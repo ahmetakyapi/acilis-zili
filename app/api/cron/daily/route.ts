@@ -42,16 +42,33 @@ export async function GET(request: Request) {
   const today = todayEt();
 
   /* ---- 1. Bilanço takvimi (bugün → +14 gün) ----
-     Neon HTTP sürücüsünde her sorgu ayrı istek; 1500 satırı tek tek yazmak
-     dakikalar alır. 200'lük parçalarla toplu upsert yapılır. */
+     Finnhub tek yanıtı ~1500 kayıtla keser; 14 günlük aralık limit yüzünden
+     bazı günleri düşürür (SNDK böyle kaybolmuştu). Bu yüzden GÜN GÜN çekilir
+     — 15 istek, 60/dk limitine rahat sığar. Yazım yine toplu upsert'tir. */
   try {
-    const result = await getEarningsCalendar(today, addEtDays(today, 14));
-    if (result.ok) {
-      // Aynı (symbol, date) yanıtın içinde tekrar edebilir — tekilleştir.
-      const unique = new Map<string, (typeof result.data)[number]>();
+    const unique = new Map<
+      string,
+      NonNullable<Awaited<ReturnType<typeof getEarningsCalendar>> extends infer R
+        ? R extends { ok: true; data: (infer T)[] }
+          ? T
+          : never
+        : never>
+    >();
+    let anyOk = false;
+    let firstError = "";
+    for (let offset = 0; offset <= 14; offset++) {
+      const day = addEtDays(today, offset);
+      const result = await getEarningsCalendar(day, day);
+      if (!result.ok) {
+        firstError ||= result.message;
+        continue;
+      }
+      anyOk = true;
       for (const entry of result.data) {
         unique.set(`${entry.symbol}|${entry.reportDate}`, entry);
       }
+    }
+    if (anyOk) {
       const rows = [...unique.values()].map((entry) => ({
         symbol: entry.symbol,
         reportDate: entry.reportDate,
@@ -82,7 +99,7 @@ export async function GET(request: Request) {
       }
       report.earnings = rows.length;
     } else {
-      report.earnings = `atlandı: ${result.message}`;
+      report.earnings = `atlandı: ${firstError}`;
     }
   } catch (error) {
     report.earnings = `hata: ${error instanceof Error ? error.message : "?"}`;
@@ -282,6 +299,8 @@ export async function GET(request: Request) {
         indexQuotes,
       });
 
+      // Kullanıcının kendi Claude'u /api/brief ile yazı gönderdiyse o esastır;
+      // sunucu üretimi yalnızca gün için henüz kayıt yokken yazılır.
       await db
         .insert(dailyBriefs)
         .values({
@@ -291,15 +310,7 @@ export async function GET(request: Request) {
           bodyMd: brief.bodyMd,
           generatedBy: brief.generatedBy,
         })
-        .onConflictDoUpdate({
-          target: [dailyBriefs.briefDate, dailyBriefs.locale],
-          set: {
-            headline: brief.headline,
-            bodyMd: brief.bodyMd,
-            generatedBy: brief.generatedBy,
-            generatedAt: new Date(),
-          },
-        });
+        .onConflictDoNothing();
     }
     report.brief = "ok";
   } catch (error) {

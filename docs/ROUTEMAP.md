@@ -2,7 +2,7 @@
 
 > Tek kaynak: proje durumu burada izlenir. Yeni session'da önce bunu oku.
 
-**Son güncelleme:** 2026-08-01
+**Son güncelleme:** 2026-08-01 (v3 — hiyerarşi + brief köprüsü)
 **Durum:** 🟢 CANLI — https://acilis-zili.vercel.app
 
 ## Rotalar
@@ -21,6 +21,9 @@
 | `/api/search` | ✅ | Yerel + Finnhub birleşik |
 | `/api/cron/daily` | ✅ | Bilanço+haber+makro+actual+özet, CRON_SECRET korumalı |
 | `/api/debug/providers` | ✅ | Yalnız dev — anahtar sağlık kontrolü |
+| `/sirketler` | ✅ | Sektör şeridi (öncelik sıralı, sayı rozetli) + tıklanabilir kolon sıralama |
+| `/haberler/[id]` | ✅ | Site içi haber detayı, kaynak linki altta |
+| `POST /api/brief` + `GET /api/brief/context` | ✅ | Kullanıcının kendi Claude'u özet yazar — BRIEF_SECRET, rehber: docs/claude-brief-agent.md |
 
 ## Deploy durumu (2026-08-01)
 

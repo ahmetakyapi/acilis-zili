@@ -6,27 +6,110 @@ import { getI18n } from "@/lib/i18n";
 import { getQuotes } from "@/lib/providers";
 import { cn, formatCompact, formatPrice, formatVolume } from "@/lib/utils";
 
-const SORTS = ["cap", "hacim"] as const;
-type Sort = (typeof SORTS)[number];
+/**
+ * Şirketler — sektör kategorileri + kolon başlığından sıralama.
+ * Sıralama URL'de yaşar (?sirala=cap&yon=desc): sunucuda çözülür, JS gerekmez;
+ * aynı kolona ikinci tıklama yönü çevirir.
+ */
+
+const SORT_KEYS = ["cap", "hacim", "fiyat", "degisim"] as const;
+type SortKey = (typeof SORT_KEYS)[number];
+type SortDir = "asc" | "desc";
+
+/**
+ * Kategori şeridinin öncelik sırası — takip edilen evrenin ağırlık merkezi
+ * (yarı iletken, teknoloji, enerji...) önde durur; listede olmayan sektörler
+ * alfabetik olarak arkaya eklenir.
+ */
+const SECTOR_PRIORITY = [
+  "Semiconductors",
+  "Technology",
+  "Media",
+  "Energy",
+  "Financial Services",
+  "Banking",
+  "Retail",
+  "Automobiles",
+  "Pharmaceuticals",
+  "Health Care",
+  "Biotechnology",
+  "Aerospace & Defense",
+] as const;
+
+function orderSectors(sectors: string[]): string[] {
+  const rank = new Map<string, number>(
+    SECTOR_PRIORITY.map((name, index) => [name.toLowerCase(), index]),
+  );
+  return [...sectors].sort((a, b) => {
+    const ra = rank.get(a.toLowerCase()) ?? Infinity;
+    const rb = rank.get(b.toLowerCase()) ?? Infinity;
+    if (ra !== rb) return ra - rb;
+    return a.localeCompare(b);
+  });
+}
+
+function SortHead({
+  col,
+  label,
+  href,
+  active,
+  dir,
+  className,
+}: {
+  col: SortKey;
+  label: string;
+  href: string;
+  active: boolean;
+  dir: SortDir;
+  className?: string;
+}) {
+  return (
+    <th
+      key={col}
+      className={cn("px-3 py-2.5 text-right font-medium", className)}
+    >
+      <Link
+        href={href}
+        className={cn(
+          "inline-flex items-center gap-1 transition-colors hover:text-primary",
+          active && "text-primary",
+        )}
+      >
+        {label}
+        <span aria-hidden className="numeral text-[8px]">
+          {active ? (dir === "desc" ? "▼" : "▲") : "▽"}
+        </span>
+      </Link>
+    </th>
+  );
+}
 
 export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   const search = await props.searchParams;
-  const sort: Sort = search.sirala === "hacim" ? "hacim" : "cap";
+  const sort: SortKey = SORT_KEYS.includes(search.sirala as SortKey)
+    ? (search.sirala as SortKey)
+    : "cap";
+  const dir: SortDir = search.yon === "asc" ? "asc" : "desc";
   const sectorFilter = typeof search.sektor === "string" ? search.sektor : null;
 
   const { locale, t } = await getI18n();
   const companies = await getCompanies();
 
-  // Sektör listesi filtre uygulanmadan çıkarılır — chip'ler hep tam görünür.
-  const sectors = [
-    ...new Set(companies.map((c) => c.industry).filter((v): v is string => !!v)),
-  ].sort();
+  // Sektör → şirket sayısı; şerit önem sırasına göre dizilir.
+  const sectorCounts = new Map<string, number>();
+  for (const company of companies) {
+    if (!company.industry) continue;
+    sectorCounts.set(
+      company.industry,
+      (sectorCounts.get(company.industry) ?? 0) + 1,
+    );
+  }
+  const sectors = orderSectors([...sectorCounts.keys()]);
 
   let rows = sectorFilter
     ? companies.filter((c) => c.industry === sectorFilter)
     : companies;
 
-  // Canlı fiyatlar — tek Alpaca çağrısı; hacim de buradan tazelenir.
   const status = await getStatus();
   const quotesResult = await getQuotes(
     rows.map((r) => r.symbol),
@@ -34,21 +117,37 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   );
   const quotes = quotesResult.ok ? quotesResult.data : {};
 
-  rows = [...rows].sort((a, b) => {
-    if (sort === "hacim") {
-      const av = quotes[a.symbol]?.volume ?? a.volume ?? 0;
-      const bv = quotes[b.symbol]?.volume ?? b.volume ?? 0;
-      return bv - av;
+  const valueOf = (row: (typeof rows)[number]): number => {
+    const quote = quotes[row.symbol];
+    switch (sort) {
+      case "fiyat":
+        return quote?.price ?? -Infinity;
+      case "degisim":
+        return quote?.changePct ?? -Infinity;
+      case "hacim":
+        return quote?.volume ?? row.volume ?? -Infinity;
+      default:
+        return row.marketCap ?? -Infinity;
     }
-    return (b.marketCap ?? 0) - (a.marketCap ?? 0);
-  });
+  };
 
-  const sortHref = (value: Sort) =>
-    `/sirketler?sirala=${value}${sectorFilter ? `&sektor=${encodeURIComponent(sectorFilter)}` : ""}`;
-  const sectorHref = (value: string | null) =>
-    value
-      ? `/sirketler?sirala=${sort}&sektor=${encodeURIComponent(value)}`
-      : `/sirketler?sirala=${sort}`;
+  rows = [...rows].sort((a, b) =>
+    dir === "asc" ? valueOf(a) - valueOf(b) : valueOf(b) - valueOf(a),
+  );
+
+  const sortHref = (key: SortKey) => {
+    // Aynı kolona tekrar tıklanınca yön değişir; yeni kolonda desc başlar.
+    const nextDir: SortDir = sort === key && dir === "desc" ? "asc" : "desc";
+    const params = new URLSearchParams({ sirala: key, yon: nextDir });
+    if (sectorFilter) params.set("sektor", sectorFilter);
+    return `/sirketler?${params.toString()}`;
+  };
+
+  const sectorHref = (value: string | null) => {
+    const params = new URLSearchParams({ sirala: sort, yon: dir });
+    if (value) params.set("sektor", value);
+    return `/sirketler?${params.toString()}`;
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -59,56 +158,62 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         <p className="mt-2 text-sm text-soft">{t.companies.subtitle}</p>
       </header>
 
-      {/* Sıralama + sektör kategorileri */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-1.5">
-          <span className="mr-1 text-xs text-muted">{t.companies.sortBy}</span>
-          {SORTS.map((value) => (
-            <Link
-              key={value}
-              href={sortHref(value)}
-              className={cn(
-                "min-h-[36px] rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors",
-                sort === value
-                  ? "bg-primary text-white"
-                  : "border border-line text-soft hover:border-line-strong hover:text-strong",
-              )}
-            >
-              {value === "cap" ? t.companies.byCap : t.companies.byVolume}
-            </Link>
-          ))}
-        </div>
-
-        {sectors.length > 0 && (
-          <div className="scroll-x flex items-center gap-1.5">
+      {/* Kategori şeridi — kaydırılabilir olduğu kenar solmasıyla belli olur */}
+      {sectors.length > 0 && (
+        <div className="relative">
+          <div className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12">
             <Link
               href={sectorHref(null)}
               className={cn(
-                "min-h-[32px] shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                "min-h-[34px] shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
                 !sectorFilter
-                  ? "bg-primary-wash text-primary"
-                  : "text-muted hover:bg-surface-elevated hover:text-soft",
+                  ? "bg-primary text-white shadow-sm"
+                  : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
               )}
             >
               {t.companies.allSectors}
-            </Link>
-            {sectors.map((sector) => (
-              <Link
-                key={sector}
-                href={sectorHref(sector === sectorFilter ? null : sector)}
+              <span
                 className={cn(
-                  "min-h-[32px] shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
-                  sector === sectorFilter
-                    ? "bg-primary-wash text-primary"
-                    : "text-muted hover:bg-surface-elevated hover:text-soft",
+                  "numeral ml-1.5",
+                  !sectorFilter ? "text-white/70" : "text-muted",
                 )}
               >
-                {sector}
-              </Link>
-            ))}
+                {companies.length}
+              </span>
+            </Link>
+            {sectors.map((sector) => {
+              const active = sector === sectorFilter;
+              return (
+                <Link
+                  key={sector}
+                  href={sectorHref(active ? null : sector)}
+                  className={cn(
+                    "min-h-[34px] shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                    active
+                      ? "bg-primary text-white shadow-sm"
+                      : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
+                  )}
+                >
+                  {sector}
+                  <span
+                    className={cn(
+                      "numeral ml-1.5",
+                      active ? "text-white/70" : "text-muted",
+                    )}
+                  >
+                    {sectorCounts.get(sector)}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
-        )}
-      </div>
+          {/* Sağ kenar solması — devamı olduğunu söyler */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-(--page-bg) to-transparent"
+          />
+        </div>
+      )}
 
       <Panel>
         {rows.length === 0 ? (
@@ -123,18 +228,35 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                   <th className="hidden px-3 py-2.5 font-medium md:table-cell">
                     {t.companies.sector}
                   </th>
-                  <th className="px-3 py-2.5 text-right font-medium">
-                    {t.companies.price}
-                  </th>
-                  <th className="px-3 py-2.5 text-right font-medium">
-                    {t.companies.change}
-                  </th>
-                  <th className="px-3 py-2.5 text-right font-medium">
-                    {t.market.marketCap}
-                  </th>
-                  <th className="hidden px-4 py-2.5 text-right font-medium sm:table-cell sm:px-5">
-                    {t.market.volume}
-                  </th>
+                  <SortHead
+                    col="fiyat"
+                    label={t.companies.price}
+                    href={sortHref("fiyat")}
+                    active={sort === "fiyat"}
+                    dir={dir}
+                  />
+                  <SortHead
+                    col="degisim"
+                    label={t.companies.change}
+                    href={sortHref("degisim")}
+                    active={sort === "degisim"}
+                    dir={dir}
+                  />
+                  <SortHead
+                    col="cap"
+                    label={t.market.marketCap}
+                    href={sortHref("cap")}
+                    active={sort === "cap"}
+                    dir={dir}
+                  />
+                  <SortHead
+                    col="hacim"
+                    label={t.market.volume}
+                    href={sortHref("hacim")}
+                    active={sort === "hacim"}
+                    dir={dir}
+                    className="hidden sm:table-cell sm:px-5"
+                  />
                 </tr>
               </thead>
               <tbody className="divide-y divide-line-soft">

@@ -372,6 +372,21 @@ h4 {
   display: none;
 }
 
+/* Kaydırılabilirliği saklamayan varyant — ince çubuk görünür kalır,
+   kategori şeritleri gibi "devamı var" hissi gereken yerlerde. */
+.scroll-x-hint {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+.scroll-x-hint::-webkit-scrollbar {
+  height: 4px;
+}
+.scroll-x-hint::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+}
+
 /* --------------------------------------------------------------------------
    Erişilebilirlik
    -------------------------------------------------------------------------- */
