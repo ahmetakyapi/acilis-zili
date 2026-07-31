@@ -2,8 +2,8 @@
 
 > Tek kaynak: proje durumu burada izlenir. Yeni session'da önce bunu oku.
 
-**Son güncelleme:** 2026-07-31
-**Durum:** Geliştirme tamamlandı — anahtar bekliyor → deploy
+**Son güncelleme:** 2026-08-01
+**Durum:** 🟢 CANLI — https://acilis-zili.vercel.app
 
 ## Rotalar
 
@@ -22,13 +22,16 @@
 | `/api/cron/daily` | ✅ | Bilanço+haber+makro+actual+özet, CRON_SECRET korumalı |
 | `/api/debug/providers` | ✅ | Yalnız dev — anahtar sağlık kontrolü |
 
-## Bekleyen
+## Deploy durumu (2026-08-01)
 
-- [ ] Kullanıcı API anahtarlarını alacak (README tablosu)
-- [ ] Neon projesi + `db:migrate` + `db:seed`
-- [ ] `/api/debug/providers` ile gerçek veri doğrulaması (fiyatları Google Finance ile karşılaştır)
-- [ ] Vercel deploy + env + cron doğrulama
-- [ ] Kayıt→giriş→favori akışının gerçek DB ile testi
+- [x] 4/4 sağlayıcı anahtarı alındı ve doğrulandı (Alpaca, Finnhub, FRED, Neon)
+- [x] `db:migrate` + `db:seed` uygulandı (23 tatil, 90 olay, 62 sembol)
+- [x] GitHub: github.com/ahmetakyapi/acilis-zili (private) — push → otomatik deploy
+- [x] Vercel production: acilis-zili.vercel.app · 8 env değişkeni · cron kayıtlı (hafta içi 10:30 UTC)
+- [x] Prod cron elle doğrulandı: 1500 bilanço + 60 haber + 6 makro + brief
+- [ ] Kayıt→giriş→favori akışının canlıda kullanıcı testi
+- [ ] (İsteğe bağlı) Neon şifresi + Finnhub anahtarı rotasyonu — sohbette paylaşıldı
+- [ ] (İsteğe bağlı) ANTHROPIC_API_KEY → günlük özet Claude ile yazılsın
 
 ## Mimari kararlar
 
