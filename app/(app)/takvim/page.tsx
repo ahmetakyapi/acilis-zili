@@ -5,9 +5,9 @@ import {
   Panel,
 } from "@/components/ui/primitives";
 import { getEventsBetween } from "@/lib/data";
-import { addEtDays, todayEt } from "@/lib/market-hours";
+import { addEtDays, etDateTimeToUtc, todayEt } from "@/lib/market-hours";
 import { getI18n } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { cn, dualTime, formatEtDateLong, formatEtDateShort } from "@/lib/utils";
 import type { EconomicEventRow } from "@/lib/schema";
 
 const VIEWS = ["day", "week", "month"] as const;
@@ -50,13 +50,6 @@ export default async function CalendarPage(
     week: t.calendar.week,
     month: t.calendar.month,
   };
-
-  const dayFormatter = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    timeZone: "UTC",
-  });
 
   return (
     <div className="flex flex-col gap-5">
@@ -120,14 +113,16 @@ export default async function CalendarPage(
           <Panel key={date}>
             <div className="flex items-baseline justify-between border-b border-line-soft px-4 py-3 sm:px-5">
               <h2 className="text-sm font-semibold text-strong">
-                {dayFormatter.format(new Date(`${date}T00:00:00Z`))}
+                {formatEtDateLong(date, locale)}
               </h2>
-              <span className="numeral text-[11px] text-muted">{date}</span>
+              <span className="numeral text-[11px] text-muted">
+                {formatEtDateShort(date, locale)}
+              </span>
             </div>
 
             {/* Sütun başlıkları */}
-            <div className="hidden grid-cols-[3.5rem_1rem_1fr_5rem_5rem_5rem] gap-3 border-b border-line-soft px-4 py-2 text-[10px] uppercase tracking-wider text-muted sm:grid sm:px-5">
-              <span>{t.calendar.time}</span>
+            <div className="hidden grid-cols-[4rem_1rem_1fr_5rem_5rem_5rem] gap-3 border-b border-line-soft px-4 py-2 text-[10px] uppercase tracking-wider text-muted sm:grid sm:px-5">
+              <span>ET · TR</span>
               <span />
               <span>{t.calendar.event}</span>
               <span className="text-right">{t.calendar.actual}</span>
@@ -139,11 +134,26 @@ export default async function CalendarPage(
               {dayEvents.map((event) => (
                 <li
                   key={event.id}
-                  className="grid grid-cols-[3.5rem_1rem_1fr] items-center gap-3 px-4 py-2.5 sm:grid-cols-[3.5rem_1rem_1fr_5rem_5rem_5rem] sm:px-5"
+                  className="grid grid-cols-[4rem_1rem_1fr] items-center gap-3 px-4 py-2.5 sm:grid-cols-[4rem_1rem_1fr_5rem_5rem_5rem] sm:px-5"
                 >
-                  <span className="numeral text-sm font-semibold text-strong">
-                    {event.eventTimeEt ?? "—"}
-                  </span>
+                  {event.eventTimeEt ? (
+                    <span>
+                      <span className="numeral block text-sm font-semibold leading-tight text-strong">
+                        {event.eventTimeEt}
+                      </span>
+                      <span className="numeral block text-[11px] leading-tight text-muted">
+                        {
+                          dualTime(
+                            etDateTimeToUtc(event.eventDate, event.eventTimeEt),
+                            event.eventTimeEt,
+                          ).tr
+                        }{" "}
+                        TR
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="numeral text-sm text-muted">—</span>
+                  )}
                   <ImpactDots
                     importance={event.importance}
                     label={impactLabel[event.importance] ?? event.importance}

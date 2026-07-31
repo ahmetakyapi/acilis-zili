@@ -1,4 +1,4 @@
-import { Sparkline } from "@/components/macro/Sparkline";
+import { Sparkline } from "@/components/ui/Sparkline";
 import { DataStamp, EmptyState, Panel } from "@/components/ui/primitives";
 import { getMacroRows } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
@@ -62,7 +62,7 @@ export default async function MacroPage() {
                 </div>
 
                 <div className="mt-3">
-                  <Sparkline observations={observations} title={title} />
+                  <Sparkline points={observations} title={title} className="h-14 w-full" />
                 </div>
 
                 <dl className="mt-3 space-y-1 border-t border-line-soft pt-2.5 text-xs">

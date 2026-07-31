@@ -235,6 +235,9 @@ export const news = pgTable(
     providerId: text("provider_id").notNull(),
     headline: text("headline").notNull(),
     summary: text("summary"),
+    /** Claude çevirisi — anahtar yoksa null kalır, orijinal gösterilir. */
+    headlineTr: text("headline_tr"),
+    summaryTr: text("summary_tr"),
     url: text("url").notNull(),
     imageUrl: text("image_url"),
     source: text("source"),

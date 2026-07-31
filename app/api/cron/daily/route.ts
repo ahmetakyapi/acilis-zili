@@ -14,6 +14,13 @@ import { getQuotes } from "@/lib/providers";
 import { addEtDays, getMarketStatus, todayEt } from "@/lib/market-hours";
 import { getEventsBetween, getHolidays, getSymbolNames } from "@/lib/data";
 import { buildDailyBrief } from "@/lib/brief";
+import { translatePendingNews, isTranslateConfigured } from "@/lib/translate";
+import {
+  getEarningsSymbolsMissingProfile,
+  getStalestSymbols,
+} from "@/lib/data";
+import { getCompanyProfile } from "@/lib/providers";
+import { symbols as symbolsTable } from "@/lib/schema";
 import { INDEX_STRIP } from "@/db/seed/symbols";
 import { LOCALES } from "@/lib/i18n/config";
 
@@ -113,6 +120,48 @@ export async function GET(request: Request) {
     }
   } catch (error) {
     report.news = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* ---- 2b. Haber çevirisi (Claude — anahtar varsa) ---- */
+  try {
+    if (isTranslateConfigured()) {
+      report.translate = await translatePendingNews(40);
+    } else {
+      report.translate = "atlandı: ANTHROPIC_API_KEY yok";
+    }
+  } catch (error) {
+    report.translate = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* ---- 2c. Sembol profillerini tazele ----
+     En bayat 25 sembolün profili (piyasa değeri, sektör, logo) yenilenir;
+     Şirketler ve Bilançolar sayfaları bu meta veriden beslenir. */
+  try {
+    // Önce yaklaşan bilançoların tanınmayan sembolleri (spotlight için),
+    // kalan bütçeyle en bayat kayıtlar. getCompanyProfile symbols tablosuna
+    // kendisi yazar (insert/update).
+    const [upcoming, stalest] = await Promise.all([
+      getEarningsSymbolsMissingProfile(7, 15),
+      getStalestSymbols(10),
+    ]);
+    const targets = [...new Set([...upcoming, ...stalest])].slice(0, 25);
+
+    let refreshed = 0;
+    for (const symbol of targets) {
+      const result = await getCompanyProfile(symbol);
+      if (result.ok) {
+        refreshed++;
+      } else {
+        // Profil dönmese de sıraya tekrar girmesin diye damga güncellenir.
+        await db
+          .update(symbolsTable)
+          .set({ updatedAt: new Date() })
+          .where(eq(symbolsTable.symbol, symbol));
+      }
+    }
+    report.profiles = refreshed;
+  } catch (error) {
+    report.profiles = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
   /* ---- 3. Makro seriler ---- */

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
 import { db } from "./db";
 import {
   dailyBriefs,
@@ -7,6 +7,7 @@ import {
   macroSeries,
   marketHolidays,
   news,
+  quotesCache as quotesCacheTable,
   symbols as symbolsTable,
   watchlistItems,
   watchlists,
@@ -107,6 +108,27 @@ export async function getEarningsBetween(
   }
 }
 
+export async function getNextEarnings(
+  symbol: string,
+): Promise<EarningsRow | null> {
+  try {
+    const [row] = await db
+      .select()
+      .from(earningsCalendar)
+      .where(
+        and(
+          eq(earningsCalendar.symbol, symbol),
+          gte(earningsCalendar.reportDate, todayEt()),
+        ),
+      )
+      .orderBy(asc(earningsCalendar.reportDate))
+      .limit(1);
+    return row ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getEarningsForSymbol(
   symbol: string,
   limit = 8,
@@ -124,6 +146,15 @@ export async function getEarningsForSymbol(
 }
 
 /* ---- Haberler ---- */
+
+export async function getNewsById(id: string): Promise<NewsRow | null> {
+  try {
+    const [row] = await db.select().from(news).where(eq(news.id, id)).limit(1);
+    return row ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export async function getLatestNews(limit = 20): Promise<NewsRow[]> {
   try {
@@ -220,9 +251,19 @@ export async function getUserSymbols(userId: string): Promise<string[]> {
 
 /* ---- Sembol adları (kartlarda isim göstermek için) ---- */
 
+export type SymbolMeta = {
+  name: string;
+  indexProxy: boolean;
+  /** Yalnızca USD cinsinden bilinen piyasa değeri — yabancı para birimleri
+      (ör. TSM/TWD) karşılaştırılamaz olduğundan null sayılır. */
+  marketCap: number | null;
+  logoUrl: string | null;
+  industry: string | null;
+};
+
 export async function getSymbolNames(
   list: string[],
-): Promise<Record<string, { name: string; indexProxy: boolean }>> {
+): Promise<Record<string, SymbolMeta>> {
   if (list.length === 0) return {};
   try {
     const rows = await db
@@ -230,14 +271,113 @@ export async function getSymbolNames(
         symbol: symbolsTable.symbol,
         name: symbolsTable.name,
         isIndexProxy: symbolsTable.isIndexProxy,
+        marketCap: symbolsTable.marketCap,
+        currency: symbolsTable.currency,
+        logoUrl: symbolsTable.logoUrl,
+        industry: symbolsTable.industry,
       })
       .from(symbolsTable)
       .where(inArray(symbolsTable.symbol, list));
     return Object.fromEntries(
-      rows.map((r) => [r.symbol, { name: r.name, indexProxy: r.isIndexProxy }]),
+      rows.map((r) => [
+        r.symbol,
+        {
+          name: r.name,
+          indexProxy: r.isIndexProxy,
+          marketCap: r.currency === "USD" ? r.marketCap : null,
+          logoUrl: r.logoUrl,
+          industry: r.industry,
+        },
+      ]),
     );
   } catch {
     return {};
+  }
+}
+
+/* ---- Şirketler sayfası ---- */
+
+export type CompanyRow = {
+  symbol: string;
+  name: string;
+  industry: string | null;
+  logoUrl: string | null;
+  marketCap: number | null;
+  volume: number | null;
+};
+
+/** Endeks ETF'leri hariç, profili bilinen şirketler. */
+export async function getCompanies(): Promise<CompanyRow[]> {
+  try {
+    const rows = await db
+      .select({
+        symbol: symbolsTable.symbol,
+        name: symbolsTable.name,
+        industry: symbolsTable.industry,
+        logoUrl: symbolsTable.logoUrl,
+        marketCap: symbolsTable.marketCap,
+        currency: symbolsTable.currency,
+        volume: quotesCacheTable.volume,
+      })
+      .from(symbolsTable)
+      .leftJoin(
+        quotesCacheTable,
+        eq(quotesCacheTable.symbol, symbolsTable.symbol),
+      )
+      .where(eq(symbolsTable.isIndexProxy, false));
+    // USD dışı piyasa değeri (ör. TWD) USD ile sıralanamaz — yok sayılır.
+    return rows.map((r) => ({
+      ...r,
+      marketCap: r.currency === "USD" ? r.marketCap : null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Önümüzdeki günlerin bilanço sembollerinden profili (piyasa değeri) henüz
+ * bilinmeyenler — cron bunlara öncelik verir ki Bilançolar sayfasının
+ * "Öne Çıkanlar" kartları dolabilsin.
+ */
+export async function getEarningsSymbolsMissingProfile(
+  days: number,
+  limit: number,
+): Promise<string[]> {
+  try {
+    const today = todayEt();
+    const rows = await db
+      .select({ symbol: earningsCalendar.symbol })
+      .from(earningsCalendar)
+      .leftJoin(
+        symbolsTable,
+        eq(symbolsTable.symbol, earningsCalendar.symbol),
+      )
+      .where(
+        and(
+          gte(earningsCalendar.reportDate, today),
+          lte(earningsCalendar.reportDate, addEtDays(today, days)),
+          isNull(symbolsTable.marketCap),
+        ),
+      )
+      .limit(limit * 3);
+    return [...new Set(rows.map((r) => r.symbol))].slice(0, limit);
+  } catch {
+    return [];
+  }
+}
+
+/** Profili en bayat semboller — cron her gün bir dilimini tazeler. */
+export async function getStalestSymbols(limit: number): Promise<string[]> {
+  try {
+    const rows = await db
+      .select({ symbol: symbolsTable.symbol })
+      .from(symbolsTable)
+      .orderBy(asc(symbolsTable.updatedAt))
+      .limit(limit);
+    return rows.map((r) => r.symbol);
+  } catch {
+    return [];
   }
 }
 

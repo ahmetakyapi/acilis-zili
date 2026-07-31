@@ -9,10 +9,10 @@
 :root,
 :root[data-theme="light"] {
   /* Zemin — bej kâğıt. Steril beyaz değil, ajans bülteni kâğıdı. */
-  --page-bg: #f2ece0;
-  --surface: #fdfaf3;
+  --page-bg: #f1ebdd;
+  --surface: #fcf9f2;
   --surface-elevated: #ffffff;
-  --surface-sunken: #eae2d2;
+  --surface-sunken: #e9e1d0;
 
   /* Mürekkep mavisi — metin ve yapı bu aileden gelir, nötr gri değil. */
   --text-strong: #0f2c44;
@@ -20,9 +20,14 @@
   --text-soft: #52697a;
   --text-muted: #71838f;
 
+  /* Mavi geçiş skalası — tek rengin tonal katmanları, degrade değil. */
+  --primary-deep: #123a5c;
   --primary: #1d5a8c;
+  --primary-soft: #4a7fae;
+  --primary-faint: #b9cddd;
   --primary-hover: #12405f;
-  --primary-wash: rgba(29, 90, 140, 0.09);
+  --primary-wash: rgba(29, 90, 140, 0.08);
+  --primary-tint: rgba(29, 90, 140, 0.045);
 
   /* Pirinç — zilin metali. İmza vurgusu, seyrek kullanılır. */
   --brass: #9a741b;
@@ -75,9 +80,13 @@
   --text-soft: #90a2b1;
   --text-muted: #6d7f90;
 
+  --primary-deep: #2f6d9e;
   --primary: #4a95cc;
+  --primary-soft: #77aed6;
+  --primary-faint: #2c4a63;
   --primary-hover: #6aabd9;
   --primary-wash: rgba(74, 149, 204, 0.14);
+  --primary-tint: rgba(74, 149, 204, 0.07);
 
   --brass: #d1a648;
   --brass-bright: #e0b95f;
@@ -129,8 +138,12 @@
   --color-muted: var(--text-muted);
 
   --color-primary: var(--primary);
+  --color-primary-deep: var(--primary-deep);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-faint: var(--primary-faint);
   --color-primary-hover: var(--primary-hover);
   --color-primary-wash: var(--primary-wash);
+  --color-primary-tint: var(--primary-tint);
 
   --color-brass: var(--brass);
   --color-brass-bright: var(--brass-bright);
@@ -259,8 +272,15 @@ h4 {
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card);
+  transition: box-shadow 0.25s var(--ease-brand), border-color 0.25s var(--ease-brand);
+}
+
+/* Tıklanabilir kartlar nazikçe yükselir — zıplamaz. */
+.panel-hover:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-raised);
 }
 
 .chrome {

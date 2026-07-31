@@ -137,3 +137,54 @@ export function timeAgo(date: Date | string, locale: string): string {
 export function isValidSymbol(symbol: string): boolean {
   return /^[A-Z][A-Z.-]{0,9}$/.test(symbol);
 }
+
+/* --------------------------------------------------------------------------
+   Tarih ve çift saat gösterimi
+   Kaynaklar ET (New York) yayınlar; kullanıcı Türkiye'de okur. Tarihler
+   Türkiye alışkanlığına göre ("6 Ağustos Perşembe"), saatler ET · TR çifti
+   olarak gösterilir.
+   -------------------------------------------------------------------------- */
+
+/** "2026-08-06" → "6 Ağustos Perşembe" / "Thursday, August 6" */
+export function formatEtDateLong(dateStr: string, locale: string): string {
+  const date = new Date(`${dateStr}T12:00:00Z`);
+  if (locale === "tr") {
+    const day = new Intl.DateTimeFormat("tr-TR", {
+      day: "numeric",
+      month: "long",
+      timeZone: "UTC",
+    }).format(date);
+    const weekday = new Intl.DateTimeFormat("tr-TR", {
+      weekday: "long",
+      timeZone: "UTC",
+    }).format(date);
+    return `${day} ${weekday}`;
+  }
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+/** "2026-08-06" → "06.08.2026" / "08/06/2026" */
+export function formatEtDateShort(dateStr: string, locale: string): string {
+  const [y, m, d] = dateStr.split("-");
+  return locale === "tr" ? `${d}.${m}.${y}` : `${m}/${d}/${y}`;
+}
+
+const TR_TIME = new Intl.DateTimeFormat("tr-TR", {
+  timeZone: "Europe/Istanbul",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+/**
+ * ET saatini Türkiye saatiyle eşler.
+ * Dönüş: { et: "08:30", tr: "15:30" } — DST farkları utcDate üzerinden doğru.
+ */
+export function dualTime(utcDate: Date, etTime: string): { et: string; tr: string } {
+  return { et: etTime, tr: TR_TIME.format(utcDate) };
+}

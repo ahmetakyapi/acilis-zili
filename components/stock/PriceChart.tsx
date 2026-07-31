@@ -6,25 +6,33 @@ import {
   CandlestickSeries,
   createChart,
   type IChartApi,
+  type MouseEventParams,
   type UTCTimestamp,
 } from "lightweight-charts";
 import type { ChartResponse } from "@/app/api/chart/[symbol]/route";
 import type { Bar, ChartRange } from "@/lib/providers/types";
 import { CHART_RANGES } from "@/lib/providers/types";
-import { cn } from "@/lib/utils";
+import { cn, formatPercent, formatPrice } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
 
 /**
  * Fiyat grafiği — lightweight-charts v5.
  *
- * Renkler DOM'daki CSS değişkenlerinden okunur; tema değişince grafik de
- * kendini yeniden boyar. Grafik kütüphanesine hex gömülmez.
+ * Midas tarzı okuma: imleç grafikte gezerken üstte sabit bir okuma satırı
+ * tarih · fiyat · dönem başından değişimi gösterir; imleç yokken seçili
+ * aralığın toplam getirisi ve en düşük/yüksek değerleri okunur. Alan rengi
+ * günlük yöne değil, SEÇİLİ ARALIĞIN yönüne göre belirlenir.
+ * Renkler DOM'daki CSS değişkenlerinden okunur; tema değişince yeniden boyanır.
  */
 
 type ChartLabels = {
   ranges: Record<ChartRange, string>;
+  rangeLabels: Record<ChartRange, string>;
   area: string;
   candles: string;
+  periodReturn: string;
+  periodHigh: string;
+  periodLow: string;
   noData: string;
   failed: string;
 };
@@ -34,18 +42,17 @@ type PriceChartProps = {
   initialRange?: ChartRange;
   locale: Locale;
   labels: ChartLabels;
-  /** Gün içi yükseliyor mu — alan grafiğinin rengi buna göre seçilir. */
-  direction: "up" | "down" | "flat";
 };
 
-/**
- * Yükleme ayrı bir state değil, türetilmiş bir durumdur: sonuç henüz aktif
- * `symbol:range` anahtarına ait değilse iskelet gösterilir. Böylece fetch
- * effect'i içinde senkron setState gerekmez.
- */
 type ChartResult =
   | { key: string; phase: "error"; message: string }
   | { key: string; phase: "ready"; bars: Bar[]; source: string; stale: boolean };
+
+type HoverReading = {
+  dateLabel: string;
+  price: number;
+  changePct: number;
+} | null;
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -56,13 +63,13 @@ export function PriceChart({
   initialRange = "1D",
   locale,
   labels,
-  direction,
 }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const [range, setRange] = useState<ChartRange>(initialRange);
   const [mode, setMode] = useState<"area" | "candles">("area");
   const [result, setResult] = useState<ChartResult | null>(null);
+  const [hover, setHover] = useState<HoverReading>(null);
   const [themeTick, setThemeTick] = useState(0);
 
   const requestKey = `${symbol}:${range}`;
@@ -73,6 +80,31 @@ export function PriceChart({
         : ({ phase: "loading" } as const),
     [result, requestKey],
   );
+
+  // Dönem istatistikleri — başlık satırı ve renk kararı bunlardan gelir.
+  const period = useMemo(() => {
+    if (state.phase !== "ready" || state.bars.length === 0) return null;
+    const bars = state.bars;
+    const first = bars[0];
+    const last = bars[bars.length - 1];
+    const changePct =
+      first.open !== 0 ? ((last.close - first.open) / first.open) * 100 : 0;
+    let high = -Infinity;
+    let low = Infinity;
+    for (const bar of bars) {
+      if (bar.high > high) high = bar.high;
+      if (bar.low < low) low = bar.low;
+    }
+    return { first, last, changePct, high, low };
+  }, [state]);
+
+  const periodTone: "up" | "down" | "flat" = !period
+    ? "flat"
+    : period.changePct > 0
+      ? "up"
+      : period.changePct < 0
+        ? "down"
+        : "flat";
 
   // Tema değişimini izle → grafiği yeniden boya
   useEffect(() => {
@@ -123,16 +155,29 @@ export function PriceChart({
   // Grafiği kur / güncelle
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || state.phase !== "ready") return;
+    if (!container || state.phase !== "ready" || !period) return;
 
-    // Eksen etiketleri ET okusun diye zaman değerleri kaydırılır.
     const bars = shiftBarsToEt(state.bars);
+    const baseline = period.first.open;
 
     const up = cssVar("--up");
     const down = cssVar("--down");
-    const line = direction === "down" ? down : cssVar("--primary");
+    const flat = cssVar("--primary");
+    const line =
+      periodTone === "up" ? up : periodTone === "down" ? down : flat;
     const text = cssVar("--text-muted");
     const grid = cssVar("--chart-grid");
+
+    const intlLocale = locale === "tr" ? "tr-TR" : "en-US";
+    const dateFormatter = new Intl.DateTimeFormat(intlLocale, {
+      timeZone: "UTC", // barlar zaten ET'ye kaydırıldı
+      day: "numeric",
+      month: intraday ? "long" : "short",
+      year: intraday ? undefined : "numeric",
+      hour: intraday ? "2-digit" : undefined,
+      minute: intraday ? "2-digit" : undefined,
+      hour12: false,
+    });
 
     const chart = createChart(container, {
       autoSize: true,
@@ -155,16 +200,17 @@ export function PriceChart({
       },
       crosshair: {
         vertLine: { color: text, width: 1, style: 3, labelBackgroundColor: line },
-        horzLine: { color: text, width: 1, style: 3, labelBackgroundColor: line },
+        horzLine: { visible: false, labelVisible: false },
       },
       localization: {
-        locale: locale === "tr" ? "tr-TR" : "en-US",
+        locale: intlLocale,
         priceFormatter: (price: number) =>
-          new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
+          new Intl.NumberFormat(intlLocale, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           }).format(price),
       },
+      handleScale: { axisPressedMouseMove: false },
     });
     chartRef.current = chart;
 
@@ -172,9 +218,12 @@ export function PriceChart({
       const series = chart.addSeries(AreaSeries, {
         lineColor: line,
         lineWidth: 2,
-        topColor: `${lineToRgba(line, 0.18)}`,
-        bottomColor: `${lineToRgba(line, 0.0)}`,
+        topColor: lineToRgba(line, 0.16),
+        bottomColor: lineToRgba(line, 0),
         priceLineVisible: false,
+        crosshairMarkerRadius: 5,
+        crosshairMarkerBorderColor: cssVar("--surface"),
+        crosshairMarkerBackgroundColor: line,
       });
       series.setData(
         bars.map((bar) => ({
@@ -201,18 +250,102 @@ export function PriceChart({
       );
     }
 
+    // İmleç okuması — Midas tarzı: tarih · fiyat · dönem başından değişim.
+    const byTime = new Map(bars.map((bar) => [bar.time, bar]));
+    const onCrosshair = (param: MouseEventParams) => {
+      if (!param.time || !param.point) {
+        setHover(null);
+        return;
+      }
+      const bar = byTime.get(param.time as number);
+      if (!bar) {
+        setHover(null);
+        return;
+      }
+      setHover({
+        dateLabel: dateFormatter.format(new Date(bar.time * 1000)),
+        price: bar.close,
+        changePct:
+          baseline !== 0 ? ((bar.close - baseline) / baseline) * 100 : 0,
+      });
+    };
+    chart.subscribeCrosshairMove(onCrosshair);
+
     chart.timeScale().fitContent();
 
     return () => {
+      chart.unsubscribeCrosshairMove(onCrosshair);
       chart.remove();
       chartRef.current = null;
     };
-  }, [state, mode, direction, locale, intraday, themeTick]);
+  }, [state, mode, locale, intraday, themeTick, period, periodTone]);
+
+  const toneText =
+    periodTone === "up" ? "text-up" : periodTone === "down" ? "text-down" : "text-soft";
+  const hoverTone =
+    hover && hover.changePct > 0
+      ? "text-up"
+      : hover && hover.changePct < 0
+        ? "text-down"
+        : "text-soft";
 
   return (
     <div>
-      {/* Aralık ve mod seçici */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-3">
+      {/* Okuma satırı — imleç gezerken nokta okuması, değilse dönem özeti */}
+      <div className="flex min-h-[3.25rem] flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2">
+        {hover ? (
+          <>
+            <div className="flex items-baseline gap-3">
+              <span className="tote text-2xl">
+                {formatPrice(hover.price, locale, { currency: true })}
+              </span>
+              <span className={cn("numeral text-sm font-semibold", hoverTone)}>
+                {formatPercent(hover.changePct, locale)}
+              </span>
+            </div>
+            <span className="numeral text-xs text-muted">{hover.dateLabel}</span>
+          </>
+        ) : period ? (
+          <>
+            <div className="flex items-baseline gap-3">
+              <span className="text-sm text-soft">
+                {labels.rangeLabels[range]}
+              </span>
+              <span className={cn("numeral text-xl font-bold", toneText)}>
+                {formatPercent(period.changePct, locale)}
+              </span>
+            </div>
+            <span className="numeral text-xs text-muted">
+              {labels.periodLow}{" "}
+              <span className="text-soft">{formatPrice(period.low, locale)}</span>
+              {"  ·  "}
+              {labels.periodHigh}{" "}
+              <span className="text-soft">{formatPrice(period.high, locale)}</span>
+            </span>
+          </>
+        ) : (
+          <span className="skeleton h-7 w-40" />
+        )}
+      </div>
+
+      {/* Grafik alanı */}
+      <div className="relative h-72 w-full sm:h-80">
+        {state.phase === "loading" && (
+          <div className="skeleton absolute inset-0" aria-hidden />
+        )}
+        {state.phase === "error" && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-sm text-muted">{state.message}</p>
+          </div>
+        )}
+        <div
+          ref={containerRef}
+          className={cn("h-full w-full", state.phase !== "ready" && "invisible")}
+        />
+      </div>
+
+      {/* Aralık ve mod seçici — grafiğin altında, Midas düzeni */}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3">
         <div className="scroll-x flex gap-1" role="tablist" aria-label="Aralık">
           {CHART_RANGES.map((r) => (
             <button
@@ -222,10 +355,10 @@ export function PriceChart({
               aria-selected={range === r}
               onClick={() => setRange(r)}
               className={cn(
-                "numeral min-h-[36px] shrink-0 rounded-(--radius-sm) px-2.5 text-xs font-medium transition-colors",
+                "numeral min-h-[36px] shrink-0 rounded-(--radius-sm) px-2.5 text-xs font-semibold transition-colors",
                 range === r
-                  ? "bg-primary-wash text-primary"
-                  : "text-muted hover:bg-surface-elevated hover:text-soft",
+                  ? "bg-primary text-white"
+                  : "text-muted hover:bg-primary-wash hover:text-primary",
               )}
             >
               {labels.ranges[r]}
@@ -250,22 +383,6 @@ export function PriceChart({
           ))}
         </div>
       </div>
-
-      {/* Grafik alanı */}
-      <div className="relative h-72 w-full sm:h-80">
-        {state.phase === "loading" && (
-          <div className="skeleton absolute inset-0" aria-hidden />
-        )}
-        {state.phase === "error" && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <p className="text-sm text-muted">{state.message}</p>
-          </div>
-        )}
-        <div
-          ref={containerRef}
-          className={cn("h-full w-full", state.phase !== "ready" && "invisible")}
-        />
-      </div>
     </div>
   );
 }
@@ -282,7 +399,7 @@ function lineToRgba(hex: string, alpha: number): string {
    Eksen saatleri New York saati göstermeli.
    lightweight-charts zaman değerlerini UTC olarak basar; bu yüzden her bara
    günün ET ofseti eklenir (DST sınırı grafik içinde değişse bile doğru).
-   Ofset gün bazında önbelleklenir — 2000 bar için 2000 Intl çağrısı yapılmaz.
+   Ofset gün bazında önbelleklenir.
    -------------------------------------------------------------------------- */
 
 const ET_FORMATTER = new Intl.DateTimeFormat("en-US", {

@@ -1,4 +1,5 @@
 import {
+  Building2,
   CalendarClock,
   FileBarChart,
   Newspaper,
@@ -34,6 +35,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.earnings,
     icon: FileBarChart,
     inBottomBar: true,
+  },
+  {
+    href: "/sirketler",
+    label: (t) => t.nav.companies,
+    icon: Building2,
+    inBottomBar: false,
   },
   {
     href: "/favoriler",

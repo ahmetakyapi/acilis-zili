@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/primitives";
 import { db } from "@/lib/db";
 import { watchlistItems, watchlists } from "@/lib/schema";
-import { getEarningsForSymbol, getStatus } from "@/lib/data";
+import { getEarningsForSymbol, getNextEarnings, getStatus } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote } from "@/lib/providers";
 import {
@@ -30,6 +30,7 @@ import {
   directionOf,
   formatChange,
   formatCompact,
+  formatEtDateLong,
   formatPrice,
   formatVolume,
   isValidSymbol,
@@ -250,7 +251,7 @@ function HeaderSkeleton() {
    Grafik — yön rengi günün değişiminden gelir
    ========================================================================== */
 
-async function ChartSection({
+function ChartSection({
   symbol,
   locale,
   t,
@@ -259,19 +260,18 @@ async function ChartSection({
   locale: Locale;
   t: Dictionary;
 }) {
-  const status = await getStatus();
-  const quote = await getQuote(symbol, status);
-  const direction = quote.ok ? directionOf(quote.data.changePct) : "flat";
-
   return (
     <PriceChart
       symbol={symbol}
       locale={locale}
-      direction={direction}
       labels={{
         ranges: t.chart.ranges,
+        rangeLabels: t.chart.rangeLabels,
         area: t.chart.area,
         candles: t.chart.candles,
+        periodReturn: t.chart.periodReturn,
+        periodHigh: t.chart.periodHigh,
+        periodLow: t.chart.periodLow,
         noData: t.chart.noChartData,
         failed: t.data.failed,
       }}
@@ -292,11 +292,20 @@ async function ProfileCard({
   locale: Locale;
   t: Dictionary;
 }) {
-  const result = await getCompanyProfile(symbol);
+  const [result, nextEarnings] = await Promise.all([
+    getCompanyProfile(symbol),
+    getNextEarnings(symbol),
+  ]);
   if (!result.ok) {
     return <DataError message={t.data.failed} hint={t.data.failedHint} />;
   }
   const profile = result.data;
+
+  const earningsHourLabel: Record<string, string> = {
+    bmo: t.earnings.beforeOpen,
+    amc: t.earnings.afterClose,
+    dmh: t.earnings.duringMarket,
+  };
 
   const rows: [string, React.ReactNode][] = [
     [t.stock.sector, profile.industry ?? "—"],
@@ -314,6 +323,24 @@ async function ProfileCard({
       profile.ipoDate ? <span className="numeral">{profile.ipoDate}</span> : "—",
     ],
   ];
+
+  if (nextEarnings) {
+    rows.unshift([
+      t.stock.nextEarnings,
+      <span key="next" className="text-right">
+        <span className="numeral block font-semibold text-brass">
+          {formatEtDateLong(nextEarnings.reportDate, locale)}
+        </span>
+        <span className="block text-[11px] text-muted">
+          {nextEarnings.hour
+            ? (earningsHourLabel[nextEarnings.hour] ?? t.earnings.timeUnknown)
+            : t.earnings.timeUnknown}
+          {nextEarnings.epsEstimate !== null &&
+            ` · EPS ${formatPrice(nextEarnings.epsEstimate, locale)}`}
+        </span>
+      </span>,
+    ]);
+  }
 
   return (
     <div className="px-4 py-3 sm:px-5">

@@ -15,16 +15,24 @@ import {
   getDailyBrief,
   getLatestNews,
   getStatus,
-  getSymbolNames,
   getTodayEvents,
   getEarningsBetween,
   getUserSymbols,
 } from "@/lib/data";
-import { formatCountdown, todayEt } from "@/lib/market-hours";
+import { etDateTimeToUtc, formatCountdown, todayEt } from "@/lib/market-hours";
 import { getQuotes } from "@/lib/providers";
 import { INDEX_STRIP } from "@/db/seed/symbols";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { cn, formatPrice, timeAgo } from "@/lib/utils";
+import {
+  cn,
+  directionOf,
+  dualTime,
+  formatEtDateLong,
+  formatPrice,
+  timeAgo,
+} from "@/lib/utils";
+import { Sparkline } from "@/components/ui/Sparkline";
+import { getChartBars } from "@/lib/providers";
 
 export default async function TodayPage() {
   const { locale, t } = await getI18n();
@@ -51,9 +59,9 @@ export default async function TodayPage() {
       {/* ---- Durum başlığı ---- */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="plate">{status.etDate} · ET</p>
-          <h1 className="notched mt-1 inline-block text-2xl font-semibold sm:text-3xl">
-            {t.today.title}
+          <p className="plate">{t.today.title} · ET</p>
+          <h1 className="notched mt-1 inline-block text-3xl font-bold tracking-tight sm:text-4xl">
+            {formatEtDateLong(status.etDate, locale)}
           </h1>
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -199,11 +207,18 @@ async function RailSection({
   );
 }
 
+const INDEX_LABEL: Record<string, string> = {
+  QQQ: "Nasdaq 100",
+  SPY: "S&P 500",
+  DIA: "Dow Jones",
+  IWM: "Russell 2000",
+};
+
 async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   const status = await getStatus();
-  const [result, names] = await Promise.all([
+  const [result, ...barResults] = await Promise.all([
     getQuotes([...INDEX_STRIP], status),
-    getSymbolNames([...INDEX_STRIP]),
+    ...INDEX_STRIP.map((symbol) => getChartBars(symbol, "1D", status)),
   ]);
 
   if (!result.ok) {
@@ -216,9 +231,8 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {INDEX_STRIP.map((symbol) => {
+      {INDEX_STRIP.map((symbol, index) => {
         const quote = result.data[symbol];
-        const meta = names[symbol];
         if (!quote) {
           return (
             <Panel key={symbol} className="p-4">
@@ -227,21 +241,37 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
             </Panel>
           );
         }
+        const bars = barResults[index];
+        const points = bars.ok
+          ? bars.data.map((bar) => ({ value: bar.close }))
+          : [];
+        const tone = directionOf(quote.changePct);
         return (
           <Link key={symbol} href={`/hisse/${symbol}`} className="group">
-            <Panel className="p-4 transition-all duration-200 group-hover:border-line-strong group-hover:shadow-(--shadow-raised)">
+            <Panel className="panel-hover flex h-full flex-col p-4">
               <div className="flex items-baseline justify-between gap-2">
-                <p className="text-xs font-medium text-soft">
-                  {meta?.name ?? symbol}
+                <p className="text-xs font-semibold text-strong">
+                  {INDEX_LABEL[symbol] ?? symbol}
                 </p>
                 <p className="numeral text-[10px] text-muted">{symbol}</p>
               </div>
-              <p className="tote mt-1.5 text-xl">
-                {formatPrice(quote.price, locale)}
-              </p>
-              <div className="mt-1.5">
+              <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <p className="tote text-xl">
+                  {formatPrice(quote.price, locale)}
+                </p>
                 <ChangePill changePct={quote.changePct} locale={locale} size="sm" />
               </div>
+              {points.length > 1 && (
+                <Sparkline
+                  points={points}
+                  title={`${INDEX_LABEL[symbol] ?? symbol} · 1D`}
+                  tone={tone}
+                  height={44}
+                  showLastDot={false}
+                  strokeWidth={1.5}
+                  className="mt-2.5 h-11 w-full opacity-90"
+                />
+              )}
             </Panel>
           </Link>
         );
@@ -304,10 +334,30 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   return (
     <ul className="divide-y divide-line-soft">
-      {events.map((event) => (
+      {events.map((event) => {
+        const times = event.eventTimeEt
+          ? dualTime(
+              etDateTimeToUtc(event.eventDate, event.eventTimeEt),
+              event.eventTimeEt,
+            )
+          : null;
+        return (
         <li key={event.id} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
-          <span className="numeral w-12 shrink-0 text-sm font-semibold text-strong">
-            {event.eventTimeEt ?? "—"}
+          <span className="w-14 shrink-0">
+            {times ? (
+              <>
+                <span className="numeral block text-sm font-semibold leading-tight text-strong">
+                  {times.et}
+                  <span className="ml-1 text-[9px] font-normal text-muted">ET</span>
+                </span>
+                <span className="numeral block text-[11px] leading-tight text-muted">
+                  {times.tr}
+                  <span className="ml-1 text-[9px]">TR</span>
+                </span>
+              </>
+            ) : (
+              <span className="numeral text-sm text-muted">—</span>
+            )}
           </span>
           <span
             aria-hidden
@@ -336,7 +386,8 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
             </span>
           )}
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }
@@ -492,21 +543,19 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
     <ul className="divide-y divide-line-soft">
       {items.map((item) => (
         <li key={item.id}>
-          <a
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block px-4 py-3 transition-colors hover:bg-surface-elevated sm:px-5"
+          <Link
+            href={`/haberler/${item.id}`}
+            className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
           >
             <p className="line-clamp-2 text-sm font-medium leading-snug text-strong">
-              {item.headline}
+              {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
             </p>
             <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted">
               {item.source && <span>{item.source}</span>}
               <span aria-hidden>·</span>
               <span>{timeAgo(item.publishedAt, locale)}</span>
             </p>
-          </a>
+          </Link>
         </li>
       ))}
     </ul>

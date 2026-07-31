@@ -43,18 +43,16 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
           <ul className="divide-y divide-line-soft">
             {items.map((item) => (
               <li key={item.id}>
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block px-4 py-3.5 transition-colors hover:bg-surface-elevated sm:px-5"
+                <Link
+                  href={`/haberler/${item.id}`}
+                  className="block px-4 py-3.5 transition-colors hover:bg-primary-tint sm:px-5"
                 >
                   <p className="text-sm font-medium leading-snug text-strong">
-                    {item.headline}
+                    {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
                   </p>
-                  {item.summary && (
+                  {(item.summaryTr || item.summary) && (
                     <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-soft">
-                      {item.summary}
+                      {locale === "tr" && item.summaryTr ? item.summaryTr : item.summary}
                     </p>
                   )}
                   <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-muted">
@@ -79,7 +77,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                       </>
                     )}
                   </p>
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

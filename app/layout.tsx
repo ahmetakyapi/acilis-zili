@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import { getI18n, getTheme } from "@/lib/i18n";
-import { THEME_COOKIE } from "@/lib/i18n/config";
 import "./globals.css";
 
 /**
@@ -60,11 +59,9 @@ export const viewport: Viewport = {
 };
 
 /**
- * Tema cookie'de yoksa sistem tercihini React'ten önce yazar.
- * <html suppressHydrationWarning> bu kasıtlı sunucu/istemci farkı için şart.
+ * Varsayılan tema açık: cookie yoksa sunucu light basar, script gerekmez.
+ * <html suppressHydrationWarning> — ThemeToggle data-theme'i DOM'a yazar.
  */
-const ANTI_FOUC = `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)${THEME_COOKIE}=(light|dark)/);if(!m){var d=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',d);}}catch(e){}})();`;
-
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -77,9 +74,6 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${bodyFace.variable} ${monoFace.variable} h-full`}
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: ANTI_FOUC }} />
-      </head>
       <body className="min-h-full antialiased">{children}</body>
     </html>
   );

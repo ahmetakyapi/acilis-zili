@@ -1,15 +1,24 @@
+import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { EmptyState, Panel } from "@/components/ui/primitives";
 import { getEarningsBetween, getSymbolNames, getUserSymbols } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
-import { getI18n } from "@/lib/i18n";
-import { cn, formatPrice } from "@/lib/utils";
+import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { cn, formatCompact, formatEtDateLong, formatPrice } from "@/lib/utils";
 import type { EarningsRow } from "@/lib/schema";
+import type { SymbolMeta } from "@/lib/data";
 
-export default async function EarningsPage(
-  props: PageProps<"/bilancolar">,
-) {
+/**
+ * Bilanço takvimi.
+ * Her gün iki katman: piyasa değeri bilinen büyük şirketler "Öne Çıkanlar"
+ * kartlarında; kalan yüzlerce sembol açılış öncesi / kapanış sonrası
+ * gruplarında kompakt chip bulutu olarak. Kalabalık liste yok.
+ */
+
+const SPOTLIGHT_COUNT = 6;
+
+export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   const search = await props.searchParams;
   const onlyWatchlist = search.f === "favoriler";
 
@@ -28,7 +37,7 @@ export default async function EarningsPage(
     rows = rows.filter((row) => set.has(row.symbol));
   }
 
-  const names = await getSymbolNames([...new Set(rows.map((r) => r.symbol))]);
+  const meta = await getSymbolNames([...new Set(rows.map((r) => r.symbol))]);
   const watchSet = new Set(userSymbols);
 
   const byDay = new Map<string, EarningsRow[]>();
@@ -37,20 +46,6 @@ export default async function EarningsPage(
     list.push(row);
     byDay.set(row.reportDate, list);
   }
-
-  const hourLabel: Record<string, string> = {
-    bmo: t.earnings.beforeOpen,
-    amc: t.earnings.afterClose,
-    dmh: t.earnings.duringMarket,
-  };
-  const hourOrder: Record<string, number> = { bmo: 0, dmh: 1, amc: 2 };
-
-  const dayFormatter = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    timeZone: "UTC",
-  });
 
   return (
     <div className="flex flex-col gap-5">
@@ -65,9 +60,9 @@ export default async function EarningsPage(
           <Link
             href={onlyWatchlist ? "/bilancolar" : "/bilancolar?f=favoriler"}
             className={cn(
-              "min-h-[36px] rounded-(--radius-sm) border px-3 py-1.5 text-sm transition-colors",
+              "min-h-[36px] rounded-full border px-4 py-1.5 text-sm transition-colors",
               onlyWatchlist
-                ? "border-transparent bg-primary-wash font-medium text-primary"
+                ? "border-transparent bg-primary font-medium text-white"
                 : "border-line text-soft hover:border-line-strong hover:text-strong",
             )}
           >
@@ -82,60 +77,185 @@ export default async function EarningsPage(
         </Panel>
       ) : (
         [...byDay.entries()].map(([date, dayRows]) => (
-          <Panel key={date}>
-            <div className="flex items-baseline justify-between border-b border-line-soft px-4 py-3 sm:px-5">
-              <h2 className="text-sm font-semibold text-strong">
-                {dayFormatter.format(new Date(`${date}T00:00:00Z`))}
-              </h2>
-              <span className="numeral text-[11px] text-muted">{date}</span>
-            </div>
-            <ul className="divide-y divide-line-soft">
-              {dayRows
-                .sort(
-                  (a, b) =>
-                    (hourOrder[a.hour ?? ""] ?? 3) - (hourOrder[b.hour ?? ""] ?? 3),
-                )
-                .map((row) => (
-                  <li key={row.id}>
-                    <Link
-                      href={`/hisse/${row.symbol}`}
-                      className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-elevated sm:px-5"
-                    >
-                      <span className="numeral w-16 shrink-0 text-sm font-semibold text-strong">
-                        {row.symbol}
-                        {watchSet.has(row.symbol) && (
-                          <span aria-hidden className="ml-1 text-brass">
-                            ★
-                          </span>
-                        )}
-                      </span>
-                      <span className="hidden min-w-0 flex-1 truncate text-sm text-soft sm:block">
-                        {names[row.symbol]?.name ?? ""}
-                      </span>
-                      <span
-                        className={cn(
-                          "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium",
-                          row.hour === "bmo"
-                            ? "bg-brass-wash text-impact-med"
-                            : row.hour === "amc"
-                              ? "bg-primary-wash text-primary"
-                              : "bg-surface-sunken text-muted",
-                        )}
-                      >
-                        {row.hour ? (hourLabel[row.hour] ?? t.earnings.timeUnknown) : t.earnings.timeUnknown}
-                      </span>
-                      {row.epsEstimate !== null && (
-                        <span className="numeral hidden shrink-0 text-xs text-muted sm:block">
-                          EPS {formatPrice(row.epsEstimate, locale)}
-                        </span>
-                      )}
-                    </Link>
-                  </li>
-                ))}
-            </ul>
-          </Panel>
+          <DaySection
+            key={date}
+            date={date}
+            rows={dayRows}
+            meta={meta}
+            watchSet={watchSet}
+            locale={locale}
+            t={t}
+          />
         ))
       )}
     </div>
+  );
+}
+
+function DaySection({
+  date,
+  rows,
+  meta,
+  watchSet,
+  locale,
+  t,
+}: {
+  date: string;
+  rows: EarningsRow[];
+  meta: Record<string, SymbolMeta>;
+  watchSet: Set<string>;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  // Piyasa değeri bilinenler büyükten küçüğe; ilk N tanesi öne çıkar.
+  const known = rows
+    .filter((row) => meta[row.symbol]?.marketCap)
+    .sort(
+      (a, b) =>
+        (meta[b.symbol]?.marketCap ?? 0) - (meta[a.symbol]?.marketCap ?? 0),
+    );
+  const spotlight = known.slice(0, SPOTLIGHT_COUNT);
+  const spotlightSet = new Set(spotlight.map((row) => row.symbol));
+  const rest = rows.filter((row) => !spotlightSet.has(row.symbol));
+
+  const bmo = rest.filter((row) => row.hour === "bmo");
+  const amc = rest.filter((row) => row.hour === "amc");
+  const other = rest.filter((row) => row.hour !== "bmo" && row.hour !== "amc");
+
+  const hourLabel: Record<string, string> = {
+    bmo: t.earnings.beforeOpen,
+    amc: t.earnings.afterClose,
+    dmh: t.earnings.duringMarket,
+  };
+
+  return (
+    <section aria-label={date}>
+      {/* Gün başlığı — takvim yaprağı gibi */}
+      <div className="mb-3 flex items-baseline gap-3">
+        <h2 className="text-lg font-semibold text-strong">
+          {formatEtDateLong(date, locale)}
+        </h2>
+        <span className="numeral rounded-full bg-primary-wash px-2.5 py-0.5 text-xs font-semibold text-primary">
+          {rows.length} {t.earnings.companiesCount}
+        </span>
+      </div>
+
+      {/* Öne çıkanlar — market cap kartları */}
+      {spotlight.length > 0 && (
+        <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {spotlight.map((row) => {
+            const m = meta[row.symbol];
+            return (
+              <Link key={row.id} href={`/hisse/${row.symbol}`} className="group">
+                <Panel className="panel-hover flex h-full flex-col gap-2 p-3.5">
+                  <div className="flex items-start justify-between gap-2">
+                    {m?.logoUrl ? (
+                      <Image
+                        src={m.logoUrl}
+                        alt=""
+                        width={30}
+                        height={30}
+                        className="rounded-md border border-line-soft bg-white object-contain p-0.5"
+                      />
+                    ) : (
+                      <span
+                        aria-hidden
+                        className="numeral flex size-[30px] items-center justify-center rounded-md bg-primary-wash text-[10px] font-bold text-primary"
+                      >
+                        {row.symbol.slice(0, 2)}
+                      </span>
+                    )}
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[10px] font-medium",
+                        row.hour === "bmo"
+                          ? "bg-brass-wash text-impact-med"
+                          : "bg-primary-wash text-primary",
+                      )}
+                    >
+                      {row.hour
+                        ? (hourLabel[row.hour] ?? t.earnings.timeUnknown)
+                        : t.earnings.timeUnknown}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="numeral text-sm font-bold text-strong">
+                      {row.symbol}
+                      {watchSet.has(row.symbol) && (
+                        <span aria-hidden className="ml-1 text-brass">★</span>
+                      )}
+                    </p>
+                    <p className="truncate text-[11px] leading-tight text-soft">
+                      {m?.name ?? ""}
+                    </p>
+                  </div>
+                  <div className="mt-auto flex items-baseline justify-between border-t border-line-soft pt-2 text-[11px]">
+                    <span className="text-muted">
+                      {m?.marketCap ? `$${formatCompact(m.marketCap, locale)}` : ""}
+                    </span>
+                    {row.epsEstimate !== null && (
+                      <span className="numeral text-soft">
+                        EPS {formatPrice(row.epsEstimate, locale)}
+                      </span>
+                    )}
+                  </div>
+                </Panel>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Kalanlar — BMO/AMC gruplu kompakt chip bulutu */}
+      {rest.length > 0 && (
+        <Panel className="px-4 py-3.5 sm:px-5">
+          <div className="flex flex-col gap-3">
+            {[
+              { label: t.earnings.beforeOpen, list: bmo, tone: "brass" },
+              { label: t.earnings.afterClose, list: amc, tone: "primary" },
+              { label: t.earnings.timeUnknown, list: other, tone: "flat" },
+            ]
+              .filter((group) => group.list.length > 0)
+              .map((group) => (
+                <div key={group.label} className="flex flex-col gap-1.5">
+                  <p className="flex items-center gap-1.5 text-[11px] font-medium text-muted">
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "size-1.5 rounded-full",
+                        group.tone === "brass"
+                          ? "bg-brass"
+                          : group.tone === "primary"
+                            ? "bg-primary"
+                            : "bg-flat",
+                      )}
+                    />
+                    {spotlight.length > 0 ? t.earnings.alsoReporting : ""}{" "}
+                    {group.label}
+                    <span className="numeral">({group.list.length})</span>
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.list.map((row) => (
+                      <Link
+                        key={row.id}
+                        href={`/hisse/${row.symbol}`}
+                        className={cn(
+                          "numeral rounded-md border border-line-soft bg-surface px-2 py-1 text-xs font-medium text-body transition-colors hover:border-primary-faint hover:bg-primary-tint hover:text-primary",
+                          watchSet.has(row.symbol) &&
+                            "border-brass/40 bg-brass-wash text-impact-med",
+                        )}
+                      >
+                        {row.symbol}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+          </div>
+        </Panel>
+      )}
+
+      <div className="mt-5" />
+    </section>
   );
 }
