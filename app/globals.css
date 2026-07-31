@@ -1,0 +1,377 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   AÇILIŞ ZİLİ — Tasarım Tokenları
+   Tailwind v4. tailwind.config.ts YOK. Hardcoded renk YASAK.
+   Tema geçişi: <html data-theme="light|dark"> — next-themes kullanılmaz.
+   ========================================================================== */
+
+:root,
+:root[data-theme="light"] {
+  /* Zemin — bej kâğıt. Steril beyaz değil, ajans bülteni kâğıdı. */
+  --page-bg: #f2ece0;
+  --surface: #fdfaf3;
+  --surface-elevated: #ffffff;
+  --surface-sunken: #eae2d2;
+
+  /* Mürekkep mavisi — metin ve yapı bu aileden gelir, nötr gri değil. */
+  --text-strong: #0f2c44;
+  --text-body: #294356;
+  --text-soft: #52697a;
+  --text-muted: #71838f;
+
+  --primary: #1d5a8c;
+  --primary-hover: #12405f;
+  --primary-wash: rgba(29, 90, 140, 0.09);
+
+  /* Pirinç — zilin metali. İmza vurgusu, seyrek kullanılır. */
+  --brass: #9a741b;
+  --brass-bright: #b8912f;
+  --brass-wash: rgba(154, 116, 27, 0.12);
+
+  /* Piyasa yönü — neon değil. Saatlerce bakılabilir tonlar. */
+  --up: #2f6b41;
+  --up-wash: rgba(47, 107, 65, 0.11);
+  --down: #9c3226;
+  --down-wash: rgba(156, 50, 38, 0.11);
+  --flat: #71838f;
+
+  /* Çizgiler — nötr, marka renkli değil. */
+  --line: rgba(15, 44, 68, 0.11);
+  --line-soft: rgba(15, 44, 68, 0.06);
+  --line-strong: rgba(15, 44, 68, 0.2);
+  --line-focus: rgba(29, 90, 140, 0.75);
+
+  /* Sticky chrome katmanları */
+  --chrome: rgba(253, 250, 243, 0.86);
+  --chrome-border: rgba(15, 44, 68, 0.1);
+
+  /* Önem seviyeleri — ekonomik takvim */
+  --impact-high: #9c3226;
+  --impact-med: #9a741b;
+  --impact-low: #71838f;
+
+  --shadow-card: 0 1px 2px rgba(15, 44, 68, 0.05), 0 1px 3px rgba(15, 44, 68, 0.04);
+  --shadow-raised: 0 4px 10px rgba(15, 44, 68, 0.06), 0 12px 32px rgba(15, 44, 68, 0.09);
+  --shadow-overlay: 0 16px 48px rgba(15, 44, 68, 0.18);
+
+  --grid-line: rgba(15, 44, 68, 0.05);
+  --chart-grid: rgba(15, 44, 68, 0.07);
+  --skeleton-lo: rgba(15, 44, 68, 0.05);
+  --skeleton-hi: rgba(15, 44, 68, 0.1);
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  /* Gece mavisi — siyah değil, aynı mürekkep ailesinin koyusu. */
+  --page-bg: #0b1622;
+  --surface: rgba(255, 255, 255, 0.035);
+  --surface-elevated: rgba(255, 255, 255, 0.06);
+  --surface-sunken: rgba(0, 0, 0, 0.22);
+
+  --text-strong: #eaf1f7;
+  --text-body: #bccbd8;
+  --text-soft: #90a2b1;
+  --text-muted: #6d7f90;
+
+  --primary: #4a95cc;
+  --primary-hover: #6aabd9;
+  --primary-wash: rgba(74, 149, 204, 0.14);
+
+  --brass: #d1a648;
+  --brass-bright: #e0b95f;
+  --brass-wash: rgba(209, 166, 72, 0.14);
+
+  --up: #5aa06e;
+  --up-wash: rgba(90, 160, 110, 0.14);
+  --down: #d0604f;
+  --down-wash: rgba(208, 96, 79, 0.14);
+  --flat: #6d7f90;
+
+  --line: rgba(255, 255, 255, 0.08);
+  --line-soft: rgba(255, 255, 255, 0.045);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --line-focus: rgba(74, 149, 204, 0.75);
+
+  --chrome: rgba(11, 22, 34, 0.88);
+  --chrome-border: rgba(255, 255, 255, 0.08);
+
+  --impact-high: #d0604f;
+  --impact-med: #d1a648;
+  --impact-low: #6d7f90;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-raised: 0 8px 28px rgba(0, 0, 0, 0.5);
+  --shadow-overlay: 0 20px 56px rgba(0, 0, 0, 0.6);
+
+  --grid-line: rgba(255, 255, 255, 0.045);
+  --chart-grid: rgba(255, 255, 255, 0.07);
+  --skeleton-lo: rgba(255, 255, 255, 0.04);
+  --skeleton-hi: rgba(255, 255, 255, 0.09);
+
+  color-scheme: dark;
+}
+
+/* --------------------------------------------------------------------------
+   Tailwind token köprüsü — @theme inline, var() referanslarını korur.
+   Kullanım: bg-page, text-strong, border-line ... veya bg-(--color-surface)
+   -------------------------------------------------------------------------- */
+@theme inline {
+  --color-page: var(--page-bg);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-sunken: var(--surface-sunken);
+
+  --color-strong: var(--text-strong);
+  --color-body: var(--text-body);
+  --color-soft: var(--text-soft);
+  --color-muted: var(--text-muted);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-wash: var(--primary-wash);
+
+  --color-brass: var(--brass);
+  --color-brass-bright: var(--brass-bright);
+  --color-brass-wash: var(--brass-wash);
+
+  --color-up: var(--up);
+  --color-up-wash: var(--up-wash);
+  --color-down: var(--down);
+  --color-down-wash: var(--down-wash);
+  --color-flat: var(--flat);
+
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-line-strong: var(--line-strong);
+  --color-line-focus: var(--line-focus);
+
+  --color-chrome: var(--chrome);
+  --color-chrome-border: var(--chrome-border);
+
+  --color-impact-high: var(--impact-high);
+  --color-impact-med: var(--impact-med);
+  --color-impact-low: var(--impact-low);
+
+  /* Tipografi — mono display rolünde. Borsa panosunun kendi dili. */
+  --font-sans: var(--font-body-face), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, "SF Mono", monospace;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Temel
+   -------------------------------------------------------------------------- */
+* {
+  border-color: var(--line);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--page-bg);
+  color: var(--text-body);
+  font-family: var(--font-body-face), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Geniş içerik kendi kabında kayar (.scroll-x); gövde asla yana kaymaz. */
+  overflow-x: clip;
+}
+
+/* Zemin: kâğıt üzerinde ölçek çizgileri — yalnızca üst bölgede, alta doğru
+   söner; kartların içinden geçip gürültü yapmaz. Aurora/spotlight yok. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, var(--primary-wash), transparent 70%),
+    repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px 96px);
+  mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.35) 30%, transparent 70%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.35) 30%, transparent 70%);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--text-strong);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+::selection {
+  background: var(--primary-wash);
+  color: var(--text-strong);
+}
+
+:focus-visible {
+  outline: 2px solid var(--line-focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   Sayısal okumalar — her fiyat, yüzde, saat, EPS bu sınıfı taşır.
+   Sütunların hizalı okunması için tabular-nums zorunlu.
+   -------------------------------------------------------------------------- */
+.numeral {
+  font-family: var(--font-mono-face), ui-monospace, "SF Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  letter-spacing: -0.02em;
+}
+
+/* Panoda okunan büyük sayı — canlı saat, endeks seviyesi */
+.tote {
+  font-family: var(--font-mono-face), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  color: var(--text-strong);
+}
+
+/* Bölüm etiketi — mono, seyrek harf aralığı */
+.plate {
+  font-family: var(--font-mono-face), ui-monospace, monospace;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Yüzeyler
+   -------------------------------------------------------------------------- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.chrome {
+  background: var(--chrome);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border-color: var(--chrome-border);
+}
+
+/* --------------------------------------------------------------------------
+   İmza: cetvel çentiği — başlık altı ölçek işareti.
+   Ürünün ölçüm yapan bir alet olduğunu söyleyen tek motif.
+   -------------------------------------------------------------------------- */
+.notched::after {
+  content: "";
+  display: block;
+  height: 5px;
+  margin-top: 0.5rem;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--brass) 0 1.5px,
+    transparent 1.5px 8px
+  );
+  opacity: 0.85;
+}
+
+/* Piyasa açıkken pirinç nabız. Kapalıyken sabit gri. */
+.pulse-live {
+  animation: pulse-live 2.4s var(--ease-brand) infinite;
+}
+
+@keyframes pulse-live {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 var(--brass-wash);
+  }
+  50% {
+    opacity: 0.72;
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-lo) 25%,
+    var(--skeleton-hi) 50%,
+    var(--skeleton-lo) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Scrollbar
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Yatay kaydırılan tablolar mobilde kaydırma çubuğunu gizler */
+.scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Erişilebilirlik
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body::before {
+    background: radial-gradient(
+      ellipse 120% 40% at 50% -5%,
+      var(--primary-wash),
+      transparent 70%
+    );
+  }
+}
