@@ -127,7 +127,7 @@ export async function GET(request: Request) {
     if (isTranslateConfigured()) {
       report.translate = await translatePendingNews(40);
     } else {
-      report.translate = "atlandı: ANTHROPIC_API_KEY yok";
+      report.translate = "atlandı: DEEPL_API_KEY veya ANTHROPIC_API_KEY yok";
     }
   } catch (error) {
     report.translate = `hata: ${error instanceof Error ? error.message : "?"}`;
