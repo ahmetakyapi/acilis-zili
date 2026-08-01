@@ -236,6 +236,21 @@ Biçimlendirme — site şu markdown alt kümesini render eder:
   Yazının tek paragraflık dersi.
   :::
 
+  ::: sayilar Rakamlarla
+  %439 | ilk yarı getirisi
+  4x | brüt kaldıraç
+  :::
+
+  ::: zaman Kronoloji
+  24 Temmuz | Yatırımcı mektubu gider.
+  30 Temmuz | Tek blok işlem.
+  :::
+
+  ::: bar Zirveden geri çekilme
+  Micron | -34
+  Nasdaq 100 | -10
+  :::
+
   ---
 
 Biçim kuralları:
@@ -244,7 +259,9 @@ Biçim kuralları:
   - İlgili rehber yazısına bağlantı ver. Mevcut slug'lar:
     /rehber/volatilite, /rehber/etf, /rehber/kaldirac, /rehber/long-short,
     /rehber/ayi-boga, /rehber/sahin-guvercin, /rehber/bilanco, /rehber/temettu
-  - En az bir tablo veya bir ::: kutusu kullan; düz metin duvarı olmasın.
+  - En az bir tablo, bir sayilar/bar/zaman bloğu ve bir ::: kutusu kullan;
+    düz metin duvarı olmasın. Kronoloji varsa mutlaka `zaman`, yüzde
+    karşılaştırması varsa mutlaka `bar` kullan.
   - En sona, kaynakların niteliğini anlatan italik bir künye paragrafı koy.
     Örnek: *Bu yazı X ve Y'nin aktardığı bilgilere dayanıyor; haberlerin bir
     kısmı isimsiz kaynaklara dayanmaktadır.*

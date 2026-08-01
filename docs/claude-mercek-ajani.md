@@ -126,6 +126,21 @@ Okuyucunun gözden kaçıracağı risk.
 Yazının tek paragraflık dersi.
 :::
 
+::: sayilar Rakamlarla
+%439 | ilk yarı getirisi
+4x | brüt kaldıraç
+:::
+
+::: zaman Kronoloji
+24 Temmuz | Yatırımcı mektubu gider.
+30 Temmuz | Tek blok işlem.
+:::
+
+::: bar Zirveden geri çekilme
+Micron | -34
+Nasdaq 100 | -10
+:::
+
 ---
 ```
 
@@ -135,7 +150,8 @@ Kurallar:
 - İlgili rehber yazısına bağlantı ver: `[Kaldıraç Nedir?](/rehber/kaldirac)`
   Mevcut rehber slug'ları: `volatilite`, `etf`, `kaldirac`, `long-short`,
   `ayi-boga`, `sahin-guvercin`, `bilanco`, `temettu`.
-- En az bir tablo veya bir `:::` kutusu kullan — düz metin duvarı olmasın.
+- En az bir tablo, bir `sayilar`/`bar`/`zaman` bloğu ve bir `:::` kutusu
+  kullan — düz metin duvarı olmasın.
 - En sona, kaynakların niteliğini anlatan italik bir künye paragrafı koy.
 
 ### 5. Gönder

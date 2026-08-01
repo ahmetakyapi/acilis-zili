@@ -109,28 +109,33 @@ async function main() {
 
   /* ---- Açılış yazısı ----
      Tablonun asıl sahibi Claude rutini; burada yalnızca ilk kayıt var ki
-     boş veritabanında /mercek ekranı gerçek bir örnekle açılsın. Rutin
-     aynı slug'ı sonradan düzeltirse onun yazdığı kalır — bu döngü yalnızca
-     seed çalıştığında geri yazar. */
+     boş veritabanında /mercek ekranı gerçek bir örnekle açılsın. Rutinin
+     yazdıkları farklı slug kullandığı için bu döngü onlara dokunmaz;
+     kendi kaydının üzerine yazar, çünkü metin depoda düzenleniyor. */
   for (const story of STORY_SEEDS) {
+    const values = {
+      slug: story.slug,
+      locale: story.locale,
+      title: story.title,
+      dek: story.dek,
+      bodyMd: story.bodyMd,
+      eventDate: story.eventDate,
+      symbols: story.symbols,
+      sources: story.sources,
+      // Türkçe metinde 160 kelime/dk — ArticleBody ile aynı sabit.
+      readMinutes: Math.max(
+        1,
+        Math.round(story.bodyMd.trim().split(/\s+/).length / 160),
+      ),
+      generatedBy: "seed",
+    };
     await db
       .insert(stories)
-      .values({
-        slug: story.slug,
-        locale: story.locale,
-        title: story.title,
-        dek: story.dek,
-        bodyMd: story.bodyMd,
-        eventDate: story.eventDate,
-        symbols: story.symbols,
-        sources: story.sources,
-        readMinutes: Math.max(
-          1,
-          Math.round(story.bodyMd.trim().split(/\s+/).length / 200),
-        ),
-        generatedBy: "seed",
-      })
-      .onConflictDoNothing({ target: [stories.slug, stories.locale] });
+      .values(values)
+      .onConflictDoUpdate({
+        target: [stories.slug, stories.locale],
+        set: { ...values, updatedAt: new Date() },
+      });
   }
   console.log(`  mercek yazıları   ${STORY_SEEDS.length} kayıt`);
 

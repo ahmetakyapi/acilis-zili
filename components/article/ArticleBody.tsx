@@ -12,12 +12,23 @@ import { cn } from "@/lib/utils";
      - madde / 1. madde     ---  ayraç         ::: kutu ... :::
      **kalın**  *eğik*  `kod`  [bağlantı](/hisse/NVDA)
 
-   `:::` kutuları yazıya görsel ritim veren tek özel sözdizimi:
-       ::: ornek Nvidia'nın 2026 ikinci çeyreği
-       Şirket beklentinin %12 üzerinde gelir açıkladı...
+   `:::` blokları yazıya görsel ritim veren tek özel sözdizimi. Dört metin
+   kutusu (ornek · dikkat · ozet · tanim) ve üç görsel blok var:
+
+       ::: sayilar Rakamlarla          ::: zaman Kronoloji
+       %439 | ilk yarı getirisi        24 Temmuz | Yatırımcı mektubu...
+       4x | brüt kaldıraç              30 Temmuz | Blok işlem
+       :::                             :::
+
+       ::: bar Temmuz kaybı
+       Micron | -34
+       Nasdaq 100 | -10
        :::
-   Türleri: ornek · dikkat · ozet · tanim. Rutinin yazdığı metinlerde de
-   aynı sözdizimi geçerli, docs/claude-mercek-ajani.md içinde anlatılıyor.
+
+   Üçünde de satırlar `|` ile ayrılır. `bar` sayıyı yüzde kabul eder, çubuğu
+   grubun en büyüğüne göre ölçekler ve işaretine göre renklendirir.
+   Rutinin yazdığı metinlerde de aynı sözdizimi geçerli —
+   docs/claude-mercek-ajani.md içinde anlatılıyor.
    ========================================================================== */
 
 type CalloutKind = "ornek" | "dikkat" | "ozet" | "tanim";
@@ -131,7 +142,14 @@ type Block =
   | { kind: "quote"; lines: string[] }
   | { kind: "rule" }
   | { kind: "table"; head: string[]; rows: string[][] }
-  | { kind: "callout"; tone: CalloutKind; label: string; lines: string[] };
+  | { kind: "callout"; tone: CalloutKind; label: string; lines: string[] }
+  | { kind: "stats"; label: string; items: { value: string; note: string }[] }
+  | { kind: "timeline"; label: string; items: { when: string; text: string }[] }
+  | {
+      kind: "bars";
+      label: string;
+      items: { name: string; value: number; display: string }[];
+    };
 
 function splitRow(line: string): string[] {
   return line
@@ -159,12 +177,11 @@ function parseBlocks(markdown: string): Block[] {
       continue;
     }
 
-    // ::: kutu
+    // ::: kutu / sayilar / zaman / bar
     if (line.startsWith(":::")) {
       const header = line.slice(3).trim().split(/\s+/);
       const kindWord = (header.shift() ?? "").toLowerCase();
-      const tone: CalloutKind = isCalloutKind(kindWord) ? kindWord : "ozet";
-      const label = header.join(" ") || CALLOUT[tone].defaultLabel;
+      const label = header.join(" ");
       const body: string[] = [];
       i += 1;
       while (i < lines.length && !lines[i].trim().startsWith(":::")) {
@@ -172,7 +189,56 @@ function parseBlocks(markdown: string): Block[] {
         i += 1;
       }
       i += 1; // kapanış :::
-      blocks.push({ kind: "callout", tone, label, lines: body });
+
+      if (kindWord === "sayilar") {
+        blocks.push({
+          kind: "stats",
+          label,
+          items: body.map((row) => {
+            const [value, ...rest] = row.split("|").map((c) => c.trim());
+            return { value, note: rest.join(" · ") };
+          }),
+        });
+        continue;
+      }
+
+      if (kindWord === "zaman") {
+        blocks.push({
+          kind: "timeline",
+          label,
+          items: body.map((row) => {
+            const [when, ...rest] = row.split("|").map((c) => c.trim());
+            return { when, text: rest.join(" ") };
+          }),
+        });
+        continue;
+      }
+
+      if (kindWord === "bar") {
+        blocks.push({
+          kind: "bars",
+          label,
+          items: body.map((row) => {
+            const [name, raw = ""] = row.split("|").map((c) => c.trim());
+            // "-28,6" ya da "-28.6%" — virgül ondalık ayırıcı olabiliyor.
+            const value = Number(raw.replace("%", "").replace(",", "."));
+            return {
+              name,
+              value: Number.isFinite(value) ? value : 0,
+              display: raw,
+            };
+          }),
+        });
+        continue;
+      }
+
+      const tone: CalloutKind = isCalloutKind(kindWord) ? kindWord : "ozet";
+      blocks.push({
+        kind: "callout",
+        tone,
+        label: label || CALLOUT[tone].defaultLabel,
+        lines: body,
+      });
       continue;
     }
 
@@ -398,6 +464,131 @@ export function ArticleBody({
                 </table>
               </div>
             );
+
+          /* Sayı şeridi — yazının en çarpıcı dört-beş rakamı. Metnin içinde
+             kaybolan bir sayı, kutuda bir bakışta okunuyor. */
+          case "stats":
+            return (
+              <div key={key} className="flex flex-col gap-2.5">
+                {block.label && (
+                  <p className="plate text-[10px] tracking-[0.09em]">
+                    {block.label}
+                  </p>
+                )}
+                <div
+                  className={cn(
+                    "grid gap-2.5",
+                    block.items.length % 3 === 0
+                      ? "grid-cols-1 sm:grid-cols-3"
+                      : "grid-cols-2 sm:grid-cols-4",
+                  )}
+                >
+                  {block.items.map((item, itemIndex) => (
+                    <div
+                      key={itemIndex}
+                      className="rounded-(--radius-lg) border border-line bg-surface px-3.5 py-3"
+                    >
+                      <p className="tote text-[22px] leading-none sm:text-[25px]">
+                        {item.value}
+                      </p>
+                      <p className="mt-1.5 text-[11.5px] leading-[16px] text-muted">
+                        {item.note}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+
+          /* Zaman çizelgesi — kronolojiyi paragrafa gömmek yerine gösterir. */
+          case "timeline":
+            return (
+              <div key={key} className="flex flex-col gap-2.5">
+                {block.label && (
+                  <p className="plate text-[10px] tracking-[0.09em]">
+                    {block.label}
+                  </p>
+                )}
+                <ol className="flex flex-col">
+                  {block.items.map((item, itemIndex) => {
+                    const last = itemIndex === block.items.length - 1;
+                    return (
+                      <li key={itemIndex} className="flex gap-3.5">
+                        <span
+                          aria-hidden
+                          className="relative w-3 shrink-0"
+                        >
+                          <span className="absolute left-0 top-[7px] size-3 rounded-full border-2 border-primary bg-page" />
+                          {!last && (
+                            <span className="absolute bottom-0 left-[5px] top-5 w-0.5 rounded-full bg-primary-faint" />
+                          )}
+                        </span>
+                        <span className={cn("min-w-0", !last && "pb-4")}>
+                          <span className="numeral block text-[12px] font-bold uppercase tracking-[0.06em] text-primary">
+                            {item.when}
+                          </span>
+                          <span className="mt-1 block text-[14.5px] leading-[24px] text-body">
+                            {renderInline(item.text, `${key}-${itemIndex}`)}
+                          </span>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            );
+
+          /* Yatay çubuk — yüzde karşılaştırmaları. Ölçek grubun en büyüğüne
+             göre; renk yönü söyler, uzunluk büyüklüğü. */
+          case "bars": {
+            const peak = Math.max(
+              ...block.items.map((item) => Math.abs(item.value)),
+              0.01,
+            );
+            return (
+              <div key={key} className="flex flex-col gap-2.5">
+                {block.label && (
+                  <p className="plate text-[10px] tracking-[0.09em]">
+                    {block.label}
+                  </p>
+                )}
+                <div className="flex flex-col gap-2 rounded-(--radius-lg) border border-line bg-surface px-4 py-4">
+                  {block.items.map((item, itemIndex) => (
+                    <div
+                      key={itemIndex}
+                      className="flex items-center gap-3 text-[13px]"
+                    >
+                      <span className="w-[122px] shrink-0 truncate text-body sm:w-[168px]">
+                        {item.name}
+                      </span>
+                      <span className="h-2 flex-1 overflow-hidden rounded-full bg-surface-sunken">
+                        <span
+                          className={cn(
+                            "block h-full rounded-full",
+                            item.value < 0 ? "bg-down" : "bg-up",
+                          )}
+                          style={{
+                            width: `${Math.max(
+                              (Math.abs(item.value) / peak) * 100,
+                              3,
+                            )}%`,
+                          }}
+                        />
+                      </span>
+                      <span
+                        className={cn(
+                          "numeral w-[62px] shrink-0 text-right font-semibold",
+                          item.value < 0 ? "text-down" : "text-up",
+                        )}
+                      >
+                        {item.display}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
 
           case "callout": {
             const tone = CALLOUT[block.tone];
