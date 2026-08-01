@@ -210,8 +210,9 @@ export function PriceChart({
       layout: {
         background: { color: "transparent" },
         textColor: text,
-        fontFamily: "'IBM Plex Mono', ui-monospace, monospace",
-        fontSize: 11,
+        // Grafik ekseni de gazetenin serifiyle basılır — tek aile kuralı.
+        fontFamily: "'Source Serif 4', Georgia, serif",
+        fontSize: 11.5,
         attributionLogo: false,
       },
       grid: {

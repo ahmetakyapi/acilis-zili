@@ -21,18 +21,8 @@ const DIRECTION_TEXT: Record<Direction, string> = {
   flat: "text-muted",
 };
 
-const DIRECTION_WASH: Record<Direction, string> = {
-  up: "bg-up-wash text-up",
-  down: "bg-down-wash text-down",
-  flat: "bg-surface-sunken text-muted",
-};
-
 export function directionText(d: Direction) {
   return DIRECTION_TEXT[d];
-}
-
-export function directionWash(d: Direction) {
-  return DIRECTION_WASH[d];
 }
 
 /** 1234.5 → "1.234,50" (tr) / "1,234.50" (en) */

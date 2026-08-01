@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { Countdown } from "@/components/today/Countdown";
 import { DayRail, type RailEvent } from "@/components/today/DayRail";
-import { LiveClock } from "@/components/today/LiveClock";
 import {
   ChangePill,
   DataError,
@@ -24,7 +24,6 @@ import {
 import {
   addEtDays,
   etDateTimeToUtc,
-  formatCountdown,
   todayEt,
 } from "@/lib/market-hours";
 import { getQuotes } from "@/lib/providers";
@@ -46,70 +45,41 @@ export default async function TodayPage() {
   const { locale, t } = await getI18n();
   const status = await getStatus();
 
-  const sessionLabel: Record<string, string> = {
-    regular: t.market.open,
-    "pre-market": t.market.preMarket,
-    "after-hours": t.market.afterHours,
-    closed: status.holiday
-      ? t.market.holiday
-      : status.isWeekend
-        ? t.market.weekend
-        : t.market.closed,
-  };
-
+  /* Tarih, seans adı ve geri sayım artık manşetin tarih rayında duruyor —
+     sayfa onları tekrar etmez. Gazetenin ilk sayfası şeritle açılır, sonra
+     günün manşetiyle devam eder. */
+  /* `nextOpen` hafta sonunu ve tatili zaten atlar — Cumartesi günü Pazartesi
+     açılışını gösterir. Geri sayım bu yüzden hafta sonu da durur, kaybolmaz. */
   const countdownTarget =
     status.session === "regular" ? status.nextClose : status.nextOpen;
   const countdownLabel =
-    status.session === "regular" ? t.market.closesIn : t.market.opensIn;
+    status.session === "regular" ? t.today.untilClose : t.today.untilBell;
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* ---- Durum başlığı ---- */}
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="plate">{t.today.title} · New York</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
-            {formatEtDateLong(status.etDate, locale)}
-          </h1>
-        </div>
-        <div className="flex flex-col items-start gap-1.5 sm:items-end">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm shadow-(--shadow-card)">
-            <span className="flex items-center gap-2">
-              <span
-                aria-hidden
-                className={cn(
-                  "size-2 rounded-full",
-                  status.session === "regular"
-                    ? "bg-brass pulse-live"
-                    : status.session === "closed"
-                      ? "bg-flat"
-                      : "bg-primary",
-                )}
-              />
-              <span className="font-medium text-strong">
-                {sessionLabel[status.session]}
-              </span>
-            </span>
-            <span aria-hidden className="hidden text-line-strong sm:inline">
-              |
-            </span>
-            <span className="whitespace-nowrap text-muted">
-              {countdownLabel}{" "}
-              <span className="numeral font-semibold text-strong">
-                {formatCountdown(countdownTarget, new Date(), locale)}
-              </span>
-            </span>
-          </div>
-          <LiveClock />
-        </div>
-      </header>
-
+    <div className="flex flex-col gap-12">
       {/* ---- Gün Şeridi ---- */}
-      <Panel className="px-4 pb-3 pt-5 sm:px-6">
+      <section>
         <Suspense fallback={<Skeleton className="h-36 w-full" />}>
           <RailSection t={t} status={{ trading: status.session !== "closed" || (!status.isWeekend && !status.holiday), closeMinutes: status.closeMinutes, nowMinutes: status.etMinutes }} locale={locale} />
         </Suspense>
-      </Panel>
+      </section>
+
+      {/* ---- Geri sayım — plaka rakamı ----
+          Büyük rakam tek camgöbeği hayaletiyle basılır; manşetlerde plaka
+          kapalıdır (okunmuyordu), yalnızca sayı taşır. */}
+      {countdownTarget && (
+        <section>
+          <Countdown
+            target={countdownTarget}
+            labels={{
+              minutes: t.today.unitMinutes,
+              hours: t.today.unitHours,
+              days: t.today.unitDays,
+              phrase: countdownLabel,
+            }}
+          />
+        </section>
+      )}
 
       {/* ---- Endeksler ---- */}
       <section aria-label={t.today.indices}>

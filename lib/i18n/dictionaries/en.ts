@@ -112,6 +112,11 @@ const en: typeof tr = {
     greetingMorning: "Good Morning",
     greetingDay: "Good Afternoon",
     greetingEvening: "Good Evening",
+    untilBell: "Until the bell",
+    untilClose: "Until the closing bell",
+    unitMinutes: "Minutes",
+    unitHours: "Hours",
+    unitDays: "Days",
   },
 
   calendar: {
@@ -150,6 +155,9 @@ const en: typeof tr = {
     period: "Period",
     reportDate: "Report Date",
     revenueShort: "Revenue",
+    epsFull: "EPS (Earnings Per Share)",
+    epsExplainer:
+      "is the company's quarterly net profit divided by its share count — how much profit a single share produced in that period. Analysts publish an estimate for each quarter, and the surprise is how far the reported figure landed above or below it. Revenue is total sales before profit: the market often sells a company that beats on earnings but misses on revenue, so the two are read together.",
     onlyWatchlist: "Watchlist Only",
     spotlight: "Spotlight",
     alsoReporting: "Also Reporting",

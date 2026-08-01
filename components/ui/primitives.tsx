@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cn, directionOf, directionWash, formatPercent } from "@/lib/utils";
+import { cn, directionOf, formatPercent } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
 
 /* --------------------------------------------------------------------------
@@ -18,6 +18,12 @@ export function Panel({
   );
 }
 
+/**
+ * Bölüm başlığı — gazetenin kicker'ı.
+ * Kutu çizmez, çerçeve çekmez: küçük büyük harfli etiket ve altındaki
+ * boşluk bölümü ayırır. Broadsheet kuralı: bölümler çizgiyle değil
+ * boşlukla ayrılır.
+ */
 export function PanelHeader({
   title,
   action,
@@ -30,15 +36,44 @@ export function PanelHeader({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3 sm:px-5",
+        "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-3",
         className,
       )}
     >
-      <h2 className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-strong">
-        <span aria-hidden className="h-3.5 w-[3px] rounded-full bg-brass" />
-        {title}
-      </h2>
+      <h6 className="kicker">{title}</h6>
       {action}
+    </div>
+  );
+}
+
+/**
+ * Nokta liderli satır — gazete fihristi: "Etiket ......... 08:30".
+ * Takvim, künye ve fiyat listeleri hep bunu kullanır (HANDOFF §4).
+ */
+export function DottedLeader({
+  label,
+  value,
+  muted,
+  className,
+}: {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  /** Değer ikincil bir okuma ise soluk basılır. */
+  muted?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn("leader py-1.5", className)}>
+      <span className="min-w-0 shrink text-[15px] text-body">{label}</span>
+      <span aria-hidden className="leader-fill" />
+      <span
+        className={cn(
+          "numeral shrink-0 text-[15px]",
+          muted ? "text-muted" : "font-semibold text-strong",
+        )}
+      >
+        {value}
+      </span>
     </div>
   );
 }
@@ -65,12 +100,12 @@ export function PageHeader({
       className={cn("flex flex-wrap items-end justify-between gap-3", className)}
     >
       <div className="min-w-0">
-        {eyebrow && <p className="plate">{eyebrow}</p>}
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-strong sm:text-3xl">
+        {eyebrow && <p className="kicker mb-2">{eyebrow}</p>}
+        <h1 className="text-[2.25rem] leading-[1.06] tracking-[-0.022em] sm:text-[2.75rem]">
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-soft">
+          <p className="mt-3 max-w-[62ch] text-[15px] leading-[1.7] text-body">
             {subtitle}
           </p>
         )}
@@ -97,17 +132,24 @@ export function ChangePill({
 }) {
   const direction = directionOf(changePct);
 
+  /* Rozet değil, mürekkep. Gazetede yön bir kutuya konmaz: işaret + yüzde
+     doğrudan yön renginde basılır. Renk tek başına anlam taşımadığı için
+     ▲/▼ işareti daima yanındadır (HANDOFF §7). */
   return (
     <span
       className={cn(
-        "numeral inline-flex items-center gap-1 rounded-full font-medium tabular-nums",
-        directionWash(direction),
-        size === "sm" ? "px-1.5 py-0.5 text-[11px]" : "px-2 py-0.5 text-xs",
+        "numeral inline-flex items-center gap-1 whitespace-nowrap tabular-nums",
+        direction === "up"
+          ? "text-up"
+          : direction === "down"
+            ? "text-down"
+            : "text-muted",
+        size === "sm" ? "text-[12.5px]" : "text-[13.5px]",
         className,
       )}
     >
       {direction !== "flat" && (
-        <span aria-hidden className="text-[0.85em] leading-none">
+        <span aria-hidden className="text-[0.82em] leading-none">
           {direction === "up" ? "▲" : "▼"}
         </span>
       )}

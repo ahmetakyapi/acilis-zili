@@ -110,6 +110,11 @@ const tr = {
     greetingMorning: "Günaydın",
     greetingDay: "İyi Günler",
     greetingEvening: "İyi Akşamlar",
+    untilBell: "Zil çalana kadar",
+    untilClose: "Kapanış ziline kadar",
+    unitMinutes: "Dakika",
+    unitHours: "Saat",
+    unitDays: "Gün",
   },
 
   calendar: {
@@ -148,6 +153,9 @@ const tr = {
     period: "Dönem",
     reportDate: "Rapor Tarihi",
     revenueShort: "Gelir",
+    epsFull: "EPS (Hisse Başına Kâr)",
+    epsExplainer:
+      "şirketin çeyrek boyunca kazandığı net kârın hisse sayısına bölünmüş hâlidir — bir hissenin o dönemde ne kadar kâr ürettiğini gösterir. Analistler her çeyrek için bir beklenti açıklar; gerçekleşen rakamın bu beklentinin ne kadar üstünde veya altında kaldığı sapmadır. Gelir (ciro) ise kârdan önceki toplam satıştır: piyasa çoğu zaman kârı tutturup geliri ıskalayan şirketi de satar, bu yüzden ikisi birlikte okunur.",
     onlyWatchlist: "Sadece Favorilerim",
     spotlight: "Öne Çıkanlar",
     alsoReporting: "Diğer Açıklayanlar",

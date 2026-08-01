@@ -1,22 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Schibsted_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import { Source_Serif_4 } from "next/font/google";
 import { getI18n, getTheme } from "@/lib/i18n";
 import "./globals.css";
 
 /**
+ * Tek aile: Source Serif 4 — başlık, gövde, sayı, arayüz kromu hepsi.
+ * Gazete baskısında sans-serif UI kromu yoktur; serif kromun kendisidir.
+ * İtalik gerçek italiktir (sentetik eğim değil), 400 ağırlıkta yüklenir.
+ *
  * Tuzak: next/font `variable` adı @theme token adıyla aynı olursa CSS'te
  * dairesel referans oluşur ve sessizce çöker. Bu yüzden `-face` soneki.
  */
-const bodyFace = Schibsted_Grotesk({
-  variable: "--font-body-face",
+const serifFace = Source_Serif_4({
+  variable: "--font-serif-face",
   subsets: ["latin", "latin-ext"],
-  display: "swap",
-});
-
-const monoFace = IBM_Plex_Mono({
-  variable: "--font-mono-face",
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 
@@ -53,7 +52,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2ece0" },
+    { media: "(prefers-color-scheme: light)", color: "#f3f2f2" },
     { media: "(prefers-color-scheme: dark)", color: "#0b1622" },
   ],
 };
@@ -72,7 +71,7 @@ export default async function RootLayout({
       lang={locale}
       data-theme={theme}
       suppressHydrationWarning
-      className={`${bodyFace.variable} ${monoFace.variable} h-full`}
+      className={`${serifFace.variable} h-full`}
     >
       <body className="min-h-full antialiased">{children}</body>
     </html>

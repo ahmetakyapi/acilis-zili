@@ -835,10 +835,18 @@ async function PastEarnings({
               {t.earnings.surprise}
             </th>
             {hasRevenue && (
-              // Dar ekranda gelir kolonu gizlenir — tablo yatay kaydırmadan sığar
-              <th className="hidden px-4 py-2.5 text-right font-medium sm:table-cell sm:px-5">
-                {t.earnings.revenueShort}
-              </th>
+              <>
+                {/* Gelir beklentisi EPS kadar önemli: piyasa çoğu zaman kârı
+                    tutturup geliri ıskalayan şirketi de satar. Beklenen ve
+                    gerçekleşen ayrı kolonlarda durur ki karşılaştırılabilsin.
+                    Dar ekranda ikisi de gizlenir — tablo kaydırmadan sığar. */}
+                <th className="hidden px-2 py-2.5 text-right font-medium lg:table-cell sm:px-3">
+                  {t.earnings.revenueShort} · {t.calendar.forecast}
+                </th>
+                <th className="hidden px-4 py-2.5 text-right font-medium sm:table-cell sm:px-5">
+                  {t.earnings.revenueShort} · {t.calendar.actual}
+                </th>
+              </>
             )}
           </tr>
         </thead>
@@ -885,25 +893,35 @@ async function PastEarnings({
                   )}
                 </td>
                 {hasRevenue && (
-                  <td className="numeral hidden px-4 py-2.5 text-right text-body sm:table-cell sm:px-5">
-                    {row.revenueActual !== null ? (
-                      <span className="font-semibold">
-                        ${formatCompact(row.revenueActual, locale)}
-                      </span>
-                    ) : row.revenueEstimate !== null ? (
-                      <span className="text-muted">
-                        ~${formatCompact(row.revenueEstimate, locale)}
-                      </span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
+                  <>
+                    <td className="numeral hidden px-2 py-2.5 text-right text-muted lg:table-cell sm:px-3">
+                      {row.revenueEstimate !== null
+                        ? `$${formatCompact(row.revenueEstimate, locale)}`
+                        : "—"}
+                    </td>
+                    <td className="numeral hidden px-4 py-2.5 text-right text-body sm:table-cell sm:px-5">
+                      {row.revenueActual !== null ? (
+                        <span className="font-semibold text-strong">
+                          ${formatCompact(row.revenueActual, locale)}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </>
                 )}
               </tr>
             );
           })}
         </tbody>
       </table>
+
+      {/* Tablo kısaltmalarının karşılığı — EPS ne demek, sapma neye göre.
+          Gazete dipnotu: rakamı okuyanın sözlüğe gitmesi gerekmesin. */}
+      <p className="mt-3 border-t border-hairline pt-3 text-[12.5px] leading-relaxed text-muted">
+        <b className="font-semibold text-soft">{t.earnings.epsFull}</b>{" "}
+        {t.earnings.epsExplainer}
+      </p>
     </div>
   );
 }
@@ -1074,14 +1092,18 @@ async function PeersCard({
           </span>
         </p>
       )}
-      <ul className="grid grid-cols-2 gap-2.5 p-4 lg:grid-cols-4 sm:px-5">
+      {/* Kutu yok: sütunlar kılcal çizgiyle ayrılır, gazete sütun ayıracı gibi. */}
+      <ul className="grid grid-cols-2 lg:grid-cols-4">
         {ranked.map((peer) => {
           const quote = quotes[peer.symbol];
           return (
-            <li key={peer.symbol} className="min-w-0">
+            <li
+              key={peer.symbol}
+              className="min-w-0 border-b border-hairline [&:nth-child(2n)]:border-l lg:[&:nth-child(2n)]:border-l-0 lg:[&:not(:nth-child(4n+1))]:border-l"
+            >
               <Link
                 href={`/hisse/${peer.symbol}`}
-                className="flex h-full flex-col justify-between gap-2.5 rounded-(--radius-lg) border border-line-soft bg-surface-elevated px-3.5 py-3 transition-colors hover:border-line-strong hover:bg-primary-tint"
+                className="flex h-full flex-col justify-between gap-2.5 px-4 py-3 transition-colors hover:bg-primary-tint"
               >
                 <span className="min-w-0">
                   <span className="numeral block text-sm font-bold text-strong">
