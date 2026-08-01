@@ -7,11 +7,13 @@ import { SESSION_BOUNDS } from "@/lib/market-hours";
 /**
  * Gün Şeridi — ürünün imzası.
  *
- * Seans günü tek bir yatay eksendir: 04:00'te başlar, 09:30'da zil çalar,
- * 16:00'da kapanır, 20:00'de biter. Günün ekonomik olayları bu eksene kendi
- * saatlerinde asılır; canlı işaretçi şerit üzerinde gerçek zamanda kayar.
- * Kart ızgarası değil, zaman ekseni — "bugün ne zaman ne olacak" sorusunun
- * kendisi görselleşir.
+ * Seans günü tek bir eksendir: 04:00'te başlar, 09:30'da zil çalar, 16:00'da
+ * kapanır, 20:00'de biter. Günün ekonomik olayları bu eksene kendi saatlerinde
+ * asılır; canlı işaretçi gerçek zamanda kayar.
+ *
+ * HANDOFF §9: masaüstündeki YATAY şerit ile mobildeki DİKEY zaman çizelgesi
+ * ayrı bileşenlerdir — aynı düzeni responsive'le esnetmek yerine iki ayrı
+ * düzen basılır. Ortak olan yalnızca saat matematiği ve canlı dakika.
  */
 
 export type RailEvent = {
@@ -22,6 +24,13 @@ export type RailEvent = {
   importance: "high" | "medium" | "low";
 };
 
+type RailLabels = {
+  bell: string;
+  close: string;
+  now: string;
+  noEvents: string;
+};
+
 type DayRailProps = {
   events: RailEvent[];
   /** ET gün içi dakika — sunucudan gelir, istemcide canlı güncellenir. */
@@ -30,18 +39,14 @@ type DayRailProps = {
   tradingDay: boolean;
   /** Yarım günlerde 13:00 (780). */
   closeMinutes: number;
-  labels: {
-    bell: string;
-    close: string;
-    now: string;
-    noEvents: string;
-  };
+  labels: RailLabels;
 };
 
 const RAIL_START = SESSION_BOUNDS.preMarketOpen; // 04:00
 const RAIL_END = SESSION_BOUNDS.afterHoursClose; // 20:00
 const RAIL_SPAN = RAIL_END - RAIL_START;
 
+/** Konum formülü (HANDOFF §4): (dakika − 240) / 960 × 100% */
 function pct(minutes: number): number {
   const clamped = Math.max(RAIL_START, Math.min(RAIL_END, minutes));
   return ((clamped - RAIL_START) / RAIL_SPAN) * 100;
@@ -52,18 +57,15 @@ function parseTime(timeEt: string): number {
   return h * 60 + m;
 }
 
-const HOUR_TICKS = [240, 360, 480, 600, 720, 840, 960, 1080, 1200];
+function hhmm(minutes: number): string {
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(
+    minutes % 60,
+  ).padStart(2, "0")}`;
+}
 
-export function DayRail({
-  events,
-  initialNowMinutes,
-  tradingDay,
-  closeMinutes,
-  labels,
-}: DayRailProps) {
-  const [nowMinutes, setNowMinutes] = useState(initialNowMinutes);
-
-  // Dakikada bir ET saatini yeniden hesapla — sunucuya gitmeden.
+/** ET duvar saatini dakikada bir tazeler — sunucuya gitmeden. */
+function useEtMinutes(initial: number): number {
+  const [nowMinutes, setNowMinutes] = useState(initial);
   useEffect(() => {
     function tick() {
       const parts = new Intl.DateTimeFormat("en-US", {
@@ -80,18 +82,41 @@ export function DayRail({
     const id = window.setInterval(tick, 60_000);
     return () => window.clearInterval(id);
   }, []);
+  return nowMinutes;
+}
 
+export function DayRail(props: DayRailProps) {
+  const nowMinutes = useEtMinutes(props.initialNowMinutes);
+  return (
+    <>
+      <RailWide {...props} nowMinutes={nowMinutes} />
+      <RailTall {...props} nowMinutes={nowMinutes} />
+    </>
+  );
+}
+
+/* ==========================================================================
+   Masaüstü — yatay eksen
+   ========================================================================== */
+
+function RailWide({
+  events,
+  tradingDay,
+  closeMinutes,
+  labels,
+  nowMinutes,
+}: DayRailProps & { nowMinutes: number }) {
   const positioned = useMemo(() => {
     const sorted = [...events]
       .map((event) => ({ ...event, minutes: parseTime(event.timeEt) }))
       .sort((a, b) => a.minutes - b.minutes);
 
-    // Çakışan olayları dikeyde kademelendir (aynı 40dk penceresi → alt sıra)
+    // Çakışan olaylar dikeyde kademelenir (aynı 45dk penceresi → üst sıra)
     const result: (RailEvent & { minutes: number; row: number })[] = [];
     let lastMinutes = -Infinity;
     let row = 0;
     for (const event of sorted) {
-      row = event.minutes - lastMinutes < 40 ? (row + 1) % 3 : 0;
+      row = event.minutes - lastMinutes < 45 ? (row + 1) % 2 : 0;
       lastMinutes = event.minutes;
       result.push({ ...event, row });
     }
@@ -99,135 +124,252 @@ export function DayRail({
   }, [events]);
 
   const nowVisible = nowMinutes >= RAIL_START && nowMinutes <= RAIL_END;
-  const marketLive =
-    tradingDay &&
-    nowMinutes >= SESSION_BOUNDS.regularOpen &&
-    nowMinutes < closeMinutes;
 
   return (
-    <div className="select-none">
-      {/* Olay etiketleri — şeridin üstünde */}
-      <div className="relative h-24 sm:h-20">
-        {positioned.length === 0 && (
-          <p className="absolute inset-x-0 bottom-2 text-center text-xs text-muted">
-            {labels.noEvents}
-          </p>
+    <div className="relative hidden h-[150px] select-none md:block">
+      {/* Taban çizgi + seans ağırlıkları — çizgi burada mobilyadır */}
+      <div className="absolute inset-x-0 top-[104px] border-t border-rule" />
+      <div
+        className="absolute top-[104px] border-t-[3px] border-rule"
+        style={{ left: 0, width: `${pct(SESSION_BOUNDS.regularOpen)}%` }}
+      />
+      <div
+        className={cn(
+          "absolute top-[104px] border-t-[3px]",
+          tradingDay ? "border-ink" : "border-rule",
         )}
-        {positioned.map((event) => (
+        style={{
+          left: `${pct(SESSION_BOUNDS.regularOpen)}%`,
+          width: `${pct(closeMinutes) - pct(SESSION_BOUNDS.regularOpen)}%`,
+        }}
+      />
+      <div
+        className="absolute top-[104px] border-t-[3px] border-rule"
+        style={{ left: `${pct(closeMinutes)}%`, right: 0 }}
+      />
+
+      {positioned.length === 0 && (
+        <p className="absolute inset-x-0 top-[64px] text-center text-[13px] text-faint">
+          {labels.noEvents}
+        </p>
+      )}
+
+      {/* Olaylar — dikey çizgi + yanında okunan etiket */}
+      {positioned.map((event) => {
+        const high = event.importance === "high";
+        const left = pct(event.minutes);
+        // Sağ uçtaki etiketler dışa taşmasın diye içe hizalanır
+        const flip = left > 78;
+        return (
           <div
             key={event.id}
-            className="absolute bottom-0 flex -translate-x-1/2 flex-col items-center gap-1"
-            style={{ left: `${pct(event.minutes)}%`, marginBottom: `${event.row * 26}px` }}
+            className="absolute"
+            style={{
+              left: `${left}%`,
+              top: event.row === 0 ? 54 : 26,
+              height: event.row === 0 ? 50 : 78,
+            }}
           >
-            <span
+            <div
               className={cn(
-                "max-w-28 truncate rounded-full border px-2 py-0.5 text-[10px] font-medium sm:max-w-40",
-                event.importance === "high"
-                  ? "border-transparent bg-down-wash text-impact-high"
-                  : event.importance === "medium"
-                    ? "border-transparent bg-brass-wash text-impact-med"
-                    : "border-line bg-surface text-soft",
-              )}
-              title={`${event.timeEt} ET · ${event.title}`}
-            >
-              <span className="numeral mr-1">{event.timeEt}</span>
-              {event.title}
-            </span>
-            <span
-              aria-hidden
-              className={cn(
-                "h-2.5 w-px",
-                event.importance === "high" ? "bg-impact-high" : "bg-line-strong",
+                "absolute inset-y-0 left-0",
+                high ? "border-l-2 border-down" : "border-l border-rule",
               )}
             />
+            <div
+              className={cn(
+                "absolute -top-1 w-[150px] text-[11.5px] leading-[1.35]",
+                flip ? "right-2 text-right" : "left-2",
+              )}
+            >
+              <b
+                className={cn(
+                  "font-semibold",
+                  high ? "text-down" : "text-ink",
+                )}
+              >
+                {event.timeEt}
+              </b>{" "}
+              <span className={high ? "text-down" : "text-body"}>
+                {event.title}
+              </span>
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
 
-      {/* Şeridin kendisi */}
-      <div className="relative">
-        {/* Taban çizgi: seans dışı sönük, ana seans dolgun */}
-        <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-line" />
+      {/* Açılış zili — mürekkep çentiği ve etiketi */}
+      <div
+        className="absolute top-[82px] h-[22px]"
+        style={{ left: `${pct(SESSION_BOUNDS.regularOpen)}%` }}
+      >
         <div
           className={cn(
-            "absolute top-1/2 h-[3px] -translate-y-1/2 rounded-full",
-            tradingDay ? "bg-primary" : "bg-line-strong",
+            "absolute inset-y-0 left-0 border-l-2",
+            tradingDay ? "border-ink" : "border-rule",
           )}
-          style={{
-            left: `${pct(SESSION_BOUNDS.regularOpen)}%`,
-            width: `${pct(closeMinutes) - pct(SESSION_BOUNDS.regularOpen)}%`,
-          }}
         />
-
-        {/* Saat çentikleri — cetvel motifi */}
-        <div className="relative h-8">
-          {HOUR_TICKS.map((minutes) => (
-            <span
-              key={minutes}
-              aria-hidden
-              className="absolute top-1/2 h-2 w-px -translate-y-1/2 bg-line-strong"
-              style={{ left: `${pct(minutes)}%` }}
-            />
-          ))}
-
-          {/* Açılış zili — pirinç nokta */}
-          <span
-            className={cn(
-              "absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full",
-              tradingDay ? "bg-brass" : "bg-line-strong",
-            )}
-            style={{ left: `${pct(SESSION_BOUNDS.regularOpen)}%` }}
-            title={`09:30 ET · ${labels.bell}`}
-          />
-          {/* Kapanış zili */}
-          <span
-            className={cn(
-              "absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2",
-              tradingDay ? "border-brass bg-transparent" : "border-line-strong bg-transparent",
-            )}
-            style={{ left: `${pct(closeMinutes)}%` }}
-            title={`${labels.close}`}
-          />
-
-          {/* Canlı işaretçi */}
-          {nowVisible && (
-            <span
-              className="absolute top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-              style={{ left: `${pct(nowMinutes)}%` }}
-            >
-              <span
-                className={cn(
-                  "size-3 rounded-full border-2 border-(--page-bg)",
-                  marketLive ? "bg-brass pulse-live" : "bg-flat",
-                )}
-                title={labels.now}
-              />
-            </span>
-          )}
-        </div>
-
-        {/* Alt saat etiketleri — uç etiketler içe hizalanır, kart taşmaz */}
-        <div className="relative h-4 text-[10px] text-muted">
-          {[240, 570, closeMinutes, 1200].map((minutes) => {
-            const position = pct(minutes);
-            return (
-              <span
-                key={minutes}
-                className={cn(
-                  "numeral absolute",
-                  position > 2 && position < 98 && "-translate-x-1/2",
-                  position >= 98 && "-translate-x-full",
-                  (minutes === 570 || minutes === closeMinutes) &&
-                    "font-semibold text-soft",
-                )}
-                style={{ left: `${position}%` }}
-              >
-                {`${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`}
-              </span>
-            );
-          })}
-        </div>
       </div>
+      <div
+        className="absolute top-[110px] whitespace-nowrap pl-2 text-[14px] font-semibold text-ink"
+        style={{ left: `${pct(SESSION_BOUNDS.regularOpen)}%` }}
+      >
+        09:30 · {labels.bell}
+      </div>
+
+      {/* Kapanış zili */}
+      <div
+        className="absolute top-[110px] -translate-x-full whitespace-nowrap pr-2 text-[13px] text-faint"
+        style={{ left: `${pct(closeMinutes)}%` }}
+      >
+        {hhmm(closeMinutes)} · {labels.close}
+      </div>
+
+      {/* Şu an — kesik camgöbeği çizgi */}
+      {nowVisible && (
+        <div
+          className="absolute top-[8px] h-[104px]"
+          style={{ left: `${pct(nowMinutes)}%` }}
+        >
+          <div className="absolute inset-y-0 left-0 border-l border-dashed border-up" />
+          <span className="absolute -bottom-[15px] left-[-15px] whitespace-nowrap bg-page px-1 text-[10px] uppercase tracking-[0.1em] text-up">
+            {labels.now}
+          </span>
+        </div>
+      )}
+
+      {/* Uç saat etiketleri */}
+      <div className="absolute inset-x-0 top-[128px] text-[11.5px] text-faint">
+        <span className="numeral absolute left-0">{hhmm(RAIL_START)}</span>
+        <span className="numeral absolute right-0">{hhmm(RAIL_END)}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ==========================================================================
+   Mobil — dikey zaman çizelgesi (HANDOFF §6)
+   Saat sütunu 56px · nokta rayı 22px · içerik
+   ========================================================================== */
+
+function RailTall({
+  events,
+  tradingDay,
+  closeMinutes,
+  labels,
+  nowMinutes,
+}: DayRailProps & { nowMinutes: number }) {
+  /* Olaylar ve zil anları tek listede, saate göre sıralı: mobilde gün
+     yukarıdan aşağı okunur, "şimdi" nerede olduğun listede görünür. */
+  const stops = useMemo(() => {
+    const list: {
+      key: string;
+      minutes: number;
+      title: string;
+      note?: string;
+      kind: "event-high" | "event" | "bell" | "now";
+    }[] = events.map((event) => ({
+      key: event.id,
+      minutes: parseTime(event.timeEt),
+      title: event.title,
+      kind: event.importance === "high" ? "event-high" : "event",
+    }));
+
+    list.push({
+      key: "bell-open",
+      minutes: SESSION_BOUNDS.regularOpen,
+      title: labels.bell,
+      kind: "bell",
+    });
+    list.push({
+      key: "bell-close",
+      minutes: closeMinutes,
+      title: labels.close,
+      kind: "bell",
+    });
+
+    if (nowMinutes >= RAIL_START && nowMinutes <= RAIL_END) {
+      list.push({
+        key: "now",
+        minutes: nowMinutes,
+        title: labels.now,
+        kind: "now",
+      });
+    }
+
+    return list.sort((a, b) => a.minutes - b.minutes);
+  }, [events, closeMinutes, nowMinutes, labels]);
+
+  return (
+    <div className="select-none md:hidden">
+      {events.length === 0 && (
+        <p className="pb-3 text-[13px] text-faint">{labels.noEvents}</p>
+      )}
+      {stops.map((stop, index) => {
+        const last = index === stops.length - 1;
+        const high = stop.kind === "event-high";
+        const now = stop.kind === "now";
+        const bell = stop.kind === "bell";
+
+        return (
+          <div key={stop.key} className="flex">
+            <div
+              className={cn(
+                "numeral w-14 shrink-0 pt-0.5 text-[14px] font-semibold",
+                high ? "text-down" : now ? "text-up" : "text-ink",
+              )}
+            >
+              {hhmm(stop.minutes)}
+            </div>
+
+            {/* Nokta rayı — kare işaret + inen çizgi */}
+            <div className="relative w-[22px] shrink-0">
+              <span
+                aria-hidden
+                className={cn(
+                  "absolute top-[6px]",
+                  high
+                    ? "left-[2px] size-[11px] bg-down"
+                    : now
+                      ? "left-[4px] size-[7px] rounded-full bg-up"
+                      : bell
+                        ? cn(
+                            "left-[3px] size-[9px] border",
+                            tradingDay ? "border-ink" : "border-rule",
+                          )
+                        : "left-[4px] size-[7px] bg-faint",
+                )}
+              />
+              {!last && (
+                <span
+                  aria-hidden
+                  className="absolute bottom-[-8px] left-[7px] top-[18px] border-l border-rule"
+                />
+              )}
+            </div>
+
+            <div className={cn("min-w-0 flex-1", last ? "pb-0" : "pb-4")}>
+              <p
+                className={cn(
+                  "text-[15px] leading-[1.35]",
+                  high
+                    ? "font-semibold text-ink"
+                    : now
+                      ? "uppercase tracking-[0.08em] text-up"
+                      : bell
+                        ? "font-semibold text-ink"
+                        : "text-body",
+                )}
+              >
+                {stop.title}
+              </p>
+              {stop.note && (
+                <p className="mt-0.5 text-[12.5px] text-faint">{stop.note}</p>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

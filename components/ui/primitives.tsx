@@ -115,6 +115,67 @@ export function PageHeader({
   );
 }
 
+/**
+ * Bölümlü seçici — Broadsheet `.seg`.
+ * Tek kutu, içinde kılcal ayıraçlar; seçili olan dolu mürekkeple basılır.
+ * Durum URL'de yaşar, bu yüzden bağlantılardan oluşur (JS gerekmez).
+ */
+export function Segmented({
+  options,
+  ariaLabel,
+  className,
+}: {
+  options: { href: string; label: string; active: boolean }[];
+  ariaLabel?: string;
+  className?: string;
+}) {
+  return (
+    <nav
+      aria-label={ariaLabel}
+      className={cn(
+        "inline-flex shrink-0 border border-rule text-[13px]",
+        className,
+      )}
+    >
+      {options.map((option) => (
+        <Link
+          key={option.href}
+          href={option.href}
+          aria-current={option.active ? "true" : undefined}
+          className={cn(
+            "min-h-[34px] whitespace-nowrap border-l border-rule px-3 py-1.5 transition-colors first:border-l-0",
+            option.active
+              ? "bg-btn text-white"
+              : "text-dim hover:bg-primary-tint hover:text-ink",
+          )}
+        >
+          {option.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+/**
+ * Çift saat — "09:45 (16:45)".
+ * HANDOFF §7: saatler daima çift basılır; ET birincil, TR parantez içinde.
+ */
+export function DualTime({
+  et,
+  tr,
+  className,
+}: {
+  et: string;
+  tr: string;
+  className?: string;
+}) {
+  return (
+    <span className={cn("numeral whitespace-nowrap", className)}>
+      {et} <span className="opacity-70">({tr})</span>
+    </span>
+  );
+}
+
 /* --------------------------------------------------------------------------
    Değişim rozeti — yön rengi ve işareti tek yerden gelir
    -------------------------------------------------------------------------- */

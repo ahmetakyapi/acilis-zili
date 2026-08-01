@@ -8,7 +8,6 @@ import {
   DataError,
   DataStamp,
   EmptyState,
-  Panel,
   PanelHeader,
   Skeleton,
 } from "@/components/ui/primitives";
@@ -89,27 +88,27 @@ export default async function TodayPage() {
       </section>
 
       {/* ---- Dünya piyasaları ---- */}
-      <Suspense fallback={<Skeleton className="h-28 w-full rounded-(--radius-xl)" />}>
+      <Suspense fallback={<Skeleton className="h-28 w-full " />}>
         <WorldStrip locale={locale} t={t} />
       </Suspense>
 
       <div className="grid gap-5 lg:grid-cols-5">
         <div className="flex flex-col gap-5 lg:col-span-3">
           {/* ---- Günün özeti ---- */}
-          <Suspense fallback={<Skeleton className="h-40 w-full rounded-(--radius-lg)" />}>
+          <Suspense fallback={<Skeleton className="h-40 w-full " />}>
             <BriefCard locale={locale} t={t} />
           </Suspense>
 
           {/* ---- Bugünün takvimi ---- */}
-          <Panel>
+          <section>
             <PanelHeader title={t.today.schedule} />
             <Suspense fallback={<ListSkeleton rows={3} />}>
               <ScheduleList locale={locale} t={t} />
             </Suspense>
-          </Panel>
+          </section>
 
           {/* ---- Bugün bilanço açıklayanlar ---- */}
-          <Panel>
+          <section>
             <PanelHeader
               title={t.today.earningsToday}
               action={
@@ -121,12 +120,12 @@ export default async function TodayPage() {
             <Suspense fallback={<ListSkeleton rows={3} />}>
               <EarningsToday locale={locale} t={t} />
             </Suspense>
-          </Panel>
+          </section>
         </div>
 
         <div className="flex flex-col gap-5 lg:col-span-2">
           {/* ---- Haftaya bakış — önümüzdeki 7 günün önemli olayları ---- */}
-          <Panel>
+          <section>
             <PanelHeader
               title={t.today.weekAhead}
               action={
@@ -138,15 +137,15 @@ export default async function TodayPage() {
             <Suspense fallback={<ListSkeleton rows={3} />}>
               <WeekAhead locale={locale} t={t} />
             </Suspense>
-          </Panel>
+          </section>
 
           {/* ---- Favori özeti ---- */}
-          <Suspense fallback={<Skeleton className="h-48 w-full rounded-(--radius-lg)" />}>
+          <Suspense fallback={<Skeleton className="h-48 w-full " />}>
             <WatchlistSummary locale={locale} t={t} />
           </Suspense>
 
           {/* ---- Öne çıkan haberler ---- */}
-          <Panel>
+          <section>
             <PanelHeader
               title={t.today.topNews}
               action={
@@ -158,7 +157,7 @@ export default async function TodayPage() {
             <Suspense fallback={<ListSkeleton rows={4} />}>
               <TopNews locale={locale} t={t} />
             </Suspense>
-          </Panel>
+          </section>
         </div>
       </div>
     </div>
@@ -227,9 +226,9 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   if (!result.ok) {
     return (
-      <Panel>
+      <section>
         <DataError message={t.data.failed} hint={t.data.failedHint} />
-      </Panel>
+      </section>
     );
   }
 
@@ -239,10 +238,10 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
         const quote = result.data[symbol];
         if (!quote) {
           return (
-            <Panel key={symbol} className="p-4">
+            <section key={symbol}>
               <p className="numeral text-sm font-semibold text-strong">{symbol}</p>
               <p className="mt-1 text-xs text-muted">{t.common.noData}</p>
-            </Panel>
+            </section>
           );
         }
         const bars = barResults[index];
@@ -252,7 +251,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
         const tone = directionOf(quote.changePct);
         return (
           <Link key={symbol} href={`/hisse/${symbol}`} className="group">
-            <Panel className="panel-hover flex h-full flex-col p-4">
+            <section className="flex h-full flex-col border-b border-hairline pb-3 transition-colors hover:bg-primary-tint">
               <div className="flex items-baseline justify-between gap-2">
                 <p className="text-xs font-semibold text-strong">
                   {INDEX_LABEL[symbol] ?? symbol}
@@ -276,7 +275,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                   className="mt-2.5 h-11 w-full opacity-90"
                 />
               )}
-            </Panel>
+            </section>
           </Link>
         );
       })}
@@ -309,7 +308,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   if (shown.length === 0) return null;
 
   return (
-    <Panel>
+    <section>
       <PanelHeader title={t.today.worldMarkets} />
       <ul className="grid grid-cols-2 divide-line-soft sm:grid-cols-3 lg:grid-cols-6">
         {shown.map((market) => {
@@ -351,7 +350,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
       <p className="px-4 py-2.5 text-[11px] leading-relaxed text-muted sm:px-5">
         {t.today.worldMarketsHint}
       </p>
-    </Panel>
+    </section>
   );
 }
 
@@ -359,7 +358,7 @@ function IndexSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-24 rounded-(--radius-lg)" />
+        <Skeleton key={i} className="h-24 " />
       ))}
     </div>
   );
@@ -369,7 +368,7 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
   const brief = await getDailyBrief(locale);
 
   return (
-    <Panel>
+    <section>
       <PanelHeader title={t.today.briefTitle} />
       {brief ? (
         <div className="px-4 py-4 sm:px-5">
@@ -389,7 +388,7 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
       ) : (
         <EmptyState title={t.today.briefEmpty} />
       )}
-    </Panel>
+    </section>
   );
 }
 
@@ -506,7 +505,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
 
   if (!session?.user?.id) {
     return (
-      <Panel>
+      <section>
         <PanelHeader title={t.today.watchlistSummary} />
         <EmptyState
           title={t.watchlist.emptyAll}
@@ -520,7 +519,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
             </Link>
           }
         />
-      </Panel>
+      </section>
     );
   }
 
@@ -528,7 +527,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
 
   if (userSymbols.length === 0) {
     return (
-      <Panel>
+      <section>
         <PanelHeader title={t.today.watchlistSummary} />
         <EmptyState
           title={t.today.watchlistEmpty}
@@ -538,7 +537,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
             </Link>
           }
         />
-      </Panel>
+      </section>
     );
   }
 
@@ -547,7 +546,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
   const result = await getQuotes(shown, status);
 
   return (
-    <Panel>
+    <section>
       <PanelHeader
         title={t.today.watchlistSummary}
         action={
@@ -596,7 +595,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
       ) : (
         <DataError message={t.data.failed} hint={t.data.failedHint} />
       )}
-    </Panel>
+    </section>
   );
 }
 

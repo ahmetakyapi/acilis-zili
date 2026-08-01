@@ -11,7 +11,6 @@ import {
   DataError,
   DataStamp,
   EmptyState,
-  Panel,
   PanelHeader,
   Skeleton,
 } from "@/components/ui/primitives";
@@ -76,13 +75,13 @@ export default async function StockPage(
         </Suspense>
 
         <div className="grid gap-5 lg:grid-cols-3">
-          <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
+          <section className="min-w-0 lg:col-span-2">
             <Suspense fallback={<Skeleton className="h-80 w-full" />}>
               <ChartSection symbol={symbol} locale={locale} t={t} />
             </Suspense>
-          </Panel>
+          </section>
 
-          <Suspense fallback={<Skeleton className="h-96 w-full rounded-(--radius-xl)" />}>
+          <Suspense fallback={<Skeleton className="h-96 w-full " />}>
             <FundCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </div>
@@ -98,21 +97,21 @@ export default async function StockPage(
 
       {/* Üst blok — grafik solda geniş, şirketin kimliği sağda */}
       <div className="grid gap-5 lg:grid-cols-3">
-        <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
+        <section className="min-w-0 lg:col-span-2">
           <Suspense fallback={<Skeleton className="h-80 w-full" />}>
             <ChartSection symbol={symbol} locale={locale} t={t} />
           </Suspense>
-        </Panel>
+        </section>
 
         <div className="flex min-w-0 flex-col gap-5">
-          <Panel>
+          <section>
             <PanelHeader title={t.stock.profile} />
             <Suspense fallback={<ListSkeleton rows={5} />}>
               <ProfileCard symbol={symbol} locale={locale} t={t} />
             </Suspense>
-          </Panel>
+          </section>
 
-          <Suspense fallback={<Skeleton className="h-24 w-full rounded-(--radius-xl)" />}>
+          <Suspense fallback={<Skeleton className="h-24 w-full " />}>
             <UpcomingEarnings symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </div>
@@ -122,44 +121,44 @@ export default async function StockPage(
           Eskiden bunlar tek sütuna dizildiği için sağ kolon uzayıp sol taraf
           boş kalıyordu; artık sayfanın tam genişliğini kullanıyorlar. */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(17rem,1fr))] gap-5">
-        <Panel>
+        <section>
           <PanelHeader title={t.stock.metrics} />
           <Suspense fallback={<ListSkeleton rows={5} />}>
             <MetricsCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
-        </Panel>
+        </section>
 
-        <Panel>
+        <section>
           <PanelHeader title={t.stock.analysts} />
           <Suspense fallback={<ListSkeleton rows={3} />}>
             <AnalystCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
-        </Panel>
+        </section>
 
-        <Suspense fallback={<Skeleton className="h-56 w-full rounded-(--radius-xl)" />}>
+        <Suspense fallback={<Skeleton className="h-56 w-full " />}>
           <ComplianceCard symbol={symbol} locale={locale} t={t} />
         </Suspense>
       </div>
 
       {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
-      <Panel>
+      <section>
         <PanelHeader title={t.stock.pastEarnings} />
         <Suspense fallback={<ListSkeleton rows={4} />}>
           <PastEarnings symbol={symbol} locale={locale} t={t} />
         </Suspense>
-      </Panel>
+      </section>
 
-      <Suspense fallback={<Skeleton className="h-48 w-full rounded-(--radius-xl)" />}>
+      <Suspense fallback={<Skeleton className="h-48 w-full " />}>
         <PeersCard symbol={symbol} locale={locale} t={t} />
       </Suspense>
 
       {/* Haberler en altta — mobilde de masaüstünde de son durak */}
-      <Panel>
+      <section>
         <PanelHeader title={t.stock.companyNews} />
         <Suspense fallback={<ListSkeleton rows={4} />}>
           <CompanyNews symbol={symbol} locale={locale} t={t} />
         </Suspense>
-      </Panel>
+      </section>
     </div>
   );
 }
@@ -217,13 +216,13 @@ async function StockHeader({
             alt=""
             width={56}
             height={56}
-            className="rounded-(--radius-lg) border border-line bg-white object-contain p-1.5 shadow-(--shadow-card)"
+            className="shrink-0 object-contain"
           />
         ) : fund ? (
           // Fonun logosu yok; ülke/piyasa bayrağı kimliği taşır
           <span
             aria-hidden
-            className="flex size-14 shrink-0 items-center justify-center rounded-(--radius-lg) border border-line bg-surface-elevated text-2xl shadow-(--shadow-card)"
+            className="flex size-14 shrink-0 items-center justify-center border border-rule text-2xl"
           >
             {fund.flag}
           </span>
@@ -310,7 +309,7 @@ function HeaderSkeleton() {
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex items-center gap-3">
-        <Skeleton className="size-11 rounded-(--radius-md)" />
+        <Skeleton className="size-11 " />
         <div className="flex flex-col gap-2">
           <Skeleton className="h-6 w-24" />
           <Skeleton className="h-4 w-40" />
@@ -424,7 +423,7 @@ async function UpcomingEarnings({
   };
 
   return (
-    <Panel className="border-l-2 border-l-brass p-4 sm:p-5">
+    <section className="border-t-2 border-ink pt-3">
       <p className="plate text-[9px]">{t.stock.nextEarnings}</p>
       <p className="numeral mt-1.5 text-lg font-bold text-strong">
         {formatEtDateLong(next.reportDate, locale)}
@@ -458,7 +457,7 @@ async function UpcomingEarnings({
           )}
         </dl>
       )}
-    </Panel>
+    </section>
   );
 }
 
@@ -489,7 +488,7 @@ async function FundCard({
   ];
 
   return (
-    <Panel>
+    <section>
       <PanelHeader title={t.stock.fundProfile} />
       <div className="px-4 py-3 sm:px-5">
         {about && (
@@ -514,7 +513,7 @@ async function FundCard({
             : t.stock.fundNoteIndex}
         </p>
       </div>
-    </Panel>
+    </section>
   );
 }
 
@@ -814,9 +813,11 @@ async function PastEarnings({
 
   return (
     <div>
-      <table className="w-full text-sm">
+      {/* Tablo dar ekranda kendi kabında kayar — sayfa yana kaymaz. */}
+      <div className="scroll-x">
+        <table className="sheet min-w-[640px]">
         <thead>
-          <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
+          <tr>
             <th className="px-4 py-2.5 font-medium sm:px-5">
               {t.earnings.period}
             </th>
@@ -914,7 +915,8 @@ async function PastEarnings({
             );
           })}
         </tbody>
-      </table>
+        </table>
+      </div>
 
       {/* Tablo kısaltmalarının karşılığı — EPS ne demek, sapma neye göre.
           Gazete dipnotu: rakamı okuyanın sözlüğe gitmesi gerekmesin. */}
@@ -965,10 +967,10 @@ async function ComplianceCard({
 
   const verdictClass =
     result.verdict === "pass"
-      ? "bg-up-wash text-up"
+      ? "text-up"
       : result.verdict === "fail"
-        ? "bg-down-wash text-down"
-        : "bg-brass-wash text-brass";
+        ? "text-down"
+        : "text-ink";
 
   const ratios: [string, number | null][] = [
     [t.stock.complianceDebt, result.debtRatio],
@@ -976,12 +978,12 @@ async function ComplianceCard({
   ];
 
   return (
-    <Panel>
+    <section>
       <PanelHeader title={t.stock.compliance} />
       <div className="px-4 py-4 sm:px-5">
         <span
           className={cn(
-            "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
+            "inline-flex text-[13px] font-semibold uppercase tracking-[0.06em]",
             verdictClass,
           )}
         >
@@ -1044,7 +1046,7 @@ async function ComplianceCard({
           {t.stock.complianceDisclaimer}
         </p>
       </div>
-    </Panel>
+    </section>
   );
 }
 
@@ -1082,7 +1084,7 @@ async function PeersCard({
   const quotes = result.ok ? result.data : {};
 
   return (
-    <Panel>
+    <section>
       <PanelHeader title={t.stock.peers} />
       {member?.sub && (
         <p className="border-b border-line-soft px-4 py-2 text-[11px] text-muted sm:px-5">
@@ -1132,7 +1134,7 @@ async function PeersCard({
           );
         })}
       </ul>
-    </Panel>
+    </section>
   );
 }
 
@@ -1220,7 +1222,7 @@ async function CompanyNews({
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-4 py-3 transition-colors hover:bg-surface-elevated sm:px-5"
+                className="block py-3 transition-colors hover:bg-primary-tint"
               >
                 {inner}
               </a>

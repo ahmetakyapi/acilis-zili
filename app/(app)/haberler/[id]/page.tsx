@@ -3,7 +3,6 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import {
   ChangePill,
   EmptyState,
-  Panel,
   PanelHeader,
 } from "@/components/ui/primitives";
 import {
@@ -122,7 +121,7 @@ export default async function NewsDetailPage(
       )}
 
       {/* Kaynak çağrısı — özetin kısa olduğunu dürüstçe söyler */}
-      <Panel className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
+      <section className="flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-strong">
             {t.news.fullStoryTitle}
@@ -141,7 +140,7 @@ export default async function NewsDetailPage(
           {t.news.readAtSource}
           <ExternalLink size={14} />
         </a>
-      </Panel>
+      </section>
 
       {item.symbols && item.symbols.length > 0 && (
         <MentionedSymbols
@@ -183,7 +182,7 @@ async function MentionedSymbols({
   const quotes = result.ok ? result.data : {};
 
   return (
-    <Panel>
+    <section>
       <PanelHeader title={t.news.relatedSymbols} />
       <ul className="divide-y divide-line-soft">
         {shown.map((symbol) => {
@@ -221,7 +220,7 @@ async function MentionedSymbols({
           );
         })}
       </ul>
-    </Panel>
+    </section>
   );
 }
 
@@ -250,7 +249,7 @@ async function RelatedNews({
   if (shown.length === 0) return null;
 
   return (
-    <Panel>
+    <section>
       <PanelHeader title={title} />
       <ul className="divide-y divide-line-soft">
         {shown.map((n) => (
@@ -271,6 +270,6 @@ async function RelatedNews({
           </li>
         ))}
       </ul>
-    </Panel>
+    </section>
   );
 }

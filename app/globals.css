@@ -204,66 +204,90 @@
 
 /* --------------------------------------------------------------------------
    Temel
+
+   TUZAK: Tailwind v4 yardımcı sınıfları @layer utilities içindedir. Katmansız
+   bir element kuralı (`a { color: … }`) katmanlı yardımcıyı EZER — bu yüzden
+   `text-dim` taşıyan her bağlantı camgöbeği basılıyordu. Element varsayılanları
+   bu yüzden @layer base içine alınır: yardımcı sınıf daima kazanır.
    -------------------------------------------------------------------------- */
-* {
-  border-color: var(--rule);
-}
+@layer base {
+  * {
+    border-color: var(--rule);
+  }
 
-html {
-  -webkit-tap-highlight-color: transparent;
-}
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
 
-body {
-  background-color: var(--page-bg);
-  background-image: var(--page-wash);
-  background-attachment: fixed;
-  color: var(--dim);
-  font-family: var(--font-serif-face), Georgia, "Times New Roman", serif;
-  font-size: 16px;
-  line-height: 1.75;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  overflow-x: clip;
-}
-
-/* Mobilde sabit zemin kaydırmayı tökezletiyor — akışa döner. */
-@media (max-width: 640px) {
   body {
-    background-attachment: scroll;
+    background-color: var(--page-bg);
+    background-image: var(--page-wash);
+    background-attachment: fixed;
+    color: var(--dim);
+    font-family: var(--font-serif-face), Georgia, "Times New Roman", serif;
+    font-size: 16px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  /* Mobilde sabit zemin kaydırmayı tökezletiyor — akışa döner. */
+  @media (max-width: 640px) {
+    body {
+      background-attachment: scroll;
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--ink);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 1.4rem + 2.2vw, 3.25rem);
+    line-height: 1.06;
+    letter-spacing: -0.022em;
+    max-width: 20ch;
+  }
+
+  h2 {
+    font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.375rem);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+  }
+
+  h3 {
+    font-size: 1.375rem;
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: var(--primary-wash);
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--up-ink);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  color: var(--ink);
-  font-weight: 600;
-  text-wrap: balance;
-}
-
-h1 {
-  font-size: clamp(2rem, 1.4rem + 2.2vw, 3.25rem);
-  line-height: 1.06;
-  letter-spacing: -0.022em;
-  max-width: 20ch;
-}
-
-h2 {
-  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.375rem);
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-}
-
-h3 {
-  font-size: 1.375rem;
-  line-height: 1.3;
-  letter-spacing: -0.012em;
-}
-
-/* Kicker / bölüm etiketi — gazetenin küçük büyük harfli üst başlığı. */
+/* Kicker / bölüm etiketi — gazetenin küçük büyük harfli üst başlığı.
+   Yardımcı sınıf olduğu için katmansız kalır ve h6 varsayılanını ezer. */
 h6,
 .kicker {
   font-size: 0.75rem;
@@ -272,22 +296,6 @@ h6,
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--dim);
-}
-
-a {
-  color: var(--up-ink);
-  text-decoration: none;
-}
-
-::selection {
-  background: var(--primary-wash);
-  color: var(--ink);
-}
-
-:focus-visible {
-  outline: 2px solid var(--up-ink);
-  outline-offset: 2px;
-  border-radius: 2px;
 }
 
 .palette-input:focus-visible {

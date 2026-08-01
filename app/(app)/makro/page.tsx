@@ -1,8 +1,8 @@
 import { Sparkline } from "@/components/ui/Sparkline";
-import { DataStamp, EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
+import { DataStamp, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { getMacroRows } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
-import { formatEtDateLong, formatPrice } from "@/lib/utils";
+import { cn, formatEtDateLong, formatPrice } from "@/lib/utils";
 import type { MacroObservation } from "@/lib/providers/types";
 
 /**
@@ -41,11 +41,9 @@ export default async function MacroPage() {
       />
 
       {withData.length === 0 ? (
-        <Panel>
-          <EmptyState title={t.common.noData} hint={t.common.noDataHint} />
-        </Panel>
+        <EmptyState title={t.common.noData} hint={t.common.noDataHint} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {withData.map((row) => {
             const title = locale === "tr" ? row.titleTr : row.titleEn;
             const observations =
@@ -57,25 +55,28 @@ export default async function MacroPage() {
             const digits = row.unit === "%" ? 1 : 0;
 
             return (
-              <Panel key={row.seriesId} className="flex flex-col p-4 sm:p-5">
+              <section key={row.seriesId} className="flex flex-col border-t border-rule pt-3">
                 <div className="flex items-start justify-between gap-2">
-                  <h2 className="text-sm font-semibold leading-snug text-strong">
+                  <h2 className="text-[15px] font-semibold leading-snug text-ink">
                     {title}
                   </h2>
-                  <span className="numeral shrink-0 rounded-full bg-primary-tint px-2 py-0.5 text-[10px] text-soft">
+                  <span className="numeral shrink-0 text-[11px] uppercase tracking-[0.07em] text-faint">
                     {formatPeriod(row.periodLabel, locale)}
                   </span>
                 </div>
 
                 <div className="mt-3 flex items-baseline gap-2.5">
-                  <span className="tote text-[2rem] leading-none">
+                  <span className="tote text-[2.25rem] leading-none">
+                    {row.unit === "%" ? "%" : ""}
                     {formatPrice(row.latestValue, locale, { digits })}
-                    {row.unit === "%" && (
-                      <span className="ml-1.5 text-lg text-soft">%</span>
-                    )}
                   </span>
                   {delta !== null && Math.abs(delta) > 0.001 && (
-                    <span className="numeral inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-body">
+                    <span
+                      className={cn(
+                        "numeral inline-flex items-center gap-1 text-[13px]",
+                        delta > 0 ? "text-up" : "text-down",
+                      )}
+                    >
                       <span aria-hidden className="text-[0.8em]">
                         {delta > 0 ? "▲" : "▼"}
                       </span>
@@ -93,7 +94,7 @@ export default async function MacroPage() {
                   />
                 </div>
 
-                <dl className="mt-4 flex-1 divide-y divide-line-soft border-t border-line-soft text-xs">
+                <dl className="mt-4 flex-1 divide-y divide-hairline border-t border-hairline text-[13px]">
                   <div className="flex items-center justify-between py-2">
                     <dt className="text-muted">{t.macro.previous}</dt>
                     <dd className="numeral font-medium text-body">
@@ -105,7 +106,7 @@ export default async function MacroPage() {
                     <dt className="shrink-0 text-muted">{t.macro.nextRelease}</dt>
                     <dd className="text-right">
                       {row.nextReleaseAt ? (
-                        <span className="numeral font-semibold text-brass">
+                        <span className="numeral font-semibold text-up">
                           {formatEtDateLong(row.nextReleaseAt, locale)}
                         </span>
                       ) : (
@@ -123,7 +124,7 @@ export default async function MacroPage() {
                   locale={locale}
                   className="mt-3"
                 />
-              </Panel>
+              </section>
             );
           })}
         </div>
