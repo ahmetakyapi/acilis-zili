@@ -20,19 +20,20 @@ varsa DOKUNMAZ — senin yazın esastır; sen göndermezsen kural tabanlı
 Saat notu: 09:00 TR = 02:00 ET — New York'ta aynı takvim günüdür, yazı
 doğru güne kaydedilir.
 
-## Kurulum (tek seferlik)
+## Kurulu rutin (2026-08-01)
 
-`BRIEF_SECRET` değerini `.env.local` dosyasından al (Vercel'de de aynı değer
-tanımlı olmalı).
+Bu görev **claude.ai bulut rutini** olarak kuruldu — yerel makineye bağımlı
+değildir, bilgisayar kapalıyken de çalışır:
 
-Claude Code'da şu komutu ver:
+- **Rutin:** "Açılış Zili — Sabah Bülteni" (`trig_011z3UdZH7p3kv1Lkm9eFS5M`)
+- **Zamanlama:** her gün 06:00 UTC = 09:00 TR · Model: Sonnet 5
+- **Yönetim:** https://claude.ai/code/routines — durdurma/silme buradan
+- Bulut ajanı yerel dosya okuyamadığı için `BRIEF_SECRET` rutinin prompt'una
+  gömülüdür; secret'ı değiştirirsen rutini de güncelle.
 
-```
-/schedule her gün 09:00'da çalışsın: ~/acilis-zili/docs/claude-brief-agent.md
-dosyasındaki "GÜNLÜK GÖREV" bölümünü uygula
-```
-
-(Ya da klasik crontab: `0 9 * * 1-5 claude -p "$(cat ~/acilis-zili/docs/claude-brief-agent.md)"`)
+Aşağıdaki GÜNLÜK GÖREV bölümü referanstır (rutinin prompt'unun kaynağı);
+elle tek seferlik çalıştırmak istersen bu dosyayı Claude'a verip
+"uygula" demen yeterli — SECRET'ı `.env.local`'den okur.
 
 ---
 
