@@ -6,7 +6,9 @@ import {
   CandlestickSeries,
   createChart,
   type IChartApi,
+  type ISeriesApi,
   type MouseEventParams,
+  type SeriesType,
   type UTCTimestamp,
 } from "lightweight-charts";
 import type { ChartResponse } from "@/app/api/chart/[symbol]/route";
@@ -23,6 +25,14 @@ import type { Locale } from "@/lib/i18n/config";
  * aralığın toplam getirisi ve en düşük/yüksek değerleri okunur. Alan rengi
  * günlük yöne değil, SEÇİLİ ARALIĞIN yönüne göre belirlenir.
  * Renkler DOM'daki CSS değişkenlerinden okunur; tema değişince yeniden boyanır.
+ *
+ * Dokunmatikte okuma tek DOKUNUŞLA açılır ve parmağı kaldırınca durur.
+ * Kütüphanenin kendi davranışı "basılı tut + sürükle"ydi; parmak kalkınca
+ * okuma kayboluyordu, yani telefonda bir saatin fiyatını görmek mümkün
+ * değildi. İmleç konumu bu yüzden elle sürülüyor (`setCrosshairPosition`)
+ * ve grafiğin dışına dokunulunca temizleniyor. Bunun bedeli: grafik artık
+ * kaydırılmıyor/yakınlaştırılmıyor — sürükleme okuma demek. Aralık zaten
+ * alttaki 1G/1H/1A düğmeleriyle seçiliyor, kaydırmaya ihtiyaç yok.
  */
 
 type ChartLabels = {
@@ -238,12 +248,25 @@ export function PriceChart({
             maximumFractionDigits: 2,
           }).format(price),
       },
-      handleScale: { axisPressedMouseMove: false },
+      // Sürükleme okuma yapıyor: kaydırma ve yakınlaştırma tümüyle kapalı.
+      handleScroll: {
+        mouseWheel: false,
+        pressedMouseMove: false,
+        horzTouchDrag: false,
+        vertTouchDrag: false,
+      },
+      handleScale: {
+        axisPressedMouseMove: false,
+        mouseWheel: false,
+        pinch: false,
+        axisDoubleClickReset: false,
+      },
     });
     chartRef.current = chart;
 
+    let series: ISeriesApi<SeriesType>;
     if (mode === "area") {
-      const series = chart.addSeries(AreaSeries, {
+      series = chart.addSeries(AreaSeries, {
         lineColor: line,
         lineWidth: 2,
         topColor: lineToRgba(line, 0.16),
@@ -260,7 +283,7 @@ export function PriceChart({
         })),
       );
     } else {
-      const series = chart.addSeries(CandlestickSeries, {
+      series = chart.addSeries(CandlestickSeries, {
         upColor: up,
         downColor: down,
         wickUpColor: up,
@@ -280,8 +303,10 @@ export function PriceChart({
 
     // İmleç okuması — Midas tarzı: tarih · fiyat · dönem başından değişim.
     const byTime = new Map(bars.map((bar) => [bar.time, bar]));
+    // `param.point` kontrol EDİLMİYOR: imleç elle sürüldüğünde (dokunmatik
+    // okuma) o alan gelmeyebiliyor, oysa okunacak bar `time` ile belli.
     const onCrosshair = (param: MouseEventParams) => {
-      if (!param.time || !param.point) {
+      if (!param.time) {
         setHover(null);
         return;
       }
@@ -298,6 +323,47 @@ export function PriceChart({
       });
     };
     chart.subscribeCrosshairMove(onCrosshair);
+
+    /* Dokunuşla okuma — imleci x koordinatına en yakın bara oturtur.
+       Okumayı `onCrosshair` üstleniyor: `setCrosshairPosition` da aynı
+       aboneliği tetikliyor, ikinci bir durum yolu açmaya gerek yok. */
+    const readAtClientX = (clientX: number) => {
+      if (bars.length === 0) return;
+      const rect = container.getBoundingClientRect();
+      const logical = chart
+        .timeScale()
+        .coordinateToLogical(clientX - rect.left);
+      if (logical === null) return;
+      const index = Math.min(
+        bars.length - 1,
+        Math.max(0, Math.round(logical)),
+      );
+      const bar = bars[index];
+      chart.setCrosshairPosition(bar.close, bar.time as UTCTimestamp, series);
+    };
+
+    let pressed = false;
+    const onPointerDown = (event: PointerEvent) => {
+      pressed = true;
+      readAtClientX(event.clientX);
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (pressed) readAtClientX(event.clientX);
+    };
+    const onPointerRelease = () => {
+      pressed = false;
+    };
+    // Grafiğin dışına dokunulunca okuma kapanır, dönem özetine dönülür.
+    const onOutsidePointerDown = (event: PointerEvent) => {
+      if (container.contains(event.target as Node)) return;
+      chart.clearCrosshairPosition();
+    };
+
+    container.addEventListener("pointerdown", onPointerDown);
+    container.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerRelease);
+    window.addEventListener("pointercancel", onPointerRelease);
+    document.addEventListener("pointerdown", onOutsidePointerDown);
 
     chart.timeScale().fitContent();
 
@@ -350,6 +416,11 @@ export function PriceChart({
 
     return () => {
       cancelAnimationFrame(raf);
+      container.removeEventListener("pointerdown", onPointerDown);
+      container.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerRelease);
+      window.removeEventListener("pointercancel", onPointerRelease);
+      document.removeEventListener("pointerdown", onOutsidePointerDown);
       chart.timeScale().unsubscribeVisibleTimeRangeChange(updateZones);
       chart.unsubscribeCrosshairMove(onCrosshair);
       chart.remove();

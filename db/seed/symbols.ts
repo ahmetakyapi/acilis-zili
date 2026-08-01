@@ -150,7 +150,18 @@ export type WorldMarket = {
   flag: string;
 };
 
+/* Sıra bilinçli: Türkiye başta — okuyucunun kendi piyasası ilk satırda
+   duruyor, kalanlar seans sırasına göre (Asya → Avrupa) diziliyor. */
 export const WORLD_MARKETS: WorldMarket[] = [
+  {
+    symbol: "TUR",
+    fundName: "iShares MSCI Turkey ETF",
+    nameTr: "Türkiye",
+    nameEn: "Türkiye",
+    tracksTr: "MSCI Türkiye · BIST ile aynı piyasa",
+    tracksEn: "MSCI Türkiye · same market as the BIST",
+    flag: "🇹🇷",
+  },
   {
     symbol: "EWJ",
     fundName: "iShares MSCI Japan ETF",
@@ -170,15 +181,6 @@ export const WORLD_MARKETS: WorldMarket[] = [
     flag: "🇰🇷",
   },
   {
-    symbol: "TUR",
-    fundName: "iShares MSCI Turkey ETF",
-    nameTr: "Türkiye",
-    nameEn: "Türkiye",
-    tracksTr: "MSCI Türkiye · BIST ile aynı piyasa",
-    tracksEn: "MSCI Türkiye · same market as the BIST",
-    flag: "🇹🇷",
-  },
-  {
     symbol: "MCHI",
     fundName: "iShares MSCI China ETF",
     nameTr: "Çin",
@@ -195,15 +197,6 @@ export const WORLD_MARKETS: WorldMarket[] = [
     tracksTr: "MSCI Almanya · DAX ile aynı piyasa",
     tracksEn: "MSCI Germany · same market as the DAX",
     flag: "🇩🇪",
-  },
-  {
-    symbol: "INDA",
-    fundName: "iShares MSCI India ETF",
-    nameTr: "Hindistan",
-    nameEn: "India",
-    tracksTr: "MSCI Hindistan · Sensex ve Nifty",
-    tracksEn: "MSCI India · Sensex and Nifty",
-    flag: "🇮🇳",
   },
 ];
 

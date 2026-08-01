@@ -26,6 +26,7 @@ import {
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote, getQuotes } from "@/lib/providers";
 import { COMPLIANCE_THRESHOLD, screenCompliance } from "@/lib/compliance";
+import { industryLabel } from "@/lib/sectors";
 import { indexMemberOf, peersOf } from "@/db/seed/indices";
 import { fundMetaOf } from "@/db/seed/symbols";
 import { subIndustryName } from "@/db/seed/sub-industries";
@@ -232,7 +233,9 @@ async function StockHeader({
           {/* Künye şeridi — borsa · sektör · alt sektör */}
           {(profile?.exchange || profile?.industry) && (
             <p className="text-xs font-semibold uppercase leading-tight tracking-[0.02em] text-muted">
-              {[profile?.exchange, profile?.industry].filter(Boolean).join(" · ")}
+              {[profile?.exchange, industryLabel(profile?.industry, locale)]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
           )}
           <div className="mt-[7px] flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -546,7 +549,10 @@ async function ProfileCard({
   const rows: [string, React.ReactNode][] = [
     // GICS sınıflandırması varsa o gösterilir — sağlayıcının serbest metinli
     // sektör alanından daha tutarlıdır.
-    [t.stock.sector, member?.sector ?? profile.industry ?? "—"],
+    [
+      t.stock.sector,
+      member?.sector ?? industryLabel(profile.industry, locale) ?? "—",
+    ],
     ...(member?.sub
       ? ([[t.stock.industry, subIndustryName(member.sub, locale)]] as [
           string,

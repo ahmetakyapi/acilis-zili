@@ -22,7 +22,7 @@ export function Panel({
 }
 
 /**
- * Panel başlığı — 13.5px/700, sağda isteğe bağlı accent bağlantı.
+ * Panel başlığı — 15px/700, sağda isteğe bağlı accent bağlantı.
  * Süs işareti yok; başlığı başlık yapan ağırlığı, kutusu değil.
  */
 export function PanelHeader({
@@ -45,7 +45,9 @@ export function PanelHeader({
         className,
       )}
     >
-      <h2 className="display-ink w-fit text-[13.5px] font-bold">{title}</h2>
+      <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
+        {title}
+      </h2>
       {meta && <span className="text-xs text-muted">{meta}</span>}
       {action}
     </div>

@@ -132,7 +132,7 @@ export default async function BriefArchivePage(props: PageProps<"/bulten">) {
           {/* ---- Arşiv listesi ---- */}
           <Panel>
             <div className="px-4 py-4 sm:px-5">
-              <h2 className="display-ink w-fit text-[13.5px] font-bold">
+              <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
                 {t.brief.archiveTitle}
               </h2>
             </div>

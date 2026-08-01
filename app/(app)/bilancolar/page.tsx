@@ -167,23 +167,52 @@ function timingOf(hour: string | null, t: Dictionary): {
 }
 
 /**
- * Sağdaki büyük sayı gelir beklentisidir. Piyasa değeri artık kendi satırında
- * ayrıca yazıldığı için buraya yedek olarak konmuyor — iki farklı büyüklüğü
- * aynı yerde göstermek okuyucuyu yanıltıyordu.
+ * Kartın sayıları — her biri kendi etiketiyle.
+ *
+ * Eskiden sağdaki büyük sayı çıplak duruyordu ve altındaki tek satırlık
+ * künye ("Gelir Beklentisi · EPS Beklentisi 0,35") neyin ne olduğunu ilk
+ * bakışta söylemiyordu. Artık başlık sayının ÜSTÜNDE, kalan ölçüler de
+ * etiket–değer çiftleri hâlinde okunuyor.
+ *
+ * Manşet sayı gelir beklentisidir; o yoksa EPS beklentisi öne çıkar —
+ * kartın en büyük yerinde bir "—" görmek bilgi taşımıyordu.
  */
-function revenueFigure(row: EarningsRow, locale: Locale): string | null {
-  if (row.revenueEstimate === null || row.revenueEstimate === undefined) {
-    return null;
-  }
-  return `${formatCompact(row.revenueEstimate, locale)} $`;
-}
+type Figure = { label: string; value: string };
 
-/** Gün içindeki sıralama zaten piyasa değerine göre; sayı da görünsün. */
-function marketCapFigure(
-  m: SymbolMeta | undefined,
+function cardFigures(
+  row: EarningsRow,
+  meta: SymbolMeta | undefined,
   locale: Locale,
-): string | null {
-  return m?.marketCap ? `${formatCompact(m.marketCap, locale)} $` : null;
+  t: Dictionary,
+  short: boolean,
+): { headline: Figure | null; rest: Figure[] } {
+  const revenue =
+    row.revenueEstimate !== null && row.revenueEstimate !== undefined
+      ? {
+          label: short ? t.earnings.revenueShort : t.earnings.revenueEstimate,
+          value: `${formatCompact(row.revenueEstimate, locale)} $`,
+        }
+      : null;
+  const eps =
+    row.epsEstimate !== null && row.epsEstimate !== undefined
+      ? {
+          label: short ? "EPS" : t.earnings.epsEstimate,
+          value: formatPrice(row.epsEstimate, locale, { currency: true }),
+        }
+      : null;
+  // Gün içindeki sıralama zaten piyasa değerine göre; sayı da görünsün.
+  const cap = meta?.marketCap
+    ? {
+        label: short ? t.earnings.marketCapShort : t.market.marketCap,
+        value: `${formatCompact(meta.marketCap, locale)} $`,
+      }
+    : null;
+
+  const headline = revenue ?? eps;
+  const rest = [revenue, eps, cap].filter(
+    (figure): figure is Figure => figure !== null && figure !== headline,
+  );
+  return { headline, rest };
 }
 
 function DaySection({
@@ -249,8 +278,7 @@ function DaySection({
         {heroes.map((row) => {
           const m = meta[row.symbol];
           const timing = timingOf(row.hour, t);
-          const revenue = revenueFigure(row, locale);
-          const cap = marketCapFigure(m, locale);
+          const { headline, rest } = cardFigures(row, m, locale, t, false);
           return (
             <Link key={row.id} href={`/hisse/${row.symbol}`} className="block">
               {/* Mobilde iki satır (mockup 4k), masaüstünde tek hero satırı. */}
@@ -284,20 +312,33 @@ function DaySection({
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-line pt-3 sm:ml-auto sm:block sm:shrink-0 sm:border-0 sm:pt-0 sm:text-right">
-                  <p className="figure text-[17px] font-bold tracking-[-0.03em] text-strong sm:text-[19px]">
-                    {revenue ?? "—"}
-                  </p>
-                  <p className="figure text-xs text-muted sm:mt-0.5">
-                    {t.earnings.revenueEstimate}
-                    {row.epsEstimate !== null &&
-                      ` · ${t.earnings.epsEstimate} ${formatPrice(row.epsEstimate, locale)}`}
-                  </p>
-                  {cap && (
-                    <p className="figure text-xs text-muted sm:mt-0.5">
-                      {t.market.marketCap}{" "}
-                      <span className="font-semibold text-body">{cap}</span>
-                    </p>
+                <div className="border-t border-line pt-3 sm:ml-auto sm:shrink-0 sm:border-0 sm:pt-0 sm:text-right">
+                  {headline ? (
+                    <>
+                      <p className="plate text-[10px] tracking-[0.09em]">
+                        {headline.label}
+                      </p>
+                      <p className="figure mt-[3px] text-[19px] font-bold tracking-[-0.03em] text-strong sm:text-[21px]">
+                        {headline.value}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted">{t.common.noData}</p>
+                  )}
+                  {rest.length > 0 && (
+                    <dl className="mt-2 flex flex-col gap-[3px] text-[11.5px] sm:items-end">
+                      {rest.map((figure) => (
+                        <div
+                          key={figure.label}
+                          className="flex items-baseline gap-2"
+                        >
+                          <dt className="text-muted">{figure.label}</dt>
+                          <dd className="figure font-semibold text-body">
+                            {figure.value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
                   )}
                 </div>
               </div>
@@ -312,6 +353,7 @@ function DaySection({
           {mid.map((row) => {
             const m = meta[row.symbol];
             const timing = timingOf(row.hour, t);
+            const { headline, rest } = cardFigures(row, m, locale, t, true);
             return (
               <Link
                 key={row.id}
@@ -348,26 +390,21 @@ function DaySection({
                       {m?.name ?? ""}
                     </p>
                   </div>
-                  <div className="figure mt-auto flex flex-col gap-1 border-t border-line pt-[9px] text-xs">
-                    <span className="flex items-baseline justify-between gap-2">
-                      <span className="text-body">
-                        {row.revenueEstimate
-                          ? formatCompact(row.revenueEstimate, locale)
-                          : "—"}
-                      </span>
-                      <span className="text-muted">
-                        {row.epsEstimate !== null
-                          ? `EPS ${formatPrice(row.epsEstimate, locale)}`
-                          : "—"}
-                      </span>
-                    </span>
-                    <span className="flex items-baseline justify-between gap-2 text-muted">
-                      <span>{t.earnings.marketCapShort}</span>
-                      <span>
-                        {m?.marketCap ? formatCompact(m.marketCap, locale) : "—"}
-                      </span>
-                    </span>
-                  </div>
+                  {/* Her sayı kendi etiketiyle: dar kartta "1,84 Mr" tek
+                      başına gelir mi kâr mı belli olmuyordu. */}
+                  <dl className="mt-auto flex flex-col gap-[3px] border-t border-line pt-[9px] text-[11.5px]">
+                    {(headline ? [headline, ...rest] : rest).map((figure) => (
+                      <div
+                        key={figure.label}
+                        className="flex items-baseline justify-between gap-2"
+                      >
+                        <dt className="text-muted">{figure.label}</dt>
+                        <dd className="figure font-semibold text-body">
+                          {figure.value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
               </Link>
             );

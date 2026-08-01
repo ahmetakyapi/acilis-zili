@@ -5,48 +5,63 @@ import { primaryOnly } from "@/db/seed/indices";
 import { getCompanies, getStatus } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { getQuotes } from "@/lib/providers";
+import {
+  SECTOR_GROUPS,
+  industryLabel,
+  sectorGroupByKey,
+  sectorGroupLabel,
+  sectorGroupOf,
+} from "@/lib/sectors";
 import { cn, formatCompact, formatPrice, formatVolume } from "@/lib/utils";
 
 /**
  * Şirketler — sektör kategorileri + kolon başlığından sıralama.
  * Sıralama URL'de yaşar (?sirala=cap&yon=desc): sunucuda çözülür, JS gerekmez;
  * aynı kolona ikinci tıklama yönü çevirir.
+ *
+ * Kategoriler alt sektör değil ÜST GRUP: sağlayıcının döndürdüğü 148 GICS alt
+ * sektörü şeride sığmıyordu ve hepsi İngilizceydi. Gruplama ve Türkçe adlar
+ * `lib/sectors.ts` içinde; alt sektörün kendisi tablonun sütununda okunur.
  */
 
 const SORT_KEYS = ["cap", "hacim", "fiyat", "degisim"] as const;
 type SortKey = (typeof SORT_KEYS)[number];
 type SortDir = "asc" | "desc";
 
-/**
- * Kategori şeridinin öncelik sırası — takip edilen evrenin ağırlık merkezi
- * (yarı iletken, teknoloji, enerji...) önde durur; listede olmayan sektörler
- * alfabetik olarak arkaya eklenir.
- */
-const SECTOR_PRIORITY = [
-  "Semiconductors",
-  "Technology",
-  "Media",
-  "Energy",
-  "Financial Services",
-  "Banking",
-  "Retail",
-  "Automobiles",
-  "Pharmaceuticals",
-  "Health Care",
-  "Biotechnology",
-  "Aerospace & Defense",
-] as const;
-
-function orderSectors(sectors: string[]): string[] {
-  const rank = new Map<string, number>(
-    SECTOR_PRIORITY.map((name, index) => [name.toLowerCase(), index]),
+/** Kategori çipi — etiket + o gruptaki şirket sayısı. */
+function SectorChip({
+  href,
+  active,
+  label,
+  count,
+}: {
+  href: string;
+  active: boolean;
+  label: string;
+  count: number;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "true" : undefined}
+      className={cn(
+        "inline-flex min-h-[34px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[12.5px] font-semibold transition-colors",
+        active
+          ? "border-transparent bg-primary text-on-primary"
+          : "border-line bg-surface text-body hover:border-line-strong hover:text-strong",
+      )}
+    >
+      {label}
+      <span
+        className={cn(
+          "numeral text-[11px] font-bold",
+          active ? "text-on-primary/70" : "text-muted",
+        )}
+      >
+        {count}
+      </span>
+    </Link>
   );
-  return [...sectors].sort((a, b) => {
-    const ra = rank.get(a.toLowerCase()) ?? Infinity;
-    const rb = rank.get(b.toLowerCase()) ?? Infinity;
-    if (ra !== rb) return ra - rb;
-    return a.localeCompare(b);
-  });
 }
 
 function SortHead({
@@ -91,25 +106,28 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     ? (search.sirala as SortKey)
     : "cap";
   const dir: SortDir = search.yon === "asc" ? "asc" : "desc";
-  const sectorFilter = typeof search.sektor === "string" ? search.sektor : null;
-
   const { locale, t } = await getI18n();
+  const activeGroup = sectorGroupByKey(
+    typeof search.sektor === "string" ? search.sektor : null,
+  );
+
   // Aynı şirketin ikinci sınıf kotasyonu (GOOG ↔ GOOGL) listede tekrar etmez.
   const companies = primaryOnly(await getCompanies());
 
-  // Sektör → şirket sayısı; şerit önem sırasına göre dizilir.
-  const sectorCounts = new Map<string, number>();
+  // Grup → şirket sayısı; boş kalan gruplar şeritte hiç görünmez.
+  const groupCounts = new Map<string, number>();
   for (const company of companies) {
-    if (!company.industry) continue;
-    sectorCounts.set(
-      company.industry,
-      (sectorCounts.get(company.industry) ?? 0) + 1,
-    );
+    const key = sectorGroupOf(company.industry).key;
+    groupCounts.set(key, (groupCounts.get(key) ?? 0) + 1);
   }
-  const sectors = orderSectors([...sectorCounts.keys()]);
+  const shownGroups = SECTOR_GROUPS.filter(
+    (group) => (groupCounts.get(group.key) ?? 0) > 0,
+  );
 
-  let rows = sectorFilter
-    ? companies.filter((c) => c.industry === sectorFilter)
+  let rows = activeGroup
+    ? companies.filter(
+        (c) => sectorGroupOf(c.industry).key === activeGroup.key,
+      )
     : companies;
 
   const status = await getStatus();
@@ -141,7 +159,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     // Aynı kolona tekrar tıklanınca yön değişir; yeni kolonda desc başlar.
     const nextDir: SortDir = sort === key && dir === "desc" ? "asc" : "desc";
     const params = new URLSearchParams({ sirala: key, yon: nextDir });
-    if (sectorFilter) params.set("sektor", sectorFilter);
+    if (activeGroup) params.set("sektor", activeGroup.key);
     return `/sirketler?${params.toString()}`;
   };
 
@@ -160,59 +178,34 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         <p className="mt-2 text-sm text-soft">{t.companies.subtitle}</p>
       </header>
 
-      {/* Kategori şeridi — kaydırılabilir olduğu kenar solmasıyla belli olur */}
-      {sectors.length > 0 && (
+      {/* Kategori şeridi — geniş ekranda iki satıra sarar, mobilde kayar
+          (kaydırılabilir olduğu sağ kenar solmasından belli olur). */}
+      {shownGroups.length > 0 && (
         <div className="relative">
-          <div className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12">
-            <Link
+          <div className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12 sm:flex-wrap sm:gap-2 sm:pb-0 sm:pr-0">
+            <SectorChip
               href={sectorHref(null)}
-              className={cn(
-                "min-h-[34px] shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                !sectorFilter
-                  ? "bg-primary text-on-primary"
-                  : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
-              )}
-            >
-              {t.companies.allSectors}
-              <span
-                className={cn(
-                  "numeral ml-1.5",
-                  !sectorFilter ? "text-on-primary/70" : "text-muted",
-                )}
-              >
-                {companies.length}
-              </span>
-            </Link>
-            {sectors.map((sector) => {
-              const active = sector === sectorFilter;
+              active={!activeGroup}
+              label={t.companies.allSectors}
+              count={companies.length}
+            />
+            {shownGroups.map((group) => {
+              const active = group.key === activeGroup?.key;
               return (
-                <Link
-                  key={sector}
-                  href={sectorHref(active ? null : sector)}
-                  className={cn(
-                    "min-h-[34px] shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                    active
-                      ? "bg-primary text-on-primary"
-                      : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
-                  )}
-                >
-                  {sector}
-                  <span
-                    className={cn(
-                      "numeral ml-1.5",
-                      active ? "text-on-primary/70" : "text-muted",
-                    )}
-                  >
-                    {sectorCounts.get(sector)}
-                  </span>
-                </Link>
+                <SectorChip
+                  key={group.key}
+                  href={sectorHref(active ? null : group.key)}
+                  active={active}
+                  label={sectorGroupLabel(group, locale)}
+                  count={groupCounts.get(group.key) ?? 0}
+                />
               );
             })}
           </div>
-          {/* Sağ kenar solması — devamı olduğunu söyler */}
+          {/* Sağ kenar solması — yalnızca kaydırmalı dizilimde anlamlı */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-(--page-bg) to-transparent"
+            className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-(--page-bg) to-transparent sm:hidden"
           />
         </div>
       )}
@@ -230,18 +223,20 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                   <th className="hidden px-3 py-2.5 font-medium md:table-cell">
                     {t.companies.sector}
                   </th>
-                  <SortHead
-                    col="fiyat"
-                    label={t.companies.price}
-                    href={sortHref("fiyat")}
-                    active={sort === "fiyat"}
-                    dir={dir}
-                  />
+                  {/* Değişim fiyattan önce: listeye bakan önce "bugün ne
+                      olmuş" diye bakıyor, seviyeye sonra. */}
                   <SortHead
                     col="degisim"
                     label={t.companies.change}
                     href={sortHref("degisim")}
                     active={sort === "degisim"}
+                    dir={dir}
+                  />
+                  <SortHead
+                    col="fiyat"
+                    label={t.companies.price}
+                    href={sortHref("fiyat")}
+                    active={sort === "fiyat"}
                     dir={dir}
                   />
                   <SortHead
@@ -304,10 +299,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                         </Link>
                       </td>
                       <td className="hidden max-w-40 truncate px-3 py-2.5 text-xs text-soft md:table-cell">
-                        {company.industry ?? "—"}
-                      </td>
-                      <td className="numeral px-3 py-2.5 text-right text-body">
-                        {quote ? formatPrice(quote.price, locale) : "—"}
+                        {industryLabel(company.industry, locale) ?? "—"}
                       </td>
                       <td className="px-3 py-2.5 text-right">
                         {quote ? (
@@ -319,6 +311,9 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                         ) : (
                           <span className="text-xs text-muted">—</span>
                         )}
+                      </td>
+                      <td className="numeral px-3 py-2.5 text-right text-body">
+                        {quote ? formatPrice(quote.price, locale) : "—"}
                       </td>
                       <td className="numeral px-3 py-2.5 text-right text-body">
                         {company.marketCap

@@ -41,17 +41,21 @@ export function Countdown({
 
   const { days, hours, minutes, seconds } = split(targetMs, nowMs);
 
-  // En anlamlı iki birim gösterilir: gün varken saniye gürültüdür.
+  // En anlamlı üç birim gösterilir. Dakika her zaman listede: "1g 16sa"
+  // kalan sürenin bir saatlik penceresini gizliyordu. Gün varken saniye
+  // gürültü olduğu için en küçük birim kaydırılarak düşer.
   const parts: [number, string][] =
     days > 0
       ? [
           [days, units.d],
           [hours, units.h],
+          [minutes, units.m],
         ]
       : hours > 0
         ? [
             [hours, units.h],
             [minutes, units.m],
+            [seconds, units.s],
           ]
         : [
             [minutes, units.m],
@@ -73,7 +77,7 @@ export function Countdown({
           <span className="text-[0.41em] font-semibold tracking-[-0.02em]">
             {" "}
             {unit}
-            {index === 0 ? " " : ""}
+            {index < parts.length - 1 ? " " : ""}
           </span>
         </span>
       ))}

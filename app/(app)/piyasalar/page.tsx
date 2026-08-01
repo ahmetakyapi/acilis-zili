@@ -730,16 +730,17 @@ function MembersTable({
                 dir={dir}
                 className="text-left"
               />
-              <SortHead
-                label={t.companies.price}
-                href={sortHref(tab, "fiyat", sort, dir)}
-                active={sort === "fiyat"}
-                dir={dir}
-              />
+              {/* Değişim fiyattan önce — bkz. /sirketler tablosu. */}
               <SortHead
                 label={t.companies.change}
                 href={sortHref(tab, "degisim", sort, dir)}
                 active={sort === "degisim"}
+                dir={dir}
+              />
+              <SortHead
+                label={t.companies.price}
+                href={sortHref(tab, "fiyat", sort, dir)}
+                active={sort === "fiyat"}
                 dir={dir}
               />
               <SortHead
@@ -785,9 +786,6 @@ function MembersTable({
                       </span>
                     </Link>
                   </td>
-                  <td className="numeral px-3 py-2 text-right text-body">
-                    {quote ? formatPrice(quote.price, locale) : "—"}
-                  </td>
                   <td
                     className={cn(
                       "numeral px-3 py-2 text-right font-semibold",
@@ -799,6 +797,9 @@ function MembersTable({
                     )}
                   >
                     {quote ? formatPercent(quote.changePct, locale) : "—"}
+                  </td>
+                  <td className="numeral px-3 py-2 text-right text-body">
+                    {quote ? formatPrice(quote.price, locale) : "—"}
                   </td>
                   <td
                     className={cn(

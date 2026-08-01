@@ -72,9 +72,13 @@ export default async function TodayPage() {
   const countdownLabel = trading ? t.today.untilClose : t.today.untilBell;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_376px]">
+    /* Izgara üç parçalı: ana kolon, yan kolon ve ayrı bir haber bloğu.
+       Haberler DOM'da yan kolondan SONRA gelir — mobilde tek kolona inince
+       en alta düşer, geniş ekranda `row-start-2` ile yine sol kolonun
+       devamı olarak ana yığının altına oturur. */
+    <div className="grid gap-x-6 gap-y-5 lg:grid-cols-[minmax(0,1fr)_376px]">
       {/* ================= Ana kolon ================= */}
-      <div className="flex min-w-0 flex-col gap-5">
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
         {/* ---- Oturum rozeti + tarih ---- */}
         <header>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
@@ -124,7 +128,7 @@ export default async function TodayPage() {
         {/* ---- Gün Şeridi ---- */}
         <Panel className="px-4 pb-5 pt-5 sm:px-[22px]">
           <div className="mb-5 flex items-center justify-between gap-3">
-            <h2 className="display-ink w-fit text-[13.5px] font-bold">
+            <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
               {t.today.todayFlow}
             </h2>
             <span className="text-xs text-muted">{t.today.sessionWindow}</span>
@@ -181,25 +185,12 @@ export default async function TodayPage() {
             <WeekAhead locale={locale} t={t} />
           </Suspense>
         </Panel>
-
-        {/* ---- Öne çıkan haberler ----
-             Okunacak metin ana kolonda durur: manşet dar kolonda iki satıra
-             kırılıyor, geniş kolonda bir bakışta okunuyor. */}
-        <Panel>
-          <PanelHeader
-            title={t.today.topNews}
-            action={<PanelLink href="/haberler">{t.common.showAll}</PanelLink>}
-          />
-          <Suspense fallback={<ListSkeleton rows={4} />}>
-            <TopNews locale={locale} t={t} />
-          </Suspense>
-        </Panel>
       </div>
 
       {/* ================= Yan kolon =================
-          Yalnızca ölçüler: endeksler → tahviller → makro → senin listen →
-          dünya. Okunacak metin sol kolonda. */}
-      <div className="flex min-w-0 flex-col gap-5">
+          Yalnızca ölçüler: endeksler → dünya → tahviller → makro → senin
+          listen. Okunacak metin sol kolonda. */}
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1 lg:row-span-2">
         <Suspense fallback={<IndexSkeleton />}>
           <IndexStrip locale={locale} t={t} />
         </Suspense>
@@ -223,8 +214,22 @@ export default async function TodayPage() {
         </Suspense>
       </div>
 
+      {/* ---- Öne çıkan haberler ----
+           Okunacak metin ana kolonda durur: manşet dar kolonda iki satıra
+           kırılıyor, geniş kolonda bir bakışta okunuyor. Mobilde ise gün
+           verisi bittikten sonra, sayfanın en altında okunuyor. */}
+      <Panel className="min-w-0 lg:col-start-1 lg:row-start-2 lg:self-start">
+        <PanelHeader
+          title={t.today.topNews}
+          action={<PanelLink href="/haberler">{t.common.showAll}</PanelLink>}
+        />
+        <Suspense fallback={<ListSkeleton rows={4} />}>
+          <TopNews locale={locale} t={t} />
+        </Suspense>
+      </Panel>
+
       {/* ---- Kaynak künyesi ---- */}
-      <footer className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-[11.5px] text-muted lg:col-span-2">
+      <footer className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-[11.5px] text-muted lg:col-span-2 lg:row-start-3">
         <span>{t.today.sourceLine}</span>
         <span>{t.today.sourceNote}</span>
       </footer>
@@ -800,7 +805,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
   return (
     <Panel className="px-[18px] py-4 sm:px-5">
       <div className="mb-1 flex items-baseline justify-between gap-3">
-        <h2 className="display-ink w-fit text-[13.5px] font-bold">
+        <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
           {t.today.watchlistSummary}
         </h2>
         <PanelLink href="/favoriler">{t.common.showAll}</PanelLink>
@@ -875,9 +880,11 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
 
 /**
  * Makro özeti — dört ana seri, 23px sayı ve yön oklu önceki değer.
- * Enflasyon serilerinde düşüş iyi haberdir; yön rengi bu yüzden değişimin
- * işaretine değil, "hangi yön iyi" bilgisine göre değil — nötr okunur ve ok
- * yalnızca yönü söyler. Renk sadece gerçekten yön bildiren yerlerde.
+ *
+ * Ok rengi yalnızca YÖN söyler, yorum yapmaz: düşüş kırmızı, yükseliş accent
+ * mavi. Yeşil kasten kullanılmıyor — enflasyonun düşmesi iyi, istihdamın
+ * düşmesi kötüdür; hisse tarafındaki yeşil/kırmızı sözlüğü buraya taşınırsa
+ * okuyucuya "bu iyi haber" demiş oluruz. Etiket metni nötr gri kalır.
  */
 async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   const rows = await getMacroRows();
@@ -888,7 +895,7 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <Panel className="px-[18px] py-4 sm:px-5">
       <div className="mb-3.5 flex items-baseline justify-between gap-3">
-        <h2 className="display-ink w-fit text-[13.5px] font-bold">
+        <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
           {t.today.macroSummary}
         </h2>
         <PanelLink href="/makro">{t.common.showAll}</PanelLink>
@@ -915,7 +922,15 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
                   t.macro.unchanged
                 ) : (
                   <>
-                    <span aria-hidden>{delta > 0 ? "▲" : "▼"}</span>{" "}
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "font-semibold",
+                        delta > 0 ? "text-primary" : "text-down",
+                      )}
+                    >
+                      {delta > 0 ? "▲" : "▼"}
+                    </span>{" "}
                     {t.macro.previous} {formatPrice(prev, locale)}
                     {suffix}
                   </>

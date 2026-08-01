@@ -61,28 +61,33 @@ export function AppShell({
           <BrandLockup
             name={labels.brandName}
             tagline={labels.tagline}
-            size={34}
+            size={38}
           />
         </Link>
 
-        <nav className="flex min-w-0 gap-[3px] text-[13.5px]">
+        <nav className="flex min-w-0 gap-[3px] text-[14.5px]">
           {NAV_ITEMS.filter((item) => item.href !== "/haberler").map((item) => {
             const active = isActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "rounded-lg px-3.5 py-[7px] transition-colors duration-150",
                   active
-                    ? "bg-surface-elevated font-semibold"
-                    : "hover:bg-surface",
+                    ? "bg-surface-elevated font-bold"
+                    : "font-medium hover:bg-surface",
                 )}
               >
                 {/* Etiketler manşet mürekkebiyle yazılır; bulunulan sayfa
-                    dolgulu pill ve kalın ağırlıkla ayrışır, renkle değil. */}
-                <span className="display-ink">{labels.nav[item.href]}</span>
+                    dolgulu pill ve kalın ağırlıkla ayrışır, renkle değil.
+                    Dar degrade varyantı: geniş olanı bu puntoda etiketleri
+                    birbirinden kopuk gösteriyordu. */}
+                <span className="display-ink display-ink-tight">
+                  {labels.nav[item.href]}
+                </span>
               </Link>
             );
           })}
@@ -127,8 +132,8 @@ export function AppShell({
           className="flex items-center gap-2.5"
           aria-label={labels.brandName}
         >
-          <BellMark size={26} />
-          <span className="display-ink w-fit text-[15.5px] font-bold tracking-[-0.03em]">
+          <BellMark size={28} />
+          <span className="display-ink display-ink-tight w-fit text-[16.5px] font-bold tracking-[-0.03em]">
             {labels.brandName}
           </span>
         </Link>
@@ -169,6 +174,7 @@ export function AppShell({
             <Link
               key={item.href}
               href={item.href}
+              prefetch
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex min-w-16 flex-col items-center gap-[5px] px-1 pb-2.5 pt-3 text-[10px] tracking-[0.03em] transition-colors",

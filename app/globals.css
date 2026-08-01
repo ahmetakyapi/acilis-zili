@@ -84,8 +84,21 @@
 
   /* Manşet mürekkebi — sayfa başlıkları ve geri sayım bu degradeyle yazılır.
      Lacivertten accent maviye; koyu tema karşılığı ters yönde açılır, yoksa
-     koyu zeminde okunmaz. */
-  --display-gradient: linear-gradient(115deg, #0b2440 0%, #0d5cb6 62%, #2a9bea 100%);
+     koyu zeminde okunmaz. Açık uç %100'e değil %92'ye çekildi: en soluk ton
+     harfin son pikseline denk gelince kelime sonu sönük görünüyordu. */
+  --display-gradient: linear-gradient(
+    112deg,
+    #0a2140 0%,
+    #0e4a8f 44%,
+    #1272c9 76%,
+    #2493dd 100%
+  );
+
+  /* Küçük puntoda (13–16px) aynı aile, çok daha dar aralık. Degrade her
+     elemanın KENDİ kutusunda çizilir: dar bir gezinme etiketi tam sweep
+     yapıp "Makro" ile "Bilançolar"ı birbirinden kopuk gösteriyordu. Dar
+     aralık hem bunu hem açık uçtaki kontrast düşüşünü çözer. */
+  --display-gradient-tight: linear-gradient(105deg, #0c2c52 0%, #12508f 100%);
 
   /* Marka karosunun oturma gölgesi — rozet hissi buradan geliyor. */
   --mark-shadow: 0 1px 2px rgb(13 92 182 / 0.28), 0 4px 10px rgb(13 92 182 / 0.22);
@@ -157,7 +170,15 @@
 
   --mark-gradient: linear-gradient(145deg, #6fd0ff 0%, #2f95e8 46%, #124f9e 100%);
 
-  --display-gradient: linear-gradient(115deg, #eaf1f8 0%, #7fd2ff 55%, #35b8ff 100%);
+  --display-gradient: linear-gradient(
+    112deg,
+    #f2f7fc 0%,
+    #b6e2ff 44%,
+    #74caff 76%,
+    #3fbcff 100%
+  );
+
+  --display-gradient-tight: linear-gradient(105deg, #e9f3fb 0%, #8fd4ff 100%);
 
   --mark-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 4px 12px rgb(26 99 196 / 0.4);
 
@@ -324,6 +345,11 @@
     padding-bottom: 0.06em;
   }
 
+  /* Küçük puntoluk varyant — masthead marka adı ve gezinme etiketleri. */
+  .display-ink-tight {
+    background-image: var(--display-gradient-tight);
+  }
+
   /* TUZAK: `.display-ink` içindeki bir çocuğa `opacity` (ya da transform,
      filter) vermek onu ayrı bir kompozit katmana taşır ve kapsayıcının
      background-clip bölgesinden ÇIKARIR — çocuğun kendi arka planı olmadığı
@@ -407,6 +433,30 @@
   50% {
     opacity: 0.45;
   }
+}
+
+/* --------------------------------------------------------------------------
+   Sayfa geçişi
+
+   Kabuk (masthead, alt şerit, sekmeler) yerinde kalır; yalnızca içerik
+   alanı yeni sayfada kısa bir yükselişle görünür. Süre kasten kısa: geçiş
+   hissi verecek kadar var, gezinmeyi geciktirecek kadar değil.
+   `both` bitiş karesini tutar — transform kalıcı olarak `none`'a döner,
+   böylece altındaki `background-clip: text` başlıklar etkilenmez.
+   -------------------------------------------------------------------------- */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 5px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page-enter {
+  animation: page-enter 0.24s var(--ease-brand) both;
 }
 
 .skeleton {

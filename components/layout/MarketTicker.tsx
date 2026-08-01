@@ -11,6 +11,11 @@ import { cn } from "@/lib/utils";
  * yumuşak bir geçişle bir sonraki gruba dönüyor — bakınca okunuyor,
  * bakmayınca rahatsız etmiyor. `prefers-reduced-motion` açıkken geçiş
  * efekti düşer ama döngü sürer.
+ *
+ * Sayfalama GRUP SINIRLARINA saygı duyar: tahvil vadeleri hep bir arada ve
+ * aynı sırada döner, endekslerin arasına karışmaz. Grup başına kaç değer
+ * gösterileceği ayrı ayrı verilir, çünkü "Nasdaq 100 686,13 +0,37%" ile
+ * "2Y 3,84% ▲0,02" aynı yeri kaplamıyor.
  */
 
 export type TickerItem = {
@@ -22,24 +27,56 @@ export type TickerItem = {
   change?: string | null;
 };
 
-/** Bir seferde gösterilen değer sayısı — dar ekranda ikiye düşer. */
-const PAGE_SIZE_WIDE = 4;
-const PAGE_SIZE_NARROW = 2;
+export type TickerGroup = {
+  key: string;
+  /** Grubun başına yazılan sessiz künye — "ABD Tahvili" gibi. */
+  caption?: string;
+  items: TickerItem[];
+  /** Dar ekranda bir sayfada kaç değer sığıyor. */
+  narrowSize: number;
+  /** Geniş ekranda bir sayfada kaç değer sığıyor. */
+  wideSize: number;
+  /**
+   * Dar ekranda değişim sütununu düşür. Tahvillerde üçünü aynı sayfada
+   * tutabilmenin bedeli bu: 390px'e üç vade + üç delta sığmıyor, seviyeler
+   * sığıyor. Vadelerin bölünüp ayrı sayfalara dağılmasındansa deltayı
+   * geniş ekrana bırakmak tercih edildi.
+   */
+  hideChangeNarrow?: boolean;
+};
+
 const WIDE_QUERY = "(min-width: 640px)";
 const ROTATE_MS = 6000;
 const FADE_MS = 400;
 
-export function MarketTicker({ items }: { items: TickerItem[] }) {
+type Page = { caption?: string; showChange: boolean; items: TickerItem[] };
+
+function paginate(groups: TickerGroup[], wide: boolean): Page[] {
+  const pages: Page[] = [];
+  for (const group of groups) {
+    const size = Math.max(1, wide ? group.wideSize : group.narrowSize);
+    const showChange = wide || !group.hideChangeNarrow;
+    for (let i = 0; i < group.items.length; i += size) {
+      pages.push({
+        caption: group.caption,
+        showChange,
+        items: group.items.slice(i, i + size),
+      });
+    }
+  }
+  return pages;
+}
+
+export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
   const [page, setPage] = useState(0);
   const [visible, setVisible] = useState(true);
-  // Sunucu geniş varsayar; dar ekranda ilk ölçümde ikiye iner. CSS ile
-  // gizlemek işe yaramıyor — gizlenen değerler döngüde hiç sıra alamıyor.
-  const [pageSize, setPageSize] = useState(PAGE_SIZE_WIDE);
+  // Sunucu geniş varsayar; dar ekranda ilk ölçümde daralır. CSS ile gizlemek
+  // işe yaramıyor — gizlenen değerler döngüde hiç sıra alamıyor.
+  const [wide, setWide] = useState(true);
 
   useEffect(() => {
     const query = window.matchMedia(WIDE_QUERY);
-    const apply = () =>
-      setPageSize(query.matches ? PAGE_SIZE_WIDE : PAGE_SIZE_NARROW);
+    const apply = () => setWide(query.matches);
     const id = window.setTimeout(apply, 0);
     query.addEventListener("change", apply);
     return () => {
@@ -48,7 +85,8 @@ export function MarketTicker({ items }: { items: TickerItem[] }) {
     };
   }, []);
 
-  const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
+  const pages = paginate(groups, wide);
+  const pageCount = Math.max(1, pages.length);
 
   useEffect(() => {
     if (pageCount <= 1) return;
@@ -63,11 +101,10 @@ export function MarketTicker({ items }: { items: TickerItem[] }) {
     return () => window.clearInterval(cycle);
   }, [pageCount]);
 
-  if (items.length === 0) return null;
+  if (pages.length === 0) return null;
 
   // Ölçü değişince sayfa sayısı da değişir; taşan indeks başa sarılır.
-  const safePage = page % pageCount;
-  const shown = items.slice(safePage * pageSize, safePage * pageSize + pageSize);
+  const shown = pages[page % pageCount];
 
   return (
     <div
@@ -76,16 +113,21 @@ export function MarketTicker({ items }: { items: TickerItem[] }) {
     >
       <div
         className={cn(
-          "mx-auto flex h-8 max-w-[1400px] items-center gap-5 overflow-hidden px-[18px] text-[11.5px] transition-opacity motion-reduce:transition-none sm:px-6 xl:px-10",
+          "mx-auto flex h-9 max-w-[1400px] items-center gap-3 overflow-hidden px-[18px] text-[12px] transition-opacity motion-reduce:transition-none sm:gap-5 sm:px-6 sm:text-[13px] xl:px-10",
           visible ? "opacity-100" : "opacity-0",
         )}
         style={{ transitionDuration: `${FADE_MS}ms` }}
       >
-        {shown.map((item) => (
+        {shown.caption && (
+          <span className="shrink-0 text-[10.5px] font-bold uppercase tracking-[0.09em] text-muted">
+            {shown.caption}
+          </span>
+        )}
+        {shown.items.map((item) => (
           <span key={item.label} className="flex shrink-0 items-center gap-1.5">
             <span className="text-muted">{item.label}</span>
             <span className="numeral font-semibold text-body">{item.value}</span>
-            {item.change && (
+            {shown.showChange && item.change && (
               <span
                 className={cn(
                   "numeral",

@@ -62,8 +62,12 @@ export function BellMark({
 }
 
 /**
- * İşaret + kelime + alt satır. Masthead ve giriş kartında birlikte durur;
- * alt satır dar ekranda gizlenir, orada marka adı zaten yeterli.
+ * İşaret + kelime + alt satır.
+ *
+ * İki metin satırı birbirine göre ORTALANIR: alt satır seyrek aralıklı
+ * olduğu için marka adından geniş çıkıyor, sola dayalıyken kilit sağa doğru
+ * kayık görünüyordu. Ortalanınca ikisi tek blok gibi oturuyor ve zil karosu
+ * bu bloğun tam ortasına denk geliyor.
  */
 export function BrandLockup({
   name,
@@ -79,17 +83,17 @@ export function BrandLockup({
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <BellMark size={size} />
-      <span className="flex flex-col leading-none">
+      <span className="flex flex-col items-center justify-center leading-none">
         <span
-          className="display-ink w-fit font-bold tracking-[-0.03em]"
+          className="display-ink display-ink-tight w-fit font-bold tracking-[-0.03em]"
           style={{ fontSize: size * 0.5 }}
         >
           {name}
         </span>
         {tagline && (
           <span
-            className="mt-[3px] font-semibold uppercase tracking-[0.14em] text-muted"
-            style={{ fontSize: Math.max(9, size * 0.26) }}
+            className="mt-[3px] text-center font-semibold uppercase tracking-[0.13em] text-muted"
+            style={{ fontSize: Math.max(9, size * 0.25) }}
           >
             {tagline}
           </span>

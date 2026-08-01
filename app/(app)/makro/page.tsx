@@ -7,8 +7,9 @@ import type { MacroObservation } from "@/lib/providers/types";
 
 /**
  * Makro göstergeler — her seri bir gösterge kartı.
- * Değer büyük ve mono; değişim yönlü ok taşır ama renk yorumu yapmaz
- * (enflasyonun düşmesi iyi, istihdamın düşmesi kötüdür — renk yanıltır).
+ * Değer büyük ve mono; ok yalnızca yönü söyler (düşüş kırmızı, yükseliş
+ * accent mavi) — yeşil bilinçli olarak yok, çünkü enflasyonun düşmesi iyi,
+ * istihdamın düşmesi kötüdür ve yeşil "iyi haber" demek olurdu.
  * Dönem ve tarih alanları ham "2026-06" yerine Türkçe okunur.
  */
 
@@ -76,7 +77,16 @@ export default async function MacroPage() {
                   </span>
                   {delta !== null && Math.abs(delta) > 0.001 && (
                     <span className="numeral inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-body">
-                      <span aria-hidden className="text-[0.8em]">
+                      {/* Ok yalnızca yönü söyler: düşüş kırmızı, yükseliş
+                          accent mavi. Yeşil yok — bkz. ana sayfa makro kartı. */}
+                      <span
+                        aria-hidden
+                        className={
+                          delta > 0
+                            ? "text-[0.8em] font-semibold text-primary"
+                            : "text-[0.8em] font-semibold text-down"
+                        }
+                      >
                         {delta > 0 ? "▲" : "▼"}
                       </span>
                       {formatPrice(Math.abs(delta), locale, { digits })}

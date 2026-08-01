@@ -1,4 +1,8 @@
-import { MarketTicker, type TickerItem } from "./MarketTicker";
+import {
+  MarketTicker,
+  type TickerGroup,
+  type TickerItem,
+} from "./MarketTicker";
 import { getStatus } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
@@ -42,13 +46,12 @@ export async function TickerFeed() {
     ...TICKER_YIELDS.map((series) => getSeries(series, 2)),
   ]);
 
-  const items: TickerItem[] = [];
-
+  const indexItems: TickerItem[] = [];
   if (quotes.ok) {
     for (const symbol of INDEX_STRIP) {
       const quote = quotes.data[symbol];
       if (!quote) continue;
-      items.push({
+      indexItems.push({
         label: INDEX_LABEL[symbol] ?? symbol,
         value: formatPrice(quote.price, locale),
         changePct: quote.changePct,
@@ -57,13 +60,14 @@ export async function TickerFeed() {
     }
   }
 
+  const yieldItems: TickerItem[] = [];
   TICKER_YIELDS.forEach((series, index) => {
     const result = yields[index];
     if (!result.ok || result.data.latestValue === null) return;
     const latest = result.data.latestValue;
     const prev = result.data.prevValue;
     const delta = prev !== null ? latest - prev : null;
-    items.push({
+    yieldItems.push({
       label: YIELD_LABEL[series.slug] ?? series.slug,
       value: `${formatPrice(latest, locale)}%`,
       changePct: delta,
@@ -74,5 +78,28 @@ export async function TickerFeed() {
     });
   });
 
-  return <MarketTicker items={items} />;
+  /* "2Y" tek başına ne olduğunu söylemiyordu; künye grubun önüne yazılıyor,
+     böylece hem etiketler kısa kalıyor hem tahvil oldukları belli oluyor.
+     Üç vade tek sayfada duruyor — dar ekranda da bölünmüyorlar. */
+  const groups: TickerGroup[] = [];
+  if (indexItems.length > 0) {
+    groups.push({
+      key: "indices",
+      items: indexItems,
+      narrowSize: 2,
+      wideSize: 4,
+    });
+  }
+  if (yieldItems.length > 0) {
+    groups.push({
+      key: "yields",
+      caption: locale === "tr" ? "ABD Tahvili" : "US Treasuries",
+      items: yieldItems,
+      narrowSize: yieldItems.length,
+      wideSize: yieldItems.length,
+      hideChangeNarrow: true,
+    });
+  }
+
+  return <MarketTicker groups={groups} />;
 }
