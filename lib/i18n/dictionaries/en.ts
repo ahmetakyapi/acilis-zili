@@ -106,6 +106,9 @@ const en: typeof tr = {
     topNews: "Top Stories",
     weekAhead: "The Week Ahead",
     weekAheadEmpty: "No major releases scheduled for the coming week.",
+    worldMarkets: "World Markets",
+    worldMarketsHint:
+      "Local indices aren't available from free providers, so these are MSCI country funds that hold those markets' shares and trade in US dollars on US hours. They move in the same direction, but the percentage can differ with currency and session timing.",
     greetingMorning: "Good Morning",
     greetingDay: "Good Afternoon",
     greetingEvening: "Good Evening",
@@ -198,6 +201,30 @@ const en: typeof tr = {
     removeFromWatchlist: "Remove from Watchlist",
     notFound: "Symbol not found",
     notFoundHint: "Check the symbol or search for it again.",
+    peers: "Companies in the Same Sector",
+    peersHint: "Sub-industry",
+    compliance: "Sharia Screening",
+    compliancePass: "Passes the Screen",
+    complianceReview: "Needs Review",
+    complianceFail: "Fails the Screen",
+    complianceDebt: "Interest-Bearing Debt / Market Cap",
+    complianceCash: "Cash and Interest-Bearing Assets / Market Cap",
+    complianceLimit: "limit",
+    complianceUnknown: "Balance-sheet ratios aren't available for this company.",
+    complianceMissing:
+      "The interest-income test (5% of revenue) needs a revenue breakdown our free data source doesn't provide, so that criterion isn't screened.",
+    complianceDisclaimer:
+      "This is not a religious ruling. It is an automated pre-screen based on the line of business and AAOIFI's widely used financial thresholds; a final judgement rests with your own school of thought and the certification boards that audit the filings.",
+    complianceReasons: {
+      banking: "Core business is interest-based finance (banking, brokerage, payments)",
+      insurance: "Core business is conventional insurance",
+      alcohol: "Alcoholic beverage production",
+      tobacco: "Tobacco products",
+      gambling: "Gambling and betting",
+      weapons: "Defense and weapons manufacturing",
+      adult: "Entertainment content — revenue mix should be reviewed",
+      pork: "Packaged foods — pork exposure should be reviewed",
+    },
   },
 
   chart: {

@@ -104,6 +104,9 @@ const tr = {
     topNews: "Öne Çıkan Haberler",
     weekAhead: "Haftaya Bakış",
     weekAheadEmpty: "Önümüzdeki hafta için planlanmış önemli veri yok.",
+    worldMarkets: "Dünya Piyasaları",
+    worldMarketsHint:
+      "Yerel endeksler ücretsiz sağlayıcılarda yok; bu değerler o ülkenin hisselerini tutan ve ABD'de dolar bazında işlem gören MSCI ülke fonlarıdır. Yönü aynı gösterir, yüzdesi kur ve seans farkıyla ayrışabilir.",
     greetingMorning: "Günaydın",
     greetingDay: "İyi Günler",
     greetingEvening: "İyi Akşamlar",
@@ -196,6 +199,30 @@ const tr = {
     removeFromWatchlist: "Favorilerden Çıkar",
     notFound: "Bu sembol bulunamadı",
     notFoundHint: "Sembolü kontrol et veya arama kutusundan tekrar dene.",
+    peers: "Aynı Sektörden Şirketler",
+    peersHint: "Alt sektör",
+    compliance: "Katılım Taraması",
+    compliancePass: "Ön Elemeyi Geçiyor",
+    complianceReview: "İnceleme Gerekir",
+    complianceFail: "Ön Elemeyi Geçemiyor",
+    complianceDebt: "Faizli Borç / Piyasa Değeri",
+    complianceCash: "Nakit ve Faizli Varlık / Piyasa Değeri",
+    complianceLimit: "sınır",
+    complianceUnknown: "Bu şirket için bilanço oranları alınamadı.",
+    complianceMissing:
+      "Faiz geliri oranı (gelirin %5'i sınırı) ücretsiz veri kaynağımızda yok; bu kriter taranamıyor.",
+    complianceDisclaimer:
+      "Bu bir fetva değildir. Faaliyet alanı ve AAOIFI'nin yaygın finansal eşiklerine dayanan otomatik bir ön elemedir; kesin hüküm için bağlı olduğun görüşe ve uzman kurulların denetimine bakmalısın.",
+    complianceReasons: {
+      banking: "Ana faaliyeti faizli finans (bankacılık, aracılık, ödeme)",
+      insurance: "Ana faaliyeti konvansiyonel sigortacılık",
+      alcohol: "Alkollü içecek üretimi",
+      tobacco: "Tütün ürünleri",
+      gambling: "Kumar ve bahis",
+      weapons: "Savunma sanayi ve silah",
+      adult: "Eğlence içeriği — gelir kırılımı incelenmeli",
+      pork: "Gıda üretimi — domuz ürünü içerip içermediği incelenmeli",
+    },
   },
 
   chart: {

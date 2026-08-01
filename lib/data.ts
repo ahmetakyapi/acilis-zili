@@ -276,9 +276,30 @@ export type SymbolMeta = {
   /** Yalnızca USD cinsinden bilinen piyasa değeri — yabancı para birimleri
       (ör. TSM/TWD) karşılaştırılamaz olduğundan null sayılır. */
   marketCap: number | null;
+  /** Ödenmiş hisse sayısı — canlı piyasa değeri hesabı bunu kullanır. */
+  shareOutstanding: number | null;
   logoUrl: string | null;
   industry: string | null;
 };
+
+/**
+ * Güncel piyasa değeri = son fiyat × hisse sayısı.
+ *
+ * Sağlayıcının yazdığı `marketCap` alanı profil çekildiği anın fotoğrafıdır;
+ * hisse sayısı ise ancak geri alım/ihraçla, yani çeyreklerde değişir. Bu
+ * yüzden değer canlı fiyattan hesaplanır ve gün içinde doğru kalır. Hisse
+ * sayısı bilinmiyorsa kayıtlı değere düşülür.
+ */
+export function liveMarketCap(
+  meta: SymbolMeta | undefined,
+  price: number | null | undefined,
+): number | null {
+  if (!meta) return null;
+  if (meta.shareOutstanding && typeof price === "number" && price > 0) {
+    return meta.shareOutstanding * price;
+  }
+  return meta.marketCap;
+}
 
 export async function getSymbolNames(
   list: string[],
@@ -292,6 +313,7 @@ export async function getSymbolNames(
         isIndexProxy: symbolsTable.isIndexProxy,
         marketCap: symbolsTable.marketCap,
         currency: symbolsTable.currency,
+        shareOutstanding: symbolsTable.shareOutstanding,
         logoUrl: symbolsTable.logoUrl,
         industry: symbolsTable.industry,
       })
@@ -304,6 +326,7 @@ export async function getSymbolNames(
           name: r.name,
           indexProxy: r.isIndexProxy,
           marketCap: r.currency === "USD" ? r.marketCap : null,
+          shareOutstanding: r.currency === "USD" ? r.shareOutstanding : null,
           logoUrl: r.logoUrl,
           industry: r.industry,
         },

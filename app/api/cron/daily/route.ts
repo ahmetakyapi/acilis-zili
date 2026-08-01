@@ -151,17 +151,20 @@ export async function GET(request: Request) {
   }
 
   /* ---- 2c. Sembol profillerini tazele ----
-     En bayat 25 sembolün profili (piyasa değeri, sektör, logo) yenilenir;
-     Şirketler ve Bilançolar sayfaları bu meta veriden beslenir. */
+     Profil; hisse sayısı, sektör ve logoyu taşır. Piyasa değeri sayfalarda
+     canlı fiyat × hisse sayısı olarak hesaplandığı için bu kayıtların gün
+     içinde tazelenmesi gerekmez — hisse sayısı ancak geri alım/ihraçla
+     değişir. Günde 60 sembol dönerek ~9 günde tüm evren yenilenir; Finnhub'ın
+     dakikada 60 istek sınırı ve fonksiyonun 120 sn bütçesi buna izin verir. */
   try {
     // Önce yaklaşan bilançoların tanınmayan sembolleri (spotlight için),
     // kalan bütçeyle en bayat kayıtlar. getCompanyProfile symbols tablosuna
     // kendisi yazar (insert/update).
     const [upcoming, stalest] = await Promise.all([
       getEarningsSymbolsMissingProfile(7, 15),
-      getStalestSymbols(10),
+      getStalestSymbols(60),
     ]);
-    const targets = [...new Set([...upcoming, ...stalest])].slice(0, 25);
+    const targets = [...new Set([...upcoming, ...stalest])].slice(0, 60);
 
     let refreshed = 0;
     for (const symbol of targets) {

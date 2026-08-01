@@ -158,6 +158,10 @@ export type KeyMetrics = {
   beta: number | null;
   high52: number | null;
   low52: number | null;
+  /** Katılım taraması için bilanço oranları — hisse başına. */
+  bookValuePerShare: number | null;
+  debtToEquity: number | null;
+  cashPerShare: number | null;
 };
 
 export type MacroObservation = {

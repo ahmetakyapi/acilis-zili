@@ -7,6 +7,23 @@
 
 export type SymbolDescription = { tr: string; en: string };
 
+/**
+ * Sembolün tanıtımı — önce bu dosyadaki uzun anlatım, yoksa endeks
+ * kapsamını tamamlayan `descriptions-sp500.ts` kaydı. İkisi de yoksa null:
+ * uydurma metin üretilmez.
+ */
+export async function describeSymbol(
+  symbol: string,
+  locale: string,
+): Promise<string | null> {
+  const own = SYMBOL_DESCRIPTIONS[symbol];
+  if (own) return locale === "tr" ? own.tr : own.en;
+  const { SP500_DESCRIPTIONS } = await import("./descriptions-sp500");
+  const extra = SP500_DESCRIPTIONS[symbol];
+  if (extra) return locale === "tr" ? extra.tr : extra.en;
+  return null;
+}
+
 export const SYMBOL_DESCRIPTIONS: Record<string, SymbolDescription> = {
   // ---- Endeks fonları ----
   QQQ: {

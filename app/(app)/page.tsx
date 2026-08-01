@@ -28,13 +28,14 @@ import {
   todayEt,
 } from "@/lib/market-hours";
 import { getQuotes } from "@/lib/providers";
-import { INDEX_STRIP } from "@/db/seed/symbols";
+import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import {
   cn,
   directionOf,
   dualTime,
   formatEtDateLong,
+  formatPercent,
   formatPrice,
   timeAgo,
 } from "@/lib/utils";
@@ -116,6 +117,11 @@ export default async function TodayPage() {
           <IndexStrip locale={locale} t={t} />
         </Suspense>
       </section>
+
+      {/* ---- Dünya piyasaları ---- */}
+      <Suspense fallback={<Skeleton className="h-28 w-full rounded-(--radius-xl)" />}>
+        <WorldStrip locale={locale} t={t} />
+      </Suspense>
 
       <div className="grid gap-5 lg:grid-cols-5">
         <div className="flex flex-col gap-5 lg:col-span-3">
@@ -314,6 +320,68 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
         />
       </div>
     </div>
+  );
+}
+
+/**
+ * Dünya piyasaları şeridi — ülke fonları üzerinden.
+ * Yerel endeksin kendisi değil; kartın altındaki künye bunu açıkça söyler.
+ */
+async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
+  const status = await getStatus();
+  const result = await getQuotes(
+    WORLD_MARKETS.map((market) => market.symbol),
+    status,
+  );
+  if (!result.ok) return null;
+
+  const shown = WORLD_MARKETS.filter((market) => result.data[market.symbol]);
+  if (shown.length === 0) return null;
+
+  return (
+    <Panel>
+      <PanelHeader title={t.today.worldMarkets} />
+      <ul className="grid grid-cols-2 divide-line-soft sm:grid-cols-3 lg:grid-cols-6">
+        {shown.map((market) => {
+          const quote = result.data[market.symbol];
+          const tone = directionOf(quote.changePct);
+          return (
+            <li
+              key={market.symbol}
+              className="border-b border-r border-line-soft px-4 py-3 last:border-r-0"
+            >
+              <Link href={`/hisse/${market.symbol}`} className="block">
+                <p className="flex items-center gap-1.5 text-xs font-semibold text-strong">
+                  <span aria-hidden>{market.flag}</span>
+                  {locale === "tr" ? market.nameTr : market.nameEn}
+                </p>
+                <p className="tote mt-1 text-base">
+                  {formatPrice(quote.price, locale)}
+                </p>
+                <p
+                  className={cn(
+                    "numeral text-xs font-semibold",
+                    tone === "up"
+                      ? "text-up"
+                      : tone === "down"
+                        ? "text-down"
+                        : "text-muted",
+                  )}
+                >
+                  {formatPercent(quote.changePct, locale)}
+                </p>
+                <p className="mt-1 text-[10px] leading-tight text-muted">
+                  {locale === "tr" ? market.tracksTr : market.tracksEn}
+                </p>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="px-4 py-2.5 text-[11px] leading-relaxed text-muted sm:px-5">
+        {t.today.worldMarketsHint}
+      </p>
+    </Panel>
   );
 }
 

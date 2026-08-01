@@ -400,6 +400,14 @@ export async function getKeyMetrics(
       beta: m.beta ?? null,
       high52: m["52WeekHigh"] ?? null,
       low52: m["52WeekLow"] ?? null,
+      bookValuePerShare:
+        m.bookValuePerShareQuarterly ?? m.bookValuePerShareAnnual ?? null,
+      debtToEquity:
+        m["totalDebt/totalEquityQuarterly"] ??
+        m["totalDebt/totalEquityAnnual"] ??
+        null,
+      cashPerShare:
+        m.cashPerSharePerShareQuarterly ?? m.cashPerSharePerShareAnnual ?? null,
     },
     "finnhub",
     { fetchedAt: result.fetchedAt },

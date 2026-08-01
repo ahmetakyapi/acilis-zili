@@ -39,14 +39,14 @@ function isActive(pathname: string, href: string): boolean {
 function SidebarClock({ nyLabel, istLabel }: { nyLabel: string; istLabel: string }) {
   const { ny, ist } = useDualClock();
   return (
-    <div className="mx-3 mb-2 rounded-(--radius-md) border border-line-soft bg-surface-sunken/60 px-3 py-2">
-      <div className="flex items-center justify-between">
+    <div className="border-t border-line-soft px-4 py-2.5">
+      <div className="flex items-baseline justify-between gap-2">
         <span className="plate text-[9px]">{nyLabel}</span>
-        <span className="numeral text-xs font-semibold text-strong">{ny}</span>
+        <span className="numeral text-[13px] font-semibold text-strong">{ny}</span>
       </div>
-      <div className="mt-1 flex items-center justify-between">
+      <div className="mt-1 flex items-baseline justify-between gap-2">
         <span className="plate text-[9px]">{istLabel}</span>
-        <span className="numeral text-xs font-semibold text-strong">{ist}</span>
+        <span className="numeral text-[13px] font-semibold text-strong">{ist}</span>
       </div>
     </div>
   );
@@ -129,30 +129,38 @@ export function AppShell({
 
         <SidebarClock nyLabel={labels.clockNy} istLabel={labels.clockIst} />
 
-        <div className="border-t border-line-soft px-2.5 py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              {themeToggle}
-              {localeToggle}
-            </div>
-            {signedIn ? (
-              <Link
-                href="/ayarlar"
-                title={username ?? labels.settings}
-                className="flex h-8 max-w-[6.5rem] items-center gap-1.5 rounded-(--radius-md) px-2 text-xs text-soft transition-colors hover:bg-surface-elevated hover:text-strong"
+        {/* Hesap satırı — avatar solda, ayarlar oraya götürür */}
+        <div className="border-t border-line-soft px-2 py-2">
+          {signedIn ? (
+            <Link
+              href="/ayarlar"
+              title={username ?? labels.settings}
+              className="flex items-center gap-2 rounded-(--radius-md) px-2 py-1.5 transition-colors hover:bg-surface-elevated"
+            >
+              <span
+                aria-hidden
+                className="numeral flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-wash text-[11px] font-bold uppercase text-primary"
               >
-                <Settings size={14} strokeWidth={1.8} />
-                <span className="truncate">{username ?? labels.settings}</span>
-              </Link>
-            ) : (
-              <Link
-                href="/giris"
-                className="flex h-8 items-center gap-1.5 rounded-(--radius-md) px-2 text-xs font-medium text-primary transition-colors hover:bg-primary-wash"
-              >
-                <LogIn size={14} strokeWidth={1.8} />
-                {labels.signIn}
-              </Link>
-            )}
+                {(username ?? "?").slice(0, 2)}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-xs font-medium text-body">
+                {username ?? labels.settings}
+              </span>
+              <Settings size={14} strokeWidth={1.8} className="shrink-0 text-muted" />
+            </Link>
+          ) : (
+            <Link
+              href="/giris"
+              className="flex items-center gap-2 rounded-(--radius-md) px-2 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary-wash"
+            >
+              <LogIn size={15} strokeWidth={1.9} />
+              {labels.signIn}
+            </Link>
+          )}
+
+          <div className="mt-0.5 flex items-center gap-0.5 border-t border-line-soft pt-1.5">
+            {themeToggle}
+            {localeToggle}
           </div>
         </div>
       </aside>

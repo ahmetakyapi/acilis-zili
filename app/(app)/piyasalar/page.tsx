@@ -14,7 +14,7 @@ import {
   SPX_MEMBERS,
   type IndexMember,
 } from "@/db/seed/indices";
-import { getStatus } from "@/lib/data";
+import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getChartBars, getQuotes } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
@@ -24,6 +24,7 @@ import {
   cn,
   directionOf,
   formatChange,
+  formatCompact,
   formatEtDateShort,
   formatPercent,
   formatPrice,
@@ -47,7 +48,7 @@ const INDEX_TABS = [
 
 type TabKey = (typeof INDEX_TABS)[number]["key"];
 
-const SORT_KEYS = ["degisim", "fiyat", "ad", "katki"] as const;
+const SORT_KEYS = ["degisim", "fiyat", "ad", "katki", "cap"] as const;
 type SortKey = (typeof SORT_KEYS)[number];
 type SortDir = "asc" | "desc";
 
@@ -347,6 +348,8 @@ type Row = {
   quote: Quote | undefined;
   /** Yalnızca Dow (fiyat ağırlıklı) için: endeks puanına katkı. */
   contribution: number | null;
+  /** Piyasa değeri — yalnızca USD cinsinden bilinenler. */
+  marketCap: number | null;
 };
 
 async function IndexDetail({
@@ -367,12 +370,13 @@ async function IndexDetail({
   t: Dictionary;
 }) {
   const status = await getStatus();
-  const [{ quotes, stampAt }, proxyResult] = await Promise.all([
+  const [{ quotes, stampAt }, proxyResult, meta] = await Promise.all([
     quotesFor(
       members.map((m) => m.symbol),
       status,
     ),
     getQuotes([proxy], status),
+    getSymbolNames(members.map((m) => m.symbol)),
   ]);
 
   /* Dow fiyat ağırlıklıdır: Endeks = Σfiyat / bölen. Bölen, elimizdeki
@@ -406,6 +410,8 @@ async function IndexDetail({
         divisor && quote && typeof quote.change === "number"
           ? quote.change / divisor
           : null,
+      // Canlı fiyat × hisse sayısı — gün içinde güncel kalır.
+      marketCap: liveMarketCap(meta[member.symbol], quote?.price),
     };
   });
 
@@ -688,6 +694,8 @@ function MembersTable({
         return row.member.name;
       case "katki":
         return row.contribution ?? -Infinity;
+      case "cap":
+        return row.marketCap ?? -Infinity;
       default:
         return row.quote?.changePct ?? -Infinity;
     }
@@ -707,7 +715,7 @@ function MembersTable({
     <Panel>
       <PanelHeader title={t.markets.constituents} />
       <div className="scroll-x">
-        <table className="w-full min-w-[560px] text-sm">
+        <table className="w-full min-w-[680px] text-sm">
           <thead>
             <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
               <th className="w-10 px-4 py-2.5 font-medium sm:px-5">#</th>
@@ -728,6 +736,12 @@ function MembersTable({
                 label={t.companies.change}
                 href={sortHref(tab, "degisim", sort, dir)}
                 active={sort === "degisim"}
+                dir={dir}
+              />
+              <SortHead
+                label={t.market.marketCap}
+                href={sortHref(tab, "cap", sort, dir)}
+                active={sort === "cap"}
                 dir={dir}
                 className={showContribution ? undefined : "sm:pr-5"}
               />
@@ -773,7 +787,6 @@ function MembersTable({
                   <td
                     className={cn(
                       "numeral px-3 py-2 text-right font-semibold",
-                      showContribution ? undefined : "sm:pr-5",
                       tone === "up"
                         ? "text-up"
                         : tone === "down"
@@ -782,6 +795,16 @@ function MembersTable({
                     )}
                   >
                     {quote ? formatPercent(quote.changePct, locale) : "—"}
+                  </td>
+                  <td
+                    className={cn(
+                      "numeral px-3 py-2 text-right text-body",
+                      showContribution ? undefined : "sm:pr-5",
+                    )}
+                  >
+                    {row.marketCap
+                      ? `$${formatCompact(row.marketCap, locale)}`
+                      : "—"}
                   </td>
                   {showContribution && (
                     <td className="numeral px-3 py-2 text-right text-soft sm:pr-5">

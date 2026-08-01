@@ -17,9 +17,17 @@ import {
 } from "@/components/ui/primitives";
 import { db } from "@/lib/db";
 import { news, watchlistItems, watchlists } from "@/lib/schema";
-import { getEarningsForSymbol, getNextEarnings, getStatus } from "@/lib/data";
+import {
+  getEarningsForSymbol,
+  getNextEarnings,
+  getStatus,
+  getSymbolNames,
+} from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { getCompanyProfile, getQuote } from "@/lib/providers";
+import { getCompanyProfile, getQuote, getQuotes } from "@/lib/providers";
+import { COMPLIANCE_THRESHOLD, screenCompliance } from "@/lib/compliance";
+import { indexMemberOf, peersOf } from "@/db/seed/indices";
+import { subIndustryName } from "@/db/seed/sub-industries";
 import {
   getCompanyNews,
   getEarningsCalendar,
@@ -28,7 +36,7 @@ import {
   getRecommendations,
 } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
-import { SYMBOL_DESCRIPTIONS } from "@/db/seed/descriptions";
+import { describeSymbol } from "@/db/seed/descriptions";
 import {
   cn,
   directionOf,
@@ -102,6 +110,14 @@ export default async function StockPage(
               <AnalystCard symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
+
+          <Suspense fallback={<Skeleton className="h-40 w-full rounded-(--radius-xl)" />}>
+            <ComplianceCard symbol={symbol} locale={locale} t={t} />
+          </Suspense>
+
+          <Suspense fallback={<Skeleton className="h-56 w-full rounded-(--radius-xl)" />}>
+            <PeersCard symbol={symbol} locale={locale} t={t} />
+          </Suspense>
         </div>
       </div>
 
@@ -409,10 +425,19 @@ async function ProfileCard({
     return <DataError message={t.data.failed} hint={t.data.failedHint} />;
   }
   const profile = result.data;
-  const about = SYMBOL_DESCRIPTIONS[symbol]?.[locale] ?? null;
+  const member = indexMemberOf(symbol);
+  const about = await describeSymbol(symbol, locale);
 
   const rows: [string, React.ReactNode][] = [
-    [t.stock.sector, profile.industry ?? "—"],
+    // GICS sınıflandırması varsa o gösterilir — sağlayıcının serbest metinli
+    // sektör alanından daha tutarlıdır.
+    [t.stock.sector, member?.sector ?? profile.industry ?? "—"],
+    ...(member?.sub
+      ? ([[t.stock.industry, subIndustryName(member.sub, locale)]] as [
+          string,
+          React.ReactNode,
+        ][])
+      : []),
     [t.stock.exchange, profile.exchange ?? "—"],
     [
       t.market.marketCap,
@@ -765,6 +790,211 @@ async function PastEarnings({
         </tbody>
       </table>
     </div>
+  );
+}
+
+/**
+ * Katılım taraması — faaliyet alanı + AAOIFI finansal eşikleri.
+ * Sonuç bir fetva değil, ön elemedir; kartın altındaki not bunu söyler.
+ */
+async function ComplianceCard({
+  symbol,
+  locale,
+  t,
+}: {
+  symbol: string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const status = await getStatus();
+  const [metricsResult, quoteResult] = await Promise.all([
+    getKeyMetrics(symbol),
+    getQuote(symbol, status),
+  ]);
+
+  const metrics = metricsResult.ok ? metricsResult.data : null;
+  const price = quoteResult.ok ? quoteResult.data.price : null;
+
+  const result = screenCompliance({
+    symbol,
+    price,
+    bookValuePerShare: metrics?.bookValuePerShare ?? null,
+    debtToEquity: metrics?.debtToEquity ?? null,
+    cashPerShare: metrics?.cashPerShare ?? null,
+  });
+
+  const verdictLabel =
+    result.verdict === "pass"
+      ? t.stock.compliancePass
+      : result.verdict === "fail"
+        ? t.stock.complianceFail
+        : t.stock.complianceReview;
+
+  const verdictClass =
+    result.verdict === "pass"
+      ? "bg-up-wash text-up"
+      : result.verdict === "fail"
+        ? "bg-down-wash text-down"
+        : "bg-brass-wash text-brass";
+
+  const ratios: [string, number | null][] = [
+    [t.stock.complianceDebt, result.debtRatio],
+    [t.stock.complianceCash, result.cashRatio],
+  ];
+
+  return (
+    <Panel>
+      <PanelHeader title={t.stock.compliance} />
+      <div className="px-4 py-4 sm:px-5">
+        <span
+          className={cn(
+            "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
+            verdictClass,
+          )}
+        >
+          {verdictLabel}
+        </span>
+
+        {result.businessReasonKey && (
+          <p className="mt-2.5 text-xs leading-relaxed text-body">
+            {t.stock.complianceReasons[result.businessReasonKey]}
+          </p>
+        )}
+
+        {result.ratiosKnown ? (
+          <dl className="mt-3 flex flex-col gap-2.5">
+            {ratios.map(([label, value]) => {
+              const over = value !== null && value >= COMPLIANCE_THRESHOLD;
+              const width =
+                value === null
+                  ? 0
+                  : Math.min((value / COMPLIANCE_THRESHOLD) * 100, 100);
+              return (
+                <div key={label}>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <dt className="text-[11px] leading-tight text-muted">
+                      {label}
+                    </dt>
+                    <dd
+                      className={cn(
+                        "numeral shrink-0 text-xs font-semibold",
+                        over ? "text-down" : "text-strong",
+                      )}
+                    >
+                      {value !== null
+                        ? `${formatPrice(value, locale, { digits: 1 })}%`
+                        : "—"}
+                    </dd>
+                  </div>
+                  {/* Eşiğe ne kadar yakın — çubuk %33'te dolar */}
+                  <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-surface-sunken">
+                    <div
+                      className={cn("h-full", over ? "bg-down" : "bg-up")}
+                      style={{ width: `${width}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            <p className="numeral text-[10px] text-muted">
+              {t.stock.complianceLimit}: %{COMPLIANCE_THRESHOLD}
+            </p>
+          </dl>
+        ) : (
+          <p className="mt-3 text-xs text-muted">{t.stock.complianceUnknown}</p>
+        )}
+
+        <p className="mt-3 border-t border-line-soft pt-2.5 text-[10px] leading-relaxed text-muted">
+          {t.stock.complianceMissing}
+        </p>
+        <p className="mt-1.5 text-[10px] leading-relaxed text-muted">
+          {t.stock.complianceDisclaimer}
+        </p>
+      </div>
+    </Panel>
+  );
+}
+
+/**
+ * Aynı alt sektördeki şirketler — piyasa değerine göre en büyük altı isim.
+ * Sınıflandırma GICS'ten gelir; fiyatlar canlı.
+ */
+async function PeersCard({
+  symbol,
+  locale,
+  t,
+}: {
+  symbol: string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const member = indexMemberOf(symbol);
+  const peers = peersOf(symbol);
+  if (peers.length === 0) return null;
+
+  const meta = await getSymbolNames(peers.map((peer) => peer.symbol));
+  const ranked = [...peers]
+    .sort(
+      (a, b) =>
+        (meta[b.symbol]?.marketCap ?? 0) - (meta[a.symbol]?.marketCap ?? 0),
+    )
+    .slice(0, 6);
+
+  const status = await getStatus();
+  const result = await getQuotes(
+    ranked.map((peer) => peer.symbol),
+    status,
+  );
+  const quotes = result.ok ? result.data : {};
+
+  return (
+    <Panel>
+      <PanelHeader title={t.stock.peers} />
+      {member?.sub && (
+        <p className="border-b border-line-soft px-4 py-2 text-[11px] text-muted sm:px-5">
+          {t.stock.peersHint}:{" "}
+          <span className="text-soft">
+            {subIndustryName(member.sub, locale)}
+          </span>
+        </p>
+      )}
+      <ul className="divide-y divide-line-soft">
+        {ranked.map((peer) => {
+          const quote = quotes[peer.symbol];
+          return (
+            <li key={peer.symbol}>
+              <Link
+                href={`/hisse/${peer.symbol}`}
+                className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-primary-tint sm:px-5"
+              >
+                <span className="flex min-w-0 flex-col">
+                  <span className="numeral text-sm font-semibold text-strong">
+                    {peer.symbol}
+                  </span>
+                  <span className="truncate text-[11px] text-muted">
+                    {peer.name}
+                  </span>
+                </span>
+                {quote ? (
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span className="numeral text-xs text-body">
+                      {formatPrice(quote.price, locale)}
+                    </span>
+                    <ChangePill
+                      changePct={quote.changePct}
+                      locale={locale}
+                      size="sm"
+                    />
+                  </span>
+                ) : (
+                  <span className="text-xs text-muted">—</span>
+                )}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </Panel>
   );
 }
 

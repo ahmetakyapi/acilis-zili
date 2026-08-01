@@ -128,3 +128,73 @@ export const ALL_SYMBOL_SEEDS: SymbolSeed[] = [
 
 /** Ana sayfadaki endeks şeridinin sırası. */
 export const INDEX_STRIP = ["QQQ", "SPY", "DIA", "IWM"] as const;
+
+/**
+ * Dünya piyasaları — ABD'de işlem gören ülke fonları üzerinden izlenir.
+ *
+ * KOSPI, Nikkei veya BIST 100'ün kendisi ücretsiz sağlayıcılarda yok; bunun
+ * yerine o piyasanın hisselerini tutan MSCI ülke ETF'leri kullanılır. Bu
+ * fonlar DOLAR bazlıdır ve ABD seansında işlem görür: yerel endeksle aynı
+ * yönü gösterir ama birebir aynı yüzdeyi vermez (kur etkisi + seans farkı).
+ * Ekranda bu açıkça yazılır — vekil olduğu gizlenmez.
+ */
+export type WorldMarket = {
+  symbol: string;
+  nameTr: string;
+  nameEn: string;
+  /** Vekil ettiği yerel endeks — kart altında künye olarak görünür. */
+  tracksTr: string;
+  tracksEn: string;
+  flag: string;
+};
+
+export const WORLD_MARKETS: WorldMarket[] = [
+  {
+    symbol: "EWJ",
+    nameTr: "Japonya",
+    nameEn: "Japan",
+    tracksTr: "MSCI Japonya · Nikkei ile aynı piyasa",
+    tracksEn: "MSCI Japan · same market as the Nikkei",
+    flag: "🇯🇵",
+  },
+  {
+    symbol: "EWY",
+    nameTr: "Güney Kore",
+    nameEn: "South Korea",
+    tracksTr: "MSCI Güney Kore · KOSPI ile aynı piyasa",
+    tracksEn: "MSCI South Korea · same market as the KOSPI",
+    flag: "🇰🇷",
+  },
+  {
+    symbol: "TUR",
+    nameTr: "Türkiye",
+    nameEn: "Türkiye",
+    tracksTr: "MSCI Türkiye · BIST ile aynı piyasa",
+    tracksEn: "MSCI Türkiye · same market as the BIST",
+    flag: "🇹🇷",
+  },
+  {
+    symbol: "MCHI",
+    nameTr: "Çin",
+    nameEn: "China",
+    tracksTr: "MSCI Çin · Şanghay ve Hong Kong",
+    tracksEn: "MSCI China · Shanghai and Hong Kong",
+    flag: "🇨🇳",
+  },
+  {
+    symbol: "EWG",
+    nameTr: "Almanya",
+    nameEn: "Germany",
+    tracksTr: "MSCI Almanya · DAX ile aynı piyasa",
+    tracksEn: "MSCI Germany · same market as the DAX",
+    flag: "🇩🇪",
+  },
+  {
+    symbol: "INDA",
+    nameTr: "Hindistan",
+    nameEn: "India",
+    tracksTr: "MSCI Hindistan · Sensex ve Nifty",
+    tracksEn: "MSCI India · Sensex and Nifty",
+    flag: "🇮🇳",
+  },
+];
