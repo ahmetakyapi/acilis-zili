@@ -30,6 +30,10 @@ değildir, bilgisayar kapalıyken de çalışır:
 - **Yönetim:** https://claude.ai/code/routines — durdurma/silme buradan
 - Bulut ajanı yerel dosya okuyamadığı için `BRIEF_SECRET` rutinin prompt'una
   gömülüdür; secret'ı değiştirirsen rutini de güncelle.
+- **Ağ şartı:** Bulut ortamının egress politikası `acilis-zili.vercel.app`
+  alan adına izin vermek ZORUNDA — aksi hâlde proxy 403 döner ve görev
+  başlamadan düşer (2026-08-01'de yaşandı). İzin, claude.ai'de ortam
+  (environment) ayarlarındaki ağ erişimi bölümünden verilir.
 
 Aşağıdaki GÜNLÜK GÖREV bölümü referanstır (rutinin prompt'unun kaynağı);
 elle tek seferlik çalıştırmak istersen bu dosyayı Claude'a verip
