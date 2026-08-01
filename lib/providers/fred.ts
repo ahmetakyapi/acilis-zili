@@ -34,48 +34,48 @@ export const MACRO_SERIES = [
     slug: "cpi",
     units: "pc1",
     unit: "%",
-    titleTr: "TÜFE (yıllık)",
-    titleEn: "CPI (year over year)",
+    titleTr: "TÜFE (Yıllık)",
+    titleEn: "CPI (Year over Year)",
   },
   {
     seriesId: "CPILFESL",
     slug: "core-cpi",
     units: "pc1",
     unit: "%",
-    titleTr: "Çekirdek TÜFE (yıllık)",
-    titleEn: "Core CPI (year over year)",
+    titleTr: "Çekirdek TÜFE (Yıllık)",
+    titleEn: "Core CPI (Year over Year)",
   },
   {
     seriesId: "UNRATE",
     slug: "unemployment",
     units: "lin",
     unit: "%",
-    titleTr: "İşsizlik oranı",
-    titleEn: "Unemployment rate",
+    titleTr: "İşsizlik Oranı",
+    titleEn: "Unemployment Rate",
   },
   {
     seriesId: "FEDFUNDS",
     slug: "fed-funds",
     units: "lin",
     unit: "%",
-    titleTr: "Fed politika faizi",
-    titleEn: "Fed funds rate",
+    titleTr: "Fed Politika Faizi",
+    titleEn: "Fed Funds Rate",
   },
   {
     seriesId: "PCEPILFE",
     slug: "core-pce",
     units: "pc1",
     unit: "%",
-    titleTr: "Çekirdek PCE (yıllık)",
-    titleEn: "Core PCE (year over year)",
+    titleTr: "Çekirdek PCE (Yıllık)",
+    titleEn: "Core PCE (Year over Year)",
   },
   {
     seriesId: "PAYEMS",
     slug: "payrolls",
     units: "chg",
     unit: "bin",
-    titleTr: "Tarım dışı istihdam (aylık değişim)",
-    titleEn: "Nonfarm payrolls (monthly change)",
+    titleTr: "Tarım Dışı İstihdam (Aylık Değişim)",
+    titleEn: "Nonfarm Payrolls (Monthly Change)",
   },
 ] as const;
 
@@ -124,8 +124,16 @@ type RawObservations = {
   observations?: { date: string; value: string }[];
 };
 
+/** getSeries'in ihtiyaç duyduğu asgari alanlar — tahvil gibi geçici seriler
+    MACRO_SERIES'e girmeden bu şekille sorgulanabilir. */
+export type SeriesRequest = {
+  seriesId: string;
+  slug: string;
+  units: string;
+};
+
 export async function getSeries(
-  definition: MacroSeriesDefinition,
+  definition: SeriesRequest,
   limit = 60,
 ): Promise<ProviderResult<MacroSeriesData>> {
   const result = await fredFetch<RawObservations>(

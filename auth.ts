@@ -10,7 +10,13 @@ import { users } from "@/lib/schema";
  * Şifre doğrulaması burada yapılır; Auth.js kendi hash'lemesini yapmaz.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
+  // Oturum 180 gün yaşar ve aktif kullanımda kayarak yenilenir —
+  // kullanıcı her ziyarette yeniden giriş yapmak zorunda kalmaz.
+  session: {
+    strategy: "jwt",
+    maxAge: 60 * 60 * 24 * 180,
+    updateAge: 60 * 60 * 24,
+  },
   pages: {
     signIn: "/giris",
   },

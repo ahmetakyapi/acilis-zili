@@ -71,7 +71,7 @@ export default async function MacroPage() {
                   <span className="tote text-[2rem] leading-none">
                     {formatPrice(row.latestValue, locale, { digits })}
                     {row.unit === "%" && (
-                      <span className="ml-0.5 text-lg text-soft">%</span>
+                      <span className="ml-1.5 text-lg text-soft">%</span>
                     )}
                   </span>
                   {delta !== null && Math.abs(delta) > 0.001 && (

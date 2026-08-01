@@ -46,7 +46,7 @@ function SidebarClock({ nyLabel, istLabel }: { nyLabel: string; istLabel: string
       </div>
       <div className="mt-1 flex items-center justify-between">
         <span className="plate text-[9px]">{istLabel}</span>
-        <span className="numeral text-xs text-soft">{ist}</span>
+        <span className="numeral text-xs font-semibold text-strong">{ist}</span>
       </div>
     </div>
   );

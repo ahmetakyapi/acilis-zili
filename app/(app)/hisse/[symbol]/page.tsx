@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Star } from "lucide-react";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
 import { PriceChart } from "@/components/stock/PriceChart";
@@ -15,7 +16,7 @@ import {
   Skeleton,
 } from "@/components/ui/primitives";
 import { db } from "@/lib/db";
-import { watchlistItems, watchlists } from "@/lib/schema";
+import { news, watchlistItems, watchlists } from "@/lib/schema";
 import { getEarningsForSymbol, getNextEarnings, getStatus } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote } from "@/lib/providers";
@@ -61,7 +62,7 @@ export default async function StockPage(
       </Suspense>
 
       <div className="grid gap-5 lg:grid-cols-3">
-        <div className="flex flex-col gap-5 lg:col-span-2">
+        <div className="flex min-w-0 flex-col gap-5 lg:col-span-2">
           <Panel className="p-4 sm:p-5">
             <Suspense fallback={<Skeleton className="h-80 w-full" />}>
               <ChartSection symbol={symbol} locale={locale} t={t} />
@@ -74,26 +75,19 @@ export default async function StockPage(
               <PastEarnings symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
-
-          <Panel>
-            <PanelHeader title={t.stock.companyNews} />
-            <Suspense fallback={<ListSkeleton rows={4} />}>
-              <CompanyNews symbol={symbol} locale={locale} t={t} />
-            </Suspense>
-          </Panel>
         </div>
 
-        <div className="flex flex-col gap-5">
-          <Suspense fallback={<Skeleton className="h-24 w-full rounded-(--radius-xl)" />}>
-            <UpcomingEarnings symbol={symbol} locale={locale} t={t} />
-          </Suspense>
-
+        <div className="flex min-w-0 flex-col gap-5">
           <Panel>
             <PanelHeader title={t.stock.profile} />
             <Suspense fallback={<ListSkeleton rows={5} />}>
               <ProfileCard symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
+
+          <Suspense fallback={<Skeleton className="h-24 w-full rounded-(--radius-xl)" />}>
+            <UpcomingEarnings symbol={symbol} locale={locale} t={t} />
+          </Suspense>
 
           <Panel>
             <PanelHeader title={t.stock.metrics} />
@@ -105,11 +99,19 @@ export default async function StockPage(
           <Panel>
             <PanelHeader title={t.stock.analysts} />
             <Suspense fallback={<ListSkeleton rows={3} />}>
-              <AnalystCard symbol={symbol} t={t} />
+              <AnalystCard symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
         </div>
       </div>
+
+      {/* Haberler en altta — mobilde de masaüstünde de son durak */}
+      <Panel>
+        <PanelHeader title={t.stock.companyNews} />
+        <Suspense fallback={<ListSkeleton rows={4} />}>
+          <CompanyNews symbol={symbol} locale={locale} t={t} />
+        </Suspense>
+      </Panel>
     </div>
   );
 }
@@ -163,9 +165,9 @@ async function StockHeader({
           <Image
             src={profile.logoUrl}
             alt=""
-            width={44}
-            height={44}
-            className="rounded-(--radius-md) border border-line bg-white object-contain p-1"
+            width={56}
+            height={56}
+            className="rounded-(--radius-lg) border border-line bg-white object-contain p-1.5 shadow-(--shadow-card)"
           />
         )}
         <div>
@@ -422,7 +424,13 @@ async function ProfileCard({
     ],
     [
       t.stock.ipoDate,
-      profile.ipoDate ? <span className="numeral">{profile.ipoDate}</span> : "—",
+      profile.ipoDate ? (
+        <span className="numeral">
+          {formatEtDateShort(profile.ipoDate, locale)}
+        </span>
+      ) : (
+        "—"
+      ),
     ],
   ];
 
@@ -522,7 +530,15 @@ async function MetricsCard({
   );
 }
 
-async function AnalystCard({ symbol, t }: { symbol: string; t: Dictionary }) {
+async function AnalystCard({
+  symbol,
+  locale,
+  t,
+}: {
+  symbol: string;
+  locale: Locale;
+  t: Dictionary;
+}) {
   const result = await getRecommendations(symbol);
   if (!result.ok) {
     return <DataError message={t.common.noData} />;
@@ -570,7 +586,13 @@ async function AnalystCard({ symbol, t }: { symbol: string; t: Dictionary }) {
           </li>
         ))}
       </ul>
-      <p className="numeral mt-2 text-[10px] text-muted">{latest.period}</p>
+      <p className="numeral mt-2 text-[10px] text-muted">
+        {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+          month: "long",
+          year: "numeric",
+          timeZone: "UTC",
+        }).format(new Date(`${latest.period}T12:00:00Z`))}
+      </p>
     </div>
   );
 }
@@ -659,24 +681,25 @@ async function PastEarnings({
   );
 
   return (
-    <div className="scroll-x">
-      <table className="w-full min-w-[480px] text-sm">
+    <div>
+      <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
             <th className="px-4 py-2.5 font-medium sm:px-5">
               {t.earnings.period}
             </th>
-            <th className="px-3 py-2.5 text-right font-medium">
+            <th className="px-2 py-2.5 text-right font-medium sm:px-3">
               EPS · {t.calendar.forecast}
             </th>
-            <th className="px-3 py-2.5 text-right font-medium">
+            <th className="px-2 py-2.5 text-right font-medium sm:px-3">
               EPS · {t.calendar.actual}
             </th>
-            <th className="px-3 py-2.5 text-right font-medium">
+            <th className="px-2 py-2.5 text-right font-medium sm:px-3">
               {t.earnings.surprise}
             </th>
             {hasRevenue && (
-              <th className="px-4 py-2.5 text-right font-medium sm:px-5">
+              // Dar ekranda gelir kolonu gizlenir — tablo yatay kaydırmadan sığar
+              <th className="hidden px-4 py-2.5 text-right font-medium sm:table-cell sm:px-5">
                 {t.earnings.revenueShort}
               </th>
             )}
@@ -704,17 +727,17 @@ async function PastEarnings({
                     {formatEtDateShort(row.reportDate, locale)}
                   </span>
                 </td>
-                <td className="numeral px-3 py-2.5 text-right text-muted">
+                <td className="numeral px-2 py-2.5 text-right text-muted sm:px-3">
                   {row.epsEstimate !== null
                     ? formatPrice(row.epsEstimate, locale, { currency: true })
                     : "—"}
                 </td>
-                <td className="numeral px-3 py-2.5 text-right font-semibold text-strong">
+                <td className="numeral px-2 py-2.5 text-right font-semibold text-strong sm:px-3">
                   {row.epsActual !== null
                     ? formatPrice(row.epsActual, locale, { currency: true })
                     : "—"}
                 </td>
-                <td className="px-3 py-2.5 text-right">
+                <td className="px-2 py-2.5 text-right sm:px-3">
                   {surprise !== null ? (
                     <ChangePill changePct={surprise} locale={locale} size="sm" />
                   ) : (
@@ -722,7 +745,7 @@ async function PastEarnings({
                   )}
                 </td>
                 {hasRevenue && (
-                  <td className="numeral px-4 py-2.5 text-right text-body sm:px-5">
+                  <td className="numeral hidden px-4 py-2.5 text-right text-body sm:table-cell sm:px-5">
                     {row.revenueActual !== null ? (
                       <span className="font-semibold">
                         ${formatCompact(row.revenueActual, locale)}
@@ -762,16 +785,49 @@ async function CompanyNews({
     return <EmptyState title={t.news.empty} />;
   }
 
+  const shown = result.data.slice(0, 8);
+
+  /* Haber önce SİTE İÇİNDE okunur; kaynak bağlantısı detay sayfasındadır.
+     Şirket haberleri canlı uçtan gelir ve genel akış tablosunda olmayabilir —
+     görüntülendiği anda tabloya işlenir, bağlantı kalıcı id ile kurulur. */
+  let idByProvider = new Map<string, string>();
+  try {
+    await db
+      .insert(news)
+      .values(
+        shown.map((item) => ({
+          providerId: item.providerId,
+          headline: item.headline,
+          summary: item.summary,
+          url: item.url,
+          imageUrl: item.imageUrl,
+          source: item.source,
+          category: item.category,
+          symbols: item.symbols,
+          publishedAt: item.publishedAt,
+        })),
+      )
+      .onConflictDoNothing();
+    const rows = await db
+      .select({ id: news.id, providerId: news.providerId })
+      .from(news)
+      .where(
+        inArray(
+          news.providerId,
+          shown.map((item) => item.providerId),
+        ),
+      );
+    idByProvider = new Map(rows.map((row) => [row.providerId, row.id]));
+  } catch {
+    // DB yazılamazsa haberler kaynağa bağlanır — liste yine çalışır.
+  }
+
   return (
     <ul className="divide-y divide-line-soft">
-      {result.data.slice(0, 8).map((item) => (
-        <li key={item.providerId}>
-          <a
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block px-4 py-3 transition-colors hover:bg-surface-elevated sm:px-5"
-          >
+      {shown.map((item) => {
+        const newsId = idByProvider.get(item.providerId);
+        const inner = (
+          <>
             <p className="line-clamp-2 text-sm font-medium leading-snug text-strong">
               {item.headline}
             </p>
@@ -780,9 +836,30 @@ async function CompanyNews({
               <span aria-hidden>·</span>
               <span>{timeAgo(item.publishedAt, locale)}</span>
             </p>
-          </a>
-        </li>
-      ))}
+          </>
+        );
+        return (
+          <li key={item.providerId}>
+            {newsId ? (
+              <Link
+                href={`/haberler/${newsId}`}
+                className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+              >
+                {inner}
+              </Link>
+            ) : (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-4 py-3 transition-colors hover:bg-surface-elevated sm:px-5"
+              >
+                {inner}
+              </a>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

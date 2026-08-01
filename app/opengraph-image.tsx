@@ -21,25 +21,20 @@ export default function OpenGraphImage() {
         {/* Marka */}
         <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="3" r="1.35" fill="#1d5a8c" />
-            <rect x="11.35" y="3.9" width="1.3" height="1.4" rx="0.6" fill="#1d5a8c" />
+            <circle cx="12" cy="12" r="10.4" stroke="#1d5a8c" strokeWidth="1.4" />
             <path
-              d="M12 5.1c2.75 0 4.33 1.85 4.55 5.1.14 2.1.62 3.45 1.5 4.4.34.36.42.78.28 1.12-.14.35-.5.58-.95.58H6.62c-.45 0-.81-.23-.95-.58-.14-.34-.06-.76.28-1.12.88-.95 1.36-2.3 1.5-4.4C7.67 6.95 9.25 5.1 12 5.1Z"
+              d="M 5.32 19.97 A 10.4 10.4 0 0 0 18.68 19.97"
+              stroke="#9a741b"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+            <circle cx="12" cy="6" r="1.05" fill="#1d5a8c" />
+            <rect x="11.5" y="6.7" width="1" height="1" rx="0.5" fill="#1d5a8c" />
+            <path
+              d="M12 7.55c2.1 0 3.3 1.45 3.47 3.9.1 1.6.47 2.62 1.14 3.35.26.28.32.6.21.86-.11.27-.38.44-.73.44H7.91c-.35 0-.62-.17-.73-.44-.11-.26-.05-.58.21-.86.67-.73 1.04-1.75 1.14-3.35C8.7 9 9.9 7.55 12 7.55Z"
               fill="#1d5a8c"
             />
-            <circle cx="12" cy="18.55" r="1.6" fill="#9a741b" />
-            <path
-              d="M4.4 4.9C3.15 6.25 2.45 7.9 2.3 9.75"
-              stroke="#9a741b"
-              strokeWidth="1.35"
-              strokeLinecap="round"
-            />
-            <path
-              d="M19.6 4.9c1.25 1.35 1.95 3 2.1 4.85"
-              stroke="#9a741b"
-              strokeWidth="1.35"
-              strokeLinecap="round"
-            />
+            <circle cx="12" cy="17.5" r="1.3" fill="#9a741b" />
           </svg>
           <span
             style={{

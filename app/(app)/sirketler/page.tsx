@@ -279,14 +279,14 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                             <Image
                               src={company.logoUrl}
                               alt=""
-                              width={26}
-                              height={26}
+                              width={34}
+                              height={34}
                               className="rounded-md border border-line-soft bg-white object-contain p-0.5"
                             />
                           ) : (
                             <span
                               aria-hidden
-                              className="numeral flex size-[26px] items-center justify-center rounded-md bg-primary-wash text-[9px] font-bold text-primary"
+                              className="numeral flex size-[34px] items-center justify-center rounded-md bg-primary-wash text-[9px] font-bold text-primary"
                             >
                               {company.symbol.slice(0, 2)}
                             </span>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { EmptyState, Panel } from "@/components/ui/primitives";
-import { getNewsById } from "@/lib/data";
+import { EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
+import { getLatestNews, getNewsById } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { timeAgo } from "@/lib/utils";
 
@@ -87,10 +87,10 @@ export default async function NewsDetailPage(
       )}
 
       {summary ? (
-        <div className="text-base leading-relaxed text-body">
+        <div className="text-[17px] leading-8 text-body">
           {summary.split("\n").map(
             (paragraph, index) =>
-              paragraph.trim() && <p key={index} className="mb-3">{paragraph}</p>,
+              paragraph.trim() && <p key={index} className="mb-4">{paragraph}</p>,
           )}
         </div>
       ) : (
@@ -130,6 +130,63 @@ export default async function NewsDetailPage(
           <ExternalLink size={14} />
         </a>
       </Panel>
+
+      <RelatedNews
+        currentId={item.id}
+        symbols={item.symbols ?? []}
+        locale={locale}
+        title={t.news.related}
+      />
     </article>
+  );
+}
+
+/**
+ * Benzer haberler — önce ortak sembol taşıyanlar, kalan yer son haberlerle
+ * dolar. Kısa özetli sayfaya bağlam kazandırır, okuyucuyu içeride tutar.
+ */
+async function RelatedNews({
+  currentId,
+  symbols,
+  locale,
+  title,
+}: {
+  currentId: string;
+  symbols: string[];
+  locale: string;
+  title: string;
+}) {
+  const pool = (await getLatestNews(24)).filter((n) => n.id !== currentId);
+  const related = pool.filter((n) =>
+    symbols.some((s) => n.symbols?.includes(s)),
+  );
+  const fill = pool.filter((n) => !related.includes(n));
+  const shown = [...related, ...fill].slice(0, 5);
+
+  if (shown.length === 0) return null;
+
+  return (
+    <Panel>
+      <PanelHeader title={title} />
+      <ul className="divide-y divide-line-soft">
+        {shown.map((n) => (
+          <li key={n.id}>
+            <Link
+              href={`/haberler/${n.id}`}
+              className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+            >
+              <p className="line-clamp-2 text-sm font-medium leading-snug text-strong">
+                {locale === "tr" && n.headlineTr ? n.headlineTr : n.headline}
+              </p>
+              <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted">
+                {n.source && <span>{n.source}</span>}
+                <span aria-hidden>·</span>
+                <span>{timeAgo(n.publishedAt, locale)}</span>
+              </p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Panel>
   );
 }

@@ -34,7 +34,7 @@ export function PanelHeader({
         className,
       )}
     >
-      <h2 className="flex items-center gap-2.5 text-sm font-semibold tracking-tight text-strong">
+      <h2 className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-strong">
         <span aria-hidden className="h-3.5 w-[3px] rounded-full bg-brass" />
         {title}
       </h2>

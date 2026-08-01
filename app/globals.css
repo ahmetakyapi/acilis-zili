@@ -220,7 +220,8 @@ h2,
 h3,
 h4 {
   color: var(--text-strong);
-  letter-spacing: -0.02em;
+  /* Hafif sıkılaştırma — daha koyusu büyük puntolarda okunaklılığı bozuyor. */
+  letter-spacing: -0.015em;
   text-wrap: balance;
 }
 

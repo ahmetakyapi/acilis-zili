@@ -1,4 +1,5 @@
 import {
+  Activity,
   Building2,
   CalendarClock,
   FileBarChart,
@@ -15,7 +16,7 @@ export type NavItem = {
   icon: typeof Sunrise;
   /** Kenar çubuğunda hangi grupta durur. */
   group: "market" | "follow";
-  /** Mobil alt çubukta görünsün mü — orada yalnızca beş yer var. */
+  /** Mobil alt çubukta görünsün mü — orada yalnızca altı yer var. */
   inBottomBar: boolean;
 };
 
@@ -28,9 +29,23 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: true,
   },
   {
+    href: "/piyasalar",
+    label: (t) => t.nav.markets,
+    icon: Activity,
+    group: "market",
+    inBottomBar: true,
+  },
+  {
     href: "/takvim",
     label: (t) => t.nav.calendar,
     icon: CalendarClock,
+    group: "market",
+    inBottomBar: true,
+  },
+  {
+    href: "/sirketler",
+    label: (t) => t.nav.companies,
+    icon: Building2,
     group: "market",
     inBottomBar: true,
   },
@@ -49,13 +64,6 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
   },
   {
-    href: "/sirketler",
-    label: (t) => t.nav.companies,
-    icon: Building2,
-    group: "follow",
-    inBottomBar: true,
-  },
-  {
     href: "/favoriler",
     label: (t) => t.nav.watchlist,
     icon: Star,
@@ -67,6 +75,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.news,
     icon: Newspaper,
     group: "follow",
-    inBottomBar: true,
+    inBottomBar: false,
   },
 ];

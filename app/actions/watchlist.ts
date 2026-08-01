@@ -105,6 +105,44 @@ export async function addSymbolToList(formData: FormData) {
   revalidatePath(`/hisse/${symbol}`);
 }
 
+/**
+ * Sürükle-bırak sonrası kalıcı sıra. Yalnızca kullanıcının kendi listesi ve
+ * o listeye ait öğe kimlikleri işlenir; listede olmayan id sessizce atlanır.
+ */
+export async function reorderWatchlistItems(
+  listId: string,
+  orderedIds: string[],
+) {
+  const userId = await requireUserId();
+  if (!userId || !listId || orderedIds.length === 0) return;
+
+  const [list] = await db
+    .select({ id: watchlists.id })
+    .from(watchlists)
+    .where(and(eq(watchlists.id, listId), eq(watchlists.userId, userId)))
+    .limit(1);
+  if (!list) return;
+
+  const rows = await db
+    .select({ id: watchlistItems.id })
+    .from(watchlistItems)
+    .where(eq(watchlistItems.watchlistId, listId));
+  const valid = new Set(rows.map((row) => row.id));
+
+  await Promise.all(
+    orderedIds
+      .filter((id) => valid.has(id))
+      .map((id, index) =>
+        db
+          .update(watchlistItems)
+          .set({ sortOrder: index })
+          .where(eq(watchlistItems.id, id)),
+      ),
+  );
+
+  revalidatePath("/favoriler");
+}
+
 export async function removeSymbolFromList(formData: FormData) {
   const userId = await requireUserId();
   if (!userId) return;

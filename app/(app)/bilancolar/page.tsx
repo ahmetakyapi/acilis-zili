@@ -238,14 +238,14 @@ function DaySection({
                       <Image
                         src={m.logoUrl}
                         alt=""
-                        width={30}
-                        height={30}
+                        width={38}
+                        height={38}
                         className="rounded-md border border-line-soft bg-white object-contain p-0.5"
                       />
                     ) : (
                       <span
                         aria-hidden
-                        className="numeral flex size-[30px] items-center justify-center rounded-md bg-primary-wash text-[10px] font-bold text-primary"
+                        className="numeral flex size-[38px] items-center justify-center rounded-md bg-primary-wash text-[10px] font-bold text-primary"
                       >
                         {row.symbol.slice(0, 2)}
                       </span>

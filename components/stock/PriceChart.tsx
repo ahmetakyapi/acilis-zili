@@ -393,11 +393,14 @@ export function PriceChart({
           </>
         ) : period ? (
           <>
-            <div className="flex items-baseline gap-3">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
               <span className="text-sm text-soft">
                 {labels.rangeLabels[range]}
               </span>
-              <span className={cn("numeral text-xl font-bold", toneText)}>
+              <span className="tote text-2xl">
+                {formatPrice(period.last.close, locale, { currency: true })}
+              </span>
+              <span className={cn("numeral text-lg font-bold", toneText)}>
                 {formatPercent(period.changePct, locale)}
               </span>
             </div>
