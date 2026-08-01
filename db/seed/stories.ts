@@ -1,8 +1,8 @@
 /* ==========================================================================
-   Açılış dosyası
+   Açılış yazısı
 
    `stories` tablosu normalde Claude rutini tarafından doldurulur; bu dosya
-   yalnızca ilk kaydı taşır, böylece boş bir veritabanında bile /dosyalar
+   yalnızca ilk kaydı taşır, böylece boş bir veritabanında bile /mercek
    ekranı gerçek bir örnekle açılır. Seed idempotenttir: aynı slug ikinci
    kez yazılırsa üzerine geçer, rutin sonradan düzeltirse o kazanır.
 

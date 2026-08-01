@@ -7,7 +7,7 @@ import { getI18n } from "@/lib/i18n";
 import { formatEtDateLong } from "@/lib/utils";
 
 /**
- * Piyasa dosyası — okuma sayfası.
+ * Mercek yazısı — okuma sayfası.
  *
  * Künye kasten gövdenin ALTINDA: kaynak listesi ve sorumluluk notu okuyanı
  * metne girmeden karşılamamalı, ama yazının bir parçası olarak da mutlaka
@@ -15,7 +15,7 @@ import { formatEtDateLong } from "@/lib/utils";
  * neye dayandığını saklamak seçenek değil.
  */
 
-export async function generateMetadata(props: PageProps<"/dosyalar/[slug]">) {
+export async function generateMetadata(props: PageProps<"/mercek/[slug]">) {
   const { slug } = await props.params;
   const { locale } = await getI18n();
   const story = await getStoryBySlug(slug, locale);
@@ -23,7 +23,7 @@ export async function generateMetadata(props: PageProps<"/dosyalar/[slug]">) {
   return { title: story.title, description: story.dek };
 }
 
-export default async function StoryPage(props: PageProps<"/dosyalar/[slug]">) {
+export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
   const { slug } = await props.params;
   const { locale, t } = await getI18n();
   const story = await getStoryBySlug(slug, locale);
@@ -36,7 +36,7 @@ export default async function StoryPage(props: PageProps<"/dosyalar/[slug]">) {
           hint={t.stories.notFoundHint}
           action={
             <Link
-              href="/dosyalar"
+              href="/mercek"
               className="text-[12.5px] font-semibold text-primary"
             >
               {t.stories.backToList}
@@ -53,7 +53,7 @@ export default async function StoryPage(props: PageProps<"/dosyalar/[slug]">) {
   return (
     <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
       <Link
-        href="/dosyalar"
+        href="/mercek"
         className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-primary"
       >
         <ArrowLeft weight="bold" size={13} />

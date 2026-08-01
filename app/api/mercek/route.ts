@@ -6,7 +6,7 @@ import { todayEt } from "@/lib/market-hours";
 import { isLocale } from "@/lib/i18n/config";
 
 /**
- * Piyasa dosyası alım ucu.
+ * Mercek yazısı alım ucu.
  *
  * Günlük bültendeki köprünün aynısı: kullanıcının kendi Claude rutini
  * (claude.ai zamanlanmış görev) akşam gün içinde yaşananları tarar, anlatmaya
@@ -111,6 +111,6 @@ export async function POST(request: Request) {
     slug: parsed.slug,
     locale,
     event_date: eventDate,
-    url: `/dosyalar/${parsed.slug}`,
+    url: `/mercek/${parsed.slug}`,
   });
 }

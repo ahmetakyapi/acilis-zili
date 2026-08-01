@@ -349,19 +349,6 @@
     background-image: var(--display-gradient-tight);
   }
 
-  /* TEK SÜPÜRME: degrade her elemanın kendi kutusunda çizilir, yani her
-     gezinme etiketi ayrı ayrı lacivertten maviye geçerse şerit yamalı
-     görünür. Sınıf KAPSAYICIYA verilir; degrade tüm gezinmenin genişliğine
-     yayılır ve her etiket kendi dilimini alır — soldan sağa tek, sürekli
-     bir geçiş. Çocuklardaki yarı saydam dolgular (seçili sekme hapı)
-     degradeyi örtmez, çünkü kendi arka planları saydamdır. */
-  .display-ink-sweep {
-    background-image: var(--display-gradient-tight);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-  }
 
   /* TUZAK: `.display-ink` içindeki bir çocuğa `opacity` (ya da transform,
      filter) vermek onu ayrı bir kompozit katmana taşır ve kapsayıcının

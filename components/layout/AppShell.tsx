@@ -68,11 +68,14 @@ export function AppShell({
           />
         </Link>
 
-        {/* Degrade tek parça: sınıf kapsayıcıda, her etiket kendi dilimini
-            alıyor. Bulunulan sayfa dolgulu hap ve kalın ağırlıkla ayrışır,
-            renkle değil. Şerit taşarsa kaydırılır — markayı dışarı itmez. */}
-        <nav className="display-ink-sweep flex min-w-0 gap-[2px] text-[13.5px] xl:gap-[3px] xl:text-[14.5px]">
-          {NAV_ITEMS.filter((item) => item.href !== "/haberler").map((item) => {
+        {/* Her etiket degradesini KENDİ kutusunda çizer; şerit boyunca tek
+            bir süpürme denendi ve istenmedi. Bulunulan sayfa dolgulu hap ve
+            kalın ağırlıkla ayrışır, renkle değil.
+            "Bugün" burada yok — logo zaten oraya götürüyor. */}
+        <nav className="flex min-w-0 gap-[2px] text-[13.5px] xl:gap-[3px] xl:text-[14.5px]">
+          {NAV_ITEMS.filter(
+            (item) => item.href !== "/haberler" && item.href !== "/",
+          ).map((item) => {
             const active = isActive(pathname, item.href);
             return (
               <Link
@@ -82,13 +85,15 @@ export function AppShell({
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "shrink-0 whitespace-nowrap rounded-lg px-2.5 py-[7px] transition-colors duration-150 xl:px-3.5",
-                  item.wideOnly && "hidden 2xl:block",
+                  item.wideOnly && "hidden xl:block",
                   active
                     ? "bg-surface-elevated font-bold"
                     : "font-medium hover:bg-surface",
                 )}
               >
-                {labels.nav[item.href]}
+                <span className="display-ink display-ink-tight">
+                  {labels.nav[item.href]}
+                </span>
               </Link>
             );
           })}

@@ -281,7 +281,7 @@ export const dailyBriefs = pgTable(
 );
 
 /**
- * Piyasa dosyaları — tek bir olayı uzun uzun anlatan yazılar.
+ * Mercek yazıları — tek bir olayı uzun uzun anlatan yazılar.
  *
  * Haber tablosundan ayrı duruyor çünkü farklı bir şey: `news` sağlayıcıdan
  * gelen ham akış (başlık + iki cümle özet + kaynak linki), `stories` ise

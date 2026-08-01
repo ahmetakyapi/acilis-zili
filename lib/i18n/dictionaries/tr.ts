@@ -17,7 +17,7 @@ const tr = {
     macro: "Makro",
     markets: "Piyasalar",
     guide: "Rehber",
-    stories: "Dosyalar",
+    stories: "Mercek",
     // Mobil alt çubuk etiketleri — 64px sekmede tam sığar.
     earningsShort: "Bilanço",
     marketsShort: "Piyasa",
@@ -420,27 +420,27 @@ const tr = {
     backToList: "Rehbere Dön",
     empty: "Bu başlıkta henüz yazı yok.",
     cardCta: "Oku",
-    homeTitle: "Rehber ve Dosyalar",
+    homeTitle: "Rehber ve Mercek",
     homeHint:
-      "Kavramları örnekleriyle anlatan yazılar ve piyasada yaşanmış olayların ayrıntılı dosyaları.",
+      "Kavramları örnekleriyle anlatan yazılar ve piyasada yaşanan olayların ayrıntılı anlatımı.",
   },
 
   stories: {
-    title: "Piyasa Dosyaları",
-    eyebrow: "Dosya",
+    title: "Mercek",
+    eyebrow: "Mercek Altında",
     subtitle:
-      "Piyasada yaşanmış olayların ayrıntılı anlatımı — ne oldu, neden oldu, ne öğretti.",
-    latest: "Son Dosya",
-    archive: "Önceki Dosyalar",
+      "Piyasada yaşanan olayları yakından anlatan uzun yazılar — ne oldu, neden oldu, ne öğretti.",
+    latest: "Son Yazı",
+    archive: "Önceki Yazılar",
     sources: "Kaynaklar",
-    relatedSymbols: "Dosyada Geçen Şirketler",
+    relatedSymbols: "Yazıda Geçen Şirketler",
     eventDate: "Olay Tarihi",
     readMinutes: "dk okuma",
-    backToList: "Dosyalara Dön",
-    empty: "Henüz yayımlanmış dosya yok.",
+    backToList: "Mercek'e Dön",
+    empty: "Henüz yayımlanmış yazı yok.",
     emptyHint:
-      "Piyasada anlatmaya değer bir olay yaşandığında dosyası burada açılır.",
-    notFound: "Dosya bulunamadı",
+      "Piyasada anlatmaya değer bir olay yaşandığında merceğe burada alınır.",
+    notFound: "Yazı bulunamadı",
     notFoundHint: "Bağlantı eski olabilir; listeden tekrar dene.",
     disclaimer:
       "Bu yazı yayımlandığı tarihteki kamuya açık haber kaynaklarına dayanır. Yatırım tavsiyesi değildir.",

@@ -4,7 +4,7 @@
    Neden veritabanında değil de depoda: bu metinler durağan ve editoryal.
    Bir tanımın yanlış olması bir fiyatın eski olmasından daha pahalı, o yüzden
    kod incelemesinden geçmeleri ve sürüm geçmişinde durmaları isteniyor.
-   Piyasa dosyaları (`stories` tablosu) tam tersi: her akşam üretiliyor ve
+   Mercek yazıları (`stories` tablosu) tam tersi: her akşam üretiliyor ve
    deploy beklemeden yazılabilmeli.
 
    Gövde sözdizimi `components/article/ArticleBody.tsx` içinde anlatılıyor:
@@ -48,7 +48,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
 Bir varlığın fiyatının belirli bir dönemde ortalamasından ne kadar saptığının ölçüsü. Yönü umursamaz: %10 yükseliş ile %10 düşüş volatiliteye aynı katkıyı yapar. Ölçtüğü şey **hareketin büyüklüğü**, yani belirsizlik.
 :::
 
-## Nasıl hesaplanır
+## Nasıl Hesaplanır
 
 Günlük getirilerin standart sapması alınır ve yıllığa çevrilir. Kaba bir sayı: günlük hareketlerin standart sapması %1 olan bir hissenin yıllık volatilitesi yaklaşık %16'dır (%1 × √252, çünkü bir yılda yaklaşık 252 işlem günü vardır).
 
@@ -63,7 +63,7 @@ Bu sayı bir tahmin değil, bir ölçüdür. "Yıllık volatilitesi %40" cümles
 
 Endeksin tek tek hisselerden sakin olması tesadüf değil: içerideki şirketlerin bir kısmı artarken bir kısmı düşer ve hareketler kısmen birbirini götürür. Buna çeşitlendirme denir ve volatiliteyi düşürmenin en ucuz yoludur.
 
-## Gerçekleşen volatilite, beklenen volatilite
+## Gerçekleşen Volatilite, Beklenen Volatilite
 
 İki farklı sayı vardır ve karıştırılır:
 
@@ -76,7 +76,7 @@ Beklenen volatilitenin en bilinen göstergesi **VIX**'tir: S&P 500 opsiyonların
 Bir şirket bilanço açıklamadan önce opsiyon fiyatları şişer, çünkü piyasa büyük bir hareket bekler. Açıklama yapıldıktan sonra belirsizlik ortadan kalkar ve opsiyon fiyatları — hisse hiç hareket etmese bile — hızla düşer. Buna *volatility crush* denir. Doğru tahmin edip yine de para kaybetmenin klasik yollarından biridir.
 :::
 
-## Volatilite kötü bir şey mi
+## Volatilite Kötü Bir Şey mi
 
 Değil, ama bedava da değil. İki farklı sonucu vardır:
 
@@ -89,7 +89,7 @@ Değil, ama bedava da değil. İki farklı sonucu vardır:
 Volatilite tek başına bir risk değil, bir ölçüdür. Riske dönüştüğü yer kaldıraçtır: ödünç parayla taşınan bir pozisyonda geçici bir dalgalanma, teminat çağrısı yoluyla kalıcı bir kayba dönüşebilir. Bkz. [Kaldıraç Nedir?](/rehber/kaldirac)
 :::
 
-## Bu sitede nerede görürsün
+## Bu Sitede Nerede Görürsün
 
 - **Gün aralığı** (hisse sayfası): günün en düşüğü ile en yükseği arasındaki mesafe, günlük volatilitenin en kaba göstergesidir.
 - **52 hafta en yüksek / en düşük:** yıllık bandın genişliği.
@@ -110,7 +110,7 @@ Volatilite tek başına bir risk değil, bir ölçüdür. Riske dönüştüğü 
 Borsada işlem gören yatırım fonu. İçinde bir varlık sepeti tutar; payları borsada, tıpkı bir hisse gibi, gün boyu alınıp satılır. Türkçesi "borsa yatırım fonu"dur.
 :::
 
-## Klasik fondan farkı
+## Klasik Fondan Farkı
 
 | | Yatırım fonu | ETF |
 |---|---|---|
@@ -133,7 +133,7 @@ Bu farkların en önemlisi gider oranıdır. Yılda %1 gider ile %0,05 gider ara
 "3x" ya da "inverse" yazan ETF'ler farklı bir üründür. Endeksin **günlük** getirisinin katını hedeflerler, dönemsel getirisinin değil. Yatay ama oynak bir piyasada her iki yönde de erirler. Uzun vadeli tutmak için tasarlanmamışlardır; bu ürünlerde "aylarca beklerim" stratejisi matematiksel olarak çalışmaz.
 :::
 
-## Fiyatı neden endeksle aynı değil
+## Fiyatı Neden Endeksle Aynı Değil
 
 QQQ'nun fiyatı Nasdaq 100 endeksinin seviyesi değildir; onun belirli bir oranıdır. DIA yaklaşık olarak Dow Jones'un yüzde biri fiyatlanır. Önemli olan seviye değil **yüzde değişimdir**; o neredeyse birebir aynıdır.
 
@@ -143,11 +143,11 @@ QQQ'nun fiyatı Nasdaq 100 endeksinin seviyesi değildir; onun belirli bir oran�
 BIST 100 lira bazında %2 yükselirken lira dolar karşısında %2 değer kaybederse, TUR (iShares MSCI Türkiye) dolar bazında neredeyse yatay kalır. Ekranda gördüğün yüzde, yerel endeksin yüzdesi değil, **dolar cinsinden getiridir**.
 :::
 
-## Ne zaman ETF, ne zaman tek hisse
+## Ne Zaman ETF, Ne Zaman Tek Hisse
 
 Tek hisse almak, o şirket hakkında bir görüşün olduğunu varsayar. ETF almak, bir tema ya da piyasa hakkında görüşün olduğunu ama hangi şirketin kazanacağını bilmediğini kabul eder. İkisi de meşrudur; karıştırıldığında sorun çıkar — yani bir tema hakkında haklı olup yanlış şirketi seçtiğinde.
 
-## Bu sitede nerede görürsün
+## Bu Sitede Nerede Görürsün
 
 Endeks kartları (Nasdaq 100, S&P 500, Dow Jones, Russell 2000) ve Dünya Piyasaları listesi ETF fiyatlarından beslenir. Bir ETF'in sayfasına girdiğinde şirket metrikleri yerine **fon künyesi** görürsün: neyi izlediği, fon yöneticisi ve izlediği piyasayla arasındaki farkın notu.`,
   },
@@ -168,7 +168,7 @@ Buraya kadarı herkesin bildiği kısım. Asıl mesele bundan sonrası.
 Kendi sermayenden büyük bir pozisyonu ödünç parayla taşımak. Ödünç veren taraf (aracı kurum, prime broker) teminat ister ve teminatın piyasa değeri belirli bir oranın altına düşerse **hemen** tamamlanmasını talep eder.
 :::
 
-## Asıl aldığı şey: takvim
+## Asıl Aldığı Şey: Takvim
 
 Kaldıraçsız bir pozisyonda ne zaman satacağına sen karar verirsin. Fiyat yarıya inse bile beklemeyi seçebilirsin, çünkü kimseye borçlu değilsin.
 
@@ -178,7 +178,7 @@ Kaldıraçlı bir pozisyonda bu karar senin değildir. Teminat oranı belirli bi
 
 Bu cümle kaldıracın tek cümlelik özetidir.
 
-## Kaç kat, ne kadar düşüşe dayanır
+## Kaç Kat, Ne Kadar Düşüşe Dayanır
 
 | Kaldıraç | Sermayeyi silen düşüş | Pratikte teminat çağrısı |
 |---|---|---|
@@ -193,7 +193,7 @@ Sağdaki sütun daha önemli: pozisyon silinmeden çok önce çağrı gelir. 4x 
 Kaldıracın en tehlikeli hâli tek başına değil, **yoğunlaşmayla** birlikte ortaya çıkar. Portföyün ilk beş pozisyonu toplamın dörtte üçüyse ve beşi de aynı temanın farklı ifadesiyse, çeşitlendirme sandığından çok azdır. Tema satıldığında beş pozisyon aynı anda ve aynı yönde düşer. 2026 Temmuz'unda bir yapay zekâ fonunun 96 saatte tasfiye edilmesi tam olarak bu iki şeyin çarpımıydı.
 :::
 
-## Görünmeyen kaldıraç
+## Görünmeyen Kaldıraç
 
 Herkes kaldıracın "marj hesabı" olduğunu sanır. Değil. Kaldıraç birçok biçimde gelir:
 
@@ -204,7 +204,7 @@ Herkes kaldıracın "marj hesabı" olduğunu sanır. Değil. Kaldıraç birçok 
 
 Son madde çoğu kişinin gözünden kaçar: hiç marj kullanmadan da yüksek kaldıraçlı bir portföy taşıyor olabilirsin.
 
-## Doğru soru
+## Doğru Soru
 
 "Ne kadar kazandırır" değil. Doğru sorular şunlar:
 
@@ -230,7 +230,7 @@ Son madde çoğu kişinin gözünden kaçar: hiç marj kullanmadan da yüksek ka
 **Short (kısa / açığa satış):** Sahip olmadığın varlığı ödünç alıp satmak, sonra geri alıp iade etmek. Fiyat düşerse aradaki farkı kazanırsın.
 :::
 
-## Short mekaniği
+## Short Mekaniği
 
 1. Bir hissenin 100 adedini aracı kurumdan ödünç alırsın.
 2. Piyasada 200 dolardan satarsın — hesabına 20.000 dolar geçer.
@@ -239,7 +239,7 @@ Son madde çoğu kişinin gözünden kaçar: hiç marj kullanmadan da yüksek ka
 
 Fiyat 250'ye çıkarsa aynı işlemi 25.000 dolara kapatırsın ve 5.000 dolar kaybedersin.
 
-## Asıl mesele: asimetri
+## Asıl Mesele: Asimetri
 
 | | Long | Short |
 |---|---|---|
@@ -254,7 +254,7 @@ Son satır kritik. Long bir pozisyon aleyhine gittiğinde küçülür — portf�
 Çok sayıda yatırımcı aynı hissede short'sa ve fiyat yükselmeye başlarsa, zararı kesmek için hepsi aynı anda geri alım yapmak zorunda kalır. Geri alım demek **satın almak** demektir; yani yükselişi besler; yükseliş daha fazla short'u kapanmaya zorlar. Kendi kendini büyüten bu döngüye *short squeeze* denir ve fiyatı birkaç günde katlayabilir.
 :::
 
-## Neden yine de short yapılır
+## Neden Yine de Short Yapılır
 
 Short her zaman bahis değildir. Profesyonel portföylerde çoğunlukla bir **hedge** aracıdır:
 
@@ -266,7 +266,7 @@ Short her zaman bahis değildir. Profesyonel portföylerde çoğunlukla bir **he
 "Uzun çip, kısa yazılım" pozisyonu, yapay zekânın yazılım marjlarını eritirken altyapı talebini patlatacağı fikrine dayanır. Tez doğruysa iki bacak birlikte kazandırır. Tez ters döndüğünde ise **iki bacak birlikte kaybettirir** — çipler düşerken yazılımlar yükselir. Bu yüzden eşleştirilmiş işlemler "daha az riskli" değildir; sadece farklı bir riski vardır.
 :::
 
-## Kısa özet
+## Kısa Özet
 
 Long yapmak varsayılan pozisyondur ve zaman genellikle lehine çalışır: şirketler büyür, ekonomi büyür, endeksler uzun vadede yükselir. Short yapmak zamana karşı bir bahistir; haklı olmak yetmez, **zamanında** haklı olman gerekir.`,
   },
@@ -289,7 +289,7 @@ Long yapmak varsayılan pozisyondur ve zaman genellikle lehine çalışır: şir
 
 Bu eşikler matematiksel bir doğruluk taşımaz — kimse %19,4 ile %20,1 arasında bir doğa yasası olduğunu iddia etmiyor. Ama piyasa katılımcıları bunları ortak dil olarak kullandığı için gerçek etkileri vardır: fon yöneticileri raporlarında bu tanımlara göre konuşur, medya bu eşiklerde başlık atar, bazı kurumsal risk kuralları bu seviyelerde devreye girer.
 
-## Karakterleri farklıdır
+## Karakterleri Farklıdır
 
 | | Boğa piyasası | Ayı piyasası |
 |---|---|---|
@@ -305,7 +305,7 @@ En kalıcı gözlem şudur: **piyasalar merdivenle çıkar, asansörle iner.** Y
 Ayı piyasalarının içinde %10–20'lik sert yükselişler görülür ve her biri "dip geçildi" diye yorumlanır. Tarihsel olarak en keskin günlük yükselişlerin çoğu ayı piyasalarının içinde yaşanmıştır. Bir günün yönü trendi anlatmaz.
 :::
 
-## Neden isimlendirmek işe yarar
+## Neden İsimlendirmek İşe Yarar
 
 Bir düzeltmeyi ayı piyasasından ayırmak, portföyde neyin değiştiğini sormanı sağlar:
 
@@ -322,7 +322,7 @@ Tarihsel ölçekte:
 - Boğa piyasaları ayı piyasalarından hem daha uzun sürer hem de daha büyük hareket üretir; endekslerin uzun vadeli yukarı eğiliminin sebebi budur.
 - 1929, 2000–2002, 2007–2009 ve 2020 en çok anılan ayı piyasalarıdır; ilk üçü aylar-yıllar sürdü, 2020 tarihin en hızlısıydı ve haftalarla ölçüldü.
 
-## Bu sitede nerede görürsün
+## Bu Sitede Nerede Görürsün
 
 **Piyasa Genişliği** kartı, endeksteki şirketlerin kaçının artıda kaçının ekside olduğunu gösterir. Endeks yükselirken genişliğin daralması (yani yükselişi bir avuç hissenin taşıması) çoğu zaman trendin zayıfladığının ilk işaretidir — endeks seviyesinden önce burada görünür.`,
   },
@@ -344,7 +344,7 @@ Tarihsel ölçekte:
 **Güvercin (dovish):** Büyümeye ve istihdama öncelik veren. Faizi indirmeye, para politikasını gevşetmeye eğilimli.
 :::
 
-## Neden bu kadar önemli
+## Neden Bu Kadar Önemli
 
 Faiz, bütün varlıkların fiyatlandığı iskonto oranıdır. Bir şirketin bugünkü değeri, gelecekte kazanacağı paranın bugüne indirgenmiş hâlidir; iskonto oranı yükselirse bugünkü değer düşer. Etki her hissede aynı değildir:
 
@@ -354,7 +354,7 @@ Faiz, bütün varlıkların fiyatlandığı iskonto oranıdır. Bir şirketin bu
 
 Bu yüzden şahin bir toplantı, endeksten çok **endeksin içindeki dağılımı** değiştirir.
 
-## Ne söylenir, ne anlaşılır
+## Ne Söylenir, Ne Anlaşılır
 
 | Söylenen | Okunan |
 |---|---|
@@ -368,7 +368,7 @@ Bu yüzden şahin bir toplantı, endeksten çok **endeksin içindeki dağılım�
 Fed üyeleri üç ayda bir, gelecek yıllar için kendi faiz beklentilerini nokta olarak yayımlar. Karar açıklanmadan bile bu grafiğin medyanı bir önceki çeyreğe göre yukarı kaydıysa, hiçbir cümle kurulmadan şahin bir mesaj verilmiş olur. Piyasanın saniyeler içinde tepki verdiği sayı çoğu zaman budur.
 :::
 
-## Toplantı günü nasıl okunur
+## Toplantı Günü Nasıl Okunur
 
 1. **14:00 NY — Karar metni.** Faiz kararı ve kısa açıklama. Önceki metinle kelime kelime karşılaştırılır; değişen ifadeler haberdir.
 2. **14:30 NY — Basın toplantısı.** Başkan konuşur. Piyasanın en oynak yarım saati genellikle buradadır; ilk tepki sık sık tersine döner.
@@ -380,7 +380,7 @@ Buradaki en sık hata, ilk beş dakikanın hareketini nihai yorum sanmaktır. Ka
 Fed'in ne yapacağını Fed'den önce **veri** söyler. TÜFE ve çekirdek PCE açıklamaları, faiz kararı gününden daha büyük hareket üretebilir; çünkü karar günü geldiğinde piyasa çoktan fiyatlamıştır.
 :::
 
-## Bu sitede nerede görürsün
+## Bu Sitede Nerede Görürsün
 
 - **Makro** ekranı: TÜFE, çekirdek TÜFE, çekirdek PCE ve Fed politika faizi bir arada.
 - **Takvim:** Fed toplantıları ve enflasyon açıklamaları saatiyle işaretli; yüksek etkili olanlar kırmızı noktayla ayrılır.
@@ -401,7 +401,7 @@ Fed'in ne yapacağını Fed'den önce **veri** söyler. TÜFE ve çekirdek PCE a
 Şirketin üç aylık dönemde ne kadar sattığını (**gelir**), bundan geriye ne kadar kâr kaldığını (**net kâr**) ve bunun hisse başına kaç dolara denk geldiğini (**EPS**) açıklaması. Yanında genellikle bir de **öngörü** (guidance) verilir: gelecek çeyrek ve yıl için şirketin kendi beklentisi.
 :::
 
-## Piyasanın baktığı üç satır
+## Piyasanın Baktığı Üç Satır
 
 **1. Gelir (revenue).** Toplam satış. Marjlardan ve muhasebeden bağımsızdır, bu yüzden en zor manipüle edilen sayıdır. Büyüme oranı, geçen yılın aynı çeyreğiyle karşılaştırılır.
 
@@ -413,7 +413,7 @@ Fed'in ne yapacağını Fed'den önce **veri** söyler. TÜFE ve çekirdek PCE a
 Analistler her çeyrek için bir konsensüs beklentisi yayımlar. Piyasayı hareket ettiren şey mutlak rakam değil, **beklentiden sapmadır** (surprise). Kârı %40 artan bir şirket, piyasa %55 beklediği için düşebilir. Fiyat, gerçekleşene değil, gerçekleşen ile beklenenin farkına tepki verir.
 :::
 
-## Dört olasılık
+## Dört Olasılık
 
 | Gelir | EPS | Tipik tepki |
 |---|---|---|
@@ -424,7 +424,7 @@ Analistler her çeyrek için bir konsensüs beklentisi yayımlar. Piyasayı hare
 
 İkinci satır çoğu kişiyi şaşırtır: kârı tutturup geliri ıskalayan şirket sık sık satılır. Sebep şudur — maliyet kısarak kâr yapmanın bir sınırı vardır, satış büyümesinin yoktur.
 
-## Ne zaman açıklanır
+## Ne Zaman Açıklanır
 
 | Zamanlama | Kısaltma | Anlamı |
 |---|---|---|
@@ -437,7 +437,7 @@ Büyük şirketlerin çoğu kapanış sonrasını tercih eder: piyasa kapalıyke
 Sayılar yayımlandıktan yaklaşık bir saat sonra yönetim analistlerle telekonferans yapar. Rakamlar iyi olup hisse toplantı sırasında düşüyorsa, sebep neredeyse her zaman sözlü öngörüdür: bir yöneticinin "önümüzdeki çeyrekte talepte normalleşme bekliyoruz" cümlesi, tablodaki hiçbir sayının anlatmadığı bir hikâye anlatır.
 :::
 
-## Bu sitede nerede görürsün
+## Bu Sitede Nerede Görürsün
 
 - **Bilançolar** ekranı: gün gün takvim, açılış öncesi / kapanış sonrası etiketiyle. Kartlarda gelir beklentisi, EPS beklentisi ve şirketin piyasa değeri birlikte durur — büyüklüğü bilmeden rakamın anlamı eksik kalır.
 - **Hisse sayfası → Geçmiş Bilançolar:** açıklanan EPS ile beklenen EPS yan yana; sapma yüzdesi hesaplı.
@@ -458,7 +458,7 @@ Sayılar yayımlandıktan yaklaşık bir saat sonra yönetim analistlerle teleko
 Şirketin kârının bir kısmını, sahip olunan hisse başına nakit olarak hissedarlara dağıtması. ABD'de genellikle üç ayda bir ödenir; Avrupa'da çoğunlukla yılda bir veya iki kez.
 :::
 
-## Verim nasıl hesaplanır
+## Verim Nasıl Hesaplanır
 
 **Temettü verimi = yıllık temettü ÷ hisse fiyatı**
 
@@ -468,7 +468,7 @@ Hissesi 100 dolar olan ve yılda 3 dolar dağıtan bir şirketin verimi %3'tür.
 Formülün paydası fiyattır. Hisse yarıya düştüğünde verim ikiye katlanır — şirket hiçbir şey yapmasa bile. Alışılmadık derecede yüksek bir verim çoğu zaman piyasanın "bu temettü sürdürülemez" dediği anlamına gelir. Buna *temettü tuzağı* denir ve kesinti geldiğinde hem gelir hem sermaye kaybedilir.
 :::
 
-## Dört tarih
+## Dört Tarih
 
 | Tarih | Ne olur |
 |---|---|
@@ -483,7 +483,7 @@ En kritik olanı ikincisidir. Temettüsüz işlem gününün sabahında hisse, d
 
 Bunu anlamak, "temettü gününden bir gün önce alıp ertesi gün satarım" fikrinin neden işlemediğini de açıklar.
 
-## Kim dağıtır, kim dağıtmaz
+## Kim Dağıtır, Kim Dağıtmaz
 
 **Dağıtanlar:** Olgun, nakit üreten, büyüme fırsatı sınırlı şirketler — kamu hizmetleri, büyük gıda ve içecek markaları, telekom, bankalar, sigorta.
 
@@ -493,7 +493,7 @@ Bunu anlamak, "temettü gününden bir gün önce alıp ertesi gün satarım" fi
 ABD'de şirketler kâr paylaşımını sık sık temettü yerine **hisse geri alımıyla** yapar: piyasadan kendi hissesini toplar ve iptal eder. Hisse sayısı azaldığı için kalan her hissenin payı büyür; EPS artar. Ekonomik olarak temettüye benzer, vergisel olarak farklıdır ve — temettünün aksine — sessizce durdurulabilir.
 :::
 
-## Toplam getiri
+## Toplam Getiri
 
 Bir hisseden kazancın iki bileşeni vardır:
 
@@ -502,7 +502,7 @@ Bir hisseden kazancın iki bileşeni vardır:
 
 İkisinin toplamına **toplam getiri** denir. Endeks grafiklerinin çoğu yalnızca fiyatı gösterir; temettüler yeniden yatırıldığında uzun dönem farkı büyüktür. Onlarca yıllık ölçekte S&P 500'ün toplam getirisinin kayda değer bir kısmı temettülerden gelir. "Endeks 20 yılda şu kadar yükseldi" cümlesi, gerçek getiriyi olduğundan düşük anlatır.
 
-## Bu sitede nerede görürsün
+## Bu Sitede Nerede Görürsün
 
 Hisse sayfasındaki **Anahtar Metrikler** kartında temettü verimi yer alır. Verimi yorumlarken şirketin sektörüne bakmak gerekir: bir kamu hizmeti şirketi için %4 normal, bir yazılım şirketi için aynı sayı sorulacak bir sorudur.`,
   },

@@ -1,26 +1,26 @@
-# Piyasa Dosyalarını Kendi Claude'unla Yazdırma
+# Mercek Yazılarını Kendi Claude'unla Yazdırma
 
-Site, dosyaları **veritabanından okur** — kimin yazdığıyla ilgilenmez. Bu
+Site, yazıları **veritabanından okur** — kimin yazdığıyla ilgilenmez. Bu
 rehber, kendi Claude aboneliğinle her akşam piyasada yaşananları tarayıp
-anlatmaya değer bir olay varsa uzun bir dosya yazdırmayı anlatır.
+anlatmaya değer bir olay varsa uzun bir yazı yazdırmayı anlatır.
 **API anahtarı ve ek ücret gerekmez.**
 
 Günlük bülten rutininden farkı: bülten **her gün** yazılır, dosya **çoğu gün
-yazılmaz**. Sıradan bir seans dosyalık değildir; boş gün pas geçilir.
+yazılmaz**. Sıradan bir seans mercek konusu değildir; boş gün pas geçilir.
 
 ## Nasıl çalışır
 
 ```
 Senin Claude'un (rutin, her akşam 21:00 TR)
-  1. GET  /api/dosya/context   → mevcut dosyalar + son haber akışı + endeksler
-  2. Gün dosyalık mı? Değilse DUR — hiçbir şey gönderme.
+  1. GET  /api/mercek/context   → mevcut yazılar + son haber akışı + endeksler
+  2. Gün mercek konusu mı? Değilse DUR — hiçbir şey gönderme.
   3. Dosyalıksa: olayı araştır, doğrula, yaz
-  4. POST /api/dosya           → siteye kaydeder
+  4. POST /api/mercek           → siteye kaydeder
 Site → sadece DB'den okur.
 ```
 
 Saat notu: 21:00 TR = 14:00 ET — ABD seansı henüz açık. Gün kapanmadan
-yazılmasının sebebi, dosyaların "bugün ne oldu" değil "şu olay neydi"
+yazılmasının sebebi, yazıların "bugün ne oldu" değil "şu olay neydi"
 anlatması: konu çoğunlukla günlerdir gelişen bir hikâyedir.
 
 ## Kurulum
@@ -43,15 +43,15 @@ Sen Açılış Zili'nin piyasa muhabirisin. Görevin, ABD piyasalarında yaşana
 
 ```bash
 curl -s -H "Authorization: Bearer $BRIEF_SECRET" \
-  https://acilis-zili.vercel.app/api/dosya/context
+  https://acilis-zili.vercel.app/api/mercek/context
 ```
 
 Yanıtta:
-- `existing_stories` — daha önce yazdığın dosyalar (slug + başlık + tarih)
+- `existing_stories` — daha önce yazdığın yazılar (slug + başlık + tarih)
 - `recent_news` — son 60 haber başlığı; konu SEÇMEK için ipucu
 - `indices` — günün endeks hareketi
 
-### 2. Karar ver: bu gün dosyalık mı?
+### 2. Karar ver: bu gün mercek konusu mı?
 
 **Dosyalık olan:** Bir fonun tasfiyesi. Büyük bir satın alma ya da onun
 bozulması. Bir şirketin iş modelini değiştiren duyuru. Düzenleyici karar.
@@ -59,14 +59,14 @@ Bir sektörü yeniden fiyatlayan bilanço. Muhasebe skandalı. Bir tezin
 piyasada sınanıp çökmesi. Kısacası: **altı ay sonra da merak edilecek** bir
 olay.
 
-**Dosyalık OLMAYAN:** Endeksin %1 hareket etmesi. Sıradan bir bilanço.
+**MERCEĞE ALINMAYACAK:** Endeksin %1 hareket etmesi. Sıradan bir bilanço.
 Analist not değişikliği. Fed'in beklenen kararı. Günlük haber akışı.
 
 Kurallar:
 - `existing_stories` içinde aynı olay varsa **yeniden yazma**. Ciddi bir
   gelişme olduysa aynı slug ile güncelle; yoksa geç.
-- Emin değilsen **pas geç.** Zayıf bir dosya, dosya olmamasından kötüdür.
-- Pas geçtiğinde hiçbir şey POST etme, sadece "bugün dosyalık bir olay yok"
+- Emin değilsen **pas geç.** Zayıf bir yazı, yazı olmamasından kötüdür.
+- Pas geçtiğinde hiçbir şey POST etme, sadece "bugün mercek konusu bir olay yok"
   diye raporla.
 
 ### 3. Araştır ve doğrula
@@ -141,7 +141,7 @@ Kurallar:
 ### 5. Gönder
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/dosya \
+curl -s -X POST https://acilis-zili.vercel.app/api/mercek \
   -H "Authorization: Bearer $BRIEF_SECRET" \
   -H "Content-Type: application/json" \
   -d '{
@@ -163,7 +163,7 @@ curl -s -X POST https://acilis-zili.vercel.app/api/dosya \
 - `symbols`: en fazla 12, hepsi ABD borsasında işlem gören semboller
 - `sources`: en az bir kaynak; URL varsa ekle
 
-Başarılı yanıt `{ "ok": true, "url": "/dosyalar/..." }` döner.
+Başarılı yanıt `{ "ok": true, "url": "/mercek/..." }` döner.
 
 ---
 
@@ -177,7 +177,7 @@ Yöntem:
 
 1. Son 30 günü hafta hafta tara. Her hafta için sor: bu hafta piyasada
    gerçekten ne oldu?
-2. Toplam **4–8 dosya** hedefle. Her güne bir dosya yazmaya çalışma — o
+2. Toplam **4–8 yazı** hedefle. Her güne bir yazı yazmaya çalışma — o
    dönemde o kadar olay yaşanmadıysa zorlama.
 3. Her dosya için yukarıdaki AKŞAM GÖREVİ kurallarının tamamı geçerli:
    araştır, doğrula, uzun yaz, kaynak göster.
@@ -188,5 +188,5 @@ Konu seçerken çeşitlilik gözet: hepsi aynı sektörden olmasın. Yapay zekâ
 tarafı ağır basıyorsa aralara makro, düzenleyici veya şirket olayları da
 koy — arşiv tek konulu bir bülten gibi görünmesin.
 
-Her dosyayı POST ettikten sonra bir sonrakine geç; hepsini tek istekte
+her yazıyı POST ettikten sonra bir sonrakine geç; hepsini tek istekte
 göndermeye çalışma.

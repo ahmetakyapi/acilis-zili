@@ -85,7 +85,7 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: true,
   },
   {
-    href: "/dosyalar",
+    href: "/mercek",
     label: (t) => t.nav.stories,
     icon: Scroll,
     inBottomBar: false,

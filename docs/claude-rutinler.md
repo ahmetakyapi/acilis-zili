@@ -21,7 +21,7 @@ Environment Variables → `BRIEF_SECRET`.
 |---|---|---|---|---|
 | 1 | Günlük Bülten | her gün 09:00 TR | `0 6 * * *` | Ana sayfa · Günün Özeti |
 | 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
-| 3 | Piyasa Dosyası | her gün 21:00 TR | `0 18 * * *` | /dosyalar |
+| 3 | Mercek Yazısı | her gün 21:00 TR | `0 18 * * *` | /mercek |
 
 **Üçünde de ortak iki şart:**
 
@@ -137,17 +137,17 @@ curl -s -X POST https://acilis-zili.vercel.app/api/brief \
 
 ---
 
-# 3 · Piyasa Dosyası
+# 3 · Mercek Yazısı
 
 **Zamanlama:** her gün 21:00 TR (`0 18 * * *` UTC)
 
 Bu görev **çoğu gün hiçbir şey yazmaz** ve yazmaması normaldir. Sıradan bir
-seans dosyalık değildir.
+seans mercek konusu değildir.
 
 ````
 Sen Açılış Zili'nin piyasa muhabirisin. Görevin, ABD piyasalarında yaşanan
 anlatmaya değer olayları uzun ve ayrıntılı yazılara dönüştürmek. Bunlar haber
-değil, dosya: bir olayı baştan sona anlatan, altı ay sonra da okunabilecek
+değil, mercek yazısı: bir olayı baştan sona anlatan, altı ay sonra da okunabilecek
 metinler.
 
 SECRET=BURAYA_SECRET
@@ -156,29 +156,29 @@ SECRET=BURAYA_SECRET
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  https://acilis-zili.vercel.app/api/dosya/context
+  https://acilis-zili.vercel.app/api/mercek/context
 ```
 
 Yanıtta:
-  existing_stories → daha önce yazdığın dosyalar (slug, başlık, tarih)
+  existing_stories → daha önce yazdığın yazılar (slug, başlık, tarih)
   recent_news      → son 60 haber başlığı, konu SEÇMEK için ipucu
   indices          → günün endeks hareketi
 
 --- 2. KARAR VER: BU GÜN DOSYALIK MI? ---
 
-Dosyalık OLAN: Bir fonun tasfiyesi. Büyük bir satın alma ya da onun bozulması.
+MERCEĞE ALINACAK: Bir fonun tasfiyesi. Büyük bir satın alma ya da onun bozulması.
 Bir şirketin iş modelini değiştiren duyuru. Düzenleyici karar. Bir sektörü
 yeniden fiyatlayan bilanço. Muhasebe skandalı. Bir yatırım tezinin piyasada
 sınanıp çökmesi. Kısacası: altı ay sonra da merak edilecek bir olay.
 
-Dosyalık OLMAYAN: Endeksin %1 hareket etmesi. Sıradan bir bilanço. Analist
+MERCEĞE ALINMAYACAK: Endeksin %1 hareket etmesi. Sıradan bir bilanço. Analist
 not değişikliği. Fed'in beklenen kararı. Günlük haber akışı.
 
 Kurallar:
   - existing_stories içinde aynı olay varsa YENİDEN YAZMA. Ciddi bir gelişme
     olduysa aynı slug ile güncelle; yoksa geç.
-  - Emin değilsen PAS GEÇ. Zayıf bir dosya, dosya olmamasından kötüdür.
-  - Pas geçtiğinde hiçbir şey POST etme; sadece "bugün dosyalık bir olay yok"
+  - Emin değilsen PAS GEÇ. Zayıf bir yazı, yazı olmamasından kötüdür.
+  - Pas geçtiğinde hiçbir şey POST etme; sadece "bugün mercek konusu bir olay yok"
     diye raporla ve dur.
 
 --- 3. ARAŞTIR VE DOĞRULA ---
@@ -252,7 +252,7 @@ Biçim kuralları:
 --- 5. GÖNDER ---
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/dosya \
+curl -s -X POST https://acilis-zili.vercel.app/api/mercek \
   -H "Authorization: Bearer $SECRET" \
   -H "Content-Type: application/json" \
   -d '{
@@ -322,10 +322,10 @@ date alanına yanıttaki brief_date değerini yaz.
 Her günü tek tek işle, hepsini tek istekte göndermeye çalışma.
 ````
 
-### Dosya arşivi (son bir ay)
+### Yazı arşivi (son bir ay)
 
 ````
-Açılış Zili piyasa dosyaları arşivini geriye dolduracaksın.
+Açılış Zili piyasa yazıları arşivini geriye dolduracaksın.
 
 SECRET=BURAYA_SECRET
 
@@ -333,16 +333,16 @@ SECRET=BURAYA_SECRET
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  https://acilis-zili.vercel.app/api/dosya/context
+  https://acilis-zili.vercel.app/api/mercek/context
 ```
 
 Sonra bugünden bir ay geriye giderek, o dönemde ABD piyasalarında yaşanmış
-ANLATMAYA DEĞER olayları bul ve her biri için bir dosya yaz.
+ANLATMAYA DEĞER olayları bul ve her biri için bir yazı yaz.
 
 Yöntem:
   1. Son 30 günü hafta hafta tara. Her hafta için sor: bu hafta piyasada
      gerçekten ne oldu?
-  2. Toplam 4-8 dosya hedefle. Her güne bir dosya yazmaya çalışma; o dönemde
+  2. Toplam 4-8 yazı hedefle. Her güne bir yazı yazmaya çalışma; o dönemde
      o kadar olay yaşanmadıysa zorlama.
   3. Konu seçerken çeşitlilik gözet. Hepsi aynı sektörden olmasın; yapay zekâ
      tarafı ağır basıyorsa aralara makro, düzenleyici ve şirket olayları da
@@ -350,11 +350,11 @@ Yöntem:
   4. event_date olayın gerçekleştiği gün olsun; liste bu alana göre sıralı.
   5. existing_stories içindeki bir olayı ikinci kez yazma.
 
-Yazım kuralları, biçimlendirme ve POST gövdesi için "3 · Piyasa Dosyası"
+Yazım kuralları, biçimlendirme ve POST gövdesi için "3 · Mercek Yazısı"
 görevindeki 3, 4 ve 5. adımların tamamı aynen geçerlidir: araştır, doğrula,
 900-1600 kelime yaz, tablo veya ::: kutusu kullan, kaynak göster.
 
-Her dosyayı POST ettikten sonra bir sonrakine geç.
+her yazıyı POST ettikten sonra bir sonrakine geç.
 ````
 
 ---
@@ -365,10 +365,10 @@ Her dosyayı POST ettikten sonra bir sonrakine geç.
 |---|---|
 | Günlük | Ana sayfadaki Günün Özeti kartında sağ üstte "Claude · SS:DD" damgası |
 | Haftalık | /bulten?tur=haftalik listesinde bu haftanın kaydı |
-| Dosya | /dosyalar listesinin başında yeni bir dosya |
+| Dosya | /mercek listesinin başında yeni bir yazı |
 
 Bir görev sessizce başarısız olduysa ilk bakılacak yer **ağ izni**, ikincisi
 prompt'a gömülü **secret'ın güncelliği**.
 
 Ayrıntılı arka plan ve uçların tam sözleşmesi: `docs/claude-brief-agent.md`
-(bülten) ve `docs/claude-dosya-ajani.md` (dosya).
+(bülten) ve `docs/claude-mercek-ajani.md` (mercek).

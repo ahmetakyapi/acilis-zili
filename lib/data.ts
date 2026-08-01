@@ -522,7 +522,7 @@ export function weekRange(anchor: string): { from: string; to: string } {
 }
 
 /* --------------------------------------------------------------------------
-   Piyasa dosyaları
+   Mercek yazıları
 
    Sıralama olay tarihine göre: bir dosya olaydan günler sonra yazılabilir
    (arşiv doldurulurken hep öyle olacak) ve okuyucu için önemli olan yazının

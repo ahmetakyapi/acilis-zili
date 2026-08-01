@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /* ==========================================================================
-   Uzun metin gövdesi — rehber yazıları ve piyasa dosyaları
+   Uzun metin gövdesi — rehber yazıları ve mercek yazıları
 
    Neden kendi çözümleyicimiz: sayfada tek bir markdown kütüphanesi bile
    ~30KB istemci paketi demek, oysa bu metinler sunucuda render ediliyor ve
@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
        Şirket beklentinin %12 üzerinde gelir açıkladı...
        :::
    Türleri: ornek · dikkat · ozet · tanim. Rutinin yazdığı metinlerde de
-   aynı sözdizimi geçerli, docs/claude-dosya-ajani.md içinde anlatılıyor.
+   aynı sözdizimi geçerli, docs/claude-mercek-ajani.md içinde anlatılıyor.
    ========================================================================== */
 
 type CalloutKind = "ornek" | "dikkat" | "ozet" | "tanim";

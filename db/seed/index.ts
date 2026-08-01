@@ -107,9 +107,9 @@ async function main() {
   }
   console.log(`  makro seriler      ${MACRO_SERIES.length} kayıt`);
 
-  /* ---- Açılış dosyası ----
+  /* ---- Açılış yazısı ----
      Tablonun asıl sahibi Claude rutini; burada yalnızca ilk kayıt var ki
-     boş veritabanında /dosyalar ekranı gerçek bir örnekle açılsın. Rutin
+     boş veritabanında /mercek ekranı gerçek bir örnekle açılsın. Rutin
      aynı slug'ı sonradan düzeltirse onun yazdığı kalır — bu döngü yalnızca
      seed çalıştığında geri yazar. */
   for (const story of STORY_SEEDS) {
@@ -132,7 +132,7 @@ async function main() {
       })
       .onConflictDoNothing({ target: [stories.slug, stories.locale] });
   }
-  console.log(`  piyasa dosyaları   ${STORY_SEEDS.length} kayıt`);
+  console.log(`  mercek yazıları   ${STORY_SEEDS.length} kayıt`);
 
   console.log("\nSeed tamamlandı.");
 }

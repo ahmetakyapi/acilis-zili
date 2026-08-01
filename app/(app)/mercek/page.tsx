@@ -6,7 +6,7 @@ import { getI18n } from "@/lib/i18n";
 import { formatEtDateLong } from "@/lib/utils";
 
 /**
- * Piyasa dosyaları — liste.
+ * Mercek — liste.
  *
  * En yeni dosya tam genişlikte bir manşet kartı alır, kalanlar altında
  * tarih sütunlu satırlar hâlinde dizilir. Haberler ekranından farkı bilinçli:
@@ -35,7 +35,7 @@ export default async function StoriesPage() {
       ) : (
         <>
           {/* ---- Manşet ---- */}
-          <Link href={`/dosyalar/${lead.slug}`} prefetch>
+          <Link href={`/mercek/${lead.slug}`} prefetch>
             <section className="panel-hover rounded-2xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 transition-colors sm:p-7">
               <div className="flex items-center gap-2.5">
                 <Kicker tone="primary">{t.stories.latest}</Kicker>
@@ -73,7 +73,7 @@ export default async function StoriesPage() {
                 {rest.map((story) => (
                   <li key={story.slug}>
                     <Link
-                      href={`/dosyalar/${story.slug}`}
+                      href={`/mercek/${story.slug}`}
                       prefetch
                       className="flex flex-col gap-1.5 border-t border-line px-4 py-4 transition-colors hover:bg-primary-tint sm:flex-row sm:gap-5 sm:px-5"
                     >

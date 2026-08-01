@@ -195,8 +195,8 @@ export default async function TodayPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           {[
             {
-              href: "/dosyalar",
-              glyph: "§",
+              href: "/mercek",
+              glyph: "◎",
               title: t.stories.title,
               hint: t.stories.subtitle,
             },

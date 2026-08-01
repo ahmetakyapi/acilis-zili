@@ -8,7 +8,7 @@ import { INDEX_STRIP } from "@/db/seed/symbols";
 import { todayEt } from "@/lib/market-hours";
 
 /**
- * Piyasa dosyası rutini için bağlam paketi.
+ * Mercek rutini için bağlam paketi.
  *
  * Rutin akşam bu ucu çeker ve şu iki soruyu cevaplar:
  *   1. Bugün gerçekten anlatmaya değer bir şey oldu mu?
@@ -19,7 +19,7 @@ import { todayEt } from "@/lib/market-hours";
  * aynı slug ile günceller.
  *
  * Bu uç veri sunar, yorum yapmaz. Neyin "dosyalık" olduğuna rutin karar
- * verir; talimatı docs/claude-dosya-ajani.md içinde.
+ * verir; talimatı docs/claude-mercek-ajani.md içinde.
  */
 
 function authorized(request: Request): boolean {
