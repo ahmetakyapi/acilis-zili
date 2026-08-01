@@ -6,10 +6,17 @@ export default async function SignUpPage() {
   const { t } = await getI18n();
 
   return (
-    <div className="flex min-h-[70dvh] items-center py-8">
+    <>
       <AuthForm
-        brandName={t.brand.name}
-        tagline={t.brand.tagline}
+        pitchTitle={t.auth.pitchTitle}
+        pitchBody={t.auth.pitchBody}
+        features={[
+          t.auth.featureLists,
+          t.auth.featureAlerts,
+          t.auth.featureBrief,
+          t.auth.featureFree,
+        ]}
+        privacyNote={t.auth.privacyNote}
         title={t.auth.signUpTitle}
         subtitle={t.auth.signUpSubtitle}
         action={signUpAction}
@@ -52,6 +59,6 @@ export default async function SignUpPage() {
         altHref="/giris"
         altLinkLabel={t.nav.signIn}
       />
-    </div>
+    </>
   );
 }

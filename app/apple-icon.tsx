@@ -3,6 +3,10 @@ import { ImageResponse } from "next/og";
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
+/**
+ * Marka işareti — gradient kare içinde tek çizgi zil (mockup 4a).
+ * Satori CSS değişkeni çözmez; renkler burada gece paletinden sabit yazılır.
+ */
 export default function AppleIcon() {
   return new ImageResponse(
     (
@@ -13,30 +17,24 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#1d5a8c",
+          backgroundImage: "linear-gradient(140deg, #4fc3ff, #1a63c4)",
         }}
       >
-        <svg width="132" height="132" viewBox="0 0 24 24" fill="none">
-          <circle
-            cx="12"
-            cy="12"
-            r="10.2"
-            stroke="#ffffff"
-            strokeWidth="1.35"
+        <svg width="104" height="104" viewBox="0 0 256 256" fill="none">
+          <path
+            d="M128 32a80 80 0 00-80 80c0 45-18 62-18 62h196s-18-17-18-62a80 80 0 00-80-80z"
+            fill="none"
+            stroke="#06121f"
+            strokeWidth="19"
+            strokeLinejoin="round"
           />
           <path
-            d="M 5.44 19.81 A 10.2 10.2 0 0 0 18.56 19.81"
-            stroke="#e0b95f"
-            strokeWidth="1.55"
+            d="M100 182a28 28 0 0056 0"
+            fill="none"
+            stroke="#06121f"
+            strokeWidth="19"
             strokeLinecap="round"
           />
-          <circle cx="12" cy="6.1" r="1.02" fill="#ffffff" />
-          <rect x="11.51" y="6.78" width="0.98" height="0.98" rx="0.49" fill="#ffffff" />
-          <path
-            d="M12 7.75c2.05 0 3.22 1.42 3.39 3.8.1 1.56.46 2.56 1.11 3.27.25.27.31.58.2.84-.1.26-.37.43-.71.43H8.01c-.34 0-.61-.17-.71-.43-.11-.26-.05-.57.2-.84.65-.71 1.01-1.71 1.11-3.27C8.78 9.17 9.95 7.75 12 7.75Z"
-            fill="#ffffff"
-          />
-          <circle cx="12" cy="17.35" r="1.26" fill="#e0b95f" />
         </svg>
       </div>
     ),

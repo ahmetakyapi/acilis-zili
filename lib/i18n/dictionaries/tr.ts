@@ -15,10 +15,16 @@ const tr = {
     news: "Haberler",
     macro: "Makro",
     markets: "Piyasalar",
+    // Mobil alt çubuk etiketleri — 64px sekmede tam sığar.
+    earningsShort: "Bilanço",
+    marketsShort: "Piyasa",
     settings: "Ayarlar",
     search: "Ara",
     searchPlaceholder: "Hisse ara — sembol veya şirket adı",
+    searchTrigger: "Sembol veya olay ara",
     searchPopular: "Popüler",
+    searchHintMove: "gez",
+    searchHintOpen: "aç",
     menu: "Menü",
     groupMarket: "Piyasa",
     groupFollow: "Takip",
@@ -85,6 +91,11 @@ const tr = {
     now: "şimdi",
     bell: "Açılış Zili",
     closingBell: "Kapanış Zili",
+    // Şerit ekseninde kısa biçim kullanılır — "AÇILIŞ ZİLİ" komşu etiketlere girer.
+    openShort: "Açılış",
+    closeShort: "Kapanış",
+    earningsNote: "bilanço",
+    watchedNote: "takipte",
     preOpen: "Açılış Öncesi Başlangıcı",
     afterClose: "Kapanış Sonrası Bitişi",
     noEvents: "Bugün planlanmış veri açıklaması yok",
@@ -115,6 +126,16 @@ const tr = {
     unitMinutes: "Dakika",
     unitHours: "Saat",
     unitDays: "Gün",
+    // Geri sayımın kısa birimleri — "18 dk 42 sn"
+    unitD: "g",
+    unitH: "sa",
+    unitM: "dk",
+    unitS: "sn",
+    macroSummary: "Makro",
+    todayFlow: "Bugünün Akışı",
+    sessionWindow: "04:00 — 20:00 NY",
+    sourceLine: "Fiyat: Alpaca IEX · Profil ve bilanço: Finnhub · Makro: FRED",
+    sourceNote: "Endeksler ETF üzerinden izlenir · veri gecikmeli olabilir",
   },
 
   calendar: {
@@ -163,6 +184,11 @@ const tr = {
     alsoReporting: "Diğer Açıklayanlar",
     companiesCount: "şirket",
     empty: "Bu aralıkta bilanço açıklaması yok.",
+    today: "Bugün",
+    rangeWeek: "Hafta",
+    rangeMonth: "Ay",
+    subtitleLong:
+      "Şirketlerin finansal sonuç açıklama tarihleri · gün içinde piyasa değerine göre sıralı",
   },
 
   companies: {
@@ -368,6 +394,7 @@ const tr = {
     period: "Dönem",
     nextRelease: "Sonraki Açıklama",
     noNextRelease: "Henüz açıklanmadı",
+    unchanged: "değişmedi",
     series: {
       cpi: "TÜFE (Yıllık)",
       coreCpi: "Çekirdek TÜFE (Yıllık)",

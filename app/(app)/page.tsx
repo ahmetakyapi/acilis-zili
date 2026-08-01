@@ -1,22 +1,28 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { Countdown } from "@/components/today/Countdown";
 import { DayRail, type RailEvent } from "@/components/today/DayRail";
 import { LiveClock } from "@/components/today/LiveClock";
 import {
-  ChangePill,
   DataError,
   DataStamp,
   EmptyState,
+  ImpactDot,
+  Kicker,
   Panel,
   PanelHeader,
+  PanelLink,
   Skeleton,
+  TimingChip,
 } from "@/components/ui/primitives";
 import {
   getDailyBrief,
   getEventsBetween,
   getLatestNews,
+  getMacroRows,
   getStatus,
+  getSymbolNames,
   getTodayEvents,
   getEarningsBetween,
   getUserSymbols,
@@ -24,7 +30,6 @@ import {
 import {
   addEtDays,
   etDateTimeToUtc,
-  formatCountdown,
   todayEt,
 } from "@/lib/market-hours";
 import { getQuotes } from "@/lib/providers";
@@ -33,6 +38,7 @@ import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import {
   cn,
   directionOf,
+  directionText,
   dualTime,
   formatEtDateLong,
   formatPercent,
@@ -57,140 +63,158 @@ export default async function TodayPage() {
         : t.market.closed,
   };
 
-  const countdownTarget =
-    status.session === "regular" ? status.nextClose : status.nextOpen;
-  const countdownLabel =
-    status.session === "regular" ? t.market.closesIn : t.market.opensIn;
+  const trading = status.session === "regular";
+  const countdownTarget = trading ? status.nextClose : status.nextOpen;
+  const countdownLabel = trading ? t.today.untilClose : t.today.untilBell;
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* ---- Durum başlığı ---- */}
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="plate">{t.today.title} · New York</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
-            {formatEtDateLong(status.etDate, locale)}
-          </h1>
-        </div>
-        <div className="flex flex-col items-start gap-1.5 sm:items-end">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm shadow-(--shadow-card)">
-            <span className="flex items-center gap-2">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_376px]">
+      {/* ================= Ana kolon ================= */}
+      <div className="flex min-w-0 flex-col gap-5">
+        {/* ---- Oturum rozeti + tarih ---- */}
+        <header>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-[11px] py-1 text-[11.5px] font-semibold",
+                trading
+                  ? "bg-up-wash text-up"
+                  : status.session === "closed"
+                    ? "bg-surface-elevated text-body"
+                    : "bg-primary-wash text-primary",
+              )}
+            >
               <span
                 aria-hidden
                 className={cn(
-                  "size-2 rounded-full",
-                  status.session === "regular"
-                    ? "bg-brass pulse-live"
-                    : status.session === "closed"
-                      ? "bg-flat"
-                      : "bg-primary",
+                  "size-1.5 rounded-full bg-current",
+                  trading && "pulse-live",
                 )}
               />
-              <span className="font-medium text-strong">
-                {sessionLabel[status.session]}
-              </span>
+              {sessionLabel[status.session]}
             </span>
-            <span aria-hidden className="hidden text-line-strong sm:inline">
-              |
+            <span className="text-[13px] text-body">
+              {formatEtDateLong(status.etDate, locale)}
             </span>
-            <span className="whitespace-nowrap text-muted">
-              {countdownLabel}{" "}
-              <span className="numeral font-semibold text-strong">
-                {formatCountdown(countdownTarget, new Date(), locale)}
-              </span>
+            <LiveClock />
+          </div>
+
+          {/* Sayfanın en büyük sayısı — zil geri sayımı */}
+          <div className="mt-3.5 flex flex-wrap items-end gap-3.5">
+            <Countdown
+              targetIso={countdownTarget.toISOString()}
+              units={{
+                d: t.today.unitD,
+                h: t.today.unitH,
+                m: t.today.unitM,
+                s: t.today.unitS,
+              }}
+              className="tote text-[44px] leading-none sm:text-[66px]"
+            />
+            <span className="pb-1.5 text-[13px] text-body sm:pb-2.5 sm:text-[15px]">
+              {countdownLabel.toLocaleLowerCase(locale === "tr" ? "tr-TR" : "en-US")}
             </span>
           </div>
-          <LiveClock />
-        </div>
-      </header>
+        </header>
 
-      {/* ---- Gün Şeridi ---- */}
-      <Panel className="px-4 pb-3 pt-5 sm:px-6">
-        <Suspense fallback={<Skeleton className="h-36 w-full" />}>
-          <RailSection t={t} status={{ trading: status.session !== "closed" || (!status.isWeekend && !status.holiday), closeMinutes: status.closeMinutes, nowMinutes: status.etMinutes }} locale={locale} />
-        </Suspense>
-      </Panel>
-
-      {/* ---- Endeksler ---- */}
-      <section aria-label={t.today.indices}>
-        <Suspense fallback={<IndexSkeleton />}>
-          <IndexStrip locale={locale} t={t} />
-        </Suspense>
-      </section>
-
-      {/* ---- Dünya piyasaları ---- */}
-      <Suspense fallback={<Skeleton className="h-28 w-full rounded-(--radius-xl)" />}>
-        <WorldStrip locale={locale} t={t} />
-      </Suspense>
-
-      <div className="grid gap-5 lg:grid-cols-5">
-        <div className="flex flex-col gap-5 lg:col-span-3">
-          {/* ---- Günün özeti ---- */}
-          <Suspense fallback={<Skeleton className="h-40 w-full rounded-(--radius-lg)" />}>
-            <BriefCard locale={locale} t={t} />
+        {/* ---- Gün Şeridi ---- */}
+        <Panel className="px-4 pb-5 pt-5 sm:px-[22px]">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <h2 className="text-[13.5px] font-bold text-strong">
+              {t.today.todayFlow}
+            </h2>
+            <span className="text-xs text-muted">{t.today.sessionWindow}</span>
+          </div>
+          <Suspense fallback={<Skeleton className="h-28 w-full" />}>
+            <RailSection
+              t={t}
+              locale={locale}
+              status={{
+                trading:
+                  status.session !== "closed" ||
+                  (!status.isWeekend && !status.holiday),
+                closeMinutes: status.closeMinutes,
+                nowMinutes: status.etMinutes,
+              }}
+            />
           </Suspense>
+        </Panel>
 
-          {/* ---- Bugünün takvimi ---- */}
-          <Panel>
-            <PanelHeader title={t.today.schedule} />
-            <Suspense fallback={<ListSkeleton rows={3} />}>
-              <ScheduleList locale={locale} t={t} />
-            </Suspense>
-          </Panel>
-
-          {/* ---- Bugün bilanço açıklayanlar ---- */}
-          <Panel>
-            <PanelHeader
-              title={t.today.earningsToday}
-              action={
-                <Link href="/bilancolar" className="text-xs text-primary hover:underline">
-                  {t.common.showAll}
-                </Link>
-              }
-            />
-            <Suspense fallback={<ListSkeleton rows={3} />}>
-              <EarningsToday locale={locale} t={t} />
-            </Suspense>
-          </Panel>
-        </div>
-
-        <div className="flex flex-col gap-5 lg:col-span-2">
-          {/* ---- Haftaya bakış — önümüzdeki 7 günün önemli olayları ---- */}
-          <Panel>
-            <PanelHeader
-              title={t.today.weekAhead}
-              action={
-                <Link href="/takvim" className="text-xs text-primary hover:underline">
-                  {t.common.showAll}
-                </Link>
-              }
-            />
-            <Suspense fallback={<ListSkeleton rows={3} />}>
-              <WeekAhead locale={locale} t={t} />
-            </Suspense>
-          </Panel>
-
-          {/* ---- Favori özeti ---- */}
-          <Suspense fallback={<Skeleton className="h-48 w-full rounded-(--radius-lg)" />}>
-            <WatchlistSummary locale={locale} t={t} />
+        {/* ---- Endeks kartları ---- */}
+        <section aria-label={t.today.indices}>
+          <Suspense fallback={<IndexSkeleton />}>
+            <IndexStrip locale={locale} t={t} />
           </Suspense>
+        </section>
 
-          {/* ---- Öne çıkan haberler ---- */}
-          <Panel>
-            <PanelHeader
-              title={t.today.topNews}
-              action={
-                <Link href="/haberler" className="text-xs text-primary hover:underline">
-                  {t.common.showAll}
-                </Link>
-              }
-            />
-            <Suspense fallback={<ListSkeleton rows={4} />}>
-              <TopNews locale={locale} t={t} />
-            </Suspense>
-          </Panel>
-        </div>
+        {/* ---- Dünya piyasaları ---- */}
+        <Suspense fallback={<Skeleton className="h-28 w-full rounded-2xl" />}>
+          <WorldStrip locale={locale} t={t} />
+        </Suspense>
+
+        {/* ---- Bugünün ekonomik takvimi ---- */}
+        <Panel>
+          <PanelHeader
+            title={t.today.schedule}
+            action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
+          />
+          <Suspense fallback={<ListSkeleton rows={3} />}>
+            <ScheduleList locale={locale} t={t} />
+          </Suspense>
+        </Panel>
+
+        {/* ---- Bugün bilanço açıklayanlar ---- */}
+        <Panel>
+          <PanelHeader
+            title={t.today.earningsToday}
+            action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
+          />
+          <Suspense fallback={<ListSkeleton rows={3} />}>
+            <EarningsToday locale={locale} t={t} />
+          </Suspense>
+        </Panel>
       </div>
+
+      {/* ================= Yan kolon ================= */}
+      <div className="flex min-w-0 flex-col gap-5">
+        <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
+          <BriefCard locale={locale} t={t} />
+        </Suspense>
+
+        <Suspense fallback={<Skeleton className="h-56 w-full rounded-2xl" />}>
+          <WatchlistSummary locale={locale} t={t} />
+        </Suspense>
+
+        <Suspense fallback={<Skeleton className="h-44 w-full rounded-2xl" />}>
+          <MacroSummary locale={locale} t={t} />
+        </Suspense>
+
+        <Panel>
+          <PanelHeader
+            title={t.today.weekAhead}
+            action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
+          />
+          <Suspense fallback={<ListSkeleton rows={3} />}>
+            <WeekAhead locale={locale} t={t} />
+          </Suspense>
+        </Panel>
+
+        <Panel>
+          <PanelHeader
+            title={t.today.topNews}
+            action={<PanelLink href="/haberler">{t.common.showAll}</PanelLink>}
+          />
+          <Suspense fallback={<ListSkeleton rows={4} />}>
+            <TopNews locale={locale} t={t} />
+          </Suspense>
+        </Panel>
+      </div>
+
+      {/* ---- Kaynak künyesi ---- */}
+      <footer className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-[11.5px] text-muted lg:col-span-2">
+        <span>{t.today.sourceLine}</span>
+        <span>{t.today.sourceNote}</span>
+      </footer>
     </div>
   );
 }
@@ -199,6 +223,11 @@ export default async function TodayPage() {
    Parçalar
    ========================================================================== */
 
+/**
+ * Şeridi besleyen iki kaynak: ekonomik takvim ve bugünün bilançoları.
+ * Mockup 4a'da ikisi de aynı eksende duruyor — gün gerçekten böyle akıyor,
+ * "08:30 istihdam" ile "16:30 AAPL" aynı zaman çizgisinin olayları.
+ */
 async function RailSection({
   t,
   status,
@@ -208,36 +237,88 @@ async function RailSection({
   status: { trading: boolean; closeMinutes: number; nowMinutes: number };
   locale: Locale;
 }) {
-  const events = await getTodayEvents();
+  const today = todayEt();
+  const session = await auth();
+  const [events, earnings, watched] = await Promise.all([
+    getTodayEvents(),
+    getEarningsBetween(today, today),
+    session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
+  ]);
 
-  const railEvents: RailEvent[] = events
+  const watchedSet = new Set(watched);
+
+  const eventItems: RailEvent[] = events
     .filter((e) => e.eventTimeEt)
     .map((e) => ({
       id: e.id,
       timeEt: e.eventTimeEt as string,
       title: locale === "tr" ? e.titleTr : e.titleEn,
       importance: (e.importance as RailEvent["importance"]) ?? "medium",
+      kind: "event",
+      detail:
+        e.actual !== null && e.actual !== undefined
+          ? `${e.actual}${e.unit === "%" ? "%" : ""}${
+              e.forecast ? ` · ${t.calendar.forecast} ${e.forecast}` : ""
+            }`
+          : e.forecast
+            ? `${t.calendar.forecast} ${e.forecast}${e.unit === "%" ? "%" : ""}`
+            : undefined,
     }));
 
+  // Bilanço saatleri: bmo → açılış öncesi, amc → kapanış sonrası. Sağlayıcı
+  // dakika vermiyor, o yüzden seans sınırlarına oturtulur; uydurma saat yok.
+  const EARNINGS_TIME: Record<string, string> = {
+    bmo: "07:00",
+    amc: "16:30",
+    dmh: "12:00",
+  };
+
+  const earningsItems: RailEvent[] = earnings
+    .filter((row) => row.hour && EARNINGS_TIME[row.hour])
+    .map((row) => ({
+      id: `earnings-${row.id}`,
+      timeEt: EARNINGS_TIME[row.hour as string],
+      title: row.symbol,
+      importance: "low" as const,
+      kind: "earnings" as const,
+      watched: watchedSet.has(row.symbol),
+      detail: watchedSet.has(row.symbol)
+        ? `${t.dayRail.earningsNote} · ${t.dayRail.watchedNote}`
+        : t.dayRail.earningsNote,
+    }));
+
+  // Aynı saate düşen bilançolar tek noktada toplanır — 229 şirketlik bir gün
+  // ekseni okunmaz hale getirir.
+  const groupedEarnings = Object.values(
+    earningsItems.reduce<Record<string, RailEvent[]>>((acc, item) => {
+      (acc[item.timeEt] ??= []).push(item);
+      return acc;
+    }, {}),
+  ).map((group) => {
+    const watchedInGroup = group.filter((item) => item.watched);
+    const shown = (watchedInGroup.length > 0 ? watchedInGroup : group).slice(0, 2);
+    const rest = group.length - shown.length;
+    return {
+      ...shown[0],
+      id: `earnings-${group[0].timeEt}`,
+      title: shown.map((item) => item.title).join(" · ") + (rest > 0 ? ` +${rest}` : ""),
+      watched: watchedInGroup.length > 0,
+    };
+  });
+
   return (
-    <>
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="plate">{t.dayRail.title}</h2>
-        <span className="text-[10px] text-muted">{t.calendar.allTimesET}</span>
-      </div>
-      <DayRail
-        events={railEvents}
-        initialNowMinutes={status.nowMinutes}
-        tradingDay={status.trading}
-        closeMinutes={status.closeMinutes}
-        labels={{
-          bell: t.dayRail.bell,
-          close: t.dayRail.closingBell,
-          now: t.dayRail.now,
-          noEvents: t.dayRail.noEvents,
-        }}
-      />
-    </>
+    <DayRail
+      events={[...eventItems, ...groupedEarnings]}
+      initialNowMinutes={status.nowMinutes}
+      tradingDay={status.trading}
+      closeMinutes={status.closeMinutes}
+      labels={{
+        bell: t.dayRail.openShort,
+        close: t.dayRail.closeShort,
+        now: t.dayRail.now,
+        noEvents: t.dayRail.noEvents,
+      }}
+    />
   );
 }
 
@@ -248,6 +329,10 @@ const INDEX_LABEL: Record<string, string> = {
   IWM: "Russell 2000",
 };
 
+/**
+ * Endeks kartları — masaüstünde dört sütun, mobilde yatay kayan 112px şerit.
+ * Aynı bileşeni responsive yapmak yerine iki farklı ölçek: mockup 4a ve 4b.
+ */
 async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   const status = await getStatus();
   const [result, ...barResults] = await Promise.all([
@@ -264,61 +349,70 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {INDEX_STRIP.map((symbol, index) => {
-        const quote = result.data[symbol];
-        if (!quote) {
+    <div className="flex flex-col gap-2.5">
+      <div className="scroll-x -mx-[18px] flex gap-2.5 px-[18px] sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:grid-cols-4 lg:gap-3.5">
+        {INDEX_STRIP.map((symbol, index) => {
+          const quote = result.data[symbol];
+          if (!quote) {
+            return (
+              <Panel key={symbol} className="w-28 shrink-0 p-3.5 sm:w-auto">
+                <p className="text-xs font-semibold text-strong">{symbol}</p>
+                <p className="mt-1 text-xs text-muted">{t.common.noData}</p>
+              </Panel>
+            );
+          }
+          const bars = barResults[index];
+          const points = bars.ok ? bars.data.map((bar) => ({ value: bar.close })) : [];
+          const tone = directionOf(quote.changePct);
           return (
-            <Panel key={symbol} className="p-4">
-              <p className="numeral text-sm font-semibold text-strong">{symbol}</p>
-              <p className="mt-1 text-xs text-muted">{t.common.noData}</p>
-            </Panel>
-          );
-        }
-        const bars = barResults[index];
-        const points = bars.ok
-          ? bars.data.map((bar) => ({ value: bar.close }))
-          : [];
-        const tone = directionOf(quote.changePct);
-        return (
-          <Link key={symbol} href={`/hisse/${symbol}`} className="group">
-            <Panel className="panel-hover flex h-full flex-col p-4">
-              <div className="flex items-baseline justify-between gap-2">
-                <p className="text-xs font-semibold text-strong">
-                  {INDEX_LABEL[symbol] ?? symbol}
-                </p>
-                <p className="numeral text-[10px] text-muted">{symbol}</p>
-              </div>
-              <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <p className="tote text-xl">
+            <Link
+              key={symbol}
+              href={`/hisse/${symbol}`}
+              className="w-28 shrink-0 sm:w-auto"
+            >
+              <Panel className="panel-hover flex h-full flex-col rounded-xl p-3 sm:rounded-[14px] sm:p-4">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="truncate text-[11.5px] font-semibold text-body sm:text-xs">
+                    <span className="sm:hidden">{symbol}</span>
+                    <span className="hidden sm:inline">
+                      {INDEX_LABEL[symbol] ?? symbol}
+                    </span>
+                  </span>
+                  <span className="hidden text-[10.5px] text-muted sm:inline">
+                    {symbol}
+                  </span>
+                </div>
+                <p className="tote mt-[3px] text-lg sm:mt-1.5 sm:text-[25px]">
                   {formatPrice(quote.price, locale)}
                 </p>
-                <ChangePill changePct={quote.changePct} locale={locale} size="sm" />
-              </div>
-              {points.length > 1 && (
-                <Sparkline
-                  points={points}
-                  title={`${INDEX_LABEL[symbol] ?? symbol} · 1D`}
-                  tone={tone}
-                  height={44}
-                  showLastDot={false}
-                  strokeWidth={1.5}
-                  className="mt-2.5 h-11 w-full opacity-90"
-                />
-              )}
-            </Panel>
-          </Link>
-        );
-      })}
-      <div className="col-span-2 lg:col-span-4">
-        <DataStamp
-          source={result.source}
-          at={result.fetchedAt}
-          stale={result.stale}
-          locale={locale}
-          note={locale === "tr" ? "Endeksler ETF üzerinden izlenir" : "Indices tracked via ETFs"}
-        />
+                <p
+                  className={cn(
+                    "numeral text-[11.5px] font-semibold sm:text-[12.5px]",
+                    directionText(tone),
+                  )}
+                >
+                  {formatPercent(quote.changePct, locale)}
+                </p>
+                {points.length > 1 && (
+                  <Sparkline
+                    points={points}
+                    title={`${INDEX_LABEL[symbol] ?? symbol} · 1D`}
+                    tone={tone}
+                    height={40}
+                    className="mt-[7px] h-6 w-full sm:mt-2.5 sm:h-10"
+                  />
+                )}
+              </Panel>
+            </Link>
+          );
+        })}
       </div>
+      <DataStamp
+        source={result.source}
+        at={result.fetchedAt}
+        stale={result.stale}
+        locale={locale}
+      />
     </div>
   );
 }
@@ -341,14 +435,14 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <Panel>
       <PanelHeader title={t.today.worldMarkets} />
-      <ul className="grid grid-cols-2 divide-line-soft sm:grid-cols-3 lg:grid-cols-6">
+      <ul className="grid grid-cols-2 border-t border-line sm:grid-cols-3 lg:grid-cols-6">
         {shown.map((market) => {
           const quote = result.data[market.symbol];
           const tone = directionOf(quote.changePct);
           return (
             <li
               key={market.symbol}
-              className="border-b border-r border-line-soft px-4 py-3 last:border-r-0"
+              className="border-b border-r border-line px-4 py-3 last:border-r-0"
             >
               <Link href={`/hisse/${market.symbol}`} className="block">
                 <p className="flex items-center gap-1.5 text-xs font-semibold text-strong">
@@ -361,16 +455,12 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                 <p
                   className={cn(
                     "numeral text-xs font-semibold",
-                    tone === "up"
-                      ? "text-up"
-                      : tone === "down"
-                        ? "text-down"
-                        : "text-muted",
+                    directionText(tone),
                   )}
                 >
                   {formatPercent(quote.changePct, locale)}
                 </p>
-                <p className="mt-1 text-[10px] leading-tight text-muted">
+                <p className="mt-1 text-[10.5px] leading-tight text-muted">
                   {locale === "tr" ? market.tracksTr : market.tracksEn}
                 </p>
               </Link>
@@ -378,7 +468,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
           );
         })}
       </ul>
-      <p className="px-4 py-2.5 text-[11px] leading-relaxed text-muted sm:px-5">
+      <p className="px-4 py-3 text-[11.5px] leading-relaxed text-muted sm:px-5">
         {t.today.worldMarketsHint}
       </p>
     </Panel>
@@ -387,39 +477,50 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
 function IndexSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="flex gap-2.5 sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:gap-3.5">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-24 rounded-(--radius-lg)" />
+        <Skeleton key={i} className="h-24 w-28 shrink-0 rounded-[14px] sm:w-auto" />
       ))}
     </div>
   );
 }
 
+/**
+ * Günün özeti — sayfadaki tek gradient yüzey (accent %13 → %2) ve tek
+ * accent çerçeve. Bu kartın öne çıkması bilinçli: günü tek paragrafta okumak
+ * ürünün vaadi.
+ */
 async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
   const brief = await getDailyBrief(locale);
 
-  return (
-    <Panel>
-      <PanelHeader title={t.today.briefTitle} />
-      {brief ? (
-        <div className="px-4 py-4 sm:px-5">
-          <h3 className="display text-[1.4rem] leading-[1.2] sm:text-[1.6rem]">
-            {brief.headline}
-          </h3>
-          <div className="mt-2.5 text-[15px] leading-relaxed text-body">
-            <BriefBody markdown={brief.bodyMd} />
-          </div>
-          <DataStamp
-            source={brief.generatedBy === "claude" ? "Claude" : "seed"}
-            at={brief.generatedAt}
-            locale={locale}
-            className="mt-3"
-          />
-        </div>
-      ) : (
+  if (!brief) {
+    return (
+      <Panel>
+        <PanelHeader title={t.today.briefTitle} />
         <EmptyState title={t.today.briefEmpty} />
-      )}
-    </Panel>
+      </Panel>
+    );
+  }
+
+  const stampTime = new Intl.DateTimeFormat(
+    locale === "tr" ? "tr-TR" : "en-US",
+    { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit" },
+  ).format(new Date(brief.generatedAt));
+
+  return (
+    <section className="rounded-2xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5">
+      <div className="mb-3 flex items-center gap-2">
+        <Kicker tone="primary">{t.today.briefTitle}</Kicker>
+        <span className="numeral ml-auto text-[11px] text-muted">
+          {brief.generatedBy === "claude" ? "Claude · " : ""}
+          {stampTime}
+        </span>
+      </div>
+      <p className="text-base font-medium leading-[25px] text-strong">
+        {brief.headline}
+      </p>
+      <BriefBody markdown={brief.bodyMd} moreLabel={t.common.showAll} />
+    </section>
   );
 }
 
@@ -431,7 +532,7 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
   }
 
   return (
-    <ul className="divide-y divide-line-soft">
+    <ul>
       {events.map((event) => {
         const times = event.eventTimeEt
           ? dualTime(
@@ -439,51 +540,62 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
               event.eventTimeEt,
             )
           : null;
+        const high = event.importance === "high";
         return (
-        <li key={event.id} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
-          <span className="w-14 shrink-0">
-            {times ? (
-              <>
-                <span className="numeral block text-sm font-semibold leading-tight text-strong">
-                  {times.et}
-                  <span className="ml-1 text-[9px] font-normal text-muted">NY</span>
-                </span>
-                <span className="numeral block text-[11px] leading-tight text-muted">
-                  {times.tr}
-                  <span className="ml-1 text-[9px]">TR</span>
-                </span>
-              </>
-            ) : (
-              <span className="numeral text-sm text-muted">—</span>
-            )}
-          </span>
-          <span
-            aria-hidden
+          <li
+            key={event.id}
             className={cn(
-              "size-1.5 shrink-0 rounded-full",
-              event.importance === "high"
-                ? "bg-impact-high"
-                : event.importance === "medium"
-                  ? "bg-impact-med"
-                  : "bg-impact-low",
+              "flex items-center gap-3 border-t border-line px-4 py-3 sm:gap-4 sm:px-5",
+              high && "bg-down-wash",
             )}
-          />
-          <span className="min-w-0 flex-1 truncate text-sm text-body">
-            {locale === "tr" ? event.titleTr : event.titleEn}
-          </span>
-          {event.actual && (
-            <span className="numeral shrink-0 text-sm font-semibold text-strong">
-              {event.actual}
-              {event.unit === "%" ? "%" : ""}
+          >
+            <span className="w-[52px] shrink-0">
+              <span
+                className={cn(
+                  "numeral block text-[13px] leading-tight",
+                  high ? "font-bold text-strong" : "font-semibold text-body",
+                )}
+              >
+                {times ? times.et : "—"}
+              </span>
+              {times && (
+                <span className="numeral block text-[10.5px] leading-tight text-muted">
+                  {times.tr} TR
+                </span>
+              )}
             </span>
-          )}
-          {!event.actual && event.forecast && (
-            <span className="numeral shrink-0 text-xs text-muted">
-              {t.calendar.forecast}: {event.forecast}
-              {event.unit === "%" ? "%" : ""}
+            <ImpactDot
+              importance={event.importance ?? "low"}
+              label={t.calendar.impact}
+            />
+            <span
+              className={cn(
+                "min-w-0 flex-1 text-sm",
+                high ? "font-semibold text-strong" : "text-body",
+              )}
+            >
+              {locale === "tr" ? event.titleTr : event.titleEn}
             </span>
-          )}
-        </li>
+            <span className="hidden w-[86px] shrink-0 text-right text-[12.5px] text-muted sm:block">
+              {event.forecast
+                ? `${t.calendar.forecast} ${event.forecast}${event.unit === "%" ? "%" : ""}`
+                : "—"}
+            </span>
+            <span
+              className={cn(
+                "numeral w-[62px] shrink-0 text-right text-sm",
+                event.actual
+                  ? high
+                    ? "font-bold text-down"
+                    : "font-semibold text-strong"
+                  : "text-muted",
+              )}
+            >
+              {event.actual
+                ? `${event.actual}${event.unit === "%" ? "%" : ""}`
+                : "—"}
+            </span>
+          </li>
         );
       })}
     </ul>
@@ -498,6 +610,8 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
     return <EmptyState title={t.earnings.empty} />;
   }
 
+  const names = await getSymbolNames(rows.map((row) => row.symbol));
+
   const hourLabel: Record<string, string> = {
     bmo: t.earnings.beforeOpen,
     amc: t.earnings.afterClose,
@@ -505,25 +619,29 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
   };
 
   return (
-    <ul className="divide-y divide-line-soft">
+    <ul>
       {rows.slice(0, 8).map((row) => (
         <li key={row.id}>
           <Link
             href={`/hisse/${row.symbol}`}
-            className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-elevated sm:px-5"
+            className="flex items-center gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:gap-4 sm:px-5"
           >
-            <span className="numeral w-16 shrink-0 text-sm font-semibold text-strong">
+            <span className="w-[66px] shrink-0 text-[13.5px] font-bold text-strong">
               {row.symbol}
             </span>
-            <span className="min-w-0 flex-1 truncate text-xs text-soft">
-              {row.hour ? (hourLabel[row.hour] ?? t.earnings.timeUnknown) : t.earnings.timeUnknown}
+            <span className="hidden min-w-0 flex-1 truncate text-[13.5px] text-body sm:block">
+              {names[row.symbol]?.name ?? ""}
             </span>
-            {row.epsEstimate !== null && (
-              <span className="numeral shrink-0 text-xs text-muted">
-                {t.earnings.epsEstimate}:{" "}
-                <span className="text-soft">{formatPrice(row.epsEstimate, locale)}</span>
-              </span>
-            )}
+            <TimingChip
+              tone={row.hour === "bmo" ? "pre" : row.hour === "amc" ? "post" : "neutral"}
+            >
+              {row.hour ? (hourLabel[row.hour] ?? t.earnings.timeUnknown) : t.earnings.timeUnknown}
+            </TimingChip>
+            <span className="ml-auto shrink-0 text-right text-[12.5px] text-muted sm:ml-0 sm:w-[82px]">
+              {row.epsEstimate !== null
+                ? `${t.earnings.epsEstimate} ${formatPrice(row.epsEstimate, locale, { currency: true })}`
+                : "—"}
+            </span>
           </Link>
         </li>
       ))}
@@ -544,7 +662,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
           action={
             <Link
               href="/giris"
-              className="inline-flex h-9 items-center rounded-(--radius-md) bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+              className="inline-flex h-9 items-center rounded-[9px] bg-primary px-4 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
             >
               {t.nav.signIn}
             </Link>
@@ -562,11 +680,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
         <PanelHeader title={t.today.watchlistSummary} />
         <EmptyState
           title={t.today.watchlistEmpty}
-          action={
-            <Link href="/favoriler" className="text-sm text-primary hover:underline">
-              {t.watchlist.addSymbol}
-            </Link>
-          }
+          action={<PanelLink href="/favoriler">{t.watchlist.addSymbol}</PanelLink>}
         />
       </Panel>
     );
@@ -574,38 +688,63 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
 
   const status = await getStatus();
   const shown = userSymbols.slice(0, 8);
-  const result = await getQuotes(shown, status);
+  const [result, ...barResults] = await Promise.all([
+    getQuotes(shown, status),
+    ...shown.map((symbol) => getChartBars(symbol, "1D", status)),
+  ]);
 
   return (
-    <Panel>
-      <PanelHeader
-        title={t.today.watchlistSummary}
-        action={
-          <Link href="/favoriler" className="text-xs text-primary hover:underline">
-            {t.common.showAll}
-          </Link>
-        }
-      />
+    <Panel className="px-[18px] py-4 sm:px-5">
+      <div className="mb-1 flex items-baseline justify-between gap-3">
+        <h2 className="text-[13.5px] font-bold text-strong">
+          {t.today.watchlistSummary}
+        </h2>
+        <PanelLink href="/favoriler">{t.common.showAll}</PanelLink>
+      </div>
       {result.ok ? (
         <>
-          <ul className="divide-y divide-line-soft">
-            {shown.map((symbol) => {
+          <ul>
+            {shown.map((symbol, index) => {
               const quote = result.data[symbol];
+              const bars = barResults[index];
+              const points =
+                bars && bars.ok ? bars.data.map((bar) => ({ value: bar.close })) : [];
+              const tone = directionOf(quote?.changePct);
               return (
-                <li key={symbol}>
+                <li key={symbol} className="border-t border-line first:border-t-0">
                   <Link
                     href={`/hisse/${symbol}`}
-                    className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-surface-elevated sm:px-5"
+                    className="flex items-center gap-3 py-2.5 transition-colors hover:opacity-80"
                   >
-                    <span className="numeral text-sm font-semibold text-strong">
-                      {symbol}
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13.5px] font-bold text-strong">
+                        {symbol}
+                      </span>
                     </span>
+                    {points.length > 1 && (
+                      <Sparkline
+                        points={points}
+                        title={`${symbol} · 1D`}
+                        tone={tone}
+                        width={56}
+                        height={24}
+                        showArea={false}
+                        className="h-6 w-14 shrink-0"
+                      />
+                    )}
                     {quote ? (
-                      <span className="flex items-center gap-3">
-                        <span className="numeral text-sm text-body">
+                      <span className="w-[74px] shrink-0 text-right">
+                        <span className="numeral block text-[13.5px] font-bold text-strong">
                           {formatPrice(quote.price, locale)}
                         </span>
-                        <ChangePill changePct={quote.changePct} locale={locale} size="sm" />
+                        <span
+                          className={cn(
+                            "numeral block text-[11.5px]",
+                            directionText(tone),
+                          )}
+                        >
+                          {formatPercent(quote.changePct, locale)}
+                        </span>
                       </span>
                     ) : (
                       <span className="text-xs text-muted">{t.common.noData}</span>
@@ -620,7 +759,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
             at={result.fetchedAt}
             stale={result.stale}
             locale={locale}
-            className="px-4 pb-3 pt-2 sm:px-5"
+            className="mt-3 border-t border-line pt-3"
           />
         </>
       ) : (
@@ -631,8 +770,63 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
 }
 
 /**
+ * Makro özeti — dört ana seri, 23px sayı ve yön oklu önceki değer.
+ * Enflasyon serilerinde düşüş iyi haberdir; yön rengi bu yüzden değişimin
+ * işaretine değil, "hangi yön iyi" bilgisine göre değil — nötr okunur ve ok
+ * yalnızca yönü söyler. Renk sadece gerçekten yön bildiren yerlerde.
+ */
+async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
+  const rows = await getMacroRows();
+  if (rows.length === 0) return null;
+
+  const shown = rows.slice(0, 4);
+
+  return (
+    <Panel className="px-[18px] py-4 sm:px-5">
+      <div className="mb-3.5 flex items-baseline justify-between gap-3">
+        <h2 className="text-[13.5px] font-bold text-strong">
+          {t.today.macroSummary}
+        </h2>
+        <PanelLink href="/makro">{t.common.showAll}</PanelLink>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        {shown.map((row) => {
+          const latest = row.latestValue;
+          const prev = row.prevValue;
+          const delta =
+            latest !== null && prev !== null ? latest - prev : null;
+          const suffix = row.unit === "%" ? "%" : "";
+          return (
+            <div key={row.seriesId}>
+              <p className="truncate text-[11.5px] text-muted">
+                {locale === "tr" ? row.titleTr : row.titleEn}
+              </p>
+              <p className="tote mt-0.5 text-[23px]">
+                {latest !== null ? `${formatPrice(latest, locale)}${suffix}` : "—"}
+              </p>
+              <p className="numeral text-[11.5px] text-muted">
+                {delta === null ? (
+                  t.common.noData
+                ) : delta === 0 ? (
+                  t.macro.unchanged
+                ) : (
+                  <>
+                    <span aria-hidden>{delta > 0 ? "▲" : "▼"}</span>{" "}
+                    {t.macro.previous} {formatPrice(prev, locale)}
+                    {suffix}
+                  </>
+                )}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
+/**
  * Haftaya bakış — önümüzdeki 7 günün yüksek ve orta önemli olayları.
- * Gün adı + çift saat: kullanıcı haftayı tek bakışta planlar.
  */
 async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
   const today = todayEt();
@@ -645,7 +839,7 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
   }
 
   return (
-    <ul className="divide-y divide-line-soft">
+    <ul>
       {events.slice(0, 6).map((event) => {
         const times = event.eventTimeEt
           ? dualTime(
@@ -654,33 +848,27 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
             )
           : null;
         return (
-          <li key={event.id} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
-            <span className="w-24 shrink-0">
-              <span className="block text-xs font-semibold leading-tight text-strong">
+          <li
+            key={event.id}
+            className="flex items-start gap-3 border-t border-line px-4 py-3 sm:px-5"
+          >
+            <span className="w-[86px] shrink-0">
+              <span className="block text-[11.5px] font-semibold leading-tight text-strong">
                 {formatEtDateLong(event.eventDate, locale)}
               </span>
               {times && (
-                <span className="numeral block text-[11px] leading-tight text-muted">
-                  {times.et} NY · {times.tr} TR
+                <span className="numeral block text-[10.5px] leading-tight text-muted">
+                  {times.et} NY
                 </span>
               )}
             </span>
-            <span
-              aria-hidden
-              className={cn(
-                "size-1.5 shrink-0 rounded-full",
-                event.importance === "high" ? "bg-impact-high" : "bg-impact-med",
-              )}
+            <ImpactDot
+              importance={event.importance ?? "medium"}
+              label={t.calendar.impact}
             />
-            <span className="min-w-0 flex-1 text-sm leading-snug text-body">
+            <span className="min-w-0 flex-1 text-[13.5px] leading-snug text-body">
               {locale === "tr" ? event.titleTr : event.titleEn}
             </span>
-            {event.forecast && (
-              <span className="numeral shrink-0 text-xs text-muted">
-                {t.calendar.forecast}: {event.forecast}
-                {event.unit === "%" ? "%" : ""}
-              </span>
-            )}
           </li>
         );
       })}
@@ -696,21 +884,26 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
   }
 
   return (
-    <ul className="divide-y divide-line-soft">
+    <ul>
       {items.map((item) => (
         <li key={item.id}>
           <Link
             href={`/haberler/${item.id}`}
-            className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+            className="flex gap-[11px] border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
           >
-            <p className="line-clamp-2 text-sm font-medium leading-snug text-strong">
-              {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
-            </p>
-            <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted">
-              {item.source && <span>{item.source}</span>}
-              <span aria-hidden>·</span>
-              <span>{timeAgo(item.publishedAt, locale)}</span>
-            </p>
+            <span className="numeral w-10 shrink-0 pt-0.5 text-[11px] text-muted">
+              {timeAgo(item.publishedAt, locale)}
+            </span>
+            <span className="min-w-0">
+              <span className="line-clamp-2 block text-[13.5px] font-medium leading-5 text-strong">
+                {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
+              </span>
+              {item.source && (
+                <span className="mt-[3px] block text-[11px] text-muted">
+                  {item.source}
+                </span>
+              )}
+            </span>
           </Link>
         </li>
       ))}
@@ -721,9 +914,57 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
 /**
  * Özet gövdesi için mini biçimlendirici — tam markdown değil, brifingin
  * kullandığı alt küme: **kalın**, "- " madde imi, boş satır paragraf arası.
+ * Maddeler mockup'taki gibi numaralanır (01, 02, 03).
+ *
+ * Mockup'taki kart kısa: bir paragraf + üç madde. Gerçek bülten bundan çok
+ * daha uzun olabiliyor ve 376px'lik yan kolonu metrelerce uzatıyor — o yüzden
+ * ilk blok açık gelir, gerisi `<details>` içinde durur. Hiçbir cümle atılmaz.
  */
-function BriefBody({ markdown }: { markdown: string }) {
-  const lines = markdown.split("\n");
+function BriefBody({
+  markdown,
+  moreLabel,
+}: {
+  markdown: string;
+  moreLabel: string;
+}) {
+  const lines = markdown.split("\n").filter((line) => line.trim());
+  // Açıkta duran kısım: ilk paragraf + onu izleyen ilk üç madde.
+  const firstBulletAt = lines.findIndex((line) => line.trim().startsWith("- "));
+  const cut =
+    firstBulletAt === -1
+      ? Math.min(lines.length, 2)
+      : Math.min(lines.length, firstBulletAt + 3);
+
+  return (
+    <>
+      <BriefLines lines={lines.slice(0, cut)} startNumber={1} />
+      {cut < lines.length && (
+        <details className="group/brief mt-3">
+          <summary className="flex min-h-8 cursor-pointer list-none items-center gap-1.5 text-[12.5px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
+            <span aria-hidden className="transition-transform group-open/brief:rotate-90">
+              ›
+            </span>
+            {moreLabel}
+          </summary>
+          <BriefLines
+            lines={lines.slice(cut)}
+            startNumber={
+              lines.slice(0, cut).filter((l) => l.trim().startsWith("- ")).length + 1
+            }
+          />
+        </details>
+      )}
+    </>
+  );
+}
+
+function BriefLines({
+  lines,
+  startNumber,
+}: {
+  lines: string[];
+  startNumber: number;
+}) {
 
   function renderInline(text: string, keyPrefix: string) {
     return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
@@ -737,20 +978,36 @@ function BriefBody({ markdown }: { markdown: string }) {
     );
   }
 
+  // Madde numaraları render sırasında sayaç artırmadan, önceden türetilir.
+  const bulletNumberOf = new Map<number, number>();
+  lines.forEach((line, index) => {
+    if (line.trim().startsWith("- ")) {
+      bulletNumberOf.set(index, startNumber + bulletNumberOf.size);
+    }
+  });
+
   return (
-    <div className="flex flex-col gap-1">
+    <div className="mt-3.5 flex flex-col gap-2.5">
       {lines.map((line, index) => {
         const trimmed = line.trim();
-        if (!trimmed) return <div key={index} className="h-1.5" />;
         if (trimmed.startsWith("- ")) {
           return (
-            <p key={index} className="flex gap-2 pl-1">
-              <span aria-hidden className="mt-[7px] size-1 shrink-0 rounded-full bg-brass" />
+            <p
+              key={index}
+              className="flex gap-2.5 text-[13px] leading-5 text-body"
+            >
+              <span className="numeral shrink-0 font-bold text-primary">
+                {String(bulletNumberOf.get(index) ?? startNumber).padStart(2, "0")}
+              </span>
               <span>{renderInline(trimmed.slice(2), String(index))}</span>
             </p>
           );
         }
-        return <p key={index}>{renderInline(trimmed, String(index))}</p>;
+        return (
+          <p key={index} className="text-[13px] leading-5 text-body">
+            {renderInline(trimmed, String(index))}
+          </p>
+        );
       })}
     </div>
   );

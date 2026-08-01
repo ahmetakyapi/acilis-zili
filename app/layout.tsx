@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Schibsted_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import { Archivo } from "next/font/google";
 import { getI18n, getTheme } from "@/lib/i18n";
 import "./globals.css";
 
@@ -8,26 +8,13 @@ import "./globals.css";
  * dairesel referans oluşur ve sessizce çöker. Bu yüzden `-face` soneki.
  */
 /**
- * Display — Fraunces. Yalnızca sayfa manşetlerinde ve günün bülteni
- * başlığında görünür; arayüz kromuna hiç girmez. Değişken eksenleri var:
- * `opsz` puntoya göre kontrastı ayarlar, `SOFT` köşeleri yumuşatır — büyük
- * puntoda karakterli, küçükte sakin durmasını bu sağlıyor.
+ * Tek aile — Archivo. Manşetten kicker'a kadar her rol bu ailenin ağırlık
+ * basamaklarıyla ayrışır; ikinci bir aile yok. Sayılar da Archivo'dur, gövdede
+ * açık `tnum` sütunları hizalar. Mono yalnızca bilanço kartlarında (.figure)
+ * ve orada sistem monosu yeter — ayrı bir web fontu yüklenmez.
  */
-const displayFace = Fraunces({
-  variable: "--font-display-face",
-  subsets: ["latin", "latin-ext"],
-  axes: ["SOFT", "WONK", "opsz"],
-  display: "swap",
-});
-
-const bodyFace = Schibsted_Grotesk({
+const bodyFace = Archivo({
   variable: "--font-body-face",
-  subsets: ["latin", "latin-ext"],
-  display: "swap",
-});
-
-const monoFace = IBM_Plex_Mono({
-  variable: "--font-mono-face",
   subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
@@ -66,8 +53,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f4f1" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a1420" },
+    { media: "(prefers-color-scheme: light)", color: "#f7f9fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#070d16" },
   ],
 };
 
@@ -85,7 +72,7 @@ export default async function RootLayout({
       lang={locale}
       data-theme={theme}
       suppressHydrationWarning
-      className={`${displayFace.variable} ${bodyFace.variable} ${monoFace.variable} h-full`}
+      className={`${bodyFace.variable} h-full`}
     >
       <body className="min-h-full antialiased">{children}</body>
     </html>

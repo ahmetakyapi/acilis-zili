@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { SignOut } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
 import { Panel, PanelHeader } from "@/components/ui/primitives";
@@ -13,7 +13,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-5">
-      <h1 className="self-start text-2xl font-bold tracking-tight">
+      <h1 className="self-start text-[26px] font-bold tracking-[-0.03em] text-strong sm:text-[34px]">
         {t.settings.title}
       </h1>
 
@@ -36,7 +36,7 @@ export default async function SettingsPage() {
               type="submit"
               className="inline-flex h-10 items-center gap-2 rounded-(--radius-md) px-3 text-sm font-medium text-down transition-colors hover:bg-down-wash"
             >
-              <LogOut size={16} />
+              <SignOut weight="duotone" size={16} />
               {t.nav.signOut}
             </button>
           </form>

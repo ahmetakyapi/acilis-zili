@@ -19,7 +19,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
   return (
     <div className="flex flex-col gap-5">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+        <h1 className="text-[26px] font-bold tracking-[-0.03em] text-strong sm:text-[34px]">
           {t.news.title}
         </h1>
         <p className="mt-2 text-sm text-soft">{t.news.subtitle}</p>

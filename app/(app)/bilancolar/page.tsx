@@ -1,8 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { CaretDown, Heart } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
-import { EmptyState, Panel } from "@/components/ui/primitives";
+import {
+  EmptyState,
+  PageHeader,
+  Panel,
+  Segment,
+  SegmentItem,
+  SymbolBadge,
+  TimingChip,
+  type TimingTone,
+} from "@/components/ui/primitives";
 import { getEarningsBetween, getSymbolNames, getUserSymbols } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -11,9 +20,9 @@ import type { EarningsRow } from "@/lib/schema";
 import type { SymbolMeta } from "@/lib/data";
 
 /**
- * Bilanço takvimi — dikkat hiyerarşisi üç katmanlıdır:
- *   1. Dev şirketler (≥$100Mr) gün başında büyük yatay kartlarda
- *   2. Büyükler (piyasa değeri bilinen sonraki 6) orta kart ızgarasında
+ * Bilanço takvimi — mockup 4d. Dikkat hiyerarşisi üç katmanlıdır:
+ *   1. Gün içinde piyasa değeri en büyük iki şirket tam genişlik hero satırı
+ *   2. Sonraki büyükler 184px sabit genişlikte mini kart ızgarasında
  *   3. Kalan yüzlerce sembol varsayılan KAPALI bir açılır bölümde —
  *      kalabalık ilk bakışta görünmez, isteyen açar (native <details>).
  */
@@ -22,15 +31,23 @@ const HERO_MIN_CAP = 100e9;
 const HERO_COUNT = 2;
 const MID_COUNT = 6;
 
+/** Hafta/Ay segmenti — mockup'taki iki seçenek. */
+const RANGES = {
+  hafta: 6,
+  ay: 29,
+} as const;
+type RangeKey = keyof typeof RANGES;
+
 export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   const search = await props.searchParams;
   const onlyWatchlist = search.f === "favoriler";
+  const range: RangeKey = search.aralik === "ay" ? "ay" : "hafta";
 
   const { locale, t } = await getI18n();
   const session = await auth();
   const today = todayEt();
 
-  let rows = await getEarningsBetween(today, addEtDays(today, 13));
+  let rows = await getEarningsBetween(today, addEtDays(today, RANGES[range]));
 
   let userSymbols: string[] = [];
   if (session?.user?.id) {
@@ -51,29 +68,51 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
     byDay.set(row.reportDate, list);
   }
 
+  const rangeHref = (key: RangeKey) =>
+    `/bilancolar?${new URLSearchParams({
+      ...(onlyWatchlist ? { f: "favoriler" } : {}),
+      ...(key === "ay" ? { aralik: "ay" } : {}),
+    })}`;
+
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            {t.earnings.title}
-          </h1>
-          <p className="mt-2 text-sm text-soft">{t.earnings.subtitle}</p>
-        </div>
-        {session?.user && (
-          <Link
-            href={onlyWatchlist ? "/bilancolar" : "/bilancolar?f=favoriler"}
-            className={cn(
-              "min-h-[36px] rounded-full border px-4 py-1.5 text-sm transition-colors",
-              onlyWatchlist
-                ? "border-transparent bg-primary font-medium text-white"
-                : "border-line text-soft hover:border-line-strong hover:text-strong",
+    <div className="flex flex-col gap-7">
+      <PageHeader
+        title={t.earnings.title}
+        subtitle={t.earnings.subtitleLong}
+        action={
+          <div className="flex flex-wrap items-center gap-2.5">
+            {session?.user && (
+              <Link
+                href={
+                  onlyWatchlist
+                    ? rangeHref(range)
+                    : `/bilancolar?f=favoriler${range === "ay" ? "&aralik=ay" : ""}`
+                }
+                className={cn(
+                  "inline-flex min-h-9 items-center gap-[7px] rounded-full border px-3.5 py-2 text-[12.5px] font-semibold transition-colors",
+                  onlyWatchlist
+                    ? "border-transparent bg-primary text-on-primary"
+                    : "border-line bg-surface text-body hover:border-line-strong hover:text-strong",
+                )}
+              >
+                <Heart weight="duotone" size={14} />
+                {t.earnings.onlyWatchlist}
+              </Link>
             )}
-          >
-            {t.earnings.onlyWatchlist}
-          </Link>
-        )}
-      </header>
+            <Segment>
+              {(["hafta", "ay"] as const).map((key) => (
+                <SegmentItem
+                  key={key}
+                  href={rangeHref(key)}
+                  active={range === key}
+                >
+                  {key === "hafta" ? t.earnings.rangeWeek : t.earnings.rangeMonth}
+                </SegmentItem>
+              ))}
+            </Segment>
+          </div>
+        }
+      />
 
       {byDay.size === 0 ? (
         <Panel>
@@ -84,6 +123,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           <DaySection
             key={date}
             date={date}
+            isToday={date === today}
             rows={dayRows}
             meta={meta}
             watchSet={watchSet}
@@ -96,26 +136,65 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   );
 }
 
-function hourBadge(hour: string | null, t: Dictionary) {
-  const label =
-    hour === "bmo"
-      ? t.earnings.beforeOpen
-      : hour === "amc"
-        ? t.earnings.afterClose
-        : hour === "dmh"
-          ? t.earnings.duringMarket
-          : t.earnings.timeUnknown;
-  const cls =
-    hour === "bmo"
-      ? "bg-brass-wash text-impact-med"
-      : hour === "amc"
-        ? "bg-primary-wash text-primary"
-        : "bg-surface-sunken text-muted";
-  return { label, cls };
+function timingOf(hour: string | null, t: Dictionary): {
+  label: string;
+  short: string;
+  tone: TimingTone;
+} {
+  if (hour === "bmo")
+    return {
+      label: t.earnings.beforeOpen,
+      short: t.earnings.beforeOpen,
+      tone: "pre",
+    };
+  if (hour === "amc")
+    return {
+      label: t.earnings.afterClose,
+      short: t.earnings.afterClose,
+      tone: "post",
+    };
+  if (hour === "dmh")
+    return {
+      label: t.earnings.duringMarket,
+      short: t.earnings.duringMarket,
+      tone: "neutral",
+    };
+  return {
+    label: t.earnings.timeUnknown,
+    short: t.earnings.timeUnknown,
+    tone: "neutral",
+  };
+}
+
+/**
+ * Sağdaki büyük sayı: gelir beklentisi. Sağlayıcı gelir vermediğinde piyasa
+ * değerine düşülür ama etiketi değişir — iki farklı büyüklüğü aynı isimle
+ * göstermek okuyucuyu yanıltır.
+ */
+function headlineFigure(
+  row: EarningsRow,
+  m: SymbolMeta | undefined,
+  locale: Locale,
+  t: Dictionary,
+): { value: string; label: string } | null {
+  if (row.revenueEstimate !== null && row.revenueEstimate !== undefined) {
+    return {
+      value: `${formatCompact(row.revenueEstimate, locale)} $`,
+      label: t.earnings.revenueEstimate,
+    };
+  }
+  if (m?.marketCap) {
+    return {
+      value: `${formatCompact(m.marketCap, locale)} $`,
+      label: t.market.marketCap,
+    };
+  }
+  return null;
 }
 
 function DaySection({
   date,
+  isToday,
   rows,
   meta,
   watchSet,
@@ -123,6 +202,7 @@ function DaySection({
   t,
 }: {
   date: string;
+  isToday: boolean;
   rows: EarningsRow[];
   meta: Record<string, SymbolMeta>;
   watchSet: Set<string>;
@@ -154,144 +234,152 @@ function DaySection({
   const other = rest.filter((row) => row.hour !== "bmo" && row.hour !== "amc");
 
   return (
-    <section aria-label={date} className="flex flex-col gap-3">
-      <div className="flex items-baseline gap-3">
-        <h2 className="text-lg font-semibold text-strong">
+    <section aria-label={date}>
+      {/* ---- Gün başlığı ---- */}
+      <div className="mb-3.5 flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
+        <h2 className="text-[19px] font-bold tracking-[-0.025em] text-strong">
           {formatEtDateLong(date, locale)}
         </h2>
-        <span className="numeral text-xs text-muted">
+        <span className="figure text-[12.5px] text-muted">
           {rows.length} {t.earnings.companiesCount}
         </span>
+        {isToday && (
+          <span className="rounded-full bg-down-wash px-[9px] py-[3px] text-[10.5px] font-bold tracking-[0.05em] text-down">
+            {t.earnings.today.toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
+          </span>
+        )}
       </div>
 
-      {/* Katman 1 — dev şirketler, tam genişlik */}
-      {heroes.map((row) => {
-        const m = meta[row.symbol];
-        const badge = hourBadge(row.hour, t);
-        return (
-          <Link key={row.id} href={`/hisse/${row.symbol}`} className="group block">
-            <Panel className="panel-hover flex items-center gap-4 border-l-[3px] border-l-brass p-4 sm:gap-5 sm:p-5">
-              {m?.logoUrl ? (
-                <Image
-                  src={m.logoUrl}
-                  alt=""
-                  width={52}
-                  height={52}
-                  className="rounded-(--radius-md) border border-line-soft bg-white object-contain p-1"
-                />
-              ) : (
-                <span
-                  aria-hidden
-                  className="numeral flex size-[52px] items-center justify-center rounded-(--radius-md) bg-primary-wash text-sm font-bold text-primary"
-                >
-                  {row.symbol.slice(0, 2)}
-                </span>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-2">
-                  <span className="numeral text-lg font-bold text-strong">
-                    {row.symbol}
-                  </span>
-                  {watchSet.has(row.symbol) && (
-                    <span aria-hidden className="text-brass">★</span>
+      {/* ---- Katman 1: hero satırları ---- */}
+      <div className="flex flex-col gap-2.5">
+        {heroes.map((row) => {
+          const m = meta[row.symbol];
+          const timing = timingOf(row.hour, t);
+          const figure = headlineFigure(row, m, locale, t);
+          return (
+            <Link key={row.id} href={`/hisse/${row.symbol}`} className="block">
+              {/* Mobilde iki satır (mockup 4k), masaüstünde tek hero satırı. */}
+              <div className="panel-hover flex flex-col gap-3 rounded-[14px] border border-line bg-surface-solid px-4 py-4 transition-colors sm:flex-row sm:items-center sm:gap-4 sm:px-5">
+                <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                  {m?.logoUrl ? (
+                    <Image
+                      src={m.logoUrl}
+                      alt=""
+                      width={44}
+                      height={44}
+                      className="size-11 shrink-0 rounded-[11px] border border-line bg-white object-contain p-1"
+                    />
+                  ) : (
+                    <SymbolBadge symbol={row.symbol} />
                   )}
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-[10px] font-medium",
-                      badge.cls,
-                    )}
-                  >
-                    {badge.label}
-                  </span>
-                </p>
-                <p className="truncate text-sm text-soft">{m?.name ?? ""}</p>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[17px] font-bold tracking-[-0.02em] text-strong">
+                        {row.symbol}
+                      </span>
+                      {watchSet.has(row.symbol) && (
+                        <span aria-hidden className="text-xs text-primary">
+                          ★
+                        </span>
+                      )}
+                      <TimingChip tone={timing.tone}>{timing.label}</TimingChip>
+                    </div>
+                    <p className="mt-[3px] truncate text-sm text-body">
+                      {m?.name ?? ""}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-3 border-t border-line pt-3 sm:ml-auto sm:block sm:shrink-0 sm:border-0 sm:pt-0 sm:text-right">
+                  {figure ? (
+                    <>
+                      <p className="figure text-[17px] font-bold tracking-[-0.03em] text-strong sm:text-[19px]">
+                        {figure.value}
+                      </p>
+                      <p className="figure text-xs text-muted sm:mt-0.5">
+                        {row.epsEstimate !== null
+                          ? `${t.earnings.epsEstimate} ${formatPrice(row.epsEstimate, locale)}`
+                          : figure.label}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="figure text-[19px] text-muted">—</p>
+                  )}
+                </div>
               </div>
-              <div className="shrink-0 text-right">
-                <p className="numeral text-base font-bold text-strong">
-                  ${formatCompact(m?.marketCap ?? 0, locale)}
-                </p>
-                {row.epsEstimate !== null && (
-                  <p className="numeral text-xs text-muted">
-                    {t.earnings.epsEstimate}{" "}
-                    <span className="text-soft">
-                      {formatPrice(row.epsEstimate, locale)}
-                    </span>
-                  </p>
-                )}
-              </div>
-            </Panel>
-          </Link>
-        );
-      })}
+            </Link>
+          );
+        })}
+      </div>
 
-      {/* Katman 2 — büyükler, kart ızgarası */}
+      {/* ---- Katman 2: 184px mini kartlar ---- */}
       {mid.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-2.5 flex flex-wrap gap-2.5">
           {mid.map((row) => {
             const m = meta[row.symbol];
-            const badge = hourBadge(row.hour, t);
+            const timing = timingOf(row.hour, t);
             return (
-              <Link key={row.id} href={`/hisse/${row.symbol}`} className="group">
-                <Panel className="panel-hover flex h-full flex-col gap-2 p-3.5">
-                  <div className="flex items-start justify-between gap-2">
+              <Link
+                key={row.id}
+                href={`/hisse/${row.symbol}`}
+                className="w-full sm:w-46 sm:shrink-0"
+              >
+                <div className="panel-hover flex h-full flex-col gap-[11px] rounded-[13px] border border-line bg-surface-solid p-3.5 transition-colors">
+                  <div className="flex items-start gap-2">
                     {m?.logoUrl ? (
                       <Image
                         src={m.logoUrl}
                         alt=""
-                        width={38}
-                        height={38}
-                        className="rounded-md border border-line-soft bg-white object-contain p-0.5"
+                        width={32}
+                        height={32}
+                        className="size-8 shrink-0 rounded-[9px] border border-line bg-white object-contain p-0.5"
                       />
                     ) : (
-                      <span
-                        aria-hidden
-                        className="numeral flex size-[38px] items-center justify-center rounded-md bg-primary-wash text-[10px] font-bold text-primary"
-                      >
-                        {row.symbol.slice(0, 2)}
-                      </span>
+                      <SymbolBadge symbol={row.symbol} size="sm" />
                     )}
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-[10px] font-medium",
-                        badge.cls,
-                      )}
-                    >
-                      {badge.label}
-                    </span>
+                    <TimingChip tone={timing.tone} size="sm" className="ml-auto">
+                      {timing.short}
+                    </TimingChip>
                   </div>
                   <div className="min-w-0">
-                    <p className="numeral text-sm font-bold text-strong">
+                    <p className="text-[14.5px] font-bold tracking-[-0.01em] text-strong">
                       {row.symbol}
                       {watchSet.has(row.symbol) && (
-                        <span aria-hidden className="ml-1 text-brass">★</span>
+                        <span aria-hidden className="ml-1 text-primary">
+                          ★
+                        </span>
                       )}
                     </p>
-                    <p className="truncate text-[11px] leading-tight text-soft">
+                    <p className="truncate text-[11.5px] text-muted">
                       {m?.name ?? ""}
                     </p>
                   </div>
-                  <div className="mt-auto flex items-baseline justify-between border-t border-line-soft pt-2 text-[11px]">
-                    <span className="numeral text-muted">
-                      {m?.marketCap ? `$${formatCompact(m.marketCap, locale)}` : ""}
+                  <div className="figure mt-auto flex items-baseline justify-between gap-2 border-t border-line pt-[9px] text-xs">
+                    <span className="text-body">
+                      {row.revenueEstimate
+                        ? formatCompact(row.revenueEstimate, locale)
+                        : m?.marketCap
+                          ? formatCompact(m.marketCap, locale)
+                          : "—"}
                     </span>
-                    {row.epsEstimate !== null && (
-                      <span className="numeral text-soft">
-                        EPS {formatPrice(row.epsEstimate, locale)}
-                      </span>
-                    )}
+                    <span className="text-muted">
+                      {row.epsEstimate !== null
+                        ? `EPS ${formatPrice(row.epsEstimate, locale)}`
+                        : "—"}
+                    </span>
                   </div>
-                </Panel>
+                </div>
               </Link>
             );
           })}
         </div>
       )}
 
-      {/* Katman 3 — kalanlar, varsayılan kapalı */}
+      {/* ---- Katman 3: kalanlar, varsayılan kapalı ---- */}
       {rest.length > 0 && (
-        <details className="group/details">
-          <summary className="flex min-h-[40px] cursor-pointer list-none items-center gap-2 rounded-(--radius-md) px-1 py-1.5 text-sm text-muted transition-colors hover:text-soft [&::-webkit-details-marker]:hidden">
-            <ChevronDown
+        <details className="group/details mt-2.5">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 py-1.5 text-[13px] text-muted transition-colors hover:text-body [&::-webkit-details-marker]:hidden">
+            <CaretDown
+              weight="duotone"
               size={15}
               className="transition-transform group-open/details:rotate-180"
             />
@@ -299,19 +387,30 @@ function DaySection({
             <span className="numeral">({rest.length})</span>
           </summary>
           <Panel className="mt-1 px-4 py-3.5 sm:px-5">
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3.5">
               {[
-                { label: t.earnings.beforeOpen, list: bmo, dot: "bg-brass" },
-                { label: t.earnings.afterClose, list: amc, dot: "bg-primary" },
-                { label: t.earnings.timeUnknown, list: other, dot: "bg-flat" },
+                { label: t.earnings.beforeOpen, list: bmo, tone: "pre" as const },
+                { label: t.earnings.afterClose, list: amc, tone: "post" as const },
+                {
+                  label: t.earnings.timeUnknown,
+                  list: other,
+                  tone: "neutral" as const,
+                },
               ]
                 .filter((group) => group.list.length > 0)
                 .map((group) => (
-                  <div key={group.label} className="flex flex-col gap-1.5">
-                    <p className="flex items-center gap-1.5 text-[11px] font-medium text-muted">
+                  <div key={group.label} className="flex flex-col gap-2">
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold text-muted">
                       <span
                         aria-hidden
-                        className={cn("size-1.5 rounded-full", group.dot)}
+                        className={cn(
+                          "size-1.5 rounded-full",
+                          group.tone === "pre"
+                            ? "bg-up"
+                            : group.tone === "post"
+                              ? "bg-primary"
+                              : "bg-flat",
+                        )}
                       />
                       {group.label}
                       <span className="numeral">({group.list.length})</span>
@@ -322,9 +421,10 @@ function DaySection({
                           key={row.id}
                           href={`/hisse/${row.symbol}`}
                           className={cn(
-                            "numeral rounded-md border border-line-soft bg-surface px-2 py-1 text-xs font-medium text-soft transition-colors hover:border-primary-faint hover:bg-primary-tint hover:text-primary",
-                            watchSet.has(row.symbol) &&
-                              "border-brass/40 bg-brass-wash text-impact-med",
+                            "rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold transition-colors hover:border-line-strong hover:bg-primary-tint hover:text-primary",
+                            watchSet.has(row.symbol)
+                              ? "border-primary-faint bg-primary-wash text-primary"
+                              : "text-body",
                           )}
                         >
                           {row.symbol}

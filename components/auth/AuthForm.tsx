@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { BellMark } from "@/components/brand/BellMark";
 import type { AuthFormState } from "@/app/actions/auth";
 import { cn } from "@/lib/utils";
 
@@ -16,8 +15,10 @@ type Field = {
 };
 
 type AuthFormProps = {
-  brandName: string;
-  tagline: string;
+  pitchTitle: string;
+  pitchBody: string;
+  features: string[];
+  privacyNote: string;
   title: string;
   subtitle: string;
   fields: Field[];
@@ -29,13 +30,19 @@ type AuthFormProps = {
 };
 
 /**
- * Giriş/kayıt kartı — markanın kapısı.
- * Zil işareti + slogan üstte, form tek kolonda; hata alanın hemen altında
- * konuşur. Başlıklar Title Case, süs işareti yok.
+ * Giriş/kayıt — mockup 4j'deki iki kolonlu bölünme: solda ürünün ne yaptığı,
+ * sağda form. Marka işareti masthead'de zaten duruyor, kartın tepesinde
+ * tekrarlanmaz.
+ *
+ * Mockup'ta görünen "Google ile devam et", "Beni hatırla" ve "Parolamı
+ * unuttum" burada YOK — hiçbiri kurulu değil ve çalışmayan düğme çizmek
+ * tasarıma uymaktan daha kötü.
  */
 export function AuthForm({
-  brandName,
-  tagline,
+  pitchTitle,
+  pitchBody,
+  features,
+  privacyNote,
   title,
   subtitle,
   fields,
@@ -48,28 +55,47 @@ export function AuthForm({
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col items-center">
-      {/* Marka başlığı — kapı tabelası */}
-      <Link href="/" className="flex flex-col items-center gap-2.5 text-center">
-        <BellMark size={34} />
-        <span className="font-mono text-[13px] font-semibold uppercase tracking-[0.16em] text-strong">
-          {brandName}
-        </span>
-        <span className="plate text-[9px] normal-case tracking-[0.08em]">
-          {tagline}
-        </span>
-      </Link>
+    <div className="grid items-stretch gap-8 py-4 lg:grid-cols-[minmax(0,1.1fr)_460px] lg:gap-14 lg:py-10">
+      {/* ---- Sol: ürün ne yapıyor ---- */}
+      <div className="flex flex-col">
+        <h1 className="max-w-[17ch] text-[32px] font-bold leading-[1.1] tracking-[-0.03em] text-strong sm:text-[46px]">
+          {pitchTitle}
+        </h1>
+        <p className="mt-5 max-w-[52ch] text-base leading-[26px] text-body">
+          {pitchBody}
+        </p>
 
-      <div className="panel mt-6 w-full p-6 shadow-(--shadow-raised) sm:p-7">
-        <h1 className="text-xl font-bold tracking-tight text-strong">{title}</h1>
-        <p className="mt-1.5 text-sm leading-relaxed text-soft">{subtitle}</p>
+        <div className="mt-auto flex flex-col gap-3 pt-10 lg:pt-12">
+          {features.map((feature) => (
+            <p key={feature} className="flex items-center gap-3">
+              <span
+                aria-hidden
+                className="flex size-[22px] shrink-0 items-center justify-center rounded-[7px] bg-up-wash text-xs font-bold text-up"
+              >
+                ✓
+              </span>
+              <span className="text-[14.5px] text-body">{feature}</span>
+            </p>
+          ))}
+          <p className="mt-2.5 text-[12.5px] leading-relaxed text-muted">
+            {privacyNote}
+          </p>
+        </div>
+      </div>
 
-        <form action={formAction} className="mt-5 flex flex-col gap-4">
+      {/* ---- Sağ: form ---- */}
+      <div className="rounded-2xl border border-line bg-surface p-6 sm:p-8 lg:self-center">
+        <h2 className="text-[24px] font-bold tracking-[-0.03em] text-strong sm:text-[28px]">
+          {title}
+        </h2>
+        <p className="mt-2 text-[13.5px] text-body">{subtitle}</p>
+
+        <form action={formAction} className="mt-6 flex flex-col gap-4">
           {fields.map((field) => {
             const hasError = state.field === field.errorKey;
             return (
-              <label key={field.name} className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-body">
+              <label key={field.name} className="flex flex-col gap-[7px]">
+                <span className="text-[12.5px] font-semibold text-body">
                   {field.label}
                 </span>
                 <input
@@ -80,8 +106,8 @@ export function AuthForm({
                   autoComplete={field.autoComplete}
                   aria-invalid={hasError || undefined}
                   className={cn(
-                    "h-11 rounded-(--radius-md) border bg-surface-elevated px-3.5 text-sm text-strong shadow-none outline-none transition-colors placeholder:text-muted focus:border-line-focus focus:ring-2 focus:ring-primary-wash",
-                    hasError ? "border-down" : "border-line",
+                    "h-11 rounded-[10px] border bg-overlay-surface px-3.5 text-sm text-strong outline-none transition-shadow placeholder:text-muted focus:border-primary/50 focus:shadow-[0_0_0_3px_var(--primary-tint)]",
+                    hasError ? "border-down" : "border-line-strong",
                   )}
                 />
                 {hasError && (
@@ -92,7 +118,7 @@ export function AuthForm({
           })}
 
           {state.field === "form" && state.error && (
-            <p className="rounded-(--radius-md) bg-down-wash px-3.5 py-2.5 text-sm text-down">
+            <p className="rounded-[10px] bg-down-wash px-3.5 py-2.5 text-sm text-down">
               {state.error}
             </p>
           )}
@@ -100,17 +126,17 @@ export function AuthForm({
           <button
             type="submit"
             disabled={pending}
-            className="mt-1 inline-flex h-11 items-center justify-center rounded-(--radius-md) bg-primary text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-hover active:scale-[0.99] disabled:opacity-60"
+            className="mt-2 inline-flex h-11 items-center justify-center rounded-[10px] bg-primary text-[14.5px] font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-45"
           >
             {submitLabel}
           </button>
         </form>
 
-        <p className="mt-5 border-t border-line-soft pt-4 text-center text-sm text-soft">
+        <p className="mt-5 border-t border-line pt-4 text-[13px] text-muted">
           {altText}{" "}
           <Link
             href={altHref}
-            className="font-semibold text-primary hover:underline"
+            className="font-semibold text-primary hover:text-primary-hover"
           >
             {altLinkLabel}
           </Link>

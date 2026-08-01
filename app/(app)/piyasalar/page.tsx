@@ -122,7 +122,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
               className={cn(
                 "flex min-h-[38px] items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors",
                 activeTab
-                  ? "bg-primary text-white shadow-sm"
+                  ? "bg-primary text-on-primary"
                   : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
               )}
             >
@@ -130,7 +130,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
               <span
                 className={cn(
                   "numeral text-xs font-normal",
-                  activeTab ? "text-white/70" : "text-muted",
+                  activeTab ? "text-on-primary/70" : "text-muted",
                 )}
               >
                 {entry.members.length}

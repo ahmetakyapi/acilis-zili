@@ -4,6 +4,9 @@ import type { Locale } from "@/lib/i18n/config";
 
 /* --------------------------------------------------------------------------
    Yüzey
+
+   Gölge yok: kartlar zeminden saydamlık + tek hairline ile ayrılır. Panel
+   içindeki satırlar da aynı hairline'ı üstlerinde taşır, kendi kutuları yok.
    -------------------------------------------------------------------------- */
 
 export function Panel({
@@ -12,40 +15,88 @@ export function Panel({
   ...props
 }: React.ComponentProps<"section">) {
   return (
-    <section className={cn("panel", className)} {...props}>
+    <section className={cn("panel overflow-hidden", className)} {...props}>
       {children}
     </section>
   );
 }
 
+/**
+ * Panel başlığı — 13.5px/700, sağda isteğe bağlı accent bağlantı.
+ * Süs işareti yok; başlığı başlık yapan ağırlığı, kutusu değil.
+ */
 export function PanelHeader({
   title,
   action,
+  meta,
   className,
 }: {
   title: string;
+  /** Sağdaki bağlantı ya da filtre grubu. */
   action?: React.ReactNode;
+  /** Başlığın sağındaki sessiz bilgi — "04:00 — 20:00 ET" gibi. */
+  meta?: string;
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3 sm:px-5",
+        "flex items-center justify-between gap-3 px-4 py-4 sm:px-5",
         className,
       )}
     >
-      <h2 className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-strong">
-        <span aria-hidden className="h-3.5 w-[3px] rounded-full bg-brass" />
-        {title}
-      </h2>
+      <h2 className="text-[13.5px] font-bold text-strong">{title}</h2>
+      {meta && <span className="text-xs text-muted">{meta}</span>}
       {action}
     </div>
   );
 }
 
+/** Panel içi satır — üstündeki hairline ayırır. */
+export function PanelRow({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-4 border-t border-line px-4 py-3 sm:px-5",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Panel başlığındaki "Tümü →" tipi sessiz bağlantı. */
+export function PanelLink({
+  href,
+  children,
+  className,
+}: {
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "text-xs text-primary transition-colors hover:text-primary-hover",
+        className,
+      )}
+    >
+      {children}
+    </Link>
+  );
+}
+
 /**
- * Sayfa başlığı — plate üst yazı + başlık + isteğe bağlı alt satır.
- * Tüm sayfalar aynı hiyerarşiyi kullanır; süs işareti yok, okunabilirlik esas.
+ * Sayfa başlığı — 34px/700, altında 14px açıklama.
+ * Serif display rolü kaldırıldı: tek aile, ayrım ağırlıkla kuruluyor.
  */
 export function PageHeader({
   eyebrow,
@@ -62,15 +113,15 @@ export function PageHeader({
 }) {
   return (
     <header
-      className={cn("flex flex-wrap items-end justify-between gap-3", className)}
+      className={cn("flex flex-wrap items-end justify-between gap-4", className)}
     >
       <div className="min-w-0">
-        {eyebrow && <p className="plate">{eyebrow}</p>}
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-strong sm:text-3xl">
+        {eyebrow && <p className="plate mb-2">{eyebrow}</p>}
+        <h1 className="text-[26px] font-bold tracking-[-0.03em] text-strong sm:text-[34px]">
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-soft">
+          <p className="mt-[7px] max-w-3xl text-sm leading-relaxed text-body">
             {subtitle}
           </p>
         )}
@@ -80,8 +131,32 @@ export function PageHeader({
   );
 }
 
+/** Küçük bölüm başlığı — accent kicker, 10.5–11px. */
+export function Kicker({
+  children,
+  tone = "muted",
+  className,
+}: {
+  children: React.ReactNode;
+  tone?: "muted" | "primary";
+  className?: string;
+}) {
+  return (
+    <p
+      className={cn(
+        "plate tracking-[0.1em]",
+        tone === "primary" && "text-primary",
+        className,
+      )}
+    >
+      {children}
+    </p>
+  );
+}
+
 /* --------------------------------------------------------------------------
-   Değişim rozeti — yön rengi ve işareti tek yerden gelir
+   Değişim rozeti — yön rengi ve işareti tek yerden gelir.
+   Renk tek başına anlam taşımaz: ▲/▼ işareti daima var.
    -------------------------------------------------------------------------- */
 
 export function ChangePill({
@@ -100,7 +175,7 @@ export function ChangePill({
   return (
     <span
       className={cn(
-        "numeral inline-flex items-center gap-1 rounded-full font-medium tabular-nums",
+        "numeral inline-flex items-center gap-1 rounded-full font-semibold",
         directionWash(direction),
         size === "sm" ? "px-1.5 py-0.5 text-[11px]" : "px-2 py-0.5 text-xs",
         className,
@@ -112,6 +187,72 @@ export function ChangePill({
         </span>
       )}
       {formatPercent(changePct, locale)}
+    </span>
+  );
+}
+
+/* --------------------------------------------------------------------------
+   Bilanço zamanlama çipi
+
+   Açılış öncesi `up` tinti, kapanış sonrası accent tinti (hero) ya da nötr
+   `srf2` (mini kart). Zamanlama bir yön değil ama gün içindeki yerini renkle
+   ayırmak listeyi taranabilir kılıyor.
+   -------------------------------------------------------------------------- */
+
+export type TimingTone = "pre" | "post" | "neutral";
+
+export function TimingChip({
+  tone,
+  children,
+  size = "md",
+  className,
+}: {
+  tone: TimingTone;
+  children: React.ReactNode;
+  size?: "sm" | "md";
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center whitespace-nowrap rounded-full font-semibold",
+        size === "sm" ? "px-2 py-[3px] text-[10px]" : "px-[9px] py-[3px] text-[11px]",
+        tone === "pre" && "bg-up-wash text-up",
+        tone === "post" && "bg-primary-wash text-primary",
+        tone === "neutral" && "bg-surface-elevated text-body",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+/**
+ * Sembol kutusu — gerçek logo geldiğinde aynı kutuya oturur, şimdilik
+ * sembolün ilk iki harfi duruyor.
+ */
+export function SymbolBadge({
+  symbol,
+  size = "md",
+  className,
+}: {
+  symbol: string;
+  size?: "sm" | "md";
+  className?: string;
+}) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "flex shrink-0 items-center justify-center border border-line bg-primary-wash font-bold tracking-[-0.02em] text-primary",
+        size === "sm"
+          ? "size-8 rounded-[9px] text-[11px]"
+          : "size-11 rounded-[11px] text-[13px]",
+        className,
+      )}
+    >
+      {symbol.slice(0, 2)}
     </span>
   );
 }
@@ -158,7 +299,7 @@ export function DataStamp({
   return (
     <p
       className={cn(
-        "flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-muted",
+        "flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11.5px] text-muted",
         className,
       )}
     >
@@ -210,7 +351,7 @@ export function EmptyState({
         className,
       )}
     >
-      <p className="text-sm text-soft">{title}</p>
+      <p className="text-sm text-body">{title}</p>
       {hint && <p className="max-w-sm text-xs text-muted">{hint}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>
@@ -228,7 +369,7 @@ export function DataError({
 }) {
   return (
     <div className={cn("px-4 py-8 text-center", className)}>
-      <p className="text-sm text-soft">{message}</p>
+      <p className="text-sm text-body">{message}</p>
       {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
     </div>
   );
@@ -270,25 +411,49 @@ export function ImpactDots({
   );
 }
 
+/** Tek nokta — takvim satırında olayın etkisini renkle söyler. */
+export function ImpactDot({
+  importance,
+  label,
+}: {
+  importance: string;
+  label: string;
+}) {
+  return (
+    <span
+      title={label}
+      className={cn(
+        "size-2 shrink-0 rounded-full",
+        importance === "high"
+          ? "bg-down"
+          : importance === "medium"
+            ? "bg-impact-med"
+            : "bg-muted",
+      )}
+    >
+      <span className="sr-only">{label}</span>
+    </span>
+  );
+}
+
 /* --------------------------------------------------------------------------
    Butonlar
    -------------------------------------------------------------------------- */
 
 const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 rounded-(--radius-md) text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none";
+  "inline-flex items-center justify-center gap-2 rounded-[9px] font-semibold transition-colors duration-150 disabled:opacity-45 disabled:pointer-events-none";
 
 const BUTTON_VARIANTS = {
-  primary:
-    "bg-primary text-white hover:bg-primary-hover active:scale-[0.98] shadow-sm",
+  primary: "bg-primary text-on-primary hover:bg-primary-hover",
   ghost:
-    "border border-line text-body hover:bg-surface-elevated hover:text-strong active:scale-[0.98]",
-  quiet: "text-soft hover:text-strong hover:bg-surface-elevated",
+    "border border-line bg-surface text-body hover:border-line-strong hover:text-strong",
+  quiet: "text-body hover:bg-surface-elevated hover:text-strong",
   danger: "text-down hover:bg-down-wash",
 } as const;
 
 const BUTTON_SIZES = {
   sm: "h-8 px-3 text-xs",
-  md: "h-10 px-4 min-h-[44px] sm:min-h-0 sm:h-10",
+  md: "h-10 px-4 text-[13.5px] min-h-11 sm:min-h-0 sm:h-10",
   icon: "size-9 p-0",
 } as const;
 
@@ -335,6 +500,69 @@ export function ButtonLink({
       )}
       {...props}
     />
+  );
+}
+
+/* --------------------------------------------------------------------------
+   Filtre çipi ve segment — mockup'ta panel başlıklarında ve sayfa üstünde
+   -------------------------------------------------------------------------- */
+
+export function FilterChip({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "true" : undefined}
+      className={cn(
+        "inline-flex items-center whitespace-nowrap rounded-full px-[11px] py-[5px] text-[11.5px] transition-colors",
+        active
+          ? "bg-primary font-semibold text-on-primary"
+          : "bg-surface-elevated text-body hover:text-strong",
+      )}
+    >
+      {children}
+    </Link>
+  );
+}
+
+/** İki–üç seçenekli segment — Hafta/Ay, 1G/1H/1A gibi. */
+export function Segment({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex overflow-hidden rounded-[9px] border border-line text-[12.5px]">
+      {children}
+    </span>
+  );
+}
+
+export function SegmentItem({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "true" : undefined}
+      className={cn(
+        "px-[13px] py-[7px] transition-colors",
+        active
+          ? "bg-primary font-semibold text-on-primary"
+          : "text-body hover:text-strong",
+      )}
+    >
+      {children}
+    </Link>
   );
 }
 

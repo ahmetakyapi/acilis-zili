@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Heart } from "@phosphor-icons/react/dist/ssr";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
@@ -217,22 +217,31 @@ async function StockHeader({
             alt=""
             width={56}
             height={56}
-            className="rounded-(--radius-lg) border border-line bg-white object-contain p-1.5 shadow-(--shadow-card)"
+            className="rounded-(--radius-lg) border border-line bg-white object-contain p-1.5"
           />
         ) : fund ? (
           // Fonun logosu yok; ülke/piyasa bayrağı kimliği taşır
           <span
             aria-hidden
-            className="flex size-14 shrink-0 items-center justify-center rounded-(--radius-lg) border border-line bg-surface-elevated text-2xl shadow-(--shadow-card)"
+            className="flex size-14 shrink-0 items-center justify-center rounded-(--radius-lg) border border-line bg-surface-elevated text-2xl"
           >
             {fund.flag}
           </span>
         ) : null}
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="numeral text-2xl font-bold tracking-tight text-strong">
-              {symbol}
+          {/* Künye şeridi — borsa · sektör · alt sektör */}
+          {(profile?.exchange || profile?.industry) && (
+            <p className="text-xs font-semibold uppercase leading-tight tracking-[0.02em] text-muted">
+              {[profile?.exchange, profile?.industry].filter(Boolean).join(" · ")}
+            </p>
+          )}
+          <div className="mt-[7px] flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h1 className="text-[26px] font-bold tracking-[-0.03em] text-strong sm:text-[38px]">
+              {profile?.name || fund?.name || symbol}
             </h1>
+            <span className="text-base font-semibold text-muted sm:text-[19px]">
+              {symbol}
+            </span>
             {session?.user && (
               <form action={toggleSymbolFavorite}>
                 <input type="hidden" name="symbol" value={symbol} />
@@ -247,16 +256,15 @@ async function StockHeader({
                   className={cn(
                     "inline-flex size-8 items-center justify-center rounded-(--radius-sm) transition-colors",
                     isFavorite
-                      ? "text-brass hover:bg-brass-wash"
+                      ? "text-primary hover:bg-primary-wash"
                       : "text-muted hover:bg-surface-elevated hover:text-soft",
                   )}
                 >
-                  <Star size={17} fill={isFavorite ? "currentColor" : "none"} />
+                  <Heart weight={isFavorite ? "fill" : "duotone"} size={17} />
                 </button>
               </form>
             )}
           </div>
-          <p className="text-sm text-soft">{profile?.name || fund?.name || ""}</p>
           {fund && (
             <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] leading-tight text-muted">
               <span className="font-semibold text-soft">
@@ -270,11 +278,11 @@ async function StockHeader({
       </div>
 
       {quoteResult.ok ? (
-        <div className="text-right">
-          <p className="tote text-3xl">
+        <div className="w-full text-left sm:w-auto sm:text-right">
+          <p className="tote text-[32px] leading-none tracking-[-0.04em] sm:text-[40px]">
             {formatPrice(quoteResult.data.price, locale, { currency: true })}
           </p>
-          <div className="mt-1 flex items-center justify-end gap-2">
+          <div className="mt-1.5 flex items-center justify-start gap-2 sm:justify-end">
             <span
               className={cn(
                 "numeral text-sm",
@@ -294,7 +302,7 @@ async function StockHeader({
             at={quoteResult.fetchedAt}
             stale={quoteResult.stale}
             locale={locale}
-            className="mt-1.5 justify-end"
+            className="mt-1.5 justify-start sm:justify-end"
           />
         </div>
       ) : (
@@ -424,7 +432,7 @@ async function UpcomingEarnings({
   };
 
   return (
-    <Panel className="border-l-2 border-l-brass p-4 sm:p-5">
+    <Panel className="border-primary-faint bg-primary-tint p-4 sm:p-5">
       <p className="plate text-[9px]">{t.stock.nextEarnings}</p>
       <p className="numeral mt-1.5 text-lg font-bold text-strong">
         {formatEtDateLong(next.reportDate, locale)}
@@ -971,7 +979,7 @@ async function ComplianceCard({
       ? "bg-up-wash text-up"
       : result.verdict === "fail"
         ? "bg-down-wash text-down"
-        : "bg-brass-wash text-brass";
+        : "bg-surface-elevated text-body";
 
   const ratios: [string, number | null][] = [
     [t.stock.complianceDebt, result.debtRatio],

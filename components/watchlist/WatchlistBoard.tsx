@@ -4,14 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ChevronDown,
-  ChevronUp,
-  GripVertical,
+  CaretDown,
+  CaretUp,
+  DotsSixVertical,
+  MagnifyingGlass,
   Plus,
-  Search,
-  Trash2,
+  Trash,
   X,
-} from "lucide-react";
+} from "@phosphor-icons/react/dist/ssr";
 import {
   addSymbolToList,
   createWatchlist,
@@ -123,7 +123,7 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
         onClick={() => setOpen(true)}
         className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-(--radius-md) border border-dashed border-line-strong px-4 text-sm font-medium text-soft transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary"
       >
-        <Plus size={16} />
+        <Plus weight="bold" size={16} />
         {labels.newList}
       </button>
     );
@@ -175,7 +175,7 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
         <div className="flex items-center gap-2 pb-0.5">
           <button
             type="submit"
-            className="inline-flex h-11 items-center justify-center rounded-(--radius-md) bg-primary px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover"
+            className="inline-flex h-11 items-center justify-center rounded-(--radius-md) bg-primary px-5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
           >
             {labels.createList}
           </button>
@@ -241,7 +241,7 @@ function ListPanel({
           title={labels.deleteList}
           className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted transition-colors hover:bg-down-wash hover:text-down"
         >
-          <Trash2 size={14} />
+          <Trash weight="duotone" size={14} />
         </button>
       </div>
 
@@ -362,7 +362,7 @@ function SortableRows({
               className="hidden cursor-grab touch-none text-muted/60 group-hover:text-muted sm:block"
               title="Sürükleyerek sırala"
             >
-              <GripVertical size={15} />
+              <DotsSixVertical weight="duotone" size={15} />
             </span>
 
             <Link
@@ -401,7 +401,7 @@ function SortableRows({
                 aria-label={`${labels.moveUp}: ${item.symbol}`}
                 className="flex h-5 w-6 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25"
               >
-                <ChevronUp size={13} />
+                <CaretUp weight="duotone" size={13} />
               </button>
               <button
                 type="button"
@@ -410,7 +410,7 @@ function SortableRows({
                 aria-label={`${labels.moveDown}: ${item.symbol}`}
                 className="flex h-5 w-6 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25"
               >
-                <ChevronDown size={13} />
+                <CaretDown weight="duotone" size={13} />
               </button>
             </span>
 
@@ -425,7 +425,7 @@ function SortableRows({
               aria-label={`${labels.deleteList}: ${item.symbol}`}
               className="inline-flex size-7 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 transition-colors hover:bg-down-wash hover:text-down"
             >
-              <Trash2 size={13} />
+              <Trash weight="duotone" size={13} />
             </button>
           </li>
         );
@@ -506,7 +506,7 @@ function AddSymbolRow({
           }}
           className="inline-flex min-h-[38px] items-center gap-2 rounded-(--radius-md) px-2 text-sm font-medium text-primary transition-colors hover:bg-primary-wash"
         >
-          <Plus size={15} />
+          <Plus weight="bold" size={15} />
           {labels.addSymbol}
         </button>
       </div>
@@ -518,7 +518,7 @@ function AddSymbolRow({
   return (
     <div className="border-b border-line-soft px-4 py-3 sm:px-5">
       <div className="flex items-center gap-2">
-        <Search size={15} className="shrink-0 text-muted" strokeWidth={1.8} />
+        <MagnifyingGlass weight="duotone" size={15} className="shrink-0 text-muted" />
         <input
           ref={inputRef}
           value={query}
@@ -564,7 +564,7 @@ function AddSymbolRow({
                 <span className="min-w-0 flex-1 truncate text-sm text-body">
                   {hit.name}
                 </span>
-                <Plus size={14} className="shrink-0 text-muted" />
+                <Plus weight="bold" size={14} className="shrink-0 text-muted" />
               </button>
             </li>
           ))}

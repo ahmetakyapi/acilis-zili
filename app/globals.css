@@ -2,136 +2,169 @@
 
 /* ==========================================================================
    AÇILIŞ ZİLİ — Tasarım Tokenları
+   Kaynak: docs/design/HANDOFF.md §2–§3 + docs/design/acilis-zili-*.dc.html
    Tailwind v4. tailwind.config.ts YOK. Hardcoded renk YASAK.
    Tema geçişi: <html data-theme="light|dark"> — next-themes kullanılmaz.
+
+   Tasarım dili tek cümlede: sakin, modern bir takip uygulaması. Zeminden
+   saydamlıkla ayrılan yumuşak köşeli yüzeyler, tek hairline çizgi, gölge yok.
+   Hiyerarşi yüzey + tipografi ağırlığıyla kurulur. Renk yalnızca üç şey
+   söyler: yukarı, aşağı, etkileşim.
    ========================================================================== */
 
 :root,
 :root[data-theme="light"] {
-  /* Zemin — sıcak kum. Bej kâğıdın sarısı alındı, dokusu kaldı: ekran için
-     tasarlanmış bir yüzey, kâğıt taklidi değil. */
-  --page-bg: #f6f4f1;
-  --surface: #ffffff;
-  --surface-elevated: #ffffff;
-  --surface-sunken: #efece7;
+  --page-bg: #f7f9fb;
+  --surface: rgb(16 32 52 / 0.028);
+  --surface-elevated: rgb(16 32 52 / 0.07);
+  /* Kart dolgusu gündüzde solid beyaz — saydamlık zeminde kayboluyor. */
+  --surface-solid: #ffffff;
+  --surface-sunken: rgb(16 32 52 / 0.045);
 
-  /* Mürekkep mavisi — metin ve yapı bu aileden gelir, nötr gri değil. */
-  --text-strong: #14293d;
-  --text-body: #33485c;
-  --text-soft: #5a6c7d;
-  --text-muted: #7d8b98;
+  --text-strong: #101c2b;
+  --text-body: #54677c;
+  --text-soft: #54677c;
+  --text-muted: #75879a;
 
-  /* Mavi skala — tek rengin tonal katmanları, degrade değil. */
-  --primary-deep: #12456e;
-  --primary: #1c5f92;
-  --primary-soft: #4d87b4;
-  --primary-faint: #bed3e4;
-  --primary-hover: #164e79;
-  --primary-wash: rgba(28, 95, 146, 0.08);
-  --primary-tint: rgba(28, 95, 146, 0.045);
+  /* Etkileşim / seçili / link. Açık zeminde bir basamak koyu. */
+  --primary: #0d74c4;
+  --primary-hover: #0a5a9a;
+  --primary-deep: #0a5a9a;
+  --primary-soft: #3a93d6;
+  --primary-faint: rgb(13 116 196 / 0.22);
+  --primary-wash: rgb(13 116 196 / 0.1);
+  --primary-tint: rgb(13 116 196 / 0.045);
+  /* Accent üzerine basılan metin. */
+  --on-primary: #ffffff;
 
-  /* Pirinç — zilin metali. İmza vurgusu, seyrek kullanılır. */
-  --brass: #b07d2b;
-  --brass-bright: #c99544;
-  --brass-wash: rgba(176, 125, 43, 0.12);
+  --up: #0f8f63;
+  --up-wash: rgb(15 143 99 / 0.12);
+  --down: #ce2044;
+  --down-wash: rgb(206 32 68 / 0.1);
+  --flat: #75879a;
 
-  /* Piyasa yönü — neon değil, saatlerce bakılabilir tonlar. */
-  --up: #197a52;
-  --up-wash: rgba(25, 122, 82, 0.1);
-  --down: #b8402f;
-  --down-wash: rgba(184, 64, 47, 0.1);
-  --flat: #7d8b98;
+  --line: rgb(16 32 52 / 0.1);
+  --line-soft: rgb(16 32 52 / 0.06);
+  --line-strong: rgb(16 32 52 / 0.17);
+  --line-focus: #0d74c4;
 
-  /* Çizgiler — nötr, marka renkli değil. */
-  --line: rgba(20, 41, 61, 0.1);
-  --line-soft: rgba(20, 41, 61, 0.055);
-  --line-strong: rgba(20, 41, 61, 0.19);
-  --line-focus: rgba(28, 95, 146, 0.75);
+  /* GRAFİK çubukları — surface-elevated ile karıştırma. Bu ayrı token bir
+     hata düzeltmesiydi: gece temasında çubuklar 1.35:1'e düşüp kayboluyordu. */
+  --bar: rgb(16 32 52 / 0.16);
 
-  /* Sticky chrome katmanları */
-  --chrome: rgba(246, 244, 241, 0.82);
-  --chrome-border: rgba(20, 41, 61, 0.09);
+  /* Destek rengi: yalnızca kullanıcı seçimli liste renkleri ve orta önem
+     seviyesi. Arayüz kromunda kullanılmaz — imza rengi değil. */
+  --brass: #a4720f;
+  --brass-bright: #c08b1f;
+  --brass-wash: rgb(164 114 15 / 0.12);
 
-  /* Önem seviyeleri — ekonomik takvim */
-  --impact-high: #b8402f;
-  --impact-med: #b07d2b;
-  --impact-low: #7d8b98;
+  --impact-high: #ce2044;
+  --impact-med: #a4720f;
+  --impact-low: #75879a;
 
-  /* Yükseklik — renkli halo yok, mürekkebin kendi gölgesi. */
-  --shadow-card: 0 1px 2px rgba(20, 41, 61, 0.04), 0 1px 3px rgba(20, 41, 61, 0.03);
-  --shadow-raised: 0 2px 6px rgba(20, 41, 61, 0.05), 0 12px 28px rgba(20, 41, 61, 0.08);
-  --shadow-overlay: 0 18px 50px rgba(20, 41, 61, 0.16);
+  /* Sticky chrome */
+  --chrome: rgb(247 249 251 / 0.85);
+  --chrome-border: rgb(16 32 52 / 0.1);
 
-  --grid-line: rgba(20, 41, 61, 0.04);
-  --chart-grid: rgba(20, 41, 61, 0.06);
-  --skeleton-lo: rgba(20, 41, 61, 0.045);
-  --skeleton-hi: rgba(20, 41, 61, 0.09);
+  /* Katman üstü — yalnızca ⌘K paleti ve diyaloglar. Saydam yüzey burada
+     okunmaz, o yüzden tek solid yüzey ve tek gölge bu katmanda yaşıyor. */
+  --overlay-surface: #ffffff;
+  --scrim: rgb(16 32 52 / 0.34);
+  --shadow-overlay: 0 24px 60px rgb(16 32 52 / 0.18);
+
+  /* Sayfa zemini — sol üstten inen çok hafif ışıma. */
+  --page-glow: radial-gradient(
+    90% 55% at 18% -8%,
+    #ffffff 0%,
+    rgb(255 255 255 / 0) 62%
+  );
+
+  /* Marka karesinin gradienti — logonun tek gradient kullanımı. */
+  --mark-gradient: linear-gradient(140deg, #2a9bea, #0d5cb6);
+
+  --chart-grid: rgb(16 32 52 / 0.07);
+  --skeleton-lo: rgb(16 32 52 / 0.045);
+  --skeleton-hi: rgb(16 32 52 / 0.09);
 
   color-scheme: light;
 }
 
 :root[data-theme="dark"] {
-  /* Gece mavisi — siyah değil, aynı mürekkep ailesinin koyusu. */
-  --page-bg: #0a1420;
-  --surface: rgba(255, 255, 255, 0.032);
-  --surface-elevated: rgba(255, 255, 255, 0.058);
-  --surface-sunken: rgba(0, 0, 0, 0.22);
+  --page-bg: #070d16;
+  --surface: rgb(255 255 255 / 0.035);
+  --surface-elevated: rgb(255 255 255 / 0.06);
+  --surface-solid: rgb(255 255 255 / 0.045);
+  --surface-sunken: rgb(0 0 0 / 0.2);
 
-  --text-strong: #e9f0f7;
-  --text-body: #bccbd8;
-  --text-soft: #92a4b3;
-  --text-muted: #6f8191;
+  --text-strong: #eaf1f8;
+  --text-body: #94a7ba;
+  --text-soft: #94a7ba;
+  /* 11px'de AA — daha soluk yapma. */
+  --text-muted: #8497a9;
 
-  --primary-deep: #2f6d9e;
-  --primary: #56a0d8;
-  --primary-soft: #82bce6;
-  --primary-faint: #294863;
-  --primary-hover: #74b4e2;
-  --primary-wash: rgba(86, 160, 216, 0.14);
-  --primary-tint: rgba(86, 160, 216, 0.07);
+  --primary: #35b8ff;
+  --primary-hover: #7fd2ff;
+  --primary-deep: #7fd2ff;
+  --primary-soft: #6bc9ff;
+  --primary-faint: rgb(53 184 255 / 0.22);
+  --primary-wash: rgb(53 184 255 / 0.14);
+  --primary-tint: rgb(53 184 255 / 0.06);
+  --on-primary: #06121f;
+
+  --up: #3ddc97;
+  --up-wash: rgb(61 220 151 / 0.14);
+  --down: #ff5c7a;
+  --down-wash: rgb(255 92 122 / 0.13);
+  --flat: #8497a9;
+
+  --line: rgb(255 255 255 / 0.08);
+  --line-soft: rgb(255 255 255 / 0.05);
+  --line-strong: rgb(255 255 255 / 0.14);
+  --line-focus: #35b8ff;
+
+  --bar: rgb(255 255 255 / 0.2);
 
   --brass: #d3a04a;
   --brass-bright: #e5b768;
-  --brass-wash: rgba(211, 160, 74, 0.15);
+  --brass-wash: rgb(211 160 74 / 0.15);
 
-  --up: #43c08d;
-  --up-wash: rgba(67, 192, 141, 0.14);
-  --down: #f2796a;
-  --down-wash: rgba(242, 121, 106, 0.14);
-  --flat: #6f8191;
-
-  --line: rgba(255, 255, 255, 0.1);
-  --line-soft: rgba(255, 255, 255, 0.055);
-  --line-strong: rgba(255, 255, 255, 0.2);
-  --line-focus: rgba(86, 160, 216, 0.8);
-
-  --chrome: rgba(10, 20, 32, 0.82);
-  --chrome-border: rgba(255, 255, 255, 0.09);
-
-  --impact-high: #f2796a;
+  --impact-high: #ff5c7a;
   --impact-med: #d3a04a;
-  --impact-low: #6f8191;
+  --impact-low: #8497a9;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.28);
-  --shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.3), 0 14px 32px rgba(0, 0, 0, 0.34);
-  --shadow-overlay: 0 20px 56px rgba(0, 0, 0, 0.55);
+  --chrome: rgb(7 13 22 / 0.85);
+  --chrome-border: rgb(255 255 255 / 0.08);
 
-  --grid-line: rgba(255, 255, 255, 0.035);
-  --chart-grid: rgba(255, 255, 255, 0.06);
-  --skeleton-lo: rgba(255, 255, 255, 0.045);
-  --skeleton-hi: rgba(255, 255, 255, 0.09);
+  /* Mockup burada beyaz bir scrim çiziyor; koyu temada arka planı diyalogdan
+     DAHA parlak yapıyor. Karartma yönü korundu — bilinçli sapma. */
+  --overlay-surface: #122236;
+  --scrim: rgb(2 6 12 / 0.6);
+  --shadow-overlay: 0 24px 60px rgb(0 0 0 / 0.5);
+
+  --page-glow: radial-gradient(
+    90% 55% at 18% -8%,
+    #12263c 0%,
+    rgb(18 38 60 / 0) 60%
+  );
+
+  --mark-gradient: linear-gradient(140deg, #4fc3ff, #1a63c4);
+
+  --chart-grid: rgb(255 255 255 / 0.07);
+  --skeleton-lo: rgb(255 255 255 / 0.045);
+  --skeleton-hi: rgb(255 255 255 / 0.09);
 
   color-scheme: dark;
 }
 
 /* --------------------------------------------------------------------------
    Tailwind token köprüsü — @theme inline, var() referanslarını korur.
-   Kullanım: bg-page, text-strong, border-line ... veya bg-(--color-surface)
+   Kullanım: bg-page, text-strong, border-line ... veya bg-(--surface)
    -------------------------------------------------------------------------- */
 @theme inline {
   --color-page: var(--page-bg);
   --color-surface: var(--surface);
   --color-surface-elevated: var(--surface-elevated);
+  --color-surface-solid: var(--surface-solid);
   --color-surface-sunken: var(--surface-sunken);
 
   --color-strong: var(--text-strong);
@@ -146,10 +179,7 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-wash: var(--primary-wash);
   --color-primary-tint: var(--primary-tint);
-
-  --color-brass: var(--brass);
-  --color-brass-bright: var(--brass-bright);
-  --color-brass-wash: var(--brass-wash);
+  --color-on-primary: var(--on-primary);
 
   --color-up: var(--up);
   --color-up-wash: var(--up-wash);
@@ -162,21 +192,30 @@
   --color-line-strong: var(--line-strong);
   --color-line-focus: var(--line-focus);
 
+  --color-bar: var(--bar);
+
+  --color-brass: var(--brass);
+  --color-brass-bright: var(--brass-bright);
+  --color-brass-wash: var(--brass-wash);
+
   --color-chrome: var(--chrome);
   --color-chrome-border: var(--chrome-border);
+  --color-overlay-surface: var(--overlay-surface);
+  --color-scrim: var(--scrim);
 
   --color-impact-high: var(--impact-high);
   --color-impact-med: var(--impact-med);
   --color-impact-low: var(--impact-low);
 
-  /* Tipografi — mono display rolünde. Borsa panosunun kendi dili. */
-  --font-sans: var(--font-body-face), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-mono-face), ui-monospace, "SF Mono", monospace;
-  --font-display: var(--font-display-face), Georgia, serif;
+  /* Tek aile: Archivo. Serif display rolü kaldırıldı — sayfayı gazeteye
+     çeviren oydu. Mono yalnızca bilanço kartlarındaki sayılarda. */
+  --font-sans: var(--font-body-face), system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
+  /* Yumuşak köşeler — mockup'ta kartlar 14px, panolar 16px. */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.5625rem;
+  --radius-lg: 0.875rem;
   --radius-xl: 1rem;
 
   --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
@@ -202,48 +241,34 @@
   body {
     background-color: var(--page-bg);
     color: var(--text-body);
-    font-family: var(--font-body-face), ui-sans-serif, system-ui, sans-serif;
-    font-feature-settings: "cv05" 1;
+    font-family: var(--font-body-face), system-ui, sans-serif;
+    /* tnum kökte açık: her sütun hizalı okunur, tek tek sınıf gerekmez. */
+    font-feature-settings: "tnum" 1;
+    letter-spacing: -0.006em;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     /* Geniş içerik kendi kabında kayar (.scroll-x); gövde asla yana kaymaz. */
     overflow-x: clip;
   }
 
-  /* Zemin: üstten inen çok hafif bir mavi ışık. Aurora/spotlight yok, ölçek
-     çizgisi de yok — pano yüzeyi sakin kalır, kartlar kendi işini yapar. */
+  /* Zemin ışıması — sol üstten inen tek katman. Aurora/spotlight yok. */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: radial-gradient(
-      ellipse 90% 46% at 50% -8%,
-      var(--primary-wash),
-      transparent 72%
-    );
+    background: var(--page-glow);
   }
 
-  /* Display ailesi YALNIZCA sayfa manşetinde. Panel başlığı, kart başlığı,
-     etiket — hepsi arayüz kromudur ve Schibsted'te kalır. Serifi kroma
-     sokmak sayfayı gazeteye çevirir; tam da kaçındığımız şey. */
-  h1 {
-    font-family: var(--font-display-face), Georgia, serif;
-    font-variation-settings: "SOFT" 28, "WONK" 0;
-    color: var(--text-strong);
-    letter-spacing: -0.022em;
-    line-height: 1.08;
-    text-wrap: balance;
-  }
-
+  h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
     color: var(--text-strong);
-    letter-spacing: -0.012em;
+    letter-spacing: -0.03em;
     text-wrap: balance;
   }
 
@@ -252,20 +277,12 @@
     color: var(--text-strong);
   }
 
+  /* Tarayıcının varsayılan mavi halkası asla kalmaz. */
   :focus-visible {
     outline: 2px solid var(--line-focus);
     outline-offset: 2px;
     border-radius: 4px;
   }
-}
-
-/* Display ailesini isteğe bağlı taşımak için — büyük sayı ve manşet dışı
-   yerlerde kullanılmaz; kroma sokma. */
-.display {
-  font-family: var(--font-display-face), Georgia, serif;
-  font-variation-settings: "SOFT" 28, "WONK" 0;
-  letter-spacing: -0.02em;
-  color: var(--text-strong);
 }
 
 /* Arama paleti girişinin odağını kapsayıcı anlatır — çift çerçeve olmaz. */
@@ -274,51 +291,58 @@
 }
 
 /* --------------------------------------------------------------------------
-   Sayısal okumalar — her fiyat, yüzde, saat, EPS bu sınıfı taşır.
-   Sütunların hizalı okunması için tabular-nums zorunlu.
+   Sayısal okumalar
+
+   Archivo `tnum` gövdede zaten açık, bu yüzden .numeral artık aile
+   değiştirmez — yalnızca hizayı ve sıkı aralığı garantiler. Mono, HANDOFF
+   §3 uyarınca sadece bilanço kartlarındaki sayılarda (.figure).
    -------------------------------------------------------------------------- */
 .numeral {
-  font-family: var(--font-mono-face), ui-monospace, "SF Mono", monospace;
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "zero" 1;
+  font-feature-settings: "tnum" 1;
   letter-spacing: -0.02em;
 }
 
-/* Panoda okunan büyük sayı — canlı saat, endeks seviyesi */
+/* Panoda okunan büyük sayı — geri sayım, endeks seviyesi, fiyat */
 .tote {
-  font-family: var(--font-mono-face), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "zero" 1;
-  font-weight: 600;
-  letter-spacing: -0.045em;
+  font-feature-settings: "tnum" 1;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   color: var(--text-strong);
 }
 
-/* Bölüm etiketi — mono, seyrek harf aralığı */
+/* Bilanço kartlarındaki gelir/EPS sayıları — tek mono kullanımı */
+.figure {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Küçük başlık / kicker — 10.5–11px, seyrek aralık */
 .plate {
-  font-family: var(--font-mono-face), ui-monospace, monospace;
-  font-weight: 600;
   font-size: 0.6875rem;
-  letter-spacing: 0.16em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 /* --------------------------------------------------------------------------
-   Yüzeyler
+   Yüzeyler — gölge yok, ayrım saydamlık + tek hairline ile
    -------------------------------------------------------------------------- */
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
-  transition: box-shadow 0.25s var(--ease-brand), border-color 0.25s var(--ease-brand);
+  transition: border-color 0.25s var(--ease-brand), background-color 0.25s
+    var(--ease-brand);
 }
 
-/* Tıklanabilir kartlar nazikçe yükselir — zıplamaz. */
+/* Tıklanabilir kartlar accent tintiyle karşılık verir — zıplamaz. */
 .panel-hover:hover {
   border-color: var(--line-strong);
-  box-shadow: var(--shadow-raised);
+  background: var(--primary-tint);
 }
 
 .chrome {
@@ -328,7 +352,7 @@
   border-color: var(--chrome-border);
 }
 
-/* Piyasa açıkken pirinç nabız. Kapalıyken sabit gri. */
+/* Piyasa açıkken nabız — accent, glow değil sadece opaklık. */
 .pulse-live {
   animation: pulse-live 2.4s var(--ease-brand) infinite;
 }
@@ -337,11 +361,9 @@
   0%,
   100% {
     opacity: 1;
-    box-shadow: 0 0 0 0 var(--brass-wash);
   }
   50% {
-    opacity: 0.72;
-    box-shadow: 0 0 0 5px transparent;
+    opacity: 0.45;
   }
 }
 
@@ -423,14 +445,6 @@
 }
 
 @media (max-width: 640px) {
-  body::before {
-    background: radial-gradient(
-      ellipse 120% 40% at 50% -5%,
-      var(--primary-wash),
-      transparent 70%
-    );
-  }
-
   /* iOS Safari, 16px altı font taşıyan input odaklanınca sayfayı yakınlaştırır.
      Mobilde tüm form alanları 16px taban kullanır — arama zoom hatasının kökü. */
   input,

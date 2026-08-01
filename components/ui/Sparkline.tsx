@@ -1,19 +1,32 @@
 /**
  * Sunucuda çizilen mini eğri — istemci JS'i yok.
  * Tek seri olduğu için lejant gerekmez; başlık seriyi adlandırır.
+ *
+ * HANDOFF §5: çizgi yönün rengini taşır, altında aynı rengin %8–9 opaklıkta
+ * alan dolgusu durur. Nokta işareti varsayılan olarak yok — mockup'ta eğri
+ * sessiz bir arka plan öğesi, okunacak sayı üstteki fiyattır.
  */
 
 type Point = { value: number };
 
+/** Alan dolgusunun opaklığı — çizgiyi bastırmayacak kadar hafif. */
+const AREA_OPACITY = 0.085;
+
 export function Sparkline({
   points,
-  width = 240,
-  height = 56,
+  width = 200,
+  height = 40,
   title,
-  /** Token adı: nötr seriler "primary", fiyat yönü için "up"/"down". */
+  /**
+   * Fiyat serileri yön rengini taşır: artıda yeşil, ekside kırmızı, tam
+   * yatayda (%0) gri. Bu kural YALNIZCA hisse ve endeks fiyatları için —
+   * makro göstergelerinde "yükselmek" iyi haber demek değil, onlar accent
+   * mavisiyle çizilir (varsayılan).
+   */
   tone = "primary",
   strokeWidth = 2,
-  showLastDot = true,
+  showArea = true,
+  showLastDot = false,
   className,
 }: {
   points: Point[];
@@ -22,6 +35,7 @@ export function Sparkline({
   title: string;
   tone?: "primary" | "up" | "down" | "flat";
   strokeWidth?: number;
+  showArea?: boolean;
   showLastDot?: boolean;
   className?: string;
 }) {
@@ -42,9 +56,9 @@ export function Sparkline({
     return [x, y] as const;
   });
 
-  const path = coords
-    .map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`)
-    .join(" ");
+  const line = coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  // Alan, çizginin iki ucundan tabana iner — kapalı bir poligon olur.
+  const area = `${pad},${height} ${line} ${(pad + innerW).toFixed(1)},${height}`;
 
   const stroke =
     tone === "up"
@@ -66,8 +80,9 @@ export function Sparkline({
       preserveAspectRatio="none"
     >
       <title>{title}</title>
-      <path
-        d={path}
+      {showArea && <polygon points={area} fill={stroke} opacity={AREA_OPACITY} />}
+      <polyline
+        points={line}
         fill="none"
         stroke={stroke}
         strokeWidth={strokeWidth}
@@ -81,7 +96,7 @@ export function Sparkline({
           cy={lastY}
           r={strokeWidth + 1.5}
           fill={stroke}
-          stroke="var(--surface)"
+          stroke="var(--page-bg)"
           strokeWidth="2"
         />
       )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore, useTransition } from "react";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "@phosphor-icons/react/dist/ssr";
 import { setThemePreference } from "@/app/actions/preferences";
 import type { Theme } from "@/lib/i18n/config";
 
@@ -49,12 +49,12 @@ export function ThemeToggle({
       onClick={toggle}
       aria-label={label}
       title={label}
-      className="inline-flex size-9 items-center justify-center rounded-(--radius-md) text-soft transition-colors hover:bg-surface-elevated hover:text-strong"
+      className="inline-flex size-[30px] items-center justify-center rounded-lg border border-line bg-surface text-body transition-colors hover:border-line-strong hover:text-strong lg:size-[34px] lg:rounded-[9px]"
     >
       {theme === "dark" ? (
-        <Sun size={17} strokeWidth={1.8} />
+        <Sun weight="duotone" size={16} />
       ) : (
-        <Moon size={17} strokeWidth={1.8} />
+        <Moon weight="duotone" size={16} />
       )}
     </button>
   );

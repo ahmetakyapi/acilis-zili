@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
 import type { SearchHit } from "@/app/api/search/route";
 import { cn } from "@/lib/utils";
 
@@ -26,14 +26,22 @@ const POPULAR_PICKS = [
 
 export function SearchCommand({
   placeholder,
+  placeholderShort,
   label,
   emptyLabel,
   popularLabel,
+  companiesLabel,
+  hints,
 }: {
   placeholder: string;
+  /** Masthead alanında görünen kısa çağrı — "Sembol veya olay ara". */
+  placeholderShort: string;
   label: string;
   emptyLabel: string;
   popularLabel: string;
+  companiesLabel: string;
+  /** Paletin alt şeridindeki klavye ipuçları. */
+  hints: { move: string; open: string };
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -147,17 +155,16 @@ export function SearchCommand({
 
   return (
     <>
+      {/* Mobilde 30px kare, masaüstünde 248px'lik ⌘K alanı — mockup 4a/4b. */}
       <button
         type="button"
         onClick={openPalette}
         aria-label={label}
-        className="inline-flex items-center gap-2 rounded-(--radius-md) border border-line px-2.5 py-1.5 text-sm text-muted transition-colors hover:border-line-strong hover:text-soft lg:w-64 lg:justify-between"
+        className="inline-flex size-[30px] items-center justify-center gap-2.5 rounded-lg border border-line bg-surface text-[13px] text-muted transition-colors hover:border-line-strong hover:text-soft lg:size-auto lg:w-[248px] lg:justify-start lg:rounded-[9px] lg:px-3 lg:py-2"
       >
-        <span className="flex items-center gap-2">
-          <Search size={16} strokeWidth={1.8} />
-          <span className="hidden lg:inline">{label}</span>
-        </span>
-        <kbd className="numeral hidden rounded border border-line px-1.5 py-0.5 text-[10px] lg:inline">
+        <MagnifyingGlass weight="duotone" size={15} className="shrink-0" />
+        <span className="hidden lg:inline">{placeholderShort}</span>
+        <kbd className="ml-auto hidden rounded bg-surface-elevated px-[5px] py-0.5 text-[10.5px] lg:inline">
           ⌘K
         </kbd>
       </button>
@@ -167,47 +174,54 @@ export function SearchCommand({
       {open &&
         createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-[rgb(10_18_30/0.55)] backdrop-blur-sm sm:px-4 sm:pt-[12vh]"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-scrim sm:px-4 sm:pt-[112px]"
           onClick={close}
           role="presentation"
         >
           {/* Mobilde üstten tam genişlik bir sayfa gibi açılır — küçük ekranda
               yüzen kutu yerine ferah, zoom'suz bir arama yüzeyi. */}
           <div
-            className="w-full overflow-hidden border-b border-line bg-surface-elevated shadow-(--shadow-overlay) sm:max-w-lg sm:rounded-(--radius-xl) sm:border"
+            className="w-full overflow-hidden border-b border-line-strong bg-overlay-surface shadow-(--shadow-overlay) sm:max-w-[640px] sm:rounded-2xl sm:border"
             onClick={(event) => event.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-label={label}
           >
-            <div className="flex items-center gap-3 border-b border-line-soft px-4">
-              <Search size={17} className="shrink-0 text-muted" strokeWidth={1.8} />
+            <div className="flex items-center gap-3 border-b border-line px-5">
+              <MagnifyingGlass
+                weight="duotone"
+                size={18}
+                className="shrink-0 text-muted"
+              />
               <input
                 ref={inputRef}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={onInputKeyDown}
                 placeholder={placeholder}
-                className="palette-input h-14 flex-1 bg-transparent text-base text-strong outline-none placeholder:text-muted sm:h-12 sm:text-sm"
+                className="palette-input h-14 flex-1 bg-transparent text-[17px] font-semibold text-strong outline-none placeholder:font-normal placeholder:text-muted"
                 autoComplete="off"
                 spellCheck={false}
               />
               <button
                 type="button"
                 onClick={close}
-                className="flex size-8 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted transition-colors hover:bg-surface hover:text-strong"
+                className="flex shrink-0 items-center justify-center rounded-[5px] bg-surface-elevated px-[7px] py-[3px] text-[11px] text-muted transition-colors hover:text-strong max-sm:size-8 max-sm:px-0"
                 aria-label="Kapat"
               >
-                <X size={16} />
+                <span className="max-sm:hidden">ESC</span>
+                <X size={16} className="sm:hidden" />
               </button>
             </div>
 
-            <div className="max-h-[60dvh] overflow-y-auto py-1 sm:max-h-[45vh]">
+            <div className="max-h-[60dvh] overflow-y-auto py-2.5 sm:max-h-[45vh]">
               {/* Kutu boşken popüler semboller — boş bir pencere yerine yön */}
               {!query.trim() && (
-                <div className="px-4 py-3">
-                  <p className="plate text-[9px]">{popularLabel}</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="px-5 pb-2 pt-2">
+                  <p className="plate text-[10.5px] tracking-[0.08em]">
+                    {popularLabel}
+                  </p>
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
                     {POPULAR_PICKS.map((pick) => (
                       <button
                         key={pick.symbol}
@@ -215,7 +229,7 @@ export function SearchCommand({
                         onClick={() => go(pick.symbol)}
                         className="flex min-h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-xs transition-colors hover:border-line-strong hover:bg-primary-tint"
                       >
-                        <span className="numeral font-semibold text-strong">
+                        <span className="font-bold text-strong">
                           {pick.symbol}
                         </span>
                         <span className="text-muted">{pick.name}</span>
@@ -225,6 +239,12 @@ export function SearchCommand({
                 </div>
               )}
 
+              {shownHits.length > 0 && (
+                <p className="plate px-5 pb-1.5 pt-2 text-[10.5px] tracking-[0.08em]">
+                  {companiesLabel}
+                </p>
+              )}
+
               {shownHits.map((hit, index) => (
                 <button
                   key={hit.symbol}
@@ -232,23 +252,39 @@ export function SearchCommand({
                   onClick={() => go(hit.symbol)}
                   onMouseEnter={() => setActive(index)}
                   className={cn(
-                    "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors sm:py-2.5",
+                    "flex w-full items-center gap-3.5 px-5 py-2.5 text-left text-[13.5px] transition-colors max-sm:py-3",
                     index === active ? "bg-primary-wash" : "hover:bg-surface",
                   )}
                 >
-                  <span className="numeral flex h-7 w-16 shrink-0 items-center justify-center rounded-(--radius-sm) bg-primary-tint text-xs font-semibold text-primary">
+                  <span className="w-[60px] shrink-0 font-bold text-strong">
                     {hit.symbol}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-body">
+                  <span
+                    className={cn(
+                      "min-w-0 flex-1 truncate",
+                      index === active ? "text-strong" : "text-body",
+                    )}
+                  >
                     {hit.name}
                   </span>
                 </button>
               ))}
 
               {!loading && query.trim() && shownHits.length === 0 && (
-                <p className="px-4 py-6 text-center text-sm text-muted">
+                <p className="px-5 py-6 text-center text-sm text-muted">
                   {emptyLabel}
                 </p>
+              )}
+            </div>
+
+            {/* Klavye ipuçları — palet açıkken ne yapılabileceğini söyler. */}
+            <div className="hidden gap-[18px] border-t border-line px-5 py-3 text-[11.5px] text-muted sm:flex">
+              <span>↑↓ {hints.move}</span>
+              <span>↵ {hints.open}</span>
+              {shownHits.length > 0 && (
+                <span className="ml-auto numeral">
+                  {shownHits.length} · Finnhub
+                </span>
               )}
             </div>
           </div>

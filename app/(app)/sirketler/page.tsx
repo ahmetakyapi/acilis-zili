@@ -154,7 +154,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   return (
     <div className="flex flex-col gap-5">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+        <h1 className="text-[26px] font-bold tracking-[-0.03em] text-strong sm:text-[34px]">
           {t.companies.title}
         </h1>
         <p className="mt-2 text-sm text-soft">{t.companies.subtitle}</p>
@@ -169,7 +169,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
               className={cn(
                 "min-h-[34px] shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
                 !sectorFilter
-                  ? "bg-primary text-white shadow-sm"
+                  ? "bg-primary text-on-primary"
                   : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
               )}
             >
@@ -177,7 +177,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
               <span
                 className={cn(
                   "numeral ml-1.5",
-                  !sectorFilter ? "text-white/70" : "text-muted",
+                  !sectorFilter ? "text-on-primary/70" : "text-muted",
                 )}
               >
                 {companies.length}
@@ -192,7 +192,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                   className={cn(
                     "min-h-[34px] shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
                     active
-                      ? "bg-primary text-white shadow-sm"
+                      ? "bg-primary text-on-primary"
                       : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
                   )}
                 >
@@ -200,7 +200,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                   <span
                     className={cn(
                       "numeral ml-1.5",
-                      active ? "text-white/70" : "text-muted",
+                      active ? "text-on-primary/70" : "text-muted",
                     )}
                   >
                     {sectorCounts.get(sector)}

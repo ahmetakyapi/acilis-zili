@@ -188,7 +188,9 @@ export function PriceChart({
 
     const up = cssVar("--up");
     const down = cssVar("--down");
-    const flat = cssVar("--primary");
+    // Fiyat serisi yön rengini taşır; dönem getirisi tam %0 ise gri kalır —
+    // yeşil/kırmızı burada yalnızca gerçekten yön varken konuşur.
+    const flat = cssVar("--flat");
     const line =
       periodTone === "up" ? up : periodTone === "down" ? down : flat;
     const text = cssVar("--text-muted");
@@ -472,7 +474,7 @@ export function PriceChart({
           </span>
           <span aria-hidden>·</span>
           <span className="flex items-center gap-1 font-medium text-soft">
-            <span aria-hidden className="size-1.5 rounded-full bg-brass" />
+            <span aria-hidden className="size-1.5 rounded-full bg-primary" />
             {labels.sessionRegular}
             <span className="numeral">09:30–16:00</span>
           </span>
@@ -505,7 +507,7 @@ export function PriceChart({
               className={cn(
                 "numeral min-h-[36px] shrink-0 rounded-(--radius-sm) px-2.5 text-xs font-semibold transition-colors",
                 range === r
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-on-primary"
                   : "text-muted hover:bg-primary-wash hover:text-primary",
               )}
             >

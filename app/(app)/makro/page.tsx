@@ -105,7 +105,7 @@ export default async function MacroPage() {
                     <dt className="shrink-0 text-muted">{t.macro.nextRelease}</dt>
                     <dd className="text-right">
                       {row.nextReleaseAt ? (
-                        <span className="numeral font-semibold text-brass">
+                        <span className="numeral font-semibold text-primary">
                           {formatEtDateLong(row.nextReleaseAt, locale)}
                         </span>
                       ) : (

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import {
   ChangePill,
   EmptyState,
@@ -69,7 +69,7 @@ export default async function NewsDetailPage(
         href="/haberler"
         className="inline-flex items-center gap-1.5 self-start text-sm text-soft transition-colors hover:text-strong"
       >
-        <ArrowLeft size={15} />
+        <CaretLeft weight="duotone" size={15} />
         {t.news.title}
       </Link>
 
@@ -83,7 +83,7 @@ export default async function NewsDetailPage(
           <span aria-hidden>·</span>
           <span>{timeAgo(item.publishedAt, locale)}</span>
         </p>
-        <h1 className="mt-2 text-2xl font-bold leading-snug tracking-tight text-strong sm:text-3xl">
+        <h1 className="mt-2 text-[26px] font-bold leading-snug tracking-[-0.03em] text-strong sm:text-[32px]">
           {headline}
         </h1>
         {useTr && (
@@ -136,10 +136,10 @@ export default async function NewsDetailPage(
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-(--radius-md) bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-(--radius-md) bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
         >
           {t.news.readAtSource}
-          <ExternalLink size={14} />
+          <ArrowSquareOut weight="duotone" size={14} />
         </a>
       </Panel>
 
