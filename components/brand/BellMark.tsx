@@ -74,11 +74,14 @@ export function BrandLockup({
   tagline,
   size = 34,
   className,
+  taglineClassName,
 }: {
   name: string;
   tagline?: string;
   size?: number;
   className?: string;
+  /** Alt satırı gizlemek için — masthead dar ekranda yalnızca adı taşır. */
+  taglineClassName?: string;
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
@@ -92,7 +95,10 @@ export function BrandLockup({
         </span>
         {tagline && (
           <span
-            className="mt-[3px] text-center font-semibold uppercase tracking-[0.13em] text-muted"
+            className={cn(
+              "mt-[3px] text-center font-semibold uppercase tracking-[0.13em] text-muted",
+              taglineClassName,
+            )}
             style={{ fontSize: Math.max(9, size * 0.25) }}
           >
             {tagline}

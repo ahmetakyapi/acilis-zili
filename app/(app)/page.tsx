@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { GlyphTile } from "@/components/article/GlyphTile";
 import { NewsImage } from "@/components/news/NewsImage";
 import { BriefBody } from "@/components/today/BriefBody";
 import { Countdown } from "@/components/today/Countdown";
@@ -186,6 +187,41 @@ export default async function TodayPage() {
             <WeekAhead locale={locale} t={t} />
           </Suspense>
         </Panel>
+
+        {/* ---- Okuma girişi ----
+             İki ekran da mobil sekme çubuğuna sığmıyor; keşif buradan
+             oluyor. Kart yerine iki kutu: ikisi farklı şeyler ve aynı
+             satırda yan yana durunca farkları da okunuyor. */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            {
+              href: "/dosyalar",
+              glyph: "§",
+              title: t.stories.title,
+              hint: t.stories.subtitle,
+            },
+            {
+              href: "/rehber",
+              glyph: "?",
+              title: t.guide.title,
+              hint: t.guide.subtitle,
+            },
+          ].map((entry) => (
+            <Link key={entry.href} href={entry.href}>
+              <Panel className="panel-hover flex h-full items-start gap-3.5 p-4 sm:p-5">
+                <GlyphTile glyph={entry.glyph} size={44} />
+                <span className="min-w-0">
+                  <span className="display-ink display-ink-tight block w-fit text-[15px] font-bold">
+                    {entry.title}
+                  </span>
+                  <span className="mt-1 block text-[12.5px] leading-[19px] text-body">
+                    {entry.hint}
+                  </span>
+                </span>
+              </Panel>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* ================= Yan kolon =================

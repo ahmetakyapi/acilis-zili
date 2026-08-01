@@ -56,16 +56,22 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh flex-col">
       {/* ---- Masaüstü masthead ---- */}
-      <header className="chrome sticky top-0 z-30 hidden items-center gap-7 border-b px-6 py-3.5 lg:flex xl:px-10">
+      <header className="chrome sticky top-0 z-30 hidden items-center gap-4 border-b px-5 py-3.5 lg:flex xl:gap-6 xl:px-10">
         <Link href="/" className="shrink-0" aria-label={labels.brandName}>
           <BrandLockup
             name={labels.brandName}
             tagline={labels.tagline}
-            size={38}
+            size={34}
+            // Alt satır yalnızca çok geniş ekranda: dokuz sekmeyle birlikte
+            // masthead 1536px altında sıkışıyor, marka adı zaten yeterli.
+            taglineClassName="hidden 2xl:block"
           />
         </Link>
 
-        <nav className="flex min-w-0 gap-[3px] text-[14.5px]">
+        {/* Degrade tek parça: sınıf kapsayıcıda, her etiket kendi dilimini
+            alıyor. Bulunulan sayfa dolgulu hap ve kalın ağırlıkla ayrışır,
+            renkle değil. Şerit taşarsa kaydırılır — markayı dışarı itmez. */}
+        <nav className="display-ink-sweep flex min-w-0 gap-[2px] text-[13.5px] xl:gap-[3px] xl:text-[14.5px]">
           {NAV_ITEMS.filter((item) => item.href !== "/haberler").map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -75,19 +81,14 @@ export function AppShell({
                 prefetch
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "rounded-lg px-3.5 py-[7px] transition-colors duration-150",
+                  "shrink-0 whitespace-nowrap rounded-lg px-2.5 py-[7px] transition-colors duration-150 xl:px-3.5",
+                  item.wideOnly && "hidden 2xl:block",
                   active
                     ? "bg-surface-elevated font-bold"
                     : "font-medium hover:bg-surface",
                 )}
               >
-                {/* Etiketler manşet mürekkebiyle yazılır; bulunulan sayfa
-                    dolgulu pill ve kalın ağırlıkla ayrışır, renkle değil.
-                    Dar degrade varyantı: geniş olanı bu puntoda etiketleri
-                    birbirinden kopuk gösteriyordu. */}
-                <span className="display-ink display-ink-tight">
-                  {labels.nav[item.href]}
-                </span>
+                {labels.nav[item.href]}
               </Link>
             );
           })}

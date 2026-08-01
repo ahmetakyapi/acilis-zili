@@ -18,6 +18,8 @@ const en: typeof tr = {
     news: "News",
     macro: "Macro",
     markets: "Markets",
+    guide: "Guide",
+    stories: "Files",
     earningsShort: "Earnings",
     marketsShort: "Markets",
     settings: "Settings",
@@ -405,6 +407,43 @@ const en: typeof tr = {
     writtenBy: "Written by",
     byClaude: "Claude",
     byRules: "Rule-Based",
+  },
+
+  guide: {
+    title: "Guide",
+    eyebrow: "Concepts",
+    subtitle:
+      "The terms you keep hearing — what they mean, with examples and where they matter.",
+    allTopics: "All",
+    readMinutes: "min read",
+    related: "Read Next",
+    backToList: "Back To Guide",
+    empty: "Nothing here yet.",
+    cardCta: "Read",
+    homeTitle: "Guide & Files",
+    homeHint:
+      "Concepts explained with examples, plus long reads on what actually happened in the market.",
+  },
+
+  stories: {
+    title: "Market Files",
+    eyebrow: "File",
+    subtitle:
+      "Long reads on what happened in the market — what took place, why, and what it taught.",
+    latest: "Latest File",
+    archive: "Earlier Files",
+    sources: "Sources",
+    relatedSymbols: "Companies In This File",
+    eventDate: "Event Date",
+    readMinutes: "min read",
+    backToList: "Back To Files",
+    empty: "No files published yet.",
+    emptyHint:
+      "When something worth explaining happens in the market, its file opens here.",
+    notFound: "File not found",
+    notFoundHint: "The link may be stale; try again from the list.",
+    disclaimer:
+      "This piece is based on public reporting available at the time of publication. It is not investment advice.",
   },
 
   macro: {

@@ -8,6 +8,7 @@ import {
   marketHolidays,
   news,
   quotesCache as quotesCacheTable,
+  stories,
   symbols as symbolsTable,
   watchlistItems,
   watchlists,
@@ -16,6 +17,7 @@ import {
   type EarningsRow,
   type MacroSeriesRow,
   type NewsRow,
+  type StoryRow,
 } from "./schema";
 import {
   addEtDays,
@@ -517,4 +519,56 @@ export async function getStalestSymbols(limit: number): Promise<string[]> {
 /** Takvim görünümü için hafta aralığı ("YYYY-MM-DD"). */
 export function weekRange(anchor: string): { from: string; to: string } {
   return { from: anchor, to: addEtDays(anchor, 6) };
+}
+
+/* --------------------------------------------------------------------------
+   Piyasa dosyaları
+
+   Sıralama olay tarihine göre: bir dosya olaydan günler sonra yazılabilir
+   (arşiv doldurulurken hep öyle olacak) ve okuyucu için önemli olan yazının
+   ne zaman yazıldığı değil, olayın ne zaman yaşandığı.
+   -------------------------------------------------------------------------- */
+
+export type StoryIndexRow = Pick<
+  StoryRow,
+  "slug" | "title" | "dek" | "eventDate" | "symbols" | "readMinutes"
+>;
+
+export async function getStories(
+  locale: string,
+  limit = 60,
+): Promise<StoryIndexRow[]> {
+  try {
+    return await db
+      .select({
+        slug: stories.slug,
+        title: stories.title,
+        dek: stories.dek,
+        eventDate: stories.eventDate,
+        symbols: stories.symbols,
+        readMinutes: stories.readMinutes,
+      })
+      .from(stories)
+      .where(eq(stories.locale, locale))
+      .orderBy(desc(stories.eventDate), desc(stories.publishedAt))
+      .limit(limit);
+  } catch {
+    return [];
+  }
+}
+
+export async function getStoryBySlug(
+  slug: string,
+  locale: string,
+): Promise<StoryRow | null> {
+  try {
+    const [row] = await db
+      .select()
+      .from(stories)
+      .where(and(eq(stories.slug, slug), eq(stories.locale, locale)))
+      .limit(1);
+    return row ?? null;
+  } catch {
+    return null;
+  }
 }

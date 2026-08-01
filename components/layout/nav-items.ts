@@ -1,11 +1,13 @@
 import {
   Bell,
+  BookOpen,
   Buildings,
   CalendarBlank,
   FileText,
   Heart,
   Newspaper,
   Percent,
+  Scroll,
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Dictionary } from "@/lib/i18n";
@@ -22,6 +24,12 @@ export type NavItem = {
   inBottomBar: boolean;
   /** Alt çubukta kısaltılmış etiket kullanılır (Piyasalar → Piyasa). */
   shortLabel?: (t: Dictionary) => string;
+  /**
+   * Masthead'de yalnızca 1536px üstünde görünsün. Dokuz sekme daha dar
+   * ekranlarda marka ile arama arasına sığmıyor; okuma ekranları o
+   * genişlikte ana sayfadaki kartlardan ve alt bilgiden açılıyor.
+   */
+  wideOnly?: boolean;
 };
 
 /**
@@ -75,6 +83,20 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.calendar,
     icon: CalendarBlank,
     inBottomBar: true,
+  },
+  {
+    href: "/dosyalar",
+    label: (t) => t.nav.stories,
+    icon: Scroll,
+    inBottomBar: false,
+    wideOnly: true,
+  },
+  {
+    href: "/rehber",
+    label: (t) => t.nav.guide,
+    icon: BookOpen,
+    inBottomBar: false,
+    wideOnly: true,
   },
   {
     href: "/favoriler",

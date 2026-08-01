@@ -16,6 +16,8 @@ const tr = {
     news: "Haberler",
     macro: "Makro",
     markets: "Piyasalar",
+    guide: "Rehber",
+    stories: "Dosyalar",
     // Mobil alt çubuk etiketleri — 64px sekmede tam sığar.
     earningsShort: "Bilanço",
     marketsShort: "Piyasa",
@@ -405,6 +407,43 @@ const tr = {
     writtenBy: "Hazırlayan",
     byClaude: "Claude",
     byRules: "Kural Tabanlı",
+  },
+
+  guide: {
+    title: "Rehber",
+    eyebrow: "Kavramlar",
+    subtitle:
+      "Piyasada sürekli duyduğun kavramlar — tanımı, örneği ve nerede işine yaradığı.",
+    allTopics: "Tümü",
+    readMinutes: "dk okuma",
+    related: "Bunları da Oku",
+    backToList: "Rehbere Dön",
+    empty: "Bu başlıkta henüz yazı yok.",
+    cardCta: "Oku",
+    homeTitle: "Rehber ve Dosyalar",
+    homeHint:
+      "Kavramları örnekleriyle anlatan yazılar ve piyasada yaşanmış olayların ayrıntılı dosyaları.",
+  },
+
+  stories: {
+    title: "Piyasa Dosyaları",
+    eyebrow: "Dosya",
+    subtitle:
+      "Piyasada yaşanmış olayların ayrıntılı anlatımı — ne oldu, neden oldu, ne öğretti.",
+    latest: "Son Dosya",
+    archive: "Önceki Dosyalar",
+    sources: "Kaynaklar",
+    relatedSymbols: "Dosyada Geçen Şirketler",
+    eventDate: "Olay Tarihi",
+    readMinutes: "dk okuma",
+    backToList: "Dosyalara Dön",
+    empty: "Henüz yayımlanmış dosya yok.",
+    emptyHint:
+      "Piyasada anlatmaya değer bir olay yaşandığında dosyası burada açılır.",
+    notFound: "Dosya bulunamadı",
+    notFoundHint: "Bağlantı eski olabilir; listeden tekrar dene.",
+    disclaimer:
+      "Bu yazı yayımlandığı tarihteki kamuya açık haber kaynaklarına dayanır. Yatırım tavsiyesi değildir.",
   },
 
   macro: {

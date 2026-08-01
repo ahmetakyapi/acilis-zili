@@ -7,11 +7,13 @@ import {
   economicEvents,
   macroSeries,
   marketHolidays,
+  stories,
   symbols as symbolsTable,
 } from "../../lib/schema";
 import { MACRO_SERIES } from "../../lib/providers/fred";
 import { MARKET_HOLIDAYS } from "./holidays";
 import { economicEventSeeds } from "./economic-events";
+import { STORY_SEEDS } from "./stories";
 import { ALL_SYMBOL_SEEDS } from "./symbols";
 
 /**
@@ -104,6 +106,33 @@ async function main() {
       });
   }
   console.log(`  makro seriler      ${MACRO_SERIES.length} kayıt`);
+
+  /* ---- Açılış dosyası ----
+     Tablonun asıl sahibi Claude rutini; burada yalnızca ilk kayıt var ki
+     boş veritabanında /dosyalar ekranı gerçek bir örnekle açılsın. Rutin
+     aynı slug'ı sonradan düzeltirse onun yazdığı kalır — bu döngü yalnızca
+     seed çalıştığında geri yazar. */
+  for (const story of STORY_SEEDS) {
+    await db
+      .insert(stories)
+      .values({
+        slug: story.slug,
+        locale: story.locale,
+        title: story.title,
+        dek: story.dek,
+        bodyMd: story.bodyMd,
+        eventDate: story.eventDate,
+        symbols: story.symbols,
+        sources: story.sources,
+        readMinutes: Math.max(
+          1,
+          Math.round(story.bodyMd.trim().split(/\s+/).length / 200),
+        ),
+        generatedBy: "seed",
+      })
+      .onConflictDoNothing({ target: [stories.slug, stories.locale] });
+  }
+  console.log(`  piyasa dosyaları   ${STORY_SEEDS.length} kayıt`);
 
   console.log("\nSeed tamamlandı.");
 }

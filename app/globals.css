@@ -94,12 +94,10 @@
     #2493dd 100%
   );
 
-  /* Küçük puntoda (13–16px) aynı aile. Degrade her elemanın KENDİ kutusunda
-     çizilir; geniş varyant dar bir gezinme etiketini lacivertten solgun
-     maviye kadar süpürüp okunmaz hale getiriyordu. Bu varyant iki durak
-     kullanır: lacivert → net accent mavi. Degrade gözle görülür kalır ama
-     açık uç 11px'te bile kontrastını korur. */
-  --display-gradient-tight: linear-gradient(100deg, #0a2547 0%, #2a90e0 100%);
+  /* Küçük puntoda (13–16px) aynı aile, iki durak: lacivert → accent mavi.
+     Açık uç kasten #1e6fbe'de duruyor — daha açığı 14px yarı kalın metinde
+     AA kontrastının altına düşüyor. */
+  --display-gradient-tight: linear-gradient(100deg, #0a2547 0%, #1e6fbe 100%);
 
   /* Marka karosunun oturma gölgesi — rozet hissi buradan geliyor. */
   --mark-shadow: 0 1px 2px rgb(13 92 182 / 0.28), 0 4px 10px rgb(13 92 182 / 0.22);
@@ -179,7 +177,7 @@
     #3fbcff 100%
   );
 
-  --display-gradient-tight: linear-gradient(100deg, #eef5fc 0%, #4fc3ff 100%);
+  --display-gradient-tight: linear-gradient(100deg, #eef5fc 0%, #58c4ff 100%);
 
   --mark-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 4px 12px rgb(26 99 196 / 0.4);
 
@@ -349,6 +347,20 @@
   /* Küçük puntoluk varyant — masthead marka adı ve gezinme etiketleri. */
   .display-ink-tight {
     background-image: var(--display-gradient-tight);
+  }
+
+  /* TEK SÜPÜRME: degrade her elemanın kendi kutusunda çizilir, yani her
+     gezinme etiketi ayrı ayrı lacivertten maviye geçerse şerit yamalı
+     görünür. Sınıf KAPSAYICIYA verilir; degrade tüm gezinmenin genişliğine
+     yayılır ve her etiket kendi dilimini alır — soldan sağa tek, sürekli
+     bir geçiş. Çocuklardaki yarı saydam dolgular (seçili sekme hapı)
+     degradeyi örtmez, çünkü kendi arka planları saydamdır. */
+  .display-ink-sweep {
+    background-image: var(--display-gradient-tight);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
   }
 
   /* TUZAK: `.display-ink` içindeki bir çocuğa `opacity` (ya da transform,

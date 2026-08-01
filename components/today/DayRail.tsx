@@ -154,7 +154,10 @@ export function DayRail({
     (max, event) => (event.prominent ? max : Math.max(max, event.row)),
     0,
   );
-  const railHeight = 128 + maxRow * ROW_OFFSET;
+  // Boş gün notu, sınırların saat satırlarıyla aynı banda düşmesin diye
+  // olay bandının bir kademe altına iner; şerit de o kadar yükselir.
+  const empty = positioned.length === 0;
+  const railHeight = (empty ? 152 : 128) + maxRow * ROW_OFFSET;
 
   const nowVisible = nowMinutes >= RAIL_START && nowMinutes <= RAIL_END;
   const marketLive =
@@ -298,10 +301,10 @@ export function DayRail({
           );
         })}
 
-        {positioned.length === 0 && (
+        {empty && (
           <p
             className="absolute inset-x-0 text-center text-xs text-muted"
-            style={{ top: EVENT_LABEL_TOP }}
+            style={{ top: EVENT_LABEL_TOP + 28 }}
           >
             {labels.noEvents}
           </p>

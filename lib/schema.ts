@@ -280,6 +280,51 @@ export const dailyBriefs = pgTable(
   ],
 );
 
+/**
+ * Piyasa dosyaları — tek bir olayı uzun uzun anlatan yazılar.
+ *
+ * Haber tablosundan ayrı duruyor çünkü farklı bir şey: `news` sağlayıcıdan
+ * gelen ham akış (başlık + iki cümle özet + kaynak linki), `stories` ise
+ * kendi yazdığımız, kaynaklarını künyesinde sayan uzun metin. Ömürleri de
+ * farklı: haber bir gün sonra ölür, dosya arşivde kalır.
+ *
+ * Rehber yazıları (ETF nedir, kaldıraç nedir...) bilinçli olarak burada
+ * DEĞİL — onlar depoda `content/guide.ts` içinde yaşıyor. Gerekçe: rehber
+ * içeriği durağan ve editoryal, kod incelemesinden geçmesi iyi; dosyalar
+ * ise her akşam üretiliyor ve deploy beklemeden yazılabilmeli.
+ */
+export const stories = pgTable(
+  "stories",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").notNull(),
+    locale: text("locale").notNull().default("tr"),
+    title: text("title").notNull(),
+    /** Başlığın altındaki tek cümlelik giriş — kart ve sayfa başında. */
+    dek: text("dek").notNull(),
+    bodyMd: text("body_md").notNull(),
+    /** Olayın yaşandığı gün (ET). Yayın tarihinden farklı olabilir. */
+    eventDate: date("event_date").notNull(),
+    /** Yazıda geçen semboller — ilgili hisselere bağlanır. */
+    symbols: jsonb("symbols").$type<string[]>(),
+    /** [{ label, url }] — künyede kaynak listesi olarak basılır. */
+    sources: jsonb("sources").$type<{ label: string; url?: string }[]>(),
+    /** Okuma süresi dakika; yoksa gövdeden hesaplanır. */
+    readMinutes: integer("read_minutes"),
+    generatedBy: text("generated_by").notNull().default("claude"),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("stories_slug_locale_key").on(t.slug, t.locale),
+    index("stories_event_date_idx").on(t.eventDate),
+  ],
+);
+
 /* ==========================================================================
    Çıkarsanan tipler
    ========================================================================== */
@@ -295,4 +340,5 @@ export type EconomicEventRow = typeof economicEvents.$inferSelect;
 export type MacroSeriesRow = typeof macroSeries.$inferSelect;
 export type NewsRow = typeof news.$inferSelect;
 export type DailyBriefRow = typeof dailyBriefs.$inferSelect;
+export type StoryRow = typeof stories.$inferSelect;
 export type MarketHolidayRow = typeof marketHolidays.$inferSelect;
