@@ -126,7 +126,7 @@ const en: typeof tr = {
     week: "Week",
     month: "Month",
     empty: "No releases scheduled in this range.",
-    allTimesET: "All times ET (New York)",
+    allTimesET: "All times New York (ET)",
     localTime: "Your local time",
   },
 

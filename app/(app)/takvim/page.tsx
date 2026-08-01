@@ -122,7 +122,7 @@ export default async function CalendarPage(
 
             {/* Sütun başlıkları */}
             <div className="hidden grid-cols-[4rem_1rem_1fr_5rem_5rem_5rem] gap-3 border-b border-line-soft px-4 py-2 text-[10px] uppercase tracking-wider text-muted sm:grid sm:px-5">
-              <span>ET · TR</span>
+              <span>NY · TR</span>
               <span />
               <span>{t.calendar.event}</span>
               <span className="text-right">{t.calendar.actual}</span>

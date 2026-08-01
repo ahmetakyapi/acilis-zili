@@ -53,7 +53,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.companies,
     icon: Building2,
     group: "follow",
-    inBottomBar: false,
+    inBottomBar: true,
   },
   {
     href: "/favoriler",

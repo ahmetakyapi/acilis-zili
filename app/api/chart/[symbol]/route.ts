@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStatus } from "@/lib/data";
-import { getChartBars } from "@/lib/providers";
+import { getChartBars, getQuote } from "@/lib/providers";
 import { isChartRange, type Bar } from "@/lib/providers/types";
 import { isValidSymbol } from "@/lib/utils";
 
@@ -11,6 +11,12 @@ export type ChartResponse =
       source: string;
       stale: boolean;
       fetchedAt: string;
+      /**
+       * Önceki seansın kapanışı — yalnızca 1G için gönderilir. Günlük yüzde
+       * TradingView/Midas konvansiyonuyla buna göre hesaplanır; açılış boşluğu
+       * (gap) kaybolmaz.
+       */
+      prevClose?: number;
     }
   | { ok: false; reason: string };
 
@@ -36,7 +42,10 @@ export async function GET(
   }
 
   const status = await getStatus();
-  const result = await getChartBars(symbol, range, status);
+  const [result, quoteResult] = await Promise.all([
+    getChartBars(symbol, range, status),
+    range === "1D" ? getQuote(symbol, status) : Promise.resolve(null),
+  ]);
 
   if (!result.ok) {
     return NextResponse.json<ChartResponse>(
@@ -45,11 +54,17 @@ export async function GET(
     );
   }
 
+  const prevClose =
+    quoteResult?.ok && typeof quoteResult.data.prevClose === "number"
+      ? quoteResult.data.prevClose
+      : undefined;
+
   return NextResponse.json<ChartResponse>({
     ok: true,
     bars: result.data,
     source: result.source,
     stale: Boolean(result.stale),
     fetchedAt: result.fetchedAt.toISOString(),
+    ...(prevClose !== undefined ? { prevClose } : {}),
   });
 }

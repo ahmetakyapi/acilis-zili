@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import type { SearchHit } from "@/app/api/search/route";
@@ -79,6 +80,16 @@ export function SearchCommand({
     return () => window.clearTimeout(id);
   }, [open]);
 
+  // Palet açıkken arkadaki sayfa kaymaz — özellikle mobilde şart.
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
+
   // Debounce'lu arama — tüm setState çağrıları zamanlayıcı/ağ callback'inde.
   useEffect(() => {
     if (!open) return;
@@ -151,9 +162,12 @@ export function SearchCommand({
         </kbd>
       </button>
 
-      {open && (
+      {/* Portal: sticky/backdrop-filter atalarının stacking bağlamından kaçar —
+          Safari'de karartmanın yalnızca üst şeride uygulanma hatasını da çözer. */}
+      {open &&
+        createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 backdrop-blur-sm sm:px-4 sm:pt-[12vh]"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-[rgb(10_18_30/0.55)] backdrop-blur-sm sm:px-4 sm:pt-[12vh]"
           onClick={close}
           role="presentation"
         >
@@ -238,7 +252,8 @@ export function SearchCommand({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

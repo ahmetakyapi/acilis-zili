@@ -59,7 +59,14 @@ type PriceChartProps = {
 
 type ChartResult =
   | { key: string; phase: "error"; message: string }
-  | { key: string; phase: "ready"; bars: Bar[]; source: string; stale: boolean };
+  | {
+      key: string;
+      phase: "ready";
+      bars: Bar[];
+      source: string;
+      stale: boolean;
+      prevClose: number | null;
+    };
 
 type HoverReading = {
   dateLabel: string;
@@ -96,21 +103,25 @@ export function PriceChart({
   );
 
   // Dönem istatistikleri — başlık satırı ve renk kararı bunlardan gelir.
+  // 1G'de baz, TradingView/Midas konvansiyonuyla ÖNCEKİ SEANSIN KAPANIŞIDIR:
+  // açılış boşluğu (gap) yüzdeye dahildir. Diğer aralıklarda baz dönem başıdır.
   const period = useMemo(() => {
     if (state.phase !== "ready" || state.bars.length === 0) return null;
     const bars = state.bars;
     const first = bars[0];
     const last = bars[bars.length - 1];
+    const baseline =
+      range === "1D" && state.prevClose ? state.prevClose : first.open;
     const changePct =
-      first.open !== 0 ? ((last.close - first.open) / first.open) * 100 : 0;
+      baseline !== 0 ? ((last.close - baseline) / baseline) * 100 : 0;
     let high = -Infinity;
     let low = Infinity;
     for (const bar of bars) {
       if (bar.high > high) high = bar.high;
       if (bar.low < low) low = bar.low;
     }
-    return { first, last, changePct, high, low };
-  }, [state]);
+    return { first, last, baseline, changePct, high, low };
+  }, [state, range]);
 
   const periodTone: "up" | "down" | "flat" = !period
     ? "flat"
@@ -153,6 +164,7 @@ export function PriceChart({
           bars: data.bars,
           source: data.source,
           stale: data.stale,
+          prevClose: data.prevClose ?? null,
         });
       })
       .catch(() => {
@@ -172,7 +184,7 @@ export function PriceChart({
     if (!container || state.phase !== "ready" || !period) return;
 
     const bars = shiftBarsToEt(state.bars);
-    const baseline = period.first.open;
+    const baseline = period.baseline;
 
     const up = cssVar("--up");
     const down = cssVar("--down");

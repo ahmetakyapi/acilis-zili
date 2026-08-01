@@ -66,7 +66,7 @@ export default async function TodayPage() {
       {/* ---- Durum başlığı ---- */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="plate">{t.today.title} · ET</p>
+          <p className="plate">{t.today.title} · New York</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
             {formatEtDateLong(status.etDate, locale)}
           </h1>
@@ -378,7 +378,7 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
               <>
                 <span className="numeral block text-sm font-semibold leading-tight text-strong">
                   {times.et}
-                  <span className="ml-1 text-[9px] font-normal text-muted">ET</span>
+                  <span className="ml-1 text-[9px] font-normal text-muted">NY</span>
                 </span>
                 <span className="numeral block text-[11px] leading-tight text-muted">
                   {times.tr}
@@ -593,7 +593,7 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
               </span>
               {times && (
                 <span className="numeral block text-[11px] leading-tight text-muted">
-                  {times.et} ET · {times.tr} TR
+                  {times.et} NY · {times.tr} TR
                 </span>
               )}
             </span>

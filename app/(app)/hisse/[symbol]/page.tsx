@@ -34,6 +34,7 @@ import {
   formatChange,
   formatCompact,
   formatEtDateLong,
+  formatEtDateShort,
   formatPrice,
   formatVolume,
   isValidSymbol,
@@ -68,6 +69,13 @@ export default async function StockPage(
           </Panel>
 
           <Panel>
+            <PanelHeader title={t.stock.pastEarnings} />
+            <Suspense fallback={<ListSkeleton rows={4} />}>
+              <PastEarnings symbol={symbol} locale={locale} t={t} />
+            </Suspense>
+          </Panel>
+
+          <Panel>
             <PanelHeader title={t.stock.companyNews} />
             <Suspense fallback={<ListSkeleton rows={4} />}>
               <CompanyNews symbol={symbol} locale={locale} t={t} />
@@ -98,13 +106,6 @@ export default async function StockPage(
             <PanelHeader title={t.stock.analysts} />
             <Suspense fallback={<ListSkeleton rows={3} />}>
               <AnalystCard symbol={symbol} t={t} />
-            </Suspense>
-          </Panel>
-
-          <Panel>
-            <PanelHeader title={t.stock.pastEarnings} />
-            <Suspense fallback={<ListSkeleton rows={3} />}>
-              <PastEarnings symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
         </div>
@@ -305,6 +306,8 @@ type EarningsItem = {
   revenueActual: number | null;
   quarter: number | null;
   year: number | null;
+  /** Çeyreğin bittiği tarih — dönem etiketi bunu kullanır (varsa). */
+  periodEnd?: string;
 };
 
 /**
@@ -587,30 +590,59 @@ async function PastEarnings({
   t: Dictionary;
 }) {
   const today = todayEt();
-  let rows: EarningsItem[] = (await getEarningsForSymbol(symbol, 10)).filter(
+
+  // Takvim satırları (yerel tablo, yoksa sağlayıcı) — gelir alanlarını taşır.
+  let calRows: EarningsItem[] = (await getEarningsForSymbol(symbol, 12)).filter(
     (row) => row.reportDate < today || row.epsActual !== null,
   );
-  if (rows.length === 0) {
-    rows = (await symbolEarnings(symbol))
-      .filter((row) => row.reportDate < today || row.epsActual !== null)
-      .sort((a, b) => b.reportDate.localeCompare(a.reportDate));
+  if (calRows.length === 0) {
+    calRows = (await symbolEarnings(symbol)).filter(
+      (row) => row.reportDate < today || row.epsActual !== null,
+    );
   }
-  if (rows.length === 0) {
-    // Takvim geçmişi kapsamıyorsa son çare: earnings surprises (son 4 çeyrek).
-    const surprises = await getEarningsSurprises(symbol);
-    if (surprises.ok) {
-      rows = surprises.data.map((row) => ({
-        reportDate: row.period,
-        hour: null,
-        epsEstimate: row.epsEstimate,
-        epsActual: row.epsActual,
-        revenueEstimate: null,
-        revenueActual: null,
-        quarter: row.quarter,
-        year: row.year,
-      }));
+
+  /* Kanonik EPS kaynağı earnings surprises'tır: çeyrek başına TEK kayıt ve
+     rapor günündeki nihai beklentiyi taşır. Takvim beslemesi aynı çeyrek için
+     revizyon kopyaları düşürebiliyor (AAPL'da iki farklı beklenti görüldü) —
+     bu yüzden takvim yalnızca gelir/rapor-tarihi zenginleştirmesi yapar. */
+  let rows: EarningsItem[];
+  const surprises = await getEarningsSurprises(symbol);
+  if (surprises.ok) {
+    rows = surprises.data.map((s) => {
+      const periodMs = new Date(`${s.period}T12:00:00Z`).getTime();
+      // Rapor, çeyrek bitiminden ~2-10 hafta sonra gelir; o penceredeki takvim
+      // kaydı bu çeyreğe aittir.
+      const cal = calRows.find((row) => {
+        const diffDays =
+          (new Date(`${row.reportDate}T12:00:00Z`).getTime() - periodMs) /
+          86400000;
+        return diffDays > 0 && diffDays <= 100;
+      });
+      return {
+        reportDate: cal?.reportDate ?? s.period,
+        hour: cal?.hour ?? null,
+        epsEstimate: s.epsEstimate,
+        epsActual: s.epsActual,
+        revenueEstimate: cal?.revenueEstimate ?? null,
+        revenueActual: cal?.revenueActual ?? null,
+        quarter: s.quarter,
+        year: s.year,
+        periodEnd: s.period,
+      };
+    });
+  } else {
+    // Surprises yoksa takvimden devam: aynı güne düşen kopyaları tekille.
+    const byDate = new Map<string, EarningsItem>();
+    for (const row of calRows) {
+      const current = byDate.get(row.reportDate);
+      if (!current || (row.epsActual !== null && current.epsActual === null)) {
+        byDate.set(row.reportDate, row);
+      }
     }
+    rows = [...byDate.values()];
   }
+  rows.sort((a, b) => b.reportDate.localeCompare(a.reportDate));
+
   if (rows.length === 0) {
     return <EmptyState title={t.common.noData} />;
   }
@@ -622,67 +654,93 @@ async function PastEarnings({
     { month: "short", year: "numeric", timeZone: "UTC" },
   );
 
+  const hasRevenue = rows.some(
+    (row) => row.revenueActual !== null || row.revenueEstimate !== null,
+  );
+
   return (
-    <div className="px-4 pb-3 sm:px-5">
-      <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 border-b border-line-soft py-2 text-[10px] uppercase tracking-wider text-muted">
-        <span>{t.earnings.period}</span>
-        <span className="text-right">{t.calendar.forecast}</span>
-        <span className="text-right">{t.calendar.actual}</span>
-        <span className="text-right">{t.earnings.surprise}</span>
-      </div>
-      <ul className="divide-y divide-line-soft">
-        {rows.slice(0, 6).map((row) => {
-          const surprise =
-            row.epsActual !== null &&
-            row.epsEstimate !== null &&
-            row.epsEstimate !== 0
-              ? ((row.epsActual - row.epsEstimate) / Math.abs(row.epsEstimate)) *
-                100
-              : null;
-          return (
-            <li key={row.reportDate} className="py-2">
-              <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3">
-                <span className="numeral text-xs font-semibold text-strong">
-                  {periodLabel.format(new Date(`${row.reportDate}T12:00:00Z`))}
-                </span>
-                <span className="numeral text-right text-xs text-muted">
+    <div className="scroll-x">
+      <table className="w-full min-w-[480px] text-sm">
+        <thead>
+          <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
+            <th className="px-4 py-2.5 font-medium sm:px-5">
+              {t.earnings.period}
+            </th>
+            <th className="px-3 py-2.5 text-right font-medium">
+              EPS · {t.calendar.forecast}
+            </th>
+            <th className="px-3 py-2.5 text-right font-medium">
+              EPS · {t.calendar.actual}
+            </th>
+            <th className="px-3 py-2.5 text-right font-medium">
+              {t.earnings.surprise}
+            </th>
+            {hasRevenue && (
+              <th className="px-4 py-2.5 text-right font-medium sm:px-5">
+                {t.earnings.revenueShort}
+              </th>
+            )}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line-soft">
+          {rows.slice(0, 8).map((row) => {
+            const surprise =
+              row.epsActual !== null &&
+              row.epsEstimate !== null &&
+              row.epsEstimate !== 0
+                ? ((row.epsActual - row.epsEstimate) /
+                    Math.abs(row.epsEstimate)) *
+                  100
+                : null;
+            return (
+              <tr key={row.reportDate}>
+                <td className="px-4 py-2.5 sm:px-5">
+                  <span className="numeral block text-sm font-semibold text-strong">
+                    {periodLabel.format(
+                      new Date(`${row.periodEnd ?? row.reportDate}T12:00:00Z`),
+                    )}
+                  </span>
+                  <span className="numeral block text-[11px] text-muted">
+                    {formatEtDateShort(row.reportDate, locale)}
+                  </span>
+                </td>
+                <td className="numeral px-3 py-2.5 text-right text-muted">
                   {row.epsEstimate !== null
-                    ? formatPrice(row.epsEstimate, locale)
+                    ? formatPrice(row.epsEstimate, locale, { currency: true })
                     : "—"}
-                </span>
-                <span className="numeral text-right text-xs font-semibold text-strong">
+                </td>
+                <td className="numeral px-3 py-2.5 text-right font-semibold text-strong">
                   {row.epsActual !== null
-                    ? formatPrice(row.epsActual, locale)
+                    ? formatPrice(row.epsActual, locale, { currency: true })
                     : "—"}
-                </span>
-                <span className="text-right">
+                </td>
+                <td className="px-3 py-2.5 text-right">
                   {surprise !== null ? (
                     <ChangePill changePct={surprise} locale={locale} size="sm" />
                   ) : (
                     <span className="text-xs text-muted">—</span>
                   )}
-                </span>
-              </div>
-              {(row.revenueActual !== null || row.revenueEstimate !== null) && (
-                <p className="numeral mt-1 text-[11px] text-muted">
-                  {t.earnings.revenueShort}:{" "}
-                  {row.revenueEstimate !== null && (
-                    <span>${formatCompact(row.revenueEstimate, locale)}</span>
-                  )}
-                  {row.revenueEstimate !== null && row.revenueActual !== null && (
-                    <span aria-hidden> → </span>
-                  )}
-                  {row.revenueActual !== null && (
-                    <span className="font-semibold text-soft">
-                      ${formatCompact(row.revenueActual, locale)}
-                    </span>
-                  )}
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+                </td>
+                {hasRevenue && (
+                  <td className="numeral px-4 py-2.5 text-right text-body sm:px-5">
+                    {row.revenueActual !== null ? (
+                      <span className="font-semibold">
+                        ${formatCompact(row.revenueActual, locale)}
+                      </span>
+                    ) : row.revenueEstimate !== null ? (
+                      <span className="text-muted">
+                        ~${formatCompact(row.revenueEstimate, locale)}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                )}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

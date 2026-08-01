@@ -271,4 +271,226 @@ export const SYMBOL_DESCRIPTIONS: Record<string, SymbolDescription> = {
     tr: "Yolculuk ve teslimat platformu Uber — araç çağırma, Uber Eats ve lojistik (Freight); otonom araç ortaklıklarıyla robotaksi ağlarına açılıyor.",
     en: "Uber, the mobility and delivery platform — ride-hailing, Uber Eats and Freight; opening to robotaxi networks through AV partnerships.",
   },
+
+  // ---- İlk 100 kapsaması: takip evreni dışındaki büyük şirketler ----
+  HD: {
+    tr: "ABD'nin en büyük yapı market zinciri Home Depot — ev geliştirme, inşaat malzemesi ve profesyonel müteahhit tedariki; konut piyasasının nabzı sayılır.",
+    en: "Home Depot, the largest US home-improvement retailer — building materials and pro-contractor supply; read as a pulse of the housing market.",
+  },
+  PEP: {
+    tr: "İçecek ve atıştırmalık devi PepsiCo — Pepsi'nin yanında Lay's, Doritos, Gatorade ve Quaker markalarıyla gıdanın geniş bir bölümünü kapsar.",
+    en: "PepsiCo, the beverage and snacks giant — Pepsi plus Lay's, Doritos, Gatorade and Quaker span a broad slice of food.",
+  },
+  TMO: {
+    tr: "Laboratuvar ekipmanı ve bilimsel cihaz lideri Thermo Fisher — ilaç geliştirme, tanı ve araştırma laboratuvarlarının ana tedarikçisi.",
+    en: "Thermo Fisher, leader in lab equipment and scientific instruments — the key supplier to drug development, diagnostics and research labs.",
+  },
+  LIN: {
+    tr: "Dünyanın en büyük endüstriyel gaz şirketi Linde — oksijen, azot, hidrojen üretimi; sanayi, sağlık ve temiz enerji projelerini besler.",
+    en: "Linde, the world's largest industrial-gas company — oxygen, nitrogen and hydrogen feeding industry, healthcare and clean energy.",
+  },
+  ACN: {
+    tr: "Küresel danışmanlık ve BT hizmetleri devi Accenture — dijital dönüşüm, bulut geçişi ve kurumsal yapay zekâ uygulamaları.",
+    en: "Accenture, the global consulting and IT-services giant — digital transformation, cloud migration and enterprise AI adoption.",
+  },
+  CSCO: {
+    tr: "Ağ donanımının köklü lideri Cisco — kurumsal ağ anahtarları, güvenlik ve Splunk ile gözlemlenebilirlik; yapay zekâ veri merkezi ağlarına genişliyor.",
+    en: "Cisco, the veteran of networking — enterprise switching, security and observability with Splunk, expanding into AI data-center networks.",
+  },
+  WFC: {
+    tr: "ABD'nin dört büyük bankasından Wells Fargo — bireysel ve ticari bankacılıkta geniş şube ağı; mortgage'ın köklü oyuncusu.",
+    en: "Wells Fargo, one of the US big four banks — broad retail and commercial branch network, a longtime mortgage player.",
+  },
+  MCD: {
+    tr: "Dünyanın en büyük restoran zinciri McDonald's — franchise ağırlıklı modeliyle gayrimenkul ve lisans geliri üretir.",
+    en: "McDonald's, the world's largest restaurant chain — a franchise-heavy model generating real-estate and licensing income.",
+  },
+  ABT: {
+    tr: "Sağlık ürünleri devi Abbott — tanı testleri, tıbbi cihazlar (FreeStyle Libre), beslenme ürünleri ve jenerik ilaçlar.",
+    en: "Abbott, the healthcare products giant — diagnostics, medical devices (FreeStyle Libre), nutrition and branded generics.",
+  },
+  INTU: {
+    tr: "Finansal yazılım şirketi Intuit — TurboTax (vergi), QuickBooks (KOBİ muhasebesi) ve Credit Karma ile bireysel finans.",
+    en: "Intuit, the financial-software company — TurboTax, QuickBooks for small business, and Credit Karma in consumer finance.",
+  },
+  AXP: {
+    tr: "American Express — premium kredi kartı ağı; kart ihraç eden, işlem işleyen ve üye kulübü işleten kapalı devre model.",
+    en: "American Express — the premium card network; a closed-loop model issuing cards, processing payments and running membership perks.",
+  },
+  VZ: {
+    tr: "ABD'nin en büyük telekom operatörlerinden Verizon — mobil ve fiber ağ; istikrarlı temettüsüyle bilinir.",
+    en: "Verizon, one of the largest US telecom carriers — mobile and fiber networks, known for its steady dividend.",
+  },
+  MS: {
+    tr: "Yatırım bankası Morgan Stanley — piyasa işlemleri ve halka arzların yanında E*Trade ile bireysel, dev varlık yönetimi koluyla kurumsal tasarruf.",
+    en: "Morgan Stanley — trading and underwriting plus E*Trade retail broking and a giant wealth-management arm.",
+  },
+  PM: {
+    tr: "Philip Morris International — Marlboro'nun ABD dışı hakları; IQOS ve ZYN ile dumansız ürünlere dönüşüyor.",
+    en: "Philip Morris International — Marlboro outside the US, transitioning to smoke-free products with IQOS and ZYN.",
+  },
+  ISRG: {
+    tr: "Cerrahi robotiğin öncüsü Intuitive Surgical — da Vinci robotlarıyla minimal invaziv cerrahinin standardını koyar; gelirin çoğu sarf malzemesinden.",
+    en: "Intuitive Surgical, the surgical-robotics pioneer — da Vinci systems set the standard, with most revenue from instruments and accessories.",
+  },
+  NEE: {
+    tr: "ABD'nin en büyük elektrik şirketi NextEra — Florida'da düzenlenmiş şebeke + ülkenin en büyük rüzgâr/güneş portföyü; veri merkezi talebinin ana tedarikçilerinden.",
+    en: "NextEra, the largest US utility — a regulated Florida grid plus the country's biggest wind/solar fleet, a key supplier to data-center demand.",
+  },
+  RTX: {
+    tr: "Savunma ve havacılık devi RTX — Patriot füze sistemleri (Raytheon), uçak motorları (Pratt & Whitney) ve haberleşme (Collins).",
+    en: "RTX, the defense and aerospace giant — Patriot missiles (Raytheon), jet engines (Pratt & Whitney) and avionics (Collins).",
+  },
+  CMCSA: {
+    tr: "Medya ve geniş bant devi Comcast — Xfinity internet, NBCUniversal stüdyoları, tema parkları ve Peacock yayın platformu.",
+    en: "Comcast, the media and broadband giant — Xfinity internet, NBCUniversal studios, theme parks and the Peacock streaming service.",
+  },
+  T: {
+    tr: "Telekom operatörü AT&T — medya maceralarını geride bırakıp mobil ve fiber ağa odaklandı; yüksek temettüyle bilinir.",
+    en: "AT&T — refocused on mobile and fiber after exiting media, known for its high dividend.",
+  },
+  AMGN: {
+    tr: "Biyoteknolojinin öncülerinden Amgen — kemik, onkoloji ve bağışıklık ilaçları; obezite programıyla yeni büyüme arıyor.",
+    en: "Amgen, a biotech pioneer — bone, oncology and inflammation drugs, seeking new growth in obesity.",
+  },
+  HON: {
+    tr: "Çeşitlendirilmiş sanayi devi Honeywell — havacılık sistemleri, bina otomasyonu, enerji teknolojileri ve endüstriyel yazılım.",
+    en: "Honeywell, the diversified industrial — aerospace systems, building automation, energy tech and industrial software.",
+  },
+  PFE: {
+    tr: "İlaç devi Pfizer — aşılar, onkoloji ve iç hastalıkları portföyü; COVID sonrası boru hattını onkolojiyle (Seagen) yeniliyor.",
+    en: "Pfizer — vaccines, oncology and internal medicine; rebuilding its post-COVID pipeline around oncology (Seagen).",
+  },
+  UNP: {
+    tr: "ABD'nin en büyük demiryolu şirketi Union Pacific — batı ABD'nin yük taşımacılığı omurgası; tahıl, kimyasal ve konteyner taşır.",
+    en: "Union Pacific, the largest US railroad — the freight backbone of the western US, hauling grain, chemicals and containers.",
+  },
+  LOW: {
+    tr: "İkinci büyük yapı market zinciri Lowe's — ev geliştirme perakendesinde Home Depot'nun ana rakibi.",
+    en: "Lowe's, the second-largest home-improvement chain — Home Depot's main rival.",
+  },
+  BLK: {
+    tr: "Dünyanın en büyük varlık yöneticisi BlackRock — iShares ETF'leri ve Aladdin risk platformuyla 10 trilyon doların üzerinde varlık yönetir.",
+    en: "BlackRock, the world's largest asset manager — over $10T via iShares ETFs and the Aladdin risk platform.",
+  },
+  COP: {
+    tr: "Bağımsız petrol üreticisi ConocoPhillips — kıta ABD şeyl havzaları, Alaska ve LNG projelerinde üretim odaklı model.",
+    en: "ConocoPhillips, the independent oil producer — US shale, Alaska and LNG, a pure upstream model.",
+  },
+  SPGI: {
+    tr: "S&P Global — kredi derecelendirme, S&P 500 dahil endeksler ve piyasa verisi/analitiği; finansın altyapı sağlayıcısı.",
+    en: "S&P Global — credit ratings, indices including the S&P 500, and market data/analytics; financial infrastructure.",
+  },
+  BKNG: {
+    tr: "Çevrimiçi seyahatin devi Booking Holdings — Booking.com, Priceline, Kayak ve OpenTable ile konaklamadan restorana rezervasyon.",
+    en: "Booking Holdings, the online-travel giant — Booking.com, Priceline, Kayak and OpenTable from stays to dining.",
+  },
+  ETN: {
+    tr: "Güç yönetimi şirketi Eaton — elektrik şebekeleri, veri merkezi güç altyapısı ve havacılık hidroliği; elektrifikasyon dalgasının ana oyuncusu.",
+    en: "Eaton, the power-management company — grids, data-center power infrastructure and aerospace hydraulics; a key electrification play.",
+  },
+  SYK: {
+    tr: "Tıbbi cihaz üreticisi Stryker — ortopedik implantlar, cerrahi ekipman ve Mako ameliyat robotları.",
+    en: "Stryker, the medical-device maker — orthopedic implants, surgical equipment and Mako surgical robots.",
+  },
+  PGR: {
+    tr: "Otomobil sigortasının teknoloji lideri Progressive — kullanım bazlı fiyatlama (Snapshot) ile en hızlı büyüyen büyük sigortacı.",
+    en: "Progressive, the tech leader in auto insurance — usage-based pricing (Snapshot) drives the fastest growth among majors.",
+  },
+  ANET: {
+    tr: "Veri merkezi ağlarının lideri Arista Networks — hyperscaler'ların ve yapay zekâ kümelerinin yüksek hızlı ethernet anahtarları.",
+    en: "Arista Networks, the data-center networking leader — high-speed ethernet switching for hyperscalers and AI clusters.",
+  },
+  TJX: {
+    tr: "İndirimli perakendenin devi TJX — TJ Maxx ve Marshalls ile marka ürünleri düşük fiyata satan 'define avı' modeli.",
+    en: "TJX, the off-price retail giant — the treasure-hunt model of TJ Maxx and Marshalls selling brands at a discount.",
+  },
+  BSX: {
+    tr: "Tıbbi cihaz şirketi Boston Scientific — kalp ritim cihazları, kateterler ve Watchman implantıyla kardiyolojide hızlı büyüyen oyuncu.",
+    en: "Boston Scientific — cardiac rhythm devices, catheters and the Watchman implant; a fast grower in cardiology.",
+  },
+  LMT: {
+    tr: "Dünyanın en büyük savunma şirketi Lockheed Martin — F-35 savaş uçağı, füze savunması ve uzay sistemleri.",
+    en: "Lockheed Martin, the world's largest defense contractor — the F-35, missile defense and space systems.",
+  },
+  DHR: {
+    tr: "Bilim ve teknoloji holdingi Danaher — biyoproses ekipmanları, yaşam bilimi araçları ve tanı sistemleri; ilaç üretiminin tedarikçisi.",
+    en: "Danaher, the science and technology holding — bioprocessing, life-science tools and diagnostics supplying drug manufacturing.",
+  },
+  ADP: {
+    tr: "Bordro ve İK hizmetlerinin devi ADP — ABD'de on milyonlarca çalışanın maaşını işler; istihdam verisinin de kaynağıdır (ADP raporu).",
+    en: "ADP, the payroll and HR giant — processes pay for tens of millions of US workers and produces the ADP employment report.",
+  },
+  VRTX: {
+    tr: "Biyoteknoloji şirketi Vertex — kistik fibrozis tedavilerinde tekel konumda; gen düzenleme (Casgevy) ve ağrı ilaçlarına genişliyor.",
+    en: "Vertex, the biotech — a near-monopoly in cystic fibrosis, expanding into gene editing (Casgevy) and pain.",
+  },
+  C: {
+    tr: "Küresel banka Citigroup — kurumsal bankacılık ve hazine hizmetlerinde güçlü; büyük bir yeniden yapılanmanın içinde.",
+    en: "Citigroup, the global bank — strong in corporate banking and treasury services, amid a major restructuring.",
+  },
+  SCHW: {
+    tr: "Aracı kurumların devi Charles Schwab — komisyonsuz alım satım, varlık yönetimi ve bankacılık; milyonlarca bireysel yatırımcının platformu.",
+    en: "Charles Schwab, the brokerage giant — commission-free trading, wealth management and banking for millions of retail investors.",
+  },
+  MDT: {
+    tr: "Dünyanın en büyük tıbbi cihaz üreticilerinden Medtronic — kalp pilleri, insülin pompaları ve cerrahi teknolojiler.",
+    en: "Medtronic, among the largest medical-device makers — pacemakers, insulin pumps and surgical technologies.",
+  },
+  BX: {
+    tr: "Alternatif varlık yönetiminin devi Blackstone — özel sermaye, gayrimenkul, kredi ve altyapı fonlarında 1 trilyon doları aşkın varlık.",
+    en: "Blackstone, the alternative-assets giant — over $1T across private equity, real estate, credit and infrastructure.",
+  },
+  SBUX: {
+    tr: "Dünyanın en büyük kahve zinciri Starbucks — mağaza ağı, sadakat programı ve Çin pazarı büyümenin ana eksenleri.",
+    en: "Starbucks, the world's largest coffee chain — stores, the loyalty program and China are the growth axes.",
+  },
+  GILD: {
+    tr: "Biyoteknoloji şirketi Gilead — HIV tedavilerinin lideri; onkoloji ve uzun etkili HIV korumasıyla (lenacapavir) büyüyor.",
+    en: "Gilead, the biotech — leader in HIV therapy, growing in oncology and long-acting HIV prevention (lenacapavir).",
+  },
+  BMY: {
+    tr: "İlaç şirketi Bristol Myers Squibb — onkoloji (Opdivo), kardiyoloji ve immünoloji; patent uçurumunu yeni ilaçlarla dengeliyor.",
+    en: "Bristol Myers Squibb — oncology (Opdivo), cardiology and immunology, offsetting patent cliffs with new launches.",
+  },
+  DE: {
+    tr: "Tarım makinelerinin devi John Deere — traktörler, hasat makineleri ve otonom tarım teknolojileri; hassas tarımın öncüsü.",
+    en: "John Deere, the farm-machinery giant — tractors, harvesters and autonomous farming; the precision-agriculture pioneer.",
+  },
+  MO: {
+    tr: "Altria — Marlboro'nun ABD hakları; sigara hacmi düşerken fiyatlama ve dumansız ürünlerle nakit üretir, yüksek temettü öder.",
+    en: "Altria — Marlboro in the US; generates cash via pricing and smoke-free products as volumes decline, paying a high dividend.",
+  },
+  SO: {
+    tr: "Güneydoğu ABD'nin elektrik şirketi Southern Company — düzenlenmiş şebekeler ve Vogtle nükleer santralleri; veri merkezi talebinden yararlanıyor.",
+    en: "Southern Company, the Southeast US utility — regulated grids and the Vogtle nuclear units, benefiting from data-center demand.",
+  },
+  ICE: {
+    tr: "Borsa işletmecisi Intercontinental Exchange — NYSE'nin sahibi; enerji vadeli işlemleri ve mortgage teknolojisi platformları.",
+    en: "Intercontinental Exchange — owner of the NYSE; energy futures and mortgage-technology platforms.",
+  },
+  CME: {
+    tr: "Dünyanın en büyük türev borsası CME Group — faiz, endeks, döviz ve emtia vadeli işlemleri; piyasa oynaklığından gelir üretir.",
+    en: "CME Group, the world's largest derivatives exchange — rates, index, FX and commodity futures; volatility drives revenue.",
+  },
+  EQIX: {
+    tr: "Veri merkezi GYO'su Equinix — şirketlerin ve bulutların birbirine bağlandığı 250+ veri merkezi; dijital altyapının kavşağı.",
+    en: "Equinix, the data-center REIT — 250+ facilities where enterprises and clouds interconnect; the crossroads of digital infrastructure.",
+  },
+  SHW: {
+    tr: "Boya devi Sherwin-Williams — Kuzey Amerika'nın en büyük boya üreticisi ve mağaza zinciri; konut ve sanayi döngüsünü izler.",
+    en: "Sherwin-Williams, the paint giant — North America's largest coatings maker and store chain, tracking housing and industry.",
+  },
+  CDNS: {
+    tr: "Çip tasarım yazılımı (EDA) lideri Cadence — Synopsys ile duopol; her modern çip bu araçlarla tasarlanır.",
+    en: "Cadence, an EDA leader — a duopoly with Synopsys; every modern chip is designed with these tools.",
+  },
+  SNPS: {
+    tr: "Çip tasarım yazılımının (EDA) diğer devi Synopsys — tasarım araçları ve IP blokları; Ansys ile simülasyona genişledi.",
+    en: "Synopsys, the other EDA giant — design tools and IP blocks, expanded into simulation with Ansys.",
+  },
+  ZTS: {
+    tr: "Hayvan sağlığının lideri Zoetis — evcil hayvan ve çiftlik hayvanı ilaçları ile aşıları; Pfizer'dan ayrılan istikrarlı büyüme hikâyesi.",
+    en: "Zoetis, the animal-health leader — pet and livestock medicines and vaccines; a steady grower spun off from Pfizer.",
+  },
 };

@@ -124,7 +124,7 @@ const tr = {
     week: "Hafta",
     month: "Ay",
     empty: "Bu aralıkta planlanmış veri açıklaması yok.",
-    allTimesET: "Tüm saatler ET (New York)",
+    allTimesET: "Saatler New York (NY) saatiyle",
     localTime: "Yerel saatin",
   },
 
