@@ -33,7 +33,9 @@ export function NewsImage({
       <span
         aria-hidden
         className={cn(
-          "flex items-center justify-center rounded-[10px] border border-line bg-primary-wash text-[11px] font-bold tracking-[-0.02em] text-primary",
+          // Sessiz kalır: aynı sembol arka arkaya birkaç satırda tekrar
+          // edebiliyor, accent dolgu o zaman listeyi bağırır hale getiriyor.
+          "flex items-center justify-center rounded-[10px] border border-line bg-surface-elevated text-[11px] font-bold tracking-[-0.02em] text-muted",
           sizeClass,
           className,
         )}

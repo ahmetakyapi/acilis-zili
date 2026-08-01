@@ -323,6 +323,13 @@
     /* Degrade metnin altına inen harfleri (g, y, ş) kırpmasın. */
     padding-bottom: 0.06em;
   }
+
+  /* TUZAK: `.display-ink` içindeki bir çocuğa `opacity` (ya da transform,
+     filter) vermek onu ayrı bir kompozit katmana taşır ve kapsayıcının
+     background-clip bölgesinden ÇIKARIR — çocuğun kendi arka planı olmadığı
+     için metni tamamen kaybolur. Geri sayımdaki "g"/"sa" birimleri böyle
+     görünmez olmuştu. Bu ağacın içinde opaklıkla soluklaştırma yapma;
+     ayrım punto ve ağırlıkla kurulur. */
 }
 
 /* --------------------------------------------------------------------------

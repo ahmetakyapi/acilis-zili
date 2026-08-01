@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, eq, gte, isNull, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   dailyBriefs,
@@ -8,7 +8,11 @@ import {
   news as newsTable,
   macroSeries,
 } from "@/lib/schema";
-import { getEarningsCalendar, getMarketNews } from "@/lib/providers/finnhub";
+import {
+  getCompanyNews,
+  getEarningsCalendar,
+  getMarketNews,
+} from "@/lib/providers/finnhub";
 import { MACRO_SERIES, getSeries } from "@/lib/providers/fred";
 import { getQuotes } from "@/lib/providers";
 import { addEtDays, getMarketStatus, todayEt } from "@/lib/market-hours";
@@ -23,6 +27,9 @@ import { getCompanyProfile } from "@/lib/providers";
 import { symbols as symbolsTable } from "@/lib/schema";
 import { INDEX_STRIP } from "@/db/seed/symbols";
 import { LOCALES } from "@/lib/i18n/config";
+
+/** Şirket haberi çekilen en büyük şirket sayısı — Finnhub dakikada 60 istek. */
+const COMPANY_NEWS_SYMBOLS = 20;
 
 export const maxDuration = 120;
 
@@ -139,7 +146,53 @@ export async function GET(request: Request) {
     report.news = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
-  /* ---- 2b. Haber çevirisi (Claude — anahtar varsa) ---- */
+  /* ---- 2b. Şirket haberleri ----
+     Genel akış Yahoo ağırlıklı ve Yahoo her habere aynı yer tutucu logoyu
+     iliştiriyor; o beslemeden okunur bir görsel çıkmıyor. Şirket bazlı uç
+     ise makalenin kendi görselini veriyor (Benzinga, SeekingAlpha, Reuters
+     foto servisi…). Bu yüzden en büyük şirketler için ayrıca çekiliyor. */
+  try {
+    const majors = await db
+      .select({ symbol: symbolsTable.symbol })
+      .from(symbolsTable)
+      .where(isNotNull(symbolsTable.marketCap))
+      .orderBy(desc(symbolsTable.marketCap))
+      .limit(COMPANY_NEWS_SYMBOLS);
+
+    const from = addEtDays(today, -2);
+    let inserted = 0;
+
+    for (const { symbol } of majors) {
+      const result = await getCompanyNews(symbol, from, today);
+      if (!result.ok) continue;
+
+      const rows = result.data
+        .filter((item) => item.imageUrl)
+        .slice(0, 4)
+        .map((item) => ({
+          providerId: item.providerId,
+          headline: item.headline,
+          summary: item.summary,
+          url: item.url,
+          imageUrl: item.imageUrl,
+          source: item.source,
+          category: item.category,
+          symbols: item.symbols?.length ? item.symbols : [symbol],
+          publishedAt: item.publishedAt,
+        }));
+
+      if (rows.length > 0) {
+        await db.insert(newsTable).values(rows).onConflictDoNothing();
+        inserted += rows.length;
+      }
+    }
+
+    report.companyNews = inserted;
+  } catch (error) {
+    report.companyNews = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* ---- 2c. Haber çevirisi (Claude — anahtar varsa) ---- */
   try {
     if (isTranslateConfigured()) {
       report.translate = await translatePendingNews(40);
@@ -150,7 +203,7 @@ export async function GET(request: Request) {
     report.translate = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
-  /* ---- 2c. Sembol profillerini tazele ----
+  /* ---- 2d. Sembol profillerini tazele ----
      Profil; hisse sayısı, sektör ve logoyu taşır. Piyasa değeri sayfalarda
      canlı fiyat × hisse sayısı olarak hesaplandığı için bu kayıtların gün
      içinde tazelenmesi gerekmez — hisse sayısı ancak geri alım/ihraçla

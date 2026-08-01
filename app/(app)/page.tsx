@@ -50,6 +50,7 @@ import {
 } from "@/lib/utils";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { getChartBars } from "@/lib/providers";
+import { getSeries } from "@/lib/providers/fred";
 
 export default async function TodayPage() {
   const { locale, t } = await getI18n();
@@ -123,7 +124,7 @@ export default async function TodayPage() {
         {/* ---- Gün Şeridi ---- */}
         <Panel className="px-4 pb-5 pt-5 sm:px-[22px]">
           <div className="mb-5 flex items-center justify-between gap-3">
-            <h2 className="text-[13.5px] font-bold text-strong">
+            <h2 className="display-ink w-fit text-[13.5px] font-bold">
               {t.today.todayFlow}
             </h2>
             <span className="text-xs text-muted">{t.today.sessionWindow}</span>
@@ -143,21 +144,9 @@ export default async function TodayPage() {
           </Suspense>
         </Panel>
 
-        {/* ---- Endeks kartları ---- */}
-        <section aria-label={t.today.indices}>
-          <Suspense fallback={<IndexSkeleton />}>
-            <IndexStrip locale={locale} t={t} />
-          </Suspense>
-        </section>
-
         {/* ---- Günün özeti — ana kolonda, günü okumaya buradan başlanıyor ---- */}
         <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
           <BriefCard locale={locale} t={t} />
-        </Suspense>
-
-        {/* ---- Dünya piyasaları ---- */}
-        <Suspense fallback={<Skeleton className="h-28 w-full rounded-2xl" />}>
-          <WorldStrip locale={locale} t={t} />
         </Suspense>
 
         {/* ---- Bugünün ekonomik takvimi ---- */}
@@ -194,14 +183,28 @@ export default async function TodayPage() {
         </Panel>
       </div>
 
-      {/* ================= Yan kolon ================= */}
+      {/* ================= Yan kolon =================
+          Sıra piyasadan kişisele daralıyor: endeksler → tahviller → makro →
+          senin listen → dünya → haberler. */}
       <div className="flex min-w-0 flex-col gap-5">
-        <Suspense fallback={<Skeleton className="h-56 w-full rounded-2xl" />}>
-          <WatchlistSummary locale={locale} t={t} />
+        <Suspense fallback={<IndexSkeleton />}>
+          <IndexStrip locale={locale} t={t} />
+        </Suspense>
+
+        <Suspense fallback={<Skeleton className="h-44 w-full rounded-2xl" />}>
+          <YieldCard locale={locale} t={t} />
         </Suspense>
 
         <Suspense fallback={<Skeleton className="h-44 w-full rounded-2xl" />}>
           <MacroSummary locale={locale} t={t} />
+        </Suspense>
+
+        <Suspense fallback={<Skeleton className="h-56 w-full rounded-2xl" />}>
+          <WatchlistSummary locale={locale} t={t} />
+        </Suspense>
+
+        <Suspense fallback={<Skeleton className="h-28 w-full rounded-2xl" />}>
+          <WorldStrip locale={locale} t={t} />
         </Suspense>
 
         <Panel>
@@ -335,8 +338,9 @@ const INDEX_LABEL: Record<string, string> = {
 };
 
 /**
- * Endeks kartları — masaüstünde dört sütun, mobilde yatay kayan 112px şerit.
- * Aynı bileşeni responsive yapmak yerine iki farklı ölçek: mockup 4a ve 4b.
+ * Endeks kartları — yan kolonda 2×2 ızgara, mobilde yatay kayan şerit.
+ * Dar kolonda dört sütun okunmuyordu; ikişerli dizilim aynı bilgiyi
+ * sıkışmadan taşıyor.
  */
 async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   const status = await getStatus();
@@ -355,7 +359,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="scroll-x -mx-[18px] flex gap-2.5 px-[18px] sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:grid-cols-4 lg:gap-3.5">
+      <div className="scroll-x -mx-[18px] flex gap-2.5 px-[18px] sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:gap-3">
         {INDEX_STRIP.map((symbol, index) => {
           const quote = result.data[symbol];
           if (!quote) {
@@ -377,17 +381,14 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
             >
               <Panel className="panel-hover flex h-full flex-col rounded-xl p-3 sm:rounded-[14px] sm:p-4">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-[11.5px] font-semibold text-body sm:text-xs">
-                    <span className="sm:hidden">{symbol}</span>
-                    <span className="hidden sm:inline">
-                      {INDEX_LABEL[symbol] ?? symbol}
-                    </span>
+                  <span className="truncate text-[11.5px] font-semibold text-body">
+                    {INDEX_LABEL[symbol] ?? symbol}
                   </span>
                   <span className="hidden text-[10.5px] text-muted sm:inline">
                     {symbol}
                   </span>
                 </div>
-                <p className="tote mt-[3px] text-lg sm:mt-1.5 sm:text-[25px]">
+                <p className="tote mt-[3px] text-lg sm:mt-1.5 sm:text-[22px]">
                   {formatPrice(quote.price, locale)}
                 </p>
                 <p
@@ -404,7 +405,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                     title={`${INDEX_LABEL[symbol] ?? symbol} · 1D`}
                     tone={tone}
                     height={40}
-                    className="mt-[7px] h-6 w-full sm:mt-2.5 sm:h-10"
+                    className="mt-[7px] h-6 w-full sm:mt-2 sm:h-9"
                   />
                 )}
               </Panel>
@@ -419,6 +420,86 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
         locale={locale}
       />
     </div>
+  );
+}
+
+/**
+ * ABD tahvil faizleri — 2, 5 ve 10 yıllık.
+ *
+ * Endekslerin hemen altında durması bilinçli: hisse tarafındaki hareketin
+ * karşılığı çoğu gün burada okunuyor. 30 yıllık bu kartta yok, tam seri
+ * /piyasalar'da; yan kolonda üç vade yeterli.
+ */
+const TODAY_YIELDS = [
+  { seriesId: "DGS2", slug: "yield-2y", units: "lin", labelKey: "yieldY2" },
+  { seriesId: "DGS5", slug: "yield-5y", units: "lin", labelKey: "yieldY5" },
+  { seriesId: "DGS10", slug: "yield-10y", units: "lin", labelKey: "yieldY10" },
+] as const;
+
+async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
+  const results = await Promise.all(
+    TODAY_YIELDS.map((series) => getSeries(series, 2)),
+  );
+
+  const values = TODAY_YIELDS.map((series, index) => {
+    const result = results[index];
+    return {
+      key: series.slug,
+      label: t.markets[series.labelKey],
+      latest: result.ok ? result.data.latestValue : null,
+      prev: result.ok ? result.data.prevValue : null,
+    };
+  });
+
+  if (values.every((value) => value.latest === null)) return null;
+
+  return (
+    <Panel>
+      <PanelHeader
+        title={t.markets.yields}
+        action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
+      />
+      <div className="grid grid-cols-3 border-t border-line">
+        {values.map((value, index) => {
+          const delta =
+            value.latest !== null && value.prev !== null
+              ? value.latest - value.prev
+              : null;
+          return (
+            <div
+              key={value.key}
+              className={cn(
+                "px-4 py-3.5",
+                index > 0 && "border-l border-line",
+              )}
+            >
+              <p className="plate text-[10px] tracking-[0.08em]">{value.label}</p>
+              <p className="tote mt-1 text-lg">
+                {value.latest !== null ? (
+                  <>
+                    {formatPrice(value.latest, locale)}
+                    <span className="ml-0.5 text-xs text-muted">%</span>
+                  </>
+                ) : (
+                  "—"
+                )}
+              </p>
+              <p className="numeral mt-0.5 text-[11px] text-muted">
+                {delta === null || delta === 0 ? (
+                  t.macro.unchanged
+                ) : (
+                  <>
+                    <span aria-hidden>{delta > 0 ? "▲" : "▼"}</span>{" "}
+                    {formatPrice(Math.abs(delta), locale, { digits: 2 })}{" "}
+                    {t.markets.point}
+                  </>
+                )}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
   );
 }
 
@@ -440,40 +521,46 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <Panel>
       <PanelHeader title={t.today.worldMarkets} />
-      <ul className="grid grid-cols-2 border-t border-line sm:grid-cols-3 lg:grid-cols-6">
+      <ul>
         {shown.map((market) => {
           const quote = result.data[market.symbol];
           const tone = directionOf(quote.changePct);
           return (
-            <li
-              key={market.symbol}
-              className="border-b border-r border-line px-4 py-3 last:border-r-0"
-            >
-              <Link href={`/hisse/${market.symbol}`} className="block">
-                <p className="flex items-center gap-1.5 text-xs font-semibold text-strong">
-                  <span aria-hidden>{market.flag}</span>
-                  {locale === "tr" ? market.nameTr : market.nameEn}
-                </p>
-                <p className="tote mt-1 text-base">
-                  {formatPrice(quote.price, locale)}
-                </p>
-                <p
-                  className={cn(
-                    "numeral text-xs font-semibold",
-                    directionText(tone),
-                  )}
-                >
-                  {formatPercent(quote.changePct, locale)}
-                </p>
-                <p className="mt-1 text-[10.5px] leading-tight text-muted">
-                  {locale === "tr" ? market.tracksTr : market.tracksEn}
-                </p>
+            <li key={market.symbol}>
+              <Link
+                href={`/hisse/${market.symbol}`}
+                className="flex items-center gap-3 border-t border-line px-4 py-2.5 transition-colors hover:bg-primary-tint sm:px-5"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5 text-[13px] font-semibold text-strong">
+                    <span aria-hidden>{market.flag}</span>
+                    <span className="truncate">
+                      {locale === "tr" ? market.nameTr : market.nameEn}
+                    </span>
+                  </span>
+                  <span className="mt-0.5 block truncate text-[10.5px] leading-tight text-muted">
+                    {locale === "tr" ? market.tracksTr : market.tracksEn}
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="numeral block text-[13px] font-bold text-strong">
+                    {formatPrice(quote.price, locale)}
+                  </span>
+                  <span
+                    className={cn(
+                      "numeral block text-[11.5px]",
+                      directionText(tone),
+                    )}
+                  >
+                    {formatPercent(quote.changePct, locale)}
+                  </span>
+                </span>
               </Link>
             </li>
           );
         })}
       </ul>
-      <p className="px-4 py-3 text-[11.5px] leading-relaxed text-muted sm:px-5">
+      <p className="border-t border-line px-4 py-3 text-[11px] leading-relaxed text-muted sm:px-5">
         {t.today.worldMarketsHint}
       </p>
     </Panel>
@@ -482,9 +569,9 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
 function IndexSkeleton() {
   return (
-    <div className="flex gap-2.5 sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:gap-3.5">
+    <div className="flex gap-2.5 sm:grid sm:grid-cols-2 lg:gap-3">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-24 w-28 shrink-0 rounded-[14px] sm:w-auto" />
+        <Skeleton key={i} className="h-28 w-28 shrink-0 rounded-[14px] sm:w-auto" />
       ))}
     </div>
   );
@@ -708,7 +795,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
   return (
     <Panel className="px-[18px] py-4 sm:px-5">
       <div className="mb-1 flex items-baseline justify-between gap-3">
-        <h2 className="text-[13.5px] font-bold text-strong">
+        <h2 className="display-ink w-fit text-[13.5px] font-bold">
           {t.today.watchlistSummary}
         </h2>
         <PanelLink href="/favoriler">{t.common.showAll}</PanelLink>
@@ -796,7 +883,7 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <Panel className="px-[18px] py-4 sm:px-5">
       <div className="mb-3.5 flex items-baseline justify-between gap-3">
-        <h2 className="text-[13.5px] font-bold text-strong">
+        <h2 className="display-ink w-fit text-[13.5px] font-bold">
           {t.today.macroSummary}
         </h2>
         <PanelLink href="/makro">{t.common.showAll}</PanelLink>
@@ -888,18 +975,33 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
   );
 }
 
-async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const items = await getLatestNews(6);
+/** Kartta gösterilen haber sayısı ve seçkinin tarandığı havuz. */
+const TOP_NEWS_COUNT = 6;
+const TOP_NEWS_POOL = 40;
 
-  if (items.length === 0) {
+async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
+  // Bu kart "son haberler" değil "öne çıkanlar": son 40 haberlik havuzdan
+  // seçim yapılıyor. Sağlayıcının genel akışı Yahoo ağırlıklı ve Yahoo her
+  // habere aynı yer tutucu logoyu iliştiriyor; kendi görseli olan haberler
+  // (şirket beslemesinden gelenler) öne alınıyor. Sıralama yine tarihe göre,
+  // yalnızca hangi altı haberin seçildiği değişiyor.
+  const pool = await getLatestNews(TOP_NEWS_POOL);
+
+  if (pool.length === 0) {
     return <EmptyState title={t.news.empty} />;
   }
 
-  // Kaynak logosu olan görseller elenir — aynı Reuters logosu altı haberde
-  // tekrar edince liste bilgi taşımaz hale geliyor.
   const genericImages = await getGenericImageUrls(
-    items.map((item) => item.imageUrl),
+    pool.map((item) => item.imageUrl),
   );
+  const hasImage = (item: (typeof pool)[number]) =>
+    Boolean(item.imageUrl) && !genericImages.has(item.imageUrl as string);
+
+  const withImage = pool.filter(hasImage);
+  const withoutImage = pool.filter((item) => !hasImage(item));
+  const items = [...withImage, ...withoutImage]
+    .slice(0, TOP_NEWS_COUNT)
+    .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
 
   return (
     <ul>

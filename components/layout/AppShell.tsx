@@ -24,6 +24,7 @@ type AppShellProps = {
   themeToggle: React.ReactNode;
   localeToggle: React.ReactNode;
   searchTrigger: React.ReactNode;
+  ticker: React.ReactNode;
   children: React.ReactNode;
 };
 
@@ -46,6 +47,7 @@ export function AppShell({
   themeToggle,
   localeToggle,
   searchTrigger,
+  ticker,
   children,
 }: AppShellProps) {
   const pathname = usePathname();
@@ -145,9 +147,13 @@ export function AppShell({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-[18px] pb-24 pt-4 sm:px-6 lg:pb-12 lg:pt-6 xl:px-10">
+      {/* Alt şerit sabit durduğu için içerik onun yüksekliği kadar boşluk
+          bırakır; mobilde ayrıca sekme çubuğu var. */}
+      <main className="mx-auto w-full max-w-[1400px] flex-1 px-[18px] pb-32 pt-4 sm:px-6 lg:pb-20 lg:pt-6 xl:px-10">
         {children}
       </main>
+
+      {ticker}
 
       {/* ---- Mobil alt gezinme — 5 sekme, dokunma hedefi min 64px ---- */}
       <nav

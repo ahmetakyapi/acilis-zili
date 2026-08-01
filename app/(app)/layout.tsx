@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { auth } from "@/auth";
 import { AppShell, type ShellLabels } from "@/components/layout/AppShell";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { SearchCommand } from "@/components/layout/SearchCommand";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { TickerFeed } from "@/components/layout/TickerFeed";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { getI18n, getTheme } from "@/lib/i18n";
 
@@ -51,6 +53,11 @@ export default async function AppLayout({
           companiesLabel={t.nav.companies}
           hints={{ move: t.nav.searchHintMove, open: t.nav.searchHintOpen }}
         />
+      }
+      ticker={
+        <Suspense fallback={null}>
+          <TickerFeed />
+        </Suspense>
       }
     >
       {children}

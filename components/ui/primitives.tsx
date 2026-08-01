@@ -45,7 +45,7 @@ export function PanelHeader({
         className,
       )}
     >
-      <h2 className="text-[13.5px] font-bold text-strong">{title}</h2>
+      <h2 className="display-ink w-fit text-[13.5px] font-bold">{title}</h2>
       {meta && <span className="text-xs text-muted">{meta}</span>}
       {action}
     </div>
