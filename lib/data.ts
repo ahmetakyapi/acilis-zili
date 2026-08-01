@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { db } from "./db";
 import {
   dailyBriefs,
@@ -153,6 +153,25 @@ export async function getNewsById(id: string): Promise<NewsRow | null> {
     return row ?? null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Görsel gerçekten habere mi ait?
+ * Sağlayıcılar makale görseli yoksa kaynağın logosunu yolluyor; o logo
+ * onlarca haberde tekrar eder. Aynı adres birden çok haberde geçiyorsa
+ * jenerik sayılır ve gösterilmez — okuyucuya bilgi taşımaz.
+ */
+export async function isGenericNewsImage(imageUrl: string): Promise<boolean> {
+  if (/\blogo\b/i.test(imageUrl)) return true;
+  try {
+    const [row] = await db
+      .select({ uses: sql<number>`count(*)::int` })
+      .from(news)
+      .where(eq(news.imageUrl, imageUrl));
+    return (row?.uses ?? 0) > 1;
+  } catch {
+    return false;
   }
 }
 

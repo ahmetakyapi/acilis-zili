@@ -1,14 +1,29 @@
 import Link from "next/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
-import { getLatestNews, getNewsById } from "@/lib/data";
-import { getI18n } from "@/lib/i18n";
-import { timeAgo } from "@/lib/utils";
+import {
+  ChangePill,
+  EmptyState,
+  Panel,
+  PanelHeader,
+} from "@/components/ui/primitives";
+import {
+  getLatestNews,
+  getNewsById,
+  getStatus,
+  getSymbolNames,
+  isGenericNewsImage,
+} from "@/lib/data";
+import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { getQuotes } from "@/lib/providers";
+import { formatPrice, timeAgo } from "@/lib/utils";
 
 /**
  * Haber detayı — kullanıcı siteden ayrılmadan okur.
- * Elimizdeki içerik sağlayıcının verdiği başlık + özettir (tam makale değil);
- * kaynağa giden bağlantı en altta tek yerde durur.
+ *
+ * Sağlayıcı yalnızca başlık + kısa özet verir (tam makale telifle korunur),
+ * bu yüzden sayfa metni uzatmak yerine BAĞLAM ekler: haberde geçen şirketlerin
+ * canlı fiyatı ve aynı konudaki diğer haberler. Kaynağa giden bağlantı tek
+ * yerde, gövdenin sonunda durur.
  */
 export default async function NewsDetailPage(
   props: PageProps<"/haberler/[id]">,
@@ -37,6 +52,11 @@ export default async function NewsDetailPage(
   const headline = useTr ? item.headlineTr! : item.headline;
   const summary =
     locale === "tr" && item.summaryTr ? item.summaryTr : item.summary;
+
+  // Kaynak logosu olan görseller gösterilmez — bilgi taşımaz, sayfayı bozar.
+  const showImage = item.imageUrl
+    ? !(await isGenericNewsImage(item.imageUrl))
+    : false;
 
   const publishedFull = new Intl.DateTimeFormat(
     locale === "tr" ? "tr-TR" : "en-US",
@@ -74,7 +94,7 @@ export default async function NewsDetailPage(
         )}
       </header>
 
-      {item.imageUrl && (
+      {showImage && item.imageUrl && (
         <div className="overflow-hidden rounded-(--radius-xl) border border-line">
           {/* Sağlayıcı görselleri farklı alan adlarından gelir — doğal img. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -90,46 +110,46 @@ export default async function NewsDetailPage(
         <div className="text-[17px] leading-8 text-body">
           {summary.split("\n").map(
             (paragraph, index) =>
-              paragraph.trim() && <p key={index} className="mb-4">{paragraph}</p>,
+              paragraph.trim() && (
+                <p key={index} className="mb-4">
+                  {paragraph}
+                </p>
+              ),
           )}
         </div>
       ) : (
         <p className="text-sm text-muted">{t.common.noDataHint}</p>
       )}
 
-      {item.symbols && item.symbols.length > 0 && (
-        <div>
-          <p className="mb-1.5 text-xs font-medium text-muted">
-            {t.news.relatedSymbols}
+      {/* Kaynak çağrısı — özetin kısa olduğunu dürüstçe söyler */}
+      <Panel className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-strong">
+            {t.news.fullStoryTitle}
           </p>
-          <div className="flex flex-wrap gap-1.5">
-            {item.symbols.map((symbol) => (
-              <Link
-                key={symbol}
-                href={`/hisse/${symbol}`}
-                className="numeral rounded-md border border-line-soft bg-surface px-2.5 py-1 text-xs font-medium text-body transition-colors hover:border-primary-faint hover:bg-primary-tint hover:text-primary"
-              >
-                {symbol}
-              </Link>
-            ))}
-          </div>
+          <p className="mt-0.5 text-xs leading-relaxed text-soft">
+            {t.news.fullStoryHint}
+            {item.source ? ` — ${item.source}` : ""}
+          </p>
         </div>
-      )}
-
-      <Panel className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
-        <span className="text-xs text-muted">
-          {t.common.source}: {item.source ?? "—"}
-        </span>
         <a
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-(--radius-md) bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-(--radius-md) bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
         >
           {t.news.readAtSource}
           <ExternalLink size={14} />
         </a>
       </Panel>
+
+      {item.symbols && item.symbols.length > 0 && (
+        <MentionedSymbols
+          symbols={item.symbols}
+          locale={locale}
+          t={t}
+        />
+      )}
 
       <RelatedNews
         currentId={item.id}
@@ -138,6 +158,70 @@ export default async function NewsDetailPage(
         title={t.news.related}
       />
     </article>
+  );
+}
+
+/**
+ * Haberde geçen şirketler — canlı fiyatla.
+ * Kısa özetin veremediği bağlamı sayı veriyor: haber çıkarken hisse ne yapıyor?
+ */
+async function MentionedSymbols({
+  symbols,
+  locale,
+  t,
+}: {
+  symbols: string[];
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const shown = symbols.slice(0, 6);
+  const status = await getStatus();
+  const [result, names] = await Promise.all([
+    getQuotes(shown, status),
+    getSymbolNames(shown),
+  ]);
+  const quotes = result.ok ? result.data : {};
+
+  return (
+    <Panel>
+      <PanelHeader title={t.news.relatedSymbols} />
+      <ul className="divide-y divide-line-soft">
+        {shown.map((symbol) => {
+          const quote = quotes[symbol];
+          return (
+            <li key={symbol}>
+              <Link
+                href={`/hisse/${symbol}`}
+                className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-primary-tint sm:px-5"
+              >
+                <span className="flex min-w-0 items-baseline gap-2.5">
+                  <span className="numeral shrink-0 text-sm font-semibold text-strong">
+                    {symbol}
+                  </span>
+                  <span className="min-w-0 truncate text-xs text-soft">
+                    {names[symbol]?.name ?? ""}
+                  </span>
+                </span>
+                {quote ? (
+                  <span className="flex shrink-0 items-center gap-2.5">
+                    <span className="numeral text-sm text-body">
+                      {formatPrice(quote.price, locale)}
+                    </span>
+                    <ChangePill
+                      changePct={quote.changePct}
+                      locale={locale}
+                      size="sm"
+                    />
+                  </span>
+                ) : (
+                  <span className="text-xs text-muted">—</span>
+                )}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </Panel>
   );
 }
 

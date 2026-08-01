@@ -26,7 +26,8 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.today,
     icon: Sunrise,
     group: "market",
-    inBottomBar: true,
+    // Mobilde marka işareti zaten ana sayfaya döner — alt barda yer tutmaz.
+    inBottomBar: false,
   },
   {
     href: "/piyasalar",
@@ -40,7 +41,8 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.calendar,
     icon: CalendarClock,
     group: "market",
-    inBottomBar: true,
+    // Günün ve haftanın takvimi ana sayfada okunuyor; alt bar beş sekmede kalır.
+    inBottomBar: false,
   },
   {
     href: "/sirketler",
@@ -61,7 +63,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.macro,
     icon: TrendingUp,
     group: "market",
-    inBottomBar: false,
+    inBottomBar: true,
   },
   {
     href: "/favoriler",

@@ -6,6 +6,7 @@ import {
   Panel,
   PanelHeader,
 } from "@/components/ui/primitives";
+import { Sparkline } from "@/components/ui/Sparkline";
 import {
   DOW_MEMBERS,
   INDEX_COMPOSITION_DATE,
@@ -15,12 +16,14 @@ import {
 } from "@/db/seed/indices";
 import { getStatus } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { getQuotes } from "@/lib/providers";
+import { getChartBars, getQuotes } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
+import type { MarketStatus } from "@/lib/market-hours";
 import type { Quote } from "@/lib/providers/types";
 import {
   cn,
   directionOf,
+  formatChange,
   formatEtDateShort,
   formatPercent,
   formatPrice,
@@ -28,26 +31,30 @@ import {
 
 /**
  * Piyasalar — nabız ekranı.
- * Üstte ABD tahvil faizleri (2Y/10Y/30Y + 10Y−2Y farkı), altında üç büyük
- * endeksin TAM bileşen listesi. Üyelik statik (kaynak: Wikipedia bileşen
- * tabloları), kotasyonlar canlı; günün en çok hareket edenleri üstte başlar.
+ *
+ * Üstte üç büyük endeksin kartı (proxy ETF fiyatı + gün içi eğrisi), altında
+ * ABD tahvil faizleri ve getiri eğrisinin durumu. Seçilen endeks için gün
+ * içi genişlik (kaç hisse artıda), en çok hareket edenler ve tam bileşen
+ * listesi gösterilir. Üyelik statik, kotasyonlar canlı; hesaplanan her sayı
+ * elimizdeki fiyatlardan türer — tahmin yok.
  */
 
 const INDEX_TABS = [
-  { key: "dow", label: "Dow Jones", members: DOW_MEMBERS },
-  { key: "nasdaq", label: "Nasdaq 100", members: NDX_MEMBERS },
-  { key: "sp500", label: "S&P 500", members: SPX_MEMBERS },
+  { key: "dow", label: "Dow Jones", proxy: "DIA", members: DOW_MEMBERS },
+  { key: "nasdaq", label: "Nasdaq 100", proxy: "QQQ", members: NDX_MEMBERS },
+  { key: "sp500", label: "S&P 500", proxy: "SPY", members: SPX_MEMBERS },
 ] as const;
 
 type TabKey = (typeof INDEX_TABS)[number]["key"];
 
-const SORT_KEYS = ["degisim", "fiyat", "ad"] as const;
+const SORT_KEYS = ["degisim", "fiyat", "ad", "katki"] as const;
 type SortKey = (typeof SORT_KEYS)[number];
 type SortDir = "asc" | "desc";
 
 /** ABD Hazine tahvili serileri — FRED sabit vadeli getiriler. */
 const YIELD_SERIES = [
   { seriesId: "DGS2", slug: "yield-2y", units: "lin", labelKey: "yieldY2" },
+  { seriesId: "DGS5", slug: "yield-5y", units: "lin", labelKey: "yieldY5" },
   { seriesId: "DGS10", slug: "yield-10y", units: "lin", labelKey: "yieldY10" },
   { seriesId: "DGS30", slug: "yield-30y", units: "lin", labelKey: "yieldY30" },
 ] as const;
@@ -55,7 +62,7 @@ const YIELD_SERIES = [
 /** Alpaca snapshot çağrısı sembol listesini paketler halinde alır. */
 async function quotesFor(
   symbols: string[],
-  status: Awaited<ReturnType<typeof getStatus>>,
+  status: MarketStatus,
 ): Promise<{ quotes: Record<string, Quote>; stampAt: Date | null }> {
   const chunks: string[][] = [];
   for (let i = 0; i < symbols.length; i += 100) {
@@ -95,10 +102,12 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         subtitle={t.markets.subtitle}
       />
 
+      <IndexCards activeTab={tab} sort={sort} dir={dir} locale={locale} />
+
       <YieldStrip locale={locale} t={t} />
 
       {/* Endeks seçici */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-1.5 pt-1">
         {INDEX_TABS.map((entry) => {
           const activeTab = entry.key === tab;
           return (
@@ -129,9 +138,10 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         </span>
       </div>
 
-      <MembersTable
+      <IndexDetail
         tab={tab}
         members={active.members}
+        proxy={active.proxy}
         sort={sort}
         dir={dir}
         locale={locale}
@@ -142,7 +152,98 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
 }
 
 /* ==========================================================================
-   Tahvil faizleri
+   Endeks kartları — üç büyük endeks, gün içi eğrisiyle
+   ========================================================================== */
+
+async function IndexCards({
+  activeTab,
+  sort,
+  dir,
+  locale,
+}: {
+  activeTab: TabKey;
+  sort: SortKey;
+  dir: SortDir;
+  locale: Locale;
+}) {
+  const status = await getStatus();
+  const proxies = INDEX_TABS.map((entry) => entry.proxy);
+  const [quotesResult, ...barResults] = await Promise.all([
+    getQuotes([...proxies], status),
+    ...proxies.map((symbol) => getChartBars(symbol, "1D", status)),
+  ]);
+
+  if (!quotesResult.ok) return null;
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-3">
+      {INDEX_TABS.map((entry, index) => {
+        const quote = quotesResult.data[entry.proxy];
+        const bars = barResults[index];
+        const points = bars.ok ? bars.data.map((bar) => ({ value: bar.close })) : [];
+        const tone = directionOf(quote?.changePct);
+        const selected = entry.key === activeTab;
+
+        return (
+          <Link
+            key={entry.key}
+            href={`/piyasalar?endeks=${entry.key}&sirala=${sort}&yon=${dir}`}
+            className="group"
+          >
+            <Panel
+              className={cn(
+                "panel-hover flex h-full flex-col p-4",
+                selected && "border-primary-faint bg-primary-tint",
+              )}
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-sm font-semibold text-strong">{entry.label}</p>
+                <p className="numeral text-[10px] text-muted">{entry.proxy}</p>
+              </div>
+              {quote ? (
+                <>
+                  <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                    <p className="tote text-2xl">
+                      {formatPrice(quote.price, locale)}
+                    </p>
+                    <p
+                      className={cn(
+                        "numeral text-sm font-semibold",
+                        tone === "up"
+                          ? "text-up"
+                          : tone === "down"
+                            ? "text-down"
+                            : "text-muted",
+                      )}
+                    >
+                      {formatPercent(quote.changePct, locale)}
+                    </p>
+                  </div>
+                  {points.length > 1 && (
+                    <Sparkline
+                      points={points}
+                      title={`${entry.label} · 1G`}
+                      tone={tone}
+                      height={40}
+                      showLastDot={false}
+                      strokeWidth={1.6}
+                      className="mt-2.5 h-10 w-full opacity-90"
+                    />
+                  )}
+                </>
+              ) : (
+                <p className="mt-2 text-xs text-muted">—</p>
+              )}
+            </Panel>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ==========================================================================
+   Tahvil faizleri ve getiri eğrisi
    ========================================================================== */
 
 async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
@@ -153,47 +254,33 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   const values = YIELD_SERIES.map((series, index) => {
     const result = results[index];
     return {
+      key: series.slug,
       label: t.markets[series.labelKey],
       latest: result.ok ? result.data.latestValue : null,
       prev: result.ok ? result.data.prevValue : null,
-      date: result.ok
-        ? (result.data.observations.at(-1)?.date ?? null)
-        : null,
+      date: result.ok ? (result.data.observations.at(-1)?.date ?? null) : null,
     };
   });
 
-  const y2 = values[0].latest;
-  const y10 = values[1].latest;
-  const spread = y2 !== null && y10 !== null ? y10 - y2 : null;
-
   if (values.every((v) => v.latest === null)) return null;
+
+  const y2 = values[0].latest;
+  const y10 = values[2].latest;
+  const spread = y2 !== null && y10 !== null ? y10 - y2 : null;
+  const inverted = spread !== null && spread < 0;
 
   return (
     <Panel>
-      <PanelHeader
-        title={t.markets.yields}
-        action={
-          spread !== null ? (
-            <span
-              className={cn(
-                "numeral rounded-full px-2.5 py-1 text-xs font-semibold",
-                spread >= 0 ? "bg-up-wash text-up" : "bg-down-wash text-down",
-              )}
-            >
-              {t.markets.spread}: {spread >= 0 ? "+" : "−"}
-              {formatPrice(Math.abs(spread), locale)} pp
-            </span>
-          ) : undefined
-        }
-      />
-      <div className="grid grid-cols-3 divide-x divide-line-soft">
+      <PanelHeader title={t.markets.yields} />
+
+      <div className="grid grid-cols-2 gap-px bg-line-soft sm:grid-cols-4">
         {values.map((value) => {
           const delta =
             value.latest !== null && value.prev !== null
               ? value.latest - value.prev
               : null;
           return (
-            <div key={value.label} className="px-4 py-3.5 sm:px-5">
+            <div key={value.key} className="bg-surface px-4 py-3.5 sm:px-5">
               <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
                 {value.label}
               </p>
@@ -209,13 +296,39 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
               </p>
               {delta !== null && Math.abs(delta) > 0.001 && (
                 <p className="numeral mt-0.5 text-[11px] text-muted">
-                  {delta > 0 ? "▲" : "▼"} {formatPrice(Math.abs(delta), locale)}
+                  {delta > 0 ? "▲" : "▼"} {formatPrice(Math.abs(delta), locale)}{" "}
+                  {t.markets.point}
                 </p>
               )}
             </div>
           );
         })}
       </div>
+
+      {/* Getiri eğrisi — sayının ne anlama geldiği burada yazar */}
+      {spread !== null && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-line-soft px-4 py-3 sm:px-5">
+          <span className="text-xs font-semibold text-strong">
+            {t.markets.curveTitle}
+          </span>
+          <span
+            className={cn(
+              "numeral rounded-full px-2.5 py-1 text-xs font-semibold",
+              inverted ? "bg-down-wash text-down" : "bg-up-wash text-up",
+            )}
+          >
+            {spread >= 0 ? "+" : "−"}
+            {formatPrice(Math.abs(spread), locale)} {t.markets.point}
+          </span>
+          <span className="text-xs text-soft">
+            {inverted ? t.markets.curveInverted : t.markets.curveNormal}
+          </span>
+          <span className="basis-full text-[11px] leading-relaxed text-muted">
+            {t.markets.curveHint}
+          </span>
+        </div>
+      )}
+
       {values[0].date && (
         <p className="border-t border-line-soft px-4 py-2 text-[10px] text-muted sm:px-5">
           FRED · {formatEtDateShort(values[0].date, locale)}
@@ -226,8 +339,285 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 }
 
 /* ==========================================================================
-   Bileşen tablosu
+   Seçili endeks — genişlik, hareket edenler, tam liste
    ========================================================================== */
+
+type Row = {
+  member: IndexMember;
+  quote: Quote | undefined;
+  /** Yalnızca Dow (fiyat ağırlıklı) için: endeks puanına katkı. */
+  contribution: number | null;
+};
+
+async function IndexDetail({
+  tab,
+  members,
+  proxy,
+  sort,
+  dir,
+  locale,
+  t,
+}: {
+  tab: TabKey;
+  members: readonly IndexMember[];
+  proxy: string;
+  sort: SortKey;
+  dir: SortDir;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const status = await getStatus();
+  const [{ quotes, stampAt }, proxyResult] = await Promise.all([
+    quotesFor(
+      members.map((m) => m.symbol),
+      status,
+    ),
+    getQuotes([proxy], status),
+  ]);
+
+  /* Dow fiyat ağırlıklıdır: Endeks = Σfiyat / bölen. Bölen, elimizdeki
+     fiyat toplamı ile endeks seviyesinden türetilir (DIA ≈ Dow/100), böylece
+     her hissenin puan katkısı = fiyat değişimi / bölen olarak hesaplanır.
+     Diğer endeksler piyasa değeri ağırlıklı olduğundan katkı hesaplanmaz. */
+  let divisor: number | null = null;
+  if (tab === "dow" && proxyResult.ok) {
+    const proxyQuote = proxyResult.data[proxy];
+    let sumPrices = 0;
+    let counted = 0;
+    for (const member of members) {
+      const price = quotes[member.symbol]?.price;
+      if (typeof price === "number") {
+        sumPrices += price;
+        counted += 1;
+      }
+    }
+    const level = proxyQuote ? proxyQuote.price * 100 : null;
+    if (level && counted === members.length && sumPrices > 0) {
+      divisor = sumPrices / level;
+    }
+  }
+
+  const rows: Row[] = members.map((member) => {
+    const quote = quotes[member.symbol];
+    return {
+      member,
+      quote,
+      contribution:
+        divisor && quote && typeof quote.change === "number"
+          ? quote.change / divisor
+          : null,
+    };
+  });
+
+  const withQuote = rows.filter((row) => row.quote);
+  const advancing = withQuote.filter((row) => (row.quote!.changePct ?? 0) > 0).length;
+  const declining = withQuote.filter((row) => (row.quote!.changePct ?? 0) < 0).length;
+  const flat = withQuote.length - advancing - declining;
+
+  const byChange = [...withQuote].sort(
+    (a, b) => (b.quote!.changePct ?? 0) - (a.quote!.changePct ?? 0),
+  );
+  const gainers = byChange.slice(0, 5);
+  const losers = [...byChange].reverse().slice(0, 5);
+
+  return (
+    <>
+      {withQuote.length > 0 && (
+        <>
+          <BreadthPanel
+            advancing={advancing}
+            declining={declining}
+            flat={flat}
+            total={withQuote.length}
+            locale={locale}
+            t={t}
+          />
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <MoverPanel
+              title={t.markets.topGainers}
+              rows={gainers}
+              tone="up"
+              showContribution={divisor !== null}
+              contributionLabel={t.markets.contribution}
+              locale={locale}
+            />
+            <MoverPanel
+              title={t.markets.topLosers}
+              rows={losers}
+              tone="down"
+              showContribution={divisor !== null}
+              contributionLabel={t.markets.contribution}
+              locale={locale}
+            />
+          </div>
+        </>
+      )}
+
+      <MembersTable
+        tab={tab}
+        rows={rows}
+        sort={sort}
+        dir={dir}
+        showContribution={divisor !== null}
+        locale={locale}
+        t={t}
+      />
+
+      {stampAt && <DataStamp source="alpaca" at={stampAt} locale={locale} />}
+    </>
+  );
+}
+
+/* ---- Piyasa genişliği ---- */
+
+function BreadthPanel({
+  advancing,
+  declining,
+  flat,
+  total,
+  locale,
+  t,
+}: {
+  advancing: number;
+  declining: number;
+  flat: number;
+  total: number;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const pct = (value: number) => (total > 0 ? (value / total) * 100 : 0);
+  const advPct = pct(advancing);
+
+  return (
+    <Panel className="p-4 sm:p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h2 className="text-sm font-semibold tracking-tight text-strong">
+          {t.markets.breadth}
+        </h2>
+        <p className="numeral text-xs text-muted">
+          <span className="font-semibold text-up">{advancing}</span>{" "}
+          {t.markets.advancing}
+          <span aria-hidden className="mx-1.5">
+            ·
+          </span>
+          <span className="font-semibold text-down">{declining}</span>{" "}
+          {t.markets.declining}
+          {flat > 0 && (
+            <>
+              <span aria-hidden className="mx-1.5">
+                ·
+              </span>
+              <span className="font-semibold text-soft">{flat}</span>{" "}
+              {t.markets.unchanged}
+            </>
+          )}
+        </p>
+      </div>
+
+      <div className="mt-3 flex h-2.5 w-full gap-px overflow-hidden rounded-full bg-surface-sunken">
+        {advancing > 0 && (
+          <span className="bg-up" style={{ width: `${pct(advancing)}%` }} />
+        )}
+        {flat > 0 && (
+          <span className="bg-flat/50" style={{ width: `${pct(flat)}%` }} />
+        )}
+        {declining > 0 && (
+          <span className="bg-down" style={{ width: `${pct(declining)}%` }} />
+        )}
+      </div>
+
+      <p className="mt-2 text-xs text-soft">
+        {locale === "tr"
+          ? `Endeksteki şirketlerin %${formatPrice(advPct, locale, { digits: 0 })}'i günü artıda geçiriyor.`
+          : `${formatPrice(advPct, locale, { digits: 0 })}% of the index is trading higher.`}
+      </p>
+    </Panel>
+  );
+}
+
+/* ---- En çok artan / düşen kartları ---- */
+
+function MoverPanel({
+  title,
+  rows,
+  tone,
+  showContribution,
+  contributionLabel,
+  locale,
+}: {
+  title: string;
+  rows: Row[];
+  tone: "up" | "down";
+  showContribution: boolean;
+  contributionLabel: string;
+  locale: Locale;
+}) {
+  if (rows.length === 0) return null;
+
+  const peak = Math.max(
+    ...rows.map((row) => Math.abs(row.quote?.changePct ?? 0)),
+    0.01,
+  );
+
+  return (
+    <Panel>
+      <PanelHeader title={title} />
+      <ul className="divide-y divide-line-soft">
+        {rows.map((row) => {
+          const changePct = row.quote?.changePct ?? 0;
+          const width = Math.max((Math.abs(changePct) / peak) * 100, 4);
+          return (
+            <li key={row.member.symbol}>
+              <Link
+                href={`/hisse/${row.member.symbol}`}
+                className="block px-4 py-2.5 transition-colors hover:bg-primary-tint sm:px-5"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="flex min-w-0 items-baseline gap-2.5">
+                    <span className="numeral shrink-0 text-sm font-semibold text-strong">
+                      {row.member.symbol}
+                    </span>
+                    <span className="min-w-0 truncate text-xs text-soft">
+                      {row.member.name}
+                    </span>
+                  </span>
+                  <span
+                    className={cn(
+                      "numeral shrink-0 text-sm font-bold",
+                      tone === "up" ? "text-up" : "text-down",
+                    )}
+                  >
+                    {formatPercent(changePct, locale)}
+                  </span>
+                </div>
+
+                {/* Görsel oran çubuğu — grubun en büyüğüne göre ölçekli */}
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "h-1 rounded-full",
+                      tone === "up" ? "bg-up/70" : "bg-down/70",
+                    )}
+                    style={{ width: `${width}%` }}
+                  />
+                  {showContribution && row.contribution !== null && (
+                    <span className="numeral shrink-0 text-[10px] text-muted">
+                      {contributionLabel} {formatChange(row.contribution, locale)}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </Panel>
+  );
+}
+
+/* ---- Tam bileşen tablosu ---- */
 
 function sortHref(tab: TabKey, key: SortKey, sort: SortKey, dir: SortDir) {
   const nextDir: SortDir = sort === key && dir === "desc" ? "asc" : "desc";
@@ -265,40 +655,45 @@ function SortHead({
   );
 }
 
-async function MembersTable({
+function MembersTable({
   tab,
-  members,
+  rows,
   sort,
   dir,
+  showContribution,
   locale,
   t,
 }: {
   tab: TabKey;
-  members: readonly IndexMember[];
+  rows: Row[];
   sort: SortKey;
   dir: SortDir;
+  showContribution: boolean;
   locale: Locale;
   t: Dictionary;
 }) {
-  const status = await getStatus();
-  const { quotes, stampAt } = await quotesFor(
-    members.map((m) => m.symbol),
-    status,
-  );
+  if (rows.length === 0) {
+    return (
+      <Panel>
+        <EmptyState title={t.common.noData} />
+      </Panel>
+    );
+  }
 
-  const valueOf = (member: IndexMember): number | string => {
-    const quote = quotes[member.symbol];
+  const valueOf = (row: Row): number | string => {
     switch (sort) {
       case "fiyat":
-        return quote?.price ?? -Infinity;
+        return row.quote?.price ?? -Infinity;
       case "ad":
-        return member.name;
+        return row.member.name;
+      case "katki":
+        return row.contribution ?? -Infinity;
       default:
-        return quote?.changePct ?? -Infinity;
+        return row.quote?.changePct ?? -Infinity;
     }
   };
 
-  const rows = [...members].sort((a, b) => {
+  const sorted = [...rows].sort((a, b) => {
     const va = valueOf(a);
     const vb = valueOf(b);
     if (typeof va === "string" || typeof vb === "string") {
@@ -308,95 +703,104 @@ async function MembersTable({
     return dir === "asc" ? va - vb : vb - va;
   });
 
-  if (rows.length === 0) {
-    return (
-      <Panel>
-        <EmptyState title={t.common.noData} />
-      </Panel>
-    );
-  }
-
   return (
-    <>
-      <Panel>
-        <div className="scroll-x">
-          <table className="w-full min-w-[560px] text-sm">
-            <thead>
-              <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
-                <th className="w-10 px-4 py-2.5 font-medium sm:px-5">#</th>
+    <Panel>
+      <PanelHeader title={t.markets.constituents} />
+      <div className="scroll-x">
+        <table className="w-full min-w-[560px] text-sm">
+          <thead>
+            <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
+              <th className="w-10 px-4 py-2.5 font-medium sm:px-5">#</th>
+              <SortHead
+                label={t.companies.company}
+                href={sortHref(tab, "ad", sort, dir)}
+                active={sort === "ad"}
+                dir={dir}
+                className="text-left"
+              />
+              <SortHead
+                label={t.companies.price}
+                href={sortHref(tab, "fiyat", sort, dir)}
+                active={sort === "fiyat"}
+                dir={dir}
+              />
+              <SortHead
+                label={t.companies.change}
+                href={sortHref(tab, "degisim", sort, dir)}
+                active={sort === "degisim"}
+                dir={dir}
+                className={showContribution ? undefined : "sm:pr-5"}
+              />
+              {showContribution && (
                 <SortHead
-                  label={t.companies.company}
-                  href={sortHref(tab, "ad", sort, dir)}
-                  active={sort === "ad"}
-                  dir={dir}
-                  className="text-left"
-                />
-                <SortHead
-                  label={t.companies.price}
-                  href={sortHref(tab, "fiyat", sort, dir)}
-                  active={sort === "fiyat"}
-                  dir={dir}
-                />
-                <SortHead
-                  label={t.companies.change}
-                  href={sortHref(tab, "degisim", sort, dir)}
-                  active={sort === "degisim"}
+                  label={t.markets.contribution}
+                  href={sortHref(tab, "katki", sort, dir)}
+                  active={sort === "katki"}
                   dir={dir}
                   className="sm:pr-5"
                 />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line-soft">
-              {rows.map((member, index) => {
-                const quote = quotes[member.symbol];
-                const tone = directionOf(quote?.changePct);
-                return (
-                  <tr
-                    key={member.symbol}
-                    className="transition-colors hover:bg-primary-tint"
-                  >
-                    <td className="numeral px-4 py-2 text-xs text-muted sm:px-5">
-                      {index + 1}
-                    </td>
-                    <td className="px-3 py-2">
-                      <Link
-                        href={`/hisse/${member.symbol}`}
-                        className="flex min-w-0 items-baseline gap-2.5"
-                      >
-                        <span className="numeral w-16 shrink-0 font-semibold text-strong">
-                          {member.symbol}
-                        </span>
-                        <span className="min-w-0 truncate text-xs text-soft">
-                          {member.name}
-                        </span>
-                      </Link>
-                    </td>
-                    <td className="numeral px-3 py-2 text-right text-body">
-                      {quote ? formatPrice(quote.price, locale) : "—"}
-                    </td>
-                    <td
-                      className={cn(
-                        "numeral px-3 py-2 text-right font-semibold sm:pr-5",
-                        tone === "up"
-                          ? "text-up"
-                          : tone === "down"
-                            ? "text-down"
-                            : "text-muted",
-                      )}
+              )}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line-soft">
+            {sorted.map((row, index) => {
+              const quote = row.quote;
+              const tone = directionOf(quote?.changePct);
+              return (
+                <tr
+                  key={row.member.symbol}
+                  className="transition-colors hover:bg-primary-tint"
+                >
+                  <td className="numeral px-4 py-2 text-xs text-muted sm:px-5">
+                    {index + 1}
+                  </td>
+                  <td className="px-3 py-2">
+                    <Link
+                      href={`/hisse/${row.member.symbol}`}
+                      className="flex min-w-0 items-baseline gap-2.5"
                     >
-                      {quote ? formatPercent(quote.changePct, locale) : "—"}
+                      <span className="numeral w-16 shrink-0 font-semibold text-strong">
+                        {row.member.symbol}
+                      </span>
+                      <span className="min-w-0 truncate text-xs text-soft">
+                        {row.member.name}
+                      </span>
+                    </Link>
+                  </td>
+                  <td className="numeral px-3 py-2 text-right text-body">
+                    {quote ? formatPrice(quote.price, locale) : "—"}
+                  </td>
+                  <td
+                    className={cn(
+                      "numeral px-3 py-2 text-right font-semibold",
+                      showContribution ? undefined : "sm:pr-5",
+                      tone === "up"
+                        ? "text-up"
+                        : tone === "down"
+                          ? "text-down"
+                          : "text-muted",
+                    )}
+                  >
+                    {quote ? formatPercent(quote.changePct, locale) : "—"}
+                  </td>
+                  {showContribution && (
+                    <td className="numeral px-3 py-2 text-right text-soft sm:pr-5">
+                      {row.contribution !== null
+                        ? formatChange(row.contribution, locale)
+                        : "—"}
                     </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-
-      {stampAt && (
-        <DataStamp source="alpaca" at={stampAt} locale={locale} />
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {showContribution && (
+        <p className="border-t border-line-soft px-4 py-2.5 text-[11px] leading-relaxed text-muted sm:px-5">
+          {t.markets.contributionHint}
+        </p>
       )}
-    </>
+    </Panel>
   );
 }

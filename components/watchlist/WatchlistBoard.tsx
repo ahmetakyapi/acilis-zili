@@ -245,6 +245,9 @@ function ListPanel({
         </button>
       </div>
 
+      {/* Ekleme kutusu listenin başında durur; eklenen sembol sona yazılır. */}
+      <AddSymbolRow listId={list.id} labels={labels} />
+
       {list.items.length === 0 ? (
         <p className="px-4 py-6 text-center text-sm text-muted">{labels.empty}</p>
       ) : (
@@ -256,8 +259,6 @@ function ListPanel({
           labels={labels}
         />
       )}
-
-      <AddSymbolRow listId={list.id} labels={labels} />
     </section>
   );
 }
@@ -496,7 +497,7 @@ function AddSymbolRow({
 
   if (!open) {
     return (
-      <div className="border-t border-line-soft px-4 py-2.5 sm:px-5">
+      <div className="border-b border-line-soft px-4 py-2.5 sm:px-5">
         <button
           type="button"
           onClick={() => {
@@ -515,7 +516,7 @@ function AddSymbolRow({
   const shownHits = query.trim() ? hits.slice(0, 6) : [];
 
   return (
-    <div className="border-t border-line-soft px-4 py-3 sm:px-5">
+    <div className="border-b border-line-soft px-4 py-3 sm:px-5">
       <div className="flex items-center gap-2">
         <Search size={15} className="shrink-0 text-muted" strokeWidth={1.8} />
         <input
