@@ -11,14 +11,26 @@ import { cn } from "@/lib/utils";
  * Yerel tablodan gelen sonuçlar anında, sağlayıcıdan gelenler gecikmeli
  * görünür; kullanıcı beklerken kutu boş kalmaz.
  */
+/** Boş kutuda önerilen semboller — takip evreninin merkezî isimleri. */
+const POPULAR_PICKS = [
+  { symbol: "NVDA", name: "NVIDIA" },
+  { symbol: "AAPL", name: "Apple" },
+  { symbol: "MSFT", name: "Microsoft" },
+  { symbol: "TSLA", name: "Tesla" },
+  { symbol: "AMD", name: "AMD" },
+  { symbol: "SPY", name: "S&P 500" },
+] as const;
+
 export function SearchCommand({
   placeholder,
   label,
   emptyLabel,
+  popularLabel,
 }: {
   placeholder: string;
   label: string;
   emptyLabel: string;
+  popularLabel: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -139,12 +151,14 @@ export function SearchCommand({
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/35 px-4 pt-[12vh] backdrop-blur-[2px]"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/35 backdrop-blur-[2px] sm:px-4 sm:pt-[12vh]"
           onClick={close}
           role="presentation"
         >
+          {/* Mobilde üstten tam genişlik bir sayfa gibi açılır — küçük ekranda
+              yüzen kutu yerine ferah, zoom'suz bir arama yüzeyi. */}
           <div
-            className="w-full max-w-lg overflow-hidden rounded-(--radius-xl) border border-line bg-surface-elevated shadow-(--shadow-overlay)"
+            className="w-full overflow-hidden border-b border-line bg-surface-elevated shadow-(--shadow-overlay) sm:max-w-lg sm:rounded-(--radius-xl) sm:border"
             onClick={(event) => event.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -158,21 +172,43 @@ export function SearchCommand({
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={onInputKeyDown}
                 placeholder={placeholder}
-                className="h-12 flex-1 bg-transparent text-sm text-strong outline-none placeholder:text-muted"
+                className="h-14 flex-1 bg-transparent text-base text-strong outline-none placeholder:text-muted sm:h-12 sm:text-sm"
                 autoComplete="off"
                 spellCheck={false}
               />
               <button
                 type="button"
                 onClick={close}
-                className="shrink-0 text-muted transition-colors hover:text-strong"
+                className="flex size-8 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted transition-colors hover:bg-surface hover:text-strong"
                 aria-label="Kapat"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <div className="max-h-[45vh] overflow-y-auto py-1">
+            <div className="max-h-[60dvh] overflow-y-auto py-1 sm:max-h-[45vh]">
+              {/* Kutu boşken popüler semboller — boş bir pencere yerine yön */}
+              {!query.trim() && (
+                <div className="px-4 py-3">
+                  <p className="plate text-[9px]">{popularLabel}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {POPULAR_PICKS.map((pick) => (
+                      <button
+                        key={pick.symbol}
+                        type="button"
+                        onClick={() => go(pick.symbol)}
+                        className="flex min-h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-xs transition-colors hover:border-line-strong hover:bg-primary-tint"
+                      >
+                        <span className="numeral font-semibold text-strong">
+                          {pick.symbol}
+                        </span>
+                        <span className="text-muted">{pick.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {shownHits.map((hit, index) => (
                 <button
                   key={hit.symbol}
@@ -180,14 +216,14 @@ export function SearchCommand({
                   onClick={() => go(hit.symbol)}
                   onMouseEnter={() => setActive(index)}
                   className={cn(
-                    "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors",
+                    "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors sm:py-2.5",
                     index === active ? "bg-primary-wash" : "hover:bg-surface",
                   )}
                 >
-                  <span className="numeral w-16 shrink-0 text-sm font-semibold text-strong">
+                  <span className="numeral flex h-7 w-16 shrink-0 items-center justify-center rounded-(--radius-sm) bg-primary-tint text-xs font-semibold text-primary">
                     {hit.symbol}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-soft">
+                  <span className="min-w-0 flex-1 truncate text-sm text-body">
                     {hit.name}
                   </span>
                 </button>

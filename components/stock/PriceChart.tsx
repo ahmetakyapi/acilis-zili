@@ -35,6 +35,19 @@ type ChartLabels = {
   periodLow: string;
   noData: string;
   failed: string;
+  sessionPre: string;
+  sessionRegular: string;
+  sessionAfter: string;
+  sessionOvernight: string;
+  sessionOvernightNote: string;
+};
+
+/** Gün içi seans bölgesi — gölge + etiket olarak çizilir. */
+type SessionZone = {
+  key: "pre" | "after";
+  left: number;
+  width: number;
+  label: string;
 };
 
 type PriceChartProps = {
@@ -71,6 +84,7 @@ export function PriceChart({
   const [result, setResult] = useState<ChartResult | null>(null);
   const [hover, setHover] = useState<HoverReading>(null);
   const [themeTick, setThemeTick] = useState(0);
+  const [zones, setZones] = useState<SessionZone[]>([]);
 
   const requestKey = `${symbol}:${range}`;
   const state = useMemo(
@@ -273,12 +287,72 @@ export function PriceChart({
 
     chart.timeScale().fitContent();
 
+    /* Seans bölgeleri — yalnızca 1G görünümünde. Barlar ET duvar saatine
+       kaydırıldığı için gün sınırı düz UTC bölmesiyle bulunur; 04:00-09:30
+       ön seans, 16:00-20:00 akşam seansı gölgelenir. Gece seansı (20:00-04:00)
+       IEX beslemesinde işlem görmez, lejantta not düşülür. */
+    const updateZones = () => {
+      if (range !== "1D" || bars.length === 0) {
+        setZones([]);
+        return;
+      }
+      const dayStart = Math.floor(bars[0].time / 86400) * 86400;
+      const bounds = {
+        preOpen: dayStart + 4 * 3600,
+        bell: dayStart + 9.5 * 3600,
+        close: dayStart + 16 * 3600,
+        afterEnd: dayStart + 20 * 3600,
+      };
+      const paneWidth =
+        container.clientWidth - chart.priceScale("right").width();
+      const coordFor = (t: number): number => {
+        const coord = chart
+          .timeScale()
+          .timeToCoordinate(t as UTCTimestamp);
+        if (coord !== null) return Math.max(0, Math.min(coord, paneWidth));
+        // Görünür aralığın dışında — yakın kenara yapıştır.
+        const visible = chart.timeScale().getVisibleRange();
+        if (!visible) return 0;
+        return t <= (visible.from as number) ? 0 : paneWidth;
+      };
+      const next: SessionZone[] = [];
+      const pushZone = (
+        key: SessionZone["key"],
+        from: number,
+        to: number,
+        label: string,
+      ) => {
+        const left = coordFor(from);
+        const width = coordFor(to) - left;
+        if (width > 2) next.push({ key, left, width, label });
+      };
+      pushZone("pre", bounds.preOpen, bounds.bell, labels.sessionPre);
+      pushZone("after", bounds.close, bounds.afterEnd, labels.sessionAfter);
+      setZones(next);
+    };
+
+    const raf = requestAnimationFrame(updateZones);
+    chart.timeScale().subscribeVisibleTimeRangeChange(updateZones);
+
     return () => {
+      cancelAnimationFrame(raf);
+      chart.timeScale().unsubscribeVisibleTimeRangeChange(updateZones);
       chart.unsubscribeCrosshairMove(onCrosshair);
       chart.remove();
       chartRef.current = null;
     };
-  }, [state, mode, locale, intraday, themeTick, period, periodTone]);
+  }, [
+    state,
+    mode,
+    locale,
+    intraday,
+    themeTick,
+    period,
+    periodTone,
+    range,
+    labels.sessionPre,
+    labels.sessionAfter,
+  ]);
 
   const toneText =
     periodTone === "up" ? "text-up" : periodTone === "down" ? "text-down" : "text-soft";
@@ -342,7 +416,66 @@ export function PriceChart({
           ref={containerRef}
           className={cn("h-full w-full", state.phase !== "ready" && "invisible")}
         />
+        {/* Seans gölgeleri — 1G görünümünde ön/akşam seansları ayrışır */}
+        {state.phase === "ready" &&
+          zones.map((zone) => (
+            <div
+              key={zone.key}
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 border-line-soft"
+              style={{
+                left: zone.left,
+                width: zone.width,
+                background: "var(--surface-sunken)",
+                opacity: 0.38,
+                borderLeftWidth: zone.key === "after" ? 1 : 0,
+                borderRightWidth: zone.key === "pre" ? 1 : 0,
+              }}
+            />
+          ))}
+        {state.phase === "ready" &&
+          zones
+            .filter((zone) => zone.width > 56)
+            .map((zone) => (
+              <span
+                key={`${zone.key}-label`}
+                aria-hidden
+                className="plate pointer-events-none absolute top-1.5 text-[8px]"
+                style={{ left: zone.left + 6 }}
+              >
+                {zone.label}
+              </span>
+            ))}
       </div>
+
+      {/* Seans lejantı — gün içi görünümde günün saat haritası (ET) */}
+      {range === "1D" && state.phase === "ready" && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted">
+          <span className="flex items-center gap-1">
+            {labels.sessionPre}
+            <span className="numeral">04:00–09:30</span>
+          </span>
+          <span aria-hidden>·</span>
+          <span className="flex items-center gap-1 font-medium text-soft">
+            <span aria-hidden className="size-1.5 rounded-full bg-brass" />
+            {labels.sessionRegular}
+            <span className="numeral">09:30–16:00</span>
+          </span>
+          <span aria-hidden>·</span>
+          <span className="flex items-center gap-1">
+            {labels.sessionAfter}
+            <span className="numeral">16:00–20:00</span>
+          </span>
+          <span aria-hidden>·</span>
+          <span className="flex items-center gap-1">
+            {labels.sessionOvernight}
+            <span className="numeral">20:00–04:00</span>
+          </span>
+          <span className="basis-full sm:basis-auto">
+            {labels.sessionOvernightNote}
+          </span>
+        </div>
+      )}
 
       {/* Aralık ve mod seçici — grafiğin altında, Midas düzeni */}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3">

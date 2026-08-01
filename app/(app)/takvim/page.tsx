@@ -55,7 +55,7 @@ export default async function CalendarPage(
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="notched inline-block text-2xl font-semibold sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             {t.calendar.title}
           </h1>
           <p className="mt-2 text-sm text-soft">{t.calendar.subtitle}</p>

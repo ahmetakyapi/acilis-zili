@@ -43,6 +43,43 @@ export function PanelHeader({
   );
 }
 
+/**
+ * Sayfa başlığı — plate üst yazı + başlık + isteğe bağlı alt satır.
+ * Tüm sayfalar aynı hiyerarşiyi kullanır; süs işareti yok, okunabilirlik esas.
+ */
+export function PageHeader({
+  eyebrow,
+  title,
+  subtitle,
+  action,
+  className,
+}: {
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <header
+      className={cn("flex flex-wrap items-end justify-between gap-3", className)}
+    >
+      <div className="min-w-0">
+        {eyebrow && <p className="plate">{eyebrow}</p>}
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-strong sm:text-3xl">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-soft">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      {action}
+    </header>
+  );
+}
+
 /* --------------------------------------------------------------------------
    Değişim rozeti — yön rengi ve işareti tek yerden gelir
    -------------------------------------------------------------------------- */
@@ -106,8 +143,11 @@ export function DataStamp({
   note?: string;
   className?: string;
 }) {
+  // Damga saati her zaman Türkiye saatiyle basılır — sunucu UTC'de koşsa da
+  // okuyucunun duvar saatiyle örtüşür.
   const time = at
     ? new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+        timeZone: "Europe/Istanbul",
         hour: "2-digit",
         minute: "2-digit",
       }).format(typeof at === "string" ? new Date(at) : at)

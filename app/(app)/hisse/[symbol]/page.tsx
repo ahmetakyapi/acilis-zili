@@ -21,10 +21,13 @@ import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote } from "@/lib/providers";
 import {
   getCompanyNews,
+  getEarningsCalendar,
+  getEarningsSurprises,
   getKeyMetrics,
   getRecommendations,
 } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
+import { SYMBOL_DESCRIPTIONS } from "@/db/seed/descriptions";
 import {
   cn,
   directionOf,
@@ -73,6 +76,10 @@ export default async function StockPage(
         </div>
 
         <div className="flex flex-col gap-5">
+          <Suspense fallback={<Skeleton className="h-24 w-full rounded-(--radius-xl)" />}>
+            <UpcomingEarnings symbol={symbol} locale={locale} t={t} />
+          </Suspense>
+
           <Panel>
             <PanelHeader title={t.stock.profile} />
             <Suspense fallback={<ListSkeleton rows={5} />}>
@@ -274,6 +281,11 @@ function ChartSection({
         periodLow: t.chart.periodLow,
         noData: t.chart.noChartData,
         failed: t.data.failed,
+        sessionPre: t.chart.sessionPre,
+        sessionRegular: t.chart.sessionRegular,
+        sessionAfter: t.chart.sessionAfter,
+        sessionOvernight: t.chart.sessionOvernight,
+        sessionOvernightNote: t.chart.sessionOvernightNote,
       }}
     />
   );
@@ -282,6 +294,101 @@ function ChartSection({
 /* ==========================================================================
    Profil / metrikler / analistler / bilançolar / haberler
    ========================================================================== */
+
+/** Bilanço kayıtlarının ortak biçimi — DB satırı da sağlayıcı girdisi de buna iner. */
+type EarningsItem = {
+  reportDate: string;
+  hour: string | null;
+  epsEstimate: number | null;
+  epsActual: number | null;
+  revenueEstimate: number | null;
+  revenueActual: number | null;
+  quarter: number | null;
+  year: number | null;
+};
+
+/**
+ * Sembolün bilanço geçmişi + geleceği. Yerel takvim tablosu yalnızca yakın
+ * aralığı tutar; kapsam dışı kalan sembollerde Finnhub'ın sembol bazlı
+ * takvimi devreye girer (geçmiş ~13 ay, gelecek ~4 ay — 6 saat önbellekli).
+ */
+async function symbolEarnings(symbol: string): Promise<EarningsItem[]> {
+  const today = todayEt();
+  const result = await getEarningsCalendar(
+    addEtDays(today, -400),
+    addEtDays(today, 120),
+    symbol,
+  );
+  return result.ok ? result.data : [];
+}
+
+/**
+ * Yaklaşan bilanço — sağ kolonun tepesinde pirinç vurgulu kart.
+ * Tarih, seans zamanı ve analistlerin EPS + gelir beklentisi bir arada.
+ */
+async function UpcomingEarnings({
+  symbol,
+  locale,
+  t,
+}: {
+  symbol: string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  let next: EarningsItem | null = await getNextEarnings(symbol);
+  if (!next) {
+    const today = todayEt();
+    next =
+      (await symbolEarnings(symbol))
+        .filter((row) => row.reportDate >= today)
+        .sort((a, b) => a.reportDate.localeCompare(b.reportDate))[0] ?? null;
+  }
+  if (!next) return null;
+
+  const earningsHourLabel: Record<string, string> = {
+    bmo: t.earnings.beforeOpen,
+    amc: t.earnings.afterClose,
+    dmh: t.earnings.duringMarket,
+  };
+
+  return (
+    <Panel className="border-l-2 border-l-brass p-4 sm:p-5">
+      <p className="plate text-[9px]">{t.stock.nextEarnings}</p>
+      <p className="numeral mt-1.5 text-lg font-bold text-strong">
+        {formatEtDateLong(next.reportDate, locale)}
+      </p>
+      <p className="mt-0.5 text-xs text-soft">
+        {next.hour
+          ? (earningsHourLabel[next.hour] ?? t.earnings.timeUnknown)
+          : t.earnings.timeUnknown}
+      </p>
+      {(next.epsEstimate !== null || next.revenueEstimate !== null) && (
+        <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-line-soft pt-3">
+          {next.epsEstimate !== null && (
+            <div>
+              <dt className="text-[10px] uppercase tracking-wider text-muted">
+                {t.earnings.epsEstimate}
+              </dt>
+              <dd className="numeral mt-0.5 text-sm font-semibold text-strong">
+                {formatPrice(next.epsEstimate, locale, { currency: true })}
+              </dd>
+            </div>
+          )}
+          {next.revenueEstimate !== null && (
+            <div>
+              <dt className="text-[10px] uppercase tracking-wider text-muted">
+                {t.earnings.revenueEstimate}
+              </dt>
+              <dd className="numeral mt-0.5 text-sm font-semibold text-strong">
+                ${formatCompact(next.revenueEstimate, locale)}
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
+    </Panel>
+  );
+}
 
 async function ProfileCard({
   symbol,
@@ -292,20 +399,12 @@ async function ProfileCard({
   locale: Locale;
   t: Dictionary;
 }) {
-  const [result, nextEarnings] = await Promise.all([
-    getCompanyProfile(symbol),
-    getNextEarnings(symbol),
-  ]);
+  const result = await getCompanyProfile(symbol);
   if (!result.ok) {
     return <DataError message={t.data.failed} hint={t.data.failedHint} />;
   }
   const profile = result.data;
-
-  const earningsHourLabel: Record<string, string> = {
-    bmo: t.earnings.beforeOpen,
-    amc: t.earnings.afterClose,
-    dmh: t.earnings.duringMarket,
-  };
+  const about = SYMBOL_DESCRIPTIONS[symbol]?.[locale] ?? null;
 
   const rows: [string, React.ReactNode][] = [
     [t.stock.sector, profile.industry ?? "—"],
@@ -324,26 +423,14 @@ async function ProfileCard({
     ],
   ];
 
-  if (nextEarnings) {
-    rows.unshift([
-      t.stock.nextEarnings,
-      <span key="next" className="text-right">
-        <span className="numeral block font-semibold text-brass">
-          {formatEtDateLong(nextEarnings.reportDate, locale)}
-        </span>
-        <span className="block text-[11px] text-muted">
-          {nextEarnings.hour
-            ? (earningsHourLabel[nextEarnings.hour] ?? t.earnings.timeUnknown)
-            : t.earnings.timeUnknown}
-          {nextEarnings.epsEstimate !== null &&
-            ` · EPS ${formatPrice(nextEarnings.epsEstimate, locale)}`}
-        </span>
-      </span>,
-    ]);
-  }
-
   return (
     <div className="px-4 py-3 sm:px-5">
+      {/* Şirket ne iş yapar — sektör satırından önce düz cümleyle anlatılır */}
+      {about && (
+        <p className="border-b border-line-soft pb-3 text-[13px] leading-relaxed text-body">
+          {about}
+        </p>
+      )}
       <dl className="divide-y divide-line-soft">
         {rows.map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-3 py-2">
@@ -485,6 +572,11 @@ async function AnalystCard({ symbol, t }: { symbol: string; t: Dictionary }) {
   );
 }
 
+/**
+ * Geçmiş bilançolar — dönem başına EPS beklentisi/gerçekleşeni ve sapma;
+ * gelir verisi varsa ikinci satırda okunur. Açıklanmamış (gelecek) kayıtlar
+ * bu listede yer almaz, onlar Yaklaşan Bilanço kartındadır.
+ */
 async function PastEarnings({
   symbol,
   locale,
@@ -494,41 +586,104 @@ async function PastEarnings({
   locale: Locale;
   t: Dictionary;
 }) {
-  const rows = await getEarningsForSymbol(symbol, 6);
+  const today = todayEt();
+  let rows: EarningsItem[] = (await getEarningsForSymbol(symbol, 10)).filter(
+    (row) => row.reportDate < today || row.epsActual !== null,
+  );
+  if (rows.length === 0) {
+    rows = (await symbolEarnings(symbol))
+      .filter((row) => row.reportDate < today || row.epsActual !== null)
+      .sort((a, b) => b.reportDate.localeCompare(a.reportDate));
+  }
+  if (rows.length === 0) {
+    // Takvim geçmişi kapsamıyorsa son çare: earnings surprises (son 4 çeyrek).
+    const surprises = await getEarningsSurprises(symbol);
+    if (surprises.ok) {
+      rows = surprises.data.map((row) => ({
+        reportDate: row.period,
+        hour: null,
+        epsEstimate: row.epsEstimate,
+        epsActual: row.epsActual,
+        revenueEstimate: null,
+        revenueActual: null,
+        quarter: row.quarter,
+        year: row.year,
+      }));
+    }
+  }
   if (rows.length === 0) {
     return <EmptyState title={t.common.noData} />;
   }
 
+  // Dönem etiketi çeyreğin bittiği ayı söyler — mali yıl etiketleri (ör.
+  // NVDA'nın FY2027'si) okuyucuyu yanıltır, ay+yıl yanıltmaz.
+  const periodLabel = new Intl.DateTimeFormat(
+    locale === "tr" ? "tr-TR" : "en-US",
+    { month: "short", year: "numeric", timeZone: "UTC" },
+  );
+
   return (
-    <ul className="divide-y divide-line-soft">
-      {rows.map((row) => {
-        const surprise =
-          row.epsActual !== null && row.epsEstimate !== null && row.epsEstimate !== 0
-            ? ((row.epsActual - row.epsEstimate) / Math.abs(row.epsEstimate)) * 100
-            : null;
-        return (
-          <li
-            key={row.id}
-            className="flex items-center justify-between gap-3 px-4 py-2.5 sm:px-5"
-          >
-            <span className="numeral text-xs text-soft">
-              {row.year && row.quarter ? `${row.year} Q${row.quarter}` : row.reportDate}
-            </span>
-            <span className="flex items-center gap-3 text-xs">
-              <span className="numeral text-muted">
-                {row.epsEstimate !== null ? formatPrice(row.epsEstimate, locale) : "—"}
-              </span>
-              <span className="numeral font-semibold text-strong">
-                {row.epsActual !== null ? formatPrice(row.epsActual, locale) : "—"}
-              </span>
-              {surprise !== null && (
-                <ChangePill changePct={surprise} locale={locale} size="sm" />
+    <div className="px-4 pb-3 sm:px-5">
+      <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 border-b border-line-soft py-2 text-[10px] uppercase tracking-wider text-muted">
+        <span>{t.earnings.period}</span>
+        <span className="text-right">{t.calendar.forecast}</span>
+        <span className="text-right">{t.calendar.actual}</span>
+        <span className="text-right">{t.earnings.surprise}</span>
+      </div>
+      <ul className="divide-y divide-line-soft">
+        {rows.slice(0, 6).map((row) => {
+          const surprise =
+            row.epsActual !== null &&
+            row.epsEstimate !== null &&
+            row.epsEstimate !== 0
+              ? ((row.epsActual - row.epsEstimate) / Math.abs(row.epsEstimate)) *
+                100
+              : null;
+          return (
+            <li key={row.reportDate} className="py-2">
+              <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3">
+                <span className="numeral text-xs font-semibold text-strong">
+                  {periodLabel.format(new Date(`${row.reportDate}T12:00:00Z`))}
+                </span>
+                <span className="numeral text-right text-xs text-muted">
+                  {row.epsEstimate !== null
+                    ? formatPrice(row.epsEstimate, locale)
+                    : "—"}
+                </span>
+                <span className="numeral text-right text-xs font-semibold text-strong">
+                  {row.epsActual !== null
+                    ? formatPrice(row.epsActual, locale)
+                    : "—"}
+                </span>
+                <span className="text-right">
+                  {surprise !== null ? (
+                    <ChangePill changePct={surprise} locale={locale} size="sm" />
+                  ) : (
+                    <span className="text-xs text-muted">—</span>
+                  )}
+                </span>
+              </div>
+              {(row.revenueActual !== null || row.revenueEstimate !== null) && (
+                <p className="numeral mt-1 text-[11px] text-muted">
+                  {t.earnings.revenueShort}:{" "}
+                  {row.revenueEstimate !== null && (
+                    <span>${formatCompact(row.revenueEstimate, locale)}</span>
+                  )}
+                  {row.revenueEstimate !== null && row.revenueActual !== null && (
+                    <span aria-hidden> → </span>
+                  )}
+                  {row.revenueActual !== null && (
+                    <span className="font-semibold text-soft">
+                      ${formatCompact(row.revenueActual, locale)}
+                    </span>
+                  )}
+                </p>
               )}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 

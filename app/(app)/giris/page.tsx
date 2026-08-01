@@ -6,8 +6,10 @@ export default async function SignInPage() {
   const { t } = await getI18n();
 
   return (
-    <div className="py-10">
+    <div className="flex min-h-[70dvh] items-center py-8">
       <AuthForm
+        brandName={t.brand.name}
+        tagline={t.brand.tagline}
         title={t.auth.signInTitle}
         subtitle={t.auth.signInSubtitle}
         action={signInAction}

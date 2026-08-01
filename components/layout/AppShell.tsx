@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Settings, LogIn } from "lucide-react";
@@ -10,6 +11,10 @@ import { cn } from "@/lib/utils";
 export type ShellLabels = {
   brandName: string;
   nav: Record<string, string>;
+  groupMarket: string;
+  groupFollow: string;
+  clockNy: string;
+  clockIst: string;
   search: string;
   settings: string;
   signIn: string;
@@ -31,6 +36,60 @@ function isActive(pathname: string, href: string): boolean {
   return pathname.startsWith(href);
 }
 
+/* --------------------------------------------------------------------------
+   Çifte saat — panonun alt köşesindeki alet göstergesi.
+   Dakika hassasiyeti yeter; 15 sn'de bir kontrol edilir, değer ancak dakika
+   değişince yenilenir. Sunucuda "--:--" basılır, hydration uyuşmazlığı olmaz.
+   -------------------------------------------------------------------------- */
+
+const NY_CLOCK = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "America/New_York",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+const IST_CLOCK = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Europe/Istanbul",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+function subscribeClock(onTick: () => void) {
+  const id = window.setInterval(onTick, 15000);
+  return () => window.clearInterval(id);
+}
+
+function useDualClock(): { ny: string; ist: string } {
+  const stamp = useSyncExternalStore(
+    subscribeClock,
+    () => `${NY_CLOCK.format(new Date())}|${IST_CLOCK.format(new Date())}`,
+    () => "--:--|--:--",
+  );
+  const [ny, ist] = stamp.split("|");
+  return { ny, ist };
+}
+
+function SidebarClock({ nyLabel, istLabel }: { nyLabel: string; istLabel: string }) {
+  const { ny, ist } = useDualClock();
+  return (
+    <div className="mx-3 mb-2 rounded-(--radius-md) border border-line-soft bg-surface-sunken/60 px-3 py-2">
+      <div className="flex items-center justify-between">
+        <span className="plate text-[9px]">{nyLabel}</span>
+        <span className="numeral text-xs font-semibold text-strong">{ny}</span>
+      </div>
+      <div className="mt-1 flex items-center justify-between">
+        <span className="plate text-[9px]">{istLabel}</span>
+        <span className="numeral text-xs text-soft">{ist}</span>
+      </div>
+    </div>
+  );
+}
+
+/* --------------------------------------------------------------------------
+   Kabuk
+   -------------------------------------------------------------------------- */
+
 export function AppShell({
   labels,
   signedIn,
@@ -43,75 +102,92 @@ export function AppShell({
   const pathname = usePathname();
   const bottomItems = NAV_ITEMS.filter((item) => item.inBottomBar);
 
+  const groups: { key: "market" | "follow"; label: string }[] = [
+    { key: "market", label: labels.groupMarket },
+    { key: "follow", label: labels.groupFollow },
+  ];
+
   return (
     <div className="flex min-h-dvh">
-      {/* ---- Masaüstü kenar çubuğu ---- */}
-      <aside className="chrome sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r lg:flex">
+      {/* ---- Masaüstü kenar çubuğu — dar, yoğun, alet paneli ---- */}
+      <aside className="chrome sticky top-0 hidden h-dvh w-52 shrink-0 flex-col border-r lg:flex">
         <Link
           href="/"
-          className="flex items-center gap-2.5 px-5 py-5"
+          className="flex items-center gap-2 border-b border-line-soft px-4 py-3.5"
           aria-label={labels.brandName}
         >
-          <BellMark size={26} />
-          <span
-            className="font-mono text-[13px] font-semibold uppercase tracking-[0.14em] text-strong"
-          >
+          <BellMark size={22} />
+          <span className="font-mono text-xs font-semibold uppercase tracking-[0.13em] text-strong">
             {labels.brandName}
           </span>
         </Link>
 
-        <nav className="flex flex-1 flex-col gap-0.5 px-3 py-2">
-          {NAV_ITEMS.map((item) => {
-            const active = isActive(pathname, item.href);
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "relative flex items-center gap-3 rounded-(--radius-md) px-3 py-2 text-sm transition-colors duration-200",
-                  active
-                    ? "bg-primary-wash font-medium text-primary"
-                    : "text-soft hover:bg-surface-elevated hover:text-strong",
+        <nav className="flex flex-1 flex-col overflow-y-auto px-2.5 pt-3">
+          {groups.map((group, groupIndex) => (
+            <div key={group.key} className={cn(groupIndex > 0 && "mt-4")}>
+              <p className="plate px-2 pb-1.5 text-[9px]">{group.label}</p>
+              <div className="flex flex-col gap-px">
+                {NAV_ITEMS.filter((item) => item.group === group.key).map(
+                  (item) => {
+                    const active = isActive(pathname, item.href);
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "relative flex h-9 items-center gap-2.5 rounded-(--radius-md) px-2 text-[13px] transition-colors duration-150",
+                          active
+                            ? "bg-primary-wash font-semibold text-primary"
+                            : "text-soft hover:bg-surface-elevated hover:text-strong",
+                        )}
+                      >
+                        {/* Aktif satırın pirinç işareti — markanın ölçek çentiği */}
+                        {active && (
+                          <span
+                            aria-hidden
+                            className="absolute -left-2.5 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-brass"
+                          />
+                        )}
+                        <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
+                        {labels.nav[item.href]}
+                      </Link>
+                    );
+                  },
                 )}
-              >
-                {/* Aktif satırın pirinç işareti — markanın ölçek çentiği */}
-                {active && (
-                  <span
-                    aria-hidden
-                    className="absolute left-0 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-brass"
-                  />
-                )}
-                <Icon size={17} strokeWidth={active ? 2.2 : 1.8} />
-                {labels.nav[item.href]}
-              </Link>
-            );
-          })}
+              </div>
+            </div>
+          ))}
         </nav>
 
-        <div className="flex flex-col gap-1 border-t border-line-soft px-3 py-3">
-          <div className="flex items-center gap-1 px-1 pb-1">
-            {themeToggle}
-            {localeToggle}
+        <SidebarClock nyLabel={labels.clockNy} istLabel={labels.clockIst} />
+
+        <div className="border-t border-line-soft px-2.5 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              {themeToggle}
+              {localeToggle}
+            </div>
+            {signedIn ? (
+              <Link
+                href="/ayarlar"
+                title={username ?? labels.settings}
+                className="flex h-8 max-w-[6.5rem] items-center gap-1.5 rounded-(--radius-md) px-2 text-xs text-soft transition-colors hover:bg-surface-elevated hover:text-strong"
+              >
+                <Settings size={14} strokeWidth={1.8} />
+                <span className="truncate">{username ?? labels.settings}</span>
+              </Link>
+            ) : (
+              <Link
+                href="/giris"
+                className="flex h-8 items-center gap-1.5 rounded-(--radius-md) px-2 text-xs font-medium text-primary transition-colors hover:bg-primary-wash"
+              >
+                <LogIn size={14} strokeWidth={1.8} />
+                {labels.signIn}
+              </Link>
+            )}
           </div>
-          {signedIn ? (
-            <Link
-              href="/ayarlar"
-              className="flex items-center gap-3 rounded-(--radius-md) px-3 py-2 text-sm text-soft transition-colors hover:bg-surface-elevated hover:text-strong"
-            >
-              <Settings size={17} strokeWidth={1.8} />
-              <span className="truncate">{username ?? labels.settings}</span>
-            </Link>
-          ) : (
-            <Link
-              href="/giris"
-              className="flex items-center gap-3 rounded-(--radius-md) px-3 py-2 text-sm text-soft transition-colors hover:bg-surface-elevated hover:text-strong"
-            >
-              <LogIn size={17} strokeWidth={1.8} />
-              {labels.signIn}
-            </Link>
-          )}
         </div>
       </aside>
 

@@ -22,6 +22,10 @@ export default async function AppLayout({
     nav: Object.fromEntries(
       NAV_ITEMS.map((item) => [item.href, item.label(t)]),
     ),
+    groupMarket: t.nav.groupMarket,
+    groupFollow: t.nav.groupFollow,
+    clockNy: t.nav.clockNy,
+    clockIst: t.nav.clockIst,
     search: t.nav.search,
     settings: t.nav.settings,
     signIn: t.nav.signIn,
@@ -40,6 +44,7 @@ export default async function AppLayout({
           placeholder={t.nav.searchPlaceholder}
           label={t.nav.search}
           emptyLabel={t.stock.notFound}
+          popularLabel={t.nav.searchPopular}
         />
       }
     >

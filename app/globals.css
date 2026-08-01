@@ -290,23 +290,6 @@ h4 {
   border-color: var(--chrome-border);
 }
 
-/* --------------------------------------------------------------------------
-   İmza: cetvel çentiği — başlık altı ölçek işareti.
-   Ürünün ölçüm yapan bir alet olduğunu söyleyen tek motif.
-   -------------------------------------------------------------------------- */
-.notched::after {
-  content: "";
-  display: block;
-  height: 5px;
-  margin-top: 0.5rem;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--brass) 0 1.5px,
-    transparent 1.5px 8px
-  );
-  opacity: 0.85;
-}
-
 /* Piyasa açıkken pirinç nabız. Kapalıyken sabit gri. */
 .pulse-live {
   animation: pulse-live 2.4s var(--ease-brand) infinite;
@@ -408,5 +391,13 @@ h4 {
       var(--primary-wash),
       transparent 70%
     );
+  }
+
+  /* iOS Safari, 16px altı font taşıyan input odaklanınca sayfayı yakınlaştırır.
+     Mobilde tüm form alanları 16px taban kullanır — arama zoom hatasının kökü. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 }

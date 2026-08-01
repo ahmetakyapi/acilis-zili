@@ -13,7 +13,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-5">
-      <h1 className="notched inline-block self-start text-2xl font-semibold">
+      <h1 className="self-start text-2xl font-bold tracking-tight">
         {t.settings.title}
       </h1>
 

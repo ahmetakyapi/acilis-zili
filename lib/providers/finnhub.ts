@@ -296,6 +296,56 @@ export async function getEarningsCalendar(
 }
 
 /* --------------------------------------------------------------------------
+   Bilanço geçmişi — earnings surprises
+   Ücretsiz katman son 4 çeyreğin EPS beklenti/gerçekleşen çiftini verir;
+   takvim tablosunun kapsamadığı geçmiş için tek güvenilir kaynak.
+   -------------------------------------------------------------------------- */
+
+type RawSurprise = {
+  actual: number | null;
+  estimate: number | null;
+  period: string;
+  quarter: number | null;
+  symbol: string;
+  year: number | null;
+};
+
+export type EarningsSurprise = {
+  /** Çeyreğin bittiği tarih (YYYY-MM-DD). */
+  period: string;
+  epsEstimate: number | null;
+  epsActual: number | null;
+  quarter: number | null;
+  year: number | null;
+};
+
+export async function getEarningsSurprises(
+  symbol: string,
+): Promise<ProviderResult<EarningsSurprise[]>> {
+  const result = await finnhubFetch<RawSurprise[]>(
+    "/stock/earnings",
+    { symbol },
+    { revalidate: 21600, tags: [`surprises:${symbol}`] },
+  );
+  if (!result.ok) return result;
+
+  const list = (result.data ?? [])
+    .filter((row) => row.period)
+    .map((row) => ({
+      period: row.period,
+      epsEstimate: row.estimate,
+      epsActual: row.actual,
+      quarter: row.quarter,
+      year: row.year,
+    }));
+
+  if (list.length === 0) {
+    return fail("finnhub", "empty", `${symbol} için bilanço geçmişi yok`);
+  }
+  return ok(list, "finnhub", { fetchedAt: result.fetchedAt });
+}
+
+/* --------------------------------------------------------------------------
    Analist tavsiyeleri ve metrikler
    -------------------------------------------------------------------------- */
 

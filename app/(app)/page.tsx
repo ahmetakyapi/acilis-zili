@@ -13,13 +13,19 @@ import {
 } from "@/components/ui/primitives";
 import {
   getDailyBrief,
+  getEventsBetween,
   getLatestNews,
   getStatus,
   getTodayEvents,
   getEarningsBetween,
   getUserSymbols,
 } from "@/lib/data";
-import { etDateTimeToUtc, formatCountdown, todayEt } from "@/lib/market-hours";
+import {
+  addEtDays,
+  etDateTimeToUtc,
+  formatCountdown,
+  todayEt,
+} from "@/lib/market-hours";
 import { getQuotes } from "@/lib/providers";
 import { INDEX_STRIP } from "@/db/seed/symbols";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -60,11 +66,11 @@ export default async function TodayPage() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="plate">{t.today.title} · ET</p>
-          <h1 className="notched mt-1 inline-block text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
             {formatEtDateLong(status.etDate, locale)}
           </h1>
         </div>
-        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm shadow-(--shadow-card)">
           <span className="flex items-center gap-2">
             <span
               aria-hidden
@@ -80,6 +86,9 @@ export default async function TodayPage() {
             <span className="font-medium text-strong">
               {sessionLabel[status.session]}
             </span>
+          </span>
+          <span aria-hidden className="hidden text-line-strong sm:inline">
+            |
           </span>
           <span className="whitespace-nowrap text-muted">
             {countdownLabel}{" "}
@@ -136,6 +145,21 @@ export default async function TodayPage() {
         </div>
 
         <div className="flex flex-col gap-5 lg:col-span-2">
+          {/* ---- Haftaya bakış — önümüzdeki 7 günün önemli olayları ---- */}
+          <Panel>
+            <PanelHeader
+              title={t.today.weekAhead}
+              action={
+                <Link href="/takvim" className="text-xs text-primary hover:underline">
+                  {t.common.showAll}
+                </Link>
+              }
+            />
+            <Suspense fallback={<ListSkeleton rows={3} />}>
+              <WeekAhead locale={locale} t={t} />
+            </Suspense>
+          </Panel>
+
           {/* ---- Favori özeti ---- */}
           <Suspense fallback={<Skeleton className="h-48 w-full rounded-(--radius-lg)" />}>
             <WatchlistSummary locale={locale} t={t} />
@@ -307,8 +331,10 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
       <PanelHeader title={t.today.briefTitle} />
       {brief ? (
         <div className="px-4 py-4 sm:px-5">
-          <h3 className="text-base font-semibold text-strong">{brief.headline}</h3>
-          <div className="mt-2 text-sm leading-relaxed text-body">
+          <h3 className="text-lg font-bold leading-snug tracking-tight text-strong">
+            {brief.headline}
+          </h3>
+          <div className="mt-2.5 text-[15px] leading-relaxed text-body">
             <BriefBody markdown={brief.bodyMd} />
           </div>
           <DataStamp
@@ -529,6 +555,64 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
         <DataError message={t.data.failed} hint={t.data.failedHint} />
       )}
     </Panel>
+  );
+}
+
+/**
+ * Haftaya bakış — önümüzdeki 7 günün yüksek ve orta önemli olayları.
+ * Gün adı + çift saat: kullanıcı haftayı tek bakışta planlar.
+ */
+async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
+  const today = todayEt();
+  const events = (
+    await getEventsBetween(addEtDays(today, 1), addEtDays(today, 7))
+  ).filter((event) => event.importance !== "low");
+
+  if (events.length === 0) {
+    return <EmptyState title={t.today.weekAheadEmpty} />;
+  }
+
+  return (
+    <ul className="divide-y divide-line-soft">
+      {events.slice(0, 6).map((event) => {
+        const times = event.eventTimeEt
+          ? dualTime(
+              etDateTimeToUtc(event.eventDate, event.eventTimeEt),
+              event.eventTimeEt,
+            )
+          : null;
+        return (
+          <li key={event.id} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
+            <span className="w-24 shrink-0">
+              <span className="block text-xs font-semibold leading-tight text-strong">
+                {formatEtDateLong(event.eventDate, locale)}
+              </span>
+              {times && (
+                <span className="numeral block text-[11px] leading-tight text-muted">
+                  {times.et} ET · {times.tr} TR
+                </span>
+              )}
+            </span>
+            <span
+              aria-hidden
+              className={cn(
+                "size-1.5 shrink-0 rounded-full",
+                event.importance === "high" ? "bg-impact-high" : "bg-impact-med",
+              )}
+            />
+            <span className="min-w-0 flex-1 text-sm leading-snug text-body">
+              {locale === "tr" ? event.titleTr : event.titleEn}
+            </span>
+            {event.forecast && (
+              <span className="numeral shrink-0 text-xs text-muted">
+                {t.calendar.forecast}: {event.forecast}
+                {event.unit === "%" ? "%" : ""}
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
