@@ -1,8 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
 import { EmptyState, Panel } from "@/components/ui/primitives";
-import { getStoryBySlug } from "@/lib/data";
+import { getStoryBySlug, getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { formatEtDateLong } from "@/lib/utils";
 
@@ -21,6 +22,60 @@ export async function generateMetadata(props: PageProps<"/mercek/[slug]">) {
   const story = await getStoryBySlug(slug, locale);
   if (!story) return {};
   return { title: story.title, description: story.dek };
+}
+
+/**
+ * Yazıda geçen şirketler — logolu kartlar.
+ *
+ * Düz sembol rozetleri yerine logo + ad: bir okuyucu "SNDK" ile "NBIS"in
+ * hangi şirket olduğunu bilmek zorunda değil. Logolar sağlayıcının şirket
+ * profilinden geliyor; gelmezse sembolün ilk iki harfi kutuda durur.
+ */
+async function StorySymbols({ symbols }: { symbols: string[] }) {
+  const meta = await getSymbolNames(symbols);
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {symbols.map((symbol) => {
+        const logo = meta[symbol]?.logoUrl;
+        const name = meta[symbol]?.name;
+        return (
+          <Link
+            key={symbol}
+            href={`/hisse/${symbol}`}
+            className="panel-hover flex items-center gap-2 rounded-[11px] border border-line bg-surface py-1.5 pl-1.5 pr-3 transition-colors"
+          >
+            {logo ? (
+              <Image
+                src={logo}
+                alt=""
+                width={26}
+                height={26}
+                className="size-[26px] shrink-0 rounded-md border border-line-soft bg-white object-contain p-px"
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="numeral flex size-[26px] shrink-0 items-center justify-center rounded-md bg-primary-wash text-[9px] font-bold text-primary"
+              >
+                {symbol.slice(0, 2)}
+              </span>
+            )}
+            <span className="min-w-0">
+              <span className="numeral block text-[12px] font-bold leading-tight text-strong">
+                {symbol}
+              </span>
+              {name && (
+                <span className="block max-w-32 truncate text-[10.5px] leading-tight text-muted">
+                  {name}
+                </span>
+              )}
+            </span>
+          </Link>
+        );
+      })}
+    </div>
+  );
 }
 
 export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
@@ -82,17 +137,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
         <p className="text-[17px] leading-[27px] text-soft">{story.dek}</p>
 
         {story.symbols && story.symbols.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            {story.symbols.map((symbol) => (
-              <Link
-                key={symbol}
-                href={`/hisse/${symbol}`}
-                className="numeral rounded-lg border border-line bg-surface px-2 py-1 text-[11.5px] font-bold text-body transition-colors hover:border-line-strong hover:bg-primary-tint hover:text-primary"
-              >
-                {symbol}
-              </Link>
-            ))}
-          </div>
+          <StorySymbols symbols={story.symbols} />
         )}
       </header>
 

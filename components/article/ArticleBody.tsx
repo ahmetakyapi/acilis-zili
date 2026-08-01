@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ArticleChart } from "./ArticleChart";
+import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
 import { cn } from "@/lib/utils";
 
 /* ==========================================================================
@@ -149,7 +151,8 @@ type Block =
       kind: "bars";
       label: string;
       items: { name: string; value: number; display: string }[];
-    };
+    }
+  | { kind: "chart"; symbol: string; range: ChartRange; caption?: string };
 
 function splitRow(line: string): string[] {
   return line
@@ -211,6 +214,26 @@ function parseBlocks(markdown: string): Block[] {
             return { when, text: rest.join(" ") };
           }),
         });
+        continue;
+      }
+
+      /* ::: grafik MU | 1M | Micron Temmuz'da yüzde 34 düştü
+         Sembolün gerçek fiyat serisi. Aralık geçersizse 1M'e düşer. */
+      if (kindWord === "grafik") {
+        const [symbolRaw, rangeRaw, ...captionParts] = (body[0] ?? label)
+          .split("|")
+          .map((c) => c.trim());
+        const range = CHART_RANGES.includes(rangeRaw as ChartRange)
+          ? (rangeRaw as ChartRange)
+          : "1M";
+        if (symbolRaw) {
+          blocks.push({
+            kind: "chart",
+            symbol: symbolRaw.toUpperCase(),
+            range,
+            caption: captionParts.join(" ") || undefined,
+          });
+        }
         continue;
       }
 
@@ -589,6 +612,16 @@ export function ArticleBody({
               </div>
             );
           }
+
+          case "chart":
+            return (
+              <ArticleChart
+                key={key}
+                symbol={block.symbol}
+                range={block.range}
+                caption={block.caption}
+              />
+            );
 
           case "callout": {
             const tone = CALLOUT[block.tone];
