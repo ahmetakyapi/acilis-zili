@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChangePill, DataStamp, EmptyState, PageHeader } from "@/components/ui/primitives";
+import { ChangePill, DataStamp, EmptyState, Panel } from "@/components/ui/primitives";
 import { primaryOnly } from "@/db/seed/indices";
 import { getCompanies, getStatus } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
@@ -67,7 +67,7 @@ function SortHead({
   return (
     <th
       key={col}
-      className={cn("num", className)}
+      className={cn("px-3 py-2.5 text-right font-medium", className)}
     >
       <Link
         href={href}
@@ -152,31 +152,32 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageHeader
-        eyebrow={t.companies.title}
-        title={t.companies.directory}
-        subtitle={t.companies.subtitle}
-      />
+    <div className="flex flex-col gap-5">
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          {t.companies.title}
+        </h1>
+        <p className="mt-2 text-sm text-soft">{t.companies.subtitle}</p>
+      </header>
 
       {/* Kategori şeridi — kaydırılabilir olduğu kenar solmasıyla belli olur */}
       {sectors.length > 0 && (
         <div className="relative">
-          <div className="scroll-x-hint flex items-end gap-4 pb-1 pr-12">
+          <div className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12">
             <Link
               href={sectorHref(null)}
               className={cn(
-                "min-h-[32px] shrink-0 whitespace-nowrap border-b px-0.5 pb-1 text-[13px] tracking-[0.04em] transition-colors",
+                "min-h-[34px] shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
                 !sectorFilter
-                  ? "border-up text-up"
-                  : "border-transparent text-dim hover:text-ink",
+                  ? "bg-primary text-white shadow-sm"
+                  : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
               )}
             >
               {t.companies.allSectors}
               <span
                 className={cn(
-                  "numeral ml-1.5 text-[11px]",
-                  !sectorFilter ? "text-up" : "text-faint",
+                  "numeral ml-1.5",
+                  !sectorFilter ? "text-white/70" : "text-muted",
                 )}
               >
                 {companies.length}
@@ -189,17 +190,17 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                   key={sector}
                   href={sectorHref(active ? null : sector)}
                   className={cn(
-                    "min-h-[32px] shrink-0 whitespace-nowrap border-b px-0.5 pb-1 text-[13px] tracking-[0.04em] transition-colors",
+                    "min-h-[34px] shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
                     active
-                      ? "border-up text-up"
-                      : "border-transparent text-dim hover:text-ink",
+                      ? "bg-primary text-white shadow-sm"
+                      : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
                   )}
                 >
                   {sector}
                   <span
                     className={cn(
-                      "numeral ml-1.5 text-[11px]",
-                      active ? "text-up" : "text-faint",
+                      "numeral ml-1.5",
+                      active ? "text-white/70" : "text-muted",
                     )}
                   >
                     {sectorCounts.get(sector)}
@@ -216,17 +217,17 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         </div>
       )}
 
-      <section>
+      <Panel>
         {rows.length === 0 ? (
           <EmptyState title={t.companies.empty} hint={t.companies.emptyHint} />
         ) : (
           <div className="scroll-x">
-            <table className="sheet min-w-[680px]">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
-                <tr>
-                  <th className="w-9">#</th>
-                  <th>{t.companies.company}</th>
-                  <th className="hidden w-[190px] md:table-cell">
+                <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
+                  <th className="w-10 px-4 py-2.5 font-medium sm:px-5">#</th>
+                  <th className="px-3 py-2.5 font-medium">{t.companies.company}</th>
+                  <th className="hidden px-3 py-2.5 font-medium md:table-cell">
                     {t.companies.sector}
                   </th>
                   <SortHead
@@ -268,10 +269,10 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                       key={company.symbol}
                       className="transition-colors hover:bg-primary-tint"
                     >
-                      <td className="numeral text-[12px] text-faint">
+                      <td className="numeral px-4 py-2.5 text-xs text-muted sm:px-5">
                         {index + 1}
                       </td>
-                      <td>
+                      <td className="px-3 py-2.5">
                         <Link
                           href={`/hisse/${company.symbol}`}
                           className="flex items-center gap-2.5"
@@ -282,12 +283,12 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                               alt=""
                               width={34}
                               height={34}
-                              className="shrink-0 object-contain"
+                              className="rounded-md border border-line-soft bg-white object-contain p-0.5"
                             />
                           ) : (
                             <span
                               aria-hidden
-                              className="numeral flex size-[34px] shrink-0 items-center justify-center border border-hairline text-[10px] font-semibold text-faint"
+                              className="numeral flex size-[34px] items-center justify-center rounded-md bg-primary-wash text-[9px] font-bold text-primary"
                             >
                               {company.symbol.slice(0, 2)}
                             </span>
@@ -302,13 +303,13 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                           </span>
                         </Link>
                       </td>
-                      <td className="hidden max-w-0 truncate text-[12.5px] text-faint md:table-cell">
+                      <td className="hidden max-w-40 truncate px-3 py-2.5 text-xs text-soft md:table-cell">
                         {company.industry ?? "—"}
                       </td>
-                      <td className="num text-[14px] text-body">
+                      <td className="numeral px-3 py-2.5 text-right text-body">
                         {quote ? formatPrice(quote.price, locale) : "—"}
                       </td>
-                      <td className="num">
+                      <td className="px-3 py-2.5 text-right">
                         {quote ? (
                           <ChangePill
                             changePct={quote.changePct}
@@ -319,12 +320,12 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                           <span className="text-xs text-muted">—</span>
                         )}
                       </td>
-                      <td className="num text-[14px] text-body">
+                      <td className="numeral px-3 py-2.5 text-right text-body">
                         {company.marketCap
                           ? `$${formatCompact(company.marketCap, locale)}`
                           : "—"}
                       </td>
-                      <td className="num hidden text-[13.5px] text-faint sm:table-cell">
+                      <td className="numeral hidden px-4 py-2.5 text-right text-soft sm:table-cell sm:px-5">
                         {formatVolume(quote?.volume ?? company.volume, locale)}
                       </td>
                     </tr>
@@ -334,7 +335,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
             </table>
           </div>
         )}
-      </section>
+      </Panel>
 
       {quotesResult.ok && (
         <DataStamp

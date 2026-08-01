@@ -1,21 +1,35 @@
 import type { Metadata, Viewport } from "next";
-import { Source_Serif_4 } from "next/font/google";
+import { Fraunces, Schibsted_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import { getI18n, getTheme } from "@/lib/i18n";
 import "./globals.css";
 
 /**
- * Tek aile: Source Serif 4 — başlık, gövde, sayı, arayüz kromu hepsi.
- * Gazete baskısında sans-serif UI kromu yoktur; serif kromun kendisidir.
- * İtalik gerçek italiktir (sentetik eğim değil), 400 ağırlıkta yüklenir.
- *
  * Tuzak: next/font `variable` adı @theme token adıyla aynı olursa CSS'te
  * dairesel referans oluşur ve sessizce çöker. Bu yüzden `-face` soneki.
  */
-const serifFace = Source_Serif_4({
-  variable: "--font-serif-face",
+/**
+ * Display — Fraunces. Yalnızca sayfa manşetlerinde ve günün bülteni
+ * başlığında görünür; arayüz kromuna hiç girmez. Değişken eksenleri var:
+ * `opsz` puntoya göre kontrastı ayarlar, `SOFT` köşeleri yumuşatır — büyük
+ * puntoda karakterli, küçükte sakin durmasını bu sağlıyor.
+ */
+const displayFace = Fraunces({
+  variable: "--font-display-face",
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "600"],
-  style: ["normal", "italic"],
+  axes: ["SOFT", "WONK", "opsz"],
+  display: "swap",
+});
+
+const bodyFace = Schibsted_Grotesk({
+  variable: "--font-body-face",
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+});
+
+const monoFace = IBM_Plex_Mono({
+  variable: "--font-mono-face",
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -52,8 +66,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f3f2f2" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b1622" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f4f1" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a1420" },
   ],
 };
 
@@ -71,7 +85,7 @@ export default async function RootLayout({
       lang={locale}
       data-theme={theme}
       suppressHydrationWarning
-      className={`${serifFace.variable} h-full`}
+      className={`${displayFace.variable} ${bodyFace.variable} ${monoFace.variable} h-full`}
     >
       <body className="min-h-full antialiased">{children}</body>
     </html>

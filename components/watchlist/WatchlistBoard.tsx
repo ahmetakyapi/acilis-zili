@@ -121,7 +121,7 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex h-11 items-center justify-center gap-2 self-start border border-dashed border-rule px-4 text-sm text-dim transition-colors hover:border-up hover:text-up"
+        className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-(--radius-md) border border-dashed border-line-strong px-4 text-sm font-medium text-soft transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary"
       >
         <Plus size={16} />
         {labels.newList}
@@ -148,7 +148,7 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
             autoFocus
             maxLength={40}
             placeholder={labels.listNamePlaceholder}
-            className="h-11 border border-rule bg-transparent px-3.5 text-[15px] text-ink outline-none transition-colors placeholder:text-faint focus:border-up"
+            className="h-11 rounded-(--radius-md) border border-line bg-surface-elevated px-3.5 text-sm text-strong outline-none transition-colors placeholder:text-muted focus:border-line-focus"
           />
         </label>
         <fieldset className="flex items-center gap-1.5 pb-2">
@@ -175,14 +175,14 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
         <div className="flex items-center gap-2 pb-0.5">
           <button
             type="submit"
-            className="inline-flex h-11 items-center justify-center bg-btn px-5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+            className="inline-flex h-11 items-center justify-center rounded-(--radius-md) bg-primary px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover"
           >
             {labels.createList}
           </button>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="inline-flex size-11 items-center justify-center text-faint transition-colors hover:text-ink"
+            className="inline-flex size-11 items-center justify-center rounded-(--radius-md) text-muted transition-colors hover:bg-surface-elevated hover:text-strong"
             aria-label={labels.cancel}
           >
             <X size={16} />
@@ -214,7 +214,7 @@ function ListPanel({
 
   return (
     <section className="panel">
-      <div className="flex items-center justify-between gap-3 border-b border-rule pb-2.5">
+      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3 sm:px-5">
         <h2 className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-strong">
           <span
             aria-hidden
@@ -239,7 +239,7 @@ function ListPanel({
           }}
           aria-label={`${labels.deleteList}: ${list.name}`}
           title={labels.deleteList}
-          className="inline-flex size-8 items-center justify-center text-faint transition-colors hover:text-down"
+          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted transition-colors hover:bg-down-wash hover:text-down"
         >
           <Trash2 size={14} />
         </button>
@@ -399,7 +399,7 @@ function SortableRows({
                 onClick={() => nudge(item.id, -1)}
                 disabled={index === 0}
                 aria-label={`${labels.moveUp}: ${item.symbol}`}
-                className="flex h-5 w-6 items-center justify-center text-faint transition-colors hover:text-ink disabled:opacity-25"
+                className="flex h-5 w-6 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25"
               >
                 <ChevronUp size={13} />
               </button>
@@ -408,7 +408,7 @@ function SortableRows({
                 onClick={() => nudge(item.id, 1)}
                 disabled={index === ordered.length - 1}
                 aria-label={`${labels.moveDown}: ${item.symbol}`}
-                className="flex h-5 w-6 items-center justify-center text-faint transition-colors hover:text-ink disabled:opacity-25"
+                className="flex h-5 w-6 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25"
               >
                 <ChevronDown size={13} />
               </button>
@@ -423,7 +423,7 @@ function SortableRows({
                 router.refresh();
               }}
               aria-label={`${labels.deleteList}: ${item.symbol}`}
-              className="inline-flex size-7 shrink-0 items-center justify-center text-faint transition-colors hover:text-down"
+              className="inline-flex size-7 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 transition-colors hover:bg-down-wash hover:text-down"
             >
               <Trash2 size={13} />
             </button>
@@ -497,14 +497,14 @@ function AddSymbolRow({
 
   if (!open) {
     return (
-      <div className="border-b border-hairline pb-2.5">
+      <div className="border-b border-line-soft px-4 py-2.5 sm:px-5">
         <button
           type="button"
           onClick={() => {
             setOpen(true);
             window.setTimeout(() => inputRef.current?.focus(), 20);
           }}
-          className="inline-flex min-h-[38px] items-center gap-2 text-[14px] font-semibold text-up transition-opacity hover:opacity-80"
+          className="inline-flex min-h-[38px] items-center gap-2 rounded-(--radius-md) px-2 text-sm font-medium text-primary transition-colors hover:bg-primary-wash"
         >
           <Plus size={15} />
           {labels.addSymbol}
@@ -516,7 +516,7 @@ function AddSymbolRow({
   const shownHits = query.trim() ? hits.slice(0, 6) : [];
 
   return (
-    <div className="border-b border-hairline pb-3">
+    <div className="border-b border-line-soft px-4 py-3 sm:px-5">
       <div className="flex items-center gap-2">
         <Search size={15} className="shrink-0 text-muted" strokeWidth={1.8} />
         <input
@@ -541,7 +541,7 @@ function AddSymbolRow({
           type="button"
           onClick={reset}
           aria-label={labels.cancel}
-          className="flex size-8 shrink-0 items-center justify-center text-faint transition-colors hover:text-ink"
+          className="flex size-8 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted transition-colors hover:bg-surface hover:text-strong"
         >
           <X size={15} />
         </button>
@@ -549,7 +549,7 @@ function AddSymbolRow({
 
       {/* Sonuçlar ya da hızlı öneriler */}
       {shownHits.length > 0 ? (
-        <ul className="mt-2 border border-hairline">
+        <ul className="mt-2 overflow-hidden rounded-(--radius-md) border border-line-soft">
           {shownHits.map((hit) => (
             <li key={hit.symbol}>
               <button
@@ -579,7 +579,7 @@ function AddSymbolRow({
               type="button"
               disabled={busy}
               onClick={() => void add(symbol)}
-              className="numeral min-h-[32px] border border-rule px-3 text-[13px] text-ink transition-colors hover:border-up hover:text-up disabled:opacity-50"
+              className="numeral min-h-[32px] rounded-full border border-line bg-surface px-3 text-xs font-semibold text-strong transition-colors hover:border-line-strong hover:bg-primary-tint disabled:opacity-50"
             >
               {symbol}
             </button>

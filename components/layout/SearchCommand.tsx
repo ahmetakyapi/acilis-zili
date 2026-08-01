@@ -151,13 +151,15 @@ export function SearchCommand({
         type="button"
         onClick={openPalette}
         aria-label={label}
-        className="inline-flex items-center gap-2 text-[13px] text-faint transition-colors hover:text-dim lg:gap-2.5 lg:border lg:border-rule lg:px-3 lg:py-1.5"
+        className="inline-flex items-center gap-2 rounded-(--radius-md) border border-line px-2.5 py-1.5 text-sm text-muted transition-colors hover:border-line-strong hover:text-soft lg:w-64 lg:justify-between"
       >
-        <Search size={15} strokeWidth={1.5} />
-        <span className="hidden lg:inline">{label}</span>
-        <span className="hidden text-[11px] tracking-[0.06em] lg:ml-3 lg:inline">
-          ⌘K
+        <span className="flex items-center gap-2">
+          <Search size={16} strokeWidth={1.8} />
+          <span className="hidden lg:inline">{label}</span>
         </span>
+        <kbd className="numeral hidden rounded border border-line px-1.5 py-0.5 text-[10px] lg:inline">
+          ⌘K
+        </kbd>
       </button>
 
       {/* Portal: sticky/backdrop-filter atalarının stacking bağlamından kaçar —

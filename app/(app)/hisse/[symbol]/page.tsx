@@ -11,6 +11,7 @@ import {
   DataError,
   DataStamp,
   EmptyState,
+  Panel,
   PanelHeader,
   Skeleton,
 } from "@/components/ui/primitives";
@@ -75,13 +76,13 @@ export default async function StockPage(
         </Suspense>
 
         <div className="grid gap-5 lg:grid-cols-3">
-          <section className="min-w-0 lg:col-span-2">
+          <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
             <Suspense fallback={<Skeleton className="h-80 w-full" />}>
               <ChartSection symbol={symbol} locale={locale} t={t} />
             </Suspense>
-          </section>
+          </Panel>
 
-          <Suspense fallback={<Skeleton className="h-96 w-full " />}>
+          <Suspense fallback={<Skeleton className="h-96 w-full rounded-(--radius-xl)" />}>
             <FundCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </div>
@@ -97,21 +98,21 @@ export default async function StockPage(
 
       {/* Üst blok — grafik solda geniş, şirketin kimliği sağda */}
       <div className="grid gap-5 lg:grid-cols-3">
-        <section className="min-w-0 lg:col-span-2">
+        <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
           <Suspense fallback={<Skeleton className="h-80 w-full" />}>
             <ChartSection symbol={symbol} locale={locale} t={t} />
           </Suspense>
-        </section>
+        </Panel>
 
         <div className="flex min-w-0 flex-col gap-5">
-          <section>
+          <Panel>
             <PanelHeader title={t.stock.profile} />
             <Suspense fallback={<ListSkeleton rows={5} />}>
               <ProfileCard symbol={symbol} locale={locale} t={t} />
             </Suspense>
-          </section>
+          </Panel>
 
-          <Suspense fallback={<Skeleton className="h-24 w-full " />}>
+          <Suspense fallback={<Skeleton className="h-24 w-full rounded-(--radius-xl)" />}>
             <UpcomingEarnings symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </div>
@@ -121,44 +122,44 @@ export default async function StockPage(
           Eskiden bunlar tek sütuna dizildiği için sağ kolon uzayıp sol taraf
           boş kalıyordu; artık sayfanın tam genişliğini kullanıyorlar. */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(17rem,1fr))] gap-5">
-        <section>
+        <Panel>
           <PanelHeader title={t.stock.metrics} />
           <Suspense fallback={<ListSkeleton rows={5} />}>
             <MetricsCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
-        </section>
+        </Panel>
 
-        <section>
+        <Panel>
           <PanelHeader title={t.stock.analysts} />
           <Suspense fallback={<ListSkeleton rows={3} />}>
             <AnalystCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
-        </section>
+        </Panel>
 
-        <Suspense fallback={<Skeleton className="h-56 w-full " />}>
+        <Suspense fallback={<Skeleton className="h-56 w-full rounded-(--radius-xl)" />}>
           <ComplianceCard symbol={symbol} locale={locale} t={t} />
         </Suspense>
       </div>
 
       {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
-      <section>
+      <Panel>
         <PanelHeader title={t.stock.pastEarnings} />
         <Suspense fallback={<ListSkeleton rows={4} />}>
           <PastEarnings symbol={symbol} locale={locale} t={t} />
         </Suspense>
-      </section>
+      </Panel>
 
-      <Suspense fallback={<Skeleton className="h-48 w-full " />}>
+      <Suspense fallback={<Skeleton className="h-48 w-full rounded-(--radius-xl)" />}>
         <PeersCard symbol={symbol} locale={locale} t={t} />
       </Suspense>
 
       {/* Haberler en altta — mobilde de masaüstünde de son durak */}
-      <section>
+      <Panel>
         <PanelHeader title={t.stock.companyNews} />
         <Suspense fallback={<ListSkeleton rows={4} />}>
           <CompanyNews symbol={symbol} locale={locale} t={t} />
         </Suspense>
-      </section>
+      </Panel>
     </div>
   );
 }
@@ -216,13 +217,13 @@ async function StockHeader({
             alt=""
             width={56}
             height={56}
-            className="shrink-0 object-contain"
+            className="rounded-(--radius-lg) border border-line bg-white object-contain p-1.5 shadow-(--shadow-card)"
           />
         ) : fund ? (
           // Fonun logosu yok; ülke/piyasa bayrağı kimliği taşır
           <span
             aria-hidden
-            className="flex size-14 shrink-0 items-center justify-center border border-rule text-2xl"
+            className="flex size-14 shrink-0 items-center justify-center rounded-(--radius-lg) border border-line bg-surface-elevated text-2xl shadow-(--shadow-card)"
           >
             {fund.flag}
           </span>
@@ -309,7 +310,7 @@ function HeaderSkeleton() {
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex items-center gap-3">
-        <Skeleton className="size-11 " />
+        <Skeleton className="size-11 rounded-(--radius-md)" />
         <div className="flex flex-col gap-2">
           <Skeleton className="h-6 w-24" />
           <Skeleton className="h-4 w-40" />
@@ -423,7 +424,7 @@ async function UpcomingEarnings({
   };
 
   return (
-    <section className="border-t-2 border-ink pt-3">
+    <Panel className="border-l-2 border-l-brass p-4 sm:p-5">
       <p className="plate text-[9px]">{t.stock.nextEarnings}</p>
       <p className="numeral mt-1.5 text-lg font-bold text-strong">
         {formatEtDateLong(next.reportDate, locale)}
@@ -457,7 +458,7 @@ async function UpcomingEarnings({
           )}
         </dl>
       )}
-    </section>
+    </Panel>
   );
 }
 
@@ -488,7 +489,7 @@ async function FundCard({
   ];
 
   return (
-    <section>
+    <Panel>
       <PanelHeader title={t.stock.fundProfile} />
       <div className="px-4 py-3 sm:px-5">
         {about && (
@@ -513,7 +514,7 @@ async function FundCard({
             : t.stock.fundNoteIndex}
         </p>
       </div>
-    </section>
+    </Panel>
   );
 }
 
@@ -815,9 +816,9 @@ async function PastEarnings({
     <div>
       {/* Tablo dar ekranda kendi kabında kayar — sayfa yana kaymaz. */}
       <div className="scroll-x">
-        <table className="sheet min-w-[640px]">
+        <table className="w-full min-w-[560px] text-sm">
         <thead>
-          <tr>
+          <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
             <th className="px-4 py-2.5 font-medium sm:px-5">
               {t.earnings.period}
             </th>
@@ -841,7 +842,7 @@ async function PastEarnings({
                     tutturup geliri ıskalayan şirketi de satar. Beklenen ve
                     gerçekleşen ayrı kolonlarda durur ki karşılaştırılabilsin.
                     Dar ekranda ikisi de gizlenir — tablo kaydırmadan sığar. */}
-                <th className="hidden px-2 py-2.5 text-right font-medium lg:table-cell sm:px-3">
+                <th className="hidden px-2 py-2.5 text-right font-medium sm:px-3 lg:table-cell">
                   {t.earnings.revenueShort} · {t.calendar.forecast}
                 </th>
                 <th className="hidden px-4 py-2.5 text-right font-medium sm:table-cell sm:px-5">
@@ -895,7 +896,7 @@ async function PastEarnings({
                 </td>
                 {hasRevenue && (
                   <>
-                    <td className="numeral hidden px-2 py-2.5 text-right text-muted lg:table-cell sm:px-3">
+                    <td className="numeral hidden px-2 py-2.5 text-right text-muted sm:px-3 lg:table-cell">
                       {row.revenueEstimate !== null
                         ? `$${formatCompact(row.revenueEstimate, locale)}`
                         : "—"}
@@ -919,8 +920,8 @@ async function PastEarnings({
       </div>
 
       {/* Tablo kısaltmalarının karşılığı — EPS ne demek, sapma neye göre.
-          Gazete dipnotu: rakamı okuyanın sözlüğe gitmesi gerekmesin. */}
-      <p className="mt-3 border-t border-hairline pt-3 text-[12.5px] leading-relaxed text-muted">
+          Rakamı okuyanın sözlüğe gitmesi gerekmesin. */}
+      <p className="mt-3 border-t border-line-soft px-4 pt-3 text-[12.5px] leading-relaxed text-muted sm:px-5">
         <b className="font-semibold text-soft">{t.earnings.epsFull}</b>{" "}
         {t.earnings.epsExplainer}
       </p>
@@ -967,10 +968,10 @@ async function ComplianceCard({
 
   const verdictClass =
     result.verdict === "pass"
-      ? "text-up"
+      ? "bg-up-wash text-up"
       : result.verdict === "fail"
-        ? "text-down"
-        : "text-ink";
+        ? "bg-down-wash text-down"
+        : "bg-brass-wash text-brass";
 
   const ratios: [string, number | null][] = [
     [t.stock.complianceDebt, result.debtRatio],
@@ -978,12 +979,12 @@ async function ComplianceCard({
   ];
 
   return (
-    <section>
+    <Panel>
       <PanelHeader title={t.stock.compliance} />
       <div className="px-4 py-4 sm:px-5">
         <span
           className={cn(
-            "inline-flex text-[13px] font-semibold uppercase tracking-[0.06em]",
+            "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
             verdictClass,
           )}
         >
@@ -1046,7 +1047,7 @@ async function ComplianceCard({
           {t.stock.complianceDisclaimer}
         </p>
       </div>
-    </section>
+    </Panel>
   );
 }
 
@@ -1084,7 +1085,7 @@ async function PeersCard({
   const quotes = result.ok ? result.data : {};
 
   return (
-    <section>
+    <Panel>
       <PanelHeader title={t.stock.peers} />
       {member?.sub && (
         <p className="border-b border-line-soft px-4 py-2 text-[11px] text-muted sm:px-5">
@@ -1094,18 +1095,14 @@ async function PeersCard({
           </span>
         </p>
       )}
-      {/* Kutu yok: sütunlar kılcal çizgiyle ayrılır, gazete sütun ayıracı gibi. */}
-      <ul className="grid grid-cols-2 lg:grid-cols-4">
+      <ul className="grid grid-cols-2 gap-2.5 p-4 lg:grid-cols-4 sm:px-5">
         {ranked.map((peer) => {
           const quote = quotes[peer.symbol];
           return (
-            <li
-              key={peer.symbol}
-              className="min-w-0 border-b border-hairline [&:nth-child(2n)]:border-l lg:[&:nth-child(2n)]:border-l-0 lg:[&:not(:nth-child(4n+1))]:border-l"
-            >
+            <li key={peer.symbol} className="min-w-0">
               <Link
                 href={`/hisse/${peer.symbol}`}
-                className="flex h-full flex-col justify-between gap-2.5 px-4 py-3 transition-colors hover:bg-primary-tint"
+                className="flex h-full flex-col justify-between gap-2.5 rounded-(--radius-lg) border border-line-soft bg-surface-elevated px-3.5 py-3 transition-colors hover:border-line-strong hover:bg-primary-tint"
               >
                 <span className="min-w-0">
                   <span className="numeral block text-sm font-bold text-strong">
@@ -1134,7 +1131,7 @@ async function PeersCard({
           );
         })}
       </ul>
-    </section>
+    </Panel>
   );
 }
 
@@ -1222,7 +1219,7 @@ async function CompanyNews({
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block py-3 transition-colors hover:bg-primary-tint"
+                className="block px-4 py-3 transition-colors hover:bg-surface-elevated sm:px-5"
               >
                 {inner}
               </a>

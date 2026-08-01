@@ -3,8 +3,8 @@ import {
   DataStamp,
   EmptyState,
   PageHeader,
+  Panel,
   PanelHeader,
-  Segmented,
 } from "@/components/ui/primitives";
 import { Sparkline } from "@/components/ui/Sparkline";
 import {
@@ -112,16 +112,33 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
       <YieldStrip locale={locale} t={t} />
 
       {/* Endeks seçici */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Segmented
-          ariaLabel={t.markets.constituents}
-          options={INDEX_TABS.map((entry) => ({
-            href: `/piyasalar?endeks=${entry.key}`,
-            label: `${entry.label} (${entry.members.length})`,
-            active: entry.key === tab,
-          }))}
-        />
-        <span className="numeral text-[11.5px] text-faint">
+      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+        {INDEX_TABS.map((entry) => {
+          const activeTab = entry.key === tab;
+          return (
+            <Link
+              key={entry.key}
+              href={`/piyasalar?endeks=${entry.key}`}
+              className={cn(
+                "flex min-h-[38px] items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors",
+                activeTab
+                  ? "bg-primary text-white shadow-sm"
+                  : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
+              )}
+            >
+              {entry.label}
+              <span
+                className={cn(
+                  "numeral text-xs font-normal",
+                  activeTab ? "text-white/70" : "text-muted",
+                )}
+              >
+                {entry.members.length}
+              </span>
+            </Link>
+          );
+        })}
+        <span className="numeral ml-auto text-[10px] text-muted">
           {t.markets.asOf}: {formatEtDateShort(INDEX_COMPOSITION_DATE, locale)}
         </span>
       </div>
@@ -163,10 +180,8 @@ async function IndexCards({
 
   if (!quotesResult.ok) return null;
 
-  /* Kutu yok: endeksler gazete sütunu gibi kılcal dikey kuralla ayrılır.
-     Seçili endeks alt kenarındaki mürekkep çizgisiyle belli olur. */
   return (
-    <div className="grid gap-y-8 sm:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-3">
       {INDEX_TABS.map((entry, index) => {
         const quote = quotesResult.data[entry.proxy];
         const bars = barResults[index];
@@ -178,57 +193,53 @@ async function IndexCards({
           <Link
             key={entry.key}
             href={`/piyasalar?endeks=${entry.key}&sirala=${sort}&yon=${dir}`}
-            aria-current={selected ? "true" : undefined}
-            className={cn(
-              "group block px-0 pb-3 transition-colors sm:px-7 sm:first:pl-0 sm:last:pr-0",
-              index > 0 && "sm:border-l sm:border-rule",
-              selected ? "border-b-2 border-b-ink" : "border-b border-b-hairline",
-            )}
+            className="group"
           >
-            <div className="flex items-baseline gap-2">
-              <span className="text-[19px] font-semibold text-ink">
-                {entry.label}
-              </span>
-              <span className="numeral text-[12px] tracking-[0.06em] text-faint">
-                {entry.proxy}
-              </span>
-            </div>
-            {quote ? (
-              <>
-                <p className="tote mt-1.5 text-[34px] leading-none">
-                  {formatPrice(quote.price, locale)}
-                </p>
-                <p
-                  className={cn(
-                    "numeral mt-1.5 text-[14px]",
-                    tone === "up"
-                      ? "text-up"
-                      : tone === "down"
-                        ? "text-down"
-                        : "text-muted",
+            <Panel
+              className={cn(
+                "panel-hover flex h-full flex-col p-4",
+                selected && "border-primary-faint bg-primary-tint",
+              )}
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-sm font-semibold text-strong">{entry.label}</p>
+                <p className="numeral text-[10px] text-muted">{entry.proxy}</p>
+              </div>
+              {quote ? (
+                <>
+                  <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                    <p className="tote text-2xl">
+                      {formatPrice(quote.price, locale)}
+                    </p>
+                    <p
+                      className={cn(
+                        "numeral text-sm font-semibold",
+                        tone === "up"
+                          ? "text-up"
+                          : tone === "down"
+                            ? "text-down"
+                            : "text-muted",
+                      )}
+                    >
+                      {formatPercent(quote.changePct, locale)}
+                    </p>
+                  </div>
+                  {points.length > 1 && (
+                    <Sparkline
+                      points={points}
+                      title={`${entry.label} · 1G`}
+                      tone={tone}
+                      height={40}
+                      showLastDot={false}
+                      strokeWidth={1.6}
+                      className="mt-2.5 h-10 w-full opacity-90"
+                    />
                   )}
-                >
-                  <span aria-hidden className="mr-1 text-[0.82em]">
-                    {tone === "up" ? "▲" : tone === "down" ? "▼" : ""}
-                  </span>
-                  {formatChange(quote.change, locale)} ·{" "}
-                  {formatPercent(quote.changePct, locale)}
-                </p>
-                {points.length > 1 && (
-                  <Sparkline
-                    points={points}
-                    title={`${entry.label} · 1G`}
-                    tone={tone}
-                    height={64}
-                    showLastDot={false}
-                    strokeWidth={1.6}
-                    className="mt-3 h-16 w-full"
-                  />
-                )}
-              </>
-            ) : (
-              <p className="mt-2 text-xs text-muted">—</p>
-            )}
+                </>
+              ) : (
+                <p className="mt-2 text-xs text-muted">—</p>
+              )}
+            </Panel>
           </Link>
         );
       })}
@@ -264,43 +275,32 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   const inverted = spread !== null && spread < 0;
 
   return (
-    <section>
+    <Panel>
       <PanelHeader title={t.markets.yields} />
 
-      <div className="grid grid-cols-2 border-t border-rule sm:grid-cols-4">
-        {values.map((value, index) => {
+      <div className="grid grid-cols-2 gap-px bg-line-soft sm:grid-cols-4">
+        {values.map((value) => {
           const delta =
             value.latest !== null && value.prev !== null
               ? value.latest - value.prev
               : null;
           return (
-            <div
-              key={value.key}
-              className={cn(
-                "py-3.5 pr-4",
-                index > 0 && "sm:border-l sm:border-hairline sm:pl-5",
-                index === 2 && "border-t border-hairline sm:border-t-0",
-                index === 3 && "border-t border-hairline sm:border-t-0",
-                index % 2 === 1 && "border-l border-hairline pl-4 sm:pl-5",
-              )}
-            >
-              <p className="text-[11px] uppercase tracking-[0.07em] text-faint">
+            <div key={value.key} className="bg-surface px-4 py-3.5 sm:px-5">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
                 {value.label}
               </p>
-              <p className="tote mt-1 text-[24px] leading-none">
+              <p className="tote mt-1 text-xl sm:text-2xl">
                 {value.latest !== null ? (
-                  <>%{formatPrice(value.latest, locale)}</>
+                  <>
+                    {formatPrice(value.latest, locale)}
+                    <span className="ml-1 text-sm text-soft">%</span>
+                  </>
                 ) : (
                   "—"
                 )}
               </p>
               {delta !== null && Math.abs(delta) > 0.001 && (
-                <p
-                  className={cn(
-                    "numeral mt-1 text-[12.5px]",
-                    delta > 0 ? "text-up" : "text-down",
-                  )}
-                >
+                <p className="numeral mt-0.5 text-[11px] text-muted">
                   {delta > 0 ? "▲" : "▼"} {formatPrice(Math.abs(delta), locale)}{" "}
                   {t.markets.point}
                 </p>
@@ -312,34 +312,34 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
       {/* Getiri eğrisi — sayının ne anlama geldiği burada yazar */}
       {spread !== null && (
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 border-t border-hairline pt-3">
-          <span className="text-[13px] font-semibold text-ink">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-line-soft px-4 py-3 sm:px-5">
+          <span className="text-xs font-semibold text-strong">
             {t.markets.curveTitle}
           </span>
           <span
             className={cn(
-              "numeral text-[13px] font-semibold",
-              inverted ? "text-down" : "text-up",
+              "numeral rounded-full px-2.5 py-1 text-xs font-semibold",
+              inverted ? "bg-down-wash text-down" : "bg-up-wash text-up",
             )}
           >
             {spread >= 0 ? "+" : "−"}
             {formatPrice(Math.abs(spread), locale)} {t.markets.point}
           </span>
-          <span className="text-[13px] text-dim">
+          <span className="text-xs text-soft">
             {inverted ? t.markets.curveInverted : t.markets.curveNormal}
           </span>
-          <span className="basis-full text-[12px] leading-relaxed text-faint">
+          <span className="basis-full text-[11px] leading-relaxed text-muted">
             {t.markets.curveHint}
           </span>
         </div>
       )}
 
       {values[0].date && (
-        <p className="mt-2 text-[11.5px] text-faint">
+        <p className="border-t border-line-soft px-4 py-2 text-[10px] text-muted sm:px-5">
           FRED · {formatEtDateShort(values[0].date, locale)}
         </p>
       )}
-    </section>
+    </Panel>
   );
 }
 
@@ -500,7 +500,7 @@ function BreadthPanel({
   const advPct = pct(advancing);
 
   return (
-    <section>
+    <Panel className="p-4 sm:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 className="text-sm font-semibold tracking-tight text-strong">
           {t.markets.breadth}
@@ -542,7 +542,7 @@ function BreadthPanel({
           ? `Endeksteki şirketlerin %${formatPrice(advPct, locale, { digits: 0 })}'i günü artıda geçiriyor.`
           : `${formatPrice(advPct, locale, { digits: 0 })}% of the index is trading higher.`}
       </p>
-    </section>
+    </Panel>
   );
 }
 
@@ -571,7 +571,7 @@ function MoverPanel({
   );
 
   return (
-    <section>
+    <Panel>
       <PanelHeader title={title} />
       <ul className="divide-y divide-line-soft">
         {rows.map((row) => {
@@ -623,7 +623,7 @@ function MoverPanel({
           );
         })}
       </ul>
-    </section>
+    </Panel>
   );
 }
 
@@ -684,9 +684,9 @@ function MembersTable({
 }) {
   if (rows.length === 0) {
     return (
-      <section>
+      <Panel>
         <EmptyState title={t.common.noData} />
-      </section>
+      </Panel>
     );
   }
 
@@ -716,7 +716,7 @@ function MembersTable({
   });
 
   return (
-    <section>
+    <Panel>
       <PanelHeader title={t.markets.constituents} />
       <div className="scroll-x">
         <table className="w-full min-w-[680px] text-sm">
@@ -828,6 +828,6 @@ function MembersTable({
           {t.markets.contributionHint}
         </p>
       )}
-    </section>
+    </Panel>
   );
 }

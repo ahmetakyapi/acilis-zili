@@ -16,8 +16,6 @@ export function LocaleToggle({
   const next: Locale = initial === "tr" ? "en" : "tr";
 
   return (
-    /* Künyede iki dil de görünür: geçerli olan mürekkep, diğeri soluk.
-       Gazete künyesinde seçenek gizlenmez, hangisinde olduğun okunur. */
     <button
       type="button"
       onClick={() => startTransition(() => void setLocalePreference(next))}
@@ -25,14 +23,11 @@ export function LocaleToggle({
       title={`${label}: ${next.toUpperCase()}`}
       disabled={pending}
       className={cn(
-        "inline-flex items-center gap-1 whitespace-nowrap text-[12px] uppercase tracking-[0.08em] transition-colors",
+        "numeral inline-flex size-9 items-center justify-center rounded-(--radius-md) text-[11px] font-semibold uppercase tracking-wider text-soft transition-colors hover:bg-surface-elevated hover:text-strong",
         pending && "opacity-50",
       )}
     >
-      <span className="font-semibold text-ink">{initial}</span>
-      <span aria-hidden className="text-faint">
-        / {next}
-      </span>
+      {next}
     </button>
   );
 }

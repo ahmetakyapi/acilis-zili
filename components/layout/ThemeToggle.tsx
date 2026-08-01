@@ -49,7 +49,7 @@ export function ThemeToggle({
       onClick={toggle}
       aria-label={label}
       title={label}
-      className="inline-flex size-7 items-center justify-center text-dim transition-colors hover:text-ink"
+      className="inline-flex size-9 items-center justify-center rounded-(--radius-md) text-soft transition-colors hover:bg-surface-elevated hover:text-strong"
     >
       {theme === "dark" ? (
         <Sun size={17} strokeWidth={1.8} />

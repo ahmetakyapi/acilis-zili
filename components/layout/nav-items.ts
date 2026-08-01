@@ -14,75 +14,69 @@ export type NavItem = {
   href: string;
   label: (t: Dictionary) => string;
   icon: typeof Sunrise;
-  /** Manşetin altındaki yatay gezinme satırında görünsün mü. */
-  inTopNav: boolean;
-  /** Mobil alt çubukta görünsün mü — orada yalnızca beş yer var. */
+  /** Kenar çubuğunda hangi grupta durur. */
+  group: "market" | "follow";
+  /** Mobil alt çubukta görünsün mü — orada yalnızca altı yer var. */
   inBottomBar: boolean;
 };
 
-/**
- * Gezinme sırası gazetenin okuma sırasıdır: gün → takvim → bilanço →
- * piyasa → şirket → makro → takip.
- *
- * Haberler üst satırda yok: Bugün akışının altında bölüm olarak duruyor ve
- * "Tümünü gör" ile tam sayfaya çıkıyor (HANDOFF §6).
- */
 export const NAV_ITEMS: NavItem[] = [
   {
     href: "/",
     label: (t) => t.nav.today,
     icon: Sunrise,
-    inTopNav: true,
+    group: "market",
+    // Mobilde marka işareti zaten ana sayfaya döner — alt barda yer tutmaz.
+    inBottomBar: false,
+  },
+  {
+    href: "/piyasalar",
+    label: (t) => t.nav.markets,
+    icon: Activity,
+    group: "market",
     inBottomBar: true,
   },
   {
     href: "/takvim",
     label: (t) => t.nav.calendar,
     icon: CalendarClock,
-    inTopNav: true,
+    group: "market",
+    // Günün ve haftanın takvimi ana sayfada okunuyor; alt bar beş sekmede kalır.
+    inBottomBar: false,
+  },
+  {
+    href: "/sirketler",
+    label: (t) => t.nav.companies,
+    icon: Building2,
+    group: "market",
     inBottomBar: true,
   },
   {
     href: "/bilancolar",
     label: (t) => t.nav.earnings,
     icon: FileBarChart,
-    inTopNav: true,
+    group: "market",
     inBottomBar: true,
-  },
-  {
-    href: "/piyasalar",
-    label: (t) => t.nav.markets,
-    icon: Activity,
-    inTopNav: true,
-    inBottomBar: true,
-  },
-  {
-    href: "/sirketler",
-    label: (t) => t.nav.companies,
-    icon: Building2,
-    inTopNav: true,
-    // Mobilde alfabetik dizin kaydırılmaz; sembol aramak asıl davranış.
-    inBottomBar: false,
   },
   {
     href: "/makro",
     label: (t) => t.nav.macro,
     icon: TrendingUp,
-    inTopNav: true,
-    inBottomBar: false,
+    group: "market",
+    inBottomBar: true,
   },
   {
     href: "/favoriler",
     label: (t) => t.nav.watchlist,
     icon: Star,
-    inTopNav: true,
+    group: "follow",
     inBottomBar: true,
   },
   {
     href: "/haberler",
     label: (t) => t.nav.news,
     icon: Newspaper,
-    inTopNav: false,
+    group: "follow",
     inBottomBar: false,
   },
 ];

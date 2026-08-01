@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
-import { PanelHeader } from "@/components/ui/primitives";
+import { Panel, PanelHeader } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 
 export default async function SettingsPage() {
@@ -17,7 +17,7 @@ export default async function SettingsPage() {
         {t.settings.title}
       </h1>
 
-      <section>
+      <Panel>
         <PanelHeader title={t.settings.account} />
         <div className="flex flex-col gap-3 px-4 py-4 sm:px-5">
           <dl className="space-y-2 text-sm">
@@ -41,7 +41,7 @@ export default async function SettingsPage() {
             </button>
           </form>
         </div>
-      </section>
+      </Panel>
 
       <p className="text-xs text-muted">{t.data.delayedNote}</p>
     </div>

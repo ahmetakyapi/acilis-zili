@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EmptyState } from "@/components/ui/primitives";
+import { EmptyState, Panel } from "@/components/ui/primitives";
 import { getLatestNews } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { cn, timeAgo } from "@/lib/utils";
@@ -27,7 +27,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
 
       {symbolFilter && (
         <div className="flex items-center gap-2">
-          <span className="numeral text-[13px] text-faint">
+          <span className="numeral rounded-full bg-primary-wash px-3 py-1 text-sm font-medium text-primary">
             {symbolFilter}
           </span>
           <Link href="/haberler" className="text-xs text-muted hover:text-soft">
@@ -36,7 +36,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
         </div>
       )}
 
-      <section>
+      <Panel>
         {items.length === 0 ? (
           <EmptyState title={t.news.empty} />
         ) : (
@@ -67,7 +67,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                             <span
                               key={symbol}
                               className={cn(
-                                "numeral text-[11px] text-faint transition-colors hover:text-up",
+                                "numeral rounded bg-surface-sunken px-1.5 py-0.5 text-[10px] font-medium text-soft",
                               )}
                             >
                               {symbol}
@@ -82,7 +82,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
             ))}
           </ul>
         )}
-      </section>
+      </Panel>
     </div>
   );
 }

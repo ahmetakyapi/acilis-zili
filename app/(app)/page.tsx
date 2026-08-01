@@ -1,13 +1,14 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { Countdown } from "@/components/today/Countdown";
 import { DayRail, type RailEvent } from "@/components/today/DayRail";
+import { LiveClock } from "@/components/today/LiveClock";
 import {
   ChangePill,
   DataError,
   DataStamp,
   EmptyState,
+  Panel,
   PanelHeader,
   Skeleton,
 } from "@/components/ui/primitives";
@@ -23,6 +24,7 @@ import {
 import {
   addEtDays,
   etDateTimeToUtc,
+  formatCountdown,
   todayEt,
 } from "@/lib/market-hours";
 import { getQuotes } from "@/lib/providers";
@@ -44,41 +46,70 @@ export default async function TodayPage() {
   const { locale, t } = await getI18n();
   const status = await getStatus();
 
-  /* Tarih, seans adı ve geri sayım artık manşetin tarih rayında duruyor —
-     sayfa onları tekrar etmez. Gazetenin ilk sayfası şeritle açılır, sonra
-     günün manşetiyle devam eder. */
-  /* `nextOpen` hafta sonunu ve tatili zaten atlar — Cumartesi günü Pazartesi
-     açılışını gösterir. Geri sayım bu yüzden hafta sonu da durur, kaybolmaz. */
+  const sessionLabel: Record<string, string> = {
+    regular: t.market.open,
+    "pre-market": t.market.preMarket,
+    "after-hours": t.market.afterHours,
+    closed: status.holiday
+      ? t.market.holiday
+      : status.isWeekend
+        ? t.market.weekend
+        : t.market.closed,
+  };
+
   const countdownTarget =
     status.session === "regular" ? status.nextClose : status.nextOpen;
   const countdownLabel =
-    status.session === "regular" ? t.today.untilClose : t.today.untilBell;
+    status.session === "regular" ? t.market.closesIn : t.market.opensIn;
 
   return (
-    <div className="flex flex-col gap-12">
+    <div className="flex flex-col gap-5">
+      {/* ---- Durum başlığı ---- */}
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="plate">{t.today.title} · New York</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
+            {formatEtDateLong(status.etDate, locale)}
+          </h1>
+        </div>
+        <div className="flex flex-col items-start gap-1.5 sm:items-end">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm shadow-(--shadow-card)">
+            <span className="flex items-center gap-2">
+              <span
+                aria-hidden
+                className={cn(
+                  "size-2 rounded-full",
+                  status.session === "regular"
+                    ? "bg-brass pulse-live"
+                    : status.session === "closed"
+                      ? "bg-flat"
+                      : "bg-primary",
+                )}
+              />
+              <span className="font-medium text-strong">
+                {sessionLabel[status.session]}
+              </span>
+            </span>
+            <span aria-hidden className="hidden text-line-strong sm:inline">
+              |
+            </span>
+            <span className="whitespace-nowrap text-muted">
+              {countdownLabel}{" "}
+              <span className="numeral font-semibold text-strong">
+                {formatCountdown(countdownTarget, new Date(), locale)}
+              </span>
+            </span>
+          </div>
+          <LiveClock />
+        </div>
+      </header>
+
       {/* ---- Gün Şeridi ---- */}
-      <section>
+      <Panel className="px-4 pb-3 pt-5 sm:px-6">
         <Suspense fallback={<Skeleton className="h-36 w-full" />}>
           <RailSection t={t} status={{ trading: status.session !== "closed" || (!status.isWeekend && !status.holiday), closeMinutes: status.closeMinutes, nowMinutes: status.etMinutes }} locale={locale} />
         </Suspense>
-      </section>
-
-      {/* ---- Geri sayım — plaka rakamı ----
-          Büyük rakam tek camgöbeği hayaletiyle basılır; manşetlerde plaka
-          kapalıdır (okunmuyordu), yalnızca sayı taşır. */}
-      {countdownTarget && (
-        <section>
-          <Countdown
-            target={countdownTarget}
-            labels={{
-              minutes: t.today.unitMinutes,
-              hours: t.today.unitHours,
-              days: t.today.unitDays,
-              phrase: countdownLabel,
-            }}
-          />
-        </section>
-      )}
+      </Panel>
 
       {/* ---- Endeksler ---- */}
       <section aria-label={t.today.indices}>
@@ -88,27 +119,27 @@ export default async function TodayPage() {
       </section>
 
       {/* ---- Dünya piyasaları ---- */}
-      <Suspense fallback={<Skeleton className="h-28 w-full " />}>
+      <Suspense fallback={<Skeleton className="h-28 w-full rounded-(--radius-xl)" />}>
         <WorldStrip locale={locale} t={t} />
       </Suspense>
 
       <div className="grid gap-5 lg:grid-cols-5">
         <div className="flex flex-col gap-5 lg:col-span-3">
           {/* ---- Günün özeti ---- */}
-          <Suspense fallback={<Skeleton className="h-40 w-full " />}>
+          <Suspense fallback={<Skeleton className="h-40 w-full rounded-(--radius-lg)" />}>
             <BriefCard locale={locale} t={t} />
           </Suspense>
 
           {/* ---- Bugünün takvimi ---- */}
-          <section>
+          <Panel>
             <PanelHeader title={t.today.schedule} />
             <Suspense fallback={<ListSkeleton rows={3} />}>
               <ScheduleList locale={locale} t={t} />
             </Suspense>
-          </section>
+          </Panel>
 
           {/* ---- Bugün bilanço açıklayanlar ---- */}
-          <section>
+          <Panel>
             <PanelHeader
               title={t.today.earningsToday}
               action={
@@ -120,12 +151,12 @@ export default async function TodayPage() {
             <Suspense fallback={<ListSkeleton rows={3} />}>
               <EarningsToday locale={locale} t={t} />
             </Suspense>
-          </section>
+          </Panel>
         </div>
 
         <div className="flex flex-col gap-5 lg:col-span-2">
           {/* ---- Haftaya bakış — önümüzdeki 7 günün önemli olayları ---- */}
-          <section>
+          <Panel>
             <PanelHeader
               title={t.today.weekAhead}
               action={
@@ -137,15 +168,15 @@ export default async function TodayPage() {
             <Suspense fallback={<ListSkeleton rows={3} />}>
               <WeekAhead locale={locale} t={t} />
             </Suspense>
-          </section>
+          </Panel>
 
           {/* ---- Favori özeti ---- */}
-          <Suspense fallback={<Skeleton className="h-48 w-full " />}>
+          <Suspense fallback={<Skeleton className="h-48 w-full rounded-(--radius-lg)" />}>
             <WatchlistSummary locale={locale} t={t} />
           </Suspense>
 
           {/* ---- Öne çıkan haberler ---- */}
-          <section>
+          <Panel>
             <PanelHeader
               title={t.today.topNews}
               action={
@@ -157,7 +188,7 @@ export default async function TodayPage() {
             <Suspense fallback={<ListSkeleton rows={4} />}>
               <TopNews locale={locale} t={t} />
             </Suspense>
-          </section>
+          </Panel>
         </div>
       </div>
     </div>
@@ -226,9 +257,9 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   if (!result.ok) {
     return (
-      <section>
+      <Panel>
         <DataError message={t.data.failed} hint={t.data.failedHint} />
-      </section>
+      </Panel>
     );
   }
 
@@ -238,10 +269,10 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
         const quote = result.data[symbol];
         if (!quote) {
           return (
-            <section key={symbol}>
+            <Panel key={symbol} className="p-4">
               <p className="numeral text-sm font-semibold text-strong">{symbol}</p>
               <p className="mt-1 text-xs text-muted">{t.common.noData}</p>
-            </section>
+            </Panel>
           );
         }
         const bars = barResults[index];
@@ -251,7 +282,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
         const tone = directionOf(quote.changePct);
         return (
           <Link key={symbol} href={`/hisse/${symbol}`} className="group">
-            <section className="flex h-full flex-col border-b border-hairline pb-3 transition-colors hover:bg-primary-tint">
+            <Panel className="panel-hover flex h-full flex-col p-4">
               <div className="flex items-baseline justify-between gap-2">
                 <p className="text-xs font-semibold text-strong">
                   {INDEX_LABEL[symbol] ?? symbol}
@@ -275,7 +306,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                   className="mt-2.5 h-11 w-full opacity-90"
                 />
               )}
-            </section>
+            </Panel>
           </Link>
         );
       })}
@@ -308,7 +339,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   if (shown.length === 0) return null;
 
   return (
-    <section>
+    <Panel>
       <PanelHeader title={t.today.worldMarkets} />
       <ul className="grid grid-cols-2 divide-line-soft sm:grid-cols-3 lg:grid-cols-6">
         {shown.map((market) => {
@@ -350,7 +381,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
       <p className="px-4 py-2.5 text-[11px] leading-relaxed text-muted sm:px-5">
         {t.today.worldMarketsHint}
       </p>
-    </section>
+    </Panel>
   );
 }
 
@@ -358,7 +389,7 @@ function IndexSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-24 " />
+        <Skeleton key={i} className="h-24 rounded-(--radius-lg)" />
       ))}
     </div>
   );
@@ -368,11 +399,11 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
   const brief = await getDailyBrief(locale);
 
   return (
-    <section>
+    <Panel>
       <PanelHeader title={t.today.briefTitle} />
       {brief ? (
         <div className="px-4 py-4 sm:px-5">
-          <h3 className="text-lg font-bold leading-snug tracking-tight text-strong">
+          <h3 className="display text-[1.4rem] leading-[1.2] sm:text-[1.6rem]">
             {brief.headline}
           </h3>
           <div className="mt-2.5 text-[15px] leading-relaxed text-body">
@@ -388,7 +419,7 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
       ) : (
         <EmptyState title={t.today.briefEmpty} />
       )}
-    </section>
+    </Panel>
   );
 }
 
@@ -505,7 +536,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
 
   if (!session?.user?.id) {
     return (
-      <section>
+      <Panel>
         <PanelHeader title={t.today.watchlistSummary} />
         <EmptyState
           title={t.watchlist.emptyAll}
@@ -519,7 +550,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
             </Link>
           }
         />
-      </section>
+      </Panel>
     );
   }
 
@@ -527,7 +558,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
 
   if (userSymbols.length === 0) {
     return (
-      <section>
+      <Panel>
         <PanelHeader title={t.today.watchlistSummary} />
         <EmptyState
           title={t.today.watchlistEmpty}
@@ -537,7 +568,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
             </Link>
           }
         />
-      </section>
+      </Panel>
     );
   }
 
@@ -546,7 +577,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
   const result = await getQuotes(shown, status);
 
   return (
-    <section>
+    <Panel>
       <PanelHeader
         title={t.today.watchlistSummary}
         action={
@@ -595,7 +626,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
       ) : (
         <DataError message={t.data.failed} hint={t.data.failedHint} />
       )}
-    </section>
+    </Panel>
   );
 }
 
