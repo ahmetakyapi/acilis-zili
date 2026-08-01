@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { DayRail, type RailEvent } from "@/components/today/DayRail";
+import { LiveClock } from "@/components/today/LiveClock";
 import {
   ChangePill,
   DataError,
@@ -70,32 +71,35 @@ export default async function TodayPage() {
             {formatEtDateLong(status.etDate, locale)}
           </h1>
         </div>
-        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm shadow-(--shadow-card)">
-          <span className="flex items-center gap-2">
-            <span
-              aria-hidden
-              className={cn(
-                "size-2 rounded-full",
-                status.session === "regular"
-                  ? "bg-brass pulse-live"
-                  : status.session === "closed"
-                    ? "bg-flat"
-                    : "bg-primary",
-              )}
-            />
-            <span className="font-medium text-strong">
-              {sessionLabel[status.session]}
+        <div className="flex flex-col items-start gap-1.5 sm:items-end">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm shadow-(--shadow-card)">
+            <span className="flex items-center gap-2">
+              <span
+                aria-hidden
+                className={cn(
+                  "size-2 rounded-full",
+                  status.session === "regular"
+                    ? "bg-brass pulse-live"
+                    : status.session === "closed"
+                      ? "bg-flat"
+                      : "bg-primary",
+                )}
+              />
+              <span className="font-medium text-strong">
+                {sessionLabel[status.session]}
+              </span>
             </span>
-          </span>
-          <span aria-hidden className="hidden text-line-strong sm:inline">
-            |
-          </span>
-          <span className="whitespace-nowrap text-muted">
-            {countdownLabel}{" "}
-            <span className="numeral font-semibold text-strong">
-              {formatCountdown(countdownTarget, new Date(), locale)}
+            <span aria-hidden className="hidden text-line-strong sm:inline">
+              |
             </span>
-          </span>
+            <span className="whitespace-nowrap text-muted">
+              {countdownLabel}{" "}
+              <span className="numeral font-semibold text-strong">
+                {formatCountdown(countdownTarget, new Date(), locale)}
+              </span>
+            </span>
+          </div>
+          <LiveClock />
         </div>
       </header>
 

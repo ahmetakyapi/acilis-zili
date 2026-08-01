@@ -1,11 +1,11 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Settings, LogIn } from "lucide-react";
 import { BellMark } from "@/components/brand/BellMark";
 import { NAV_ITEMS } from "./nav-items";
+import { useDualClock } from "./useDualClock";
 import { cn } from "@/lib/utils";
 
 export type ShellLabels = {
@@ -34,40 +34,6 @@ type AppShellProps = {
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname.startsWith(href);
-}
-
-/* --------------------------------------------------------------------------
-   Çifte saat — panonun alt köşesindeki alet göstergesi.
-   Dakika hassasiyeti yeter; 15 sn'de bir kontrol edilir, değer ancak dakika
-   değişince yenilenir. Sunucuda "--:--" basılır, hydration uyuşmazlığı olmaz.
-   -------------------------------------------------------------------------- */
-
-const NY_CLOCK = new Intl.DateTimeFormat("en-GB", {
-  timeZone: "America/New_York",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-const IST_CLOCK = new Intl.DateTimeFormat("en-GB", {
-  timeZone: "Europe/Istanbul",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-
-function subscribeClock(onTick: () => void) {
-  const id = window.setInterval(onTick, 15000);
-  return () => window.clearInterval(id);
-}
-
-function useDualClock(): { ny: string; ist: string } {
-  const stamp = useSyncExternalStore(
-    subscribeClock,
-    () => `${NY_CLOCK.format(new Date())}|${IST_CLOCK.format(new Date())}`,
-    () => "--:--|--:--",
-  );
-  const [ny, ist] = stamp.split("|");
-  return { ny, ist };
 }
 
 function SidebarClock({ nyLabel, istLabel }: { nyLabel: string; istLabel: string }) {

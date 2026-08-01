@@ -235,6 +235,12 @@ h4 {
   border-radius: 3px;
 }
 
+/* Arama paleti girişinin odağını kapsayıcı anlatır — çift çerçeve olmaz.
+   Küresel :focus-visible katmansız olduğu için istisna da burada durmalı. */
+.palette-input:focus-visible {
+  outline: none;
+}
+
 /* --------------------------------------------------------------------------
    Sayısal okumalar — her fiyat, yüzde, saat, EPS bu sınıfı taşır.
    Sütunların hizalı okunması için tabular-nums zorunlu.

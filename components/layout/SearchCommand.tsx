@@ -18,7 +18,9 @@ const POPULAR_PICKS = [
   { symbol: "MSFT", name: "Microsoft" },
   { symbol: "TSLA", name: "Tesla" },
   { symbol: "AMD", name: "AMD" },
+  { symbol: "MU", name: "Micron" },
   { symbol: "SPY", name: "S&P 500" },
+  { symbol: "QQQ", name: "Nasdaq 100" },
 ] as const;
 
 export function SearchCommand({
@@ -151,7 +153,7 @@ export function SearchCommand({
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/35 backdrop-blur-[2px] sm:px-4 sm:pt-[12vh]"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 backdrop-blur-sm sm:px-4 sm:pt-[12vh]"
           onClick={close}
           role="presentation"
         >
@@ -172,7 +174,7 @@ export function SearchCommand({
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={onInputKeyDown}
                 placeholder={placeholder}
-                className="h-14 flex-1 bg-transparent text-base text-strong outline-none placeholder:text-muted sm:h-12 sm:text-sm"
+                className="palette-input h-14 flex-1 bg-transparent text-base text-strong outline-none placeholder:text-muted sm:h-12 sm:text-sm"
                 autoComplete="off"
                 spellCheck={false}
               />

@@ -16,16 +16,26 @@ export default function AppleIcon() {
           background: "#1d5a8c",
         }}
       >
-        <svg width="120" height="120" viewBox="0 0 24 24" fill="none">
+        <svg width="124" height="124" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="3.6" r="1.35" fill="#ffffff" />
+          <rect x="11.35" y="4.5" width="1.3" height="1.35" rx="0.6" fill="#ffffff" />
           <path
-            d="M12 3.4c.62 0 1.12.5 1.12 1.12v.62h-2.24v-.62c0-.62.5-1.12 1.12-1.12Z"
+            d="M12 5.6c2.75 0 4.33 1.85 4.55 5.1.14 2.1.62 3.45 1.5 4.4.34.36.42.78.28 1.12-.14.35-.5.58-.95.58H6.62c-.45 0-.81-.23-.95-.58-.14-.34-.06-.76.28-1.12.88-.95 1.36-2.3 1.5-4.4C7.67 7.45 9.25 5.6 12 5.6Z"
             fill="#ffffff"
           />
+          <circle cx="12" cy="19" r="1.6" fill="#e0b95f" />
           <path
-            d="M12 4.85c3.42 0 5.06 3.42 5.24 7.68.1 2.32.62 3.42 1.32 4.22.36.42.1 1.05-.46 1.05H5.9c-.56 0-.82-.63-.46-1.05.7-.8 1.22-1.9 1.32-4.22C6.94 8.27 8.58 4.85 12 4.85Z"
-            fill="#ffffff"
+            d="M4.4 5.4C3.15 6.75 2.45 8.4 2.3 10.25"
+            stroke="#e0b95f"
+            strokeWidth="1.35"
+            strokeLinecap="round"
           />
-          <circle cx="12" cy="20.05" r="1.75" fill="#e0b95f" />
+          <path
+            d="M19.6 5.4c1.25 1.35 1.95 3 2.1 4.85"
+            stroke="#e0b95f"
+            strokeWidth="1.35"
+            strokeLinecap="round"
+          />
         </svg>
       </div>
     ),
