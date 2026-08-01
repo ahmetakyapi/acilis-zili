@@ -181,14 +181,33 @@ export default async function TodayPage() {
             <WeekAhead locale={locale} t={t} />
           </Suspense>
         </Panel>
+
+        {/* ---- Öne çıkan haberler ----
+             Okunacak metin ana kolonda durur: manşet dar kolonda iki satıra
+             kırılıyor, geniş kolonda bir bakışta okunuyor. */}
+        <Panel>
+          <PanelHeader
+            title={t.today.topNews}
+            action={<PanelLink href="/haberler">{t.common.showAll}</PanelLink>}
+          />
+          <Suspense fallback={<ListSkeleton rows={4} />}>
+            <TopNews locale={locale} t={t} />
+          </Suspense>
+        </Panel>
       </div>
 
       {/* ================= Yan kolon =================
-          Sıra piyasadan kişisele daralıyor: endeksler → tahviller → makro →
-          senin listen → dünya → haberler. */}
+          Yalnızca ölçüler: endeksler → tahviller → makro → senin listen →
+          dünya. Okunacak metin sol kolonda. */}
       <div className="flex min-w-0 flex-col gap-5">
         <Suspense fallback={<IndexSkeleton />}>
           <IndexStrip locale={locale} t={t} />
+        </Suspense>
+
+        {/* Dünya piyasaları endekslerin hemen altında: ikisi de "bugün
+            borsalar ne yapmış" sorusunun cevabı, ABD'si ve dünyası. */}
+        <Suspense fallback={<Skeleton className="h-28 w-full rounded-2xl" />}>
+          <WorldStrip locale={locale} t={t} />
         </Suspense>
 
         <Suspense fallback={<Skeleton className="h-44 w-full rounded-2xl" />}>
@@ -202,20 +221,6 @@ export default async function TodayPage() {
         <Suspense fallback={<Skeleton className="h-56 w-full rounded-2xl" />}>
           <WatchlistSummary locale={locale} t={t} />
         </Suspense>
-
-        <Suspense fallback={<Skeleton className="h-28 w-full rounded-2xl" />}>
-          <WorldStrip locale={locale} t={t} />
-        </Suspense>
-
-        <Panel>
-          <PanelHeader
-            title={t.today.topNews}
-            action={<PanelLink href="/haberler">{t.common.showAll}</PanelLink>}
-          />
-          <Suspense fallback={<ListSkeleton rows={4} />}>
-            <TopNews locale={locale} t={t} />
-          </Suspense>
-        </Panel>
       </div>
 
       {/* ---- Kaynak künyesi ---- */}
@@ -1012,10 +1017,17 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
             className="flex gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
           >
             <span className="min-w-0 flex-1">
-              <span className="line-clamp-2 block text-[13.5px] font-medium leading-5 text-strong">
+              <span className="block text-sm font-medium leading-snug text-strong">
                 {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
               </span>
-              <span className="mt-[3px] flex items-center gap-1.5 text-[11px] text-muted">
+              {(item.summaryTr || item.summary) && (
+                <span className="mt-1 line-clamp-2 block text-xs leading-relaxed text-body">
+                  {locale === "tr" && item.summaryTr
+                    ? item.summaryTr
+                    : item.summary}
+                </span>
+              )}
+              <span className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted">
                 <span className="numeral">{timeAgo(item.publishedAt, locale)}</span>
                 {item.source && (
                   <>
@@ -1033,7 +1045,7 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
               }
               symbol={item.symbols?.[0] ?? null}
               className="shrink-0"
-              sizeClass="size-14"
+              sizeClass="size-16"
             />
           </Link>
         </li>

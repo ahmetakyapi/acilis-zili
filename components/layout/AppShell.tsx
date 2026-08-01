@@ -76,11 +76,13 @@ export function AppShell({
                 className={cn(
                   "rounded-lg px-3.5 py-[7px] transition-colors duration-150",
                   active
-                    ? "bg-surface-elevated font-semibold text-strong"
-                    : "text-body hover:bg-surface hover:text-strong",
+                    ? "bg-surface-elevated font-semibold"
+                    : "hover:bg-surface",
                 )}
               >
-                {labels.nav[item.href]}
+                {/* Etiketler manşet mürekkebiyle yazılır; bulunulan sayfa
+                    dolgulu pill ve kalın ağırlıkla ayrışır, renkle değil. */}
+                <span className="display-ink">{labels.nav[item.href]}</span>
               </Link>
             );
           })}
@@ -126,7 +128,7 @@ export function AppShell({
           aria-label={labels.brandName}
         >
           <BellMark size={26} />
-          <span className="text-[15.5px] font-bold tracking-[-0.03em] text-strong">
+          <span className="display-ink w-fit text-[15.5px] font-bold tracking-[-0.03em]">
             {labels.brandName}
           </span>
         </Link>

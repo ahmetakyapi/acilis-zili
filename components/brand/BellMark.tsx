@@ -81,7 +81,7 @@ export function BrandLockup({
       <BellMark size={size} />
       <span className="flex flex-col leading-none">
         <span
-          className="font-bold tracking-[-0.03em] text-strong"
+          className="display-ink w-fit font-bold tracking-[-0.03em]"
           style={{ fontSize: size * 0.5 }}
         >
           {name}
