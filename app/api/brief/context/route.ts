@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
   const [events, weekEvents, earnings, macro, quotesResult] = await Promise.all([
     getEventsBetween(today, today),
-    getEventsBetween(addEtDays(today, 1), addEtDays(today, 5)),
+    getEventsBetween(addEtDays(today, 1), addEtDays(today, 7)),
     getEarningsBetween(today, today),
     getMacroRows(),
     getQuotes([...INDEX_STRIP], status),
