@@ -6,10 +6,18 @@ export default async function SignUpPage() {
   const { t } = await getI18n();
 
   return (
-    <div className="flex min-h-[70dvh] items-center py-8">
+    <div className="py-6">
       <AuthForm
-        brandName={t.brand.name}
-        tagline={t.brand.tagline}
+        pitch={{
+          title: t.auth.pitchTitle,
+          body: t.auth.pitchBody,
+          features: [
+            { label: t.auth.featureLists, value: t.auth.featureFree },
+            { label: t.auth.featureAlerts, value: t.auth.featureFree },
+            { label: t.auth.featureBrief, value: t.auth.featureFree },
+          ],
+          privacyNote: t.auth.privacyNote,
+        }}
         title={t.auth.signUpTitle}
         subtitle={t.auth.signUpSubtitle}
         action={signUpAction}

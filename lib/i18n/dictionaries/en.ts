@@ -382,6 +382,15 @@ const en: typeof tr = {
 
   auth: {
     signInTitle: "Sign In",
+    pitchTitle: "Stop Checking Six Tabs Every Morning",
+    pitchBody:
+      "The economic calendar, earnings dates, macro readings and your watchlist — on one screen, with the times. You can read it without an account; sign in and your lists stay with you.",
+    featureLists: "Watchlists and a symbol archive",
+    featureAlerts: "Earnings and macro calendar",
+    featureBrief: "A daily brief written each morning",
+    featureFree: "Free",
+    privacyNote:
+      "No ads, no data selling. Your account exists only to keep your lists.",
     signInSubtitle: "Sign in to reach your watchlists.",
     signUpTitle: "Create Account",
     signUpSubtitle: "Create an account to build your own watchlists.",

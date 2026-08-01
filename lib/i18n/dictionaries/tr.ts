@@ -380,6 +380,15 @@ const tr = {
 
   auth: {
     signInTitle: "Giriş Yap",
+    pitchTitle: "Sabah Altı Sekmeye Bakmayı Bırak",
+    pitchBody:
+      "Ekonomik takvim, bilanço tarihleri, makro göstergeler ve takip listen — hepsi saatleriyle tek ekranda. Hesap açmadan da okuyabilirsin; giriş yaparsan listelerin sende kalır.",
+    featureLists: "Takip listeleri ve sembol arşivi",
+    featureAlerts: "Bilanço ve makro takvimi",
+    featureBrief: "Her sabah hazırlanan günlük bülten",
+    featureFree: "Ücretsiz",
+    privacyNote:
+      "Reklam yok, veri satışı yok. Hesabını yalnızca listelerini saklamak için kullanırız.",
     signInSubtitle: "Favorilerine ve listelerine erişmek için giriş yap.",
     signUpTitle: "Hesap Oluştur",
     signUpSubtitle: "Kendi takip listelerini oluşturmak için hesap aç.",

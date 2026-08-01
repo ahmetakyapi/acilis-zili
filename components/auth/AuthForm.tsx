@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { BellMark } from "@/components/brand/BellMark";
+import { DottedLeader } from "@/components/ui/primitives";
 import type { AuthFormState } from "@/app/actions/auth";
 import { cn } from "@/lib/utils";
 
@@ -15,11 +15,18 @@ type Field = {
   errorKey: AuthFormState["field"];
 };
 
+export type AuthPitch = {
+  title: string;
+  body: string;
+  /** Nokta liderli fihrist — ne veriyoruz, karşılığı ne. */
+  features: { label: string; value: string }[];
+  privacyNote: string;
+};
+
 type AuthFormProps = {
-  brandName: string;
-  tagline: string;
   title: string;
   subtitle: string;
+  pitch: AuthPitch;
   fields: Field[];
   submitLabel: string;
   action: (prev: AuthFormState, formData: FormData) => Promise<AuthFormState>;
@@ -29,15 +36,16 @@ type AuthFormProps = {
 };
 
 /**
- * Giriş/kayıt kartı — markanın kapısı.
- * Zil işareti + slogan üstte, form tek kolonda; hata alanın hemen altında
- * konuşur. Başlıklar Title Case, süs işareti yok.
+ * Giriş/kayıt — gazetenin abonelik sayfası (HANDOFF §5, ekran 2j).
+ *
+ * Solda ürünün vaadi ve nokta liderli fihrist, sağda form; ikisini dikey bir
+ * kural ayırır. Marka künyesi burada tekrar edilmez — sayfanın üstündeki
+ * manşet zaten taşıyor. Dar ekranda vaat üste, form altına iner.
  */
 export function AuthForm({
-  brandName,
-  tagline,
   title,
   subtitle,
+  pitch,
   fields,
   submitLabel,
   action,
@@ -48,25 +56,37 @@ export function AuthForm({
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
-    /* Gazetenin künye sayfası: marka, manşet çizgisi, slogan rayı, sonra form.
-       Kutu yok — form sayfanın kendi zemininde durur. */
-    <div className="mx-auto w-full max-w-[400px]">
-      <Link href="/" className="flex items-center gap-2.5">
-        <BellMark size={26} />
-        <span className="text-[19px] font-semibold tracking-[-0.02em] text-ink">
-          {brandName}
-        </span>
-      </Link>
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-0">
+      {/* ---- Vaat ---- */}
+      <section className="flex flex-col lg:pr-14">
+        <h1 className="max-w-[15ch] text-[2.25rem] leading-[1.08] tracking-[-0.024em] sm:text-[3rem]">
+          {pitch.title}
+        </h1>
+        <p className="mt-6 max-w-[50ch] text-[16px] leading-[1.75] text-dim sm:text-[17px]">
+          {pitch.body}
+        </p>
 
-      <div className="rule-head mt-4" />
-      <p className="py-2.5 text-[12.5px] uppercase tracking-[0.08em] text-dim">
-        {tagline}
-      </p>
-      <div className="rule-thin" />
+        <div className="mt-auto pt-10">
+          {pitch.features.map((feature) => (
+            <DottedLeader
+              key={feature.label}
+              label={feature.label}
+              value={feature.value}
+              className="text-[16px]"
+            />
+          ))}
+          <p className="mt-5 text-[13px] leading-relaxed text-faint">
+            {pitch.privacyNote}
+          </p>
+        </div>
+      </section>
 
-      <div className="mt-10 w-full">
+      {/* ---- Form ---- */}
+      <section className="bg-surface-elevated p-6 sm:p-8 lg:border-l lg:border-rule lg:pl-14">
         <h6 className="kicker mb-2.5">{subtitle}</h6>
-        <h1 className="text-[32px] leading-[1.1] tracking-[-0.02em]">{title}</h1>
+        <h2 className="text-[28px] leading-[1.1] tracking-[-0.02em] sm:text-[32px]">
+          {title}
+        </h2>
 
         <form action={formAction} className="mt-7 flex flex-col gap-4">
           {fields.map((field) => {
@@ -82,19 +102,19 @@ export function AuthForm({
                   autoComplete={field.autoComplete}
                   aria-invalid={hasError || undefined}
                   className={cn(
-                    "h-11 border bg-transparent px-3.5 text-[15px] text-ink outline-none transition-colors placeholder:text-faint focus:border-up",
+                    "h-11 border bg-page px-3.5 text-[15px] text-ink outline-none transition-colors placeholder:text-faint focus:border-up",
                     hasError ? "border-down" : "border-rule",
                   )}
                 />
                 {hasError && (
-                  <span className="text-xs text-down">{state.error}</span>
+                  <span className="text-[13px] text-down">{state.error}</span>
                 )}
               </label>
             );
           })}
 
           {state.field === "form" && state.error && (
-            <p className="border-l-2 border-down bg-down-wash px-3.5 py-2.5 text-sm text-down">
+            <p className="border-l-2 border-down px-3.5 py-2.5 text-[14px] text-down">
               {state.error}
             </p>
           )}
@@ -114,7 +134,7 @@ export function AuthForm({
             {altLinkLabel}
           </Link>
         </p>
-      </div>
+      </section>
     </div>
   );
 }
