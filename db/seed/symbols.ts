@@ -140,6 +140,8 @@ export const INDEX_STRIP = ["QQQ", "SPY", "DIA", "IWM"] as const;
  */
 export type WorldMarket = {
   symbol: string;
+  /** Fonun resmî adı — sağlayıcı ETF profili döndürmediği için elle tutulur. */
+  fundName: string;
   nameTr: string;
   nameEn: string;
   /** Vekil ettiği yerel endeks — kart altında künye olarak görünür. */
@@ -151,6 +153,7 @@ export type WorldMarket = {
 export const WORLD_MARKETS: WorldMarket[] = [
   {
     symbol: "EWJ",
+    fundName: "iShares MSCI Japan ETF",
     nameTr: "Japonya",
     nameEn: "Japan",
     tracksTr: "MSCI Japonya · Nikkei ile aynı piyasa",
@@ -159,6 +162,7 @@ export const WORLD_MARKETS: WorldMarket[] = [
   },
   {
     symbol: "EWY",
+    fundName: "iShares MSCI South Korea ETF",
     nameTr: "Güney Kore",
     nameEn: "South Korea",
     tracksTr: "MSCI Güney Kore · KOSPI ile aynı piyasa",
@@ -167,6 +171,7 @@ export const WORLD_MARKETS: WorldMarket[] = [
   },
   {
     symbol: "TUR",
+    fundName: "iShares MSCI Turkey ETF",
     nameTr: "Türkiye",
     nameEn: "Türkiye",
     tracksTr: "MSCI Türkiye · BIST ile aynı piyasa",
@@ -175,6 +180,7 @@ export const WORLD_MARKETS: WorldMarket[] = [
   },
   {
     symbol: "MCHI",
+    fundName: "iShares MSCI China ETF",
     nameTr: "Çin",
     nameEn: "China",
     tracksTr: "MSCI Çin · Şanghay ve Hong Kong",
@@ -183,6 +189,7 @@ export const WORLD_MARKETS: WorldMarket[] = [
   },
   {
     symbol: "EWG",
+    fundName: "iShares MSCI Germany ETF",
     nameTr: "Almanya",
     nameEn: "Germany",
     tracksTr: "MSCI Almanya · DAX ile aynı piyasa",
@@ -191,6 +198,7 @@ export const WORLD_MARKETS: WorldMarket[] = [
   },
   {
     symbol: "INDA",
+    fundName: "iShares MSCI India ETF",
     nameTr: "Hindistan",
     nameEn: "India",
     tracksTr: "MSCI Hindistan · Sensex ve Nifty",
@@ -198,3 +206,100 @@ export const WORLD_MARKETS: WorldMarket[] = [
     flag: "🇮🇳",
   },
 ];
+
+/* ==========================================================================
+   Fon künyeleri
+   ========================================================================== */
+
+/**
+ * Takip ettiğimiz ETF'lerin kimliği.
+ *
+ * Finnhub'ın `/stock/profile2` ucu fonlar için BOŞ nesne döner — QQQ, SPY,
+ * EWJ hepsi `{}`. Bu yüzden ad, ülke ve izlenen endeks bilgisi burada elle
+ * tutulur; hisse detayında şirket profili yerine bu künye gösterilir.
+ */
+export type FundMeta = {
+  symbol: string;
+  /** Fonun resmî adı. */
+  name: string;
+  /** Kısa ad — "Nasdaq 100", "Japonya". */
+  labelTr: string;
+  labelEn: string;
+  /** İzlediği endeks ve piyasa. */
+  tracksTr: string;
+  tracksEn: string;
+  flag: string;
+  /** Fonu çıkaran kurum. */
+  issuer: string;
+  /** ABD endeks fonu mu, yabancı piyasa fonu mu — künye notu buna göre. */
+  kind: "us-index" | "country";
+};
+
+const US_INDEX_FUNDS: FundMeta[] = [
+  {
+    symbol: "QQQ",
+    name: "Invesco QQQ Trust",
+    labelTr: "Nasdaq 100",
+    labelEn: "Nasdaq 100",
+    tracksTr: "Nasdaq 100 endeksi · ABD",
+    tracksEn: "Nasdaq 100 index · US",
+    flag: "🇺🇸",
+    issuer: "Invesco",
+    kind: "us-index",
+  },
+  {
+    symbol: "SPY",
+    name: "SPDR S&P 500 ETF Trust",
+    labelTr: "S&P 500",
+    labelEn: "S&P 500",
+    tracksTr: "S&P 500 endeksi · ABD",
+    tracksEn: "S&P 500 index · US",
+    flag: "🇺🇸",
+    issuer: "State Street",
+    kind: "us-index",
+  },
+  {
+    symbol: "DIA",
+    name: "SPDR Dow Jones Industrial Average ETF Trust",
+    labelTr: "Dow Jones",
+    labelEn: "Dow Jones",
+    tracksTr: "Dow Jones Industrial Average · ABD",
+    tracksEn: "Dow Jones Industrial Average · US",
+    flag: "🇺🇸",
+    issuer: "State Street",
+    kind: "us-index",
+  },
+  {
+    symbol: "IWM",
+    name: "iShares Russell 2000 ETF",
+    labelTr: "Russell 2000",
+    labelEn: "Russell 2000",
+    tracksTr: "Russell 2000 endeksi · ABD küçük ölçekli",
+    tracksEn: "Russell 2000 index · US small caps",
+    flag: "🇺🇸",
+    issuer: "BlackRock",
+    kind: "us-index",
+  },
+];
+
+const FUND_META: Record<string, FundMeta> = Object.fromEntries(
+  [
+    ...US_INDEX_FUNDS,
+    ...WORLD_MARKETS.map<FundMeta>((market) => ({
+      symbol: market.symbol,
+      name: market.fundName,
+      labelTr: market.nameTr,
+      labelEn: market.nameEn,
+      tracksTr: market.tracksTr,
+      tracksEn: market.tracksEn,
+      flag: market.flag,
+      issuer: "BlackRock",
+      kind: "country",
+    })),
+  ].map((fund) => [fund.symbol, fund]),
+);
+
+/** Sembol bir fon mu — öyleyse künyesi, değilse null. */
+export function fundMetaOf(symbol: string): FundMeta | null {
+  return FUND_META[symbol] ?? null;
+}

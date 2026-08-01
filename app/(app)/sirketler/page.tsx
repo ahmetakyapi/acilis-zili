@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChangePill, DataStamp, EmptyState, Panel } from "@/components/ui/primitives";
+import { primaryOnly } from "@/db/seed/indices";
 import { getCompanies, getStatus } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { getQuotes } from "@/lib/providers";
@@ -93,7 +94,8 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   const sectorFilter = typeof search.sektor === "string" ? search.sektor : null;
 
   const { locale, t } = await getI18n();
-  const companies = await getCompanies();
+  // Aynı şirketin ikinci sınıf kotasyonu (GOOG ↔ GOOGL) listede tekrar etmez.
+  const companies = primaryOnly(await getCompanies());
 
   // Sektör → şirket sayısı; şerit önem sırasına göre dizilir.
   const sectorCounts = new Map<string, number>();

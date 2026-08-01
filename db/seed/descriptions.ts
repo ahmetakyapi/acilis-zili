@@ -43,6 +43,32 @@ export const SYMBOL_DESCRIPTIONS: Record<string, SymbolDescription> = {
     en: "ETF tracking the Russell 2000 — about 2,000 US small-cap companies, widely read as a pulse of the domestic economy.",
   },
 
+  // ---- Ülke fonları (dünya piyasaları) ----
+  EWJ: {
+    tr: "Japonya borsasının büyük ve orta ölçekli şirketlerini tutan iShares MSCI Japonya fonu — Toyota, Sony, Mitsubishi UFJ, Hitachi ve Keyence gibi isimler en ağır kalemler. Nikkei 225 ve TOPIX ile aynı piyasayı temsil eder. ABD borsasında dolar cinsinden işlem gördüğü için fiyatına hem Tokyo'daki hisse hareketi hem de yen/dolar kuru yansır.",
+    en: "iShares MSCI Japan holds the large- and mid-cap names of the Japanese market — Toyota, Sony, Mitsubishi UFJ, Hitachi and Keyence are among the heaviest weights. It represents the same market as the Nikkei 225 and TOPIX. Because it trades in US dollars on a US exchange, its price reflects both Tokyo share moves and the yen/dollar rate.",
+  },
+  EWY: {
+    tr: "Güney Kore borsasını izleyen iShares MSCI Güney Kore fonu — Samsung Electronics ve SK Hynix tek başlarına fonun büyük bölümünü oluşturur; Hyundai, Naver ve Kia diğer ağır isimlerdir. KOSPI ile aynı piyasadır ve bellek çipi (DRAM/NAND) döngüsüne çok duyarlıdır: Kore endeksi çoğu zaman küresel yarı iletken talebinin erken göstergesi sayılır.",
+    en: "iShares MSCI South Korea tracks the Korean market — Samsung Electronics and SK Hynix alone make up a large share of the fund, with Hyundai, Naver and Kia among the other big weights. It is the same market as the KOSPI and is highly sensitive to the memory-chip (DRAM/NAND) cycle, which makes it an early read on global semiconductor demand.",
+  },
+  TUR: {
+    tr: "Borsa İstanbul'un büyük şirketlerini tutan iShares MSCI Türkiye fonu — bankalar, holdingler, havacılık ve perakende ağırlıkta; BIST 100 ile aynı piyasadır. Dolar cinsinden işlem görür, bu yüzden getirisi TL'deki hisse hareketinden çok kur farkını da içerir: BIST 100 TL'de yükselirken TL değer kaybederse bu fon geride kalabilir.",
+    en: "iShares MSCI Türkiye holds the large caps of Borsa İstanbul — banks, holding companies, aviation and retail carry the most weight; the same market as the BIST 100. It trades in dollars, so its return blends share moves in lira with the currency: if the BIST 100 rises in lira while the lira weakens, the fund can lag.",
+  },
+  MCHI: {
+    tr: "Çin hisselerini kapsayan iShares MSCI Çin fonu — Tencent, Alibaba, Xiaomi, Meituan ve PDD en ağır isimler. Hong Kong'da işlem gören H-hisseleri ve ABD'de kote Çin şirketleri ile anakaradaki A-hisselerini bir arada tutar; internet ve tüketim tarafı, düzenleyici kararlara ve iç talep verilerine hızlı tepki verir.",
+    en: "iShares MSCI China spans Chinese equities — Tencent, Alibaba, Xiaomi, Meituan and PDD are the heaviest names. It combines Hong Kong–listed H-shares and US-listed Chinese companies with mainland A-shares; the internet and consumer side reacts quickly to regulatory decisions and domestic demand data.",
+  },
+  EWG: {
+    tr: "Almanya borsasını izleyen iShares MSCI Almanya fonu — SAP, Siemens, Allianz, Deutsche Telekom ve Munich Re en büyük kalemler; DAX ile aynı piyasadır. Alman endeksi ihracat ağırlıklı bir sanayi ekonomisini yansıtır: otomotiv, makine ve kimya kalemleri küresel büyüme ile enerji fiyatlarına duyarlıdır.",
+    en: "iShares MSCI Germany tracks the German market — SAP, Siemens, Allianz, Deutsche Telekom and Munich Re are the largest holdings; the same market as the DAX. The German index reflects an export-heavy industrial economy: autos, machinery and chemicals move with global growth and energy prices.",
+  },
+  INDA: {
+    tr: "Hindistan borsasının büyük şirketlerini tutan iShares MSCI Hindistan fonu — Reliance Industries, HDFC Bank, ICICI Bank, Infosys ve TCS ağırlıkta; Sensex ve Nifty 50 ile aynı piyasadır. Finans ve bilişim hizmetleri fonun omurgasını oluşturur; iç tüketim büyümesi bu endeksin ana hikâyesidir.",
+    en: "iShares MSCI India holds the large caps of the Indian market — Reliance Industries, HDFC Bank, ICICI Bank, Infosys and TCS carry the most weight; the same market as the Sensex and Nifty 50. Financials and IT services form the fund's backbone, with domestic consumption growth the central story.",
+  },
+
   // ---- Yapay zekâ ve yarı iletken ----
   NVDA: {
     tr: "Yapay zekâ hızlandırıcıları ve grafik işlemcilerinde (GPU) dünya lideri. Veri merkezi çipleri, oyun ekran kartları, otomotiv ve robotik platformları ile CUDA yazılım ekosistemini kapsar.",

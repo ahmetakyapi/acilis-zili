@@ -683,11 +683,42 @@ export function indexMemberOf(symbol: string): IndexMember | null {
   return BY_SYMBOL.get(symbol) ?? null;
 }
 
+/**
+ * Çok sınıflı hisseler — aynı şirketin ikinci kotasyonu.
+ *
+ * Alphabet endekste hem GOOGL (A sınıfı, oy hakkı var) hem GOOG (C sınıfı,
+ * oy hakkı yok) olarak yer alır; ikisi de AYNI şirkettir. Listelerde iki ayrı
+ * satır açmaları okuyucuyu yanıltır, bu yüzden yaygın olarak izlenen sınıf
+ * gösterilir, diğeri elenir. Sembol yine geçerlidir — /hisse/GOOG açılır,
+ * arama bulur; yalnızca toplu listelerde tekrar etmez.
+ *
+ * Anahtar: elenen sembol · Değer: yerine gösterilen sembol.
+ */
+export const SECONDARY_SHARE_CLASSES: Record<string, string> = {
+  GOOG: "GOOGL",
+  FOX: "FOXA",
+  NWS: "NWSA",
+  "BRK.A": "BRK.B",
+  "LEN.B": "LEN",
+  "UHAL.B": "UHAL",
+};
+
+export function isSecondaryShareClass(symbol: string): boolean {
+  return symbol in SECONDARY_SHARE_CLASSES;
+}
+
+/** Aynı şirketin ikinci sınıf kotasyonlarını listeden düşürür. */
+export function primaryOnly<T extends { symbol: string }>(
+  rows: readonly T[],
+): T[] {
+  return rows.filter((row) => !isSecondaryShareClass(row.symbol));
+}
+
 /** Aynı GICS alt sektöründeki diğer şirketler — hisse detayındaki öneriler. */
 export function peersOf(symbol: string): IndexMember[] {
   const member = BY_SYMBOL.get(symbol);
   if (!member?.sub) return [];
-  return ALL_MEMBERS.filter(
+  return primaryOnly(ALL_MEMBERS).filter(
     (other) => other.symbol !== symbol && other.sub === member.sub,
   );
 }

@@ -27,6 +27,7 @@ import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote, getQuotes } from "@/lib/providers";
 import { COMPLIANCE_THRESHOLD, screenCompliance } from "@/lib/compliance";
 import { indexMemberOf, peersOf } from "@/db/seed/indices";
+import { fundMetaOf } from "@/db/seed/symbols";
 import { subIndustryName } from "@/db/seed/sub-industries";
 import {
   getCompanyNews,
@@ -63,27 +64,45 @@ export default async function StockPage(
     );
   }
 
+  /* Fon sayfası ayrı kurgudur: metrikler, analist tavsiyeleri, katılım taraması
+     ve sektör benzerleri bir ETF için anlamsızdır — sağlayıcı da bu uçlarda
+     boş döner. Yerine fonun künyesi ve izlediği piyasa anlatılır. */
+  const fund = fundMetaOf(symbol);
+  if (fund) {
+    return (
+      <div className="flex flex-col gap-5">
+        <Suspense fallback={<HeaderSkeleton />}>
+          <StockHeader symbol={symbol} locale={locale} t={t} />
+        </Suspense>
+
+        <div className="grid gap-5 lg:grid-cols-3">
+          <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
+            <Suspense fallback={<Skeleton className="h-80 w-full" />}>
+              <ChartSection symbol={symbol} locale={locale} t={t} />
+            </Suspense>
+          </Panel>
+
+          <Suspense fallback={<Skeleton className="h-96 w-full rounded-(--radius-xl)" />}>
+            <FundCard symbol={symbol} locale={locale} t={t} />
+          </Suspense>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <Suspense fallback={<HeaderSkeleton />}>
         <StockHeader symbol={symbol} locale={locale} t={t} />
       </Suspense>
 
+      {/* Üst blok — grafik solda geniş, şirketin kimliği sağda */}
       <div className="grid gap-5 lg:grid-cols-3">
-        <div className="flex min-w-0 flex-col gap-5 lg:col-span-2">
-          <Panel className="p-4 sm:p-5">
-            <Suspense fallback={<Skeleton className="h-80 w-full" />}>
-              <ChartSection symbol={symbol} locale={locale} t={t} />
-            </Suspense>
-          </Panel>
-
-          <Panel>
-            <PanelHeader title={t.stock.pastEarnings} />
-            <Suspense fallback={<ListSkeleton rows={4} />}>
-              <PastEarnings symbol={symbol} locale={locale} t={t} />
-            </Suspense>
-          </Panel>
-        </div>
+        <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
+          <Suspense fallback={<Skeleton className="h-80 w-full" />}>
+            <ChartSection symbol={symbol} locale={locale} t={t} />
+          </Suspense>
+        </Panel>
 
         <div className="flex min-w-0 flex-col gap-5">
           <Panel>
@@ -96,30 +115,43 @@ export default async function StockPage(
           <Suspense fallback={<Skeleton className="h-24 w-full rounded-(--radius-xl)" />}>
             <UpcomingEarnings symbol={symbol} locale={locale} t={t} />
           </Suspense>
-
-          <Panel>
-            <PanelHeader title={t.stock.metrics} />
-            <Suspense fallback={<ListSkeleton rows={5} />}>
-              <MetricsCard symbol={symbol} locale={locale} t={t} />
-            </Suspense>
-          </Panel>
-
-          <Panel>
-            <PanelHeader title={t.stock.analysts} />
-            <Suspense fallback={<ListSkeleton rows={3} />}>
-              <AnalystCard symbol={symbol} locale={locale} t={t} />
-            </Suspense>
-          </Panel>
-
-          <Suspense fallback={<Skeleton className="h-40 w-full rounded-(--radius-xl)" />}>
-            <ComplianceCard symbol={symbol} locale={locale} t={t} />
-          </Suspense>
-
-          <Suspense fallback={<Skeleton className="h-56 w-full rounded-(--radius-xl)" />}>
-            <PeersCard symbol={symbol} locale={locale} t={t} />
-          </Suspense>
         </div>
       </div>
+
+      {/* Ölçüler şeridi — üç kart yan yana; dar ekranda kendiliğinden alt alta.
+          Eskiden bunlar tek sütuna dizildiği için sağ kolon uzayıp sol taraf
+          boş kalıyordu; artık sayfanın tam genişliğini kullanıyorlar. */}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(17rem,1fr))] gap-5">
+        <Panel>
+          <PanelHeader title={t.stock.metrics} />
+          <Suspense fallback={<ListSkeleton rows={5} />}>
+            <MetricsCard symbol={symbol} locale={locale} t={t} />
+          </Suspense>
+        </Panel>
+
+        <Panel>
+          <PanelHeader title={t.stock.analysts} />
+          <Suspense fallback={<ListSkeleton rows={3} />}>
+            <AnalystCard symbol={symbol} locale={locale} t={t} />
+          </Suspense>
+        </Panel>
+
+        <Suspense fallback={<Skeleton className="h-56 w-full rounded-(--radius-xl)" />}>
+          <ComplianceCard symbol={symbol} locale={locale} t={t} />
+        </Suspense>
+      </div>
+
+      {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
+      <Panel>
+        <PanelHeader title={t.stock.pastEarnings} />
+        <Suspense fallback={<ListSkeleton rows={4} />}>
+          <PastEarnings symbol={symbol} locale={locale} t={t} />
+        </Suspense>
+      </Panel>
+
+      <Suspense fallback={<Skeleton className="h-48 w-full rounded-(--radius-xl)" />}>
+        <PeersCard symbol={symbol} locale={locale} t={t} />
+      </Suspense>
 
       {/* Haberler en altta — mobilde de masaüstünde de son durak */}
       <Panel>
@@ -153,6 +185,8 @@ async function StockHeader({
   ]);
 
   const profile = profileResult.ok ? profileResult.data : null;
+  // Fonlarda sağlayıcı profili boş döner — ad ve künye yerel kayıttan gelir.
+  const fund = fundMetaOf(symbol);
 
   let isFavorite = false;
   if (session?.user?.id) {
@@ -177,7 +211,7 @@ async function StockHeader({
   return (
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div className="flex items-center gap-3">
-        {profile?.logoUrl && (
+        {profile?.logoUrl ? (
           <Image
             src={profile.logoUrl}
             alt=""
@@ -185,7 +219,15 @@ async function StockHeader({
             height={56}
             className="rounded-(--radius-lg) border border-line bg-white object-contain p-1.5 shadow-(--shadow-card)"
           />
-        )}
+        ) : fund ? (
+          // Fonun logosu yok; ülke/piyasa bayrağı kimliği taşır
+          <span
+            aria-hidden
+            className="flex size-14 shrink-0 items-center justify-center rounded-(--radius-lg) border border-line bg-surface-elevated text-2xl shadow-(--shadow-card)"
+          >
+            {fund.flag}
+          </span>
+        ) : null}
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="numeral text-2xl font-bold tracking-tight text-strong">
@@ -214,7 +256,16 @@ async function StockHeader({
               </form>
             )}
           </div>
-          <p className="text-sm text-soft">{profile?.name ?? ""}</p>
+          <p className="text-sm text-soft">{profile?.name || fund?.name || ""}</p>
+          {fund && (
+            <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] leading-tight text-muted">
+              <span className="font-semibold text-soft">
+                {locale === "tr" ? fund.labelTr : fund.labelEn}
+              </span>
+              <span aria-hidden>·</span>
+              <span>{locale === "tr" ? fund.tracksTr : fund.tracksEn}</span>
+            </p>
+          )}
         </div>
       </div>
 
@@ -407,6 +458,62 @@ async function UpcomingEarnings({
           )}
         </dl>
       )}
+    </Panel>
+  );
+}
+
+/**
+ * Fon künyesi — ETF'ler için profil kartının karşılığı.
+ *
+ * Sağlayıcı fonlar hakkında hiçbir şey döndürmediğinden içeriğin tamamı
+ * yerel kayıttan gelir: ne izlediği, kim çıkardığı ve fiyatının yerel
+ * endeksten nasıl ayrıştığı. Bu ayrım kartın altında açıkça yazılır.
+ */
+async function FundCard({
+  symbol,
+  locale,
+  t,
+}: {
+  symbol: string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const fund = fundMetaOf(symbol);
+  if (!fund) return null;
+
+  const about = await describeSymbol(symbol, locale);
+  const rows: [string, React.ReactNode][] = [
+    [t.stock.fundKind, t.stock.fundKindLabel],
+    [t.stock.fundTracks, locale === "tr" ? fund.tracksTr : fund.tracksEn],
+    [t.stock.fundIssuer, fund.issuer],
+  ];
+
+  return (
+    <Panel>
+      <PanelHeader title={t.stock.fundProfile} />
+      <div className="px-4 py-3 sm:px-5">
+        {about && (
+          <p className="border-b border-line-soft pb-3 text-[13px] leading-relaxed text-body">
+            {about}
+          </p>
+        )}
+        <dl className="divide-y divide-line-soft">
+          {rows.map(([label, value]) => (
+            <div
+              key={label}
+              className="flex items-start justify-between gap-3 py-2"
+            >
+              <dt className="shrink-0 text-xs text-muted">{label}</dt>
+              <dd className="text-right text-sm text-body">{value}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mt-3 border-t border-line-soft pt-2.5 text-[11px] leading-relaxed text-muted">
+          {fund.kind === "country"
+            ? t.stock.fundNoteCountry
+            : t.stock.fundNoteIndex}
+        </p>
+      </div>
     </Panel>
   );
 }
@@ -713,6 +820,11 @@ async function PastEarnings({
             <th className="px-4 py-2.5 font-medium sm:px-5">
               {t.earnings.period}
             </th>
+            {/* Tablo tam genişlikte olduğu için rapor tarihi kendi kolonunda
+                durur; dar ekranda dönem hücresinin altına iner. */}
+            <th className="hidden px-3 py-2.5 font-medium md:table-cell">
+              {t.earnings.reportDate}
+            </th>
             <th className="px-2 py-2.5 text-right font-medium sm:px-3">
               EPS · {t.calendar.forecast}
             </th>
@@ -748,9 +860,12 @@ async function PastEarnings({
                       new Date(`${row.periodEnd ?? row.reportDate}T12:00:00Z`),
                     )}
                   </span>
-                  <span className="numeral block text-[11px] text-muted">
+                  <span className="numeral block text-[11px] text-muted md:hidden">
                     {formatEtDateShort(row.reportDate, locale)}
                   </span>
+                </td>
+                <td className="numeral hidden px-3 py-2.5 text-sm text-body md:table-cell">
+                  {formatEtDateShort(row.reportDate, locale)}
                 </td>
                 <td className="numeral px-2 py-2.5 text-right text-muted sm:px-3">
                   {row.epsEstimate !== null
@@ -916,8 +1031,9 @@ async function ComplianceCard({
 }
 
 /**
- * Aynı alt sektördeki şirketler — piyasa değerine göre en büyük altı isim.
- * Sınıflandırma GICS'ten gelir; fiyatlar canlı.
+ * Aynı alt sektördeki şirketler — piyasa değerine göre en büyük sekiz isim,
+ * sayfanın tam genişliğinde kart ızgarası olarak. Sınıflandırma GICS'ten
+ * gelir; fiyatlar canlı. Aynı şirketin ikinci hisse sınıfı listeye girmez.
  */
 async function PeersCard({
   symbol,
@@ -938,7 +1054,7 @@ async function PeersCard({
       (a, b) =>
         (meta[b.symbol]?.marketCap ?? 0) - (meta[a.symbol]?.marketCap ?? 0),
     )
-    .slice(0, 6);
+    .slice(0, 8);
 
   const status = await getStatus();
   const result = await getQuotes(
@@ -958,26 +1074,26 @@ async function PeersCard({
           </span>
         </p>
       )}
-      <ul className="divide-y divide-line-soft">
+      <ul className="grid grid-cols-2 gap-2.5 p-4 lg:grid-cols-4 sm:px-5">
         {ranked.map((peer) => {
           const quote = quotes[peer.symbol];
           return (
-            <li key={peer.symbol}>
+            <li key={peer.symbol} className="min-w-0">
               <Link
                 href={`/hisse/${peer.symbol}`}
-                className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-primary-tint sm:px-5"
+                className="flex h-full flex-col justify-between gap-2.5 rounded-(--radius-lg) border border-line-soft bg-surface-elevated px-3.5 py-3 transition-colors hover:border-line-strong hover:bg-primary-tint"
               >
-                <span className="flex min-w-0 flex-col">
-                  <span className="numeral text-sm font-semibold text-strong">
+                <span className="min-w-0">
+                  <span className="numeral block text-sm font-bold text-strong">
                     {peer.symbol}
                   </span>
-                  <span className="truncate text-[11px] text-muted">
+                  <span className="mt-0.5 block truncate text-[11px] text-muted">
                     {peer.name}
                   </span>
                 </span>
                 {quote ? (
-                  <span className="flex shrink-0 items-center gap-2">
-                    <span className="numeral text-xs text-body">
+                  <span className="flex flex-wrap items-center justify-between gap-1.5">
+                    <span className="numeral text-sm text-body">
                       {formatPrice(quote.price, locale)}
                     </span>
                     <ChangePill

@@ -12,6 +12,7 @@ import {
   INDEX_COMPOSITION_DATE,
   NDX_MEMBERS,
   SPX_MEMBERS,
+  primaryOnly,
   type IndexMember,
 } from "@/db/seed/indices";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
@@ -40,10 +41,13 @@ import {
  * elimizdeki fiyatlardan türer — tahmin yok.
  */
 
+/* Üyelik listeleri şirket başına tek satır gösterir: endekste iki sınıfı da
+   bulunan şirketler (GOOGL/GOOG, FOXA/FOX, NWSA/NWS) yaygın sınıfıyla yer
+   alır. Dow'da çok sınıflı üye yoktur, bölen hesabı bundan etkilenmez. */
 const INDEX_TABS = [
-  { key: "dow", label: "Dow Jones", proxy: "DIA", members: DOW_MEMBERS },
-  { key: "nasdaq", label: "Nasdaq 100", proxy: "QQQ", members: NDX_MEMBERS },
-  { key: "sp500", label: "S&P 500", proxy: "SPY", members: SPX_MEMBERS },
+  { key: "dow", label: "Dow Jones", proxy: "DIA", members: primaryOnly(DOW_MEMBERS) },
+  { key: "nasdaq", label: "Nasdaq 100", proxy: "QQQ", members: primaryOnly(NDX_MEMBERS) },
+  { key: "sp500", label: "S&P 500", proxy: "SPY", members: primaryOnly(SPX_MEMBERS) },
 ] as const;
 
 type TabKey = (typeof INDEX_TABS)[number]["key"];
