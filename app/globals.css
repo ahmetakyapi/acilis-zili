@@ -94,11 +94,12 @@
     #2493dd 100%
   );
 
-  /* Küçük puntoda (13–16px) aynı aile, çok daha dar aralık. Degrade her
-     elemanın KENDİ kutusunda çizilir: dar bir gezinme etiketi tam sweep
-     yapıp "Makro" ile "Bilançolar"ı birbirinden kopuk gösteriyordu. Dar
-     aralık hem bunu hem açık uçtaki kontrast düşüşünü çözer. */
-  --display-gradient-tight: linear-gradient(105deg, #0c2c52 0%, #12508f 100%);
+  /* Küçük puntoda (13–16px) aynı aile. Degrade her elemanın KENDİ kutusunda
+     çizilir; geniş varyant dar bir gezinme etiketini lacivertten solgun
+     maviye kadar süpürüp okunmaz hale getiriyordu. Bu varyant iki durak
+     kullanır: lacivert → net accent mavi. Degrade gözle görülür kalır ama
+     açık uç 11px'te bile kontrastını korur. */
+  --display-gradient-tight: linear-gradient(100deg, #0a2547 0%, #2a90e0 100%);
 
   /* Marka karosunun oturma gölgesi — rozet hissi buradan geliyor. */
   --mark-shadow: 0 1px 2px rgb(13 92 182 / 0.28), 0 4px 10px rgb(13 92 182 / 0.22);
@@ -178,7 +179,7 @@
     #3fbcff 100%
   );
 
-  --display-gradient-tight: linear-gradient(105deg, #e9f3fb 0%, #8fd4ff 100%);
+  --display-gradient-tight: linear-gradient(100deg, #eef5fc 0%, #4fc3ff 100%);
 
   --mark-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 4px 12px rgb(26 99 196 / 0.4);
 

@@ -78,7 +78,7 @@ export default async function StockPage(
 
         <div className="grid gap-5 lg:grid-cols-3">
           <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
-            <Suspense fallback={<Skeleton className="h-80 w-full" />}>
+            <Suspense fallback={<Skeleton className="h-[300px] w-full sm:h-[430px]" />}>
               <ChartSection symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
@@ -100,7 +100,7 @@ export default async function StockPage(
       {/* Üst blok — grafik solda geniş, şirketin kimliği sağda */}
       <div className="grid gap-5 lg:grid-cols-3">
         <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
-          <Suspense fallback={<Skeleton className="h-80 w-full" />}>
+          <Suspense fallback={<Skeleton className="h-[300px] w-full sm:h-[430px]" />}>
             <ChartSection symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </Panel>

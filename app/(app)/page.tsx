@@ -31,6 +31,7 @@ import {
   getUserSymbols,
 } from "@/lib/data";
 import {
+  SESSION_BOUNDS,
   addEtDays,
   etDateTimeToUtc,
   todayEt,
@@ -324,6 +325,15 @@ async function RailSection({
     };
   });
 
+  // Seans sınırlarının Türkiye saati. ET↔TR farkı ABD yaz saatiyle kaydığı
+  // için sabit değil; o günün tarihiyle hesaplanıp şeride veriliyor.
+  const clockOf = (minutes: number) =>
+    `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(
+      minutes % 60,
+    ).padStart(2, "0")}`;
+  const openEt = clockOf(SESSION_BOUNDS.regularOpen);
+  const closeEt = clockOf(status.closeMinutes);
+
   return (
     <DayRail
       events={[...eventItems, ...groupedEarnings]}
@@ -335,6 +345,8 @@ async function RailSection({
         close: t.dayRail.closeShort,
         now: t.dayRail.now,
         noEvents: t.dayRail.noEvents,
+        bellTr: dualTime(etDateTimeToUtc(today, openEt), openEt).tr,
+        closeTr: dualTime(etDateTimeToUtc(today, closeEt), closeEt).tr,
       }}
     />
   );

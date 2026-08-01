@@ -236,8 +236,17 @@ export function PriceChart({
         timeVisible: intraday,
         secondsVisible: false,
       },
+      /* İmleç arayüz kromudur, yön göstergesi değil: çizgi ve tarih etiketi
+         accent maviyle çizilir. Eskiden etiket serinin yön rengini (yeşil/
+         kırmızı) alıyordu ve grafiğin üstünde bağımsız bir "yeşil kutu" gibi
+         duruyordu — sitenin geri kalanında o renk yalnızca yön söylüyor. */
       crosshair: {
-        vertLine: { color: text, width: 1, style: 3, labelBackgroundColor: line },
+        vertLine: {
+          color: cssVar("--primary-faint"),
+          width: 1,
+          style: 0,
+          labelBackgroundColor: cssVar("--primary"),
+        },
         horzLine: { visible: false, labelVisible: false },
       },
       localization: {
@@ -490,8 +499,10 @@ export function PriceChart({
         )}
       </div>
 
-      {/* Grafik alanı */}
-      <div className="relative h-72 w-full sm:h-80">
+      {/* Grafik alanı — yükseklik kasten cömert: yanındaki künye kartı daha
+          uzun olduğu için grafik kartının altında ölü boşluk kalıyordu ve
+          gün içi hareket 288px'e sıkışınca düzleşiyordu. */}
+      <div className="relative h-[300px] w-full sm:h-[430px]">
         {state.phase === "loading" && (
           <div className="skeleton absolute inset-0" aria-hidden />
         )}

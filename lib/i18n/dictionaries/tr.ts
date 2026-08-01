@@ -122,8 +122,9 @@ const tr = {
     greetingMorning: "Günaydın",
     greetingDay: "İyi Günler",
     greetingEvening: "İyi Akşamlar",
-    untilBell: "Zil çalana kadar",
-    untilClose: "Kapanış ziline kadar",
+    // Sayının ARDINDAN okunur: "1g 15sa 31dk açılış ziline kaldı".
+    untilBell: "Açılış Ziline Kaldı",
+    untilClose: "Kapanış Ziline Kaldı",
     unitMinutes: "Dakika",
     unitHours: "Saat",
     unitDays: "Gün",

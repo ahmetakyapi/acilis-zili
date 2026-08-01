@@ -122,8 +122,9 @@ const en: typeof tr = {
     greetingMorning: "Good Morning",
     greetingDay: "Good Afternoon",
     greetingEvening: "Good Evening",
-    untilBell: "Until the bell",
-    untilClose: "Until the closing bell",
+    // Reads after the number: "1d 15h 31m left until the opening bell".
+    untilBell: "Left Until The Opening Bell",
+    untilClose: "Left Until The Closing Bell",
     unitMinutes: "Minutes",
     unitHours: "Hours",
     unitDays: "Days",

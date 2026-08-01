@@ -47,6 +47,10 @@ type DayRailProps = {
     close: string;
     now: string;
     noEvents: string;
+    /** Açılışın Türkiye saati ("16:30") — ET/TR farkı DST ile kaydığı için
+        sunucuda hesaplanıp geliyor, burada sabitlenmiyor. */
+    bellTr: string;
+    closeTr: string;
   };
 };
 
@@ -58,7 +62,11 @@ const RAIL_SPAN = RAIL_END - RAIL_START;
 const AXIS_TOP = 37;
 const AXIS_HEIGHT = 6;
 const BOUND_LABEL_TOP = 56;
-const EVENT_LABEL_TOP = 74;
+/** AÇILIŞ/KAPANIŞ etiketinin altındaki saat satırı — HANDOFF §5'e ek.
+    Sınırların saatini yazmak istendi; olay etiketleri bu yüzden 74 yerine
+    90'da başlıyor ve şerit 16px yükseldi. */
+const BOUND_TIME_TOP = 70;
+const EVENT_LABEL_TOP = 90;
 /** Çakışan alt etiketler bu kadar aşağı kademelenir. */
 const ROW_OFFSET = 30;
 /** İki olay bu dakikadan yakınsa etiketleri üst üste biner. */
@@ -146,7 +154,7 @@ export function DayRail({
     (max, event) => (event.prominent ? max : Math.max(max, event.row)),
     0,
   );
-  const railHeight = 112 + maxRow * ROW_OFFSET;
+  const railHeight = 128 + maxRow * ROW_OFFSET;
 
   const nowVisible = nowMinutes >= RAIL_START && nowMinutes <= RAIL_END;
   const marketLive =
@@ -194,19 +202,45 @@ export function DayRail({
           />
         )}
 
-        {/* AÇILIŞ / KAPANIŞ — eksenin altında, olay etiketlerinden ayrı bant */}
-        <div
-          className="plate absolute -translate-x-1/2 whitespace-nowrap text-[10.5px] tracking-[0.08em] text-body"
-          style={{ left: `${openPct}%`, top: BOUND_LABEL_TOP }}
-        >
-          {labels.bell}
-        </div>
-        <div
-          className="plate absolute -translate-x-1/2 whitespace-nowrap text-[10.5px] tracking-[0.08em] text-body"
-          style={{ left: `${closePct}%`, top: BOUND_LABEL_TOP }}
-        >
-          {labels.close}
-        </div>
+        {/* AÇILIŞ / KAPANIŞ — eksenin altında, olay etiketlerinden ayrı bant.
+            Altına iki saat birden yazılır: New York seansın kendi saati,
+            Türkiye ise okuyucunun duvar saati. */}
+        {[
+          {
+            key: "open",
+            left: openPct,
+            label: labels.bell,
+            et: formatMinutes(SESSION_BOUNDS.regularOpen),
+            tr: labels.bellTr,
+          },
+          {
+            key: "close",
+            left: closePct,
+            label: labels.close,
+            et: formatMinutes(closeMinutes),
+            tr: labels.closeTr,
+          },
+        ].map((bound) => (
+          <div
+            key={bound.key}
+            className="absolute -translate-x-1/2 whitespace-nowrap text-center"
+            style={{ left: `${bound.left}%`, top: BOUND_LABEL_TOP }}
+          >
+            <div className="plate text-[10.5px] tracking-[0.08em] text-body">
+              {bound.label}
+            </div>
+            <div
+              className="numeral text-[10.5px] text-muted"
+              style={{ marginTop: BOUND_TIME_TOP - BOUND_LABEL_TOP - 12 }}
+            >
+              <span className="font-semibold text-body">{bound.et}</span> NY
+              <span aria-hidden className="mx-1">
+                ·
+              </span>
+              <span className="font-semibold text-body">{bound.tr}</span> TR
+            </div>
+          </div>
+        ))}
 
         {positioned.map((event) => {
           const left = `${pct(event.minutes)}%`;
@@ -303,7 +337,8 @@ export function DayRail({
             prominent: false,
             row: 0,
             kind: "bound" as const,
-            detail: undefined,
+            // Soldaki sütun NY saatini yazıyor; Türkiye saati alt satırda.
+            detail: `${labels.bellTr} TR` as string | undefined,
             watched: false,
           },
           {
@@ -315,7 +350,7 @@ export function DayRail({
             prominent: false,
             row: 0,
             kind: "bound" as const,
-            detail: undefined,
+            detail: `${labels.closeTr} TR` as string | undefined,
             watched: false,
           },
         ]

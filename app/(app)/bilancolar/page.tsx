@@ -296,15 +296,21 @@ function DaySection({
                     <SymbolBadge symbol={row.symbol} />
                   )}
                   <div className="min-w-0">
+                    {/* Yıldız sembolün SOLUNDA ve sembol bloğu sabit
+                        genişlikte: zamanlama çipleri kartlar arasında aynı
+                        hizada dursun, sembolün kaç harf olduğuna göre
+                        sağa sola kaymasın. */}
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[17px] font-bold tracking-[-0.02em] text-strong">
-                        {row.symbol}
-                      </span>
-                      {watchSet.has(row.symbol) && (
-                        <span aria-hidden className="text-xs text-primary">
-                          ★
+                      <span className="flex min-w-[104px] items-center gap-1.5">
+                        {watchSet.has(row.symbol) && (
+                          <span aria-hidden className="text-sm text-primary">
+                            ★
+                          </span>
+                        )}
+                        <span className="text-[17px] font-bold tracking-[-0.02em] text-strong">
+                          {row.symbol}
                         </span>
-                      )}
+                      </span>
                       <TimingChip tone={timing.tone}>{timing.label}</TimingChip>
                     </div>
                     <p className="mt-[3px] truncate text-sm text-body">
@@ -379,12 +385,12 @@ function DaySection({
                   </div>
                   <div className="min-w-0">
                     <p className="text-[14.5px] font-bold tracking-[-0.01em] text-strong">
-                      {row.symbol}
                       {watchSet.has(row.symbol) && (
-                        <span aria-hidden className="ml-1 text-primary">
+                        <span aria-hidden className="mr-1 text-primary">
                           ★
                         </span>
                       )}
+                      {row.symbol}
                     </p>
                     <p className="truncate text-[11.5px] text-muted">
                       {m?.name ?? ""}
