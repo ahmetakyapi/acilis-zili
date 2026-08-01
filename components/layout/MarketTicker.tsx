@@ -23,15 +23,32 @@ export type TickerItem = {
 };
 
 /** Bir seferde gösterilen değer sayısı — dar ekranda ikiye düşer. */
-const PAGE_SIZE = 4;
+const PAGE_SIZE_WIDE = 4;
+const PAGE_SIZE_NARROW = 2;
+const WIDE_QUERY = "(min-width: 640px)";
 const ROTATE_MS = 6000;
 const FADE_MS = 400;
 
 export function MarketTicker({ items }: { items: TickerItem[] }) {
   const [page, setPage] = useState(0);
   const [visible, setVisible] = useState(true);
+  // Sunucu geniş varsayar; dar ekranda ilk ölçümde ikiye iner. CSS ile
+  // gizlemek işe yaramıyor — gizlenen değerler döngüde hiç sıra alamıyor.
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_WIDE);
 
-  const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  useEffect(() => {
+    const query = window.matchMedia(WIDE_QUERY);
+    const apply = () =>
+      setPageSize(query.matches ? PAGE_SIZE_WIDE : PAGE_SIZE_NARROW);
+    const id = window.setTimeout(apply, 0);
+    query.addEventListener("change", apply);
+    return () => {
+      window.clearTimeout(id);
+      query.removeEventListener("change", apply);
+    };
+  }, []);
+
+  const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
 
   useEffect(() => {
     if (pageCount <= 1) return;
@@ -48,7 +65,9 @@ export function MarketTicker({ items }: { items: TickerItem[] }) {
 
   if (items.length === 0) return null;
 
-  const shown = items.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+  // Ölçü değişince sayfa sayısı da değişir; taşan indeks başa sarılır.
+  const safePage = page % pageCount;
+  const shown = items.slice(safePage * pageSize, safePage * pageSize + pageSize);
 
   return (
     <div
