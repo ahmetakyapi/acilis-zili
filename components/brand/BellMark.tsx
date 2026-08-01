@@ -1,77 +1,99 @@
 import { cn } from "@/lib/utils";
 
-type BellMarkProps = {
+/**
+ * Marka işareti — gradient karo içinde dolgun zil silueti.
+ *
+ * İnce çizgili zil 24px'te kırılıyordu; dolu siluet küçük boyutta çok daha
+ * net okunuyor. Karoya iki ayrıntı eklendi: üstten inen ince bir iç ışık
+ * çizgisi ve alttan gelen hafif bir gölge — karo düz bir kare yerine
+ * basılmış bir rozet gibi duruyor. Sayfadaki tek gradient budur.
+ */
+
+/** Zil gövdesi + tokmak — favicon ve OG görseli de aynı geometriyi kullanır. */
+export const BELL_BODY_PATH =
+  "M128 30a82 82 0 00-82 82c0 40-6 58-17 69-6 6-2 17 7 17h184c9 0 13-11 7-17-11-11-17-29-17-69a82 82 0 00-82-82z";
+export const BELL_CLAPPER_PATH = "M98 214a30 30 0 0060 0z";
+export const BELL_KNOB = { cx: 128, cy: 26, r: 14 };
+
+export function BellMark({
+  size = 27,
+  className,
+}: {
   size?: number;
   className?: string;
-};
-
-/**
- * Marka işareti — gradient kare içinde tek çizgi zil.
- *
- * Sayfadaki tek gradient budur; başka hiçbir yüzey gradient taşımaz. Zil
- * accent üzerine basıldığı için `--on-primary` ile çizilir: gündüz beyaz,
- * gece lacivert mürekkep.
- */
-export function BellMark({ size = 27, className }: BellMarkProps) {
+}) {
   return (
     <span
       aria-hidden="true"
-      className={cn("flex shrink-0 items-center justify-center", className)}
+      className={cn(
+        "relative flex shrink-0 items-center justify-center",
+        className,
+      )}
       style={{
         width: size,
         height: size,
-        // Köşe yarıçapı boyutla ölçekleniyor — 27px'te 9px, mockup değeri.
+        // Köşe yarıçapı boyutla ölçekleniyor — 27px'te 9px.
         borderRadius: size / 3,
         background: "var(--mark-gradient)",
+        boxShadow: "var(--mark-shadow)",
       }}
     >
+      {/* İç kenar ışığı — karoya kalınlık veren tek çizgi. */}
+      <span
+        className="pointer-events-none absolute inset-0"
+        style={{
+          borderRadius: "inherit",
+          boxShadow:
+            "inset 0 1px 0 rgb(255 255 255 / 0.32), inset 0 0 0 1px rgb(255 255 255 / 0.1)",
+        }}
+      />
       <svg
-        width={size * 0.56}
-        height={size * 0.56}
+        width={size * 0.62}
+        height={size * 0.62}
         viewBox="0 0 256 256"
-        fill="none"
+        fill="var(--on-primary)"
       >
-        <path
-          d="M128 32a80 80 0 00-80 80c0 45-18 62-18 62h196s-18-17-18-62a80 80 0 00-80-80z"
-          fill="none"
-          stroke="var(--on-primary)"
-          strokeWidth="19"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M100 182a28 28 0 0056 0"
-          fill="none"
-          stroke="var(--on-primary)"
-          strokeWidth="19"
-          strokeLinecap="round"
-        />
+        <circle {...BELL_KNOB} />
+        <path d={BELL_BODY_PATH} />
+        <path d={BELL_CLAPPER_PATH} />
       </svg>
     </span>
   );
 }
 
-type WordmarkProps = {
-  locale?: string;
+/**
+ * İşaret + kelime + alt satır. Masthead ve giriş kartında birlikte durur;
+ * alt satır dar ekranda gizlenir, orada marka adı zaten yeterli.
+ */
+export function BrandLockup({
+  name,
+  tagline,
+  size = 34,
+  className,
+}: {
+  name: string;
+  tagline?: string;
   size?: number;
   className?: string;
-};
-
-/** İşaret + kelime — masthead ve giriş kartında birlikte durur. */
-export function BrandLockup({
-  locale = "tr",
-  size = 27,
-  className,
-}: WordmarkProps) {
-  const name = locale === "en" ? "Opening Bell" : "Açılış Zili";
-
+}) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <BellMark size={size} />
-      <span
-        className="font-bold tracking-[-0.03em] text-strong"
-        style={{ fontSize: size * 0.63 }}
-      >
-        {name}
+      <span className="flex flex-col leading-none">
+        <span
+          className="font-bold tracking-[-0.03em] text-strong"
+          style={{ fontSize: size * 0.5 }}
+        >
+          {name}
+        </span>
+        {tagline && (
+          <span
+            className="mt-[3px] font-semibold uppercase tracking-[0.14em] text-muted"
+            style={{ fontSize: Math.max(9, size * 0.26) }}
+          >
+            {tagline}
+          </span>
+        )}
       </span>
     </span>
   );

@@ -80,7 +80,15 @@
   );
 
   /* Marka karesinin gradienti — logonun tek gradient kullanımı. */
-  --mark-gradient: linear-gradient(140deg, #2a9bea, #0d5cb6);
+  --mark-gradient: linear-gradient(145deg, #4fb3f5 0%, #1f7fd4 48%, #0a4d9e 100%);
+
+  /* Manşet mürekkebi — sayfa başlıkları ve geri sayım bu degradeyle yazılır.
+     Lacivertten accent maviye; koyu tema karşılığı ters yönde açılır, yoksa
+     koyu zeminde okunmaz. */
+  --display-gradient: linear-gradient(115deg, #0b2440 0%, #0d5cb6 62%, #2a9bea 100%);
+
+  /* Marka karosunun oturma gölgesi — rozet hissi buradan geliyor. */
+  --mark-shadow: 0 1px 2px rgb(13 92 182 / 0.28), 0 4px 10px rgb(13 92 182 / 0.22);
 
   --chart-grid: rgb(16 32 52 / 0.07);
   --skeleton-lo: rgb(16 32 52 / 0.045);
@@ -147,7 +155,11 @@
     rgb(18 38 60 / 0) 60%
   );
 
-  --mark-gradient: linear-gradient(140deg, #4fc3ff, #1a63c4);
+  --mark-gradient: linear-gradient(145deg, #6fd0ff 0%, #2f95e8 46%, #124f9e 100%);
+
+  --display-gradient: linear-gradient(115deg, #eaf1f8 0%, #7fd2ff 55%, #35b8ff 100%);
+
+  --mark-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 4px 12px rgb(26 99 196 / 0.4);
 
   --chart-grid: rgb(255 255 255 / 0.07);
   --skeleton-lo: rgb(255 255 255 / 0.045);
@@ -288,6 +300,29 @@
 /* Arama paleti girişinin odağını kapsayıcı anlatır — çift çerçeve olmaz. */
 .palette-input:focus-visible {
   outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   Manşet mürekkebi — sayfa başlıkları ve geri sayım.
+
+   Yalnızca büyük puntoda kullanılır: küçük metinde degrade kontrastı
+   düşürüyor ve okunurluğu bozuyor. Düz renk taban olarak durur, degrade
+   yalnızca background-clip destekleniyorsa devreye girer.
+   -------------------------------------------------------------------------- */
+.display-ink {
+  color: var(--text-strong);
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .display-ink {
+    background-image: var(--display-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    /* Degrade metnin altına inen harfleri (g, y, ş) kırpmasın. */
+    padding-bottom: 0.06em;
+  }
 }
 
 /* --------------------------------------------------------------------------

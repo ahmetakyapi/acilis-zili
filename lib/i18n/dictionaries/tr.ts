@@ -1,6 +1,7 @@
 const tr = {
   brand: {
     name: "Açılış Zili",
+    marketTagline: "ABD Piyasa Takibi",
     tagline: "Zil Çalmadan Önce Bugünü Gör",
     description:
       "ABD borsalarında bugün ne var: ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin tek ekranda — saatleriyle birlikte.",
@@ -185,6 +186,7 @@ const tr = {
     companiesCount: "şirket",
     empty: "Bu aralıkta bilanço açıklaması yok.",
     today: "Bugün",
+    marketCapShort: "PD",
     rangeWeek: "Hafta",
     rangeMonth: "Ay",
     subtitleLong:
@@ -239,7 +241,7 @@ const tr = {
     notFound: "Bu sembol bulunamadı",
     notFoundHint: "Sembolü kontrol et veya arama kutusundan tekrar dene.",
     peers: "Aynı Sektörden Şirketler",
-    peersHint: "Alt sektör",
+    peersHint: "Alt Sektör",
     fundProfile: "Fon Künyesi",
     fundKind: "Tür",
     fundKindLabel: "Borsa Yatırım Fonu (ETF)",
@@ -342,8 +344,8 @@ const tr = {
     yieldY30: "30 Yıllık",
     point: "puan",
     curveTitle: "Getiri Eğrisi (10 Yıllık − 2 Yıllık)",
-    curveNormal: "Normal eğri",
-    curveInverted: "Ters eğri",
+    curveNormal: "Normal Eğri",
+    curveInverted: "Ters Eğri",
     curveHint:
       "Uzun vadeli tahvilin faizi kısa vadeliden yüksekse eğri normaldir; ekonomi olağan seyrinde demektir. Fark eksiye dönerse (ters eğri) piyasa yakın vadede faiz indirimi bekliyor — tarihsel olarak durgunluğun en çok izlenen habercisidir.",
     breadth: "Piyasa Genişliği",
@@ -357,7 +359,7 @@ const tr = {
       "Katkı, hissenin bugün endeksi kaç puan yukarı ya da aşağı taşıdığını gösterir. Dow fiyat ağırlıklı bir endekstir: her hissenin dolar bazındaki değişimi endeksin bölenine oranlanarak hesaplanır.",
     constituents: "Endeks Bileşenleri",
     listedCompanies: "şirket",
-    asOf: "Liste kompozisyonu",
+    asOf: "Liste Kompozisyonu",
   },
 
   news: {
@@ -371,7 +373,7 @@ const tr = {
     empty: "Şu an gösterilecek haber yok.",
     readMore: "Devamını Oku",
     readAtSource: "Kaynakta Oku",
-    translated: "Türkçeye çevrildi",
+    translated: "Türkçeye Çevrildi",
     originalTitle: "Orijinal Başlık",
     notFound: "Haber bulunamadı",
     notFoundHint: "Bu haber kaldırılmış olabilir.",
@@ -384,6 +386,24 @@ const tr = {
     positive: "Olumlu",
     negative: "Olumsuz",
     neutral: "Nötr",
+  },
+
+  brief: {
+    title: "Günlük Bülten",
+    subtitle: "Her sabah hazırlanan piyasa özeti · geçmiş günler arşivde",
+    archiveLink: "Geçmiş Bültenler",
+    archiveTitle: "Arşiv",
+    empty: "Bu güne ait bülten bulunamadı.",
+    emptyHint: "Bülten her sabah hazırlanır; hafta sonu ve tatillerde olmayabilir.",
+    noArchive: "Henüz arşivlenmiş bülten yok.",
+    today: "Bugün",
+    thisWeek: "Bu Hafta",
+    periodDaily: "Günlük",
+    periodWeekly: "Haftalık",
+    weekOf: "{date} haftası",
+    writtenBy: "Hazırlayan",
+    byClaude: "Claude",
+    byRules: "Kural Tabanlı",
   },
 
   macro: {
@@ -420,7 +440,7 @@ const tr = {
     signUpTitle: "Hesap Oluştur",
     signUpSubtitle: "Kendi takip listelerini oluşturmak için hesap aç.",
     username: "Kullanıcı Adı",
-    usernamePlaceholder: "kullaniciadi",
+    usernamePlaceholder: "Kullanıcı Adı",
     email: "E-posta",
     emailPlaceholder: "ornek@eposta.com",
     password: "Şifre",
@@ -458,7 +478,7 @@ const tr = {
     stale: "Bu veri güncel olmayabilir",
     failed: "Veri alınamadı",
     failedHint: "Sağlayıcıya ulaşılamıyor. Son bilinen değer gösteriliyor.",
-    lastKnown: "Son bilinen değer",
+    lastKnown: "Son Bilinen Değer",
     feedIex: "IEX · gerçek zamanlı",
     delayedNote: "Fiyatlar IEX beslemesinden gelir, konsolide fiyattan sapabilir.",
   },

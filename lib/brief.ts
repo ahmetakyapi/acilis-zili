@@ -13,6 +13,8 @@ import { formatPercent } from "./utils";
  * verilerden konuşur — modelden tahmin veya yatırım tavsiyesi istenmez.
  */
 
+export type BriefPeriod = "daily" | "weekly";
+
 export type BriefInput = {
   dateEt: string;
   locale: Locale;
@@ -131,17 +133,22 @@ export async function generateClaudeBrief(
     language: input.locale,
     date_et: input.dateEt,
     economic_events: input.events.map((e) => ({
+      date_et: e.eventDate,
       time_et: e.eventTimeEt,
       title: input.locale === "tr" ? e.titleTr : e.titleEn,
       importance: e.importance,
       forecast: e.forecast,
+      // Geçmişe bakan metinlerde asıl haber gerçekleşen değerdir.
+      actual: e.actual,
       previous: e.previous,
       unit: e.unit,
     })),
     earnings: input.earnings.map((e) => ({
       symbol: e.symbol,
+      report_date: e.reportDate,
       timing: e.hour,
       eps_estimate: e.epsEstimate,
+      eps_actual: e.epsActual,
     })),
     index_changes_pct: input.indexQuotes
       .filter((q) => q.quote)
@@ -160,7 +167,7 @@ export async function generateClaudeBrief(
       messages: [
         {
           role: "user",
-          content: `Bugünün verisi:\n${JSON.stringify(payload, null, 2)}`,
+          content: `Dönem verisi:\n${JSON.stringify(payload, null, 2)}`,
         },
       ],
     });

@@ -1,13 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="32" height="32">
   <defs>
-    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1" gradientTransform="rotate(50 .5 .5)">
-      <stop offset="0" stop-color="#4fc3ff"/>
-      <stop offset="1" stop-color="#1a63c4"/>
+    <linearGradient id="tile" x1="12%" y1="0%" x2="88%" y2="100%">
+      <stop offset="0" stop-color="#6fd0ff"/>
+      <stop offset="0.46" stop-color="#2f95e8"/>
+      <stop offset="1" stop-color="#124f9e"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <rect width="256" height="256" rx="85" fill="url(#mark)"/>
-  <g transform="translate(128 128) scale(0.62) translate(-128 -128)">
-    <path d="M128 32a80 80 0 00-80 80c0 45-18 62-18 62h196s-18-17-18-62a80 80 0 00-80-80z" fill="none" stroke="#06121f" stroke-width="19" stroke-linejoin="round"/>
-    <path d="M100 182a28 28 0 0056 0" fill="none" stroke="#06121f" stroke-width="19" stroke-linecap="round"/>
+  <rect width="256" height="256" rx="72" fill="url(#tile)"/>
+  <rect width="256" height="256" rx="72" fill="url(#sheen)"/>
+  <rect x="1.5" y="1.5" width="253" height="253" rx="70.5" fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="3"/>
+  <g transform="translate(128 132) scale(0.66) translate(-128 -128)" fill="#06121f">
+    <circle cx="128" cy="26" r="14"/>
+    <path d="M128 30a82 82 0 00-82 82c0 40-6 58-17 69-6 6-2 17 7 17h184c9 0 13-11 7-17-11-11-17-29-17-69a82 82 0 00-82-82z"/>
+    <path d="M98 214a30 30 0 0060 0z"/>
   </g>
 </svg>

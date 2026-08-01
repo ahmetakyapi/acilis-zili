@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EmptyState, Panel } from "@/components/ui/primitives";
-import { getLatestNews } from "@/lib/data";
+import { NewsImage } from "@/components/news/NewsImage";
+import { getGenericImageUrls, getLatestNews } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { cn, timeAgo } from "@/lib/utils";
 
@@ -16,10 +17,15 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
     items = items.filter((item) => item.symbols?.includes(symbolFilter));
   }
 
+  // Kaynak logoları elenir; kalan makale görselleri küçük resim olarak durur.
+  const genericImages = await getGenericImageUrls(
+    items.map((item) => item.imageUrl),
+  );
+
   return (
     <div className="flex flex-col gap-5">
       <header>
-        <h1 className="text-[26px] font-bold tracking-[-0.03em] text-strong sm:text-[34px]">
+        <h1 className="display-ink w-fit text-[26px] font-bold tracking-[-0.03em] sm:text-[34px]">
           {t.news.title}
         </h1>
         <p className="mt-2 text-sm text-soft">{t.news.subtitle}</p>
@@ -45,8 +51,9 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
               <li key={item.id}>
                 <Link
                   href={`/haberler/${item.id}`}
-                  className="block px-4 py-3.5 transition-colors hover:bg-primary-tint sm:px-5"
+                  className="flex gap-3.5 px-4 py-3.5 transition-colors hover:bg-primary-tint sm:gap-4 sm:px-5"
                 >
+                  <span className="min-w-0 flex-1">
                   <p className="text-sm font-medium leading-snug text-strong">
                     {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
                   </p>
@@ -77,6 +84,17 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                       </>
                     )}
                   </p>
+                  </span>
+
+                  <NewsImage
+                    src={
+                      item.imageUrl && !genericImages.has(item.imageUrl)
+                        ? item.imageUrl
+                        : null
+                    }
+                    symbol={item.symbols?.[0] ?? null}
+                    className="hidden shrink-0 sm:flex"
+                  />
                 </Link>
               </li>
             ))}

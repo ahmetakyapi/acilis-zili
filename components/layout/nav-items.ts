@@ -32,25 +32,17 @@ export type NavItem = {
  * kaydırmaz, üstteki aramadan erişiliyor. Makro ve Haberler, Bugün akışının
  * altında bölüm olarak duruyor ve kendi tam sayfalarına açılıyor.
  */
+/**
+ * Masthead sırası kullanıcının kararı: geniş resimden (Piyasalar) tekil
+ * şirkete (Şirketler), oradan makro çerçeveye ve takvim odaklı iki ekrana.
+ * Bugün başta durur — logo da oraya gider — Favoriler sonda.
+ */
 export const NAV_ITEMS: NavItem[] = [
   {
     href: "/",
     label: (t) => t.nav.today,
     icon: Bell,
     inBottomBar: true,
-  },
-  {
-    href: "/takvim",
-    label: (t) => t.nav.calendar,
-    icon: CalendarBlank,
-    inBottomBar: true,
-  },
-  {
-    href: "/bilancolar",
-    label: (t) => t.nav.earnings,
-    icon: FileText,
-    inBottomBar: true,
-    shortLabel: (t) => t.nav.earningsShort,
   },
   {
     href: "/piyasalar",
@@ -70,6 +62,19 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.macro,
     icon: Percent,
     inBottomBar: false,
+  },
+  {
+    href: "/bilancolar",
+    label: (t) => t.nav.earnings,
+    icon: FileText,
+    inBottomBar: true,
+    shortLabel: (t) => t.nav.earningsShort,
+  },
+  {
+    href: "/takvim",
+    label: (t) => t.nav.calendar,
+    icon: CalendarBlank,
+    inBottomBar: true,
   },
   {
     href: "/favoriler",

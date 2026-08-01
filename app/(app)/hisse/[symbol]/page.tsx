@@ -236,7 +236,7 @@ async function StockHeader({
             </p>
           )}
           <div className="mt-[7px] flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="text-[26px] font-bold tracking-[-0.03em] text-strong sm:text-[38px]">
+            <h1 className="display-ink text-[26px] font-bold tracking-[-0.03em] sm:text-[38px]">
               {profile?.name || fund?.name || symbol}
             </h1>
             <span className="text-base font-semibold text-muted sm:text-[19px]">

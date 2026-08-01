@@ -67,7 +67,7 @@ export function Countdown({
       {parts.map(([value, unit], index) => (
         <span key={unit}>
           {value}
-          <span className="text-[0.41em] font-semibold tracking-[-0.02em] text-body">
+          <span className="text-[0.41em] font-semibold tracking-[-0.02em] opacity-70">
             {" "}
             {unit}
             {index === 0 ? " " : ""}

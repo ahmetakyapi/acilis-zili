@@ -24,6 +24,7 @@ import {
   type MarketHoliday,
   type MarketStatus,
 } from "./market-hours";
+import type { BriefPeriod } from "./brief";
 
 /**
  * Sayfaların kullandığı okuma fonksiyonları.
@@ -162,6 +163,40 @@ export async function getNewsById(id: string): Promise<NewsRow | null> {
  * onlarca haberde tekrar eder. Aynı adres birden çok haberde geçiyorsa
  * jenerik sayılır ve gösterilmez — okuyucuya bilgi taşımaz.
  */
+/**
+ * Liste için toplu sürüm — her habere ayrı sorgu atmak yerine tek sorguda
+ * "birden çok haberde geçen" görselleri bulur. Sağlayıcılar makale görseli
+ * yoksa kaynak logosunu yolluyor; aynı URL onlarca haberde tekrar ediyor ve
+ * liste aynı Reuters logosuyla doluyordu.
+ */
+export async function getGenericImageUrls(
+  urls: (string | null)[],
+): Promise<Set<string>> {
+  const candidates = [...new Set(urls.filter((u): u is string => Boolean(u)))];
+  if (candidates.length === 0) return new Set();
+
+  const generic = new Set(candidates.filter((u) => /\blogo\b/i.test(u)));
+
+  try {
+    const rows = await db
+      .select({
+        imageUrl: news.imageUrl,
+        uses: sql<number>`count(*)::int`,
+      })
+      .from(news)
+      .where(inArray(news.imageUrl, candidates))
+      .groupBy(news.imageUrl);
+
+    for (const row of rows) {
+      if (row.imageUrl && row.uses > 1) generic.add(row.imageUrl);
+    }
+  } catch {
+    // Sorgu düşerse yalnızca ad kalıbıyla elenenler gizlenir.
+  }
+
+  return generic;
+}
+
 export async function isGenericNewsImage(imageUrl: string): Promise<boolean> {
   if (/\blogo\b/i.test(imageUrl)) return true;
   try {
@@ -192,18 +227,74 @@ export async function getLatestNews(limit = 20): Promise<NewsRow[]> {
 export async function getDailyBrief(
   locale: string,
 ): Promise<DailyBriefRow | null> {
+  return getBriefByDate(todayEt(), locale);
+}
+
+/**
+ * Belirli bir günün bülteni. Tablo (tarih, dil) benzersiz olduğu için her gün
+ * kendi kaydını tutar — arşiv zaten birikmiş durumda, tek yaptığımız onu
+ * okunabilir hale getirmek.
+ */
+export async function getBriefByDate(
+  date: string,
+  locale: string,
+  period: BriefPeriod = "daily",
+): Promise<DailyBriefRow | null> {
   try {
     const [row] = await db
       .select()
       .from(dailyBriefs)
       .where(
-        and(eq(dailyBriefs.briefDate, todayEt()), eq(dailyBriefs.locale, locale)),
+        and(
+          eq(dailyBriefs.briefDate, date),
+          eq(dailyBriefs.locale, locale),
+          eq(dailyBriefs.period, period),
+        ),
       )
       .limit(1);
     return row ?? null;
   } catch {
     return null;
   }
+}
+
+export type BriefIndexRow = {
+  briefDate: string;
+  headline: string;
+  generatedBy: string;
+  period: string;
+};
+
+/** Arşiv listesi — yeniden eskiye, gövde metni taşınmaz. */
+export async function getBriefArchive(
+  locale: string,
+  period: BriefPeriod,
+  limit = 60,
+): Promise<BriefIndexRow[]> {
+  try {
+    return await db
+      .select({
+        briefDate: dailyBriefs.briefDate,
+        headline: dailyBriefs.headline,
+        generatedBy: dailyBriefs.generatedBy,
+        period: dailyBriefs.period,
+      })
+      .from(dailyBriefs)
+      .where(and(eq(dailyBriefs.locale, locale), eq(dailyBriefs.period, period)))
+      .orderBy(desc(dailyBriefs.briefDate))
+      .limit(limit);
+  } catch {
+    return [];
+  }
+}
+
+/** Verilen günü kapsayan haftanın pazartesisi — haftalık kaydın çapası. */
+export function weekAnchor(dateEt: string): string {
+  const d = new Date(`${dateEt}T00:00:00Z`);
+  // getUTCDay: 0 pazar … 6 cumartesi. Pazar, biten haftaya sayılır.
+  const shift = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - shift);
+  return d.toISOString().slice(0, 10);
 }
 
 /* ---- Makro ---- */

@@ -117,7 +117,7 @@ export function PageHeader({
     >
       <div className="min-w-0">
         {eyebrow && <p className="plate mb-2">{eyebrow}</p>}
-        <h1 className="text-[26px] font-bold tracking-[-0.03em] text-strong sm:text-[34px]">
+        <h1 className="display-ink w-fit text-[26px] font-bold tracking-[-0.03em] sm:text-[34px]">
           {title}
         </h1>
         {subtitle && (

@@ -167,29 +167,23 @@ function timingOf(hour: string | null, t: Dictionary): {
 }
 
 /**
- * Sağdaki büyük sayı: gelir beklentisi. Sağlayıcı gelir vermediğinde piyasa
- * değerine düşülür ama etiketi değişir — iki farklı büyüklüğü aynı isimle
- * göstermek okuyucuyu yanıltır.
+ * Sağdaki büyük sayı gelir beklentisidir. Piyasa değeri artık kendi satırında
+ * ayrıca yazıldığı için buraya yedek olarak konmuyor — iki farklı büyüklüğü
+ * aynı yerde göstermek okuyucuyu yanıltıyordu.
  */
-function headlineFigure(
-  row: EarningsRow,
+function revenueFigure(row: EarningsRow, locale: Locale): string | null {
+  if (row.revenueEstimate === null || row.revenueEstimate === undefined) {
+    return null;
+  }
+  return `${formatCompact(row.revenueEstimate, locale)} $`;
+}
+
+/** Gün içindeki sıralama zaten piyasa değerine göre; sayı da görünsün. */
+function marketCapFigure(
   m: SymbolMeta | undefined,
   locale: Locale,
-  t: Dictionary,
-): { value: string; label: string } | null {
-  if (row.revenueEstimate !== null && row.revenueEstimate !== undefined) {
-    return {
-      value: `${formatCompact(row.revenueEstimate, locale)} $`,
-      label: t.earnings.revenueEstimate,
-    };
-  }
-  if (m?.marketCap) {
-    return {
-      value: `${formatCompact(m.marketCap, locale)} $`,
-      label: t.market.marketCap,
-    };
-  }
-  return null;
+): string | null {
+  return m?.marketCap ? `${formatCompact(m.marketCap, locale)} $` : null;
 }
 
 function DaySection({
@@ -255,7 +249,8 @@ function DaySection({
         {heroes.map((row) => {
           const m = meta[row.symbol];
           const timing = timingOf(row.hour, t);
-          const figure = headlineFigure(row, m, locale, t);
+          const revenue = revenueFigure(row, locale);
+          const cap = marketCapFigure(m, locale);
           return (
             <Link key={row.id} href={`/hisse/${row.symbol}`} className="block">
               {/* Mobilde iki satır (mockup 4k), masaüstünde tek hero satırı. */}
@@ -289,20 +284,20 @@ function DaySection({
                     </p>
                   </div>
                 </div>
-                <div className="flex items-baseline gap-3 border-t border-line pt-3 sm:ml-auto sm:block sm:shrink-0 sm:border-0 sm:pt-0 sm:text-right">
-                  {figure ? (
-                    <>
-                      <p className="figure text-[17px] font-bold tracking-[-0.03em] text-strong sm:text-[19px]">
-                        {figure.value}
-                      </p>
-                      <p className="figure text-xs text-muted sm:mt-0.5">
-                        {row.epsEstimate !== null
-                          ? `${t.earnings.epsEstimate} ${formatPrice(row.epsEstimate, locale)}`
-                          : figure.label}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="figure text-[19px] text-muted">—</p>
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-line pt-3 sm:ml-auto sm:block sm:shrink-0 sm:border-0 sm:pt-0 sm:text-right">
+                  <p className="figure text-[17px] font-bold tracking-[-0.03em] text-strong sm:text-[19px]">
+                    {revenue ?? "—"}
+                  </p>
+                  <p className="figure text-xs text-muted sm:mt-0.5">
+                    {t.earnings.revenueEstimate}
+                    {row.epsEstimate !== null &&
+                      ` · ${t.earnings.epsEstimate} ${formatPrice(row.epsEstimate, locale)}`}
+                  </p>
+                  {cap && (
+                    <p className="figure text-xs text-muted sm:mt-0.5">
+                      {t.market.marketCap}{" "}
+                      <span className="font-semibold text-body">{cap}</span>
+                    </p>
                   )}
                 </div>
               </div>
@@ -353,18 +348,24 @@ function DaySection({
                       {m?.name ?? ""}
                     </p>
                   </div>
-                  <div className="figure mt-auto flex items-baseline justify-between gap-2 border-t border-line pt-[9px] text-xs">
-                    <span className="text-body">
-                      {row.revenueEstimate
-                        ? formatCompact(row.revenueEstimate, locale)
-                        : m?.marketCap
-                          ? formatCompact(m.marketCap, locale)
+                  <div className="figure mt-auto flex flex-col gap-1 border-t border-line pt-[9px] text-xs">
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="text-body">
+                        {row.revenueEstimate
+                          ? formatCompact(row.revenueEstimate, locale)
                           : "—"}
+                      </span>
+                      <span className="text-muted">
+                        {row.epsEstimate !== null
+                          ? `EPS ${formatPrice(row.epsEstimate, locale)}`
+                          : "—"}
+                      </span>
                     </span>
-                    <span className="text-muted">
-                      {row.epsEstimate !== null
-                        ? `EPS ${formatPrice(row.epsEstimate, locale)}`
-                        : "—"}
+                    <span className="flex items-baseline justify-between gap-2 text-muted">
+                      <span>{t.earnings.marketCapShort}</span>
+                      <span>
+                        {m?.marketCap ? formatCompact(m.marketCap, locale) : "—"}
+                      </span>
                     </span>
                   </div>
                 </div>

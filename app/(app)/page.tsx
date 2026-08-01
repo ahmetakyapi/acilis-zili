@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { NewsImage } from "@/components/news/NewsImage";
+import { BriefBody } from "@/components/today/BriefBody";
 import { Countdown } from "@/components/today/Countdown";
 import { DayRail, type RailEvent } from "@/components/today/DayRail";
 import { LiveClock } from "@/components/today/LiveClock";
@@ -19,6 +21,7 @@ import {
 import {
   getDailyBrief,
   getEventsBetween,
+  getGenericImageUrls,
   getLatestNews,
   getMacroRows,
   getStatus,
@@ -109,7 +112,7 @@ export default async function TodayPage() {
                 m: t.today.unitM,
                 s: t.today.unitS,
               }}
-              className="tote text-[44px] leading-none sm:text-[66px]"
+              className="tote display-ink text-[44px] leading-none sm:text-[66px]"
             />
             <span className="pb-1.5 text-[13px] text-body sm:pb-2.5 sm:text-[15px]">
               {countdownLabel.toLocaleLowerCase(locale === "tr" ? "tr-TR" : "en-US")}
@@ -147,6 +150,11 @@ export default async function TodayPage() {
           </Suspense>
         </section>
 
+        {/* ---- Günün özeti — ana kolonda, günü okumaya buradan başlanıyor ---- */}
+        <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
+          <BriefCard locale={locale} t={t} />
+        </Suspense>
+
         {/* ---- Dünya piyasaları ---- */}
         <Suspense fallback={<Skeleton className="h-28 w-full rounded-2xl" />}>
           <WorldStrip locale={locale} t={t} />
@@ -173,22 +181,8 @@ export default async function TodayPage() {
             <EarningsToday locale={locale} t={t} />
           </Suspense>
         </Panel>
-      </div>
 
-      {/* ================= Yan kolon ================= */}
-      <div className="flex min-w-0 flex-col gap-5">
-        <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
-          <BriefCard locale={locale} t={t} />
-        </Suspense>
-
-        <Suspense fallback={<Skeleton className="h-56 w-full rounded-2xl" />}>
-          <WatchlistSummary locale={locale} t={t} />
-        </Suspense>
-
-        <Suspense fallback={<Skeleton className="h-44 w-full rounded-2xl" />}>
-          <MacroSummary locale={locale} t={t} />
-        </Suspense>
-
+        {/* ---- Haftaya bakış ---- */}
         <Panel>
           <PanelHeader
             title={t.today.weekAhead}
@@ -198,6 +192,17 @@ export default async function TodayPage() {
             <WeekAhead locale={locale} t={t} />
           </Suspense>
         </Panel>
+      </div>
+
+      {/* ================= Yan kolon ================= */}
+      <div className="flex min-w-0 flex-col gap-5">
+        <Suspense fallback={<Skeleton className="h-56 w-full rounded-2xl" />}>
+          <WatchlistSummary locale={locale} t={t} />
+        </Suspense>
+
+        <Suspense fallback={<Skeleton className="h-44 w-full rounded-2xl" />}>
+          <MacroSummary locale={locale} t={t} />
+        </Suspense>
 
         <Panel>
           <PanelHeader
@@ -520,6 +525,13 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
         {brief.headline}
       </p>
       <BriefBody markdown={brief.bodyMd} moreLabel={t.common.showAll} />
+      <Link
+        href="/bulten"
+        className="mt-4 inline-flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-[12.5px] font-semibold text-primary transition-colors hover:text-primary-hover"
+      >
+        {t.brief.archiveLink}
+        <span aria-hidden>→</span>
+      </Link>
     </section>
   );
 }
@@ -883,133 +895,48 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
     return <EmptyState title={t.news.empty} />;
   }
 
+  // Kaynak logosu olan görseller elenir — aynı Reuters logosu altı haberde
+  // tekrar edince liste bilgi taşımaz hale geliyor.
+  const genericImages = await getGenericImageUrls(
+    items.map((item) => item.imageUrl),
+  );
+
   return (
     <ul>
       {items.map((item) => (
         <li key={item.id}>
           <Link
             href={`/haberler/${item.id}`}
-            className="flex gap-[11px] border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+            className="flex gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
           >
-            <span className="numeral w-10 shrink-0 pt-0.5 text-[11px] text-muted">
-              {timeAgo(item.publishedAt, locale)}
-            </span>
-            <span className="min-w-0">
+            <span className="min-w-0 flex-1">
               <span className="line-clamp-2 block text-[13.5px] font-medium leading-5 text-strong">
                 {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
               </span>
-              {item.source && (
-                <span className="mt-[3px] block text-[11px] text-muted">
-                  {item.source}
-                </span>
-              )}
+              <span className="mt-[3px] flex items-center gap-1.5 text-[11px] text-muted">
+                <span className="numeral">{timeAgo(item.publishedAt, locale)}</span>
+                {item.source && (
+                  <>
+                    <span aria-hidden>·</span>
+                    <span className="truncate">{item.source}</span>
+                  </>
+                )}
+              </span>
             </span>
+            <NewsImage
+              src={
+                item.imageUrl && !genericImages.has(item.imageUrl)
+                  ? item.imageUrl
+                  : null
+              }
+              symbol={item.symbols?.[0] ?? null}
+              className="shrink-0"
+              sizeClass="size-14"
+            />
           </Link>
         </li>
       ))}
     </ul>
-  );
-}
-
-/**
- * Özet gövdesi için mini biçimlendirici — tam markdown değil, brifingin
- * kullandığı alt küme: **kalın**, "- " madde imi, boş satır paragraf arası.
- * Maddeler mockup'taki gibi numaralanır (01, 02, 03).
- *
- * Mockup'taki kart kısa: bir paragraf + üç madde. Gerçek bülten bundan çok
- * daha uzun olabiliyor ve 376px'lik yan kolonu metrelerce uzatıyor — o yüzden
- * ilk blok açık gelir, gerisi `<details>` içinde durur. Hiçbir cümle atılmaz.
- */
-function BriefBody({
-  markdown,
-  moreLabel,
-}: {
-  markdown: string;
-  moreLabel: string;
-}) {
-  const lines = markdown.split("\n").filter((line) => line.trim());
-  // Açıkta duran kısım: ilk paragraf + onu izleyen ilk üç madde.
-  const firstBulletAt = lines.findIndex((line) => line.trim().startsWith("- "));
-  const cut =
-    firstBulletAt === -1
-      ? Math.min(lines.length, 2)
-      : Math.min(lines.length, firstBulletAt + 3);
-
-  return (
-    <>
-      <BriefLines lines={lines.slice(0, cut)} startNumber={1} />
-      {cut < lines.length && (
-        <details className="group/brief mt-3">
-          <summary className="flex min-h-8 cursor-pointer list-none items-center gap-1.5 text-[12.5px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
-            <span aria-hidden className="transition-transform group-open/brief:rotate-90">
-              ›
-            </span>
-            {moreLabel}
-          </summary>
-          <BriefLines
-            lines={lines.slice(cut)}
-            startNumber={
-              lines.slice(0, cut).filter((l) => l.trim().startsWith("- ")).length + 1
-            }
-          />
-        </details>
-      )}
-    </>
-  );
-}
-
-function BriefLines({
-  lines,
-  startNumber,
-}: {
-  lines: string[];
-  startNumber: number;
-}) {
-
-  function renderInline(text: string, keyPrefix: string) {
-    return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-      part.startsWith("**") && part.endsWith("**") ? (
-        <strong key={`${keyPrefix}-${i}`} className="font-semibold text-strong">
-          {part.slice(2, -2)}
-        </strong>
-      ) : (
-        <span key={`${keyPrefix}-${i}`}>{part}</span>
-      ),
-    );
-  }
-
-  // Madde numaraları render sırasında sayaç artırmadan, önceden türetilir.
-  const bulletNumberOf = new Map<number, number>();
-  lines.forEach((line, index) => {
-    if (line.trim().startsWith("- ")) {
-      bulletNumberOf.set(index, startNumber + bulletNumberOf.size);
-    }
-  });
-
-  return (
-    <div className="mt-3.5 flex flex-col gap-2.5">
-      {lines.map((line, index) => {
-        const trimmed = line.trim();
-        if (trimmed.startsWith("- ")) {
-          return (
-            <p
-              key={index}
-              className="flex gap-2.5 text-[13px] leading-5 text-body"
-            >
-              <span className="numeral shrink-0 font-bold text-primary">
-                {String(bulletNumberOf.get(index) ?? startNumber).padStart(2, "0")}
-              </span>
-              <span>{renderInline(trimmed.slice(2), String(index))}</span>
-            </p>
-          );
-        }
-        return (
-          <p key={index} className="text-[13px] leading-5 text-body">
-            {renderInline(trimmed, String(index))}
-          </p>
-        );
-      })}
-    </div>
   );
 }
 

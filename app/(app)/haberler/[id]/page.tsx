@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NewsImage } from "@/components/news/NewsImage";
 import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import {
   ChangePill,
@@ -95,15 +96,11 @@ export default async function NewsDetailPage(
       </header>
 
       {showImage && item.imageUrl && (
-        <div className="overflow-hidden rounded-(--radius-xl) border border-line">
-          {/* Sağlayıcı görselleri farklı alan adlarından gelir — doğal img. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={item.imageUrl}
-            alt=""
-            className="max-h-96 w-full object-cover"
-          />
-        </div>
+        <NewsImage
+          src={item.imageUrl}
+          className="rounded-2xl"
+          sizeClass="max-h-96 w-full"
+        />
       )}
 
       {summary ? (

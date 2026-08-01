@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   ),
   title: {
-    default: "Açılış Zili — ABD piyasa takibi",
+    default: "Açılış Zili — ABD Piyasa Takibi",
     template: "%s · Açılış Zili",
   },
   description:

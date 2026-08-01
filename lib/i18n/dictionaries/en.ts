@@ -3,6 +3,7 @@ import type tr from "./tr";
 const en: typeof tr = {
   brand: {
     name: "Opening Bell",
+    marketTagline: "US Market Tracker",
     tagline: "See the Day Before the Bell",
     description:
       "What's happening in US markets today: economic calendar, earnings dates, news and your watchlist on one screen — with the times.",
@@ -183,6 +184,7 @@ const en: typeof tr = {
     alsoReporting: "Also Reporting",
     companiesCount: "companies",
     today: "Today",
+    marketCapShort: "Mkt cap",
     rangeWeek: "Week",
     rangeMonth: "Month",
     subtitleLong:
@@ -383,6 +385,25 @@ const en: typeof tr = {
     positive: "Positive",
     negative: "Negative",
     neutral: "Neutral",
+  },
+
+  brief: {
+    title: "Daily Brief",
+    subtitle: "The morning market summary · earlier days are archived",
+    archiveLink: "Past Briefs",
+    archiveTitle: "Archive",
+    empty: "No brief found for this day.",
+    emptyHint:
+      "The brief is written each morning; weekends and holidays may be missing.",
+    noArchive: "No briefs archived yet.",
+    today: "Today",
+    thisWeek: "This Week",
+    periodDaily: "Daily",
+    periodWeekly: "Weekly",
+    weekOf: "Week of {date}",
+    writtenBy: "Written by",
+    byClaude: "Claude",
+    byRules: "Rule-Based",
   },
 
   macro: {

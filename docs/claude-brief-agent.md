@@ -74,3 +74,72 @@ curl -s -X POST https://acilis-zili.vercel.app/api/brief \
 
 4. Yanıtta `"ok": true` gördüğünü doğrula; göremezsen hatayı bildir.
 İstersen aynı akışla `"locale": "en"` için İngilizce sürüm de gönder.
+
+---
+
+## HAFTALIK GÖREV (her Pazartesi)
+
+Aynı köprü, dönemi `weekly` olan bir kayıt yazar. Sunucuda haftalık üretim
+YOKTUR — bu yazı da senin aboneliğinden çıkar.
+
+Rutin kurulumu: claude.ai bulut rutini, **haftada bir, Pazartesi 07:00 UTC
+(10:00 TR)**. Günlük rutinin bir saat sonrasına konması bilinçli — ikisi aynı
+anda koşup aynı bağlamı iki kez çekmesin.
+
+1. Biten haftanın verisini çek (`date`, geçen haftadan herhangi bir gün
+   olabilir; uç, o günü kapsayan haftanın Pazartesi–Cuma paketini döner):
+
+```bash
+LAST_WEEK=$(date -u -d '7 days ago' +%F)   # macOS: date -u -v-7d +%F
+curl -s -H "Authorization: Bearer $BRIEF_SECRET" \
+  "https://acilis-zili.vercel.app/api/brief/context?period=weekly&date=$LAST_WEEK"
+```
+
+2. Yanıttaki `brief_date` (dönemin Pazartesisi) ve `range_et` alanlarını not
+   et. `retrospective: true` gelir — metin GEÇMİŞ zamanda yazılır.
+
+3. **Türkçe** hafta özeti yaz:
+   - Başlık: ≤ 70 karakter, haftanın ana temasını taşır.
+   - Gövde: 8-12 cümle, 2-3 paragraf. Haftanın makro gündemi (gerçekleşen
+     değerlerle), öne çıkan bilançolar (beklenti vs açıklanan) ve
+     endekslerin **haftalık** getirisi birlikte okunur.
+   - `indices[].change_pct` burada HAFTALIK değişimdir, günlük değil.
+   - Gelecek hakkında tahmin yok; bu bir arşiv kaydı.
+
+4. Gönder — `date` alanına **`brief_date`** değerini yaz:
+
+```bash
+curl -s -X POST https://acilis-zili.vercel.app/api/brief \
+  -H "Authorization: Bearer $BRIEF_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"period":"weekly","date":"<brief_date>","locale":"tr","headline":"<başlık>","body_md":"<gövde>"}'
+```
+
+---
+
+## TEK SEFERLİK: ARŞİVİ 1 AY GERİYE DOLDUR
+
+Site arşivi (`/bulten`) yalnızca yazılmış günleri gösterir. Geçmişi bir kez
+doldurmak için aynı iki ucu tarih tarih dolaş.
+
+**Kural:** veri gelmeyen günü ATLA. Piyasa kapalıysa (hafta sonu, tatil)
+`indices[].change_pct` boş gelir ve `economic_events` ile `earnings` de
+boşsa o gün için yazı yazma — uydurma kayıt açmaktansa boşluk kalsın.
+
+```bash
+# Son 30 günün her biri için (macOS: date -u -v-${i}d +%F)
+for i in $(seq 30 -1 1); do
+  D=$(date -u -d "$i days ago" +%F)
+  curl -s -H "Authorization: Bearer $BRIEF_SECRET" \
+    "https://acilis-zili.vercel.app/api/brief/context?date=$D"
+  # → yaz, sonra POST /api/brief  {"date":"$D","locale":"tr", ...}
+done
+```
+
+Haftalıklar için aynı döngüyü `?period=weekly&date=...` ile son ~4 Pazartesi
+üzerinde çalıştır; `brief_date` tekrar edeceği için aynı hafta iki kez
+yazılmaz (uç `onConflictDoUpdate` ile üzerine yazar).
+
+Geçmiş günlerde uç `retrospective: true` döner: metin "açıklanacak" değil
+"açıklandı" diliyle, o günün gerçekleşen değerleri ve o günün endeks
+kapanışlarıyla yazılır — bugünün fiyatıyla değil.

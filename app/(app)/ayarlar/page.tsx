@@ -13,7 +13,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-5">
-      <h1 className="self-start text-[26px] font-bold tracking-[-0.03em] text-strong sm:text-[34px]">
+      <h1 className="display-ink self-start text-[26px] font-bold tracking-[-0.03em] sm:text-[34px]">
         {t.settings.title}
       </h1>
 

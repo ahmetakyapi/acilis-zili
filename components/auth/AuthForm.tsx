@@ -58,7 +58,7 @@ export function AuthForm({
     <div className="grid items-stretch gap-8 py-4 lg:grid-cols-[minmax(0,1.1fr)_460px] lg:gap-14 lg:py-10">
       {/* ---- Sol: ürün ne yapıyor ---- */}
       <div className="flex flex-col">
-        <h1 className="max-w-[17ch] text-[32px] font-bold leading-[1.1] tracking-[-0.03em] text-strong sm:text-[46px]">
+        <h1 className="display-ink max-w-[17ch] text-[32px] font-bold leading-[1.1] tracking-[-0.03em] sm:text-[46px]">
           {pitchTitle}
         </h1>
         <p className="mt-5 max-w-[52ch] text-base leading-[26px] text-body">

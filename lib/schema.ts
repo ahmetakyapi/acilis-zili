@@ -258,8 +258,11 @@ export const dailyBriefs = pgTable(
   "daily_briefs",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    /** Günlükte o gün; haftalıkta haftanın PAZARTESİsi (dönemin çapası). */
     briefDate: date("brief_date").notNull(),
     locale: text("locale").notNull(),
+    /** "daily" | "weekly" — aynı tarihe iki farklı dönem yazısı düşebilir. */
+    period: text("period").notNull().default("daily"),
     headline: text("headline").notNull(),
     bodyMd: text("body_md").notNull(),
     /** "rules" | "claude" — özetin nasıl üretildiği ekranda belirtilir. */
@@ -268,7 +271,13 @@ export const dailyBriefs = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (t) => [uniqueIndex("daily_briefs_date_locale_key").on(t.briefDate, t.locale)],
+  (t) => [
+    uniqueIndex("daily_briefs_date_locale_period_key").on(
+      t.briefDate,
+      t.locale,
+      t.period,
+    ),
+  ],
 );
 
 /* ==========================================================================

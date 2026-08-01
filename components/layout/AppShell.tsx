@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Gear, SignIn } from "@phosphor-icons/react/dist/ssr";
-import { BellMark } from "@/components/brand/BellMark";
+import { BellMark, BrandLockup } from "@/components/brand/BellMark";
 import { NAV_ITEMS } from "./nav-items";
 import { cn } from "@/lib/utils";
 
 export type ShellLabels = {
   brandName: string;
+  tagline: string;
   nav: Record<string, string>;
   navShort: Record<string, string>;
   settings: string;
@@ -54,15 +55,12 @@ export function AppShell({
     <div className="flex min-h-dvh flex-col">
       {/* ---- Masaüstü masthead ---- */}
       <header className="chrome sticky top-0 z-30 hidden items-center gap-7 border-b px-6 py-3.5 lg:flex xl:px-10">
-        <Link
-          href="/"
-          className="flex shrink-0 items-center gap-2.5"
-          aria-label={labels.brandName}
-        >
-          <BellMark size={27} />
-          <span className="text-[17px] font-bold tracking-[-0.03em] text-strong">
-            {labels.brandName}
-          </span>
+        <Link href="/" className="shrink-0" aria-label={labels.brandName}>
+          <BrandLockup
+            name={labels.brandName}
+            tagline={labels.tagline}
+            size={34}
+          />
         </Link>
 
         <nav className="flex min-w-0 gap-[3px] text-[13.5px]">
@@ -125,7 +123,7 @@ export function AppShell({
           className="flex items-center gap-2.5"
           aria-label={labels.brandName}
         >
-          <BellMark size={24} />
+          <BellMark size={26} />
           <span className="text-[15.5px] font-bold tracking-[-0.03em] text-strong">
             {labels.brandName}
           </span>

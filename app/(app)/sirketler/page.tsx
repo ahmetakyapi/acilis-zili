@@ -154,7 +154,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   return (
     <div className="flex flex-col gap-5">
       <header>
-        <h1 className="text-[26px] font-bold tracking-[-0.03em] text-strong sm:text-[34px]">
+        <h1 className="display-ink w-fit text-[26px] font-bold tracking-[-0.03em] sm:text-[34px]">
           {t.companies.title}
         </h1>
         <p className="mt-2 text-sm text-soft">{t.companies.subtitle}</p>

@@ -19,6 +19,7 @@ export default async function AppLayout({
 
   const labels: ShellLabels = {
     brandName: t.brand.name,
+    tagline: t.brand.marketTagline,
     nav: Object.fromEntries(
       NAV_ITEMS.map((item) => [item.href, item.label(t)]),
     ),
