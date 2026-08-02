@@ -296,6 +296,72 @@ export async function getEarningsCalendar(
 }
 
 /* --------------------------------------------------------------------------
+   Halka arz takvimi
+
+   Ücretsiz katmanda açık olan uçlardan biri. Bilanço takvimiyle aynı desen:
+   tarih aralığı sorulur, liste döner. Kayıtların bir kısmı henüz fiyat
+   aralığı belirlenmemiş "expected" durumundadır; ekranda o alanlar boş
+   gösterilir, uydurulmaz.
+   -------------------------------------------------------------------------- */
+
+type RawIpo = {
+  ipoCalendar?: {
+    date: string;
+    exchange: string | null;
+    name: string;
+    numberOfShares: number | null;
+    price: string | null;
+    status: string | null;
+    symbol: string;
+    totalSharesValue: number | null;
+  }[];
+};
+
+export type IpoEntry = {
+  date: string;
+  symbol: string;
+  name: string;
+  exchange: string | null;
+  /** "15.00-17.00" ya da "10.00" — sağlayıcı serbest metin veriyor. */
+  priceRange: string | null;
+  shares: number | null;
+  /** Toplam arz büyüklüğü (dolar). */
+  totalValue: number | null;
+  /** expected | priced | filed | withdrawn */
+  status: string | null;
+};
+
+export async function getIpoCalendar(
+  from: string,
+  to: string,
+): Promise<ProviderResult<IpoEntry[]>> {
+  const result = await finnhubFetch<RawIpo>(
+    "/calendar/ipo",
+    { from, to },
+    { revalidate: 21600, tags: ["ipo"] },
+  );
+  if (!result.ok) return result;
+
+  const list = result.data?.ipoCalendar ?? [];
+  const entries: IpoEntry[] = list
+    // Geri çekilmiş arzlar takvimde yer tutmasın.
+    .filter((e) => (e.status ?? "").toLowerCase() !== "withdrawn")
+    .map((e) => ({
+      date: e.date,
+      symbol: e.symbol,
+      name: e.name,
+      exchange: e.exchange,
+      priceRange: e.price || null,
+      shares: e.numberOfShares,
+      totalValue: e.totalSharesValue,
+      status: e.status,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return ok(entries, "finnhub", { fetchedAt: result.fetchedAt });
+}
+
+/* --------------------------------------------------------------------------
    Bilanço geçmişi — earnings surprises
    Ücretsiz katman son 4 çeyreğin EPS beklenti/gerçekleşen çiftini verir;
    takvim tablosunun kapsamadığı geçmiş için tek güvenilir kaynak.

@@ -343,6 +343,18 @@ const en: typeof tr = {
     moveDown: "Move Down",
   },
 
+  ipo: {
+    title: "IPO Calendar",
+    window: "Next 6 weeks",
+    empty: "No IPOs scheduled in this range",
+    emptyHint: "The provider has not published new entries yet.",
+    statusExpected: "Expected",
+    statusPriced: "Priced",
+    statusFiled: "Filed",
+    shares: "shares",
+    hint: "Price range and size can change until the offering completes, and \u201cexpected\u201d entries can move date as well.",
+  },
+
   compare: {
     eyebrow: "Side By Side",
     title: "Compare",

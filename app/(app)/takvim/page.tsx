@@ -1,4 +1,5 @@
 import { GuideHint } from "@/components/article/GuideHint";
+import { IpoCalendar } from "@/components/markets/IpoCalendar";
 import Link from "next/link";
 import {
   EmptyState,
@@ -177,6 +178,10 @@ export default async function CalendarPage(
           </Panel>
         ))
       )}
+
+      {/* Makro takvimin altında halka arz takvimi: ikisi de "önümüzdeki
+          günlerde ne olacak" sorusuna cevap veriyor. */}
+      <IpoCalendar locale={locale} t={t} />
 
       <GuideHint
         label={t.guide.contextLabel}

@@ -344,6 +344,18 @@ const tr = {
     moveDown: "Aşağı Taşı",
   },
 
+  ipo: {
+    title: "Halka Arz Takvimi",
+    window: "Önümüzdeki 6 hafta",
+    empty: "Bu aralıkta planlanmış halka arz yok",
+    emptyHint: "Sağlayıcı takvimi henüz yeni kayıt yayımlamadı.",
+    statusExpected: "Beklenen",
+    statusPriced: "Fiyatlandı",
+    statusFiled: "Başvuruldu",
+    shares: "adet",
+    hint: "Fiyat aralığı ve büyüklük, arz tamamlanana kadar değişebilir; \u201cbeklenen\u201d kayıtlarda tarih de kayabilir. Yeni halka açılan hisselerin ilk haftalarındaki oynaklık için Hisse Senedi ve Likidite rehberlerine bakabilirsin.",
+  },
+
   compare: {
     eyebrow: "Yan Yana",
     title: "Karşılaştır",
