@@ -58,6 +58,14 @@ export const DOW_MEMBERS: IndexMember[] = [
 
 /** Nasdaq-100 — 100 üye. */
 export const NDX_MEMBERS: IndexMember[] = [
+  /* SPCX (SpaceX) 7 Temmuz 2026'da endekse girdi ve liste bunu kaçırmıştı:
+     dosya 1 Ağustos damgalı olmasına rağmen SPCX yoktu, yani kaynak tablo o
+     tarihte henüz güncellenmemişti.
+
+     Nasdaq'ın hızlı giriş kuralı gereği kimse çıkarılmadı — endeks geçici
+     olarak 100 üyeyi aşabiliyor. Bu yüzden liste 101 satır ve bu bir hata
+     değil; sayının 100 olmasını bekleyen bir kontrol yazma. */
+  { symbol: "SPCX", name: "SpaceX", sector: "Industrials", sub: "Aerospace & Defense" },
   { symbol: "AAPL", name: "Apple Inc.", sector: "Information Technology", sub: "Technology Hardware, Storage & Peripherals" },
   { symbol: "ABNB", name: "Airbnb", sector: "Consumer Discretionary", sub: "Hotels, Resorts & Cruise Lines" },
   { symbol: "ADBE", name: "Adobe Inc.", sector: "Information Technology", sub: "Application Software" },
