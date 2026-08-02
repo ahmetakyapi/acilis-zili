@@ -3,15 +3,33 @@
  *
  * Buraya yalnızca **ilan edilmiş veya kurala bağlı** tarihler girer:
  *   - CPI ve FOMC tarihleri BLS ve Federal Reserve'ün yayımladığı takvimlerden
- *   - Employment Situation, BLS'in "ayın ilk Cuma günü" kuralından
- *   - İşsizlik başvuruları, "her Perşembe 08:30 ET" kuralından
+ *   - Employment Situation, BLS'in yayımladığı takvimden (kural "ayın ilk
+ *     Cuma günü" ama istisnası var: 2027 Ocak'ta ilk Cuma yılbaşına denk
+ *     geldiği için yayın 8'ine kaydı. Bu yüzden üretilmiyor, işleniyor.)
+ *   - İşsizlik başvuruları, "her Perşembe 08:30 ET" kuralından — tek
+ *     ÜRETİLEN seri bu, her tohum koşumunda bugünden bir yıl ileri dolar.
  *
- * Tahmin edilen tarih yazılmaz. PPI, PCE, perakende satışlar ve GDP gibi
- * yayınlar FRED'in release-dates ucundan senkronize edilir
- * (app/api/cron/sync-calendar). Böylece takvimde uydurma satır olmaz.
+ * Tahmin edilen tarih yazılmaz.
+ *
+ * BURASI ARTIK YALNIZCA BAŞLANGIÇ. Takvimin ileriye doğru dolması günlük
+ * cron'un işi: `lib/calendar-sync.ts` FRED'in yayın takviminden TÜFE,
+ * istihdam raporu ve çekirdek PCE tarihlerini bir yıl ileriye kadar çekiyor
+ * ve buradaki elle işlenmiş kayıtlara dokunmuyor. Yani bu dosyadaki CPI ve
+ * istihdam listeleri bitse bile takvim boşalmıyor.
+ *
+ * TEK İSTİSNA FOMC. Fed'in toplantı takvimi bir FRED yayını değil — politika
+ * faizi serisinin bağlı olduğu H.15 günlük çıkar, toplantı günleriyle ilgisi
+ * yoktur. FOMC tarihleri elle işlenir ve BİTER. `manualCoverage()` kalan ömrü
+ * hesaplar, `npm run db:seed` her koşumda yazdırır, eşiğin altına inince
+ * uyarır. Kaynak:
+ *   FOMC → federalreserve.gov/monetarypolicy/fomccalendars.htm
+ *   (BLS takvimi de hâlâ elle tazelenebilir: bls.gov/schedule/news_release/ —
+ *    ama artık zorunlu değil, FRED aynı tarihleri veriyor.)
  *
  * Tüm saatler New York saatiyle (ET).
  */
+
+import { todayEt } from "../../lib/market-hours";
 
 export type EconomicEventSeed = {
   eventDate: string;
@@ -167,7 +185,7 @@ function payrollEvents(): EconomicEventSeed[] {
  * Tatile denk gelen haftalarda BLS bir gün kaydırır; FRED senkronizasyonu
  * bu istisnaları düzeltir.
  */
-function joblessClaimsEvents(from: string, weeks: number): EconomicEventSeed[] {
+export function joblessClaimsEvents(from: string, weeks: number): EconomicEventSeed[] {
   const events: EconomicEventSeed[] = [];
   const cursor = new Date(`${from}T00:00:00Z`);
 
@@ -195,11 +213,70 @@ function joblessClaimsEvents(from: string, weeks: number): EconomicEventSeed[] {
   return events;
 }
 
-export function economicEventSeeds(): EconomicEventSeed[] {
+/** İşsizlik başvurularının kaç hafta ileri tohumlanacağı. */
+const JOBLESS_WEEKS = 52;
+
+export function economicEventSeeds(
+  today: string = todayEt(),
+): EconomicEventSeed[] {
   return [
     ...cpiEvents(),
     ...fomcEvents(),
     ...payrollEvents(),
-    ...joblessClaimsEvents("2026-08-01", 40),
+    /* Başlangıç ÇALIŞMA ANINDAN türer. Eskiden "2026-08-01" sabitti: tohum
+       2027 yazında çalıştırıldığında geçmiş 40 haftayı yazıp geleceği boş
+       bırakıyordu. Kural tabanlı olan tek seri bu olduğu için kendini
+       yenileyebilen de yalnızca bu — her seed koşumu bugünden itibaren bir
+       yıl ileriyi doldurur. */
+    ...joblessClaimsEvents(today, JOBLESS_WEEKS),
   ].sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+}
+
+/* --------------------------------------------------------------------------
+   Kapsam denetimi
+
+   CPI, FOMC ve istihdam tarihleri KURAL DEĞİL, ilan edilmiş takvimlerdir:
+   BLS ve Fed bunları yılda bir yayımlar ve buraya elle işlenir. Yani bu
+   dosyanın bir son kullanma tarihi var ve o tarih geldiğinde takvim sessizce
+   boşalıyordu — ekranda hata yok, sadece "yaklaşan olay yok" yazıyor.
+   Yatırımcının FOMC gününü kaçırması için yeterli.
+
+   Sessiz bitişi görünür bir uyarıya çeviriyoruz: `npm run db:seed` her
+   koşumda kalan kapsamı yazdırır, eşiğin altına inince yüksek sesle söyler.
+   Otomatik çözüm değil — hatırlatıcı. Asıl çözüm tarihleri tazelemek.
+   -------------------------------------------------------------------------- */
+
+/** Bu kadar günün altına inince tohum uyarı basar. */
+export const COVERAGE_WARN_DAYS = 90;
+
+export type SeriesCoverage = {
+  label: string;
+  /** Elle işlenen son tarih; seri hiç yoksa null. */
+  lastDate: string | null;
+  /** Bugünden itibaren kaç gün kaldı. */
+  daysLeft: number;
+};
+
+/** Elle bakımı gereken serilerin kapsamı — kural tabanlı olanlar hariç. */
+export function manualCoverage(today: string = todayEt()): SeriesCoverage[] {
+  const daysBetween = (from: string, to: string) =>
+    Math.round(
+      (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
+        86400000,
+    );
+
+  const lastOf = (dates: string[]): string | null =>
+    dates.length > 0 ? [...dates].sort().at(-1)! : null;
+
+  return [
+    { label: "TÜFE (BLS)", lastDate: lastOf(CPI_RELEASES.map((r) => r.date)) },
+    { label: "FOMC (Fed)", lastDate: lastOf(FOMC_DECISIONS.map((r) => r.date)) },
+    {
+      label: "İstihdam (BLS)",
+      lastDate: lastOf(PAYROLL_RELEASES.map((r) => r.date)),
+    },
+  ].map((entry) => ({
+    ...entry,
+    daysLeft: entry.lastDate ? daysBetween(today, entry.lastDate) : 0,
+  }));
 }
