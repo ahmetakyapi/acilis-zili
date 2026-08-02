@@ -23,7 +23,7 @@ import type { SymbolMeta } from "@/lib/data";
 /**
  * Bilanço takvimi — mockup 4d. Dikkat hiyerarşisi üç katmanlıdır:
  *   1. Gün içinde piyasa değeri en büyük iki şirket tam genişlik hero satırı
- *   2. Sonraki büyükler 184px sabit genişlikte mini kart ızgarasında
+ *   2. Sonraki büyükler, satırı tam dolduran esnek mini kart ızgarasında
  *   3. Kalan yüzlerce sembol varsayılan KAPALI bir açılır bölümde —
  *      kalabalık ilk bakışta görünmez, isteyen açar (native <details>).
  */
@@ -387,9 +387,18 @@ function DaySection({
         })}
       </div>
 
-      {/* ---- Katman 2: 184px mini kartlar ---- */}
+      {/* ---- Katman 2: mini kartlar ----
+          Kartlar SABİT 184px genişlikteydi ve `flex-wrap` içinde duruyordu:
+          altı kart kapsayıcının tamamını doldurmuyor, kalan yer satırın
+          sağında ölü boşluk olarak kalıyordu — üstteki tam genişlik hero
+          satırlarının yanında bu kırık görünüyordu.
+
+          `auto-fit` + `1fr` ile kartlar artan yeri paylaşıyor: sığdığı kadar
+          sütun açılıyor, boş kalan izler çöküyor ve kartlar gerilerek
+          hizalanıyor. Alt sınır 9,5rem, yani dar ekranda ikili/üçlü düzene
+          kendiliğinden iniyor. */}
       {mid.length > 0 && (
-        <div className="mt-2.5 flex flex-wrap gap-2.5">
+        <div className="mt-2.5 grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-2.5">
           {mid.map((row) => {
             const m = meta[row.symbol];
             const timing = timingOf(row.hour, t);
@@ -398,7 +407,7 @@ function DaySection({
               <Link
                 key={row.id}
                 href={`/hisse/${row.symbol}`} prefetch={false}
-                className="w-full sm:w-46 sm:shrink-0"
+                className="block min-w-0"
               >
                 <div className="panel-hover flex h-full flex-col gap-[11px] rounded-[13px] border border-line bg-surface-solid p-3.5 transition-colors">
                   <div className="flex items-start gap-2">
