@@ -413,26 +413,42 @@ export function ImpactDots({
   );
 }
 
-/** Tek nokta — takvim satırında olayın etkisini renkle söyler. */
+/**
+ * Tek nokta — takvim satırında olayın etkisini renkle söyler.
+ *
+ * Nokta 8px, yanındaki başlık satırı ~19px. `items-start` bir satırda ikisi
+ * üst üste hizalanınca nokta metnin ilk satırının üstünde kalıyor ve kaymış
+ * görünüyor. Bu yüzden nokta, kendi yüksekliğinde değil METNİN SATIR
+ * YÜKSEKLİĞİNDE bir kutuya oturuyor ve o kutunun içinde dikey ortalanıyor —
+ * başlık kaç satıra kırılırsa kırılsın ilk satırla hizalı kalır.
+ */
 export function ImpactDot({
   importance,
   label,
+  /** Hizalanacağı metnin satır yüksekliği (px). */
+  lineHeight = 19,
 }: {
   importance: string;
   label: string;
+  lineHeight?: number;
 }) {
   return (
     <span
       title={label}
-      className={cn(
-        "size-2 shrink-0 rounded-full",
-        importance === "high"
-          ? "bg-down"
-          : importance === "medium"
-            ? "bg-impact-med"
-            : "bg-muted",
-      )}
+      className="flex shrink-0 items-center"
+      style={{ height: lineHeight }}
     >
+      <span
+        aria-hidden
+        className={cn(
+          "block size-2 rounded-full",
+          importance === "high"
+            ? "bg-down"
+            : importance === "medium"
+              ? "bg-impact-med"
+              : "bg-muted",
+        )}
+      />
       <span className="sr-only">{label}</span>
     </span>
   );

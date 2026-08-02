@@ -165,6 +165,10 @@ const tr = {
   },
 
   earnings: {
+    emptyWatchlist: "Favorilerinde bu aralıkta bilanço yok",
+    emptyWatchlistHint:
+      "Takip ettiğin şirketlerden hiçbiri bu tarih aralığında sonuç açıklamıyor.",
+    clearFilter: "Filtreyi Kaldır",
     title: "Bilanço Takvimi",
     subtitle: "Şirketlerin finansal sonuç açıklama tarihleri",
     beforeOpen: "Açılış Öncesi",

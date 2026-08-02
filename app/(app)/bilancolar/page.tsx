@@ -54,7 +54,12 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   if (session?.user?.id) {
     userSymbols = await getUserSymbols(session.user.id);
   }
-  if (onlyWatchlist && userSymbols.length > 0) {
+  /* Filtre açıkken liste BOŞ olsa bile uygulanır. Eskiden
+     `userSymbols.length > 0` koşulu vardı ve favori listesi boş olan bir
+     kullanıcıda filtre sessizce yok sayılıyordu: çip seçili görünüyor ama
+     tüm şirketler listeleniyordu. Sessiz yok sayma yerine dürüst bir boş
+     durum daha iyi. */
+  if (onlyWatchlist) {
     const set = new Set(userSymbols);
     rows = rows.filter((row) => set.has(row.symbol));
   }
@@ -75,6 +80,18 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
       ...(key === "ay" ? { aralik: "ay" } : {}),
     })}`;
 
+  /* Favori filtresini AÇIP KAPATAN bağlantı.
+     Hata buradaydı: kapatma dalı `rangeHref(range)` kullanıyordu, o
+     fonksiyon ise mevcut filtreyi koruduğu için aynı adrese geri
+     dönüyordu — ikinci tıklama hiçbir şey yapmıyor gibi görünüyordu. */
+  const watchlistHref = () => {
+    const params = new URLSearchParams();
+    if (!onlyWatchlist) params.set("f", "favoriler");
+    if (range === "ay") params.set("aralik", "ay");
+    const query = params.toString();
+    return query ? `/bilancolar?${query}` : "/bilancolar";
+  };
+
   return (
     <div className="flex flex-col gap-7">
       <PageHeader
@@ -84,11 +101,8 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           <div className="flex flex-wrap items-center gap-2.5">
             {session?.user && (
               <Link
-                href={
-                  onlyWatchlist
-                    ? rangeHref(range)
-                    : `/bilancolar?f=favoriler${range === "ay" ? "&aralik=ay" : ""}`
-                }
+                href={watchlistHref()}
+                aria-pressed={onlyWatchlist}
                 className={cn(
                   "inline-flex min-h-9 items-center gap-[7px] rounded-full border px-3.5 py-2 text-[12.5px] font-semibold transition-colors",
                   onlyWatchlist
@@ -117,7 +131,20 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
 
       {byDay.size === 0 ? (
         <Panel>
-          <EmptyState title={t.earnings.empty} />
+          <EmptyState
+            title={onlyWatchlist ? t.earnings.emptyWatchlist : t.earnings.empty}
+            hint={onlyWatchlist ? t.earnings.emptyWatchlistHint : undefined}
+            action={
+              onlyWatchlist ? (
+                <Link
+                  href={watchlistHref()}
+                  className="text-[12.5px] font-semibold text-primary"
+                >
+                  {t.earnings.clearFilter}
+                </Link>
+              ) : undefined
+            }
+          />
         </Panel>
       ) : (
         [...byDay.entries()].map(([date, dayRows]) => (

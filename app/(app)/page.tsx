@@ -735,6 +735,7 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
             <ImpactDot
               importance={event.importance ?? "low"}
               label={t.calendar.impact}
+              lineHeight={20}
             />
             <span
               className={cn(

@@ -352,9 +352,28 @@ export function PriceChart({
     };
 
     let pressed = false;
+    let readRaf = 0;
+
+    /* TUZAK: `setCrosshairPosition` çağrısı, grafiğin AYNI olayı kendi
+       içinde işlemesinden önce koşuyor. Kütüphane pointerdown'ı işlerken
+       imleci kendi hesabına göre yeniden kuruyor ve elle koyduğumuz konumu
+       siliyordu — sonuç: tek dokunuşta alttaki tarih beliriyor ama grafik
+       üstündeki fiyat işareti yerinde kalıyor, ancak basılı tutup
+       kıpırdatınca (yeni pointermove olayları) düzeliyordu.
+
+       Çözüm, okumayı bir sonraki kareye ERTELEYİP tekrar uygulamak: ilk
+       çağrı anında tepki verir, rAF'taki ikinci çağrı kütüphanenin kendi
+       işlemesinden sonra son sözü söyler. Basılı tutma davranışı
+       değişmiyor, pointermove yolu aynen duruyor. */
+    const readSticky = (clientX: number) => {
+      readAtClientX(clientX);
+      cancelAnimationFrame(readRaf);
+      readRaf = requestAnimationFrame(() => readAtClientX(clientX));
+    };
+
     const onPointerDown = (event: PointerEvent) => {
       pressed = true;
-      readAtClientX(event.clientX);
+      readSticky(event.clientX);
     };
     const onPointerMove = (event: PointerEvent) => {
       if (pressed) readAtClientX(event.clientX);
@@ -362,6 +381,10 @@ export function PriceChart({
     const onPointerRelease = () => {
       pressed = false;
     };
+    /* Fare tarafında bazı tarayıcılar pointerdown'ı grafiğin kendi tıklama
+       işleyicisinden SONRA teslim ediyor; click tek dokunuşu ikinci kez
+       sabitliyor. Aynı bara ikinci kez yazmak zararsız. */
+    const onClick = (event: MouseEvent) => readSticky(event.clientX);
     // Grafiğin dışına dokunulunca okuma kapanır, dönem özetine dönülür.
     const onOutsidePointerDown = (event: PointerEvent) => {
       if (container.contains(event.target as Node)) return;
@@ -370,6 +393,7 @@ export function PriceChart({
 
     container.addEventListener("pointerdown", onPointerDown);
     container.addEventListener("pointermove", onPointerMove);
+    container.addEventListener("click", onClick);
     window.addEventListener("pointerup", onPointerRelease);
     window.addEventListener("pointercancel", onPointerRelease);
     document.addEventListener("pointerdown", onOutsidePointerDown);
@@ -425,8 +449,10 @@ export function PriceChart({
 
     return () => {
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(readRaf);
       container.removeEventListener("pointerdown", onPointerDown);
       container.removeEventListener("pointermove", onPointerMove);
+      container.removeEventListener("click", onClick);
       window.removeEventListener("pointerup", onPointerRelease);
       window.removeEventListener("pointercancel", onPointerRelease);
       document.removeEventListener("pointerdown", onOutsidePointerDown);

@@ -164,6 +164,10 @@ const en: typeof tr = {
   },
 
   earnings: {
+    emptyWatchlist: "No earnings from your watchlist",
+    emptyWatchlistHint:
+      "None of the companies you follow report in this date range.",
+    clearFilter: "Clear Filter",
     title: "Earnings Calendar",
     subtitle: "When companies report their results",
     beforeOpen: "Before Open",
