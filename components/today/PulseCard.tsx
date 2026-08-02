@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
-import { getStatus } from "@/lib/data";
-import { getQuotes } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn, formatEtDateShort, formatPercent, formatPrice } from "@/lib/utils";
@@ -13,20 +11,28 @@ import { cn, formatEtDateShort, formatPercent, formatPrice } from "@/lib/utils";
  * ikisinin arka planı. Petrol enflasyon beklentisinin en hızlı okunan
  * göstergesi, VIX ise piyasanın kendi hakkındaki gerginliği.
  *
- * BRENT NEDEN FON ÜZERİNDEN: FRED'in spot Brent serisi (DCOILBRENTEU) resmî
- * ama YAPISAL OLARAK GECİKMELİ — yayın takvimi gereği son gözlem çoğu zaman
- * dört-beş iş günü geride kalıyor ve kartta bayat bir sayı duruyordu. BNO
- * (United States Brent Oil Fund) ABD borsasında işlem gördüğü için son
- * seansın kapanışını veriyor. Bu, ürünün başka yerde de kullandığı
- * konvansiyon: endeks kartları da endeksin kendisini değil onu izleyen
- * ETF'i gösteriyor (Nasdaq 100 → QQQ). Seviye fonun fiyatıdır, varil
- * fiyatı değil; kartın altındaki not bunu açıkça söylüyor.
+ * BRENT NEDEN FON ÜZERİNDEN DEĞİL — bir geri alınmış karar
+ * ------------------------------------------------------------------
+ * Bir süre burada BNO (United States Brent Oil Fund) kapanışı gösterildi.
+ * Gerekçe tazelikti: FRED'in spot serisi birkaç iş günü geriden geliyor,
+ * BNO ise ABD seansında işlem görüyor. Sonuç kabul edilemezdi.
  *
- * VIX tarafında bu sorun yok: VIXCLS bir önceki kapanışı ertesi gün veriyor
- * ve hücre kendi gözlem tarihini yazıyor.
+ * "BRENT PETROL" başlığının altında "$50,37" yazınca okuyan kişi bunu VARİL
+ * FİYATI olarak okur — başka türlü okunmaz. Gerçek varil fiyatı o sırada
+ * ~$89'du. Kartın altındaki "seviye fonun fiyatıdır" notu bunu kurtarmıyor:
+ * bir sayıyı büyük punto ile yanlış, küçük punto ile doğru göstermek yanlış
+ * göstermektir.
+ *
+ * Endeks kartlarındaki ETF konvansiyonu (Nasdaq 100 → QQQ) buna emsal değil.
+ * Bir endeksin "seviyesi" okuyucunun kafasında zaten soyut bir sayı; emtianın
+ * fiyatı ise doğrudan dolar/varil demek. Aynı desen, iki farklı okuma.
+ *
+ * Artık DCOILBRENTEU: gerçek varil fiyatı, gözlem tarihi damgalı. Gecikmeyi
+ * kabul ediyoruz çünkü yanındaki VIX hücresi de tam olarak bunu yapıyor —
+ * doğru ve damgalı, taze ve yanlıştan iyidir.
  */
 
-const BRENT_SYMBOL = "BNO";
+const BRENT = { seriesId: "DCOILBRENTEU", slug: "brent", units: "lin" };
 const VIX = { seriesId: "VIXCLS", slug: "vix", units: "lin" };
 
 type BandKey =
@@ -52,19 +58,29 @@ export async function PulseCard({
   locale: Locale;
   t: Dictionary;
 }) {
-  const status = await getStatus();
   const [brentResult, vix] = await Promise.all([
-    getQuotes([BRENT_SYMBOL], status),
+    getSeries(BRENT, 3),
     getSeries(VIX, 3),
   ]);
 
-  const brent = brentResult.ok ? brentResult.data[BRENT_SYMBOL] : undefined;
+  const brentValue = brentResult.ok ? brentResult.data.latestValue : null;
+  const brentPrev = brentResult.ok ? brentResult.data.prevValue : null;
+  const brentDate = brentResult.ok
+    ? (brentResult.data.observations.at(-1)?.date ?? null)
+    : null;
+  /* Yüzde, iki gözlem arasındaki fark — "günlük değişim" DEĞİL, çünkü
+     gözlemler arasında hafta sonu ya da tatil olabiliyor. Künyedeki tarih
+     hangi güne ait olduğunu zaten söylüyor. */
+  const brentDelta =
+    brentValue !== null && brentPrev !== null && brentPrev !== 0
+      ? ((brentValue - brentPrev) / brentPrev) * 100
+      : null;
 
   const vixValue = vix.ok ? vix.data.latestValue : null;
   const vixPrev = vix.ok ? vix.data.prevValue : null;
   const vixDate = vix.ok ? (vix.data.observations.at(-1)?.date ?? null) : null;
 
-  if (!brent && vixValue === null) return null;
+  if (brentValue === null && vixValue === null) return null;
 
   const vixDelta =
     vixValue !== null && vixPrev !== null ? vixValue - vixPrev : null;
@@ -79,36 +95,40 @@ export async function PulseCard({
       <div className="grid grid-cols-2 border-t border-line">
         {/* ---- Brent ---- */}
         <Link
-          href={`/hisse/${BRENT_SYMBOL}`}
+          href="/rehber/enflasyon"
           className="px-4 py-3.5 transition-colors hover:bg-primary-tint"
         >
           <p className="plate text-[10px] tracking-[0.08em]">{t.markets.brent}</p>
           <p className="tote mt-1 text-lg">
-            {brent ? (
+            {brentValue !== null ? (
               <>
                 <span className="mr-0.5 text-xs text-muted">$</span>
-                {formatPrice(brent.price, locale)}
+                {formatPrice(brentValue, locale)}
               </>
             ) : (
               "—"
             )}
           </p>
           <p className="numeral mt-0.5 text-[11px]">
-            {brent ? (
+            {brentValue !== null ? (
               <span
                 className={cn(
                   "font-semibold",
-                  brent.changePct > 0
-                    ? "text-up"
-                    : brent.changePct < 0
-                      ? "text-down"
-                      : "text-muted",
+                  brentDelta === null
+                    ? "text-muted"
+                    : brentDelta > 0
+                      ? "text-up"
+                      : brentDelta < 0
+                        ? "text-down"
+                        : "text-muted",
                 )}
               >
-                {brent.changePct !== 0 && (
-                  <span aria-hidden>{brent.changePct > 0 ? "▲ " : "▼ "}</span>
+                {brentDelta !== null && brentDelta !== 0 && (
+                  <span aria-hidden>{brentDelta > 0 ? "▲ " : "▼ "}</span>
                 )}
-                {formatPercent(brent.changePct, locale)}
+                {brentDelta !== null
+                  ? formatPercent(brentDelta, locale)
+                  : t.markets.barrel}
               </span>
             ) : (
               <span className="text-muted">{t.common.noData}</span>
@@ -156,8 +176,11 @@ export async function PulseCard({
           </p>
         </Link>
       </div>
+      {/* Her iki sayı da FRED kapanışı ve ikisi de gecikebiliyor; künye her
+          hücrenin kendi gözlem tarihini ayrı ayrı yazar. */}
       <p className="border-t border-line px-4 py-2.5 text-[10.5px] leading-relaxed text-muted">
         {t.markets.pulseHint}
+        {brentDate ? ` · Brent ${formatEtDateShort(brentDate, locale)}` : ""}
         {vixDate ? ` · VIX ${formatEtDateShort(vixDate, locale)}` : ""}
       </p>
     </Panel>
