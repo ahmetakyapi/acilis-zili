@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { db } from "./db";
 import {
@@ -34,7 +35,15 @@ import type { BriefPeriod } from "./brief";
  * çökmez, ilgili kart "veri yok" gösterir.
  */
 
-export async function getHolidays(): Promise<MarketHoliday[]> {
+/* React `cache()`: bir istek boyunca ilk çağrı sonucu paylaşılır.
+   Tatil listesi ve ondan türeyen seans durumu tek bir sayfada dört-beş kez
+   sorulabiliyor (ana sayfada endeks şeridi, dünya kartı, favoriler ve
+   sayfanın kendisi) ve her biri ayrı bir veritabanı gidiş-dönüşüydü. Veri
+   gün içinde değişmediği için tekrar sorulmasının bir faydası yok.
+   İstekler arasında paylaşılmaz — istemcilerin verisi karışmaz. */
+export const getHolidays = cache(async function getHolidays(): Promise<
+  MarketHoliday[]
+> {
   try {
     const rows = await db.select().from(marketHolidays);
     return rows.map((r) => ({
@@ -46,16 +55,19 @@ export async function getHolidays(): Promise<MarketHoliday[]> {
   } catch {
     return [];
   }
-}
+});
 
-export async function getStatus(): Promise<MarketStatus> {
+export const getStatus = cache(async function getStatus(): Promise<MarketStatus> {
   const holidays = await getHolidays();
   return getMarketStatus(new Date(), holidays);
-}
+});
 
 /* ---- Ekonomik takvim ---- */
 
-export async function getEventsBetween(
+/* Aynı aralık bir sayfada birden fazla bileşen tarafından isteniyor
+   (ana sayfada gün şeridi ve bugünün takvimi). cache() argümanlara göre
+   ayırır, yani farklı aralıklar hâlâ ayrı sorgu. */
+export const getEventsBetween = cache(async function getEventsBetween(
   from: string,
   to: string,
 ): Promise<EconomicEventRow[]> {
@@ -68,7 +80,7 @@ export async function getEventsBetween(
   } catch {
     return [];
   }
-}
+});
 
 export async function getTodayEvents(): Promise<EconomicEventRow[]> {
   const today = todayEt();
@@ -91,7 +103,7 @@ export async function getUpcomingEvents(limit = 6): Promise<EconomicEventRow[]> 
 
 /* ---- Bilanço takvimi ---- */
 
-export async function getEarningsBetween(
+export const getEarningsBetween = cache(async function getEarningsBetween(
   from: string,
   to: string,
 ): Promise<EarningsRow[]> {
@@ -109,7 +121,7 @@ export async function getEarningsBetween(
   } catch {
     return [];
   }
-}
+});
 
 export async function getNextEarnings(
   symbol: string,

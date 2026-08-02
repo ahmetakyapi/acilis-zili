@@ -366,8 +366,20 @@ ayrılır. Her yazıda EN AZ ÜÇÜ kullanılmalı.
 BAĞLANTI KURALLARI
   - Sitede sayfası olan her şirkete bağlantı ver: [Micron](/hisse/MU)
   - En az bir rehber yazısına bağlantı ver. Mevcut slug'lar:
-    /rehber/volatilite · /rehber/etf · /rehber/kaldirac · /rehber/long-short
-    /rehber/ayi-boga · /rehber/sahin-guvercin · /rehber/bilanco · /rehber/temettu
+    Temel:     /rehber/hisse-senedi · /rehber/borsa-nasil-isler ·
+               /rehber/endeks · /rehber/etf · /rehber/volatilite ·
+               /rehber/ayi-boga · /rehber/spread-likidite
+    Risk:      /rehber/emir-tipleri · /rehber/risk-yonetimi ·
+               /rehber/cesitlendirme · /rehber/long-short ·
+               /rehber/kaldirac · /rehber/yatirimci-psikolojisi
+    Şirket:    /rehber/bilanco · /rehber/degerleme ·
+               /rehber/piyasa-degeri · /rehber/temettu
+    Makro:     /rehber/faiz-tahvil · /rehber/enflasyon ·
+               /rehber/sahin-guvercin · /rehber/kur-riski
+
+    Bu liste değişebilir. Emin değilsen https://acilis-zili.vercel.app/rehber
+    sayfasını aç ve oradaki bağlantıyı kullan — var olmayan bir slug'a
+    bağlantı vermek 404 üretir.
   - Bağlantılar cümlenin içine doğal biçimde girsin, liste hâlinde dipnot
     olarak değil.
 
