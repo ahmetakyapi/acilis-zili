@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArticleChart } from "./ArticleChart";
 import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
-import { cn } from "@/lib/utils";
+import { cn, safeExternalUrl } from "@/lib/utils";
 
 /* ==========================================================================
    Uzun metin gövdesi — rehber yazıları ve mercek yazıları
@@ -109,14 +109,26 @@ function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
       const internal = href.startsWith("/");
       const className =
         "font-medium text-primary underline decoration-primary-faint underline-offset-2 transition-colors hover:text-primary-hover";
-      return internal ? (
-        <Link key={key} href={href} className={className}>
-          {label}
-        </Link>
-      ) : (
+
+      if (internal) {
+        return (
+          <Link key={key} href={href} className={className}>
+            {label}
+          </Link>
+        );
+      }
+
+      /* Mercek yazıları /api/mercek üzerinden geliyor, yani gövdeyi biz
+         yazmıyoruz. `[tıkla](javascript:…)` bağlantısı JSX kaçışından
+         geçer — href öznitelikleri kaçışın kapsamı dışında. Şema
+         süzülmezse bağlantı düz metne düşer. */
+      const external = safeExternalUrl(href);
+      if (!external) return <span key={key}>{label}</span>;
+
+      return (
         <a
           key={key}
-          href={href}
+          href={external}
           target="_blank"
           rel="noreferrer noopener"
           className={className}

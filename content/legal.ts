@@ -52,7 +52,7 @@ Bu ikisi kimlik bilgisi taşımaz, bir kullanıcı kimliğine bağlanmaz ve baş
 | Veri | Neden işleniyor | Hukuki sebep |
 |---|---|---|
 | Kullanıcı adı | Hesabı tanımlamak ve giriş yapmak | Sözleşmenin ifası (m. 5/2-c) |
-| E-posta adresi | Hesabı benzersiz kılmak, hesap kurtarma | Sözleşmenin ifası (m. 5/2-c) |
+| E-posta adresi | Hesabı benzersiz kılmak | Sözleşmenin ifası (m. 5/2-c) |
 | Şifrenin özeti | Girişi doğrulamak | Sözleşmenin ifası (m. 5/2-c) |
 | Takip listen ve notların | Ürünün asıl işlevi | Sözleşmenin ifası (m. 5/2-c) |
 | Tema ve dil tercihi | Arayüzü hatırlamak | Meşru menfaat (m. 5/2-f) |
@@ -61,6 +61,8 @@ Bu ikisi kimlik bilgisi taşımaz, bir kullanıcı kimliğine bağlanmaz ve baş
 ::: dikkat Şifren Saklanmıyor
 Şifrenin kendisi hiçbir yerde tutulmaz. Kaydedilen şey **bcrypt** algoritmasıyla üretilmiş, geri çevrilemeyen bir özettir. Veritabanına erişen biri bile şifreni okuyamaz. Buna rağmen başka bir serviste kullandığın şifreyi burada kullanma — bu, tüm siteler için geçerli genel bir kuraldır.
 :::
+
+E-posta adresin **yalnızca** hesabın benzersiz olmasını sağlamak için tutulur; bu adrese hiçbir zaman posta gönderilmez. Şifre sıfırlama özelliği henüz yok, yani şifreni unutursan e-posta adresin hesabını geri getirmez — bu yüzden şifreni bir parola yöneticisinde sakla.
 
 Özel nitelikli kişisel veri (sağlık, din, biyometri, siyasi görüş vb.) hiçbir biçimde toplanmaz. Kimlik numarası, telefon, adres, doğum tarihi ve finansal hesap bilgisi de istenmez — site senin adına işlem yapmaz, bir aracı kuruma bağlanmaz.
 

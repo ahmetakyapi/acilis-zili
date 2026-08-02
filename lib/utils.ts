@@ -138,6 +138,37 @@ export function isValidSymbol(symbol: string): boolean {
   return /^[A-Z][A-Z.-]{0,9}$/.test(symbol);
 }
 
+/**
+ * Dışarıya açılan bağlantıları süzer — yalnızca http(s) geçer.
+ *
+ * `href` değerlerinin hepsi bizim yazdığımız metinden gelmiyor: haber ve
+ * şirket sitesi adresleri sağlayıcıdan, mercek yazılarının kaynak listesi
+ * ise /api/mercek ucundan geliyor. Zod'un `.url()` doğrulaması bu iş için
+ * yeterli değil — `new URL()` tabanlı olduğu için `javascript:alert(1)` de
+ * geçerli bir URL sayılıyor ve `<a href>` içine konduğunda tıklandığında
+ * çalışan bir betiğe dönüşüyor.
+ *
+ * Gerçekleşme ihtimali düşük (uçlar secret'la korunuyor, sağlayıcılar
+ * güvenilir) ama bedeli tek satır ve React'in JSX kaçışı bu vektörü
+ * kapatmıyor — href öznitelikleri kaçışın kapsamı dışında.
+ *
+ * Geçmeyen adres null döner; çağıran taraf bağlantıyı düz metne düşürür.
+ */
+export function safeExternalUrl(
+  raw: string | null | undefined,
+): string | null {
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw.trim());
+    return parsed.protocol === "https:" || parsed.protocol === "http:"
+      ? parsed.href
+      : null;
+  } catch {
+    // Göreli ya da bozuk adres — dış bağlantı olarak kullanılamaz.
+    return null;
+  }
+}
+
 /* --------------------------------------------------------------------------
    Tarih ve çift saat gösterimi
    Kaynaklar ET (New York) yayınlar; kullanıcı Türkiye'de okur. Tarihler

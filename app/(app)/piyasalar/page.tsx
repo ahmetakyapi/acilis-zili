@@ -678,10 +678,12 @@ function SortHead({
 }) {
   return (
     <th className={cn("px-3 py-2.5 text-right font-medium", className)}>
+      {/* Dokunma alanı yazının kendisi kadardı (14px); negatif margin +
+          dikey dolgu tabloyu büyütmeden hedefi 32px'e çıkarır. */}
       <Link
         href={href}
         className={cn(
-          "inline-flex items-center gap-1 transition-colors hover:text-primary",
+          "-my-2 inline-flex min-h-8 items-center gap-1 py-2 transition-colors hover:text-primary",
           active && "text-primary",
         )}
       >

@@ -5,7 +5,7 @@ import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
 import { EmptyState, Panel } from "@/components/ui/primitives";
 import { getStoryBySlug, getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
-import { formatEtDateLong } from "@/lib/utils";
+import { formatEtDateLong, safeExternalUrl } from "@/lib/utils";
 
 /**
  * Mercek yazısı — okuma sayfası.
@@ -153,22 +153,28 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
               {t.stories.sources}
             </p>
             <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-[12.5px]">
-              {sources.map((source) => (
-                <li key={source.label}>
-                  {source.url ? (
-                    <a
-                      href={source.url}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="text-primary transition-colors hover:text-primary-hover"
-                    >
-                      {source.label}
-                    </a>
-                  ) : (
-                    <span className="text-body">{source.label}</span>
-                  )}
-                </li>
-              ))}
+              {sources.map((source) => {
+                /* Adres /api/mercek üzerinden geliyor ve zod'un `.url()`
+                   doğrulaması `javascript:` şemasını da geçiriyor; süzgeç
+                   burada. Geçmeyen kaynak bağlantısız künye olarak kalır. */
+                const href = safeExternalUrl(source.url);
+                return (
+                  <li key={source.label}>
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="text-primary transition-colors hover:text-primary-hover"
+                      >
+                        {source.label}
+                      </a>
+                    ) : (
+                      <span className="text-body">{source.label}</span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

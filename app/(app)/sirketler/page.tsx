@@ -93,10 +93,13 @@ function SortHead({
       key={col}
       className={cn("px-1.5 py-2.5 text-right font-medium sm:px-3", className)}
     >
+      {/* Dokunma alanı yazının kendisi kadardı (14px yüksekliğinde) ve
+          telefonda sıralama değiştirmek nişancılık istiyordu. Negatif
+          margin + dikey dolgu, tabloyu büyütmeden hedefi 32px'e çıkarıyor. */}
       <Link
         href={href}
         className={cn(
-          "inline-flex items-center gap-1 transition-colors hover:text-primary",
+          "-my-2 inline-flex min-h-8 items-center gap-1 py-2 transition-colors hover:text-primary",
           active && "text-primary",
         )}
       >

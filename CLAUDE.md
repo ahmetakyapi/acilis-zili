@@ -10,8 +10,14 @@ npm run dev         # geliştirme (3000 doluysa 3001'e düşer)
 npm run typecheck   # tsc --noEmit  ·  `npx tsc` ÇALIŞMAZ
 npm run lint
 npm run build       # route tipleri bozulursa önce `rm -rf .next`
-npm run db:seed
+npm run db:seed     # takvim kapsamı azaldığında uyarı basar
 ```
+
+**Temiz bir kopyada önce `npm run build` çalıştır.** `PageProps` ve
+`RouteContext` tipleri Next 16 tarafından `.next/types` altına üretiliyor ve
+ikisi de gitignore'da. Build almadan `npm run typecheck` çalıştırırsan
+"Cannot find name 'PageProps'" diye onlarca hata alırsın — kodda bir sorun
+olduğu için değil, tipler henüz üretilmediği için.
 
 ## Yazım kuralı: Title Case
 
