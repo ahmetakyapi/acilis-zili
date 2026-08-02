@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { ilike, or, sql } from "drizzle-orm";
+import { ilike, inArray, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { symbols } from "@/lib/schema";
 import { searchSymbols } from "@/lib/providers/finnhub";
+import { aliasSymbols } from "@/db/seed/aliases";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 export type SearchHit = {
@@ -50,8 +51,24 @@ export async function GET(request: Request) {
   const hits: SearchHit[] = [];
   const seen = new Set<string>();
 
+  /* Marka adı ↔ resmî ad köprüsü.
+
+     Arama yalnızca sembolde ve `symbols.name` alanında metin eşleşmesi
+     yapıyordu; o ad ise sağlayıcıdan gelen TİCARİ SİCİL ADI. "spacex"
+     araması hiçbir şey bulmuyordu çünkü tablodaki ad "Space Exploration
+     Technologies Corp" ve içinde o dizi hiç geçmiyor. Aynı boşluk
+     Google→Alphabet, Facebook→Meta için de vardı. Eşleme
+     db/seed/aliases.ts içinde ve elle bakılıyor. */
+  const aliased = aliasSymbols(query);
+
   try {
     const pattern = `%${query}%`;
+    const matches = [
+      ilike(symbols.symbol, pattern),
+      ilike(symbols.name, pattern),
+      ...(aliased.length > 0 ? [inArray(symbols.symbol, aliased)] : []),
+    ];
+
     const local = await db
       .select({
         symbol: symbols.symbol,
@@ -59,9 +76,17 @@ export async function GET(request: Request) {
         industry: symbols.industry,
       })
       .from(symbols)
-      .where(or(ilike(symbols.symbol, pattern), ilike(symbols.name, pattern)))
-      // Sembolün kendisiyle başlayan eşleşmeler önce gelsin
-      .orderBy(sql`case when ${symbols.symbol} ilike ${query + "%"} then 0 else 1 end`)
+      .where(or(...matches))
+      /* Sıra: takma ad eşleşmesi → sembol ön eki → gerisi. Takma ad en
+         kesin sinyal ("spacex" yazan SPCX istiyor, tahmin yok); sembolle
+         başlayanlar ondan sonra gelir. */
+      .orderBy(
+        sql`case
+              when ${aliased.length > 0 ? inArray(symbols.symbol, aliased) : sql`false`} then 0
+              when ${symbols.symbol} ilike ${query + "%"} then 1
+              else 2
+            end`,
+      )
       .limit(8);
 
     for (const row of local) {
