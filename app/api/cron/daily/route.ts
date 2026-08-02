@@ -23,11 +23,13 @@ import { calendarRunwayDays, syncCalendar } from "@/lib/calendar-sync";
 import { translatePendingNews, isTranslateConfigured } from "@/lib/translate";
 import {
   getEarningsSymbolsMissingProfile,
+  getIndexDriftCandidates,
   getStalestSymbols,
 } from "@/lib/data";
 import { getCompanyProfile } from "@/lib/providers";
 import { symbols as symbolsTable } from "@/lib/schema";
 import { INDEX_STRIP } from "@/db/seed/symbols";
+import { ALL_MEMBERS } from "@/db/seed/indices";
 import { LOCALES } from "@/lib/i18n/config";
 
 /** Şirket haberi çekilen en büyük şirket sayısı — Finnhub dakikada 60 istek. */
@@ -274,6 +276,25 @@ export async function GET(request: Request) {
     report.calendarRunwayDays = await calendarRunwayDays(today);
   } catch (error) {
     report.calendar = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* ---- 2f. Endeks listesi bayatladı mı ----
+     indices.ts elle bakiliyor ve bir kez gercekten bayatladi (SPCX Nasdaq-100'e
+     girdi, dosya kacirdi). Otomatik duzeltemiyoruz — Finnhub'in bilesen ucu
+     ucretsiz katmanda 403 — ama dev bir sirketin hicbir endekste gorunmemesi
+     tespit edilebilir bir tutarsizlik. Raporda cikar, insan bakar. */
+  try {
+    const known = new Set(ALL_MEMBERS.map((member) => member.symbol));
+    const drifting = await getIndexDriftCandidates(known);
+    report.indexDrift =
+      drifting.length === 0
+        ? "yok"
+        : drifting
+            .slice(0, 5)
+            .map((row) => `${row.symbol} (${Math.round(row.marketCap / 1e9)}Mr$)`)
+            .join(", ");
+  } catch (error) {
+    report.indexDrift = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
   /* ---- 3. Makro seriler ---- */

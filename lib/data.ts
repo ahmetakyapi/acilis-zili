@@ -578,6 +578,67 @@ export const isKnownSymbol = cache(async function isKnownSymbol(
   }
 });
 
+/* --------------------------------------------------------------------------
+   Endeks listesi bayatlama dedektörü
+
+   `db/seed/indices.ts` elle bakılan tek büyük veri parçası ve otomatikleşmesi
+   mümkün değil: Finnhub'ın /index/constituents ucu ücretsiz katmanda 403
+   dönüyor, başka ücretsiz kaynak da yok. Dosya elle tazeleniyor ve bir kez
+   gerçekten bayatladı — SPCX 7 Temmuz 2026'da Nasdaq-100'e girdi, dosya 1
+   Ağustos damgalı olmasına rağmen içermiyordu ve /piyasalar bileşenleri
+   eksik gösterdi.
+
+   Listeyi otomatik DÜZELTEMEYİZ ama bozulduğunu FARK EDEBİLİRİZ: dev bir
+   şirket sembol tablosunda duruyor da hiçbir endekste görünmüyorsa,
+   büyük ihtimalle endeks listesi geride kalmıştır. SPCX bu testten
+   1,44 trilyon dolarla geçerdi.
+
+   Kesin bir kanıt değil, bir koku: ABD'de listeli her dev şirket endekste
+   olmak zorunda değil (yeni halka arzlar bekleme süresine tabi, çift
+   kotasyonlar hiç girmeyebilir). Bu yüzden hata değil, cron raporuna düşen
+   bir uyarı — insan bakıp karar verir.
+   -------------------------------------------------------------------------- */
+
+/** Bu piyasa değerinin üstünde olup endekste olmayanlar bildirilir. */
+const INDEX_DRIFT_THRESHOLD_USD = 200e9;
+
+export async function getIndexDriftCandidates(
+  indexSymbols: Set<string>,
+): Promise<{ symbol: string; name: string; marketCap: number }[]> {
+  try {
+    const rows = await db
+      .select({
+        symbol: symbolsTable.symbol,
+        name: symbolsTable.name,
+        marketCap: symbolsTable.marketCap,
+        currency: symbolsTable.currency,
+        isIndexProxy: symbolsTable.isIndexProxy,
+      })
+      .from(symbolsTable)
+      .where(gte(symbolsTable.marketCap, INDEX_DRIFT_THRESHOLD_USD));
+
+    return rows
+      .filter(
+        (row) =>
+          // ETF'ler endeks üyesi değildir, doğal olarak listede yoklar.
+          !row.isIndexProxy &&
+          // USD dışı piyasa değeri eşikle karşılaştırılamaz (KRW'de her
+          // şirket "trilyonluk" görünür) — SKHY bu yüzden elenmeli.
+          row.currency === "USD" &&
+          row.marketCap !== null &&
+          !indexSymbols.has(row.symbol),
+      )
+      .map((row) => ({
+        symbol: row.symbol,
+        name: row.name,
+        marketCap: row.marketCap as number,
+      }))
+      .sort((a, b) => b.marketCap - a.marketCap);
+  } catch {
+    return [];
+  }
+}
+
 /** Profili en bayat semboller — cron her gün bir dilimini tazeler. */
 export async function getStalestSymbols(limit: number): Promise<string[]> {
   try {
