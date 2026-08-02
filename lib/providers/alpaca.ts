@@ -146,37 +146,76 @@ function snapshotToQuote(symbol: string, snap: AlpacaSnapshot): Quote | null {
   };
 }
 
+/**
+ * Tek istekte sorulacak sembol sayısı — URL uzunluğu sınırı için.
+ * Hem anlık fiyat hem dönemsel değişim uçları bunu kullanır.
+ */
+const BATCH_SIZE = 200;
+
+/**
+ * Anlık fiyatlar — çok sembollü.
+ *
+ * `getPeriodChanges` gibi BATCH_SIZE'lık paketlere bölünür. Eskiden tüm liste
+ * tek URL'ye diziliyordu; Şirketler dizini 513 sembolle çağırdığında sorgu
+ * dizesi 2200 karakteri buluyordu — bugün çalışıyor ama evren büyüdüğünde
+ * sessizce kırılacak bir sınırın dibinde duruyordu.
+ *
+ * Paketlerden biri düşerse diğerleri yine döner: kısmi sonuç, hiç sonuç
+ * olmamasından iyidir. Hiçbiri dönmezse son hata yukarı taşınır ve çağıran
+ * önbelleğe düşer.
+ */
 export async function getSnapshots(
   symbols: string[],
   revalidate: number,
 ): Promise<ProviderResult<Record<string, Quote>>> {
   if (symbols.length === 0) return ok({}, "alpaca");
 
-  const result = await alpacaFetch<unknown>(
-    "/snapshots",
-    { symbols: symbols.join(","), feed: DEFAULT_FEED },
-    { revalidate, tags: ["quotes"] },
-  );
-  if (!result.ok) return result;
-
-  const snapshots = unwrapSnapshots(result.data);
-  if (!snapshots) {
-    return fail("alpaca", "empty", "Snapshot yanıtı beklenen biçimde değil");
-  }
-
+  const unique = [...new Set(symbols)];
   const quotes: Record<string, Quote> = {};
-  for (const symbol of symbols) {
-    const snap = snapshots[symbol];
-    if (!snap) continue;
-    const quote = snapshotToQuote(symbol, snap);
-    if (quote) quotes[symbol] = quote;
+  let fetchedAt: Date | undefined;
+  let lastFailure: ProviderResult<Record<string, Quote>> | null = null;
+
+  for (let i = 0; i < unique.length; i += BATCH_SIZE) {
+    const batch = unique.slice(i, i + BATCH_SIZE);
+    const result = await alpacaFetch<unknown>(
+      "/snapshots",
+      { symbols: batch.join(","), feed: DEFAULT_FEED },
+      { revalidate, tags: ["quotes"] },
+    );
+
+    if (!result.ok) {
+      lastFailure = result;
+      continue;
+    }
+
+    const snapshots = unwrapSnapshots(result.data);
+    if (!snapshots) {
+      lastFailure = fail(
+        "alpaca",
+        "empty",
+        "Snapshot yanıtı beklenen biçimde değil",
+      );
+      continue;
+    }
+
+    for (const symbol of batch) {
+      const snap = snapshots[symbol];
+      if (!snap) continue;
+      const quote = snapshotToQuote(symbol, snap);
+      if (quote) quotes[symbol] = quote;
+    }
+
+    if (!fetchedAt || result.fetchedAt > fetchedAt) fetchedAt = result.fetchedAt;
   }
 
   if (Object.keys(quotes).length === 0) {
-    return fail("alpaca", "empty", "Hiçbir sembol için fiyat dönmedi");
+    return (
+      lastFailure ??
+      fail("alpaca", "empty", "Hiçbir sembol için fiyat dönmedi")
+    );
   }
 
-  return ok(quotes, "alpaca", { fetchedAt: result.fetchedAt });
+  return ok(quotes, "alpaca", { fetchedAt });
 }
 
 /* --------------------------------------------------------------------------
@@ -190,9 +229,6 @@ export async function getSnapshots(
    Günlük barla çalışıyoruz: hafta içindeki 5 işlem gününü kapsaması için
    takvimde ~12 gün geriye gidiliyor (hafta sonu + olası tatil payı).
    -------------------------------------------------------------------------- */
-
-/** Tek istekte sorulacak sembol sayısı — URL uzunluğu sınırı için. */
-const BATCH_SIZE = 200;
 
 /**
  * Verilen sembollerin son `sessions` işlem günündeki yüzde değişimi.

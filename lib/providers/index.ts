@@ -1,4 +1,4 @@
-import { inArray, eq, and } from "drizzle-orm";
+import { inArray, eq, and, sql } from "drizzle-orm";
 import { db } from "../db";
 import { candlesCache, quotesCache, symbols as symbolsTable } from "../schema";
 import { candleTtlSeconds, quoteTtlSeconds, type MarketStatus } from "../market-hours";
@@ -18,6 +18,7 @@ import {
 export * as alpaca from "./alpaca";
 export * as finnhub from "./finnhub";
 export * as fred from "./fred";
+export * as tcmb from "./tcmb";
 export * from "./types";
 
 /**
@@ -45,44 +46,68 @@ export function isFullyConfigured(): boolean {
    Fiyatlar
    -------------------------------------------------------------------------- */
 
-/** Taze fiyatları arka planda önbelleğe yazar; hata sessizce yutulur. */
+/**
+ * Tek yazmada kaç satır — Postgres'in 65535 parametre sınırının çok altında
+ * (11 kolon × 500 = 5500) ve tek bir HTTP gövdesine rahat sığıyor.
+ */
+const QUOTE_WRITE_BATCH = 500;
+
+/**
+ * Taze fiyatları önbelleğe yazar; hata sessizce yutulur.
+ *
+ * TEK SORGU olması şart. Eskiden her kotasyon ayrı bir `db.insert()` idi ve
+ * `Promise.all` ile paralel atılıyordu; neon-http'de her sorgu ayrı bir HTTP
+ * gidiş-dönüşü olduğu için Şirketler dizini (513 sembol) TEK sayfa
+ * görüntülemede 513 istek üretiyordu. Üstelik Alpaca yanıtı Data Cache'ten
+ * gelse bile bu yazma çalıştığı için önbellek isabeti de aynı bedeli
+ * ödüyordu.
+ *
+ * Artık çok satırlı tek upsert: 513 istek → 2 istek. `excluded.*` ile her
+ * satır kendi yeni değerini alır.
+ *
+ * Beklenerek çağrılır. Eskiden `void` ile bırakılıyordu ve sunucusuz
+ * fonksiyon yanıtı döndükten sonra donduğunda yazma yarıda kesilebiliyordu;
+ * tek gidiş-dönüşün maliyeti (~20ms) bu belirsizliğe değmez.
+ */
 async function persistQuotes(quotes: Quote[]): Promise<void> {
   if (quotes.length === 0) return;
+
+  const now = new Date();
+  const rows = quotes.map((q) => ({
+    symbol: q.symbol,
+    price: q.price,
+    change: q.change,
+    changePct: q.changePct,
+    open: q.open,
+    high: q.high,
+    low: q.low,
+    prevClose: q.prevClose,
+    volume: q.volume,
+    tradedAt: q.tradedAt,
+    updatedAt: now,
+  }));
+
   try {
-    await Promise.all(
-      quotes.map((q) =>
-        db
-          .insert(quotesCache)
-          .values({
-            symbol: q.symbol,
-            price: q.price,
-            change: q.change,
-            changePct: q.changePct,
-            open: q.open,
-            high: q.high,
-            low: q.low,
-            prevClose: q.prevClose,
-            volume: q.volume,
-            tradedAt: q.tradedAt,
-            updatedAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: quotesCache.symbol,
-            set: {
-              price: q.price,
-              change: q.change,
-              changePct: q.changePct,
-              open: q.open,
-              high: q.high,
-              low: q.low,
-              prevClose: q.prevClose,
-              volume: q.volume,
-              tradedAt: q.tradedAt,
-              updatedAt: new Date(),
-            },
-          }),
-      ),
-    );
+    for (let i = 0; i < rows.length; i += QUOTE_WRITE_BATCH) {
+      await db
+        .insert(quotesCache)
+        .values(rows.slice(i, i + QUOTE_WRITE_BATCH))
+        .onConflictDoUpdate({
+          target: quotesCache.symbol,
+          set: {
+            price: sql`excluded.price`,
+            change: sql`excluded.change`,
+            changePct: sql`excluded.change_pct`,
+            open: sql`excluded.open`,
+            high: sql`excluded.high`,
+            low: sql`excluded.low`,
+            prevClose: sql`excluded.prev_close`,
+            volume: sql`excluded.volume`,
+            tradedAt: sql`excluded.traded_at`,
+            updatedAt: sql`excluded.updated_at`,
+          },
+        });
+    }
   } catch {
     // Önbellek yazımı ürünün çalışması için zorunlu değil.
   }
@@ -130,7 +155,7 @@ export async function getQuotes(
 
   const primary = await alpaca.getSnapshots(unique, ttl);
   if (primary.ok) {
-    void persistQuotes(Object.values(primary.data));
+    await persistQuotes(Object.values(primary.data));
     return primary;
   }
 
@@ -145,7 +170,7 @@ export async function getQuotes(
       if (result.ok) quotes[result.data.symbol] = result.data;
     }
     if (Object.keys(quotes).length > 0) {
-      void persistQuotes(Object.values(quotes));
+      await persistQuotes(Object.values(quotes));
       return ok(quotes, "finnhub");
     }
   }
@@ -227,7 +252,9 @@ export async function getChartBars(
   const primary = await alpaca.getBars(symbol, range, ttl);
 
   if (primary.ok) {
-    void persistBars(symbol, range, primary.data);
+    // Beklenerek çağrılır: tek gidiş-dönüş, ve `void` bırakıldığında
+    // sunucusuz fonksiyon donunca yazma yarıda kesilebiliyordu.
+    await persistBars(symbol, range, primary.data);
     return primary;
   }
 
