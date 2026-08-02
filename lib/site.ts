@@ -6,13 +6,32 @@
  * değiştiğinde tek yerde değişir.
  */
 
+/**
+ * Boş dizgiyi de "tanımsız" sayar.
+ *
+ * `??` yalnızca null/undefined'da devreye girer, boş dizgide girmez. Vercel
+ * bir değişkeni tanımlı ama boş bırakabiliyor (`env pull` de öyle yazıyor) ve
+ * o durumda SITE_URL boş kalıyordu — `new URL("")` fırlatıyor ve BÜTÜN build
+ * "Invalid URL" ile düşüyor. Hata mesajı da nedeni söylemiyor: /_not-found
+ * sayfasını işaret ediyor.
+ */
+function firstNonEmpty(...values: (string | undefined)[]): string | undefined {
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (trimmed) return trimmed;
+  }
+  return undefined;
+}
+
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  // Vercel'de değişken unutulursa üretim alan adına düş; site haritasının
-  // localhost adresleri yayması sessiz ama pahalı bir hata olurdu.
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : "http://localhost:3000")
+  firstNonEmpty(
+    process.env.NEXT_PUBLIC_SITE_URL,
+    // Vercel'de değişken unutulursa üretim alan adına düş; site haritasının
+    // localhost adresleri yayması sessiz ama pahalı bir hata olurdu.
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : undefined,
+  ) ?? "http://localhost:3000"
 ).replace(/\/$/, "");
 
 /**

@@ -1,10 +1,17 @@
+import { Suspense } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
 import Image from "next/image";
 import Link from "next/link";
-import { ChangePill, DataStamp, EmptyState, Panel } from "@/components/ui/primitives";
+import {
+  ChangePill,
+  DataStamp,
+  EmptyState,
+  Panel,
+  Skeleton,
+} from "@/components/ui/primitives";
 import { primaryOnly } from "@/db/seed/indices";
-import { getCompanies, getStatus } from "@/lib/data";
-import { getI18n } from "@/lib/i18n";
+import { getCompanies, getStatus, type CompanyRow } from "@/lib/data";
+import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getQuotes, getWeeklyChanges } from "@/lib/providers";
 import {
   SECTOR_GROUPS,
@@ -124,6 +131,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   );
 
   // Aynı şirketin ikinci sınıf kotasyonu (GOOG ↔ GOOGL) listede tekrar etmez.
+  // Tek veritabanı sorgusu — kabuk bunu bekler, sağlayıcıları beklemez.
   const companies = primaryOnly(await getCompanies());
 
   // Grup → şirket sayısı; boş kalan gruplar şeritte hiç görünmez.
@@ -136,46 +144,11 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     (group) => (groupCounts.get(group.key) ?? 0) > 0,
   );
 
-  let rows = activeGroup
+  const rows = activeGroup
     ? companies.filter(
         (c) => sectorGroupOf(c.industry).key === activeGroup.key,
       )
     : companies;
-
-  const status = await getStatus();
-  const quotesResult = await getQuotes(
-    rows.map((r) => r.symbol),
-    status,
-  );
-  const quotes = quotesResult.ok ? quotesResult.data : {};
-
-  /* Haftalık değişim toplu bir bar isteğiyle geliyor (500 sembol birkaç
-     istek), günlük barlardan hesaplanıyor ve uzun TTL ile önbellekli.
-     Günün hareketi tek başına gürültü; hafta yönü gösteriyor. */
-  const weekly = await getWeeklyChanges(
-    rows.map((r) => r.symbol),
-    status,
-  );
-
-  const valueOf = (row: (typeof rows)[number]): number => {
-    const quote = quotes[row.symbol];
-    switch (sort) {
-      case "fiyat":
-        return quote?.price ?? -Infinity;
-      case "degisim":
-        return quote?.changePct ?? -Infinity;
-      case "hafta":
-        return weekly[row.symbol] ?? -Infinity;
-      case "hacim":
-        return quote?.volume ?? row.volume ?? -Infinity;
-      default:
-        return row.marketCap ?? -Infinity;
-    }
-  };
-
-  rows = [...rows].sort((a, b) =>
-    dir === "asc" ? valueOf(a) - valueOf(b) : valueOf(b) - valueOf(a),
-  );
 
   const sortHref = (key: SortKey) => {
     // Aynı kolona tekrar tıklanınca yön değişir; yeni kolonda desc başlar.
@@ -232,6 +205,95 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         </div>
       )}
 
+      {/* Tablo AYRI AKIYOR. Eskiden kotasyonlar ve haftalık değişim sayfanın
+          gövdesinde arka arkaya bekleniyordu: 514 sembol için altı ardışık
+          Alpaca turu demek ve o süre boyunca sektör çipleri bile boyanmıyordu,
+          yani filtreye basınca ekran donuyordu. Artık kabuk tek veritabanı
+          sorgusuyla anında geliyor, tablo arkadan akıyor.
+
+          `key` filtreye ve sıralamaya bağlı: değiştiğinde Suspense sınırı
+          sıfırlanıyor ve iskelet ANINDA görünüyor — tıklamanın karşılığı
+          hemen ekranda. */}
+      <Suspense
+        key={`${activeGroup?.key ?? "hepsi"}:${sort}:${dir}`}
+        fallback={<TableSkeleton rows={Math.min(rows.length || 12, 12)} />}
+      >
+        <CompaniesTable
+          rows={rows}
+          sort={sort}
+          dir={dir}
+          sortHref={sortHref}
+          locale={locale}
+          t={t}
+        />
+      </Suspense>
+
+      <GuideHint
+        label={t.guide.contextLabel}
+        slugs={["degerleme", "piyasa-degeri"]}
+        className="pt-1"
+      />
+    </div>
+  );
+}
+/* ==========================================================================
+   Tablo — sayfadan ayrı akar
+
+   Kotasyon ve haftalık değişim PARALEL çekilir. Eskiden `await getQuotes()`
+   sonra `await getWeeklyChanges()` yazıyordu; ikisi de Alpaca'ya üç paket
+   istek atıyor, yani altı tur arka arkaya bekleniyordu. Birbirlerine
+   bağlı olmadıkları için sıralı beklemenin bir gerekçesi yoktu.
+   ========================================================================== */
+
+async function CompaniesTable({
+  rows: unsorted,
+  sort,
+  dir,
+  sortHref,
+  locale,
+  t,
+}: {
+  rows: CompanyRow[];
+  sort: SortKey;
+  dir: SortDir;
+  sortHref: (key: SortKey) => string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const status = await getStatus();
+  const symbols = unsorted.map((r) => r.symbol);
+
+  const [quotesResult, weekly] = await Promise.all([
+    getQuotes(symbols, status),
+    /* Haftalık değişim toplu bir bar isteğiyle geliyor, günlük barlardan
+       hesaplanıyor ve uzun TTL ile önbellekli. Günün hareketi tek başına
+       gürültü; hafta yönü gösteriyor. */
+    getWeeklyChanges(symbols, status),
+  ]);
+  const quotes = quotesResult.ok ? quotesResult.data : {};
+
+  const valueOf = (row: CompanyRow): number => {
+    const quote = quotes[row.symbol];
+    switch (sort) {
+      case "fiyat":
+        return quote?.price ?? -Infinity;
+      case "degisim":
+        return quote?.changePct ?? -Infinity;
+      case "hafta":
+        return weekly[row.symbol] ?? -Infinity;
+      case "hacim":
+        return quote?.volume ?? row.volume ?? -Infinity;
+      default:
+        return row.marketCap ?? -Infinity;
+    }
+  };
+
+  const rows = [...unsorted].sort((a, b) =>
+    dir === "asc" ? valueOf(a) - valueOf(b) : valueOf(b) - valueOf(a),
+  );
+
+  return (
+    <>
       <Panel>
         {rows.length === 0 ? (
           <EmptyState title={t.companies.empty} hint={t.companies.emptyHint} />
@@ -390,11 +452,28 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         />
       )}
 
-      <GuideHint
-        label={t.guide.contextLabel}
-        slugs={["degerleme", "piyasa-degeri"]}
-        className="pt-1"
-      />
-    </div>
+    </>
+  );
+}
+
+/** Filtre değişiminde anında görünen iskelet — boş ekran yerine yapı. */
+function TableSkeleton({ rows }: { rows: number }) {
+  return (
+    <Panel>
+      <div className="flex flex-col gap-px">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
+            <Skeleton className="size-[34px] shrink-0 rounded-md" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-2.5 w-28" />
+            </div>
+            <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
+            <Skeleton className="hidden h-3 w-12 shrink-0 sm:block" />
+            <Skeleton className="h-3 w-14 shrink-0" />
+          </div>
+        ))}
+      </div>
+    </Panel>
   );
 }
