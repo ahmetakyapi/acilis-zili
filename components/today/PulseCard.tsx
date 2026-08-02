@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
 import { getSeries } from "@/lib/providers/fred";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -93,11 +92,14 @@ export async function PulseCard({
         action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
       />
       <div className="grid grid-cols-2 border-t border-line">
-        {/* ---- Brent ---- */}
-        <Link
-          href="/rehber/enflasyon"
-          className="px-4 py-3.5 transition-colors hover:bg-primary-tint"
-        >
+        {/* ---- Brent ----
+            Hücreler TIKLANABİLİR DEĞİL. Bir süre rehber yazılarına
+            bağlanıyorlardı ve bu, kartın vaadiyle çelişiyordu: okuyucu bir
+            fiyat okumak için bakıyor, tıklayınca kendini bir kavram
+            anlatımının içinde buluyordu — istemediği bir yerde. Bir sayıyı
+            göstermek ile onu açıklamak farklı işler; kartın başlığındaki
+            "Tümünü Gör" zaten piyasa ekranına götürüyor. */}
+        <div className="px-4 py-3.5">
           <p className="plate text-[10px] tracking-[0.08em]">{t.markets.brent}</p>
           <p className="tote mt-1 text-lg">
             {brentValue !== null ? (
@@ -134,13 +136,10 @@ export async function PulseCard({
               <span className="text-muted">{t.common.noData}</span>
             )}
           </p>
-        </Link>
+        </div>
 
         {/* ---- VIX ---- */}
-        <Link
-          href="/rehber/volatilite"
-          className="border-l border-line px-4 py-3.5 transition-colors hover:bg-primary-tint"
-        >
+        <div className="border-l border-line px-4 py-3.5">
           <p className="plate text-[10px] tracking-[0.08em]">
             {t.markets.fearTitle}
           </p>
@@ -174,7 +173,7 @@ export async function PulseCard({
               </>
             )}
           </p>
-        </Link>
+        </div>
       </div>
       {/* Her iki sayı da FRED kapanışı ve ikisi de gecikebiliyor; künye her
           hücrenin kendi gözlem tarihini ayrı ayrı yazar. */}
