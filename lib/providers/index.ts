@@ -159,6 +159,26 @@ export async function getQuotes(
   return primary;
 }
 
+/**
+ * Haftalık (5 işlem günü) yüzde değişim — toplu.
+ *
+ * Şirketler dizininde günlük değişimin yanında duruyor: tek bir günün
+ * hareketi çoğu zaman gürültü, hafta ise yönü gösteriyor. Günlük barlardan
+ * hesaplandığı için gün içi fiyattan bağımsız ve uzun TTL ile önbellekli;
+ * seans içinde saat başı tazelenmesi yeterli.
+ *
+ * Sağlayıcı düşerse boş sözlük döner ve kolon "—" gösterir; sayfanın geri
+ * kalanı etkilenmez.
+ */
+export async function getWeeklyChanges(
+  symbolList: string[],
+  status: MarketStatus,
+): Promise<Record<string, number>> {
+  const ttl = Math.max(candleTtlSeconds("1M", status), 900);
+  const result = await alpaca.getPeriodChanges(symbolList, 5, ttl);
+  return result.ok ? result.data : {};
+}
+
 export async function getQuote(
   symbol: string,
   status: MarketStatus,

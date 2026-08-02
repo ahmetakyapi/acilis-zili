@@ -13,6 +13,26 @@ npm run build       # route tipleri bozulursa önce `rm -rf .next`
 npm run db:seed
 ```
 
+## Yazım kuralı: Title Case
+
+Vurgu taşıyan her metin **Title Case** yazılır. Kapsam:
+
+- Sayfa başlıkları, bölüm ve panel başlıkları, kart başlıkları
+- Buton ve bağlantı metinleri ("Tümünü Gör", "Hesabımı Sil", "Tekrar Dene")
+- Kategori, filtre, sekme ve rozet etiketleri
+- Tablo başlık satırları ve etiket görevi gören ilk sütun hücreleri
+- Rehber ve mercek yazılarındaki `##` / `###` başlıkları
+- Kısa vurgulu ifadeler ("Yatırım Tavsiyesi Değildir")
+
+Title Case OLMAYAN yerler — bunlar cümledir, başlık değil:
+
+- Paragraflar, açıklama satırları, kart altı ipuçları
+- Boş durum ve hata **mesajları** (başlıkları Title Case, gövdeleri değil)
+- Grafik ekseni ve ölçek etiketleri gibi teknik notlar
+
+Türkçe Title Case: bağlaç ve edatlar (ve, ile, için, de/da, mi) küçük kalır,
+başta gelirse büyür. "Faiz, Tahvil ve Getiri Eğrisi" · "Ne Kadar, Ne Zaman"
+
 ## Bilinmesi gerekenler
 
 - **Depo herkese açık.** `BRIEF_SECRET` ve `CRON_SECRET` asla commit'lenmez.

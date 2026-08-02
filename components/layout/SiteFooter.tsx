@@ -1,21 +1,17 @@
 import Link from "next/link";
-import { ArrowUpRight, GithubLogo } from "@phosphor-icons/react/dist/ssr";
+import { GithubLogo } from "@phosphor-icons/react/dist/ssr";
 import { BellMark } from "@/components/brand/BellMark";
 import { getI18n } from "@/lib/i18n";
 
 /**
- * Sayfa altı — künye, bölüm dizini ve geliştirici bandı.
+ * Sayfa altı — künye ve bölüm dizini.
  *
  * Masthead dar ekranda sekiz sekmenin hepsini taşıyamıyor; burası o eksiği
  * kapatan ikinci dizin. Mobilde de Menü sekmesinin altında aynı bağlantılar
  * var, yani hiçbir ekran yalnızca tek yoldan erişilebilir değil.
- *
- * GitHub bandı bilinçli olarak tek accent yüzey: sayfada başka hiçbir şey
- * dikkat istemiyorsa göz oraya gider ve projenin kaynağı bir tık uzakta olur.
  */
 
 const GITHUB_URL = "https://github.com/ahmetakyapi";
-const REPO_URL = "https://github.com/ahmetakyapi/acilis-zili";
 
 export async function SiteFooter() {
   const { t } = await getI18n();
@@ -86,52 +82,25 @@ export async function SiteFooter() {
         ))}
       </div>
 
-      {/* ---- Geliştirici bandı ---- */}
-      <a
-        href={GITHUB_URL}
-        target="_blank"
-        rel="noreferrer noopener"
-        className="group flex items-center gap-3.5 rounded-(--radius-lg) border border-primary-faint bg-[linear-gradient(115deg,var(--primary-wash),var(--primary-tint))] px-4 py-3.5 transition-colors hover:border-primary sm:px-5"
-      >
-        <GithubLogo
-          weight="fill"
-          size={26}
-          className="shrink-0 text-primary"
-          aria-hidden
-        />
-        <span className="min-w-0 flex-1">
-          <span className="block text-[13.5px] font-bold text-strong">
-            {t.footer.builtBy}
-          </span>
-          <span className="mt-0.5 block text-[12px] leading-snug text-body">
-            {t.footer.builtByHint}
-          </span>
-        </span>
-        <ArrowUpRight
-          weight="bold"
-          size={16}
-          className="shrink-0 text-primary transition-transform group-hover:-translate-y-px group-hover:translate-x-px"
-          aria-hidden
-        />
-      </a>
-
-      {/* ---- Yasal satır ---- */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11.5px] text-muted">
+      {/* ---- Yasal satır + geliştirici imzası ----
+           Geliştirici bandı önce accent gradientli bir kutuydu ve alt
+           bilginin en dikkat çeken öğesi olmuştu; oysa buranın işi sessiz
+           olmak. Artık aynı satırda küçük bir imza: ikon + ad. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11.5px] text-muted">
         <span>{t.footer.copyright}</span>
         <Link href="/kvkk" className="transition-colors hover:text-primary">
           {t.footer.privacy}
         </Link>
+        <span>{t.footer.disclaimer}</span>
         <a
-          href={REPO_URL}
+          href={GITHUB_URL}
           target="_blank"
           rel="noreferrer noopener"
-          className="transition-colors hover:text-primary"
+          className="inline-flex items-center gap-1.5 transition-colors hover:text-primary sm:ml-auto"
         >
-          {t.footer.sourceCode}
+          <GithubLogo weight="fill" size={14} aria-hidden />
+          {t.footer.builtBy}
         </a>
-        <span className="w-full sm:ml-auto sm:w-auto">
-          {t.footer.disclaimer}
-        </span>
       </div>
     </footer>
   );

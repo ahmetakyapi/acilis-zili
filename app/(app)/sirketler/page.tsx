@@ -5,7 +5,7 @@ import { ChangePill, DataStamp, EmptyState, Panel } from "@/components/ui/primit
 import { primaryOnly } from "@/db/seed/indices";
 import { getCompanies, getStatus } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
-import { getQuotes } from "@/lib/providers";
+import { getQuotes, getWeeklyChanges } from "@/lib/providers";
 import {
   SECTOR_GROUPS,
   industryLabel,
@@ -13,7 +13,15 @@ import {
   sectorGroupLabel,
   sectorGroupOf,
 } from "@/lib/sectors";
-import { cn, formatCompact, formatPrice, formatVolume } from "@/lib/utils";
+import {
+  cn,
+  directionOf,
+  directionText,
+  formatCompact,
+  formatPercent,
+  formatPrice,
+  formatVolume,
+} from "@/lib/utils";
 
 /**
  * Şirketler — sektör kategorileri + kolon başlığından sıralama.
@@ -25,7 +33,7 @@ import { cn, formatCompact, formatPrice, formatVolume } from "@/lib/utils";
  * `lib/sectors.ts` içinde; alt sektörün kendisi tablonun sütununda okunur.
  */
 
-const SORT_KEYS = ["cap", "hacim", "fiyat", "degisim"] as const;
+const SORT_KEYS = ["cap", "hacim", "fiyat", "degisim", "hafta"] as const;
 type SortKey = (typeof SORT_KEYS)[number];
 type SortDir = "asc" | "desc";
 
@@ -83,7 +91,7 @@ function SortHead({
   return (
     <th
       key={col}
-      className={cn("px-3 py-2.5 text-right font-medium", className)}
+      className={cn("px-1.5 py-2.5 text-right font-medium sm:px-3", className)}
     >
       <Link
         href={href}
@@ -138,6 +146,14 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   );
   const quotes = quotesResult.ok ? quotesResult.data : {};
 
+  /* Haftalık değişim toplu bir bar isteğiyle geliyor (500 sembol birkaç
+     istek), günlük barlardan hesaplanıyor ve uzun TTL ile önbellekli.
+     Günün hareketi tek başına gürültü; hafta yönü gösteriyor. */
+  const weekly = await getWeeklyChanges(
+    rows.map((r) => r.symbol),
+    status,
+  );
+
   const valueOf = (row: (typeof rows)[number]): number => {
     const quote = quotes[row.symbol];
     switch (sort) {
@@ -145,6 +161,8 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         return quote?.price ?? -Infinity;
       case "degisim":
         return quote?.changePct ?? -Infinity;
+      case "hafta":
+        return weekly[row.symbol] ?? -Infinity;
       case "hacim":
         return quote?.volume ?? row.volume ?? -Infinity;
       default:
@@ -216,11 +234,15 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
           <EmptyState title={t.companies.empty} hint={t.companies.emptyHint} />
         ) : (
           <div className="scroll-x">
-            <table className="w-full min-w-[640px] text-sm">
+            <table className="w-full text-sm sm:min-w-[700px]">
               <thead>
                 <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
-                  <th className="w-10 px-4 py-2.5 font-medium sm:px-5">#</th>
-                  <th className="px-3 py-2.5 font-medium">{t.companies.company}</th>
+                  <th className="hidden w-10 px-4 py-2.5 font-medium sm:table-cell sm:px-5">
+                    #
+                  </th>
+                  <th className="px-3 py-2.5 font-medium sm:px-3">
+                    {t.companies.company}
+                  </th>
                   <th className="hidden px-3 py-2.5 font-medium md:table-cell">
                     {t.companies.sector}
                   </th>
@@ -232,6 +254,14 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                     href={sortHref("degisim")}
                     active={sort === "degisim"}
                     dir={dir}
+                  />
+                  <SortHead
+                    col="hafta"
+                    label={t.companies.weekChange}
+                    href={sortHref("hafta")}
+                    active={sort === "hafta"}
+                    dir={dir}
+                    className="hidden sm:table-cell"
                   />
                   <SortHead
                     col="fiyat"
@@ -246,6 +276,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                     href={sortHref("cap")}
                     active={sort === "cap"}
                     dir={dir}
+                    className="hidden sm:table-cell"
                   />
                   <SortHead
                     col="hacim"
@@ -265,7 +296,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                       key={company.symbol}
                       className="transition-colors hover:bg-primary-tint"
                     >
-                      <td className="numeral px-4 py-2.5 text-xs text-muted sm:px-5">
+                      <td className="numeral hidden px-4 py-2.5 text-xs text-muted sm:table-cell sm:px-5">
                         {index + 1}
                       </td>
                       <td className="px-3 py-2.5">
@@ -293,7 +324,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                             <span className="numeral block font-semibold text-strong">
                               {company.symbol}
                             </span>
-                            <span className="block max-w-44 truncate text-xs text-soft">
+                            <span className="block max-w-[104px] truncate text-xs text-soft sm:max-w-44">
                               {company.name}
                             </span>
                           </span>
@@ -302,7 +333,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                       <td className="hidden max-w-40 truncate px-3 py-2.5 text-xs text-soft md:table-cell">
                         {industryLabel(company.industry, locale) ?? "—"}
                       </td>
-                      <td className="px-3 py-2.5 text-right">
+                      <td className="px-1.5 py-2.5 text-right sm:px-3">
                         {quote ? (
                           <ChangePill
                             changePct={quote.changePct}
@@ -313,10 +344,24 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                           <span className="text-xs text-muted">—</span>
                         )}
                       </td>
-                      <td className="numeral px-3 py-2.5 text-right text-body">
+                      <td className="numeral hidden px-3 py-2.5 text-right sm:table-cell">
+                        {weekly[company.symbol] !== undefined ? (
+                          <span
+                            className={cn(
+                              "font-semibold",
+                              directionText(directionOf(weekly[company.symbol])),
+                            )}
+                          >
+                            {formatPercent(weekly[company.symbol], locale)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted">—</span>
+                        )}
+                      </td>
+                      <td className="numeral px-3 py-2.5 pr-4 text-right text-body sm:pr-3">
                         {quote ? formatPrice(quote.price, locale) : "—"}
                       </td>
-                      <td className="numeral px-3 py-2.5 text-right text-body">
+                      <td className="numeral hidden px-3 py-2.5 text-right text-body sm:table-cell">
                         {company.marketCap
                           ? `$${formatCompact(company.marketCap, locale)}`
                           : "—"}

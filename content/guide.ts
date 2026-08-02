@@ -563,11 +563,11 @@ Bir pozisyonun aleyhine gitmesi durumunda ne kadar kaybedeceğine **önceden** k
 Kayıplar simetrik değildir. Kaybettiğin yüzde ile başa dönmek için gereken yüzde aynı değildir:
 
 ::: bar Başa Dönmek İçin Gereken Yükseliş
-%10 kayıp | 11
-%25 kayıp | 33
-%50 kayıp | 100
-%75 kayıp | 300
-%90 kayıp | 900
+%10 kayıp | %11
+%25 kayıp | %33
+%50 kayıp | %100
+%75 kayıp | %300
+%90 kayıp | %900
 :::
 
 Bu tablo, risk yönetiminin neden bir tercih değil bir zorunluluk olduğunu tek başına anlatır. Küçük kayıpları küçük tutmak, büyük kazançlar aramaktan daha kolaydır ve sonuca daha çok katkı yapar.
@@ -596,12 +596,12 @@ Yuvarlak bir sayı değil, hissenin kendi karakteri. Günde ortalama %4 oynayan 
 
 ## Sık Yapılan Dört Hata
 
-| Hata | Neden yanlış |
+| Hata | Neden Yanlış |
 |---|---|
-| Stop'u düştükten sonra aşağı çekmek | Kararı korkuya devretmek. Kaybın sınırı kalmaz. |
-| Zarardaki pozisyona ekleme yapmak | Yanlış fikre daha çok para koymak. Ortalama düşer, risk artar. |
-| Kâzançlı pozisyonu erken, zararlıyı geç kapatmak | Küçük kâr, büyük zarar. Yukarıdaki tabloyu tersine çevirir. |
-| Tek fikre büyük ağırlık vermek | Bir hata sermayenin yarısını götürebilir. |
+| Stop'u Düştükten Sonra Aşağı Çekmek | Kararı korkuya devretmek. Kaybın sınırı kalmaz. |
+| Zarardaki Pozisyona Ekleme Yapmak | Yanlış fikre daha çok para koymak. Ortalama düşer, risk artar. |
+| Kazançlı Pozisyonu Erken, Zararlıyı Geç Kapatmak | Küçük kâr, büyük zarar. Yukarıdaki tabloyu tersine çevirir. |
+| Tek Fikre Büyük Ağırlık Vermek | Bir hata sermayenin yarısını götürebilir. |
 
 ::: dikkat Ortalama Düşürmenin İki Yüzü
 "Düştükçe ekle" stratejisi, şirketin değeri hakkında haklıysan işe yarar; haksızsan seni hızlandırarak batırır. Fark, ekleme kararını *fiyat düştüğü için* mi yoksa *şirket hakkındaki bilgin değişmediği için* mi verdiğindedir. Fiyat tek başına bir gerekçe değildir.

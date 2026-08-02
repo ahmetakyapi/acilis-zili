@@ -7,6 +7,7 @@ import { BriefBody } from "@/components/today/BriefBody";
 import { Countdown } from "@/components/today/Countdown";
 import { DayRail, type RailEvent } from "@/components/today/DayRail";
 import { LiveClock } from "@/components/today/LiveClock";
+import { PulseCard } from "@/components/today/PulseCard";
 import {
   DataError,
   DataStamp,
@@ -208,6 +209,12 @@ export default async function TodayPage() {
 
         <Suspense fallback={<Skeleton className="h-44 w-full rounded-2xl" />}>
           <YieldCard locale={locale} t={t} />
+        </Suspense>
+
+        {/* Petrol ve VIX tahvillerin hemen altında: üçü de hisse tarafının
+            arka planını okuyan, tek sayıdan ibaret ölçüler. */}
+        <Suspense fallback={<Skeleton className="h-28 w-full rounded-2xl" />}>
+          <PulseCard locale={locale} t={t} />
         </Suspense>
 
         <Suspense fallback={<Skeleton className="h-44 w-full rounded-2xl" />}>

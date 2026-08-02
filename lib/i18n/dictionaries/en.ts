@@ -210,6 +210,7 @@ const en: typeof tr = {
     name: "Company Name",
     price: "Price",
     change: "Change",
+    weekChange: "Week",
     empty: "No company data yet.",
     emptyHint:
       "Company profiles fill in as stock pages are visited and via the daily sync.",
@@ -339,11 +340,13 @@ const en: typeof tr = {
   },
 
   markets: {
+    pulseTitle: "Oil & Volatility",
+    brent: "Brent Crude",
     fearTitle: "Fear Index",
     fearHint:
       "VIX is derived from S&P 500 options and shows the volatility the market expects over the next 30 days. It says nothing about direction — only how large the move is expected to be.",
     fearAverage: "long-run avg ~20",
-    fearGuideCta: "What is volatility?",
+    fearGuideCta: "What Is Volatility?",
     fearCalm: "Calm",
     fearNormal: "Normal",
     fearTense: "Uneasy",
@@ -432,7 +435,7 @@ const en: typeof tr = {
     backToList: "Back To Guide",
     empty: "Nothing here yet.",
     cardCta: "Read",
-    onlyThis: "Only these",
+    onlyThis: "Only These",
     contextLabel: "To Understand This",
     homeTitle: "Guide & Close-Up",
     homeHint:
@@ -550,8 +553,8 @@ const en: typeof tr = {
     disclaimerEyebrow: "Disclaimer",
     disclaimerTitle: "What This Site Is Not",
     updatedAt: "Last updated:",
-    manageAccount: "Go to account settings",
-    contact: "Requests and contact",
+    manageAccount: "Go To Account Settings",
+    contact: "Requests And Contact",
   },
 
   menu: {
@@ -588,14 +591,14 @@ const en: typeof tr = {
     briefArchive: "Brief archive",
     privacy: "Privacy",
     sourceCode: "Source code",
-    builtBy: "Built by Ahmet Akyapı",
-    builtByHint: "Other projects and the source code are on GitHub.",
+    builtBy: "Ahmet Akyapı",
+    builtByHint: "GitHub",
     copyright: "© 2026 Açılış Zili",
-    disclaimer: "Not investment advice.",
+    disclaimer: "Not Investment Advice",
   },
 
   errors: {
-    notFoundTitle: "This page could not be found",
+    notFoundTitle: "This Page Could Not Be Found",
     notFoundHint:
       "The link may be outdated or the address mistyped. What you are looking for is probably still on the site.",
     shortcuts: "Shortcuts",

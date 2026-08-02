@@ -180,6 +180,81 @@ export async function getSnapshots(
 }
 
 /* --------------------------------------------------------------------------
+   Toplu dönemsel değişim
+
+   Şirketler dizininde 500 satır var; her biri için ayrı bar isteği atmak
+   mümkün değil. Alpaca'nın /bars ucu `symbols` parametresini virgülle
+   ayrılmış liste olarak kabul ediyor ve sonucu sembol → bar dizisi olarak
+   döndürüyor, yani tüm dizin birkaç istekle çıkıyor.
+
+   Günlük barla çalışıyoruz: hafta içindeki 5 işlem gününü kapsaması için
+   takvimde ~12 gün geriye gidiliyor (hafta sonu + olası tatil payı).
+   -------------------------------------------------------------------------- */
+
+/** Tek istekte sorulacak sembol sayısı — URL uzunluğu sınırı için. */
+const BATCH_SIZE = 200;
+
+/**
+ * Verilen sembollerin son `sessions` işlem günündeki yüzde değişimi.
+ * Yeterli bar olmayan semboller sonuçta hiç görünmez (null yerine eksik).
+ */
+export async function getPeriodChanges(
+  symbols: string[],
+  sessions: number,
+  revalidate: number,
+): Promise<ProviderResult<Record<string, number>>> {
+  if (symbols.length === 0) return ok({}, "alpaca");
+
+  const unique = [...new Set(symbols)];
+  const lookbackDays = Math.max(12, sessions * 2 + 6);
+  const start = new Date(Date.now() - lookbackDays * 86400000)
+    .toISOString()
+    .slice(0, 10);
+
+  const changes: Record<string, number> = {};
+  let anyOk = false;
+  let lastFailure: ProviderResult<Record<string, number>> | null = null;
+
+  for (let i = 0; i < unique.length; i += BATCH_SIZE) {
+    const batch = unique.slice(i, i + BATCH_SIZE);
+    const result = await alpacaFetch<{
+      bars?: Record<string, AlpacaBar[]>;
+    }>(
+      "/bars",
+      {
+        symbols: batch.join(","),
+        timeframe: "1Day",
+        start,
+        limit: String(batch.length * (sessions + 8)),
+        adjustment: "split",
+        feed: DEFAULT_FEED,
+        sort: "asc",
+      },
+      { revalidate, tags: ["bars", `changes:${sessions}`] },
+    );
+
+    if (!result.ok) {
+      lastFailure = result;
+      continue;
+    }
+    anyOk = true;
+
+    for (const [symbol, bars] of Object.entries(result.data.bars ?? {})) {
+      if (!bars || bars.length < 2) continue;
+      const last = bars[bars.length - 1];
+      // `sessions` gün öncesi; o kadar bar yoksa eldeki en eskisi kullanılır
+      // ve sonuç "kısa dönem" olur — yanlış değil, sadece daha dar.
+      const base = bars[Math.max(0, bars.length - 1 - sessions)];
+      if (!base?.c || !last?.c) continue;
+      changes[symbol] = ((last.c - base.c) / base.c) * 100;
+    }
+  }
+
+  if (!anyOk && lastFailure) return lastFailure;
+  return ok(changes, "alpaca");
+}
+
+/* --------------------------------------------------------------------------
    Grafik barları
    -------------------------------------------------------------------------- */
 

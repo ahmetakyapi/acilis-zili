@@ -211,6 +211,7 @@ const tr = {
     name: "Şirket Adı",
     price: "Fiyat",
     change: "Değişim",
+    weekChange: "Hafta",
     empty: "Henüz şirket verisi yok.",
     emptyHint:
       "Şirket profilleri hisse sayfaları ziyaret edildikçe ve günlük senkronla dolar.",
@@ -340,11 +341,13 @@ const tr = {
   },
 
   markets: {
+    pulseTitle: "Petrol ve Oynaklık",
+    brent: "Brent Petrol",
     fearTitle: "Korku Endeksi",
     fearHint:
       "VIX, S&P 500 opsiyonlarından türetilir ve piyasanın önümüzdeki 30 gün için beklediği oynaklığı gösterir. Yön söylemez; yalnızca hareketin ne kadar büyük beklendiğini söyler.",
     fearAverage: "uzun dönem ort. ~20",
-    fearGuideCta: "Volatilite nedir?",
+    fearGuideCta: "Volatilite Nedir?",
     fearCalm: "Sakin",
     fearNormal: "Normal",
     fearTense: "Tedirgin",
@@ -432,7 +435,7 @@ const tr = {
     backToList: "Rehbere Dön",
     empty: "Bu başlıkta henüz yazı yok.",
     cardCta: "Oku",
-    onlyThis: "Yalnızca bunlar",
+    onlyThis: "Yalnızca Bunlar",
     contextLabel: "Bunu Anlamak İçin",
     homeTitle: "Rehber ve Mercek",
     homeHint:
@@ -551,8 +554,8 @@ const tr = {
     disclaimerEyebrow: "Sorumluluk Reddi",
     disclaimerTitle: "Bu Site Ne Değildir",
     updatedAt: "Son güncelleme:",
-    manageAccount: "Hesap ayarlarına git",
-    contact: "Başvuru ve iletişim",
+    manageAccount: "Hesap Ayarlarına Git",
+    contact: "Başvuru ve İletişim",
   },
 
   menu: {
@@ -589,14 +592,14 @@ const tr = {
     briefArchive: "Bülten Arşivi",
     privacy: "KVKK ve Gizlilik",
     sourceCode: "Kaynak Kodu",
-    builtBy: "Ahmet Akyapı tarafından geliştirildi",
-    builtByHint: "Diğer projelere ve kaynak koda GitHub'dan bakabilirsin.",
+    builtBy: "Ahmet Akyapı",
+    builtByHint: "GitHub",
     copyright: "© 2026 Açılış Zili",
-    disclaimer: "Yatırım tavsiyesi değildir.",
+    disclaimer: "Yatırım Tavsiyesi Değildir",
   },
 
   errors: {
-    notFoundTitle: "Bu sayfa bulunamadı",
+    notFoundTitle: "Bu Sayfa Bulunamadı",
     notFoundHint:
       "Bağlantı eski olabilir ya da adres yanlış yazılmış olabilir. Aradığın şey büyük ihtimalle hâlâ sitede.",
     shortcuts: "Kısayollar",
