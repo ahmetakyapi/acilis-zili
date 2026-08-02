@@ -14,6 +14,18 @@ import { cn } from "@/lib/utils";
  * gelir. Böylece liste hizası bozulmaz ama okuyucu da olmayan bir görseli
  * varmış gibi görmez. Kaynakların çoğu (Yahoo) tek bir yer tutucu logo
  * yolladığı için bu durum sık — `getGenericImageUrls` onları eler.
+ *
+ * ÖLÇÜ HER ZAMAN ÇERÇEVEDE
+ * ------------------------
+ * Eskiden `sizeClass` iki dalda farklı elemana gidiyordu: yer tutucuda dış
+ * `<span>`'e, görselde `<img>`'ye. Görsel dalında çerçevenin hiç ölçüsü
+ * olmadığı için yüksekliğini satır-içi `<img>`'den alıyordu ve altında
+ * baseline boşluğu kalıyordu — kenarlık görseli sarmıyor, kutunun dibinde
+ * birkaç piksellik dolgu şeridi görünüyordu. Mobilde 64px'lik bir karoda
+ * bu şerit oranla çok daha belirgindi.
+ *
+ * Artık ölçü daima çerçevede; `<img>` çerçeveyi `block` olarak tam doldurur.
+ * Baseline boşluğu kalmaz ve iki dal birebir aynı yeri kaplar.
  */
 export function NewsImage({
   src,
@@ -27,17 +39,25 @@ export function NewsImage({
   className?: string;
   sizeClass?: string;
 }) {
+  /* Ölçü ve çağıran sınıfı en sonda: tailwind-merge display çakışmasını
+     (block ↔ hidden ↔ flex) sona göre çözüyor, yani liste sayfasının
+     "hidden sm:flex"i buradaki "block"u doğru şekilde eziyor. */
+  const frame = cn(
+    "block shrink-0 overflow-hidden rounded-[10px] border border-line bg-surface-elevated",
+    sizeClass,
+    className,
+  );
+
   if (!src) {
     if (!symbol) return null;
     return (
       <span
         aria-hidden
         className={cn(
+          frame,
           // Sessiz kalır: aynı sembol arka arkaya birkaç satırda tekrar
           // edebiliyor, accent dolgu o zaman listeyi bağırır hale getiriyor.
-          "flex items-center justify-center rounded-[10px] border border-line bg-surface-elevated text-[11px] font-bold tracking-[-0.02em] text-muted",
-          sizeClass,
-          className,
+          "flex items-center justify-center text-[11px] font-bold tracking-[-0.02em] text-muted",
         )}
       >
         {symbol}
@@ -46,18 +66,13 @@ export function NewsImage({
   }
 
   return (
-    <span
-      className={cn(
-        "block overflow-hidden rounded-[10px] border border-line bg-surface-elevated",
-        className,
-      )}
-    >
+    <span className={frame}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt=""
         loading="lazy"
-        className={cn("object-cover", sizeClass)}
+        className="block size-full object-cover"
       />
     </span>
   );
