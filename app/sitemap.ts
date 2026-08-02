@@ -28,6 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/takvim", priority: 0.8, frequency: "daily" },
     { path: "/makro", priority: 0.7, frequency: "daily" },
     { path: "/sirketler", priority: 0.6, frequency: "weekly" },
+    { path: "/karsilastir", priority: 0.6, frequency: "weekly" },
     { path: "/haberler", priority: 0.6, frequency: "hourly" },
     { path: "/bulten", priority: 0.7, frequency: "daily" },
     { path: "/rehber", priority: 0.9, frequency: "weekly" },

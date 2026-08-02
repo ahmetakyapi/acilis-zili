@@ -344,6 +344,30 @@ const tr = {
     moveDown: "Aşağı Taşı",
   },
 
+  compare: {
+    eyebrow: "Yan Yana",
+    title: "Karşılaştır",
+    subtitle:
+      "İki ile dört hisseyi aynı ölçekte oku — getiri, değerleme ve oynaklık tek tabloda.",
+    empty: "Karşılaştırmak için sembol seç",
+    emptyHint:
+      "Bir hisse sayfasındaki \u201cKarşılaştır\u201d bağlantısıyla ekleyebilir ya da aşağıdaki hazır setlerden biriyle başlayabilirsin.",
+    presets: "Hazır Setler",
+    presetChips: "Yarı İletken",
+    presetMega: "Mega Ölçek",
+    presetIndices: "Endeks Fonları",
+    chartTitle: "Dönem Getirisi",
+    chartHint:
+      "Her seri kendi başlangıcına göre yüzdeye çevrildi; hepsi sıfırdan başlar. Fiyat seviyeleri değil, dönem boyunca üretilen getiri karşılaştırılıyor.",
+    metric: "Metrik",
+    dayChange: "Günlük Değişim",
+    periodChange: "Dönem Getirisi",
+    range52: "52 Hafta Aralığı",
+    remove: "listeden çıkar",
+    addHint: "Sembol eklemek için bir hisse sayfasından Karşılaştır'a bas.",
+    addCta: "Karşılaştır",
+  },
+
   markets: {
     pulseTitle: "Petrol ve Korku Endeksi",
     brent: "Brent Petrol",
@@ -580,6 +604,7 @@ const tr = {
     hintMacro: "TÜFE, istihdam, faiz",
     hintEarnings: "Bilanço takvimi ve beklentiler",
     hintCalendar: "Ekonomik veri takvimi",
+    hintCompare: "Hisseleri yan yana oku",
     hintGuide: "Kavramları anlatan yazılar",
     hintStories: "Piyasada yaşananların uzun anlatımı",
     hintNews: "Çevrilmiş piyasa haberleri",

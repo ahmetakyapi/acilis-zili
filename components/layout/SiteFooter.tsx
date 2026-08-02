@@ -26,6 +26,7 @@ export async function SiteFooter() {
           { href: "/makro", label: t.nav.macro },
           { href: "/bilancolar", label: t.nav.earnings },
           { href: "/takvim", label: t.nav.calendar },
+          { href: "/karsilastir", label: t.compare.title },
         ],
       },
       {

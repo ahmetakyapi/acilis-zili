@@ -1,5 +1,6 @@
 import {
   Bell,
+  ChartBar,
   BookOpen,
   Buildings,
   CalendarBlank,
@@ -123,6 +124,13 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/haberler",
     label: (t) => t.nav.news,
     icon: Newspaper,
+    inMasthead: false,
+    inBottomBar: false,
+  },
+  {
+    href: "/karsilastir",
+    label: (t) => t.compare.title,
+    icon: ChartBar,
     inMasthead: false,
     inBottomBar: false,
   },

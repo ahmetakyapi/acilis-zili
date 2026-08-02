@@ -5,6 +5,7 @@ import {
   Buildings,
   CalendarBlank,
   CaretRight,
+  ChartBar,
   Envelope,
   FileText,
   Gear,
@@ -58,6 +59,7 @@ export default async function MenuPage() {
         { href: "/makro", icon: Percent, title: t.nav.macro, hint: t.menu.hintMacro },
         { href: "/bilancolar", icon: FileText, title: t.nav.earnings, hint: t.menu.hintEarnings },
         { href: "/takvim", icon: CalendarBlank, title: t.nav.calendar, hint: t.menu.hintCalendar },
+        { href: "/karsilastir", icon: ChartBar, title: t.compare.title, hint: t.menu.hintCompare },
       ],
     },
     {

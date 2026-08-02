@@ -343,6 +343,30 @@ const en: typeof tr = {
     moveDown: "Move Down",
   },
 
+  compare: {
+    eyebrow: "Side By Side",
+    title: "Compare",
+    subtitle:
+      "Read two to four stocks on the same scale — return, valuation and volatility in one table.",
+    empty: "Pick symbols to compare",
+    emptyHint:
+      "Add one from the \u201cCompare\u201d link on any stock page, or start from one of the ready-made sets below.",
+    presets: "Ready-Made Sets",
+    presetChips: "Semiconductors",
+    presetMega: "Mega Cap",
+    presetIndices: "Index Funds",
+    chartTitle: "Period Return",
+    chartHint:
+      "Each series is converted to a percentage of its own starting point, so all of them begin at zero. What is compared is the return over the period, not price levels.",
+    metric: "Metric",
+    dayChange: "Daily Change",
+    periodChange: "Period Return",
+    range52: "52-Week Range",
+    remove: "remove from list",
+    addCta: "Compare",
+    addHint: "Add symbols with the Compare button on any stock page.",
+  },
+
   markets: {
     pulseTitle: "Oil & The Fear Index",
     brent: "Brent Crude",
@@ -579,6 +603,7 @@ const en: typeof tr = {
     hintMacro: "CPI, employment, rates",
     hintEarnings: "Earnings calendar and estimates",
     hintCalendar: "Economic data calendar",
+    hintCompare: "Read stocks side by side",
     hintGuide: "Explainers on market concepts",
     hintStories: "Long reads on what happened",
     hintNews: "Translated market news",

@@ -13,6 +13,7 @@ import {
   EmptyState,
   Panel,
   PanelHeader,
+  PanelLink,
   Skeleton,
 } from "@/components/ui/primitives";
 import { db } from "@/lib/db";
@@ -1100,9 +1101,23 @@ async function PeersCard({
   );
   const quotes = result.ok ? result.data : {};
 
+  /* Karşılaştırma bağlantısı buraya konuyor çünkü soru tam burada doğuyor:
+     benzer dört şirketi yan yana gören biri "hangisi" diye sorar. Sembol
+     listesi bu hissenin kendisiyle başlar ve en büyük üç rakiple dolar. */
+  const compareSymbols = [symbol, ...ranked.map((peer) => peer.symbol)]
+    .filter((entry, index, list) => list.indexOf(entry) === index)
+    .slice(0, 4);
+
   return (
     <Panel>
-      <PanelHeader title={t.stock.peers} />
+      <PanelHeader
+        title={t.stock.peers}
+        action={
+          <PanelLink href={`/karsilastir?semboller=${compareSymbols.join(",")}`}>
+            {t.compare.addCta} →
+          </PanelLink>
+        }
+      />
       {member?.sub && (
         <p className="border-b border-line-soft px-4 py-2 text-[11px] text-muted sm:px-5">
           {t.stock.peersHint}:{" "}
