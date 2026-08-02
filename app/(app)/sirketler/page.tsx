@@ -366,7 +366,7 @@ async function CompaniesTable({
                       </td>
                       <td className="px-3 py-2.5">
                         <Link
-                          href={`/hisse/${company.symbol}`}
+                          href={`/hisse/${company.symbol}`} prefetch={false}
                           className="flex items-center gap-2.5"
                         >
                           {company.logoUrl ? (

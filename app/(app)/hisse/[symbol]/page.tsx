@@ -61,27 +61,34 @@ import {
 /* --------------------------------------------------------------------------
    Sağlayıcı kotasını koruyan süzgeç
 
-   Tanınan sembol (`symbols` tablosunda kayıtlı ~500 hisse) için sınır bir
-   insanın gezinme hızının çok üstünde. Tanınmayan sembol — aramanın Finnhub
-   üzerinden bulduğu uzun kuyruk — meşru bir keşif yolu olduğu için
-   kapatılmıyor, yalnızca daraltılıyor.
+   YALNIZCA TANINMAYAN SEMBOLLER SINIRLANIR.
 
-   Kendi kendini onaran bir taraf var: gerçek bir hissenin sayfası açıldığında
-   `getCompanyProfile` profili `symbols` tablosuna yazıyor, yani sembol bir
-   sonraki ziyarette "tanınan" tarafa geçiyor. Uydurma semboller hiçbir zaman
-   geçmiyor.
+   Bir süre tanınan sembollere de dakikada 40'lık bir tavan konmuştu ve bu,
+   siteyi kullanılamaz hale getirdi: Next, görüş alanına giren `<Link>`leri
+   kendiliğinden ön yüklüyor ve her ön yükleme sunucuda gerçek bir sayfa
+   render'ı demek. 500 satırlık Şirketler dizininde biraz aşağı kaydırmak
+   tavanı tek başına tüketiyordu; sonrasında kullanıcının GERÇEK tıklamaları
+   "Biraz Yavaşla" ekranına düşüyordu. Yani sınır, korumaya çalıştığı
+   kullanıcıyı dışarıda bırakıyordu.
+
+   Doğru ayrım kota değil KARDİNALİTE. Tanınan evren `symbols` tablosundaki
+   ~500 sembolle sınırlı ve hepsinin sağlayıcı yanıtı önbellekli; ne kadar
+   gezilirse gezilsin sağlayıcıya giden istek sayısının bir tavanı var.
+   Sayım saldırısının işlemesi için ise TANINMAYAN sembol gerekiyor — sonsuz
+   uzay orası. O yüzden tavan yalnızca oraya konuyor.
+
+   Kendi kendini onaran taraf duruyor: gerçek bir hissenin sayfası
+   açıldığında `getCompanyProfile` profili `symbols` tablosuna yazıyor, yani
+   sembol bir sonraki ziyarette tanınan tarafa geçiyor ve sınırdan çıkıyor.
+   Uydurma semboller hiçbir zaman geçmiyor.
    -------------------------------------------------------------------------- */
-const KNOWN_LIMIT = 40;
-const UNKNOWN_LIMIT = 8;
+const UNKNOWN_LIMIT = 10;
 const WINDOW_MS = 60_000;
 
 async function allowStockRender(symbol: string): Promise<boolean> {
-  const known = await isKnownSymbol(symbol);
-  return rateLimit(
-    await requestKey(known ? "stock" : "stock-unknown"),
-    known ? KNOWN_LIMIT : UNKNOWN_LIMIT,
-    WINDOW_MS,
-  ).allowed;
+  if (await isKnownSymbol(symbol)) return true;
+  return rateLimit(await requestKey("stock-unknown"), UNKNOWN_LIMIT, WINDOW_MS)
+    .allowed;
 }
 
 export default async function StockPage(

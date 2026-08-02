@@ -16,23 +16,31 @@ import { isValidSymbol } from "@/lib/utils";
    Kota bittiğinde site çökmüyor (önbellekten "güncel değil" damgasıyla
    sürüyor) ama canlı fiyat herkes için ölüyordu.
 
-   İki kademe var çünkü iki farklı istek aynı şey değil:
+   Ayrım kota değil KARDİNALİTE üzerinden yapılır:
 
-     TANINAN sembol  — `symbols` tablosunda kayıtlı ~500 hisse. Grafik
-       aralığını değiştiren, sekmeler arasında gezinen gerçek bir kullanıcı
-       burada rahatça kalır.
+     TANINAN sembol — `symbols` tablosundaki ~500 hisse. Kapalı bir küme ve
+       her yanıtı önbellekli, yani ne kadar gezilirse gezilsin sağlayıcıya
+       giden istek sayısının bir tavanı var. Sınır cömert: grafiğin sekiz
+       aralığı arasında hızlıca gezinen bir kullanıcı takılmamalı.
 
      TANINMAYAN sembol — aramanın Finnhub üzerinden bulduğu uzun kuyruk.
        Meşru bir keşif yolu, o yüzden kapatılmıyor; ama sayım saldırısının
-       tek girişi de burası, o yüzden dar tutuluyor. Bir insan dakikada
-       sekiz farklı bilinmeyen hisseye bakmaz; bir betik ilk saniyede bakar.
+       tek girişi de burası ve orası sonsuz bir uzay. Dar tutuluyor: bir
+       insan dakikada sekiz bilinmeyen hisseye bakmaz, bir betik saniyede
+       bakar.
+
+   DAR SINIRIN BEDELİ ÖĞRENİLDİ. Hisse sayfasında tanınan sembollere de
+   dakikada 40 konmuştu; Next'in `<Link>` ön yüklemesi bunu kendiliğinden
+   tüketip kullanıcının gerçek tıklamalarını blokladı. Buradaki tavan o
+   yüzden gerçek kullanımın çok üstünde tutuluyor — sınır, koruduğu
+   kullanıcıyı dışarıda bırakırsa yanlış kurulmuş demektir.
 
    Sınırlayıcının sunucusuz ortamda örnek başına çalıştığı ve neyi
    çözmediği lib/rate-limit.ts başında yazılı — dağıtık bir saldırıya karşı
    asıl katman Vercel Firewall'daki IP kuralı, bu değil.
    -------------------------------------------------------------------------- */
-const KNOWN_LIMIT = 60;
-const UNKNOWN_LIMIT = 8;
+const KNOWN_LIMIT = 300;
+const UNKNOWN_LIMIT = 10;
 const WINDOW_MS = 60_000;
 
 export type ChartResponse =

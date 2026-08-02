@@ -314,7 +314,7 @@ function DaySection({
           const timing = timingOf(row.hour, t);
           const { headline, rest } = cardFigures(row, m, locale, t, false);
           return (
-            <Link key={row.id} href={`/hisse/${row.symbol}`} className="block">
+            <Link key={row.id} href={`/hisse/${row.symbol}`} prefetch={false} className="block">
               {/* Mobilde iki satır (mockup 4k), masaüstünde tek hero satırı. */}
               <div className="panel-hover flex flex-col gap-3 rounded-[14px] border border-line bg-surface-solid px-4 py-4 transition-colors sm:flex-row sm:items-center sm:gap-4 sm:px-5">
                 <div className="flex min-w-0 items-center gap-3 sm:gap-4">
@@ -397,7 +397,7 @@ function DaySection({
             return (
               <Link
                 key={row.id}
-                href={`/hisse/${row.symbol}`}
+                href={`/hisse/${row.symbol}`} prefetch={false}
                 className="w-full sm:w-46 sm:shrink-0"
               >
                 <div className="panel-hover flex h-full flex-col gap-[11px] rounded-[13px] border border-line bg-surface-solid p-3.5 transition-colors">
@@ -497,7 +497,7 @@ function DaySection({
                       {group.list.map((row) => (
                         <Link
                           key={row.id}
-                          href={`/hisse/${row.symbol}`}
+                          href={`/hisse/${row.symbol}`} prefetch={false}
                           className={cn(
                             "rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold transition-colors hover:border-line-strong hover:bg-primary-tint hover:text-primary",
                             watchSet.has(row.symbol)
