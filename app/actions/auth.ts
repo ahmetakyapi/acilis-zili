@@ -34,6 +34,26 @@ const SIGN_IN_LIMIT = 10;
 const SIGN_UP_LIMIT = 5;
 const AUTH_WINDOW_MS = 10 * 60_000;
 
+/**
+ * Giriş sonrası dönülecek adres.
+ *
+ * `devam` parametresi proxy tarafından yazılıyordu ama hiç OKUNMUYORDU:
+ * korumalı bir sayfadan giriş yapan kullanıcı işini bitirdiğinde ana
+ * sayfaya düşüyordu. Artık okunuyor — ama körlemesine değil.
+ *
+ * Doğrulama şart: kullanıcıdan gelen bir adrese sorgusuz yönlendirmek açık
+ * yönlendirme (open redirect) açığıdır ve kimlik avında kullanılır. Kabul
+ * edilen tek biçim, tek eğik çizgiyle başlayan göreli yol. `//baska.site`
+ * ve `/\baska.site` protokole göreli adreslerdir ve dışarı çıkarlar; bu
+ * yüzden ikinci karakter de kontrol ediliyor.
+ */
+function safeRedirectTarget(raw: FormDataEntryValue | null): string {
+  const value = typeof raw === "string" ? raw.trim() : "";
+  if (!value.startsWith("/")) return "/";
+  if (value.startsWith("//") || value.startsWith("/\\")) return "/";
+  return value;
+}
+
 async function authRateKey(scope: string): Promise<string> {
   const store = await headers();
   const forwarded = store.get("x-forwarded-for") ?? "";
@@ -137,7 +157,8 @@ export async function signUpAction(
     redirect: false,
   });
 
-  redirect("/favoriler");
+  const target = safeRedirectTarget(formData.get("devam"));
+  redirect(target === "/" ? "/favoriler" : target);
 }
 
 export async function signInAction(
@@ -174,7 +195,7 @@ export async function signInAction(
     throw error;
   }
 
-  redirect("/");
+  redirect(safeRedirectTarget(formData.get("devam")));
 }
 
 export async function signOutAction() {

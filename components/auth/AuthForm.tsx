@@ -27,6 +27,8 @@ type AuthFormProps = {
   altText: string;
   altHref: string;
   altLinkLabel: string;
+  /** Giriş sonrası dönülecek yol — sunucu tarafında ayrıca doğrulanır. */
+  continueTo?: string;
 };
 
 /**
@@ -51,6 +53,7 @@ export function AuthForm({
   altText,
   altHref,
   altLinkLabel,
+  continueTo,
 }: AuthFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
 
@@ -91,6 +94,11 @@ export function AuthForm({
         <p className="mt-2 text-[13.5px] text-body">{subtitle}</p>
 
         <form action={formAction} className="mt-6 flex flex-col gap-4">
+          {/* Hedef gizli alanla taşınır; sunucu tarafı ayrıca doğrular —
+              istemciden gelen bir yola körlemesine yönlendirmek yok. */}
+          {continueTo && (
+            <input type="hidden" name="devam" value={continueTo} />
+          )}
           {fields.map((field) => {
             const hasError = state.field === field.errorKey;
             return (

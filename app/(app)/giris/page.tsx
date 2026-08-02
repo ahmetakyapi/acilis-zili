@@ -2,12 +2,15 @@ import { signInAction } from "@/app/actions/auth";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { getI18n } from "@/lib/i18n";
 
-export default async function SignInPage() {
-  const { t } = await getI18n();
+export default async function SignInPage(props: PageProps<"/giris">) {
+  const [{ t }, search] = await Promise.all([getI18n(), props.searchParams]);
+  const continueTo =
+    typeof search.devam === "string" ? search.devam : undefined;
 
   return (
     <>
       <AuthForm
+        continueTo={continueTo}
         pitchTitle={t.auth.pitchTitle}
         pitchBody={t.auth.pitchBody}
         features={[

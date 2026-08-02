@@ -2,12 +2,15 @@ import { signUpAction } from "@/app/actions/auth";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { getI18n } from "@/lib/i18n";
 
-export default async function SignUpPage() {
-  const { t } = await getI18n();
+export default async function SignUpPage(props: PageProps<"/kayit">) {
+  const [{ t }, search] = await Promise.all([getI18n(), props.searchParams]);
+  const continueTo =
+    typeof search.devam === "string" ? search.devam : undefined;
 
   return (
     <>
       <AuthForm
+        continueTo={continueTo}
         pitchTitle={t.auth.pitchTitle}
         pitchBody={t.auth.pitchBody}
         features={[
