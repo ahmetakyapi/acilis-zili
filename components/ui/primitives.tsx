@@ -87,7 +87,10 @@ export function PanelLink({
     <Link
       href={href}
       className={cn(
-        "text-xs text-primary transition-colors hover:text-primary-hover",
+        /* -my-2 py-2: metnin kendisi 16px yüksekliğinde bir dokunma hedefi
+           bırakıyordu. Dolgu tıklama alanını 32px'e çıkarır, negatif margin
+           de satır yüksekliğini olduğu gibi bırakır — düzen kaymaz. */
+        "-my-2 inline-flex min-h-8 items-center py-2 text-xs text-primary transition-colors hover:text-primary-hover",
         className,
       )}
     >

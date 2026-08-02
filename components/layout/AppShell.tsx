@@ -147,7 +147,7 @@ export function AppShell({
       <header className="chrome sticky top-0 z-30 flex items-center gap-2.5 border-b px-[18px] py-2.5 lg:hidden">
         <Link
           href="/"
-          className="flex items-center gap-2.5"
+          className="-my-1 flex items-center gap-2.5 py-1"
           aria-label={labels.brandName}
         >
           <BellMark size={28} />
@@ -164,7 +164,7 @@ export function AppShell({
               href="/giris"
               aria-label={labels.signIn}
               title={labels.signIn}
-              className="flex size-[30px] items-center justify-center rounded-lg bg-primary text-on-primary"
+              className="flex size-[38px] items-center justify-center rounded-lg bg-primary text-on-primary"
             >
               <SignIn weight="duotone" size={16} />
             </Link>
