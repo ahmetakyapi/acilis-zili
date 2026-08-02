@@ -171,6 +171,9 @@ async function CompareBoard({
       return {
         symbol,
         closes: bars?.ok ? bars.data.map((bar) => bar.close) : [],
+        // İmleç kartındaki tarih için — hangi ana baktığını söylemeyen bir
+        // okuma "o zaman kim öndeydi" sorusuna yarım cevap verir.
+        times: bars?.ok ? bars.data.map((bar) => bar.time) : [],
       };
     })
     .filter((entry) => entry.closes.length >= 2);
@@ -304,7 +307,11 @@ async function CompareBoard({
               <Link
                 href={hrefFor(symbols.filter((entry) => entry !== symbol))}
                 aria-label={`${symbol} ${t.compare.remove}`}
-                className="flex size-5 items-center justify-center rounded-full text-muted transition-colors hover:bg-down-wash hover:text-down"
+                /* 20×20'lik bir çarpı, parmakla ıskalanan bir hedefti — hem
+                   de yanlış basıldığında sembolü listeden düşüren bir
+                   hedef. Görsel daire aynı boyutta kalıyor, dokunma alanı
+                   dolguyla 32px'e çıkıyor. */
+                className="-m-1.5 flex size-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-down-wash hover:text-down"
               >
                 <X weight="bold" size={11} />
               </Link>
@@ -335,7 +342,12 @@ async function CompareBoard({
               ))}
             </Segment>
           </div>
-          <CompareChart series={series} title={t.compare.chartTitle} />
+          <CompareChart
+            series={series}
+            title={t.compare.chartTitle}
+            locale={locale}
+            readingLabel={t.compare.chartReading}
+          />
           <p className="text-[11.5px] leading-relaxed text-muted">
             {t.compare.chartHint}
           </p>

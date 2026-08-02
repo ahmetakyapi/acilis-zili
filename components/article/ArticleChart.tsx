@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { Sparkline } from "@/components/ui/Sparkline";
-import { getStatus, getSymbolNames } from "@/lib/data";
-import { getChartBars } from "@/lib/providers";
+import { PriceChart, chartLabels } from "@/components/stock/PriceChart";
+import { getSymbolNames, isKnownSymbol } from "@/lib/data";
 import type { ChartRange } from "@/lib/providers/types";
 import { getI18n } from "@/lib/i18n";
-import { cn, directionOf, formatPercent, formatPrice } from "@/lib/utils";
+import { isValidSymbol } from "@/lib/utils";
 
 /**
  * Yazının içine gömülen gerçek fiyat grafiği.
@@ -14,20 +13,22 @@ import { cn, directionOf, formatPercent, formatPrice } from "@/lib/utils";
  * çekiyoruz — telif sorunu yok, her açılışta güncel ve yazının iddiasını
  * doğrudan gösteriyor.
  *
- * Sunucuda çizilir (Sparkline SVG üretir), istemciye ek JS inmez. Veri
- * gelmezse blok tamamen düşer; yazı boş bir kutuyla kalmaz.
+ * ARTIK DETAY SAYFASININ GRAFİĞİ. Önceden burada sunucuda çizilen statik bir
+ * Sparkline vardı: tek aralık, tek çizgi, okuma yok. Yazıyı okuyan kişi
+ * grafikte bir şey görüp "peki üç ay önce neredeydi" diye sorduğunda
+ * yapabileceği tek şey hisse sayfasına gidip yazıyı terk etmekti. Aynı
+ * bileşen (`PriceChart`) burada da durunca aralık düğmeleri, mum/çizgi
+ * seçimi ve imleçle okuma yazının içinde kalıyor — iki ekran arasında
+ * grafiğin davranışı da görünüşü de aynı.
+ *
+ * Bedeli dürüstçe: blok artık istemci tarafında çiziliyor ve veriyi
+ * /api/chart üzerinden kendisi çekiyor, yani yazı sayfasına lightweight-charts
+ * paketi iniyor. Grafik içeren yazılarda bu takas kabul edildi; grafiği
+ * olmayan yazılar hiçbir şey ödemiyor çünkü blok yoksa bileşen de yok.
+ *
+ * `::: grafik NVDA | 3M | açıklama` sözdizimi değişmedi; aralık artık
+ * grafiğin AÇILIŞ aralığı, okuyucu üzerinden değiştirebiliyor.
  */
-
-const RANGE_LABEL: Record<string, string> = {
-  "1D": "Bugün",
-  "1W": "Son 1 hafta",
-  "1M": "Son 1 ay",
-  "3M": "Son 3 ay",
-  "6M": "Son 6 ay",
-  YTD: "Yılbaşından beri",
-  "1Y": "Son 1 yıl",
-  "5Y": "Son 5 yıl",
-};
 
 export async function ArticleChart({
   symbol,
@@ -38,68 +39,49 @@ export async function ArticleChart({
   range: ChartRange;
   caption?: string;
 }) {
-  const { locale } = await getI18n();
-  const status = await getStatus();
-  const [bars, meta] = await Promise.all([
-    getChartBars(symbol, range, status),
-    getSymbolNames([symbol]),
-  ]);
+  const { locale, t } = await getI18n();
 
-  if (!bars.ok || bars.data.length < 2) return null;
+  /* Tanınmayan sembolde blok TAMAMEN düşer.
+     Eski statik sürüm veri gelmeyince null dönüyordu; PriceChart ise kendi
+     hata durumunu çiziyor ve bu, yazının ortasında "veri alınamadı" kutusu
+     demek. Mercek yazıları borsada işlem GÖRMEYEN şirketleri de anlatıyor
+     (SpaceX gibi) ve orada bir grafik bloğu yanlışlıkla kalmışsa okuyucu
+     kırık bir kutu değil, hiçbir şey görmeli. */
+  if (!isValidSymbol(symbol) || !(await isKnownSymbol(symbol))) return null;
 
-  const points = bars.data.map((bar) => ({ value: bar.close }));
-  const first = bars.data[0].open || bars.data[0].close;
-  const last = bars.data[bars.data.length - 1].close;
-  const changePct = first ? ((last - first) / first) * 100 : 0;
-  const tone = directionOf(changePct);
+  const meta = await getSymbolNames([symbol]);
   const name = meta[symbol]?.name;
 
   return (
     <figure className="flex flex-col gap-0 overflow-hidden rounded-(--radius-lg) border border-line bg-surface">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 pt-4 sm:px-5">
-        <div className="flex flex-wrap items-baseline gap-x-2.5">
-          <Link
-            href={`/hisse/${symbol}`}
-            className="numeral text-[15px] font-bold tracking-[-0.02em] text-strong transition-colors hover:text-primary"
-          >
-            {symbol}
-          </Link>
-          {name && (
-            <span className="text-[12.5px] text-muted">{name}</span>
-          )}
-        </div>
-        <div className="flex items-baseline gap-2.5">
-          <span className="tote text-[17px]">{formatPrice(last, locale)}</span>
-          <span
-            className={cn(
-              "numeral text-[13px] font-semibold",
-              tone === "up"
-                ? "text-up"
-                : tone === "down"
-                  ? "text-down"
-                  : "text-muted",
-            )}
-          >
-            {formatPercent(changePct, locale)}
-          </span>
-        </div>
+      {/* Künye grafiğin ÜSTÜNDE: PriceChart kendi okuma satırını en üste
+          koyuyor, hangi hisseye baktığını söyleyen satır ondan da önce
+          gelmeli. Sembol hisse sayfasına açılır — yazıdan çıkış kapısı
+          kapanmıyor, sadece artık zorunlu değil. */}
+      <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 border-b border-line px-4 pb-3 pt-4 sm:px-5">
+        <Link
+          href={`/hisse/${symbol}`}
+          className="numeral text-[15px] font-bold tracking-[-0.02em] text-strong transition-colors hover:text-primary"
+        >
+          {symbol}
+        </Link>
+        {name && <span className="text-[12.5px] text-muted">{name}</span>}
       </div>
 
-      <Sparkline
-        points={points}
-        title={`${symbol} · ${RANGE_LABEL[range] ?? range}`}
-        tone={tone}
-        height={96}
-        strokeWidth={1.8}
-        className="mt-2 h-24 w-full"
-      />
+      <div className="px-1 py-1 sm:px-2 sm:py-2">
+        <PriceChart
+          symbol={symbol}
+          initialRange={range}
+          locale={locale}
+          labels={chartLabels(t)}
+        />
+      </div>
 
-      <figcaption className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-line px-4 py-2.5 text-[11.5px] text-muted sm:px-5">
-        <span>{caption ?? `${symbol} · ${RANGE_LABEL[range] ?? range}`}</span>
-        <span className="numeral shrink-0">
-          {RANGE_LABEL[range] ?? range} · Alpaca
-        </span>
-      </figcaption>
+      {caption && (
+        <figcaption className="border-t border-line px-4 py-2.5 text-[11.5px] leading-relaxed text-muted sm:px-5">
+          {caption}
+        </figcaption>
+      )}
     </figure>
   );
 }

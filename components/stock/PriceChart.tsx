@@ -16,6 +16,7 @@ import type { Bar, ChartRange } from "@/lib/providers/types";
 import { CHART_RANGES } from "@/lib/providers/types";
 import { cn, formatPercent, formatPrice } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
+import type { Dictionary } from "@/lib/i18n";
 
 /**
  * Fiyat grafiği — lightweight-charts v5.
@@ -35,7 +36,7 @@ import type { Locale } from "@/lib/i18n/config";
  * alttaki 1G/1H/1A düğmeleriyle seçiliyor, kaydırmaya ihtiyaç yok.
  */
 
-type ChartLabels = {
+export type ChartLabels = {
   ranges: Record<ChartRange, string>;
   rangeLabels: Record<ChartRange, string>;
   area: string;
@@ -59,6 +60,33 @@ type SessionZone = {
   width: number;
   label: string;
 };
+
+/**
+ * Sözlükten grafik etiketlerine köprü.
+ *
+ * Eşleme tek yerde duruyor çünkü grafiği artık iki yer kuruyor: hisse detay
+ * sayfası ve mercek/rehber yazılarının içine gömülen `::: grafik` bloğu.
+ * Kopyalanmış bir eşleme, sözlüğe yeni bir anahtar eklendiğinde birinde
+ * güncellenip diğerinde unutulur.
+ */
+export function chartLabels(t: Dictionary): ChartLabels {
+  return {
+    ranges: t.chart.ranges,
+    rangeLabels: t.chart.rangeLabels,
+    area: t.chart.area,
+    candles: t.chart.candles,
+    periodReturn: t.chart.periodReturn,
+    periodHigh: t.chart.periodHigh,
+    periodLow: t.chart.periodLow,
+    noData: t.chart.noChartData,
+    failed: t.data.failed,
+    sessionPre: t.chart.sessionPre,
+    sessionRegular: t.chart.sessionRegular,
+    sessionAfter: t.chart.sessionAfter,
+    sessionOvernight: t.chart.sessionOvernight,
+    sessionOvernightNote: t.chart.sessionOvernightNote,
+  };
+}
 
 type PriceChartProps = {
   symbol: string;
@@ -486,11 +514,11 @@ export function PriceChart({
   return (
     <div>
       {/* Okuma satırı — imleç gezerken nokta okuması, değilse dönem özeti */}
-      <div className="flex min-h-[3.25rem] flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2">
+      <div className="flex min-h-[3.5rem] flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2">
         {hover ? (
           <>
             <div className="flex items-baseline gap-3">
-              <span className="tote text-2xl">
+              <span className="tote text-[28px] sm:text-[32px]">
                 {formatPrice(hover.price, locale, { currency: true })}
               </span>
               <span className={cn("numeral text-sm font-semibold", hoverTone)}>
@@ -505,7 +533,7 @@ export function PriceChart({
               <span className="text-sm text-soft">
                 {labels.rangeLabels[range]}
               </span>
-              <span className="tote text-2xl">
+              <span className="tote text-[28px] sm:text-[32px]">
                 {formatPrice(period.last.close, locale, { currency: true })}
               </span>
               <span className={cn("numeral text-lg font-bold", toneText)}>
