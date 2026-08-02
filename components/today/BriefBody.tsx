@@ -8,7 +8,41 @@ import { cn } from "@/lib/utils";
  * İki yerde kullanılıyor: ana sayfadaki özet kartı (`collapsible`, ilk blok
  * açık gerisi katlı — 376px'lik kolonu metrelerce uzatmasın) ve bülten
  * arşivi (tamamı açık, orada okumaya gelinmiş).
+ *
+ * BÖLÜM BAŞLIKLARI
+ * ----------------
+ * Haftalık bülten gövdeyi ikiye ayırıyor: "Geçen Hafta ne oldu" ve "Bu Hafta
+ * ne var". Bu ayrımın görsel bir karşılığı olmadan iki bölüm tek bir metin
+ * yığınına dönüşüyor ve haftalık bültenin bütün kurgusu kayboluyordu.
+ *
+ * İki yazım da başlık sayılır:
+ *   `## Geçen Hafta`      — standart markdown
+ *   `**Geçen Hafta**`     — TAMAMI kalın olan tek satırlık paragraf
+ *
+ * İkincisi bilinçli: rutin uzun süre başlık desteği olmadığı için bu deseni
+ * kullandı ve yazılmış arşiv kayıtları öyle duruyor. Kalın bir satırın tek
+ * başına paragraf olması zaten "başlık" demektir; öyle de gösteriliyor.
+ * Madde numaralandırması her başlıkta SIFIRLANIR — "Bu Hafta" bölümünün ilk
+ * maddesi 07 değil 01 olmalı.
  */
+
+/** Son başlıktan bu yana kaç madde var — katlanan kısım oradan devam eder. */
+function bulletsSinceLastHeading(lines: string[]): number {
+  let count = 0;
+  for (const line of lines) {
+    if (headingOf(line)) count = 0;
+    else if (line.trim().startsWith("- ")) count++;
+  }
+  return count;
+}
+
+/** `## Başlık` ya da tek başına `**Başlık**` → başlık metni; değilse null. */
+function headingOf(line: string): string | null {
+  const trimmed = line.trim();
+  if (trimmed.startsWith("## ")) return trimmed.slice(3).trim();
+  const bold = /^\*\*([^*]+)\*\*$/.exec(trimmed);
+  return bold ? bold[1].trim() : null;
+}
 
 function renderInline(text: string, keyPrefix: string) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
@@ -31,11 +65,18 @@ function BriefLines({
   startNumber: number;
   size: "card" | "page";
 }) {
-  // Madde numaraları render sırasında sayaç artırmadan, önceden türetilir.
+  /* Madde numaraları render sırasında sayaç artırmadan, önceden türetilir.
+     Her bölüm başlığında sayaç sıfırlanır: "Bu Hafta"nın ilk maddesi
+     "Geçen Hafta"nın devamı değil, kendi listesinin başıdır. */
   const bulletNumberOf = new Map<number, number>();
+  let counter = startNumber;
   lines.forEach((line, index) => {
+    if (headingOf(line)) {
+      counter = 1;
+      return;
+    }
     if (line.trim().startsWith("- ")) {
-      bulletNumberOf.set(index, startNumber + bulletNumberOf.size);
+      bulletNumberOf.set(index, counter++);
     }
   });
 
@@ -51,6 +92,24 @@ function BriefLines({
     >
       {lines.map((line, index) => {
         const trimmed = line.trim();
+
+        const heading = headingOf(line);
+        if (heading) {
+          return (
+            <h3
+              key={index}
+              className={cn(
+                "display-ink display-ink-tight w-fit font-bold tracking-[-0.02em] text-strong",
+                // İlk başlık üstten boşluk almaz; sonrakiler bölümleri ayırır.
+                index > 0 && (size === "page" ? "mt-3" : "mt-1.5"),
+                size === "page" ? "text-[17px]" : "text-[14px]",
+              )}
+            >
+              {heading}
+            </h3>
+          );
+        }
+
         if (trimmed.startsWith("- ")) {
           return (
             <p key={index} className={cn("flex gap-2.5 text-body", text)}>
@@ -100,6 +159,8 @@ export function BriefBody({
     <>
       <BriefLines lines={lines.slice(0, cut)} startNumber={1} size={size} />
       {cut < lines.length && (
+        /* Katlanan kısmın numarası, açıkta kalan kısmın SON BAŞLIĞINDAN
+           sonraki madde sayısından devam eder; başlık yoksa baştan sayar. */
         <details className="group/brief mt-3">
           <summary className="flex min-h-8 cursor-pointer list-none items-center gap-1.5 text-[12.5px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
             <span
@@ -112,10 +173,7 @@ export function BriefBody({
           </summary>
           <BriefLines
             lines={lines.slice(cut)}
-            startNumber={
-              lines.slice(0, cut).filter((l) => l.trim().startsWith("- ")).length +
-              1
-            }
+            startNumber={bulletsSinceLastHeading(lines.slice(0, cut)) + 1}
             size={size}
           />
         </details>
