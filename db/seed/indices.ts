@@ -56,8 +56,23 @@ export const DOW_MEMBERS: IndexMember[] = [
   { symbol: "WMT", name: "Walmart", sector: "Consumer Staples", sub: "Consumer Staples Merchandise Retail" },
 ];
 
-/** Nasdaq-100 — 100 üye. */
+/**
+ * Nasdaq-100 — üye sayısı 100 OLMAK ZORUNDA DEĞİL.
+ *
+ * Nasdaq'ın hızlı giriş kuralı, büyük bir halka arzın bekleme süresi
+ * dolmadan endekse alınmasına ve endeksin geçici olarak 100'ü aşmasına izin
+ * veriyor; SPCX böyle girdi ve kimse çıkarılmadı. Sayının 100 olmasını
+ * bekleyen bir kontrol yazma.
+ *
+ * Bu liste elle bakılmıyor: `npx tsx scripts/sync-indices.ts` resmî kaynakla
+ * karşılaştırır, `--write` uygular. S&P 500 ve Dow hâlâ elle.
+ */
 export const NDX_MEMBERS: IndexMember[] = [
+  /* Bu liste `npx tsx scripts/sync-indices.ts --write` ile üretildi.
+     Kaynak: api.nasdaq.com · son senkron: 2026-08-02
+     Elle düzenlenebilir ama betik bir daha koştuğunda üzerine yazar;
+     kalıcı düzeltmeler betiğe girmeli. Üye sayısı 100'ü aşabilir:
+     Nasdaq'ın hızlı giriş kuralı buna izin veriyor. */
   { symbol: "AAPL", name: "Apple Inc.", sector: "Information Technology", sub: "Technology Hardware, Storage & Peripherals" },
   { symbol: "ABNB", name: "Airbnb", sector: "Consumer Discretionary", sub: "Hotels, Resorts & Cruise Lines" },
   { symbol: "ADBE", name: "Adobe Inc.", sector: "Information Technology", sub: "Application Software" },
@@ -100,8 +115,10 @@ export const NDX_MEMBERS: IndexMember[] = [
   { symbol: "FTNT", name: "Fortinet", sector: "Information Technology", sub: "Systems Software" },
   { symbol: "GEHC", name: "GE HealthCare", sector: "Health Care", sub: "Health Care Equipment" },
   { symbol: "GILD", name: "Gilead Sciences", sector: "Health Care", sub: "Biotechnology" },
+  { symbol: "GOOG", name: "Alphabet Inc. Class C", sector: "Communication Services", sub: "Interactive Media & Services" },
   { symbol: "GOOGL", name: "Alphabet Inc.", sector: "Communication Services", sub: "Interactive Media & Services" },
   { symbol: "HON", name: "Honeywell", sector: "Industrials", sub: "Industrial Conglomerates" },
+  { symbol: "HONA", name: "Honeywell Aerospace Inc.", sector: "Industrials", sub: "Aerospace & Defense" },
   { symbol: "IDXX", name: "Idexx Laboratories", sector: "Health Care", sub: "Health Care Equipment" },
   { symbol: "INTC", name: "Intel", sector: "Information Technology", sub: "Semiconductors" },
   { symbol: "INTU", name: "Intuit", sector: "Information Technology", sub: "Application Software" },
@@ -145,6 +162,7 @@ export const NDX_MEMBERS: IndexMember[] = [
   { symbol: "SHOP", name: "Shopify", sector: "Information Technology", sub: "Application Software" },
   { symbol: "SNDK", name: "SanDisk", sector: "Information Technology", sub: "Technology Hardware, Storage & Peripherals" },
   { symbol: "SNPS", name: "Synopsys", sector: "Information Technology", sub: "Application Software" },
+  { symbol: "SPCX", name: "SpaceX", sector: "Industrials", sub: "Aerospace & Defense" },
   { symbol: "STX", name: "Seagate Technology", sector: "Information Technology", sub: "Technology Hardware, Storage & Peripherals" },
   { symbol: "TER", name: "Teradyne", sector: "Information Technology", sub: "Semiconductor Materials & Equipment" },
   { symbol: "TMUS", name: "T-Mobile US", sector: "Communication Services", sub: "Wireless Telecommunication Services" },

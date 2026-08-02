@@ -16,7 +16,7 @@ import {
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getQuotes } from "@/lib/providers";
-import { formatPrice, timeAgo } from "@/lib/utils";
+import { formatPrice, safeExternalUrl, timeAgo } from "@/lib/utils";
 
 /**
  * Haber detayı — kullanıcı siteden ayrılmadan okur.
@@ -59,6 +59,8 @@ export default async function NewsDetailPage(
     ? !(await isGenericNewsImage(item.imageUrl))
     : false;
 
+  const sourceHref = safeExternalUrl(item.url);
+
   const publishedFull = new Intl.DateTimeFormat(
     locale === "tr" ? "tr-TR" : "en-US",
     { dateStyle: "long", timeStyle: "short" },
@@ -95,11 +97,16 @@ export default async function NewsDetailPage(
         )}
       </header>
 
+      {/* Sabit oran: `max-h-96` yükseklik AUTO bıraktığı için object-cover
+          kırpacak bir kutu bulamıyordu ve görsel kendi oranında uzayıp
+          kutudan taşıyordu — mobilde en belirgin haliyle. 16/9 hem kırpmayı
+          çalıştırıyor hem de görsel yüklenmeden önce yerini ayırdığı için
+          sayfa zıplamıyor. */}
       {showImage && item.imageUrl && (
         <NewsImage
           src={item.imageUrl}
           className="rounded-2xl"
-          sizeClass="max-h-96 w-full"
+          sizeClass="aspect-[16/9] w-full"
         />
       )}
 
@@ -118,7 +125,9 @@ export default async function NewsDetailPage(
         <p className="text-sm text-muted">{t.common.noDataHint}</p>
       )}
 
-      {/* Kaynak çağrısı — özetin kısa olduğunu dürüstçe söyler */}
+      {/* Kaynak çağrısı — özetin kısa olduğunu dürüstçe söyler.
+          Adres sağlayıcıdan geliyor; şeması süzülmeden href'e konmaz. */}
+      {sourceHref && (
       <Panel className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-strong">
@@ -130,7 +139,7 @@ export default async function NewsDetailPage(
           </p>
         </div>
         <a
-          href={item.url}
+          href={sourceHref}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex shrink-0 items-center gap-1.5 rounded-(--radius-md) bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
@@ -139,6 +148,7 @@ export default async function NewsDetailPage(
           <ArrowSquareOut weight="duotone" size={14} />
         </a>
       </Panel>
+      )}
 
       {item.symbols && item.symbols.length > 0 && (
         <MentionedSymbols

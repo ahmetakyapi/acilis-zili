@@ -55,7 +55,28 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const pathname = usePathname();
-  const bottomItems = NAV_ITEMS.filter((item) => item.inBottomBar);
+
+  /* Alt çubuk: Piyasa · Bilanço · Favoriler · Menü.
+     Giriş yapmamış kullanıcıda Favoriler sekmesi ÇIKMAZ SOKAKTI — proxy onu
+     doğrudan /giris'e atıyordu, yani dört sekmeden biri o kullanıcı için
+     içerik değil bir duvardı. O yuvada artık adıyla "Giriş" duruyor.
+
+     Bu aynı zamanda mobil başlıktan kaldırılan giriş düğmesinin yerini
+     dolduruyor: oradaki SignIn ikonu kapıdan çıkan bir ok çizdiği için
+     "çıkış" gibi okunuyordu. Aynı işlev, ikon yerine yazıyla ve doğru yerde. */
+  const bottomItems = NAV_ITEMS.filter((item) => item.inBottomBar).map(
+    (item) => {
+      const swap = item.href === "/favoriler" && !signedIn;
+      return {
+        key: item.href,
+        href: swap ? "/giris" : item.href,
+        icon: swap ? SignIn : item.icon,
+        text: swap
+          ? labels.signIn
+          : (labels.navShort[item.href] ?? labels.nav[item.href]),
+      };
+    },
+  );
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -155,23 +176,15 @@ export function AppShell({
             {labels.brandName}
           </span>
         </Link>
+        {/* Giriş düğmesi burada YOK. Phosphor'un SignIn ikonu kapıdan çıkan
+            bir ok çiziyor ve giriş yapmamış kullanıcıya "çıkış" gibi
+            okunuyordu — henüz girmediği bir yerden çıkma daveti. Giriş
+            zaten alt çubuktaki Menü sekmesinde, adıyla yazılı olarak
+            duruyor; ikonla ikinci kez tekrarlamaya gerek yok. */}
         <div className="ml-auto flex items-center gap-2">
           {searchTrigger}
           {themeToggle}
           {localeToggle}
-          {/* Zaten giriş/kayıt ekranındayken bu düğme kendi sayfasına
-              götürüyordu; tekrar eden bir hedefin dokunma alanı işgal
-              etmesinin bir faydası yok. */}
-          {!signedIn && !pathname.startsWith("/giris") && !pathname.startsWith("/kayit") && (
-            <Link
-              href="/giris"
-              aria-label={labels.signIn}
-              title={labels.signIn}
-              className="flex size-[38px] items-center justify-center rounded-lg bg-primary text-on-primary"
-            >
-              <SignIn weight="duotone" size={16} />
-            </Link>
-          )}
         </div>
       </header>
 
@@ -202,19 +215,17 @@ export function AppShell({
           const Icon = item.icon;
           return (
             <Link
-              key={item.href}
+              key={item.key}
               href={item.href}
               prefetch
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-w-16 flex-col items-center gap-[5px] px-1 pb-2.5 pt-3 text-[10px] tracking-[0.03em] transition-colors",
+                "flex flex-1 flex-col items-center gap-[5px] px-1 pb-2.5 pt-3 text-[10px] tracking-[0.03em] transition-colors",
                 active ? "font-semibold text-primary" : "text-muted",
               )}
             >
               <Icon weight="duotone" size={21} />
-              <span className="truncate">
-                {labels.navShort[item.href] ?? labels.nav[item.href]}
-              </span>
+              <span className="truncate">{item.text}</span>
             </Link>
           );
         })}

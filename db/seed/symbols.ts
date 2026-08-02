@@ -50,6 +50,15 @@ export const INDEX_PROXIES: SymbolSeed[] = [
 ];
 
 export const POPULAR_SYMBOLS: SymbolSeed[] = [
+  /* Yeni halka arzlar — henüz endeks üyesi değiller.
+     S&P 500 ve Nasdaq-100 üyeliği listelenmeden hemen sonra gelmiyor
+     (S&P'de olağan koşul bir yıllık işlem geçmişi, Nasdaq-100'de yıllık
+     yeniden yapılandırma). Bu yüzden `indices.ts`'ten türeyen evrene
+     düşmüyorlar ve elle buraya yazılıyorlar; endekse girdiklerinde
+     indices.ts tazelendiğinde oradan da gelecekler. */
+  { symbol: "SPCX", name: "SpaceX" }, // Nasdaq, 12 Haziran 2026
+  { symbol: "SKHY", name: "SK hynix Inc. (ADR)" }, // Nasdaq, 10 Temmuz 2026
+
   // Yapay zekâ ve yarı iletken
   { symbol: "NVDA", name: "NVIDIA Corporation" },
   { symbol: "AMD", name: "Advanced Micro Devices" },

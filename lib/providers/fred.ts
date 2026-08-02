@@ -176,6 +176,38 @@ export async function getSeries(
   );
 }
 
+type RawSeriesRelease = {
+  releases?: { id: number; name: string }[];
+};
+
+/**
+ * Bir serinin bağlı olduğu FRED yayını.
+ *
+ * Yayın kimlikleri (CPI = 10, Employment Situation = 50 …) koda GÖMÜLMÜYOR:
+ * doğrulayamadığımız bir sabiti yazmak, uydurma tarih yazmakla aynı kapıya
+ * çıkar. Zaten kullandığımız seri kimliğinden çalışma anında türetiliyor.
+ */
+export async function getSeriesRelease(
+  seriesId: string,
+): Promise<ProviderResult<{ id: number; name: string }>> {
+  const result = await fredFetch<RawSeriesRelease>(
+    "/series/release",
+    { series_id: seriesId },
+    { revalidate: 604800, tags: ["macro-releases"] },
+  );
+  if (!result.ok) return result;
+
+  const release = result.data?.releases?.[0];
+  if (!release || typeof release.id !== "number") {
+    return fail("fred", "empty", `${seriesId} için yayın bulunamadı`);
+  }
+  return ok(
+    { id: release.id, name: release.name ?? "" },
+    "fred",
+    { fetchedAt: result.fetchedAt },
+  );
+}
+
 type RawReleaseDates = {
   release_dates?: { release_id: number; date: string }[];
 };

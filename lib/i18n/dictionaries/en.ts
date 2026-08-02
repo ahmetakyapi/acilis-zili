@@ -249,6 +249,9 @@ const en: typeof tr = {
     removeFromWatchlist: "Remove from Watchlist",
     notFound: "Symbol not found",
     notFoundHint: "Check the symbol or search for it again.",
+    throttled: "Slow Down a Little",
+    throttledHint:
+      "You have opened too many different stocks in a short time. Please wait a minute so we can protect our data providers' free quota.",
     peers: "Companies in the Same Sector",
     peersHint: "Sub-industry",
     fundProfile: "Fund Profile",
@@ -368,6 +371,7 @@ const en: typeof tr = {
     presetMega: "Mega Cap",
     presetIndices: "Index Funds",
     chartTitle: "Period Return",
+    chartReading: "Hover the chart for values along the way",
     chartHint:
       "Each series is converted to a percentage of its own starting point, so all of them begin at zero. What is compared is the return over the period, not price levels.",
     metric: "Metric",
@@ -382,8 +386,9 @@ const en: typeof tr = {
   markets: {
     pulseTitle: "Oil & The Fear Index",
     brent: "Brent Crude",
+    barrel: "USD/barrel",
     pulseHint:
-      "Brent is tracked via BNO, a US-listed fund — the level is the fund's price, not the price per barrel, while direction and percentage follow Brent. The fear index (VIX) is the FRED close.",
+      "The Brent price per barrel and the fear index (VIX) are closing values published by FRED; both can lag by a few business days, and their observation dates are shown below.",
     fearTitle: "Fear Index",
     fearHint:
       "VIX is derived from S&P 500 options and shows the volatility the market expects over the next 30 days. It says nothing about direction — only how large the move is expected to be.",
@@ -461,6 +466,12 @@ const en: typeof tr = {
     periodDaily: "Daily",
     periodWeekly: "Weekly",
     weekOf: "Week of {date}",
+    weeklySubtitle:
+      "Written every Monday · what happened last week, what is coming this week",
+    weeklyFrame: "What Happened Last Week · What Is Coming This Week",
+    weeklyRange: "{start} – {end}",
+    weeklyNotForecast:
+      "The week-ahead section is a calendar, not a forecast: it says what will be released, not what the numbers will be.",
     writtenBy: "Written by",
     byClaude: "Claude",
     byRules: "Rule-Based",

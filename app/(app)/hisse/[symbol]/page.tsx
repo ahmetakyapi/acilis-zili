@@ -5,7 +5,8 @@ import { Heart } from "@phosphor-icons/react/dist/ssr";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
-import { PriceChart } from "@/components/stock/PriceChart";
+import { NewsImage } from "@/components/news/NewsImage";
+import { PriceChart, chartLabels } from "@/components/stock/PriceChart";
 import {
   ChangePill,
   DataError,
@@ -21,9 +22,12 @@ import { news, watchlistItems, watchlists } from "@/lib/schema";
 import {
   getEarningsForSymbol,
   getNextEarnings,
+  getGenericImageUrls,
   getStatus,
   getSymbolNames,
+  isKnownSymbol,
 } from "@/lib/data";
+import { rateLimit, requestKey } from "@/lib/rate-limit";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote, getQuotes } from "@/lib/providers";
 import { COMPLIANCE_THRESHOLD, screenCompliance } from "@/lib/compliance";
@@ -50,8 +54,35 @@ import {
   formatPrice,
   formatVolume,
   isValidSymbol,
+  safeExternalUrl,
   timeAgo,
 } from "@/lib/utils";
+
+/* --------------------------------------------------------------------------
+   Sağlayıcı kotasını koruyan süzgeç
+
+   Tanınan sembol (`symbols` tablosunda kayıtlı ~500 hisse) için sınır bir
+   insanın gezinme hızının çok üstünde. Tanınmayan sembol — aramanın Finnhub
+   üzerinden bulduğu uzun kuyruk — meşru bir keşif yolu olduğu için
+   kapatılmıyor, yalnızca daraltılıyor.
+
+   Kendi kendini onaran bir taraf var: gerçek bir hissenin sayfası açıldığında
+   `getCompanyProfile` profili `symbols` tablosuna yazıyor, yani sembol bir
+   sonraki ziyarette "tanınan" tarafa geçiyor. Uydurma semboller hiçbir zaman
+   geçmiyor.
+   -------------------------------------------------------------------------- */
+const KNOWN_LIMIT = 40;
+const UNKNOWN_LIMIT = 8;
+const WINDOW_MS = 60_000;
+
+async function allowStockRender(symbol: string): Promise<boolean> {
+  const known = await isKnownSymbol(symbol);
+  return rateLimit(
+    await requestKey(known ? "stock" : "stock-unknown"),
+    known ? KNOWN_LIMIT : UNKNOWN_LIMIT,
+    WINDOW_MS,
+  ).allowed;
+}
 
 export default async function StockPage(
   props: PageProps<"/hisse/[symbol]">,
@@ -63,6 +94,17 @@ export default async function StockPage(
   if (!isValidSymbol(symbol)) {
     return (
       <EmptyState title={t.stock.notFound} hint={t.stock.notFoundHint} />
+    );
+  }
+
+  /* Sağlayıcı kotasının en pahalı yüzeyi burası: tanınmayan bir sembolün tam
+     sayfası altı ayrı Finnhub ucuna gidiyor (profil, metrik, tavsiye, bilanço
+     sürprizi, takvim, haber) ve Finnhub ücretsiz katmanı dakikada 60 istek
+     kabul ediyor — yani dakikada ~10 yeni sembol kotayı bitiriyordu. Grafik
+     ucundaki iki kademeli sınırın aynısı, aynı gerekçeyle. */
+  if (!(await allowStockRender(symbol))) {
+    return (
+      <EmptyState title={t.stock.throttled} hint={t.stock.throttledHint} />
     );
   }
 
@@ -106,8 +148,14 @@ export default async function StockPage(
           </Suspense>
         </Panel>
 
+        {/* Sağ kolon grafiğin boyuna geriliyor (ızgara varsayılanı) ama
+            kartlar doğal boyunda kaldığı için altta tırtıklı bir boşluk
+            kalıyordu. Profil kartı artık artan yeri kendi içine alıyor:
+            satırlar boşluğa yayılıyor, kartın alt kenarı grafiğinkiyle
+            hizalanıyor. Veri çoksa `flex-1` zaten bağlayıcı olmuyor ve kart
+            eskisi gibi içeriği kadar yer kaplıyor. */}
         <div className="flex min-w-0 flex-col gap-5">
-          <Panel>
+          <Panel className="flex flex-1 flex-col">
             <PanelHeader title={t.stock.profile} />
             <Suspense fallback={<ListSkeleton rows={5} />}>
               <ProfileCard symbol={symbol} locale={locale} t={t} />
@@ -350,26 +398,7 @@ function ChartSection({
   t: Dictionary;
 }) {
   return (
-    <PriceChart
-      symbol={symbol}
-      locale={locale}
-      labels={{
-        ranges: t.chart.ranges,
-        rangeLabels: t.chart.rangeLabels,
-        area: t.chart.area,
-        candles: t.chart.candles,
-        periodReturn: t.chart.periodReturn,
-        periodHigh: t.chart.periodHigh,
-        periodLow: t.chart.periodLow,
-        noData: t.chart.noChartData,
-        failed: t.data.failed,
-        sessionPre: t.chart.sessionPre,
-        sessionRegular: t.chart.sessionRegular,
-        sessionAfter: t.chart.sessionAfter,
-        sessionOvernight: t.chart.sessionOvernight,
-        sessionOvernightNote: t.chart.sessionOvernightNote,
-      }}
-    />
+    <PriceChart symbol={symbol} locale={locale} labels={chartLabels(t)} />
   );
 }
 
@@ -546,6 +575,7 @@ async function ProfileCard({
   const profile = result.data;
   const member = indexMemberOf(symbol);
   const about = await describeSymbol(symbol, locale);
+  const websiteHref = safeExternalUrl(profile.weburl);
 
   const rows: [string, React.ReactNode][] = [
     // GICS sınıflandırması varsa o gösterilir — sağlayıcının serbest metinli
@@ -584,31 +614,35 @@ async function ProfileCard({
   ];
 
   return (
-    <div className="px-4 py-3 sm:px-5">
+    <div className="flex flex-1 flex-col px-4 py-3 sm:px-5">
       {/* Şirket ne iş yapar — sektör satırından önce düz cümleyle anlatılır */}
       {about && (
         <p className="border-b border-line-soft pb-3 text-[13px] leading-relaxed text-body">
           {about}
         </p>
       )}
-      <dl className="divide-y divide-line-soft">
+      {/* Satırlar artan yere yayılır: kart grafiğin boyuna gerildiğinde
+          altta ölü boşluk yerine nefes alan bir liste kalıyor. İçerik
+          kartı zaten dolduruyorsa `justify-between`in etkisi olmuyor. */}
+      <dl className="flex flex-1 flex-col justify-between divide-y divide-line-soft">
         {rows.map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-3 py-2">
             <dt className="text-xs text-muted">{label}</dt>
             <dd className="text-right text-sm text-body">{value}</dd>
           </div>
         ))}
-        {profile.weburl && (
+        {/* Adres sağlayıcıdan geliyor; şeması süzülmeden href'e konmaz. */}
+        {websiteHref && (
           <div className="flex items-center justify-between gap-3 py-2">
             <dt className="text-xs text-muted">{t.stock.website}</dt>
             <dd className="min-w-0 text-right text-sm">
               <a
-                href={profile.weburl}
+                href={websiteHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block truncate text-primary hover:underline"
               >
-                {profile.weburl.replace(/^https?:\/\/(www\.)?/, "")}
+                {websiteHref.replace(/^https?:\/\/(www\.)?/, "")}
               </a>
             </dd>
           </div>
@@ -1234,23 +1268,45 @@ async function CompanyNews({
     // DB yazılamazsa haberler kaynağa bağlanır — liste yine çalışır.
   }
 
+  /* Küçük resim burada da var artık: haber akışı ve ana sayfa listesi
+     gösteriyordu, şirket sayfası göstermiyordu ve aynı haber iki ekranda
+     farklı görünüyordu. Jenerik görseller (kaynak logosu) elenir — aynı
+     logonun sekiz satırda tekrar etmesi listeyi taranabilir yapmıyor,
+     bozuyor. */
+  const genericImages = await getGenericImageUrls(
+    shown.map((item) => item.imageUrl),
+  );
+
   return (
     <ul className="divide-y divide-line-soft">
       {shown.map((item) => {
         const newsId = idByProvider.get(item.providerId);
         const inner = (
-          <>
-            <p className="line-clamp-2 text-sm font-medium leading-snug text-strong">
-              {(locale === "tr" && trByProvider.get(item.providerId)) ||
-                item.headline}
-            </p>
-            <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted">
-              {item.source && <span>{item.source}</span>}
-              <span aria-hidden>·</span>
-              <span>{timeAgo(item.publishedAt, locale)}</span>
-            </p>
-          </>
+          <span className="flex items-start gap-3">
+            <span className="min-w-0 flex-1">
+              <span className="line-clamp-2 block text-sm font-medium leading-snug text-strong">
+                {(locale === "tr" && trByProvider.get(item.providerId)) ||
+                  item.headline}
+              </span>
+              <span className="mt-1 flex items-center gap-1.5 text-[11px] text-muted">
+                {item.source && <span>{item.source}</span>}
+                <span aria-hidden>·</span>
+                <span>{timeAgo(item.publishedAt, locale)}</span>
+              </span>
+            </span>
+            <NewsImage
+              src={
+                item.imageUrl && !genericImages.has(item.imageUrl)
+                  ? item.imageUrl
+                  : null
+              }
+              symbol={symbol}
+              sizeClass="size-14"
+            />
+          </span>
         );
+        // Kaynak adresi sağlayıcıdan; şeması süzülmezse href'e konmaz.
+        const sourceHref = safeExternalUrl(item.url);
         return (
           <li key={item.providerId}>
             {newsId ? (
@@ -1260,15 +1316,17 @@ async function CompanyNews({
               >
                 {inner}
               </Link>
-            ) : (
+            ) : sourceHref ? (
               <a
-                href={item.url}
+                href={sourceHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block px-4 py-3 transition-colors hover:bg-surface-elevated sm:px-5"
               >
                 {inner}
               </a>
+            ) : (
+              <div className="block px-4 py-3 sm:px-5">{inner}</div>
             )}
           </li>
         );

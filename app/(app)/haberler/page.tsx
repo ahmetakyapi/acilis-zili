@@ -86,6 +86,10 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                   </p>
                   </span>
 
+                  {/* Mobilde de görünür. Ana sayfadaki haber listesi küçük
+                      resmi telefonda zaten gösteriyordu; burada gizlemek iki
+                      listeyi birbirinden farklı kılıyordu ve küçük resim
+                      listeyi taranabilir yapan asıl şey. */}
                   <NewsImage
                     src={
                       item.imageUrl && !genericImages.has(item.imageUrl)
@@ -93,7 +97,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                         : null
                     }
                     symbol={item.symbols?.[0] ?? null}
-                    className="hidden shrink-0 sm:flex"
+                    sizeClass="size-16 sm:size-20"
                   />
                 </Link>
               </li>

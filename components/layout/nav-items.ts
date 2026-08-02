@@ -37,12 +37,15 @@ export type NavItem = {
 };
 
 /**
- * Mobil alt çubuk beş sekme: Bugün · Piyasa · Bilanço · Favoriler · Menü.
+ * Mobil alt çubuk dört sekme: Piyasa · Bilanço · Favoriler · Menü.
  *
  * Takvim buradan çıkarıldı — bugünün takvimi ve haftaya bakış zaten Bugün
  * ekranının iki bölümü, sekmenin taşıdığı ek bilgi azdı. Yerine gelen Menü
  * sekmesi ürünün TAMAMINI açıyor: masthead'de duran her ekran, okuma
  * bölümleri, hesap ve yasal sayfalar. Mobilde artık ulaşılamayan ekran yok.
+ *
+ * Bugün de çıkarıldı: mobil başlıktaki logo her ekranda oraya götürüyor,
+ * yani sekme ikinci bir kapıydı. Dört sekme 390px'de beşten rahat.
  *
  * Şirketler dizini mobilde sekme değil — 500+ satırlık listeyi kimse
  * kaydırmaz, üstteki aramadan ve Menü'den erişiliyor.
@@ -54,11 +57,14 @@ export type NavItem = {
  */
 export const NAV_ITEMS: NavItem[] = [
   {
+    /* Alt çubukta YOK: mastheaddeki logo zaten buraya götürüyor ve o logo
+       mobilde her ekranın tepesinde duruyor. Sekmeyi kaldırınca kalan dörde
+       daha geniş dokunma alanı düşüyor — beş sekme 390px'de sıkışıktı. */
     href: "/",
     label: (t) => t.nav.today,
     icon: Bell,
     inMasthead: false,
-    inBottomBar: true,
+    inBottomBar: false,
   },
   {
     href: "/piyasalar",

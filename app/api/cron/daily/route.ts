@@ -19,18 +19,32 @@ import { getQuotes } from "@/lib/providers";
 import { addEtDays, getMarketStatus, todayEt } from "@/lib/market-hours";
 import { getEventsBetween, getHolidays, getSymbolNames } from "@/lib/data";
 import { buildDailyBrief } from "@/lib/brief";
+import { calendarRunwayDays, syncCalendar } from "@/lib/calendar-sync";
 import { translatePendingNews, isTranslateConfigured } from "@/lib/translate";
 import {
   getEarningsSymbolsMissingProfile,
+  getIndexDriftCandidates,
   getStalestSymbols,
 } from "@/lib/data";
 import { getCompanyProfile } from "@/lib/providers";
 import { symbols as symbolsTable } from "@/lib/schema";
 import { INDEX_STRIP } from "@/db/seed/symbols";
+import { ALL_MEMBERS } from "@/db/seed/indices";
 import { LOCALES } from "@/lib/i18n/config";
 
 /** Şirket haberi çekilen en büyük şirket sayısı — Finnhub dakikada 60 istek. */
 const COMPANY_NEWS_SYMBOLS = 20;
+
+/**
+ * Bilanço takvimi kaç gün ileri çekilir.
+ *
+ * Bilançolar sayfasının "Ay" sekmesi 29 gün gösteriyor ama burası 14 günde
+ * duruyordu: aradaki iki hafta boş görünüyordu ve ancak gün gün yaklaştıkça
+ * doluyordu. Sayfanın istediğinden bir gün fazlası çekilir ki sınırda boş
+ * satır kalmasın. Maliyeti 31 Finnhub isteği — dakikadaki 60 sınırının
+ * altında, fonksiyonun 120 sn bütçesine rahat sığıyor.
+ */
+const EARNINGS_HORIZON_DAYS = 30;
 
 export const maxDuration = 120;
 
@@ -52,10 +66,15 @@ export async function GET(request: Request) {
   const report: Record<string, string | number> = {};
   const today = todayEt();
 
-  /* ---- 1. Bilanço takvimi (bugün → +14 gün) ----
-     Finnhub tek yanıtı ~1500 kayıtla keser; 14 günlük aralık limit yüzünden
-     bazı günleri düşürür (SNDK böyle kaybolmuştu). Bu yüzden GÜN GÜN çekilir
-     — 15 istek, 60/dk limitine rahat sığar. Yazım yine toplu upsert'tir. */
+  /* ---- 1. Bilanço takvimi (bugün → +30 gün) ----
+     Finnhub tek yanıtı ~1500 kayıtla keser; geniş aralık limit yüzünden bazı
+     günleri düşürür (SNDK böyle kaybolmuştu). Bu yüzden GÜN GÜN çekilir —
+     31 istek, 60/dk limitine sığar. Yazım yine toplu upsert'tir.
+
+     Beklenti ve gerçekleşen (epsEstimate/epsActual, revenueEstimate/
+     revenueActual) her koşumda ÜZERİNE YAZILIR: analist beklentisi bilanço
+     gününe kadar revize olur, sonrasında gerçekleşen değer düşer. Yani bu
+     tablo elle bakım istemiyor, kendi kendine güncel kalıyor. */
   try {
     const unique = new Map<
       string,
@@ -67,7 +86,7 @@ export async function GET(request: Request) {
     >();
     let anyOk = false;
     let firstError = "";
-    for (let offset = 0; offset <= 14; offset++) {
+    for (let offset = 0; offset <= EARNINGS_HORIZON_DAYS; offset++) {
       const day = addEtDays(today, offset);
       const result = await getEarningsCalendar(day, day);
       if (!result.ok) {
@@ -239,6 +258,43 @@ export async function GET(request: Request) {
     report.profiles = refreshed;
   } catch (error) {
     report.profiles = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* ---- 2e. Ekonomik takvimi ileriye doldur ----
+     Takvimin ilan edilmiş tarihleri elle tohumlanıyordu ve bir gün bitip
+     ekranı sessizce boşaltıyordu. Artık FRED'in yayın takviminden bir yıl
+     ileriye kadar kendi kendine uzuyor; elle işlenmiş kayıtlara dokunmuyor.
+     Ayrıntı ve FOMC'nin neden buradan gelmediği: lib/calendar-sync.ts */
+  try {
+    const sync = await syncCalendar(today);
+    report.calendar = `+${sync.inserted} yayın, +${sync.rolling} haftalık`;
+    if (sync.problems.length > 0) {
+      report.calendarProblems = sync.problems.join(" | ");
+    }
+    /* Takvimin ömrü rapora yazılır: bu sayı küçülüyorsa senkron çalışmıyor
+       demektir ve bunu takvim boşalmadan ÖNCE görmek gerekir. */
+    report.calendarRunwayDays = await calendarRunwayDays(today);
+  } catch (error) {
+    report.calendar = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* ---- 2f. Endeks listesi bayatladı mı ----
+     indices.ts elle bakiliyor ve bir kez gercekten bayatladi (SPCX Nasdaq-100'e
+     girdi, dosya kacirdi). Otomatik duzeltemiyoruz — Finnhub'in bilesen ucu
+     ucretsiz katmanda 403 — ama dev bir sirketin hicbir endekste gorunmemesi
+     tespit edilebilir bir tutarsizlik. Raporda cikar, insan bakar. */
+  try {
+    const known = new Set(ALL_MEMBERS.map((member) => member.symbol));
+    const drifting = await getIndexDriftCandidates(known);
+    report.indexDrift =
+      drifting.length === 0
+        ? "yok"
+        : drifting
+            .slice(0, 5)
+            .map((row) => `${row.symbol} (${Math.round(row.marketCap / 1e9)}Mr$)`)
+            .join(", ");
+  } catch (error) {
+    report.indexDrift = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
   /* ---- 3. Makro seriler ---- */

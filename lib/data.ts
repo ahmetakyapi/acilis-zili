@@ -279,6 +279,35 @@ export type BriefIndexRow = {
   period: string;
 };
 
+/**
+ * Dönemin en yeni kaydı.
+ *
+ * Bülten sayfası eskiden önce arşiv listesini çekip, listenin ilk satırından
+ * tarihi okuyup, sonra o tarihin metnini çekiyordu — iki sorgu ARKA ARKAYA.
+ * Günlük/haftalık sekmesi her değiştiğinde iki tam gidiş-dönüş bekleniyordu
+ * ve geçiş takılıyordu. Bu fonksiyon zinciri kırıyor: seçili tarih
+ * belirtilmediğinde en yeni kayıt doğrudan çekilebiliyor ve iki sorgu
+ * paralel gidiyor.
+ */
+export async function getLatestBrief(
+  locale: string,
+  period: BriefPeriod = "daily",
+): Promise<DailyBriefRow | null> {
+  try {
+    const [row] = await db
+      .select()
+      .from(dailyBriefs)
+      .where(
+        and(eq(dailyBriefs.locale, locale), eq(dailyBriefs.period, period)),
+      )
+      .orderBy(desc(dailyBriefs.briefDate))
+      .limit(1);
+    return row ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Arşiv listesi — yeniden eskiye, gövde metni taşınmaz. */
 export async function getBriefArchive(
   locale: string,
@@ -509,6 +538,102 @@ export async function getEarningsSymbolsMissingProfile(
       )
       .limit(limit * 3);
     return [...new Set(rows.map((r) => r.symbol))].slice(0, limit);
+  } catch {
+    return [];
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Sembol tanınıyor mu
+
+   Sağlayıcı kotasını tüketen saldırıya karşı ilk süzgeç. `isValidSymbol`
+   yalnızca BİÇİMİ doğruluyor (`^[A-Z][A-Z.-]{0,9}$`) — yani "AAAA", "ZZZQ"
+   gibi milyonlarca uydurma sembol geçerli sayılıyor ve her biri Next'in veri
+   önbelleğini ıskalayıp doğrudan Alpaca/Finnhub'a gidiyordu.
+
+   Burada sorulan soru: bu sembolü GERÇEKTEN tanıyor muyuz? `symbols` tablosu
+   endeks üyeleri, tohumlanan popüler hisseler ve bilanço takviminden geçmiş
+   şirketlerle doluyor (~500+ satır ve büyüyor).
+
+   Tanınmayan sembol REDDEDİLMİYOR — arama, Finnhub üzerinden bu evrenin
+   dışındaki hisseleri de bulabiliyor ve onlara tıklayan kullanıcı boş
+   duvara çarpmamalı. Tanınmayanlar yalnızca çok daha dar bir oran sınırına
+   tabi tutuluyor (bkz. app/api/chart/[symbol]/route.ts). Keşif çalışmaya
+   devam ediyor, sayım saldırısı ilk saniyede duruyor.
+   -------------------------------------------------------------------------- */
+export const isKnownSymbol = cache(async function isKnownSymbol(
+  symbol: string,
+): Promise<boolean> {
+  try {
+    const [row] = await db
+      .select({ symbol: symbolsTable.symbol })
+      .from(symbolsTable)
+      .where(eq(symbolsTable.symbol, symbol))
+      .limit(1);
+    return Boolean(row);
+  } catch {
+    // Veritabanı düştüyse sembolü tanınmış sayma; dar sınır uygulanır ve
+    // sağlayıcı kotası korunur. Yanlış tarafa düşmek burada güvenli olan.
+    return false;
+  }
+});
+
+/* --------------------------------------------------------------------------
+   Endeks listesi bayatlama dedektörü
+
+   `db/seed/indices.ts` elle bakılan tek büyük veri parçası ve otomatikleşmesi
+   mümkün değil: Finnhub'ın /index/constituents ucu ücretsiz katmanda 403
+   dönüyor, başka ücretsiz kaynak da yok. Dosya elle tazeleniyor ve bir kez
+   gerçekten bayatladı — SPCX 7 Temmuz 2026'da Nasdaq-100'e girdi, dosya 1
+   Ağustos damgalı olmasına rağmen içermiyordu ve /piyasalar bileşenleri
+   eksik gösterdi.
+
+   Listeyi otomatik DÜZELTEMEYİZ ama bozulduğunu FARK EDEBİLİRİZ: dev bir
+   şirket sembol tablosunda duruyor da hiçbir endekste görünmüyorsa,
+   büyük ihtimalle endeks listesi geride kalmıştır. SPCX bu testten
+   1,44 trilyon dolarla geçerdi.
+
+   Kesin bir kanıt değil, bir koku: ABD'de listeli her dev şirket endekste
+   olmak zorunda değil (yeni halka arzlar bekleme süresine tabi, çift
+   kotasyonlar hiç girmeyebilir). Bu yüzden hata değil, cron raporuna düşen
+   bir uyarı — insan bakıp karar verir.
+   -------------------------------------------------------------------------- */
+
+/** Bu piyasa değerinin üstünde olup endekste olmayanlar bildirilir. */
+const INDEX_DRIFT_THRESHOLD_USD = 200e9;
+
+export async function getIndexDriftCandidates(
+  indexSymbols: Set<string>,
+): Promise<{ symbol: string; name: string; marketCap: number }[]> {
+  try {
+    const rows = await db
+      .select({
+        symbol: symbolsTable.symbol,
+        name: symbolsTable.name,
+        marketCap: symbolsTable.marketCap,
+        currency: symbolsTable.currency,
+        isIndexProxy: symbolsTable.isIndexProxy,
+      })
+      .from(symbolsTable)
+      .where(gte(symbolsTable.marketCap, INDEX_DRIFT_THRESHOLD_USD));
+
+    return rows
+      .filter(
+        (row) =>
+          // ETF'ler endeks üyesi değildir, doğal olarak listede yoklar.
+          !row.isIndexProxy &&
+          // USD dışı piyasa değeri eşikle karşılaştırılamaz (KRW'de her
+          // şirket "trilyonluk" görünür) — SKHY bu yüzden elenmeli.
+          row.currency === "USD" &&
+          row.marketCap !== null &&
+          !indexSymbols.has(row.symbol),
+      )
+      .map((row) => ({
+        symbol: row.symbol,
+        name: row.name,
+        marketCap: row.marketCap as number,
+      }))
+      .sort((a, b) => b.marketCap - a.marketCap);
   } catch {
     return [];
   }

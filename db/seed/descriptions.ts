@@ -70,6 +70,14 @@ export const SYMBOL_DESCRIPTIONS: Record<string, SymbolDescription> = {
   },
 
   // ---- Yapay zekâ ve yarı iletken ----
+  SPCX: {
+    tr: "Fırlatma araçları ve uydu internet şirketi — yeniden kullanılabilir Falcon roketleri, Starship programı ve Starlink uydu ağını kapsar. Haziran 2026'da halka açıldı; gelirinin büyük kısmı Starlink aboneliklerinden ve devlet fırlatma sözleşmelerinden gelir.",
+    en: "Launch vehicle and satellite internet company — reusable Falcon rockets, the Starship program and the Starlink satellite network. Went public in June 2026; most revenue comes from Starlink subscriptions and government launch contracts.",
+  },
+  SKHY: {
+    tr: "Güney Koreli bellek çipi üreticisi — DRAM ve NAND flash üretir; yapay zekâ hızlandırıcılarında kullanılan yüksek bant genişlikli bellekte (HBM) önde gelen tedarikçidir. Temmuz 2026'da Nasdaq'ta ADR olarak listelendi; asıl kotasyonu Kore borsasındadır.",
+    en: "South Korean memory chipmaker — produces DRAM and NAND flash, and is a leading supplier of high-bandwidth memory (HBM) used in AI accelerators. Listed on Nasdaq as an ADR in July 2026; its primary listing remains in Korea.",
+  },
   NVDA: {
     tr: "Yapay zekâ hızlandırıcıları ve grafik işlemcilerinde (GPU) dünya lideri. Veri merkezi çipleri, oyun ekran kartları, otomotiv ve robotik platformları ile CUDA yazılım ekosistemini kapsar.",
     en: "World leader in AI accelerators and graphics processors (GPUs). Spans data-center chips, gaming graphics cards, automotive and robotics platforms, and the CUDA software ecosystem.",

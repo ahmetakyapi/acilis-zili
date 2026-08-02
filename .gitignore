@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# …ama şablon commit'lenir: README kurulumda `cp .env.example .env.local`
+# diyor ve dosya yoksa o komut sessizce başarısız oluyor. İçinde yalnızca
+# boş anahtar adları var, değer yok.
+!.env.example
 
 # vercel
 .vercel

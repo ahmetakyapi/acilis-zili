@@ -6,6 +6,7 @@ import {
 import { getStatus } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
+import { getUsdTry } from "@/lib/providers/tcmb";
 import { INDEX_STRIP } from "@/db/seed/symbols";
 import { getI18n } from "@/lib/i18n";
 import { formatPercent, formatPrice } from "@/lib/utils";
@@ -41,8 +42,9 @@ export async function TickerFeed() {
   const { locale } = await getI18n();
   const status = await getStatus();
 
-  const [quotes, ...yields] = await Promise.all([
+  const [quotes, usdTry, ...yields] = await Promise.all([
     getQuotes([...INDEX_STRIP], status),
+    getUsdTry(),
     ...TICKER_YIELDS.map((series) => getSeries(series, 2)),
   ]);
 
@@ -98,6 +100,30 @@ export async function TickerFeed() {
       narrowSize: yieldItems.length,
       wideSize: yieldItems.length,
       hideChangeNarrow: true,
+    });
+  }
+
+  /* Kur şeridin son grubu. Sitedeki her fiyat dolar; Türkiye'den yatırım
+     yapan biri için lira karşılığı getirinin yarısı burada oluşuyor.
+
+     Değişim sütunu YOK ve bu bilinçli: TCMB günde tek bülten yayımlıyor,
+     "önceki bültene göre fark" günlük bir hareket değil ve endekslerin
+     yanında yüzde olarak durunca öyleymiş gibi okunuyor. Künyede bültenin
+     tarihi var — kaynak ne diyorsa o. */
+  if (usdTry.ok) {
+    groups.push({
+      key: "fx",
+      caption: locale === "tr" ? "TCMB Kuru" : "TCMB Rate",
+      items: [
+        {
+          label: "USD/TRY",
+          value: formatPrice(usdTry.data.selling, locale),
+          changePct: null,
+          change: null,
+        },
+      ],
+      narrowSize: 1,
+      wideSize: 1,
     });
   }
 
