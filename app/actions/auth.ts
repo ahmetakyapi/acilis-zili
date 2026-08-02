@@ -5,12 +5,11 @@ import { eq, or } from "drizzle-orm";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { headers } from "next/headers";
 import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { users, watchlists } from "@/lib/schema";
 import { getDictionary, getLocale } from "@/lib/i18n";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, requestKey } from "@/lib/rate-limit";
 
 export type AuthFormState = {
   error?: string;
@@ -54,13 +53,6 @@ function safeRedirectTarget(raw: FormDataEntryValue | null): string {
   return value;
 }
 
-async function authRateKey(scope: string): Promise<string> {
-  const store = await headers();
-  const forwarded = store.get("x-forwarded-for") ?? "";
-  const ip = forwarded.split(",")[0]?.trim() || "bilinmeyen";
-  return `${scope}:${ip}`;
-}
-
 const usernameSchema = z
   .string()
   .trim()
@@ -81,7 +73,7 @@ export async function signUpAction(
   const t = getDictionary(locale).auth.errors;
 
   const limited = rateLimit(
-    await authRateKey("signup"),
+    await requestKey("signup"),
     SIGN_UP_LIMIT,
     AUTH_WINDOW_MS,
   );
@@ -169,7 +161,7 @@ export async function signInAction(
   const t = getDictionary(locale).auth.errors;
 
   const limited = rateLimit(
-    await authRateKey("signin"),
+    await requestKey("signin"),
     SIGN_IN_LIMIT,
     AUTH_WINDOW_MS,
   );

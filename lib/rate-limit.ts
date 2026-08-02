@@ -14,6 +14,8 @@
  * siliniyor ve tablo sert bir üst sınırda tutuluyor.
  */
 
+import { headers } from "next/headers";
+
 type Bucket = { count: number; resetAt: number };
 
 const buckets = new Map<string, Bucket>();
@@ -77,7 +79,18 @@ export function rateLimit(
  * kötü ihtimalle sınır paylaşılır — sahte bir güvenlik iddiası yok.
  */
 export function clientKey(request: Request, scope: string): string {
-  const forwarded = request.headers.get("x-forwarded-for") ?? "";
-  const ip = forwarded.split(",")[0]?.trim() || "bilinmeyen";
-  return `${scope}:${ip}`;
+  return `${scope}:${ipFrom(request.headers.get("x-forwarded-for"))}`;
+}
+
+/**
+ * Aynı kimlik, elinde `Request` olmayan yerler için: sayfalar ve server
+ * action'lar. Üçüncü bir yerde daha aynı üç satırı yazmamak için burada.
+ */
+export async function requestKey(scope: string): Promise<string> {
+  const store = await headers();
+  return `${scope}:${ipFrom(store.get("x-forwarded-for"))}`;
+}
+
+function ipFrom(forwarded: string | null): string {
+  return forwarded?.split(",")[0]?.trim() || "bilinmeyen";
 }

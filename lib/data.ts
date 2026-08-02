@@ -279,6 +279,35 @@ export type BriefIndexRow = {
   period: string;
 };
 
+/**
+ * Dönemin en yeni kaydı.
+ *
+ * Bülten sayfası eskiden önce arşiv listesini çekip, listenin ilk satırından
+ * tarihi okuyup, sonra o tarihin metnini çekiyordu — iki sorgu ARKA ARKAYA.
+ * Günlük/haftalık sekmesi her değiştiğinde iki tam gidiş-dönüş bekleniyordu
+ * ve geçiş takılıyordu. Bu fonksiyon zinciri kırıyor: seçili tarih
+ * belirtilmediğinde en yeni kayıt doğrudan çekilebiliyor ve iki sorgu
+ * paralel gidiyor.
+ */
+export async function getLatestBrief(
+  locale: string,
+  period: BriefPeriod = "daily",
+): Promise<DailyBriefRow | null> {
+  try {
+    const [row] = await db
+      .select()
+      .from(dailyBriefs)
+      .where(
+        and(eq(dailyBriefs.locale, locale), eq(dailyBriefs.period, period)),
+      )
+      .orderBy(desc(dailyBriefs.briefDate))
+      .limit(1);
+    return row ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Arşiv listesi — yeniden eskiye, gövde metni taşınmaz. */
 export async function getBriefArchive(
   locale: string,
@@ -513,6 +542,41 @@ export async function getEarningsSymbolsMissingProfile(
     return [];
   }
 }
+
+/* --------------------------------------------------------------------------
+   Sembol tanınıyor mu
+
+   Sağlayıcı kotasını tüketen saldırıya karşı ilk süzgeç. `isValidSymbol`
+   yalnızca BİÇİMİ doğruluyor (`^[A-Z][A-Z.-]{0,9}$`) — yani "AAAA", "ZZZQ"
+   gibi milyonlarca uydurma sembol geçerli sayılıyor ve her biri Next'in veri
+   önbelleğini ıskalayıp doğrudan Alpaca/Finnhub'a gidiyordu.
+
+   Burada sorulan soru: bu sembolü GERÇEKTEN tanıyor muyuz? `symbols` tablosu
+   endeks üyeleri, tohumlanan popüler hisseler ve bilanço takviminden geçmiş
+   şirketlerle doluyor (~500+ satır ve büyüyor).
+
+   Tanınmayan sembol REDDEDİLMİYOR — arama, Finnhub üzerinden bu evrenin
+   dışındaki hisseleri de bulabiliyor ve onlara tıklayan kullanıcı boş
+   duvara çarpmamalı. Tanınmayanlar yalnızca çok daha dar bir oran sınırına
+   tabi tutuluyor (bkz. app/api/chart/[symbol]/route.ts). Keşif çalışmaya
+   devam ediyor, sayım saldırısı ilk saniyede duruyor.
+   -------------------------------------------------------------------------- */
+export const isKnownSymbol = cache(async function isKnownSymbol(
+  symbol: string,
+): Promise<boolean> {
+  try {
+    const [row] = await db
+      .select({ symbol: symbolsTable.symbol })
+      .from(symbolsTable)
+      .where(eq(symbolsTable.symbol, symbol))
+      .limit(1);
+    return Boolean(row);
+  } catch {
+    // Veritabanı düştüyse sembolü tanınmış sayma; dar sınır uygulanır ve
+    // sağlayıcı kotası korunur. Yanlış tarafa düşmek burada güvenli olan.
+    return false;
+  }
+});
 
 /** Profili en bayat semboller — cron her gün bir dilimini tazeler. */
 export async function getStalestSymbols(limit: number): Promise<string[]> {

@@ -250,6 +250,9 @@ const tr = {
     removeFromWatchlist: "Favorilerden Çıkar",
     notFound: "Bu sembol bulunamadı",
     notFoundHint: "Sembolü kontrol et veya arama kutusundan tekrar dene.",
+    throttled: "Biraz Yavaşla",
+    throttledHint:
+      "Kısa sürede çok fazla farklı hisse açtın. Veri sağlayıcılarımızın ücretsiz kotasını korumak için bir dakika beklemen gerekiyor.",
     peers: "Aynı Sektörden Şirketler",
     peersHint: "Alt Sektör",
     fundProfile: "Fon Künyesi",
@@ -369,6 +372,7 @@ const tr = {
     presetMega: "Mega Ölçek",
     presetIndices: "Endeks Fonları",
     chartTitle: "Dönem Getirisi",
+    chartReading: "Ara değerler için grafiğin üzerine gel",
     chartHint:
       "Her seri kendi başlangıcına göre yüzdeye çevrildi; hepsi sıfırdan başlar. Fiyat seviyeleri değil, dönem boyunca üretilen getiri karşılaştırılıyor.",
     metric: "Metrik",
@@ -383,8 +387,9 @@ const tr = {
   markets: {
     pulseTitle: "Petrol ve Korku Endeksi",
     brent: "Brent Petrol",
+    barrel: "dolar/varil",
     pulseHint:
-      "Brent, ABD borsasında işlem gören BNO fonu üzerinden izlenir — seviye fonun fiyatıdır, varil fiyatı değil; yönü ve yüzdesi Brent'i takip eder. Korku endeksi (VIX) FRED kapanışıdır.",
+      "Brent varil fiyatı ve korku endeksi (VIX), FRED'in yayımladığı kapanış değerleridir; ikisi de birkaç iş günü geriden gelebilir, gözlem tarihleri aşağıda yazılıdır.",
     fearTitle: "Korku Endeksi",
     fearHint:
       "VIX, S&P 500 opsiyonlarından türetilir ve piyasanın önümüzdeki 30 gün için beklediği oynaklığı gösterir. Yön söylemez; yalnızca hareketin ne kadar büyük beklendiğini söyler.",
@@ -461,6 +466,15 @@ const tr = {
     periodDaily: "Günlük",
     periodWeekly: "Haftalık",
     weekOf: "{date} haftası",
+    /* Haftalık bülten iki soruyu birlikte cevaplıyor ve bu, ekranda
+       söylenmezse anlaşılmıyor: kayıt biten haftanın adına açılıyor ama
+       içinde önümüzdeki haftanın takvimi de var. */
+    weeklySubtitle:
+      "Her pazartesi hazırlanan hafta değerlendirmesi · geçen hafta ne oldu, bu hafta ne var",
+    weeklyFrame: "Geçen Hafta Ne Oldu · Bu Hafta Ne Var",
+    weeklyRange: "{start} – {end}",
+    weeklyNotForecast:
+      "Bu hafta bölümü bir takvimdir, tahmin değil: neyin açıklanacağını söyler, ne çıkacağını değil.",
     writtenBy: "Hazırlayan",
     byClaude: "Claude",
     byRules: "Kural Tabanlı",

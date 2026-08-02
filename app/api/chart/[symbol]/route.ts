@@ -1,8 +1,39 @@
 import { NextResponse } from "next/server";
-import { getStatus } from "@/lib/data";
+import { getStatus, isKnownSymbol } from "@/lib/data";
 import { getChartBars, getQuote } from "@/lib/providers";
 import { isChartRange, type Bar } from "@/lib/providers/types";
+import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { isValidSymbol } from "@/lib/utils";
+
+/* --------------------------------------------------------------------------
+   Oran sınırı
+
+   Bu uç yetkisiz, herkese açık ve HER İSTEKTE Alpaca'ya gidebiliyor: her
+   farklı sembol Next'in veri önbelleğinde ayrı bir anahtar, yani önbellek
+   isabetsiz. `isValidSymbol` yalnızca biçimi doğruladığı için "AAAA" gibi
+   milyonlarca uydurma sembol geçerli sayılıyordu ve tek bir döngü Alpaca'nın
+   ücretsiz katmanındaki 200 istek/dk sınırını dakikalar içinde tüketiyordu.
+   Kota bittiğinde site çökmüyor (önbellekten "güncel değil" damgasıyla
+   sürüyor) ama canlı fiyat herkes için ölüyordu.
+
+   İki kademe var çünkü iki farklı istek aynı şey değil:
+
+     TANINAN sembol  — `symbols` tablosunda kayıtlı ~500 hisse. Grafik
+       aralığını değiştiren, sekmeler arasında gezinen gerçek bir kullanıcı
+       burada rahatça kalır.
+
+     TANINMAYAN sembol — aramanın Finnhub üzerinden bulduğu uzun kuyruk.
+       Meşru bir keşif yolu, o yüzden kapatılmıyor; ama sayım saldırısının
+       tek girişi de burası, o yüzden dar tutuluyor. Bir insan dakikada
+       sekiz farklı bilinmeyen hisseye bakmaz; bir betik ilk saniyede bakar.
+
+   Sınırlayıcının sunucusuz ortamda örnek başına çalıştığı ve neyi
+   çözmediği lib/rate-limit.ts başında yazılı — dağıtık bir saldırıya karşı
+   asıl katman Vercel Firewall'daki IP kuralı, bu değil.
+   -------------------------------------------------------------------------- */
+const KNOWN_LIMIT = 60;
+const UNKNOWN_LIMIT = 8;
+const WINDOW_MS = 60_000;
 
 export type ChartResponse =
   | {
@@ -38,6 +69,21 @@ export async function GET(
     return NextResponse.json<ChartResponse>(
       { ok: false, reason: "invalid-range" },
       { status: 400 },
+    );
+  }
+
+  /* Sınır sağlayıcıya gitmeden ÖNCE uygulanır; tek maliyeti tanınan sembol
+     listesine bakan bir veritabanı sorgusu ve o istek başına önbellekli. */
+  const known = await isKnownSymbol(symbol);
+  const limited = rateLimit(
+    clientKey(request, known ? "chart" : "chart-unknown"),
+    known ? KNOWN_LIMIT : UNKNOWN_LIMIT,
+    WINDOW_MS,
+  );
+  if (!limited.allowed) {
+    return NextResponse.json<ChartResponse>(
+      { ok: false, reason: "rate-limited" },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfter) } },
     );
   }
 
