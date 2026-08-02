@@ -159,7 +159,10 @@ export function AppShell({
           {searchTrigger}
           {themeToggle}
           {localeToggle}
-          {!signedIn && (
+          {/* Zaten giriş/kayıt ekranındayken bu düğme kendi sayfasına
+              götürüyordu; tekrar eden bir hedefin dokunma alanı işgal
+              etmesinin bir faydası yok. */}
+          {!signedIn && !pathname.startsWith("/giris") && !pathname.startsWith("/kayit") && (
             <Link
               href="/giris"
               aria-label={labels.signIn}

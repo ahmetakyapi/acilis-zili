@@ -59,8 +59,12 @@ export function AuthForm({
 
   return (
     <div className="grid items-stretch gap-8 py-4 lg:grid-cols-[minmax(0,1.1fr)_460px] lg:gap-14 lg:py-10">
-      {/* ---- Sol: ürün ne yapıyor ---- */}
-      <div className="flex flex-col">
+      {/* ---- Sol: ürün ne yapıyor ----
+           MOBİLDE İKİNCİ SIRADA: "Giriş Yap"a basan biri formu arıyor.
+           Tanıtım metni tam ekranı doldurup formu katlamanın altına
+           itiyordu; `order` ile mobilde aşağı, geniş ekranda yine sola
+           alınıyor. */}
+      <div className="order-2 flex flex-col lg:order-1">
         <h1 className="display-ink max-w-[17ch] text-[32px] font-bold leading-[1.1] tracking-[-0.03em] sm:text-[46px]">
           {pitchTitle}
         </h1>
@@ -87,7 +91,7 @@ export function AuthForm({
       </div>
 
       {/* ---- Sağ: form ---- */}
-      <div className="rounded-2xl border border-line bg-surface p-6 sm:p-8 lg:self-center">
+      <div className="order-1 rounded-2xl border border-line bg-surface p-6 sm:p-8 lg:order-2 lg:self-center">
         <h2 className="text-[24px] font-bold tracking-[-0.03em] text-strong sm:text-[28px]">
           {title}
         </h2>
