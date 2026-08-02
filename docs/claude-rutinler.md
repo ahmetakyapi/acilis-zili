@@ -19,9 +19,19 @@ Environment Variables → `BRIEF_SECRET`.
 
 | # | Görev | Zamanlama | Cron (UTC) | Nereye yazar |
 |---|---|---|---|---|
-| 1 | Günlük Bülten | her gün 09:00 TR | `0 6 * * *` | Ana sayfa · Günün Özeti |
+| 1 | Günlük Bülten | her gün 16:00 TR | `0 13 * * *` | Ana sayfa · Günün Özeti |
 | 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
 | 3 | Mercek Yazısı | her gün 21:00 TR | `0 18 * * *` | /mercek |
+
+> **Saatler neden böyle.** Vercel cron'u (`/api/cron/daily`, 13:30 TR) veriyi
+> veritabanına yazan taraftır; bültenler onu OKUR. Günlük bülten uzun süre
+> 09:00 TR'de koşuyordu, yani senkrondan **4,5 saat önce** — her sabahki yazı
+> bir önceki günün makro değerleriyle yazılıyordu. 16:00 bu sırayı düzeltir.
+>
+> 16:00 aynı zamanda ABD açılışının hemen öncesidir, ama pay yıl boyu sabit
+> değil: Türkiye yaz saati uygulamadığı, ABD uyguladığı için açılış yazın
+> 16:30 TR, kışın 17:30 TR olur. Yani bülten yazın 30, kışın 90 dakika önce
+> düşer. Yazın daha rahat bir pay istersen 15:30 TR (`30 12 * * *`).
 
 **Üçünde de ortak iki şart:**
 
@@ -34,7 +44,8 @@ Environment Variables → `BRIEF_SECRET`.
 
 # 1 · Günlük Bülten
 
-**Zamanlama:** her gün 09:00 TR (`0 6 * * *` UTC)
+**Zamanlama:** her gün 16:00 TR (`0 13 * * *` UTC) — açılış zilinden hemen
+önce ve günlük senkrondan (13:30 TR) sonra.
 
 ````
 Sen Açılış Zili'nin sabah bülteni editörüsün. Aşağıdaki adımları uygula.
@@ -85,8 +96,17 @@ tekrar deneme — aynı gün iki kez yazmak kaydın üzerine yazar.
 
 **Zamanlama:** her Pazartesi 09:30 TR (`30 6 * * 1` UTC)
 
-Günlükten yarım saat sonraya konması bilinçli — ikisi aynı anda koşup aynı
-bağlamı iki kez çekmesin.
+Haftalık bülten açılış tetikli bir metin değil, o yüzden günlükle aynı saate
+çekilmedi: "geçen hafta ne oldu" kapanmış bir defter, "bu hafta ne var" ise
+takvim. İkisi de sabah okunur. Pazartesi 09:30 TR = 02:30 ET, yani ABD ön
+seansı bile başlamamıştır — bu, "bu hafta" bölümünün tahmine kaymasını
+zorlaştıran bir avantajdır: o saatte yorumlanacak bir fiyat hareketi yok.
+
+Bir kabul: Pazartesi 09:30, o günkü Vercel senkronundan (13:30 TR) önce.
+Yani haftalık, Cuma günkü senkronun verisini okur. Sorun değil — geçen
+haftanın rakamları Alpaca barlarından geliyor (senkrona bağlı değil) ve
+gelecek haftanın bilanço takvimi Cuma koşumunda zaten çekilmiş durumda
+(ufuk 30 gün).
 
 ````
 Sen Açılış Zili'nin haftalık bülten editörüsün. Biten haftanın arşiv kaydını
