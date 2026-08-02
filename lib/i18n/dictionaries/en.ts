@@ -30,6 +30,8 @@ const en: typeof tr = {
     searchHintMove: "move",
     searchHintOpen: "open",
     menu: "Menu",
+    mainNav: "Main navigation",
+    skipToContent: "Skip to content",
     groupMarket: "Market",
     groupFollow: "Following",
     clockNy: "New York",
@@ -501,6 +503,7 @@ const en: typeof tr = {
       passwordMismatch: "Passwords don't match.",
       emailFormat: "Enter a valid email address.",
       generic: "Couldn't sign in. Try again.",
+      tooManyAttempts: "Too many attempts. Try again in a few minutes.",
     },
   },
 
@@ -578,6 +581,14 @@ const en: typeof tr = {
     builtByHint: "Other projects and the source code are on GitHub.",
     copyright: "© 2026 Açılış Zili",
     disclaimer: "Not investment advice.",
+  },
+
+  errors: {
+    notFoundTitle: "This page could not be found",
+    notFoundHint:
+      "The link may be outdated or the address mistyped. What you are looking for is probably still on the site.",
+    shortcuts: "Shortcuts",
+    searchHint: "Use the search box above to look up a symbol.",
   },
 
   data: {

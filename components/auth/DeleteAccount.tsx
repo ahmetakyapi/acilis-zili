@@ -116,7 +116,11 @@ export function DeleteAccount({
           type="submit"
           size="sm"
           disabled={pending}
-          className="bg-down text-white hover:bg-down/85"
+          /* text-page: sayfa zemini iki temada da --down'un zıddı — açıkta
+             beyaza, koyuda lacivere düşüyor ve ikisinde de okunuyor.
+             Sabit beyaz, koyu temanın açık kırmızısında AA'nın altına
+             iniyordu. */
+          className="bg-down text-page hover:bg-down/85"
         >
           <Trash weight="duotone" size={15} />
           {labels.submit}

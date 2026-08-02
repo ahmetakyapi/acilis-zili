@@ -35,6 +35,8 @@ export default async function AppLayout({
     settings: t.nav.settings,
     signIn: t.nav.signIn,
     menu: t.nav.menu,
+    mainNav: t.nav.mainNav,
+    skipToContent: t.nav.skipToContent,
   };
 
   return (

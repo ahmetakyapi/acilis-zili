@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkBearer } from "@/lib/api-auth";
 import { and, desc, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
@@ -39,10 +40,13 @@ export const maxDuration = 120;
  * günlük özet. Her adım kendi hatasını yutar; biri düşse diğerleri çalışır.
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  const auth = request.headers.get("authorization");
-  if (secret && auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  /* Eskiden `if (secret && ...)` yazıyordu: CRON_SECRET tanımsızsa koşul hiç
+     çalışmıyor ve bu uç herkese açık kalıyordu. Sağlayıcılardan veri çekip
+     veritabanına yazan bir uç için kabul edilemez — artık üretimde anahtar
+     yoksa istek reddediliyor. */
+  const auth = checkBearer(request, process.env.CRON_SECRET);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
   const report: Record<string, string | number> = {};

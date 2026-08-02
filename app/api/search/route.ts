@@ -3,6 +3,7 @@ import { ilike, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { symbols } from "@/lib/schema";
 import { searchSymbols } from "@/lib/providers/finnhub";
+import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 export type SearchHit = {
   symbol: string;
@@ -15,8 +16,32 @@ export type SearchHit = {
  * Önce yerel tablo (anında, sağlayıcı kotası harcamaz), sonuç azsa Finnhub
  * ile genişletilir.
  */
+/* Sitedeki tek yetkisiz uç ve hem veritabanına hem Finnhub'a gidiyor —
+   yani kotayı harcayan yüzey burası. Dakikada 40 istek, tuşa basarak arayan
+   bir insanın çok üstünde; kazara kurulmuş bir döngünün çok altında. */
+const SEARCH_LIMIT = 40;
+const SEARCH_WINDOW_MS = 60_000;
+
+/** Sağlayıcıya giden en uzun sorgu — daha uzunu anlamlı sonuç üretmiyor. */
+const MAX_QUERY_LENGTH = 64;
+
 export async function GET(request: Request) {
-  const query = new URL(request.url).searchParams.get("q")?.trim() ?? "";
+  const limited = rateLimit(
+    clientKey(request, "search"),
+    SEARCH_LIMIT,
+    SEARCH_WINDOW_MS,
+  );
+  if (!limited.allowed) {
+    return NextResponse.json(
+      { hits: [] satisfies SearchHit[], error: "rate-limited" },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfter) } },
+    );
+  }
+
+  const query = (new URL(request.url).searchParams.get("q")?.trim() ?? "").slice(
+    0,
+    MAX_QUERY_LENGTH,
+  );
 
   if (query.length < 1) {
     return NextResponse.json({ hits: [] satisfies SearchHit[] });

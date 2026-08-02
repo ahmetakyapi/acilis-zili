@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo } from "next/font/google";
 import { getI18n, getTheme } from "@/lib/i18n";
+import { INDEXABLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 /**
@@ -21,9 +22,7 @@ const bodyFace = Archivo({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  ),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Açılış Zili — ABD Piyasa Takibi",
     template: "%s · Açılış Zili",
@@ -45,7 +44,13 @@ export const metadata: Metadata = {
       "Ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin — saatleriyle birlikte.",
   },
   twitter: { card: "summary_large_image" },
-  robots: { index: false, follow: false },
+  /* Uzun süre `index: false` idi ve bu bir geliştirme kalıntısıydı: site
+     canlı ve rehber yazılarının amacı zaten okunmak. Anahtar tek yerde —
+     lib/site.ts → INDEXABLE. */
+  robots: INDEXABLE
+    ? { index: true, follow: true }
+    : { index: false, follow: false },
+  alternates: { canonical: "/" },
 };
 
 export const viewport: Viewport = {

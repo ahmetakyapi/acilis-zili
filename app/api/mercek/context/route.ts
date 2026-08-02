@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkBearer, type AuthOutcome } from "@/lib/api-auth";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { news, stories } from "@/lib/schema";
@@ -22,17 +23,16 @@ import { todayEt } from "@/lib/market-hours";
  * verir; talimatı docs/claude-mercek-ajani.md içinde.
  */
 
-function authorized(request: Request): boolean {
-  const secret = process.env.BRIEF_SECRET;
-  if (!secret) return false;
-  return request.headers.get("authorization") === `Bearer ${secret}`;
+function authorized(request: Request): AuthOutcome {
+  return checkBearer(request, process.env.BRIEF_SECRET);
 }
 
 const NEWS_SAMPLE = 60;
 
 export async function GET(request: Request) {
-  if (!authorized(request)) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const auth = authorized(request);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
   const url = new URL(request.url);

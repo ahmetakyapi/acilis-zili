@@ -5,15 +5,41 @@ import { eq, or } from "drizzle-orm";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { headers } from "next/headers";
 import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { users, watchlists } from "@/lib/schema";
 import { getDictionary, getLocale } from "@/lib/i18n";
+import { rateLimit } from "@/lib/rate-limit";
 
 export type AuthFormState = {
   error?: string;
   field?: "username" | "email" | "password" | "passwordConfirm" | "form";
 };
+
+/* --------------------------------------------------------------------------
+   Oran sınırı
+
+   Giriş ve kayıt uçlarında hiçbir tavan yoktu: aynı adresten dakikada
+   binlerce şifre denemesi ya da binlerce hesap açılışı mümkündü. bcrypt'in
+   maliyeti (12 tur) tek başına bir yavaşlatıcı ama ücretsiz bir koruma
+   değil — her deneme sunucu işlemcisi harcıyor.
+
+   Sınır bilinçli olarak cömert: yanlış şifreyi üç kez yazan gerçek bir
+   kullanıcı hiç fark etmez, kaba kuvvet denemesi ilk dakikada durur.
+   Sınırlayıcının dağıtık olmadığı ve neyi çözüp neyi çözmediği
+   lib/rate-limit.ts başında yazılı.
+   -------------------------------------------------------------------------- */
+const SIGN_IN_LIMIT = 10;
+const SIGN_UP_LIMIT = 5;
+const AUTH_WINDOW_MS = 10 * 60_000;
+
+async function authRateKey(scope: string): Promise<string> {
+  const store = await headers();
+  const forwarded = store.get("x-forwarded-for") ?? "";
+  const ip = forwarded.split(",")[0]?.trim() || "bilinmeyen";
+  return `${scope}:${ip}`;
+}
 
 const usernameSchema = z
   .string()
@@ -33,6 +59,15 @@ export async function signUpAction(
 ): Promise<AuthFormState> {
   const locale = await getLocale();
   const t = getDictionary(locale).auth.errors;
+
+  const limited = rateLimit(
+    await authRateKey("signup"),
+    SIGN_UP_LIMIT,
+    AUTH_WINDOW_MS,
+  );
+  if (!limited.allowed) {
+    return { error: t.tooManyAttempts, field: "form" };
+  }
 
   const rawUsername = String(formData.get("username") ?? "");
   const rawEmail = String(formData.get("email") ?? "");
@@ -111,6 +146,15 @@ export async function signInAction(
 ): Promise<AuthFormState> {
   const locale = await getLocale();
   const t = getDictionary(locale).auth.errors;
+
+  const limited = rateLimit(
+    await authRateKey("signin"),
+    SIGN_IN_LIMIT,
+    AUTH_WINDOW_MS,
+  );
+  if (!limited.allowed) {
+    return { error: t.tooManyAttempts, field: "form" };
+  }
 
   const username = String(formData.get("username") ?? "")
     .trim()

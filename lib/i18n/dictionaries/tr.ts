@@ -29,6 +29,8 @@ const tr = {
     searchHintMove: "gez",
     searchHintOpen: "aç",
     menu: "Menü",
+    mainNav: "Ana gezinme",
+    skipToContent: "İçeriğe geç",
     groupMarket: "Piyasa",
     groupFollow: "Takip",
     clockNy: "New York",
@@ -501,6 +503,8 @@ const tr = {
       passwordMismatch: "Şifreler eşleşmiyor.",
       emailFormat: "Geçerli bir e-posta adresi gir.",
       generic: "Giriş yapılamadı. Tekrar dene.",
+      tooManyAttempts:
+        "Çok fazla deneme yapıldı. Birkaç dakika sonra tekrar dene.",
     },
   },
 
@@ -578,6 +582,14 @@ const tr = {
     builtByHint: "Diğer projelere ve kaynak koda GitHub'dan bakabilirsin.",
     copyright: "© 2026 Açılış Zili",
     disclaimer: "Yatırım tavsiyesi değildir.",
+  },
+
+  errors: {
+    notFoundTitle: "Bu sayfa bulunamadı",
+    notFoundHint:
+      "Bağlantı eski olabilir ya da adres yanlış yazılmış olabilir. Aradığın şey büyük ihtimalle hâlâ sitede.",
+    shortcuts: "Kısayollar",
+    searchHint: "Sembol aramak için üstteki arama kutusunu kullan.",
   },
 
   data: {

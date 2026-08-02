@@ -15,6 +15,8 @@ export type ShellLabels = {
   settings: string;
   signIn: string;
   menu: string;
+  mainNav: string;
+  skipToContent: string;
 };
 
 type AppShellProps = {
@@ -57,6 +59,16 @@ export function AppShell({
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {/* Klavyeyle gezen biri her sayfada sekiz sekmeyi geçmek zorunda
+          kalmasın. Odaklanana kadar görünmez; odakta masthead'in üstüne
+          oturur. */}
+      <a
+        href="#icerik"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-[9px] focus:bg-primary focus:px-4 focus:py-2.5 focus:text-[13.5px] focus:font-semibold focus:text-on-primary"
+      >
+        {labels.skipToContent}
+      </a>
+
       {/* ---- Masaüstü masthead ---- */}
       <header className="chrome sticky top-0 z-30 hidden items-center gap-4 border-b px-5 py-3.5 lg:flex xl:gap-6 xl:px-10">
         <Link href="/" className="shrink-0" aria-label={labels.brandName}>
@@ -162,7 +174,10 @@ export function AppShell({
 
       {/* Alt şerit sabit durduğu için içerik onun yüksekliği kadar boşluk
           bırakır; mobilde ayrıca sekme çubuğu var. */}
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-[18px] pt-4 sm:px-6 lg:pt-6 xl:px-10">
+      <main
+        id="icerik"
+        className="mx-auto w-full max-w-[1400px] flex-1 px-[18px] pt-4 sm:px-6 lg:pt-6 xl:px-10"
+      >
         {children}
       </main>
 
@@ -177,7 +192,7 @@ export function AppShell({
       {/* ---- Mobil alt gezinme — 5 sekme, dokunma hedefi min 64px ---- */}
       <nav
         className="chrome fixed inset-x-0 bottom-0 z-30 flex justify-between border-t px-3 pb-[env(safe-area-inset-bottom)] lg:hidden"
-        aria-label={labels.menu}
+        aria-label={labels.mainNav}
       >
         {bottomItems.map((item) => {
           const active = isActive(pathname, item.href);
