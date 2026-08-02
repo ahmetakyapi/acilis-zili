@@ -345,8 +345,10 @@ const tr = {
   },
 
   markets: {
-    pulseTitle: "Petrol ve Oynaklık",
+    pulseTitle: "Petrol ve Korku Endeksi",
     brent: "Brent Petrol",
+    pulseHint:
+      "Brent, ABD borsasında işlem gören BNO fonu üzerinden izlenir — seviye fonun fiyatıdır, varil fiyatı değil; yönü ve yüzdesi Brent'i takip eder. Korku endeksi (VIX) FRED kapanışıdır.",
     fearTitle: "Korku Endeksi",
     fearHint:
       "VIX, S&P 500 opsiyonlarından türetilir ve piyasanın önümüzdeki 30 gün için beklediği oynaklığı gösterir. Yön söylemez; yalnızca hareketin ne kadar büyük beklendiğini söyler.",

@@ -344,8 +344,10 @@ const en: typeof tr = {
   },
 
   markets: {
-    pulseTitle: "Oil & Volatility",
+    pulseTitle: "Oil & The Fear Index",
     brent: "Brent Crude",
+    pulseHint:
+      "Brent is tracked via BNO, a US-listed fund — the level is the fund's price, not the price per barrel, while direction and percentage follow Brent. The fear index (VIX) is the FRED close.",
     fearTitle: "Fear Index",
     fearHint:
       "VIX is derived from S&P 500 options and shows the volatility the market expects over the next 30 days. It says nothing about direction — only how large the move is expected to be.",
