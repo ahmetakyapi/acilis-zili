@@ -16,7 +16,7 @@ import type { Bar, ChartRange } from "@/lib/providers/types";
 import { CHART_RANGES } from "@/lib/providers/types";
 import { cn, formatPercent, formatPrice } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
-import type { Dictionary } from "@/lib/i18n";
+import type { ChartLabels } from "@/lib/chart-labels";
 
 /**
  * Fiyat grafiği — lightweight-charts v5.
@@ -36,23 +36,6 @@ import type { Dictionary } from "@/lib/i18n";
  * alttaki 1G/1H/1A düğmeleriyle seçiliyor, kaydırmaya ihtiyaç yok.
  */
 
-export type ChartLabels = {
-  ranges: Record<ChartRange, string>;
-  rangeLabels: Record<ChartRange, string>;
-  area: string;
-  candles: string;
-  periodReturn: string;
-  periodHigh: string;
-  periodLow: string;
-  noData: string;
-  failed: string;
-  sessionPre: string;
-  sessionRegular: string;
-  sessionAfter: string;
-  sessionOvernight: string;
-  sessionOvernightNote: string;
-};
-
 /** Gün içi seans bölgesi — gölge + etiket olarak çizilir. */
 type SessionZone = {
   key: "pre" | "after";
@@ -60,33 +43,6 @@ type SessionZone = {
   width: number;
   label: string;
 };
-
-/**
- * Sözlükten grafik etiketlerine köprü.
- *
- * Eşleme tek yerde duruyor çünkü grafiği artık iki yer kuruyor: hisse detay
- * sayfası ve mercek/rehber yazılarının içine gömülen `::: grafik` bloğu.
- * Kopyalanmış bir eşleme, sözlüğe yeni bir anahtar eklendiğinde birinde
- * güncellenip diğerinde unutulur.
- */
-export function chartLabels(t: Dictionary): ChartLabels {
-  return {
-    ranges: t.chart.ranges,
-    rangeLabels: t.chart.rangeLabels,
-    area: t.chart.area,
-    candles: t.chart.candles,
-    periodReturn: t.chart.periodReturn,
-    periodHigh: t.chart.periodHigh,
-    periodLow: t.chart.periodLow,
-    noData: t.chart.noChartData,
-    failed: t.data.failed,
-    sessionPre: t.chart.sessionPre,
-    sessionRegular: t.chart.sessionRegular,
-    sessionAfter: t.chart.sessionAfter,
-    sessionOvernight: t.chart.sessionOvernight,
-    sessionOvernightNote: t.chart.sessionOvernightNote,
-  };
-}
 
 type PriceChartProps = {
   symbol: string;

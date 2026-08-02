@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { PriceChart, chartLabels } from "@/components/stock/PriceChart";
+import { PriceChart } from "@/components/stock/PriceChart";
+import { chartLabels } from "@/lib/chart-labels";
 import { getSymbolNames, isKnownSymbol } from "@/lib/data";
 import type { ChartRange } from "@/lib/providers/types";
 import { getI18n } from "@/lib/i18n";

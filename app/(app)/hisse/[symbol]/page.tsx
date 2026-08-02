@@ -6,7 +6,8 @@ import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
 import { NewsImage } from "@/components/news/NewsImage";
-import { PriceChart, chartLabels } from "@/components/stock/PriceChart";
+import { PriceChart } from "@/components/stock/PriceChart";
+import { chartLabels } from "@/lib/chart-labels";
 import {
   ChangePill,
   DataError,
