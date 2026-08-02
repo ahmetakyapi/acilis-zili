@@ -1,3 +1,4 @@
+import { GuideHint } from "@/components/article/GuideHint";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { DataStamp, EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
 import { getMacroRows } from "@/lib/data";
@@ -138,6 +139,12 @@ export default async function MacroPage() {
           })}
         </div>
       )}
+
+      <GuideHint
+        label={t.guide.contextLabel}
+        slugs={["enflasyon", "sahin-guvercin"]}
+        className="pt-1"
+      />
     </div>
   );
 }

@@ -423,6 +423,7 @@ const tr = {
     empty: "Bu başlıkta henüz yazı yok.",
     cardCta: "Oku",
     onlyThis: "Yalnızca bunlar",
+    contextLabel: "Bunu Anlamak İçin",
     homeTitle: "Rehber ve Mercek",
     homeHint:
       "Kavramları örnekleriyle anlatan yazılar ve piyasada yaşanan olayların ayrıntılı anlatımı.",

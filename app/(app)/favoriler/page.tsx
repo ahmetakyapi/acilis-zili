@@ -1,3 +1,4 @@
+import { GuideHint } from "@/components/article/GuideHint";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import {
@@ -84,6 +85,12 @@ export default async function WatchlistPage() {
           locale={locale}
         />
       )}
+
+      <GuideHint
+        label={t.guide.contextLabel}
+        slugs={["risk-yonetimi", "cesitlendirme"]}
+        className="pt-1"
+      />
     </div>
   );
 }

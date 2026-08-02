@@ -26,7 +26,7 @@ import {
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote, getQuotes } from "@/lib/providers";
 import { COMPLIANCE_THRESHOLD, screenCompliance } from "@/lib/compliance";
-import { industryLabel } from "@/lib/sectors";
+import { industryLabel, sectorLabel } from "@/lib/sectors";
 import { indexMemberOf, peersOf } from "@/db/seed/indices";
 import { fundMetaOf } from "@/db/seed/symbols";
 import { subIndustryName } from "@/db/seed/sub-industries";
@@ -551,7 +551,9 @@ async function ProfileCard({
     // sektör alanından daha tutarlıdır.
     [
       t.stock.sector,
-      member?.sector ?? industryLabel(profile.industry, locale) ?? "—",
+      sectorLabel(member?.sector, locale) ??
+        industryLabel(profile.industry, locale) ??
+        "—",
     ],
     ...(member?.sub
       ? ([[t.stock.industry, subIndustryName(member.sub, locale)]] as [
@@ -1172,6 +1174,11 @@ async function CompanyNews({
      Şirket haberleri canlı uçtan gelir ve genel akış tablosunda olmayabilir —
      görüntülendiği anda tabloya işlenir, bağlantı kalıcı id ile kurulur. */
   let idByProvider = new Map<string, string>();
+  /* Şirket haberleri canlı uçtan İngilizce geliyor; günlük senkron ise
+     tabloya Türkçe başlığı yazıyor. Aynı okumada çeviriyi de alıp varsa onu
+     gösteriyoruz — yoksa liste, akış sayfasında Türkçe olan bir haberi
+     burada İngilizce göstermeye devam ederdi. */
+  let trByProvider = new Map<string, string>();
   try {
     await db
       .insert(news)
@@ -1190,7 +1197,11 @@ async function CompanyNews({
       )
       .onConflictDoNothing();
     const rows = await db
-      .select({ id: news.id, providerId: news.providerId })
+      .select({
+        id: news.id,
+        providerId: news.providerId,
+        headlineTr: news.headlineTr,
+      })
       .from(news)
       .where(
         inArray(
@@ -1199,6 +1210,11 @@ async function CompanyNews({
         ),
       );
     idByProvider = new Map(rows.map((row) => [row.providerId, row.id]));
+    trByProvider = new Map(
+      rows
+        .filter((row) => row.headlineTr)
+        .map((row) => [row.providerId, row.headlineTr as string]),
+    );
   } catch {
     // DB yazılamazsa haberler kaynağa bağlanır — liste yine çalışır.
   }
@@ -1210,7 +1226,8 @@ async function CompanyNews({
         const inner = (
           <>
             <p className="line-clamp-2 text-sm font-medium leading-snug text-strong">
-              {item.headline}
+              {(locale === "tr" && trByProvider.get(item.providerId)) ||
+                item.headline}
             </p>
             <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted">
               {item.source && <span>{item.source}</span>}

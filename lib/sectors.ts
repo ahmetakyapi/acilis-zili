@@ -490,3 +490,34 @@ export function industryLabel(
   if (locale !== "tr") return industry;
   return INDUSTRY_TR[industry] ?? industry;
 }
+
+/**
+ * GICS ana sektörleri — on bir tane, hepsi bu.
+ *
+ * Alt sektörler çevriliyken şirket sayfasındaki "Sektör" satırı ham İngilizce
+ * kalıyordu: "Information Technology" yazarken hemen altında "Yarı İletkenler"
+ * duruyordu. Liste kapalı ve kısa olduğu için tam karşılık yazılabilir.
+ */
+const SECTOR_TR: Record<string, string> = {
+  "Communication Services": "İletişim Hizmetleri",
+  "Consumer Discretionary": "İsteğe Bağlı Tüketim",
+  "Consumer Staples": "Temel Tüketim",
+  Energy: "Enerji",
+  Financials: "Finans",
+  "Health Care": "Sağlık",
+  Industrials: "Sanayi",
+  "Information Technology": "Bilgi Teknolojileri",
+  Materials: "Hammadde",
+  "Real Estate": "Gayrimenkul",
+  Utilities: "Kamu Hizmetleri",
+};
+
+/** Ana sektörün ekranda yazılacak adı. */
+export function sectorLabel(
+  sector: string | null | undefined,
+  locale: Locale,
+): string | null {
+  if (!sector) return null;
+  if (locale !== "tr") return sector;
+  return SECTOR_TR[sector] ?? sector;
+}

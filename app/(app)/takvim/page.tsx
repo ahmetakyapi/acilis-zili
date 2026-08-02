@@ -1,3 +1,4 @@
+import { GuideHint } from "@/components/article/GuideHint";
 import Link from "next/link";
 import {
   EmptyState,
@@ -176,6 +177,12 @@ export default async function CalendarPage(
           </Panel>
         ))
       )}
+
+      <GuideHint
+        label={t.guide.contextLabel}
+        slugs={["sahin-guvercin", "enflasyon"]}
+        className="pt-1"
+      />
     </div>
   );
 }

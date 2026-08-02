@@ -1,3 +1,4 @@
+import { GuideHint } from "@/components/article/GuideHint";
 import Image from "next/image";
 import Link from "next/link";
 import { ChangePill, DataStamp, EmptyState, Panel } from "@/components/ui/primitives";
@@ -340,6 +341,12 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
           locale={locale}
         />
       )}
+
+      <GuideHint
+        label={t.guide.contextLabel}
+        slugs={["degerleme", "piyasa-degeri"]}
+        className="pt-1"
+      />
     </div>
   );
 }

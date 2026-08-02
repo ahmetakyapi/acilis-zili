@@ -1,3 +1,4 @@
+import { GuideHint } from "@/components/article/GuideHint";
 import Image from "next/image";
 import Link from "next/link";
 import { CaretDown, Heart } from "@phosphor-icons/react/dist/ssr";
@@ -132,6 +133,12 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           />
         ))
       )}
+
+      <GuideHint
+        label={t.guide.contextLabel}
+        slugs={["bilanco", "degerleme"]}
+        className="pt-1"
+      />
     </div>
   );
 }

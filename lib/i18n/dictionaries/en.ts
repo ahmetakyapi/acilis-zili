@@ -423,6 +423,7 @@ const en: typeof tr = {
     empty: "Nothing here yet.",
     cardCta: "Read",
     onlyThis: "Only these",
+    contextLabel: "To Understand This",
     homeTitle: "Guide & Close-Up",
     homeHint:
       "Concepts explained with examples, plus long reads on what actually happened in the market.",

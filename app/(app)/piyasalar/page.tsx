@@ -1,3 +1,4 @@
+import { GuideHint } from "@/components/article/GuideHint";
 import Link from "next/link";
 import {
   DataStamp,
@@ -151,6 +152,12 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         dir={dir}
         locale={locale}
         t={t}
+      />
+
+      <GuideHint
+        label={t.guide.contextLabel}
+        slugs={["endeks", "faiz-tahvil"]}
+        className="pt-1"
       />
     </div>
   );
