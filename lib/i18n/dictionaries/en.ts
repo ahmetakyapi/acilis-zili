@@ -339,6 +339,16 @@ const en: typeof tr = {
   },
 
   markets: {
+    fearTitle: "Fear Index",
+    fearHint:
+      "VIX is derived from S&P 500 options and shows the volatility the market expects over the next 30 days. It says nothing about direction — only how large the move is expected to be.",
+    fearAverage: "long-run avg ~20",
+    fearGuideCta: "What is volatility?",
+    fearCalm: "Calm",
+    fearNormal: "Normal",
+    fearTense: "Uneasy",
+    fearHigh: "Tense",
+    fearPanic: "Panic",
     title: "Markets",
     subtitle: "Indices, treasury yields and intraday moves — the market's pulse",
     yields: "US Treasury Yields",

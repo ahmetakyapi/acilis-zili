@@ -340,6 +340,16 @@ const tr = {
   },
 
   markets: {
+    fearTitle: "Korku Endeksi",
+    fearHint:
+      "VIX, S&P 500 opsiyonlarından türetilir ve piyasanın önümüzdeki 30 gün için beklediği oynaklığı gösterir. Yön söylemez; yalnızca hareketin ne kadar büyük beklendiğini söyler.",
+    fearAverage: "uzun dönem ort. ~20",
+    fearGuideCta: "Volatilite nedir?",
+    fearCalm: "Sakin",
+    fearNormal: "Normal",
+    fearTense: "Tedirgin",
+    fearHigh: "Gergin",
+    fearPanic: "Panik",
     title: "Piyasalar",
     subtitle: "Endeksler, tahvil faizleri ve gün içi hareket — piyasanın nabzı",
     yields: "ABD Tahvil Faizleri",

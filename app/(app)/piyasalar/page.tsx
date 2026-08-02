@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { FearGauge } from "@/components/markets/FearGauge";
 import { GuideHint } from "@/components/article/GuideHint";
 import Link from "next/link";
 import {
@@ -110,7 +112,27 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
 
       <IndexCards activeTab={tab} sort={sort} dir={dir} locale={locale} />
 
-      <YieldStrip locale={locale} t={t} />
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <YieldStrip locale={locale} t={t} />
+        <Suspense fallback={null}>
+          <FearGauge
+            locale={locale}
+            labels={{
+              title: t.markets.fearTitle,
+              hint: t.markets.fearHint,
+              average: t.markets.fearAverage,
+              guideCta: t.markets.fearGuideCta,
+              bands: {
+                calm: t.markets.fearCalm,
+                normal: t.markets.fearNormal,
+                tense: t.markets.fearTense,
+                fear: t.markets.fearHigh,
+                panic: t.markets.fearPanic,
+              },
+            }}
+          />
+        </Suspense>
+      </div>
 
       {/* Endeks seçici */}
       <div className="flex flex-wrap items-center gap-1.5 pt-1">
