@@ -393,12 +393,30 @@ function DaySection({
           sağında ölü boşluk olarak kalıyordu — üstteki tam genişlik hero
           satırlarının yanında bu kırık görünüyordu.
 
-          `auto-fit` + `1fr` ile kartlar artan yeri paylaşıyor: sığdığı kadar
-          sütun açılıyor, boş kalan izler çöküyor ve kartlar gerilerek
-          hizalanıyor. Alt sınır 9,5rem, yani dar ekranda ikili/üçlü düzene
-          kendiliğinden iniyor. */}
+          Davranış KART SAYISINA bağlı, çünkü tek bir kural ikisini birden
+          çözmüyor:
+
+            Kalabalık satır (4+) — `1fr` ile kartlar artan yeri paylaşır ve
+              satırı doldurur. Sabit genişlikte bırakılınca sağda ölü boşluk
+              kalıyordu ve üstteki tam genişlik hero satırlarının yanında
+              kırık görünüyordu.
+
+            Seyrek satır (1–3) — kartlar doğal genişliğinde kalır ve sola
+              yaslanır. Burada `1fr` felaket: o gün tek şirket açıklama
+              yaptığında kart satırın tamamına yayılıyor, "kart" olmaktan
+              çıkıp anlamsız bir banda dönüşüyordu.
+
+          Eşik 4: dörtten azı zaten satırı dolduracak kadar değil, o yüzden
+          germek yerine olduğu gibi bırakmak dürüst duruyor. */}
       {mid.length > 0 && (
-        <div className="mt-2.5 grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-2.5">
+        <div
+          className={cn(
+            "mt-2.5 grid gap-2.5",
+            mid.length >= 4
+              ? "grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))]"
+              : "grid-cols-[repeat(auto-fit,minmax(9.5rem,15rem))] justify-start",
+          )}
+        >
           {mid.map((row) => {
             const m = meta[row.symbol];
             const timing = timingOf(row.hour, t);
