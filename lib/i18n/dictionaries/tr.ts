@@ -420,6 +420,7 @@ const tr = {
     backToList: "Rehbere Dön",
     empty: "Bu başlıkta henüz yazı yok.",
     cardCta: "Oku",
+    onlyThis: "Yalnızca bunlar",
     homeTitle: "Rehber ve Mercek",
     homeHint:
       "Kavramları örnekleriyle anlatan yazılar ve piyasada yaşanan olayların ayrıntılı anlatımı.",
@@ -511,6 +512,72 @@ const tr = {
     themeDark: "Koyu",
     account: "Hesap",
     saved: "Kaydedildi",
+    privacyTitle: "Verilerin",
+    privacyHint:
+      "Hangi verini neden sakladığımız, nereye gittiği ve haklarının tamamı KVKK sayfasında yazılı.",
+    privacyLink: "KVKK ve Gizlilik Metni",
+    deleteTitle: "Hesabı Sil",
+    deleteHint:
+      "Hesabın ve bütün takip listelerin kalıcı olarak silinir. Bu işlem geri alınamaz.",
+    deleteOpen: "Hesabımı Sil",
+    deleteConfirmLabel: "Onay",
+    deleteConfirmHint: "Silmek için kullanıcı adını yaz:",
+    deleteSubmit: "Kalıcı Olarak Sil",
+    deleteWarning:
+      "Bu işlem geri alınamaz. Hesabın, takip listelerin ve listelerdeki notların veritabanından silinir.",
+    deleteNotSignedIn: "Oturum bulunamadı. Tekrar giriş yap.",
+    deleteConfirmMismatch: "Kullanıcı adı eşleşmedi.",
+    deleteWrongPassword: "Şifre hatalı.",
+  },
+
+  legal: {
+    eyebrow: "Yasal",
+    privacyTitle: "KVKK Aydınlatma Metni ve Gizlilik",
+    disclaimerEyebrow: "Sorumluluk Reddi",
+    disclaimerTitle: "Bu Site Ne Değildir",
+    updatedAt: "Son güncelleme:",
+    manageAccount: "Hesap ayarlarına git",
+    contact: "Başvuru ve iletişim",
+  },
+
+  menu: {
+    eyebrow: "Tüm Bölümler",
+    title: "Menü",
+    subtitle:
+      "Ürünün bütün ekranları burada. Alt çubukta yer olmayan bölümlere de tek dokunuşla ulaşırsın.",
+    groupMarket: "Piyasa",
+    groupRead: "Okuma",
+    groupAccount: "Hesap ve Site",
+    guestTitle: "Misafir",
+    guestHint: "Takip listesi tutmak için hesap açman yeterli.",
+    signedInHint: "Listelerin bu hesapta saklanıyor.",
+    hintMarkets: "Endeksler, tahviller, sektörler",
+    hintCompanies: "Şirket dizini ve arama",
+    hintMacro: "TÜFE, istihdam, faiz",
+    hintEarnings: "Bilanço takvimi ve beklentiler",
+    hintCalendar: "Ekonomik veri takvimi",
+    hintGuide: "Kavramları anlatan yazılar",
+    hintStories: "Piyasada yaşananların uzun anlatımı",
+    hintNews: "Çevrilmiş piyasa haberleri",
+    hintBrief: "Günlük ve haftalık bülten arşivi",
+    hintWatchlist: "Takip listelerin",
+    hintSettings: "Hesap, tema ve dil",
+    hintPrivacy: "Verilerin ve haklarının tamamı",
+  },
+
+  footer: {
+    blurb:
+      "ABD borsalarını Türkçe takip etmek için yapılmış kişisel bir proje. Ücretsiz, reklamsız ve açık kaynak.",
+    sectionMarket: "Piyasa",
+    sectionRead: "Okuma",
+    sectionAccount: "Hesap",
+    briefArchive: "Bülten Arşivi",
+    privacy: "KVKK ve Gizlilik",
+    sourceCode: "Kaynak Kodu",
+    builtBy: "Ahmet Akyapı tarafından geliştirildi",
+    builtByHint: "Diğer projelere ve kaynak koda GitHub'dan bakabilirsin.",
+    copyright: "© 2026 Açılış Zili",
+    disclaimer: "Yatırım tavsiyesi değildir.",
   },
 
   data: {

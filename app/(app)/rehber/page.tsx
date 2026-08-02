@@ -9,7 +9,7 @@ import {
   guideTopicLabel,
   type GuideTopicKey,
 } from "@/content/guide";
-import { getI18n } from "@/lib/i18n";
+import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /**
@@ -71,39 +71,100 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
         <Panel>
           <EmptyState title={t.guide.empty} />
         </Panel>
+      ) : activeTopic ? (
+        <ArticleGrid articles={shown} locale={locale} t={t} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {shown.map((article) => (
-            <Link key={article.slug} href={`/rehber/${article.slug}`} prefetch>
-              <Panel className="panel-hover flex h-full flex-col gap-4 p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <GlyphTile glyph={article.glyph} />
-                  <span className="plate mt-1 text-[10px] tracking-[0.09em]">
-                    {guideTopicLabel(article.topic, locale)}
-                  </span>
-                </div>
-
-                <div className="flex flex-1 flex-col gap-1.5">
-                  <h2 className="display-ink display-ink-tight w-fit text-[18px] font-bold tracking-[-0.025em]">
-                    {article.title}
+        /* Filtre yokken yirmiden fazla kart tek yığın hâlinde okunmuyordu.
+           Konu başlıkları hem müfredat sırasını görünür kılıyor hem de
+           "nereden başlasam" sorusunu cevaplıyor. */
+        <div className="flex flex-col gap-8">
+          {GUIDE_TOPICS.map((topic) => {
+            const group = GUIDE_ARTICLES.filter(
+              (article) => article.topic === topic.key,
+            );
+            if (group.length === 0) return null;
+            return (
+              <section key={topic.key} className="flex flex-col gap-4">
+                <div className="flex items-baseline gap-3 border-b border-line pb-2.5">
+                  <h2 className="display-ink display-ink-tight w-fit text-[17px] font-bold tracking-[-0.03em]">
+                    {guideTopicLabel(topic.key, locale)}
                   </h2>
-                  <p className="text-[13.5px] leading-[21px] text-body">
-                    {article.dek}
-                  </p>
-                </div>
-
-                <p className="flex items-center gap-1.5 border-t border-line pt-3 text-[12px] font-semibold text-primary">
-                  {t.guide.cardCta}
-                  <ArrowRight weight="bold" size={13} />
-                  <span className="numeral ml-auto font-normal text-muted">
-                    {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
+                  <span className="numeral text-[12px] text-muted">
+                    {group.length}
                   </span>
-                </p>
-              </Panel>
-            </Link>
-          ))}
+                  <Link
+                    href={topicHref(topic.key)}
+                    className="ml-auto shrink-0 text-[12px] text-primary transition-colors hover:text-primary-hover"
+                  >
+                    {t.guide.onlyThis}
+                  </Link>
+                </div>
+                {/* Konu etiketi kartlarda gizli: başlık zaten iki satır
+                    yukarıda duruyor, tekrarı gürültü yapıyor. */}
+                <ArticleGrid
+                  articles={group}
+                  locale={locale}
+                  t={t}
+                  showTopic={false}
+                />
+              </section>
+            );
+          })}
         </div>
       )}
+    </div>
+  );
+}
+
+function ArticleGrid({
+  articles,
+  locale,
+  t,
+  showTopic = true,
+}: {
+  articles: typeof GUIDE_ARTICLES;
+  locale: Locale;
+  t: Dictionary;
+  showTopic?: boolean;
+}) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {articles.map((article) => (
+        <Link
+          key={article.slug}
+          href={`/rehber/${article.slug}`}
+          prefetch={false}
+          className="min-w-0"
+        >
+          <Panel className="panel-hover flex h-full flex-col gap-4 p-5">
+            <div className="flex items-start justify-between gap-3">
+              <GlyphTile glyph={article.glyph} />
+              {showTopic && (
+                <span className="plate mt-1 text-right text-[10px] tracking-[0.09em]">
+                  {guideTopicLabel(article.topic, locale)}
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-1 flex-col gap-1.5">
+              <h2 className="display-ink display-ink-tight w-fit text-[18px] font-bold tracking-[-0.025em]">
+                {article.title}
+              </h2>
+              <p className="text-[13.5px] leading-[21px] text-body">
+                {article.dek}
+              </p>
+            </div>
+
+            <p className="flex items-center gap-1.5 border-t border-line pt-3 text-[12px] font-semibold text-primary">
+              {t.guide.cardCta}
+              <ArrowRight weight="bold" size={13} />
+              <span className="numeral ml-auto font-normal text-muted">
+                {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
+              </span>
+            </p>
+          </Panel>
+        </Link>
+      ))}
     </div>
   );
 }

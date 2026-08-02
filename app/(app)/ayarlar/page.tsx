@@ -1,15 +1,20 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { SignOut } from "@phosphor-icons/react/dist/ssr";
+import { ShieldCheck, SignOut } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
+import { DeleteAccount } from "@/components/auth/DeleteAccount";
 import { Panel, PanelHeader } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
+
+export const metadata = { title: "Ayarlar" };
 
 export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/giris?devam=/ayarlar");
 
   const { t } = await getI18n();
+  const username = session.user.name ?? "";
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-5">
@@ -19,27 +24,58 @@ export default async function SettingsPage() {
 
       <Panel>
         <PanelHeader title={t.settings.account} />
-        <div className="flex flex-col gap-3 px-4 py-4 sm:px-5">
+        <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
           <dl className="space-y-2 text-sm">
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-4">
               <dt className="text-muted">{t.auth.username}</dt>
-              <dd className="font-medium text-strong">{session.user.name}</dd>
+              <dd className="truncate font-medium text-strong">{username}</dd>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-4">
               <dt className="text-muted">{t.auth.email}</dt>
-              <dd className="text-body">{session.user.email}</dd>
+              <dd className="truncate text-body">{session.user.email}</dd>
             </div>
           </dl>
 
           <form action={signOutAction} className="border-t border-line-soft pt-3">
             <button
               type="submit"
-              className="inline-flex h-10 items-center gap-2 rounded-(--radius-md) px-3 text-sm font-medium text-down transition-colors hover:bg-down-wash"
+              className="inline-flex h-10 items-center gap-2 rounded-(--radius-md) px-3 text-sm font-medium text-body transition-colors hover:bg-surface-elevated hover:text-strong"
             >
               <SignOut weight="duotone" size={16} />
               {t.nav.signOut}
             </button>
           </form>
+
+          <DeleteAccount
+            username={username}
+            labels={{
+              title: t.settings.deleteTitle,
+              hint: t.settings.deleteHint,
+              open: t.settings.deleteOpen,
+              confirmLabel: t.settings.deleteConfirmLabel,
+              confirmHint: t.settings.deleteConfirmHint,
+              passwordLabel: t.auth.password,
+              submit: t.settings.deleteSubmit,
+              cancel: t.common.cancel,
+              warning: t.settings.deleteWarning,
+            }}
+          />
+        </div>
+      </Panel>
+
+      <Panel>
+        <PanelHeader title={t.settings.privacyTitle} />
+        <div className="flex flex-col gap-3 px-4 py-4 sm:px-5">
+          <p className="text-[13px] leading-relaxed text-body">
+            {t.settings.privacyHint}
+          </p>
+          <Link
+            href="/kvkk"
+            className="inline-flex w-fit items-center gap-2 text-[13px] font-semibold text-primary transition-colors hover:text-primary-hover"
+          >
+            <ShieldCheck weight="duotone" size={16} />
+            {t.settings.privacyLink}
+          </Link>
         </div>
       </Panel>
 

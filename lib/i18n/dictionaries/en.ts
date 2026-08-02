@@ -420,6 +420,7 @@ const en: typeof tr = {
     backToList: "Back To Guide",
     empty: "Nothing here yet.",
     cardCta: "Read",
+    onlyThis: "Only these",
     homeTitle: "Guide & Close-Up",
     homeHint:
       "Concepts explained with examples, plus long reads on what actually happened in the market.",
@@ -511,6 +512,72 @@ const en: typeof tr = {
     themeDark: "Dark",
     account: "Account",
     saved: "Saved",
+    privacyTitle: "Your data",
+    privacyHint:
+      "What is stored, why, where it goes and the full list of your rights are on the privacy page.",
+    privacyLink: "Privacy notice",
+    deleteTitle: "Delete account",
+    deleteHint:
+      "Your account and all watchlists are permanently removed. This cannot be undone.",
+    deleteOpen: "Delete my account",
+    deleteConfirmLabel: "Confirmation",
+    deleteConfirmHint: "Type your username to delete:",
+    deleteSubmit: "Delete permanently",
+    deleteWarning:
+      "This cannot be undone. Your account, watchlists and notes are removed from the database.",
+    deleteNotSignedIn: "No session found. Please sign in again.",
+    deleteConfirmMismatch: "Username did not match.",
+    deleteWrongPassword: "Wrong password.",
+  },
+
+  legal: {
+    eyebrow: "Legal",
+    privacyTitle: "Privacy Notice",
+    disclaimerEyebrow: "Disclaimer",
+    disclaimerTitle: "What This Site Is Not",
+    updatedAt: "Last updated:",
+    manageAccount: "Go to account settings",
+    contact: "Requests and contact",
+  },
+
+  menu: {
+    eyebrow: "All Sections",
+    title: "Menu",
+    subtitle:
+      "Every screen in the product. Sections that do not fit the tab bar are one tap away here.",
+    groupMarket: "Market",
+    groupRead: "Reading",
+    groupAccount: "Account & Site",
+    guestTitle: "Guest",
+    guestHint: "Create an account to keep watchlists.",
+    signedInHint: "Your lists are stored on this account.",
+    hintMarkets: "Indices, yields, sectors",
+    hintCompanies: "Company directory and search",
+    hintMacro: "CPI, employment, rates",
+    hintEarnings: "Earnings calendar and estimates",
+    hintCalendar: "Economic data calendar",
+    hintGuide: "Explainers on market concepts",
+    hintStories: "Long reads on what happened",
+    hintNews: "Translated market news",
+    hintBrief: "Daily and weekly brief archive",
+    hintWatchlist: "Your watchlists",
+    hintSettings: "Account, theme and language",
+    hintPrivacy: "Your data and your rights",
+  },
+
+  footer: {
+    blurb:
+      "A personal project for following US markets in Turkish. Free, ad-free and open source.",
+    sectionMarket: "Market",
+    sectionRead: "Reading",
+    sectionAccount: "Account",
+    briefArchive: "Brief archive",
+    privacy: "Privacy",
+    sourceCode: "Source code",
+    builtBy: "Built by Ahmet Akyapı",
+    builtByHint: "Other projects and the source code are on GitHub.",
+    copyright: "© 2026 Açılış Zili",
+    disclaimer: "Not investment advice.",
   },
 
   data: {

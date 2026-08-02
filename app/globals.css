@@ -266,8 +266,18 @@
     border-color: var(--line);
   }
 
+  /* Yatay kaydırma kilidi — HEM html HEM body.
+     Tek başına body üzerindeki `overflow-x` görünüm alanına yayılıyor ama
+     iOS Safari bu yayılmayı güvenilir uygulamıyor; sayfa parmakla sağa sola
+     çekilebiliyor ve kenardan boş zemin görünüyordu. İkisini birden kilitlemek
+     o davranışı her tarayıcıda kapatıyor.
+
+     `clip` bilinçli, `hidden` değil: `hidden` bir kaydırma kabı yaratır ve
+     içerideki `position: sticky` başlıkları bozar. Geniş içerik (tablolar,
+     şerit kartlar) kendi kabında kayar — .scroll-x / .scroll-x-hint. */
   html {
     -webkit-tap-highlight-color: transparent;
+    overflow-x: clip;
   }
 
   body {
@@ -279,8 +289,10 @@
     letter-spacing: -0.006em;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    /* Geniş içerik kendi kabında kayar (.scroll-x); gövde asla yana kaymaz. */
     overflow-x: clip;
+    /* Kilit taşmayı gizler ama sebebini gizlememeli; bu yüzden taşma
+       ölçümü .tmp-shot.mjs koşumunda ayrıca kontrol ediliyor. */
+    max-width: 100%;
   }
 
   /* Zemin ışıması — sol üstten inen tek katman. Aurora/spotlight yok. */

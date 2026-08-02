@@ -1,11 +1,11 @@
 "use server";
 
-import { hash } from "bcryptjs";
+import { compare, hash } from "bcryptjs";
 import { eq, or } from "drizzle-orm";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { signIn, signOut } from "@/auth";
+import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { users, watchlists } from "@/lib/schema";
 import { getDictionary, getLocale } from "@/lib/i18n";
@@ -135,4 +135,54 @@ export async function signInAction(
 
 export async function signOutAction() {
   await signOut({ redirectTo: "/" });
+}
+
+/* --------------------------------------------------------------------------
+   Hesap silme
+
+   KVKK m. 11 silme hakkının çalışan karşılığı. Ekranda bir onay kutusu değil,
+   kullanıcı adını yazdırma var: yanlışlıkla tıklanması mümkün olmayan tek
+   desen bu. Şifre de isteniyor — oturum çerezi ele geçirilmiş bir tarayıcı
+   hesabı silememeli.
+
+   Silme gerçekten siliyor: users satırı gidince watchlists ve
+   watchlist_items ON DELETE CASCADE ile birlikte düşüyor. Yumuşak silme
+   (soft delete) bilinçli olarak yok — "sildim" demek, silmek demektir.
+   -------------------------------------------------------------------------- */
+
+export type DeleteAccountState = { error?: string };
+
+export async function deleteAccountAction(
+  _prev: DeleteAccountState,
+  formData: FormData,
+): Promise<DeleteAccountState> {
+  const locale = await getLocale();
+  const t = getDictionary(locale).settings;
+
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { error: t.deleteNotSignedIn };
+
+  const confirmation = String(formData.get("confirm") ?? "")
+    .trim()
+    .toLowerCase();
+  const password = String(formData.get("password") ?? "");
+
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!user) return { error: t.deleteNotSignedIn };
+  if (confirmation !== user.username) return { error: t.deleteConfirmMismatch };
+  if (!password || !(await compare(password, user.passwordHash))) {
+    return { error: t.deleteWrongPassword };
+  }
+
+  await db.delete(users).where(eq(users.id, userId));
+
+  // signOut yönlendirmeyi kendi atar; buradan sonrası çalışmaz.
+  await signOut({ redirectTo: "/" });
+  return {};
 }

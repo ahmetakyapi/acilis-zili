@@ -80,9 +80,17 @@ export default async function GuideArticlePage(
           <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
             {t.guide.related}
           </h2>
+          {/* Bağlantılardaki min-w-0: içerideki `truncate` nowrap demek, o da
+              ızgara hücresinin min-content genişliğini metnin tamamına
+              çıkarıyor ve sayfayı yana taşırıyordu. */}
           <div className="grid gap-3 sm:grid-cols-2">
             {related.map((entry) => (
-              <Link key={entry.slug} href={`/rehber/${entry.slug}`} prefetch>
+              <Link
+                key={entry.slug}
+                href={`/rehber/${entry.slug}`}
+                prefetch
+                className="min-w-0"
+              >
                 <Panel className="panel-hover flex h-full items-center gap-3 p-4">
                   <GlyphTile glyph={entry.glyph} size={40} />
                   <span className="min-w-0 flex-1">

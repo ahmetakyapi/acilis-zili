@@ -74,10 +74,12 @@ export default async function TodayPage() {
   const countdownLabel = trading ? t.today.untilClose : t.today.untilBell;
 
   return (
-    /* Izgara üç parçalı: ana kolon, yan kolon ve ayrı bir haber bloğu.
-       Haberler DOM'da yan kolondan SONRA gelir — mobilde tek kolona inince
-       en alta düşer, geniş ekranda `row-start-2` ile yine sol kolonun
-       devamı olarak ana yığının altına oturur. */
+    /* Izgara dört parçalı: ana kolon, yan kolon, okuma girişi ve haberler.
+       Son ikisi DOM'da yan kolondan SONRA gelir — mobilde tek kolona inince
+       ölçümlerin altına düşer, geniş ekranda `row-start` ile yine sol kolonun
+       devamı olarak ana yığının altına oturur. Mobilde okuma kartlarının
+       endekslerle dünya piyasaları arasına girmemesi bilinçli: ölçüm okurken
+       araya giren bir okuma davetiyesi akışı kesiyordu. */
     <div className="grid gap-x-6 gap-y-5 lg:grid-cols-[minmax(0,1fr)_376px]">
       {/* ================= Ana kolon ================= */}
       <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
@@ -188,46 +190,12 @@ export default async function TodayPage() {
           </Suspense>
         </Panel>
 
-        {/* ---- Okuma girişi ----
-             İki ekran da mobil sekme çubuğuna sığmıyor; keşif buradan
-             oluyor. Kart yerine iki kutu: ikisi farklı şeyler ve aynı
-             satırda yan yana durunca farkları da okunuyor. */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          {[
-            {
-              href: "/mercek",
-              glyph: "◎",
-              title: t.stories.title,
-              hint: t.stories.subtitle,
-            },
-            {
-              href: "/rehber",
-              glyph: "?",
-              title: t.guide.title,
-              hint: t.guide.subtitle,
-            },
-          ].map((entry) => (
-            <Link key={entry.href} href={entry.href}>
-              <Panel className="panel-hover flex h-full items-start gap-3.5 p-4 sm:p-5">
-                <GlyphTile glyph={entry.glyph} size={44} />
-                <span className="min-w-0">
-                  <span className="display-ink display-ink-tight block w-fit text-[15px] font-bold">
-                    {entry.title}
-                  </span>
-                  <span className="mt-1 block text-[12.5px] leading-[19px] text-body">
-                    {entry.hint}
-                  </span>
-                </span>
-              </Panel>
-            </Link>
-          ))}
-        </div>
       </div>
 
       {/* ================= Yan kolon =================
           Yalnızca ölçüler: endeksler → dünya → tahviller → makro → senin
           listen. Okunacak metin sol kolonda. */}
-      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1 lg:row-span-2">
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1 lg:row-span-3">
         <Suspense fallback={<IndexSkeleton />}>
           <IndexStrip locale={locale} t={t} />
         </Suspense>
@@ -251,11 +219,47 @@ export default async function TodayPage() {
         </Suspense>
       </div>
 
+      {/* ---- Okuma girişi ----
+           İki ekran da mobil sekme çubuğuna sığmıyor; keşif buradan oluyor.
+           Kart yerine iki kutu: ikisi farklı şeyler ve aynı satırda yan yana
+           durunca farkları da okunuyor. Mobilde ölçümlerin bittiği, haberlerin
+           başladığı yerde durur — iki okuma bloğu arasındaki köprü. */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:col-start-1 lg:row-start-2">
+        {[
+          {
+            href: "/mercek",
+            glyph: "◎",
+            title: t.stories.title,
+            hint: t.stories.subtitle,
+          },
+          {
+            href: "/rehber",
+            glyph: "?",
+            title: t.guide.title,
+            hint: t.guide.subtitle,
+          },
+        ].map((entry) => (
+          <Link key={entry.href} href={entry.href}>
+            <Panel className="panel-hover flex h-full items-start gap-3.5 p-4 sm:p-5">
+              <GlyphTile glyph={entry.glyph} size={44} />
+              <span className="min-w-0">
+                <span className="display-ink display-ink-tight block w-fit text-[15px] font-bold">
+                  {entry.title}
+                </span>
+                <span className="mt-1 block text-[12.5px] leading-[19px] text-body">
+                  {entry.hint}
+                </span>
+              </span>
+            </Panel>
+          </Link>
+        ))}
+      </div>
+
       {/* ---- Öne çıkan haberler ----
            Okunacak metin ana kolonda durur: manşet dar kolonda iki satıra
            kırılıyor, geniş kolonda bir bakışta okunuyor. Mobilde ise gün
            verisi bittikten sonra, sayfanın en altında okunuyor. */}
-      <Panel className="min-w-0 lg:col-start-1 lg:row-start-2 lg:self-start">
+      <Panel className="min-w-0 lg:col-start-1 lg:row-start-3 lg:self-start">
         <PanelHeader
           title={t.today.topNews}
           action={<PanelLink href="/haberler">{t.common.showAll}</PanelLink>}
@@ -266,7 +270,7 @@ export default async function TodayPage() {
       </Panel>
 
       {/* ---- Kaynak künyesi ---- */}
-      <footer className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-[11.5px] text-muted lg:col-span-2 lg:row-start-3">
+      <footer className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-[11.5px] text-muted lg:col-span-2 lg:row-start-4">
         <span>{t.today.sourceLine}</span>
         <span>{t.today.sourceNote}</span>
       </footer>

@@ -25,6 +25,7 @@ type AppShellProps = {
   localeToggle: React.ReactNode;
   searchTrigger: React.ReactNode;
   ticker: React.ReactNode;
+  footer: React.ReactNode;
   children: React.ReactNode;
 };
 
@@ -48,6 +49,7 @@ export function AppShell({
   localeToggle,
   searchTrigger,
   ticker,
+  footer,
   children,
 }: AppShellProps) {
   const pathname = usePathname();
@@ -73,9 +75,7 @@ export function AppShell({
             kalın ağırlıkla ayrışır, renkle değil.
             "Bugün" burada yok — logo zaten oraya götürüyor. */}
         <nav className="flex min-w-0 gap-[2px] text-[13.5px] xl:gap-[3px] xl:text-[14.5px]">
-          {NAV_ITEMS.filter(
-            (item) => item.href !== "/haberler" && item.href !== "/",
-          ).map((item) => {
+          {NAV_ITEMS.filter((item) => item.inMasthead).map((item) => {
             const active = isActive(pathname, item.href);
             return (
               <Link
@@ -162,9 +162,15 @@ export function AppShell({
 
       {/* Alt şerit sabit durduğu için içerik onun yüksekliği kadar boşluk
           bırakır; mobilde ayrıca sekme çubuğu var. */}
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-[18px] pb-32 pt-4 sm:px-6 lg:pb-20 lg:pt-6 xl:px-10">
+      <main className="mx-auto w-full max-w-[1400px] flex-1 px-[18px] pt-4 sm:px-6 lg:pt-6 xl:px-10">
         {children}
       </main>
+
+      {/* Alt bilgi ana akışın parçası; sabit şerit ve mobil sekme çubuğu
+          kadar boşluk kendi altında bırakır. */}
+      <div className="mx-auto w-full max-w-[1400px] px-[18px] pb-32 pt-10 sm:px-6 lg:pb-20 xl:px-10">
+        {footer}
+      </div>
 
       {ticker}
 

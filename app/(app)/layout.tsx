@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { AppShell, type ShellLabels } from "@/components/layout/AppShell";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { SearchCommand } from "@/components/layout/SearchCommand";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { TickerFeed } from "@/components/layout/TickerFeed";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
@@ -59,6 +60,7 @@ export default async function AppLayout({
           <TickerFeed />
         </Suspense>
       }
+      footer={<SiteFooter />}
     >
       {children}
     </AppShell>
