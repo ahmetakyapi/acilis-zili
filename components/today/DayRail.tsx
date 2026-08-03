@@ -76,8 +76,9 @@ const BOUND_LABEL_TOP = 56;
     90'da başlıyor ve şerit 16px yükseldi. */
 const BOUND_TIME_TOP = 70;
 const EVENT_LABEL_TOP = 90;
-/** Çakışan alt etiketler bu kadar aşağı kademelenir. */
-const ROW_OFFSET = 30;
+/** Çakışan alt etiketler bu kadar aşağı kademelenir.
+    Bir etiket üç satır: saat, başlık, detay — toplam ~40px. */
+const ROW_OFFSET = 44;
 /** İki olay bu dakikadan yakınsa etiketleri üst üste biner. */
 const COLLISION_MINUTES = 70;
 /**
@@ -209,7 +210,8 @@ export function DayRail({
   // Boş gün notu, sınırların saat satırlarıyla aynı banda düşmesin diye
   // olay bandının bir kademe altına iner; şerit de o kadar yükselir.
   const empty = positioned.length === 0;
-  const railHeight = (empty ? 152 : 128) + maxRow * ROW_OFFSET;
+  // 140: olay bandı 90'da başlıyor ve üç satırlık etiket ~40px yer kaplıyor.
+  const railHeight = (empty ? 152 : 140) + maxRow * ROW_OFFSET;
 
   const nowVisible = nowMinutes >= RAIL_START && nowMinutes <= RAIL_END;
   const marketLive =
@@ -347,9 +349,19 @@ export function DayRail({
                   <div className="numeral text-[11.5px] font-semibold text-strong">
                     {shown(event.minutes)}
                   </div>
-                  <div className="max-w-32 truncate text-[11px] text-muted">
-                    {event.detail ?? event.title}
+                  {/* Başlık artık düşmüyor. Eskiden `detail ?? title`
+                      yazılıyordu ve detayı olan her satırda başlık kayboluyordu:
+                      bilanço saatlerinde ekranda yalnızca "bilanço" kalıyor,
+                      hangi şirketler olduğu mobilde görünüp masaüstünde
+                      kayboluyordu. */}
+                  <div className="max-w-32 truncate text-[11px] font-medium text-strong">
+                    {event.title}
                   </div>
+                  {event.detail && (
+                    <div className="max-w-32 truncate text-[11px] text-muted">
+                      {event.detail}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
