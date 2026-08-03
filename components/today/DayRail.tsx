@@ -80,6 +80,13 @@ const EVENT_LABEL_TOP = 90;
 const ROW_OFFSET = 30;
 /** İki olay bu dakikadan yakınsa etiketleri üst üste biner. */
 const COLLISION_MINUTES = 70;
+/**
+ * Sınır etiketi bir olay etiketinden geniş: altında iki saat birden taşıyor
+ * ("23:00 TR · 16:00 NY"). Yakınına düşen olay bu yüzden daha erken kaçar.
+ */
+const BOUND_COLLISION_MINUTES = 100;
+/** Alt bant en fazla üç satır; daha derini şeridi bir duvara çeviriyor. */
+const MAX_ROW = 2;
 
 function pct(minutes: number): number {
   const clamped = Math.max(RAIL_START, Math.min(RAIL_END, minutes));
@@ -152,21 +159,48 @@ export function DayRail({
       }))
       .sort((a, b) => a.minutes - b.minutes);
 
-    // Alt banttaki etiketleri kademelendir — üsttekiler zaten seyrek.
+    /* Alt banttaki etiketler satır satır yerleştirilir: her etiket, komşusuna
+       çarpmadığı EN ÜST satıra oturur.
+
+       İlk satırda AÇILIŞ ve KAPANIŞ da dolu birer yuva sayılır. Sınırların
+       etiketi eksenin altında kendi bandında duruyor ama hemen altındaki olay
+       etiketiyle tek bir yığın gibi okunuyordu: kapanış zilinin 30 dakika
+       sonrasında açıklanan bilançolar "KAPANIŞ · 23:00 TR · 16:00 NY · 23:30 ·
+       bilanço" diye dört satırlık bir kuleye dönüşüyordu. Artık o olay bir
+       kademe aşağı iner ve iki şey ayrı ayrı okunur.
+
+       Eski kural iki satır arasında gidip geliyordu (`(row + 1) % 2`) ve üç
+       olay arka arkaya geldiğinde üçüncüsü birincinin üstüne biniyordu. */
+    /* Yuvanın "kaç dakikalık yer kapladığı" kendisiyle geliyor: sınır
+       etiketleri olay etiketlerinden geniş. */
+    type Slot = { minutes: number; gap: number };
+    const occupied: Slot[][] = [
+      [
+        { minutes: SESSION_BOUNDS.regularOpen, gap: BOUND_COLLISION_MINUTES },
+        { minutes: closeMinutes, gap: BOUND_COLLISION_MINUTES },
+      ],
+    ];
+    const clashes = (row: number, minutes: number) =>
+      (occupied[row] ?? []).some(
+        (slot) => Math.abs(slot.minutes - minutes) < slot.gap,
+      );
+
     const result: ((typeof sorted)[number] & { row: number })[] = [];
-    let lastBelow = -Infinity;
-    let row = 0;
     for (const event of sorted) {
       if (event.prominent) {
         result.push({ ...event, row: 0 });
         continue;
       }
-      row = event.minutes - lastBelow < COLLISION_MINUTES ? (row + 1) % 2 : 0;
-      lastBelow = event.minutes;
+      let row = 0;
+      while (row < MAX_ROW && clashes(row, event.minutes)) row++;
+      (occupied[row] ??= []).push({
+        minutes: event.minutes,
+        gap: COLLISION_MINUTES,
+      });
       result.push({ ...event, row });
     }
     return result;
-  }, [events]);
+  }, [events, closeMinutes]);
 
   const maxRow = positioned.reduce(
     (max, event) => (event.prominent ? max : Math.max(max, event.row)),

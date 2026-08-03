@@ -176,6 +176,20 @@ export default async function TodayPage() {
           </Suspense>
         </Panel>
 
+        {/* ---- Haftaya bakış ----
+             Bugünün takviminin hemen ardından geliyor: ikisi de ekonomik
+             takvim ve aynı soruyu farklı ölçekte soruyor. Bilanço listesi
+             başka bir kaynağın verisi, o yüzden ikisinin arasına girmiyor. */}
+        <Panel>
+          <PanelHeader
+            title={t.today.weekAhead}
+            action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
+          />
+          <Suspense fallback={<ListSkeleton rows={3} />}>
+            <WeekAhead locale={locale} t={t} />
+          </Suspense>
+        </Panel>
+
         {/* ---- Bugün bilanço açıklayanlar ---- */}
         <Panel>
           <PanelHeader
@@ -184,17 +198,6 @@ export default async function TodayPage() {
           />
           <Suspense fallback={<ListSkeleton rows={3} />}>
             <EarningsToday locale={locale} t={t} />
-          </Suspense>
-        </Panel>
-
-        {/* ---- Haftaya bakış ---- */}
-        <Panel>
-          <PanelHeader
-            title={t.today.weekAhead}
-            action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
-          />
-          <Suspense fallback={<ListSkeleton rows={3} />}>
-            <WeekAhead locale={locale} t={t} />
           </Suspense>
         </Panel>
 
