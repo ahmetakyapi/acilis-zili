@@ -95,7 +95,7 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
               <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <Link
                   href={`/hisse/${row.symbol}`}
-                  className="numeral text-[13.5px] font-bold text-strong transition-colors hover:text-primary"
+                  className="numeral -my-1.5 inline-flex min-h-8 items-center py-1.5 text-[13.5px] font-bold text-strong transition-colors hover:text-primary"
                 >
                   {row.symbol}
                 </Link>

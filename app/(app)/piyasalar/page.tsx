@@ -807,7 +807,11 @@ function MembersTable({
                   <td className="px-3 py-2">
                     <Link
                       href={`/hisse/${row.member.symbol}`}
-                      className="flex min-w-0 items-baseline gap-2.5"
+                      /* -my-2 py-2: bağlantı hücreyi doldurmadığı için
+                         dokunma hedefi metnin kendi 20px'iyle sınırlıydı.
+                         Dolgu onu satır yüksekliğine yayar, negatif margin
+                         de tabloyu olduğu yerde tutar. */
+                      className="-my-2 flex min-w-0 items-baseline gap-2.5 py-2"
                     >
                       <span className="numeral w-16 shrink-0 font-semibold text-strong">
                         {row.member.symbol}

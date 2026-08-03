@@ -94,7 +94,10 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
                   </span>
                   <Link
                     href={topicHref(topic.key)}
-                    className="ml-auto shrink-0 text-[12px] text-primary transition-colors hover:text-primary-hover"
+                    /* -my-2 py-2: 12px'lik metin tek başına 18px yüksekliğinde
+                       bir dokunma hedefi bırakıyordu; dolgu onu 32px'e
+                       çıkarır, negatif margin satırı olduğu yerde tutar. */
+                    className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center py-2 text-[12px] text-primary transition-colors hover:text-primary-hover"
                   >
                     {t.guide.onlyThis}
                   </Link>

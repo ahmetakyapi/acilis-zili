@@ -87,9 +87,15 @@ export async function SiteFooter() {
            Geliştirici bandı önce accent gradientli bir kutuydu ve alt
            bilginin en dikkat çeken öğesi olmuştu; oysa buranın işi sessiz
            olmak. Artık aynı satırda küçük bir imza: ikon + ad. */}
+      {/* 11.5px'lik satırda bağlantılar 17px yüksekliğinde bir dokunma hedefi
+          bırakıyordu; dolgu ikisini de 32px'e çıkarır, negatif margin satırın
+          kendi yüksekliğini korur. */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11.5px] text-muted">
         <span>{t.footer.copyright}</span>
-        <Link href="/kvkk" className="transition-colors hover:text-primary">
+        <Link
+          href="/kvkk"
+          className="-my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"
+        >
           {t.footer.privacy}
         </Link>
         <span>{t.footer.disclaimer}</span>
@@ -97,7 +103,7 @@ export async function SiteFooter() {
           href={GITHUB_URL}
           target="_blank"
           rel="noreferrer noopener"
-          className="inline-flex items-center gap-1.5 transition-colors hover:text-primary sm:ml-auto"
+          className="-my-2 inline-flex min-h-8 items-center gap-1.5 py-2 transition-colors hover:text-primary sm:ml-auto"
         >
           <GithubLogo weight="fill" size={14} aria-hidden />
           {t.footer.builtBy}
