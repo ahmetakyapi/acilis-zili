@@ -176,7 +176,10 @@ export function SearchCommand({
       {open &&
         createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-scrim sm:px-4 sm:pt-[112px]"
+          /* Mobilde palet ekranın en tepesinden açılıyor; üst dolgu güvenli
+             alanı taşımazsa arama kutusu çentiğin altında kalıyor ve
+             dokunulamıyor. Masaüstünde 112px'lik boşluk zaten var. */
+          className="fixed inset-0 z-50 flex items-start justify-center bg-scrim pt-[env(safe-area-inset-top)] sm:px-4 sm:pt-[112px]"
           onClick={close}
           role="presentation"
         >

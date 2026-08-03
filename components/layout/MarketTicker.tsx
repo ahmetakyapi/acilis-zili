@@ -109,7 +109,7 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
   return (
     <div
       aria-live="off"
-      className="chrome fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+63px)] z-20 border-t lg:bottom-0"
+      className="chrome fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+63px)] z-20 border-t pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:bottom-0"
     >
       <div
         className={cn(

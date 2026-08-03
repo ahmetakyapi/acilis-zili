@@ -41,7 +41,32 @@ function isActive(pathname: string, href: string): boolean {
 
    Kenar çubuğu kaldırıldı: yeni tasarımda gezinme sayfanın üstünde yatay
    duruyor ve içerik tam genişliği alıyor.
+
+   GÜVENLİ ALAN. Sayfa `viewport-fit=cover` ile açılıyor (app/layout.tsx) ve
+   iOS'ta ayrıca `black-translucent` durum çubuğu isteniyor: yani görünüm alanı
+   çentiğin ve durum çubuğunun ALTINA uzanıyor. Alt çubuk bunu baştan beri
+   hesaba katıyordu (`env(safe-area-inset-bottom)`), ÜST başlık katmıyordu —
+   mobil başlık ekranın en tepesine yapıştığında saatin/çentiğin arkasında
+   kalıyor, kesik görünüyor ve içindeki düğmeler dokunulamaz oluyordu.
+   Bu yüzden her sabit/yapışkan katman kendi güvenli alanını kendi taşır.
    -------------------------------------------------------------------------- */
+
+/**
+ * Yatay güvenli alan — telefon yan çevrildiğinde çentik SOL kenardan içeri
+ * girer ve ilk sekme/marka onun altında kalır. `max()` kullanılıyor çünkü
+ * çentiksiz cihazda env değeri 0'dır ve tasarımın kendi dolgusu korunmalı.
+ */
+const SAFE_X_18 =
+  "pl-[max(env(safe-area-inset-left),18px)] pr-[max(env(safe-area-inset-right),18px)]";
+const SAFE_X_12 =
+  "pl-[max(env(safe-area-inset-left),12px)] pr-[max(env(safe-area-inset-right),12px)]";
+
+/** İçerik kanalı — 18/24/40px dolgu, çentik daha genişse o kazanır. */
+const CONTENT_GUTTER = [
+  "pl-[max(env(safe-area-inset-left),18px)] pr-[max(env(safe-area-inset-right),18px)]",
+  "sm:pl-[max(env(safe-area-inset-left),24px)] sm:pr-[max(env(safe-area-inset-right),24px)]",
+  "xl:pl-[max(env(safe-area-inset-left),40px)] xl:pr-[max(env(safe-area-inset-right),40px)]",
+].join(" ");
 
 export function AppShell({
   labels,
@@ -85,13 +110,15 @@ export function AppShell({
           oturur. */}
       <a
         href="#icerik"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-[9px] focus:bg-primary focus:px-4 focus:py-2.5 focus:text-[13.5px] focus:font-semibold focus:text-on-primary"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-[calc(env(safe-area-inset-top)+12px)] focus:z-50 focus:rounded-[9px] focus:bg-primary focus:px-4 focus:py-2.5 focus:text-[13.5px] focus:font-semibold focus:text-on-primary"
       >
         {labels.skipToContent}
       </a>
 
-      {/* ---- Masaüstü masthead ---- */}
-      <header className="chrome sticky top-0 z-30 hidden items-center gap-4 border-b px-5 py-3.5 lg:flex xl:gap-6 xl:px-10">
+      {/* ---- Masaüstü masthead ----
+           Üst güvenli alan burada da eklenir; masaüstünde 0 döner, tablette
+           tam ekran (standalone) açıldığında değil. */}
+      <header className="chrome sticky top-0 z-30 hidden items-center gap-4 border-b px-5 pb-3.5 pt-[calc(env(safe-area-inset-top)+14px)] lg:flex xl:gap-6 xl:px-10">
         <Link href="/" className="shrink-0" aria-label={labels.brandName}>
           <BrandLockup
             name={labels.brandName}
@@ -164,8 +191,15 @@ export function AppShell({
         </div>
       </header>
 
-      {/* ---- Mobil başlık ---- */}
-      <header className="chrome sticky top-0 z-30 flex items-center gap-2.5 border-b px-[18px] py-2.5 lg:hidden">
+      {/* ---- Mobil başlık ----
+           Üst dolgu güvenli alanı taşır: çentikli telefonda başlık durum
+           çubuğunun altından değil, altındaki güvenli bandın içinden başlar. */}
+      <header
+        className={cn(
+          "chrome sticky top-0 z-30 flex items-center gap-2.5 border-b pb-2.5 pt-[calc(env(safe-area-inset-top)+10px)] lg:hidden",
+          SAFE_X_18,
+        )}
+      >
         <Link
           href="/"
           className="-my-1 flex items-center gap-2.5 py-1"
@@ -192,14 +226,22 @@ export function AppShell({
           bırakır; mobilde ayrıca sekme çubuğu var. */}
       <main
         id="icerik"
-        className="mx-auto w-full max-w-[1400px] flex-1 px-[18px] pt-4 sm:px-6 lg:pt-6 xl:px-10"
+        className={cn(
+          "mx-auto w-full max-w-[1400px] flex-1 pt-4 lg:pt-6",
+          CONTENT_GUTTER,
+        )}
       >
         {children}
       </main>
 
       {/* Alt bilgi ana akışın parçası; sabit şerit ve mobil sekme çubuğu
           kadar boşluk kendi altında bırakır. */}
-      <div className="mx-auto w-full max-w-[1400px] px-[18px] pb-32 pt-10 sm:px-6 lg:pb-20 xl:px-10">
+      <div
+        className={cn(
+          "mx-auto w-full max-w-[1400px] pb-32 pt-10 lg:pb-20",
+          CONTENT_GUTTER,
+        )}
+      >
         {footer}
       </div>
 
@@ -207,7 +249,10 @@ export function AppShell({
 
       {/* ---- Mobil alt gezinme — 5 sekme, dokunma hedefi min 64px ---- */}
       <nav
-        className="chrome fixed inset-x-0 bottom-0 z-30 flex justify-between border-t px-3 pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className={cn(
+          "chrome fixed inset-x-0 bottom-0 z-30 flex justify-between border-t pb-[env(safe-area-inset-bottom)] lg:hidden",
+          SAFE_X_12,
+        )}
         aria-label={labels.mainNav}
       >
         {bottomItems.map((item) => {
