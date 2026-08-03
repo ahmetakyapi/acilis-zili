@@ -39,6 +39,8 @@ export type ChartLabels = {
   sessionAfter: string;
   sessionOvernight: string;
   sessionOvernightNote: string;
+  /** Lejantın alt satırı — "ABD saatiyle" / "In Turkish time". */
+  otherZoneTimes: string;
 };
 
 export function chartLabels(t: Dictionary): ChartLabels {
@@ -57,5 +59,6 @@ export function chartLabels(t: Dictionary): ChartLabels {
     sessionAfter: t.chart.sessionAfter,
     sessionOvernight: t.chart.sessionOvernight,
     sessionOvernightNote: t.chart.sessionOvernightNote,
+    otherZoneTimes: t.chart.otherZoneTimes,
   };
 }

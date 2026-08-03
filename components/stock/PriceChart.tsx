@@ -17,6 +17,12 @@ import { CHART_RANGES } from "@/lib/providers/types";
 import { cn, formatPercent, formatPrice } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
 import type { ChartLabels } from "@/lib/chart-labels";
+import { etDateTimeToUtc, etParts } from "@/lib/market-hours";
+import {
+  displayZone,
+  sessionWindows,
+  zoneOffsetSeconds,
+} from "@/lib/session-clock";
 
 /**
  * Fiyat grafiği — lightweight-charts v5.
@@ -177,7 +183,8 @@ export function PriceChart({
     const container = containerRef.current;
     if (!container || state.phase !== "ready" || !period) return;
 
-    const bars = shiftBarsToEt(state.bars);
+    const zone = displayZone(locale);
+    const bars = shiftBarsToZone(state.bars, zone);
     const baseline = period.baseline;
 
     const up = cssVar("--up");
@@ -192,7 +199,7 @@ export function PriceChart({
 
     const intlLocale = locale === "tr" ? "tr-TR" : "en-US";
     const dateFormatter = new Intl.DateTimeFormat(intlLocale, {
-      timeZone: "UTC", // barlar zaten ET'ye kaydırıldı
+      timeZone: "UTC", // barlar zaten gösterim dilimine kaydırıldı
       day: "numeric",
       month: intraday ? "long" : "short",
       year: intraday ? undefined : "numeric",
@@ -384,21 +391,31 @@ export function PriceChart({
 
     chart.timeScale().fitContent();
 
-    /* Seans bölgeleri — yalnızca 1G görünümünde. Barlar ET duvar saatine
-       kaydırıldığı için gün sınırı düz UTC bölmesiyle bulunur; 04:00-09:30
-       ön seans, 16:00-20:00 akşam seansı gölgelenir. Gece seansı (20:00-04:00)
-       IEX beslemesinde işlem görmez, lejantta not düşülür. */
+    /* Seans bölgeleri — yalnızca 1G görünümünde. 04:00-09:30 ön seans,
+       16:00-20:00 akşam seansı gölgelenir (ET). Gece seansı (20:00-04:00)
+       IEX beslemesinde işlem görmez, lejantta not düşülür.
+
+       Sınırlar ET TAKVİMİNDEN hesaplanır, barların gününü ikiye bölerek
+       değil: gösterim dilimi İstanbul olduğunda ABD'nin akşam seansı ertesi
+       güne (03:00) taşıyor ve düz bir UTC bölmesi yanlış güne düşüyordu. */
+    const etDay = etParts(new Date(state.bars[0].time * 1000)).dateStr;
+    const displayTimeOf = (timeEt: string): number => {
+      const utcSeconds = Math.floor(
+        etDateTimeToUtc(etDay, timeEt).getTime() / 1000,
+      );
+      return utcSeconds + zoneOffsetSeconds(utcSeconds, zone);
+    };
+
     const updateZones = () => {
       if (range !== "1D" || bars.length === 0) {
         setZones([]);
         return;
       }
-      const dayStart = Math.floor(bars[0].time / 86400) * 86400;
       const bounds = {
-        preOpen: dayStart + 4 * 3600,
-        bell: dayStart + 9.5 * 3600,
-        close: dayStart + 16 * 3600,
-        afterEnd: dayStart + 20 * 3600,
+        preOpen: displayTimeOf("04:00"),
+        bell: displayTimeOf("09:30"),
+        close: displayTimeOf("16:00"),
+        afterEnd: displayTimeOf("20:00"),
       };
       const paneWidth =
         container.clientWidth - chart.priceScale("right").width();
@@ -457,6 +474,23 @@ export function PriceChart({
     labels.sessionPre,
     labels.sessionAfter,
   ]);
+
+  /* Seans lejantı — okuyucunun saatiyle yazılır, diğer saat alt satırda tek
+     bir zincir hâlinde durur. Saatler sabit değil: barın kendi gününden
+     hesaplanır, çünkü ABD yaz saati Türkiye'ye göre kayıyor (açılış yazın
+     16:30, kışın 17:30). */
+  const windows = useMemo(() => {
+    if (state.phase !== "ready" || state.bars.length === 0) return null;
+    const dayEt = etParts(new Date(state.bars[0].time * 1000)).dateStr;
+    return sessionWindows(dayEt, locale);
+  }, [state, locale]);
+
+  const sessionName: Record<string, string> = {
+    pre: labels.sessionPre,
+    regular: labels.sessionRegular,
+    after: labels.sessionAfter,
+    overnight: labels.sessionOvernight,
+  };
 
   const toneText =
     periodTone === "up" ? "text-up" : periodTone === "down" ? "text-down" : "text-soft";
@@ -557,32 +591,44 @@ export function PriceChart({
             ))}
       </div>
 
-      {/* Seans lejantı — gün içi görünümde günün saat haritası (ET) */}
-      {range === "1D" && state.phase === "ready" && (
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted">
-          <span className="flex items-center gap-1">
-            {labels.sessionPre}
-            <span className="numeral">04:00–09:30</span>
-          </span>
-          <span aria-hidden>·</span>
-          <span className="flex items-center gap-1 font-medium text-soft">
-            <span aria-hidden className="size-1.5 rounded-full bg-primary" />
-            {labels.sessionRegular}
-            <span className="numeral">09:30–16:00</span>
-          </span>
-          <span aria-hidden>·</span>
-          <span className="flex items-center gap-1">
-            {labels.sessionAfter}
-            <span className="numeral">16:00–20:00</span>
-          </span>
-          <span aria-hidden>·</span>
-          <span className="flex items-center gap-1">
-            {labels.sessionOvernight}
-            <span className="numeral">20:00–04:00</span>
-          </span>
-          <span className="basis-full sm:basis-auto">
-            {labels.sessionOvernightNote}
-          </span>
+      {/* Seans lejantı — gün içi görünümde günün saat haritası */}
+      {range === "1D" && state.phase === "ready" && windows && (
+        <div className="mt-2 text-[10px] text-muted">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            {windows.map((window, index) => (
+              <span key={window.key} className="flex items-center gap-1.5">
+                {index > 0 && (
+                  <span aria-hidden className="mr-1.5">
+                    ·
+                  </span>
+                )}
+                <span
+                  className={cn(
+                    "flex items-center gap-1",
+                    window.key === "regular" && "font-medium text-soft",
+                  )}
+                >
+                  {window.key === "regular" && (
+                    <span
+                      aria-hidden
+                      className="size-1.5 rounded-full bg-primary"
+                    />
+                  )}
+                  {sessionName[window.key]}
+                  <span className="numeral">{window.primary}</span>
+                </span>
+              </span>
+            ))}
+            <span className="basis-full sm:basis-auto">
+              {labels.sessionOvernightNote}
+            </span>
+          </div>
+          {/* Diğer saat dilimi tek satırda, aynı sırada: okumak isteyen
+              buradan eşler, istemeyenin gözüne girmez. */}
+          <p className="numeral mt-1 text-[9.5px] opacity-80">
+            {labels.otherZoneTimes}{" "}
+            {windows.map((window) => window.secondary).join(" · ")}
+          </p>
         </div>
       )}
 
@@ -638,45 +684,25 @@ function lineToRgba(hex: string, alpha: number): string {
 }
 
 /* --------------------------------------------------------------------------
-   Eksen saatleri New York saati göstermeli.
+   Eksen saatleri OKUYUCUNUN saatini göstermeli.
+
    lightweight-charts zaman değerlerini UTC olarak basar; bu yüzden her bara
-   günün ET ofseti eklenir (DST sınırı grafik içinde değişse bile doğru).
-   Ofset gün bazında önbelleklenir.
+   günün ofseti eklenir (DST sınırı grafik içinde değişse bile doğru). Ofset
+   gün bazında önbelleklenir.
+
+   Hangi dilim: Türkçe okuyanda İstanbul, İngilizcede New York. Sayının
+   kendisi değişmiyor, yalnızca eksende hangi duvar saatiyle okunduğu
+   değişiyor — "16:30 açılış" Türkiye'de gerçekten 16:30'dur.
    -------------------------------------------------------------------------- */
 
-const ET_FORMATTER = new Intl.DateTimeFormat("en-US", {
-  timeZone: "America/New_York",
-  hour12: false,
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-function etOffsetSeconds(unixSeconds: number): number {
-  const date = new Date(unixSeconds * 1000);
-  const parts = ET_FORMATTER.formatToParts(date);
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    Number(parts.find((p) => p.type === type)?.value ?? 0);
-  const asUtc = Date.UTC(
-    get("year"),
-    get("month") - 1,
-    get("day"),
-    get("hour") % 24,
-    get("minute"),
-  );
-  return Math.round((asUtc - date.getTime()) / 1000);
-}
-
-function shiftBarsToEt(bars: Bar[]): Bar[] {
+function shiftBarsToZone(bars: Bar[], zone: string): Bar[] {
   let cachedDay = "";
   let cachedOffset = 0;
   return bars.map((bar) => {
     const day = new Date(bar.time * 1000).toISOString().slice(0, 10);
     if (day !== cachedDay) {
       cachedDay = day;
-      cachedOffset = etOffsetSeconds(bar.time);
+      cachedOffset = zoneOffsetSeconds(bar.time, zone);
     }
     return { ...bar, time: bar.time + cachedOffset };
   });

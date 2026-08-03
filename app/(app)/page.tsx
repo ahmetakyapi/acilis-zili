@@ -3,7 +3,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { NewsImage } from "@/components/news/NewsImage";
-import { BriefBody } from "@/components/today/BriefBody";
+import { BriefSwitch, type BriefView } from "@/components/today/BriefSwitch";
 import { Countdown } from "@/components/today/Countdown";
 import { DayRail, type RailEvent } from "@/components/today/DayRail";
 import { LiveClock } from "@/components/today/LiveClock";
@@ -13,7 +13,6 @@ import {
   DataStamp,
   EmptyState,
   ImpactDot,
-  Kicker,
   Panel,
   PanelHeader,
   PanelLink,
@@ -21,9 +20,10 @@ import {
   TimingChip,
 } from "@/components/ui/primitives";
 import {
-  getDailyBrief,
+  BRIEF_PUBLISH_TR,
   getEventsBetween,
   getGenericImageUrls,
+  getLatestBrief,
   getLatestNews,
   getMacroRows,
   getStatus,
@@ -31,13 +31,15 @@ import {
   getTodayEvents,
   getEarningsBetween,
   getUserSymbols,
+  weekAnchor,
 } from "@/lib/data";
+import { addEtDays, todayEt } from "@/lib/market-hours";
 import {
-  SESSION_BOUNDS,
-  addEtDays,
-  etDateTimeToUtc,
-  todayEt,
-} from "@/lib/market-hours";
+  displayOffsets,
+  railSpan,
+  timePair,
+  zoneTag,
+} from "@/lib/session-clock";
 import { getQuotes } from "@/lib/providers";
 import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -45,8 +47,8 @@ import {
   cn,
   directionOf,
   directionText,
-  dualTime,
   formatEtDateLong,
+  formatEtDateShort,
   formatPercent,
   formatPrice,
   timeAgo,
@@ -109,7 +111,7 @@ export default async function TodayPage() {
             <span className="text-[13px] text-body">
               {formatEtDateLong(status.etDate, locale)}
             </span>
-            <LiveClock />
+            <LiveClock locale={locale} />
           </div>
 
           {/* Sayfanın en büyük sayısı — zil geri sayımı */}
@@ -136,7 +138,12 @@ export default async function TodayPage() {
             <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
               {t.today.todayFlow}
             </h2>
-            <span className="text-xs text-muted">{t.today.sessionWindow}</span>
+            {/* Şeridin kapsadığı pencere, okuyucunun saatiyle. TR'de gün
+                gece yarısını aşıyor (11:00 — 03:00) ve bu doğru: ABD'nin
+                akşam seansı Türkiye'de geceye düşer. */}
+            <span className="numeral text-xs text-muted">
+              {railSpan(status.etDate, locale).primary} {zoneTag(locale).primary}
+            </span>
           </div>
           <Suspense fallback={<Skeleton className="h-28 w-full" />}>
             <RailSection
@@ -372,28 +379,22 @@ async function RailSection({
     };
   });
 
-  // Seans sınırlarının Türkiye saati. ET↔TR farkı ABD yaz saatiyle kaydığı
-  // için sabit değil; o günün tarihiyle hesaplanıp şeride veriliyor.
-  const clockOf = (minutes: number) =>
-    `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(
-      minutes % 60,
-    ).padStart(2, "0")}`;
-  const openEt = clockOf(SESSION_BOUNDS.regularOpen);
-  const closeEt = clockOf(status.closeMinutes);
-
+  /* Şerit ET dakikasıyla konumlanır ama okuyucunun saatiyle yazılır. İki saat
+     arasındaki fark ABD yaz saatiyle kaydığı için sabit değil, o günün
+     tarihiyle hesaplanıp şeride veriliyor. */
   return (
     <DayRail
       events={[...eventItems, ...groupedEarnings]}
       initialNowMinutes={status.nowMinutes}
       tradingDay={status.trading}
       closeMinutes={status.closeMinutes}
+      offsets={displayOffsets(today, locale)}
+      tags={zoneTag(locale)}
       labels={{
         bell: t.dayRail.openShort,
         close: t.dayRail.closeShort,
         now: t.dayRail.now,
         noEvents: t.dayRail.noEvents,
-        bellTr: dualTime(etDateTimeToUtc(today, openEt), openEt).tr,
-        closeTr: dualTime(etDateTimeToUtc(today, closeEt), closeEt).tr,
       }}
     />
   );
@@ -650,45 +651,87 @@ function IndexSkeleton() {
  * Günün özeti — sayfadaki tek gradient yüzey (accent %13 → %2) ve tek
  * accent çerçeve. Bu kartın öne çıkması bilinçli: günü tek paragrafta okumak
  * ürünün vaadi.
+ *
+ * Kart iki metin taşıyor: günlük ve haftalık bülten. İkisi de burada
+ * çekiliyor, sekme geçişi istemcide oluyor (BriefSwitch).
+ *
+ * "Bugünün kaydı" yerine "en son kayıt" okunuyor. Günlük bülten 16:00'da
+ * yazıldığı için gün içinde saatlerce boş duran bir kutu vardı; artık dünkü
+ * metin duruyor ve üstünde tarihini söyleyen bir uyarı var.
  */
 async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const brief = await getDailyBrief(locale);
+  const [daily, weekly] = await Promise.all([
+    getLatestBrief(locale, "daily"),
+    getLatestBrief(locale, "weekly"),
+  ]);
 
-  if (!brief) {
-    return (
-      <Panel>
-        <PanelHeader title={t.today.briefTitle} />
-        <EmptyState title={t.today.briefEmpty} />
-      </Panel>
-    );
-  }
+  const today = todayEt();
+  const thisWeek = weekAnchor(today);
 
-  const stampTime = new Intl.DateTimeFormat(
-    locale === "tr" ? "tr-TR" : "en-US",
-    { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit" },
-  ).format(new Date(brief.generatedAt));
+  const stampOf = (row: NonNullable<typeof daily>) => {
+    const time = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+      timeZone: "Europe/Istanbul",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(row.generatedAt));
+    return `${row.generatedBy === "claude" ? "Claude · " : ""}${time}`;
+  };
+
+  const weekRange = (anchor: string) =>
+    t.brief.weeklyRange
+      .replace("{start}", formatEtDateShort(anchor, locale))
+      .replace("{end}", formatEtDateShort(addEtDays(anchor, 4), locale));
+
+  const dailyView: BriefView | null = daily && {
+    headline: daily.headline,
+    bodyMd: daily.bodyMd,
+    stamp: stampOf(daily),
+    dateLabel: formatEtDateLong(daily.briefDate, locale),
+    current: daily.briefDate === today,
+    staleNote:
+      daily.briefDate === today
+        ? null
+        : t.today.briefStaleNote
+            .replace("{date}", formatEtDateLong(daily.briefDate, locale))
+            .replace("{time}", BRIEF_PUBLISH_TR.daily),
+    archiveHref: "/bulten",
+  };
+
+  const weeklyView: BriefView | null = weekly && {
+    headline: weekly.headline,
+    bodyMd: weekly.bodyMd,
+    stamp: stampOf(weekly),
+    dateLabel: weekRange(weekly.briefDate),
+    current: weekly.briefDate === thisWeek,
+    staleNote:
+      weekly.briefDate === thisWeek
+        ? null
+        : t.today.briefWeeklyStaleNote
+            .replace("{range}", weekRange(weekly.briefDate))
+            .replace("{time}", BRIEF_PUBLISH_TR.weekly),
+    archiveHref: "/bulten?tur=haftalik",
+  };
 
   return (
-    <section className="rounded-2xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5">
-      <div className="mb-3 flex items-center gap-2">
-        <Kicker tone="primary">{t.today.briefTitle}</Kicker>
-        <span className="numeral ml-auto text-[11px] text-muted">
-          {brief.generatedBy === "claude" ? "Claude · " : ""}
-          {stampTime}
-        </span>
-      </div>
-      <p className="text-base font-medium leading-[25px] text-strong">
-        {brief.headline}
-      </p>
-      <BriefBody markdown={brief.bodyMd} moreLabel={t.common.showAll} />
-      <Link
-        href="/bulten"
-        className="mt-4 inline-flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-[12.5px] font-semibold text-primary transition-colors hover:text-primary-hover"
-      >
-        {t.brief.archiveLink}
-        <span aria-hidden>→</span>
-      </Link>
-    </section>
+    <BriefSwitch
+      daily={dailyView}
+      weekly={weeklyView}
+      labels={{
+        tabs: { daily: t.brief.periodDaily, weekly: t.brief.periodWeekly },
+        titles: {
+          daily: t.today.briefTitle,
+          weekly: t.today.briefWeeklyTitle,
+        },
+        empty: {
+          daily: t.today.briefEmpty,
+          weekly: t.today.briefWeeklyEmpty,
+        },
+        currentBadge: { daily: t.brief.today, weekly: t.brief.thisWeek },
+        periodLabel: t.today.briefPeriod,
+        more: t.common.showAll,
+        archive: t.brief.archiveLink,
+      }}
+    />
   );
 }
 
@@ -699,14 +742,15 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
     return <EmptyState title={t.today.scheduleEmpty} />;
   }
 
+  const tags = zoneTag(locale);
+
   return (
     <ul>
       {events.map((event) => {
+        /* Büyük satır okuyucunun saati, altındaki küçük satır kaynağın
+           saati. TR'de sıra dönüyor: "16:30" üstte, "09:30 NY" altta. */
         const times = event.eventTimeEt
-          ? dualTime(
-              etDateTimeToUtc(event.eventDate, event.eventTimeEt),
-              event.eventTimeEt,
-            )
+          ? timePair(event.eventDate, event.eventTimeEt, locale)
           : null;
         const high = event.importance === "high";
         return (
@@ -724,11 +768,11 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
                   high ? "font-bold text-strong" : "font-semibold text-body",
                 )}
               >
-                {times ? times.et : "—"}
+                {times ? times.primary : "—"}
               </span>
               {times && (
                 <span className="numeral block text-[10.5px] leading-tight text-muted">
-                  {times.tr} TR
+                  {times.secondary} {tags.secondary}
                 </span>
               )}
             </span>
@@ -1017,14 +1061,13 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
     return <EmptyState title={t.today.weekAheadEmpty} />;
   }
 
+  const tags = zoneTag(locale);
+
   return (
     <ul>
       {events.slice(0, 6).map((event) => {
         const times = event.eventTimeEt
-          ? dualTime(
-              etDateTimeToUtc(event.eventDate, event.eventTimeEt),
-              event.eventTimeEt,
-            )
+          ? timePair(event.eventDate, event.eventTimeEt, locale)
           : null;
         return (
           <li
@@ -1037,7 +1080,7 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
               </span>
               {times && (
                 <span className="numeral block text-[10.5px] leading-tight text-muted">
-                  {times.et} NY
+                  {times.primary} {tags.primary}
                 </span>
               )}
             </span>

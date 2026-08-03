@@ -238,6 +238,20 @@ export async function getLatestNews(limit = 20): Promise<NewsRow[]> {
 
 /* ---- Günlük özet ---- */
 
+/**
+ * Bültenlerin yazılma saatleri, Türkiye saatiyle.
+ *
+ * Metinleri claude.ai zamanlanmış görevleri yazıyor (docs/claude-rutinler.md):
+ * günlük 16:00'da — Vercel senkronundan sonra, ABD açılışından hemen önce —
+ * ve haftalık pazartesi 09:30'da. Sayı burada duruyor çünkü ekranda da
+ * söyleniyor: bugünün özeti henüz yoksa kart okuyucuya ne zaman geleceğini
+ * yazıyor. Rutinlerin saati değişirse burası da değişmeli.
+ */
+export const BRIEF_PUBLISH_TR: Record<BriefPeriod, string> = {
+  daily: "16:00",
+  weekly: "09:30",
+};
+
 export async function getDailyBrief(
   locale: string,
 ): Promise<DailyBriefRow | null> {

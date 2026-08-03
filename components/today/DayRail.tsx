@@ -42,15 +42,24 @@ type DayRailProps = {
   tradingDay: boolean;
   /** Yarım günlerde 13:00 (780). */
   closeMinutes: number;
+  /**
+   * Ekranda yazılan saatlere geçmek için ET dakikasına eklenen farklar.
+   *
+   * Eksenin KENDİSİ hep ET dakikasıyla konumlanır — seans 09:30'da başlar,
+   * olaylar ET saatiyle gelir, canlı işaretçi New York saatini okur. Değişen
+   * yalnızca etiketlerdeki rakam: Türkçe okuyan biri "16:30" görür, altında
+   * künyesiyle "09:30 NY" durur. İngilizcede sıra tersine döner. Fark ABD yaz
+   * saatiyle kaydığı için sabit değil, o günün tarihiyle sunucuda hesaplanıp
+   * geliyor (lib/session-clock.ts).
+   */
+  offsets: { primary: number; secondary: number };
+  /** Saatlerin yanına yazılan künye — { primary: "TR", secondary: "NY" }. */
+  tags: { primary: string; secondary: string };
   labels: {
     bell: string;
     close: string;
     now: string;
     noEvents: string;
-    /** Açılışın Türkiye saati ("16:30") — ET/TR farkı DST ile kaydığı için
-        sunucuda hesaplanıp geliyor, burada sabitlenmiyor. */
-    bellTr: string;
-    closeTr: string;
   };
 };
 
@@ -82,9 +91,11 @@ function parseTime(timeEt: string): number {
   return h * 60 + m;
 }
 
+/** Gün taşmasını başa sarar: ABD'nin 20:00'si Türkiye'de ertesi gün 03:00. */
 function formatMinutes(minutes: number): string {
-  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(
-    minutes % 60,
+  const wrapped = ((minutes % 1440) + 1440) % 1440;
+  return `${String(Math.floor(wrapped / 60)).padStart(2, "0")}:${String(
+    wrapped % 60,
   ).padStart(2, "0")}`;
 }
 
@@ -106,9 +117,16 @@ export function DayRail({
   initialNowMinutes,
   tradingDay,
   closeMinutes,
+  offsets,
+  tags,
   labels,
 }: DayRailProps) {
   const [nowMinutes, setNowMinutes] = useState(initialNowMinutes);
+
+  /** ET dakikası → ekranda öne yazılan saat. */
+  const shown = (minutes: number) => formatMinutes(minutes + offsets.primary);
+  /** Aynı anın diğer saati — künyesiyle birlikte alt satırda durur. */
+  const other = (minutes: number) => formatMinutes(minutes + offsets.secondary);
 
   // Dakikada bir ET saatini yeniden hesapla — sunucuya gitmeden. İlk eşitleme
   // de zamanlayıcıdan geçer; effect gövdesinde senkron setState zincirleme
@@ -213,15 +231,15 @@ export function DayRail({
             key: "open",
             left: openPct,
             label: labels.bell,
-            et: formatMinutes(SESSION_BOUNDS.regularOpen),
-            tr: labels.bellTr,
+            primary: shown(SESSION_BOUNDS.regularOpen),
+            secondary: other(SESSION_BOUNDS.regularOpen),
           },
           {
             key: "close",
             left: closePct,
             label: labels.close,
-            et: formatMinutes(closeMinutes),
-            tr: labels.closeTr,
+            primary: shown(closeMinutes),
+            secondary: other(closeMinutes),
           },
         ].map((bound) => (
           <div
@@ -236,11 +254,13 @@ export function DayRail({
               className="numeral text-[10.5px] text-muted"
               style={{ marginTop: BOUND_TIME_TOP - BOUND_LABEL_TOP - 12 }}
             >
-              <span className="font-semibold text-body">{bound.et}</span> NY
+              <span className="font-semibold text-body">{bound.primary}</span>{" "}
+              {tags.primary}
               <span aria-hidden className="mx-1">
                 ·
               </span>
-              <span className="font-semibold text-body">{bound.tr}</span> TR
+              <span className="font-semibold text-body">{bound.secondary}</span>{" "}
+              {tags.secondary}
             </div>
           </div>
         ))}
@@ -278,7 +298,8 @@ export function DayRail({
                       high ? "text-down" : "text-primary",
                     )}
                   >
-                    <span className="numeral">{event.timeEt}</span> {event.title}
+                    <span className="numeral">{shown(event.minutes)}</span>{" "}
+                    {event.title}
                   </div>
                   {event.detail && (
                     <div className="text-[11px] text-body">{event.detail}</div>
@@ -290,7 +311,7 @@ export function DayRail({
                   style={{ left, top: EVENT_LABEL_TOP + event.row * ROW_OFFSET }}
                 >
                   <div className="numeral text-[11.5px] font-semibold text-strong">
-                    {event.timeEt}
+                    {shown(event.minutes)}
                   </div>
                   <div className="max-w-32 truncate text-[11px] text-muted">
                     {event.detail ?? event.title}
@@ -340,8 +361,10 @@ export function DayRail({
             prominent: false,
             row: 0,
             kind: "bound" as const,
-            // Soldaki sütun NY saatini yazıyor; Türkiye saati alt satırda.
-            detail: `${labels.bellTr} TR` as string | undefined,
+            // Soldaki sütun okuyucunun saatini yazıyor; diğeri alt satırda.
+            detail: `${other(SESSION_BOUNDS.regularOpen)} ${tags.secondary}` as
+              | string
+              | undefined,
             watched: false,
           },
           {
@@ -353,7 +376,9 @@ export function DayRail({
             prominent: false,
             row: 0,
             kind: "bound" as const,
-            detail: `${labels.closeTr} TR` as string | undefined,
+            detail: `${other(closeMinutes)} ${tags.secondary}` as
+              | string
+              | undefined,
             watched: false,
           },
         ]
@@ -377,7 +402,7 @@ export function DayRail({
                           : "font-semibold text-body",
                   )}
                 >
-                  {entry.timeEt}
+                  {shown(entry.minutes)}
                 </div>
                 <div className="relative w-5 shrink-0">
                   {isNow ? (

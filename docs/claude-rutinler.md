@@ -23,6 +23,11 @@ Environment Variables → `BRIEF_SECRET`.
 | 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
 | 3 | Mercek Yazısı | her gün 21:00 TR | `0 18 * * *` | /mercek |
 
+> **Bu saatler kodda da yazılı.** Ana sayfadaki özet kartı, günün kaydı henüz
+> yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün 16:00'da
+> yayımlanır" der. Sayı `lib/data.ts` → `BRIEF_PUBLISH_TR` sabitinden geliyor;
+> aşağıdaki zamanlamayı değiştirirsen orayı da değiştir.
+
 > **Saatler neden böyle.** Vercel cron'u (`/api/cron/daily`, 13:30 TR) veriyi
 > veritabanına yazan taraftır; bültenler onu OKUR. Günlük bülten uzun süre
 > 09:00 TR'de koşuyordu, yani senkrondan **4,5 saat önce** — her sabahki yazı

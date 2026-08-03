@@ -109,7 +109,14 @@ const en: typeof tr = {
   today: {
     title: "Today",
     briefTitle: "Today's Brief",
-    briefEmpty: "Today's brief hasn't been prepared yet.",
+    briefWeeklyTitle: "The Week's Brief",
+    briefEmpty: "No daily brief has been written yet.",
+    briefWeeklyEmpty: "No weekly brief has been written yet.",
+    briefPeriod: "Brief Period",
+    briefStaleNote:
+      "This is the brief from {date}. The daily brief is published at {time} Istanbul time.",
+    briefWeeklyStaleNote:
+      "This is the brief for the week of {range}. The weekly brief is published Monday at {time} Istanbul time.",
     indices: "Indices",
     schedule: "Today's Calendar",
     scheduleEmpty: "No economic releases scheduled for today.",
@@ -138,7 +145,6 @@ const en: typeof tr = {
     unitS: "s",
     macroSummary: "Macro",
     todayFlow: "Today's Flow",
-    sessionWindow: "04:00 — 20:00 NY",
     sourceLine: "Prices: Alpaca IEX · Profiles and earnings: Finnhub · Macro: FRED",
     sourceNote: "Indices tracked via ETFs · data may be delayed",
   },
@@ -159,7 +165,7 @@ const en: typeof tr = {
     week: "Week",
     month: "Month",
     empty: "No releases scheduled in this range.",
-    allTimesET: "All times New York (ET)",
+    timesNote: "Times in New York (ET) · Turkish time below",
     localTime: "Your local time",
   },
 
@@ -320,6 +326,7 @@ const en: typeof tr = {
     sessionAfter: "After Hours",
     sessionOvernight: "Overnight",
     sessionOvernightNote: "Extended-hours prices don't flow on the IEX feed",
+    otherZoneTimes: "In Turkish time:",
   },
 
   watchlist: {

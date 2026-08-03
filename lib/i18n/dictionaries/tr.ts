@@ -109,7 +109,20 @@ const tr = {
   today: {
     title: "Bugün",
     briefTitle: "Günün Özeti",
-    briefEmpty: "Bugünün özeti henüz hazırlanmadı.",
+    briefWeeklyTitle: "Haftanın Özeti",
+    briefEmpty: "Henüz günlük özet yazılmadı.",
+    briefWeeklyEmpty: "Henüz haftalık özet yazılmadı.",
+    briefPeriod: "Özet Dönemi",
+    /* Günlük özet 16:00'da, haftalık pazartesi 09:30'da yazılıyor; o saate
+       kadar en son yazılan metin duruyor ve tarihi burada söyleniyor.
+
+       Cümle "bugünün özeti şu saatte gelecek" değil, "bu özet her gün şu
+       saatte yazılır" diyor: rutin gecikirse ya da o gün hiç yazılmazsa
+       ikincisi hâlâ doğru kalıyor, birincisi yalan oluyordu. */
+    briefStaleNote:
+      "Bu, {date} tarihli özet. Günlük özet her gün {time}'da (TR) yayımlanır.",
+    briefWeeklyStaleNote:
+      "Bu, {range} haftasının özeti. Haftalık özet pazartesi {time}'da (TR) yayımlanır.",
     indices: "Endeksler",
     schedule: "Bugünün Takvimi",
     scheduleEmpty: "Bugün için planlanmış ekonomik veri yok.",
@@ -139,7 +152,6 @@ const tr = {
     unitS: "sn",
     macroSummary: "Makro",
     todayFlow: "Bugünün Akışı",
-    sessionWindow: "04:00 — 20:00 NY",
     sourceLine: "Fiyat: Alpaca IEX · Profil ve bilanço: Finnhub · Makro: FRED",
     sourceNote: "Endeksler ETF üzerinden izlenir · veri gecikmeli olabilir",
   },
@@ -160,7 +172,7 @@ const tr = {
     week: "Hafta",
     month: "Ay",
     empty: "Bu aralıkta planlanmış veri açıklaması yok.",
-    allTimesET: "Saatler New York (NY) saatiyle",
+    timesNote: "Saatler Türkiye saatiyle · altında New York (NY)",
     localTime: "Yerel saatin",
   },
 
@@ -321,6 +333,8 @@ const tr = {
     sessionAfter: "Akşam Seansı",
     sessionOvernight: "Gece",
     sessionOvernightNote: "Seans dışı fiyatlar IEX beslemesinde akmaz",
+    // Lejantın alt satırı: üstteki saatlerin diğer dilimdeki karşılığı.
+    otherZoneTimes: "ABD saatiyle:",
   },
 
   watchlist: {
