@@ -283,13 +283,29 @@ export function getMarketStatus(
    Piyasa kapalıyken fiyat sorgulamak sağlayıcı kotasını boşa harcar.
    -------------------------------------------------------------------------- */
 
+/**
+ * Kotasyon tazeliği.
+ *
+ * Seans içinde 60 saniyeydi ve sayfayı yenileyen kullanıcı çoğu zaman aynı
+ * fiyatı görüyordu — "endeksler güncellenmiyor" şikâyetinin kaynağı buydu.
+ *
+ * ÖNBELLEK ZİYARETÇİ BAŞINA DEĞİL, SUNUCUDA PAYLAŞIMLI (Next data cache).
+ * Yani sağlayıcıya giden istek sayısı trafikle değil YALNIZCA bu süreyle
+ * artar: bir sembol kümesi için dakikada en fazla 60/TTL istek. 15 saniyede
+ * dakikada 4 istek eder; Alpaca'nın ücretsiz katmanı dakikada 200 kabul
+ * ediyor ve tek çağrı bütün sembolleri birlikte soruyor. Yani tazelik
+ * bedavaya yakın.
+ *
+ * Piyasa kapalıyken uzun süre kalır: fiyat zaten hareket etmiyor, sorgulamak
+ * kotayı boşa harcamak olur.
+ */
 export function quoteTtlSeconds(status: MarketStatus): number {
   switch (status.session) {
     case "regular":
-      return 60;
+      return 15;
     case "pre-market":
     case "after-hours":
-      return 180;
+      return 60;
     default:
       return 900;
   }
