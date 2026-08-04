@@ -21,7 +21,7 @@ Environment Variables → `BRIEF_SECRET`.
 |---|---|---|---|---|
 | 1 | Günlük Bülten | her gün 16:00 TR | `0 13 * * *` | Ana sayfa · Günün Özeti |
 | 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
-| 3 | Mercek Yazısı | her gün 21:00 TR | `0 18 * * *` | /mercek |
+| 3 | Mercek Yazısı | her gün 23:30 TR | `30 20 * * *` | /mercek |
 
 > **Bu saatler kodda da yazılı.** Ana sayfadaki özet kartı, günün kaydı henüz
 > yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün 16:00'da
@@ -164,7 +164,12 @@ curl -s -X POST https://acilis-zili.vercel.app/api/brief \
 
 # 3 · Mercek Yazısı
 
-**Zamanlama:** her gün 21:00 TR (`0 18 * * *` UTC)
+**Zamanlama:** her gün 23:30 TR (`30 20 * * *` UTC)
+
+Saat ABD kapanışının sonrasına çekildi: 23:30 TR, New York'ta 16:30 (kışın
+15:30), yani kapanış zili çalmış ve günün hikâyesi tamamlanmış oluyor. Daha
+erken yazılan bir metin, seans biterken değişen bir olayı yarım anlatma
+riski taşıyordu.
 
 Bu görev **çoğu gün hiçbir şey yazmaz** ve yazmaması normaldir. Sıradan bir
 seans mercek konusu değildir.
@@ -314,6 +319,12 @@ Site şu markdown alt kümesini render eder:
 GÖRSEL BLOKLAR — bunlar yazıyı okunur kılan asıl şey. Satırlar `|` ile
 ayrılır. Her yazıda EN AZ ÜÇÜ kullanılmalı.
 
+Yazıların görsel dili budur; FOTOĞRAF YOK. Sitede görsel alanı bilinçli
+olarak bulunmuyor: haber fotoğrafı telifli, kaynak bulmak zahmetli ve finans
+metnine çoğu zaman bir şey katmıyor. Bu bloklar ise metinden çiziliyor —
+sen yalnızca satırları yazıyorsun, çizimi site yapıyor; telif riski yok,
+her temada tutarlı ve her açılışta güncel.
+
   ::: sayilar Rakamlarla
   %439 | 2026 ilk yarı getirisi, masraflar sonrası
   45 Mr $ | Temmuz başındaki zirve büyüklük
@@ -368,6 +379,43 @@ ayrılır. Her yazıda EN AZ ÜÇÜ kullanılmalı.
         canlıdır: olayın kendisini değil, hissenin bugün nerede olduğunu
         gösterir." 
 
+  ::: pay Optik Modül Pazar Payı
+  Zhongji Innolight | 27
+  Coherent | 18
+  Innolight Dışı Çinli Üreticiler | 20
+  Diğerleri | 35
+  :::
+
+  → Bütünün dağılımı: tek bir yığın çubuk ve altında adı-yüzdesi yazılı
+    satırlar. Pasta/halka DEĞİL — uzun şirket adları halkada okunmuyor.
+    Sayılar yüzde kabul edilir; toplam 100 tutmazsa site normalize eder.
+    EN FAZLA 4 gerçek dilim + "Diğerleri" yaz: dilimler büyükten küçüğe
+    sıralanır ve renk basamağı sırayı taşır, "Diğerleri" nötr griye düşer.
+    Pazar payı, oy dağılımı, gelir kırılımı gibi "bütünün parçaları" için.
+
+  ::: akis Bellekten Sunucuya
+  HBM Üretimi | SK Hynix · Micron
+  Paketleme | TSMC CoWoS
+  Hızlandırıcı | Nvidia GB200
+  Sunucu | Dell · Supermicro
+  :::
+
+  → Zincir: kutular ve aralarında ok. Geniş ekranda soldan sağa, telefonda
+    alt alta. Tedarik zinciri, onay süreci, para akışı gibi SIRALI yollar
+    için. Sol taraf adım adı, sağ taraf o adımdaki oyuncular ya da not.
+    Üç ila beş halka ideal; daha fazlası okunmuyor.
+
+  ::: oncesi Zhongji Innolight'ın Piyasa Değeri
+  52,5 Mr $ | 12 Haziran
+  19 Mr $ | 29 Temmuz
+  :::
+
+  → Tek bir büyüklüğün iki hâli, yan yana ve aralarında ok. TAM İKİ SATIR:
+    ilki önce, ikincisi sonra. Sağ taraf o anın etiketi (tarih, olay).
+    Değişim yüzdesini site kendisi hesaplar — ama yalnızca iki değerin
+    birimi AYNIYSA ("Mr $" ile "Mr $"). Birim tutmuyorsa yüzde yazılmaz,
+    bu yüzden karşılaştırdığın iki sayıyı aynı birimde yaz.
+
   ::: ornek 100 Birim Öz Sermaye, 4x Kaldıraç
   Elinde 100 birim öz sermaye var ve 4x brüt maruziyetle 400 birimlik pozisyon taşıyorsun. Varlıkların **%25 düşerse** kaybın 100 birim — yani öz sermayenin tamamı.
   Ama iflas o noktada gelmez. Pratikte 4x kaldıraçta **%10-12'lik bir düşüş** teminat tamamlama çağrısı getirmeye yeter — ki bu borsada sıradan bir düzeltme büyüklüğüdür.
@@ -421,7 +469,8 @@ BİÇİM KURALLARI
   [ ] Başlıkta kahramanın adı ve olayın yayı var mı?
   [ ] Bütün ## başlıkları Title Case ve vurgulu mu?
   [ ] 1200+ kelime mi?
-  [ ] En az üç görsel blok var mı (sayilar / bar / zaman / ornek / ozet)?
+  [ ] En az üç görsel blok var mı (sayilar / bar / pay / akis / oncesi /
+      zaman / ornek / ozet)?
   [ ] En az bir ::: grafik bloğu var mı?
   [ ] Ağır kelimeleri gündelik Türkçeyle değiştirdin mi?
   [ ] Mekanizmayı işlenmiş bir hesapla açıklayan bölüm var mı?

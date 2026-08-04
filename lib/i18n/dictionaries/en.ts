@@ -509,11 +509,25 @@ const en: typeof tr = {
       "Long reads on what happened in the market — what took place, why, and what it taught.",
     latest: "Latest Piece",
     archive: "Earlier Pieces",
+    whatTitle: "What Gets Covered",
+    whatBody:
+      "A fund unwinding, an acquisition falling apart, a thesis tested and broken by the market — events still worth reading about six months later.",
+    howTitle: "How It Is Written",
+    howBody:
+      "The event end to end, with the mechanism explained through a worked calculation. Every number is verified and the sources are listed at the foot.",
+    rhythmTitle: "How Often",
+    rhythmBody:
+      "Not daily. An ordinary session is not a story; a piece is published when something worth telling actually happens.",
+    bridge: "Daily headlines and concept explainers live in their own sections:",
+    filterLabel: "By Company",
+    filterAll: "All",
+    emptyFilter: "No pieces about this company yet.",
     sources: "Sources",
     relatedSymbols: "Companies In This Piece",
     eventDate: "Event Date",
     readMinutes: "min read",
     backToList: "Back To Close-Up",
+    moreStories: "More From The Archive",
     empty: "Nothing published yet.",
     emptyHint:
       "When something worth explaining happens in the market, it lands here.",

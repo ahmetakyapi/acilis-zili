@@ -307,6 +307,11 @@ export const stories = pgTable(
     eventDate: date("event_date").notNull(),
     /** Yazıda geçen semboller — ilgili hisselere bağlanır. */
     symbols: jsonb("symbols").$type<string[]>(),
+    /* Kapak görseli alanı KASTEN YOK. Bir kez eklendi (0004) ve hemen geri
+       alındı (0005): yazıların görsel dili metinden çizilen `:::` blokları —
+       pay, akis, oncesi, bar, sayilar, zaman, grafik. Hepsi telifsiz, her
+       temada tutarlı ve hiçbir yerde görsel barındırmayı gerektirmiyor.
+       Haber fotoğrafı bunların hiçbirini sağlamıyordu. */
     /** [{ label, url }] — künyede kaynak listesi olarak basılır. */
     sources: jsonb("sources").$type<{ label: string; url?: string }[]>(),
     /** Okuma süresi dakika; yoksa gövdeden hesaplanır. */

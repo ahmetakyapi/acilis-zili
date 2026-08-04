@@ -106,6 +106,20 @@
   --skeleton-lo: rgb(16 32 52 / 0.045);
   --skeleton-hi: rgb(16 32 52 / 0.09);
 
+  /* PAY DAĞILIMI — yazılardaki `::: pay` bloğunun basamakları.
+     Tek renk, tekdüze açıklık: pay çubuğunun dilimleri büyüklüğe göre
+     sıralı olduğu için renk de sırayı taşır (ordinal), kategorik bir
+     gökkuşağı değil. Gökkuşağı zaten bu tasarımda yasak — renk yalnızca
+     yukarı, aşağı ve etkileşim söyler; pay dilimleri accent ailesinin
+     basamaklarıyla ayrışır, "diğerleri" nötr griye düşer.
+     En açık basamak zeminde 2,2:1 — sıralı rampa için yeterli; kimlik
+     zaten dilimin yanındaki adla ve yüzdesiyle yazılı. */
+  --share-1: #0a4d9e;
+  --share-2: #0d74c4;
+  --share-3: #3f97d8;
+  --share-4: #6fb0e0;
+  --share-rest: #75879a;
+
   color-scheme: light;
 }
 
@@ -184,6 +198,15 @@
   --chart-grid: rgb(255 255 255 / 0.07);
   --skeleton-lo: rgb(255 255 255 / 0.045);
   --skeleton-hi: rgb(255 255 255 / 0.09);
+
+  /* Rampa gece temasında TERS yönde açılır: koyu zeminde öne çıkan ton
+     parlak olandır, en büyük pay onu alır. Otomatik çevirme değil, kendi
+     basamakları — en koyu uç zeminde 2,8:1. */
+  --share-1: #9adcff;
+  --share-2: #35b8ff;
+  --share-3: #1d87c4;
+  --share-4: #135f8c;
+  --share-rest: #8497a9;
 
   color-scheme: dark;
 }

@@ -519,11 +519,27 @@ const tr = {
       "Piyasada yaşanan olayları yakından anlatan uzun yazılar — ne oldu, neden oldu, ne öğretti.",
     latest: "Son Yazı",
     archive: "Önceki Yazılar",
+    /* Sayfanın kendini tanıttığı bant — "Mercek" adı tek başına burada ne
+       yazıldığını söylemiyor ve liste haber akışından ayırt edilemiyordu. */
+    whatTitle: "Ne Yazılır",
+    whatBody:
+      "Bir fonun kapanması, bir satın almanın bozulması, bir tezin piyasada sınanıp çökmesi — altı ay sonra da merak edilecek olaylar.",
+    howTitle: "Nasıl Yazılır",
+    howBody:
+      "Olay baştan sona anlatılır, mekanizması işlenmiş bir hesapla açıklanır. Her rakam doğrulanır, kaynaklar künyede sayılır.",
+    rhythmTitle: "Ne Sıklıkla",
+    rhythmBody:
+      "Her gün değil. Sıradan bir seans mercek konusu değildir; anlatmaya değer bir olay yaşandığında yayımlanır.",
+    bridge: "Günlük haber akışı ve kavram anlatımları ayrı bölümlerde:",
+    filterLabel: "Şirkete Göre",
+    filterAll: "Tümü",
+    emptyFilter: "Bu şirket hakkında henüz yazı yok.",
     sources: "Kaynaklar",
     relatedSymbols: "Yazıda Geçen Şirketler",
     eventDate: "Olay Tarihi",
     readMinutes: "dk okuma",
     backToList: "Mercek'e Dön",
+    moreStories: "Arşivden Diğer Yazılar",
     empty: "Henüz yayımlanmış yazı yok.",
     emptyHint:
       "Piyasada anlatmaya değer bir olay yaşandığında merceğe burada alınır.",

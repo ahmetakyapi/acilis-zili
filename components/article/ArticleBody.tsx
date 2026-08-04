@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { ArticleChart } from "./ArticleChart";
 import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
@@ -15,22 +16,38 @@ import { cn, safeExternalUrl } from "@/lib/utils";
      **kalın**  *eğik*  `kod`  [bağlantı](/hisse/NVDA)
 
    `:::` blokları yazıya görsel ritim veren tek özel sözdizimi. Dört metin
-   kutusu (ornek · dikkat · ozet · tanim) ve üç görsel blok var:
+   kutusu (ornek · dikkat · ozet · tanim) ve altı görsel blok var:
 
        ::: sayilar Rakamlarla          ::: zaman Kronoloji
        %439 | ilk yarı getirisi        24 Temmuz | Yatırımcı mektubu...
        4x | brüt kaldıraç              30 Temmuz | Blok işlem
        :::                             :::
 
-       ::: bar Temmuz kaybı
-       Micron | -34
-       Nasdaq 100 | -10
+       ::: bar Temmuz kaybı            ::: pay Optik Modül Pazar Payı
+       Micron | -34                    Zhongji Innolight | 27
+       Nasdaq 100 | -10                Coherent | 18
+       :::                             Diğerleri | 55
+                                       :::
+
+       ::: akis Bellekten Sunucuya     ::: oncesi Piyasa Değeri
+       HBM | SK Hynix · Micron         52,5 Mr $ | 12 Haziran
+       Paketleme | TSMC CoWoS          19 Mr $ | 29 Temmuz
+       Hızlandırıcı | Nvidia GB200     :::
        :::
 
-   Üçünde de satırlar `|` ile ayrılır. `bar` sayıyı yüzde kabul eder, çubuğu
-   grubun en büyüğüne göre ölçekler ve işaretine göre renklendirir.
+   Hepsinde satırlar `|` ile ayrılır. `bar` sayıyı yüzde kabul eder, çubuğu
+   grubun en büyüğüne göre ölçekler ve işaretine göre renklendirir; `pay`
+   bütünü yüzdeye çevirip tek bir yığın çubuğa böler; `akis` bir zinciri
+   kutu-ok olarak çizer; `oncesi` tek bir büyüklüğün iki hâlini yan yana
+   koyar ve arasındaki değişimi kendisi hesaplar.
+
+   NEDEN FOTOĞRAF YOK: bu blok ailesi, yazılara görsel katmanın telifsiz ve
+   bakımsız yolu. Model yalnızca metin yazıyor, çizimi site yapıyor; hiçbir
+   yerde görsel barındırmak, kaynak aramak ya da telif kovalamak gerekmiyor
+   ve tasarım dili her yazıda aynı kalıyor.
+
    Rutinin yazdığı metinlerde de aynı sözdizimi geçerli —
-   docs/claude-mercek-ajani.md içinde anlatılıyor.
+   docs/claude-rutinler.md içinde anlatılıyor.
    ========================================================================== */
 
 type CalloutKind = "ornek" | "dikkat" | "ozet" | "tanim";
@@ -164,7 +181,83 @@ type Block =
       label: string;
       items: { name: string; value: number; display: string }[];
     }
+  | {
+      kind: "share";
+      label: string;
+      items: { name: string; value: number; display: string }[];
+    }
+  | { kind: "flow"; label: string; items: { name: string; note: string }[] }
+  | {
+      kind: "shift";
+      label: string;
+      from: Magnitude;
+      to: Magnitude;
+      /** İki değer aynı birimdeyse hesaplanan değişim; değilse null. */
+      deltaPct: number | null;
+    }
   | { kind: "chart"; symbol: string; range: ChartRange; caption?: string };
+
+/** Yüzdeler tam sayıysa ondalık basılmaz: "%27", "%12,5". */
+function formatShare(value: number): string {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded)
+    ? String(rounded)
+    : String(rounded).replace(".", ",");
+}
+
+/** Öncesi–sonrası bloğunun tek yanı: büyük sayı ve altında etiketi. */
+function Side({
+  value,
+  tone,
+}: {
+  value: Magnitude;
+  tone?: "up" | "down" | "flat";
+}) {
+  return (
+    <span className="flex min-w-0 flex-1 flex-col">
+      <span
+        className={cn(
+          "tote text-[24px] leading-none sm:text-[29px]",
+          tone === "down" && "text-down",
+          tone === "up" && "text-up",
+        )}
+      >
+        {value.display}
+      </span>
+      {value.label && (
+        <span className="mt-1.5 truncate text-[12px] text-muted">
+          {value.label}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** "52,5 Mr $" → { value: 52.5, unit: "Mr $", display: "52,5 Mr $" } */
+type Magnitude = {
+  display: string;
+  label: string;
+  value: number | null;
+  unit: string;
+};
+
+function parseMagnitude(raw: string, label: string): Magnitude {
+  const trimmed = raw.trim();
+  const match = /^[-+]?[\d.,\s]*\d/.exec(trimmed.replace(/^%/, ""));
+  const numeric = match
+    ? Number(match[0].replace(/\s/g, "").replace(/\.(?=\d{3}\b)/g, "").replace(",", "."))
+    : NaN;
+  // Birim, sayıdan geriye kalan metin: "Mr $", "milyon adet", "%".
+  const unit = match
+    ? trimmed.replace(/^%/, "").replace(match[0], "").trim()
+    : trimmed;
+  return {
+    display: trimmed,
+    label,
+    value: Number.isFinite(numeric) ? numeric : null,
+    unit: trimmed.startsWith("%") ? "%" : unit,
+  };
+}
 
 function splitRow(line: string): string[] {
   return line
@@ -244,6 +337,76 @@ function parseBlocks(markdown: string): Block[] {
             symbol: symbolRaw.toUpperCase(),
             range,
             caption: captionParts.join(" ") || undefined,
+          });
+        }
+        continue;
+      }
+
+      /* ::: pay — bütünün dağılımı. Sayılar yüzde kabul edilir; toplam
+         100 değilse (kaynak yuvarlamışsa ya da mutlak değer yazılmışsa)
+         toplama göre normalize edilir, yani çubuk her zaman bütünü doldurur. */
+      if (kindWord === "pay") {
+        const items = body.slice(0, 6).map((row) => {
+          const [name, raw = ""] = row.split("|").map((c) => c.trim());
+          const value = Number(raw.replace("%", "").replace(",", "."));
+          return {
+            name,
+            value: Number.isFinite(value) ? Math.max(value, 0) : 0,
+            display: raw,
+          };
+        });
+        /* Dilimler BÜYÜKTEN KÜÇÜĞE sıralanır: renk basamakları sırayı taşıyor
+           (koyudan açığa), o yüzden sıra rastgele olamaz — yazar %27'yi
+           %35'ten önce yazdığında en açık ton en büyük paya düşüyor ve renk
+           yalan söylüyordu. "Diğerleri" her hâlükârda sona ve nötr griye
+           gider; büyüklüğü değil, artık kalanı temsil ediyor. */
+        const isRest = (name: string) =>
+          /^(diğer|diger|other)/i.test(name.trim());
+        const sorted = [
+          ...items.filter((item) => !isRest(item.name)).sort((a, b) => b.value - a.value),
+          ...items.filter((item) => isRest(item.name)),
+        ];
+        if (sorted.length > 0)
+          blocks.push({ kind: "share", label, items: sorted });
+        continue;
+      }
+
+      /* ::: akis — tedarik zinciri gibi sıralı bir yol. */
+      if (kindWord === "akis") {
+        const items = body.map((row) => {
+          const [name, ...rest] = row.split("|").map((c) => c.trim());
+          return { name, note: rest.join(" · ") };
+        });
+        if (items.length > 0) blocks.push({ kind: "flow", label, items });
+        continue;
+      }
+
+      /* ::: oncesi — tek bir büyüklüğün iki hâli. İlk satır önce, ikinci
+         satır sonra. Değişim yüzdesi ancak İKİ DEĞER DE sayıya çevrilebiliyor
+         ve BİRİMLERİ AYNIYSA hesaplanır: "52,5 Mr $" ile "19 Mn $"
+         karşılaştırmak sessizce yanlış bir yüzde üretirdi. */
+      if (kindWord === "oncesi") {
+        const rows = body.slice(0, 2).map((row) => {
+          const [value, ...rest] = row.split("|").map((c) => c.trim());
+          return parseMagnitude(value, rest.join(" "));
+        });
+        if (rows.length === 2) {
+          const [from, to] = rows;
+          const comparable =
+            from.value !== null &&
+            to.value !== null &&
+            from.value !== 0 &&
+            from.unit.toLocaleLowerCase("tr") === to.unit.toLocaleLowerCase("tr");
+          blocks.push({
+            kind: "shift",
+            label,
+            from,
+            to,
+            deltaPct: comparable
+              ? ((to.value as number) - (from.value as number)) /
+                Math.abs(from.value as number) *
+                100
+              : null,
           });
         }
         continue;
@@ -620,6 +783,156 @@ export function ArticleBody({
                       </span>
                     </div>
                   ))}
+                </div>
+              </div>
+            );
+          }
+
+          /* Pay dağılımı — tek yığın çubuk + adı ve yüzdesi yazılı satırlar.
+             PASTA DEĞİL: dilim adları uzun ("Innolight dışı Çinli üreticiler")
+             ve yakın değerler halkada okunmuyor; yatay yığın hem sıralamayı
+             hem büyüklüğü doğru veriyor. Dilimler arasında 2px zemin boşluğu
+             var — komşu basamaklar aynı renk ailesinden olduğu için sınırı
+             boşluk çiziyor, renk farkı değil. */
+          case "share": {
+            const total = block.items.reduce((sum, item) => sum + item.value, 0);
+            if (total <= 0) return null;
+            const swatch = (index: number) =>
+              index < 4 ? `var(--share-${index + 1})` : "var(--share-rest)";
+            return (
+              <div key={key} className="flex flex-col gap-2.5">
+                {block.label && (
+                  <p className="plate text-[10px] tracking-[0.09em]">
+                    {block.label}
+                  </p>
+                )}
+                <div className="rounded-(--radius-lg) border border-line bg-surface px-4 py-4">
+                  <div className="flex h-3.5 w-full gap-[2px] overflow-hidden rounded-full">
+                    {block.items.map((item, itemIndex) => (
+                      <span
+                        key={itemIndex}
+                        className="block h-full first:rounded-l-full last:rounded-r-full"
+                        style={{
+                          width: `${(item.value / total) * 100}%`,
+                          background: swatch(itemIndex),
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <ul className="mt-3.5 flex flex-col gap-2">
+                    {block.items.map((item, itemIndex) => (
+                      <li
+                        key={itemIndex}
+                        className="flex items-center gap-2.5 text-[13px]"
+                      >
+                        <span
+                          aria-hidden
+                          className="size-2.5 shrink-0 rounded-[3px]"
+                          style={{ background: swatch(itemIndex) }}
+                        />
+                        <span className="min-w-0 flex-1 truncate text-body">
+                          {item.name}
+                        </span>
+                        <span className="numeral shrink-0 font-semibold text-strong">
+                          %{formatShare((item.value / total) * 100)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          }
+
+          /* Akış — bir zincirin halkaları. Geniş ekranda soldan sağa kutular
+             ve aralarında ok; dar ekranda alt alta ve ok aşağı bakar. Ok bir
+             yön işareti, süs değil: sıra bilgiyi taşıyor. */
+          case "flow":
+            return (
+              <div key={key} className="flex flex-col gap-2.5">
+                {block.label && (
+                  <p className="plate text-[10px] tracking-[0.09em]">
+                    {block.label}
+                  </p>
+                )}
+                <ol className="flex flex-col gap-1.5 sm:flex-row sm:items-stretch">
+                  {block.items.map((item, itemIndex) => (
+                    <Fragment key={itemIndex}>
+                      {itemIndex > 0 && (
+                        <li
+                          aria-hidden
+                          className="flex shrink-0 select-none items-center justify-center text-[15px] leading-none text-primary-soft sm:px-1.5"
+                        >
+                          <span className="sm:hidden">↓</span>
+                          <span className="hidden sm:inline">→</span>
+                        </li>
+                      )}
+                      <li className="flex min-w-0 flex-col rounded-(--radius-lg) border border-line bg-surface px-3.5 py-3 sm:flex-1">
+                        <span className="numeral text-[10px] font-bold tracking-[0.09em] text-primary">
+                          {String(itemIndex + 1).padStart(2, "0")}
+                        </span>
+                        <span className="mt-1 text-[13.5px] font-bold leading-tight text-strong">
+                          {item.name}
+                        </span>
+                        {item.note && (
+                          <span className="mt-1 text-[12px] leading-[17px] text-muted">
+                            {item.note}
+                          </span>
+                        )}
+                      </li>
+                    </Fragment>
+                  ))}
+                </ol>
+              </div>
+            );
+
+          /* Öncesi–sonrası — tek bir büyüklüğün çöküşü ya da sıçraması.
+             İki sayı aynı ölçekte yan yana; aradaki değişim ancak birimler
+             aynıysa yazılır, yoksa ok tek başına konuşur. */
+          case "shift": {
+            const tone =
+              block.deltaPct === null
+                ? "flat"
+                : block.deltaPct > 0
+                  ? "up"
+                  : block.deltaPct < 0
+                    ? "down"
+                    : "flat";
+            return (
+              <div key={key} className="flex flex-col gap-2.5">
+                {block.label && (
+                  <p className="plate text-[10px] tracking-[0.09em]">
+                    {block.label}
+                  </p>
+                )}
+                <div className="flex flex-col gap-3 rounded-(--radius-lg) border border-line bg-surface px-4 py-4 sm:flex-row sm:items-center sm:gap-4">
+                  <Side value={block.from} />
+
+                  <span
+                    aria-hidden
+                    className="select-none text-[16px] leading-none text-primary-soft sm:shrink-0 sm:text-[18px]"
+                  >
+                    <span className="sm:hidden">↓</span>
+                    <span className="hidden sm:inline">→</span>
+                  </span>
+
+                  <Side value={block.to} tone={tone} />
+
+                  {block.deltaPct !== null && (
+                    <span
+                      className={cn(
+                        "numeral w-fit shrink-0 rounded-full px-2.5 py-1 text-[12.5px] font-bold sm:ml-auto",
+                        tone === "down"
+                          ? "bg-down-wash text-down"
+                          : tone === "up"
+                            ? "bg-up-wash text-up"
+                            : "bg-surface-elevated text-body",
+                      )}
+                    >
+                      {block.deltaPct > 0 ? "+" : "−"}%
+                      {formatShare(Math.abs(block.deltaPct))}
+                    </span>
+                  )}
                 </div>
               </div>
             );

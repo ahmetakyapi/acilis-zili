@@ -3,8 +3,8 @@ import Link from "next/link";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
 import { EmptyState, Panel } from "@/components/ui/primitives";
-import { getStoryBySlug, getSymbolNames } from "@/lib/data";
-import { getI18n } from "@/lib/i18n";
+import { getStories, getStoryBySlug, getSymbolNames } from "@/lib/data";
+import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong, safeExternalUrl } from "@/lib/utils";
 
 /**
@@ -75,6 +75,60 @@ async function StorySymbols({ symbols }: { symbols: string[] }) {
         );
       })}
     </div>
+  );
+}
+
+/**
+ * Yazının altındaki arşiv köprüsü.
+ *
+ * Bir dosyayı bitiren okuyucunun tek çıkışı geri tuşuydu; arşivde ikinci bir
+ * yazıya geçmenin yolu yoktu. Üç komşu kayıt burada duruyor — kart değil
+ * satır, çünkü sayfanın işi hâlâ okumak, yeni bir vitrin açmak değil.
+ */
+async function MoreStories({
+  slug,
+  locale,
+  t,
+}: {
+  slug: string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const rows = (await getStories(locale, 8))
+    .filter((story) => story.slug !== slug)
+    .slice(0, 3);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <nav className="flex flex-col gap-3 border-t border-line pt-6">
+      <p className="plate text-[10px] tracking-[0.09em]">
+        {t.stories.moreStories}
+      </p>
+      <ul className="flex flex-col">
+        {rows.map((story) => (
+          <li key={story.slug}>
+            <Link
+              href={`/mercek/${story.slug}`}
+              className="-mx-3 flex flex-col gap-0.5 rounded-(--radius-lg) px-3 py-3 transition-colors hover:bg-primary-tint sm:flex-row sm:items-baseline sm:gap-4"
+            >
+              <span className="numeral shrink-0 text-[11.5px] text-muted sm:w-[124px]">
+                {formatEtDateLong(story.eventDate, locale)}
+              </span>
+              <span className="min-w-0 text-[14.5px] font-semibold leading-snug text-strong">
+                {story.title}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <Link
+        href="/mercek"
+        className="w-fit text-[12.5px] font-semibold text-primary transition-colors hover:text-primary-hover"
+      >
+        {t.stories.backToList}
+      </Link>
+    </nav>
   );
 }
 
@@ -182,6 +236,8 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
           {t.stories.disclaimer}
         </p>
       </footer>
+
+      <MoreStories slug={slug} locale={locale} t={t} />
     </article>
   );
 }
