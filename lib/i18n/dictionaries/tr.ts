@@ -399,11 +399,6 @@ const tr = {
   },
 
   markets: {
-    pulseTitle: "Petrol ve Korku Endeksi",
-    brent: "Brent Petrol",
-    barrel: "dolar/varil",
-    pulseHint:
-      "Brent varil fiyatı ve korku endeksi (VIX), FRED'in yayımladığı kapanış değerleridir; ikisi de birkaç iş günü geriden gelebilir, gözlem tarihleri aşağıda yazılıdır.",
     fearTitle: "Korku Endeksi",
     fearHint:
       "VIX, S&P 500 opsiyonlarından türetilir ve piyasanın önümüzdeki 30 gün için beklediği oynaklığı gösterir. Yön söylemez; yalnızca hareketin ne kadar büyük beklendiğini söyler.",

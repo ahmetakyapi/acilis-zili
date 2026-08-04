@@ -7,7 +7,6 @@ import { BriefSwitch, type BriefView } from "@/components/today/BriefSwitch";
 import { Countdown } from "@/components/today/Countdown";
 import { DayRail, type RailEvent } from "@/components/today/DayRail";
 import { LiveClock } from "@/components/today/LiveClock";
-import { PulseCard } from "@/components/today/PulseCard";
 import {
   DataError,
   DataStamp,
@@ -56,6 +55,7 @@ import {
 import { Sparkline } from "@/components/ui/Sparkline";
 import { getChartBars } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
+import { VIX_SERIES, vixBand } from "@/components/markets/FearGauge";
 
 export default async function TodayPage() {
   const { locale, t } = await getI18n();
@@ -221,12 +221,15 @@ export default async function TodayPage() {
           <YieldCard locale={locale} t={t} />
         </Suspense>
 
-        {/* Petrol ve VIX tahvillerin hemen altında: üçü de hisse tarafının
-            arka planını okuyan, tek sayıdan ibaret ölçüler. */}
-        <Suspense fallback={<Skeleton className="h-28 w-full rounded-2xl" />}>
-          <PulseCard locale={locale} t={t} />
-        </Suspense>
-
+        {/* Burada bir "Petrol ve Korku Endeksi" kartı vardı; kaldırıldı.
+            Brent, FRED'in EIA spot serisinden geliyordu ve o seri günlerce
+            geriden yayımlanıyor: 4 Ağustos'ta ekranda 27 Temmuz'un fiyatı
+            duruyordu, aradaki pencerede varil 92'den 80'e inmişti. Bir
+            fiyatı büyük puntoyla bir hafta geriden göstermek, küçük puntoda
+            tarihini yazarak kurtarılamaz. Ücretsiz sağlayıcılarımızın
+            hiçbirinde canlı emtia spotu yok, o yüzden metrik düştü.
+            Korku Endeksi (VIX) ise günlük geliyor ve yaşıyor: alt şeritte
+            her sayfada, /piyasalar'da bantlı göstergesiyle. */}
         <Suspense fallback={<Skeleton className="h-44 w-full rounded-2xl" />}>
           <MacroSummary locale={locale} t={t} />
         </Suspense>
@@ -510,9 +513,10 @@ const TODAY_YIELDS = [
 ] as const;
 
 async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const results = await Promise.all(
-    TODAY_YIELDS.map((series) => getSeries(series, 2)),
-  );
+  const [vixResult, ...results] = await Promise.all([
+    getSeries(VIX_SERIES, 2),
+    ...TODAY_YIELDS.map((series) => getSeries(series, 2)),
+  ]);
 
   const values = TODAY_YIELDS.map((series, index) => {
     const result = results[index];
@@ -525,6 +529,25 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
   });
 
   if (values.every((value) => value.latest === null)) return null;
+
+  const vixLevel = vixResult.ok ? vixResult.data.latestValue : null;
+  const vixPrev = vixResult.ok ? vixResult.data.prevValue : null;
+  const vixDelta =
+    vixLevel !== null && vixPrev !== null ? vixLevel - vixPrev : null;
+  const bandLabel: Record<string, string> = {
+    calm: t.markets.fearCalm,
+    normal: t.markets.fearNormal,
+    tense: t.markets.fearTense,
+    fear: t.markets.fearHigh,
+    panic: t.markets.fearPanic,
+  };
+  const vixTone =
+    vixLevel !== null
+      ? (() => {
+          const band = vixBand(vixLevel);
+          return { band, label: bandLabel[band.key] ?? "" };
+        })()
+      : null;
 
   return (
     <Panel>
@@ -572,6 +595,48 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
           );
         })}
       </div>
+
+      {/* ---- Korku Endeksi ----
+           Kendi kartı vardı ve o kart Brent'le eşleşmişti; Brent düşünce
+           (FRED'in spot serisi günlerce geriden geliyor) VIX tek başına
+           kaldı. Yeri burası: faiz de VIX de hisse tarafının arka planını
+           okuyan, tek sayıdan ibaret ölçüler ve ikisi de aynı FRED
+           beslemesinden günlük geliyor. Bantlı tam göstergesi
+           /piyasalar'da — eşikler oradan, tek yerden okunuyor. */}
+      {vixLevel !== null && vixTone && (
+        <div className="flex items-center gap-3 border-t border-line px-4 py-3">
+          <span className="plate shrink-0 text-[10px] tracking-[0.08em]">
+            {t.markets.fearTitle}
+          </span>
+          <span className="tote ml-auto text-[17px] leading-none">
+            {formatPrice(vixLevel, locale, { digits: 2 })}
+          </span>
+          <span
+            className={cn(
+              "shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-semibold",
+              vixTone.band.tone === "up" && "bg-up-wash text-up",
+              vixTone.band.tone === "flat" && "bg-surface-elevated text-body",
+              vixTone.band.tone === "warn" && "bg-brass-wash text-brass",
+              vixTone.band.tone === "down" && "bg-down-wash text-down",
+            )}
+          >
+            {vixTone.label}
+          </span>
+          {vixDelta !== null && vixDelta !== 0 && (
+            <span
+              className={cn(
+                "numeral shrink-0 text-[11.5px] font-semibold",
+                // Yükselen VIX gerginlik demek — yön rengi hisse
+                // sözlüğünün tersine kurulu.
+                vixDelta > 0 ? "text-down" : "text-up",
+              )}
+            >
+              <span aria-hidden>{vixDelta > 0 ? "▲" : "▼"}</span>{" "}
+              {formatPrice(Math.abs(vixDelta), locale, { digits: 2 })}
+            </span>
+          )}
+        </div>
+      )}
     </Panel>
   );
 }
@@ -1129,6 +1194,15 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
     .slice(0, TOP_NEWS_COUNT)
     .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
 
+  /* Görseli olmayan haber, künye kutusunda sembol yazan gri bir kutuyla
+     duruyordu. Sıradaki en iyi görsel şirketin kendi logosu: haberin konusunu
+     gösteriyor ve zaten elimizde. */
+  const logos = await getSymbolNames([
+    ...new Set(
+      items.map((item) => item.symbols?.[0]).filter((s): s is string => Boolean(s)),
+    ),
+  ]);
+
   return (
     <ul>
       {items.map((item) => (
@@ -1165,6 +1239,11 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
                   : null
               }
               symbol={item.symbols?.[0] ?? null}
+              logoUrl={
+                item.symbols?.[0]
+                  ? (logos[item.symbols[0]]?.logoUrl ?? null)
+                  : null
+              }
               className="shrink-0"
               sizeClass="size-16"
             />

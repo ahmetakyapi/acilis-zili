@@ -59,6 +59,7 @@ function SectorChip({
   return (
     <Link
       href={href}
+      scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
         "inline-flex min-h-[34px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[12.5px] font-semibold transition-colors",
@@ -103,8 +104,13 @@ function SortHead({
       {/* Dokunma alanı yazının kendisi kadardı (14px yüksekliğinde) ve
           telefonda sıralama değiştirmek nişancılık istiyordu. Negatif
           margin + dikey dolgu, tabloyu büyütmeden hedefi 32px'e çıkarıyor. */}
+      {/* scroll={false}: sıralama bir gezinme değil, aynı tablonun yeniden
+          dizilmesi. Varsayılan davranışta okuyucu tablonun ortasında bir
+          başlığa basınca sayfanın en üstüne fırlıyor ve aşağı geri kaydırmak
+          zorunda kalıyordu. */}
       <Link
         href={href}
+        scroll={false}
         className={cn(
           "-my-2 inline-flex min-h-8 items-center gap-1 py-2 transition-colors hover:text-primary",
           active && "text-primary",

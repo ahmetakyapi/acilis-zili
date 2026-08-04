@@ -391,11 +391,6 @@ const en: typeof tr = {
   },
 
   markets: {
-    pulseTitle: "Oil & The Fear Index",
-    brent: "Brent Crude",
-    barrel: "USD/barrel",
-    pulseHint:
-      "The Brent price per barrel and the fear index (VIX) are closing values published by FRED; both can lag by a few business days, and their observation dates are shown below.",
     fearTitle: "Fear Index",
     fearHint:
       "VIX is derived from S&P 500 options and shows the volatility the market expects over the next 30 days. It says nothing about direction — only how large the move is expected to be.",

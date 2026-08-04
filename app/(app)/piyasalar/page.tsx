@@ -142,6 +142,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
             <Link
               key={entry.key}
               href={`/piyasalar?endeks=${entry.key}`}
+              scroll={false}
               className={cn(
                 "flex min-h-[38px] items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors",
                 activeTab
@@ -222,6 +223,7 @@ async function IndexCards({
           <Link
             key={entry.key}
             href={`/piyasalar?endeks=${entry.key}&sirala=${sort}&yon=${dir}`}
+            scroll={false}
             className="group"
           >
             <Panel
@@ -680,8 +682,13 @@ function SortHead({
     <th className={cn("px-3 py-2.5 text-right font-medium", className)}>
       {/* Dokunma alanı yazının kendisi kadardı (14px); negatif margin +
           dikey dolgu tabloyu büyütmeden hedefi 32px'e çıkarır. */}
+      {/* scroll={false}: sıralama bir gezinme değil, aynı tablonun yeniden
+          dizilmesi. Varsayılan davranışta okuyucu tablonun ortasında bir
+          başlığa basınca sayfanın en üstüne fırlıyor ve aşağı geri kaydırmak
+          zorunda kalıyordu. */}
       <Link
         href={href}
+        scroll={false}
         className={cn(
           "-my-2 inline-flex min-h-8 items-center gap-1 py-2 transition-colors hover:text-primary",
           active && "text-primary",

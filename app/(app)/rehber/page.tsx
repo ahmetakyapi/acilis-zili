@@ -186,6 +186,7 @@ function TopicChip({
   return (
     <Link
       href={href}
+      scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
         "inline-flex min-h-[34px] items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[12.5px] font-semibold transition-colors",

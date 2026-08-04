@@ -22,7 +22,7 @@ import { cn, formatEtDateShort, formatPrice } from "@/lib/utils";
  * Kart bu yüzden tarihini açıkça yazar; "canlı VIX" iddiası taşımaz.
  */
 
-const VIX_SERIES = { seriesId: "VIXCLS", slug: "vix", units: "lin" };
+export const VIX_SERIES = { seriesId: "VIXCLS", slug: "vix", units: "lin" };
 
 /** Bantlar piyasa dilindeki yaygın eşikler; uzun dönem ortalaması ~20. */
 const BANDS = [
@@ -32,6 +32,13 @@ const BANDS = [
   { max: 50, key: "fear", tone: "down" },
   { max: Infinity, key: "panic", tone: "down" },
 ] as const;
+
+export type VixBand = (typeof BANDS)[number];
+
+/** Eşikler tek yerde: ana sayfadaki tahvil kartı da bu bandı okuyor. */
+export function vixBand(level: number): VixBand {
+  return BANDS.find((entry) => level < entry.max) ?? BANDS[BANDS.length - 1];
+}
 
 /** Ölçek çubuğunun üst sınırı — 50 üstü zaten "panik", ayrıntısı önemsiz. */
 const SCALE_MAX = 50;

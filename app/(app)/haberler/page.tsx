@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { EmptyState, Panel } from "@/components/ui/primitives";
 import { NewsImage } from "@/components/news/NewsImage";
-import { getGenericImageUrls, getLatestNews } from "@/lib/data";
+import { getGenericImageUrls, getLatestNews, getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { cn, timeAgo } from "@/lib/utils";
 
@@ -17,10 +17,18 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
     items = items.filter((item) => item.symbols?.includes(symbolFilter));
   }
 
-  // Kaynak logoları elenir; kalan makale görselleri küçük resim olarak durur.
-  const genericImages = await getGenericImageUrls(
-    items.map((item) => item.imageUrl),
-  );
+  /* Kaynak logoları elenir; kalan makale görselleri küçük resim olarak durur.
+     Görseli olmayan habere şirketin logosu konuyor — künye kutusunda sembol
+     yazmaktansa haberin konusu olan şirketi göstermek listeyi taranabilir
+     kılıyor. */
+  const [genericImages, logos] = await Promise.all([
+    getGenericImageUrls(items.map((item) => item.imageUrl)),
+    getSymbolNames([
+      ...new Set(
+        items.map((item) => item.symbols?.[0]).filter((s): s is string => Boolean(s)),
+      ),
+    ]),
+  ]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -97,6 +105,11 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                         : null
                     }
                     symbol={item.symbols?.[0] ?? null}
+                    logoUrl={
+                      item.symbols?.[0]
+                        ? (logos[item.symbols[0]]?.logoUrl ?? null)
+                        : null
+                    }
                     sizeClass="size-16 sm:size-20"
                   />
                 </Link>

@@ -76,6 +76,7 @@ export default async function CalendarPage(
             <Link
               key={v}
               href={`/takvim?g=${v}${impactFilter ? `&onem=${impactFilter}` : ""}`}
+              scroll={false}
               className={cn(
                 "min-h-[36px] rounded-(--radius-sm) px-3 py-1.5 text-sm font-medium transition-colors",
                 view === v
@@ -96,6 +97,7 @@ export default async function CalendarPage(
                   ? `/takvim?g=${view}`
                   : `/takvim?g=${view}&onem=${level}`
               }
+              scroll={false}
               className={cn(
                 "flex min-h-[36px] items-center gap-1.5 rounded-(--radius-sm) px-2.5 py-1.5 text-xs transition-colors",
                 impactFilter === level

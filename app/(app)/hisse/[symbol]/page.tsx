@@ -1281,9 +1281,13 @@ async function CompanyNews({
      farklı görünüyordu. Jenerik görseller (kaynak logosu) elenir — aynı
      logonun sekiz satırda tekrar etmesi listeyi taranabilir yapmıyor,
      bozuyor. */
-  const genericImages = await getGenericImageUrls(
-    shown.map((item) => item.imageUrl),
-  );
+  const [genericImages, meta] = await Promise.all([
+    getGenericImageUrls(shown.map((item) => item.imageUrl)),
+    // Görseli olmayan haber şirketin logosunu alır — bu listede hepsi aynı
+    // şirketin haberi, o yüzden tek sembol yetiyor.
+    getSymbolNames([symbol]),
+  ]);
+  const logoUrl = meta[symbol]?.logoUrl ?? null;
 
   return (
     <ul className="divide-y divide-line-soft">
@@ -1309,6 +1313,7 @@ async function CompanyNews({
                   : null
               }
               symbol={symbol}
+              logoUrl={logoUrl}
               sizeClass="size-14"
             />
           </span>

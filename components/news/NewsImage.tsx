@@ -30,12 +30,15 @@ import { cn } from "@/lib/utils";
 export function NewsImage({
   src,
   symbol,
+  logoUrl,
   className,
   sizeClass = "size-20",
 }: {
   src?: string | null;
   /** Görsel yokken karoda görünen sembol. */
   symbol?: string | null;
+  /** Haberin geçtiği şirketin logosu — görsel yoksa sembolün yerine geçer. */
+  logoUrl?: string | null;
   className?: string;
   sizeClass?: string;
 }) {
@@ -47,6 +50,25 @@ export function NewsImage({
     sizeClass,
     className,
   );
+
+  /* Görsel yoksa sıradaki en iyi şey ŞİRKETİN LOGOSU: haberin konusu olan
+     şirketi gösteriyor, telifi zaten kullandığımız sağlayıcı profilinden
+     geliyor (symbols.logo_url) ve listeyi sembol yazan gri kutulardan
+     kurtarıyor. Beyaz zemin bilinçli — logoların çoğu şeffaf PNG ve koyu
+     temada kendi koyu harfleriyle kayboluyor. */
+  if (!src && logoUrl) {
+    return (
+      <span className={cn(frame, "bg-white")}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logoUrl}
+          alt=""
+          loading="lazy"
+          className="block size-full object-contain p-2"
+        />
+      </span>
+    );
+  }
 
   if (!src) {
     if (!symbol) return null;

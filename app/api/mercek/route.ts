@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkBearer, type AuthOutcome } from "@/lib/api-auth";
 import { z } from "zod";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { stories } from "@/lib/schema";
 import { todayEt } from "@/lib/market-hours";
@@ -47,6 +48,72 @@ const BodySchema = z.object({
 
 function authorized(request: Request): AuthOutcome {
   return checkBearer(request, process.env.BRIEF_SECRET);
+}
+
+/**
+ * Yazının kendisini geri okur — `?slug=...`.
+ *
+ * NEDEN VAR: rutin "aynı olayda ciddi bir gelişme olduysa AYNI SLUG İLE
+ * GÜNCELLE" diyor ama güncellenecek metni okuyacak bir yol yoktu; POST
+ * gövdenin tamamını üzerine yazdığı için model, elindeki eski metni
+ * hatırlamadan yazmak zorunda kalıyordu. Sayfanın HTML'inden geri okumak da
+ * işe yaramıyor: `:::` blokları render sırasında tüketiliyor, yani hangi
+ * bloğun kullanıldığı çıktıdan güvenilir biçimde çıkarılamıyor.
+ *
+ * İçerik zaten herkese açık (sayfası yayımda), ama uç yine de POST ile aynı
+ * anahtarın arkasında: bu kapı yazı ARŞİVİNİN bakım kapısı, okuma kapısı
+ * değil — okumak isteyen /mercek/<slug> adresini açar.
+ */
+export async function GET(request: Request) {
+  const auth = authorized(request);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const url = new URL(request.url);
+  const slug = url.searchParams.get("slug")?.trim();
+  const localeParam = url.searchParams.get("locale");
+  const locale = isLocale(localeParam) ? localeParam : "tr";
+
+  if (!slug) {
+    return NextResponse.json(
+      {
+        error: "missing-slug",
+        detail: "?slug=... zorunlu. Slug listesi: /api/mercek/context",
+      },
+      { status: 400 },
+    );
+  }
+
+  const [row] = await db
+    .select()
+    .from(stories)
+    .where(and(eq(stories.slug, slug), eq(stories.locale, locale)))
+    .limit(1);
+
+  if (!row) {
+    return NextResponse.json(
+      { error: "not-found", slug, locale },
+      { status: 404 },
+    );
+  }
+
+  /* Alan adları POST gövdesiyle AYNI yazılıyor (body_md, event_date…): model
+     okuduğu paketi düzenleyip doğrudan geri gönderebilsin, alan adı
+     çevirmesin. */
+  return NextResponse.json({
+    ok: true,
+    slug: row.slug,
+    locale: row.locale,
+    title: row.title,
+    dek: row.dek,
+    body_md: row.bodyMd,
+    event_date: row.eventDate,
+    symbols: row.symbols ?? [],
+    sources: row.sources ?? [],
+    read_minutes: row.readMinutes,
+    updated_at: row.updatedAt,
+  });
 }
 
 /** Ortalama okuma hızıyla dakika — listede künye olarak görünür. */

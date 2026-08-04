@@ -528,6 +528,11 @@ export function ButtonLink({
    Filtre çipi ve segment — mockup'ta panel başlıklarında ve sayfa üstünde
    -------------------------------------------------------------------------- */
 
+/* SAYFA BAŞA ATLAMASIN. Bu bağlantılar bir gezinme değil, aynı sayfanın
+   filtresi: App Router varsayılan olarak her gezinmede en üste kaydırıyor ve
+   tablonun ortasında sıralamayı değiştiren okuyucu kendini sayfanın başında
+   buluyordu. `scroll={false}` konumu olduğu yerde bırakır. Aynı gerekçe
+   SegmentItem ve sayfalardaki sıralama başlıkları için de geçerli. */
 export function FilterChip({
   href,
   active,
@@ -540,6 +545,7 @@ export function FilterChip({
   return (
     <Link
       href={href}
+      scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
         "inline-flex items-center whitespace-nowrap rounded-full px-[11px] py-[5px] text-[11.5px] transition-colors",
@@ -574,6 +580,7 @@ export function SegmentItem({
   return (
     <Link
       href={href}
+      scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
         "px-[13px] py-[7px] transition-colors",

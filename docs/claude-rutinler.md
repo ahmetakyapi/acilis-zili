@@ -219,6 +219,17 @@ Analist not değişikliği. Fed'in beklenen kararı. Günlük haber akışı.
 Kurallar:
   - existing_stories içinde aynı olay varsa YENİDEN YAZMA. Ciddi bir gelişme
     olduysa aynı slug ile güncelle; yoksa geç.
+
+    Güncelleyeceksen ÖNCE mevcut gövdeyi oku — POST bütün gövdeyi üzerine
+    yazar, yani okumadan yazmak eski metni siler:
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  "https://acilis-zili.vercel.app/api/mercek?slug=<slug>"
+```
+
+    Yanıt POST gövdesiyle aynı alan adlarını kullanır (body_md, event_date,
+    symbols, sources); düzenleyip doğrudan geri gönderebilirsin.
   - Emin değilsen PAS GEÇ. Zayıf bir yazı, yazı olmamasından kötüdür.
   - Pas geçtiğinde hiçbir şey POST etme; sadece "bugün mercek konusu bir olay
     yok" diye raporla ve dur.
