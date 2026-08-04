@@ -104,11 +104,18 @@ export type CoverQuote = {
 } | null;
 
 /**
- * Kart kapağı — gradient bant, logolar ve arkasında sembolün eğrisi.
+ * Kart kapağı — gradient yüzey, logolar, sembolün okuması ve eğrisi.
  *
- * Eğri kasten ARKA PLANDA ve soluk: kapağın işi bir bakışta "bu yazı hangi
- * şirketlerin, piyasa ne yapmış" demek, grafik okutmak değil. Okunacak grafik
- * yazının içinde (`::: grafik` bloğu) zaten var.
+ * KOMPOZİSYON. Kapak üç katman: en altta zeminin degradesi, onun üstünde
+ * sembolün son bir aylık eğrisi (soluk, tam genişlikte, kapağın alt üçte
+ * ikisini kaplar), en üstte logolar ve okuma. Eğri kasten arka planda —
+ * kapağın işi "bu yazı hangi şirketlerin, piyasa ne yapmış" demek, grafik
+ * okutmak değil; okunacak grafik yazının içinde (`::: grafik`) zaten var.
+ *
+ * YÜKSEKLİK `minHeight` OLARAK VERİLİYOR, sabit değil: manşette kapak sağ
+ * kolonda duruyor ve sabit yükseklikle metnin yanında yarım kalıyordu —
+ * altında kartın degradesi boş bir şerit olarak görünüyordu. Esnek ölçüyle
+ * kapak kolonun tamamını dolduruyor, kart tek parça okunuyor.
  */
 export function StoryCover({
   symbols,
@@ -116,7 +123,8 @@ export function StoryCover({
   quote,
   points,
   locale,
-  height = 92,
+  rangeLabel,
+  minHeight = 92,
   logoSize = 40,
   className,
 }: {
@@ -126,58 +134,71 @@ export function StoryCover({
   /** Birincil sembolün son bir aylık kapanışları; yoksa eğri çizilmez. */
   points?: { value: number }[];
   locale: Locale;
-  height?: number;
+  /** Eğrinin ne kadarlık dönem olduğunu söyleyen mikro etiket — "son 1 ay". */
+  rangeLabel?: string;
+  minHeight?: number;
   logoSize?: number;
   className?: string;
 }) {
   const tone = directionOf(quote?.changePct);
   const name = quote ? meta[quote.symbol]?.name : null;
+  const hasCurve = Boolean(points && points.length > 1);
 
   return (
     <div
       className={cn(
-        "relative flex items-center gap-3 overflow-hidden border-b border-line bg-[linear-gradient(135deg,var(--primary-wash),var(--primary-tint))] px-5",
+        "relative flex flex-col gap-3 overflow-hidden border-b border-line bg-[linear-gradient(135deg,var(--primary-wash),var(--primary-tint))] px-5 py-4",
+        /* Eğri yoksa kapak kısalır ve içerik ortalanır. Sağlayıcı barları
+           döndürmediğinde (kota, yeni sembol, geçici hata) sabit yükseklik
+           logoların altında boş bir bant bırakıyordu — kapak bozulmuş gibi
+           duruyordu. Yükseklik veriye uyuyor, tersi değil. */
+        hasCurve ? "justify-between" : "justify-center",
         className,
       )}
-      style={{ height }}
+      style={{ minHeight: hasCurve ? minHeight : Math.min(minHeight, 76) }}
     >
-      {points && points.length > 1 && (
+      {hasCurve && (
         <Sparkline
-          points={points}
+          points={points as { value: number }[]}
           title=""
           tone={tone}
           width={320}
-          height={48}
+          height={80}
           strokeWidth={1.5}
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-12 w-full opacity-50"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 w-full opacity-45"
         />
       )}
 
-      <LogoCluster
-        symbols={symbols}
-        meta={meta}
-        size={logoSize}
-        className="relative"
-      />
+      <div className="relative flex items-start gap-3">
+        <LogoCluster symbols={symbols} meta={meta} size={logoSize} />
 
-      {quote && (
-        <span className="relative ml-auto min-w-0 text-right">
-          <span className="numeral block truncate text-[12px] font-bold text-strong">
-            {quote.symbol}
-          </span>
-          {name && (
-            <span className="block max-w-28 truncate text-[10.5px] leading-tight text-muted">
-              {name}
+        {quote && (
+          <span className="ml-auto min-w-0 text-right">
+            <span className="numeral block truncate text-[12.5px] font-bold text-strong">
+              {quote.symbol}
             </span>
-          )}
-          <span
-            className={cn(
-              "numeral block text-[11.5px] font-semibold",
-              directionText(tone),
+            {name && (
+              <span className="block max-w-[10rem] truncate text-[10.5px] leading-tight text-muted">
+                {name}
+              </span>
             )}
-          >
-            {formatPercent(quote.changePct, locale)}
+            <span
+              className={cn(
+                "numeral mt-0.5 block text-[12px] font-bold",
+                directionText(tone),
+              )}
+            >
+              {formatPercent(quote.changePct, locale)}
+            </span>
           </span>
+        )}
+      </div>
+
+      {/* Eğrinin künyesi: soluk bir çizginin ne olduğunu söylemezsen süs
+          gibi okunuyor. Yalnızca eğri varken yazılır. */}
+      {hasCurve && rangeLabel && (
+        <span className="plate relative self-start text-[9px] tracking-[0.09em]">
+          {rangeLabel}
         </span>
       )}
     </div>

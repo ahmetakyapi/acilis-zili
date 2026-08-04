@@ -36,6 +36,8 @@ import { cn, formatEtDateLong } from "@/lib/utils";
 
 /** Kapakta ve kartlarda canlı fiyat gösterilen sembol sayısı sınırı. */
 const QUOTE_LIMIT = 40;
+/** Kapak eğrisi çizilen farklı sembol sayısı — sağlayıcı kotasının sınırı. */
+const CURVE_LIMIT = 12;
 
 export default async function StoriesPage(props: PageProps<"/mercek">) {
   const search = await props.searchParams;
@@ -155,18 +157,35 @@ async function StoryBoard({
 
   const status = await getStatus();
   const lead = rows[0] ?? null;
-  const leadPrimary = lead?.symbols?.[0] ?? null;
 
-  /* Üç sorgu paralel: künye (logo + ad), canlı fiyatlar ve manşetin eğrisi.
-     Eğri yalnızca MANŞET için çekiliyor — her kart için bar çekmek sağlayıcı
-     kotasını yazı sayısıyla çarpardı. */
-  const [meta, quotes, leadBars] = await Promise.all([
+  /* Kapaklardaki eğriler için barlar: her yazının BİRİNCİL sembolü, tekil
+     küme ve sınırlı sayıda. Aynı sembol birkaç yazıda geçiyor (MU dört
+     yazıda), o yüzden tekilleştirme gerçek bir tasarruf. Günlük barın
+     önbelleği 12 saat ve veritabanına yazılıyor, yani bu istekler günde iki
+     kez gerçekten ağa çıkıyor. */
+  const curveSymbols = [
+    ...new Set(
+      rows
+        .map((story) => story.symbols?.[0])
+        .filter((symbol): symbol is string => Boolean(symbol)),
+    ),
+  ].slice(0, CURVE_LIMIT);
+
+  const [meta, quotes, ...barResults] = await Promise.all([
     getSymbolNames(shownSymbols),
     getQuotes(shownSymbols, status),
-    leadPrimary
-      ? getChartBars(leadPrimary, "1M", status)
-      : Promise.resolve(null),
+    ...curveSymbols.map((symbol) => getChartBars(symbol, "1M", status)),
   ]);
+
+  const curves = new Map<string, { value: number }[]>();
+  curveSymbols.forEach((symbol, index) => {
+    const bars = barResults[index];
+    if (bars?.ok && bars.data.length > 1) {
+      curves.set(symbol, bars.data.map((bar) => ({ value: bar.close })));
+    }
+  });
+  const curveOf = (symbol: string | null | undefined) =>
+    symbol ? curves.get(symbol) : undefined;
 
   const quoteOf = (symbol: string | null | undefined) => {
     if (!symbol || !quotes.ok) return null;
@@ -217,10 +236,8 @@ async function StoryBoard({
             <LeadStory
               story={lead}
               meta={meta}
-              quote={quoteOf(leadPrimary)}
-              points={
-                leadBars?.ok ? leadBars.data.map((bar) => ({ value: bar.close })) : undefined
-              }
+              quote={quoteOf(lead.symbols?.[0])}
+              points={curveOf(lead.symbols?.[0])}
               locale={locale}
               t={t}
             />
@@ -238,6 +255,7 @@ async function StoryBoard({
                     story={story}
                     meta={meta}
                     quote={quoteOf(story.symbols?.[0])}
+                    points={curveOf(story.symbols?.[0])}
                     locale={locale}
                     t={t}
                   />
@@ -286,9 +304,10 @@ function LeadStory({
               quote={quote}
               points={points}
               locale={locale}
-              height={132}
+              rangeLabel={t.chart.rangeLabels["1M"]}
+              minHeight={132}
               logoSize={48}
-              className="border-b lg:w-[320px] lg:shrink-0 lg:border-b-0 lg:border-l"
+              className="border-b lg:w-[300px] lg:shrink-0 lg:border-b-0 lg:border-l"
             />
           )}
 
@@ -335,12 +354,14 @@ function StoryCard({
   story,
   meta,
   quote,
+  points,
   locale,
   t,
 }: {
   story: StoryIndexRow;
   meta: Awaited<ReturnType<typeof getSymbolNames>>;
   quote: { symbol: string; changePct: number | null } | null;
+  points?: { value: number }[];
   locale: Locale;
   t: Dictionary;
 }) {
@@ -354,7 +375,10 @@ function StoryCard({
             symbols={symbols}
             meta={meta}
             quote={quote}
+            points={points}
             locale={locale}
+            rangeLabel={t.chart.rangeLabels["1M"]}
+            minHeight={104}
           />
         ) : (
           <span className="block h-1.5 bg-[linear-gradient(90deg,var(--primary-wash),var(--primary-tint))]" />
