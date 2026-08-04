@@ -51,7 +51,7 @@ async function StorySymbols({ symbols }: { symbols: string[] }) {
                 alt=""
                 width={26}
                 height={26}
-                className="size-[26px] shrink-0 rounded-md border border-line-soft bg-white object-contain p-px"
+                className="size-[26px] shrink-0 rounded-md bg-white object-contain"
               />
             ) : (
               <span

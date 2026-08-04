@@ -293,7 +293,7 @@ async function CompareBoard({
                   alt=""
                   width={22}
                   height={22}
-                  className="size-[22px] shrink-0 rounded-full border border-line-soft bg-white object-contain p-px"
+                  className="size-[22px] shrink-0 rounded-full bg-white object-contain"
                 />
               ) : (
                 <SymbolBadge symbol={symbol} size="sm" className="size-[22px] rounded-full text-[9px]" />

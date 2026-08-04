@@ -45,8 +45,12 @@ export function NewsImage({
   /* Ölçü ve çağıran sınıfı en sonda: tailwind-merge display çakışmasını
      (block ↔ hidden ↔ flex) sona göre çözüyor, yani liste sayfasının
      "hidden sm:flex"i buradaki "block"u doğru şekilde eziyor. */
+  /* ÇERÇEVE YOK. Görselin etrafındaki kenarlık ve iç dolgu, resmi kutunun
+     ortasında duran ayrı bir nesne gibi gösteriyordu; görsel kutunun kendisi
+     olmalı. Kenarlık yalnızca GÖRSEL OLMAYAN yer tutucuda kalıyor — orada
+     kutuyu kutu yapan tek şey o. */
   const frame = cn(
-    "block shrink-0 overflow-hidden rounded-[10px] border border-line bg-surface-elevated",
+    "block shrink-0 overflow-hidden rounded-[10px]",
     sizeClass,
     className,
   );
@@ -58,18 +62,13 @@ export function NewsImage({
      temada kendi koyu harfleriyle kayboluyor. */
   if (!src && logoUrl) {
     return (
-      /* Logo çerçeveye TAM oturur: kalın bir iç dolgu, şeffaf logoları beyaz
-         bir kutunun ortasında küçük bırakıyordu; kendi zemini olan logolar
-         (SpaceX, Nvidia) ise köşeleri kırpılmadığı için kutunun yuvarlak
-         köşelerinden taşıyor gibi duruyordu. İnce dolgu + kırpılan köşe
-         ikisini de aynı ölçüde gösteriyor. */
-      <span className={cn(frame, "bg-white p-1")}>
+      <span className={cn(frame, "bg-white")}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={logoUrl}
           alt=""
           loading="lazy"
-          className="block size-full rounded-[7px] object-contain"
+          className="block size-full object-contain"
         />
       </span>
     );
@@ -84,7 +83,7 @@ export function NewsImage({
           frame,
           // Sessiz kalır: aynı sembol arka arkaya birkaç satırda tekrar
           // edebiliyor, accent dolgu o zaman listeyi bağırır hale getiriyor.
-          "flex items-center justify-center text-[11px] font-bold tracking-[-0.02em] text-muted",
+          "flex items-center justify-center border border-line bg-surface-elevated text-[11px] font-bold tracking-[-0.02em] text-muted",
         )}
       >
         {symbol}

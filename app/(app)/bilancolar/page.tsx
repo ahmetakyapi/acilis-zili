@@ -324,7 +324,7 @@ function DaySection({
                       alt=""
                       width={44}
                       height={44}
-                      className="size-11 shrink-0 rounded-[11px] border border-line bg-white object-contain p-1"
+                      className="size-11 shrink-0 rounded-[11px] bg-white object-contain"
                     />
                   ) : (
                     <SymbolBadge symbol={row.symbol} />
@@ -435,7 +435,7 @@ function DaySection({
                         alt=""
                         width={32}
                         height={32}
-                        className="size-8 shrink-0 rounded-[9px] border border-line bg-white object-contain p-0.5"
+                        className="size-8 shrink-0 rounded-[9px] bg-white object-contain"
                       />
                     ) : (
                       <SymbolBadge symbol={row.symbol} size="sm" />

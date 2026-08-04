@@ -381,7 +381,7 @@ async function CompaniesTable({
                               alt=""
                               width={34}
                               height={34}
-                              className="rounded-md border border-line-soft bg-white object-contain p-0.5"
+                              className="rounded-md bg-white object-contain"
                             />
                           ) : (
                             <span

@@ -1,11 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
-import {
-  StoryCardHeader,
-  StoryCover,
-  StoryCurveStrip,
-} from "@/components/stories/StoryVisual";
+import { BrandPlate } from "@/components/stories/StoryVisual";
 import {
   EmptyState,
   FilterChip,
@@ -15,7 +11,7 @@ import {
   Skeleton,
 } from "@/components/ui/primitives";
 import { getStatus, getStories, getSymbolNames, type StoryIndexRow } from "@/lib/data";
-import { getChartBars, getQuotes } from "@/lib/providers";
+import { getChartBars } from "@/lib/providers";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong } from "@/lib/utils";
 
@@ -40,7 +36,7 @@ import { formatEtDateLong } from "@/lib/utils";
 
 /** Kapakta ve kartlarda canlı fiyat gösterilen sembol sayısı sınırı. */
 const QUOTE_LIMIT = 40;
-/** Kapak eğrisi çizilen farklı sembol sayısı — sağlayıcı kotasının sınırı. */
+/** "Olaydan bugüne" getirisi hesaplanan farklı sembol sayısı. */
 const CURVE_LIMIT = 12;
 
 export default async function StoriesPage(props: PageProps<"/mercek">) {
@@ -165,11 +161,10 @@ async function StoryBoard({
   const status = await getStatus();
   const lead = rows[0] ?? null;
 
-  /* Kapaklardaki eğriler için barlar: her yazının BİRİNCİL sembolü, tekil
-     küme ve sınırlı sayıda. Aynı sembol birkaç yazıda geçiyor (MU dört
-     yazıda), o yüzden tekilleştirme gerçek bir tasarruf. Günlük barın
-     önbelleği 12 saat ve veritabanına yazılıyor, yani bu istekler günde iki
-     kez gerçekten ağa çıkıyor. */
+  /* "Olaydan bugüne" getirisi için bir yıllık günlük barlar: her yazının
+     BİRİNCİL sembolü, tekil küme ve sınırlı sayıda. Aynı sembol birkaç
+     yazıda geçiyor (MU dört yazıda), o yüzden tekilleştirme gerçek bir
+     tasarruf. Günlük barın önbelleği 12 saat ve veritabanına yazılıyor. */
   const curveSymbols = [
     ...new Set(
       rows
@@ -178,26 +173,38 @@ async function StoryBoard({
     ),
   ].slice(0, CURVE_LIMIT);
 
-  const [meta, quotes, ...barResults] = await Promise.all([
+  const [meta, ...barResults] = await Promise.all([
     getSymbolNames(shownSymbols),
-    getQuotes(shownSymbols, status),
-    ...curveSymbols.map((symbol) => getChartBars(symbol, "1M", status)),
+    ...curveSymbols.map((symbol) => getChartBars(symbol, "1Y", status)),
   ]);
 
-  const curves = new Map<string, { value: number }[]>();
+  const seriesOf = new Map<string, { time: number; close: number }[]>();
   curveSymbols.forEach((symbol, index) => {
     const bars = barResults[index];
     if (bars?.ok && bars.data.length > 1) {
-      curves.set(symbol, bars.data.map((bar) => ({ value: bar.close })));
+      seriesOf.set(
+        symbol,
+        bars.data.map((bar) => ({ time: bar.time, close: bar.close })),
+      );
     }
   });
-  const curveOf = (symbol: string | null | undefined) =>
-    symbol ? curves.get(symbol) : undefined;
 
-  const quoteOf = (symbol: string | null | undefined) => {
-    if (!symbol || !quotes.ok) return null;
-    const quote = quotes.data[symbol];
-    return quote ? { symbol, changePct: quote.changePct } : null;
+  /* Olay gününden bugüne getiri: o güne ait (ya da ondan sonraki ilk) günlük
+     kapanış ile son kapanış arasındaki fark. Olay barların başladığı tarihten
+     eskiyse ya da seri yoksa sayı hiç yazılmaz — uydurulmuş bir taban
+     üzerinden yüzde üretmektense boş bırakmak doğru. */
+  const sinceEventOf = (
+    symbol: string | null | undefined,
+    eventDate: string,
+  ): number | null => {
+    if (!symbol) return null;
+    const series = seriesOf.get(symbol);
+    if (!series || series.length < 2) return null;
+    const eventTs = Date.parse(`${eventDate}T00:00:00Z`) / 1000;
+    const at = series.find((point) => point.time >= eventTs);
+    const last = series[series.length - 1];
+    if (!at || !last || at.close === 0 || at.time === last.time) return null;
+    return ((last.close - at.close) / at.close) * 100;
   };
 
   return (
@@ -243,8 +250,7 @@ async function StoryBoard({
             <LeadStory
               story={lead}
               meta={meta}
-              quote={quoteOf(lead.symbols?.[0])}
-              points={curveOf(lead.symbols?.[0])}
+              sinceEvent={sinceEventOf(lead.symbols?.[0], lead.eventDate)}
               locale={locale}
               t={t}
             />
@@ -261,8 +267,7 @@ async function StoryBoard({
                     key={story.slug}
                     story={story}
                     meta={meta}
-                    quote={quoteOf(story.symbols?.[0])}
-                    points={curveOf(story.symbols?.[0])}
+                    sinceEvent={sinceEventOf(story.symbols?.[0], story.eventDate)}
                     locale={locale}
                     t={t}
                   />
@@ -286,15 +291,13 @@ async function StoryBoard({
 function LeadStory({
   story,
   meta,
-  quote,
-  points,
+  sinceEvent,
   locale,
   t,
 }: {
   story: StoryIndexRow;
   meta: Awaited<ReturnType<typeof getSymbolNames>>;
-  quote: { symbol: string; changePct: number | null } | null;
-  points?: { value: number }[];
+  sinceEvent: number | null;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -302,73 +305,71 @@ function LeadStory({
 
   return (
     <Link href={`/mercek/${story.slug}`} prefetch className="min-w-0">
-      <section className="panel-hover overflow-hidden rounded-2xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] transition-colors">
-        <div className="flex flex-col lg:flex-row-reverse lg:items-stretch">
-          {symbols.length > 0 && (
-            <StoryCover
+      <section className="panel-hover overflow-hidden rounded-2xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 transition-colors sm:p-7">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <Kicker tone="primary">{t.stories.latest}</Kicker>
+          <span className="numeral ml-auto text-[11.5px] text-muted">
+            {formatEtDateLong(story.eventDate, locale)}
+          </span>
+        </div>
+
+        <h2 className="display-ink mt-3 w-fit max-w-[22ch] text-[26px] font-bold leading-[1.12] tracking-[-0.03em] sm:text-[34px]">
+          {story.title}
+        </h2>
+        <p className="mt-3.5 max-w-[62ch] text-[15px] leading-[25px] text-body">
+          {story.dek}
+        </p>
+
+        {/* Marka plakası metnin ALTINDA ve tam genişlikte: sağ kolonda
+            duran kapak, başlığı dar bir sütuna sıkıştırıyordu ve manşetin
+            en güçlü öğesi başlıktır. */}
+        {symbols.length > 0 && (
+          <div className="mt-5 inline-flex w-fit max-w-full rounded-(--radius-lg) border border-primary-faint bg-surface-solid/60 px-4 py-3">
+            <BrandPlate
               symbols={symbols}
               meta={meta}
-              quote={quote}
-              points={points}
+              sinceEvent={sinceEvent}
+              sinceLabel={t.stories.sinceEvent}
               locale={locale}
-              rangeLabel={t.chart.rangeLabels["1M"]}
-              minHeight={132}
-              logoSize={48}
-              className="border-b lg:w-[300px] lg:shrink-0 lg:border-b-0 lg:border-l"
+              size={56}
             />
-          )}
-
-          <div className="min-w-0 flex-1 p-5 sm:p-7">
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-              <Kicker tone="primary">{t.stories.latest}</Kicker>
-              <span className="numeral ml-auto text-[11.5px] text-muted">
-                {formatEtDateLong(story.eventDate, locale)}
-              </span>
-            </div>
-
-            <h2 className="display-ink mt-3 w-fit text-[24px] font-bold leading-[1.15] tracking-[-0.03em] sm:text-[30px]">
-              {story.title}
-            </h2>
-            <p className="mt-3 max-w-[62ch] text-[15px] leading-[25px] text-body">
-              {story.dek}
-            </p>
-
-            <p className="mt-4 flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-[12.5px] font-semibold text-primary">
-              {t.guide.cardCta}
-              <ArrowRight weight="bold" size={13} />
-              {story.readMinutes && (
-                <span className="numeral ml-auto font-normal text-muted">
-                  {story.readMinutes} {t.stories.readMinutes}
-                </span>
-              )}
-            </p>
           </div>
-        </div>
+        )}
+
+        <p className="mt-4 flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-[12.5px] font-semibold text-primary">
+          {t.guide.cardCta}
+          <ArrowRight weight="bold" size={13} />
+          {story.readMinutes && (
+            <span className="numeral ml-auto font-normal text-muted">
+              {story.readMinutes} {t.stories.readMinutes}
+            </span>
+          )}
+        </p>
       </section>
     </Link>
   );
 }
 
 /**
- * Arşiv kartı — kapak bandı, künye, başlık, giriş ve semboller.
+ * Arşiv kartı — marka plakası, künye, başlık, giriş ve kadro.
  *
- * Sembol çipleri artık ölü metin değil: yanlarında o şirketin bugünkü
- * değişimi duruyor. Yazı geçmişte kalmış bir olayı anlatıyor, çip ise o
- * şirketin bugün nerede olduğunu söylüyor — ikisi birlikte "sonra ne oldu"
- * sorusunun ilk cevabı.
+ * KART NEDEN BÖYLE. Önce kapak bandında logolar ve sembolün günlük değişimi,
+ * kartın altında da bir aylık fiyat eğrisi vardı. Eğri gürültüydü: küçük
+ * kartta okunmuyor, arşivde sorulan soruyu da cevaplamıyordu. Kart artık tek
+ * bir görsel çapa taşıyor — şirketin logosu, büyük ve kırpılmadan — ve tek
+ * bir sayı: olayın gününden bugüne getiri. Yazı geçmişte kalmış bir olayı
+ * anlatıyor; o rakam "sonra ne oldu" sorusunun ilk cevabı.
  */
 function StoryCard({
   story,
   meta,
-  quote,
-  points,
+  sinceEvent,
   locale,
   t,
 }: {
   story: StoryIndexRow;
   meta: Awaited<ReturnType<typeof getSymbolNames>>;
-  quote: { symbol: string; changePct: number | null } | null;
-  points?: { value: number }[];
+  sinceEvent: number | null;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -378,12 +379,15 @@ function StoryCard({
     <Link href={`/mercek/${story.slug}`} prefetch={false} className="min-w-0">
       <Panel className="panel-hover flex h-full flex-col overflow-hidden">
         {symbols.length > 0 ? (
-          <StoryCardHeader
-            symbols={symbols}
-            meta={meta}
-            quote={quote}
-            locale={locale}
-          />
+          <div className="border-b border-line bg-[linear-gradient(135deg,var(--primary-wash),var(--primary-tint))] px-5 py-4">
+            <BrandPlate
+              symbols={symbols}
+              meta={meta}
+              sinceEvent={sinceEvent}
+              sinceLabel={t.stories.sinceEvent}
+              locale={locale}
+            />
+          </div>
         ) : (
           <span className="block h-1.5 bg-[linear-gradient(90deg,var(--primary-wash),var(--primary-tint))]" />
         )}
@@ -408,32 +412,27 @@ function StoryCard({
             {story.dek}
           </p>
 
-          {/* Kapak zaten birincil sembolün canlı okumasını taşıyor; çipler
-              yazının geri kalan kadrosunu sayar. Aynı yüzde iki kez
-              yazılmasın diye çiplerde değişim tekrar edilmiyor. */}
-          {symbols.length > 0 && (
+          {/* Plaka birincil şirketi gösteriyor; çipler yazının geri kalan
+              kadrosunu sayar, birincil sembol orada tekrar edilmez. */}
+          {symbols.length > 1 && (
             <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
-              {symbols.slice(0, 4).map((symbol) => (
-                <SymbolPill key={symbol} symbol={symbol} locale={locale} />
+              {symbols.slice(1, 5).map((symbol) => (
+                <SymbolPill key={symbol} symbol={symbol} />
               ))}
-              {symbols.length > 4 && (
+              {symbols.length > 5 && (
                 <span className="numeral inline-flex items-center rounded-md bg-surface-elevated px-1.5 py-0.5 text-[10.5px] font-bold text-muted">
-                  +{symbols.length - 4}
+                  +{symbols.length - 5}
                 </span>
               )}
             </div>
           )}
         </div>
-
-        {/* Eğri kartın alt kenarında, kırpılmadan tam genişlikte: başlıkta
-            logoların arkasından geçerken üçü birbirini bulandırıyordu. */}
-        <StoryCurveStrip points={points} changePct={quote?.changePct} />
       </Panel>
     </Link>
   );
 }
 
-function SymbolPill({ symbol }: { symbol: string; locale: Locale }) {
+function SymbolPill({ symbol }: { symbol: string }) {
   return (
     <span className="numeral inline-flex items-center rounded-md bg-surface-elevated px-1.5 py-0.5 text-[10.5px] font-bold text-body">
       {symbol}
