@@ -55,6 +55,16 @@ type PriceChartProps = {
   initialRange?: ChartRange;
   locale: Locale;
   labels: ChartLabels;
+  /**
+   * Sayfa başlığındaki kotasyon — okuma satırı bunu yazar.
+   *
+   * Eğri barlardan çiziliyor ve barın son kapanışı ile anlık kotasyon
+   * tanımı gereği farklı sayılar: biri son tamamlanmış dakikanın kapanışı,
+   * diğeri son işlem. Ekranda yan yana duran iki fiyatın birbirini
+   * tutmaması ise okuyucu için hata demek. Büyük punto ile yazılan fiyat bu
+   * yüzden başlıktakiyle aynı kaynaktan geliyor.
+   */
+  quote?: { price: number | null; changePct: number | null } | null;
 };
 
 type ChartResult =
@@ -83,6 +93,7 @@ export function PriceChart({
   initialRange = "1D",
   locale,
   labels,
+  quote,
 }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -339,6 +350,19 @@ export function PriceChart({
         Math.max(0, Math.round(logical)),
       );
       const bar = bars[index];
+
+      /* Okuma DOĞRUDAN yazılıyor, imleç aboneliğinin dönmesi beklenmiyor.
+         Telefonda parmağın altındaki fiyat bazen geç yansıyordu: değeri
+         yalnızca `subscribeCrosshairMove` besliyordu ve o geri çağrı,
+         kütüphane imleci kendi içinde işledikten SONRA — bazen bir sonraki
+         karede — geliyordu. Okunacak bar burada zaten belli; state'i beklemek
+         için bir sebep yok. Abonelik yine duruyor (fare, klavye, temizleme). */
+      setHover({
+        dateLabel: dateFormatter.format(new Date(bar.time * 1000)),
+        price: bar.close,
+        changePct:
+          baseline !== 0 ? ((bar.close - baseline) / baseline) * 100 : 0,
+      });
       chart.setCrosshairPosition(bar.close, bar.time as UTCTimestamp, series);
     };
 
@@ -492,8 +516,27 @@ export function PriceChart({
     overnight: labels.sessionOvernight,
   };
 
+  /* Okunan fiyat: kotasyon varsa o, yoksa son barın kapanışı. Yüzde ise
+     1G'de doğrudan kotasyonun günlük değişimi — böylece başlıktaki rozetle
+     birebir aynı sayı çıkıyor. Diğer aralıklarda dönem getirisi, ama son
+     nokta yine kotasyon: eğri barlardan, sayı canlı fiyattan. */
+  const shownPrice = quote?.price ?? period?.last.close ?? null;
+  const shownChangePct =
+    range === "1D" && quote?.changePct !== null && quote?.changePct !== undefined
+      ? quote.changePct
+      : period && shownPrice !== null && period.baseline !== 0
+        ? ((shownPrice - period.baseline) / period.baseline) * 100
+        : (period?.changePct ?? null);
+
+  const shownTone: "up" | "down" | "flat" =
+    shownChangePct === null || shownChangePct === 0
+      ? "flat"
+      : shownChangePct > 0
+        ? "up"
+        : "down";
+
   const toneText =
-    periodTone === "up" ? "text-up" : periodTone === "down" ? "text-down" : "text-soft";
+    shownTone === "up" ? "text-up" : shownTone === "down" ? "text-down" : "text-soft";
   const hoverTone =
     hover && hover.changePct > 0
       ? "text-up"
@@ -524,10 +567,10 @@ export function PriceChart({
                 {labels.rangeLabels[range]}
               </span>
               <span className="tote text-[28px] sm:text-[32px]">
-                {formatPrice(period.last.close, locale, { currency: true })}
+                {formatPrice(shownPrice, locale, { currency: true })}
               </span>
               <span className={cn("numeral text-lg font-bold", toneText)}>
-                {formatPercent(period.changePct, locale)}
+                {formatPercent(shownChangePct, locale)}
               </span>
             </div>
             <span className="numeral text-xs text-muted">

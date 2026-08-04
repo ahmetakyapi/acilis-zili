@@ -516,6 +516,9 @@ const tr = {
     archive: "Önceki Yazılar",
     /* Sayfanın kendini tanıttığı bant — "Mercek" adı tek başına burada ne
        yazıldığını söylemiyor ve liste haber akışından ayırt edilemiyordu. */
+    whatShort: "altı ay sonra da merak edilecek olaylar",
+    howShort: "doğrulanmış rakamlar, künyede kaynaklar",
+    rhythmShort: "her gün değil, olay olduğunda",
     whatTitle: "Ne Yazılır",
     whatBody:
       "Bir fonun kapanması, bir satın almanın bozulması, bir tezin piyasada sınanıp çökmesi — altı ay sonra da merak edilecek olaylar.",

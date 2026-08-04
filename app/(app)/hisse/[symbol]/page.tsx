@@ -270,13 +270,20 @@ async function StockHeader({
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div className="flex items-center gap-3">
         {profile?.logoUrl ? (
-          <Image
-            src={profile.logoUrl}
-            alt=""
-            width={56}
-            height={56}
-            className="rounded-(--radius-lg) border border-line bg-white object-contain p-1.5"
-          />
+          /* Logo ÇERÇEVESİZ ve tam oturur: kenarlık + iç dolgu, logoyu beyaz
+             bir kutunun ortasında küçük bir damga gibi gösteriyordu. Artık
+             kare kendi köşe yarıçapıyla kırpılıyor, görsel kutuyu tümüyle
+             dolduruyor. Beyaz zemin duruyor çünkü logoların çoğu şeffaf PNG
+             ve koyu temada kendi koyu harfleriyle kayboluyor. */
+          <span className="block size-16 shrink-0 overflow-hidden rounded-(--radius-lg) bg-white">
+            <Image
+              src={profile.logoUrl}
+              alt=""
+              width={64}
+              height={64}
+              className="size-full object-contain"
+            />
+          </span>
         ) : fund ? (
           // Fonun logosu yok; ülke/piyasa bayrağı kimliği taşır
           <span
@@ -396,7 +403,7 @@ function HeaderSkeleton() {
    Grafik — yön rengi günün değişiminden gelir
    ========================================================================== */
 
-function ChartSection({
+async function ChartSection({
   symbol,
   locale,
   t,
@@ -405,8 +412,27 @@ function ChartSection({
   locale: Locale;
   t: Dictionary;
 }) {
+  /* Grafiğin okuma satırı ile sayfa başlığındaki fiyat AYNI kaynaktan gelmeli.
+     Eskiden başlık anlık kotasyonu (son işlem), grafik ise son DAKİKA BARININ
+     kapanışını yazıyordu; ikisi tanımı gereği farklı sayılar ve ekranda yan
+     yana duran iki fiyat birbirini tutmuyordu ($897,75 ile $897,06 gibi).
+     Kotasyon buradan geçiriliyor: eğri barlardan çizilmeye devam ediyor, ama
+     büyük punto ile yazılan fiyat başlıktakiyle aynı. İkinci çağrı sağlayıcıya
+     gitmiyor — aynı önbellek. */
+  const status = await getStatus();
+  const result = await getQuote(symbol, status);
+
   return (
-    <PriceChart symbol={symbol} locale={locale} labels={chartLabels(t)} />
+    <PriceChart
+      symbol={symbol}
+      locale={locale}
+      labels={chartLabels(t)}
+      quote={
+        result.ok
+          ? { price: result.data.price, changePct: result.data.changePct }
+          : null
+      }
+    />
   );
 }
 
@@ -635,14 +661,14 @@ async function ProfileCard({
       <dl className="flex flex-1 flex-col justify-between divide-y divide-line-soft">
         {rows.map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-3 py-2">
-            <dt className="text-xs text-muted">{label}</dt>
+            <dt className="text-xs font-semibold text-strong">{label}</dt>
             <dd className="text-right text-sm text-body">{value}</dd>
           </div>
         ))}
         {/* Adres sağlayıcıdan geliyor; şeması süzülmeden href'e konmaz. */}
         {websiteHref && (
           <div className="flex items-center justify-between gap-3 py-2">
-            <dt className="text-xs text-muted">{t.stock.website}</dt>
+            <dt className="text-xs font-semibold text-strong">{t.stock.website}</dt>
             <dd className="min-w-0 text-right text-sm">
               <a
                 href={websiteHref}
@@ -712,7 +738,7 @@ async function MetricsCard({
       <dl className="divide-y divide-line-soft">
         {rows.map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-3 py-2">
-            <dt className="text-xs text-muted">{label}</dt>
+            <dt className="text-xs font-semibold text-strong">{label}</dt>
             <dd className="numeral text-sm text-body">{value}</dd>
           </div>
         ))}

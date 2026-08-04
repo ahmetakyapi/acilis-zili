@@ -58,13 +58,18 @@ export function NewsImage({
      temada kendi koyu harfleriyle kayboluyor. */
   if (!src && logoUrl) {
     return (
-      <span className={cn(frame, "bg-white")}>
+      /* Logo çerçeveye TAM oturur: kalın bir iç dolgu, şeffaf logoları beyaz
+         bir kutunun ortasında küçük bırakıyordu; kendi zemini olan logolar
+         (SpaceX, Nvidia) ise köşeleri kırpılmadığı için kutunun yuvarlak
+         köşelerinden taşıyor gibi duruyordu. İnce dolgu + kırpılan köşe
+         ikisini de aynı ölçüde gösteriyor. */
+      <span className={cn(frame, "bg-white p-1")}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={logoUrl}
           alt=""
           loading="lazy"
-          className="block size-full object-contain p-2"
+          className="block size-full rounded-[7px] object-contain"
         />
       </span>
     );

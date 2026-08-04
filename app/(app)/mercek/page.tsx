@@ -1,7 +1,11 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
-import { StoryCover } from "@/components/stories/StoryVisual";
+import {
+  StoryCardHeader,
+  StoryCover,
+  StoryCurveStrip,
+} from "@/components/stories/StoryVisual";
 import {
   EmptyState,
   FilterChip,
@@ -13,7 +17,7 @@ import {
 import { getStatus, getStories, getSymbolNames, type StoryIndexRow } from "@/lib/data";
 import { getChartBars, getQuotes } from "@/lib/providers";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { cn, formatEtDateLong } from "@/lib/utils";
+import { formatEtDateLong } from "@/lib/utils";
 
 /**
  * Mercek — arşivin vitrini.
@@ -56,7 +60,7 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
         subtitle={t.stories.subtitle}
       />
 
-      <IntroBand t={t} />
+      <IntroLine t={t} />
 
       <Suspense key={symbolFilter ?? "all"} fallback={<BoardSkeleton />}>
         <StoryBoard locale={locale} t={t} symbolFilter={symbolFilter} />
@@ -66,37 +70,40 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
 }
 
 /**
- * Açıklama bandı — ne, nasıl, ne sıklıkla.
+ * Sayfanın kendini tanıttığı satır — ne, nasıl, ne sıklıkla.
  *
- * Veri beklemez, sayfayla birlikte anında gelir: bu sayfanın ilk işi kendini
- * tanıtmak, listeyi göstermek ikinci iş.
+ * ÖNCE BİR KARTTI ve sayfanın en üstünde duruyordu: ekranda ilk karşılaşılan
+ * yüzey manşet değil bir açıklama kutusu oluyordu, dikkat de oraya
+ * dağılıyordu. Oysa bu metnin işi yol göstermek, sahneyi almak değil.
+ *
+ * Artık kutu yok: başlığın hemen altında üç kısa madde, nokta ayraçlı tek
+ * bir sessiz satır. Bilgi duruyor, ağırlığı kalkıyor — manşet ilk sırada.
  */
-function IntroBand({ t }: { t: Dictionary }) {
-  const columns = [
-    { title: t.stories.whatTitle, body: t.stories.whatBody },
-    { title: t.stories.howTitle, body: t.stories.howBody },
-    { title: t.stories.rhythmTitle, body: t.stories.rhythmBody },
+function IntroLine({ t }: { t: Dictionary }) {
+  const items = [
+    { title: t.stories.whatTitle, body: t.stories.whatShort },
+    { title: t.stories.howTitle, body: t.stories.howShort },
+    { title: t.stories.rhythmTitle, body: t.stories.rhythmShort },
   ];
 
   return (
-    <Panel className="px-5 py-5 sm:px-6">
-      <div className="grid gap-5 sm:grid-cols-3 sm:gap-6">
-        {columns.map((column, index) => (
-          <div
-            key={column.title}
-            className={cn(
-              "flex flex-col gap-1.5",
-              index > 0 && "sm:border-l sm:border-line sm:pl-6",
+    <div className="-mt-1 flex flex-col gap-2">
+      <ul className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[12.5px] leading-[18px] text-muted">
+        {items.map((item, index) => (
+          <li key={item.title} className="flex items-center gap-2.5">
+            {index > 0 && (
+              <span aria-hidden className="text-line-strong">
+                ·
+              </span>
             )}
-          >
-            <p className="plate text-[10px] tracking-[0.09em] text-primary">
-              {column.title}
-            </p>
-            <p className="text-[13px] leading-[20px] text-body">{column.body}</p>
-          </div>
+            <span>
+              <span className="font-semibold text-body">{item.title}:</span>{" "}
+              {item.body}
+            </span>
+          </li>
         ))}
-      </div>
-      <p className="mt-5 flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t border-line pt-3.5 text-[12.5px] text-muted">
+      </ul>
+      <p className="flex flex-wrap items-center gap-x-1.5 text-[12px] text-muted">
         {t.stories.bridge}
         <Link
           href="/haberler"
@@ -112,7 +119,7 @@ function IntroBand({ t }: { t: Dictionary }) {
           {t.nav.guide}
         </Link>
       </p>
-    </Panel>
+    </div>
   );
 }
 
@@ -369,16 +376,13 @@ function StoryCard({
 
   return (
     <Link href={`/mercek/${story.slug}`} prefetch={false} className="min-w-0">
-      <Panel className="panel-hover flex h-full flex-col">
+      <Panel className="panel-hover flex h-full flex-col overflow-hidden">
         {symbols.length > 0 ? (
-          <StoryCover
+          <StoryCardHeader
             symbols={symbols}
             meta={meta}
             quote={quote}
-            points={points}
             locale={locale}
-            rangeLabel={t.chart.rangeLabels["1M"]}
-            minHeight={104}
           />
         ) : (
           <span className="block h-1.5 bg-[linear-gradient(90deg,var(--primary-wash),var(--primary-tint))]" />
@@ -420,6 +424,10 @@ function StoryCard({
             </div>
           )}
         </div>
+
+        {/* Eğri kartın alt kenarında, kırpılmadan tam genişlikte: başlıkta
+            logoların arkasından geçerken üçü birbirini bulandırıyordu. */}
+        <StoryCurveStrip points={points} changePct={quote?.changePct} />
       </Panel>
     </Link>
   );

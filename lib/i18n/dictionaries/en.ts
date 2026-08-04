@@ -504,6 +504,9 @@ const en: typeof tr = {
       "Long reads on what happened in the market — what took place, why, and what it taught.",
     latest: "Latest Piece",
     archive: "Earlier Pieces",
+    whatShort: "events still worth reading six months later",
+    howShort: "verified numbers, sources listed",
+    rhythmShort: "not daily — only when something happens",
     whatTitle: "What Gets Covered",
     whatBody:
       "A fund unwinding, an acquisition falling apart, a thesis tested and broken by the market — events still worth reading about six months later.",

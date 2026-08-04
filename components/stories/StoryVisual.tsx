@@ -204,3 +204,83 @@ export function StoryCover({
     </div>
   );
 }
+
+/**
+ * Kart başlığı — logolar ve sembolün okuması, ARKASINDA EĞRİ YOK.
+ *
+ * Manşetteki katmanlı kapak küçük kartta çalışmıyordu: 104px'lik bir bantta
+ * eğri logoların arkasından geçiyor, "SON 1 AY" künyesi çizginin üstüne
+ * biniyor ve üç öğe birbirini bulandırıyordu. Kartta eğri başlıktan çıkıp
+ * kartın ALT kenarına iniyor (StoryCurveStrip); başlıkta yalnızca kimlik ve
+ * okuma kalıyor, ikisi de net.
+ */
+export function StoryCardHeader({
+  symbols,
+  meta,
+  quote,
+  locale,
+}: {
+  symbols: string[];
+  meta: Record<string, SymbolMetaLite>;
+  quote: CoverQuote;
+  locale: Locale;
+}) {
+  const tone = directionOf(quote?.changePct);
+  const name = quote ? meta[quote.symbol]?.name : null;
+
+  return (
+    <div className="flex items-center gap-3 border-b border-line bg-[linear-gradient(135deg,var(--primary-wash),var(--primary-tint))] px-5 py-3.5">
+      <LogoCluster symbols={symbols} meta={meta} size={36} />
+      {quote && (
+        <span className="ml-auto min-w-0 text-right">
+          <span className="numeral block truncate text-[12px] font-bold text-strong">
+            {quote.symbol}
+          </span>
+          {name && (
+            <span className="block max-w-[10rem] truncate text-[10.5px] leading-tight text-muted">
+              {name}
+            </span>
+          )}
+        </span>
+      )}
+      {quote && (
+        <span
+          className={cn(
+            "numeral shrink-0 text-[12.5px] font-bold",
+            directionText(tone),
+          )}
+        >
+          {formatPercent(quote.changePct, locale)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Kartın alt kenarındaki eğri şeridi — kartın imzası.
+ *
+ * Kırpılmadan tam genişliği kaplar ve altında etiket taşımaz: burada eğri
+ * bir ölçü değil, kartın hangi hisseye ait olduğunu hatırlatan sessiz bir
+ * biçim. Okunacak sayı başlıkta zaten yazılı.
+ */
+export function StoryCurveStrip({
+  points,
+  changePct,
+}: {
+  points?: { value: number }[];
+  changePct: number | null | undefined;
+}) {
+  if (!points || points.length < 2) return null;
+  return (
+    <Sparkline
+      points={points}
+      title=""
+      tone={directionOf(changePct)}
+      width={320}
+      height={28}
+      strokeWidth={1.5}
+      className="mt-auto h-7 w-full opacity-70"
+    />
+  );
+}
