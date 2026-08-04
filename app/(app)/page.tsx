@@ -344,27 +344,45 @@ async function RailSection({
             : undefined,
     }));
 
-  // Bilanço saatleri: bmo → açılış öncesi, amc → kapanış sonrası. Sağlayıcı
-  // dakika vermiyor, o yüzden seans sınırlarına oturtulur; uydurma saat yok.
+  /* Bilanço saatleri YAKLAŞIKTIR ve şeritte "~" ile yazılır.
+     Sağlayıcı yalnızca pencereyi veriyor — bmo (açılış öncesi), amc (kapanış
+     sonrası), dmh (seans içi) — dakika vermiyor. Kayıtlar bu yüzden gerçek
+     dağılımın merkezine oturtuluyor: ABD'de açılış öncesi açıklamalar
+     06:30-08:00 ET arasında yığılıyor, kapanış sonrası olanlar 16:05-16:30'da.
+     16:30 ayrıca kapanış zilinin (16:00) SONRASINA düşmek zorunda; zilin tam
+     üstüne konsa "sonrası" olduğu okunmaz ve KAPANIŞ etiketiyle karışırdı.
+     Alt satırda hangi pencere olduğu adıyla yazılı, yani rakam tek başına
+     bir iddia taşımıyor. */
   const EARNINGS_TIME: Record<string, string> = {
     bmo: "07:00",
     amc: "16:30",
     dmh: "12:00",
   };
+  const lower = (value: string) =>
+    value.toLocaleLowerCase(locale === "tr" ? "tr-TR" : "en-US");
+  const EARNINGS_WINDOW: Record<string, string> = {
+    bmo: lower(t.earnings.beforeOpen),
+    amc: lower(t.earnings.afterClose),
+    dmh: lower(t.earnings.duringMarket),
+  };
 
   const earningsItems: RailEvent[] = earnings
     .filter((row) => row.hour && EARNINGS_TIME[row.hour])
-    .map((row) => ({
-      id: `earnings-${row.id}`,
-      timeEt: EARNINGS_TIME[row.hour as string],
-      title: row.symbol,
-      importance: "low" as const,
-      kind: "earnings" as const,
-      watched: watchedSet.has(row.symbol),
-      detail: watchedSet.has(row.symbol)
-        ? `${t.dayRail.earningsNote} · ${t.dayRail.watchedNote}`
-        : t.dayRail.earningsNote,
-    }));
+    .map((row) => {
+      const window = EARNINGS_WINDOW[row.hour as string];
+      return {
+        id: `earnings-${row.id}`,
+        timeEt: EARNINGS_TIME[row.hour as string],
+        title: row.symbol,
+        importance: "low" as const,
+        kind: "earnings" as const,
+        approx: true,
+        watched: watchedSet.has(row.symbol),
+        detail: watchedSet.has(row.symbol)
+          ? `${window} · ${t.dayRail.watchedNote}`
+          : window,
+      };
+    });
 
   // Aynı saate düşen bilançolar tek noktada toplanır — 229 şirketlik bir gün
   // ekseni okunmaz hale getirir.

@@ -30,6 +30,17 @@ export type RailEvent = {
   kind?: "event" | "earnings";
   /** Kullanıcının takip listesinde mi? Accent dolu nokta alır. */
   watched?: boolean;
+  /**
+   * Saat YAKLAŞIK mı — başına "~" konur.
+   *
+   * Bilanço satırlarında saat gerçek bir açıklama anı değil: sağlayıcı
+   * yalnızca "açılış öncesi / kapanış sonrası" diyor, dakika vermiyor. Bu
+   * yüzden kayıtlar seans sınırlarının yakınına oturtuluyor (bmo 07:00,
+   * amc 16:30 ET). Ekranda kesin saat gibi yazınca okuyucu haklı olarak
+   * "AMD gerçekten 23:30'da mı açıklıyor?" diye soruyor — cevap hayır,
+   * kapanıştan sonra bir vakitte. İşaret bunu söylüyor.
+   */
+  approx?: boolean;
   /** Alt satırda görünen sessiz bilgi — "42B · bekl. 65B", "bilanço". */
   detail?: string;
 };
@@ -132,7 +143,8 @@ export function DayRail({
   const [nowMinutes, setNowMinutes] = useState(initialNowMinutes);
 
   /** ET dakikası → ekranda öne yazılan saat. */
-  const shown = (minutes: number) => formatMinutes(minutes + offsets.primary);
+  const shown = (minutes: number, approx = false) =>
+    `${approx ? "~" : ""}${formatMinutes(minutes + offsets.primary)}`;
   /** Aynı anın diğer saati — künyesiyle birlikte alt satırda durur. */
   const other = (minutes: number) => formatMinutes(minutes + offsets.secondary);
 
@@ -334,7 +346,9 @@ export function DayRail({
                       high ? "text-down" : "text-primary",
                     )}
                   >
-                    <span className="numeral">{shown(event.minutes)}</span>{" "}
+                    <span className="numeral">
+                      {shown(event.minutes, event.approx)}
+                    </span>{" "}
                     {event.title}
                   </div>
                   {event.detail && (
@@ -347,7 +361,7 @@ export function DayRail({
                   style={{ left, top: EVENT_LABEL_TOP + event.row * ROW_OFFSET }}
                 >
                   <div className="numeral text-[11.5px] font-semibold text-strong">
-                    {shown(event.minutes)}
+                    {shown(event.minutes, event.approx)}
                   </div>
                   {/* Başlık artık düşmüyor. Eskiden `detail ?? title`
                       yazılıyordu ve detayı olan her satırda başlık kayboluyordu:
@@ -395,6 +409,7 @@ export function DayRail({
                   kind: "now" as const,
                   detail: undefined,
                   watched: false,
+                  approx: false,
                 },
               ]
             : []),
@@ -412,6 +427,7 @@ export function DayRail({
               | string
               | undefined,
             watched: false,
+            approx: false,
           },
           {
             id: "__close",
@@ -426,6 +442,7 @@ export function DayRail({
               | string
               | undefined,
             watched: false,
+            approx: false,
           },
         ]
           .sort((a, b) => a.minutes - b.minutes)
@@ -448,7 +465,7 @@ export function DayRail({
                           : "font-semibold text-body",
                   )}
                 >
-                  {shown(entry.minutes)}
+                  {shown(entry.minutes, entry.approx)}
                 </div>
                 <div className="relative w-5 shrink-0">
                   {isNow ? (
