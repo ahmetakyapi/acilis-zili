@@ -219,3 +219,32 @@ const TR_TIME = new Intl.DateTimeFormat("tr-TR", {
 export function dualTime(utcDate: Date, etTime: string): { et: string; tr: string } {
   return { et: etTime, tr: TR_TIME.format(utcDate) };
 }
+
+/**
+ * Haber gerçekten bu şirketle mi ilgili?
+ *
+ * `news.symbols` alanı her zaman haberin KONUSUNU söylemiyor: günlük senkron,
+ * en büyük şirketlerin haber uçlarını tek tek geziyor ve sağlayıcı sembol
+ * döndürmediğinde kaydı çekildiği sembolle damgalıyor. Sonuç: "Palantir, AMD,
+ * Coherent, SpaceX…" başlıklı genel bir piyasa yazısı MU etiketiyle
+ * duruyor. Künyeye Micron logosu koyduğumuz anda bu sessiz bir yanlıştan
+ * görünür bir yanlışa dönüştü.
+ *
+ * Bu yüzden logo, ancak şirket BAŞLIKTA gerçekten geçiyorsa gösterilir:
+ * sembolün kendisi ya da şirket adının ilk kelimesi ("Micron Technology Inc"
+ * → "micron"). Geçmiyorsa nötr sembol karosu kalır — eksik bilgi, yanlış
+ * bilgiden iyidir.
+ */
+export function headlineMentions(
+  headline: string,
+  symbol: string,
+  name?: string | null,
+): boolean {
+  const text = headline.toLowerCase();
+  const escaped = symbol.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (new RegExp(`\\b${escaped}\\b`).test(text)) return true;
+
+  // Şirket adının ilk kelimesi — "Inc", "Corp" gibi son ekler eşleşme üretmez.
+  const first = (name ?? "").trim().split(/[\s,.]+/)[0]?.toLowerCase();
+  return Boolean(first && first.length >= 3 && text.includes(first));
+}

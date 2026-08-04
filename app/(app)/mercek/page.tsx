@@ -109,14 +109,14 @@ function IntroLine({ t }: { t: Dictionary }) {
         {t.stories.bridge}
         <Link
           href="/haberler"
-          className="font-semibold text-primary transition-colors hover:text-primary-hover"
+          className="-my-2 inline-flex min-h-8 items-center py-2 font-semibold text-primary transition-colors hover:text-primary-hover"
         >
           {t.nav.news}
         </Link>
         <span aria-hidden>·</span>
         <Link
           href="/rehber"
-          className="font-semibold text-primary transition-colors hover:text-primary-hover"
+          className="-my-2 inline-flex min-h-8 items-center py-2 font-semibold text-primary transition-colors hover:text-primary-hover"
         >
           {t.nav.guide}
         </Link>

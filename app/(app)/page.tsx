@@ -50,6 +50,7 @@ import {
   formatEtDateShort,
   formatPercent,
   formatPrice,
+  headlineMentions,
   timeAgo,
 } from "@/lib/utils";
 import { Sparkline } from "@/components/ui/Sparkline";
@@ -1189,6 +1190,8 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
 /** Kartta gösterilen haber sayısı ve seçkinin tarandığı havuz. */
 const TOP_NEWS_COUNT = 6;
 const TOP_NEWS_POOL = 40;
+/** Aynı sembolden listeye en fazla kaç haber girer. */
+const TOP_NEWS_PER_SYMBOL = 2;
 
 async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
   // Bu kart "son haberler" değil "öne çıkanlar": son 40 haberlik havuzdan
@@ -1208,9 +1211,31 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
   const hasImage = (item: (typeof pool)[number]) =>
     Boolean(item.imageUrl) && !genericImages.has(item.imageUrl as string);
 
+  /* TEK ŞİRKET LİSTEYİ ELE GEÇİRMESİN. Günlük senkron en büyük şirketlerin
+     haber uçlarını tek tek geziyor; hareketli bir günde tek sembol havuzun
+     dörtte birini doldurabiliyor (bir gün 40 haberin 12'si MU'ydu) ve
+     "Öne Çıkan Haberler" tek şirketin bülteni gibi görünüyordu. Sembol
+     başına en fazla iki haber alınır, kalanlar sıradakine yer açar. */
+  const bySymbolCap = (list: typeof pool) => {
+    const seen = new Map<string, number>();
+    const kept: typeof pool = [];
+    for (const item of list) {
+      const key = item.symbols?.[0] ?? "";
+      const count = seen.get(key) ?? 0;
+      if (key && count >= TOP_NEWS_PER_SYMBOL) continue;
+      seen.set(key, count + 1);
+      kept.push(item);
+    }
+    return kept;
+  };
+
   const withImage = pool.filter(hasImage);
   const withoutImage = pool.filter((item) => !hasImage(item));
-  const items = [...withImage, ...withoutImage]
+  const ordered = bySymbolCap([...withImage, ...withoutImage]);
+  const items = (ordered.length >= TOP_NEWS_COUNT
+    ? ordered
+    : [...ordered, ...[...withImage, ...withoutImage].filter((i) => !ordered.includes(i))]
+  )
     .slice(0, TOP_NEWS_COUNT)
     .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
 
@@ -1222,6 +1247,16 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
       items.map((item) => item.symbols?.[0]).filter((s): s is string => Boolean(s)),
     ),
   ]);
+
+  /* Logo, haber gerçekten o şirketle ilgiliyse konur — `symbols` alanı
+     haberin konusunu değil, çekildiği beslemeyi söyleyebiliyor. */
+  const logoFor = (item: (typeof pool)[number]) => {
+    const symbol = item.symbols?.[0];
+    if (!symbol) return null;
+    const meta = logos[symbol];
+    if (!meta?.logoUrl) return null;
+    return headlineMentions(item.headline, symbol, meta.name) ? meta.logoUrl : null;
+  };
 
   return (
     <ul>
@@ -1259,11 +1294,7 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
                   : null
               }
               symbol={item.symbols?.[0] ?? null}
-              logoUrl={
-                item.symbols?.[0]
-                  ? (logos[item.symbols[0]]?.logoUrl ?? null)
-                  : null
-              }
+              logoUrl={logoFor(item)}
               className="shrink-0"
               sizeClass="size-16"
             />

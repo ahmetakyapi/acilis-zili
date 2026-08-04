@@ -186,9 +186,14 @@ export function StoryCast({
 
   return (
     <div className="overflow-hidden rounded-(--radius-lg) border border-primary-faint bg-surface-solid/70">
+      {/* Sağdaki künye, ALTINDAKİ SAYI SÜTUNUYLA aynı hizada durur: iki
+          satıra kırılıp sola yaslandığında rakamlarla ilgisiz bir metin gibi
+          okunuyordu. Sol başlık kırılır, sağdaki tek satır kalır. */}
       <div className="flex items-baseline justify-between gap-3 border-b border-primary-faint px-4 py-2.5">
-        <span className="plate text-[9.5px] tracking-[0.09em]">{title}</span>
-        <span className="text-[9.5px] uppercase tracking-[0.07em] text-muted">
+        <span className="plate min-w-0 text-[9.5px] tracking-[0.09em]">
+          {title}
+        </span>
+        <span className="shrink-0 whitespace-nowrap text-right text-[9.5px] uppercase tracking-[0.07em] text-muted">
           {sinceLabel}
         </span>
       </div>

@@ -548,7 +548,7 @@ export function FilterChip({
       scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "inline-flex items-center whitespace-nowrap rounded-full px-[11px] py-[5px] text-[11.5px] transition-colors",
+        "inline-flex min-h-8 items-center whitespace-nowrap rounded-full px-[11px] py-[5px] text-[11.5px] transition-colors",
         active
           ? "bg-primary font-semibold text-on-primary"
           : "bg-surface-elevated text-body hover:text-strong",

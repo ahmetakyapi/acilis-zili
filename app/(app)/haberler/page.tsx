@@ -3,7 +3,7 @@ import { EmptyState, Panel } from "@/components/ui/primitives";
 import { NewsImage } from "@/components/news/NewsImage";
 import { getGenericImageUrls, getLatestNews, getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
-import { cn, timeAgo } from "@/lib/utils";
+import { cn, headlineMentions, timeAgo } from "@/lib/utils";
 
 export default async function NewsPage(props: PageProps<"/haberler">) {
   const search = await props.searchParams;
@@ -105,11 +105,17 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                         : null
                     }
                     symbol={item.symbols?.[0] ?? null}
-                    logoUrl={
-                      item.symbols?.[0]
-                        ? (logos[item.symbols[0]]?.logoUrl ?? null)
-                        : null
-                    }
+                    logoUrl={(() => {
+                      /* Logo yalnızca haber gerçekten o şirketle ilgiliyse:
+                         `symbols` alanı bazen haberin konusunu değil,
+                         çekildiği beslemeyi söylüyor. */
+                      const symbol = item.symbols?.[0];
+                      const meta = symbol ? logos[symbol] : null;
+                      if (!symbol || !meta?.logoUrl) return null;
+                      return headlineMentions(item.headline, symbol, meta.name)
+                        ? meta.logoUrl
+                        : null;
+                    })()}
                     sizeClass="size-16 sm:size-20"
                   />
                 </Link>

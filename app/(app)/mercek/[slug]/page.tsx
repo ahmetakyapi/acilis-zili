@@ -43,7 +43,7 @@ async function StorySymbols({ symbols }: { symbols: string[] }) {
           <Link
             key={symbol}
             href={`/hisse/${symbol}`}
-            className="panel-hover flex items-center gap-2 rounded-[11px] border border-line bg-surface py-1.5 pl-1.5 pr-3 transition-colors"
+            className="panel-hover flex min-h-10 items-center gap-2 rounded-[11px] border border-line bg-surface py-1.5 pl-1.5 pr-3 transition-colors"
           >
             {logo ? (
               <Image
@@ -124,7 +124,7 @@ async function MoreStories({
       </ul>
       <Link
         href="/mercek"
-        className="w-fit text-[12.5px] font-semibold text-primary transition-colors hover:text-primary-hover"
+        className="-my-2 inline-flex w-fit min-h-8 items-center py-2 text-[12.5px] font-semibold text-primary transition-colors hover:text-primary-hover"
       >
         {t.stories.backToList}
       </Link>
@@ -163,7 +163,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
     <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
       <Link
         href="/mercek"
-        className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-primary"
+        className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-[12.5px] font-semibold text-muted transition-colors hover:text-primary"
       >
         <ArrowLeft weight="bold" size={13} />
         {t.stories.backToList}

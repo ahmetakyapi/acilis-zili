@@ -54,6 +54,7 @@ import {
   formatEtDateShort,
   formatPrice,
   formatVolume,
+  headlineMentions,
   isValidSymbol,
   safeExternalUrl,
   timeAgo,
@@ -674,7 +675,7 @@ async function ProfileCard({
                 href={websiteHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block truncate text-primary hover:underline"
+                className="-my-2 block min-h-8 truncate py-2 text-primary hover:underline"
               >
                 {websiteHref.replace(/^https?:\/\/(www\.)?/, "")}
               </a>
@@ -1339,7 +1340,14 @@ async function CompanyNews({
                   : null
               }
               symbol={symbol}
-              logoUrl={logoUrl}
+              /* Bu liste şirketin kendi beslemesinden geliyor ama besleme
+                 ara ara genel piyasa yazıları da döndürüyor; logo yalnızca
+                 başlıkta şirket geçiyorsa konur. */
+              logoUrl={
+                headlineMentions(item.headline, symbol, meta[symbol]?.name)
+                  ? logoUrl
+                  : null
+              }
               sizeClass="size-14"
             />
           </span>
