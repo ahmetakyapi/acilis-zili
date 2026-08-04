@@ -1,3 +1,4 @@
+import { Newspaper } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/lib/utils";
 
 /**
@@ -29,15 +30,16 @@ import { cn } from "@/lib/utils";
  */
 export function NewsImage({
   src,
-  symbol,
   logoUrl,
   className,
   sizeClass = "size-20",
 }: {
   src?: string | null;
-  /** Görsel yokken karoda görünen sembol. */
-  symbol?: string | null;
-  /** Haberin geçtiği şirketin logosu — görsel yoksa sembolün yerine geçer. */
+  /**
+   * Haberin konusu olan şirketin logosu. Yalnızca şirket BAŞLIKTA gerçekten
+   * geçiyorsa gönderilir (`headlineMentions`) — `news.symbols` alanı bazen
+   * haberin konusunu değil, çekildiği beslemeyi söylüyor.
+   */
   logoUrl?: string | null;
   className?: string;
   sizeClass?: string;
@@ -74,19 +76,24 @@ export function NewsImage({
     );
   }
 
+  /* GÖRSEL DE LOGO DA YOKSA: nötr bir okuma işareti.
+     Burada bir süre SEMBOL YAZIYORDU ("MU", "INTC") ve bu iki ayrı sorun
+     üretiyordu. Birincisi, sembol de bir iddiadır: haber o şirketle ilgili
+     değilse — `news.symbols` bazen haberin konusunu değil çekildiği beslemeyi
+     söylüyor — kutuda yanlış şirketin adı duruyordu. İkincisi, liste satır
+     satır farklı görünüyordu: biri fotoğraf, biri logo, biri gri harfler.
+     Nötr işaret ikisini de çözüyor; hiçbir şey iddia etmiyor ve bütün
+     satırlar aynı ritimde duruyor. */
   if (!src) {
-    if (!symbol) return null;
     return (
       <span
         aria-hidden
         className={cn(
           frame,
-          // Sessiz kalır: aynı sembol arka arkaya birkaç satırda tekrar
-          // edebiliyor, accent dolgu o zaman listeyi bağırır hale getiriyor.
-          "flex items-center justify-center border border-line bg-surface-elevated text-[11px] font-bold tracking-[-0.02em] text-muted",
+          "flex items-center justify-center border border-line bg-surface-elevated text-muted",
         )}
       >
-        {symbol}
+        <Newspaper weight="duotone" className="size-1/3" />
       </span>
     );
   }

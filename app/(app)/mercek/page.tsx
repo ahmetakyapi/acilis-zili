@@ -17,7 +17,7 @@ import {
 import { getStatus, getStories, getSymbolNames, type StoryIndexRow } from "@/lib/data";
 import { getChartBars } from "@/lib/providers";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { formatEtDateLong } from "@/lib/utils";
+import { formatEtDateLong, formatEtDateShort } from "@/lib/utils";
 
 /**
  * Mercek — arşivin vitrini.
@@ -360,6 +360,7 @@ function LeadStory({
                 total={total}
                 title={t.stories.relatedSymbols}
                 sinceLabel={t.stories.sinceEvent}
+                eventDate={formatEtDateShort(story.eventDate, locale)}
                 moreLabel={t.stories.moreCompanies}
                 locale={locale}
               />
@@ -401,6 +402,7 @@ function StoryCard({
             cast={cast}
             total={total}
             sinceLabel={t.stories.sinceEvent}
+            eventDate={formatEtDateShort(story.eventDate, locale)}
             locale={locale}
           />
         ) : (

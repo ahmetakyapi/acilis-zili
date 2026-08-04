@@ -1293,7 +1293,6 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
                   ? item.imageUrl
                   : null
               }
-              symbol={item.symbols?.[0] ?? null}
               logoUrl={logoFor(item)}
               className="shrink-0"
               sizeClass="size-16"

@@ -1339,7 +1339,6 @@ async function CompanyNews({
                   ? item.imageUrl
                   : null
               }
-              symbol={symbol}
               /* Bu liste şirketin kendi beslemesinden geliyor ama besleme
                  ara ara genel piyasa yazıları da döndürüyor; logo yalnızca
                  başlıkta şirket geçiyorsa konur. */

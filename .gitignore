@@ -46,3 +46,12 @@ next-env.d.ts
 
 # Gerçek secret gömülü, yapıştırmaya hazır rutin promptları — asla commitlenmez
 *.local.md
+
+# macOS senkron araçlarının (iCloud Drive) ürettiği çakışma kopyaları.
+# Bu depo iCloud'a bağlı bir klasörde duruyor; senkron bir dosyayı iki yerde
+# değişmiş görünce ikinci bir kopya bırakıyor: "alpaca 2.ts", ".gitignore 2".
+# Kopyalar eski sürüm taşıyor ve hiçbir yerden import edilmiyor — commit'e
+# girmeleri kesinlikle istenmiyor. Kaynağı kapatmanın yolu: Sistem Ayarları →
+# Apple Hesabı → iCloud → iCloud Drive → "Masaüstü ve Belgeler" kapalı.
+* [0-9].*
+* [0-9]

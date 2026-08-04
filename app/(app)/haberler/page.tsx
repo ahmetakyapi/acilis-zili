@@ -104,7 +104,6 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                         ? item.imageUrl
                         : null
                     }
-                    symbol={item.symbols?.[0] ?? null}
                     logoUrl={(() => {
                       /* Logo yalnızca haber gerçekten o şirketle ilgiliyse:
                          `symbols` alanı bazen haberin konusunu değil,

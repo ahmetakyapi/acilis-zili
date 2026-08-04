@@ -111,6 +111,21 @@ dönüşümünün tamamı orada, başka yerde manuel saat aritmetiği yapılmaz.
 - **Yatay taşma** düzenli kontrol edilir; puppeteer koşumu route × genişlik
   matrisini tarar (`.tmp-*.mjs` geçici dosyaları commit'lenmez).
 
+## iCloud kopyaları — derlemeyi kırar
+
+Depo iCloud Drive'a bağlı bir klasörde (Masaüstü senkronu). Senkron bir
+dosyayı iki yerde değişmiş görünce ikinci bir kopya bırakıyor: `alpaca 2.ts`,
+`routes.d 5.ts`, `.gitignore 3`. Kopyalar eski sürüm taşır, hiçbir yerden
+import edilmez ama `.next/types` altına düştüklerinde TypeScript onları da
+okur ve derleme `TS6200: Definitions … conflict` ile kırılır — hata koddan
+değil dosya sisteminden gelir.
+
+`npm run typecheck` ve `npm run build` bu yüzden önce
+`scripts/clean-sync-dupes.mjs` çalıştırıyor; ayrıca `.gitignore` deseni
+kopyaların commit'e girmesini engelliyor. Kalıcı çözüm kaynakta: Sistem
+Ayarları → Apple Hesabı → iCloud → iCloud Drive → "Masaüstü ve Belgeler
+Klasörleri" kapatılırsa hiç oluşmazlar.
+
 ## Yerelde çalışırken
 
 `.env.local` içindeki bazı sağlayıcı anahtarları boş olabilir. O zaman ilgili

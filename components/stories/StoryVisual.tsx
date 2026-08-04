@@ -96,6 +96,7 @@ export function StoryBrands({
   cast,
   total,
   sinceLabel,
+  eventDate,
   locale,
   max = 4,
 }: {
@@ -103,6 +104,9 @@ export function StoryBrands({
   /** Yazıda geçen toplam sembol sayısı — şeride sığmayanlar sayıyla söylenir. */
   total: number;
   sinceLabel: string;
+  /** Ölçünün başladığı gün — "olaydan bugüne" tek başına hangi gün olduğunu
+      söylemiyordu. */
+  eventDate: string;
   locale: Locale;
   max?: number;
 }) {
@@ -149,6 +153,9 @@ export function StoryBrands({
           <span className="mt-1 block text-[9px] uppercase tracking-[0.07em] text-muted">
             {lead.symbol} · {sinceLabel}
           </span>
+          <span className="numeral block text-[9.5px] leading-tight text-muted">
+            {eventDate}
+          </span>
         </span>
       )}
     </div>
@@ -169,6 +176,7 @@ export function StoryCast({
   total,
   title,
   sinceLabel,
+  eventDate,
   moreLabel,
   locale,
 }: {
@@ -176,6 +184,8 @@ export function StoryCast({
   total: number;
   title: string;
   sinceLabel: string;
+  /** Ölçünün başladığı gün — künyenin altında yazılır. */
+  eventDate: string;
   /** "+{count} şirket daha" — şablon. */
   moreLabel: string;
   locale: Locale;
@@ -193,8 +203,15 @@ export function StoryCast({
         <span className="plate min-w-0 text-[9.5px] tracking-[0.09em]">
           {title}
         </span>
-        <span className="shrink-0 whitespace-nowrap text-right text-[9.5px] uppercase tracking-[0.07em] text-muted">
-          {sinceLabel}
+        {/* Künyenin altında ölçünün BAŞLADIĞI GÜN: "olaydan bugüne" tek
+            başına hangi günden beri olduğunu söylemiyordu. */}
+        <span className="shrink-0 whitespace-nowrap text-right">
+          <span className="block text-[9.5px] uppercase tracking-[0.07em] text-muted">
+            {sinceLabel}
+          </span>
+          <span className="numeral block text-[10px] leading-tight text-body">
+            {eventDate}
+          </span>
         </span>
       </div>
       <ul>
