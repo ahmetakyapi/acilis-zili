@@ -529,6 +529,7 @@ const tr = {
     rhythmBody:
       "Her gün değil. Sıradan bir seans mercek konusu değildir; anlatmaya değer bir olay yaşandığında yayımlanır.",
     bridge: "Günlük haber akışı ve kavram anlatımları ayrı bölümlerde:",
+    moreCompanies: "+{count} şirket daha",
     sinceEvent: "olaydan bugüne",
     filterLabel: "Şirkete Göre",
     filterAll: "Tümü",

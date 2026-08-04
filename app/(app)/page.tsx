@@ -349,13 +349,15 @@ async function RailSection({
      sonrası), dmh (seans içi) — dakika vermiyor. Kayıtlar bu yüzden gerçek
      dağılımın merkezine oturtuluyor: ABD'de açılış öncesi açıklamalar
      06:30-08:00 ET arasında yığılıyor, kapanış sonrası olanlar 16:05-16:30'da.
-     16:30 ayrıca kapanış zilinin (16:00) SONRASINA düşmek zorunda; zilin tam
-     üstüne konsa "sonrası" olduğu okunmaz ve KAPANIŞ etiketiyle karışırdı.
-     Alt satırda hangi pencere olduğu adıyla yazılı, yani rakam tek başına
-     bir iddia taşımıyor. */
+     Kapanış sonrası kayıtlar KAPANIŞ ZİLİNİN KENDİSİNE oturuyor (16:00 ET =
+     23:00 TR): bir süre 16:30'a konmuştu, "sonrası" olduğu okunsun diye, ama
+     zilin yarım saat ötesine atmak da uydurma bir kesinlik veriyordu. Şerit
+     zaten "~" ile yaklaşık olduğunu ve alt satırda hangi pencere olduğunu
+     söylüyor; konumun zille aynı olması doğruyu bozmuyor, etiket bir kademe
+     aşağıya kaçıyor (bkz. BOUND_COLLISION_MINUTES). */
   const EARNINGS_TIME: Record<string, string> = {
     bmo: "07:00",
-    amc: "16:30",
+    amc: "16:00",
     dmh: "12:00",
   };
   const lower = (value: string) =>

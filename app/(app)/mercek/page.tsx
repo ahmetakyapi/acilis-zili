@@ -1,7 +1,11 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
-import { BrandPlate } from "@/components/stories/StoryVisual";
+import {
+  StoryBrands,
+  StoryCast,
+  type CastMember,
+} from "@/components/stories/StoryVisual";
 import {
   EmptyState,
   FilterChip,
@@ -87,8 +91,10 @@ function IntroLine({ t }: { t: Dictionary }) {
       <ul className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[12.5px] leading-[18px] text-muted">
         {items.map((item, index) => (
           <li key={item.title} className="flex items-center gap-2.5">
+            {/* Ayraç dar ekranda gizlenir: maddeler zaten alt alta düşüyor ve
+                nokta, satır başına kayıp yetim bir işaret olarak kalıyordu. */}
             {index > 0 && (
-              <span aria-hidden className="text-line-strong">
+              <span aria-hidden className="hidden text-line-strong sm:inline">
                 ·
               </span>
             )}
@@ -165,12 +171,15 @@ async function StoryBoard({
      BİRİNCİL sembolü, tekil küme ve sınırlı sayıda. Aynı sembol birkaç
      yazıda geçiyor (MU dört yazıda), o yüzden tekilleştirme gerçek bir
      tasarruf. Günlük barın önbelleği 12 saat ve veritabanına yazılıyor. */
+  /* Manşette kadro tablosu var, kartlarda tek rakam: o yüzden manşetin ilk
+     dört sembolü ve diğer yazıların birincil sembolü için bar çekiliyor. */
   const curveSymbols = [
-    ...new Set(
-      rows
+    ...new Set([
+      ...(lead?.symbols ?? []).slice(0, 3),
+      ...rows
         .map((story) => story.symbols?.[0])
         .filter((symbol): symbol is string => Boolean(symbol)),
-    ),
+    ]),
   ].slice(0, CURVE_LIMIT);
 
   const [meta, ...barResults] = await Promise.all([
@@ -206,6 +215,15 @@ async function StoryBoard({
     if (!at || !last || at.close === 0 || at.time === last.time) return null;
     return ((last.close - at.close) / at.close) * 100;
   };
+
+  /** Yazının kadrosu — logo, ad ve olaydan bugüne getiri. */
+  const castOf = (story: StoryIndexRow, limit: number): CastMember[] =>
+    (story.symbols ?? []).slice(0, limit).map((symbol) => ({
+      symbol,
+      name: meta[symbol]?.name ?? null,
+      logoUrl: meta[symbol]?.logoUrl ?? null,
+      sinceEvent: sinceEventOf(symbol, story.eventDate),
+    }));
 
   return (
     <div className="flex flex-col gap-6">
@@ -249,8 +267,7 @@ async function StoryBoard({
           {lead && (
             <LeadStory
               story={lead}
-              meta={meta}
-              sinceEvent={sinceEventOf(lead.symbols?.[0], lead.eventDate)}
+              cast={castOf(lead, 3)}
               locale={locale}
               t={t}
             />
@@ -266,8 +283,7 @@ async function StoryBoard({
                   <StoryCard
                     key={story.slug}
                     story={story}
-                    meta={meta}
-                    sinceEvent={sinceEventOf(story.symbols?.[0], story.eventDate)}
+                    cast={castOf(story, 4)}
                     locale={locale}
                     t={t}
                   />
@@ -290,104 +306,103 @@ async function StoryBoard({
  */
 function LeadStory({
   story,
-  meta,
-  sinceEvent,
+  cast,
   locale,
   t,
 }: {
   story: StoryIndexRow;
-  meta: Awaited<ReturnType<typeof getSymbolNames>>;
-  sinceEvent: number | null;
+  cast: CastMember[];
   locale: Locale;
   t: Dictionary;
 }) {
-  const symbols = story.symbols ?? [];
+  const total = story.symbols?.length ?? 0;
 
   return (
     <Link href={`/mercek/${story.slug}`} prefetch className="min-w-0">
       <section className="panel-hover overflow-hidden rounded-2xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 transition-colors sm:p-7">
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-          <Kicker tone="primary">{t.stories.latest}</Kicker>
-          <span className="numeral ml-auto text-[11.5px] text-muted">
-            {formatEtDateLong(story.eventDate, locale)}
-          </span>
-        </div>
+        {/* İki kolon: solda okunacak metin, sağda yazının kadrosu. Kadro
+            manşette bir tabloya dönüşüyor çünkü burada yer var ve bu
+            yazıların anlattığı olay çoğu zaman birkaç şirketi birlikte
+            vuruyor — "sonra ne oldu" sorusunun cevabı şirket şirket
+            değişiyor. Tek logo göstermek yazıyı tek firmalık gibi
+            okutuyordu. */}
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+              <Kicker tone="primary">{t.stories.latest}</Kicker>
+              <span className="numeral ml-auto text-[11.5px] text-muted">
+                {formatEtDateLong(story.eventDate, locale)}
+              </span>
+            </div>
 
-        <h2 className="display-ink mt-3 w-fit max-w-[22ch] text-[26px] font-bold leading-[1.12] tracking-[-0.03em] sm:text-[34px]">
-          {story.title}
-        </h2>
-        <p className="mt-3.5 max-w-[62ch] text-[15px] leading-[25px] text-body">
-          {story.dek}
-        </p>
+            <h2 className="display-ink mt-3 w-fit text-[26px] font-bold leading-[1.12] tracking-[-0.03em] sm:text-[34px]">
+              {story.title}
+            </h2>
+            <p className="mt-3.5 max-w-[58ch] text-[15px] leading-[25px] text-body">
+              {story.dek}
+            </p>
 
-        {/* Marka plakası metnin ALTINDA ve tam genişlikte: sağ kolonda
-            duran kapak, başlığı dar bir sütuna sıkıştırıyordu ve manşetin
-            en güçlü öğesi başlıktır. */}
-        {symbols.length > 0 && (
-          <div className="mt-5 inline-flex w-fit max-w-full rounded-(--radius-lg) border border-primary-faint bg-surface-solid/60 px-4 py-3">
-            <BrandPlate
-              symbols={symbols}
-              meta={meta}
-              sinceEvent={sinceEvent}
-              sinceLabel={t.stories.sinceEvent}
-              locale={locale}
-              size={56}
-            />
+            <p className="mt-5 flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-[12.5px] font-semibold text-primary">
+              {t.guide.cardCta}
+              <ArrowRight weight="bold" size={13} />
+              {story.readMinutes && (
+                <span className="numeral ml-auto font-normal text-muted">
+                  {story.readMinutes} {t.stories.readMinutes}
+                </span>
+              )}
+            </p>
           </div>
-        )}
 
-        <p className="mt-4 flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-[12.5px] font-semibold text-primary">
-          {t.guide.cardCta}
-          <ArrowRight weight="bold" size={13} />
-          {story.readMinutes && (
-            <span className="numeral ml-auto font-normal text-muted">
-              {story.readMinutes} {t.stories.readMinutes}
-            </span>
+          {cast.length > 0 && (
+            <div className="lg:w-[300px] lg:shrink-0">
+              <StoryCast
+                cast={cast}
+                total={total}
+                title={t.stories.relatedSymbols}
+                sinceLabel={t.stories.sinceEvent}
+                moreLabel={t.stories.moreCompanies}
+                locale={locale}
+              />
+            </div>
           )}
-        </p>
+        </div>
       </section>
     </Link>
   );
 }
 
 /**
- * Arşiv kartı — marka plakası, künye, başlık, giriş ve kadro.
+ * Arşiv kartı — marka şeridi, künye, başlık, giriş.
  *
- * KART NEDEN BÖYLE. Önce kapak bandında logolar ve sembolün günlük değişimi,
- * kartın altında da bir aylık fiyat eğrisi vardı. Eğri gürültüydü: küçük
- * kartta okunmuyor, arşivde sorulan soruyu da cevaplamıyordu. Kart artık tek
- * bir görsel çapa taşıyor — şirketin logosu, büyük ve kırpılmadan — ve tek
- * bir sayı: olayın gününden bugüne getiri. Yazı geçmişte kalmış bir olayı
- * anlatıyor; o rakam "sonra ne oldu" sorusunun ilk cevabı.
+ * Şerit yazının KADROSUNU gösteriyor: logolar yan yana, altında semboller.
+ * Tek büyük logo denendi ve yazı tek bir firmayla ilgiliymiş gibi
+ * okunuyordu; bu metinler çoğu zaman bir zinciri anlatıyor. Sağdaki tek
+ * rakam ilk şirketin olay gününden bugüne getirisi — arşivde sorulan soru
+ * "bu ay fiyat nasıl seyretti" değil, "bu olaydan sonra ne oldu".
  */
 function StoryCard({
   story,
-  meta,
-  sinceEvent,
+  cast,
   locale,
   t,
 }: {
   story: StoryIndexRow;
-  meta: Awaited<ReturnType<typeof getSymbolNames>>;
-  sinceEvent: number | null;
+  cast: CastMember[];
   locale: Locale;
   t: Dictionary;
 }) {
-  const symbols = story.symbols ?? [];
+  const total = story.symbols?.length ?? 0;
 
   return (
     <Link href={`/mercek/${story.slug}`} prefetch={false} className="min-w-0">
       <Panel className="panel-hover flex h-full flex-col overflow-hidden">
-        {symbols.length > 0 ? (
-          <div className="border-b border-line bg-[linear-gradient(135deg,var(--primary-wash),var(--primary-tint))] px-5 py-4">
-            <BrandPlate
-              symbols={symbols}
-              meta={meta}
-              sinceEvent={sinceEvent}
-              sinceLabel={t.stories.sinceEvent}
-              locale={locale}
-            />
-          </div>
+        {cast.length > 0 ? (
+          <StoryBrands
+            cast={cast}
+            total={total}
+            sinceLabel={t.stories.sinceEvent}
+            locale={locale}
+          />
         ) : (
           <span className="block h-1.5 bg-[linear-gradient(90deg,var(--primary-wash),var(--primary-tint))]" />
         )}
@@ -411,32 +426,9 @@ function StoryCard({
           <p className="mt-2 line-clamp-3 text-[13px] leading-[20px] text-body">
             {story.dek}
           </p>
-
-          {/* Plaka birincil şirketi gösteriyor; çipler yazının geri kalan
-              kadrosunu sayar, birincil sembol orada tekrar edilmez. */}
-          {symbols.length > 1 && (
-            <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
-              {symbols.slice(1, 5).map((symbol) => (
-                <SymbolPill key={symbol} symbol={symbol} />
-              ))}
-              {symbols.length > 5 && (
-                <span className="numeral inline-flex items-center rounded-md bg-surface-elevated px-1.5 py-0.5 text-[10.5px] font-bold text-muted">
-                  +{symbols.length - 5}
-                </span>
-              )}
-            </div>
-          )}
         </div>
       </Panel>
     </Link>
-  );
-}
-
-function SymbolPill({ symbol }: { symbol: string }) {
-  return (
-    <span className="numeral inline-flex items-center rounded-md bg-surface-elevated px-1.5 py-0.5 text-[10.5px] font-bold text-body">
-      {symbol}
-    </span>
   );
 }
 

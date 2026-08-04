@@ -517,6 +517,7 @@ const en: typeof tr = {
     rhythmBody:
       "Not daily. An ordinary session is not a story; a piece is published when something worth telling actually happens.",
     bridge: "Daily headlines and concept explainers live in their own sections:",
+    moreCompanies: "+{count} more companies",
     sinceEvent: "since the event",
     filterLabel: "By Company",
     filterAll: "All",
