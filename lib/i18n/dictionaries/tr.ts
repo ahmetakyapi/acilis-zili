@@ -487,6 +487,9 @@ const tr = {
     writtenBy: "Hazırlayan",
     byClaude: "Claude",
     byRules: "Kural Tabanlı",
+    /* Bülten henüz bu dile çevrilmediyse orijinal gösterilir; not bunu söyler. */
+    fallbackNote:
+      "Bu bülten henüz Türkçeye çevrilmedi; orijinal diliyle gösteriliyor.",
   },
 
   guide: {

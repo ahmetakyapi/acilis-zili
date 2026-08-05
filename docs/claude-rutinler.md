@@ -93,6 +93,21 @@ curl -s -X POST https://acilis-zili.vercel.app/api/brief \
 
 4) Yanıtta "ok": true gördüğünü doğrula. Göremezsen hatayı raporla ve
 tekrar deneme — aynı gün iki kez yazmak kaydın üzerine yazar.
+
+5) İngilizcesini gönder. Aynı brifingi doğal finans İngilizcesiyle yeniden
+yaz (birebir çeviri değil) ve "locale": "en" ile ikinci kez POST et:
+
+```bash
+curl -s -X POST https://acilis-zili.vercel.app/api/brief \
+  -H "Authorization: Bearer $SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"headline": "<English headline>", "body_md": "<English body>", "locale": "en"}'
+```
+
+Sayı biçimi İngilizceye döner: ondalıkta nokta, $ önde, % sonda. Saatler
+İngilizce sürümde New York öncelikli yazılır ("8:30 ET · 15:30 Istanbul").
+Bu adım atlanırsa site İngilizce okura Türkçe metni "TR" notuyla gösterir —
+bozulmaz ama eksik kalır.
 ````
 
 ---
@@ -158,6 +173,12 @@ curl -s -X POST https://acilis-zili.vercel.app/api/brief \
 ```
 
 5) Yanıtta "ok": true gördüğünü doğrula.
+
+6) İngilizcesini gönder: aynı özeti doğal finans İngilizcesiyle yeniden yaz
+ve aynı period/date ile, yalnızca "locale": "en" değiştirerek ikinci kez
+POST et. Sayı biçimi İngilizce (ondalık nokta, $ önde, % sonda), saatler
+New York öncelikli. Bu adım atlanırsa İngilizce okur Türkçe kaydı "TR"
+notuyla görür.
 ````
 
 ---

@@ -188,6 +188,13 @@ async function ArchiveBoard({
               </p>
             )}
 
+            {/* Çeviri henüz yoksa orijinal gösterilir — ama bunu söyleyerek. */}
+            {brief.locale !== locale && (
+              <p className="mt-3 w-fit rounded-full border border-line bg-surface-elevated px-3.5 py-1.5 text-[12px] text-muted">
+                {t.brief.fallbackNote}
+              </p>
+            )}
+
             <h2 className="mt-4 text-[22px] font-bold leading-tight tracking-[-0.03em] text-strong sm:text-[26px]">
               {brief.headline}
             </h2>
@@ -257,6 +264,12 @@ async function ArchiveBoard({
                       <span className="font-bold">
                         ·{" "}
                         {period === "weekly" ? t.brief.thisWeek : t.brief.today}
+                      </span>
+                    )}
+                    {/* Kayıt okunan dilde değilse dili rozetle söylenir. */}
+                    {row.locale !== locale && (
+                      <span className="plate ml-auto text-[9px] tracking-[0.09em]">
+                        {row.locale.toUpperCase()}
                       </span>
                     )}
                   </span>

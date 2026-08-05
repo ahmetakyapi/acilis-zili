@@ -477,6 +477,8 @@ const en: typeof tr = {
     writtenBy: "Written by",
     byClaude: "Claude",
     byRules: "Rule-Based",
+    fallbackNote:
+      "This brief hasn't been translated to English yet — you're reading the Turkish original.",
   },
 
   guide: {

@@ -783,6 +783,7 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
         : t.today.briefStaleNote
             .replace("{date}", formatEtDateLong(daily.briefDate, locale))
             .replace("{time}", BRIEF_PUBLISH_TR.daily),
+    langNote: daily.locale === locale ? null : t.brief.fallbackNote,
     archiveHref: "/bulten",
   };
 
@@ -798,6 +799,7 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
         : t.today.briefWeeklyStaleNote
             .replace("{range}", weekRange(weekly.briefDate))
             .replace("{time}", BRIEF_PUBLISH_TR.weekly),
+    langNote: weekly.locale === locale ? null : t.brief.fallbackNote,
     archiveHref: "/bulten?tur=haftalik",
   };
 

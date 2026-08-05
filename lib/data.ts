@@ -269,18 +269,16 @@ export async function getBriefByDate(
   period: BriefPeriod = "daily",
 ): Promise<DailyBriefRow | null> {
   try {
-    const [row] = await db
+    /* Mercek'teki dil kuralının aynısı: istenen dil varsa o, yoksa yazılan
+       dil — sayfa dil notunu satırdaki `locale` alanından basar. */
+    const rows = await db
       .select()
       .from(dailyBriefs)
       .where(
-        and(
-          eq(dailyBriefs.briefDate, date),
-          eq(dailyBriefs.locale, locale),
-          eq(dailyBriefs.period, period),
-        ),
+        and(eq(dailyBriefs.briefDate, date), eq(dailyBriefs.period, period)),
       )
-      .limit(1);
-    return row ?? null;
+      .limit(4);
+    return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
   } catch {
     return null;
   }
@@ -291,6 +289,7 @@ export type BriefIndexRow = {
   headline: string;
   generatedBy: string;
   period: string;
+  locale: string;
 };
 
 /**
@@ -308,38 +307,59 @@ export async function getLatestBrief(
   period: BriefPeriod = "daily",
 ): Promise<DailyBriefRow | null> {
   try {
-    const [row] = await db
+    /* Dil süzgeci sorguda değil sonra: en yeni GÜNÜN kaydı esas alınır ve
+       o günün içinde istenen dil tercih edilir. Çeviri bir gün geride
+       kaldığında İngilizce okur dünkü İngilizce yerine bugünkü Türkçeyi
+       (dil notuyla) görür — bülten güne bağlı bir metin, tazelik dilden
+       önce gelir. */
+    const rows = await db
       .select()
       .from(dailyBriefs)
-      .where(
-        and(eq(dailyBriefs.locale, locale), eq(dailyBriefs.period, period)),
-      )
+      .where(eq(dailyBriefs.period, period))
       .orderBy(desc(dailyBriefs.briefDate))
-      .limit(1);
-    return row ?? null;
+      .limit(4);
+    if (rows.length === 0) return null;
+    const latestDate = rows[0].briefDate;
+    const sameDay = rows.filter((row) => row.briefDate === latestDate);
+    return sameDay.find((row) => row.locale === locale) ?? sameDay[0];
   } catch {
     return null;
   }
 }
 
-/** Arşiv listesi — yeniden eskiye, gövde metni taşınmaz. */
+/**
+ * Arşiv listesi — yeniden eskiye, gövde metni taşınmaz.
+ * Gün başına tek satır: istenen dildeki kayıt varsa o, yoksa yazılan dil.
+ */
 export async function getBriefArchive(
   locale: string,
   period: BriefPeriod,
   limit = 60,
 ): Promise<BriefIndexRow[]> {
   try {
-    return await db
+    const rows = await db
       .select({
         briefDate: dailyBriefs.briefDate,
         headline: dailyBriefs.headline,
         generatedBy: dailyBriefs.generatedBy,
         period: dailyBriefs.period,
+        locale: dailyBriefs.locale,
       })
       .from(dailyBriefs)
-      .where(and(eq(dailyBriefs.locale, locale), eq(dailyBriefs.period, period)))
+      .where(eq(dailyBriefs.period, period))
       .orderBy(desc(dailyBriefs.briefDate))
-      .limit(limit);
+      .limit(limit * 2);
+
+    const byDate = new Map<string, BriefIndexRow>();
+    for (const row of rows) {
+      const held = byDate.get(row.briefDate);
+      if (!held) {
+        byDate.set(row.briefDate, row);
+      } else if (held.locale !== locale && row.locale === locale) {
+        byDate.set(row.briefDate, row);
+      }
+    }
+    return [...byDate.values()].slice(0, limit);
   } catch {
     return [];
   }

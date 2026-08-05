@@ -92,7 +92,7 @@ Her hissenin bir emir defteri vardır: bir tarafta almak isteyenler, diğer tara
 | **Alış (bid)** | En yüksek alıcı fiyatı | 100,20 dolardan 500 adet |
 | **Satış (ask)** | En düşük satıcı fiyatı | 100,24 dolardan 300 adet |
 
-İkisi arasındaki boşluğa **makas** (spread) denir. Bir alış emri satış tarafındaki fiyata değdiği anda işlem gerçekleşir ve o rakam "son fiyat" olur. Ekranda gördüğün fiyat budur: gerçekleşmiş son işlem, yani geçmiş.
+İkisi arasındaki farka **spread** denir (Türkçede *makas* da denir). Bir alış emri satış tarafındaki fiyata değdiği anda işlem gerçekleşir ve o rakam "son fiyat" olur. Ekranda gördüğün fiyat budur: gerçekleşmiş son işlem, yani geçmiş.
 
 ## Sıra Kuralı
 
@@ -115,7 +115,7 @@ Takas | İşlem kaydedilir ve hisselerle para karşılıklı el değiştirir. AB
 :::
 
 ::: dikkat Emir Akışının Satılması
-ABD'de birçok komisyonsuz aracı kurum, emirlerini borsaya değil bir piyasa yapıcıya yönlendirir ve karşılığında ödeme alır. Buna *payment for order flow* denir. "Komisyon sıfır" demek "maliyet sıfır" demek değildir; maliyet makasın içine gizlenmiş olabilir. Ayrıntı: [Likidite ve Makas](/rehber/spread-likidite)
+ABD'de birçok komisyonsuz aracı kurum, emirlerini borsaya değil bir piyasa yapıcıya yönlendirir ve karşılığında ödeme alır. Buna *payment for order flow* denir. "Komisyon sıfır" demek "maliyet sıfır" demek değildir; maliyet spread'in içine gizlenmiş olabilir. Ayrıntı: [Likidite ve Spread](/rehber/spread-likidite)
 :::
 
 ## Seans Saatleri
@@ -124,14 +124,14 @@ ABD piyasası üç bölümde çalışır. Türkiye saatleri ABD'nin yaz saati uy
 
 | Bölüm | New York | Türkiye (yaz) | Karakteri |
 |---|---|---|---|
-| Açılış öncesi | 04:00 – 09:30 | 11:00 – 16:30 | İnce, oynak, makas geniş |
+| Açılış öncesi | 04:00 – 09:30 | 11:00 – 16:30 | İnce, oynak, spread geniş |
 | **Ana seans** | 09:30 – 16:00 | **16:30 – 23:00** | Hacmin neredeyse tamamı |
 | Kapanış sonrası | 16:00 – 20:00 | 23:00 – 03:00 | Bilanço tepkileri burada |
 
 Günün en yoğun iki dakikası açılış ve kapanıştır. Kapanış müzayedesinde endeks fonları gün içindeki para giriş-çıkışını dengeler; bu yüzden son dakikada büyük hacimler görünür.
 
 ::: ornek Neden Bilançolar Kapanıştan Sonra
-Büyük şirketlerin çoğu sonuçlarını seans bittikten sonra açıklar. Amaç, haberin piyasa kapalıyken sindirilmesi ve telekonferansın panik satışına dönüşmemesidir. Tepki ertesi sabah açılışta tek bir sıçrama olarak görünür — grafikte "boşluk" (gap) diye durur.
+Büyük şirketlerin çoğu sonuçlarını seans bittikten sonra açıklar. Amaç, haberin piyasa kapalıyken sindirilmesi ve telekonferansın panik satışına dönüşmemesidir. Tepki ertesi sabah açılışta tek bir sıçrama olarak görünür — grafikte **gap** (fiyat boşluğu) diye durur.
 :::
 
 ## Bu Sitede Nerede Görürsün
@@ -276,7 +276,7 @@ Endeksin tek tek hisselerden sakin olması tesadüf değil: içerideki şirketle
 İki farklı sayı vardır ve karıştırılır:
 
 - **Gerçekleşen (realized):** Geçmiş fiyatlardan hesaplanır. Ne olduğunu söyler.
-- **Beklenen (implied):** Opsiyon fiyatlarından geri çözülür. Piyasanın önümüzdeki dönem için ne beklediğini söyler.
+- **Beklenen (implied volatility):** Opsiyon fiyatlarından geri çözülür. Piyasanın önümüzdeki dönem için ne beklediğini söyler.
 
 Beklenen volatilitenin en bilinen göstergesi **VIX**'tir: S&P 500 opsiyonlarından türetilir ve "korku endeksi" diye anılır. Uzun dönem ortalaması 20 civarındadır. 12–15 bandı sakin bir piyasa, 30 üstü gerginlik, 50 üstü panik demektir.
 
@@ -294,7 +294,7 @@ Değil, ama bedava da değil. İki farklı sonucu vardır:
 İkinci madde, aynı ortalama getiriye sahip iki varlıktan sakin olanın uzun vadede daha fazla kazandırmasının nedenidir.
 
 ::: dikkat Kaldıraçla Birleşince
-Volatilite tek başına bir risk değil, bir ölçüdür. Riske dönüştüğü yer kaldıraçtır: ödünç parayla taşınan bir pozisyonda geçici bir dalgalanma, teminat çağrısı yoluyla kalıcı bir kayba dönüşebilir. Bkz. [Kaldıraç Nedir?](/rehber/kaldirac)
+Volatilite tek başına bir risk değil, bir ölçüdür. Riske dönüştüğü yer kaldıraçtır: ödünç parayla taşınan bir pozisyonda geçici bir dalgalanma, margin call (teminat çağrısı) yoluyla kalıcı bir kayba dönüşebilir. Bkz. [Kaldıraç Nedir?](/rehber/kaldirac)
 :::
 
 ## Bu Sitede Nerede Görürsün
@@ -358,54 +358,54 @@ Tarihsel ölçekte:
 
   /* ---------------------------------------------------------------------- */
   "spread-likidite": {
-    title: "Likidite ve Makas Nedir?",
+    title: "Likidite ve Spread Nedir?",
     dek: "İşlem ücreti sıfır olsa bile her alım satımda ödediğin görünmez bedel.",
     bodyMd: `Bir hissenin tek bir fiyatı yoktur. Aynı anda iki fiyatı vardır: birinden alabilirsin, diğerinden satabilirsin ve ikisi asla aynı değildir. Aradaki fark, hiçbir komisyon tablosunda görünmeyen gerçek maliyettir.
 
-::: tanim Makas (Spread) ve Likidite
-**Makas:** En iyi alış (bid) ile en iyi satış (ask) fiyatı arasındaki fark.
-**Likidite:** Fiyatı bozmadan ne kadar büyük işlem yapılabildiği. Likit bir hissede makas dardır ve her kademede çok emir vardır.
+::: tanim Spread ve Likidite
+**Spread:** En iyi alış (bid) ile en iyi satış (ask) fiyatı arasındaki fark; Türkçede *makas* da denir.
+**Likidite:** Fiyatı bozmadan ne kadar büyük işlem yapılabildiği. Likit bir hissede spread dardır ve her kademede çok emir vardır.
 :::
 
 ## Neden Var
 
-Karşı tarafta duran piyasa yapıcı bir risk alır: senden hisseyi satın alır ve bir sonraki alıcıyı bulana kadar elinde tutar. O arada fiyat düşerse zarar eder. Makas, bu riskin ücretidir.
+Karşı tarafta duran piyasa yapıcı bir risk alır: senden hisseyi satın alır ve bir sonraki alıcıyı bulana kadar elinde tutar. O arada fiyat düşerse zarar eder. Spread, bu riskin ücretidir.
 
 ## Ne Kadar Önemli
 
-| Hisse tipi | Tipik makas | 10.000 dolarlık işlemde gidiş-dönüş maliyeti |
+| Hisse tipi | Tipik spread | 10.000 dolarlık işlemde gidiş-dönüş maliyeti |
 |---|---|---|
 | SPY, AAPL gibi çok likit | 0,01 dolar (%0,002) | ~0,20 dolar |
 | Orta ölçek | %0,05 | ~5 dolar |
 | Küçük ölçek, düşük hacim | %0,5 | ~50 dolar |
 | Açılış öncesi / kapanış sonrası | Normalin 3–10 katı | Çok değişken |
 
-Son satır çoğu kişinin gözünden kaçar: seans dışında makas açılır. Bilanço gecesi "hemen tepki vereyim" diye ana seans dışında işlem yapmak, çoğu zaman kazanılan tepkinin bir kısmını makasa bırakmak demektir.
+Son satır çoğu kişinin gözünden kaçar: seans dışında spread açılır. Bilanço gecesi "hemen tepki vereyim" diye ana seans dışında işlem yapmak, çoğu zaman kazanılan tepkinin bir kısmını spread'e bırakmak demektir.
 
 ::: ornek İki Yönde de Ödersin
-Alış 100,00 · satış 100,10 olan bir hissede 100,10'dan alıp hemen 100,00'dan satarsan fiyat hiç hareket etmemesine rağmen %0,1 kaybedersin. Günde on kez alıp satan biri, fiyat hiç değişmese bile ayda ciddi bir tutarı yalnızca makasa ödemiş olur.
+Alış 100,00 · satış 100,10 olan bir hissede 100,10'dan alıp hemen 100,00'dan satarsan fiyat hiç hareket etmemesine rağmen %0,1 kaybedersin. Günde on kez alıp satan biri, fiyat hiç değişmese bile ayda ciddi bir tutarı yalnızca spread'e ödemiş olur.
 :::
 
 ## Likiditeyi Nereden Anlarsın
 
 - **Günlük ortalama hacim.** Milyonlarca adet işlem gören bir hissede sorun yaşamazsın.
-- **Makasın genişliği.** Fiyatın binde birinden büyük bir makas, dikkat işaretidir.
+- **Spread'in genişliği.** Fiyatın binde birinden büyük bir spread, dikkat işaretidir.
 - **Emir defterinin derinliği.** Her kademede kaç adet var.
 
 ::: dikkat Likidite Tam İhtiyaç Duyduğunda Kaybolur
-Likidite sakin günlerde boldur, panik günlerinde buharlaşır. Herkesin aynı anda satmak istediği bir sabahta alıcılar çekilir, makas açılır ve "istediğim fiyattan çıkarım" varsayımı çöker. Küçük ve az işlem gören hisselerde bu, düşüşün kendisinden daha büyük bir sorundur.
+Likidite sakin günlerde boldur, panik günlerinde buharlaşır. Herkesin aynı anda satmak istediği bir sabahta alıcılar çekilir, spread açılır ve "istediğim fiyattan çıkarım" varsayımı çöker. Küçük ve az işlem gören hisselerde bu, düşüşün kendisinden daha büyük bir sorundur.
 :::
 
 ## Ne Yapmalı
 
 1. **Piyasa emri yerine limit emir kullan.** Özellikle likit olmayan bir hissede piyasa emri, defterin yukarısını yiyerek dolar. Ayrıntı: [Emir Tipleri](/rehber/emir-tipleri)
-2. **Açılışın ilk ve kapanışın son dakikalarından kaçın.** Makas o iki aralıkta en geniştir.
+2. **Açılışın ilk ve kapanışın son dakikalarından kaçın.** Spread o iki aralıkta en geniştir.
 3. **Seans dışında işlem yapma.** Gerçekten mecbur değilsen.
 4. **Pozisyon büyüklüğünü hacme göre ölç.** Günlük hacmin kayda değer bir kısmını tek başına alacaksan fiyatı sen hareket ettirirsin.
 
 ## Bu Sitede Nerede Görürsün
 
-Hisse sayfasındaki **hacim** satırı likiditenin en kaba göstergesidir. Fiyat verisi IEX beslemesinden geldiği için ekrandaki son fiyat, konsolide piyasadaki fiyattan biraz sapabilir — bu da makasın bir başka görünümüdür.`,
+Hisse sayfasındaki **hacim** satırı likiditenin en kaba göstergesidir. Fiyat verisi IEX beslemesinden geldiği için ekrandaki son fiyat, konsolide piyasadaki fiyattan biraz sapabilir — bu da spread'in bir başka görünümüdür.`,
   },
 
   /* ---------------------------------------------------------------------- */
@@ -450,12 +450,12 @@ Bir şirket hissesini 25 dolardan arz etti, ilk işlem 34 dolardan açıldı. Ma
 
 Bu farkın senin için pratik sonucu şudur: bireysel yatırımcı neredeyse her zaman **açılış fiyatından** alır, arz fiyatından değil. Manşetteki "%35 kazanç" arz gecesinde tahsis alan kurumların kazancıdır.
 
-## Kilit Süresi
+## Lock-Up Süresi
 
-Halka arzda satılmayan hisseler — kurucular, çalışanlar, erken fonlar — genellikle **90 ila 180 gün** boyunca satış yasağı altındadır. Buna kilit süresi (*lock-up*) denir.
+Halka arzda satılmayan hisseler — kurucular, çalışanlar, erken fonlar — genellikle **90 ila 180 gün** boyunca satış yasağı altındadır. Buna **lock-up** (kilit süresi) denir.
 
 ::: dikkat Kilidin Açıldığı Gün
-Kilit süresi dolduğunda piyasaya çıkabilecek hisse sayısı bir anda katlanır. Fiyat çoğu zaman o güne yaklaşırken baskı görür; takvimi bellidir, sürpriz değildir. Yeni arz edilmiş bir hissede pozisyon alıyorsan kilit tarihini bilmeden alma — izahnamede yazar.
+Lock-up süresi dolduğunda piyasaya çıkabilecek hisse sayısı bir anda katlanır. Fiyat çoğu zaman o güne yaklaşırken baskı görür; takvimi bellidir, sürpriz değildir. Yeni arz edilmiş bir hissede pozisyon alıyorsan lock-up tarihini bilmeden alma — izahnamede yazar.
 :::
 
 ## Halka Açılmanın Diğer Yolları
@@ -463,7 +463,7 @@ Kilit süresi dolduğunda piyasaya çıkabilecek hisse sayısı bir anda katlan�
 | Yol | Nasıl işler | Fark |
 |---|---|---|
 | **Klasik IPO** | Bankalar aracılığıyla yeni hisse satışı | Şirkete para girer, banka garantisi vardır |
-| **Doğrudan kotasyon** | Mevcut hisseler doğrudan borsada işleme açılır | Yeni para toplanmaz, arz fiyatı yoktur |
+| **Direct listing** (doğrudan kotasyon) | Mevcut hisseler doğrudan borsada işleme açılır | Yeni para toplanmaz, arz fiyatı yoktur |
 | **SPAC birleşmesi** | Borsada kote boş bir şirketle birleşme | Hızlıdır; incelemesi IPO'dan zayıftır |
 
 Üçüncü yol 2020–2021'de moda oldu ve o dönemin SPAC'lerinin büyük kısmı sonraki yıllarda arz fiyatının çok altına düştü — hız ve gevşek inceleme, bedava değildi.
@@ -476,7 +476,7 @@ Kilit süresi dolduğunda piyasaya çıkabilecek hisse sayısı bir anda katlan�
 - **Endeks dışıdır.** Yeni hisse S&P 500 gibi endekslere hemen girmez; endeks fonlarının mekanik alımı ilk günlerde yoktur.
 
 ::: ozet Özet
-Halka arz bir şirketin doğumu değil, satış ilanıdır: zamanı ve fiyatı satan taraf belirler. İlk gün manşetleri arz gecesi tahsis alanların hikâyesidir; senin fiyatın açılış fiyatıdır ve kilit takvimi, ilk bilançolar, endekse giriş gibi mekanik olaylar önündeki aylarda fiyatı şirketin işinden bağımsız hareket ettirir.
+Halka arz bir şirketin doğumu değil, satış ilanıdır: zamanı ve fiyatı satan taraf belirler. İlk gün manşetleri arz gecesi tahsis alanların hikâyesidir; senin fiyatın açılış fiyatıdır ve lock-up takvimi, ilk bilançolar, endekse giriş gibi mekanik olaylar önündeki aylarda fiyatı şirketin işinden bağımsız hareket ettirir.
 :::
 
 ## Bu Sitede Nerede Görürsün
@@ -502,7 +502,7 @@ Halka arz bir şirketin doğumu değil, satış ilanıdır: zamanı ve fiyatı s
 
 Emir defterindeki en iyi karşı fiyattan başlayarak anında dolar. Avantajı kesinlik: **gerçekleşir**. Dezavantajı da aynı yerde: hangi fiyattan gerçekleşeceğini bilmezsin.
 
-Likit bir hissede fark önemsizdir. Likit olmayan bir hissede ya da açılışın ilk saniyelerinde piyasa emri, defterin birkaç kademesini birden yiyerek beklediğinden çok kötü bir ortalamayla dolabilir. Buna **kayma** (slippage) denir.
+Likit bir hissede fark önemsizdir. Likit olmayan bir hissede ya da açılışın ilk saniyelerinde piyasa emri, defterin birkaç kademesini birden yiyerek beklediğinden çok kötü bir ortalamayla dolabilir. Buna **slippage** (kayma) denir.
 
 ## Limit Emri
 
@@ -530,7 +530,7 @@ Stop bir tetikleyicidir. Fiyat belirlediğin seviyeye değdiği anda emir **akti
 - **Trailing stop (takip eden stop):** Seviye fiyatla birlikte yukarı kayar, aşağı inmez. Kârı korumak için kullanılır.
 
 ::: dikkat Stop Bir Sigorta Değildir
-En sık yanılgı budur. Stop, fiyat oraya *değdiğinde* bir piyasa emri gönderir — o fiyattan satacağını garanti etmez. Kötü bir haberle gece boyunca %20 aşağıda açan bir hissede 5 aşağıya koyduğun stop, açılıştaki 20 aşağıda dolar. Stop, kademeli düşüşlere karşı işe yarar; ani boşluklara karşı yaramaz.
+En sık yanılgı budur. Stop, fiyat oraya *değdiğinde* bir piyasa emri gönderir — o fiyattan satacağını garanti etmez. Kötü bir haberle gece boyunca %20 aşağıda açan bir hissede 5 aşağıya koyduğun stop, açılıştaki 20 aşağıda dolar. Stop, kademeli düşüşlere karşı işe yarar; ani gap'lere karşı yaramaz.
 :::
 
 ## Süre Seçenekleri
@@ -544,7 +544,7 @@ En sık yanılgı budur. Stop, fiyat oraya *değdiğinde* bir piyasa emri gönde
 GTC emirlerini takip etmeyi unutmak klasik bir hatadır: aylar önce koyduğun bir alım emri, şirket hakkındaki görüşün tamamen değiştikten sonra sessizce dolabilir.
 
 ::: ozet Pratik Kurallar
-Alırken limit kullan, aceleyi maliyet olarak gör. Stop'u pozisyonu açarken belirle, düştükten sonra değil. Açılışın ilk beş ve kapanışın son beş dakikasında piyasa emri verme — makas orada en geniştir.
+Alırken limit kullan, aceleyi maliyet olarak gör. Stop'u pozisyonu açarken belirle, düştükten sonra değil. Açılışın ilk beş ve kapanışın son beş dakikasında piyasa emri verme — spread orada en geniştir.
 :::
 
 ## Bu Sitede Nerede Görürsün
@@ -727,12 +727,12 @@ Son satır kritik. Long bir pozisyon aleyhine gittiğinde küçülür — portf�
 
 Short her zaman bahis değildir. Profesyonel portföylerde çoğunlukla bir **hedge** aracıdır:
 
-- **Piyasa nötrleme:** Bir sektörde beğendiğin şirketi long, beğenmediğini short alırsan, sektörün genel yönünden bağımsız olarak "seçimimde haklı mıyım" bahsini oynamış olursun.
+- **Market-neutral (piyasa nötr):** Bir sektörde beğendiğin şirketi long, beğenmediğini short alırsan, sektörün genel yönünden bağımsız olarak "seçimimde haklı mıyım" bahsini oynamış olursun.
 - **Portföy sigortası:** Uzun vadeli long portföyün varken endeksi short'lamak, düşüşte kaybı yumuşatır.
-- **Eşleştirilmiş işlem (pair trade):** "Uzun çip, kısa yazılım" gibi. İki bacak da aynı tezin parçasıdır.
+- **Pair trade (eşleştirilmiş işlem):** "Uzun çip, kısa yazılım" gibi. İki bacak da aynı tezin parçasıdır.
 
-::: ornek Eşleştirilmiş İşlemin İki Tarafı da Kanayabilir
-"Uzun çip, kısa yazılım" pozisyonu, yapay zekânın yazılım marjlarını eritirken altyapı talebini patlatacağı fikrine dayanır. Tez doğruysa iki bacak birlikte kazandırır. Tez ters döndüğünde ise **iki bacak birlikte kaybettirir** — çipler düşerken yazılımlar yükselir. Bu yüzden eşleştirilmiş işlemler "daha az riskli" değildir; sadece farklı bir riski vardır.
+::: ornek Pair Trade'in İki Tarafı da Kanayabilir
+"Uzun çip, kısa yazılım" pozisyonu, yapay zekânın yazılım marjlarını eritirken altyapı talebini patlatacağı fikrine dayanır. Tez doğruysa iki bacak birlikte kazandırır. Tez ters döndüğünde ise **iki bacak birlikte kaybettirir** — çipler düşerken yazılımlar yükselir. Bu yüzden pair trade'ler "daha az riskli" değildir; sadece farklı bir riski vardır.
 :::
 
 ## Kısa Özet
@@ -771,7 +771,7 @@ Buraya kadarı herkesin bildiği kısım ve simetrik görünüyor. Asıl mesele 
 
 Kaldıraçsız bir pozisyonda ne zaman satacağına sen karar verirsin. Fiyat yarıya inse bile beklemeyi seçebilirsin, çünkü kimseye borçlu değilsin. Sıkıntı verir ama kararı senden almaz.
 
-Kaldıraçlı bir pozisyonda bu karar senin değildir. Teminat oranı belirli bir eşiğin altına indiğinde aracı kurum **teminat tamamlama çağrısı** (margin call) gönderir. Para koyamazsan pozisyon kapatılır — hem de tam olarak fiyatın en kötü olduğu anda, çünkü çağrı zaten o yüzden geldi.
+Kaldıraçlı bir pozisyonda bu karar senin değildir. Teminat oranı belirli bir eşiğin altına indiğinde aracı kurum **margin call** (teminat tamamlama çağrısı) gönderir. Para koyamazsan pozisyon kapatılır — hem de tam olarak fiyatın en kötü olduğu anda, çünkü çağrı zaten o yüzden geldi.
 
 > Doğru olduğun hâlde iflas edebilirsin. Haklı çıkman için gereken süre, pozisyonu taşıyabileceğin süreden uzun olabilir.
 
@@ -779,7 +779,7 @@ Bu cümle kaldıracın tek cümlelik özetidir ve yazının geri kalanı bunun a
 
 ## Kaç Kat, Ne Kadar Düşüşe Dayanır
 
-| Kaldıraç | Sermayeyi silen düşüş | Pratikte teminat çağrısı |
+| Kaldıraç | Sermayeyi silen düşüş | Pratikte margin call |
 |---|---|---|
 | 1x (kaldıraçsız) | %100 | Yok |
 | 2x | %50 | ~%25 düşüşte |
@@ -810,7 +810,7 @@ Kaldıraçlı bir pozisyonda gün içi dalgalanmalar sermayenin yüzdesi olarak 
 
 ### 5. Portföyünün geri kalanını da tehdit eder
 
-Teminat çağrısı geldiğinde aracı kurum yalnızca sorunlu pozisyonu değil, elindeki başka varlıkları da satabilir. Kaldıraçlı tek bir fikir, sağlıklı pozisyonlarını da yanında götürebilir.
+Margin call geldiğinde aracı kurum yalnızca sorunlu pozisyonu değil, elindeki başka varlıkları da satabilir. Kaldıraçlı tek bir fikir, sağlıklı pozisyonlarını da yanında götürebilir.
 
 ::: ornek Yoğunlaşmayla Çarpınca
 Kaldıracın en tehlikeli hâli tek başına değil, **yoğunlaşmayla** birlikte ortaya çıkar. Portföyün ilk beş pozisyonu toplamın dörtte üçüyse ve beşi de aynı temanın farklı ifadesiyse, çeşitlendirme sandığından çok azdır. Tema satıldığında beş pozisyon aynı anda ve aynı yönde düşer.
@@ -851,7 +851,7 @@ Kaldıraç, bir yatırımın sahibi ile takvimin sahibini birbirinden ayırır. 
     bodyMd: `Opsiyon, hisse senedinden farklı bir şey satın alır: hissenin kendisini değil, onu belirli bir fiyattan alma ya da satma **hakkını**. Bu tek cümlelik fark, bambaşka bir risk matematiği doğurur — ve bu yazının amacı o matematiği göstermek, kullanmayı önermek değil.
 
 ::: tanim Opsiyon
-Belirli bir vadeye kadar, belirli bir fiyattan (**kullanım fiyatı**, *strike*) bir hisseyi alma ya da satma hakkı. **Call** alma hakkıdır, **put** satma hakkı. Hak kullanılmak zorunda değildir; işlemezse ödenen prim yanar. ABD'de bir opsiyon sözleşmesi 100 hisseyi temsil eder.
+Belirli bir vadeye kadar, belirli bir fiyattan (**strike**, kullanım fiyatı) bir hisseyi alma ya da satma hakkı. **Call** alma hakkıdır, **put** satma hakkı. Hak kullanılmak zorunda değildir; işlemezse ödenen prim yanar. ABD'de bir opsiyon sözleşmesi 100 hisseyi temsil eder.
 :::
 
 ## Dört Koltuk
@@ -880,7 +880,7 @@ Zaman değeri: 13 − 10 = **3 dolar**.
 Hisse bir ay boyunca 110'da çakılı kalırsa opsiyon vadede 10 dolar eder: içsel değer durur, zaman değeri **sıfıra erir**. Hisse hiç düşmeden %23 kaybettin.
 :::
 
-## Zaman Erimesi
+## Zaman Erimesi (Time Decay)
 
 Zaman değeri her gün azalır ve azalış vadeye yaklaştıkça hızlanır. Buna *theta* denir. Pratikteki anlamı şudur: opsiyon alıcısı yalnızca yöne değil, **takvime karşı** da oynar. Haklı çıkmak yetmez; vadeden önce, zaman değerinin eridiğinden daha hızlı haklı çıkmak gerekir.
 
@@ -888,7 +888,7 @@ Vadesi aynı gün dolan opsiyonlar (*0DTE*) bu erimenin en uç hâlidir: birkaç
 
 ## Volatilite Primi
 
-Zaman değerinin büyüklüğünü belirleyen ana girdi, piyasanın o hisseden beklediği oynaklıktır — **beklenen volatilite** (*implied volatility*). Piyasa büyük hareket bekliyorsa prim şişer, sakinlik bekliyorsa söner. Ayrıntı: [Volatilite Nedir?](/rehber/volatilite)
+Zaman değerinin büyüklüğünü belirleyen ana girdi, piyasanın o hisseden beklediği oynaklıktır — **implied volatility** (piyasanın beklediği oynaklık). Piyasa büyük hareket bekliyorsa prim şişer, sakinlik bekliyorsa söner. Ayrıntı: [Volatilite Nedir?](/rehber/volatilite)
 
 ::: dikkat Bilanço Gecesi Tuzağı
 Bilançodan önce opsiyon primleri şişer, çünkü herkes büyük hareket bekler. Açıklama gelince belirsizlik biter ve şişkinlik söner — hisse beklediğin yönde hareket etse bile opsiyonun değer kaybedebilir. Buna *volatility crush* denir: yönü doğru tahmin edip para kaybetmenin en klasik yolu.
@@ -896,7 +896,7 @@ Bilançodan önce opsiyon primleri şişer, çünkü herkes büyük hareket bekl
 
 ## Bu Bir Kaldıraçtır
 
-Opsiyonun cazibesi küçük parayla büyük pozisyona erişimdir: 3 dolarlık prim, 100 dolarlık hissenin hareketine maruz bırakır. Bu, tanımı gereği kaldıraçtır — hesap ekranında "kaldıraç" diye görünmese bile. [Kaldıraç yazısındaki](/rehber/kaldirac) her uyarı burada da geçerlidir, bir farkla: marj hesabında kayıp teminat çağrısıyla gelir, opsiyonda primin **tamamının** yanmasıyla. Alıcı için %100 kayıp uç senaryo değil, sık görülen sonuçtur.
+Opsiyonun cazibesi küçük parayla büyük pozisyona erişimdir: 3 dolarlık prim, 100 dolarlık hissenin hareketine maruz bırakır. Bu, tanımı gereği kaldıraçtır — hesap ekranında "kaldıraç" diye görünmese bile. [Kaldıraç yazısındaki](/rehber/kaldirac) her uyarı burada da geçerlidir, bir farkla: marj hesabında kayıp margin call ile gelir, opsiyonda primin **tamamının** yanmasıyla. Alıcı için %100 kayıp uç senaryo değil, sık görülen sonuçtur.
 
 ## Satıcı Tarafı
 
@@ -937,13 +937,13 @@ Bir hisse hakkında herkesin konuşmaya başladığı an, o hissenin en çok hab
 "Kaçırıyorum" hissi, alım gerekçesi değildir. İyi bir gerekçe şirketle ilgilidir: ne kazanıyor, ne büyütüyor, ne kadar fiyatlanmış. Grafiğin dik olması bu soruların hiçbirine cevap vermez.
 :::
 
-## Çıpalama
+## Çıpalama (Anchoring)
 
 Aldığın fiyat, zihninde bir referans noktası olur. Oysa piyasa senin maliyetini bilmez ve umursamaz.
 
 "Maliyetime gelince satacağım" cümlesi, kararı şirketin bugünkü değerine değil, geçmişteki bir tesadüfe bağlar. Doğru soru şudur: *bu hisseyi bugün, bu fiyattan, sıfırdan alır mıydım?* Cevap hayırsa elde tutmanın gerekçesi maliyet olamaz.
 
-## Onay Arayışı
+## Doğrulama Önyargısı (Confirmation Bias)
 
 Bir fikre karar verdikten sonra beynin, o fikri destekleyen bilgiyi arar ve çelişeni önemsizleştirir. Portföyündeki en büyük pozisyon hakkında en az eleştirel olduğun an, tam da en eleştirel olman gereken andır.
 
@@ -954,10 +954,10 @@ Basit bir karşı ilaç: pozisyon açarken *hangi gelişme beni yanlış çıkar
 İki üç isabetli karardan sonra "bu işi çözdüm" hissi gelir. Piyasada bu hissin bedeli genellikle pozisyon büyüklüğünün artmasıyla ödenir — ve büyüyen pozisyonla ilk yanlış kararın çarpımı, önceki isabetlerin toplamını siler.
 
 ::: ornek İşlem Sıklığı ve Getiri
-Davranışsal finans literatüründeki en tekrarlanan bulgulardan biri şudur: bireysel yatırımcılar arasında **daha sık işlem yapanlar, daha az işlem yapanlardan sistematik olarak daha düşük net getiri** elde eder. Sebep karmaşık değil — her işlemin makas ve komisyon maliyeti vardır ve sık işlem, o maliyeti çoğaltırken karar kalitesini artırmaz.
+Davranışsal finans literatüründeki en tekrarlanan bulgulardan biri şudur: bireysel yatırımcılar arasında **daha sık işlem yapanlar, daha az işlem yapanlardan sistematik olarak daha düşük net getiri** elde eder. Sebep karmaşık değil — her işlemin spread ve komisyon maliyeti vardır ve sık işlem, o maliyeti çoğaltırken karar kalitesini artırmaz.
 :::
 
-## Yakın Geçmiş Yanılgısı
+## Yakın Geçmiş Yanılgısı (Recency Bias)
 
 Son üç ayda ne olduysa önümüzdeki üç ayda da olacakmış gibi hissedilir. Bu yüzden insanlar zirvede en iyimser, dipte en karamsardır — yani tam olarak tersini yapmaları gereken anlarda.
 
@@ -985,7 +985,7 @@ Piyasa hakkında bilmen gerekenlerin çoğu birkaç ayda öğrenilir. Kendin hak
     bodyMd: `Halka açık şirketler üç ayda bir hesap verir. Türkçede hepsine "bilanço" denir; teknik olarak açıklanan şey bir bilanço tablosundan ibaret değildir, çeyrek sonuçlarının tamamıdır.
 
 ::: tanim Çeyrek Sonuçları
-Şirketin üç aylık dönemde ne kadar sattığını (**gelir**), bundan geriye ne kadar kâr kaldığını (**net kâr**) ve bunun hisse başına kaç dolara denk geldiğini (**EPS**) açıklaması. Yanında genellikle bir de **öngörü** (guidance) verilir: gelecek çeyrek ve yıl için şirketin kendi beklentisi.
+Şirketin üç aylık dönemde ne kadar sattığını (**gelir**), bundan geriye ne kadar kâr kaldığını (**net kâr**) ve bunun hisse başına kaç dolara denk geldiğini (**EPS**) açıklaması. Yanında genellikle bir de **guidance** verilir: gelecek çeyrek ve yıl için şirketin kendi beklentisi.
 :::
 
 ## Piyasanın Baktığı Üç Satır
@@ -994,7 +994,7 @@ Piyasa hakkında bilmen gerekenlerin çoğu birkaç ayda öğrenilir. Kendin hak
 
 **2. EPS (hisse başına kâr).** Net kârın hisse sayısına bölünmüş hâli. Bir hissenin o dönemde ne kadar kâr ürettiğini gösterir.
 
-**3. Öngörü (guidance).** Şirketin gelecek dönem beklentisi. **Çoğu gün en önemlisi budur.** Geçmiş çeyrek harika olup öngörü zayıf geldiğinde hisse sert düşer; tersi de olur.
+**3. Guidance.** Şirketin gelecek dönem için kendi beklentisi. **Çoğu gün en önemlisi budur.** Geçmiş çeyrek harika olup guidance zayıf geldiğinde hisse sert düşer; tersi de olur.
 
 ::: dikkat "Beklentiyi Tutturdu" Ne Demek
 Analistler her çeyrek için bir konsensüs beklentisi yayımlar. Piyasayı hareket ettiren şey mutlak rakam değil, **beklentiden sapmadır** (surprise). Kârı %40 artan bir şirket, piyasa %55 beklediği için düşebilir. Fiyat, gerçekleşene değil, gerçekleşen ile beklenenin farkına tepki verir.
@@ -1004,7 +1004,7 @@ Analistler her çeyrek için bir konsensüs beklentisi yayımlar. Piyasayı hare
 
 | Gelir | EPS | Tipik tepki |
 |---|---|---|
-| Tuttu | Tuttu | Öngörü ne dedi, ona bakılır |
+| Tuttu | Tuttu | Guidance ne dedi, ona bakılır |
 | Iskaladı | Tuttu | Kötü — kâr maliyet kısarak yapılmış olabilir |
 | Tuttu | Iskaladı | Marj sorunu — sorgulanır |
 | Iskaladı | Iskaladı | Sert satış |
@@ -1018,10 +1018,10 @@ Analistler her çeyrek için bir konsensüs beklentisi yayımlar. Piyasayı hare
 | Açılış öncesi | BMO (*before market open*) | Seans başlamadan, genellikle 07:00–09:00 NY |
 | Kapanış sonrası | AMC (*after market close*) | Seans bittikten sonra, genellikle 16:05–16:30 NY |
 
-Büyük şirketlerin çoğu kapanış sonrasını tercih eder: piyasa kapalıyken haber sindirilsin, telekonferans yapılsın, ertesi sabah fiyat oluşsun diye. Bu yüzden bir hissenin bilanço tepkisi çoğunlukla **ertesi günün açılışında** görünür ve gün içi grafikte büyük bir boşluk (gap) olarak durur.
+Büyük şirketlerin çoğu kapanış sonrasını tercih eder: piyasa kapalıyken haber sindirilsin, telekonferans yapılsın, ertesi sabah fiyat oluşsun diye. Bu yüzden bir hissenin bilanço tepkisi çoğunlukla **ertesi günün açılışında** görünür ve gün içi grafikte büyük bir gap olarak durur.
 
 ::: ornek Telekonferans
-Sayılar yayımlandıktan yaklaşık bir saat sonra yönetim analistlerle telekonferans yapar. Rakamlar iyi olup hisse toplantı sırasında düşüyorsa, sebep neredeyse her zaman sözlü öngörüdür: bir yöneticinin "önümüzdeki çeyrekte talepte normalleşme bekliyoruz" cümlesi, tablodaki hiçbir sayının anlatmadığı bir hikâye anlatır.
+Sayılar yayımlandıktan yaklaşık bir saat sonra yönetim analistlerle telekonferans yapar. Rakamlar iyi olup hisse toplantı sırasında düşüyorsa, sebep neredeyse her zaman sözlü guidance'tır: bir yöneticinin "önümüzdeki çeyrekte talepte normalleşme bekliyoruz" cümlesi, tablodaki hiçbir sayının anlatmadığı bir hikâye anlatır.
 :::
 
 ## Üç Tablo
@@ -1085,7 +1085,7 @@ Yani iş, kendini döndürmek için gereken harcamalar yapıldıktan sonra ne b�
 
 Bu yüzden uzun vadeli değerleme tartışmalarının çoğu F/K'dan değil FCF'den yürür: [değerleme oranının](/rehber/degerleme) paydası süslenebilir, kasaya giren para daha zor süslenir.
 
-## Hisse Bazlı Ücretler
+## Hisse Bazlı Ödemeler (SBC)
 
 ::: dikkat SBC: Nakit Çıkmayan Gerçek Maliyet
 Teknoloji şirketleri çalışanlarına hisse dağıtır (*stock-based compensation*). Nakit akış tablosunda bu, nakit çıkışı olmadığı için işletme nakdine geri eklenir — ve serbest nakit akışını olduğundan güzel gösterir. Ama maliyet gerçektir: yeni hisse basıldıkça senin payın **sulanır**. FCF'si güçlü görünen bir şirkette SBC'nin büyüklüğüne bakmadan karar verme; bazı şirketlerde FCF'nin yarısına ulaşır.
@@ -1135,7 +1135,7 @@ Ekranda A ucuz görünür. Kazanç başına ödediğin fiyata bakıldığında B
 | **İleri F/K** | Fiyat ÷ beklenen kâr | Büyüyen şirketler |
 | **PD/DD** | Piyasa değeri ÷ defter değeri | Bankalar, varlık ağırlıklı şirketler |
 | **F/S** | Fiyat ÷ satış | Henüz kâr etmeyen şirketler |
-| **FD/FAVÖK** | Firma değeri ÷ FAVÖK | Borçlu şirketleri karşılaştırırken |
+| **FD/FAVÖK** (EV/EBITDA) | Firma değeri ÷ FAVÖK | Borçlu şirketleri karşılaştırırken |
 | **PEG** | F/K ÷ büyüme oranı | Büyüme hızını fiyata katmak için |
 
 Son satır faydalıdır: F/K'sı 40 olan ama yılda %50 büyüyen bir şirket, F/K'sı 15 olup hiç büyümeyen bir şirketten pahalı olmayabilir.
@@ -1150,7 +1150,7 @@ Son satır faydalıdır: F/K'sı 40 olan ama yılda %50 büyüyen bir şirket, F
 Hangisi olduğunu oran söylemez. Söyleyen tek şey zamandır. Bu yüzden değerleme bir karar değil, bir **soru** üretir: *bu fiyatı haklı çıkaracak büyümenin gerçekleşme ihtimali nedir?*
 
 ::: dikkat Düşük F/K Ucuzluk Değildir
-En düşük F/K'lı hisseler çoğu zaman en riskli olanlardır — piyasa kârın düşeceğini beklediği için fiyat düşüktür. Bir sektör yapısal olarak gerilerken F/K'nın düşmesi normaldir. Buna *değer tuzağı* denir: ucuz görünen şey, ucuz olduğu için değil kârı eridiği için ucuzdur.
+En düşük F/K'lı hisseler çoğu zaman en riskli olanlardır — piyasa kârın düşeceğini beklediği için fiyat düşüktür. Bir sektör yapısal olarak gerilerken F/K'nın düşmesi normaldir. Buna *değer tuzağı* (value trap) denir: ucuz görünen şey, ucuz olduğu için değil kârı eridiği için ucuzdur.
 :::
 
 ## Karşılaştırma Kuralları
@@ -1207,13 +1207,13 @@ Piyasa değeri 40 milyar dolar olan bir şirket:
 | Küçük ölçek | 300 milyon – 2 milyar | Oynak, Russell 2000'in alanı |
 | Mikro ölçek | 300 milyon altı | Likidite sorunlu, dikkat ister |
 
-Ölçek yalnızca bir büyüklük etiketi değil, bir risk tanımıdır: küçüldükçe volatilite artar, makas genişler ve tek bir haberin fiyat üzerindeki etkisi büyür.
+Ölçek yalnızca bir büyüklük etiketi değil, bir risk tanımıdır: küçüldükçe volatilite artar, spread genişler ve tek bir haberin fiyat üzerindeki etkisi büyür.
 
 ## Halka Açıklık Oranı (Float)
 
 Toplam hisse adedinin hepsi piyasada dolaşmaz. Kurucuların, çalışanların ve kilitli paketlerin dışında kalan kısma **float** denir.
 
-Float küçükse aynı büyüklükteki bir alım fiyatı daha çok hareket ettirir. Yeni halka açılan şirketlerde ilk aylarda görülen sert hareketlerin en büyük sebebi budur; kilit süresi (lock-up) dolduğunda arz aniden artar ve fiyat baskı görür.
+Float küçükse aynı büyüklükteki bir alım fiyatı daha çok hareket ettirir. Yeni halka açılan şirketlerde ilk aylarda görülen sert hareketlerin en büyük sebebi budur; lock-up süresi dolduğunda arz aniden artar ve fiyat baskı görür.
 
 ## Bölünme ve Ters Bölünme
 
@@ -1265,11 +1265,11 @@ Formülün paydası fiyattır. Hisse yarıya düştüğünde verim ikiye katlan�
 | Tarih | Ne olur |
 |---|---|
 | Açıklama (declaration) | Şirket tutarı ve takvimi duyurur |
-| **Temettüsüz işlem (ex-dividend)** | Bu günden itibaren alan temettüyü ALAMAZ |
+| **Ex-dividend (temettüsüz işlem)** | Bu günden itibaren alan temettüyü ALAMAZ |
 | Kayıt (record) | Hissedar listesi dondurulur |
 | Ödeme (payment) | Para hesaba geçer |
 
-En kritik olanı ikincisidir. Temettüsüz işlem gününün sabahında hisse, dağıtılacak tutar kadar **düşük açar**. Bu bir satış dalgası değil, muhasebedir: 3 dolar dağıtacak bir şirketin kasasında artık 3 dolar daha az vardır.
+En kritik olanı ikincisidir. Ex-dividend gününün sabahında hisse, dağıtılacak tutar kadar **düşük açar**. Bu bir satış dalgası değil, muhasebedir: 3 dolar dağıtacak bir şirketin kasasında artık 3 dolar daha az vardır.
 
 > Temettü bedava para değildir. Şirketin senin cebine aktardığı kendi öz sermayesidir.
 
@@ -1499,7 +1499,7 @@ NFP tek başına değildir; etrafında bir takvim döner:
 |---|---|---|
 | **JOLTS** | Ay başı, iki ay gecikmeli | Açık pozisyon sayısı — işgücü talebinin genişliği |
 | **ADP** | NFP'den iki gün önce | Özel sektör bordro tahmini; NFP'yi her zaman tutturamaz |
-| **Haftalık başvurular** | Her perşembe | İşsizlik maaşına ilk başvurular — en taze, en gürültülü |
+| **Haftalık başvurular** (jobless claims) | Her perşembe | İşsizlik maaşına ilk başvurular — en taze, en gürültülü |
 
 JOLTS'un izlediği oran ("işsiz başına açık pozisyon") Fed konuşmalarında düzenli geçer: işgücü piyasasının gevşeyip gevşemediğinin en sade ölçüsüdür.
 
@@ -1547,7 +1547,7 @@ Bu yüzden şahin bir toplantı, endeksten çok **endeksin içindeki dağılım�
 | "Uzun süre bu seviyede kalmak uygun olabilir" | *Higher for longer* — şahin |
 | "İş gücü piyasasında soğuma belirginleşti" | Gerekçe hazırlanıyor — güvercin |
 
-::: ornek Nokta Grafiği (Dot Plot)
+::: ornek Dot Plot (Nokta Grafiği)
 Fed üyeleri üç ayda bir, gelecek yıllar için kendi faiz beklentilerini nokta olarak yayımlar. Karar açıklanmadan bile bu grafiğin medyanı bir önceki çeyreğe göre yukarı kaydıysa, hiçbir cümle kurulmadan şahin bir mesaj verilmiş olur. Piyasanın saniyeler içinde tepki verdiği sayı çoğu zaman budur.
 :::
 

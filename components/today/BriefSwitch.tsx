@@ -37,6 +37,8 @@ export type BriefView = {
   dateLabel: string;
   /** Kayıt güncel değilse uyarı cümlesi; günceldeyse null. */
   staleNote: string | null;
+  /** Kayıt okunan dilde değilse dil notu; çeviri varsa null. */
+  langNote: string | null;
   /** Kayıt bu döneme mi ait — rozet bunun için. */
   current: boolean;
   archiveHref: string;
@@ -127,6 +129,14 @@ export function BriefSwitch({
             {brief.staleNote && (
               <p className="mt-2.5 rounded-[9px] border border-line bg-surface-elevated px-3 py-2 text-[12px] leading-[18px] text-body">
                 {brief.staleNote}
+              </p>
+            )}
+
+            {/* Dil notu da metnin üstünde, aynı gerekçeyle: okur hangi dilde
+                bir metne baktığını okumaya başlamadan bilmeli. */}
+            {brief.langNote && (
+              <p className="mt-2.5 w-fit rounded-full border border-line bg-surface-elevated px-3 py-1.5 text-[11.5px] text-muted">
+                {brief.langNote}
               </p>
             )}
 
