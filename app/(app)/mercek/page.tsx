@@ -330,6 +330,14 @@ function LeadStory({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <Kicker tone="primary">{t.stories.latest}</Kicker>
+              {/* Yazı henüz bu dile çevrilmediyse orijinal gösterilir ve
+                  dili rozetle söylenir — sessizce yanlış dilde metin sunmak
+                  seçenek değil. */}
+              {story.locale !== locale && (
+                <span className="plate text-[10px] tracking-[0.09em]">
+                  {story.locale.toUpperCase()}
+                </span>
+              )}
               <span className="numeral ml-auto text-[11.5px] text-muted">
                 {formatEtDateLong(story.eventDate, locale)}
               </span>
@@ -419,6 +427,11 @@ function StoryCard({
                   {story.readMinutes} {t.stories.readMinutes}
                 </span>
               </>
+            )}
+            {story.locale !== locale && (
+              <span className="plate ml-auto text-[9.5px] tracking-[0.09em]">
+                {story.locale.toUpperCase()}
+              </span>
             )}
           </p>
 

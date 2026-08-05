@@ -130,7 +130,7 @@ lib/
   session-clock.ts   # dile göre birincil saat dilimi (TR/NY)
   providers/         # alpaca · finnhub · fred · tcmb
   i18n/              # tr + en sözlükleri
-content/guide.ts     # rehber yazıları (depoda)
+content/guide/       # rehber yazıları (depoda) — meta + tr + en
 db/seed/             # FOMC/CPI takvimi, tatiller, semboller, endeksler
 docs/                # rutin prompt'ları, tasarım notları, rota haritası
 drizzle/             # migration'lar — elle düzenlenmez, yenisi eklenir

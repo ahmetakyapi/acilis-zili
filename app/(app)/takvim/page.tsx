@@ -196,6 +196,7 @@ export default async function CalendarPage(
 
       <GuideHint
         label={t.guide.contextLabel}
+        locale={locale}
         slugs={["sahin-guvercin", "enflasyon"]}
         className="pt-1"
       />

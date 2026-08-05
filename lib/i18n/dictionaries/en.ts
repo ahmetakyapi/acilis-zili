@@ -491,6 +491,12 @@ const en: typeof tr = {
     empty: "Nothing here yet.",
     cardCta: "Read",
     onlyThis: "Only These",
+    curriculum: "Where To Start",
+    curriculumHint:
+      "Four topic blocks ordered easy to hard; a newcomer can read the guide start to finish like a curriculum.",
+    articlesCount: "articles",
+    prevArticle: "Previous",
+    nextArticle: "Up Next",
     contextLabel: "To Understand This",
     homeTitle: "Guide & Close-Up",
     homeHint:
@@ -533,6 +539,8 @@ const en: typeof tr = {
       "When something worth explaining happens in the market, it lands here.",
     notFound: "Piece not found",
     notFoundHint: "The link may be stale; try again from the list.",
+    fallbackNote:
+      "This piece hasn't been translated to English yet — you're reading the Turkish original.",
     disclaimer:
       "This piece is based on public reporting available at the time of publication. It is not investment advice.",
   },

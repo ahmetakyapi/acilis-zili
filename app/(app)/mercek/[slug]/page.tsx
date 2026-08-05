@@ -190,6 +190,14 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
         </h1>
         <p className="text-[17px] leading-[27px] text-soft">{story.dek}</p>
 
+        {/* Çeviri henüz yoksa orijinal gösterilir — ama bunu söyleyerek.
+            Rutin iki dili art arda yazdığı için bu not kısa ömürlüdür. */}
+        {story.locale !== locale && (
+          <p className="w-fit rounded-full border border-line bg-surface-sunken px-3.5 py-1.5 text-[12px] text-muted">
+            {t.stories.fallbackNote}
+          </p>
+        )}
+
         {story.symbols && story.symbols.length > 0 && (
           <StorySymbols symbols={story.symbols} />
         )}

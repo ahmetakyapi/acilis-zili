@@ -501,6 +501,13 @@ const tr = {
     empty: "Bu başlıkta henüz yazı yok.",
     cardCta: "Oku",
     onlyThis: "Yalnızca Bunlar",
+    /* Müfredat şeridi — liste sayfasının girişindeki dört konu karosu. */
+    curriculum: "Nereden Başlamalı",
+    curriculumHint:
+      "Dört konu bloğu kolaydan zora sıralı; hiç bilmeyen biri baştan sona bir müfredat gibi okuyabilir.",
+    articlesCount: "yazı",
+    prevArticle: "Önceki Yazı",
+    nextArticle: "Sıradaki Yazı",
     contextLabel: "Bunu Anlamak İçin",
     homeTitle: "Rehber ve Mercek",
     homeHint:
@@ -545,6 +552,9 @@ const tr = {
       "Piyasada anlatmaya değer bir olay yaşandığında merceğe burada alınır.",
     notFound: "Yazı bulunamadı",
     notFoundHint: "Bağlantı eski olabilir; listeden tekrar dene.",
+    /* Yazı henüz bu dile çevrilmediyse orijinal gösterilir; bu not onu söyler. */
+    fallbackNote:
+      "Bu yazı henüz Türkçeye çevrilmedi; orijinal diliyle gösteriliyor.",
     disclaimer:
       "Bu yazı yayımlandığı tarihteki kamuya açık haber kaynaklarına dayanır. Yatırım tavsiyesi değildir.",
   },

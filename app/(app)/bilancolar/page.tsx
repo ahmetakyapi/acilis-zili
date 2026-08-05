@@ -163,6 +163,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
 
       <GuideHint
         label={t.guide.contextLabel}
+        locale={locale}
         slugs={["bilanco", "degerleme"]}
         className="pt-1"
       />

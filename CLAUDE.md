@@ -99,9 +99,12 @@ dönüşümünün tamamı orada, başka yerde manuel saat aritmetiği yapılmaz.
 - **Arayüz metni** sözlükte: `lib/i18n/dictionaries/{tr,en}.ts`. `en`, `tr`
   tipinden türüyor — `tr`'ye anahtar eklersen `en` derlenmez, ikisini birlikte
   güncelle.
-- **Rehber yazıları** depoda (`content/guide.ts`), **mercek yazıları**
+- **Rehber yazıları** depoda (`content/guide/`), **mercek yazıları**
   veritabanında (`stories` tablosu). `/api/mercek` POST ile yazılır, aynı uç
   `?slug=` ile gövdeyi geri okur — rutin güncelleme yaparken onu kullanıyor.
+- **İçerik iki dilli.** Rehber: `content/guide/` üç katman (meta + tr + en),
+  eksik çeviri derlemeyi kırar. Mercek: aynı slug iki `locale` satırı; çeviri
+  yoksa sayfa orijinali "TR" rozeti ve notla gösterir, boş kalmaz.
 - **Sayfa içi filtre ve sıralama bağlantıları `scroll={false}` ister.** App
   Router her gezinmede en üste kaydırıyor; tablonun ortasında sıralamayı
   değiştiren okuyucu sayfanın başına fırlıyordu.

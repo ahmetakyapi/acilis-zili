@@ -20,15 +20,18 @@ import { cn } from "@/lib/utils";
 export function GuideHint({
   slugs,
   label,
+  locale,
   className,
 }: {
   slugs: string[];
   /** Şeridin üstündeki küçük başlık — ekranın diline göre değişir. */
   label: string;
+  /** Başlık ve açıklama içerikten okunur; hangi dilden okunacağı buradan. */
+  locale: string;
   className?: string;
 }) {
   const articles = slugs
-    .map((slug) => guideArticle(slug))
+    .map((slug) => guideArticle(slug, locale))
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
   if (articles.length === 0) return null;

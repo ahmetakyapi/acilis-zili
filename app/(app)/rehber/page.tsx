@@ -1,23 +1,32 @@
 import Link from "next/link";
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { readingMinutes } from "@/components/article/ArticleBody";
 import { EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
 import {
-  GUIDE_ARTICLES,
   GUIDE_TOPICS,
+  guideArticles,
+  guideTopicDesc,
   guideTopicLabel,
+  type GuideArticle,
   type GuideTopicKey,
 } from "@/content/guide";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
 
 /**
- * Rehber — kavram yazılarının vitrini.
+ * Rehber — müfredatın vitrini.
  *
- * Kartlar tek tek okunacak yazılar olduğu için ızgara geniş: üç sütunda
- * başlık ve giriş cümlesi kırpılmadan sığıyor. Filtre URL'de yaşıyor
- * (?konu=strateji), sunucuda çözülüyor — burada da JS gerekmiyor.
+ * Sayfanın iki hâli var ve ikisi farklı soruya cevap veriyor:
+ *
+ * FİLTRESİZ hâl "nereden başlamalıyım" sorusunu cevaplıyor: girişte dört
+ * konu karosu (sıra numarası, açıklama, yazı sayısı ve toplam okuma süresi),
+ * altında konu konu bölümlenmiş liste. Karolar sayfa içi çapalara gider —
+ * filtre değil, içindekiler tablosu.
+ *
+ * FİLTRELİ hâl (?konu=...) "yalnızca bu konuyu göster" diyor: konunun kendi
+ * başlığı ve açıklamasıyla açılır, tek ızgara listelenir. Eski çip sırası
+ * kaldırıldı — karolar, bölüm başlıkları ve çipler aynı işi üç kez
+ * yapıyordu; kalan iki yol (karo → çapa, "Yalnızca Bunlar" → filtre) yetiyor.
  */
 
 export default async function GuidePage(props: PageProps<"/rehber">) {
@@ -29,110 +38,217 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
   const activeTopic =
     GUIDE_TOPICS.find((topic) => topic.key === requested)?.key ?? null;
 
-  const counts = new Map<string, number>();
-  for (const article of GUIDE_ARTICLES) {
-    counts.set(article.topic, (counts.get(article.topic) ?? 0) + 1);
-  }
-
-  const shown = activeTopic
-    ? GUIDE_ARTICLES.filter((article) => article.topic === activeTopic)
-    : GUIDE_ARTICLES;
-
-  const topicHref = (key: string | null) =>
-    key ? `/rehber?konu=${key}` : "/rehber";
+  const all = guideArticles(locale);
+  const groupOf = (key: GuideTopicKey) =>
+    all.filter((article) => article.topic === key);
+  const minutesOf = (articles: GuideArticle[]) =>
+    articles.reduce((sum, article) => sum + readingMinutes(article.bodyMd), 0);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       <PageHeader
         eyebrow={t.guide.eyebrow}
         title={t.guide.title}
         subtitle={t.guide.subtitle}
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <TopicChip
-          href={topicHref(null)}
-          active={!activeTopic}
-          label={t.guide.allTopics}
-          count={GUIDE_ARTICLES.length}
+      {activeTopic ? (
+        <TopicView
+          topic={activeTopic}
+          articles={groupOf(activeTopic)}
+          locale={locale}
+          t={t}
         />
-        {GUIDE_TOPICS.map((topic) => (
-          <TopicChip
-            key={topic.key}
-            href={topicHref(topic.key === activeTopic ? null : topic.key)}
-            active={topic.key === activeTopic}
-            label={guideTopicLabel(topic.key, locale)}
-            count={counts.get(topic.key) ?? 0}
-          />
-        ))}
-      </div>
-
-      {shown.length === 0 ? (
-        <Panel>
-          <EmptyState title={t.guide.empty} />
-        </Panel>
-      ) : activeTopic ? (
-        <ArticleGrid articles={shown} locale={locale} t={t} />
       ) : (
-        /* Filtre yokken yirmiden fazla kart tek yığın hâlinde okunmuyordu.
-           Konu başlıkları hem müfredat sırasını görünür kılıyor hem de
-           "nereden başlasam" sorusunu cevaplıyor. */
-        <div className="flex flex-col gap-8">
-          {GUIDE_TOPICS.map((topic) => {
-            const group = GUIDE_ARTICLES.filter(
-              (article) => article.topic === topic.key,
-            );
+        <>
+          <CurriculumStrip
+            all={all}
+            groupOf={groupOf}
+            minutesOf={minutesOf}
+            locale={locale}
+            t={t}
+          />
+
+          {GUIDE_TOPICS.map((topic, index) => {
+            const group = groupOf(topic.key);
             if (group.length === 0) return null;
             return (
-              <section key={topic.key} className="flex flex-col gap-4">
-                <div className="flex items-baseline gap-3 border-b border-line pb-2.5">
-                  <h2 className="display-ink display-ink-tight w-fit text-[17px] font-bold tracking-[-0.03em]">
-                    {guideTopicLabel(topic.key, locale)}
-                  </h2>
-                  <span className="numeral text-[12px] text-muted">
-                    {group.length}
-                  </span>
-                  <Link
-                    href={topicHref(topic.key)}
-                    /* -my-2 py-2: 12px'lik metin tek başına 18px yüksekliğinde
-                       bir dokunma hedefi bırakıyordu; dolgu onu 32px'e
-                       çıkarır, negatif margin satırı olduğu yerde tutar. */
-                    className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center py-2 text-[12px] text-primary transition-colors hover:text-primary-hover"
-                  >
-                    {t.guide.onlyThis}
-                  </Link>
+              /* scroll-mt: çapaya atlayınca başlık yapışkan üst çubuğun
+                 altında kalmasın. */
+              <section
+                key={topic.key}
+                id={`konu-${topic.key}`}
+                className="flex scroll-mt-24 flex-col gap-4"
+              >
+                <div className="flex flex-col gap-1.5 border-b border-line pb-3">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span className="numeral text-[12px] font-bold text-primary">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <h2 className="display-ink display-ink-tight w-fit text-[19px] font-bold tracking-[-0.03em]">
+                      {guideTopicLabel(topic.key, locale)}
+                    </h2>
+                    <span className="numeral text-[12px] text-muted">
+                      {group.length} {t.guide.articlesCount} · ~
+                      {minutesOf(group)} {t.guide.readMinutes}
+                    </span>
+                    <Link
+                      href={`/rehber?konu=${topic.key}`}
+                      scroll={false}
+                      /* -my-2 py-2: 12px'lik metin tek başına 18px'lik bir
+                         dokunma hedefi bırakıyordu; dolgu 32px'e çıkarır,
+                         negatif margin satırı olduğu yerde tutar. */
+                      className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center py-2 text-[12px] font-semibold text-primary transition-colors hover:text-primary-hover"
+                    >
+                      {t.guide.onlyThis}
+                    </Link>
+                  </div>
+                  <p className="max-w-[64ch] text-[12.5px] leading-[19px] text-muted">
+                    {guideTopicDesc(topic.key, locale)}
+                  </p>
                 </div>
-                {/* Konu etiketi kartlarda gizli: başlık zaten iki satır
-                    yukarıda duruyor, tekrarı gürültü yapıyor. */}
-                <ArticleGrid
-                  articles={group}
-                  locale={locale}
-                  t={t}
-                  showTopic={false}
-                />
+                <ArticleGrid articles={group} t={t} />
               </section>
             );
           })}
-        </div>
+        </>
       )}
     </div>
   );
 }
 
-function ArticleGrid({
+/**
+ * Müfredat şeridi — dört konu, sıra numarası ve kapsamıyla.
+ *
+ * Karolar filtrelemez, sayfa içinde ilgili bölüme götürür: yeni gelen
+ * okuyucunun sorusu "bu konudaki yazıları süz" değil "nereden başlayayım".
+ * Toplam sayaç şeridin başlığında durur — rehberin büyüklüğü tek satırda.
+ */
+function CurriculumStrip({
+  all,
+  groupOf,
+  minutesOf,
+  locale,
+  t,
+}: {
+  all: GuideArticle[];
+  groupOf: (key: GuideTopicKey) => GuideArticle[];
+  minutesOf: (articles: GuideArticle[]) => number;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
+          {t.guide.curriculum}
+        </h2>
+        <span className="numeral text-[11.5px] text-muted">
+          {all.length} {t.guide.articlesCount} · ~{minutesOf(all)}{" "}
+          {t.guide.readMinutes}
+        </span>
+      </div>
+      <p className="-mt-1.5 text-[12.5px] leading-[19px] text-muted">
+        {t.guide.curriculumHint}
+      </p>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {GUIDE_TOPICS.map((topic, index) => {
+          const group = groupOf(topic.key);
+          return (
+            <a key={topic.key} href={`#konu-${topic.key}`} className="min-w-0">
+              <Panel className="panel-hover flex h-full flex-col gap-1.5 p-4">
+                <span className="numeral text-[11px] font-bold text-primary">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="display-ink display-ink-tight w-fit text-[16px] font-bold tracking-[-0.02em]">
+                  {guideTopicLabel(topic.key, locale)}
+                </span>
+                <span className="text-[12px] leading-[18px] text-muted">
+                  {guideTopicDesc(topic.key, locale)}
+                </span>
+                <span className="numeral mt-auto flex items-center gap-1.5 pt-2.5 text-[11px] text-muted">
+                  {group.length} {t.guide.articlesCount} · ~{minutesOf(group)}{" "}
+                  {t.guide.readMinutes}
+                  <ArrowRight
+                    weight="bold"
+                    size={11}
+                    className="ml-auto text-primary"
+                    aria-hidden
+                  />
+                </span>
+              </Panel>
+            </a>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/** Filtreli hâl: konunun kendi başlığı, açıklaması ve tek ızgara. */
+function TopicView({
+  topic,
   articles,
   locale,
   t,
-  showTopic = true,
 }: {
-  articles: typeof GUIDE_ARTICLES;
+  topic: GuideTopicKey;
+  articles: GuideArticle[];
   locale: Locale;
   t: Dictionary;
-  showTopic?: boolean;
+}) {
+  return (
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5 border-b border-line pb-3">
+        <Link
+          href="/rehber"
+          scroll={false}
+          className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-[12px] font-semibold text-muted transition-colors hover:text-primary"
+        >
+          <ArrowLeft weight="bold" size={12} />
+          {t.guide.allTopics}
+        </Link>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h2 className="display-ink display-ink-tight w-fit text-[19px] font-bold tracking-[-0.03em]">
+            {guideTopicLabel(topic, locale)}
+          </h2>
+          <span className="numeral text-[12px] text-muted">
+            {articles.length} {t.guide.articlesCount}
+          </span>
+        </div>
+        <p className="max-w-[64ch] text-[12.5px] leading-[19px] text-muted">
+          {guideTopicDesc(topic, locale)}
+        </p>
+      </div>
+
+      {articles.length === 0 ? (
+        <Panel>
+          <EmptyState title={t.guide.empty} />
+        </Panel>
+      ) : (
+        <ArticleGrid articles={articles} t={t} />
+      )}
+    </section>
+  );
+}
+
+/**
+ * Yazı kartları. Sağ üstteki numara yazının konu içindeki sırası —
+ * müfredat hissini kart düzeyine taşır. Konu etiketi kartlarda yok:
+ * kartlar her iki görünümde de kendi konu başlığının altında duruyor,
+ * tekrarı gürültü yapıyordu.
+ */
+function ArticleGrid({
+  articles,
+  t,
+}: {
+  articles: GuideArticle[];
+  t: Dictionary;
 }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {articles.map((article) => (
+      {articles.map((article, index) => (
         <Link
           key={article.slug}
           href={`/rehber/${article.slug}`}
@@ -142,17 +258,15 @@ function ArticleGrid({
           <Panel className="panel-hover flex h-full flex-col gap-4 p-5">
             <div className="flex items-start justify-between gap-3">
               <GlyphTile glyph={article.glyph} />
-              {showTopic && (
-                <span className="plate mt-1 text-right text-[10px] tracking-[0.09em]">
-                  {guideTopicLabel(article.topic, locale)}
-                </span>
-              )}
+              <span className="numeral mt-1 text-[11px] font-bold text-muted">
+                {String(index + 1).padStart(2, "0")}
+              </span>
             </div>
 
             <div className="flex flex-1 flex-col gap-1.5">
-              <h2 className="display-ink display-ink-tight w-fit text-[18px] font-bold tracking-[-0.025em]">
+              <h3 className="display-ink display-ink-tight w-fit text-[18px] font-bold tracking-[-0.025em]">
                 {article.title}
-              </h2>
+              </h3>
               <p className="text-[13.5px] leading-[21px] text-body">
                 {article.dek}
               </p>
@@ -169,41 +283,5 @@ function ArticleGrid({
         </Link>
       ))}
     </div>
-  );
-}
-
-function TopicChip({
-  href,
-  active,
-  label,
-  count,
-}: {
-  href: string;
-  active: boolean;
-  label: string;
-  count: number;
-}) {
-  return (
-    <Link
-      href={href}
-      scroll={false}
-      aria-current={active ? "true" : undefined}
-      className={cn(
-        "inline-flex min-h-[34px] items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[12.5px] font-semibold transition-colors",
-        active
-          ? "border-transparent bg-primary text-on-primary"
-          : "border-line bg-surface text-body hover:border-line-strong hover:text-strong",
-      )}
-    >
-      {label}
-      <span
-        className={cn(
-          "numeral text-[11px] font-bold",
-          active ? "text-on-primary/70" : "text-muted",
-        )}
-      >
-        {count}
-      </span>
-    </Link>
   );
 }

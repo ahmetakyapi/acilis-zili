@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { GUIDE_ARTICLES } from "@/content/guide";
+import { GUIDE_SLUGS } from "@/content/guide";
 import { getStories } from "@/lib/data";
 import { SITE_URL } from "@/lib/site";
 
@@ -44,9 +44,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route.priority,
   }));
 
-  for (const article of GUIDE_ARTICLES) {
+  for (const slug of GUIDE_SLUGS) {
     entries.push({
-      url: `${SITE_URL}/rehber/${article.slug}`,
+      url: `${SITE_URL}/rehber/${slug}`,
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.7,

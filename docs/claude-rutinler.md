@@ -452,13 +452,15 @@ BAĞLANTI KURALLARI
   - En az bir rehber yazısına bağlantı ver. Mevcut slug'lar:
     Temel:     /rehber/hisse-senedi · /rehber/borsa-nasil-isler ·
                /rehber/endeks · /rehber/etf · /rehber/volatilite ·
-               /rehber/ayi-boga · /rehber/spread-likidite
+               /rehber/ayi-boga · /rehber/spread-likidite ·
+               /rehber/halka-arz
     Risk:      /rehber/emir-tipleri · /rehber/risk-yonetimi ·
                /rehber/cesitlendirme · /rehber/long-short ·
-               /rehber/kaldirac · /rehber/yatirimci-psikolojisi
-    Şirket:    /rehber/bilanco · /rehber/degerleme ·
+               /rehber/kaldirac · /rehber/opsiyonlar ·
+               /rehber/yatirimci-psikolojisi
+    Şirket:    /rehber/bilanco · /rehber/nakit-akisi · /rehber/degerleme ·
                /rehber/piyasa-degeri · /rehber/temettu
-    Makro:     /rehber/faiz-tahvil · /rehber/enflasyon ·
+    Makro:     /rehber/faiz-tahvil · /rehber/enflasyon · /rehber/istihdam ·
                /rehber/sahin-guvercin · /rehber/kur-riski
 
     Bu liste değişebilir. Emin değilsen https://acilis-zili.vercel.app/rehber
@@ -488,6 +490,7 @@ BİÇİM KURALLARI
   [ ] Her rakamı doğrulanmış bir kaynağa dayandırabiliyor musun?
   [ ] En az bir /rehber ve birkaç /hisse bağlantısı var mı?
   [ ] Kapanışta ::: ozet ve künye paragrafı var mı?
+  [ ] Türkçesini gönderdikten sonra İngilizcesini de gönderecek misin (adım 8)?
 
 Bir madde bile "hayır" ise geri dön ve düzelt. Eksik bir yazı göndermektense
 o günü pas geçmek daha iyidir.
@@ -520,6 +523,32 @@ Alan kuralları:
 
 Yanıtta "ok": true gördüğünü doğrula, sonra yazıyı canlıda aç ve görsel
 blokların doğru render edildiğini gözle kontrol et.
+
+--- 8. İNGİLİZCESİNİ YAZ VE GÖNDER ---
+
+Site iki dilli; her yazının İngilizcesi de yayımlanır. Türkçeyi gönderdikten
+sonra AYNI yazıyı İngilizce yaz ve AYNI slug ile, "locale": "en" ekleyerek
+ikinci kez POST et. slug, event_date, symbols ve sources birebir aynı kalır;
+title, dek ve body_md İngilizce olur.
+
+Çeviri kuralları:
+  - Birebir çeviri değil, editoryal çeviri: doğal Amerikan finans İngilizcesi.
+  - Sayı biçimi İngilizceye döner: ondalıkta NOKTA (0.1), $ önde ($45B),
+    % SONDA (10%). Türkçedeki "45 Mr $" İngilizcede "$45B" yazılır.
+  - ::: blok adları SÖZDİZİMİDİR, çevrilmez: sayilar, bar, pay, akis,
+    oncesi, zaman, grafik, ornek, dikkat, ozet, tanim aynen kalır.
+    Blok adının YANINDAKİ başlık metni İngilizce yazılır.
+  - Bağlantı adresleri değişmez (/rehber/kaldirac, /hisse/MU aynı);
+    bağlantının görünen metni İngilizce olur.
+  - Aynı olayda güncelleme yaptığında iki dili birden güncelle:
+    GET ?slug=...&locale=en ile İngilizce gövdeyi ayrıca okuyabilirsin.
+
+context yanıtındaki existing_stories artık her yazı için "locales" listesi
+taşır. Bir yazıda yalnızca ["tr"] görüyorsan İngilizcesi eksik demektir —
+o günün işi hafifse eksik bir çeviriyi tamamlayarak bitir.
+
+Türkçe gönderimde olduğu gibi yanıtta "ok": true doğrula; İngilizce sayfayı
+görmek için sitede dil EN'e çevrilir, adres aynıdır.
 ````
 ---
 
@@ -598,6 +627,52 @@ görevindeki 3, 4 ve 5. adımların tamamı aynen geçerlidir: araştır, doğru
 900-1600 kelime yaz, tablo veya ::: kutusu kullan, kaynak göster.
 
 her yazıyı POST ettikten sonra bir sonrakine geç.
+````
+
+### Yazı arşivinin İngilizcesi (bir kez)
+
+Var olan Türkçe yazıların İngilizce sürümlerini üretir. Rutin bundan sonra
+her yazıyı iki dilde birden gönderdiği için bu blok yalnızca geçmişi kapatır.
+
+````
+Açılış Zili mercek arşivindeki yazıların İngilizce sürümlerini yazacaksın.
+
+SECRET=BURAYA_SECRET
+
+1. Arşivi listele:
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  https://acilis-zili.vercel.app/api/mercek/context
+```
+
+   existing_stories içindeki her kayıtta "locales" listesi var.
+   "locales": ["tr"] olanlar çevrilecek; ["tr","en"] olanlar atlanır.
+
+2. Her eksik yazı için Türkçe gövdeyi oku:
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  "https://acilis-zili.vercel.app/api/mercek?slug=<slug>"
+```
+
+3. İngilizcesini yaz ve AYNI slug ile gönder — tek fark "locale": "en":
+
+```bash
+curl -s -X POST https://acilis-zili.vercel.app/api/mercek \
+  -H "Authorization: Bearer $SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{ "slug": "<slug>", "locale": "en", "title": "...", "dek": "...",
+        "event_date": "<aynı>", "symbols": [...], "sources": [...],
+        "body_md": "..." }'
+```
+
+Çeviri kuralları "3 · Mercek Yazısı" görevinin 8. adımındakiyle aynıdır:
+editoryal çeviri, sayı biçimi İngilizce (ondalık NOKTA, $ önde, % sonda),
+::: blok adları aynen kalır, bağlantı adresleri değişmez, başlık İngilizce
+Title Case yazılır. slug, event_date, symbols ve sources'a dokunma.
+
+Her POST sonrası "ok": true doğrula ve bir sonraki yazıya geç.
 ````
 
 ---

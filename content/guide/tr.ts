@@ -1,57 +1,23 @@
 /* ==========================================================================
-   Rehber — kavram yazıları
+   Rehber — Türkçe metinler
 
-   Neden veritabanında değil de depoda: bu metinler durağan ve editoryal.
-   Bir tanımın yanlış olması bir fiyatın eski olmasından daha pahalı, o yüzden
-   kod incelemesinden geçmeleri ve sürüm geçmişinde durmaları isteniyor.
-   Mercek yazıları (`stories` tablosu) tam tersi: her akşam üretiliyor ve
-   deploy beklemeden yazılabilmeli.
-
-   Sıra bir müfredat: hiç bilmeyen biri baştan okuyabilsin diye yazılar
-   konularına göre dört blokta duruyor ve her blok kendi içinde kolaydan zora
-   ilerliyor. Bu yüzden tek bir dizi yerine dört dizi var — yeni bir yazı
-   eklerken doğru bloğa, doğru sıraya koy.
+   Yapı, sıra ve ilişkiler `meta.ts`'te; buradaki anahtarlar oradaki
+   slug'larla birebir aynıdır ve tip bunu zorlar. Yeni yazı eklerken üç
+   dosya birlikte güncellenir: meta + tr + en — biri eksikse derleme kırılır.
 
    Gövde sözdizimi `components/article/ArticleBody.tsx` içinde anlatılıyor:
    ## başlık, - madde, | tablo |, > alıntı, ::: kutu ... :::
    ========================================================================== */
 
-export const GUIDE_TOPICS = [
-  { key: "temel", labelTr: "Temel Kavramlar", labelEn: "Basics" },
-  { key: "strateji", labelTr: "Pozisyon ve Risk", labelEn: "Positions & Risk" },
-  { key: "sirket", labelTr: "Şirketi Okumak", labelEn: "Reading a Company" },
-  { key: "makro", labelTr: "Makro ve Merkez Bankası", labelEn: "Macro" },
-] as const;
+import type { GuideSlug, GuideText } from "./meta";
 
-export type GuideTopicKey = (typeof GUIDE_TOPICS)[number]["key"];
+export const GUIDE_TR: Record<GuideSlug, GuideText> = {
+  /* ==== 1 · Temel Kavramlar =============================================== */
 
-export type GuideArticle = {
-  slug: string;
-  title: string;
-  /** Kartta ve sayfa başında okunan tek cümle. */
-  dek: string;
-  topic: GuideTopicKey;
-  /** Kart üstündeki tipografik işaret — ikon değil, kavramın kendi notasyonu. */
-  glyph: string;
-  bodyMd: string;
-  /** İlgili yazılar; sayfa sonunda bağlantı olarak çıkar. */
-  related?: string[];
-};
-
-/* ==========================================================================
-   1 · Temel Kavramlar
-   Hiç bilmeyen birinin bu sırayla okuması hedeflendi.
-   ========================================================================== */
-
-const TEMEL: GuideArticle[] = [
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "hisse-senedi",
+  "hisse-senedi": {
     title: "Hisse Senedi Nedir?",
     dek: "Bir şirketin küçük bir parçasına sahip olmak — ve o parçanın fiyatını kimin belirlediği.",
-    topic: "temel",
-    glyph: "◧",
-    related: ["borsa-nasil-isler", "bilanco"],
     bodyMd: `Apple'ın bir hissesini aldığında bir kâğıt parçası satın almış olmuyorsun. Şirketin milyarlarca parçaya bölünmüş mülkiyetinin bir parçasını satın alıyorsun. O parça sana iki şey verir: şirket kâr dağıtırsa payını alma hakkı ve genel kurulda oy hakkı.
 
 ::: tanim Hisse Senedi
@@ -108,13 +74,9 @@ Her şirketin kendi sayfası var: [NVDA](/hisse/NVDA) gibi. Orada fiyat, gün ar
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "borsa-nasil-isler",
+  "borsa-nasil-isler": {
     title: "Borsa Nasıl İşler?",
     dek: "Emrin tuşa bastığın andan hisselerin hesabına geçtiği ana kadar izlediği yol.",
-    topic: "temel",
-    glyph: "⇄",
-    related: ["emir-tipleri", "spread-likidite"],
     bodyMd: `Borsa bir bina değil, bir eşleştirme makinesidir. Görevi tek bir şey: alıcıyla satıcıyı fiyat üzerinden buluşturmak. Geri kalan her şey bu basit işin etrafına kurulmuş altyapıdır.
 
 ::: tanim Borsa (Exchange)
@@ -178,13 +140,9 @@ Ana sayfadaki geri sayım, bir sonraki açılışa ya da kapanışa kalan sürey
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "endeks",
+  "endeks": {
     title: "Endeks Nedir?",
     dek: "S&P 500 dediğimiz sayı nereden geliyor ve neden Dow Jones'tan farklı davranıyor.",
-    topic: "temel",
-    glyph: "Σ",
-    related: ["etf", "ayi-boga"],
     bodyMd: `"Piyasa bugün %1 yükseldi" cümlesindeki *piyasa* bir endekstir. Endeks, bir grup hissenin toplu hâlde nasıl hareket ettiğini tek bir sayıya indirir. Kendisi alınıp satılamaz — bir hesaptır, bir ürün değil.
 
 ::: tanim Endeks
@@ -237,13 +195,9 @@ Ana sayfanın yan kolonunda dört endeks kartı ve her birinin gün içi grafiğ
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "etf",
+  "etf": {
     title: "ETF Nedir?",
     dek: "Tek bir hisse gibi alınıp satılan, içinde onlarca şirket taşıyan fon.",
-    topic: "temel",
-    glyph: "ETF",
-    related: ["endeks", "temettu"],
     bodyMd: `Nasdaq 100 endeksini "satın alamazsın". Endeks bir hesaptır, bir ürün değil. Ama endeksteki 100 şirketin hepsini doğru ağırlıklarla tutan bir fonun payını satın alabilirsin. O fonun adı **QQQ** ve bir ETF'tir.
 
 ::: tanim ETF (Exchange Traded Fund)
@@ -293,13 +247,9 @@ Endeks kartları (Nasdaq 100, S&P 500, Dow Jones, Russell 2000) ve Dünya Piyasa
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "volatilite",
+  "volatilite": {
     title: "Volatilite Nedir?",
     dek: "Fiyatın ne kadar oynadığını ölçer — hangi yöne gittiğini değil.",
-    topic: "temel",
-    glyph: "σ",
-    related: ["ayi-boga", "risk-yonetimi"],
     bodyMd: `Bir hisse ayı %2 artıda kapatabilir. Aynı hisse ay boyunca önce %18 düşüp sonra %24 yükselerek de %2 artıda kapatabilir. Sonuç aynı, yaşadıkların değil. Aradaki farkın adı **volatilite**.
 
 ::: tanim Volatilite
@@ -355,13 +305,9 @@ Volatilite tek başına bir risk değil, bir ölçüdür. Riske dönüştüğü 
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "ayi-boga",
+  "ayi-boga": {
     title: "Ayı ve Boğa Piyasası Nedir?",
     dek: "İki hayvan, iki eşik ve piyasanın kendi hakkında anlattığı hikâye.",
-    topic: "temel",
-    glyph: "▲▼",
-    related: ["volatilite", "yatirimci-psikolojisi"],
     bodyMd: `Boğa boynuzlarıyla yukarı savurur, ayı pençesiyle aşağı vurur. Terimlerin kökeni bu kadar basit. Eşikleri ise sayısaldır ve piyasa bunları ciddiye alır.
 
 ::: tanim İki Eşik
@@ -411,13 +357,9 @@ Tarihsel ölçekte:
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "spread-likidite",
+  "spread-likidite": {
     title: "Likidite ve Makas Nedir?",
     dek: "İşlem ücreti sıfır olsa bile her alım satımda ödediğin görünmez bedel.",
-    topic: "temel",
-    glyph: "⇔",
-    related: ["borsa-nasil-isler", "emir-tipleri"],
     bodyMd: `Bir hissenin tek bir fiyatı yoktur. Aynı anda iki fiyatı vardır: birinden alabilirsin, diğerinden satabilirsin ve ikisi asla aynı değildir. Aradaki fark, hiçbir komisyon tablosunda görünmeyen gerçek maliyettir.
 
 ::: tanim Makas (Spread) ve Likidite
@@ -465,23 +407,89 @@ Likidite sakin günlerde boldur, panik günlerinde buharlaşır. Herkesin aynı 
 
 Hisse sayfasındaki **hacim** satırı likiditenin en kaba göstergesidir. Fiyat verisi IEX beslemesinden geldiği için ekrandaki son fiyat, konsolide piyasadaki fiyattan biraz sapabilir — bu da makasın bir başka görünümüdür.`,
   },
-];
 
-/* ==========================================================================
-   2 · Pozisyon ve Risk
-   Emirden başlar, kaldıraçta biter. Kaldıraç yazısı bilinçli olarak
-   "nasıl kullanılır" değil "neden kullanılmamalı" diye yazıldı.
-   ========================================================================== */
-
-const STRATEJI: GuideArticle[] = [
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "emir-tipleri",
+  "halka-arz": {
+    title: "Halka Arz (IPO): Şirket Borsaya Nasıl Gelir?",
+    dek: "Kapalı bir şirketin herkese açık bir fiyat etiketi kazandığı gün — ve o günün neden bu kadar oynak olduğu.",
+    bodyMd: `Borsada gördüğün her şirket bir gün borsada değildi. Kurucuların, çalışanların ve birkaç fonun elindeki kapalı bir şirketti; hissesinin fiyatı yoktu çünkü alınıp satıldığı bir piyasa yoktu. Halka arz, o kapalı yapının herkese açık bir piyasaya taşındığı süreçtir.
+
+::: tanim Halka Arz (IPO)
+*Initial Public Offering* — bir şirketin hisselerinin ilk kez halka satılması ve borsada işlem görmeye başlaması. O günden sonra şirketin her an güncellenen bir fiyat etiketi ve üç ayda bir hesap verme yükümlülüğü vardır.
+:::
+
+## Şirket Neden Halka Açılır
+
+Üç sebep vardır ve hangisinin baskın olduğu, arzın nasıl okunacağını değiştirir:
+
+1. **Para toplamak.** Şirket yeni hisse basar ve satıştan gelen para şirkete girer — fabrika, ürün, büyüme için.
+2. **Erken yatırımcıya çıkış.** Kuruluşta para koyan fonlar ve kurucular, ellerindeki hisseyi nakde çevirmek ister. Bu satışta para şirkete değil, satan hissedara gider.
+3. **Hisseyi para gibi kullanmak.** Borsada fiyatı olan bir hisse, şirket satın almakta ve çalışan maaşında ödeme aracı olur.
+
+İzahnamede "kim satıyor" bölümü bu yüzden okunur: sermaye artırımı ağırlıklı bir arz ile erken yatırımcıların çıkışı ağırlıklı bir arz, aynı şey değildir.
+
+## Süreç: Dosyadan Çana
+
+::: zaman Tipik Bir Halka Arzın Takvimi
+Aylar önce | Şirket yatırım bankalarını seçer ve SEC'e **S-1** dosyasını verir: mali tablolar, riskler, ortaklık yapısı — hepsi ilk kez kamuya açılır.
+Haftalar önce | **Roadshow**: yönetim, kurumsal yatırımcılara şirketi anlatır. Bankalar talebi bir deftere toplar.
+Birkaç gün önce | Fiyat aralığı ilan edilir ("hisse başına 24–27 dolar"). Talep güçlüyse aralık yukarı çekilir.
+Arzdan önceki akşam | Kesin **arz fiyatı** belirlenir ve kurumsal alıcılara tahsis yapılır.
+İlk gün | Hisse borsada işlem görmeye başlar. İlk işlem fiyatı arz fiyatından farklıdır — bazen çok farklı.
+:::
+
+## İki Fiyat: Arz ve Açılış
+
+Halka arz gününde iki ayrı fiyat vardır ve karıştırılmaları en yaygın hatadır.
+
+**Arz fiyatı**, önceki akşam kurumsal alıcıların ödediği fiyattır. **Açılış fiyatı**, ertesi gün borsada ilk eşleşmenin gerçekleştiği fiyattır. "Hisse ilk gün %35 yükseldi" başlığı çoğu zaman şu demektir: açılış, arz fiyatının %35 üstünde gerçekleşti.
+
+::: ornek "Pop" Kimin Parası
+Bir şirket hissesini 25 dolardan arz etti, ilk işlem 34 dolardan açıldı. Manşet bunu başarı olarak yazar. Şirket tarafından bakınca tablo farklıdır: şirket hisselerini 25'e sattı ama piyasa 34 ödemeye hazırmış — aradaki 9 dolar, şirketin kasasına girmeyen paradır. Büyük bir "ilk gün pop'u", arzın ucuza fiyatlandığının da işaretidir.
+:::
+
+Bu farkın senin için pratik sonucu şudur: bireysel yatırımcı neredeyse her zaman **açılış fiyatından** alır, arz fiyatından değil. Manşetteki "%35 kazanç" arz gecesinde tahsis alan kurumların kazancıdır.
+
+## Kilit Süresi
+
+Halka arzda satılmayan hisseler — kurucular, çalışanlar, erken fonlar — genellikle **90 ila 180 gün** boyunca satış yasağı altındadır. Buna kilit süresi (*lock-up*) denir.
+
+::: dikkat Kilidin Açıldığı Gün
+Kilit süresi dolduğunda piyasaya çıkabilecek hisse sayısı bir anda katlanır. Fiyat çoğu zaman o güne yaklaşırken baskı görür; takvimi bellidir, sürpriz değildir. Yeni arz edilmiş bir hissede pozisyon alıyorsan kilit tarihini bilmeden alma — izahnamede yazar.
+:::
+
+## Halka Açılmanın Diğer Yolları
+
+| Yol | Nasıl işler | Fark |
+|---|---|---|
+| **Klasik IPO** | Bankalar aracılığıyla yeni hisse satışı | Şirkete para girer, banka garantisi vardır |
+| **Doğrudan kotasyon** | Mevcut hisseler doğrudan borsada işleme açılır | Yeni para toplanmaz, arz fiyatı yoktur |
+| **SPAC birleşmesi** | Borsada kote boş bir şirketle birleşme | Hızlıdır; incelemesi IPO'dan zayıftır |
+
+Üçüncü yol 2020–2021'de moda oldu ve o dönemin SPAC'lerinin büyük kısmı sonraki yıllarda arz fiyatının çok altına düştü — hız ve gevşek inceleme, bedava değildi.
+
+## Yeni Hisse Neden Daha Riskli
+
+- **Kısa geçmiş.** Beş çeyreklik mali tablo, beş yıllıkla aynı güveni vermez; şirketin kötü bir döngüde nasıl davrandığı hiç görülmemiştir.
+- **Bilgi asimetrisi.** Satan taraf şirketi yıllardır tanıyor; alan taraf birkaç haftadır. Fiyatı belirleyen taraf, bilgisi çok olan taraftır.
+- **Halka arz penceresi.** Şirketler borsanın coşkulu olduğu dönemde arz etmeyi seçer — yani alıcının en iyimser olduğu anda. Zamanlamayı satıcı seçiyorsa, fiyat satıcının lehinedir.
+- **Endeks dışıdır.** Yeni hisse S&P 500 gibi endekslere hemen girmez; endeks fonlarının mekanik alımı ilk günlerde yoktur.
+
+::: ozet Özet
+Halka arz bir şirketin doğumu değil, satış ilanıdır: zamanı ve fiyatı satan taraf belirler. İlk gün manşetleri arz gecesi tahsis alanların hikâyesidir; senin fiyatın açılış fiyatıdır ve kilit takvimi, ilk bilançolar, endekse giriş gibi mekanik olaylar önündeki aylarda fiyatı şirketin işinden bağımsız hareket ettirir.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Şirket sayfasındaki profil kartında **halka arz tarihi** yazar — beş çeyreklik geçmişi olan bir şirketle otuz yıllık bir şirketi aynı güvenle okumamak için oraya bak. Yeni kote olmuş semboller arama kutusuyla bulunur; endeks kartlarında görünmezler, çünkü henüz endekste değillerdir.`,
+  },
+
+  /* ==== 2 · Pozisyon ve Risk ============================================== */
+
+  /* ---------------------------------------------------------------------- */
+  "emir-tipleri": {
     title: "Emir Tipleri: Piyasa, Limit ve Stop",
     dek: "Hangi tuşa bastığın, ne aldığından bazen daha önemlidir.",
-    topic: "strateji",
-    glyph: "LMT",
-    related: ["spread-likidite", "risk-yonetimi"],
     bodyMd: `Aynı hisseyi aynı anda almak isteyen iki kişi, farklı emir tipleri kullanarak farklı fiyatlara sahip olabilir. Emir tipi, işlemin **ne zaman** ve **hangi fiyattan** gerçekleşeceğini belirleyen kuraldır.
 
 ::: tanim Üç Temel Emir
@@ -545,13 +553,9 @@ Açılış Zili bir aracı kurum değildir; buradan emir verilmez ve bu ekranlar
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "risk-yonetimi",
+  "risk-yonetimi": {
     title: "Risk Yönetimi: Ne Kadar, Ne Zaman",
     dek: "Kazanmayı değil, oyunda kalmayı belirleyen tek beceri.",
-    topic: "strateji",
-    glyph: "1R",
-    related: ["cesitlendirme", "kaldirac"],
     bodyMd: `Yeni başlayan biri "ne alsam" diye sorar. Uzun süre kalabilen biri "ne kadar alsam" diye sorar. İkinci soru daha az heyecanlıdır ve sonucu daha çok belirler.
 
 ::: tanim Risk Yönetimi
@@ -623,13 +627,9 @@ Ne kadar kazanacağını piyasa belirler, ne kadar kaybedeceğini sen belirlersi
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "cesitlendirme",
+  "cesitlendirme": {
     title: "Çeşitlendirme: Kaç Sepet Yeter?",
     dek: "On farklı hisse almak, on farklı riske sahip olmak demek değildir.",
-    topic: "strateji",
-    glyph: "⁙",
-    related: ["risk-yonetimi", "etf"],
     bodyMd: `"Bütün yumurtaları aynı sepete koyma" cümlesini herkes bilir. Az bilinen kısım şu: on farklı sepet aldığını sanırken hepsini aynı kamyona yüklemiş olabilirsin.
 
 ::: tanim Çeşitlendirme
@@ -689,13 +689,9 @@ Yoğunlaşmak her zaman hata değildir; bilinçli bir seçim olabilir. Ama üç 
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "long-short",
+  "long-short": {
     title: "Long ve Short Ne Demek?",
     dek: "Yükselişten kazanmak ile düşüşten kazanmak — ve ikisinin hiç de simetrik olmaması.",
-    topic: "strateji",
-    glyph: "L/S",
-    related: ["kaldirac", "ayi-boga"],
     bodyMd: `Piyasada iki temel yön vardır ve ikisi de para kazanabilir. Ama riskleri birbirinin aynası değildir; bu asimetri, short pozisyonun neden bu kadar tehlikeli olduğunu açıklar.
 
 ::: tanim Long ve Short
@@ -747,13 +743,9 @@ Bireysel bir yatırımcı için pratik sonuç şudur: short satış, kaybı teor
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "kaldirac",
+  "kaldirac": {
     title: "Kaldıraç Nedir ve Neden Uzak Durmalısın?",
     dek: "Ödünç parayla pozisyon taşımak. Getiriyi de kaybı da çarpar — ama asıl aldığı şey, ne zaman satacağına karar verme hakkındır.",
-    topic: "strateji",
-    glyph: "4×",
-    related: ["risk-yonetimi", "long-short"],
     bodyMd: `Bu yazının bir tavsiyesi var ve baştan söylemek daha dürüst: **kaldıraç kullanma.**
 
 Sitedeki diğer yazılar bir kavramı tarafsız anlatır. Bu yazı da mekaniği tarafsız anlatacak, ama sonunda bir şey söyleyecek. Sebebi, kaldıracın yalnızca riski artıran bir araç olmaması: kararı senin elinden alan bir araç olması.
@@ -853,13 +845,76 @@ Kaldıraç, bir yatırımın sahibi ile takvimin sahibini birbirinden ayırır. 
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "yatirimci-psikolojisi",
+  "opsiyonlar": {
+    title: "Opsiyonlar: Call, Put ve Primin Anatomisi",
+    dek: "Hisse almadan yön oynamanın aracı — ve primin içinde işleyen saatin neden hep alıcının aleyhine olduğu.",
+    bodyMd: `Opsiyon, hisse senedinden farklı bir şey satın alır: hissenin kendisini değil, onu belirli bir fiyattan alma ya da satma **hakkını**. Bu tek cümlelik fark, bambaşka bir risk matematiği doğurur — ve bu yazının amacı o matematiği göstermek, kullanmayı önermek değil.
+
+::: tanim Opsiyon
+Belirli bir vadeye kadar, belirli bir fiyattan (**kullanım fiyatı**, *strike*) bir hisseyi alma ya da satma hakkı. **Call** alma hakkıdır, **put** satma hakkı. Hak kullanılmak zorunda değildir; işlemezse ödenen prim yanar. ABD'de bir opsiyon sözleşmesi 100 hisseyi temsil eder.
+:::
+
+## Dört Koltuk
+
+Her opsiyon işleminde iki taraf vardır ve dört farklı pozisyon çıkar:
+
+| | Call | Put |
+|---|---|---|
+| **Alıcı** | Yükselişe oynar, kaybı primle sınırlı | Düşüşe oynar, kaybı primle sınırlı |
+| **Satıcı** | Primi alır, yükselişte kaybı **sınırsız** | Primi alır, düşüşte kaybı çok büyük |
+
+Tablonun anlattığı asimetri şudur: alıcının kaybı sınırlı ama olasıdır; satıcının kazancı sınırlı ama olasıdır. İki taraf farklı şeyler takas eder — alıcı küçük ve kesin bir maliyeti, büyük ama düşük ihtimalli bir kazanç için öder.
+
+## Primin İki Parçası
+
+Opsiyonun fiyatına **prim** denir ve iki parçadan oluşur:
+
+**İçsel değer** — hak bugün kullanılsa ne ederdi. Hisse 110 dolarken 100 dolarlık call'un içsel değeri 10 dolardır.
+
+**Zaman değeri** — geri kalan her şey. Vadeye kadar hissenin lehine hareket etme *ihtimalinin* fiyatıdır.
+
+::: ornek Primi Parçalara Ayırmak
+Hisse 110 dolar. Bir ay vadeli, 100 dolar kullanım fiyatlı call 13 dolardan işlem görüyor.
+İçsel değer: 110 − 100 = **10 dolar**.
+Zaman değeri: 13 − 10 = **3 dolar**.
+Hisse bir ay boyunca 110'da çakılı kalırsa opsiyon vadede 10 dolar eder: içsel değer durur, zaman değeri **sıfıra erir**. Hisse hiç düşmeden %23 kaybettin.
+:::
+
+## Zaman Erimesi
+
+Zaman değeri her gün azalır ve azalış vadeye yaklaştıkça hızlanır. Buna *theta* denir. Pratikteki anlamı şudur: opsiyon alıcısı yalnızca yöne değil, **takvime karşı** da oynar. Haklı çıkmak yetmez; vadeden önce, zaman değerinin eridiğinden daha hızlı haklı çıkmak gerekir.
+
+Vadesi aynı gün dolan opsiyonlar (*0DTE*) bu erimenin en uç hâlidir: birkaç saat içinde ya katlanır ya sıfırlanır. Son yıllarda hacmin büyük kısmı bu sözleşmelere kaydı — piyango biletine en çok benzeyen finansal ürün budur.
+
+## Volatilite Primi
+
+Zaman değerinin büyüklüğünü belirleyen ana girdi, piyasanın o hisseden beklediği oynaklıktır — **beklenen volatilite** (*implied volatility*). Piyasa büyük hareket bekliyorsa prim şişer, sakinlik bekliyorsa söner. Ayrıntı: [Volatilite Nedir?](/rehber/volatilite)
+
+::: dikkat Bilanço Gecesi Tuzağı
+Bilançodan önce opsiyon primleri şişer, çünkü herkes büyük hareket bekler. Açıklama gelince belirsizlik biter ve şişkinlik söner — hisse beklediğin yönde hareket etse bile opsiyonun değer kaybedebilir. Buna *volatility crush* denir: yönü doğru tahmin edip para kaybetmenin en klasik yolu.
+:::
+
+## Bu Bir Kaldıraçtır
+
+Opsiyonun cazibesi küçük parayla büyük pozisyona erişimdir: 3 dolarlık prim, 100 dolarlık hissenin hareketine maruz bırakır. Bu, tanımı gereği kaldıraçtır — hesap ekranında "kaldıraç" diye görünmese bile. [Kaldıraç yazısındaki](/rehber/kaldirac) her uyarı burada da geçerlidir, bir farkla: marj hesabında kayıp teminat çağrısıyla gelir, opsiyonda primin **tamamının** yanmasıyla. Alıcı için %100 kayıp uç senaryo değil, sık görülen sonuçtur.
+
+## Satıcı Tarafı
+
+Prim toplamak düzenli gelir gibi görünür: çoğu ay opsiyonlar değersiz biter ve satıcı kazanır. Sorun dağılımdadır — kazançlar küçük ve sık, kayıplar nadir ve çok büyüktür. Teminatsız call satan biri, [short pozisyondaki](/rehber/long-short) sınırsız kayıp riskinin aynısını taşır. "Yıllardır her ay kazanıyordu" cümlesi, bu stratejilerde çoğu zaman "henüz o ay gelmedi" demektir.
+
+::: ozet Özet
+Opsiyon primi üç şey satın alır: yön, zaman ve oynaklık. Hisse alan yalnızca yönde haklı çıkmak zorundadır; opsiyon alan üçünde birden haklı çıkmak zorundadır. Bu yüzden opsiyon, "az parayla hisse" değil, farklı ve daha zor bir bahistir — öğrenme sırasında portföyün değil, merakın konusu olmalıdır.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Bu sitede opsiyon zinciri yok ve buradan opsiyon alınmaz. Ama opsiyon piyasasının bir çıktısı her gün ekranda durur: **korku endeksi VIX**, S&P 500 opsiyonlarının fiyatından türetilir ve piyasanın önümüzdeki 30 gün için beklediği oynaklığı söyler. [Piyasalar](/piyasalar) ekranındaki karta ve bandına oradan bakabilirsin.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  "yatirimci-psikolojisi": {
     title: "Yatırımcı Psikolojisi: En Pahalı Hatalar",
     dek: "Portföyünün en zayıf halkası genellikle bir hisse değil, bir alışkanlıktır.",
-    topic: "strateji",
-    glyph: "!",
-    related: ["risk-yonetimi", "ayi-boga"],
     bodyMd: `Piyasada uzun süre kalanların ortak gözlemi şudur: kayıpların çoğu bilgi eksikliğinden değil, davranıştan gelir. Bir yatırımcının aynı stratejiyi disiplinle uygulaması, daha iyi bir strateji bulmasından daha çok fark yaratır.
 
 Aşağıdakiler kanıtlanmış davranış kalıplarıdır ve hepsinin ortak özelliği şudur: yaşarken mantıklı hissettirirler.
@@ -920,21 +975,13 @@ Son üç ayda ne olduysa önümüzdeki üç ayda da olacakmış gibi hissedilir.
 Piyasa hakkında bilmen gerekenlerin çoğu birkaç ayda öğrenilir. Kendin hakkında bilmen gerekenler yıllar alır ve pahalıya öğrenilir. Yazılı kurallar, ikinci öğrenmenin faturasını küçültmenin bilinen tek yoludur.
 :::`,
   },
-];
 
-/* ==========================================================================
-   3 · Şirketi Okumak
-   ========================================================================== */
+  /* ==== 3 · Şirketi Okumak ================================================ */
 
-const SIRKET: GuideArticle[] = [
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "bilanco",
+  "bilanco": {
     title: "Bilanço Nedir, Nasıl Okunur?",
     dek: "Üç ayda bir açılan kapak — ve piyasanın gerçekten baktığı üç satır.",
-    topic: "sirket",
-    glyph: "EPS",
-    related: ["degerleme", "temettu"],
     bodyMd: `Halka açık şirketler üç ayda bir hesap verir. Türkçede hepsine "bilanço" denir; teknik olarak açıklanan şey bir bilanço tablosundan ibaret değildir, çeyrek sonuçlarının tamamıdır.
 
 ::: tanim Çeyrek Sonuçları
@@ -997,13 +1044,75 @@ Tam raporda üç tablo bulunur ve üçü farklı soruya cevap verir:
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "degerleme",
+  "nakit-akisi": {
+    title: "Nakit Akışı: Kârın Arkasını Okumak",
+    dek: "Kâr bir görüştür, nakit bir olgudur — ve ikisinin arasındaki fark, tablolardaki en erken uyarı işaretidir.",
+    bodyMd: `"Şirket bu çeyrekte 2 milyar dolar kâr etti" cümlesi, kasaya 2 milyar dolar girdiği anlamına gelmez. Kâr, muhasebe kurallarına göre **hesaplanan** bir sayıdır; nakit, banka hesabında **duran** paradır. İkisi çoğu zaman farklıdır ve fark açıldığında önce bakılacak yer nakit akış tablosudur.
+
+::: tanim Nakit Akış Tablosu
+Bir dönemde şirketin kasasına gerçekten giren ve çıkan parayı, üç başlık altında gösteren tablo. [Bilanço açıklamasının](/rehber/bilanco) üç tablosundan biridir — en az okunanı ve en zor süslenenidir.
+:::
+
+## Üç Bölüm
+
+| Bölüm | Soru | Örnek kalemler |
+|---|---|---|
+| **İşletme** | İş, para üretiyor mu? | Tahsilatlar, tedarikçi ödemeleri, maaşlar |
+| **Yatırım** | Para neye harcanıyor? | Fabrika, ekipman, şirket alımları |
+| **Finansman** | Para kimden geliyor, kime dönüyor? | Borçlanma, temettü, hisse geri alımı |
+
+Sağlıklı olgun bir şirketin deseni bellidir: işletme bölümü artı, yatırım bölümü eksi (büyümek para ister), finansman bölümü eksi (temettü ve geri alım hissedara döner). Bu desenden sapma tek başına suç değildir — ama bir sorudur.
+
+## Kâr ile Nakit Neden Ayrışır
+
+Muhasebe, geliri para tahsil edildiğinde değil, **hak edildiğinde** yazar. Üç klasik ayrışma kaynağı:
+
+- **Alacaklar.** Satış faturalandı, kâr yazıldı — ama müşteri henüz ödemedi. Para yok, kâr var.
+- **Stok.** Üretilen mal satılana kadar giderleşmez. Depo dolarken nakit erir, kâr etkilenmez.
+- **Amortisman.** Beş yıl önce alınan fabrikanın maliyeti her yıl parça parça giderleşir. Bu yıl kârı düşürür ama bu yıl kasadan para çıkarmaz.
+
+::: ornek Aynı Çeyrek, İki Hikâye
+Bir yazılım şirketi çeyreği 500 milyon dolar kârla kapattı. Nakit akış tablosunda işletme nakdi yalnızca 80 milyon. Fark nerede? Müşterilere üç yıllık sözleşmeler faturalandı, geliri bu çeyreğe yazıldı — tahsilat gelecek yıllarda. Kâr gerçek, ama **bu çeyreğin parası değil**. Büyüme yavaşlarsa aynı muhasebe bu kez tersine çalışır ve tablo aniden çirkinleşir.
+:::
+
+## Serbest Nakit Akışı
+
+En çok kullanılan türev ölçü şudur:
+
+**Serbest nakit akışı (FCF) = işletme nakdi − yatırım harcamaları**
+
+Yani iş, kendini döndürmek için gereken harcamalar yapıldıktan sonra ne bırakıyor. [Temettü](/rehber/temettu) de, hisse geri alımı da, borç ödemesi de bu paradan çıkar. Kârdan çıkmaz — kâr bir hesaptır, temettü nakitle ödenir.
+
+Bu yüzden uzun vadeli değerleme tartışmalarının çoğu F/K'dan değil FCF'den yürür: [değerleme oranının](/rehber/degerleme) paydası süslenebilir, kasaya giren para daha zor süslenir.
+
+## Hisse Bazlı Ücretler
+
+::: dikkat SBC: Nakit Çıkmayan Gerçek Maliyet
+Teknoloji şirketleri çalışanlarına hisse dağıtır (*stock-based compensation*). Nakit akış tablosunda bu, nakit çıkışı olmadığı için işletme nakdine geri eklenir — ve serbest nakit akışını olduğundan güzel gösterir. Ama maliyet gerçektir: yeni hisse basıldıkça senin payın **sulanır**. FCF'si güçlü görünen bir şirkette SBC'nin büyüklüğüne bakmadan karar verme; bazı şirketlerde FCF'nin yarısına ulaşır.
+:::
+
+## Uyarı İşaretleri
+
+Tek çeyrek desen bozan her şirket sorunlu değildir; işaretler **eğilim** olarak izlenir:
+
+1. **Kâr büyüyor, işletme nakdi büyümüyor.** En klasik erken sinyal — büyüyen fark her çeyrek daha çok açıklama ister.
+2. **Alacaklar satıştan hızlı büyüyor.** Satış "yapılmış" ama para gelmiyor; agresif fatura kesiminin izidir.
+3. **Her çeyrek "tek seferlik" bir kalem.** Tek seferlik olay yılda bir olur; her çeyrek oluyorsa adı tek seferlik değildir.
+4. **Temettü ve geri alım borçla dönüyor.** Finansman bölümünde borç artarken hissedara para dağıtılıyorsa, dağıtılan para kazanılmamış demektir.
+
+::: ozet Özet
+Kâr bir görüştür, nakit bir olgudur. İkisi uzun süre aynı yönde gitmiyorsa doğruyu söyleyen genellikle nakittir — çünkü muhasebe tercihi yorumlanabilir ama banka hesabı yorumlanamaz. Bir şirketi ciddi olarak değerlendiriyorsan gelir tablosuyla başla, nakit akışıyla bitir.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Bu sitede bilanço günü **EPS ve gelir** beklenti/gerçekleşme olarak durur ([Bilançolar](/bilancolar) ekranı ve hisse sayfası); nakit akış tablosunun kendisi gösterilmez. Tablonun aslı, şirketin yatırımcı ilişkileri sayfasında ve SEC dosyalarında (10-Q, 10-K) yayımlanır — bu yazının işi, o dosyayı açtığında hangi üç satıra bakacağını bilmen.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  "degerleme": {
     title: "F/K ve Değerleme Oranları",
     dek: "Bir hissenin pahalı mı ucuz mu olduğunu fiyatına bakarak anlayamazsın.",
-    topic: "sirket",
-    glyph: "F/K",
-    related: ["bilanco", "piyasa-degeri"],
     bodyMd: `20 dolarlık bir hisse, 400 dolarlık bir hisseden ucuz değildir. Fiyat tek başına hiçbir şey söylemez; şirketin ürettiği kazanca oranlandığında söylemeye başlar.
 
 ::: tanim F/K Oranı (P/E)
@@ -1068,13 +1177,9 @@ Hisse sayfasındaki **Anahtar Metrikler** kartında F/K, PD/DD ve temettü verim
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "piyasa-degeri",
+  "piyasa-degeri": {
     title: "Piyasa Değeri, Halka Açıklık ve Bölünme",
     dek: "Bir şirketin gerçek büyüklüğü hissenin fiyatında değil, adet ile fiyatın çarpımındadır.",
-    topic: "sirket",
-    glyph: "Mr$",
-    related: ["degerleme", "endeks"],
     bodyMd: `"Bu hisse 8 dolar, çok ucuz" cümlesi ekonomik olarak boş bir cümledir. Bir şirketin ne kadara satın alındığını hisse fiyatı değil, **piyasa değeri** söyler.
 
 ::: tanim Piyasa Değeri (Market Cap)
@@ -1136,13 +1241,9 @@ Piyasa değeri hem hisse sayfasındaki metrik kartında hem de [Bilançolar](/bi
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "temettu",
+  "temettu": {
     title: "Temettü Nedir?",
     dek: "Şirketin kârını hissedarla paylaşması — ve bunun bedava para olmadığı gerçeği.",
-    topic: "sirket",
-    glyph: "%",
-    related: ["bilanco", "degerleme"],
     bodyMd: `Bir şirket kâr ettiğinde iki seçeneği vardır: parayı işine geri koymak ya da hissedarına dağıtmak. İkincisinin adı **temettü**dür.
 
 ::: tanim Temettü (Dividend)
@@ -1197,21 +1298,13 @@ Bir hisseden kazancın iki bileşeni vardır:
 
 Hisse sayfasındaki **Anahtar Metrikler** kartında temettü verimi yer alır. Verimi yorumlarken şirketin sektörüne bakmak gerekir: bir kamu hizmeti şirketi için %4 normal, bir yazılım şirketi için aynı sayı sorulacak bir sorudur.`,
   },
-];
 
-/* ==========================================================================
-   4 · Makro ve Merkez Bankası
-   ========================================================================== */
+  /* ==== 4 · Makro ve Merkez Bankası ======================================= */
 
-const MAKRO: GuideArticle[] = [
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "faiz-tahvil",
+  "faiz-tahvil": {
     title: "Faiz, Tahvil ve Getiri Eğrisi",
     dek: "Borsayı en çok etkileyen sayı borsada değil, tahvil piyasasında oluşur.",
-    topic: "makro",
-    glyph: "10Y",
-    related: ["sahin-guvercin", "enflasyon"],
     bodyMd: `Hisse yatırımcılarının çoğu tahvil piyasasını takip etmez. Oysa hisse fiyatlarının en büyük tek belirleyicisi orada oluşur: **risksiz faiz oranı**.
 
 ::: tanim Tahvil ve Getiri
@@ -1278,13 +1371,9 @@ Nominal faiz %5, enflasyon %4 ise reel faiz %1'dir — para hâlâ ucuzdur. Nomi
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "enflasyon",
+  "enflasyon": {
     title: "Enflasyon Verileri: TÜFE, Çekirdek ve PCE",
     dek: "Ayda bir açıklanan bir sayı, bütün varlık fiyatlarını neden yeniden yazıyor.",
-    topic: "makro",
-    glyph: "TÜFE",
-    related: ["faiz-tahvil", "sahin-guvercin"],
     bodyMd: `ABD piyasasında ayın en çok beklenen iki verisinden biri enflasyondur (diğeri istihdam). Sebebi doğrudan değil dolaylıdır: enflasyon, Fed'in ne yapacağını belirler; Fed faizi belirler; faiz her şeyi belirler.
 
 ::: tanim Üç Ölçü
@@ -1351,13 +1440,84 @@ Piyasa açıklamadan önce bir beklentiyi zaten fiyatlamıştır. Fiyat, gerçek
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "sahin-guvercin",
+  "istihdam": {
+    title: "İstihdam Verileri: Tarım Dışı, İşsizlik ve JOLTS",
+    dek: "Ayın ilk cuması açıklanan tek sayı, Fed'in iki görevinden birinin karnesidir — ve bazen iyi haber, kötü haberdir.",
+    bodyMd: `Fed'in yasayla tanımlı iki görevi vardır: fiyat istikrarı ve **tam istihdam**. Birincisinin karnesi [enflasyon verileridir](/rehber/enflasyon); ikincisininki, her ayın ilk cuması sabah 08:30'da (New York) açıklanan istihdam raporudur. Ayın en çok beklenen iki verisinden biri budur ve piyasayı enflasyon kadar hareket ettirebilir.
+
+::: tanim Tarım Dışı İstihdam (Nonfarm Payrolls, NFP)
+ABD'de bir ayda yaratılan (ya da kaybedilen) tarım dışı iş sayısı. "Tarım dışı" tarihsel bir tercihtir: mevsimlik tarım işleri seriyi bozduğu için dışarıda tutulur. Manşette okuduğun "ABD ekonomisi 187 bin istihdam yarattı" cümlesindeki sayı budur.
+:::
+
+## Bir Rapor, İki Anket
+
+İstihdam raporu tek bir ölçüm değildir; aynı sabah açıklanan **iki ayrı anketin** birleşimidir ve ikisi bazen ters yönü gösterir:
+
+| | Kurum anketi | Hane anketi |
+|---|---|---|
+| Kime sorulur | İşverenlere | Hanelere |
+| Ürettiği sayı | **Tarım dışı istihdam** | **İşsizlik oranı** |
+| Gücü | Büyük örneklem, güvenilir eğilim | Serbest çalışanları da görür |
+| Zayıflığı | Sonradan ciddi revize edilir | Aydan aya oynak |
+
+"İstihdam arttı ama işsizlik de yükseldi" başlığı çelişki değildir — iki farklı anket, iki farklı şey saymıştır. İşsizlik oranı ayrıca **katılıma** bağlıdır: iş aramayı bırakan biri işsiz sayılmaz, yeniden aramaya başlayan herkes önce "işsiz" olarak kaydolur. İşsizliğin yükselmesi bazen kötüleşme değil, umudun geri gelmesidir.
+
+## Raporun Dört Sayısı
+
+::: sayilar Piyasanın Baktığı Kalemler
+NFP | Aylık yeni istihdam; beklentiyle farkı fiyatı oynatır
+%X,X | İşsizlik oranı — hane anketinden
+Saatlik kazanç | Ücret artışı: enflasyonun işgücü tarafı
+Katılım | Çalışma çağındakilerin ne kadarı işgücünde
+:::
+
+Dördü içinde en az bilineni en kritik olabilir: **ortalama saatlik kazanç**. Ücretler hızlı artıyorsa hizmet enflasyonu diri kalır ve Fed'in işi bitmemiş demektir. Güçlü bir NFP'nin yanında yüksek ücret artışı, faiz beklentilerini doğrudan yukarı iter.
+
+## İlk Sayı Bir Taslaktır
+
+::: dikkat Revizyonlar
+Her NFP sayısı sonraki iki ayda iki kez revize edilir ve revizyonlar yüz binlik olabilir. Piyasanın sert tepki verdiği bir manşet, iki ay sonra sessizce başka bir sayıya dönüşebilir. Ayrıca yılda bir kez tüm seri toptan güncellenir. Tek bir ayın verisi üzerinden büyük hikâye kurma; üç aylık ortalama, tek ayın manşetinden her zaman daha dürüsttür.
+:::
+
+## İyi Haber Ne Zaman Kötü Haberdir
+
+İstihdam verisinin tuhaflığı şudur: piyasanın tepkisi sayının kendisine değil, sayının **Fed için anlamına** göre şekillenir ve bu anlam döneme göre değişir.
+
+::: ornek Aynı Sayı, İki Tepki
+Ekonominin güçlü, enflasyonun yüksek olduğu bir dönemde 300 binlik NFP hisseleri **düşürür**: "ekonomi soğumuyor, faiz uzun süre yüksek kalacak" diye okunur.
+Resesyon korkusunun baskın olduğu bir dönemde aynı 300 bin hisseleri **yükseltir**: "kazançlar çökmeyecek" diye okunur.
+Veriyi yorumlamadan önce hangi rejimde olduğunu bil: piyasa o ay büyümeden mi korkuyor, enflasyondan mı?
+:::
+
+Bu rejim sorusunun kestirme göstergesi tahvildir: güçlü veriye [2 yıllık faiz](/rehber/faiz-tahvil) sert yükselerek tepki veriyorsa piyasa Fed'i fiyatlıyor demektir.
+
+## Ayın Diğer İstihdam Verileri
+
+NFP tek başına değildir; etrafında bir takvim döner:
+
+| Veri | Ne zaman | Ne söyler |
+|---|---|---|
+| **JOLTS** | Ay başı, iki ay gecikmeli | Açık pozisyon sayısı — işgücü talebinin genişliği |
+| **ADP** | NFP'den iki gün önce | Özel sektör bordro tahmini; NFP'yi her zaman tutturamaz |
+| **Haftalık başvurular** | Her perşembe | İşsizlik maaşına ilk başvurular — en taze, en gürültülü |
+
+JOLTS'un izlediği oran ("işsiz başına açık pozisyon") Fed konuşmalarında düzenli geçer: işgücü piyasasının gevşeyip gevşemediğinin en sade ölçüsüdür.
+
+::: ozet Özet
+İstihdam raporu tek sayı değil, iki anket ve bir ücret serisidir; ilk hâli taslaktır ve piyasadaki anlamı rejime göre değişir. Okumanın sırası şudur: önce NFP beklentiden saptı mı, sonra ücretler ne dedi, sonra tahvil faizi nasıl tepki verdi. Üçü aynı yönü gösteriyorsa hikâye gerçektir.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+- [Takvim](/takvim) ekranında istihdam raporu, TÜFE ile birlikte yüksek etkili veri olarak işaretlidir; saat hem New York hem Türkiye saatiyle yazılır.
+- [Makro](/makro) ekranında işsizlik oranı ve tarım dışı istihdam serisi geçmişiyle durur.
+- Ana sayfadaki **Bugünün Akışı**, açıklama sabahı geri sayımı gösterir.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  "sahin-guvercin": {
     title: "Şahin ve Güvercin: Fed'in Dilini Okumak",
     dek: "Faiz kararının kendisi çoğu zaman sürpriz değildir; sürpriz, kararın yanındaki cümlelerdedir.",
-    topic: "makro",
-    glyph: "Fed",
-    related: ["enflasyon", "faiz-tahvil"],
     bodyMd: `Fed toplantı günü faizi sabit bıraktı. Piyasa zaten bunu bekliyordu. Yine de endeks yarım saat içinde %1,5 düştü. Neden?
 
 Çünkü kararın kendisi haber değildi — **Başkan'ın basın toplantısında kullandığı iki sıfat** haberdi.
@@ -1411,13 +1571,9 @@ Fed'in ne yapacağını Fed'den önce **veri** söyler. TÜFE ve çekirdek PCE a
   },
 
   /* ---------------------------------------------------------------------- */
-  {
-    slug: "kur-riski",
+  "kur-riski": {
     title: "Dolar Bazında Yatırım ve Kur Riski",
     dek: "ABD hissesi alan bir Türkiye yatırımcısı aslında iki bahis birden oynar.",
-    topic: "makro",
-    glyph: "₺/$",
-    related: ["etf", "faiz-tahvil"],
     bodyMd: `Bir ABD hissesi aldığında sadece o şirkete yatırım yapmış olmazsın. Aynı zamanda **dolara** yatırım yapmış olursun. Portföyünün getirisi bu iki bahsin çarpımıdır ve ikisi birbirinden bağımsız hareket eder.
 
 ::: tanim Kur Riski
@@ -1476,25 +1632,4 @@ Yurt dışı hisse almak iki karardır: hangi şirket ve hangi para birimi. İki
 
 Bütün fiyatlar ve yüzdeler dolar bazındadır; ayrıca bir kur dönüşümü yapılmaz. **Dünya Piyasaları** kartının altındaki not, bu kartın yerel endeksleri değil dolar cinsinden ülke fonlarını gösterdiğini hatırlatmak için orada durur.`,
   },
-];
-
-const BY_SLUG = new Map<string, GuideArticle>();
-
-export const GUIDE_ARTICLES: GuideArticle[] = [
-  ...TEMEL,
-  ...STRATEJI,
-  ...SIRKET,
-  ...MAKRO,
-];
-
-for (const article of GUIDE_ARTICLES) BY_SLUG.set(article.slug, article);
-
-export function guideArticle(slug: string): GuideArticle | null {
-  return BY_SLUG.get(slug) ?? null;
-}
-
-export function guideTopicLabel(key: GuideTopicKey, locale: string): string {
-  const topic = GUIDE_TOPICS.find((entry) => entry.key === key);
-  if (!topic) return key;
-  return locale === "tr" ? topic.labelTr : topic.labelEn;
-}
+};

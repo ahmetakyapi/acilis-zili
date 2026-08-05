@@ -236,6 +236,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
 
       <GuideHint
         label={t.guide.contextLabel}
+        locale={locale}
         slugs={["degerleme", "piyasa-degeri"]}
         className="pt-1"
       />

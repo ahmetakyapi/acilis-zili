@@ -682,15 +682,22 @@ export function weekRange(anchor: string): { from: string; to: string } {
 
 export type StoryIndexRow = Pick<
   StoryRow,
-  "slug" | "title" | "dek" | "eventDate" | "symbols" | "readMinutes"
+  "slug" | "title" | "dek" | "eventDate" | "symbols" | "readMinutes" | "locale"
 >;
 
+/**
+ * Arşiv slug başına TEK kayıt döndürür: istenen dildeki sürüm varsa o,
+ * yoksa hangi dilde yazıldıysa o. Çeviri rutini akşamları koşuyor ve iki
+ * dil arasında her zaman bir boşluk penceresi olacak; o pencerede İngilizce
+ * ekranı boş bırakmak yerine orijinal gösterilir. Satırda `locale` bu
+ * yüzden dönüyor — arayüz "TR" rozetini oradan basar.
+ */
 export async function getStories(
   locale: string,
   limit = 60,
 ): Promise<StoryIndexRow[]> {
   try {
-    return await db
+    const rows = await db
       .select({
         slug: stories.slug,
         title: stories.title,
@@ -698,27 +705,42 @@ export async function getStories(
         eventDate: stories.eventDate,
         symbols: stories.symbols,
         readMinutes: stories.readMinutes,
+        locale: stories.locale,
       })
       .from(stories)
-      .where(eq(stories.locale, locale))
       .orderBy(desc(stories.eventDate), desc(stories.publishedAt))
-      .limit(limit);
+      /* Dil başına bir satır düşebileceği için sınır iki katıyla çekilir;
+         birleştirme sonrası tekrar kırpılır. */
+      .limit(limit * 2);
+
+    const bySlug = new Map<string, StoryIndexRow>();
+    for (const row of rows) {
+      const held = bySlug.get(row.slug);
+      if (!held) {
+        bySlug.set(row.slug, row);
+      } else if (held.locale !== locale && row.locale === locale) {
+        /* Map sıra korur: değeri değiştirmek satırın yerini oynatmaz. */
+        bySlug.set(row.slug, row);
+      }
+    }
+    return [...bySlug.values()].slice(0, limit);
   } catch {
     return [];
   }
 }
 
+/** İstenen dil yoksa yazının orijinali döner — sayfa dil notunu kendisi basar. */
 export async function getStoryBySlug(
   slug: string,
   locale: string,
 ): Promise<StoryRow | null> {
   try {
-    const [row] = await db
+    const rows = await db
       .select()
       .from(stories)
-      .where(and(eq(stories.slug, slug), eq(stories.locale, locale)))
-      .limit(1);
-    return row ?? null;
+      .where(eq(stories.slug, slug))
+      .limit(4);
+    return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
   } catch {
     return null;
   }

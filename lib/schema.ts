@@ -289,7 +289,7 @@ export const dailyBriefs = pgTable(
  * farklı: haber bir gün sonra ölür, dosya arşivde kalır.
  *
  * Rehber yazıları (ETF nedir, kaldıraç nedir...) bilinçli olarak burada
- * DEĞİL — onlar depoda `content/guide.ts` içinde yaşıyor. Gerekçe: rehber
+ * DEĞİL — onlar depoda `content/guide/` içinde yaşıyor. Gerekçe: rehber
  * içeriği durağan ve editoryal, kod incelemesinden geçmesi iyi; dosyalar
  * ise her akşam üretiliyor ve deploy beklemeden yazılabilmeli.
  */

@@ -88,6 +88,7 @@ export default async function WatchlistPage() {
 
       <GuideHint
         label={t.guide.contextLabel}
+        locale={locale}
         slugs={["risk-yonetimi", "cesitlendirme"]}
         className="pt-1"
       />

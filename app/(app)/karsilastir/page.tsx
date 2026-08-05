@@ -127,6 +127,7 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
 
       <GuideHint
         label={t.guide.contextLabel}
+        locale={locale}
         slugs={["degerleme", "cesitlendirme"]}
         className="pt-1"
       />

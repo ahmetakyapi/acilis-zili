@@ -142,6 +142,7 @@ export default async function MacroPage() {
 
       <GuideHint
         label={t.guide.contextLabel}
+        locale={locale}
         slugs={["enflasyon", "sahin-guvercin"]}
         className="pt-1"
       />

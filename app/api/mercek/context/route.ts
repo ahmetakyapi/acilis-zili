@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkBearer, type AuthOutcome } from "@/lib/api-auth";
-import { desc, eq } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { news, stories } from "@/lib/schema";
 import { getStatus } from "@/lib/data";
@@ -35,9 +35,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  const url = new URL(request.url);
-  const locale = url.searchParams.get("locale") === "en" ? "en" : "tr";
-
   const status = await getStatus();
   const quotes = await getQuotes([...INDEX_STRIP], status);
 
@@ -47,11 +44,11 @@ export async function GET(request: Request) {
         slug: stories.slug,
         title: stories.title,
         eventDate: stories.eventDate,
+        locale: stories.locale,
       })
       .from(stories)
-      .where(eq(stories.locale, locale))
       .orderBy(desc(stories.eventDate))
-      .limit(200),
+      .limit(400),
     db
       .select({
         headline: news.headline,
@@ -66,9 +63,30 @@ export async function GET(request: Request) {
       .limit(NEWS_SAMPLE),
   ]);
 
+  /* Aynı yazı iki dilde iki satır — rutin için slug başına TEK kayıt ve
+     dillerin listesi daha kullanışlı: "hangi yazının İngilizcesi eksik"
+     sorusu tek bakışta cevaplanır, geri doldurma da buradan beslenir. */
+  const grouped = new Map<
+    string,
+    { slug: string; title: string; event_date: string; locales: string[] }
+  >();
+  for (const row of existing) {
+    const held = grouped.get(row.slug);
+    if (held) {
+      if (!held.locales.includes(row.locale)) held.locales.push(row.locale);
+      if (row.locale === "tr") held.title = row.title;
+    } else {
+      grouped.set(row.slug, {
+        slug: row.slug,
+        title: row.title,
+        event_date: row.eventDate,
+        locales: [row.locale],
+      });
+    }
+  }
+
   return NextResponse.json({
     today_et: todayEt(),
-    locale,
     session: status.session,
     indices: quotes.ok
       ? INDEX_STRIP.map((symbol) => {
@@ -82,8 +100,9 @@ export async function GET(request: Request) {
             : { symbol, price: null, change_pct: null };
         })
       : [],
-    /* Zaten yazılmış dosyalar — aynı olayı ikinci kez yazma. */
-    existing_stories: existing,
+    /* Zaten yazılmış dosyalar — aynı olayı ikinci kez yazma. `locales`
+       hangi dillerin mevcut olduğunu söyler; "en" eksikse çevirisi bekleniyor. */
+    existing_stories: [...grouped.values()],
     /* Son haber akışı: konuyu SEÇMEK için ipucu, kaynak olarak yeterli değil.
        Rutin yazmadan önce olayı kendi araştırmasıyla doğrulamalı. */
     recent_news: recentNews.map((item) => ({

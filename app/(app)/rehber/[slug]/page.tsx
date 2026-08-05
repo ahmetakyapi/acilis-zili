@@ -5,11 +5,13 @@ import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { Panel } from "@/components/ui/primitives";
 import {
-  GUIDE_ARTICLES,
+  GUIDE_SLUGS,
   guideArticle,
+  guideArticles,
   guideTopicLabel,
+  type GuideArticle,
 } from "@/content/guide";
-import { getI18n } from "@/lib/i18n";
+import { getI18n, type Dictionary } from "@/lib/i18n";
 
 /**
  * Rehber yazısı.
@@ -17,15 +19,21 @@ import { getI18n } from "@/lib/i18n";
  * Metin sütunu kasten dar (68ch): uzun satır okumayı yorar ve bu sayfanın
  * tek işi okutmak. Yan kolon yok — dikkat dağıtacak bir ölçüm kartı burada
  * bilinçli olarak bulunmuyor.
+ *
+ * Sayfa sonunda müfredat gezinmesi var: rehber sıralı bir okuma listesi ve
+ * bir yazıyı bitiren okuyucunun en olası sorusu "sırada ne var". İlişkili
+ * yazılar (konusal komşuluk) ile önceki/sıradaki (müfredat komşuluğu) ayrı
+ * şeyler söylüyor, ikisi de duruyor.
  */
 
 export async function generateStaticParams() {
-  return GUIDE_ARTICLES.map((article) => ({ slug: article.slug }));
+  return GUIDE_SLUGS.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata(props: PageProps<"/rehber/[slug]">) {
   const { slug } = await props.params;
-  const article = guideArticle(slug);
+  const { locale } = await getI18n();
+  const article = guideArticle(slug, locale);
   if (!article) return {};
   return { title: article.title, description: article.dek };
 }
@@ -34,13 +42,19 @@ export default async function GuideArticlePage(
   props: PageProps<"/rehber/[slug]">,
 ) {
   const { slug } = await props.params;
-  const article = guideArticle(slug);
+  const { locale, t } = await getI18n();
+  const article = guideArticle(slug, locale);
   if (!article) notFound();
 
-  const { locale, t } = await getI18n();
-  const related = (article.related ?? [])
-    .map((key) => guideArticle(key))
+  const related = article.related
+    .map((key) => guideArticle(key, locale))
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+  /* Müfredat komşuları — sıra meta.ts'teki dizilişten gelir. */
+  const all = guideArticles(locale);
+  const position = all.findIndex((entry) => entry.slug === article.slug);
+  const prev = position > 0 ? all[position - 1] : null;
+  const next = position < all.length - 1 ? all[position + 1] : null;
 
   return (
     <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
@@ -112,6 +126,63 @@ export default async function GuideArticlePage(
           </div>
         </section>
       )}
+
+      {(prev || next) && (
+        <nav className="grid gap-3 border-t border-line pt-6 sm:grid-cols-2">
+          {prev ? (
+            <CurriculumStep
+              article={prev}
+              label={t.guide.prevArticle}
+              direction="prev"
+            />
+          ) : (
+            <span aria-hidden className="hidden sm:block" />
+          )}
+          {next && (
+            <CurriculumStep
+              article={next}
+              label={t.guide.nextArticle}
+              direction="next"
+            />
+          )}
+        </nav>
+      )}
     </article>
+  );
+}
+
+function CurriculumStep({
+  article,
+  label,
+  direction,
+}: {
+  article: GuideArticle;
+  label: Dictionary["guide"]["prevArticle"];
+  direction: "prev" | "next";
+}) {
+  const next = direction === "next";
+  return (
+    <Link href={`/rehber/${article.slug}`} prefetch className="min-w-0">
+      <Panel
+        className={`panel-hover flex h-full items-center gap-3 p-4 ${next ? "text-right" : ""}`}
+      >
+        {!next && (
+          <ArrowLeft weight="bold" size={14} className="shrink-0 text-primary" />
+        )}
+        <span className={`min-w-0 flex-1 ${next ? "order-first" : ""}`}>
+          <span className="plate text-[9.5px] tracking-[0.09em]">{label}</span>
+          <span className="mt-1 block truncate text-[14px] font-bold text-strong">
+            {article.title}
+          </span>
+        </span>
+        {next && (
+          <ArrowRight
+            weight="bold"
+            size={14}
+            className="shrink-0 text-primary"
+          />
+        )}
+      </Panel>
+    </Link>
   );
 }

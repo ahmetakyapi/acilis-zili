@@ -179,6 +179,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
 
       <GuideHint
         label={t.guide.contextLabel}
+        locale={locale}
         slugs={["endeks", "faiz-tahvil"]}
         className="pt-1"
       />
