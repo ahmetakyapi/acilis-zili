@@ -402,9 +402,41 @@ export const earningsAnalyses = pgTable(
     risks: jsonb("risks").$type<string[]>(),
     /** "Katalizörler" değil: Beklenen Gelişmeler. Tarih taşır. */
     upcoming: jsonb("upcoming").$type<string[]>(),
-    /** Sağ kolondaki 6 satır — etiketi de değeri de serbest metin. */
+    /** Altı metrik kartı — etiketi de değeri de serbest metin, çünkü hangi
+        ölçünün öne çıkacağı şirkete göre değişiyor (bankada net faiz marjı,
+        bellekte brüt marj). `note` değerin altındaki renkli bağlam satırı. */
     highlights: jsonb("highlights").$type<
       { label: string; value: string; note?: string; tone?: string }[]
+    >(),
+    /**
+     * Çeyreklik gelir serisi — sayfadaki sütun grafiği.
+     *
+     * Sağlayıcıdan çekilmiyor, analizle birlikte yazılıyor: mali yıl
+     * takvimi şirkete göre kayıyor ("4Ç FY2026" kimi şirkette Temmuz'da
+     * biter) ve doğru çeyrek etiketini yalnızca bilançoyu okuyan bilir.
+     * `projected` işaretli son öğe gelecek çeyrek öngörüsüdür ve kesikli
+     * çizilir; `note` varsa sütunun üstünde onun metni yazılır ("10,3–10,8").
+     */
+    quarterlyRevenue: jsonb("quarterly_revenue").$type<
+      { label: string; value: number; projected?: boolean; note?: string }[]
+    >(),
+    /**
+     * Gelecek çeyrek şirket öngörüsü — aralık barları.
+     *
+     * Her satır bir ölçü: şirketin verdiği alt–üst bandı dolu bar, piyasa
+     * beklentisi onun üstündeki nokta. "Konsensüs" kelimesi hiçbir yerde
+     * geçmez; `note` satırı bandın beklentiye göre nerede durduğunu yazar.
+     */
+    guidance: jsonb("guidance").$type<
+      {
+        label: string;
+        low: number;
+        high: number;
+        consensus?: number;
+        unit?: string;
+        note?: string;
+        tone?: string;
+      }[]
     >(),
     ceoQuote: jsonb("ceo_quote").$type<{
       quote: string;

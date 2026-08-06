@@ -21,6 +21,10 @@ export function GuideHint({
   slugs,
   label,
   locale,
+  /** "stack" iki kartı alt alta dizer — dar bir yan kolonda `sm:grid-cols-2`
+      görüntü genişliğine bakıyor, KAPSAYICI genişliğine değil, ve 340px'lik
+      bir kolonda başlıkları üç satıra kırıyordu. */
+  layout = "row",
   className,
 }: {
   slugs: string[];
@@ -28,6 +32,7 @@ export function GuideHint({
   label: string;
   /** Başlık ve açıklama içerikten okunur; hangi dilden okunacağı buradan. */
   locale: string;
+  layout?: "row" | "stack";
   className?: string;
 }) {
   const articles = slugs
@@ -42,7 +47,11 @@ export function GuideHint({
       <div
         className={cn(
           "grid gap-3",
-          articles.length > 1 ? "sm:grid-cols-2" : "sm:max-w-md",
+          layout === "stack"
+            ? "grid-cols-1"
+            : articles.length > 1
+              ? "sm:grid-cols-2"
+              : "sm:max-w-md",
         )}
       >
         {articles.map((article) => (

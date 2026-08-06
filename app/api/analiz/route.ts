@@ -35,6 +35,27 @@ const HighlightSchema = z.object({
   tone: z.enum(["up", "down", "neutral"]).optional(),
 });
 
+/** Çeyreklik gelir sütunu. `projected` işaretli olan kesikli çizilir. */
+const RevenueBarSchema = z.object({
+  label: z.string().trim().min(1).max(20),
+  value: z.number(),
+  projected: z.boolean().optional(),
+  /** Sütunun üstünde yazacak metin; yoksa değer biçimlenir ("10,3–10,8"). */
+  note: z.string().trim().max(24).optional(),
+});
+
+/** Gelecek çeyrek öngörüsü — bir ölçünün alt/üst bandı ve piyasa beklentisi. */
+const GuidanceSchema = z.object({
+  label: z.string().trim().min(1).max(60),
+  low: z.number(),
+  high: z.number(),
+  consensus: z.number().optional(),
+  /** "Mr $", "$", "%" — değerin ardına eklenir. */
+  unit: z.string().trim().max(8).optional(),
+  note: z.string().trim().max(120).optional(),
+  tone: z.enum(["up", "down", "neutral"]).optional(),
+});
+
 const SectionSchema = z.object({
   title: z.string().trim().min(1).max(120),
   body: z.string().trim().min(40).max(4000),
@@ -95,6 +116,8 @@ const BodySchema = z.object({
       title: z.string().trim().min(2).max(80),
     })
     .optional(),
+  quarterly_revenue: z.array(RevenueBarSchema).max(8).optional(),
+  guidance: z.array(GuidanceSchema).max(5).optional(),
   sources: z.array(SourceSchema).max(20).optional(),
   /** Karne PNG'sinin site içi yolu. Dış adres kabul edilmez. */
   card_image_url: z
@@ -193,6 +216,8 @@ export async function GET(request: Request) {
     upcoming: row.upcoming ?? [],
     highlights: row.highlights ?? [],
     ceo_quote: row.ceoQuote,
+    quarterly_revenue: row.quarterlyRevenue ?? [],
+    guidance: row.guidance ?? [],
     sources: row.sources ?? [],
     card_image_url: row.cardImageUrl,
     updated_at: row.updatedAt,
@@ -231,7 +256,11 @@ export async function POST(request: Request) {
           "sayısal alanlar":
             "price, reaction_pct, market_cap, return_1y_pct, target_price, upside_pct, analyst_count, revenue, revenue_yoy_pct, eps, eps_surprise_pct — HAM sayı",
           strengths_risks_upcoming: "['madde', ...] en fazla 6",
-          highlights: "[{label, value, note?, tone?}] en fazla 10",
+          highlights: "[{label, value, note?, tone?}] — 6 metrik karti",
+          quarterly_revenue:
+            "[{label, value, projected?, note?}] — son 5 çeyrek + öngörü",
+          guidance:
+            "[{label, low, high, consensus?, unit?, note?, tone?}] en fazla 5",
           ceo_quote: "{quote, name, title} (opsiyonel)",
           sources: "[{label, url}] (opsiyonel)",
           card_image_url: "/karne/sndk-4c-fy2026.png (opsiyonel, site içi yol)",
@@ -286,6 +315,8 @@ export async function POST(request: Request) {
     upcoming: parsed.upcoming ?? null,
     highlights: parsed.highlights ?? null,
     ceoQuote: parsed.ceo_quote ?? null,
+    quarterlyRevenue: parsed.quarterly_revenue ?? null,
+    guidance: parsed.guidance ?? null,
     sources: parsed.sources ?? null,
     cardImageUrl: parsed.card_image_url ?? null,
     generatedBy: "claude",

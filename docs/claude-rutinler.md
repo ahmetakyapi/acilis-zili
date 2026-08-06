@@ -634,6 +634,11 @@ Hepsi yazılmışsa o gün YAZMA — "bugün yeni analiz yok" diye bitir.
      şirketler varsa, izlenen listeden yazılmamış olanı yaz.
   2. existing_analyses içinde locales yalnızca ["tr"] olan bir kayıt varsa,
      yeni analiz yazmak yerine onun İNGİLİZCESİNİ tamamla (adım 6).
+  3. existing_analyses içinde has_charts: false olan bir kayıt varsa, o
+     analiz grafiksiz yazılmış demektir ve sayfası metin yığını gibi
+     duruyor. Yeni analiz yazmak yerine onu GERİ OKU (adım 6'daki GET),
+     quarterly_revenue ve guidance alanlarını ekleyip iki dilde de yeniden
+     gönder. Diğer alanlara dokunma.
 
 --- 3. GERÇEK VERİYİ TOPLA ---
 
@@ -648,6 +653,13 @@ Yazmadan önce şunları şirketin kendi kaynağından doğrula:
 Doğrulayamadığın sayıyı YAZMA. Alan boş kalsın; uydurma rakam en büyük hata.
 
 --- 4. DEĞERLENDİR ---
+
+Sayfa metin değil, ÖNCE GÖRSEL: skor şeridi, altı metrik kartı, çeyreklik
+gelir grafiği ve öngörü aralıkları en üstte duruyor; özet ve detaylı
+değerlendirme onların ALTINDA. Yani highlights, quarterly_revenue ve
+guidance alanları "isteğe bağlı süs" değil, sayfanın gövdesi — üçünü de
+doldurmadığında sayfa metin yığınına dönüyor.
+
 
 Skor 0–100 ve görüş buy/hold/sell. İkisi de çeyreğin KENDİSİNİ değerlendirir,
 hisseyi tavsiye etmez. Kabaca:
@@ -670,6 +682,10 @@ Dil kuralları (mercek yazılarıyla aynı):
     normal cümle yazımı
   - "Katalizörler" KULLANMA — Beklenen Gelişmeler
   - Her sayının yanında tek bakışta anlaşılan bir kıyas olsun
+  - HAM HTML YAZMA. summary, analysis.body, strengths/risks/upcoming
+    metinlerinde site yalnızca iki şeyi tanır: [metin](/adres) bağlantısı ve
+    **kalın**. `<a href="...">` yazarsan ekranda etiketin kendisi görünür.
+    Rehber bağlantısı vereceksen: [Değerleme Rehberi](/rehber/degerleme)
 
 Sayılar HAM gönderilir: 8970000000, biçimlenmiş "8,97 Mr $" değil. Site
 sayıyı okuyucunun diline göre kendisi yazar. Yüzdeler yüzde OLARAK verilir
@@ -717,6 +733,22 @@ curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
       {"label": "Brüt Marj", "value": "%84,6", "note": "Rekor", "tone": "up"}
     ],
     "ceo_quote": {"quote": "<çağrıdan gerçek alıntı>", "name": "David Goeckeler", "title": "Başkan & CEO"},
+    "quarterly_revenue": [
+      {"label": "4Ç25", "value": 1900000000},
+      {"label": "1Ç26", "value": 2350000000},
+      {"label": "2Ç26", "value": 3400000000},
+      {"label": "3Ç26", "value": 5950000000},
+      {"label": "4Ç26", "value": 8970000000},
+      {"label": "1Ç27Ö", "value": 10550000000, "projected": true, "note": "10,3–10,8"}
+    ],
+    "guidance": [
+      {"label": "Gelir", "low": 10.3, "high": 10.8, "consensus": 10.82, "unit": "Mr $",
+       "note": "Orta nokta 10,55 · Piyasa Beklentisi 10,82 · Aralığın Üstünde", "tone": "down"},
+      {"label": "Hisse Başı Kâr (Düzeltilmiş)", "low": 44, "high": 46, "consensus": 45.58,
+       "unit": "$", "note": "Piyasa Beklentisi 45,58 · Uyumlu", "tone": "up"},
+      {"label": "Brüt Marj", "low": 83, "high": 85, "consensus": 84.6, "unit": "%",
+       "note": "Son çeyrek gerçekleşen %84,6 · Yatay seyir öngörüsü"}
+    ],
     "sources": [{"label": "SanDisk 4Ç FY26 Bülteni", "url": "https://..."}]
   }'
 ```
@@ -726,9 +758,29 @@ Alan notları:
                 tepki verdi. 3: genel görüş ve gerekçesi.
   analysis    → 3-6 bölüm. Her title kalın mini başlık olarak basılır ve
                 NOKTAYLA biter ("Gelirin motoru veri merkezi.").
-  highlights  → sağ kolondaki 6 satır. label ve value SERBEST METİN,
-                okuyucunun dilinde yazılır; biçimlendirme sana ait.
+  highlights  → sayfadaki ALTI metrik kartı — sayfanın en görünür yeri.
+                label ve value SERBEST METİN, okuyucunun dilinde yazılır;
+                biçimlendirme sana ait. note değerin altındaki renkli tek
+                satır bağlam ("▲ Yıllık %372 · Beklenti Üstü"), tone ise
+                up/down/neutral. Altısını da doldur.
   upcoming    → tarih taşır (yatırımcı günü, sonraki bilanço, endeks kararı).
+
+  quarterly_revenue → çeyreklik gelir sütun grafiği. Son BEŞ gerçekleşen
+                çeyrek + gelecek çeyrek öngörüsü. Öngörü satırına
+                "projected": true koy; value orta noktadır ve note sütunun
+                üstünde yazacak aralık metnidir ("10,3–10,8"). value HAM
+                dolardır (8970000000), grafik ölçeği ondan çıkar.
+  guidance    → gelecek çeyrek öngörüsü, en fazla 5 satır. Her satır bir
+                ölçü: low/high şirketin verdiği bant, consensus piyasa
+                beklentisi. unit "Mr $" / "$" / "%" — site aralığın yalnızca
+                SONUNA yazar, yüzdeyi Türkçede başa alır. note satırı bandın
+                beklentiye göre nerede durduğunu söyler; tone o değerlendirme
+                olumluysa "up", olumsuzsa "down".
+
+                DİKKAT: low/high/consensus AYNI BİRİMDE olmalı. Gelir satırında
+                10.3 yazıp birimi "Mr $" vermek doğru; 10300000000 yazmak
+                grafiği bozar — bu alan sütun grafiğinden farklı, burada sayı
+                okunduğu gibi yazılır.
   card_image_url → PNG karne varsa "/karne/sndk-4c-fy2026.png" gibi site içi
                 bir yol. Yoksa alanı hiç gönderme; kart basılmaz.
 

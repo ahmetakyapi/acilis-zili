@@ -6,6 +6,10 @@ import { Star } from "@phosphor-icons/react/dist/ssr";
 import { GuideHint } from "@/components/article/GuideHint";
 import { Panel, SymbolBadge } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
+import { MetricCards } from "@/components/earnings/MetricCards";
+import { RevenueColumns } from "@/components/earnings/RevenueColumns";
+import { GuidanceRanges } from "@/components/earnings/GuidanceRanges";
+import { RichText } from "@/components/earnings/RichText";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
 import { auth } from "@/auth";
 import {
@@ -38,11 +42,16 @@ import type { EarningsAnalysisRow } from "@/lib/schema";
 /**
  * Bilanço detayı — bir çeyreğin okunmuş hâli.
  *
- * İki kolon: solda yargı ve gerekçesi (görüş şeridi → özet → detaylı
- * değerlendirme → güçlü yönler/riskler/beklenen gelişmeler), sağda sabit
- * kalan referans kolonu (karne, metrikler, CEO, yaklaşan bilançolar).
- * Mobilde tek kolona düşer ve karne en üste çıkar — paylaşılabilir tek
- * sayfalık özet, uzun metinden önce gelir.
+ * Sıra karnedekiyle aynı ve bilinçli: görüş şeridi → altı metrik kartı →
+ * çeyreklik gelir + öngörü aralıkları → CEO şeridi → özet → detaylı
+ * değerlendirme → güçlü yönler/riskler/beklenen gelişmeler. Sayfa uzun
+ * metinle açılıyordu ve çeyreğin rakamları dokuz paragrafın gölgesinde
+ * kalıyordu; rakamı gören okuyucu artık metne inmek zorunda değil.
+ *
+ * Sağda sabit kalan referans kolonu yalnızca karne ve yaklaşan bilançolar
+ * taşır. Metrikler ve CEO alıntısı oradan ANA kolona alındı: ikisi de
+ * çeyreğin hikâyesinin parçası, kenarda duran birer referans değil.
+ * Mobilde tek kolona düşer ve karne en üste çıkar.
  */
 
 export async function generateMetadata(
@@ -104,6 +113,8 @@ export default async function AnalysisDetailPage(
 
   const langNote = row.locale === locale ? null : t.analysis.fallbackNote;
   const sources = row.sources ?? [];
+  const hasColumns = (row.quarterlyRevenue?.length ?? 0) > 0;
+  const hasGuidance = (row.guidance?.length ?? 0) > 0;
 
   return (
     <div className="flex flex-col gap-5">
@@ -234,7 +245,10 @@ export default async function AnalysisDetailPage(
       </header>
 
       {/* ---- İki kolon ---- */}
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px]">
+      {/* Yan kolon YAPIŞKAN (`lg:sticky`): sol kolon dört ekran sürerken
+          referanslar görüş alanında kalır. Bu yüzden kısa olması sorun
+          değil — okuyucu kaydırdıkça onunla birlikte iniyor. */}
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]">
         {/* Karne mobilde metinden ÖNCE gelir: paylaşılabilir tek sayfalık
             özet, dokuz paragraflık değerlendirmeden önce okunur. */}
         <div className="contents lg:hidden">
@@ -243,6 +257,79 @@ export default async function AnalysisDetailPage(
 
         <div className="flex min-w-0 flex-col gap-5">
           <VerdictStrip row={row} verdict={verdict} locale={locale} t={t} />
+
+          {/* ---- Görsel katman ----
+              Sayfa uzun metinle açılıyordu ve çeyreğin rakamları dokuz
+              paragrafın gölgesinde kalıyordu. Sıra artık karnedekiyle aynı:
+              önce ölçüler, sonra grafikler, sonra CEO, en sonda metin.
+              Rakamı gören okuyucu metne inmek zorunda değil; inmek isteyen
+              için metin zaten altında duruyor. */}
+          <MetricCards metrics={row.highlights ?? []} />
+
+          {(hasColumns || hasGuidance) && (
+            <div
+              className={cn(
+                "grid gap-4",
+                hasColumns && hasGuidance
+                  ? "lg:grid-cols-[repeat(2,minmax(0,1fr))]"
+                  : "grid-cols-1",
+              )}
+            >
+              {hasColumns && (
+                <RevenueColumns
+                  bars={row.quarterlyRevenue ?? []}
+                  title={t.analysis.quarterlyRevenue}
+                  legendActual={t.analysis.legendActual}
+                  legendProjected={t.analysis.legendProjected}
+                  format={(value) => `${formatCompact(value, locale)} $`}
+                />
+              )}
+              {hasGuidance && (
+                <GuidanceRanges
+                  rows={row.guidance ?? []}
+                  title={
+                    row.nextPeriodLabel
+                      ? t.analysis.guidanceTitle.replace(
+                          "{period}",
+                          row.nextPeriodLabel,
+                        )
+                      : t.analysis.guidanceTitleFallback
+                  }
+                  legendRange={t.analysis.legendRange}
+                  legendConsensus={t.analysis.legendConsensus}
+                  formatRange={(low, high, unit) =>
+                    formatGuidanceRange(low, high, unit, locale)
+                  }
+                />
+              )}
+            </div>
+          )}
+
+          {row.ceoQuote && (
+            /* CEO şeridi yan kolondan ana kolona alındı: alıntı bir referans
+               değil, çeyreğin hikâyesinin parçası — grafiklerle metin
+               arasında duruyor. */
+            <section className="flex flex-col gap-3 rounded-[16px] border border-line bg-surface p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
+              <div className="flex shrink-0 flex-col gap-px sm:w-40">
+                <span className="plate tracking-[0.09em]">
+                  {t.analysis.ceoMessage}
+                </span>
+                <span className="text-[13.5px] font-bold text-strong">
+                  {row.ceoQuote.name}
+                </span>
+                <span className="text-[11px] text-muted">
+                  {row.ceoQuote.title}
+                </span>
+              </div>
+              <span
+                aria-hidden
+                className="hidden w-px self-stretch bg-line sm:block"
+              />
+              <blockquote className="min-w-0 flex-1 text-[12.5px] italic leading-[19px] text-body [text-wrap:pretty]">
+                “{row.ceoQuote.quote}”
+              </blockquote>
+            </section>
+          )}
 
           <Panel className="p-5 sm:p-6">
             <div className="mb-3 flex items-center justify-between gap-3">
@@ -258,7 +345,9 @@ export default async function AnalysisDetailPage(
             </div>
             <div className="flex flex-col gap-3 text-[13.5px] leading-[22px] text-body [text-wrap:pretty]">
               {row.summary.map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
+                <p key={index}>
+                  <RichText text={paragraph} />
+                </p>
               ))}
             </div>
           </Panel>
@@ -277,7 +366,7 @@ export default async function AnalysisDetailPage(
                 {row.analysis.map((section, index) => (
                   <p key={index}>
                     <b className="font-bold text-strong">{section.title}</b>{" "}
-                    {section.body}
+                    <RichText text={section.body} />
                   </p>
                 ))}
               </div>
@@ -308,57 +397,6 @@ export default async function AnalysisDetailPage(
             <ReportCard row={row} t={t} />
           </div>
 
-          {row.highlights && row.highlights.length > 0 && (
-            <Panel className="p-4 sm:p-[18px]">
-              <h2 className="mb-3 text-[13.5px] font-bold text-strong">
-                {t.analysis.highlights}
-              </h2>
-              <dl className="flex flex-col">
-                {row.highlights.map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex items-baseline justify-between gap-3 border-b border-line-soft py-2 last:border-b-0"
-                  >
-                    <dt className="text-[12.5px] font-medium text-body">
-                      {item.label}
-                    </dt>
-                    <dd className="figure shrink-0 text-[13.5px] font-bold text-strong">
-                      {item.value}
-                      {item.note && (
-                        <span
-                          className={cn(
-                            "ml-1.5 text-[11px] font-bold",
-                            item.tone === "up"
-                              ? "text-up"
-                              : item.tone === "down"
-                                ? "text-down"
-                                : "text-muted",
-                          )}
-                        >
-                          {item.note}
-                        </span>
-                      )}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </Panel>
-          )}
-
-          {row.ceoQuote && (
-            <Panel className="p-4 sm:p-[18px]">
-              <h2 className="mb-2.5 text-[13.5px] font-bold text-strong">
-                {t.analysis.ceoMessage}
-              </h2>
-              <blockquote className="text-[12.5px] italic leading-[19px] text-body [text-wrap:pretty]">
-                “{row.ceoQuote.quote}”
-              </blockquote>
-              <p className="mt-2 text-[11.5px] font-semibold text-muted">
-                {row.ceoQuote.name} · {row.ceoQuote.title}
-              </p>
-            </Panel>
-          )}
-
           {peers.length > 0 && (
             <Panel className="p-4 sm:p-[18px]">
               <h2 className="mb-3 text-[13.5px] font-bold text-strong">
@@ -386,6 +424,17 @@ export default async function AnalysisDetailPage(
               </div>
             </Panel>
           )}
+
+          {/* Rehber bağlantıları sayfanın en altından yan kolona alındı:
+              orada dokuz paragraf metnin ardından geliyordu ve kimse o
+              noktada "bilanço nedir" sorusunu sormuyordu. Yanda, metrikleri
+              okurken duruyor. */}
+          <GuideHint
+            label={t.guide.contextLabel}
+            locale={locale}
+            slugs={["bilanco", "degerleme"]}
+            layout="stack"
+          />
         </aside>
       </div>
 
@@ -415,14 +464,48 @@ export default async function AnalysisDetailPage(
           </p>
         )}
       </footer>
-
-      <GuideHint
-        label={t.guide.contextLabel}
-        locale={locale}
-        slugs={["bilanco", "degerleme"]}
-      />
     </div>
   );
+}
+
+/**
+ * Öngörü aralığının tam metni: "10,3 – 10,8 Mr $" · "%83 – %85".
+ *
+ * İki ayrıntı burada karara bağlanıyor:
+ *
+ * ONDALIK HANE ölçeğe göre. Aynı kartta gelir (10,3 milyar), hisse başı kâr
+ * (44 $) ve marj (%83) yan yana duruyor; hepsine iki hane vermek "10,30 Mr $"
+ * gibi sahte bir hassasiyet üretiyor, hepsine sıfır vermek 44 ile 46
+ * arasındaki farkı siliyordu.
+ *
+ * YÜZDE İŞARETİ dile göre yer değiştirir ve aralığın İKİ ucuna da yazılır:
+ * Türkçede "%83 – %85", İngilizcede "83% – 85%". Birim ise aralığın yalnızca
+ * SONUNDA durur — "10,3 Mr $ – 10,8 Mr $" aynı bilgiyi iki kez söylüyordu.
+ */
+function formatGuidanceRange(
+  low: number,
+  high: number,
+  unit: string | undefined,
+  locale: Locale,
+): string {
+  const digits = (value: number) => {
+    const abs = Math.abs(value);
+    if (abs >= 100) return 0;
+    if (abs >= 10) return 1;
+    return 2;
+  };
+  /* İki uç da tam sayıysa ondalık yazılmaz: "%83,0 – %85,0" şirketin
+     vermediği bir hassasiyeti uyduruyor, yönetim "%83–85" dedi. */
+  const scale = Math.max(Math.abs(low), Math.abs(high));
+  const d =
+    Number.isInteger(low) && Number.isInteger(high) ? 0 : digits(scale);
+  const a = formatPrice(low, locale, { digits: d });
+  const b = formatPrice(high, locale, { digits: d });
+
+  if (unit === "%") {
+    return locale === "tr" ? `%${a} – %${b}` : `${a}% – ${b}%`;
+  }
+  return `${a} – ${b}${unit ? ` ${unit}` : ""}`;
 }
 
 /** Gövde metninden okuma süresi — kayıtta ayrı alan tutmaya değmez. */
@@ -604,7 +687,9 @@ function PointsCard({
             >
               {String(index + 1).padStart(2, "0")}
             </span>
-            <span>{point}</span>
+            <span>
+              <RichText text={point} />
+            </span>
           </li>
         ))}
       </ol>

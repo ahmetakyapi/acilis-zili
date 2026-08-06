@@ -147,6 +147,8 @@ export async function GET(request: Request) {
         reportDate: earningsAnalyses.reportDate,
         verdict: earningsAnalyses.verdict,
         score: earningsAnalyses.score,
+        quarterlyRevenue: earningsAnalyses.quarterlyRevenue,
+        guidance: earningsAnalyses.guidance,
       })
       .from(earningsAnalyses)
       .orderBy(desc(earningsAnalyses.reportDate))
@@ -168,13 +170,21 @@ export async function GET(request: Request) {
       verdict: string;
       score: number;
       locales: string[];
+      /* Grafik alanları sonradan eklendi; onlardan önce yazılmış analizler
+         sayfada metin yığını olarak duruyor. Rutin bu bayrağa bakıp eski
+         kayıtları tamamlıyor. */
+      has_charts: boolean;
     }
   >();
   for (const row of existing) {
     const key = `${row.symbol}:${row.period}`;
     const held = grouped.get(key);
+    const charts =
+      (row.quarterlyRevenue?.length ?? 0) > 0 && (row.guidance?.length ?? 0) > 0;
     if (held) {
       if (!held.locales.includes(row.locale)) held.locales.push(row.locale);
+      /* İki dilden biri grafiksizse analiz eksik sayılır. */
+      held.has_charts = held.has_charts && charts;
     } else {
       grouped.set(key, {
         symbol: row.symbol,
@@ -184,6 +194,7 @@ export async function GET(request: Request) {
         verdict: row.verdict,
         score: row.score,
         locales: [row.locale],
+        has_charts: charts,
       });
     }
   }
