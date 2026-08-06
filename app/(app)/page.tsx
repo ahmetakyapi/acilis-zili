@@ -327,6 +327,12 @@ async function RailSection({
 
   const watchedSet = new Set(watched);
 
+  /* Şeritteki bilanço işaretleri yalnızca okuyucunun tanıyacağı isimleri
+     taşıyacak; kimin büyük olduğunu bilmek için piyasa değeri çekiliyor.
+     Tablo cron'la profillenmiş sembollerden dolu; tabloda olmayan küçük
+     isimler zaten eşiği geçemez. */
+  const earningsMeta = await getSymbolNames(earnings.map((row) => row.symbol));
+
   const eventItems: RailEvent[] = events
     .filter((e) => e.eventTimeEt)
     .map((e) => ({
@@ -387,6 +393,12 @@ async function RailSection({
       };
     });
 
+  /* Şeride adıyla çıkmanın eşiği. Bir dönem kalabalık "182 bilanço" diye
+     sayıyla yazıldı — o sayı da kimsenin planını değiştirmiyordu. İşarete
+     yalnızca takip edilenler ve eşik üstü şirketler çıkar; ikisi de yoksa o
+     pencerenin işareti HİÇ çizilmez. Tam liste zaten /bilancolar'da. */
+  const RAIL_CAP_FLOOR = 100e9;
+
   // Aynı saate düşen bilançolar tek noktada toplanır — 229 şirketlik bir gün
   // ekseni okunmaz hale getirir.
   const groupedEarnings = Object.values(
@@ -394,30 +406,29 @@ async function RailSection({
       (acc[item.timeEt] ??= []).push(item);
       return acc;
     }, {}),
-  ).map((group) => {
-    const watchedInGroup = group.filter((item) => item.watched);
+  ).flatMap((group) => {
+    const capOf = (symbol: string) => earningsMeta[symbol]?.marketCap ?? 0;
+    const notable = group
+      .filter((item) => item.watched || capOf(item.title) >= RAIL_CAP_FLOOR)
+      .sort(
+        (a, b) =>
+          Number(b.watched) - Number(a.watched) ||
+          capOf(b.title) - capOf(a.title),
+      );
+    if (notable.length === 0) return [];
 
-    /* Takip edilen şirket varsa adıyla öne çıkar. Yoksa ve grup kalabalıksa
-       sembol yerine SAYI yazılır: "ATI · AURA +180" alfabenin başından iki
-       rastgele şirketti ve okuyucuya hiçbir şey söylemiyordu — "182 bilanço"
-       günün yoğunluğunu söylüyor. */
-    if (watchedInGroup.length === 0 && group.length > 3) {
-      return {
-        ...group[0],
+    const shown = notable.slice(0, 3);
+    const rest = notable.length - shown.length;
+    return [
+      {
+        ...shown[0],
         id: `earnings-${group[0].timeEt}`,
-        title: `${group.length} ${t.dayRail.reportsCount}`,
-      };
-    }
-
-    const shown =
-      watchedInGroup.length > 0 ? watchedInGroup.slice(0, 2) : group.slice(0, 3);
-    const rest = group.length - shown.length;
-    return {
-      ...shown[0],
-      id: `earnings-${group[0].timeEt}`,
-      title: shown.map((item) => item.title).join(" · ") + (rest > 0 ? ` +${rest}` : ""),
-      watched: watchedInGroup.length > 0,
-    };
+        title:
+          shown.map((item) => item.title).join(" · ") +
+          (rest > 0 ? ` +${rest}` : ""),
+        watched: notable.some((item) => item.watched),
+      },
+    ];
   });
 
   /* Şerit ET dakikasıyla konumlanır ama okuyucunun saatiyle yazılır. İki saat

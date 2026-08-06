@@ -100,7 +100,6 @@ const en: typeof tr = {
     openShort: "Open",
     closeShort: "Close",
     earningsNote: "earnings",
-    reportsCount: "reports",
     watchedNote: "watching",
     preOpen: "Pre-Market Opens",
     afterClose: "After Hours Ends",
