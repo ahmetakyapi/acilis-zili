@@ -43,7 +43,7 @@ npm run dev
 | `FINNHUB_API_KEY` | profil/haber için | [finnhub.io](https://finnhub.io) → Get free API key |
 | `FRED_API_KEY` | makro için | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) — 32 karakter, küçük harf |
 | `CRON_SECRET` | üretimde | `openssl rand -hex 32` — Vercel Cron bunu `Bearer` ile gönderir |
-| `BRIEF_SECRET` | içerik için | `openssl rand -hex 32` — bülten ve mercek uçlarının kapısı |
+| `BRIEF_SECRET` | içerik için | `openssl rand -hex 32` — bülten, mercek ve analiz uçlarının kapısı |
 | `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri ve sitemap için) |
 | `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisi (DeepL yoksa) |
 | `DEEPL_API_KEY` | opsiyonel | haber başlığı çevirisi (önce bu denenir) |
@@ -61,8 +61,9 @@ model çağrısı ve API anahtarı yoktur, site yalnızca veritabanından okur.
 | Günlük bülten | her gün 16:00 TR | `POST /api/brief` → ana sayfa · Günün Özeti |
 | Haftalık bülten | pazartesi 09:30 TR | `POST /api/brief` (`period: weekly`) → /bulten |
 | Mercek yazısı | her gün 23:30 TR | `POST /api/mercek` → /mercek |
+| Bilanço analizi | her gün 09:00 TR | `POST /api/analiz` → /bilancolar/analizler |
 
-Üçü de `BRIEF_SECRET` ile korunuyor. Prompt'ların tamamı ve kurulum adımları
+Dördü de `BRIEF_SECRET` ile korunuyor. Prompt'ların tamamı ve kurulum adımları
 `docs/claude-rutinler.md` içinde — **görevler koddan kurulamaz**, claude.ai
 arayüzünden elle kurulur. Saatler kodda da yazılı (`lib/data.ts` →
 `BRIEF_PUBLISH_TR`): bugünün özeti henüz yoksa kart en son yazılanı gösterir
@@ -118,7 +119,7 @@ npm run db:studio    # Drizzle Studio
 
 ```
 app/(app)/           # sayfalar — Bugün, takvim, bilançolar, mercek, hisse/[symbol]…
-app/api/             # chart, search, brief, mercek, cron, auth
+app/api/             # chart, search, brief, mercek, analiz, cron, auth
 components/
   article/           # ArticleBody — ::: blok ailesi burada render edilir
   layout/            # AppShell, ticker, arama paleti

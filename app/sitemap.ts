@@ -1,13 +1,13 @@
 import type { MetadataRoute } from "next";
 import { GUIDE_SLUGS } from "@/content/guide";
-import { getStories } from "@/lib/data";
+import { getAnalyses, getStories } from "@/lib/data";
 import { SITE_URL } from "@/lib/site";
 
 /**
  * Site haritası.
  *
- * Üç kaynaktan derlenir: durağan ekranlar, depodaki rehber yazıları ve
- * veritabanındaki mercek yazıları. Şirket sayfaları (/hisse/*) bilinçli
+ * Dört kaynaktan derlenir: durağan ekranlar, depodaki rehber yazıları,
+ * veritabanındaki mercek yazıları ve bilanço analizleri. Şirket sayfaları (/hisse/*) bilinçli
  * olarak YOK — beş yüzden fazla sayfa üretirdi, içerikleri neredeyse
  * tamamen sağlayıcı verisi ve her biri her gün değişiyor. Arama motoruna
  * gönderilecek asıl değer, yazılan metinler.
@@ -25,6 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/", priority: 1, frequency: "hourly" },
     { path: "/piyasalar", priority: 0.8, frequency: "hourly" },
     { path: "/bilancolar", priority: 0.8, frequency: "daily" },
+    { path: "/bilancolar/analizler", priority: 0.9, frequency: "daily" },
     { path: "/takvim", priority: 0.8, frequency: "daily" },
     { path: "/makro", priority: 0.7, frequency: "daily" },
     { path: "/sirketler", priority: 0.6, frequency: "weekly" },
@@ -67,6 +68,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch {
     // Veritabanı yoksa harita durağan kısımla üretilsin, hata vermesin.
+  }
+
+  try {
+    const analyses = await getAnalyses("tr", { limit: 200 });
+    for (const analysis of analyses) {
+      entries.push({
+        url: `${SITE_URL}/bilancolar/${analysis.symbol.toLowerCase()}/${analysis.period}`,
+        lastModified: new Date(analysis.reportDate),
+        changeFrequency: "monthly",
+        priority: 0.7,
+      });
+    }
+  } catch {
+    // Aynı gerekçe: analiz tablosu okunamazsa harita eksik ama geçerli kalır.
   }
 
   return entries;

@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm"
 import { db } from "./db";
 import {
   dailyBriefs,
+  earningsAnalyses,
   earningsCalendar,
   economicEvents,
   macroSeries,
@@ -15,6 +16,7 @@ import {
   watchlists,
   type DailyBriefRow,
   type EconomicEventRow,
+  type EarningsAnalysisRow,
   type EarningsRow,
   type MacroSeriesRow,
   type NewsRow,
@@ -763,5 +765,180 @@ export async function getStoryBySlug(
     return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
   } catch {
     return null;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Bilanço analizleri
+
+   Dil yedeği mercek yazılarındakiyle aynı kural: kayıt dil başına bir satır,
+   istenen dil yoksa orijinal gösterilir ve satır kendi `locale` değerini
+   taşır — arayüz rozeti oradan basar. Analiz rutini iki dili birlikte
+   yazıyor ama arada her zaman bir pencere olacak.
+   -------------------------------------------------------------------------- */
+
+/** Liste ekranlarının ihtiyacı — gövde metinleri çekilmez. */
+export type AnalysisIndexRow = Pick<
+  EarningsAnalysisRow,
+  | "symbol"
+  | "period"
+  | "periodLabel"
+  | "locale"
+  | "company"
+  | "sector"
+  | "reportDate"
+  | "timing"
+  | "score"
+  | "verdict"
+  | "headline"
+  | "revenue"
+  | "revenueYoyPct"
+  | "eps"
+  | "epsSurprisePct"
+  | "reactionPct"
+>;
+
+const ANALYSIS_INDEX_COLUMNS = {
+  symbol: earningsAnalyses.symbol,
+  period: earningsAnalyses.period,
+  periodLabel: earningsAnalyses.periodLabel,
+  locale: earningsAnalyses.locale,
+  company: earningsAnalyses.company,
+  sector: earningsAnalyses.sector,
+  reportDate: earningsAnalyses.reportDate,
+  timing: earningsAnalyses.timing,
+  score: earningsAnalyses.score,
+  verdict: earningsAnalyses.verdict,
+  headline: earningsAnalyses.headline,
+  revenue: earningsAnalyses.revenue,
+  revenueYoyPct: earningsAnalyses.revenueYoyPct,
+  eps: earningsAnalyses.eps,
+  epsSurprisePct: earningsAnalyses.epsSurprisePct,
+  reactionPct: earningsAnalyses.reactionPct,
+} as const;
+
+/** `symbol + period` başına tek satır; istenen dil öncelikli. */
+function dedupeAnalyses<T extends { symbol: string; period: string; locale: string }>(
+  rows: T[],
+  locale: string,
+  limit: number,
+): T[] {
+  const byKey = new Map<string, T>();
+  for (const row of rows) {
+    const key = `${row.symbol}:${row.period}`;
+    const held = byKey.get(key);
+    if (!held) {
+      byKey.set(key, row);
+    } else if (held.locale !== locale && row.locale === locale) {
+      /* Map sıra korur: değeri değiştirmek satırın yerini oynatmaz. */
+      byKey.set(key, row);
+    }
+  }
+  return [...byKey.values()].slice(0, limit);
+}
+
+export type AnalysisSort = "tarih" | "skor" | "tepki";
+
+export async function getAnalyses(
+  locale: string,
+  options: { limit?: number; sort?: AnalysisSort; symbols?: string[] } = {},
+): Promise<AnalysisIndexRow[]> {
+  const limit = options.limit ?? 40;
+  const sort = options.sort ?? "tarih";
+  try {
+    const order =
+      sort === "skor"
+        ? [desc(earningsAnalyses.score), desc(earningsAnalyses.reportDate)]
+        : sort === "tepki"
+          ? [desc(earningsAnalyses.reactionPct), desc(earningsAnalyses.reportDate)]
+          : [desc(earningsAnalyses.reportDate), desc(earningsAnalyses.publishedAt)];
+
+    const query = db.select(ANALYSIS_INDEX_COLUMNS).from(earningsAnalyses);
+    const rows = await (options.symbols
+      ? query.where(inArray(earningsAnalyses.symbol, options.symbols))
+      : query
+    )
+      .orderBy(...order)
+      /* Dil başına bir satır düşebileceği için sınır iki katıyla çekilir. */
+      .limit(limit * 2);
+
+    return dedupeAnalyses(rows, locale, limit);
+  } catch {
+    return [];
+  }
+}
+
+/** İstenen dil yoksa analizin orijinali döner — sayfa dil notunu kendi basar. */
+export async function getAnalysis(
+  symbol: string,
+  period: string,
+  locale: string,
+): Promise<EarningsAnalysisRow | null> {
+  try {
+    const rows = await db
+      .select()
+      .from(earningsAnalyses)
+      .where(
+        and(
+          eq(earningsAnalyses.symbol, symbol.toUpperCase()),
+          eq(earningsAnalyses.period, period),
+        ),
+      )
+      .limit(4);
+    return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Takvim satırına düşecek rozetler.
+ *
+ * Anahtar `SEMBOL:TARİH`: takvim satırının kimliği bu ikili, analizin
+ * `period` alanı ise şirketin kendi mali takviminden geliyor ve takvim
+ * satırında böyle bir alan yok. Eşleşme tarihten kuruluyor.
+ */
+export type AnalysisBadge = {
+  symbol: string;
+  period: string;
+  verdict: string;
+  score: number;
+};
+
+export async function getAnalysisBadges(
+  symbols: string[],
+  locale: string,
+): Promise<Record<string, AnalysisBadge>> {
+  if (symbols.length === 0) return {};
+  try {
+    const rows = await db
+      .select({
+        symbol: earningsAnalyses.symbol,
+        period: earningsAnalyses.period,
+        locale: earningsAnalyses.locale,
+        verdict: earningsAnalyses.verdict,
+        score: earningsAnalyses.score,
+        reportDate: earningsAnalyses.reportDate,
+      })
+      .from(earningsAnalyses)
+      .where(inArray(earningsAnalyses.symbol, [...new Set(symbols)]));
+
+    const out: Record<string, AnalysisBadge> = {};
+    for (const row of rows) {
+      const key = `${row.symbol}:${row.reportDate}`;
+      /* Aynı bilançonun iki dil satırı aynı rozeti taşır; yine de istenen
+         dildeki kayıt kazansın ki `period` slug'ı o dilin sayfasına gitsin. */
+      if (!out[key] || row.locale === locale) {
+        out[key] = {
+          symbol: row.symbol,
+          period: row.period,
+          verdict: row.verdict,
+          score: row.score,
+        };
+      }
+    }
+    return out;
+  } catch {
+    return {};
   }
 }

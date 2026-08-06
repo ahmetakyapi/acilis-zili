@@ -102,6 +102,18 @@ dönüşümünün tamamı orada, başka yerde manuel saat aritmetiği yapılmaz.
 - **Rehber yazıları** depoda (`content/guide/`), **mercek yazıları**
   veritabanında (`stories` tablosu). `/api/mercek` POST ile yazılır, aynı uç
   `?slug=` ile gövdeyi geri okur — rutin güncelleme yaparken onu kullanıyor.
+- **Bilanço analizleri** de veritabanında (`earnings_analyses`) ve aynı
+  köprüden geliyor: `/api/analiz` POST yazar, `?symbol=&period=` geri okur,
+  `/api/analiz/context` rutine aday listesi verir. Rutin promptu
+  `docs/claude-rutinler.md` § 4'te. Sayılar **ham** tutulur (8.97e9), metin
+  alanları dile göre; sunum katmanı biçimlendirir.
+  Bilançolar ekranı üç sekmedir — Takvim (`/bilancolar`), Analizler
+  (`/bilancolar/analizler`), Takip Ettiklerim (`/bilancolar/takip`); detay
+  `/bilancolar/{sembol}/{donem}`. Sekme çubuğu paylaşılan bir layout'ta
+  DEĞİL, üç sayfanın her biri kendi basıyor: detay sayfası aynı segmentin
+  altında ve orada sekme istenmiyor.
+  Karne PNG'si isteğe bağlı: `public/karne/` altına elle konur, kayda site
+  içi yol olarak yazılır (`docs/karne-agenti.md`). Yoksa kart hiç basılmaz.
 - **İçerik iki dilli.** Rehber: `content/guide/` üç katman (meta + tr + en),
   eksik çeviri derlemeyi kırar. Mercek: aynı slug iki `locale` satırı; çeviri
   yoksa sayfa orijinali "TR" rozeti ve notla gösterir, boş kalmaz.

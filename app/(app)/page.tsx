@@ -6,6 +6,7 @@ import { NewsImage } from "@/components/news/NewsImage";
 import { BriefSwitch, type BriefView } from "@/components/today/BriefSwitch";
 import { Countdown } from "@/components/today/Countdown";
 import { DayRail, type RailEvent } from "@/components/today/DayRail";
+import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
 import { LiveClock } from "@/components/today/LiveClock";
 import {
   DataError,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/primitives";
 import {
   BRIEF_PUBLISH_TR,
+  getAnalysisBadges,
   getEventsBetween,
   getGenericImageUrls,
   getLatestBrief,
@@ -949,6 +951,22 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   const names = await getSymbolNames(rows.map((row) => row.symbol));
 
+  /* Sekiz satır, PİYASA DEĞERİNE göre. Sağlayıcı takvimi alfabetik
+     döndürüyor ve liste "APC · ATI · ATII · ATLC" diye başlıyordu: bugünün
+     en büyük bilançosu 400 satır aşağıdaydı. Takvim ekranı zaten aynı
+     sıralamayı kullanıyor. */
+  const shown = [...rows]
+    .sort(
+      (a, b) =>
+        (names[b.symbol]?.marketCap ?? 0) - (names[a.symbol]?.marketCap ?? 0),
+    )
+    .slice(0, 8);
+
+  const badges = await getAnalysisBadges(
+    shown.map((row) => row.symbol),
+    locale,
+  );
+
   const hourLabel: Record<string, string> = {
     bmo: t.earnings.beforeOpen,
     amc: t.earnings.afterClose,
@@ -957,31 +975,44 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   return (
     <ul>
-      {rows.slice(0, 8).map((row) => (
-        <li key={row.id}>
-          <Link
-            href={`/hisse/${row.symbol}`}
-            className="flex items-center gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:gap-4 sm:px-5"
+      {shown.map((row) => {
+        const badge = badges[`${row.symbol}:${row.reportDate}`];
+        return (
+          /* Satır artık bir <a> değil: analiz rozeti kendi bağlantısını
+             taşıyor ve iç içe bağlantı geçersiz HTML. Yüzeyi kaplayan
+             bağlantı katmanı görünümü aynen koruyor. */
+          <li
+            key={row.id}
+            className="relative flex items-center gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:gap-4 sm:px-5"
           >
+            <Link
+              href={`/hisse/${row.symbol}`}
+              aria-label={`${row.symbol} ${names[row.symbol]?.name ?? ""}`}
+              className="absolute inset-0"
+            />
             <span className="w-[66px] shrink-0 text-[13.5px] font-bold text-strong">
               {row.symbol}
             </span>
             <span className="hidden min-w-0 flex-1 truncate text-[13.5px] text-body sm:block">
               {names[row.symbol]?.name ?? ""}
             </span>
-            <TimingChip
-              tone={row.hour === "bmo" ? "pre" : row.hour === "amc" ? "post" : "neutral"}
-            >
-              {row.hour ? (hourLabel[row.hour] ?? t.earnings.timeUnknown) : t.earnings.timeUnknown}
-            </TimingChip>
+            {badge ? (
+              <AnalysisBadge badge={badge} t={t} size="sm" />
+            ) : (
+              <TimingChip
+                tone={row.hour === "bmo" ? "pre" : row.hour === "amc" ? "post" : "neutral"}
+              >
+                {row.hour ? (hourLabel[row.hour] ?? t.earnings.timeUnknown) : t.earnings.timeUnknown}
+              </TimingChip>
+            )}
             <span className="ml-auto shrink-0 text-right text-[12.5px] text-muted sm:ml-0 sm:w-[82px]">
               {row.epsEstimate !== null
                 ? `${t.earnings.epsEstimate} ${formatPrice(row.epsEstimate, locale, { currency: true })}`
                 : "—"}
             </span>
-          </Link>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 }

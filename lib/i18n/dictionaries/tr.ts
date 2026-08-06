@@ -212,6 +212,98 @@ const tr = {
     rangeMonth: "Ay",
     subtitleLong:
       "Şirketlerin finansal sonuç açıklama tarihleri · gün içinde piyasa değerine göre sıralı",
+    /* Bilançolar ekranının üç sekmesi — takvim, analizler ve takip listesi
+       aynı konunun üç görünümü, ayrı sayfalar değil. */
+    tabCalendar: "Takvim",
+    tabAnalyses: "Analizler",
+    tabWatchlist: "Takip Ettiklerim",
+    /* Dar sütunlarda tam etiket komşu hücreye taşıyor. */
+    beforeOpenShort: "Açılış Öncesi",
+    afterCloseShort: "Kap. Sonrası",
+  },
+
+  /* Bilanço analizleri — açıklanmış çeyreğin okunmuş hâli. */
+  analysis: {
+    title: "Bilançolar",
+    subtitle:
+      "Takvimden bilançoları izle; açıklananlar için karne, özet ve detaylı değerlendirme Analizler'de.",
+    listTitle: "Son Analizler",
+    todaysAnalysis: "Günün Analizi",
+    thisWeekAnalyzed: "Bu Hafta Analiz Edilenler",
+    upcomingEarnings: "Yaklaşan Bilançolar",
+    goToCalendar: "Takvime Git →",
+    showAll: "Tümünü Gör →",
+    loadMore: "Daha Fazla Yükle",
+    reportCardLink: "Karne →",
+    reportCard: "Bilanço Karnesi",
+    downloadPng: "PNG İndir",
+    reportCardHint:
+      "Tek sayfalık paylaşılabilir karne: metrikler, grafikler, öngörü ve değerlendirme. Tıklayarak tam boyut aç.",
+
+    /* Kayıtta buy/hold/sell duruyor; ekranda okunan bunlar. */
+    verdictBuy: "AL",
+    verdictHold: "TUT",
+    verdictSell: "SAT",
+    verdictLabel: "Genel Görüş",
+    scoreOutOf: "/ 100",
+
+    colSymbol: "Sembol",
+    colCompany: "Şirket · Dönem",
+    colReported: "Açıklanma",
+    colRevenue: "Gelir · Yıllık",
+    colEps: "HBK vs Beklenti",
+    colReaction: "Hisse Tepkisi",
+    colScore: "Skor",
+    colVerdict: "Görüş",
+    colCard: "Karne",
+
+    sortDate: "Tarihe Göre",
+    sortScore: "Skora Göre",
+    sortReaction: "Tepkiye Göre",
+    filterAll: "Tümü",
+    filterThisWeek: "Bu Hafta",
+    filterWatchlist: "Takip Ettiklerim",
+
+    summary: "Özet",
+    detailed: "Detaylı Değerlendirme",
+    byTeam: "Açılış Zili Analiz Ekibi",
+    strengths: "Güçlü Yönler",
+    risks: "Riskler",
+    upcomingDev: "Beklenen Gelişmeler",
+    highlights: "Öne Çıkan Metrikler",
+    ceoMessage: "CEO Mesajı",
+    analystTarget: "Ort. Analist Hedefi",
+    analystTargetCount: "Ort. Analist Hedefi ({count})",
+    upsidePotential: "Potansiyel",
+    closePrice: "Kapanış Fiyatı",
+    return1y: "1 Yıllık Getiri",
+    afterHours: "seans sonrası",
+    nextEarnings: "Sonraki Bilanço",
+    earningsOf: "{period} Bilançosu",
+    readMinutes: "{count} Dakikalık Okuma",
+
+    empty: "Henüz yayımlanmış bilanço analizi yok.",
+    emptyHint:
+      "Bir şirket bilançosunu açıkladıktan sonra karnesi ve değerlendirmesi burada yayımlanır.",
+    emptyWatchlist: "Takip ettiklerin için henüz analiz yok.",
+    emptyWatchlistHint:
+      "Favorilerine eklediğin şirketlerden biri bilanço açıkladığında analizi burada görünür.",
+    emptyFilter: "Bu filtreyle eşleşen analiz yok.",
+    notFound: "Analiz bulunamadı",
+    notFoundHint: "Bağlantı eski olabilir; listeden tekrar dene.",
+    signedOut: "Takip listesi için giriş yap",
+    signedOutHint:
+      "Favorilerine eklediğin şirketlerin bilanço ve analizleri bu sekmede toplanır.",
+    watchlistAnalyses: "Takip Ettiklerinin Analizleri",
+    watchlistCalendar: "Takip Ettiklerinin Takvimi",
+
+    fallbackNote:
+      "Bu analiz henüz Türkçeye çevrilmedi; orijinal diliyle gösteriliyor.",
+    publishNote: "Analizler bilanço açıklandıktan sonra ~1 saat içinde yayımlanır.",
+    disclaimer:
+      "Bu analiz şirketin resmi bilanço bülteni ve kazanç çağrısına dayanır. Yatırım Tavsiyesi Değildir.",
+    sourcesLabel: "Kaynaklar",
+    marketExpectation: "Piyasa Beklentisi",
   },
 
   companies: {

@@ -50,15 +50,44 @@ export function formatPrice(
   return currency ? `$${formatted}` : formatted;
 }
 
-/** Değişim yüzdesi — işaret her zaman gösterilir. */
-export function formatPercent(value: number | null | undefined, locale: string) {
+/**
+ * Değişim yüzdesi — işaret her zaman gösterilir.
+ *
+ * `digits` fiyat değişimi için 2'de kalır ama bilanço büyümeleri üç haneli
+ * olabiliyor ve "+372,00%" ondalıkları gürültü; oralarda 0–1 hane isteniyor.
+ */
+export function formatPercent(
+  value: number | null | undefined,
+  locale: string,
+  digits = 2,
+) {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   const formatted = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
   }).format(Math.abs(value));
   const sign = value > 0 ? "+" : value < 0 ? "−" : "";
   return `${sign}${formatted}%`;
+}
+
+/**
+ * İşARETSİZ yüzde — 372 → "372%".
+ *
+ * Yanında zaten ▲/▼ oku duran değerler için. `formatPercent` işareti her
+ * zaman basıyor ve ok ile birleşince "▲ +372%" gibi iki kez yön bildiren bir
+ * dize çıkıyordu.
+ */
+export function formatPercentPlain(
+  value: number | null | undefined,
+  locale: string,
+  digits = 1,
+) {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  const formatted = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(Math.abs(value));
+  return `${formatted}%`;
 }
 
 /** Mutlak değişim — 2.41 → "+2,41" */
@@ -203,6 +232,22 @@ export function formatEtDateLong(dateStr: string, locale: string): string {
 export function formatEtDateShort(dateStr: string, locale: string): string {
   const [y, m, d] = dateStr.split("-");
   return locale === "tr" ? `${d}.${m}.${y}` : `${m}/${d}/${y}`;
+}
+
+/**
+ * "2026-08-06" → "6 Ağu" / "Aug 6"
+ *
+ * Dar sütunlarda tam tarih ("06.08.2026") komşu sütuna taşıyordu; yıl zaten
+ * her satırda aynı ve bilgi taşımıyor. Yılı gerçekten gereken yerlerde
+ * `formatEtDateShort` duruyor.
+ */
+export function formatEtDateCompact(dateStr: string, locale: string): string {
+  const date = new Date(`${dateStr}T12:00:00Z`);
+  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(date);
 }
 
 const TR_TIME = new Intl.DateTimeFormat("tr-TR", {

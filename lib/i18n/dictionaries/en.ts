@@ -205,6 +205,93 @@ const en: typeof tr = {
     subtitleLong:
       "Company results release dates · ranked by market cap within each day",
     empty: "No earnings reports in this range.",
+    tabCalendar: "Calendar",
+    tabAnalyses: "Analyses",
+    tabWatchlist: "My Watchlist",
+    beforeOpenShort: "Pre-Market",
+    afterCloseShort: "After Close",
+  },
+
+  analysis: {
+    title: "Earnings",
+    subtitle:
+      "Track earnings on the calendar; once a company reports, its scorecard, summary and full review land in Analyses.",
+    listTitle: "Latest Analyses",
+    todaysAnalysis: "Analysis Of The Day",
+    thisWeekAnalyzed: "Analyzed This Week",
+    upcomingEarnings: "Upcoming Earnings",
+    goToCalendar: "Go To Calendar →",
+    showAll: "See All →",
+    loadMore: "Load More",
+    reportCardLink: "Scorecard →",
+    reportCard: "Earnings Scorecard",
+    downloadPng: "Download PNG",
+    reportCardHint:
+      "A single-page shareable scorecard: metrics, charts, guidance and the verdict. Click to open full size.",
+
+    verdictBuy: "BUY",
+    verdictHold: "HOLD",
+    verdictSell: "SELL",
+    verdictLabel: "Verdict",
+    scoreOutOf: "/ 100",
+
+    colSymbol: "Symbol",
+    colCompany: "Company · Period",
+    colReported: "Reported",
+    colRevenue: "Revenue · YoY",
+    colEps: "EPS vs Estimate",
+    colReaction: "Share Reaction",
+    colScore: "Score",
+    colVerdict: "Verdict",
+    colCard: "Scorecard",
+
+    sortDate: "By Date",
+    sortScore: "By Score",
+    sortReaction: "By Reaction",
+    filterAll: "All",
+    filterThisWeek: "This Week",
+    filterWatchlist: "My Watchlist",
+
+    summary: "Summary",
+    detailed: "Full Review",
+    byTeam: "Açılış Zili Research",
+    strengths: "Strengths",
+    risks: "Risks",
+    upcomingDev: "What To Watch",
+    highlights: "Key Metrics",
+    ceoMessage: "From The CEO",
+    analystTarget: "Avg. Analyst Target",
+    analystTargetCount: "Avg. Analyst Target ({count})",
+    upsidePotential: "Upside",
+    closePrice: "Closing Price",
+    return1y: "1Y Return",
+    afterHours: "after hours",
+    nextEarnings: "Next Earnings",
+    earningsOf: "{period} Earnings",
+    readMinutes: "{count} Minute Read",
+
+    empty: "No earnings analysis published yet.",
+    emptyHint:
+      "Once a company reports, its scorecard and full review are published here.",
+    emptyWatchlist: "No analysis for the companies you follow yet.",
+    emptyWatchlistHint:
+      "When one of your watchlist companies reports, its analysis shows up here.",
+    emptyFilter: "No analysis matches this filter.",
+    notFound: "Analysis not found",
+    notFoundHint: "The link may be stale; try again from the list.",
+    signedOut: "Sign in to use your watchlist",
+    signedOutHint:
+      "Earnings and analyses for the companies you follow are gathered in this tab.",
+    watchlistAnalyses: "Analyses From Your Watchlist",
+    watchlistCalendar: "Your Watchlist Calendar",
+
+    fallbackNote:
+      "This analysis has not been translated into English yet; the original is shown.",
+    publishNote: "Analyses are published ~1 hour after a company reports.",
+    disclaimer:
+      "This analysis is based on the company's official earnings release and call. Not Investment Advice.",
+    sourcesLabel: "Sources",
+    marketExpectation: "Market Expectation",
   },
 
   companies: {

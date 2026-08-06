@@ -330,6 +330,107 @@ export const stories = pgTable(
   ],
 );
 
+/**
+ * Bilanço analizleri — açıklanmış bir çeyreğin okunmuş hâli.
+ *
+ * `earnings_calendar` ne zaman açıklanacağını söyler; bu tablo açıklandıktan
+ * SONRA ne anlama geldiğini. İkisi ayrı duruyor çünkü ömürleri ve kaynakları
+ * ayrı: takvim sağlayıcıdan gelir ve her gün senkronlanır, analiz bir kez
+ * yazılır ve arşivde kalır. Takvim satırına bağlamak için yabancı anahtar da
+ * yok — sağlayıcı satırı silip yeniden yazabiliyor; eşleşme sembol + tarih
+ * üzerinden kuruluyor.
+ *
+ * Sayılar HAM tutulur (8.97e9), biçimlenmiş metin değil: aynı kayıt iki dilde
+ * de gösteriliyor ve "8,97 Mr $" ile "$8.97B" arasındaki fark sunum katmanına
+ * ait. Yalnızca kaynağı serbest metin olan alanlar (öne çıkan metrikler,
+ * CEO alıntısı) dile göre yazılır.
+ *
+ * Mercek yazılarındaki gibi dil başına bir satır: aynı `symbol + period`
+ * için `tr` ve `en` iki kayıt. Çeviri henüz yoksa sayfa orijinali not düşerek
+ * gösterir, boş kalmaz.
+ */
+export const earningsAnalyses = pgTable(
+  "earnings_analyses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    symbol: text("symbol").notNull(),
+    /** URL parçası — küçük harf + tire: "4c-fy2026", "2c-2026". */
+    period: text("period").notNull(),
+    locale: text("locale").notNull().default("tr"),
+    /** Ekranda görünen dönem adı: "4Ç FY2026" / "Q4 FY2026". */
+    periodLabel: text("period_label").notNull(),
+    company: text("company").notNull(),
+    exchange: text("exchange"),
+    sector: text("sector"),
+    /** Bilançonun açıklandığı gün (ET). */
+    reportDate: date("report_date").notNull(),
+    /** bmo | amc | dmh — takvimdeki `hour` ile aynı sözlük. */
+    timing: text("timing"),
+    nextPeriodLabel: text("next_period_label"),
+    /** "~Ekim 2026" gibi yaklaşık pencere; kesin tarih verilmez. */
+    nextReportEstimate: text("next_report_estimate"),
+
+    /** 0–100. Görüşün kendisi değil, gerekçesinin yoğunluğu. */
+    score: integer("score").notNull(),
+    /** buy | hold | sell — ekranda AL/TUT/SAT olarak yazılır. */
+    verdict: text("verdict").notNull(),
+    /** Kartlarda görünen tek cümlelik hikâye. */
+    headline: text("headline").notNull(),
+
+    price: doublePrecision("price"),
+    /** Bilanço sonrası seans dışı tepki, yüzde. */
+    reactionPct: doublePrecision("reaction_pct"),
+    marketCap: doublePrecision("market_cap"),
+    return1yPct: doublePrecision("return_1y_pct"),
+    targetPrice: doublePrecision("target_price"),
+    upsidePct: doublePrecision("upside_pct"),
+    analystCount: integer("analyst_count"),
+
+    revenue: doublePrecision("revenue"),
+    revenueYoyPct: doublePrecision("revenue_yoy_pct"),
+    eps: doublePrecision("eps"),
+    /** Açıklanan EPS'in piyasa beklentisinden sapması, yüzde. */
+    epsSurprisePct: doublePrecision("eps_surprise_pct"),
+
+    /** 3 paragraflık özet. */
+    summary: jsonb("summary").$type<string[]>().notNull(),
+    /** Detaylı değerlendirme — her biri kalın mini başlıkla açılan bölümler. */
+    analysis: jsonb("analysis")
+      .$type<{ title: string; body: string }[]>()
+      .notNull(),
+    strengths: jsonb("strengths").$type<string[]>(),
+    risks: jsonb("risks").$type<string[]>(),
+    /** "Katalizörler" değil: Beklenen Gelişmeler. Tarih taşır. */
+    upcoming: jsonb("upcoming").$type<string[]>(),
+    /** Sağ kolondaki 6 satır — etiketi de değeri de serbest metin. */
+    highlights: jsonb("highlights").$type<
+      { label: string; value: string; note?: string; tone?: string }[]
+    >(),
+    ceoQuote: jsonb("ceo_quote").$type<{
+      quote: string;
+      name: string;
+      title: string;
+    }>(),
+    sources: jsonb("sources").$type<{ label: string; url?: string }[]>(),
+    /** Karne PNG'sinin site içi yolu: "/karne/sndk-4c-fy2026.png". Yoksa
+        kart hiç basılmaz — boş çerçeve göstermektense yokluğu dürüst. */
+    cardImageUrl: text("card_image_url"),
+
+    generatedBy: text("generated_by").notNull().default("claude"),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("earnings_analyses_key").on(t.symbol, t.period, t.locale),
+    index("earnings_analyses_report_idx").on(t.reportDate),
+    index("earnings_analyses_symbol_idx").on(t.symbol),
+  ],
+);
+
 /* ==========================================================================
    Çıkarsanan tipler
    ========================================================================== */
@@ -347,3 +448,7 @@ export type NewsRow = typeof news.$inferSelect;
 export type DailyBriefRow = typeof dailyBriefs.$inferSelect;
 export type StoryRow = typeof stories.$inferSelect;
 export type MarketHolidayRow = typeof marketHolidays.$inferSelect;
+export type EarningsAnalysisRow = typeof earningsAnalyses.$inferSelect;
+
+/** AL / TUT / SAT — kayıtta İngilizce anahtar, ekranda dile göre yazılır. */
+export type Verdict = "buy" | "hold" | "sell";

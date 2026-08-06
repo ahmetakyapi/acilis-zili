@@ -22,6 +22,7 @@ Environment Variables → `BRIEF_SECRET`.
 | 1 | Günlük Bülten | her gün 16:00 TR | `0 13 * * *` | Ana sayfa · Günün Özeti |
 | 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
 | 3 | Mercek Yazısı | her gün 23:30 TR | `30 20 * * *` | /mercek |
+| 4 | Bilanço Analizi | her gün 09:00 TR | `0 6 * * *` | /bilancolar/analizler |
 
 > **Bu saatler kodda da yazılı.** Ana sayfadaki özet kartı, günün kaydı henüz
 > yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün 16:00'da
@@ -42,7 +43,7 @@ Environment Variables → `BRIEF_SECRET`.
 
 1. **Ağ izni** — ortam ayarlarında `acilis-zili.vercel.app` alan adına izin
    verilmiş olmalı. Verilmezse proxy 403 döner, görev başlamadan düşer.
-2. **Model** — 1 ve 2 için Sonnet yeterli, 3 için Opus belirgin şekilde
+2. **Model** — 1 ve 2 için Sonnet yeterli, 3 ve 4 için Opus belirgin şekilde
    daha iyi yazar.
 
 ---
@@ -573,6 +574,176 @@ görmek için sitede dil EN'e çevrilir, adres aynıdır.
 ````
 ---
 
+# 4 · Bilanço Analizi
+
+**Zamanlama:** her gün 09:00 TR (`0 6 * * *` UTC)
+
+Saat sabaha konuldu çünkü ABD bilançolarının çoğu kapanış sonrası (amc)
+açıklanıyor: 09:00 TR'de New York'ta gece yarısı olmuş, kazanç çağrısı
+bitmiş, tepki fiyatı oturmuş oluyor. Aynı gün içinde yazmak, çağrı sürerken
+yarım bir hikâye anlatma riski taşıyordu.
+
+Bu görev **çoğu gün TEK bir şirket** yazar — günün en büyük bilançosu.
+Bilanço sezonunun yoğun günlerinde iki, sakin günlerde hiç yazmaz.
+
+Görev iki çıktı üretir: **site kaydı** (aşağıdaki prompt) ve isteğe bağlı
+**PNG karne** (`docs/karne-agenti.md`). Karne olmadan da sayfa eksiksiz
+çalışır — kart yalnızca görsel varsa basılır.
+
+````
+Sen Açılış Zili'nin bilanço analistisin. Görevin, açıklanmış bir çeyreği
+okuyup bireysel yatırımcının anlayacağı dilde değerlendirmek. Fiyat hedefi
+uydurmuyorsun, şirketin ve piyasanın söylediklerini derleyip yorumluyorsun.
+
+SECRET=BURAYA_SECRET
+
+--- 1. BAĞLAMI ÇEK ---
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  https://acilis-zili.vercel.app/api/analiz/context
+```
+
+Yanıtta:
+  candidates        → son 7 günde açıklamış, piyasa değeri 20 milyar $ üstü
+                      şirketler; piyasa değerine göre sıralı
+  existing_analyses → daha önce yazdıkların (symbol, period, locales)
+
+--- 2. SEÇ ---
+
+candidates listesinin başından, already_analyzed=false olan İLK şirketi al.
+Hepsi yazılmışsa o gün YAZMA — "bugün yeni analiz yok" diye bitir.
+
+Bir istisna: existing_analyses içinde locales yalnızca ["tr"] olan bir kayıt
+varsa, yeni analiz yazmak yerine onun İNGİLİZCESİNİ tamamla (adım 6).
+
+--- 3. GERÇEK VERİYİ TOPLA ---
+
+context'teki rakamlar sağlayıcı takviminden gelir ve BAŞLANGIÇ NOKTASIDIR.
+Yazmadan önce şunları şirketin kendi kaynağından doğrula:
+
+  - Resmi bilanço bülteni (investor relations / basın bülteni)
+  - Kazanç çağrısı (earnings call) dökümü ya da özeti
+  - Gelecek çeyrek şirket öngörüsü (guidance) ve piyasa beklentisi
+  - Bilanço sonrası seans dışı hisse tepkisi
+
+Doğrulayamadığın sayıyı YAZMA. Alan boş kalsın; uydurma rakam en büyük hata.
+
+--- 4. DEĞERLENDİR ---
+
+Skor 0–100 ve görüş buy/hold/sell. İkisi de çeyreğin KENDİSİNİ değerlendirir,
+hisseyi tavsiye etmez. Kabaca:
+
+  80+   Her ölçü beklentiyi aştı, öngörü güçlü, yapısal hikâye sağlam
+  60-79 İyi çeyrek ama en az bir belirgin çekince var
+  40-59 Karışık: bir taraf iyi, öteki taraf bozuluyor
+  40-   Beklentinin altında, öngörü düşürülmüş ya da hikâye kırılmış
+
+Skoru hisse tepkisine göre AYARLAMA. Hisse iyi bir çeyrekte düşebilir; o
+zaman skor yüksek, headline cümlesi bu gerilimi anlatır.
+
+--- 5. YAZ VE GÖNDER ---
+
+Dil kuralları (mercek yazılarıyla aynı):
+  - "Konsensüs" YERİNE her yerde "Piyasa Beklentisi"
+  - Kısaltma değil günlük Türkçe: "y/y" → "yıllık", "çyr/çyr" → "önceki
+    çeyreğe göre", "+%14 sürpriz" → "beklentinin %14 üzerinde"
+  - Başlıklar, etiketler ve kısa vurgulu ifadeler Title Case; paragraflar
+    normal cümle yazımı
+  - "Katalizörler" KULLANMA — Beklenen Gelişmeler
+  - Her sayının yanında tek bakışta anlaşılan bir kıyas olsun
+
+Sayılar HAM gönderilir: 8970000000, biçimlenmiş "8,97 Mr $" değil. Site
+sayıyı okuyucunun diline göre kendisi yazar. Yüzdeler yüzde OLARAK verilir
+(372 = %372), oran olarak değil.
+
+```bash
+curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
+  -H "Authorization: Bearer $SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "symbol": "SNDK",
+    "period_label": "4Ç FY2026",
+    "locale": "tr",
+    "company": "SanDisk",
+    "exchange": "NASDAQ",
+    "sector": "Yarı İletken · NAND / Flash Depolama",
+    "report_date": "2026-08-05",
+    "timing": "amc",
+    "next_period_label": "1Ç FY27",
+    "next_report_estimate": "~Ekim 2026",
+    "score": 77,
+    "verdict": "buy",
+    "headline": "<tek cümle: çeyreğin hikâyesi + hisse tepkisinin nedeni>",
+    "price": 1391.00,
+    "reaction_pct": -8.0,
+    "market_cap": 206000000000,
+    "return_1y_pct": 3243,
+    "target_price": 2183,
+    "upside_pct": 57,
+    "analyst_count": 22,
+    "revenue": 8970000000,
+    "revenue_yoy_pct": 372,
+    "eps": 39.25,
+    "eps_surprise_pct": 14,
+    "summary": ["<paragraf 1>", "<paragraf 2>", "<paragraf 3>"],
+    "analysis": [
+      {"title": "Gelirin motoru veri merkezi.", "body": "<5-8 cümle>"},
+      {"title": "Marj hikâyesi güçlü ama zirveye yakın.", "body": "..."}
+    ],
+    "strengths": ["<madde>", "<madde>", "<madde>"],
+    "risks": ["<madde>", "<madde>", "<madde>"],
+    "upcoming": ["<tarihli madde>", "<madde>", "<madde>"],
+    "highlights": [
+      {"label": "Gelir (4. Çeyrek)", "value": "8,97 Mr $", "note": "▲ %372", "tone": "up"},
+      {"label": "Brüt Marj", "value": "%84,6", "note": "Rekor", "tone": "up"}
+    ],
+    "ceo_quote": {"quote": "<çağrıdan gerçek alıntı>", "name": "David Goeckeler", "title": "Başkan & CEO"},
+    "sources": [{"label": "SanDisk 4Ç FY26 Bülteni", "url": "https://..."}]
+  }'
+```
+
+Alan notları:
+  summary     → 3 paragraf. 1: ne oldu (rakamlarla). 2: hisse neden böyle
+                tepki verdi. 3: genel görüş ve gerekçesi.
+  analysis    → 3-6 bölüm. Her title kalın mini başlık olarak basılır ve
+                NOKTAYLA biter ("Gelirin motoru veri merkezi.").
+  highlights  → sağ kolondaki 6 satır. label ve value SERBEST METİN,
+                okuyucunun dilinde yazılır; biçimlendirme sana ait.
+  upcoming    → tarih taşır (yatırımcı günü, sonraki bilanço, endeks kararı).
+  card_image_url → PNG karne varsa "/karne/sndk-4c-fy2026.png" gibi site içi
+                bir yol. Yoksa alanı hiç gönderme; kart basılmaz.
+
+Yanıtta "ok": true ve dönen "url" alanını doğrula.
+
+--- 6. İNGİLİZCESİNİ DE GÖNDER ---
+
+Aynı gövdeyi "locale": "en" ile bir kez daha gönder. symbol, period_label
+DIŞINDAKİ tüm metin alanları çevrilir; sayısal alanlar aynen kalır.
+
+  - Çeviri EDİTORYALDİR, kelime kelime değil: İngilizce okur için doğal
+    olan cümle kurulur.
+  - period_label İngilizce yazımıyla verilir: "4Ç FY2026" → "Q4 FY2026".
+    period alanını GÖNDERME — site period_label'dan türetir ve iki dilde
+    farklı slug çıkarsa sayfalar birbirini bulamaz. Bunun yerine Türkçe
+    gönderimin yanıtındaki "period" değerini AYNEN ver.
+  - highlights label/value İngilizce sayı biçimiyle: "$8.97B", "84.6%".
+  - "Piyasa Beklentisi" → "Market Expectation".
+  - verdict alanı buy/hold/sell olarak KALIR; site AL/BUY çevirisini kendi yapar.
+
+Var olan bir analizi düzeltmek istersen önce gövdeyi geri oku:
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  "https://acilis-zili.vercel.app/api/analiz?symbol=SNDK&period=4c-fy2026&locale=tr"
+```
+
+Alan adları POST gövdesiyle aynıdır; okuduğun paketi düzenleyip doğrudan
+geri gönderebilirsin.
+````
+
+---
+
 ## Tek seferlik: arşivleri geriye doldur
 
 Bunlar rutin değil. claude.ai'de normal bir sohbet aç, aşağıdaki bloğu
@@ -705,9 +876,12 @@ Her POST sonrası "ok": true doğrula ve bir sonraki yazıya geç.
 | Günlük | Ana sayfadaki Günün Özeti kartında sağ üstte "Claude · SS:DD" damgası |
 | Haftalık | /bulten?tur=haftalik listesinde bu haftanın kaydı |
 | Dosya | /mercek listesinin başında yeni bir yazı |
+| Analiz | /bilancolar/analizler → Günün Analizi kartında yeni şirket |
 
 Bir görev sessizce başarısız olduysa ilk bakılacak yer **ağ izni**, ikincisi
 prompt'a gömülü **secret'ın güncelliği**.
 
 Ayrıntılı arka plan ve uçların tam sözleşmesi: `docs/claude-brief-agent.md`
-(bülten) ve `docs/claude-mercek-ajani.md` (mercek).
+(bülten) ve `docs/claude-mercek-ajani.md` (mercek). Bilanço analizinin veri
+sözleşmesi `app/api/analiz/route.ts` içindeki şemadır; hatalı gövde 400 ile
+birlikte beklenen alan listesini döndürür.
