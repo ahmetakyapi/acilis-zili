@@ -393,11 +393,12 @@ async function RailSection({
       };
     });
 
-  /* Şeride adıyla çıkmanın eşiği. Bir dönem kalabalık "182 bilanço" diye
-     sayıyla yazıldı — o sayı da kimsenin planını değiştirmiyordu. İşarete
-     yalnızca takip edilenler ve eşik üstü şirketler çıkar; ikisi de yoksa o
-     pencerenin işareti HİÇ çizilmez. Tam liste zaten /bilancolar'da. */
-  const RAIL_CAP_FLOOR = 100e9;
+  /* Şeride adıyla çıkmanın eşiği: 50 milyar dolar. Bir dönem kalabalık
+     "182 bilanço" diye sayıyla yazıldı — o sayı da kimsenin planını
+     değiştirmiyordu. İşarete yalnızca takip edilenler ve eşik üstü şirketler
+     çıkar; ikisi de yoksa o pencerenin işareti HİÇ çizilmez. Tam liste
+     zaten /bilancolar'da. */
+  const RAIL_CAP_FLOOR = 50e9;
 
   // Aynı saate düşen bilançolar tek noktada toplanır — 229 şirketlik bir gün
   // ekseni okunmaz hale getirir.
