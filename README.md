@@ -45,7 +45,7 @@ npm run dev
 | `CRON_SECRET` | üretimde | `openssl rand -hex 32` — Vercel Cron bunu `Bearer` ile gönderir |
 | `BRIEF_SECRET` | içerik için | `openssl rand -hex 32` — bülten ve mercek uçlarının kapısı |
 | `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri ve sitemap için) |
-| `ANTHROPIC_API_KEY` | opsiyonel | sunucu tarafı yedek özet ve haber çevirisi |
+| `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisi (DeepL yoksa) |
 | `DEEPL_API_KEY` | opsiyonel | haber başlığı çevirisi (önce bu denenir) |
 
 Anahtarlar olmadan da uygulama açılır; ilgili kartlar "veri alınamadı"

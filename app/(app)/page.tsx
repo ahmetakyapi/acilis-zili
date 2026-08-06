@@ -396,7 +396,21 @@ async function RailSection({
     }, {}),
   ).map((group) => {
     const watchedInGroup = group.filter((item) => item.watched);
-    const shown = (watchedInGroup.length > 0 ? watchedInGroup : group).slice(0, 2);
+
+    /* Takip edilen şirket varsa adıyla öne çıkar. Yoksa ve grup kalabalıksa
+       sembol yerine SAYI yazılır: "ATI · AURA +180" alfabenin başından iki
+       rastgele şirketti ve okuyucuya hiçbir şey söylemiyordu — "182 bilanço"
+       günün yoğunluğunu söylüyor. */
+    if (watchedInGroup.length === 0 && group.length > 3) {
+      return {
+        ...group[0],
+        id: `earnings-${group[0].timeEt}`,
+        title: `${group.length} ${t.dayRail.reportsCount}`,
+      };
+    }
+
+    const shown =
+      watchedInGroup.length > 0 ? watchedInGroup.slice(0, 2) : group.slice(0, 3);
     const rest = group.length - shown.length;
     return {
       ...shown[0],

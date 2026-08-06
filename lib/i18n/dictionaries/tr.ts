@@ -100,6 +100,8 @@ const tr = {
     openShort: "Açılış",
     closeShort: "Kapanış",
     earningsNote: "bilanço",
+    /* Kalabalık bilanço grubunda sembol yerine sayı yazılır: "182 bilanço". */
+    reportsCount: "bilanço",
     watchedNote: "takipte",
     preOpen: "Açılış Öncesi Başlangıcı",
     afterClose: "Kapanış Sonrası Bitişi",

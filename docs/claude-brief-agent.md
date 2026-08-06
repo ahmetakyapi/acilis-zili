@@ -12,9 +12,10 @@ Senin Claude'un (cron 09:00 TR)
   1. GET  /api/brief/context   → günün ham verisi (JSON)
   2. yazıyı yazar
   3. POST /api/brief           → siteye kaydeder
-Site → sadece DB'den okur. Sunucu cron'u (13:30 TR) gün için kayıt
-varsa DOKUNMAZ — senin yazın esastır; sen göndermezsen kural tabanlı
-özet yedek olarak devreye girer.
+Site → sadece DB'den okur. Bülteni yalnızca bu rutin yazar; sunucu
+tarafında yedek üretim YOK (kural tabanlı özet kaldırıldı — mekanik
+metin günün slotunu kapatıp dünkü yazıyı ve eskime notunu gizliyordu).
+Rutin göndermezse kart en son bülteni, tarihini söyleyen notla gösterir.
 ```
 
 Saat notu: 09:00 TR = 02:00 ET — New York'ta aynı takvim günüdür, yazı

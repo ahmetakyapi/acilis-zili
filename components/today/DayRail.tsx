@@ -88,8 +88,10 @@ const BOUND_LABEL_TOP = 56;
 const BOUND_TIME_TOP = 70;
 const EVENT_LABEL_TOP = 90;
 /** Çakışan alt etiketler bu kadar aşağı kademelenir.
-    Bir etiket üç satır: saat, başlık, detay — toplam ~40px. */
-const ROW_OFFSET = 44;
+    Bir etiket en fazla dört satır: saat, iki satıra sarabilen başlık, detay —
+    toplam ~52px. Başlık eskiden tek satırda kesiliyordu ("Haftalık İşsizlik
+    Başvurul…"); kesik etiket hem çirkin hem bilgisiz. */
+const ROW_OFFSET = 56;
 /** İki olay bu dakikadan yakınsa etiketleri üst üste biner. */
 const COLLISION_MINUTES = 70;
 /**
@@ -222,8 +224,8 @@ export function DayRail({
   // Boş gün notu, sınırların saat satırlarıyla aynı banda düşmesin diye
   // olay bandının bir kademe altına iner; şerit de o kadar yükselir.
   const empty = positioned.length === 0;
-  // 140: olay bandı 90'da başlıyor ve üç satırlık etiket ~40px yer kaplıyor.
-  const railHeight = (empty ? 152 : 140) + maxRow * ROW_OFFSET;
+  // 148: olay bandı 90'da başlıyor ve etiket en fazla ~52px yer kaplıyor.
+  const railHeight = (empty ? 152 : 148) + maxRow * ROW_OFFSET;
 
   const nowVisible = nowMinutes >= RAIL_START && nowMinutes <= RAIL_END;
   const marketLive =
@@ -316,6 +318,14 @@ export function DayRail({
         {positioned.map((event) => {
           const left = `${pct(event.minutes)}%`;
           const high = event.importance === "high";
+          /* Sınırla aynı hizaya düşen olayın kılavuz çizgisi noktadan değil,
+             sınırın saat satırının ALTINDAN başlar — yoksa çizgi "23:00 TR ·
+             16:00 NY" yazısının ortasından geçiyordu (kapanış sonrası
+             bilançolar tam kapanış hizasında durur). */
+          const nearBound =
+            Math.abs(event.minutes - SESSION_BOUNDS.regularOpen) < 24 ||
+            Math.abs(event.minutes - closeMinutes) < 24;
+          const leadTop = nearBound ? 84 : 47;
           return (
             <div key={event.id}>
               {/* Nokta */}
@@ -356,27 +366,46 @@ export function DayRail({
                   )}
                 </div>
               ) : (
-                <div
-                  className="absolute -translate-x-1/2 whitespace-nowrap text-center"
-                  style={{ left, top: EVENT_LABEL_TOP + event.row * ROW_OFFSET }}
-                >
-                  <div className="numeral text-[11.5px] font-semibold text-strong">
-                    {shown(event.minutes, event.approx)}
-                  </div>
-                  {/* Başlık artık düşmüyor. Eskiden `detail ?? title`
-                      yazılıyordu ve detayı olan her satırda başlık kayboluyordu:
-                      bilanço saatlerinde ekranda yalnızca "bilanço" kalıyor,
-                      hangi şirketler olduğu mobilde görünüp masaüstünde
-                      kayboluyordu. */}
-                  <div className="max-w-32 truncate text-[11px] font-medium text-strong">
-                    {event.title}
-                  </div>
-                  {event.detail && (
-                    <div className="max-w-32 truncate text-[11px] text-muted">
-                      {event.detail}
-                    </div>
+                <>
+                  {/* Alt kademeye inen etiket, noktasından inen ince bir
+                      çizgiyle bağlanır: kademelenme boşlukta asılı duran
+                      yetim metinler üretiyordu, hangi etiketin hangi noktaya
+                      ait olduğu okunmuyordu. */}
+                  {event.row > 0 && (
+                    <span
+                      className="absolute w-px bg-line"
+                      style={{
+                        left,
+                        top: leadTop,
+                        height:
+                          EVENT_LABEL_TOP + event.row * ROW_OFFSET - leadTop - 3,
+                      }}
+                    />
                   )}
-                </div>
+                  <div
+                    className="absolute w-44 -translate-x-1/2 text-center"
+                    style={{
+                      left,
+                      top: EVENT_LABEL_TOP + event.row * ROW_OFFSET,
+                    }}
+                  >
+                    <div className="numeral text-[11.5px] font-semibold text-strong">
+                      {shown(event.minutes, event.approx)}
+                    </div>
+                    {/* Başlık artık düşmüyor. Eskiden `detail ?? title`
+                        yazılıyordu ve detayı olan her satırda başlık
+                        kayboluyordu. Kesilmiyor da: uzun veri adları
+                        ("Haftalık İşsizlik Başvuruları") iki satıra sarar. */}
+                    <div className="mx-auto line-clamp-2 max-w-40 text-[11px] font-medium leading-[14px] text-strong">
+                      {event.title}
+                    </div>
+                    {event.detail && (
+                      <div className="mx-auto max-w-40 truncate text-[11px] text-muted">
+                        {event.detail}
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           );

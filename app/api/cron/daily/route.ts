@@ -3,7 +3,6 @@ import { checkBearer } from "@/lib/api-auth";
 import { and, desc, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
-  dailyBriefs,
   earningsCalendar,
   economicEvents,
   news as newsTable,
@@ -15,10 +14,7 @@ import {
   getMarketNews,
 } from "@/lib/providers/finnhub";
 import { MACRO_SERIES, getSeries } from "@/lib/providers/fred";
-import { getQuotes } from "@/lib/providers";
-import { addEtDays, getMarketStatus, todayEt } from "@/lib/market-hours";
-import { getEventsBetween, getHolidays, getSymbolNames } from "@/lib/data";
-import { buildDailyBrief } from "@/lib/brief";
+import { addEtDays, todayEt } from "@/lib/market-hours";
 import { calendarRunwayDays, syncCalendar } from "@/lib/calendar-sync";
 import { translatePendingNews, isTranslateConfigured } from "@/lib/translate";
 import {
@@ -28,9 +24,7 @@ import {
 } from "@/lib/data";
 import { getCompanyProfile } from "@/lib/providers";
 import { symbols as symbolsTable } from "@/lib/schema";
-import { INDEX_STRIP } from "@/db/seed/symbols";
 import { ALL_MEMBERS } from "@/db/seed/indices";
-import { LOCALES } from "@/lib/i18n/config";
 
 /** Şirket haberi çekilen en büyük şirket sayısı — Finnhub dakikada 60 istek. */
 const COMPANY_NEWS_SYMBOLS = 20;
@@ -386,52 +380,13 @@ export async function GET(request: Request) {
     report.actuals = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
-  /* ---- 5. Günlük özet (TR + EN) ---- */
-  try {
-    const [events, earningsRows, holidays, names] = await Promise.all([
-      getEventsBetween(today, today),
-      db
-        .select()
-        .from(earningsCalendar)
-        .where(eq(earningsCalendar.reportDate, today)),
-      getHolidays(),
-      getSymbolNames([...INDEX_STRIP]),
-    ]);
-
-    const status = getMarketStatus(new Date(), holidays);
-    const quotesResult = await getQuotes([...INDEX_STRIP], status);
-    const indexQuotes = INDEX_STRIP.map((symbol) => ({
-      symbol,
-      label: names[symbol]?.name ?? symbol,
-      quote: quotesResult.ok ? (quotesResult.data[symbol] ?? null) : null,
-    }));
-
-    for (const locale of LOCALES) {
-      const brief = await buildDailyBrief({
-        dateEt: today,
-        locale,
-        events,
-        earnings: earningsRows,
-        indexQuotes,
-      });
-
-      // Kullanıcının kendi Claude'u /api/brief ile yazı gönderdiyse o esastır;
-      // sunucu üretimi yalnızca gün için henüz kayıt yokken yazılır.
-      await db
-        .insert(dailyBriefs)
-        .values({
-          briefDate: today,
-          locale,
-          headline: brief.headline,
-          bodyMd: brief.bodyMd,
-          generatedBy: brief.generatedBy,
-        })
-        .onConflictDoNothing();
-    }
-    report.brief = "ok";
-  } catch (error) {
-    report.brief = `hata: ${error instanceof Error ? error.message : "?"}`;
-  }
+  /* Bülten üretimi BİLEREK YOK. Cron bir dönem kural tabanlı bir özet
+     yazıyordu (madde listesi hâlinde takvim + bilanço + endeks) ve 13:30'da
+     günün slotunu dolduruyordu; kart 16:00'ya kadar bu mekanik metni "BUGÜN"
+     rozetiyle gösteriyor, elle yazılmış dünkü bülteni ve eskime notunu hiç
+     göstermiyordu. Bülteni yalnızca claude.ai rutini yazar (16:00 TR,
+     POST /api/brief); o saate kadar kart en son bülteni "dünün yazısı" notuyla
+     gösterir — o mekanizma BriefSwitch'te hazır ve doğru davranış bu. */
 
   return NextResponse.json({ ok: true, date: today, report });
 }
