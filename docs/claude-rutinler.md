@@ -5,7 +5,7 @@ Sunucuda model çağrısı yok, API anahtarı yok, ek ücret yok — site yalnı
 veritabanından okur.
 
 > **Bu görevler koddan kurulamaz.** Claude Code'un zamanlayıcısı oturum
-> ömürlüdür ve claude.ai listesine yazmaz. Üçünü de
+> ömürlüdür ve claude.ai listesine yazmaz. Dördünü de
 > **https://claude.ai/scheduled-task** adresinden elle kurman gerekiyor.
 
 ## Nasıl kurulur
@@ -22,7 +22,7 @@ Environment Variables → `BRIEF_SECRET`.
 | 1 | Günlük Bülten | her gün 16:00 TR | `0 13 * * *` | Ana sayfa · Günün Özeti |
 | 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
 | 3 | Mercek Yazısı | her gün 23:30 TR | `30 20 * * *` | /mercek |
-| 4 | Bilanço Analizi | her gün 08:00 TR | `0 5 * * *` | /bilancolar/analizler |
+| 4 | Bilanço Analizi | her gün 09:00 TR | `0 6 * * *` | /bilancolar/analizler |
 
 > **Bu saatler kodda da yazılı.** Ana sayfadaki özet kartı, günün kaydı henüz
 > yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün 16:00'da
@@ -39,7 +39,7 @@ Environment Variables → `BRIEF_SECRET`.
 > 16:30 TR, kışın 17:30 TR olur. Yani bülten yazın 30, kışın 90 dakika önce
 > düşer. Yazın daha rahat bir pay istersen 15:30 TR (`30 12 * * *`).
 
-**Üçünde de ortak iki şart:**
+**Dördünde de ortak iki şart:**
 
 1. **Ağ izni** — ortam ayarlarında `acilis-zili.vercel.app` alan adına izin
    verilmiş olmalı. Verilmezse proxy 403 döner, görev başlamadan düşer.
@@ -576,10 +576,10 @@ görmek için sitede dil EN'e çevrilir, adres aynıdır.
 
 # 4 · Bilanço Analizi
 
-**Zamanlama:** her gün 08:00 TR (`0 5 * * *` UTC)
+**Zamanlama:** her gün 09:00 TR (`0 6 * * *` UTC)
 
 Saat sabaha konuldu çünkü ABD bilançolarının çoğu kapanış sonrası (amc)
-açıklanıyor: 08:00 TR'de New York'ta gece yarısını geçmiş, kazanç çağrısı
+açıklanıyor: 09:00 TR'de New York'ta saat 02:00 olmuş, kazanç çağrısı
 bitmiş, seans dışı tepki fiyatı oturmuş oluyor. Aynı gün içinde yazmak,
 çağrı sürerken yarım bir hikâye anlatma riski taşıyordu.
 
@@ -732,19 +732,23 @@ Alan notları:
   card_image_url → PNG karne varsa "/karne/sndk-4c-fy2026.png" gibi site içi
                 bir yol. Yoksa alanı hiç gönderme; kart basılmaz.
 
-Yanıtta "ok": true ve dönen "url" alanını doğrula.
+Yanıtta "ok": true ve dönen "url" alanını doğrula; ayrıca dönen "period"
+değerini NOT ET — İngilizce gönderimde ona ihtiyacın olacak. "ok" göremezsen
+hatayı raporla ve körlemesine tekrar deneme: aynı symbol + period + locale
+üçlüsü ikinci kez gelirse kaydın ÜZERİNE yazılır.
 
 --- 6. İNGİLİZCESİNİ DE GÖNDER ---
 
-Aynı gövdeyi "locale": "en" ile bir kez daha gönder. symbol, period_label
-DIŞINDAKİ tüm metin alanları çevrilir; sayısal alanlar aynen kalır.
+Aynı gövdeyi "locale": "en" ile bir kez daha gönder. symbol DIŞINDAKİ tüm
+metin alanları çevrilir; sayısal alanlar aynen kalır.
 
   - Çeviri EDİTORYALDİR, kelime kelime değil: İngilizce okur için doğal
     olan cümle kurulur.
   - period_label İngilizce yazımıyla verilir: "4Ç FY2026" → "Q4 FY2026".
-    period alanını GÖNDERME — site period_label'dan türetir ve iki dilde
-    farklı slug çıkarsa sayfalar birbirini bulamaz. Bunun yerine Türkçe
-    gönderimin yanıtındaki "period" değerini AYNEN ver.
+  - "period" alanını MUTLAKA GÖNDER ve Türkçe gönderimin yanıtındaki
+    değeri AYNEN kullan ("4c-fy2026"). Göndermezsen site adresi
+    period_label'dan türetir, İngilizcede "q4-fy2026" çıkar ve iki dil
+    ayrı iki kayda bölünür — sayfalar birbirini bulamaz.
   - highlights label/value İngilizce sayı biçimiyle: "$8.97B", "84.6%".
   - "Piyasa Beklentisi" → "Market Expectation".
   - verdict alanı buy/hold/sell olarak KALIR; site AL/BUY çevirisini kendi yapar.

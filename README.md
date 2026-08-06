@@ -61,7 +61,7 @@ model çağrısı ve API anahtarı yoktur, site yalnızca veritabanından okur.
 | Günlük bülten | her gün 16:00 TR | `POST /api/brief` → ana sayfa · Günün Özeti |
 | Haftalık bülten | pazartesi 09:30 TR | `POST /api/brief` (`period: weekly`) → /bulten |
 | Mercek yazısı | her gün 23:30 TR | `POST /api/mercek` → /mercek |
-| Bilanço analizi | her gün 08:00 TR | `POST /api/analiz` → /bilancolar/analizler |
+| Bilanço analizi | her gün 09:00 TR | `POST /api/analiz` → /bilancolar/analizler |
 
 Dördü de `BRIEF_SECRET` ile korunuyor. Prompt'ların tamamı ve kurulum adımları
 `docs/claude-rutinler.md` içinde — **görevler koddan kurulamaz**, claude.ai
