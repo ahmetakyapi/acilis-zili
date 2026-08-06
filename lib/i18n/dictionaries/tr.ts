@@ -228,6 +228,10 @@ const tr = {
     subtitle:
       "Takvimden bilançoları izle; açıklananlar için karne, özet ve detaylı değerlendirme Analizler'de.",
     listTitle: "Son Analizler",
+    /* Hisse sayfasındaki panel — orada zaten şirketin içindesin, adı
+       tekrar etmeye gerek yok. */
+    symbolPanelTitle: "Bilanço Analizleri",
+    symbolPanelAll: "Tüm Analizler →",
     todaysAnalysis: "Günün Analizi",
     thisWeekAnalyzed: "Bu Hafta Analiz Edilenler",
     upcomingEarnings: "Yaklaşan Bilançolar",

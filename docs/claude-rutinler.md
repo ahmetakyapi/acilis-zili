@@ -22,7 +22,7 @@ Environment Variables → `BRIEF_SECRET`.
 | 1 | Günlük Bülten | her gün 16:00 TR | `0 13 * * *` | Ana sayfa · Günün Özeti |
 | 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
 | 3 | Mercek Yazısı | her gün 23:30 TR | `30 20 * * *` | /mercek |
-| 4 | Bilanço Analizi | her gün 09:00 TR | `0 6 * * *` | /bilancolar/analizler |
+| 4 | Bilanço Analizi | her gün 08:00 TR | `0 5 * * *` | /bilancolar/analizler |
 
 > **Bu saatler kodda da yazılı.** Ana sayfadaki özet kartı, günün kaydı henüz
 > yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün 16:00'da
@@ -576,12 +576,12 @@ görmek için sitede dil EN'e çevrilir, adres aynıdır.
 
 # 4 · Bilanço Analizi
 
-**Zamanlama:** her gün 09:00 TR (`0 6 * * *` UTC)
+**Zamanlama:** her gün 08:00 TR (`0 5 * * *` UTC)
 
 Saat sabaha konuldu çünkü ABD bilançolarının çoğu kapanış sonrası (amc)
-açıklanıyor: 09:00 TR'de New York'ta gece yarısı olmuş, kazanç çağrısı
-bitmiş, tepki fiyatı oturmuş oluyor. Aynı gün içinde yazmak, çağrı sürerken
-yarım bir hikâye anlatma riski taşıyordu.
+açıklanıyor: 08:00 TR'de New York'ta gece yarısını geçmiş, kazanç çağrısı
+bitmiş, seans dışı tepki fiyatı oturmuş oluyor. Aynı gün içinde yazmak,
+çağrı sürerken yarım bir hikâye anlatma riski taşıyordu.
 
 Bu görev **çoğu gün TEK bir şirket** yazar — günün en büyük bilançosu.
 Bilanço sezonunun yoğun günlerinde iki, sakin günlerde hiç yazmaz.
@@ -605,17 +605,35 @@ curl -s -H "Authorization: Bearer $SECRET" \
 ```
 
 Yanıtta:
-  candidates        → son 7 günde açıklamış, piyasa değeri 20 milyar $ üstü
-                      şirketler; piyasa değerine göre sıralı
+  candidates        → son 7 günde açıklamış ve eşiği geçen şirketler,
+                      piyasa değerine göre sıralı
+  thresholds        → o an geçerli eşikler ve izlenen sembol listesi
   existing_analyses → daha önce yazdıkların (symbol, period, locales)
+
+Her adayda bir `tier` alanı var — hangi kapıdan girdiğini söyler:
+
+  teknoloji-altyapi → 100 milyar $ üstü. Teknoloji, yarı iletken, uzay ve
+                      savunma, elektrik ekipmanı, elektrik üretimi, telekom
+                      ve veri merkezi altyapısı.
+  genel             → 200 milyar $ üstü. Diğer bütün sektörler.
+  izlenen           → eşik uygulanmaz. Yapay zekâ, uzay ve enerji
+                      altyapısının inşa katmanındaki takip edilen şirketler
+                      (NBIS, BE, RKLB, ASTS, CRWV). Hepsi eşiğin altında ama
+                      bilançoları eşiğin üstündeki pek çok şirketten daha
+                      çok konuşuluyor.
 
 --- 2. SEÇ ---
 
 candidates listesinin başından, already_analyzed=false olan İLK şirketi al.
 Hepsi yazılmışsa o gün YAZMA — "bugün yeni analiz yok" diye bitir.
 
-Bir istisna: existing_analyses içinde locales yalnızca ["tr"] olan bir kayıt
-varsa, yeni analiz yazmak yerine onun İNGİLİZCESİNİ tamamla (adım 6).
+İki istisna:
+
+  1. Liste piyasa değerine göre sıralı, yani `tier: "izlenen"` şirketler
+     sona düşer. O gün başka aday YOKSA ya da yalnızca zaten yazılmış
+     şirketler varsa, izlenen listeden yazılmamış olanı yaz.
+  2. existing_analyses içinde locales yalnızca ["tr"] olan bir kayıt varsa,
+     yeni analiz yazmak yerine onun İNGİLİZCESİNİ tamamla (adım 6).
 
 --- 3. GERÇEK VERİYİ TOPLA ---
 

@@ -5,6 +5,7 @@ import { Heart } from "@phosphor-icons/react/dist/ssr";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
+import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
 import { NewsImage } from "@/components/news/NewsImage";
 import { PriceChart } from "@/components/stock/PriceChart";
 import { chartLabels } from "@/lib/chart-labels";
@@ -199,6 +200,13 @@ export default async function StockPage(
           <ComplianceCard symbol={symbol} locale={locale} t={t} />
         </Suspense>
       </div>
+
+      {/* Analizler tablonun HEMEN üstünde: tablo çeyreklerin rakamları,
+          panel o rakamların okunmuş hâli. Analizi olmayan şirkette hiçbir
+          şey basılmaz. */}
+      <Suspense fallback={null}>
+        <SymbolAnalyses symbol={symbol} locale={locale} t={t} />
+      </Suspense>
 
       {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
       <Panel>
