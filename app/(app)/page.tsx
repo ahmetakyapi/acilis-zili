@@ -428,6 +428,12 @@ async function RailSection({
           shown.map((item) => item.title).join(" · ") +
           (rest > 0 ? ` +${rest}` : ""),
         watched: notable.some((item) => item.watched),
+        /* Kart, sembollerin logolarını başlıkla aynı sırada basar — logo,
+           "bunlar şirket" bilgisini sembol kısaltmasından hızlı veriyor. */
+        logos: shown.map((item) => ({
+          symbol: item.title,
+          logoUrl: earningsMeta[item.title]?.logoUrl ?? null,
+        })),
       },
     ];
   });
@@ -448,6 +454,7 @@ async function RailSection({
         close: t.dayRail.closeShort,
         now: t.dayRail.now,
         noEvents: t.dayRail.noEvents,
+        earnings: t.dayRail.earningsNote,
       }}
     />
   );
