@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { EmptyState, PageHeader, Panel, Segment, SegmentItem } from "@/components/ui/primitives";
 import { EarningsCalendar } from "@/components/earnings/EarningsCalendar";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
+import { RecentAnalysesStrip } from "@/components/earnings/RecentAnalysesStrip";
 import {
   getAnalysisBadges,
   getEarningsBetween,
@@ -75,6 +76,10 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
       />
 
       <EarningsTabs active="calendar" t={t} className="-mt-2" />
+
+      {/* Analizler geçmiş bilançolara ait, takvim ise ileriye bakıyor:
+          son yazılanlar sekmeye tıklanmadan burada görünüyor. */}
+      <RecentAnalysesStrip locale={locale} t={t} />
 
       {rows.length === 0 ? (
         <Panel>

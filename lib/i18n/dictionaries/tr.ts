@@ -231,6 +231,9 @@ const tr = {
     /* Hisse sayfasındaki panel — orada zaten şirketin içindesin, adı
        tekrar etmeye gerek yok. */
     symbolPanelTitle: "Bilanço Analizleri",
+    /* Takvim sekmesinin altındaki şerit — analizler geçmiş bilançolara ait
+       olduğu için ileriye bakan takvimde kendiliğinden görünmüyorlar. */
+    recentStrip: "Son Yazılan Analizler",
     symbolPanelAll: "Tüm Analizler →",
     todaysAnalysis: "Günün Analizi",
     thisWeekAnalyzed: "Bu Hafta Analiz Edilenler",

@@ -218,6 +218,7 @@ const en: typeof tr = {
       "Track earnings on the calendar; once a company reports, its scorecard, summary and full review land in Analyses.",
     listTitle: "Latest Analyses",
     symbolPanelTitle: "Earnings Analyses",
+    recentStrip: "Recently Analyzed",
     symbolPanelAll: "All Analyses →",
     todaysAnalysis: "Analysis Of The Day",
     thisWeekAnalyzed: "Analyzed This Week",
