@@ -74,6 +74,7 @@ export function RevenueColumns({
   legendProjected,
   format,
   footer = [],
+  locale,
   className,
 }: {
   bars: RevenueBar[];
@@ -84,6 +85,8 @@ export function RevenueColumns({
   /** Sütun üstündeki ÇIPLAK sayı — birim başlıkta, burada değil. */
   format: (value: number) => string;
   footer?: FooterStat[];
+  /** ChartFooter'a geçer — not satırının Title Case'i dile bağlı. */
+  locale: string;
   className?: string;
 }) {
   if (bars.length === 0) return null;
@@ -207,7 +210,7 @@ export function RevenueColumns({
         ))}
       </ul>
 
-      <ChartFooter stats={footer} />
+      <ChartFooter stats={footer} locale={locale} />
     </section>
   );
 }

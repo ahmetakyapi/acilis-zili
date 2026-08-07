@@ -314,8 +314,8 @@ const tr = {
     /* Kayıttaki fiyat donuk, bu canlı. İkisi tanımı gereği farklı sayı;
        adları da farklı olmalı ki yan yana dururken hata gibi okunmasın. */
     livePrice: "Şu An",
-    sinceReport: "bilanço gününden bugüne",
-    reactionNote: "bilanço günü tepkisi · kapanıştan kapanışa",
+    sinceReport: "Bilanço Gününden Bugüne",
+    reactionNote: "Bilanço Günü Tepkisi",
     return1y: "1 Yıllık Getiri",
     afterHours: "seans sonrası",
     nextEarnings: "Sonraki Bilanço",

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, titleCaseLabel } from "@/lib/utils";
 
 /**
  * Grafik kartlarının altındaki üçlü mini künye.
@@ -24,9 +24,12 @@ export type FooterStat = {
 
 export function ChartFooter({
   stats,
+  locale,
   className,
 }: {
   stats: FooterStat[];
+  /** Not satırı Title Case'e çekilirken gerekiyor: Türkçede i → İ. */
+  locale: string;
   className?: string;
 }) {
   if (stats.length === 0) return null;
@@ -59,7 +62,7 @@ export function ChartFooter({
             {stat.value}
             {stat.note && (
               <span className="text-[11.5px] font-semibold text-muted">
-                {stat.note}
+                {titleCaseLabel(stat.note, locale)}
               </span>
             )}
           </dd>

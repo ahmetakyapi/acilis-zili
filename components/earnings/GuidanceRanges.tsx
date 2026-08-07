@@ -87,6 +87,7 @@ export function GuidanceRanges({
   verdictLabels,
   formatRange,
   footer = [],
+  locale,
   className,
 }: {
   rows: GuidanceRow[];
@@ -98,6 +99,8 @@ export function GuidanceRanges({
       çağrı: "10,3 – 10,8 Mr $", "%83 – %85". */
   formatRange: (low: number, high: number, unit?: string | null) => string;
   footer?: FooterStat[];
+  /** ChartFooter'a geçer — not satırının Title Case'i dile bağlı. */
+  locale: string;
   className?: string;
 }) {
   if (rows.length === 0) return null;
@@ -126,11 +129,18 @@ export function GuidanceRanges({
         </div>
       </div>
 
-      {/* Satırlar YUKARIDA toplanıyor, kartın boyuna yayılmıyor. Yayılma
-          denendi ve iki ölçülük bir öngörüde satırların arasına yüz piksellik
-          bir boşluk açtı — kartın altındaki sessiz boşluk, ortasındaki
-          boşluktan iyi. */}
-      <ul className="flex flex-col gap-4">
+      {/* Satırlar kartın boyuna YAYILIYOR — ama yalnızca üç ve üstünde.
+          Yanındaki sütun grafiği sabit yükseklikte ve kart onunla aynı boya
+          çekiliyor; satırlar yukarıda toplanınca altta kocaman bir boşluk
+          kalıyordu. Yayılma iki ölçüde denendi ve bu sefer boşluk kartın
+          ORTASINA yığıldı (iki satır arası yüz piksel) — o yüzden eşik üç.
+          Üç satırda araların büyümesi ferahlık, ikide kopukluk. */}
+      <ul
+        className={cn(
+          "flex flex-col gap-4",
+          rows.length >= 3 && "min-h-0 flex-1 justify-between",
+        )}
+      >
         {rows.map((row, index) => {
           const lo = Math.min(row.low, row.high);
           const hi = Math.max(row.low, row.high);
@@ -231,7 +241,7 @@ export function GuidanceRanges({
         })}
       </ul>
 
-      <ChartFooter stats={footer} />
+      <ChartFooter stats={footer} locale={locale} />
     </section>
   );
 }

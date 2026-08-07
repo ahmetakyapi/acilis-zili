@@ -5,6 +5,52 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Ölçü künyelerini Title Case'e çeker — TÜRKÇE DOĞRU biçimde.
+ *
+ * `text-transform: capitalize` ve `String.toUpperCase()` bu iş için YASAK
+ * (bkz. CLAUDE.md): ikisi de `i → I` üretir, oysa Türkçede `i → İ`. Burada
+ * dönüşüm `toLocaleUpperCase("tr-TR")` ile yapılıyor ve yalnızca ilk harfe
+ * dokunuluyor — kelimenin geri kalanı olduğu gibi kalıyor, böylece "NAND"
+ * ya da "FAVÖK" bozulmuyor.
+ *
+ * NEREDE KULLANILIR: yalnızca ÖLÇÜ KÜNYELERİ — metrik kartının ve grafik
+ * künyesinin değer altındaki tek satırlık etiketi. Bunları ajan yazıyor ve
+ * kayıttan kayda yazımı değişiyor ("Çeyreklik daralma" / "Rekor · Öngörü");
+ * aynı kartın içinde iki ayrı imla duruyordu. Rutin promptu da artık Title
+ * Case istiyor, bu katman onu garantiye alıyor.
+ *
+ * NEREDE KULLANILMAZ: paragraflar, özet, detaylı değerlendirme, güçlü
+ * yönler/riskler maddeleri. Onlar cümledir ve cümle düzeni korunur.
+ *
+ * Sayı, işaret ve kısaltma taşıyan parçalara dokunulmaz: "%372", "▲",
+ * "8,97", "Mr", "EPS" olduğu gibi geçer.
+ */
+const TITLE_SMALL_WORDS: Record<string, ReadonlySet<string>> = {
+  tr: new Set(["ve", "ile", "için", "de", "da", "ki", "mi", "mı", "mu", "mü", "idi", "ise", "ya", "veya"]),
+  en: new Set(["a", "an", "the", "and", "or", "of", "to", "in", "on", "for", "vs", "with", "at", "by"]),
+};
+
+export function titleCaseLabel(text: string, locale: string): string {
+  const small = TITLE_SMALL_WORDS[locale === "tr" ? "tr" : "en"];
+  const upperLocale = locale === "tr" ? "tr-TR" : "en-US";
+  return text
+    .split(/(\s+)/)
+    .map((token, index) => {
+      if (!token.trim()) return token;
+      // Rakam ya da harf olmayan bir şey taşıyorsa yazarın yazdığı gibi kalır.
+      if (/[\d%$·▲▼~/]/.test(token)) return token;
+      // Zaten büyük harfli kısaltma.
+      if (token === token.toLocaleUpperCase(upperLocale)) return token;
+      const word = index === 0 ? token : token;
+      if (index > 0 && small.has(word.toLocaleLowerCase(upperLocale))) {
+        return word.toLocaleLowerCase(upperLocale);
+      }
+      return word.charAt(0).toLocaleUpperCase(upperLocale) + word.slice(1);
+    })
+    .join("");
+}
+
 /** Piyasa yönü — renk ve işaret kararları hep bunun üzerinden verilir. */
 export type Direction = "up" | "down" | "flat";
 

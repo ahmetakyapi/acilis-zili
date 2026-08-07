@@ -298,15 +298,21 @@ export default async function AnalysisDetailPage(
         </span>
       </nav>
 
-      {/* ---- Şirket başlığı ---- */}
       {/* ---- Şirket başlığı ----
-          Kimlik solda, ölçü sağda, ikisi TEK bir yüzeyin içinde ve arada
-          dikey bir hairline. Önceki hâlinde ikisi serbest akışta iki uca
-          yaslanıyordu ve aralarında kocaman bir ölü alan kalıyordu; ayraç
-          o boşluğu bir karar hâline getiriyor. Takip düğmesi de artık
-          şirket adının arasına sıkışmıyor, sol sütunun tabanında duruyor. */}
-      <header className="rounded-[16px] border border-line bg-surface p-4 sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-6">
+          İKİ SATIR: üstte kimlik, altta ölçüler.
+
+          Bir süre kimlik SOLDA, ölçüler SAĞDA iki sütun hâlindeydi. Ölçü
+          sütunu üç katmana çıkınca (bilanço günü → bugün → büyüklük) sol
+          sütundan iki kat uzun oldu; kimlik kısa bir bloktur ve altındaki
+          çipler `mt-auto` ile tabana yapıştığı için aralarında kocaman bir
+          delik kaldı. Sütunları eşit uzunlukta içerikle doldurmanın yolu
+          yok — biri iki satır, öteki altı.
+
+          Ölçüler alt satıra alınıp yatay bir şeride dönüşünce delik
+          kapanıyor, her ölçü kendi sütununda okunuyor ve şerit kartın
+          genişliğini gerçekten kullanıyor. */}
+      <header className="flex flex-col gap-4 rounded-[16px] border border-line bg-surface p-4 sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
           <div className="flex min-w-0 flex-1 flex-col gap-3.5">
             <div className="flex min-w-0 items-start gap-3.5 sm:gap-4">
               {symbolMeta?.logoUrl ? (
@@ -345,7 +351,7 @@ export default async function AnalysisDetailPage(
                 dibine yaslıyor — satır artık sol sütunu boydan boya
                 kapatıyor ve blok iki sıkı satıra iniyor. Yükseklikleri de
                 aynı, yan yana bir aile gibi duruyorlar. */}
-            <div className="mt-auto flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               {/* Bu künye bir süre dolu siyah bir kutuydu. Sayfadaki en koyu
                   yüzey oydu ve gözü ilk oraya çekiyordu — oysa taşıdığı bilgi
                   bir tarih, sayfanın en önemli şeyi değil. Komşusuyla aynı
@@ -388,157 +394,133 @@ export default async function AnalysisDetailPage(
             </div>
           </div>
 
-          {row.price !== null && (
-            <>
-              <span
-                aria-hidden
-                className="hidden w-px self-stretch bg-line lg:block"
-              />
-              {/* Ölçü sütunu artık kendi kenarlığını taşımıyor: kapsayıcı
-                  zaten bir yüzey, kutu içinde kutu iki kat çerçeve demekti.
-                  Dar ekranda dikey ayraç yatay bir hairline'a dönüşür. */}
-              {/* ---- Ölçü sütunu: üç KATMAN, aralarında hairline ----
-                  Hepsi tek bir yığındı ve "hangi sayı neyin sayısı" ancak
-                  küçük puntolu etiketler okununca anlaşılıyordu. Katmanlar
-                  ayrılınca sıra kendiliğinden okunuyor: bilanço günü ne
-                  oldu → bugün nerede → şirket ne büyüklükte. */}
-              <section className="flex shrink-0 flex-col gap-3 border-t border-line pt-3.5 lg:w-[288px] lg:border-t-0 lg:pt-0">
-                <div>
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className={cn(PLATE_LABEL, "text-body")}>
-                      {t.analysis.closePrice}
-                    </span>
-                    <span className="text-[10.5px] font-medium text-muted">
-                      {formatEtDateCompact(row.reportDate, locale)}
-                    </span>
-                  </div>
+        </div>
 
-                  <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                    <span className="figure text-[28px] font-bold leading-none tracking-[-0.04em] text-strong">
-                      {formatPrice(row.price, locale, { currency: true })}
-                    </span>
-                    {row.reactionPct !== null && (
-                      /* Tepki bir süre 11px'lik bir rozetti ve yanındaki 28px
-                         fiyatın gölgesinde kalıyordu — oysa "bilanço hisseyi
-                         ne yaptı" sorusunun cevabı o. Artık okla birlikte
-                         14px ve künyesi kendi satırında. */
-                      <span
-                        className={cn(
-                          "figure inline-flex items-baseline gap-1 rounded-md px-2 py-[3px] text-[14px] font-bold leading-none",
-                          row.reactionPct >= 0
-                            ? "bg-up-wash text-up"
-                            : "bg-down-wash text-down",
-                        )}
-                      >
-                        {row.reactionPct >= 0 ? "▲" : "▼"}
-                        {formatPercentPlain(row.reactionPct, locale, 1)}
-                      </span>
-                    )}
-                  </div>
-                  {row.reactionPct !== null && (
-                    /* Ölçünün altındaki mikro künye — cümle değil, Title
-                       Case almaz (bkz. CLAUDE.md yazım kuralı). */
-                    <p className="mt-1 text-[10.5px] text-muted">
-                      {t.analysis.reactionNote}
-                    </p>
-                  )}
-                </div>
-
-                {live && (
-                  /* ---- Bugün nerede? ----
-                     Sayfa açıklanmış bir çeyreği anlatıyor ve üstündeki fiyat
-                     o günün kapanışı — okuyucunun bir sonraki sorusu her
-                     zaman "peki şimdi kaçtan işlem görüyor". İki fiyat
-                     TANIMI GEREĞİ farklı, o yüzden ayrı katmanda ve ikisinin
-                     de ne olduğu adıyla yazılı (bkz. CLAUDE.md → veri
-                     dürüstlüğü, "aynı sayı iki yerde"). */
-                  <div className="border-t border-line pt-2.5">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <span className={cn(PLATE_LABEL, "text-primary")}>
-                        {t.analysis.livePrice}
-                      </span>
-                      {/* Seans dışında sağlayıcının verdiği fiyat canlı bir
-                          kotasyon değil, ÖNCEKİ KAPANIŞ. "Canlı" yazmak onu
-                          olduğundan taze gösterirdi — bayat veriyi taze
-                          etiketlemek bu projede kaldırılmış bir metriğin
-                          sebebiydi (bkz. CLAUDE.md → veri dürüstlüğü). */}
-                      <span className="text-[10.5px] font-medium text-muted">
-                        {status.session === "regular" && !live.stale
-                          ? t.market.live
-                          : t.market.prevClose}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                      <span className="figure text-[22px] font-bold leading-none tracking-[-0.035em] text-strong">
-                        {formatPrice(live.quote.price, locale, { currency: true })}
-                      </span>
-                      <span
-                        className={cn(
-                          "figure text-[13px] font-bold",
-                          live.quote.changePct >= 0 ? "text-up" : "text-down",
-                        )}
-                      >
-                        {formatPercent(live.quote.changePct, locale)}
-                      </span>
-                    </div>
-                    {sinceReportPct !== null && (
-                      <p className="mt-1 text-[10.5px] text-muted">
-                        {t.analysis.sinceReport}{" "}
-                        <span
-                          className={cn(
-                            "figure font-bold",
-                            sinceReportPct >= 0 ? "text-up" : "text-down",
-                          )}
-                        >
-                          {formatPercent(sinceReportPct, locale, 1)}
-                        </span>
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {(row.marketCap !== null || row.return1yPct !== null) && (
-                  /* İki ölçüden yalnızca biri geldiğinde iki sütunluk ızgara
-                     yarısı boş bir satır bırakıyordu. Sayı kadar sütun. */
-                  <dl
+        {/* ---- Ölçü şeridi ----
+            Dört ölçü yan yana, aralarında dikey hairline: bilanço günü ne
+            oldu → bugün nerede → şirket ne büyüklükte → yıl nasıl geçti.
+            Sıra bilinçli; okuyucu soldan sağa giderek zaman içinde
+            ilerliyor. Dar ekranda ikişerli, telefonda alt alta. */}
+        {row.price !== null && (
+          <dl className="grid gap-x-5 gap-y-4 border-t border-line pt-4 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-line">
+            <div className="min-w-0 lg:pr-5">
+              <dt className="flex items-baseline justify-between gap-2">
+                <span className={cn(PLATE_LABEL, "text-body")}>
+                  {t.analysis.closePrice}
+                </span>
+                <span className="shrink-0 text-[10.5px] font-medium text-muted">
+                  {formatEtDateCompact(row.reportDate, locale)}
+                </span>
+              </dt>
+              <dd className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                <span className="figure text-[26px] font-bold leading-none tracking-[-0.04em] text-strong">
+                  {formatPrice(row.price, locale, { currency: true })}
+                </span>
+                {row.reactionPct !== null && (
+                  /* Tepki bir süre 11px'lik bir rozetti ve yanındaki büyük
+                     fiyatın gölgesinde kalıyordu — oysa "bilanço hisseyi ne
+                     yaptı" sorusunun cevabı o. */
+                  <span
                     className={cn(
-                      "grid gap-x-4 border-t border-line pt-2.5",
-                      row.marketCap !== null && row.return1yPct !== null
-                        ? "grid-cols-2"
-                        : "grid-cols-1",
+                      "figure inline-flex items-baseline gap-1 rounded-md px-2 py-[3px] text-[14px] font-bold leading-none",
+                      row.reactionPct >= 0
+                        ? "bg-up-wash text-up"
+                        : "bg-down-wash text-down",
                     )}
                   >
-                    {row.marketCap !== null && (
-                      <div className="min-w-0">
-                        <dt className="truncate text-[10px] font-medium text-muted">
-                          {t.market.marketCap}
-                        </dt>
-                        <dd className="figure text-[13px] font-bold text-strong">
-                          ≈{formatCompact(row.marketCap, locale)} $
-                        </dd>
-                      </div>
-                    )}
-                    {row.return1yPct !== null && (
-                      <div className="min-w-0">
-                        <dt className="truncate text-[10px] font-medium text-muted">
-                          {t.analysis.return1y}
-                        </dt>
-                        <dd
-                          className={cn(
-                            "figure text-[13px] font-bold",
-                            row.return1yPct >= 0 ? "text-up" : "text-down",
-                          )}
-                        >
-                          {formatPercent(row.return1yPct, locale, 0)}
-                        </dd>
-                      </div>
-                    )}
-                  </dl>
+                    {row.reactionPct >= 0 ? "▲" : "▼"}
+                    {formatPercentPlain(row.reactionPct, locale, 1)}
+                  </span>
                 )}
-              </section>
-            </>
-          )}
-        </div>
+              </dd>
+              {row.reactionPct !== null && (
+                <p className="mt-1.5 text-[10.5px] text-muted">
+                  {t.analysis.reactionNote}
+                </p>
+              )}
+            </div>
+
+            {live && (
+              /* ---- Bugün nerede? ----
+                 Sayfa açıklanmış bir çeyreği anlatıyor ve soldaki fiyat o
+                 günün kapanışı — okuyucunun bir sonraki sorusu her zaman
+                 "peki şimdi kaçtan işlem görüyor". İki fiyat TANIMI GEREĞİ
+                 farklı, o yüzden ayrı sütunda ve ikisinin de ne olduğu
+                 adıyla yazılı (bkz. CLAUDE.md → veri dürüstlüğü, "aynı sayı
+                 iki yerde"). */
+              <div className="min-w-0 lg:px-5">
+                <dt className="flex items-baseline justify-between gap-2">
+                  <span className={cn(PLATE_LABEL, "text-primary")}>
+                    {t.analysis.livePrice}
+                  </span>
+                  {/* Seans dışında sağlayıcının verdiği fiyat canlı bir
+                      kotasyon değil, ÖNCEKİ KAPANIŞ. "Canlı" yazmak onu
+                      olduğundan taze gösterirdi — bayat veriyi taze
+                      etiketlemek bu projede kaldırılmış bir metriğin
+                      sebebiydi (bkz. CLAUDE.md → veri dürüstlüğü). */}
+                  <span className="shrink-0 text-[10.5px] font-medium text-muted">
+                    {status.session === "regular" && !live.stale
+                      ? t.market.live
+                      : t.market.prevClose}
+                  </span>
+                </dt>
+                <dd className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  <span className="figure text-[26px] font-bold leading-none tracking-[-0.04em] text-strong">
+                    {formatPrice(live.quote.price, locale, { currency: true })}
+                  </span>
+                  <span
+                    className={cn(
+                      "figure text-[14px] font-bold",
+                      live.quote.changePct >= 0 ? "text-up" : "text-down",
+                    )}
+                  >
+                    {formatPercent(live.quote.changePct, locale)}
+                  </span>
+                </dd>
+                {sinceReportPct !== null && (
+                  <p className="mt-1.5 text-[10.5px] text-muted">
+                    {t.analysis.sinceReport}{" "}
+                    <span
+                      className={cn(
+                        "figure font-bold",
+                        sinceReportPct >= 0 ? "text-up" : "text-down",
+                      )}
+                    >
+                      {formatPercent(sinceReportPct, locale, 1)}
+                    </span>
+                  </p>
+                )}
+              </div>
+            )}
+
+            {row.marketCap !== null && (
+              <div className="min-w-0 lg:px-5">
+                <dt className={cn(PLATE_LABEL, "text-body")}>
+                  {t.market.marketCap}
+                </dt>
+                <dd className="figure mt-1.5 text-[20px] font-bold leading-none tracking-[-0.03em] text-strong">
+                  ≈{formatCompact(row.marketCap, locale)} $
+                </dd>
+              </div>
+            )}
+
+            {row.return1yPct !== null && (
+              <div className="min-w-0 lg:pl-5">
+                <dt className={cn(PLATE_LABEL, "text-body")}>
+                  {t.analysis.return1y}
+                </dt>
+                <dd
+                  className={cn(
+                    "figure mt-1.5 text-[20px] font-bold leading-none tracking-[-0.03em]",
+                    row.return1yPct >= 0 ? "text-up" : "text-down",
+                  )}
+                >
+                  {formatPercent(row.return1yPct, locale, 0)}
+                </dd>
+              </div>
+            )}
+          </dl>
+        )}
       </header>
 
       {/* ---- Tek kolon ----
@@ -556,7 +538,7 @@ export default async function AnalysisDetailPage(
               önce ölçüler, sonra grafikler, sonra CEO, en sonda metin.
               Rakamı gören okuyucu metne inmek zorunda değil; inmek isteyen
               için metin zaten altında duruyor. */}
-          <MetricCards metrics={row.highlights ?? []} />
+          <MetricCards metrics={row.highlights ?? []} locale={locale} />
 
           {(hasColumns || hasGuidance) && (
             <div
@@ -579,6 +561,7 @@ export default async function AnalysisDetailPage(
                     })
                   }
                   footer={revenueFooter}
+                  locale={locale}
                 />
               )}
               {hasGuidance && (
@@ -603,6 +586,7 @@ export default async function AnalysisDetailPage(
                     formatGuidanceRange(low, high, unit ?? undefined, locale)
                   }
                   footer={guidanceFooter}
+                  locale={locale}
                 />
               )}
             </div>

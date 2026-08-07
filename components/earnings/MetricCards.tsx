@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, titleCaseLabel } from "@/lib/utils";
 
 /**
  * Altı metrik kartı — karnedeki 3×2 ızgaranın sayfa karşılığı.
@@ -11,6 +11,11 @@ import { cn } from "@/lib/utils";
  * Etiket de değer de SERBEST METİN, çünkü hangi ölçünün öne çıkacağı
  * şirkete göre değişiyor: bankada net faiz marjı, bellek üreticisinde brüt
  * marj. Site biçimlendirmiyor, analiz yazarken karar veriliyor.
+ *
+ * TEK istisna alttaki bağlam satırı: onun yazımı kayıttan kayda değişiyordu
+ * ("▲ %372 yıllık" ile "Rekor · Öngörü %79-81 idi" yan yana) ve aynı ızgarada
+ * iki ayrı imla duruyordu. `titleCaseLabel` onu Türkçe doğru biçimde
+ * eşitliyor; sayı, işaret ve kısaltmalara dokunmuyor.
  */
 
 export type Metric = {
@@ -22,9 +27,12 @@ export type Metric = {
 
 export function MetricCards({
   metrics,
+  locale,
   className,
 }: {
   metrics: Metric[];
+  /** Büyük harf dönüşümü dile bağlı: Türkçede i → İ. */
+  locale: string;
   className?: string;
 }) {
   if (metrics.length === 0) return null;
@@ -60,7 +68,7 @@ export function MetricCards({
                     : "text-primary",
               )}
             >
-              {metric.note}
+              {titleCaseLabel(metric.note, locale)}
             </p>
           )}
         </li>
