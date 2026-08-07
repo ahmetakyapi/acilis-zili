@@ -32,7 +32,6 @@ import {
   formatCompact,
   formatEtDateCompact,
   formatEtDateLong,
-  formatEtDateShort,
   formatPercent,
   formatPercentPlain,
   formatPrice,
@@ -141,6 +140,11 @@ export default async function AnalysisDetailPage(
 
       {/* ---- Şirket başlığı ---- */}
       <header className="flex flex-wrap items-start gap-4">
+        {/* Logo ve şirket bloğu KIRILMAYAN bir grup: dış kapsayıcı
+            `flex-wrap` olduğu için dar ekranda logo tek başına bir satıra
+            düşüyor ve başlık altına iniyordu. Fiyat kartı hâlâ sarabilir —
+            asıl istenen kırılma noktası o. */}
+        <div className="flex min-w-0 flex-1 items-start gap-3.5 sm:gap-4">
         {symbolMeta?.logoUrl ? (
           <Image
             src={symbolMeta.logoUrl}
@@ -167,6 +171,23 @@ export default async function AnalysisDetailPage(
             {row.sector && (
               <span className="text-xs font-medium text-muted">{row.sector}</span>
             )}
+            {session?.user && (
+              <form action={toggleSymbolFavorite}>
+                <input type="hidden" name="symbol" value={symbol} />
+                <button
+                  type="submit"
+                  className={cn(
+                    "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 py-1 text-[11.5px] font-semibold transition-colors",
+                    watched
+                      ? "border-primary-faint bg-primary-wash text-primary"
+                      : "border-line bg-surface text-body hover:border-line-strong hover:text-strong",
+                  )}
+                >
+                  <Star weight={watched ? "fill" : "duotone"} size={13} />
+                  {watched ? t.stock.removeFromWatchlist : t.stock.addToWatchlist}
+                </button>
+              </form>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="rounded-md bg-strong px-2.5 py-1 text-[10.5px] font-bold text-page">
@@ -186,62 +207,83 @@ export default async function AnalysisDetailPage(
             )}
           </div>
         </div>
+        </div>
 
-        <div className="ml-auto flex flex-wrap items-center gap-4">
-          {row.price !== null && (
-            <div className="flex flex-col items-end gap-[3px]">
-              <span className="text-[10.5px] font-semibold text-muted">
-                {t.analysis.closePrice} ·{" "}
-                {formatEtDateShort(row.reportDate, locale)}
+        {/* ---- Fiyat kartı ----
+            Üç farklı şey — büyük fiyat, tepki rozeti, iki satırlık künye —
+            ve yanında bir düğme, hepsi serbest akışta duruyordu; sarma
+            noktasına göre her ekranda başka bir yerde toplanıyorlardı.
+            Artık kendi yüzeyi olan kapalı bir kart: etiket, manşet sayı,
+            hairline, altında iki ölçü. Takip düğmesi kartın dışına, şirket
+            satırına çıktı — o eylem çeyreğe değil şirkete ait. */}
+        {row.price !== null && (
+          <section className="w-full shrink-0 rounded-[14px] border border-line bg-surface px-4 py-3.5 sm:ml-auto sm:w-auto sm:min-w-[268px]">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="plate text-[10px] tracking-[0.09em]">
+                {t.analysis.closePrice}
               </span>
-              <div className="flex items-center gap-2">
-                <span className="figure text-[26px] font-bold leading-none tracking-[-0.04em] text-strong">
-                  {formatPrice(row.price, locale, { currency: true })}
-                </span>
-                {row.reactionPct !== null && (
+              <span className="text-[10.5px] font-medium text-muted">
+                {formatEtDateCompact(row.reportDate, locale)}
+              </span>
+            </div>
+
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+              <span className="figure text-[28px] font-bold leading-none tracking-[-0.04em] text-strong">
+                {formatPrice(row.price, locale, { currency: true })}
+              </span>
+              {row.reactionPct !== null && (
+                <span className="flex flex-col gap-px">
                   <span
                     className={cn(
-                      "figure rounded-md px-2 py-[3px] text-[11px] font-bold",
+                      "figure w-fit rounded-md px-[7px] py-[2px] text-[11px] font-bold",
                       row.reactionPct >= 0
                         ? "bg-up-wash text-up"
                         : "bg-down-wash text-down",
                     )}
                   >
                     {row.reactionPct >= 0 ? "▲" : "▼"}{" "}
-                    {formatPercentPlain(row.reactionPct, locale, 1)}{" "}
+                    {formatPercentPlain(row.reactionPct, locale, 1)}
+                  </span>
+                  {/* Ölçünün altındaki mikro künye — cümle değil, Title Case
+                      almaz (bkz. CLAUDE.md yazım kuralı). */}
+                  <span className="text-[10px] text-muted">
                     {t.analysis.afterHours}
                   </span>
-                )}
-              </div>
-              {(row.marketCap !== null || row.return1yPct !== null) && (
-                <span className="figure text-[10.5px] font-medium text-muted">
-                  {row.marketCap !== null &&
-                    `${t.market.marketCap} ≈${formatCompact(row.marketCap, locale)} $`}
-                  {row.marketCap !== null && row.return1yPct !== null && " · "}
-                  {row.return1yPct !== null &&
-                    `${t.analysis.return1y} ${formatPercent(row.return1yPct, locale, 0)}`}
                 </span>
               )}
             </div>
-          )}
-          {session?.user && (
-            <form action={toggleSymbolFavorite}>
-              <input type="hidden" name="symbol" value={symbol} />
-              <button
-                type="submit"
-                className={cn(
-                  "inline-flex min-h-10 items-center gap-[7px] rounded-[9px] border px-4 text-[13px] font-semibold transition-colors",
-                  watched
-                    ? "border-primary-faint bg-primary-wash text-primary"
-                    : "border-line bg-surface text-body hover:border-line-strong hover:text-strong",
+
+            {(row.marketCap !== null || row.return1yPct !== null) && (
+              <dl className="mt-3 grid grid-cols-2 gap-x-4 border-t border-line pt-2.5">
+                {row.marketCap !== null && (
+                  <div className="min-w-0">
+                    <dt className="truncate text-[10px] font-medium text-muted">
+                      {t.market.marketCap}
+                    </dt>
+                    <dd className="figure text-[13px] font-bold text-strong">
+                      ≈{formatCompact(row.marketCap, locale)} $
+                    </dd>
+                  </div>
                 )}
-              >
-                <Star weight={watched ? "fill" : "duotone"} size={15} />
-                {watched ? t.stock.removeFromWatchlist : t.stock.addToWatchlist}
-              </button>
-            </form>
-          )}
-        </div>
+                {row.return1yPct !== null && (
+                  <div className="min-w-0">
+                    <dt className="truncate text-[10px] font-medium text-muted">
+                      {t.analysis.return1y}
+                    </dt>
+                    <dd
+                      className={cn(
+                        "figure text-[13px] font-bold",
+                        row.return1yPct >= 0 ? "text-up" : "text-down",
+                      )}
+                    >
+                      {formatPercent(row.return1yPct, locale, 0)}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            )}
+          </section>
+        )}
       </header>
 
       {/* ---- İki kolon ---- */}
