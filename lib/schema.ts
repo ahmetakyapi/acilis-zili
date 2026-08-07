@@ -426,6 +426,20 @@ export const earningsAnalyses = pgTable(
       }[]
     >(),
     /**
+     * Grafiklerin altındaki üçlü mini künye şeridi.
+     *
+     * Karnede olan ama sayfada olmayan parça buydu: sütun grafiğinin altında
+     * "Yıllık Gelir Büyümesi · Veri Merkezi Payı · Tüketici Segmenti",
+     * öngörü kartının altında "Faaliyet Gideri · Hisse Sayısı · Yatırım
+     * Harcaması". Grafiği tamamlayan bağlam; onsuz kart yarım duruyor.
+     */
+    revenueFooter: jsonb("revenue_footer").$type<
+      { label: string; value: string; note?: string | null; tone?: string | null }[]
+    >(),
+    guidanceFooter: jsonb("guidance_footer").$type<
+      { label: string; value: string; note?: string | null; tone?: string | null }[]
+    >(),
+    /**
      * Gelecek çeyrek şirket öngörüsü — aralık barları.
      *
      * Her satır bir ölçü: şirketin verdiği alt–üst bandı dolu bar, piyasa

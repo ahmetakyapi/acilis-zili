@@ -653,6 +653,10 @@ Yazmadan önce şunları şirketin kendi kaynağından doğrula:
 
 Doğrulayamadığın sayıyı YAZMA. Alan boş kalsın; uydurma rakam en büyük hata.
 
+Şu üçü sayfanın BAŞLIK kartında yan yana duruyor ve biri eksik kalınca kart
+yarım görünüyor — üçünü de doldur: price (bilanço günü kapanışı),
+market_cap ve return_1y_pct (son 12 ayın getirisi, yüzde olarak).
+
 --- 4. DEĞERLENDİR ---
 
 Sayfa metin değil, ÖNCE GÖRSEL: skor şeridi, altı metrik kartı, çeyreklik
@@ -746,6 +750,11 @@ curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
       {"label": "4Ç26", "value": 8970000000},
       {"label": "1Ç27Ö", "value": 10550000000, "projected": true, "note": "10,3–10,8"}
     ],
+    "revenue_footer": [
+      {"label": "Yıllık Gelir Büyümesi", "value": "%372", "note": "▲", "tone": "up"},
+      {"label": "Veri Merkezi Payı", "value": "%38", "note": "%12'den", "tone": "up"},
+      {"label": "Tüketici Segmenti", "value": "%-32", "note": "556 Mn $", "tone": "down"}
+    ],
     "guidance": [
       {"label": "Gelir", "low": 10.3, "high": 10.8, "consensus": 10.82, "unit": "Mr $",
        "note": "Orta nokta 10,55 · Piyasa Beklentisi 10,82 · Aralığın Üstünde", "tone": "down"},
@@ -753,6 +762,11 @@ curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
        "unit": "$", "note": "Piyasa Beklentisi 45,58 · Uyumlu", "tone": "up"},
       {"label": "Brüt Marj", "low": 83, "high": 85, "consensus": 84.6, "unit": "%",
        "note": "Son çeyrek gerçekleşen %84,6 · Yatay seyir öngörüsü"}
+    ],
+    "guidance_footer": [
+      {"label": "Faaliyet Gideri", "value": "520–540 Mn $"},
+      {"label": "Hisse Sayısı", "value": "155 Mn"},
+      {"label": "Yatırım Harcaması / Gelir", "value": "~%6"}
     ],
     "sources": [{"label": "SanDisk 4Ç FY26 Bülteni", "url": "https://..."}]
   }'
@@ -789,6 +803,12 @@ Alan notları:
                 10.3 yazıp birimi "Mr $" vermek doğru; 10300000000 yazmak
                 grafiği bozar — bu alan sütun grafiğinden farklı, burada sayı
                 okunduğu gibi yazılır.
+  revenue_footer / guidance_footer → grafiklerin ALTINDAKİ üçlü mini künye.
+                Sütun grafiğinin altına "Yıllık Gelir Büyümesi · Segment Payı ·
+                Daralan Segment", öngörü kartının altına "Faaliyet Gideri ·
+                Hisse Sayısı · Yatırım Harcaması" gibi. Grafiği tamamlayan
+                bağlam; onsuz kart yarım duruyor. Üçer tane, value serbest
+                metin, note küçük renkli ek.
   card_image_base64 → PNG karne ürettiysen (docs/karne-agenti.md) görselin
                 base64'ü. Sunucu veritabanına yazar ve adresi kendisi üretir;
                 card_image_url göndermene gerek yok. `data:` ön eki OLMADAN,
@@ -951,6 +971,11 @@ curl -s -H "Authorization: Bearer $SECRET" \
    bırakma — o zaman yıl sonu öngörüsünü kullan ve label'a öyle yaz
    ("Yıl Sonu Geliri"). İkisi de yoksa yalnızca quarterly_revenue gönder.
 
+   revenue_footer   → sütun grafiğinin altına üç mini ölçü (yıllık büyüme,
+     öne çıkan segmentin payı, daralan segment).
+   guidance_footer  → öngörü kartının altına üç mini ölçü (faaliyet gideri,
+     hisse sayısı, yatırım harcaması / gelir).
+
    DOĞRULAYAMADIĞIN ÇEYREĞİ UYDURMA. Beş çeyrek bulamıyorsan üç yaz.
 
 4. Okuduğun gövdeye bu iki alanı ekleyip AYNEN geri gönder. Diğer hiçbir
@@ -960,7 +985,8 @@ curl -s -H "Authorization: Bearer $SECRET" \
 curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
   -H "Authorization: Bearer $SECRET" \
   -H "Content-Type: application/json" \
-  -d '{ ...okuduğun gövdenin tamamı..., "quarterly_revenue": [...], "guidance": [...] }'
+  -d '{ ...okuduğun gövdenin tamamı..., "quarterly_revenue": [...],
+        "revenue_footer": [...], "guidance": [...], "guidance_footer": [...] }'
 ```
 
 5. Aynı kaydın İngilizcesini de güncelle: locale=en ile geri oku, aynı iki

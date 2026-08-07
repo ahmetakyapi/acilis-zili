@@ -58,7 +58,7 @@ export async function RecentAnalysesStrip({
 
       {/* Dar ekranda çipler kırılmak yerine kayar — sekiz analiz alt alta
           dizilince şerit bir listeye dönüşüyordu. */}
-      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:min-w-0 sm:flex-1 sm:px-0">
+      <ul className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:min-w-0 sm:flex-1 sm:px-0">
         {rows.map((row) => {
           const verdict = verdictOf(row.verdict);
           const logoUrl = meta[row.symbol]?.logoUrl;

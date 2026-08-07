@@ -273,7 +273,16 @@ export default async function AnalysisDetailPage(
                 </div>
 
                 {(row.marketCap !== null || row.return1yPct !== null) && (
-                  <dl className="mt-3 grid grid-cols-2 gap-x-4 border-t border-line pt-2.5">
+                  /* İki ölçüden yalnızca biri geldiğinde iki sütunluk ızgara
+                     yarısı boş bir satır bırakıyordu. Sayı kadar sütun. */
+                  <dl
+                    className={cn(
+                      "mt-3 grid gap-x-4 border-t border-line pt-2.5",
+                      row.marketCap !== null && row.return1yPct !== null
+                        ? "grid-cols-2"
+                        : "grid-cols-1",
+                    )}
+                  >
                     {row.marketCap !== null && (
                       <div className="min-w-0">
                         <dt className="truncate text-[10px] font-medium text-muted">
@@ -307,18 +316,13 @@ export default async function AnalysisDetailPage(
         </div>
       </header>
 
-      {/* ---- İki kolon ---- */}
-      {/* Yan kolon YAPIŞKAN (`lg:sticky`): sol kolon dört ekran sürerken
-          referanslar görüş alanında kalır. Bu yüzden kısa olması sorun
-          değil — okuyucu kaydırdıkça onunla birlikte iniyor. */}
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]">
-        {/* Karne mobilde metinden ÖNCE gelir: paylaşılabilir tek sayfalık
-            özet, dokuz paragraflık değerlendirmeden önce okunur. */}
-        <div className="contents lg:hidden">
-          <ReportCard row={row} t={t} />
-        </div>
-
-        <div className="flex min-w-0 flex-col gap-5">
+      {/* ---- Tek kolon ----
+          Sağda karne + yaklaşan bilançolar + rehber taşıyan yapışkan bir
+          kolon vardı ve içeriğin genişliğini 340px kısıyordu. Grafikler
+          asıl anlatan parça; onlara yer açmak için kolon kaldırıldı, oradaki
+          üç kart sayfanın altına indi. Metin panellerinde satır uzunluğu
+          `max-w` ile sınırlı — 1300px'lik bir paragraf okunmuyor. */}
+      <div className="flex min-w-0 flex-col gap-5">
           <VerdictStrip row={row} verdict={verdict} locale={locale} t={t} />
 
           {/* ---- Görsel katman ----
@@ -345,6 +349,7 @@ export default async function AnalysisDetailPage(
                   legendActual={t.analysis.legendActual}
                   legendProjected={t.analysis.legendProjected}
                   format={(value) => `${formatCompact(value, locale)} $`}
+                  footer={row.revenueFooter ?? []}
                 />
               )}
               {hasGuidance && (
@@ -363,64 +368,55 @@ export default async function AnalysisDetailPage(
                   formatRange={(low, high, unit) =>
                     formatGuidanceRange(low, high, unit ?? undefined, locale)
                   }
+                  footer={row.guidanceFooter ?? []}
                 />
               )}
             </div>
           )}
 
           {row.ceoQuote && (
-            /* CEO şeridi yan kolondan ana kolona alındı: alıntı bir referans
-               değil, çeyreğin hikâyesinin parçası — grafiklerle metin
-               arasında duruyor.
+            /* CEO şeridi: solda kim, ortada ne dediği, sağda çağrıda
+               vurguladığı başlıklar. Bir ara baş harflerden bir avatar
+               halkası denendi ve kaldırıldı — kimsenin tanımadığı iki harf
+               bir portre yerine geçmiyor, yalnızca yer kaplıyordu.
 
-               Tırnak işareti dev ve dekoratif: şeridin sayfadaki başka hiçbir
-               şeye benzemeyen tek görsel imzası o. `aria-hidden` çünkü metnin
-               alıntı olduğunu blockquote zaten söylüyor. */
+               Dev tırnak dekoratif ve `aria-hidden`: metnin alıntı olduğunu
+               blockquote zaten söylüyor. */
             <section className="relative overflow-hidden rounded-[16px] border border-line bg-surface p-4 sm:p-5">
               <span
                 aria-hidden
-                className="pointer-events-none absolute -top-6 right-4 select-none font-serif text-[120px] leading-none text-primary opacity-[0.07]"
+                className="pointer-events-none absolute -top-8 right-5 select-none font-serif text-[140px] leading-none text-primary opacity-[0.06]"
               >
                 &rdquo;
               </span>
-              <div className="relative flex flex-col gap-4 sm:flex-row sm:gap-5">
-                <div className="flex shrink-0 items-center gap-3 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
-                  {/* Fotoğraf yok (proje kuralı); baş harfler aynı işi telifsiz
-                      görüyor ve her şirkette tutarlı. */}
-                  <span
-                    aria-hidden
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-wash text-[13px] font-bold text-primary sm:mb-1"
-                  >
-                    {initialsOf(row.ceoQuote.name)}
+              <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
+                <div className="flex shrink-0 flex-col gap-px lg:w-44">
+                  <span className="plate text-[10px] tracking-[0.09em]">
+                    {t.analysis.ceoMessage}
                   </span>
-                  <span className="flex min-w-0 flex-col">
-                    <span className="plate text-[10px] tracking-[0.09em]">
-                      {t.analysis.ceoMessage}
-                    </span>
-                    <span className="text-[13.5px] font-bold text-strong">
-                      {row.ceoQuote.name}
-                    </span>
-                    <span className="text-[11px] text-muted">
-                      {row.ceoQuote.title}
-                    </span>
+                  <span className="text-[15px] font-bold tracking-[-0.02em] text-strong">
+                    {row.ceoQuote.name}
+                  </span>
+                  <span className="text-[11.5px] text-muted">
+                    {row.ceoQuote.title}
                   </span>
                 </div>
 
                 <span
                   aria-hidden
-                  className="hidden w-px self-stretch bg-line sm:block"
+                  className="hidden w-px self-stretch bg-line lg:block"
                 />
 
-                <blockquote className="min-w-0 flex-1 border-t border-line pt-3 text-[13px] italic leading-[20px] text-body [text-wrap:pretty] sm:border-t-0 sm:pt-0">
+                <blockquote className="min-w-0 flex-1 border-t border-line pt-3.5 text-[14px] italic leading-[22px] text-body [text-wrap:pretty] lg:border-t-0 lg:pt-0">
                   “{row.ceoQuote.quote}”
                 </blockquote>
 
                 {row.ceoQuote.topics && row.ceoQuote.topics.length > 0 && (
-                  <ul className="flex shrink-0 flex-wrap gap-1.5 sm:w-56 sm:flex-col sm:content-start">
+                  <ul className="flex shrink-0 flex-wrap gap-1.5 lg:w-60 lg:flex-col lg:content-start">
                     {row.ceoQuote.topics.map((topic) => (
                       <li
                         key={topic}
-                        className="rounded-full border border-primary-faint bg-primary-wash px-2.5 py-1 text-[11px] font-semibold text-primary"
+                        className="rounded-full border border-primary-faint bg-primary-wash px-3 py-1.5 text-[11.5px] font-semibold text-primary"
                       >
                         {topic}
                       </li>
@@ -443,7 +439,7 @@ export default async function AnalysisDetailPage(
                 )}
               </span>
             </div>
-            <div className="flex flex-col gap-3 text-[13.5px] leading-[22px] text-body [text-wrap:pretty]">
+            <div className="flex max-w-[92ch] flex-col gap-3 text-[13.5px] leading-[22px] text-body [text-wrap:pretty]">
               {row.summary.map((paragraph, index) => (
                 <p key={index}>
                   <RichText text={paragraph} />
@@ -462,7 +458,7 @@ export default async function AnalysisDetailPage(
                   {t.analysis.byTeam}
                 </span>
               </div>
-              <div className="flex flex-col gap-3 text-[13.5px] leading-[22px] text-body [text-wrap:pretty]">
+              <div className="flex max-w-[92ch] flex-col gap-3 text-[13.5px] leading-[22px] text-body [text-wrap:pretty]">
                 {row.analysis.map((section, index) => (
                   <p key={index}>
                     <b className="font-bold text-strong">{section.title}</b>{" "}
@@ -490,52 +486,49 @@ export default async function AnalysisDetailPage(
               tone="primary"
             />
           </div>
-        </div>
+      </div>
 
-        <aside className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-5">
-          <div className="hidden lg:block">
-            <ReportCard row={row} t={t} />
-          </div>
+      {/* ---- Kapanış şeridi ----
+          Karne, rakip takvimi ve rehber bağlantıları yapışkan yan kolondaydı;
+          o kolon içeriğin genişliğini kısıyordu. Üçü de "okudun, şimdi ne
+          var" sorusuna ait — metnin sonunda yan yana duruyorlar. */}
+      <div className="grid items-start gap-4 lg:grid-cols-[repeat(3,minmax(0,1fr))]">
+        <ReportCard row={row} t={t} />
 
-          {peers.length > 0 && (
-            <Panel className="p-4 sm:p-[18px]">
-              <h2 className="mb-3 text-[13.5px] font-bold text-strong">
-                {t.analysis.upcomingEarnings}
-              </h2>
-              <div className="flex flex-col">
-                {peers.map((peer) => (
-                  <Link
-                    key={peer.id}
-                    href={`/hisse/${peer.symbol}`}
-                    prefetch={false}
-                    className="flex items-center gap-2.5 border-b border-line-soft py-[7px] last:border-b-0 hover:opacity-75"
-                  >
-                    <span className="w-[52px] shrink-0 text-[12.5px] font-bold text-strong">
-                      {peer.symbol}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-xs text-body">
-                      {peerMeta[peer.symbol]?.name ?? ""}
-                    </span>
-                    <span className="shrink-0 text-[11px] text-muted">
-                      {formatEtDateCompact(peer.reportDate, locale)}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </Panel>
-          )}
+        {peers.length > 0 && (
+          <Panel className="p-4 sm:p-[18px]">
+            <h2 className="mb-3 text-[13.5px] font-bold text-strong">
+              {t.analysis.upcomingEarnings}
+            </h2>
+            <div className="flex flex-col">
+              {peers.map((peer) => (
+                <Link
+                  key={peer.id}
+                  href={`/hisse/${peer.symbol}`}
+                  prefetch={false}
+                  className="flex items-center gap-2.5 border-b border-line-soft py-[7px] last:border-b-0 hover:opacity-75"
+                >
+                  <span className="w-[52px] shrink-0 text-[12.5px] font-bold text-strong">
+                    {peer.symbol}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-xs text-body">
+                    {peerMeta[peer.symbol]?.name ?? ""}
+                  </span>
+                  <span className="shrink-0 text-[11px] text-muted">
+                    {formatEtDateCompact(peer.reportDate, locale)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </Panel>
+        )}
 
-          {/* Rehber bağlantıları sayfanın en altından yan kolona alındı:
-              orada dokuz paragraf metnin ardından geliyordu ve kimse o
-              noktada "bilanço nedir" sorusunu sormuyordu. Yanda, metrikleri
-              okurken duruyor. */}
-          <GuideHint
-            label={t.guide.contextLabel}
-            locale={locale}
-            slugs={["bilanco", "degerleme"]}
-            layout="stack"
-          />
-        </aside>
+        <GuideHint
+          label={t.guide.contextLabel}
+          locale={locale}
+          slugs={["bilanco", "degerleme"]}
+          layout="stack"
+        />
       </div>
 
       {/* ---- Alt bilgi ---- */}
@@ -828,10 +821,3 @@ function PointsCard({
   );
 }
 
-/** "David Goeckeler" → "DG". Tek kelimelik adlarda ilk iki harf. */
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toLocaleUpperCase("tr-TR");
-  return (parts[0][0] + parts[parts.length - 1][0]).toLocaleUpperCase("tr-TR");
-}

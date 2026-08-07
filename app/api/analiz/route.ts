@@ -125,7 +125,11 @@ const BodySchema = z.object({
     })
     .nullish(),
   quarterly_revenue: z.array(RevenueBarSchema).max(8).nullish(),
+  /** Sütun grafiğinin altındaki üç mini ölçü. */
+  revenue_footer: z.array(HighlightSchema).max(3).nullish(),
   guidance: z.array(GuidanceSchema).max(5).nullish(),
+  /** Öngörü kartının altındaki üç mini ölçü. */
+  guidance_footer: z.array(HighlightSchema).max(3).nullish(),
   sources: z.array(SourceSchema).max(20).nullish(),
   /**
    * Karne PNG'sinin site içi yolu. Dış adres kabul edilmez.
@@ -243,7 +247,9 @@ export async function GET(request: Request) {
     ceo_quote: row.ceoQuote,
     has_card_image: Boolean(row.cardImageUrl),
     quarterly_revenue: row.quarterlyRevenue ?? [],
+    revenue_footer: row.revenueFooter ?? [],
     guidance: row.guidance ?? [],
+    guidance_footer: row.guidanceFooter ?? [],
     sources: row.sources ?? [],
     card_image_url: row.cardImageUrl,
     updated_at: row.updatedAt,
@@ -287,6 +293,10 @@ export async function POST(request: Request) {
             "[{label, value, projected?, note?}] — son 5 çeyrek + öngörü",
           guidance:
             "[{label, low, high, consensus?, unit?, note?, tone?}] en fazla 5",
+          revenue_footer:
+            "[{label, value, note?, tone?}] — sütun grafiğinin altındaki 3 ölçü",
+          guidance_footer:
+            "[{label, value, note?, tone?}] — öngörü kartının altındaki 3 ölçü",
           ceo_quote: "{quote, name, title} (opsiyonel)",
           sources: "[{label, url}] (opsiyonel)",
           card_image_base64:
@@ -390,7 +400,9 @@ export async function POST(request: Request) {
     highlights: parsed.highlights ?? null,
     ceoQuote: parsed.ceo_quote ?? null,
     quarterlyRevenue: parsed.quarterly_revenue ?? null,
+    revenueFooter: parsed.revenue_footer ?? null,
     guidance: parsed.guidance ?? null,
+    guidanceFooter: parsed.guidance_footer ?? null,
     sources: parsed.sources ?? null,
     cardImageUrl,
     generatedBy: "claude",

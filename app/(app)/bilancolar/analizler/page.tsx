@@ -282,7 +282,7 @@ export default async function AnalysesPage(
                 {t.analysis.listTitle}
               </h2>
               {/* Dar ekranda çipler kırılmak yerine kayar. */}
-              <div className="-mx-4 flex max-w-full gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+              <div className="no-scrollbar -mx-4 flex max-w-full gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
                 <FilterChip href={filterHref(null)} active={!filter}>
                   {t.analysis.filterAll}
                 </FilterChip>

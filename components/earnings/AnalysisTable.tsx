@@ -137,7 +137,7 @@ export function AnalysisTable({
       </div>
 
       <div className="panel overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="no-scrollbar overflow-x-auto">
           <div className="min-w-[1100px]" role="table">
             <div
               role="row"

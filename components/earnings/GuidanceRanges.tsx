@@ -1,3 +1,4 @@
+import { ChartFooter, type FooterStat } from "@/components/earnings/ChartFooter";
 import { cn } from "@/lib/utils";
 
 /**
@@ -33,6 +34,7 @@ export function GuidanceRanges({
   legendRange,
   legendConsensus,
   formatRange,
+  footer = [],
   className,
 }: {
   rows: GuidanceRow[];
@@ -42,6 +44,7 @@ export function GuidanceRanges({
   /** Aralığın TAMAMINI biçimlendirir — birim iki kez yazılmasın diye tek
       çağrı: "10,3 – 10,8 Mr $", "%83 – %85". */
   formatRange: (low: number, high: number, unit?: string | null) => string;
+  footer?: FooterStat[];
   className?: string;
 }) {
   if (rows.length === 0) return null;
@@ -134,6 +137,8 @@ export function GuidanceRanges({
           );
         })}
       </ul>
+
+      <ChartFooter stats={footer} />
     </section>
   );
 }

@@ -431,6 +431,22 @@
   color: var(--text-muted);
 }
 
+/**
+ * Kaydırılabilir ama çubuğu GÖRÜNMEYEN şerit.
+ *
+ * Analiz çipleri ve filtre satırları dar ekranda kırılmak yerine kayıyor.
+ * Kaydırma çubuğu bir denetim değil, bir kusur gibi duruyordu: şeridin
+ * altına gri bir çizgi çekiyor ve kartın hairline'ıyla yarışıyordu.
+ * İçerik hâlâ parmakla ve trackpad ile kaydırılıyor; yalnızca çubuk gizli.
+ */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* --------------------------------------------------------------------------
    Yüzeyler — gölge yok, ayrım saydamlık + tek hairline ile
    -------------------------------------------------------------------------- */

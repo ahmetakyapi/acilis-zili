@@ -39,7 +39,7 @@ export function EarningsTabs({
       aria-label={t.earnings.title}
       className={cn(
         // Dar ekranda üç sekme sığmayabilir; kırılmak yerine kayar.
-        "-mx-4 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0",
+        "no-scrollbar -mx-4 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0",
         className,
       )}
     >

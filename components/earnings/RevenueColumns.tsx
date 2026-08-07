@@ -1,3 +1,4 @@
+import { ChartFooter, type FooterStat } from "@/components/earnings/ChartFooter";
 import { cn } from "@/lib/utils";
 
 /**
@@ -39,6 +40,7 @@ export function RevenueColumns({
   legendActual,
   legendProjected,
   format,
+  footer = [],
   className,
 }: {
   bars: RevenueBar[];
@@ -47,6 +49,7 @@ export function RevenueColumns({
   legendProjected: string;
   /** Sütun üstündeki sayıyı biçimlendirir — dil sunum katmanına ait. */
   format: (value: number) => string;
+  footer?: FooterStat[];
   className?: string;
 }) {
   if (bars.length === 0) return null;
@@ -143,6 +146,8 @@ export function RevenueColumns({
           </li>
         ))}
       </ul>
+
+      <ChartFooter stats={footer} />
     </section>
   );
 }
