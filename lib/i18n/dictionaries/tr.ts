@@ -103,6 +103,10 @@ const tr = {
     watchedNote: "takipte",
     preOpen: "Açılış Öncesi Başlangıcı",
     afterClose: "Kapanış Sonrası Bitişi",
+    /* Eksendeki kalın mavi bandın adı — açılış ile kapanış arası. Bandın
+       iki ucundaki saatler onun nerede başlayıp bittiğini söylüyordu ama
+       bandın kendisinin ne olduğunu söyleyen bir şey yoktu. */
+    marketHours: "Piyasa Saatleri",
     noEvents: "Bugün planlanmış veri açıklaması yok",
   },
 

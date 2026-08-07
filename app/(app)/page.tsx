@@ -450,6 +450,7 @@ async function RailSection({
         bell: t.dayRail.openShort,
         close: t.dayRail.closeShort,
         now: t.dayRail.now,
+        marketHours: t.dayRail.marketHours,
         noEvents: t.dayRail.noEvents,
         earnings: t.dayRail.earningsNote,
       }}

@@ -103,6 +103,7 @@ const en: typeof tr = {
     watchedNote: "watching",
     preOpen: "Pre-Market Opens",
     afterClose: "After Hours Ends",
+    marketHours: "Market Hours",
     noEvents: "No scheduled releases today",
   },
 

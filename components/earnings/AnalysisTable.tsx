@@ -25,6 +25,11 @@ import { cn } from "@/lib/utils";
  * `toAnalysisRowView`), buraya yalnızca basılacak dizeler ve on beş etiket
  * ulaşıyor. Biçimlendirme de böylece sunucuda ve dile göre kalıyor.
  *
+ * Sayı hücreleri mono `.figure` DEĞİL, tabular `.numeral`. Dokuz sütunluk
+ * yoğun bir satırda daktilo genişliğindeki rakamlar hem yer yiyor hem de
+ * satırı gürültülü gösteriyordu; mono, metrik kartlarındaki büyük tek
+ * sayılarda kalıyor. Grafik etiketleri de aynı yolu izledi.
+ *
  * Gerçek bir `<table>` değil: satırın tamamı tıklanabilir olmalı ve `<tr>`
  * üzerine yayılan bağlantı hiçbir tarayıcıda güvenilir çalışmıyor. Izgara
  * rollerle duyuruluyor, hücre genişlikleri sabit — sayı sütunları satırdan
@@ -128,7 +133,7 @@ export function AnalysisTable({
         </label>
 
         {searching && (
-          <span className="figure shrink-0 text-[11.5px] text-muted">
+          <span className="numeral shrink-0 text-[12px] text-muted">
             {labels.resultCount.replace("{count}", String(visible.length))}
           </span>
         )}
@@ -138,10 +143,10 @@ export function AnalysisTable({
 
       <div className="panel overflow-hidden">
         <div className="no-scrollbar overflow-x-auto">
-          <div className="min-w-[1100px]" role="table">
+          <div className="min-w-[1180px]" role="table">
             <div
               role="row"
-              className="flex items-center gap-4 border-b border-line px-4 py-3 text-[10.5px] font-bold text-muted sm:px-[22px]"
+              className="flex items-center gap-4 border-b border-line px-4 py-3.5 text-[11px] font-bold text-muted sm:px-[22px]"
             >
               <span role="columnheader" className={COLS.symbol}>
                 {labels.colSymbol}
@@ -193,7 +198,7 @@ export function AnalysisTable({
                   href={row.href}
                   prefetch={false}
                   className={cn(
-                    "flex items-center gap-4 border-b border-line-soft px-4 py-3 transition-colors last:border-b-0 hover:bg-surface-elevated sm:px-[22px]",
+                    "flex items-center gap-4 border-b border-line-soft px-4 py-3.5 transition-colors last:border-b-0 hover:bg-surface-elevated sm:px-[22px]",
                     highlightFirst && !searching && index === 0 && "bg-primary-tint",
                   )}
                 >
@@ -222,7 +227,7 @@ export function AnalysisTable({
                     )}
                     <span
                       className={cn(
-                        "text-[13px] font-bold",
+                        "text-[13.5px] font-bold",
                         highlightFirst && !searching && index === 0
                           ? "text-primary"
                           : "text-strong",
@@ -233,7 +238,7 @@ export function AnalysisTable({
                   </span>
                   <span
                     role="cell"
-                    className={cn(COLS.company, "truncate text-[13px] text-body")}
+                    className={cn(COLS.company, "truncate text-[13.5px] text-body")}
                   >
                     <b className="font-bold text-strong">{row.company}</b>
                     {" · "}
@@ -243,7 +248,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.reported,
-                      "whitespace-nowrap text-xs text-muted",
+                      "whitespace-nowrap text-[12.5px] text-muted",
                     )}
                   >
                     {row.reported}
@@ -252,7 +257,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.revenue,
-                      "figure whitespace-nowrap text-[12.5px] font-bold",
+                      "numeral whitespace-nowrap text-[13.5px] font-bold",
                       toneClass(row.revenueTone),
                     )}
                   >
@@ -262,7 +267,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.eps,
-                      "figure whitespace-nowrap text-[12.5px] font-bold",
+                      "numeral whitespace-nowrap text-[13.5px] font-bold",
                       toneClass(row.epsTone),
                     )}
                   >
@@ -272,7 +277,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.reaction,
-                      "figure whitespace-nowrap text-[12.5px] font-bold",
+                      "numeral whitespace-nowrap text-[13.5px] font-bold",
                       toneClass(row.reactionTone),
                     )}
                   >
@@ -281,7 +286,7 @@ export function AnalysisTable({
                   <span role="cell" className={cn(COLS.score, "flex justify-center")}>
                     <span
                       className={cn(
-                        "figure rounded-full px-2.5 py-[3px] text-[11.5px] font-bold",
+                        "numeral rounded-full px-2.5 py-[3.5px] text-[12.5px] font-bold",
                         verdictPillClass(row.verdict),
                       )}
                     >
@@ -292,7 +297,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.verdict,
-                      "text-[12.5px] font-bold",
+                      "text-[13.5px] font-bold",
                       verdictTextClass(row.verdict),
                     )}
                   >
@@ -302,7 +307,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.card,
-                      "text-[11.5px] font-semibold text-primary",
+                      "text-[12.5px] font-semibold text-primary",
                     )}
                   >
                     {labels.cardLink}

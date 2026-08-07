@@ -863,6 +863,12 @@ Alan notları:
                 kartınınki GELECEĞE — her kart kendi zamanının ölçüsünü taşır.
                 value tona boyanıyor: yön bildiren değerlerin başına ▲/▼ koy
                 ve tone'u ona göre ver.
+
+                note DA Title Case yazılır — bu künyeler birer ölçü etiketi,
+                cümle değil: "Çeyreklik Daralma", "Faaliyet Nakdi 7,13 Mr $",
+                "Önceki Çeyrek 6,2 Mr $". Cümle kurma ("14 Mr $'lık ek program
+                onaylandı" yerine "Ek Program 14 Mr $"); künye satırı dar ve
+                orada cümle okunmuyor.
   card_image_base64 → PNG karne ürettiysen (docs/karne-agenti.md) görselin
                 base64'ü. Sunucu veritabanına yazar ve adresi kendisi üretir;
                 card_image_url göndermene gerek yok. `data:` ön eki OLMADAN,
@@ -1055,6 +1061,56 @@ curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
 
 Her kaydı tek tek işle. Bir kayıt bittiğinde "ok": true doğrula ve
 sonrakine geç; hepsini tek istekte göndermeye çalışma.
+````
+
+### Künye satırlarını Title Case'e çek (bir kez)
+
+Grafik künyelerinin `label` alanları baştan Title Case yazıldı ama alttaki
+`note` satırı kayıttan kayda değişiyor: kimi "Çeyreklik daralma", kimi
+"14 Mr $'lık ek program onaylandı" gibi cümle. Aynı şeridin içinde iki ayrı
+yazım duruyor.
+
+````
+Açılış Zili'ndeki bilanço analizlerinin grafik künyelerini Title Case'e
+çekeceksin. BAŞKA HİÇBİR ALANA DOKUNMA.
+
+SECRET=BURAYA_SECRET
+
+1. Kayıtları listele:
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  https://acilis-zili.vercel.app/api/analiz/context
+```
+
+2. Her kayıt için gövdeyi geri oku (POST bütün gövdenin üzerine yazar):
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  "https://acilis-zili.vercel.app/api/analiz?symbol=<SEMBOL>&period=<period>&locale=tr"
+```
+
+3. YALNIZCA revenue_footer ve guidance_footer içindeki `note` alanlarını
+   düzelt. Kural: bunlar ölçü etiketidir, cümle değil.
+
+     "Çeyreklik daralma"                → "Çeyreklik Daralma"
+     "Faaliyet nakdi 7,13 Mr $"         → "Faaliyet Nakdi 7,13 Mr $"
+     "2,98 Mr $ · yıllık ▲ %437"        → "2,98 Mr $ · Yıllık ▲ %437"
+     "14 Mr $'lık ek program onaylandı" → "Ek Program 14 Mr $"
+
+   Bağlaçlar (ve, ile, için, de/da) başta değilse küçük kalır. Kısaltmalar
+   olduğu gibi durur (EPS, HBK, FAVÖK, Mr $, Mn $). Sayılar ve işaretler
+   değişmez. Türkçe büyük harfe dikkat: i → İ, ı → I.
+
+   label alanlarına DOKUNMA, zaten Title Case. highlights, summary, analysis,
+   strengths, risks, upcoming da AYNEN kalır — oralar cümle, Title Case
+   değil.
+
+4. Düzelttiğin gövdeyi aynen geri gönder, sonra locale=en için aynısını
+   yap (İngilizcede de Title Case: "Quarterly Decline", "Operating Cash
+   Flow $7.13B"). period alanını iki gönderimde de aynı ver.
+
+Her kaydı tek tek işle, "ok": true doğrula, sonrakine geç.
 ````
 
 ### Yazı arşivinin İngilizcesi (bir kez)

@@ -81,6 +81,8 @@ type DayRailProps = {
     bell: string;
     close: string;
     now: string;
+    /** Kalın mavi bandın adı — "Piyasa Saatleri". */
+    marketHours: string;
     noEvents: string;
     /** Bilanço kartındaki tür plakası — "bilanço" (CSS büyük harfe çevirir). */
     earnings: string;
@@ -110,6 +112,18 @@ const ROW_OFFSET = 84;
 const COLLISION_MINUTES = 150;
 /** Alt bant en fazla üç kademe; daha derini şeridi bir duvara çeviriyor. */
 const MAX_ROW = 2;
+
+/**
+ * `.plate` görünümü, RENGİ SERBEST bırakarak.
+ *
+ * TUZAK (globals.css §Temel'de anlatılan tuzağın aynısı): `.plate` katmansız
+ * bir kural ve `color: var(--text-muted)` taşıyor; Tailwind yardımcıları
+ * `@layer utilities` içinde olduğu için `class="plate text-primary"` yazınca
+ * RENK UYGULANMIYOR — plate kazanıyor. Şeritteki renkli küçük etiketler bu
+ * yüzden gri basılıyordu. Burada plate'in yerine aynı biçim elle yazılıyor,
+ * renk çağıran tarafta kalıyor.
+ */
+const PLATE = "font-bold uppercase leading-none";
 
 function pct(minutes: number): number {
   const clamped = Math.max(RAIL_START, Math.min(RAIL_END, minutes));
@@ -249,7 +263,9 @@ export function DayRail({
             className="absolute -translate-x-1/2 whitespace-nowrap text-center"
             style={{ left: `${bound.left}%`, top: 0 }}
           >
-            <div className="plate text-[10.5px] tracking-[0.08em] text-body">
+            <div
+              className={cn(PLATE, "text-[10.5px] tracking-[0.08em] text-body")}
+            >
               {bound.label}
             </div>
             <div className="numeral mt-0.5 text-[10.5px] text-muted">
@@ -315,18 +331,36 @@ export function DayRail({
           {shown(RAIL_END)} {tags.primary}
         </div>
 
+        {/* Bandın ADI, tam ortasında. Uçlardaki saatler bandın nerede
+            başlayıp bittiğini söylüyordu ama bandın kendisinin ne olduğunu
+            söyleyen bir şey yoktu: kalın mavi kısım "piyasa açıkken" demek,
+            geri kalan gri kısım seans öncesi ve sonrası. */}
+        <div
+          className={cn(
+            PLATE,
+            "absolute -translate-x-1/2 whitespace-nowrap text-[9.5px] tracking-[0.09em]",
+            tradingDay ? "text-primary" : "text-muted",
+          )}
+          style={{ left: `${(openPct + closePct) / 2}%`, top: EDGE_TOP }}
+        >
+          {labels.marketHours}
+        </div>
+
         {/* Şu an — canlı işaretçi ve rozeti.
             Rozet eskiden yalnızca `title` özniteliğindeydi: yani ancak fareyi
             üstünde bekletirsen görünüyordu ve dokunmatik ekranda hiç
-            görünmüyordu. Çizgi tek başına "bu ne" sorusunu doğuruyordu. */}
+            görünmüyordu. Çizgi tek başına "bu ne" sorusunu doğuruyordu.
+
+            Rozet DOLU basılıyor, soluk değil: bir kez soluk gri denendi ve
+            eksenin arkasında kalmış gibi duruyordu — oysa sayfadaki tek
+            canlı işaret bu. Piyasa kapalıyken rengi accent değil koyu
+            mürekkep, ama ağırlığı aynı. */}
         {nowVisible && (
           <>
             <div
               className={cn(
-                "absolute z-10 whitespace-nowrap rounded-full px-1.5 py-[3px] text-[9px] font-bold uppercase leading-none tracking-[0.09em]",
-                marketLive
-                  ? "bg-primary text-on-primary"
-                  : "bg-surface-elevated text-muted",
+                "absolute z-10 whitespace-nowrap rounded-full px-2 py-[3.5px] text-[9.5px] font-bold uppercase leading-none tracking-[0.09em] text-on-primary",
+                marketLive ? "bg-primary" : "bg-strong",
               )}
               style={{
                 left: `${pct(nowMinutes)}%`,
@@ -338,12 +372,18 @@ export function DayRail({
             >
               {labels.now}
             </div>
+            {/* Çizgi rozetin altından başlayıp ekseni KESİYOR: eksende
+                bitseydi rozet ile eksen arasında asılı kalıyordu. */}
             <div
               className={cn(
                 "absolute w-[3px] -translate-x-1/2 rounded-full",
-                marketLive ? "bg-primary" : "bg-flat",
+                marketLive ? "bg-primary" : "bg-strong",
               )}
-              style={{ left: `${pct(nowMinutes)}%`, top: AXIS_TOP - 8, height: 26 }}
+              style={{
+                left: `${pct(nowMinutes)}%`,
+                top: NOW_TOP + 15,
+                height: AXIS_TOP + AXIS_HEIGHT + 4 - (NOW_TOP + 15),
+              }}
             />
           </>
         )}
@@ -554,7 +594,7 @@ export function DayRail({
                     className={cn(
                       "flex items-center gap-1.5 text-[13.5px]",
                       isNow
-                        ? "plate text-[10.5px] text-primary"
+                        ? `${PLATE} text-[10.5px] tracking-[0.1em] text-primary`
                         : high
                           ? "font-bold text-strong"
                           : isBound

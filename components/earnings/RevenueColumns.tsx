@@ -101,8 +101,8 @@ export function RevenueColumns({
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-        <h3 className="text-[13.5px] font-bold text-strong">{title}</h3>
-        <div className="flex items-center gap-3 text-[10.5px] text-muted">
+        <h3 className="text-[14.5px] font-bold text-strong">{title}</h3>
+        <div className="flex items-center gap-3 text-[11px] text-muted">
           <span className="flex items-center gap-1.5">
             <span
               aria-hidden
@@ -157,7 +157,7 @@ export function RevenueColumns({
               >
                 <p
                   className={cn(
-                    "numeral whitespace-nowrap text-[12px] font-bold",
+                    "numeral whitespace-nowrap text-[13px] font-bold",
                     /* Etiket sütundan geniş olabiliyor (öngörü sütununda
                        aralık yazıyor). Taşma ortadan hizalanınca iki yana
                        birden sarkıyor ve dar ekranda kartın dışına çıkıyor;
@@ -198,7 +198,7 @@ export function RevenueColumns({
           <li
             key={`${bar.label}-label-${index}`}
             className={cn(
-              "truncate text-center text-[10.5px] font-semibold",
+              "truncate text-center text-[11.5px] font-semibold",
               bar.projected ? "text-primary" : "text-muted",
             )}
           >

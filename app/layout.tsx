@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo } from "next/font/google";
+import { Schibsted_Grotesk } from "next/font/google";
 import { getI18n, getTheme } from "@/lib/i18n";
 import { INDEXABLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
@@ -9,15 +9,22 @@ import "./globals.css";
  * dairesel referans oluşur ve sessizce çöker. Bu yüzden `-face` soneki.
  */
 /**
- * Tek aile — Archivo. Manşetten kicker'a kadar her rol bu ailenin ağırlık
- * basamaklarıyla ayrışır; ikinci bir aile yok. Sayılar da Archivo'dur, gövdede
- * açık `tnum` sütunları hizalar. Mono yalnızca bilanço kartlarında (.figure)
- * ve orada sistem monosu yeter — ayrı bir web fontu yüklenmez.
+ * Tek aile — Schibsted Grotesk. Manşetten kicker'a kadar her rol bu ailenin
+ * ağırlık basamaklarıyla ayrışır; ikinci bir aile yok. SAYILAR DA aynı aile:
+ * gövdede açık `tnum` sütunları hizalar, ayrı bir mono yüklenmez.
+ *
+ * Önce Archivo vardı. Haber-editoryal kökenli bu grotesk sıkı başlıkta daha
+ * karakterli, 400'de gövde metni olarak daha sessiz; ekosistemde Mimio da
+ * aynı aileye geçmişti (`~/dev-starter/knowledge/themes/mimio.md`).
+ *
+ * 800 de yükleniyor: manşet ve geri sayım 700'de yeterince ayrışmıyordu.
+ *
+ * Tuzak (yukarıdaki not): `variable` adı @theme token adıyla aynı olamaz.
  */
-const bodyFace = Archivo({
+const bodyFace = Schibsted_Grotesk({
   variable: "--font-body-face",
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 

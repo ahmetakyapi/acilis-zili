@@ -40,7 +40,7 @@ export function ChartFooter({
     >
       {stats.map((stat) => (
         <div key={stat.label} className="min-w-0">
-          <dt className="truncate text-[10px] font-medium text-muted">
+          <dt className="truncate text-[11px] font-medium text-muted">
             {stat.label}
           </dt>
           {/* Değerin KENDİSİ tona boyanıyor, karnedeki gibi: "▲ %372"
@@ -48,7 +48,7 @@ export function ChartFooter({
               değerin metnine ait — ton yoksa nötr koyu yazı. */}
           <dd
             className={cn(
-              "numeral mt-px flex flex-wrap items-baseline gap-x-1.5 text-[15px] font-bold",
+              "numeral mt-px flex flex-wrap items-baseline gap-x-1.5 text-[16px] font-bold",
               stat.tone === "up"
                 ? "text-up"
                 : stat.tone === "down"
@@ -58,7 +58,7 @@ export function ChartFooter({
           >
             {stat.value}
             {stat.note && (
-              <span className="text-[10.5px] font-semibold text-muted">
+              <span className="text-[11.5px] font-semibold text-muted">
                 {stat.note}
               </span>
             )}

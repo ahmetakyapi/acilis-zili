@@ -307,8 +307,9 @@
     background-color: var(--page-bg);
     color: var(--text-body);
     font-family: var(--font-body-face), system-ui, sans-serif;
-    /* tnum kökte açık: her sütun hizalı okunur, tek tek sınıf gerekmez. */
-    font-feature-settings: "tnum" 1;
+    /* tnum KÖKTE KAPALI — bkz. §Sayısal okumalar. Archivo döneminde açıktı ve
+       doğru seçimdi; Schibsted Grotesk'te aynı ayar virgülü de rakam
+       genişliğine çekiyor ve "8,97" ekranda "8 , 97" diye çıkıyor. */
     letter-spacing: -0.006em;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -396,29 +397,43 @@
 /* --------------------------------------------------------------------------
    Sayısal okumalar
 
-   Archivo `tnum` gövdede zaten açık, bu yüzden .numeral artık aile
-   değiştirmez — yalnızca hizayı ve sıkı aralığı garantiler. Mono, HANDOFF
-   §3 uyarınca sadece bilanço kartlarındaki sayılarda (.figure).
+   Sayfadaki her sayı GÖVDE AİLESİNDE (Schibsted Grotesk); sınıflar aile
+   değiştirmez, yalnızca ağırlığı ve sıkı aralığı garantiler.
+
+   Mono kalktı. Bilanço kartlarındaki sayılar bir süre sistem monosuyla
+   yazıldı (.figure) ve tek başına bakınca iyi duruyordu; ama analiz
+   tablosunda dokuz sütun yan yana gelince daktilo genişliğindeki rakamlar
+   hem yer yiyor hem satırı gürültülü gösteriyordu.
+
+   TABULAR FİGÜR DE KALKTI ve bu bilinçli bir ödün. Schibsted Grotesk'te
+   `tnum` yalnızca rakamları değil VİRGÜLÜ VE NOKTAYI da rakam genişliğine
+   çekiyor: "8,97 Mr $" ekranda "8 , 97 Mr $", "$1.258,58" ise
+   "$1 . 258 , 58" diye çıkıyor — her sayıda görünen bir kusur. Kapatınca
+   sayılar düzgün yazılıyor ama rakam genişlikleri eşitlenmiyor; "1" 4,55px,
+   "0" 8,17px (13,5px puntoda ölçüldü).
+
+   Bedeli sütun içinde: sayı hücrelerinin hepsi SAĞA yaslı olduğu için sağ
+   kenarlar hizalı kalıyor, yalnızca içerideki basamaklar satırdan satıra
+   kayıyor. Her sayıda duran bir boşluk kusuru, ara ara fark edilen bir
+   kaymadan kötüydü. Hizanın şart olduğu bir yer çıkarsa çözüm `.figure`
+   sınıfını ayrı bir mono aileye bağlamaktır — kök ayarına dokunmadan.
    -------------------------------------------------------------------------- */
 .numeral {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
   letter-spacing: -0.02em;
 }
 
 /* Panoda okunan büyük sayı — geri sayım, endeks seviyesi, fiyat */
 .tote {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--text-strong);
 }
 
-/* Bilanço kartlarındaki gelir/EPS sayıları — tek mono kullanımı */
+/* Bilanço kartlarındaki gelir/EPS sayıları.
+   `.numeral` ile aynı davranıyor; ayrı ad, o sayıların nerede kullanıldığını
+   koddan okumaya yarıyor ve ileride oraya özel bir ayar gerekirse tek yerden
+   verilir. */
 .figure {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
 

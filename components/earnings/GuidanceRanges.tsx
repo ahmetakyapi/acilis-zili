@@ -110,8 +110,8 @@ export function GuidanceRanges({
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-        <h3 className="text-[13.5px] font-bold text-strong">{title}</h3>
-        <div className="flex items-center gap-3 text-[10.5px] text-muted">
+        <h3 className="text-[14.5px] font-bold text-strong">{title}</h3>
+        <div className="flex items-center gap-3 text-[11px] text-muted">
           <span className="flex items-center gap-1.5">
             <span aria-hidden className="h-2 w-3 rounded-full bg-primary" />
             {legendRange}
@@ -159,15 +159,15 @@ export function GuidanceRanges({
           return (
             <li key={`${row.label}-${index}`} className="flex flex-col gap-1.5">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                <span className="text-[12.5px] font-bold text-strong">
+                <span className="text-[13.5px] font-bold text-strong">
                   {row.label}
                 </span>
-                <span className="numeral whitespace-nowrap text-[13.5px] font-bold text-strong">
+                <span className="numeral whitespace-nowrap text-[15px] font-bold text-strong">
                   {formatRange(lo, hi, row.unit)}
                 </span>
               </div>
 
-              <div className="relative h-2.5 w-full rounded-full bg-surface-elevated">
+              <div className="relative h-3 w-full rounded-full bg-surface-elevated">
                 {lo === hi ? (
                   /* Şirket aralık değil TEK bir sayı verdiyse band çizilmez:
                      genişliği sıfır olan bir bandı görünür kılmak için
@@ -176,7 +176,7 @@ export function GuidanceRanges({
                      biçim — ikisi de tek bir değer gösteriyor. */
                   <span
                     aria-hidden
-                    className="absolute top-1/2 h-[15px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
+                    className="absolute top-1/2 h-[17px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
                     style={{ left: `${pos(lo)}%` }}
                   />
                 ) : (
@@ -197,7 +197,7 @@ export function GuidanceRanges({
                      eşik: "piyasa tam burayı bekliyordu". */
                   <span
                     aria-hidden
-                    className="absolute top-1/2 h-[15px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-strong ring-2 ring-surface"
+                    className="absolute top-1/2 h-[17px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-strong ring-2 ring-surface"
                     style={{ left: `${pos(consensus)}%` }}
                   />
                 )}
@@ -208,7 +208,7 @@ export function GuidanceRanges({
                   boyuyordu; okuyucu neyin değerlendirme olduğunu ayırt
                   edemiyordu. */}
               {(note || evaluation) && (
-                <p className="flex flex-wrap items-baseline gap-x-1.5 text-[10.5px]">
+                <p className="flex flex-wrap items-baseline gap-x-1.5 text-[11.5px]">
                   {note && <span className="text-muted">{note}</span>}
                   {evaluation && (
                     <span
