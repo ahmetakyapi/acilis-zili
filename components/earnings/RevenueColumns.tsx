@@ -10,9 +10,18 @@ import { cn } from "@/lib/utils";
  * gerçekleşmemiş bir sayının dolu bir sütunla aynı ağırlıkta durması, o
  * sayıyı ölçülmüş gibi gösteriyordu.
  *
- * Grafik `viewBox` ile ölçekleniyor ama etiketler SVG dışında, HTML olarak
- * basılıyor: SVG `<text>` font yüklenene kadar ölçüsüz kalıyor ve sütunun
- * üstünde kayıyor (skor halkasındaki sayının HTML olmasıyla aynı gerekçe).
+ * BİRİM BAŞLIKTA, sütunlarda değil. Her sütunun üstünde "1,9 Mr $" yazınca
+ * altı çeyrekte altı kez aynı iki kelime tekrar ediyor ve sayının kendisi
+ * kayboluyordu; başlıkta bir kez söyleyip sütunlarda çıplak sayı bırakmak
+ * hem daha sessiz hem daha okunur.
+ *
+ * Arkadaki yatay ızgara çizgileri sütun yüksekliklerini kıyaslanabilir
+ * kılıyor: çizgisiz bir grupta "bu ötekinin iki katı mı" sorusu gözle
+ * cevaplanmıyordu.
+ *
+ * Etiketler SVG dışında, HTML olarak basılıyor: SVG `<text>` font yüklenene
+ * kadar ölçüsüz kalıyor ve sütunun üstünde kayıyor (skor halkasındaki
+ * sayının HTML olmasıyla aynı gerekçe).
  */
 
 export type RevenueBar = {
@@ -32,7 +41,9 @@ const SHADES = [
   "var(--share-1)",
 ] as const;
 
-const CHART_HEIGHT = 132;
+const CHART_HEIGHT = 150;
+/** Izgara çizgisi oranları; taban çizgisini alttaki hairline zaten veriyor. */
+const GRID = [1, 0.75, 0.5, 0.25];
 
 export function RevenueColumns({
   bars,
@@ -44,10 +55,11 @@ export function RevenueColumns({
   className,
 }: {
   bars: RevenueBar[];
+  /** Birimi de taşır: "Çeyreklik Gelir (milyar $)". */
   title: string;
   legendActual: string;
   legendProjected: string;
-  /** Sütun üstündeki sayıyı biçimlendirir — dil sunum katmanına ait. */
+  /** Sütun üstündeki ÇIPLAK sayı — birim başlıkta, burada değil. */
   format: (value: number) => string;
   footer?: FooterStat[];
   className?: string;
@@ -87,51 +99,66 @@ export function RevenueColumns({
         </div>
       </div>
 
-      {/* Sütunlar CSS ızgarasıyla: SVG'de sabit genişlik varsayımı yapmadan
-          her sütun eşit pay alıyor ve dar ekranda kendiliğinden daralıyor. */}
-      <ul
-        className="grid items-end gap-2"
-        style={{
-          gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))`,
-          height: CHART_HEIGHT + 22,
-        }}
-      >
-        {bars.map((bar, index) => {
-          const ratio = Math.max(0.02, bar.value / max);
-          const shade =
-            SHADES[
-              Math.min(
-                SHADES.length - 1,
-                SHADES.length - actualCount + index,
-              )
-            ] ?? SHADES[SHADES.length - 1];
-          return (
-            <li key={`${bar.label}-${index}`} className="flex h-full flex-col justify-end gap-1.5">
-              <p
-                className={cn(
-                  "figure whitespace-nowrap text-center text-[10.5px] font-bold",
-                  bar.projected ? "text-primary" : "text-strong",
-                )}
+      <div className="relative" style={{ height: CHART_HEIGHT + 22 }}>
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0"
+          style={{ height: CHART_HEIGHT }}
+        >
+          {GRID.map((ratio) => (
+            <span
+              key={ratio}
+              className="absolute inset-x-0 border-t border-line-soft"
+              style={{ bottom: `${ratio * 100}%` }}
+            />
+          ))}
+        </div>
+
+        {/* Sütunlar CSS ızgarasıyla: SVG'de sabit genişlik varsayımı yapmadan
+            her sütun eşit pay alıyor ve dar ekranda kendiliğinden daralıyor.
+            Dar boşluk = kalın sütun; karnedeki oran. */}
+        <ul
+          className="relative grid h-full items-end gap-1.5 sm:gap-2"
+          style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}
+        >
+          {bars.map((bar, index) => {
+            const ratio = Math.max(0.02, bar.value / max);
+            const shade =
+              SHADES[
+                Math.min(SHADES.length - 1, SHADES.length - actualCount + index)
+              ] ?? SHADES[SHADES.length - 1];
+            return (
+              <li
+                key={`${bar.label}-${index}`}
+                className="flex h-full flex-col justify-end gap-1.5"
               >
-                {bar.note ?? format(bar.value)}
-              </p>
-              <div
-                className={cn(
-                  "w-full rounded-t-[3px]",
-                  bar.projected && "border border-dashed border-primary bg-primary-tint",
-                )}
-                style={{
-                  height: Math.round(ratio * CHART_HEIGHT),
-                  ...(bar.projected ? {} : { background: shade }),
-                }}
-              />
-            </li>
-          );
-        })}
-      </ul>
+                <p
+                  className={cn(
+                    "figure whitespace-nowrap text-center text-[11px] font-bold",
+                    bar.projected ? "text-primary" : "text-strong",
+                  )}
+                >
+                  {bar.note ?? format(bar.value)}
+                </p>
+                <div
+                  className={cn(
+                    "w-full rounded-t-[3px]",
+                    bar.projected &&
+                      "border border-dashed border-primary bg-primary-tint",
+                  )}
+                  style={{
+                    height: Math.round(ratio * CHART_HEIGHT),
+                    ...(bar.projected ? {} : { background: shade }),
+                  }}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
       <ul
-        className="grid gap-2 border-t border-line pt-2"
+        className="grid gap-1.5 border-t border-line pt-2 sm:gap-2"
         style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}
       >
         {bars.map((bar, index) => (

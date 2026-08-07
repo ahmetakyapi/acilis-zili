@@ -267,6 +267,8 @@ const en: typeof tr = {
     upcomingDev: "What To Watch",
     highlights: "Key Metrics",
     quarterlyRevenue: "Quarterly Revenue",
+    unitBillionUsd: "$ billion",
+    unitMillionUsd: "$ million",
     legendActual: "Reported",
     legendProjected: "Company Guidance",
     guidanceTitle: "{period} Company Guidance",

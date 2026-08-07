@@ -713,7 +713,7 @@ curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
     "next_report_estimate": "~Ekim 2026",
     "score": 77,
     "verdict": "buy",
-    "headline": "<tek cümle: çeyreğin hikâyesi + hisse tepkisinin nedeni>",
+    "headline": "<2-3 cümle: çeyreğin hikâyesi + hisse tepkisinin nedeni>",
     "price": 1391.00,
     "reaction_pct": -8.0,
     "market_cap": 206000000000,
@@ -757,11 +757,13 @@ curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
     ],
     "guidance": [
       {"label": "Gelir", "low": 10.3, "high": 10.8, "consensus": 10.82, "unit": "Mr $",
-       "note": "Orta nokta 10,55 · Piyasa Beklentisi 10,82 · Aralığın Üstünde", "tone": "down"},
+       "note": "Orta nokta 10,55 · Piyasa Beklentisi 10,82",
+       "evaluation": "Aralığın Üstünde ▼", "tone": "down"},
       {"label": "Hisse Başı Kâr (Düzeltilmiş)", "low": 44, "high": 46, "consensus": 45.58,
-       "unit": "$", "note": "Piyasa Beklentisi 45,58 · Uyumlu", "tone": "up"},
+       "unit": "$", "note": "Orta nokta 45,00 · Piyasa Beklentisi 45,58",
+       "evaluation": "Uyumlu ✓", "tone": "up"},
       {"label": "Brüt Marj", "low": 83, "high": 85, "consensus": 84.6, "unit": "%",
-       "note": "Son çeyrek gerçekleşen %84,6 · Yatay seyir öngörüsü"}
+       "note": "Son çeyrek gerçekleşen %84,6", "evaluation": "Yatay Seyir"}
     ],
     "guidance_footer": [
       {"label": "Faaliyet Gideri", "value": "520–540 Mn $"},
@@ -773,6 +775,10 @@ curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
 ```
 
 Alan notları:
+  headline    → GÖRÜŞ ŞERİDİNİN gövdesi, sayfanın en üstündeki geniş bant.
+                2-3 CÜMLE (120-600 karakter): çeyreğin ana hikâyesi + hisse
+                tepkisinin nedeni. Tek cümle yazma — şerit sayfanın en geniş
+                yeri ve tek satır orada boş duruyor.
   summary     → 3 paragraf. 1: ne oldu (rakamlarla). 2: hisse neden böyle
                 tepki verdi. 3: genel görüş ve gerekçesi.
   analysis    → 3-6 bölüm. Her title kalın mini başlık olarak basılır ve
@@ -795,9 +801,12 @@ Alan notları:
   guidance    → gelecek çeyrek öngörüsü, en fazla 5 satır. Her satır bir
                 ölçü: low/high şirketin verdiği bant, consensus piyasa
                 beklentisi. unit "Mr $" / "$" / "%" — site aralığın yalnızca
-                SONUNA yazar, yüzdeyi Türkçede başa alır. note satırı bandın
-                beklentiye göre nerede durduğunu söyler; tone o değerlendirme
-                olumluysa "up", olumsuzsa "down".
+                SONUNA yazar, yüzdeyi Türkçede başa alır.
+                note ile evaluation AYRI: note NÖTR bağlamdır ("Orta nokta
+                10,55 · Piyasa Beklentisi 10,82") ve gri basılır; evaluation
+                RENKLİ yargıdır ("Aralığın Üstünde ▼", "Uyumlu ✓") ve tone
+                ona uygulanır. İkisini tek dizede birleştirirsen tarafsız
+                bilgi de kırmızıya boyanıyor.
 
                 DİKKAT: low/high/consensus AYNI BİRİMDE olmalı. Gelir satırında
                 10.3 yazıp birimi "Mr $" vermek doğru; 10300000000 yazmak

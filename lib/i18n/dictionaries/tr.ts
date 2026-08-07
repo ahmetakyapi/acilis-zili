@@ -283,6 +283,9 @@ const tr = {
     upcomingDev: "Beklenen Gelişmeler",
     highlights: "Öne Çıkan Metrikler",
     quarterlyRevenue: "Çeyreklik Gelir",
+    /* Birim sütunların üstünde altı kez tekrar etmesin diye başlıkta. */
+    unitBillionUsd: "milyar $",
+    unitMillionUsd: "milyon $",
     legendActual: "Gerçekleşen",
     legendProjected: "Şirket Öngörüsü",
     guidanceTitle: "{period} Şirket Öngörüsü",

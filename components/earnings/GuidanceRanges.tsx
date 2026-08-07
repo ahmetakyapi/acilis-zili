@@ -22,7 +22,10 @@ export type GuidanceRow = {
   high: number;
   consensus?: number | null;
   unit?: string | null;
+  /** Nötr bağlam: "Orta nokta 10,55 · Piyasa Beklentisi 10,82". */
   note?: string | null;
+  /** Renkli yargı: "Aralığın Üstünde ▼" / "Uyumlu ✓". */
+  evaluation?: string | null;
   tone?: string | null;
 };
 
@@ -119,18 +122,27 @@ export function GuidanceRanges({
                 )}
               </div>
 
-              {row.note && (
-                <p
-                  className={cn(
-                    "text-[10.5px] font-semibold",
-                    row.tone === "up"
-                      ? "text-up"
-                      : row.tone === "down"
-                        ? "text-down"
-                        : "text-muted",
+              {/* Bağlam nötr, yargı renkli. Tek parça renkli bir satır
+                  "orta nokta 10,55" gibi tarafsız bir bilgiyi de kırmızıya
+                  boyuyordu; okuyucu neyin değerlendirme olduğunu ayırt
+                  edemiyordu. */}
+              {(row.note || row.evaluation) && (
+                <p className="flex flex-wrap items-baseline gap-x-1.5 text-[10.5px]">
+                  {row.note && <span className="text-muted">{row.note}</span>}
+                  {row.evaluation && (
+                    <span
+                      className={cn(
+                        "font-bold",
+                        row.tone === "up"
+                          ? "text-up"
+                          : row.tone === "down"
+                            ? "text-down"
+                            : "text-primary",
+                      )}
+                    >
+                      {row.evaluation}
+                    </span>
                   )}
-                >
-                  {row.note}
                 </p>
               )}
             </li>

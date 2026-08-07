@@ -454,6 +454,7 @@ export const earningsAnalyses = pgTable(
         consensus?: number | null;
         unit?: string | null;
         note?: string | null;
+        evaluation?: string | null;
         tone?: string | null;
       }[]
     >(),

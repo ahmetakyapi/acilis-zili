@@ -118,6 +118,17 @@ export default async function AnalysisDetailPage(
   const langNote = row.locale === locale ? null : t.analysis.fallbackNote;
   const sources = row.sources ?? [];
   const hasColumns = (row.quarterlyRevenue?.length ?? 0) > 0;
+  /* Sütun grafiğinin ölçeği: birim BAŞLIKTA bir kez söyleniyor, sütunlarda
+     çıplak sayı kalıyor. Eşik en büyük çeyreğe bakıyor — bir şirketin geliri
+     milyar bandındaysa hepsi milyar yazılır, milyon bandındaysa hepsi
+     milyon; aynı grafikte iki farklı birim olmaz. */
+  const revenueMax = Math.max(
+    0,
+    ...(row.quarterlyRevenue ?? []).map((bar) => bar.value),
+  );
+  const revenueScale = revenueMax >= 1e9 ? 1e9 : 1e6;
+  const revenueUnit =
+    revenueScale === 1e9 ? t.analysis.unitBillionUsd : t.analysis.unitMillionUsd;
   const hasGuidance = (row.guidance?.length ?? 0) > 0;
 
   return (
@@ -345,10 +356,14 @@ export default async function AnalysisDetailPage(
               {hasColumns && (
                 <RevenueColumns
                   bars={row.quarterlyRevenue ?? []}
-                  title={t.analysis.quarterlyRevenue}
+                  title={`${t.analysis.quarterlyRevenue} (${revenueUnit})`}
                   legendActual={t.analysis.legendActual}
                   legendProjected={t.analysis.legendProjected}
-                  format={(value) => `${formatCompact(value, locale)} $`}
+                  format={(value) =>
+                    formatPrice(value / revenueScale, locale, {
+                      digits: value / revenueScale >= 100 ? 0 : 2,
+                    })
+                  }
                   footer={row.revenueFooter ?? []}
                 />
               )}

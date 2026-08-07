@@ -40,19 +40,22 @@ export function ChartFooter({
           <dt className="truncate text-[10px] font-medium text-muted">
             {stat.label}
           </dt>
-          <dd className="figure mt-px flex flex-wrap items-baseline gap-x-1.5 text-[14px] font-bold text-strong">
+          {/* Değerin KENDİSİ tona boyanıyor, karnedeki gibi: "▲ %372"
+              yeşil, "▼ %32" kırmızı. Renk yalnız kalmasın diye ok işareti
+              değerin metnine ait — ton yoksa nötr koyu yazı. */}
+          <dd
+            className={cn(
+              "figure mt-px flex flex-wrap items-baseline gap-x-1.5 text-[15px] font-bold",
+              stat.tone === "up"
+                ? "text-up"
+                : stat.tone === "down"
+                  ? "text-down"
+                  : "text-strong",
+            )}
+          >
             {stat.value}
             {stat.note && (
-              <span
-                className={cn(
-                  "text-[10.5px] font-bold",
-                  stat.tone === "up"
-                    ? "text-up"
-                    : stat.tone === "down"
-                      ? "text-down"
-                      : "text-muted",
-                )}
-              >
+              <span className="text-[10.5px] font-semibold text-muted">
                 {stat.note}
               </span>
             )}

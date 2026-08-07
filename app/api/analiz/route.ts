@@ -58,7 +58,10 @@ const GuidanceSchema = z.object({
   consensus: z.number().nullish(),
   /** "Mr $", "$", "%" — değerin ardına eklenir. */
   unit: z.string().trim().max(8).nullish(),
+  /** Nötr bağlam satırı. */
   note: z.string().trim().max(120).nullish(),
+  /** Renkli yargı: "Aralığın Üstünde ▼" / "Uyumlu ✓". */
+  evaluation: z.string().trim().max(60).nullish(),
   tone: z.enum(["up", "down", "neutral"]).nullish(),
 });
 
@@ -94,7 +97,14 @@ const BodySchema = z.object({
 
   score: z.number().int().min(0).max(100),
   verdict: z.enum(["buy", "hold", "sell"]),
-  headline: z.string().trim().min(20).max(400),
+  /**
+   * Görüş şeridinin gövdesi — 2-3 cümle.
+   *
+   * Alt sınır 20'den 120'ye çıktı: tek cümlelik bir manşet sayfanın en
+   * geniş şeridinde tek satır kalıyor ve şerit boş görünüyordu. Karnedeki
+   * karşılığı da 2-3 cümle.
+   */
+  headline: z.string().trim().min(120).max(600),
 
   price: z.number().nullish(),
   reaction_pct: z.number().nullish(),
@@ -282,7 +292,7 @@ export async function POST(request: Request) {
           timing: "bmo | amc | dmh (opsiyonel)",
           score: "0-100 tam sayı",
           verdict: "buy | hold | sell",
-          headline: "tek cümlelik hikâye (20-400)",
+          headline: "2-3 cümle: çeyreğin hikâyesi + tepkinin nedeni (120-600)",
           summary: "['p1','p2','p3'] — 1-6 paragraf",
           analysis: "[{title, body}] — 1-12 bölüm",
           "sayısal alanlar":
@@ -292,7 +302,7 @@ export async function POST(request: Request) {
           quarterly_revenue:
             "[{label, value, projected?, note?}] — son 5 çeyrek + öngörü",
           guidance:
-            "[{label, low, high, consensus?, unit?, note?, tone?}] en fazla 5",
+            "[{label, low, high, consensus?, unit?, note?, evaluation?, tone?}] ≤5",
           revenue_footer:
             "[{label, value, note?, tone?}] — sütun grafiğinin altındaki 3 ölçü",
           guidance_footer:
