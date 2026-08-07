@@ -812,6 +812,11 @@ Alan notları:
                 biçimlendirme sana ait. note değerin altındaki renkli tek
                 satır bağlam ("▲ Yıllık %372 · Beklenti Üstü"), tone ise
                 up/down/neutral. Altısını da doldur.
+
+                note DA Title Case yazılır, tıpkı label gibi: "▲ %372 Yıllık",
+                "Rekor · Öngörü %79-81 idi", "Beklentinin ~%12 Üzerinde",
+                "Kapanıştan Kapanışa". Bunlar cümle değil, ölçünün künyesi;
+                kartın içinde iki ayrı yazım durunca satır dağınık görünüyor.
   upcoming    → tarih taşır (yatırımcı günü, sonraki bilanço, endeks kararı).
   ceo_quote.topics → CEO'nun çağrıda VURGULADIĞI 2-3 konu, alıntının yanında
                 hap rozet olur. Alıntının özeti değil: çağrının başka
@@ -1065,10 +1070,10 @@ sonrakine geç; hepsini tek istekte göndermeye çalışma.
 
 ### Künye satırlarını Title Case'e çek (bir kez)
 
-Grafik künyelerinin `label` alanları baştan Title Case yazıldı ama alttaki
-`note` satırı kayıttan kayda değişiyor: kimi "Çeyreklik daralma", kimi
-"14 Mr $'lık ek program onaylandı" gibi cümle. Aynı şeridin içinde iki ayrı
-yazım duruyor.
+`label` alanları baştan Title Case yazıldı ama altlarındaki `note` satırı
+kayıttan kayda değişiyor: kimi "Çeyreklik daralma", kimi "14 Mr $'lık ek
+program onaylandı" gibi cümle. Aynı kartın içinde iki ayrı yazım duruyor.
+Hem metrik kartlarını (`highlights`) hem grafik künyelerini kapsar.
 
 ````
 Açılış Zili'ndeki bilanço analizlerinin grafik künyelerini Title Case'e
@@ -1090,19 +1095,24 @@ curl -s -H "Authorization: Bearer $SECRET" \
   "https://acilis-zili.vercel.app/api/analiz?symbol=<SEMBOL>&period=<period>&locale=tr"
 ```
 
-3. YALNIZCA revenue_footer ve guidance_footer içindeki `note` alanlarını
-   düzelt. Kural: bunlar ölçü etiketidir, cümle değil.
+3. YALNIZCA şu üç alanın içindeki `note` değerlerini düzelt:
+   highlights, revenue_footer, guidance_footer.
+   Kural: bunlar ölçü künyesidir, cümle değil.
 
      "Çeyreklik daralma"                → "Çeyreklik Daralma"
      "Faaliyet nakdi 7,13 Mr $"         → "Faaliyet Nakdi 7,13 Mr $"
      "2,98 Mr $ · yıllık ▲ %437"        → "2,98 Mr $ · Yıllık ▲ %437"
      "14 Mr $'lık ek program onaylandı" → "Ek Program 14 Mr $"
+     "▲ %372 yıllık"                    → "▲ %372 Yıllık"
+     "Rekor · öngörü %79-81 idi"        → "Rekor · Öngörü %79-81 idi"
+     "Beklentinin ~%12 üzerinde"        → "Beklentinin ~%12 Üzerinde"
+     "Kapanıştan kapanışa"              → "Kapanıştan Kapanışa"
 
    Bağlaçlar (ve, ile, için, de/da) başta değilse küçük kalır. Kısaltmalar
    olduğu gibi durur (EPS, HBK, FAVÖK, Mr $, Mn $). Sayılar ve işaretler
    değişmez. Türkçe büyük harfe dikkat: i → İ, ı → I.
 
-   label alanlarına DOKUNMA, zaten Title Case. highlights, summary, analysis,
+   label ve value alanlarına DOKUNMA, zaten Title Case. summary, analysis,
    strengths, risks, upcoming da AYNEN kalır — oralar cümle, Title Case
    değil.
 

@@ -310,7 +310,12 @@ const tr = {
     analystTarget: "Ort. Analist Hedefi",
     analystTargetCount: "Ort. Analist Hedefi ({count})",
     upsidePotential: "Potansiyel",
-    closePrice: "Kapanış Fiyatı",
+    closePrice: "Bilanço Günü Kapanışı",
+    /* Kayıttaki fiyat donuk, bu canlı. İkisi tanımı gereği farklı sayı;
+       adları da farklı olmalı ki yan yana dururken hata gibi okunmasın. */
+    livePrice: "Şu An",
+    sinceReport: "bilanço gününden bugüne",
+    reactionNote: "bilanço günü tepkisi · kapanıştan kapanışa",
     return1y: "1 Yıllık Getiri",
     afterHours: "seans sonrası",
     nextEarnings: "Sonraki Bilanço",

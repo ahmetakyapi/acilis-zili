@@ -94,18 +94,29 @@ const RAIL_END = SESSION_BOUNDS.afterHoursClose; // 20:00
 const RAIL_SPAN = RAIL_END - RAIL_START;
 
 /* Dikey katlar, yukarıdan aşağıya:
-     0-28   sınır etiketleri (AÇILIŞ / KAPANIŞ)
-     32-46  "şimdi" rozeti — sınır etiketlerinin ALTINDA ayrı bir şerit,
-            böylece işaretçi açılışın üstüne geldiğinde etiketler çakışmıyor
-     50-56  eksen
-     61-74  eksenin iki ucundaki saatler (şeridin nerede başlayıp bittiği)
-     92+    olay kartları */
-const AXIS_TOP = 50;
+     0-15    "şimdi" rozeti — EN ÜSTTE, kendi şeridinde
+     24-52   sınır etiketleri (AÇILIŞ / KAPANIŞ)
+     68-74   eksen
+     79-92   eksenin iki ucundaki saatler + bandın adı
+     110+    olay kartları
+
+   Rozet önce eksenin hemen üstündeydi ve orada sıkışıyordu: 42 piksellik
+   bir etiket, olay noktaları ile açılış işaretinin arasına giriyor,
+   ikisine de değiyordu. En üstte kendi şeridine alınınca hiçbir şeyle
+   yarışmıyor; işaretçi çizgisi rozetten inip ekseni kesiyor ve aradaki
+   bağ görünür kalıyor.
+
+   Çizgi sınır etiketlerinin ARKASINDAN geçer (etiketlerde `z-10` var):
+   seans içinde işaretçi açılış etiketinin üstüne geldiğinde 3 piksellik
+   accent çizgi yazının içinden geçmiyor, altından. */
+const NOW_TOP = 0;
+const NOW_BADGE_HEIGHT = 16;
+const BOUND_TOP = 24;
+const AXIS_TOP = 68;
 const AXIS_HEIGHT = 6;
 const AXIS_CENTER = AXIS_TOP + AXIS_HEIGHT / 2;
-const NOW_TOP = 32;
 const EDGE_TOP = AXIS_TOP + AXIS_HEIGHT + 5;
-const CHIP_TOP = 92;
+const CHIP_TOP = 110;
 /** Kart yüksekliği ~72px (üç satır + dolgu); kademeler arası nefes payı. */
 const ROW_OFFSET = 84;
 /** Kartlar metin etiketlerinden geniş; çakışma eşiği de ona göre geniş. */
@@ -260,8 +271,9 @@ export function DayRail({
         ].map((bound) => (
           <div
             key={bound.key}
-            className="absolute -translate-x-1/2 whitespace-nowrap text-center"
-            style={{ left: `${bound.left}%`, top: 0 }}
+            /* z-10: "şimdi" çizgisi bu etiketlerin ALTINDAN geçsin. */
+            className="absolute z-10 -translate-x-1/2 whitespace-nowrap text-center"
+            style={{ left: `${bound.left}%`, top: BOUND_TOP }}
           >
             <div
               className={cn(PLATE, "text-[10.5px] tracking-[0.08em] text-body")}
@@ -359,7 +371,7 @@ export function DayRail({
           <>
             <div
               className={cn(
-                "absolute z-10 whitespace-nowrap rounded-full px-2 py-[3.5px] text-[9.5px] font-bold uppercase leading-none tracking-[0.09em] text-on-primary",
+                "absolute z-20 whitespace-nowrap rounded-full px-2 py-[3.5px] text-[9.5px] font-bold uppercase leading-none tracking-[0.09em] text-on-primary",
                 marketLive ? "bg-primary" : "bg-strong",
               )}
               style={{
@@ -372,8 +384,10 @@ export function DayRail({
             >
               {labels.now}
             </div>
-            {/* Çizgi rozetin altından başlayıp ekseni KESİYOR: eksende
-                bitseydi rozet ile eksen arasında asılı kalıyordu. */}
+            {/* Çizgi rozetten inip ekseni KESİYOR — rozet ile işaretçinin
+                aynı ana ait olduğu başka türlü okunmuyordu. Katman verilmedi:
+                sınır etiketlerinin `z-10`'u kazanıyor ve çizgi yazının
+                altından geçiyor. */}
             <div
               className={cn(
                 "absolute w-[3px] -translate-x-1/2 rounded-full",
@@ -381,8 +395,8 @@ export function DayRail({
               )}
               style={{
                 left: `${pct(nowMinutes)}%`,
-                top: NOW_TOP + 15,
-                height: AXIS_TOP + AXIS_HEIGHT + 4 - (NOW_TOP + 15),
+                top: NOW_TOP + NOW_BADGE_HEIGHT,
+                height: AXIS_TOP + AXIS_HEIGHT + 4 - (NOW_TOP + NOW_BADGE_HEIGHT),
               }}
             />
           </>
