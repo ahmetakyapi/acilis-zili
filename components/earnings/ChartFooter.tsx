@@ -36,8 +36,11 @@ export function ChartFooter({
   return (
     <dl
       className={cn(
-        "mt-auto grid gap-3 border-t border-line pt-3",
-        stats.length >= 3 ? "grid-cols-3" : "grid-cols-2",
+        "mt-auto grid gap-x-3 gap-y-2.5 border-t border-line pt-3",
+        /* Üçlü künye telefonda ALT ALTA: 390 pikselde üç sütun etiketleri
+           kırpıyor ("Serbest Nakit Akı...") ve değerler satır ortasından
+           kırılıyordu. Kırpılmış bir etiket hiç etiket olmamasından kötü. */
+        stats.length >= 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2",
         className,
       )}
     >

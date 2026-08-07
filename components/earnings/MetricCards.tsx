@@ -46,12 +46,12 @@ export function MetricCards({
       {metrics.map((metric) => (
         <li
           key={metric.label}
-          className="flex min-w-0 flex-col gap-[3px] rounded-[14px] border border-line bg-surface px-4 py-3.5"
+          className="flex min-w-0 flex-col gap-1 rounded-[14px] border border-line bg-surface px-4 py-4"
         >
-          <p className="truncate text-[10.5px] font-semibold text-muted">
+          <p className="truncate text-[11px] font-semibold text-muted">
             {metric.label}
           </p>
-          <p className="figure text-[21px] font-bold leading-none tracking-[-0.03em] text-strong">
+          <p className="figure text-[23px] font-bold leading-none tracking-[-0.035em] text-strong">
             {metric.value}
           </p>
           {metric.note && (
@@ -60,7 +60,7 @@ export function MetricCards({
                tırtıklı görünüyordu. Sığmazsa kesilir. */
             <p
               className={cn(
-                "truncate text-[11.5px] font-bold",
+                "truncate text-[12px] font-bold",
                 metric.tone === "up"
                   ? "text-up"
                   : metric.tone === "down"

@@ -99,14 +99,17 @@ function PanelHead({
   meta?: string;
 }) {
   return (
-    <div className="mb-4 flex items-center gap-2.5 border-b border-line-soft pb-3">
+    /* flex-wrap: künye metni ("Açılış Zili Analiz Ekibi") telefonda başlığı
+       iki satıra sıkıştırıyordu — sığmadığında kendi satırına düşer, başlık
+       hep tek satır kalır. */
+    <div className="mb-4 flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-line-soft pb-3">
       <span
         aria-hidden
         className="flex size-7 shrink-0 items-center justify-center rounded-[9px] bg-primary-wash text-primary"
       >
         <Icon weight="duotone" size={15} />
       </span>
-      <h2 className="text-[15px] font-bold tracking-[-0.01em] text-strong">
+      <h2 className="whitespace-nowrap text-[15px] font-bold tracking-[-0.01em] text-strong">
         {title}
       </h2>
       {meta && (
@@ -321,7 +324,7 @@ export default async function AnalysisDetailPage(
                   alt=""
                   width={56}
                   height={56}
-                  className="size-14 shrink-0 rounded-[12px] bg-white object-contain"
+                  className="size-14 shrink-0 rounded-[13px] border border-line bg-white object-contain p-1"
                 />
               ) : (
                 <SymbolBadge symbol={symbol} />
@@ -529,7 +532,7 @@ export default async function AnalysisDetailPage(
           asıl anlatan parça; onlara yer açmak için kolon kaldırıldı, oradaki
           üç kart sayfanın altına indi. Metin panellerinde satır uzunluğu
           `max-w` ile sınırlı — 1300px'lik bir paragraf okunmuyor. */}
-      <div className="flex min-w-0 flex-col gap-5">
+      <div className="flex min-w-0 flex-col gap-4">
           <VerdictStrip row={row} verdict={verdict} locale={locale} t={t} />
 
           {/* ---- Görsel katman ----
@@ -630,11 +633,16 @@ export default async function AnalysisDetailPage(
                 </blockquote>
 
                 {row.ceoQuote.topics && row.ceoQuote.topics.length > 0 && (
-                  <ul className="flex shrink-0 flex-wrap gap-1.5 lg:w-60 lg:flex-col lg:content-start">
+                  /* Rozetler karnedeki gibi: dar ekranda yan yana saran
+                     hap, genis ekranda alt alta TAM GENISLIK seritler.
+                     Yuvarlak haplar sag kolonda farkli genislikte kirpinti
+                     gibi duruyordu; ayni genislikteki seritler bir liste
+                     olarak okunuyor. */
+                  <ul className="flex shrink-0 flex-wrap gap-1.5 lg:w-64 lg:flex-col lg:flex-nowrap lg:gap-2">
                     {row.ceoQuote.topics.map((topic) => (
                       <li
                         key={topic}
-                        className="rounded-full border border-primary-faint bg-primary-wash px-3 py-1.5 text-[11.5px] font-semibold text-primary"
+                        className="rounded-[10px] border border-primary-faint bg-primary-wash px-3 py-2 text-[11.5px] font-semibold leading-[15px] text-primary lg:text-center"
                       >
                         {topic}
                       </li>
@@ -953,7 +961,7 @@ function VerdictStrip({
         aria-hidden
         className="hidden w-px self-stretch bg-primary-faint sm:block"
       />
-      <p className="min-w-[16rem] flex-1 text-[13.5px] font-medium leading-[21px] text-strong [text-wrap:pretty]">
+      <p className="min-w-[16rem] flex-1 text-[14px] font-medium leading-[22px] text-strong [text-wrap:pretty]">
         {row.headline}
       </p>
       {row.targetPrice !== null && (
@@ -1094,7 +1102,7 @@ function PointsCard({
         >
           <Icon weight="duotone" size={15} />
         </span>
-        <h3 className={cn("text-[12.5px] font-bold tracking-[-0.01em]", accent)}>
+        <h3 className={cn("text-[13px] font-bold tracking-[-0.01em]", accent)}>
           {title}
         </h3>
         <span className="figure ml-auto text-[11px] font-bold text-muted">
@@ -1106,7 +1114,7 @@ function PointsCard({
         {points.map((point, index) => (
           <li
             key={index}
-            className="flex gap-2.5 text-[11.5px] leading-[17px] text-body [text-wrap:pretty]"
+            className="flex gap-2.5 text-[12px] leading-[18px] text-body [text-wrap:pretty]"
           >
             <span
               aria-hidden
