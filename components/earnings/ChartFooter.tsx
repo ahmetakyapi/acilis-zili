@@ -11,6 +11,9 @@ import { cn } from "@/lib/utils";
  * Hairline ile ayrılıyor ve `mt-auto` ile kartın TABANINA yapışıyor: yan
  * yana duran iki kart farklı yükseklikte içerik taşıyor, künyeler aynı
  * hizada olmazsa satır tırtıklı görünüyor.
+ *
+ * Sayılar grafik kartının geri kalanıyla aynı ailede (`.numeral`); mono
+ * `.figure` metrik kartlarına ayrılmış durumda.
  */
 export type FooterStat = {
   label: string;
@@ -45,7 +48,7 @@ export function ChartFooter({
               değerin metnine ait — ton yoksa nötr koyu yazı. */}
           <dd
             className={cn(
-              "figure mt-px flex flex-wrap items-baseline gap-x-1.5 text-[15px] font-bold",
+              "numeral mt-px flex flex-wrap items-baseline gap-x-1.5 text-[15px] font-bold",
               stat.tone === "up"
                 ? "text-up"
                 : stat.tone === "down"

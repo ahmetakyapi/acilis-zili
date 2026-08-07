@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
+  Article,
   CalendarBlank,
+  Scales,
   Star,
   TrendUp,
   Warning,
@@ -57,6 +59,52 @@ import type { EarningsAnalysisRow } from "@/lib/schema";
  * çeyreğin hikâyesinin parçası, kenarda duran birer referans değil.
  * Mobilde tek kolona düşer ve karne en üste çıkar.
  */
+
+/**
+ * Metin panellerinin sütun düzeni.
+ *
+ * Satır boyu okunur bandın (50-75 karakter) içinde kalsın diye sütun sayısı
+ * genişlikle birlikte artıyor: telefonda tek, tablette iki, geniş ekranda
+ * üç. Sabit bir `max-w` bunu yapamıyordu — dar ekranda gereksiz kısıtlıyor,
+ * geniş ekranda panelin sağ yarısını boş bırakıyordu.
+ */
+const PROSE_COLUMNS =
+  "columns-1 gap-x-8 md:columns-2 xl:columns-3 [column-rule:1px_solid_var(--line-soft)]";
+
+/**
+ * Panel başlığı — ikon karosu, başlık, sağda künye.
+ *
+ * Güçlü Yönler / Riskler kartlarıyla aynı dil: sayfadaki her panel aynı
+ * biçimde açılıyor, çıplak bir `<h2>` kalanın yanında yarım duruyordu.
+ */
+function PanelHead({
+  icon: Icon,
+  title,
+  meta,
+}: {
+  icon: typeof Article;
+  title: string;
+  meta?: string;
+}) {
+  return (
+    <div className="mb-4 flex items-center gap-2.5 border-b border-line-soft pb-3">
+      <span
+        aria-hidden
+        className="flex size-7 shrink-0 items-center justify-center rounded-[9px] bg-primary-wash text-primary"
+      >
+        <Icon weight="duotone" size={15} />
+      </span>
+      <h2 className="text-[15px] font-bold tracking-[-0.01em] text-strong">
+        {title}
+      </h2>
+      {meta && (
+        <span className="plate ml-auto shrink-0 text-[10px] tracking-[0.09em]">
+          {meta}
+        </span>
+      )}
+    </div>
+  );
+}
 
 export async function generateMetadata(
   props: PageProps<"/bilancolar/[symbol]/[period]">,
@@ -130,6 +178,11 @@ export default async function AnalysisDetailPage(
   const revenueUnit =
     revenueScale === 1e9 ? t.analysis.unitBillionUsd : t.analysis.unitMillionUsd;
   const hasGuidance = (row.guidance?.length ?? 0) > 0;
+  /* Kapanış şeridinde kaç kart basılacak: karne yalnızca görsel varsa,
+     rakip takvimi yalnızca aynı sektörden yaklaşan bilanço varsa çıkıyor;
+     rehber şeridi her zaman var. */
+  const bottomCards =
+    1 + (row.cardImageUrl ? 1 : 0) + (peers.length > 0 ? 1 : 0);
 
   return (
     <div className="flex flex-col gap-5">
@@ -442,21 +495,32 @@ export default async function AnalysisDetailPage(
             </section>
           )}
 
+          {/* ---- Metin katmanı ----
+              İkisi de sayfanın tam genişliğinde bir panelken metin `max-w`
+              ile ~92 karaktere kısılıyordu: sol tarafta bir metin bloğu,
+              sağ tarafta 400 piksellik boşluk. Sütunlaştırma iki sorunu
+              birden çözüyor — genişlik gerçekten kullanılıyor ve satır boyu
+              her kırılma noktasında okunur bandın içinde kalıyor (1300px'te
+              üç sütun ≈ 58 karakter, tek sütunda 100'ün üstündeydi).
+
+              Bloklar `break-inside-avoid`: bir paragrafın ortasından
+              bölünüp iki sütuna yayılması, sayfayı gazete değil bozuk bir
+              düzen gibi gösteriyordu. */}
           <Panel className="p-5 sm:p-6">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h2 className="text-[15px] font-bold text-strong">
-                {t.analysis.summary}
-              </h2>
-              <span className="text-[11px] font-semibold text-muted">
-                {t.analysis.readMinutes.replace(
-                  "{count}",
-                  String(readMinutes(row)),
-                )}
-              </span>
-            </div>
-            <div className="flex max-w-[92ch] flex-col gap-3 text-[13.5px] leading-[22px] text-body [text-wrap:pretty]">
+            <PanelHead
+              icon={Article}
+              title={t.analysis.summary}
+              meta={t.analysis.readMinutes.replace(
+                "{count}",
+                String(readMinutes(row)),
+              )}
+            />
+            <div className={PROSE_COLUMNS}>
               {row.summary.map((paragraph, index) => (
-                <p key={index}>
+                <p
+                  key={index}
+                  className="mb-3 break-inside-avoid text-[13.5px] leading-[22px] text-body [text-wrap:pretty] last:mb-0"
+                >
                   <RichText text={paragraph} />
                 </p>
               ))}
@@ -465,20 +529,33 @@ export default async function AnalysisDetailPage(
 
           {row.analysis.length > 0 && (
             <Panel className="p-5 sm:p-6">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <h2 className="text-[15px] font-bold text-strong">
-                  {t.analysis.detailed}
-                </h2>
-                <span className="text-[11px] font-semibold text-muted">
-                  {t.analysis.byTeam}
-                </span>
-              </div>
-              <div className="flex max-w-[92ch] flex-col gap-3 text-[13.5px] leading-[22px] text-body [text-wrap:pretty]">
+              <PanelHead
+                icon={Scales}
+                title={t.analysis.detailed}
+                meta={t.analysis.byTeam}
+              />
+              {/* Bölümler tek bir metin yığınıydı: her birinin başlığı
+                  paragrafın başında kalın bir cümle olarak duruyor, göz
+                  nereden nereye kadar okuduğunu ayırt edemiyordu. Artık her
+                  bölüm numarasıyla ve kendi başlık satırıyla ayrı bir birim. */}
+              <div className={PROSE_COLUMNS}>
                 {row.analysis.map((section, index) => (
-                  <p key={index}>
-                    <b className="font-bold text-strong">{section.title}</b>{" "}
-                    <RichText text={section.body} />
-                  </p>
+                  <section key={index} className="mb-5 break-inside-avoid last:mb-0">
+                    <h3 className="mb-1.5 flex items-start gap-2">
+                      <span
+                        aria-hidden
+                        className="numeral mt-px flex size-[18px] shrink-0 items-center justify-center rounded-[5px] bg-primary-wash text-[9.5px] font-bold text-primary"
+                      >
+                        {index + 1}
+                      </span>
+                      <span className="text-[13px] font-bold leading-[18px] tracking-[-0.01em] text-strong [text-wrap:balance]">
+                        {section.title}
+                      </span>
+                    </h3>
+                    <p className="text-[13px] leading-[21px] text-body [text-wrap:pretty]">
+                      <RichText text={section.body} />
+                    </p>
+                  </section>
                 ))}
               </div>
             </Panel>
@@ -506,13 +583,36 @@ export default async function AnalysisDetailPage(
       {/* ---- Kapanış şeridi ----
           Karne, rakip takvimi ve rehber bağlantıları yapışkan yan kolondaydı;
           o kolon içeriğin genişliğini kısıyordu. Üçü de "okudun, şimdi ne
-          var" sorusuna ait — metnin sonunda yan yana duruyorlar. */}
-      <div className="grid items-start gap-4 lg:grid-cols-[repeat(3,minmax(0,1fr))]">
+          var" sorusuna ait — metnin sonunda yan yana duruyorlar.
+
+          Izgara SABİT üç sütun değil, BASILAN kart sayısına göre kuruluyor:
+          karne çoğu kayıtta yok ve üç sütunluk bir ızgarada üçüncü göz
+          bomboş kalıyordu — sayfa "bir şey yüklenemedi" gibi bitiyordu.
+          Rehber kartları da aynı sebeple: tek sütuna sıkışmışken alt alta
+          diziliyor, yarım genişlikte yan yana geçiyorlar. */}
+      <div
+        className={cn(
+          "grid items-start gap-4",
+          bottomCards === 3
+            ? "lg:grid-cols-[repeat(3,minmax(0,1fr))]"
+            : bottomCards === 2
+              ? // Eşit iki yarıda referans kartı gereğinden geniş kalıyor,
+                // rehber kartlarının açıklaması ise üç noktaya kırpılıyordu.
+                "lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]"
+              : "",
+        )}
+      >
         <ReportCard row={row} t={t} />
 
         {peers.length > 0 && (
           <Panel className="p-4 sm:p-[18px]">
-            <h2 className="mb-3 text-[13.5px] font-bold text-strong">
+            <h2 className="mb-3 flex items-center gap-2.5 text-[13.5px] font-bold text-strong">
+              <span
+                aria-hidden
+                className="flex size-7 shrink-0 items-center justify-center rounded-[9px] bg-primary-wash text-primary"
+              >
+                <CalendarBlank weight="duotone" size={15} />
+              </span>
               {t.analysis.upcomingEarnings}
             </h2>
             <div className="flex flex-col">
@@ -521,15 +621,34 @@ export default async function AnalysisDetailPage(
                   key={peer.id}
                   href={`/hisse/${peer.symbol}`}
                   prefetch={false}
-                  className="flex items-center gap-2.5 border-b border-line-soft py-[7px] last:border-b-0 hover:opacity-75"
+                  className="flex items-center gap-2.5 border-b border-line-soft py-2 last:border-b-0 hover:opacity-75"
                 >
-                  <span className="w-[52px] shrink-0 text-[12.5px] font-bold text-strong">
+                  {/* Logo, satırı bir sembol listesi olmaktan çıkarıp
+                      sayfanın geri kalanıyla aynı dile sokuyor (mercek
+                      künyeleri ve analiz tablosu da logodan besleniyor). */}
+                  {peerMeta[peer.symbol]?.logoUrl ? (
+                    <Image
+                      src={peerMeta[peer.symbol].logoUrl!}
+                      alt=""
+                      width={22}
+                      height={22}
+                      className="size-[22px] shrink-0 rounded-[6px] bg-white object-contain"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="flex size-[22px] shrink-0 items-center justify-center rounded-[6px] bg-primary-wash text-[9px] font-bold text-primary"
+                    >
+                      {peer.symbol.slice(0, 2)}
+                    </span>
+                  )}
+                  <span className="shrink-0 text-[12.5px] font-bold text-strong">
                     {peer.symbol}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-xs text-body">
                     {peerMeta[peer.symbol]?.name ?? ""}
                   </span>
-                  <span className="shrink-0 text-[11px] text-muted">
+                  <span className="numeral shrink-0 text-[11px] text-muted">
                     {formatEtDateCompact(peer.reportDate, locale)}
                   </span>
                 </Link>
@@ -542,7 +661,7 @@ export default async function AnalysisDetailPage(
           label={t.guide.contextLabel}
           locale={locale}
           slugs={["bilanco", "degerleme"]}
-          layout="stack"
+          layout={bottomCards === 3 ? "stack" : "row"}
         />
       </div>
 
@@ -632,6 +751,11 @@ function readMinutes(row: EarningsAnalysisRow): number {
  * Genel Görüş şeridi — skor, karar, iki cümlelik gerekçe ve analist hedefi
  * tek satırda. Sayfanın en üstünde duruyor çünkü okuyucunun ilk sorusu bu;
  * altındaki her şey bu satırın gerekçesi.
+ *
+ * Potansiyel yüzdesi kayıtta yoksa hedef ile kapanış fiyatından TÜRETİLİYOR.
+ * Uydurma değil: iki sayı da aynı gövdede duruyor, aradaki bölme yeni bir
+ * iddia üretmiyor. Ajan bu alanı ara sıra boş bırakıyor ve şeridin sağ ucu
+ * hedefi yazıp "ne kadar yukarısı" sorusunu cevapsız bırakıyordu.
  */
 function VerdictStrip({
   row,
@@ -644,6 +768,12 @@ function VerdictStrip({
   locale: Locale;
   t: Dictionary;
 }) {
+  const upsidePct =
+    row.upsidePct ??
+    (row.targetPrice !== null && row.price !== null && row.price > 0
+      ? ((row.targetPrice - row.price) / row.price) * 100
+      : null);
+
   return (
     <section className="flex flex-wrap items-center gap-4 rounded-[16px] border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-4 sm:gap-[18px] sm:px-[22px]">
       <ScoreRing score={row.score} verdict={verdict} size={64} showDenominator />
@@ -680,15 +810,15 @@ function VerdictStrip({
           <span className="figure text-[22px] font-bold leading-none tracking-[-0.03em] text-strong">
             {formatPrice(row.targetPrice, locale, { currency: true })}
           </span>
-          {row.upsidePct !== null && (
+          {upsidePct !== null && (
             <span
               className={cn(
                 "figure text-[11.5px] font-bold",
-                row.upsidePct >= 0 ? "text-up" : "text-down",
+                upsidePct >= 0 ? "text-up" : "text-down",
               )}
             >
-              {row.upsidePct >= 0 ? "▲" : "▼"}{" "}
-              {formatPercentPlain(row.upsidePct, locale, 0)}{" "}
+              {upsidePct >= 0 ? "▲" : "▼"}{" "}
+              {formatPercentPlain(upsidePct, locale, 0)}{" "}
               {t.analysis.upsidePotential}
             </span>
           )}

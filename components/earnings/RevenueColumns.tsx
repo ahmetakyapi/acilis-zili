@@ -15,6 +15,16 @@ import { cn } from "@/lib/utils";
  * kayboluyordu; başlıkta bir kez söyleyip sütunlarda çıplak sayı bırakmak
  * hem daha sessiz hem daha okunur.
  *
+ * `note` YALNIZCA öngörü sütununda basılır — orada tek bir sayı değil bir
+ * aralık ("10,3–10,8") gösterilmesi gerekiyor. Gerçekleşen sütunlarda not
+ * yok sayılır: birkaç kayıtta ajan oraya yıllık değişimi yazmıştı ("▲ %5")
+ * ve grafik gelirin kendisini hiç göstermeden beş kez değişim oranı basıyordu.
+ * Değişim oranının yeri kartın altındaki künye (`ChartFooter`).
+ *
+ * Sayılar mono DEĞİL, tabular Archivo (`.numeral`): mono `.figure` metrik
+ * kartlarına ait — grafikteki etiketler orada bir tablo satırı gibi değil,
+ * çizimin parçası gibi durmalı.
+ *
  * Arkadaki yatay ızgara çizgileri sütun yüksekliklerini kıyaslanabilir
  * kılıyor: çizgisiz bir grupta "bu ötekinin iki katı mı" sorusu gözle
  * cevaplanmıyordu.
@@ -28,7 +38,8 @@ export type RevenueBar = {
   label: string;
   value: number;
   projected?: boolean | null;
-  /** Sütunun üstünde yazan metin; yoksa değerin kendisi yazılır. */
+  /** Öngörü sütununun üstünde yazan ARALIK metni ("10,3–10,8"); gerçekleşen
+      sütunlarda yok sayılır, orada her zaman değerin kendisi yazılır. */
   note?: string | null;
 };
 
@@ -134,11 +145,11 @@ export function RevenueColumns({
               >
                 <p
                   className={cn(
-                    "figure whitespace-nowrap text-center text-[11px] font-bold",
+                    "numeral whitespace-nowrap text-center text-[12px] font-bold",
                     bar.projected ? "text-primary" : "text-strong",
                   )}
                 >
-                  {bar.note ?? format(bar.value)}
+                  {bar.projected ? (bar.note ?? format(bar.value)) : format(bar.value)}
                 </p>
                 <div
                   className={cn(

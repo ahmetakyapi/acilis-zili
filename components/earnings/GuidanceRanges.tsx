@@ -67,13 +67,16 @@ export function GuidanceRanges({
             {legendRange}
           </span>
           <span className="flex items-center gap-1.5">
-            <span aria-hidden className="size-2 rounded-full bg-strong" />
+            {/* Gösterge işareti bandın üstündeki İŞARETİN aynısı: yuvarlak
+                bir nokta çizilip barda kapsül göstermek, okuyucuya iki ayrı
+                şey varmış gibi geliyordu. */}
+            <span aria-hidden className="h-3 w-[5px] rounded-full bg-strong" />
             {legendConsensus}
           </span>
         </div>
       </div>
 
-      <ul className="flex flex-col gap-3.5">
+      <ul className="flex flex-col gap-4">
         {rows.map((row, index) => {
           const lo = Math.min(row.low, row.high);
           const hi = Math.max(row.low, row.high);
@@ -93,15 +96,15 @@ export function GuidanceRanges({
           return (
             <li key={`${row.label}-${index}`} className="flex flex-col gap-1.5">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                <span className="text-[12px] font-semibold text-body">
+                <span className="text-[12.5px] font-bold text-strong">
                   {row.label}
                 </span>
-                <span className="figure whitespace-nowrap text-[12.5px] font-bold text-strong">
+                <span className="numeral whitespace-nowrap text-[13.5px] font-bold text-strong">
                   {formatRange(lo, hi, row.unit)}
                 </span>
               </div>
 
-              <div className="relative h-2 w-full rounded-full bg-surface-elevated">
+              <div className="relative h-2.5 w-full rounded-full bg-surface-elevated">
                 <span
                   aria-hidden
                   className="absolute inset-y-0 rounded-full bg-primary"
@@ -111,12 +114,14 @@ export function GuidanceRanges({
                   }}
                 />
                 {consensus !== null && (
-                  /* Nokta bandın ÜSTÜNE biniyor ve kendi zemin renginde bir
+                  /* İşaret bandın ÜSTÜNE biniyor ve kendi zemin renginde bir
                      halka taşıyor: bandın içine düştüğünde maviye karışıp
-                     kayboluyordu. */
+                     kayboluyordu. Yuvarlak nokta yerine DİKEY kapsül —
+                     nokta bir veri işareti gibi okunuyordu, oysa bu bir
+                     eşik: "piyasa tam burayı bekliyordu". */
                   <span
                     aria-hidden
-                    className="absolute top-1/2 size-[9px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-strong ring-2 ring-surface"
+                    className="absolute top-1/2 h-[15px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-strong ring-2 ring-surface"
                     style={{ left: `${pos(consensus)}%` }}
                   />
                 )}

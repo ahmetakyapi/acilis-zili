@@ -657,6 +657,13 @@ Doğrulayamadığın sayıyı YAZMA. Alan boş kalsın; uydurma rakam en büyük
 yarım görünüyor — üçünü de doldur: price (bilanço günü kapanışı),
 market_cap ve return_1y_pct (son 12 ayın getirisi, yüzde olarak).
 
+Şu üçü de GÖRÜŞ ŞERİDİNİN sağ ucudur ve aynı şekilde zorunludur:
+target_price (analistlerin ortalama 12 aylık hedefi), analyst_count (hedefi
+veren analist sayısı) ve upside_pct (hedefin kapanış fiyatına göre yüzde
+farkı). target_price boş gelirse şeridin sağ ucu bomboş kalıyor. upside_pct'yi
+unutursan site fiyattan kendisi hesaplar, ama hedef ile analist sayısının
+karşılığı yok — onları bul.
+
 --- 4. DEĞERLENDİR ---
 
 Sayfa metin değil, ÖNCE GÖRSEL: skor şeridi, altı metrik kartı, çeyreklik
@@ -798,6 +805,14 @@ Alan notları:
                 "projected": true koy; value orta noktadır ve note sütunun
                 üstünde yazacak aralık metnidir ("10,3–10,8"). value HAM
                 dolardır (8970000000), grafik ölçeği ondan çıkar.
+
+                note SADECE öngörü satırında kullanılır ve BİRİM YAZMAZ —
+                birim başlıkta bir kez geçiyor ("Çeyreklik Gelir (milyar $)"),
+                sütunun üstünde ikinci kez yazınca satır kalabalıklaşıyor.
+                Gerçekleşen satırlara note YAZMA: oraya yıllık değişim
+                yazılan kayıtlarda grafik gelirin kendisini hiç göstermeden
+                beş kez "▲ %5" basıyordu. Değişim oranının yeri
+                revenue_footer.
   guidance    → gelecek çeyrek öngörüsü, en fazla 5 satır. Her satır bir
                 ölçü: low/high şirketin verdiği bant, consensus piyasa
                 beklentisi. unit "Mr $" / "$" / "%" — site aralığın yalnızca
