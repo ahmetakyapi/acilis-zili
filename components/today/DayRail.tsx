@@ -118,9 +118,9 @@ const AXIS_CENTER = AXIS_TOP + AXIS_HEIGHT / 2;
 const EDGE_TOP = AXIS_TOP + AXIS_HEIGHT + 5;
 const CHIP_TOP = 110;
 /** Kart yüksekliği ~72px (üç satır + dolgu); kademeler arası nefes payı. */
-const ROW_OFFSET = 84;
+const ROW_OFFSET = 90;
 /** Kartlar metin etiketlerinden geniş; çakışma eşiği de ona göre geniş. */
-const COLLISION_MINUTES = 150;
+const COLLISION_MINUTES = 160;
 /** Alt bant en fazla üç kademe; daha derini şeridi bir duvara çeviriyor. */
 const MAX_ROW = 2;
 
@@ -315,7 +315,10 @@ export function DayRail({
         {[openPct, closePct].map((left) => (
           <div
             key={left}
-            className="absolute size-3.5 rounded-full border-2 border-flat bg-page"
+            className={cn(
+              "absolute size-3.5 rounded-full border-[3px] bg-page",
+              tradingDay ? "border-primary" : "border-flat",
+            )}
             style={{
               left: `${left}%`,
               top: AXIS_CENTER - 7,
@@ -430,14 +433,14 @@ export function DayRail({
               />
               {/* Bağ çizgisi: kart hangi ana aitse oradan iner. */}
               <span
-                className="absolute w-px bg-line"
+                className="absolute w-px bg-line-strong"
                 style={{ left, top: AXIS_CENTER + 8, height: chipTop - AXIS_CENTER - 10 }}
               />
               {/* Kart — bağ çizgilerinin ÜSTÜNDE durur: komşu kartın çizgisi
                   kartın arkasından geçer, içinden değil. */}
               <div
                 className={cn(
-                  "absolute z-10 w-max max-w-52 rounded-[10px] border border-line bg-surface px-3 py-2 text-center",
+                  "absolute z-10 w-max max-w-56 rounded-[12px] border border-line bg-surface-solid px-3.5 py-2.5 text-center",
                   high && "border-l-[3px] border-l-down",
                   !high && event.watched && "border-l-[3px] border-l-primary",
                 )}
@@ -445,7 +448,7 @@ export function DayRail({
               >
                 <div
                   className={cn(
-                    "numeral flex items-center justify-center gap-1.5 whitespace-nowrap text-[11px] font-semibold leading-none",
+                    "numeral flex items-center justify-center gap-1.5 whitespace-nowrap text-[11.5px] font-bold leading-none",
                     high ? "text-down" : "text-strong",
                   )}
                 >
@@ -473,18 +476,18 @@ export function DayRail({
                         ))}
                       </span>
                     )}
-                    <span className="numeral min-w-0 truncate text-[11.5px] font-bold text-strong">
+                    <span className="numeral min-w-0 truncate text-[12px] font-bold text-strong">
                       {event.title}
                     </span>
                   </div>
                 ) : (
-                  <div className="mx-auto mt-1.5 line-clamp-2 max-w-44 text-[11.5px] font-medium leading-[15px] text-strong">
+                  <div className="mx-auto mt-1.5 line-clamp-2 max-w-48 text-[12px] font-semibold leading-[16px] text-strong">
                     {event.title}
                   </div>
                 )}
 
                 {event.detail && (
-                  <div className="mx-auto mt-1 max-w-44 truncate text-[10.5px] leading-none text-muted">
+                  <div className="mx-auto mt-1 max-w-48 truncate text-[11px] leading-none text-muted">
                     {event.detail}
                   </div>
                 )}

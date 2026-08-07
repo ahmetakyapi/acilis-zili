@@ -240,12 +240,12 @@ async function IndexCards({
               {quote ? (
                 <>
                   <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                    <p className="tote text-2xl">
+                    <p className="tote text-[26px]">
                       {formatPrice(quote.price, locale)}
                     </p>
                     <p
                       className={cn(
-                        "numeral text-sm font-semibold",
+                        "numeral text-[14px] font-bold",
                         tone === "up"
                           ? "text-up"
                           : tone === "down"
@@ -261,10 +261,10 @@ async function IndexCards({
                       points={points}
                       title={`${entry.label} · 1G`}
                       tone={tone}
-                      height={40}
+                      height={44}
                       showLastDot={false}
                       strokeWidth={1.6}
-                      className="mt-2.5 h-10 w-full opacity-90"
+                      className="mt-3 h-11 w-full opacity-90"
                     />
                   )}
                 </>
@@ -310,15 +310,15 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
     <Panel>
       <PanelHeader title={t.markets.yields} />
 
-      <div className="grid grid-cols-2 gap-px bg-line-soft sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-line-soft sm:p-0">
         {values.map((value) => {
           const delta =
             value.latest !== null && value.prev !== null
               ? value.latest - value.prev
               : null;
           return (
-            <div key={value.key} className="bg-surface px-4 py-3.5 sm:px-5">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+            <div key={value.key} className="rounded-[12px] border border-line bg-surface px-3.5 py-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-5 sm:py-4">
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted">
                 {value.label}
               </p>
               <p className="tote mt-1 text-xl sm:text-2xl">
@@ -332,7 +332,12 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                 )}
               </p>
               {delta !== null && Math.abs(delta) > 0.001 && (
-                <p className="numeral mt-0.5 text-[11px] text-muted">
+                <p
+                  className={cn(
+                    "numeral mt-1 text-[11px] font-semibold",
+                    delta > 0 ? "text-up" : "text-down",
+                  )}
+                >
                   {delta > 0 ? "▲" : "▼"} {formatPrice(Math.abs(delta), locale)}{" "}
                   {t.markets.point}
                 </p>
@@ -350,7 +355,7 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
           </span>
           <span
             className={cn(
-              "numeral rounded-full px-2.5 py-1 text-xs font-semibold",
+              "numeral rounded-full px-2.5 py-1 text-xs font-bold",
               inverted ? "bg-down-wash text-down" : "bg-up-wash text-up",
             )}
           >
@@ -534,10 +539,10 @@ function BreadthPanel({
   return (
     <Panel className="p-4 sm:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-sm font-semibold tracking-tight text-strong">
+        <h2 className="text-[14px] font-bold tracking-tight text-strong">
           {t.markets.breadth}
         </h2>
-        <p className="numeral text-xs text-muted">
+        <p className="numeral text-[12.5px] text-muted">
           <span className="font-semibold text-up">{advancing}</span>{" "}
           {t.markets.advancing}
           <span aria-hidden className="mx-1.5">
@@ -557,7 +562,7 @@ function BreadthPanel({
         </p>
       </div>
 
-      <div className="mt-3 flex h-2.5 w-full gap-px overflow-hidden rounded-full bg-surface-sunken">
+      <div className="mt-3.5 flex h-3 w-full gap-px overflow-hidden rounded-full bg-surface-sunken">
         {advancing > 0 && (
           <span className="bg-up" style={{ width: `${pct(advancing)}%` }} />
         )}
@@ -613,14 +618,14 @@ function MoverPanel({
             <li key={row.member.symbol}>
               <Link
                 href={`/hisse/${row.member.symbol}`}
-                className="block px-4 py-2.5 transition-colors hover:bg-primary-tint sm:px-5"
+                className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="flex min-w-0 items-baseline gap-2.5">
-                    <span className="numeral shrink-0 text-sm font-semibold text-strong">
+                    <span className="shrink-0 text-[13.5px] font-bold text-strong">
                       {row.member.symbol}
                     </span>
-                    <span className="min-w-0 truncate text-xs text-soft">
+                    <span className="min-w-0 truncate text-[11.5px] text-muted">
                       {row.member.name}
                     </span>
                   </span>
@@ -639,7 +644,7 @@ function MoverPanel({
                   <span
                     aria-hidden
                     className={cn(
-                      "h-1 rounded-full",
+                      "h-[5px] rounded-full",
                       tone === "up" ? "bg-up/70" : "bg-down/70",
                     )}
                     style={{ width: `${width}%` }}
@@ -680,7 +685,7 @@ function SortHead({
   className?: string;
 }) {
   return (
-    <th className={cn("px-3 py-2.5 text-right font-medium", className)}>
+    <th className={cn("px-3 py-2.5 text-right font-semibold", className)}>
       {/* Dokunma alanı yazının kendisi kadardı (14px); negatif margin +
           dikey dolgu tabloyu büyütmeden hedefi 32px'e çıkarır. */}
       {/* scroll={false}: sıralama bir gezinme değil, aynı tablonun yeniden
@@ -760,8 +765,8 @@ function MembersTable({
       <div className="scroll-x">
         <table className="w-full min-w-[680px] text-sm">
           <thead>
-            <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
-              <th className="w-10 px-4 py-2.5 font-medium sm:px-5">#</th>
+            <tr className="border-b border-line text-left text-[10.5px] uppercase tracking-[0.08em] text-muted">
+              <th className="w-10 px-4 py-2.5 font-semibold sm:px-5">#</th>
               <SortHead
                 label={t.companies.company}
                 href={sortHref(tab, "ad", sort, dir)}
@@ -809,10 +814,10 @@ function MembersTable({
                   key={row.member.symbol}
                   className="transition-colors hover:bg-primary-tint"
                 >
-                  <td className="numeral px-4 py-2 text-xs text-muted sm:px-5">
+                  <td className="numeral px-4 py-2.5 text-xs text-muted sm:px-5">
                     {index + 1}
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2.5">
                     <Link
                       href={`/hisse/${row.member.symbol}`}
                       /* -my-2 py-2: bağlantı hücreyi doldurmadığı için
@@ -821,17 +826,17 @@ function MembersTable({
                          de tabloyu olduğu yerde tutar. */
                       className="-my-2 flex min-w-0 items-baseline gap-2.5 py-2"
                     >
-                      <span className="numeral w-16 shrink-0 font-semibold text-strong">
+                      <span className="w-16 shrink-0 text-[13.5px] font-bold text-strong">
                         {row.member.symbol}
                       </span>
-                      <span className="min-w-0 truncate text-xs text-soft">
+                      <span className="min-w-0 truncate text-[11.5px] text-muted">
                         {row.member.name}
                       </span>
                     </Link>
                   </td>
                   <td
                     className={cn(
-                      "numeral px-3 py-2 text-right font-semibold",
+                      "numeral px-3 py-2.5 text-right font-bold",
                       tone === "up"
                         ? "text-up"
                         : tone === "down"
@@ -841,12 +846,12 @@ function MembersTable({
                   >
                     {quote ? formatPercent(quote.changePct, locale) : "—"}
                   </td>
-                  <td className="numeral px-3 py-2 text-right text-body">
+                  <td className="numeral px-3 py-2.5 text-right font-bold text-strong">
                     {quote ? formatPrice(quote.price, locale) : "—"}
                   </td>
                   <td
                     className={cn(
-                      "numeral px-3 py-2 text-right text-body",
+                      "numeral px-3 py-2.5 text-right text-body",
                       showContribution ? undefined : "sm:pr-5",
                     )}
                   >

@@ -99,7 +99,7 @@ function SortHead({
   return (
     <th
       key={col}
-      className={cn("px-1.5 py-2.5 text-right font-medium sm:px-3", className)}
+      className={cn("px-1.5 py-2.5 text-right font-semibold sm:px-3", className)}
     >
       {/* Dokunma alanı yazının kendisi kadardı (14px yüksekliğinde) ve
           telefonda sıralama değiştirmek nişancılık istiyordu. Negatif
@@ -308,14 +308,14 @@ async function CompaniesTable({
           <div className="scroll-x">
             <table className="w-full text-sm sm:min-w-[700px]">
               <thead>
-                <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
-                  <th className="hidden w-10 px-4 py-2.5 font-medium sm:table-cell sm:px-5">
+                <tr className="border-b border-line text-left text-[10.5px] uppercase tracking-[0.08em] text-muted">
+                  <th className="hidden w-10 px-4 py-2.5 font-semibold sm:table-cell sm:px-5">
                     #
                   </th>
-                  <th className="px-3 py-2.5 font-medium sm:px-3">
+                  <th className="px-3 py-2.5 font-semibold sm:px-3">
                     {t.companies.company}
                   </th>
-                  <th className="hidden px-3 py-2.5 font-medium md:table-cell">
+                  <th className="hidden px-3 py-2.5 font-semibold md:table-cell">
                     {t.companies.sector}
                   </th>
                   {/* Değişim fiyattan önce: listeye bakan önce "bugün ne
@@ -368,10 +368,10 @@ async function CompaniesTable({
                       key={company.symbol}
                       className="transition-colors hover:bg-primary-tint"
                     >
-                      <td className="numeral hidden px-4 py-2.5 text-xs text-muted sm:table-cell sm:px-5">
+                      <td className="numeral hidden px-4 py-3 text-xs text-muted sm:table-cell sm:px-5">
                         {index + 1}
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-3 py-3">
                         <Link
                           href={`/hisse/${company.symbol}`} prefetch={false}
                           className="flex items-center gap-2.5"
@@ -382,30 +382,30 @@ async function CompaniesTable({
                               alt=""
                               width={34}
                               height={34}
-                              className="rounded-md bg-white object-contain"
+                              className="rounded-[9px] border border-line-soft bg-white object-contain"
                             />
                           ) : (
                             <span
                               aria-hidden
-                              className="numeral flex size-[34px] items-center justify-center rounded-md bg-primary-wash text-[9px] font-bold text-primary"
+                              className="numeral flex size-[34px] items-center justify-center rounded-[9px] bg-primary-wash text-[9px] font-bold text-primary"
                             >
                               {company.symbol.slice(0, 2)}
                             </span>
                           )}
                           <span className="min-w-0">
-                            <span className="numeral block font-semibold text-strong">
+                            <span className="block text-[13.5px] font-bold leading-[18px] text-strong">
                               {company.symbol}
                             </span>
-                            <span className="block max-w-[104px] truncate text-xs text-soft sm:max-w-44">
+                            <span className="block max-w-[104px] truncate text-[11.5px] leading-[15px] text-muted sm:max-w-44">
                               {company.name}
                             </span>
                           </span>
                         </Link>
                       </td>
-                      <td className="hidden max-w-40 truncate px-3 py-2.5 text-xs text-soft md:table-cell">
+                      <td className="hidden max-w-40 truncate px-3 py-3 text-[12px] text-soft md:table-cell">
                         {industryLabel(company.industry, locale) ?? "—"}
                       </td>
-                      <td className="px-1.5 py-2.5 text-right sm:px-3">
+                      <td className="px-1.5 py-3 text-right sm:px-3">
                         {quote ? (
                           <ChangePill
                             changePct={quote.changePct}
@@ -416,7 +416,7 @@ async function CompaniesTable({
                           <span className="text-xs text-muted">—</span>
                         )}
                       </td>
-                      <td className="numeral hidden px-3 py-2.5 text-right sm:table-cell">
+                      <td className="numeral hidden px-3 py-3 text-right sm:table-cell">
                         {weekly[company.symbol] !== undefined ? (
                           <span
                             className={cn(
@@ -433,15 +433,15 @@ async function CompaniesTable({
                       {/* Fiyat satırın ÇAPASI: değişim, hafta, piyasa değeri
                           ve hacim hep ona göre okunuyor. Diğerleriyle aynı
                           ağırlıkta yazılınca sayı dizisinin içinde kayboluyordu. */}
-                      <td className="numeral px-3 py-2.5 pr-4 text-right font-bold text-strong sm:pr-3">
+                      <td className="numeral px-3 py-3 pr-4 text-right text-[13.5px] font-bold text-strong sm:pr-3">
                         {quote ? formatPrice(quote.price, locale) : "—"}
                       </td>
-                      <td className="numeral hidden px-3 py-2.5 text-right text-body sm:table-cell">
+                      <td className="numeral hidden px-3 py-3 text-right font-semibold text-body sm:table-cell">
                         {company.marketCap
                           ? `$${formatCompact(company.marketCap, locale)}`
                           : "—"}
                       </td>
-                      <td className="numeral hidden px-4 py-2.5 text-right text-soft sm:table-cell sm:px-5">
+                      <td className="numeral hidden px-4 py-3 text-right text-soft sm:table-cell sm:px-5">
                         {formatVolume(quote?.volume ?? company.volume, locale)}
                       </td>
                     </tr>
