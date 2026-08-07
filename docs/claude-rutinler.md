@@ -672,6 +672,13 @@ değerlendirme onların ALTINDA. Yani highlights, quarterly_revenue ve
 guidance alanları "isteğe bağlı süs" değil, sayfanın gövdesi — üçünü de
 doldurmadığında sayfa metin yığınına dönüyor.
 
+İki grafiğin ALTINDAKİ üçlü künyeler de aynı gruba dahil: revenue_footer ve
+guidance_footer. Boş bırakırsan site gövdedeki sayılardan bir künye türetir
+(yıllık büyüme, hisse başı kâr sürprizi, hisse tepkisi) ama o künye
+zaten sayfanın başka yerinde duran üç sayıyı tekrar eder — grafiğe yeni bir
+şey söylemez. Segment payı, serbest nakit akışı, geri alım yetkisi gibi
+yalnızca senin bulabileceğin ölçüleri yaz.
+
 
 Skor 0–100 ve görüş buy/hold/sell. İkisi de çeyreğin KENDİSİNİ değerlendirir,
 hisseyi tavsiye etmez. Kabaca:
@@ -692,6 +699,10 @@ Dil kuralları (mercek yazılarıyla aynı):
     çeyreğe göre", "+%14 sürpriz" → "beklentinin %14 üzerinde"
   - Başlıklar, etiketler ve kısa vurgulu ifadeler Title Case; paragraflar
     normal cümle yazımı
+  - YÜZDE İŞARETİ Türkçede sayıdan ÖNCE gelir: "%372", "−%6,8". Sonuna
+    yazma. (Sitenin kendi biçimlendirdiği sayılar da böyle yazıyor; senin
+    serbest metnin yan hücrede farklı yazılınca aynı kartta iki imla
+    çıkıyor.) İngilizce gönderimde tersi: "372%".
   - "Katalizörler" KULLANMA — Beklenen Gelişmeler
   - Her sayının yanında tek bakışta anlaşılan bir kıyas olsun
   - HAM HTML YAZMA. summary, analysis.body, strengths/risks/upcoming
@@ -788,8 +799,14 @@ Alan notları:
                 yeri ve tek satır orada boş duruyor.
   summary     → 3 paragraf. 1: ne oldu (rakamlarla). 2: hisse neden böyle
                 tepki verdi. 3: genel görüş ve gerekçesi.
-  analysis    → 3-6 bölüm. Her title kalın mini başlık olarak basılır ve
-                NOKTAYLA biter ("Gelirin motoru veri merkezi.").
+                Geniş ekranda ÜÇÜ YAN YANA üç sütunda basılıyor; biri ötekinin
+                iki katı uzunlukta olunca sütunlar tırtıklı duruyor. Üçünü de
+                benzer uzunlukta tut (kabaca 5-7 cümle).
+  analysis    → 3-6 bölüm. title artık paragrafın başında kalın bir cümle
+                değil, KENDİ SATIRINDA numaralı bir başlık — kısa tut, en
+                fazla 60 karakter, ve noktayla bitir ("Gelirin motoru veri
+                merkezi."). Bölümler geniş ekranda sütunlara dağılıyor, uzun
+                bir başlık orada üç satıra kırılıyor.
   highlights  → sayfadaki ALTI metrik kartı — sayfanın en görünür yeri.
                 label ve value SERBEST METİN, okuyucunun dilinde yazılır;
                 biçimlendirme sana ait. note değerin altındaki renkli tek
@@ -823,16 +840,29 @@ Alan notları:
                 ona uygulanır. İkisini tek dizede birleştirirsen tarafsız
                 bilgi de kırmızıya boyanıyor.
 
+                Yargıyı note'un SONUNA da ekleme ("… · Beklenti aralığın
+                üstünde"). Aynı şey iki kez yazılıyor; site evaluation boş
+                kaldığında yargıyı zaten low/high/consensus'tan kendisi
+                türetiyor ve o zaman notun sonundaki cümleyi ayıklıyor.
+
                 DİKKAT: low/high/consensus AYNI BİRİMDE olmalı. Gelir satırında
                 10.3 yazıp birimi "Mr $" vermek doğru; 10300000000 yazmak
                 grafiği bozar — bu alan sütun grafiğinden farklı, burada sayı
                 okunduğu gibi yazılır.
+
+                Şirket aralık değil TEK bir sayı verdiyse low ile high'ı AYNI
+                yaz (10.3 / 10.3); site o zaman band değil tek bir işaret
+                çizer.
   revenue_footer / guidance_footer → grafiklerin ALTINDAKİ üçlü mini künye.
                 Sütun grafiğinin altına "Yıllık Gelir Büyümesi · Segment Payı ·
                 Daralan Segment", öngörü kartının altına "Faaliyet Gideri ·
                 Hisse Sayısı · Yatırım Harcaması" gibi. Grafiği tamamlayan
                 bağlam; onsuz kart yarım duruyor. Üçer tane, value serbest
                 metin, note küçük renkli ek.
+                Sütun grafiğinin künyesi ÇEYREĞİN GERÇEKLEŞENİNE bakar, öngörü
+                kartınınki GELECEĞE — her kart kendi zamanının ölçüsünü taşır.
+                value tona boyanıyor: yön bildiren değerlerin başına ▲/▼ koy
+                ve tone'u ona göre ver.
   card_image_base64 → PNG karne ürettiysen (docs/karne-agenti.md) görselin
                 base64'ü. Sunucu veritabanına yazar ve adresi kendisi üretir;
                 card_image_url göndermene gerek yok. `data:` ön eki OLMADAN,
@@ -858,6 +888,10 @@ metin alanları çevrilir; sayısal alanlar aynen kalır.
     period_label'dan türetir, İngilizcede "q4-fy2026" çıkar ve iki dil
     ayrı iki kayda bölünür — sayfalar birbirini bulamaz.
   - highlights label/value İngilizce sayı biçimiyle: "$8.97B", "84.6%".
+    Aynısı revenue_footer / guidance_footer değerleri için de geçerli.
+  - guidance.unit İngilizcede aralığın SONUNA yazılıyor, o yüzden "B$"
+    yerine "billion" ya da yalnızca "B" ver: "10.3 – 10.8 billion".
+    Yüzde satırlarında unit "%" kalır, site İngilizcede sona alır.
   - "Piyasa Beklentisi" → "Market Expectation".
   - verdict alanı buy/hold/sell olarak KALIR; site AL/BUY çevirisini kendi yapar.
 
