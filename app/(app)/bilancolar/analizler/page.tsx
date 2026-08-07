@@ -26,6 +26,8 @@ import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import {
   analysisHref,
+  analysisTableLabels,
+  toAnalysisRowView,
   verdictLabel,
   verdictOf,
   verdictTextClass,
@@ -125,6 +127,10 @@ export default async function AnalysesPage(
     })
     .slice(0, 5);
 
+  const tableRows = rows.map((analysis) =>
+    toAnalysisRowView(analysis, meta[analysis.symbol], locale, t),
+  );
+
   const filterHref = (key: string | null) => {
     const params = new URLSearchParams();
     if (key) params.set("filtre", key);
@@ -142,34 +148,7 @@ export default async function AnalysesPage(
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t.analysis.title}
-        subtitle={t.analysis.subtitle}
-        action={
-          <div className="flex flex-wrap items-center gap-1.5">
-            <FilterChip href={filterHref(null)} active={!filter}>
-              {t.analysis.filterAll}
-            </FilterChip>
-            <FilterChip href={filterHref("hafta")} active={filter === "hafta"}>
-              {t.analysis.filterThisWeek}
-            </FilterChip>
-            {session?.user && (
-              <FilterChip href={filterHref("takip")} active={filter === "takip"}>
-                {t.analysis.filterWatchlist}
-              </FilterChip>
-            )}
-            {[...groups.values()].map((group) => (
-              <FilterChip
-                key={group.key}
-                href={filterHref(group.key)}
-                active={filter === group.key}
-              >
-                {sectorGroupLabel(group, locale)}
-              </FilterChip>
-            ))}
-          </div>
-        }
-      />
+      <PageHeader title={t.analysis.title} subtitle={t.analysis.subtitle} />
 
       <EarningsTabs active="analyses" t={t} className="-mt-1" />
 
@@ -204,9 +183,13 @@ export default async function AnalysesPage(
                         key={`${row.symbol}-${row.period}`}
                         href={analysisHref(row.symbol, row.period)}
                         prefetch={false}
-                        className="flex items-center gap-2.5 border-b border-line-soft py-1.5 last:border-b-0 hover:opacity-75"
+                        className="flex items-center gap-2.5 border-b border-line-soft py-[7px] last:border-b-0 hover:opacity-75"
                       >
-                        <span className="w-[52px] shrink-0 text-[12.5px] font-bold text-strong">
+                        <PanelLogo
+                          logoUrl={meta[row.symbol]?.logoUrl ?? null}
+                          symbol={row.symbol}
+                        />
+                        <span className="w-[46px] shrink-0 text-[12.5px] font-bold text-strong">
                           {row.symbol}
                         </span>
                         <span className="min-w-0 flex-1 truncate text-[11.5px] text-body">
@@ -246,9 +229,13 @@ export default async function AnalysesPage(
                       key={row.id}
                       href={`/hisse/${row.symbol}`}
                       prefetch={false}
-                      className="flex items-center gap-2.5 border-b border-line-soft py-1.5 last:border-b-0 hover:opacity-75"
+                      className="flex items-center gap-2.5 border-b border-line-soft py-[7px] last:border-b-0 hover:opacity-75"
                     >
-                      <span className="w-[52px] shrink-0 text-[12.5px] font-bold text-strong">
+                      <PanelLogo
+                        logoUrl={upcomingMeta[row.symbol]?.logoUrl ?? null}
+                        symbol={row.symbol}
+                      />
+                      <span className="w-[46px] shrink-0 text-[12.5px] font-bold text-strong">
                         {row.symbol}
                       </span>
                       <span className="min-w-0 flex-1 truncate text-[11.5px] text-body">
@@ -285,40 +272,78 @@ export default async function AnalysesPage(
             </Panel>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="display-ink display-ink-tight w-fit text-base font-bold">
-              {t.analysis.listTitle}
-            </h2>
-            <Segment>
-              <SegmentItem href={sortHref("tarih")} active={sort === "tarih"}>
-                {t.analysis.sortDate}
-              </SegmentItem>
-              <SegmentItem href={sortHref("skor")} active={sort === "skor"}>
-                {t.analysis.sortScore}
-              </SegmentItem>
-              <SegmentItem href={sortHref("tepki")} active={sort === "tepki"}>
-                {t.analysis.sortReaction}
-              </SegmentItem>
-            </Segment>
-          </div>
-
-          {rows.length === 0 ? (
-            <Panel>
-              <EmptyState
-                title={t.analysis.emptyFilter}
-                action={
-                  <Link
-                    href={filterHref(null)}
-                    className="text-[12.5px] font-semibold text-primary"
+          {/* Bütün denetimler tablonun üstünde tek bir yerde: filtre çipleri
+              sayfa başlığının içinde duruyordu ve on bir çip başlığı ikinci
+              satıra itiyordu. Üçü de aynı listeyi daraltıyor, bir arada
+              durmaları gerekiyordu. */}
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <h2 className="display-ink display-ink-tight w-fit text-base font-bold">
+                {t.analysis.listTitle}
+              </h2>
+              {/* Dar ekranda çipler kırılmak yerine kayar. */}
+              <div className="-mx-4 flex max-w-full gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+                <FilterChip href={filterHref(null)} active={!filter}>
+                  {t.analysis.filterAll}
+                </FilterChip>
+                <FilterChip href={filterHref("hafta")} active={filter === "hafta"}>
+                  {t.analysis.filterThisWeek}
+                </FilterChip>
+                {session?.user && (
+                  <FilterChip
+                    href={filterHref("takip")}
+                    active={filter === "takip"}
                   >
-                    {t.earnings.clearFilter}
-                  </Link>
+                    {t.analysis.filterWatchlist}
+                  </FilterChip>
+                )}
+                {[...groups.values()].map((group) => (
+                  <FilterChip
+                    key={group.key}
+                    href={filterHref(group.key)}
+                    active={filter === group.key}
+                  >
+                    {sectorGroupLabel(group, locale)}
+                  </FilterChip>
+                ))}
+              </div>
+            </div>
+
+            {rows.length === 0 ? (
+              <Panel>
+                <EmptyState
+                  title={t.analysis.emptyFilter}
+                  action={
+                    <Link
+                      href={filterHref(null)}
+                      className="text-[12.5px] font-semibold text-primary"
+                    >
+                      {t.earnings.clearFilter}
+                    </Link>
+                  }
+                />
+              </Panel>
+            ) : (
+              <AnalysisTable
+                rows={tableRows}
+                labels={analysisTableLabels(t)}
+                highlightFirst={!filter && sort === "tarih"}
+                toolbar={
+                  <Segment>
+                    <SegmentItem href={sortHref("tarih")} active={sort === "tarih"}>
+                      {t.analysis.sortDate}
+                    </SegmentItem>
+                    <SegmentItem href={sortHref("skor")} active={sort === "skor"}>
+                      {t.analysis.sortScore}
+                    </SegmentItem>
+                    <SegmentItem href={sortHref("tepki")} active={sort === "tepki"}>
+                      {t.analysis.sortReaction}
+                    </SegmentItem>
+                  </Segment>
                 }
               />
-            </Panel>
-          ) : (
-            <AnalysisTable rows={rows} locale={locale} t={t} highlightFirst={!filter && sort === "tarih"} />
-          )}
+            )}
+          </div>
         </>
       )}
 
@@ -332,6 +357,41 @@ export default async function AnalysesPage(
         slugs={["bilanco", "degerleme"]}
       />
     </div>
+  );
+}
+
+/**
+ * Panel satırındaki küçük logo — tabloyla aynı dil.
+ *
+ * Yan paneller yalnızca sembol + tarih listesiydi ve altındaki logolu
+ * tablonun yanında sönük kalıyordu. Logo yoksa sembolün ilk iki harfi
+ * aynı kutuya oturuyor; satırın hizası kaymıyor.
+ */
+function PanelLogo({
+  logoUrl,
+  symbol,
+}: {
+  logoUrl: string | null;
+  symbol: string;
+}) {
+  if (logoUrl) {
+    return (
+      <Image
+        src={logoUrl}
+        alt=""
+        width={22}
+        height={22}
+        className="size-[22px] shrink-0 rounded-[6px] bg-white object-contain"
+      />
+    );
+  }
+  return (
+    <span
+      aria-hidden
+      className="flex size-[22px] shrink-0 items-center justify-center rounded-[6px] bg-primary-wash text-[9px] font-bold text-primary"
+    >
+      {symbol.slice(0, 2)}
+    </span>
   );
 }
 

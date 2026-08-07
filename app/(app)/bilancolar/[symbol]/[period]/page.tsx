@@ -184,43 +184,47 @@ export default async function AnalysisDetailPage(
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="rounded-md bg-strong px-2.5 py-1 text-[10.5px] font-bold text-page">
+            {/* Künye çipleri ve takip düğmesi AYNI satırda: düğme kendi
+                satırında dururken sol sütunun tabanında yetim kalıyordu ve
+                blok dört gevşek satıra yayılıyordu. `sm:ml-auto` onu ayracın
+                dibine yaslıyor — satır artık sol sütunu boydan boya
+                kapatıyor ve blok iki sıkı satıra iniyor. Yükseklikleri de
+                aynı, yan yana bir aile gibi duruyorlar. */}
+            <div className="mt-auto flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex min-h-7 items-center rounded-md bg-strong px-2.5 text-[10.5px] font-bold text-page">
                 {t.analysis.earningsOf.replace("{period}", row.periodLabel)} ·{" "}
                 {formatEtDateLong(row.reportDate, locale)}
               </span>
               {row.nextPeriodLabel && (
-                <span className="rounded-md border border-primary-faint bg-primary-wash px-2.5 py-1 text-[10.5px] font-bold text-primary">
+                <span className="inline-flex min-h-7 items-center rounded-md border border-primary-faint bg-primary-wash px-2.5 text-[10.5px] font-bold text-primary">
                   {t.analysis.nextEarnings}: {row.nextPeriodLabel}
                   {row.nextReportEstimate ? ` · ${row.nextReportEstimate}` : ""}
                 </span>
               )}
               {langNote && (
-                <span className="rounded-md bg-surface-elevated px-2.5 py-1 text-[10.5px] font-semibold text-muted">
+                <span className="inline-flex min-h-7 items-center rounded-md bg-surface-elevated px-2.5 text-[10.5px] font-semibold text-muted">
                   {langNote}
                 </span>
               )}
-            </div>
 
-            {session?.user && (
-              /* mt-auto: sol sütun sağdaki ölçü sütunundan kısa kaldığında
-                 düğme havada asılı kalmıyor, bloğun tabanına oturuyor. */
-              <form action={toggleSymbolFavorite} className="mt-auto">
-                <input type="hidden" name="symbol" value={symbol} />
-                <button
-                  type="submit"
-                  className={cn(
-                    "inline-flex min-h-9 items-center gap-[7px] rounded-[9px] border px-3.5 text-[12.5px] font-semibold transition-colors",
-                    watched
-                      ? "border-primary-faint bg-primary-wash text-primary"
-                      : "border-line bg-surface-solid text-body hover:border-line-strong hover:text-strong",
-                  )}
-                >
-                  <Star weight={watched ? "fill" : "duotone"} size={14} />
-                  {watched ? t.stock.removeFromWatchlist : t.stock.addToWatchlist}
-                </button>
-              </form>
-            )}
+              {session?.user && (
+                <form action={toggleSymbolFavorite} className="sm:ml-auto">
+                  <input type="hidden" name="symbol" value={symbol} />
+                  <button
+                    type="submit"
+                    className={cn(
+                      "inline-flex min-h-7 items-center gap-1.5 rounded-md border px-2.5 text-[10.5px] font-bold transition-colors",
+                      watched
+                        ? "border-primary-faint bg-primary-wash text-primary"
+                        : "border-line bg-surface-solid text-body hover:border-line-strong hover:text-strong",
+                    )}
+                  >
+                    <Star weight={watched ? "fill" : "duotone"} size={12} />
+                    {watched ? t.stock.removeFromWatchlist : t.stock.addToWatchlist}
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
 
           {row.price !== null && (

@@ -12,6 +12,10 @@ import { AnalysisTable } from "@/components/earnings/AnalysisTable";
 import { EarningsCalendar } from "@/components/earnings/EarningsCalendar";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
 import {
+  analysisTableLabels,
+  toAnalysisRowView,
+} from "@/lib/analysis";
+import {
   getAnalyses,
   getAnalysisBadges,
   getEarningsBetween,
@@ -82,11 +86,17 @@ export default async function WatchedEarningsPage(
   ]);
 
   const rows = allRows.filter((row) => watchSet.has(row.symbol));
-  const symbolList = [...new Set(rows.map((r) => r.symbol))];
+  const symbolList = [
+    ...new Set([...rows.map((r) => r.symbol), ...analyses.map((r) => r.symbol)]),
+  ];
   const [meta, badges] = await Promise.all([
     getSymbolNames(symbolList),
     getAnalysisBadges(symbolList, locale),
   ]);
+
+  const analysisRows = analyses.map((analysis) =>
+    toAnalysisRowView(analysis, meta[analysis.symbol], locale, t),
+  );
 
   const rangeHref = (key: RangeKey) =>
     key === "ay" ? "/bilancolar/takip?aralik=ay" : "/bilancolar/takip";
@@ -138,7 +148,10 @@ export default async function WatchedEarningsPage(
                 />
               </Panel>
             ) : (
-              <AnalysisTable rows={analyses} locale={locale} t={t} />
+              <AnalysisTable
+                rows={analysisRows}
+                labels={analysisTableLabels(t)}
+              />
             )}
           </section>
 
