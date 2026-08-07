@@ -52,9 +52,20 @@ const SHADES = [
   "var(--share-1)",
 ] as const;
 
-const CHART_HEIGHT = 150;
+const CHART_HEIGHT = 208;
 /** Izgara çizgisi oranları; taban çizgisini alttaki hairline zaten veriyor. */
 const GRID = [1, 0.75, 0.5, 0.25];
+/**
+ * Sütun genişliğinin ÜST sınırı.
+ *
+ * Sütunlar hücrenin tamamını kaplıyordu: 600 piksellik bir kartta altı
+ * çeyrek demek 90 piksel eninde, 150 piksel boyunda sütunlar demek — grafik
+ * tombul duruyor ve yükseklik farkları eziliyordu. Sınır konunca sütun dar
+ * kalıyor, artan yer boşluğa gidiyor ve oran karnedekine dönüyor. Dar
+ * ekranda hücre bu sınırın altına düştüğünde sınır kendiliğinden devre
+ * dışı kalır (`max-width`), sütun hücreyi doldurur.
+ */
+const MAX_BAR_WIDTH = 62;
 
 export function RevenueColumns({
   bars,
@@ -141,11 +152,22 @@ export function RevenueColumns({
             return (
               <li
                 key={`${bar.label}-${index}`}
-                className="flex h-full flex-col justify-end gap-1.5"
+                className="mx-auto flex h-full w-full flex-col justify-end gap-1.5"
+                style={{ maxWidth: MAX_BAR_WIDTH }}
               >
                 <p
                   className={cn(
-                    "numeral whitespace-nowrap text-center text-[12px] font-bold",
+                    "numeral whitespace-nowrap text-[12px] font-bold",
+                    /* Etiket sütundan geniş olabiliyor (öngörü sütununda
+                       aralık yazıyor). Taşma ortadan hizalanınca iki yana
+                       birden sarkıyor ve dar ekranda kartın dışına çıkıyor;
+                       uçtaki sütunlar dışa değil İÇE doğru taşsın diye
+                       kenarlarına yaslanıyor. */
+                    index === 0
+                      ? "text-left"
+                      : index === bars.length - 1
+                        ? "text-right"
+                        : "text-center",
                     bar.projected ? "text-primary" : "text-strong",
                   )}
                 >

@@ -292,6 +292,16 @@ const tr = {
     guidanceTitleFallback: "Gelecek Çeyrek Öngörüsü",
     legendRange: "Şirket Aralığı",
     legendConsensus: "Piyasa Beklentisi",
+    /* Öngörü satırındaki renkli yargı. Kayıtta `evaluation` yoksa bandın
+       iki ucu ile piyasa beklentisi karşılaştırılıp buradan seçilir. */
+    guidanceAbove: "Beklenti Aralığın Üstünde",
+    guidanceBelow: "Beklenti Aralığın Altında",
+    guidanceInline: "Beklentiyle Uyumlu",
+    /* Grafik künyeleri — kayıtta künye yoksa gövdedeki sayılardan kurulur. */
+    revenueGrowthYoy: "Yıllık Gelir Büyümesi",
+    epsSurprise: "Hisse Başı Kâr Sürprizi",
+    stockReaction: "Bilanço Sonrası Tepki",
+    nextPeriod: "Sonraki Dönem",
     ceoMessage: "CEO Mesajı",
     analystTarget: "Ort. Analist Hedefi",
     analystTargetCount: "Ort. Analist Hedefi ({count})",

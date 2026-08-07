@@ -31,11 +31,60 @@ export type GuidanceRow = {
 
 const PAD_RATIO = 0.12;
 
+/** Renkli yargının metinleri — okuyucunun dilinde gelir. */
+export type GuidanceVerdictLabels = {
+  /** Piyasa beklentisi şirketin bandının ÜSTÜNDE: şirket az öngördü. */
+  above: string;
+  /** Beklenti bandın ALTINDA: şirket beklentiden fazlasını öngördü. */
+  below: string;
+  /** Beklenti bandın içinde. */
+  inline: string;
+};
+
+/**
+ * Renkli yargı kayıtta yoksa SAYILARDAN türetilir.
+ *
+ * `evaluation` alanı sonradan eklendi; ondan önce yazılmış kayıtlarda
+ * öngörü satırlarının tamamı gri duruyor ve "şirket beklentiyi karşıladı mı"
+ * sorusu ancak üç sayı karşılaştırılarak cevaplanıyordu. Oysa cevap zaten
+ * kayıtta: bandın iki ucu ve piyasa beklentisi orada. Uydurma değil,
+ * karşılaştırma.
+ */
+function judge(
+  lo: number,
+  hi: number,
+  consensus: number | null,
+  labels: GuidanceVerdictLabels,
+): { text: string; tone: "up" | "down" } | null {
+  if (consensus === null) return null;
+  if (consensus > hi) return { text: `${labels.above} ▼`, tone: "down" };
+  if (consensus < lo) return { text: `${labels.below} ▲`, tone: "up" };
+  return { text: `${labels.inline} ✓`, tone: "up" };
+}
+
+/**
+ * Eski kayıtların not metninden yargı cümlesini ayıklar.
+ *
+ * `evaluation` yokken ajan yargıyı notun sonuna ekliyordu ("… · Beklenti
+ * aralığın üstünde"). Türetilmiş yargıyı da basınca aynı şey iki kez
+ * yazılıyor. Nötr parçaların hepsi sayı taşır ("Orta nokta 10,55"), yargı
+ * cümlesi taşımaz — ayıklama bu farka bakıyor.
+ */
+function stripJudgment(note: string): string {
+  const parts = note
+    .split("·")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length > 1 && !/\d/.test(parts[parts.length - 1])) parts.pop();
+  return parts.join(" · ");
+}
+
 export function GuidanceRanges({
   rows,
   title,
   legendRange,
   legendConsensus,
+  verdictLabels,
   formatRange,
   footer = [],
   className,
@@ -44,6 +93,7 @@ export function GuidanceRanges({
   title: string;
   legendRange: string;
   legendConsensus: string;
+  verdictLabels: GuidanceVerdictLabels;
   /** Aralığın TAMAMINI biçimlendirir — birim iki kez yazılmasın diye tek
       çağrı: "10,3 – 10,8 Mr $", "%83 – %85". */
   formatRange: (low: number, high: number, unit?: string | null) => string;
@@ -76,6 +126,10 @@ export function GuidanceRanges({
         </div>
       </div>
 
+      {/* Satırlar YUKARIDA toplanıyor, kartın boyuna yayılmıyor. Yayılma
+          denendi ve iki ölçülük bir öngörüde satırların arasına yüz piksellik
+          bir boşluk açtı — kartın altındaki sessiz boşluk, ortasındaki
+          boşluktan iyi. */}
       <ul className="flex flex-col gap-4">
         {rows.map((row, index) => {
           const lo = Math.min(row.low, row.high);
@@ -93,6 +147,15 @@ export function GuidanceRanges({
           const pos = (value: number) =>
             ((value - axisMin) / (axisMax - axisMin)) * 100;
 
+          const derived = row.evaluation ? null : judge(lo, hi, consensus, verdictLabels);
+          const evaluation = row.evaluation ?? derived?.text ?? null;
+          const tone = row.evaluation ? row.tone : (derived?.tone ?? null);
+          const note = row.note
+            ? derived
+              ? stripJudgment(row.note)
+              : row.note
+            : null;
+
           return (
             <li key={`${row.label}-${index}`} className="flex flex-col gap-1.5">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
@@ -105,14 +168,27 @@ export function GuidanceRanges({
               </div>
 
               <div className="relative h-2.5 w-full rounded-full bg-surface-elevated">
-                <span
-                  aria-hidden
-                  className="absolute inset-y-0 rounded-full bg-primary"
-                  style={{
-                    left: `${pos(lo)}%`,
-                    width: `${Math.max(2, pos(hi) - pos(lo))}%`,
-                  }}
-                />
+                {lo === hi ? (
+                  /* Şirket aralık değil TEK bir sayı verdiyse band çizilmez:
+                     genişliği sıfır olan bir bandı görünür kılmak için
+                     verilen asgari pay, eksenin ortasında rastgele duran
+                     mavi bir noktaya dönüşüyordu. Beklenti işaretiyle aynı
+                     biçim — ikisi de tek bir değer gösteriyor. */
+                  <span
+                    aria-hidden
+                    className="absolute top-1/2 h-[15px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
+                    style={{ left: `${pos(lo)}%` }}
+                  />
+                ) : (
+                  <span
+                    aria-hidden
+                    className="absolute inset-y-0 rounded-full bg-primary"
+                    style={{
+                      left: `${pos(lo)}%`,
+                      width: `${Math.max(2, pos(hi) - pos(lo))}%`,
+                    }}
+                  />
+                )}
                 {consensus !== null && (
                   /* İşaret bandın ÜSTÜNE biniyor ve kendi zemin renginde bir
                      halka taşıyor: bandın içine düştüğünde maviye karışıp
@@ -131,21 +207,21 @@ export function GuidanceRanges({
                   "orta nokta 10,55" gibi tarafsız bir bilgiyi de kırmızıya
                   boyuyordu; okuyucu neyin değerlendirme olduğunu ayırt
                   edemiyordu. */}
-              {(row.note || row.evaluation) && (
+              {(note || evaluation) && (
                 <p className="flex flex-wrap items-baseline gap-x-1.5 text-[10.5px]">
-                  {row.note && <span className="text-muted">{row.note}</span>}
-                  {row.evaluation && (
+                  {note && <span className="text-muted">{note}</span>}
+                  {evaluation && (
                     <span
                       className={cn(
                         "font-bold",
-                        row.tone === "up"
+                        tone === "up"
                           ? "text-up"
-                          : row.tone === "down"
+                          : tone === "down"
                             ? "text-down"
                             : "text-primary",
                       )}
                     >
-                      {row.evaluation}
+                      {evaluation}
                     </span>
                   )}
                 </p>

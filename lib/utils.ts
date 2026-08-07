@@ -51,6 +51,19 @@ export function formatPrice(
 }
 
 /**
+ * Yüzde işaretinin yeri DİLE bağlı: Türkçede sayıdan önce (%372, −%0,37),
+ * İngilizcede sonra (372%, −0.37%).
+ *
+ * Site uzun süre iki dilde de sonuna yazıyordu. Yanlış olduğu bilanço
+ * sayfasında görünür oldu: ajanın yazdığı serbest metinler kurala uyup
+ * "%372" derken, bizim biçimlendirdiğimiz aynı sayı yan hücrede "372%"
+ * çıkıyordu. Aynı kartta iki yazım.
+ */
+function withPercent(formatted: string, locale: string, sign = "") {
+  return locale === "tr" ? `${sign}%${formatted}` : `${sign}${formatted}%`;
+}
+
+/**
  * Değişim yüzdesi — işaret her zaman gösterilir.
  *
  * `digits` fiyat değişimi için 2'de kalır ama bilanço büyümeleri üç haneli
@@ -67,11 +80,11 @@ export function formatPercent(
     maximumFractionDigits: digits,
   }).format(Math.abs(value));
   const sign = value > 0 ? "+" : value < 0 ? "−" : "";
-  return `${sign}${formatted}%`;
+  return withPercent(formatted, locale, sign);
 }
 
 /**
- * İşARETSİZ yüzde — 372 → "372%".
+ * İşARETSİZ yüzde — 372 → "%372" / "372%".
  *
  * Yanında zaten ▲/▼ oku duran değerler için. `formatPercent` işareti her
  * zaman basıyor ve ok ile birleşince "▲ +372%" gibi iki kez yön bildiren bir
@@ -87,7 +100,7 @@ export function formatPercentPlain(
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   }).format(Math.abs(value));
-  return `${formatted}%`;
+  return withPercent(formatted, locale);
 }
 
 /** Mutlak değişim — 2.41 → "+2,41" */

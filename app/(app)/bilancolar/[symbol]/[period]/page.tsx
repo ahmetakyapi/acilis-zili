@@ -16,6 +16,7 @@ import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { MetricCards } from "@/components/earnings/MetricCards";
 import { RevenueColumns } from "@/components/earnings/RevenueColumns";
 import { GuidanceRanges } from "@/components/earnings/GuidanceRanges";
+import type { FooterStat } from "@/components/earnings/ChartFooter";
 import { RichText } from "@/components/earnings/RichText";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
 import { auth } from "@/auth";
@@ -178,6 +179,60 @@ export default async function AnalysisDetailPage(
   const revenueUnit =
     revenueScale === 1e9 ? t.analysis.unitBillionUsd : t.analysis.unitMillionUsd;
   const hasGuidance = (row.guidance?.length ?? 0) > 0;
+
+  /* ---- Grafik künyeleri ----
+     Karnede grafiklerin altında üçer mini ölçü duruyor ve kartı tamamlayan
+     şey o; onsuz kart "işte bir grafik" diyor. Alanlar sonradan eklendiği
+     için analizlerin çoğunda boş — o zaman künye KAYITTAKİ sayılardan
+     kuruluyor. Uydurma değil: üçü de gövdede zaten duran, sayfanın başka
+     yerinde de basılan ölçüler; burada grafiğin bağlamı olarak
+     tekrarlanıyorlar.
+
+     Sütun grafiğinin altına çeyreğin GERÇEKLEŞEN üç ölçüsü, öngörü kartının
+     altına GELECEĞE dair üç künye — her kart kendi zamanına bakıyor. */
+  const toneOf = (value: number) => (value >= 0 ? "up" : "down");
+  const arrow = (value: number) => (value >= 0 ? "▲" : "▼");
+  const revenueFooter: FooterStat[] = row.revenueFooter?.length
+    ? row.revenueFooter
+    : ([
+        row.revenueYoyPct !== null && {
+          label: t.analysis.revenueGrowthYoy,
+          value: `${arrow(row.revenueYoyPct)} ${formatPercentPlain(row.revenueYoyPct, locale, 0)}`,
+          tone: toneOf(row.revenueYoyPct),
+        },
+        row.epsSurprisePct !== null && {
+          label: t.analysis.epsSurprise,
+          value: `${arrow(row.epsSurprisePct)} ${formatPercentPlain(row.epsSurprisePct, locale, 0)}`,
+          tone: toneOf(row.epsSurprisePct),
+        },
+        row.reactionPct !== null && {
+          label: t.analysis.stockReaction,
+          value: `${arrow(row.reactionPct)} ${formatPercentPlain(row.reactionPct, locale, 1)}`,
+          tone: toneOf(row.reactionPct),
+        },
+      ].filter(Boolean) as FooterStat[]);
+  const guidanceFooter: FooterStat[] = row.guidanceFooter?.length
+    ? row.guidanceFooter
+    : ([
+        row.nextPeriodLabel && {
+          label: t.analysis.nextPeriod,
+          value: row.nextPeriodLabel,
+        },
+        row.nextReportEstimate && {
+          label: t.analysis.nextEarnings,
+          value: row.nextReportEstimate,
+        },
+        row.targetPrice !== null && {
+          label: row.analystCount
+            ? t.analysis.analystTargetCount.replace(
+                "{count}",
+                String(row.analystCount),
+              )
+            : t.analysis.analystTarget,
+          value: formatPrice(row.targetPrice, locale, { currency: true }),
+        },
+      ].filter(Boolean) as FooterStat[]);
+
   /* Kapanış şeridinde kaç kart basılacak: karne yalnızca görsel varsa,
      rakip takvimi yalnızca aynı sektörden yaklaşan bilanço varsa çıkıyor;
      rehber şeridi her zaman var. */
@@ -417,7 +472,7 @@ export default async function AnalysisDetailPage(
                       digits: value / revenueScale >= 100 ? 0 : 2,
                     })
                   }
-                  footer={row.revenueFooter ?? []}
+                  footer={revenueFooter}
                 />
               )}
               {hasGuidance && (
@@ -433,10 +488,15 @@ export default async function AnalysisDetailPage(
                   }
                   legendRange={t.analysis.legendRange}
                   legendConsensus={t.analysis.legendConsensus}
+                  verdictLabels={{
+                    above: t.analysis.guidanceAbove,
+                    below: t.analysis.guidanceBelow,
+                    inline: t.analysis.guidanceInline,
+                  }}
                   formatRange={(low, high, unit) =>
                     formatGuidanceRange(low, high, unit ?? undefined, locale)
                   }
-                  footer={row.guidanceFooter ?? []}
+                  footer={guidanceFooter}
                 />
               )}
             </div>
