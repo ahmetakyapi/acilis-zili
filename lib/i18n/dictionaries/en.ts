@@ -248,6 +248,10 @@ const en: typeof tr = {
     colVerdict: "Verdict",
     colCard: "Scorecard",
 
+    searchPlaceholder: "Search symbol or company",
+    searchEmpty: "No analysis matches \"{query}\".",
+    searchClear: "Clear Search",
+    resultCount: "{count} analyses",
     sortDate: "By Date",
     sortScore: "By Score",
     sortReaction: "By Reaction",

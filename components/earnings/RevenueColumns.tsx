@@ -17,9 +17,9 @@ import { cn } from "@/lib/utils";
 export type RevenueBar = {
   label: string;
   value: number;
-  projected?: boolean;
+  projected?: boolean | null;
   /** Sütunun üstünde yazan metin; yoksa değerin kendisi yazılır. */
-  note?: string;
+  note?: string | null;
 };
 
 /** Sütun renkleri, en eskiden en yeniye — beşten fazlası en koyuda kalır. */

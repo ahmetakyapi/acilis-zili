@@ -733,7 +733,11 @@ curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
       {"label": "Gelir (4. Çeyrek)", "value": "8,97 Mr $", "note": "▲ %372", "tone": "up"},
       {"label": "Brüt Marj", "value": "%84,6", "note": "Rekor", "tone": "up"}
     ],
-    "ceo_quote": {"quote": "<çağrıdan gerçek alıntı>", "name": "David Goeckeler", "title": "Başkan & CEO"},
+    "ceo_quote": {
+      "quote": "<çağrıdan gerçek alıntı>",
+      "name": "David Goeckeler", "title": "Başkan & CEO",
+      "topics": ["Veri merkezi en büyük segment", "Talep arzı aşıyor", "15,5 Mr $ geri alım"]
+    },
     "quarterly_revenue": [
       {"label": "4Ç25", "value": 1900000000},
       {"label": "1Ç26", "value": 2350000000},
@@ -765,6 +769,9 @@ Alan notları:
                 satır bağlam ("▲ Yıllık %372 · Beklenti Üstü"), tone ise
                 up/down/neutral. Altısını da doldur.
   upcoming    → tarih taşır (yatırımcı günü, sonraki bilanço, endeks kararı).
+  ceo_quote.topics → CEO'nun çağrıda VURGULADIĞI 2-3 konu, alıntının yanında
+                hap rozet olur. Alıntının özeti değil: çağrının başka
+                yerlerinde altı çizilen başlıklar. Her biri 3-6 kelime.
 
   quarterly_revenue → çeyreklik gelir sütun grafiği. Son BEŞ gerçekleşen
                 çeyrek + gelecek çeyrek öngörüsü. Öngörü satırına

@@ -264,6 +264,10 @@ const tr = {
     colVerdict: "Görüş",
     colCard: "Karne",
 
+    searchPlaceholder: "Sembol veya şirket ara",
+    searchEmpty: "\"{query}\" ile eşleşen analiz yok.",
+    searchClear: "Aramayı Temizle",
+    resultCount: "{count} analiz",
     sortDate: "Tarihe Göre",
     sortScore: "Skora Göre",
     sortReaction: "Tepkiye Göre",

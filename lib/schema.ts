@@ -406,7 +406,7 @@ export const earningsAnalyses = pgTable(
         ölçünün öne çıkacağı şirkete göre değişiyor (bankada net faiz marjı,
         bellekte brüt marj). `note` değerin altındaki renkli bağlam satırı. */
     highlights: jsonb("highlights").$type<
-      { label: string; value: string; note?: string; tone?: string }[]
+      { label: string; value: string; note?: string | null; tone?: string | null }[]
     >(),
     /**
      * Çeyreklik gelir serisi — sayfadaki sütun grafiği.
@@ -418,7 +418,12 @@ export const earningsAnalyses = pgTable(
      * çizilir; `note` varsa sütunun üstünde onun metni yazılır ("10,3–10,8").
      */
     quarterlyRevenue: jsonb("quarterly_revenue").$type<
-      { label: string; value: number; projected?: boolean; note?: string }[]
+      {
+        label: string;
+        value: number;
+        projected?: boolean | null;
+        note?: string | null;
+      }[]
     >(),
     /**
      * Gelecek çeyrek şirket öngörüsü — aralık barları.
@@ -432,18 +437,24 @@ export const earningsAnalyses = pgTable(
         label: string;
         low: number;
         high: number;
-        consensus?: number;
-        unit?: string;
-        note?: string;
-        tone?: string;
+        consensus?: number | null;
+        unit?: string | null;
+        note?: string | null;
+        tone?: string | null;
       }[]
     >(),
+    /** `topics`: CEO'nun çağrıda vurguladığı 2-3 konu, hap rozet olarak
+        basılır. jsonb içinde olduğu için şema değişikliği gerektirmedi. */
     ceoQuote: jsonb("ceo_quote").$type<{
       quote: string;
       name: string;
       title: string;
+      topics?: string[] | null;
     }>(),
-    sources: jsonb("sources").$type<{ label: string; url?: string }[]>(),
+    /* Alanların hepsinde `| null` var: giriş şeması `.nullish()` kabul
+       ediyor (GET boş alanları `null` döndürüyor ve o gövde geri
+       gönderilebilmeli), dolayısıyla jsonb içinde de null durabiliyor. */
+    sources: jsonb("sources").$type<{ label: string; url?: string | null }[]>(),
     /** Karne PNG'sinin site içi yolu: "/karne/sndk-4c-fy2026.png". Yoksa
         kart hiç basılmaz — boş çerçeve göstermektense yokluğu dürüst. */
     cardImageUrl: text("card_image_url"),

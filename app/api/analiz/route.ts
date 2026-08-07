@@ -10,6 +10,12 @@ import { periodSlug } from "@/lib/analysis";
 /**
  * Bilanço analizi alım ucu.
  *
+ * İsteğe bağlı alanların hepsi `.nullish()` — yani hem yokluğu hem de açık
+ * `null` kabul ediliyor. Gerekçe kâğıt üzerinde değil pratikte: rutinin
+ * dokümanlı akışı "GET ile oku → düzenle → aynı gövdeyi POST et" ve GET,
+ * boş alanları `null` olarak döndürüyor. Şema yalnızca `.optional()` olsaydı
+ * o gövde geri gönderilemezdi; alan eksik değil, açıkça boş.
+ *
  * Bülten ve mercek köprüsünün üçüncüsü: kullanıcının kendi claude.ai rutini
  * açıklanan bilançoyu okur, karneyi ve değerlendirmeyi yazar, buraya
  * gönderir. Sitede API anahtarı tutulmaz, model maliyeti sunucuya binmez.
@@ -24,24 +30,24 @@ import { periodSlug } from "@/lib/analysis";
 
 const SourceSchema = z.object({
   label: z.string().trim().min(1).max(120),
-  url: z.string().trim().url().max(500).optional(),
+  url: z.string().trim().url().max(500).nullish(),
 });
 
 const HighlightSchema = z.object({
   label: z.string().trim().min(1).max(80),
   value: z.string().trim().min(1).max(60),
   /** Değerin yanındaki renkli kısa not: "▲ %372", "Rekor". */
-  note: z.string().trim().max(40).optional(),
-  tone: z.enum(["up", "down", "neutral"]).optional(),
+  note: z.string().trim().max(40).nullish(),
+  tone: z.enum(["up", "down", "neutral"]).nullish(),
 });
 
 /** Çeyreklik gelir sütunu. `projected` işaretli olan kesikli çizilir. */
 const RevenueBarSchema = z.object({
   label: z.string().trim().min(1).max(20),
   value: z.number(),
-  projected: z.boolean().optional(),
+  projected: z.boolean().nullish(),
   /** Sütunun üstünde yazacak metin; yoksa değer biçimlenir ("10,3–10,8"). */
-  note: z.string().trim().max(24).optional(),
+  note: z.string().trim().max(24).nullish(),
 });
 
 /** Gelecek çeyrek öngörüsü — bir ölçünün alt/üst bandı ve piyasa beklentisi. */
@@ -49,11 +55,11 @@ const GuidanceSchema = z.object({
   label: z.string().trim().min(1).max(60),
   low: z.number(),
   high: z.number(),
-  consensus: z.number().optional(),
+  consensus: z.number().nullish(),
   /** "Mr $", "$", "%" — değerin ardına eklenir. */
-  unit: z.string().trim().max(8).optional(),
-  note: z.string().trim().max(120).optional(),
-  tone: z.enum(["up", "down", "neutral"]).optional(),
+  unit: z.string().trim().max(8).nullish(),
+  note: z.string().trim().max(120).nullish(),
+  tone: z.enum(["up", "down", "neutral"]).nullish(),
 });
 
 const SectionSchema = z.object({
@@ -76,49 +82,51 @@ const BodySchema = z.object({
     .trim()
     .max(40)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "yalnızca küçük harf, rakam ve tire")
-    .optional(),
-  locale: z.string().optional(),
+    .nullish(),
+  locale: z.string().nullish(),
   company: z.string().trim().min(1).max(120),
-  exchange: z.string().trim().max(20).optional(),
-  sector: z.string().trim().max(120).optional(),
+  exchange: z.string().trim().max(20).nullish(),
+  sector: z.string().trim().max(120).nullish(),
   report_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  timing: z.enum(["bmo", "amc", "dmh"]).optional(),
-  next_period_label: z.string().trim().max(40).optional(),
-  next_report_estimate: z.string().trim().max(40).optional(),
+  timing: z.enum(["bmo", "amc", "dmh"]).nullish(),
+  next_period_label: z.string().trim().max(40).nullish(),
+  next_report_estimate: z.string().trim().max(40).nullish(),
 
   score: z.number().int().min(0).max(100),
   verdict: z.enum(["buy", "hold", "sell"]),
   headline: z.string().trim().min(20).max(400),
 
-  price: z.number().optional(),
-  reaction_pct: z.number().optional(),
-  market_cap: z.number().optional(),
-  return_1y_pct: z.number().optional(),
-  target_price: z.number().optional(),
-  upside_pct: z.number().optional(),
-  analyst_count: z.number().int().min(0).max(200).optional(),
+  price: z.number().nullish(),
+  reaction_pct: z.number().nullish(),
+  market_cap: z.number().nullish(),
+  return_1y_pct: z.number().nullish(),
+  target_price: z.number().nullish(),
+  upside_pct: z.number().nullish(),
+  analyst_count: z.number().int().min(0).max(200).nullish(),
 
-  revenue: z.number().optional(),
-  revenue_yoy_pct: z.number().optional(),
-  eps: z.number().optional(),
-  eps_surprise_pct: z.number().optional(),
+  revenue: z.number().nullish(),
+  revenue_yoy_pct: z.number().nullish(),
+  eps: z.number().nullish(),
+  eps_surprise_pct: z.number().nullish(),
 
   summary: z.array(z.string().trim().min(40).max(2000)).min(1).max(6),
   analysis: z.array(SectionSchema).min(1).max(12),
-  strengths: z.array(z.string().trim().min(10).max(300)).max(6).optional(),
-  risks: z.array(z.string().trim().min(10).max(300)).max(6).optional(),
-  upcoming: z.array(z.string().trim().min(10).max(300)).max(6).optional(),
-  highlights: z.array(HighlightSchema).max(10).optional(),
+  strengths: z.array(z.string().trim().min(10).max(300)).max(6).nullish(),
+  risks: z.array(z.string().trim().min(10).max(300)).max(6).nullish(),
+  upcoming: z.array(z.string().trim().min(10).max(300)).max(6).nullish(),
+  highlights: z.array(HighlightSchema).max(10).nullish(),
   ceo_quote: z
     .object({
       quote: z.string().trim().min(20).max(800),
       name: z.string().trim().min(2).max(80),
       title: z.string().trim().min(2).max(80),
+      /** Çağrıda vurgulanan 2-3 konu — alıntının yanında hap rozet olur. */
+      topics: z.array(z.string().trim().min(3).max(80)).max(4).nullish(),
     })
-    .optional(),
-  quarterly_revenue: z.array(RevenueBarSchema).max(8).optional(),
-  guidance: z.array(GuidanceSchema).max(5).optional(),
-  sources: z.array(SourceSchema).max(20).optional(),
+    .nullish(),
+  quarterly_revenue: z.array(RevenueBarSchema).max(8).nullish(),
+  guidance: z.array(GuidanceSchema).max(5).nullish(),
+  sources: z.array(SourceSchema).max(20).nullish(),
   /**
    * Karne PNG'sinin site içi yolu. Dış adres kabul edilmez.
    *
@@ -131,7 +139,7 @@ const BodySchema = z.object({
     .trim()
     .max(300)
     .regex(/^\/[\w\-./]+\.(png|jpg|jpeg|webp)$/, "site içi bir yol olmalı")
-    .optional(),
+    .nullish(),
   /**
    * Karnenin kendisi — base64, `data:` ön eki olmadan.
    *
@@ -139,10 +147,10 @@ const BodySchema = z.object({
    * boyutun ~4/3'ü. A4 2x bir PNG tipik olarak 0,5–1,5 MB, yani rahat
    * sığıyor; bundan büyüğü zaten sıkıştırılmamış demektir.
    */
-  card_image_base64: z.string().trim().min(100).max(3_400_000).optional(),
-  card_image_mime: z.enum(["image/png", "image/jpeg", "image/webp"]).optional(),
-  card_image_width: z.number().int().positive().max(10000).optional(),
-  card_image_height: z.number().int().positive().max(10000).optional(),
+  card_image_base64: z.string().trim().min(100).max(3_400_000).nullish(),
+  card_image_mime: z.enum(["image/png", "image/jpeg", "image/webp"]).nullish(),
+  card_image_width: z.number().int().positive().max(10000).nullish(),
+  card_image_height: z.number().int().positive().max(10000).nullish(),
 });
 
 function authorized(request: Request): AuthOutcome {

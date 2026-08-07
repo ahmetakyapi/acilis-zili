@@ -19,10 +19,10 @@ export type GuidanceRow = {
   label: string;
   low: number;
   high: number;
-  consensus?: number;
-  unit?: string;
-  note?: string;
-  tone?: string;
+  consensus?: number | null;
+  unit?: string | null;
+  note?: string | null;
+  tone?: string | null;
 };
 
 const PAD_RATIO = 0.12;
@@ -41,7 +41,7 @@ export function GuidanceRanges({
   legendConsensus: string;
   /** Aralığın TAMAMINI biçimlendirir — birim iki kez yazılmasın diye tek
       çağrı: "10,3 – 10,8 Mr $", "%83 – %85". */
-  formatRange: (low: number, high: number, unit?: string) => string;
+  formatRange: (low: number, high: number, unit?: string | null) => string;
   className?: string;
 }) {
   if (rows.length === 0) return null;
@@ -71,7 +71,11 @@ export function GuidanceRanges({
         {rows.map((row, index) => {
           const lo = Math.min(row.low, row.high);
           const hi = Math.max(row.low, row.high);
-          const marks = [lo, hi, ...(row.consensus !== undefined ? [row.consensus] : [])];
+          /* `!= null`: alan hem eksik hem açıkça null olabiliyor (bkz.
+             lib/schema.ts jsonb tipleri). `!== undefined` null'ı geçiriyor
+             ve nokta eksenin dışına düşüyordu. */
+          const consensus = row.consensus ?? null;
+          const marks = [lo, hi, ...(consensus !== null ? [consensus] : [])];
           const min = Math.min(...marks);
           const max = Math.max(...marks);
           const span = max - min || Math.abs(max) || 1;
@@ -100,14 +104,14 @@ export function GuidanceRanges({
                     width: `${Math.max(2, pos(hi) - pos(lo))}%`,
                   }}
                 />
-                {row.consensus !== undefined && (
+                {consensus !== null && (
                   /* Nokta bandın ÜSTÜNE biniyor ve kendi zemin renginde bir
                      halka taşıyor: bandın içine düştüğünde maviye karışıp
                      kayboluyordu. */
                   <span
                     aria-hidden
                     className="absolute top-1/2 size-[9px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-strong ring-2 ring-surface"
-                    style={{ left: `${pos(row.consensus)}%` }}
+                    style={{ left: `${pos(consensus)}%` }}
                   />
                 )}
               </div>

@@ -2,7 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Star } from "@phosphor-icons/react/dist/ssr";
+import {
+  CalendarBlank,
+  Star,
+  TrendUp,
+  Warning,
+} from "@phosphor-icons/react/dist/ssr";
 import { GuideHint } from "@/components/article/GuideHint";
 import { Panel, SymbolBadge } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
@@ -139,151 +144,163 @@ export default async function AnalysisDetailPage(
       </nav>
 
       {/* ---- Şirket başlığı ---- */}
-      <header className="flex flex-wrap items-start gap-4">
-        {/* Logo ve şirket bloğu KIRILMAYAN bir grup: dış kapsayıcı
-            `flex-wrap` olduğu için dar ekranda logo tek başına bir satıra
-            düşüyor ve başlık altına iniyordu. Fiyat kartı hâlâ sarabilir —
-            asıl istenen kırılma noktası o. */}
-        <div className="flex min-w-0 flex-1 items-start gap-3.5 sm:gap-4">
-        {symbolMeta?.logoUrl ? (
-          <Image
-            src={symbolMeta.logoUrl}
-            alt=""
-            width={56}
-            height={56}
-            className="size-14 shrink-0 rounded-[12px] bg-white object-contain"
-          />
-        ) : (
-          <SymbolBadge symbol={symbol} />
-        )}
-        <div className="flex min-w-0 flex-col gap-[7px]">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="display-ink w-fit text-[24px] font-bold tracking-[-0.035em]">
-              {row.company}
-            </h1>
-            <Link
-              href={`/hisse/${symbol}`}
-              className="rounded-md border border-primary-faint bg-primary-wash px-2 py-[3px] text-[11px] font-bold text-primary hover:bg-primary-tint"
-            >
-              {symbol}
-              {row.exchange ? ` · ${row.exchange}` : ""}
-            </Link>
-            {row.sector && (
-              <span className="text-xs font-medium text-muted">{row.sector}</span>
-            )}
+      {/* ---- Şirket başlığı ----
+          Kimlik solda, ölçü sağda, ikisi TEK bir yüzeyin içinde ve arada
+          dikey bir hairline. Önceki hâlinde ikisi serbest akışta iki uca
+          yaslanıyordu ve aralarında kocaman bir ölü alan kalıyordu; ayraç
+          o boşluğu bir karar hâline getiriyor. Takip düğmesi de artık
+          şirket adının arasına sıkışmıyor, sol sütunun tabanında duruyor. */}
+      <header className="rounded-[16px] border border-line bg-surface p-4 sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-6">
+          <div className="flex min-w-0 flex-1 flex-col gap-3.5">
+            <div className="flex min-w-0 items-start gap-3.5 sm:gap-4">
+              {symbolMeta?.logoUrl ? (
+                <Image
+                  src={symbolMeta.logoUrl}
+                  alt=""
+                  width={56}
+                  height={56}
+                  className="size-14 shrink-0 rounded-[12px] bg-white object-contain"
+                />
+              ) : (
+                <SymbolBadge symbol={symbol} />
+              )}
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h1 className="display-ink w-fit text-[24px] font-bold tracking-[-0.035em]">
+                    {row.company}
+                  </h1>
+                  <Link
+                    href={`/hisse/${symbol}`}
+                    className="rounded-md border border-primary-faint bg-primary-wash px-2 py-[3px] text-[11px] font-bold text-primary hover:bg-primary-tint"
+                  >
+                    {symbol}
+                    {row.exchange ? ` · ${row.exchange}` : ""}
+                  </Link>
+                </div>
+                {row.sector && (
+                  <p className="text-xs font-medium text-muted">{row.sector}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="rounded-md bg-strong px-2.5 py-1 text-[10.5px] font-bold text-page">
+                {t.analysis.earningsOf.replace("{period}", row.periodLabel)} ·{" "}
+                {formatEtDateLong(row.reportDate, locale)}
+              </span>
+              {row.nextPeriodLabel && (
+                <span className="rounded-md border border-primary-faint bg-primary-wash px-2.5 py-1 text-[10.5px] font-bold text-primary">
+                  {t.analysis.nextEarnings}: {row.nextPeriodLabel}
+                  {row.nextReportEstimate ? ` · ${row.nextReportEstimate}` : ""}
+                </span>
+              )}
+              {langNote && (
+                <span className="rounded-md bg-surface-elevated px-2.5 py-1 text-[10.5px] font-semibold text-muted">
+                  {langNote}
+                </span>
+              )}
+            </div>
+
             {session?.user && (
-              <form action={toggleSymbolFavorite}>
+              /* mt-auto: sol sütun sağdaki ölçü sütunundan kısa kaldığında
+                 düğme havada asılı kalmıyor, bloğun tabanına oturuyor. */
+              <form action={toggleSymbolFavorite} className="mt-auto">
                 <input type="hidden" name="symbol" value={symbol} />
                 <button
                   type="submit"
                   className={cn(
-                    "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 py-1 text-[11.5px] font-semibold transition-colors",
+                    "inline-flex min-h-9 items-center gap-[7px] rounded-[9px] border px-3.5 text-[12.5px] font-semibold transition-colors",
                     watched
                       ? "border-primary-faint bg-primary-wash text-primary"
-                      : "border-line bg-surface text-body hover:border-line-strong hover:text-strong",
+                      : "border-line bg-surface-solid text-body hover:border-line-strong hover:text-strong",
                   )}
                 >
-                  <Star weight={watched ? "fill" : "duotone"} size={13} />
+                  <Star weight={watched ? "fill" : "duotone"} size={14} />
                   {watched ? t.stock.removeFromWatchlist : t.stock.addToWatchlist}
                 </button>
               </form>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="rounded-md bg-strong px-2.5 py-1 text-[10.5px] font-bold text-page">
-              {t.analysis.earningsOf.replace("{period}", row.periodLabel)} ·{" "}
-              {formatEtDateLong(row.reportDate, locale)}
-            </span>
-            {row.nextPeriodLabel && (
-              <span className="rounded-md border border-primary-faint bg-primary-wash px-2.5 py-1 text-[10.5px] font-bold text-primary">
-                {t.analysis.nextEarnings}: {row.nextPeriodLabel}
-                {row.nextReportEstimate ? ` · ${row.nextReportEstimate}` : ""}
-              </span>
-            )}
-            {langNote && (
-              <span className="rounded-md bg-surface-elevated px-2.5 py-1 text-[10.5px] font-semibold text-muted">
-                {langNote}
-              </span>
-            )}
-          </div>
-        </div>
-        </div>
 
-        {/* ---- Fiyat kartı ----
-            Üç farklı şey — büyük fiyat, tepki rozeti, iki satırlık künye —
-            ve yanında bir düğme, hepsi serbest akışta duruyordu; sarma
-            noktasına göre her ekranda başka bir yerde toplanıyorlardı.
-            Artık kendi yüzeyi olan kapalı bir kart: etiket, manşet sayı,
-            hairline, altında iki ölçü. Takip düğmesi kartın dışına, şirket
-            satırına çıktı — o eylem çeyreğe değil şirkete ait. */}
-        {row.price !== null && (
-          <section className="w-full shrink-0 rounded-[14px] border border-line bg-surface px-4 py-3.5 sm:ml-auto sm:w-auto sm:min-w-[268px]">
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="plate text-[10px] tracking-[0.09em]">
-                {t.analysis.closePrice}
-              </span>
-              <span className="text-[10.5px] font-medium text-muted">
-                {formatEtDateCompact(row.reportDate, locale)}
-              </span>
-            </div>
+          {row.price !== null && (
+            <>
+              <span
+                aria-hidden
+                className="hidden w-px self-stretch bg-line lg:block"
+              />
+              {/* Ölçü sütunu artık kendi kenarlığını taşımıyor: kapsayıcı
+                  zaten bir yüzey, kutu içinde kutu iki kat çerçeve demekti.
+                  Dar ekranda dikey ayraç yatay bir hairline'a dönüşür. */}
+              <section className="shrink-0 border-t border-line pt-3.5 lg:w-[244px] lg:border-t-0 lg:pt-0">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="plate text-[10px] tracking-[0.09em]">
+                    {t.analysis.closePrice}
+                  </span>
+                  <span className="text-[10.5px] font-medium text-muted">
+                    {formatEtDateCompact(row.reportDate, locale)}
+                  </span>
+                </div>
 
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-              <span className="figure text-[28px] font-bold leading-none tracking-[-0.04em] text-strong">
-                {formatPrice(row.price, locale, { currency: true })}
-              </span>
-              {row.reactionPct !== null && (
-                <span className="flex flex-col gap-px">
-                  <span
-                    className={cn(
-                      "figure w-fit rounded-md px-[7px] py-[2px] text-[11px] font-bold",
-                      row.reactionPct >= 0
-                        ? "bg-up-wash text-up"
-                        : "bg-down-wash text-down",
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  <span className="figure text-[28px] font-bold leading-none tracking-[-0.04em] text-strong">
+                    {formatPrice(row.price, locale, { currency: true })}
+                  </span>
+                  {row.reactionPct !== null && (
+                    <span className="flex flex-col gap-px">
+                      <span
+                        className={cn(
+                          "figure w-fit rounded-md px-[7px] py-[2px] text-[11px] font-bold",
+                          row.reactionPct >= 0
+                            ? "bg-up-wash text-up"
+                            : "bg-down-wash text-down",
+                        )}
+                      >
+                        {row.reactionPct >= 0 ? "▲" : "▼"}{" "}
+                        {formatPercentPlain(row.reactionPct, locale, 1)}
+                      </span>
+                      {/* Ölçünün altındaki mikro künye — cümle değil, Title
+                          Case almaz (bkz. CLAUDE.md yazım kuralı). */}
+                      <span className="text-[10px] text-muted">
+                        {t.analysis.afterHours}
+                      </span>
+                    </span>
+                  )}
+                </div>
+
+                {(row.marketCap !== null || row.return1yPct !== null) && (
+                  <dl className="mt-3 grid grid-cols-2 gap-x-4 border-t border-line pt-2.5">
+                    {row.marketCap !== null && (
+                      <div className="min-w-0">
+                        <dt className="truncate text-[10px] font-medium text-muted">
+                          {t.market.marketCap}
+                        </dt>
+                        <dd className="figure text-[13px] font-bold text-strong">
+                          ≈{formatCompact(row.marketCap, locale)} $
+                        </dd>
+                      </div>
                     )}
-                  >
-                    {row.reactionPct >= 0 ? "▲" : "▼"}{" "}
-                    {formatPercentPlain(row.reactionPct, locale, 1)}
-                  </span>
-                  {/* Ölçünün altındaki mikro künye — cümle değil, Title Case
-                      almaz (bkz. CLAUDE.md yazım kuralı). */}
-                  <span className="text-[10px] text-muted">
-                    {t.analysis.afterHours}
-                  </span>
-                </span>
-              )}
-            </div>
-
-            {(row.marketCap !== null || row.return1yPct !== null) && (
-              <dl className="mt-3 grid grid-cols-2 gap-x-4 border-t border-line pt-2.5">
-                {row.marketCap !== null && (
-                  <div className="min-w-0">
-                    <dt className="truncate text-[10px] font-medium text-muted">
-                      {t.market.marketCap}
-                    </dt>
-                    <dd className="figure text-[13px] font-bold text-strong">
-                      ≈{formatCompact(row.marketCap, locale)} $
-                    </dd>
-                  </div>
+                    {row.return1yPct !== null && (
+                      <div className="min-w-0">
+                        <dt className="truncate text-[10px] font-medium text-muted">
+                          {t.analysis.return1y}
+                        </dt>
+                        <dd
+                          className={cn(
+                            "figure text-[13px] font-bold",
+                            row.return1yPct >= 0 ? "text-up" : "text-down",
+                          )}
+                        >
+                          {formatPercent(row.return1yPct, locale, 0)}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
                 )}
-                {row.return1yPct !== null && (
-                  <div className="min-w-0">
-                    <dt className="truncate text-[10px] font-medium text-muted">
-                      {t.analysis.return1y}
-                    </dt>
-                    <dd
-                      className={cn(
-                        "figure text-[13px] font-bold",
-                        row.return1yPct >= 0 ? "text-up" : "text-down",
-                      )}
-                    >
-                      {formatPercent(row.return1yPct, locale, 0)}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            )}
-          </section>
-        )}
+              </section>
+            </>
+          )}
+        </div>
       </header>
 
       {/* ---- İki kolon ---- */}
@@ -340,7 +357,7 @@ export default async function AnalysisDetailPage(
                   legendRange={t.analysis.legendRange}
                   legendConsensus={t.analysis.legendConsensus}
                   formatRange={(low, high, unit) =>
-                    formatGuidanceRange(low, high, unit, locale)
+                    formatGuidanceRange(low, high, unit ?? undefined, locale)
                   }
                 />
               )}
@@ -350,26 +367,63 @@ export default async function AnalysisDetailPage(
           {row.ceoQuote && (
             /* CEO şeridi yan kolondan ana kolona alındı: alıntı bir referans
                değil, çeyreğin hikâyesinin parçası — grafiklerle metin
-               arasında duruyor. */
-            <section className="flex flex-col gap-3 rounded-[16px] border border-line bg-surface p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
-              <div className="flex shrink-0 flex-col gap-px sm:w-40">
-                <span className="plate tracking-[0.09em]">
-                  {t.analysis.ceoMessage}
-                </span>
-                <span className="text-[13.5px] font-bold text-strong">
-                  {row.ceoQuote.name}
-                </span>
-                <span className="text-[11px] text-muted">
-                  {row.ceoQuote.title}
-                </span>
-              </div>
+               arasında duruyor.
+
+               Tırnak işareti dev ve dekoratif: şeridin sayfadaki başka hiçbir
+               şeye benzemeyen tek görsel imzası o. `aria-hidden` çünkü metnin
+               alıntı olduğunu blockquote zaten söylüyor. */
+            <section className="relative overflow-hidden rounded-[16px] border border-line bg-surface p-4 sm:p-5">
               <span
                 aria-hidden
-                className="hidden w-px self-stretch bg-line sm:block"
-              />
-              <blockquote className="min-w-0 flex-1 text-[12.5px] italic leading-[19px] text-body [text-wrap:pretty]">
-                “{row.ceoQuote.quote}”
-              </blockquote>
+                className="pointer-events-none absolute -top-6 right-4 select-none font-serif text-[120px] leading-none text-primary opacity-[0.07]"
+              >
+                &rdquo;
+              </span>
+              <div className="relative flex flex-col gap-4 sm:flex-row sm:gap-5">
+                <div className="flex shrink-0 items-center gap-3 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
+                  {/* Fotoğraf yok (proje kuralı); baş harfler aynı işi telifsiz
+                      görüyor ve her şirkette tutarlı. */}
+                  <span
+                    aria-hidden
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-wash text-[13px] font-bold text-primary sm:mb-1"
+                  >
+                    {initialsOf(row.ceoQuote.name)}
+                  </span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="plate text-[10px] tracking-[0.09em]">
+                      {t.analysis.ceoMessage}
+                    </span>
+                    <span className="text-[13.5px] font-bold text-strong">
+                      {row.ceoQuote.name}
+                    </span>
+                    <span className="text-[11px] text-muted">
+                      {row.ceoQuote.title}
+                    </span>
+                  </span>
+                </div>
+
+                <span
+                  aria-hidden
+                  className="hidden w-px self-stretch bg-line sm:block"
+                />
+
+                <blockquote className="min-w-0 flex-1 border-t border-line pt-3 text-[13px] italic leading-[20px] text-body [text-wrap:pretty] sm:border-t-0 sm:pt-0">
+                  “{row.ceoQuote.quote}”
+                </blockquote>
+
+                {row.ceoQuote.topics && row.ceoQuote.topics.length > 0 && (
+                  <ul className="flex shrink-0 flex-wrap gap-1.5 sm:w-56 sm:flex-col sm:content-start">
+                    {row.ceoQuote.topics.map((topic) => (
+                      <li
+                        key={topic}
+                        className="rounded-full border border-primary-faint bg-primary-wash px-2.5 py-1 text-[11px] font-semibold text-primary"
+                      >
+                        {topic}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </section>
           )}
 
@@ -688,7 +742,15 @@ function ReportCard({
   );
 }
 
-/** Güçlü Yönler / Riskler / Beklenen Gelişmeler — 01/02/03 numaralı maddeler. */
+/**
+ * Güçlü Yönler / Riskler / Beklenen Gelişmeler.
+ *
+ * Üçü de aynı biçimde altı maddelik bir liste ve düz metin olarak yan yana
+ * durduklarında hangisinin ne olduğu ancak başlık okununca anlaşılıyordu.
+ * Artık her kart başlıkta bir ikon karosu ve madde sayısı taşıyor, madde
+ * numaraları da çıplak rakam değil kendi tonundaki küçük kareler — göz
+ * karta bakar bakmaz "bu iyi taraf / bu risk" diyor.
+ */
 function PointsCard({
   title,
   points,
@@ -699,40 +761,58 @@ function PointsCard({
   tone: "up" | "down" | "primary";
 }) {
   if (points.length === 0) return null;
+
+  const Icon = tone === "up" ? TrendUp : tone === "down" ? Warning : CalendarBlank;
+  const accent =
+    tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-primary";
+
   return (
     <section
       className={cn(
-        "rounded-[16px] border p-4",
-        tone === "up" && "border-up/25 bg-up-wash/50",
-        tone === "down" && "border-down/25 bg-down-wash/50",
+        "flex min-w-0 flex-col rounded-[16px] border p-4",
+        tone === "up" && "border-up/25 bg-up-wash/40",
+        tone === "down" && "border-down/25 bg-down-wash/40",
         tone === "primary" && "border-primary-faint bg-primary-tint",
       )}
     >
-      <h3
-        className={cn(
-          "mb-2 text-[11px] font-bold tracking-[0.04em]",
-          tone === "up" && "text-up",
-          tone === "down" && "text-down",
-          tone === "primary" && "text-primary",
-        )}
-      >
-        {title}
-      </h3>
-      <ol className="flex flex-col gap-1.5">
+      <div className="mb-3 flex items-center gap-2.5">
+        <span
+          aria-hidden
+          className={cn(
+            "flex size-7 shrink-0 items-center justify-center rounded-[9px]",
+            tone === "up" && "bg-up-wash",
+            tone === "down" && "bg-down-wash",
+            tone === "primary" && "bg-primary-wash",
+            accent,
+          )}
+        >
+          <Icon weight="duotone" size={15} />
+        </span>
+        <h3 className={cn("text-[12.5px] font-bold tracking-[-0.01em]", accent)}>
+          {title}
+        </h3>
+        <span className="figure ml-auto text-[11px] font-bold text-muted">
+          {points.length}
+        </span>
+      </div>
+
+      <ol className="flex flex-col gap-2.5">
         {points.map((point, index) => (
           <li
             key={index}
-            className="flex gap-2 text-[11.5px] leading-[17px] text-body [text-wrap:pretty]"
+            className="flex gap-2.5 text-[11.5px] leading-[17px] text-body [text-wrap:pretty]"
           >
             <span
+              aria-hidden
               className={cn(
-                "figure shrink-0 font-bold",
-                tone === "up" && "text-up",
-                tone === "down" && "text-down",
-                tone === "primary" && "text-primary",
+                "figure mt-px flex size-[18px] shrink-0 items-center justify-center rounded-[5px] text-[9.5px] font-bold",
+                tone === "up" && "bg-up-wash",
+                tone === "down" && "bg-down-wash",
+                tone === "primary" && "bg-primary-wash",
+                accent,
               )}
             >
-              {String(index + 1).padStart(2, "0")}
+              {index + 1}
             </span>
             <span>
               <RichText text={point} />
@@ -742,4 +822,12 @@ function PointsCard({
       </ol>
     </section>
   );
+}
+
+/** "David Goeckeler" → "DG". Tek kelimelik adlarda ilk iki harf. */
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toLocaleUpperCase("tr-TR");
+  return (parts[0][0] + parts[parts.length - 1][0]).toLocaleUpperCase("tr-TR");
 }

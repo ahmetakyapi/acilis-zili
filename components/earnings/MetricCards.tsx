@@ -16,8 +16,8 @@ import { cn } from "@/lib/utils";
 export type Metric = {
   label: string;
   value: string;
-  note?: string;
-  tone?: string;
+  note?: string | null;
+  tone?: string | null;
 };
 
 export function MetricCards({
