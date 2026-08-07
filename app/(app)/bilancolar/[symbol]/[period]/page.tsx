@@ -611,9 +611,11 @@ function ReportCard({
         <h2 className="text-[13.5px] font-bold text-strong">
           {t.analysis.reportCard}
         </h2>
+        {/* `?indir=1` rotaya Content-Disposition ekletir. `download`
+            özniteliği tek başına yetmiyor: aynı kaynaktan gelse de rota bir
+            dosya değil, tarayıcı adı uzantıdan tahmin ediyordu. */}
         <a
-          href={row.cardImageUrl}
-          download
+          href={`${row.cardImageUrl}?indir=1`}
           className="text-[11.5px] font-semibold text-primary hover:text-primary-hover"
         >
           ↓ {t.analysis.downloadPng}
@@ -625,12 +627,15 @@ function ReportCard({
         rel="noopener noreferrer"
         className="block overflow-hidden rounded-[10px]"
       >
-        {/* A4 dikey oran — görsel yüklenirken düzen zıplamasın. */}
+        {/* A4 dikey oran — görsel yüklenirken düzen zıplamasın. Karne 2x
+            çözünürlükte üretiliyor ve yan kolonda ~340px'e sığıyor;
+            `sizes` bunu söyleyip gereksiz büyük dosya indirilmesini önler. */}
         <Image
           src={row.cardImageUrl}
           alt={`${row.symbol} ${row.periodLabel} ${t.analysis.reportCard}`}
-          width={794}
-          height={1123}
+          width={1654}
+          height={2339}
+          sizes="(min-width: 1024px) 380px, 100vw"
           className="h-auto w-full"
         />
       </a>

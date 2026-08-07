@@ -587,8 +587,9 @@ Bu görev **çoğu gün TEK bir şirket** yazar — günün en büyük bilanços
 Bilanço sezonunun yoğun günlerinde iki, sakin günlerde hiç yazmaz.
 
 Görev iki çıktı üretir: **site kaydı** (aşağıdaki prompt) ve isteğe bağlı
-**PNG karne** (`docs/karne-agenti.md`). Karne olmadan da sayfa eksiksiz
-çalışır — kart yalnızca görsel varsa basılır.
+**PNG karne** (`docs/karne-agenti.md`). Karne üretirsen aynı POST'ta
+`card_image_base64` olarak gönderilir — ayrı bir yükleme adımı yok. Karne
+olmadan da sayfa eksiksiz çalışır; kart yalnızca görsel varsa basılır.
 
 ````
 Sen Açılış Zili'nin bilanço analistisin. Görevin, açıklanmış bir çeyreği
@@ -781,8 +782,12 @@ Alan notları:
                 10.3 yazıp birimi "Mr $" vermek doğru; 10300000000 yazmak
                 grafiği bozar — bu alan sütun grafiğinden farklı, burada sayı
                 okunduğu gibi yazılır.
-  card_image_url → PNG karne varsa "/karne/sndk-4c-fy2026.png" gibi site içi
-                bir yol. Yoksa alanı hiç gönderme; kart basılmaz.
+  card_image_base64 → PNG karne ürettiysen (docs/karne-agenti.md) görselin
+                base64'ü. Sunucu veritabanına yazar ve adresi kendisi üretir;
+                card_image_url göndermene gerek yok. `data:` ön eki OLMADAN,
+                en fazla 3,4 MB. Yanında card_image_width/height ver.
+                Dil başına ayrı görsel: karne metin içeriyor.
+                Karne yoksa alanı hiç gönderme; kart basılmaz, sayfa eksilmez.
 
 Yanıtta "ok": true ve dönen "url" alanını doğrula; ayrıca dönen "period"
 değerini NOT ET — İngilizce gönderimde ona ihtiyacın olacak. "ok" göremezsen
@@ -893,6 +898,72 @@ görevindeki 3, 4 ve 5. adımların tamamı aynen geçerlidir: araştır, doğru
 900-1600 kelime yaz, tablo veya ::: kutusu kullan, kaynak göster.
 
 her yazıyı POST ettikten sonra bir sonrakine geç.
+````
+
+### Analizlerin eksik grafiklerini doldur (bir kez)
+
+`quarterly_revenue` ve `guidance` alanları özellik yayına girdikten sonra
+eklendi; onlardan önce yazılmış analizlerin sayfası metin yığını gibi
+duruyor. Rutin bunları günde bir tane tamamlıyor, bu blok hepsini tek
+koşumda bitirir.
+
+````
+Açılış Zili'nde grafiksiz kalmış bilanço analizlerini tamamlayacaksın.
+Yeni analiz YAZMIYORSUN — var olanlara iki alan ekliyorsun.
+
+SECRET=BURAYA_SECRET
+
+1. Eksikleri listele:
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  https://acilis-zili.vercel.app/api/analiz/context
+```
+
+   existing_analyses içinde "has_charts": false olan her kayıt işlenecek.
+
+2. Her kayıt için ÖNCE gövdeyi geri oku (POST bütün gövdenin üzerine yazar,
+   okumadan göndermek metni siler):
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  "https://acilis-zili.vercel.app/api/analiz?symbol=<SEMBOL>&period=<period>&locale=tr"
+```
+
+3. Şirketin resmi bilanço bültenlerinden şu iki alanı topla:
+
+   quarterly_revenue → son BEŞ gerçekleşen çeyreğin geliri + gelecek çeyrek
+     öngörüsü. Öngörü satırına "projected": true, value orta nokta, note
+     aralık metni. Değerler HAM dolar (8970000000).
+   guidance          → gelecek çeyrek için 2-4 ölçü: gelir, hisse başı kâr,
+     brüt marj / faaliyet marjı. low/high şirketin bandı, consensus piyasa
+     beklentisi, unit "Mr $" / "$" / "%". Sayılar okunduğu gibi yazılır
+     (10.3), ham dolar DEĞİL.
+
+   Şirket gelecek çeyrek için sayısal öngörü vermediyse guidance'ı boş
+   bırakma — o zaman yıl sonu öngörüsünü kullan ve label'a öyle yaz
+   ("Yıl Sonu Geliri"). İkisi de yoksa yalnızca quarterly_revenue gönder.
+
+   DOĞRULAYAMADIĞIN ÇEYREĞİ UYDURMA. Beş çeyrek bulamıyorsan üç yaz.
+
+4. Okuduğun gövdeye bu iki alanı ekleyip AYNEN geri gönder. Diğer hiçbir
+   alana dokunma — score, verdict, summary, analysis, highlights aynı kalır:
+
+```bash
+curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
+  -H "Authorization: Bearer $SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{ ...okuduğun gövdenin tamamı..., "quarterly_revenue": [...], "guidance": [...] }'
+```
+
+5. Aynı kaydın İngilizcesini de güncelle: locale=en ile geri oku, aynı iki
+   alanı ekle, "locale": "en" ile gönder. Sayısal alanlar AYNEN aynıdır;
+   yalnızca label, note ve unit metinleri İngilizceye döner
+   ("Gelir" → "Revenue", "Mr $" → "B$", "Piyasa Beklentisi" → "Market
+   Expectation"). period alanını iki gönderimde de aynı ver.
+
+Her kaydı tek tek işle. Bir kayıt bittiğinde "ok": true doğrula ve
+sonrakine geç; hepsini tek istekte göndermeye çalışma.
 ````
 
 ### Yazı arşivinin İngilizcesi (bir kez)

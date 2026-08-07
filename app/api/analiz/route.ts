@@ -3,7 +3,7 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { checkBearer, type AuthOutcome } from "@/lib/api-auth";
 import { db } from "@/lib/db";
-import { earningsAnalyses } from "@/lib/schema";
+import { earningsAnalyses, earningsAnalysisCards } from "@/lib/schema";
 import { isLocale } from "@/lib/i18n/config";
 import { periodSlug } from "@/lib/analysis";
 
@@ -119,13 +119,30 @@ const BodySchema = z.object({
   quarterly_revenue: z.array(RevenueBarSchema).max(8).optional(),
   guidance: z.array(GuidanceSchema).max(5).optional(),
   sources: z.array(SourceSchema).max(20).optional(),
-  /** Karne PNG'sinin site içi yolu. Dış adres kabul edilmez. */
+  /**
+   * Karne PNG'sinin site içi yolu. Dış adres kabul edilmez.
+   *
+   * `card_image_base64` gönderildiğinde bu alan GEREKSİZDİR — sunucu görseli
+   * veritabanına yazar ve adresi kendisi üretir. Alan yine de duruyor çünkü
+   * `public/karne/` altına elle konmuş bir dosyayı göstermek de mümkün.
+   */
   card_image_url: z
     .string()
     .trim()
     .max(300)
     .regex(/^\/[\w\-./]+\.(png|jpg|jpeg|webp)$/, "site içi bir yol olmalı")
     .optional(),
+  /**
+   * Karnenin kendisi — base64, `data:` ön eki olmadan.
+   *
+   * Sınır 3,4 MB: Vercel'in istek gövdesi tavanı 4,5 MB ve base64 ham
+   * boyutun ~4/3'ü. A4 2x bir PNG tipik olarak 0,5–1,5 MB, yani rahat
+   * sığıyor; bundan büyüğü zaten sıkıştırılmamış demektir.
+   */
+  card_image_base64: z.string().trim().min(100).max(3_400_000).optional(),
+  card_image_mime: z.enum(["image/png", "image/jpeg", "image/webp"]).optional(),
+  card_image_width: z.number().int().positive().max(10000).optional(),
+  card_image_height: z.number().int().positive().max(10000).optional(),
 });
 
 function authorized(request: Request): AuthOutcome {
@@ -216,6 +233,7 @@ export async function GET(request: Request) {
     upcoming: row.upcoming ?? [],
     highlights: row.highlights ?? [],
     ceo_quote: row.ceoQuote,
+    has_card_image: Boolean(row.cardImageUrl),
     quarterly_revenue: row.quarterlyRevenue ?? [],
     guidance: row.guidance ?? [],
     sources: row.sources ?? [],
@@ -263,7 +281,10 @@ export async function POST(request: Request) {
             "[{label, low, high, consensus?, unit?, note?, tone?}] en fazla 5",
           ceo_quote: "{quote, name, title} (opsiyonel)",
           sources: "[{label, url}] (opsiyonel)",
-          card_image_url: "/karne/sndk-4c-fy2026.png (opsiyonel, site içi yol)",
+          card_image_base64:
+            "PNG'nin base64'ü (opsiyonel, ≤3,4 MB) — site kendi adresini üretir",
+          card_image_url:
+            "/karne/... (opsiyonel; yalnızca elle konmuş dosya için, base64 varsa gerekmez)",
         },
       },
       { status: 400 },
@@ -282,8 +303,53 @@ export async function POST(request: Request) {
     );
   }
 
+  const symbol = parsed.symbol.toUpperCase();
+
+  /* Görsel varsa ÖNCE o yazılır ve adres ondan türetilir. Ters sırada
+     yazılsaydı, resim yazımı düşen bir istekte analiz kaydı var olmayan bir
+     görseli işaret ediyor olurdu — sayfada kırık bir çerçeve kalırdı. */
+  let cardImageUrl = parsed.card_image_url ?? null;
+  if (parsed.card_image_base64) {
+    const clean = parsed.card_image_base64.replace(
+      /^data:image\/[a-z+]+;base64,/i,
+      "",
+    );
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(clean)) {
+      return NextResponse.json(
+        {
+          error: "invalid-card-image",
+          detail: "card_image_base64 geçerli base64 değil; data: ön eki olmadan gönder.",
+        },
+        { status: 400 },
+      );
+    }
+    const bytes = Buffer.from(clean, "base64");
+    const card = {
+      symbol,
+      period,
+      locale,
+      mimeType: parsed.card_image_mime ?? "image/png",
+      dataBase64: clean,
+      width: parsed.card_image_width ?? null,
+      height: parsed.card_image_height ?? null,
+      byteSize: bytes.byteLength,
+    };
+    await db
+      .insert(earningsAnalysisCards)
+      .values(card)
+      .onConflictDoUpdate({
+        target: [
+          earningsAnalysisCards.symbol,
+          earningsAnalysisCards.period,
+          earningsAnalysisCards.locale,
+        ],
+        set: { ...card, updatedAt: new Date() },
+      });
+    cardImageUrl = `/karne/${symbol.toLowerCase()}/${period}/${locale}.png`;
+  }
+
   const values = {
-    symbol: parsed.symbol.toUpperCase(),
+    symbol,
     period,
     locale,
     periodLabel: parsed.period_label,
@@ -318,7 +384,7 @@ export async function POST(request: Request) {
     quarterlyRevenue: parsed.quarterly_revenue ?? null,
     guidance: parsed.guidance ?? null,
     sources: parsed.sources ?? null,
-    cardImageUrl: parsed.card_image_url ?? null,
+    cardImageUrl,
     generatedBy: "claude",
   };
 
@@ -336,9 +402,10 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    symbol: values.symbol,
+    symbol,
     period,
     locale,
-    url: `/bilancolar/${values.symbol.toLowerCase()}/${period}`,
+    url: `/bilancolar/${symbol.toLowerCase()}/${period}`,
+    card_image_url: cardImageUrl,
   });
 }

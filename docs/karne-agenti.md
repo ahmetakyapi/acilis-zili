@@ -7,16 +7,29 @@ hiç basılmaz.
 
 ## Görsel nereye konur
 
-PNG depoya elle eklenir: `public/karne/<sembol>-<donem>.png`
-(ör. `public/karne/sndk-4c-fy2026.png`). Adres o zaman `/karne/sndk-4c-fy2026.png`
-olur ve POST gövdesine `card_image_url` olarak yazılır.
+**Veritabanına.** PNG, analiz gövdesiyle birlikte `card_image_base64` alanında
+gönderilir; sunucu `earnings_analysis_cards` tablosuna yazar ve adresi kendisi
+üretir: `/karne/<sembol>/<donem>/<dil>.png`
 
-Uç yalnızca **site içi** yolu kabul eder (`^/…\.(png|jpg|jpeg|webp)$`) — dış
-adres reddedilir. Gerekçe: dış barındırma bir gün düşerse sayfada kırık görsel
-kalır, üstelik `next/image` bilinmeyen alan adını zaten reddeder.
+```bash
+B64=$(base64 -i karne.png | tr -d '\n')
+# POST gövdesine: "card_image_base64": "$B64",
+#                 "card_image_width": 1654, "card_image_height": 2339
+```
+
+Sınır **3,4 MB base64** (~2,5 MB PNG). Vercel'in istek gövdesi tavanı 4,5 MB
+ve base64 ham boyutun ~4/3'ü; A4 2x bir karne tipik olarak 0,5–1,5 MB.
+
+Dil başına ayrı görsel: karne metin içeriyor ("Genel Görüş", "Piyasa
+Beklentisi"), Türkçesiyle İngilizcesi aynı dosya değil. İki POST, iki görsel.
+
+Görsel neden depoda değil de veritabanında: rutin bulutta koşuyor ve depoya
+commit atamıyor. Elle koymak her analiz için manuel bir adım demekti; hattın
+tamamı tek POST'ta bitmeli. Elle konmuş bir dosyayı göstermek de mümkün —
+`public/karne/…` altına koyup `card_image_url` alanını vermek yeterli.
 
 Karne bir ZORUNLULUK DEĞİL. Analiz sayfası görselsiz de eksiksiz çalışır;
-karne yalnızca paylaşım için var.
+kart yalnızca görsel varsa basılır.
 
 ---
 
@@ -105,6 +118,6 @@ kelimesini KULLANMA. Dil: Türkçe; virgüllü ondalık, "milyar $" / "Mr $".
 
 ### Teslim
 
-1. **PNG** — `public/karne/<sembol>-<donem>.png` olarak kaydedilecek dosya
-2. Analiz kaydına `"card_image_url": "/karne/<sembol>-<donem>.png"` eklenir
-   (bkz. `docs/claude-rutinler.md` § 4)
+1. **PNG** — 2x çözünürlük, A4 dikey
+2. Analiz POST gövdesine `card_image_base64` olarak eklenir; site adresi
+   kendisi üretir (bkz. `docs/claude-rutinler.md` § 4)
