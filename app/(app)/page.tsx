@@ -37,7 +37,6 @@ import {
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import {
   displayOffsets,
-  railSpan,
   timePair,
   zoneTag,
 } from "@/lib/session-clock";
@@ -137,17 +136,13 @@ export default async function TodayPage() {
 
         {/* ---- Gün Şeridi ---- */}
         <Panel className="px-4 pb-5 pt-5 sm:px-[22px]">
-          <div className="mb-5 flex items-center justify-between gap-3">
-            <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
-              {t.today.todayFlow}
-            </h2>
-            {/* Şeridin kapsadığı pencere, okuyucunun saatiyle. TR'de gün
-                gece yarısını aşıyor (11:00 — 03:00) ve bu doğru: ABD'nin
-                akşam seansı Türkiye'de geceye düşer. */}
-            <span className="numeral text-xs text-muted">
-              {railSpan(status.etDate, locale).primary} {zoneTag(locale).primary}
-            </span>
-          </div>
+          {/* Şeridin kapsadığı pencere ("11:00 — 03:00 TR") burada, başlığın
+              sağında duruyordu. Aynı iki saat artık eksenin kendi uçlarında
+              yazılı — okuyucu "bu çizginin solu hangi saat" diye sorduğunda
+              cevabın ekranın öbür ucunda olması gerekmiyor. */}
+          <h2 className="display-ink display-ink-tight mb-5 w-fit text-[15px] font-bold">
+            {t.today.todayFlow}
+          </h2>
           <Suspense fallback={<Skeleton className="h-28 w-full" />}>
             <RailSection
               t={t}

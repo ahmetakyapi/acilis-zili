@@ -91,11 +91,19 @@ const RAIL_START = SESSION_BOUNDS.preMarketOpen; // 04:00
 const RAIL_END = SESSION_BOUNDS.afterHoursClose; // 20:00
 const RAIL_SPAN = RAIL_END - RAIL_START;
 
-/* Dikey katlar: 0-27 sınır etiketleri, 46 ekseni, 76'dan itibaren kartlar. */
-const AXIS_TOP = 46;
+/* Dikey katlar, yukarıdan aşağıya:
+     0-28   sınır etiketleri (AÇILIŞ / KAPANIŞ)
+     32-46  "şimdi" rozeti — sınır etiketlerinin ALTINDA ayrı bir şerit,
+            böylece işaretçi açılışın üstüne geldiğinde etiketler çakışmıyor
+     50-56  eksen
+     61-74  eksenin iki ucundaki saatler (şeridin nerede başlayıp bittiği)
+     92+    olay kartları */
+const AXIS_TOP = 50;
 const AXIS_HEIGHT = 6;
 const AXIS_CENTER = AXIS_TOP + AXIS_HEIGHT / 2;
-const CHIP_TOP = 76;
+const NOW_TOP = 32;
+const EDGE_TOP = AXIS_TOP + AXIS_HEIGHT + 5;
+const CHIP_TOP = 92;
 /** Kart yüksekliği ~72px (üç satır + dolgu); kademeler arası nefes payı. */
 const ROW_OFFSET = 84;
 /** Kartlar metin etiketlerinden geniş; çakışma eşiği de ona göre geniş. */
@@ -288,16 +296,56 @@ export function DayRail({
           />
         ))}
 
-        {/* Şu an — canlı işaretçi. */}
+        {/* ---- Eksenin uçları: şerit nerede başlıyor, nerede bitiyor ----
+            Pencerenin kendisi paneli başlığında yazıyordu ve orada bir künye
+            gibi kalıyordu; okuyucu "bu çizginin solu hangi saat" diye
+            sorduğunda cevap ekranın öbür ucundaydı. Uç saatler artık kendi
+            eksenlerinde. Sağdaki künyeyi de taşır: iki uç aynı dilimin iki
+            ucu, saat dilimini iki kez yazmaya gerek yok. */}
+        <div
+          className="numeral absolute left-0 text-[10.5px] text-muted"
+          style={{ top: EDGE_TOP }}
+        >
+          {shown(RAIL_START)}
+        </div>
+        <div
+          className="numeral absolute right-0 text-[10.5px] text-muted"
+          style={{ top: EDGE_TOP }}
+        >
+          {shown(RAIL_END)} {tags.primary}
+        </div>
+
+        {/* Şu an — canlı işaretçi ve rozeti.
+            Rozet eskiden yalnızca `title` özniteliğindeydi: yani ancak fareyi
+            üstünde bekletirsen görünüyordu ve dokunmatik ekranda hiç
+            görünmüyordu. Çizgi tek başına "bu ne" sorusunu doğuruyordu. */}
         {nowVisible && (
-          <div
-            className={cn(
-              "absolute w-[3px] rounded-full",
-              marketLive ? "bg-primary" : "bg-flat",
-            )}
-            style={{ left: `${pct(nowMinutes)}%`, top: AXIS_TOP - 12, height: 30 }}
-            title={labels.now}
-          />
+          <>
+            <div
+              className={cn(
+                "absolute z-10 whitespace-nowrap rounded-full px-1.5 py-[3px] text-[9px] font-bold uppercase leading-none tracking-[0.09em]",
+                marketLive
+                  ? "bg-primary text-on-primary"
+                  : "bg-surface-elevated text-muted",
+              )}
+              style={{
+                left: `${pct(nowMinutes)}%`,
+                top: NOW_TOP,
+                /* Kartlarla aynı katlama: gün başında ya da sonunda rozet
+                   ortalanınca şeridin dışına sarkıyor. */
+                transform: chipTransform(pct(nowMinutes)),
+              }}
+            >
+              {labels.now}
+            </div>
+            <div
+              className={cn(
+                "absolute w-[3px] -translate-x-1/2 rounded-full",
+                marketLive ? "bg-primary" : "bg-flat",
+              )}
+              style={{ left: `${pct(nowMinutes)}%`, top: AXIS_TOP - 8, height: 26 }}
+            />
+          </>
         )}
 
         {/* ---- Kat 3: olay kartları, eksenin altında ---- */}

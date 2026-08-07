@@ -184,12 +184,6 @@ export function sessionWindows(
   });
 }
 
-/** Şerit başlığındaki tek satırlık pencere — "11:00 — 03:00". */
-export function railSpan(dateEt: string, locale: Locale): TimePair {
-  const start = timePair(dateEt, clockOf(SESSION_BOUNDS.preMarketOpen), locale);
-  const end = timePair(dateEt, clockOf(SESSION_BOUNDS.afterHoursClose), locale);
-  return {
-    primary: `${start.primary} — ${end.primary}`,
-    secondary: `${start.secondary} — ${end.secondary}`,
-  };
-}
+/* `railSpan` burada dururdu: şerit başlığının sağına "11:00 — 03:00 TR"
+   yazan tek satırlık pencere. Aynı iki saat artık eksenin uçlarında
+   basıldığı için (components/today/DayRail.tsx) kaldırıldı. */

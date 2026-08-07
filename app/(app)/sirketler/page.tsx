@@ -430,7 +430,10 @@ async function CompaniesTable({
                           <span className="text-xs text-muted">—</span>
                         )}
                       </td>
-                      <td className="numeral px-3 py-2.5 pr-4 text-right text-body sm:pr-3">
+                      {/* Fiyat satırın ÇAPASI: değişim, hafta, piyasa değeri
+                          ve hacim hep ona göre okunuyor. Diğerleriyle aynı
+                          ağırlıkta yazılınca sayı dizisinin içinde kayboluyordu. */}
+                      <td className="numeral px-3 py-2.5 pr-4 text-right font-bold text-strong sm:pr-3">
                         {quote ? formatPrice(quote.price, locale) : "—"}
                       </td>
                       <td className="numeral hidden px-3 py-2.5 text-right text-body sm:table-cell">
