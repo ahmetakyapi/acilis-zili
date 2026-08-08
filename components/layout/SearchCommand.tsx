@@ -162,7 +162,7 @@ export function SearchCommand({
         type="button"
         onClick={openPalette}
         aria-label={label}
-        className="inline-flex size-[38px] items-center justify-center gap-2.5 rounded-lg border border-line bg-surface text-[13px] text-muted transition-colors hover:border-line-strong hover:text-soft lg:size-9 2xl:size-auto 2xl:w-[248px] 2xl:justify-start 2xl:rounded-[9px] 2xl:px-3 2xl:py-2"
+        className="inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface text-[13px] text-muted transition-colors hover:border-line-strong hover:text-soft lg:size-9 2xl:size-auto 2xl:w-[248px] 2xl:justify-start 2xl:rounded-[9px] 2xl:px-3 2xl:py-2"
       >
         <MagnifyingGlass weight="duotone" size={15} className="shrink-0" />
         <span className="hidden 2xl:inline">{placeholderShort}</span>

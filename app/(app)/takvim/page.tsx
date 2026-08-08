@@ -6,6 +6,7 @@ import {
   ImpactDots,
   Panel,
 } from "@/components/ui/primitives";
+import { eventExplainer } from "@/lib/event-explainers";
 import { getEventsBetween } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -279,15 +280,29 @@ export default async function CalendarPage(
                         label={impactLabel[event.importance] ?? event.importance}
                       />
 
-                      <span
-                        className={cn(
-                          "min-w-0 flex-1 text-sm",
-                          event.importance === "high"
-                            ? "font-semibold text-strong"
-                            : "text-body",
+                      {/* Başlık + açıklama. Satır eskiden yalnızca başlıktı
+                          ve "TÜFE — Temmuz Verisi", TÜFE'nin ne olduğunu
+                          bilmeyene hiçbir şey söylemiyordu; sitenin geri
+                          kalanındaki öğretici ton takvimde kesiliyordu.
+                          Açıklama olayın TÜRÜNE bağlı (bkz.
+                          `lib/event-explainers.ts`), tanınmayan türde satır
+                          eskisi gibi tek satır kalır. */}
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span
+                          className={cn(
+                            "text-sm",
+                            event.importance === "high"
+                              ? "font-semibold text-strong"
+                              : "text-body",
+                          )}
+                        >
+                          {locale === "tr" ? event.titleTr : event.titleEn}
+                        </span>
+                        {eventExplainer(event.slug, locale) && (
+                          <span className="max-w-[68ch] text-[11.5px] leading-[17px] text-muted">
+                            {eventExplainer(event.slug, locale)}
+                          </span>
                         )}
-                      >
-                        {locale === "tr" ? event.titleTr : event.titleEn}
                       </span>
 
                       {/* Değerler künye olarak, etiketi yanında. Eski hâlde

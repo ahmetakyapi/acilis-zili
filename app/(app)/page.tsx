@@ -116,8 +116,13 @@ export default async function TodayPage() {
             <LiveClock locale={locale} />
           </div>
 
-          {/* Sayfanın en büyük sayısı — zil geri sayımı */}
-          <div className="mt-3.5 flex flex-wrap items-end gap-3.5">
+          {/* Sayfanın en büyük sayısı — zil geri sayımı.
+              Bu satır aynı zamanda sayfanın H1'i: ana sayfada hiç `h1` yoktu
+              (denetimde çıktı), ekran okuyucu ve arama motoru için sayfa
+              başlıksız görünüyordu. Geri sayım + "açılış ziline kaldı"
+              zaten sayfanın ne anlattığını söyleyen cümle; görünüm
+              değişmiyor, yalnızca etiket doğru olanla değişti. */}
+          <h1 className="mt-3.5 flex flex-wrap items-end gap-3.5">
             <Countdown
               targetIso={countdownTarget.toISOString()}
               units={{
@@ -128,10 +133,10 @@ export default async function TodayPage() {
               }}
               className="tote display-ink text-[44px] leading-none sm:text-[66px]"
             />
-            <span className="pb-1.5 text-[13px] text-body sm:pb-2.5 sm:text-[15px]">
+            <span className="pb-1.5 text-[13px] font-normal text-body sm:pb-2.5 sm:text-[15px]">
               {countdownLabel.toLocaleLowerCase(locale === "tr" ? "tr-TR" : "en-US")}
             </span>
-          </div>
+          </h1>
         </header>
 
         {/* ---- Gün Şeridi ---- */}

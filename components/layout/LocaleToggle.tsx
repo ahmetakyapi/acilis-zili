@@ -59,7 +59,7 @@ export function LocaleToggle({
         title={`${label}: ${next.toUpperCase()}`}
         disabled={pending}
         className={cn(
-          "inline-flex size-[38px] items-center justify-center rounded-lg border border-line bg-surface text-[11px] font-semibold uppercase text-body transition-colors hover:text-strong lg:hidden",
+          "inline-flex size-11 items-center justify-center rounded-lg border border-line bg-surface text-[11px] font-semibold uppercase text-body transition-colors hover:text-strong lg:hidden",
           pending && "opacity-50",
         )}
       >

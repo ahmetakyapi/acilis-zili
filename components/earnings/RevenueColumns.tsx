@@ -104,7 +104,7 @@ export function RevenueColumns({
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-        <h3 className="text-[14.5px] font-bold text-strong">{title}</h3>
+        <h2 className="text-[14.5px] font-bold text-strong">{title}</h2>
         <div className="flex items-center gap-3 text-[11px] text-muted">
           <span className="flex items-center gap-1.5">
             <span
@@ -142,8 +142,13 @@ export function RevenueColumns({
         {/* Sütunlar CSS ızgarasıyla: SVG'de sabit genişlik varsayımı yapmadan
             her sütun eşit pay alıyor ve dar ekranda kendiliğinden daralıyor.
             Dar boşluk = kalın sütun; karnedeki oran. */}
+        {/* Sağda iç dolgu: son sütun ÖNGÖRÜ sütunu ve etiketi ("2,06-2,09
+            Mr $") sütundan geniş olduğu için sağa yaslanınca panelin
+            kenarına yapışıyor, köşeye sıkışmış gibi duruyordu. Dolgu bütün
+            şeridi bir tık içeri alıyor. Izgara çizgileri `inset-x-0` ile
+            tam genişlikte kalıyor — onların kenara kadar gitmesi doğru. */}
         <ul
-          className="relative grid h-full items-end gap-1.5 sm:gap-2"
+          className="relative grid h-full items-end gap-1.5 pr-2 sm:gap-2 sm:pr-3"
           style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}
         >
           {bars.map((bar, index) => {
@@ -155,7 +160,13 @@ export function RevenueColumns({
             return (
               <li
                 key={`${bar.label}-${index}`}
-                className="mx-auto flex h-full w-full flex-col justify-end gap-1.5"
+                className={cn(
+                  "mx-auto flex h-full w-full flex-col justify-end gap-1.5",
+                  /* Öngörü sütunu gerçekleşenlerden bir nefes uzakta durur:
+                     kesikli çerçeve onu tür olarak ayırıyor ama komşusuna
+                     bitişikken aynı serinin devamı gibi okunuyordu. */
+                  bar.projected && "ml-1.5 sm:ml-3",
+                )}
                 style={{ maxWidth: MAX_BAR_WIDTH }}
               >
                 <p

@@ -67,7 +67,14 @@ export function BriefSwitch({
   const brief = period === "daily" ? daily : weekly;
 
   return (
-    <section className="rounded-2xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5">
+    /* Zemin BEYAZ BELGE, tint değil.
+       Panel bir süre mavi degrade taşıdı ve sayfadaki en uzun metin onun
+       üstünde duruyordu: tint, gövde metninin kontrastını düşürüyor ve
+       "okunacak yer" yerine "vurgulanmış kutu" gibi okunuyordu. Projede bu
+       karar bir kez veri yüzeyleri için verildi (bkz. `--surface-solid`,
+       karne dokusu); uzun metin için daha da geçerli. Accent kenarlık
+       kalıyor — bültenin günün başyazısı olduğu oradan belli. */
+    <section className="rounded-2xl border border-primary-faint bg-surface-solid p-5">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <Kicker tone="primary">{labels.titles[period]}</Kicker>
         {brief && (
@@ -95,7 +102,10 @@ export function BriefSwitch({
             aria-selected={period === key}
             onClick={() => setPeriod(key)}
             className={cn(
-              "min-h-[34px] px-3.5 transition-colors",
+              /* Telefonda 44px: 34px'lik sekmeler dokunma eşiğinin altındaydı
+                 ve bunlar bültenin tek denetimi. Masaüstünde imleç hassas,
+                 orada 34px yeterli. */
+              "min-h-11 px-3.5 transition-colors sm:min-h-[34px]",
               period === key
                 ? "bg-primary font-semibold text-on-primary"
                 : "text-body hover:text-strong",
@@ -140,7 +150,12 @@ export function BriefSwitch({
               </p>
             )}
 
-            <p className="mt-3 text-base font-medium leading-[25px] text-strong">
+            {/* Okunur bant: başlık ve gövde panelin tam genişliğine
+                yayılıyordu ve geniş ekranda satır boyu 110 karakteri
+                aşıyordu. Aynı sorun analiz sayfasında çok sütunla çözülmüştü;
+                bültende listeler ve ara başlıklar olduğu için sütun değil
+                ÖLÇÜ sınırı doğru araç. */}
+            <p className="mt-3 max-w-[74ch] text-base font-medium leading-[25px] text-strong">
               {brief.headline}
             </p>
             <BriefBody

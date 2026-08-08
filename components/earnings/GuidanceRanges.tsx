@@ -113,7 +113,7 @@ export function GuidanceRanges({
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-        <h3 className="text-[14.5px] font-bold text-strong">{title}</h3>
+        <h2 className="text-[14.5px] font-bold text-strong">{title}</h2>
         <div className="flex items-center gap-3 text-[11px] text-muted">
           <span className="flex items-center gap-1.5">
             <span aria-hidden className="h-2 w-3 rounded-full bg-primary" />
