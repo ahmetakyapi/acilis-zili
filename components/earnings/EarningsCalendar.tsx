@@ -1,13 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CaretDown } from "@phosphor-icons/react/dist/ssr";
 import {
-  Panel,
   SymbolBadge,
   TimingChip,
   type TimingTone,
 } from "@/components/ui/primitives";
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
+import { AlsoReporting } from "@/components/earnings/AlsoReporting";
 import type { AnalysisBadge as AnalysisBadgeData, SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn, formatCompact, formatEtDateLong, formatPrice } from "@/lib/utils";
@@ -410,72 +409,26 @@ function DaySection({
         </div>
       )}
 
-      {/* ---- Katman 3: kalanlar, varsayılan kapalı ---- */}
-      {rest.length > 0 && (
-        <details className="group/details mt-2.5">
-          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 py-1.5 text-[13px] text-muted transition-colors hover:text-body [&::-webkit-details-marker]:hidden">
-            <CaretDown
-              weight="duotone"
-              size={15}
-              className="transition-transform group-open/details:rotate-180"
-            />
-            {t.earnings.alsoReporting}
-            <span className="numeral">({rest.length})</span>
-          </summary>
-          <Panel className="mt-1 px-4 py-3.5 sm:px-5">
-            <div className="flex flex-col gap-3.5">
-              {[
-                { label: t.earnings.beforeOpen, list: bmo, tone: "pre" as const },
-                { label: t.earnings.afterClose, list: amc, tone: "post" as const },
-                {
-                  label: t.earnings.timeUnknown,
-                  list: other,
-                  tone: "neutral" as const,
-                },
-              ]
-                .filter((group) => group.list.length > 0)
-                .map((group) => (
-                  <div key={group.label} className="flex flex-col gap-2">
-                    <p className="flex items-center gap-1.5 text-[11px] font-semibold text-muted">
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "size-1.5 rounded-full",
-                          group.tone === "pre"
-                            ? "bg-up"
-                            : group.tone === "post"
-                              ? "bg-primary"
-                              : "bg-flat",
-                        )}
-                      />
-                      {group.label}
-                      <span className="numeral">({group.list.length})</span>
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {group.list.map((row) => (
-                        <Link
-                          key={row.id}
-                          href={`/hisse/${row.symbol}`} prefetch={false}
-                          className={cn(
-                            // min-h-8: sembol çipleri 26px'lik dokunma hedefi
-                            // bırakıyordu; sık dizilmiş bir ızgarada parmakla
-                            // komşusuna basmak kolaydı.
-                            "inline-flex min-h-8 items-center rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold transition-colors hover:border-line-strong hover:bg-primary-tint hover:text-primary",
-                            watchSet.has(row.symbol)
-                              ? "border-primary-faint bg-primary-wash text-primary"
-                              : "text-body",
-                          )}
-                        >
-                          {row.symbol}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </Panel>
-        </details>
-      )}
+      {/* ---- Katman 3: kalanlar ----
+           Çipler artık sunucuda ÇİZİLMİYOR, veri olarak geçiyor: kapalı bir
+           `<details>` içindeki 1.354 çip HTML'in yarısını yiyordu. Gerekçe
+           `AlsoReporting` dosyasının başında. */}
+      <AlsoReporting
+        label={t.earnings.alsoReporting}
+        total={rest.length}
+        groups={[
+          { label: t.earnings.beforeOpen, tone: "pre", list: bmo },
+          { label: t.earnings.afterClose, tone: "post", list: amc },
+          { label: t.earnings.timeUnknown, tone: "neutral", list: other },
+        ].map((group) => ({
+          label: group.label,
+          tone: group.tone as "pre" | "post" | "neutral",
+          symbols: group.list.map((row) => ({
+            symbol: row.symbol,
+            watched: watchSet.has(row.symbol),
+          })),
+        }))}
+      />
     </section>
   );
 }
