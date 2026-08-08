@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { BellMark } from "@/components/brand/BellMark";
 
 /* --------------------------------------------------------------------------
    Gezinme göstergesi — üstte ince çubuk, gecikirse "Yükleniyor" hapı.
@@ -145,11 +146,21 @@ export function RouteProgress({ label }: { label: string }) {
   return (
     <>
       <span aria-hidden className="route-progress" />
+      {/* Gecikirse EKRANIN ORTASINDA marka işareti. Köşedeki küçük hap
+          "bir şeyler oluyor" diyordu ama gözün gitmediği bir yerde
+          duruyordu; ortadaki kart bekleyişi ürünün kendi işaretine
+          bağlıyor — zil, etrafında dönen accent halka ve altında tek
+          kelime. Katman tıklamayı ENGELLEMEZ (`pointer-events: none`):
+          gösterge takılırsa ekranı kilitlemesin. */}
       {slow && (
-        <span role="status" className="route-progress-pill">
-          <span aria-hidden className="route-progress-spinner" />
-          {label}
-        </span>
+        <div className="route-loader" role="status" aria-live="polite">
+          <div className="route-loader-card">
+            <span aria-hidden className="route-loader-mark">
+              <BellMark size={30} className="route-loader-bell" />
+            </span>
+            <span className="route-loader-label">{label}</span>
+          </div>
+        </div>
       )}
     </>
   );
