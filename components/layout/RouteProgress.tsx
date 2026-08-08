@@ -156,7 +156,7 @@ export function RouteProgress({ label }: { label: string }) {
         <div className="route-loader" role="status" aria-live="polite">
           <div className="route-loader-card">
             <span aria-hidden className="route-loader-mark">
-              <BellMark size={30} className="route-loader-bell" />
+              <BellMark size={34} className="route-loader-bell" />
             </span>
             <span className="route-loader-label">{label}</span>
           </div>

@@ -27,7 +27,7 @@ export default async function NotFound() {
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6 py-14 text-center sm:py-24">
-      <BellMark size={52} />
+      <BellMark size={60} />
 
       <div className="flex flex-col gap-2.5">
         <p className="tote display-ink text-[54px] leading-none">404</p>

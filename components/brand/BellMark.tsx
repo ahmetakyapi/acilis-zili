@@ -29,6 +29,26 @@ export const BELL_MOUTH = { x: 56, y: 159, width: 144, height: 16, rx: 8 };
 export const BELL_CLAPPER = { cx: 128, cy: 196, r: 12 };
 export const BELL_KNOB = { cx: 128, cy: 50, r: 11 };
 
+/**
+ * DAR görüş kutusu — işaretin her yerde küçük görünmesinin sebebi buydu.
+ *
+ * Geometri `0 0 256 256` içinde çizildi ama zilin kendisi o alanın tamamını
+ * doldurmuyor: dikeyde 39→208 (169 birim, %66), yatayda 56→200 (144 birim,
+ * %56). Karonun içine `size × 0.66` ölçüsünde basılınca zilin karodaki
+ * gerçek yüksekliği %43'e, genişliği %37'ye düşüyordu — geri kalanı çizimin
+ * kendi içindeki boşluktu. Karo büyütülse bile zil küçük kalıyordu, çünkü
+ * sorun karonun boyu değil çizimin içindeki payıydı.
+ *
+ * Görüş kutusu zilin sınırlarına çekildi: kare kalması için (aksi hâlde
+ * ölçekleme zili ezerdi) dikeyde dar kenar belirleyici, yatayda fazlalık
+ * simetrik bırakıldı. Zil artık kutunun %91'i. Koordinatlar DEĞİŞMEDİ —
+ * `icon.svg`, apple ikonu ve paylaşım kartları aynı sayıları kullanmaya
+ * devam ediyor, yalnızca çerçeve daraldı.
+ */
+export const BELL_VIEWBOX = "35 31 186 186";
+/** Zil karonun ne kadarını kaplasın — kutu daraldığı için oran da düştü. */
+export const BELL_INSET = 0.64;
+
 export function BellMark({
   size = 27,
   className,
@@ -62,9 +82,9 @@ export function BellMark({
         }}
       />
       <svg
-        width={size * 0.66}
-        height={size * 0.66}
-        viewBox="0 0 256 256"
+        width={size * BELL_INSET}
+        height={size * BELL_INSET}
+        viewBox={BELL_VIEWBOX}
         fill="var(--on-primary)"
       >
         <circle {...BELL_KNOB} />

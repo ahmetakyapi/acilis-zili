@@ -81,7 +81,10 @@ export async function ogFonts() {
 /** Zil işareti — icon.svg ile aynı çizim, Satori'nin anladığı sadelikte. */
 export function BellGlyph({ size = 40, fill = "#ffffff" }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 256 256" fill={fill}>
+    /* Dar görüş kutusu: zil `0 0 256 256` içinde alanın yalnızca %66'sını
+       kaplıyor ve paylaşım kartlarında karonun ortasında küçük duruyordu.
+       Kaynak ve gerekçe: components/brand/BellMark.tsx */
+    <svg width={size} height={size} viewBox="35 31 186 186" fill={fill}>
       <circle cx="128" cy="50" r="11" />
       <path d="M128 68c-30 0-53 24-53 54v33h106v-33c0-30-23-54-53-54z" />
       <rect x="56" y="159" width="144" height="16" rx="8" />
@@ -105,7 +108,7 @@ export function BrandLock({ label }: { label?: string }) {
           backgroundImage: BRAND_GRADIENT,
         }}
       >
-        <BellGlyph size={34} />
+        <BellGlyph size={38} />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <span

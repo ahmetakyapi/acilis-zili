@@ -22,10 +22,17 @@
   <rect width="256" height="256" rx="85" fill="url(#tile)"/>
   <!-- İç kenar ışığı: karoyu düz kare değil basılmış bir rozet gibi gösterir. -->
   <rect x="2" y="2" width="252" height="252" rx="83" fill="none" stroke="#ffffff" stroke-opacity="0.20" stroke-width="4"/>
-  <g fill="#ffffff">
+  <!--
+    Zil, DAR görüş kutusuyla büyütülür. Geometri `0 0 256 256` içinde
+    çizildi ama zil o alanın yalnızca %66'sını (dikey) kaplıyor; doğrudan
+    basılınca karoda küçük duruyordu. İç svg zilin sınırlarına çekilmiş bir
+    kutuyla (BELL_VIEWBOX) yeniden ölçekleniyor — koordinatlar değişmedi,
+    yalnızca çerçeve daraldı. Kaynak: components/brand/BellMark.tsx
+  -->
+  <svg x="46" y="46" width="164" height="164" viewBox="35 31 186 186" fill="#ffffff">
     <circle cx="128" cy="50" r="11"/>
     <path d="M128 68c-30 0-53 24-53 54v33h106v-33c0-30-23-54-53-54z"/>
     <rect x="56" y="159" width="144" height="16" rx="8"/>
     <circle cx="128" cy="196" r="12"/>
-  </g>
+  </svg>
 </svg>

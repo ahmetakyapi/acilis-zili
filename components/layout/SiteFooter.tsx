@@ -54,7 +54,7 @@ export async function SiteFooter() {
         {/* ---- Künye ---- */}
         <div className="flex flex-col gap-3">
           <Link href="/" className="flex w-fit items-center gap-2.5">
-            <BellMark size={30} />
+            <BellMark size={34} />
             <span className="display-ink display-ink-tight text-[16px] font-bold tracking-[-0.03em]">
               {t.brand.name}
             </span>

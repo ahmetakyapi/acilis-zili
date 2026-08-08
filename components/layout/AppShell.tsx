@@ -164,7 +164,7 @@ export function AppShell({
           <BrandLockup
             name={labels.brandName}
             tagline={labels.tagline}
-            size={34}
+            size={38}
             // Alt satır yalnızca çok geniş ekranda: dokuz sekmeyle birlikte
             // masthead 1536px altında sıkışıyor, marka adı zaten yeterli.
             taglineClassName="hidden 2xl:block"
@@ -253,7 +253,7 @@ export function AppShell({
           className="-my-1 flex items-center gap-2.5 py-1"
           aria-label={labels.brandName}
         >
-          <BellMark size={28} />
+          <BellMark size={32} />
           <span className="display-ink display-ink-tight w-fit text-[16.5px] font-bold tracking-[-0.03em]">
             {labels.brandName}
           </span>
