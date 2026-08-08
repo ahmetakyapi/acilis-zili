@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
+import { LevelBadge } from "@/components/article/LevelBadge";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { Panel } from "@/components/ui/primitives";
 import {
@@ -73,8 +74,14 @@ export default async function GuideArticlePage(
             <p className="plate text-[10px] tracking-[0.09em] text-primary">
               {guideTopicLabel(article.topic, locale)}
             </p>
-            <p className="numeral mt-1 text-[12px] text-muted">
-              {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
+            {/* Zorluk ile okuma süresi aynı satırda: ikisi de "bu yazıya
+                girmeye hazır mıyım" sorusunun parçası — biri hazırlığı,
+                öteki zamanı ölçüyor. */}
+            <p className="mt-1.5 flex flex-wrap items-center gap-2">
+              <LevelBadge level={article.level} locale={locale} />
+              <span className="numeral text-[12px] text-muted">
+                {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
+              </span>
             </p>
           </div>
         </div>

@@ -53,6 +53,50 @@ export const GUIDE_TOPICS = [
 
 export type GuideTopicKey = (typeof GUIDE_TOPICS)[number]["key"];
 
+/* ==========================================================================
+   Zorluk
+
+   Müfredat zaten kolaydan zora sıralı ama ekranda bunu söyleyen bir şey
+   yoktu: 32 yazılık bir listeye ilk kez bakan biri nereden başlayacağını
+   ancak başlıkları okuyup tahmin ederek buluyordu.
+
+   Seviye YAZI YAZI UYDURULMUYOR, konudan türüyor. Otuz iki yazıya tek tek
+   "bu orta seviyedir" diye not düşmek uydurma bir kesinlik olurdu; konular
+   zaten bir zorluk merdiveni. Konunun genel seviyesinden AÇIKÇA ayrılan
+   yazılar (bir ön koşul zinciri gerektiren ya da tersine giriş niteliğinde
+   olanlar) tek tek işaretleniyor — istisna listesi kısa tutuluyor ki kural
+   okunabilir kalsın.
+   ========================================================================== */
+
+export const GUIDE_LEVELS = ["temel", "orta", "ileri"] as const;
+export type GuideLevel = (typeof GUIDE_LEVELS)[number];
+
+/** Konunun varsayılan seviyesi — istisna işaretlenmemişse bu geçerli. */
+const TOPIC_LEVEL: Record<GuideTopicKey, GuideLevel> = {
+  temel: "temel",
+  strateji: "orta",
+  sirket: "orta",
+  makro: "orta",
+};
+
+export function guideLevel(entry: {
+  topic: GuideTopicKey;
+  level?: GuideLevel;
+}): GuideLevel {
+  return entry.level ?? TOPIC_LEVEL[entry.topic];
+}
+
+export function guideLevelLabel(level: GuideLevel, locale: string): string {
+  if (locale === "tr") {
+    return level === "temel" ? "Temel" : level === "orta" ? "Orta" : "İleri";
+  }
+  return level === "temel"
+    ? "Basic"
+    : level === "orta"
+      ? "Intermediate"
+      : "Advanced";
+}
+
 /** Bir dilin taşıdığı metin — yapı `meta.ts`'te, metin dil dosyalarında. */
 export type GuideText = {
   title: string;
@@ -64,6 +108,8 @@ export type GuideText = {
 type GuideMetaEntry = {
   slug: string;
   topic: GuideTopicKey;
+  /** Konunun varsayılan seviyesinden AÇIKÇA ayrılıyorsa — bkz. § Zorluk. */
+  level?: GuideLevel;
   /** Kart üstündeki tipografik işaret — ikon değil, kavramın kendi notasyonu. */
   glyph: string;
   /** Notasyonun İngilizce karşılığı farklıysa (TÜFE→CPI) burada durur. */
@@ -128,12 +174,14 @@ export const GUIDE_META = [
   {
     slug: "emir-tipleri",
     topic: "strateji",
+    level: "temel", // ilk emri verirken okunuyor, ön koşulu yok
     glyph: "LMT",
     related: ["spread-likidite", "risk-yonetimi"],
   },
   {
     slug: "risk-yonetimi",
     topic: "strateji",
+    level: "temel", // en erken okunması gereken yazı; ön koşul değil ön şart
     glyph: "1R",
     related: ["cesitlendirme", "kaldirac"],
   },
@@ -156,6 +204,7 @@ export const GUIDE_META = [
        şey marj çağrısı değil, kaybın sınırsızlığı. */
     slug: "kisa-sikisma",
     topic: "strateji",
+    level: "ileri", // long/short mekaniği + ödünç hisse zinciri gerekiyor
     glyph: "⇈",
     related: ["long-short", "yatirimci-psikolojisi", "volatilite"],
   },
@@ -168,6 +217,7 @@ export const GUIDE_META = [
   {
     slug: "opsiyonlar",
     topic: "strateji",
+    level: "ileri", // prim, vade ve zaman erimesi üç ayrı kavram
     glyph: "C/P",
     related: ["kaldirac", "volatilite"],
   },
@@ -178,6 +228,7 @@ export const GUIDE_META = [
        araçları bir araya getiren yazı. */
     slug: "hedge",
     topic: "strateji",
+    level: "ileri", // opsiyon + long/short + risk yönetimi üçünün üstüne kuruluyor
     glyph: "Δ",
     related: ["opsiyonlar", "long-short", "risk-yonetimi", "cesitlendirme"],
   },
@@ -229,6 +280,7 @@ export const GUIDE_META = [
   {
     slug: "temettu",
     topic: "sirket",
+    level: "temel", // tek kavram, tek cümlelik tanım
     glyph: "%",
     related: ["bilanco", "nakit-akisi", "hisse-geri-alimi"],
   },
@@ -255,6 +307,7 @@ export const GUIDE_META = [
        "sinyal ile olay arasındaki gecikme" de anlatılması gereken bir şey. */
     slug: "getiri-egrisi",
     topic: "makro",
+    level: "ileri", // iki ucun ayrı ayrı ne fiyatladığını bilmeyi gerektiriyor
     glyph: "2s10s",
     related: ["faiz-tahvil", "sahin-guvercin", "ayi-boga"],
   },
@@ -289,6 +342,7 @@ export const GUIDE_META = [
        Müfredatın da doğal kapanışı — makroyu portföye bağlayan yazı. */
     slug: "sektor-rotasyonu",
     topic: "makro",
+    level: "ileri", // faiz, iskonto ve döngü — makro bloğunun tamamı ön koşul
     glyph: "◷",
     related: ["faiz-tahvil", "getiri-egrisi", "endeks", "cesitlendirme"],
   },

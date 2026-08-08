@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { LevelBadge } from "@/components/article/LevelBadge";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { readingMinutes } from "@/components/article/ArticleBody";
 import { EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
@@ -121,7 +122,7 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
                     {guideTopicDesc(topic.key, locale)}
                   </p>
                 </div>
-                <ArticleGrid articles={group} t={t} />
+                <ArticleGrid articles={group} locale={locale} t={t} />
               </section>
             );
           })}
@@ -250,7 +251,7 @@ function TopicView({
           <EmptyState title={t.guide.empty} />
         </Panel>
       ) : (
-        <ArticleGrid articles={articles} t={t} />
+        <ArticleGrid articles={articles} locale={locale} t={t} />
       )}
     </section>
   );
@@ -264,9 +265,11 @@ function TopicView({
  */
 function ArticleGrid({
   articles,
+  locale,
   t,
 }: {
   articles: GuideArticle[];
+  locale: string;
   t: Dictionary;
 }) {
   return (
@@ -279,10 +282,17 @@ function ArticleGrid({
           className="min-w-0"
         >
           <Panel className="panel-hover flex h-full flex-col gap-4 p-5">
+            {/* Sağ üstte sıra numarası ve zorluk. Rozet KARTTA, çünkü
+                okuyucu nereden başlayacağına listeye bakarken karar veriyor;
+                yalnızca yazı sayfasında dursaydı seçimi yaptıktan sonra
+                öğrenmiş olurdu. */}
             <div className="flex items-start justify-between gap-3">
               <GlyphTile glyph={article.glyph} />
-              <span className="numeral mt-1 text-[11px] font-bold text-muted">
-                {String(index + 1).padStart(2, "0")}
+              <span className="flex flex-col items-end gap-1.5">
+                <span className="numeral text-[11px] font-bold text-muted">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <LevelBadge level={article.level} locale={locale} />
               </span>
             </div>
 

@@ -20,18 +20,23 @@
 import {
   GUIDE_META,
   GUIDE_TOPICS,
+  guideLevel,
+  guideLevelLabel,
+  type GuideLevel,
   type GuideSlug,
   type GuideTopicKey,
 } from "./meta";
 import { GUIDE_TR } from "./tr";
 import { GUIDE_EN } from "./en";
 
-export { GUIDE_TOPICS };
-export type { GuideSlug, GuideTopicKey };
+export { GUIDE_TOPICS, guideLevelLabel };
+export type { GuideLevel, GuideSlug, GuideTopicKey };
 
 export type GuideArticle = {
   slug: GuideSlug;
   topic: GuideTopicKey;
+  /** Konudan türeyen zorluk; istisnalar meta.ts'te işaretli. */
+  level: GuideLevel;
   glyph: string;
   related: readonly string[];
   title: string;
@@ -45,6 +50,7 @@ function assemble(meta: (typeof GUIDE_META)[number], locale: string): GuideArtic
   return {
     slug: meta.slug,
     topic: meta.topic,
+    level: guideLevel(meta),
     glyph: locale === "en" && glyphEn ? glyphEn : meta.glyph,
     related: "related" in meta ? meta.related : [],
     ...text,
