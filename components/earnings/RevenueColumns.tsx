@@ -169,24 +169,40 @@ export function RevenueColumns({
                 )}
                 style={{ maxWidth: MAX_BAR_WIDTH }}
               >
-                <p
-                  className={cn(
-                    "numeral whitespace-nowrap text-[13px] font-bold",
-                    /* Etiket sütundan geniş olabiliyor (öngörü sütununda
-                       aralık yazıyor). Taşma ortadan hizalanınca iki yana
-                       birden sarkıyor ve dar ekranda kartın dışına çıkıyor;
-                       uçtaki sütunlar dışa değil İÇE doğru taşsın diye
-                       kenarlarına yaslanıyor. */
-                    index === 0
-                      ? "text-left"
-                      : index === bars.length - 1
-                        ? "text-right"
-                        : "text-center",
-                    bar.projected ? "text-primary" : "text-strong",
-                  )}
-                >
-                  {bar.projected ? (bar.note ?? format(bar.value)) : format(bar.value)}
-                </p>
+                {/* Etiket sütundan GENİŞ olabiliyor: öngörü sütununda bir
+                    aralık yazıyor ("10,3-10,8 Mr $") ve sütun 390px'te ~50px.
+                    `text-right` tek başına yetmedi — kutu sütun genişliğinde
+                    kaldığı için nowrap metin kutudan taşıyor ve telefonda
+                    panelin sağ kenarını aşıp ekranın dışına çıkıyordu.
+
+                    `w-max` kutuyu metnin kendi genişliğine getiriyor,
+                    `ml-auto` onu sütunun sağ kenarına yaslıyor: fazlalık
+                    artık dışarı değil, İÇERİ — komşu sütunun üstündeki boş
+                    alana doğru taşıyor. İlk sütunda ayna simetriği. */}
+                <div className="relative h-[18px] w-full">
+                  <p
+                    className={cn(
+                      /* MUTLAK konum, akış değil. Kutu akışta kaldığı sürece
+                         sütun genişliğine sıkışıyor ve nowrap metin sağa
+                         taşıyordu; `ml-auto` da işe yaramaz çünkü otomatik
+                         margin negatif olamıyor. Mutlak konumda kutu sütunun
+                         SAĞ KENARINA çapalanıyor ve fazlalık sola, komşu
+                         sütunun üstündeki boş alana akıyor. Sabit yükseklik
+                         sütun hizasını koruyor. */
+                      "numeral absolute bottom-0 whitespace-nowrap text-[13px] font-bold",
+                      index === 0
+                        ? "left-0"
+                        : index === bars.length - 1
+                          ? "right-0"
+                          : "left-1/2 -translate-x-1/2",
+                      bar.projected ? "text-primary" : "text-strong",
+                    )}
+                  >
+                    {bar.projected
+                      ? (bar.note ?? format(bar.value))
+                      : format(bar.value)}
+                  </p>
+                </div>
                 <div
                   className={cn(
                     "w-full rounded-t-[3px]",

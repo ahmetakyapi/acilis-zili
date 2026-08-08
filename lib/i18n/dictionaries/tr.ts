@@ -292,7 +292,7 @@ const tr = {
 
     summary: "Özet",
     detailed: "Detaylı Değerlendirme",
-    byTeam: "Açılış Zili Analiz Ekibi",
+    byTeam: "Claude",
     strengths: "Güçlü Yönler",
     risks: "Riskler",
     upcomingDev: "Beklenen Gelişmeler",

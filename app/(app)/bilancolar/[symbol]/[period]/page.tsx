@@ -691,14 +691,11 @@ export default async function AnalysisDetailPage(
               bölünüp iki sütuna yayılması, sayfayı gazete değil bozuk bir
               düzen gibi gösteriyordu. */}
           <Panel className="p-5 sm:p-6">
-            <PanelHead
-              icon={Article}
-              title={t.analysis.summary}
-              meta={t.analysis.readMinutes.replace(
-                "{count}",
-                String(readMinutes(row)),
-              )}
-            />
+            {/* Okuma süresi künyesi kaldırıldı: metin zaten ekranda ve ne
+                kadar sürdüğü, okunup okunmayacağına dair bir karar
+                değiştirmiyordu — panelin sağ ucunda taşıdığı tek şey
+                gürültüydü. */}
+            <PanelHead icon={Article} title={t.analysis.summary} />
             {/* İlk paragraf GİRİŞ ölçüsünde: üç sütun eşit puntoda dizilince
                 metin duvara dönüyor ve göz nereden başlayacağını yüzeyden
                 okuyamıyordu. Bir kademe iri ve koyu bir giriş, sütunun
@@ -961,17 +958,6 @@ function formatGuidanceRange(
   return `${a} – ${b}${unit ? ` ${unit}` : ""}`;
 }
 
-/** Gövde metninden okuma süresi — kayıtta ayrı alan tutmaya değmez. */
-function readMinutes(row: EarningsAnalysisRow): number {
-  const words = [
-    ...row.summary,
-    ...row.analysis.map((section) => `${section.title} ${section.body}`),
-  ]
-    .join(" ")
-    .trim()
-    .split(/\s+/).length;
-  return Math.max(1, Math.round(words / 200));
-}
 
 /**
  * Genel Görüş şeridi — skor, karar, iki cümlelik gerekçe ve analist hedefi

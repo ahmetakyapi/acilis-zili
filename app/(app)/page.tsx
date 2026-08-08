@@ -1435,8 +1435,11 @@ async function LatestWriting({
 
   return (
     <div
+      /* `items-start`: iki panel satırın en uzununa gerilirse kısa olanın
+         altında sebepsiz bir boşluk kalıyor — analiz satırları iki, yazı
+         başlıkları çoğu zaman üç satır. Her panel kendi boyunda. */
       className={cn(
-        "grid gap-4 lg:col-start-1 lg:row-start-2",
+        "grid items-start gap-4 lg:col-start-1 lg:row-start-2",
         analyses.length > 0 && stories.length > 0 && "sm:grid-cols-2",
       )}
     >
@@ -1483,6 +1486,10 @@ async function LatestWriting({
                       </span>
                       <span className="numeral block text-[11px] text-muted">
                         {row.symbol} · {row.periodLabel}
+                        <span aria-hidden className="mx-1.5">
+                          ·
+                        </span>
+                        {formatEtDateShort(row.reportDate, locale)}
                       </span>
                     </span>
                     <span

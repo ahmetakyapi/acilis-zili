@@ -270,7 +270,7 @@ const en: typeof tr = {
 
     summary: "Summary",
     detailed: "Full Review",
-    byTeam: "Açılış Zili Research",
+    byTeam: "Claude",
     strengths: "Strengths",
     risks: "Risks",
     upcomingDev: "What To Watch",

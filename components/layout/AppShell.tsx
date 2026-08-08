@@ -169,9 +169,12 @@ export function AppShell({
                      masthead soluk bir bağlantı şeridi gibi duruyordu ve
                      seçili sekme tek başına ağır kalıyordu. İkisi de kalın,
                      ayrım artık ağırlıkta değil zeminde ve mürekkepte. */
-                  active
-                    ? "bg-surface-elevated font-bold"
-                    : "font-semibold hover:bg-surface",
+                  /* Sekmelerin TAMAMI kalın. Pasifler önce `font-medium`,
+                     sonra `font-semibold` idi ve masthead yine soluk bir
+                     bağlantı şeridi gibi duruyordu. Ayrım ağırlıkta değil
+                     zeminde ve mürekkepte: seçili olan zemin alıyor. */
+                  "font-bold",
+                  active ? "bg-surface-elevated" : "hover:bg-surface",
                 )}
               >
                 <span className="display-ink display-ink-tight">
