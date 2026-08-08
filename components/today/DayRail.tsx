@@ -117,12 +117,27 @@ const AXIS_HEIGHT = 6;
 const AXIS_CENTER = AXIS_TOP + AXIS_HEIGHT / 2;
 const EDGE_TOP = AXIS_TOP + AXIS_HEIGHT + 5;
 const CHIP_TOP = 110;
-/** Kart yüksekliği ~72px (üç satır + dolgu); kademeler arası nefes payı. */
-const ROW_OFFSET = 90;
 /** Kartlar metin etiketlerinden geniş; çakışma eşiği de ona göre geniş. */
 const COLLISION_MINUTES = 160;
 /** Alt bant en fazla üç kademe; daha derini şeridi bir duvara çeviriyor. */
 const MAX_ROW = 2;
+/**
+ * Olay kartlarının SABİT ölçüsü.
+ *
+ * Kart genişliği metne göre değişiyordu (`w-max`): tek kelimelik bir
+ * başlık dar, iki satırlık bir başlık geniş bir kutu üretiyordu ve aynı
+ * eksende üç farklı boyda kart yan yana duruyordu. Yükseklik de başlığın
+ * bir mi iki satır sürdüğüne göre oynuyordu; alt alta gelen kademelerin
+ * tabanı hizalanmıyordu.
+ *
+ * Sabit ölçüde başlık iki satırda kırpılır (`line-clamp-2` zaten vardı),
+ * detay satırı kartın tabanına yaslanır. Şerit artık bir ızgara gibi
+ * okunuyor.
+ */
+const CARD_WIDTH = 208;
+const CARD_HEIGHT = 84;
+/** Kademeler arası nefes payı — kart yüksekliğinden türer. */
+const ROW_OFFSET = CARD_HEIGHT + 14;
 
 /**
  * `.plate` görünümü, RENGİ SERBEST bırakarak.
@@ -440,11 +455,17 @@ export function DayRail({
                   kartın arkasından geçer, içinden değil. */}
               <div
                 className={cn(
-                  "absolute z-10 w-max max-w-56 rounded-[12px] border border-line bg-surface-solid px-3.5 py-2.5 text-center",
+                  "absolute z-10 flex flex-col rounded-[12px] border border-line bg-surface-solid px-3 py-2.5 text-center",
                   high && "border-l-[3px] border-l-down",
                   !high && event.watched && "border-l-[3px] border-l-primary",
                 )}
-                style={{ left, top: chipTop, transform: chipTransform(p) }}
+                style={{
+                  left,
+                  top: chipTop,
+                  transform: chipTransform(p),
+                  width: CARD_WIDTH,
+                  height: CARD_HEIGHT,
+                }}
               >
                 <div
                   className={cn(
@@ -481,13 +502,13 @@ export function DayRail({
                     </span>
                   </div>
                 ) : (
-                  <div className="mx-auto mt-1.5 line-clamp-2 max-w-48 text-[12px] font-semibold leading-[16px] text-strong">
+                  <div className="mx-auto mt-1.5 line-clamp-2 max-w-full text-[12px] font-semibold leading-[16px] text-strong">
                     {event.title}
                   </div>
                 )}
 
                 {event.detail && (
-                  <div className="mx-auto mt-1 max-w-48 truncate text-[11px] leading-none text-muted">
+                  <div className="mx-auto mt-auto max-w-full truncate pt-1 text-[11px] leading-none text-muted">
                     {event.detail}
                   </div>
                 )}

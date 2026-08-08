@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { FearGauge } from "@/components/markets/FearGauge";
 import { GuideHint } from "@/components/article/GuideHint";
+import Image from "next/image";
 import Link from "next/link";
 import {
   DataStamp,
@@ -389,6 +390,8 @@ type Row = {
   quote: Quote | undefined;
   /** Yalnızca Dow (fiyat ağırlıklı) için: endeks puanına katkı. */
   contribution: number | null;
+  /** Finnhub logosu — tabloda satırı bir bakışta tanınır kılar. */
+  logoUrl: string | null;
   /** Piyasa değeri — yalnızca USD cinsinden bilinenler. */
   marketCap: number | null;
 };
@@ -452,6 +455,7 @@ async function IndexDetail({
           ? quote.change / divisor
           : null,
       // Canlı fiyat × hisse sayısı — gün içinde güncel kalır.
+      logoUrl: meta[member.symbol]?.logoUrl ?? null,
       marketCap: liveMarketCap(meta[member.symbol], quote?.price),
     };
   });
@@ -749,6 +753,14 @@ function MembersTable({
     }
   };
 
+  /* Cubuk olcegi: grubun EN BUYUK mutlak degisimi. Yuzde degerleri
+     kendi araliginda kucuk (±%3) oldugu icin sabit bir olcek cubuklari
+     gorunmez yapiyordu. */
+  const peakChange = Math.max(
+    ...rows.map((row) => Math.abs(row.quote?.changePct ?? 0)),
+    0.01,
+  );
+
   const sorted = [...rows].sort((a, b) => {
     const va = valueOf(a);
     const vb = valueOf(b);
@@ -824,27 +836,77 @@ function MembersTable({
                          dokunma hedefi metnin kendi 20px'iyle sınırlıydı.
                          Dolgu onu satır yüksekliğine yayar, negatif margin
                          de tabloyu olduğu yerde tutar. */
-                      className="-my-2 flex min-w-0 items-baseline gap-2.5 py-2"
+                      className="-my-2 flex min-w-0 items-center gap-2.5 py-2"
                     >
-                      <span className="w-16 shrink-0 text-[13.5px] font-bold text-strong">
-                        {row.member.symbol}
-                      </span>
-                      <span className="min-w-0 truncate text-[11.5px] text-muted">
-                        {row.member.name}
+                      {row.logoUrl ? (
+                        <Image
+                          src={row.logoUrl}
+                          alt=""
+                          width={26}
+                          height={26}
+                          className="size-[26px] shrink-0 rounded-[7px] border border-line-soft bg-white object-contain"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden
+                          className="flex size-[26px] shrink-0 items-center justify-center rounded-[7px] bg-primary-wash text-[9px] font-bold text-primary"
+                        >
+                          {row.member.symbol.slice(0, 2)}
+                        </span>
+                      )}
+                      <span className="min-w-0">
+                        <span className="block text-[13.5px] font-bold leading-[17px] text-strong">
+                          {row.member.symbol}
+                        </span>
+                        <span className="block truncate text-[11.5px] leading-[15px] text-muted">
+                          {row.member.name}
+                        </span>
                       </span>
                     </Link>
                   </td>
-                  <td
-                    className={cn(
-                      "numeral px-3 py-2.5 text-right font-bold",
-                      tone === "up"
-                        ? "text-up"
-                        : tone === "down"
-                          ? "text-down"
-                          : "text-muted",
-                    )}
-                  >
-                    {quote ? formatPercent(quote.changePct, locale) : "—"}
+                  {/* Sayı + oran çubuğu birlikte: tablo yalnızca sayıdan
+                      ibaretken "kim ne kadar oynamış" sorusu ancak yüzdeler
+                      tek tek okunup kafada sıralanarak cevaplanıyordu.
+                      Çubuk sıralamayı göze taşıyor ve üstteki En Çok
+                      Artanlar kartıyla aynı ölçeği kullanıyor. */}
+                  <td className="px-3 py-2.5">
+                    <span className="flex flex-col items-end gap-1">
+                      <span
+                        className={cn(
+                          "numeral text-right font-bold",
+                          tone === "up"
+                            ? "text-up"
+                            : tone === "down"
+                              ? "text-down"
+                              : "text-muted",
+                        )}
+                      >
+                        {quote ? formatPercent(quote.changePct, locale) : "—"}
+                      </span>
+                      {quote && (
+                        <span
+                          aria-hidden
+                          className="flex h-1 w-16 justify-end overflow-hidden rounded-full bg-surface-elevated"
+                        >
+                          <span
+                            className={cn(
+                              "h-full rounded-full",
+                              tone === "up"
+                                ? "bg-up/70"
+                                : tone === "down"
+                                  ? "bg-down/70"
+                                  : "bg-flat/50",
+                            )}
+                            style={{
+                              width: `${Math.max(
+                                (Math.abs(quote.changePct) / peakChange) * 100,
+                                6,
+                              )}%`,
+                            }}
+                          />
+                        </span>
+                      )}
+                    </span>
                   </td>
                   <td className="numeral px-3 py-2.5 text-right font-bold text-strong">
                     {quote ? formatPrice(quote.price, locale) : "—"}
