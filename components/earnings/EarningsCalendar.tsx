@@ -376,18 +376,33 @@ function DaySection({
                     {timing.short}
                   </TimingChip>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[14.5px] font-bold tracking-[-0.01em] text-strong">
-                    {watchSet.has(row.symbol) && (
-                      <span aria-hidden className="mr-1 text-primary">
-                        ★
-                      </span>
-                    )}
-                    {row.symbol}
-                  </p>
-                  <p className="truncate text-[11.5px] text-muted">
-                    {m?.name ?? ""}
-                  </p>
+                {/* Takvim düğmesi kimlik satırının SAĞINDA, kendi satırında
+                    değil: dar kartta ayrı bir satır her karta ~32px ekliyordu
+                    ve ızgara `h-full` olduğu için o boşluk hepsine yayılıyordu.
+                    Burada var olan satırın sağ ucuna oturuyor, ad zaten
+                    kırpılıyor. Üst satır (logo + zamanlama çipi) 152px'lik
+                    kartta zaten dolu; ikon oraya sığmıyordu. */}
+                <div className="flex min-w-0 items-start gap-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14.5px] font-bold tracking-[-0.01em] text-strong">
+                      {watchSet.has(row.symbol) && (
+                        <span aria-hidden className="mr-1 text-primary">
+                          ★
+                        </span>
+                      )}
+                      {row.symbol}
+                    </p>
+                    <p className="truncate text-[11.5px] text-muted">
+                      {m?.name ?? ""}
+                    </p>
+                  </div>
+                  <AddToCalendar
+                    symbol={row.symbol}
+                    date={row.reportDate}
+                    label={t.earnings.addToCalendar}
+                    compact
+                    className="-mt-1 -mr-1 mb-0"
+                  />
                 </div>
                 {badge && (
                   <AnalysisBadge
