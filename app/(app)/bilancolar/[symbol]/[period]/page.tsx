@@ -201,7 +201,13 @@ export default async function AnalysisDetailPage(
         (peerMeta[b.symbol]?.marketCap ?? 0) -
         (peerMeta[a.symbol]?.marketCap ?? 0),
     )
-    .slice(0, 3);
+    .slice(0, 3)
+    /* Seçim piyasa değerine göre (hangi rakipler önemli), ama SIRALAMA
+       tarihe göre: kartın başlığı "Yaklaşan Bilançolar" ve satırların
+       sağında tarih var — tarih taşıyan bir listenin en yakından
+       başlaması bekleniyor. Piyasa değeri sırası ekranda "3 Eyl, 1 Eyl,
+       26 Ağu" gibi geriye akan bir tarih sütunu üretiyordu. */
+    .sort((a, b) => a.reportDate.localeCompare(b.reportDate));
 
   const langNote = row.locale === locale ? null : t.analysis.fallbackNote;
   const sources = row.sources ?? [];
@@ -673,11 +679,21 @@ export default async function AnalysisDetailPage(
                 String(readMinutes(row)),
               )}
             />
+            {/* İlk paragraf GİRİŞ ölçüsünde: üç sütun eşit puntoda dizilince
+                metin duvara dönüyor ve göz nereden başlayacağını yüzeyden
+                okuyamıyordu. Bir kademe iri ve koyu bir giriş, sütunun
+                başlangıcını işaretliyor — kalan paragraflar gövde ölçüsünde
+                kalıyor, yani hiyerarşi bir kademe, iki değil. */}
             <div className={PROSE_COLUMNS}>
               {row.summary.map((paragraph, index) => (
                 <p
                   key={index}
-                  className="mb-3 break-inside-avoid text-[13.5px] leading-[22px] text-body [text-wrap:pretty] last:mb-0"
+                  className={cn(
+                    "mb-3.5 break-inside-avoid [text-wrap:pretty] last:mb-0",
+                    index === 0
+                      ? "text-[14.5px] leading-[24px] text-strong"
+                      : "text-[13.5px] leading-[23px] text-body",
+                  )}
                 >
                   <RichText text={paragraph} />
                 </p>
@@ -705,21 +721,39 @@ export default async function AnalysisDetailPage(
                   kırılmada okunur bantta kalıyor (1300px'te üç sütun ≈ 52
                   karakter). Her hücrenin üstündeki hairline bölümleri
                   birbirinden ayırıyor ve aynı satırdakiler hizalı başlıyor. */}
-              <div className="grid gap-x-8 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
+              {/* ---- Sütun sayısı BÖLÜM SAYISINA göre ----
+                  Sabit üç sütunda dört bölüm, son satıra tek başına düşen
+                  bir bölüm ve yanında iki sütunluk bomboş bir alan
+                  bırakıyordu: panelin altı yarım kalmış gibi duruyordu.
+                  Üçe tam bölünmeyen ama ikiye bölünen sayılarda (4, 8)
+                  ızgara ikiye geçiyor ve satırlar tam doluyor. Satır boyu
+                  bir miktar uzuyor, ama yarım kalmış bir ızgaradan iyi. */}
+              <div
+                className={cn(
+                  "grid gap-x-8 gap-y-6 md:grid-cols-2",
+                  row.analysis.length % 3 === 0 || row.analysis.length % 2 !== 0
+                    ? "xl:grid-cols-3"
+                    : "xl:grid-cols-2",
+                )}
+              >
+                {/* Sıra numarası başlığın YANINDA değil ÜSTÜNDE: karo,
+                    başlığın ilk satırını içeri itiyor ve iki satıra taşan
+                    başlıklarda ikinci satır karonun altından başlayınca
+                    blok sola doğru tırtıklı görünüyordu. Numara kendi
+                    satırına çıkınca başlık tam genişlikte, sol kenar
+                    hizalı — rehberdeki müfredat şeridiyle aynı dil. */}
                 {row.analysis.map((section, index) => (
                   <section key={index} className="border-t border-line pt-3.5">
-                    <h3 className="mb-2 flex items-start gap-2.5">
-                      <span
-                        aria-hidden
-                        className="numeral mt-px flex size-[20px] shrink-0 items-center justify-center rounded-[6px] bg-primary-wash text-[10.5px] font-bold text-primary"
-                      >
-                        {index + 1}
-                      </span>
-                      <span className="text-[13.5px] font-bold leading-[19px] tracking-[-0.01em] text-strong [text-wrap:balance]">
-                        {section.title}
-                      </span>
+                    <span
+                      aria-hidden
+                      className="numeral mb-1.5 block text-[11px] font-bold tracking-[0.04em] text-primary"
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <h3 className="mb-2 text-[14px] font-bold leading-[20px] tracking-[-0.015em] text-strong [text-wrap:balance]">
+                      {section.title}
                     </h3>
-                    <p className="text-[13px] leading-[21px] text-body [text-wrap:pretty]">
+                    <p className="text-[13.5px] leading-[22px] text-body [text-wrap:pretty]">
                       <RichText text={section.body} />
                     </p>
                   </section>
@@ -788,7 +822,12 @@ export default async function AnalysisDetailPage(
                   key={peer.id}
                   href={`/hisse/${peer.symbol}`}
                   prefetch={false}
-                  className="flex items-center gap-2.5 border-b border-line-soft py-2 last:border-b-0 hover:opacity-75"
+                  /* Vurgu, sitedeki diğer listelerle aynı: satırın tamamı
+                     panel kenarına kadar boyanıyor. `opacity-75` satırı
+                     soldurup geri çekiyordu — tıklanabilir bir satırın
+                     tersi. Negatif margin, dolguyu panelin kenarına
+                     taşıyor. */
+                  className="-mx-4 flex items-center gap-2.5 border-b border-line-soft px-4 py-2.5 transition-colors last:border-b-0 hover:bg-primary-tint sm:-mx-[18px] sm:px-[18px]"
                 >
                   {/* Logo, satırı bir sembol listesi olmaktan çıkarıp
                       sayfanın geri kalanıyla aynı dile sokuyor (mercek
@@ -965,36 +1004,52 @@ function VerdictStrip({
         {row.headline}
       </p>
       {row.targetPrice !== null && (
-        /* Analist hedefi serbest akışta üç satırdı ve şeridin sağ ucunda
-           yetim duruyordu: etiket, sayı ve potansiyel aynı hizada üst üste,
-           aralarında hiçbir yüzey yok. Kendi kutusuna alınınca şeridin
-           parçası olmayı bırakıp bir ÖLÇÜ oluyor — solundaki skor halkasının
-           sağdaki karşılığı. */
-        <div className="shrink-0 rounded-[12px] border border-primary-faint bg-surface-solid px-3.5 py-2.5 text-right">
-          <span className={cn(PLATE_LABEL, "block text-muted")}>
-            {row.analystCount
-              ? t.analysis.analystTargetCount.replace(
-                  "{count}",
-                  String(row.analystCount),
-                )
-              : t.analysis.analystTarget}
-          </span>
-          <span className="figure mt-1.5 block text-[24px] font-bold leading-none tracking-[-0.035em] text-strong">
-            {formatPrice(row.targetPrice, locale, { currency: true })}
-          </span>
-          {upsidePct !== null && (
-            <span
-              className={cn(
-                "figure mt-1.5 inline-flex items-baseline gap-1 rounded-md px-1.5 py-[2px] text-[11.5px] font-bold",
-                upsidePct >= 0 ? "bg-up-wash text-up" : "bg-down-wash text-down",
-              )}
-            >
-              {upsidePct >= 0 ? "▲" : "▼"}
-              {formatPercentPlain(upsidePct, locale, 0)}{" "}
-              {t.analysis.upsidePotential}
+        /* Analist hedefi bir ara BEYAZ bir kutuya alınmıştı: serbest akışta
+           şeridin sağ ucunda yetim duruyordu, kutu ona yüzey veriyordu. Ama
+           kutu bu kez tinted şeridin üstünde parlak bir yama gibi okundu —
+           şeridin parçası olmak yerine üstüne yapıştırılmış duruyordu.
+           Çözüm kutu değil AYRAÇ: soldaki skor halkasıyla görüş bloğunu
+           ayıran çizginin aynısı buraya da geliyor, ölçü kendi yüzeyi
+           olmadan da şeridin bir parçası olarak duruyor. Etiket, sayı ve
+           potansiyel ortak bir MERKEZ ekseninde — sağa yaslıyken etiket
+           sayıdan geniş olduğu için ikisi hizasız görünüyordu. */
+        <>
+          <span
+            aria-hidden
+            className="hidden w-px self-stretch bg-primary-faint sm:block"
+          />
+          {/* Telefonda şerit alt alta diziliyor ve dikey ayraç gizleniyor:
+              orada ölçü, sola yaslı bir paragrafın altında ortada kalıyordu.
+              Dar ekranda sola yaslanıp kendi üst çizgisini taşıyor; sm'den
+              itibaren ortak merkez eksenine ve dikey ayraca dönüyor. */}
+          <div className="flex w-full shrink-0 flex-col items-start gap-1.5 border-t border-primary-faint pt-3 sm:w-auto sm:items-center sm:border-t-0 sm:pt-0">
+            <span className={cn(PLATE_LABEL, "text-muted")}>
+              {row.analystCount
+                ? t.analysis.analystTargetCount.replace(
+                    "{count}",
+                    String(row.analystCount),
+                  )
+                : t.analysis.analystTarget}
             </span>
-          )}
-        </div>
+            <span className="figure text-[26px] font-bold leading-none tracking-[-0.035em] text-strong">
+              {formatPrice(row.targetPrice, locale, { currency: true })}
+            </span>
+            {upsidePct !== null && (
+              <span
+                className={cn(
+                  "figure inline-flex items-baseline gap-1 rounded-md px-1.5 py-[2px] text-[11.5px] font-bold",
+                  upsidePct >= 0
+                    ? "bg-up-wash text-up"
+                    : "bg-down-wash text-down",
+                )}
+              >
+                {upsidePct >= 0 ? "▲" : "▼"}
+                {formatPercentPlain(upsidePct, locale, 0)}{" "}
+                {t.analysis.upsidePotential}
+              </span>
+            )}
+          </div>
+        </>
       )}
     </section>
   );
