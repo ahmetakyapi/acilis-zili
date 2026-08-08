@@ -94,37 +94,35 @@ const RAIL_END = SESSION_BOUNDS.afterHoursClose; // 20:00
 const RAIL_SPAN = RAIL_END - RAIL_START;
 
 /* Dikey katlar, yukarıdan aşağıya:
-     0-15    "şimdi" rozeti — EN ÜSTTE, kendi şeridinde
-     24-52   sınır etiketleri (AÇILIŞ / KAPANIŞ)
+     6-33    sınır etiketleri (AÇILIŞ / KAPANIŞ)
+     46-63   "şimdi" rozeti — eksenin HEMEN ÜSTÜNDE, kendi bandında
+     62-68   rozeti eksene bağlayan tırnak
      68-74   eksen
      79-92   eksenin iki ucundaki saatler + bandın adı
      110+    olay kartları
 
-   Rozet önce eksenin hemen üstündeydi ve orada sıkışıyordu: 42 piksellik
-   bir etiket, olay noktaları ile açılış işaretinin arasına giriyor,
-   ikisine de değiyordu. En üstte kendi şeridine alınınca hiçbir şeyle
-   yarışmıyor; işaretçi çizgisi rozetten inip ekseni kesiyor ve aradaki
-   bağ görünür kalıyor.
+   Rozetin yeri üç kez değişti; üçünün de gerekçesi burada duruyor çünkü
+   dördüncü bir deneme yapan biri aynı çıkmazlara girmesin.
 
-   Çizgi sınır etiketlerinin ARKASINDAN geçer (etiketlerde `z-10` var):
-   seans içinde işaretçi açılış etiketinin üstüne geldiğinde 3 piksellik
-   accent çizgi yazının içinden geçmiyor, altından. */
-/**
- * "ŞİMDİ" rozeti EN ÜSTTE ve ondan inen UZUN ÇİZGİ YOK.
- *
- * Rozet bir ara eksenin altına alınmıştı; orada sınır etiketleriyle
- * çakışmıyordu ama bu sefer olay kartlarının üstüne düşüyor ve şeridin
- * alt yarısını kapatıyordu. Asıl sorun rozetin yeri değil, ondan eksene
- * inen uzun çizgiydi: arada kalan sınır etiketlerinin (AÇILIŞ · 16:30 TR ·
- * 09:30 NY) tam içinden geçiyordu.
- *
- * Çözüm çizgiyi kaldırmak. Eksenin üstünde zaten kendi işaretçisi var ve
- * rozet onunla AYNI x'te duruyor — göz ikisini çizgi olmadan da
- * birleştiriyor. Rozet en üstte, altındaki her şey serbest: üst bant
- * rozete, orta bant sınır etiketlerine, alt bant kartlara kalıyor.
- */
-const NOW_TOP = 0;
-const BOUND_TOP = 24;
+   (1) Eksenin hemen üstünde, sınır etiketleriyle AYNI bantta: 42 piksellik
+       etiket olay noktalarıyla açılış işaretinin arasına giriyor, ikisine
+       de değiyordu.
+   (2) Eksenin ALTINDA: sınır etiketleriyle çakışması bitti ama bu sefer
+       olay kartlarının üstüne düşüp şeridin alt yarısını kapattı.
+   (3) EN ÜSTTE, kendi şeridinde, eksene inen uzun çizgiyle: çizgi sınır
+       etiketlerinin (AÇILIŞ · 16:30 TR · 09:30 NY) tam içinden geçiyordu.
+       Çizgi kaldırılınca çakışma bitti ama rozet 46 piksel yukarıda,
+       hiçbir şeye değmeden HAVADA kaldı — eksenle arasında koca bir sınır
+       etiketi var ve ikisinin aynı x'te olduğu gözle kurulmuyordu.
+
+   Şimdiki düzen (4): rozet sınır etiketlerinin ALTINDA, eksenin HEMEN
+   ÜSTÜNDE, kendi dar bandında. Bandı kimseyle paylaşmadığı için hiçbir
+   metnin içinden geçmiyor; eksene 6 piksellik bir tırnakla DEĞDİĞİ için de
+   havada durmuyor. Sınır etiketiyle aynı x'e denk geldiğinde (şu an çoğu
+   akşam olduğu gibi: 23:00 hem kapanış hem "şimdi") ikisi çakışmıyor, alt
+   alta diziliyor — KAPANIŞ / saatler / ŞİMDİ / eksen. */
+const BOUND_TOP = 6;
+const NOW_TOP = 46;
 const AXIS_TOP = 68;
 const AXIS_HEIGHT = 6;
 const AXIS_CENTER = AXIS_TOP + AXIS_HEIGHT / 2;
@@ -434,10 +432,11 @@ export function DayRail({
             >
               {labels.now}
             </div>
-            {/* Rozetin altındaki KISA tırnak — yalnızca rozetin bir noktayı
-                işaret ettiğini söyler. Eksene kadar inen uzun çizgi, sınır
-                etiketlerinin içinden geçtiği için kaldırıldı; eksendeki
-                işaretçi aynı x'te zaten duruyor. */}
+            {/* Rozeti eksene BAĞLAYAN tırnak. Kısa ama boşluk bırakmıyor:
+                rozetin alt kenarından başlayıp eksenin içine giriyor
+                (`AXIS_TOP + 2`), yani ikisi tek parça gibi okunuyor.
+                Rozet havada dururken bu bağ yoktu ve aynı x'te olmaları
+                gözle kurulmuyordu. */}
             <div
               className={cn(
                 "absolute w-[3px] -translate-x-1/2 rounded-full",
@@ -446,7 +445,7 @@ export function DayRail({
               style={{
                 left: `${pct(nowMinutes)}%`,
                 top: NOW_TOP + 16,
-                height: 6,
+                height: AXIS_TOP + 2 - (NOW_TOP + 16),
               }}
             />
           </>
