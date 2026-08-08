@@ -94,12 +94,12 @@ const RAIL_END = SESSION_BOUNDS.afterHoursClose; // 20:00
 const RAIL_SPAN = RAIL_END - RAIL_START;
 
 /* Dikey katlar, yukarıdan aşağıya:
-     6-33    sınır etiketleri (AÇILIŞ / KAPANIŞ)
-     46-63   "şimdi" rozeti — eksenin HEMEN ÜSTÜNDE, kendi bandında
-     62-68   rozeti eksene bağlayan tırnak
-     68-74   eksen
-     79-92   eksenin iki ucundaki saatler + bandın adı
-     110+    olay kartları
+      6-33    sınır etiketleri (AÇILIŞ / KAPANIŞ)
+     40-57    "şimdi" rozeti — kendi bandında
+     57-78    rozeti eksene bağlayan tırnak
+     76-82    eksen
+     87-100   eksenin iki ucundaki saatler + bandın adı
+    116+      olay kartları
 
    Rozetin yeri üç kez değişti; üçünün de gerekçesi burada duruyor çünkü
    dördüncü bir deneme yapan biri aynı çıkmazlara girmesin.
@@ -115,19 +115,24 @@ const RAIL_SPAN = RAIL_END - RAIL_START;
        hiçbir şeye değmeden HAVADA kaldı — eksenle arasında koca bir sınır
        etiketi var ve ikisinin aynı x'te olduğu gözle kurulmuyordu.
 
-   Şimdiki düzen (4): rozet sınır etiketlerinin ALTINDA, eksenin HEMEN
-   ÜSTÜNDE, kendi dar bandında. Bandı kimseyle paylaşmadığı için hiçbir
-   metnin içinden geçmiyor; eksene 6 piksellik bir tırnakla DEĞDİĞİ için de
-   havada durmuyor. Sınır etiketiyle aynı x'e denk geldiğinde (şu an çoğu
-   akşam olduğu gibi: 23:00 hem kapanış hem "şimdi") ikisi çakışmıyor, alt
-   alta diziliyor — KAPANIŞ / saatler / ŞİMDİ / eksen. */
+   Şimdiki düzen (4): rozet sınır etiketlerinin ALTINDA, kendi dar bandında.
+   Bandı kimseyle paylaşmadığı için hiçbir metnin içinden geçmiyor; eksene
+   bir tırnakla bağlı olduğu için de havada durmuyor. Sınır etiketiyle aynı
+   x'e denk geldiğinde (çoğu akşam olduğu gibi: 23:00 hem kapanış hem "şimdi")
+   ikisi çakışmıyor, alt alta diziliyor — KAPANIŞ / saatler / ŞİMDİ / eksen.
+
+   TIRNAK KISAYDI ve rozet eksene yapışık duruyordu: ikisi arasında nefes
+   payı yoktu, rozet çubuğun üstüne oturmuş gibi görünüyordu. Tırnak 21
+   piksele çıkarıldı — rozet yukarıda duruyor, bağ görünüyor, ikisi ayrı iki
+   nesne olarak okunuyor. Eksen bir kademe aşağı alınarak yer açıldı;
+   altındaki her ölçü eksene bağlı türediği için tek sabit yetiyor. */
 const BOUND_TOP = 6;
-const NOW_TOP = 46;
-const AXIS_TOP = 68;
+const NOW_TOP = 40;
+const AXIS_TOP = 76;
 const AXIS_HEIGHT = 6;
 const AXIS_CENTER = AXIS_TOP + AXIS_HEIGHT / 2;
 const EDGE_TOP = AXIS_TOP + AXIS_HEIGHT + 5;
-const CHIP_TOP = 110;
+const CHIP_TOP = 116;
 /** Kartlar metin etiketlerinden geniş; çakışma eşiği de ona göre geniş. */
 const COLLISION_MINUTES = 160;
 /** Alt bant en fazla üç kademe; daha derini şeridi bir duvara çeviriyor. */
@@ -409,46 +414,50 @@ export function DayRail({
             canlı işaret bu. Piyasa kapalıyken rengi accent değil koyu
             mürekkep, ama ağırlığı aynı. */}
         {nowVisible && (
-          <>
-            <div
+          /* Rozet ve tırnak TEK kutuda ve kutu bir sütun: tırnak
+             `items-center` ile rozetin tam ortasında duruyor.
+
+             Ayrı basıldıklarında ikisi de aynı `left` yüzdesini alıyordu ama
+             rozet şeridin ucunda katlanıyor (`chipTransform`), tırnak
+             katlanmıyordu — gün sonunda rozet sola kayıyor, tırnak yerinde
+             kalıyor ve çubuk yazının sol kenarının altına düşüyordu. Tek
+             kutu ikisini birlikte katlıyor; tırnak her x'te ortada. */
+          <div
+            className="absolute z-20 flex flex-col items-center"
+            style={{
+              left: `${pct(nowMinutes)}%`,
+              top: NOW_TOP,
+              /* Kartlarla aynı katlama: gün başında ya da sonunda rozet
+                 ortalanınca şeridin dışına sarkıyor. */
+              transform: chipTransform(pct(nowMinutes)),
+            }}
+          >
+            <span
               className={cn(
                 /* Piyasa kapalıyken rozet KOYU MÜREKKEPTİ ve sayfadaki tek
                    siyah yüzey oydu: göz önce oraya gidiyordu, oysa taşıdığı
                    bilgi "şu an" — vurgulu ama alarm değil. İki hâl de artık
                    mavi degrade, fark TONDA: açıkken canlı mavi, kapalıyken
                    daha derin ve sakin bir mavi. */
-                "absolute z-20 whitespace-nowrap rounded-full bg-gradient-to-r px-2 py-[3.5px] text-[9.5px] font-bold uppercase leading-none tracking-[0.09em] text-on-primary",
+                "whitespace-nowrap rounded-full bg-gradient-to-r px-2 py-[3.5px] text-[9.5px] font-bold uppercase leading-none tracking-[0.09em] text-on-primary",
                 marketLive
                   ? "from-primary to-primary-soft"
                   : "from-primary-deep to-primary",
               )}
-              style={{
-                left: `${pct(nowMinutes)}%`,
-                top: NOW_TOP,
-                /* Kartlarla aynı katlama: gün başında ya da sonunda rozet
-                   ortalanınca şeridin dışına sarkıyor. */
-                transform: chipTransform(pct(nowMinutes)),
-              }}
             >
               {labels.now}
-            </div>
-            {/* Rozeti eksene BAĞLAYAN tırnak. Kısa ama boşluk bırakmıyor:
-                rozetin alt kenarından başlayıp eksenin içine giriyor
-                (`AXIS_TOP + 2`), yani ikisi tek parça gibi okunuyor.
-                Rozet havada dururken bu bağ yoktu ve aynı x'te olmaları
-                gözle kurulmuyordu. */}
-            <div
+            </span>
+            {/* Rozeti eksene bağlayan tırnak: rozetin alt kenarından başlar,
+                eksenin içine girer (`AXIS_TOP + 2`). */}
+            <span
+              aria-hidden
               className={cn(
-                "absolute w-[3px] -translate-x-1/2 rounded-full",
+                "w-[3px] rounded-full",
                 marketLive ? "bg-primary" : "bg-primary-deep",
               )}
-              style={{
-                left: `${pct(nowMinutes)}%`,
-                top: NOW_TOP + 16,
-                height: AXIS_TOP + 2 - (NOW_TOP + 16),
-              }}
+              style={{ height: AXIS_TOP + 2 - (NOW_TOP + 17) }}
             />
-          </>
+          </div>
         )}
 
         {/* ---- Kat 3: olay kartları, eksenin altında ---- */}
