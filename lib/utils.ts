@@ -105,8 +105,22 @@ export function formatPrice(
  * "%372" derken, bizim biçimlendirdiğimiz aynı sayı yan hücrede "372%"
  * çıkıyordu. Aynı kartta iki yazım.
  */
+/**
+ * İşaretle sayı arasındaki dar boşluk — U+202F (dar bağlantısız boşluk).
+ *
+ * "+%2.902" ve "≈187,53" gibi dizelerde işaret sayıya yapışık duruyordu ve
+ * ikisi tek bir simge gibi okunuyordu. Normal boşluk kullanılamaz: satır
+ * sonuna denk geldiğinde işaret üst satırda, sayı alt satırda kalır ve
+ * "−" tek başına bir tire gibi görünür. U+202F hem dar hem bölünmez.
+ *
+ * Yönü ▲/▼ ile veren yerlerde ok ayrı bir düğümde durur ve boşluğu
+ * `gap-*` verir; bu sabit yalnızca dizeye gömülü işaretler içindir.
+ */
+export const SIGN_GAP = " ";
+
 function withPercent(formatted: string, locale: string, sign = "") {
-  return locale === "tr" ? `${sign}%${formatted}` : `${sign}${formatted}%`;
+  const lead = sign ? `${sign}${SIGN_GAP}` : "";
+  return locale === "tr" ? `${lead}%${formatted}` : `${lead}${formatted}%`;
 }
 
 /**
@@ -157,7 +171,7 @@ export function formatChange(value: number | null | undefined, locale: string) {
     maximumFractionDigits: 2,
   }).format(Math.abs(value));
   const sign = value > 0 ? "+" : value < 0 ? "−" : "";
-  return `${sign}${formatted}`;
+  return sign ? `${sign}${SIGN_GAP}${formatted}` : formatted;
 }
 
 /** Piyasa değeri — 3210000000 → "3,21 T" */

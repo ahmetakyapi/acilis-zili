@@ -138,6 +138,16 @@ const CARD_WIDTH = 208;
 const CARD_HEIGHT = 84;
 /** Kademeler arası nefes payı — kart yüksekliğinden türer. */
 const ROW_OFFSET = CARD_HEIGHT + 14;
+/**
+ * Şeridin altındaki nefes payı.
+ *
+ * Eksen ve sınır saatleri, altındaki metne (boş gün cümlesi ya da bir sonraki
+ * bölüm) neredeyse yapışıyordu. Pay TEK yerden veriliyor ki kartlı ve kartsız
+ * hâl aynı boşlukla bitsin: kart sayısı değiştikçe şeridin yüksekliği
+ * değişiyor ama alttaki boşluk sabit kalıyor, sonradan gelen kartlar bu
+ * ilişkiyi bozmuyor.
+ */
+const RAIL_BOTTOM_PAD = 18;
 
 /**
  * `.plate` görünümü, RENGİ SERBEST bırakarak.
@@ -248,7 +258,9 @@ export function DayRail({
 
   const maxRow = positioned.reduce((max, event) => Math.max(max, event.row), 0);
   const empty = positioned.length === 0;
-  const railHeight = empty ? CHIP_TOP + 56 : CHIP_TOP + (maxRow + 1) * ROW_OFFSET;
+  const railHeight =
+    (empty ? CHIP_TOP + 56 : CHIP_TOP + (maxRow + 1) * ROW_OFFSET) +
+    RAIL_BOTTOM_PAD;
 
   const nowVisible = nowMinutes >= RAIL_START && nowMinutes <= RAIL_END;
   const marketLive =
@@ -389,8 +401,15 @@ export function DayRail({
           <>
             <div
               className={cn(
-                "absolute z-20 whitespace-nowrap rounded-full px-2 py-[3.5px] text-[9.5px] font-bold uppercase leading-none tracking-[0.09em] text-on-primary",
-                marketLive ? "bg-primary" : "bg-strong",
+                /* Piyasa kapalıyken rozet KOYU MÜREKKEPTİ ve sayfadaki tek
+                   siyah yüzey oydu: göz önce oraya gidiyordu, oysa taşıdığı
+                   bilgi "şu an" — vurgulu ama alarm değil. İki hâl de artık
+                   mavi degrade, fark TONDA: açıkken canlı mavi, kapalıyken
+                   daha derin ve sakin bir mavi. */
+                "absolute z-20 whitespace-nowrap rounded-full bg-gradient-to-r px-2 py-[3.5px] text-[9.5px] font-bold uppercase leading-none tracking-[0.09em] text-on-primary",
+                marketLive
+                  ? "from-primary to-primary-soft"
+                  : "from-primary-deep to-primary",
               )}
               style={{
                 left: `${pct(nowMinutes)}%`,
@@ -409,7 +428,7 @@ export function DayRail({
             <div
               className={cn(
                 "absolute w-[3px] -translate-x-1/2 rounded-full",
-                marketLive ? "bg-primary" : "bg-strong",
+                marketLive ? "bg-primary" : "bg-primary-deep",
               )}
               style={{
                 left: `${pct(nowMinutes)}%`,

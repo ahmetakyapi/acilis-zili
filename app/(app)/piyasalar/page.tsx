@@ -49,9 +49,13 @@ import {
 /* Üyelik listeleri şirket başına tek satır gösterir: endekste iki sınıfı da
    bulunan şirketler (GOOGL/GOOG, FOXA/FOX, NWSA/NWS) yaygın sınıfıyla yer
    alır. Dow'da çok sınıflı üye yoktur, bölen hesabı bundan etkilenmez. */
+/* Sıra Nasdaq 100 ile başlıyor: okuyucunun bu siteye gelme sebebi ağırlıkla
+   teknoloji hissesi ve gün içi hareketin konuşulduğu endeks o. Dizi hem üstteki
+   endeks kartlarını hem seçici çiplerini besliyor, ikisi de aynı sırayı
+   izliyor — ve açılıştaki seçili sekme de baştaki endeks. */
 const INDEX_TABS = [
-  { key: "dow", label: "Dow Jones", proxy: "DIA", members: primaryOnly(DOW_MEMBERS) },
   { key: "nasdaq", label: "Nasdaq 100", proxy: "QQQ", members: primaryOnly(NDX_MEMBERS) },
+  { key: "dow", label: "Dow Jones", proxy: "DIA", members: primaryOnly(DOW_MEMBERS) },
   { key: "sp500", label: "S&P 500", proxy: "SPY", members: primaryOnly(SPX_MEMBERS) },
 ] as const;
 
@@ -93,9 +97,11 @@ async function quotesFor(
 
 export default async function MarketsPage(props: PageProps<"/piyasalar">) {
   const search = await props.searchParams;
+  /* Varsayılan sekme dizinin BAŞI: sabit "dow" yazmak, sırayı değiştirdiğimiz
+     an ilk çipin seçili olmadığı bir açılış üretiyordu — çubuk hatalı görünür. */
   const tab: TabKey = INDEX_TABS.some((t) => t.key === search.endeks)
     ? (search.endeks as TabKey)
-    : "dow";
+    : INDEX_TABS[0].key;
   const sort: SortKey = SORT_KEYS.includes(search.sirala as SortKey)
     ? (search.sirala as SortKey)
     : "degisim";

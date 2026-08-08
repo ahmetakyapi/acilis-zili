@@ -45,6 +45,7 @@ import {
   formatPercent,
   formatPercentPlain,
   formatPrice,
+  SIGN_GAP,
 } from "@/lib/utils";
 import type { EarningsAnalysisRow } from "@/lib/schema";
 
@@ -508,7 +509,8 @@ export default async function AnalysisDetailPage(
                   {t.market.marketCap}
                 </dt>
                 <dd className="figure mt-1.5 text-[20px] font-bold leading-none tracking-[-0.03em] text-strong">
-                  ≈{formatCompact(row.marketCap, locale)} $
+                  ≈{SIGN_GAP}
+                  {formatCompact(row.marketCap, locale)} $
                 </dd>
               </div>
             )}
@@ -1043,7 +1045,11 @@ function VerdictStrip({
                     : "bg-down-wash text-down",
                 )}
               >
+                {/* Ok burada ayrı bir flex düğümü değil, dizeye bitişik
+                    duruyor — aradaki dar boşluk bu yüzden `gap-*` ile değil
+                    SIGN_GAP ile veriliyor. */}
                 {upsidePct >= 0 ? "▲" : "▼"}
+                {SIGN_GAP}
                 {formatPercentPlain(upsidePct, locale, 0)}{" "}
                 {t.analysis.upsidePotential}
               </span>
