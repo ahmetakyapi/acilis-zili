@@ -389,11 +389,15 @@ export default async function AnalysisDetailPage(
                 </span>
               </div>
               {sinceReportPct !== null && (
-                <p className="mt-1.5 text-[10.5px] text-muted">
+                /* 10,5px'ti ve 30px'lik fiyatın yanında künye gibi kalıyordu;
+                   oysa bu satır sayfanın ana sorusuna ("bilanço günden bugüne
+                   ne oldu") doğrudan cevap veriyor. Etiket 12px gövde
+                   mürekkebine, oran 13px'e çıktı. */
+                <p className="mt-2 text-[12px] text-body">
                   {t.analysis.sinceReport}{" "}
                   <span
                     className={cn(
-                      "figure font-bold",
+                      "figure text-[13px] font-bold",
                       sinceReportPct >= 0 ? "text-up" : "text-down",
                     )}
                   >
@@ -550,9 +554,15 @@ export default async function AnalysisDetailPage(
           <MetricCards metrics={row.highlights ?? []} locale={locale} />
 
           {(hasColumns || hasGuidance) && (
+            /* `items-start`: iki grafik paneli varsayılan olarak satırın en
+               uzununa GERİLİYORDU. Gelir sütunlarının yüksekliği sabit
+               (CHART_HEIGHT) olduğu için gerilen alan grafiğe değil, x
+               etiketleri ile alt künye arasına ölü boşluk olarak
+               dağılıyordu: panelin ortasında sebepsiz bir delik. Her panel
+               artık kendi doğal boyunda. */
             <div
               className={cn(
-                "grid gap-4",
+                "grid items-start gap-4",
                 hasColumns && hasGuidance
                   ? "lg:grid-cols-[repeat(2,minmax(0,1fr))]"
                   : "grid-cols-1",
