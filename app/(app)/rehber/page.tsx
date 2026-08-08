@@ -12,6 +12,7 @@ import {
   type GuideTopicKey,
 } from "@/content/guide";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 /**
  * Rehber — müfredatın vitrini.
@@ -19,9 +20,11 @@ import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
  * Sayfanın iki hâli var ve ikisi farklı soruya cevap veriyor:
  *
  * FİLTRESİZ hâl "nereden başlamalıyım" sorusunu cevaplıyor: girişte dört
- * konu karosu (sıra numarası, açıklama, yazı sayısı ve toplam okuma süresi),
- * altında konu konu bölümlenmiş liste. Karolar sayfa içi çapalara gider —
- * filtre değil, içindekiler tablosu.
+ * bölmeli müfredat şeridi (sıra numarası, konu adı, yazı sayısı ve okuma
+ * süresi), altında konu konu bölümlenmiş liste. Bölmeler sayfa içi çapalara
+ * gider — filtre değil, içindekiler tablosu. Konu AÇIKLAMASI şeritte yok,
+ * yalnızca bölüm başlığında: ikisi birden yazınca aynı cümle art arda iki
+ * kez okunuyordu.
  *
  * FİLTRELİ hâl (?konu=...) "yalnızca bu konuyu göster" diyor: konunun kendi
  * başlığı ve açıklamasıyla açılır, tek ızgara listelenir. Eski çip sırası
@@ -152,36 +155,45 @@ function CurriculumStrip({
         {t.guide.curriculumHint}
       </p>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Konu açıklamaları BURADA DEĞİL, bölüm başlıklarında duruyor: bu
+          şerit dört karodan ibaretti ve her karo, hemen altındaki bölüm
+          başlığının başlığını, açıklamasını ve sayacını birebir tekrar
+          ediyordu — sayfanın en düz yeri oydu. Şerit artık numaralı bir
+          güzergâh: hangi blok, kaç yazı, ne kadar okuma. */}
+      <Panel className="grid grid-cols-2 divide-line-soft overflow-hidden sm:grid-cols-4 sm:divide-x">
         {GUIDE_TOPICS.map((topic, index) => {
           const group = groupOf(topic.key);
           return (
-            <a key={topic.key} href={`#konu-${topic.key}`} className="min-w-0">
-              <Panel className="panel-hover flex h-full flex-col gap-1.5 p-4">
-                <span className="numeral text-[11px] font-bold text-primary">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="display-ink display-ink-tight w-fit text-[16px] font-bold tracking-[-0.02em]">
-                  {guideTopicLabel(topic.key, locale)}
-                </span>
-                <span className="text-[12px] leading-[18px] text-muted">
-                  {guideTopicDesc(topic.key, locale)}
-                </span>
-                <span className="numeral mt-auto flex items-center gap-1.5 pt-2.5 text-[11px] text-muted">
-                  {group.length} {t.guide.articlesCount} · ~{minutesOf(group)}{" "}
-                  {t.guide.readMinutes}
-                  <ArrowRight
-                    weight="bold"
-                    size={11}
-                    className="ml-auto text-primary"
-                    aria-hidden
-                  />
-                </span>
-              </Panel>
+            <a
+              key={topic.key}
+              href={`#konu-${topic.key}`}
+              className={cn(
+                "group flex min-w-0 flex-col gap-1 px-4 py-3.5 transition-colors hover:bg-primary-tint",
+                /* Telefonda şerit 2×2 kırılıyor ve iki sıra arasında hiçbir
+                   ayraç kalmıyordu; dörtlü sıraya geçince divide-x devralır. */
+                index >= 2 && "border-t border-line-soft sm:border-t-0",
+              )}
+            >
+              <span className="numeral text-[11px] font-bold text-primary">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="display-ink display-ink-tight w-fit text-[15px] font-bold tracking-[-0.02em]">
+                {guideTopicLabel(topic.key, locale)}
+              </span>
+              <span className="numeral mt-auto flex items-center gap-1.5 pt-1.5 text-[11px] text-muted">
+                {group.length} {t.guide.articlesCount} · ~{minutesOf(group)}{" "}
+                {t.guide.readMinutes}
+                <ArrowRight
+                  weight="bold"
+                  size={11}
+                  className="ml-auto shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100"
+                  aria-hidden
+                />
+              </span>
             </a>
           );
         })}
-      </div>
+      </Panel>
     </section>
   );
 }
