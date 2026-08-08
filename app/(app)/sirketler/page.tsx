@@ -279,25 +279,38 @@ async function CompaniesTable({
   ]);
   const quotes = quotesResult.ok ? quotesResult.data : {};
 
-  const valueOf = (row: CompanyRow): number => {
+  /* Değeri OLMAYAN satır `null` döner, sayı değil.
+     Eskiden eksik değerler `-Infinity` ile temsil ediliyordu ve bu, azalan
+     sıralamada işe yarayıp artanda bozuluyordu: "Değişim"e tıklayıp artana
+     geçen okuyucu, listenin başında günün en çok düşenlerini değil kotasyonu
+     hiç gelmemiş şirketleri buluyordu. Eksik veri bir uç değer DEĞİL, bir
+     bilinmezlik — hiçbir yönde listeye başkanlık etmemeli. */
+  const valueOf = (row: CompanyRow): number | null => {
     const quote = quotes[row.symbol];
     switch (sort) {
       case "fiyat":
-        return quote?.price ?? -Infinity;
+        return quote?.price ?? null;
       case "degisim":
-        return quote?.changePct ?? -Infinity;
+        return quote?.changePct ?? null;
       case "hafta":
-        return weekly[row.symbol] ?? -Infinity;
+        return weekly[row.symbol] ?? null;
       case "hacim":
-        return quote?.volume ?? row.volume ?? -Infinity;
+        return quote?.volume ?? row.volume ?? null;
       default:
-        return row.marketCap ?? -Infinity;
+        return row.marketCap ?? null;
     }
   };
 
-  const rows = [...unsorted].sort((a, b) =>
-    dir === "asc" ? valueOf(a) - valueOf(b) : valueOf(b) - valueOf(a),
-  );
+  /* Boşlar her zaman SONDA, yön ne olursa olsun. Kendi aralarındaki sıra
+     bozulmuyor: `Array.prototype.sort` kararlı, yani veri gelmeyen şirketler
+     tablonun kendi (piyasa değeri) sırasında kalıyor. */
+  const rows = [...unsorted].sort((a, b) => {
+    const av = valueOf(a);
+    const bv = valueOf(b);
+    if (av === null) return bv === null ? 0 : 1;
+    if (bv === null) return -1;
+    return dir === "asc" ? av - bv : bv - av;
+  });
 
   return (
     <>

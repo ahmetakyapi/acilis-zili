@@ -755,18 +755,22 @@ function MembersTable({
     );
   }
 
-  const valueOf = (row: Row): number | string => {
+  /* Değeri olmayan satır `null` — eksik veri bir uç değer değil bilinmezlik.
+     `-Infinity` azalan sıralamada doğru çalışıp artanda bozuluyordu: artana
+     geçen okuyucu listenin başında en çok düşenleri değil kotasyonu hiç
+     gelmemiş şirketleri buluyordu (aynı düzeltme Şirketler tablosunda da). */
+  const valueOf = (row: Row): number | string | null => {
     switch (sort) {
       case "fiyat":
-        return row.quote?.price ?? -Infinity;
+        return row.quote?.price ?? null;
       case "ad":
         return row.member.name;
       case "katki":
-        return row.contribution ?? -Infinity;
+        return row.contribution ?? null;
       case "cap":
-        return row.marketCap ?? -Infinity;
+        return row.marketCap ?? null;
       default:
-        return row.quote?.changePct ?? -Infinity;
+        return row.quote?.changePct ?? null;
     }
   };
 
@@ -781,6 +785,9 @@ function MembersTable({
   const sorted = [...rows].sort((a, b) => {
     const va = valueOf(a);
     const vb = valueOf(b);
+    // Boşlar her iki yönde de sonda; kendi aralarında tablo sırasını korur.
+    if (va === null) return vb === null ? 0 : 1;
+    if (vb === null) return -1;
     if (typeof va === "string" || typeof vb === "string") {
       const cmp = String(va).localeCompare(String(vb), "en");
       return dir === "asc" ? cmp : -cmp;
