@@ -125,6 +125,8 @@ const en: typeof tr = {
     earningsEmpty: "None of the companies you follow report today.",
     watchlistSummary: "Your Watchlist",
     watchlistEmpty: "You haven't added any symbols yet.",
+    latestAnalyses: "Latest Analyses",
+    latestStories: "Latest Deep Dives",
     topNews: "Top Stories",
     weekAhead: "The Week Ahead",
     weekAheadEmpty: "No major releases scheduled for the coming week.",

@@ -19,8 +19,10 @@ import {
   Skeleton,
   TimingChip,
 } from "@/components/ui/primitives";
+import Image from "next/image";
 import {
   BRIEF_PUBLISH_TR,
+  getAnalyses,
   getAnalysisBadges,
   getEventsBetween,
   getGenericImageUrls,
@@ -28,6 +30,7 @@ import {
   getLatestNews,
   getMacroRows,
   getStatus,
+  getStories,
   getSymbolNames,
   getTodayEvents,
   getEarningsBetween,
@@ -43,6 +46,12 @@ import {
 import { getQuotes } from "@/lib/providers";
 import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import {
+  analysisHref,
+  verdictLabel,
+  verdictOf,
+  verdictPillClass,
+} from "@/lib/analysis";
 import {
   cn,
   directionOf,
@@ -243,41 +252,30 @@ export default async function TodayPage() {
         </Suspense>
       </div>
 
-      {/* ---- Okuma girişi ----
-           İki ekran da mobil sekme çubuğuna sığmıyor; keşif buradan oluyor.
-           Kart yerine iki kutu: ikisi farklı şeyler ve aynı satırda yan yana
-           durunca farkları da okunuyor. Mobilde ölçümlerin bittiği, haberlerin
-           başladığı yerde durur — iki okuma bloğu arasındaki köprü. */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:col-start-1 lg:row-start-2">
-        {[
-          {
-            href: "/mercek",
-            glyph: "◎",
-            title: t.stories.title,
-            hint: t.stories.subtitle,
-          },
-          {
-            href: "/rehber",
-            glyph: "?",
-            title: t.guide.title,
-            hint: t.guide.subtitle,
-          },
-        ].map((entry) => (
-          <Link key={entry.href} href={entry.href}>
-            <Panel className="panel-hover flex h-full items-start gap-3.5 p-4 sm:p-5">
-              <GlyphTile glyph={entry.glyph} size={44} />
-              <span className="min-w-0">
-                <span className="display-ink display-ink-tight block w-fit text-[15px] font-bold">
-                  {entry.title}
-                </span>
-                <span className="mt-1 block text-[12.5px] leading-[19px] text-body">
-                  {entry.hint}
-                </span>
-              </span>
-            </Panel>
-          </Link>
-        ))}
-      </div>
+      {/* ---- Son yazılanlar ----
+           Burada bir süre iki STATİK karo vardı ("Mercek" ve "Rehber"), yani
+           yalnızca "şuraya git" diyen iki kapı. Okuyucu tıklamadan önce ne
+           bulacağını bilmiyordu ve yeni bir analiz ya da yazı çıktığında ana
+           sayfa bunu hiç haber vermiyordu.
+
+           Şimdi iki panel de GERÇEK içerik taşıyor: son analizler ve son
+           mercek yazıları. Kapı hâlâ orada (başlıktaki "Tümünü Gör") ama
+           yanında ne olduğu da yazıyor.
+
+           İçerik yoksa panel hiç basılmıyor ve ızgara kalanla tek sütuna
+           iner; ikisi de boşsa eski keşif karoları geri geliyor — henüz
+           içerik yazılmamış bir sitede ana sayfanın okuma girişi büsbütün
+           kaybolmasın. */}
+      <Suspense
+        fallback={
+          <div className="grid gap-4 sm:grid-cols-2 lg:col-start-1 lg:row-start-2">
+            <Skeleton className="h-52 w-full rounded-2xl" />
+            <Skeleton className="h-52 w-full rounded-2xl" />
+          </div>
+        }
+      >
+        <LatestWriting locale={locale} t={t} />
+      </Suspense>
 
       {/* ---- Öne çıkan haberler ----
            Okunacak metin ana kolonda durur: manşet dar kolonda iki satıra
@@ -1398,6 +1396,175 @@ function ListSkeleton({ rows }: { rows: number }) {
     <div className="flex flex-col gap-2 px-4 py-3 sm:px-5">
       {Array.from({ length: rows }).map((_, i) => (
         <Skeleton key={i} className="h-9 w-full" />
+      ))}
+    </div>
+  );
+}
+
+/* ==========================================================================
+   Son yazılanlar — analizler + mercek
+   ========================================================================== */
+
+/**
+ * Ana sayfanın okuma girişi.
+ *
+ * İki panel de son yazılanları gösteriyor; kapı (Tümünü Gör) başlıkta
+ * duruyor. Boş liste basılmıyor: analiz ya da yazı yoksa o panel hiç
+ * çıkmıyor, ikisi de yoksa keşif karoları geri geliyor.
+ */
+async function LatestWriting({
+  locale,
+  t,
+}: {
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const [analyses, stories] = await Promise.all([
+    getAnalyses(locale, { limit: 3 }),
+    getStories(locale, 3),
+  ]);
+
+  if (analyses.length === 0 && stories.length === 0) {
+    return <ReadingDoors t={t} />;
+  }
+
+  const meta =
+    analyses.length > 0
+      ? await getSymbolNames([...new Set(analyses.map((r) => r.symbol))])
+      : {};
+
+  return (
+    <div
+      className={cn(
+        "grid gap-4 lg:col-start-1 lg:row-start-2",
+        analyses.length > 0 && stories.length > 0 && "sm:grid-cols-2",
+      )}
+    >
+      {analyses.length > 0 && (
+        <Panel className="min-w-0">
+          <PanelHeader
+            title={t.today.latestAnalyses}
+            action={
+              <PanelLink href="/bilancolar/analizler">
+                {t.common.showAll}
+              </PanelLink>
+            }
+          />
+          <ul className="divide-y divide-line-soft">
+            {analyses.map((row) => {
+              const verdict = verdictOf(row.verdict);
+              const logo = meta[row.symbol]?.logoUrl;
+              return (
+                <li key={`${row.symbol}-${row.period}`}>
+                  <Link
+                    href={analysisHref(row.symbol, row.period)}
+                    prefetch={false}
+                    className="flex items-center gap-2.5 px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+                  >
+                    {logo ? (
+                      <Image
+                        src={logo}
+                        alt=""
+                        width={28}
+                        height={28}
+                        className="size-7 shrink-0 rounded-[8px] border border-line-soft bg-white object-contain"
+                      />
+                    ) : (
+                      <span
+                        aria-hidden
+                        className="numeral flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-primary-wash text-[9px] font-bold text-primary"
+                      >
+                        {row.symbol.slice(0, 2)}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] font-semibold text-strong">
+                        {row.company}
+                      </span>
+                      <span className="numeral block text-[11px] text-muted">
+                        {row.symbol} · {row.periodLabel}
+                      </span>
+                    </span>
+                    <span
+                      className={cn(
+                        "shrink-0 rounded-md px-2 py-[3px] text-[11px] font-bold",
+                        verdictPillClass(verdict),
+                      )}
+                    >
+                      {verdictLabel(verdict, t)} · {row.score}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </Panel>
+      )}
+
+      {stories.length > 0 && (
+        <Panel className="min-w-0">
+          <PanelHeader
+            title={t.today.latestStories}
+            action={<PanelLink href="/mercek">{t.common.showAll}</PanelLink>}
+          />
+          <ul className="divide-y divide-line-soft">
+            {stories.map((story) => (
+              <li key={story.slug}>
+                <Link
+                  href={`/mercek/${story.slug}`}
+                  prefetch={false}
+                  className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+                >
+                  <span className="block text-[13px] font-semibold leading-[19px] text-strong">
+                    {story.title}
+                  </span>
+                  <span className="numeral mt-1 block text-[11px] text-muted">
+                    {formatEtDateShort(story.eventDate, locale)}
+                    {story.readMinutes ? (
+                      <>
+                        <span aria-hidden className="mx-1.5">
+                          ·
+                        </span>
+                        {story.readMinutes} {t.guide.readMinutes}
+                      </>
+                    ) : null}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Keşif karoları — yalnızca hiç içerik yokken.
+ *
+ * Sitenin ilk günlerindeki hâl: iki bölüm de boşken ana sayfada okuma
+ * girişinin büsbütün kaybolmaması için duruyor.
+ */
+function ReadingDoors({ t }: { t: Dictionary }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:col-start-1 lg:row-start-2">
+      {[
+        { href: "/mercek", glyph: "◎", title: t.stories.title, hint: t.stories.subtitle },
+        { href: "/rehber", glyph: "?", title: t.guide.title, hint: t.guide.subtitle },
+      ].map((entry) => (
+        <Link key={entry.href} href={entry.href}>
+          <Panel className="panel-hover flex h-full items-start gap-3.5 p-4 sm:p-5">
+            <GlyphTile glyph={entry.glyph} size={44} />
+            <span className="min-w-0">
+              <span className="display-ink display-ink-tight block w-fit text-[15px] font-bold">
+                {entry.title}
+              </span>
+              <span className="mt-1 block text-[12.5px] leading-[19px] text-body">
+                {entry.hint}
+              </span>
+            </span>
+          </Panel>
+        </Link>
       ))}
     </div>
   );

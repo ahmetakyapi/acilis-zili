@@ -134,6 +134,9 @@ const tr = {
     earningsEmpty: "Bugün bilanço açıklayan takip ettiğin şirket yok.",
     watchlistSummary: "Favorilerin",
     watchlistEmpty: "Henüz favori eklemedin.",
+    // Ana sayfadaki "son yazılanlar" bloğu
+    latestAnalyses: "Son Analizler",
+    latestStories: "Son Mercek Yazıları",
     topNews: "Öne Çıkan Haberler",
     weekAhead: "Haftaya Bakış",
     weekAheadEmpty: "Önümüzdeki hafta için planlanmış önemli veri yok.",
