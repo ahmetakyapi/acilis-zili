@@ -23,9 +23,36 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "tr",
     dir: "ltr",
     categories: ["finance", "news", "business"],
+    /* PNG'ler ŞART. Burada yalnızca `icon.svg` ve apple ikonu duruyordu ve
+       Chrome'un kurulum ölçütü karşılanmıyordu: en az 192 ve 512 boyutunda
+       PNG arıyor, ikisi de yoksa "ana ekrana ekle" istemi hiç çıkmıyor,
+       elle eklendiğinde de sistem kendi ürettiği bulanık bir kopyayı
+       kullanıyordu.
+
+       MASKELİ AYRI GİRDİ. Android ikonu kendi şekliyle kırpıyor (daire,
+       kare, damla — üreticiye göre değişiyor) ve güvenli alan yalnızca
+       ortadaki %80'lik daire. Yuvarlatılmış karo gönderilirse köşeler
+       kırpılıp kenarda saydam bir ısırık kalıyor; maskeli sürüm tam taşma
+       degrade ve zil bir kademe küçük.
+
+       Dosyalar `npm run build:favicon` ile üretiliyor, kaynak icon.svg. */
     icons: [
       { src: "/icon.svg", sizes: "any", type: "image/svg+xml" },
       { src: "/apple-icon", sizes: "180x180", type: "image/png" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      {
+        src: "/icon-maskable-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/icon-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
     ],
   };
 }

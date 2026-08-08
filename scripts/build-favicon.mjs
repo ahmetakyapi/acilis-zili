@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
@@ -24,6 +24,43 @@ import sharp from "sharp";
 
 const SIZES = [16, 32, 48];
 const ROOT = path.resolve(import.meta.dirname, "..");
+
+/**
+ * Android / PWA ikonları.
+ *
+ * `manifest.ts` yalnızca `icon.svg` ve apple ikonunu listeliyordu. Chrome'un
+ * kurulum ölçütü PNG istiyor ve en az 192 ile 512 arıyor; ikisi de yoksa
+ * "ana ekrana ekle" istemi hiç çıkmıyor, elle eklendiğinde de sistem
+ * kendi ürettiği bulanık bir kopyayı kullanıyor.
+ *
+ * MASKELİ SÜRÜM AYRI. Android ikonu kendi şekliyle kırpıyor (daire, kare,
+ * damla — üreticiye göre değişiyor) ve güvenli alan yalnızca ortadaki %80'lik
+ * daire. Yuvarlatılmış karomuzu gönderirsek köşeler kırpılıp kenarda saydam
+ * bir ısırık kalıyor. Maskeli sürüm bu yüzden TAM TAŞMA degrade ve zil bir
+ * kademe küçük — kırpma nereden gelirse gelsin zil güvenli dairenin içinde.
+ */
+const PWA_SIZES = [192, 512];
+
+/** Zil geometrisi — components/brand/BellMark.tsx ile birebir aynı. */
+const BELL = `
+  <circle cx="128" cy="50" r="11"/>
+  <path d="M128 68c-30 0-53 24-53 54v33h106v-33c0-30-23-54-53-54z"/>
+  <rect x="56" y="159" width="144" height="16" rx="8"/>
+  <circle cx="128" cy="196" r="12"/>`;
+
+/** Maskeli ikon: köşe yuvarlama YOK, zil güvenli dairenin içinde (%50). */
+const MASKABLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="tile" x1="12%" y1="0%" x2="88%" y2="100%">
+      <stop offset="0" stop-color="#6fd0ff"/>
+      <stop offset="0.46" stop-color="#2f95e8"/>
+      <stop offset="1" stop-color="#124f9e"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#tile)"/>
+  <svg x="128" y="128" width="256" height="256" viewBox="35 31 186 186" fill="#ffffff">${BELL}
+  </svg>
+</svg>`;
 
 /** ICO kapsayıcısı: 6 baytlık başlık + boyut başına 16 baytlık dizin girdisi. */
 function buildIco(images) {
@@ -73,3 +110,24 @@ console.log(
     .map((i) => `${i.size}:${i.data.length}B`)
     .join(" · ")})`,
 );
+
+/* ---- PWA ikonları ---- */
+// public/ depoda boş duramıyor (git boş dizin tutmaz); script kendi açar.
+await mkdir(path.join(ROOT, "public"), { recursive: true });
+for (const size of PWA_SIZES) {
+  const file = `public/icon-${size}.png`;
+  await sharp(svg, { density: 384 })
+    .resize(size, size)
+    .png({ compressionLevel: 9 })
+    .toFile(path.join(ROOT, file));
+  console.log(`${file} yazıldı`);
+}
+
+for (const size of PWA_SIZES) {
+  const file = `public/icon-maskable-${size}.png`;
+  await sharp(Buffer.from(MASKABLE_SVG), { density: 384 })
+    .resize(size, size)
+    .png({ compressionLevel: 9 })
+    .toFile(path.join(ROOT, file));
+  console.log(`${file} yazıldı`);
+}
