@@ -809,11 +809,23 @@ function MembersTable({
   return (
     <Panel>
       <PanelHeader title={t.markets.constituents} />
+      {/* Tablo telefonda `min-w-[680px]` ile açılıyordu: ilk bakışta yalnızca
+          sıra, şirket ve değişimin bir kısmı görünüyor, FİYAT ekranın dışında
+          kalıyordu. Bir bileşen listesinde "ne kadar oynamış" ile "kaç dolar"
+          birlikte okunur — birini görmek için yana kaydırmak gerekmesi tabloyu
+          ilk açılışta kırık gösteriyordu.
+
+          Çözüm daraltmak değil, ELEMEK: sıra numarası, piyasa değeri ve Dow
+          katkısı telefonda gizleniyor (sm+ hepsi geri geliyor), kalan üç sütun
+          390px'e rahat sığıyor ve yatay kaydırma kalkıyor. Piyasa değeri
+          kaybolmuyor — fiyatın altına ikinci satır olarak iniyor. */}
       <div className="scroll-x">
-        <table className="w-full min-w-[680px] text-sm">
+        <table className="w-full text-sm sm:min-w-[680px]">
           <thead>
             <tr className="border-b border-line text-left text-[10.5px] uppercase tracking-[0.08em] text-muted">
-              <th className="w-10 px-4 py-2.5 font-semibold sm:px-5">#</th>
+              <th className="hidden w-10 px-4 py-2.5 font-semibold sm:table-cell sm:px-5">
+                #
+              </th>
               <SortHead
                 label={t.companies.company}
                 href={sortHref(tab, "ad", sort, dir)}
@@ -827,19 +839,24 @@ function MembersTable({
                 href={sortHref(tab, "degisim", sort, dir)}
                 active={sort === "degisim"}
                 dir={dir}
+                className="px-1.5 sm:px-3"
               />
               <SortHead
                 label={t.companies.price}
                 href={sortHref(tab, "fiyat", sort, dir)}
                 active={sort === "fiyat"}
                 dir={dir}
+                className="pr-4 sm:pr-3"
               />
               <SortHead
                 label={t.market.marketCap}
                 href={sortHref(tab, "cap", sort, dir)}
                 active={sort === "cap"}
                 dir={dir}
-                className={showContribution ? undefined : "sm:pr-5"}
+                className={cn(
+                  "hidden sm:table-cell",
+                  !showContribution && "sm:pr-5",
+                )}
               />
               {showContribution && (
                 <SortHead
@@ -847,7 +864,7 @@ function MembersTable({
                   href={sortHref(tab, "katki", sort, dir)}
                   active={sort === "katki"}
                   dir={dir}
-                  className="sm:pr-5"
+                  className="hidden sm:table-cell sm:pr-5"
                 />
               )}
             </tr>
@@ -861,10 +878,10 @@ function MembersTable({
                   key={row.member.symbol}
                   className="transition-colors hover:bg-primary-tint"
                 >
-                  <td className="numeral px-4 py-2.5 text-xs text-muted sm:px-5">
+                  <td className="numeral hidden px-4 py-2.5 text-xs text-muted sm:table-cell sm:px-5">
                     {index + 1}
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td className="px-3 py-2.5 pl-4 sm:pl-3">
                     <Link
                       href={`/hisse/${row.member.symbol}`}
                       /* -my-2 py-2: bağlantı hücreyi doldurmadığı için
@@ -893,7 +910,7 @@ function MembersTable({
                         <span className="block text-[13.5px] font-bold leading-[17px] text-strong">
                           {row.member.symbol}
                         </span>
-                        <span className="block truncate text-[11.5px] leading-[15px] text-muted">
+                        <span className="block max-w-[104px] truncate text-[11.5px] leading-[15px] text-muted sm:max-w-none">
                           {row.member.name}
                         </span>
                       </span>
@@ -904,7 +921,7 @@ function MembersTable({
                       tek tek okunup kafada sıralanarak cevaplanıyordu.
                       Çubuk sıralamayı göze taşıyor ve üstteki En Çok
                       Artanlar kartıyla aynı ölçeği kullanıyor. */}
-                  <td className="px-3 py-2.5">
+                  <td className="px-1.5 py-2.5 sm:px-3">
                     <span className="flex flex-col items-end gap-1">
                       <span
                         className={cn(
@@ -921,7 +938,7 @@ function MembersTable({
                       {quote && (
                         <span
                           aria-hidden
-                          className="flex h-1 w-16 justify-end overflow-hidden rounded-full bg-surface-elevated"
+                          className="flex h-1 w-12 justify-end overflow-hidden rounded-full bg-surface-elevated sm:w-16"
                         >
                           <span
                             className={cn(
@@ -943,12 +960,25 @@ function MembersTable({
                       )}
                     </span>
                   </td>
-                  <td className="numeral px-3 py-2.5 text-right font-bold text-strong">
-                    {quote ? formatPrice(quote.price, locale) : "—"}
+                  {/* Piyasa değeri telefonda kendi sütununu kaybediyor ama
+                      veriyi kaybetmiyor: fiyatın altına küçük punto ikinci
+                      satır olarak iniyor. Aynı şirketin iki ölçüsü zaten
+                      birlikte okunuyor ("kaç dolar / ne kadar büyük"), alt
+                      alta gelmeleri sütun olarak durmalarından daha sıkı.
+                      sm+ ekranda satır gizlenir, sütun geri gelir. */}
+                  <td className="px-3 py-2.5 pr-4 text-right sm:pr-3">
+                    <span className="numeral block font-bold text-strong">
+                      {quote ? formatPrice(quote.price, locale) : "—"}
+                    </span>
+                    {row.marketCap && (
+                      <span className="numeral mt-0.5 block text-[11px] leading-[14px] text-muted sm:hidden">
+                        ${formatCompact(row.marketCap, locale)}
+                      </span>
+                    )}
                   </td>
                   <td
                     className={cn(
-                      "numeral px-3 py-2.5 text-right text-body",
+                      "numeral hidden px-3 py-2.5 text-right text-body sm:table-cell",
                       showContribution ? undefined : "sm:pr-5",
                     )}
                   >
@@ -957,7 +987,7 @@ function MembersTable({
                       : "—"}
                   </td>
                   {showContribution && (
-                    <td className="numeral px-3 py-2 text-right text-soft sm:pr-5">
+                    <td className="numeral hidden px-3 py-2 text-right text-soft sm:table-cell sm:pr-5">
                       {row.contribution !== null
                         ? formatChange(row.contribution, locale)
                         : "—"}

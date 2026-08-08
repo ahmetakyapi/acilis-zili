@@ -461,8 +461,22 @@ async function CompaniesTable({
                       {/* Fiyat satırın ÇAPASI: değişim, hafta, piyasa değeri
                           ve hacim hep ona göre okunuyor. Diğerleriyle aynı
                           ağırlıkta yazılınca sayı dizisinin içinde kayboluyordu. */}
-                      <td className="numeral px-3 py-3 pr-4 text-right text-[13.5px] font-bold text-strong sm:pr-3">
-                        {quote ? formatPrice(quote.price, locale) : "—"}
+                      {/* Piyasa değeri telefonda fiyatın ALTINDA. Kendi sütunu
+                          `sm:table-cell` olduğu için mobilde hiç görünmüyordu
+                          ve bu dizinin ana sıralaması (büyüklük) ekranda
+                          karşılıksız kalıyordu: liste piyasa değerine göre
+                          sıralı geliyor ama okuyucu sıralamanın dayandığı
+                          sayıyı göremiyordu. Beşinci sütun 390px'e sığmaz;
+                          fiyatın altındaki ikinci satır sığar. */}
+                      <td className="px-3 py-3 pr-4 text-right sm:pr-3">
+                        <span className="numeral block text-[13.5px] font-bold text-strong">
+                          {quote ? formatPrice(quote.price, locale) : "—"}
+                        </span>
+                        {company.marketCap && (
+                          <span className="numeral mt-0.5 block text-[11px] leading-[14px] text-muted sm:hidden">
+                            ${formatCompact(company.marketCap, locale)}
+                          </span>
+                        )}
                       </td>
                       <td className="numeral hidden px-3 py-3 text-right font-semibold text-body sm:table-cell">
                         {company.marketCap
