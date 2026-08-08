@@ -742,6 +742,72 @@ For an individual investor the practical takeaway: a short sale is the only ordi
   },
 
   /* ---------------------------------------------------------------------- */
+  "kisa-sikisma": {
+    title: "What Is a Short Squeeze?",
+    dek: "A stock doubling not because anyone wants it — but because the sellers are forced to buy it back.",
+    bodyMd: `Sometimes a stock doubles in two days with no news at all. Nothing changed at the company, earnings are the same, the sector is the same. What drove the price up was not buyers' appetite; it was **sellers' obligation.**
+
+::: tanim Short Squeeze
+A chain reaction in a heavily shorted stock that begins with a price rise. Losing shorts must BUY the stock back to close out; that buying pushes the price higher, which forces more shorts to close. The rally manufactures its own fuel.
+:::
+
+## The Mechanism
+
+Recall the mechanics from the [long/short article](/rehber/long-short): a short seller borrows the stock, sells it, and **must return it**. The only way to return it is to buy it in the market.
+
+This is what separates shorting from every other position: someone who is long is never forced to sell — they can wait. Someone who is short cannot. Three things force their hand:
+
+1. **Margin call.** If losses eat the collateral, the broker closes the position for them.
+2. **Recall of the borrow.** Whoever lent the shares can ask for them back, and the short has no say.
+3. **Cost of the borrow.** In a squeezing stock the annualised borrow fee can exceed 100%. Waiting burns money on its own.
+
+## What Makes a Squeeze Possible
+
+Not every falling stock squeezes. The odds rise when three things line up:
+
+| Condition | What to look at | Why it matters |
+|---|---|---|
+| **Heavy short interest** | Short interest above 20% of the float | Many people will be forced to close |
+| **Small float** | Few shares actually available to trade | The same buying moves the price more |
+| **Days to cover** | Short interest divided by average daily volume | Everyone cannot exit at once |
+
+The third is the most revealing. If short interest is eight times daily volume, all the shorts closing means eight full days of volume. The door is narrow.
+
+::: ornek How Narrow the Door Is
+A stock has a 50 million share float and trades 2 million shares a day. Short interest is 15 million shares — 30% of the float, 7.5 times daily volume.
+If the price rises 20%, some shorts hit their collateral limits and start covering. But the exit is 2 million shares wide per day: closing all 15 million takes days of sustained buying pressure.
+That buying pressure lifts the price, and the higher price pushes new shorts to their limits. The loop feeds itself.
+:::
+
+## A Squeeze Is Not a Valuation
+
+This is the most misleading part: as the price rises, so does the story. "So the company must be good after all" sounds very convincing mid-squeeze. But the cause of the move is not the company — it is **positioning**.
+
+The practical consequence: when the squeeze ends, nothing holds the price up. The forced buyers are done, there are no new buyers, and the price usually returns near where it started. The rise is fast; so is the fall.
+
+::: dikkat "Riding the Squeeze"
+Spotting a squeeze in advance and profiting on the long side is theoretically possible and practically very hard, for two reasons:
+**Timing.** A heavily shorted stock can sit still for months; the squeeze may come weeks later, or never.
+**Volatility.** Intraday swings of 30% are normal in a squeezing name. Set a [stop](/rehber/emir-tipleri) and you get swept out before the squeeze begins; skip it and your position size starts running you.
+This is one of the setups with the highest chance of being right and losing money anyway.
+:::
+
+## Gamma Squeezes
+
+Sometimes the forced buyer is not the shorts but the **dealers who sold the options.** Heavy call buying in a stock leaves the seller of those calls needing to hold shares to offset the risk — and needing more of them as the price rises. It is the derivatives-side version of the logic in the [options article](/rehber/opsiyonlar).
+
+The two types usually appear together and feed each other. Telling them apart is hard; the outcome is the same either way: a mechanical, temporary, violent rally.
+
+::: ozet In Short
+A short squeeze is a positioning story, not a company story. What lifts the price is not that someone wants the stock, but that someone HAS to buy it back. When the obligation ends, so does the fuel. The right question during a squeeze is not "what is this company worth" but **"how many forced buyers are left"** — and nobody outside can know that precisely.
+:::
+
+## Where You'll See It Here
+
+If you spot a name up 15-20% on its own in the top gainers on [Markets](/piyasalar) while the rest of the index sits flat, the first hypothesis is positioning, not news. The volume line on a [stock page](/sirketler) helps too: squeezes run at several times average volume, because forced buying is real buying.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
   "kaldirac": {
     title: "What Is Leverage — and Why You Should Stay Away",
     dek: "Carrying a position on borrowed money. It multiplies gains and losses alike — but what it really takes is your right to decide when to sell.",
@@ -1146,6 +1212,77 @@ The third is the least read and the hardest to dress up. Profit is computed unde
   },
 
   /* ---------------------------------------------------------------------- */
+  "bilanco-gunu-nasil-okunur": {
+    title: "How to Read an Earnings Day",
+    dek: "Why a company posting record profit drops 9% — expectations, the gap, and guidance.",
+    bodyMd: `A company reports the highest profit in its history and the stock falls 9%. This is the most frequently asked question about earnings days, and the answer fits in one sentence: **price reacts not to the number, but to the number's distance from what was expected.**
+
+The [earnings article](/rehber/bilanco) covers reading the tables themselves. This one covers reading the day — a different job.
+
+::: tanim Consensus
+The average of the estimates from analysts covering the company. The share price already carries that expectation before the release. What you paid for was not the information "the company will make money" but **"the company will make this much money."**
+:::
+
+## Three Numbers, Three Timeframes
+
+An earnings release actually carries three pieces of information, each looking at a different time:
+
+| | What it tells you | Timeframe |
+|---|---|---|
+| **Revenue** | How much it sold | Past quarter |
+| **Earnings per share (EPS)** | What was left after costs | Past quarter |
+| **Guidance** | What the company expects next | **The future** |
+
+Most of the price reaction comes from the third row. The past quarter is, the moment it is published, a known thing; the stock is a price on the future. A company that cuts guidance takes its stock down even after a record quarter.
+
+::: ornek Record Profit, Falling Stock
+Expected: $2.40 EPS on $8.1 billion of revenue.
+Reported: **$2.55 EPS**, **$8.4 billion** revenue — both above expectations, both company records.
+Guidance: $8.0-8.2 billion of revenue next quarter. The market expected $8.7 billion.
+Result: the stock falls. The reported quarter was good, but the good was already in the price; what changed was **the information that next quarter will be worse.**
+:::
+
+## "Beat" Alone Says Nothing
+
+The phrase "beat expectations" carries no information on its own, because the beat itself is expected. Most companies beat by small margins routinely — that is not a mark of performance but the result of expectation management: guide conservatively, and beating gets easy.
+
+So what matters is the **size** and the **source** of the gap:
+
+- If profit beat but revenue did not, the difference may be cost cutting. Cutting costs is not a sustainable source of growth.
+- If profit came from a one-off item (an asset sale, a tax adjustment), it is not operating performance.
+- If revenue beat but margins narrowed, the company may be buying growth with discounts.
+
+## Adjusted or GAAP
+
+Companies publish two profit figures: the one calculated under the legal standard (**GAAP**) and the one excluding items the company deems unusual (**adjusted / non-GAAP**). Headlines usually quote the second, because it is higher.
+
+::: dikkat The "One-Off" That Recurs Every Year
+Adjusted figures are useful: excluding a genuinely unusual legal settlement is reasonable. The problem is the same item being excluded as "one-off" every single quarter. Stock-based compensation is the classic case — paying employees in shares is a real cost, and it repeats every quarter.
+A practical test: if the gap between the two figures has been roughly the same size for several quarters, that item is not unusual.
+:::
+
+## The Conference Call
+
+After the numbers, management takes analysts' questions on a call — and the sharpest price move often happens **there**. The reason: the tables describe one quarter, the sentences describe direction. "We're seeing some softening in demand" appears in no table and moves the price more than any number in one.
+
+## Why Volatility Inflates
+
+Option premiums swell before earnings and collapse after. That is the *volatility crush* from the [options article](/rehber/opsiyonlar): when the uncertainty ends, so does its price. In practice this makes earnings night the most volatile night for the stock too — 10% moves are common in [extended-hours](/rehber/borsa-nasil-isler) trading, and those prices form on thin volume.
+
+::: ozet In Short
+Read an earnings day with three questions: **What was expected? Where did the gap come from? What did the company say about the future?** The third matters most, because a stock is a price on the future, not the past. A "record profit" headline tells you nothing on its own — it does not tell you whether the record was expected.
+:::
+
+## Where You'll See It Here
+
+The earnings side of this site is built on exactly that trio:
+
+- The [earnings calendar](/bilancolar) shows who reports when; where the provider gives no exact minute, the time is written with a "~" and named by its window ("~23:00 · after the close").
+- Each entry in the [earnings analyses](/bilancolar/analizler) carries the expected-versus-actual gap and the guidance separately; in the revenue column chart, the final dashed-outline column is a **projection**, not a reported number.
+- The "since the report" stamp on an analysis page shows what the price did after the release — as instructive as the numbers themselves.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
   "nakit-akisi": {
     title: "Cash Flow: Reading Behind the Profit",
     dek: "Profit is an opinion, cash is a fact — and the gap between them is the earliest warning sign in the statements.",
@@ -1401,6 +1538,68 @@ The sum is **total return**. Most index charts show price only; with dividends r
 The **Key Metrics** card on the stock page shows the dividend yield. Interpreting it requires the sector: 4% is normal for a utility; the same number at a software company is a question that needs asking.`,
   },
 
+  "hisse-geri-alimi": {
+    title: "What Is a Share Buyback?",
+    dek: "A company buying its own stock — growing your slice without growing the pie.",
+    bodyMd: `There are two ways a company returns money to shareholders. The first is a [dividend](/rehber/temettu): cash lands in your account. The second is a buyback: you get nothing directly, and instead the company **buys its own shares in the market and cancels them.**
+
+The second looks odd at first — nothing is handed to you. But because the share count falls, your stake in the company grows. The pie is the same size; your slice is bigger.
+
+::: tanim Share Buyback
+A company purchasing its own shares on the exchange. The shares are usually cancelled or held in treasury; either way the count of shares outstanding falls. The shareholder receives no payment; their **proportion** of ownership rises.
+:::
+
+## Why EPS Goes Up
+
+Earnings per share is a simple fraction: net income divided by share count. A buyback shrinks the denominator — so EPS rises even if profit does not.
+
+::: ornek Same Profit, Higher EPS
+Net income: $1 billion. Shares: 500 million. EPS = **$2.00**.
+The company buys back 25 million shares (5% of the count). New count: 475 million.
+Profit is unchanged, still $1 billion. New EPS = 1,000 / 475 = **$2.11**.
+Headline: "earnings per share up 5.5%". The business grew by exactly nothing.
+:::
+
+This is the most abused feature of buybacks. Executive bonuses are frequently tied to EPS targets, and a buyback is the shortest route to hitting one without growing the business. So when [reading earnings](/rehber/bilanco), look past EPS to **net income itself** and to **the trend in share count**: if EPS is rising while net income is flat or falling, that is not growth, it is arithmetic.
+
+## Versus Dividends
+
+| | Dividend | Buyback |
+|---|---|---|
+| Effect on you | Cash income | A larger stake |
+| Tax | At the time of payment | None until you sell |
+| Flexibility | Cutting one is a bad signal | Can be paused quietly |
+| Price sensitivity | None | **High** |
+
+The last row matters most. A dividend is indifferent to the share price; in a buyback the company is a buyer, and **the price it pays is decisive.** Shares bought cheaply create value for holders; shares bought expensively destroy it. It is the most concrete test of a management team's capital allocation.
+
+::: dikkat Buying at the Top
+Companies buy back most when their coffers are fullest — that is, when business is good, which is when the stock is expensive. When a crisis arrives, cash is needed and buybacks are suspended precisely when the stock is cheap.
+The result is the corporate version of the classic retail mistake: buy high, stop buying low. Many large companies followed that exact sequence in 2020 and 2022. Before treating a buyback announcement as good news, ask **at what price the shares were bought.**
+:::
+
+## An Announcement Is Not a Purchase
+
+Companies announce "a $10 billion buyback programme." That is an **authorisation**, not a commitment: the board grants permission, and the company may use it, partly use it, or spread it over years. Announced amounts and executed amounts diverge routinely.
+
+To see what actually happened, look at the cash flow statement — under financing activities in the [cash flow article](/rehber/nakit-akisi), the "repurchase of common stock" line shows money actually spent that quarter. The announcement is in the headline; the execution is in the table.
+
+## Buybacks That Only Offset Dilution
+
+A common situation in technology companies: the company pays employees in stock, which increases the share count, then buys back shares to offset that increase. From outside it looks like value being returned, but what is really happening is that wages are paid in shares and the bill is settled with a buyback.
+
+The test is simple: **is the share count actually falling?** If it is flat despite billions in buybacks, that programme is not returning value to shareholders — it is concealing dilution.
+
+::: ozet In Short
+A buyback is a neutral tool; price decides whether it is good or bad. Read it with three questions: **Did the share count actually fall? At what valuation were the shares bought? Where did the money come from — cash flow or debt?** If all three answer well, a buyback can be more efficient than a dividend. If they don't, it is expensive cosmetics on an EPS chart.
+:::
+
+## Where You'll See It Here
+
+This is why the [earnings analyses](/bilancolar/analizler) report EPS and net income side by side: when the two diverge, the share count explains the gap. The P/E calculation in the [valuation](/rehber/degerleme) and [market cap](/rehber/piyasa-degeri) articles is directly affected too — shrink the denominator and the ratio falls without the company changing at all.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
   /* ==== 4 · Macro ======================================================== */
 
   /* ---------------------------------------------------------------------- */
@@ -1470,6 +1669,75 @@ Nominal 5% with 4% inflation is a real 1% — money is still cheap. Nominal 3% w
 - The home page's side column shows **2, 5 and 10-year Treasury yields** with their daily change.
 - The bottom ticker rotates the three maturities under "US Treasury."
 - The [Markets](/piyasalar) screen has the full series and the yield curve.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  "getiri-egrisi": {
+    title: "The Yield Curve and Its Inversion",
+    dek: "Short rates above long rates — the market's oldest recession signal, and why it doesn't fire immediately.",
+    bodyMd: `In a normal world, tying money up for longer pays more: a 10-year bond yields more than a 2-year. The reason is simple — nobody knows what the next decade holds, and that uncertainty has a price.
+
+Sometimes this reverses. Short-term rates rise above long-term ones. It is the most striking sentence the bond market ever utters, and it has preceded almost every US recession of the last fifty years.
+
+::: tanim Yield Curve
+The line drawn through the yields of one borrower's bonds (here, the US Treasury) across maturities. It normally slopes upward: the longer the maturity, the higher the yield. **Inversion** is when short-term yields rise above long-term ones.
+:::
+
+## Why It Inverts
+
+The two ends price two different things. The [rates and bonds article](/rehber/faiz-tahvil) covers the mechanics; what matters here is the split:
+
+- **The short end (2 years)** reflects the Fed's policy rate today and in the near future. If rates are being raised to fight inflation, the short end rises.
+- **The long end (10 years)** reflects long-run growth and inflation expectations. If the market expects a slowdown, the long end falls.
+
+An inversion is both happening at once: **the Fed is tightening today, and the market expects a slowdown tomorrow.** The curve is saying "this level of tightness cannot be carried for long; eventually rates come down."
+
+::: ornek Reading 2s10s
+2-year: 4.90% · 10-year: 4.25%
+Spread: 4.25 − 4.90 = **−0.65 points**. The curve is inverted.
+The market is saying two things at once: today's rate is high AND the average of the next ten years will be lower than that. Both can only be true if cuts are coming — and cuts usually come when the economy slows.
+:::
+
+That spread is called **2s10s** in market shorthand, and it is this article's glyph.
+
+## The Signal's Actual Record
+
+The reputation is earned: the curve has inverted before every US recession since the 1970s. With two caveats.
+
+**The lag is long and variable.** Historically, six to twenty-four months have passed between inversion and the start of a recession. "The curve inverted, so sell" can look wrong for more than a year — and stocks can keep rising throughout.
+
+**The un-inversion is a signal too.** The curve returning to normal (*re-steepening*) often lands just before the recession, because the normalisation usually comes from the short end falling — that is, the Fed starting to cut. A rate cut looks like something to celebrate; it is worth remembering what prompted it.
+
+::: dikkat One Indicator Is Not a Decision
+The yield curve is not a forecasting machine but a photograph of expectations: it shows what the market thinks today, not what will happen. The sample is small too — a handful of recessions in fifty years, and each time the claim "this time is different" is both common and occasionally correct.
+Practical use: read the curve as **context**, not as an alarm. An inverted curve tells you the price of risk has shifted regime; it does not tell you what to buy or when.
+:::
+
+## Which Spread
+
+There is no single "yield curve"; different pairs of maturities give different signals:
+
+| Spread | What it reflects | Character |
+|---|---|---|
+| **2s10s** | Policy expectations vs growth expectations | The most quoted |
+| **3m-10y** | Today's cost of money vs growth | Stronger in academic work |
+| **5s30s** | Long-run inflation expectations | Less affected by policy |
+
+Two inverting together strengthens the signal; only one inverting is often technical.
+
+## What It Means for Stocks
+
+An inverted curve is a direct problem for banks: a bank borrows short and lends long, so it lives off the spread. When the spread goes negative, the business model tightens.
+
+For other sectors the effect is indirect, and it is the subject of the [sector rotation](/rehber/sektor-rotasyonu) article: an expected slowdown moves money from cyclical sectors into defensive ones.
+
+::: ozet In Short
+An inverted yield curve is the bond market saying today's tightness cannot last. Its record is strong but its timing is poor: one to two years can pass between signal and event. So treat it not as a trading trigger but as background on which regime risk is being priced in.
+:::
+
+## Where You'll See It Here
+
+The Treasury yield strip on [Markets](/piyasalar) puts the 2, 5, 10 and 30-year yields side by side — you can read the shape of the curve straight off it: if the short rate is above the long one, the curve is inverted. The data comes from FRED and any publication lag is stated in the stamp. [Macro](/makro) shows how those series have moved over time.`,
   },
 
   /* ---------------------------------------------------------------------- */
@@ -1733,5 +2001,77 @@ Buying foreign stocks is two decisions: which company, and which currency. If yo
 ## Where You'll See It on This Site
 
 All prices and percentages here are in dollars; no currency conversion is applied. The note under the **World Markets** card exists precisely to remind you that the card shows dollar-denominated country funds, not local indexes.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  "sektor-rotasyonu": {
+    title: "What Is Sector Rotation?",
+    dek: "Money changing sectors without leaving the market — and how that tracks the economic cycle.",
+    bodyMd: `Some days the index closes flat while something large happens underneath: banks up 3%, technology down 3%. No money left the market; it **moved**. That is sector rotation, and it is where the macro articles connect to a portfolio.
+
+::: tanim Sector Rotation
+Investors shifting weight from one sector to another based on the economic cycle or rate expectations. Little happens at the index level; a great deal happens inside it.
+:::
+
+## Two Families: Cyclical and Defensive
+
+The whole of rotation rests on one distinction.
+
+**Cyclical sectors** breathe with the economy. When people feel good they buy cars, take holidays, renovate. Banks earn from loan growth and the rate spread. These sectors outrun the index in expansions and fall harder in slowdowns: **industrials, consumer discretionary, financials, energy, materials.**
+
+**Defensive sectors** are less affected by the cycle. Electricity bills get paid in a recession too, medicines are bought, detergent runs out. They beat the index in slowdowns and lag it in booms: **consumer staples, healthcare, utilities, telecom.**
+
+::: ornek One Day, Two Directions
+A Fed meeting delivers a more hawkish message than expected: rates stay higher for longer.
+In the same session:
+Utilities **−2.4%** — heavily indebted, dividend-paying companies compete with bond yields; higher rates dull their appeal.
+Banks **+1.8%** — higher rates widen the gap between lending and deposit rates.
+Technology **−1.9%** — most of the value sits in profits far in the future; higher rates cut what those profits are worth today.
+The index: **−0.3%**. A headline reader calls it a quiet day; underneath there are three separate stories.
+:::
+
+## Why Rates Dominate
+
+The last line of that example is the important one. A company is worth its future cash discounted to today. The discount rate is the interest rate.
+
+A company whose profits arrive **soon** (a mature bank, a grocery chain) is barely affected by rate changes. A company whose profits are expected **far out** (a growth name not yet profitable) is affected enormously — distant cash discounted at a high rate is worth far less.
+
+That is why rotation becomes almost mechanical when rate expectations shift. Every signal in the [yield curve](/rehber/getiri-egrisi) and [hawkish/dovish](/rehber/sahin-guvercin) articles shows up here first.
+
+## Four Phases of the Cycle
+
+The classic model is this — a frame, not a rule:
+
+| Phase | Economy | Leadership |
+|---|---|---|
+| **Early recovery** | Turning up off the bottom, rates low | Financials, consumer discretionary |
+| **Expansion** | Fast growth, rates rising | Technology, industrials |
+| **Peak / slowdown** | High inflation, rates at their top | Energy, materials |
+| **Contraction** | Slowing, rates start coming down | Staples, healthcare, utilities |
+
+::: dikkat Turning a Frame Into a Prophecy
+That table summarises historical tendencies; it does not hand you a programme for the future. Three reasons:
+**We only know the phase afterwards.** Which phase we are in becomes clear months after it has passed.
+**The market prices ahead.** Rotation happens when expectations change, not when the data prints — by the time you see the number, the move has happened.
+**Sector labels mislead.** "Technology" today contains both unprofitable software companies and the most cash-rich businesses on earth; the two can react to the same rate headline in opposite directions.
+:::
+
+## Seeing Rotation
+
+The most practical sign of rotation is **market breadth**: when the index rises, how many stocks are up? If the index gains 1% while only 35% of its members are green, the rise is coming from a few large names and money is flowing elsewhere underneath.
+
+The second sign is sectors **not moving together**. In a panic everything falls at once (correlations go to 1); in a healthy rotation some rise while others fall.
+
+::: ozet In Short
+Sector rotation is the same money changing places inside the market. It shows what the index headline hides. It is not a timing tool — knowing the framework does not tell you to "switch to banks now." Its real value is on the [diversification](/rehber/cesitlendirme) side: it lets you notice which phase your portfolio is betting on. Most portfolios carry a macro bet their owner never consciously placed.
+:::
+
+## Where You'll See It Here
+
+Three screens read this subject directly:
+
+- The **market breadth** bar on [Markets](/piyasalar) tells you how many index members are up — the fastest read on rotation.
+- The sector filters in the [Companies](/sirketler) directory let you compare the same day sector by sector.
+- The rate and inflation series on [Macro](/makro) give you the cause; you see the effect in the market.`,
   },
 };

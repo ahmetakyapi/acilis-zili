@@ -743,6 +743,72 @@ Bireysel bir yatırımcı için pratik sonuç şudur: short satış, kaybı teor
   },
 
   /* ---------------------------------------------------------------------- */
+  "kisa-sikisma": {
+    title: "Kısa Sıkışma (Short Squeeze) Nedir?",
+    dek: "Bir hissenin, kimse almak istemediği için değil — satanlar geri almak zorunda kaldığı için fırlaması.",
+    bodyMd: `Bir hisse bazen hiçbir haber olmadan iki günde ikiye katlanır. Şirkette yeni bir şey yoktur, kazancı değişmemiştir, sektörü aynıdır. Fiyatı yukarı iten şey alıcıların iştahı değildir; **satanların mecburiyetidir.**
+
+::: tanim Kısa Sıkışma
+Açığa satış pozisyonu yoğun bir hissede fiyatın yükselmesiyle başlayan zincir. Zarar eden short'lar pozisyonu kapatmak için hisseyi geri ALMAK zorundadır; bu alım fiyatı daha da yukarı iter, bu da daha fazla short'u kapanmaya zorlar. Yükseliş kendi yakıtını üretir.
+:::
+
+## Mekanizma
+
+[Long/short yazısındaki](/rehber/long-short) mekaniği hatırla: açığa satan kişi hisseyi ödünç alır, satar ve **geri vermek zorundadır**. Geri vermenin tek yolu piyasadan satın almaktır.
+
+Bu, açığa satışı diğer her pozisyondan ayıran şeydir: long pozisyondaki biri hiçbir zaman satmak zorunda değildir, bekleyebilir. Short'taki kişi bekleyemez — üç ayrı zorlayıcı vardır:
+
+1. **Marj çağrısı.** Zarar teminatı yerse aracı kurum pozisyonu zorla kapatır.
+2. **Ödünç geri çağrısı.** Hisseyi ödünç veren onu geri isteyebilir; short buna karşı çıkamaz.
+3. **Ödünç maliyeti.** Sıkışan bir hissede yıllık ödünç faizi %100'ü aşabilir. Beklemek tek başına para yakar.
+
+## Sıkışmayı Mümkün Kılan Koşullar
+
+Her düşen hisse sıkışmaz. Üçü bir arada olduğunda ihtimal büyür:
+
+| Koşul | Neye bakılır | Neden önemli |
+|---|---|---|
+| **Yoğun açık pozisyon** | Halka açık payın %20'sini aşan short oranı | Kapatmak zorunda kalacak çok kişi var |
+| **Dar dolaşım** | Serbest dolaşımdaki hisse sayısının azlığı | Aynı alım daha çok fiyat oynatır |
+| **Kapanma süresi** | Günlük hacme bölünmüş short miktarı | Herkes aynı anda çıkamaz |
+
+Üçüncüsüne *days to cover* denir ve en açıklayıcı olanıdır: short miktarı günlük hacmin sekiz katıysa, short'ların tamamının çıkması sekiz günlük hacim demektir. Kapı dardır.
+
+::: ornek Kapının Darlığı
+Bir hissenin serbest dolaşımı 50 milyon adet, günlük ortalama hacmi 2 milyon adet. Açık short pozisyon 15 milyon adet — dolaşımın %30'u, günlük hacmin 7,5 katı.
+Fiyat %20 yükselirse short'ların bir kısmı teminat sınırına dayanır ve kapatmaya başlar. Ama çıkış kapısı günde 2 milyon adetlik: 15 milyonun tamamı ancak günlerce sürecek bir alım baskısıyla kapanabilir.
+O alım baskısı fiyatı yukarı taşır, yukarı fiyat yeni short'ları sınıra dayar. Döngü kendi kendini besler.
+:::
+
+## Sıkışma Bir Değerleme Değildir
+
+Sıkışmanın en yanıltıcı yanı budur: fiyat yükselirken hikâye de yükselir. "Demek ki şirket iyiymiş" cümlesi sıkışmanın ortasında çok inandırıcı gelir. Oysa hareketin sebebi şirket değil, **pozisyonlanmadır**.
+
+Bunun pratik sonucu şudur: sıkışma bittiğinde fiyatı yukarıda tutacak bir şey kalmaz. Zorunlu alıcılar kapanmıştır, yeni alıcı yoktur ve fiyat çoğu zaman başladığı yere yakın bir seviyeye döner. Yükseliş hızlıdır, iniş de öyle.
+
+::: dikkat "Sıkışmaya Binmek"
+Sıkışmayı önceden fark edip long tarafında kâr etmek teorik olarak mümkündür, pratikte iki sebeple çok zordur:
+**Zamanlama.** Yoğun short'lu bir hisse aylarca hiçbir şey yapmadan durabilir; sıkışma haftalar sonra ya da hiç gelmeyebilir.
+**Volatilite.** Sıkışan hissede gün içi %30'luk salınımlar normaldir. [Stop emri](/rehber/emir-tipleri) koyduysan sıkışma başlamadan süpürülürsün; koymadıysan pozisyon büyüklüğün seni yönetmeye başlar.
+Bu, "haklı çıkıp para kaybetme" ihtimalinin en yüksek olduğu kurgulardan biridir.
+:::
+
+## Gamma Sıkışması
+
+Bazen zorunlu alıcı short'lar değil, **opsiyon satan aracı kurumlardır.** Bir hissede yoğun call alımı olursa, o call'ları satan taraf riskini dengelemek için hisseden almak zorunda kalır. Fiyat yükseldikçe daha çok almaları gerekir — [opsiyon yazısındaki](/rehber/opsiyonlar) mantığın türev tarafı.
+
+İki sıkışma tipi çoğu zaman birlikte görülür ve birbirini besler. Ayırt etmek zordur; ikisinin de ortak sonucu aynıdır: mekanik, geçici ve şiddetli bir yükseliş.
+
+::: ozet Özet
+Kısa sıkışma bir şirket hikâyesi değil, bir pozisyon hikâyesidir. Fiyatı yukarı taşıyan şey birinin o hisseyi istemesi değil, birinin geri almak ZORUNDA olmasıdır. Zorunluluk bitince yakıt biter. Bu yüzden sıkışma sırasında sorulacak doğru soru "bu şirket ne kadar eder" değil, **"geriye kaç zorunlu alıcı kaldı"**dır — ve bunun cevabını dışarıdan kimse tam olarak bilemez.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+[Piyasalar](/piyasalar) ekranındaki günün en çok artanları listesinde, endeksin geri kalanı yatayken tek başına %15-20 fırlamış bir isim görürsen, ilk ihtimal bir haber değil pozisyonlanmadır. [Hisse sayfasındaki](/sirketler) hacim satırı da ipucu verir: sıkışmalarda hacim ortalamanın birkaç katına çıkar — çünkü zorunlu alım gerçek bir alımdır.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
   "kaldirac": {
     title: "Kaldıraç Nedir ve Neden Uzak Durmalısın?",
     dek: "Ödünç parayla pozisyon taşımak. Getiriyi de kaybı da çarpar — ama asıl aldığı şey, ne zaman satacağına karar verme hakkındır.",
@@ -1147,6 +1213,77 @@ Tam raporda üç tablo bulunur ve üçü farklı soruya cevap verir:
   },
 
   /* ---------------------------------------------------------------------- */
+  "bilanco-gunu-nasil-okunur": {
+    title: "Bilanço Günü Nasıl Okunur?",
+    dek: "Rekor kâr açıklayan hissenin neden düştüğü — beklenti, sapma ve rehberlik üçlüsü.",
+    bodyMd: `Bir şirket tarihinin en yüksek kârını açıklar ve hisse %9 düşer. Bu, bilanço günlerinin en sık sorulan sorusudur ve cevabı tek cümlededir: **fiyat sayıya değil, sayının beklentiden sapmasına tepki verir.**
+
+[Bilanço yazısı](/rehber/bilanco) tabloların kendisini okumayı anlatıyor. Bu yazı açıklama gününü okumayı anlatıyor — ikisi farklı iş.
+
+::: tanim Konsensüs (Beklenti)
+Şirketi takip eden analistlerin tahminlerinin ortalaması. Hisse fiyatı, açıklamadan önce zaten bu beklentiyi içinde taşır. Yani ödediğin fiyat "şirket kâr edecek" bilgisini değil, **"şirket şu kadar kâr edecek" bilgisini** satın alır.
+:::
+
+## Üç Sayı, Üç Zaman
+
+Bir bilanço açıklaması aslında üç ayrı bilgi taşır ve üçü farklı zamanlara bakar:
+
+| | Neyi söyler | Zamanı |
+|---|---|---|
+| **Gelir** | Ne kadar sattı | Geçmiş çeyrek |
+| **Hisse başı kâr (EPS)** | Satıştan geriye ne kaldı | Geçmiş çeyrek |
+| **Rehberlik (guidance)** | Şirket önümüzdeki dönem için ne bekliyor | **Gelecek** |
+
+Fiyat tepkisinin büyük kısmını üçüncü satır belirler. Geçmiş çeyrek, açıklandığı anda artık bilinen bir şeydir; hisse ise geleceğin fiyatıdır. Rehberliği düşüren bir şirket, rekor bir çeyrek açıklamış olsa bile hissesini düşürür.
+
+::: ornek Rekor Kâr, Düşen Hisse
+Beklenti: hisse başı 2,40 dolar kâr, 8,1 milyar dolar gelir.
+Açıklanan: hisse başı **2,55 dolar**, gelir **8,4 milyar dolar** — ikisi de beklentinin üstünde, ikisi de şirket tarihinin rekoru.
+Rehberlik: gelecek çeyrek için 8,0-8,2 milyar dolar gelir. Piyasanın beklediği 8,7 milyardı.
+Sonuç: hisse düşer. Açıklanan çeyrek iyiydi ama fiyatın içinde zaten iyisi vardı; değişen şey **gelecek çeyreğin daha kötü olacağı bilgisiydi.**
+:::
+
+## Sapmanın Büyüklüğü Değil, Yönü Bile Yetmez
+
+"Beklentiyi aştı" cümlesi tek başına bir şey söylemez, çünkü sapmanın kendisi de beklenir. Şirketlerin çoğu düzenli olarak beklentiyi küçük farklarla aşar — bu bir başarı göstergesi değil, beklenti yönetiminin sonucudur: rehberlik ihtiyatlı verilir, aşmak kolaylaşır.
+
+Bu yüzden asıl bakılacak yer sapmanın **büyüklüğü** ve **kaynağıdır**:
+
+- Kâr beklentiyi aştı ama gelir aşmadıysa, fark maliyet kısıntısından geliyor olabilir. Maliyet kısmak sürdürülebilir bir büyüme kaynağı değildir.
+- Kâr, tek seferlik bir kalemden (varlık satışı, vergi düzeltmesi) geliyorsa operasyonel değildir.
+- Gelir aştı ama kâr marjı daraldıysa, şirket büyümeyi indirimle satın alıyor olabilir.
+
+## Düzeltilmiş mi, GAAP mi
+
+Şirketler iki kâr rakamı yayımlar: yasal standarda göre hesaplanan (**GAAP**) ve şirketin "olağandışı" saydığı kalemleri çıkardığı (**düzeltilmiş / non-GAAP**). Manşetlerde genellikle ikincisi geçer, çünkü daha yüksektir.
+
+::: dikkat Her Yıl Tekrarlayan "Tek Seferlik"
+Düzeltilmiş rakam yararlıdır: gerçekten olağandışı bir dava tazminatını çıkarmak makuldür. Sorun, aynı kalemin her çeyrek "tek seferlik" diye çıkarılmasıdır. Hisse bazlı ödeme (SBC) bunun klasik örneğidir — çalışana hisse vermek gerçek bir maliyettir ve her çeyrek tekrarlar.
+Pratik ölçü: iki rakam arasındaki fark birkaç çeyrektir aynı büyüklükteyse, o kalem "olağandışı" değildir.
+:::
+
+## Konferans Görüşmesi
+
+Sayılar açıklandıktan sonra yönetim analistlerle telefonda konuşur ve fiyatın en sert hareketi çoğu zaman **burada** olur. Sebebi şudur: tablodaki sayılar tek bir çeyreği anlatır, görüşmedeki cümleler yönü anlatır. "Talepte yumuşama görüyoruz" cümlesi hiçbir tabloda yazmaz ama tablodaki her sayıdan daha fazla fiyat oynatır.
+
+## Volatilite Neden Şişer
+
+Bilanço öncesinde opsiyon primleri şişer, açıklamadan sonra söner. [Opsiyon yazısındaki](/rehber/opsiyonlar) *volatility crush* budur: belirsizlik bitince belirsizliğin fiyatı da biter. Pratik sonucu, bilanço gecesinin hisse için de en oynak gece olmasıdır — [seans dışı](/rehber/borsa-nasil-isler) işlemlerde %10'luk hareketler olağandır ve o fiyatlar ince hacimde oluşur.
+
+::: ozet Özet
+Bilanço günü üç soruyla okunur: **Beklenti neydi? Sapma nereden geldi? Şirket gelecek için ne dedi?** Üçüncüsü ilk ikisinden daha önemlidir çünkü hisse geçmişin değil geleceğin fiyatıdır. "Rekor kâr" manşeti tek başına hiçbir şey söylemez — rekorun beklenip beklenmediğini söylemez.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Bu sitenin bilanço tarafı tam olarak bu üçlü üzerine kurulu:
+
+- [Bilanço takvimi](/bilancolar) hangi şirketin ne zaman açıklayacağını gösterir; saat kesin verilmiyorsa "~" ile ve pencere adıyla yazılır ("~23:00 · kapanış sonrası").
+- [Bilanço analizlerinde](/bilancolar/analizler) her kayıt beklenti-gerçekleşme farkını ve rehberliği ayrı ayrı taşır; gelir sütun grafiğindeki kesikli çerçeveli son sütun **öngörüdür**, gerçekleşmiş sayı değildir.
+- Analiz detayında "bilanço gününden bugüne" künyesi, açıklamadan sonra fiyatın ne yaptığını gösterir — sayının kendisi kadar öğreticidir.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
   "nakit-akisi": {
     title: "Nakit Akışı: Kârın Arkasını Okumak",
     dek: "Kâr bir görüştür, nakit bir olgudur — ve ikisinin arasındaki fark, tablolardaki en erken uyarı işaretidir.",
@@ -1402,6 +1539,68 @@ Bir hisseden kazancın iki bileşeni vardır:
 Hisse sayfasındaki **Anahtar Metrikler** kartında temettü verimi yer alır. Verimi yorumlarken şirketin sektörüne bakmak gerekir: bir kamu hizmeti şirketi için %4 normal, bir yazılım şirketi için aynı sayı sorulacak bir sorudur.`,
   },
 
+  "hisse-geri-alimi": {
+    title: "Hisse Geri Alımı (Buyback) Nedir?",
+    dek: "Şirketin kendi hissesini satın alması — pastayı büyütmeden dilimi büyütmek.",
+    bodyMd: `Bir şirketin kazandığı parayı hissedara döndürmesinin iki yolu vardır. Birincisi [temettü](/rehber/temettu): parayı doğrudan hesabına yatırır. İkincisi geri alım: parayı sana vermez, **kendi hissesini piyasadan satın alıp iptal eder.**
+
+İkincisi ilk bakışta tuhaf görünür — sana bir şey verilmiyor. Ama pay sayısı azaldığı için elindeki hissenin şirketteki oranı büyür. Pasta aynıdır, dilim büyür.
+
+::: tanim Hisse Geri Alımı (Buyback)
+Şirketin kendi hisselerini borsadan satın alması. Alınan hisseler genellikle iptal edilir ya da hazinede tutulur; her iki durumda da dolaşımdaki pay sayısı azalır. Hissedar bir ödeme almaz, sahip olduğu **oran** artar.
+:::
+
+## EPS Neden Yükselir
+
+Hisse başı kâr basit bir kesirdir: net kâr bölü pay sayısı. Geri alım paydayı küçültür — kâr hiç artmasa bile EPS yükselir.
+
+::: ornek Aynı Kâr, Yüksek EPS
+Net kâr: 1 milyar dolar. Pay sayısı: 500 milyon. EPS = **2,00 dolar**.
+Şirket 25 milyon hisse geri alır (pay sayısının %5'i). Yeni pay sayısı: 475 milyon.
+Kâr değişmedi, hâlâ 1 milyar dolar. Yeni EPS = 1.000 / 475 = **2,11 dolar**.
+Manşet: "hisse başı kâr %5,5 arttı". Şirketin işi bir gram büyümedi.
+:::
+
+Bu, geri alımın en çok istismar edilen yanıdır. Yönetici primleri sıklıkla EPS hedefine bağlıdır ve geri alım, işi büyütmeden o hedefi tutturmanın en kısa yoludur. [Bilanço okurken](/rehber/bilanco) bu yüzden EPS'in yanında **net kârın kendisine** ve **pay sayısının seyrine** bakmak gerekir: EPS artarken net kâr yatay ya da düşüyorsa büyüme yoktur, muhasebe vardır.
+
+## Temettüyle Farkı
+
+| | Temettü | Geri Alım |
+|---|---|---|
+| Hissedara etkisi | Nakit gelir | Oran artışı |
+| Vergi | Dağıtım anında | Sen satana kadar yok |
+| Esneklik | Kesmek kötü sinyal | Sessizce durdurulabilir |
+| Fiyat duyarlılığı | Yok | **Yüksek** |
+
+Son satır en önemlisidir. Temettü fiyattan bağımsızdır; geri alımda ise şirket bir alıcıdır ve **ne fiyattan aldığı belirleyicidir.** Ucuzken alınan geri alım hissedara değer katar, pahalıyken alınan değer yakar. Bu, şirketin sermaye dağıtımıyla ilgili en somut sınavıdır.
+
+::: dikkat Zirvede Alım
+Şirketler geri alımı en çok, kasaları en dolu olduğunda yapar: yani iş iyi giderken, yani hisse pahalıyken. Kriz geldiğinde nakde ihtiyaç duyulur ve geri alım tam da hisse ucuzken durdurulur.
+Sonuç, bireysel yatırımcının klasik hatasının kurumsal versiyonudur: yüksekten al, düşükte alma. 2020 ve 2022'de birçok büyük şirket bu sırayı birebir uyguladı. Geri alım duyurusunu iyi haber saymadan önce **hangi fiyattan alındığına** bak.
+:::
+
+## Duyuru Alım Değildir
+
+Şirketler "10 milyar dolarlık geri alım programı" açıklar. Bu bir **yetkidir**, taahhüt değil: yönetim kurulu izin verir, şirket dilerse kullanır, dilerse yıllar boyunca kısmen kullanır. Duyurulan tutarla gerçekleşen tutar sık sık ayrışır.
+
+Gerçekleşeni görmek için nakit akış tablosuna bakılır — [nakit akışı yazısındaki](/rehber/nakit-akisi) finansman faaliyetleri bölümünde "hisse geri alımı" satırı, o çeyrekte fiilen harcanan parayı gösterir. Duyuru manşettedir, gerçekleşme tablodadır.
+
+## Seyreltmeyi Kapatan Geri Alım
+
+Teknoloji şirketlerinde sık görülen bir durum: şirket çalışanlarına hisse verir (SBC), bu pay sayısını artırır, sonra geri alımla o artışı kapatır. Dışarıdan "hissedara değer dönüyor" gibi görünür ama fiilen olan şey, çalışan maaşının nakit yerine hisseyle ödenip faturanın geri alımla kapatılmasıdır.
+
+Ayırt etmenin yolu basittir: **pay sayısı gerçekten azalıyor mu?** Milyarlarca dolarlık geri alıma rağmen pay sayısı yatay duruyorsa, o geri alım hissedara değer döndürmüyor, seyreltmeyi gizliyordur.
+
+::: ozet Özet
+Geri alım nötr bir araçtır; iyi ya da kötü olmasını fiyat belirler. Üç soruyla okunur: **Pay sayısı gerçekten azaldı mı? Hangi değerlemeden alındı? Para nereden geldi — nakit akışından mı, borçtan mu?** Üçünün cevabı iyiyse geri alım temettüden bile verimli bir dağıtımdır. Kötüyse, EPS grafiğini güzelleştiren pahalı bir kozmetiktir.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+[Bilanço analizlerinde](/bilancolar/analizler) hisse başı kâr ile net kârın birlikte verilmesinin sebebi budur: ikisi ayrıştığında aradaki farkı pay sayısı açıklar. [Değerleme](/rehber/degerleme) ve [piyasa değeri](/rehber/piyasa-degeri) yazılarındaki F/K hesabı da geri alımdan doğrudan etkilenir — payda küçülünce oran, şirket hiç değişmeden düşer.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
   /* ==== 4 · Makro ve Merkez Bankası ======================================= */
 
   /* ---------------------------------------------------------------------- */
@@ -1471,6 +1670,75 @@ Nominal faiz %5, enflasyon %4 ise reel faiz %1'dir — para hâlâ ucuzdur. Nomi
 - Ana sayfanın yan kolonunda **2, 5 ve 10 yıllık ABD tahvil faizleri**, bir önceki güne göre değişimiyle.
 - Alt şeritte üç vade "ABD Tahvili" başlığı altında birlikte döner.
 - [Piyasalar](/piyasalar) ekranında tam seri ve getiri eğrisi.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  "getiri-egrisi": {
+    title: "Getiri Eğrisi ve Tersine Dönmesi",
+    dek: "Kısa vadeli faizin uzun vadeliyi geçmesi — piyasanın bilinen en eski resesyon sinyali ve neden hemen çalışmadığı.",
+    bodyMd: `Normal bir dünyada parayı uzun süre bağlamak daha çok kazandırır: 10 yıllık tahvil, 2 yıllıktan yüksek faiz öder. Bunun sebebi basittir — on yıl boyunca ne olacağını kimse bilmez ve o belirsizliğin bir bedeli vardır.
+
+Bazen bu ters döner. Kısa vadeli faiz uzun vadeliyi geçer. Bu, tahvil piyasasının söylediği en dikkat çekici cümledir ve son elli yılda hemen her ABD resesyonundan önce görülmüştür.
+
+::: tanim Getiri Eğrisi
+Aynı borçlunun (burada ABD Hazinesi) farklı vadelerdeki tahvillerinin faizlerini vadeye göre çizen eğri. Normalde yukarı eğimlidir: vade uzadıkça faiz artar. **Tersine dönme (inversion)**, kısa vadeli faizin uzun vadeliyi geçmesidir.
+:::
+
+## Neden Ters Döner
+
+İki uç iki farklı şeyi fiyatlar. [Faiz ve tahvil yazısı](/rehber/faiz-tahvil) mekaniği anlatıyor; burada önemli olan şu ayrım:
+
+- **Kısa uç (2 yıl)** Fed'in bugünkü ve yakın gelecekteki politika faizini yansıtır. Enflasyonla mücadele için faiz yükseltiliyorsa kısa uç yükselir.
+- **Uzun uç (10 yıl)** ekonominin uzun vadeli büyüme ve enflasyon beklentisini yansıtır. Piyasa yavaşlama bekliyorsa uzun uç düşer.
+
+Tersine dönme bu ikisinin aynı anda olmasıdır: **Fed bugün sıkıyor, piyasa yarın yavaşlama bekliyor.** Eğri "bu sıkılık uzun süre taşınamaz, sonunda faiz indirilecek" diyor demektir.
+
+::: ornek 2s10s Nasıl Okunur
+2 yıllık: %4,90 · 10 yıllık: %4,25
+Fark (spread): 4,25 − 4,90 = **−0,65 puan**. Eğri terstir.
+Piyasa aynı anda iki şey söylüyor: bugünkü faiz yüksek VE önümüzdeki on yılın ortalaması bundan düşük olacak. İkisi ancak bir noktada indirim varsa bir arada doğru olabilir; indirim de genellikle ekonomi yavaşladığında gelir.
+:::
+
+Bu farka piyasa dilinde **2s10s** denir ve bu yazının glifi de odur.
+
+## Sinyalin Gerçek Sicili
+
+Tersine dönmenin ünü boşuna değildir: 1970'lerden bu yana ABD'deki her resesyondan önce eğri ters dönmüştür. Ama iki uyarıyla:
+
+**Gecikme uzundur ve değişkendir.** Tersine dönme ile resesyonun başlangıcı arasında geçen süre tarihsel olarak 6 ile 24 ay arasında değişmiştir. "Eğri ters döndü, satalım" kararı bir yıldan uzun süre yanlış görünebilir — ve o süre boyunca borsa yükselmeye devam edebilir.
+
+**Düzelme de bir sinyaldir.** Eğrinin terslikten normale dönmesi (*re-steepening*) çoğu zaman resesyonun hemen öncesine denk gelir, çünkü düzelme genelde kısa ucun düşmesiyle, yani Fed'in indirime başlamasıyla olur. Faiz indirimi bir kutlama sebebi gibi görünür ama sebebini de hatırlamak gerekir.
+
+::: dikkat Tek Göstergeyle Karar
+Getiri eğrisi bir tahmin makinesi değil, bir beklenti fotoğrafıdır: piyasanın bugün ne düşündüğünü gösterir, ne olacağını değil. Örneklem de küçüktür — elli yılda bir avuç resesyon üzerinden konuşuluyor ve her seferinde "bu sefer farklı" iddiası hem sık hem bazen doğru çıkıyor.
+Pratik kullanım: eğriyi bir alarm değil, bir **bağlam** olarak oku. Ters bir eğri, riskin fiyatının değiştiği bir dönemde olduğunu söyler; ne zaman ne alacağını söylemez.
+:::
+
+## Hangi Fark Bakılır
+
+Tek bir "getiri eğrisi" yoktur; hangi iki vadenin karşılaştırıldığına göre farklı sinyaller çıkar:
+
+| Fark | Ne yansıtır | Özelliği |
+|---|---|---|
+| **2s10s** | Politika beklentisi ile büyüme beklentisi | En yaygın anılan |
+| **3ay-10y** | Bugünkü para maliyeti ile büyüme | Akademik çalışmalarda daha güçlü |
+| **5s30s** | Uzun vadeli enflasyon beklentisi | Politikadan az etkilenir |
+
+İkisinin aynı anda ters olması sinyali güçlendirir; yalnızca birinin ters olması çoğu zaman teknik bir sebepten kaynaklanabilir.
+
+## Borsaya Etkisi
+
+Ters eğri bankalar için doğrudan bir sorundur: banka kısa vadeden borçlanıp uzun vadeye kredi verir, yani farktan yaşar. Fark negatife dönünce iş modeli sıkışır.
+
+Geri kalan sektörler için etki dolaylıdır ve [sektör rotasyonu](/rehber/sektor-rotasyonu) yazısının konusudur: yavaşlama beklentisi parayı döngüsel sektörlerden savunma sektörlerine kaydırır.
+
+::: ozet Özet
+Getiri eğrisinin tersine dönmesi, tahvil piyasasının "bugünkü sıkılık sürdürülemez" demesidir. Sicili güçlüdür ama zamanlaması kötüdür: sinyal ile olay arasında bir ile iki yıl geçebilir. Bu yüzden bir alım-satım tetikleyicisi değil, riskin hangi rejimde fiyatlandığını gösteren bir arka plandır.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+[Piyasalar](/piyasalar) ekranındaki tahvil faizleri şeridi 2, 5, 10 ve 30 yıllık getirileri yan yana verir — eğrinin şeklini oradan doğrudan okuyabilirsin: kısa vadeli oran uzun vadeliden yüksekse eğri terstir. Veriler FRED'den gelir ve yayın gecikmesi künyesinde yazılıdır. [Makro](/makro) ekranında da faiz serilerinin zaman içindeki seyri durur.`,
   },
 
   /* ---------------------------------------------------------------------- */
@@ -1734,5 +2002,77 @@ Yurt dışı hisse almak iki karardır: hangi şirket ve hangi para birimi. İki
 ## Bu Sitede Nerede Görürsün
 
 Bütün fiyatlar ve yüzdeler dolar bazındadır; ayrıca bir kur dönüşümü yapılmaz. **Dünya Piyasaları** kartının altındaki not, bu kartın yerel endeksleri değil dolar cinsinden ülke fonlarını gösterdiğini hatırlatmak için orada durur.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  "sektor-rotasyonu": {
+    title: "Sektör Rotasyonu Nedir?",
+    dek: "Paranın borsadan çıkmadan sektör değiştirmesi — ve bunun ekonomik döngüyle ilişkisi.",
+    bodyMd: `Bir gün endeks yatay kapanır ama içeride büyük bir hareket olmuştur: bankalar %3 yükselirken teknoloji %3 düşmüştür. Piyasadan para çıkmamıştır, **yer değiştirmiştir.** Buna sektör rotasyonu denir ve makro yazılarının portföye bağlandığı yer burasıdır.
+
+::: tanim Sektör Rotasyonu
+Yatırımcıların ekonomik döngüye ya da faiz beklentisine göre ağırlıklarını bir sektörden diğerine kaydırması. Endeks seviyesinde az şey olur; endeksin içinde çok şey olur.
+:::
+
+## İki Aile: Döngüsel ve Savunmacı
+
+Rotasyonun tamamı tek bir ayrım üzerine kuruludur:
+
+**Döngüsel sektörler** ekonomiyle birlikte nefes alır. İnsanlar iyi hissettiğinde araba alır, tatile çıkar, ev yeniler. Bankalar da kredi büyümesinden ve faiz farkından kazanır. Bu sektörler büyüme dönemlerinde endeksten hızlı yükselir, yavaşlamada hızlı düşer: **sanayi, tüketici isteğe bağlı, finans, enerji, malzeme.**
+
+**Savunmacı sektörler** döngüden az etkilenir. Resesyonda da elektrik faturası ödenir, ilaç alınır, deterjan tükenir. Yavaşlamada endeksten iyi, coşkuda endeksten kötü performans gösterirler: **temel tüketim, sağlık, kamu hizmetleri (utilities), telekom.**
+
+::: ornek Aynı Gün, İki Yön
+Fed toplantısında beklenenden şahin bir mesaj çıkar: faizler daha uzun süre yüksek kalacak.
+Aynı seansta:
+Kamu hizmetleri **−%2,4** — yüksek borçlu, temettü ödeyen bu şirketler tahvil faiziyle rekabet eder; faiz yükselince cazibesi düşer.
+Bankalar **+%1,8** — yüksek faiz, kredi ile mevduat arasındaki farkı genişletir.
+Teknoloji **−%1,9** — değerinin büyük kısmı uzak gelecekteki kârlarda; yüksek faiz o kârların bugünkü değerini düşürür.
+Endeks: **−%0,3**. Manşete bakan "sakin bir gün" der; içeride üç ayrı hikâye vardır.
+:::
+
+## Faiz Neden Bu Kadar Belirleyici
+
+Yukarıdaki örneğin son satırı en önemlisidir. Bir şirketin değeri, gelecekte üreteceği nakdin bugüne indirgenmiş hâlidir. İndirgeme oranı faizdir.
+
+Kârının büyük kısmı **yakın gelecekte** olan bir şirket (olgun bir banka, bir market zinciri) faiz değişiminden az etkilenir. Kârının büyük kısmı **uzak gelecekte** beklenen bir şirket (henüz kâr etmeyen bir büyüme hissesi) çok etkilenir — çünkü uzak nakit, yüksek faizle indirgendiğinde çok daha az eder.
+
+Bu yüzden faiz beklentisi değiştiğinde rotasyon neredeyse mekanik olur. [Getiri eğrisi](/rehber/getiri-egrisi) ve [şahin/güvercin](/rehber/sahin-guvercin) yazılarındaki her sinyalin borsadaki karşılığı önce burada görülür.
+
+## Döngünün Dört Evresi
+
+Klasik model şudur — bir kural değil, bir çerçeve:
+
+| Evre | Ekonomi | Öne çıkan |
+|---|---|---|
+| **Erken toparlanma** | Dipten dönüş, faiz düşük | Finans, tüketici isteğe bağlı |
+| **Genişleme** | Büyüme hızlı, faiz artıyor | Teknoloji, sanayi |
+| **Zirve / yavaşlama** | Enflasyon yüksek, faiz tepede | Enerji, malzeme |
+| **Daralma** | Yavaşlama, faiz inmeye başlar | Temel tüketim, sağlık, kamu hizmetleri |
+
+::: dikkat Çerçeveyi Kehanete Çevirmek
+Bu tablo tarihsel eğilimleri özetler, gelecek için bir program vermez. Üç sebeple:
+**Evreyi ancak sonradan biliriz.** Hangi evrede olduğumuz, geçtikten aylar sonra netleşen bir şeydir.
+**Piyasa önden fiyatlar.** Rotasyon ekonomik veri açıklandığında değil, beklenti değiştiğinde olur — yani veriyi gördüğünde hareket çoktan olmuştur.
+**Sektör etiketleri yanıltır.** Bugün "teknoloji" içinde hem kâr etmeyen bir yazılım şirketi hem dünyanın en nakit zengin işletmeleri var; ikisi aynı faiz haberine ters yönde tepki verebilir.
+:::
+
+## Rotasyonu Görmek
+
+Rotasyonun en pratik göstergesi **piyasa genişliğidir**: endeks yükselirken kaç hisse artıda? Endeks %1 yükselirken bileşenlerin yalnızca %35'i artıdaysa, yükseliş birkaç büyük isimden geliyordur ve içeride para başka yöne akıyordur.
+
+İkinci gösterge sektör performanslarının **birlikte hareket etmemesidir**. Panikte her şey birlikte düşer (korelasyon 1'e gider); sağlıklı bir rotasyonda ise bazıları yükselirken bazıları düşer.
+
+::: ozet Özet
+Sektör rotasyonu, aynı miktardaki paranın borsa içinde yer değiştirmesidir. Endeks manşetinin gizlediği şeyi gösterir. Bir zamanlama aracı değildir — çerçeveyi bilmek "şimdi bankaya geç" demeye yetmez. Asıl faydası [çeşitlendirme](/rehber/cesitlendirme) tarafındadır: portföyün hangi evreye bahis oynadığını fark etmeni sağlar. Çoğu portföy, sahibinin farkında olmadığı bir makro bahis taşır.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Bu ekranların üçü doğrudan bu konuyu okur:
+
+- [Piyasalar](/piyasalar) ekranındaki **piyasa genişliği** çubuğu, endeksin içinde kaç hissenin artıda olduğunu söyler — rotasyonun en hızlı okunan işareti.
+- [Şirketler](/sirketler) dizinindeki sektör filtreleri, aynı günün hareketini sektör sektör karşılaştırmanı sağlar.
+- [Makro](/makro) ekranındaki faiz ve enflasyon serileri, rotasyonun sebep tarafını verir; sonucu piyasalarda görürsün.`,
   },
 };

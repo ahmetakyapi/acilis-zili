@@ -150,6 +150,16 @@ export const GUIDE_META = [
     related: ["kaldirac", "ayi-boga"],
   },
   {
+    /* Long/short'un hemen ardından: sıkışmayı anlatmak için açığa satışın
+       mekaniğinin (ödünç hisse, geri alma zorunluluğu) taze olması gerekiyor.
+       Kaldıraçtan ÖNCE, çünkü sıkışmanın neden ölümcül olduğunu açıklayan
+       şey marj çağrısı değil, kaybın sınırsızlığı. */
+    slug: "kisa-sikisma",
+    topic: "strateji",
+    glyph: "⇈",
+    related: ["long-short", "yatirimci-psikolojisi", "volatilite"],
+  },
+  {
     slug: "kaldirac",
     topic: "strateji",
     glyph: "4×",
@@ -186,6 +196,17 @@ export const GUIDE_META = [
     related: ["nakit-akisi", "degerleme", "temettu"],
   },
   {
+    /* Bilançodan hemen sonra: o yazı tabloları okumayı öğretiyor, bu yazı
+       AÇIKLAMA GÜNÜNÜ okumayı — beklenti, sapma ve rehberlik üçlüsünü.
+       İkisi ayrı çünkü sayıyı anlamak ile fiyatın neden ters yöne gittiğini
+       anlamak farklı iki iş. */
+    slug: "bilanco-gunu-nasil-okunur",
+    topic: "sirket",
+    glyph: "4Ç",
+    glyphEn: "Q4",
+    related: ["bilanco", "degerleme", "volatilite"],
+  },
+  {
     slug: "nakit-akisi",
     topic: "sirket",
     glyph: "FCF",
@@ -209,7 +230,16 @@ export const GUIDE_META = [
     slug: "temettu",
     topic: "sirket",
     glyph: "%",
-    related: ["bilanco", "nakit-akisi"],
+    related: ["bilanco", "nakit-akisi", "hisse-geri-alimi"],
+  },
+  {
+    /* Temettünün hemen ardından: ikisi de "şirket kazandığı parayı hissedara
+       nasıl döndürür" sorusunun cevabı ve yazı sürekli temettüyle
+       karşılaştırma yaparak ilerliyor. */
+    slug: "hisse-geri-alimi",
+    topic: "sirket",
+    glyph: "↺",
+    related: ["temettu", "bilanco", "degerleme", "nakit-akisi"],
   },
 
   /* ---- 4 · Makro ve Merkez Bankası ------------------------------------- */
@@ -218,6 +248,15 @@ export const GUIDE_META = [
     topic: "makro",
     glyph: "10Y",
     related: ["sahin-guvercin", "enflasyon"],
+  },
+  {
+    /* Faiz-tahvilden hemen sonra: eğrinin ne olduğu orada anlatılıyor, burada
+       TERSİNE DÖNMESİ işleniyor. Ayrı yazı çünkü sinyalin kendisi kadar
+       "sinyal ile olay arasındaki gecikme" de anlatılması gereken bir şey. */
+    slug: "getiri-egrisi",
+    topic: "makro",
+    glyph: "2s10s",
+    related: ["faiz-tahvil", "sahin-guvercin", "ayi-boga"],
   },
   {
     slug: "enflasyon",
@@ -243,6 +282,15 @@ export const GUIDE_META = [
     topic: "makro",
     glyph: "₺/$",
     related: ["etf", "faiz-tahvil"],
+  },
+  {
+    /* Makro bloğunun SONU: faiz, enflasyon, istihdam ve eğri okunduktan
+       sonra "peki bu bilgi hangi sektöre para akıtır" sorusunu cevaplıyor.
+       Müfredatın da doğal kapanışı — makroyu portföye bağlayan yazı. */
+    slug: "sektor-rotasyonu",
+    topic: "makro",
+    glyph: "◷",
+    related: ["faiz-tahvil", "getiri-egrisi", "endeks", "cesitlendirme"],
   },
 ] as const satisfies readonly GuideMetaEntry[];
 
