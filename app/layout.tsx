@@ -43,12 +43,17 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   formatDetection: { telephone: false },
+  /* Burada BAŞLIK VE AÇIKLAMA YOK — bilerek.
+     İkisi sabit yazılıyken her sayfanın paylaşım künyesi aynı çıkıyordu:
+     WhatsApp'a bir bilanço analizi linki atınca da "Zil çalmadan önce
+     bugünü gör" görünüyordu, çünkü alt sayfalar yalnızca `title` ve
+     `description` veriyor, `openGraph.*` vermiyor ve Next üst katmandakini
+     miras alıyor. Boş bırakılınca Next og:title'ı sayfanın kendi
+     başlığından, og:description'ı kendi açıklamasından türetiyor. */
   openGraph: {
     type: "website",
     siteName: "Açılış Zili",
-    title: "Açılış Zili — Zil çalmadan önce bugünü gör",
-    description:
-      "Ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin — saatleriyle birlikte.",
+    locale: "tr_TR",
   },
   twitter: { card: "summary_large_image" },
   /* Uzun süre `index: false` idi ve bu bir geliştirme kalıntısıydı: site

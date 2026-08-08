@@ -14,6 +14,17 @@ import {
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
+import type { Metadata } from "next";
+
+/* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
+   varsayılanı miras alıyor ve her bölüm linki aynı metinle
+   paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
+export const metadata: Metadata = {
+  title: "Rehber",
+  description:
+    "Borsayı anlatan yazılar — kavramdan stratejiye, kolaydan zora.",
+};
+
 /**
  * Rehber — müfredatın vitrini.
  *

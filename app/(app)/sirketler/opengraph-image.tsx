@@ -1,0 +1,18 @@
+import { ImageResponse } from "next/og";
+import { OG_CONTENT_TYPE, OG_SIZE, ogFonts, sectionOg } from "@/lib/og";
+
+export const size = OG_SIZE;
+export const contentType = OG_CONTENT_TYPE;
+export const alt = "Açılış Zili — Şirketler";
+
+export default async function SectionOgImage() {
+  return new ImageResponse(
+    sectionOg({
+      eyebrow: "Dizin",
+      title: "Şirketler",
+      dek: "ABD borsalarında işlem gören şirketler — sektör, fiyat ve piyasa değeriyle.",
+      chips: ["Sektörler", "Piyasa Değeri", "Haftalık Değişim"],
+    }),
+    { ...size, fonts: await ogFonts() },
+  );
+}

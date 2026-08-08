@@ -19,6 +19,17 @@ import { getChartBars } from "@/lib/providers";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong, formatEtDateShort } from "@/lib/utils";
 
+import type { Metadata } from "next";
+
+/* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
+   varsayılanı miras alıyor ve her bölüm linki aynı metinle
+   paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
+export const metadata: Metadata = {
+  title: "Mercek",
+  description:
+    "Piyasada yaşananların uzun anlatımı — olayın arkasındaki mekanizma.",
+};
+
 /**
  * Mercek — arşivin vitrini.
  *

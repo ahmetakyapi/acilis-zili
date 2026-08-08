@@ -14,6 +14,17 @@ import { timePair, zoneTag } from "@/lib/session-clock";
 import { cn, formatEtDateLong, formatPrice } from "@/lib/utils";
 import type { EconomicEventRow } from "@/lib/schema";
 
+import type { Metadata } from "next";
+
+/* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
+   varsayılanı miras alıyor ve her bölüm linki aynı metinle
+   paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
+export const metadata: Metadata = {
+  title: "Ekonomik Takvim",
+  description:
+    "ABD makro veri açıklamaları ve Fed toplantıları — Türkiye saatiyle.",
+};
+
 const VIEWS = ["day", "week", "month"] as const;
 type View = (typeof VIEWS)[number];
 

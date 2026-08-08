@@ -36,6 +36,17 @@ import {
   formatPrice,
 } from "@/lib/utils";
 
+import type { Metadata } from "next";
+
+/* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
+   varsayılanı miras alıyor ve her bölüm linki aynı metinle
+   paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
+export const metadata: Metadata = {
+  title: "Piyasalar",
+  description:
+    "Endeksler, tahvil faizleri ve gün içi hareket — ABD piyasasının nabzı.",
+};
+
 /**
  * Piyasalar — nabız ekranı.
  *

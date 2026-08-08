@@ -30,6 +30,17 @@ import {
   formatVolume,
 } from "@/lib/utils";
 
+import type { Metadata } from "next";
+
+/* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
+   varsayılanı miras alıyor ve her bölüm linki aynı metinle
+   paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
+export const metadata: Metadata = {
+  title: "Şirketler",
+  description:
+    "ABD borsalarında işlem gören şirketler — sektör, fiyat ve piyasa değeriyle.",
+};
+
 /**
  * Şirketler — sektör kategorileri + kolon başlığından sıralama.
  * Sıralama URL'de yaşar (?sirala=cap&yon=desc): sunucuda çözülür, JS gerekmez;

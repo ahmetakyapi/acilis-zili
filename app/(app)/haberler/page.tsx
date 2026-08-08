@@ -5,6 +5,17 @@ import { getGenericImageUrls, getLatestNews, getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { cn, headlineMentions, timeAgo } from "@/lib/utils";
 
+import type { Metadata } from "next";
+
+/* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
+   varsayılanı miras alıyor ve her bölüm linki aynı metinle
+   paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
+export const metadata: Metadata = {
+  title: "Haberler",
+  description:
+    "ABD piyasalarından haberler — Türkçe künyeleriyle.",
+};
+
 export default async function NewsPage(props: PageProps<"/haberler">) {
   const search = await props.searchParams;
   const symbolFilter =

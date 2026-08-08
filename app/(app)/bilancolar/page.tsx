@@ -14,6 +14,17 @@ import {
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n } from "@/lib/i18n";
 
+import type { Metadata } from "next";
+
+/* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
+   varsayılanı miras alıyor ve her bölüm linki aynı metinle
+   paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
+export const metadata: Metadata = {
+  title: "Bilançolar",
+  description:
+    "Şirketlerin finansal sonuç tarihleri ve okunmuş çeyrek analizleri.",
+};
+
 /**
  * Bilançolar · Takvim sekmesi.
  *

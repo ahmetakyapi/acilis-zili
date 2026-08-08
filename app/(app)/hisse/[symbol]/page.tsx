@@ -45,6 +45,7 @@ import {
   getRecommendations,
 } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
+import type { Metadata } from "next";
 import { describeSymbol } from "@/db/seed/descriptions";
 import {
   cn,
@@ -92,6 +93,32 @@ async function allowStockRender(symbol: string): Promise<boolean> {
   if (await isKnownSymbol(symbol)) return true;
   return rateLimit(await requestKey("stock-unknown"), UNKNOWN_LIMIT, WINDOW_MS)
     .allowed;
+}
+
+/**
+ * Paylaşım künyesi.
+ *
+ * Sayfa kendi başlığını vermediğinde Next kökteki varsayılanı miras alıyor
+ * ve her hisse linki "Açılış Zili — ABD Piyasa Takibi" diye paylaşılıyordu.
+ * Fiyat BURAYA yazılmıyor: künye önbelleğe giriyor ve saatler sonra bayat
+ * bir fiyatı sanki güncelmiş gibi gösterirdi (bkz. CLAUDE.md → veri
+ * dürüstlüğü). Fiyat yalnızca her istekte yeniden çizilen OG kartında.
+ */
+export async function generateMetadata(
+  props: PageProps<"/hisse/[symbol]">,
+): Promise<Metadata> {
+  const { symbol: raw } = await props.params;
+  const symbol = raw.toUpperCase();
+  const { locale } = await getI18n();
+  const meta = await getSymbolNames([symbol]);
+  const info = meta[symbol];
+  const sector = industryLabel(info?.industry, locale);
+  return {
+    title: info?.name ? `${info.name} (${symbol})` : symbol,
+    description: sector
+      ? `${info?.name ?? symbol} — ${sector}. Fiyat, grafik, bilanço geçmişi ve haberler.`
+      : `${symbol} hissesi — fiyat, grafik, bilanço geçmişi ve haberler.`,
+  };
 }
 
 export default async function StockPage(

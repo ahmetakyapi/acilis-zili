@@ -6,6 +6,17 @@ import { getI18n } from "@/lib/i18n";
 import { formatEtDateLong, formatPrice } from "@/lib/utils";
 import type { MacroObservation } from "@/lib/providers/types";
 
+import type { Metadata } from "next";
+
+/* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
+   varsayılanı miras alıyor ve her bölüm linki aynı metinle
+   paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
+export const metadata: Metadata = {
+  title: "Makro",
+  description:
+    "Enflasyon, istihdam ve faiz — ABD ekonomisinin ana göstergeleri.",
+};
+
 /**
  * Makro göstergeler — her seri bir gösterge kartı.
  * Değer büyük ve mono; ok yalnızca yönü söyler (düşüş kırmızı, yükseliş
