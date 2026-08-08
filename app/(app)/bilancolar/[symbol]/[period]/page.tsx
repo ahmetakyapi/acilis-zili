@@ -323,7 +323,13 @@ export default async function AnalysisDetailPage(
           genişliğini gerçekten kullanıyor. */}
       <header className="flex flex-col gap-4 rounded-[16px] border border-line bg-surface-solid p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-          <div className="flex min-w-0 items-start gap-3.5 sm:gap-4">
+          {/* Sol kolon: kimlik + künye çipleri.
+              Çipler bir süre KENDİ BANDINDAYDI ve solda iki çip, sağında bin
+              piksel boşluk bırakıyordu; kart üç gevşek şeride bölünüyordu.
+              Çipler bu raporun künyesi — şirket adının altında, ait oldukları
+              yerde. Kart artık iki bant: solda kimlik + künye, sağda "şu an". */}
+          <div className="flex min-w-0 flex-1 flex-col gap-3.5">
+            <div className="flex min-w-0 items-start gap-3.5 sm:gap-4">
               {symbolMeta?.logoUrl ? (
                 <Image
                   src={symbolMeta.logoUrl}
@@ -353,6 +359,50 @@ export default async function AnalysisDetailPage(
                 )}
               </div>
             </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+
+              {/* Bu künye bir süre dolu siyah bir kutuydu. Sayfadaki en koyu
+                  yüzey oydu ve gözü ilk oraya çekiyordu — oysa taşıdığı bilgi
+                  bir tarih, sayfanın en önemli şeyi değil. Komşusuyla aynı
+                  aileye alındı: ikisi de kenarlıklı çip, biri nötr (olmuş
+                  olan), öteki accent (olacak olan). */}
+              <span className="inline-flex min-h-7 items-center gap-1.5 rounded-md border border-line bg-surface-solid px-2.5 text-[10.5px] font-bold text-body">
+                <CalendarBlank weight="duotone" size={12} className="text-muted" />
+                {t.analysis.earningsOf.replace("{period}", row.periodLabel)} ·{" "}
+                {formatEtDateLong(row.reportDate, locale)}
+              </span>
+              {row.nextPeriodLabel && (
+                <span className="inline-flex min-h-7 items-center rounded-md border border-primary-faint bg-primary-wash px-2.5 text-[10.5px] font-bold text-primary">
+                  {t.analysis.nextEarnings}: {row.nextPeriodLabel}
+                  {row.nextReportEstimate ? ` · ${row.nextReportEstimate}` : ""}
+                </span>
+              )}
+              {langNote && (
+                <span className="inline-flex min-h-7 items-center rounded-md bg-surface-elevated px-2.5 text-[10.5px] font-semibold text-muted">
+                  {langNote}
+                </span>
+              )}
+
+              {session?.user && (
+                <form action={toggleSymbolFavorite} className="sm:ml-auto">
+                  <input type="hidden" name="symbol" value={symbol} />
+                  <button
+                    type="submit"
+                    className={cn(
+                      "inline-flex min-h-7 items-center gap-1.5 rounded-md border px-2.5 text-[10.5px] font-bold transition-colors",
+                      watched
+                        ? "border-primary-faint bg-primary-wash text-primary"
+                        : "border-line bg-surface-solid text-body hover:border-line-strong hover:text-strong",
+                    )}
+                  >
+                    <Star weight={watched ? "fill" : "duotone"} size={12} />
+                    {watched ? t.stock.removeFromWatchlist : t.stock.addToWatchlist}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
 
           {/* ---- Şu an ----
               Kimlik bandının sağ yarısı BOŞTU: en dıştaki sarmalayıcı
@@ -409,51 +459,6 @@ export default async function AnalysisDetailPage(
           )}
         </div>
 
-        {/* Künye çipleri ve takip düğmesi AYNI satırda: düğme kendi
-            satırında dururken yetim kalıyordu. `sm:ml-auto` onu satırın
-            sağ ucuna yaslıyor. */}
-        <div className="flex flex-wrap items-center gap-1.5">
-              {/* Bu künye bir süre dolu siyah bir kutuydu. Sayfadaki en koyu
-                  yüzey oydu ve gözü ilk oraya çekiyordu — oysa taşıdığı bilgi
-                  bir tarih, sayfanın en önemli şeyi değil. Komşusuyla aynı
-                  aileye alındı: ikisi de kenarlıklı çip, biri nötr (olmuş
-                  olan), öteki accent (olacak olan). */}
-              <span className="inline-flex min-h-7 items-center gap-1.5 rounded-md border border-line bg-surface-solid px-2.5 text-[10.5px] font-bold text-body">
-                <CalendarBlank weight="duotone" size={12} className="text-muted" />
-                {t.analysis.earningsOf.replace("{period}", row.periodLabel)} ·{" "}
-                {formatEtDateLong(row.reportDate, locale)}
-              </span>
-              {row.nextPeriodLabel && (
-                <span className="inline-flex min-h-7 items-center rounded-md border border-primary-faint bg-primary-wash px-2.5 text-[10.5px] font-bold text-primary">
-                  {t.analysis.nextEarnings}: {row.nextPeriodLabel}
-                  {row.nextReportEstimate ? ` · ${row.nextReportEstimate}` : ""}
-                </span>
-              )}
-              {langNote && (
-                <span className="inline-flex min-h-7 items-center rounded-md bg-surface-elevated px-2.5 text-[10.5px] font-semibold text-muted">
-                  {langNote}
-                </span>
-              )}
-
-              {session?.user && (
-                <form action={toggleSymbolFavorite} className="sm:ml-auto">
-                  <input type="hidden" name="symbol" value={symbol} />
-                  <button
-                    type="submit"
-                    className={cn(
-                      "inline-flex min-h-7 items-center gap-1.5 rounded-md border px-2.5 text-[10.5px] font-bold transition-colors",
-                      watched
-                        ? "border-primary-faint bg-primary-wash text-primary"
-                        : "border-line bg-surface-solid text-body hover:border-line-strong hover:text-strong",
-                    )}
-                  >
-                    <Star weight={watched ? "fill" : "duotone"} size={12} />
-                    {watched ? t.stock.removeFromWatchlist : t.stock.addToWatchlist}
-                  </button>
-                </form>
-              )}
-        </div>
-
         {/* ---- Ölçü şeridi ----
             Üç ölçü yan yana, aralarında dikey hairline: bilanço günü ne oldu
             → şirket ne büyüklükte → yıl nasıl geçti. "Şu an" buradan kimlik
@@ -464,7 +469,12 @@ export default async function AnalysisDetailPage(
         {row.price !== null && (
           <dl className="grid gap-x-5 gap-y-4 border-t border-line pt-4 sm:grid-cols-2 lg:grid-cols-3 lg:divide-x lg:divide-line">
             <div className="min-w-0 lg:pr-5">
-              <dt className="flex items-baseline justify-between gap-2">
+              {/* Tarih etiketin YANINDA, hücrenin öbür ucunda değil.
+                  `justify-between` onu geniş hücrede 250px öteye savuruyordu
+                  ve hangi etikete ait olduğu okunmuyordu; komşu iki hücrede
+                  böyle bir künye olmadığı için de şerit tek başına o hücrede
+                  sağa yaslı bir metin taşıyor gibi duruyordu. */}
+              <dt className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <span className={cn(PLATE_LABEL, "text-body")}>
                   {t.analysis.closePrice}
                 </span>

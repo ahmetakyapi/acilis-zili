@@ -529,7 +529,7 @@ function AddSymbolRow({
             setOpen(true);
             window.setTimeout(() => inputRef.current?.focus(), 20);
           }}
-          className="inline-flex min-h-[38px] items-center gap-2 rounded-(--radius-md) px-2 text-sm font-medium text-primary transition-colors hover:bg-primary-wash"
+          className="inline-flex min-h-11 items-center gap-2 rounded-(--radius-md) px-2 sm:min-h-[38px] text-sm font-medium text-primary transition-colors hover:bg-primary-wash"
         >
           <Plus weight="bold" size={15} />
           {labels.addSymbol}

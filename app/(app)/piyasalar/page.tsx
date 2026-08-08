@@ -532,7 +532,7 @@ function IndexToolbar({
               href={`/piyasalar?endeks=${entry.key}`}
               scroll={false}
               className={cn(
-                "flex min-h-[38px] items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors",
+                "flex min-h-11 items-center gap-2 rounded-full px-4 py-1.5 sm:min-h-[38px] text-sm font-semibold transition-colors",
                 activeTab
                   ? "bg-primary text-on-primary"
                   : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",

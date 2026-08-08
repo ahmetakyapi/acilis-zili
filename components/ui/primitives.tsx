@@ -548,7 +548,12 @@ export function FilterChip({
       scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "inline-flex min-h-8 items-center whitespace-nowrap rounded-full px-[11px] py-[5px] text-[11.5px] transition-colors",
+        /* Telefonda 44px, masaüstünde 32px: çipler 32px yüksekliğindeydi ve
+           dokunma eşiğinin altında kalıyordu — sektör süzgeci gibi yan yana
+           dizilen çiplerde yanlış çipe basmak kolaydı. İmleç hassas olduğu
+           için geniş ekranda ölçü değişmiyor, çip şeridi orada aynı
+           sıkılıkta kalıyor. */
+        "inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-[11px] py-[5px] text-[11.5px] transition-colors sm:min-h-8",
         active
           ? "bg-primary font-semibold text-on-primary"
           : "bg-surface-elevated text-body hover:text-strong",

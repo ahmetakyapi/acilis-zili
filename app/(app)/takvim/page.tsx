@@ -151,7 +151,7 @@ export default async function CalendarPage(
               href={`/takvim?g=${v}${impactFilter ? `&onem=${impactFilter}` : ""}`}
               scroll={false}
               className={cn(
-                "min-h-[36px] rounded-(--radius-sm) px-3 py-1.5 text-sm font-medium transition-colors",
+                "min-h-11 rounded-(--radius-sm) px-3 py-1.5 sm:min-h-[36px] text-sm font-medium transition-colors",
                 view === v
                   ? "bg-primary-wash text-primary"
                   : "text-muted hover:bg-surface-elevated hover:text-soft",
@@ -172,7 +172,7 @@ export default async function CalendarPage(
               }
               scroll={false}
               className={cn(
-                "flex min-h-[36px] items-center gap-1.5 rounded-(--radius-sm) px-2.5 py-1.5 text-xs transition-colors",
+                "flex min-h-11 items-center gap-1.5 rounded-(--radius-sm) px-2.5 py-1.5 sm:min-h-[36px] text-xs transition-colors",
                 impactFilter === level
                   ? "bg-primary-wash text-primary"
                   : "text-muted hover:bg-surface-elevated hover:text-soft",

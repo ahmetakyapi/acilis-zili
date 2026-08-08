@@ -686,7 +686,7 @@ export function PriceChart({
               aria-selected={range === r}
               onClick={() => setRange(r)}
               className={cn(
-                "numeral min-h-[36px] shrink-0 rounded-(--radius-sm) px-2.5 text-xs font-semibold transition-colors",
+                "numeral min-h-11 shrink-0 rounded-(--radius-sm) px-2.5 sm:min-h-[36px] text-xs font-semibold transition-colors",
                 range === r
                   ? "bg-primary text-on-primary"
                   : "text-muted hover:bg-primary-wash hover:text-primary",
@@ -703,7 +703,7 @@ export function PriceChart({
               type="button"
               onClick={() => setMode(m)}
               className={cn(
-                "min-h-[36px] rounded-(--radius-sm) px-2.5 text-xs font-medium transition-colors",
+                "min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-medium sm:min-h-[36px] transition-colors",
                 mode === m
                   ? "bg-primary-wash text-primary"
                   : "text-muted hover:bg-surface-elevated hover:text-soft",

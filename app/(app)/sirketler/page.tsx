@@ -62,7 +62,7 @@ function SectorChip({
       scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "inline-flex min-h-[34px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[12.5px] font-semibold transition-colors",
+        "inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 sm:min-h-[34px] text-[12.5px] font-semibold transition-colors",
         active
           ? "border-transparent bg-primary text-on-primary"
           : "border-line bg-surface text-body hover:border-line-strong hover:text-strong",
@@ -387,7 +387,11 @@ async function CompaniesTable({
                       <td className="px-3 py-3">
                         <Link
                           href={`/hisse/${company.symbol}`} prefetch={false}
-                          className="flex items-center gap-2.5"
+                          /* Telefonda 44px: satıra dokunmak bu sayfanın ana
+                             eylemi ama bağlantı yalnızca logo yüksekliği
+                             kadardı (34px) ve hücre dolgusunun bir kısmı
+                             tıklanabilir değildi. */
+                          className="flex min-h-11 items-center gap-2.5 sm:min-h-0"
                         >
                           {company.logoUrl ? (
                             <Image

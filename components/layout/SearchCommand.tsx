@@ -233,7 +233,7 @@ export function SearchCommand({
                         key={pick.symbol}
                         type="button"
                         onClick={() => go(pick.symbol)}
-                        className="flex min-h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-xs transition-colors hover:border-line-strong hover:bg-primary-tint"
+                        className="flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 sm:min-h-[34px] text-xs transition-colors hover:border-line-strong hover:bg-primary-tint"
                       >
                         <span className="font-bold text-strong">
                           {pick.symbol}

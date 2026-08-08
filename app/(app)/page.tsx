@@ -50,6 +50,7 @@ import {
   formatEtDateLong,
   formatEtDateShort,
   formatPercent,
+  formatPercentPlain,
   formatPrice,
   headlineMentions,
   timeAgo,
@@ -627,14 +628,22 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
               )}
             >
               <p className="plate text-[10px] tracking-[0.08em]">{value.label}</p>
+              {/* İşaret küçük ve sessiz kalıyor (birim künyesi gibi) ama YERİ
+                  dile bağlı: Türkçede sayıdan önce, İngilizcede sonra. Sabit
+                  "sonra" yazıldığında panel Türkçede "4,25 %" basıyordu. */}
               <p className="tote mt-1 text-lg">
-                {value.latest !== null ? (
+                {value.latest === null ? (
+                  "—"
+                ) : locale === "tr" ? (
+                  <>
+                    <span className="mr-0.5 text-xs text-muted">%</span>
+                    {formatPrice(value.latest, locale)}
+                  </>
+                ) : (
                   <>
                     {formatPrice(value.latest, locale)}
                     <span className="ml-0.5 text-xs text-muted">%</span>
                   </>
-                ) : (
-                  "—"
                 )}
               </p>
               <p className="numeral mt-0.5 text-[11px] text-muted">
@@ -1171,14 +1180,23 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
           const prev = row.prevValue;
           const delta =
             latest !== null && prev !== null ? latest - prev : null;
-          const suffix = row.unit === "%" ? "%" : "";
+          /* Yüzde işaretinin yeri DİLE bağlı: Türkçede sayıdan önce (%2,57),
+             İngilizcede sonra (2.57%). Burada dize sonuna elle "%" ekleniyordu
+             ve panel iki dilde de "2,57%" basıyordu — sitenin geri kalanı
+             `formatPercentPlain` ile doğru yazarken bu panel kuralı
+             çiğniyordu (bkz. lib/utils.ts → withPercent). */
+          const isPct = row.unit === "%";
+          const show = (value: number) =>
+            isPct
+              ? formatPercentPlain(value, locale, 2)
+              : formatPrice(value, locale);
           return (
             <div key={row.seriesId}>
               <p className="truncate text-[11.5px] text-muted">
                 {locale === "tr" ? row.titleTr : row.titleEn}
               </p>
               <p className="tote mt-0.5 text-[23px]">
-                {latest !== null ? `${formatPrice(latest, locale)}${suffix}` : "—"}
+                {latest !== null ? show(latest) : "—"}
               </p>
               <p className="numeral text-[11.5px] text-muted">
                 {delta === null ? (
@@ -1196,8 +1214,7 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
                     >
                       {delta > 0 ? "▲" : "▼"}
                     </span>{" "}
-                    {t.macro.previous} {formatPrice(prev, locale)}
-                    {suffix}
+                    {t.macro.previous} {show(prev!)}
                   </>
                 )}
               </p>
