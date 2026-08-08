@@ -190,10 +190,17 @@ export function RevenueColumns({
                          sütunun üstündeki boş alana akıyor. Sabit yükseklik
                          sütun hizasını koruyor. */
                       "numeral absolute bottom-0 whitespace-nowrap text-[13px] font-bold",
+                      /* Son sütunun etiketi sağ kenara ÇAPALI ama iki
+                         piksel dışarı taşıyor: öngörü etiketi ("2,06-2,09")
+                         sütundan geniş olduğu için tam çapalandığında sola,
+                         komşu sütunun üstüne doğru kayık duruyor ve kendi
+                         sütununun ortasından belirgin biçimde sola düşüyordu.
+                         Negatif kaydırma onu kendi sütununa geri getiriyor;
+                         panelin sağ dolgusu (pr-2/pr-3) taşmayı yutuyor. */
                       index === 0
                         ? "left-0"
                         : index === bars.length - 1
-                          ? "right-0"
+                          ? "right-0 translate-x-1.5 sm:translate-x-2.5"
                           : "left-1/2 -translate-x-1/2",
                       bar.projected ? "text-primary" : "text-strong",
                     )}

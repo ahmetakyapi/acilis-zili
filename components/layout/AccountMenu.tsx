@@ -9,14 +9,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  CaretDown,
-  Gear,
-  Moon,
-  SignIn,
-  Sun,
-  UserCircle,
-} from "@phosphor-icons/react/dist/ssr";
+import { Gear, SignIn, User } from "@phosphor-icons/react/dist/ssr";
 import {
   setLocalePreference,
   setThemePreference,
@@ -148,33 +141,38 @@ export function AccountMenu({
 
   return (
     <div className={cn("relative", className)}>
+      {/* AVATAR, kutu değil.
+          Önce arama düğmesiyle aynı kenarlıklı kareydi ve içinde jenerik bir
+          kullanıcı ikonu + aşağı ok duruyordu: üç ayrı şekil (kare, daire,
+          üçgen) 44 pikselin içine sıkışıyor, hiçbiri "hesap" demiyordu.
+          Şimdi tek şekil var — dolgulu bir daire. Giriş yapan kullanıcıda
+          baş harfleri, yapmayanda tek bir siluet taşıyor; ikisi de aynı
+          nesnenin iki hâli gibi okunuyor. Ok kalktı, açıklık zeminden
+          belli oluyor. */}
       <button
         type="button"
         onClick={() => setOpenedAt(open ? null : pathname)}
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={labels.account}
-        className={cn(
-          "inline-flex h-11 items-center gap-1 rounded-lg border border-line bg-surface pl-1.5 pr-1 text-body transition-colors hover:border-line-strong hover:text-strong",
-          open && "border-line-strong text-strong",
-        )}
+        className="inline-flex size-11 items-center justify-center rounded-full transition-colors"
       >
-        {signedIn ? (
-          <span
-            aria-hidden
-            className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-primary-wash text-[10px] font-bold uppercase text-primary"
-          >
-            {initials || "?"}
-          </span>
-        ) : (
-          <UserCircle weight="duotone" size={24} className="shrink-0" />
-        )}
-        <CaretDown
-          weight="bold"
-          size={11}
+        <span
           aria-hidden
-          className={cn("shrink-0 transition-transform", open && "rotate-180")}
-        />
+          className={cn(
+            "flex size-[34px] items-center justify-center rounded-full text-[12px] font-bold uppercase tracking-[0.02em] transition-colors",
+            signedIn
+              ? "bg-primary text-on-primary"
+              : "bg-primary-wash text-primary",
+            open && "ring-2 ring-primary/35",
+          )}
+        >
+          {signedIn ? (
+            initials || "?"
+          ) : (
+            <User weight="fill" size={17} />
+          )}
+        </span>
       </button>
 
       {open && (
@@ -187,6 +185,14 @@ export function AccountMenu({
             className="fixed inset-0 z-10 cursor-default"
           />
 
+          {/* PANEL DAR ve SADE.
+              248 piksel genişliğinde, içinde tam boy bir birincil düğme ve
+              iki ikonlu segment vardı: 44 piksellik bir avatarın altından
+              açılan kutu, ekranın üçte birini kaplayan bir sayfa gibi
+              duruyordu. Bir hesap menüsünde beklenen şey satırlar, kartlar
+              değil — genişlik 216'ya indi, giriş/kayıt birer satır oldu,
+              tema ve dil segmentlerinden ikonlar kalktı (adlar zaten
+              yazılı, ikon ikinci kez aynı şeyi söylüyordu). */}
           <div
             role="menu"
             aria-label={labels.account}
@@ -195,111 +201,131 @@ export function AccountMenu({
                tasarlandı — panelin arkasından sayfa başlığı ve endeks kartı
                okunuyordu. Katman üstü yüzey ve gölgesi bu iş için var, ⌘K
                paletiyle aynı ikili. */
-            className="absolute right-0 top-[calc(100%+9px)] z-20 flex w-[248px] flex-col overflow-hidden rounded-[14px] border border-line bg-overlay-surface shadow-(--shadow-overlay)"
+            className="absolute right-0 top-[calc(100%+8px)] z-20 flex w-[216px] flex-col overflow-hidden rounded-[13px] border border-line bg-overlay-surface py-1 shadow-(--shadow-overlay)"
           >
             {/* ---- Hesap ---- */}
             {signedIn ? (
               <Link
                 href="/ayarlar"
                 role="menuitem"
-                className="flex min-h-[52px] items-center gap-2.5 px-3.5 py-2.5 transition-colors hover:bg-surface"
+                className="flex min-h-11 items-center gap-2.5 px-3 transition-colors hover:bg-surface"
               >
                 <span
                   aria-hidden
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-wash text-[11px] font-bold uppercase text-primary"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-[10.5px] font-bold uppercase text-on-primary"
                 >
                   {initials || "?"}
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13.5px] font-bold text-strong">
-                    {username ?? labels.account}
-                  </span>
-                  <span className="block text-[11.5px] text-muted">
-                    {labels.settings}
-                  </span>
+                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-strong">
+                  {username ?? labels.account}
                 </span>
-                <Gear weight="duotone" size={16} className="shrink-0 text-soft" />
+                <Gear weight="duotone" size={15} className="shrink-0 text-soft" />
               </Link>
             ) : (
-              <div className="flex flex-col gap-1.5 p-3">
+              <>
                 <Link
                   href="/giris"
                   role="menuitem"
-                  className="flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-primary px-3 text-[13.5px] font-semibold text-on-primary transition-colors hover:bg-primary-hover"
+                  className="flex min-h-11 items-center gap-2.5 px-3 text-[13px] font-semibold text-strong transition-colors hover:bg-surface"
                 >
-                  <SignIn weight="bold" size={15} aria-hidden />
+                  <SignIn weight="duotone" size={16} className="shrink-0 text-primary" />
                   {labels.signIn}
                 </Link>
                 <Link
                   href="/kayit"
                   role="menuitem"
-                  className="flex min-h-10 items-center justify-center rounded-[10px] border border-line px-3 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+                  className="flex min-h-11 items-center gap-2.5 px-3 text-[13px] text-body transition-colors hover:bg-surface"
                 >
+                  <span aria-hidden className="w-4" />
                   {labels.signUp}
                 </Link>
-              </div>
+              </>
             )}
 
-            {/* ---- Tema ----
-                İkon değil AD: tek bir güneş/ay ikonu "şu an hangisindeyim"
-                sorusunu da "basınca ne olacak" sorusunu da cevaplamıyordu. */}
-            <div className="flex items-center justify-between gap-3 border-t border-line-soft px-3.5 py-2.5">
-              <span className="text-[12.5px] font-semibold text-body">
-                {labels.theme}
-              </span>
-              <span className="flex overflow-hidden rounded-[9px] border border-line">
+            {/* ---- Tema ve dil ----
+                İkon yok: seçenekler zaten adıyla yazılı ve 216 pikselde
+                ikon + ad, segmenti satırın tamamına yayıyordu. */}
+            <div className="mt-1 flex flex-col gap-1 border-t border-line-soft px-3 pb-1 pt-2">
+              <Row label={labels.theme}>
                 {(
                   [
-                    { key: "light", text: labels.themeLight, Icon: Sun },
-                    { key: "dark", text: labels.themeDark, Icon: Moon },
+                    { key: "light", text: labels.themeLight },
+                    { key: "dark", text: labels.themeDark },
                   ] as const
-                ).map(({ key, text, Icon }) => (
-                  <button
+                ).map(({ key, text }) => (
+                  <SegmentButton
                     key={key}
-                    type="button"
+                    active={theme === key}
                     onClick={() => pickTheme(key)}
-                    aria-pressed={theme === key}
-                    className={cn(
-                      "flex min-h-9 items-center gap-1 px-2.5 text-[11.5px] transition-colors",
-                      theme === key
-                        ? "bg-surface-elevated font-semibold text-strong"
-                        : "text-muted hover:text-strong",
-                    )}
                   >
-                    <Icon weight="duotone" size={13} aria-hidden />
                     {text}
-                  </button>
+                  </SegmentButton>
                 ))}
-              </span>
-            </div>
+              </Row>
 
-            {/* ---- Dil ---- */}
-            <div className="flex items-center justify-between gap-3 border-t border-line-soft px-3.5 py-2.5">
-              <span className="text-[12.5px] font-semibold text-body">
-                {labels.language}
-              </span>
-              <span className="flex overflow-hidden rounded-[9px] border border-line">
+              <Row label={labels.language}>
                 {LOCALES.map((locale) => (
-                  <button
+                  <SegmentButton
                     key={locale}
-                    type="button"
+                    active={locale === initialLocale}
                     onClick={() => pickLocale(locale)}
-                    aria-pressed={locale === initialLocale}
-                    className={cn(
-                      "min-h-9 px-3 text-[11.5px] uppercase transition-colors",
-                      locale === initialLocale
-                        ? "bg-surface-elevated font-semibold text-strong"
-                        : "text-muted hover:text-strong",
-                    )}
+                    className="uppercase"
                   >
                     {locale}
-                  </button>
+                  </SegmentButton>
                 ))}
-              </span>
+              </Row>
             </div>
           </div>
         </>
       )}
     </div>
+  );
+}
+
+/** Etiket solda, segment sağda — tema ve dil satırlarının ortak iskeleti. */
+function Row({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-[12px] text-muted">{label}</span>
+      <span className="flex overflow-hidden rounded-lg border border-line">
+        {children}
+      </span>
+    </div>
+  );
+}
+
+function SegmentButton({
+  active,
+  onClick,
+  className,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "min-h-8 px-2.5 text-[11.5px] transition-colors",
+        active
+          ? "bg-surface-elevated font-semibold text-strong"
+          : "text-muted hover:text-strong",
+        className,
+      )}
+    >
+      {children}
+    </button>
   );
 }

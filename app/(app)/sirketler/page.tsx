@@ -417,6 +417,7 @@ async function CompaniesTable({
                     href={sortHref("fiyat")}
                     active={sort === "fiyat"}
                     dir={dir}
+                    className="px-1.5 sm:px-3"
                   />
                   <SortHead
                     col="cap"
@@ -424,7 +425,7 @@ async function CompaniesTable({
                     href={sortHref("cap")}
                     active={sort === "cap"}
                     dir={dir}
-                    className="hidden sm:table-cell"
+                    className="pr-4 sm:pr-3"
                   />
                   <SortHead
                     col="hacim"
@@ -447,14 +448,14 @@ async function CompaniesTable({
                       <td className="numeral hidden px-4 py-3 text-xs text-muted sm:table-cell sm:px-5">
                         {index + 1}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="py-3 pl-3 pr-1.5 sm:px-3">
                         <Link
                           href={`/hisse/${company.symbol}`} prefetch={false}
                           /* Telefonda 44px: satıra dokunmak bu sayfanın ana
                              eylemi ama bağlantı yalnızca logo yüksekliği
                              kadardı (34px) ve hücre dolgusunun bir kısmı
                              tıklanabilir değildi. */
-                          className="flex min-h-11 items-center gap-2.5 sm:min-h-0"
+                          className="flex min-h-11 items-center gap-2 sm:min-h-0 sm:gap-2.5"
                         >
                           {company.logoUrl ? (
                             <Image
@@ -462,12 +463,15 @@ async function CompaniesTable({
                               alt=""
                               width={34}
                               height={34}
-                              className="rounded-[9px] border border-line-soft bg-white object-contain"
+                              /* Telefonda 30px: dördüncü sütun (piyasa değeri)
+                                 eklenince satır 372px'e çıkıp 352'lik kanalı
+                                 20 piksel aşıyordu. */
+                              className="size-[30px] rounded-[9px] border border-line-soft bg-white object-contain sm:size-[34px]"
                             />
                           ) : (
                             <span
                               aria-hidden
-                              className="numeral flex size-[34px] items-center justify-center rounded-[9px] bg-primary-wash text-[9px] font-bold text-primary"
+                              className="numeral flex size-[30px] items-center justify-center rounded-[9px] bg-primary-wash text-[9px] font-bold text-primary sm:size-[34px]"
                             >
                               {company.symbol.slice(0, 2)}
                             </span>
@@ -476,7 +480,7 @@ async function CompaniesTable({
                             <span className="block text-[13.5px] font-bold leading-[18px] text-strong">
                               {company.symbol}
                             </span>
-                            <span className="block max-w-[104px] truncate text-[11.5px] leading-[15px] text-muted sm:max-w-44">
+                            <span className="block max-w-[66px] truncate text-[11.5px] leading-[15px] text-muted sm:max-w-44">
                               {company.name}
                             </span>
                           </span>
@@ -485,12 +489,13 @@ async function CompaniesTable({
                       <td className="hidden max-w-40 truncate px-3 py-3 text-[12px] text-soft md:table-cell">
                         {industryLabel(company.industry, locale) ?? "—"}
                       </td>
-                      <td className="px-1.5 py-3 text-right sm:px-3">
+                      <td className="px-1 py-3 text-right sm:px-3">
                         {quote ? (
                           <ChangePill
                             changePct={quote.changePct}
                             locale={locale}
                             size="sm"
+                            className="px-1 sm:px-1.5"
                           />
                         ) : (
                           <span className="text-xs text-muted">—</span>
@@ -513,24 +518,18 @@ async function CompaniesTable({
                       {/* Fiyat satırın ÇAPASI: değişim, hafta, piyasa değeri
                           ve hacim hep ona göre okunuyor. Diğerleriyle aynı
                           ağırlıkta yazılınca sayı dizisinin içinde kayboluyordu. */}
-                      {/* Piyasa değeri telefonda fiyatın ALTINDA. Kendi sütunu
-                          `sm:table-cell` olduğu için mobilde hiç görünmüyordu
-                          ve bu dizinin ana sıralaması (büyüklük) ekranda
-                          karşılıksız kalıyordu: liste piyasa değerine göre
-                          sıralı geliyor ama okuyucu sıralamanın dayandığı
-                          sayıyı göremiyordu. Beşinci sütun 390px'e sığmaz;
-                          fiyatın altındaki ikinci satır sığar. */}
-                      <td className="px-3 py-3 pr-4 text-right sm:pr-3">
-                        <span className="numeral block text-[13.5px] font-bold text-strong">
-                          {quote ? formatPrice(quote.price, locale) : "—"}
-                        </span>
-                        {company.marketCap && (
-                          <span className="numeral mt-0.5 block text-[11px] leading-[14px] text-muted sm:hidden">
-                            ${formatCompact(company.marketCap, locale)}
-                          </span>
-                        )}
+                      <td className="numeral px-1 py-3 text-right text-[13px] font-bold text-strong sm:px-3 sm:text-[13.5px]">
+                        {quote ? formatPrice(quote.price, locale) : "—"}
                       </td>
-                      <td className="numeral hidden px-3 py-3 text-right font-semibold text-body sm:table-cell">
+                      {/* Piyasa değeri telefonda da FİYATIN SAĞINDA, kendi
+                          sütununda. Bir süre fiyatın altına ikinci satır
+                          olarak konmuştu: yer kazandırıyordu ama iki ayrı
+                          ölçüyü tek hücrede üst üste bindirdiği için satır
+                          "fiyat 178,19 / 105 milyar" diye tek bir bilgi gibi
+                          okunuyordu. Ayrı sütunda ikisi de kendi başlığının
+                          altında duruyor; 390px'e dört sütun, kalan yerler
+                          daraltılarak sığdı. */}
+                      <td className="numeral py-3 pl-1 pr-3 text-right text-[12px] font-semibold text-body sm:px-3 sm:text-[13px]">
                         {company.marketCap
                           ? `$${formatCompact(company.marketCap, locale)}`
                           : "—"}
