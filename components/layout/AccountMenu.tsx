@@ -9,7 +9,13 @@ import {
 } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Gear, SignIn, User } from "@phosphor-icons/react/dist/ssr";
+import {
+  CaretRight,
+  Gear,
+  Heart,
+  SignIn,
+  User,
+} from "@phosphor-icons/react/dist/ssr";
 import {
   setLocalePreference,
   setThemePreference,
@@ -25,15 +31,29 @@ import { cn } from "@/lib/utils";
    Hesap menüsü — mobil başlığın sağ ucu.
 
    Telefonda başlıkta üç ayrı düğme duruyordu: arama, tema, dil. Üçü de aynı
-   ağırlıkta, aynı boyda ve aynı kutu içinde; hangisinin ne yaptığı ancak
-   ikonuna bakıp tahmin edilerek anlaşılıyordu ve okuyucunun HESABI hiçbir
-   yerde görünmüyordu — giriş yalnızca alt çubuktaki bir sekmede vardı.
+   ağırlıkta ve hangisinin ne yaptığı ancak ikonuna bakıp tahmin edilerek
+   anlaşılıyordu; okuyucunun HESABI ise hiçbir yerde görünmüyordu. Dağılım
+   tek soruya göre kuruldu: bu düğme İÇERİĞİ mi değiştiriyor yoksa ORTAMI mı?
+   Arama içeriktir, başlıkta kalır. Hesap, tema ve dil ortamdır — üçü de bu
+   menünün altında.
 
-   Yeni dağılım tek bir soruya göre: bu düğme İÇERİĞİ mi değiştiriyor yoksa
-   ORTAMI mı? Arama içeriktir, başlıkta kalır. Tema, dil ve hesap ortamdır —
-   üçü de bu menünün altında. Başlık iki düğmeye iniyor, menü açıldığında
-   seçenekler ikonla değil ADIYLA yazılı duruyor ("Açık" / "Koyu", "TR" /
-   "EN"), yani ilk kez açan biri neyin ne olduğunu tahmin etmiyor.
+   PANEL İKİ KEZ YENİDEN YAZILDI, ikisinin de gerekçesi burada:
+
+   (1) İlk hâl 248 piksel genişliğinde bir kutuydu; içinde tam boy bir
+       birincil düğme ve iki ikonlu segment vardı. 44 piksellik bir avatarın
+       altından açılan panel ekranın üçte birini kaplıyordu.
+   (2) Karşılık olarak her şey satıra indirildi ve 216 piksele daraltıldı.
+       Bu sefer panel bir sistem menüsü gibi duruyordu: dört gri satır, hiç
+       hiyerarşi yok, hangisinin önemli olduğu okunmuyor.
+
+   Şimdiki düzen ÜÇ BÖLGE: kimlik başlığı, gezinme satırları, tercihler.
+   Bölgeler ayraç çizgisiyle değil ZEMİNLE ayrılıyor — başlık çok soluk bir
+   degrade taşıyor, satırlar düz zeminde, tercihler bir kademe çökük blokta.
+   Göz üç bölgeyi tek bakışta ayırıyor ve hiçbir yerde çizgi saymıyor.
+
+   TEMA SEÇİMİ İKİ KÜÇÜK ÖNİZLEME. "Açık/Koyu" yazan iki metin düğmesi
+   doğruydu ama sönüktü; oysa seçilen şey görsel bir şey ve karşılığı
+   gösterilebilir. İki minik sayfa maketi, seçili olan accent çerçeveyle.
 
    Tema burada da <html data-theme> üzerinden okunur (ThemeToggle ile aynı
    kaynak): iki bileşen aynı anda ekranda olabilir ve biri değiştirince
@@ -55,6 +75,20 @@ function readTheme(): Theme {
     : "dark";
 }
 
+/**
+ * Tema önizlemesinin renkleri — SABİT, token değil.
+ *
+ * "Hardcoded renk yasak" kuralının bilinçli tek istisnası. Swatch'ın işi o
+ * temanın nasıl göründüğünü göstermek; token kullanılsaydı iki maket de O AN
+ * AÇIK OLAN temanın renklerini alır ve "Açık" ile "Koyu" birbirinin aynısı
+ * çizilirdi. Değerler `globals.css` içindeki `--page-bg`, kart yüzeyi ve
+ * `--primary` ile birebir aynı; orası değişirse burası da değişmeli.
+ */
+const THEME_SPECIMEN = {
+  light: { page: "#f7f9fb", card: "#ffffff", ink: "#d7dee6", accent: "#0d74c4" },
+  dark: { page: "#070d16", card: "#141d29", ink: "#2a3542", accent: "#35b8ff" },
+} as const;
+
 export type AccountMenuLabels = {
   account: string;
   settings: string;
@@ -64,6 +98,11 @@ export type AccountMenuLabels = {
   themeLight: string;
   themeDark: string;
   language: string;
+  /** Giriş yapılmamış kimlik satırının adı — "Misafir". */
+  guest: string;
+  /** Hesabın ne kazandırdığını söyleyen tek satır. */
+  guestHint: string;
+  watchlist: string;
 };
 
 export function AccountMenu({
@@ -141,37 +180,28 @@ export function AccountMenu({
 
   return (
     <div className={cn("relative", className)}>
-      {/* AVATAR, kutu değil.
-          Önce arama düğmesiyle aynı kenarlıklı kareydi ve içinde jenerik bir
-          kullanıcı ikonu + aşağı ok duruyordu: üç ayrı şekil (kare, daire,
-          üçgen) 44 pikselin içine sıkışıyor, hiçbiri "hesap" demiyordu.
-          Şimdi tek şekil var — dolgulu bir daire. Giriş yapan kullanıcıda
-          baş harfleri, yapmayanda tek bir siluet taşıyor; ikisi de aynı
-          nesnenin iki hâli gibi okunuyor. Ok kalktı, açıklık zeminden
-          belli oluyor. */}
+      {/* AVATAR, kutu değil. Önce arama düğmesiyle aynı kenarlıklı kareydi ve
+          içinde jenerik bir kullanıcı ikonu + aşağı ok duruyordu: üç ayrı
+          şekil 44 pikselin içine sıkışıyor, hiçbiri "hesap" demiyordu. */}
       <button
         type="button"
         onClick={() => setOpenedAt(open ? null : pathname)}
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={labels.account}
-        className="inline-flex size-11 items-center justify-center rounded-full transition-colors"
+        className="inline-flex size-11 items-center justify-center rounded-full"
       >
         <span
           aria-hidden
           className={cn(
-            "flex size-[34px] items-center justify-center rounded-full text-[12px] font-bold uppercase tracking-[0.02em] transition-colors",
+            "flex size-[34px] items-center justify-center rounded-full text-[12px] font-bold uppercase tracking-[0.02em] transition-shadow",
             signedIn
               ? "bg-primary text-on-primary"
               : "bg-primary-wash text-primary",
             open && "ring-2 ring-primary/35",
           )}
         >
-          {signedIn ? (
-            initials || "?"
-          ) : (
-            <User weight="fill" size={17} />
-          )}
+          {signedIn ? initials || "?" : <User weight="fill" size={17} />}
         </span>
       </button>
 
@@ -185,96 +215,127 @@ export function AccountMenu({
             className="fixed inset-0 z-10 cursor-default"
           />
 
-          {/* PANEL DAR ve SADE.
-              248 piksel genişliğinde, içinde tam boy bir birincil düğme ve
-              iki ikonlu segment vardı: 44 piksellik bir avatarın altından
-              açılan kutu, ekranın üçte birini kaplayan bir sayfa gibi
-              duruyordu. Bir hesap menüsünde beklenen şey satırlar, kartlar
-              değil — genişlik 216'ya indi, giriş/kayıt birer satır oldu,
-              tema ve dil segmentlerinden ikonlar kalktı (adlar zaten
-              yazılı, ikon ikinci kez aynı şeyi söylüyordu). */}
           <div
             role="menu"
             aria-label={labels.account}
             /* Zemin `--overlay-surface`, `--surface-solid` DEĞİL: ikincisi koyu
                temada saydam (beyazın %4,5'i) çünkü sayfa üstündeki kartlar için
-               tasarlandı — panelin arkasından sayfa başlığı ve endeks kartı
-               okunuyordu. Katman üstü yüzey ve gölgesi bu iş için var, ⌘K
-               paletiyle aynı ikili. */
-            className="absolute right-0 top-[calc(100%+8px)] z-20 flex w-[216px] flex-col overflow-hidden rounded-[13px] border border-line bg-overlay-surface py-1 shadow-(--shadow-overlay)"
+               tasarlandı — panelin arkasından sayfa başlığı okunuyordu. */
+            className="account-menu absolute right-0 top-[calc(100%+9px)] z-20 w-[268px] overflow-hidden rounded-[18px] border border-line bg-overlay-surface shadow-(--shadow-overlay)"
           >
-            {/* ---- Hesap ---- */}
-            {signedIn ? (
-              <Link
-                href="/ayarlar"
-                role="menuitem"
-                className="flex min-h-11 items-center gap-2.5 px-3 transition-colors hover:bg-surface"
+            {/* ===== 1 · Kimlik ===== */}
+            <div className="relative flex items-center gap-3 px-4 py-4">
+              {/* Degrade YALNIZCA burada ve çok soluk: bölgeyi zeminden
+                  ayırıyor, bir düğme gibi görünmeden. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary-wash to-transparent"
+              />
+              <span
+                aria-hidden
+                className={cn(
+                  "relative flex size-11 shrink-0 items-center justify-center rounded-full text-[14px] font-bold uppercase",
+                  signedIn
+                    ? "bg-primary text-on-primary"
+                    : "border border-line bg-surface-solid text-primary",
+                )}
               >
-                <span
-                  aria-hidden
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-[10.5px] font-bold uppercase text-on-primary"
-                >
-                  {initials || "?"}
+                {signedIn ? initials || "?" : <User weight="fill" size={22} />}
+              </span>
+              <span className="relative min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-bold tracking-[-0.01em] text-strong">
+                  {signedIn ? (username ?? labels.account) : labels.guest}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-strong">
-                  {username ?? labels.account}
+                <span className="mt-0.5 block text-[11.5px] leading-[16px] text-muted">
+                  {signedIn ? labels.account : labels.guestHint}
                 </span>
-                <Gear weight="duotone" size={15} className="shrink-0 text-soft" />
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/giris"
-                  role="menuitem"
-                  className="flex min-h-11 items-center gap-2.5 px-3 text-[13px] font-semibold text-strong transition-colors hover:bg-surface"
-                >
-                  <SignIn weight="duotone" size={16} className="shrink-0 text-primary" />
-                  {labels.signIn}
-                </Link>
-                <Link
-                  href="/kayit"
-                  role="menuitem"
-                  className="flex min-h-11 items-center gap-2.5 px-3 text-[13px] text-body transition-colors hover:bg-surface"
-                >
-                  <span aria-hidden className="w-4" />
-                  {labels.signUp}
-                </Link>
-              </>
-            )}
+              </span>
+            </div>
 
-            {/* ---- Tema ve dil ----
-                İkon yok: seçenekler zaten adıyla yazılı ve 216 pikselde
-                ikon + ad, segmenti satırın tamamına yayıyordu. */}
-            <div className="mt-1 flex flex-col gap-1 border-t border-line-soft px-3 pb-1 pt-2">
-              <Row label={labels.theme}>
-                {(
-                  [
-                    { key: "light", text: labels.themeLight },
-                    { key: "dark", text: labels.themeDark },
-                  ] as const
-                ).map(({ key, text }) => (
-                  <SegmentButton
-                    key={key}
-                    active={theme === key}
-                    onClick={() => pickTheme(key)}
+            {/* ===== 2 · Gezinme ===== */}
+            <div className="flex flex-col px-2 pb-2">
+              {signedIn ? (
+                <>
+                  <MenuRow
+                    href="/favoriler"
+                    icon={Heart}
+                    label={labels.watchlist}
+                  />
+                  <MenuRow href="/ayarlar" icon={Gear} label={labels.settings} />
+                </>
+              ) : (
+                <div className="flex flex-col gap-1.5 px-1 pb-1">
+                  {/* Giriş TEK birincil eylem. İki eşit ağırlıklı düğme
+                      konduğunda hangisine basılacağı kararı okuyucuya
+                      kalıyordu; kayıt olmak isteyen ikinci satırı zaten
+                      okuyor. */}
+                  <Link
+                    href="/giris"
+                    role="menuitem"
+                    className="flex min-h-11 items-center justify-center gap-2 rounded-[11px] bg-primary text-[13.5px] font-semibold text-on-primary transition-colors hover:bg-primary-hover"
                   >
-                    {text}
-                  </SegmentButton>
-                ))}
-              </Row>
+                    <SignIn weight="bold" size={15} aria-hidden />
+                    {labels.signIn}
+                  </Link>
+                  <Link
+                    href="/kayit"
+                    role="menuitem"
+                    className="flex min-h-10 items-center justify-center rounded-[11px] border border-line text-[12.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+                  >
+                    {labels.signUp}
+                  </Link>
+                </div>
+              )}
+            </div>
 
-              <Row label={labels.language}>
-                {LOCALES.map((locale) => (
-                  <SegmentButton
-                    key={locale}
-                    active={locale === initialLocale}
-                    onClick={() => pickLocale(locale)}
-                    className="uppercase"
-                  >
-                    {locale}
-                  </SegmentButton>
-                ))}
-              </Row>
+            {/* ===== 3 · Tercihler =====
+                Çökük zemin bölgeyi ayırıyor; sayılacak ayraç çizgisi yok. */}
+            <div className="flex flex-col gap-3 border-t border-line-soft bg-surface px-4 py-3.5">
+              <div className="flex flex-col gap-2">
+                <span className="plate text-[9.5px] tracking-[0.1em]">
+                  {labels.theme}
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      { key: "light", text: labels.themeLight },
+                      { key: "dark", text: labels.themeDark },
+                    ] as const
+                  ).map(({ key, text }) => (
+                    <ThemeChoice
+                      key={key}
+                      variant={key}
+                      label={text}
+                      active={theme === key}
+                      onClick={() => pickTheme(key)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-3">
+                <span className="plate text-[9.5px] tracking-[0.1em]">
+                  {labels.language}
+                </span>
+                <span className="flex overflow-hidden rounded-[9px] border border-line bg-surface-solid">
+                  {LOCALES.map((locale) => (
+                    <button
+                      key={locale}
+                      type="button"
+                      onClick={() => pickLocale(locale)}
+                      aria-pressed={locale === initialLocale}
+                      className={cn(
+                        "min-h-8 px-3 text-[11.5px] uppercase transition-colors",
+                        locale === initialLocale
+                          ? "bg-primary font-bold text-on-primary"
+                          : "text-muted hover:text-strong",
+                      )}
+                    >
+                      {locale}
+                    </button>
+                  ))}
+                </span>
+              </div>
             </div>
           </div>
         </>
@@ -283,49 +344,103 @@ export function AccountMenu({
   );
 }
 
-/** Etiket solda, segment sağda — tema ve dil satırlarının ortak iskeleti. */
-function Row({
+/** Gezinme satırı — ikon, ad, ok. Yalnızca giriş yapmış kullanıcıda. */
+function MenuRow({
+  href,
+  icon: Icon,
   label,
-  children,
 }: {
+  href: string;
+  icon: typeof Gear;
   label: string;
-  children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-[12px] text-muted">{label}</span>
-      <span className="flex overflow-hidden rounded-lg border border-line">
-        {children}
+    <Link
+      href={href}
+      role="menuitem"
+      className="group flex min-h-11 items-center gap-3 rounded-[11px] px-2 transition-colors hover:bg-surface"
+    >
+      <span
+        aria-hidden
+        className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-primary-wash text-primary"
+      >
+        <Icon weight="duotone" size={16} />
       </span>
-    </div>
+      <span className="flex-1 text-[13.5px] font-semibold text-strong">
+        {label}
+      </span>
+      <CaretRight
+        weight="bold"
+        size={13}
+        aria-hidden
+        className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5"
+      />
+    </Link>
   );
 }
 
-function SegmentButton({
+/**
+ * Tema seçeneği — o temanın minik bir sayfa maketi.
+ *
+ * Zemin, üstünde bir kart, kartın içinde bir accent şerit ve iki metin
+ * satırı. Seçili olan accent çerçeveyle işaretli ve adı altında yazılı —
+ * maket tek başına bilmece kalmıyor.
+ */
+function ThemeChoice({
+  variant,
+  label,
   active,
   onClick,
-  className,
-  children,
 }: {
+  variant: "light" | "dark";
+  label: string;
   active: boolean;
   onClick: () => void;
-  className?: string;
-  children: React.ReactNode;
 }) {
+  const spec = THEME_SPECIMEN[variant];
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "min-h-8 px-2.5 text-[11.5px] transition-colors",
+        "flex flex-col items-center gap-1.5 rounded-[11px] border p-1.5 transition-colors",
         active
-          ? "bg-surface-elevated font-semibold text-strong"
-          : "text-muted hover:text-strong",
-        className,
+          ? "border-primary bg-primary-wash"
+          : "border-line bg-surface-solid hover:border-line-strong",
       )}
     >
-      {children}
+      <span
+        aria-hidden
+        className="flex h-[40px] w-full items-center rounded-[7px] px-[7px]"
+        style={{ background: spec.page }}
+      >
+        <span
+          className="flex w-full flex-col gap-[3px] rounded-[4px] p-[5px]"
+          style={{ background: spec.card }}
+        >
+          <span
+            className="h-[3px] w-[55%] rounded-full"
+            style={{ background: spec.accent }}
+          />
+          <span
+            className="h-[3px] w-full rounded-full"
+            style={{ background: spec.ink }}
+          />
+          <span
+            className="h-[3px] w-[70%] rounded-full"
+            style={{ background: spec.ink }}
+          />
+        </span>
+      </span>
+      <span
+        className={cn(
+          "text-[11.5px] font-semibold",
+          active ? "text-primary" : "text-body",
+        )}
+      >
+        {label}
+      </span>
     </button>
   );
 }

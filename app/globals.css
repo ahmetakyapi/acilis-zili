@@ -692,6 +692,25 @@
   }
 }
 
+/* Hesap menüsü — avatarın altından açılırken kısa bir yükseliş.
+   Kaynak noktası sağ üst: panel avatardan çıkıyormuş gibi büyüsün, ekranın
+   ortasından belirmesin. */
+.account-menu {
+  transform-origin: top right;
+  animation: account-menu-in 0.16s var(--ease-brand) both;
+}
+
+@keyframes account-menu-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -4px, 0) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .skeleton {
   background: linear-gradient(
     90deg,
