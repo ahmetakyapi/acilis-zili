@@ -33,9 +33,10 @@ export default function AppleIcon() {
         }}
       >
         <svg width="94" height="94" viewBox="0 0 256 256" fill="#ffffff">
-          <circle cx="128" cy="26" r="14" />
-          <path d="M128 30a82 82 0 00-82 82c0 40-6 58-17 69-6 6-2 17 7 17h184c9 0 13-11 7-17-11-11-17-29-17-69a82 82 0 00-82-82z" />
-          <path d="M98 214a30 30 0 0060 0z" />
+          <circle cx="128" cy="50" r="11" />
+          <path d="M128 68c-30 0-53 24-53 54v33h106v-33c0-30-23-54-53-54z" />
+          <rect x="56" y="159" width="144" height="16" rx="8" />
+          <circle cx="128" cy="196" r="12" />
         </svg>
       </div>
     ),

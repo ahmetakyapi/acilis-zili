@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Marka işareti — gradient karo içinde dolgun zil silueti.
+ * Marka işareti — gradient karo içinde tören zili.
  *
  * İnce çizgili zil 24px'te kırılıyordu; dolu siluet küçük boyutta çok daha
  * net okunuyor. Karoya iki ayrıntı eklendi: üstten inen ince bir iç ışık
@@ -9,11 +9,25 @@ import { cn } from "@/lib/utils";
  * basılmış bir rozet gibi duruyor. Sayfadaki tek gradient budur.
  */
 
-/** Zil gövdesi + tokmak — favicon ve OG görseli de aynı geometriyi kullanır. */
+/**
+ * Zil geometrisi — TÖREN ZİLİ, bildirim zili değil.
+ *
+ * Önceki çizim her uygulamanın notification ikonuydu: geniş, basık bir
+ * silüet ve gövdeye yapışık yarım daire bir tokmak. Ürünün adı "Açılış
+ * Zili" ve işaret ettiği nesne borsanın tören zili — ayrı bir şey.
+ *
+ * Yeni çizim dört parça: tepede AYRIK topuz, daha dar ve uzun kubbe,
+ * altında keskin bir AĞIZ ÇUBUĞU ve ondan kopuk yuvarlak tokmak. Ağız
+ * çubuğu aynı zamanda sitenin imzası olan gün şeridinin yankısı.
+ * Parçaların arasındaki boşluklar 16px'te kapanmıyor; eski çizimde tokmak
+ * gövdeye karışıp tek bir lekeye dönüşüyordu.
+ */
 export const BELL_BODY_PATH =
-  "M128 30a82 82 0 00-82 82c0 40-6 58-17 69-6 6-2 17 7 17h184c9 0 13-11 7-17-11-11-17-29-17-69a82 82 0 00-82-82z";
-export const BELL_CLAPPER_PATH = "M98 214a30 30 0 0060 0z";
-export const BELL_KNOB = { cx: 128, cy: 26, r: 14 };
+  "M128 68c-30 0-53 24-53 54v33h106v-33c0-30-23-54-53-54z";
+/** Ağız çubuğu — zilin ağzı ve gün şeridinin yankısı. */
+export const BELL_MOUTH = { x: 56, y: 159, width: 144, height: 16, rx: 8 };
+export const BELL_CLAPPER = { cx: 128, cy: 196, r: 12 };
+export const BELL_KNOB = { cx: 128, cy: 50, r: 11 };
 
 export function BellMark({
   size = 27,
@@ -48,14 +62,15 @@ export function BellMark({
         }}
       />
       <svg
-        width={size * 0.62}
-        height={size * 0.62}
+        width={size * 0.66}
+        height={size * 0.66}
         viewBox="0 0 256 256"
         fill="var(--on-primary)"
       >
         <circle {...BELL_KNOB} />
         <path d={BELL_BODY_PATH} />
-        <path d={BELL_CLAPPER_PATH} />
+        <rect {...BELL_MOUTH} />
+        <circle {...BELL_CLAPPER} />
       </svg>
     </span>
   );

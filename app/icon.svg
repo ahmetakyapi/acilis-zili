@@ -1,14 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="32" height="32">
   <!--
-    Sekme ikonu — `components/brand/BellMark` ile BİREBİR aynı çizim.
+    Sekme ikonu — `components/brand/BellMark` ile BİREBİR aynı geometri.
+    Değişirse ikisi birlikte değişir; kaynak orası.
 
-    Uzun süre buradaki zil KOYU MÜREKKEPTİ (#06121f) ama sitenin kendi
-    logosu beyaz zil kullanıyor: sekmede duran işaret, sayfanın sol üstündeki
-    işaretle aynı marka değilmiş gibi görünüyordu. Beyaz zil ayrıca 16px'te
-    çok daha net okunuyor — koyu zil, koyu mavi degradenin alt ucunda
-    zemine karışıyordu.
+    TÖREN ZİLİ, bildirim zili değil: ayrık topuz, dar ve uzun kubbe, keskin
+    ağız çubuğu (sitenin gün şeridinin yankısı) ve ondan kopuk tokmak.
+    Önceki çizim her uygulamanın notification ikonuydu ve 16px'te tokmak
+    gövdeye karışıp tek lekeye dönüşüyordu.
 
-    Köşe yarıçapı BellMark'taki kuralın aynısı: boyut / 3 (256 → 85).
+    Zil BEYAZ — sitenin kendi logosuyla aynı. Bir ara koyu mürekkepti ve
+    sekmedeki işaret, sayfanın sol üstündeki işaretle aynı marka değilmiş
+    gibi duruyordu. Köşe yarıçapı BellMark kuralının aynısı: boyut / 3.
   -->
   <defs>
     <linearGradient id="tile" x1="12%" y1="0%" x2="88%" y2="100%">
@@ -16,18 +18,14 @@
       <stop offset="0.46" stop-color="#2f95e8"/>
       <stop offset="1" stop-color="#124f9e"/>
     </linearGradient>
-    <linearGradient id="sheen" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.30"/>
-      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
-    </linearGradient>
   </defs>
   <rect width="256" height="256" rx="85" fill="url(#tile)"/>
-  <rect width="256" height="256" rx="85" fill="url(#sheen)"/>
   <!-- İç kenar ışığı: karoyu düz kare değil basılmış bir rozet gibi gösterir. -->
-  <rect x="2" y="2" width="252" height="252" rx="83" fill="none" stroke="#ffffff" stroke-opacity="0.22" stroke-width="4"/>
-  <g transform="translate(128 133) scale(0.62) translate(-128 -128)" fill="#ffffff">
-    <circle cx="128" cy="26" r="14"/>
-    <path d="M128 30a82 82 0 00-82 82c0 40-6 58-17 69-6 6-2 17 7 17h184c9 0 13-11 7-17-11-11-17-29-17-69a82 82 0 00-82-82z"/>
-    <path d="M98 214a30 30 0 0060 0z"/>
+  <rect x="2" y="2" width="252" height="252" rx="83" fill="none" stroke="#ffffff" stroke-opacity="0.20" stroke-width="4"/>
+  <g fill="#ffffff">
+    <circle cx="128" cy="50" r="11"/>
+    <path d="M128 68c-30 0-53 24-53 54v33h106v-33c0-30-23-54-53-54z"/>
+    <rect x="56" y="159" width="144" height="16" rx="8"/>
+    <circle cx="128" cy="196" r="12"/>
   </g>
 </svg>
