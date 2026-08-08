@@ -11,6 +11,7 @@ import {
   SegmentItem,
   SymbolBadge,
 } from "@/components/ui/primitives";
+import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { AnalysisTable } from "@/components/earnings/AnalysisTable";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
@@ -225,12 +226,19 @@ export default async function AnalysesPage(
                   <p className="text-xs text-muted">{t.earnings.empty}</p>
                 ) : (
                   upcomingTop.map((row) => (
-                    <Link
+                    /* Satır kutu, içindeki mutlak bağlantı yüzeyi kaplıyor —
+                       takvim düğmesi kendi bağlantısını taşıdığı için iç içe
+                       <a> olamaz. */
+                    <div
                       key={row.id}
-                      href={`/hisse/${row.symbol}`}
-                      prefetch={false}
-                      className="flex items-center gap-2.5 border-b border-line-soft py-[7px] last:border-b-0 hover:opacity-75"
+                      className="relative flex items-center gap-2.5 border-b border-line-soft py-[7px] last:border-b-0 hover:opacity-75"
                     >
+                      <Link
+                        href={`/hisse/${row.symbol}`}
+                        prefetch={false}
+                        aria-label={row.symbol}
+                        className="absolute inset-0"
+                      />
                       <PanelLogo
                         logoUrl={upcomingMeta[row.symbol]?.logoUrl ?? null}
                         symbol={row.symbol}
@@ -259,7 +267,14 @@ export default async function AnalysesPage(
                             : "—"}
                         </span>
                       )}
-                    </Link>
+                      <AddToCalendar
+                        symbol={row.symbol}
+                        date={row.reportDate}
+                        label={t.earnings.addToCalendar}
+                        compact
+                        className="-mr-1"
+                      />
+                    </div>
                   ))
                 )}
               </div>

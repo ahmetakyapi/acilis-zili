@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarPlus } from "@phosphor-icons/react/dist/ssr";
 import {
   SymbolBadge,
   TimingChip,
   type TimingTone,
 } from "@/components/ui/primitives";
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
+import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { AlsoReporting } from "@/components/earnings/AlsoReporting";
 import type { AnalysisBadge as AnalysisBadgeData, SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -266,18 +266,14 @@ function DaySection({
                     </span>
                     <TimingChip tone={timing.tone}>{timing.label}</TimingChip>
                     {badge && <AnalysisBadge badge={badge} t={t} />}
-                    {/* `relative z-10`: kartın yüzeyini kaplayan mutlak
-                        bağlantının ÜSTÜNDE dursun, yoksa dokunuş hisse
-                        sayfasına gidiyor. Yalnızca hero satırlarında —
-                        günün en büyük iki bilançosu, takvime girmeye en
-                        çok değen ikisi. */}
-                    <a
-                      href={`/api/takvim?tip=bilanco&sembol=${row.symbol}&tarih=${row.reportDate}`}
-                      className="relative z-10 -my-1 inline-flex min-h-8 items-center gap-1 rounded-full border border-line px-2 py-1 text-[10.5px] font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary"
-                    >
-                      <CalendarPlus weight="duotone" size={13} aria-hidden />
-                      {t.earnings.addToCalendar}
-                    </a>
+                    {/* Adıyla yazılı hâli yalnızca hero satırlarında —
+                        günün en büyük iki bilançosu, takvime girmeye en çok
+                        değen ikisi. Dar listelerde ikonlu (compact) sürüm. */}
+                    <AddToCalendar
+                      symbol={row.symbol}
+                      date={row.reportDate}
+                      label={t.earnings.addToCalendar}
+                    />
                   </div>
                   <p className="mt-[3px] truncate text-sm text-body">
                     {m?.name ?? ""}

@@ -10,6 +10,7 @@ import {
   TrendUp,
   Warning,
 } from "@phosphor-icons/react/dist/ssr";
+import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { GuideHint } from "@/components/article/GuideHint";
 import { Panel, SymbolBadge } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
@@ -827,17 +828,24 @@ export default async function AnalysisDetailPage(
             </h2>
             <div className="flex flex-col">
               {peers.map((peer) => (
-                <Link
+                /* Satır bir <a> DEĞİL, yüzeyi kaplayan bir <a> TAŞIYAN kutu:
+                   takvim düğmesi kendi bağlantısını taşıyor ve iç içe
+                   bağlantı geçersiz HTML. Görünüm birebir aynı kalıyor. */
+                <div
                   key={peer.id}
-                  href={`/hisse/${peer.symbol}`}
-                  prefetch={false}
                   /* Vurgu, sitedeki diğer listelerle aynı: satırın tamamı
                      panel kenarına kadar boyanıyor. `opacity-75` satırı
                      soldurup geri çekiyordu — tıklanabilir bir satırın
                      tersi. Negatif margin, dolguyu panelin kenarına
                      taşıyor. */
-                  className="-mx-4 flex items-center gap-2.5 border-b border-line-soft px-4 py-2.5 transition-colors last:border-b-0 hover:bg-primary-tint sm:-mx-[18px] sm:px-[18px]"
+                  className="relative -mx-4 flex items-center gap-2.5 border-b border-line-soft px-4 py-2.5 transition-colors last:border-b-0 hover:bg-primary-tint sm:-mx-[18px] sm:px-[18px]"
                 >
+                  <Link
+                    href={`/hisse/${peer.symbol}`}
+                    prefetch={false}
+                    aria-label={peer.symbol}
+                    className="absolute inset-0"
+                  />
                   {/* Logo, satırı bir sembol listesi olmaktan çıkarıp
                       sayfanın geri kalanıyla aynı dile sokuyor (mercek
                       künyeleri ve analiz tablosu da logodan besleniyor). */}
@@ -866,7 +874,14 @@ export default async function AnalysisDetailPage(
                   <span className="numeral shrink-0 text-[11px] text-muted">
                     {formatEtDateCompact(peer.reportDate, locale)}
                   </span>
-                </Link>
+                  <AddToCalendar
+                    symbol={peer.symbol}
+                    date={peer.reportDate}
+                    label={t.earnings.addToCalendar}
+                    compact
+                    className="-mr-1.5"
+                  />
+                </div>
               ))}
             </div>
           </Panel>
