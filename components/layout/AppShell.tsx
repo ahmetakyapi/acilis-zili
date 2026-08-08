@@ -269,7 +269,10 @@ export function AppShell({
           pathname'i göremiyor, karar burada veriliyor. */}
       <div
         className={cn(
-          "mx-auto w-full max-w-[1400px] pb-32 pt-10 lg:pb-20",
+          /* pb: telefonda yalnızca sekme çubuğunu (64px + güvenli alan)
+             temizlemesi yeter — şerit artık orada basılmıyor, 128px'lik
+             eski dolgu sayfanın dibinde ölü boşluk bırakıyordu. */
+          "mx-auto w-full max-w-[1400px] pb-24 pt-10 lg:pb-20",
           CONTENT_GUTTER,
           pathname === "/menu" && "[&_footer_nav]:hidden",
         )}

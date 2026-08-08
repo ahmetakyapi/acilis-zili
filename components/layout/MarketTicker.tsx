@@ -107,9 +107,16 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
   const shown = pages[page % pageCount];
 
   return (
+    /* TELEFONDA GİZLİ.
+       Şerit 37px ve hemen altında 64px'lik sekme çubuğu duruyordu: 844px'lik
+       bir ekranda sabit alt katman %12, yapışkan başlıkla birlikte ekranın
+       beşte biri kroma gidiyordu. Taşıdığı dört endeks zaten alt çubuktaki
+       "Piyasa" sekmesinin bir dokunuş ötesinde ve ana sayfanın kart
+       ızgarasında; okuma alanını daraltmasına değmiyor. Masaüstünde yer bol,
+       orada sayfanın dibinde kalıyor ve ortam bilgisi olarak işe yarıyor. */
     <div
       aria-live="off"
-      className="chrome fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+63px)] z-20 border-t pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:bottom-0"
+      className="chrome fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+63px)] z-20 hidden border-t pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:bottom-0 lg:block"
     >
       <div
         className={cn(
