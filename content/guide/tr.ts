@@ -912,6 +912,109 @@ Bu sitede opsiyon zinciri yok ve buradan opsiyon alınmaz. Ama opsiyon piyasası
   },
 
   /* ---------------------------------------------------------------------- */
+  "hedge": {
+    title: "Hedge: Riski Kapatmanın Maliyeti",
+    dek: "Pozisyonu satmadan riski azaltmak — ve her korumanın bir fatura kestiği.",
+    bodyMd: `Hedge tahmin etmek değildir. Tahmin edemediğini kabul etmektir.
+
+Bir pozisyonun düşeceğini biliyorsan yapılacak şey bellidir: satarsın. Hedge, "düşerse ne olacağını bilmiyorum ama o ihtimalin bana açacağı zararı şimdiden sınırlamak istiyorum" diyen kişinin işidir. Sigortaya benzemesi tesadüf değil — mantığı birebir aynıdır, faturası da.
+
+::: tanim Hedge (Korunma)
+Mevcut bir pozisyonun zararını dengeleyecek İKİNCİ bir pozisyon açmak. Amaç kazanç değil, kaybın büyüklüğünü baştan sınırlamaktır. İyi çalışan bir hedge, portföyün kazandığı senaryoda para kaybeder — kaybetmiyorsa muhtemelen hedge değil, ikinci bir bahistir.
+:::
+
+## Neden Satmak Yerine?
+
+Satmak her zaman en basit korunmadır ve çoğu zaman doğru cevaptır. Hedge'in tercih edildiği durumlar dardır:
+
+- **Pozisyondan çıkmak istemiyorsun.** Uzun vadeli tezine inanıyorsun ama önümüzdeki üç haftada bir bilanço, bir seçim ya da bir Fed toplantısı var.
+- **Satış vergi doğuruyor.** Büyük bir kâr üzerinde oturuyorsan satmak vergi olayını bugüne çeker.
+- **Geri girmek zor.** Düşük hacimli bir hissede çıkıp girmek [spread](/rehber/spread-likidite) maliyetini iki kez ödemek demektir.
+- **Riskin tamamı değil bir parçası rahatsız ediyor.** Şirketi seviyorsun ama sektörün tamamının aşırı ısındığını düşünüyorsun.
+
+Bu dördü de yoksa cevap büyük ihtimalle hedge değil, **pozisyonu küçültmek**tir. Küçültmenin maliyeti sıfırdır; hedge'in maliyeti hiçbir zaman sıfır değildir.
+
+## Dört Yöntem
+
+| Yöntem | Neyi korur | Maliyeti | Yukarı yönü |
+|---|---|---|---|
+| **Koruyucu put** | Belirli bir fiyatın altını tamamen | Peşin prim | Bozulmaz |
+| **Covered call** | Küçük düşüşleri kısmen | Prim geliri, maliyet negatif | **Tavanlanır** |
+| **Endeks short / ters ETF** | Piyasa geneli riskini | Finansman + takip sapması | Endeks kadar kısılır |
+| **Pozisyon küçültme** | Her şeyi, orantılı | Yok | Orantılı azalır |
+
+Dört satırın anlattığı şey şudur: bedava koruma yoktur. Ya peşin ödersin (put), ya yukarı yönden ödersin (covered call), ya taşıma maliyetiyle ödersin (short), ya da maruziyetten ödersin (küçültme).
+
+## Koruyucu Put: Sigortanın Fiyatı
+
+En saf hedge budur. Hisseyi tutarsın, altına bir taban koyan put alırsın. [Opsiyon yazısındaki](/rehber/opsiyonlar) prim mantığı burada aynen işler.
+
+::: ornek Üç Aylık Sigorta
+100 hisse, hisse başı 200 dolar. Portföydeki değer: **20.000 dolar**.
+Üç ay vadeli, 180 dolar kullanım fiyatlı put: hisse başı 9 dolar → **900 dolar prim**.
+
+Hisse 140'a düşerse: pozisyon 6.000 dolar kaybeder, put ~4.000 dolar kazanır. Net kayıp 2.900 dolar (put primi dahil) — korumasız hâlde 6.000 dolardı.
+Hisse 200'de kalırsa: put sıfırlanır, 900 dolar gider. Hisse hiç hareket etmeden **%4,5** kaybettin.
+Hisse 240'a çıkarsa: 4.000 dolar kazanırsın, 900 doları sigortaya verirsin. Net 3.100 dolar.
+:::
+
+Örnekteki üç satır hedge'in tamamını anlatır: **kötü senaryoda kazandığın, iyi ve nötr senaryoda ödediğindir.** Sigortayı her yıl yenilersen ve büyük düşüş hiç gelmezse, yıllık %4-5'lik bir sürtünme portföyün getirisinin önemli bir kısmını yer.
+
+## Covered Call: Yarım Koruma
+
+Elindeki hisse üzerine call satarsın, primi cebe koyarsın. O prim küçük düşüşleri karşılar. Karşılığında yukarıyı satmış olursun: hisse strike'ın üstüne çıkarsa kazancın orada durur.
+
+Bu bir hedge'den çok **yön takasıdır**: büyük yukarı senaryodan vazgeçip küçük ve kesin bir gelir alırsın. Sert bir düşüşe karşı koruması neredeyse yoktur — %40 düşen bir hissede topladığın 3 dolarlık prim teselli olmaz.
+
+## Endeksle Hedge ve Oran Sorunu
+
+Tek tek hisseleri değil, portföyün tamamının piyasa riskini kapatmak istiyorsan endeks tarafından hedge yaparsın: endeks ETF'sinde [short](/rehber/long-short) ya da endeks üzerine put.
+
+Burada bir oran sorunu doğar. Portföyün 100.000 dolarsa 100.000 dolarlık endeks short'u doğru cevap değildir — portföyün endeksten daha oynak ya da daha sakin olabilir. Bu duyarlılığa **beta** denir: betası 1,3 olan bir portföy, endeks %10 düşerken ortalama %13 düşer, yani hedge'in 130.000 dolar büyüklüğünde olması gerekir.
+
+::: dikkat Baz Riski
+Hedge ettiğin şey ile hedge aracın aynı şey değildir. Yarı iletken ağırlıklı bir portföyü S&P 500 ile hedge edersen, S&P yatay kalırken yarı iletkenler %15 düşebilir: portföy kaybeder, hedge hiçbir şey kazanmaz. Buna **baz riski** denir ve hedge'in en sık gözden kaçan kusurudur. Hedge aracı korunan şeye ne kadar benzemezse, koruma o kadar teoriktir.
+:::
+
+## Ters ETF'lerin Sessiz Sorunu
+
+"Endeks düşerse kazanan" ETF'ler (ters/inverse, özellikle 2x ve 3x kaldıraçlı olanlar) hedge için pratik görünür. Sorun şudur: bu ürünler **günlük** getiriyi hedefler ve her gün yeniden dengelenir. Oynak ama yatay seyreden bir piyasada, endeks aynı yere dönse bile ters ETF değer kaybeder.
+
+Sonuç: birkaç günlük bir olay için makul, aylarca taşınacak bir koruma için kötü bir araçtır. Uzun vadeli korumada takvim, ürünün aleyhine işler.
+
+## Hedge'in Üç Sabit Maliyeti
+
+1. **Prim ya da taşıma.** Put primi, short'un finansmanı, ETF'nin gider oranı. Kötü senaryo gelmezse bu para tamamen gider.
+2. **Vazgeçilen yukarı yön.** Covered call'da açık, put'ta prim kadar, short'ta birebir.
+3. **Dikkat.** Hedge bir pozisyondur; vadesi, oranı ve yenilenmesi takip ister. Unutulmuş bir hedge, korumadığı gibi tek başına zarar eden bir bahse dönüşür.
+
+::: dikkat Aşırı Hedge
+İkiden fazla korumayı üst üste bindiren portföy artık hedge'li değil, **yönsüzdür**. Her kalemi hedge edilmiş bir portföyün beklenen getirisi, maliyetler düşüldükten sonra nakitten düşüktür. O noktada yapılacak şey daha fazla hedge değil, pozisyonları küçültüp nakde geçmektir — aynı sonucu bedavaya verir.
+:::
+
+## Şirketler de Hedge Yapar
+
+Bu, ekranda en sık karşına çıkacak hedge türüdür. Gelirinin yarısını avrodan alan bir Amerikan şirketi, döviz kurunun aleyhine dönmesine karşı vadeli işlem yapar. Havayolu yakıtı, gıda şirketi buğdayı, madenci de üretimini hedge eder.
+
+Bunun bilanço okuma açısından iki sonucu vardır:
+
+- Hedge, kötü çeyreği yumuşatır ama **iyi çeyreği de yumuşatır.** Kur lehine döndüğünde şirket o kazancın tamamını alamaz.
+- Hedge'in kendisi kâr-zarar tablosunda satır açar. "Kur farkı geliri" ya da "türev araç zararı" gibi kalemler operasyonel performansla karışabilir. [Bilanço yazısındaki](/rehber/bilanco) düzeltilmiş/GAAP ayrımının bir sebebi de budur.
+
+::: ozet Özet
+Hedge, kaybı sınırlamak için beklenen getiriden vazgeçmektir. Doğru sorulacak soru "nasıl hedge yaparım" değil, **"bu riski taşıyamıyorsam neden bu büyüklükte taşıyorum"**dur. Cevap çoğu zaman pozisyonu küçültmektir — bedava, basit ve takip gerektirmez. Hedge yalnızca pozisyondan çıkmanın gerçek bir maliyeti olduğunda ve korunacak olay TARİHLİ olduğunda (bilanço, toplantı, seçim) mantıklıdır.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Bu sitede opsiyon ya da türev işlemi yapılmaz. Ama hedge'in izleri birkaç yerde okunur:
+
+- [Piyasalar](/piyasalar) ekranındaki **korku endeksi VIX**, korunma talebinin fiyatıdır: yükselmesi, piyasanın sigortaya daha çok ödemeye razı olduğu anlamına gelir.
+- [Bilanço analizlerinde](/bilancolar/analizler) kur ve emtia etkisinden söz edilen satırlar, şirketin kendi hedge kararlarının sonucudur.
+- [Takvim](/takvim) ekranındaki tarihli olaylar, kurumsal yatırımcının hedge takvimini kuran şeydir — koruma bu tarihlerin etrafında alınır ve çözülür.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
   "yatirimci-psikolojisi": {
     title: "Yatırımcı Psikolojisi: En Pahalı Hatalar",
     dek: "Portföyünün en zayıf halkası genellikle bir hisse değil, bir alışkanlıktır.",

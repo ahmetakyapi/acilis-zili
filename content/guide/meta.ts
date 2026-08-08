@@ -162,6 +162,16 @@ export const GUIDE_META = [
     related: ["kaldirac", "volatilite"],
   },
   {
+    /* Opsiyonlardan SONRA: koruyucu put ile covered call'u anlatmak için
+       primin, vadenin ve zaman erimesinin önce okunmuş olması gerekiyor.
+       Kaldıraç ve long/short da ön koşul — hedge, o üç yazının kurduğu
+       araçları bir araya getiren yazı. */
+    slug: "hedge",
+    topic: "strateji",
+    glyph: "Δ",
+    related: ["opsiyonlar", "long-short", "risk-yonetimi", "cesitlendirme"],
+  },
+  {
     slug: "yatirimci-psikolojisi",
     topic: "strateji",
     glyph: "!",

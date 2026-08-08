@@ -911,6 +911,109 @@ There is no options chain on this site, and nothing can be traded here. But one 
   },
 
   /* ---------------------------------------------------------------------- */
+  "hedge": {
+    title: "Hedging: What Protection Costs",
+    dek: "Reducing risk without selling the position — and why every hedge sends an invoice.",
+    bodyMd: `Hedging is not a prediction. It is an admission that you cannot make one.
+
+If you know a position is going to fall, the answer is simple: sell it. Hedging is for the person who says "I don't know what happens next, but I want to cap what that uncertainty can cost me." The resemblance to insurance is not a metaphor — the logic is identical, and so is the bill.
+
+::: tanim Hedge
+A SECOND position opened to offset the loss on an existing one. The goal is not profit; it is capping the size of the loss in advance. A hedge that works loses money in the scenario where your portfolio wins — if it doesn't, it probably isn't a hedge but a second bet.
+:::
+
+## Why Not Just Sell?
+
+Selling is always the simplest protection and usually the right answer. The cases where hedging beats it are narrow:
+
+- **You don't want out of the position.** You believe the long-term thesis, but there's an earnings report, an election or a Fed meeting in the next three weeks.
+- **Selling triggers tax.** Sitting on a large gain, selling pulls the tax event into today.
+- **Getting back in is hard.** In a thinly traded name, exiting and re-entering means paying the [spread](/rehber/spread-likidite) twice.
+- **Part of the risk bothers you, not all of it.** You like the company but think the whole sector is overheated.
+
+If none of these apply, the answer is probably not a hedge but a **smaller position**. Trimming costs nothing; a hedge never costs nothing.
+
+## Four Methods
+
+| Method | What it protects | Cost | Upside |
+|---|---|---|---|
+| **Protective put** | Everything below a chosen price | Premium, paid upfront | Intact |
+| **Covered call** | Small declines, partially | Premium income, negative cost | **Capped** |
+| **Index short / inverse ETF** | Broad market risk | Financing + tracking drift | Reduced by the index |
+| **Trimming the position** | Everything, proportionally | None | Reduced proportionally |
+
+What the four rows say: there is no free protection. You pay upfront (put), you pay in upside (covered call), you pay in carry (short), or you pay in exposure (trimming).
+
+## The Protective Put: Insurance With a Price Tag
+
+This is the purest hedge. You keep the stock and buy a put that places a floor under it. The premium mechanics from the [options article](/rehber/opsiyonlar) apply unchanged.
+
+::: ornek Three Months of Insurance
+100 shares at $200. Position value: **$20,000**.
+A three-month put struck at $180 costs $9 per share → **$900 premium**.
+
+Stock falls to $140: the position loses $6,000, the put gains ~$4,000. Net loss $2,900 including premium — it would have been $6,000 unhedged.
+Stock stays at $200: the put expires worthless, $900 gone. You lost **4.5%** with the stock unchanged.
+Stock rises to $240: you gain $4,000 and hand $900 to the insurance. Net $3,100.
+:::
+
+Those three lines are the whole of hedging: **what you gain in the bad case is what you pay in the good and the flat case.** Renew the insurance every year and never get the crash, and a 4-5% annual drag eats a meaningful share of your return.
+
+## Covered Call: Half a Hedge
+
+You sell a call against stock you own and pocket the premium. That premium absorbs small declines. In exchange you have sold your upside: above the strike, your gain stops.
+
+This is less a hedge than a **swap of outcomes** — you give up the large upside scenario for a small, certain income. Against a sharp fall it offers almost nothing: $3 of premium is no consolation in a stock that drops 40%.
+
+## Hedging With an Index, and the Ratio Problem
+
+To neutralise the market risk of a whole portfolio rather than single names, you hedge on the index side: [short](/rehber/long-short) an index ETF, or buy index puts.
+
+That raises a sizing question. If your portfolio is $100,000, a $100,000 index short is not the right answer — your portfolio may be more or less volatile than the index. That sensitivity is called **beta**: a portfolio with a beta of 1.3 falls about 13% when the index falls 10%, so the hedge needs to be $130,000.
+
+::: dikkat Basis Risk
+What you are hedging and what you hedge it with are not the same thing. Hedge a semiconductor-heavy portfolio with the S&P 500, and semis can fall 15% while the S&P sits flat: the portfolio loses, the hedge earns nothing. This is **basis risk**, and it is the most commonly overlooked flaw in a hedge. The less the instrument resembles what it protects, the more theoretical the protection.
+:::
+
+## The Quiet Problem With Inverse ETFs
+
+ETFs that rise when an index falls — inverse products, especially the 2x and 3x leveraged ones — look practical for hedging. The problem: they target the **daily** return and reset every day. In a volatile but directionless market, the inverse ETF loses value even when the index ends up exactly where it started.
+
+The result: reasonable for an event a few days out, poor for protection carried for months. Over a long horizon the calendar works against the product.
+
+## Three Costs That Never Go Away
+
+1. **Premium or carry.** Put premium, financing on a short, an ETF's expense ratio. If the bad scenario never arrives, that money is simply gone.
+2. **Forfeited upside.** Explicit in a covered call, premium-sized in a put, one-for-one in a short.
+3. **Attention.** A hedge is a position: it has an expiry, a ratio and a renewal. A forgotten hedge stops protecting and becomes a standalone losing bet.
+
+::: dikkat Over-Hedging
+A portfolio stacking more than two overlapping protections is no longer hedged — it is **directionless**. Hedge every line item and the expected return, after costs, is below cash. At that point the answer is not more hedging but smaller positions and more cash, which gets you the same result for free.
+:::
+
+## Companies Hedge Too
+
+This is the kind of hedging you will meet most often on screen. An American company earning half its revenue in euros uses forwards against an adverse move in the exchange rate. Airlines hedge fuel, food companies hedge wheat, miners hedge output.
+
+Two consequences for reading a report:
+
+- Hedging softens a bad quarter but **softens a good one too.** When the currency moves in the company's favour, it does not capture all of that gain.
+- The hedge itself creates lines in the income statement. Items like "foreign exchange gain" or "loss on derivatives" can be mistaken for operating performance. This is one reason for the adjusted/GAAP distinction in the [earnings article](/rehber/bilanco).
+
+::: ozet In Short
+Hedging means giving up expected return in order to cap a loss. The right question is not "how do I hedge this" but **"if I can't carry this risk, why am I carrying it in this size."** The answer is usually to trim — free, simple, and it needs no maintenance. Hedging makes sense only when exiting has a real cost and the risk you're protecting against has a DATE on it: an earnings report, a meeting, an election.
+:::
+
+## Where You'll See It Here
+
+No options or derivatives are traded on this site. But the traces of hedging show up in a few places:
+
+- The **VIX fear index** on [Markets](/piyasalar) is the price of protection: when it rises, the market is willing to pay more for insurance.
+- Lines in the [earnings analyses](/bilancolar/analizler) that mention currency or commodity effects are the result of a company's own hedging decisions.
+- The dated events on [Calendar](/takvim) are what sets an institution's hedging schedule — protection is put on and taken off around these dates.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
   "yatirimci-psikolojisi": {
     title: "Investor Psychology: The Most Expensive Mistakes",
     dek: "The weakest link in your portfolio is usually not a stock but a habit.",
