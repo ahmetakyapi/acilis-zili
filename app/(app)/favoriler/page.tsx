@@ -37,9 +37,15 @@ export default async function WatchlistPage() {
   }
 
   const nameMap: Record<string, string> = {};
+  /* Logo, favori satırını sitedeki diğer listelerle aynı dile sokuyor:
+     şirketler tablosu, endeks bileşenleri ve yaklaşan bilançolar hep
+     `symbols.logo_url`'den besleniyordu, favoriler tek istisnaydı ve
+     bu yüzden düz bir sembol sütunu gibi duruyordu. */
+  const logoMap: Record<string, string> = {};
   for (const symbol of allSymbols) {
     const meta = names[symbol];
     if (meta?.name) nameMap[symbol] = meta.name;
+    if (meta?.logoUrl) logoMap[symbol] = meta.logoUrl;
   }
 
   const labels: BoardLabels = {
@@ -73,6 +79,7 @@ export default async function WatchlistPage() {
         }))}
         quotes={quotes}
         names={nameMap}
+        logos={logoMap}
         locale={locale}
         labels={labels}
       />

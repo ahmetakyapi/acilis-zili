@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -74,12 +75,14 @@ export function WatchlistBoard({
   lists,
   quotes,
   names,
+  logos,
   locale,
   labels,
 }: {
   lists: BoardList[];
   quotes: Record<string, BoardQuote>;
   names: Record<string, string>;
+  logos: Record<string, string>;
   locale: Locale;
   labels: BoardLabels;
 }) {
@@ -100,6 +103,7 @@ export function WatchlistBoard({
             list={list}
             quotes={quotes}
             names={names}
+            logos={logos}
             locale={locale}
             labels={labels}
           />
@@ -201,12 +205,14 @@ function ListPanel({
   list,
   quotes,
   names,
+  logos,
   locale,
   labels,
 }: {
   list: BoardList;
   quotes: Record<string, BoardQuote>;
   names: Record<string, string>;
+  logos: Record<string, string>;
   locale: Locale;
   labels: BoardLabels;
 }) {
@@ -255,6 +261,7 @@ function ListPanel({
           list={list}
           quotes={quotes}
           names={names}
+          logos={logos}
           locale={locale}
           labels={labels}
         />
@@ -281,12 +288,14 @@ function SortableRows({
   list,
   quotes,
   names,
+  logos,
   locale,
   labels,
 }: {
   list: BoardList;
   quotes: Record<string, BoardQuote>;
   names: Record<string, string>;
+  logos: Record<string, string>;
   locale: Locale;
   labels: BoardLabels;
 }) {
@@ -355,7 +364,7 @@ function SortableRows({
               dragId.current = null;
               if (order) persist(order);
             }}
-            className="group flex items-center gap-2 px-2 py-2 sm:px-3"
+            className="group flex items-center gap-2 px-2 py-2.5 transition-colors hover:bg-primary-tint sm:px-3"
           >
             <span
               aria-hidden
@@ -369,6 +378,22 @@ function SortableRows({
               href={`/hisse/${item.symbol}`}
               className="flex min-w-0 flex-1 items-center gap-2.5"
             >
+              {logos[item.symbol] ? (
+                <Image
+                  src={logos[item.symbol]}
+                  alt=""
+                  width={26}
+                  height={26}
+                  className="size-[26px] shrink-0 rounded-[7px] border border-line-soft bg-white object-contain"
+                />
+              ) : (
+                <span
+                  aria-hidden
+                  className="numeral flex size-[26px] shrink-0 items-center justify-center rounded-[7px] bg-primary-wash text-[9px] font-bold text-primary"
+                >
+                  {item.symbol.slice(0, 2)}
+                </span>
+              )}
               <span className="numeral w-14 shrink-0 text-sm font-semibold text-strong">
                 {item.symbol}
               </span>
