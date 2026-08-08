@@ -40,12 +40,25 @@ export function ChartFooter({
         /* Üçlü künye telefonda ALT ALTA: 390 pikselde üç sütun etiketleri
            kırpıyor ("Serbest Nakit Akı...") ve değerler satır ortasından
            kırılıyordu. Kırpılmış bir etiket hiç etiket olmamasından kötü. */
-        stats.length >= 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2",
+        stats.length >= 3
+          ? /* Telefonda üçü alt alta ve aralarında AYRAÇ var: ayraçsızken
+               üç ölçü gevşek bir liste gibi akıyor, hangi değerin hangi
+               etikete ait olduğu ancak dikkatle okunuyordu. Hairline
+               sitenin geri kalanıyla aynı dil. Üçlü sıraya geçince
+               ayraç kalkıyor, orada sütunlar zaten ayırıyor. */
+            "grid-cols-1 divide-y divide-line-soft sm:grid-cols-3 sm:divide-y-0"
+          : "grid-cols-2",
         className,
       )}
     >
       {stats.map((stat) => (
-        <div key={stat.label} className="min-w-0">
+        <div
+          key={stat.label}
+          className={cn(
+            "min-w-0",
+            stats.length >= 3 && "py-2 first:pt-0 last:pb-0 sm:py-0",
+          )}
+        >
           <dt className="truncate text-[11px] font-medium text-muted">
             {stat.label}
           </dt>

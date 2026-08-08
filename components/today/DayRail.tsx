@@ -109,11 +109,25 @@ const RAIL_SPAN = RAIL_END - RAIL_START;
    Çizgi sınır etiketlerinin ARKASINDAN geçer (etiketlerde `z-10` var):
    seans içinde işaretçi açılış etiketinin üstüne geldiğinde 3 piksellik
    accent çizgi yazının içinden geçmiyor, altından. */
-const NOW_TOP = 0;
-const NOW_BADGE_HEIGHT = 16;
+/**
+ * "ŞİMDİ" rozeti EKSENİN ALTINDA duruyor, üstünde değil.
+ *
+ * Rozet bir süre en üstteydi (top: 0) ve ondan eksene inen dikey çizgi,
+ * arada kalan sınır etiketlerinin (AÇILIŞ · 16:30 TR · 09:30 NY) tam
+ * içinden geçiyordu. Katman sırası çizgiyi yazının ALTINA alıyordu ama
+ * göz yine de kesişmeyi görüyor ve şerit karışık duruyordu; "şimdi"
+ * açılışa yakın bir saatteyse ikisi üst üste biniyordu.
+ *
+ * Aşağı alınınca üst bant yalnızca sınır etiketlerine, alt bant yalnızca
+ * "şimdi"ye kalıyor: hiçbir şey hiçbir şeyi kesmiyor. Çizgi de kısaldı —
+ * rozetten eksene birkaç piksel, işaretçiyle rozetin aynı ana ait olduğu
+ * hâlâ okunuyor.
+ */
 const BOUND_TOP = 24;
 const AXIS_TOP = 68;
 const AXIS_HEIGHT = 6;
+/** Eksenin altından başlar; olay kartları CHIP_TOP'ta, araya girmiyor. */
+const NOW_TOP = AXIS_TOP + AXIS_HEIGHT + 10;
 const AXIS_CENTER = AXIS_TOP + AXIS_HEIGHT / 2;
 const EDGE_TOP = AXIS_TOP + AXIS_HEIGHT + 5;
 const CHIP_TOP = 110;
@@ -421,10 +435,9 @@ export function DayRail({
             >
               {labels.now}
             </div>
-            {/* Çizgi rozetten inip ekseni KESİYOR — rozet ile işaretçinin
-                aynı ana ait olduğu başka türlü okunmuyordu. Katman verilmedi:
-                sınır etiketlerinin `z-10`'u kazanıyor ve çizgi yazının
-                altından geçiyor. */}
+            {/* Kısa bağ: eksenden rozete. Rozet ile eksendeki işaretçinin
+                aynı ana ait olduğunu söyleyen tek şey bu; artık hiçbir
+                yazının içinden geçmiyor. */}
             <div
               className={cn(
                 "absolute w-[3px] -translate-x-1/2 rounded-full",
@@ -432,8 +445,8 @@ export function DayRail({
               )}
               style={{
                 left: `${pct(nowMinutes)}%`,
-                top: NOW_TOP + NOW_BADGE_HEIGHT,
-                height: AXIS_TOP + AXIS_HEIGHT + 4 - (NOW_TOP + NOW_BADGE_HEIGHT),
+                top: AXIS_TOP + AXIS_HEIGHT - 2,
+                height: NOW_TOP - (AXIS_TOP + AXIS_HEIGHT) + 2,
               }}
             />
           </>
