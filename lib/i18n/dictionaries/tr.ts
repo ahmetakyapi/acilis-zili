@@ -374,6 +374,9 @@ const tr = {
     empty: "Henüz şirket verisi yok.",
     emptyHint:
       "Şirket profilleri hisse sayfaları ziyaret edildikçe ve günlük senkronla dolar.",
+    // Cümle, başlık değil: sayaç tablonun altında bir bilgi satırı.
+    showing: "{total} şirketin {n} tanesi",
+    showMore: "Daha Fazla Göster",
   },
 
   stock: {

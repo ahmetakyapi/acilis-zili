@@ -210,7 +210,7 @@ export default async function AnalysesPage(
               </div>
               <Link
                 href={filterHref("hafta")}
-                className="text-[11.5px] font-semibold text-primary hover:text-primary-hover"
+                className="-my-2 inline-flex min-h-10 items-center py-2 text-[11.5px] font-semibold text-primary hover:text-primary-hover sm:-my-1 sm:min-h-0 sm:py-1"
               >
                 {t.analysis.showAll}
               </Link>
@@ -265,7 +265,7 @@ export default async function AnalysesPage(
               </div>
               <Link
                 href="/bilancolar"
-                className="text-[11.5px] font-semibold text-primary hover:text-primary-hover"
+                className="-my-2 inline-flex min-h-10 items-center py-2 text-[11.5px] font-semibold text-primary hover:text-primary-hover sm:-my-1 sm:min-h-0 sm:py-1"
               >
                 {t.analysis.goToCalendar}
               </Link>

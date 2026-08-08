@@ -346,6 +346,8 @@ const en: typeof tr = {
     empty: "No company data yet.",
     emptyHint:
       "Company profiles fill in as stock pages are visited and via the daily sync.",
+    showing: "{n} of {total} companies",
+    showMore: "Show More",
   },
 
   stock: {

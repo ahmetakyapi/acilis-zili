@@ -1091,7 +1091,7 @@ function ReportCard({
             dosya değil, tarayıcı adı uzantıdan tahmin ediyordu. */}
         <a
           href={`${row.cardImageUrl}?indir=1`}
-          className="text-[11.5px] font-semibold text-primary hover:text-primary-hover"
+          className="-my-2 inline-flex min-h-10 items-center py-2 text-[11.5px] font-semibold text-primary hover:text-primary-hover sm:-my-1 sm:min-h-0 sm:py-1"
         >
           ↓ {t.analysis.downloadPng}
         </a>

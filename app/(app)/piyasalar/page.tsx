@@ -76,6 +76,18 @@ const SORT_KEYS = ["degisim", "fiyat", "ad", "katki", "cap"] as const;
 type SortKey = (typeof SORT_KEYS)[number];
 type SortDir = "asc" | "desc";
 
+/**
+ * Bir seferde basılan bileşen satırı.
+ *
+ * S&P 500 sekmesi 499 satırın tamamını basıyordu: 2,3 MB HTML tek sayfada,
+ * telefonda saniyelerce süren bir yerleşim. Endeks bileşenleri listesi
+ * baştan sona okunan bir şey değil — okuyucu ilk sıralara, yani sıralamanın
+ * tepesine bakıyor. Sıralama SATIRLARIN TAMAMI üzerinde yapılıp dilim sonra
+ * alınıyor, yani "en çok düşen" ilk 60'ın değil 499'un en çok düşeni.
+ * (Aynı ölçü ve aynı gerekçe /sirketler dizininde de var.)
+ */
+const PAGE_STEP = 60;
+
 /** ABD Hazine tahvili serileri — FRED sabit vadeli getiriler. */
 const YIELD_SERIES = [
   { seriesId: "DGS2", slug: "yield-2y", units: "lin", labelKey: "yieldY2" },
@@ -117,6 +129,13 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
     ? (search.sirala as SortKey)
     : "degisim";
   const dir: SortDir = search.yon === "asc" ? "asc" : "desc";
+  const requested = Number(
+    typeof search.adet === "string" ? search.adet : PAGE_STEP,
+  );
+  const limit =
+    Number.isFinite(requested) && requested > 0
+      ? Math.ceil(requested / PAGE_STEP) * PAGE_STEP
+      : PAGE_STEP;
 
   const { locale, t } = await getI18n();
   const active = INDEX_TABS.find((entry) => entry.key === tab)!;
@@ -159,6 +178,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         proxy={active.proxy}
         sort={sort}
         dir={dir}
+        limit={limit}
         locale={locale}
         t={t}
       />
@@ -387,6 +407,7 @@ async function IndexDetail({
   proxy,
   sort,
   dir,
+  limit,
   locale,
   t,
 }: {
@@ -395,6 +416,7 @@ async function IndexDetail({
   proxy: string;
   sort: SortKey;
   dir: SortDir;
+  limit: number;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -494,6 +516,7 @@ async function IndexDetail({
       <MembersTable
         tab={tab}
         rows={rows}
+        limit={limit}
         sort={sort}
         dir={dir}
         showContribution={divisor !== null}
@@ -698,9 +721,18 @@ function MoverPanel({
 
 /* ---- Tam bileşen tablosu ---- */
 
-function sortHref(tab: TabKey, key: SortKey, sort: SortKey, dir: SortDir) {
+function sortHref(
+  tab: TabKey,
+  key: SortKey,
+  sort: SortKey,
+  dir: SortDir,
+  limit: number,
+) {
   const nextDir: SortDir = sort === key && dir === "desc" ? "asc" : "desc";
-  return `/piyasalar?endeks=${tab}&sirala=${key}&yon=${nextDir}`;
+  // Derinlik korunur: 180 satıra inmiş biri sütun başlığına basınca ilk 60'a
+  // geri fırlatılmamalı.
+  const depth = limit > PAGE_STEP ? `&adet=${limit}` : "";
+  return `/piyasalar?endeks=${tab}&sirala=${key}&yon=${nextDir}${depth}`;
 }
 
 function SortHead({
@@ -744,6 +776,7 @@ function SortHead({
 function MembersTable({
   tab,
   rows,
+  limit,
   sort,
   dir,
   showContribution,
@@ -752,6 +785,8 @@ function MembersTable({
 }: {
   tab: TabKey;
   rows: Row[];
+  /** Kaç satır basılacak — sıralama TAMAMI üzerinde, dilim sonra alınır. */
+  limit: number;
   sort: SortKey;
   dir: SortDir;
   showContribution: boolean;
@@ -793,7 +828,7 @@ function MembersTable({
     0.01,
   );
 
-  const sorted = [...rows].sort((a, b) => {
+  const ordered = [...rows].sort((a, b) => {
     const va = valueOf(a);
     const vb = valueOf(b);
     // Boşlar her iki yönde de sonda; kendi aralarında tablo sırasını korur.
@@ -805,6 +840,11 @@ function MembersTable({
     }
     return dir === "asc" ? va - vb : vb - va;
   });
+
+  // Dilim SIRALAMADAN SONRA — bkz. PAGE_STEP.
+  const sorted = ordered.slice(0, limit);
+  const hasMore = ordered.length > sorted.length;
+  const moreHref = `/piyasalar?endeks=${tab}&sirala=${sort}&yon=${dir}&adet=${limit + PAGE_STEP}`;
 
   return (
     <Panel>
@@ -828,7 +868,7 @@ function MembersTable({
               </th>
               <SortHead
                 label={t.companies.company}
-                href={sortHref(tab, "ad", sort, dir)}
+                href={sortHref(tab, "ad", sort, dir, limit)}
                 active={sort === "ad"}
                 dir={dir}
                 className="text-left"
@@ -836,21 +876,21 @@ function MembersTable({
               {/* Değişim fiyattan önce — bkz. /sirketler tablosu. */}
               <SortHead
                 label={t.companies.change}
-                href={sortHref(tab, "degisim", sort, dir)}
+                href={sortHref(tab, "degisim", sort, dir, limit)}
                 active={sort === "degisim"}
                 dir={dir}
                 className="px-1.5 sm:px-3"
               />
               <SortHead
                 label={t.companies.price}
-                href={sortHref(tab, "fiyat", sort, dir)}
+                href={sortHref(tab, "fiyat", sort, dir, limit)}
                 active={sort === "fiyat"}
                 dir={dir}
                 className="pr-4 sm:pr-3"
               />
               <SortHead
                 label={t.market.marketCap}
-                href={sortHref(tab, "cap", sort, dir)}
+                href={sortHref(tab, "cap", sort, dir, limit)}
                 active={sort === "cap"}
                 dir={dir}
                 className={cn(
@@ -861,7 +901,7 @@ function MembersTable({
               {showContribution && (
                 <SortHead
                   label={t.markets.contribution}
-                  href={sortHref(tab, "katki", sort, dir)}
+                  href={sortHref(tab, "katki", sort, dir, limit)}
                   active={sort === "katki"}
                   dir={dir}
                   className="hidden sm:table-cell sm:pr-5"
@@ -999,6 +1039,26 @@ function MembersTable({
           </tbody>
         </table>
       </div>
+      {/* Sayaç + devamı — /sirketler dizinindeki ölçünün aynısı.
+          scroll={false}: okuyucu tablonun dibinde, yeni satırlar geldiğinde
+          sayfanın başına fırlatılmamalı. */}
+      {hasMore && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
+          <p className="numeral text-[12px] text-muted">
+            {t.companies.showing
+              .replace("{n}", String(sorted.length))
+              .replace("{total}", String(ordered.length))}
+          </p>
+          <Link
+            href={moreHref}
+            scroll={false}
+            className="inline-flex min-h-10 items-center rounded-[10px] border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+          >
+            {t.companies.showMore}
+          </Link>
+        </div>
+      )}
+
       {showContribution && (
         <p className="border-t border-line-soft px-4 py-2.5 text-[11px] leading-relaxed text-muted sm:px-5">
           {t.markets.contributionHint}

@@ -146,9 +146,13 @@ export function AuthForm({
 
         <p className="mt-5 border-t border-line pt-4 text-[13px] text-muted">
           {altText}{" "}
+          {/* Cümle içinde ama dokunulabilir: 16px yüksekliğindeydi ve giriş
+              ile kayıt arasında geçiş yapmanın TEK yolu bu bağlantı.
+              `inline-flex` + dikey dolgu hedefi 40px'e çıkarıyor; negatif
+              margin cümlenin satır yüksekliğini bozmuyor. */}
           <Link
             href={altHref}
-            className="font-semibold text-primary hover:text-primary-hover"
+            className="-my-2 inline-flex min-h-10 items-center py-2 font-semibold text-primary hover:text-primary-hover"
           >
             {altLinkLabel}
           </Link>

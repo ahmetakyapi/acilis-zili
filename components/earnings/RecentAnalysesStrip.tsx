@@ -50,7 +50,7 @@ export async function RecentAnalysesStrip({
             satıra çıkıyor ve takvimin önüne geçiyordu. */}
         <Link
           href="/bilancolar/analizler"
-          className="whitespace-nowrap text-[11.5px] font-semibold text-primary hover:text-primary-hover sm:hidden"
+          className="-my-2 inline-flex min-h-10 items-center whitespace-nowrap py-2 text-[11.5px] font-semibold text-primary hover:text-primary-hover sm:hidden"
         >
           {t.common.showAll} →
         </Link>

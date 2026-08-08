@@ -55,6 +55,23 @@ const SORT_KEYS = ["cap", "hacim", "fiyat", "degisim", "hafta"] as const;
 type SortKey = (typeof SORT_KEYS)[number];
 type SortDir = "asc" | "desc";
 
+/**
+ * Bir seferde basılan satır sayısı.
+ *
+ * Dizin 670 şirketin TAMAMINI tek sayfada basıyordu: 3 MB HTML, 13.700 DOM
+ * düğümü, 667 logo. Telefonda 4G'de ilk boyama iki saniyeyi geçiyordu ve
+ * sıralamaya basmak yarım saniye sürüyordu — çünkü sunucu her tıklamada 670
+ * satırı yeniden çiziyor, tarayıcı da 670 satırı yeniden yerleştiriyordu.
+ * Kimse 670 satırlık bir listeyi kaydırmıyor; okuyucu ya sektöre filtreliyor
+ * ya aramayı kullanıyor.
+ *
+ * Sıralama SATIRLARIN TAMAMI üzerinde yapılır, sonra dilim alınır: "en çok
+ * düşen" listesi ilk 60 satırın değil, 670'in en çok düşenidir. Kotasyonlar
+ * bu yüzden hepsi için çekilmeye devam ediyor (zaten paralel ve önbellekli);
+ * kazanç sunucunun ürettiği HTML'de ve tarayıcının kurduğu DOM'da.
+ */
+const PAGE_STEP = 60;
+
 /** Kategori çipi — etiket + o gruptaki şirket sayısı. */
 function SectorChip({
   href,
@@ -167,17 +184,40 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
       )
     : companies;
 
+  /* Kaç satır basılacak. Sıralama ya da filtre değişince sayaç başa döner:
+     "daha fazla" bir okuma derinliğidir, yeni bir listeye taşınmaz. */
+  const requested = Number(
+    typeof search.adet === "string" ? search.adet : PAGE_STEP,
+  );
+  const limit =
+    Number.isFinite(requested) && requested > 0
+      ? Math.min(Math.ceil(requested / PAGE_STEP) * PAGE_STEP, rows.length)
+      : PAGE_STEP;
+
   const sortHref = (key: SortKey) => {
     // Aynı kolona tekrar tıklanınca yön değişir; yeni kolonda desc başlar.
     const nextDir: SortDir = sort === key && dir === "desc" ? "asc" : "desc";
     const params = new URLSearchParams({ sirala: key, yon: nextDir });
     if (activeGroup) params.set("sektor", activeGroup.key);
+    // Sıralama değişince derinlik korunur: 180 satıra inmiş biri, sütun
+    // başlığına basınca ilk 60'a geri fırlatılmamalı.
+    if (limit > PAGE_STEP) params.set("adet", String(limit));
     return `/sirketler?${params.toString()}`;
   };
 
   const sectorHref = (value: string | null) => {
     const params = new URLSearchParams({ sirala: sort, yon: dir });
     if (value) params.set("sektor", value);
+    return `/sirketler?${params.toString()}`;
+  };
+
+  const moreHref = () => {
+    const params = new URLSearchParams({
+      sirala: sort,
+      yon: dir,
+      adet: String(limit + PAGE_STEP),
+    });
+    if (activeGroup) params.set("sektor", activeGroup.key);
     return `/sirketler?${params.toString()}`;
   };
 
@@ -232,11 +272,13 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
           sıfırlanıyor ve iskelet ANINDA görünüyor — tıklamanın karşılığı
           hemen ekranda. */}
       <Suspense
-        key={`${activeGroup?.key ?? "hepsi"}:${sort}:${dir}`}
+        key={`${activeGroup?.key ?? "hepsi"}:${sort}:${dir}:${limit}`}
         fallback={<TableSkeleton rows={Math.min(rows.length || 12, 12)} />}
       >
         <CompaniesTable
           rows={rows}
+          limit={limit}
+          moreHref={moreHref()}
           sort={sort}
           dir={dir}
           sortHref={sortHref}
@@ -265,6 +307,8 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
 
 async function CompaniesTable({
   rows: unsorted,
+  limit,
+  moreHref,
   sort,
   dir,
   sortHref,
@@ -272,6 +316,9 @@ async function CompaniesTable({
   t,
 }: {
   rows: CompanyRow[];
+  /** Kaç satır basılacak — sıralama TAMAMI üzerinde, dilim sonra alınır. */
+  limit: number;
+  moreHref: string;
   sort: SortKey;
   dir: SortDir;
   sortHref: (key: SortKey) => string;
@@ -315,13 +362,18 @@ async function CompaniesTable({
   /* Boşlar her zaman SONDA, yön ne olursa olsun. Kendi aralarındaki sıra
      bozulmuyor: `Array.prototype.sort` kararlı, yani veri gelmeyen şirketler
      tablonun kendi (piyasa değeri) sırasında kalıyor. */
-  const rows = [...unsorted].sort((a, b) => {
+  const sorted = [...unsorted].sort((a, b) => {
     const av = valueOf(a);
     const bv = valueOf(b);
     if (av === null) return bv === null ? 0 : 1;
     if (bv === null) return -1;
     return dir === "asc" ? av - bv : bv - av;
   });
+
+  // Dilim SIRALAMADAN SONRA: "en çok düşen" ilk 60'ın değil, hepsinin en çok
+  // düşeni. Kotasyonlar bu yüzden tüm semboller için çekiliyor.
+  const rows = sorted.slice(0, limit);
+  const hasMore = sorted.length > rows.length;
 
   return (
     <>
@@ -491,6 +543,29 @@ async function CompaniesTable({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Sayaç + devamı. Sayaç düğmeden ÖNCE geliyor çünkü asıl soru
+            "listenin neresindeyim": çıplak bir "Daha Fazla Göster" düğmesi
+            kaç satır daha olduğunu söylemiyor ve tıklamanın karşılığını
+            tahmin ettiriyordu.
+            scroll={false}: okuyucu listenin dibinde, sayfanın başına
+            fırlatılmamalı — geldiği yerin altına yeni satırlar eklenmeli. */}
+        {hasMore && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
+            <p className="numeral text-[12px] text-muted">
+              {t.companies.showing
+                .replace("{n}", String(rows.length))
+                .replace("{total}", String(sorted.length))}
+            </p>
+            <Link
+              href={moreHref}
+              scroll={false}
+              className="inline-flex min-h-10 items-center rounded-[10px] border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+            >
+              {t.companies.showMore}
+            </Link>
           </div>
         )}
       </Panel>

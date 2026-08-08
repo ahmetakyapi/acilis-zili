@@ -72,7 +72,12 @@ export async function SiteFooter() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="-my-1 inline-block py-1 text-[13px] text-body transition-colors hover:text-primary"
+                    /* Telefonda 44px: dizin bağlantıları 28px yüksekliğindeydi
+                       ve alt bilgi ekranın en dibinde, başparmağın en zor
+                       nişan aldığı yerde duruyor. Masaüstünde eski ölçü
+                       korunuyor — orada fare var, yüksek satırlar sütunu
+                       gereksiz uzatıyordu. */
+                    className="-my-1 flex min-h-11 items-center py-1 text-[13px] text-body transition-colors hover:text-primary sm:min-h-0 sm:inline-block"
                   >
                     {link.label}
                   </Link>
