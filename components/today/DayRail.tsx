@@ -110,24 +110,23 @@ const RAIL_SPAN = RAIL_END - RAIL_START;
    seans içinde işaretçi açılış etiketinin üstüne geldiğinde 3 piksellik
    accent çizgi yazının içinden geçmiyor, altından. */
 /**
- * "ŞİMDİ" rozeti EKSENİN ALTINDA duruyor, üstünde değil.
+ * "ŞİMDİ" rozeti EN ÜSTTE ve ondan inen UZUN ÇİZGİ YOK.
  *
- * Rozet bir süre en üstteydi (top: 0) ve ondan eksene inen dikey çizgi,
- * arada kalan sınır etiketlerinin (AÇILIŞ · 16:30 TR · 09:30 NY) tam
- * içinden geçiyordu. Katman sırası çizgiyi yazının ALTINA alıyordu ama
- * göz yine de kesişmeyi görüyor ve şerit karışık duruyordu; "şimdi"
- * açılışa yakın bir saatteyse ikisi üst üste biniyordu.
+ * Rozet bir ara eksenin altına alınmıştı; orada sınır etiketleriyle
+ * çakışmıyordu ama bu sefer olay kartlarının üstüne düşüyor ve şeridin
+ * alt yarısını kapatıyordu. Asıl sorun rozetin yeri değil, ondan eksene
+ * inen uzun çizgiydi: arada kalan sınır etiketlerinin (AÇILIŞ · 16:30 TR ·
+ * 09:30 NY) tam içinden geçiyordu.
  *
- * Aşağı alınınca üst bant yalnızca sınır etiketlerine, alt bant yalnızca
- * "şimdi"ye kalıyor: hiçbir şey hiçbir şeyi kesmiyor. Çizgi de kısaldı —
- * rozetten eksene birkaç piksel, işaretçiyle rozetin aynı ana ait olduğu
- * hâlâ okunuyor.
+ * Çözüm çizgiyi kaldırmak. Eksenin üstünde zaten kendi işaretçisi var ve
+ * rozet onunla AYNI x'te duruyor — göz ikisini çizgi olmadan da
+ * birleştiriyor. Rozet en üstte, altındaki her şey serbest: üst bant
+ * rozete, orta bant sınır etiketlerine, alt bant kartlara kalıyor.
  */
+const NOW_TOP = 0;
 const BOUND_TOP = 24;
 const AXIS_TOP = 68;
 const AXIS_HEIGHT = 6;
-/** Eksenin altından başlar; olay kartları CHIP_TOP'ta, araya girmiyor. */
-const NOW_TOP = AXIS_TOP + AXIS_HEIGHT + 10;
 const AXIS_CENTER = AXIS_TOP + AXIS_HEIGHT / 2;
 const EDGE_TOP = AXIS_TOP + AXIS_HEIGHT + 5;
 const CHIP_TOP = 110;
@@ -435,9 +434,10 @@ export function DayRail({
             >
               {labels.now}
             </div>
-            {/* Kısa bağ: eksenden rozete. Rozet ile eksendeki işaretçinin
-                aynı ana ait olduğunu söyleyen tek şey bu; artık hiçbir
-                yazının içinden geçmiyor. */}
+            {/* Rozetin altındaki KISA tırnak — yalnızca rozetin bir noktayı
+                işaret ettiğini söyler. Eksene kadar inen uzun çizgi, sınır
+                etiketlerinin içinden geçtiği için kaldırıldı; eksendeki
+                işaretçi aynı x'te zaten duruyor. */}
             <div
               className={cn(
                 "absolute w-[3px] -translate-x-1/2 rounded-full",
@@ -445,8 +445,8 @@ export function DayRail({
               )}
               style={{
                 left: `${pct(nowMinutes)}%`,
-                top: AXIS_TOP + AXIS_HEIGHT - 2,
-                height: NOW_TOP - (AXIS_TOP + AXIS_HEIGHT) + 2,
+                top: NOW_TOP + 16,
+                height: 6,
               }}
             />
           </>
