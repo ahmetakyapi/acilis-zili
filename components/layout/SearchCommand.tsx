@@ -4,7 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
-import type { SearchHit } from "@/app/api/search/route";
+import type {
+  SearchHit,
+  SearchResponse,
+  WritingHit,
+} from "@/app/api/search/route";
 import { cn } from "@/lib/utils";
 
 /**
@@ -31,6 +35,7 @@ export function SearchCommand({
   emptyLabel,
   popularLabel,
   companiesLabel,
+  writingsLabel,
   hints,
 }: {
   placeholder: string;
@@ -40,6 +45,8 @@ export function SearchCommand({
   emptyLabel: string;
   popularLabel: string;
   companiesLabel: string;
+  /** "Yazılar" — rehber ve mercek sonuçlarının başlığı. */
+  writingsLabel: string;
   /** Paletin alt şeridindeki klavye ipuçları. */
   hints: { move: string; open: string };
 }) {
@@ -47,6 +54,7 @@ export function SearchCommand({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<SearchHit[]>([]);
+  const [writings, setWritings] = useState<WritingHit[]>([]);
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +64,7 @@ export function SearchCommand({
     setOpen(false);
     setQuery("");
     setHits([]);
+    setWritings([]);
     setActive(0);
     setLoading(false);
   }, []);
@@ -111,8 +120,9 @@ export function SearchCommand({
         const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`, {
           signal: controller.signal,
         });
-        const data = (await res.json()) as { hits: SearchHit[] };
+        const data = (await res.json()) as SearchResponse;
         setHits(data.hits ?? []);
+        setWritings(data.writings ?? []);
         setActive(0);
       } catch {
         // İptal edilen istekler sessizce geçilir.
@@ -128,28 +138,37 @@ export function SearchCommand({
   }, [query, open]);
 
   const go = useCallback(
-    (symbol: string) => {
+    (href: string) => {
       close();
-      router.push(`/hisse/${symbol}`);
+      router.push(href);
     },
     [router, close],
   );
 
   // Kutu boşaltıldığında eski sonuçlar gösterilmez — türetilmiş görünüm.
   const shownHits = query.trim() ? hits : [];
+  const shownWritings = query.trim() ? writings : [];
+
+  /* Klavye gezinmesi TEK bir düz liste üzerinde yürür. İki ayrı bölüm iki
+     ayrı indeks tutsaydı ok tuşu sembollerin sonunda takılırdı; okuyucu için
+     bunlar tek bir sonuç listesi, başlıklar yalnızca gruplama. */
+  const navItems = [
+    ...shownHits.map((hit) => `/hisse/${hit.symbol}`),
+    ...shownWritings.map((w) => `/${w.kind}/${w.slug}`),
+  ];
 
   function onInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setActive((i) => Math.min(i + 1, shownHits.length - 1));
+      setActive((i) => Math.min(i + 1, navItems.length - 1));
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       setActive((i) => Math.max(i - 1, 0));
     } else if (event.key === "Enter") {
       event.preventDefault();
-      const hit = shownHits[active];
-      if (hit) go(hit.symbol);
-      else if (query.trim()) go(query.trim().toUpperCase());
+      const href = navItems[active];
+      if (href) go(href);
+      else if (query.trim()) go(`/hisse/${query.trim().toUpperCase()}`);
     }
   }
 
@@ -232,7 +251,7 @@ export function SearchCommand({
                       <button
                         key={pick.symbol}
                         type="button"
-                        onClick={() => go(pick.symbol)}
+                        onClick={() => go(`/hisse/${pick.symbol}`)}
                         className="flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 sm:min-h-[34px] text-xs transition-colors hover:border-line-strong hover:bg-primary-tint"
                       >
                         <span className="font-bold text-strong">
@@ -255,7 +274,7 @@ export function SearchCommand({
                 <button
                   key={hit.symbol}
                   type="button"
-                  onClick={() => go(hit.symbol)}
+                  onClick={() => go(`/hisse/${hit.symbol}`)}
                   onMouseEnter={() => setActive(index)}
                   className={cn(
                     "flex w-full items-center gap-3.5 px-5 py-2.5 text-left text-[13.5px] transition-colors max-sm:py-3",
@@ -276,11 +295,57 @@ export function SearchCommand({
                 </button>
               ))}
 
-              {!loading && query.trim() && shownHits.length === 0 && (
-                <p className="px-5 py-6 text-center text-sm text-muted">
-                  {emptyLabel}
+              {/* ---- Yazılar ----
+                  Sembolden SONRA: paletin ana işi hâlâ hisseye gitmek ve
+                  "NVDA" yazan biri ilk satırda NVDA görmeli. Yazı sonuçları
+                  aynı listenin devamı olarak okunuyor, ayrı bir sekme değil. */}
+              {shownWritings.length > 0 && (
+                <p className="plate px-5 pb-1.5 pt-2 text-[10.5px] tracking-[0.08em]">
+                  {writingsLabel}
                 </p>
               )}
+
+              {shownWritings.map((writing, index) => {
+                const position = shownHits.length + index;
+                return (
+                  <button
+                    key={`${writing.kind}-${writing.slug}`}
+                    type="button"
+                    onClick={() => go(`/${writing.kind}/${writing.slug}`)}
+                    onMouseEnter={() => setActive(position)}
+                    className={cn(
+                      "flex w-full items-start gap-3.5 px-5 py-2.5 text-left transition-colors max-sm:py-3",
+                      position === active ? "bg-primary-wash" : "hover:bg-surface",
+                    )}
+                  >
+                    <span className="plate w-[60px] shrink-0 pt-[3px] text-[9.5px] tracking-[0.08em] text-primary">
+                      {writing.kind}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={cn(
+                          "block truncate text-[13.5px] font-semibold",
+                          position === active ? "text-strong" : "text-body",
+                        )}
+                      >
+                        {writing.title}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[11.5px] text-muted">
+                        {writing.dek}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+
+              {!loading &&
+                query.trim() &&
+                shownHits.length === 0 &&
+                shownWritings.length === 0 && (
+                  <p className="px-5 py-6 text-center text-sm text-muted">
+                    {emptyLabel}
+                  </p>
+                )}
             </div>
 
             {/* Klavye ipuçları — palet açıkken ne yapılabileceğini söyler. */}

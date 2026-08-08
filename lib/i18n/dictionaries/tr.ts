@@ -26,6 +26,7 @@ const tr = {
     searchPlaceholder: "Hisse ara — sembol veya şirket adı",
     searchTrigger: "Sembol veya olay ara",
     searchPopular: "Popüler",
+    searchWritings: "Yazılar",
     searchHintMove: "gez",
     searchHintOpen: "aç",
     menu: "Menü",
@@ -218,6 +219,7 @@ const tr = {
       "şirketin çeyrek boyunca kazandığı net kârın hisse sayısına bölünmüş hâlidir — bir hissenin o dönemde ne kadar kâr ürettiğini gösterir. Analistler her çeyrek için bir beklenti açıklar; gerçekleşen rakamın bu beklentinin ne kadar üstünde veya altında kaldığı sapmadır. Gelir (ciro) ise kârdan önceki toplam satıştır: piyasa çoğu zaman kârı tutturup geliri ıskalayan şirketi de satar, bu yüzden ikisi birlikte okunur.",
     onlyWatchlist: "Sadece Favorilerim",
     spotlight: "Öne Çıkanlar",
+    addToCalendar: "Takvime Ekle",
     alsoReporting: "Diğer Açıklayanlar",
     companiesCount: "şirket",
     empty: "Bu aralıkta bilanço açıklaması yok.",
@@ -834,6 +836,7 @@ const tr = {
   footer: {
     blurb:
       "ABD borsalarını Türkçe takip etmek için yapılmış kişisel bir proje. Ücretsiz, reklamsız ve açık kaynak.",
+    feed: "RSS",
     sectionMarket: "Piyasa",
     sectionRead: "Okuma",
     sectionAccount: "Hesap",

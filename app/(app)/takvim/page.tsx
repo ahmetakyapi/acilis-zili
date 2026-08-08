@@ -6,6 +6,7 @@ import {
   ImpactDots,
   Panel,
 } from "@/components/ui/primitives";
+import { CalendarPlus } from "@phosphor-icons/react/dist/ssr";
 import { eventExplainer } from "@/lib/event-explainers";
 import { getEventsBetween } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
@@ -313,6 +314,19 @@ export default async function CalendarPage(
                           <span className="max-w-[68ch] text-[11.5px] leading-[17px] text-muted">
                             {eventExplainer(event.slug, locale)}
                           </span>
+                        )}
+                        {/* Takvime ekleme YALNIZCA yüksek etkili olaylarda.
+                            Her satıra düğme koymak takvimi bir düğme
+                            listesine çeviriyordu; okuyucunun kendi takvimine
+                            geçirmek isteyeceği şey zaten bu üç beş olay. */}
+                        {event.importance === "high" && (
+                          <a
+                            href={`/api/takvim?tip=olay&slug=${event.slug}`}
+                            className="-my-1 mt-1 inline-flex w-fit min-h-8 items-center gap-1 rounded-full border border-line px-2 py-1 text-[10.5px] font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary"
+                          >
+                            <CalendarPlus weight="duotone" size={13} aria-hidden />
+                            {t.earnings.addToCalendar}
+                          </a>
                         )}
                       </span>
 

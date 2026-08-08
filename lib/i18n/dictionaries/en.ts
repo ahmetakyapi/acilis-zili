@@ -27,6 +27,7 @@ const en: typeof tr = {
     searchPlaceholder: "Search stocks — symbol or company name",
     searchTrigger: "Search symbol or event",
     searchPopular: "Popular",
+    searchWritings: "Writing",
     searchHintMove: "move",
     searchHintOpen: "open",
     menu: "Menu",
@@ -205,6 +206,7 @@ const en: typeof tr = {
       "is the company's quarterly net profit divided by its share count — how much profit a single share produced in that period. Analysts publish an estimate for each quarter, and the surprise is how far the reported figure landed above or below it. Revenue is total sales before profit: the market often sells a company that beats on earnings but misses on revenue, so the two are read together.",
     onlyWatchlist: "Watchlist Only",
     spotlight: "Spotlight",
+    addToCalendar: "Add to Calendar",
     alsoReporting: "Also Reporting",
     companiesCount: "companies",
     today: "Today",
@@ -793,6 +795,7 @@ const en: typeof tr = {
   footer: {
     blurb:
       "A personal project for following US markets in Turkish. Free, ad-free and open source.",
+    feed: "RSS",
     sectionMarket: "Market",
     sectionRead: "Reading",
     sectionAccount: "Account",

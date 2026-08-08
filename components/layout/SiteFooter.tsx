@@ -36,6 +36,7 @@ export async function SiteFooter() {
           { href: "/mercek", label: t.nav.stories },
           { href: "/haberler", label: t.nav.news },
           { href: "/bulten", label: t.footer.briefArchive },
+          { href: "/feed.xml", label: t.footer.feed },
         ],
       },
       {

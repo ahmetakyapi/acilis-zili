@@ -56,6 +56,7 @@ export default async function AppLayout({
           emptyLabel={t.stock.notFound}
           popularLabel={t.nav.searchPopular}
           companiesLabel={t.nav.companies}
+          writingsLabel={t.nav.searchWritings}
           hints={{ move: t.nav.searchHintMove, open: t.nav.searchHintOpen }}
         />
       }
@@ -70,6 +71,9 @@ export default async function AppLayout({
             settings: t.nav.settings,
             signIn: t.nav.signIn,
             signUp: t.nav.signUp,
+            guest: t.menu.guestTitle,
+            guestHint: t.menu.guestHint,
+            watchlist: t.nav.watchlist,
             theme: t.settings.theme,
             themeLight: t.settings.themeLight,
             themeDark: t.settings.themeDark,

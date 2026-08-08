@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { ilike, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { symbols } from "@/lib/schema";
+import { stories, symbols } from "@/lib/schema";
 import { searchSymbols } from "@/lib/providers/finnhub";
 import { aliasSymbols } from "@/db/seed/aliases";
+import { guideArticles } from "@/content/guide";
+import { getLocale } from "@/lib/i18n";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 export type SearchHit = {
@@ -11,6 +13,45 @@ export type SearchHit = {
   name: string;
   industry?: string | null;
 };
+
+/**
+ * Yazı sonucu — rehber ya da mercek.
+ *
+ * Arama yalnızca sembol buluyordu. Otuz bir rehber yazısı ve bütün mercek
+ * arşivi paletten ERİŞİLEMEZDİ: "hedge" yazan biri, iki gün önce yayımlanan
+ * yazıyı bulamıyor, elle /rehber'e gidip listeyi taramak zorunda kalıyordu.
+ * Sembol arayan da yazı arayan da aynı kutuyu açıyor; ayıran şey ne yazdığı.
+ */
+export type WritingHit = {
+  kind: "rehber" | "mercek";
+  slug: string;
+  title: string;
+  dek: string;
+};
+
+export type SearchResponse = {
+  hits: SearchHit[];
+  writings: WritingHit[];
+  error?: string;
+};
+
+/** Yazı sonuçları listeyi boğmasın — sembol hâlâ paletin ana işi. */
+const MAX_WRITINGS = 4;
+
+/**
+ * Türkçe duyarsız karşılaştırma.
+ *
+ * `toLowerCase()` Türkçede "İ" harfini "i̇" (i + birleşen nokta) yapıyor ve
+ * "İSTİHDAM" araması "istihdam" başlığını bulamıyordu. Locale'li küçültme
+ * doğru sonucu veriyor; ayrıca aksanlı harfler normalize ediliyor ki
+ * "enflasyon" araması "Enflasyon"u da "ENFLASYON"u da bulsun.
+ */
+function fold(value: string): string {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
 /**
  * Sembol arama.
@@ -34,7 +75,7 @@ export async function GET(request: Request) {
   );
   if (!limited.allowed) {
     return NextResponse.json(
-      { hits: [] satisfies SearchHit[], error: "rate-limited" },
+      { hits: [], writings: [], error: "rate-limited" } satisfies SearchResponse,
       { status: 429, headers: { "Retry-After": String(limited.retryAfter) } },
     );
   }
@@ -45,7 +86,7 @@ export async function GET(request: Request) {
   );
 
   if (query.length < 1) {
-    return NextResponse.json({ hits: [] satisfies SearchHit[] });
+    return NextResponse.json({ hits: [], writings: [] } satisfies SearchResponse);
   }
 
   const hits: SearchHit[] = [];
@@ -108,5 +149,55 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ hits });
+  /* ---- Yazılar ----
+     Rehber depoda ve durağan: eşleşme bellekte yapılıyor, sorgu yok. Mercek
+     veritabanında ve büyüyor: başlık ile giriş cümlesinde `ilike`. İkisi de
+     sembol aramasından SONRA çalışıyor ve yanıtı geciktirmiyor — paralel
+     değil çünkü rehber zaten senkron, mercek tek bir indeksli sorgu. */
+  const locale = await getLocale();
+  const needle = fold(query);
+  const writings: WritingHit[] = [];
+
+  if (query.length >= 2) {
+    for (const article of guideArticles(locale)) {
+      if (writings.length >= MAX_WRITINGS) break;
+      if (fold(article.title).includes(needle) || fold(article.dek).includes(needle)) {
+        writings.push({
+          kind: "rehber",
+          slug: article.slug,
+          title: article.title,
+          dek: article.dek,
+        });
+      }
+    }
+
+    if (writings.length < MAX_WRITINGS) {
+      try {
+        const pattern = `%${query}%`;
+        const rows = await db
+          .select({ slug: stories.slug, title: stories.title, dek: stories.dek })
+          .from(stories)
+          .where(
+            and(
+              eq(stories.locale, locale),
+              or(ilike(stories.title, pattern), ilike(stories.dek, pattern)),
+            ),
+          )
+          .orderBy(desc(stories.eventDate))
+          .limit(MAX_WRITINGS - writings.length);
+        for (const row of rows) {
+          writings.push({
+            kind: "mercek",
+            slug: row.slug,
+            title: row.title,
+            dek: row.dek ?? "",
+          });
+        }
+      } catch {
+        // Veritabanı yoksa arama sembol tarafıyla çalışmaya devam eder.
+      }
+    }
+  }
+
+  return NextResponse.json({ hits, writings } satisfies SearchResponse);
 }

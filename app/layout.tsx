@@ -62,7 +62,12 @@ export const metadata: Metadata = {
   robots: INDEXABLE
     ? { index: true, follow: true }
     : { index: false, follow: false },
-  alternates: { canonical: "/" },
+  /* `types` ile besleme keşfedilebilir oluyor: okuyucular sayfayı bu
+     etiketten buluyor, adresi elle yazmak zorunda kalmıyorlar. */
+  alternates: {
+    canonical: "/",
+    types: { "application/rss+xml": "/feed.xml" },
+  },
 };
 
 export const viewport: Viewport = {
