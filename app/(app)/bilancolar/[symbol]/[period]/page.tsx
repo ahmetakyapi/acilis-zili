@@ -322,9 +322,8 @@ export default async function AnalysisDetailPage(
           kapanıyor, her ölçü kendi sütununda okunuyor ve şerit kartın
           genişliğini gerçekten kullanıyor. */}
       <header className="flex flex-col gap-4 rounded-[16px] border border-line bg-surface-solid p-4 sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
-          <div className="flex min-w-0 flex-1 flex-col gap-3.5">
-            <div className="flex min-w-0 items-start gap-3.5 sm:gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+          <div className="flex min-w-0 items-start gap-3.5 sm:gap-4">
               {symbolMeta?.logoUrl ? (
                 <Image
                   src={symbolMeta.logoUrl}
@@ -355,13 +354,61 @@ export default async function AnalysisDetailPage(
               </div>
             </div>
 
-            {/* Künye çipleri ve takip düğmesi AYNI satırda: düğme kendi
-                satırında dururken sol sütunun tabanında yetim kalıyordu ve
-                blok dört gevşek satıra yayılıyordu. `sm:ml-auto` onu ayracın
-                dibine yaslıyor — satır artık sol sütunu boydan boya
-                kapatıyor ve blok iki sıkı satıra iniyor. Yükseklikleri de
-                aynı, yan yana bir aile gibi duruyorlar. */}
-            <div className="flex flex-wrap items-center gap-1.5">
+          {/* ---- Şu an ----
+              Kimlik bandının sağ yarısı BOŞTU: en dıştaki sarmalayıcı
+              `lg:flex-row` idi ama içinde tek çocuk vardı — iki sütunlu eski
+              tasarımdan kalan bir kabuk. Sayfanın açılışında okuyucunun ilk
+              sorduğu sayı ("şimdi kaçtan işlem görüyor") ölçü şeridinin
+              içinde, kapanış fiyatıyla aynı puntoda kaybolmuştu. Yukarı
+              alınınca hem o boşluk doluyor hem kart bir odak kazanıyor.
+              Kapanış fiyatı aşağıda kendi adıyla duruyor; iki fiyat tanımı
+              gereği farklı ve ikisi de nereye ait olduğu yazılı. */}
+          {live && (
+            <div className="shrink-0 sm:text-right">
+              <div className="flex items-baseline gap-2 sm:justify-end">
+                <span className={cn(PLATE_LABEL, "text-primary")}>
+                  {t.analysis.livePrice}
+                </span>
+                <span className="text-[10.5px] font-medium text-muted">
+                  {status.session === "regular" && !live.stale
+                    ? t.market.live
+                    : t.market.prevClose}
+                </span>
+              </div>
+              <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 sm:justify-end">
+                <span className="figure text-[30px] font-bold leading-none tracking-[-0.04em] text-strong">
+                  {formatPrice(live.quote.price, locale, { currency: true })}
+                </span>
+                <span
+                  className={cn(
+                    "figure text-[15px] font-bold",
+                    live.quote.changePct >= 0 ? "text-up" : "text-down",
+                  )}
+                >
+                  {formatPercent(live.quote.changePct, locale)}
+                </span>
+              </div>
+              {sinceReportPct !== null && (
+                <p className="mt-1.5 text-[10.5px] text-muted">
+                  {t.analysis.sinceReport}{" "}
+                  <span
+                    className={cn(
+                      "figure font-bold",
+                      sinceReportPct >= 0 ? "text-up" : "text-down",
+                    )}
+                  >
+                    {formatPercent(sinceReportPct, locale, 1)}
+                  </span>
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Künye çipleri ve takip düğmesi AYNI satırda: düğme kendi
+            satırında dururken yetim kalıyordu. `sm:ml-auto` onu satırın
+            sağ ucuna yaslıyor. */}
+        <div className="flex flex-wrap items-center gap-1.5">
               {/* Bu künye bir süre dolu siyah bir kutuydu. Sayfadaki en koyu
                   yüzey oydu ve gözü ilk oraya çekiyordu — oysa taşıdığı bilgi
                   bir tarih, sayfanın en önemli şeyi değil. Komşusuyla aynı
@@ -401,18 +448,17 @@ export default async function AnalysisDetailPage(
                   </button>
                 </form>
               )}
-            </div>
-          </div>
-
         </div>
 
         {/* ---- Ölçü şeridi ----
-            Dört ölçü yan yana, aralarında dikey hairline: bilanço günü ne
-            oldu → bugün nerede → şirket ne büyüklükte → yıl nasıl geçti.
-            Sıra bilinçli; okuyucu soldan sağa giderek zaman içinde
-            ilerliyor. Dar ekranda ikişerli, telefonda alt alta. */}
+            Üç ölçü yan yana, aralarında dikey hairline: bilanço günü ne oldu
+            → şirket ne büyüklükte → yıl nasıl geçti. "Şu an" buradan kimlik
+            bandına çıktı; dört ölçüdeyken iki tanesi altına birer açıklama
+            satırı alıyor, diğer ikisi almıyordu ve şeridin tabanı tırtıklı
+            kalıyordu. Üçü de artık İKİ satır: etiket + değer. Dar ekranda
+            ikişerli, telefonda alt alta. */}
         {row.price !== null && (
-          <dl className="grid gap-x-5 gap-y-4 border-t border-line pt-4 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-line">
+          <dl className="grid gap-x-5 gap-y-4 border-t border-line pt-4 sm:grid-cols-2 lg:grid-cols-3 lg:divide-x lg:divide-line">
             <div className="min-w-0 lg:pr-5">
               <dt className="flex items-baseline justify-between gap-2">
                 <span className={cn(PLATE_LABEL, "text-body")}>
@@ -439,69 +485,21 @@ export default async function AnalysisDetailPage(
                     )}
                   >
                     {row.reactionPct >= 0 ? "▲" : "▼"}
+                    {SIGN_GAP}
                     {formatPercentPlain(row.reactionPct, locale, 1)}
                   </span>
                 )}
-              </dd>
-              {row.reactionPct !== null && (
-                <p className="mt-1.5 text-[10.5px] text-muted">
-                  {t.analysis.reactionNote}
-                </p>
-              )}
-            </div>
-
-            {live && (
-              /* ---- Bugün nerede? ----
-                 Sayfa açıklanmış bir çeyreği anlatıyor ve soldaki fiyat o
-                 günün kapanışı — okuyucunun bir sonraki sorusu her zaman
-                 "peki şimdi kaçtan işlem görüyor". İki fiyat TANIMI GEREĞİ
-                 farklı, o yüzden ayrı sütunda ve ikisinin de ne olduğu
-                 adıyla yazılı (bkz. CLAUDE.md → veri dürüstlüğü, "aynı sayı
-                 iki yerde"). */
-              <div className="min-w-0 lg:px-5">
-                <dt className="flex items-baseline justify-between gap-2">
-                  <span className={cn(PLATE_LABEL, "text-primary")}>
-                    {t.analysis.livePrice}
+                {/* "Bilanço Günü Tepkisi" ayrı bir üçüncü satırdı ve yalnızca
+                    bu hücrede olduğu için şeridin tabanını tırtıklı
+                    bırakıyordu. Rozetin ne olduğunu söyleyen künye artık
+                    rozetin yanında, kendi satırında değil. */}
+                {row.reactionPct !== null && (
+                  <span className="text-[10.5px] text-muted">
+                    {t.analysis.reactionNote}
                   </span>
-                  {/* Seans dışında sağlayıcının verdiği fiyat canlı bir
-                      kotasyon değil, ÖNCEKİ KAPANIŞ. "Canlı" yazmak onu
-                      olduğundan taze gösterirdi — bayat veriyi taze
-                      etiketlemek bu projede kaldırılmış bir metriğin
-                      sebebiydi (bkz. CLAUDE.md → veri dürüstlüğü). */}
-                  <span className="shrink-0 text-[10.5px] font-medium text-muted">
-                    {status.session === "regular" && !live.stale
-                      ? t.market.live
-                      : t.market.prevClose}
-                  </span>
-                </dt>
-                <dd className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                  <span className="figure text-[26px] font-bold leading-none tracking-[-0.04em] text-strong">
-                    {formatPrice(live.quote.price, locale, { currency: true })}
-                  </span>
-                  <span
-                    className={cn(
-                      "figure text-[14px] font-bold",
-                      live.quote.changePct >= 0 ? "text-up" : "text-down",
-                    )}
-                  >
-                    {formatPercent(live.quote.changePct, locale)}
-                  </span>
-                </dd>
-                {sinceReportPct !== null && (
-                  <p className="mt-1.5 text-[10.5px] text-muted">
-                    {t.analysis.sinceReport}{" "}
-                    <span
-                      className={cn(
-                        "figure font-bold",
-                        sinceReportPct >= 0 ? "text-up" : "text-down",
-                      )}
-                    >
-                      {formatPercent(sinceReportPct, locale, 1)}
-                    </span>
-                  </p>
                 )}
-              </div>
-            )}
+              </dd>
+            </div>
 
             {row.marketCap !== null && (
               <div className="min-w-0 lg:px-5">
