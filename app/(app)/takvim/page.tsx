@@ -8,13 +8,85 @@ import {
 } from "@/components/ui/primitives";
 import { getEventsBetween } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
-import { getI18n } from "@/lib/i18n";
+import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { timePair, zoneTag } from "@/lib/session-clock";
-import { cn, formatEtDateLong, formatEtDateShort } from "@/lib/utils";
+import { cn, formatEtDateLong, formatPrice } from "@/lib/utils";
 import type { EconomicEventRow } from "@/lib/schema";
 
 const VIEWS = ["day", "week", "month"] as const;
 type View = (typeof VIEWS)[number];
+
+/**
+ * İki ET takvim günü arasındaki fark.
+ *
+ * Tarihler "YYYY-MM-DD" düz gün damgası — saat taşımıyorlar. UTC gece
+ * yarısından kurup çıkarmak yaz saati kaymasından etkilenmez; yerel
+ * `new Date(str)` ile kurmak, DST sınırını geçen aralıklarda bir gün
+ * kaydırabilirdi.
+ */
+function daysBetweenEt(from: string, to: string) {
+  const parse = (value: string) => {
+    const [year, month, day] = value.split("-").map(Number);
+    return Date.UTC(year, month - 1, day);
+  };
+  return Math.round((parse(to) - parse(from)) / 86_400_000);
+}
+
+/** "Bugün" · "Yarın" · "3 gün sonra" */
+function relativeDayLabel(away: number, t: Dictionary) {
+  if (away === 0) return t.calendar.today;
+  if (away === 1) return t.calendar.tomorrow;
+  return `${away} ${t.calendar.daysAway}`;
+}
+
+/**
+ * Değer künyesi — etiket üstte küçük, sayı altında.
+ *
+ * Sayılar sağlayıcıdan METİN geliyor ("4.2", "129", bazen "250K" ya da
+ * "3.1%"). BİRİM EKLEMİYORUZ: yüzde mi puan mı bin adet mi olduğunu
+ * bilmiyoruz, uydurmak veri dürüstlüğüne aykırı. Yalnızca dizge baştan
+ * sona sayıysa ondalık ayracı yerelleştiriliyor — sitenin geri kalanı
+ * "4,25" yazarken bu sütunun "4.2" yazması tutarsızdı. Sayı olmayan
+ * her şey olduğu gibi basılır.
+ */
+const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
+
+function ValueChip({
+  label,
+  value,
+  locale,
+  tone = "muted",
+}: {
+  label: string;
+  value: string;
+  locale: Locale;
+  tone?: "strong" | "muted";
+}) {
+  const trimmed = value.trim();
+  const shown = PLAIN_NUMBER.test(trimmed)
+    ? formatPrice(Number(trimmed), locale, {
+        // Ondalık varsa koru, yoksa tam sayı kalsın: "129" → "129",
+        // "4.2" → "4,2". Sabit basamak sayısı ikisinden birini bozardı.
+        digits: trimmed.includes(".") ? trimmed.split(".")[1].length : 0,
+      })
+    : trimmed;
+
+  return (
+    <span className="flex flex-col items-end leading-tight">
+      <span className="text-[9.5px] font-semibold uppercase tracking-[0.07em] text-muted">
+        {label}
+      </span>
+      <span
+        className={cn(
+          "numeral text-[13.5px]",
+          tone === "strong" ? "font-bold text-strong" : "text-soft",
+        )}
+      >
+        {shown}
+      </span>
+    </span>
+  );
+}
 
 export default async function CalendarPage(
   props: PageProps<"/takvim">,
@@ -117,77 +189,142 @@ export default async function CalendarPage(
           <EmptyState title={t.calendar.empty} />
         </Panel>
       ) : (
-        [...byDay.entries()].map(([date, dayEvents]) => (
-          <Panel key={date}>
-            <div className="flex items-baseline justify-between border-b border-line-soft px-4 py-3 sm:px-5">
-              <h2 className="text-sm font-semibold text-strong">
-                {formatEtDateLong(date, locale)}
-              </h2>
-              <span className="numeral text-[11px] text-muted">
-                {formatEtDateShort(date, locale)}
-              </span>
-            </div>
+        [...byDay.entries()].map(([date, dayEvents]) => {
+          const away = daysBetweenEt(today, date);
+          const isToday = away === 0;
+          const highCount = dayEvents.filter(
+            (event) => event.importance === "high",
+          ).length;
 
-            {/* Sütun başlıkları */}
-            <div className="hidden grid-cols-[4rem_1rem_1fr_5rem_5rem_5rem] gap-3 border-b border-line-soft px-4 py-2 text-[10px] uppercase tracking-wider text-muted sm:grid sm:px-5">
-              <span>
-                {tags.primary} · {tags.secondary}
-              </span>
-              <span />
-              <span>{t.calendar.event}</span>
-              <span className="text-right">{t.calendar.actual}</span>
-              <span className="text-right">{t.calendar.forecast}</span>
-              <span className="text-right">{t.calendar.previous}</span>
-            </div>
+          return (
+            <Panel
+              key={date}
+              className={cn(
+                "overflow-hidden",
+                isToday && "border-primary-faint",
+              )}
+            >
+              <div
+                className={cn(
+                  "flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-line-soft px-4 py-3 sm:px-5",
+                  isToday && "bg-primary-tint",
+                )}
+              >
+                <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                  <h2 className="text-sm font-semibold text-strong">
+                    {formatEtDateLong(date, locale)}
+                  </h2>
+                  {/* Uzaklık rozeti: takvimde asıl soru "ne zaman", ve
+                      "12 Ağustos"un kaç gün sonrası olduğu ancak sağdaki
+                      kısa tarihe bakıp kafadan çıkarılıyordu. */}
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[10.5px] font-bold",
+                      isToday
+                        ? "bg-primary text-on-primary"
+                        : "bg-surface-elevated text-soft",
+                    )}
+                  >
+                    {relativeDayLabel(away, t)}
+                  </span>
+                </div>
 
-            <ul className="divide-y divide-line-soft">
-              {dayEvents.map((event) => (
-                <li
-                  key={event.id}
-                  className="grid grid-cols-[4rem_1rem_1fr] items-center gap-3 px-4 py-2.5 sm:grid-cols-[4rem_1rem_1fr_5rem_5rem_5rem] sm:px-5"
-                >
-                  {event.eventTimeEt ? (
-                    (() => {
-                      const times = timePair(
-                        event.eventDate,
-                        event.eventTimeEt,
-                        locale,
-                      );
-                      return (
-                        <span>
-                          <span className="numeral block text-sm font-semibold leading-tight text-strong">
-                            {times.primary}
-                          </span>
-                          <span className="numeral block text-[11px] leading-tight text-muted">
-                            {times.secondary} {tags.secondary}
-                          </span>
-                        </span>
-                      );
-                    })()
-                  ) : (
-                    <span className="numeral text-sm text-muted">—</span>
+                <span className="numeral text-[11px] text-muted">
+                  {dayEvents.length}{" "}
+                  {dayEvents.length === 1
+                    ? t.calendar.eventOne
+                    : t.calendar.eventMany}
+                  {highCount > 0 && (
+                    <>
+                      <span aria-hidden className="mx-1.5">
+                        ·
+                      </span>
+                      <span className="font-semibold text-strong">
+                        {highCount}
+                      </span>{" "}
+                      {t.calendar.highImpactShort}
+                    </>
                   )}
-                  <ImpactDots
-                    importance={event.importance}
-                    label={impactLabel[event.importance] ?? event.importance}
-                  />
-                  <span className="min-w-0 truncate text-sm text-body">
-                    {locale === "tr" ? event.titleTr : event.titleEn}
-                  </span>
-                  <span className="numeral hidden text-right text-sm font-semibold text-strong sm:block">
-                    {event.actual ?? "—"}
-                  </span>
-                  <span className="numeral hidden text-right text-sm text-soft sm:block">
-                    {event.forecast ?? "—"}
-                  </span>
-                  <span className="numeral hidden text-right text-sm text-muted sm:block">
-                    {event.previous ?? "—"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        ))
+                </span>
+              </div>
+
+              <ul className="divide-y divide-line-soft">
+                {dayEvents.map((event) => {
+                  const times = event.eventTimeEt
+                    ? timePair(event.eventDate, event.eventTimeEt, locale)
+                    : null;
+
+                  return (
+                    <li
+                      key={event.id}
+                      className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 px-4 py-3 sm:flex-nowrap sm:px-5"
+                    >
+                      <span className="w-16 shrink-0">
+                        {times ? (
+                          <>
+                            <span className="numeral block text-sm font-semibold leading-tight text-strong">
+                              {times.primary}
+                            </span>
+                            <span className="numeral block text-[11px] leading-tight text-muted">
+                              {times.secondary} {tags.secondary}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="numeral text-sm text-muted">—</span>
+                        )}
+                      </span>
+
+                      <ImpactDots
+                        importance={event.importance}
+                        label={impactLabel[event.importance] ?? event.importance}
+                      />
+
+                      <span
+                        className={cn(
+                          "min-w-0 flex-1 text-sm",
+                          event.importance === "high"
+                            ? "font-semibold text-strong"
+                            : "text-body",
+                        )}
+                      >
+                        {locale === "tr" ? event.titleTr : event.titleEn}
+                      </span>
+
+                      {/* Değerler künye olarak, etiketi yanında. Eski hâlde
+                          üç sabit sütun vardı ve açıklanmamış olaylarda
+                          üçü de tire basıyordu: satırın yarısı boş tireydi.
+                          Şimdi yalnızca DOLU olan yazılıyor. */}
+                      <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1 sm:shrink-0 sm:justify-end">
+                        {event.actual !== null && (
+                          <ValueChip
+                            label={t.calendar.actual}
+                            value={event.actual}
+                            locale={locale}
+                            tone="strong"
+                          />
+                        )}
+                        {event.forecast !== null && (
+                          <ValueChip
+                            label={t.calendar.forecast}
+                            value={event.forecast}
+                            locale={locale}
+                          />
+                        )}
+                        {event.previous !== null && (
+                          <ValueChip
+                            label={t.calendar.previous}
+                            value={event.previous}
+                            locale={locale}
+                          />
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Panel>
+          );
+        })
       )}
 
       {/* Makro takvimin altında halka arz takvimi: ikisi de "önümüzdeki

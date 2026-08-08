@@ -168,6 +168,12 @@ const en: typeof tr = {
     empty: "No releases scheduled in this range.",
     timesNote: "Times in New York (ET) · Turkish time below",
     localTime: "Your local time",
+    today: "Today",
+    tomorrow: "Tomorrow",
+    daysAway: "days away",
+    eventOne: "event",
+    eventMany: "events",
+    highImpactShort: "high impact",
   },
 
   earnings: {

@@ -178,6 +178,14 @@ const tr = {
     empty: "Bu aralıkta planlanmış veri açıklaması yok.",
     timesNote: "Saatler Türkiye saatiyle · altında New York (NY)",
     localTime: "Yerel saatin",
+    // Gün başlığındaki uzaklık rozeti: "Bugün" · "Yarın" · "3 gün sonra"
+    today: "Bugün",
+    tomorrow: "Yarın",
+    daysAway: "gün sonra",
+    // Sayaç: Türkçede sayıdan sonra tekil kalır, ikisi de aynı.
+    eventOne: "olay",
+    eventMany: "olay",
+    highImpactShort: "yüksek etkili",
   },
 
   earnings: {
