@@ -224,7 +224,7 @@ const en: typeof tr = {
   analysis: {
     title: "Earnings",
     subtitle:
-      "Track earnings on the calendar; once a company reports, its scorecard, summary and full review land in Analyses.",
+      "Track earnings on the calendar; once a company reports, the summary and full review land in Analyses.",
     listTitle: "Latest Analyses",
     symbolPanelTitle: "Earnings Analyses",
     recentStrip: "Recently Analyzed",
@@ -235,11 +235,7 @@ const en: typeof tr = {
     goToCalendar: "Go To Calendar →",
     showAll: "See All →",
     loadMore: "Load More",
-    reportCardLink: "Scorecard →",
-    reportCard: "Earnings Scorecard",
-    downloadPng: "Download PNG",
-    reportCardHint:
-      "A single-page shareable scorecard: metrics, charts, guidance and the verdict. Click to open full size.",
+    analysisLink: "Analysis →",
 
     verdictBuy: "BUY",
     verdictHold: "HOLD",
@@ -255,7 +251,7 @@ const en: typeof tr = {
     colReaction: "Share Reaction",
     colScore: "Score",
     colVerdict: "Verdict",
-    colCard: "Scorecard",
+    colCard: "Analysis",
 
     searchPlaceholder: "Search symbol or company",
     searchEmpty: "No analysis matches \"{query}\".",
@@ -307,7 +303,7 @@ const en: typeof tr = {
 
     empty: "No earnings analysis published yet.",
     emptyHint:
-      "Once a company reports, its scorecard and full review are published here.",
+      "Once a company reports, its full review is published here.",
     emptyWatchlist: "No analysis for the companies you follow yet.",
     emptyWatchlistHint:
       "When one of your watchlist companies reports, its analysis shows up here.",
@@ -776,19 +772,22 @@ const en: typeof tr = {
     guestTitle: "Guest",
     guestHint: "Create an account to keep watchlists.",
     signedInHint: "Your lists are stored on this account.",
-    hintMarkets: "Indices, yields, sectors",
-    hintCompanies: "Company directory and search",
-    hintMacro: "CPI, employment, rates",
-    hintEarnings: "Earnings calendar and estimates",
-    hintCalendar: "Economic data calendar",
-    hintCompare: "Read stocks side by side",
-    hintGuide: "Explainers on market concepts",
-    hintStories: "Long reads on what happened",
-    hintNews: "Translated market news",
-    hintBrief: "Daily and weekly brief archive",
-    hintWatchlist: "Your watchlists",
-    hintSettings: "Account, theme and language",
-    hintPrivacy: "Your data and your rights",
+    /* Menü satırlarının altındaki mikro etiketler Title Case. Bunlar cümle
+       değil, satırın ne olduğunu söyleyen ADLAR — "Endeksler, Tahviller,
+       Sektörler". Bağlaçlar (ve/and) küçük kalır. */
+    hintMarkets: "Indices, Yields, Sectors",
+    hintCompanies: "Company Directory and Search",
+    hintMacro: "CPI, Employment, Rates",
+    hintEarnings: "Earnings Calendar and Estimates",
+    hintCalendar: "Economic Data Calendar",
+    hintCompare: "Read Stocks Side by Side",
+    hintGuide: "Explainers on Market Concepts",
+    hintStories: "Long Reads on What Happened",
+    hintNews: "Translated Market News",
+    hintBrief: "Daily and Weekly Brief Archive",
+    hintWatchlist: "Your Watchlists",
+    hintSettings: "Account, Theme and Language",
+    hintPrivacy: "Your Data and Your Rights",
   },
 
   footer: {

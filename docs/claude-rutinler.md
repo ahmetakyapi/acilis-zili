@@ -586,10 +586,12 @@ bitmiş, seans dışı tepki fiyatı oturmuş oluyor. Aynı gün içinde yazmak,
 Bu görev **çoğu gün TEK bir şirket** yazar — günün en büyük bilançosu.
 Bilanço sezonunun yoğun günlerinde iki, sakin günlerde hiç yazmaz.
 
-Görev iki çıktı üretir: **site kaydı** (aşağıdaki prompt) ve isteğe bağlı
-**PNG karne** (`docs/karne-agenti.md`). Karne üretirsen aynı POST'ta
-`card_image_base64` olarak gönderilir — ayrı bir yükleme adımı yok. Karne
-olmadan da sayfa eksiksiz çalışır; kart yalnızca görsel varsa basılır.
+Görev tek bir çıktı üretir: **site kaydı** (aşağıdaki prompt).
+
+> Bir dönem buna isteğe bağlı bir **PNG karne** eşlik ediyordu (`card_image_base64`
+> ile aynı POST'ta gönderiliyordu). Özellik kaldırıldı: 34 kaydın hiçbirinde
+> görsel yoktu, yani kart hiç basılmadı — taşınan şey çalışmayan bir yoldu.
+> Sayfanın kendisi zaten karnenin taşıdığı her şeyi içeriyor.
 
 ````
 Sen Açılış Zili'nin bilanço analistisin. Görevin, açıklanmış bir çeyreği
@@ -874,12 +876,6 @@ Alan notları:
                 "Önceki Çeyrek 6,2 Mr $". Cümle kurma ("14 Mr $'lık ek program
                 onaylandı" yerine "Ek Program 14 Mr $"); künye satırı dar ve
                 orada cümle okunmuyor.
-  card_image_base64 → PNG karne ürettiysen (docs/karne-agenti.md) görselin
-                base64'ü. Sunucu veritabanına yazar ve adresi kendisi üretir;
-                card_image_url göndermene gerek yok. `data:` ön eki OLMADAN,
-                en fazla 3,4 MB. Yanında card_image_width/height ver.
-                Dil başına ayrı görsel: karne metin içeriyor.
-                Karne yoksa alanı hiç gönderme; kart basılmaz, sayfa eksilmez.
 
 Yanıtta "ok": true ve dönen "url" alanını doğrula; ayrıca dönen "period"
 değerini NOT ET — İngilizce gönderimde ona ihtiyacın olacak. "ok" göremezsen

@@ -279,11 +279,9 @@ export default async function AnalysisDetailPage(
         },
       ].filter(Boolean) as FooterStat[]);
 
-  /* Kapanış şeridinde kaç kart basılacak: karne yalnızca görsel varsa,
-     rakip takvimi yalnızca aynı sektörden yaklaşan bilanço varsa çıkıyor;
-     rehber şeridi her zaman var. */
-  const bottomCards =
-    1 + (row.cardImageUrl ? 1 : 0) + (peers.length > 0 ? 1 : 0);
+  /* Kapanış şeridinde kaç kart basılacak: rakip takvimi yalnızca aynı
+     sektörden yaklaşan bilanço varsa çıkıyor; rehber şeridi her zaman var. */
+  const bottomCards = 1 + (peers.length > 0 ? 1 : 0);
 
   return (
     <div className="flex flex-col gap-5">
@@ -799,29 +797,23 @@ export default async function AnalysisDetailPage(
       </div>
 
       {/* ---- Kapanış şeridi ----
-          Karne, rakip takvimi ve rehber bağlantıları yapışkan yan kolondaydı;
-          o kolon içeriğin genişliğini kısıyordu. Üçü de "okudun, şimdi ne
+          Rakip takvimi ve rehber bağlantıları yapışkan yan kolondaydı; o
+          kolon içeriğin genişliğini kısıyordu. İkisi de "okudun, şimdi ne
           var" sorusuna ait — metnin sonunda yan yana duruyorlar.
 
-          Izgara SABİT üç sütun değil, BASILAN kart sayısına göre kuruluyor:
-          karne çoğu kayıtta yok ve üç sütunluk bir ızgarada üçüncü göz
-          bomboş kalıyordu — sayfa "bir şey yüklenemedi" gibi bitiyordu.
-          Rehber kartları da aynı sebeple: tek sütuna sıkışmışken alt alta
-          diziliyor, yarım genişlikte yan yana geçiyorlar. */}
+          Izgara SABİT değil, BASILAN kart sayısına göre kuruluyor: rakip
+          takvimi yalnızca aynı sektörden yaklaşan bilanço varsa çıkıyor ve
+          sabit ızgarada boş kalan göz sayfayı "bir şey yüklenemedi" gibi
+          bitiriyordu. */}
       <div
         className={cn(
           "grid items-start gap-4",
-          bottomCards === 3
-            ? "lg:grid-cols-[repeat(3,minmax(0,1fr))]"
-            : bottomCards === 2
-              ? // Eşit iki yarıda referans kartı gereğinden geniş kalıyor,
-                // rehber kartlarının açıklaması ise üç noktaya kırpılıyordu.
-                "lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]"
-              : "",
+          bottomCards === 2 &&
+            // Eşit iki yarıda referans kartı gereğinden geniş kalıyor,
+            // rehber kartlarının açıklaması ise üç noktaya kırpılıyordu.
+            "lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]",
         )}
       >
-        <ReportCard row={row} t={t} />
-
         {peers.length > 0 && (
           <Panel className="p-4 sm:p-[18px]">
             <h2 className="mb-3 flex items-center gap-2.5 text-[13.5px] font-bold text-strong">
@@ -1065,61 +1057,6 @@ function VerdictStrip({
   );
 }
 
-/**
- * Karne kartı — yalnızca görsel VARSA basılır.
- *
- * Boş bir çerçeve göstermek "burada bir şey olmalıydı" hissi veriyor;
- * yokluğu sessizce geçmek dürüst. Görselin etrafında kenarlık yok: kutunun
- * kendisi görsel (`overflow-hidden` + kendi köşe yarıçapı).
- */
-function ReportCard({
-  row,
-  t,
-}: {
-  row: EarningsAnalysisRow;
-  t: Dictionary;
-}) {
-  if (!row.cardImageUrl) return null;
-  return (
-    <Panel className="p-4 sm:p-[18px]">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-[13.5px] font-bold text-strong">
-          {t.analysis.reportCard}
-        </h2>
-        {/* `?indir=1` rotaya Content-Disposition ekletir. `download`
-            özniteliği tek başına yetmiyor: aynı kaynaktan gelse de rota bir
-            dosya değil, tarayıcı adı uzantıdan tahmin ediyordu. */}
-        <a
-          href={`${row.cardImageUrl}?indir=1`}
-          className="-my-2 inline-flex min-h-10 items-center py-2 text-[11.5px] font-semibold text-primary hover:text-primary-hover sm:-my-1 sm:min-h-0 sm:py-1"
-        >
-          ↓ {t.analysis.downloadPng}
-        </a>
-      </div>
-      <a
-        href={row.cardImageUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block overflow-hidden rounded-[10px]"
-      >
-        {/* A4 dikey oran — görsel yüklenirken düzen zıplamasın. Karne 2x
-            çözünürlükte üretiliyor ve yan kolonda ~340px'e sığıyor;
-            `sizes` bunu söyleyip gereksiz büyük dosya indirilmesini önler. */}
-        <Image
-          src={row.cardImageUrl}
-          alt={`${row.symbol} ${row.periodLabel} ${t.analysis.reportCard}`}
-          width={1654}
-          height={2339}
-          sizes="(min-width: 1024px) 380px, 100vw"
-          className="h-auto w-full"
-        />
-      </a>
-      <p className="mt-2.5 text-[11px] leading-4 text-muted [text-wrap:pretty]">
-        {t.analysis.reportCardHint}
-      </p>
-    </Panel>
-  );
-}
 
 /**
  * Güçlü Yönler / Riskler / Beklenen Gelişmeler.

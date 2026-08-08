@@ -241,7 +241,7 @@ const tr = {
   analysis: {
     title: "Bilançolar",
     subtitle:
-      "Takvimden bilançoları izle; açıklananlar için karne, özet ve detaylı değerlendirme Analizler'de.",
+      "Takvimden bilançoları izle; açıklananlar için özet ve detaylı değerlendirme Analizler'de.",
     listTitle: "Son Analizler",
     /* Hisse sayfasındaki panel — orada zaten şirketin içindesin, adı
        tekrar etmeye gerek yok. */
@@ -256,11 +256,10 @@ const tr = {
     goToCalendar: "Takvime Git →",
     showAll: "Tümünü Gör →",
     loadMore: "Daha Fazla Yükle",
-    reportCardLink: "Karne →",
-    reportCard: "Bilanço Karnesi",
-    downloadPng: "PNG İndir",
-    reportCardHint:
-      "Tek sayfalık paylaşılabilir karne: metrikler, grafikler, öngörü ve değerlendirme. Tıklayarak tam boyut aç.",
+    /* Rozetin kuyruğundaki bağlantı. Bir süre "Karne →" yazıyordu ve o
+       kelime artık var olmayan bir PNG'yi işaret ediyordu — bağlantının
+       gittiği yer baştan beri analiz sayfasıydı. */
+    analysisLink: "Analiz →",
 
     /* Kayıtta buy/hold/sell duruyor; ekranda okunan bunlar. */
     verdictBuy: "AL",
@@ -277,7 +276,7 @@ const tr = {
     colReaction: "Hisse Tepkisi",
     colScore: "Skor",
     colVerdict: "Görüş",
-    colCard: "Karne",
+    colCard: "Analiz",
 
     searchPlaceholder: "Sembol veya şirket ara",
     searchEmpty: "\"{query}\" ile eşleşen analiz yok.",
@@ -335,7 +334,7 @@ const tr = {
 
     empty: "Henüz yayımlanmış bilanço analizi yok.",
     emptyHint:
-      "Bir şirket bilançosunu açıkladıktan sonra karnesi ve değerlendirmesi burada yayımlanır.",
+      "Bir şirket bilançosunu açıkladıktan sonra değerlendirmesi burada yayımlanır.",
     emptyWatchlist: "Takip ettiklerin için henüz analiz yok.",
     emptyWatchlistHint:
       "Favorilerine eklediğin şirketlerden biri bilanço açıkladığında analizi burada görünür.",
@@ -814,19 +813,22 @@ const tr = {
     guestTitle: "Misafir",
     guestHint: "Takip listesi tutmak için hesap açman yeterli.",
     signedInHint: "Listelerin bu hesapta saklanıyor.",
-    hintMarkets: "Endeksler, tahviller, sektörler",
-    hintCompanies: "Şirket dizini ve arama",
-    hintMacro: "TÜFE, istihdam, faiz",
-    hintEarnings: "Bilanço takvimi ve beklentiler",
-    hintCalendar: "Ekonomik veri takvimi",
-    hintCompare: "Hisseleri yan yana oku",
-    hintGuide: "Kavramları anlatan yazılar",
-    hintStories: "Piyasada yaşananların uzun anlatımı",
-    hintNews: "Çevrilmiş piyasa haberleri",
-    hintBrief: "Günlük ve haftalık bülten arşivi",
-    hintWatchlist: "Takip listelerin",
-    hintSettings: "Hesap, tema ve dil",
-    hintPrivacy: "Verilerin ve haklarının tamamı",
+    /* Menü satırlarının altındaki mikro etiketler Title Case. Bunlar cümle
+       değil, satırın ne olduğunu söyleyen ADLAR — "Endeksler, Tahviller,
+       Sektörler". Bağlaçlar (ve/and) küçük kalır. */
+    hintMarkets: "Endeksler, Tahviller, Sektörler",
+    hintCompanies: "Şirket Dizini ve Arama",
+    hintMacro: "TÜFE, İstihdam, Faiz",
+    hintEarnings: "Bilanço Takvimi ve Beklentiler",
+    hintCalendar: "Ekonomik Veri Takvimi",
+    hintCompare: "Hisseleri Yan Yana Oku",
+    hintGuide: "Kavramları Anlatan Yazılar",
+    hintStories: "Piyasada Yaşananların Uzun Anlatımı",
+    hintNews: "Çevrilmiş Piyasa Haberleri",
+    hintBrief: "Günlük ve Haftalık Bülten Arşivi",
+    hintWatchlist: "Takip Listelerin",
+    hintSettings: "Hesap, Tema ve Dil",
+    hintPrivacy: "Verilerin ve Haklarının Tamamı",
   },
 
   footer: {

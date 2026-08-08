@@ -207,7 +207,7 @@ export function analysisTableLabels(t: Dictionary) {
     colScore: t.analysis.colScore,
     colVerdict: t.analysis.colVerdict,
     colCard: t.analysis.colCard,
-    cardLink: t.analysis.reportCardLink,
+    cardLink: t.analysis.analysisLink,
     searchPlaceholder: t.analysis.searchPlaceholder,
     searchEmpty: t.analysis.searchEmpty,
     searchClear: t.analysis.searchClear,

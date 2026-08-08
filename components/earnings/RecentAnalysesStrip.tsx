@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
  * Takvim sekmesinin altındaki "son yazılan analizler" şeridi.
  *
  * NEDEN VAR: takvim BUGÜNDEN İLERİYE bakıyor, analizler ise açıklanmış —
- * yani geçmiş — bilançolara ait. Satırlara düşen "AL · 77 · Karne" rozeti
+ * yani geçmiş — bilançolara ait. Satırlara düşen "AL · 77 · Analiz" rozeti
  * bu yüzden yalnızca aynı gün açıklayan şirketlerde ateşleniyor; dünkü ya da
  * geçen haftaki analizler takvimde hiç görünmüyordu. Okuyucunun onları
  * bulmak için Analizler sekmesine geçmesi gerekiyordu.

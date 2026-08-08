@@ -10,10 +10,10 @@ import type { AnalysisBadge as AnalysisBadgeData } from "@/lib/data";
 import type { Dictionary } from "@/lib/i18n";
 
 /**
- * Takvim satırındaki "AL · 77 · Karne →" rozeti.
+ * Takvim satırındaki "AL · 77 · Analiz →" rozeti.
  *
  * Analizler sekmesi aranmasın diye var: bilançosu okunmuş bir şirketi
- * takvimde gören okuyucu, listeye dönüp aramadan doğrudan karneye geçer.
+ * takvimde gören okuyucu, listeye dönüp aramadan doğrudan analize geçer.
  *
  * Rozet KENDİ bağlantısını taşıyor ve içinde bulunduğu kart başka bir yere
  * (şirket sayfasına) gidiyor. İç içe `<a>` geçersiz HTML olduğu için kart,
@@ -53,7 +53,7 @@ export function AnalysisBadge({
       <span aria-hidden className="opacity-45">
         ·
       </span>
-      <span>{t.analysis.reportCardLink}</span>
+      <span>{t.analysis.analysisLink}</span>
     </Link>
   );
 }

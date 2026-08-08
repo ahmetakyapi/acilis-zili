@@ -112,8 +112,6 @@ dönüşümünün tamamı orada, başka yerde manuel saat aritmetiği yapılmaz.
   `/bilancolar/{sembol}/{donem}`. Sekme çubuğu paylaşılan bir layout'ta
   DEĞİL, üç sayfanın her biri kendi basıyor: detay sayfası aynı segmentin
   altında ve orada sekme istenmiyor.
-  Karne PNG'si isteğe bağlı: `public/karne/` altına elle konur, kayda site
-  içi yol olarak yazılır (`docs/karne-agenti.md`). Yoksa kart hiç basılmaz.
 - **İçerik iki dilli.** Rehber: `content/guide/` üç katman (meta + tr + en),
   eksik çeviri derlemeyi kırar. Mercek: aynı slug iki `locale` satırı; çeviri
   yoksa sayfa orijinali "TR" rozeti ve notla gösterir, boş kalmaz.

@@ -470,9 +470,6 @@ export const earningsAnalyses = pgTable(
        ediyor (GET boş alanları `null` döndürüyor ve o gövde geri
        gönderilebilmeli), dolayısıyla jsonb içinde de null durabiliyor. */
     sources: jsonb("sources").$type<{ label: string; url?: string | null }[]>(),
-    /** Karne PNG'sinin site içi yolu: "/karne/sndk-4c-fy2026.png". Yoksa
-        kart hiç basılmaz — boş çerçeve göstermektense yokluğu dürüst. */
-    cardImageUrl: text("card_image_url"),
 
     generatedBy: text("generated_by").notNull().default("claude"),
     publishedAt: timestamp("published_at", { withTimezone: true })
@@ -489,41 +486,6 @@ export const earningsAnalyses = pgTable(
   ],
 );
 
-/**
- * Bilanço karnesi görselleri — analiz kaydının PNG'si.
- *
- * Ayrı tabloda çünkü megabaytlık bir alan: `earnings_analyses` her liste
- * sorgusunda okunuyor ve görsel oraya konsaydı, altı satırlık bir tabloyu
- * çizmek için on megabayt taşımak gerekirdi. Burada yalnızca görseli servis
- * eden rota dokunuyor.
- *
- * Veri base64 METİN olarak tutuluyor, bytea olarak değil. Neon'un HTTP
- * sürücüsü bytea'yı sürüm ve yapılandırmaya göre kâh Buffer kâh `\x…` hex
- * dizesi döndürüyor; base64 her iki uçta da aynı şey. %33 yer maliyeti,
- * sürücü davranışına bağlı sessiz bir bozulmadan ucuz.
- *
- * Dil başına ayrı satır: karne metin içeriyor ("Genel Görüş", "Piyasa
- * Beklentisi") ve Türkçesiyle İngilizcesi aynı görsel değil.
- */
-export const earningsAnalysisCards = pgTable(
-  "earnings_analysis_cards",
-  {
-    symbol: text("symbol").notNull(),
-    period: text("period").notNull(),
-    locale: text("locale").notNull().default("tr"),
-    mimeType: text("mime_type").notNull().default("image/png"),
-    /** Base64 gövde — `data:` ön eki OLMADAN. */
-    dataBase64: text("data_base64").notNull(),
-    /** Düzen zıplamasın diye kaydediliyor; yoksa A4 2x varsayılır. */
-    width: integer("width"),
-    height: integer("height"),
-    byteSize: integer("byte_size"),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [primaryKey({ columns: [t.symbol, t.period, t.locale] })],
-);
 
 /* ==========================================================================
    Çıkarsanan tipler
@@ -543,7 +505,6 @@ export type DailyBriefRow = typeof dailyBriefs.$inferSelect;
 export type StoryRow = typeof stories.$inferSelect;
 export type MarketHolidayRow = typeof marketHolidays.$inferSelect;
 export type EarningsAnalysisRow = typeof earningsAnalyses.$inferSelect;
-export type EarningsAnalysisCardRow = typeof earningsAnalysisCards.$inferSelect;
 
 /** AL / TUT / SAT — kayıtta İngilizce anahtar, ekranda dile göre yazılır. */
 export type Verdict = "buy" | "hold" | "sell";
