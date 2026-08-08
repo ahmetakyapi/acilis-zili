@@ -146,9 +146,13 @@ export function AppShell({
                 className={cn(
                   "shrink-0 whitespace-nowrap rounded-lg px-2.5 py-[7px] transition-colors duration-150 xl:px-3.5",
                   item.wideOnly && "hidden xl:block",
+                  /* Pasif sekmeler de KALIN: `font-medium` ile yazılınca
+                     masthead soluk bir bağlantı şeridi gibi duruyordu ve
+                     seçili sekme tek başına ağır kalıyordu. İkisi de kalın,
+                     ayrım artık ağırlıkta değil zeminde ve mürekkepte. */
                   active
                     ? "bg-surface-elevated font-bold"
-                    : "font-medium hover:bg-surface",
+                    : "font-semibold hover:bg-surface",
                 )}
               >
                 <span className="display-ink display-ink-tight">

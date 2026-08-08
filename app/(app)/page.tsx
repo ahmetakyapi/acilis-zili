@@ -737,18 +737,23 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                     {locale === "tr" ? market.tracksTr : market.tracksEn}
                   </span>
                 </span>
-                <span className="shrink-0 text-right">
-                  <span className="numeral block text-[13px] font-bold text-strong">
-                    {formatPrice(quote.price, locale)}
-                  </span>
-                  <span
-                    className={cn(
-                      "numeral block text-[11.5px]",
-                      directionText(tone),
-                    )}
-                  >
-                    {formatPercent(quote.changePct, locale)}
-                  </span>
+                {/* Satırın değeri YALNIZCA yüzde.
+                    Burada bir süre fonun dolar fiyatı da (38,70 gibi)
+                    büyük puntoyla yazıyordu. O sayı yanlış değildi ama
+                    okuyucunun etiketten beklediği büyüklük DEĞİLDİ: "Türkiye
+                    38,70" satırında 38,70 bir piyasa seviyesi değil, ABD'de
+                    işlem gören bir MSCI fonunun fiyatı — BIST 100 on
+                    binlerde. Alttaki açıklama bunu kurtarmıyordu; aynı
+                    gerekçeyle Brent metriği de kaldırılmıştı (bkz.
+                    CLAUDE.md → veri dürüstlüğü). Yüzde ise gerçekten
+                    anlamlı: fonun o günkü yönü. */}
+                <span
+                  className={cn(
+                    "numeral shrink-0 text-[15px] font-bold",
+                    directionText(tone),
+                  )}
+                >
+                  {formatPercent(quote.changePct, locale)}
                 </span>
               </Link>
             </li>

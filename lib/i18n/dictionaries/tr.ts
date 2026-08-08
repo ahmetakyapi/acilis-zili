@@ -139,7 +139,7 @@ const tr = {
     weekAheadEmpty: "Önümüzdeki hafta için planlanmış önemli veri yok.",
     worldMarkets: "Dünya Piyasaları",
     worldMarketsHint:
-      "Yerel endeksler ücretsiz sağlayıcılarda yok; bu değerler o ülkenin hisselerini tutan ve ABD'de dolar bazında işlem gören MSCI ülke fonlarıdır. Yönü aynı gösterir, yüzdesi kur ve seans farkıyla ayrışabilir.",
+      "Yerel endeksler ücretsiz sağlayıcılarda yok; bu oranlar o ülkenin hisselerini tutan ve ABD'de dolar bazında işlem gören MSCI ülke fonlarının günlük değişimidir. Yönü aynı gösterir, yüzdesi kur ve seans farkıyla ayrışabilir. Fonun kendi fiyatı bir piyasa seviyesi olmadığı için yazılmıyor.",
     greetingMorning: "Günaydın",
     greetingDay: "İyi Günler",
     greetingEvening: "İyi Akşamlar",
