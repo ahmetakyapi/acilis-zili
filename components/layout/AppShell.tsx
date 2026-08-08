@@ -1,9 +1,11 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Gear, SignIn } from "@phosphor-icons/react/dist/ssr";
+import { CalendarBlank, Gear } from "@phosphor-icons/react/dist/ssr";
 import { BellMark, BrandLockup } from "@/components/brand/BellMark";
+import { RouteProgress } from "./RouteProgress";
 import { NAV_ITEMS } from "./nav-items";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +19,7 @@ export type ShellLabels = {
   menu: string;
   mainNav: string;
   skipToContent: string;
+  loading: string;
 };
 
 type AppShellProps = {
@@ -26,6 +29,8 @@ type AppShellProps = {
   themeToggle: React.ReactNode;
   localeToggle: React.ReactNode;
   searchTrigger: React.ReactNode;
+  /** Mobil başlığın sağ ucu: hesap + tema + dil tek panelde. */
+  accountMenu: React.ReactNode;
   ticker: React.ReactNode;
   footer: React.ReactNode;
   children: React.ReactNode;
@@ -75,6 +80,7 @@ export function AppShell({
   themeToggle,
   localeToggle,
   searchTrigger,
+  accountMenu,
   ticker,
   footer,
   children,
@@ -82,22 +88,30 @@ export function AppShell({
   const pathname = usePathname();
 
   /* Alt çubuk: Piyasa · Bilanço · Favoriler · Menü.
-     Giriş yapmamış kullanıcıda Favoriler sekmesi ÇIKMAZ SOKAKTI — proxy onu
-     doğrudan /giris'e atıyordu, yani dört sekmeden biri o kullanıcı için
-     içerik değil bir duvardı. O yuvada artık adıyla "Giriş" duruyor.
+     Giriş yapmamış kullanıcıda Favoriler sekmesi ÇIKMAZ SOKAKTI — sayfa onu
+     doğrudan /giris'e atıyor, yani dört sekmeden biri o kullanıcı için içerik
+     değil bir duvardı. Yuvaya bir süre "Giriş Yap" yazıldı ve bu daha da kötü
+     çalıştı: gezinme çubuğunun ÜÇÜ ekran, BİRİ formdu; göz her sayfada oraya
+     takılıyor ve sekme bir davet gibi durduğu için kapatılamıyordu.
 
-     Bu aynı zamanda mobil başlıktan kaldırılan giriş düğmesinin yerini
-     dolduruyor: oradaki SignIn ikonu kapıdan çıkan bir ok çizdiği için
-     "çıkış" gibi okunuyordu. Aynı işlev, ikon yerine yazıyla ve doğru yerde. */
+     Artık yuvada giriş yapmamış okuyucu için TAKVİM var — gerçek bir ekran,
+     duvar değil. Takvim mobil alt çubuktan bilerek çıkarılmıştı (bugünün
+     olayları zaten ana sayfada) ama "hiç yoktan" değil "girişten" iyi:
+     haftaya bakış ana sayfada yok ve bu ekran mobilde başka türlü yalnızca
+     Menü'den açılıyor. Giriş bağlantısı kaybolmuyor — başlıktaki hesap
+     menüsünde, ait olduğu yerde duruyor.
+
+     Giriş yapan kullanıcıda yuva Favoriler'e döner: onun için o sekme
+     ürünün en sık açılan ekranı. */
   const bottomItems = NAV_ITEMS.filter((item) => item.inBottomBar).map(
     (item) => {
       const swap = item.href === "/favoriler" && !signedIn;
       return {
         key: item.href,
-        href: swap ? "/giris" : item.href,
-        icon: swap ? SignIn : item.icon,
+        href: swap ? "/takvim" : item.href,
+        icon: swap ? CalendarBlank : item.icon,
         text: swap
-          ? labels.signIn
+          ? labels.nav["/takvim"]
           : (labels.navShort[item.href] ?? labels.nav[item.href]),
       };
     },
@@ -124,6 +138,14 @@ export function AppShell({
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {/* Gezinme göstergesi kabuğun EN ÜSTÜNDE: her rota bu kabuğun altında
+          yaşıyor, tek bir yerde durması yeter. `useSearchParams` okuduğu için
+          Suspense şart — yoksa altındaki bütün rotalar statik ön çizimden
+          düşerdi. */}
+      <Suspense fallback={null}>
+        <RouteProgress label={labels.loading} />
+      </Suspense>
+
       {/* Klavyeyle gezen biri her sayfada sekiz sekmeyi geçmek zorunda
           kalmasın. Odaklanana kadar görünmez; odakta masthead'in üstüne
           oturur. */}
@@ -236,15 +258,15 @@ export function AppShell({
             {labels.brandName}
           </span>
         </Link>
-        {/* Giriş düğmesi burada YOK. Phosphor'un SignIn ikonu kapıdan çıkan
-            bir ok çiziyor ve giriş yapmamış kullanıcıya "çıkış" gibi
-            okunuyordu — henüz girmediği bir yerden çıkma daveti. Giriş
-            zaten alt çubuktaki Menü sekmesinde, adıyla yazılı olarak
-            duruyor; ikonla ikinci kez tekrarlamaya gerek yok. */}
+        {/* İki düğme, üç değil. Tema ve dil ayrı birer kutu olarak duruyordu;
+            ikisi de "ortam" ayarı ve ikisi de tek bir ikonla ne yaptığını
+            anlatmaya çalışıyordu (güneş mi şu anki tema mı, basınca gelecek
+            olan mı?). İkisi de hesap menüsünün içine, adlarıyla yazılı
+            seçenekler hâline geldi. Başlıkta içeriği değiştiren tek şey
+            kalıyor: arama. */}
         <div className="ml-auto flex items-center gap-2">
           {searchTrigger}
-          {themeToggle}
-          {localeToggle}
+          {accountMenu}
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { auth } from "@/auth";
+import { AccountMenu } from "@/components/layout/AccountMenu";
 import { AppShell, type ShellLabels } from "@/components/layout/AppShell";
 import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { SearchCommand } from "@/components/layout/SearchCommand";
@@ -37,6 +38,7 @@ export default async function AppLayout({
     menu: t.nav.menu,
     mainNav: t.nav.mainNav,
     skipToContent: t.nav.skipToContent,
+    loading: t.common.loading,
   };
 
   return (
@@ -55,6 +57,25 @@ export default async function AppLayout({
           popularLabel={t.nav.searchPopular}
           companiesLabel={t.nav.companies}
           hints={{ move: t.nav.searchHintMove, open: t.nav.searchHintOpen }}
+        />
+      }
+      accountMenu={
+        <AccountMenu
+          signedIn={Boolean(session?.user)}
+          username={session?.user?.name ?? null}
+          initialTheme={theme}
+          initialLocale={locale}
+          labels={{
+            account: t.nav.account,
+            settings: t.nav.settings,
+            signIn: t.nav.signIn,
+            signUp: t.nav.signUp,
+            theme: t.settings.theme,
+            themeLight: t.settings.themeLight,
+            themeDark: t.settings.themeDark,
+            language: t.settings.language,
+          }}
+          className="lg:hidden"
         />
       }
       ticker={

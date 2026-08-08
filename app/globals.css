@@ -525,6 +525,98 @@
   animation: page-enter 0.24s var(--ease-brand) both;
 }
 
+/* --------------------------------------------------------------------------
+   Gezinme göstergesi
+
+   Ekranın en tepesinde 2px'lik bir ray, üzerinde sağa süzülen bir ışık.
+   YÜZDE YOK: ne kadar kaldığını bilmiyoruz, bilmediğimiz bir şeyi ölçülmüş
+   gibi çizmiyoruz (bkz. `components/layout/RouteProgress.tsx`).
+
+   Ray güvenli alanın ALTINDAN başlar; `top: 0` verilseydi çentikli telefonda
+   durum çubuğunun arkasında kalır, hiç görünmezdi. z-index başlığın (30) ve
+   arama paletinin üstünde: gezinme her şeyin önünde olan bir olay.
+   -------------------------------------------------------------------------- */
+.route-progress {
+  position: fixed;
+  top: env(safe-area-inset-top);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--primary-wash);
+}
+
+.route-progress::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--primary-soft),
+    var(--primary),
+    transparent
+  );
+  animation: route-progress 0.9s var(--ease-brand) infinite;
+}
+
+@keyframes route-progress {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(320%);
+  }
+}
+
+/* Gecikince çıkan hap — başlığın ALTINDA, yatayda ortada.
+
+   Önce sağ üste konmuştu ve orada aramanın/hesap düğmesinin üstüne düşüyordu:
+   gezinme sürerken tam da dokunulacak iki hedefin önünü kapatıyordu. Ortada
+   hiçbir kontrol yok; iki uçtaki düğmelerin arasından geçiyor. Sabit konumlu
+   çünkü altındaki içerik gezinme sırasında değişiyor — akışa girseydi yeni
+   sayfayla birlikte yerinden oynardı. */
+.route-progress-pill {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 68px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-solid);
+  box-shadow: 0 10px 26px -12px rgb(0 0 0 / 0.42);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-body);
+  pointer-events: none;
+}
+
+.route-progress-spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--primary-faint);
+  border-top-color: var(--primary);
+  animation: route-progress-spin 0.7s linear infinite;
+}
+
+@keyframes route-progress-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .skeleton {
   background: linear-gradient(
     90deg,
