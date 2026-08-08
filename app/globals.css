@@ -466,7 +466,7 @@
    Yüzeyler — gölge yok, ayrım saydamlık + tek hairline ile
    -------------------------------------------------------------------------- */
 .panel {
-  background: var(--surface);
+  background: var(--surface-solid);
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
   transition: border-color 0.25s var(--ease-brand), background-color 0.25s

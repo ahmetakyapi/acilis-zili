@@ -314,7 +314,7 @@ export default async function AnalysisDetailPage(
           Ölçüler alt satıra alınıp yatay bir şeride dönüşünce delik
           kapanıyor, her ölçü kendi sütununda okunuyor ve şerit kartın
           genişliğini gerçekten kullanıyor. */}
-      <header className="flex flex-col gap-4 rounded-[16px] border border-line bg-surface p-4 sm:p-5">
+      <header className="flex flex-col gap-4 rounded-[16px] border border-line bg-surface-solid p-4 sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
           <div className="flex min-w-0 flex-1 flex-col gap-3.5">
             <div className="flex min-w-0 items-start gap-3.5 sm:gap-4">
@@ -603,7 +603,7 @@ export default async function AnalysisDetailPage(
 
                Dev tırnak dekoratif ve `aria-hidden`: metnin alıntı olduğunu
                blockquote zaten söylüyor. */
-            <section className="relative overflow-hidden rounded-[16px] border border-line bg-surface p-4 sm:p-5">
+            <section className="relative overflow-hidden rounded-[16px] border border-line bg-surface-solid p-4 sm:p-5">
               <span
                 aria-hidden
                 className="pointer-events-none absolute -top-8 right-5 select-none font-serif text-[140px] leading-none text-primary opacity-[0.06]"
@@ -612,7 +612,7 @@ export default async function AnalysisDetailPage(
               </span>
               <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
                 <div className="flex shrink-0 flex-col gap-px lg:w-44">
-                  <span className="plate text-[10px] tracking-[0.09em]">
+                  <span className={cn(PLATE_LABEL, "text-primary")}>
                     {t.analysis.ceoMessage}
                   </span>
                   <span className="text-[15px] font-bold tracking-[-0.02em] text-strong">
