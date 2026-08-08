@@ -32,6 +32,7 @@ import {
   formatCompact,
   formatEtDateShort,
   formatPercent,
+  formatPercentPlain,
   formatPrice,
 } from "@/lib/utils";
 
@@ -133,39 +134,6 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
             }}
           />
         </Suspense>
-      </div>
-
-      {/* Endeks seçici */}
-      <div className="flex flex-wrap items-center gap-1.5 pt-1">
-        {INDEX_TABS.map((entry) => {
-          const activeTab = entry.key === tab;
-          return (
-            <Link
-              key={entry.key}
-              href={`/piyasalar?endeks=${entry.key}`}
-              scroll={false}
-              className={cn(
-                "flex min-h-[38px] items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors",
-                activeTab
-                  ? "bg-primary text-on-primary"
-                  : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
-              )}
-            >
-              {entry.label}
-              <span
-                className={cn(
-                  "numeral text-xs font-normal",
-                  activeTab ? "text-on-primary/70" : "text-muted",
-                )}
-              >
-                {entry.members.length}
-              </span>
-            </Link>
-          );
-        })}
-        <span className="numeral ml-auto text-[10px] text-muted">
-          {t.markets.asOf}: {formatEtDateShort(INDEX_COMPOSITION_DATE, locale)}
-        </span>
       </div>
 
       <IndexDetail
@@ -473,17 +441,18 @@ async function IndexDetail({
 
   return (
     <>
+      <IndexToolbar
+        tab={tab}
+        advancing={advancing}
+        declining={declining}
+        flat={flat}
+        total={withQuote.length}
+        locale={locale}
+        t={t}
+      />
+
       {withQuote.length > 0 && (
         <>
-          <BreadthPanel
-            advancing={advancing}
-            declining={declining}
-            flat={flat}
-            total={withQuote.length}
-            locale={locale}
-            t={t}
-          />
-
           <div className="grid gap-4 lg:grid-cols-2">
             <MoverPanel
               title={t.markets.topGainers}
@@ -520,9 +489,15 @@ async function IndexDetail({
   );
 }
 
-/* ---- Piyasa genişliği ---- */
+/* ---- Endeks seçici + piyasa genişliği ----
 
-function BreadthPanel({
+   İkisi tek panelde: seçici başıboş bir düğme satırıydı, genişlik ise tek
+   bir çubuk için ayrı bir paneldi. Bilgi olarak da aynı şeye bakıyorlar —
+   "hangi endeks" ve "o endeksin bugünü". Ayrı dururken sayfada iki blok
+   yüksekliği harcıyor, birleşince seçimin karşılığı hemen altında okunuyor. */
+
+function IndexToolbar({
+  tab,
   advancing,
   declining,
   flat,
@@ -530,6 +505,7 @@ function BreadthPanel({
   locale,
   t,
 }: {
+  tab: TabKey;
   advancing: number;
   declining: number;
   flat: number;
@@ -538,51 +514,86 @@ function BreadthPanel({
   t: Dictionary;
 }) {
   const pct = (value: number) => (total > 0 ? (value / total) * 100 : 0);
-  const advPct = pct(advancing);
 
   return (
-    <Panel className="p-4 sm:p-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-[14px] font-bold tracking-tight text-strong">
-          {t.markets.breadth}
-        </h2>
-        <p className="numeral text-[12.5px] text-muted">
-          <span className="font-semibold text-up">{advancing}</span>{" "}
-          {t.markets.advancing}
-          <span aria-hidden className="mx-1.5">
-            ·
-          </span>
-          <span className="font-semibold text-down">{declining}</span>{" "}
-          {t.markets.declining}
-          {flat > 0 && (
-            <>
-              <span aria-hidden className="mx-1.5">
-                ·
+    <Panel className="overflow-hidden">
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 px-4 py-3 sm:px-5">
+        {INDEX_TABS.map((entry) => {
+          const activeTab = entry.key === tab;
+          return (
+            <Link
+              key={entry.key}
+              href={`/piyasalar?endeks=${entry.key}`}
+              scroll={false}
+              className={cn(
+                "flex min-h-[38px] items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors",
+                activeTab
+                  ? "bg-primary text-on-primary"
+                  : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
+              )}
+            >
+              {entry.label}
+              <span
+                className={cn(
+                  "numeral text-xs font-normal",
+                  activeTab ? "text-on-primary/70" : "text-muted",
+                )}
+              >
+                {entry.members.length}
               </span>
-              <span className="font-semibold text-soft">{flat}</span>{" "}
-              {t.markets.unchanged}
-            </>
-          )}
-        </p>
+            </Link>
+          );
+        })}
+        <span className="numeral ml-auto text-[10px] text-muted">
+          {t.markets.asOf}: {formatEtDateShort(INDEX_COMPOSITION_DATE, locale)}
+        </span>
       </div>
 
-      <div className="mt-3.5 flex h-3 w-full gap-px overflow-hidden rounded-full bg-surface-sunken">
-        {advancing > 0 && (
-          <span className="bg-up" style={{ width: `${pct(advancing)}%` }} />
-        )}
-        {flat > 0 && (
-          <span className="bg-flat/50" style={{ width: `${pct(flat)}%` }} />
-        )}
-        {declining > 0 && (
-          <span className="bg-down" style={{ width: `${pct(declining)}%` }} />
-        )}
-      </div>
+      {total > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 border-t border-line-soft px-4 py-3.5 sm:px-5">
+          <h2 className="flex items-baseline gap-2 text-[13px] font-bold tracking-tight text-strong">
+            {t.markets.breadth}
+            {/* Oran etiketin yanında: çubuğun kesin karşılığı burada okunur,
+                eskiden altta ayrı bir cümleydi. */}
+            <span className="numeral text-[13px] font-bold text-up">
+              {formatPercentPlain(pct(advancing), locale, 0)}
+            </span>
+          </h2>
 
-      <p className="mt-2 text-xs text-soft">
-        {locale === "tr"
-          ? `Endeksteki şirketlerin %${formatPrice(advPct, locale, { digits: 0 })}'i günü artıda geçiriyor.`
-          : `${formatPrice(advPct, locale, { digits: 0 })}% of the index is trading higher.`}
-      </p>
+          {/* Çubuk satırın esneyen parçası: dar ekranda kırılıp tam genişliğe
+              geçsin diye taban genişliği var. */}
+          <div className="flex h-2.5 min-w-[180px] flex-1 gap-px overflow-hidden rounded-full bg-surface-sunken">
+            {advancing > 0 && (
+              <span className="bg-up" style={{ width: `${pct(advancing)}%` }} />
+            )}
+            {flat > 0 && (
+              <span className="bg-flat/50" style={{ width: `${pct(flat)}%` }} />
+            )}
+            {declining > 0 && (
+              <span className="bg-down" style={{ width: `${pct(declining)}%` }} />
+            )}
+          </div>
+
+          <p className="numeral text-[12.5px] text-muted">
+            <span className="font-semibold text-up">{advancing}</span>{" "}
+            {t.markets.advancing}
+            <span aria-hidden className="mx-1.5">
+              ·
+            </span>
+            <span className="font-semibold text-down">{declining}</span>{" "}
+            {t.markets.declining}
+            {flat > 0 && (
+              <>
+                <span aria-hidden className="mx-1.5">
+                  ·
+                </span>
+                <span className="font-semibold text-soft">{flat}</span>{" "}
+                {t.markets.unchanged}
+              </>
+            )}
+          </p>
+        </div>
+      )}
     </Panel>
   );
 }
