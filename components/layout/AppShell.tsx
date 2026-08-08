@@ -103,6 +103,25 @@ export function AppShell({
     },
   );
 
+  /**
+   * Alt çubukta hangi sekme işaretli.
+   *
+   * Eskiden her sekme kendi yolunu tek başına sınıyordu ve Takvim, Rehber,
+   * Mercek, Haberler ya da bir hisse sayfasındayken HİÇBİR sekme işaretli
+   * kalmıyordu: dört sekme de sönük duruyor, okuyucu çubuğa göre "hiçbir
+   * yerde" oluyordu. O ekranların tamamı mobilde Menü'nün altında yaşıyor,
+   * dolayısıyla eşleşme bulunamadığında işaret Menü'ye düşer.
+   *
+   * Ana sayfa istisna: alt çubukta bilerek sekmesi yok (marka logosu zaten
+   * oraya götürüyor), orada hiçbir şey işaretlenmez — yoksa ana sayfa
+   * "Menü'deymişsin" gibi görünürdü.
+   */
+  const matchedBottom = bottomItems.find(
+    (item) => item.href !== "/menu" && isActive(pathname, item.href),
+  );
+  const activeBottomKey =
+    pathname === "/" ? null : (matchedBottom?.key ?? "/menu");
+
   return (
     <div className="flex min-h-dvh flex-col">
       {/* Klavyeyle gezen biri her sayfada sekiz sekmeyi geçmek zorunda
@@ -239,11 +258,20 @@ export function AppShell({
       </main>
 
       {/* Alt bilgi ana akışın parçası; sabit şerit ve mobil sekme çubuğu
-          kadar boşluk kendi altında bırakır. */}
+          kadar boşluk kendi altında bırakır.
+
+          MENÜ EKRANINDA alt bilginin dizin sütunları gizleniyor: o sayfa
+          zaten menünün kendisi ve aynı bağlantıları ikonlu, açıklamalı
+          satırlar hâlinde veriyor. Altında bir kez daha düz liste olarak
+          tekrarlanınca sayfa iki katına çıkıyor ve okuyucu aynı dizini
+          ikinci kez tarıyordu. Marka künyesi ve yasal satır kalıyor —
+          onlar tekrar değil. `SiteFooter` sunucu bileşeni olduğu için
+          pathname'i göremiyor, karar burada veriliyor. */}
       <div
         className={cn(
           "mx-auto w-full max-w-[1400px] pb-32 pt-10 lg:pb-20",
           CONTENT_GUTTER,
+          pathname === "/menu" && "[&_footer_nav]:hidden",
         )}
       >
         {footer}
@@ -260,7 +288,7 @@ export function AppShell({
         aria-label={labels.mainNav}
       >
         {bottomItems.map((item) => {
-          const active = isActive(pathname, item.href);
+          const active = item.key === activeBottomKey;
           const Icon = item.icon;
           return (
             <Link
