@@ -1,0 +1,1 @@
+ALTER TABLE "earnings_analyses" DROP COLUMN "book_value_per_share";

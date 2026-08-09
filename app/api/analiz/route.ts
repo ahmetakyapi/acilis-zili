@@ -126,7 +126,6 @@ const BodySchema = z.object({
      `growth_pct` tek başına REDDEDİLİYOR (aşağıdaki superRefine): hangi
      büyümenin bölündüğü söylenmeden yazılan bir PEG doğrulanamaz. */
   eps_ttm: z.number().nullish(),
-  book_value_per_share: z.number().positive().nullish(),
   growth_pct: z.number().nullish(),
   growth_basis: z.string().trim().min(3).max(60).nullish(),
 
@@ -253,7 +252,6 @@ export async function GET(request: Request) {
     eps: row.eps,
     eps_surprise_pct: row.epsSurprisePct,
     eps_ttm: row.epsTtm,
-    book_value_per_share: row.bookValuePerShare,
     growth_pct: row.growthPct,
     growth_basis: row.growthBasis,
     summary: row.summary,
@@ -304,7 +302,7 @@ export async function POST(request: Request) {
           "sayısal alanlar":
             "price, reaction_pct, market_cap, return_1y_pct, target_price, upside_pct, analyst_count, revenue, revenue_yoy_pct, eps, eps_surprise_pct — HAM sayı",
           "değerleme girdileri":
-            "eps_ttm (F/K bölen) · book_value_per_share (PD/DD bölen, YALNIZCA banka/sigorta/GYO) · growth_pct + growth_basis (PEG bölen; ikisi birlikte verilir) — oran DEĞİL, bölen",
+            "eps_ttm (F/K bölen) · growth_pct + growth_basis (PEG bölen; ikisi birlikte verilir) — oran DEĞİL, bölen",
           strengths_risks_upcoming: "['madde', ...] en fazla 6",
           highlights: "[{label, value, note?, tone?}] — 6 metrik karti",
           quarterly_revenue:
@@ -364,7 +362,6 @@ export async function POST(request: Request) {
     eps: parsed.eps ?? null,
     epsSurprisePct: parsed.eps_surprise_pct ?? null,
     epsTtm: parsed.eps_ttm ?? null,
-    bookValuePerShare: parsed.book_value_per_share ?? null,
     growthPct: parsed.growth_pct ?? null,
     growthBasis: parsed.growth_basis ?? null,
     summary: parsed.summary,

@@ -333,7 +333,6 @@ const tr = {
        bırakıldı — F/K açılımıyla yazılınca ("Fiyat / Kazanç") künye
        satırına sığmıyor ve zaten kimse öyle aramıyor. */
     peRatio: "F/K",
-    pbRatio: "PD/DD",
     pegRatio: "PEG",
     netMargin: "Net Kâr Marjı",
     /* Ölçünün penceresi — künye, başlık değil; cümle düzeninde kalıyor.

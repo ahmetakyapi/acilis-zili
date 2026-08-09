@@ -405,20 +405,17 @@ export const earningsAnalyses = pgTable(
        Bölenler burada, oranı sunum katmanı sayfadaki fiyatla kuruyor. Böylece
        okuyucu çarpıp doğrulayabiliyor.
 
-       Üçü de İSTEĞE BAĞLI; yazılmayan oran hiç gösterilmez.
+       İkisi de İSTEĞE BAĞLI; yazılmayan oran hiç gösterilmez.
+
+       PD/DD'nin böleni (`book_value_per_share`) bir süre buradaydı ve
+       migration 0012 ile geri alındı. Sektöre bağlı bir ölçüydü: bankada
+       ve GYO'da fiyatın kurulduğu yer, yarı iletkende gürültü — ve "bu
+       şirkette anlamlı mı" kararı her analizde yeniden verilmesi gereken
+       bir yargı çağrısıydı.
        ---------------------------------------------------------------- */
 
     /** Son dört çeyreğin toplam hisse başı kârı — F/K'nin böleni. */
     epsTtm: doublePrecision("eps_ttm"),
-    /**
-     * Hisse başı defter değeri — PD/DD'nin böleni.
-     *
-     * SEKTÖRE BAĞLI bir ölçü: bankada, sigortada ve GYO'da fiyatın kurulduğu
-     * asıl yer burasıdır; yazılımda ya da yarı iletkende şirketin ne
-     * ürettiğini anlatmaz. Yazılmadığında oran basılmıyor — her şirkete
-     * PD/DD yazmak yanlış okumaya davet.
-     */
-    bookValuePerShare: doublePrecision("book_value_per_share"),
     /**
      * PEG'in böleni — beklenen yıllık kâr büyümesi, yüzde (18.4).
      *

@@ -668,7 +668,7 @@ karşılığı yok — onları bul.
 
 **Değerleme girdileri — ORAN DEĞİL BÖLEN yaz.**
 
-Sayfadaki F/K, PD/DD ve PEG'i site kendisi kuruyor: payı her zaman o anki
+Sayfadaki F/K ve PEG'i site kendisi kuruyor: payı her zaman o anki
 canlı fiyat, bölenleri de senin yazdığın sayılar. Oranın kendisini yazma —
 fiyat her gün değişiyor ve analiz günü doğru olan bir F/K üç hafta sonra
 sayfanın en üstündeki canlı fiyatla çelişiyor. (Ölçtük: bir sağlayıcının
@@ -676,12 +676,6 @@ hazır F/K'si tam bu yüzden %5,6 geriden geliyordu.)
 
   - `eps_ttm` — son dört çeyreğin toplam hisse başı kârı. F/K'nin böleni.
     Neredeyse her şirkette yazılabilir; bilanço bülteninden topla.
-
-  - `book_value_per_share` — hisse başı defter değeri. PD/DD'nin böleni ve
-    **yalnızca banka, sigorta, GYO ve varlık ağırlıklı sanayide** yaz.
-    Yazılım ya da yarı iletkende defter değeri şirketin ne ürettiğini
-    anlatmıyor; oradaki PD/DD okuyucuyu yanlış yere götürür. Emin
-    değilsen boş bırak — yazılmayan oran hiç gösterilmiyor.
 
   - `growth_pct` + `growth_basis` — PEG'in böleni ve o büyümenin TANIMI.
     İkisi birlikte verilir, biri tek başına gelirse uç kaydı reddediyor.
@@ -691,7 +685,12 @@ hazır F/K'si tam bu yüzden %5,6 geriden geliyordu.)
     yazmıyordu. `growth_basis` ekranda oranın yanında yazılı çıkıyor:
     "ileriye dönük 12 ay", "son 12 ay", "şirket öngörüsü 2027".
 
-Üçü de isteğe bağlı. Doğrulayamadığın bölen yazılmaz, o oran da basılmaz.
+İkisi de isteğe bağlı. Doğrulayamadığın bölen yazılmaz, o oran da basılmaz.
+
+PD/DD bir süre burada duruyordu ve KALDIRILDI: sektöre bağlı bir ölçü, her
+şirkete yazılamıyor ve "bu şirkette anlamlı mı" kararını rutine yıkmak her
+seferinde bir yargı çağrısı demekti. Yanlış yazıldığında da sessizce yanlış
+okunuyor. Gerekirse şema geçmişinden geri getirilir (migration 0011/0012).
 
 --- 4. DEĞERLENDİR ---
 
@@ -773,7 +772,6 @@ curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
     "eps": 39.25,
     "eps_surprise_pct": 14,
     "eps_ttm": 73.76,
-    "book_value_per_share": null,
     "growth_pct": null,
     "growth_basis": null,
     "summary": ["<paragraf 1>", "<paragraf 2>", "<paragraf 3>"],

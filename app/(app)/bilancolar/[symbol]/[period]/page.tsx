@@ -107,8 +107,8 @@ type Fact = {
 };
 
 /* Sütun sayısı hücre sayısını izliyor: sabit bir sütun sayısı, ray dolmadığı
-   günlerde satır sonunda boşluk bırakıyordu. En çok altı hücre olur —
-   piyasa değeri, yıllık getiri, F/K, PD/DD, PEG, net kâr marjı.
+   günlerde satır sonunda boşluk bırakıyordu. En çok beş hücre olur —
+   piyasa değeri, yıllık getiri, F/K, PEG, net kâr marjı.
 
    Sınıflar birebir yazılı; Tailwind kaynağı metin olarak tarıyor ve şablonla
    üretilen sınıf adları derlemeye girmiyor. */
@@ -118,7 +118,6 @@ const RAIL_COLS: Record<number, string> = {
   3: "grid-cols-2 sm:grid-cols-3",
   4: "grid-cols-2 lg:grid-cols-4",
   5: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
-  6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
 };
 
 function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
@@ -129,7 +128,7 @@ function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
     <dl
       className={cn(
         "grid gap-x-5 gap-y-4 rounded-[14px] bg-surface-sunken px-4 py-3.5 sm:px-5",
-        RAIL_COLS[Math.min(list.length, 6)],
+        RAIL_COLS[Math.min(list.length, 5)],
       )}
     >
       {list.map((fact) => (
@@ -268,24 +267,23 @@ export default async function AnalysisDetailPage(
      kullanılmıyor: SNDK'da %5,6 geriden geliyordu (bkz. `peRatioOf`).
 
      BÖLEN ÖNCE KAYITTAN okunuyor. Analizi yazan, bilançonun kendisinden
-     gelen sayıyı `eps_ttm` / `book_value_per_share` alanlarına koyabiliyor;
-     yoksa sağlayıcı devralıyor. Kayıt hep önde çünkü o, kaynağı belli ve
-     sürüm geçmişinde duran bir sayı.
+     gelen sayıyı `eps_ttm` alanına koyabiliyor; yoksa sağlayıcı devralıyor.
+     Kayıt hep önde çünkü o, kaynağı belli ve sürüm geçmişinde duran bir sayı.
 
      DOĞRULANDI. 8 Ağustos 2026 kapanışında MU ve SNDK için bağımsız bir oran
      tablosuyla karşılaştırıldı: F/K'de 19,87/19,80 ve 16,63/16,43, hisse başı
      kârda %1'in altında fark. Kalan sapma TTM penceresinin nerede
      kapandığından geliyor, fiyattan değil.
 
-     PD/DD ve PEG YALNIZCA YAZILDIYSA çıkar, sağlayıcıdan türetilmez:
-       PD/DD  — sektöre bağlı bir ölçü ve sağlayıcının `pbQuarterly` alanı
-                maddi defter değerini izliyor (SNDK'da 16,42 dönüyor, aynı
-                günün tablosunda PD/DD 11,48, P/TBV 16,81). Her şirkete
-                otomatik yazmak yanlış etiket olurdu.
-       PEG    — bölünen büyümenin tanımı olmadan doğrulanamıyor: aynı gün
-                aynı şirket için iki kaynak üç kat farklı veriyordu (MU
-                0,04 ile 0,12). Kayıt `growth_basis`'i zorunlu tutuyor,
-                tanım da ekranda yazılı çıkıyor.
+     PEG YALNIZCA YAZILDIYSA çıkar, sağlayıcıdan türetilmez: bölünen
+     büyümenin tanımı olmadan doğrulanamıyor — aynı gün aynı şirket için iki
+     kaynak üç kat farklı veriyordu (MU 0,04 ile 0,12). Kayıt
+     `growth_basis`'i zorunlu tutuyor, tanım da ekranda yazılı çıkıyor.
+
+     PD/DD bir süre buradaydı ve KALDIRILDI: sektöre bağlı bir ölçü ve
+     "bu şirkette anlamlı mı" kararı her analizde yeniden verilmesi gereken
+     bir yargı çağrısıydı. Yanlış yazıldığında sessizce yanlış okunuyor —
+     yarı iletkende 11,5 katı görüp "pahalı" demek gibi.
 
      Sayıların penceresi etiketin yanında yazılı — bir sayının "ne zamanki"
      olduğu sayfada asla tahmine bırakılmıyor. */
@@ -296,9 +294,6 @@ export default async function AnalysisDetailPage(
   const epsTtm = finite(row.epsTtm) ?? finite(metrics?.eps);
   const peRatio = peRatioOf(live?.quote.price, epsTtm);
   const netMarginPct = finite(metrics?.netMarginPct);
-
-  const bookValuePerShare = finite(row.bookValuePerShare);
-  const pbRatio = peRatioOf(live?.quote.price, bookValuePerShare);
 
   /* PEG = F/K ÷ büyüme. F/K'nin kendisi yoksa (zararda ya da kotasyon yok)
      PEG de yok — bölünecek bir şey kalmıyor. */
@@ -660,8 +655,8 @@ export default async function AnalysisDetailPage(
                 },
                 /* HER ORANIN KÜNYESİ KENDİ BÖLENİ. Hisse başı kâr bir süre
                    kendi hücresindeydi ve ray tutarsız duruyordu: F/K'nin
-                   böleni tam bir ölçü kadar yer kaplarken PD/DD'ninki
-                   künyeye sığıyordu. Bölen künyeye inince okuyucu üstteki
+                   böleni tam bir ölçü kadar yer kaplarken PEG'inki künyeye
+                   sığıyordu. Bölen künyeye inince okuyucu üstteki
                    fiyatı ona bölüp oranı yerinde doğrulayabiliyor — sayının
                    nasıl kurulduğunu göstermek, kesinliğini iddia etmekten
                    daha dürüst. */
@@ -669,14 +664,6 @@ export default async function AnalysisDetailPage(
                   label: t.analysis.peRatio,
                   note: `${formatPrice(epsTtm, locale, { currency: true })} · ${t.analysis.trailing12m}`,
                   value: formatPrice(peRatio, locale, { digits: 1 }),
-                },
-                /* PD/DD yalnızca defter değeri YAZILDIYSA — bkz. şema. */
-                pbRatio !== null && {
-                  label: t.analysis.pbRatio,
-                  note: formatPrice(bookValuePerShare, locale, {
-                    currency: true,
-                  }),
-                  value: formatPrice(pbRatio, locale, { digits: 1 }),
                 },
                 /* PEG'in künyesi hangi büyümenin bölündüğünü söylüyor;
                    `growth_basis` olmadan kayıt zaten reddediliyor. */
