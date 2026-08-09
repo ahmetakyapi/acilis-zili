@@ -55,3 +55,7 @@ next-env.d.ts
 # Apple Hesabı → iCloud → iCloud Drive → "Masaüstü ve Belgeler" kapalı.
 * [0-9].*
 * [0-9]
+
+# Geçici ölçüm betikleri — puppeteer koşumları, tarama çıktıları.
+# Bir tanesi (.tmp-a11y.mjs) desen yokken commit'e sızmıştı.
+.tmp-*

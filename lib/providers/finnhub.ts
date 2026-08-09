@@ -474,6 +474,7 @@ export async function getKeyMetrics(
         null,
       cashPerShare:
         m.cashPerSharePerShareQuarterly ?? m.cashPerSharePerShareAnnual ?? null,
+      netMarginPct: m.netProfitMarginTTM ?? null,
     },
     "finnhub",
     { fetchedAt: result.fetchedAt },

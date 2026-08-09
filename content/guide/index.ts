@@ -18,6 +18,7 @@
    ========================================================================== */
 
 import {
+  GUIDE_LEVELS,
   GUIDE_META,
   GUIDE_TOPICS,
   guideLevel,
@@ -29,7 +30,7 @@ import {
 import { GUIDE_TR } from "./tr";
 import { GUIDE_EN } from "./en";
 
-export { GUIDE_TOPICS, guideLevelLabel };
+export { GUIDE_LEVELS, GUIDE_TOPICS, guideLevelLabel };
 export type { GuideLevel, GuideSlug, GuideTopicKey };
 
 export type GuideArticle = {
@@ -43,6 +44,39 @@ export type GuideArticle = {
   dek: string;
   bodyMd: string;
 };
+
+/* ==========================================================================
+   Müfredat sırası
+
+   Kural iki basamaklı: önce konu bloğu, sonra blok içinde ZORLUK — temel,
+   orta, ileri. Sıralama KARARLI olduğu için aynı seviyedeki yazılar
+   `meta.ts`'teki elle kurulmuş sırayı koruyor; yani "bilanço günü nasıl
+   okunur" hâlâ "bilanço"nun hemen ardından geliyor.
+
+   Sıra BURADA türetiliyor, `meta.ts` yeniden dizilerek değil: dosyadaki
+   diziliş yazıların birbirine olan anlatı yakınlığını taşıyor ve o bilgi
+   kaybolursa yeni yazının nereye gireceği belirsizleşir. Kaynak sırası
+   yazarın, ekrandaki sıra okuyucunun.
+
+   BEDELİ VAR ve bilerek ödeniyor: seviye atlayan birkaç komşuluk bozuluyor —
+   "temettü" kendi bloğunun başına, "getiri eğrisi" faiz-tahvilden birkaç sıra
+   öteye düşüyor. Karşılığında liste, hiç bilmeyen birinin okuyabileceği tek
+   bir merdiven oluyor. Kopan bağları `related` zaten taşıyor.
+
+   Tek sıra hem listeyi hem yazı sayfasındaki önceki/sıradaki gezinmesini
+   besliyor; ikisi ayrılırsa okuyucu listede gördüğü sıradan başka bir yere
+   götürülür.
+   ========================================================================== */
+
+const LEVEL_ORDER: Record<GuideLevel, number> = { temel: 0, orta: 1, ileri: 2 };
+
+const CURRICULUM = [...GUIDE_META].sort((a, b) => {
+  const topicDelta =
+    GUIDE_TOPICS.findIndex((topic) => topic.key === a.topic) -
+    GUIDE_TOPICS.findIndex((topic) => topic.key === b.topic);
+  if (topicDelta !== 0) return topicDelta;
+  return LEVEL_ORDER[guideLevel(a)] - LEVEL_ORDER[guideLevel(b)];
+});
 
 function assemble(meta: (typeof GUIDE_META)[number], locale: string): GuideArticle {
   const text = locale === "en" ? GUIDE_EN[meta.slug] : GUIDE_TR[meta.slug];
@@ -59,7 +93,7 @@ function assemble(meta: (typeof GUIDE_META)[number], locale: string): GuideArtic
 
 /** Bütün yazılar, müfredat sırasında ve istenen dilde. */
 export function guideArticles(locale: string): GuideArticle[] {
-  return GUIDE_META.map((meta) => assemble(meta, locale));
+  return CURRICULUM.map((meta) => assemble(meta, locale));
 }
 
 export function guideArticle(slug: string, locale: string): GuideArticle | null {
@@ -68,7 +102,7 @@ export function guideArticle(slug: string, locale: string): GuideArticle | null 
 }
 
 /** Sitemap gibi dilden bağımsız tüketiciler için yalnızca kimlikler. */
-export const GUIDE_SLUGS: readonly GuideSlug[] = GUIDE_META.map(
+export const GUIDE_SLUGS: readonly GuideSlug[] = CURRICULUM.map(
   (entry) => entry.slug,
 );
 

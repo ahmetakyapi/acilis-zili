@@ -58,6 +58,7 @@ import {
   formatVolume,
   headlineMentions,
   isValidSymbol,
+  peRatioOf,
   safeExternalUrl,
   timeAgo,
 } from "@/lib/utils";
@@ -751,7 +752,10 @@ async function MetricsCard({
   const quote = quoteResult.ok ? quoteResult.data : null;
 
   const rows: [string, string][] = [
-    [t.stock.peRatio, m.peRatio ? formatPrice(m.peRatio, locale) : "—"],
+    /* F/K sağlayıcının hazır alanından değil, sayfanın gösterdiği fiyattan
+       kuruluyor — o alan geriden gelen bir fiyatla hesaplanmış oluyor ve
+       tablonun hemen üstündeki kotasyonla çelişiyordu. Bkz. `peRatioOf`. */
+    [t.stock.peRatio, formatPrice(peRatioOf(quote?.price, m.eps), locale)],
     [t.stock.eps, m.eps ? formatPrice(m.eps, locale, { currency: true }) : "—"],
     [
       t.stock.dividend,

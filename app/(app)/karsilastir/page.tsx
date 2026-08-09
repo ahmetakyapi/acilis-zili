@@ -27,6 +27,7 @@ import {
   formatPercent,
   formatPrice,
   isValidSymbol,
+  peRatioOf,
 } from "@/lib/utils";
 
 /**
@@ -231,11 +232,17 @@ async function CompareBoard({
     },
     {
       label: t.stock.peRatio,
+      /* Oran, tablonun kendi fiyat satırından kuruluyor. Sağlayıcının hazır
+         F/K'si geriden gelen bir fiyatla hesaplanmış oluyor; karşılaştırma
+         tablosunda bu, iki şirketi farklı anların fiyatıyla yan yana koymak
+         demekti. Gerekçenin tamamı `peRatioOf`'ta. */
       value: (i) => {
         const metrics = metricResults[i];
-        return metrics?.ok && metrics.data.peRatio !== null
-          ? formatPrice(metrics.data.peRatio, locale)
-          : "—";
+        if (!metrics?.ok) return "—";
+        return formatPrice(
+          peRatioOf(quotes[symbols[i]]?.price, metrics.data.eps),
+          locale,
+        );
       },
     },
     {

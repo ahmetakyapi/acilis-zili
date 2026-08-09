@@ -23,8 +23,6 @@ export function LevelBadge({
   locale: string;
   className?: string;
 }) {
-  const filled = level === "temel" ? 1 : level === "orta" ? 2 : 3;
-
   return (
     <span
       className={cn(
@@ -32,18 +30,40 @@ export function LevelBadge({
         className,
       )}
     >
-      <span aria-hidden className="flex items-center gap-[2px]">
-        {[0, 1, 2].map((step) => (
-          <span
-            key={step}
-            className={cn(
-              "size-[5px] rounded-full",
-              step < filled ? "bg-primary" : "bg-line-strong",
-            )}
-          />
-        ))}
-      </span>
+      <LevelDots level={level} />
       {guideLevelLabel(level, locale)}
+    </span>
+  );
+}
+
+/**
+ * Basamağın rozetsiz hâli. Rehber şeridinde bir KONUNUN ulaştığı en üst
+ * seviyeyi gösteriyor; orada etiket zaten yanında yazılı olduğu için
+ * rozetin kenarlığı fazladan bir kutu oluyordu.
+ */
+export function LevelDots({
+  level,
+  className,
+}: {
+  level: GuideLevel;
+  className?: string;
+}) {
+  const filled = level === "temel" ? 1 : level === "orta" ? 2 : 3;
+
+  return (
+    <span
+      aria-hidden
+      className={cn("flex shrink-0 items-center gap-[2px]", className)}
+    >
+      {[0, 1, 2].map((step) => (
+        <span
+          key={step}
+          className={cn(
+            "size-[5px] rounded-full",
+            step < filled ? "bg-primary" : "bg-line-strong",
+          )}
+        />
+      ))}
     </span>
   );
 }

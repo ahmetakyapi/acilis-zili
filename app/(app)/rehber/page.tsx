@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
-import { LevelBadge } from "@/components/article/LevelBadge";
+import { LevelBadge, LevelDots } from "@/components/article/LevelBadge";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { readingMinutes } from "@/components/article/ArticleBody";
 import { EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
 import {
+  GUIDE_LEVELS,
   GUIDE_TOPICS,
   guideArticles,
+  guideLevelLabel,
   guideTopicDesc,
   guideTopicLabel,
   type GuideArticle,
+  type GuideLevel,
   type GuideTopicKey,
 } from "@/content/guide";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -32,16 +35,26 @@ export const metadata: Metadata = {
  * Sayfanın iki hâli var ve ikisi farklı soruya cevap veriyor:
  *
  * FİLTRESİZ hâl "nereden başlamalıyım" sorusunu cevaplıyor: girişte dört
- * bölmeli müfredat şeridi (sıra numarası, konu adı, yazı sayısı ve okuma
- * süresi), altında konu konu bölümlenmiş liste. Bölmeler sayfa içi çapalara
- * gider — filtre değil, içindekiler tablosu. Konu AÇIKLAMASI şeritte yok,
- * yalnızca bölüm başlığında: ikisi birden yazınca aynı cümle art arda iki
- * kez okunuyordu.
+ * bölmeli müfredat şeridi, altında konu konu bölümlenmiş liste. Bölmeler
+ * sayfa içi çapalara gider — filtre değil, içindekiler tablosu.
  *
  * FİLTRELİ hâl (?konu=...) "yalnızca bu konuyu göster" diyor: konunun kendi
- * başlığı ve açıklamasıyla açılır, tek ızgara listelenir. Eski çip sırası
- * kaldırıldı — karolar, bölüm başlıkları ve çipler aynı işi üç kez
- * yapıyordu; kalan iki yol (karo → çapa, "Yalnızca Bunlar" → filtre) yetiyor.
+ * başlığı ve açıklamasıyla açılır, tek liste görünür.
+ *
+ * ÜÇ KATMANLI HİYERARŞİ. Sayfa bir süre 31 eş ağırlıklı karttan ibaretti:
+ * dört bölüm arasında yalnızca ince bir çizgi vardı, bölüm başlıkları
+ * kartlardan pek az büyüktü ve her kartın köşesindeki zorluk rozeti bir
+ * bölümün tamamında aynı kelimeyi yazıyordu ("Temel", sekiz kez). Sonuç,
+ * neyin nerede bittiğinin okunmadığı tek bir akıştı. Şimdi:
+ *
+ *   1. Şerit — hangi blok, hangi zorluk aralığında
+ *   2. Bölüm başlığı — numaralı karo, büyük ad, kapsam
+ *   3. Seviye bandı — blok içinde temel / orta / ileri ayrımı
+ *
+ * Zorluk rozeti KARTTAN BANDA taşındı: bandın söylediğini kart tekrar
+ * ettiğinde rozet bilgi değil doku oluyordu. Bir konunun tamamı tek
+ * seviyedeyse bant basılmaz, seviye bölüm başlığına çıkar — bilgi hep
+ * yazılı, yalnızca doğru yükseklikte.
  */
 
 export default async function GuidePage(props: PageProps<"/rehber">) {
@@ -60,7 +73,7 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
     articles.reduce((sum, article) => sum + readingMinutes(article.bodyMd), 0);
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-9">
       <PageHeader
         eyebrow={t.guide.eyebrow}
         title={t.guide.title}
@@ -93,36 +106,17 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
               <section
                 key={topic.key}
                 id={`konu-${topic.key}`}
-                className="flex scroll-mt-24 flex-col gap-4"
+                className="flex scroll-mt-24 flex-col gap-5"
               >
-                <div className="flex flex-col gap-1.5 border-b border-line pb-3">
-                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <span className="numeral text-[12px] font-bold text-primary">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <h2 className="display-ink display-ink-tight w-fit text-[19px] font-bold tracking-[-0.03em]">
-                      {guideTopicLabel(topic.key, locale)}
-                    </h2>
-                    <span className="numeral text-[12px] text-muted">
-                      {group.length} {t.guide.articlesCount} · ~
-                      {minutesOf(group)} {t.guide.readMinutes}
-                    </span>
-                    <Link
-                      href={`/rehber?konu=${topic.key}`}
-                      scroll={false}
-                      /* -my-2 py-2: 12px'lik metin tek başına 18px'lik bir
-                         dokunma hedefi bırakıyordu; dolgu 32px'e çıkarır,
-                         negatif margin satırı olduğu yerde tutar. */
-                      className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center py-2 text-[12px] font-semibold text-primary transition-colors hover:text-primary-hover"
-                    >
-                      {t.guide.onlyThis}
-                    </Link>
-                  </div>
-                  <p className="max-w-[64ch] text-[12.5px] leading-[19px] text-muted">
-                    {guideTopicDesc(topic.key, locale)}
-                  </p>
-                </div>
-                <ArticleGrid articles={group} locale={locale} t={t} />
+                <TopicHeading
+                  index={index}
+                  topic={topic.key}
+                  articles={group}
+                  minutes={minutesOf(group)}
+                  locale={locale}
+                  t={t}
+                />
+                <LeveledGrid articles={group} locale={locale} t={t} />
               </section>
             );
           })}
@@ -132,12 +126,24 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
   );
 }
 
+/** Konudaki seviyeler, kolaydan zora ve yalnızca gerçekten kullanılanlar. */
+function levelsIn(articles: GuideArticle[]): GuideLevel[] {
+  return GUIDE_LEVELS.filter((level) =>
+    articles.some((article) => article.level === level),
+  );
+}
+
 /**
- * Müfredat şeridi — dört konu, sıra numarası ve kapsamıyla.
+ * Müfredat şeridi — dört konu, sıra numarası ve zorluk aralığıyla.
  *
  * Karolar filtrelemez, sayfa içinde ilgili bölüme götürür: yeni gelen
  * okuyucunun sorusu "bu konudaki yazıları süz" değil "nereden başlayayım".
- * Toplam sayaç şeridin başlığında durur — rehberin büyüklüğü tek satırda.
+ *
+ * Karo, bölüm başlığının SÖYLEMEDİĞİNİ söyler. Bir süre ikisi de aynı üç
+ * şeyi yazıyordu — ad, yazı sayısı, okuma süresi — ve şerit, hemen altındaki
+ * başlığın kırk piksel yukarıdaki kopyası gibi duruyordu. Artık karoda
+ * zorluk aralığı var (bu blok nerede başlayıp nerede bitiyor), başlıkta
+ * kapsam (kaç yazı, ne kadar okuma). Kapsamın toplamı şeridin künyesinde.
  */
 function CurriculumStrip({
   all,
@@ -152,6 +158,8 @@ function CurriculumStrip({
   locale: Locale;
   t: Dictionary;
 }) {
+  const first = all[0];
+
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -162,19 +170,27 @@ function CurriculumStrip({
           {all.length} {t.guide.articlesCount} · ~{minutesOf(all)}{" "}
           {t.guide.readMinutes}
         </span>
+        {/* Müfredatın ilk durağına doğrudan giden tek bağlantı. Şeridin
+            başlığı "Nereden Başlamalı" diyor ama başlamak, doğru karoyu
+            bulup içindeki ilk kartı seçmeyi gerektiriyordu. */}
+        {first && (
+          <Link
+            href={`/rehber/${first.slug}`}
+            className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 py-2 text-[12px] font-semibold text-primary transition-colors hover:text-primary-hover"
+          >
+            {t.guide.startFirst}
+            <ArrowRight weight="bold" size={12} />
+          </Link>
+        )}
       </div>
-      <p className="-mt-1.5 text-[12.5px] leading-[19px] text-muted">
+      <p className="-mt-1.5 max-w-[72ch] text-[12.5px] leading-[19px] text-muted">
         {t.guide.curriculumHint}
       </p>
 
-      {/* Konu açıklamaları BURADA DEĞİL, bölüm başlıklarında duruyor: bu
-          şerit dört karodan ibaretti ve her karo, hemen altındaki bölüm
-          başlığının başlığını, açıklamasını ve sayacını birebir tekrar
-          ediyordu — sayfanın en düz yeri oydu. Şerit artık numaralı bir
-          güzergâh: hangi blok, kaç yazı, ne kadar okuma. */}
       <Panel className="grid grid-cols-2 divide-line-soft overflow-hidden sm:grid-cols-4 sm:divide-x">
         {GUIDE_TOPICS.map((topic, index) => {
           const group = groupOf(topic.key);
+          const levels = levelsIn(group);
           return (
             <a
               key={topic.key}
@@ -192,9 +208,11 @@ function CurriculumStrip({
               <span className="display-ink display-ink-tight w-fit text-[15px] font-bold tracking-[-0.02em]">
                 {guideTopicLabel(topic.key, locale)}
               </span>
-              <span className="numeral mt-auto flex items-center gap-1.5 pt-1.5 text-[11px] text-muted">
-                {group.length} {t.guide.articlesCount} · ~{minutesOf(group)}{" "}
-                {t.guide.readMinutes}
+              <span className="mt-auto flex items-center gap-1.5 pt-2 text-[11px] text-muted">
+                <LevelDots level={levels[levels.length - 1] ?? "temel"} />
+                <span className="min-w-0 truncate">
+                  {levelSpan(levels, locale)}
+                </span>
                 <ArrowRight
                   weight="bold"
                   size={11}
@@ -210,7 +228,80 @@ function CurriculumStrip({
   );
 }
 
-/** Filtreli hâl: konunun kendi başlığı, açıklaması ve tek ızgara. */
+/** "Temel" ya da "Temel → İleri" — bloğun nerede başlayıp nerede bittiği. */
+function levelSpan(levels: GuideLevel[], locale: Locale): string {
+  if (levels.length === 0) return "";
+  const first = guideLevelLabel(levels[0], locale);
+  if (levels.length === 1) return first;
+  return `${first} → ${guideLevelLabel(levels[levels.length - 1], locale)}`;
+}
+
+/**
+ * Bölüm başlığı — numaralı karo, ad, kapsam ve konu bağlantısı.
+ *
+ * Numara eskiden başlığın solunda 12px'lik bir rakamdı ve kartların
+ * köşesindeki sıra numaralarından ayırt edilmiyordu. Karo hâlinde bölümün
+ * çapası oluyor: şeritteki karoyla aynı numara, aynı yerde.
+ */
+function TopicHeading({
+  index,
+  topic,
+  articles,
+  minutes,
+  locale,
+  t,
+}: {
+  index: number;
+  topic: GuideTopicKey;
+  articles: GuideArticle[];
+  minutes: number;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const levels = levelsIn(articles);
+
+  return (
+    <div className="flex flex-col gap-2 border-b border-line pb-3.5">
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden
+          className="numeral flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-primary-wash text-[13px] font-bold text-primary"
+        >
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h2 className="display-ink display-ink-tight w-fit text-[21px] font-bold tracking-[-0.03em]">
+            {guideTopicLabel(topic, locale)}
+          </h2>
+          <span className="numeral text-[12px] text-muted">
+            {articles.length} {t.guide.articlesCount} · ~{minutes}{" "}
+            {t.guide.readMinutes}
+          </span>
+          {/* Tek seviyeli konuda bant basılmıyor; seviye buraya çıkıyor. */}
+          {levels.length === 1 && (
+            <LevelBadge level={levels[0]} locale={locale} />
+          )}
+        </div>
+        <Link
+          href={`/rehber?konu=${topic}`}
+          scroll={false}
+          /* -my-2 py-2: 12px'lik metin tek başına 18px'lik bir dokunma
+             hedefi bırakıyordu; dolgu 32px'e çıkarır, negatif margin satırı
+             olduğu yerde tutar. */
+          className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 py-2 text-[12px] font-semibold text-primary transition-colors hover:text-primary-hover"
+        >
+          {t.guide.onlyThis}
+          <ArrowRight weight="bold" size={12} />
+        </Link>
+      </div>
+      <p className="max-w-[72ch] text-[12.5px] leading-[19px] text-muted">
+        {guideTopicDesc(topic, locale)}
+      </p>
+    </div>
+  );
+}
+
+/** Filtreli hâl: konunun kendi başlığı, açıklaması ve tek liste. */
 function TopicView({
   topic,
   articles,
@@ -222,9 +313,11 @@ function TopicView({
   locale: Locale;
   t: Dictionary;
 }) {
+  const levels = levelsIn(articles);
+
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5 border-b border-line pb-3">
+    <section className="flex flex-col gap-5">
+      <div className="flex flex-col gap-2 border-b border-line pb-3.5">
         <Link
           href="/rehber"
           scroll={false}
@@ -234,14 +327,17 @@ function TopicView({
           {t.guide.allTopics}
         </Link>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="display-ink display-ink-tight w-fit text-[19px] font-bold tracking-[-0.03em]">
+          <h2 className="display-ink display-ink-tight w-fit text-[21px] font-bold tracking-[-0.03em]">
             {guideTopicLabel(topic, locale)}
           </h2>
           <span className="numeral text-[12px] text-muted">
             {articles.length} {t.guide.articlesCount}
           </span>
+          {levels.length === 1 && (
+            <LevelBadge level={levels[0]} locale={locale} />
+          )}
         </div>
-        <p className="max-w-[64ch] text-[12.5px] leading-[19px] text-muted">
+        <p className="max-w-[72ch] text-[12.5px] leading-[19px] text-muted">
           {guideTopicDesc(topic, locale)}
         </p>
       </div>
@@ -251,25 +347,90 @@ function TopicView({
           <EmptyState title={t.guide.empty} />
         </Panel>
       ) : (
-        <ArticleGrid articles={articles} locale={locale} t={t} />
+        <LeveledGrid articles={articles} locale={locale} t={t} />
       )}
     </section>
   );
 }
 
 /**
- * Yazı kartları. Sağ üstteki numara yazının konu içindeki sırası —
- * müfredat hissini kart düzeyine taşır. Konu etiketi kartlarda yok:
- * kartlar her iki görünümde de kendi konu başlığının altında duruyor,
- * tekrarı gürültü yapıyordu.
+ * Konunun yazıları, seviye bantlarına bölünmüş hâlde.
+ *
+ * Sıra `content/guide/index.ts`'te zaten kolaydan zora kurulu; burada
+ * yapılan iş o sıraya GÖRÜNÜR bir ayraç koymak. Tek bantlı konularda ayraç
+ * basılmaz — sekiz kartın üstünde tek bir "Temel" etiketi, bölümün adı
+ * zaten "Temel Kavramlar"ken bilgi taşımıyor.
  */
-function ArticleGrid({
+function LeveledGrid({
   articles,
   locale,
   t,
 }: {
   articles: GuideArticle[];
-  locale: string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const levels = levelsIn(articles);
+
+  if (levels.length <= 1) {
+    return <ArticleGrid articles={articles} t={t} />;
+  }
+
+  /* Numara BANDIN içinde değil konunun tamamında sayılıyor: okuyucunun
+     "bu konunun 5. yazısı" diye tuttuğu sıra bantla kesilmemeli. Bantlar
+     çizimden ÖNCE kuruluyor — sayaç `map` içinde artırılsaydı render
+     sırasında değişen bir değişken olurdu. */
+  const bands = levels.reduce<
+    { level: GuideLevel; articles: GuideArticle[]; offset: number }[]
+  >((acc, level) => {
+    const previous = acc[acc.length - 1];
+    const offset = previous ? previous.offset + previous.articles.length : 0;
+    return [
+      ...acc,
+      {
+        level,
+        offset,
+        articles: articles.filter((article) => article.level === level),
+      },
+    ];
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-5">
+      {bands.map((band) => (
+        <div key={band.level} className="flex flex-col gap-3">
+          <div className="flex items-center gap-2.5">
+            <LevelBadge level={band.level} locale={locale} />
+            <span className="numeral text-[11px] text-muted">
+              {band.articles.length} {t.guide.articlesCount}
+            </span>
+            <span aria-hidden className="h-px min-w-6 flex-1 bg-line" />
+          </div>
+          <ArticleGrid
+            articles={band.articles}
+            startIndex={band.offset}
+            t={t}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Yazı kartları. Sağ üstteki numara yazının konu içindeki sırası —
+ * müfredat hissini kart düzeyine taşır. Konu etiketi ve zorluk rozeti
+ * kartlarda yok: ikisini de kartın üstündeki başlık ya da bant söylüyor
+ * ve tekrar, otuz bir kartı birbirinin kopyası gibi gösteriyordu.
+ */
+function ArticleGrid({
+  articles,
+  startIndex = 0,
+  t,
+}: {
+  articles: GuideArticle[];
+  /** Bantlı listede numaralandırma konunun başından devam etsin diye. */
+  startIndex?: number;
   t: Dictionary;
 }) {
   return (
@@ -282,17 +443,10 @@ function ArticleGrid({
           className="min-w-0"
         >
           <Panel className="panel-hover flex h-full flex-col gap-4 p-5">
-            {/* Sağ üstte sıra numarası ve zorluk. Rozet KARTTA, çünkü
-                okuyucu nereden başlayacağına listeye bakarken karar veriyor;
-                yalnızca yazı sayfasında dursaydı seçimi yaptıktan sonra
-                öğrenmiş olurdu. */}
             <div className="flex items-start justify-between gap-3">
               <GlyphTile glyph={article.glyph} />
-              <span className="flex flex-col items-end gap-1.5">
-                <span className="numeral text-[11px] font-bold text-muted">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <LevelBadge level={article.level} locale={locale} />
+              <span className="numeral text-[11px] font-bold text-muted">
+                {String(startIndex + index + 1).padStart(2, "0")}
               </span>
             </div>
 

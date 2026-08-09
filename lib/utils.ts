@@ -82,6 +82,41 @@ export function directionWash(d: Direction) {
 }
 
 /** 1234.5 → "1.234,50" (tr) / "1,234.50" (en) */
+/**
+ * F/K — fiyat ÷ hisse başı kâr (TTM).
+ *
+ * SAĞLAYICININ HAZIR `peTTM` DEĞERİ KULLANILMIYOR ve gerekçesi ölçüldü:
+ * Finnhub o oranı kendi tarafında, geriden gelen bir fiyatla hesaplıyor.
+ * 8 Ağustos 2026'da bakıldığında SNDK için `peTTM × epsTTM` çarpımı 1.144 $
+ * veriyordu, oysa aynı anda kotasyon 1.212 $'dı — oran %5,6 bayattı. MU'da
+ * fark daha küçüktü ama aynı yöndeydi (867 $ / 878 $).
+ *
+ * Ekranda bunun bedeli şu: sayfanın üstünde "şu an 1.212 $" yazarken hemen
+ * altındaki F/K başka bir fiyattan kuruluyor. Aynı sayfada iki fiyat, üstelik
+ * hangisinin hangisi olduğu söylenmeden. Oranı burada kendimiz kurunca
+ * bölen de bölünen de sayfanın gösterdiği sayı oluyor ve okuyucu isterse
+ * çarpıp doğrulayabiliyor.
+ *
+ * Doğrulama: canlı fiyat ÷ epsTTM ile MU 19,87 · SNDK 16,63 çıkıyor; aynı
+ * günün bağımsız tablosunda 19,80 ve 16,43. Kalan fark TTM penceresinin
+ * kapanış çeyreğinden geliyor, fiyattan değil.
+ *
+ * Zarardaki şirkette (epsTtm ≤ 0) oran tanımsız — `null` döner, hücre hiç
+ * basılmaz. Eksi bir F/K ekranda "ucuz" gibi okunuyor.
+ */
+export function peRatioOf(
+  price: number | null | undefined,
+  epsTtm: number | null | undefined,
+): number | null {
+  if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) {
+    return null;
+  }
+  if (typeof epsTtm !== "number" || !Number.isFinite(epsTtm) || epsTtm <= 0) {
+    return null;
+  }
+  return price / epsTtm;
+}
+
 export function formatPrice(
   value: number | null | undefined,
   locale: string,

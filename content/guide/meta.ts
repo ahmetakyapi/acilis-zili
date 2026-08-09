@@ -7,9 +7,14 @@
    diğerini unutursan derleme kırılır. Sözlüklerdeki `en: typeof tr`
    güvencesinin buradaki karşılığı budur.
 
-   Sıra bir müfredat: hiç bilmeyen biri baştan okuyabilsin diye yazılar
-   konularına göre dört blokta duruyor ve her blok kendi içinde kolaydan
-   zora ilerliyor. Yeni bir yazı eklerken doğru bloğa, doğru sıraya koy.
+   Bu dosyadaki DİZİLİŞ ekrandaki sıra DEĞİL. Burada yazılar konu bloklarında
+   ve blok içinde anlatı yakınlığına göre duruyor — hangi yazı hangisinin
+   hemen ardından okununca anlamlı, o bilgi aşağıdaki yorumlarda. Okuyucunun
+   gördüğü sıra `index.ts`'te bundan türetiliyor: konu bloğu, sonra zorluk.
+   Sıralama kararlı olduğu için aynı seviyedeki komşuluklar korunuyor.
+
+   Yeni yazı eklerken doğru bloğa ve anlatı olarak ait olduğu yere koy;
+   seviyesini `level` ile işaretle. Sıralamayı düşünme, o türetiliyor.
    ========================================================================== */
 
 export const GUIDE_TOPICS = [
@@ -198,10 +203,10 @@ export const GUIDE_META = [
     related: ["kaldirac", "ayi-boga"],
   },
   {
-    /* Long/short'un hemen ardından: sıkışmayı anlatmak için açığa satışın
-       mekaniğinin (ödünç hisse, geri alma zorunluluğu) taze olması gerekiyor.
-       Kaldıraçtan ÖNCE, çünkü sıkışmanın neden ölümcül olduğunu açıklayan
-       şey marj çağrısı değil, kaybın sınırsızlığı. */
+    /* Long/short'a yaslanıyor: sıkışmayı anlatmak için açığa satışın
+       mekaniği (ödünç hisse, geri alma zorunluluğu) okunmuş olmalı. Ekranda
+       bitişik durmuyorlar — bu ileri, long/short orta — ama ön koşul yine de
+       önce geliyor ve `related` ikisini birbirine bağlıyor. */
     slug: "kisa-sikisma",
     topic: "strateji",
     level: "ileri", // long/short mekaniği + ödünç hisse zinciri gerekiyor
@@ -285,9 +290,10 @@ export const GUIDE_META = [
     related: ["bilanco", "nakit-akisi", "hisse-geri-alimi"],
   },
   {
-    /* Temettünün hemen ardından: ikisi de "şirket kazandığı parayı hissedara
+    /* Temettünün karşı yakası: ikisi de "şirket kazandığı parayı hissedara
        nasıl döndürür" sorusunun cevabı ve yazı sürekli temettüyle
-       karşılaştırma yaparak ilerliyor. */
+       karşılaştırma yaparak ilerliyor. Temettü bloğun tek `temel` yazısı
+       olduğu için ekranda başa geçiyor, bu ise orta bandın içinde kalıyor. */
     slug: "hisse-geri-alimi",
     topic: "sirket",
     glyph: "↺",
@@ -302,9 +308,11 @@ export const GUIDE_META = [
     related: ["sahin-guvercin", "enflasyon"],
   },
   {
-    /* Faiz-tahvilden hemen sonra: eğrinin ne olduğu orada anlatılıyor, burada
+    /* Faiz-tahvilin devamı: eğrinin ne olduğu orada anlatılıyor, burada
        TERSİNE DÖNMESİ işleniyor. Ayrı yazı çünkü sinyalin kendisi kadar
-       "sinyal ile olay arasındaki gecikme" de anlatılması gereken bir şey. */
+       "sinyal ile olay arasındaki gecikme" de anlatılması gereken bir şey.
+       Ekranda araya orta seviyedeki makro yazıları giriyor; ön koşul yine de
+       önce okunmuş oluyor. */
     slug: "getiri-egrisi",
     topic: "makro",
     level: "ileri", // iki ucun ayrı ayrı ne fiyatladığını bilmeyi gerektiriyor

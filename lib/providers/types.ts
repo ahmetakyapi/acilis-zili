@@ -158,7 +158,13 @@ export type Recommendation = {
 };
 
 export type KeyMetrics = {
+  /**
+   * Sağlayıcının hazır F/K'si — EKRANDA KULLANMA, geriden gelen bir fiyattan
+   * hesaplanıyor. Ölçüsü ve doğrusu `peRatioOf` (lib/utils.ts) yorumunda;
+   * oran `eps` ile gösterilen fiyattan kurulur.
+   */
   peRatio: number | null;
+  /** Hisse başı kâr, TTM. F/K'nin böleni. */
   eps: number | null;
   dividendYield: number | null;
   beta: number | null;
@@ -168,6 +174,8 @@ export type KeyMetrics = {
   bookValuePerShare: number | null;
   debtToEquity: number | null;
   cashPerShare: number | null;
+  /** Gelirin yüzde kaçı net kâra dönüyor — TTM, yüzde olarak (56.46). */
+  netMarginPct: number | null;
 };
 
 export type MacroObservation = {

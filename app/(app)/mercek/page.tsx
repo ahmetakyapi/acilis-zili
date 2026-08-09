@@ -349,7 +349,9 @@ function LeadStory({
                   {story.locale.toUpperCase()}
                 </span>
               )}
-              <span className="numeral ml-auto text-[11.5px] text-muted">
+              {/* Arşiv kartındaki künyeyle aynı ağırlık — manşet yazının
+                  tarihi orada okunur, burada okunmaz olamaz. */}
+              <span className="numeral ml-auto text-[13.5px] font-semibold text-body">
                 {formatEtDateLong(story.eventDate, locale)}
               </span>
             </div>
@@ -429,8 +431,15 @@ function StoryCard({
         )}
 
         <div className="flex flex-1 flex-col p-5">
-          <p className="numeral flex items-center gap-1.5 text-[11.5px] text-muted">
-            {formatEtDateLong(story.eventDate, locale)}
+          {/* Tarih künyenin en görünür parçası. Üçü de 11,5px ve aynı soluk
+              mürekkepteyken satır tek bir gri şerit gibi okunuyordu; oysa bu
+              yazılarda tarih başlıktan sonra gelen ikinci bilgi — metin bir
+              OLAYI anlatıyor ve olayın ne zaman olduğu hikâyenin parçası.
+              Okuma süresi geride kalıyor: o bir künye, tarih değil. */}
+          <p className="numeral flex items-baseline gap-1.5 text-[11.5px] text-muted">
+            <span className="text-[13.5px] font-semibold text-body">
+              {formatEtDateLong(story.eventDate, locale)}
+            </span>
             {story.readMinutes && (
               <>
                 <span aria-hidden>·</span>

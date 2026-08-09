@@ -29,6 +29,7 @@ import {
   getUserSymbols,
 } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
+import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import {
@@ -46,6 +47,7 @@ import {
   formatPercent,
   formatPercentPlain,
   formatPrice,
+  peRatioOf,
   SIGN_GAP,
 } from "@/lib/utils";
 import type { EarningsAnalysisRow } from "@/lib/schema";
@@ -84,6 +86,39 @@ const PROSE_COLUMNS =
  */
 const PLATE_LABEL =
   "text-[10px] font-bold uppercase leading-none tracking-[0.09em]";
+
+/**
+ * Değerleme hücresi — etiket, pencere künyesi ve sayı.
+ *
+ * Pencere ETİKETİN YANINDA yazılı ("F/K · son 12 ay"). Bu hücreler canlı
+ * sağlayıcıdan geliyor, komşularındaki piyasa değeri ve yıllık getiri ise
+ * analizin yazıldığı gündendi; ikisi aynı şeritte durunca hangisinin ne
+ * zamana ait olduğu okunabilir olmalı. Aynı kural bilanço günü kapanışında
+ * da işliyor — orada künye tarihin kendisi.
+ */
+function ValuationCell({
+  label,
+  window,
+  value,
+}: {
+  label: string;
+  window: string;
+  value: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <dt className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <span className={cn(PLATE_LABEL, "text-body")}>{label}</span>
+        <span className="shrink-0 text-[10.5px] font-medium text-muted">
+          {window}
+        </span>
+      </dt>
+      <dd className="figure mt-1.5 text-[20px] font-bold leading-none tracking-[-0.03em] text-strong">
+        {value}
+      </dd>
+    </div>
+  );
+}
 
 /**
  * Panel başlığı — ikon karosu, başlık, sağda künye.
@@ -151,12 +186,14 @@ export default async function AnalysisDetailPage(
   const today = todayEt();
   const status = await getStatus();
 
-  const [meta, userSymbols, upcomingRows, quotes] = await Promise.all([
-    getSymbolNames([symbol]),
-    session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
-    getEarningsBetween(today, addEtDays(today, 30)),
-    getQuotes([symbol], status),
-  ]);
+  const [meta, userSymbols, upcomingRows, quotes, keyMetrics] =
+    await Promise.all([
+      getSymbolNames([symbol]),
+      session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
+      getEarningsBetween(today, addEtDays(today, 30)),
+      getQuotes([symbol], status),
+      getKeyMetrics(symbol),
+    ]);
 
   /* ---- Canlı kotasyon ----
      Kayıttaki `price` bilanço GÜNÜNÜN kapanışı ve donuk; okuyucunun bir
@@ -179,6 +216,47 @@ export default async function AnalysisDetailPage(
   const sinceReportPct =
     sinceReportRaw !== null && Math.abs(sinceReportRaw) >= 0.05
       ? sinceReportRaw
+      : null;
+
+  /* ---- Değerleme künyesi ----
+     Şeritte şirketin BÜYÜKLÜĞÜ ve YILI vardı, FİYATININ NEYE GÖRE kurulduğu
+     yoktu: "187 milyar dolar" tek başına pahalı mı ucuz mu söylemiyor.
+
+     Üçü de DOĞRULANDI. 8 Ağustos 2026 kapanışında MU ve SNDK için bağımsız
+     bir oran tablosuyla karşılaştırıldı; F/K'de 19,87/19,80 ve 16,63/16,43,
+     hisse başı kârda %1'in altında fark çıktı. Kalan sapma TTM penceresinin
+     nerede kapandığından geliyor.
+
+     ELENENLER de ölçüldü, tahminle atılmadı:
+       PEG    — aynı gün aynı şirket için iki kaynak ÜÇ KAT farklı veriyor
+                (MU: 0,04 ile 0,12). Biri ileriye dönük büyümeyi, öteki son
+                on iki ayı bölüyor ve hangisinin kullanıldığı hiçbir yerde
+                yazmıyor. Doğrulanamayan sayı büyük puntoyla yazılmaz.
+       PD/DD  — sağlayıcının `pbQuarterly` alanı MADDİ defter değerini
+                izliyor: SNDK'da 16,42 dönüyor, tablodaki PD/DD ise 11,48;
+                tablonun P/TBV sütunu 16,81. "PD/DD" diye yazmak yanlış
+                etiket olurdu.
+       52 hafta aralığı — taranan sembollerden birinde uç değerler bugünkü
+                fiyatla bağdaşmıyordu.
+       Temettü verimi — büyüme şirketlerinde boş dönüyor, şeritte delik.
+
+     Sayılar TTM ve CANLI; kayıttaki piyasa değeri ile yıllık getiri ise
+     analizin yazıldığı gündendi. Bu yüzden her birinin etiketinin yanında
+     hangi pencereye ait olduğu yazılı — bir sayının "ne zamanki" olduğu
+     sayfada asla tahmine bırakılmıyor. */
+  const metrics = keyMetrics.ok ? keyMetrics.data : null;
+  const epsTtm =
+    typeof metrics?.eps === "number" && Number.isFinite(metrics.eps)
+      ? metrics.eps
+      : null;
+  /* Bölen, sayfanın kimlik bandında "şu an" diye yazdığı fiyatın ta kendisi.
+     Kotasyon yoksa oran da yazılmıyor: bilanço günü kapanışından kurulan bir
+     F/K, üstteki canlı fiyatla çelişirdi. Gerekçenin tamamı `peRatioOf`'ta. */
+  const peRatio = peRatioOf(live?.quote.price, epsTtm);
+  const netMarginPct =
+    typeof metrics?.netMarginPct === "number" &&
+    Number.isFinite(metrics.netMarginPct)
+      ? metrics.netMarginPct
       : null;
 
   const symbolMeta = meta[symbol];
@@ -459,15 +537,23 @@ export default async function AnalysisDetailPage(
         </div>
 
         {/* ---- Ölçü şeridi ----
-            Üç ölçü yan yana, aralarında dikey hairline: bilanço günü ne oldu
-            → şirket ne büyüklükte → yıl nasıl geçti. "Şu an" buradan kimlik
-            bandına çıktı; dört ölçüdeyken iki tanesi altına birer açıklama
-            satırı alıyor, diğer ikisi almıyordu ve şeridin tabanı tırtıklı
-            kalıyordu. Üçü de artık İKİ satır: etiket + değer. Dar ekranda
-            ikişerli, telefonda alt alta. */}
+            Sıra bir cümle kuruyor: bilanço günü ne oldu → şirket ne
+            büyüklükte → yıl nasıl geçti → fiyat neye göre kurulu. Her hücre
+            İKİ satır (etiket + değer); dört ölçüdeyken ikisi altına açıklama
+            satırı alıyor, ikisi almıyordu ve şeridin tabanı tırtıklı
+            kalıyordu. "Şu an" buradan kimlik bandına çıktı.
+
+            HAIRLINE'LAR `divide-x` DEĞİL. Şerit üç hücreyken tek satırdı ve
+            `divide-x` yetiyordu; altı hücreye çıkınca ikinci satırın ilk
+            hücresi de "önceki kardeş" sayılıyor ve ızgaranın sol kenarında
+            boşlukta duran bir dikey çizgi çiziliyordu. Sınır artık sütun
+            konumuna bakıyor: satır başındaki hücrede yok.
+
+            Dar ekranda ikişerli, telefonda alt alta — orada dikey çizgi
+            hiç yok, hücreler zaten alt alta. */}
         {row.price !== null && (
-          <dl className="grid gap-x-5 gap-y-4 border-t border-line pt-4 sm:grid-cols-2 lg:grid-cols-3 lg:divide-x lg:divide-line">
-            <div className="min-w-0 lg:pr-5">
+          <dl className="grid gap-x-5 gap-y-5 border-t border-line pt-4 sm:grid-cols-2 lg:grid-cols-3 lg:*:pl-5 lg:*:nth-[3n+1]:pl-0 lg:*:not-nth-[3n+1]:border-l lg:*:not-nth-[3n+1]:border-line">
+            <div className="min-w-0">
               {/* Tarih etiketin YANINDA, hücrenin öbür ucunda değil.
                   `justify-between` onu geniş hücrede 250px öteye savuruyordu
                   ve hangi etikete ait olduğu okunmuyordu; komşu iki hücrede
@@ -515,7 +601,7 @@ export default async function AnalysisDetailPage(
             </div>
 
             {row.marketCap !== null && (
-              <div className="min-w-0 lg:px-5">
+              <div className="min-w-0">
                 <dt className={cn(PLATE_LABEL, "text-body")}>
                   {t.market.marketCap}
                 </dt>
@@ -527,7 +613,7 @@ export default async function AnalysisDetailPage(
             )}
 
             {row.return1yPct !== null && (
-              <div className="min-w-0 lg:pl-5">
+              <div className="min-w-0">
                 <dt className={cn(PLATE_LABEL, "text-body")}>
                   {t.analysis.return1y}
                 </dt>
@@ -540,6 +626,33 @@ export default async function AnalysisDetailPage(
                   {formatPercent(row.return1yPct, locale, 0)}
                 </dd>
               </div>
+            )}
+
+            {peRatio !== null && (
+              <ValuationCell
+                label={t.analysis.peRatio}
+                window={t.analysis.trailing12m}
+                value={formatPrice(peRatio, locale, { digits: 1 })}
+              />
+            )}
+
+            {epsTtm !== null && (
+              /* F/K'nin böleni de ekranda: okuyucu üstteki fiyatı buna bölüp
+                 yandaki oranı doğrulayabiliyor. Bir sayının nasıl kurulduğunu
+                 göstermek, kesinliğini iddia etmekten daha dürüst. */
+              <ValuationCell
+                label={t.stock.eps}
+                window={t.analysis.trailing12m}
+                value={formatPrice(epsTtm, locale, { currency: true })}
+              />
+            )}
+
+            {netMarginPct !== null && (
+              <ValuationCell
+                label={t.analysis.netMargin}
+                window={t.analysis.trailing12m}
+                value={formatPercentPlain(netMarginPct, locale, 1)}
+              />
             )}
           </dl>
         )}

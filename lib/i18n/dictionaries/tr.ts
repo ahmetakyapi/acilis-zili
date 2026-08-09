@@ -329,6 +329,15 @@ const tr = {
     sinceReport: "Bilanço Gününden Bugüne",
     reactionNote: "Bilanço Günü Tepkisi",
     return1y: "1 Yıllık Getiri",
+    /* Değerleme künyesi. Kısaltmalar Türkiye'de yerleşik olduğu gibi
+       bırakıldı — F/K açılımıyla yazılınca ("Fiyat / Kazanç") künye
+       satırına sığmıyor ve zaten kimse öyle aramıyor. */
+    peRatio: "F/K",
+    netMargin: "Net Kâr Marjı",
+    /* Ölçünün penceresi — künye, başlık değil; cümle düzeninde kalıyor.
+       "TTM" yazılmadı: sitenin okuru Türkçe okuyor ve kısaltma burada
+       kazanç sağlamıyor. */
+    trailing12m: "son 12 ay",
     afterHours: "seans sonrası",
     nextEarnings: "Sonraki Bilanço",
     earningsOf: "{period} Bilançosu",
@@ -650,9 +659,15 @@ const tr = {
     backToList: "Rehbere Dön",
     empty: "Bu başlıkta henüz yazı yok.",
     cardCta: "Oku",
-    onlyThis: "Yalnızca Bunlar",
+    /* "Yalnızca Bunlar" Türkçede kurulmayan bir kalıptı — işaret zamiri
+       neyi gösterdiğini söylemiyordu. Bağlantı konunun kendi sayfasını
+       açıyor; adı da onu söylüyor. */
+    onlyThis: "Konuyu Aç",
     /* Müfredat şeridi — liste sayfasının girişindeki dört konu karosu. */
     curriculum: "Nereden Başlamalı",
+    /* Şeridin başlığı "Nereden Başlamalı" diyordu ama sayfada başlamayı
+       tek tuşla mümkün kılan hiçbir şey yoktu. */
+    startFirst: "Baştan Başla",
     curriculumHint:
       "Dört konu bloğu kolaydan zora sıralı; hiç bilmeyen biri baştan sona bir müfredat gibi okuyabilir.",
     articlesCount: "yazı",
