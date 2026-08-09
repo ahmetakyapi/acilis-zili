@@ -48,13 +48,25 @@ export const metadata: Metadata = {
  * neyin nerede bittiğinin okunmadığı tek bir akıştı. Şimdi:
  *
  *   1. Şerit — hangi blok, hangi zorluk aralığında
- *   2. Bölüm başlığı — numaralı karo, büyük ad, kapsam
+ *   2. Bölüm başlığı — kalın kural, iri numara, YAPIŞKAN
  *   3. Seviye bandı — blok içinde temel / orta / ileri ayrımı
  *
  * Zorluk rozeti KARTTAN BANDA taşındı: bandın söylediğini kart tekrar
  * ettiğinde rozet bilgi değil doku oluyordu. Bir konunun tamamı tek
  * seviyedeyse bant basılmaz, seviye bölüm başlığına çıkar — bilgi hep
  * yazılı, yalnızca doğru yükseklikte.
+ *
+ * BÖLÜM BAŞLIKLARI YAPIŞKAN. Ayrımı asıl kuran şey bu: bir konunun
+ * kartları arasında ilerlerken o konunun adı üstte asılı kalıyor, sıradaki
+ * bölüm gelince onu yukarı itip yerini alıyor. Okuyucu hangi bloğun içinde
+ * olduğunu her an görüyor ve blokların nerede bittiği kaydırırken fiziksel
+ * olarak hissediliyor — otuz bir kart artık tek bir akış değil, dört bölüm.
+ * CSS ile çalışıyor; kaydırma dinleyen bir bileşen yok.
+ *
+ * RENKLE AYRILMADI, bilerek. Konu başına bir renk vermek en kolay yoldu ama
+ * bu sitede renk yalnızca üç şey söylüyor: yukarı, aşağı, etkileşim.
+ * Dördüncü bir anlam yüklemek o dili bozardı. Ayrım ölçüden, kuraldan ve
+ * boşluktan geliyor.
  */
 
 export default async function GuidePage(props: PageProps<"/rehber">) {
@@ -73,7 +85,10 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
     articles.reduce((sum, article) => sum + readingMinutes(article.bodyMd), 0);
 
   return (
-    <div className="flex flex-col gap-9">
+    /* Bölümler arası boşluk sayfanın ritmini kuruyor: kartlar arası 16px,
+       seviye bantları arası 20px, bölümler arası 40px. Üç ayrı ölçek, üç
+       ayrı düzey. */
+    <div className="flex flex-col gap-10">
       <PageHeader
         eyebrow={t.guide.eyebrow}
         title={t.guide.title}
@@ -101,12 +116,13 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
             const group = groupOf(topic.key);
             if (group.length === 0) return null;
             return (
-              /* scroll-mt: çapaya atlayınca başlık yapışkan üst çubuğun
-                 altında kalmasın. */
+              /* scroll-mt: çapaya atlayınca bölüm başlığı yapışkan üst
+                 çubuğun altında kalmasın — çubuk 65px, 80px onu güvenle
+                 açıklıyor. */
               <section
                 key={topic.key}
                 id={`konu-${topic.key}`}
-                className="flex scroll-mt-24 flex-col gap-5"
+                className="flex scroll-mt-20 flex-col"
               >
                 <TopicHeading
                   index={index}
@@ -237,11 +253,23 @@ function levelSpan(levels: GuideLevel[], locale: Locale): string {
 }
 
 /**
- * Bölüm başlığı — numaralı karo, ad, kapsam ve konu bağlantısı.
+ * Bölüm başlığı — kalın kural, iri numara, ad, kapsam ve konu bağlantısı.
  *
- * Numara eskiden başlığın solunda 12px'lik bir rakamdı ve kartların
- * köşesindeki sıra numaralarından ayırt edilmiyordu. Karo hâlinde bölümün
- * çapası oluyor: şeritteki karoyla aynı numara, aynı yerde.
+ * YAPIŞKAN VE İKİ PARÇALI. Üstteki satır (kural + numara + ad + kapsam)
+ * bölüm boyunca ekranın üstünde asılı kalıyor, açıklama paragrafı kalmıyor:
+ * yapışan şeyin bir SATIR olması gerekiyor, üç satırlık bir blok ekranın
+ * altıda birini yiyor. Yapışkan olan kısım kendi zeminini taşıyor
+ * (`bg-page`), yoksa altından geçen kartlar metnin içinden görünüyor.
+ *
+ * `top-16` uygulamanın kendi yapışkan çubuğunun (65-67px) bir tık ALTINDA
+ * duruyor: eşit verilseydi iki katman arasında bir piksellik bir yarık
+ * kalıyor ve oradan içerik sızıyordu. Çubuk opak olduğu için birkaç piksel
+ * altına girmek görünmüyor.
+ *
+ * Numara eskiden 9px'lik bir karoydu ve kartların köşesindeki sıra
+ * numaralarından ayırt edilmiyordu. Şimdi 26px: bölümün çapası o, kartın
+ * künyesi değil. Karo kaldırıldı çünkü yapışkan satırda bir kutu daha
+ * taşımak satırı kalınlaştırıyordu.
  */
 function TopicHeading({
   index,
@@ -261,16 +289,19 @@ function TopicHeading({
   const levels = levelsIn(articles);
 
   return (
-    <div className="flex flex-col gap-2 border-b border-line pb-3.5">
-      <div className="flex items-center gap-3">
-        <span
-          aria-hidden
-          className="numeral flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-primary-wash text-[13px] font-bold text-primary"
-        >
-          {String(index + 1).padStart(2, "0")}
-        </span>
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="display-ink display-ink-tight w-fit text-[21px] font-bold tracking-[-0.03em]">
+    <>
+      <div className="sticky top-16 z-10 bg-page pt-1">
+        {/* 2px'lik koyu kural — sayfadaki tek kalın çizgi. Bölüm sınırını
+            renk kullanmadan işaretleyen şey bu; hairline denendi ve
+            kartların kendi kenarlıklarından ayırt edilmiyordu. */}
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t-2 border-strong pb-3 pt-3">
+          <span
+            aria-hidden
+            className="numeral text-[26px] font-bold leading-none tracking-[-0.03em] text-primary"
+          >
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <h2 className="display-ink display-ink-tight w-fit text-[22px] font-bold tracking-[-0.03em]">
             {guideTopicLabel(topic, locale)}
           </h2>
           <span className="numeral text-[12px] text-muted">
@@ -281,23 +312,23 @@ function TopicHeading({
           {levels.length === 1 && (
             <LevelBadge level={levels[0]} locale={locale} />
           )}
+          <Link
+            href={`/rehber?konu=${topic}`}
+            scroll={false}
+            /* -my-2 py-2: 12px'lik metin tek başına 18px'lik bir dokunma
+               hedefi bırakıyordu; dolgu 32px'e çıkarır, negatif margin satırı
+               olduğu yerde tutar. */
+            className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 py-2 text-[12px] font-semibold text-primary transition-colors hover:text-primary-hover"
+          >
+            {t.guide.onlyThis}
+            <ArrowRight weight="bold" size={12} />
+          </Link>
         </div>
-        <Link
-          href={`/rehber?konu=${topic}`}
-          scroll={false}
-          /* -my-2 py-2: 12px'lik metin tek başına 18px'lik bir dokunma
-             hedefi bırakıyordu; dolgu 32px'e çıkarır, negatif margin satırı
-             olduğu yerde tutar. */
-          className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 py-2 text-[12px] font-semibold text-primary transition-colors hover:text-primary-hover"
-        >
-          {t.guide.onlyThis}
-          <ArrowRight weight="bold" size={12} />
-        </Link>
       </div>
-      <p className="max-w-[72ch] text-[12.5px] leading-[19px] text-muted">
+      <p className="mb-5 max-w-[72ch] text-[13px] leading-[20px] text-soft">
         {guideTopicDesc(topic, locale)}
       </p>
-    </div>
+    </>
   );
 }
 
@@ -317,7 +348,11 @@ function TopicView({
 
   return (
     <section className="flex flex-col gap-5">
-      <div className="flex flex-col gap-2 border-b border-line pb-3.5">
+      {/* Tek konu görünümünde başlık YAPIŞKAN DEĞİL: kaydırırken ayırt
+          edilecek ikinci bir bölüm yok, asılı kalan bir satır yalnızca yer
+          kaplardı. Kural ve iri numara duruyor — iki görünüm birbirinin
+          devamı gibi okunsun. */}
+      <div className="flex flex-col gap-2.5">
         <Link
           href="/rehber"
           scroll={false}
@@ -326,8 +361,14 @@ function TopicView({
           <ArrowLeft weight="bold" size={12} />
           {t.guide.allTopics}
         </Link>
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="display-ink display-ink-tight w-fit text-[21px] font-bold tracking-[-0.03em]">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t-2 border-strong pt-3">
+          <span
+            aria-hidden
+            className="numeral text-[26px] font-bold leading-none tracking-[-0.03em] text-primary"
+          >
+            {String(GUIDE_TOPICS.findIndex((entry) => entry.key === topic) + 1).padStart(2, "0")}
+          </span>
+          <h2 className="display-ink display-ink-tight w-fit text-[22px] font-bold tracking-[-0.03em]">
             {guideTopicLabel(topic, locale)}
           </h2>
           <span className="numeral text-[12px] text-muted">
@@ -337,7 +378,7 @@ function TopicView({
             <LevelBadge level={levels[0]} locale={locale} />
           )}
         </div>
-        <p className="max-w-[72ch] text-[12.5px] leading-[19px] text-muted">
+        <p className="max-w-[72ch] text-[13px] leading-[20px] text-soft">
           {guideTopicDesc(topic, locale)}
         </p>
       </div>
@@ -442,22 +483,29 @@ function ArticleGrid({
           prefetch={false}
           className="min-w-0"
         >
-          <Panel className="panel-hover flex h-full flex-col gap-4 p-5">
-            <div className="flex items-start justify-between gap-3">
-              <GlyphTile glyph={article.glyph} />
-              <span className="numeral text-[11px] font-bold text-muted">
+          <Panel className="panel-hover flex h-full flex-col gap-3 p-5">
+            {/* KARO BAŞLIĞIN YANINDA, kendi satırında değil. 52px'lik karo
+                her kartta tek başına bir satır tutuyordu ve otuz bir kart
+                yan yana gelince sayfada mavi kareden bir ızgara oluşuyordu —
+                kartları birbirinden ayıran şey karonun İÇİNDEKİ işaret,
+                karonun kendisi değil. Yana alınınca başlık kartın en üst
+                satırına çıkıyor: okuyucunun taradığı şey o.
+
+                Aynı düzen yazı sayfasının "Bunları da Oku" kartlarında da
+                var; iki liste artık aynı dili konuşuyor. */}
+            <div className="flex items-start gap-3">
+              <GlyphTile glyph={article.glyph} size={40} />
+              <h3 className="display-ink display-ink-tight min-w-0 flex-1 text-[17px] font-bold leading-[22px] tracking-[-0.025em] [text-wrap:balance]">
+                {article.title}
+              </h3>
+              <span className="numeral shrink-0 text-[11px] font-bold text-muted">
                 {String(startIndex + index + 1).padStart(2, "0")}
               </span>
             </div>
 
-            <div className="flex flex-1 flex-col gap-1.5">
-              <h3 className="display-ink display-ink-tight w-fit text-[18px] font-bold tracking-[-0.025em]">
-                {article.title}
-              </h3>
-              <p className="text-[13.5px] leading-[21px] text-body">
-                {article.dek}
-              </p>
-            </div>
+            <p className="flex-1 text-[13.5px] leading-[21px] text-body">
+              {article.dek}
+            </p>
 
             <p className="flex items-center gap-1.5 border-t border-line pt-3 text-[12px] font-semibold text-primary">
               {t.guide.cardCta}
