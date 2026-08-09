@@ -1,4 +1,7 @@
-import { ChartFooter, type FooterStat } from "@/components/earnings/ChartFooter";
+import {
+  ChartFooter,
+  type FooterStat,
+} from "@/components/earnings/ChartFooter";
 import { cn } from "@/lib/utils";
 
 /**
@@ -157,7 +160,9 @@ export function GuidanceRanges({
           const pos = (value: number) =>
             ((value - axisMin) / (axisMax - axisMin)) * 100;
 
-          const derived = row.evaluation ? null : judge(lo, hi, consensus, verdictLabels);
+          const derived = row.evaluation
+            ? null
+            : judge(lo, hi, consensus, verdictLabels);
           const evaluation = row.evaluation ?? derived?.text ?? null;
           const tone = row.evaluation ? row.tone : (derived?.tone ?? null);
           const note = row.note
@@ -177,41 +182,50 @@ export function GuidanceRanges({
                 </span>
               </div>
 
-              <div className="relative h-3 w-full rounded-full bg-surface-elevated">
-                {lo === hi ? (
-                  /* Şirket aralık değil TEK bir sayı verdiyse band çizilmez:
+              {/* ÇUBUK YALNIZCA PİYASA BEKLENTİSİ VARKEN ÇİZİLİYOR.
+                  Eksen her satırda kendi işaretlerine göre kuruluyor; beklenti
+                  yoksa işaretler bandın iki ucundan ibaret kalıyor ve eksen
+                  tam olarak o bandı çevreleyecek şekilde açılıyor. Sonuç:
+                  ölçü ne olursa olsun çubuk her zaman %9,7'den %90,3'e
+                  uzanıyordu. Beş satırlık bir panelde dört birebir aynı
+                  çubuk, veri gibi görünen ama hiçbir şey söylemeyen bir
+                  süse dönüşmüştü. Bandın kendisi zaten sağda rakamla yazılı;
+                  çubuğun tek işi onu beklentiyle KARŞILAŞTIRMAK. */}
+              {consensus !== null && (
+                <div className="relative h-3 w-full rounded-full bg-surface-elevated">
+                  {lo === hi ? (
+                    /* Şirket aralık değil TEK bir sayı verdiyse band çizilmez:
                      genişliği sıfır olan bir bandı görünür kılmak için
                      verilen asgari pay, eksenin ortasında rastgele duran
                      mavi bir noktaya dönüşüyordu. Beklenti işaretiyle aynı
                      biçim — ikisi de tek bir değer gösteriyor. */
-                  <span
-                    aria-hidden
-                    className="absolute top-1/2 h-[17px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
-                    style={{ left: `${pos(lo)}%` }}
-                  />
-                ) : (
-                  <span
-                    aria-hidden
-                    className="absolute inset-y-0 rounded-full bg-primary"
-                    style={{
-                      left: `${pos(lo)}%`,
-                      width: `${Math.max(2, pos(hi) - pos(lo))}%`,
-                    }}
-                  />
-                )}
-                {consensus !== null && (
-                  /* İşaret bandın ÜSTÜNE biniyor ve kendi zemin renginde bir
-                     halka taşıyor: bandın içine düştüğünde maviye karışıp
-                     kayboluyordu. Yuvarlak nokta yerine DİKEY kapsül —
-                     nokta bir veri işareti gibi okunuyordu, oysa bu bir
-                     eşik: "piyasa tam burayı bekliyordu". */
+                    <span
+                      aria-hidden
+                      className="absolute top-1/2 h-[17px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
+                      style={{ left: `${pos(lo)}%` }}
+                    />
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="absolute inset-y-0 rounded-full bg-primary"
+                      style={{
+                        left: `${pos(lo)}%`,
+                        width: `${Math.max(2, pos(hi) - pos(lo))}%`,
+                      }}
+                    />
+                  )}
+                  {/* İşaret bandın ÜSTÜNE biniyor ve kendi zemin renginde bir
+                    halka taşıyor: bandın içine düştüğünde maviye karışıp
+                    kayboluyordu. Yuvarlak nokta yerine DİKEY kapsül —
+                    nokta bir veri işareti gibi okunuyordu, oysa bu bir
+                    eşik: "piyasa tam burayı bekliyordu". */}
                   <span
                     aria-hidden
                     className="absolute top-1/2 h-[17px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-strong ring-2 ring-surface"
                     style={{ left: `${pos(consensus)}%` }}
                   />
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Bağlam nötr, yargı renkli. Tek parça renkli bir satır
                   "orta nokta 10,55" gibi tarafsız bir bilgiyi de kırmızıya

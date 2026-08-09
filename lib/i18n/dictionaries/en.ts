@@ -299,6 +299,7 @@ const en: typeof tr = {
     reactionNote: "Report-Day Move",
     return1y: "1Y Return",
     asOfReport: "at report",
+    asOfToday: "today",
     peRatio: "P/E",
     pegRatio: "PEG",
     netMargin: "Net Margin",

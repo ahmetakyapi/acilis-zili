@@ -27,6 +27,7 @@ import {
   getStatus,
   getSymbolNames,
   getUserSymbols,
+  liveMarketCap,
 } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
@@ -139,9 +140,12 @@ function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
             <span className={cn(PLATE_LABEL, "text-[11px] text-muted")}>
               {fact.label}
             </span>
+            {/* Künye PARANTEZ İÇİNDE. Etiketin yanında çıplak dururken ikisi
+                tek bir uzun etiket gibi okunuyordu ("PİYASA DEĞERİ bugün");
+                parantez, ölçünün adı ile o ölçünün koşulunu ayırıyor. */}
             {fact.note && (
               <span className="shrink-0 text-[11px] font-medium text-muted">
-                {fact.note}
+                ({fact.note})
               </span>
             )}
           </dt>
@@ -259,6 +263,8 @@ export default async function AnalysisDetailPage(
       ? sinceReportRaw
       : null;
 
+  const symbolMeta = meta[symbol];
+
   /* ---- Değerleme künyesi ----
      Şeritte şirketin BÜYÜKLÜĞÜ ve YILI vardı, FİYATININ NEYE GÖRE kurulduğu
      yoktu: "187 milyar dolar" tek başına pahalı mı ucuz mu söylemiyor.
@@ -307,7 +313,24 @@ export default async function AnalysisDetailPage(
       ? peRatio / growthPct
       : null;
 
-  const symbolMeta = meta[symbol];
+  /* ---- Piyasa değeri: BUGÜNKÜ ----
+     Kayıttaki `market_cap` bilanço günü kapanışıyla ölçülmüştü ve o sayının
+     bugün bir karşılığı yok: şirketin büyüklüğü fiyatla birlikte her gün
+     değişiyor, oysa okuyucunun sorusu "bu şirket ŞU AN ne kadar eder".
+     Hisse sayısı yalnızca geri alım ve ihraçla, yani çeyreklerde değişiyor;
+     bu yüzden değer canlı fiyattan kuruluyor ve sayfanın en üstündeki
+     fiyatla aynı andan geliyor. Aynı hesap `/piyasalar`'da da kullanılıyor.
+
+     Hisse sayısı ya da kotasyon yoksa kayıttaki sayıya düşülüyor ve künye
+     "bilanço günü"ne dönüyor — hangi sayıya baktığı okuyucuya hep yazılı. */
+  const liveCap =
+    symbolMeta?.shareOutstanding && live?.quote.price
+      ? liveMarketCap(symbolMeta, live.quote.price)
+      : null;
+  const marketCap = liveCap ?? row.marketCap;
+  const marketCapNote =
+    liveCap !== null ? t.analysis.asOfToday : t.analysis.asOfReport;
+
   const watched = userSymbols.includes(symbol);
   const verdict = verdictOf(row.verdict);
   const group = sectorGroupOf(symbolMeta?.industry);
@@ -658,17 +681,14 @@ export default async function AnalysisDetailPage(
 
             <FactRail
               facts={[
-                /* Bu ikisi KAYITTAN geliyor ve analizin yazıldığı gün, yani
-                   bilanço günü kapanışıyla ölçülmüş. Bir süre künyesizdi ve
-                   rayda yalnızca canlı ölçüler pencere taşıyordu — okuyucu
-                   piyasa değerinin de "şu an" olduğunu sanıyordu. Doğrulandı:
-                   PLTR'de 374,68 Mr $ ÷ 155,92 $ = 2,40 milyar hisse, canlı
-                   fiyata bölünce çıkmıyor. Yani sayı bilanço gününden. */
-                row.marketCap !== null && {
+                marketCap !== null && {
                   label: t.market.marketCap,
-                  note: t.analysis.asOfReport,
-                  value: `≈${SIGN_GAP}${formatCompact(row.marketCap, locale)} $`,
+                  note: marketCapNote,
+                  value: `≈${SIGN_GAP}${formatCompact(marketCap, locale)} $`,
                 },
+                /* Getiri kayıttan geliyor ve bilanço gününe kadar ölçülmüş;
+                   piyasa değerinin aksine bugüne taşınamıyor, çünkü bir yıl
+                   önceki fiyat elimizde yok. Künyesi bunu söylüyor. */
                 row.return1yPct !== null && {
                   label: t.analysis.return1y,
                   note: t.analysis.asOfReport,
@@ -1114,15 +1134,40 @@ function formatGuidanceRange(
   /* İki uç da tam sayıysa ondalık yazılmaz: "%83,0 – %85,0" şirketin
      vermediği bir hassasiyeti uyduruyor, yönetim "%83–85" dedi. */
   const scale = Math.max(Math.abs(low), Math.abs(high));
-  const d =
+  const base =
     Number.isInteger(low) && Number.isInteger(high) ? 0 : digits(scale);
+
+  /* HANE SAYISI, ARALIK GÖRÜNENE KADAR ARTIYOR.
+     Ölçek tabanlı sabit hane, dar bantları yok ediyordu: Palantir 3Ç26 geliri
+     için yönetim 2,160–2,164 Mr $ dedi, iki hanede ikisi de "2,16" oluyor ve
+     ekranda "2,16 – 2,16 Mr $" yazıyordu — bant kaybolduğu gibi sayı da hata
+     gibi okunuyor. Hassasiyet uydurulmuyor, VAR OLAN hassasiyet korunuyor;
+     üç hanede duruluyor çünkü ötesi şirketin verdiği bir şey değil. */
+  let d = base;
+  while (
+    d < 3 &&
+    formatPrice(low, locale, { digits: d }) ===
+      formatPrice(high, locale, { digits: d }) &&
+    low !== high
+  ) {
+    d += 1;
+  }
+
   const a = formatPrice(low, locale, { digits: d });
   const b = formatPrice(high, locale, { digits: d });
 
-  if (unit === "%") {
-    return locale === "tr" ? `%${a} – %${b}` : `${a}% – ${b}%`;
+  /* Yüzde işaretinin yeri dile bağlı ve HER İKİ uca da yazılıyor; ötekilerde
+     birim yalnızca sonda bir kez geçiyor ("2,160 – 2,164 Mr $"). */
+  function withUnit(value: string): string {
+    if (unit === "%") return locale === "tr" ? `%${value}` : `${value}%`;
+    return unit ? `${value} ${unit}` : value;
   }
-  return `${a} – ${b}${unit ? ` ${unit}` : ""}`;
+
+  /* Şirket bant değil tek sayı verdiyse (ya da üç haneye rağmen ikisi aynı
+     kalıyorsa) "2,16 – 2,16" yerine tek değer yazılır. */
+  if (a === b) return withUnit(a);
+  if (unit === "%") return `${withUnit(a)} – ${withUnit(b)}`;
+  return `${a} – ${withUnit(b)}`;
 }
 
 
@@ -1279,9 +1324,14 @@ function PointsCard({
         >
           <Icon weight="duotone" size={15} />
         </span>
-        <h3 className={cn("text-[13px] font-bold tracking-[-0.01em]", accent)}>
+        {/* h3 DEĞİL h2. Güçlü Yönler / Riskler / Beklenen Gelişmeler,
+            sayfada "Özet" ve "Detaylı Değerlendirme" ile aynı düzeyde duran
+            üç panel; h3 yazılınca başlıklarda gezinen okuyucuya bir üsttekinin
+            ALT BÖLÜMÜ gibi görünüyorlardı. Punto küçük ama düzey öyle değil —
+            ikisi ayrı şeyler. */}
+        <h2 className={cn("text-[13px] font-bold tracking-[-0.01em]", accent)}>
           {title}
-        </h3>
+        </h2>
         <span className="figure ml-auto text-[11px] font-bold text-muted">
           {points.length}
         </span>

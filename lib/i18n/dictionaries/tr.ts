@@ -336,6 +336,7 @@ const tr = {
        değil. "analiz günü" denmedi: okuyucu analizin ne zaman yazıldığını
        bilmiyor, bilanço gününü ise kartın hemen üstünde okuyor. */
     asOfReport: "bilanço günü",
+    asOfToday: "bugün",
     peRatio: "F/K",
     pegRatio: "PEG",
     netMargin: "Net Kâr Marjı",
