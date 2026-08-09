@@ -133,17 +133,21 @@ function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
     >
       {list.map((fact) => (
         <div key={fact.label} className="min-w-0">
+          {/* Etiket ve künye 10px'ti ve okunmuyordu — ray zaten sakin bir
+              katman, bir de puntoyu kısınca fısıltıya dönüşüyordu. */}
           <dt className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-            <span className={cn(PLATE_LABEL, "text-muted")}>{fact.label}</span>
+            <span className={cn(PLATE_LABEL, "text-[11px] text-muted")}>
+              {fact.label}
+            </span>
             {fact.note && (
-              <span className="shrink-0 text-[10px] font-medium text-muted">
+              <span className="shrink-0 text-[11px] font-medium text-muted">
                 {fact.note}
               </span>
             )}
           </dt>
           <dd
             className={cn(
-              "figure mt-1.5 text-[17px] font-bold leading-none tracking-[-0.03em]",
+              "figure mt-1.5 text-[19px] font-bold leading-none tracking-[-0.03em]",
               fact.tone === "up" && "text-up",
               fact.tone === "down" && "text-down",
               !fact.tone && "text-strong",
@@ -505,23 +509,6 @@ export default async function AnalysisDetailPage(
                 </span>
               )}
 
-              {session?.user && (
-                <form action={toggleSymbolFavorite} className="sm:ml-auto">
-                  <input type="hidden" name="symbol" value={symbol} />
-                  <button
-                    type="submit"
-                    className={cn(
-                      "inline-flex min-h-7 items-center gap-1.5 rounded-md border px-2.5 text-[10.5px] font-bold transition-colors",
-                      watched
-                        ? "border-primary-faint bg-primary-wash text-primary"
-                        : "border-line bg-surface-solid text-body hover:border-line-strong hover:text-strong",
-                    )}
-                  >
-                    <Star weight={watched ? "fill" : "duotone"} size={12} />
-                    {watched ? t.stock.removeFromWatchlist : t.stock.addToWatchlist}
-                  </button>
-                </form>
-              )}
             </div>
           </div>
 
@@ -534,8 +521,15 @@ export default async function AnalysisDetailPage(
               alınınca hem o boşluk doluyor hem kart bir odak kazanıyor.
               Kapanış fiyatı aşağıda kendi adıyla duruyor; iki fiyat tanımı
               gereği farklı ve ikisi de nereye ait olduğu yazılı. */}
-          {live && (
-            <div className="shrink-0 sm:text-right">
+          {/* Sağ kolon: "şu an" ve favori düğmesi, aynı sağ kenara yaslı.
+              Düğme bir süre SOL kolondaki çip satırının sonundaydı ve
+              `ml-auto` ile o kolonun sağ ucuna yaslanıyordu — yani fiyat
+              bloğunun sol kenarından üç yüz piksel geride duruyordu. İki
+              hizasız sağ kenar kartın en görünür yerinde yan yanaydı. */}
+          {(live || session?.user) && (
+            <div className="flex shrink-0 flex-col gap-3.5 sm:items-end sm:text-right">
+              {live && (
+                <div>
               <div className="flex items-baseline gap-2 sm:justify-end">
                 <span className={cn(PLATE_LABEL, "text-primary")}>
                   {t.analysis.livePrice}
@@ -575,6 +569,26 @@ export default async function AnalysisDetailPage(
                     {formatPercent(sinceReportPct, locale, 1)}
                   </span>
                 </p>
+              )}
+                </div>
+              )}
+
+              {session?.user && (
+                <form action={toggleSymbolFavorite}>
+                  <input type="hidden" name="symbol" value={symbol} />
+                  <button
+                    type="submit"
+                    className={cn(
+                      "inline-flex min-h-7 items-center gap-1.5 rounded-md border px-2.5 text-[10.5px] font-bold transition-colors",
+                      watched
+                        ? "border-primary-faint bg-primary-wash text-primary"
+                        : "border-line bg-surface-solid text-body hover:border-line-strong hover:text-strong",
+                    )}
+                  >
+                    <Star weight={watched ? "fill" : "duotone"} size={12} />
+                    {watched ? t.stock.removeFromWatchlist : t.stock.addToWatchlist}
+                  </button>
+                </form>
               )}
             </div>
           )}
@@ -644,12 +658,20 @@ export default async function AnalysisDetailPage(
 
             <FactRail
               facts={[
+                /* Bu ikisi KAYITTAN geliyor ve analizin yazıldığı gün, yani
+                   bilanço günü kapanışıyla ölçülmüş. Bir süre künyesizdi ve
+                   rayda yalnızca canlı ölçüler pencere taşıyordu — okuyucu
+                   piyasa değerinin de "şu an" olduğunu sanıyordu. Doğrulandı:
+                   PLTR'de 374,68 Mr $ ÷ 155,92 $ = 2,40 milyar hisse, canlı
+                   fiyata bölünce çıkmıyor. Yani sayı bilanço gününden. */
                 row.marketCap !== null && {
                   label: t.market.marketCap,
+                  note: t.analysis.asOfReport,
                   value: `≈${SIGN_GAP}${formatCompact(row.marketCap, locale)} $`,
                 },
                 row.return1yPct !== null && {
                   label: t.analysis.return1y,
+                  note: t.analysis.asOfReport,
                   value: formatPercent(row.return1yPct, locale, 0),
                   tone: row.return1yPct >= 0 ? ("up" as const) : ("down" as const),
                 },

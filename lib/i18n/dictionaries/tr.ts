@@ -332,6 +332,10 @@ const tr = {
     /* Değerleme künyesi. Kısaltmalar Türkiye'de yerleşik olduğu gibi
        bırakıldı — F/K açılımıyla yazılınca ("Fiyat / Kazanç") künye
        satırına sığmıyor ve zaten kimse öyle aramıyor. */
+    /* Kayıttan gelen ölçülerin penceresi. Küçük harf çünkü künye, başlık
+       değil. "analiz günü" denmedi: okuyucu analizin ne zaman yazıldığını
+       bilmiyor, bilanço gününü ise kartın hemen üstünde okuyor. */
+    asOfReport: "bilanço günü",
     peRatio: "F/K",
     pegRatio: "PEG",
     netMargin: "Net Kâr Marjı",
