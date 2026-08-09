@@ -78,6 +78,13 @@
       "when": 1786227661226,
       "tag": "0010_peaceful_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1786269254803,
+      "tag": "0011_chilly_rick_jones",
+      "breakpoints": true
     }
   ]
 }

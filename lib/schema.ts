@@ -392,6 +392,46 @@ export const earningsAnalyses = pgTable(
     /** Açıklanan EPS'in piyasa beklentisinden sapması, yüzde. */
     epsSurprisePct: doublePrecision("eps_surprise_pct"),
 
+    /* ----------------------------------------------------------------
+       Değerleme girdileri
+
+       ORAN DEĞİL GİRDİ yazılır. Alanlar `pe_ratio`/`pb_ratio` olarak da
+       açılabilirdi ama olmadı: bir oranın payı fiyattır ve fiyat her gün
+       değişiyor. Analiz yazıldığı gün doğru olan F/K, üç hafta sonra
+       sayfanın en üstünde duran canlı fiyatla çelişiyor — aynı sayfada iki
+       fiyat, hangisinin hangisi olduğu söylenmeden. Ölçtük: sağlayıcının
+       hazır F/K'si tam bu yüzden SNDK'da %5,6 sapıyordu.
+
+       Bölenler burada, oranı sunum katmanı sayfadaki fiyatla kuruyor. Böylece
+       okuyucu çarpıp doğrulayabiliyor.
+
+       Üçü de İSTEĞE BAĞLI; yazılmayan oran hiç gösterilmez.
+       ---------------------------------------------------------------- */
+
+    /** Son dört çeyreğin toplam hisse başı kârı — F/K'nin böleni. */
+    epsTtm: doublePrecision("eps_ttm"),
+    /**
+     * Hisse başı defter değeri — PD/DD'nin böleni.
+     *
+     * SEKTÖRE BAĞLI bir ölçü: bankada, sigortada ve GYO'da fiyatın kurulduğu
+     * asıl yer burasıdır; yazılımda ya da yarı iletkende şirketin ne
+     * ürettiğini anlatmaz. Yazılmadığında oran basılmıyor — her şirkete
+     * PD/DD yazmak yanlış okumaya davet.
+     */
+    bookValuePerShare: doublePrecision("book_value_per_share"),
+    /**
+     * PEG'in böleni — beklenen yıllık kâr büyümesi, yüzde (18.4).
+     *
+     * `growthBasis` OLMADAN KULLANILMAZ. PEG'in tek sorunu hangi büyümenin
+     * bölündüğünün söylenmemesi: aynı gün aynı şirket için iki kaynak, biri
+     * ileriye dönük öteki son on iki ay üzerinden, üç kat farklı PEG
+     * veriyordu (MU: 0,04 ile 0,12). Sayı tek başına yazılırsa okuyucunun
+     * doğrulama şansı kalmıyor.
+     */
+    growthPct: doublePrecision("growth_pct"),
+    /** Büyümenin tanımı — "ileriye dönük 3 yıl", "son 12 ay". Ekranda yazılı. */
+    growthBasis: text("growth_basis"),
+
     /** 3 paragraflık özet. */
     summary: jsonb("summary").$type<string[]>().notNull(),
     /** Detaylı değerlendirme — her biri kalın mini başlıkla açılan bölümler. */

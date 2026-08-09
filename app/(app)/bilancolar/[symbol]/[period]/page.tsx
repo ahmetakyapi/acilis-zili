@@ -88,35 +88,73 @@ const PLATE_LABEL =
   "text-[10px] font-bold uppercase leading-none tracking-[0.09em]";
 
 /**
- * Değerleme hücresi — etiket, pencere künyesi ve sayı.
+ * Künye rayı — manşetin altındaki sakin ölçü şeridi.
  *
- * Pencere ETİKETİN YANINDA yazılı ("F/K · son 12 ay"). Bu hücreler canlı
- * sağlayıcıdan geliyor, komşularındaki piyasa değeri ve yıllık getiri ise
- * analizin yazıldığı gündendi; ikisi aynı şeritte durunca hangisinin ne
- * zamana ait olduğu okunabilir olmalı. Aynı kural bilanço günü kapanışında
- * da işliyor — orada künye tarihin kendisi.
+ * Çukur zemin ve boşluk ayrımı çiziyor, dikey hairline yok: hücre sayısı
+ * kayda göre değiştiği için ray satır atlayabiliyor ve çizgiler o zaman
+ * ikinci satırın ilk hücresinin soluna, boşlukta duran bir hairline
+ * bırakıyordu.
+ *
+ * `note` ölçünün PENCERESİ ya da BÖLENİ: "son 12 ay", "$105,61",
+ * "ileriye dönük 3 yıl". Bir sayının ne zamana ait olduğu ya da neye
+ * bölündüğü bu sayfada asla tahmine bırakılmıyor.
  */
-function ValuationCell({
-  label,
-  window,
-  value,
-}: {
+type Fact = {
   label: string;
-  window: string;
   value: string;
-}) {
+  note?: string | null;
+  tone?: "up" | "down";
+};
+
+/* Sütun sayısı hücre sayısını izliyor: sabit bir sütun sayısı, ray dolmadığı
+   günlerde satır sonunda boşluk bırakıyordu. En çok altı hücre olur —
+   piyasa değeri, yıllık getiri, F/K, PD/DD, PEG, net kâr marjı.
+
+   Sınıflar birebir yazılı; Tailwind kaynağı metin olarak tarıyor ve şablonla
+   üretilen sınıf adları derlemeye girmiyor. */
+const RAIL_COLS: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-2 sm:grid-cols-3",
+  4: "grid-cols-2 lg:grid-cols-4",
+  5: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
+  6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
+};
+
+function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
+  const list = facts.filter((fact): fact is Fact => Boolean(fact));
+  if (list.length === 0) return null;
+
   return (
-    <div className="min-w-0">
-      <dt className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <span className={cn(PLATE_LABEL, "text-body")}>{label}</span>
-        <span className="shrink-0 text-[10.5px] font-medium text-muted">
-          {window}
-        </span>
-      </dt>
-      <dd className="figure mt-1.5 text-[20px] font-bold leading-none tracking-[-0.03em] text-strong">
-        {value}
-      </dd>
-    </div>
+    <dl
+      className={cn(
+        "grid gap-x-5 gap-y-4 rounded-[14px] bg-surface-sunken px-4 py-3.5 sm:px-5",
+        RAIL_COLS[Math.min(list.length, 6)],
+      )}
+    >
+      {list.map((fact) => (
+        <div key={fact.label} className="min-w-0">
+          <dt className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+            <span className={cn(PLATE_LABEL, "text-muted")}>{fact.label}</span>
+            {fact.note && (
+              <span className="shrink-0 text-[10px] font-medium text-muted">
+                {fact.note}
+              </span>
+            )}
+          </dt>
+          <dd
+            className={cn(
+              "figure mt-1.5 text-[17px] font-bold leading-none tracking-[-0.03em]",
+              fact.tone === "up" && "text-up",
+              fact.tone === "down" && "text-down",
+              !fact.tone && "text-strong",
+            )}
+          >
+            {fact.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -222,41 +260,52 @@ export default async function AnalysisDetailPage(
      Şeritte şirketin BÜYÜKLÜĞÜ ve YILI vardı, FİYATININ NEYE GÖRE kurulduğu
      yoktu: "187 milyar dolar" tek başına pahalı mı ucuz mu söylemiyor.
 
-     Üçü de DOĞRULANDI. 8 Ağustos 2026 kapanışında MU ve SNDK için bağımsız
-     bir oran tablosuyla karşılaştırıldı; F/K'de 19,87/19,80 ve 16,63/16,43,
-     hisse başı kârda %1'in altında fark çıktı. Kalan sapma TTM penceresinin
-     nerede kapandığından geliyor.
+     ORANLAR BURADA KURULUYOR, hiçbir yerden hazır alınmıyor. Payı her zaman
+     sayfanın kimlik bandında "şu an" diye yazdığı fiyat; bölenler ya
+     analizle birlikte yazılıyor ya sağlayıcıdan geliyor. Böylece okuyucu
+     üstteki fiyatı yandaki bölene bölüp oranı doğrulayabiliyor — ve oran
+     fiyat oynadıkça bayatlamıyor. Sağlayıcının hazır F/K'si tam bu yüzden
+     kullanılmıyor: SNDK'da %5,6 geriden geliyordu (bkz. `peRatioOf`).
 
-     ELENENLER de ölçüldü, tahminle atılmadı:
-       PEG    — aynı gün aynı şirket için iki kaynak ÜÇ KAT farklı veriyor
-                (MU: 0,04 ile 0,12). Biri ileriye dönük büyümeyi, öteki son
-                on iki ayı bölüyor ve hangisinin kullanıldığı hiçbir yerde
-                yazmıyor. Doğrulanamayan sayı büyük puntoyla yazılmaz.
-       PD/DD  — sağlayıcının `pbQuarterly` alanı MADDİ defter değerini
-                izliyor: SNDK'da 16,42 dönüyor, tablodaki PD/DD ise 11,48;
-                tablonun P/TBV sütunu 16,81. "PD/DD" diye yazmak yanlış
-                etiket olurdu.
-       52 hafta aralığı — taranan sembollerden birinde uç değerler bugünkü
-                fiyatla bağdaşmıyordu.
-       Temettü verimi — büyüme şirketlerinde boş dönüyor, şeritte delik.
+     BÖLEN ÖNCE KAYITTAN okunuyor. Analizi yazan, bilançonun kendisinden
+     gelen sayıyı `eps_ttm` / `book_value_per_share` alanlarına koyabiliyor;
+     yoksa sağlayıcı devralıyor. Kayıt hep önde çünkü o, kaynağı belli ve
+     sürüm geçmişinde duran bir sayı.
 
-     Sayılar TTM ve CANLI; kayıttaki piyasa değeri ile yıllık getiri ise
-     analizin yazıldığı gündendi. Bu yüzden her birinin etiketinin yanında
-     hangi pencereye ait olduğu yazılı — bir sayının "ne zamanki" olduğu
-     sayfada asla tahmine bırakılmıyor. */
+     DOĞRULANDI. 8 Ağustos 2026 kapanışında MU ve SNDK için bağımsız bir oran
+     tablosuyla karşılaştırıldı: F/K'de 19,87/19,80 ve 16,63/16,43, hisse başı
+     kârda %1'in altında fark. Kalan sapma TTM penceresinin nerede
+     kapandığından geliyor, fiyattan değil.
+
+     PD/DD ve PEG YALNIZCA YAZILDIYSA çıkar, sağlayıcıdan türetilmez:
+       PD/DD  — sektöre bağlı bir ölçü ve sağlayıcının `pbQuarterly` alanı
+                maddi defter değerini izliyor (SNDK'da 16,42 dönüyor, aynı
+                günün tablosunda PD/DD 11,48, P/TBV 16,81). Her şirkete
+                otomatik yazmak yanlış etiket olurdu.
+       PEG    — bölünen büyümenin tanımı olmadan doğrulanamıyor: aynı gün
+                aynı şirket için iki kaynak üç kat farklı veriyordu (MU
+                0,04 ile 0,12). Kayıt `growth_basis`'i zorunlu tutuyor,
+                tanım da ekranda yazılı çıkıyor.
+
+     Sayıların penceresi etiketin yanında yazılı — bir sayının "ne zamanki"
+     olduğu sayfada asla tahmine bırakılmıyor. */
   const metrics = keyMetrics.ok ? keyMetrics.data : null;
-  const epsTtm =
-    typeof metrics?.eps === "number" && Number.isFinite(metrics.eps)
-      ? metrics.eps
-      : null;
-  /* Bölen, sayfanın kimlik bandında "şu an" diye yazdığı fiyatın ta kendisi.
-     Kotasyon yoksa oran da yazılmıyor: bilanço günü kapanışından kurulan bir
-     F/K, üstteki canlı fiyatla çelişirdi. Gerekçenin tamamı `peRatioOf`'ta. */
+  const finite = (value: number | null | undefined) =>
+    typeof value === "number" && Number.isFinite(value) ? value : null;
+
+  const epsTtm = finite(row.epsTtm) ?? finite(metrics?.eps);
   const peRatio = peRatioOf(live?.quote.price, epsTtm);
-  const netMarginPct =
-    typeof metrics?.netMarginPct === "number" &&
-    Number.isFinite(metrics.netMarginPct)
-      ? metrics.netMarginPct
+  const netMarginPct = finite(metrics?.netMarginPct);
+
+  const bookValuePerShare = finite(row.bookValuePerShare);
+  const pbRatio = peRatioOf(live?.quote.price, bookValuePerShare);
+
+  /* PEG = F/K ÷ büyüme. F/K'nin kendisi yoksa (zararda ya da kotasyon yok)
+     PEG de yok — bölünecek bir şey kalmıyor. */
+  const growthPct = finite(row.growthPct);
+  const pegRatio =
+    peRatio !== null && growthPct !== null && growthPct > 0
+      ? peRatio / growthPct
       : null;
 
   const symbolMeta = meta[symbol];
@@ -536,39 +585,41 @@ export default async function AnalysisDetailPage(
           )}
         </div>
 
-        {/* ---- Ölçü şeridi ----
-            Sıra bir cümle kuruyor: bilanço günü ne oldu → şirket ne
-            büyüklükte → yıl nasıl geçti → fiyat neye göre kurulu. Her hücre
-            İKİ satır (etiket + değer); dört ölçüdeyken ikisi altına açıklama
-            satırı alıyor, ikisi almıyordu ve şeridin tabanı tırtıklı
-            kalıyordu. "Şu an" buradan kimlik bandına çıktı.
+        {/* ---- Ölçü katmanı ----
+            İKİ KATMAN, tek ızgara değil.
 
-            HAIRLINE'LAR `divide-x` DEĞİL. Şerit üç hücreyken tek satırdı ve
-            `divide-x` yetiyordu; altı hücreye çıkınca ikinci satırın ilk
-            hücresi de "önceki kardeş" sayılıyor ve ızgaranın sol kenarında
-            boşlukta duran bir dikey çizgi çiziliyordu. Sınır artık sütun
-            konumuna bakıyor: satır başındaki hücrede yok.
+            Altı ölçü bir süre eşit ağırlıklı 2×3 ızgaradaydı ve sonuç bir
+            tabloydu: altı büyük harfli etiket, altı sayı, aralarında dikey
+            hairline'lar. Hiçbiri ötekinden önemli görünmüyordu, oysa bu sayfa
+            BİR ÇEYREĞİ anlatıyor ve o çeyreğin cevabı tek bir sayıda —
+            bilanço günü kapanışı ile hissenin o gün verdiği tepki.
 
-            Dar ekranda ikişerli, telefonda alt alta — orada dikey çizgi
-            hiç yok, hücreler zaten alt alta. */}
+            Şimdi manşet o ölçü, tek başına ve büyük. Kalanlar altında sakin
+            bir künye rayında: şirket ne büyüklükte, yıl nasıl geçti, fiyat
+            neye göre kurulu. Ray çukur zeminde duruyor ve DİKEY ÇİZGİ
+            TAŞIMIYOR — çizgiler ızgara satır atladığında ikinci satırın ilk
+            hücresinin soluna boşlukta duran bir hairline bırakıyordu; zemin
+            ve boşluk aynı ayrımı çizgisiz yapıyor.
+
+            Ray hücre sayısına göre sütunlanıyor: yazılmamış oran hiç
+            basılmadığı için sayı 3 ile 6 arasında değişiyor ve sabit bir
+            sütun sayısı satır sonunda boşluk bırakırdı. */}
         {row.price !== null && (
-          <dl className="grid gap-x-5 gap-y-5 border-t border-line pt-4 sm:grid-cols-2 lg:grid-cols-3 lg:*:pl-5 lg:*:nth-[3n+1]:pl-0 lg:*:not-nth-[3n+1]:border-l lg:*:not-nth-[3n+1]:border-line">
+          <div className="flex flex-col gap-4 border-t border-line pt-4">
             <div className="min-w-0">
               {/* Tarih etiketin YANINDA, hücrenin öbür ucunda değil.
                   `justify-between` onu geniş hücrede 250px öteye savuruyordu
-                  ve hangi etikete ait olduğu okunmuyordu; komşu iki hücrede
-                  böyle bir künye olmadığı için de şerit tek başına o hücrede
-                  sağa yaslı bir metin taşıyor gibi duruyordu. */}
-              <dt className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  ve hangi etikete ait olduğu okunmuyordu. */}
+              <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <span className={cn(PLATE_LABEL, "text-body")}>
                   {t.analysis.closePrice}
                 </span>
                 <span className="shrink-0 text-[10.5px] font-medium text-muted">
                   {formatEtDateCompact(row.reportDate, locale)}
                 </span>
-              </dt>
-              <dd className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                <span className="figure text-[26px] font-bold leading-none tracking-[-0.04em] text-strong">
+              </p>
+              <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <span className="figure text-[30px] font-bold leading-none tracking-[-0.04em] text-strong sm:text-[34px]">
                   {formatPrice(row.price, locale, { currency: true })}
                 </span>
                 {row.reactionPct !== null && (
@@ -577,7 +628,7 @@ export default async function AnalysisDetailPage(
                      yaptı" sorusunun cevabı o. */
                   <span
                     className={cn(
-                      "figure inline-flex items-baseline gap-1 rounded-md px-2 py-[3px] text-[14px] font-bold leading-none",
+                      "figure inline-flex items-baseline gap-1 rounded-lg px-2.5 py-1 text-[15px] font-bold leading-none",
                       row.reactionPct >= 0
                         ? "bg-up-wash text-up"
                         : "bg-down-wash text-down",
@@ -588,73 +639,60 @@ export default async function AnalysisDetailPage(
                     {formatPercentPlain(row.reactionPct, locale, 1)}
                   </span>
                 )}
-                {/* "Bilanço Günü Tepkisi" ayrı bir üçüncü satırdı ve yalnızca
-                    bu hücrede olduğu için şeridin tabanını tırtıklı
-                    bırakıyordu. Rozetin ne olduğunu söyleyen künye artık
-                    rozetin yanında, kendi satırında değil. */}
                 {row.reactionPct !== null && (
-                  <span className="text-[10.5px] text-muted">
+                  <span className="text-[11px] text-muted">
                     {t.analysis.reactionNote}
                   </span>
                 )}
-              </dd>
+              </p>
             </div>
 
-            {row.marketCap !== null && (
-              <div className="min-w-0">
-                <dt className={cn(PLATE_LABEL, "text-body")}>
-                  {t.market.marketCap}
-                </dt>
-                <dd className="figure mt-1.5 text-[20px] font-bold leading-none tracking-[-0.03em] text-strong">
-                  ≈{SIGN_GAP}
-                  {formatCompact(row.marketCap, locale)} $
-                </dd>
-              </div>
-            )}
-
-            {row.return1yPct !== null && (
-              <div className="min-w-0">
-                <dt className={cn(PLATE_LABEL, "text-body")}>
-                  {t.analysis.return1y}
-                </dt>
-                <dd
-                  className={cn(
-                    "figure mt-1.5 text-[20px] font-bold leading-none tracking-[-0.03em]",
-                    row.return1yPct >= 0 ? "text-up" : "text-down",
-                  )}
-                >
-                  {formatPercent(row.return1yPct, locale, 0)}
-                </dd>
-              </div>
-            )}
-
-            {peRatio !== null && (
-              <ValuationCell
-                label={t.analysis.peRatio}
-                window={t.analysis.trailing12m}
-                value={formatPrice(peRatio, locale, { digits: 1 })}
-              />
-            )}
-
-            {epsTtm !== null && (
-              /* F/K'nin böleni de ekranda: okuyucu üstteki fiyatı buna bölüp
-                 yandaki oranı doğrulayabiliyor. Bir sayının nasıl kurulduğunu
-                 göstermek, kesinliğini iddia etmekten daha dürüst. */
-              <ValuationCell
-                label={t.stock.eps}
-                window={t.analysis.trailing12m}
-                value={formatPrice(epsTtm, locale, { currency: true })}
-              />
-            )}
-
-            {netMarginPct !== null && (
-              <ValuationCell
-                label={t.analysis.netMargin}
-                window={t.analysis.trailing12m}
-                value={formatPercentPlain(netMarginPct, locale, 1)}
-              />
-            )}
-          </dl>
+            <FactRail
+              facts={[
+                row.marketCap !== null && {
+                  label: t.market.marketCap,
+                  value: `≈${SIGN_GAP}${formatCompact(row.marketCap, locale)} $`,
+                },
+                row.return1yPct !== null && {
+                  label: t.analysis.return1y,
+                  value: formatPercent(row.return1yPct, locale, 0),
+                  tone: row.return1yPct >= 0 ? ("up" as const) : ("down" as const),
+                },
+                /* HER ORANIN KÜNYESİ KENDİ BÖLENİ. Hisse başı kâr bir süre
+                   kendi hücresindeydi ve ray tutarsız duruyordu: F/K'nin
+                   böleni tam bir ölçü kadar yer kaplarken PD/DD'ninki
+                   künyeye sığıyordu. Bölen künyeye inince okuyucu üstteki
+                   fiyatı ona bölüp oranı yerinde doğrulayabiliyor — sayının
+                   nasıl kurulduğunu göstermek, kesinliğini iddia etmekten
+                   daha dürüst. */
+                peRatio !== null && {
+                  label: t.analysis.peRatio,
+                  note: `${formatPrice(epsTtm, locale, { currency: true })} · ${t.analysis.trailing12m}`,
+                  value: formatPrice(peRatio, locale, { digits: 1 }),
+                },
+                /* PD/DD yalnızca defter değeri YAZILDIYSA — bkz. şema. */
+                pbRatio !== null && {
+                  label: t.analysis.pbRatio,
+                  note: formatPrice(bookValuePerShare, locale, {
+                    currency: true,
+                  }),
+                  value: formatPrice(pbRatio, locale, { digits: 1 }),
+                },
+                /* PEG'in künyesi hangi büyümenin bölündüğünü söylüyor;
+                   `growth_basis` olmadan kayıt zaten reddediliyor. */
+                pegRatio !== null && {
+                  label: t.analysis.pegRatio,
+                  note: row.growthBasis,
+                  value: formatPrice(pegRatio, locale, { digits: 2 }),
+                },
+                netMarginPct !== null && {
+                  label: t.analysis.netMargin,
+                  note: t.analysis.trailing12m,
+                  value: formatPercentPlain(netMarginPct, locale, 1),
+                },
+              ]}
+            />
+          </div>
         )}
       </header>
 

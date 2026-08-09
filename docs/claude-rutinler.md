@@ -666,6 +666,33 @@ farkı). target_price boş gelirse şeridin sağ ucu bomboş kalıyor. upside_pc
 unutursan site fiyattan kendisi hesaplar, ama hedef ile analist sayısının
 karşılığı yok — onları bul.
 
+**Değerleme girdileri — ORAN DEĞİL BÖLEN yaz.**
+
+Sayfadaki F/K, PD/DD ve PEG'i site kendisi kuruyor: payı her zaman o anki
+canlı fiyat, bölenleri de senin yazdığın sayılar. Oranın kendisini yazma —
+fiyat her gün değişiyor ve analiz günü doğru olan bir F/K üç hafta sonra
+sayfanın en üstündeki canlı fiyatla çelişiyor. (Ölçtük: bir sağlayıcının
+hazır F/K'si tam bu yüzden %5,6 geriden geliyordu.)
+
+  - `eps_ttm` — son dört çeyreğin toplam hisse başı kârı. F/K'nin böleni.
+    Neredeyse her şirkette yazılabilir; bilanço bülteninden topla.
+
+  - `book_value_per_share` — hisse başı defter değeri. PD/DD'nin böleni ve
+    **yalnızca banka, sigorta, GYO ve varlık ağırlıklı sanayide** yaz.
+    Yazılım ya da yarı iletkende defter değeri şirketin ne ürettiğini
+    anlatmıyor; oradaki PD/DD okuyucuyu yanlış yere götürür. Emin
+    değilsen boş bırak — yazılmayan oran hiç gösterilmiyor.
+
+  - `growth_pct` + `growth_basis` — PEG'in böleni ve o büyümenin TANIMI.
+    İkisi birlikte verilir, biri tek başına gelirse uç kaydı reddediyor.
+    Sebebi ölçüldü: aynı gün aynı şirket için iki kaynak, biri ileriye
+    dönük büyümeyi öteki son on iki ayı böldüğü için ÜÇ KAT farklı PEG
+    veriyordu (MU'da 0,04 ile 0,12) ve hangisi olduğu hiçbir yerde
+    yazmıyordu. `growth_basis` ekranda oranın yanında yazılı çıkıyor:
+    "ileriye dönük 12 ay", "son 12 ay", "şirket öngörüsü 2027".
+
+Üçü de isteğe bağlı. Doğrulayamadığın bölen yazılmaz, o oran da basılmaz.
+
 --- 4. DEĞERLENDİR ---
 
 Sayfa metin değil, ÖNCE GÖRSEL: skor şeridi, altı metrik kartı, çeyreklik
@@ -745,6 +772,10 @@ curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
     "revenue_yoy_pct": 372,
     "eps": 39.25,
     "eps_surprise_pct": 14,
+    "eps_ttm": 73.76,
+    "book_value_per_share": null,
+    "growth_pct": null,
+    "growth_basis": null,
     "summary": ["<paragraf 1>", "<paragraf 2>", "<paragraf 3>"],
     "analysis": [
       {"title": "Gelirin motoru veri merkezi.", "body": "<5-8 cümle>"},

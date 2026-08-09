@@ -119,6 +119,17 @@ const BodySchema = z.object({
   eps: z.number().nullish(),
   eps_surprise_pct: z.number().nullish(),
 
+  /* ---- Değerleme girdileri ----
+     ORAN DEĞİL GİRDİ alınıyor; gerekçesi `lib/schema.ts` yorumunda. Oranı
+     sunum katmanı sayfadaki canlı fiyatla kuruyor.
+
+     `growth_pct` tek başına REDDEDİLİYOR (aşağıdaki superRefine): hangi
+     büyümenin bölündüğü söylenmeden yazılan bir PEG doğrulanamaz. */
+  eps_ttm: z.number().nullish(),
+  book_value_per_share: z.number().positive().nullish(),
+  growth_pct: z.number().nullish(),
+  growth_basis: z.string().trim().min(3).max(60).nullish(),
+
   summary: z.array(z.string().trim().min(40).max(2000)).min(1).max(6),
   analysis: z.array(SectionSchema).min(1).max(12),
   strengths: z.array(z.string().trim().min(10).max(300)).max(6).nullish(),
@@ -141,6 +152,23 @@ const BodySchema = z.object({
   /** Öngörü kartının altındaki üç mini ölçü. */
   guidance_footer: z.array(HighlightSchema).max(3).nullish(),
   sources: z.array(SourceSchema).max(20).nullish(),
+}).superRefine((body, ctx) => {
+  /* PEG'in böleni tanımıyla birlikte gelir, yoksa hiç gelmez.
+     Kural şemada değil burada, çünkü iki alan arasındaki bağı anlatıyor:
+     "%18,4 büyüme" tek başına doğrulanamaz — ileriye dönük mü, son on iki ay
+     mı? Aynı gün aynı şirket için iki kaynak, bu ayrım yüzünden üç kat
+     farklı PEG veriyordu. Sunum katmanı tanımı ekrana yazıyor; tanım yoksa
+     yazacak bir şey de yok. */
+  const hasGrowth = body.growth_pct !== null && body.growth_pct !== undefined;
+  const hasBasis = body.growth_basis !== null && body.growth_basis !== undefined;
+  if (hasGrowth !== hasBasis) {
+    ctx.addIssue({
+      code: "custom",
+      path: [hasGrowth ? "growth_basis" : "growth_pct"],
+      message:
+        "growth_pct ve growth_basis birlikte verilir: hangi büyümenin bölündüğü yazılmadan PEG doğrulanamaz.",
+    });
+  }
 });
 
 function authorized(request: Request): AuthOutcome {
@@ -224,6 +252,10 @@ export async function GET(request: Request) {
     revenue_yoy_pct: row.revenueYoyPct,
     eps: row.eps,
     eps_surprise_pct: row.epsSurprisePct,
+    eps_ttm: row.epsTtm,
+    book_value_per_share: row.bookValuePerShare,
+    growth_pct: row.growthPct,
+    growth_basis: row.growthBasis,
     summary: row.summary,
     analysis: row.analysis,
     strengths: row.strengths ?? [],
@@ -271,6 +303,8 @@ export async function POST(request: Request) {
           analysis: "[{title, body}] — 1-12 bölüm",
           "sayısal alanlar":
             "price, reaction_pct, market_cap, return_1y_pct, target_price, upside_pct, analyst_count, revenue, revenue_yoy_pct, eps, eps_surprise_pct — HAM sayı",
+          "değerleme girdileri":
+            "eps_ttm (F/K bölen) · book_value_per_share (PD/DD bölen, YALNIZCA banka/sigorta/GYO) · growth_pct + growth_basis (PEG bölen; ikisi birlikte verilir) — oran DEĞİL, bölen",
           strengths_risks_upcoming: "['madde', ...] en fazla 6",
           highlights: "[{label, value, note?, tone?}] — 6 metrik karti",
           quarterly_revenue:
@@ -329,6 +363,10 @@ export async function POST(request: Request) {
     revenueYoyPct: parsed.revenue_yoy_pct ?? null,
     eps: parsed.eps ?? null,
     epsSurprisePct: parsed.eps_surprise_pct ?? null,
+    epsTtm: parsed.eps_ttm ?? null,
+    bookValuePerShare: parsed.book_value_per_share ?? null,
+    growthPct: parsed.growth_pct ?? null,
+    growthBasis: parsed.growth_basis ?? null,
     summary: parsed.summary,
     analysis: parsed.analysis,
     strengths: parsed.strengths ?? null,
