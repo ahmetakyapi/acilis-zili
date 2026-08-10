@@ -54,12 +54,58 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  /**
+   * Görsel optimizasyonu — dönüşüm sayısı için ayarlandı.
+   *
+   * Sitedeki TEK görsel kaynağı şirket logoları: 671 sembol, hepsi
+   * `static2.finnhub.io`, hepsi 1000×1000 PNG ve 30-83 KB. Vercel ücretsiz
+   * kotası bir ayda doldu (3.748 dönüşüm) ve sebebi ölçüldü.
+   *
+   * `unoptimized` ÇÖZÜM DEĞİL, ilk akla gelen o olsa da: Vercel'in belgesi
+   * "10 KB altındaki görselleri optimize etme" diyor ama bizimkiler 30-83 KB
+   * ve ekranda 22-64 piksellik yuvalarda duruyor. Optimizasyonu kapatmak,
+   * 26 piksellik bir hücreye 60 KB'lık bir PNG yollamak demek — telefonda
+   * altmış logolu bir listede 3,6 MB.
+   *
+   * İki gerçek sebep vardı:
+   *
+   * 1) ÖNBELLEK ÖMRÜ. Finnhub logoları `cache-control: no-store` ile
+   *    yayınlıyor; Next bunu `Math.max(minimumCacheTTL, üstKaynak)` ile
+   *    tabanlıyor, yani ömrü belirleyen tek şey bizim değerimiz. Varsayılan
+   *    4 saat: aynı logo ayda 180 kez yeniden dönüştürülüyordu. Logolar
+   *    yıllarca değişmiyor — 31 güne çekildi.
+   *
+   * 2) GENİŞLİK SAYISI. Çağrı yerleri 16'dan 64'e onbir ayrı `width`
+   *    kullanıyor ve Next her biri için 1x + 2x istiyor; varsayılan
+   *    `imageSizes` ile bu 32, 48, 64, 96, 128 olmak üzere BEŞ ayrı
+   *    genişliğe çıkıyordu. Her (logo × genişlik) çifti ayrı bir dönüşüm.
+   *    Liste ikiye indirildi: artık hangi `width` yazılırsa yazılsın yalnızca
+   *    64 ve 128 üretilebiliyor. 64 tek kat ekranları, 128 retinada en büyük
+   *    yuvayı (64 piksel) karşılıyor.
+   *
+   *    Kural çağrı yerlerinde değil BURADA duruyor, bilerek: on altı ayrı
+   *    dosyadaki `width` değerlerini hizalamak bir kereliğine çözerdi,
+   *    liste ise yarın yazılacak on yedinciyi de bağlıyor.
+   *
+   * Beklenen sonuç: dönüşüm sayısı trafikle değil KATALOG BÜYÜKLÜĞÜYLE
+   * sınırlanıyor — 671 logo × 2 genişlik = ayda en çok 1.342, üstelik
+   * bunun için bütün katalogun görüntülenmiş olması gerekiyor.
+   *
+   * `formats` ve `qualities` varsayılanda bırakıldı: ikisi de zaten TEK
+   * değer taşıyor (`image/webp`, 75) ve Vercel'in "birden fazlaysa birini
+   * kaldır" önerisi bizde karşılıksız.
+   */
   images: {
     remotePatterns: [
       // Finnhub şirket logoları
       { protocol: "https", hostname: "static2.finnhub.io" },
       { protocol: "https", hostname: "static.finnhub.io" },
     ],
+    /* 31 gün. Logo değişirse (şirket markasını yeniler) bir aya kadar eski
+       hâli görünür — kabul edilebilir, çünkü alternatifi her dört saatte bir
+       yeniden dönüştürmek. */
+    minimumCacheTTL: 2678400,
+    imageSizes: [64, 128],
   },
   experimental: {
     turbopackFileSystemCacheForDev: true,
