@@ -120,7 +120,11 @@ export default async function TodayPage() {
               />
               {sessionLabel[status.session]}
             </span>
-            <span className="text-[13px] text-body">
+            {/* Tarih 13px sessiz gövdeydi ve yanındaki rozetle saatin
+                arasında üçüncü bir ağırlık gibi duruyordu; oysa "bugün hangi
+                gün" bu şeridin ana bilgisi. Yarı kalın koyu mürekkebe çıktı,
+                rozet ve saat ise künye kaldı. */}
+            <span className="text-[13.5px] font-semibold text-strong">
               {formatEtDateLong(status.etDate, locale)}
             </span>
             <LiveClock locale={locale} />
