@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { db } from "./db";
+import { logoSrc } from "./logos";
 import {
   dailyBriefs,
   earningsAnalyses,
@@ -497,7 +498,7 @@ export async function getSymbolNames(
           indexProxy: r.isIndexProxy,
           marketCap: r.currency === "USD" ? r.marketCap : null,
           shareOutstanding: r.currency === "USD" ? r.shareOutstanding : null,
-          logoUrl: r.logoUrl,
+          logoUrl: logoSrc(r.symbol, r.logoUrl),
           industry: r.industry,
         },
       ]),
@@ -540,6 +541,7 @@ export async function getCompanies(): Promise<CompanyRow[]> {
     // USD dışı piyasa değeri (ör. TWD) USD ile sıralanamaz — yok sayılır.
     return rows.map((r) => ({
       ...r,
+      logoUrl: logoSrc(r.symbol, r.logoUrl),
       marketCap: r.currency === "USD" ? r.marketCap : null,
     }));
   } catch {

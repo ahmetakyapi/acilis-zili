@@ -14,6 +14,7 @@ import {
   type ProviderResult,
   type Quote,
 } from "./types";
+import { logoSrc } from "@/lib/logos";
 
 export * as alpaca from "./alpaca";
 export * as finnhub from "./finnhub";
@@ -327,7 +328,14 @@ export async function getCompanyProfile(
     } catch {
       // yoksay
     }
-    return live;
+    /* Veritabanına KAYNAK adresi yazılıyor (indirme betiği onu okuyor),
+       ekrana dönen ise yerel dosya. İkisi ayrı: biri kaynak kaydı, öteki
+       sunum. Gerekçe `lib/logos.ts`'te. */
+    return ok(
+      { ...live.data, logoUrl: logoSrc(live.data.symbol, live.data.logoUrl) },
+      live.source,
+      { fetchedAt: live.fetchedAt, stale: live.stale },
+    );
   }
 
   try {
@@ -344,7 +352,7 @@ export async function getCompanyProfile(
           name: row.name,
           exchange: row.exchange,
           industry: row.industry,
-          logoUrl: row.logoUrl,
+          logoUrl: logoSrc(row.symbol, row.logoUrl),
           country: row.country,
           currency: row.currency,
           marketCap: row.marketCap,

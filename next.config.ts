@@ -96,16 +96,23 @@ const nextConfig: NextConfig = {
    * kaldır" önerisi bizde karşılıksız.
    */
   images: {
+    /* İYİLEŞTİRİCİ TAMAMEN KAPALI.
+       Yukarıdaki ayarlar (31 günlük önbellek, iki genişlik) dönüşüm sayısını
+       düşürüyordu ama kotaya bağlı kalmaya devam ediyordu — ve kota dolunca
+       iyileştirici HTTP 402 döndü, büyük şirketlerin logoları ekranda kırık
+       göründü. Kapalıyken `next/image` düz bir `<img>` basıyor; hiçbir kod
+       yolu bir daha dönüşüm faturalayamaz.
+
+       Boyut küçültme kaybolmuyor, YERE DEĞİŞTİRDİ: logolar `public/logos/`
+       altında 128 piksellik webp olarak duruyor (ortalama 1,4 KB) ve
+       `scripts/build-logos.mjs` tarafından bir kez üretiliyor. */
+    unoptimized: true,
+    /* Manifeste girmemiş yeni bir sembolün logosu hâlâ kaynaktan gelebilir;
+       `unoptimized` ile proxy'lenmiyor ama izin listesi yerinde kalsın. */
     remotePatterns: [
-      // Finnhub şirket logoları
       { protocol: "https", hostname: "static2.finnhub.io" },
       { protocol: "https", hostname: "static.finnhub.io" },
     ],
-    /* 31 gün. Logo değişirse (şirket markasını yeniler) bir aya kadar eski
-       hâli görünür — kabul edilebilir, çünkü alternatifi her dört saatte bir
-       yeniden dönüştürmek. */
-    minimumCacheTTL: 2678400,
-    imageSizes: [64, 128],
   },
   experimental: {
     turbopackFileSystemCacheForDev: true,
