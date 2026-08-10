@@ -219,9 +219,13 @@ function ListPanel({
   const router = useRouter();
 
   return (
-    <section className="panel">
+    /* `group/list`: liste başlığındaki silme düğmesi de satırlardaki gibi
+       imleç kartın üstündeyken çıkıyor. Kart başına bir tane olduğu için
+       satırlardaki kadar gürültülü değildi ama yıkıcı bir eylemin sürekli
+       ekranda durması için de bir sebep yok. */
+    <section className="panel group/list">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3 sm:px-5">
-        <h2 className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-strong">
+        <h2 className="flex items-center gap-2.5 text-[15.5px] font-bold tracking-[-0.01em] text-strong">
           <span
             aria-hidden
             className={cn(
@@ -230,7 +234,9 @@ function ListPanel({
             )}
           />
           {list.name}
-          <span className="numeral text-xs font-normal text-muted">
+          {/* Sayaç çıplak bir rakamdı ve liste adının devamı gibi
+              okunuyordu ("Semiconductors 9"). Kendi hapına girdi. */}
+          <span className="numeral rounded-full bg-surface-elevated px-2 py-[2px] text-[11px] font-semibold text-muted">
             {list.items.length}
           </span>
         </h2>
@@ -245,7 +251,7 @@ function ListPanel({
           }}
           aria-label={`${labels.deleteList}: ${list.name}`}
           title={labels.deleteList}
-          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted transition-colors hover:bg-down-wash hover:text-down"
+          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-100 transition hover:bg-down-wash hover:text-down opacity-0 group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <Trash weight="duotone" size={14} />
         </button>
@@ -366,9 +372,12 @@ function SortableRows({
             }}
             className="group flex items-center gap-2 px-2 py-2.5 transition-colors hover:bg-primary-tint sm:px-3"
           >
+            {/* Tutamak yalnızca imleç satırın üstündeyken görünür. Dokuz
+                satırın hepsinde sürekli duran gri bir nokta ızgarası, listenin
+                sol kenarında ikinci bir sütun gibi okunuyordu. */}
             <span
               aria-hidden
-              className="hidden cursor-grab touch-none text-muted/60 group-hover:text-muted sm:block"
+              className="hidden cursor-grab touch-none text-muted/60 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-hover:text-muted [@media(hover:none)]:opacity-100 sm:block"
               title="Sürükleyerek sırala"
             >
               <DotsSixVertical weight="duotone" size={15} />
@@ -403,10 +412,16 @@ function SortableRows({
               </span>
             </Link>
 
-            <span className="numeral shrink-0 text-right text-sm text-body">
+            {/* Fiyat SABİT GENİŞLİKTE bir sütun. Genişlik içeriğe bağlıydı
+                ("539,58" ile "1.211,61" arasında yirmi piksel fark var) ve
+                sayılar sağdan hizasız duruyordu; okuyucu dokuz satırı
+                karşılaştıramıyordu. Ayrıca fiyat gövde mürekkebindeydi ve
+                yanındaki renkli yüzde rozeti onu gölgede bırakıyordu — oysa
+                satırın ana sayısı fiyat. */}
+            <span className="numeral w-[92px] shrink-0 text-right text-sm font-semibold text-strong">
               {quote ? formatPrice(quote.price, locale) : "—"}
             </span>
-            <span className="w-20 shrink-0 text-right">
+            <span className="flex w-[86px] shrink-0 justify-end">
               {quote ? (
                 <ChangePill
                   changePct={quote.changePct}
@@ -418,8 +433,28 @@ function SortableRows({
               )}
             </span>
 
-            {/* Dokunmatik sıralama okları */}
-            <span className="flex shrink-0 flex-col">
+            {/* Sıralama okları ve silme, İMLEÇ SATIRDAYKEN çıkar.
+                Üç ikon her satırda sürekli duruyordu: dokuz satırlık bir
+                listede yirmi yedi düğme, üstelik biri yıkıcı.
+
+                KOŞUL GENİŞLİK DEĞİL, İMLEÇ VARLIĞI — ve kural CASCADE
+                SIRASINA göre kuruldu. Önce `sm:opacity-0` yazılmıştı: geniş
+                ekranlı bir dokunmatik cihazda (tablet) düğmeler gizleniyor
+                ve onları geri getirecek hover olayı hiç gelmiyordu.
+
+                İkinci deneme `[@media(hover:hover)]:opacity-0` idi ve
+                üretilen CSS ölçülünce o da yanlış çıktı: Tailwind serbest
+                varyantları en sona basıyor, yani gizleyen kural gösterenden
+                SONRA geliyor ve aynı özgüllükte olduğu için hover hiç
+                çalışmıyordu.
+
+                Doğrusu ters kurmak: taban gizli, hover ve klavye açıyor,
+                DOKUNMATİK için `[@media(hover:none)]` sonda geldiği için
+                tabanı eziyor ve orada düğmeler hep açık kalıyor.
+
+                Klavyeyle gezen okuyucu için `group-focus-within` var: sekme
+                tuşu satıra girdiğinde hepsi görünür oluyor. */}
+            <span className="flex shrink-0 flex-col opacity-100 transition-opacity opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
               <button
                 type="button"
                 onClick={() => nudge(item.id, -1)}
@@ -449,7 +484,7 @@ function SortableRows({
                 router.refresh();
               }}
               aria-label={`${labels.deleteList}: ${item.symbol}`}
-              className="inline-flex size-7 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 transition-colors hover:bg-down-wash hover:text-down"
+              className="inline-flex size-7 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 opacity-100 transition hover:bg-down-wash hover:text-down opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
             >
               <Trash weight="duotone" size={13} />
             </button>

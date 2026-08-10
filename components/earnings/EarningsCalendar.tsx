@@ -200,19 +200,31 @@ function DaySection({
 
   return (
     <section aria-label={date}>
-      {/* ---- Gün başlığı ---- */}
-      <div className="mb-3.5 flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
-        <h2 className="text-[19px] font-bold tracking-[-0.025em] text-strong">
-          {formatEtDateLong(date, locale)}
-        </h2>
-        <span className="figure text-[12.5px] text-muted">
-          {rows.length} {t.earnings.companiesCount}
-        </span>
-        {isToday && (
-          <span className="rounded-full bg-down-wash px-[9px] py-[3px] text-[10.5px] font-bold tracking-[0.05em] text-down">
-            {t.earnings.today.toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
+      {/* ---- Gün başlığı ----
+          YAPIŞKAN VE KURALLI. Takvim beş gün alt alta akıyordu ve günleri
+          birbirinden ayıran tek şey 19px'lik bir tarihti; kartların kendi
+          başlıkları ondan pek küçük olmadığı için sayfa tek bir kart
+          denizi gibi okunuyordu. Kalın kural bölümü açıyor, tarih kartların
+          üstüne çıkıyor ve o günün kartları arasında ilerlerken tarih
+          ekranın üstünde asılı kalıyor.
+
+          Rehber sayfasındaki bölüm başlığıyla AYNI dil — iki uzun liste
+          sayfası aynı şekilde bölünüyor. `top-16` uygulamanın yapışkan
+          çubuğunun bir tık altında; gerekçesi orada anlatılı. */}
+      <div className="sticky top-16 z-10 mb-4 bg-page pt-1">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 border-t-2 border-strong pb-3 pt-3">
+          <h2 className="text-[21px] font-bold tracking-[-0.03em] text-strong">
+            {formatEtDateLong(date, locale)}
+          </h2>
+          <span className="figure text-[12.5px] text-muted">
+            {rows.length} {t.earnings.companiesCount}
           </span>
-        )}
+          {isToday && (
+            <span className="rounded-full bg-down-wash px-[9px] py-[3px] text-[10.5px] font-bold tracking-[0.05em] text-down">
+              {t.earnings.today.toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* ---- Katman 1: hero satırları ---- */}
@@ -413,20 +425,47 @@ function DaySection({
                   />
                 )}
                 {/* Her sayı kendi etiketiyle: dar kartta "1,84 Mr" tek
-                    başına gelir mi kâr mı belli olmuyordu. */}
-                <dl className="mt-auto flex flex-col gap-[3px] border-t border-line pt-[9px] text-[11.5px]">
-                  {(headline ? [headline, ...rest] : rest).map((figure) => (
-                    <div
-                      key={figure.label}
-                      className="flex items-baseline justify-between gap-2"
+                    başına gelir mi kâr mı belli olmuyordu.
+
+                    MANŞET SAYI AYRIŞTI. Üç ölçü de aynı 11,5px'te, aynı
+                    ağırlıkta, alt alta duruyordu; bir günde altı kart, dört
+                    gün üst üste gelince sayfa gri satırlardan bir duvara
+                    dönüşüyordu ve hiçbir kartın odağı yoktu. Artık gelir
+                    beklentisi (yoksa EPS) kendi büyük puntosunda, kalan iki
+                    ölçü onun altında sessiz bir künye. Kartın taşıdığı bilgi
+                    aynı, okuma sırası farklı. */}
+                <div className="mt-auto border-t border-line pt-[9px]">
+                  {headline && (
+                    <>
+                      <p className="plate text-[9.5px] tracking-[0.08em]">
+                        {headline.label}
+                      </p>
+                      <p className="figure mt-[3px] text-[16px] font-bold leading-none tracking-[-0.03em] text-strong">
+                        {headline.value}
+                      </p>
+                    </>
+                  )}
+                  {rest.length > 0 && (
+                    <dl
+                      className={cn(
+                        "flex flex-col gap-[2px] text-[11px]",
+                        headline && "mt-2",
+                      )}
                     >
-                      <dt className="text-muted">{figure.label}</dt>
-                      <dd className="figure font-semibold text-body">
-                        {figure.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
+                      {rest.map((figure) => (
+                        <div
+                          key={figure.label}
+                          className="flex items-baseline justify-between gap-2"
+                        >
+                          <dt className="text-muted">{figure.label}</dt>
+                          <dd className="figure font-semibold text-body">
+                            {figure.value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                </div>
               </div>
             );
           })}

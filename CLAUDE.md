@@ -88,6 +88,17 @@ dönüşümünün tamamı orada, başka yerde manuel saat aritmetiği yapılmaz.
    anlık kotasyonu, grafik son dakika barının kapanışını yazıyordu; ikisi
    tanımı gereği farklı sayılar ve yan yana durunca hata gibi okunuyor.
 
+## Commit'leme
+
+**Bir oturumda iki-üç commit.** Her mikro düzeltme ya da her ekran için ayrı
+commit atma; kullanıcı arka arkaya iş sıraladığında hepsini bitir, sonra
+konu bazında topla. Ölçü: yapılanlar tek bir başlıkta özetlenebiliyorsa tek
+commit; "görsel iyileştirme" ile "performans" gibi iki farklı alan varsa iki.
+
+Mesele commit SAYISI, mesaj detayı değil — gövdede her değişikliğin gerekçesi
+ayrı paragraf olarak yazılmaya devam eder. Sekiz-on küçük commit geçmişi
+taranamaz hâle getiriyor.
+
 ## Bilinmesi gerekenler
 
 - **Depo herkese açık.** `BRIEF_SECRET` ve `CRON_SECRET` asla commit'lenmez.
