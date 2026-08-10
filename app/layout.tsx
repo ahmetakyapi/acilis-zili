@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { getI18n, getTheme } from "@/lib/i18n";
 import { INDEXABLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
@@ -96,7 +97,10 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${bodyFace.variable} h-full`}
     >
-      <body className="min-h-full antialiased">{children}</body>
+      <body className="min-h-full antialiased">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
