@@ -671,8 +671,15 @@ function MoverPanel({
           const width = Math.max((Math.abs(changePct) / peak) * 100, 4);
           return (
             <li key={row.member.symbol}>
+              {/* prefetch={false}: bu bağlantı bir LİSTE SATIRINDA ve satır
+                  sayısı altmışa çıkıyor. Next varsayılanı, görünür alana
+                  giren her bağlantıyı önden ısıtıyor — altmış satır altmış
+                  sunucu isteği demek. Sitedeki öteki liste satırları
+                  (şirketler, bilanço takvimi, analiz tablosu) bunu zaten
+                  yapıyordu; endeks bileşenleri gözden kaçmış. */}
               <Link
                 href={`/hisse/${row.member.symbol}`}
+                prefetch={false}
                 className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
               >
                 <div className="flex items-baseline justify-between gap-3">
@@ -924,6 +931,7 @@ function MembersTable({
                   <td className="px-3 py-2.5 pl-4 sm:pl-3">
                     <Link
                       href={`/hisse/${row.member.symbol}`}
+                      prefetch={false}
                       /* -my-2 py-2: bağlantı hücreyi doldurmadığı için
                          dokunma hedefi metnin kendi 20px'iyle sınırlıydı.
                          Dolgu onu satır yüksekliğine yayar, negatif margin

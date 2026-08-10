@@ -376,6 +376,7 @@ function SortableRows({
 
             <Link
               href={`/hisse/${item.symbol}`}
+              prefetch={false}
               className="flex min-w-0 flex-1 items-center gap-2.5"
             >
               {logos[item.symbol] ? (

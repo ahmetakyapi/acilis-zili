@@ -70,6 +70,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
               <li key={item.id}>
                 <Link
                   href={`/haberler/${item.id}`}
+                  prefetch={false}
                   className="flex gap-3.5 px-4 py-3.5 transition-colors hover:bg-primary-tint sm:gap-4 sm:px-5"
                 >
                   <span className="min-w-0 flex-1">
