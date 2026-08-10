@@ -129,7 +129,7 @@ export default async function TodayPage() {
           {/* Sayfanın en büyük sayısı — zil geri sayımı.
               Bu satır aynı zamanda sayfanın H1'i: ana sayfada hiç `h1` yoktu
               (denetimde çıktı), ekran okuyucu ve arama motoru için sayfa
-              başlıksız görünüyordu. Geri sayım + "açılış ziline kaldı"
+              başlıksız görünüyordu. Geri sayım + "Açılış Ziline Kaldı"
               zaten sayfanın ne anlattığını söyleyen cümle; görünüm
               değişmiyor, yalnızca etiket doğru olanla değişti. */}
           <h1 className="mt-3.5 flex flex-wrap items-end gap-3.5">
@@ -143,8 +143,13 @@ export default async function TodayPage() {
               }}
               className="tote display-ink text-[44px] leading-none sm:text-[66px]"
             />
+            {/* Etiket sözlükteki hâliyle basılır. Bir süre burada
+                `toLocaleLowerCase` vardı ve sözlükte Title Case yazan metni
+                ekranda küçültüyordu — sayfanın H1'i "açılış ziline kaldı"
+                diye okunuyordu. Vurgu taşıyan metin Title Case yazılır ve
+                bundan büyük vurgulu bir yer yok. */}
             <span className="pb-1.5 text-[13px] font-normal text-body sm:pb-2.5 sm:text-[15px]">
-              {countdownLabel.toLocaleLowerCase(locale === "tr" ? "tr-TR" : "en-US")}
+              {countdownLabel}
             </span>
           </h1>
         </header>
@@ -368,12 +373,13 @@ async function RailSection({
     amc: "16:00",
     dmh: "12:00",
   };
-  const lower = (value: string) =>
-    value.toLocaleLowerCase(locale === "tr" ? "tr-TR" : "en-US");
+  /* Pencere adı sözlükteki Title Case hâliyle basılır. Bir süre burada
+     küçültülüyordu — künye kuralı gereği — ama bu satır bir ölçünün altındaki
+     mikro künye değil, kartın taşıdığı iki bilgiden biri: "ne zaman". */
   const EARNINGS_WINDOW: Record<string, string> = {
-    bmo: lower(t.earnings.beforeOpen),
-    amc: lower(t.earnings.afterClose),
-    dmh: lower(t.earnings.duringMarket),
+    bmo: t.earnings.beforeOpen,
+    amc: t.earnings.afterClose,
+    dmh: t.earnings.duringMarket,
   };
 
   const earningsItems: RailEvent[] = earnings

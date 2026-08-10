@@ -148,12 +148,20 @@ export function BriefBody({
     return <BriefLines lines={lines} startNumber={1} size={size} />;
   }
 
-  // Açıkta duran kısım: ilk paragraf + onu izleyen ilk üç madde.
+  /* Açıkta duran kısım: ilk paragraf + onu izleyen ilk üç madde.
+     Maddesiz metinde (haftalık bülten düz paragraf yazılıyor) eşik ikiydi
+     ve üç paragraflık bir özette "Tümünü Gör" TEK paragraf için çıkıyordu. */
   const firstBulletAt = lines.findIndex((line) => line.trim().startsWith("- "));
-  const cut =
+  const base =
     firstBulletAt === -1
-      ? Math.min(lines.length, 2)
+      ? Math.min(lines.length, 3)
       : Math.min(lines.length, firstBulletAt + 3);
+
+  /* Geriye tek satır kalıyorsa hiç katlanmıyor. Bir paragrafı saklayan
+     katlama, kendi düğmesi kadar yer tutuyor ve okuyucuya hiçbir şey
+     kazandırmıyor — üstelik "arkada çok şey var" diye yanlış bir izlenim
+     bırakıyor. Kural iki bülten türüne de aynı işliyor. */
+  const cut = lines.length - base <= 1 ? lines.length : base;
 
   return (
     <>

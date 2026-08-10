@@ -25,7 +25,7 @@ const en: typeof tr = {
     settings: "Settings",
     search: "Search",
     searchPlaceholder: "Search stocks — symbol or company name",
-    searchTrigger: "Search symbol or event",
+    searchTrigger: "Search Symbol or Event",
     searchPopular: "Popular",
     searchWritings: "Writing",
     searchHintMove: "move",

@@ -24,7 +24,7 @@ const tr = {
     settings: "Ayarlar",
     search: "Ara",
     searchPlaceholder: "Hisse ara — sembol veya şirket adı",
-    searchTrigger: "Sembol veya olay ara",
+    searchTrigger: "Sembol veya Olay Ara",
     searchPopular: "Popüler",
     searchWritings: "Yazılar",
     searchHintMove: "gez",
