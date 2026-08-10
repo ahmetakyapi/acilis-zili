@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { SESSION_BOUNDS } from "@/lib/market-hours";
 
@@ -492,10 +493,20 @@ export function DayRail({
                 style={{ left, top: AXIS_CENTER + 8, height: chipTop - AXIS_CENTER - 10 }}
               />
               {/* Kart — bağ çizgilerinin ÜSTÜNDE durur: komşu kartın çizgisi
-                  kartın arkasından geçer, içinden değil. */}
-              <div
+                  kartın arkasından geçer, içinden değil.
+
+                  KART ARTIK BİR BAĞLANTI. Şeritte "bugün SPG bilanço
+                  açıklıyor" yazıyordu ve okuyucunun bir sonraki adımı yoktu;
+                  sembolü görüp menüden bilanço takvimini bulmak zorundaydı.
+
+                  Bilanço kartı takvime, veri kartı ekonomik takvime gidiyor.
+                  Analiz sayfasına (`/bilancolar/{sembol}/{dönem}`) GİTMİYOR,
+                  bilerek: şeritteki bilançolar BUGÜNÜN, analiz ise ertesi
+                  sabah yazılıyor — bağlantı açıldığı gün 404 verirdi. */}
+              <Link
+                href={isEarnings ? "/bilancolar" : "/takvim"}
                 className={cn(
-                  "absolute z-10 flex flex-col rounded-[12px] border border-line bg-surface-solid px-3 py-2.5 text-center",
+                  "panel-hover absolute z-10 flex flex-col rounded-[12px] border border-line bg-surface-solid px-3 py-2.5 text-center transition-colors",
                   high && "border-l-[3px] border-l-down",
                   !high && event.watched && "border-l-[3px] border-l-primary",
                 )}
@@ -552,7 +563,7 @@ export function DayRail({
                     {event.detail}
                   </div>
                 )}
-              </div>
+              </Link>
             </div>
           );
         })}
