@@ -43,6 +43,54 @@ const SIZE = 128;
 /** Sağlayıcı arka arkaya yüzlerce istekte yavaşlıyor; ölçülü paralellik. */
 const CONCURRENCY = 8;
 
+/**
+ * Windows'un rezerve cihaz adları. Bu adlarda dosya OLUŞTURULAMIYOR —
+ * uzantı eklemek de kurtarmıyor, `CON.webp` de yasak.
+ *
+ * CON gerçek bir sembol (Concentra Group) ve `public/logos/CON.webp` bir
+ * süre depoda öylece durdu: Linux'ta ve CI'da sorun çıkarmadı, deploy da
+ * aldı. Windows'ta ise depoyu KLONLANAMAZ yaptı — `git clone` bütün objeleri
+ * indirdikten sonra checkout aşamasında `invalid path` ile düşüyor ve geriye
+ * çalışan ağaç yerine boş bir dizin kalıyor. Tek bir logonun eksikliği değil,
+ * projeye hiç girilememesi.
+ *
+ * Rezerve adlı semboller diske sonuna alt çizgi eklenerek yazılıyor
+ * (`CON` → `CON_.webp`). Sembolün kendisi değişmiyor: eşleme manifeste
+ * giriyor, adresi `logoSrc()` oradan kuruyor.
+ */
+const RESERVED_NAMES = new Set([
+  "CON",
+  "PRN",
+  "AUX",
+  "NUL",
+  ...Array.from({ length: 9 }, (_, i) => `COM${i + 1}`),
+  ...Array.from({ length: 9 }, (_, i) => `LPT${i + 1}`),
+]);
+
+/**
+ * Sembolün diskteki dosya adı, uzantısız.
+ *
+ * Alt çizgiyle biten sembol de kaçırılıyor, yoksa eşleme tersine çevrilemez
+ * olurdu: `CON_` diye bir sembol `CON`la AYNI dosyaya yazar ve biri diğerini
+ * sessizce ezerdi. Böyle bir ticker yok, ama kaçış iki koşula bakıyor ve
+ * karşılığında dosya adı ↔ sembol birebir kalıyor — kodlanan her ad alt
+ * çizgiyle biter, kodlanmayan hiçbiri bitmez.
+ */
+function logoFileName(symbol) {
+  const kacisGerek =
+    RESERVED_NAMES.has(symbol.toUpperCase()) || symbol.endsWith("_");
+  return kacisGerek ? `${symbol}_` : symbol;
+}
+
+/** `logoFileName`in tersi: dosya adından sembole. */
+function logoSymbol(fileName) {
+  if (!fileName.endsWith("_")) return fileName;
+  const stripped = fileName.slice(0, -1);
+  return RESERVED_NAMES.has(stripped.toUpperCase()) || stripped.endsWith("_")
+    ? stripped
+    : fileName;
+}
+
 async function databaseUrl() {
   const env = await readFile(path.join(ROOT, ".env.local"), "utf8");
   const match = env.match(/^DATABASE_URL=(.*)$/m);
@@ -70,7 +118,7 @@ async function main() {
   const varOlan = new Set(
     (await readdir(OUT_DIR).catch(() => []))
       .filter((f) => f.endsWith(".webp"))
-      .map((f) => f.replace(/\.webp$/, "")),
+      .map((f) => logoSymbol(f.replace(/\.webp$/, ""))),
   );
 
   const basarili = [...varOlan];
@@ -95,7 +143,10 @@ async function main() {
           })
           .webp({ quality: 82 })
           .toBuffer();
-        await writeFile(path.join(OUT_DIR, `${row.symbol}.webp`), webp);
+        await writeFile(
+          path.join(OUT_DIR, `${logoFileName(row.symbol)}.webp`),
+          webp,
+        );
         basarili.push(row.symbol);
       } catch (error) {
         hatalar.push(`${row.symbol}: ${error.message}`);
@@ -108,12 +159,21 @@ async function main() {
 
   basarili.sort();
   const liste = basarili.map((s) => `  "${s}",`).join("\n");
+  /* Neredeyse her sembolün dosya adı kendisi; eşlemeye yalnızca istisnalar
+     giriyor, altı yüz satırlık ikinci bir liste değil. */
+  const esleme = basarili
+    .filter((s) => logoFileName(s) !== s)
+    .map((s) => `  ["${s}", "${logoFileName(s)}"],`)
+    .join("\n");
   await writeFile(
     MANIFEST,
     `/* ÜRETİLEN DOSYA — elle düzenleme. Kaynak: scripts/build-logos.mjs\n` +
       `   Yerel logosu olan semboller; dosyalar public/logos/{SEMBOL}.webp.\n` +
+      `   LOGO_FILE_OVERRIDES'takiler istisna: adları Windows'ta rezerve\n` +
+      `   olduğu için dosyaları başka adla duruyor.\n` +
       `   Gerekçe betiğin başında. */\n\n` +
-      `export const LOCAL_LOGOS: ReadonlySet<string> = new Set([\n${liste}\n]);\n`,
+      `export const LOCAL_LOGOS: ReadonlySet<string> = new Set([\n${liste}\n]);\n\n` +
+      `export const LOGO_FILE_OVERRIDES: ReadonlyMap<string, string> = new Map([\n${esleme}\n]);\n`,
     "utf8",
   );
 

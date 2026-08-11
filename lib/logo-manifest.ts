@@ -1,5 +1,7 @@
 /* ÜRETİLEN DOSYA — elle düzenleme. Kaynak: scripts/build-logos.mjs
    Yerel logosu olan semboller; dosyalar public/logos/{SEMBOL}.webp.
+   LOGO_FILE_OVERRIDES'takiler istisna: adları Windows'ta rezerve
+   olduğu için dosyaları başka adla duruyor.
    Gerekçe betiğin başında. */
 
 export const LOCAL_LOGOS: ReadonlySet<string> = new Set([
@@ -689,4 +691,8 @@ export const LOCAL_LOGOS: ReadonlySet<string> = new Set([
   "ZBRA",
   "ZTS",
   "ZURA",
+]);
+
+export const LOGO_FILE_OVERRIDES: ReadonlyMap<string, string> = new Map([
+  ["CON", "CON_"],
 ]);

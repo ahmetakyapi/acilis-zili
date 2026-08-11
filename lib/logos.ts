@@ -1,4 +1,4 @@
-import { LOCAL_LOGOS } from "./logo-manifest";
+import { LOCAL_LOGOS, LOGO_FILE_OVERRIDES } from "./logo-manifest";
 
 /**
  * Şirket logosunun adresi — önce DEPODAN.
@@ -19,11 +19,18 @@ import { LOCAL_LOGOS } from "./logo-manifest";
  * o logo optimize edilmeden, olduğu gibi yüklenir. Tek bir sembol için
  * kabul edilebilir bir bedel ve durum gözle görülüyor — betiği çalıştırınca
  * kendiliğinden düzeliyor.
+ *
+ * DOSYA ADI SEMBOLE EŞİT DEĞİL olabilir: Windows'ta rezerve cihaz adı taşıyan
+ * semboller (CON, PRN, AUX, NUL, COM1-9, LPT1-9) diskte alt çizgiyle duruyor,
+ * yoksa depo Windows'ta klonlanamıyor. Eşleme manifestte, gerekçesi
+ * `scripts/build-logos.mjs` içinde.
  */
 export function logoSrc(
   symbol: string,
   remote: string | null | undefined,
 ): string | null {
-  if (LOCAL_LOGOS.has(symbol)) return `/logos/${symbol}.webp`;
+  if (LOCAL_LOGOS.has(symbol)) {
+    return `/logos/${LOGO_FILE_OVERRIDES.get(symbol) ?? symbol}.webp`;
+  }
   return remote ?? null;
 }
