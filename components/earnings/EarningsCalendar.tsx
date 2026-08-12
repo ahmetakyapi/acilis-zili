@@ -295,10 +295,10 @@ function DaySection({
               <div className="border-t border-line pt-3 sm:ml-auto sm:shrink-0 sm:border-0 sm:pt-0 sm:text-right">
                 {headline ? (
                   <>
-                    <p className="plate text-[10px] tracking-[0.09em]">
+                    <p className="plate text-[10.5px] tracking-[0.09em]">
                       {headline.label}
                     </p>
-                    <p className="figure mt-[3px] text-[19px] font-bold tracking-[-0.03em] text-strong sm:text-[21px]">
+                    <p className="figure mt-[3px] text-[20px] font-bold tracking-[-0.03em] text-strong sm:text-[22px]">
                       {headline.value}
                     </p>
                   </>
@@ -306,7 +306,7 @@ function DaySection({
                   <p className="text-xs text-muted">{t.common.noData}</p>
                 )}
                 {rest.length > 0 && (
-                  <dl className="mt-2 flex flex-col gap-[3px] text-[11.5px] sm:items-end">
+                  <dl className="mt-2 flex flex-col gap-[3px] text-[12.5px] sm:items-end">
                     {rest.map((figure) => (
                       <div
                         key={figure.label}
@@ -396,7 +396,7 @@ function DaySection({
                     kartta zaten dolu; ikon oraya sığmıyordu. */}
                 <div className="flex min-w-0 items-start gap-1">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[14.5px] font-bold tracking-[-0.01em] text-strong">
+                    <p className="text-[15.5px] font-bold tracking-[-0.01em] text-strong">
                       {watchSet.has(row.symbol) && (
                         <span aria-hidden className="mr-1 text-primary">
                           ★
@@ -404,7 +404,7 @@ function DaySection({
                       )}
                       {row.symbol}
                     </p>
-                    <p className="truncate text-[11.5px] text-muted">
+                    <p className="truncate text-[12.5px] text-muted">
                       {m?.name ?? ""}
                     </p>
                   </div>
@@ -433,14 +433,16 @@ function DaySection({
                     dönüşüyordu ve hiçbir kartın odağı yoktu. Artık gelir
                     beklentisi (yoksa EPS) kendi büyük puntosunda, kalan iki
                     ölçü onun altında sessiz bir künye. Kartın taşıdığı bilgi
-                    aynı, okuma sırası farklı. */}
+                    aynı, okuma sırası farklı. Puntolar sonradan bir kademe
+                    büyütüldü (16→18, 11→12.5): sayılar bir bakışta
+                    okunmuyordu, hiyerarşi aynı kaldı. */}
                 <div className="mt-auto border-t border-line pt-[9px]">
                   {headline && (
                     <>
-                      <p className="plate text-[9.5px] tracking-[0.08em]">
+                      <p className="plate text-[10px] tracking-[0.08em]">
                         {headline.label}
                       </p>
-                      <p className="figure mt-[3px] text-[16px] font-bold leading-none tracking-[-0.03em] text-strong">
+                      <p className="figure mt-[3px] text-[18px] font-bold leading-none tracking-[-0.03em] text-strong">
                         {headline.value}
                       </p>
                     </>
@@ -448,7 +450,7 @@ function DaySection({
                   {rest.length > 0 && (
                     <dl
                       className={cn(
-                        "flex flex-col gap-[2px] text-[11px]",
+                        "flex flex-col gap-[2px] text-[12.5px]",
                         headline && "mt-2",
                       )}
                     >

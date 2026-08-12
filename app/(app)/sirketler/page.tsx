@@ -495,13 +495,16 @@ async function CompaniesTable({
                             changePct={quote.changePct}
                             locale={locale}
                             size="sm"
-                            className="px-1 sm:px-1.5"
+                            /* sm:text-…: dar ekranda pilin 11px'i kalıyor
+                               (390px'te dört sütun zor sığıyor), geniş
+                               ekranda sayı bir bakışta okunacak boya çıkıyor. */
+                            className="px-1 sm:px-2 sm:text-[12.5px]"
                           />
                         ) : (
                           <span className="text-xs text-muted">—</span>
                         )}
                       </td>
-                      <td className="numeral hidden px-3 py-3 text-right sm:table-cell">
+                      <td className="numeral hidden px-3 py-3 text-right text-[14.5px] sm:table-cell">
                         {weekly[company.symbol] !== undefined ? (
                           <span
                             className={cn(
@@ -517,8 +520,10 @@ async function CompaniesTable({
                       </td>
                       {/* Fiyat satırın ÇAPASI: değişim, hafta, piyasa değeri
                           ve hacim hep ona göre okunuyor. Diğerleriyle aynı
-                          ağırlıkta yazılınca sayı dizisinin içinde kayboluyordu. */}
-                      <td className="numeral px-1 py-3 text-right text-[13px] font-bold text-strong sm:px-3 sm:text-[13.5px]">
+                          ağırlıkta yazılınca sayı dizisinin içinde kayboluyordu.
+                          Boylar bir kademe büyütüldü: 13/13.5 punto sayılar
+                          "bir bakışta" okunmuyordu, tablo sayı tablosu. */}
+                      <td className="numeral px-1 py-3 text-right text-[13.5px] font-bold text-strong sm:px-3 sm:text-[15px]">
                         {quote ? formatPrice(quote.price, locale) : "—"}
                       </td>
                       {/* Piyasa değeri telefonda da FİYATIN SAĞINDA, kendi
@@ -529,12 +534,12 @@ async function CompaniesTable({
                           okunuyordu. Ayrı sütunda ikisi de kendi başlığının
                           altında duruyor; 390px'e dört sütun, kalan yerler
                           daraltılarak sığdı. */}
-                      <td className="numeral py-3 pl-1 pr-3 text-right text-[12px] font-semibold text-body sm:px-3 sm:text-[13px]">
+                      <td className="numeral py-3 pl-1 pr-3 text-right text-[12.5px] font-semibold text-body sm:px-3 sm:text-[14px]">
                         {company.marketCap
                           ? `$${formatCompact(company.marketCap, locale)}`
                           : "—"}
                       </td>
-                      <td className="numeral hidden px-4 py-3 text-right text-soft sm:table-cell sm:px-5">
+                      <td className="numeral hidden px-4 py-3 text-right text-[14.5px] text-soft sm:table-cell sm:px-5">
                         {formatVolume(quote?.volume ?? company.volume, locale)}
                       </td>
                     </tr>

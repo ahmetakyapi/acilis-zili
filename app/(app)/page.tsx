@@ -1430,7 +1430,7 @@ async function LatestWriting({
   t: Dictionary;
 }) {
   const [analyses, stories] = await Promise.all([
-    getAnalyses(locale, { limit: 3 }),
+    getAnalyses(locale, { limit: 4 }),
     getStories(locale, 3),
   ]);
 
@@ -1445,11 +1445,12 @@ async function LatestWriting({
 
   return (
     <div
-      /* `items-start`: iki panel satırın en uzununa gerilirse kısa olanın
-         altında sebepsiz bir boşluk kalıyor — analiz satırları iki, yazı
-         başlıkları çoğu zaman üç satır. Her panel kendi boyunda. */
+      /* Paneller satırın en uzununa gerilir (grid'in stretch varsayılanı).
+         Önceden `items-start` ile her panel kendi boyundaydı ama kısa kartın
+         ALTINDA kalan boşluk, kartın İÇİNDE kalan boşluktan daha bozuk
+         görünüyor — yan yana kartlar hep aynı boyda olacak. */
       className={cn(
-        "grid items-start gap-4 lg:col-start-1 lg:row-start-2",
+        "grid gap-4 lg:col-start-1 lg:row-start-2",
         analyses.length > 0 && stories.length > 0 && "sm:grid-cols-2",
       )}
     >
