@@ -28,8 +28,37 @@ import { symbols as symbolsTable } from "@/lib/schema";
 import { ALL_MEMBERS } from "@/db/seed/indices";
 import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
 
-/** Şirket haberi çekilen en büyük şirket sayısı — Finnhub dakikada 60 istek. */
-const COMPANY_NEWS_SYMBOLS = 20;
+/**
+ * BÜTÇE. Finnhub ücretsiz katmanı dakikada 60 istek kabul ediyor ve bu
+ * fonksiyonun toplam süresi 120 saniye. Yani bu koşum en fazla ~120 istek
+ * atabilir ve pratikte daha azını atmalı — sınıra dayanmak 429 demek.
+ *
+ * Sayılar bir dönem bu aritmetiği hiç yapmadan konmuştu: 31 bilanço günü +
+ * 20 şirket haberi + 60 profil + ~15 FRED = ~127 istek, yani koşum ancak
+ * kotaya çarparak ya da yarıda kesilerek bitebiliyordu. Kuyruktaki iş
+ * (profiller) sessizce hiç çalışmıyordu.
+ *
+ * Yeni dağılım ~84 istek: bilanço takvimi kısaltılmadı (gün gün çekmek bir
+ * hata düzeltmesiydi — SNDK böyle kaybolmuştu), kısalan yerler haber ve
+ * profil. Profil turu 60'tan 25'e inince evren ~12 günde değil ~29 günde bir
+ * tazeleniyor; hisse sayısı ve sektör ancak geri alım/ihraçla değiştiği için
+ * bu kabul edilebilir bir yavaşlama.
+ *
+ * İşi ayrı cron uçlarına bölmek (her birine kendi 120 saniyesi) daha iyi
+ * olurdu ama cron SAYISI dağıtım planına bağlı; bu düzeltme hangi planda
+ * olursa olsun çalışıyor.
+ */
+const COMPANY_NEWS_SYMBOLS = 12;
+const PROFILE_REFRESH_LIMIT = 25;
+
+/**
+ * Koşumun kendine ayırdığı süre — fonksiyon sınırının altında bir pay.
+ *
+ * Adımlar bu süreyi aşmaya başlayınca KALANI ATLIYOR ve raporda söylüyor.
+ * Yarıda kesilen bir fonksiyon hiçbir şey söylemeden ölüyordu; atlanan iş
+ * ertesi gün zaten tekrar sıraya giriyor.
+ */
+const BUDGET_MS = 100_000;
 
 /**
  * Bilanço takvimi kaç gün ileri çekilir.
@@ -37,8 +66,8 @@ const COMPANY_NEWS_SYMBOLS = 20;
  * Bilançolar sayfasının "Ay" sekmesi 29 gün gösteriyor ama burası 14 günde
  * duruyordu: aradaki iki hafta boş görünüyordu ve ancak gün gün yaklaştıkça
  * doluyordu. Sayfanın istediğinden bir gün fazlası çekilir ki sınırda boş
- * satır kalmasın. Maliyeti 31 Finnhub isteği — dakikadaki 60 sınırının
- * altında, fonksiyonun 120 sn bütçesine rahat sığıyor.
+ * satır kalmasın. Maliyeti 31 Finnhub isteği ve koşumun en pahalı adımı bu;
+ * yukarıdaki bütçe dağılımı buna göre kuruldu.
  */
 const EARNINGS_HORIZON_DAYS = 30;
 
@@ -82,6 +111,8 @@ export async function GET(request: Request) {
 
   const report: Record<string, string | number> = {};
   const today = todayEt();
+  const startedAt = Date.now();
+  const outOfTime = () => Date.now() - startedAt > BUDGET_MS;
 
   /* ---- 1. Bilanço takvimi (bugün → +30 gün) ----
      Finnhub tek yanıtı ~1500 kayıtla keser; geniş aralık limit yüzünden bazı
@@ -103,7 +134,15 @@ export async function GET(request: Request) {
     >();
     let anyOk = false;
     let firstError = "";
+    let skippedDays = 0;
     for (let offset = 0; offset <= EARNINGS_HORIZON_DAYS; offset++) {
+      /* Takvim ilk adım ve en önemlisi; yine de sınırsız değil. Bütçe
+         biterse kalan günler ertesi koşumda çekilir — o güne kadar takvimin
+         uzak ucu eksik kalır, yakın ucu değil. */
+      if (outOfTime()) {
+        skippedDays = EARNINGS_HORIZON_DAYS - offset + 1;
+        break;
+      }
       const day = addEtDays(today, offset);
       const result = await getEarningsCalendar(day, day);
       if (!result.ok) {
@@ -144,7 +183,10 @@ export async function GET(request: Request) {
             },
           });
       }
-      report.earnings = rows.length;
+      report.earnings =
+        skippedDays > 0
+          ? `${rows.length} (son ${skippedDays} gün bütçe yüzünden atlandı)`
+          : rows.length;
     } else {
       report.earnings = `atlandı: ${firstError}`;
     }
@@ -202,7 +244,12 @@ export async function GET(request: Request) {
     const from = addEtDays(today, -2);
     let inserted = 0;
 
+    let skipped = 0;
     for (const { symbol } of majors) {
+      if (outOfTime()) {
+        skipped++;
+        continue;
+      }
       const result = await getCompanyNews(symbol, from, today);
       if (!result.ok) continue;
 
@@ -227,7 +274,8 @@ export async function GET(request: Request) {
       }
     }
 
-    report.companyNews = inserted;
+    report.companyNews =
+      skipped > 0 ? `${inserted} (${skipped} sembol atlandı)` : inserted;
   } catch (error) {
     report.companyNews = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
@@ -261,27 +309,40 @@ export async function GET(request: Request) {
        tablosunda hiç satırı yoktu. Yedi sembol, günlük 60'lık bütçenin
        görünmeyecek kadar küçük bir parçası. */
     const [upcoming, stalest] = await Promise.all([
-      getEarningsSymbolsMissingProfile(7, 15),
-      getStalestSymbols(60),
+      getEarningsSymbolsMissingProfile(7, 10),
+      getStalestSymbols(PROFILE_REFRESH_LIMIT),
     ]);
     const targets = [
       ...new Set([...SPOTLIGHT_SYMBOLS, ...upcoming, ...stalest]),
-    ].slice(0, 60);
+    ].slice(0, PROFILE_REFRESH_LIMIT);
 
     let refreshed = 0;
+    let skipped = 0;
     for (const symbol of targets) {
+      if (outOfTime()) {
+        skipped++;
+        continue;
+      }
       const result = await getCompanyProfile(symbol);
       if (result.ok) {
         refreshed++;
-      } else {
-        // Profil dönmese de sıraya tekrar girmesin diye damga güncellenir.
+        continue;
+      }
+      /* DAMGA YALNIZCA KALICI HATADA İLERLETİLİR.
+         Eskiden her başarısızlıkta güncelleniyordu ve bu, geçici bir hatayı
+         kalıcı bir karara çeviriyordu: kotaya takılan ya da ağ hatası alan
+         bir sembol "tazelenmiş" sayılıp sıranın en arkasına gidiyor ve
+         evren bir turu tamamlayana kadar (haftalar) bir daha denenmiyordu.
+         Sağlayıcı sembolü tanımıyorsa (`not-found`) tekrar denemenin
+         anlamı yok — orada damga ilerliyor. */
+      if (result.reason === "not-found" || result.reason === "empty") {
         await db
           .update(symbolsTable)
           .set({ updatedAt: new Date() })
           .where(eq(symbolsTable.symbol, symbol));
       }
     }
-    report.profiles = refreshed;
+    report.profiles = skipped > 0 ? `${refreshed} (${skipped} atlandı)` : refreshed;
   } catch (error) {
     report.profiles = `hata: ${error instanceof Error ? error.message : "?"}`;
   }

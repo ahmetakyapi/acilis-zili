@@ -58,6 +58,13 @@ export function SearchCommand({
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  /* Paleti açan düğme ve panelin kendisi. İkisi de odak yönetimi için:
+     kapanışta odak düğmeye geri döner, açıkken Tab paneli terk edemez. */
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  /* Sonuca gidilerek kapandıysa odak düğmeye GERİ DÖNMEZ: sayfa değişti,
+     okuyucunun odağı yeni sayfanın başında olmalı. */
+  const navigatingRef = useRef(false);
 
   // Kapanışta durum event handler'da sıfırlanır — effect içinde setState yok.
   const close = useCallback(() => {
@@ -67,6 +74,14 @@ export function SearchCommand({
     setWritings([]);
     setActive(0);
     setLoading(false);
+    /* ODAK GERİ VERİLİR. Palet kapanınca odak `document.body`'ye düşüyordu:
+       klavyeyle gezen okuyucu sayfanın en başına savruluyor, ekran okuyucu
+       da nerede olduğunu kaybediyordu. WCAG 2.4.3 gereği odak, diyaloğu
+       açan öğeye döner. */
+    if (!navigatingRef.current) {
+      requestAnimationFrame(() => triggerRef.current?.focus());
+    }
+    navigatingRef.current = false;
   }, []);
 
   const openPalette = useCallback(() => setOpen(true), []);
@@ -97,14 +112,62 @@ export function SearchCommand({
     return () => window.clearTimeout(id);
   }, [open]);
 
-  // Palet açıkken arkadaki sayfa kaymaz — özellikle mobilde şart.
+  /* Palet açıkken arkadaki sayfa kaymaz — özellikle mobilde şart — ve
+     arkadaki her şey ERİŞİLEBİLİRLİK AĞACINDAN ÇIKAR.
+
+     `aria-modal="true"` tek başına yetmiyordu: bazı ekran okuyucular sanal
+     imleçle arkadaki sayfayı okumaya devam ediyor. `inert` hem odağı hem
+     okumayı kesiyor ve portal `document.body`'nin çocuğu olduğu için
+     kardeşlerini işaretlemek yeterli. Kapanışta yalnızca BİZİM eklediğimiz
+     işaret kaldırılıyor — başka bir bileşen aynı öğeyi inert yaptıysa
+     onun kararına dokunulmuyor. */
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
+    const marked: Element[] = [];
+    for (const child of Array.from(document.body.children)) {
+      if (child.contains(panelRef.current)) continue;
+      if (child.hasAttribute("inert")) continue;
+      child.setAttribute("inert", "");
+      marked.push(child);
+    }
+
     return () => {
       document.body.style.overflow = previous;
+      for (const child of marked) child.removeAttribute("inert");
     };
+  }, [open]);
+
+  /* ODAK TUZAĞI. Tab, panelin son odaklanabilir öğesinden sonra arkadaki
+     GÖRÜNMEYEN bağlantılara geçiyordu: okuyucu ekranda hiçbir şeyin
+     seçilmediği bir turda dolaşıyordu. Tab ve Shift+Tab artık panelin ilk ve
+     son öğesi arasında dönüyor. `inert` çoğu tarayıcıda bunu zaten sağlıyor;
+     bu, desteklemeyen tarayıcılar için ikinci kilit. */
+  useEffect(() => {
+    if (!open) return;
+    function onTab(event: KeyboardEvent) {
+      if (event.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const focusable = panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const activeEl = document.activeElement;
+      if (event.shiftKey && (activeEl === first || !panel.contains(activeEl))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && activeEl === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", onTab, true);
+    return () => document.removeEventListener("keydown", onTab, true);
   }, [open]);
 
   // Debounce'lu arama — tüm setState çağrıları zamanlayıcı/ağ callback'inde.
@@ -139,6 +202,7 @@ export function SearchCommand({
 
   const go = useCallback(
     (href: string) => {
+      navigatingRef.current = true;
       close();
       router.push(href);
     },
@@ -178,6 +242,7 @@ export function SearchCommand({
           Gezinme dokuz sekmeye çıkınca geniş arama kutusu masthead'i
           taşırıyordu; kısayol yine çalışıyor, ikon da yerinde. */}
       <button
+        ref={triggerRef}
         type="button"
         onClick={openPalette}
         aria-label={label}
@@ -205,6 +270,7 @@ export function SearchCommand({
           {/* Mobilde üstten tam genişlik bir sayfa gibi açılır — küçük ekranda
               yüzen kutu yerine ferah, zoom'suz bir arama yüzeyi. */}
           <div
+            ref={panelRef}
             className="w-full overflow-hidden border-b border-line-strong bg-overlay-surface shadow-(--shadow-overlay) sm:max-w-[640px] sm:rounded-2xl sm:border"
             onClick={(event) => event.stopPropagation()}
             role="dialog"
