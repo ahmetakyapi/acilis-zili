@@ -245,6 +245,12 @@ const en: typeof tr = {
     verdictLabel: "Verdict",
     scoreOutOf: "/ 100",
 
+    /* Tablo 1180px ve kendi kabında yatay kayıyor; kap klavyeyle
+       odaklanabilir olduğu için bir adı olmak zorunda. */
+    tableRegion: "Analyses Table",
+    /* Satırı kaplayan bağlantının adı — satır artık bağlantı değil,
+       içinde bağlantı taşıyan bir satır. */
+    rowLink: "Open the {symbol} · {period} analysis",
     colSymbol: "Symbol",
     colCompany: "Company · Period",
     colReported: "Reported",

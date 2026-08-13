@@ -115,6 +115,14 @@ export type AnalysisRowView = {
   verdictText: string;
   /** Aramanın taradığı alan — küçültülmüş sembol + şirket + dönem. */
   search: string;
+  /**
+   * Satırı kaplayan bağlantının erişilebilir adı.
+   *
+   * Satır artık `div[role="row"]` ve bağlantı onu kaplayan boş bir katman;
+   * boş bir bağlantının adı da olmaz. Ekran okuyucu "NVDA · 2Ç 2026
+   * analizini aç" duyuyor, dokuz hücreyi tek tek okumak zorunda kalmıyor.
+   */
+  linkLabel: string;
 };
 
 function toneOf(value: number | null | undefined): CellTone {
@@ -192,12 +200,16 @@ export function toAnalysisRowView(
     search: foldForSearch(
       `${row.symbol} ${row.company} ${row.periodLabel} ${row.sector ?? ""}`,
     ),
+    linkLabel: t.analysis.rowLink
+      .replace("{symbol}", row.symbol)
+      .replace("{period}", row.periodLabel),
   };
 }
 
 /** Tablonun ihtiyaç duyduğu on beş dize — sözlüğün tamamı yerine bu gider. */
 export function analysisTableLabels(t: Dictionary) {
   return {
+    tableRegion: t.analysis.tableRegion,
     colSymbol: t.analysis.colSymbol,
     colCompany: t.analysis.colCompany,
     colReported: t.analysis.colReported,

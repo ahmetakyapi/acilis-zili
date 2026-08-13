@@ -270,6 +270,12 @@ const tr = {
     verdictLabel: "Genel Görüş",
     scoreOutOf: "/ 100",
 
+    /* Tablo 1180px ve kendi kabında yatay kayıyor; kap klavyeyle
+       odaklanabilir olduğu için bir adı olmak zorunda. */
+    tableRegion: "Analiz Tablosu",
+    /* Satırı kaplayan bağlantının adı — satır artık bağlantı değil,
+       içinde bağlantı taşıyan bir satır. */
+    rowLink: "{symbol} · {period} analizini aç",
     colSymbol: "Sembol",
     colCompany: "Şirket · Dönem",
     colReported: "Açıklanma",

@@ -197,7 +197,12 @@ export function AccountMenu({
         type="button"
         onClick={() => setOpenedAt(open ? null : pathname)}
         aria-expanded={open}
-        aria-haspopup="menu"
+        /* `menu` DEĞİL `dialog`: aşağıdaki panel bir menü değil, içinde
+           kimlik başlığı, iki tema düğmesi ve iki dil düğmesi olan küçük bir
+           panel. ARIA'da `menu`nün çocukları yalnızca menuitem türleri
+           olabilir; başka içerik olduğunda ekran okuyucu öğe sayısını yanlış
+           duyuruyor ve ok tuşu yönetimi bekliyordu. */
+        aria-haspopup="dialog"
         aria-label={labels.account}
         className="inline-flex size-11 items-center justify-center rounded-full"
       >
@@ -226,7 +231,7 @@ export function AccountMenu({
           />
 
           <div
-            role="menu"
+            role="dialog"
             aria-label={labels.account}
             /* Zemin `--overlay-surface`, `--surface-solid` DEĞİL: ikincisi koyu
                temada saydam (beyazın %4,5'i) çünkü sayfa üstündeki kartlar için
@@ -290,7 +295,6 @@ export function AccountMenu({
                       okuyor. */}
                   <Link
                     href="/giris"
-                    role="menuitem"
                     className="flex min-h-11 items-center justify-center gap-2 rounded-[11px] bg-primary text-[13.5px] font-semibold text-on-primary transition-colors hover:bg-primary-hover"
                   >
                     <SignIn weight="bold" size={15} aria-hidden />
@@ -298,7 +302,6 @@ export function AccountMenu({
                   </Link>
                   <Link
                     href="/kayit"
-                    role="menuitem"
                     className="flex min-h-10 items-center justify-center rounded-[11px] border border-line text-[12.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
                   >
                     {labels.signUp}
@@ -376,7 +379,6 @@ function MenuRow({
   return (
     <Link
       href={href}
-      role="menuitem"
       className="group flex min-h-11 items-center gap-3 rounded-[11px] px-2 transition-colors hover:bg-surface"
     >
       <span

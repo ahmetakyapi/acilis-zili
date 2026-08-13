@@ -38,6 +38,8 @@ import { cn } from "@/lib/utils";
  */
 
 export type AnalysisTableLabels = {
+  /** Yatay kaydırılan kabın adı — klavyeyle odaklanınca duyurulur. */
+  tableRegion: string;
   colSymbol: string;
   colCompany: string;
   colReported: string;
@@ -142,7 +144,19 @@ export function AnalysisTable({
       </div>
 
       <div className="panel overflow-hidden">
-        <div className="no-scrollbar overflow-x-auto">
+        {/* KAYDIRMA KABI KLAVYEYLE ERİŞİLEBİLİR. Tablo 1180px genişliğinde ve
+            kendi kabında yatay kayıyor; Chrome ve Safari kaydırılabilir kaplara
+            kendiliğinden odak VERMİYOR (Firefox veriyor). Yani fare
+            kullanmayan biri sağdaki sütunlara — puan, karne, tarih — hiç
+            ulaşamıyordu. `tabIndex={0}` kabı bir durağa çeviriyor, `role`
+            ve `aria-label` de onu adlandırıyor: ekran okuyucu "kaydırılabilir
+            bölge, Analizler" diyor ve ok tuşları çalışıyor. */}
+        <div
+          className="no-scrollbar overflow-x-auto"
+          tabIndex={0}
+          role="region"
+          aria-label={labels.tableRegion}
+        >
           <div className="min-w-[1180px]" role="table">
             <div
               role="row"
@@ -192,16 +206,31 @@ export function AnalysisTable({
               </p>
             ) : (
               visible.map((row, index) => (
-                <Link
+                /* SATIR BİR BAĞLANTI DEĞİL, İÇİNDE BAĞLANTI TAŞIYOR.
+                   Önce `<Link role="row">` yazılıydı ve `role="row"`
+                   elemanın kendi `link` rolünü TAMAMEN eziyordu: ekran
+                   okuyucu satırı bağlantı olarak duyurmuyor, bağlantı
+                   listesinde göstermiyor, "bağlantıya git" komutlarıyla
+                   ulaşılamıyordu — Tab'lanabiliyor ama odaklandığında
+                   yalnızca "satır" deniyordu.
+
+                   Artık satır `div[role="row"]`, tıklama alanı ise sembol
+                   hücresindeki gerçek bağlantının mutlak konumlu kaplaması.
+                   Bağlantı satırın tamamını kaplıyor, görünüm değişmiyor. */
+                <div
                   key={row.key}
                   role="row"
-                  href={row.href}
-                  prefetch={false}
                   className={cn(
-                    "flex items-center gap-4 border-b border-line-soft px-4 py-3.5 transition-colors last:border-b-0 hover:bg-surface-elevated sm:px-[22px]",
+                    "relative flex items-center gap-4 border-b border-line-soft px-4 py-3.5 transition-colors last:border-b-0 hover:bg-surface-elevated sm:px-[22px]",
                     highlightFirst && !searching && index === 0 && "bg-primary-tint",
                   )}
                 >
+                  <Link
+                    href={row.href}
+                    prefetch={false}
+                    aria-label={row.linkLabel}
+                    className="absolute inset-0 z-10 rounded-(--radius-sm)"
+                  />
                   {/* Logo + sembol tek hücrede: tablo satırı yalnızca sayı
                       dizisiyken hepsi birbirinin aynıydı, logo satırı bir
                       bakışta tanınır kılıyor. */}
@@ -312,7 +341,7 @@ export function AnalysisTable({
                   >
                     {labels.cardLink}
                   </span>
-                </Link>
+                </div>
               ))
             )}
           </div>

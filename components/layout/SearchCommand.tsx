@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
@@ -16,6 +22,45 @@ import { cn } from "@/lib/utils";
  * Yerel tablodan gelen sonuçlar anında, sağlayıcıdan gelenler gecikmeli
  * görünür; kullanıcı beklerken kutu boş kalmaz.
  */
+/**
+ * PALET TEK ÖRNEK OLMALI.
+ *
+ * `AppShell` arama tetikleyicisini İKİ yerde basıyor (masaüstü masthead ve
+ * mobil başlık); aynı React elemanı iki yere konunca iki BİLEŞEN ÖRNEĞİ
+ * oluşuyor. İkisi de ⌘K dinliyor, ikisi de portalını `document.body`'ye
+ * çiziyordu — yani kısayola basınca üst üste İKİ modal açılıyor, `id`ler
+ * (`palet-sonuclari`, `palet-secenek-0`) belgede iki kez geçiyor ve iki ayrı
+ * odak tuzağı birbiriyle yarışıyordu. Görsel olarak fark edilmiyordu çünkü
+ * ikisi birebir aynı ve üst üste duruyor.
+ *
+ * Çözüm: ilk bağlanan örnek paleti SAHİPLENİR; ötekiler yalnızca tetikleyici
+ * düğmeyi çizer ve açma isteğini sahibe iletir. Durum modül seviyesinde
+ * tutuluyor, `useSyncExternalStore` ile okunuyor.
+ */
+let paletteOwner: symbol | null = null;
+let paletteOpen = false;
+const paletteListeners = new Set<() => void>();
+
+function emitPalette() {
+  for (const listener of paletteListeners) listener();
+}
+
+function setPaletteOpen(next: boolean) {
+  if (paletteOpen === next) return;
+  paletteOpen = next;
+  emitPalette();
+}
+
+/** Modül seviyesinde: hiçbir hook'un bağımlılığı olmuyor. */
+function togglePalette(next: boolean | ((value: boolean) => boolean)) {
+  setPaletteOpen(typeof next === "function" ? next(paletteOpen) : next);
+}
+
+function subscribePalette(listener: () => void) {
+  paletteListeners.add(listener);
+  return () => paletteListeners.delete(listener);
+}
+
 /** Boş kutuda önerilen semboller — takip evreninin merkezî isimleri. */
 const POPULAR_PICKS = [
   { symbol: "NVDA", name: "NVIDIA" },
@@ -51,7 +96,40 @@ export function SearchCommand({
   hints: { move: string; open: string };
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+
+  /* Sahiplik ilk bağlanan örneğe verilir ve bileşen sökülene kadar onda
+     kalır. Kimlik `useRef` ile örneğe özel bir sembol. */
+  const idRef = useRef<symbol | null>(null);
+  if (idRef.current == null) idRef.current = Symbol("palette");
+  /* Sahiplik de mağazadan OKUNUYOR, `setState` ile değil: efekt içinden
+     `setState` çağırmak fazladan bir çizim turu demek ve React bunu bir
+     kural ihlali olarak işaretliyor. Efekt yalnızca modül durumunu
+     değiştirip abonelere haber veriyor. */
+  useEffect(() => {
+    if (paletteOwner === null) {
+      paletteOwner = idRef.current;
+      emitPalette();
+    }
+    return () => {
+      if (paletteOwner === idRef.current) {
+        paletteOwner = null;
+        paletteOpen = false;
+        emitPalette();
+      }
+    };
+  }, []);
+
+  const owns = useSyncExternalStore(
+    subscribePalette,
+    () => paletteOwner === idRef.current,
+    () => false,
+  );
+  const open = useSyncExternalStore(
+    subscribePalette,
+    () => paletteOpen,
+    () => false,
+  );
+
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [writings, setWritings] = useState<WritingHit[]>([]);
@@ -68,7 +146,7 @@ export function SearchCommand({
 
   // Kapanışta durum event handler'da sıfırlanır — effect içinde setState yok.
   const close = useCallback(() => {
-    setOpen(false);
+    togglePalette(false);
     setQuery("");
     setHits([]);
     setWritings([]);
@@ -84,14 +162,14 @@ export function SearchCommand({
     navigatingRef.current = false;
   }, []);
 
-  const openPalette = useCallback(() => setOpen(true), []);
+  const openPalette = useCallback(() => togglePalette(true), []);
 
   // ⌘K / Ctrl+K
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
-        setOpen((value) => {
+        togglePalette((value) => {
           if (value) {
             // Kapanırken alanları da temizle
             queueMicrotask(close);
@@ -101,16 +179,19 @@ export function SearchCommand({
       }
       if (event.key === "Escape") close();
     }
+    /* Kısayolu YALNIZCA sahip dinler: iki örnek de dinleseydi ⌘K durumu iki
+       kez çevirir ve palet hiç açılmazdı. */
+    if (!owns) return;
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [close]);
+  }, [close, owns]);
 
   // Açılınca odaklan — yalnızca DOM etkisi, setState yok.
   useEffect(() => {
-    if (!open) return;
+    if (!open || !owns) return;
     const id = window.setTimeout(() => inputRef.current?.focus(), 20);
     return () => window.clearTimeout(id);
-  }, [open]);
+  }, [open, owns]);
 
   /* Palet açıkken arkadaki sayfa kaymaz — özellikle mobilde şart — ve
      arkadaki her şey ERİŞİLEBİLİRLİK AĞACINDAN ÇIKAR.
@@ -121,8 +202,13 @@ export function SearchCommand({
      kardeşlerini işaretlemek yeterli. Kapanışta yalnızca BİZİM eklediğimiz
      işaret kaldırılıyor — başka bir bileşen aynı öğeyi inert yaptıysa
      onun kararına dokunulmuyor. */
+  /* SAHİP DEĞİLSE HİÇ KOŞMAZ. `open` durumu iki örnek arasında paylaşıldığı
+     için bu efekt sahip olmayan örnekte de çalışıyordu ve orada
+     `panelRef.current` NULL: `child.contains(null)` her zaman false döndüğü
+     için portal dahil belgedeki HER ŞEY inert işaretleniyor, paletin kendisi
+     de tıklanamaz ve yazılamaz hâle geliyordu. */
   useEffect(() => {
-    if (!open) return;
+    if (!open || !owns) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -138,7 +224,7 @@ export function SearchCommand({
       document.body.style.overflow = previous;
       for (const child of marked) child.removeAttribute("inert");
     };
-  }, [open]);
+  }, [open, owns]);
 
   /* ODAK TUZAĞI. Tab, panelin son odaklanabilir öğesinden sonra arkadaki
      GÖRÜNMEYEN bağlantılara geçiyordu: okuyucu ekranda hiçbir şeyin
@@ -146,7 +232,7 @@ export function SearchCommand({
      son öğesi arasında dönüyor. `inert` çoğu tarayıcıda bunu zaten sağlıyor;
      bu, desteklemeyen tarayıcılar için ikinci kilit. */
   useEffect(() => {
-    if (!open) return;
+    if (!open || !owns) return;
     function onTab(event: KeyboardEvent) {
       if (event.key !== "Tab") return;
       const panel = panelRef.current;
@@ -168,11 +254,11 @@ export function SearchCommand({
     }
     document.addEventListener("keydown", onTab, true);
     return () => document.removeEventListener("keydown", onTab, true);
-  }, [open]);
+  }, [open, owns]);
 
   // Debounce'lu arama — tüm setState çağrıları zamanlayıcı/ağ callback'inde.
   useEffect(() => {
-    if (!open) return;
+    if (!open || !owns) return;
     const term = query.trim();
     if (!term) return;
 
@@ -198,7 +284,7 @@ export function SearchCommand({
       controller.abort();
       window.clearTimeout(id);
     };
-  }, [query, open]);
+  }, [query, open, owns]);
 
   const go = useCallback(
     (href: string) => {
@@ -258,6 +344,7 @@ export function SearchCommand({
       {/* Portal: sticky/backdrop-filter atalarının stacking bağlamından kaçar —
           Safari'de karartmanın yalnızca üst şeride uygulanma hatasını da çözer. */}
       {open &&
+        owns &&
         createPortal(
         <div
           /* Mobilde palet ekranın en tepesinden açılıyor; üst dolgu güvenli
@@ -283,6 +370,12 @@ export function SearchCommand({
                 size={18}
                 className="shrink-0 text-muted"
               />
+              {/* COMBOBOX SEMANTİĞİ. Ok tuşları seçili satırı değiştiriyordu
+                  ama bu yalnızca bir zemin rengiyle anlatılıyordu: ekran
+                  okuyucu kullanıcısı ↓ tuşuna bastığında HİÇBİR ŞEY duymuyor,
+                  hangi sonucun üzerinde olduğunu ve Enter'ın nereye
+                  götüreceğini bilmiyordu. `aria-activedescendant` seçili
+                  seçeneği input'un odağını bozmadan duyuruyor. */}
               <input
                 ref={inputRef}
                 value={query}
@@ -290,6 +383,13 @@ export function SearchCommand({
                 onKeyDown={onInputKeyDown}
                 placeholder={placeholder}
                 aria-label={placeholder}
+                role="combobox"
+                aria-expanded={navItems.length > 0}
+                aria-controls="palet-sonuclari"
+                aria-autocomplete="list"
+                aria-activedescendant={
+                  navItems[active] ? `palet-secenek-${active}` : undefined
+                }
                 className="palette-input h-14 flex-1 bg-transparent text-[17px] font-semibold text-strong outline-none placeholder:font-normal placeholder:text-muted"
                 autoComplete="off"
                 spellCheck={false}
@@ -305,10 +405,21 @@ export function SearchCommand({
               </button>
             </div>
 
-            <div className="max-h-[60dvh] overflow-y-auto py-2.5 sm:max-h-[45vh]">
+            {/* LISTBOX. Kabın kendisi `role="listbox"` ve her sonuç bir
+                `option`; input `aria-controls` ile buraya bağlı. Popüler
+                semboller ve boş durum metni seçenek DEĞİL — onlar
+                `role="presentation"` ile listeden çıkarılıyor, yoksa ekran
+                okuyucu "8 seçenekten 1'i" derken sekiz hisse çipini de
+                sayıyordu. */}
+            <div
+              id="palet-sonuclari"
+              role="listbox"
+              aria-label={label}
+              className="max-h-[60dvh] overflow-y-auto py-2.5 sm:max-h-[45vh]"
+            >
               {/* Kutu boşken popüler semboller — boş bir pencere yerine yön */}
               {!query.trim() && (
-                <div className="px-5 pb-2 pt-2">
+                <div role="presentation" className="px-5 pb-2 pt-2">
                   <p className="plate text-[10.5px] tracking-[0.08em]">
                     {popularLabel}
                   </p>
@@ -331,7 +442,10 @@ export function SearchCommand({
               )}
 
               {shownHits.length > 0 && (
-                <p className="plate px-5 pb-1.5 pt-2 text-[10.5px] tracking-[0.08em]">
+                <p
+                  id="palet-grup-semboller"
+                  className="plate px-5 pb-1.5 pt-2 text-[10.5px] tracking-[0.08em]"
+                >
                   {companiesLabel}
                 </p>
               )}
@@ -339,6 +453,9 @@ export function SearchCommand({
               {shownHits.map((hit, index) => (
                 <button
                   key={hit.symbol}
+                  id={`palet-secenek-${index}`}
+                  role="option"
+                  aria-selected={index === active}
                   type="button"
                   onClick={() => go(`/hisse/${hit.symbol}`)}
                   onMouseEnter={() => setActive(index)}
@@ -366,7 +483,10 @@ export function SearchCommand({
                   "NVDA" yazan biri ilk satırda NVDA görmeli. Yazı sonuçları
                   aynı listenin devamı olarak okunuyor, ayrı bir sekme değil. */}
               {shownWritings.length > 0 && (
-                <p className="plate px-5 pb-1.5 pt-2 text-[10.5px] tracking-[0.08em]">
+                <p
+                  id="palet-grup-yazilar"
+                  className="plate px-5 pb-1.5 pt-2 text-[10.5px] tracking-[0.08em]"
+                >
                   {writingsLabel}
                 </p>
               )}
@@ -376,6 +496,9 @@ export function SearchCommand({
                 return (
                   <button
                     key={`${writing.kind}-${writing.slug}`}
+                    id={`palet-secenek-${position}`}
+                    role="option"
+                    aria-selected={position === active}
                     type="button"
                     onClick={() => go(`/${writing.kind}/${writing.slug}`)}
                     onMouseEnter={() => setActive(position)}
