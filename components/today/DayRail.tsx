@@ -338,7 +338,7 @@ export function DayRail({
 
         {/* ---- Kat 2: eksen ---- */}
         <div
-          className="absolute inset-x-0 rounded-full bg-surface-elevated"
+          className="absolute inset-x-0 rounded-full bg-rail-track"
           style={{ top: AXIS_TOP, height: AXIS_HEIGHT }}
         />
         {/* Ana seans bir kademe kalın: günün gövdesi eksenin kendisinde de
@@ -479,7 +479,11 @@ export function DayRail({
                     ? "size-3.5 bg-down"
                     : event.watched
                       ? "size-3.5 bg-primary"
-                      : "size-3 border-2 border-muted bg-page",
+                      : /* Sıradan olay noktası İÇİ DOLU. Eskiden `bg-page`
+                           dolgulu, ince kenarlıklı bir halkaydı ve koyu
+                           temada eksende açılmış bir DELİK gibi okunuyordu:
+                           tel üstünde bir işaret değil, telin eksiği. */
+                        "size-3 bg-flat ring-2 ring-(--surface)",
                 )}
                 style={{
                   left,
@@ -489,7 +493,7 @@ export function DayRail({
               />
               {/* Bağ çizgisi: kart hangi ana aitse oradan iner. */}
               <span
-                className="absolute w-px bg-line-strong"
+                className="absolute w-px bg-rail-link"
                 style={{ left, top: AXIS_CENTER + 8, height: chipTop - AXIS_CENTER - 10 }}
               />
               {/* Kart — bağ çizgilerinin ÜSTÜNDE durur: komşu kartın çizgisi
@@ -507,6 +511,11 @@ export function DayRail({
                 href={isEarnings ? "/bilancolar" : "/takvim"}
                 className={cn(
                   "panel-hover absolute z-10 flex flex-col rounded-[12px] border border-line bg-surface-solid px-3 py-2.5 text-center transition-colors",
+                  /* Kart yüksekliği sabit (aynı banttaki kartlar aynı yerde
+                     bitmeli). Alt künyesi olmayan kartta içerik tepede
+                     kalıp altında büyük bir boşluk bırakıyordu; künye yoksa
+                     içerik dikeyde ortalanıyor. */
+                  !event.detail && "justify-center",
                   high && "border-l-[3px] border-l-down",
                   !high && event.watched && "border-l-[3px] border-l-primary",
                 )}

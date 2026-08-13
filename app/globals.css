@@ -54,6 +54,15 @@
   --down-wash: rgb(192 26 61 / 0.1);
   --flat: #586a7c;
 
+  /* Gün Şeridinin ekseni ve bağ çizgileri.
+     Eksen `surface-elevated` ile çiziliyordu ve koyu temada bu, panelden
+     DAHA PARLAK bir bant demek: ekrandaki en güçlü yatay öğe, üstündeki
+     içeriğin değil zeminin kendisi oluyordu. Doğru okuma bir OLUK — eksen
+     zeminin içine gömülü, olaylar onun üstünde. Açık temada zaten öyleydi,
+     token ayrıldığı için koyu tarafta da öyle olabiliyor. */
+  --rail-track: rgb(16 32 52 / 0.09);
+  --rail-link: rgb(16 32 52 / 0.22);
+
   --line: rgb(16 32 52 / 0.1);
   --line-soft: rgb(16 32 52 / 0.06);
   --line-strong: rgb(16 32 52 / 0.17);
@@ -148,10 +157,19 @@
 
 :root[data-theme="dark"] {
   --page-bg: #070d16;
-  --surface: rgb(255 255 255 / 0.035);
-  --surface-elevated: rgb(255 255 255 / 0.06);
-  --surface-solid: rgb(255 255 255 / 0.045);
-  --surface-sunken: rgb(0 0 0 / 0.2);
+  /* YÜZEY RAMPASI AÇILDI. Üç basamak birbirinden 0,01 alfa uzaktaydı ve
+     #070d16 zeminde hepsi aynı renge iniyordu: panel #10151e, üstündeki kart
+     #121820 — aralarındaki kontrast 1,03:1, yani kart görünmüyordu, yalnızca
+     saç teli kenarlığı vardı. Koyu temada derinlik gölgeyle değil (projede
+     gölge yok) YÜZEY BASAMAĞIYLA anlatılıyor; basamak yoksa derinlik de yok.
+
+     Yeni değerler ölçüldü: panel sayfaya karşı 1,10 · kart panele karşı
+     1,10 · yükseltilmiş panele karşı 1,22. Metin kontrastı korunuyor —
+     en soluk ton (muted) kartın üstünde 5,3:1, AA sınırının üstünde. */
+  --surface: rgb(255 255 255 / 0.05);
+  --surface-elevated: rgb(255 255 255 / 0.12);
+  --surface-solid: rgb(255 255 255 / 0.085);
+  --surface-sunken: rgb(0 0 0 / 0.3);
 
   --text-strong: #eaf1f8;
   --text-body: #94a7ba;
@@ -174,9 +192,18 @@
   --down-wash: rgb(255 92 122 / 0.13);
   --flat: #8497a9;
 
-  --line: rgb(255 255 255 / 0.08);
-  --line-soft: rgb(255 255 255 / 0.05);
-  --line-strong: rgb(255 255 255 / 0.14);
+  /* Kenarlıklar da bir kademe yukarı: yüzeyler açılınca 0,08'lik bir saç
+     teli kartın kendi dolgusunun altında kalıyordu, yani kenar çizgisi
+     yüzeyden daha sönük çiziliyordu ve kart kenarsız görünüyordu. */
+  /* Eksen KOYU bir oluk, parlak bir bant değil. Bağ çizgisi ise tersine
+     daha parlak: 1px'lik bir çizgi 0,14 alfayla koyu panelde neredeyse
+     görünmüyordu ve kartın hangi ana ait olduğu okunmuyordu. */
+  --rail-track: rgb(0 0 0 / 0.24);
+  --rail-link: rgb(255 255 255 / 0.26);
+
+  --line: rgb(255 255 255 / 0.11);
+  --line-soft: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.2);
   --line-focus: #35b8ff;
 
   --bar: rgb(255 255 255 / 0.2);
@@ -252,6 +279,8 @@
   --color-page: var(--page-bg);
   --color-surface: var(--surface);
   --color-surface-elevated: var(--surface-elevated);
+  --color-rail-track: var(--rail-track);
+  --color-rail-link: var(--rail-link);
   --color-surface-solid: var(--surface-solid);
   --color-surface-sunken: var(--surface-sunken);
 
