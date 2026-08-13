@@ -9,7 +9,14 @@ import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { users, watchlists } from "@/lib/schema";
 import { getDictionary, getLocale } from "@/lib/i18n";
-import { rateLimit, requestKey } from "@/lib/rate-limit";
+import {
+  AUTH_WINDOW_MS,
+  SIGN_IN_LIMIT,
+  SIGN_UP_LIMIT,
+  peekRateLimit,
+  rateLimit,
+  requestKey,
+} from "@/lib/rate-limit";
 
 export type AuthFormState = {
   error?: string;
@@ -29,9 +36,8 @@ export type AuthFormState = {
    Sınırlayıcının dağıtık olmadığı ve neyi çözüp neyi çözmediği
    lib/rate-limit.ts başında yazılı.
    -------------------------------------------------------------------------- */
-const SIGN_IN_LIMIT = 10;
-const SIGN_UP_LIMIT = 5;
-const AUTH_WINDOW_MS = 10 * 60_000;
+/* Sınırlar lib/rate-limit.ts'te: aynı sayaç `authorize()` kapısında da
+   okunuyor ve iki ayrı sabit er geç birbirinden ayrı düşerdi. */
 
 /**
  * Giriş sonrası dönülecek adres.
@@ -160,11 +166,11 @@ export async function signInAction(
   const locale = await getLocale();
   const t = getDictionary(locale).auth.errors;
 
-  const limited = rateLimit(
-    await requestKey("signin"),
-    SIGN_IN_LIMIT,
-    AUTH_WINDOW_MS,
-  );
+  /* Sayaç BURADA ARTMIYOR, yalnızca okunuyor. Gerçek sayaç `authorize()`
+     içinde (auth.ts) — orası iki yolun da geçmek zorunda olduğu tek nokta.
+     Buradaki okuma yalnızca doğru mesajı göstermek için: sınır dolduğunda
+     kullanıcı "şifre hatalı" değil "çok fazla deneme" görüyor. */
+  const limited = peekRateLimit(await requestKey("signin"), SIGN_IN_LIMIT);
   if (!limited.allowed) {
     return { error: t.tooManyAttempts, field: "form" };
   }

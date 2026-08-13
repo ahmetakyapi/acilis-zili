@@ -2,13 +2,59 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
+import { AUTH_WINDOW_MS, SIGN_IN_LIMIT, rateLimit } from "@/lib/rate-limit";
 
 /**
  * Kullanıcı adı + şifre ile giriş.
  * Şifre doğrulaması burada yapılır; Auth.js kendi hash'lemesini yapmaz.
+ *
+ * KABA KUVVET SAYACI BURADA, formda değil.
+ *
+ * Sınır bir dönem yalnızca `signInAction` içindeydi (app/actions/auth.ts) ve
+ * o hiç uğranmadan geçilebiliyordu: `app/api/auth/[...nextauth]/route.ts`
+ * Auth.js handler'larını dışa açıyor, yani `POST /api/auth/callback/credentials`
+ * doğrudan çağrılabiliyor ve doğrudan buraya giriyordu. Bir betik csrf
+ * çerezini bir kez alıp aynı hesaba sınırsız şifre denemesi yapabilirdi —
+ * üstelik her denemede bcrypt çalıştığı için sunucu işlemcisini de tüketerek.
+ *
+ * Sayaç artık İKİ yolun da geçmek zorunda olduğu tek noktada. Form tarafı
+ * sayacı yalnızca OKUYOR (`peekRateLimit`) ki doğru mesajı gösterebilsin ama
+ * hakkı iki kez tüketmesin.
+ *
+ * HESAP BAZLI KİLİT BİLEREK YOK: kullanıcı adına sayaç koymak, o adı bilen
+ * herkese "istediğin hesabı kilitle" imkânı verir. Sınır IP başına.
  */
+/**
+ * Giriş sayacının anahtarı — IP başına.
+ *
+ * İki farklı yoldan gelinebiliyor ve ikisinde istek nesnesi aynı değil:
+ * doğrudan `/api/auth/callback/credentials` çağrısında Auth.js gerçek
+ * `Request`i veriyor, form akışında (`signIn()` sunucu tarafından
+ * çağrılıyor) o nesne uydurulmuş olabiliyor ve `x-forwarded-for` taşımıyor.
+ * Başlık istekte yoksa istek bağlamındaki başlıklara düşülüyor; ikisi de
+ * yoksa tek bir ortak kovaya düşmemek için sabit bir ad kullanılıyor —
+ * o durumda sınır paylaşılır ama sahte bir güvenlik iddiası da yok.
+ */
+async function signInKey(request: unknown): Promise<string> {
+  const fromRequest =
+    request instanceof Request
+      ? request.headers.get("x-forwarded-for")
+      : null;
+  if (fromRequest) return `signin:${fromRequest.split(",")[0]?.trim()}`;
+
+  try {
+    const store = await headers();
+    const forwarded = store.get("x-forwarded-for");
+    if (forwarded) return `signin:${forwarded.split(",")[0]?.trim()}`;
+  } catch {
+    /* İstek bağlamı yoksa (beklenmiyor) aşağıdaki ortak kovaya düşülür. */
+  }
+  return "signin:bilinmeyen";
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Oturum 180 gün yaşar ve aktif kullanımda kayarak yenilenir —
   // kullanıcı her ziyarette yeniden giriş yapmak zorunda kalmaz.
@@ -26,7 +72,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         username: { label: "Kullanıcı adı", type: "text" },
         password: { label: "Şifre", type: "password" },
       },
-      authorize: async (credentials) => {
+      authorize: async (credentials, request) => {
+        /* Sayaç şifre karşılaştırmasından ÖNCE: bcrypt maliyeti (cost 12)
+           tam olarak saldırganın tüketmek istediği kaynak. */
+        const limited = rateLimit(
+          await signInKey(request),
+          SIGN_IN_LIMIT,
+          AUTH_WINDOW_MS,
+        );
+        if (!limited.allowed) return null;
+
         const username = String(credentials?.username ?? "")
           .trim()
           .toLowerCase();

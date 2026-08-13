@@ -37,6 +37,17 @@ function sweep(now: number) {
   }
 }
 
+/**
+ * Giriş ve kayıt sınırları.
+ *
+ * Burada duruyorlar çünkü İKİ yerden okunuyorlar: form akışı
+ * (`app/actions/auth.ts`) ve `authorize()` kapısı (`auth.ts`). Sayaç ikisinde
+ * de aynı olmak zorunda — ayrı sabitler er geç birbirinden ayrı düşerdi.
+ */
+export const SIGN_IN_LIMIT = 10;
+export const SIGN_UP_LIMIT = 5;
+export const AUTH_WINDOW_MS = 10 * 60_000;
+
 export type RateLimitResult = {
   allowed: boolean;
   /** Pencerede kalan hak. */
@@ -68,6 +79,30 @@ export function rateLimit(
     };
   }
 
+  return { allowed: true, remaining: limit - existing.count, retryAfter: 0 };
+}
+
+/**
+ * Sayacı ARTIRMADAN durumu okur.
+ *
+ * Giriş formu için var. Sayaç tek yerde tutuluyor (`authorize()` kapısında)
+ * ama form, kullanıcıya "çok fazla deneme yaptın" diye doğru mesajı
+ * gösterebilmek için o sayacı BİLMEK zorunda. Artırarak okusaydı her giriş
+ * denemesi iki hak yiyecek ve sınır yarıya inecekti.
+ */
+export function peekRateLimit(key: string, limit: number): RateLimitResult {
+  const now = Date.now();
+  const existing = buckets.get(key);
+  if (!existing || existing.resetAt <= now) {
+    return { allowed: true, remaining: limit, retryAfter: 0 };
+  }
+  if (existing.count >= limit) {
+    return {
+      allowed: false,
+      remaining: 0,
+      retryAfter: Math.ceil((existing.resetAt - now) / 1000),
+    };
+  }
   return { allowed: true, remaining: limit - existing.count, retryAfter: 0 };
 }
 
