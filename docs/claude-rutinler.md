@@ -620,10 +620,15 @@ Her adayda bir `tier` alanı var — hangi kapıdan girdiğini söyler:
                       ve veri merkezi altyapısı.
   genel             → 200 milyar $ üstü. Diğer bütün sektörler.
   izlenen           → eşik uygulanmaz. Yapay zekâ, uzay ve enerji
-                      altyapısının inşa katmanındaki takip edilen şirketler
-                      (NBIS, BE, RKLB, ASTS, CRWV). Hepsi eşiğin altında ama
-                      bilançoları eşiğin üstündeki pek çok şirketten daha
-                      çok konuşuluyor.
+                      altyapısının inşa katmanındaki takip edilen şirketler:
+                      CRWV, NBIS, BE, RKLB, ASTS, ONDS, SHAZ. Hepsi eşiğin
+                      altında ama bilançoları eşiğin üstündeki pek çok
+                      şirketten daha çok konuşuluyor.
+
+                      Bu listeyi ezberleme — yanıttaki
+                      `thresholds.izlenen` alanı o an geçerli hâlini
+                      taşıyor, kaynağı `lib/spotlight.ts`. Liste büyürse
+                      uç kendiliğinden yeni adları da döndürür.
 
 --- 2. SEÇ ---
 

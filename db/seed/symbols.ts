@@ -59,6 +59,18 @@ export const POPULAR_SYMBOLS: SymbolSeed[] = [
   { symbol: "SPCX", name: "SpaceX" }, // Nasdaq, 12 Haziran 2026
   { symbol: "SKHY", name: "SK hynix Inc. (ADR)" }, // Nasdaq, 10 Temmuz 2026
 
+  /* Adla seçilen evren — `lib/spotlight.ts`. Buradaki kopya arama ve temiz
+     kurulum içindir: liste orada tek başına da çalışıyor (cron profilleri
+     kendisi çekiyor) ama sıfırdan kurulan bir veritabanında bu şirketlerin
+     araması ilk cron koşumuna kadar boş dönüyordu. */
+  { symbol: "CRWV", name: "CoreWeave Inc." },
+  { symbol: "NBIS", name: "Nebius Group N.V." },
+  { symbol: "BE", name: "Bloom Energy Corporation" },
+  { symbol: "RKLB", name: "Rocket Lab Corporation" },
+  { symbol: "ASTS", name: "AST SpaceMobile Inc." },
+  { symbol: "ONDS", name: "Ondas Holdings Inc." },
+  { symbol: "SHAZ", name: "SharonAI Holdings Inc." },
+
   // Yapay zekâ ve yarı iletken
   { symbol: "NVDA", name: "NVIDIA Corporation" },
   { symbol: "AMD", name: "Advanced Micro Devices" },

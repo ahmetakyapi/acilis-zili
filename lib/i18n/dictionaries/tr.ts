@@ -751,18 +751,23 @@ const tr = {
 
   auth: {
     signInTitle: "Giriş Yap",
-    pitchTitle: "Sabah Altı Sekmeye Bakmayı Bırak",
+    /* Başlık markanın kendi cümlesi. Bir dönem "Sabah Altı Sekmeye Bakmayı
+       Bırak" yazıyordu: ürünün ne olduğunu değil, kullanıcının neyi
+       bırakması gerektiğini anlatan, herhangi bir SaaS'a yapıştırılabilecek
+       bir cümleydi ve sitenin adıyla hiç konuşmuyordu. Zil bu ürünün
+       merkezindeki nesne — ana sayfanın en büyük sayısı ona geri sayıyor. */
+    pitchTitle: "Zil Çalmadan Önce Hazır Ol",
     pitchBody:
-      "Ekonomik takvim, bilanço tarihleri, makro göstergeler ve takip listen — hepsi saatleriyle tek ekranda. Hesap açmadan da okuyabilirsin; giriş yaparsan listelerin sende kalır.",
-    featureLists: "Takip listeleri ve sembol arşivi",
-    featureAlerts: "Bilanço ve makro takvimi",
-    featureBrief: "Her sabah hazırlanan günlük bülten",
-    featureFree: "Ücretsiz",
+      "Bugün ne açıklanacak, hangi şirket bilanço verecek, takip ettiklerin nerede duruyor — hepsi tek ekranda ve Türkiye saatiyle. Okumak için hesap gerekmiyor; giriş yaparsan listelerin seninle kalır.",
+    featureLists: "Takip listen, notlarınla birlikte",
+    featureAlerts: "Bilanço ve ekonomi takvimi, saatleriyle",
+    featureBrief: "Her sabah yazılan günlük bülten",
+    featureFree: "Reklamsız ve ücretsiz",
     privacyNote:
       "Reklam yok, veri satışı yok. Hesabını yalnızca listelerini saklamak için kullanırız.",
-    signInSubtitle: "Favorilerine ve listelerine erişmek için giriş yap.",
+    signInSubtitle: "Takip listelerine dönmek için giriş yap.",
     signUpTitle: "Hesap Oluştur",
-    signUpSubtitle: "Kendi takip listelerini oluşturmak için hesap aç.",
+    signUpSubtitle: "Kendi takip listeni kurmak için hesap aç.",
     username: "Kullanıcı Adı",
     usernamePlaceholder: "Kullanıcı Adı",
     email: "E-posta",

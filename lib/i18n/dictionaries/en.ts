@@ -697,18 +697,18 @@ const en: typeof tr = {
 
   auth: {
     signInTitle: "Sign In",
-    pitchTitle: "Stop Checking Six Tabs Every Morning",
+    pitchTitle: "Be Ready Before the Bell",
     pitchBody:
-      "The economic calendar, earnings dates, macro readings and your watchlist — on one screen, with the times. You can read it without an account; sign in and your lists stay with you.",
-    featureLists: "Watchlists and a symbol archive",
-    featureAlerts: "Earnings and macro calendar",
+      "What gets released today, who reports, where your watchlist stands — one screen, with the times. No account needed to read it; sign in and your lists stay with you.",
+    featureLists: "Your watchlist, with your notes",
+    featureAlerts: "Earnings and economic calendar, with times",
     featureBrief: "A daily brief written each morning",
-    featureFree: "Free",
+    featureFree: "Free, and no ads",
     privacyNote:
       "No ads, no data selling. Your account exists only to keep your lists.",
-    signInSubtitle: "Sign in to reach your watchlists.",
+    signInSubtitle: "Sign in to get back to your watchlists.",
     signUpTitle: "Create Account",
-    signUpSubtitle: "Create an account to build your own watchlists.",
+    signUpSubtitle: "Create an account to build your own watchlist.",
     username: "Username",
     usernamePlaceholder: "username",
     email: "Email",

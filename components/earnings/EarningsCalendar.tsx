@@ -10,6 +10,7 @@ import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { AlsoReporting } from "@/components/earnings/AlsoReporting";
 import type { AnalysisBadge as AnalysisBadgeData, SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import { isSpotlight } from "@/lib/spotlight";
 import { cn, formatCompact, formatEtDateLong, formatPrice } from "@/lib/utils";
 import type { EarningsRow } from "@/lib/schema";
 
@@ -172,21 +173,40 @@ function DaySection({
   locale: Locale;
   t: Dictionary;
 }) {
+  /* Adla seçilmiş şirketler görünür katmanı piyasa değerine bakmadan hak
+     eder. Üç katmanın tamamı `marketCap`e göre diziliyordu ve bu ölçü bu
+     ekranda yanlış cevap veriyordu: CRWV'nin çeyreği aynı gün açıklayan pek
+     çok 200 milyar dolarlık şirketinkinden daha çok konuşuluyor. Daha kötüsü,
+     profili henüz gelmemiş bir şirket (ONDS) `marketCap` null olduğu için
+     `known` filtresine hiç giremiyor ve varsayılan KAPALI bölümde
+     kayboluyordu — takvimde adı geçmiyor gibi görünmesinin sebebi buydu.
+     Bu yüzden filtre profile değil SEMBOLE bakıyor. Liste: lib/spotlight.ts */
+  const spotlight = rows
+    .filter((row) => isSpotlight(row.symbol))
+    .sort(
+      (a, b) =>
+        (meta[b.symbol]?.marketCap ?? 0) - (meta[a.symbol]?.marketCap ?? 0),
+    );
+  const spotlightSet = new Set(spotlight.map((row) => row.symbol));
+
   const known = rows
-    .filter((row) => meta[row.symbol]?.marketCap)
+    .filter((row) => meta[row.symbol]?.marketCap && !spotlightSet.has(row.symbol))
     .sort(
       (a, b) =>
         (meta[b.symbol]?.marketCap ?? 0) - (meta[a.symbol]?.marketCap ?? 0),
     );
 
+  /* Hero satırı günün devlerine ayrılmış durumda kalıyor: adla seçilenler
+     ikinci katmana giriyor, orada da tamamı görünür. */
   const heroes = known
     .filter((row) => (meta[row.symbol]?.marketCap ?? 0) >= HERO_MIN_CAP)
     .slice(0, HERO_COUNT);
   const heroSet = new Set(heroes.map((row) => row.symbol));
 
-  const mid = known
-    .filter((row) => !heroSet.has(row.symbol))
-    .slice(0, MID_COUNT);
+  const mid = [
+    ...spotlight,
+    ...known.filter((row) => !heroSet.has(row.symbol)),
+  ].slice(0, MID_COUNT);
   const midSet = new Set(mid.map((row) => row.symbol));
 
   const rest = rows.filter(

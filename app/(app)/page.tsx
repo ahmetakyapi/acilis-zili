@@ -45,6 +45,7 @@ import {
   zoneTag,
 } from "@/lib/session-clock";
 import { getQuotes } from "@/lib/providers";
+import { isSpotlight } from "@/lib/spotlight";
 import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import {
@@ -423,9 +424,9 @@ async function RailSection({
 
   /* Şeride adıyla çıkmanın eşiği: 50 milyar dolar. Bir dönem kalabalık
      "182 bilanço" diye sayıyla yazıldı — o sayı da kimsenin planını
-     değiştirmiyordu. İşarete yalnızca takip edilenler ve eşik üstü şirketler
-     çıkar; ikisi de yoksa o pencerenin işareti HİÇ çizilmez. Tam liste
-     zaten /bilancolar'da. */
+     değiştirmiyordu. İşarete yalnızca takip edilenler, adla seçilen şirketler
+     (lib/spotlight.ts) ve eşik üstü şirketler çıkar; hiçbiri yoksa o
+     pencerenin işareti HİÇ çizilmez. Tam liste zaten /bilancolar'da. */
   const RAIL_CAP_FLOOR = 50e9;
 
   // Aynı saate düşen bilançolar tek noktada toplanır — 229 şirketlik bir gün
@@ -438,10 +439,16 @@ async function RailSection({
   ).flatMap((group) => {
     const capOf = (symbol: string) => earningsMeta[symbol]?.marketCap ?? 0;
     const notable = group
-      .filter((item) => item.watched || capOf(item.title) >= RAIL_CAP_FLOOR)
+      .filter(
+        (item) =>
+          item.watched ||
+          isSpotlight(item.title) ||
+          capOf(item.title) >= RAIL_CAP_FLOOR,
+      )
       .sort(
         (a, b) =>
           Number(b.watched) - Number(a.watched) ||
+          Number(isSpotlight(b.title)) - Number(isSpotlight(a.title)) ||
           capOf(b.title) - capOf(a.title),
       );
     if (notable.length === 0) return [];

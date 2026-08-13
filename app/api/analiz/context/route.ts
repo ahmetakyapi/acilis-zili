@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { earningsAnalyses, earningsCalendar, symbols } from "@/lib/schema";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { sectorGroupOf } from "@/lib/sectors";
+import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
 
 /**
  * Analiz rutini için bağlam paketi.
@@ -41,17 +42,11 @@ const CAP_GENERAL = 200e9;
 /**
  * Eşiğe bakılmaksızın aday sayılan şirketler.
  *
- * Yapay zekâ, uzay ve enerji altyapısının inşa katmanı: hepsi 100 milyarın
- * belirgin altında (NBIS 48, BE 64, RKLB 45, CRWV 39 milyar $) ama
- * bilançoları o eşiğin üstündeki pek çok şirketten daha çok konuşuluyor.
- * Eşiği bunları yakalayacak kadar indirmek yüzlerce sıradan şirketi de içeri
- * alırdı; adla saymak hem dar hem dürüst.
- *
- * ASTS'in `symbols` tablosunda henüz profili yok (piyasa değeri null) —
- * liste bilinçli olarak profile DEĞİL sembole bakıyor ki profil gelene kadar
- * da aday kalsın. Cron her gün 15 eksik profili dolduruyor.
+ * Liste burada DURMUYOR: aynı adlar bilanço takviminde ve gün şeridinde de
+ * eşiği atlıyor ve üç kopya hâlinde yaşadıklarında biri güncellenip ötekiler
+ * unutuluyordu. Tek kaynak `lib/spotlight.ts`; gerekçenin tamamı orada.
  */
-const ALWAYS_ELIGIBLE = new Set(["NBIS", "BE", "RKLB", "ASTS", "CRWV"]);
+const ALWAYS_ELIGIBLE = new Set(SPOTLIGHT_SYMBOLS);
 
 /**
  * "Teknoloji ve altyapı" kümesi.
