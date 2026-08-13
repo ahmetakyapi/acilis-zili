@@ -72,14 +72,19 @@ import { getSeries } from "@/lib/providers/fred";
 import { VIX_SERIES, vixBand } from "@/components/markets/FearGauge";
 
 import type { Metadata } from "next";
+import { pageAlternates } from "@/lib/site";
 
 /* Canonical yalnızca BURADA. Kökte durduğu sürece bütün alt sayfalara miras
    kalıyor ve hepsi arama motoruna "asıl adresim ana sayfa" diyordu; gerekçe
    `app/layout.tsx` içindeki `alternates` yorumunda. Başlık ve açıklama
    köktekilerden miras alınmaya devam ediyor — ana sayfa için doğru olan
-   zaten onlar. */
+   zaten onlar.
+
+   `pageAlternates` üzerinden yazılıyor: `alternates` derin birleşmediği için
+   elle yazılan bir canonical, kökteki RSS keşif etiketini sessizce
+   siliyordu. */
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  alternates: pageAlternates("/"),
 };
 
 export default async function TodayPage() {

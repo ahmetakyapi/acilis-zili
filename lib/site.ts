@@ -46,3 +46,22 @@ export const SITE_URL = (
  * adreste görünmesi arama motorlarında kopya içerik sayılır.
  */
 export const INDEXABLE = process.env.VERCEL_ENV !== "preview";
+
+/**
+ * Bir sayfanın `alternates` bloğu.
+ *
+ * TUZAK: Next metadata birleştirmesinde `alternates` DERİN BİRLEŞMEZ, tümüyle
+ * değiştirilir. Kökte `types: { "application/rss+xml": "/feed.xml" }` yazıyor
+ * ve bir alt sayfa `alternates: { canonical: "..." }` verdiği anda o sayfada
+ * besleme keşif etiketi SESSİZCE kayboluyor. Ana sayfada tam olarak bu oldu:
+ * canonical eklendi, RSS bağlantısı düştü ve HTML'de hiçbir uyarı çıkmadı.
+ *
+ * Bu yüzden canonical yazan her sayfa bloğu buradan üretiliyor — `types`
+ * unutulamıyor.
+ */
+export function pageAlternates(path: string) {
+  return {
+    canonical: path,
+    types: { "application/rss+xml": "/feed.xml" },
+  } as const;
+}
