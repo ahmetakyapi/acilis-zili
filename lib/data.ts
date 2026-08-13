@@ -543,6 +543,16 @@ export type CompanyRow = {
   name: string;
   industry: string | null;
   logoUrl: string | null;
+  /**
+   * Piyasa değeri — CANLI hesaplanmış.
+   *
+   * Sağlayıcının yazdığı `marketCap` profil çekildiği ANIN fotoğrafı ve o
+   * profil ~29 günde bir tazeleniyor; hisse sayısı ise ancak geri
+   * alım/ihraçla değişiyor. `/piyasalar` ve bilanço analizi bu yüzden değeri
+   * canlı fiyattan hesaplıyordu ama `/sirketler` fotoğrafı basıyordu: aynı
+   * şirket iki ekranda iki farklı piyasa değeriyle görünüyordu ve okuyucu
+   * için bu bir hata demek.
+   */
   marketCap: number | null;
   volume: number | null;
 };
@@ -557,8 +567,10 @@ export async function getCompanies(): Promise<CompanyRow[]> {
         industry: symbolsTable.industry,
         logoUrl: symbolsTable.logoUrl,
         marketCap: symbolsTable.marketCap,
+        shareOutstanding: symbolsTable.shareOutstanding,
         currency: symbolsTable.currency,
         volume: quotesCacheTable.volume,
+        price: quotesCacheTable.price,
       })
       .from(symbolsTable)
       .leftJoin(
@@ -568,9 +580,20 @@ export async function getCompanies(): Promise<CompanyRow[]> {
       .where(eq(symbolsTable.isIndexProxy, false));
     // USD dışı piyasa değeri (ör. TWD) USD ile sıralanamaz — yok sayılır.
     return rows.map((r) => ({
-      ...r,
+      symbol: r.symbol,
+      name: r.name,
+      industry: r.industry,
+      volume: r.volume,
       logoUrl: logoSrc(r.symbol, r.logoUrl),
-      marketCap: r.currency === "USD" ? r.marketCap : null,
+      /* Canlı hesap: son fiyat × hisse sayısı. İkisinden biri yoksa kayıtlı
+         değere düşülüyor — `liveMarketCap` ile aynı kural, tek fark burada
+         fiyatın önbellekten gelmesi. */
+      marketCap:
+        r.currency === "USD"
+          ? r.shareOutstanding && r.price
+            ? r.shareOutstanding * r.price
+            : r.marketCap
+          : null,
     }));
   } catch {
     return [];

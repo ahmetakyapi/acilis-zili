@@ -425,3 +425,33 @@ export function formatPeriodLabel(
     timeZone: "UTC",
   }).format(new Date(`${match[1]}-${match[2]}-15T12:00:00Z`));
 }
+
+
+/**
+ * Ekonomik olay değeri — `economic_events.actual` / `.forecast`.
+ *
+ * Sütun `text` ve içinde sağlayıcının yazdığı ham dize duruyor ("2.7", "129",
+ * "3.1%"). İki yer bu değeri basıyordu ve ikisi farklı davranıyordu: takvim
+ * ekranı ondalık ayracını yerelleştiriyor, ana sayfadaki Gün Şeridi ise dizeyi
+ * olduğu gibi yazıyordu. Aynı TÜFE rakamı bir ekranda "2,7" ötekinde "2.7"
+ * görünüyordu — okuyucu için iki farklı sayı.
+ *
+ * BİRİM UYDURULMUYOR: yüzde mi puan mı bin adet mi olduğunu bilmiyoruz.
+ * Yalnızca dizge baştan sona sayıysa ondalık ayracı yerelleşir; `unit` "%"
+ * ise işaret dile göre yerleşir. Sayı olmayan her şey olduğu gibi basılır.
+ */
+const PLAIN_NUMBER_VALUE = /^-?\d+(\.\d+)?$/;
+
+export function formatEventValue(
+  raw: string | null | undefined,
+  unit: string | null | undefined,
+  locale: string,
+): string | null {
+  const trimmed = raw?.trim();
+  if (!trimmed) return null;
+  if (!PLAIN_NUMBER_VALUE.test(trimmed)) return trimmed;
+
+  const digits = trimmed.includes(".") ? trimmed.split(".")[1].length : 0;
+  const shown = formatPrice(Number(trimmed), locale, { digits });
+  return unit === "%" ? withPercent(shown, locale) : shown;
+}

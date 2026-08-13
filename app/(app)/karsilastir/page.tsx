@@ -13,7 +13,7 @@ import {
   Segment,
   SymbolBadge,
 } from "@/components/ui/primitives";
-import { getStatus, getSymbolNames } from "@/lib/data";
+import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { getChartBars, getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
@@ -240,7 +240,15 @@ async function CompareBoard({
     {
       label: t.market.marketCap,
       value: (i) => {
-        const cap = names[symbols[i]]?.marketCap;
+        /* CANLI hesap — sağlayıcının `marketCap` alanı profil çekildiği anın
+           fotoğrafı ve profil ~29 günde bir tazeleniyor. Aynı şirket bu
+           tabloda ve /piyasalar'da iki farklı değerle görünüyordu; tablonun
+           kendi fiyat satırı zaten canlı, piyasa değeri de ondan kurulmalı.
+           Kural tek yerde: lib/data.ts → liveMarketCap */
+        const cap = liveMarketCap(
+          names[symbols[i]],
+          quotes[symbols[i]]?.price,
+        );
         return cap ? `$${formatCompact(cap, locale)}` : "—";
       },
     },

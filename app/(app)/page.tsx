@@ -61,6 +61,7 @@ import {
   formatEtDateLong,
   formatEtDateShort,
   formatPercent,
+  formatEventValue,
   formatPercentPlain,
   formatPeriodLabel,
   formatPrice,
@@ -395,14 +396,21 @@ async function RailSection({
       title: locale === "tr" ? e.titleTr : e.titleEn,
       importance: (e.importance as RailEvent["importance"]) ?? "medium",
       kind: "event",
-      detail:
-        e.actual !== null && e.actual !== undefined
-          ? `${e.actual}${e.unit === "%" ? "%" : ""}${
-              e.forecast ? ` · ${t.calendar.forecast} ${e.forecast}` : ""
-            }`
-          : e.forecast
-            ? `${t.calendar.forecast} ${e.forecast}${e.unit === "%" ? "%" : ""}`
-            : undefined,
+      /* Değerler PAYLAŞILAN biçimlendiriciden geçiyor. Burada şablon dizesiyle
+         ham yazılıyordu: `actual` bir `text` sütunu ve içinde sağlayıcının
+         nokta ayraçlı dizesi duruyor, yani aynı TÜFE rakamı takvimde "2,7"
+         burada "2.7" görünüyordu. Yüzde işaretinin yeri de elle konuyordu ve
+         İngilizcede yanlıştı. Gerekçe: lib/utils.ts → formatEventValue */
+      detail: (() => {
+        const actual = formatEventValue(e.actual, e.unit, locale);
+        const forecast = formatEventValue(e.forecast, e.unit, locale);
+        if (actual) {
+          return forecast
+            ? `${actual} · ${t.calendar.forecast} ${forecast}`
+            : actual;
+        }
+        return forecast ? `${t.calendar.forecast} ${forecast}` : undefined;
+      })(),
     }));
 
   /* Bilanço saatleri YAKLAŞIKTIR ve şeritte "~" ile yazılır.

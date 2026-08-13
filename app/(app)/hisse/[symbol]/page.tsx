@@ -27,6 +27,7 @@ import {
   getGenericImageUrls,
   getStatus,
   getSymbolNames,
+  liveMarketCap,
   isKnownSymbol,
 } from "@/lib/data";
 import { rateLimit, requestKey } from "@/lib/rate-limit";
@@ -640,11 +641,24 @@ async function ProfileCard({
   locale: Locale;
   t: Dictionary;
 }) {
-  const result = await getCompanyProfile(symbol);
+  /* Piyasa değeri CANLI hesaplanıyor: `profile.marketCap` profilin çekildiği
+     anın fotoğrafı ve o profil ~29 günde bir tazeleniyor, yani künyedeki sayı
+     `/piyasalar` ve bilanço analizindekinden farklı olabiliyordu — aynı
+     şirket, iki ekran, iki değer. Kural tek yerde: lib/data.ts →
+     liveMarketCap. Fiyat alınamazsa kayıtlı değere düşülür. */
+  const status = await getStatus();
+  const [result, meta, quoteForCap] = await Promise.all([
+    getCompanyProfile(symbol),
+    getSymbolNames([symbol]),
+    getQuote(symbol, status),
+  ]);
   if (!result.ok) {
     return <DataError message={t.data.failed} hint={t.data.failedHint} />;
   }
   const profile = result.data;
+  const marketCap =
+    liveMarketCap(meta[symbol], quoteForCap.ok ? quoteForCap.data.price : null) ??
+    profile.marketCap;
   const member = indexMemberOf(symbol);
   const about = await describeSymbol(symbol, locale);
   const websiteHref = safeExternalUrl(profile.weburl);
@@ -667,8 +681,8 @@ async function ProfileCard({
     [t.stock.exchange, profile.exchange ?? "—"],
     [
       t.market.marketCap,
-      profile.marketCap ? (
-        <span className="numeral">${formatCompact(profile.marketCap, locale)}</span>
+      marketCap ? (
+        <span className="numeral">${formatCompact(marketCap, locale)}</span>
       ) : (
         "—"
       ),

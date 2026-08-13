@@ -12,7 +12,11 @@ import { getEventsBetween } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { timePair, zoneTag } from "@/lib/session-clock";
-import { cn, formatEtDateLong, formatPrice } from "@/lib/utils";
+import {
+  cn,
+  formatEtDateLong,
+  formatEventValue,
+} from "@/lib/utils";
 import type { EconomicEventRow } from "@/lib/schema";
 
 import { pageMetadata } from "@/lib/page-meta";
@@ -70,8 +74,6 @@ function relativeDayLabel(away: number, t: Dictionary) {
  * "4,25" yazarken bu sütunun "4.2" yazması tutarsızdı. Sayı olmayan
  * her şey olduğu gibi basılır.
  */
-const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
-
 function ValueChip({
   label,
   value,
@@ -83,14 +85,10 @@ function ValueChip({
   locale: Locale;
   tone?: "strong" | "muted";
 }) {
-  const trimmed = value.trim();
-  const shown = PLAIN_NUMBER.test(trimmed)
-    ? formatPrice(Number(trimmed), locale, {
-        // Ondalık varsa koru, yoksa tam sayı kalsın: "129" → "129",
-        // "4.2" → "4,2". Sabit basamak sayısı ikisinden birini bozardı.
-        digits: trimmed.includes(".") ? trimmed.split(".")[1].length : 0,
-      })
-    : trimmed;
+  /* Biçimlendirme `lib/utils.ts` içindeki paylaşılan yardımcıda: ana
+     sayfadaki Gün Şeridi de aynı değeri basıyor ve iki kopya birbirinden
+     ayrı düşmüştü. */
+  const shown = formatEventValue(value, null, locale) ?? value.trim();
 
   return (
     <span className="flex flex-col items-end leading-tight">
