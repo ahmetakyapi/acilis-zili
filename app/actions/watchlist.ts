@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
@@ -18,6 +18,20 @@ async function requireUserId(): Promise<string | null> {
 }
 
 const LIST_COLORS = ["primary", "brass", "up", "down", "flat"] as const;
+
+/**
+ * Bir listede en fazla kaç öğe sıralanabilir.
+ *
+ * Sıra bilgisi İSTEMCİDEN geliyor ve istemciden gelen her şey gibi güvenilmez.
+ * Sınır yokken `orderedIds` içinde aynı geçerli kimliği yüz bin kez göndermek
+ * yüz bin ayrı UPDATE'i `Promise.all` ile aynı anda Neon'a yolluyordu: tek bir
+ * server action çağrısı veritabanını ve fonksiyon bütçesini bitiriyordu. Kimlik
+ * doğrulanmış bir kullanıcı gerekiyor ama bu, kendi hesabıyla siteyi
+ * durdurabilmesi anlamına gelmemeli.
+ *
+ * 200 gerçek kullanımın çok üstünde: en kalabalık liste bir avuç sembol.
+ */
+const MAX_REORDER_ITEMS = 200;
 
 export async function createWatchlist(formData: FormData) {
   const userId = await requireUserId();
@@ -114,7 +128,11 @@ export async function reorderWatchlistItems(
   orderedIds: string[],
 ) {
   const userId = await requireUserId();
-  if (!userId || !listId || orderedIds.length === 0) return;
+  if (!userId || !listId || !Array.isArray(orderedIds)) return;
+  /* Sınırı AŞAN İSTEK KIRPILMAZ, HİÇ İŞLENMEZ. Kırpmak, gönderenin niyetini
+     tahmin etmek olurdu: gerçek bir sürükle-bırak asla bu boyda olmaz, yani
+     bu istek ya bozuk ya kasıtlı. İkisinde de doğru cevap dokunmamak. */
+  if (orderedIds.length === 0 || orderedIds.length > MAX_REORDER_ITEMS) return;
 
   const [list] = await db
     .select({ id: watchlists.id })
@@ -129,16 +147,27 @@ export async function reorderWatchlistItems(
     .where(eq(watchlistItems.watchlistId, listId));
   const valid = new Set(rows.map((row) => row.id));
 
-  await Promise.all(
-    orderedIds
-      .filter((id) => valid.has(id))
-      .map((id, index) =>
-        db
-          .update(watchlistItems)
-          .set({ sortOrder: index })
-          .where(eq(watchlistItems.id, id)),
-      ),
+  /* Tekilleştirme sıradan ÖNCE: aynı kimlik iki kez gelirse ikinci geçişi
+     birincinin sırasını eziyor ve sonuç, gönderilen sıradan farklı çıkıyordu. */
+  const ordered = [...new Set(orderedIds)].filter((id) => valid.has(id));
+  if (ordered.length === 0) return;
+
+  /* TEK SORGU. Öğe başına bir UPDATE, on beş sembollük bir listede on beş
+     ayrı HTTP gidiş-dönüşü demekti (Neon serverless sürücüsü her sorguyu
+     ayrı istek olarak yolluyor). `CASE WHEN` ile hepsi tek turda yazılıyor. */
+  const cases = sql.join(
+    ordered.map((id, index) => sql`when ${watchlistItems.id} = ${id} then ${index}`),
+    sql` `,
   );
+  await db
+    .update(watchlistItems)
+    .set({ sortOrder: sql`case ${cases} else ${watchlistItems.sortOrder} end` })
+    .where(
+      and(
+        eq(watchlistItems.watchlistId, listId),
+        inArray(watchlistItems.id, ordered),
+      ),
+    );
 
   revalidatePath("/favoriler");
 }

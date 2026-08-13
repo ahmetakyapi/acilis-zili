@@ -401,119 +401,132 @@
    düşürüyor ve okunurluğu bozuyor. Düz renk taban olarak durur, degrade
    yalnızca background-clip destekleniyorsa devreye girer.
    -------------------------------------------------------------------------- */
-.display-ink {
-  color: var(--text-strong);
-}
+/* KATMAN — @layer components.
+   Bu blok bir dönem KATMANSIZ yazılıyordu ve sessiz bir hata üretiyordu:
+   Tailwind yardımcıları `@layer utilities` içinde, katmansız bir kural ise
+   katmanlı olanı HER ZAMAN ezer. Yani `class="plate text-[10px] text-primary"`
+   yazan kırk çağrı yerinde punto ve renk hiç uygulanmıyordu — yazılmış ama
+   ölü. Aynısı `.panel` için de geçerliydi: kendi `transition` shorthand'i,
+   üstüne yazılan `transition-colors`'ı siliyordu.
 
-@supports (background-clip: text) or (-webkit-background-clip: text) {
+   Bileşen katmanı utilities'ten ÖNCE geldiği için artık sıra doğru: sınıf
+   tabanı verir, yardımcı istisnayı yazar. */
+@layer components {
   .display-ink {
-    background-image: var(--display-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    /* Degrade metnin altına inen harfleri (g, y, ş) kırpmasın. */
-    padding-bottom: 0.06em;
+    color: var(--text-strong);
   }
 
-  /* Küçük puntoluk varyant — masthead marka adı ve gezinme etiketleri. */
-  .display-ink-tight {
-    background-image: var(--display-gradient-tight);
+  @supports (background-clip: text) or (-webkit-background-clip: text) {
+    .display-ink {
+      background-image: var(--display-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      /* Degrade metnin altına inen harfleri (g, y, ş) kırpmasın. */
+      padding-bottom: 0.06em;
+    }
+
+    /* Küçük puntoluk varyant — masthead marka adı ve gezinme etiketleri. */
+    .display-ink-tight {
+      background-image: var(--display-gradient-tight);
+    }
+
+
+    /* TUZAK: `.display-ink` içindeki bir çocuğa `opacity` (ya da transform,
+       filter) vermek onu ayrı bir kompozit katmana taşır ve kapsayıcının
+       background-clip bölgesinden ÇIKARIR — çocuğun kendi arka planı olmadığı
+       için metni tamamen kaybolur. Geri sayımdaki "g"/"sa" birimleri böyle
+       görünmez olmuştu. Bu ağacın içinde opaklıkla soluklaştırma yapma;
+       ayrım punto ve ağırlıkla kurulur. */
   }
 
+  /* --------------------------------------------------------------------------
+     Sayısal okumalar
 
-  /* TUZAK: `.display-ink` içindeki bir çocuğa `opacity` (ya da transform,
-     filter) vermek onu ayrı bir kompozit katmana taşır ve kapsayıcının
-     background-clip bölgesinden ÇIKARIR — çocuğun kendi arka planı olmadığı
-     için metni tamamen kaybolur. Geri sayımdaki "g"/"sa" birimleri böyle
-     görünmez olmuştu. Bu ağacın içinde opaklıkla soluklaştırma yapma;
-     ayrım punto ve ağırlıkla kurulur. */
+     Sayfadaki her sayı GÖVDE AİLESİNDE (Schibsted Grotesk); sınıflar aile
+     değiştirmez, yalnızca ağırlığı ve sıkı aralığı garantiler.
+
+     Mono kalktı. Bilanço kartlarındaki sayılar bir süre sistem monosuyla
+     yazıldı (.figure) ve tek başına bakınca iyi duruyordu; ama analiz
+     tablosunda dokuz sütun yan yana gelince daktilo genişliğindeki rakamlar
+     hem yer yiyor hem satırı gürültülü gösteriyordu.
+
+     TABULAR FİGÜR DE KALKTI ve bu bilinçli bir ödün. Schibsted Grotesk'te
+     `tnum` yalnızca rakamları değil VİRGÜLÜ VE NOKTAYI da rakam genişliğine
+     çekiyor: "8,97 Mr $" ekranda "8 , 97 Mr $", "$1.258,58" ise
+     "$1 . 258 , 58" diye çıkıyor — her sayıda görünen bir kusur. Kapatınca
+     sayılar düzgün yazılıyor ama rakam genişlikleri eşitlenmiyor; "1" 4,55px,
+     "0" 8,17px (13,5px puntoda ölçüldü).
+
+     Bedeli sütun içinde: sayı hücrelerinin hepsi SAĞA yaslı olduğu için sağ
+     kenarlar hizalı kalıyor, yalnızca içerideki basamaklar satırdan satıra
+     kayıyor. Her sayıda duran bir boşluk kusuru, ara ara fark edilen bir
+     kaymadan kötüydü. Hizanın şart olduğu bir yer çıkarsa çözüm `.figure`
+     sınıfını ayrı bir mono aileye bağlamaktır — kök ayarına dokunmadan.
+     -------------------------------------------------------------------------- */
+  .numeral {
+    letter-spacing: -0.02em;
+  }
+
+  /* Panoda okunan büyük sayı — geri sayım, endeks seviyesi, fiyat */
+  .tote {
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text-strong);
+  }
+
+  /* Bilanço kartlarındaki gelir/EPS sayıları.
+     `.numeral` ile aynı davranıyor; ayrı ad, o sayıların nerede kullanıldığını
+     koddan okumaya yarıyor ve ileride oraya özel bir ayar gerekirse tek yerden
+     verilir. */
+  .figure {
+    letter-spacing: -0.02em;
+  }
+
+  /* Küçük başlık / kicker — 10.5–11px, seyrek aralık */
+  .plate {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /**
+   * Kaydırılabilir ama çubuğu GÖRÜNMEYEN şerit.
+   *
+   * Analiz çipleri ve filtre satırları dar ekranda kırılmak yerine kayıyor.
+   * Kaydırma çubuğu bir denetim değil, bir kusur gibi duruyordu: şeridin
+   * altına gri bir çizgi çekiyor ve kartın hairline'ıyla yarışıyordu.
+   * İçerik hâlâ parmakla ve trackpad ile kaydırılıyor; yalnızca çubuk gizli.
+   */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* --------------------------------------------------------------------------
+     Yüzeyler — gölge yok, ayrım saydamlık + tek hairline ile
+     -------------------------------------------------------------------------- */
+  .panel {
+    background: var(--surface-solid);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    transition: border-color 0.25s var(--ease-brand), background-color 0.25s
+      var(--ease-brand);
+  }
+
+  /* Tıklanabilir kartlar accent tintiyle karşılık verir — zıplamaz. */
+  .panel-hover:hover {
+    border-color: var(--line-strong);
+    background: var(--primary-tint);
+  }
 }
 
-/* --------------------------------------------------------------------------
-   Sayısal okumalar
-
-   Sayfadaki her sayı GÖVDE AİLESİNDE (Schibsted Grotesk); sınıflar aile
-   değiştirmez, yalnızca ağırlığı ve sıkı aralığı garantiler.
-
-   Mono kalktı. Bilanço kartlarındaki sayılar bir süre sistem monosuyla
-   yazıldı (.figure) ve tek başına bakınca iyi duruyordu; ama analiz
-   tablosunda dokuz sütun yan yana gelince daktilo genişliğindeki rakamlar
-   hem yer yiyor hem satırı gürültülü gösteriyordu.
-
-   TABULAR FİGÜR DE KALKTI ve bu bilinçli bir ödün. Schibsted Grotesk'te
-   `tnum` yalnızca rakamları değil VİRGÜLÜ VE NOKTAYI da rakam genişliğine
-   çekiyor: "8,97 Mr $" ekranda "8 , 97 Mr $", "$1.258,58" ise
-   "$1 . 258 , 58" diye çıkıyor — her sayıda görünen bir kusur. Kapatınca
-   sayılar düzgün yazılıyor ama rakam genişlikleri eşitlenmiyor; "1" 4,55px,
-   "0" 8,17px (13,5px puntoda ölçüldü).
-
-   Bedeli sütun içinde: sayı hücrelerinin hepsi SAĞA yaslı olduğu için sağ
-   kenarlar hizalı kalıyor, yalnızca içerideki basamaklar satırdan satıra
-   kayıyor. Her sayıda duran bir boşluk kusuru, ara ara fark edilen bir
-   kaymadan kötüydü. Hizanın şart olduğu bir yer çıkarsa çözüm `.figure`
-   sınıfını ayrı bir mono aileye bağlamaktır — kök ayarına dokunmadan.
-   -------------------------------------------------------------------------- */
-.numeral {
-  letter-spacing: -0.02em;
-}
-
-/* Panoda okunan büyük sayı — geri sayım, endeks seviyesi, fiyat */
-.tote {
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--text-strong);
-}
-
-/* Bilanço kartlarındaki gelir/EPS sayıları.
-   `.numeral` ile aynı davranıyor; ayrı ad, o sayıların nerede kullanıldığını
-   koddan okumaya yarıyor ve ileride oraya özel bir ayar gerekirse tek yerden
-   verilir. */
-.figure {
-  letter-spacing: -0.02em;
-}
-
-/* Küçük başlık / kicker — 10.5–11px, seyrek aralık */
-.plate {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-/**
- * Kaydırılabilir ama çubuğu GÖRÜNMEYEN şerit.
- *
- * Analiz çipleri ve filtre satırları dar ekranda kırılmak yerine kayıyor.
- * Kaydırma çubuğu bir denetim değil, bir kusur gibi duruyordu: şeridin
- * altına gri bir çizgi çekiyor ve kartın hairline'ıyla yarışıyordu.
- * İçerik hâlâ parmakla ve trackpad ile kaydırılıyor; yalnızca çubuk gizli.
- */
-.no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* --------------------------------------------------------------------------
-   Yüzeyler — gölge yok, ayrım saydamlık + tek hairline ile
-   -------------------------------------------------------------------------- */
-.panel {
-  background: var(--surface-solid);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  transition: border-color 0.25s var(--ease-brand), background-color 0.25s
-    var(--ease-brand);
-}
-
-/* Tıklanabilir kartlar accent tintiyle karşılık verir — zıplamaz. */
-.panel-hover:hover {
-  border-color: var(--line-strong);
-  background: var(--primary-tint);
-}
 
 .chrome {
   background: var(--chrome);
