@@ -135,6 +135,12 @@ function SortHead({
   return (
     <th
       key={col}
+      scope="col"
+      /* Hangi sütuna göre sıralı olduğu iki şeyle anlatılıyordu: `text-primary`
+         rengi ve `aria-hidden` işaretli bir üçgen. İkisi de yardımcı
+         teknolojiye ulaşmıyor — ekran okuyucu kullanıcısı tablonun neye göre
+         dizildiğini hiç öğrenemiyordu. `aria-sort` bunu doğrudan söylüyor. */
+      aria-sort={active ? (dir === "desc" ? "descending" : "ascending") : "none"}
       className={cn("px-1.5 py-2.5 text-right font-semibold sm:px-3", className)}
     >
       {/* Dokunma alanı yazının kendisi kadardı (14px yüksekliğinde) ve

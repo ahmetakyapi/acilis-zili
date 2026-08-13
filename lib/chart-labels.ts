@@ -29,6 +29,9 @@ export type ChartLabels = {
   rangeLabels: Record<ChartRange, string>;
   area: string;
   candles: string;
+  /** Aralık ve mod düğmelerinin grup adları — ekran okuyucu için. */
+  rangeGroup: string;
+  modeGroup: string;
   periodReturn: string;
   periodHigh: string;
   periodLow: string;
@@ -48,6 +51,8 @@ export function chartLabels(t: Dictionary): ChartLabels {
     ranges: t.chart.ranges,
     rangeLabels: t.chart.rangeLabels,
     area: t.chart.area,
+    rangeGroup: t.chart.rangeGroup,
+    modeGroup: t.chart.modeGroup,
     candles: t.chart.candles,
     periodReturn: t.chart.periodReturn,
     periodHigh: t.chart.periodHigh,

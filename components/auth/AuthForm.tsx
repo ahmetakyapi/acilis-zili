@@ -117,20 +117,34 @@ export function AuthForm({
                   placeholder={field.placeholder}
                   autoComplete={field.autoComplete}
                   aria-invalid={hasError || undefined}
+                  /* Hata metni alana BAĞLANIYOR. Bağlanmadan önce ekran
+                     okuyucu alana odaklandığında yalnızca etiketi duyuyor,
+                     "şifre en az 8 karakter olmalı" satırını hiç görmüyordu. */
+                  aria-describedby={hasError ? `${field.name}-hata` : undefined}
                   className={cn(
                     "h-11 rounded-[10px] border bg-overlay-surface px-3.5 text-sm text-strong outline-none transition-shadow placeholder:text-muted focus:border-primary/50 focus:shadow-[0_0_0_3px_var(--primary-tint)]",
                     hasError ? "border-down" : "border-line-strong",
                   )}
                 />
                 {hasError && (
-                  <span className="text-xs text-down">{state.error}</span>
+                  <span id={`${field.name}-hata`} className="text-xs text-down">
+                    {state.error}
+                  </span>
                 )}
               </label>
             );
           })}
 
           {state.field === "form" && state.error && (
-            <p className="rounded-[10px] bg-down-wash px-3.5 py-2.5 text-sm text-down">
+            /* CANLI BÖLGE. Sunucu eylemi dönünce sayfa yeniden çizilmiyor,
+               yalnızca bu satır beliriyordu: ekran okuyucu kullanıcısı "Giriş
+               Yap"a bastıktan sonra hiçbir şey duymuyor, formun neden
+               gönderilmediğini anlamıyordu. Aynı desen hesap silmede zaten
+               doğru yazılmıştı. */
+            <p
+              role="alert"
+              className="rounded-[10px] bg-down-wash px-3.5 py-2.5 text-sm text-down"
+            >
               {state.error}
             </p>
           )}

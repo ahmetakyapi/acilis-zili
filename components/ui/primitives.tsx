@@ -588,7 +588,10 @@ export function SegmentItem({
       scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "px-[13px] py-[7px] transition-colors",
+        /* Dokunma hedefi 33px'ti. `FilterChip` bir denetimde 44px'e
+           çıkarılmıştı ama aynı satırın öteki denetimi olan bu segment
+           atlanmıştı — Hafta/Ay gibi en çok basılan seçicilerin hepsi bu. */
+        "inline-flex min-h-11 items-center px-[13px] py-[7px] transition-colors sm:min-h-9",
         active
           ? "bg-primary font-semibold text-on-primary"
           : "text-body hover:text-strong",

@@ -337,6 +337,24 @@
   html {
     -webkit-tap-highlight-color: transparent;
     overflow-x: clip;
+
+    /* SABİT KATMANLAR ODAKLANAN ÖĞEYİ ÖRTMESİN (WCAG 2.2 · 2.4.11).
+       Üstte 64px yapışkan başlık, altta mobilde sekme çubuğu, masaüstünde
+       piyasa şeridi var. Tarayıcı odaklanan öğeyi görünüm alanının kenarına
+       kaydırıyordu ve öğe bu katmanların ALTINDA kalıyordu: klavyeyle gezen
+       okuyucu odağın nerede olduğunu göremiyordu. Aynı kural atlama
+       bağlantısını ve `#çapa` hedeflerini de düzeltiyor.
+
+       Alt değer masaüstünde daha küçük: orada şerit 36px, mobil sekme
+       çubuğu ise güvenli alanla birlikte 80px'e yaklaşıyor. */
+    scroll-padding-block: calc(env(safe-area-inset-top) + 76px)
+      calc(env(safe-area-inset-bottom) + 80px);
+  }
+
+  @media (min-width: 640px) {
+    html {
+      scroll-padding-block: 76px 52px;
+    }
   }
 
   body {

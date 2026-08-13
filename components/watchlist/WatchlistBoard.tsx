@@ -49,7 +49,11 @@ export type BoardLabels = {
   listNamePlaceholder: string;
   createList: string;
   deleteList: string;
+  /** Satırdaki çöp kutusu — listeyi değil YALNIZCA o sembolü çıkarır. */
+  removeSymbol: string;
   deleteListConfirm: string;
+  colorLegend: string;
+  colorNames: Record<string, string>;
   addSymbol: string;
   symbolPlaceholder: string;
   empty: string;
@@ -156,22 +160,29 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
           />
         </label>
         <fieldset className="flex items-center gap-1.5 pb-2">
-          <legend className="sr-only">renk</legend>
+          <legend className="sr-only">{labels.colorLegend}</legend>
           {Object.entries(LIST_COLOR_CLASS).map(([value, cls], index) => (
             <label key={value} className="cursor-pointer">
+              {/* ERİŞİLEBİLİR AD. Etiketin metin içeriği boştu (içinde yalnızca
+                  `sr-only` bir radio ve renkli bir daire vardı), dolayısıyla
+                  beş seçenek de "seçenek düğmesi, işaretli değil" diye
+                  okunuyor ve aralarında hiçbir ayrım kalmıyordu. `title`
+                  yardımcı teknolojide güvenilir bir ad değil ve zaten iç
+                  anahtarı ("primary", "brass") gösteriyordu. */}
               <input
                 type="radio"
                 name="color"
                 value={value}
                 defaultChecked={index === 0}
+                aria-label={labels.colorNames[value] ?? value}
                 className="peer sr-only"
               />
               <span
+                aria-hidden
                 className={cn(
                   "block size-6 rounded-full border-2 border-transparent transition-all peer-checked:border-(--text-strong) peer-focus-visible:ring-2 peer-focus-visible:ring-(--line-focus)",
                   cls,
                 )}
-                title={value}
               />
             </label>
           ))}
@@ -498,7 +509,7 @@ function SortableRows({
                 await removeSymbolFromList(fd);
                 router.refresh();
               }}
-              aria-label={`${labels.deleteList}: ${item.symbol}`}
+              aria-label={`${labels.removeSymbol}: ${item.symbol}`}
               className="inline-flex size-7 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 opacity-100 transition hover:bg-down-wash hover:text-down opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
             >
               <Trash weight="duotone" size={13} />

@@ -445,6 +445,10 @@ const en: typeof tr = {
       "5Y": "Past 5 Years",
     },
     area: "Line",
+    /* Aralık ve mod düğmeleri sahte `tablist` idi; artık `role="group"` ve
+       grubun bir adı olması gerekiyor. */
+    rangeGroup: "Chart Range",
+    modeGroup: "Chart Type",
     candles: "Candles",
     periodReturn: "Return",
     periodHigh: "High",
@@ -467,6 +471,21 @@ const en: typeof tr = {
     createList: "Create List",
     renameList: "Rename List",
     deleteList: "Delete List",
+    /* Satırdaki çöp kutusu YALNIZCA o sembolü çıkarıyor ama etiketi
+       "Listeyi Sil"di: ekran okuyucu "Listeyi Sil: NVDA" diyor ve
+       kullanıcı tüm listeyi sileceğini sanıyordu. Yıkıcı bir eylemde
+       yanlış etiket, ya işlemi hiç yaptırmaz ya da istenmeyeni yaptırır. */
+    removeSymbol: "Remove From List",
+    /* Renk seçimi beş `sr-only` radio; etiketleri boştu ve ekran
+       okuyucu beşini de ayırt edilemez biçimde okuyordu. */
+    colorLegend: "List Color",
+    colorNames: {
+      primary: "Blue",
+      brass: "Amber",
+      up: "Green",
+      down: "Red",
+      flat: "Grey",
+    },
     deleteListConfirm:
       "This list and every symbol in it will be deleted. Continue?",
     addSymbol: "Add Symbol",

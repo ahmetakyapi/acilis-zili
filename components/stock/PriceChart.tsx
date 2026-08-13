@@ -677,13 +677,18 @@ export function PriceChart({
 
       {/* Aralık ve mod seçici — grafiğin altında, Midas düzeni */}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3">
-        <div className="scroll-x flex gap-1" role="tablist" aria-label="Aralık">
+        {/* SEKME DEĞİL, AÇMA-KAPAMA GRUBU. `role="tablist"` + `role="tab"`
+            yazılıydı ama ne `aria-controls` ne de bir `tabpanel` vardı; grafik
+            kabı sade bir `div`. Ekran okuyucu "sekme, seçili" diyor, kullanıcı
+            ok tuşlarıyla gezmeyi bekliyor ve öyle bir yönetim yok — ARIA sözü
+            tutulmuyordu. Aralık seçimi zaten bir sekme değil: aynı grafiğin
+            penceresini değiştiriyor. */}
+        <div className="scroll-x flex gap-1" role="group" aria-label={labels.rangeGroup}>
           {CHART_RANGES.map((r) => (
             <button
               key={r}
               type="button"
-              role="tab"
-              aria-selected={range === r}
+              aria-pressed={range === r}
               onClick={() => setRange(r)}
               className={cn(
                 "numeral min-h-11 shrink-0 rounded-(--radius-sm) px-2.5 sm:min-h-[36px] text-xs font-semibold transition-colors",
@@ -696,11 +701,14 @@ export function PriceChart({
             </button>
           ))}
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1" role="group" aria-label={labels.modeGroup}>
           {(["area", "candles"] as const).map((m) => (
             <button
               key={m}
               type="button"
+              /* Mod düğmelerinde hiç durum yoktu: hangi çizim türünün açık
+                 olduğu yalnızca renkle anlatılıyordu. */
+              aria-pressed={mode === m}
               onClick={() => setMode(m)}
               className={cn(
                 "min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-medium sm:min-h-[36px] transition-colors",

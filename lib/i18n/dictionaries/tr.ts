@@ -490,6 +490,10 @@ const tr = {
       "5Y": "Son 5 Yıl",
     },
     area: "Çizgi",
+    /* Aralık ve mod düğmeleri sahte `tablist` idi; artık `role="group"` ve
+       grubun bir adı olması gerekiyor. */
+    rangeGroup: "Grafik Aralığı",
+    modeGroup: "Grafik Türü",
     candles: "Mum",
     periodReturn: "Getiri",
     periodHigh: "En Yüksek",
@@ -513,6 +517,21 @@ const tr = {
     createList: "Liste Oluştur",
     renameList: "Listeyi Yeniden Adlandır",
     deleteList: "Listeyi Sil",
+    /* Satırdaki çöp kutusu YALNIZCA o sembolü çıkarıyor ama etiketi
+       "Listeyi Sil"di: ekran okuyucu "Listeyi Sil: NVDA" diyor ve
+       kullanıcı tüm listeyi sileceğini sanıyordu. Yıkıcı bir eylemde
+       yanlış etiket, ya işlemi hiç yaptırmaz ya da istenmeyeni yaptırır. */
+    removeSymbol: "Listeden Çıkar",
+    /* Renk seçimi beş `sr-only` radio; etiketleri boştu ve ekran
+       okuyucu beşini de ayırt edilemez biçimde okuyordu. */
+    colorLegend: "Liste Rengi",
+    colorNames: {
+      primary: "Mavi",
+      brass: "Amber",
+      up: "Yeşil",
+      down: "Kırmızı",
+      flat: "Gri",
+    },
     deleteListConfirm:
       "Bu liste ve içindeki tüm semboller silinecek. Devam edilsin mi?",
     addSymbol: "Sembol Ekle",

@@ -786,7 +786,14 @@ function SortHead({
   className?: string;
 }) {
   return (
-    <th className={cn("px-3 py-2.5 text-right font-semibold", className)}>
+    <th
+      scope="col"
+      /* Sıralı sütun rengi ve `aria-hidden` bir üçgenle anlatılıyordu; ikisi
+         de yardımcı teknolojiye ulaşmıyor. Gerekçe ikizinde yazılı:
+         app/(app)/sirketler/page.tsx */
+      aria-sort={active ? (dir === "desc" ? "descending" : "ascending") : "none"}
+      className={cn("px-3 py-2.5 text-right font-semibold", className)}
+    >
       {/* Dokunma alanı yazının kendisi kadardı (14px); negatif margin +
           dikey dolgu tabloyu büyütmeden hedefi 32px'e çıkarır. */}
       {/* scroll={false}: sıralama bir gezinme değil, aynı tablonun yeniden
