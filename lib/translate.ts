@@ -3,6 +3,7 @@ import { z } from "zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { eq, desc, isNull } from "drizzle-orm";
 import { db } from "./db";
+import { BACKGROUND_TIMEOUT_MS, withTimeout } from "./providers/timeout";
 import { news } from "./schema";
 
 /**
@@ -153,18 +154,26 @@ async function translateWithClaude(items: PendingItem[]): Promise<Translated[]> 
       summary: item.summary?.slice(0, 600) ?? "",
     }));
 
-    const response = await client.messages.parse({
-      model: "claude-opus-5",
-      max_tokens: 16000,
-      system: CLAUDE_SYSTEM,
-      output_config: { format: zodOutputFormat(TranslationSchema) },
-      messages: [
-        {
-          role: "user",
-          content: `Şu haberleri çevir ve aynı id ile döndür:\n${JSON.stringify(payload)}`,
-        },
-      ],
-    });
+    /* SÜRE SINIRI. Kırk haberi 16.000 token bütçesiyle çeviren tek bir istek
+       yavaşladığında cron'un tamamı onu bekliyordu; `providers/timeout.ts`
+       tam bu iş için `BACKGROUND_TIMEOUT_MS` tanımlamıştı ama burası
+       sarmalanmamıştı. Süre dolarsa aşağıdaki `catch` zaten boş dizi
+       döndürüyor — çeviri o koşumda atlanıyor, koşum devam ediyor. */
+    const response = await withTimeout(
+      client.messages.parse({
+        model: "claude-opus-5",
+        max_tokens: 16000,
+        system: CLAUDE_SYSTEM,
+        output_config: { format: zodOutputFormat(TranslationSchema) },
+        messages: [
+          {
+            role: "user",
+            content: `Şu haberleri çevir ve aynı id ile döndür:\n${JSON.stringify(payload)}`,
+          },
+        ],
+      }),
+      BACKGROUND_TIMEOUT_MS,
+    );
 
     const parsed = response.parsed_output;
     if (!parsed) return [];

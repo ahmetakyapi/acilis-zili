@@ -67,32 +67,19 @@ export async function GET() {
     return new Response("not-found", { status: 404 });
   }
 
-  const [storyRows, briefRows] = await Promise.all([
-    db
-      .select({
-        slug: stories.slug,
-        title: stories.title,
-        dek: stories.dek,
-        eventDate: stories.eventDate,
-        publishedAt: stories.publishedAt,
-      })
-      .from(stories)
-      .where(eq(stories.locale, locale))
-      .orderBy(desc(stories.publishedAt))
-      .limit(FEED_LIMIT),
-    db
-      .select({
-        briefDate: dailyBriefs.briefDate,
-        period: dailyBriefs.period,
-        headline: dailyBriefs.headline,
-        bodyMd: dailyBriefs.bodyMd,
-        generatedAt: dailyBriefs.generatedAt,
-      })
-      .from(dailyBriefs)
-      .where(eq(dailyBriefs.locale, locale))
-      .orderBy(desc(dailyBriefs.briefDate))
-      .limit(FEED_LIMIT),
-  ]);
+  /* Veritabanı hatası beslemeyi ÇÖKERTMİYOR. İki sorgu try/catch dışındaydı
+     ve Neon düştüğünde abonelerin okuyucusu 500 alıyordu; bazı RSS
+     istemcileri tekrarlanan 5xx'te aboneliği sessizce durduruyor. Sitenin
+     geri kalanı "hata durumunda boş değer döner, sayfa çökmez" kuralını
+     uyguluyor — besleme de artık öyle: kanal başlığı ve tarihi yazılı,
+     öğesiz ama geçerli bir gövde döner. */
+  let storyRows: Awaited<ReturnType<typeof loadFeedRows>>[0] = [];
+  let briefRows: Awaited<ReturnType<typeof loadFeedRows>>[1] = [];
+  try {
+    [storyRows, briefRows] = await loadFeedRows(locale);
+  } catch {
+    /* Boş ama GEÇERLİ besleme: kanal künyesi yazılır, öğe listesi boş kalır. */
+  }
 
   const items: Item[] = [
     ...storyRows.map((row) => ({
@@ -159,4 +146,35 @@ ${items
       "Cache-Control": "public, max-age=1800, s-maxage=1800",
     },
   });
+}
+
+
+/** Besleme satırları — hata çağırana bırakılır, orada yutulur. */
+async function loadFeedRows(locale: string) {
+  return Promise.all([
+    db
+      .select({
+        slug: stories.slug,
+        title: stories.title,
+        dek: stories.dek,
+        eventDate: stories.eventDate,
+        publishedAt: stories.publishedAt,
+      })
+      .from(stories)
+      .where(eq(stories.locale, locale))
+      .orderBy(desc(stories.publishedAt))
+      .limit(FEED_LIMIT),
+    db
+      .select({
+        briefDate: dailyBriefs.briefDate,
+        period: dailyBriefs.period,
+        headline: dailyBriefs.headline,
+        bodyMd: dailyBriefs.bodyMd,
+        generatedAt: dailyBriefs.generatedAt,
+      })
+      .from(dailyBriefs)
+      .where(eq(dailyBriefs.locale, locale))
+      .orderBy(desc(dailyBriefs.briefDate))
+      .limit(FEED_LIMIT),
+  ]);
 }

@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -265,6 +266,15 @@ export const news = pgTable(
   (t) => [
     uniqueIndex("news_provider_id_key").on(t.providerId),
     index("news_published_idx").on(t.publishedAt),
+    /* Haber detayı her açılışta "bu görsel kaç haberde geçiyor" diye
+       sayıyor (isGenericNewsImage — kaynak logosunu elemek için) ve o sorgu
+       indekssiz kalınca tüm tabloyu tarıyordu. Tablo 90 günlük pencerede
+       binlerce satır taşıyor; sayfa açılışına eklenen tarama boşuna.
+       Kısmi indeks: satırların çoğunda görsel yok, onları taşımaya gerek
+       yok — sorgu da zaten yalnızca dolu bir adresle geliyor. */
+    index("news_image_url_idx")
+      .on(t.imageUrl)
+      .where(sql`${t.imageUrl} is not null`),
   ],
 );
 

@@ -165,14 +165,19 @@ export async function getEarningsForSymbol(
 
 /* ---- Haberler ---- */
 
-export async function getNewsById(id: string): Promise<NewsRow | null> {
+/* `cache()`: haber detayı aynı satırı İKİ KEZ istiyor — bir kez künye için
+   (`generateMetadata`), bir kez sayfa gövdesi için. İkisi aynı istekte
+   çalıştığı için tek sorguya iniyor. */
+export const getNewsById = cache(async function getNewsById(
+  id: string,
+): Promise<NewsRow | null> {
   try {
     const [row] = await db.select().from(news).where(eq(news.id, id)).limit(1);
     return row ?? null;
   } catch {
     return null;
   }
-}
+});
 
 /**
  * Görsel gerçekten habere mi ait?
@@ -903,7 +908,15 @@ export async function getAnalyses(
       sort === "skor"
         ? [desc(earningsAnalyses.score), desc(earningsAnalyses.reportDate)]
         : sort === "tepki"
-          ? [desc(earningsAnalyses.reactionPct), desc(earningsAnalyses.reportDate)]
+          ? [
+              /* NULLS LAST. `reaction_pct` nullable ve Postgres'in `DESC`
+                 varsayılanı NULLS FIRST: "Tepki" sekmesine geçen okuyucu, en
+                 büyük tepkiyi veren bilançolar yerine tepki verisi hiç
+                 girilmemiş kayıtları görüyordu — sıralamanın vaat ettiğinin
+                 tam tersi. */
+              sql`${earningsAnalyses.reactionPct} desc nulls last`,
+              desc(earningsAnalyses.reportDate),
+            ]
           : [desc(earningsAnalyses.reportDate), desc(earningsAnalyses.publishedAt)];
 
     const query = db.select(ANALYSIS_INDEX_COLUMNS).from(earningsAnalyses);

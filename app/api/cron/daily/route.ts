@@ -75,6 +75,17 @@ const EARNINGS_HORIZON_DAYS = 30;
 const VIEW_RETENTION_DAYS = 180;
 
 /**
+ * Haber kaç gün saklanır.
+ *
+ * Günde ~60 genel + ~50 şirket haberi yazılıyor (özet, çeviri ve sembol
+ * dizisiyle birlikte) ve hiçbiri silinmiyordu. Ekran zaten yalnızca son
+ * 20-60 haberi gösteriyor; birikenin tek etkisi tablo boyutu ve yedek
+ * maliyeti. Doksan gün, hisse sayfasındaki "son haberler" penceresinin çok
+ * üstünde.
+ */
+const NEWS_RETENTION_DAYS = 90;
+
+/**
  * Bir olayın açıklanma saati geçti mi.
  *
  * Pay 30 dakika: FRED yayını saniyesinde yansıtmıyor ve sınırda koşan bir
@@ -509,6 +520,21 @@ export async function GET(request: Request) {
     report.viewsPurged = deleted.length;
   } catch (error) {
     report.viewsPurged = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* Haber tablosu da budanıyor — ölçüm buduluyordu ama haber sonsuza kadar
+     büyüyordu. Gerekçe NEWS_RETENTION_DAYS'te. */
+  try {
+    const cutoff = new Date(
+      Date.parse(`${addEtDays(today, -NEWS_RETENTION_DAYS)}T00:00:00Z`),
+    );
+    const deleted = await db
+      .delete(newsTable)
+      .where(lt(newsTable.publishedAt, cutoff))
+      .returning({ id: newsTable.id });
+    report.newsPurged = deleted.length;
+  } catch (error) {
+    report.newsPurged = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
   /* Bülten üretimi BİLEREK YOK. Cron bir dönem kural tabanlı bir özet

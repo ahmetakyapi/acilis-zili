@@ -33,6 +33,7 @@ import { getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { missingMetadata } from "@/lib/page-meta";
 import {
   verdictLabel,
   verdictOf,
@@ -209,7 +210,7 @@ export async function generateMetadata(
   const { symbol, period } = await props.params;
   const { locale } = await getI18n();
   const row = await getAnalysis(symbol.toUpperCase(), period, locale);
-  if (!row) return { title: "404" };
+  if (!row) return missingMetadata(locale);
   return {
     title: `${row.company} ${row.periodLabel} — ${row.symbol}`,
     description: row.headline,

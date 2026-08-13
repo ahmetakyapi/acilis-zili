@@ -1,0 +1,1 @@
+CREATE INDEX "news_image_url_idx" ON "news" USING btree ("image_url") WHERE "news"."image_url" is not null;

@@ -55,6 +55,15 @@ async function signInKey(request: unknown): Promise<string> {
   return "signin:bilinmeyen";
 }
 
+/**
+ * Veritabanına ulaşılamadığında fırlatılan işaret.
+ *
+ * next-auth her `authorize` hatasını `AuthError`a sarıyor ve form tarafı
+ * onu "kimlik bilgisi hatalı" diye okuyordu. Bu dize iki katmanın
+ * anlaşmasıdır — `app/actions/auth.ts` onu arayıp mesajı ayırıyor.
+ */
+export const DB_UNAVAILABLE = "az:db-unavailable";
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Oturum 180 gün yaşar ve aktif kullanımda kayarak yenilenir —
   // kullanıcı her ziyarette yeniden giriş yapmak zorunda kalmaz.
@@ -89,11 +98,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!username || !password) return null;
 
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.username, username))
-          .limit(1);
+        /* VERİTABANI HATASI "ŞİFRE HATALI" DEĞİLDİR. Sorgu try/catch'sizdi;
+           Neon erişilemediğinde fırlatılan hata next-auth tarafından
+           `AuthError`a sarılıyor ve form dalı kullanıcıya "kullanıcı adı veya
+           şifre hatalı" diyordu. Okuyucu şifresini değiştirmeye çalışıyor,
+           oysa sorun onda değil. Ayrı bir hata fırlatılıyor; `signInAction`
+           onu tanıyıp genel hata mesajını gösteriyor. */
+        let user: typeof users.$inferSelect | undefined;
+        try {
+          [user] = await db
+            .select()
+            .from(users)
+            .where(eq(users.username, username))
+            .limit(1);
+        } catch {
+          throw new Error(DB_UNAVAILABLE);
+        }
 
         if (!user) return null;
 

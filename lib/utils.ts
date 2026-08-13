@@ -209,7 +209,22 @@ export function formatChange(value: number | null | undefined, locale: string) {
   return sign ? `${sign}${SIGN_GAP}${formatted}` : formatted;
 }
 
-/** Piyasa değeri — 3210000000 → "3,21 T" */
+/**
+ * Piyasa değeri — 3210000000 → "3,21 Mr", 1e12 → "1,00 T"
+ *
+ * ÜÇ ANLAMLI HANE, ondalık sayısı sabit değil. `maximumFractionDigits: 2`
+ * yeterli görünüyordu ama sütun hâlinde okununca dağılıyordu: tam trilyonluk
+ * bir şirket "1 T", yanındaki "1,11 T" yazıyor ve ikisi aynı ölçekte
+ * olmadıkları izlenimini veriyordu. Ondalık hane artık büyüklüğe göre
+ * seçiliyor — 1–9 arası iki, 10–99 arası bir, 100'den büyükte sıfır:
+ *
+ *   1,00 T · 4,32 T · 875 Mr · 54,3 Mr · 3,21 Mr · 612 Mn
+ *
+ * HER YERE İKİ ONDALIK KOYULMADI çünkü "875,00 Mr" olmayan bir kesinlik
+ * iddia ediyor: sayı hisse adedi × fiyattan geliyor ve son iki hanesi
+ * gün içinde zaten oynuyor. Üç anlamlı hane hem sütunu hizalı tutuyor hem
+ * de sayının gerçekten taşıdığı bilgiyi yazıyor.
+ */
 export function formatCompact(
   value: number | null | undefined,
   locale: string,
@@ -230,13 +245,32 @@ export function formatCompact(
           { v: 1e6, s: "M" },
           { v: 1e3, s: "K" },
         ];
-  const nf = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    maximumFractionDigits: 2,
-  });
-  for (const unit of units) {
-    if (abs >= unit.v) return `${nf.format(value / unit.v)} ${unit.s}`;
+  /** 1–9 → 2 hane, 10–99 → 1, 100+ → 0. Toplam her zaman üç anlamlı hane. */
+  const digitsFor = (scaled: number) => {
+    const size = Math.abs(scaled);
+    if (size >= 100) return 0;
+    if (size >= 10) return 1;
+    return 2;
+  };
+  const nf = (digits: number) =>
+    new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+
+  for (let i = 0; i < units.length; i += 1) {
+    if (abs < units[i]!.v) continue;
+    let unit = units[i]!;
+    let scaled = value / unit.v;
+    /* Yuvarlama üst birime taşabilir: 999.996 Mr, sıfır ondalıkla "1.000 Mr"
+       olurdu — doğrusu "1,00 T". Taşma varsa bir üst birime geçilir. */
+    if (i > 0 && Math.abs(Number(scaled.toFixed(digitsFor(scaled)))) >= 1000) {
+      unit = units[i - 1]!;
+      scaled = value / unit.v;
+    }
+    return `${nf(digitsFor(scaled)).format(scaled)} ${unit.s}`;
   }
-  return nf.format(value);
+  return nf(digitsFor(value)).format(value);
 }
 
 /** Hacim — tam sayı, binlik ayraçlı */

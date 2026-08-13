@@ -1,11 +1,11 @@
 "use server";
 
 import { compare, hash } from "bcryptjs";
-import { eq, or } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth, signIn, signOut } from "@/auth";
+import { DB_UNAVAILABLE, auth, signIn, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { users, watchlists } from "@/lib/schema";
 import { getDictionary, getLocale } from "@/lib/i18n";
@@ -71,6 +71,56 @@ const signUpSchema = z.object({
   password: z.string().min(8),
 });
 
+/**
+ * Postgres hata gövdesi — Drizzle onu bir kat sarıyor.
+ *
+ * `DrizzleQueryError` kendi mesajını yazıp asıl hatayı `cause` altına
+ * koyuyor; `code` ve `constraint` orada. Üst seviyede aranırsa benzersizlik
+ * ihlali (23505) hiç görülmez ve kullanıcı "kullanıcı adı alınmış" yerine
+ * "bir şeyler ters gitti" okur. İki seviye de bakılıyor ki sürücü sarmayı
+ * bırakırsa da çalışsın.
+ */
+function pgError(error: unknown): { code?: string; constraint?: string } | null {
+  const seen = new Set<unknown>();
+  let node: unknown = error;
+  while (node && typeof node === "object" && !seen.has(node)) {
+    seen.add(node);
+    const candidate = node as { code?: unknown; constraint?: unknown; cause?: unknown };
+    if (typeof candidate.code === "string") {
+      return {
+        code: candidate.code,
+        constraint:
+          typeof candidate.constraint === "string" ? candidate.constraint : undefined,
+      };
+    }
+    node = candidate.cause;
+  }
+  return null;
+}
+
+/**
+ * Hata zincirinde bir işaret aranıyor mu?
+ *
+ * next-auth fırlatılan hatayı `CallbackRouteError` içine alıyor ve asıl
+ * hatayı `cause.err` altına koyuyor — yani `String(error.cause)` "[object
+ * Object]" verir, mesaj kaybolur. Zincir sonuna kadar geziliyor.
+ */
+function mentions(error: unknown, marker: string): boolean {
+  const seen = new Set<unknown>();
+  const stack: unknown[] = [error];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (!node || typeof node !== "object" || seen.has(node)) continue;
+    seen.add(node);
+    const candidate = node as { message?: unknown; cause?: unknown; err?: unknown };
+    if (typeof candidate.message === "string" && candidate.message.includes(marker)) {
+      return true;
+    }
+    stack.push(candidate.cause, candidate.err);
+  }
+  return false;
+}
+
 export async function signUpAction(
   _prev: AuthFormState,
   formData: FormData,
@@ -127,25 +177,42 @@ export async function signUpAction(
 
   const passwordHash = await hash(parsed.password, 12);
 
-  try {
-    const [created] = await db
-      .insert(users)
-      .values({
-        username: parsed.username,
-        email: parsed.email,
-        passwordHash,
-        locale,
-      })
-      .returning({ id: users.id });
+  /* HESAP VE İLK LİSTE TEK İFADEDE — ikisi de olur ya da hiçbiri.
+     Önce `insert users`, sonra ayrı bir `insert watchlists` vardı. İkincisi
+     patladığında (Neon'un HTTP bağlantısı isteğin ortasında düşebiliyor)
+     ortaya listesiz bir hesap çıkıyordu ve daha kötüsü, kullanıcı "bir şeyler
+     ters gitti" görüp yeniden denediğinde bu kez "kullanıcı adı alınmış"
+     diyorduk — kendi yarım kaydına takılıyordu. Kurtarma yolu da yoktu.
 
-    // Boş bir uygulamaya düşmemesi için ilk listeyi hazır ver.
-    await db.insert(watchlists).values({
-      userId: created.id,
-      name: locale === "tr" ? "Takip listem" : "My watchlist",
-      color: "primary",
-      sortOrder: 0,
-    });
-  } catch {
+     neon-http sürücüsü etkileşimli işlem (transaction) açmıyor: her sorgu
+     ayrı bir HTTP isteği. Postgres'te tek ifade zaten atomiktir, o yüzden
+     iki INSERT tek CTE'ye alındı. Ham SQL yazmanın gerekçesi bu; sütun
+     adları şemayla elle eşleşiyor. */
+  const listName = locale === "tr" ? "Takip listem" : "My watchlist";
+  try {
+    await db.execute(sql`
+      with yeni_kullanici as (
+        insert into ${users} (username, email, password_hash, locale)
+        values (${parsed.username}, ${parsed.email}, ${passwordHash}, ${locale})
+        returning id
+      ), ilk_liste as (
+        insert into ${watchlists} (user_id, name, color, sort_order)
+        select id, ${listName}, 'primary', 0 from yeni_kullanici
+      )
+      select id from yeni_kullanici
+    `);
+  } catch (error) {
+    /* Yukarıdaki varlık kontrolü ile bu ekleme arasında saniyenin küçük bir
+       diliminde aynı adla ikinci bir kayıt gelebilir; benzersizlik indeksi
+       onu burada durduruyor. Kullanıcıya "bir şeyler ters gitti" demek yerine
+       gerçek nedeni söylüyoruz — hangi alan olduğunu indeks adı taşıyor. */
+    const pg = pgError(error);
+    const constraint = pg?.constraint ?? "";
+    if (pg?.code === "23505") {
+      return constraint.includes("email")
+        ? { error: t.emailTaken, field: "email" }
+        : { error: t.usernameTaken, field: "username" };
+    }
     return { error: t.generic, field: "form" };
   }
 
@@ -188,6 +255,12 @@ export async function signInAction(
     await signIn("credentials", { username, password, redirect: false });
   } catch (error) {
     if (error instanceof AuthError) {
+      /* Veritabanı hatası ile yanlış şifre AYRI ŞEYLER. İkisi de aynı
+         mesajı verdiğinde okuyucu şifresini değiştirmeye çalışıyor, oysa
+         sorun onda değil. İşaret `auth.ts` ile paylaşılıyor. */
+      if (mentions(error, DB_UNAVAILABLE)) {
+        return { error: t.generic, field: "form" };
+      }
       return { error: t.invalidCredentials, field: "form" };
     }
     throw error;

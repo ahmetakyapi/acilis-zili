@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Heart } from "@phosphor-icons/react/dist/ssr";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
@@ -32,6 +33,7 @@ import {
 } from "@/lib/data";
 import { rateLimit, requestKey } from "@/lib/rate-limit";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { missingMetadata } from "@/lib/page-meta";
 import { getCompanyProfile, getQuote, getQuotes } from "@/lib/providers";
 import { COMPLIANCE_THRESHOLD, screenCompliance } from "@/lib/compliance";
 import { industryLabel, sectorLabel } from "@/lib/sectors";
@@ -113,6 +115,7 @@ export async function generateMetadata(
   const { symbol: raw } = await props.params;
   const symbol = raw.toUpperCase();
   const { locale } = await getI18n();
+  if (!isValidSymbol(symbol)) return missingMetadata(locale);
   const meta = await getSymbolNames([symbol]);
   const info = meta[symbol];
   const sector = industryLabel(info?.industry, locale);
@@ -121,6 +124,14 @@ export async function generateMetadata(
     description: sector
       ? `${info?.name ?? symbol} — ${sector}. Fiyat, grafik, bilanço geçmişi ve haberler.`
       : `${symbol} hissesi — fiyat, grafik, bilanço geçmişi ve haberler.`,
+    /* TANINMAYAN SEMBOL DİZİNE GİRMESİN. Biçimi geçerli her dizi bu sayfayı
+       açıyor (`ZQXW` da) ve şirket bilinmiyorsa ekran boş kartlarla doluyor.
+       Sonsuz bir adres uzayı: taranırsa hem kotamız hem sitenin dizin
+       kalitesi yanar. `follow` açık kalıyor — sayfadaki gerçek bağlantılar
+       yine izlensin. Gerçek ama HENÜZ tanınmayan bir sembol bu ziyarette
+       profilini yazıyor (allowStockRender yorumuna bak), yani bir sonraki
+       taramada tanınan tarafa geçip dizine giriyor. */
+    ...(info?.name ? {} : { robots: { index: false, follow: true } }),
   };
 }
 
@@ -131,11 +142,9 @@ export default async function StockPage(
   const symbol = decodeURIComponent(raw).toUpperCase();
   const { locale, t } = await getI18n();
 
-  if (!isValidSymbol(symbol)) {
-    return (
-      <EmptyState title={t.stock.notFound} hint={t.stock.notFoundHint} />
-    );
-  }
+  /* Geçersiz sembol 404 DÖNER — ekran `not-found.tsx` dosyasında. Kota
+     dolduğunda gösterilen alttaki ekran 200 kalır: adres geçerli, veri yok. */
+  if (!isValidSymbol(symbol)) notFound();
 
   /* Sağlayıcı kotasının en pahalı yüzeyi burası: tanınmayan bir sembolün tam
      sayfası altı ayrı Finnhub ucuna gidiyor (profil, metrik, tavsiye, bilanço

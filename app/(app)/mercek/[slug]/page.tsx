@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
-import { EmptyState, Panel } from "@/components/ui/primitives";
 import { getStories, getStoryBySlug, getSymbolNames } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { missingMetadata } from "@/lib/page-meta";
 import { formatEtDateLong, safeExternalUrl } from "@/lib/utils";
 
 /**
@@ -20,7 +21,7 @@ export async function generateMetadata(props: PageProps<"/mercek/[slug]">) {
   const { slug } = await props.params;
   const { locale } = await getI18n();
   const story = await getStoryBySlug(slug, locale);
-  if (!story) return {};
+  if (!story) return missingMetadata(locale);
   return { title: story.title, description: story.dek };
 }
 
@@ -137,24 +138,8 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
   const { locale, t } = await getI18n();
   const story = await getStoryBySlug(slug, locale);
 
-  if (!story) {
-    return (
-      <Panel>
-        <EmptyState
-          title={t.stories.notFound}
-          hint={t.stories.notFoundHint}
-          action={
-            <Link
-              href="/mercek"
-              className="text-[12.5px] font-semibold text-primary"
-            >
-              {t.stories.backToList}
-            </Link>
-          }
-        />
-      </Panel>
-    );
-  }
+  /* Olmayan yazı 404 DÖNER — ekran `not-found.tsx` dosyasında. */
+  if (!story) notFound();
 
   const minutes = story.readMinutes ?? readingMinutes(story.bodyMd);
   const sources = story.sources ?? [];

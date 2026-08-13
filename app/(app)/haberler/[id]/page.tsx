@@ -1,12 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { NewsImage } from "@/components/news/NewsImage";
 import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react/dist/ssr";
-import {
-  ChangePill,
-  EmptyState,
-  Panel,
-  PanelHeader,
-} from "@/components/ui/primitives";
+import { ChangePill, Panel, PanelHeader } from "@/components/ui/primitives";
 import {
   getLatestNews,
   getNewsById,
@@ -15,6 +12,7 @@ import {
   isGenericNewsImage,
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { missingMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
 import { formatPrice, safeExternalUrl, timeAgo } from "@/lib/utils";
 
@@ -26,6 +24,31 @@ import { formatPrice, safeExternalUrl, timeAgo } from "@/lib/utils";
  * canlı fiyatı ve aynı konudaki diğer haberler. Kaynağa giden bağlantı tek
  * yerde, gövdenin sonunda durur.
  */
+/**
+ * Künye — başlık haberin kendisi.
+ *
+ * Yoktu: her haber detayı kök şablonun genel başlığıyla açılıyordu, yani
+ * paylaşılan bağlantı da arama sonucu da hangi haber olduğunu söylemiyordu.
+ * Başlık okuyucunun dilindeki çeviriden geliyor; çeviri yoksa orijinal.
+ */
+export async function generateMetadata(
+  props: PageProps<"/haberler/[id]">,
+): Promise<Metadata> {
+  const { id } = await props.params;
+  const { locale } = await getI18n();
+  const item = await getNewsById(id);
+  if (!item) return missingMetadata(locale);
+
+  const headline =
+    locale === "tr" && item.headlineTr ? item.headlineTr : item.headline;
+  const summary =
+    locale === "tr" && item.summaryTr ? item.summaryTr : item.summary;
+  return {
+    title: headline,
+    description: summary ?? undefined,
+  };
+}
+
 export default async function NewsDetailPage(
   props: PageProps<"/haberler/[id]">,
 ) {
@@ -33,21 +56,8 @@ export default async function NewsDetailPage(
   const { locale, t } = await getI18n();
   const item = await getNewsById(id);
 
-  if (!item) {
-    return (
-      <div className="mx-auto max-w-2xl">
-        <EmptyState
-          title={t.news.notFound}
-          hint={t.news.notFoundHint}
-          action={
-            <Link href="/haberler" className="text-sm text-primary hover:underline">
-              {t.common.back}
-            </Link>
-          }
-        />
-      </div>
-    );
-  }
+  /* Olmayan haber 404 DÖNER, 200 değil — ekran `not-found.tsx` dosyasında. */
+  if (!item) notFound();
 
   const useTr = locale === "tr" && item.headlineTr;
   const headline = useTr ? item.headlineTr! : item.headline;
