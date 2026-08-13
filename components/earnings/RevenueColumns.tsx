@@ -67,6 +67,21 @@ const GRID = [1, 0.75, 0.5, 0.25];
  */
 const MAX_BAR_WIDTH = 62;
 
+/**
+ * Sütun ızgarasının biçimi — İKİ ızgarada da birebir aynı olmak zorunda.
+ *
+ * Sütunlar ve altlarındaki dönem etiketleri ayrı iki `<ul>`: aradaki yatay
+ * kural kesintisiz bir çizgi olmalı, sütun sütun bölünmüş parçalar değil.
+ * Ama ayrı olmaları hizayı elle tutmayı gerektiriyordu ve tutulmamıştı —
+ * sütun şeridinde sağ dolgu ve öngörü nefesi vardı, etiket şeridinde yoktu.
+ * Tek sabit ikisini birden besliyor; biri değişirse öteki kendiliğinden
+ * değişir.
+ */
+const GRID_SHAPE = "gap-1.5 pr-2 sm:gap-2 sm:pr-3";
+
+/** Öngörü sütununun komşusundan aldığı nefes — margin değil dolgu, gerekçe altta. */
+const PROJECTED_INSET = "pl-1.5 sm:pl-3";
+
 export function RevenueColumns({
   bars,
   title,
@@ -142,13 +157,12 @@ export function RevenueColumns({
         {/* Sütunlar CSS ızgarasıyla: SVG'de sabit genişlik varsayımı yapmadan
             her sütun eşit pay alıyor ve dar ekranda kendiliğinden daralıyor.
             Dar boşluk = kalın sütun; karnedeki oran. */}
-        {/* Sağda iç dolgu: son sütun ÖNGÖRÜ sütunu ve etiketi ("2,06-2,09
-            Mr $") sütundan geniş olduğu için sağa yaslanınca panelin
-            kenarına yapışıyor, köşeye sıkışmış gibi duruyordu. Dolgu bütün
-            şeridi bir tık içeri alıyor. Izgara çizgileri `inset-x-0` ile
-            tam genişlikte kalıyor — onların kenara kadar gitmesi doğru. */}
+        {/* Sağda iç dolgu: son sütun ÖNGÖRÜ sütunu ve etiketi sütundan geniş
+            olduğu için ortalandığında sağa taşıyor. Dolgu o taşmayı yutuyor.
+            Izgara çizgileri `inset-x-0` ile tam genişlikte kalıyor —
+            onların kenara kadar gitmesi doğru. */}
         <ul
-          className="relative grid h-full items-end gap-1.5 pr-2 sm:gap-2 sm:pr-3"
+          className={cn("relative grid h-full items-end", GRID_SHAPE)}
           style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}
         >
           {bars.map((bar, index) => {
@@ -161,85 +175,107 @@ export function RevenueColumns({
               <li
                 key={`${bar.label}-${index}`}
                 className={cn(
-                  "mx-auto flex h-full w-full flex-col justify-end gap-1.5",
+                  "flex h-full flex-col justify-end",
                   /* Öngörü sütunu gerçekleşenlerden bir nefes uzakta durur:
                      kesikli çerçeve onu tür olarak ayırıyor ama komşusuna
-                     bitişikken aynı serinin devamı gibi okunuyordu. */
-                  bar.projected && "ml-1.5 sm:ml-3",
-                )}
-                style={{ maxWidth: MAX_BAR_WIDTH }}
-              >
-                {/* Etiket sütundan GENİŞ olabiliyor: öngörü sütununda bir
-                    aralık yazıyor ("10,3-10,8 Mr $") ve sütun 390px'te ~50px.
-                    `text-right` tek başına yetmedi — kutu sütun genişliğinde
-                    kaldığı için nowrap metin kutudan taşıyor ve telefonda
-                    panelin sağ kenarını aşıp ekranın dışına çıkıyordu.
+                     bitişikken aynı serinin devamı gibi okunuyordu.
 
-                    `w-max` kutuyu metnin kendi genişliğine getiriyor,
-                    `ml-auto` onu sütunun sağ kenarına yaslıyor: fazlalık
-                    artık dışarı değil, İÇERİ — komşu sütunun üstündeki boş
-                    alana doğru taşıyor. İlk sütunda ayna simetriği. */}
-                <div className="relative h-[18px] w-full">
-                  <p
-                    className={cn(
-                      /* MUTLAK konum, akış değil. Kutu akışta kaldığı sürece
-                         sütun genişliğine sıkışıyor ve nowrap metin sağa
-                         taşıyordu; `ml-auto` da işe yaramaz çünkü otomatik
-                         margin negatif olamıyor. Mutlak konumda kutu sütunun
-                         SAĞ KENARINA çapalanıyor ve fazlalık sola, komşu
-                         sütunun üstündeki boş alana akıyor. Sabit yükseklik
-                         sütun hizasını koruyor. */
-                      "numeral absolute bottom-0 whitespace-nowrap text-[13px] font-bold",
-                      /* Son sütunun etiketi sağ kenara ÇAPALI ama iki
-                         piksel dışarı taşıyor: öngörü etiketi ("2,06-2,09")
-                         sütundan geniş olduğu için tam çapalandığında sola,
-                         komşu sütunun üstüne doğru kayık duruyor ve kendi
-                         sütununun ortasından belirgin biçimde sola düşüyordu.
-                         Negatif kaydırma onu kendi sütununa geri getiriyor;
-                         panelin sağ dolgusu (pr-2/pr-3) taşmayı yutuyor. */
-                      index === 0
-                        ? "left-0"
-                        : index === bars.length - 1
-                          ? "right-0 translate-x-1.5 sm:translate-x-2.5"
-                          : "left-1/2 -translate-x-1/2",
-                      bar.projected ? "text-primary" : "text-strong",
-                    )}
-                  >
-                    {bar.projected
-                      ? (bar.note ?? format(bar.value))
-                      : format(bar.value)}
-                  </p>
-                </div>
+                     Nefes MARGIN değil DOLGU: margin `mx-auto`nun sol yarısını
+                     eziyor ve sütunu hücrede ortalanmaktan çıkarıyordu.
+                     Dolgu, hücrenin içini daraltıyor; içerideki kutu yine
+                     ortalanıyor ve alttaki dönem etiketi aynı dolguyu alarak
+                     birebir aynı yere düşüyor. */
+                  bar.projected && PROJECTED_INSET,
+                )}
+              >
+                {/* Sütunun kendi kutusu. Alttaki dönem etiketi de AYNI
+                    ölçülerde bir kutuya giriyor (`mx-auto` + aynı üst sınır),
+                    böylece hizalama iki ızgarada da yapısal olarak garanti —
+                    elle verilen bir kaydırmaya bağlı değil. */}
                 <div
-                  className={cn(
-                    "w-full rounded-t-[3px]",
-                    bar.projected &&
-                      "border border-dashed border-primary bg-primary-tint",
-                  )}
-                  style={{
-                    height: Math.round(ratio * CHART_HEIGHT),
-                    ...(bar.projected ? {} : { background: shade }),
-                  }}
-                />
+                  className="mx-auto flex w-full flex-col justify-end gap-1.5"
+                  style={{ maxWidth: MAX_BAR_WIDTH }}
+                >
+                  {/* Etiket sütundan GENİŞ olabiliyor: öngörü sütununda tek
+                      sayı değil bir aralık yazıyor ("18,0–18,2") ve sütun
+                      390px'te ~50px kalıyor.
+
+                      Bir dönem bu yüzden ilk sütun sola, son sütun sağa
+                      ÇAPALANIYORDU; son sütunda üstüne elle bir kaydırma da
+                      ekleniyordu. Sonuç, tam olarak kaçınılmak istenen şeydi:
+                      öngörü etiketi kendi sütununun ortasında durmuyordu.
+
+                      Artık istisnasız hepsi ortalı. Taşma iki yana simetrik
+                      dağılıyor ve komşu sütunun ÜSTÜNDEKİ boş alana giriyor;
+                      son sütunda şeridin sağ dolgusu, ilk sütunda panelin
+                      kendi dolgusu onu yutuyor. */}
+                  <div className="relative h-[18px] w-full">
+                    <p
+                      className={cn(
+                        /* Mutlak konum: kutu akışta kaldığı sürece sütun
+                           genişliğine sıkışıyor ve nowrap metin taşıp
+                           ızgarayı bozuyordu. Sabit yükseklik sütun
+                           hizasını koruyor. */
+                        "numeral absolute bottom-0 left-1/2 -translate-x-1/2 whitespace-nowrap text-center text-[13px] font-bold",
+                        bar.projected ? "text-primary" : "text-strong",
+                      )}
+                    >
+                      {bar.projected
+                        ? (bar.note ?? format(bar.value))
+                        : format(bar.value)}
+                    </p>
+                  </div>
+                  <div
+                    className={cn(
+                      "w-full rounded-t-[3px]",
+                      bar.projected &&
+                        "border border-dashed border-primary bg-primary-tint",
+                    )}
+                    style={{
+                      height: Math.round(ratio * CHART_HEIGHT),
+                      ...(bar.projected ? {} : { background: shade }),
+                    }}
+                  />
+                </div>
               </li>
             );
           })}
         </ul>
       </div>
 
+      {/* Dönem etiketleri sütunlarla AYNI ızgara geometrisini taşır: aynı
+          sütun sayısı, aynı boşluk, aynı sağ dolgu, öngörü sütununda aynı
+          iç dolgu ve içeride aynı üst sınırlı kutu. Bir dönem bu ızgarada
+          sağ dolgu ve öngörü nefesi yoktu; alttaki "1Ç FY27Ö" ile üstündeki
+          sütun birbirinden kayıyordu. İkisi tek bir sabitten besleniyor
+          (GRID_SHAPE) ki biri değişip öteki unutulmasın. */}
       <ul
-        className="grid gap-1.5 border-t border-line pt-2 sm:gap-2"
+        className={cn("grid border-t border-line pt-2", GRID_SHAPE)}
         style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}
       >
         {bars.map((bar, index) => (
           <li
             key={`${bar.label}-label-${index}`}
-            className={cn(
-              "truncate text-center text-[11.5px] font-semibold",
-              bar.projected ? "text-primary" : "text-muted",
-            )}
+            className={cn(bar.projected && PROJECTED_INSET)}
           >
-            {bar.label}
+            {/* KESİLMİYOR, SARIYOR. Telefonda hücre ~41px kalıyor ve
+                "1Ç FY27Ö" 11,5 puntoda ~52px: `truncate` onu "1Ç FY…"
+                yapıyordu, yani grafiğin okunması için gereken tek bilgiyi —
+                hangi çeyrek — siliyordu. Etiketler boşluktan doğal olarak
+                iki satıra iniyor ("1Ç" / "FY27Ö") ve altı sütunda da aynı
+                davrandığı için şerit hizalı kalıyor.
+
+                Sütun kutusunun üst sınırı buraya UYGULANMIYOR: hizayı
+                değiştirmiyor (ikisi de aynı hücrede ortalı) ama etiketi
+                gereksiz yere daha da daraltırdı. */}
+            <span
+              className={cn(
+                "block text-center text-[11.5px] font-semibold leading-[1.25]",
+                bar.projected ? "text-primary" : "text-muted",
+              )}
+            >
+              {bar.label}
+            </span>
           </li>
         ))}
       </ul>
