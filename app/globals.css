@@ -313,6 +313,21 @@
 }
 
 /* --------------------------------------------------------------------------
+   Yapışkan çubuğun yüksekliği — TEK KAYNAK.
+
+   Sayfa içi yapışkan bölüm başlıkları `top-16` (64px) ile sabitlenmişti ama
+   uygulama çubuğunun yüksekliği cihaza göre DEĞİŞİYOR: güvenli alan sıfırken
+   65px, çentikli bir iPhone'da 47-59px inset ile 112-124px. Yani çentikli
+   telefonda takvim ve rehber sayfalarının bölüm başlıkları çubuğun ALTINDA
+   kalıyor, okuyucu hangi günün ya da bölümün içinde olduğunu göremiyordu.
+
+   Sabit sayı yerine çubuğun kendi formülü: iki yer de bu tokenı okuyor.
+   -------------------------------------------------------------------------- */
+:root {
+  --app-bar-h: calc(env(safe-area-inset-top) + 65px);
+}
+
+/* --------------------------------------------------------------------------
    Temel
 
    TUZAK: Tailwind v4 yardımcı sınıfları @layer utilities içindedir. Katmansız

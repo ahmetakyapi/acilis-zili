@@ -488,7 +488,7 @@ function SortableRows({
                 onClick={() => nudge(item.id, -1)}
                 disabled={index === 0}
                 aria-label={`${labels.moveUp}: ${item.symbol}`}
-                className="flex h-5 w-6 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25"
+                className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25 sm:h-5 sm:w-6"
               >
                 <CaretUp weight="duotone" size={13} />
               </button>
@@ -497,7 +497,7 @@ function SortableRows({
                 onClick={() => nudge(item.id, 1)}
                 disabled={index === ordered.length - 1}
                 aria-label={`${labels.moveDown}: ${item.symbol}`}
-                className="flex h-5 w-6 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25"
+                className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25 sm:h-5 sm:w-6"
               >
                 <CaretDown weight="duotone" size={13} />
               </button>
@@ -512,7 +512,7 @@ function SortableRows({
                 router.refresh();
               }}
               aria-label={`${labels.removeSymbol}: ${item.symbol}`}
-              className="inline-flex size-7 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 opacity-100 transition hover:bg-down-wash hover:text-down opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 opacity-100 transition hover:bg-down-wash hover:text-down opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 sm:size-7"
             >
               <Trash weight="duotone" size={13} />
             </button>

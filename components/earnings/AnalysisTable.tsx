@@ -151,8 +151,13 @@ export function AnalysisTable({
             ulaşamıyordu. `tabIndex={0}` kabı bir durağa çeviriyor, `role`
             ve `aria-label` de onu adlandırıyor: ekran okuyucu "kaydırılabilir
             bölge, Analizler" diyor ve ok tuşları çalışıyor. */}
+        {/* ÇUBUK GÖRÜNÜR (`scroll-x-hint`), gizli değil. 390px'lik telefonda
+            kap 352px ve içerik 1180px: içeriğin yalnızca %30'u görünüyor ve
+            gelir, EPS, tepki, skor, karar sütunlarının hepsi ekran dışında
+            kalıyor. Gizli çubuk burada "devamı var" işaretini de siliyordu;
+            `scroll-x-hint` tam bu durum için yazılmış ince bir çubuk. */}
         <div
-          className="no-scrollbar overflow-x-auto"
+          className="scroll-x-hint overflow-x-auto"
           tabIndex={0}
           role="region"
           aria-label={labels.tableRegion}

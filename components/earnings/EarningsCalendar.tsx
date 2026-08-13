@@ -231,7 +231,7 @@ function DaySection({
           Rehber sayfasındaki bölüm başlığıyla AYNI dil — iki uzun liste
           sayfası aynı şekilde bölünüyor. `top-16` uygulamanın yapışkan
           çubuğunun bir tık altında; gerekçesi orada anlatılı. */}
-      <div className="sticky top-16 z-10 mb-4 bg-page pt-1">
+      <div className="sticky top-(--app-bar-h) z-10 mb-4 bg-page pt-1">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 border-t-2 border-strong pb-3 pt-3">
           <h2 className="text-[21px] font-bold tracking-[-0.03em] text-strong">
             {formatEtDateLong(date, locale)}
