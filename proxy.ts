@@ -7,6 +7,10 @@ import { NextResponse, type NextRequest } from "next/server";
  * Gerçek doğrulama sayfa ve server action'larda `auth()` ile yapılır.
  */
 
+/* `/admin` BİLEREK BU LİSTEDE DEĞİL. Buradaki koruma girişe yönlendiriyor ve
+   "giriş yap, sonra /admin'e devam edeceksin" demek, olmayan bir kapının VAR
+   olduğunu söylemek olurdu. Panelin kapısı `app/admin/layout.tsx` içinde ve
+   yetkisiz herkese — giriş yapmışa da yapmamışa da — 404 döndürüyor. */
 const PROTECTED = ["/favoriler", "/ayarlar"];
 const AUTH_ROUTES = ["/giris", "/kayit"];
 

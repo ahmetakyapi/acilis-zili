@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { checkBearer } from "@/lib/api-auth";
-import { and, desc, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   earningsCalendar,
   economicEvents,
   news as newsTable,
   macroSeries,
+  pageViews,
 } from "@/lib/schema";
 import {
   getCompanyNews,
@@ -14,7 +15,7 @@ import {
   getMarketNews,
 } from "@/lib/providers/finnhub";
 import { MACRO_SERIES, getSeries } from "@/lib/providers/fred";
-import { addEtDays, todayEt } from "@/lib/market-hours";
+import { addEtDays, etParts, todayEt } from "@/lib/market-hours";
 import { calendarRunwayDays, syncCalendar } from "@/lib/calendar-sync";
 import { translatePendingNews, isTranslateConfigured } from "@/lib/translate";
 import {
@@ -25,6 +26,7 @@ import {
 import { getCompanyProfile } from "@/lib/providers";
 import { symbols as symbolsTable } from "@/lib/schema";
 import { ALL_MEMBERS } from "@/db/seed/indices";
+import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
 
 /** Şirket haberi çekilen en büyük şirket sayısı — Finnhub dakikada 60 istek. */
 const COMPANY_NEWS_SYMBOLS = 20;
@@ -39,6 +41,27 @@ const COMPANY_NEWS_SYMBOLS = 20;
  * altında, fonksiyonun 120 sn bütçesine rahat sığıyor.
  */
 const EARNINGS_HORIZON_DAYS = 30;
+
+/** Sayfa ölçümü kaç gün saklanır — panelin en geniş penceresi altı ay. */
+const VIEW_RETENTION_DAYS = 180;
+
+/**
+ * Bir olayın açıklanma saati geçti mi.
+ *
+ * Pay 30 dakika: FRED yayını saniyesinde yansıtmıyor ve sınırda koşan bir
+ * cron, açıklanmış gibi görünen ama henüz gelmemiş bir gözlemi yazardı.
+ * Saati bilinmeyen olay (eventTimeEt null) o gün için ATLANIR — ne zaman
+ * çıktığını bilmediğimiz bir veriyi açıklanmış saymak, tam olarak kaçındığımız
+ * uydurma kesinlik.
+ */
+const RELEASE_GRACE_MINUTES = 30;
+
+function hasReleased(timeEt: string | null, nowMinutesEt: number): boolean {
+  if (!timeEt) return false;
+  const [hour, minute] = timeEt.split(":").map(Number);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return false;
+  return nowMinutesEt >= hour * 60 + minute + RELEASE_GRACE_MINUTES;
+}
 
 export const maxDuration = 120;
 
@@ -227,14 +250,23 @@ export async function GET(request: Request) {
      değişir. Günde 60 sembol dönerek ~9 günde tüm evren yenilenir; Finnhub'ın
      dakikada 60 istek sınırı ve fonksiyonun 120 sn bütçesi buna izin verir. */
   try {
-    // Önce yaklaşan bilançoların tanınmayan sembolleri (spotlight için),
-    // kalan bütçeyle en bayat kayıtlar. getCompanyProfile symbols tablosuna
-    // kendisi yazar (insert/update).
+    /* Sıra: adla seçilen şirketler → yaklaşan bilançoların tanınmayan
+       sembolleri → kalan bütçeyle en bayat kayıtlar. getCompanyProfile
+       symbols tablosuna kendisi yazar (insert/update).
+
+       Adla seçilenler en başta çünkü onların künyesi EKRANDA KULLANILIYOR:
+       takvimde görünür katmana, gün şeridine ve analiz aday havuzuna sembolle
+       giriyorlar ama ad, sektör ve logo profilden geliyor. ONDS bu yüzden
+       aylarca künyesiz kaldı — bilanço takviminde kaydı vardı, `symbols`
+       tablosunda hiç satırı yoktu. Yedi sembol, günlük 60'lık bütçenin
+       görünmeyecek kadar küçük bir parçası. */
     const [upcoming, stalest] = await Promise.all([
       getEarningsSymbolsMissingProfile(7, 15),
       getStalestSymbols(60),
     ]);
-    const targets = [...new Set([...upcoming, ...stalest])].slice(0, 60);
+    const targets = [
+      ...new Set([...SPOTLIGHT_SYMBOLS, ...upcoming, ...stalest]),
+    ].slice(0, 60);
 
     let refreshed = 0;
     for (const symbol of targets) {
@@ -316,9 +348,22 @@ export async function GET(request: Request) {
 
   /* ---- 4. Geçmiş olayların gerçekleşen değerleri ----
      Son 7 günün olaylarından actual'ı boş olanlara FRED'deki en güncel
-     gözlemi işle. Sonraki açıklama tarihini de takvimden doldur. */
+     gözlemi işle. Sonraki açıklama tarihini de takvimden doldur.
+
+     AÇIKLANMAMIŞ OLAY DIŞARIDA. Sorgu bugünün olaylarını da kapsıyordu ve
+     cron 06:30 ET civarında koşuyor; ekonomik veriler ise 08:30 ET'de
+     çıkıyor. Yani TÜFE gününde, veri daha AÇIKLANMADAN, FRED'in o an
+     verdiği en güncel gözlem — geçen ayınki — bugünün olayına "gerçekleşen"
+     diye yazılıyordu. Ekranda uydurma bir sayı değil, YANLIŞ TARİHE
+     yapıştırılmış gerçek bir sayı görünüyordu ki bu daha da kötü: hiçbir
+     yerde şüphe uyandırmıyor.
+
+     Kural: olayın kendi saati geçmediyse dokunma. Payı 30 dakika — FRED
+     yayını anında yansıtmıyor. */
   try {
     let filled = 0;
+    let skippedUnreleased = 0;
+    const nowEt = etParts(new Date());
     const pending = await db
       .select()
       .from(economicEvents)
@@ -331,6 +376,10 @@ export async function GET(request: Request) {
       );
 
     for (const event of pending) {
+      if (event.eventDate === today && !hasReleased(event.eventTimeEt, nowEt.minutes)) {
+        skippedUnreleased++;
+        continue;
+      }
       if (!event.fredSeriesId) continue;
       const definition = MACRO_SERIES.find(
         (s) => s.seriesId === event.fredSeriesId,
@@ -376,8 +425,29 @@ export async function GET(request: Request) {
     }
 
     report.actuals = filled;
+    /* Atlananlar raporda görünür: sayı sürekli sıfırdan büyükse cron çok
+       erken koşuyor demektir ve bu bir ayar sorunu, bir hata değil. */
+    if (skippedUnreleased > 0) {
+      report.actualsSkipped = `${skippedUnreleased} olay henüz açıklanmadı`;
+    }
   } catch (error) {
     report.actuals = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* ---- 5. Ölçüm kayıtlarını buda ----
+     Sayfa görüntülemeleri satır satır tutuluyor ve hiçbir şey silmezse tablo
+     sonsuza kadar büyür. Panelin en geniş penceresi altı ay; daha eskisinin
+     tek faydası fatura. Silme İŞ GÜNÜNE değil takvim gününe göre: ölçüm
+     borsanın kapalı olduğu günlerde de birikiyor. */
+  try {
+    const cutoff = addEtDays(today, -VIEW_RETENTION_DAYS);
+    const deleted = await db
+      .delete(pageViews)
+      .where(lt(pageViews.viewedOn, cutoff))
+      .returning({ id: pageViews.id });
+    report.viewsPurged = deleted.length;
+  } catch (error) {
+    report.viewsPurged = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
   /* Bülten üretimi BİLEREK YOK. Cron bir dönem kural tabanlı bir özet

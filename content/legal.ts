@@ -14,14 +14,14 @@
    ========================================================================== */
 
 /** Metnin son güncellendiği tarih — sayfa künyesinde görünür (ET/TR farkı önemsiz). */
-export const LEGAL_UPDATED = "2026-08-02";
+export const LEGAL_UPDATED = "2026-08-13";
 
 export const PRIVACY_MD = `Açılış Zili kişisel bir projedir ve ABD borsalarını Türkçe takip etmek için yapılmıştır. Bu sayfa, 6698 sayılı **Kişisel Verilerin Korunması Kanunu** (KVKK) kapsamında hangi verinin neden işlendiğini, nereye gittiğini ve senin hangi haklara sahip olduğunu anlatır.
 
-Kısa cevap peşindeysen: hesap açmadan siteyi kullanabilirsin ve o durumda hiçbir kişisel verin işlenmez. Reklam ağı, analitik izleyici ve üçüncü taraf piksel bu sitede **yok**.
+Kısa cevap peşindeysen: hesap açmadan siteyi kullanabilirsin ve o durumda seni tanımlayan hiçbir kayıt oluşmaz. Reklam ağı, izleme çerezi ve üçüncü taraf piksel bu sitede **yok**. Hangi sayfanın kaç kez okunduğu sayılır ama bu sayım kimliksizdir ve aşağıda satır satır anlatılmıştır.
 
 ::: ozet Üç Cümlede
-Hesap açmazsan yalnızca tema ve dil tercihin tarayıcında saklanır; sunucuda seninle ilgili bir kayıt oluşmaz. Hesap açarsan kullanıcı adın, e-postan, şifrenin geri döndürülemez özeti ve takip listen saklanır. Bu veriler kimseye satılmaz, pazarlama amacıyla kullanılmaz.
+Hesap açmazsan yalnızca tema ve dil tercihin tarayıcında saklanır; sunucuda seni tanımlayan bir kayıt oluşmaz. Hesap açarsan kullanıcı adın, e-postan, şifrenin geri döndürülemez özeti ve takip listen saklanır. Bu veriler kimseye satılmaz, pazarlama amacıyla kullanılmaz.
 :::
 
 ## Veri Sorumlusu
@@ -40,12 +40,31 @@ Site iki farklı durumda çalışır ve ikisi arasında ciddi bir fark vardır.
 
 ### Hesap Açmadan Kullanırken
 
-Sunucuda seninle ilişkilendirilen hiçbir kayıt oluşmaz. Yalnızca tarayıcında iki tercih çerezi tutulur:
+Sunucuda seni tanımlayan bir kayıt oluşmaz. Yalnızca tarayıcında iki tercih çerezi tutulur:
 
 - **Tema tercihi** (\`az-theme\`) — açık ya da koyu.
 - **Dil tercihi** (\`az-locale\`) — Türkçe ya da İngilizce.
 
 Bu ikisi kimlik bilgisi taşımaz, bir kullanıcı kimliğine bağlanmaz ve başka bir siteyle paylaşılmaz. Tarayıcı ayarlarından sildiğinde site varsayılanlara döner.
+
+### Sayfa Sayımı
+
+Hangi sayfanın kaç kez okunduğunu bilmek, neyin işe yaradığını görmek için gerekli — hangi rehber yazısı okunuyor, İngilizce tarafa gelen var mı, bir bilanço analizi karşılık buluyor mu. Bu sayım **çerez kullanmaz** ve seni tanımlamaz. Her okunan sayfa için kaydedilenler:
+
+| Kaydedilen | Örnek |
+|---|---|
+| Yol | \`/hisse/AAPL\` |
+| Arayüz dili | \`tr\` |
+| Cihaz sınıfı | mobil / tablet / masaüstü |
+| Yönlendiren alan adı | \`google.com\` — yolu ve arama terimi **atılır** |
+| Giriş yapılmış mı | evet/hayır — **kim olduğu değil** |
+| Tarih | \`2026-08-13\` |
+
+**Kaydedilmeyenler:** IP adresin, tarayıcı künyenin tam metni, tam yönlendiren adres, kullanıcı kimliğin. Bunların hiçbiri hiçbir sütunda yer almaz.
+
+Aynı ziyaretçiyi gün içinde iki kez saymamak için IP adresin ve tarayıcı künyen, o günün tarihi ve sunucudaki bir sırla birlikte **geri döndürülemez bir özete** çevrilir. Özet her gün değişir: dünkü kayıtla bugünkü kayıt birbirine bağlanamaz, özetten IP adresine geri gidilemez. Bu kayıtlar **180 gün** sonra otomatik silinir.
+
+Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullanıldığını görmek. Bu sayım pazarlama amacı taşımadığı ve kimlik üretmediği için açık rıza gerektirmez.
 
 ### Hesap Açtığında
 
@@ -71,10 +90,11 @@ E-posta adresin **yalnızca** hesabın benzersiz olmasını sağlamak için tutu
 Bu bölüm bilinçli olarak ayrı: çoğu gizlilik metni ne topladığını yazar, ne toplamadığını yazmaz.
 
 - Reklam ve izleme çerezi kullanılmaz.
-- Google Analytics ya da benzeri bir analitik aracı kurulu değildir.
+- Google Analytics ya da benzeri, ziyaretçiyi siteler arası izleyen bir araç kurulu değildir.
 - Sosyal medya pikseli, ısı haritası, oturum kaydı yoktur.
 - Parmak izi (fingerprinting) yöntemleriyle profil çıkarılmaz.
 - Konum verisi istenmez ve kullanılmaz.
+- Sayfa sayımı seni bir ziyaretten diğerine takip etmez: ayırt edici özet her gün sıfırlanır.
 
 ## Çerezler
 
@@ -94,7 +114,7 @@ Sitede yalnızca üç çerez vardır ve üçü de işlevseldir:
 
 | Kim | Ne için | Sana ait ne gidiyor |
 |---|---|---|
-| Vercel (ABD) | Siteyi barındırır | İstek kayıtlarında IP adresi ve tarayıcı bilgisi |
+| Vercel (ABD) | Siteyi barındırır ve toplam ziyaret sayısını ölçer | İstek kayıtlarında IP adresi ve tarayıcı bilgisi. Ölçüm tarafı çerezsizdir ve kimlik üretmez |
 | Neon (ABD/AB) | Veritabanı | Hesap ve takip listesi kayıtların |
 | Alpaca, Finnhub, FRED | Fiyat, şirket ve makro verisi | **Hiçbir şey** — bu istekleri sunucu kendi adına yapar |
 | DeepL | Haber başlıklarının çevirisi | **Hiçbir şey** — yalnızca haber metni gider |

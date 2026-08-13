@@ -49,17 +49,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           name: user.username,
           email: user.email,
+          role: user.role,
         };
       },
     }),
   ],
   callbacks: {
     jwt({ token, user }) {
-      if (user) token.sub = user.id;
+      if (user) {
+        token.sub = user.id;
+        /* Rol token'a giriş anında yazılır ve oturum boyunca orada kalır.
+           GÖRÜNÜM İÇİN yeterli, YETKİ İÇİN değil: yetkisi alınan bir hesabın
+           token'ı yenilenene kadar (updateAge: 1 gün) hâlâ "admin" yazıyor
+           olabilir. Kapıyı tutan kontrol veritabanına bakar — lib/admin.ts */
+        token.role = (user as { role?: string }).role ?? "user";
+      }
       return token;
     },
     session({ session, token }) {
       if (token.sub) session.user.id = token.sub;
+      /* `token.role` tip olarak dar değil: JWT'nin dizin imzası ona `unknown`
+         benzeri bir tip veriyor ve `?? "user"` bunu düzeltmiyor. Daraltma
+         açıkça yapılıyor — hem tip doğru oluyor hem de token'da beklenmedik
+         bir şey varsa rol sessizce "user"a düşüyor. */
+      session.user.role = typeof token.role === "string" ? token.role : "user";
       return session;
     },
   },

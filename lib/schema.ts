@@ -26,6 +26,20 @@ export const users = pgTable(
     passwordHash: text("password_hash").notNull(),
     locale: text("locale").notNull().default("tr"),
     theme: text("theme").notNull().default("dark"),
+    /**
+     * "user" | "admin" — yönetim ekranının tek kapısı.
+     *
+     * Yetki env değişkeninde DEĞİL veritabanında: bir kullanıcıyı yönetici
+     * yapmak ya da yetkisini almak yeniden deploy gerektirmemeli, ve iki
+     * ayrı yerde tutulan bir yetki listesi er geç birbirinden ayrı düşer.
+     * Varsayılan "user"; yükseltme elle SQL ile yapılır (scripts/make-admin.mts).
+     *
+     * Rol JWT'ye de basılır (auth.ts) — her istekte kullanıcıyı yeniden
+     * okumamak için. Yetki alındığında oturum token'ı yenilenene kadar
+     * (updateAge: 1 gün) açık kalabilir; bu yüzden yazan uçlar rolü
+     * TOKEN'DAN DEĞİL veritabanından doğrular (lib/admin.ts).
+     */
+    role: text("role").notNull().default("user"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -525,6 +539,65 @@ export const earningsAnalyses = pgTable(
 
 
 /* ==========================================================================
+   Ölçüm — birinci taraf, çerezsiz sayfa görüntülemeleri
+   ========================================================================== */
+
+/**
+ * Sayfa görüntülemeleri.
+ *
+ * NEDEN KENDİ TABLOMUZ: Vercel Web Analytics sayfa sayılarını veriyor ama bu
+ * ürünün asıl soruları onun kırılımıyla cevaplanmıyor — "hangi hisse sayfası
+ * okunuyor", "hangi analiz okundu", "İngilizce tarafa kim geliyor". Yol
+ * şablonunu ve dili kendimiz yazdığımız için bu sorular tek SQL sorgusu.
+ *
+ * NE TUTULMUYOR — liste kısa olsun diye değil, tutulmadığı için:
+ *   · IP adresi. Hiçbir sütunda yok, ham hâliyle bir yere yazılmıyor.
+ *   · User-Agent metni. Yalnızca "mobil / tablet / masaüstü" üçlüsüne indirgenir.
+ *   · Tam yönlendiren adres. Yalnızca alan adı; sorgu dizesi ve yol atılır
+ *     (arama terimleri ve özel bağlantılar oraya sızıyor).
+ *   · Kullanıcı kimliği. `signedIn` yalnızca evet/hayır — kim olduğu değil.
+ *
+ * `visitorHash` GÜNLÜK DÖNER: girdisi (IP + tarayıcı künyesi + O GÜNÜN
+ * tarihi + sunucu sırrı) ve sonuç 16 karaktere kırpılır. Aynı ziyaretçi gün
+ * içinde aynı özeti üretir — tekil ziyaretçi bu yüzden sayılabiliyor — ama
+ * ertesi gün başka bir özet üretir ve iki gün birbirine bağlanamaz. Geri
+ * döndürülemez; sır olmadan üretilemez.
+ *
+ * SAKLAMA SÜRESİ 180 GÜN. Günlük cron daha eskisini siler; tablo sonsuza
+ * kadar büyümez ve panelin ihtiyacı olan pencere zaten altı ay.
+ */
+export const pageViews = pgTable(
+  "page_views",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** Ziyaret edilen yol, sorgu dizesi atılmış: "/hisse/AAPL". */
+    path: text("path").notNull(),
+    /** Rota şablonu: "/hisse/[symbol]". Toplamlar bunun üzerinden alınır. */
+    route: text("route").notNull(),
+    locale: text("locale").notNull(),
+    /** Yalnızca alan adı — "google.com". Site içi gezinmede null. */
+    referrerHost: text("referrer_host"),
+    /** "mobile" | "tablet" | "desktop" */
+    device: text("device").notNull(),
+    /** Giriş yapmış bir okuyucu mu — kim olduğu değil. */
+    signedIn: boolean("signed_in").notNull().default(false),
+    /** Günlük dönen tuzlu özet; gerekçesi tablo yorumunda. */
+    visitorHash: text("visitor_hash").notNull(),
+    /** ET takvim günü — panelin bütün toplamları bu sütuna göre. */
+    viewedOn: date("viewed_on").notNull(),
+    viewedAt: timestamp("viewed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("page_views_day_idx").on(t.viewedOn),
+    index("page_views_route_idx").on(t.viewedOn, t.route),
+    index("page_views_path_idx").on(t.viewedOn, t.path),
+    index("page_views_visitor_idx").on(t.viewedOn, t.visitorHash),
+  ],
+);
+
+/* ==========================================================================
    Çıkarsanan tipler
    ========================================================================== */
 
@@ -542,6 +615,11 @@ export type DailyBriefRow = typeof dailyBriefs.$inferSelect;
 export type StoryRow = typeof stories.$inferSelect;
 export type MarketHolidayRow = typeof marketHolidays.$inferSelect;
 export type EarningsAnalysisRow = typeof earningsAnalyses.$inferSelect;
+export type PageViewRow = typeof pageViews.$inferSelect;
+
+/** Kullanıcı rolleri — "admin" yönetim ekranını açar, başka ayrıcalığı yok. */
+export const USER_ROLES = ["user", "admin"] as const;
+export type UserRole = (typeof USER_ROLES)[number];
 
 /** AL / TUT / SAT — kayıtta İngilizce anahtar, ekranda dile göre yazılır. */
 export type Verdict = "buy" | "hold" | "sell";

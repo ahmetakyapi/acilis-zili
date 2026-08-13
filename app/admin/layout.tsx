@@ -1,0 +1,64 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { getAdmin } from "@/lib/admin";
+import { AdminTabs } from "@/components/admin/AdminTabs";
+
+/**
+ * Yönetim paneli.
+ *
+ * SİTENİN KABUĞUNUN DIŞINDA, bilerek: `(app)` grubunun içine konsaydı
+ * panelin üstünde piyasa şeridi, alt sekme çubuğu ve arama kutusu dururdu.
+ * Bunların hiçbiri burada işe yaramaz ve şerit her yönetim sayfasında
+ * sağlayıcıya kotasyon sorgusu attırırdı.
+ *
+ * YETKİSİZE 404. Yönlendirme ya da "yetkiniz yok" ekranı, olmayan bir şeyin
+ * VAR OLDUĞUNU söyler. Panel giriş yapmış sıradan bir kullanıcı için de
+ * mevcut olmayan bir adres; ayrı bir cevap vermenin tek işlevi keşfi
+ * kolaylaştırmak olurdu.
+ */
+
+export const metadata: Metadata = {
+  title: "Yönetim",
+  /* Panel arama motorlarına kapalı. Zaten 404 dönüyor ama başlık ve adres
+     bir yerde sızarsa dizine girmesin. */
+  robots: { index: false, follow: false },
+};
+
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const admin = await getAdmin();
+  if (!admin) notFound();
+
+  return (
+    /* Güvenli alan kendi dolgusunda: sayfa `viewport-fit=cover` ile açılıyor
+       ve çentik yan çevrildiğinde kenardan içeri giriyor. `px-` ile `pr-`
+       birlikte yazılmıştı; ikisi aynı özgüllükte olduğu için hangisinin
+       kazandığı üretilen CSS'in sırasına kalıyordu. */
+    <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6 py-6 pl-[max(env(safe-area-inset-left),18px)] pr-[max(env(safe-area-inset-right),18px)] pb-[max(env(safe-area-inset-bottom),24px)] sm:py-8 sm:pl-6 sm:pr-6">
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div>
+          <p className="text-[10.5px] font-semibold uppercase tracking-[0.09em] text-primary">
+            Açılış Zili
+          </p>
+          <h1 className="mt-1 text-[28px] font-bold leading-none tracking-[-0.035em] text-strong sm:text-[34px]">
+            Yönetim
+          </h1>
+        </div>
+        <p className="text-[12.5px] text-muted">
+          <span className="font-semibold text-body">{admin.username}</span> ·{" "}
+          <Link href="/" className="text-primary hover:text-primary-hover">
+            Siteye Dön
+          </Link>
+        </p>
+      </header>
+
+      <AdminTabs />
+
+      {children}
+    </div>
+  );
+}

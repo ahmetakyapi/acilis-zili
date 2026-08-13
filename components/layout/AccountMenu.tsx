@@ -14,6 +14,7 @@ import {
   Gear,
   Heart,
   SignIn,
+  SlidersHorizontal,
   User,
 } from "@phosphor-icons/react/dist/ssr";
 import {
@@ -108,6 +109,7 @@ export type AccountMenuLabels = {
 export function AccountMenu({
   signedIn,
   username,
+  isAdmin = false,
   initialTheme,
   initialLocale,
   labels,
@@ -115,6 +117,9 @@ export function AccountMenu({
 }: {
   signedIn: boolean;
   username: string | null;
+  /** Yönetim satırı yalnızca yöneticide çizilir — panelin kapısı ayrıca
+      veritabanına soruyor, bu yalnızca görünürlük kararı. */
+  isAdmin?: boolean;
   initialTheme: Theme;
   initialLocale: Locale;
   labels: AccountMenuLabels;
@@ -262,6 +267,15 @@ export function AccountMenu({
                     label={labels.watchlist}
                   />
                   <MenuRow href="/ayarlar" icon={Gear} label={labels.settings} />
+                  {/* Panel yalnızca Türkçe (gerekçe: components/admin/AdminUI.tsx),
+                      etiketi de öyle — sözlüğe girmiyor. */}
+                  {isAdmin && (
+                    <MenuRow
+                      href="/admin"
+                      icon={SlidersHorizontal}
+                      label="Yönetim"
+                    />
+                  )}
                 </>
               ) : (
                 <div className="flex flex-col gap-1.5 px-1 pb-1">

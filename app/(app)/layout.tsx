@@ -7,6 +7,7 @@ import { SearchCommand } from "@/components/layout/SearchCommand";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { TickerFeed } from "@/components/layout/TickerFeed";
+import { ViewBeacon } from "@/components/layout/ViewBeacon";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { getI18n, getTheme } from "@/lib/i18n";
 
@@ -64,6 +65,11 @@ export default async function AppLayout({
         <AccountMenu
           signedIn={Boolean(session?.user)}
           username={session?.user?.name ?? null}
+          /* Oturum token'ındaki rol yalnızca BAĞLANTIYI göstermek için
+             yeterli; panelin kendisi yetkiyi veritabanından doğruluyor
+             (lib/admin.ts). Burada sorgu yapmak her sayfada bir gidiş-dönüş
+             daha demek olurdu. */
+          isAdmin={session?.user?.role === "admin"}
           initialTheme={theme}
           initialLocale={locale}
           labels={{
@@ -89,6 +95,8 @@ export default async function AppLayout({
       }
       footer={<SiteFooter />}
     >
+      {/* Sayfa ölçümü — çerezsiz, kimliksiz, hiçbir şey çizmez. */}
+      <ViewBeacon locale={locale} />
       {children}
     </AppShell>
   );

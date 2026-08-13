@@ -58,6 +58,18 @@
   --brass-bright: #c08b1f;
   --brass-wash: rgb(164 114 15 / 0.12);
 
+  /* Grafik serileri — yönetim panelindeki iki seri (görüntüleme, ziyaretçi).
+     Arayüz renklerinden AYRI tutuluyor çünkü ölçütleri farklı: bir grafik
+     işareti hem zemine karşı okunmalı hem de renk körlüğünde diğer seriden
+     ayrılmalı. Değerler `dataviz` doğrulayıcısının altı kontrolünden geçti
+     (açık tema, zemin #f4f6f8): açıklık bandı, kroma tabanı, protan/tritan
+     ayrımı ΔE 24,4 / 20,1, normal görüş ΔE 27,1 ve zemine karşı kontrast.
+     Yeşil-kırmızı BİLEREK kullanılmadı: bu üründe o ikisi fiyat yönü
+     demek ve trafik grafiğinde "yeşil çizgi" iyi haber gibi okunurdu. */
+  --chart-a: #0d74c4;
+  --chart-b: #a4720f;
+  --chart-a-fill: rgb(13 116 196 / 0.13);
+
   --impact-high: #ce2044;
   --impact-med: #a4720f;
   --impact-low: #75879a;
@@ -162,6 +174,16 @@
   --brass-bright: #e5b768;
   --brass-wash: rgb(211 160 74 / 0.15);
 
+  /* Koyu temanın grafik serileri AYRI SEÇİLDİ, açık temanın çevrilmişi
+     değil. Arayüzün koyu tema mavisi (#35b8ff) grafik işareti olarak fazla
+     parlak — doğrulayıcının açıklık bandını (L 0,48–0,67) aşıyor ve
+     neredeyse siyah bir zeminde çizgi olarak parlıyor. Bu iki değer aynı
+     altı kontrolden koyu zeminle (#0b111c) geçti: protan/tritan ΔE
+     22,7 / 20,9, normal görüş 24,0. */
+  --chart-a: #2f92d2;
+  --chart-b: #b3822a;
+  --chart-a-fill: rgb(47 146 210 / 0.18);
+
   --impact-high: #ff5c7a;
   --impact-med: #d3a04a;
   --impact-low: #8497a9;
@@ -252,6 +274,9 @@
   --color-brass: var(--brass);
   --color-brass-bright: var(--brass-bright);
   --color-brass-wash: var(--brass-wash);
+
+  --color-chart-a: var(--chart-a);
+  --color-chart-b: var(--chart-b);
 
   --color-chrome: var(--chrome);
   --color-chrome-border: var(--chrome-border);
