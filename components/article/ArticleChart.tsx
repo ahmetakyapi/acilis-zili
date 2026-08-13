@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PriceChart } from "@/components/stock/PriceChart";
+import { PriceChartLazy } from "@/components/stock/PriceChartLazy";
 import { chartLabels } from "@/lib/chart-labels";
 import { getSymbolNames, isKnownSymbol } from "@/lib/data";
 import type { ChartRange } from "@/lib/providers/types";
@@ -70,7 +70,7 @@ export async function ArticleChart({
       </div>
 
       <div className="px-1 py-1 sm:px-2 sm:py-2">
-        <PriceChart
+        <PriceChartLazy
           symbol={symbol}
           initialRange={range}
           locale={locale}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { NewsImage } from "@/components/news/NewsImage";
+import { BriefBody } from "@/components/today/BriefBody";
 import { BriefSwitch, type BriefView } from "@/components/today/BriefSwitch";
 import { Countdown } from "@/components/today/Countdown";
 import { DayRail, type RailEvent } from "@/components/today/DayRail";
@@ -916,7 +917,6 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   const dailyView: BriefView | null = daily && {
     headline: daily.headline,
-    bodyMd: daily.bodyMd,
     stamp: stampOf(daily),
     dateLabel: formatEtDateLong(daily.briefDate, locale),
     current: daily.briefDate === today,
@@ -932,7 +932,6 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   const weeklyView: BriefView | null = weekly && {
     headline: weekly.headline,
-    bodyMd: weekly.bodyMd,
     stamp: stampOf(weekly),
     dateLabel: weekRange(weekly.briefDate),
     current: weekly.briefDate === thisWeek,
@@ -950,6 +949,16 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
     <BriefSwitch
       daily={dailyView}
       weekly={weeklyView}
+      /* Gövdeler BURADA çiziliyor: `BriefBody` ve iki bültenin ham metni
+         sunucuda kalıyor, istemciye yalnızca çizilmiş ağaç gidiyor. */
+      dailyBody={
+        daily && <BriefBody markdown={daily.bodyMd} moreLabel={t.common.showAll} />
+      }
+      weeklyBody={
+        weekly && (
+          <BriefBody markdown={weekly.bodyMd} moreLabel={t.common.showAll} />
+        )
+      }
       labels={{
         tabs: { daily: t.brief.periodDaily, weekly: t.brief.periodWeekly },
         titles: {

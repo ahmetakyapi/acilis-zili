@@ -68,6 +68,9 @@ export function CompareChart({
   const frameRef = useRef<HTMLDivElement>(null);
   /** İmlecin genişlik boyunca oranı (0–1); imleç dışarıdaysa null. */
   const [fraction, setFraction] = useState<number | null>(null);
+  /* İmleç kısıtlaması: bekleyen kare ve o kareye yazılacak son konum. */
+  const rafRef = useRef<number | null>(null);
+  const pendingX = useRef<number | null>(null);
 
   const usable = useMemo(
     () => series.filter((entry) => entry.closes.length >= 2),
@@ -88,13 +91,45 @@ export function CompareChart({
   );
 
   const geometry = useMemo(() => {
-    const all = normalized.flatMap((entry) => entry.points);
-    if (all.length === 0) return null;
-    const min = Math.min(...all, 0);
-    const max = Math.max(...all, 0);
-    const span = max - min || 1;
-    return { min, span };
+    /* TEK GEÇİŞ, YAYMA YOK. Burada `Math.min(...all, 0)` vardı ve `all`
+       serilerin tüm noktalarının düzleştirilmiş hâli: 5Y aralığında dört
+       sembol ≈ 5.000 nokta demek, yani her çizimde 5.000 argümanlı iki
+       fonksiyon çağrısı. Çağrı yığınının argüman sınırına da yaklaşıyordu. */
+    let min = 0;
+    let max = 0;
+    let count = 0;
+    for (const entry of normalized) {
+      for (const value of entry.points) {
+        if (value < min) min = value;
+        if (value > max) max = value;
+        count += 1;
+      }
+    }
+    if (count === 0) return null;
+    return { min, span: max - min || 1 };
   }, [normalized]);
+
+  /* YOL DİZELERİ ÖNBELLEKLİ. Her `pointermove` bir setState tetikliyor ve
+     her çizimde seri yolları sıfırdan kuruluyordu — oysa geometri imlecin
+     yerine hiç bağlı değil, yalnızca kılavuz çizgisi, noktalar ve okuma
+     kartı değişiyor. 5Y'de dört sembol ≈ 5.000 nokta: parmak grafiğin
+     üstünde gezerken saniyede yüzlerce kez 5.000 elemanlık dize birleştirme
+     yapılıyordu. `yOf` aşağıda da duruyor (nokta ve kılavuz onu kullanıyor)
+     ama yol dizeleri artık yalnızca veri ya da ölçek değişince kuruluyor. */
+  const paths = useMemo(() => {
+    if (!geometry) return [];
+    const yAt = (value: number) =>
+      PAD_Y + (1 - (value - geometry.min) / geometry.span) * (HEIGHT - PAD_Y * 2);
+    return normalized.map((entry) => {
+      const step = WIDTH / Math.max(1, entry.points.length - 1);
+      return entry.points
+        .map(
+          (value, i) =>
+            `${i === 0 ? "M" : "L"}${(i * step).toFixed(2)},${yAt(value).toFixed(2)}`,
+        )
+        .join(" ");
+    });
+  }, [normalized, geometry]);
 
   if (!geometry || normalized.length === 0) return null;
 
@@ -137,11 +172,30 @@ export function CompareChart({
           };
         })();
 
+  /* KARE BAŞINA EN FAZLA BİR GÜNCELLEME. `pointermove` kısıtlanmamıştı ve
+     120 Hz ekranlarda saniyede o kadar setState çağrılıyordu; ekran zaten
+     kareden hızlı boyanamıyor, fazlası boşa iş. Bekleyen kare varken yeni
+     konum yalnızca ref'e yazılıyor. */
   function updateFromClientX(clientX: number) {
-    const rect = frameRef.current?.getBoundingClientRect();
-    if (!rect || rect.width === 0) return;
-    const f = (clientX - rect.left) / rect.width;
-    setFraction(Math.min(1, Math.max(0, f)));
+    pendingX.current = clientX;
+    if (rafRef.current !== null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const x = pendingX.current;
+      const rect = frameRef.current?.getBoundingClientRect();
+      if (x === null || !rect || rect.width === 0) return;
+      const f = (x - rect.left) / rect.width;
+      setFraction(Math.min(1, Math.max(0, f)));
+    });
+  }
+
+  function clearReading() {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    pendingX.current = null;
+    setFraction(null);
   }
 
   return (
@@ -164,8 +218,8 @@ export function CompareChart({
             updateFromClientX(event.clientX);
           }}
           onPointerDown={(event) => updateFromClientX(event.clientX)}
-          onPointerLeave={() => setFraction(null)}
-          onPointerCancel={() => setFraction(null)}
+          onPointerLeave={clearReading}
+          onPointerCancel={clearReading}
         >
           <svg
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -200,18 +254,11 @@ export function CompareChart({
             )}
 
             {normalized.map((entry, index) => {
-              const step = WIDTH / Math.max(1, entry.points.length - 1);
               const color = SERIES_COLORS[index % SERIES_COLORS.length];
-              const d = entry.points
-                .map(
-                  (value, i) =>
-                    `${i === 0 ? "M" : "L"}${(i * step).toFixed(2)},${yOf(value).toFixed(2)}`,
-                )
-                .join(" ");
               return (
                 <path
                   key={entry.symbol}
-                  d={d}
+                  d={paths[index]}
                   fill="none"
                   stroke={color}
                   strokeWidth={1.9}
@@ -283,7 +330,9 @@ export function CompareChart({
                             : "text-muted",
                       )}
                     >
-                      {row.value > 0 ? "+" : ""}
+                      {/* İŞARET ELLE BASILMIYOR: `formatPercent` artı/eksiyi
+                          kendisi yazıyor ve buradaki `+` ile birleşince
+                          "++%23,6" çıkıyordu. */}
                       {/* `toFixed(1)}%` iki şeyi birden bozuyordu: ondalık
                           ayracı Türkçede virgül olmalıyken nokta çıkıyor ve
                           yüzde işareti sayıdan SONRA yazılıyordu — Türkçede
@@ -322,7 +371,8 @@ export function CompareChart({
                   last > 0 ? "text-up" : last < 0 ? "text-down" : "text-muted",
                 )}
               >
-                {last > 0 ? "+" : ""}
+                {/* İşaret `formatPercent` içinde; elle `+` eklemek
+                    "++%181,9" üretiyordu. */}
                 {formatPercent(last, locale, 1)}
               </span>
             </span>

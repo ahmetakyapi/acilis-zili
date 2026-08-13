@@ -23,10 +23,16 @@ import "./globals.css";
  *
  * Tuzak (yukarıdaki not): `variable` adı @theme token adıyla aynı olamaz.
  */
+/* `weight` VERİLMİYOR — aile değişken (variable) ve ağırlık ekseni 400-900.
+   Bir dönem `weight: ["400","500","600","700","800"]` yazıyordu; ölçüldü,
+   üretilen dosya sayısını ve boyutunu DEĞİŞTİRMİYOR: next/font değişken
+   sürüm varken onu çekiyor ve build çıktısı iki dosyada kalıyor (latin,
+   latin-ext · 20 KB + 46 KB). Liste yalnızca "beş ayrı ağırlık iniyor" gibi
+   okunuyordu, o yüzden kaldırıldı. Tailwind'in font-medium/semibold/bold
+   sınıfları ekseni kullanıyor, görsel çıktı aynı. */
 const bodyFace = Schibsted_Grotesk({
   variable: "--font-body-face",
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 

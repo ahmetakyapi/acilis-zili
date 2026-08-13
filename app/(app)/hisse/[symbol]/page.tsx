@@ -8,7 +8,7 @@ import { auth } from "@/auth";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
 import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
 import { NewsImage } from "@/components/news/NewsImage";
-import { PriceChart } from "@/components/stock/PriceChart";
+import { PriceChartLazy } from "@/components/stock/PriceChartLazy";
 import { chartLabels } from "@/lib/chart-labels";
 import {
   ChangePill,
@@ -34,7 +34,12 @@ import {
 import { rateLimit, requestKey } from "@/lib/rate-limit";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { missingMetadata } from "@/lib/page-meta";
-import { getCompanyProfile, getQuote, getQuotes } from "@/lib/providers";
+import {
+  getChartBars,
+  getCompanyProfile,
+  getQuote,
+  getQuotes,
+} from "@/lib/providers";
 import { COMPLIANCE_THRESHOLD, screenCompliance } from "@/lib/compliance";
 import { industryLabel, sectorLabel } from "@/lib/sectors";
 import { indexMemberOf, peersOf } from "@/db/seed/indices";
@@ -474,16 +479,33 @@ async function ChartSection({
      büyük punto ile yazılan fiyat başlıktakiyle aynı. İkinci çağrı sağlayıcıya
      gitmiyor — aynı önbellek. */
   const status = await getStatus();
-  const result = await getQuote(symbol, status);
+  /* Barlar da BURADA çekiliyor. Grafik onları istemciden `/api/chart` ile
+     ikinci kez istiyordu: "HTML → JS indir → hidrasyon → fetch → çizim".
+     Veri sunucuda zaten erişilebilir ve `/api/chart` yanıtları `no-store`
+     olduğu için o istek hiçbir katmanda önbelleğe de girmiyordu. */
+  const [result, bars] = await Promise.all([
+    getQuote(symbol, status),
+    getChartBars(symbol, "1D", status),
+  ]);
 
   return (
-    <PriceChart
+    <PriceChartLazy
       symbol={symbol}
       locale={locale}
       labels={chartLabels(t)}
       quote={
         result.ok
           ? { price: result.data.price, changePct: result.data.changePct }
+          : null
+      }
+      initialBars={
+        bars.ok
+          ? {
+              bars: bars.data,
+              source: bars.source,
+              stale: bars.stale,
+              prevClose: result.ok ? result.data.prevClose : null,
+            }
           : null
       }
     />

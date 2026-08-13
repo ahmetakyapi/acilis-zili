@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { BriefBody } from "@/components/today/BriefBody";
 import { EmptyState, Kicker } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 import type { BriefPeriod } from "@/lib/brief";
@@ -30,7 +29,6 @@ import type { BriefPeriod } from "@/lib/brief";
 
 export type BriefView = {
   headline: string;
-  bodyMd: string;
   /** "Claude · 16:12" — sağ üstteki künye. */
   stamp: string;
   /** Kaydın kendi tarihi: "1 Ağustos Cumartesi" ya da "28.07 – 01.08". */
@@ -57,14 +55,31 @@ export type BriefSwitchLabels = {
 export function BriefSwitch({
   daily,
   weekly,
+  dailyBody,
+  weeklyBody,
   labels,
 }: {
   daily: BriefView | null;
   weekly: BriefView | null;
+  /**
+   * Gövdeler SUNUCUDA çizilip buraya slot olarak geliyor.
+   *
+   * Eskiden ham markdown metinleri prop olarak geçiyor ve `BriefBody`
+   * (191 satırlık mini ayrıştırıcı) bu istemci bileşeninden import edildiği
+   * için o da istemci demetine giriyordu. Yani ekranda tek seferde biri
+   * görünen iki metnin TAMAMI indiriliyor ve ayrıştırma tarayıcıda
+   * yapılıyordu — ana sayfa bu kartı her açılışta basıyor.
+   *
+   * İkisi de props içinde hazır olduğu için sekme geçişinde yine ağ isteği
+   * yok; değişen tek şey hangi ağacın çizildiği.
+   */
+  dailyBody?: ReactNode;
+  weeklyBody?: ReactNode;
   labels: BriefSwitchLabels;
 }) {
   const [period, setPeriod] = useState<BriefPeriod>("daily");
   const brief = period === "daily" ? daily : weekly;
+  const body = period === "daily" ? dailyBody : weeklyBody;
 
   return (
     /* Zemin BEYAZ BELGE, tint değil.
@@ -158,11 +173,7 @@ export function BriefSwitch({
             <p className="mt-3 max-w-[74ch] text-base font-medium leading-[25px] text-strong">
               {brief.headline}
             </p>
-            <BriefBody
-              key={period}
-              markdown={brief.bodyMd}
-              moreLabel={labels.more}
-            />
+            {body}
             <Link
               href={brief.archiveHref}
               className="mt-4 inline-flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-[12.5px] font-semibold text-primary transition-colors hover:text-primary-hover"

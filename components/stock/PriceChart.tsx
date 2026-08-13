@@ -65,6 +65,22 @@ type PriceChartProps = {
    * yüzden başlıktakiyle aynı kaynaktan geliyor.
    */
   quote?: { price: number | null; changePct: number | null } | null;
+  /**
+   * Açılış aralığının barları — SUNUCUDAN.
+   *
+   * Bunlar olmadan zincir "HTML → JS indir → hidrasyon → fetch → çizim"
+   * diye işliyordu: sayfanın en büyük görsel öğesi gereksiz bir gidiş-dönüş
+   * kadar geç beliriyordu. Üstelik `/api/chart` yanıtları `no-store` ile
+   * yayınlandığı için o istek hiçbir katmanda önbelleğe de girmiyor.
+   * Aralık düğmeleri aynı şekilde çalışmaya devam ediyor — effect yalnızca
+   * istenen aralık ilk aralıktan farklıysa ağa çıkıyor.
+   */
+  initialBars?: {
+    bars: Bar[];
+    source: string;
+    stale?: boolean;
+    prevClose?: number | null;
+  } | null;
 };
 
 type ChartResult =
@@ -94,12 +110,24 @@ export function PriceChart({
   locale,
   labels,
   quote,
+  initialBars,
 }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const [range, setRange] = useState<ChartRange>(initialRange);
   const [mode, setMode] = useState<"area" | "candles">("area");
-  const [result, setResult] = useState<ChartResult | null>(null);
+  const [result, setResult] = useState<ChartResult | null>(
+    initialBars && initialBars.bars.length > 0
+      ? {
+          key: `${symbol}:${initialRange}`,
+          phase: "ready",
+          bars: initialBars.bars,
+          source: initialBars.source,
+          stale: initialBars.stale ?? false,
+          prevClose: initialBars.prevClose ?? null,
+        }
+      : null,
+  );
   const [hover, setHover] = useState<HoverReading>(null);
   const [themeTick, setThemeTick] = useState(0);
   const [zones, setZones] = useState<SessionZone[]>([]);
@@ -157,6 +185,15 @@ export function PriceChart({
     let cancelled = false;
     const key = `${symbol}:${range}`;
 
+    /* ELDEKİ ARALIK İÇİN AĞA ÇIKILMIYOR. Açılış aralığının barları
+       sunucudan geliyor (`initialBars`) ve `result` onlarla başlatılıyor;
+       koşulsuz bir fetch aynı veriyi ikinci kez istemek olurdu.
+
+       `result` bağımlılık listesinde ve bu bir döngü kurmuyor: fetch bittiğinde
+       setResult aynı anahtarı yazıyor, effect bir kez daha koşup buradan
+       dönüyor. Aralık değiştiğinde anahtar tutmuyor ve istek gidiyor. */
+    if (result?.key === key) return;
+
     fetch(`/api/chart/${symbol}?range=${range}`)
       .then((res) => res.json() as Promise<ChartResponse>)
       .then((data) => {
@@ -185,7 +222,7 @@ export function PriceChart({
     return () => {
       cancelled = true;
     };
-  }, [symbol, range, labels.failed, labels.noData]);
+  }, [symbol, range, result, labels.failed, labels.noData]);
 
   const intraday = range === "1D" || range === "1W";
 
