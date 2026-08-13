@@ -14,16 +14,24 @@ import {
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n } from "@/lib/i18n";
 
-import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-meta";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
    paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
-export const metadata: Metadata = {
-  title: "Bilançolar",
-  description:
-    "Şirketlerin finansal sonuç tarihleri ve okunmuş çeyrek analizleri.",
-};
+export const generateMetadata = pageMetadata({
+  path: "/bilancolar",
+  tr: {
+    title: "Bilançolar",
+    description:
+      "Şirketlerin finansal sonuç tarihleri ve okunmuş çeyrek analizleri.",
+  },
+  en: {
+    title: "Earnings",
+    description:
+      "When companies report, plus written analyses of the quarters we read.",
+  },
+});
 
 /**
  * Bilançolar · Takvim sekmesi.

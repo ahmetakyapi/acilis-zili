@@ -22,6 +22,7 @@ import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
 import { PageHeader, Panel } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/page-meta";
 
 /**
  * Menü — mobilde ürünün tam dizini.
@@ -36,7 +37,19 @@ import { getI18n } from "@/lib/i18n";
  * (min 52px) — sekme çubuğundan sonra en çok kullanılacak ekran burası.
  */
 
-export const metadata = { title: "Menü" };
+export const generateMetadata = pageMetadata({
+  path: "/menu",
+  tr: {
+    title: "Menü",
+    description:
+      "Bütün ekranlar tek listede.",
+  },
+  en: {
+    title: "Menu",
+    description:
+      "Every screen in one list.",
+  },
+});
 
 type Entry = {
   href: string;

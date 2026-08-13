@@ -47,6 +47,9 @@ export const SITE_URL = (
  */
 export const INDEXABLE = process.env.VERCEL_ENV !== "preview";
 
+import { DEFAULT_LOCALE, type Locale } from "./i18n/config";
+import { languageAlternates, stripLocale, withLocale } from "./i18n/routing";
+
 /**
  * Bir sayfanın `alternates` bloğu.
  *
@@ -59,9 +62,21 @@ export const INDEXABLE = process.env.VERCEL_ENV !== "preview";
  * Bu yüzden canonical yazan her sayfa bloğu buradan üretiliyor — `types`
  * unutulamıyor.
  */
-export function pageAlternates(path: string) {
+export function pageAlternates(path: string, locale: Locale = DEFAULT_LOCALE) {
   return {
-    canonical: path,
+    /* CANONICAL HER DİLDE KENDİSİ. Bir dönem her iki dil de Türkçe adresi
+       canonical gösteriyordu ve bu, İngilizce sayfayı Türkçenin mükerreri
+       ilan etmek demekti: arama motoru onu dizinden düşürür, yani dili
+       adrese taşımanın bütün faydası kaybolurdu. */
+    canonical: withLocale(path, locale),
+    /* hreflang: aynı içeriğin öteki dildeki adresi. Bu olmadan arama motoru
+       iki sayfayı birbirinin çevirisi olarak değil, ayrı iki sayfa (hatta
+       mükerrer içerik) olarak görüyordu. `x-default` önekSİZ Türkçeyi
+       gösteriyor — dili bilinmeyen istemcinin gideceği adres o. */
+    languages: {
+      ...languageAlternates(path),
+      "x-default": stripLocale(path) || "/",
+    },
     types: { "application/rss+xml": "/feed.xml" },
   } as const;
 }

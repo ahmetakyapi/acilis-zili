@@ -3,6 +3,7 @@ import { ArticleBody } from "@/components/article/ArticleBody";
 import { LEGAL_UPDATED, PRIVACY_MD, DISCLAIMER_MD } from "@/content/legal";
 import { getI18n } from "@/lib/i18n";
 import { formatEtDateLong } from "@/lib/utils";
+import { pageMetadata } from "@/lib/page-meta";
 
 /**
  * KVKK aydınlatma metni ve sorumluluk reddi.
@@ -13,11 +14,19 @@ import { formatEtDateLong } from "@/lib/utils";
  * yasal metnin okunmaz olmasının teknik bir sebebi yok.
  */
 
-export const metadata = {
-  title: "KVKK ve Gizlilik",
-  description:
-    "Açılış Zili'nde hangi kişisel veri neden işleniyor, nereye gidiyor ve hangi haklara sahipsin.",
-};
+export const generateMetadata = pageMetadata({
+  path: "/kvkk",
+  tr: {
+    title: "KVKK ve Gizlilik",
+    description:
+      "Açılış Zili'nde hangi kişisel veri neden işleniyor, nereye gidiyor ve hangi haklara sahipsin.",
+  },
+  en: {
+    title: "Privacy",
+    description:
+      "What personal data Açılış Zili processes, why, where it goes and what rights you have.",
+  },
+});
 
 export default async function PrivacyPage() {
   const { locale, t } = await getI18n();

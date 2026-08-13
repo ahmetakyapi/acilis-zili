@@ -1,7 +1,9 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { dailyBriefs, stories } from "@/lib/schema";
-import { getLocale } from "@/lib/i18n";
+import { headers } from "next/headers";
+import { DEFAULT_LOCALE } from "@/lib/i18n/config";
+import { LOCALE_HEADER, localeFromHeader } from "@/lib/i18n/routing";
 import { SITE_URL, INDEXABLE } from "@/lib/site";
 
 /**
@@ -49,7 +51,14 @@ type Item = {
 };
 
 export async function GET() {
-  const locale = await getLocale();
+  /* DİL YALNIZCA ADRESTEN — çerezden DEĞİL.
+     Besleme `public, s-maxage=1800` ile önbelleğe alınıyor ve `Vary: Cookie`
+     yok: çerezle dil seçilseydi CDN ilk isteyenin dilini herkese servis
+     ederdi. Üstelik gerçek RSS istemcileri (Feedly, NetNewsWire, Inoreader)
+     çerez taşımıyor — hepsi varsayılana düşüyordu. Türkçe `/feed.xml`,
+     İngilizce `/en/feed.xml`; iki ayrı adres, iki ayrı önbellek. */
+  const headerStore = await headers();
+  const locale = localeFromHeader(headerStore.get(LOCALE_HEADER)) ?? DEFAULT_LOCALE;
   const tr = locale === "tr";
 
   /* Yayına kapalı ortamda (önizleme dağıtımları) besleme de kapalı: robots
@@ -111,7 +120,10 @@ export async function GET() {
 
   const title = tr
     ? "Açılış Zili — Piyasa Yazıları ve Bülten"
-    : "Açılış Zili — Market Writing and Briefs";
+    /* Marka adı İngilizce beslemede de İngilizce: sitenin EN tarafı kendini
+       "Opening Bell" diye tanıtıyor, besleme başka bir ad kullanınca aynı
+       ürünün iki adı oluyordu. */
+    : "Opening Bell — Market Writing and Briefs";
   const description = tr
     ? "ABD borsalarını Türkçe takip eden bir sitenin mercek yazıları ve günlük bülteni."
     : "Long reads and the daily brief from a site tracking US markets.";

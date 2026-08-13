@@ -6,16 +6,24 @@ import { getI18n } from "@/lib/i18n";
 import { formatEtDateLong, formatPrice } from "@/lib/utils";
 import type { MacroObservation } from "@/lib/providers/types";
 
-import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-meta";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
    paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
-export const metadata: Metadata = {
-  title: "Makro",
-  description:
-    "Enflasyon, istihdam ve faiz — ABD ekonomisinin ana göstergeleri.",
-};
+export const generateMetadata = pageMetadata({
+  path: "/makro",
+  tr: {
+    title: "Makro",
+    description:
+      "Enflasyon, istihdam ve faiz — ABD ekonomisinin ana göstergeleri.",
+  },
+  en: {
+    title: "Macro",
+    description:
+      "Inflation, employment and rates — the main gauges of the US economy.",
+  },
+});
 
 /**
  * Makro göstergeler — her seri bir gösterge kartı.

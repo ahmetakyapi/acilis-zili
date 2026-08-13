@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { GUIDE_SLUGS } from "@/content/guide";
 import { getAnalyses, getStories } from "@/lib/data";
 import { SITE_URL } from "@/lib/site";
+import { LOCALES } from "@/lib/i18n/config";
+import { withLocale } from "@/lib/i18n/routing";
 
 /**
  * Site haritası.
@@ -38,47 +40,74 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/kvkk", priority: 0.3, frequency: "monthly" },
   ];
 
-  const entries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
-    url: `${SITE_URL}${route.path}`,
-    lastModified: now,
-    changeFrequency: route.frequency,
-    priority: route.priority,
-  }));
+  /* HER KAYIT İKİ DİLDE. Harita bir dönem yalnızca önekSİZ adresleri
+     listeliyordu ve İngilizce içeriğin adresi olmadığı için listelenecek bir
+     şey de yoktu; arama motoru EN tarafını hiç görmüyordu. `alternates`
+     bloğu iki adresi birbirinin çevirisi olarak bağlıyor. */
+  const alternatesFor = (path: string) => ({
+    languages: Object.fromEntries(
+      LOCALES.map((locale) => [locale, `${SITE_URL}${withLocale(path, locale)}`]),
+    ),
+  });
+
+  const bothLocales = (
+    path: string,
+    priority: number,
+    frequency: MetadataRoute.Sitemap[number]["changeFrequency"],
+  ): MetadataRoute.Sitemap =>
+    LOCALES.map((locale) => ({
+      url: `${SITE_URL}${withLocale(path, locale)}`,
+      lastModified: now,
+      changeFrequency: frequency,
+      priority,
+      alternates: alternatesFor(path),
+    }));
+
+  const entries: MetadataRoute.Sitemap = staticRoutes.flatMap((route) =>
+    bothLocales(route.path, route.priority, route.frequency),
+  );
 
   for (const slug of GUIDE_SLUGS) {
-    entries.push({
-      url: `${SITE_URL}/rehber/${slug}`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    });
+    entries.push(...bothLocales(`/rehber/${slug}`, 0.7, "monthly"));
   }
 
+  /* MERCEK VE ANALİZ YAZILARI DİLE GÖRE listelenir; durağan sayfaların
+     aksine bunların çevirisi OLMAYABİLİR. Var olmayan bir çeviriyi
+     `hreflang` ile göstermek arama motoruna yanlış söz vermek olur — sayfa
+     açıldığında orijinali "TR" rozetiyle çıkıyor, o adres o dilin sayfası
+     değil. Bu yüzden her dil kendi yazdıklarıyla listeleniyor. */
   try {
-    const stories = await getStories("tr", 200);
-    for (const story of stories) {
-      entries.push({
-        // eventDate olayın günü (YYYY-MM-DD); yazının yazıldığı gün değil ama
-        // "bu içerik ne kadar taze" sorusuna verilecek en yakın cevap o.
-        url: `${SITE_URL}/mercek/${story.slug}`,
-        lastModified: new Date(story.eventDate),
-        changeFrequency: "monthly",
-        priority: 0.7,
-      });
+    for (const locale of LOCALES) {
+      const rows = await getStories(locale, 200);
+      for (const story of rows) {
+        entries.push({
+          // eventDate olayın günü (YYYY-MM-DD); yazının yazıldığı gün değil ama
+          // "bu içerik ne kadar taze" sorusuna verilecek en yakın cevap o.
+          url: `${SITE_URL}${withLocale(`/mercek/${story.slug}`, locale)}`,
+          lastModified: new Date(story.eventDate),
+          changeFrequency: "monthly",
+          priority: 0.7,
+        });
+      }
     }
   } catch {
     // Veritabanı yoksa harita durağan kısımla üretilsin, hata vermesin.
   }
 
   try {
-    const analyses = await getAnalyses("tr", { limit: 200 });
-    for (const analysis of analyses) {
-      entries.push({
-        url: `${SITE_URL}/bilancolar/${analysis.symbol.toLowerCase()}/${analysis.period}`,
-        lastModified: new Date(analysis.reportDate),
-        changeFrequency: "monthly",
-        priority: 0.7,
-      });
+    for (const locale of LOCALES) {
+      const rows = await getAnalyses(locale, { limit: 200 });
+      for (const analysis of rows) {
+        entries.push({
+          url: `${SITE_URL}${withLocale(
+            `/bilancolar/${analysis.symbol.toLowerCase()}/${analysis.period}`,
+            locale,
+          )}`,
+          lastModified: new Date(analysis.reportDate),
+          changeFrequency: "monthly",
+          priority: 0.7,
+        });
+      }
     }
   } catch {
     // Aynı gerekçe: analiz tablosu okunamazsa harita eksik ama geçerli kalır.

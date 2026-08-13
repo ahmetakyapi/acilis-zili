@@ -8,7 +8,7 @@ import {
   useTransition,
 } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   CaretRight,
   Gear,
@@ -17,6 +17,7 @@ import {
   SlidersHorizontal,
   User,
 } from "@phosphor-icons/react/dist/ssr";
+import { withLocale } from "@/lib/i18n/routing";
 import {
   setLocalePreference,
   setThemePreference,
@@ -132,6 +133,7 @@ export function AccountMenu({
   const [openedAt, setOpenedAt] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const pathname = usePathname();
+  const router = useRouter();
   const open = openedAt !== null && openedAt === pathname;
   const theme = useSyncExternalStore(
     subscribeTheme,
@@ -178,6 +180,9 @@ export function AccountMenu({
        kalıyor — React 19'un asenkron geçişleri. */
     startTransition(async () => {
       await setLocalePreference(next);
+      /* Dil adreste yaşıyor: tercih yazıldıktan sonra aynı sayfanın öteki
+         dildeki adresine gidiliyor. */
+      router.push(withLocale(pathname, next));
     });
   };
 

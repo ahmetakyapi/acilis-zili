@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { getI18n, getTheme } from "@/lib/i18n";
+import { INTL_LOCALE } from "@/lib/i18n/config";
 import { INDEXABLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -29,18 +30,29 @@ const bodyFace = Schibsted_Grotesk({
   display: "swap",
 });
 
-export const metadata: Metadata = {
+/**
+ * Kök künye DİLE GÖRE üretilir.
+ *
+ * Sabit bir nesne dili okuyamıyordu: başlık şablonu ("%s · Açılış Zili"),
+ * açıklama ve `openGraph.locale` her istemcide Türkçeydi. İngilizce bir
+ * sayfanın sekmesinde "Markets · Açılış Zili" yazıyor, paylaşım kartı
+ * `tr_TR` diyordu. Şablon artık markanın o dildeki adını kullanıyor.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale, t } = await getI18n();
+  const brand = t.brand.name;
+
+  return {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Açılış Zili — ABD Piyasa Takibi",
-    template: "%s · Açılış Zili",
+    default: `${brand} — ${t.brand.marketTagline}`,
+    template: `%s · ${brand}`,
   },
-  description:
-    "ABD borsalarında bugün ne var: ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin tek ekranda — saatleriyle birlikte.",
-  applicationName: "Açılış Zili",
+  description: t.brand.description,
+  applicationName: brand,
   appleWebApp: {
     capable: true,
-    title: "Açılış Zili",
+    title: brand,
     statusBarStyle: "black-translucent",
   },
   formatDetection: { telephone: false },
@@ -53,8 +65,8 @@ export const metadata: Metadata = {
      başlığından, og:description'ı kendi açıklamasından türetiyor. */
   openGraph: {
     type: "website",
-    siteName: "Açılış Zili",
-    locale: "tr_TR",
+    siteName: brand,
+    locale: INTL_LOCALE[locale].replace("-", "_"),
   },
   twitter: { card: "summary_large_image" },
   /* Uzun süre `index: false` idi ve bu bir geliştirme kalıntısıydı: site
@@ -78,7 +90,8 @@ export const metadata: Metadata = {
   alternates: {
     types: { "application/rss+xml": "/feed.xml" },
   },
-};
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

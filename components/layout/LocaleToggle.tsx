@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { setLocalePreference } from "@/app/actions/preferences";
+import { withLocale } from "@/lib/i18n/routing";
 import {
   startRouteProgress,
   stopRouteProgress,
@@ -24,12 +26,15 @@ export function LocaleToggle({
   label: string;
 }) {
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  /* Dil değişimi bir gezinme DEĞİL: adres aynı kalıyor, çerez yazılıyor ve
-     sunucu bileşenlerinin tamamı yeniden çiziliyor. Bu yüzden `RouteProgress`
-     içindeki tıklama dinleyicisi bunu göremiyor ve ekranda saniyenin üçte
-     ikisi boyunca hiçbir şey olmuyordu. Göstergeyi elle yakıp geçiş bitince
-     söndürüyoruz. */
+  /* Dil değişimi artık BİR GEZİNME: aynı sayfanın öteki dildeki adresine
+     gidiliyor (`/piyasalar` ↔ `/en/piyasalar`). Çerez de yazılıyor ama artık
+     ikincil — önekSİZ adreslerde tercihi hatırlatan şey o.
+
+     `RouteProgress`in tıklama dinleyicisi programatik gezinmeyi göremiyor,
+     bu yüzden gösterge elle yakılıp söndürülüyor. */
   useEffect(() => {
     if (pending) startRouteProgress();
     else stopRouteProgress();
@@ -43,6 +48,7 @@ export function LocaleToggle({
        (React 19 asenkron geçişleri.) */
     startTransition(async () => {
       await setLocalePreference(locale);
+      router.push(withLocale(pathname, locale));
     });
   };
 

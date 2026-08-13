@@ -29,6 +29,7 @@ import {
   isValidSymbol,
   peRatioOf,
 } from "@/lib/utils";
+import { pageMetadata } from "@/lib/page-meta";
 
 /**
  * Karşılaştırma — iki ile dört hisseyi yan yana okumak.
@@ -55,7 +56,19 @@ const PRESETS: { labelKey: keyof Dictionary["compare"]; symbols: string[] }[] = 
   { labelKey: "presetIndices", symbols: ["SPY", "QQQ", "DIA", "IWM"] },
 ];
 
-export const metadata = { title: "Karşılaştır" };
+export const generateMetadata = pageMetadata({
+  path: "/karsilastir",
+  tr: {
+    title: "Karşılaştır",
+    description:
+      "İki ya da daha fazla hisseyi aynı grafikte, aynı ölçekte karşılaştır.",
+  },
+  en: {
+    title: "Compare",
+    description:
+      "Put two or more stocks on the same chart, at the same scale.",
+  },
+});
 
 function parseSymbols(raw: string | string[] | undefined): string[] {
   if (typeof raw !== "string") return [];

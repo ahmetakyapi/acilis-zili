@@ -18,16 +18,24 @@ import {
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-meta";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
    paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
-export const metadata: Metadata = {
-  title: "Rehber",
-  description:
-    "Borsayı anlatan yazılar — kavramdan stratejiye, kolaydan zora.",
-};
+export const generateMetadata = pageMetadata({
+  path: "/rehber",
+  tr: {
+    title: "Rehber",
+    description:
+      "Borsayı anlatan yazılar — kavramdan stratejiye, kolaydan zora.",
+  },
+  en: {
+    title: "Guide",
+    description:
+      "Writing that explains the market — from concept to strategy, easy to hard.",
+  },
+});
 
 /**
  * Rehber — müfredatın vitrini.

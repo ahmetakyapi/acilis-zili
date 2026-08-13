@@ -71,8 +71,7 @@ import { getChartBars } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
 import { VIX_SERIES, vixBand } from "@/components/markets/FearGauge";
 
-import type { Metadata } from "next";
-import { pageAlternates } from "@/lib/site";
+import { pageMetadata } from "@/lib/page-meta";
 
 /* Canonical yalnızca BURADA. Kökte durduğu sürece bütün alt sayfalara miras
    kalıyor ve hepsi arama motoruna "asıl adresim ana sayfa" diyordu; gerekçe
@@ -83,9 +82,20 @@ import { pageAlternates } from "@/lib/site";
    `pageAlternates` üzerinden yazılıyor: `alternates` derin birleşmediği için
    elle yazılan bir canonical, kökteki RSS keşif etiketini sessizce
    siliyordu. */
-export const metadata: Metadata = {
-  alternates: pageAlternates("/"),
-};
+export const generateMetadata = pageMetadata({
+  path: "/",
+  absoluteTitle: true,
+  tr: {
+    title: "Açılış Zili — ABD Piyasa Takibi",
+    description:
+      "ABD borsalarında bugün ne var: ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin tek ekranda — saatleriyle birlikte.",
+  },
+  en: {
+    title: "Opening Bell — US Market Tracker",
+    description:
+      "What's happening in US markets today: economic calendar, earnings dates, news and your watchlist on one screen — with the times.",
+  },
+});
 
 export default async function TodayPage() {
   const { locale, t } = await getI18n();

@@ -10,16 +10,24 @@ import {
 import { getI18n } from "@/lib/i18n";
 import { cn, headlineMentions, timeAgo } from "@/lib/utils";
 
-import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-meta";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
    paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
-export const metadata: Metadata = {
-  title: "Haberler",
-  description:
-    "ABD piyasalarından haberler — Türkçe künyeleriyle.",
-};
+export const generateMetadata = pageMetadata({
+  path: "/haberler",
+  tr: {
+    title: "Haberler",
+    description:
+      "ABD piyasalarından haberler — Türkçe künyeleriyle.",
+  },
+  en: {
+    title: "News",
+    description:
+      "Headlines from US markets, with their sources.",
+  },
+});
 
 export default async function NewsPage(props: PageProps<"/haberler">) {
   const search = await props.searchParams;

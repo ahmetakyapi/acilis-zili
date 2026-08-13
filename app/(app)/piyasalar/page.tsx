@@ -37,16 +37,24 @@ import {
   formatPrice,
 } from "@/lib/utils";
 
-import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-meta";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
    paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
-export const metadata: Metadata = {
-  title: "Piyasalar",
-  description:
-    "Endeksler, tahvil faizleri ve gün içi hareket — ABD piyasasının nabzı.",
-};
+export const generateMetadata = pageMetadata({
+  path: "/piyasalar",
+  tr: {
+    title: "Piyasalar",
+    description:
+      "Endeksler, tahvil faizleri ve gün içi hareket — ABD piyasasının nabzı.",
+  },
+  en: {
+    title: "Markets",
+    description:
+      "Indices, bond yields and intraday moves — the pulse of the US market.",
+  },
+});
 
 /**
  * Piyasalar — nabız ekranı.

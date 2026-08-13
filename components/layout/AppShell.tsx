@@ -3,10 +3,12 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLocaleHref } from "@/components/layout/useLocaleHref";
 import { CalendarBlank, Gear } from "@phosphor-icons/react/dist/ssr";
 import { BellMark, BrandLockup } from "@/components/brand/BellMark";
 import { RouteProgress } from "./RouteProgress";
 import { NAV_ITEMS } from "./nav-items";
+import { stripLocale } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
 
 export type ShellLabels = {
@@ -36,9 +38,18 @@ type AppShellProps = {
   children: React.ReactNode;
 };
 
+/**
+ * Aktif sekme — KARŞILAŞTIRMA DİLDEN ARINDIRILMIŞ yolla yapılır.
+ *
+ * `usePathname()` tarayıcının adresini veriyor, yani `/en/piyasalar`. Gezinme
+ * hedefleri ise dilsiz yazılıyor (`/piyasalar`). İkisi ham hâlde
+ * karşılaştırılınca İngilizce tarafta HİÇBİR sekme aktif görünmüyordu —
+ * `startsWith` yalnızca "/" ile eşleşiyor ve vurgu "Menü"ye düşüyordu.
+ */
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
-  return pathname.startsWith(href);
+  const path = stripLocale(pathname);
+  if (href === "/") return path === "/";
+  return path.startsWith(href);
 }
 
 /* --------------------------------------------------------------------------
@@ -86,6 +97,9 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const pathname = usePathname();
+  /* Kabuktaki bağlantılar dili taşır: en çok tıklanan yerler bunlar ve
+     önekSİZ bir bağlantı proxy'de fazladan bir yönlendirmeye mal oluyor. */
+  const { href: L } = useLocaleHref();
 
   /* Alt çubuk: Piyasa · Bilanço · Favoriler · Menü.
      Giriş yapmamış kullanıcıda Favoriler sekmesi ÇIKMAZ SOKAKTI — sayfa onu
@@ -160,7 +174,7 @@ export function AppShell({
            Üst güvenli alan burada da eklenir; masaüstünde 0 döner, tablette
            tam ekran (standalone) açıldığında değil. */}
       <header className="chrome sticky top-0 z-30 hidden items-center gap-4 border-b px-5 pb-3.5 pt-[calc(env(safe-area-inset-top)+14px)] lg:flex xl:gap-6 xl:px-10">
-        <Link href="/" className="shrink-0" aria-label={labels.brandName}>
+        <Link href={L("/")} className="shrink-0" aria-label={labels.brandName}>
           <BrandLockup
             name={labels.brandName}
             tagline={labels.tagline}
@@ -181,7 +195,7 @@ export function AppShell({
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={L(item.href)}
                 prefetch
                 aria-current={active ? "page" : undefined}
                 className={cn(
@@ -213,7 +227,7 @@ export function AppShell({
           {localeToggle}
           {signedIn ? (
             <Link
-              href="/ayarlar"
+              href={L("/ayarlar")}
               title={username ?? labels.settings}
               className="flex items-center gap-2 rounded-[9px] border border-line bg-surface px-2.5 py-[7px] text-[13px] text-body transition-colors hover:border-line-strong hover:text-strong"
             >
@@ -230,7 +244,7 @@ export function AppShell({
             </Link>
           ) : (
             <Link
-              href="/giris"
+              href={L("/giris")}
               className="rounded-[9px] bg-primary px-4 py-2 text-[13.5px] font-semibold text-on-primary transition-colors hover:bg-primary-hover"
             >
               {labels.signIn}
@@ -249,7 +263,7 @@ export function AppShell({
         )}
       >
         <Link
-          href="/"
+          href={L("/")}
           className="-my-1 flex items-center gap-2.5 py-1"
           aria-label={labels.brandName}
         >
@@ -321,7 +335,7 @@ export function AppShell({
           return (
             <Link
               key={item.key}
-              href={item.href}
+              href={L(item.href)}
               prefetch
               aria-current={active ? "page" : undefined}
               className={cn(

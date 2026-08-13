@@ -30,16 +30,24 @@ import {
   formatVolume,
 } from "@/lib/utils";
 
-import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-meta";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
    paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
-export const metadata: Metadata = {
-  title: "Şirketler",
-  description:
-    "ABD borsalarında işlem gören şirketler — sektör, fiyat ve piyasa değeriyle.",
-};
+export const generateMetadata = pageMetadata({
+  path: "/sirketler",
+  tr: {
+    title: "Şirketler",
+    description:
+      "ABD borsalarında işlem gören şirketler — sektör, fiyat ve piyasa değeriyle.",
+  },
+  en: {
+    title: "Companies",
+    description:
+      "Companies listed on US exchanges — with sector, price and market cap.",
+  },
+});
 
 /**
  * Şirketler — sektör kategorileri + kolon başlığından sıralama.
