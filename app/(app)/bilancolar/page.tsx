@@ -63,7 +63,8 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   const session = await auth();
   const today = todayEt();
 
-  const rows = await getEarningsBetween(today, addEtDays(today, RANGES[range]));
+  const rangeEnd = addEtDays(today, RANGES[range]);
+  const rows = await getEarningsBetween(today, rangeEnd);
 
   const userSymbols = session?.user?.id
     ? await getUserSymbols(session.user.id)
@@ -72,7 +73,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   const symbolList = [...new Set(rows.map((r) => r.symbol))];
   const [meta, badges] = await Promise.all([
     getSymbolNames(symbolList),
-    getAnalysisBadges(symbolList, locale),
+    getAnalysisBadges(symbolList, locale, { from: today, to: rangeEnd }),
   ]);
 
   const rangeHref = (key: RangeKey) =>

@@ -288,6 +288,32 @@ export function sectorGroupOf(industry: string | null | undefined): SectorGroup 
   return GROUP_BY_INDUSTRY.get(industry.toLowerCase()) ?? FALLBACK_GROUP;
 }
 
+/**
+ * Bir grubun sorguya yazılabilir alt sektör koşulu.
+ *
+ * Sektör eşlemesi kodda, veritabanında değil: `symbols.industry` sağlayıcının
+ * ham GICS adını taşıyor ve grup ona bakılarak kodda kuruluyor. Sektöre göre
+ * SQL süzmek isteyen (rakip listesi) bu yüzden grubun alt sektör adlarını
+ * elde etmek zorunda.
+ *
+ * "Diğer" grubu tersine çalışır: bilinen hiçbir listeye girmeyen ve boş olan
+ * alt sektörleri toplar, yani koşulu "şu adların HİÇBİRİ değil" olur.
+ */
+export function industryFilterFor(group: SectorGroup): {
+  industries: readonly string[];
+  include: boolean;
+} {
+  if (group.key !== FALLBACK_GROUP.key) {
+    return { industries: group.industries, include: true };
+  }
+  return {
+    industries: SECTOR_GROUPS.filter((g) => g.key !== FALLBACK_GROUP.key).flatMap(
+      (g) => g.industries,
+    ),
+    include: false,
+  };
+}
+
 export function sectorGroupByKey(key: string | null | undefined) {
   return key ? (GROUP_BY_KEY.get(key) ?? null) : null;
 }

@@ -108,6 +108,9 @@ export default async function WatchedEarningsPage(
   ];
   const [meta, badges] = await Promise.all([
     getSymbolNames(symbolList),
+    /* Aralık VERİLMİYOR: bu ekranda rozet hem takvim satırlarına hem de
+       geçmiş analiz listesine bağlanıyor, ikincisi takvim penceresinin
+       dışında kalıyor. Sembol sayısı zaten takip listesiyle sınırlı. */
     getAnalysisBadges(symbolList, locale),
   ]);
 

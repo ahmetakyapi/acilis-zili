@@ -22,7 +22,7 @@ import {
 } from "@/db/seed/indices";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { getChartBars, getQuotes } from "@/lib/providers";
+import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
 import type { MarketStatus } from "@/lib/market-hours";
 import type { Quote } from "@/lib/providers/types";
@@ -105,26 +105,24 @@ const YIELD_SERIES = [
   { seriesId: "DGS30", slug: "yield-30y", units: "lin", labelKey: "yieldY30" },
 ] as const;
 
-/** Alpaca snapshot çağrısı sembol listesini paketler halinde alır. */
+/**
+ * Endeks üyelerinin kotasyonu.
+ *
+ * PAKETLEME BURADA DEĞİL SAĞLAYICI KATMANINDA. Burada elle 100'erlik
+ * paketlere bölünüyordu; oysa `alpaca.getSnapshots` zaten 200'lük paketlerle
+ * çalışıyor. S&P 500 için sonuç 5 Alpaca isteği ve 5 ayrı veritabanı
+ * yazmasıydı — tek çağrıda 3 istek ve tek toplu yazma oluyor
+ * (QUOTE_WRITE_BATCH = 500). Bölmek üstelik zararlıydı: paket sınırı
+ * sağlayıcının kendi sınırıyla hizalı değil, yani her iki katman da
+ * bölünce paketler ufalıyordu.
+ */
 async function quotesFor(
   symbols: string[],
   status: MarketStatus,
 ): Promise<{ quotes: Record<string, Quote>; stampAt: Date | null }> {
-  const chunks: string[][] = [];
-  for (let i = 0; i < symbols.length; i += 100) {
-    chunks.push(symbols.slice(i, i + 100));
-  }
-  const results = await Promise.all(
-    chunks.map((chunk) => getQuotes(chunk, status)),
-  );
-  const quotes: Record<string, Quote> = {};
-  let stampAt: Date | null = null;
-  for (const result of results) {
-    if (!result.ok) continue;
-    Object.assign(quotes, result.data);
-    if (!stampAt || result.fetchedAt > stampAt) stampAt = result.fetchedAt;
-  }
-  return { quotes, stampAt };
+  const result = await getQuotes(symbols, status);
+  if (!result.ok) return { quotes: {}, stampAt: null };
+  return { quotes: result.data, stampAt: result.fetchedAt };
 }
 
 export default async function MarketsPage(props: PageProps<"/piyasalar">) {
@@ -240,19 +238,20 @@ async function IndexCards({
 }) {
   const status = await getStatus();
   const proxies = INDEX_TABS.map((entry) => entry.proxy);
-  const [quotesResult, ...barResults] = await Promise.all([
+  const [quotesResult, bars] = await Promise.all([
     getQuotes([...proxies], status),
-    ...proxies.map((symbol) => getChartBars(symbol, "1D", status)),
+    getChartBarsMulti([...proxies], "1D", status),
   ]);
 
   if (!quotesResult.ok) return null;
 
   return (
     <div className="grid gap-3 sm:grid-cols-3">
-      {INDEX_TABS.map((entry, index) => {
+      {INDEX_TABS.map((entry) => {
         const quote = quotesResult.data[entry.proxy];
-        const bars = barResults[index];
-        const points = bars.ok ? bars.data.map((bar) => ({ value: bar.close })) : [];
+        const points = (bars[entry.proxy] ?? []).map((bar) => ({
+          value: bar.close,
+        }));
         const tone = directionOf(quote?.changePct);
         const selected = entry.key === activeTab;
 
@@ -456,7 +455,13 @@ async function IndexDetail({
       members.map((m) => m.symbol),
       status,
     ),
-    getQuotes([proxy], status),
+    /* TÜM proxy'ler isteniyor, yalnızca seçili olan değil: aynı liste
+       yukarıdaki `IndexCards` içinde de çekiliyor ve iki çağrının argümanı
+       birebir aynı olunca istek boyunca tek çalışmaya iniyor
+       (`getQuotes` sıralı anahtarla tekilleştiriyor). Tek sembol sorulunca
+       anahtar farklı oluyor ve fazladan bir Alpaca isteği + bir veritabanı
+       yazması çıkıyordu. */
+    getQuotes([...INDEX_TABS.map((entry) => entry.proxy)], status),
     getSymbolNames(members.map((m) => m.symbol)),
   ]);
 

@@ -69,7 +69,7 @@ import {
   timeAgo,
 } from "@/lib/utils";
 import { Sparkline } from "@/components/ui/Sparkline";
-import { getChartBars } from "@/lib/providers";
+import { getChartBarsMulti } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
 import { VIX_SERIES, vixBand } from "@/components/markets/FearGauge";
 
@@ -562,9 +562,11 @@ const INDEX_LABEL: Record<string, string> = {
  */
 async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   const status = await getStatus();
-  const [result, ...barResults] = await Promise.all([
+  /* Barlar TEK istekte: sembol başına ayrı çağrı hem dört Alpaca isteği
+     hem dört `candles_cache` yazması demekti. */
+  const [result, bars] = await Promise.all([
     getQuotes([...INDEX_STRIP], status),
-    ...INDEX_STRIP.map((symbol) => getChartBars(symbol, "1D", status)),
+    getChartBarsMulti([...INDEX_STRIP], "1D", status),
   ]);
 
   if (!result.ok) {
@@ -578,7 +580,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <div className="flex flex-col gap-2.5">
       <div className="scroll-x -mx-[18px] flex gap-2.5 px-[18px] sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:gap-3">
-        {INDEX_STRIP.map((symbol, index) => {
+        {INDEX_STRIP.map((symbol) => {
           const quote = result.data[symbol];
           if (!quote) {
             return (
@@ -588,8 +590,9 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
               </Panel>
             );
           }
-          const bars = barResults[index];
-          const points = bars.ok ? bars.data.map((bar) => ({ value: bar.close })) : [];
+          const points = (bars[symbol] ?? []).map((bar) => ({
+            value: bar.close,
+          }));
           const tone = directionOf(quote.changePct);
           return (
             <Link
@@ -1070,6 +1073,7 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
   const badges = await getAnalysisBadges(
     shown.map((row) => row.symbol),
     locale,
+    { from: today, to: today },
   );
 
   const hourLabel: Record<string, string> = {
@@ -1161,9 +1165,9 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
 
   const status = await getStatus();
   const shown = userSymbols.slice(0, 8);
-  const [result, ...barResults] = await Promise.all([
+  const [result, bars] = await Promise.all([
     getQuotes(shown, status),
-    ...shown.map((symbol) => getChartBars(symbol, "1D", status)),
+    getChartBarsMulti(shown, "1D", status),
   ]);
 
   return (
@@ -1177,11 +1181,11 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
       {result.ok ? (
         <>
           <ul>
-            {shown.map((symbol, index) => {
+            {shown.map((symbol) => {
               const quote = result.data[symbol];
-              const bars = barResults[index];
-              const points =
-                bars && bars.ok ? bars.data.map((bar) => ({ value: bar.close })) : [];
+              const points = (bars[symbol] ?? []).map((bar) => ({
+                value: bar.close,
+              }));
               const tone = directionOf(quote?.changePct);
               return (
                 <li key={symbol} className="border-t border-line first:border-t-0">

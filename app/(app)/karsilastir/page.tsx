@@ -14,7 +14,7 @@ import {
   SymbolBadge,
 } from "@/components/ui/primitives";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
-import { getChartBars, getQuotes } from "@/lib/providers";
+import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -165,31 +165,25 @@ async function CompareBoard({
 }) {
   const status = await getStatus();
 
-  const [quotesResult, names, ...rest] = await Promise.all([
-    getQuotes(symbols, status),
-    getSymbolNames(symbols),
-    ...symbols.map((symbol) => getChartBars(symbol, range, status)),
-    ...symbols.map((symbol) => getKeyMetrics(symbol)),
-  ]);
-
-  const barResults = rest.slice(0, symbols.length) as Awaited<
-    ReturnType<typeof getChartBars>
-  >[];
-  const metricResults = rest.slice(symbols.length) as Awaited<
-    ReturnType<typeof getKeyMetrics>
-  >[];
+  const [quotesResult, names, barsBySymbol, ...metricResults] =
+    await Promise.all([
+      getQuotes(symbols, status),
+      getSymbolNames(symbols),
+      getChartBarsMulti(symbols, range, status),
+      ...symbols.map((symbol) => getKeyMetrics(symbol)),
+    ]);
 
   const quotes = quotesResult.ok ? quotesResult.data : {};
 
   const series: CompareSeries[] = symbols
-    .map((symbol, index) => {
-      const bars = barResults[index];
+    .map((symbol) => {
+      const bars = barsBySymbol[symbol] ?? [];
       return {
         symbol,
-        closes: bars?.ok ? bars.data.map((bar) => bar.close) : [],
+        closes: bars.map((bar) => bar.close),
         // İmleç kartındaki tarih için — hangi ana baktığını söylemeyen bir
         // okuma "o zaman kim öndeydi" sorusuna yarım cevap verir.
-        times: bars?.ok ? bars.data.map((bar) => bar.time) : [],
+        times: bars.map((bar) => bar.time),
       };
     })
     .filter((entry) => entry.closes.length >= 2);

@@ -23,7 +23,7 @@ import { toggleSymbolFavorite } from "@/app/actions/watchlist";
 import { auth } from "@/auth";
 import {
   getAnalysis,
-  getEarningsBetween,
+  getUpcomingEarnings,
   getStatus,
   getSymbolNames,
   getUserSymbols,
@@ -40,7 +40,11 @@ import {
   verdictTextClass,
   type VerdictKey,
 } from "@/lib/analysis";
-import { sectorGroupLabel, sectorGroupOf } from "@/lib/sectors";
+import {
+  industryFilterFor,
+  sectorGroupLabel,
+  sectorGroupOf,
+} from "@/lib/sectors";
 import {
   cn,
   formatCompact,
@@ -233,14 +237,12 @@ export default async function AnalysisDetailPage(
   const today = todayEt();
   const status = await getStatus();
 
-  const [meta, userSymbols, upcomingRows, quotes, keyMetrics] =
-    await Promise.all([
-      getSymbolNames([symbol]),
-      session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
-      getEarningsBetween(today, addEtDays(today, 30)),
-      getQuotes([symbol], status),
-      getKeyMetrics(symbol),
-    ]);
+  const [meta, userSymbols, quotes, keyMetrics] = await Promise.all([
+    getSymbolNames([symbol]),
+    session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
+    getQuotes([symbol], status),
+    getKeyMetrics(symbol),
+  ]);
 
   /* ---- Canlı kotasyon ----
      Kayıttaki `price` bilanço GÜNÜNÜN kapanışı ve donuk; okuyucunun bir
@@ -339,28 +341,25 @@ export default async function AnalysisDetailPage(
 
   /* Sağ kolondaki "Yaklaşan Bilançolar": aynı sektörden en büyük üç şirket.
      Rastgele bir liste değil — okuyucu bu şirketin sonucunu okuduktan sonra
-     doğal olarak rakiplerine bakıyor. */
-  const peerMeta = await getSymbolNames([
-    ...new Set(upcomingRows.map((r) => r.symbol)),
-  ]);
-  const peers = upcomingRows
-    .filter(
-      (r) =>
-        r.symbol !== symbol &&
-        sectorGroupOf(peerMeta[r.symbol]?.industry).key === group.key,
-    )
-    .sort(
-      (a, b) =>
-        (peerMeta[b.symbol]?.marketCap ?? 0) -
-        (peerMeta[a.symbol]?.marketCap ?? 0),
-    )
-    .slice(0, 3)
-    /* Seçim piyasa değerine göre (hangi rakipler önemli), ama SIRALAMA
-       tarihe göre: kartın başlığı "Yaklaşan Bilançolar" ve satırların
-       sağında tarih var — tarih taşıyan bir listenin en yakından
-       başlaması bekleniyor. Piyasa değeri sırası ekranda "3 Eyl, 1 Eyl,
-       26 Ağu" gibi geriye akan bir tarih sütunu üretiyordu. */
-    .sort((a, b) => a.reportDate.localeCompare(b.reportDate));
+     doğal olarak rakiplerine bakıyor.
+
+     SÜZGEÇ SORGUDA. Burada bir dönem 30 günlük takvimin TAMAMI çekilip
+     (bilanço sezonunda birkaç bin satır) ardından o satırların tekil
+     sembolleriyle `getSymbolNames` çağrılıyordu — binlerce elemanlı bir
+     `inArray`, üç satır uğruna. Sektör eşlemesi kodda olduğu için grubun
+     alt sektör adları sorguya açılıyor (industryFilterFor). */
+  const peerRows = await getUpcomingEarnings(today, addEtDays(today, 30), 3, {
+    exclude: symbol,
+    industries: industryFilterFor(group),
+  });
+  /* Seçim piyasa değerine göre (hangi rakipler önemli), ama SIRALAMA
+     tarihe göre: kartın başlığı "Yaklaşan Bilançolar" ve satırların
+     sağında tarih var — tarih taşıyan bir listenin en yakından
+     başlaması bekleniyor. Piyasa değeri sırası ekranda "3 Eyl, 1 Eyl,
+     26 Ağu" gibi geriye akan bir tarih sütunu üretiyordu. */
+  const peers = [...peerRows].sort((a, b) =>
+    a.reportDate.localeCompare(b.reportDate),
+  );
 
   const langNote = row.locale === locale ? null : t.analysis.fallbackNote;
   const sources = row.sources ?? [];
@@ -1049,9 +1048,9 @@ export default async function AnalysisDetailPage(
                   {/* Logo, satırı bir sembol listesi olmaktan çıkarıp
                       sayfanın geri kalanıyla aynı dile sokuyor (mercek
                       künyeleri ve analiz tablosu da logodan besleniyor). */}
-                  {peerMeta[peer.symbol]?.logoUrl ? (
+                  {peer.logoUrl ? (
                     <Image
-                      src={peerMeta[peer.symbol].logoUrl!}
+                      src={peer.logoUrl}
                       alt=""
                       width={22}
                       height={22}
@@ -1069,7 +1068,7 @@ export default async function AnalysisDetailPage(
                     {peer.symbol}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-xs text-body">
-                    {peerMeta[peer.symbol]?.name ?? ""}
+                    {peer.name ?? ""}
                   </span>
                   <span className="numeral shrink-0 text-[11px] text-muted">
                     {formatEtDateCompact(peer.reportDate, locale)}

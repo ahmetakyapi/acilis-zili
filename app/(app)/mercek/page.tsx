@@ -15,7 +15,7 @@ import {
   Skeleton,
 } from "@/components/ui/primitives";
 import { getStatus, getStories, getSymbolNames, type StoryIndexRow } from "@/lib/data";
-import { getChartBars } from "@/lib/providers";
+import { getChartBarsMulti } from "@/lib/providers";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong, formatEtDateShort } from "@/lib/utils";
 
@@ -201,21 +201,23 @@ async function StoryBoard({
     ]),
   ].slice(0, CURVE_LIMIT);
 
-  const [meta, ...barResults] = await Promise.all([
+  /* On iki sembole kadar çıkabilen bu liste sembol başına ayrı istek
+     atıyordu; tek çağrıda çıkıyor. */
+  const [meta, barsBySymbol] = await Promise.all([
     getSymbolNames(shownSymbols),
-    ...curveSymbols.map((symbol) => getChartBars(symbol, "1Y", status)),
+    getChartBarsMulti(curveSymbols, "1Y", status),
   ]);
 
   const seriesOf = new Map<string, { time: number; close: number }[]>();
-  curveSymbols.forEach((symbol, index) => {
-    const bars = barResults[index];
-    if (bars?.ok && bars.data.length > 1) {
+  for (const symbol of curveSymbols) {
+    const bars = barsBySymbol[symbol];
+    if (bars && bars.length > 1) {
       seriesOf.set(
         symbol,
-        bars.data.map((bar) => ({ time: bar.time, close: bar.close })),
+        bars.map((bar) => ({ time: bar.time, close: bar.close })),
       );
     }
-  });
+  }
 
   /* Olay gününden bugüne getiri: o güne ait (ya da ondan sonraki ilk) günlük
      kapanış ile son kapanış arasındaki fark. Olay barların başladığı tarihten

@@ -17,7 +17,7 @@ import { EarningsTabs } from "@/components/earnings/EarningsTabs";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import {
   getAnalyses,
-  getEarningsBetween,
+  getUpcomingEarnings,
   getSymbolNames,
   getUserSymbols,
   type AnalysisIndexRow,
@@ -93,6 +93,17 @@ export default async function AnalysesPage(
     getAnalyses(locale, { limit: 60, sort }),
     session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
   ]);
+  const watchSet = new Set(userSymbols);
+
+  /* YAKLAŞANLAR SORGUDA SÜZÜLÜYOR. Burada bir dönem 30 günlük takvimin
+     TAMAMI çekilip (bilanço sezonunda birkaç bin satır) bellekte
+     sıralanıyordu, ardından o satırların tekil sembolleriyle ikinci bir
+     `getSymbolNames` çağrılıyordu. Ekrana giden beş satır için. Üstelik
+     bu iş yukarıdaki sorgulara HİÇ bağlı olmadığı hâlde onları bekliyordu;
+     artık takip listesiyle birlikte tek turda geliyor. */
+  const upcomingTop = await getUpcomingEarnings(today, addEtDays(today, 30), 5, {
+    preferred: userSymbols,
+  });
 
   const meta = await getSymbolNames([
     ...new Set(all.map((row) => row.symbol)),
@@ -107,7 +118,6 @@ export default async function AnalysesPage(
   }
 
   const weekAgo = addEtDays(today, -7);
-  const watchSet = new Set(userSymbols);
 
   const rows = all.filter((row) => {
     if (!filter) return true;
@@ -118,31 +128,6 @@ export default async function AnalysesPage(
 
   const featured = all[0] ?? null;
   const thisWeek = all.filter((row) => row.reportDate >= weekAgo).slice(0, 5);
-
-  const upcoming = await getEarningsBetween(today, addEtDays(today, 30));
-  const upcomingMeta = await getSymbolNames([
-    ...new Set(upcoming.map((row) => row.symbol)),
-  ]);
-  /* Sağlayıcı aynı sembol için birden çok tarih yazabiliyor (tahmin
-     güncellenince eski satır kalıyor); panelde aynı şirketi iki kez
-     görmek hata gibi okunuyordu. */
-  const seenUpcoming = new Set<string>();
-  const upcomingTop = upcoming
-    .filter((row) => {
-      if (seenUpcoming.has(row.symbol)) return false;
-      seenUpcoming.add(row.symbol);
-      return true;
-    })
-    .sort((a, b) => {
-      const watchDelta =
-        Number(watchSet.has(b.symbol)) - Number(watchSet.has(a.symbol));
-      if (watchDelta !== 0) return watchDelta;
-      return (
-        (upcomingMeta[b.symbol]?.marketCap ?? 0) -
-        (upcomingMeta[a.symbol]?.marketCap ?? 0)
-      );
-    })
-    .slice(0, 5);
 
   const tableRows = rows.map((analysis) =>
     toAnalysisRowView(analysis, meta[analysis.symbol], locale, t),
@@ -256,7 +241,7 @@ export default async function AnalysesPage(
                         className="absolute inset-0"
                       />
                       <PanelLogo
-                        logoUrl={upcomingMeta[row.symbol]?.logoUrl ?? null}
+                        logoUrl={row.logoUrl}
                         symbol={row.symbol}
                       />
                       <span className="w-[46px] shrink-0 text-[12.5px] font-bold text-strong">

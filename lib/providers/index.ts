@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { inArray, eq, and, sql } from "drizzle-orm";
 import { db } from "../db";
 import { candlesCache, quotesCache, symbols as symbolsTable } from "../schema";
@@ -162,7 +163,18 @@ async function quotesFromCache(
   }
 }
 
-export async function getQuotes(
+/**
+ * Kotasyon çekmenin gerçek gövdesi — sarmalayıcı aşağıda.
+ *
+ * AYNI İSTEKTE İKİ KEZ ÇALIŞMAMALI. Alpaca çağrısı Next'in `fetch`
+ * belleklemesiyle zaten tekilleşiyordu ama ardından gelen `persistQuotes`
+ * tekilleşmiyordu: hisse sayfası aynı sembolün kotasyonunu dört ayrı
+ * bileşende soruyor (başlık, grafik, metrikler, uygunluk kartı) ve tek
+ * satırlık aynı upsert dört kez Neon'a gidiyordu. Ana sayfada da benzeri
+ * vardı — endeks şeridi ile layout'taki şerit aynı satırları iki kez
+ * yazıyordu.
+ */
+async function fetchQuotes(
   symbolList: string[],
   status: MarketStatus,
 ): Promise<ProviderResult<Record<string, Quote>>> {
@@ -203,6 +215,26 @@ export async function getQuotes(
   }
 
   return primary;
+}
+
+/* React `cache()` argümanları KİMLİĞE göre eşliyor: her çağıran kendi
+   dizisini yazdığı için `["NVDA"]` hiçbir zaman aynı dizi olmuyordu ve
+   önbellek hiç tutmuyordu. Anahtar bu yüzden sıralı ve birleştirilmiş bir
+   dize. `status` ise `getStatus()`ten geliyor ve o da `cache()`li, yani
+   istek boyunca aynı nesne referansı. */
+const quotesForKey = cache(async function quotesForKey(
+  key: string,
+  status: MarketStatus,
+): Promise<ProviderResult<Record<string, Quote>>> {
+  return fetchQuotes(key ? key.split(",") : [], status);
+});
+
+export async function getQuotes(
+  symbolList: string[],
+  status: MarketStatus,
+): Promise<ProviderResult<Record<string, Quote>>> {
+  const unique = [...new Set(symbolList)].sort();
+  return quotesForKey(unique.join(","), status);
 }
 
 /**
@@ -262,6 +294,87 @@ async function persistBars(
   } catch {
     // yoksay
   }
+}
+
+/** Çoklu bar yazması — tek upsert. */
+async function persistBarsMulti(
+  range: ChartRange,
+  bySymbol: Record<string, Bar[]>,
+): Promise<void> {
+  const entries = Object.entries(bySymbol);
+  if (entries.length === 0) return;
+  try {
+    const now = new Date();
+    await db
+      .insert(candlesCache)
+      .values(
+        entries.map(([symbol, bars]) => ({
+          symbol,
+          timeframe: range,
+          bars,
+          fetchedAt: now,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [candlesCache.symbol, candlesCache.timeframe],
+        set: {
+          bars: sql`excluded.bars`,
+          fetchedAt: sql`excluded.fetched_at`,
+        },
+      });
+  } catch {
+    // yoksay
+  }
+}
+
+/**
+ * Birden çok sembolün grafik barları.
+ *
+ * `getChartBars` tek sembolle çalışıyor ve çağıranlar döngüde çağırıyordu:
+ * giriş yapmış bir kullanıcının ana sayfası tek çizimde 12 Alpaca isteği +
+ * 12 Neon yazması üretiyordu. Sağlayıcı çoklu sembolü zaten destekliyor,
+ * yazma da tek upsert'e sığıyor.
+ *
+ * Sağlayıcı düşerse önbellekteki son barlara düşülür — tek sembollük
+ * yoldaki davranışın aynısı, tek sorguda.
+ */
+export async function getChartBarsMulti(
+  symbolList: string[],
+  range: ChartRange,
+  status: MarketStatus,
+): Promise<Record<string, Bar[]>> {
+  const unique = [...new Set(symbolList)];
+  if (unique.length === 0) return {};
+
+  const ttl = candleTtlSeconds(range, status);
+  const primary = await alpaca.getBarsMulti(unique, range, ttl);
+  const out: Record<string, Bar[]> = primary.ok ? { ...primary.data } : {};
+
+  if (primary.ok && Object.keys(primary.data).length > 0) {
+    await persistBarsMulti(range, primary.data);
+  }
+
+  const missing = unique.filter((symbol) => !out[symbol]);
+  if (missing.length === 0) return out;
+
+  try {
+    const rows = await db
+      .select()
+      .from(candlesCache)
+      .where(
+        and(
+          inArray(candlesCache.symbol, missing),
+          eq(candlesCache.timeframe, range),
+        ),
+      );
+    for (const row of rows) {
+      if (row.bars) out[row.symbol] = row.bars as Bar[];
+    }
+  } catch {
+    // yoksay
+  }
+
+  return out;
 }
 
 export async function getChartBars(

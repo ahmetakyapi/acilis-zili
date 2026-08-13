@@ -1,5 +1,6 @@
 import { cache } from "react";
-import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
+import { and, asc, desc, eq, gte, inArray, isNull, lte, sql, type SQL } from "drizzle-orm";
 import { db } from "./db";
 import { logoSrc } from "./logos";
 import {
@@ -44,10 +45,28 @@ import type { BriefPeriod } from "./brief";
    sayfanın kendisi) ve her biri ayrı bir veritabanı gidiş-dönüşüydü. Veri
    gün içinde değişmediği için tekrar sorulmasının bir faydası yok.
    İstekler arasında paylaşılmaz — istemcilerin verisi karışmaz. */
-export const getHolidays = cache(async function getHolidays(): Promise<
-  MarketHoliday[]
-> {
-  try {
+/* İSTEKLER ARASINDA DA ÖNBELLEKLİ. `cache()` yalnızca tek bir istek boyunca
+   paylaşıyor; tatil listesi ise yılda birkaç kez değişen bir veri ve
+   `getStatus` üzerinden sitedeki HER çizimde en az bir kez soruluyordu
+   (ana sayfa, layout'taki şerit, /piyasalar, /sirketler, /hisse,
+   /favoriler, /api/chart). Yani her sayfa görüntülemesi bir Neon
+   gidiş-dönüşünü (~30-60 ms) tatil takvimine harcıyordu.
+
+   Süre 24 saat. Etiket dışa açık ama şu an kimse tetiklemiyor: tatilleri
+   yazan tek yer `db/seed/index.ts` ve o bir betik — `revalidateTag` yalnızca
+   istek bağlamında (server action ya da route handler) çalışır. Yani seed
+   koştuktan sonra liste en geç bir gün içinde yerine oturur. Anında
+   gerekirse etiket hazır; bir uçtan `revalidateTag(HOLIDAYS_TAG)` yeter.
+   Dıştaki `cache()` duruyor — aynı istekte tekrar sorulmasını o engelliyor. */
+export const HOLIDAYS_TAG = "holidays";
+
+/* HATA ÖNBELLEĞE GİRMEZ. İçerideki fonksiyon hatayı YUTMUYOR, fırlatıyor:
+   `unstable_cache` yalnızca başarılı sonucu saklıyor. Yutulsaydı, Neon'un
+   bir saniyelik kesintisi "bu yıl tatil yok" cevabını 24 saat boyunca
+   dondurur ve site kapalı günleri açık sanardı. Boş listeye düşme kararı
+   dışarıda, önbelleğin ötesinde. */
+const loadHolidays = unstable_cache(
+  async function loadHolidays(): Promise<MarketHoliday[]> {
     const rows = await db.select().from(marketHolidays);
     return rows.map((r) => ({
       date: r.date,
@@ -55,6 +74,16 @@ export const getHolidays = cache(async function getHolidays(): Promise<
       nameEn: r.nameEn,
       earlyCloseEt: r.earlyCloseEt,
     }));
+  },
+  ["market-holidays"],
+  { revalidate: 86_400, tags: [HOLIDAYS_TAG] },
+);
+
+export const getHolidays = cache(async function getHolidays(): Promise<
+  MarketHoliday[]
+> {
+  try {
+    return await loadHolidays();
   } catch {
     return [];
   }
@@ -125,6 +154,123 @@ export const getEarningsBetween = cache(async function getEarningsBetween(
     return [];
   }
 });
+
+export type UpcomingRow = {
+  id: string;
+  symbol: string;
+  reportDate: string;
+  hour: string | null;
+  epsEstimate: number | null;
+  name: string | null;
+  logoUrl: string | null;
+  marketCap: number | null;
+};
+
+/**
+ * Yaklaşan bilançolar — EN BÜYÜKLERİ, veritabanında süzülmüş.
+ *
+ * Analizler ekranı bunu 30 günlük TAKVİMİN TAMAMINI çekip bellekte
+ * sıralayarak yapıyordu: bilanço sezonunda birkaç bin satır Neon'dan HTTP
+ * üzerinden geliyor, ardından o satırların tekil sembolleriyle ikinci bir
+ * `getSymbolNames` çağrılıyordu (binlerce elemanlı `inArray`), ve bütün bu
+ * işin çıktısı ekrandaki BEŞ satırdı.
+ *
+ * Sıralama iki kademeli ve ikisi de sorguda: aynı sembolün birden çok tarihi
+ * varsa (sağlayıcı tahmini güncellerken eski satırı bırakıyor) en yakın
+ * tarih alınır, sonra piyasa değerine göre sıralanır. Piyasa değeri
+ * bilinmeyen sembol en sona düşer — `symbols` tablosunda karşılığı olmayan
+ * satırlar da listeden çıkmaz, sadece geriye gider.
+ */
+export async function getUpcomingEarnings(
+  from: string,
+  to: string,
+  limit: number,
+  options: {
+    /* Takip edilenler öne alınır. Liste kullanıcıya özel olduğu için
+       sıralama ifadesine parametre olarak giriyor; boşsa koşul yazılmıyor. */
+    preferred?: string[];
+    /** Sayfanın kendi sembolü listede durmasın. */
+    exclude?: string;
+    /* Sektör süzgeci. Eşleme kodda olduğu için (lib/sectors.ts) buraya alt
+       sektör adlarının kendisi geliyor; "Diğer" grubu `include: false` ile
+       tersine çalışıyor. */
+    industries?: { industries: readonly string[]; include: boolean };
+  } = {},
+): Promise<UpcomingRow[]> {
+  const preferred = options.preferred ?? [];
+  try {
+    /* DISTINCT ON: aynı sembolün en yakın tarihli satırı. Sağlayıcı tahmini
+       güncellerken eski satırı bırakabiliyor ve panelde aynı şirket iki kez
+       görünüyordu. Postgres'e özgü ama şema zaten Postgres'e bağlı.
+
+       Sıralama ve LİMİT dışarıda: DISTINCT ON, ORDER BY'ın kendi sütunuyla
+       başlamasını şart koşuyor, oysa sıralama ölçütü piyasa değeri. İç
+       sorgu alt sorgu olarak sarılıyor ve tavan orada uygulanıyor —
+       ekrana beş satır gidecekse Neon'dan da beş satır gelmeli. */
+    const uniq = db
+      .selectDistinctOn([earningsCalendar.symbol], {
+        id: earningsCalendar.id,
+        symbol: earningsCalendar.symbol,
+        reportDate: earningsCalendar.reportDate,
+        hour: earningsCalendar.hour,
+        epsEstimate: earningsCalendar.epsEstimate,
+        name: symbolsTable.name,
+        logoUrl: symbolsTable.logoUrl,
+        marketCap: symbolsTable.marketCap,
+      })
+      .from(earningsCalendar)
+      .leftJoin(symbolsTable, eq(symbolsTable.symbol, earningsCalendar.symbol))
+      .where(
+        and(
+          gte(earningsCalendar.reportDate, from),
+          lte(earningsCalendar.reportDate, to),
+          options.exclude
+            ? sql`${earningsCalendar.symbol} <> ${options.exclude}`
+            : undefined,
+          options.industries
+            ? options.industries.include
+              ? inArray(symbolsTable.industry, [...options.industries.industries])
+              : /* "Diğer" grubu: bilinen hiçbir adı taşımayanlar VE alt
+                   sektörü boş olanlar. `NOT IN` null'ı eleyeceği için
+                   ikinci koşul ayrıca yazılıyor. */
+                sql`(${symbolsTable.industry} is null or ${
+                  symbolsTable.industry
+                } not in (${sql.join(
+                  [...options.industries.industries].map((name) => sql`${name}`),
+                  sql`, `,
+                )}))`
+            : undefined,
+        ),
+      )
+      .orderBy(asc(earningsCalendar.symbol), asc(earningsCalendar.reportDate))
+      .as("yaklasan");
+
+    /* Piyasa değeri bilinmeyen sembol (symbols tablosunda karşılığı yok)
+       listeden çıkmıyor, sadece sona düşüyor. */
+    const order: SQL[] = [sql`${uniq.marketCap} desc nulls last`];
+    if (preferred.length > 0) {
+      /* Tercih koşulu YALNIZCA liste doluyken ekleniyor. Boşken sabit bir
+         ifade (`sql\`0\``) yazmak sessizce kırıyordu: Postgres ORDER BY
+         içindeki çıplak tam sayıyı SÜTUN SIRASI sayıyor ve `ORDER BY 0`
+         hata veriyor — hata yutulduğu için panel boş görünüyordu. */
+      order.unshift(
+        sql`case when ${uniq.symbol} in (${sql.join(
+          [...new Set(preferred)].map((symbol) => sql`${symbol}`),
+          sql`, `,
+        )}) then 0 else 1 end`,
+      );
+    }
+
+    const rows = await db.select().from(uniq).orderBy(...order).limit(limit);
+
+    return rows.map((row) => ({
+      ...row,
+      logoUrl: logoSrc(row.symbol, row.logoUrl),
+    }));
+  } catch {
+    return [];
+  }
+}
 
 export async function getNextEarnings(
   symbol: string,
@@ -974,9 +1120,18 @@ export type AnalysisBadge = {
 export async function getAnalysisBadges(
   symbols: string[],
   locale: string,
+  /* TARİH ARALIĞI ŞART DEĞİL AMA OLMALI. Süzgeç yokken fonksiyon verilen
+     sembollerin TÜM analiz arşivini çekiyordu — takvim ekranı bunu 30 günlük
+     takvimin tekil sembolleriyle çağırıyor, yani bilanço sezonunda binlerce
+     elemanlı bir `inArray` ve arşivin tamamı. Oysa rozet yalnızca takvim
+     satırının SEMBOL:TARİH anahtarıyla eşleşenler için kullanılıyor, geri
+     kalan her satır aşağıda atılıyor. `earnings_analyses_report_idx` bu
+     süzgeci karşılıyor. */
+  range?: { from: string; to: string },
 ): Promise<Record<string, AnalysisBadge>> {
   if (symbols.length === 0) return {};
   try {
+    const bySymbol = inArray(earningsAnalyses.symbol, [...new Set(symbols)]);
     const rows = await db
       .select({
         symbol: earningsAnalyses.symbol,
@@ -987,7 +1142,15 @@ export async function getAnalysisBadges(
         reportDate: earningsAnalyses.reportDate,
       })
       .from(earningsAnalyses)
-      .where(inArray(earningsAnalyses.symbol, [...new Set(symbols)]));
+      .where(
+        range
+          ? and(
+              bySymbol,
+              gte(earningsAnalyses.reportDate, range.from),
+              lte(earningsAnalyses.reportDate, range.to),
+            )
+          : bySymbol,
+      );
 
     const out: Record<string, AnalysisBadge> = {};
     for (const row of rows) {

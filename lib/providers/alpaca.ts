@@ -385,6 +385,93 @@ export async function getBars(
 }
 
 /**
+ * Alpaca'nın tek istekte döndürdüğü en fazla bar sayısı.
+ *
+ * `limit` sembol BAŞINA değil, YANITIN TAMAMI için geçerli — çoklu sembol
+ * isteğinde tavan aşılırsa yanıt kesiliyor ve `next_page_token` ile devam
+ * ediliyor. Sayfalama yapmak yerine istek, tavana sığacak kadar sembolle
+ * bölünüyor: `sort=asc` olduğu için kesilme listenin sonundaki sembollerin
+ * EN YENİ barlarını düşürürdü, yani grafik sessizce eksik çizilirdi.
+ */
+const MAX_BARS_PER_REQUEST = 10_000;
+
+/**
+ * Birden çok sembolün barları — TEK istekte.
+ *
+ * `getBars` tek sembolle çalışıyor ve çağıranlar onu döngüde çağırıyordu:
+ * ana sayfanın endeks şeridi 4, favori özeti 8, /mercek 12'ye kadar. Her
+ * çağrı ayrı bir Alpaca isteği artı ayrı bir `candles_cache` yazması
+ * demekti. Alpaca'nın `/bars` ucu virgüllü sembol listesi kabul ediyor ve
+ * yanıtı zaten sembol → bar dizisi olarak veriyor.
+ *
+ * Bulunamayan sembol sonuçta HİÇ görünmez (boş dizi değil): çağıran onu
+ * "veri yok" diye ayırt edebilsin.
+ */
+export async function getBarsMulti(
+  symbols: string[],
+  range: ChartRange,
+  revalidate: number,
+): Promise<ProviderResult<Record<string, Bar[]>>> {
+  if (symbols.length === 0) return ok({}, "alpaca");
+
+  const spec = RANGE_SPECS[range];
+  const unique = [...new Set(symbols)];
+  const perRequest = Math.max(
+    1,
+    Math.min(BATCH_SIZE, Math.floor(MAX_BARS_PER_REQUEST / spec.limit)),
+  );
+  const start = startDateFor(range, new Date());
+
+  const out: Record<string, Bar[]> = {};
+  let anyOk = false;
+  let lastFailure: ProviderResult<Record<string, Bar[]>> | null = null;
+  let fetchedAt: Date | undefined;
+
+  for (let i = 0; i < unique.length; i += perRequest) {
+    const batch = unique.slice(i, i + perRequest);
+    const result = await alpacaFetch<{
+      bars?: Record<string, AlpacaBar[]>;
+    }>(
+      "/bars",
+      {
+        symbols: batch.join(","),
+        timeframe: spec.timeframe,
+        start,
+        limit: String(Math.min(MAX_BARS_PER_REQUEST, spec.limit * batch.length)),
+        adjustment: "split",
+        feed: DEFAULT_FEED,
+        sort: "asc",
+      },
+      { revalidate, tags: ["bars", `bars:${range}`] },
+    );
+
+    if (!result.ok) {
+      lastFailure = result;
+      continue;
+    }
+    anyOk = true;
+    fetchedAt = result.fetchedAt;
+
+    for (const [symbol, list] of Object.entries(result.data.bars ?? {})) {
+      if (!list || list.length === 0) continue;
+      let bars: Bar[] = list.map((b) => ({
+        time: Math.floor(new Date(b.t).getTime() / 1000),
+        open: b.o,
+        high: b.h,
+        low: b.l,
+        close: b.c,
+        volume: b.v,
+      }));
+      if (range === "1D") bars = lastTradingDayOnly(bars);
+      if (bars.length > 0) out[symbol] = bars;
+    }
+  }
+
+  if (!anyOk && lastFailure) return lastFailure;
+  return ok(out, "alpaca", { fetchedAt });
+}
+
+/**
  * Gün ayrımı New York takvimine göre yapılır — UTC'ye göre yapılırsa
  * kapanış sonrası barlar (20:00 ET = 00:00 UTC) ertesi güne kayar.
  */
