@@ -578,8 +578,14 @@ export function DayRail({
         )}
       </div>
 
-      {/* ================= Mobil: dikey timeline ================= */}
-      <ul className="sm:hidden">
+      {/* ================= Mobil: dikey timeline =================
+          MASAÜSTÜNDE DE VAR, yalnızca görünmez. Bir dönem `sm:hidden` yazıyordu
+          ve yukarıdaki yatay eksen kökten `aria-hidden` olduğu için 640px
+          üstünde ekran okuyucuya BU PANELDEN HİÇBİR ŞEY ulaşmıyordu — sayfanın
+          "Bugünün Akışı" başlığı vardı, içeriği yoktu. `sm:sr-only` görsel
+          olarak gizliyor ama erişilebilirlik ağacında bırakıyor: gören
+          okuyucu çizimi, ekran okuyucu aynı olayların listesini alıyor. */}
+      <ul className="sm:sr-only">
         {[
           ...positioned,
           ...(nowVisible
@@ -719,7 +725,7 @@ export function DayRail({
       {/* Not, çizelgenin ALTINDA durur: üstte olsaydı hemen ardından gelen
           açılış/kapanış satırlarını yalanlıyor gibi okunuyordu. */}
       {positioned.length === 0 && (
-        <p className="mt-1 text-xs text-muted sm:hidden">{labels.noEvents}</p>
+        <p className="mt-1 text-xs text-muted sm:sr-only">{labels.noEvents}</p>
       )}
     </div>
   );

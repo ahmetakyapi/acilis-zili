@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { EmptyState, Panel } from "@/components/ui/primitives";
 import { NewsImage } from "@/components/news/NewsImage";
-import { getGenericImageUrls, getLatestNews, getSymbolNames } from "@/lib/data";
+import {
+  getGenericImageUrls,
+  getLatestNews,
+  getNewsForSymbol,
+  getSymbolNames,
+} from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { cn, headlineMentions, timeAgo } from "@/lib/utils";
 
@@ -22,11 +27,13 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
     typeof search.sembol === "string" ? search.sembol.toUpperCase() : null;
 
   const { locale, t } = await getI18n();
-  let items = await getLatestNews(60);
-
-  if (symbolFilter) {
-    items = items.filter((item) => item.symbols?.includes(symbolFilter));
-  }
+  /* Sembol süzgeci VERİTABANINDA. Bir dönem en yeni 60 haber çekilip bellekte
+     süzülüyordu ve sembol o pencerede geçmiyorsa sayfa "haber yok" diyordu —
+     tabloda dünden kalan haberler dururken. Gerekçenin tamamı
+     `getNewsForSymbol` yorumunda. */
+  const items = symbolFilter
+    ? await getNewsForSymbol(symbolFilter, 60)
+    : await getLatestNews(60);
 
   /* Kaynak logoları elenir; kalan makale görselleri küçük resim olarak durur.
      Görseli olmayan habere şirketin logosu konuyor — künye kutusunda sembol

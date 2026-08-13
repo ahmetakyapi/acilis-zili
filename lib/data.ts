@@ -239,6 +239,34 @@ export async function getLatestNews(limit = 20): Promise<NewsRow[]> {
   }
 }
 
+/**
+ * Bir sembolün haberleri — FİLTRE VERİTABANINDA.
+ *
+ * `/haberler?sembol=NVDA` bir dönem en yeni 60 haberi çekip bellekte
+ * süzüyordu: hareketli bir günde o pencere birkaç saati kapsıyor ve sembol
+ * o aralıkta geçmiyorsa sayfa "haber yok" diyordu — oysa dünkü haberler
+ * tabloda duruyordu. Sayfalama da yalancıydı: 60 satırın kaçının kaldığına
+ * bağlıydı.
+ *
+ * `symbols` bir metin dizisi; Postgres'in dizi içerme operatörü tam da bunun
+ * için var. Tabloda `news_published_idx` zaten tarihe göre sıralı okuyor.
+ */
+export async function getNewsForSymbol(
+  symbol: string,
+  limit = 60,
+): Promise<NewsRow[]> {
+  try {
+    return await db
+      .select()
+      .from(news)
+      .where(sql`${news.symbols} @> ARRAY[${symbol}]::text[]`)
+      .orderBy(desc(news.publishedAt))
+      .limit(limit);
+  } catch {
+    return [];
+  }
+}
+
 /* ---- Günlük özet ---- */
 
 /**

@@ -147,13 +147,22 @@ export function CompareChart({
   return (
     <figure className={cn("flex flex-col gap-3", className)}>
       <div className="scroll-x -mx-1 px-1">
-        {/* Dokunmatikte de çalışır: parmak sürüklendikçe okuma kayar,
-            kalkınca kart kapanır. `touch-pan-y` dikey kaydırmayı bırakır —
-            grafiğin üstünde parmak sürüklerken sayfa kilitlenmesin. */}
+        {/* DOKUNMATİKTE KAYDIRMA SERBEST. Burada `touch-pan-y` vardı ve
+            tarayıcıya yalnızca dikey kaydırmayı bırakıyordu; grafik ise
+            `min-w-[520px]` ile kendi kabında yatay kayıyor. Sonuç: 390px'lik
+            telefonda grafiğin üçte biri HİÇ görülemiyordu — parmak yatayda
+            hiçbir şey yapmıyordu.
+
+            Sürükleyerek okuma yalnızca fare ve kalemde; dokunmatikte
+            DOKUNARAK okunuyor (`pointerdown` her girdi türünde çalışıyor).
+            Okumanın tamamını görebilmek, sürükleyerek okumaktan önce gelir. */}
         <div
           ref={frameRef}
-          className="relative min-w-[520px] touch-pan-y"
-          onPointerMove={(event) => updateFromClientX(event.clientX)}
+          className="relative min-w-[520px]"
+          onPointerMove={(event) => {
+            if (event.pointerType === "touch") return;
+            updateFromClientX(event.clientX);
+          }}
           onPointerDown={(event) => updateFromClientX(event.clientX)}
           onPointerLeave={() => setFraction(null)}
           onPointerCancel={() => setFraction(null)}

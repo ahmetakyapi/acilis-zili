@@ -9,6 +9,7 @@ import {
   PageHeader,
   Panel,
   PanelHeader,
+  Skeleton,
 } from "@/components/ui/primitives";
 import { Sparkline } from "@/components/ui/Sparkline";
 import {
@@ -148,7 +149,23 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         subtitle={t.markets.subtitle}
       />
 
-      <IndexCards activeTab={tab} sort={sort} dir={dir} locale={locale} />
+      {/* KABUK ÖNCE AKAR. `IndexCards` ve `IndexDetail` doğrudan gövdede
+          await ediliyordu ve S&P 500 sekmesinde `IndexDetail` 499 sembol için
+          kotasyon + ad çekiyor; o tur bitene kadar sayfa başlığı, tahvil
+          şeridi ve sekme çubuğu dahil HİÇBİR ŞEY görünmüyordu. Sekmeye
+          basan okuyucu yalnızca sekmenin yeniden çizilmesi için tam turu
+          bekliyordu. Aynı düzeltme /sirketler'de zaten yapılmış (orada
+          gerekçesi yorumla yazılı); burası atlanmıştı.
+
+          `key`: sekme ya da sıralama değişince Suspense yeni bir sınır
+          sayıyor ve iskelet tekrar görünüyor — yoksa React eski içeriği
+          ekranda tutup sessizce bekletiyor. */}
+      <Suspense
+        key={`cards:${tab}:${sort}:${dir}`}
+        fallback={<Skeleton className="h-[132px] w-full rounded-2xl" />}
+      >
+        <IndexCards activeTab={tab} sort={sort} dir={dir} locale={locale} />
+      </Suspense>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <YieldStrip locale={locale} t={t} />
@@ -172,16 +189,21 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         </Suspense>
       </div>
 
-      <IndexDetail
-        tab={tab}
-        members={active.members}
-        proxy={active.proxy}
-        sort={sort}
-        dir={dir}
-        limit={limit}
-        locale={locale}
-        t={t}
-      />
+      <Suspense
+        key={`detail:${tab}:${sort}:${dir}:${limit}`}
+        fallback={<Skeleton className="h-[420px] w-full rounded-2xl" />}
+      >
+        <IndexDetail
+          tab={tab}
+          members={active.members}
+          proxy={active.proxy}
+          sort={sort}
+          dir={dir}
+          limit={limit}
+          locale={locale}
+          t={t}
+        />
+      </Suspense>
 
       <GuideHint
         label={t.guide.contextLabel}

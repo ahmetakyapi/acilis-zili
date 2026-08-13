@@ -395,8 +395,26 @@ async function RailSection({
      zaten "~" ile yaklaşık olduğunu ve alt satırda hangi pencere olduğunu
      söylüyor; konumun zille aynı olması doğruyu bozmuyor, etiket bir kademe
      aşağıya kaçıyor (bkz. BOUND_COLLISION_MINUTES). */
+  /**
+   * Bilanço penceresinin şeritteki temsilî saati — ET.
+   *
+   * Sağlayıcı dakika vermiyor, yalnızca pencereyi söylüyor (bmo/amc/dmh); bu
+   * yüzden şeritte "~" ile yazılıyor ve pencerenin adı da yanında duruyor.
+   * Buradaki değer o pencerenin AĞIRLIK MERKEZİ olmalı, en erken ucu değil.
+   *
+   * `bmo` 07:00'dı ve okuyucunun saatiyle 14:00'e düşüyordu — Türkiye'de
+   * öğleden hemen sonraya, hiçbir şeyin açıklanmadığı bir saate. Açılış
+   * öncesi bilançoların büyük kısmı 07:00-08:30 ET arasında, kalabalık da
+   * 08:00'e yakın çıkıyor; 08:00 hem pencerenin ortasına daha yakın hem de
+   * okuyucunun saatiyle 15:00'e, gerçekten bir şeylerin olduğu saate denk
+   * geliyor.
+   *
+   * Saat SABİT DEĞİL, ET olarak yazılıyor ve ekrana TR'ye çevrilerek
+   * basılıyor: yaz-kış farkı kendiliğinden doğru kalıyor (yazın 15:00,
+   * kışın 16:00 TR).
+   */
   const EARNINGS_TIME: Record<string, string> = {
-    bmo: "07:00",
+    bmo: "08:00",
     amc: "16:00",
     dmh: "12:00",
   };
@@ -684,7 +702,13 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
                 )}
               </p>
               <p className="numeral mt-0.5 text-[11px] text-muted">
-                {delta === null || delta === 0 ? (
+                {/* `null` ile `0` AYRI ŞEYLER: biri "önceki gözlemi
+                    bilmiyoruz", öteki "faiz gerçekten değişmedi". İkisini de
+                    "değişmedi" diye yazmak, olmayan bir ölçümü ölçülmüş gibi
+                    göstermek oluyordu. Bilinmeyende tire basılıyor. */}
+                {delta === null ? (
+                  "—"
+                ) : delta === 0 ? (
                   t.macro.unchanged
                 ) : (
                   <>

@@ -47,10 +47,19 @@ const MAX_WRITINGS = 4;
  * "enflasyon" araması "Enflasyon"u da "ENFLASYON"u da bulsun.
  */
 function fold(value: string): string {
-  return value
-    .toLocaleLowerCase("tr-TR")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  return (
+    value
+      .toLocaleLowerCase("tr-TR")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      /* NOKTASIZ "ı" NOKTALIYA KATLANIR — bu satır olmadan arama İngilizce
+         başlıkları kaçırıyordu. Türkçe küçültme "I" harfini "ı" yapıyor:
+         "Index" → "ındex" olurken kullanıcının yazdığı "index" olduğu gibi
+         kalıyor ve eşleşme kırılıyordu. Aynı şey "IWM", "IBM", "INTC" gibi
+         sembollerde de oluyordu. İkisini de "i"ye indirince hem "İSTİHDAM"
+         hem "index" doğru buluyor. */
+      .replace(/ı/g, "i")
+  );
 }
 
 /**

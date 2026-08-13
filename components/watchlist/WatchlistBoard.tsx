@@ -404,7 +404,14 @@ function SortableRows({
                   {item.symbol.slice(0, 2)}
                 </span>
               )}
-              <span className="numeral w-14 shrink-0 text-sm font-semibold text-strong">
+              {/* Sembol telefonda SABİT GENİŞLİKTE DEĞİL. `w-14` (56px) her
+                  ekranda duruyordu ve dar telefonda satırın sabit sütunları
+                  (fiyat 92 + değişim 86 + oklar 24 + sil 28 + boşluklar)
+                  yeri bitirince bu kutu daralmıyor, TAŞIYORDU: sembol fiyatın
+                  üstüne biniyor, şirket adı sıfır genişliğe düşüp tamamen
+                  kayboluyordu. Sabit genişliğin işi geniş ekranda sütunları
+                  hizalamak; telefonda hizalanacak yer zaten yok. */}
+              <span className="numeral shrink-0 text-sm font-semibold text-strong sm:w-14">
                 {item.symbol}
               </span>
               <span className="min-w-0 truncate text-xs text-soft">
@@ -418,19 +425,27 @@ function SortableRows({
                 karşılaştıramıyordu. Ayrıca fiyat gövde mürekkebindeydi ve
                 yanındaki renkli yüzde rozeti onu gölgede bırakıyordu — oysa
                 satırın ana sayısı fiyat. */}
-            <span className="numeral w-[92px] shrink-0 text-right text-sm font-semibold text-strong">
-              {quote ? formatPrice(quote.price, locale) : "—"}
-            </span>
-            <span className="flex w-[86px] shrink-0 justify-end">
-              {quote ? (
-                <ChangePill
-                  changePct={quote.changePct}
-                  locale={locale}
-                  size="sm"
-                />
-              ) : (
-                <span className="text-xs text-muted">—</span>
-              )}
+            {/* Fiyat ve değişim TELEFONDA ALT ALTA, geniş ekranda yan yana.
+                İkisi de sabit genişlikte sütun olarak yan yana dururken satır
+                320-360px'te yeri bitiriyordu: sembol fiyatın üstüne biniyor,
+                şirket adı sıfır genişliğe düşüyordu. Alt alta almak seksen
+                piksel kazandırıyor ve iki sayı zaten aynı şeyin iki yüzü —
+                sağ kenarda hizalı bir blok olarak da doğru okunuyor. */}
+            <span className="flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+              <span className="numeral text-right text-sm font-semibold text-strong sm:w-[92px]">
+                {quote ? formatPrice(quote.price, locale) : "—"}
+              </span>
+              <span className="flex justify-end sm:w-[86px]">
+                {quote ? (
+                  <ChangePill
+                    changePct={quote.changePct}
+                    locale={locale}
+                    size="sm"
+                  />
+                ) : (
+                  <span className="text-xs text-muted">—</span>
+                )}
+              </span>
             </span>
 
             {/* Sıralama okları ve silme, İMLEÇ SATIRDAYKEN çıkar.

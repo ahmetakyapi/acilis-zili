@@ -24,7 +24,13 @@
   --text-strong: #101c2b;
   --text-body: #54677c;
   --text-soft: #54677c;
-  --text-muted: #75879a;
+  /* #75879a idi ve sayfa zemininde 3,50:1, yükseltilmiş yüzeyde 3,06:1
+     veriyordu — WCAG AA'nın 4,5 eşiğinin altında. Bu token 10-13px metinlerde
+     kullanılıyor (`.plate` künyeleri, veri damgaları, mobil alt çubuğun pasif
+     sekmeleri, tablo başlıkları); hiçbiri "büyük metin" istisnasına girmiyor.
+     Yeni değer iki zeminde de geçiyor: 5,28 ve 4,62. Koyu tema zaten 5,94'tü,
+     dokunulmadı. */
+  --text-muted: #586a7c;
 
   /* Etkileşim / seçili / link. Açık zeminde bir basamak koyu. */
   --primary: #0d74c4;
@@ -37,11 +43,16 @@
   /* Accent üzerine basılan metin. */
   --on-primary: #ffffff;
 
-  --up: #0f8f63;
-  --up-wash: rgb(15 143 99 / 0.12);
-  --down: #ce2044;
-  --down-wash: rgb(206 32 68 / 0.1);
-  --flat: #75879a;
+  /* Yön renkleri KENDİ WASH'LERİ ÜZERİNDE ölçülür: sitenin en çok tekrarlanan
+     bileşeni `ChangePill` (`bg-up-wash text-up`, 11-12px) ve rozet zemini
+     sayfa zemininden koyu. Eski değerler wash üzerinde 3,35 ve 4,34
+     veriyordu. Yeniler 4,69 ve 4,90; ton aynı, yalnızca bir basamak koyu.
+     Koyu temada ikisi de zaten geçiyordu (11,02 ve 6,55), dokunulmadı. */
+  --up: #0c7350;
+  --up-wash: rgb(12 115 80 / 0.12);
+  --down: #c01a3d;
+  --down-wash: rgb(192 26 61 / 0.1);
+  --flat: #586a7c;
 
   --line: rgb(16 32 52 / 0.1);
   --line-soft: rgb(16 32 52 / 0.06);
@@ -70,9 +81,9 @@
   --chart-b: #a4720f;
   --chart-a-fill: rgb(13 116 196 / 0.13);
 
-  --impact-high: #ce2044;
+  --impact-high: #c01a3d;
   --impact-med: #a4720f;
-  --impact-low: #75879a;
+  --impact-low: #586a7c;
 
   /* Sticky chrome */
   --chrome: rgb(247 249 251 / 0.85);
