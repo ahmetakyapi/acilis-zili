@@ -282,6 +282,7 @@ const en: typeof tr = {
     guidanceTitleFallback: "Next Quarter Guidance",
     legendRange: "Guidance Range",
     legendConsensus: "Market Expectation",
+    guidanceAxis: "Bars scaled to the midpoint · axis ±{value}",
     guidanceAbove: "Expectation Above the Range",
     guidanceBelow: "Expectation Below the Range",
     guidanceInline: "In Line with Expectations",

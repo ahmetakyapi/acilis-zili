@@ -308,6 +308,11 @@ const tr = {
     guidanceTitleFallback: "Gelecek Çeyrek Öngörüsü",
     legendRange: "Şirket Aralığı",
     legendConsensus: "Piyasa Beklentisi",
+    /* Öngörü çubuklarının ekseni orta noktaya göre YÜZDE sapma ve kart
+       içinde ortak: en geniş bant ekseni belirliyor. Bu satır olmadan uzun
+       bir çubuk "geniş aralık" diye okunuyor, oysa yalnızca "bu karttaki en
+       geniş bant" demek. {value} eksenin ucundaki yüzdeyle doluyor. */
+    guidanceAxis: "Çubuklar orta noktaya göre ölçekli · eksen ±{value}",
     /* Öngörü satırındaki renkli yargı. Kayıtta `evaluation` yoksa bandın
        iki ucu ile piyasa beklentisi karşılaştırılıp buradan seçilir. */
     guidanceAbove: "Beklenti Aralığın Üstünde",

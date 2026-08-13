@@ -743,15 +743,19 @@ export default async function AnalysisDetailPage(
           <MetricCards metrics={row.highlights ?? []} locale={locale} />
 
           {(hasColumns || hasGuidance) && (
-            /* `items-start`: iki grafik paneli varsayılan olarak satırın en
-               uzununa GERİLİYORDU. Gelir sütunlarının yüksekliği sabit
-               (CHART_HEIGHT) olduğu için gerilen alan grafiğe değil, x
-               etiketleri ile alt künye arasına ölü boşluk olarak
-               dağılıyordu: panelin ortasında sebepsiz bir delik. Her panel
-               artık kendi doğal boyunda. */
+            /* YAN YANA KARTLAR AYNI HİZADA BİTER. Izgaranın varsayılanı olan
+               gerilme burada bir süre `items-start` ile kapatılmıştı ve
+               gerekçesi geçerliydi: gelir sütunlarının yüksekliği SABİTTİ,
+               dolayısıyla gerilen alan grafiğe değil, dönem etiketleriyle alt
+               künye arasına ölü boşluk olarak dağılıyordu.
+
+               Doğru düzeltme gerilmeyi kapatmak değil, grafiği esnetmekti.
+               `RevenueColumns` artık taban yükseklikli ve `flex-1`; fazla
+               alanın tamamı çizime gidiyor, sütunlar uzuyor, delik kalmıyor.
+               Öngörü kartı da satırlarını kartın boyuna yayıyor. */
             <div
               className={cn(
-                "grid items-start gap-4",
+                "grid gap-4",
                 hasColumns && hasGuidance
                   ? "lg:grid-cols-[repeat(2,minmax(0,1fr))]"
                   : "grid-cols-1",
@@ -785,6 +789,12 @@ export default async function AnalysisDetailPage(
                   }
                   legendRange={t.analysis.legendRange}
                   legendConsensus={t.analysis.legendConsensus}
+                  axisNote={t.analysis.guidanceAxis}
+                  /* Eksen ucu bir ORAN, fiyat değil: tek ondalık yeter ve
+                     işaret yazılmıyor (künye zaten "±" diyor). */
+                  formatPercent={(value) =>
+                    formatPercentPlain(value, locale, value < 10 ? 1 : 0)
+                  }
                   verdictLabels={{
                     above: t.analysis.guidanceAbove,
                     below: t.analysis.guidanceBelow,
@@ -988,7 +998,10 @@ export default async function AnalysisDetailPage(
           bitiriyordu. */}
       <div
         className={cn(
-          "grid items-start gap-4",
+          /* Yan yana kartlar aynı hizada biter — `items-start` yok. İkisi de
+             liste kartı, içlerinde sabit yükseklikli bir çizim olmadığı için
+             gerilme boşluğu doğrudan kartın altına gidiyor. */
+          "grid gap-4",
           bottomCards === 2 &&
             // Eşit iki yarıda referans kartı gereğinden geniş kalıyor,
             // rehber kartlarının açıklaması ise üç noktaya kırpılıyordu.

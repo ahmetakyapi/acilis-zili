@@ -13,10 +13,9 @@ import { cn } from "@/lib/utils";
  * neden düştüğünü tek bakışta gösteriyor — üç paragraf metin aynı şeyi
  * anlatmak için üç paragraf sürüyordu.
  *
- * Ölçek satır başına AYRI hesaplanıyor: gelir milyar dolar, marj yüzde,
- * hisse başı kâr dolar — üçünü ortak eksene oturtmak anlamsız. Eksen
- * bandın ve beklentinin ikisini de kapsayacak şekilde %12 payla açılıyor;
- * pay olmadan bandın ucundaki nokta kenara yapışıyordu.
+ * Eksen ORTA NOKTAYA GÖRE YÜZDE SAPMA ve kartın tamamında ORTAK. Satırlar
+ * farklı birimlerde (milyar dolar, yüzde, dolar) ortak bir sayı ekseninde
+ * buluşamaz — ama oranda buluşur. Ayrıntı ve neden değiştiği aşağıda.
  */
 
 export type GuidanceRow = {
@@ -32,7 +31,58 @@ export type GuidanceRow = {
   tone?: string | null;
 };
 
-const PAD_RATIO = 0.12;
+/**
+ * Eksen: ORTA NOKTAYA GÖRE YÜZDE SAPMA.
+ *
+ * Çubuk bir dönem yalnızca piyasa beklentisi VARKEN çiziliyordu ve bunun iyi
+ * bir sebebi vardı: eksen her satırda kendi işaretlerine göre kuruluyordu,
+ * beklenti yoksa işaretler bandın iki ucundan ibaret kalıyor ve eksen tam o
+ * bandı çevreleyecek şekilde açılıyordu. Sonuç, ölçü ne olursa olsun
+ * birebir aynı uzunlukta bir çubuktu — veri gibi görünen ama hiçbir şey
+ * söylemeyen bir süs.
+ *
+ * Ama çizmemek de bir bedel ödetiyordu: kayıtların dörtte üçünde piyasa
+ * beklentisi yok (30 öngörü satırının 23'ü), yani kart çoğu zaman
+ * göstergesini gösterip hiçbir çubuk çizmiyordu — okuyucuya bir grafik
+ * vaat edip vermiyordu.
+ *
+ * ÇÖZÜM EKSENİ DEĞİŞTİRMEK. Satırlar farklı birimlerde (milyar dolar, yüzde,
+ * dolar) ortak bir sayı ekseninde buluşamaz — ama ORANDA buluşur. Her satır
+ * kendi orta noktasına göre yüzde sapmayla çiziliyor ve eksen kartın
+ * tamamında ORTAK: en geniş sapma neyse o, ekseni belirliyor.
+ *
+ * Böylece çubuğun uzunluğu gerçek bir şey söylüyor — şirket kendine ne
+ * kadar hareket alanı bırakmış. "18,0–18,2" dar bir çubuk (±%0,6),
+ * "150–200" geniş bir çubuk (±%14). Beklenti varsa aynı eksende, orta
+ * noktadan sapması kadar uzağa konuyor; bandın içinde mi dışında mı sorusu
+ * yine tek bakışta cevaplanıyor.
+ */
+/** Eksenin iki ucundaki pay — işaret kenara yapışmasın. */
+const AXIS_PAD = 1.15;
+
+/** Orta nokta sıfıra çok yakınsa oran anlamını yitirir; o satır çizilmez. */
+const MIN_MIDPOINT = 1e-9;
+
+/** Bir satırın orta noktaya göre yarı genişliği ve beklenti sapması. */
+function relativeSpread(row: GuidanceRow): {
+  mid: number;
+  half: number;
+  consensusOffset: number | null;
+} | null {
+  const lo = Math.min(row.low, row.high);
+  const hi = Math.max(row.low, row.high);
+  const mid = (lo + hi) / 2;
+  if (!Number.isFinite(mid) || Math.abs(mid) < MIN_MIDPOINT) return null;
+  const consensus = row.consensus ?? null;
+  return {
+    mid,
+    half: (hi - lo) / 2 / Math.abs(mid),
+    consensusOffset:
+      consensus !== null && Number.isFinite(consensus)
+        ? (consensus - mid) / Math.abs(mid)
+        : null,
+  };
+}
 
 /** Renkli yargının metinleri — okuyucunun dilinde gelir. */
 export type GuidanceVerdictLabels = {
@@ -87,8 +137,10 @@ export function GuidanceRanges({
   title,
   legendRange,
   legendConsensus,
+  axisNote,
   verdictLabels,
   formatRange,
+  formatPercent,
   footer = [],
   locale,
   className,
@@ -97,6 +149,10 @@ export function GuidanceRanges({
   title: string;
   legendRange: string;
   legendConsensus: string;
+  /** "Çubuklar orta noktaya göre ölçekli · eksen ±{value}" */
+  axisNote: string;
+  /** Eksen ucundaki yüzdeyi okuyucunun dilinde yazar. */
+  formatPercent: (value: number) => string;
   verdictLabels: GuidanceVerdictLabels;
   /** Aralığın TAMAMINI biçimlendirir — birim iki kez yazılmasın diye tek
       çağrı: "10,3 – 10,8 Mr $", "%83 – %85". */
@@ -107,6 +163,23 @@ export function GuidanceRanges({
   className?: string;
 }) {
   if (rows.length === 0) return null;
+
+  /* Eksen kartın TAMAMINDA ortak: en geniş sapma neyse ölçeği o kuruyor.
+     Satır satır kurulan bir eksen bütün çubukları aynı uzunlukta çizerdi —
+     karşılaştırma da tam olarak burada doğuyor. */
+  const spreads = rows.map(relativeSpread);
+  const maxOffset = Math.max(
+    ...spreads.flatMap((s) =>
+      s ? [s.half, Math.abs(s.consensusOffset ?? 0)] : [],
+    ),
+    0,
+  );
+  const axis = maxOffset > 0 ? maxOffset * AXIS_PAD : 0;
+
+  /* Beklenti göstergesi yalnızca EN AZ BİR satırda karşılığı varsa yazılır.
+     Kayıtların çoğunda piyasa beklentisi yok ve gösterge her koşulda
+     basıldığı için kart olmayan bir işareti tarif ediyordu. */
+  const hasConsensus = spreads.some((s) => s?.consensusOffset != null);
 
   return (
     <section
@@ -122,26 +195,32 @@ export function GuidanceRanges({
             <span aria-hidden className="h-2 w-3 rounded-full bg-primary" />
             {legendRange}
           </span>
-          <span className="flex items-center gap-1.5">
-            {/* Gösterge işareti bandın üstündeki İŞARETİN aynısı: yuvarlak
-                bir nokta çizilip barda kapsül göstermek, okuyucuya iki ayrı
-                şey varmış gibi geliyordu. */}
-            <span aria-hidden className="h-3 w-[5px] rounded-full bg-strong" />
-            {legendConsensus}
-          </span>
+          {hasConsensus && (
+            <span className="flex items-center gap-1.5">
+              {/* Gösterge işareti bandın üstündeki İŞARETİN aynısı: yuvarlak
+                  bir nokta çizilip barda kapsül göstermek, okuyucuya iki ayrı
+                  şey varmış gibi geliyordu. */}
+              <span aria-hidden className="h-3 w-[5px] rounded-full bg-strong" />
+              {legendConsensus}
+            </span>
+          )}
         </div>
       </div>
 
       {/* Satırlar kartın boyuna YAYILIYOR — ama yalnızca üç ve üstünde.
-          Yanındaki sütun grafiği sabit yükseklikte ve kart onunla aynı boya
-          çekiliyor; satırlar yukarıda toplanınca altta kocaman bir boşluk
-          kalıyordu. Yayılma iki ölçüde denendi ve bu sefer boşluk kartın
-          ORTASINA yığıldı (iki satır arası yüz piksel) — o yüzden eşik üç.
-          Üç satırda araların büyümesi ferahlık, ikide kopukluk. */}
+          Yanındaki sütun grafiği kartla birlikte uzuyor ve iki kart aynı
+          hizada bitiyor; satırlar yukarıda toplanınca altta kocaman bir
+          boşluk kalıyordu. Yayılma iki satırda da denendi ve bu sefer boşluk
+          kartın ORTASINA yığıldı (iki satır arası yüz piksel) — o yüzden
+          eşik üç. Üç satırda araların büyümesi ferahlık, ikide kopukluk.
+
+          İki satırlı kartta fazla alan bu yüzden ALTA gidiyor: `flex-1`
+          listeyi büyütüyor ama satırlar başta toplanıyor, künye de en altta
+          kalıyor. Ortada delik açmaktansa altta sakin bir boşluk. */}
       <ul
         className={cn(
-          "flex flex-col gap-4",
-          rows.length >= 3 && "min-h-0 flex-1 justify-between",
+          "flex min-h-0 flex-1 flex-col gap-4",
+          rows.length >= 3 && "justify-between",
         )}
       >
         {rows.map((row, index) => {
@@ -151,14 +230,12 @@ export function GuidanceRanges({
              lib/schema.ts jsonb tipleri). `!== undefined` null'ı geçiriyor
              ve nokta eksenin dışına düşüyordu. */
           const consensus = row.consensus ?? null;
-          const marks = [lo, hi, ...(consensus !== null ? [consensus] : [])];
-          const min = Math.min(...marks);
-          const max = Math.max(...marks);
-          const span = max - min || Math.abs(max) || 1;
-          const axisMin = min - span * PAD_RATIO;
-          const axisMax = max + span * PAD_RATIO;
-          const pos = (value: number) =>
-            ((value - axisMin) / (axisMax - axisMin)) * 100;
+          const spread = spreads[index];
+          /* Ortak eksende konum: orta nokta her zaman %50'de, sapma iki yana
+             simetrik açılıyor. Eksen yoksa (tek satır ve o da tek değer)
+             çubuk çizilmiyor — çizilecek bir genişlik yok. */
+          const pos = (offset: number) =>
+            axis > 0 ? 50 + (offset / axis) * 50 : 50;
 
           const derived = row.evaluation
             ? null
@@ -182,17 +259,17 @@ export function GuidanceRanges({
                 </span>
               </div>
 
-              {/* ÇUBUK YALNIZCA PİYASA BEKLENTİSİ VARKEN ÇİZİLİYOR.
-                  Eksen her satırda kendi işaretlerine göre kuruluyor; beklenti
-                  yoksa işaretler bandın iki ucundan ibaret kalıyor ve eksen
-                  tam olarak o bandı çevreleyecek şekilde açılıyor. Sonuç:
-                  ölçü ne olursa olsun çubuk her zaman %9,7'den %90,3'e
-                  uzanıyordu. Beş satırlık bir panelde dört birebir aynı
-                  çubuk, veri gibi görünen ama hiçbir şey söylemeyen bir
-                  süse dönüşmüştü. Bandın kendisi zaten sağda rakamla yazılı;
-                  çubuğun tek işi onu beklentiyle KARŞILAŞTIRMAK. */}
-              {consensus !== null && (
+              {/* Çubuk her satırda çizilir — eksen ortak olduğu için artık
+                  bir şey söylüyor: bandın uzunluğu şirketin kendine bıraktığı
+                  hareket alanı, konumu ise beklentiyle arasındaki fark.
+                  Ortadaki ince çizgi orta noktayı işaretliyor; band ona göre
+                  simetrik. */}
+              {spread && axis > 0 && (
                 <div className="relative h-3 w-full rounded-full bg-surface-elevated">
+                  <span
+                    aria-hidden
+                    className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-line-strong"
+                  />
                   {lo === hi ? (
                     /* Şirket aralık değil TEK bir sayı verdiyse band çizilmez:
                      genişliği sıfır olan bir bandı görünür kılmak için
@@ -202,15 +279,15 @@ export function GuidanceRanges({
                     <span
                       aria-hidden
                       className="absolute top-1/2 h-[17px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
-                      style={{ left: `${pos(lo)}%` }}
+                      style={{ left: "50%" }}
                     />
                   ) : (
                     <span
                       aria-hidden
                       className="absolute inset-y-0 rounded-full bg-primary"
                       style={{
-                        left: `${pos(lo)}%`,
-                        width: `${Math.max(2, pos(hi) - pos(lo))}%`,
+                        left: `${pos(-spread.half)}%`,
+                        width: `${Math.max(2, pos(spread.half) - pos(-spread.half))}%`,
                       }}
                     />
                   )}
@@ -219,11 +296,13 @@ export function GuidanceRanges({
                     kayboluyordu. Yuvarlak nokta yerine DİKEY kapsül —
                     nokta bir veri işareti gibi okunuyordu, oysa bu bir
                     eşik: "piyasa tam burayı bekliyordu". */}
-                  <span
-                    aria-hidden
-                    className="absolute top-1/2 h-[17px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-strong ring-2 ring-surface"
-                    style={{ left: `${pos(consensus)}%` }}
-                  />
+                  {spread.consensusOffset !== null && (
+                    <span
+                      aria-hidden
+                      className="absolute top-1/2 h-[17px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-strong ring-2 ring-surface-solid"
+                      style={{ left: `${pos(spread.consensusOffset)}%` }}
+                    />
+                  )}
                 </div>
               )}
 
@@ -254,6 +333,17 @@ export function GuidanceRanges({
           );
         })}
       </ul>
+
+      {/* EKSEN YAZILIYOR. Çubuğun uzunluğu kart içinde GÖRECELİ: en geniş
+          bant ekseni belirliyor ve öteki bantlar ona göre kısalıyor. Bu satır
+          olmadan uzun bir çubuk "geniş aralık" diye okunuyordu, oysa yalnızca
+          "bu karttaki en geniş bant" demek. Ucundaki yüzde, çubukları mutlak
+          olarak da okunur kılıyor. */}
+      {axis > 0 && (
+        <p className="-mt-1 text-[11px] text-muted">
+          {axisNote.replace("{value}", formatPercent(axis * 100))}
+        </p>
+      )}
 
       <ChartFooter stats={footer} locale={locale} />
     </section>

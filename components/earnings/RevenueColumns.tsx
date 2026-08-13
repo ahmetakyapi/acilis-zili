@@ -52,7 +52,28 @@ const SHADES = [
   "var(--share-1)",
 ] as const;
 
-const CHART_HEIGHT = 208;
+/**
+ * Çizim alanının EN AZ yüksekliği — sabit değil, taban.
+ *
+ * Sabitken bir kural çiğneniyordu: yan yana duran iki kart aynı hizada
+ * bitmeli. Sütun grafiği sabit boyda olduğu için düzen kartları germekten
+ * vazgeçmişti (`items-start`) ve komşusundan kısa kaldığında ikisi farklı
+ * yerde bitiyordu. Germe bir kez denenmiş ve geri alınmıştı çünkü fazla
+ * alan grafiğe değil, dönem etiketleriyle alt künye arasına ölü boşluk
+ * olarak dağılıyordu — panelin ortasında sebepsiz bir delik.
+ *
+ * Artık çizim alanı esniyor: kart uzadıkça sütunlar da uzuyor, boşluk
+ * kalmıyor ve iki kart aynı hizada bitiyor. Sütun yükseklikleri piksel
+ * yerine YÜZDE veriliyor (aşağıdaki `calc`), yani oran her boyda korunuyor.
+ */
+const MIN_CHART_HEIGHT = 208;
+
+/**
+ * Sütunun üstündeki değer etiketinin kapladığı şerit: 18px kutu + 6px boşluk.
+ * Yüzde hesabı bu şeridi düşerek yapılıyor ki en uzun sütun tam tepeye
+ * değsin, etiketi de üstünde kalsın.
+ */
+const LABEL_BAND = 24;
 /** Izgara çizgisi oranları; taban çizgisini alttaki hairline zaten veriyor. */
 const GRID = [1, 0.75, 0.5, 0.25];
 /**
@@ -139,11 +160,18 @@ export function RevenueColumns({
         </div>
       </div>
 
-      <div className="relative" style={{ height: CHART_HEIGHT + 22 }}>
+      {/* `flex-1` + taban yükseklik: kart komşusu yüzünden uzadığında fazla
+          alanın tamamı buraya, yani grafiğe gidiyor. */}
+      <div
+        className="relative flex-1"
+        style={{ minHeight: MIN_CHART_HEIGHT + LABEL_BAND }}
+      >
+        {/* Izgara çizgileri de etiket şeridinin ALTINDAN başlıyor: çizim
+            alanı neyse ızgara o. */}
         <div
           aria-hidden
           className="absolute inset-x-0 bottom-0"
-          style={{ height: CHART_HEIGHT }}
+          style={{ top: LABEL_BAND }}
         >
           {GRID.map((ratio) => (
             <span
@@ -161,8 +189,11 @@ export function RevenueColumns({
             olduğu için ortalandığında sağa taşıyor. Dolgu o taşmayı yutuyor.
             Izgara çizgileri `inset-x-0` ile tam genişlikte kalıyor —
             onların kenara kadar gitmesi doğru. */}
+        {/* `items-end` KALKTI: hücreler tam boy olmalı ki sütun yüzdesi
+            (calc) doğru bir yüksekliğe göre çözülsün. Sütun zaten kendi
+            içinde `justify-end` ile tabana yaslanıyor. */}
         <ul
-          className={cn("relative grid h-full items-end", GRID_SHAPE)}
+          className={cn("relative grid h-full", GRID_SHAPE)}
           style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}
         >
           {bars.map((bar, index) => {
@@ -193,7 +224,7 @@ export function RevenueColumns({
                     böylece hizalama iki ızgarada da yapısal olarak garanti —
                     elle verilen bir kaydırmaya bağlı değil. */}
                 <div
-                  className="mx-auto flex w-full flex-col justify-end gap-1.5"
+                  className="mx-auto flex h-full w-full flex-col justify-end gap-1.5"
                   style={{ maxWidth: MAX_BAR_WIDTH }}
                 >
                   {/* Etiket sütundan GENİŞ olabiliyor: öngörü sütununda tek
@@ -232,7 +263,10 @@ export function RevenueColumns({
                         "border border-dashed border-primary bg-primary-tint",
                     )}
                     style={{
-                      height: Math.round(ratio * CHART_HEIGHT),
+                      /* Piksel değil YÜZDE: kart uzadıkça sütun da uzuyor ve
+                         oranlar korunuyor. Etiket şeridi düşülüyor ki en uzun
+                         sütun tam tepeye değsin. */
+                      height: `calc((100% - ${LABEL_BAND}px) * ${ratio})`,
                       ...(bar.projected ? {} : { background: shade }),
                     }}
                   />
