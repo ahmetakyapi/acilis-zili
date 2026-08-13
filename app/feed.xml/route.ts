@@ -2,6 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { dailyBriefs, stories } from "@/lib/schema";
 import { headers } from "next/headers";
+import { briefSummary } from "@/lib/brief";
 import { DEFAULT_LOCALE } from "@/lib/i18n/config";
 import { LOCALE_HEADER, localeFromHeader } from "@/lib/i18n/routing";
 import { SITE_URL, INDEXABLE } from "@/lib/site";
@@ -91,13 +92,16 @@ export async function GET() {
     })),
     ...briefRows.map((row) => ({
       title: row.headline,
-      link:
-        row.period === "weekly"
-          ? `${SITE_URL}/bulten?tur=haftalik`
-          : `${SITE_URL}/bulten`,
-      /* Gövde markdown; beslemede ilk paragraf yeterli. Tamamını göndermek
-         işaretlemeyi de taşımak demek ve okuyucular onu ham gösteriyor. */
-      description: row.bodyMd.split("\n").find((line) => line.trim()) ?? "",
+      /* BAĞLANTI KAYIT TARİHİNE BAĞLI. Her günlük öğe `/bulten`e, her
+         haftalık öğe `/bulten?tur=haftalik`a gidiyordu: okuyucu üç gün
+         önceki bülteni tıkladığında bugünün bülteni açılıyordu. Sayfa
+         `?tarih=` parametresini zaten destekliyor. */
+      link: `${SITE_URL}/bulten?${
+        row.period === "weekly" ? "tur=haftalik&" : ""
+      }tarih=${row.briefDate}`,
+      /* Gövde markdown; beslemede tek cümle yeterli. Kural `lib/brief.ts`te:
+         başlık satırları atlanır, işaretleme temizlenir. */
+      description: briefSummary(row.bodyMd),
       date: row.generatedAt ?? new Date(`${row.briefDate}T12:00:00Z`),
       guid: `bulten-${row.period}-${row.briefDate}-${locale}`,
     })),

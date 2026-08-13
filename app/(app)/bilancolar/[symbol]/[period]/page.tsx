@@ -50,6 +50,7 @@ import {
   formatPercentPlain,
   formatPrice,
   peRatioOf,
+  safeExternalUrl,
   SIGN_GAP,
 } from "@/lib/utils";
 import type { EarningsAnalysisRow } from "@/lib/schema";
@@ -1100,11 +1101,20 @@ export default async function AnalysisDetailPage(
         {sources.length > 0 && (
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted">
             <span className="font-semibold">{t.analysis.sourcesLabel}:</span>
-            {sources.map((source, index) => (
+            {sources.map((source, index) => {
+              /* ADRES SÜZGEÇTEN GEÇER. Kaynak listesi `/api/analiz` POST
+                 gövdesinden geliyor ve oradaki `z.string().url()` yetmiyor:
+                 doğrulama `new URL()` tabanlı olduğu için `javascript:alert(1)`
+                 de geçerli bir adres sayılıyor. React'in JSX kaçışı `href`
+                 özniteliğini kapsamaz, yani tıklanan bağlantı çalışan bir
+                 betiğe dönüşürdü. Aynı süzgeç mercek sayfasında zaten vardı;
+                 burası o düzeltmenin dışında kalmıştı. */
+              const href = safeExternalUrl(source.url);
+              return (
               <span key={`${source.label}-${index}`}>
-                {source.url ? (
+                {href ? (
                   <a
-                    href={source.url}
+                    href={href}
                     target="_blank"
                     rel="noopener noreferrer nofollow"
                     className="text-primary hover:underline"
@@ -1116,7 +1126,8 @@ export default async function AnalysisDetailPage(
                 )}
                 {index < sources.length - 1 && <span aria-hidden> ·</span>}
               </span>
-            ))}
+              );
+            })}
           </p>
         )}
       </footer>

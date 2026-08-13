@@ -114,16 +114,22 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { symbol: raw } = await props.params;
   const symbol = raw.toUpperCase();
-  const { locale } = await getI18n();
+  const { locale, t } = await getI18n();
   if (!isValidSymbol(symbol)) return missingMetadata(locale);
   const meta = await getSymbolNames([symbol]);
   const info = meta[symbol];
   const sector = industryLabel(info?.industry, locale);
+  /* Açıklama SÖZLÜKTEN. Sabit Türkçe yazılıydı: İngilizce okuyan birinin
+     arama sonucunda ve paylaşım kartında Türkçe cümle çıkıyordu — üstelik
+     hemen yanındaki sektör etiketi çevrilmiş olarak. */
+  const description = sector
+    ? t.stock.metaWithSector
+        .replace("{ad}", info?.name ?? symbol)
+        .replace("{sektor}", sector)
+    : t.stock.metaPlain.replace("{ad}", symbol);
   return {
     title: info?.name ? `${info.name} (${symbol})` : symbol,
-    description: sector
-      ? `${info?.name ?? symbol} — ${sector}. Fiyat, grafik, bilanço geçmişi ve haberler.`
-      : `${symbol} hissesi — fiyat, grafik, bilanço geçmişi ve haberler.`,
+    description,
     /* TANINMAYAN SEMBOL DİZİNE GİRMESİN. Biçimi geçerli her dizi bu sayfayı
        açıyor (`ZQXW` da) ve şirket bilinmiyorsa ekran boş kartlarla doluyor.
        Sonsuz bir adres uzayı: taranırsa hem kotamız hem sitenin dizin

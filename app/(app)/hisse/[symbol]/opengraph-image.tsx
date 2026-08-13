@@ -36,7 +36,7 @@ export default async function StockOgImage({
 }) {
   const { symbol: raw } = await params;
   const symbol = raw.toUpperCase();
-  const { locale } = await getI18n();
+  const { locale, t } = await getI18n();
   const fonts = await ogFonts();
 
   const status = await getStatus();
@@ -56,7 +56,7 @@ export default async function StockOgImage({
   return new ImageResponse(
     (
       <OgFrame
-        eyebrow="Hisse"
+        eyebrow={t.nav.companies} locale={locale}
         accent={
           quote ? (
             <div

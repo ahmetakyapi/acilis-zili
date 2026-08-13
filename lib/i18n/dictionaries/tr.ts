@@ -245,6 +245,8 @@ const tr = {
     subtitle:
       "Takvimden bilançoları izle; açıklananlar için özet ve detaylı değerlendirme Analizler'de.",
     listTitle: "Son Analizler",
+    /* Paylaşım kartının üst künyesi — kart sabit Türkçe basıyordu. */
+    ogEyebrow: "Bilanço Analizi",
     /* Hisse sayfasındaki panel — orada zaten şirketin içindesin, adı
        tekrar etmeye gerek yok. */
     symbolPanelTitle: "Bilanço Analizleri",
@@ -268,6 +270,8 @@ const tr = {
     verdictHold: "TUT",
     verdictSell: "SAT",
     verdictLabel: "Genel Görüş",
+    /* Paylaşım kartındaki hedef fiyat çipi — sabit "Hedef" yazıyordu. */
+    ogTarget: "Hedef",
     scoreOutOf: "/ 100",
 
     /* Tablo 1180px ve kendi kabında yatay kayıyor; kap klavyeyle
@@ -433,6 +437,12 @@ const tr = {
     addToWatchlist: "Favorilere Ekle",
     inWatchlist: "Favorilerde",
     removeFromWatchlist: "Favorilerden Çıkar",
+    /* Künye açıklaması ŞABLON. Sabit Türkçe yazılmıştı ve dil ne olursa
+       olsun "Fiyat, grafik, bilanço geçmişi ve haberler." gidiyordu — aynı
+       fonksiyon sektör etiketini zaten çeviriyor olmasına rağmen.
+       `{ad}` şirket adı ya da sembol, `{sektor}` varsa sektör. */
+    metaWithSector: "{ad} — {sektor}. Fiyat, grafik, bilanço geçmişi ve haberler.",
+    metaPlain: "{ad} hissesi — fiyat, grafik, bilanço geçmişi ve haberler.",
     notFound: "Bu sembol bulunamadı",
     notFoundHint: "Sembolü kontrol et veya arama kutusundan tekrar dene.",
     throttled: "Biraz Yavaşla",
@@ -812,7 +822,8 @@ const tr = {
     errors: {
       invalidCredentials: "Kullanıcı adı veya şifre hatalı.",
       usernameTaken: "Bu kullanıcı adı alınmış.",
-      emailTaken: "Bu e-posta zaten kayıtlı.",
+      emailTaken:
+        "Bu bilgilerle hesap açılamadı. Zaten bir hesabın varsa giriş yap.",
       usernameFormat:
         "Kullanıcı adı 3-20 karakter olmalı; harf, rakam, alt çizgi kullanabilirsin.",
       passwordLength: "Şifre en az 8 karakter olmalı.",
@@ -848,6 +859,7 @@ const tr = {
     deleteNotSignedIn: "Oturum bulunamadı. Tekrar giriş yap.",
     deleteConfirmMismatch: "Kullanıcı adı eşleşmedi.",
     deleteWrongPassword: "Şifre hatalı.",
+    deleteTooMany: "Çok fazla deneme. Biraz bekleyip tekrar dene.",
   },
 
   legal: {

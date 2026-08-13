@@ -24,7 +24,7 @@ export default async function GuideOgImage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { locale } = await getI18n();
+  const { locale, t } = await getI18n();
   const article = guideArticle(slug, locale);
   const fonts = await ogFonts();
 
@@ -32,14 +32,14 @@ export default async function GuideOgImage({
   return new ImageResponse(
     (
       <OgFrame
-        eyebrow="Rehber"
+        eyebrow={t.nav.guide} locale={locale}
         footer={
           article ? (
             <>
               <Chip tone="primary">
                 {guideTopicLabel(article.topic, locale)}
               </Chip>
-              <Chip>{`${readingMinutes(article.bodyMd)} dk okuma`}</Chip>
+              <Chip>{`${readingMinutes(article.bodyMd)} ${t.guide.readMinutes}`}</Chip>
             </>
           ) : undefined
         }

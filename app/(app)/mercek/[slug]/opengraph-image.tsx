@@ -23,7 +23,7 @@ export default async function StoryOgImage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { locale } = await getI18n();
+  const { locale, t } = await getI18n();
   const story = await getStoryBySlug(slug, locale);
   const fonts = await ogFonts();
 
@@ -31,7 +31,7 @@ export default async function StoryOgImage({
   return new ImageResponse(
     (
       <OgFrame
-        eyebrow="Mercek"
+        eyebrow={t.nav.stories} locale={locale}
         footer={story?.dek ? <Chip tone="primary">Uzun Okuma</Chip> : undefined}
       >
         <OgTitle size={title.length > 46 ? 50 : title.length > 28 ? 60 : 70}>

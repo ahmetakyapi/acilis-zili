@@ -9,6 +9,8 @@ import {
   OgTitle,
   ogFonts,
 } from "@/lib/og";
+import { SESSION_BOUNDS, todayEt } from "@/lib/market-hours";
+import { clockOf, timePair } from "@/lib/session-clock";
 
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
@@ -22,6 +24,18 @@ export const alt = "Açılış Zili — ABD Piyasa Takibi";
  * — sitenin "TR önce" kuralı kartta da geçerli.
  */
 export default async function OpenGraphImage() {
+  /* SAAT HESAPLANIR, YAZILMAZ. Kart açılışı sabit "16:30 TR" basıyordu ve
+     ABD kış saatine geçtiğinde doğrusu 17:30 TR oluyor — yani sitenin en
+     çok paylaşılan görseli yılın dört ayı yanlış bilgi taşıyordu. Projenin
+     kuralı da bu: hiçbir yere sabit saat yazılmaz, o günün tarihiyle
+     hesaplanır (CLAUDE.md → saat kuralı). Kart zaten her istekte yeniden
+     çiziliyor, maliyet yok. */
+  const { primary, secondary } = timePair(
+    todayEt(),
+    clockOf(SESSION_BOUNDS.regularOpen),
+    "tr",
+  );
+
   return new ImageResponse(
     (
       <OgFrame
@@ -53,10 +67,10 @@ export default async function OpenGraphImage() {
                 color: C.strong,
               }}
             >
-              16:30
+              {primary}
             </span>
             <span style={{ fontSize: 20, color: C.muted }}>
-              TR · 09:30 NY
+              TR · {secondary} NY
             </span>
           </div>
         }

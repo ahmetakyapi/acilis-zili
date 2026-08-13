@@ -46,6 +46,15 @@ function sweep(now: number) {
  */
 export const SIGN_IN_LIMIT = 10;
 export const SIGN_UP_LIMIT = 5;
+
+/**
+ * Hesap silmede şifre denemesi — kullanıcı başına.
+ *
+ * Giriş sınırından dar: kendi hesabını silen biri şifresini bilir, beş
+ * deneme fazlasıyla yeter. Sayaç IP'ye değil kullanıcıya bağlı; uç zaten
+ * oturum istiyor ve IP değiştirmek kaçış yolu olmamalı.
+ */
+export const DELETE_ACCOUNT_LIMIT = 5;
 export const AUTH_WINDOW_MS = 10 * 60_000;
 
 export type RateLimitResult = {

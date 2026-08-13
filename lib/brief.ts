@@ -14,3 +14,34 @@
  */
 
 export type BriefPeriod = "daily" | "weekly";
+
+/**
+ * `## Başlık` ya da tek başına `**Başlık**` → başlık metni; değilse null.
+ *
+ * Hem ekrandaki bülten gövdesi (BriefBody) hem RSS beslemesi kullanıyor.
+ * Beslemede öğe açıklaması gövdenin ilk dolu satırını HAM alıyordu ve
+ * bültenler bölüm başlığıyla başladığı için okuyucularda "## Geçen Hafta"
+ * görünüyordu; kural tek yerde durunca ikisi birbirinden ayrı düşmüyor.
+ */
+export function headingOf(line: string): string | null {
+  const trimmed = line.trim();
+  if (trimmed.startsWith("## ")) return trimmed.slice(3).trim();
+  const bold = /^\*\*([^*]+)\*\*$/.exec(trimmed);
+  return bold ? bold[1].trim() : null;
+}
+
+/**
+ * Bültenin özet cümlesi — başlık satırları atlanır, işaretleme temizlenir.
+ *
+ * RSS açıklaması ve paylaşım kartı için. Markdown'ın tamamını göndermek
+ * işaretlemeyi de taşımak demek ve okuyucular onu ham gösteriyor.
+ */
+export function briefSummary(bodyMd: string): string {
+  for (const line of bodyMd.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || headingOf(trimmed)) continue;
+    // Liste işareti ve kalın vurgu okunur metne dönüşmüyor, kaldırılıyor.
+    return trimmed.replace(/^[-*]\s+/, "").replace(/\*\*/g, "");
+  }
+  return "";
+}

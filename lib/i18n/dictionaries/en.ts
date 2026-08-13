@@ -228,6 +228,7 @@ const en: typeof tr = {
     subtitle:
       "Track earnings on the calendar; once a company reports, the summary and full review land in Analyses.",
     listTitle: "Latest Analyses",
+    ogEyebrow: "Earnings Analysis",
     symbolPanelTitle: "Earnings Analyses",
     recentStrip: "Recently Analyzed",
     symbolPanelAll: "All Analyses →",
@@ -243,6 +244,7 @@ const en: typeof tr = {
     verdictHold: "HOLD",
     verdictSell: "SELL",
     verdictLabel: "Verdict",
+    ogTarget: "Target",
     scoreOutOf: "/ 100",
 
     /* Tablo 1180px ve kendi kabında yatay kayıyor; kap klavyeyle
@@ -388,6 +390,8 @@ const en: typeof tr = {
     addToWatchlist: "Add to Watchlist",
     inWatchlist: "In Watchlist",
     removeFromWatchlist: "Remove from Watchlist",
+    metaWithSector: "{ad} — {sektor}. Price, chart, earnings history and news.",
+    metaPlain: "{ad} stock — price, chart, earnings history and news.",
     notFound: "Symbol not found",
     notFoundHint: "Check the symbol or search for it again.",
     throttled: "Slow Down a Little",
@@ -749,7 +753,8 @@ const en: typeof tr = {
     errors: {
       invalidCredentials: "Username or password is incorrect.",
       usernameTaken: "That username is taken.",
-      emailTaken: "That email is already registered.",
+      emailTaken:
+        "Couldn't create an account with these details. If you already have one, sign in.",
       usernameFormat:
         "Username must be 3-20 characters using letters, numbers or underscores.",
       passwordLength: "Password must be at least 8 characters.",
@@ -784,6 +789,7 @@ const en: typeof tr = {
     deleteNotSignedIn: "No session found. Please sign in again.",
     deleteConfirmMismatch: "Username did not match.",
     deleteWrongPassword: "Wrong password.",
+    deleteTooMany: "Too many attempts. Wait a bit and try again.",
   },
 
   legal: {

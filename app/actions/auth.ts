@@ -11,6 +11,7 @@ import { users, watchlists } from "@/lib/schema";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import {
   AUTH_WINDOW_MS,
+  DELETE_ACCOUNT_LIMIT,
   SIGN_IN_LIMIT,
   SIGN_UP_LIMIT,
   peekRateLimit,
@@ -169,10 +170,22 @@ export async function signUpAction(
     )
     .limit(1);
 
+  /* E-POSTA ÇAKIŞMASI "BU ADRES KAYITLI" DEMİYOR.
+     Mesaj eskiden ayrıktı ve uç bir üyelik doğrulayıcısına dönüşüyordu:
+     elindeki adres listesini buraya sokan biri hangilerinin siteye üye
+     olduğunu öğrenebiliyordu (10 dakikada 5 deneme sınırı listeyi yavaşlatır,
+     durdurmaz). Kişisel veri sızıntısı ve hedefli kimlik avının girdisi.
+     Kullanıcı adı ayrık kalabilir: o zaten profil sayfalarında görünen bir
+     kimlik ve formun çalışması için hangi alanın dolu olduğu söylenmeli.
+
+     TAM ÇÖZÜM DEĞİL, bilerek: adres kayıtlı DEĞİLSE hesap gerçekten açılıyor
+     ve saldırgan bunu yan etkiden anlayabilir. Bunu kapatmak kaydı e-posta
+     doğrulamasına bağlamayı gerektiriyor (iki durumda da "adrese bir posta
+     gönderildi" demek) — o ayrı bir iş, bir posta sağlayıcısı istiyor. */
   if (existing.length > 0) {
     return existing[0].username === parsed.username
       ? { error: t.usernameTaken, field: "username" }
-      : { error: t.emailTaken, field: "email" };
+      : { error: t.emailTaken, field: "form" };
   }
 
   const passwordHash = await hash(parsed.password, 12);
@@ -210,7 +223,7 @@ export async function signUpAction(
     const constraint = pg?.constraint ?? "";
     if (pg?.code === "23505") {
       return constraint.includes("email")
-        ? { error: t.emailTaken, field: "email" }
+        ? { error: t.emailTaken, field: "form" }
         : { error: t.usernameTaken, field: "username" };
     }
     return { error: t.generic, field: "form" };
@@ -298,6 +311,22 @@ export async function deleteAccountAction(
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return { error: t.deleteNotSignedIn };
+
+  /* ŞİFRE DENEMESİ BURADA DA SAYILIYOR. Uç her çağrıda bcrypt (cost 12)
+     çalıştırıyordu ve hiçbir tavanı yoktu. Şifre sorulmasının gerekçesi
+     "oturum çerezi ele geçirilmiş bir tarayıcı hesabı silememeli" — ama
+     sayaç olmadan çerezi ele geçiren saldırgan tam da buradan sınırsız
+     deneme yapabiliyordu, yani koruma kendi tehdit modeline karşı
+     çalışmıyordu. Üstelik her istek ~250 ms işlemci yakıyor.
+
+     Anahtar IP DEĞİL kullanıcı: silme zaten oturuma bağlı, saldırgan IP
+     değiştirerek kaçamasın. */
+  const limited = rateLimit(
+    `delete-account:${userId}`,
+    DELETE_ACCOUNT_LIMIT,
+    AUTH_WINDOW_MS,
+  );
+  if (!limited.allowed) return { error: t.deleteTooMany };
 
   const confirmation = String(formData.get("confirm") ?? "")
     .trim()

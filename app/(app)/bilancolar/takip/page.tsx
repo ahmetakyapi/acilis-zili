@@ -24,6 +24,23 @@ import {
 } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/page-meta";
+
+/* Künye yoktu. Sayfa okuyucunun KENDİ listesine bağlı, yani herkese aynı
+   şeyi göstermiyor: dizine girmesi anlamsız, `robots` kapalı. Başlık yine
+   de gerekli — sekmede ve paylaşımda ana sayfanın başlığı görünüyordu. */
+export const generateMetadata = pageMetadata({
+  path: "/bilancolar/takip",
+  robots: { index: false, follow: true },
+  tr: {
+    title: "Takip Ettiklerim",
+    description: "Takip listendeki şirketlerin bilanço takvimi ve analizleri.",
+  },
+  en: {
+    title: "Following",
+    description: "Earnings dates and analyses for the companies you follow.",
+  },
+});
 
 /**
  * Bilançolar · Takip Ettiklerim sekmesi.

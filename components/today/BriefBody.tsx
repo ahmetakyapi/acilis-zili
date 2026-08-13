@@ -1,3 +1,4 @@
+import { headingOf } from "@/lib/brief";
 import { cn } from "@/lib/utils";
 
 /**
@@ -36,13 +37,10 @@ function bulletsSinceLastHeading(lines: string[]): number {
   return count;
 }
 
-/** `## Başlık` ya da tek başına `**Başlık**` → başlık metni; değilse null. */
-function headingOf(line: string): string | null {
-  const trimmed = line.trim();
-  if (trimmed.startsWith("## ")) return trimmed.slice(3).trim();
-  const bold = /^\*\*([^*]+)\*\*$/.exec(trimmed);
-  return bold ? bold[1].trim() : null;
-}
+/* Başlık tanıma ve satır içi işaretleme temizliği `lib/brief.ts` içine
+   taşındı: RSS beslemesi de aynı kuralı uyguluyor (öğe açıklaması gövdenin
+   ilk satırını ham alıyordu ve okuyucularda "## Geçen Hafta" görünüyordu).
+   İki ayrı kopya er geç birbirinden ayrı düşer. */
 
 function renderInline(text: string, keyPrefix: string) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>

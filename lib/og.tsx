@@ -1,3 +1,4 @@
+import type { Locale } from "@/lib/i18n";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -15,6 +16,20 @@ import { join } from "node:path";
  * - Birden fazla çocuğu olan her düğümde `display` açıkça yazılmalı.
  * - `gap` çalışır, `grid` çalışmaz; her şey flex.
  * - Font gömülü olmalı; sistem fontuna düşerse marka tipografisi kaybolur.
+ *
+ * BİLİNEN SINIR — İNGİLİZCE PAYLAŞIM KARTI. Kart metinleri artık sözlükten
+ * geliyor ve istek `/en/...` altından gelirse İngilizce çiziliyor. Ama
+ * sayfanın kendi `og:image` etiketi ÖNEKSİZ adresi yazıyor: dosya tabanlı
+ * OG kuralında adresi Next üretiyor ve o, proxy'nin yeniden yazdığı iç yolu
+ * (`/hisse/NVDA/opengraph-image-<id>`) kullanıyor. Yani `/en/hisse/NVDA`
+ * paylaşıldığında tarayıcı önekSİZ adresi çekiyor ve Türkçe kartı alıyor.
+ *
+ * Denendi, olmadı: `metadataBase`i `/en` ile kurmak canonical'ı da
+ * bozuyor (alternates göreli yol veriyor, taban iki kez ekleniyor);
+ * `openGraph.images`i elle yazmak ise Next'in ürettiği `<id>` ve karma
+ * sorgusunu bilmeyi gerektiriyor. Gerçek çözüm OG rotalarını `/en` altında
+ * ikilemek; maliyeti faydasının şu an üstünde. Sayfanın BAŞLIĞI ve
+ * AÇIKLAMASI iki dilli, doğru olmayan tek şey kartın içindeki metin.
  */
 
 export const OG_SIZE = { width: 1200, height: 630 } as const;
@@ -93,8 +108,28 @@ export function BellGlyph({ size = 40, fill = "#ffffff" }) {
   );
 }
 
+/**
+ * Metnin dilinde büyük harf.
+ *
+ * `toLocaleUpperCase("tr-TR")` sabitti ve künye Türkçe olduğu sürece
+ * doğruydu. Künye iki dilli olunca hata görünür oldu: Türkçe kuralı İngilizce
+ * metne uygulanınca "EARNINGS ANALYSIS" değil "EARNİNGS ANALYSİS" çıkıyor —
+ * çünkü Türkçede `i`nin büyüğü `İ`. Ters yön de aynı derecede yanlış:
+ * İngilizce kuralı Türkçe metne uygulanırsa "BİLANÇO" yerine "BILANÇO"
+ * olurdu. Kural metnin dilinden geliyor.
+ */
+export function upper(text: string, locale: Locale): string {
+  return text.toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US");
+}
+
 /** Marka kilidi — karo + ad. Her kartın sol üstünde aynı yerde. */
-export function BrandLock({ label }: { label?: string }) {
+export function BrandLock({
+  label,
+  locale = "tr",
+}: {
+  label?: string;
+  locale?: Locale;
+}) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
       <div
@@ -130,7 +165,7 @@ export function BrandLock({ label }: { label?: string }) {
               color: C.primary,
             }}
           >
-            {label.toLocaleUpperCase("tr-TR")}
+            {upper(label, locale)}
           </span>
         )}
       </div>
@@ -233,11 +268,15 @@ export function OgFrame({
   children,
   accent,
   footer,
+  /* Künyenin büyük harfe çevrilme kuralı bu dilden geliyor — bkz. `upper`.
+     Varsayılan Türkçe: kartların çoğu tek dilli ve o dil Türkçe. */
+  locale = "tr",
 }: {
   eyebrow?: string;
   children: React.ReactNode;
   accent?: React.ReactNode;
   footer?: React.ReactNode;
+  locale?: Locale;
 }) {
   return (
     <div
@@ -270,7 +309,7 @@ export function OgFrame({
             justifyContent: "space-between",
           }}
         >
-          <BrandLock label={eyebrow} />
+          <BrandLock label={eyebrow} locale={locale} />
           {accent}
         </div>
 

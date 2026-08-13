@@ -25,6 +25,22 @@ import {
 } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/page-meta";
+
+/* Künye YOKTU ve sayfa site haritasında en yüksek öncelikte (0.9) duruyordu:
+   arama sonucunda kökten miras kalan "Açılış Zili — ABD Piyasa Takibi"
+   başlığıyla, yani ana sayfayla birebir aynı künyeyle çıkıyordu. */
+export const generateMetadata = pageMetadata({
+  path: "/bilancolar/analizler",
+  tr: {
+    title: "Bilanço Analizleri",
+    description: "Okunmuş çeyrek sonuçları — skor, görüş ve hedef fiyatla.",
+  },
+  en: {
+    title: "Earnings Analyses",
+    description: "Quarters we read — score, verdict and price target.",
+  },
+});
 import {
   analysisHref,
   analysisTableLabels,

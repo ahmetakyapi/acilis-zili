@@ -33,6 +33,25 @@ const LIST_COLORS = ["primary", "brass", "up", "down", "flat"] as const;
  */
 const MAX_REORDER_ITEMS = 200;
 
+/* --------------------------------------------------------------------------
+   Yazma tavanları
+
+   Liste açma ve sembol ekleme yalnızca oturumu ve biçimi doğruluyordu; kaç
+   liste ya da listede kaç sembol olabileceğine dair bir tavan yoktu. Giriş
+   yapmış tek bir hesap döngüyle yüz binlerce satır yazıp hem Neon
+   depolamasını hem `/favoriler` sayfasının çizim süresini şişirebilirdi —
+   üstelik `MAX_REORDER_ITEMS` tavanının anlamı da kalmıyordu, çünkü listeye
+   sınırsız öğe konabildiği sürece 200'lük sıralama tavanı yalnızca tek
+   çağrıyı sınırlıyordu.
+
+   Sayılar gerçek kullanımın çok üstünde: en kalabalık kullanım bir avuç
+   liste, listede birkaç düzine sembol. Sınıra dayanan kullanıcı sessizce
+   dönmüyor; arayüz zaten sunucu eyleminden sonra sayfayı tazeliyor ve
+   eklenmeyen öğe görünmediği için durum kendini belli ediyor.
+   -------------------------------------------------------------------------- */
+const MAX_LISTS = 20;
+const MAX_ITEMS_PER_LIST = 200;
+
 export async function createWatchlist(formData: FormData) {
   const userId = await requireUserId();
   if (!userId) return;
@@ -41,10 +60,17 @@ export async function createWatchlist(formData: FormData) {
   const color = String(formData.get("color") ?? "primary");
   if (!name) return;
 
-  const [{ maxOrder }] = await db
-    .select({ maxOrder: sql<number>`coalesce(max(${watchlists.sortOrder}), -1)` })
+  /* Sayım ve sıra tek sorguda: ikisi de aynı satır kümesinden çıkıyor,
+     ayrı istek atmak Neon'da ikinci bir HTTP gidiş-dönüşü demek. */
+  const [{ maxOrder, total }] = await db
+    .select({
+      maxOrder: sql<number>`coalesce(max(${watchlists.sortOrder}), -1)`,
+      total: sql<number>`count(*)::int`,
+    })
     .from(watchlists)
     .where(eq(watchlists.userId, userId));
+
+  if (total >= MAX_LISTS) return;
 
   await db.insert(watchlists).values({
     userId,
@@ -103,12 +129,15 @@ export async function addSymbolToList(formData: FormData) {
     .limit(1);
   if (!list) return;
 
-  const [{ maxOrder }] = await db
+  const [{ maxOrder, total }] = await db
     .select({
       maxOrder: sql<number>`coalesce(max(${watchlistItems.sortOrder}), -1)`,
+      total: sql<number>`count(*)::int`,
     })
     .from(watchlistItems)
     .where(eq(watchlistItems.watchlistId, listId));
+
+  if (total >= MAX_ITEMS_PER_LIST) return;
 
   await db
     .insert(watchlistItems)

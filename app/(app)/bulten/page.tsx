@@ -18,6 +18,22 @@ import {
 } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/page-meta";
+
+/* Künye yoktu; arşivin tamamı ana sayfanın başlığı ve açıklamasıyla
+   paylaşılıyordu. Adres sorgu parametresi taşısa da (`?tur=`, `?tarih=`)
+   canonical sorgusuz kalıyor — `pageAlternates` onu `path`ten kuruyor. */
+export const generateMetadata = pageMetadata({
+  path: "/bulten",
+  tr: {
+    title: "Bülten",
+    description: "Günlük ve haftalık piyasa bülteninin arşivi.",
+  },
+  en: {
+    title: "Brief",
+    description: "Archive of the daily and weekly market brief.",
+  },
+});
 import { cn, formatEtDateLong, formatEtDateShort } from "@/lib/utils";
 import type { BriefPeriod } from "@/lib/brief";
 

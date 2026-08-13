@@ -9,6 +9,7 @@ import {
   Tri,
   clip,
   ogFonts,
+  upper,
 } from "@/lib/og";
 import { getAnalysis } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
@@ -87,7 +88,7 @@ export default async function AnalysisOgImage({
   if (!row) {
     return new ImageResponse(
       (
-        <OgFrame eyebrow="Bilanço Analizi">
+        <OgFrame eyebrow={t.analysis.ogEyebrow} locale={locale}>
           <OgTitle>{symbol}</OgTitle>
         </OgFrame>
       ),
@@ -106,7 +107,7 @@ export default async function AnalysisOgImage({
   return new ImageResponse(
     (
       <OgFrame
-        eyebrow="Bilanço Analizi"
+        eyebrow={t.analysis.ogEyebrow} locale={locale}
         accent={
           <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
             <div
@@ -125,7 +126,7 @@ export default async function AnalysisOgImage({
                   color: C.muted,
                 }}
               >
-                GENEL GÖRÜŞ
+                {upper(t.analysis.verdictLabel, locale)}
               </span>
               <span
                 style={{
@@ -151,7 +152,7 @@ export default async function AnalysisOgImage({
             <Chip>{row.periodLabel}</Chip>
             {row.targetPrice !== null && (
               <Chip tone={upside !== null && upside < 0 ? "down" : "up"}>
-                {`Hedef ${formatPrice(row.targetPrice, locale, { currency: true })}`}
+                {`${t.analysis.ogTarget} ${formatPrice(row.targetPrice, locale, { currency: true })}`}
                 {upside !== null && (
                   <>
                     <span style={{ color: C.muted }}>·</span>
