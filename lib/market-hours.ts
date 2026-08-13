@@ -50,6 +50,16 @@ export type MarketStatus = {
   nextOpen: Date;
   /** Bugünün kapanış zili anı; piyasa kapalıysa bir sonraki seansın kapanışı. */
   nextClose: Date;
+  /**
+   * Ekrandaki seans anlatısının değişeceği İLK an.
+   *
+   * `nextOpen`/`nextClose` yetmiyor: rozet günde dört kez değişiyor
+   * (04:00 ön seans → 09:30 açılış → kapanış → +4 saat gece). Açık duran bir
+   * sekmenin ne zaman tazeleneceğini bu alan söyler; en yakın sınır hangisiyse
+   * o. Geri sayımın hedefi her zaman bu sınırlardan biri olduğu için
+   * `nextTransition <= countdownTarget` her koşulda doğrudur.
+   */
+  nextTransition: Date;
 };
 
 /* --------------------------------------------------------------------------
@@ -264,6 +274,30 @@ export function getMarketStatus(
     nextClose = etDateWithMinutes(next, closeMinutesFor(next, holidays));
   }
 
+  /* Seansın değişeceği ilk an.
+
+     Bugünün dört sınırından ŞU ANDAN SONRAKİ en yakını alınır; hiçbiri
+     kalmadıysa (gece, hafta sonu, tatil) sıradaki işlem gününün ön seans
+     açılışı. Tatil gününde bugünün sınırları hiç sayılmaz — o gün rozet
+     zaten değişmiyor. */
+  let nextTransition: Date;
+  const upcomingMarks = tradingToday
+    ? [
+        SESSION_BOUNDS.preMarketOpen,
+        SESSION_BOUNDS.regularOpen,
+        closeMinutes,
+        afterHoursEnd,
+      ]
+        .filter((mark) => mark > minutes)
+        .sort((a, b) => a - b)
+    : [];
+  if (upcomingMarks.length > 0) {
+    nextTransition = etDateWithMinutes(dateStr, upcomingMarks[0]);
+  } else {
+    const next = nextTradingDay(dateStr, holidays);
+    nextTransition = etDateWithMinutes(next, SESSION_BOUNDS.preMarketOpen);
+  }
+
   return {
     session,
     isRegularOpen: session === "regular",
@@ -275,6 +309,7 @@ export function getMarketStatus(
     closeMinutes,
     nextOpen,
     nextClose,
+    nextTransition,
   };
 }
 

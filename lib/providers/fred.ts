@@ -5,6 +5,7 @@ import {
   type MacroSeriesData,
   type ProviderResult,
 } from "./types";
+import { withTimeout } from "./timeout";
 
 /**
  * FRED (St. Louis Fed) — makro göstergelerin resmî değerleri.
@@ -98,10 +99,13 @@ async function fredFetch<T>(
   }).toString()}`;
 
   try {
-    const res = await fetch(url, {
-      headers: { accept: "application/json" },
-      next: { revalidate: opts.revalidate, tags: opts.tags },
-    });
+    /* Süre sınırı — gerekçe lib/providers/timeout.ts'te. */
+    const res = await withTimeout(
+      fetch(url, {
+        headers: { accept: "application/json" },
+        next: { revalidate: opts.revalidate, tags: opts.tags },
+      }),
+    );
 
     if (res.status === 429) {
       return fail("fred", "rate-limited", "FRED istek limiti aşıldı");

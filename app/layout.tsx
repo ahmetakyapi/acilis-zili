@@ -64,9 +64,18 @@ export const metadata: Metadata = {
     ? { index: true, follow: true }
     : { index: false, follow: false },
   /* `types` ile besleme keşfedilebilir oluyor: okuyucular sayfayı bu
-     etiketten buluyor, adresi elle yazmak zorunda kalmıyorlar. */
+     etiketten buluyor, adresi elle yazmak zorunda kalmıyorlar.
+
+     CANONICAL BURADA YOK, bilerek. Bir süre `canonical: "/"` yazıyordu ve
+     alt sayfalar `alternates` vermediği için Next bu değeri onlara MİRAS
+     bırakıyordu: her hisse, her analiz, her rehber yazısı arama motoruna
+     "asıl adresim ana sayfa" diyordu. Yani sitenin tamamı tek bir sayfa
+     olarak dizine giriyor, alt sayfaların hiçbiri kendi başına
+     sıralanmıyordu — sitemap'te listelenmiş olmalarına rağmen.
+
+     Ana sayfanın kendi canonical'ı `app/(app)/page.tsx` içinde duruyor;
+     bir sayfanın canonical'ı ancak o sayfada yazılabilir. */
   alternates: {
-    canonical: "/",
     types: { "application/rss+xml": "/feed.xml" },
   },
 };

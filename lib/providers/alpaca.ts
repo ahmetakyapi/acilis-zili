@@ -7,6 +7,7 @@ import {
   type ProviderResult,
   type Quote,
 } from "./types";
+import { withTimeout } from "./timeout";
 
 /**
  * Alpaca Market Data — fiyat ve grafik barları.
@@ -49,14 +50,17 @@ async function alpacaFetch<T>(
   const url = `${BASE}${path}?${new URLSearchParams(params).toString()}`;
 
   try {
-    const res = await fetch(url, {
-      headers: {
-        "APCA-API-KEY-ID": creds.key,
-        "APCA-API-SECRET-KEY": creds.secret,
-        accept: "application/json",
-      },
-      next: { revalidate: opts.revalidate, tags: opts.tags },
-    });
+    /* Süre sınırı — gerekçe lib/providers/timeout.ts'te. */
+    const res = await withTimeout(
+      fetch(url, {
+        headers: {
+          "APCA-API-KEY-ID": creds.key,
+          "APCA-API-SECRET-KEY": creds.secret,
+          accept: "application/json",
+        },
+        next: { revalidate: opts.revalidate, tags: opts.tags },
+      }),
+    );
 
     if (res.status === 429) {
       return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");

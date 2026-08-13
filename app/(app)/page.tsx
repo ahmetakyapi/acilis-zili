@@ -6,6 +6,7 @@ import { NewsImage } from "@/components/news/NewsImage";
 import { BriefSwitch, type BriefView } from "@/components/today/BriefSwitch";
 import { Countdown } from "@/components/today/Countdown";
 import { DayRail, type RailEvent } from "@/components/today/DayRail";
+import { SessionRefresh } from "@/components/today/SessionRefresh";
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
 import { LiveClock } from "@/components/today/LiveClock";
 import {
@@ -69,6 +70,17 @@ import { getChartBars } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
 import { VIX_SERIES, vixBand } from "@/components/markets/FearGauge";
 
+import type { Metadata } from "next";
+
+/* Canonical yalnızca BURADA. Kökte durduğu sürece bütün alt sayfalara miras
+   kalıyor ve hepsi arama motoruna "asıl adresim ana sayfa" diyordu; gerekçe
+   `app/layout.tsx` içindeki `alternates` yorumunda. Başlık ve açıklama
+   köktekilerden miras alınmaya devam ediyor — ana sayfa için doğru olan
+   zaten onlar. */
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
 export default async function TodayPage() {
   const { locale, t } = await getI18n();
   const status = await getStatus();
@@ -96,6 +108,11 @@ export default async function TodayPage() {
        endekslerle dünya piyasaları arasına girmemesi bilinçli: ölçüm okurken
        araya giren bir okuma davetiyesi akışı kesiyordu. */
     <div className="grid gap-x-6 gap-y-5 lg:grid-cols-[minmax(0,1fr)_376px]">
+      {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer
+          kaplamaz. Geri sayım sıfıra inince orada kilitleniyor ve yeni güne
+          ancak elle yenilemeyle geçiliyordu; gerekçenin tamamı bileşende. */}
+      <SessionRefresh atIso={status.nextTransition.toISOString()} />
+
       {/* ================= Ana kolon ================= */}
       <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
         {/* ---- Oturum rozeti + tarih ---- */}

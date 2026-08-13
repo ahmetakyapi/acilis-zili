@@ -1,4 +1,5 @@
 import { fail, ok, type ProviderResult } from "./types";
+import { withTimeout } from "./timeout";
 
 /**
  * TCMB — Türkiye Cumhuriyet Merkez Bankası günlük döviz kurları.
@@ -67,10 +68,13 @@ function extract(block: string, tag: string): string | undefined {
 export async function getUsdTry(): Promise<ProviderResult<UsdTryRate>> {
   let res: Response;
   try {
-    res = await fetch(TODAY_URL, {
-      headers: { accept: "application/xml" },
-      next: { revalidate: REVALIDATE_SECONDS, tags: ["fx"] },
-    });
+    /* Süre sınırı — gerekçe lib/providers/timeout.ts'te. */
+    res = await withTimeout(
+      fetch(TODAY_URL, {
+        headers: { accept: "application/xml" },
+        next: { revalidate: REVALIDATE_SECONDS, tags: ["fx"] },
+      }),
+    );
   } catch (error) {
     return fail(
       "tcmb",
@@ -83,7 +87,23 @@ export async function getUsdTry(): Promise<ProviderResult<UsdTryRate>> {
     return fail("tcmb", "upstream-error", `TCMB ${res.status}`);
   }
 
-  const xml = await res.text();
+  /* GÖVDE OKUMASI DA SARMAL İÇİNDE. Bir süre dışarıdaydı ve tek başına
+     bütün siteyi düşürebiliyordu: `fetch` başlıkları aldıktan sonra dönüyor,
+     gövde ise akmaya devam ediyor. TCMB bağlantıyı gövde ortasında keserse
+     (`socket hang up` / `TypeError: terminated`) hata buradan yukarı
+     fırlıyor, sunucu bileşeni çöküyor ve okuyucu kur kartı yerine
+     global-error ekranını görüyordu — kartın "sessizce düşmesi" gereken bir
+     durumda. */
+  let xml: string;
+  try {
+    xml = await res.text();
+  } catch (error) {
+    return fail(
+      "tcmb",
+      "network",
+      error instanceof Error ? error.message : "TCMB yanıtı okunamadı",
+    );
+  }
 
   const usdBlock = /<Currency[^>]*Kod="USD"[^>]*>([\s\S]*?)<\/Currency>/.exec(
     xml,

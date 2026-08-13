@@ -10,6 +10,7 @@ import {
   type Recommendation,
   type SymbolSearchResult,
 } from "./types";
+import { withTimeout } from "./timeout";
 
 /**
  * Finnhub — şirket meta verisi, haberler, bilanço takvimi.
@@ -42,10 +43,14 @@ async function finnhubFetch<T>(
   const url = `${BASE}${path}?${new URLSearchParams(params).toString()}`;
 
   try {
-    const res = await fetch(url, {
-      headers: { "X-Finnhub-Token": key, accept: "application/json" },
-      next: { revalidate: opts.revalidate, tags: opts.tags },
-    });
+    /* Süre sınırı: sağlayıcı yanıt vermeyi bırakırsa sayfa kilitlenmesin.
+       Gerekçesi ve iptal edilmemesinin sebebi lib/providers/timeout.ts'te. */
+    const res = await withTimeout(
+      fetch(url, {
+        headers: { "X-Finnhub-Token": key, accept: "application/json" },
+        next: { revalidate: opts.revalidate, tags: opts.tags },
+      }),
+    );
 
     if (res.status === 429) {
       return fail("finnhub", "rate-limited", "Finnhub istek limiti aşıldı");
