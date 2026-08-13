@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn, formatPercent } from "@/lib/utils";
 
 /**
  * Normalize edilmiş karşılaştırma grafiği.
@@ -284,7 +284,12 @@ export function CompareChart({
                       )}
                     >
                       {row.value > 0 ? "+" : ""}
-                      {row.value.toFixed(1)}%
+                      {/* `toFixed(1)}%` iki şeyi birden bozuyordu: ondalık
+                          ayracı Türkçede virgül olmalıyken nokta çıkıyor ve
+                          yüzde işareti sayıdan SONRA yazılıyordu — Türkçede
+                          önce gelir. Bileşen `locale`ı zaten alıyor ve
+                          tarihi onunla biçimlendiriyordu. */}
+                      {formatPercent(row.value, locale, 1)}
                     </span>
                   </div>
                 ))}
@@ -318,7 +323,7 @@ export function CompareChart({
                 )}
               >
                 {last > 0 ? "+" : ""}
-                {last.toFixed(1)}%
+                {formatPercent(last, locale, 1)}
               </span>
             </span>
           );

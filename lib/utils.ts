@@ -401,3 +401,27 @@ export function headlineMentions(
   const first = (name ?? "").trim().split(/[\s,.]+/)[0]?.toLowerCase();
   return Boolean(first && first.length >= 3 && text.includes(first));
 }
+
+
+/**
+ * FRED serisinin dönem künyesi: "2026-06" → "Haziran 2026".
+ *
+ * NEDEN PAYLAŞILAN: makro ekranı bu künyeyi sayının yanına koyuyordu ama ana
+ * sayfadaki Makro Özeti paneli koymuyordu — aynı sayı orada 23 puntoyla ve
+ * TARİHSİZ duruyordu. TÜFE ve istihdam haftalar geriden yayımlanır; okuyucu
+ * büyük puntolu bir sayıyı bugünün verisi sanıyordu. Projenin "bayat veriyi
+ * damgasız gösterme" kuralı tam olarak bunu yasaklıyor.
+ */
+export function formatPeriodLabel(
+  period: string | null,
+  locale: string,
+): string {
+  if (!period) return "—";
+  const match = /^(\d{4})-(\d{2})$/.exec(period);
+  if (!match) return period;
+  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${match[1]}-${match[2]}-15T12:00:00Z`));
+}

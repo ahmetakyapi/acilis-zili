@@ -567,10 +567,15 @@ export default async function AnalysisDetailPage(
                 <span className="figure text-[30px] font-bold leading-none tracking-[-0.04em] text-strong">
                   {formatPrice(live.quote.price, locale, { currency: true })}
                 </span>
+                {/* Değişim bilinmiyorsa yön rengi de yok: tire nötr basılır. */}
                 <span
                   className={cn(
                     "figure text-[15px] font-bold",
-                    live.quote.changePct >= 0 ? "text-up" : "text-down",
+                    live.quote.changePct === null
+                      ? "text-muted"
+                      : live.quote.changePct >= 0
+                        ? "text-up"
+                        : "text-down",
                   )}
                 >
                   {formatPercent(live.quote.changePct, locale)}

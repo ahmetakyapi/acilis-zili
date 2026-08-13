@@ -132,9 +132,13 @@ function snapshotToQuote(symbol: string, snap: AlpacaSnapshot): Quote | null {
   const prevClose = snap.prevDailyBar?.c ?? null;
   if (price === null) return null;
 
-  const change = prevClose !== null ? price - prevClose : 0;
+  /* Önceki kapanış yoksa değişim SIFIR DEĞİL, BİLİNMİYOR. Sıfır yazmak
+     ekranda "bugün fiyat hiç değişmedi" cümlesini kuruyordu. */
+  const change = prevClose !== null ? price - prevClose : null;
   const changePct =
-    prevClose !== null && prevClose !== 0 ? (change / prevClose) * 100 : 0;
+    change !== null && prevClose !== null && prevClose !== 0
+      ? (change / prevClose) * 100
+      : null;
 
   return {
     symbol,

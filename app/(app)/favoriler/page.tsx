@@ -32,7 +32,9 @@ export default async function WatchlistPage() {
   const quotes: Record<string, BoardQuote> = {};
   if (quotesResult?.ok) {
     for (const [symbol, quote] of Object.entries(quotesResult.data)) {
-      if (quote) quotes[symbol] = { price: quote.price, changePct: quote.changePct };
+      if (quote) {
+        quotes[symbol] = { price: quote.price, changePct: quote.changePct };
+      }
     }
   }
 

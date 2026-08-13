@@ -3,7 +3,11 @@ import { Sparkline } from "@/components/ui/Sparkline";
 import { DataStamp, EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
 import { getMacroRows } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
-import { formatEtDateLong, formatPrice } from "@/lib/utils";
+import {
+  formatEtDateLong,
+  formatPeriodLabel,
+  formatPrice,
+} from "@/lib/utils";
 import type { MacroObservation } from "@/lib/providers/types";
 
 import { pageMetadata } from "@/lib/page-meta";
@@ -34,16 +38,9 @@ export const generateMetadata = pageMetadata({
  */
 
 /** "2026-06" → "Haziran 2026" / "June 2026" */
-function formatPeriod(period: string | null, locale: string): string {
-  if (!period) return "—";
-  const match = /^(\d{4})-(\d{2})$/.exec(period);
-  if (!match) return period;
-  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${match[1]}-${match[2]}-15T12:00:00Z`));
-}
+/* Künye artık `lib/utils.ts` içinde: ana sayfadaki Makro Özeti paneli de
+   aynı biçimi kullanıyor. */
+const formatPeriod = formatPeriodLabel;
 
 export default async function MacroPage() {
   const { locale, t } = await getI18n();

@@ -1035,10 +1035,16 @@ function MembersTable({
                                   : "bg-flat/50",
                             )}
                             style={{
-                              width: `${Math.max(
-                                (Math.abs(quote.changePct) / peakChange) * 100,
-                                6,
-                              )}%`,
+                              /* Değişim bilinmiyorsa çubuk çizilmiyor: sıfır
+                                 genişlik "hareket yok" demek olurdu ve o da
+                                 bir iddia. */
+                              width:
+                                quote.changePct === null
+                                  ? 0
+                                  : `${Math.max(
+                                      (Math.abs(quote.changePct) / peakChange) * 100,
+                                      6,
+                                    )}%`,
                             }}
                           />
                         </span>

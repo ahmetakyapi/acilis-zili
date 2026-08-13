@@ -25,6 +25,7 @@ import {
   directionText,
   formatCompact,
   formatPercent,
+  formatPercentPlain,
   formatPrice,
   isValidSymbol,
   peRatioOf,
@@ -262,8 +263,11 @@ async function CompareBoard({
       label: t.stock.dividend,
       value: (i) => {
         const metrics = metricResults[i];
+        /* Yüzde işareti elle BAŞA konuyordu: İngilizce tarafta "%0.46"
+           çıkıyordu, oysa orada sayıdan sonra gelir. İşaretin yeri dile
+           bağlı ve o kural tek yerde: lib/utils.ts → withPercent. */
         return metrics?.ok && metrics.data.dividendYield !== null
-          ? `%${formatPrice(metrics.data.dividendYield, locale)}`
+          ? formatPercentPlain(metrics.data.dividendYield, locale, 2)
           : "—";
       },
     },

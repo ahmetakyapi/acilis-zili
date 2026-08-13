@@ -69,8 +69,19 @@ export function fail(
 export type Quote = {
   symbol: string;
   price: number;
-  change: number;
-  changePct: number;
+  /**
+   * Önceki kapanışa göre değişim — VERİ YOKSA NULL, sıfır değil.
+   *
+   * Sağlayıcı `prevDailyBar` göndermediğinde bu alanlar 0'a çekiliyordu ve
+   * ekranda "bugün fiyat hiç değişmedi" diye okunuyordu: hisse yatay renkte,
+   * "+0,00" ve "%0,00" basılı. Oysa doğru cümle "önceki kapanışı
+   * bilmiyoruz". Aynı sıfırlama üç yerdeydi — Alpaca anlık görüntüsü,
+   * Finnhub yedeği ve Neon önbelleği.
+   *
+   * Sıfır artık gerçekten "değişmedi" demek.
+   */
+  change: number | null;
+  changePct: number | null;
   open: number | null;
   high: number | null;
   low: number | null;

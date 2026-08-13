@@ -168,8 +168,10 @@ export async function getQuote(
     {
       symbol,
       price: raw.c,
-      change: raw.d ?? 0,
-      changePct: raw.dp ?? 0,
+      /* `?? 0` değil `?? null`: sağlayıcı alanı boş bıraktığında "değişim
+         sıfır" değil "bilmiyoruz" demek. Gerekçe `Quote` tipinde. */
+      change: raw.d ?? null,
+      changePct: raw.dp ?? null,
       open: raw.o || null,
       high: raw.h || null,
       low: raw.l || null,

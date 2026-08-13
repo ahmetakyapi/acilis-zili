@@ -54,6 +54,7 @@ import {
   formatCompact,
   formatEtDateLong,
   formatEtDateShort,
+  formatPercentPlain,
   formatPrice,
   formatVolume,
   headlineMentions,
@@ -759,7 +760,9 @@ async function MetricsCard({
     [t.stock.eps, m.eps ? formatPrice(m.eps, locale, { currency: true }) : "—"],
     [
       t.stock.dividend,
-      m.dividendYield ? `${formatPrice(m.dividendYield, locale)}%` : "—",
+      /* İşaret elle SONA konuyordu ve Türkçede başa gelmesi gerekiyor;
+         kural tek yerde: lib/utils.ts → withPercent. */
+      m.dividendYield ? formatPercentPlain(m.dividendYield, locale, 2) : "—",
     ],
     [t.stock.beta, m.beta ? formatPrice(m.beta, locale) : "—"],
     [

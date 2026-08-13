@@ -62,6 +62,7 @@ import {
   formatEtDateShort,
   formatPercent,
   formatPercentPlain,
+  formatPeriodLabel,
   formatPrice,
   headlineMentions,
   timeAgo,
@@ -157,8 +158,18 @@ export default async function TodayPage() {
                 arasında üçüncü bir ağırlık gibi duruyordu; oysa "bugün hangi
                 gün" bu şeridin ana bilgisi. Yarı kalın koyu mürekkebe çıktı,
                 rozet ve saat ise künye kaldı. */}
-            <span className="text-[13.5px] font-semibold text-strong">
+            {/* TARİH NEW YORK TAKVİMİNDEN ve bu artık yazıyor.
+                Yanındaki saat Türkçe okuyanda İstanbul'u gösteriyor; Türkiye
+                saatiyle gece yarısı ile sabah 07:00 arasında ikisi BİR GÜN
+                ayrışıyor ve ekranda "11 Ağustos Salı · 02:14 TR" gibi kendi
+                kendisiyle çelişen bir satır kalıyordu. Künye, hangi takvimin
+                konuştuğunu söylüyor — saatlerin yanındaki TR/NY künyesiyle
+                aynı dil. */}
+            <span className="flex items-baseline gap-1 text-[13.5px] font-semibold text-strong">
               {formatEtDateLong(status.etDate, locale)}
+              <span className="text-[10.5px] font-bold tracking-[0.06em] text-muted">
+                NY
+              </span>
             </span>
             <LiveClock locale={locale} />
           </div>
@@ -1269,6 +1280,15 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
               <p className="tote mt-0.5 text-[23px]">
                 {latest !== null ? show(latest) : "—"}
               </p>
+              {/* DÖNEM KÜNYESİ. Sayı 23 puntoyla basılıyor ama hangi aya ait
+                  olduğu yazmıyordu; TÜFE ve istihdam haftalar geriden
+                  yayımlanır ve okuyucu bunu bugünün verisi sanıyordu. Makro
+                  ekranı aynı sayının yanına bu künyeyi zaten koyuyor. */}
+              {row.periodLabel && (
+                <p className="text-[10.5px] text-muted">
+                  {formatPeriodLabel(row.periodLabel, locale)}
+                </p>
+              )}
               <p className="numeral text-[11.5px] text-muted">
                 {delta === null ? (
                   t.common.noData

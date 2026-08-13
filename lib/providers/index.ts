@@ -114,9 +114,19 @@ async function persistQuotes(quotes: Quote[]): Promise<void> {
   }
 }
 
+/**
+ * Son çare: Neon önbelleğindeki son bilinen fiyat.
+ *
+ * KAYITLARIN YAŞI DA DÖNER. Eskiden yalnızca değerler dönüyordu ve çağıran
+ * `ok(cached, "cache", { stale: true })` yazıyordu; `ok()` damga verilmediğinde
+ * `new Date()` koyuyor, yani ekranda "önbellek · 14:32 güncellendi" görünüyordu
+ * — 14:32 verinin yazıldığı an değil, SAYFANIN ÇİZİLDİĞİ an. Fiyat dünden
+ * kalmış olabilirken damga onu az önce alınmış gösteriyordu; projenin
+ * "bayat veriyi taze gibi gösterme" kuralının doğrudan ihlali.
+ */
 async function quotesFromCache(
   symbolList: string[],
-): Promise<Record<string, Quote>> {
+): Promise<{ quotes: Record<string, Quote>; oldest: Date | null }> {
   try {
     const rows = await db
       .select()
@@ -124,13 +134,20 @@ async function quotesFromCache(
       .where(inArray(quotesCache.symbol, symbolList));
 
     const result: Record<string, Quote> = {};
+    let oldest: Date | null = null;
     for (const row of rows) {
       if (row.price === null) continue;
+      /* En ESKİ damga alınıyor, en yenisi değil: kartta tek bir tarih
+         yazılıyor ve o tarih "bu ekrandaki en bayat sayı ne kadar eski"
+         sorusunu cevaplamalı. */
+      if (row.updatedAt && (!oldest || row.updatedAt < oldest)) {
+        oldest = row.updatedAt;
+      }
       result[row.symbol] = {
         symbol: row.symbol,
         price: row.price,
-        change: row.change ?? 0,
-        changePct: row.changePct ?? 0,
+        change: row.change,
+        changePct: row.changePct,
         open: row.open,
         high: row.high,
         low: row.low,
@@ -139,9 +156,9 @@ async function quotesFromCache(
         tradedAt: row.tradedAt,
       };
     }
-    return result;
+    return { quotes: result, oldest };
   } catch {
-    return {};
+    return { quotes: {}, oldest: null };
   }
 }
 
@@ -178,8 +195,11 @@ export async function getQuotes(
 
   // Son çare: en son bilinen değer, "güncel değil" damgasıyla.
   const cached = await quotesFromCache(unique);
-  if (Object.keys(cached).length > 0) {
-    return ok(cached, "cache", { stale: true });
+  if (Object.keys(cached.quotes).length > 0) {
+    return ok(cached.quotes, "cache", {
+      stale: true,
+      fetchedAt: cached.oldest ?? undefined,
+    });
   }
 
   return primary;

@@ -41,7 +41,9 @@ export type BoardList = {
   color: string;
   items: BoardItem[];
 };
-export type BoardQuote = { price: number; changePct: number };
+/* `changePct` NULL OLABİLİR: sağlayıcı önceki kapanışı vermediğinde değişim
+   "sıfır" değil "bilinmiyor". `ChangePill` bu durumu zaten nötr basıyor. */
+export type BoardQuote = { price: number; changePct: number | null };
 
 export type BoardLabels = {
   newList: string;
