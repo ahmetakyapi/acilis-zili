@@ -27,6 +27,11 @@ const tr = {
     searchTrigger: "Sembol veya Olay Ara",
     searchPopular: "Popüler",
     searchWritings: "Yazılar",
+    /* Arama ucu 429 döndüğünde. Eskiden bu durum "sonuç yok" gibi
+       görünüyordu: aradığı şirket sitede duruyorken kullanıcıya olgusal
+       olarak yanlış bilgi veriliyordu. */
+    searchRateLimited: "Çok hızlı arıyorsun. {saniye} sn sonra tekrar dene.",
+    searchFailed: "Arama şu an yapılamadı. Tekrar dene.",
     searchHintMove: "gez",
     searchHintOpen: "aç",
     menu: "Menü",
@@ -596,6 +601,8 @@ const tr = {
     periodChange: "Dönem Getirisi",
     range52: "52 Hafta Aralığı",
     remove: "listeden çıkar",
+    addSymbol: "Sembol Ekle",
+    addPlaceholder: "Sembol ya da şirket adı",
     addHint: "Sembol eklemek için bir hisse sayfasından Karşılaştır'a bas.",
     addCta: "Karşılaştır",
   },
@@ -732,6 +739,10 @@ const tr = {
       "Piyasada yaşanan olayları yakından anlatan uzun yazılar — ne oldu, neden oldu, ne öğretti.",
     latest: "Son Yazı",
     archive: "Önceki Yazılar",
+    /* Sayaç `companies.showing`den ödünç alınıyordu ve "25 şirketin 24
+       tanesi" yazıyordu — burada sayılan şirket değil YAZI. */
+    showing: "{total} yazının {n} tanesi",
+    showMore: "Daha Fazla Göster",
     /* Sayfanın kendini tanıttığı bant — "Mercek" adı tek başına burada ne
        yazıldığını söylemiyor ve liste haber akışından ayırt edilemiyordu. */
     whatShort: "altı ay sonra da merak edilecek olaylar",
@@ -810,6 +821,11 @@ const tr = {
     signUpSubtitle: "Kendi takip listeni kurmak için hesap aç.",
     username: "Kullanıcı Adı",
     usernamePlaceholder: "Kullanıcı Adı",
+    /* GİRİŞTE iki kapı da açık: `authorize` kullanıcı adı ya da e-posta ile
+       eşleştiriyor. Alan etiketi bunu söylemezse ikinci kapı görünmez
+       kalır — kullanıcı adını unutan biri hesabını kaybetmiş sanır. */
+    identifier: "Kullanıcı Adı veya E-posta",
+    identifierPlaceholder: "Kullanıcı adın ya da e-postan",
     email: "E-posta",
     emailPlaceholder: "ornek@eposta.com",
     password: "Şifre",
@@ -820,7 +836,7 @@ const tr = {
     noAccount: "Hesabın yok mu?",
     hasAccount: "Zaten hesabın var mı?",
     errors: {
-      invalidCredentials: "Kullanıcı adı veya şifre hatalı.",
+      invalidCredentials: "Bilgiler hatalı. Kullanıcı adını, e-postanı ve şifreni kontrol et.",
       usernameTaken: "Bu kullanıcı adı alınmış.",
       emailTaken:
         "Bu bilgilerle hesap açılamadı. Zaten bir hesabın varsa giriş yap.",

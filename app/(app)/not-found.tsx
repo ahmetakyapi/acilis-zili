@@ -3,6 +3,7 @@ import { ArrowRight, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { BellMark } from "@/components/brand/BellMark";
 import { Panel } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
+import { missingMetadata } from "@/lib/page-meta";
 
 /**
  * 404 — uygulama kabuğunun içinde.
@@ -13,7 +14,12 @@ import { getI18n } from "@/lib/i18n";
  * biri çoğunlukla eski bir bağlantıdan geliyor ve aradığı şey hâlâ sitede.
  */
 
-export const metadata = { title: "Sayfa bulunamadı" };
+/* Künye SABİT DEĞİL: başlık dil ne olursa olsun Türkçe yazılıyordu ve
+   İngilizce gezinen okuyucunun sekmesinde "Sayfa bulunamadı" duruyordu. */
+export async function generateMetadata() {
+  const { locale } = await getI18n();
+  return missingMetadata(locale);
+}
 
 export default async function NotFound() {
   const { t } = await getI18n();

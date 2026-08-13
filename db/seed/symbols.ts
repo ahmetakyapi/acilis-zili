@@ -70,6 +70,7 @@ export const POPULAR_SYMBOLS: SymbolSeed[] = [
   { symbol: "ASTS", name: "AST SpaceMobile Inc." },
   { symbol: "ONDS", name: "Ondas Holdings Inc." },
   { symbol: "SHAZ", name: "SharonAI Holdings Inc." },
+  { symbol: "AAOI", name: "Applied Optoelectronics Inc." },
 
   // Yapay zekâ ve yarı iletken
   { symbol: "NVDA", name: "NVIDIA Corporation" },

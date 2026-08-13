@@ -4,7 +4,7 @@
  * NEDEN VAR: bu sitedeki her sıralama piyasa değerine bakıyor ve o ölçü tek
  * başına yanlış cevap veriyor. Yapay zekâ, uzay ve enerji altyapısının inşa
  * katmanındaki şirketler eşiklerin belirgin altında (CRWV 49, NBIS 49, RKLB 48,
- * BE 64, ASTS 27, SHAZ 1,7 milyar $) ama çeyrekleri o eşiğin üstündeki pek çok
+ * BE 64, ASTS 27, AAOI 12, SHAZ 1,7 milyar $) ama çeyrekleri o eşiğin üstündeki pek çok
  * şirketinkinden daha çok konuşuluyor. Eşiği bunları yakalayacak kadar indirmek
  * yüzlerce sıradan şirketi de içeri alırdı; ADLA SAYMAK hem dar hem dürüst.
  *
@@ -35,6 +35,7 @@ export const SPOTLIGHT_SYMBOLS: readonly string[] = [
   "ASTS", // AST SpaceMobile — uydudan doğrudan telefon bağlantısı
   "ONDS", // Ondas Holdings — insansız sistemler ve özel ağlar
   "SHAZ", // SharonAI Holdings — yapay zekâ hesaplama
+  "AAOI", // Applied Optoelectronics — veri merkezi optik bağlantı
 ] as const;
 
 const SPOTLIGHT_SET: ReadonlySet<string> = new Set(SPOTLIGHT_SYMBOLS);

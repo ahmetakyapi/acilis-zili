@@ -6,8 +6,22 @@ import { signOutAction } from "@/app/actions/auth";
 import { DeleteAccount } from "@/components/auth/DeleteAccount";
 import { Panel, PanelHeader } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/page-meta";
 
-export const metadata = { title: "Ayarlar" };
+/* Künye sabit Türkçeydi; sayfa zaten oturuma bağlı olduğu için dizine de
+   girmemeli. */
+export const generateMetadata = pageMetadata({
+  path: "/ayarlar",
+  robots: { index: false, follow: false },
+  tr: {
+    title: "Ayarlar",
+    description: "Hesap, dil ve tema tercihlerin.",
+  },
+  en: {
+    title: "Settings",
+    description: "Your account, language and theme preferences.",
+  },
+});
 
 export default async function SettingsPage() {
   const session = await auth();

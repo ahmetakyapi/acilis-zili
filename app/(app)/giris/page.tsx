@@ -27,9 +27,9 @@ export default async function SignInPage(props: PageProps<"/giris">) {
         fields={[
           {
             name: "username",
-            label: t.auth.username,
+            label: t.auth.identifier,
             type: "text",
-            placeholder: t.auth.usernamePlaceholder,
+            placeholder: t.auth.identifierPlaceholder,
             autoComplete: "username",
             errorKey: "username",
           },

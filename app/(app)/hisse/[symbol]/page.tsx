@@ -2,12 +2,11 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Heart } from "@phosphor-icons/react/dist/ssr";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
-import { toggleSymbolFavorite } from "@/app/actions/watchlist";
 import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
 import { NewsImage } from "@/components/news/NewsImage";
+import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { PriceChartLazy } from "@/components/stock/PriceChartLazy";
 import { chartLabels } from "@/lib/chart-labels";
 import {
@@ -369,26 +368,14 @@ async function StockHeader({
               {symbol}
             </span>
             {session?.user && (
-              <form action={toggleSymbolFavorite}>
-                <input type="hidden" name="symbol" value={symbol} />
-                <button
-                  type="submit"
-                  aria-label={
-                    isFavorite ? t.stock.removeFromWatchlist : t.stock.addToWatchlist
-                  }
-                  title={
-                    isFavorite ? t.stock.removeFromWatchlist : t.stock.addToWatchlist
-                  }
-                  className={cn(
-                    "inline-flex size-8 items-center justify-center rounded-(--radius-sm) transition-colors",
-                    isFavorite
-                      ? "text-primary hover:bg-primary-wash"
-                      : "text-muted hover:bg-surface-elevated hover:text-soft",
-                  )}
-                >
-                  <Heart weight={isFavorite ? "fill" : "duotone"} size={17} />
-                </button>
-              </form>
+              /* Kalp KENDİ istemci bileşeninde: tıklamanın karşılığını
+                 anında vermesi gerekiyor (bkz. FavoriteToggle). */
+              <FavoriteToggle
+                symbol={symbol}
+                isFavorite={isFavorite}
+                addLabel={t.stock.addToWatchlist}
+                removeLabel={t.stock.removeFromWatchlist}
+              />
             )}
           </div>
           {fund && (

@@ -69,6 +69,8 @@ export default async function WatchlistPage() {
     moveUp: t.watchlist.moveUp,
     moveDown: t.watchlist.moveDown,
     cancel: t.common.cancel,
+    renameList: t.watchlist.renameList,
+    save: t.common.save,
   };
 
   return (

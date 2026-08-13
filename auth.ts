@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
@@ -91,12 +91,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
         if (!limited.allowed) return null;
 
-        const username = String(credentials?.username ?? "")
+        /* KULLANICI ADI YA DA E-POSTA. Giriş yalnızca kullanıcı adıyla
+           yapılıyordu; e-posta kayıtta toplanıp hiçbir yerde
+           kullanılmıyordu. Kullanıcı adını unutup e-postasını hatırlayan
+           birinin girmesinin yolu yoktu ve şifre sıfırlama da olmadığı için
+           hesap kalıcı olarak kayboluyordu. En azından ikinci kapı açık.
+
+           Küçültme Türkçe locale'i İLE YAPILMIYOR: `toLocaleLowerCase("tr-TR")`
+           "I" harfini "ı"ya çeviriyor ve kayıt sırasında da aynı dönüşüm
+           uygulanmadığı sürece eşleşme kırılır. Kayıt tarafı düz
+           `toLowerCase()` kullanıyor (app/actions/auth.ts), burası da öyle. */
+        const identifier = String(credentials?.username ?? "")
           .trim()
           .toLowerCase();
         const password = String(credentials?.password ?? "");
 
-        if (!username || !password) return null;
+        if (!identifier || !password) return null;
 
         /* VERİTABANI HATASI "ŞİFRE HATALI" DEĞİLDİR. Sorgu try/catch'sizdi;
            Neon erişilemediğinde fırlatılan hata next-auth tarafından
@@ -109,7 +119,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           [user] = await db
             .select()
             .from(users)
-            .where(eq(users.username, username))
+            .where(
+              or(eq(users.username, identifier), eq(users.email, identifier)),
+            )
             .limit(1);
         } catch {
           throw new Error(DB_UNAVAILABLE);

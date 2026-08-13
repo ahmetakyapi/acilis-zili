@@ -14,7 +14,13 @@ import {
   Panel,
   Skeleton,
 } from "@/components/ui/primitives";
-import { getStatus, getStories, getSymbolNames, type StoryIndexRow } from "@/lib/data";
+import {
+  countStories,
+  getStatus,
+  getStories,
+  getSymbolNames,
+  type StoryIndexRow,
+} from "@/lib/data";
 import { getChartBarsMulti } from "@/lib/providers";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong, formatEtDateShort } from "@/lib/utils";
@@ -61,6 +67,16 @@ export const generateMetadata = pageMetadata({
 const QUOTE_LIMIT = 40;
 /** "Olaydan bugüne" getirisi hesaplanan farklı sembol sayısı. */
 const CURVE_LIMIT = 12;
+/**
+ * Bir sayfada gösterilen yazı sayısı ve "daha fazla" adımı.
+ *
+ * Arşiv 60 yazıda sessizce kesiliyordu: ne bir bağlantı ne bir künye vardı,
+ * yani 60'ıncıdan eskisi site içinden HİÇBİR yoldan erişilemiyordu (site
+ * haritasında durdukları için arama motorundan gelen okuyucu açabiliyordu).
+ * Filtre çipleri de yalnızca o 60 satırdan sayıldığı için sadece eski
+ * yazılarda geçen şirketler hiç çip almıyordu.
+ */
+const PAGE_STEP = 24;
 
 export default async function StoriesPage(props: PageProps<"/mercek">) {
   const search = await props.searchParams;
@@ -70,6 +86,16 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
     typeof search.sembol === "string"
       ? search.sembol.toUpperCase().slice(0, 12)
       : null;
+
+  /* Derinlik adreste yaşıyor (/sirketler ve /piyasalar ile aynı desen):
+     okuyucu bağlantıyı paylaşırsa karşı taraf aynı derinliği görüyor. */
+  const requested = Number(
+    typeof search.adet === "string" ? search.adet : PAGE_STEP,
+  );
+  const limit =
+    Number.isFinite(requested) && requested > 0
+      ? Math.min(Math.ceil(requested / PAGE_STEP) * PAGE_STEP, 600)
+      : PAGE_STEP;
 
   return (
     <div className="flex flex-col gap-6">
@@ -81,8 +107,16 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
 
       <IntroLine t={t} />
 
-      <Suspense key={symbolFilter ?? "all"} fallback={<BoardSkeleton />}>
-        <StoryBoard locale={locale} t={t} symbolFilter={symbolFilter} />
+      <Suspense
+        key={`${symbolFilter ?? "all"}:${limit}`}
+        fallback={<BoardSkeleton />}
+      >
+        <StoryBoard
+          locale={locale}
+          t={t}
+          symbolFilter={symbolFilter}
+          limit={limit}
+        />
       </Suspense>
     </div>
   );
@@ -148,12 +182,17 @@ async function StoryBoard({
   locale,
   t,
   symbolFilter,
+  limit,
 }: {
   locale: Locale;
   t: Dictionary;
   symbolFilter: string | null;
+  limit: number;
 }) {
-  const all = await getStories(locale);
+  const [all, total] = await Promise.all([
+    getStories(locale, limit),
+    countStories(),
+  ]);
 
   if (all.length === 0) {
     return (
@@ -310,6 +349,25 @@ async function StoryBoard({
                   />
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* "Daha Fazla" — künyesiyle birlikte. `scroll={false}`: okuyucu
+              listenin dibinde, sayfanın başına fırlatılmamalı. */}
+          {total > all.length && !symbolFilter && (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+              <p className="numeral text-[12px] text-muted">
+                {t.stories.showing
+                  .replace("{n}", String(all.length))
+                  .replace("{total}", String(total))}
+              </p>
+              <Link
+                href={`/mercek?adet=${limit + PAGE_STEP}`}
+                scroll={false}
+                className="inline-flex min-h-10 items-center rounded-[10px] border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+              >
+                {t.stories.showMore}
+              </Link>
             </div>
           )}
         </>

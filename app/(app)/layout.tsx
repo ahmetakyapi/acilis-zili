@@ -55,6 +55,8 @@ export default async function AppLayout({
           placeholderShort={t.nav.searchTrigger}
           label={t.nav.search}
           emptyLabel={t.stock.notFound}
+          rateLimitedLabel={t.nav.searchRateLimited}
+          failedLabel={t.nav.searchFailed}
           popularLabel={t.nav.searchPopular}
           companiesLabel={t.nav.companies}
           writingsLabel={t.nav.searchWritings}

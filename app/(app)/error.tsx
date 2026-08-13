@@ -17,7 +17,39 @@ import { Button, Panel } from "@/components/ui/primitives";
  *
  * Mesajın kendisi kasten gösterilmiyor: sunucu hatalarının metni sızıntı
  * yüzeyidir (dosya yolu, sorgu, sağlayıcı yanıtı taşıyabilir).
+ *
+ * METİNLER BURADA, SÖZLÜKTE DEĞİL — ve bu bilinçli. Hata sınırı bir istemci
+ * bileşeni: `getI18n()` await edemez, sözlüğü prop olarak alması için de
+ * üstündeki layout'un onu her çizimde geçirmesi gerekirdi. Dil `<html lang>`
+ * özniteliğinden okunuyor; o özniteliği kök layout zaten okuyucunun diliyle
+ * basıyor. Site iki dilli ve en kırılgan anında dilini kaybetmemeli.
  */
+
+const COPY = {
+  tr: {
+    title: "Bir Şeyler Ters Gitti",
+    body: "Bu ekran yüklenemedi. Çoğu zaman geçici bir veri sağlayıcı sorunudur; tekrar denemek genellikle yeter.",
+    retry: "Tekrar Dene",
+    home: "Bugün ekranına dön",
+    digest: "Sorun sürerse bu kimliği bildir:",
+  },
+  en: {
+    title: "Something Went Wrong",
+    body: "This screen failed to load. It is usually a temporary data provider issue; trying again is normally enough.",
+    retry: "Try Again",
+    home: "Back to Today",
+    digest: "If it keeps happening, report this id:",
+  },
+} as const;
+
+function copyForDocument() {
+  /* Sunucu çiziminde `document` yok; varsayılan Türkçe. İlk boyamadan sonra
+     istemcide doğru dile geçiyor — hata ekranı zaten yalnızca istemcide
+     görünüyor. */
+  if (typeof document === "undefined") return COPY.tr;
+  return document.documentElement.lang === "en" ? COPY.en : COPY.tr;
+}
+
 export default function AppError({
   error,
   reset,
@@ -25,6 +57,8 @@ export default function AppError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const copy = copyForDocument();
+
   useEffect(() => {
     // Sunucu tarafı zaten kaydediyor; bu, tarayıcı konsolunda izi bırakır.
     console.error("Sayfa hatası:", error);
@@ -41,31 +75,28 @@ export default function AppError({
 
       <div className="flex flex-col gap-2.5">
         <h1 className="text-[21px] font-bold tracking-[-0.025em] text-strong">
-          Bir şeyler ters gitti
+          {copy.title}
         </h1>
-        <p className="text-[14px] leading-relaxed text-body">
-          Bu ekran yüklenemedi. Çoğu zaman geçici bir veri sağlayıcı sorunudur;
-          tekrar denemek genellikle yeter.
-        </p>
+        <p className="text-[14px] leading-relaxed text-body">{copy.body}</p>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2.5">
         <Button type="button" onClick={reset}>
           <ArrowClockwise weight="bold" size={15} />
-          Tekrar Dene
+          {copy.retry}
         </Button>
         <Link
           href="/"
           className="inline-flex h-10 items-center rounded-[9px] border border-line bg-surface px-4 text-[13.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
         >
-          Bugün ekranına dön
+          {copy.home}
         </Link>
       </div>
 
       {error.digest && (
         <Panel className="w-full px-4 py-3">
           <p className="text-[11.5px] text-muted">
-            Sorun sürerse bu kimliği bildir:{" "}
+            {copy.digest}{" "}
             <code className="numeral rounded-[5px] bg-surface-elevated px-1.5 py-0.5 font-bold text-strong">
               {error.digest}
             </code>

@@ -2,6 +2,7 @@
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { watchlistItems, watchlists } from "@/lib/schema";
@@ -15,6 +16,28 @@ import { isValidSymbol } from "@/lib/utils";
 async function requireUserId(): Promise<string | null> {
   const session = await auth();
   return session?.user?.id ?? null;
+}
+
+/**
+ * Oturumu olmayan kullanıcıyı GİRİŞE gönderir.
+ *
+ * Yedi eylemin hepsi `if (!userId) return;` ile başlıyordu ve hiçbiri durum
+ * döndürmüyordu: başka bir sekmede çıkış yapmış ya da oturumu süresi dolmuş
+ * biri /favoriler'de kalırsa liste açma, sembol ekleme, silme ve sıralama
+ * düğmelerinin hepsi tıklamayı yutuyordu. Hata yok, yönlendirme yok, tazeleme
+ * sonrası ekran aynı — kullanıcı düğmenin bozuk olduğunu sanıyordu.
+ *
+ * `redirect` bir server action içinden çalışıyor ve `devam` parametresiyle
+ * kullanıcı giriş sonrası aynı ekrana dönüyor (bkz. safeRedirectTarget).
+ *
+ * SÜRÜKLE-BIRAK SIRALAMASI HARİÇ: o eylem bir gezinme değil, sürükleme
+ * bittiğinde arka planda çalışan bir yazma. Ortasında yönlendirme atmak
+ * kullanıcının elindeki listeyi kaybettirirdi; orada sessiz dönüş doğru.
+ */
+async function requireUserIdOrRedirect(back = "/favoriler"): Promise<string> {
+  const userId = await requireUserId();
+  if (!userId) redirect(`/giris?devam=${encodeURIComponent(back)}`);
+  return userId;
 }
 
 const LIST_COLORS = ["primary", "brass", "up", "down", "flat"] as const;
@@ -53,8 +76,7 @@ const MAX_LISTS = 20;
 const MAX_ITEMS_PER_LIST = 200;
 
 export async function createWatchlist(formData: FormData) {
-  const userId = await requireUserId();
-  if (!userId) return;
+  const userId = await requireUserIdOrRedirect();
 
   const name = String(formData.get("name") ?? "").trim().slice(0, 40);
   const color = String(formData.get("color") ?? "primary");
@@ -83,24 +105,30 @@ export async function createWatchlist(formData: FormData) {
 }
 
 export async function renameWatchlist(formData: FormData) {
-  const userId = await requireUserId();
-  if (!userId) return;
+  const userId = await requireUserIdOrRedirect();
 
   const listId = String(formData.get("listId") ?? "");
   const name = String(formData.get("name") ?? "").trim().slice(0, 40);
   if (!listId || !name) return;
 
+  /* RENK DE BURADA. Eylem yalnızca adı güncelliyordu ve rengi değiştirmenin
+     tek yolu listeyi silip yeniden kurmaktı — yani sembolleri kaybetmek.
+     Alan gelmezse mevcut renk korunuyor. */
+  const color = String(formData.get("color") ?? "");
+  const validColor = (LIST_COLORS as readonly string[]).includes(color)
+    ? color
+    : null;
+
   await db
     .update(watchlists)
-    .set({ name })
+    .set(validColor ? { name, color: validColor } : { name })
     .where(and(eq(watchlists.id, listId), eq(watchlists.userId, userId)));
 
   revalidatePath("/favoriler");
 }
 
 export async function deleteWatchlist(formData: FormData) {
-  const userId = await requireUserId();
-  if (!userId) return;
+  const userId = await requireUserIdOrRedirect();
 
   const listId = String(formData.get("listId") ?? "");
   if (!listId) return;
@@ -114,8 +142,7 @@ export async function deleteWatchlist(formData: FormData) {
 }
 
 export async function addSymbolToList(formData: FormData) {
-  const userId = await requireUserId();
-  if (!userId) return;
+  const userId = await requireUserIdOrRedirect();
 
   const listId = String(formData.get("listId") ?? "");
   const symbol = String(formData.get("symbol") ?? "").trim().toUpperCase();
@@ -202,8 +229,7 @@ export async function reorderWatchlistItems(
 }
 
 export async function removeSymbolFromList(formData: FormData) {
-  const userId = await requireUserId();
-  if (!userId) return;
+  const userId = await requireUserIdOrRedirect();
 
   const itemId = String(formData.get("itemId") ?? "");
   if (!itemId) return;
@@ -224,11 +250,12 @@ export async function removeSymbolFromList(formData: FormData) {
 
 /** Hisse sayfasındaki yıldız — ilk listeye ekler / tüm listelerden çıkarır. */
 export async function toggleSymbolFavorite(formData: FormData) {
-  const userId = await requireUserId();
-  if (!userId) return;
-
+  /* Sembol oturumdan ÖNCE okunuyor: oturumu düşen kullanıcı girişten sonra
+     /favoriler'e değil kalp'e bastığı hisse sayfasına dönsün. */
   const symbol = String(formData.get("symbol") ?? "").trim().toUpperCase();
   if (!isValidSymbol(symbol)) return;
+
+  const userId = await requireUserIdOrRedirect(`/hisse/${symbol}`);
 
   const existing = await db
     .select({ itemId: watchlistItems.id })

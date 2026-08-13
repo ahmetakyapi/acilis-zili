@@ -918,6 +918,23 @@ export type StoryIndexRow = Pick<
  * ekranı boş bırakmak yerine orijinal gösterilir. Satırda `locale` bu
  * yüzden dönüyor — arayüz "TR" rozetini oradan basar.
  */
+/**
+ * Arşivdeki tekil yazı sayısı — dil satırları tekilleştirilmiş.
+ *
+ * Sayfalama künyesi ("60 / 128") ve filtre çipleri bunu istiyor: liste
+ * kırpıldığı için sayım kırpılmış listeden yapılamaz.
+ */
+export async function countStories(): Promise<number> {
+  try {
+    const [row] = await db
+      .select({ total: sql<number>`count(distinct ${stories.slug})::int` })
+      .from(stories);
+    return row?.total ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 export async function getStories(
   locale: string,
   limit = 60,

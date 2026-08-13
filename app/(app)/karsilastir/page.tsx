@@ -14,6 +14,7 @@ import {
   SymbolBadge,
 } from "@/components/ui/primitives";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
+import { CompareAdd } from "@/components/markets/CompareAdd";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
@@ -346,7 +347,19 @@ async function CompareBoard({
           );
         })}
         {symbols.length < MAX_SYMBOLS && (
-          <span className="text-[12px] text-muted">{t.compare.addHint}</span>
+          /* EKLEME YOLU EKRANIN İÇİNDE. Burada yalnızca "bir hisse
+             sayfasından Karşılaştır'a bas" yazan bir cümle vardı: dörtten
+             üçe düşen kullanıcı dördüncüyü geri koyamıyordu. */
+          <CompareAdd
+            symbols={symbols}
+            rangeParam={range === DEFAULT_RANGE ? null : range}
+            labels={{
+              add: t.compare.addSymbol,
+              placeholder: t.compare.addPlaceholder,
+              cancel: t.common.cancel,
+              noResults: t.stock.notFound,
+            }}
+          />
         )}
       </div>
 

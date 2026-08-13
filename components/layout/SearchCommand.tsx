@@ -15,7 +15,7 @@ import type {
   SearchResponse,
   WritingHit,
 } from "@/app/api/search/route";
-import { cn } from "@/lib/utils";
+import { cn, isValidSymbol } from "@/lib/utils";
 
 /**
  * ⌘K sembol arama.
@@ -78,6 +78,8 @@ export function SearchCommand({
   placeholderShort,
   label,
   emptyLabel,
+  rateLimitedLabel,
+  failedLabel,
   popularLabel,
   companiesLabel,
   writingsLabel,
@@ -88,6 +90,9 @@ export function SearchCommand({
   placeholderShort: string;
   label: string;
   emptyLabel: string;
+  /** "{saniye}" yer tutucusu taşıyan 429 mesajı. */
+  rateLimitedLabel: string;
+  failedLabel: string;
   popularLabel: string;
   companiesLabel: string;
   /** "Yazılar" — rehber ve mercek sonuçlarının başlığı. */
@@ -135,6 +140,11 @@ export function SearchCommand({
   const [writings, setWritings] = useState<WritingHit[]>([]);
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(false);
+  /* Arama HATASI ile SONUÇ YOKLUĞU ayrı şeyler. Uç 429 döndüğünde istemci
+     `res.ok`a hiç bakmıyor, gövdedeki `error` alanını okumuyordu; sonuç boş
+     liste ve ekranda "sonuç yok" oluyordu. Kullanıcı aradığı şirketin sitede
+     olmadığını sanıyordu. */
+  const [failure, setFailure] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   /* Paleti açan düğme ve panelin kendisi. İkisi de odak yönetimi için:
      kapanışta odak düğmeye geri döner, açıkken Tab paneli terk edemez. */
@@ -152,6 +162,7 @@ export function SearchCommand({
     setWritings([]);
     setActive(0);
     setLoading(false);
+    setFailure(null);
     /* ODAK GERİ VERİLİR. Palet kapanınca odak `document.body`'ye düşüyordu:
        klavyeyle gezen okuyucu sayfanın en başına savruluyor, ekran okuyucu
        da nerede olduğunu kaybediyordu. WCAG 2.4.3 gereği odak, diyaloğu
@@ -270,6 +281,21 @@ export function SearchCommand({
           signal: controller.signal,
         });
         const data = (await res.json()) as SearchResponse;
+        if (!res.ok || data.error) {
+          setHits([]);
+          setWritings([]);
+          setActive(0);
+          setFailure(
+            res.status === 429
+              ? rateLimitedLabel.replace(
+                  "{saniye}",
+                  res.headers.get("Retry-After") ?? "60",
+                )
+              : failedLabel,
+          );
+          return;
+        }
+        setFailure(null);
         setHits(data.hits ?? []);
         setWritings(data.writings ?? []);
         setActive(0);
@@ -284,7 +310,7 @@ export function SearchCommand({
       controller.abort();
       window.clearTimeout(id);
     };
-  }, [query, open, owns]);
+  }, [query, open, owns, rateLimitedLabel, failedLabel]);
 
   const go = useCallback(
     (href: string) => {
@@ -317,8 +343,17 @@ export function SearchCommand({
     } else if (event.key === "Enter") {
       event.preventDefault();
       const href = navItems[active];
-      if (href) go(href);
-      else if (query.trim()) go(`/hisse/${query.trim().toUpperCase()}`);
+      if (href) {
+        go(href);
+        return;
+      }
+      /* SONUÇ YOKKEN ENTER UYDURMA ADRESE GİTMEZ. Eskiden yazılan her şey
+         doğrudan `/hisse/<METİN>` adresine çevriliyordu: "tesla motors"
+         yazan biri ekranda "sonuç yok" görürken Enter'a bastığında
+         `/hisse/TESLA MOTORS` gibi kesin 404 bir adrese düşüyordu. Yalnızca
+         gerçekten sembole benzeyen bir metin geçiyor. */
+      const typed = query.trim().toUpperCase();
+      if (typed && isValidSymbol(typed)) go(`/hisse/${typed}`);
     }
   }
 
@@ -527,7 +562,17 @@ export function SearchCommand({
                 );
               })}
 
+              {!loading && query.trim() && failure && (
+                <p
+                  role="alert"
+                  className="px-5 py-6 text-center text-sm text-down"
+                >
+                  {failure}
+                </p>
+              )}
+
               {!loading &&
+                !failure &&
                 query.trim() &&
                 shownHits.length === 0 &&
                 shownWritings.length === 0 && (

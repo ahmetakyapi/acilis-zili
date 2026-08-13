@@ -11,12 +11,14 @@ import {
   MagnifyingGlass,
   Plus,
   Trash,
+  PencilSimple,
   X,
 } from "@phosphor-icons/react/dist/ssr";
 import {
   addSymbolToList,
   createWatchlist,
   deleteWatchlist,
+  renameWatchlist,
   removeSymbolFromList,
   reorderWatchlistItems,
 } from "@/app/actions/watchlist";
@@ -65,6 +67,8 @@ export type BoardLabels = {
   moveUp: string;
   moveDown: string;
   cancel: string;
+  renameList: string;
+  save: string;
 };
 
 const LIST_COLOR_CLASS: Record<string, string> = {
@@ -122,6 +126,88 @@ export function WatchlistBoard({
 /* --------------------------------------------------------------------------
    Yeni liste — tek dokunuşla açılan satır içi form
    -------------------------------------------------------------------------- */
+
+/**
+ * Liste adını ve rengini yerinde düzenler.
+ *
+ * `NewListForm` ile aynı desen; ayrı bir ekran ya da diyalog açmıyor çünkü
+ * düzeltilen şey tek bir satır. Renk de burada: rengi değiştirmek için de
+ * tek yol listeyi silip yeniden kurmaktı.
+ */
+function RenameListForm({
+  list,
+  labels,
+  onDone,
+}: {
+  list: BoardList;
+  labels: BoardLabels;
+  onDone: () => void;
+}) {
+  const router = useRouter();
+
+  return (
+    <form
+      action={async (formData: FormData) => {
+        await renameWatchlist(formData);
+        onDone();
+        router.refresh();
+      }}
+      className="flex flex-wrap items-end gap-3 border-b border-line-soft px-4 py-3 sm:px-5"
+    >
+      <input type="hidden" name="listId" value={list.id} />
+      <label className="flex min-w-40 flex-1 flex-col gap-1.5">
+        <span className="text-xs font-semibold text-body">
+          {labels.newListName}
+        </span>
+        <input
+          name="name"
+          required
+          autoFocus
+          maxLength={40}
+          defaultValue={list.name}
+          className="h-11 rounded-(--radius-md) border border-line bg-surface-elevated px-3.5 text-sm text-strong outline-none transition-colors placeholder:text-muted focus:border-line-focus"
+        />
+      </label>
+      <fieldset className="flex items-center gap-1.5 pb-2">
+        <legend className="sr-only">{labels.colorLegend}</legend>
+        {Object.entries(LIST_COLOR_CLASS).map(([value, cls]) => (
+          <label key={value} className="cursor-pointer">
+            <input
+              type="radio"
+              name="color"
+              value={value}
+              defaultChecked={list.color === value}
+              aria-label={labels.colorNames[value] ?? value}
+              className="peer sr-only"
+            />
+            <span
+              aria-hidden
+              className={cn(
+                "block size-6 rounded-full ring-2 ring-transparent transition peer-checked:ring-line-strong peer-focus-visible:ring-line-focus",
+                cls,
+              )}
+            />
+          </label>
+        ))}
+      </fieldset>
+      <div className="flex items-center gap-2 pb-1">
+        <button
+          type="submit"
+          className="inline-flex h-11 items-center rounded-(--radius-md) bg-primary px-4 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
+        >
+          {labels.save}
+        </button>
+        <button
+          type="button"
+          onClick={onDone}
+          className="inline-flex h-11 items-center rounded-(--radius-md) px-3 text-sm font-medium text-muted transition-colors hover:text-strong"
+        >
+          {labels.cancel}
+        </button>
+      </div>
+    </form>
+  );
+}
 
 function NewListForm({ labels }: { labels: BoardLabels }) {
   const [open, setOpen] = useState(false);
@@ -230,6 +316,7 @@ function ListPanel({
   labels: BoardLabels;
 }) {
   const router = useRouter();
+  const [renaming, setRenaming] = useState(false);
 
   return (
     /* `group/list`: liste başlığındaki silme düğmesi de satırlardaki gibi
@@ -237,6 +324,13 @@ function ListPanel({
        satırlardaki kadar gürültülü değildi ama yıkıcı bir eylemin sürekli
        ekranda durması için de bir sebep yok. */
     <section className="panel group/list">
+      {renaming ? (
+        <RenameListForm
+          list={list}
+          labels={labels}
+          onDone={() => setRenaming(false)}
+        />
+      ) : (
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3 sm:px-5">
         <h2 className="flex items-center gap-2.5 text-[15.5px] font-bold tracking-[-0.01em] text-strong">
           <span
@@ -253,6 +347,21 @@ function ListPanel({
             {list.items.length}
           </span>
         </h2>
+        <div className="flex items-center gap-0.5">
+        {/* YIKICI OLMAYAN DÜZELTMENİN YOLU. `renameWatchlist` eylemi ve
+            sözlük anahtarı yazılıydı ama onu çağıran hiçbir düğme yoktu:
+            liste adını yanlış yazan ya da kapsamı değişen kullanıcının tek
+            seçeneği listeyi SİLMEKTİ — ve silme, cascade ile içindeki bütün
+            sembolleri de götürüyordu. */}
+        <button
+          type="button"
+          onClick={() => setRenaming(true)}
+          aria-label={`${labels.renameList}: ${list.name}`}
+          title={labels.renameList}
+          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-0 transition hover:bg-primary-wash hover:text-primary group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
+        >
+          <PencilSimple weight="duotone" size={14} />
+        </button>
         <button
           type="button"
           onClick={async () => {
@@ -264,11 +373,18 @@ function ListPanel({
           }}
           aria-label={`${labels.deleteList}: ${list.name}`}
           title={labels.deleteList}
-          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-100 transition hover:bg-down-wash hover:text-down opacity-0 group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
+          /* `opacity-100` ile `opacity-0` aynı sınıf dizesinde duruyordu ve
+             hangisinin kazandığı sınıf sırasına değil stil sayfasındaki
+             sıraya bağlıydı: silme düğmesi hep görünürken yanına eklenen
+             kalem düğmesi yalnızca imleçle çıkıyordu — aynı yerdeki iki
+             düğme farklı davranıyordu. Tek kural: ikisi de imleçle çıkar. */
+          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-0 transition hover:bg-down-wash hover:text-down group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <Trash weight="duotone" size={14} />
         </button>
+        </div>
       </div>
+      )}
 
       {/* Ekleme kutusu listenin başında durur; eklenen sembol sona yazılır. */}
       <AddSymbolRow listId={list.id} labels={labels} />
@@ -616,7 +732,11 @@ function AddSymbolRow({
             if (event.key === "Escape") reset();
             if (event.key === "Enter") {
               event.preventDefault();
-              const pick = shownHits[0]?.symbol ?? query.trim().toUpperCase();
+              /* YALNIZCA LİSTEDEN SEÇİLEN EKLENİR. Eskiden sonuç yoksa
+                 yazılan metin sembol sanılıp doğrudan ekleniyordu: listede
+                 var olmayan bir satır kalıcı olarak "—" fiyatla duruyordu ve
+                 kullanıcı onu silmekten başka bir şey yapamıyordu. */
+              const pick = shownHits[0]?.symbol;
               if (pick) void add(pick);
             }
           }}

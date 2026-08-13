@@ -1,0 +1,169 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { MagnifyingGlass, Plus, X } from "@phosphor-icons/react";
+import type { SearchHit } from "@/app/api/search/route";
+
+/**
+ * Karşılaştırma ekranına sembol EKLEME yolu.
+ *
+ * Hazır setler yalnızca liste boşken çiziliyordu; bir sembol seçildikten
+ * sonra ekranda yalnızca ÇIKARMA vardı ve ekleme için tek yönlendirme bir
+ * cümleydi: "bir hisse sayfasından Karşılaştır'a bas". Yani kullanıcı
+ * sayfayı terk edip başka bir ekrana gidip geri gelmek zorundaydı. Dörtten
+ * üçe düşen dördüncüyü geri koyamıyor, ikiden bire düşen tek sembolle
+ * karşılaştırma ekranında sıkışıp kalıyordu.
+ *
+ * SEÇİM URL'DE YAŞIYOR, istemci durumunda değil: sonuç tıklanınca yeni
+ * adrese gidiliyor ve sunucu geri kalanını yapıyor. Buradaki tek istemci
+ * durumu arama kutusunun kendisi.
+ */
+export function CompareAdd({
+  symbols,
+  rangeParam,
+  labels,
+}: {
+  symbols: string[];
+  /* Adres SUNUCUDAN GELEN FONKSİYONLA değil, veriyle kuruluyor: sunucu
+     bileşeninden istemci bileşenine fonksiyon geçilemiyor. Seçili aralık
+     varsayılan değilse korunuyor, değilse parametre hiç yazılmıyor. */
+  rangeParam: string | null;
+  labels: {
+    add: string;
+    placeholder: string;
+    cancel: string;
+    noResults: string;
+  };
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [hits, setHits] = useState<SearchHit[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const reset = useCallback(() => {
+    setOpen(false);
+    setQuery("");
+    setHits([]);
+  }, []);
+
+  // Debounce'lu arama — setState yalnızca zamanlayıcı/ağ callback'inde.
+  useEffect(() => {
+    if (!open) return;
+    const term = query.trim();
+    if (!term) return;
+    const controller = new AbortController();
+    const id = window.setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { hits?: SearchHit[] };
+        setHits(data.hits ?? []);
+      } catch {
+        // iptal edilen istekler sessizce geçilir
+      }
+    }, 200);
+    return () => {
+      controller.abort();
+      window.clearTimeout(id);
+    };
+  }, [query, open]);
+
+  const pick = useCallback(
+    (symbol: string) => {
+      reset();
+      const params = new URLSearchParams({
+        semboller: [...symbols, symbol].join(","),
+      });
+      if (rangeParam) params.set("aralik", rangeParam);
+      router.push(`/karsilastir?${params}`);
+    },
+    [rangeParam, reset, router, symbols],
+  );
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true);
+          window.setTimeout(() => inputRef.current?.focus(), 20);
+        }}
+        className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-dashed border-line-strong px-3.5 text-[12.5px] font-semibold text-soft transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary"
+      >
+        <Plus weight="bold" size={13} />
+        {labels.add}
+      </button>
+    );
+  }
+
+  /* Zaten seçili olan sembol sonuçlarda GÖRÜNMEZ: tıklanınca aynı listeyi
+     üreteceği için hiçbir şey olmuyormuş gibi görünürdü. */
+  const shown = hits
+    .filter((hit) => !symbols.includes(hit.symbol))
+    .slice(0, 6);
+
+  return (
+    <div className="relative">
+      <div className="flex min-h-9 items-center gap-2 rounded-full border border-line bg-surface px-3">
+        <MagnifyingGlass weight="duotone" size={14} className="shrink-0 text-muted" />
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") reset();
+            if (event.key === "Enter") {
+              event.preventDefault();
+              /* Yalnızca listeden seçilen eklenir — yazılan metin sembol
+                 sayılmaz; olmayan bir sembol tabloya "—" olarak girerdi. */
+              if (shown[0]) pick(shown[0].symbol);
+            }
+          }}
+          placeholder={labels.placeholder}
+          className="h-8 w-40 bg-transparent text-sm text-strong outline-none placeholder:text-muted sm:w-48"
+          autoComplete="off"
+          spellCheck={false}
+        />
+        <button
+          type="button"
+          onClick={reset}
+          aria-label={labels.cancel}
+          className="-mr-1 flex size-7 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-strong"
+        >
+          <X size={13} />
+        </button>
+      </div>
+
+      {query.trim() && (
+        <ul className="absolute left-0 top-[calc(100%+6px)] z-20 w-64 overflow-hidden rounded-(--radius-md) border border-line bg-surface-elevated">
+          {shown.length === 0 ? (
+            <li className="px-3 py-2.5 text-[12.5px] text-muted">
+              {labels.noResults}
+            </li>
+          ) : (
+            shown.map((hit) => (
+              <li key={hit.symbol}>
+                <button
+                  type="button"
+                  onClick={() => pick(hit.symbol)}
+                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-primary-wash"
+                >
+                  <span className="numeral flex h-5 w-12 shrink-0 items-center justify-center rounded bg-primary-tint text-[11px] font-semibold text-primary">
+                    {hit.symbol}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-[12.5px] text-body">
+                    {hit.name}
+                  </span>
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
