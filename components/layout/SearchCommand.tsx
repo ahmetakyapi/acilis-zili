@@ -367,7 +367,7 @@ export function SearchCommand({
         type="button"
         onClick={openPalette}
         aria-label={label}
-        className="inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface text-[13px] text-muted transition-colors hover:border-line-strong hover:text-soft lg:size-9 2xl:size-auto 2xl:w-[248px] 2xl:justify-start 2xl:rounded-[9px] 2xl:px-3 2xl:py-2"
+        className="inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface text-[13px] text-muted transition-colors hover:border-line-strong hover:text-soft lg:size-9 2xl:size-auto 2xl:w-[248px] 2xl:justify-start 2xl:rounded-md 2xl:px-3 2xl:py-2"
       >
         <MagnifyingGlass weight="duotone" size={15} className="shrink-0" />
         <span className="hidden 2xl:inline">{placeholderShort}</span>
@@ -393,7 +393,7 @@ export function SearchCommand({
               yüzen kutu yerine ferah, zoom'suz bir arama yüzeyi. */}
           <div
             ref={panelRef}
-            className="w-full overflow-hidden border-b border-line-strong bg-overlay-surface shadow-(--shadow-overlay) sm:max-w-[640px] sm:rounded-2xl sm:border"
+            className="w-full overflow-hidden border-b border-line-strong bg-overlay-surface shadow-(--shadow-overlay) sm:max-w-[640px] sm:rounded-xl sm:border"
             onClick={(event) => event.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -432,7 +432,7 @@ export function SearchCommand({
               <button
                 type="button"
                 onClick={close}
-                className="flex shrink-0 items-center justify-center rounded-[5px] bg-surface-elevated px-[7px] py-[3px] text-[11px] text-muted transition-colors hover:text-strong max-sm:size-8 max-sm:px-0"
+                className="flex shrink-0 items-center justify-center rounded-xs bg-surface-elevated px-[7px] py-[3px] text-[11px] text-muted transition-colors hover:text-strong max-sm:size-8 max-sm:px-0"
                 aria-label="Kapat"
               >
                 <span className="max-sm:hidden">ESC</span>

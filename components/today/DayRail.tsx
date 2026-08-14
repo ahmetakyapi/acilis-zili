@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { LogoTile } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 import { SESSION_BOUNDS } from "@/lib/market-hours";
 
@@ -510,7 +510,7 @@ export function DayRail({
               <Link
                 href={isEarnings ? "/bilancolar" : "/takvim"}
                 className={cn(
-                  "panel-hover absolute z-10 flex flex-col rounded-[12px] border border-line bg-surface-solid px-3 py-2.5 text-center transition-colors",
+                  "panel-hover absolute z-10 flex flex-col rounded-lg border border-line bg-surface-solid px-3 py-2.5 text-center transition-colors",
                   /* Kart yüksekliği sabit (aynı banttaki kartlar aynı yerde
                      bitmeli). Alt künyesi olmayan kartta içerik tepede
                      kalıp altında büyük bir boşluk bırakıyordu; künye yoksa
@@ -546,13 +546,16 @@ export function DayRail({
                     {logos.length > 0 && (
                       <span className="flex shrink-0 -space-x-1">
                         {logos.slice(0, 3).map((logo) => (
-                          <Image
+                          <LogoTile
                             key={logo.symbol}
-                            src={logo.logoUrl as string}
-                            alt=""
-                            width={18}
-                            height={18}
-                            className="size-[18px] rounded-full border border-line bg-white object-contain"
+                            symbol={logo.symbol}
+                            logoUrl={logo.logoUrl}
+                            size="xs"
+                            /* KENARLIK BURADA KURALIN İSTİSNASI: logolar
+                               üst üste biniyor (`-space-x-1`) ve çizgi,
+                               görselin çerçevesi değil iki dairenin AYRACI.
+                               Yuvarlaklık da aynı yığın deseninden. */
+                            className="size-[18px] rounded-full border border-line"
                           />
                         ))}
                       </span>
@@ -709,13 +712,13 @@ export function DayRail({
                     {logos.length > 0 && (
                       <span className="flex shrink-0 -space-x-1">
                         {logos.slice(0, 3).map((logo) => (
-                          <Image
+                          <LogoTile
                             key={logo.symbol}
-                            src={logo.logoUrl as string}
-                            alt=""
-                            width={16}
-                            height={16}
-                            className="size-4 rounded-full border border-line bg-white object-contain"
+                            symbol={logo.symbol}
+                            logoUrl={logo.logoUrl}
+                            size="xs"
+                            /* Ayraç kenarlığı — bkz. yukarıdaki yığın. */
+                            className="size-4 rounded-full border border-line"
                           />
                         ))}
                       </span>

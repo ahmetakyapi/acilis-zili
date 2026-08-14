@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import type { AuthFormState } from "@/app/actions/auth";
+import { Button } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
 type Field = {
@@ -77,7 +78,7 @@ export function AuthForm({
             <p key={feature} className="flex items-center gap-3">
               <span
                 aria-hidden
-                className="flex size-[22px] shrink-0 items-center justify-center rounded-[7px] bg-up-wash text-xs font-bold text-up"
+                className="flex size-[22px] shrink-0 items-center justify-center rounded-xs bg-up-wash text-xs font-bold text-up"
               >
                 ✓
               </span>
@@ -91,7 +92,7 @@ export function AuthForm({
       </div>
 
       {/* ---- Sağ: form ---- */}
-      <div className="order-1 rounded-2xl border border-line bg-surface p-6 sm:p-8 lg:order-2 lg:self-center">
+      <div className="order-1 rounded-xl border border-line bg-surface p-6 sm:p-8 lg:order-2 lg:self-center">
         <h2 className="text-[24px] font-bold tracking-[-0.03em] text-strong sm:text-[28px]">
           {title}
         </h2>
@@ -122,7 +123,7 @@ export function AuthForm({
                      "şifre en az 8 karakter olmalı" satırını hiç görmüyordu. */
                   aria-describedby={hasError ? `${field.name}-hata` : undefined}
                   className={cn(
-                    "h-11 rounded-[10px] border bg-overlay-surface px-3.5 text-sm text-strong outline-none transition-shadow placeholder:text-muted focus:border-primary/50 focus:shadow-[0_0_0_3px_var(--primary-tint)]",
+                    "h-11 rounded-md border bg-overlay-surface px-3.5 text-sm text-strong outline-none transition-shadow placeholder:text-muted focus:border-primary/50 focus:shadow-[0_0_0_3px_var(--primary-tint)]",
                     hasError ? "border-down" : "border-line-strong",
                   )}
                 />
@@ -143,19 +144,15 @@ export function AuthForm({
                doğru yazılmıştı. */
             <p
               role="alert"
-              className="rounded-[10px] bg-down-wash px-3.5 py-2.5 text-sm text-down"
+              className="rounded-md bg-down-wash px-3.5 py-2.5 text-sm text-down"
             >
               {state.error}
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="mt-2 inline-flex h-11 items-center justify-center rounded-[10px] bg-primary text-[14.5px] font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-45"
-          >
+          <Button type="submit" disabled={pending} size="lg" className="mt-2">
             {submitLabel}
-          </button>
+          </Button>
         </form>
 
         <p className="mt-5 border-t border-line pt-4 text-[13px] text-muted">

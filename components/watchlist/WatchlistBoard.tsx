@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -22,7 +21,7 @@ import {
   removeSymbolFromList,
   reorderWatchlistItems,
 } from "@/app/actions/watchlist";
-import { ChangePill } from "@/components/ui/primitives";
+import { ChangePill, LogoTile, Button } from "@/components/ui/primitives";
 import type { SearchHit } from "@/app/api/search/route";
 import type { Locale } from "@/lib/i18n/config";
 import { cn, formatPrice } from "@/lib/utils";
@@ -191,12 +190,9 @@ function RenameListForm({
         ))}
       </fieldset>
       <div className="flex items-center gap-2 pb-1">
-        <button
-          type="submit"
-          className="inline-flex h-11 items-center rounded-(--radius-md) bg-primary px-4 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
-        >
+        <Button type="submit" size="lg">
           {labels.save}
-        </button>
+        </Button>
         <button
           type="button"
           onClick={onDone}
@@ -276,12 +272,9 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
           ))}
         </fieldset>
         <div className="flex items-center gap-2 pb-0.5">
-          <button
-            type="submit"
-            className="inline-flex h-11 items-center justify-center rounded-(--radius-md) bg-primary px-5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
-          >
+          <Button type="submit" size="lg" className="px-5">
             {labels.createList}
-          </button>
+          </Button>
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -517,22 +510,11 @@ function SortableRows({
               prefetch={false}
               className="flex min-w-0 flex-1 items-center gap-2.5"
             >
-              {logos[item.symbol] ? (
-                <Image
-                  src={logos[item.symbol]}
-                  alt=""
-                  width={26}
-                  height={26}
-                  className="size-[26px] shrink-0 rounded-[7px] border border-line-soft bg-white object-contain"
-                />
-              ) : (
-                <span
-                  aria-hidden
-                  className="numeral flex size-[26px] shrink-0 items-center justify-center rounded-[7px] bg-primary-wash text-[9px] font-bold text-primary"
-                >
-                  {item.symbol.slice(0, 2)}
-                </span>
-              )}
+              <LogoTile
+                symbol={item.symbol}
+                logoUrl={logos[item.symbol]}
+                size="sm"
+              />
               {/* Sembol telefonda SABİT GENİŞLİKTE DEĞİL. `w-14` (56px) her
                   ekranda duruyordu ve dar telefonda satırın sabit sütunları
                   (fiyat 92 + değişim 86 + oklar 24 + sil 28 + boşluklar)

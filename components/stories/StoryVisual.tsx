@@ -130,7 +130,7 @@ export function StoryBrands({
             />
           ))}
           {rest > 0 && (
-            <span className="numeral flex size-[34px] shrink-0 items-center justify-center rounded-[10px] bg-surface-elevated text-[11px] font-bold text-muted">
+            <span className="numeral flex size-[34px] shrink-0 items-center justify-center rounded-md bg-surface-elevated text-[11px] font-bold text-muted">
               +{rest}
             </span>
           )}

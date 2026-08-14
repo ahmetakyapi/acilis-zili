@@ -27,6 +27,7 @@ import {
   startRouteProgress,
   stopRouteProgress,
 } from "@/components/layout/RouteProgress";
+import { ButtonLink } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
 /* --------------------------------------------------------------------------
@@ -236,7 +237,7 @@ export function AccountMenu({
             /* Zemin `--overlay-surface`, `--surface-solid` DEĞİL: ikincisi koyu
                temada saydam (beyazın %4,5'i) çünkü sayfa üstündeki kartlar için
                tasarlandı — panelin arkasından sayfa başlığı okunuyordu. */
-            className="account-menu absolute right-0 top-[calc(100%+9px)] z-20 w-[268px] overflow-hidden rounded-[18px] border border-line bg-overlay-surface shadow-(--shadow-overlay)"
+            className="account-menu absolute right-0 top-[calc(100%+9px)] z-20 w-[268px] overflow-hidden rounded-xl border border-line bg-overlay-surface shadow-(--shadow-overlay)"
           >
             {/* ===== 1 · Kimlik ===== */}
             <div className="relative flex items-center gap-3 px-4 py-4">
@@ -293,16 +294,13 @@ export function AccountMenu({
                       konduğunda hangisine basılacağı kararı okuyucuya
                       kalıyordu; kayıt olmak isteyen ikinci satırı zaten
                       okuyor. */}
-                  <Link
-                    href="/giris"
-                    className="flex min-h-11 items-center justify-center gap-2 rounded-[11px] bg-primary text-[13.5px] font-semibold text-on-primary transition-colors hover:bg-primary-hover"
-                  >
+                  <ButtonLink href="/giris" variant="primary" className="w-full">
                     <SignIn weight="bold" size={15} aria-hidden />
                     {labels.signIn}
-                  </Link>
+                  </ButtonLink>
                   <Link
                     href="/kayit"
-                    className="flex min-h-10 items-center justify-center rounded-[11px] border border-line text-[12.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+                    className="flex min-h-10 items-center justify-center rounded-md border border-line text-[12.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
                   >
                     {labels.signUp}
                   </Link>
@@ -339,7 +337,7 @@ export function AccountMenu({
                 <span className="plate text-[9.5px] tracking-[0.1em]">
                   {labels.language}
                 </span>
-                <span className="flex overflow-hidden rounded-[9px] border border-line bg-surface-solid">
+                <span className="flex overflow-hidden rounded-md border border-line bg-surface-solid">
                   {LOCALES.map((locale) => (
                     <button
                       key={locale}
@@ -379,11 +377,11 @@ function MenuRow({
   return (
     <Link
       href={href}
-      className="group flex min-h-11 items-center gap-3 rounded-[11px] px-2 transition-colors hover:bg-surface"
+      className="group flex min-h-11 items-center gap-3 rounded-md px-2 transition-colors hover:bg-surface"
     >
       <span
         aria-hidden
-        className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-primary-wash text-primary"
+        className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary"
       >
         <Icon weight="duotone" size={16} />
       </span>
@@ -425,7 +423,7 @@ function ThemeChoice({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "flex flex-col items-center gap-1.5 rounded-[11px] border p-1.5 transition-colors",
+        "flex flex-col items-center gap-1.5 rounded-md border p-1.5 transition-colors",
         active
           ? "border-primary bg-primary-wash"
           : "border-line bg-surface-solid hover:border-line-strong",
@@ -433,7 +431,7 @@ function ThemeChoice({
     >
       <span
         aria-hidden
-        className="flex h-[40px] w-full items-center rounded-[7px] px-[7px]"
+        className="flex h-[40px] w-full items-center rounded-xs px-[7px]"
         style={{ background: spec.page }}
       >
         <span

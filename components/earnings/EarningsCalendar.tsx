@@ -1,9 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
-  SymbolBadge,
   TimingChip,
   type TimingTone,
+  LogoTile,
 } from "@/components/ui/primitives";
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
@@ -260,26 +259,16 @@ function DaySection({
                bağlantı geçersiz HTML. Görünüm birebir aynı kalıyor. */
             <div
               key={row.id}
-              className="panel-hover relative flex flex-col gap-3 rounded-[14px] border border-line bg-surface-solid px-4 py-4 transition-colors sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+              className="panel-hover relative flex flex-col gap-3 rounded-lg border border-line bg-surface-solid px-4 py-4 transition-colors sm:flex-row sm:items-center sm:gap-4 sm:px-5"
             >
               <Link
                 href={`/hisse/${row.symbol}`}
                 prefetch={false}
                 aria-label={`${row.symbol} ${m?.name ?? ""}`}
-                className="absolute inset-0 rounded-[14px]"
+                className="absolute inset-0 rounded-lg"
               />
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                {m?.logoUrl ? (
-                  <Image
-                    src={m.logoUrl}
-                    alt=""
-                    width={44}
-                    height={44}
-                    className="size-11 shrink-0 rounded-[11px] bg-white object-contain"
-                  />
-                ) : (
-                  <SymbolBadge symbol={row.symbol} />
-                )}
+                <LogoTile symbol={row.symbol} logoUrl={m?.logoUrl} size="lg" />
                 <div className="min-w-0">
                   {/* Yıldız sembolün SOLUNDA ve sembol bloğu sabit
                       genişlikte: zamanlama çipleri kartlar arasında aynı
@@ -384,26 +373,16 @@ function DaySection({
             return (
               <div
                 key={row.id}
-                className="panel-hover relative flex h-full min-w-0 flex-col gap-[11px] rounded-[13px] border border-line bg-surface-solid p-3.5 transition-colors"
+                className="panel-hover relative flex h-full min-w-0 flex-col gap-[11px] rounded-lg border border-line bg-surface-solid p-3.5 transition-colors"
               >
                 <Link
                   href={`/hisse/${row.symbol}`}
                   prefetch={false}
                   aria-label={`${row.symbol} ${m?.name ?? ""}`}
-                  className="absolute inset-0 rounded-[13px]"
+                  className="absolute inset-0 rounded-lg"
                 />
                 <div className="flex items-start gap-2">
-                  {m?.logoUrl ? (
-                    <Image
-                      src={m.logoUrl}
-                      alt=""
-                      width={32}
-                      height={32}
-                      className="size-8 shrink-0 rounded-[9px] bg-white object-contain"
-                    />
-                  ) : (
-                    <SymbolBadge symbol={row.symbol} size="sm" />
-                  )}
+                  <LogoTile symbol={row.symbol} logoUrl={m?.logoUrl} />
                   <TimingChip tone={timing.tone} size="sm" className="ml-auto">
                     {timing.short}
                   </TimingChip>

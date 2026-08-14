@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { GuideHint } from "@/components/article/GuideHint";
 import { auth } from "@/auth";
@@ -9,7 +8,7 @@ import {
   Panel,
   Segment,
   SegmentItem,
-  SymbolBadge,
+  LogoTile,
 } from "@/components/ui/primitives";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { AnalysisTable } from "@/components/earnings/AnalysisTable";
@@ -187,9 +186,10 @@ export default async function AnalysesPage(
                         prefetch={false}
                         className="flex items-center gap-2.5 border-b border-line-soft py-[7px] last:border-b-0 hover:opacity-75"
                       >
-                        <PanelLogo
-                          logoUrl={meta[row.symbol]?.logoUrl ?? null}
+                        <LogoTile
                           symbol={row.symbol}
+                          logoUrl={meta[row.symbol]?.logoUrl}
+                          size="xs"
                         />
                         <span className="w-[46px] shrink-0 text-[12.5px] font-bold text-strong">
                           {row.symbol}
@@ -240,9 +240,10 @@ export default async function AnalysesPage(
                         aria-label={row.symbol}
                         className="absolute inset-0"
                       />
-                      <PanelLogo
-                        logoUrl={row.logoUrl}
+                      <LogoTile
                         symbol={row.symbol}
+                        logoUrl={row.logoUrl}
+                        size="xs"
                       />
                       <span className="w-[46px] shrink-0 text-[12.5px] font-bold text-strong">
                         {row.symbol}
@@ -377,41 +378,6 @@ export default async function AnalysesPage(
 }
 
 /**
- * Panel satırındaki küçük logo — tabloyla aynı dil.
- *
- * Yan paneller yalnızca sembol + tarih listesiydi ve altındaki logolu
- * tablonun yanında sönük kalıyordu. Logo yoksa sembolün ilk iki harfi
- * aynı kutuya oturuyor; satırın hizası kaymıyor.
- */
-function PanelLogo({
-  logoUrl,
-  symbol,
-}: {
-  logoUrl: string | null;
-  symbol: string;
-}) {
-  if (logoUrl) {
-    return (
-      <Image
-        src={logoUrl}
-        alt=""
-        width={22}
-        height={22}
-        className="size-[22px] shrink-0 rounded-[6px] bg-white object-contain"
-      />
-    );
-  }
-  return (
-    <span
-      aria-hidden
-      className="flex size-[22px] shrink-0 items-center justify-center rounded-[6px] bg-primary-wash text-[9px] font-bold text-primary"
-    >
-      {symbol.slice(0, 2)}
-    </span>
-  );
-}
-
-/**
  * Günün Analizi — üst sıranın geniş kartı.
  *
  * Üç mini ölçü tek satırda: gelir büyümesi, beklentiye göre HBK ve hisse
@@ -458,7 +424,7 @@ function FeaturedAnalysis({
     <Link
       href={analysisHref(row.symbol, row.period)}
       prefetch={false}
-      className="flex min-w-0 flex-col gap-4 rounded-[16px] border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-5 transition-colors hover:border-primary sm:flex-row sm:gap-5"
+      className="flex min-w-0 flex-col gap-4 rounded-xl border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-5 transition-colors hover:border-primary sm:flex-row sm:gap-5"
     >
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
@@ -470,17 +436,7 @@ function FeaturedAnalysis({
           </span>
         </div>
         <div className="flex items-center gap-2.5">
-          {logoUrl ? (
-            <Image
-              src={logoUrl}
-              alt=""
-              width={40}
-              height={40}
-              className="size-10 shrink-0 rounded-[10px] bg-white object-contain"
-            />
-          ) : (
-            <SymbolBadge symbol={row.symbol} size="sm" />
-          )}
+          <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="lg" />
           <div className="min-w-0">
             <p className="truncate text-[17px] font-bold tracking-[-0.03em] text-strong">
               {row.company} · {row.periodLabel}

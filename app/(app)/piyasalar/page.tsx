@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { FearGauge } from "@/components/markets/FearGauge";
 import { GuideHint } from "@/components/article/GuideHint";
-import Image from "next/image";
 import Link from "next/link";
 import {
   DataStamp,
@@ -10,6 +9,7 @@ import {
   Panel,
   PanelHeader,
   Skeleton,
+  LogoTile,
 } from "@/components/ui/primitives";
 import { Sparkline } from "@/components/ui/Sparkline";
 import {
@@ -168,7 +168,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
           ekranda tutup sessizce bekletiyor. */}
       <Suspense
         key={`cards:${tab}:${sort}:${dir}`}
-        fallback={<Skeleton className="h-[132px] w-full rounded-2xl" />}
+        fallback={<Skeleton className="h-[132px] w-full rounded-xl" />}
       >
         <IndexCards activeTab={tab} sort={sort} dir={dir} locale={locale} />
       </Suspense>
@@ -197,7 +197,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
 
       <Suspense
         key={`detail:${tab}:${sort}:${dir}:${limit}`}
-        fallback={<Skeleton className="h-[420px] w-full rounded-2xl" />}
+        fallback={<Skeleton className="h-[420px] w-full rounded-xl" />}
       >
         <IndexDetail
           tab={tab}
@@ -352,7 +352,7 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
               ? value.latest - value.prev
               : null;
           return (
-            <div key={value.key} className="rounded-[12px] border border-line bg-surface px-3.5 py-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-5 sm:py-4">
+            <div key={value.key} className="rounded-lg border border-line bg-surface px-3.5 py-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-5 sm:py-4">
               <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted">
                 {value.label}
               </p>
@@ -980,22 +980,11 @@ function MembersTable({
                          de tabloyu olduğu yerde tutar. */
                       className="-my-2 flex min-w-0 items-center gap-2.5 py-2"
                     >
-                      {row.logoUrl ? (
-                        <Image
-                          src={row.logoUrl}
-                          alt=""
-                          width={26}
-                          height={26}
-                          className="size-[26px] shrink-0 rounded-[7px] border border-line-soft bg-white object-contain"
-                        />
-                      ) : (
-                        <span
-                          aria-hidden
-                          className="flex size-[26px] shrink-0 items-center justify-center rounded-[7px] bg-primary-wash text-[9px] font-bold text-primary"
-                        >
-                          {row.member.symbol.slice(0, 2)}
-                        </span>
-                      )}
+                      <LogoTile
+                        symbol={row.member.symbol}
+                        logoUrl={row.logoUrl}
+                        size="sm"
+                      />
                       <span className="min-w-0">
                         <span className="block text-[13.5px] font-bold leading-[17px] text-strong">
                           {row.member.symbol}
@@ -1108,7 +1097,7 @@ function MembersTable({
           <Link
             href={moreHref}
             scroll={false}
-            className="inline-flex min-h-10 items-center rounded-[10px] border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+            className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
           >
             {t.companies.showMore}
           </Link>

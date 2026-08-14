@@ -46,7 +46,7 @@ export function MetricCards({
       {metrics.map((metric) => (
         <li
           key={metric.label}
-          className="flex min-w-0 flex-col gap-1 rounded-[14px] border border-line bg-surface-solid px-4 py-4"
+          className="flex min-w-0 flex-col gap-1 rounded-lg border border-line bg-surface-solid px-4 py-4"
         >
           <p className="truncate text-[11px] font-semibold text-muted">
             {metric.label}

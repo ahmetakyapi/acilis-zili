@@ -9,6 +9,7 @@ import { BellMark, BrandLockup } from "@/components/brand/BellMark";
 import { RouteProgress } from "./RouteProgress";
 import { NAV_ITEMS } from "./nav-items";
 import { stripLocale } from "@/lib/i18n/routing";
+import { ButtonLink } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
 export type ShellLabels = {
@@ -165,7 +166,7 @@ export function AppShell({
           oturur. */}
       <a
         href="#icerik"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-[calc(env(safe-area-inset-top)+12px)] focus:z-50 focus:rounded-[9px] focus:bg-primary focus:px-4 focus:py-2.5 focus:text-[13.5px] focus:font-semibold focus:text-on-primary"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-[calc(env(safe-area-inset-top)+12px)] focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2.5 focus:text-[13.5px] focus:font-semibold focus:text-on-primary"
       >
         {labels.skipToContent}
       </a>
@@ -229,7 +230,7 @@ export function AppShell({
             <Link
               href={L("/ayarlar")}
               title={username ?? labels.settings}
-              className="flex items-center gap-2 rounded-[9px] border border-line bg-surface px-2.5 py-[7px] text-[13px] text-body transition-colors hover:border-line-strong hover:text-strong"
+              className="flex items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-[7px] text-[13px] text-body transition-colors hover:border-line-strong hover:text-strong"
             >
               <span
                 aria-hidden
@@ -243,12 +244,9 @@ export function AppShell({
               <Gear weight="duotone" size={15} className="shrink-0" />
             </Link>
           ) : (
-            <Link
-              href={L("/giris")}
-              className="rounded-[9px] bg-primary px-4 py-2 text-[13.5px] font-semibold text-on-primary transition-colors hover:bg-primary-hover"
-            >
+            <ButtonLink href={L("/giris")} variant="primary">
               {labels.signIn}
-            </Link>
+            </ButtonLink>
           )}
         </div>
       </header>

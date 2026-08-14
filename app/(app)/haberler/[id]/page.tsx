@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { NewsImage } from "@/components/news/NewsImage";
 import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react/dist/ssr";
-import { ChangePill, Panel, PanelHeader } from "@/components/ui/primitives";
+import { ChangePill, Panel, PanelHeader, buttonClass } from "@/components/ui/primitives";
 import {
   getLatestNews,
   getNewsById,
@@ -115,7 +115,7 @@ export default async function NewsDetailPage(
       {showImage && item.imageUrl && (
         <NewsImage
           src={item.imageUrl}
-          className="rounded-2xl"
+          className="rounded-xl"
           sizeClass="aspect-[16/9] w-full"
         />
       )}
@@ -152,7 +152,7 @@ export default async function NewsDetailPage(
           href={sourceHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-(--radius-md) bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
+          className={buttonClass({ className: "shrink-0" })}
         >
           {t.news.readAtSource}
           <ArrowSquareOut weight="duotone" size={14} />

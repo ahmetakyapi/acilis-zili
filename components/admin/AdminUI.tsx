@@ -168,7 +168,7 @@ export function RankList({
           <>
             <span
               aria-hidden
-              className="absolute inset-y-0 left-0 rounded-[5px] bg-primary-wash"
+              className="absolute inset-y-0 left-0 rounded-xs bg-primary-wash"
               style={{ width: `${share}%` }}
             />
             <span className="relative min-w-0 flex-1 truncate pr-3">
@@ -190,12 +190,12 @@ export function RankList({
             {row.href ? (
               <Link
                 href={row.href}
-                className="relative flex items-center rounded-[5px] px-2.5 py-[7px] text-[13px] text-body transition-colors hover:bg-surface-elevated"
+                className="relative flex items-center rounded-xs px-2.5 py-[7px] text-[13px] text-body transition-colors hover:bg-surface-elevated"
               >
                 {body}
               </Link>
             ) : (
-              <div className="relative flex items-center rounded-[5px] px-2.5 py-[7px] text-[13px] text-body">
+              <div className="relative flex items-center rounded-xs px-2.5 py-[7px] text-[13px] text-body">
                 {body}
               </div>
             )}

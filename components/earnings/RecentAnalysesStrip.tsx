@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   analysisHref,
@@ -8,6 +7,7 @@ import {
 } from "@/lib/analysis";
 import { getAnalyses, getSymbolNames } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import { LogoTile } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
 /**
@@ -40,7 +40,7 @@ export async function RecentAnalysesStrip({
   return (
     <section
       aria-label={t.analysis.recentStrip}
-      className="flex flex-col gap-2.5 rounded-[14px] border border-line bg-surface-solid px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+      className="flex flex-col gap-2.5 rounded-lg border border-line bg-surface-solid px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
     >
       <div className="flex shrink-0 items-center justify-between gap-3">
         <p className="plate whitespace-nowrap tracking-[0.09em]">
@@ -70,22 +70,13 @@ export async function RecentAnalysesStrip({
                 title={row.headline}
                 className="flex items-center gap-2 rounded-full border border-line bg-surface-solid py-1 pl-1 pr-2.5 transition-colors hover:border-line-strong"
               >
-                {logoUrl ? (
-                  <Image
-                    src={logoUrl}
-                    alt=""
-                    width={22}
-                    height={22}
-                    className="size-[22px] shrink-0 rounded-full bg-white object-contain"
-                  />
-                ) : (
-                  <span
-                    aria-hidden
-                    className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary-wash text-[9px] font-bold text-primary"
-                  >
-                    {row.symbol.slice(0, 2)}
-                  </span>
-                )}
+                {/* Yuvarlak: karo hap biçimli bir çipin içinde. */}
+                <LogoTile
+                  symbol={row.symbol}
+                  logoUrl={logoUrl}
+                  size="xs"
+                  className="rounded-full"
+                />
                 <span className="text-[12.5px] font-bold text-strong">
                   {row.symbol}
                 </span>

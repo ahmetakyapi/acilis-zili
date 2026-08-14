@@ -89,7 +89,7 @@ export function BriefSwitch({
        karar bir kez veri yüzeyleri için verildi (bkz. `--surface-solid`,
        karne dokusu); uzun metin için daha da geçerli. Accent kenarlık
        kalıyor — bültenin günün başyazısı olduğu oradan belli. */
-    <section className="rounded-2xl border border-primary-faint bg-surface-solid p-5">
+    <section className="rounded-xl border border-primary-faint bg-surface-solid p-5">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <Kicker tone="primary">{labels.titles[period]}</Kicker>
         {brief && (
@@ -105,7 +105,7 @@ export function BriefSwitch({
       <div
         role="tablist"
         aria-label={labels.periodLabel}
-        className="mt-3 inline-flex overflow-hidden rounded-[9px] border border-primary-faint text-[12.5px]"
+        className="mt-3 inline-flex overflow-hidden rounded-md border border-primary-faint text-[12.5px]"
       >
         {(["daily", "weekly"] as const).map((key) => (
           <button
@@ -152,7 +152,7 @@ export function BriefSwitch({
             {/* Uyarı metnin ÜSTÜNDE: aşağıdaki cümleleri hangi günün gözüyle
                 okuyacağını önce söylemek gerekiyor. */}
             {brief.staleNote && (
-              <p className="mt-2.5 rounded-[9px] border border-line bg-surface-elevated px-3 py-2 text-[12px] leading-[18px] text-body">
+              <p className="mt-2.5 rounded-md border border-line bg-surface-elevated px-3 py-2 text-[12px] leading-[18px] text-body">
                 {brief.staleNote}
               </p>
             )}

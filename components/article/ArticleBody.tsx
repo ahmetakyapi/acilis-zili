@@ -113,7 +113,7 @@ function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
       return (
         <code
           key={key}
-          className="numeral rounded-[5px] bg-surface-elevated px-1 py-0.5 text-[0.9em] text-strong"
+          className="numeral rounded-xs bg-surface-elevated px-1 py-0.5 text-[0.9em] text-strong"
         >
           {part.slice(1, -1)}
         </code>

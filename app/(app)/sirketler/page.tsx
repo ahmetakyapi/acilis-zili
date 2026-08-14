@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
-import Image from "next/image";
 import Link from "next/link";
 import {
   ChangePill,
@@ -8,6 +7,7 @@ import {
   EmptyState,
   Panel,
   Skeleton,
+  LogoTile,
 } from "@/components/ui/primitives";
 import { primaryOnly } from "@/db/seed/indices";
 import { getCompanies, getStatus, type CompanyRow } from "@/lib/data";
@@ -471,25 +471,14 @@ async function CompaniesTable({
                              tıklanabilir değildi. */
                           className="flex min-h-11 items-center gap-2 sm:min-h-0 sm:gap-2.5"
                         >
-                          {company.logoUrl ? (
-                            <Image
-                              src={company.logoUrl}
-                              alt=""
-                              width={34}
-                              height={34}
-                              /* Telefonda 30px: dördüncü sütun (piyasa değeri)
-                                 eklenince satır 372px'e çıkıp 352'lik kanalı
-                                 20 piksel aşıyordu. */
-                              className="size-[30px] rounded-[9px] border border-line-soft bg-white object-contain sm:size-[34px]"
-                            />
-                          ) : (
-                            <span
-                              aria-hidden
-                              className="numeral flex size-[30px] items-center justify-center rounded-[9px] bg-primary-wash text-[9px] font-bold text-primary sm:size-[34px]"
-                            >
-                              {company.symbol.slice(0, 2)}
-                            </span>
-                          )}
+                          <LogoTile
+                            symbol={company.symbol}
+                            logoUrl={company.logoUrl}
+                            /* Telefonda 30px: dördüncü sütun (piyasa değeri)
+                               eklenince satır 372px'e çıkıp 352'lik kanalı
+                               20 piksel aşıyordu. */
+                            className="size-[30px] sm:size-[34px]"
+                          />
                           <span className="min-w-0">
                             <span className="block text-[13.5px] font-bold leading-[18px] text-strong">
                               {company.symbol}
@@ -580,7 +569,7 @@ async function CompaniesTable({
             <Link
               href={moreHref}
               scroll={false}
-              className="inline-flex min-h-10 items-center rounded-[10px] border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+              className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
             >
               {t.companies.showMore}
             </Link>

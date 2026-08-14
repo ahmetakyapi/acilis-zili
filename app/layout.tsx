@@ -99,15 +99,30 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f9fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#070d16" },
-  ],
-};
+/**
+ * Tarayıcı çubuğunun rengi — ÜRÜNÜN temasından, işletim sisteminden değil.
+ *
+ * `themeColor` iki değeri `prefers-color-scheme` medya sorgusuna bağlıyordu.
+ * Oysa bu üründe tema next-themes değil `az-theme` çerezi + `data-theme` ile
+ * belirleniyor ve varsayılan AÇIK. İşletim sistemi koyu ayarlı ama çerezi
+ * olmayan ziyaretçi — yani mobilde ilk açılışların çoğu — açık temalı bir
+ * sayfayı koyu bir tarayıcı çubuğuyla görüyordu: sayfanın üstünde ürünle
+ * uyumsuz bir bant. Tersi de oluyordu.
+ *
+ * Renkler `app/globals.css` içindeki `--page-bg` değerleri; iki yerde
+ * yaşadıkları için değiştirilirse ikisi birlikte değişmeli.
+ */
+const PAGE_BG = { light: "#f7f9fb", dark: "#070d16" } as const;
+
+export async function generateViewport(): Promise<Viewport> {
+  const theme = await getTheme();
+  return {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+    themeColor: PAGE_BG[theme === "dark" ? "dark" : "light"],
+  };
+}
 
 /**
  * Varsayılan tema açık: cookie yoksa sunucu light basar, script gerekmez.

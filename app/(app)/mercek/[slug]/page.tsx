@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
+import { LogoTile } from "@/components/ui/primitives";
 import { getStories, getStoryBySlug, getSymbolNames } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { missingMetadata } from "@/lib/page-meta";
@@ -44,24 +44,9 @@ async function StorySymbols({ symbols }: { symbols: string[] }) {
           <Link
             key={symbol}
             href={`/hisse/${symbol}`}
-            className="panel-hover flex min-h-10 items-center gap-2 rounded-[11px] border border-line bg-surface py-1.5 pl-1.5 pr-3 transition-colors"
+            className="panel-hover flex min-h-10 items-center gap-2 rounded-md border border-line bg-surface py-1.5 pl-1.5 pr-3 transition-colors"
           >
-            {logo ? (
-              <Image
-                src={logo}
-                alt=""
-                width={26}
-                height={26}
-                className="size-[26px] shrink-0 rounded-md bg-white object-contain"
-              />
-            ) : (
-              <span
-                aria-hidden
-                className="numeral flex size-[26px] shrink-0 items-center justify-center rounded-md bg-primary-wash text-[9px] font-bold text-primary"
-              >
-                {symbol.slice(0, 2)}
-              </span>
-            )}
+            <LogoTile symbol={symbol} logoUrl={logo} size="sm" />
             <span className="min-w-0">
               <span className="numeral block text-[12px] font-bold leading-tight text-strong">
                 {symbol}

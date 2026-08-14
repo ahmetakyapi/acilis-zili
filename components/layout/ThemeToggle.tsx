@@ -54,7 +54,7 @@ export function ThemeToggle({
       onClick={toggle}
       aria-label={label}
       title={label}
-      className="inline-flex size-[34px] items-center justify-center rounded-[9px] border border-line bg-surface text-body transition-colors hover:border-line-strong hover:text-strong"
+      className="inline-flex size-[34px] items-center justify-center rounded-md border border-line bg-surface text-body transition-colors hover:border-line-strong hover:text-strong"
     >
       {theme === "dark" ? (
         <Sun weight="duotone" size={16} />

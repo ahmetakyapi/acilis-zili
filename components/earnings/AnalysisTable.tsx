@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
 import {
@@ -11,6 +10,7 @@ import {
   type AnalysisRowView,
   type CellTone,
 } from "@/lib/analysis";
+import { LogoTile } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
 /**
@@ -116,7 +116,7 @@ export function AnalysisTable({
             placeholder={labels.searchPlaceholder}
             aria-label={labels.searchPlaceholder}
             className={cn(
-              "h-10 w-full min-w-0 rounded-[10px] border border-line bg-surface pl-9 pr-9 text-[13px] text-strong",
+              "h-10 w-full min-w-0 rounded-md border border-line bg-surface pl-9 pr-9 text-[13px] text-strong",
               "placeholder:text-muted focus:border-line-focus focus:outline-none",
               // Safari'nin kendi temizleme düğmesi bizimkiyle üst üste biniyor.
               "[&::-webkit-search-cancel-button]:hidden",
@@ -243,22 +243,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(COLS.symbol, "flex items-center gap-2.5")}
                   >
-                    {row.logoUrl ? (
-                      <Image
-                        src={row.logoUrl}
-                        alt=""
-                        width={26}
-                        height={26}
-                        className="size-[26px] shrink-0 rounded-[7px] bg-white object-contain"
-                      />
-                    ) : (
-                      <span
-                        aria-hidden
-                        className="flex size-[26px] shrink-0 items-center justify-center rounded-[7px] bg-primary-wash text-[9.5px] font-bold text-primary"
-                      >
-                        {row.symbol.slice(0, 2)}
-                      </span>
-                    )}
+                    <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
                     <span
                       className={cn(
                         "text-[13.5px] font-bold",

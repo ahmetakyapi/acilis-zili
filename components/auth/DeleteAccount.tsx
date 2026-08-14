@@ -78,7 +78,7 @@ export function DeleteAccount({
         </span>
         <span className="text-[11.5px] text-muted">
           {labels.confirmHint}{" "}
-          <code className="numeral rounded-[5px] bg-surface-elevated px-1 py-0.5 font-bold text-strong">
+          <code className="numeral rounded-xs bg-surface-elevated px-1 py-0.5 font-bold text-strong">
             {username}
           </code>
         </span>

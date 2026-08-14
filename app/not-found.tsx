@@ -51,7 +51,7 @@ export default async function RootNotFound() {
 
       <nav
         aria-label={t.errors.shortcuts}
-        className="w-full overflow-hidden rounded-2xl border border-line bg-surface"
+        className="w-full overflow-hidden rounded-xl border border-line bg-surface"
       >
         <p className="plate px-4 pb-2.5 pt-3.5 text-left text-[10px] tracking-[0.09em]">
           {t.errors.shortcuts}

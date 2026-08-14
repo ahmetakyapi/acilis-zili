@@ -281,7 +281,9 @@ export function CompareChart({
                     cx={i * step}
                     cy={yOf(entry.points[i])}
                     r={3.5}
-                    fill="var(--surface)"
+                    /* Nokta dolgusu OPAK: `var(--surface)` %3-5 opaklıkta
+                       bir ton ve çizgi işaretin altından geçiyordu. */
+                    fill="var(--page-bg)"
                     stroke={SERIES_COLORS[index % SERIES_COLORS.length]}
                     strokeWidth={2}
                     vectorEffect="non-scaling-stroke"
@@ -294,7 +296,14 @@ export function CompareChart({
               taşmaz: sol yarıdaysa sağa, sağ yarıdaysa sola yaslanır. */}
           {reading && (
             <div
-              className="pointer-events-none absolute top-2 z-10 rounded-(--radius-md) border border-line bg-surface-elevated px-3 py-2 shadow-lg"
+              /* KART SAYDAM DEĞİL. `bg-surface-elevated` bir yüzey tonu,
+                 örtü değil: arkasındaki grafik çizgileri kartın içinden
+                 geçiyor ve sayılar okunmuyordu. Gölge de `shadow-lg` ile
+                 Tailwind varsayılanındaydı (siyah %10) — projenin tek gölge
+                 token'ını baypas ediyor ve koyu temada hiç görünmüyordu.
+                 Kardeş örtüler (AddToCalendar, SearchCommand, AccountMenu)
+                 zaten bu ikiliyi kullanıyor. */
+              className="pointer-events-none absolute top-2 z-10 rounded-(--radius-md) border border-line bg-overlay-surface px-3 py-2 shadow-(--shadow-overlay)"
               style={
                 fraction !== null && fraction > 0.5
                   ? { right: `${(1 - fraction) * 100}%`, marginRight: 10 }

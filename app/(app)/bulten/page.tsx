@@ -153,7 +153,7 @@ async function ArchiveBoard({
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       {/* ---- Seçili kayıt ---- */}
-      <article className="rounded-2xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 sm:p-7">
+      <article className="rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 sm:p-7">
         {brief ? (
           <>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -313,7 +313,7 @@ async function ArchiveBoard({
 function ArchiveSkeleton() {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-      <Skeleton className="h-[420px] w-full rounded-2xl" />
+      <Skeleton className="h-[420px] w-full rounded-xl" />
       <Skeleton className="h-[420px] w-full rounded-(--radius-xl)" />
     </div>
   );

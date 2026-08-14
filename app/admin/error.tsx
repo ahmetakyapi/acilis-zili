@@ -34,7 +34,7 @@ export default function AdminError({
     <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6 py-14 text-center sm:py-20">
       <span
         aria-hidden
-        className="flex size-14 items-center justify-center rounded-[18px] bg-down-wash text-down"
+        className="flex size-14 items-center justify-center rounded-xl bg-down-wash text-down"
       >
         <WarningCircle weight="duotone" size={30} />
       </span>
@@ -56,7 +56,7 @@ export default function AdminError({
         </Button>
         <Link
           href="/admin"
-          className="inline-flex h-10 items-center rounded-[9px] border border-line bg-surface px-4 text-[13.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+          className="inline-flex h-10 items-center rounded-md border border-line bg-surface px-4 text-[13.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
         >
           Panele dön
         </Link>
@@ -66,7 +66,7 @@ export default function AdminError({
         <Panel className="w-full px-4 py-3">
           <p className="text-[11.5px] text-muted">
             Sunucu kaydında bu kimlikle duruyor:{" "}
-            <code className="numeral rounded-[5px] bg-surface-elevated px-1.5 py-0.5 font-bold text-strong">
+            <code className="numeral rounded-xs bg-surface-elevated px-1.5 py-0.5 font-bold text-strong">
               {error.digest}
             </code>
           </p>

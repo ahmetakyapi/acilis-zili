@@ -23,11 +23,11 @@ export default function AppLoading() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-28 w-full rounded-2xl" />
+          <Skeleton key={i} className="h-28 w-full rounded-xl" />
         ))}
       </div>
 
-      <Skeleton className="h-[420px] w-full rounded-2xl" />
+      <Skeleton className="h-[420px] w-full rounded-xl" />
     </div>
   );
 }

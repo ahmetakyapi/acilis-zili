@@ -364,7 +364,7 @@ async function StoryBoard({
               <Link
                 href={`/mercek?adet=${limit + PAGE_STEP}`}
                 scroll={false}
-                className="inline-flex min-h-10 items-center rounded-[10px] border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+                className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
               >
                 {t.stories.showMore}
               </Link>
@@ -398,7 +398,7 @@ function LeadStory({
 
   return (
     <Link href={`/mercek/${story.slug}`} prefetch className="min-w-0">
-      <section className="panel-hover overflow-hidden rounded-2xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 transition-colors sm:p-7">
+      <section className="panel-hover overflow-hidden rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 transition-colors sm:p-7">
         {/* İki kolon: solda okunacak metin, sağda yazının kadrosu. Kadro
             manşette bir tabloya dönüşüyor çünkü burada yer var ve bu
             yazıların anlattığı olay çoğu zaman birkaç şirketi birlikte
@@ -539,7 +539,7 @@ function BoardSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <Skeleton className="h-8 w-64 rounded-full" />
-      <Skeleton className="h-[236px] w-full rounded-2xl" />
+      <Skeleton className="h-[236px] w-full rounded-xl" />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 3 }).map((_, index) => (
           <Skeleton key={index} className="h-[280px] w-full rounded-(--radius-xl)" />

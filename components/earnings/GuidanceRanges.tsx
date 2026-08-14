@@ -184,7 +184,7 @@ export function GuidanceRanges({
   return (
     <section
       className={cn(
-        "flex min-w-0 flex-col gap-4 rounded-[16px] border border-line bg-surface-solid p-4 sm:p-5",
+        "flex min-w-0 flex-col gap-4 rounded-xl border border-line bg-surface-solid p-4 sm:p-5",
         className,
       )}
     >

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -12,7 +11,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { GuideHint } from "@/components/article/GuideHint";
-import { Panel, SymbolBadge } from "@/components/ui/primitives";
+import { Panel, LogoTile } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { MetricCards } from "@/components/earnings/MetricCards";
 import { RevenueColumns } from "@/components/earnings/RevenueColumns";
@@ -134,7 +133,7 @@ function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
   return (
     <dl
       className={cn(
-        "grid gap-x-5 gap-y-4 rounded-[14px] bg-surface-sunken px-4 py-3.5 sm:px-5",
+        "grid gap-x-5 gap-y-4 rounded-lg bg-surface-sunken px-4 py-3.5 sm:px-5",
         RAIL_COLS[Math.min(list.length, 5)],
       )}
     >
@@ -193,7 +192,7 @@ function PanelHead({
     <div className="mb-4 flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-line-soft pb-3">
       <span
         aria-hidden
-        className="flex size-7 shrink-0 items-center justify-center rounded-[9px] bg-primary-wash text-primary"
+        className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary"
       >
         <Icon weight="duotone" size={15} />
       </span>
@@ -470,7 +469,7 @@ export default async function AnalysisDetailPage(
           Ölçüler alt satıra alınıp yatay bir şeride dönüşünce delik
           kapanıyor, her ölçü kendi sütununda okunuyor ve şerit kartın
           genişliğini gerçekten kullanıyor. */}
-      <header className="flex flex-col gap-4 rounded-[16px] border border-line bg-surface-solid p-4 sm:p-5">
+      <header className="flex flex-col gap-4 rounded-xl border border-line bg-surface-solid p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           {/* Sol kolon: kimlik + künye çipleri.
               Çipler bir süre KENDİ BANDINDAYDI ve solda iki çip, sağında bin
@@ -479,17 +478,11 @@ export default async function AnalysisDetailPage(
               yerde. Kart artık iki bant: solda kimlik + künye, sağda "şu an". */}
           <div className="flex min-w-0 flex-1 flex-col gap-3.5">
             <div className="flex min-w-0 items-start gap-3.5 sm:gap-4">
-              {symbolMeta?.logoUrl ? (
-                <Image
-                  src={symbolMeta.logoUrl}
-                  alt=""
-                  width={56}
-                  height={56}
-                  className="size-14 shrink-0 rounded-[13px] border border-line bg-white object-contain p-1"
-                />
-              ) : (
-                <SymbolBadge symbol={symbol} />
-              )}
+              <LogoTile
+                symbol={symbol}
+                logoUrl={symbolMeta?.logoUrl}
+                size="xl"
+              />
               <div className="flex min-w-0 flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2.5">
                   <h1 className="display-ink w-fit text-[24px] font-bold tracking-[-0.035em]">
@@ -824,7 +817,7 @@ export default async function AnalysisDetailPage(
 
                Dev tırnak dekoratif ve `aria-hidden`: metnin alıntı olduğunu
                blockquote zaten söylüyor. */
-            <section className="relative overflow-hidden rounded-[16px] border border-line bg-surface-solid p-4 sm:p-5">
+            <section className="relative overflow-hidden rounded-xl border border-line bg-surface-solid p-4 sm:p-5">
               <span
                 aria-hidden
                 className="pointer-events-none absolute -top-8 right-5 select-none font-serif text-[140px] leading-none text-primary opacity-[0.06]"
@@ -863,7 +856,7 @@ export default async function AnalysisDetailPage(
                     {row.ceoQuote.topics.map((topic) => (
                       <li
                         key={topic}
-                        className="rounded-[10px] border border-primary-faint bg-primary-wash px-3 py-2 text-[11.5px] font-semibold leading-[15px] text-primary lg:text-center"
+                        className="rounded-md border border-primary-faint bg-primary-wash px-3 py-2 text-[11.5px] font-semibold leading-[15px] text-primary lg:text-center"
                       >
                         {topic}
                       </li>
@@ -1019,7 +1012,7 @@ export default async function AnalysisDetailPage(
             <h2 className="mb-3 flex items-center gap-2.5 text-[13.5px] font-bold text-strong">
               <span
                 aria-hidden
-                className="flex size-7 shrink-0 items-center justify-center rounded-[9px] bg-primary-wash text-primary"
+                className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary"
               >
                 <CalendarBlank weight="duotone" size={15} />
               </span>
@@ -1048,22 +1041,7 @@ export default async function AnalysisDetailPage(
                   {/* Logo, satırı bir sembol listesi olmaktan çıkarıp
                       sayfanın geri kalanıyla aynı dile sokuyor (mercek
                       künyeleri ve analiz tablosu da logodan besleniyor). */}
-                  {peer.logoUrl ? (
-                    <Image
-                      src={peer.logoUrl}
-                      alt=""
-                      width={22}
-                      height={22}
-                      className="size-[22px] shrink-0 rounded-[6px] bg-white object-contain"
-                    />
-                  ) : (
-                    <span
-                      aria-hidden
-                      className="flex size-[22px] shrink-0 items-center justify-center rounded-[6px] bg-primary-wash text-[9px] font-bold text-primary"
-                    >
-                      {peer.symbol.slice(0, 2)}
-                    </span>
-                  )}
+                  <LogoTile symbol={peer.symbol} logoUrl={peer.logoUrl} size="xs" />
                   <span className="shrink-0 text-[12.5px] font-bold text-strong">
                     {peer.symbol}
                   </span>
@@ -1228,7 +1206,7 @@ function VerdictStrip({
       : null);
 
   return (
-    <section className="flex flex-wrap items-center gap-4 rounded-[16px] border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-4 sm:gap-[18px] sm:px-[22px]">
+    <section className="flex flex-wrap items-center gap-4 rounded-xl border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-4 sm:gap-[18px] sm:px-[22px]">
       <ScoreRing score={row.score} verdict={verdict} size={64} showDenominator />
       <div className="flex shrink-0 flex-col items-center gap-1">
         <span className="text-[11px] font-bold tracking-[0.04em] text-body">
@@ -1334,7 +1312,7 @@ function PointsCard({
   return (
     <section
       className={cn(
-        "flex min-w-0 flex-col rounded-[16px] border p-4",
+        "flex min-w-0 flex-col rounded-xl border p-4",
         tone === "up" && "border-up/25 bg-up-wash/40",
         tone === "down" && "border-down/25 bg-down-wash/40",
         tone === "primary" && "border-primary-faint bg-primary-tint",
@@ -1344,7 +1322,7 @@ function PointsCard({
         <span
           aria-hidden
           className={cn(
-            "flex size-7 shrink-0 items-center justify-center rounded-[9px]",
+            "flex size-7 shrink-0 items-center justify-center rounded-md",
             tone === "up" && "bg-up-wash",
             tone === "down" && "bg-down-wash",
             tone === "primary" && "bg-primary-wash",
@@ -1375,7 +1353,7 @@ function PointsCard({
             <span
               aria-hidden
               className={cn(
-                "figure mt-px flex size-[18px] shrink-0 items-center justify-center rounded-[5px] text-[9.5px] font-bold",
+                "figure mt-px flex size-[18px] shrink-0 items-center justify-center rounded-xs text-[9.5px] font-bold",
                 tone === "up" && "bg-up-wash",
                 tone === "down" && "bg-down-wash",
                 tone === "primary" && "bg-primary-wash",

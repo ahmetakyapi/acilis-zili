@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { X } from "@phosphor-icons/react/dist/ssr";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -11,7 +10,7 @@ import {
   Panel,
   SegmentItem,
   Segment,
-  SymbolBadge,
+  LogoTile,
 } from "@/components/ui/primitives";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { CompareAdd } from "@/components/markets/CompareAdd";
@@ -315,17 +314,14 @@ async function CompareBoard({
               key={symbol}
               className="inline-flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-1.5 text-[13px]"
             >
-              {meta?.logoUrl ? (
-                <Image
-                  src={meta.logoUrl}
-                  alt=""
-                  width={22}
-                  height={22}
-                  className="size-[22px] shrink-0 rounded-full bg-white object-contain"
-                />
-              ) : (
-                <SymbolBadge symbol={symbol} size="sm" className="size-[22px] rounded-full text-[9px]" />
-              )}
+              {/* Yuvarlak: karo hap biçimli bir çipin içinde duruyor,
+                  kabın yarıçapıyla aynı olmalı. */}
+              <LogoTile
+                symbol={symbol}
+                logoUrl={meta?.logoUrl}
+                size="xs"
+                className="rounded-full"
+              />
               <Link
                 href={`/hisse/${symbol}`}
                 className="numeral font-bold text-strong transition-colors hover:text-primary"

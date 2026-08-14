@@ -20,7 +20,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
-import { PageHeader, Panel } from "@/components/ui/primitives";
+import { PageHeader, Panel, ButtonLink } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -107,7 +107,7 @@ export default async function MenuPage() {
       <Panel className="flex items-center gap-3.5 p-4 sm:p-5">
         <span
           aria-hidden
-          className="flex size-11 shrink-0 items-center justify-center rounded-[12px] bg-primary-wash text-[13px] font-bold uppercase text-primary"
+          className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-wash text-[13px] font-bold uppercase text-primary"
         >
           {username ? (
             username.slice(0, 2)
@@ -127,19 +127,16 @@ export default async function MenuPage() {
           <form action={signOutAction}>
             <button
               type="submit"
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 text-[12.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-[12.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
             >
               <SignOut weight="duotone" size={15} />
               {t.nav.signOut}
             </button>
           </form>
         ) : (
-          <Link
-            href="/giris"
-            className="inline-flex h-9 shrink-0 items-center rounded-[9px] bg-primary px-4 text-[13px] font-semibold text-on-primary transition-colors hover:bg-primary-hover"
-          >
+          <ButtonLink href="/giris" variant="primary" className="shrink-0">
             {t.nav.signIn}
-          </Link>
+          </ButtonLink>
         )}
       </Panel>
 

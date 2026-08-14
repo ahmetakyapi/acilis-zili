@@ -20,8 +20,9 @@ import {
   PanelLink,
   Skeleton,
   TimingChip,
+  LogoTile,
+  ButtonLink,
 } from "@/components/ui/primitives";
-import Image from "next/image";
 import {
   BRIEF_PUBLISH_TR,
   getAnalyses,
@@ -229,7 +230,7 @@ export default async function TodayPage() {
         </Panel>
 
         {/* ---- Günün özeti — ana kolonda, günü okumaya buradan başlanıyor ---- */}
-        <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
+        <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
           <BriefCard locale={locale} t={t} />
         </Suspense>
 
@@ -281,11 +282,11 @@ export default async function TodayPage() {
 
         {/* Dünya piyasaları endekslerin hemen altında: ikisi de "bugün
             borsalar ne yapmış" sorusunun cevabı, ABD'si ve dünyası. */}
-        <Suspense fallback={<Skeleton className="h-28 w-full rounded-2xl" />}>
+        <Suspense fallback={<Skeleton className="h-28 w-full rounded-xl" />}>
           <WorldStrip locale={locale} t={t} />
         </Suspense>
 
-        <Suspense fallback={<Skeleton className="h-44 w-full rounded-2xl" />}>
+        <Suspense fallback={<Skeleton className="h-44 w-full rounded-xl" />}>
           <YieldCard locale={locale} t={t} />
         </Suspense>
 
@@ -298,11 +299,11 @@ export default async function TodayPage() {
             hiçbirinde canlı emtia spotu yok, o yüzden metrik düştü.
             Korku Endeksi (VIX) ise günlük geliyor ve yaşıyor: alt şeritte
             her sayfada, /piyasalar'da bantlı göstergesiyle. */}
-        <Suspense fallback={<Skeleton className="h-44 w-full rounded-2xl" />}>
+        <Suspense fallback={<Skeleton className="h-44 w-full rounded-xl" />}>
           <MacroSummary locale={locale} t={t} />
         </Suspense>
 
-        <Suspense fallback={<Skeleton className="h-56 w-full rounded-2xl" />}>
+        <Suspense fallback={<Skeleton className="h-56 w-full rounded-xl" />}>
           <WatchlistSummary locale={locale} t={t} />
         </Suspense>
       </div>
@@ -324,8 +325,8 @@ export default async function TodayPage() {
       <Suspense
         fallback={
           <div className="grid gap-4 sm:grid-cols-2 lg:col-start-1 lg:row-start-2">
-            <Skeleton className="h-52 w-full rounded-2xl" />
-            <Skeleton className="h-52 w-full rounded-2xl" />
+            <Skeleton className="h-52 w-full rounded-xl" />
+            <Skeleton className="h-52 w-full rounded-xl" />
           </div>
         }
       >
@@ -601,7 +602,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
               href={`/hisse/${symbol}`}
               className="w-28 shrink-0 sm:w-auto"
             >
-              <Panel className="panel-hover flex h-full flex-col rounded-xl p-3 sm:rounded-[14px] sm:p-4">
+              <Panel className="panel-hover flex h-full flex-col rounded-xl p-3 sm:rounded-lg sm:p-4">
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="truncate text-[11.5px] font-semibold text-body">
                     {INDEX_LABEL[symbol] ?? symbol}
@@ -874,7 +875,7 @@ function IndexSkeleton() {
   return (
     <div className="flex gap-2.5 sm:grid sm:grid-cols-2 lg:gap-3">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-28 w-28 shrink-0 rounded-[14px] sm:w-auto" />
+        <Skeleton key={i} className="h-28 w-28 shrink-0 rounded-lg sm:w-auto" />
       ))}
     </div>
   );
@@ -1146,12 +1147,9 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
           title={t.watchlist.emptyAll}
           hint={t.watchlist.emptyAllHint}
           action={
-            <Link
-              href="/giris"
-              className="inline-flex h-9 items-center rounded-[9px] bg-primary px-4 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
-            >
+            <ButtonLink href="/giris" variant="primary">
               {t.nav.signIn}
-            </Link>
+            </ButtonLink>
           }
         />
       </Panel>
@@ -1579,22 +1577,7 @@ async function LatestWriting({
                     prefetch={false}
                     className="flex items-center gap-2.5 px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
                   >
-                    {logo ? (
-                      <Image
-                        src={logo}
-                        alt=""
-                        width={28}
-                        height={28}
-                        className="size-7 shrink-0 rounded-[8px] border border-line-soft bg-white object-contain"
-                      />
-                    ) : (
-                      <span
-                        aria-hidden
-                        className="numeral flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-primary-wash text-[9px] font-bold text-primary"
-                      >
-                        {row.symbol.slice(0, 2)}
-                      </span>
-                    )}
+                    <LogoTile symbol={row.symbol} logoUrl={logo} size="md" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] font-semibold text-strong">
                         {row.company}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cn, directionOf, directionWash, formatPercent } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
@@ -252,12 +253,91 @@ export function SymbolBadge({
       className={cn(
         "flex shrink-0 items-center justify-center border border-line bg-primary-wash font-bold tracking-[-0.02em] text-primary",
         size === "sm"
-          ? "size-8 rounded-[9px] text-[11px]"
-          : "size-11 rounded-[11px] text-[13px]",
+          ? "size-8 rounded-md text-[11px]"
+          : "size-11 rounded-md text-[13px]",
         className,
       )}
     >
       {symbol.slice(0, 2)}
+    </span>
+  );
+}
+
+/* --------------------------------------------------------------------------
+   Şirket logosu karosu
+
+   TEK YERDE, ÇÜNKÜ ON İKİ YERDE FARKLIYDI. Doğru davranan bir karo vardı ama
+   `StoryVisual.tsx`e özeldi ve dışa açılmamıştı; aynı karo on iki ayrı yerde
+   elden yazılmıştı — 22/26/30/32/44/56 piksel, 6/7/9/11/13 piksel yarıçap,
+   bir yerde tam yuvarlak. Aynı logo bir ekranda köşeli, öbüründe yuvarlak
+   görünüyordu.
+
+   DAHA KÖTÜSÜ ÇERÇEVE. CLAUDE.md'deki kural açık: "görselin etrafında
+   çerçeve ve iç dolgu yok — kenarlık ve dolgu, resmi kutunun ortasında duran
+   ayrı bir nesne gibi gösteriyor; görsel kutunun kendisi olmalı". Altı çağrı
+   yeri bunu çiğniyordu (biri hem `border` hem `p-1` taşıyordu). Karo artık
+   kuralı kendi taşıyor: `overflow-hidden` + kendi köşe yarıçapı, kenarlık
+   yok.
+
+   Logo yoksa `SymbolBadge`e düşer — o düşüş de her yerde ayrı yazılıyordu.
+   -------------------------------------------------------------------------- */
+
+const LOGO_TILE_SIZE = {
+  xs: { box: "size-[22px] rounded-xs", px: 22 },
+  sm: { box: "size-[26px] rounded-sm", px: 26 },
+  md: { box: "size-8 rounded-md", px: 32 },
+  lg: { box: "size-11 rounded-lg", px: 44 },
+  xl: { box: "size-14 rounded-lg", px: 56 },
+} as const;
+
+export type LogoTileSize = keyof typeof LOGO_TILE_SIZE;
+
+export function LogoTile({
+  symbol,
+  logoUrl,
+  size = "md",
+  className,
+}: {
+  symbol: string;
+  logoUrl?: string | null;
+  size?: LogoTileSize;
+  className?: string;
+}) {
+  const step = LOGO_TILE_SIZE[size];
+
+  if (!logoUrl) {
+    return (
+      <span
+        aria-hidden
+        className={cn(
+          "numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold tracking-[-0.02em] text-primary",
+          step.box,
+          size === "xs" || size === "sm" ? "text-[9px]" : "text-[11px]",
+          className,
+        )}
+      >
+        {symbol.slice(0, 2)}
+      </span>
+    );
+  }
+
+  return (
+    /* Zemin BEYAZ: logoların çoğu şeffaf PNG ve koyu mürekkeple çizilmiş —
+       koyu temada zeminsiz bırakılırsa görünmüyorlar. */
+    <span
+      className={cn(
+        "block shrink-0 overflow-hidden bg-white",
+        step.box,
+        className,
+      )}
+    >
+      <Image
+        src={logoUrl}
+        alt=""
+        width={step.px}
+        height={step.px}
+        className="size-full object-contain"
+      />
     </span>
   );
 }
@@ -461,8 +541,10 @@ export function ImpactDot({
    Butonlar
    -------------------------------------------------------------------------- */
 
+/* Yarıçap TOKEN'DAN (`--radius-md` = 9px), elle yazılmış `rounded-md`
+   değil: token değişirse buton da değişsin. */
 const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 rounded-[9px] font-semibold transition-colors duration-150 disabled:opacity-45 disabled:pointer-events-none";
+  "inline-flex items-center justify-center gap-2 rounded-md font-semibold transition-colors duration-150 disabled:opacity-45 disabled:pointer-events-none";
 
 const BUTTON_VARIANTS = {
   primary: "bg-primary text-on-primary hover:bg-primary-hover",
@@ -472,11 +554,38 @@ const BUTTON_VARIANTS = {
   danger: "text-down hover:bg-down-wash",
 } as const;
 
+/* `lg` BASAMAĞI FORMLAR İÇİN. Aynı mavi buton sekiz yerde elden yazılmıştı ve
+   hiçbiri birbirini tutmuyordu: beş farklı yükseklik, dört yarıçap, dört
+   punto. Aynı ekranda iki farklı yarıçaplı buton yan yana gelebiliyor ve
+   dokunma hedefi 36px ile 44px arasında değişiyordu. Form gönderme
+   düğmelerinin girdi alanlarıyla aynı yükseklikte (44px) olması gerekiyor;
+   o ölçü artık `md`nin yanında kendi basamağı. */
 const BUTTON_SIZES = {
   sm: "h-8 px-3 text-xs",
   md: "h-10 px-4 text-[13.5px] min-h-11 sm:min-h-0 sm:h-10",
+  lg: "h-11 px-4 text-[14.5px]",
   icon: "size-9 p-0",
 } as const;
+
+/**
+ * Buton görünümünün sınıf dizesi — `<button>`/`<Link>` OLMAYAN yerler için.
+ *
+ * Dış bağlantılar (`<a target="_blank">`) ve atlama bağlantısı gibi birkaç
+ * yer bileşeni kullanamıyor ama görünüm aynı olmalı. Sınıfları elle yeniden
+ * yazmak yerine aynı kaynaktan alıyorlar.
+ */
+export function buttonClass(options?: {
+  variant?: keyof typeof BUTTON_VARIANTS;
+  size?: keyof typeof BUTTON_SIZES;
+  className?: string;
+}) {
+  return cn(
+    BUTTON_BASE,
+    BUTTON_VARIANTS[options?.variant ?? "primary"],
+    BUTTON_SIZES[options?.size ?? "md"],
+    options?.className,
+  );
+}
 
 type ButtonProps = React.ComponentProps<"button"> & {
   variant?: keyof typeof BUTTON_VARIANTS;
@@ -567,7 +676,7 @@ export function FilterChip({
 /** İki–üç seçenekli segment — Hafta/Ay, 1G/1H/1A gibi. */
 export function Segment({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex overflow-hidden rounded-[9px] border border-line text-[12.5px]">
+    <span className="inline-flex overflow-hidden rounded-md border border-line text-[12.5px]">
       {children}
     </span>
   );

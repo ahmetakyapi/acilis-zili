@@ -52,7 +52,7 @@ export function NewsImage({
      olmalı. Kenarlık yalnızca GÖRSEL OLMAYAN yer tutucuda kalıyor — orada
      kutuyu kutu yapan tek şey o. */
   const frame = cn(
-    "block shrink-0 overflow-hidden rounded-[10px]",
+    "block shrink-0 overflow-hidden rounded-md",
     sizeClass,
     className,
   );
