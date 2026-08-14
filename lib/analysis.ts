@@ -223,6 +223,7 @@ export function analysisTableLabels(t: Dictionary) {
     searchPlaceholder: t.analysis.searchPlaceholder,
     searchEmpty: t.analysis.searchEmpty,
     searchClear: t.analysis.searchClear,
-    resultCount: t.analysis.resultCount,
+    resultCountOne: t.analysis.resultCountOne,
+    resultCountMany: t.analysis.resultCountMany,
   };
 }

@@ -117,6 +117,15 @@ export function AuthForm({
                   required
                   placeholder={field.placeholder}
                   autoComplete={field.autoComplete}
+                  /* Kullanıcı adı ve e-posta alanlarında OTOMATİK BÜYÜTME
+                     KAPALI. Mobil klavye ilk harfi kendiliğinden büyütüyordu
+                     ve Türkçe klavyede o harf "İ" olduğunda kayıt "kullanıcı
+                     adı biçimi" hatası veriyor, giriş ise eşleşmiyordu
+                     (normalizasyon lib/utils.ts'te; bu da aynı sorunun
+                     kaynağını kesiyor). Şifre alanına dokunulmuyor —
+                     orada büyük harf kullanıcının tercihidir. */
+                  autoCapitalize={field.type === "password" ? undefined : "none"}
+                  autoCorrect={field.type === "password" ? undefined : "off"}
                   aria-invalid={hasError || undefined}
                   /* Hata metni alana BAĞLANIYOR. Bağlanmadan önce ekran
                      okuyucu alana odaklandığında yalnızca etiketi duyuyor,

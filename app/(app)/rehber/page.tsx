@@ -16,7 +16,7 @@ import {
   type GuideTopicKey,
 } from "@/content/guide";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { cn, plural } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -191,7 +191,7 @@ function CurriculumStrip({
           {t.guide.curriculum}
         </h2>
         <span className="numeral text-[11.5px] text-muted">
-          {all.length} {t.guide.articlesCount} · ~{minutesOf(all)}{" "}
+          {all.length} {plural(all.length, t.guide.articleOne, t.guide.articleMany)} · ~{minutesOf(all)}{" "}
           {t.guide.readMinutes}
         </span>
         {/* Müfredatın ilk durağına doğrudan giden tek bağlantı. Şeridin
@@ -313,7 +313,8 @@ function TopicHeading({
             {guideTopicLabel(topic, locale)}
           </h2>
           <span className="numeral text-[12px] text-muted">
-            {articles.length} {t.guide.articlesCount} · ~{minutes}{" "}
+            {articles.length}{" "}
+            {plural(articles.length, t.guide.articleOne, t.guide.articleMany)} · ~{minutes}{" "}
             {t.guide.readMinutes}
           </span>
           {/* Tek seviyeli konuda bant basılmıyor; seviye buraya çıkıyor. */}
@@ -380,7 +381,8 @@ function TopicView({
             {guideTopicLabel(topic, locale)}
           </h2>
           <span className="numeral text-[12px] text-muted">
-            {articles.length} {t.guide.articlesCount}
+            {articles.length}{" "}
+            {plural(articles.length, t.guide.articleOne, t.guide.articleMany)}
           </span>
           {levels.length === 1 && (
             <LevelBadge level={levels[0]} locale={locale} />
@@ -451,7 +453,8 @@ function LeveledGrid({
           <div className="flex items-center gap-2.5">
             <LevelBadge level={band.level} locale={locale} />
             <span className="numeral text-[11px] text-muted">
-              {band.articles.length} {t.guide.articlesCount}
+              {band.articles.length}{" "}
+              {plural(band.articles.length, t.guide.articleOne, t.guide.articleMany)}
             </span>
             <span aria-hidden className="h-px min-w-6 flex-1 bg-line" />
           </div>

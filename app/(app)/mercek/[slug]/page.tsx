@@ -175,7 +175,14 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
 
       <hr className="border-t border-line" aria-hidden />
 
-      <ArticleBody markdown={story.bodyMd} />
+      {/* GÖVDE KENDİ DİLİNİ SÖYLÜYOR. Çevirisi olmayan yazı orijinal
+          diliyle gösteriliyor (üstteki not bunu yazıyor) ama `lang`
+          verilmediği için sayfalarca Türkçe metin `<html lang="en">`
+          altında duruyordu: ekran okuyucu onu İngilizce fonetikle okuyor,
+          tarayıcının "bu sayfayı çevir" önerisi de devreye girmiyordu. */}
+      <div lang={story.locale}>
+        <ArticleBody markdown={story.bodyMd} />
+      </div>
 
       {/* ---- Künye ---- */}
       <footer className="mt-2 flex flex-col gap-3 border-t border-line pt-5">

@@ -23,7 +23,7 @@ import {
 } from "@/lib/data";
 import { getChartBarsMulti } from "@/lib/providers";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { formatEtDateLong, formatEtDateShort } from "@/lib/utils";
+import { formatEtDateLong, formatEtDateShort, plural } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -450,7 +450,11 @@ function LeadStory({
                 title={t.stories.relatedSymbols}
                 sinceLabel={t.stories.sinceEvent}
                 eventDate={formatEtDateShort(story.eventDate, locale)}
-                moreLabel={t.stories.moreCompanies}
+                moreLabel={plural(
+                  Math.max(0, total - cast.length),
+                  t.stories.moreCompaniesOne,
+                  t.stories.moreCompaniesMany,
+                )}
                 locale={locale}
               />
             </div>

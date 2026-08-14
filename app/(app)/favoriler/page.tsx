@@ -93,6 +93,7 @@ export default async function WatchlistPage() {
 
       {quotesResult?.ok && allSymbols.length > 0 && (
         <DataStamp
+      labels={t.data}
           source={quotesResult.source}
           at={quotesResult.fetchedAt}
           stale={quotesResult.stale}

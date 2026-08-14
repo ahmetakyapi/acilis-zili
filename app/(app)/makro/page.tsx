@@ -145,6 +145,7 @@ export default async function MacroPage() {
                 </dl>
 
                 <DataStamp
+      labels={t.data}
                   source="fred"
                   at={row.updatedAt}
                   locale={locale}

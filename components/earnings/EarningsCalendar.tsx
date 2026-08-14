@@ -10,7 +10,7 @@ import { AlsoReporting } from "@/components/earnings/AlsoReporting";
 import type { AnalysisBadge as AnalysisBadgeData, SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { isSpotlight } from "@/lib/spotlight";
-import { cn, formatCompact, formatEtDateLong, formatPrice } from "@/lib/utils";
+import { cn, formatCompact, formatEtDateLong, formatPrice, plural } from "@/lib/utils";
 import type { EarningsRow } from "@/lib/schema";
 
 /**
@@ -236,7 +236,8 @@ function DaySection({
             {formatEtDateLong(date, locale)}
           </h2>
           <span className="figure text-[12.5px] text-muted">
-            {rows.length} {t.earnings.companiesCount}
+            {rows.length}{" "}
+            {plural(rows.length, t.earnings.companyOne, t.earnings.companyMany)}
           </span>
           {isToday && (
             <span className="rounded-full bg-down-wash px-[9px] py-[3px] text-[10.5px] font-bold tracking-[0.05em] text-down">

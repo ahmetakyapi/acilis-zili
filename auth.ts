@@ -5,6 +5,7 @@ import { eq, or } from "drizzle-orm";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
+import { normalizeUsername } from "@/lib/utils";
 import { AUTH_WINDOW_MS, SIGN_IN_LIMIT, rateLimit } from "@/lib/rate-limit";
 
 /**
@@ -97,13 +98,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
            birinin girmesinin yolu yoktu ve şifre sıfırlama da olmadığı için
            hesap kalıcı olarak kayboluyordu. En azından ikinci kapı açık.
 
-           Küçültme Türkçe locale'i İLE YAPILMIYOR: `toLocaleLowerCase("tr-TR")`
-           "I" harfini "ı"ya çeviriyor ve kayıt sırasında da aynı dönüşüm
-           uygulanmadığı sürece eşleşme kırılır. Kayıt tarafı düz
-           `toLowerCase()` kullanıyor (app/actions/auth.ts), burası da öyle. */
-        const identifier = String(credentials?.username ?? "")
-          .trim()
-          .toLowerCase();
+           Küçültme `normalizeUsername` ile ve kayıt tarafı da aynı
+           fonksiyonu kullanıyor: Türkçe "İ" düz `toLowerCase()` ile
+           bozuluyor, iki taraf aynı dönüşümü uygulamazsa eşleşme kırılır.
+           E-posta da aynı fonksiyondan geçiyor — adreslerde Türkçe harf
+           bulunmuyor, dönüşüm onlara dokunmuyor. */
+        const identifier = normalizeUsername(String(credentials?.username ?? ""));
         const password = String(credentials?.password ?? "");
 
         if (!identifier || !password) return null;

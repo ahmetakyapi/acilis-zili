@@ -559,7 +559,8 @@ async function IndexDetail({
         t={t}
       />
 
-      {stampAt && <DataStamp source="alpaca" at={stampAt} locale={locale} />}
+      {stampAt && <DataStamp
+      labels={t.data} source="alpaca" at={stampAt} locale={locale} />}
     </>
   );
 }

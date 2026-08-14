@@ -9,6 +9,7 @@ import { DB_UNAVAILABLE, auth, signIn, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { users, watchlists } from "@/lib/schema";
 import { getDictionary, getLocale } from "@/lib/i18n";
+import { normalizeUsername } from "@/lib/utils";
 import {
   AUTH_WINDOW_MS,
   DELETE_ACCOUNT_LIMIT,
@@ -62,9 +63,10 @@ function safeRedirectTarget(raw: FormDataEntryValue | null): string {
 
 const usernameSchema = z
   .string()
-  .trim()
-  .toLowerCase()
-  .regex(/^[a-z0-9_]{3,20}$/);
+  /* Küçültme `normalizeUsername` ile: düz `toLowerCase()` Türkçe "İ"yi
+     bozuyor ve doğrulama patlıyordu (gerekçe lib/utils.ts'te). */
+  .transform(normalizeUsername)
+  .refine((value) => /^[a-z0-9_]{3,20}$/.test(value));
 
 const signUpSchema = z.object({
   username: usernameSchema,
@@ -255,9 +257,7 @@ export async function signInAction(
     return { error: t.tooManyAttempts, field: "form" };
   }
 
-  const username = String(formData.get("username") ?? "")
-    .trim()
-    .toLowerCase();
+  const username = normalizeUsername(String(formData.get("username") ?? ""));
   const password = String(formData.get("password") ?? "");
 
   if (!username || !password) {
@@ -328,9 +328,7 @@ export async function deleteAccountAction(
   );
   if (!limited.allowed) return { error: t.deleteTooMany };
 
-  const confirmation = String(formData.get("confirm") ?? "")
-    .trim()
-    .toLowerCase();
+  const confirmation = normalizeUsername(String(formData.get("confirm") ?? ""));
   const password = String(formData.get("password") ?? "");
 
   const [user] = await db

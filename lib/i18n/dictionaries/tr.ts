@@ -226,7 +226,12 @@ const tr = {
     spotlight: "Öne Çıkanlar",
     addToCalendar: "Takvime Ekle",
     alsoReporting: "Diğer Açıklayanlar",
-    companiesCount: "şirket",
+    /* Türkçede sayıdan sonra çoğul eki gelmez, iki değer de aynı; ayrım
+       İngilizce için — "1 companies" yazıyordu. Desen `eventOne/eventMany`
+       çiftinden geliyor, o zaten bu iş için vardı ama dört yere
+       uygulanmamıştı. */
+    companyOne: "şirket",
+    companyMany: "şirket",
     empty: "Bu aralıkta bilanço açıklaması yok.",
     today: "Bugün",
     marketCapShort: "PD",
@@ -298,7 +303,8 @@ const tr = {
     searchPlaceholder: "Sembol veya şirket ara",
     searchEmpty: "\"{query}\" ile eşleşen analiz yok.",
     searchClear: "Aramayı Temizle",
-    resultCount: "{count} analiz",
+    resultCountOne: "{count} analiz",
+    resultCountMany: "{count} analiz",
     sortDate: "Tarihe Göre",
     sortScore: "Skora Göre",
     sortReaction: "Tepkiye Göre",
@@ -723,7 +729,8 @@ const tr = {
     startFirst: "Baştan Başla",
     curriculumHint:
       "Dört konu bloğu kolaydan zora sıralı; hiç bilmeyen biri baştan sona bir müfredat gibi okuyabilir.",
-    articlesCount: "yazı",
+    articleOne: "yazı",
+    articleMany: "yazı",
     prevArticle: "Önceki Yazı",
     nextArticle: "Sıradaki Yazı",
     contextLabel: "Bunu Anlamak İçin",
@@ -758,7 +765,8 @@ const tr = {
     rhythmBody:
       "Her gün değil. Sıradan bir seans mercek konusu değildir; anlatmaya değer bir olay yaşandığında yayımlanır.",
     bridge: "Günlük haber akışı ve kavram anlatımları ayrı bölümlerde:",
-    moreCompanies: "+{count} şirket daha",
+    moreCompaniesOne: "+{count} şirket daha",
+    moreCompaniesMany: "+{count} şirket daha",
     sinceEvent: "olaydan bugüne",
     filterLabel: "Şirkete Göre",
     filterAll: "Tümü",
@@ -949,6 +957,16 @@ const tr = {
     lastKnown: "Son Bilinen Değer",
     feedIex: "IEX · gerçek zamanlı",
     delayedNote: "Fiyatlar IEX beslemesinden gelir, konsolide fiyattan sapabilir.",
+    /* Kaynak adları SÖZLÜKTE: "önbellek" ve "takvim" sabit bir tablodan
+       geliyordu ve İngilizce sitede de Türkçe basılıyordu. */
+    sourceCache: "önbellek",
+    sourceSeed: "takvim",
+    /* CÜMLE TAM YAZILIYOR, parça parça birleştirilmiyor. Damga
+       "{saat} {kelime}" sırasıyla kuruluyordu; Türkçede doğru ama İngilizcede
+       "5:05 PM updated" çıkıyordu — sözcük sırası dile ait, bu yüzden yer
+       tutuculu tam cümle. */
+    updatedAt: "{time} güncellendi",
+    mayBeStale: "güncel olmayabilir",
   },
 };
 

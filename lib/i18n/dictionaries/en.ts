@@ -210,7 +210,8 @@ const en: typeof tr = {
     spotlight: "Spotlight",
     addToCalendar: "Add to Calendar",
     alsoReporting: "Also Reporting",
-    companiesCount: "companies",
+    companyOne: "company",
+    companyMany: "companies",
     today: "Today",
     marketCapShort: "Mkt cap",
     rangeWeek: "Week",
@@ -268,7 +269,8 @@ const en: typeof tr = {
     searchPlaceholder: "Search symbol or company",
     searchEmpty: "No analysis matches \"{query}\".",
     searchClear: "Clear Search",
-    resultCount: "{count} analyses",
+    resultCountOne: "{count} analysis",
+    resultCountMany: "{count} analyses",
     sortDate: "By Date",
     sortScore: "By Score",
     sortReaction: "By Reaction",
@@ -659,7 +661,8 @@ const en: typeof tr = {
     startFirst: "Start From The Top",
     curriculumHint:
       "Four topic blocks ordered easy to hard; a newcomer can read the guide start to finish like a curriculum.",
-    articlesCount: "articles",
+    articleOne: "article",
+    articleMany: "articles",
     prevArticle: "Previous",
     nextArticle: "Up Next",
     contextLabel: "To Understand This",
@@ -690,7 +693,8 @@ const en: typeof tr = {
     rhythmBody:
       "Not daily. An ordinary session is not a story; a piece is published when something worth telling actually happens.",
     bridge: "Daily headlines and concept explainers live in their own sections:",
-    moreCompanies: "+{count} more companies",
+    moreCompaniesOne: "+{count} more company",
+    moreCompaniesMany: "+{count} more companies",
     sinceEvent: "since the event",
     filterLabel: "By Company",
     filterAll: "All",
@@ -872,6 +876,10 @@ const en: typeof tr = {
     feedIex: "IEX · real-time",
     delayedNote:
       "Prices come from the IEX feed and may differ from the consolidated tape.",
+    sourceCache: "cache",
+    sourceSeed: "calendar",
+    updatedAt: "updated {time}",
+    mayBeStale: "may be out of date",
   },
 };
 

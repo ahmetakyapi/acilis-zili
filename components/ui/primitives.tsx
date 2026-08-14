@@ -346,12 +346,19 @@ export function LogoTile({
    Veri tazeliği damgası — her veri kartının altında görünür
    -------------------------------------------------------------------------- */
 
-const SOURCE_LABEL: Record<string, string> = {
+export type DataStampLabels = {
+  sourceCache: string;
+  sourceSeed: string;
+  updatedAt: string;
+  mayBeStale: string;
+};
+
+/* Sağlayıcı adları çevrilmez — marka. "önbellek" ve "takvim" ise sözlükten
+   geliyor: sabit tabloda dururken İngilizce sitede de Türkçe basılıyorlardı. */
+const PROVIDER_LABEL: Record<string, string> = {
   alpaca: "Alpaca · IEX",
   finnhub: "Finnhub",
   fred: "FRED",
-  cache: "önbellek",
-  seed: "takvim",
 };
 
 export function DataStamp({
@@ -359,6 +366,7 @@ export function DataStamp({
   at,
   stale,
   locale,
+  labels,
   note,
   className,
 }: {
@@ -366,20 +374,33 @@ export function DataStamp({
   at?: Date | string | null;
   stale?: boolean;
   locale: Locale;
+  /** Sözlüğün `data` bloğu — çağıran sunucu bileşeni onu zaten okuyor. */
+  labels: DataStampLabels;
   note?: string;
   className?: string;
 }) {
-  // Damga saati her zaman Türkiye saatiyle basılır — sunucu UTC'de koşsa da
-  // okuyucunun duvar saatiyle örtüşür.
+  /* Damga saati her zaman Türkiye saatiyle basılır — sunucu UTC'de koşsa da
+     okuyucunun duvar saatiyle örtüşür.
+
+     24 SAAT, İKİ DİLDE DE. `en-US` varsayılanı 12 saatlik biçim veriyor ve
+     aynı ekranda sitenin geri kalanıyla (lib/session-clock.ts, iki dilde de
+     24 saat) iki farklı saat biçimi yan yana duruyordu. */
   const time = at
     ? new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
         timeZone: "Europe/Istanbul",
         hour: "2-digit",
         minute: "2-digit",
+        hourCycle: "h23",
       }).format(typeof at === "string" ? new Date(at) : at)
     : null;
 
-  const updatedWord = locale === "tr" ? "güncellendi" : "updated";
+  const sourceLabel =
+    PROVIDER_LABEL[source] ??
+    (source === "cache"
+      ? labels.sourceCache
+      : source === "seed"
+        ? labels.sourceSeed
+        : source);
 
   return (
     <p
@@ -388,20 +409,21 @@ export function DataStamp({
         className,
       )}
     >
-      <span>{SOURCE_LABEL[source] ?? source}</span>
+      <span>{sourceLabel}</span>
       {time && (
         <>
           <span aria-hidden>·</span>
-          <span className="numeral">{time}</span>
-          <span>{updatedWord}</span>
+          {/* Cümle TEK PARÇA: sözcük sırası sözlükten geliyor. Parça parça
+              birleştirilince İngilizcede "5:05 PM updated" çıkıyordu. */}
+          <span className="numeral">
+            {labels.updatedAt.replace("{time}", time)}
+          </span>
         </>
       )}
       {stale && (
         <>
           <span aria-hidden>·</span>
-          <span className="text-impact-med">
-            {locale === "tr" ? "güncel olmayabilir" : "may be out of date"}
-          </span>
+          <span className="text-impact-med">{labels.mayBeStale}</span>
         </>
       )}
       {note && (

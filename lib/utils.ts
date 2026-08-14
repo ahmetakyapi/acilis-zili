@@ -305,6 +305,46 @@ export function timeAgo(date: Date | string, locale: string): string {
   return rtf.format(-seconds, "second");
 }
 
+/**
+ * Kullanıcı adını tek bir biçime indirger — TÜRKÇE "İ" DAHİL.
+ *
+ * Düz `toLowerCase()` yetmiyor: Türkçe klavyede yazılan büyük "İ"yi JS
+ * "i̇" yapıyor, yani "i" harfinin arkasına ayrı bir birleşen nokta
+ * ekliyor. Sonuç iki yerde birden kırılıyordu — kayıtta `^[a-z0-9_]{3,20}$`
+ * doğrulaması patlıyor ve kullanıcı "kullanıcı adı biçimi" hatası alıyor,
+ * girişte ise ad eşleşmeyip "hatalı kullanıcı adı veya şifre" dönüyor.
+ * Mobilde ilk harf kendiliğinden büyüdüğü için bu yol kazara değil, TİPİK
+ * akış.
+ *
+ * `İ → I` ve `ı → i` eşlemeleri küçültmeden ÖNCE yapılıyor: sonra yapılsa
+ * "İ" zaten bozulmuş oluyor. NFKC normalizasyonu ayrı yazılmış birleşen
+ * noktayı da tek koda topluyor.
+ */
+/**
+ * Sayıya göre tekil/çoğul biçim seçer.
+ *
+ * Dört etiket İngilizcede yalnızca çoğul yazılmıştı ve tek şirketin bilanço
+ * açıkladığı gün — takvimde sık — başlık "1 companies" yazıyordu; arama tek
+ * analiz döndürünce "1 analyses" çıkıyordu. Türkçe tarafta sorun yok, orada
+ * sayıdan sonra çoğul eki gelmiyor: iki değer de aynı yazılıyor ve bu
+ * fonksiyon hangisini seçerse seçsin sonuç değişmiyor.
+ *
+ * Sözlükte `eventOne`/`eventMany` çifti bu iş için zaten vardı; desen
+ * yalnızca dört yere uygulanmamıştı.
+ */
+export function plural(count: number, one: string, many: string): string {
+  return Math.abs(count) === 1 ? one : many;
+}
+
+export function normalizeUsername(raw: string): string {
+  return raw
+    .normalize("NFKC")
+    .replace(/İ/g, "I")
+    .replace(/ı/g, "i")
+    .toLowerCase()
+    .trim();
+}
+
 export function isValidSymbol(symbol: string): boolean {
   return /^[A-Z][A-Z.-]{0,9}$/.test(symbol);
 }

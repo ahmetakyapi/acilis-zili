@@ -637,6 +637,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
         })}
       </div>
       <DataStamp
+      labels={t.data}
         source={result.source}
         at={result.fetchedAt}
         stale={result.stale}
@@ -1239,6 +1240,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
             })}
           </ul>
           <DataStamp
+      labels={t.data}
             source={result.source}
             at={result.fetchedAt}
             stale={result.stale}

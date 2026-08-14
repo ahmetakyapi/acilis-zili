@@ -435,6 +435,7 @@ async function CompareBoard({
 
       {quotesResult.ok && (
         <DataStamp
+      labels={t.data}
           source={quotesResult.source}
           at={quotesResult.fetchedAt}
           stale={quotesResult.stale}

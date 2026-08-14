@@ -211,15 +211,20 @@ async function ArchiveBoard({
               </p>
             )}
 
-            <h2 className="mt-4 text-[22px] font-bold leading-tight tracking-[-0.03em] text-strong sm:text-[26px]">
-              {brief.headline}
-            </h2>
+            {/* Başlık ve gövde kendi dilini söylüyor — gerekçe mercek
+                sayfasında; çevirisi olmayan bülten orijinal diliyle
+                gösteriliyor. */}
+            <div lang={brief.locale}>
+              <h2 className="mt-4 text-[22px] font-bold leading-tight tracking-[-0.03em] text-strong sm:text-[26px]">
+                {brief.headline}
+              </h2>
 
-            <BriefBody
-              markdown={brief.bodyMd}
-              collapsible={false}
-              size="page"
-            />
+              <BriefBody
+                markdown={brief.bodyMd}
+                collapsible={false}
+                size="page"
+              />
+            </div>
 
             {/* Takvim tahmin değildir — "bu hafta" bölümünün sınırı. */}
             {period === "weekly" && (

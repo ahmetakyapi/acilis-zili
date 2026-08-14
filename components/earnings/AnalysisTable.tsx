@@ -11,7 +11,7 @@ import {
   type CellTone,
 } from "@/lib/analysis";
 import { LogoTile } from "@/components/ui/primitives";
-import { cn } from "@/lib/utils";
+import { cn, plural } from "@/lib/utils";
 
 /**
  * Son Analizler tablosu — arama kutusuyla birlikte.
@@ -55,7 +55,8 @@ export type AnalysisTableLabels = {
   searchEmpty: string;
   searchClear: string;
   /** "{count}" yer tutucusu taşır. */
-  resultCount: string;
+  resultCountOne: string;
+  resultCountMany: string;
 };
 
 const COLS = {
@@ -136,7 +137,11 @@ export function AnalysisTable({
 
         {searching && (
           <span className="numeral shrink-0 text-[12px] text-muted">
-            {labels.resultCount.replace("{count}", String(visible.length))}
+            {plural(
+              visible.length,
+              labels.resultCountOne,
+              labels.resultCountMany,
+            ).replace("{count}", String(visible.length))}
           </span>
         )}
 

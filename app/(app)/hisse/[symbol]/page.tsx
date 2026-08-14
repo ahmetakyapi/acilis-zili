@@ -411,6 +411,7 @@ async function StockHeader({
             <ChangePill changePct={quoteResult.data.changePct} locale={locale} />
           </div>
           <DataStamp
+      labels={t.data}
             source={quoteResult.source}
             at={quoteResult.fetchedAt}
             stale={quoteResult.stale}
@@ -759,6 +760,7 @@ async function ProfileCard({
         )}
       </dl>
       <DataStamp
+      labels={t.data}
         source={result.source}
         at={result.fetchedAt}
         stale={result.stale}
