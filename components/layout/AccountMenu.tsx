@@ -218,14 +218,14 @@ export function AccountMenu({
           "inline-flex size-11 items-center justify-center rounded-lg border text-small font-bold uppercase tracking-[0.02em] transition-colors",
           signedIn
             ? "border-transparent bg-primary text-on-primary hover:bg-primary-hover"
-            : "border-line bg-surface text-muted hover:border-line-strong hover:text-soft",
+            : "border-line bg-surface-elevated text-body hover:border-line-strong hover:text-strong",
           open && "ring-2 ring-primary/35",
         )}
       >
         {signedIn ? (
           <span aria-hidden>{initials || "?"}</span>
         ) : (
-          <UserCircle weight="duotone" size={20} aria-hidden />
+          <UserCircle weight="bold" size={20} aria-hidden />
         )}
       </button>
 

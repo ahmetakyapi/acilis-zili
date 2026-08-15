@@ -95,7 +95,7 @@
   --impact-low: #586a7c;
 
   /* Sticky chrome */
-  --chrome: rgb(247 249 251 / 0.85);
+  --chrome: #f7f9fb;
   --chrome-border: rgb(16 32 52 / 0.1);
 
   /* Katman üstü — yalnızca ⌘K paleti ve diyaloglar. Saydam yüzey burada
@@ -226,7 +226,7 @@
   --impact-med: #d3a04a;
   --impact-low: #8497a9;
 
-  --chrome: rgb(7 13 22 / 0.85);
+  --chrome: #070d16;
   --chrome-border: rgb(255 255 255 / 0.08);
 
   /* Mockup burada beyaz bir scrim çiziyor; koyu temada arka planı diyalogdan
@@ -656,40 +656,35 @@
 
 
 /**
- * Üst çubuk ve alt gezinme — buzlu cam.
+ * Üst çubuk ve alt gezinme.
  *
- * FİLTRE METNİN ARKASINDA, ÜSTÜNDE DEĞİL. `backdrop-filter` doğrudan
- * kabın kendisine veriliyordu ve bu, kabı kendi kompozit katmanına
- * taşıyor: içindeki metin alt piksel yumuşatmasını (subpixel
- * antialiasing) kaybedip gri tonlamalıya düşüyor ve telefonda gözle
- * görülür biçimde YUMUŞAK/BULANIK okunuyordu — özellikle marka adı, çünkü
- * o `display-ink` ile degrade maskeli çiziliyor ve maskeli metin aynı
- * katmanda bir kat daha yumuşuyor.
+ * BUZLU CAM KALDIRILDI, ÇÜNKÜ METİN BULANIKLAŞIYORDU. Katman `%85 opak
+ * zemin + backdrop-blur(20px)` ile çiziliyordu ve telefonda üstündeki metin
+ * gözle görülür biçimde yumuşuyordu: `backdrop-filter` kabı kendi kompozit
+ * katmanına taşıyor, o katmandaki metin alt piksel yumuşatmasını kaybedip
+ * gri tonlamalıya düşüyor. Marka adı bir kat daha yumuşuyordu çünkü o
+ * `display-ink` ile degrade maskeli çiziliyor ve maskeli metin aynı katmanda
+ * ikinci kez yumuşuyor.
  *
- * Filtre artık kendi katmanında, içeriğin altında duran bir sözde öğede.
- * Metin normal akışta ve keskin kalıyor. Kenarlık kapta kalıyor ki
- * `border-b`/`border-t` yardımcıları çalışmaya devam etsin.
+ * Filtreyi içeriğin ALTINDAKİ bir sözde öğeye almak yetmedi — iOS'ta
+ * `backdrop-filter` taşıyan bir alt öğe de kapsayıcı yığın bağlamını
+ * kompozit ettiriyor. Denendi, telefonda hâlâ yumuşaktı.
+ *
+ * Zemin artık TAM OPAK ve hiçbir filtre yok: kompozit katman oluşmuyor,
+ * metin normal akışta ve keskin. Bedeli, çubuğun arkasından içeriğin
+ * görünmemesi — cam efekti hoş bir dokunuştu ama okunaklılığın önüne
+ * geçemez. Ayırıcı, altındaki hairline.
  *
  * `position` BURADA VERİLMEZ. Bu kural katmansız yazılı ve katmansız CSS,
- * `@layer utilities` içindeki Tailwind yardımcılarını yener: `position:
- * relative` eklendiğinde `sticky`/`fixed` sınıfları eziliyor ve üst çubuk
- * yapışkanlığını kaybediyordu. Sözde öğenin çapası zaten var — dört
- * kullanımın dördü de `sticky` ya da `fixed`.
+ * `@layer utilities` içindeki Tailwind yardımcılarını yeniyor: `position:
+ * relative` eklendiğinde `sticky`/`fixed` eziliyor ve çubuk yapışkanlığını
+ * kaybediyordu (ölçüldü).
  */
 .chrome {
-  isolation: isolate;
+  background: var(--chrome);
   border-color: var(--chrome-border);
 }
 
-.chrome::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: var(--chrome);
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
-}
 
 /* Piyasa açıkken nabız — accent, glow değil sadece opaklık. */
 .pulse-live {

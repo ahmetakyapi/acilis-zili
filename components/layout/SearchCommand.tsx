@@ -367,9 +367,16 @@ export function SearchCommand({
         type="button"
         onClick={openPalette}
         aria-label={label}
-        className="inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface text-base text-muted transition-colors hover:border-line-strong hover:text-soft lg:size-9 2xl:size-auto 2xl:w-[248px] 2xl:justify-start 2xl:rounded-md 2xl:px-3 2xl:py-2"
+        /* KONTRAST. Kutu neredeyse görünmez bir yüzey (`bg-surface`,
+           açık temada beyazın üstünde %3) ve ikon en soluk ton
+           (`text-muted`) taşıyordu: telefonda düğme bir leke gibi
+           duruyor, ikon da bulanık okunuyordu. Yüzey bir kademe yukarı,
+           ikon gövde mürekkebine çıktı. */
+        className="inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface-elevated text-base text-body transition-colors hover:border-line-strong hover:text-strong lg:size-9 2xl:size-auto 2xl:w-[248px] 2xl:justify-start 2xl:rounded-md 2xl:px-3 2xl:py-2"
       >
-        <MagnifyingGlass weight="duotone" size={15} className="shrink-0" />
+        {/* `bold`, `duotone` değil: 15 pikselde duotone büyütecin sapını
+            neredeyse görünmez yapıyordu. */}
+        <MagnifyingGlass weight="bold" size={16} className="shrink-0" />
         <span className="hidden 2xl:inline">{placeholderShort}</span>
         <kbd className="ml-auto hidden rounded bg-surface-elevated px-[5px] py-0.5 text-nano 2xl:inline">
           ⌘K
