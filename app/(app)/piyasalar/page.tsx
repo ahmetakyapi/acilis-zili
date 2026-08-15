@@ -30,7 +30,7 @@ import {
   cn,
   directionOf,
   SIGN_GAP,
-  formatCompact,
+  formatMoneyCompact,
   formatEtDateShort,
   formatPercent,
   formatPercentPlain,
@@ -1083,7 +1083,7 @@ function MembersTable({
                     </span>
                     {row.marketCap && (
                       <span className="numeral mt-0.5 block text-tiny leading-[14px] text-muted sm:hidden">
-                        ${formatCompact(row.marketCap, locale)}
+                        {formatMoneyCompact(row.marketCap, locale)}
                       </span>
                     )}
                   </td>
@@ -1094,7 +1094,7 @@ function MembersTable({
                     )}
                   >
                     {row.marketCap
-                      ? `$${formatCompact(row.marketCap, locale)}`
+                      ? formatMoneyCompact(row.marketCap, locale)
                       : "—"}
                   </td>
                   {showContribution && (

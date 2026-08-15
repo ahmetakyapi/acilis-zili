@@ -13,7 +13,7 @@ import {
 import { getStatus, getSymbolNames } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
 import { getI18n } from "@/lib/i18n";
-import { formatCompact, formatPercentPlain, formatPrice } from "@/lib/utils";
+import { formatMoneyCompact, formatPercentPlain, formatPrice } from "@/lib/utils";
 import { industryLabel, sectorGroupLabel, sectorGroupOf } from "@/lib/sectors";
 
 export const size = OG_SIZE;
@@ -99,7 +99,7 @@ export default async function StockOgImage({
             <Chip tone="primary">{symbol}</Chip>
             {sector && <Chip>{clip(sector, 34)}</Chip>}
             {info?.marketCap ? (
-              <Chip>{`≈ ${formatCompact(info.marketCap, locale)} $`}</Chip>
+              <Chip>{`≈ ${formatMoneyCompact(info.marketCap, locale)}`}</Chip>
             ) : null}
           </>
         }

@@ -10,7 +10,7 @@ import { AlsoReporting } from "@/components/earnings/AlsoReporting";
 import type { AnalysisBadge as AnalysisBadgeData, SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { isSpotlight } from "@/lib/spotlight";
-import { cn, formatCompact, formatEtDateLong, formatPrice, plural } from "@/lib/utils";
+import { cn, formatMoneyCompact, formatEtDateLong, formatPrice, plural } from "@/lib/utils";
 import type { EarningsRow } from "@/lib/schema";
 
 /**
@@ -82,7 +82,7 @@ function cardFigures(
     row.revenueEstimate !== null && row.revenueEstimate !== undefined
       ? {
           label: short ? t.earnings.revenueShort : t.earnings.revenueEstimate,
-          value: `${formatCompact(row.revenueEstimate, locale)} $`,
+          value: formatMoneyCompact(row.revenueEstimate, locale),
         }
       : null;
   const eps =
@@ -96,7 +96,7 @@ function cardFigures(
   const cap = meta?.marketCap
     ? {
         label: short ? t.earnings.marketCapShort : t.market.marketCap,
-        value: `${formatCompact(meta.marketCap, locale)} $`,
+        value: formatMoneyCompact(meta.marketCap, locale),
       }
     : null;
 

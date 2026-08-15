@@ -1,5 +1,43 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+/**
+ * Kendi punto adlarımız — `--text-*` tokenlarının ölçü olanları.
+ *
+ * BUNLARI twMerge'E TANITMAK ZORUNLUYUZ. Birleştirici `text-xs`, `text-sm`
+ * gibi KENDİ bildiği adları punto sayıyor; tanımadığı `text-small` ise
+ * RENK varsayıyor. Bizim renk tokenlarımız da aynı önekle yazıldığı için
+ * (`text-body`, `text-strong`, `text-muted`) ikisi tek gruba düşüyor ve
+ * çakışma kuralı gereği SONUNCUSU kazanıyordu:
+ *
+ *     cn("text-small font-semibold", "text-body")  →  "font-semibold text-body"
+ *
+ * Yani punto sınıfı sessizce siliniyor ve eleman gövdeden miras kalan 16px
+ * ile çiziliyordu. Ekranda görülen buydu: sektör çipleri, analiz şeridindeki
+ * karar rozetleri, takvim künyeleri — hepsi olmaları gerekenden büyüktü ve
+ * kodda doğru sınıf yazılı olduğu için sorun görünmüyordu.
+ *
+ * Renkler listede YOK, olmamalı: tanımadığı `text-*` adını twMerge zaten
+ * renk sayıyor, yani eski davranış onlarda doğruydu.
+ */
+const TEXT_SIZES = [
+  "micro",
+  "nano",
+  "tiny",
+  "small",
+  "base",
+  "read",
+  "lead",
+  "title",
+  "heading",
+  "subdisplay",
+  "display",
+  "hero",
+] as const;
+
+const twMerge = extendTailwindMerge({
+  extend: { classGroups: { "font-size": [{ text: [...TEXT_SIZES] }] } },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -118,7 +156,29 @@ export function peRatioOf(
 }
 
 /**
- * EKSİ İŞARETİ SİMGENİN ÖNÜNDE — "−$0,19", "$-0,19" değil.
+ * Sayı ile para simgesi arasındaki BÖLÜNMEZ boşluk (U+00A0).
+ * Türkçe yazımda simge sayıdan sonra ve arada boşlukla durur; satır sonunda
+ * ayrılmamalı, yoksa dolar işareti tek başına bir alt satıra düşüyor.
+ */
+const MONEY_GAP = "\u00A0";
+
+/**
+ * DOLAR İŞARETİNİN YERİ DİLE BAĞLI — Türkçede sayıdan SONRA (507,12 $),
+ * İngilizcede ÖNCE ($507.12).
+ *
+ * Site iki dilde de öne yazıyordu. Yanlış olduğu, yüzde işaretinde olduğu
+ * gibi, kendi ürettiğimiz sayı ile yazılan metnin yan yana düştüğü yerde
+ * görüldü: bilanço analizinde ajanın yazdığı ölçü kartları "9,12 Mr $"
+ * derken hemen üstündeki künye "$403 Mr" diyordu — aynı ekranda iki imla.
+ * İngilizce kayıtlarda ajan da öne yazıyor ("$9.12B"), yani dile bağlı kural
+ * her iki tarafta da metinle uyuşuyor.
+ */
+export function withCurrency(body: string, locale: string): string {
+  return locale === "tr" ? `${body}${MONEY_GAP}$` : `$${body}`;
+}
+
+/**
+ * EKSİ İŞARETİ SİMGENİN ÖNÜNDE — "−$0.19" / "−0,19 $", "$-0.19" değil.
  *
  * İşaret sayının parçası olarak biçimlendirilip başına dolar konunca ortaya
  * "$-0,19" çıkıyordu: zarar açıklayan şirketlerin hisse başı kârı analiz
@@ -139,7 +199,7 @@ export function formatPrice(
     maximumFractionDigits: digits,
   });
   if (!currency) return nf.format(value);
-  const body = `$${nf.format(Math.abs(value))}`;
+  const body = withCurrency(nf.format(Math.abs(value)), locale);
   return value < 0 ? `−${SIGN_GAP}${body}` : body;
 }
 
@@ -237,6 +297,27 @@ export function formatChange(value: number | null | undefined, locale: string) {
  * gün içinde zaten oynuyor. Üç anlamlı hane hem sütunu hizalı tutuyor hem
  * de sayının gerçekten taşıdığı bilgiyi yazıyor.
  */
+/**
+ * Kısaltılmış dolar tutarı — "$403 Mr", "−$1,20 Mr".
+ *
+ * SİMGE HER YERDE AYNI YERDE. Aynı büyüklük sitede iki farklı biçimde
+ * yazılıyordu: piyasalar ve şirketler dizininde "$70,4 Mr", bilanço
+ * analizinde ve hisse künyesinde "70,4 Mr $". Aynı şirketin piyasa değeri
+ * iki ekranda iki imlayla duruyordu. Simge önde, çünkü fiyatlar da öyle
+ * yazılıyor (`formatPrice` → "$507,12") ve iki biçim arasında seçim
+ * yapılacaksa sayının başındaki simge sitenin geri kalanıyla uyuyor.
+ *
+ * Eksi işareti — para birimi kuralının aynısı — simgenin ÖNÜNDE.
+ */
+export function formatMoneyCompact(
+  value: number | null | undefined,
+  locale: string,
+): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  const body = withCurrency(formatCompact(Math.abs(value), locale), locale);
+  return value < 0 ? `−${SIGN_GAP}${body}` : body;
+}
+
 export function formatCompact(
   value: number | null | undefined,
   locale: string,

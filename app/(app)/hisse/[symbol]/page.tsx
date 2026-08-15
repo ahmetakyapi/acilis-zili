@@ -35,6 +35,7 @@ import {
 import { rateLimit, requestKey } from "@/lib/rate-limit";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { missingMetadata } from "@/lib/page-meta";
+import { pageAlternates } from "@/lib/site";
 import {
   getChartBars,
   getCompanyProfile,
@@ -60,7 +61,7 @@ import {
   cn,
   directionOf,
   formatChange,
-  formatCompact,
+  formatMoneyCompact,
   formatEtDateLong,
   formatEtDateShort,
   formatPercentPlain,
@@ -136,6 +137,13 @@ export async function generateMetadata(
   return {
     title: info?.name ? `${info.name} (${symbol})` : symbol,
     description,
+    /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
+       `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
+       adresleri (yüzlerce hisse, her yazı, her analiz) canonical'sız ve
+       "öteki dildeki karşılığı şu" bilgisi olmadan yayımlanıyordu. Kök
+       layout canonical yazmıyor (orada gerekçesi var), yani miras da yok.
+       `pageAlternates` RSS keşif etiketini de birlikte taşıyor. */
+    alternates: pageAlternates(`/hisse/${symbol}`, locale),
     /* TANINMAYAN SEMBOL DİZİNE GİRMESİN. Biçimi geçerli her dizi bu sayfayı
        açıyor (`ZQXW` da) ve şirket bilinmiyorsa ekran boş kartlarla doluyor.
        Sonsuz bir adres uzayı: taranırsa hem kotamız hem sitenin dizin
@@ -633,7 +641,7 @@ async function UpcomingEarnings({
                 {t.earnings.revenueEstimate}
               </dt>
               <dd className="numeral mt-0.5 text-sm font-semibold text-strong">
-                ${formatCompact(next.revenueEstimate, locale)}
+                {formatMoneyCompact(next.revenueEstimate, locale)}
               </dd>
             </div>
           )}
@@ -749,7 +757,7 @@ async function ProfileCard({
     [
       t.market.marketCap,
       marketCap ? (
-        <span className="numeral">${formatCompact(marketCap, locale)}</span>
+        <span className="numeral">{formatMoneyCompact(marketCap, locale)}</span>
       ) : (
         "—"
       ),
@@ -1113,13 +1121,13 @@ async function PastEarnings({
                   <>
                     <td className="numeral hidden px-2 py-2.5 text-right text-muted sm:px-3 lg:table-cell">
                       {row.revenueEstimate !== null
-                        ? `$${formatCompact(row.revenueEstimate, locale)}`
+                        ? formatMoneyCompact(row.revenueEstimate, locale)
                         : "—"}
                     </td>
                     <td className="numeral hidden px-4 py-2.5 text-right text-body sm:table-cell sm:px-5">
                       {row.revenueActual !== null ? (
                         <span className="font-semibold text-strong">
-                          ${formatCompact(row.revenueActual, locale)}
+                          {formatMoneyCompact(row.revenueActual, locale)}
                         </span>
                       ) : (
                         "—"
@@ -1232,8 +1240,11 @@ async function ComplianceCard({
                         over ? "text-down" : "text-strong",
                       )}
                     >
+                      {/* Yüzde işareti sözlüğe değil biçimlendiriciye ait:
+                          elden yazılan "%" iki dilde de sonda kalıyordu
+                          ("12,3%"), oysa Türkçede önde yazılır. */}
                       {value !== null
-                        ? `${formatPrice(value, locale, { digits: 1 })}%`
+                        ? formatPercentPlain(value, locale, 1)
                         : "—"}
                     </dd>
                   </div>

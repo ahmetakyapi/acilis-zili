@@ -24,7 +24,7 @@ import {
   cn,
   directionOf,
   directionText,
-  formatCompact,
+  formatMoneyCompact,
   formatPercent,
   formatPrice,
   formatVolume,
@@ -539,7 +539,7 @@ async function CompaniesTable({
                           daraltılarak sığdı. */}
                       <td className="numeral py-3 pl-1 pr-3 text-right text-small font-semibold text-body sm:px-3 sm:text-base">
                         {company.marketCap
-                          ? `$${formatCompact(company.marketCap, locale)}`
+                          ? formatMoneyCompact(company.marketCap, locale)
                           : "—"}
                       </td>
                       <td className="numeral hidden px-4 py-3 text-right text-read text-soft sm:table-cell sm:px-5">

@@ -4,7 +4,12 @@ import { EmptyState, Panel, PanelHeader, Skeleton } from "@/components/ui/primit
 import { getIpoCalendar } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { formatCompact, formatEtDateLong } from "@/lib/utils";
+import {
+  formatCompact,
+  formatEtDateLong,
+  formatMoneyCompact,
+  withCurrency,
+} from "@/lib/utils";
 
 /**
  * Halka arz takvimi — önümüzdeki altı hafta.
@@ -112,11 +117,12 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
 
             <span className="shrink-0 text-right">
               <span className="numeral block text-small font-semibold text-strong">
-                {row.priceRange ? `$${row.priceRange}` : "—"}
+                {/* Aralık bir metin ama para: simgenin yeri yine dile bağlı. */}
+                {row.priceRange ? withCurrency(row.priceRange, locale) : "—"}
               </span>
               <span className="numeral mt-0.5 block text-nano leading-tight text-muted">
                 {row.totalValue
-                  ? `$${formatCompact(row.totalValue, locale)}`
+                  ? formatMoneyCompact(row.totalValue, locale)
                   : row.shares
                     ? `${formatCompact(row.shares, locale)} ${t.ipo.shares}`
                     : "—"}

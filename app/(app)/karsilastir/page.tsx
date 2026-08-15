@@ -23,7 +23,7 @@ import {
   cn,
   directionOf,
   directionText,
-  formatCompact,
+  formatMoneyCompact,
   formatPercent,
   formatPercentPlain,
   formatPrice,
@@ -243,7 +243,7 @@ async function CompareBoard({
           names[symbols[i]],
           quotes[symbols[i]]?.price,
         );
-        return cap ? `$${formatCompact(cap, locale)}` : "—";
+        return formatMoneyCompact(cap, locale);
       },
     },
     {

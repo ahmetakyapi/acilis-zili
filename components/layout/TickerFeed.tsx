@@ -9,7 +9,7 @@ import { getSeries } from "@/lib/providers/fred";
 import { getUsdTry } from "@/lib/providers/tcmb";
 import { INDEX_STRIP } from "@/db/seed/symbols";
 import { getI18n } from "@/lib/i18n";
-import { formatPercent, formatPrice } from "@/lib/utils";
+import { formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils";
 
 /**
  * Şeridin verisini toplar. Kabuğun içinde <Suspense> ile sarılıdır — bu
@@ -71,7 +71,9 @@ export async function TickerFeed() {
     const delta = prev !== null ? latest - prev : null;
     yieldItems.push({
       label: YIELD_LABEL[series.slug] ?? series.slug,
-      value: `${formatPrice(latest, locale)}%`,
+      /* Tahvil getirisi bir YÜZDE: işaretin yeri dile bağlı ve
+         biçimlendiriciden geliyor ("%4,25" / "4.25%"). */
+      value: formatPercentPlain(latest, locale, 2),
       changePct: delta,
       change:
         delta === null || delta === 0
