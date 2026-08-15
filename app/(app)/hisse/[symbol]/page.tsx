@@ -9,6 +9,7 @@ import { Heart } from "@phosphor-icons/react/dist/ssr";
 import { NewsImage } from "@/components/news/NewsImage";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { PriceChartLazy } from "@/components/stock/PriceChartLazy";
+import { SymbolStories } from "@/components/stock/SymbolStories";
 import { chartLabels } from "@/lib/chart-labels";
 import {
   ChangePill,
@@ -271,6 +272,13 @@ export default async function StockPage(
           şey basılmaz. */}
       <Suspense fallback={null}>
         <SymbolAnalyses symbol={symbol} locale={locale} t={t} />
+      </Suspense>
+
+      {/* Mercek yazıları analizlerin ALTINDA: analiz bir çeyreğin okunmuş
+          hâli ve sayfanın tablosuyla doğrudan bağlı; mercek ise bir olayın
+          anlatısı, yani bir adım geride duran bağlam. */}
+      <Suspense fallback={null}>
+        <SymbolStories symbol={symbol} locale={locale} t={t} />
       </Suspense>
 
       {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}

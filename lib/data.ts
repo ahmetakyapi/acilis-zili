@@ -962,6 +962,52 @@ export async function countStories(): Promise<number> {
   }
 }
 
+/**
+ * Bir sembolün geçtiği mercek yazıları — hisse sayfası için.
+ *
+ * SORGU VERİTABANINDA SÜZÜYOR. Arşivin tamamını çekip bellekte `symbols`
+ * dizisini taramak, yazı sayısı büyüdükçe her hisse sayfasına binen bir
+ * maliyet olurdu; `jsonb` içinde arama Postgres'in kendi işi.
+ *
+ * Dil düşüşü arşivdekiyle aynı kural: istenen dildeki sürüm varsa o, yoksa
+ * yazının orijinali. Aynı slug iki dilde de dönebileceği için tekilleştirme
+ * burada da yapılıyor.
+ */
+export async function getStoriesForSymbol(
+  symbol: string,
+  locale: string,
+  limit = 3,
+): Promise<StoryIndexRow[]> {
+  try {
+    const rows = await db
+      .select({
+        slug: stories.slug,
+        title: stories.title,
+        dek: stories.dek,
+        eventDate: stories.eventDate,
+        symbols: stories.symbols,
+        readMinutes: stories.readMinutes,
+        locale: stories.locale,
+      })
+      .from(stories)
+      .where(sql`${stories.symbols} @> ${JSON.stringify([symbol])}::jsonb`)
+      .orderBy(desc(stories.eventDate), desc(stories.publishedAt))
+      .limit(limit * 2);
+
+    const bySlug = new Map<string, StoryIndexRow>();
+    for (const row of rows) {
+      const held = bySlug.get(row.slug);
+      if (!held) bySlug.set(row.slug, row);
+      else if (held.locale !== locale && row.locale === locale) {
+        bySlug.set(row.slug, row);
+      }
+    }
+    return [...bySlug.values()].slice(0, limit);
+  } catch {
+    return [];
+  }
+}
+
 export async function getStories(
   locale: string,
   limit = 60,
