@@ -1037,8 +1037,16 @@ async function PastEarnings({
 
   return (
     <div>
-      {/* Tablo dar ekranda kendi kabında kayar — sayfa yana kaymaz. */}
-      <div className="scroll-x">
+      {/* Tablo dar ekranda kendi kabında kayar — sayfa yana kaymaz.
+          KAP KLAVYEYLE ODAKLANABİLİR: 560px'lik tablo 352px'lik kapta kayıyor
+          ve `tabindex` olmadan sağdaki sütunlara fare olmadan ulaşılamıyordu
+          (WCAG 2.1.1). */}
+      <div
+        className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+        tabIndex={0}
+        role="region"
+        aria-label={t.stock.pastEarnings}
+      >
         <table className="w-full min-w-[560px] text-sm">
         <thead>
           <tr className="border-b border-line-soft text-left text-nano uppercase tracking-wider text-muted">

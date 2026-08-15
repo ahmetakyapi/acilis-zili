@@ -635,7 +635,20 @@ export function ArticleBody({
 
           case "table":
             return (
-              <div key={key} className="scroll-x rounded-(--radius-lg) border border-line">
+              /* KAYDIRMA KABI KLAVYEYLE ODAKLANABİLİR. Yazı içindeki tablo
+                 dar ekranda kendi kabında kayıyor (420px'lik tablo 352px'lik
+                 kapta) ama kap `tabindex` taşımadığı için fare ya da dokunma
+                 olmadan sağdaki sütunlara HİÇ ulaşılamıyordu — WCAG 2.1.1.
+                 Aynı düzeltme yönetim panelinde ve analiz tablosunda yapıldı;
+                 bu üçüncü tablo atlanmıştı. Ad dile göre: ekran okuyucu
+                 "kaydırılabilir bölge, Tablo" diye duyuruyor. */
+              <div
+                key={key}
+                className="scroll-x rounded-(--radius-lg) border border-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+                tabIndex={0}
+                role="region"
+                aria-label={locale === "en" ? "Table" : "Tablo"}
+              >
                 <table className="w-full min-w-[420px] text-left text-base">
                   <thead>
                     <tr className="border-b border-line bg-surface">

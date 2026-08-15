@@ -109,7 +109,15 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
 
       {symbols.length === 0 ? (
         <Panel className="flex flex-col gap-5 p-5 sm:p-6">
-          <EmptyState title={t.compare.empty} hint={t.compare.emptyHint} />
+          {/* Dolgusu kısılmış: `EmptyState` tek başına duran bir panel için
+              yazıldı ve altta 40px taşıyor; burada hemen altında hazır setler
+              var ve iki blok arasında altmış piksellik ölü bir bant
+              kalıyordu. */}
+          <EmptyState
+            title={t.compare.empty}
+            hint={t.compare.emptyHint}
+            className="pb-2 pt-6"
+          />
           <div className="flex flex-col gap-2.5">
             <p className="plate text-nano tracking-[0.09em]">
               {t.compare.presets}

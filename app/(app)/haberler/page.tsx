@@ -89,11 +89,24 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                   className="flex gap-3.5 px-4 py-3.5 transition-colors hover:bg-primary-tint sm:gap-4 sm:px-5"
                 >
                   <span className="min-w-0 flex-1">
-                  <p className="text-sm font-medium leading-snug text-strong">
+                  {/* ÇEVRİLMEMİŞ SATIR KENDİ DİLİNİ TAŞIR. Türkçe sayfada
+                      çevirisi henüz gelmemiş haber orijinal İngilizce
+                      başlığıyla görünüyor (çeviri cron'da ve sağlayıcı
+                      anahtarı yoksa atlanıyor — lib/translate.ts). `lang`
+                      olmadan ekran okuyucu İngilizce cümleyi Türkçe
+                      sesletmeye çalışıyordu. Mercek yazılarında aynı kural
+                      zaten uygulanıyor. */}
+                  <p
+                    lang={locale === "tr" && !item.headlineTr ? "en" : undefined}
+                    className="text-sm font-medium leading-snug text-strong"
+                  >
                     {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
                   </p>
                   {(item.summaryTr || item.summary) && (
-                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-soft">
+                    <p
+                      lang={locale === "tr" && !item.summaryTr ? "en" : undefined}
+                      className="mt-1 line-clamp-2 text-xs leading-relaxed text-soft"
+                    >
                       {locale === "tr" && item.summaryTr ? item.summaryTr : item.summary}
                     </p>
                   )}
