@@ -384,18 +384,27 @@
      metin değil, birer görsel öğe — bir rolü değil kendilerini temsil
      ediyorlar.
      ========================================================================== */
-  --text-micro: 0.5625rem;     /* 9px   — en küçük künye, plaka */
-  --text-nano: 0.65625rem;     /* 10.5  — mikro etiket, rozet */
-  --text-tiny: 0.71875rem;     /* 11.5  — künye satırı, veri damgası */
-  --text-small: 0.78125rem;    /* 12.5  — ikincil metin, çip */
-  --text-base: 0.84375rem;     /* 13.5  — kontrol ve tablo metni */
-  --text-read: 0.9375rem;      /* 15    — okuma gövdesi, panel başlığı */
-  --text-lead: 1.0625rem;      /* 17    — giriş cümlesi, öne çıkan satır */
-  --text-title: 1.3125rem;     /* 21    — kart ve bölüm başlığı */
-  --text-heading: 1.625rem;    /* 26    — panel manşeti */
-  --text-subdisplay: 1.875rem; /* 30    — ikinci düzey sayfa başlığı */
-  --text-display: 2.125rem;    /* 34    — sayfa başlığı */
-  --text-hero: 2.875rem;       /* 46    — giriş ekranı manşeti */
+  /* ÖLÇEK BİR KEZ AŞAĞI ÇEKİLDİ. İlk sürüm her tek seferlik değeri en yakın
+     basamağa yuvarluyordu ve yuvarlamanın çoğu YUKARI çıkıyordu (10→10.5,
+     11→11.5, 12→12.5, 13→13.5, 14→15); sonuç, arayüzün tamamının bir tık
+     şişmesi oldu — çipler, filtre şeritleri, tablo başlıkları ve sayfa
+     başlıkları gözle görülür biçimde büyüdü. Basamaklar orijinal ağırlığa
+     geri çekildi: artık yuvarlama AŞAĞI yönde ve ölçek eskisinden bir
+     miktar daha sıkı.
+     Ölçeğin faydası tam da burada görüldü — tek bir blokta on iki satır
+     değiştirmek, 621 kullanımın hepsini birden ayarladı. */
+  --text-micro: 0.5rem;        /* 8px   — en küçük künye, plaka */
+  --text-nano: 0.625rem;       /* 10    — mikro etiket, rozet */
+  --text-tiny: 0.6875rem;      /* 11    — künye satırı, veri damgası */
+  --text-small: 0.75rem;       /* 12    — ikincil metin, çip */
+  --text-base: 0.8125rem;      /* 13    — kontrol ve tablo metni */
+  --text-read: 0.875rem;       /* 14    — okuma gövdesi, panel başlığı */
+  --text-lead: 1rem;           /* 16    — giriş cümlesi, öne çıkan satır */
+  --text-title: 1.1875rem;     /* 19    — kart ve bölüm başlığı */
+  --text-heading: 1.5rem;      /* 24    — panel manşeti */
+  --text-subdisplay: 1.75rem;  /* 28    — ikinci düzey sayfa başlığı */
+  --text-display: 2rem;        /* 32    — sayfa başlığı */
+  --text-hero: 2.75rem;        /* 44    — giriş ekranı manşeti */
 
   --radius-xs: 0.375rem;
   --radius-sm: 0.5rem;

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocaleHref } from "@/components/layout/useLocaleHref";
 import { CalendarBlank, Gear } from "@phosphor-icons/react/dist/ssr";
-import { BellMark, BrandLockup } from "@/components/brand/BellMark";
+import { BellMark, BrandLockup, BrandWord } from "@/components/brand/BellMark";
 import { RouteProgress } from "./RouteProgress";
 import { NAV_ITEMS } from "./nav-items";
 import { stripLocale } from "@/lib/i18n/routing";
@@ -214,9 +214,10 @@ export function AppShell({
                   active ? "bg-surface-elevated" : "hover:bg-surface",
                 )}
               >
-                <span className="display-ink display-ink-tight">
-                  {labels.nav[item.href]}
-                </span>
+                {/* Gezinme etiketleri de maskesiz: 13-14 pikselde degrade
+                    maske metni yumuşatıyor ve bu, sekme adları gibi sürekli
+                    okunan metinlerde en çok görülen yer. */}
+                <span>{labels.nav[item.href]}</span>
               </Link>
             );
           })}
@@ -266,9 +267,16 @@ export function AppShell({
           aria-label={labels.brandName}
         >
           <BellMark size={32} />
-          <span className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.03em]">
-            {labels.brandName}
-          </span>
+          {/* DEGRADE MASKE YOK — METİN KESKİN OLSUN. `display-ink`
+              `-webkit-background-clip: text` ile çiziyor: harfler bir maske
+              hâline geliyor ve maskeli metin alt piksel yumuşatması ALAMIYOR,
+              gri tonlamalı çiziliyor. Telefonda bu, çubuğun tamamının
+              "hafif bulanık" okunmasının asıl sebebiydi — `backdrop-filter`
+              kaldırıldıktan sonra da kalan buydu.
+
+              Marka rengini bell işareti taşıyor (o bir SVG, maskeye ihtiyacı
+              yok); yazı düz accent mürekkeple aynı kimliği veriyor. */}
+          <BrandWord name={labels.brandName} className="text-lead" />
         </Link>
         {/* İki düğme, üç değil. Tema ve dil ayrı birer kutu olarak duruyordu;
             ikisi de "ortam" ayarı ve ikisi de tek bir ikonla ne yaptığını

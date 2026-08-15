@@ -225,7 +225,7 @@ export function AccountMenu({
         {signedIn ? (
           <span aria-hidden>{initials || "?"}</span>
         ) : (
-          <UserCircle weight="bold" size={20} aria-hidden />
+          <UserCircle weight="duotone" size={20} aria-hidden />
         )}
       </button>
 

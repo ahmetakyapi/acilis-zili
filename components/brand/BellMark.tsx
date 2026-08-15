@@ -104,6 +104,42 @@ export function BellMark({
  * kayık görünüyordu. Ortalanınca ikisi tek blok gibi oturuyor ve zil karosu
  * bu bloğun tam ortasına denk geliyor.
  */
+/**
+ * Marka adı — DEGRADE MASKE YOK.
+ *
+ * Ad bir dönem `display-ink` ile çiziliyordu: `-webkit-background-clip: text`
+ * harfleri bir maskeye çeviriyor ve maskeli metin alt piksel yumuşatması
+ * ALAMIYOR, gri tonlamalı çiziliyor. Telefonda üst çubuğun "hafif bulanık"
+ * okunmasının asıl sebebi buydu — `backdrop-filter` kaldırıldıktan sonra da
+ * kalan buydu. Marka kimliğini zil işareti (SVG, maskeye ihtiyacı yok) ve
+ * ikinci kelimenin accent mürekkebi taşıyor.
+ *
+ * Bölme SON BOŞLUKTAN: "Açılış Zili" ve "Opening Bell" ikisi de doğru
+ * ayrılıyor, ad sözlükten geldiği için sabit yazılamaz.
+ */
+export function BrandWord({
+  name,
+  className,
+  style,
+}: {
+  name: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const cut = name.lastIndexOf(" ");
+  const head = cut > 0 ? name.slice(0, cut) : name;
+  const tail = cut > 0 ? name.slice(cut + 1) : "";
+  return (
+    <span
+      className={cn("w-fit font-bold tracking-[-0.03em] text-strong", className)}
+      style={style}
+    >
+      {head}
+      {tail && <span className="text-primary"> {tail}</span>}
+    </span>
+  );
+}
+
 export function BrandLockup({
   name,
   tagline,
@@ -122,12 +158,7 @@ export function BrandLockup({
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <BellMark size={size} />
       <span className="flex flex-col items-center justify-center leading-none">
-        <span
-          className="display-ink display-ink-tight w-fit font-bold tracking-[-0.03em]"
-          style={{ fontSize: size * 0.5 }}
-        >
-          {name}
-        </span>
+        <BrandWord name={name} style={{ fontSize: size * 0.5 }} />
         {tagline && (
           <span
             className={cn(

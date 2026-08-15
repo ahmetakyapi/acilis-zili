@@ -1,16 +1,16 @@
 import {
   Bell,
   ChartBar,
-  ChartLineUp,
   BookOpen,
   Buildings,
   CalendarBlank,
   Heart,
   ListDashes,
   Newspaper,
+  FileText,
   Percent,
-  Receipt,
   Scroll,
+  TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Dictionary } from "@/lib/i18n";
 
@@ -69,11 +69,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     href: "/piyasalar",
     label: (t) => t.nav.markets,
-    /* `TrendUp` çıplak bir oktu ve duotone ağırlıkta 21 pikselde neredeyse
-       kütlesiz kalıyordu — alt çubuktaki komşularının yanında sönük
-       duruyordu. `ChartLineUp` aynı şeyi söylüyor ama eksen çizgisiyle
-       birlikte, yani okunur bir gövdesi var. */
-    icon: ChartLineUp,
+    icon: TrendUp,
     inMasthead: true,
     inBottomBar: true,
     shortLabel: (t) => t.nav.marketsShort,
@@ -95,10 +91,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     href: "/bilancolar",
     label: (t) => t.nav.earnings,
-    /* Bilanço bir FİNANSAL BELGE; `FileText` yalnızca "bir belge" diyor ve
-       Mercek'in `Scroll`u ile Rehber'in `BookOpen`ı arasında ayırt edici
-       değildi. */
-    icon: Receipt,
+    icon: FileText,
     inMasthead: true,
     inBottomBar: true,
     shortLabel: (t) => t.nav.earningsShort,

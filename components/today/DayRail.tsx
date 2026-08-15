@@ -320,11 +320,13 @@ export function DayRail({
             style={{ left: `${bound.left}%`, top: BOUND_TOP }}
           >
             <div
-              className={cn(PLATE, "text-nano tracking-[0.08em] text-body")}
+              className={cn(PLATE, "text-tiny tracking-[0.08em] text-body")}
             >
               {bound.label}
             </div>
-            <div className="numeral mt-0.5 text-nano text-muted">
+            {/* Saatler şeridin en çok okunan bilgisi — künye puntosunda
+                kalmaları onları eksenin gürültüsüne karıştırıyordu. */}
+            <div className="numeral mt-0.5 text-small text-muted">
               <span className="font-semibold text-body">{bound.primary}</span>{" "}
               {tags.primary}
               <span aria-hidden className="mx-1">
@@ -378,13 +380,13 @@ export function DayRail({
             eksenlerinde. Sağdaki künyeyi de taşır: iki uç aynı dilimin iki
             ucu, saat dilimini iki kez yazmaya gerek yok. */}
         <div
-          className="numeral absolute left-0 text-nano text-muted"
+          className="numeral absolute left-0 text-small text-muted"
           style={{ top: EDGE_TOP }}
         >
           {shown(RAIL_START)}
         </div>
         <div
-          className="numeral absolute right-0 text-nano text-muted"
+          className="numeral absolute right-0 text-small text-muted"
           style={{ top: EDGE_TOP }}
         >
           {shown(RAIL_END)} {tags.primary}
@@ -440,7 +442,9 @@ export function DayRail({
                    bilgi "şu an" — vurgulu ama alarm değil. İki hâl de artık
                    mavi degrade, fark TONDA: açıkken canlı mavi, kapalıyken
                    daha derin ve sakin bir mavi. */
-                "whitespace-nowrap rounded-full bg-gradient-to-r px-2 py-[3.5px] text-micro font-bold uppercase leading-none tracking-[0.09em] text-on-primary",
+                /* Rozet KÜÇÜK kalmalı: eksende gezen bir işaret, bir başlık
+                   değil. Ölçek aşağı çekilirken bu da bir kademe indi. */
+                "whitespace-nowrap rounded-full bg-gradient-to-r px-[7px] py-[3px] text-[8.5px] font-bold uppercase leading-none tracking-[0.08em] text-on-primary",
                 marketLive
                   ? "from-primary to-primary-soft"
                   : "from-primary-deep to-primary",
