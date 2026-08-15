@@ -37,9 +37,28 @@ const ROUTE_PATTERNS: [RegExp, string][] = [
   [/^\/haberler\/[^/]+$/, "/haberler/[id]"],
 ];
 
+/**
+ * Dil öneki şablondan ÖNCE ayrılır ve sonra geri konur.
+ *
+ * Desenlerin hepsi `^/hisse/...` gibi kökten başlıyordu; `/en` öneki
+ * eklendikten sonra `/en/hisse/AAPL` hiçbir desene uymuyor ve HAM hâliyle
+ * saklanıyordu. Sonuç iki katmanlı bir bozulma: İngilizce tarafın altı yüz
+ * ayrı hisse sayfası tek tek sayılıp hiçbiri listeye giremiyor, ve aynı
+ * ekranın Türkçesi ile İngilizcesi ayrı satırlar olarak duruyor — yani
+ * "en çok okunan bölüm" sorusu iki kez, yarım yarım cevaplanıyor.
+ *
+ * Önek KORUNUYOR, atılmıyor: hangi dilin okunduğu ayrı bir kırılım olarak
+ * zaten `locale` sütununda ama rota da dili söylerse iki sütun birbirini
+ * doğruluyor.
+ */
 export function routeTemplate(path: string): string {
+  const enPrefix = path === "/en" || path.startsWith("/en/");
+  const bare = enPrefix ? path.slice(3) || "/" : path;
   for (const [pattern, template] of ROUTE_PATTERNS) {
-    if (pattern.test(path)) return path.replace(pattern, template);
+    if (pattern.test(bare)) {
+      const applied = bare.replace(pattern, template);
+      return enPrefix ? `/en${applied}` : applied;
+    }
   }
   return path;
 }

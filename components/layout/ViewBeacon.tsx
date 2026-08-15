@@ -28,13 +28,20 @@ export function ViewBeacon({ locale }: { locale: string }) {
 
   useEffect(() => {
     if (!pathname || lastSent.current === pathname) return;
+
+    /* YÖNLENDİREN YALNIZCA İLK GÖRÜNTÜLEMEDE. `document.referrer` yumuşak
+       gezinmede DEĞİŞMİYOR: Google'dan gelip on sayfa gezen bir okuyucu on
+       satırın hepsine "google.com" yazdırıyordu ve "Nereden Geliniyor"
+       listesi gelen ziyaret sayısını değil, o ziyaretlerin okuduğu sayfa
+       sayısını ölçüyordu — arama motoru payı olduğundan kat kat büyük
+       görünüyordu. Girişten sonraki gezinmelerin kaynağı zaten sitenin
+       kendisi. */
+    const firstView = lastSent.current === null;
     lastSent.current = pathname;
 
     const body = JSON.stringify({
       path: pathname,
-      /* İlk girişte dış yönlendiren, site içi gezinmede kendi adresimiz —
-         sunucu kendi alan adını zaten eliyor. */
-      referrer: document.referrer || null,
+      referrer: firstView ? document.referrer || null : null,
       locale,
     });
 

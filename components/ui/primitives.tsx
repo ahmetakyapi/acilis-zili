@@ -287,11 +287,19 @@ export function TabBar({
   children: React.ReactNode;
 }) {
   return (
-    <nav aria-label={label}>
-      {/* Dar ekranda sekmeler kırılmak yerine kayar. */}
+    /* Dar ekranda sekmeler kırılmak yerine kayar. KAP İLE İÇERİK AYRI
+       ELEMAN: `min-w-max` ile `overflow-x-auto` aynı elemandaydı ve
+       `min-w-max` kabın KENDİSİNİ içerik kadar genişletiyordu — kap hiçbir
+       zaman içerikten dar olmadığı için kaydırma da hiç doğmuyordu. Taşma
+       sayfaya çıkıyor, sayfa gövdesi yatay kaydırmaya kilitli olduğu için
+       (globals.css) son sekmeler dar ekranda tamamen erişilemez kalıyordu. */
+    <nav
+      aria-label={label}
+      className="no-scrollbar -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0"
+    >
       <ul
         className={cn(
-          "no-scrollbar -mx-4 flex min-w-max gap-0.5 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0",
+          "flex min-w-max gap-0.5 border-b border-line",
           className,
         )}
       >
