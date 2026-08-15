@@ -11,6 +11,7 @@ import {
 } from "@/components/admin/AdminUI";
 import { Skeleton } from "@/components/ui/primitives";
 import { getContentSummary, getRecentBriefs } from "@/lib/admin-data";
+import { requireAdmin } from "@/lib/admin";
 import { agoLabel } from "@/lib/admin-format";
 import { formatEtDateShort } from "@/lib/utils";
 
@@ -28,7 +29,10 @@ import { formatEtDateShort } from "@/lib/utils";
  * ucundan zaten okuyor; buradaki insanın bakabildiği hâli.
  */
 
-export default function ContentPage() {
+export default async function ContentPage() {
+  /* Yetki kapısı SAYFADA da: layout yumuşak gezinmede yeniden koşmuyor. */
+  await requireAdmin();
+
   return (
     <div className="flex flex-col gap-5">
       <Suspense fallback={<Skeleton className="h-24 w-full rounded-xl" />}>
@@ -153,7 +157,7 @@ async function Briefs() {
           Henüz bülten yazılmamış.
         </p>
       ) : (
-        <AdminTable head={["Tarih", "Başlık", "Dil", "Dönem", "Yazılma"]}>
+        <AdminTable label="Bülten arşivi" head={["Tarih", "Başlık", "Dil", "Dönem", "Yazılma"]}>
           {rows.map((row) => (
             <AdminRow key={`${row.briefDate}-${row.locale}-${row.period}`}>
               <AdminCell mono strong>

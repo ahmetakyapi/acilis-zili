@@ -29,7 +29,12 @@ const { db } = await import("../lib/db");
 const { users } = await import("../lib/schema");
 const { eq } = await import("drizzle-orm");
 
-const key = username.trim().toLowerCase();
+/* UYGULAMANIN NORMALİZASYONU. Düz `toLowerCase()` Türkçe "İ"yi "i̇" yapıyor
+   (i + ayrı birleşen nokta) ve kayıt tarafı `normalizeUsername` kullandığı
+   için "İsmail" adlı bir hesap bu betikle HİÇ bulunamıyordu — betik sessizce
+   "kullanıcı yok" diyordu. İki taraf aynı fonksiyondan geçmeli. */
+const { normalizeUsername } = await import("../lib/utils");
+const key = normalizeUsername(username);
 const role = remove ? "user" : "admin";
 
 const updated = await db

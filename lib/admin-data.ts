@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { and, asc, count, countDistinct, desc, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm";
 import type { PgColumn } from "drizzle-orm/pg-core";
 import { db } from "./db";
@@ -31,6 +32,16 @@ import { addEtDays, todayEt } from "./market-hours";
  * hâlâ dün — iki tanım karışırsa panel kendi kendisiyle çelişir.
  */
 
+/** Bir anı ET takvim gününe indirger — panelin gün tanımı bu. */
+function etDayOf(at: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(at);
+}
+
 /* --------------------------------------------------------------------------
    Trafik
    -------------------------------------------------------------------------- */
@@ -42,9 +53,20 @@ export type TrafficPoint = {
   visitors: number;
 };
 
+/**
+ * GERÇEK TEKİL KİŞİ SAYISI ÜRETİLEMEZ ve bu bilinçli bir tasarım sonucu:
+ * `visitorHash` her gün döner (lib/schema.ts), yani iki günün kaydı
+ * birbirine bağlanamaz — gizliliğin bedeli tam olarak bu. Dolayısıyla çok
+ * günlük pencerede sayılan şey KİŞİ değil ZİYARETÇİ-GÜNÜ: her gün gelen on
+ * sadık okuyucu doksan günlük pencerede 900 satır üretir.
+ *
+ * Alan adı bunu söylüyor; ekran etiketleri de öyle. Ölçüyü düzeltmek
+ * mümkün değilken adını düzeltmemek, sayının yalan söylemesi demekti.
+ */
 export type TrafficTotals = {
   views: number;
-  visitors: number;
+  /** Ziyaretçi-günü — aynı kişi her gün yeniden sayılır. */
+  visitorDays: number;
 };
 
 /** Gün gün görüntüleme ve tekil ziyaretçi — grafiğin kaynağı. */
@@ -83,7 +105,22 @@ export async function getTrafficSeries(days: number): Promise<TrafficPoint[]> {
   }
 }
 
-/** Bir aralığın toplamı — tekil ziyaretçi günleri birleştirerek sayılır. */
+/**
+ * "Son N gün" penceresi — DÜN BİTER, bugün dışarıda.
+ *
+ * Aynı seçici ("Son 30 Gün") sayfada iki farklı pencere anlamına geliyordu:
+ * sayı kutuları tamamlanmış günleri sayıyordu (aşağıdaki gerekçe), kırılım
+ * listeleri ise bugünü de içeriyordu. Okuyucu "Bölümler" listesindeki
+ * satırları toplayıp üstteki "Görüntüleme" kutusuyla karşılaştırdığında
+ * tutmayan iki sayı görüyordu. Tek tanım burada; grafik bilerek dışarıda,
+ * çünkü orada bugün AYRI BİR SÜTUN olarak duruyor ve eksik olduğu görülüyor.
+ */
+export function fullDayWindow(days: number): { from: string; to: string } {
+  const to = addEtDays(todayEt(), -1);
+  return { from: addEtDays(to, -(days - 1)), to };
+}
+
+/** Bir aralığın toplamı — ziyaretçi sayısı GÜN BAŞINA tekildir (bkz. tip). */
 export async function getTrafficTotals(
   fromDay: string,
   toDay: string,
@@ -100,10 +137,10 @@ export async function getTrafficTotals(
       );
     return {
       views: Number(row?.views ?? 0),
-      visitors: Number(row?.visitors ?? 0),
+      visitorDays: Number(row?.visitors ?? 0),
     };
   } catch {
-    return { views: 0, visitors: 0 };
+    return { views: 0, visitorDays: 0 };
   }
 }
 
@@ -122,12 +159,13 @@ async function breakdownBy(
   limit: number,
   onlyNotNull = false,
 ): Promise<Breakdown[]> {
-  const today = todayEt();
-  const from = addEtDays(today, -(days - 1));
+  const { from, to } = fullDayWindow(days);
   try {
-    const where = onlyNotNull
-      ? and(gte(pageViews.viewedOn, from), isNotNull(column))
-      : gte(pageViews.viewedOn, from);
+    const inWindow = and(
+      gte(pageViews.viewedOn, from),
+      lte(pageViews.viewedOn, to),
+    );
+    const where = onlyNotNull ? and(inWindow, isNotNull(column)) : inWindow;
 
     const rows = await db
       .select({
@@ -166,12 +204,14 @@ export const getLocaleSplit = (days: number) =>
 export async function getSignedInShare(
   days: number,
 ): Promise<{ signedIn: number; anonymous: number }> {
-  const from = addEtDays(todayEt(), -(days - 1));
+  const { from, to } = fullDayWindow(days);
   try {
     const rows = await db
       .select({ signedIn: pageViews.signedIn, views: count() })
       .from(pageViews)
-      .where(gte(pageViews.viewedOn, from))
+      .where(
+        and(gte(pageViews.viewedOn, from), lte(pageViews.viewedOn, to)),
+      )
       .groupBy(pageViews.signedIn);
     return {
       signedIn: Number(rows.find((r) => r.signedIn)?.views ?? 0),
@@ -186,6 +226,10 @@ export async function getSignedInShare(
 export async function getTrackingRange(): Promise<{
   firstDay: string | null;
   rows: number;
+  /* Sorgu koştu mu. Hata yutulduğunda dönen `{null, 0}` "kayıt yok" ile
+     AYNIYDI: tablo okunamadığında panel "ölçüm henüz başlamadı" diyordu ve
+     bozuk olan tam da uyarması gereken şeydi. */
+  ok: boolean;
 }> {
   try {
     const [row] = await db
@@ -194,9 +238,13 @@ export async function getTrackingRange(): Promise<{
         rows: count(),
       })
       .from(pageViews);
-    return { firstDay: row?.firstDay ?? null, rows: Number(row?.rows ?? 0) };
+    return {
+      firstDay: row?.firstDay ?? null,
+      rows: Number(row?.rows ?? 0),
+      ok: true,
+    };
   } catch {
-    return { firstDay: null, rows: 0 };
+    return { firstDay: null, rows: 0, ok: false };
   }
 }
 
@@ -216,19 +264,21 @@ export async function getMemberSummary(): Promise<MemberSummary> {
   try {
     const now = new Date();
     const day = 86_400_000;
-    const [totals] = await db
+    /* İki sorgu bağımsız — sırayla beklemenin sebebi yoktu. */
+    const [[totals], [active]] = await Promise.all([
+      db
       .select({
         total: count(),
         last7: sql<number>`count(*) filter (where ${users.createdAt} >= ${new Date(now.getTime() - 7 * day)})`,
         last30: sql<number>`count(*) filter (where ${users.createdAt} >= ${new Date(now.getTime() - 30 * day)})`,
         admins: sql<number>`count(*) filter (where ${users.role} = 'admin')`,
       })
-      .from(users);
-
-    const [active] = await db
-      .select({ n: countDistinct(watchlists.userId) })
-      .from(watchlists)
-      .innerJoin(watchlistItems, eq(watchlistItems.watchlistId, watchlists.id));
+      .from(users),
+      db
+        .select({ n: countDistinct(watchlists.userId) })
+        .from(watchlists)
+        .innerJoin(watchlistItems, eq(watchlistItems.watchlistId, watchlists.id)),
+    ]);
 
     return {
       total: Number(totals?.total ?? 0),
@@ -280,6 +330,8 @@ export type MemberRow = {
   role: string;
   locale: string;
   createdAt: Date;
+  /** ET takvim günü ("YYYY-MM-DD") — ekranda basılan tarih bu. */
+  createdOn: string;
   symbolCount: number;
 };
 
@@ -304,6 +356,10 @@ export async function getRecentMembers(limit = 25): Promise<MemberRow[]> {
         role: users.role,
         locale: users.locale,
         createdAt: users.createdAt,
+        /* Kayıt günü ET'den — tablodaki tarih ile yandaki kayıt eğrisi aynı
+           kaynaktan beslensin (ikisi ayrı tanım kullanınca aynı kayıt iki
+           farklı güne düşüyordu). */
+        createdOn: sql<string>`to_char(${users.createdAt} at time zone 'America/New_York', 'YYYY-MM-DD')`,
       })
       .from(users)
       .orderBy(desc(users.createdAt))
@@ -383,7 +439,10 @@ export type ContentSummary = {
  * yazısının İngilizcesi yok, hangi analiz grafiksiz kalmış. Aynı soruları
  * `/api/analiz/context` rutin için cevaplıyor; burası insanın bakabildiği hâli.
  */
-export async function getContentSummary(): Promise<ContentSummary> {
+/* `cache()`: `/admin/icerik` bu özeti İKİ ayrı Suspense sınırından çağırıyor
+   (`Summary` ve `Gaps`) ve sarmalı olmadığı için tek sayfa açılışında iki kez
+   koşuyordu — üç ardışık sorgu × iki = altı HTTP gidiş-dönüşü. */
+export const getContentSummary = cache(async function getContentSummary(): Promise<ContentSummary> {
   const empty: ContentSummary = {
     briefs: 0,
     briefsLatest: null,
@@ -395,26 +454,32 @@ export async function getContentSummary(): Promise<ContentSummary> {
   };
 
   try {
-    const [briefRow] = await db
-      .select({
-        n: count(),
-        latest: sql<string | null>`max(${dailyBriefs.briefDate})`,
-      })
-      .from(dailyBriefs);
-
-    const storyRows = await db
-      .select({ slug: stories.slug, locale: stories.locale })
-      .from(stories);
-
-    const analysisRows = await db
-      .select({
-        symbol: earningsAnalyses.symbol,
-        period: earningsAnalyses.period,
-        locale: earningsAnalyses.locale,
-        quarterlyRevenue: earningsAnalyses.quarterlyRevenue,
-        guidance: earningsAnalyses.guidance,
-      })
-      .from(earningsAnalyses);
+    /* ÜÇÜ DE BAĞIMSIZ — sırayla beklenmelerinin bir sebebi yoktu.
+       neon-http'de her sorgu ayrı bir HTTP gidiş-dönüşü; üç tur bire indi. */
+    const [[briefRow], storyRows, analysisRows] = await Promise.all([
+      db
+        .select({
+          n: count(),
+          latest: sql<string | null>`max(${dailyBriefs.briefDate})`,
+        })
+        .from(dailyBriefs),
+      db.select({ slug: stories.slug, locale: stories.locale }).from(stories),
+      /* GRAFİK DİZİLERİ ÇEKİLMİYOR, yalnızca DOLU MU diye soruluyor. İki
+         `jsonb` sütunu (çeyreklik gelir ve öngörü) tek kullanım amacı
+         `?.length > 0` kontrolüyken tamamen ağdan geçiyordu — altmış analiz
+         × iki dil, yüzlerce kilobayt. Karar veritabanında veriliyor. */
+      db
+        .select({
+          symbol: earningsAnalyses.symbol,
+          period: earningsAnalyses.period,
+          locale: earningsAnalyses.locale,
+          hasCharts: sql<boolean>`
+            coalesce(jsonb_array_length(${earningsAnalyses.quarterlyRevenue}), 0) > 0
+            and coalesce(jsonb_array_length(${earningsAnalyses.guidance}), 0) > 0
+          `,
+        })
+        .from(earningsAnalyses),
+    ]);
 
     const storyLocales = new Map<string, Set<string>>();
     for (const row of storyRows) {
@@ -433,9 +498,7 @@ export async function getContentSummary(): Promise<ContentSummary> {
       /* İki dilden biri grafiksizse analiz eksik sayılır — sayfası metin
          yığını gibi duruyor demektir. Aynı kural rutinin okuduğu
          /api/analiz/context ucunda da geçerli. */
-      const hasCharts =
-        (row.quarterlyRevenue?.length ?? 0) > 0 && (row.guidance?.length ?? 0) > 0;
-      if (!hasCharts) chartless.add(key);
+      if (!row.hasCharts) chartless.add(key);
     }
 
     return {
@@ -454,7 +517,7 @@ export async function getContentSummary(): Promise<ContentSummary> {
   } catch {
     return empty;
   }
-}
+});
 
 export type BriefRow = {
   briefDate: string;
@@ -490,6 +553,10 @@ export async function getRecentBriefs(limit = 14): Promise<BriefRow[]> {
 
 export type HealthCheck = {
   label: string;
+  /* Satır hangi listeye ait. Sistem sayfası iki panel çiziyor ve ayrımı
+     `label.endsWith("anahtarı")` ile yapıyordu: etiketin sonundaki bir kelime
+     görünmez bir protokole dönüşmüştü, etiketi düzeltmek listeyi bozuyordu. */
+  group: "data" | "key";
   /** Ekranda basılan değer — "142 gün", "4 saat önce". */
   value: string;
   /** "ok" yeşil, "warn" sarı, "down" kırmızı, "idle" nötr. */
@@ -510,34 +577,70 @@ export async function getHealthChecks(): Promise<HealthCheck[]> {
   const today = todayEt();
   const checks: HealthCheck[] = [];
 
+  /* ALTI SONDA PARALEL. Hepsi birbirinden bağımsızdı ama ardışık `await`
+     ile bekleniyordu ve neon-http'de her sorgu ayrı bir HTTP gidiş-dönüşü:
+     altı tur, sistem sayfasının ilk baytına doğrudan biniyordu. Sonuçlar
+     `allSettled` ile toplanıyor — biri düşerse yalnızca o satır "okunamadı"
+     gösteriyor, diğer beşi eskisi gibi yerinde. */
+  const probes = await Promise.allSettled([
+    db
+      .select({ furthest: sql<string | null>`max(${earningsCalendar.reportDate})` })
+      .from(earningsCalendar),
+    db
+      .select({ furthest: sql<string | null>`max(${economicEvents.eventDate})` })
+      .from(economicEvents)
+      .where(eq(economicEvents.importance, "high")),
+    newsPulse(),
+    db
+      .select({
+        total: count(),
+        stalest: sql<string | null>`min(${symbols.updatedAt})`,
+        noCap: sql<number>`count(*) filter (where ${symbols.marketCap} is null)`,
+      })
+      .from(symbols),
+    db
+      .select({ stalest: sql<string | null>`min(${macroSeries.updatedAt})` })
+      .from(macroSeries),
+  ]);
+
+  /* Düşen sorgu fırlatır ve aşağıdaki blokların kendi `catch`i onu
+     "okunamadı" satırına çevirir — davranış eskisiyle aynı. */
+  function unwrap<T>(result: PromiseSettledResult<T>): T {
+    if (result.status === "rejected") throw result.reason;
+    return result.value;
+  }
+
   /* ---- Sağlayıcı anahtarları ---- */
   const keys: [string, string | undefined][] = [
     ["Alpaca", process.env.ALPACA_API_KEY_ID],
     ["Finnhub", process.env.FINNHUB_API_KEY],
     ["FRED", process.env.FRED_API_KEY],
     ["Anthropic", process.env.ANTHROPIC_API_KEY],
-    ["Cron sırrı", process.env.CRON_SECRET],
-    ["Rutin sırrı", process.env.BRIEF_SECRET],
+    ["Cron Sırrı", process.env.CRON_SECRET],
+    ["Rutin Sırrı", process.env.BRIEF_SECRET],
   ];
   for (const [label, value] of keys) {
     checks.push({
-      label: `${label} anahtarı`,
+      label,
+      group: "key",
       value: value ? "tanımlı" : "yok",
       tone: value ? "ok" : "down",
+      /* "anahtar" kelimesi NOTTA: özet ekranı bu satırları kendi panelinin
+         dışında, başlıksız listeliyor ve orada yalnızca "Anthropic" yazması
+         neyin eksik olduğunu söylemiyordu. */
       note: value
         ? "ortam değişkeni dolu"
-        : "eksik — ilgili kartlar veri alamaz",
+        : "anahtar eksik — ilgili kartlar veri alamaz",
     });
   }
 
   /* ---- Bilanço takvimi ne kadar ileri gidiyor ---- */
   try {
-    const [row] = await db
-      .select({ furthest: sql<string | null>`max(${earningsCalendar.reportDate})` })
-      .from(earningsCalendar);
+    const [row] = unwrap(probes[0]);
     const days = row?.furthest ? daysBetween(today, row.furthest) : 0;
     checks.push({
-      label: "Bilanço takvimi",
+      label: "Bilanço Takvimi",
+      group: "data",
       value: `${days} gün ileri`,
       /* Cron 30 gün dolduruyor; 20'nin altına düşmesi koşumun aksadığını
          söyler, 7'nin altı ekranın boşalmaya başladığı yer. */
@@ -545,18 +648,16 @@ export async function getHealthChecks(): Promise<HealthCheck[]> {
       note: `en uzak kayıt ${row?.furthest ?? "yok"}`,
     });
   } catch {
-    checks.push(failed("Bilanço takvimi"));
+    checks.push(failed("Bilanço Takvimi"));
   }
 
   /* ---- Ekonomik takvim ömrü ---- */
   try {
-    const [row] = await db
-      .select({ furthest: sql<string | null>`max(${economicEvents.eventDate})` })
-      .from(economicEvents)
-      .where(eq(economicEvents.importance, "high"));
+    const [row] = unwrap(probes[1]);
     const days = row?.furthest ? daysBetween(today, row.furthest) : 0;
     checks.push({
-      label: "Ekonomik takvim",
+      label: "Ekonomik Takvim",
+      group: "data",
       value: `${days} gün ileri`,
       /* FRED bir yıl ileriye dolduruyor; 90 günün altı senkronun durduğunu
          gösterir ve bunu takvim boşalmadan görmek gerekiyor. */
@@ -564,41 +665,32 @@ export async function getHealthChecks(): Promise<HealthCheck[]> {
       note: "yüksek önemli olayların en uzağı",
     });
   } catch {
-    checks.push(failed("Ekonomik takvim"));
+    checks.push(failed("Ekonomik Takvim"));
   }
 
   /* ---- Haber akışı ---- */
   try {
-    const [row] = await db
-      .select({
-        latest: sql<string | null>`max(${news.fetchedAt})`,
-        untranslated: sql<number>`count(*) filter (where ${news.headlineTr} is null)`,
-      })
-      .from(news);
-    const hours = hoursSince(row?.latest ?? null);
+    const pulse = unwrap(probes[2]);
+    const hours = hoursSince(pulse.latest);
     checks.push({
-      label: "Haber akışı",
+      label: "Haber Akışı",
+      group: "data",
       value: hours === null ? "kayıt yok" : `${hours} saat önce`,
       tone: hours === null ? "down" : hours <= 30 ? "ok" : "warn",
-      note: `çevrilmemiş başlık: ${Number(row?.untranslated ?? 0)}`,
+      note: `çevrilmemiş başlık: ${pulse.untranslated}`,
     });
   } catch {
-    checks.push(failed("Haber akışı"));
+    checks.push(failed("Haber Akışı"));
   }
 
   /* ---- Sembol profilleri ---- */
   try {
-    const [row] = await db
-      .select({
-        total: count(),
-        stalest: sql<string | null>`min(${symbols.updatedAt})`,
-        noCap: sql<number>`count(*) filter (where ${symbols.marketCap} is null)`,
-      })
-      .from(symbols);
+    const [row] = unwrap(probes[3]);
     const stalestHours = hoursSince(row?.stalest ?? null);
     const days = stalestHours === null ? null : Math.floor(stalestHours / 24);
     checks.push({
-      label: "Sembol profilleri",
+      label: "Sembol Profilleri",
+      group: "data",
       value: `${Number(row?.total ?? 0)} kayıt`,
       /* Cron günde 60 profil tazeliyor; ~700 sembollük evren 12 günde bir
          tur atıyor. 20 günü aşan bir kayıt turun aksadığını gösterir. */
@@ -609,30 +701,31 @@ export async function getHealthChecks(): Promise<HealthCheck[]> {
           : `en bayat kayıt ${days} günlük · piyasa değeri boş: ${Number(row?.noCap ?? 0)}`,
     });
   } catch {
-    checks.push(failed("Sembol profilleri"));
+    checks.push(failed("Sembol Profilleri"));
   }
 
   /* ---- Makro seriler ---- */
   try {
-    const [row] = await db
-      .select({ stalest: sql<string | null>`min(${macroSeries.updatedAt})` })
-      .from(macroSeries);
+    const [row] = unwrap(probes[4]);
     const hours = hoursSince(row?.stalest ?? null);
     checks.push({
-      label: "Makro seriler",
+      label: "Makro Seriler",
+      group: "data",
       value: hours === null ? "kayıt yok" : `${Math.floor(hours / 24)} gün önce`,
       tone: hours === null ? "down" : hours <= 48 ? "ok" : "warn",
       note: "en bayat serinin tazelenme zamanı",
     });
   } catch {
-    checks.push(failed("Makro seriler"));
+    checks.push(failed("Makro Seriler"));
   }
 
   /* ---- Ölçüm ---- */
   try {
     const range = await getTrackingRange();
+    if (!range.ok) throw new Error("olcum okunamadi");
     checks.push({
-      label: "Sayfa ölçümü",
+      label: "Sayfa Ölçümü",
+      group: "data",
       value: `${range.rows.toLocaleString("tr-TR")} kayıt`,
       tone: range.rows > 0 ? "ok" : "idle",
       note: range.firstDay
@@ -640,7 +733,7 @@ export async function getHealthChecks(): Promise<HealthCheck[]> {
         : "henüz kayıt yok — ilk ziyaretle başlar",
     });
   } catch {
-    checks.push(failed("Sayfa ölçümü"));
+    checks.push(failed("Sayfa Ölçümü"));
   }
 
   return checks;
@@ -649,6 +742,7 @@ export async function getHealthChecks(): Promise<HealthCheck[]> {
 function failed(label: string): HealthCheck {
   return {
     label,
+    group: "data",
     value: "okunamadı",
     tone: "down",
     note: "veritabanı sorgusu başarısız",
@@ -689,18 +783,50 @@ function hoursSince(value: Date | string | null): number | null {
  * yukarıdaki sağlık satırlarında; buradaki tek ek soru bugün koşup
  * koşmadığı.
  */
+/**
+ * Haber akışının son çekim damgası ve çevrilmemiş başlık sayısı.
+ *
+ * `cache()` — sistem sayfası aynı sayıyı İKİ KEZ soruyordu: bir kez cron
+ * nabzı ("bugün koştu mu"), bir kez de sağlık listesi ("akış ne kadar
+ * taze"). Aynı `max(fetched_at)` iki ayrı HTTP gidiş-dönüşü demekti ve
+ * ikisi ayrı anlarda okunduğu için teorik olarak farklı cevap da
+ * verebiliyorlardı.
+ */
+const newsPulse = cache(async function newsPulse(): Promise<{
+  latest: Date | null;
+  untranslated: number;
+}> {
+  const [row] = await db
+    .select({
+      latest: sql<string | null>`max(${news.fetchedAt})`,
+      untranslated: sql<number>`count(*) filter (where ${news.headlineTr} is null)`,
+    })
+    .from(news);
+  return {
+    latest: row?.latest ? new Date(row.latest) : null,
+    untranslated: Number(row?.untranslated ?? 0),
+  };
+});
+
 export async function getCronPulse(): Promise<{
   lastNewsFetch: Date | null;
   ranToday: boolean;
 }> {
   try {
-    const [row] = await db
-      .select({ latest: sql<string | null>`max(${news.fetchedAt})` })
-      .from(news);
-    const hours = hoursSince(row?.latest ?? null);
+    const pulse = await newsPulse();
+    /* TAKVİM GÜNÜ, KAYAN 24 SAAT DEĞİL. "Son 24 saatte koştu" ile "bugün
+       koştu" farklı sorular: cron hafta içi 10:30 UTC'de koşuyor, yani
+       Çarşamba 09:00'da bakan biri Salı'nın koşumunu görüp "Bugün koştu"
+       yazısıyla karşılaşıyordu — bugünkü koşum henüz olmamışken. Hafta
+       sonu daha da yanlıştı: Cumartesi hiç planlanmamışken Cuma'nın koşumu
+       22 saat önceydi ve kart yeşil yanıyordu. Panelin varlık sebebi olan
+       uyarı, tam da cron aksadığı sabah susuyordu.
+
+       Gün tanımı ET — panelin geri kalanıyla aynı (dosya başındaki not). */
+    const latest = pulse.latest;
     return {
-      lastNewsFetch: row?.latest ? new Date(row.latest) : null,
-      ranToday: hours !== null && hours < 24,
+      lastNewsFetch: latest,
+      ranToday: latest !== null && etDayOf(latest) === todayEt(),
     };
   } catch {
     return { lastNewsFetch: null, ranToday: false };

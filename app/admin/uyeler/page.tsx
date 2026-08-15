@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireAdmin } from "@/lib/admin";
 import { Suspense } from "react";
 import {
   AdminCell,
@@ -28,7 +29,10 @@ import { formatEtDateShort } from "@/lib/utils";
  * veriyi ekrana basmamak, KVKK metninde yazdığımız duruşun kod tarafı.
  */
 
-export default function MembersPage() {
+export default async function MembersPage() {
+  /* Yetki kapısı SAYFADA da: layout yumuşak gezinmede yeniden koşmuyor. */
+  await requireAdmin();
+
   return (
     <div className="flex flex-col gap-5">
       <Suspense fallback={<Skeleton className="h-24 w-full rounded-xl" />}>
@@ -93,10 +97,10 @@ async function RecentMembers() {
           Henüz kayıtlı üye yok.
         </p>
       ) : (
-        <AdminTable head={["Kullanıcı", "Kayıt", "Dil", "Sembol"]}>
+        <AdminTable label="Son kaydolan üyeler" head={["Kullanıcı", "Kayıt", "Dil", "Sembol"]}>
           {rows.map((row) => (
             <AdminRow key={row.id}>
-              <AdminCell strong>
+              <AdminCell strong rowHeader>
                 {row.username}
                 {row.role === "admin" && (
                   <span className="ml-2 rounded-full bg-primary-wash px-2 py-0.5 text-nano font-semibold uppercase tracking-[0.05em] text-primary">
@@ -104,11 +108,15 @@ async function RecentMembers() {
                   </span>
                 )}
               </AdminCell>
+              {/* Tarih ET gününden geliyor, `toISOString()` (UTC) DEĞİL:
+                  bir üye 12 Ağustos 21:30 ET'de kaydolduğunda UTC zaten
+                  13 Ağustos oluyordu ve bu tablo "13.08" derken hemen
+                  yanındaki kayıt eğrisi (ET ile grupluyor) aynı kaydı
+                  "12.08" satırında gösteriyordu. Yaz saatinde her günün
+                  20:00-24:00 ET aralığı — günün altıda biri — bir gün
+                  ileri görünüyordu. */}
               <AdminCell mono>
-                {formatEtDateShort(
-                  row.createdAt.toISOString().slice(0, 10),
-                  "tr",
-                )}
+                {formatEtDateShort(row.createdOn, "tr")}
               </AdminCell>
               <AdminCell>{row.locale === "en" ? "İngilizce" : "Türkçe"}</AdminCell>
               <AdminCell align="right" mono strong={row.symbolCount > 0}>

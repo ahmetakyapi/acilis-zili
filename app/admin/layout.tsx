@@ -37,8 +37,20 @@ export default async function AdminLayout({
     /* Güvenli alan kendi dolgusunda: sayfa `viewport-fit=cover` ile açılıyor
        ve çentik yan çevrildiğinde kenardan içeri giriyor. `px-` ile `pr-`
        birlikte yazılmıştı; ikisi aynı özgüllükte olduğu için hangisinin
-       kazandığı üretilen CSS'in sırasına kalıyordu. */
-    <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6 py-6 pl-[max(env(safe-area-inset-left),18px)] pr-[max(env(safe-area-inset-right),18px)] pb-[max(env(safe-area-inset-bottom),24px)] sm:py-8 sm:pl-6 sm:pr-6">
+       kazandığı üretilen CSS'in sırasına kalıyordu.
+
+       PANEL TÜRKÇE — `lang` bunu söylüyor. Sayfanın dili çereze bağlı ve
+       İngilizce çerezle gezen bir yönetici `<html lang="en">` altında Türkçe
+       metin okuyordu: ekran okuyucu yanlış sesletiyor, `uppercase` etiketler
+       İngilizce kuralıyla büyüyüp "İÇERİK" yerine "ICERIK" üretiyordu.
+
+       Güvenli alan `sm:` kırılımında DÜŞMÜYOR: `sm:pl-6` yatay çentiği
+       eziyordu ve telefon yan çevrildiğinde panel kenardan içeri giriyordu;
+       `max()` her iki kırılımda da duruyor. */
+    <div
+      lang="tr"
+      className="mx-auto flex w-full max-w-[1180px] flex-col gap-6 py-6 pl-[max(env(safe-area-inset-left),18px)] pr-[max(env(safe-area-inset-right),18px)] pb-[max(env(safe-area-inset-bottom),24px)] sm:py-8 sm:pl-[max(env(safe-area-inset-left),24px)] sm:pr-[max(env(safe-area-inset-right),24px)]"
+    >
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
           <p className="text-nano font-semibold uppercase tracking-[0.09em] text-primary">
@@ -58,7 +70,9 @@ export default async function AdminLayout({
 
       <AdminTabs />
 
-      {children}
+      {/* İçerik bir YER İŞARETİ içinde: panelde `<main>` yoktu, yani ekran
+          okuyucu "ana içerik" diye bir bölgeye atlayamıyordu. */}
+      <main>{children}</main>
     </div>
   );
 }

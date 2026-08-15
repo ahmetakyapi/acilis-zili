@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireAdmin } from "@/lib/admin";
 import { Suspense } from "react";
 import {
   AdminPanel,
@@ -19,8 +20,9 @@ import {
   getTrackingRange,
   getTrafficSeries,
   getTrafficTotals,
+  fullDayWindow,
 } from "@/lib/admin-data";
-import { addEtDays, todayEt } from "@/lib/market-hours";
+import { addEtDays } from "@/lib/market-hours";
 import { getLocale } from "@/lib/i18n";
 import { deltaOf } from "@/lib/admin-format";
 import { cn, formatEtDateShort } from "@/lib/utils";
@@ -43,6 +45,9 @@ function windowOf(raw: string | string[] | undefined): WindowDays {
 }
 
 export default async function TrafficPage(props: PageProps<"/admin/trafik">) {
+  /* Yetki kapısı SAYFADA da: layout yumuşak gezinmede yeniden koşmuyor. */
+  await requireAdmin();
+
   const search = await props.searchParams;
   const days = windowOf(search.gun);
 
@@ -62,7 +67,10 @@ export default async function TrafficPage(props: PageProps<"/admin/trafik">) {
             scroll={false}
             aria-current={option === days ? "true" : undefined}
             className={cn(
-              "inline-flex h-8 flex-1 items-center justify-center rounded-md text-base font-semibold transition-colors",
+              /* Dokunma hedefi 32px'ti; sitenin geri kalanında bu tür seçiciler
+                 44px'e çıkarılmıştı (primitives.tsx `SegmentItem`) ve panel
+                 atlanmıştı. Masaüstünde 34px yeter, orada işaretçi hassas. */
+              "inline-flex min-h-11 flex-1 items-center justify-center rounded-md text-base font-semibold transition-colors sm:min-h-[34px]",
               option === days
                 ? "bg-surface-elevated text-strong"
                 : "text-muted hover:text-body",
@@ -118,16 +126,27 @@ export default async function TrafficPage(props: PageProps<"/admin/trafik">) {
 }
 
 async function Totals({ days }: { days: WindowDays }) {
-  const today = todayEt();
+  /* KARŞILAŞTIRMA TAM GÜNLERLE. Güncel pencere BUGÜNÜ içeriyordu ve bugün
+     henüz bitmemiş: trafik tamamen sabit olsa bile panel her gün kalıcı bir
+     düşüş gösteriyordu (30 günün 29'u tam + bugünün yarısı, karşısında 30
+     tam gün). Her iki pencere de dünde bitiyor; bugünün kendisi grafikte
+     zaten görünüyor ve orada eksik olduğu belli. */
+  const now = fullDayWindow(days);
+  const before = fullDayWindow(days * 2);
   const [current, previous, range] = await Promise.all([
-    getTrafficTotals(addEtDays(today, -(days - 1)), today),
-    getTrafficTotals(addEtDays(today, -(days * 2 - 1)), addEtDays(today, -days)),
+    getTrafficTotals(now.from, now.to),
+    /* Önceki pencere: iki katı geriden başlar, güncel pencerenin bir gün
+       öncesinde biter. */
+    getTrafficTotals(before.from, addEtDays(now.from, -1)),
     getTrackingRange(),
   ]);
 
-  const perVisitor =
-    current.visitors > 0
-      ? (current.views / current.visitors).toFixed(1).replace(".", ",")
+  /* Payda ziyaretçi-günü olduğu için sonuç "kişi başına" değil "kişi-gün
+     başına" — yani ortalama bir ziyaretin kaç sayfa okuduğu. Etiket de
+     böyle yazılıyor. */
+  const perVisitDay =
+    current.visitorDays > 0
+      ? (current.views / current.visitorDays).toFixed(1).replace(".", ",")
       : "—";
 
   return (
@@ -135,27 +154,37 @@ async function Totals({ days }: { days: WindowDays }) {
       <StatBox
         label="Görüntüleme"
         value={current.views.toLocaleString("tr-TR")}
-        sub={`son ${days} gün`}
+        sub={`önceki ${days} tam gün`}
         delta={deltaOf(current.views, previous.views)}
       />
       <StatBox
-        label="Tekil Ziyaretçi"
-        value={current.visitors.toLocaleString("tr-TR")}
-        sub={`son ${days} gün`}
-        delta={deltaOf(current.visitors, previous.visitors)}
+        label="Ziyaretçi Günü"
+        value={current.visitorDays.toLocaleString("tr-TR")}
+        sub={`${days} tam gün · aynı kişi her gün yeniden sayılır`}
+        delta={deltaOf(current.visitorDays, previous.visitorDays)}
       />
       <StatBox
-        label="Kişi Başı Sayfa"
-        value={perVisitor}
-        sub="ziyaretçi başına görüntüleme"
+        label="Ziyaret Başı Sayfa"
+        value={perVisitDay}
+        sub="bir günde okunan sayfa"
       />
       <StatBox
         label="Ölçüm Başlangıcı"
-        value={range.firstDay ? formatEtDateShort(range.firstDay, "tr") : "—"}
+        value={
+          !range.ok
+            ? "—"
+            : range.firstDay
+              ? formatEtDateShort(range.firstDay, "tr")
+              : "—"
+        }
+        /* Okunamadı ile "henüz kayıt yok" AYRI: ölçüm tablosu düştüğünde
+           panel kurulumun yeni olduğunu söylüyordu. */
         sub={
-          range.firstDay
-            ? `${range.rows.toLocaleString("tr-TR")} kayıt`
-            : "henüz kayıt yok"
+          !range.ok
+            ? "ölçüm okunamadı"
+            : range.firstDay
+              ? `${range.rows.toLocaleString("tr-TR")} kayıt`
+              : "henüz kayıt yok"
         }
       />
     </StatGrid>
@@ -169,7 +198,7 @@ async function Chart({ days }: { days: WindowDays }) {
   ]);
   return (
     <AdminPanel>
-      <AdminPanelTitle hint={`Son ${days} gün · ET takvim günü`}>
+      <AdminPanelTitle hint={`Son ${days} gün · bugün dahil, ET takvim günü`}>
         Günlük Trafik
       </AdminPanelTitle>
       <TrafficChart points={series} locale={locale} />
@@ -181,7 +210,7 @@ async function Routes({ days }: { days: WindowDays }) {
   const rows = await getTopRoutes(days, 12);
   return (
     <AdminPanel>
-      <AdminPanelTitle hint="Dinamik sayfalar şablonlarında toplanır">
+      <AdminPanelTitle hint={`Son ${days} tam gün · dinamik sayfalar şablonlarında toplanır`}>
         Bölümler
       </AdminPanelTitle>
       <RankList
@@ -189,7 +218,7 @@ async function Routes({ days }: { days: WindowDays }) {
           key: r.key,
           label: r.key,
           value: r.views,
-          secondary: `${r.visitors} kişi`,
+          secondary: `${r.visitors} ziyaretçi-günü`,
         }))}
       />
     </AdminPanel>
@@ -200,7 +229,7 @@ async function Paths({ days }: { days: WindowDays }) {
   const rows = await getTopPaths(days, 15);
   return (
     <AdminPanel>
-      <AdminPanelTitle hint="Tek tek adresler — hangi hisse, hangi yazı">
+      <AdminPanelTitle hint={`Son ${days} tam gün · tek tek adresler`}>
         Sayfalar
       </AdminPanelTitle>
       <RankList
@@ -211,7 +240,7 @@ async function Paths({ days }: { days: WindowDays }) {
              nasıl görünüyordu" sorusu hemen orada cevaplanıyor. */
           href: r.key,
           value: r.views,
-          secondary: `${r.visitors} kişi`,
+          secondary: `${r.visitors} ziyaretçi-günü`,
         }))}
       />
     </AdminPanel>
@@ -222,7 +251,7 @@ async function Referrers({ days }: { days: WindowDays }) {
   const rows = await getTopReferrers(days, 12);
   return (
     <AdminPanel>
-      <AdminPanelTitle hint="Yalnızca alan adı — arama terimi saklanmaz">
+      <AdminPanelTitle hint={`Son ${days} tam gün · yalnızca alan adı, arama terimi saklanmaz`}>
         Nereden Geliniyor
       </AdminPanelTitle>
       <RankList
@@ -230,7 +259,7 @@ async function Referrers({ days }: { days: WindowDays }) {
           key: r.key,
           label: r.key,
           value: r.views,
-          secondary: `${r.visitors} kişi`,
+          secondary: `${r.visitors} ziyaretçi-günü`,
         }))}
         emptyLabel="Dış yönlendirme kaydı yok — gelenler adresi doğrudan açmış."
       />
@@ -260,7 +289,7 @@ async function Splits({ days }: { days: WindowDays }) {
 
   return (
     <AdminPanel>
-      <AdminPanelTitle hint="Cihaz, dil ve üyelik kırılımı">Okuyucu</AdminPanelTitle>
+      <AdminPanelTitle hint={`Son ${days} tam gün · cihaz, dil ve üyelik`}>Okuyucu</AdminPanelTitle>
 
       <div className="flex flex-col gap-5">
         <div>
@@ -293,10 +322,13 @@ async function Splits({ days }: { days: WindowDays }) {
           <h3 className="mb-1.5 text-tiny font-semibold uppercase tracking-[0.06em] text-muted">
             Üyelik
           </h3>
+          {/* EK SABİT YAZILAMAZ. Cümle "%{oran}'ı" diye kuruluyordu ve
+              Türkçe ünlü uyumu sayının okunuşuna bağlı: %2'si, %6'sı,
+              %11'i, %40'ı... Sayı her gün değiştiği için doğru ek
+              seçilemez. Cümle eki hiç istemeyecek biçimde yeniden kuruldu. */}
           <p className="text-base text-body">
-            Görüntülemelerin{" "}
+            Giriş yapmış okuyucuların payı:{" "}
             <span className="font-semibold text-strong">%{signedShare}</span>
-            {"'ı giriş yapmış okuyuculardan geliyor."}
           </p>
           <p className="mt-1 text-small text-muted">
             {signed.signedIn.toLocaleString("tr-TR")} üye ·{" "}

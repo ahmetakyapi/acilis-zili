@@ -9,6 +9,7 @@ import {
 } from "@/components/admin/AdminUI";
 import { Skeleton } from "@/components/ui/primitives";
 import { getCronPulse, getHealthChecks } from "@/lib/admin-data";
+import { requireAdmin } from "@/lib/admin";
 import { getStatus } from "@/lib/data";
 import { agoLabel } from "@/lib/admin-format";
 import { formatInZone, TR_ZONE } from "@/lib/session-clock";
@@ -26,7 +27,10 @@ import { ET_ZONE } from "@/lib/market-hours";
  * Dikkat / Sorunlu" yazıyor.
  */
 
-export default function SystemPage() {
+export default async function SystemPage() {
+  /* Yetki kapısı SAYFADA da: layout yumuşak gezinmede yeniden koşmuyor. */
+  await requireAdmin();
+
   return (
     <div className="flex flex-col gap-5">
       <Suspense fallback={<Skeleton className="h-24 w-full rounded-xl" />}>
@@ -64,8 +68,8 @@ async function Pulse() {
         sub={agoLabel(pulse.lastNewsFetch)}
         delta={
           pulse.ranToday
-            ? { text: "sağlıklı", tone: "up" }
-            : { text: "kontrol et", tone: "down" }
+            ? { text: "sağlıklı", tone: "up", srLabel: "sağlıklı" }
+            : { text: "kontrol et", tone: "down", srLabel: "kontrol et" }
         }
       />
       <StatBox
@@ -89,8 +93,8 @@ async function Pulse() {
 
 async function Checks() {
   const checks = await getHealthChecks();
-  const keys = checks.filter((c) => c.label.endsWith("anahtarı"));
-  const data = checks.filter((c) => !c.label.endsWith("anahtarı"));
+  const keys = checks.filter((c) => c.group === "key");
+  const data = checks.filter((c) => c.group === "data");
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -142,7 +146,7 @@ async function Checks() {
             >
               <span className="flex items-center gap-2.5 text-base text-strong">
                 <HealthDot tone={check.tone} />
-                {check.label.replace(" anahtarı", "")}
+                {check.label}
               </span>
               <span className="text-small text-muted">{check.note}</span>
             </li>

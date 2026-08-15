@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireAdmin } from "@/lib/admin";
 import { Suspense } from "react";
 import {
   AdminPanel,
@@ -32,7 +33,10 @@ import { deltaOf } from "@/lib/admin-format";
  * şeyi eşit ağırlıkta gösterip hiçbir şeyi söylememesi.
  */
 
-export default function AdminOverviewPage() {
+export default async function AdminOverviewPage() {
+  /* Yetki kapısı SAYFADA da: layout yumuşak gezinmede yeniden koşmuyor. */
+  await requireAdmin();
+
   return (
     <div className="flex flex-col gap-5">
       <Suspense fallback={<Skeleton className="h-28 w-full rounded-xl" />}>
@@ -57,10 +61,12 @@ export default function AdminOverviewPage() {
 }
 
 async function Headline() {
-  const today = todayEt();
+  /* İki pencere de DÜNDE biter: bugünü içeren yarım gün, tam bir haftayla
+     karşılaştırılınca trafik sabitken bile kalıcı düşüş gösteriyordu. */
+  const lastFull = addEtDays(todayEt(), -1);
   const [last7, prev7, members] = await Promise.all([
-    getTrafficTotals(addEtDays(today, -6), today),
-    getTrafficTotals(addEtDays(today, -13), addEtDays(today, -7)),
+    getTrafficTotals(addEtDays(lastFull, -6), lastFull),
+    getTrafficTotals(addEtDays(lastFull, -13), addEtDays(lastFull, -7)),
     getMemberSummary(),
   ]);
 
@@ -69,14 +75,16 @@ async function Headline() {
       <StatBox
         label="Görüntüleme"
         value={last7.views.toLocaleString("tr-TR")}
-        sub="son 7 gün"
+        sub="son 7 tam gün"
         delta={deltaOf(last7.views, prev7.views)}
       />
+      {/* "Tekil Ziyaretçi" DEĞİL: özet her gün döndüğü için çok günlük
+          pencerede sayılan şey kişi değil ziyaretçi-günü (bkz. TrafficTotals). */}
       <StatBox
-        label="Tekil Ziyaretçi"
-        value={last7.visitors.toLocaleString("tr-TR")}
-        sub="son 7 gün"
-        delta={deltaOf(last7.visitors, prev7.visitors)}
+        label="Ziyaretçi Günü"
+        value={last7.visitorDays.toLocaleString("tr-TR")}
+        sub="son 7 gün · aynı kişi her gün yeniden sayılır"
+        delta={deltaOf(last7.visitorDays, prev7.visitorDays)}
       />
       <StatBox
         label="Üye"
@@ -84,8 +92,12 @@ async function Headline() {
         sub={`${members.withWatchlistItems} kişi liste kurmuş`}
         delta={
           members.last7 > 0
-            ? { text: `+${members.last7}`, tone: "up" }
-            : { text: "0", tone: "neutral" }
+            ? {
+                text: `+${members.last7}`,
+                tone: "up",
+                srLabel: `${members.last7} yeni üye`,
+              }
+            : { text: "0", tone: "neutral", srLabel: "0" }
         }
       />
       <StatBox

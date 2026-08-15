@@ -80,7 +80,7 @@ export function StatBox({
   label: string;
   value: string;
   sub?: string;
-  delta?: { text: string; tone: StatTone } | null;
+  delta?: { text: string; tone: StatTone; srLabel: string } | null;
 }) {
   return (
     <div className="rounded-lg border border-line bg-surface-elevated px-4 py-3.5">
@@ -113,6 +113,9 @@ export function StatBox({
             )}
           >
             {delta.text}
+            {/* Yön ekran okuyucuya da söyleniyor: "−%12" işareti gören için
+                açık ama sesletimde tire kaybolabiliyor. */}
+            <span className="sr-only"> ({delta.srLabel})</span>
           </span>
         )}
         {sub && <span className="text-small text-muted">{sub}</span>}
@@ -212,16 +215,29 @@ export function RankList({
 
 export function AdminTable({
   head,
+  label,
   children,
 }: {
   head: string[];
+  /** Kaydırılabilir bölgenin adı — ekran okuyucu bunu duyurur. */
+  label: string;
   children: React.ReactNode;
 }) {
   return (
     /* Dar ekranda tablo KENDİ kabında kayar. Sayfa gövdesinin yatay
        kaymasına izin verilmiyor (globals.css'te html/body kilitli) ve
        dolayısıyla geniş içerik kendi kaydırmasını kendisi taşımak zorunda. */
-    <div className="scroll-x -mx-1 overflow-x-auto px-1">
+    /* KAYDIRMA KABI KLAVYEYLE ODAKLANABİLİR. Kap kayıyordu ama `tabindex`
+       taşımadığı için klavyeyle gezen okuyucu sağdaki sütunlara HİÇ
+       ulaşamıyordu — fare ya da dokunma olmadan tablonun yarısı erişilemez
+       kalıyordu (WCAG 2.1.1). `role="region"` + ad, ekran okuyucunun da
+       "kaydırılabilir bir bölge" diye duyurmasını sağlıyor. */
+    <div
+      className="scroll-x -mx-1 overflow-x-auto px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+      tabIndex={0}
+      role="region"
+      aria-label={label}
+    >
       <table className="w-full min-w-[520px] border-collapse text-base">
         <thead>
           <tr className="border-b border-line-strong text-left">
@@ -255,23 +271,32 @@ export function AdminCell({
   align = "left",
   strong,
   mono,
+  rowHeader,
 }: {
   children: React.ReactNode;
   align?: "left" | "right";
   strong?: boolean;
   mono?: boolean;
+  /** Satırı TANIMLAYAN ilk hücre — `th scope="row"` olarak basılır. */
+  rowHeader?: boolean;
 }) {
+  /* Satır başlığı işaretlenmemişti: hücre hücre gezen ekran okuyucu
+     kullanıcısı "13.08.2026 · 4" duyuyor ama hangi üyenin satırında
+     olduğunu bilmiyordu. */
+  const Tag = rowHeader ? "th" : "td";
   return (
-    <td
+    <Tag
+      scope={rowHeader ? "row" : undefined}
       className={cn(
         "py-2.5 pl-3 first:pl-0",
         align === "right" && "text-right",
         strong ? "font-semibold text-strong" : "text-body",
         mono && "tabular-nums",
+        rowHeader && "text-left font-semibold",
       )}
     >
       {children}
-    </td>
+    </Tag>
   );
 }
 

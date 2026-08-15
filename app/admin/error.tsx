@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react/dist/ssr";
-import { Button, Panel } from "@/components/ui/primitives";
+import { Button, ButtonLink, Panel } from "@/components/ui/primitives";
 
 /**
  * Yönetim ekranı çöktüğünde.
@@ -40,9 +39,11 @@ export default function AdminError({
       </span>
 
       <div className="flex flex-col gap-2.5">
-        <h1 className="text-title font-bold tracking-[-0.025em] text-strong">
+        {/* `h2` — layout'un `h1`i ayakta kalıyor ve panelde iki tepe başlık
+            olamaz; hata ekranı o başlığın ALTINDAKİ bölüm. */}
+        <h2 className="text-title font-bold tracking-[-0.025em] text-strong">
           Panel Yüklenemedi
-        </h1>
+        </h2>
         <p className="text-base leading-relaxed text-body">
           Bu ekranın verisi çekilemedi. Çoğu zaman veritabanı bağlantısı
           geçici olarak düşmüştür; tekrar denemek genellikle yeter.
@@ -54,12 +55,11 @@ export default function AdminError({
           <ArrowClockwise weight="bold" size={15} />
           Tekrar Dene
         </Button>
-        <Link
-          href="/admin"
-          className="inline-flex h-10 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
-        >
-          Panele dön
-        </Link>
+        {/* Elden yazılmış 40 piksellik düğme yerine primitif: yanındaki
+            "Tekrar Dene" ile aynı yükseklik ve aynı dokunma hedefi. */}
+        <ButtonLink href="/admin" variant="ghost">
+          Panele Dön
+        </ButtonLink>
       </div>
 
       {error.digest && (

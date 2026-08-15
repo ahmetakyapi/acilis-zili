@@ -1,3 +1,5 @@
+import { cache } from "react";
+import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "./db";
@@ -23,8 +25,13 @@ export type AdminSession = {
   username: string;
 };
 
-/** Yönetici mi — değilse null. Hiçbir yere yönlendirmez, karar çağırana ait. */
-export async function getAdmin(): Promise<AdminSession | null> {
+/**
+ * Yönetici mi — değilse null. Hiçbir yere yönlendirmez, karar çağırana ait.
+ *
+ * `cache()`: layout ve sayfa aynı istekte ikisi de soruyor (aşağıdaki
+ * `requireAdmin` notu), sorgu bir kez koşsun.
+ */
+export const getAdmin = cache(async function getAdmin(): Promise<AdminSession | null> {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return null;
@@ -43,6 +50,22 @@ export async function getAdmin(): Promise<AdminSession | null> {
 
   if (!row || row.role !== "admin") return null;
   return { userId: row.id, username: row.username };
+});
+
+/**
+ * Kapı — yetkisizi 404'e düşürür.
+ *
+ * HER SAYFA KENDİ KONTROLÜNÜ YAPAR, layout'a güvenmez. Next App Router'da
+ * kardeş rotalar arasında yumuşak gezinmede ORTAK LAYOUT YENİDEN
+ * ÇALIŞMIYOR: yalnızca değişen segmentin RSC yükü isteniyor. Yani yetkisi
+ * alınmış bir yönetici, elindeki sayfadan öteki sekmelere geçmeye devam
+ * edebiliyordu — tam sayfa yenilenene kadar. Kontrolün maliyeti tek bir
+ * sorgu ve `cache()` sayesinde istek başına bir kez koşuyor.
+ */
+export async function requireAdmin(): Promise<AdminSession> {
+  const admin = await getAdmin();
+  if (!admin) notFound();
+  return admin;
 }
 
 /** Yönetici mi — yalnızca evet/hayır; menüde bağlantı gösterilecek mi. */
