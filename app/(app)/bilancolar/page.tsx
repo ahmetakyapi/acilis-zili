@@ -63,12 +63,14 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   const session = await auth();
   const today = todayEt();
 
+  /* İki sorgu BİRBİRİNE BAĞLI DEĞİL ama sıralı bekleniyordu: takvim
+     dönmeden takip listesi istenmiyordu ve sayfada Suspense sınırı da
+     olmadığı için iki ardışık Neon turu doğrudan ilk bayta biniyordu. */
   const rangeEnd = addEtDays(today, RANGES[range]);
-  const rows = await getEarningsBetween(today, rangeEnd);
-
-  const userSymbols = session?.user?.id
-    ? await getUserSymbols(session.user.id)
-    : [];
+  const [rows, userSymbols] = await Promise.all([
+    getEarningsBetween(today, rangeEnd),
+    session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
+  ]);
 
   const symbolList = [...new Set(rows.map((r) => r.symbol))];
   const [meta, badges] = await Promise.all([

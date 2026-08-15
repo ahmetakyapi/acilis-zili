@@ -15,7 +15,7 @@ import {
   Heart,
   SignIn,
   SlidersHorizontal,
-  User,
+  UserCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import { withLocale } from "@/lib/i18n/routing";
 import {
@@ -205,20 +205,28 @@ export function AccountMenu({
            duyuruyor ve ok tuşu yönetimi bekliyordu. */
         aria-haspopup="dialog"
         aria-label={labels.account}
-        className="inline-flex size-11 items-center justify-center rounded-full"
+        /* DÜĞME ARAMA DÜĞMESİYLE AYNI DİLİ KONUŞUYOR. Yanındaki arama
+           kutusu 44 piksellik yumuşak köşeli bir kare, hairline kenarlıklı
+           ve dolgusuz; hesap ise 34 piksellik DOLU bir daireydi. İki farklı
+           biçim, iki farklı ağırlık, yan yana.
+
+           Giriş yapılmamışken düğme bir kimlik değil bir DAVET: arama gibi
+           dolgusuz ve sakin duruyor. Giriş yapılmışken kimlik var, o yüzden
+           dolu accent kutu ve baş harfler — fark artık rastgele değil,
+           durumu anlatıyor. */
+        className={cn(
+          "inline-flex size-11 items-center justify-center rounded-lg border text-[12px] font-bold uppercase tracking-[0.02em] transition-colors",
+          signedIn
+            ? "border-transparent bg-primary text-on-primary hover:bg-primary-hover"
+            : "border-line bg-surface text-muted hover:border-line-strong hover:text-soft",
+          open && "ring-2 ring-primary/35",
+        )}
       >
-        <span
-          aria-hidden
-          className={cn(
-            "flex size-[34px] items-center justify-center rounded-full text-[12px] font-bold uppercase tracking-[0.02em] transition-shadow",
-            signedIn
-              ? "bg-primary text-on-primary"
-              : "bg-primary-wash text-primary",
-            open && "ring-2 ring-primary/35",
-          )}
-        >
-          {signedIn ? initials || "?" : <User weight="fill" size={17} />}
-        </span>
+        {signedIn ? (
+          <span aria-hidden>{initials || "?"}</span>
+        ) : (
+          <UserCircle weight="duotone" size={20} aria-hidden />
+        )}
       </button>
 
       {open && (
@@ -250,13 +258,16 @@ export function AccountMenu({
               <span
                 aria-hidden
                 className={cn(
-                  "relative flex size-11 shrink-0 items-center justify-center rounded-full text-[14px] font-bold uppercase",
+                  /* Panelin künyesi düğmeyle AYNI biçim: düğme yumuşak
+                     köşeli kare, künye daireydi ve panel açıldığında iki
+                     ayrı şey gibi duruyordu. */
+                  "relative flex size-11 shrink-0 items-center justify-center rounded-lg text-[14px] font-bold uppercase",
                   signedIn
                     ? "bg-primary text-on-primary"
-                    : "border border-line bg-surface-solid text-primary",
+                    : "border border-line bg-surface-solid text-muted",
                 )}
               >
-                {signedIn ? initials || "?" : <User weight="fill" size={22} />}
+                {signedIn ? initials || "?" : <UserCircle weight="duotone" size={22} />}
               </span>
               <span className="relative min-w-0 flex-1">
                 <span className="block truncate text-[15px] font-bold tracking-[-0.01em] text-strong">

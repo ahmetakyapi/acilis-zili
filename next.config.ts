@@ -116,6 +116,14 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     turbopackFileSystemCacheForDev: true,
+    /* Yirmi yedi dosya ikonları `@phosphor-icons/react/dist/ssr` barrel'ından
+       çekiyor ve o giriş noktası binden fazla ikonu tek tek yeniden dışa
+       aktarıyor. Üretim demeti ağaç sarsmayla temizleniyor (paket
+       `sideEffects: false` taşıyor) ama her derlemede ve her dev sayfa
+       açılışında bu modül grafiği çözümleniyordu. Next'in varsayılan
+       listesinde lucide ve heroicons var, Phosphor yok. Çağrı yerlerinde
+       değişiklik gerekmiyor; derleyici tek tek alt yollara çeviriyor. */
+    optimizePackageImports: ["@phosphor-icons/react"],
   },
 };
 

@@ -513,11 +513,13 @@ export async function GET(request: Request) {
      borsanın kapalı olduğu günlerde de birikiyor. */
   try {
     const cutoff = addEtDays(today, -VIEW_RETENTION_DAYS);
-    const deleted = await db
-      .delete(pageViews)
-      .where(lt(pageViews.viewedOn, cutoff))
-      .returning({ id: pageViews.id });
-    report.viewsPurged = deleted.length;
+    /* SATIRLARI GERİ ÇEKMEDEN SAY. `.returning()` silinen her satırın
+       uuid'sini Neon'dan HTTP üzerinden geri getiriyordu; cron birkaç gün
+       aksadıktan sonra koştuğunda bu yüz binlerce uuid'lik bir yanıt olabilir
+       ve zaten dar olan bütçeyi boşuna yer. Sürücü etkilenen satır sayısını
+       zaten veriyor. */
+    const deleted = await db.delete(pageViews).where(lt(pageViews.viewedOn, cutoff));
+    report.viewsPurged = deleted.rowCount ?? 0;
   } catch (error) {
     report.viewsPurged = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
@@ -530,9 +532,8 @@ export async function GET(request: Request) {
     );
     const deleted = await db
       .delete(newsTable)
-      .where(lt(newsTable.publishedAt, cutoff))
-      .returning({ id: newsTable.id });
-    report.newsPurged = deleted.length;
+      .where(lt(newsTable.publishedAt, cutoff));
+    report.newsPurged = deleted.rowCount ?? 0;
   } catch (error) {
     report.newsPurged = `hata: ${error instanceof Error ? error.message : "?"}`;
   }

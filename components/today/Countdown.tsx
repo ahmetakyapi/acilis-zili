@@ -34,10 +34,19 @@ export function Countdown({
   const targetMs = new Date(targetIso).getTime();
   const [nowMs, setNowMs] = useState(() => Date.now());
 
+  /* TİK, GÖSTERİLEN EN KÜÇÜK BİRİME BAĞLI. Aralık her durumda 1 saniyeydi;
+     oysa zil bir günden uzaksa ekranda gün/saat/dakika var, saniye yok —
+     yani saniyede bir çizim aynı çıktıyı üretiyordu. Ana sayfa açık
+     bırakıldığında saatlerce süren, karşılığı olmayan bir döngü. Hedef bir
+     günün altına indiğinde bağımlılık değişiyor ve saniyelik tike kendi
+     kendine geçiliyor. */
+  const coarse = split(targetMs, nowMs).days > 0;
+
   useEffect(() => {
-    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    const step = coarse ? 60_000 : 1_000;
+    const id = window.setInterval(() => setNowMs(Date.now()), step);
     return () => window.clearInterval(id);
-  }, []);
+  }, [coarse]);
 
   const { days, hours, minutes, seconds } = split(targetMs, nowMs);
 

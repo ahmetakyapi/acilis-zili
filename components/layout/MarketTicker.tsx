@@ -46,6 +46,9 @@ export type TickerGroup = {
 };
 
 const WIDE_QUERY = "(min-width: 640px)";
+/* Şeridin GÖRÜNDÜĞÜ eşik — `lg`. `WIDE_QUERY` bundan ayrı ve sayfa başına
+   kaç öğe sığdığını söylüyor; ikisi karıştırılmamalı. */
+const SHOWN_QUERY = "(min-width: 1024px)";
 const ROTATE_MS = 6000;
 const FADE_MS = 400;
 
@@ -73,15 +76,26 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
   // Sunucu geniş varsayar; dar ekranda ilk ölçümde daralır. CSS ile gizlemek
   // işe yaramıyor — gizlenen değerler döngüde hiç sıra alamıyor.
   const [wide, setWide] = useState(true);
+  /* Şerit telefonda CSS ile gizli ama bileşen ayakta: döngü çalışmaya devam
+     ediyor ve altı saniyede bir GÖRÜNMEYEN bir DOM'u yeniden çiziyordu.
+     Sunucu geniş varsayıyor (işaretleme aynı kalsın, mobilde bir kare bile
+     görünmesin), ölçüm sonrası dar ekranda döngü hiç kurulmuyor. */
+  const [onScreen, setOnScreen] = useState(true);
 
   useEffect(() => {
-    const query = window.matchMedia(WIDE_QUERY);
-    const apply = () => setWide(query.matches);
+    const wideQuery = window.matchMedia(WIDE_QUERY);
+    const shownQuery = window.matchMedia(SHOWN_QUERY);
+    const apply = () => {
+      setWide(wideQuery.matches);
+      setOnScreen(shownQuery.matches);
+    };
     const id = window.setTimeout(apply, 0);
-    query.addEventListener("change", apply);
+    wideQuery.addEventListener("change", apply);
+    shownQuery.addEventListener("change", apply);
     return () => {
       window.clearTimeout(id);
-      query.removeEventListener("change", apply);
+      wideQuery.removeEventListener("change", apply);
+      shownQuery.removeEventListener("change", apply);
     };
   }, []);
 
@@ -89,17 +103,25 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
   const pageCount = Math.max(1, pages.length);
 
   useEffect(() => {
-    if (pageCount <= 1) return;
+    if (pageCount <= 1 || !onScreen) return;
+    /* İÇTEKİ ZAMANLAYICI DA TEMİZLENİYOR. Kimliği tutulmuyordu: `pageCount`
+       değiştiğinde (ekran döndürme, veri güncellemesi) askıda kalan geri
+       çağrı ESKİ `pageCount` kapanışıyla ateşleniyor ve sayfa indeksi
+       tutarsız kalabiliyordu. */
+    let fade: number | undefined;
     const cycle = window.setInterval(() => {
       // Önce söndür, geçiş bitince sıradaki gruba geç ve yeniden yak.
       setVisible(false);
-      window.setTimeout(() => {
+      fade = window.setTimeout(() => {
         setPage((current) => (current + 1) % pageCount);
         setVisible(true);
       }, FADE_MS);
     }, ROTATE_MS);
-    return () => window.clearInterval(cycle);
-  }, [pageCount]);
+    return () => {
+      window.clearInterval(cycle);
+      if (fade !== undefined) window.clearTimeout(fade);
+    };
+  }, [pageCount, onScreen]);
 
   if (pages.length === 0) return null;
 

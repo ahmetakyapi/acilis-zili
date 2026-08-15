@@ -580,24 +580,31 @@ export async function getUserWatchlists(
   userId: string,
 ): Promise<WatchlistWithItems[]> {
   try {
-    const lists = await db
-      .select()
+    /* TEK SORGU. Önce listeler, sonra o listelerin öğeleri diye iki ardışık
+       tur atılıyordu ve neon-http'de her sorgu ayrı bir HTTP gidiş-dönüşü.
+       `leftJoin` ikisini tek turda getiriyor; gruplama bellekte. Boş liste de
+       görünmeye devam ediyor — `left` join olması tam bunun için. */
+    const rows = await db
+      .select({
+        list: watchlists,
+        item: watchlistItems,
+      })
       .from(watchlists)
+      .leftJoin(watchlistItems, eq(watchlistItems.watchlistId, watchlists.id))
       .where(eq(watchlists.userId, userId))
-      .orderBy(asc(watchlists.sortOrder), asc(watchlists.createdAt));
+      .orderBy(
+        asc(watchlists.sortOrder),
+        asc(watchlists.createdAt),
+        asc(watchlistItems.sortOrder),
+        asc(watchlistItems.addedAt),
+      );
 
-    if (lists.length === 0) return [];
+    if (rows.length === 0) return [];
 
-    const items = await db
-      .select()
-      .from(watchlistItems)
-      .where(
-        inArray(
-          watchlistItems.watchlistId,
-          lists.map((l) => l.id),
-        ),
-      )
-      .orderBy(asc(watchlistItems.sortOrder), asc(watchlistItems.addedAt));
+    const lists = [...new Map(rows.map((r) => [r.list.id, r.list])).values()];
+    const items = rows
+      .map((r) => r.item)
+      .filter((item): item is NonNullable<typeof item> => item !== null);
 
     return lists.map((list) => ({
       id: list.id,
@@ -651,7 +658,27 @@ export function liveMarketCap(
   return meta.marketCap;
 }
 
+/* İSTEK İÇİNDE TEKİL. Aynı sembol listesi bir sayfada birden çok yerden
+   isteniyor — ana sayfada gün şeridi ve "bugünün bilançoları" aynı takvim
+   sonucundan besleniyor, yoğun bir günde bu yüzlerce sembollük aynı sorgunun
+   iki kez koşması demekti. `cache()` argümanları KİMLİĞE göre eşlediği için
+   her seferinde yeni üretilen dizi hiçbir zaman isabet etmiyordu; anahtar bu
+   yüzden sıralı ve birleştirilmiş bir dize (kotasyonlarda da aynı desen). */
+const symbolNamesForKey = cache(async function symbolNamesForKey(
+  key: string,
+): Promise<Record<string, SymbolMeta>> {
+  return loadSymbolNames(key ? key.split(",") : []);
+});
+
 export async function getSymbolNames(
+  list: string[],
+): Promise<Record<string, SymbolMeta>> {
+  const unique = [...new Set(list)].sort();
+  if (unique.length === 0) return {};
+  return symbolNamesForKey(unique.join(","));
+}
+
+async function loadSymbolNames(
   list: string[],
 ): Promise<Record<string, SymbolMeta>> {
   if (list.length === 0) return {};
