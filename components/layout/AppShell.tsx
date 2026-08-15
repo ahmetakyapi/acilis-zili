@@ -337,7 +337,14 @@ export function AppShell({
       {/* ---- Mobil alt gezinme — 5 sekme, dokunma hedefi min 64px ---- */}
       <nav
         className={cn(
-          "chrome fixed inset-x-0 bottom-0 z-30 flex justify-between border-t pb-[env(safe-area-inset-bottom)] lg:hidden",
+          /* ALT DOLGU TABAN DEĞERLİ. `viewport-fit=auto`ya geçtikten sonra
+             (bkz. app/layout.tsx durum çubuğu notu) `env(safe-area-inset-bottom)`
+             her cihazda 0 dönüyor ve şerit ekranın en alt kenarına yapışıyordu:
+             etiketler tam kenarda kalınca telefonda "kesilmiş" görünüyor —
+             iOS'un alttaki yüzen araç çubuğu ve ev göstergesi tam o bandın
+             üstünde duruyor. `max()` ile taban 16px: env geri gelirse
+             (cover'a dönülürse) büyük olan kazanır. */
+          "chrome fixed inset-x-0 bottom-0 z-30 flex justify-between border-t pb-[max(env(safe-area-inset-bottom),16px)] lg:hidden",
           SAFE_X_12,
         )}
         aria-label={labels.mainNav}
