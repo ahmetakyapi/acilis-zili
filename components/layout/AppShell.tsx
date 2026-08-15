@@ -59,13 +59,16 @@ function isActive(pathname: string, href: string): boolean {
    Kenar çubuğu kaldırıldı: yeni tasarımda gezinme sayfanın üstünde yatay
    duruyor ve içerik tam genişliği alıyor.
 
-   GÜVENLİ ALAN. Sayfa `viewport-fit=cover` ile açılıyor (app/layout.tsx) ve
-   iOS'ta ayrıca `black-translucent` durum çubuğu isteniyor: yani görünüm alanı
-   çentiğin ve durum çubuğunun ALTINA uzanıyor. Alt çubuk bunu baştan beri
-   hesaba katıyordu (`env(safe-area-inset-bottom)`), ÜST başlık katmıyordu —
-   mobil başlık ekranın en tepesine yapıştığında saatin/çentiğin arkasında
-   kalıyor, kesik görünüyor ve içindeki düğmeler dokunulamaz oluyordu.
-   Bu yüzden her sabit/yapışkan katman kendi güvenli alanını kendi taşır.
+   GÜVENLİ ALAN. Sayfa artık `viewport-fit=auto` ile açılıyor: görünüm alanı
+   çentiğin ve sistem çubuklarının altına UZANMIYOR (gerekçe app/layout.tsx
+   içinde — iOS 26'nın cam sistem çubuğu, altında kalan başlığın yazısını
+   bulanıklaştırıyordu). Yani `env(safe-area-inset-*)` değerleri çoğu cihazda
+   artık 0 dönüyor.
+
+   Dolgular YİNE DE `env()` ile yazılı ve hepsi `max(...)` taban değer
+   taşıyor: env 0 olduğunda tasarımın kendi boşluğu duruyor, karar geri
+   alınırsa (cover'a dönülürse) katmanlar güvenli alanı yeniden kendileri
+   taşıyor. Her sabit/yapışkan katman kendi güvenli alanını kendi taşır.
    -------------------------------------------------------------------------- */
 
 /**
@@ -257,7 +260,11 @@ export function AppShell({
            çubuğunun altından değil, altındaki güvenli bandın içinden başlar. */}
       <header
         className={cn(
-          "chrome sticky top-0 z-30 flex items-center gap-2.5 border-b pb-2.5 pt-[calc(env(safe-area-inset-top)+10px)] lg:hidden",
+          /* Üstte 14px — masaüstü şeridiyle aynı. Kullanıcı "gerekirse
+             üstten biraz boşluk bırak" dedi; sistem çubuğunun altına
+             girmeyi bıraktıktan sonra da yazının tepeye yapışmaması için
+             dört piksel daha ferahlık. */
+          "chrome sticky top-0 z-30 flex items-center gap-2.5 border-b pb-2.5 pt-[calc(env(safe-area-inset-top)+14px)] lg:hidden",
           SAFE_X_18,
         )}
       >

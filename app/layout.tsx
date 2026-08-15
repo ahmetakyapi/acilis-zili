@@ -60,7 +60,17 @@ export async function generateMetadata(): Promise<Metadata> {
   appleWebApp: {
     capable: true,
     title: brand,
-    statusBarStyle: "black-translucent",
+    /* DURUM ÇUBUĞU "default" — "black-translucent" DEĞİL.
+       Translucent stil, web içeriğini durum çubuğunun ALTINA uzatır. iOS 26
+       ile sistem çubukları cam: altlarında kalanı bulanıklaştırıyorlar. Yani
+       ekranın en üstüne yapışan başlığımız kalıcı olarak o camın altında
+       kalıyor ve içindeki yazı bulanık okunuyordu — sayfanın gerisi keskinken.
+       Üç ayrı CSS düzeltmesi (buzlu camı kaldırmak, zemini opak yapmak,
+       degrade maskeli metni sökmek) bu yüzden hiçbir şeyi değiştirmedi:
+       bulanıklık bizim katmanımızda değil, işletim sisteminin katmanındaydı.
+       `default` ile içerik durum çubuğunun ALTINDAN başlar; sistemin
+       bulanıklaştıracağı bir şeyimiz kalmıyor. */
+    statusBarStyle: "default",
   },
   formatDetection: { telephone: false },
   /* Burada BAŞLIK VE AÇIKLAMA YOK — bilerek.
@@ -120,7 +130,21 @@ export async function generateViewport(): Promise<Viewport> {
   return {
     width: "device-width",
     initialScale: 1,
-    viewportFit: "cover",
+    /* `cover` KALDIRILDI — aynı gerekçe (bkz. `appleWebApp.statusBarStyle`).
+       `viewport-fit=cover` görünüm alanını çentiğin ve sistem çubuklarının
+       altına uzatıyordu; tarayıcıda da, ana ekrana eklenmiş hâlde de üst
+       şeridimiz sistemin cam katmanının altında kalıyordu. Varsayılan
+       (`auto`) ile sayfa güvenli alanın İÇİNDE kalıyor: sistem hiçbir yerde
+       bizim pikselimizin üstüne çizmiyor.
+
+       Bedeli: telefon yan çevrildiğinde sayfa çentiğin altına uzanmıyor, o
+       şerit sayfa zemini rengiyle doluyor. Kenardan kenara görünüm hoştu ama
+       başlığın okunaklılığının önüne geçemez.
+
+       `env(safe-area-inset-*)` dolguları YERİNDE KALIYOR: hepsi `max(...)`
+       ile taban değer taşıyor, yani env 0 döndüğünde tasarımın kendi
+       boşluğu korunuyor ve karar geri alınırsa dolgular hazır. */
+    viewportFit: "auto",
     themeColor: PAGE_BG[theme === "dark" ? "dark" : "light"],
   };
 }

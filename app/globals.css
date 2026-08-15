@@ -427,7 +427,10 @@
    Sabit sayı yerine çubuğun kendi formülü: iki yer de bu tokenı okuyor.
    -------------------------------------------------------------------------- */
 :root {
-  --app-bar-h: calc(env(safe-area-inset-top) + 65px);
+  /* 65 → 69: mobil başlığın üst dolgusu 10'dan 14 piksele çıktı
+     (AppShell.tsx, sistem çubuğu notu). İki değer birlikte değişmeli,
+     yoksa yapışkan bölüm başlıkları çubuğun altına giriyor. */
+  --app-bar-h: calc(env(safe-area-inset-top) + 69px);
 }
 
 /* --------------------------------------------------------------------------

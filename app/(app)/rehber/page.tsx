@@ -298,7 +298,9 @@ function TopicHeading({
 
   return (
     <>
-      <div className="sticky top-(--app-bar-h) z-10 bg-page pt-1">
+      {/* z-20: gerekçe EarningsCalendar.tsx içinde — eşit z-index'te
+          sonraki eleman kazanıyor ve kart içeriği başlığın üstüne çıkıyor. */}
+      <div className="sticky top-(--app-bar-h) z-20 bg-page pt-1">
         {/* 2px'lik koyu kural — sayfadaki tek kalın çizgi. Bölüm sınırını
             renk kullanmadan işaretleyen şey bu; hairline denendi ve
             kartların kendi kenarlıklarından ayırt edilmiyordu. */}
