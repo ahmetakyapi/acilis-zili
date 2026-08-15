@@ -108,7 +108,12 @@ function SectorChip({
       <span
         className={cn(
           "numeral text-tiny font-bold",
-          active ? "text-on-primary/70" : "text-muted",
+          /* SAYI TAM BEYAZ. Saydamlık (/70) mavi zemin üstünde kontrastı
+             3,2'ye düşürüyordu; WCAG AA küçük punto için 4,5 istiyor ve
+             kalın olması bunu değiştirmiyor (eşik 18,66px'ten büyük
+             puntolarda düşüyor, bu 11px). Hiyerarşi saydamlıkla değil
+             puntoyla kuruluyor: sayı zaten etiketten bir kademe küçük. */
+          active ? "text-on-primary" : "text-muted",
         )}
       >
         {count}

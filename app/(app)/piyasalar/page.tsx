@@ -637,7 +637,8 @@ function IndexToolbar({
               <span
                 className={cn(
                   "numeral text-xs font-normal",
-                  activeTab ? "text-on-primary/70" : "text-muted",
+                  /* Saydamlık yerine punto — gerekçe şirketler dizininde. */
+                  activeTab ? "text-on-primary" : "text-muted",
                 )}
               >
                 {entry.members.length}
