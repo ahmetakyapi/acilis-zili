@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArticleBody } from "@/components/article/ArticleBody";
-import { LEGAL_UPDATED, PRIVACY_MD, DISCLAIMER_MD } from "@/content/legal";
+import { LEGAL_UPDATED, disclaimerMd, privacyMd } from "@/content/legal";
 import { getI18n } from "@/lib/i18n";
 import { formatEtDateLong } from "@/lib/utils";
 import { pageMetadata } from "@/lib/page-meta";
@@ -47,11 +47,7 @@ export default async function PrivacyPage() {
 
       <hr className="border-t border-line" aria-hidden />
 
-      {/* Yasal metinler yalnızca Türkçe yazılı — İngilizce arayüzde de
-          Türkçe gösteriliyorlar, o yüzden dilleri sabit. */}
-      <div lang="tr">
-        <ArticleBody markdown={PRIVACY_MD} locale="tr" />
-      </div>
+      <ArticleBody markdown={privacyMd(locale)} locale={locale} />
 
       <hr className="mt-4 border-t border-line" aria-hidden />
 
@@ -64,9 +60,7 @@ export default async function PrivacyPage() {
             {t.legal.disclaimerTitle}
           </h2>
         </header>
-        <div lang="tr">
-          <ArticleBody markdown={DISCLAIMER_MD} locale="tr" />
-        </div>
+        <ArticleBody markdown={disclaimerMd(locale)} locale={locale} />
       </section>
 
       <footer className="mt-2 flex flex-wrap gap-x-5 gap-y-2 border-t border-line pt-5 text-small">
