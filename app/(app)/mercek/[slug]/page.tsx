@@ -7,6 +7,7 @@ import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { getStories, getStoryBySlug, getSymbolNames } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { missingMetadata } from "@/lib/page-meta";
+import { pageAlternates } from "@/lib/site";
 import { formatEtDateLong, safeExternalUrl } from "@/lib/utils";
 
 /**
@@ -26,6 +27,13 @@ export async function generateMetadata(props: PageProps<"/mercek/[slug]">) {
   return {
     title: story.title,
     description: story.dek,
+    /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
+       `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
+       adresleri (yüzlerce hisse, her yazı, her analiz) canonical'sız ve
+       "öteki dildeki karşılığı şu" bilgisi olmadan yayımlanıyordu. Kök
+       layout canonical yazmıyor (orada gerekçesi var), yani miras da yok.
+       `pageAlternates` RSS keşif etiketini de birlikte taşıyor. */
+    alternates: pageAlternates(`/mercek/${slug}`, locale),
     /* `og:type` kökten "website" miras alınıyordu: uzun okuma metinleri
        sosyal ağlara ve okuyucu uygulamalarına "bu bir web sitesi" diye
        tanıtılıyor, yayın tarihi hiçbir yere çıkmıyordu. */

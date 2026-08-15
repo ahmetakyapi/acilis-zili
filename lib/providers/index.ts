@@ -71,11 +71,38 @@ const QUOTE_WRITE_BATCH = 500;
  * fonksiyon yanıtı döndükten sonra donduğunda yazma yarıda kesilebiliyordu;
  * tek gidiş-dönüşün maliyeti (~20ms) bu belirsizliğe değmez.
  */
+/**
+ * En son yazılan işlem damgası — sembol → `tradedAt` (ms).
+ *
+ * DEĞİŞMEYEN SATIR YENİDEN YAZILMIYOR. Alpaca yanıtı Next'in veri
+ * önbelleğinden geldiğinde de bu fonksiyon çalışıyordu: borsa kapalıyken
+ * fiyatlar saatlerce sabit kalıyor ama Şirketler dizinini açan HER okuyucu
+ * 753 satırlık iki upsert'i Neon'a gönderiyordu. Yazılan değer bir öncekinin
+ * aynısıydı — tek kazandığı `updated_at` damgası, ki onu okuyan yok.
+ *
+ * Ölçüldü: sayfanın sunucu yanıtı 3,2 saniyeydi ve bunun yarısı bu yazma.
+ * Seans açıkken `tradedAt` her kotasyonda değişiyor, yani yazma o zaman
+ * eskisi gibi yapılıyor — atlanan yalnızca gereksiz olan.
+ *
+ * Harita süreç belleğinde ve sunucusuz ortamda örnek başına: bir örnek
+ * "bilmiyorum" derse yazma yapılır, yani yanlış tarafa düşmüyor.
+ */
+const lastPersisted = new Map<string, number>();
+
 async function persistQuotes(quotes: Quote[]): Promise<void> {
   if (quotes.length === 0) return;
 
+  const fresh = quotes.filter((q) => {
+    const stamp = q.tradedAt?.getTime() ?? 0;
+    /* Damgası olmayan kotasyon her zaman yazılır: karşılaştıracak bir şey
+       yok ve son bilinen değer tablosunun boş kalması daha kötü. */
+    if (!stamp) return true;
+    return lastPersisted.get(q.symbol) !== stamp;
+  });
+  if (fresh.length === 0) return;
+
   const now = new Date();
-  const rows = quotes.map((q) => ({
+  const rows = fresh.map((q) => ({
     symbol: q.symbol,
     price: q.price,
     change: q.change,
@@ -109,6 +136,10 @@ async function persistQuotes(quotes: Quote[]): Promise<void> {
             updatedAt: sql`excluded.updated_at`,
           },
         });
+    }
+    for (const q of fresh) {
+      const stamp = q.tradedAt?.getTime();
+      if (stamp) lastPersisted.set(q.symbol, stamp);
     }
   } catch {
     // Önbellek yazımı ürünün çalışması için zorunlu değil.

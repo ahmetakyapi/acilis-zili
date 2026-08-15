@@ -13,6 +13,7 @@ import {
   type GuideArticle,
 } from "@/content/guide";
 import { getI18n, type Dictionary } from "@/lib/i18n";
+import { pageAlternates } from "@/lib/site";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 /**
@@ -40,6 +41,13 @@ export async function generateMetadata(props: PageProps<"/rehber/[slug]">) {
   return {
     title: article.title,
     description: article.dek,
+    /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
+       `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
+       adresleri (yüzlerce hisse, her yazı, her analiz) canonical'sız ve
+       "öteki dildeki karşılığı şu" bilgisi olmadan yayımlanıyordu. Kök
+       layout canonical yazmıyor (orada gerekçesi var), yani miras da yok.
+       `pageAlternates` RSS keşif etiketini de birlikte taşıyor. */
+    alternates: pageAlternates(`/rehber/${slug}`, locale),
     /* Yazı, "website" değil: gerekçe mercek sayfasında. */
     openGraph: { type: "article", authors: ["Açılış Zili"] },
   };

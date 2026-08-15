@@ -33,6 +33,7 @@ import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { missingMetadata } from "@/lib/page-meta";
+import { pageAlternates } from "@/lib/site";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import {
   verdictLabel,
@@ -47,7 +48,7 @@ import {
 } from "@/lib/sectors";
 import {
   cn,
-  formatCompact,
+  formatMoneyCompact,
   formatEtDateCompact,
   formatEtDateLong,
   formatPercent,
@@ -225,6 +226,16 @@ export async function generateMetadata(
   return {
     title: `${row.company} ${row.periodLabel} — ${row.symbol}`,
     description: row.headline,
+    /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
+       `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
+       adresleri (yüzlerce hisse, her yazı, her analiz) canonical'sız ve
+       "öteki dildeki karşılığı şu" bilgisi olmadan yayımlanıyordu. Kök
+       layout canonical yazmıyor (orada gerekçesi var), yani miras da yok.
+       `pageAlternates` RSS keşif etiketini de birlikte taşıyor. */
+    alternates: pageAlternates(
+      `/bilancolar/${symbol.toUpperCase()}/${period}`,
+      locale,
+    ),
     openGraph: {
       type: "article",
       publishedTime: row.publishedAt?.toISOString(),
@@ -723,7 +734,7 @@ export default async function AnalysisDetailPage(
                 marketCap !== null && {
                   label: t.market.marketCap,
                   note: marketCapNote,
-                  value: `≈${SIGN_GAP}${formatCompact(marketCap, locale)} $`,
+                  value: `≈${SIGN_GAP}${formatMoneyCompact(marketCap, locale)}`,
                 },
                 /* Getiri kayıttan geliyor ve bilanço gününe kadar ölçülmüş;
                    piyasa değerinin aksine bugüne taşınamıyor, çünkü bir yıl

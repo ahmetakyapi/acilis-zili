@@ -4,6 +4,7 @@ import { earningsCalendar, economicEvents, symbols } from "@/lib/schema";
 import { etDateTimeToUtc } from "@/lib/market-hours";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { SITE_URL } from "@/lib/site";
+import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 /**
  * Takvime Ekle — tek bir olayın `.ics` dosyası.
@@ -148,7 +149,23 @@ function impactLabel(
   return importance ?? "-";
 }
 
+/* Uç YETKİSİZ ve her istek en az iki veritabanı sorgusu koşuyor (kayıt +
+   şirket adı). Tavan cömert: bir okuyucu takvim ekranındaki bütün satırları
+   tek tek eklese bile sınıra yaklaşmaz, ama aynı adresten saniyede yüzlerce
+   istek gelmesi artık ücretsiz değil. Aynı sayaç ailesi arama ve grafik
+   uçlarında da kullanılıyor. */
+const ICS_LIMIT = 60;
+const ICS_WINDOW_MS = 60_000;
+
 export async function GET(request: Request) {
+  const limited = rateLimit(clientKey(request, "takvim"), ICS_LIMIT, ICS_WINDOW_MS);
+  if (!limited.allowed) {
+    return new Response("rate-limited", {
+      status: 429,
+      headers: { "Retry-After": String(limited.retryAfter) },
+    });
+  }
+
   const params = new URL(request.url).searchParams;
   const tip = params.get("tip");
   const locale = await getLocale();
