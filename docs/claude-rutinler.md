@@ -736,6 +736,10 @@ Dil kuralları (mercek yazılarıyla aynı):
     yazma. (Sitenin kendi biçimlendirdiği sayılar da böyle yazıyor; senin
     serbest metnin yan hücrede farklı yazılınca aynı kartta iki imla
     çıkıyor.) İngilizce gönderimde tersi: "372%".
+  - SAYIDAN SONRA GELEN EK KESME İŞARETİYLE ayrılır: "%35'ten geriledi",
+    "gelirin %77'si", "2026'ya taşındı". Kesmesiz yazım ("%35ten", "%77si")
+    ekranda yazım hatası olarak duruyor ve düzeltmesi elle veritabanına
+    girmeyi gerektiriyor.
   - "Katalizörler" KULLANMA — Beklenen Gelişmeler
   - Her sayının yanında tek bakışta anlaşılan bir kıyas olsun
   - HAM HTML YAZMA. summary, analysis.body, strengths/risks/upcoming

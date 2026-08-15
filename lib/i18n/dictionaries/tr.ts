@@ -358,6 +358,11 @@ const tr = {
     /* Kayıttaki fiyat donuk, bu canlı. İkisi tanımı gereği farklı sayı;
        adları da farklı olmalı ki yan yana dururken hata gibi okunmasın. */
     livePrice: "Şu An",
+    /* Borsa kapalıyken "Şu An" yerine bu yazılıyor. "Önceki Kapanış"
+       DEĞİL: sayfada bir de "Bilanço Günü Kapanışı" var ve "önceki",
+       bilançodan önceki kapanış diye okunuyordu. Kastedilen en son
+       kapanış. */
+    lastClose: "Son Kapanış",
     sinceReport: "Bilanço Gününden Bugüne",
     reactionNote: "Bilanço Günü Tepkisi",
     return1y: "1 Yıllık Getiri",

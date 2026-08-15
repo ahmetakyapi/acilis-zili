@@ -139,7 +139,13 @@ function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
       )}
     >
       {list.map((fact) => (
-        <div key={fact.label} className="min-w-0">
+        /* SAYILAR AYNI ÇİZGİDE. Hücreler yalnızca bir kutuydu ve etiketi iki
+           satıra sarkan ölçünün sayısı, yanındakinden bir satır aşağı
+           düşüyordu: telefonda "F/K 46,5" ile "NET KÂR MARJI %30,1" ızgaranın
+           aynı satırındayken farklı yüksekliklerde duruyordu. Hücre artık
+           sütun ve sayı `mt-auto` ile alta yaslı; ızgara satırı zaten eşit
+           yükseklik veriyor. */
+        <div key={fact.label} className="flex min-w-0 flex-col">
           {/* Etiket ve künye 10px'ti ve okunmuyordu — ray zaten sakin bir
               katman, bir de puntoyu kısınca fısıltıya dönüşüyordu. */}
           <dt className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
@@ -157,7 +163,7 @@ function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
           </dt>
           <dd
             className={cn(
-              "figure mt-1.5 text-title font-bold leading-none tracking-[-0.03em]",
+              "figure mt-auto pt-1.5 text-title font-bold leading-none tracking-[-0.03em]",
               fact.tone === "up" && "text-up",
               fact.tone === "down" && "text-down",
               !fact.tone && "text-strong",
@@ -578,14 +584,17 @@ export default async function AnalysisDetailPage(
             <div className="flex shrink-0 flex-col gap-3.5 sm:items-end sm:text-right">
               {live && (
                 <div>
+              {/* TEK ETİKET. Yan yana "ŞU AN" ve "Önceki Kapanış" yazıyordu:
+                  biri fiyatın şu anki olduğunu, öteki geçen seansın
+                  kapanışı olduğunu söylüyor ve ikisi aynı sayının üstünde
+                  duruyordu. Borsa kapalıyken ekrandaki sayı zaten kapanış
+                  fiyatı; ona "şu an" demek sayıyı olduğundan taze
+                  gösteriyor. Etiket artık durumu tek başına söylüyor. */}
               <div className="flex items-baseline gap-2 sm:justify-end">
                 <span className={cn(PLATE_LABEL, "text-primary")}>
-                  {t.analysis.livePrice}
-                </span>
-                <span className="text-nano font-medium text-muted">
                   {status.session === "regular" && !live.stale
-                    ? t.market.live
-                    : t.market.prevClose}
+                    ? t.analysis.livePrice
+                    : t.analysis.lastClose}
                 </span>
               </div>
               <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 sm:justify-end">

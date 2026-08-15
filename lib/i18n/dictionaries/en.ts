@@ -310,6 +310,7 @@ const en: typeof tr = {
     upsidePotential: "Upside",
     closePrice: "Close on Report Day",
     livePrice: "Trading Now",
+    lastClose: "Last Close",
     sinceReport: "Since the Report",
     reactionNote: "Report-Day Move",
     return1y: "1Y Return",

@@ -214,13 +214,14 @@ export function GuidanceRanges({
           kartın ORTASINA yığıldı (iki satır arası yüz piksel) — o yüzden
           eşik üç. Üç satırda araların büyümesi ferahlık, ikide kopukluk.
 
-          İki satırlı kartta fazla alan bu yüzden ALTA gidiyor: `flex-1`
-          listeyi büyütüyor ama satırlar başta toplanıyor, künye de en altta
-          kalıyor. Ortada delik açmaktansa altta sakin bir boşluk. */}
+          İki satırlı kartta satırlar ORTALANIYOR: fazla alan altta tek
+          parça halinde birikince (yüz piksel) kart yarıda kesilmiş gibi
+          duruyordu. Ortalama aynı boşluğu ikiye bölüyor, satırlar başlıkla
+          künyenin arasında dengede duruyor ve hiçbir yerde delik açmıyor. */}
       <ul
         className={cn(
           "flex min-h-0 flex-1 flex-col gap-4",
-          rows.length >= 3 && "justify-between",
+          rows.length >= 3 ? "justify-between" : "justify-center",
         )}
       >
         {rows.map((row, index) => {

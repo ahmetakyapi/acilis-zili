@@ -62,7 +62,13 @@ export type AnalysisTableLabels = {
 const COLS = {
   symbol: "w-[104px] shrink-0",
   company: "min-w-[190px] flex-1",
-  reported: "w-[124px] shrink-0",
+  /* 124px'ti ve YETMİYORDU: "31 Tem · Açılış Öncesi" 157 piksel istiyor
+     (İngilizcede 148) ve hücre `whitespace-nowrap` olduğu için metin
+     kırpılmıyor, yandaki gelir sütununun üstüne taşıyordu — tablonun her
+     satırında "Açılış Öncesi83,8 Mn $" gibi birbirine girmiş iki sütun.
+     Genişlik en uzun etiketi alacak kadar; tablonun toplam eni değişmiyor,
+     `min-w-[1180px]` zaten bu kadarını taşıyor. */
+  reported: "w-[164px] shrink-0",
   revenue: "w-28 shrink-0 text-right",
   eps: "w-[124px] shrink-0 text-right",
   reaction: "w-[86px] shrink-0 text-right",

@@ -117,6 +117,16 @@ export function peRatioOf(
   return price / epsTtm;
 }
 
+/**
+ * EKSİ İŞARETİ SİMGENİN ÖNÜNDE — "−$0,19", "$-0,19" değil.
+ *
+ * İşaret sayının parçası olarak biçimlendirilip başına dolar konunca ortaya
+ * "$-0,19" çıkıyordu: zarar açıklayan şirketlerin hisse başı kârı analiz
+ * tablosunda böyle yazılıyordu ve dolarla tire yan yana bir kısa çizgi gibi
+ * okunuyor, sayının negatif olduğu bir bakışta seçilmiyordu. Sitenin yüzde
+ * biçimi aynı sorunu çoktan çözmüştü (`−%0,37`); para birimi de aynı işareti
+ * (U+2212) ve aynı dar boşluğu kullanıyor.
+ */
 export function formatPrice(
   value: number | null | undefined,
   locale: string,
@@ -124,11 +134,13 @@ export function formatPrice(
 ) {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   const { currency = false, digits = 2 } = opts;
-  const formatted = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
+  const nf = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
-  }).format(value);
-  return currency ? `$${formatted}` : formatted;
+  });
+  if (!currency) return nf.format(value);
+  const body = `$${nf.format(Math.abs(value))}`;
+  return value < 0 ? `−${SIGN_GAP}${body}` : body;
 }
 
 /**
@@ -237,7 +249,13 @@ export function formatCompact(
           { v: 1e12, s: "T" },
           { v: 1e9, s: "Mr" },
           { v: 1e6, s: "Mn" },
-          { v: 1e3, s: "B" },
+          /* "Bin", "B" DEĞİL. Kısaltma Türkçede doğru ama bu site ABD
+             borsasını anlatıyor ve okuduğu her kaynakta "B" milyar demek:
+             aynı takvim ekranında milyarlar "Mr" ile yazılırken bir hücrede
+             "428 B $" görmek, 428 bin dolarlık geliri 428 milyar gibi
+             okutuyordu. Yazılı hâli kısaltmanın bütün belirsizliğini
+             kaldırıyor ve iki karakter uzun. */
+          { v: 1e3, s: "Bin" },
         ]
       : [
           { v: 1e12, s: "T" },
