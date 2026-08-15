@@ -311,7 +311,7 @@ export function CompareChart({
               }
             >
               {reading.date && (
-                <p className="numeral mb-1.5 text-[10.5px] text-muted">
+                <p className="numeral mb-1.5 text-nano text-muted">
                   {reading.date}
                 </p>
               )}
@@ -319,7 +319,7 @@ export function CompareChart({
                 {reading.values.map((row) => (
                   <div
                     key={row.symbol}
-                    className="flex items-center gap-2 whitespace-nowrap text-[11.5px]"
+                    className="flex items-center gap-2 whitespace-nowrap text-tiny"
                   >
                     <span
                       aria-hidden
@@ -359,7 +359,7 @@ export function CompareChart({
 
       {/* Künye dönem SONU farkını gösterir; imleç kartı ara anları.
           İkisi birbirinin yerine geçmiyor, biri özet biri detay. */}
-      <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px]">
+      <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-small">
         {normalized.map((entry, index) => {
           const last = entry.points[entry.points.length - 1];
           return (
@@ -388,7 +388,7 @@ export function CompareChart({
           );
         })}
         {readingLabel && (
-          <span className="ml-auto text-[11px] text-muted">{readingLabel}</span>
+          <span className="ml-auto text-tiny text-muted">{readingLabel}</span>
         )}
       </figcaption>
     </figure>

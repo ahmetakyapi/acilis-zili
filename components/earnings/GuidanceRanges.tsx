@@ -189,8 +189,8 @@ export function GuidanceRanges({
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-        <h2 className="text-[14.5px] font-bold text-strong">{title}</h2>
-        <div className="flex items-center gap-3 text-[11px] text-muted">
+        <h2 className="text-read font-bold text-strong">{title}</h2>
+        <div className="flex items-center gap-3 text-tiny text-muted">
           <span className="flex items-center gap-1.5">
             <span aria-hidden className="h-2 w-3 rounded-full bg-primary" />
             {legendRange}
@@ -251,10 +251,10 @@ export function GuidanceRanges({
           return (
             <li key={`${row.label}-${index}`} className="flex flex-col gap-1.5">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                <span className="text-[13.5px] font-bold text-strong">
+                <span className="text-base font-bold text-strong">
                   {row.label}
                 </span>
-                <span className="numeral whitespace-nowrap text-[15px] font-bold text-strong">
+                <span className="numeral whitespace-nowrap text-read font-bold text-strong">
                   {formatRange(lo, hi, row.unit)}
                 </span>
               </div>
@@ -311,7 +311,7 @@ export function GuidanceRanges({
                   boyuyordu; okuyucu neyin değerlendirme olduğunu ayırt
                   edemiyordu. */}
               {(note || evaluation) && (
-                <p className="flex flex-wrap items-baseline gap-x-1.5 text-[11.5px]">
+                <p className="flex flex-wrap items-baseline gap-x-1.5 text-tiny">
                   {note && <span className="text-muted">{note}</span>}
                   {evaluation && (
                     <span
@@ -340,7 +340,7 @@ export function GuidanceRanges({
           "bu karttaki en geniş bant" demek. Ucundaki yüzde, çubukları mutlak
           olarak da okunur kılıyor. */}
       {axis > 0 && (
-        <p className="-mt-1 text-[11px] text-muted">
+        <p className="-mt-1 text-tiny text-muted">
           {axisNote.replace("{value}", formatPercent(axis * 100))}
         </p>
       )}

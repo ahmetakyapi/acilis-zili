@@ -140,7 +140,7 @@ export default async function TodayPage() {
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
             <span
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-[11px] py-1 text-[11.5px] font-semibold",
+                "inline-flex items-center gap-1.5 rounded-full px-[11px] py-1 text-tiny font-semibold",
                 trading
                   ? "bg-up-wash text-up"
                   : status.session === "closed"
@@ -168,9 +168,9 @@ export default async function TodayPage() {
                 kendisiyle çelişen bir satır kalıyordu. Künye, hangi takvimin
                 konuştuğunu söylüyor — saatlerin yanındaki TR/NY künyesiyle
                 aynı dil. */}
-            <span className="flex items-baseline gap-1 text-[13.5px] font-semibold text-strong">
+            <span className="flex items-baseline gap-1 text-base font-semibold text-strong">
               {formatEtDateLong(status.etDate, locale)}
-              <span className="text-[10.5px] font-bold tracking-[0.06em] text-muted">
+              <span className="text-nano font-bold tracking-[0.06em] text-muted">
                 NY
               </span>
             </span>
@@ -206,7 +206,7 @@ export default async function TodayPage() {
                 ekranda küçültüyordu — sayfanın H1'i "açılış ziline kaldı"
                 diye okunuyordu. Vurgu taşıyan metin Title Case yazılır ve
                 bundan büyük vurgulu bir yer yok. */}
-            <span className="pb-1.5 text-[13px] font-normal text-body sm:pb-2.5 sm:text-[15px]">
+            <span className="pb-1.5 text-base font-normal text-body sm:pb-2.5 sm:text-read">
               {countdownLabel}
             </span>
           </h1>
@@ -218,7 +218,7 @@ export default async function TodayPage() {
               sağında duruyordu. Aynı iki saat artık eksenin kendi uçlarında
               yazılı — okuyucu "bu çizginin solu hangi saat" diye sorduğunda
               cevabın ekranın öbür ucunda olması gerekmiyor. */}
-          <h2 className="display-ink display-ink-tight mb-5 w-fit text-[15px] font-bold">
+          <h2 className="display-ink display-ink-tight mb-5 w-fit text-read font-bold">
             {t.today.todayFlow}
           </h2>
           <Suspense fallback={<Skeleton className="h-28 w-full" />}>
@@ -355,7 +355,7 @@ export default async function TodayPage() {
       </Panel>
 
       {/* ---- Kaynak künyesi ---- */}
-      <footer className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-[11.5px] text-muted lg:col-span-2 lg:row-start-4">
+      <footer className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted lg:col-span-2 lg:row-start-4">
         <span>{t.today.sourceLine}</span>
         <span>{t.today.sourceNote}</span>
       </footer>
@@ -611,19 +611,19 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
             >
               <Panel className="panel-hover flex h-full flex-col rounded-xl p-3 sm:rounded-lg sm:p-4">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-[11.5px] font-semibold text-body">
+                  <span className="truncate text-tiny font-semibold text-body">
                     {INDEX_LABEL[symbol] ?? symbol}
                   </span>
-                  <span className="hidden text-[10.5px] text-muted sm:inline">
+                  <span className="hidden text-nano text-muted sm:inline">
                     {symbol}
                   </span>
                 </div>
-                <p className="tote mt-[3px] text-lg sm:mt-1.5 sm:text-[22px]">
+                <p className="tote mt-[3px] text-lg sm:mt-1.5 sm:text-title">
                   {formatPrice(quote.price, locale)}
                 </p>
                 <p
                   className={cn(
-                    "numeral text-[11.5px] font-semibold sm:text-[12.5px]",
+                    "numeral text-tiny font-semibold sm:text-small",
                     directionText(tone),
                   )}
                 >
@@ -724,7 +724,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
                 index > 0 && "border-l border-line",
               )}
             >
-              <p className="plate text-[10px] tracking-[0.08em]">{value.label}</p>
+              <p className="plate text-nano tracking-[0.08em]">{value.label}</p>
               {/* İşaret küçük ve sessiz kalıyor (birim künyesi gibi) ama YERİ
                   dile bağlı: Türkçede sayıdan önce, İngilizcede sonra. Sabit
                   "sonra" yazıldığında panel Türkçede "4,25 %" basıyordu. */}
@@ -743,7 +743,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
                   </>
                 )}
               </p>
-              <p className="numeral mt-0.5 text-[11px] text-muted">
+              <p className="numeral mt-0.5 text-tiny text-muted">
                 {/* `null` ile `0` AYRI ŞEYLER: biri "önceki gözlemi
                     bilmiyoruz", öteki "faiz gerçekten değişmedi". İkisini de
                     "değişmedi" diye yazmak, olmayan bir ölçümü ölçülmüş gibi
@@ -774,15 +774,15 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
            /piyasalar'da — eşikler oradan, tek yerden okunuyor. */}
       {vixLevel !== null && vixTone && (
         <div className="flex items-center gap-3 border-t border-line px-4 py-3">
-          <span className="plate shrink-0 text-[10px] tracking-[0.08em]">
+          <span className="plate shrink-0 text-nano tracking-[0.08em]">
             {t.markets.fearTitle}
           </span>
-          <span className="tote ml-auto text-[17px] leading-none">
+          <span className="tote ml-auto text-lead leading-none">
             {formatPrice(vixLevel, locale, { digits: 2 })}
           </span>
           <span
             className={cn(
-              "shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-semibold",
+              "shrink-0 rounded-full px-2 py-0.5 text-nano font-semibold",
               vixTone.band.tone === "up" && "bg-up-wash text-up",
               vixTone.band.tone === "flat" && "bg-surface-elevated text-body",
               vixTone.band.tone === "warn" && "bg-brass-wash text-brass",
@@ -794,7 +794,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
           {vixDelta !== null && vixDelta !== 0 && (
             <span
               className={cn(
-                "numeral shrink-0 text-[11.5px] font-semibold",
+                "numeral shrink-0 text-tiny font-semibold",
                 // Yükselen VIX gerginlik demek — yön rengi hisse
                 // sözlüğünün tersine kurulu.
                 vixDelta > 0 ? "text-down" : "text-up",
@@ -839,13 +839,13 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                 className="flex items-center gap-3 border-t border-line px-4 py-2.5 transition-colors hover:bg-primary-tint sm:px-5"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5 text-[13px] font-semibold text-strong">
+                  <span className="flex items-center gap-1.5 text-base font-semibold text-strong">
                     <span aria-hidden>{market.flag}</span>
                     <span className="truncate">
                       {locale === "tr" ? market.nameTr : market.nameEn}
                     </span>
                   </span>
-                  <span className="mt-0.5 block truncate text-[10.5px] leading-tight text-muted">
+                  <span className="mt-0.5 block truncate text-nano leading-tight text-muted">
                     {locale === "tr" ? market.tracksTr : market.tracksEn}
                   </span>
                 </span>
@@ -861,7 +861,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                     anlamlı: fonun o günkü yönü. */}
                 <span
                   className={cn(
-                    "numeral shrink-0 text-[15px] font-bold",
+                    "numeral shrink-0 text-read font-bold",
                     directionText(tone),
                   )}
                 >
@@ -872,7 +872,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
           );
         })}
       </ul>
-      <p className="border-t border-line px-4 py-3 text-[11px] leading-relaxed text-muted sm:px-5">
+      <p className="border-t border-line px-4 py-3 text-tiny leading-relaxed text-muted sm:px-5">
         {t.today.worldMarketsHint}
       </p>
     </Panel>
@@ -1016,14 +1016,14 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
             <span className="w-[52px] shrink-0">
               <span
                 className={cn(
-                  "numeral block text-[13px] leading-tight",
+                  "numeral block text-base leading-tight",
                   high ? "font-bold text-strong" : "font-semibold text-body",
                 )}
               >
                 {times ? times.primary : "—"}
               </span>
               {times && (
-                <span className="numeral block text-[10.5px] leading-tight text-muted">
+                <span className="numeral block text-nano leading-tight text-muted">
                   {times.secondary} {tags.secondary}
                 </span>
               )}
@@ -1041,7 +1041,7 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
             >
               {locale === "tr" ? event.titleTr : event.titleEn}
             </span>
-            <span className="hidden w-[86px] shrink-0 text-right text-[12.5px] text-muted sm:block">
+            <span className="hidden w-[86px] shrink-0 text-right text-small text-muted sm:block">
               {event.forecast
                 ? `${t.calendar.forecast} ${event.forecast}${event.unit === "%" ? "%" : ""}`
                 : "—"}
@@ -1117,10 +1117,10 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
               aria-label={`${row.symbol} ${names[row.symbol]?.name ?? ""}`}
               className="absolute inset-0"
             />
-            <span className="w-[66px] shrink-0 text-[13.5px] font-bold text-strong">
+            <span className="w-[66px] shrink-0 text-base font-bold text-strong">
               {row.symbol}
             </span>
-            <span className="hidden min-w-0 flex-1 truncate text-[13.5px] text-body sm:block">
+            <span className="hidden min-w-0 flex-1 truncate text-base text-body sm:block">
               {names[row.symbol]?.name ?? ""}
             </span>
             {badge ? (
@@ -1132,7 +1132,7 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
                 {row.hour ? (hourLabel[row.hour] ?? t.earnings.timeUnknown) : t.earnings.timeUnknown}
               </TimingChip>
             )}
-            <span className="ml-auto shrink-0 text-right text-[12.5px] text-muted sm:ml-0 sm:w-[82px]">
+            <span className="ml-auto shrink-0 text-right text-small text-muted sm:ml-0 sm:w-[82px]">
               {row.epsEstimate !== null
                 ? `${t.earnings.epsEstimate} ${formatPrice(row.epsEstimate, locale, { currency: true })}`
                 : "—"}
@@ -1188,7 +1188,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
   return (
     <Panel className="px-4 py-4 sm:px-5">
       <div className="mb-1 flex items-baseline justify-between gap-3">
-        <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
+        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
           {t.today.watchlistSummary}
         </h2>
         <PanelLink href="/favoriler">{t.common.showAll}</PanelLink>
@@ -1209,7 +1209,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
                     className="flex items-center gap-3 py-2.5 transition-colors hover:opacity-80"
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[13.5px] font-bold text-strong">
+                      <span className="block text-base font-bold text-strong">
                         {symbol}
                       </span>
                     </span>
@@ -1226,12 +1226,12 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
                     )}
                     {quote ? (
                       <span className="w-[74px] shrink-0 text-right">
-                        <span className="numeral block text-[13.5px] font-bold text-strong">
+                        <span className="numeral block text-base font-bold text-strong">
                           {formatPrice(quote.price, locale)}
                         </span>
                         <span
                           className={cn(
-                            "numeral block text-[11.5px]",
+                            "numeral block text-tiny",
                             directionText(tone),
                           )}
                         >
@@ -1279,7 +1279,7 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <Panel className="px-4 py-4 sm:px-5">
       <div className="mb-3.5 flex items-baseline justify-between gap-3">
-        <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
+        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
           {t.today.macroSummary}
         </h2>
         <PanelLink href="/makro">{t.common.showAll}</PanelLink>
@@ -1302,10 +1302,10 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
               : formatPrice(value, locale);
           return (
             <div key={row.seriesId}>
-              <p className="truncate text-[11.5px] text-muted">
+              <p className="truncate text-tiny text-muted">
                 {locale === "tr" ? row.titleTr : row.titleEn}
               </p>
-              <p className="tote mt-0.5 text-[23px]">
+              <p className="tote mt-0.5 text-title">
                 {latest !== null ? show(latest) : "—"}
               </p>
               {/* DÖNEM KÜNYESİ. Sayı 23 puntoyla basılıyor ama hangi aya ait
@@ -1313,11 +1313,11 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
                   yayımlanır ve okuyucu bunu bugünün verisi sanıyordu. Makro
                   ekranı aynı sayının yanına bu künyeyi zaten koyuyor. */}
               {row.periodLabel && (
-                <p className="text-[10.5px] text-muted">
+                <p className="text-nano text-muted">
                   {formatPeriodLabel(row.periodLabel, locale)}
                 </p>
               )}
-              <p className="numeral text-[11.5px] text-muted">
+              <p className="numeral text-tiny text-muted">
                 {delta === null ? (
                   t.common.noData
                 ) : delta === 0 ? (
@@ -1372,11 +1372,11 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
             className="flex items-start gap-3 border-t border-line px-4 py-3 sm:px-5"
           >
             <span className="w-[86px] shrink-0">
-              <span className="block text-[11.5px] font-semibold leading-tight text-strong">
+              <span className="block text-tiny font-semibold leading-tight text-strong">
                 {formatEtDateLong(event.eventDate, locale)}
               </span>
               {times && (
-                <span className="numeral block text-[10.5px] leading-tight text-muted">
+                <span className="numeral block text-nano leading-tight text-muted">
                   {times.primary} {tags.primary}
                 </span>
               )}
@@ -1385,7 +1385,7 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
               importance={event.importance ?? "medium"}
               label={t.calendar.impact}
             />
-            <span className="min-w-0 flex-1 text-[13.5px] leading-snug text-body">
+            <span className="min-w-0 flex-1 text-base leading-snug text-body">
               {locale === "tr" ? event.titleTr : event.titleEn}
             </span>
           </li>
@@ -1485,7 +1485,7 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
                     : item.summary}
                 </span>
               )}
-              <span className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted">
+              <span className="mt-1.5 flex items-center gap-1.5 text-tiny text-muted">
                 <span className="numeral">{timeAgo(item.publishedAt, locale)}</span>
                 {item.source && (
                   <>
@@ -1588,10 +1588,10 @@ async function LatestWriting({
                   >
                     <LogoTile symbol={row.symbol} logoUrl={logo} size="md" />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] font-semibold text-strong">
+                      <span className="block truncate text-base font-semibold text-strong">
                         {row.company}
                       </span>
-                      <span className="numeral block text-[11px] text-muted">
+                      <span className="numeral block text-tiny text-muted">
                         {row.symbol} · {row.periodLabel}
                         <span aria-hidden className="mx-1.5">
                           ·
@@ -1601,7 +1601,7 @@ async function LatestWriting({
                     </span>
                     <span
                       className={cn(
-                        "shrink-0 rounded-md px-2 py-[3px] text-[11px] font-bold",
+                        "shrink-0 rounded-md px-2 py-[3px] text-tiny font-bold",
                         verdictPillClass(verdict),
                       )}
                     >
@@ -1629,10 +1629,10 @@ async function LatestWriting({
                   prefetch={false}
                   className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
                 >
-                  <span className="block text-[13px] font-semibold leading-[19px] text-strong">
+                  <span className="block text-base font-semibold leading-[19px] text-strong">
                     {story.title}
                   </span>
-                  <span className="numeral mt-1 block text-[11px] text-muted">
+                  <span className="numeral mt-1 block text-tiny text-muted">
                     {formatEtDateShort(story.eventDate, locale)}
                     {story.readMinutes ? (
                       <>
@@ -1670,10 +1670,10 @@ function ReadingDoors({ t }: { t: Dictionary }) {
           <Panel className="panel-hover flex h-full items-start gap-3.5 p-4 sm:p-5">
             <GlyphTile glyph={entry.glyph} size={44} />
             <span className="min-w-0">
-              <span className="display-ink display-ink-tight block w-fit text-[15px] font-bold">
+              <span className="display-ink display-ink-tight block w-fit text-read font-bold">
                 {entry.title}
               </span>
-              <span className="mt-1 block text-[12.5px] leading-[19px] text-body">
+              <span className="mt-1 block text-small leading-[19px] text-body">
                 {entry.hint}
               </span>
             </span>

@@ -80,7 +80,7 @@ export default async function MacroPage() {
                   <h2 className="text-sm font-semibold leading-snug text-strong">
                     {title}
                   </h2>
-                  <span className="numeral shrink-0 rounded-full bg-primary-tint px-2 py-0.5 text-[10px] text-soft">
+                  <span className="numeral shrink-0 rounded-full bg-primary-tint px-2 py-0.5 text-nano text-soft">
                     {formatPeriod(row.periodLabel, locale)}
                   </span>
                 </div>
@@ -93,7 +93,7 @@ export default async function MacroPage() {
                     )}
                   </span>
                   {delta !== null && Math.abs(delta) > 0.001 && (
-                    <span className="numeral inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-body">
+                    <span className="numeral inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-tiny font-medium text-body">
                       {/* Ok yalnızca yönü söyler: düşüş kırmızı, yükseliş
                           accent mavi. Yeşil yok — bkz. ana sayfa makro kartı. */}
                       <span

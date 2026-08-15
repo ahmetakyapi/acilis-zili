@@ -611,7 +611,7 @@ export function PriceChart({
         {hover ? (
           <>
             <div className="flex items-baseline gap-3">
-              <span className="tote text-[28px] sm:text-[32px]">
+              <span className="tote text-heading sm:text-subdisplay">
                 {formatPrice(hover.price, locale, { currency: true })}
               </span>
               <span className={cn("numeral text-sm font-semibold", hoverTone)}>
@@ -626,7 +626,7 @@ export function PriceChart({
               <span className="text-sm text-soft">
                 {labels.rangeLabels[range]}
               </span>
-              <span className="tote text-[28px] sm:text-[32px]">
+              <span className="tote text-heading sm:text-subdisplay">
                 {formatPrice(shownPrice, locale, { currency: true })}
               </span>
               <span className={cn("numeral text-lg font-bold", toneText)}>
@@ -686,7 +686,7 @@ export function PriceChart({
               <span
                 key={`${zone.key}-label`}
                 aria-hidden
-                className="plate pointer-events-none absolute top-1.5 text-[8px]"
+                className="plate pointer-events-none absolute top-1.5 text-micro"
                 style={{ left: zone.left + 6 }}
               >
                 {zone.label}
@@ -696,7 +696,7 @@ export function PriceChart({
 
       {/* Seans lejantı — gün içi görünümde günün saat haritası */}
       {range === "1D" && state.phase === "ready" && windows && (
-        <div className="mt-2 text-[10px] text-muted">
+        <div className="mt-2 text-nano text-muted">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             {windows.map((window, index) => (
               <span key={window.key} className="flex items-center gap-1.5">
@@ -728,7 +728,7 @@ export function PriceChart({
           </div>
           {/* Diğer saat dilimi tek satırda, aynı sırada: okumak isteyen
               buradan eşler, istemeyenin gözüne girmez. */}
-          <p className="numeral mt-1 text-[9.5px] opacity-80">
+          <p className="numeral mt-1 text-micro opacity-80">
             {labels.otherZoneTimes}{" "}
             {windows.map((window) => window.secondary).join(" · ")}
           </p>

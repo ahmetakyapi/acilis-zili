@@ -92,12 +92,12 @@ function ValueChip({
 
   return (
     <span className="flex flex-col items-end leading-tight">
-      <span className="text-[9.5px] font-semibold uppercase tracking-[0.07em] text-muted">
+      <span className="text-micro font-semibold uppercase tracking-[0.07em] text-muted">
         {label}
       </span>
       <span
         className={cn(
-          "numeral text-[13.5px]",
+          "numeral text-base",
           tone === "strong" ? "font-bold text-strong" : "text-soft",
         )}
       >
@@ -152,12 +152,12 @@ export default async function CalendarPage(
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="display-ink w-fit text-[26px] font-bold tracking-[-0.03em] sm:text-[34px]">
+          <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
             {t.calendar.title}
           </h1>
           <p className="mt-2 text-sm text-soft">{t.calendar.subtitle}</p>
         </div>
-        <p className="text-[11px] text-muted">{t.calendar.timesNote}</p>
+        <p className="text-tiny text-muted">{t.calendar.timesNote}</p>
       </header>
 
       {/* Görünüm + önem filtresi */}
@@ -238,7 +238,7 @@ export default async function CalendarPage(
                       kısa tarihe bakıp kafadan çıkarılıyordu. */}
                   <span
                     className={cn(
-                      "rounded-full px-2 py-0.5 text-[10.5px] font-bold",
+                      "rounded-full px-2 py-0.5 text-nano font-bold",
                       isToday
                         ? "bg-primary text-on-primary"
                         : "bg-surface-elevated text-soft",
@@ -248,7 +248,7 @@ export default async function CalendarPage(
                   </span>
                 </div>
 
-                <span className="numeral text-[11px] text-muted">
+                <span className="numeral text-tiny text-muted">
                   {dayEvents.length}{" "}
                   {dayEvents.length === 1
                     ? t.calendar.eventOne
@@ -284,7 +284,7 @@ export default async function CalendarPage(
                             <span className="numeral block text-sm font-semibold leading-tight text-strong">
                               {times.primary}
                             </span>
-                            <span className="numeral block text-[11px] leading-tight text-muted">
+                            <span className="numeral block text-tiny leading-tight text-muted">
                               {times.secondary} {tags.secondary}
                             </span>
                           </>
@@ -317,7 +317,7 @@ export default async function CalendarPage(
                           {locale === "tr" ? event.titleTr : event.titleEn}
                         </span>
                         {eventExplainer(event.slug, locale) && (
-                          <span className="max-w-[68ch] text-[11.5px] leading-[17px] text-muted">
+                          <span className="max-w-[68ch] text-tiny leading-[17px] text-muted">
                             {eventExplainer(event.slug, locale)}
                           </span>
                         )}
@@ -328,7 +328,7 @@ export default async function CalendarPage(
                         {event.importance === "high" && (
                           <a
                             href={`/api/takvim?tip=olay&slug=${event.slug}`}
-                            className="-my-1 mt-1 inline-flex w-fit min-h-8 items-center gap-1 rounded-full border border-line px-2 py-1 text-[10.5px] font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary"
+                            className="-my-1 mt-1 inline-flex w-fit min-h-8 items-center gap-1 rounded-full border border-line px-2 py-1 text-nano font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary"
                           >
                             <CalendarPlus weight="duotone" size={13} aria-hidden />
                             {t.earnings.addToCalendar}

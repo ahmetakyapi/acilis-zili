@@ -59,7 +59,7 @@ export function AddToCalendar({
     <a
       href={href}
       className={cn(
-        "relative z-10 -my-1 inline-flex min-h-8 items-center gap-1 rounded-full border border-line px-2 py-1 text-[10.5px] font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary",
+        "relative z-10 -my-1 inline-flex min-h-8 items-center gap-1 rounded-full border border-line px-2 py-1 text-nano font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary",
         className,
       )}
     >
@@ -92,7 +92,7 @@ function HoverTip({ text }: { text: string }) {
   return (
     <span
       aria-hidden
-      className="pointer-events-none absolute bottom-full right-0 z-30 mb-1.5 hidden whitespace-nowrap rounded-lg border border-line bg-overlay-surface px-2 py-1 text-[11px] font-semibold text-strong opacity-0 shadow-(--shadow-overlay) transition-opacity duration-150 group-hover/cal:opacity-100 group-focus-visible/cal:opacity-100 sm:block"
+      className="pointer-events-none absolute bottom-full right-0 z-30 mb-1.5 hidden whitespace-nowrap rounded-lg border border-line bg-overlay-surface px-2 py-1 text-tiny font-semibold text-strong opacity-0 shadow-(--shadow-overlay) transition-opacity duration-150 group-hover/cal:opacity-100 group-focus-visible/cal:opacity-100 sm:block"
     >
       {text}
     </span>

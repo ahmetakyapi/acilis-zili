@@ -81,11 +81,11 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
             className="flex items-start gap-3 border-t border-line px-4 py-3 sm:gap-4 sm:px-5"
           >
             <span className="w-[74px] shrink-0 sm:w-[92px]">
-              <span className="block text-[11.5px] font-semibold leading-tight text-strong">
+              <span className="block text-tiny font-semibold leading-tight text-strong">
                 {formatEtDateLong(row.date, locale)}
               </span>
               {shortExchange(row.exchange) && (
-                <span className="mt-0.5 block truncate text-[10.5px] leading-tight text-muted">
+                <span className="mt-0.5 block truncate text-nano leading-tight text-muted">
                   {shortExchange(row.exchange)}
                 </span>
               )}
@@ -95,26 +95,26 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
               <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <Link
                   href={`/hisse/${row.symbol}`}
-                  className="numeral -my-1.5 inline-flex min-h-8 items-center py-1.5 text-[13.5px] font-bold text-strong transition-colors hover:text-primary"
+                  className="numeral -my-1.5 inline-flex min-h-8 items-center py-1.5 text-base font-bold text-strong transition-colors hover:text-primary"
                 >
                   {row.symbol}
                 </Link>
                 {row.status && (
-                  <span className="rounded-full bg-surface-elevated px-[7px] py-px text-[10px] font-semibold text-body">
+                  <span className="rounded-full bg-surface-elevated px-[7px] py-px text-nano font-semibold text-body">
                     {statusLabel[row.status.toLowerCase()] ?? row.status}
                   </span>
                 )}
               </span>
-              <span className="mt-0.5 block truncate text-[12px] leading-tight text-body">
+              <span className="mt-0.5 block truncate text-small leading-tight text-body">
                 {row.name}
               </span>
             </span>
 
             <span className="shrink-0 text-right">
-              <span className="numeral block text-[12.5px] font-semibold text-strong">
+              <span className="numeral block text-small font-semibold text-strong">
                 {row.priceRange ? `$${row.priceRange}` : "—"}
               </span>
-              <span className="numeral mt-0.5 block text-[10.5px] leading-tight text-muted">
+              <span className="numeral mt-0.5 block text-nano leading-tight text-muted">
                 {row.totalValue
                   ? `$${formatCompact(row.totalValue, locale)}`
                   : row.shares
@@ -125,7 +125,7 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
           </li>
         ))}
       </ul>
-      <p className="border-t border-line px-4 py-3 text-[11px] leading-relaxed text-muted sm:px-5">
+      <p className="border-t border-line px-4 py-3 text-tiny leading-relaxed text-muted sm:px-5">
         {t.ipo.hint}
       </p>
     </>

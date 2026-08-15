@@ -46,7 +46,7 @@ export function TrafficChart({
 }) {
   if (points.length < 2) {
     return (
-      <p className="py-10 text-center text-[13px] text-muted">
+      <p className="py-10 text-center text-base text-muted">
         Grafik için henüz yeterli gün yok. Ölçüm ilk ziyaretle başlar.
       </p>
     );
@@ -78,7 +78,7 @@ export function TrafficChart({
       {/* Lejant iki seri için ŞART: kimlik hiçbir zaman yalnızca renkle
           taşınmaz. Renk kutusu işaretin yanında, metin ise mürekkep
           renginde — etiketin kendisi seri rengini giymiyor. */}
-      <div className="mb-3 flex flex-wrap items-baseline gap-x-5 gap-y-1.5 text-[12.5px]">
+      <div className="mb-3 flex flex-wrap items-baseline gap-x-5 gap-y-1.5 text-small">
         <span className="inline-flex items-center gap-2 text-body">
           <span aria-hidden className="h-[3px] w-4 rounded-full bg-chart-a" />
           Görüntüleme
@@ -93,14 +93,14 @@ export function TrafficChart({
             {last.visitors.toLocaleString("tr-TR")}
           </span>
         </span>
-        <span className="text-[11.5px] text-muted">son gün</span>
+        <span className="text-tiny text-muted">son gün</span>
       </div>
 
       <div className="relative">
         {/* Tavan etiketi, ızgara çizgisinin tam üstüne yüzdeyle
             konumlanıyor — her genişlikte doğru yerde durur. */}
         <span
-          className="pointer-events-none absolute left-0 -translate-y-full text-[11px] tabular-nums text-muted"
+          className="pointer-events-none absolute left-0 -translate-y-full text-tiny tabular-nums text-muted"
           style={{ top: `${(PAD_T / H) * 100}%` }}
         >
           {top.toLocaleString("tr-TR")}
@@ -172,7 +172,7 @@ export function TrafficChart({
 
       {/* Tarih ekseni HTML'de: üç etiket. Otuz günün hepsini yazmak
           okunmayan bir duvar üretiyor. */}
-      <div className="mt-1.5 flex justify-between text-[11px] tabular-nums text-muted">
+      <div className="mt-1.5 flex justify-between text-tiny tabular-nums text-muted">
         <span>{formatEtDateShort(points[0].day, locale)}</span>
         <span>{formatEtDateShort(points[midIndex].day, locale)}</span>
         <span>{formatEtDateShort(last.day, locale)}</span>
@@ -180,16 +180,16 @@ export function TrafficChart({
 
       {/* Tablo görünümü — grafiğin okunamadığı her durumda aynı sayılar. */}
       <details className="mt-3">
-        <summary className="cursor-pointer text-[12px] text-muted hover:text-body">
+        <summary className="cursor-pointer text-small text-muted hover:text-body">
           Sayıları Tablo Olarak Gör
         </summary>
         <div className="scroll-x mt-2 max-h-64 overflow-auto">
-          <table className="w-full text-[12.5px]">
+          <table className="w-full text-small">
             <caption className="sr-only">
               Gün gün görüntüleme ve tekil ziyaretçi
             </caption>
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-[0.05em] text-muted">
+              <tr className="text-left text-tiny uppercase tracking-[0.05em] text-muted">
                 <th scope="col" className="pb-1">
                   Gün
                 </th>

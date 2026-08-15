@@ -187,10 +187,10 @@ function CurriculumStrip({
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
+        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
           {t.guide.curriculum}
         </h2>
-        <span className="numeral text-[11.5px] text-muted">
+        <span className="numeral text-tiny text-muted">
           {all.length} {plural(all.length, t.guide.articleOne, t.guide.articleMany)} · ~{minutesOf(all)}{" "}
           {t.guide.readMinutes}
         </span>
@@ -200,14 +200,14 @@ function CurriculumStrip({
         {first && (
           <Link
             href={`/rehber/${first.slug}`}
-            className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 py-2 text-[12px] font-semibold text-primary transition-colors hover:text-primary-hover"
+            className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
           >
             {t.guide.startFirst}
             <ArrowRight weight="bold" size={12} />
           </Link>
         )}
       </div>
-      <p className="-mt-1.5 max-w-[72ch] text-[12.5px] leading-[19px] text-muted">
+      <p className="-mt-1.5 max-w-[72ch] text-small leading-[19px] text-muted">
         {t.guide.curriculumHint}
       </p>
 
@@ -226,13 +226,13 @@ function CurriculumStrip({
                 index >= 2 && "border-t border-line-soft sm:border-t-0",
               )}
             >
-              <span className="numeral text-[11px] font-bold text-primary">
+              <span className="numeral text-tiny font-bold text-primary">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <span className="display-ink display-ink-tight w-fit text-[15px] font-bold tracking-[-0.02em]">
+              <span className="display-ink display-ink-tight w-fit text-read font-bold tracking-[-0.02em]">
                 {guideTopicLabel(topic.key, locale)}
               </span>
-              <span className="mt-auto flex items-center gap-1.5 pt-2 text-[11px] text-muted">
+              <span className="mt-auto flex items-center gap-1.5 pt-2 text-tiny text-muted">
                 <LevelDots level={levels[levels.length - 1] ?? "temel"} />
                 <span className="min-w-0 truncate">
                   {levelSpan(levels, locale)}
@@ -305,14 +305,14 @@ function TopicHeading({
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t-2 border-strong pb-3 pt-3">
           <span
             aria-hidden
-            className="numeral text-[26px] font-bold leading-none tracking-[-0.03em] text-primary"
+            className="numeral text-heading font-bold leading-none tracking-[-0.03em] text-primary"
           >
             {String(index + 1).padStart(2, "0")}
           </span>
-          <h2 className="display-ink display-ink-tight w-fit text-[22px] font-bold tracking-[-0.03em]">
+          <h2 className="display-ink display-ink-tight w-fit text-title font-bold tracking-[-0.03em]">
             {guideTopicLabel(topic, locale)}
           </h2>
-          <span className="numeral text-[12px] text-muted">
+          <span className="numeral text-small text-muted">
             {articles.length}{" "}
             {plural(articles.length, t.guide.articleOne, t.guide.articleMany)} · ~{minutes}{" "}
             {t.guide.readMinutes}
@@ -327,14 +327,14 @@ function TopicHeading({
             /* -my-2 py-2: 12px'lik metin tek başına 18px'lik bir dokunma
                hedefi bırakıyordu; dolgu 32px'e çıkarır, negatif margin satırı
                olduğu yerde tutar. */
-            className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 py-2 text-[12px] font-semibold text-primary transition-colors hover:text-primary-hover"
+            className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
           >
             {t.guide.onlyThis}
             <ArrowRight weight="bold" size={12} />
           </Link>
         </div>
       </div>
-      <p className="mb-5 max-w-[72ch] text-[13px] leading-[20px] text-soft">
+      <p className="mb-5 max-w-[72ch] text-base leading-[20px] text-soft">
         {guideTopicDesc(topic, locale)}
       </p>
     </>
@@ -365,7 +365,7 @@ function TopicView({
         <Link
           href="/rehber"
           scroll={false}
-          className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-[12px] font-semibold text-muted transition-colors hover:text-primary"
+          className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
         >
           <ArrowLeft weight="bold" size={12} />
           {t.guide.allTopics}
@@ -373,14 +373,14 @@ function TopicView({
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t-2 border-strong pt-3">
           <span
             aria-hidden
-            className="numeral text-[26px] font-bold leading-none tracking-[-0.03em] text-primary"
+            className="numeral text-heading font-bold leading-none tracking-[-0.03em] text-primary"
           >
             {String(GUIDE_TOPICS.findIndex((entry) => entry.key === topic) + 1).padStart(2, "0")}
           </span>
-          <h2 className="display-ink display-ink-tight w-fit text-[22px] font-bold tracking-[-0.03em]">
+          <h2 className="display-ink display-ink-tight w-fit text-title font-bold tracking-[-0.03em]">
             {guideTopicLabel(topic, locale)}
           </h2>
-          <span className="numeral text-[12px] text-muted">
+          <span className="numeral text-small text-muted">
             {articles.length}{" "}
             {plural(articles.length, t.guide.articleOne, t.guide.articleMany)}
           </span>
@@ -388,7 +388,7 @@ function TopicView({
             <LevelBadge level={levels[0]} locale={locale} />
           )}
         </div>
-        <p className="max-w-[72ch] text-[13px] leading-[20px] text-soft">
+        <p className="max-w-[72ch] text-base leading-[20px] text-soft">
           {guideTopicDesc(topic, locale)}
         </p>
       </div>
@@ -452,7 +452,7 @@ function LeveledGrid({
         <div key={band.level} className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
             <LevelBadge level={band.level} locale={locale} />
-            <span className="numeral text-[11px] text-muted">
+            <span className="numeral text-tiny text-muted">
               {band.articles.length}{" "}
               {plural(band.articles.length, t.guide.articleOne, t.guide.articleMany)}
             </span>
@@ -506,19 +506,19 @@ function ArticleGrid({
                 var; iki liste artık aynı dili konuşuyor. */}
             <div className="flex items-start gap-3">
               <GlyphTile glyph={article.glyph} size={40} />
-              <h3 className="display-ink display-ink-tight min-w-0 flex-1 text-[17px] font-bold leading-[22px] tracking-[-0.025em] [text-wrap:balance]">
+              <h3 className="display-ink display-ink-tight min-w-0 flex-1 text-lead font-bold leading-[22px] tracking-[-0.025em] [text-wrap:balance]">
                 {article.title}
               </h3>
-              <span className="numeral shrink-0 text-[11px] font-bold text-muted">
+              <span className="numeral shrink-0 text-tiny font-bold text-muted">
                 {String(startIndex + index + 1).padStart(2, "0")}
               </span>
             </div>
 
-            <p className="flex-1 text-[13.5px] leading-[21px] text-body">
+            <p className="flex-1 text-base leading-[21px] text-body">
               {article.dek}
             </p>
 
-            <p className="flex items-center gap-1.5 border-t border-line pt-3 text-[12px] font-semibold text-primary">
+            <p className="flex items-center gap-1.5 border-t border-line pt-3 text-small font-semibold text-primary">
               {t.guide.cardCta}
               <ArrowRight weight="bold" size={13} />
               <span className="numeral ml-auto font-normal text-muted">

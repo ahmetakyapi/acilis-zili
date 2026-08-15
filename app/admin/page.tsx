@@ -106,7 +106,7 @@ async function TrafficCard() {
         action={
           <Link
             href="/admin/trafik"
-            className="text-[12.5px] font-semibold text-primary hover:text-primary-hover"
+            className="text-small font-semibold text-primary hover:text-primary-hover"
           >
             Tümünü Gör
           </Link>
@@ -148,28 +148,28 @@ async function AttentionCard() {
       </AdminPanelTitle>
 
       {problems.length === 0 && gaps.length === 0 ? (
-        <p className="flex items-center gap-2 py-2 text-[13px] text-body">
+        <p className="flex items-center gap-2 py-2 text-base text-body">
           <HealthDot tone="ok" />
           Her şey yolunda — eksik veri ya da bayat kayıt yok.
         </p>
       ) : (
         <ul className="flex flex-col gap-2.5">
           {problems.map((check) => (
-            <li key={check.label} className="flex items-start gap-2.5 text-[13px]">
+            <li key={check.label} className="flex items-start gap-2.5 text-base">
               <span className="mt-[5px]">
                 <HealthDot tone={check.tone} />
               </span>
               <span className="min-w-0">
                 <span className="font-semibold text-strong">{check.label}</span>{" "}
                 <span className="text-muted">· {HEALTH_LABEL[check.tone]}</span>
-                <span className="block text-[12px] text-muted">
+                <span className="block text-small text-muted">
                   {check.value} — {check.note}
                 </span>
               </span>
             </li>
           ))}
           {gaps.map((gap) => (
-            <li key={gap} className="flex items-start gap-2.5 text-[13px]">
+            <li key={gap} className="flex items-start gap-2.5 text-base">
               <span className="mt-[5px]">
                 <HealthDot tone="warn" />
               </span>

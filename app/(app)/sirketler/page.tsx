@@ -98,7 +98,7 @@ function SectorChip({
       scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 sm:min-h-[34px] text-[12.5px] font-semibold transition-colors",
+        "inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 sm:min-h-[34px] text-small font-semibold transition-colors",
         active
           ? "border-transparent bg-primary text-on-primary"
           : "border-line bg-surface text-body hover:border-line-strong hover:text-strong",
@@ -107,7 +107,7 @@ function SectorChip({
       {label}
       <span
         className={cn(
-          "numeral text-[11px] font-bold",
+          "numeral text-tiny font-bold",
           active ? "text-on-primary/70" : "text-muted",
         )}
       >
@@ -159,7 +159,7 @@ function SortHead({
         )}
       >
         {label}
-        <span aria-hidden className="numeral text-[8px]">
+        <span aria-hidden className="numeral text-micro">
           {active ? (dir === "desc" ? "▼" : "▲") : "▽"}
         </span>
       </Link>
@@ -238,7 +238,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   return (
     <div className="flex flex-col gap-5">
       <header>
-        <h1 className="display-ink w-fit text-[26px] font-bold tracking-[-0.03em] sm:text-[34px]">
+        <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
           {t.companies.title}
         </h1>
         <p className="mt-2 text-sm text-soft">{t.companies.subtitle}</p>
@@ -398,7 +398,7 @@ async function CompaniesTable({
           <div className="scroll-x">
             <table className="w-full text-sm sm:min-w-[700px]">
               <thead>
-                <tr className="border-b border-line text-left text-[10.5px] uppercase tracking-[0.08em] text-muted">
+                <tr className="border-b border-line text-left text-nano uppercase tracking-[0.08em] text-muted">
                   <th className="hidden w-10 px-4 py-2.5 font-semibold sm:table-cell sm:px-5">
                     #
                   </th>
@@ -480,16 +480,16 @@ async function CompaniesTable({
                             className="size-[30px] sm:size-[34px]"
                           />
                           <span className="min-w-0">
-                            <span className="block text-[13.5px] font-bold leading-[18px] text-strong">
+                            <span className="block text-base font-bold leading-[18px] text-strong">
                               {company.symbol}
                             </span>
-                            <span className="block max-w-[66px] truncate text-[11.5px] leading-[15px] text-muted sm:max-w-44">
+                            <span className="block max-w-[66px] truncate text-tiny leading-[15px] text-muted sm:max-w-44">
                               {company.name}
                             </span>
                           </span>
                         </Link>
                       </td>
-                      <td className="hidden max-w-40 truncate px-3 py-3 text-[12px] text-soft md:table-cell">
+                      <td className="hidden max-w-40 truncate px-3 py-3 text-small text-soft md:table-cell">
                         {industryLabel(company.industry, locale) ?? "—"}
                       </td>
                       <td className="px-1 py-3 text-right sm:px-3">
@@ -501,13 +501,13 @@ async function CompaniesTable({
                             /* sm:text-…: dar ekranda pilin 11px'i kalıyor
                                (390px'te dört sütun zor sığıyor), geniş
                                ekranda sayı bir bakışta okunacak boya çıkıyor. */
-                            className="px-1 sm:px-2 sm:text-[12.5px]"
+                            className="px-1 sm:px-2 sm:text-small"
                           />
                         ) : (
                           <span className="text-xs text-muted">—</span>
                         )}
                       </td>
-                      <td className="numeral hidden px-3 py-3 text-right text-[14.5px] sm:table-cell">
+                      <td className="numeral hidden px-3 py-3 text-right text-read sm:table-cell">
                         {weekly[company.symbol] !== undefined ? (
                           <span
                             className={cn(
@@ -526,7 +526,7 @@ async function CompaniesTable({
                           ağırlıkta yazılınca sayı dizisinin içinde kayboluyordu.
                           Boylar bir kademe büyütüldü: 13/13.5 punto sayılar
                           "bir bakışta" okunmuyordu, tablo sayı tablosu. */}
-                      <td className="numeral px-1 py-3 text-right text-[13.5px] font-bold text-strong sm:px-3 sm:text-[15px]">
+                      <td className="numeral px-1 py-3 text-right text-base font-bold text-strong sm:px-3 sm:text-read">
                         {quote ? formatPrice(quote.price, locale) : "—"}
                       </td>
                       {/* Piyasa değeri telefonda da FİYATIN SAĞINDA, kendi
@@ -537,12 +537,12 @@ async function CompaniesTable({
                           okunuyordu. Ayrı sütunda ikisi de kendi başlığının
                           altında duruyor; 390px'e dört sütun, kalan yerler
                           daraltılarak sığdı. */}
-                      <td className="numeral py-3 pl-1 pr-3 text-right text-[12.5px] font-semibold text-body sm:px-3 sm:text-[14px]">
+                      <td className="numeral py-3 pl-1 pr-3 text-right text-small font-semibold text-body sm:px-3 sm:text-base">
                         {company.marketCap
                           ? `$${formatCompact(company.marketCap, locale)}`
                           : "—"}
                       </td>
-                      <td className="numeral hidden px-4 py-3 text-right text-[14.5px] text-soft sm:table-cell sm:px-5">
+                      <td className="numeral hidden px-4 py-3 text-right text-read text-soft sm:table-cell sm:px-5">
                         {formatVolume(quote?.volume ?? company.volume, locale)}
                       </td>
                     </tr>
@@ -561,7 +561,7 @@ async function CompaniesTable({
             fırlatılmamalı — geldiği yerin altına yeni satırlar eklenmeli. */}
         {hasMore && (
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
-            <p className="numeral text-[12px] text-muted">
+            <p className="numeral text-small text-muted">
               {t.companies.showing
                 .replace("{n}", String(rows.length))
                 .replace("{total}", String(sorted.length))}
@@ -569,7 +569,7 @@ async function CompaniesTable({
             <Link
               href={moreHref}
               scroll={false}
-              className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+              className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
             >
               {t.companies.showMore}
             </Link>

@@ -92,7 +92,7 @@ const PROSE_COLUMNS =
  * uygulanmıyor (aynı tuzak `components/today/DayRail.tsx` içinde de anlatılı).
  */
 const PLATE_LABEL =
-  "text-[10px] font-bold uppercase leading-none tracking-[0.09em]";
+  "text-nano font-bold uppercase leading-none tracking-[0.09em]";
 
 /**
  * Künye rayı — manşetin altındaki sakin ölçü şeridi.
@@ -143,21 +143,21 @@ function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
           {/* Etiket ve künye 10px'ti ve okunmuyordu — ray zaten sakin bir
               katman, bir de puntoyu kısınca fısıltıya dönüşüyordu. */}
           <dt className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-            <span className={cn(PLATE_LABEL, "text-[11px] text-muted")}>
+            <span className={cn(PLATE_LABEL, "text-tiny text-muted")}>
               {fact.label}
             </span>
             {/* Künye PARANTEZ İÇİNDE. Etiketin yanında çıplak dururken ikisi
                 tek bir uzun etiket gibi okunuyordu ("PİYASA DEĞERİ bugün");
                 parantez, ölçünün adı ile o ölçünün koşulunu ayırıyor. */}
             {fact.note && (
-              <span className="shrink-0 text-[11px] font-medium text-muted">
+              <span className="shrink-0 text-tiny font-medium text-muted">
                 ({fact.note})
               </span>
             )}
           </dt>
           <dd
             className={cn(
-              "figure mt-1.5 text-[19px] font-bold leading-none tracking-[-0.03em]",
+              "figure mt-1.5 text-title font-bold leading-none tracking-[-0.03em]",
               fact.tone === "up" && "text-up",
               fact.tone === "down" && "text-down",
               !fact.tone && "text-strong",
@@ -197,11 +197,11 @@ function PanelHead({
       >
         <Icon weight="duotone" size={15} />
       </span>
-      <h2 className="whitespace-nowrap text-[15px] font-bold tracking-[-0.01em] text-strong">
+      <h2 className="whitespace-nowrap text-read font-bold tracking-[-0.01em] text-strong">
         {title}
       </h2>
       {meta && (
-        <span className="plate ml-auto shrink-0 text-[10px] tracking-[0.09em]">
+        <span className="plate ml-auto shrink-0 text-nano tracking-[0.09em]">
           {meta}
         </span>
       )}
@@ -466,7 +466,7 @@ export default async function AnalysisDetailPage(
       {/* ---- Künye ---- */}
       <nav
         aria-label="breadcrumb"
-        className="flex flex-wrap items-center gap-2 text-[12.5px] text-muted"
+        className="flex flex-wrap items-center gap-2 text-small text-muted"
       >
         <Link
           href="/bilancolar/analizler"
@@ -516,12 +516,12 @@ export default async function AnalysisDetailPage(
               />
               <div className="flex min-w-0 flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <h1 className="display-ink w-fit text-[24px] font-bold tracking-[-0.035em]">
+                  <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.035em]">
                     {row.company}
                   </h1>
                   <Link
                     href={`/hisse/${symbol}`}
-                    className="rounded-md border border-primary-faint bg-primary-wash px-2 py-[3px] text-[11px] font-bold text-primary hover:bg-primary-tint"
+                    className="rounded-md border border-primary-faint bg-primary-wash px-2 py-[3px] text-tiny font-bold text-primary hover:bg-primary-tint"
                   >
                     {symbol}
                     {row.exchange ? ` · ${row.exchange}` : ""}
@@ -540,19 +540,19 @@ export default async function AnalysisDetailPage(
                   bir tarih, sayfanın en önemli şeyi değil. Komşusuyla aynı
                   aileye alındı: ikisi de kenarlıklı çip, biri nötr (olmuş
                   olan), öteki accent (olacak olan). */}
-              <span className="inline-flex min-h-7 items-center gap-1.5 rounded-md border border-line bg-surface-solid px-2.5 text-[10.5px] font-bold text-body">
+              <span className="inline-flex min-h-7 items-center gap-1.5 rounded-md border border-line bg-surface-solid px-2.5 text-nano font-bold text-body">
                 <CalendarBlank weight="duotone" size={12} className="text-muted" />
                 {t.analysis.earningsOf.replace("{period}", row.periodLabel)} ·{" "}
                 {formatEtDateLong(row.reportDate, locale)}
               </span>
               {row.nextPeriodLabel && (
-                <span className="inline-flex min-h-7 items-center rounded-md border border-primary-faint bg-primary-wash px-2.5 text-[10.5px] font-bold text-primary">
+                <span className="inline-flex min-h-7 items-center rounded-md border border-primary-faint bg-primary-wash px-2.5 text-nano font-bold text-primary">
                   {t.analysis.nextEarnings}: {row.nextPeriodLabel}
                   {row.nextReportEstimate ? ` · ${row.nextReportEstimate}` : ""}
                 </span>
               )}
               {langNote && (
-                <span className="inline-flex min-h-7 items-center rounded-md bg-surface-elevated px-2.5 text-[10.5px] font-semibold text-muted">
+                <span className="inline-flex min-h-7 items-center rounded-md bg-surface-elevated px-2.5 text-nano font-semibold text-muted">
                   {langNote}
                 </span>
               )}
@@ -582,20 +582,20 @@ export default async function AnalysisDetailPage(
                 <span className={cn(PLATE_LABEL, "text-primary")}>
                   {t.analysis.livePrice}
                 </span>
-                <span className="text-[10.5px] font-medium text-muted">
+                <span className="text-nano font-medium text-muted">
                   {status.session === "regular" && !live.stale
                     ? t.market.live
                     : t.market.prevClose}
                 </span>
               </div>
               <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 sm:justify-end">
-                <span className="figure text-[30px] font-bold leading-none tracking-[-0.04em] text-strong">
+                <span className="figure text-subdisplay font-bold leading-none tracking-[-0.04em] text-strong">
                   {formatPrice(live.quote.price, locale, { currency: true })}
                 </span>
                 {/* Değişim bilinmiyorsa yön rengi de yok: tire nötr basılır. */}
                 <span
                   className={cn(
-                    "figure text-[15px] font-bold",
+                    "figure text-read font-bold",
                     live.quote.changePct === null
                       ? "text-muted"
                       : live.quote.changePct >= 0
@@ -611,11 +611,11 @@ export default async function AnalysisDetailPage(
                    oysa bu satır sayfanın ana sorusuna ("bilanço günden bugüne
                    ne oldu") doğrudan cevap veriyor. Etiket 12px gövde
                    mürekkebine, oran 13px'e çıktı. */
-                <p className="mt-2 text-[12px] text-body">
+                <p className="mt-2 text-small text-body">
                   {t.analysis.sinceReport}{" "}
                   <span
                     className={cn(
-                      "figure text-[13px] font-bold",
+                      "figure text-base font-bold",
                       sinceReportPct >= 0 ? "text-up" : "text-down",
                     )}
                   >
@@ -632,7 +632,7 @@ export default async function AnalysisDetailPage(
                   <button
                     type="submit"
                     className={cn(
-                      "inline-flex min-h-7 items-center gap-1.5 rounded-md border px-2.5 text-[10.5px] font-bold transition-colors",
+                      "inline-flex min-h-7 items-center gap-1.5 rounded-md border px-2.5 text-nano font-bold transition-colors",
                       watched
                         ? "border-primary-faint bg-primary-wash text-primary"
                         : "border-line bg-surface-solid text-body hover:border-line-strong hover:text-strong",
@@ -676,12 +676,12 @@ export default async function AnalysisDetailPage(
                 <span className={cn(PLATE_LABEL, "text-body")}>
                   {t.analysis.closePrice}
                 </span>
-                <span className="shrink-0 text-[10.5px] font-medium text-muted">
+                <span className="shrink-0 text-nano font-medium text-muted">
                   {formatEtDateCompact(row.reportDate, locale)}
                 </span>
               </p>
               <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <span className="figure text-[30px] font-bold leading-none tracking-[-0.04em] text-strong sm:text-[34px]">
+                <span className="figure text-subdisplay font-bold leading-none tracking-[-0.04em] text-strong sm:text-display">
                   {formatPrice(row.price, locale, { currency: true })}
                 </span>
                 {row.reactionPct !== null && (
@@ -690,7 +690,7 @@ export default async function AnalysisDetailPage(
                      yaptı" sorusunun cevabı o. */
                   <span
                     className={cn(
-                      "figure inline-flex items-baseline gap-1 rounded-lg px-2.5 py-1 text-[15px] font-bold leading-none",
+                      "figure inline-flex items-baseline gap-1 rounded-lg px-2.5 py-1 text-read font-bold leading-none",
                       row.reactionPct >= 0
                         ? "bg-up-wash text-up"
                         : "bg-down-wash text-down",
@@ -702,7 +702,7 @@ export default async function AnalysisDetailPage(
                   </span>
                 )}
                 {row.reactionPct !== null && (
-                  <span className="text-[11px] text-muted">
+                  <span className="text-tiny text-muted">
                     {t.analysis.reactionNote}
                   </span>
                 )}
@@ -860,10 +860,10 @@ export default async function AnalysisDetailPage(
                   <span className={cn(PLATE_LABEL, "text-primary")}>
                     {t.analysis.ceoMessage}
                   </span>
-                  <span className="text-[15px] font-bold tracking-[-0.02em] text-strong">
+                  <span className="text-read font-bold tracking-[-0.02em] text-strong">
                     {row.ceoQuote.name}
                   </span>
-                  <span className="text-[11.5px] text-muted">
+                  <span className="text-tiny text-muted">
                     {row.ceoQuote.title}
                   </span>
                 </div>
@@ -873,7 +873,7 @@ export default async function AnalysisDetailPage(
                   className="hidden w-px self-stretch bg-line lg:block"
                 />
 
-                <blockquote className="min-w-0 flex-1 border-t border-line pt-3.5 text-[14px] italic leading-[22px] text-body [text-wrap:pretty] lg:border-t-0 lg:pt-0">
+                <blockquote className="min-w-0 flex-1 border-t border-line pt-3.5 text-base italic leading-[22px] text-body [text-wrap:pretty] lg:border-t-0 lg:pt-0">
                   “{row.ceoQuote.quote}”
                 </blockquote>
 
@@ -887,7 +887,7 @@ export default async function AnalysisDetailPage(
                     {row.ceoQuote.topics.map((topic) => (
                       <li
                         key={topic}
-                        className="rounded-md border border-primary-faint bg-primary-wash px-3 py-2 text-[11.5px] font-semibold leading-[15px] text-primary lg:text-center"
+                        className="rounded-md border border-primary-faint bg-primary-wash px-3 py-2 text-tiny font-semibold leading-[15px] text-primary lg:text-center"
                       >
                         {topic}
                       </li>
@@ -927,8 +927,8 @@ export default async function AnalysisDetailPage(
                   className={cn(
                     "mb-3.5 break-inside-avoid [text-wrap:pretty] last:mb-0",
                     index === 0
-                      ? "text-[14.5px] leading-[24px] text-strong"
-                      : "text-[13.5px] leading-[23px] text-body",
+                      ? "text-read leading-[24px] text-strong"
+                      : "text-base leading-[23px] text-body",
                   )}
                 >
                   <RichText text={paragraph} />
@@ -982,14 +982,14 @@ export default async function AnalysisDetailPage(
                   <section key={index} className="border-t border-line pt-3.5">
                     <span
                       aria-hidden
-                      className="numeral mb-1.5 block text-[11px] font-bold tracking-[0.04em] text-primary"
+                      className="numeral mb-1.5 block text-tiny font-bold tracking-[0.04em] text-primary"
                     >
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <h3 className="mb-2 text-[14px] font-bold leading-[20px] tracking-[-0.015em] text-strong [text-wrap:balance]">
+                    <h3 className="mb-2 text-base font-bold leading-[20px] tracking-[-0.015em] text-strong [text-wrap:balance]">
                       {section.title}
                     </h3>
-                    <p className="text-[13.5px] leading-[22px] text-body [text-wrap:pretty]">
+                    <p className="text-base leading-[22px] text-body [text-wrap:pretty]">
                       <RichText text={section.body} />
                     </p>
                   </section>
@@ -1040,7 +1040,7 @@ export default async function AnalysisDetailPage(
       >
         {peers.length > 0 && (
           <Panel className="px-4 py-4 sm:px-5">
-            <h2 className="mb-3 flex items-center gap-2.5 text-[13.5px] font-bold text-strong">
+            <h2 className="mb-3 flex items-center gap-2.5 text-base font-bold text-strong">
               <span
                 aria-hidden
                 className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary"
@@ -1073,13 +1073,13 @@ export default async function AnalysisDetailPage(
                       sayfanın geri kalanıyla aynı dile sokuyor (mercek
                       künyeleri ve analiz tablosu da logodan besleniyor). */}
                   <LogoTile symbol={peer.symbol} logoUrl={peer.logoUrl} size="xs" />
-                  <span className="shrink-0 text-[12.5px] font-bold text-strong">
+                  <span className="shrink-0 text-small font-bold text-strong">
                     {peer.symbol}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-xs text-body">
                     {peer.name ?? ""}
                   </span>
-                  <span className="numeral shrink-0 text-[11px] text-muted">
+                  <span className="numeral shrink-0 text-tiny text-muted">
                     {formatEtDateCompact(peer.reportDate, locale)}
                   </span>
                   <AddToCalendar
@@ -1105,9 +1105,9 @@ export default async function AnalysisDetailPage(
 
       {/* ---- Alt bilgi ---- */}
       <footer className="flex flex-col gap-2 border-t border-line pt-3.5">
-        <p className="text-[11px] text-muted">{t.analysis.disclaimer}</p>
+        <p className="text-tiny text-muted">{t.analysis.disclaimer}</p>
         {sources.length > 0 && (
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted">
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-tiny text-muted">
             <span className="font-semibold">{t.analysis.sourcesLabel}:</span>
             {sources.map((source, index) => {
               /* ADRES SÜZGEÇTEN GEÇER. Kaynak listesi `/api/analiz` POST
@@ -1245,12 +1245,12 @@ function VerdictStrip({
     <section className="flex flex-wrap items-center gap-4 rounded-xl border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-4 sm:gap-[18px] sm:px-5">
       <ScoreRing score={row.score} verdict={verdict} size={64} showDenominator />
       <div className="flex shrink-0 flex-col items-center gap-1">
-        <span className="text-[11px] font-bold tracking-[0.04em] text-body">
+        <span className="text-tiny font-bold tracking-[0.04em] text-body">
           {t.analysis.verdictLabel}
         </span>
         <span
           className={cn(
-            "text-[30px] font-bold leading-none tracking-[-0.03em]",
+            "text-subdisplay font-bold leading-none tracking-[-0.03em]",
             verdictTextClass(verdict),
           )}
         >
@@ -1261,7 +1261,7 @@ function VerdictStrip({
         aria-hidden
         className="hidden w-px self-stretch bg-primary-faint sm:block"
       />
-      <p className="min-w-[16rem] flex-1 text-[14px] font-medium leading-[22px] text-strong [text-wrap:pretty]">
+      <p className="min-w-[16rem] flex-1 text-base font-medium leading-[22px] text-strong [text-wrap:pretty]">
         {row.headline}
       </p>
       {row.targetPrice !== null && (
@@ -1292,13 +1292,13 @@ function VerdictStrip({
                   )
                 : t.analysis.analystTarget}
             </span>
-            <span className="figure text-[26px] font-bold leading-none tracking-[-0.035em] text-strong">
+            <span className="figure text-heading font-bold leading-none tracking-[-0.035em] text-strong">
               {formatPrice(row.targetPrice, locale, { currency: true })}
             </span>
             {upsidePct !== null && (
               <span
                 className={cn(
-                  "figure inline-flex items-baseline gap-1 rounded-md px-1.5 py-[2px] text-[11.5px] font-bold",
+                  "figure inline-flex items-baseline gap-1 rounded-md px-1.5 py-[2px] text-tiny font-bold",
                   upsidePct >= 0
                     ? "bg-up-wash text-up"
                     : "bg-down-wash text-down",
@@ -1372,10 +1372,10 @@ function PointsCard({
             üç panel; h3 yazılınca başlıklarda gezinen okuyucuya bir üsttekinin
             ALT BÖLÜMÜ gibi görünüyorlardı. Punto küçük ama düzey öyle değil —
             ikisi ayrı şeyler. */}
-        <h2 className={cn("text-[13px] font-bold tracking-[-0.01em]", accent)}>
+        <h2 className={cn("text-base font-bold tracking-[-0.01em]", accent)}>
           {title}
         </h2>
-        <span className="figure ml-auto text-[11px] font-bold text-muted">
+        <span className="figure ml-auto text-tiny font-bold text-muted">
           {points.length}
         </span>
       </div>
@@ -1384,12 +1384,12 @@ function PointsCard({
         {points.map((point, index) => (
           <li
             key={index}
-            className="flex gap-2.5 text-[12px] leading-[18px] text-body [text-wrap:pretty]"
+            className="flex gap-2.5 text-small leading-[18px] text-body [text-wrap:pretty]"
           >
             <span
               aria-hidden
               className={cn(
-                "figure mt-px flex size-[18px] shrink-0 items-center justify-center rounded-xs text-[9.5px] font-bold",
+                "figure mt-px flex size-[18px] shrink-0 items-center justify-center rounded-xs text-micro font-bold",
                 tone === "up" && "bg-up-wash",
                 tone === "down" && "bg-down-wash",
                 tone === "primary" && "bg-primary-wash",

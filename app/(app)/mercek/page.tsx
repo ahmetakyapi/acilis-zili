@@ -141,7 +141,7 @@ function IntroLine({ t }: { t: Dictionary }) {
 
   return (
     <div className="-mt-1 flex flex-col gap-2">
-      <ul className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[12.5px] leading-[18px] text-muted">
+      <ul className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-small leading-[18px] text-muted">
         {items.map((item, index) => (
           <li key={item.title} className="flex items-center gap-2.5">
             {/* Ayraç dar ekranda gizlenir: maddeler zaten alt alta düşüyor ve
@@ -158,7 +158,7 @@ function IntroLine({ t }: { t: Dictionary }) {
           </li>
         ))}
       </ul>
-      <p className="flex flex-wrap items-center gap-x-1.5 text-[12px] text-muted">
+      <p className="flex flex-wrap items-center gap-x-1.5 text-small text-muted">
         {t.stories.bridge}
         <Link
           href="/haberler"
@@ -289,7 +289,7 @@ async function StoryBoard({
     <div className="flex flex-col gap-6">
       {chips.length > 1 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="plate mr-0.5 text-[10px] tracking-[0.09em]">
+          <span className="plate mr-0.5 text-nano tracking-[0.09em]">
             {t.stories.filterLabel}
           </span>
           <FilterChip href="/mercek" active={!symbolFilter}>
@@ -315,7 +315,7 @@ async function StoryBoard({
             action={
               <Link
                 href="/mercek"
-                className="text-[12.5px] font-semibold text-primary"
+                className="text-small font-semibold text-primary"
               >
                 {t.stories.filterAll}
               </Link>
@@ -335,7 +335,7 @@ async function StoryBoard({
 
           {rows.length > 1 && (
             <div className="flex flex-col gap-3">
-              <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
+              <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
                 {t.stories.archive}
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -356,7 +356,7 @@ async function StoryBoard({
               listenin dibinde, sayfanın başına fırlatılmamalı. */}
           {total > all.length && !symbolFilter && (
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-              <p className="numeral text-[12px] text-muted">
+              <p className="numeral text-small text-muted">
                 {t.stories.showing
                   .replace("{n}", String(all.length))
                   .replace("{total}", String(total))}
@@ -364,7 +364,7 @@ async function StoryBoard({
               <Link
                 href={`/mercek?adet=${limit + PAGE_STEP}`}
                 scroll={false}
-                className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+                className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
               >
                 {t.stories.showMore}
               </Link>
@@ -413,25 +413,25 @@ function LeadStory({
                   dili rozetle söylenir — sessizce yanlış dilde metin sunmak
                   seçenek değil. */}
               {story.locale !== locale && (
-                <span className="plate text-[10px] tracking-[0.09em]">
+                <span className="plate text-nano tracking-[0.09em]">
                   {story.locale.toUpperCase()}
                 </span>
               )}
               {/* Arşiv kartındaki künyeyle aynı ağırlık — manşet yazının
                   tarihi orada okunur, burada okunmaz olamaz. */}
-              <span className="numeral ml-auto text-[13.5px] font-semibold text-body">
+              <span className="numeral ml-auto text-base font-semibold text-body">
                 {formatEtDateLong(story.eventDate, locale)}
               </span>
             </div>
 
-            <h2 className="display-ink mt-3 w-fit text-[26px] font-bold leading-[1.12] tracking-[-0.03em] sm:text-[34px]">
+            <h2 className="display-ink mt-3 w-fit text-heading font-bold leading-[1.12] tracking-[-0.03em] sm:text-display">
               {story.title}
             </h2>
-            <p className="mt-3.5 max-w-[58ch] text-[15px] leading-[25px] text-body">
+            <p className="mt-3.5 max-w-[58ch] text-read leading-[25px] text-body">
               {story.dek}
             </p>
 
-            <p className="mt-5 flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-[12.5px] font-semibold text-primary">
+            <p className="mt-5 flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-small font-semibold text-primary">
               {t.guide.cardCta}
               <ArrowRight weight="bold" size={13} />
               {story.readMinutes && (
@@ -508,8 +508,8 @@ function StoryCard({
               yazılarda tarih başlıktan sonra gelen ikinci bilgi — metin bir
               OLAYI anlatıyor ve olayın ne zaman olduğu hikâyenin parçası.
               Okuma süresi geride kalıyor: o bir künye, tarih değil. */}
-          <p className="numeral flex items-baseline gap-1.5 text-[11.5px] text-muted">
-            <span className="text-[13.5px] font-semibold text-body">
+          <p className="numeral flex items-baseline gap-1.5 text-tiny text-muted">
+            <span className="text-base font-semibold text-body">
               {formatEtDateLong(story.eventDate, locale)}
             </span>
             {story.readMinutes && (
@@ -521,16 +521,16 @@ function StoryCard({
               </>
             )}
             {story.locale !== locale && (
-              <span className="plate ml-auto text-[9.5px] tracking-[0.09em]">
+              <span className="plate ml-auto text-micro tracking-[0.09em]">
                 {story.locale.toUpperCase()}
               </span>
             )}
           </p>
 
-          <h3 className="display-ink display-ink-tight mt-1.5 w-fit text-[17px] font-bold leading-[1.2] tracking-[-0.025em]">
+          <h3 className="display-ink display-ink-tight mt-1.5 w-fit text-lead font-bold leading-[1.2] tracking-[-0.025em]">
             {story.title}
           </h3>
-          <p className="mt-2 line-clamp-3 text-[13px] leading-[20px] text-body">
+          <p className="mt-2 line-clamp-3 text-base leading-[20px] text-body">
             {story.dek}
           </p>
         </div>

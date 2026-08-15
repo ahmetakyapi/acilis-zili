@@ -162,7 +162,7 @@ async function ArchiveBoard({
                   ? t.brief.periodWeekly
                   : t.brief.periodDaily}
               </Kicker>
-              <span className="text-[12.5px] text-body">
+              <span className="text-small text-body">
                 {period === "weekly"
                   ? t.brief.weeklyRange
                       .replace(
@@ -179,14 +179,14 @@ async function ArchiveBoard({
                   : formatEtDateLong(brief.briefDate, locale)}
               </span>
               {brief.briefDate === currentAnchor && (
-                <span className="rounded-full bg-primary px-2 py-0.5 text-[10.5px] font-bold tracking-[0.05em] text-on-primary">
+                <span className="rounded-full bg-primary px-2 py-0.5 text-nano font-bold tracking-[0.05em] text-on-primary">
                   {(period === "weekly"
                     ? t.brief.thisWeek
                     : t.brief.today
                   ).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
                 </span>
               )}
-              <span className="ml-auto text-[11.5px] text-muted">
+              <span className="ml-auto text-tiny text-muted">
                 {t.brief.writtenBy}:{" "}
                 {brief.generatedBy === "claude"
                   ? t.brief.byClaude
@@ -199,14 +199,14 @@ async function ArchiveBoard({
                 taşıyor. Bu satır olmadan okuyucu iki bölümün neden yan yana
                 durduğunu anlamıyordu. */}
             {period === "weekly" && (
-              <p className="mt-3 text-[11.5px] font-semibold tracking-[0.04em] text-primary">
+              <p className="mt-3 text-tiny font-semibold tracking-[0.04em] text-primary">
                 {t.brief.weeklyFrame}
               </p>
             )}
 
             {/* Çeviri henüz yoksa orijinal gösterilir — ama bunu söyleyerek. */}
             {brief.locale !== locale && (
-              <p className="mt-3 w-fit rounded-full border border-line bg-surface-elevated px-3.5 py-1.5 text-[12px] text-muted">
+              <p className="mt-3 w-fit rounded-full border border-line bg-surface-elevated px-3.5 py-1.5 text-small text-muted">
                 {t.brief.fallbackNote}
               </p>
             )}
@@ -215,7 +215,7 @@ async function ArchiveBoard({
                 sayfasında; çevirisi olmayan bülten orijinal diliyle
                 gösteriliyor. */}
             <div lang={brief.locale}>
-              <h2 className="mt-4 text-[22px] font-bold leading-tight tracking-[-0.03em] text-strong sm:text-[26px]">
+              <h2 className="mt-4 text-title font-bold leading-tight tracking-[-0.03em] text-strong sm:text-heading">
                 {brief.headline}
               </h2>
 
@@ -228,7 +228,7 @@ async function ArchiveBoard({
 
             {/* Takvim tahmin değildir — "bu hafta" bölümünün sınırı. */}
             {period === "weekly" && (
-              <p className="mt-6 border-t border-primary-faint pt-3 text-[11.5px] leading-relaxed text-muted">
+              <p className="mt-6 border-t border-primary-faint pt-3 text-tiny leading-relaxed text-muted">
                 {t.brief.weeklyNotForecast}
               </p>
             )}
@@ -241,7 +241,7 @@ async function ArchiveBoard({
       {/* ---- Arşiv listesi ---- */}
       <Panel>
         <div className="px-4 py-4 sm:px-5">
-          <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
+          <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
             {t.brief.archiveTitle}
           </h2>
         </div>
@@ -261,7 +261,7 @@ async function ArchiveBoard({
                 >
                   <span
                     className={cn(
-                      "flex items-center gap-2 text-[11.5px]",
+                      "flex items-center gap-2 text-tiny",
                       active ? "text-primary" : "text-muted",
                     )}
                   >
@@ -289,14 +289,14 @@ async function ArchiveBoard({
                     )}
                     {/* Kayıt okunan dilde değilse dili rozetle söylenir. */}
                     {row.locale !== locale && (
-                      <span className="plate ml-auto text-[9px] tracking-[0.09em]">
+                      <span className="plate ml-auto text-micro tracking-[0.09em]">
                         {row.locale.toUpperCase()}
                       </span>
                     )}
                   </span>
                   <span
                     className={cn(
-                      "mt-1 line-clamp-2 block text-[13px] leading-snug",
+                      "mt-1 line-clamp-2 block text-base leading-snug",
                       active
                         ? "font-semibold text-strong"
                         : "font-medium text-body",

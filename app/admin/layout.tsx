@@ -41,14 +41,14 @@ export default async function AdminLayout({
     <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6 py-6 pl-[max(env(safe-area-inset-left),18px)] pr-[max(env(safe-area-inset-right),18px)] pb-[max(env(safe-area-inset-bottom),24px)] sm:py-8 sm:pl-6 sm:pr-6">
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
-          <p className="text-[10.5px] font-semibold uppercase tracking-[0.09em] text-primary">
+          <p className="text-nano font-semibold uppercase tracking-[0.09em] text-primary">
             Açılış Zili
           </p>
-          <h1 className="mt-1 text-[28px] font-bold leading-none tracking-[-0.035em] text-strong sm:text-[34px]">
+          <h1 className="mt-1 text-heading font-bold leading-none tracking-[-0.035em] text-strong sm:text-display">
             Yönetim
           </h1>
         </div>
-        <p className="text-[12.5px] text-muted">
+        <p className="text-small text-muted">
           <span className="font-semibold text-body">{admin.username}</span> ·{" "}
           <Link href="/" className="text-primary hover:text-primary-hover">
             Siteye Dön

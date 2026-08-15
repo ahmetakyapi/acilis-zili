@@ -56,18 +56,18 @@ export async function SiteFooter() {
         <div className="flex flex-col gap-3">
           <Link href="/" className="flex w-fit items-center gap-2.5">
             <BellMark size={34} />
-            <span className="display-ink display-ink-tight text-[16px] font-bold tracking-[-0.03em]">
+            <span className="display-ink display-ink-tight text-read font-bold tracking-[-0.03em]">
               {t.brand.name}
             </span>
           </Link>
-          <p className="max-w-[38ch] text-[12.5px] leading-[20px] text-muted">
+          <p className="max-w-[38ch] text-small leading-[20px] text-muted">
             {t.footer.blurb}
           </p>
         </div>
 
         {columns.map((column) => (
           <nav key={column.title} className="flex flex-col gap-2.5">
-            <p className="plate text-[10px] tracking-[0.09em]">{column.title}</p>
+            <p className="plate text-nano tracking-[0.09em]">{column.title}</p>
             <ul className="flex flex-col gap-2">
               {column.links.map((link) => (
                 <li key={link.href}>
@@ -78,7 +78,7 @@ export async function SiteFooter() {
                        nişan aldığı yerde duruyor. Masaüstünde eski ölçü
                        korunuyor — orada fare var, yüksek satırlar sütunu
                        gereksiz uzatıyordu. */
-                    className="-my-1 flex min-h-11 items-center py-1 text-[13px] text-body transition-colors hover:text-primary sm:min-h-0 sm:inline-block"
+                    className="-my-1 flex min-h-11 items-center py-1 text-base text-body transition-colors hover:text-primary sm:min-h-0 sm:inline-block"
                   >
                     {link.label}
                   </Link>
@@ -96,7 +96,7 @@ export async function SiteFooter() {
       {/* 11.5px'lik satırda bağlantılar 17px yüksekliğinde bir dokunma hedefi
           bırakıyordu; dolgu ikisini de 32px'e çıkarır, negatif margin satırın
           kendi yüksekliğini korur. */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11.5px] text-muted">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-tiny text-muted">
         <span>{t.footer.copyright}</span>
         <Link
           href="/kvkk"

@@ -46,7 +46,7 @@ export function PanelHeader({
         className,
       )}
     >
-      <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
+      <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
         {title}
       </h2>
       {meta && <span className="text-xs text-muted">{meta}</span>}
@@ -123,7 +123,7 @@ export function PageHeader({
     >
       <div className="min-w-0">
         {eyebrow && <p className="plate mb-2">{eyebrow}</p>}
-        <h1 className="display-ink w-fit text-[26px] font-bold tracking-[-0.03em] sm:text-[34px]">
+        <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
           {title}
         </h1>
         {subtitle && (
@@ -183,7 +183,7 @@ export function ChangePill({
       className={cn(
         "numeral inline-flex items-center gap-1 rounded-full font-semibold",
         directionWash(direction),
-        size === "sm" ? "px-1.5 py-0.5 text-[11px]" : "px-2 py-0.5 text-xs",
+        size === "sm" ? "px-1.5 py-0.5 text-tiny" : "px-2 py-0.5 text-xs",
         className,
       )}
     >
@@ -222,7 +222,7 @@ export function TimingChip({
     <span
       className={cn(
         "inline-flex shrink-0 items-center whitespace-nowrap rounded-full font-semibold",
-        size === "sm" ? "px-2 py-[3px] text-[10px]" : "px-[9px] py-[3px] text-[11px]",
+        size === "sm" ? "px-2 py-[3px] text-nano" : "px-[9px] py-[3px] text-tiny",
         tone === "pre" && "bg-up-wash text-up",
         tone === "post" && "bg-primary-wash text-primary",
         tone === "neutral" && "bg-surface-elevated text-body",
@@ -253,8 +253,8 @@ export function SymbolBadge({
       className={cn(
         "flex shrink-0 items-center justify-center border border-line bg-primary-wash font-bold tracking-[-0.02em] text-primary",
         size === "sm"
-          ? "size-8 rounded-md text-[11px]"
-          : "size-11 rounded-md text-[13px]",
+          ? "size-8 rounded-md text-tiny"
+          : "size-11 rounded-md text-base",
         className,
       )}
     >
@@ -318,7 +318,7 @@ export function TabItem({
         className={cn(
           /* -mb-px: alt çizgi çubuğun hairline'ının üstüne otursun, altına
              inip 1px kalınlık farkı yaratmasın. */
-          "-mb-px inline-flex min-h-11 items-center whitespace-nowrap border-b-2 px-3.5 text-[13.5px] transition-colors sm:px-[18px]",
+          "-mb-px inline-flex min-h-11 items-center whitespace-nowrap border-b-2 px-3.5 text-base transition-colors sm:px-[18px]",
           active
             ? "border-primary font-bold text-primary"
             : "border-transparent font-medium text-body hover:text-strong",
@@ -379,7 +379,7 @@ export function LogoTile({
         className={cn(
           "numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold tracking-[-0.02em] text-primary",
           step.box,
-          size === "xs" || size === "sm" ? "text-[9px]" : "text-[11px]",
+          size === "xs" || size === "sm" ? "text-micro" : "text-tiny",
           className,
         )}
       >
@@ -472,7 +472,7 @@ export function DataStamp({
   return (
     <p
       className={cn(
-        "flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11.5px] text-muted",
+        "flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-tiny text-muted",
         className,
       )}
     >
@@ -651,8 +651,8 @@ const BUTTON_VARIANTS = {
    o ölçü artık `md`nin yanında kendi basamağı. */
 const BUTTON_SIZES = {
   sm: "h-8 px-3 text-xs",
-  md: "h-10 px-4 text-[13.5px] min-h-11 sm:min-h-0 sm:h-10",
-  lg: "h-11 px-4 text-[14.5px]",
+  md: "h-10 px-4 text-base min-h-11 sm:min-h-0 sm:h-10",
+  lg: "h-11 px-4 text-read",
   icon: "size-9 p-0",
 } as const;
 
@@ -751,7 +751,7 @@ export function FilterChip({
            dizilen çiplerde yanlış çipe basmak kolaydı. İmleç hassas olduğu
            için geniş ekranda ölçü değişmiyor, çip şeridi orada aynı
            sıkılıkta kalıyor. */
-        "inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-[11px] py-[5px] text-[11.5px] transition-colors sm:min-h-8",
+        "inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-[11px] py-[5px] text-tiny transition-colors sm:min-h-8",
         active
           ? "bg-primary font-semibold text-on-primary"
           : "bg-surface-elevated text-body hover:text-strong",
@@ -765,7 +765,7 @@ export function FilterChip({
 /** İki–üç seçenekli segment — Hafta/Ay, 1G/1H/1A gibi. */
 export function Segment({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex overflow-hidden rounded-md border border-line text-[12.5px]">
+    <span className="inline-flex overflow-hidden rounded-md border border-line text-small">
       {children}
     </span>
   );

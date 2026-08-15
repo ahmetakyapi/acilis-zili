@@ -53,7 +53,7 @@ export function AlsoReporting({
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-        className="flex min-h-10 items-center gap-2 py-1.5 text-[13px] text-muted transition-colors hover:text-body"
+        className="flex min-h-10 items-center gap-2 py-1.5 text-base text-muted transition-colors hover:text-body"
       >
         <CaretDown
           weight="duotone"
@@ -72,7 +72,7 @@ export function AlsoReporting({
               .filter((group) => group.symbols.length > 0)
               .map((group) => (
                 <div key={group.label} className="flex flex-col gap-2">
-                  <p className="flex items-center gap-1.5 text-[11px] font-semibold text-muted">
+                  <p className="flex items-center gap-1.5 text-tiny font-semibold text-muted">
                     <span
                       aria-hidden
                       className={cn(

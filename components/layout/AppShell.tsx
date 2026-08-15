@@ -166,7 +166,7 @@ export function AppShell({
           oturur. */}
       <a
         href="#icerik"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-[calc(env(safe-area-inset-top)+12px)] focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2.5 focus:text-[13.5px] focus:font-semibold focus:text-on-primary"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-[calc(env(safe-area-inset-top)+12px)] focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2.5 focus:text-base focus:font-semibold focus:text-on-primary"
       >
         {labels.skipToContent}
       </a>
@@ -190,7 +190,7 @@ export function AppShell({
             bir süpürme denendi ve istenmedi. Bulunulan sayfa dolgulu hap ve
             kalın ağırlıkla ayrışır, renkle değil.
             "Bugün" burada yok — logo zaten oraya götürüyor. */}
-        <nav className="flex min-w-0 gap-[2px] text-[13.5px] xl:gap-[3px] xl:text-[14.5px]">
+        <nav className="flex min-w-0 gap-[2px] text-base xl:gap-[3px] xl:text-read">
           {NAV_ITEMS.filter((item) => item.inMasthead).map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -230,11 +230,11 @@ export function AppShell({
             <Link
               href={L("/ayarlar")}
               title={username ?? labels.settings}
-              className="flex items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-[7px] text-[13px] text-body transition-colors hover:border-line-strong hover:text-strong"
+              className="flex items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-[7px] text-base text-body transition-colors hover:border-line-strong hover:text-strong"
             >
               <span
                 aria-hidden
-                className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary-wash text-[10px] font-bold uppercase text-primary"
+                className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary-wash text-nano font-bold uppercase text-primary"
               >
                 {(username ?? "?").slice(0, 2)}
               </span>
@@ -266,7 +266,7 @@ export function AppShell({
           aria-label={labels.brandName}
         >
           <BellMark size={32} />
-          <span className="display-ink display-ink-tight w-fit text-[16.5px] font-bold tracking-[-0.03em]">
+          <span className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.03em]">
             {labels.brandName}
           </span>
         </Link>
@@ -337,7 +337,7 @@ export function AppShell({
               prefetch
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex flex-1 flex-col items-center gap-[5px] px-1 pb-2.5 pt-3 text-[10px] tracking-[0.03em] transition-colors",
+                "flex flex-1 flex-col items-center gap-[5px] px-1 pb-2.5 pt-3 text-nano tracking-[0.03em] transition-colors",
                 active ? "font-semibold text-primary" : "text-muted",
               )}
             >

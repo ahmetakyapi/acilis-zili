@@ -50,7 +50,7 @@ export async function RecentAnalysesStrip({
             satıra çıkıyor ve takvimin önüne geçiyordu. */}
         <Link
           href="/bilancolar/analizler"
-          className="-my-2 inline-flex min-h-10 items-center whitespace-nowrap py-2 text-[11.5px] font-semibold text-primary hover:text-primary-hover sm:hidden"
+          className="-my-2 inline-flex min-h-10 items-center whitespace-nowrap py-2 text-tiny font-semibold text-primary hover:text-primary-hover sm:hidden"
         >
           {t.common.showAll} →
         </Link>
@@ -77,12 +77,12 @@ export async function RecentAnalysesStrip({
                   size="xs"
                   className="rounded-full"
                 />
-                <span className="text-[12.5px] font-bold text-strong">
+                <span className="text-small font-bold text-strong">
                   {row.symbol}
                 </span>
                 <span
                   className={cn(
-                    "figure whitespace-nowrap rounded-full px-1.5 py-px text-[10px] font-bold",
+                    "figure whitespace-nowrap rounded-full px-1.5 py-px text-nano font-bold",
                     verdictPillClass(verdict),
                   )}
                 >
@@ -96,7 +96,7 @@ export async function RecentAnalysesStrip({
 
       <Link
         href="/bilancolar/analizler"
-        className="hidden shrink-0 whitespace-nowrap text-[11.5px] font-semibold text-primary hover:text-primary-hover sm:inline"
+        className="hidden shrink-0 whitespace-nowrap text-tiny font-semibold text-primary hover:text-primary-hover sm:inline"
       >
         {t.common.showAll} →
       </Link>

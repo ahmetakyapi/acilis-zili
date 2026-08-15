@@ -109,19 +109,19 @@ async function Checks() {
                   <HealthDot tone={check.tone} />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[13.5px] font-semibold text-strong">
+                  <span className="block text-base font-semibold text-strong">
                     {check.label}
                   </span>
-                  <span className="block text-[12px] text-muted">
+                  <span className="block text-small text-muted">
                     {check.note}
                   </span>
                 </span>
               </span>
               <span className="shrink-0 text-right">
-                <span className="block text-[13px] font-semibold tabular-nums text-body">
+                <span className="block text-base font-semibold tabular-nums text-body">
                   {check.value}
                 </span>
-                <span className="block text-[11.5px] text-muted">
+                <span className="block text-tiny text-muted">
                   {HEALTH_LABEL[check.tone]}
                 </span>
               </span>
@@ -140,15 +140,15 @@ async function Checks() {
               key={check.label}
               className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
             >
-              <span className="flex items-center gap-2.5 text-[13.5px] text-strong">
+              <span className="flex items-center gap-2.5 text-base text-strong">
                 <HealthDot tone={check.tone} />
                 {check.label.replace(" anahtarı", "")}
               </span>
-              <span className="text-[12.5px] text-muted">{check.note}</span>
+              <span className="text-small text-muted">{check.note}</span>
             </li>
           ))}
         </ul>
-        <p className="mt-4 border-t border-line pt-3 text-[12px] text-muted">
+        <p className="mt-4 border-t border-line pt-3 text-small text-muted">
           Eksik anahtar sayfayı çökertmez: ilgili kart &ldquo;veri
           alınamadı&rdquo; gösterir ve gerisi çalışmaya devam eder.
         </p>

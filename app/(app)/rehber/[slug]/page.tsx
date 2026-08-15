@@ -80,7 +80,7 @@ export default async function GuideArticlePage(
       />
       <Link
         href="/rehber"
-        className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-[12.5px] font-semibold text-muted transition-colors hover:text-primary"
+        className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
       >
         <ArrowLeft weight="bold" size={13} />
         {t.guide.backToList}
@@ -90,7 +90,7 @@ export default async function GuideArticlePage(
         <div className="flex items-center gap-3.5">
           <GlyphTile glyph={article.glyph} size={56} />
           <div className="min-w-0">
-            <p className="plate text-[10px] tracking-[0.09em] text-primary">
+            <p className="plate text-nano tracking-[0.09em] text-primary">
               {guideTopicLabel(article.topic, locale)}
             </p>
             {/* Zorluk ile okuma süresi aynı satırda: ikisi de "bu yazıya
@@ -98,17 +98,17 @@ export default async function GuideArticlePage(
                 öteki zamanı ölçüyor. */}
             <p className="mt-1.5 flex flex-wrap items-center gap-2">
               <LevelBadge level={article.level} locale={locale} />
-              <span className="numeral text-[12px] text-muted">
+              <span className="numeral text-small text-muted">
                 {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
               </span>
             </p>
           </div>
         </div>
 
-        <h1 className="display-ink w-fit text-[30px] font-bold leading-[1.12] tracking-[-0.035em] sm:text-[40px]">
+        <h1 className="display-ink w-fit text-subdisplay font-bold leading-[1.12] tracking-[-0.035em] sm:text-display">
           {article.title}
         </h1>
-        <p className="text-[17px] leading-[27px] text-soft">{article.dek}</p>
+        <p className="text-lead leading-[27px] text-soft">{article.dek}</p>
       </header>
 
       <hr className="border-t border-line" aria-hidden />
@@ -117,7 +117,7 @@ export default async function GuideArticlePage(
 
       {related.length > 0 && (
         <section className="mt-2 flex flex-col gap-3">
-          <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
+          <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
             {t.guide.related}
           </h2>
           {/* Bağlantılardaki min-w-0: içerideki `truncate` nowrap demek, o da
@@ -134,10 +134,10 @@ export default async function GuideArticlePage(
                 <Panel className="panel-hover flex h-full items-center gap-3 p-4">
                   <GlyphTile glyph={entry.glyph} size={40} />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[14px] font-bold text-strong">
+                    <span className="block text-base font-bold text-strong">
                       {entry.title}
                     </span>
-                    <span className="mt-0.5 block truncate text-[12px] text-muted">
+                    <span className="mt-0.5 block truncate text-small text-muted">
                       {entry.dek}
                     </span>
                   </span>
@@ -196,8 +196,8 @@ function CurriculumStep({
           <ArrowLeft weight="bold" size={14} className="shrink-0 text-primary" />
         )}
         <span className={`min-w-0 flex-1 ${next ? "order-first" : ""}`}>
-          <span className="plate text-[9.5px] tracking-[0.09em]">{label}</span>
-          <span className="mt-1 block truncate text-[14px] font-bold text-strong">
+          <span className="plate text-micro tracking-[0.09em]">{label}</span>
+          <span className="mt-1 block truncate text-base font-bold text-strong">
             {article.title}
           </span>
         </span>

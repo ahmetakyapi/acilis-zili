@@ -320,11 +320,11 @@ export function DayRail({
             style={{ left: `${bound.left}%`, top: BOUND_TOP }}
           >
             <div
-              className={cn(PLATE, "text-[10.5px] tracking-[0.08em] text-body")}
+              className={cn(PLATE, "text-nano tracking-[0.08em] text-body")}
             >
               {bound.label}
             </div>
-            <div className="numeral mt-0.5 text-[10.5px] text-muted">
+            <div className="numeral mt-0.5 text-nano text-muted">
               <span className="font-semibold text-body">{bound.primary}</span>{" "}
               {tags.primary}
               <span aria-hidden className="mx-1">
@@ -378,13 +378,13 @@ export function DayRail({
             eksenlerinde. Sağdaki künyeyi de taşır: iki uç aynı dilimin iki
             ucu, saat dilimini iki kez yazmaya gerek yok. */}
         <div
-          className="numeral absolute left-0 text-[10.5px] text-muted"
+          className="numeral absolute left-0 text-nano text-muted"
           style={{ top: EDGE_TOP }}
         >
           {shown(RAIL_START)}
         </div>
         <div
-          className="numeral absolute right-0 text-[10.5px] text-muted"
+          className="numeral absolute right-0 text-nano text-muted"
           style={{ top: EDGE_TOP }}
         >
           {shown(RAIL_END)} {tags.primary}
@@ -397,7 +397,7 @@ export function DayRail({
         <div
           className={cn(
             PLATE,
-            "absolute -translate-x-1/2 whitespace-nowrap text-[9.5px] tracking-[0.09em]",
+            "absolute -translate-x-1/2 whitespace-nowrap text-micro tracking-[0.09em]",
             tradingDay ? "text-primary" : "text-muted",
           )}
           style={{ left: `${(openPct + closePct) / 2}%`, top: EDGE_TOP }}
@@ -440,7 +440,7 @@ export function DayRail({
                    bilgi "şu an" — vurgulu ama alarm değil. İki hâl de artık
                    mavi degrade, fark TONDA: açıkken canlı mavi, kapalıyken
                    daha derin ve sakin bir mavi. */
-                "whitespace-nowrap rounded-full bg-gradient-to-r px-2 py-[3.5px] text-[9.5px] font-bold uppercase leading-none tracking-[0.09em] text-on-primary",
+                "whitespace-nowrap rounded-full bg-gradient-to-r px-2 py-[3.5px] text-micro font-bold uppercase leading-none tracking-[0.09em] text-on-primary",
                 marketLive
                   ? "from-primary to-primary-soft"
                   : "from-primary-deep to-primary",
@@ -529,13 +529,13 @@ export function DayRail({
               >
                 <div
                   className={cn(
-                    "numeral flex items-center justify-center gap-1.5 whitespace-nowrap text-[11.5px] font-bold leading-none",
+                    "numeral flex items-center justify-center gap-1.5 whitespace-nowrap text-tiny font-bold leading-none",
                     high ? "text-down" : "text-strong",
                   )}
                 >
                   {shown(event.minutes, event.approx)}
                   {isEarnings && (
-                    <span className="text-[9px] font-bold uppercase leading-none tracking-[0.1em] text-primary">
+                    <span className="text-micro font-bold uppercase leading-none tracking-[0.1em] text-primary">
                       {labels.earnings}
                     </span>
                   )}
@@ -560,18 +560,18 @@ export function DayRail({
                         ))}
                       </span>
                     )}
-                    <span className="numeral min-w-0 truncate text-[12px] font-bold text-strong">
+                    <span className="numeral min-w-0 truncate text-small font-bold text-strong">
                       {event.title}
                     </span>
                   </div>
                 ) : (
-                  <div className="mx-auto mt-1.5 line-clamp-2 max-w-full text-[12px] font-semibold leading-[16px] text-strong">
+                  <div className="mx-auto mt-1.5 line-clamp-2 max-w-full text-small font-semibold leading-[16px] text-strong">
                     {event.title}
                   </div>
                 )}
 
                 {event.detail && (
-                  <div className="mx-auto mt-auto max-w-full truncate pt-1 text-[11px] leading-none text-muted">
+                  <div className="mx-auto mt-auto max-w-full truncate pt-1 text-tiny leading-none text-muted">
                     {event.detail}
                   </div>
                 )}
@@ -660,7 +660,7 @@ export function DayRail({
               <li key={entry.id} className="flex gap-0">
                 <div
                   className={cn(
-                    "numeral w-12 shrink-0 pt-px text-[12.5px]",
+                    "numeral w-12 shrink-0 pt-px text-small",
                     isNow
                       ? "font-bold text-primary"
                       : high
@@ -699,9 +699,9 @@ export function DayRail({
                 <div className={cn("min-w-0", !last && "pb-3.5")}>
                   <div
                     className={cn(
-                      "flex items-center gap-1.5 text-[13.5px]",
+                      "flex items-center gap-1.5 text-base",
                       isNow
-                        ? `${PLATE} text-[10.5px] tracking-[0.1em] text-primary`
+                        ? `${PLATE} text-nano tracking-[0.1em] text-primary`
                         : high
                           ? "font-bold text-strong"
                           : isBound
@@ -726,7 +726,7 @@ export function DayRail({
                     <span className="min-w-0 truncate">{entry.title}</span>
                   </div>
                   {entry.detail && (
-                    <div className="text-[11.5px] text-muted">{entry.detail}</div>
+                    <div className="text-tiny text-muted">{entry.detail}</div>
                   )}
                 </div>
               </li>

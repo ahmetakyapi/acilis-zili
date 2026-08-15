@@ -46,8 +46,8 @@ export function DeleteAccount({
   if (!open) {
     return (
       <div className="flex flex-col gap-2 border-t border-line pt-4">
-        <p className="text-[13px] font-semibold text-strong">{labels.title}</p>
-        <p className="text-[12px] leading-relaxed text-muted">{labels.hint}</p>
+        <p className="text-base font-semibold text-strong">{labels.title}</p>
+        <p className="text-small leading-relaxed text-muted">{labels.hint}</p>
         <Button
           type="button"
           variant="danger"
@@ -67,16 +67,16 @@ export function DeleteAccount({
       action={formAction}
       className="flex flex-col gap-3 rounded-(--radius-lg) border border-down/40 bg-down-wash p-4"
     >
-      <p className="flex items-start gap-2 text-[12.5px] leading-relaxed text-strong">
+      <p className="flex items-start gap-2 text-small leading-relaxed text-strong">
         <Warning weight="fill" size={16} className="mt-px shrink-0 text-down" />
         {labels.warning}
       </p>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-[12px] font-semibold text-body">
+        <span className="text-small font-semibold text-body">
           {labels.confirmLabel}
         </span>
-        <span className="text-[11.5px] text-muted">
+        <span className="text-tiny text-muted">
           {labels.confirmHint}{" "}
           <code className="numeral rounded-xs bg-surface-elevated px-1 py-0.5 font-bold text-strong">
             {username}
@@ -93,7 +93,7 @@ export function DeleteAccount({
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-[12px] font-semibold text-body">
+        <span className="text-small font-semibold text-body">
           {labels.passwordLabel}
         </span>
         <input
@@ -106,7 +106,7 @@ export function DeleteAccount({
       </label>
 
       {state.error && (
-        <p role="alert" className="text-[12.5px] font-medium text-down">
+        <p role="alert" className="text-small font-medium text-down">
           {state.error}
         </p>
       )}

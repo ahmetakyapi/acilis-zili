@@ -14,7 +14,7 @@ export default async function StoryNotFound() {
         action={
           <Link
             href="/mercek"
-            className="text-[12.5px] font-semibold text-primary"
+            className="text-small font-semibold text-primary"
           >
             {t.stories.backToList}
           </Link>

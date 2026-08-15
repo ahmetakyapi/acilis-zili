@@ -69,7 +69,7 @@ export function ScoreRing({
           {score}
         </span>
         {showDenominator && (
-          <span className="mt-px text-[8px] font-semibold text-muted">
+          <span className="mt-px text-micro font-semibold text-muted">
             / 100
           </span>
         )}

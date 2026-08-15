@@ -377,10 +377,10 @@ async function StockHeader({
             </p>
           )}
           <div className="mt-[7px] flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="display-ink text-[26px] font-bold tracking-[-0.03em] sm:text-[38px]">
+            <h1 className="display-ink text-heading font-bold tracking-[-0.03em] sm:text-display">
               {profile?.name || fund?.name || symbol}
             </h1>
-            <span className="text-base font-semibold text-muted sm:text-[19px]">
+            <span className="text-base font-semibold text-muted sm:text-title">
               {symbol}
             </span>
             {session?.user ? (
@@ -410,7 +410,7 @@ async function StockHeader({
             )}
           </div>
           {fund && (
-            <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] leading-tight text-muted">
+            <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-tiny leading-tight text-muted">
               <span className="font-semibold text-soft">
                 {locale === "tr" ? fund.labelTr : fund.labelEn}
               </span>
@@ -423,7 +423,7 @@ async function StockHeader({
 
       {quoteResult.ok ? (
         <div className="w-full text-left sm:w-auto sm:text-right">
-          <p className="tote text-[32px] leading-none tracking-[-0.04em] sm:text-[40px]">
+          <p className="tote text-subdisplay leading-none tracking-[-0.04em] sm:text-display">
             {formatPrice(quoteResult.data.price, locale, { currency: true })}
           </p>
           <div className="mt-1.5 flex items-center justify-start gap-2 sm:justify-end">
@@ -598,7 +598,7 @@ async function UpcomingEarnings({
 
   return (
     <Panel className="border-primary-faint bg-primary-tint p-4 sm:p-5">
-      <p className="plate text-[9px]">{t.stock.nextEarnings}</p>
+      <p className="plate text-micro">{t.stock.nextEarnings}</p>
       <p className="numeral mt-1.5 text-lg font-bold text-strong">
         {formatEtDateLong(next.reportDate, locale)}
       </p>
@@ -611,7 +611,7 @@ async function UpcomingEarnings({
         <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-line-soft pt-3">
           {next.epsEstimate !== null && (
             <div>
-              <dt className="text-[10px] uppercase tracking-wider text-muted">
+              <dt className="text-nano uppercase tracking-wider text-muted">
                 {t.earnings.epsEstimate}
               </dt>
               <dd className="numeral mt-0.5 text-sm font-semibold text-strong">
@@ -621,7 +621,7 @@ async function UpcomingEarnings({
           )}
           {next.revenueEstimate !== null && (
             <div>
-              <dt className="text-[10px] uppercase tracking-wider text-muted">
+              <dt className="text-nano uppercase tracking-wider text-muted">
                 {t.earnings.revenueEstimate}
               </dt>
               <dd className="numeral mt-0.5 text-sm font-semibold text-strong">
@@ -666,7 +666,7 @@ async function FundCard({
       <PanelHeader title={t.stock.fundProfile} />
       <div className="px-4 py-3 sm:px-5">
         {about && (
-          <p className="border-b border-line-soft pb-3 text-[13px] leading-relaxed text-body">
+          <p className="border-b border-line-soft pb-3 text-base leading-relaxed text-body">
             {about}
           </p>
         )}
@@ -681,7 +681,7 @@ async function FundCard({
             </div>
           ))}
         </dl>
-        <p className="mt-3 border-t border-line-soft pt-2.5 text-[11px] leading-relaxed text-muted">
+        <p className="mt-3 border-t border-line-soft pt-2.5 text-tiny leading-relaxed text-muted">
           {fund.kind === "country"
             ? t.stock.fundNoteCountry
             : t.stock.fundNoteIndex}
@@ -762,7 +762,7 @@ async function ProfileCard({
     <div className="flex flex-1 flex-col px-4 py-3 sm:px-5">
       {/* Şirket ne iş yapar — sektör satırından önce düz cümleyle anlatılır */}
       {about && (
-        <p className="border-b border-line-soft pb-3 text-[13px] leading-relaxed text-body">
+        <p className="border-b border-line-soft pb-3 text-base leading-relaxed text-body">
           {about}
         </p>
       )}
@@ -925,7 +925,7 @@ async function AnalystCard({
           </li>
         ))}
       </ul>
-      <p className="numeral mt-2 text-[10px] text-muted">
+      <p className="numeral mt-2 text-nano text-muted">
         {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
           month: "long",
           year: "numeric",
@@ -1025,7 +1025,7 @@ async function PastEarnings({
       <div className="scroll-x">
         <table className="w-full min-w-[560px] text-sm">
         <thead>
-          <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
+          <tr className="border-b border-line-soft text-left text-nano uppercase tracking-wider text-muted">
             <th className="px-4 py-2.5 font-medium sm:px-5">
               {t.earnings.period}
             </th>
@@ -1077,7 +1077,7 @@ async function PastEarnings({
                       new Date(`${row.periodEnd ?? row.reportDate}T12:00:00Z`),
                     )}
                   </span>
-                  <span className="numeral block text-[11px] text-muted md:hidden">
+                  <span className="numeral block text-tiny text-muted md:hidden">
                     {formatEtDateShort(row.reportDate, locale)}
                   </span>
                 </td>
@@ -1128,7 +1128,7 @@ async function PastEarnings({
 
       {/* Tablo kısaltmalarının karşılığı — EPS ne demek, sapma neye göre.
           Rakamı okuyanın sözlüğe gitmesi gerekmesin. */}
-      <p className="mt-3 border-t border-line-soft px-4 pt-3 text-[12.5px] leading-relaxed text-muted sm:px-5">
+      <p className="mt-3 border-t border-line-soft px-4 pt-3 text-small leading-relaxed text-muted sm:px-5">
         <b className="font-semibold text-soft">{t.earnings.epsFull}</b>{" "}
         {t.earnings.epsExplainer}
       </p>
@@ -1215,7 +1215,7 @@ async function ComplianceCard({
               return (
                 <div key={label}>
                   <div className="flex items-baseline justify-between gap-2">
-                    <dt className="text-[11px] leading-tight text-muted">
+                    <dt className="text-tiny leading-tight text-muted">
                       {label}
                     </dt>
                     <dd
@@ -1239,7 +1239,7 @@ async function ComplianceCard({
                 </div>
               );
             })}
-            <p className="numeral text-[10px] text-muted">
+            <p className="numeral text-nano text-muted">
               {t.stock.complianceLimit}: %{COMPLIANCE_THRESHOLD}
             </p>
           </dl>
@@ -1247,10 +1247,10 @@ async function ComplianceCard({
           <p className="mt-3 text-xs text-muted">{t.stock.complianceUnknown}</p>
         )}
 
-        <p className="mt-3 border-t border-line-soft pt-2.5 text-[10px] leading-relaxed text-muted">
+        <p className="mt-3 border-t border-line-soft pt-2.5 text-nano leading-relaxed text-muted">
           {t.stock.complianceMissing}
         </p>
-        <p className="mt-1.5 text-[10px] leading-relaxed text-muted">
+        <p className="mt-1.5 text-nano leading-relaxed text-muted">
           {t.stock.complianceDisclaimer}
         </p>
       </div>
@@ -1309,7 +1309,7 @@ async function PeersCard({
         }
       />
       {member?.sub && (
-        <p className="border-b border-line-soft px-4 py-2 text-[11px] text-muted sm:px-5">
+        <p className="border-b border-line-soft px-4 py-2 text-tiny text-muted sm:px-5">
           {t.stock.peersHint}:{" "}
           <span className="text-soft">
             {subIndustryName(member.sub, locale)}
@@ -1329,7 +1329,7 @@ async function PeersCard({
                   <span className="numeral block text-sm font-bold text-strong">
                     {peer.symbol}
                   </span>
-                  <span className="mt-0.5 block truncate text-[11px] text-muted">
+                  <span className="mt-0.5 block truncate text-tiny text-muted">
                     {peer.name}
                   </span>
                 </span>
@@ -1448,7 +1448,7 @@ async function CompanyNews({
                 {(locale === "tr" && trByProvider.get(item.providerId)) ||
                   item.headline}
               </span>
-              <span className="mt-1 flex items-center gap-1.5 text-[11px] text-muted">
+              <span className="mt-1 flex items-center gap-1.5 text-tiny text-muted">
                 {item.source && <span>{item.source}</span>}
                 <span aria-hidden>·</span>
                 <span>{timeAgo(item.publishedAt, locale)}</span>

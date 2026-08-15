@@ -40,8 +40,8 @@ export function AnalysisBadge({
         "relative z-10 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full font-bold transition-opacity hover:opacity-80",
         verdictPillClass(verdict),
         size === "sm"
-          ? "px-2 py-[3px] text-[10px]"
-          : "px-2.5 py-1 text-[11px]",
+          ? "px-2 py-[3px] text-nano"
+          : "px-2.5 py-1 text-tiny",
         className,
       )}
     >

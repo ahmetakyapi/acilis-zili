@@ -62,7 +62,7 @@ export default async function TrafficPage(props: PageProps<"/admin/trafik">) {
             scroll={false}
             aria-current={option === days ? "true" : undefined}
             className={cn(
-              "inline-flex h-8 flex-1 items-center justify-center rounded-md text-[13px] font-semibold transition-colors",
+              "inline-flex h-8 flex-1 items-center justify-center rounded-md text-base font-semibold transition-colors",
               option === days
                 ? "bg-surface-elevated text-strong"
                 : "text-muted hover:text-body",
@@ -264,7 +264,7 @@ async function Splits({ days }: { days: WindowDays }) {
 
       <div className="flex flex-col gap-5">
         <div>
-          <h3 className="mb-1.5 text-[11.5px] font-semibold uppercase tracking-[0.06em] text-muted">
+          <h3 className="mb-1.5 text-tiny font-semibold uppercase tracking-[0.06em] text-muted">
             Cihaz
           </h3>
           <RankList
@@ -277,7 +277,7 @@ async function Splits({ days }: { days: WindowDays }) {
         </div>
 
         <div>
-          <h3 className="mb-1.5 text-[11.5px] font-semibold uppercase tracking-[0.06em] text-muted">
+          <h3 className="mb-1.5 text-tiny font-semibold uppercase tracking-[0.06em] text-muted">
             Dil
           </h3>
           <RankList
@@ -290,15 +290,15 @@ async function Splits({ days }: { days: WindowDays }) {
         </div>
 
         <div>
-          <h3 className="mb-1.5 text-[11.5px] font-semibold uppercase tracking-[0.06em] text-muted">
+          <h3 className="mb-1.5 text-tiny font-semibold uppercase tracking-[0.06em] text-muted">
             Üyelik
           </h3>
-          <p className="text-[13px] text-body">
+          <p className="text-base text-body">
             Görüntülemelerin{" "}
             <span className="font-semibold text-strong">%{signedShare}</span>
             {"'ı giriş yapmış okuyuculardan geliyor."}
           </p>
-          <p className="mt-1 text-[12px] text-muted">
+          <p className="mt-1 text-small text-muted">
             {signed.signedIn.toLocaleString("tr-TR")} üye ·{" "}
             {signed.anonymous.toLocaleString("tr-TR")} ziyaretçi
           </p>

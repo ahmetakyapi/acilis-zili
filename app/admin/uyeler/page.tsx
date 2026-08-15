@@ -89,7 +89,7 @@ async function RecentMembers() {
       </AdminPanelTitle>
 
       {rows.length === 0 ? (
-        <p className="py-8 text-center text-[13px] text-muted">
+        <p className="py-8 text-center text-base text-muted">
           Henüz kayıtlı üye yok.
         </p>
       ) : (
@@ -99,7 +99,7 @@ async function RecentMembers() {
               <AdminCell strong>
                 {row.username}
                 {row.role === "admin" && (
-                  <span className="ml-2 rounded-full bg-primary-wash px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.05em] text-primary">
+                  <span className="ml-2 rounded-full bg-primary-wash px-2 py-0.5 text-nano font-semibold uppercase tracking-[0.05em] text-primary">
                     Yönetici
                   </span>
                 )}
@@ -158,17 +158,17 @@ async function SignupCurve() {
     <AdminPanel>
       <AdminPanelTitle hint="Son 30 gün">Kayıt Günleri</AdminPanelTitle>
       {withSignups.length === 0 ? (
-        <p className="py-6 text-center text-[13px] text-muted">
+        <p className="py-6 text-center text-base text-muted">
           Son 30 günde yeni kayıt yok.
         </p>
       ) : (
         <>
-          <p className="mb-3 text-[13px] text-body">
+          <p className="mb-3 text-base text-body">
             Son 30 günde{" "}
             <span className="font-semibold text-strong">{total}</span> kayıt,{" "}
             {withSignups.length} ayrı güne yayılmış.
           </p>
-          <ul className="flex flex-col gap-1.5 text-[13px]">
+          <ul className="flex flex-col gap-1.5 text-base">
             {withSignups.slice(0, 10).map((point) => (
               <li key={point.day} className="flex justify-between gap-4">
                 <span className="text-body">
@@ -182,13 +182,13 @@ async function SignupCurve() {
           </ul>
         </>
       )}
-      <p className="mt-4 border-t border-line pt-3 text-[12px] text-muted">
+      <p className="mt-4 border-t border-line pt-3 text-small text-muted">
         Yeni yönetici eklemek için:{" "}
         <code className="rounded bg-surface-elevated px-1.5 py-0.5">
           npx tsx scripts/make-admin.mts kullanıcıadı
         </code>
       </p>
-      <p className="mt-1.5 text-[12px] text-muted">
+      <p className="mt-1.5 text-small text-muted">
         <Link href="/kvkk" className="text-primary hover:text-primary-hover">
           KVKK Metni
         </Link>{" "}

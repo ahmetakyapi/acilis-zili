@@ -43,7 +43,7 @@ export function GuideHint({
 
   return (
     <section className={cn("flex flex-col gap-2.5", className)}>
-      <p className="plate text-[10px] tracking-[0.09em]">{label}</p>
+      <p className="plate text-nano tracking-[0.09em]">{label}</p>
       <div
         className={cn(
           "grid gap-3",
@@ -63,10 +63,10 @@ export function GuideHint({
           >
             <GlyphTile glyph={article.glyph} size={36} />
             <span className="min-w-0 flex-1">
-              <span className="block text-[13.5px] font-bold text-strong">
+              <span className="block text-base font-bold text-strong">
                 {article.title}
               </span>
-              <span className="mt-0.5 block truncate text-[11.5px] text-muted">
+              <span className="mt-0.5 block truncate text-tiny text-muted">
                 {article.dek}
               </span>
             </span>

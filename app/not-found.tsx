@@ -41,10 +41,10 @@ export default async function RootNotFound() {
 
       <div className="flex flex-col gap-2.5">
         <p className="tote display-ink text-[54px] leading-none">404</p>
-        <h1 className="text-[19px] font-bold tracking-[-0.02em] text-strong">
+        <h1 className="text-title font-bold tracking-[-0.02em] text-strong">
           {t.errors.notFoundTitle}
         </h1>
-        <p className="text-[14px] leading-relaxed text-body">
+        <p className="text-base leading-relaxed text-body">
           {t.errors.notFoundHint}
         </p>
       </div>
@@ -53,7 +53,7 @@ export default async function RootNotFound() {
         aria-label={t.errors.shortcuts}
         className="w-full overflow-hidden rounded-xl border border-line bg-surface"
       >
-        <p className="plate px-4 pb-2.5 pt-3.5 text-left text-[10px] tracking-[0.09em]">
+        <p className="plate px-4 pb-2.5 pt-3.5 text-left text-nano tracking-[0.09em]">
           {t.errors.shortcuts}
         </p>
         <ul>
@@ -61,7 +61,7 @@ export default async function RootNotFound() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex min-h-[46px] items-center border-t border-line px-4 py-2.5 text-left text-[14px] font-semibold text-strong transition-colors hover:bg-primary-tint"
+                className="flex min-h-[46px] items-center border-t border-line px-4 py-2.5 text-left text-base font-semibold text-strong transition-colors hover:bg-primary-tint"
               >
                 {item.label}
                 <span aria-hidden className="ml-auto text-primary">

@@ -107,7 +107,7 @@ export default async function MenuPage() {
       <Panel className="flex items-center gap-3.5 p-4 sm:p-5">
         <span
           aria-hidden
-          className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-wash text-[13px] font-bold uppercase text-primary"
+          className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-wash text-base font-bold uppercase text-primary"
         >
           {username ? (
             username.slice(0, 2)
@@ -116,10 +116,10 @@ export default async function MenuPage() {
           )}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[14.5px] font-bold text-strong">
+          <span className="block truncate text-read font-bold text-strong">
             {username ?? t.menu.guestTitle}
           </span>
-          <span className="mt-0.5 block text-[12px] leading-snug text-muted">
+          <span className="mt-0.5 block text-small leading-snug text-muted">
             {username ? t.menu.signedInHint : t.menu.guestHint}
           </span>
         </span>
@@ -127,7 +127,7 @@ export default async function MenuPage() {
           <form action={signOutAction}>
             <button
               type="submit"
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-[12.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-small font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
             >
               <SignOut weight="duotone" size={15} />
               {t.nav.signOut}
@@ -143,7 +143,7 @@ export default async function MenuPage() {
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {groups.map((group) => (
           <Panel key={group.title} className="flex flex-col">
-            <p className="plate px-4 pb-3 pt-4 text-[10px] tracking-[0.09em] sm:px-5">
+            <p className="plate px-4 pb-3 pt-4 text-nano tracking-[0.09em] sm:px-5">
               {group.title}
             </p>
             <ul>
@@ -163,10 +163,10 @@ export default async function MenuPage() {
                         aria-hidden
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[14px] font-semibold text-strong">
+                        <span className="block text-base font-semibold text-strong">
                           {entry.title}
                         </span>
-                        <span className="mt-px block truncate text-[11.5px] text-muted">
+                        <span className="mt-px block truncate text-tiny text-muted">
                           {entry.hint}
                         </span>
                       </span>

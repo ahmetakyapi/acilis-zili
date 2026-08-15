@@ -26,7 +26,7 @@ export function LevelBadge({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface px-2 py-[3px] text-[10.5px] font-bold tracking-[0.02em] text-body",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface px-2 py-[3px] text-nano font-bold tracking-[0.02em] text-body",
         className,
       )}
     >

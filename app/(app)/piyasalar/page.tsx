@@ -270,17 +270,17 @@ async function IndexCards({
             >
               <div className="flex items-baseline justify-between gap-2">
                 <p className="text-sm font-semibold text-strong">{entry.label}</p>
-                <p className="numeral text-[10px] text-muted">{entry.proxy}</p>
+                <p className="numeral text-nano text-muted">{entry.proxy}</p>
               </div>
               {quote ? (
                 <>
                   <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                    <p className="tote text-[26px]">
+                    <p className="tote text-heading">
                       {formatPrice(quote.price, locale)}
                     </p>
                     <p
                       className={cn(
-                        "numeral text-[14px] font-bold",
+                        "numeral text-base font-bold",
                         tone === "up"
                           ? "text-up"
                           : tone === "down"
@@ -353,7 +353,7 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
               : null;
           return (
             <div key={value.key} className="rounded-lg border border-line bg-surface px-3.5 py-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-5 sm:py-4">
-              <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted">
+              <p className="text-nano font-semibold uppercase tracking-[0.08em] text-muted">
                 {value.label}
               </p>
               <p className="tote mt-1 text-xl sm:text-2xl">
@@ -369,7 +369,7 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
               {delta !== null && Math.abs(delta) > 0.001 && (
                 <p
                   className={cn(
-                    "numeral mt-1 text-[11px] font-semibold",
+                    "numeral mt-1 text-tiny font-semibold",
                     delta > 0 ? "text-up" : "text-down",
                   )}
                 >
@@ -400,14 +400,14 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
           <span className="text-xs text-soft">
             {inverted ? t.markets.curveInverted : t.markets.curveNormal}
           </span>
-          <span className="basis-full text-[11px] leading-relaxed text-muted">
+          <span className="basis-full text-tiny leading-relaxed text-muted">
             {t.markets.curveHint}
           </span>
         </div>
       )}
 
       {values[0].date && (
-        <p className="border-t border-line-soft px-4 py-2 text-[10px] text-muted sm:px-5">
+        <p className="border-t border-line-soft px-4 py-2 text-nano text-muted sm:px-5">
           FRED · {formatEtDateShort(values[0].date, locale)}
         </p>
       )}
@@ -645,18 +645,18 @@ function IndexToolbar({
             </Link>
           );
         })}
-        <span className="numeral ml-auto text-[10px] text-muted">
+        <span className="numeral ml-auto text-nano text-muted">
           {t.markets.asOf}: {formatEtDateShort(INDEX_COMPOSITION_DATE, locale)}
         </span>
       </div>
 
       {total > 0 && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 border-t border-line-soft px-4 py-3.5 sm:px-5">
-          <h2 className="flex items-baseline gap-2 text-[13px] font-bold tracking-tight text-strong">
+          <h2 className="flex items-baseline gap-2 text-base font-bold tracking-tight text-strong">
             {t.markets.breadth}
             {/* Oran etiketin yanında: çubuğun kesin karşılığı burada okunur,
                 eskiden altta ayrı bir cümleydi. */}
-            <span className="numeral text-[13px] font-bold text-up">
+            <span className="numeral text-base font-bold text-up">
               {formatPercentPlain(pct(advancing), locale, 0)}
             </span>
           </h2>
@@ -675,7 +675,7 @@ function IndexToolbar({
             )}
           </div>
 
-          <p className="numeral text-[12.5px] text-muted">
+          <p className="numeral text-small text-muted">
             <span className="font-semibold text-up">{advancing}</span>{" "}
             {t.markets.advancing}
             <span aria-hidden className="mx-1.5">
@@ -745,10 +745,10 @@ function MoverPanel({
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="flex min-w-0 items-baseline gap-2.5">
-                    <span className="shrink-0 text-[13.5px] font-bold text-strong">
+                    <span className="shrink-0 text-base font-bold text-strong">
                       {row.member.symbol}
                     </span>
-                    <span className="min-w-0 truncate text-[11.5px] text-muted">
+                    <span className="min-w-0 truncate text-tiny text-muted">
                       {row.member.name}
                     </span>
                   </span>
@@ -773,7 +773,7 @@ function MoverPanel({
                     style={{ width: `${width}%` }}
                   />
                   {showContribution && row.contribution !== null && (
-                    <span className="numeral shrink-0 text-[10px] text-muted">
+                    <span className="numeral shrink-0 text-nano text-muted">
                       {contributionLabel} {approxPoints(row.contribution, locale)}
                     </span>
                   )}
@@ -840,7 +840,7 @@ function SortHead({
         )}
       >
         {label}
-        <span aria-hidden className="numeral text-[8px]">
+        <span aria-hidden className="numeral text-micro">
           {active ? (dir === "desc" ? "▼" : "▲") : "▽"}
         </span>
       </Link>
@@ -937,7 +937,7 @@ function MembersTable({
       <div className="scroll-x">
         <table className="w-full text-sm sm:min-w-[680px]">
           <thead>
-            <tr className="border-b border-line text-left text-[10.5px] uppercase tracking-[0.08em] text-muted">
+            <tr className="border-b border-line text-left text-nano uppercase tracking-[0.08em] text-muted">
               <th className="hidden w-10 px-4 py-2.5 font-semibold sm:table-cell sm:px-5">
                 #
               </th>
@@ -1012,10 +1012,10 @@ function MembersTable({
                         size="sm"
                       />
                       <span className="min-w-0">
-                        <span className="block text-[13.5px] font-bold leading-[17px] text-strong">
+                        <span className="block text-base font-bold leading-[17px] text-strong">
                           {row.member.symbol}
                         </span>
-                        <span className="block max-w-[104px] truncate text-[11.5px] leading-[15px] text-muted sm:max-w-none">
+                        <span className="block max-w-[104px] truncate text-tiny leading-[15px] text-muted sm:max-w-none">
                           {row.member.name}
                         </span>
                       </span>
@@ -1082,7 +1082,7 @@ function MembersTable({
                       {quote ? formatPrice(quote.price, locale) : "—"}
                     </span>
                     {row.marketCap && (
-                      <span className="numeral mt-0.5 block text-[11px] leading-[14px] text-muted sm:hidden">
+                      <span className="numeral mt-0.5 block text-tiny leading-[14px] text-muted sm:hidden">
                         ${formatCompact(row.marketCap, locale)}
                       </span>
                     )}
@@ -1115,7 +1115,7 @@ function MembersTable({
           sayfanın başına fırlatılmamalı. */}
       {hasMore && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
-          <p className="numeral text-[12px] text-muted">
+          <p className="numeral text-small text-muted">
             {t.companies.showing
               .replace("{n}", String(sorted.length))
               .replace("{total}", String(ordered.length))}
@@ -1123,7 +1123,7 @@ function MembersTable({
           <Link
             href={moreHref}
             scroll={false}
-            className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-[13px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+            className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
           >
             {t.companies.showMore}
           </Link>
@@ -1131,7 +1131,7 @@ function MembersTable({
       )}
 
       {showContribution && (
-        <p className="border-t border-line-soft px-4 py-2.5 text-[11px] leading-relaxed text-muted sm:px-5">
+        <p className="border-t border-line-soft px-4 py-2.5 text-tiny leading-relaxed text-muted sm:px-5">
           {t.markets.contributionHint}
         </p>
       )}

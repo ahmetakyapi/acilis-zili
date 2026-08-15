@@ -140,8 +140,8 @@ export function RevenueColumns({
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-        <h2 className="text-[14.5px] font-bold text-strong">{title}</h2>
-        <div className="flex items-center gap-3 text-[11px] text-muted">
+        <h2 className="text-read font-bold text-strong">{title}</h2>
+        <div className="flex items-center gap-3 text-tiny text-muted">
           <span className="flex items-center gap-1.5">
             <span
               aria-hidden
@@ -247,7 +247,7 @@ export function RevenueColumns({
                            genişliğine sıkışıyor ve nowrap metin taşıp
                            ızgarayı bozuyordu. Sabit yükseklik sütun
                            hizasını koruyor. */
-                        "numeral absolute bottom-0 left-1/2 -translate-x-1/2 whitespace-nowrap text-center text-[13px] font-bold",
+                        "numeral absolute bottom-0 left-1/2 -translate-x-1/2 whitespace-nowrap text-center text-base font-bold",
                         bar.projected ? "text-primary" : "text-strong",
                       )}
                     >
@@ -304,7 +304,7 @@ export function RevenueColumns({
                 gereksiz yere daha da daraltırdı. */}
             <span
               className={cn(
-                "block text-center text-[11.5px] font-semibold leading-[1.25]",
+                "block text-center text-tiny font-semibold leading-[1.25]",
                 bar.projected ? "text-primary" : "text-muted",
               )}
             >

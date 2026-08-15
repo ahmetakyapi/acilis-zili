@@ -92,7 +92,7 @@ export function CompareAdd({
           setOpen(true);
           window.setTimeout(() => inputRef.current?.focus(), 20);
         }}
-        className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-dashed border-line-strong px-3.5 text-[12.5px] font-semibold text-soft transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary"
+        className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-dashed border-line-strong px-3.5 text-small font-semibold text-soft transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary"
       >
         <Plus weight="bold" size={13} />
         {labels.add}
@@ -141,7 +141,7 @@ export function CompareAdd({
       {query.trim() && (
         <ul className="absolute left-0 top-[calc(100%+6px)] z-20 w-64 overflow-hidden rounded-(--radius-md) border border-line bg-surface-elevated">
           {shown.length === 0 ? (
-            <li className="px-3 py-2.5 text-[12.5px] text-muted">
+            <li className="px-3 py-2.5 text-small text-muted">
               {labels.noResults}
             </li>
           ) : (
@@ -152,10 +152,10 @@ export function CompareAdd({
                   onClick={() => pick(hit.symbol)}
                   className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-primary-wash"
                 >
-                  <span className="numeral flex h-5 w-12 shrink-0 items-center justify-center rounded bg-primary-tint text-[11px] font-semibold text-primary">
+                  <span className="numeral flex h-5 w-12 shrink-0 items-center justify-center rounded bg-primary-tint text-tiny font-semibold text-primary">
                     {hit.symbol}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-[12.5px] text-body">
+                  <span className="min-w-0 flex-1 truncate text-small text-body">
                     {hit.name}
                   </span>
                 </button>

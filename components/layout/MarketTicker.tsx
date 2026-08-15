@@ -142,13 +142,13 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
     >
       <div
         className={cn(
-          "mx-auto flex h-9 max-w-[1400px] items-center gap-3 overflow-hidden px-[18px] text-[12px] transition-opacity motion-reduce:transition-none sm:gap-5 sm:px-6 sm:text-[13px] xl:px-10",
+          "mx-auto flex h-9 max-w-[1400px] items-center gap-3 overflow-hidden px-[18px] text-small transition-opacity motion-reduce:transition-none sm:gap-5 sm:px-6 sm:text-base xl:px-10",
           visible ? "opacity-100" : "opacity-0",
         )}
         style={{ transitionDuration: `${FADE_MS}ms` }}
       >
         {shown.caption && (
-          <span className="shrink-0 text-[10.5px] font-bold uppercase tracking-[0.09em] text-muted">
+          <span className="shrink-0 text-nano font-bold uppercase tracking-[0.09em] text-muted">
             {shown.caption}
           </span>
         )}

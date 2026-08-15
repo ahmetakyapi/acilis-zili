@@ -232,15 +232,15 @@ function DaySection({
           çubuğunun bir tık altında; gerekçesi orada anlatılı. */}
       <div className="sticky top-(--app-bar-h) z-10 mb-4 bg-page pt-1">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 border-t-2 border-strong pb-3 pt-3">
-          <h2 className="text-[21px] font-bold tracking-[-0.03em] text-strong">
+          <h2 className="text-title font-bold tracking-[-0.03em] text-strong">
             {formatEtDateLong(date, locale)}
           </h2>
-          <span className="figure text-[12.5px] text-muted">
+          <span className="figure text-small text-muted">
             {rows.length}{" "}
             {plural(rows.length, t.earnings.companyOne, t.earnings.companyMany)}
           </span>
           {isToday && (
-            <span className="rounded-full bg-down-wash px-[9px] py-[3px] text-[10.5px] font-bold tracking-[0.05em] text-down">
+            <span className="rounded-full bg-down-wash px-[9px] py-[3px] text-nano font-bold tracking-[0.05em] text-down">
               {t.earnings.today.toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
             </span>
           )}
@@ -282,7 +282,7 @@ function DaySection({
                           ★
                         </span>
                       )}
-                      <span className="text-[17px] font-bold tracking-[-0.02em] text-strong">
+                      <span className="text-lead font-bold tracking-[-0.02em] text-strong">
                         {row.symbol}
                       </span>
                     </span>
@@ -305,10 +305,10 @@ function DaySection({
               <div className="border-t border-line pt-3 sm:ml-auto sm:shrink-0 sm:border-0 sm:pt-0 sm:text-right">
                 {headline ? (
                   <>
-                    <p className="plate text-[10.5px] tracking-[0.09em]">
+                    <p className="plate text-nano tracking-[0.09em]">
                       {headline.label}
                     </p>
-                    <p className="figure mt-[3px] text-[20px] font-bold tracking-[-0.03em] text-strong sm:text-[22px]">
+                    <p className="figure mt-[3px] text-title font-bold tracking-[-0.03em] text-strong sm:text-title">
                       {headline.value}
                     </p>
                   </>
@@ -316,7 +316,7 @@ function DaySection({
                   <p className="text-xs text-muted">{t.common.noData}</p>
                 )}
                 {rest.length > 0 && (
-                  <dl className="mt-2 flex flex-col gap-[3px] text-[12.5px] sm:items-end">
+                  <dl className="mt-2 flex flex-col gap-[3px] text-small sm:items-end">
                     {rest.map((figure) => (
                       <div
                         key={figure.label}
@@ -396,7 +396,7 @@ function DaySection({
                     kartta zaten dolu; ikon oraya sığmıyordu. */}
                 <div className="flex min-w-0 items-start gap-1">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[15.5px] font-bold tracking-[-0.01em] text-strong">
+                    <p className="text-read font-bold tracking-[-0.01em] text-strong">
                       {watchSet.has(row.symbol) && (
                         <span aria-hidden className="mr-1 text-primary">
                           ★
@@ -404,7 +404,7 @@ function DaySection({
                       )}
                       {row.symbol}
                     </p>
-                    <p className="truncate text-[12.5px] text-muted">
+                    <p className="truncate text-small text-muted">
                       {m?.name ?? ""}
                     </p>
                   </div>
@@ -439,10 +439,10 @@ function DaySection({
                 <div className="mt-auto border-t border-line pt-[9px]">
                   {headline && (
                     <>
-                      <p className="plate text-[10px] tracking-[0.08em]">
+                      <p className="plate text-nano tracking-[0.08em]">
                         {headline.label}
                       </p>
-                      <p className="figure mt-[3px] text-[18px] font-bold leading-none tracking-[-0.03em] text-strong">
+                      <p className="figure mt-[3px] text-lead font-bold leading-none tracking-[-0.03em] text-strong">
                         {headline.value}
                       </p>
                     </>
@@ -450,7 +450,7 @@ function DaySection({
                   {rest.length > 0 && (
                     <dl
                       className={cn(
-                        "flex flex-col gap-[2px] text-[12.5px]",
+                        "flex flex-col gap-[2px] text-small",
                         headline && "mt-2",
                       )}
                     >

@@ -117,7 +117,7 @@ export function AnalysisTable({
             placeholder={labels.searchPlaceholder}
             aria-label={labels.searchPlaceholder}
             className={cn(
-              "h-10 w-full min-w-0 rounded-md border border-line bg-surface pl-9 pr-9 text-[13px] text-strong",
+              "h-10 w-full min-w-0 rounded-md border border-line bg-surface pl-9 pr-9 text-base text-strong",
               "placeholder:text-muted focus:border-line-focus focus:outline-none",
               // Safari'nin kendi temizleme düğmesi bizimkiyle üst üste biniyor.
               "[&::-webkit-search-cancel-button]:hidden",
@@ -136,7 +136,7 @@ export function AnalysisTable({
         </label>
 
         {searching && (
-          <span className="numeral shrink-0 text-[12px] text-muted">
+          <span className="numeral shrink-0 text-small text-muted">
             {plural(
               visible.length,
               labels.resultCountOne,
@@ -170,7 +170,7 @@ export function AnalysisTable({
           <div className="min-w-[1180px]" role="table">
             <div
               role="row"
-              className="flex items-center gap-4 border-b border-line px-4 py-3.5 text-[11px] font-bold text-muted sm:px-5"
+              className="flex items-center gap-4 border-b border-line px-4 py-3.5 text-tiny font-bold text-muted sm:px-5"
             >
               <span role="columnheader" className={COLS.symbol}>
                 {labels.colSymbol}
@@ -251,7 +251,7 @@ export function AnalysisTable({
                     <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
                     <span
                       className={cn(
-                        "text-[13.5px] font-bold",
+                        "text-base font-bold",
                         highlightFirst && !searching && index === 0
                           ? "text-primary"
                           : "text-strong",
@@ -262,7 +262,7 @@ export function AnalysisTable({
                   </span>
                   <span
                     role="cell"
-                    className={cn(COLS.company, "truncate text-[13.5px] text-body")}
+                    className={cn(COLS.company, "truncate text-base text-body")}
                   >
                     <b className="font-bold text-strong">{row.company}</b>
                     {" · "}
@@ -272,7 +272,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.reported,
-                      "whitespace-nowrap text-[12.5px] text-muted",
+                      "whitespace-nowrap text-small text-muted",
                     )}
                   >
                     {row.reported}
@@ -281,7 +281,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.revenue,
-                      "numeral whitespace-nowrap text-[13.5px] font-bold",
+                      "numeral whitespace-nowrap text-base font-bold",
                       toneClass(row.revenueTone),
                     )}
                   >
@@ -291,7 +291,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.eps,
-                      "numeral whitespace-nowrap text-[13.5px] font-bold",
+                      "numeral whitespace-nowrap text-base font-bold",
                       toneClass(row.epsTone),
                     )}
                   >
@@ -301,7 +301,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.reaction,
-                      "numeral whitespace-nowrap text-[13.5px] font-bold",
+                      "numeral whitespace-nowrap text-base font-bold",
                       toneClass(row.reactionTone),
                     )}
                   >
@@ -310,7 +310,7 @@ export function AnalysisTable({
                   <span role="cell" className={cn(COLS.score, "flex justify-center")}>
                     <span
                       className={cn(
-                        "numeral rounded-full px-2.5 py-[3.5px] text-[12.5px] font-bold",
+                        "numeral rounded-full px-2.5 py-[3.5px] text-small font-bold",
                         verdictPillClass(row.verdict),
                       )}
                     >
@@ -321,7 +321,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.verdict,
-                      "text-[13.5px] font-bold",
+                      "text-base font-bold",
                       verdictTextClass(row.verdict),
                     )}
                   >
@@ -331,7 +331,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.card,
-                      "text-[12.5px] font-semibold text-primary",
+                      "text-small font-semibold text-primary",
                     )}
                   >
                     {labels.cardLink}

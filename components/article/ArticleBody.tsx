@@ -223,7 +223,7 @@ function Side({
     <span className="flex min-w-0 flex-1 flex-col">
       <span
         className={cn(
-          "tote text-[24px] leading-none sm:text-[29px]",
+          "tote text-heading leading-none sm:text-subdisplay",
           tone === "down" && "text-down",
           tone === "up" && "text-up",
         )}
@@ -231,7 +231,7 @@ function Side({
         {value.display}
       </span>
       {value.label && (
-        <span className="mt-1.5 truncate text-[12px] text-muted">
+        <span className="mt-1.5 truncate text-small text-muted">
           {value.label}
         </span>
       )}
@@ -562,14 +562,14 @@ export function ArticleBody({
             return block.level === 2 ? (
               <h2
                 key={key}
-                className="display-ink display-ink-tight mt-3 w-fit text-[21px] font-bold tracking-[-0.03em] sm:text-[24px]"
+                className="display-ink display-ink-tight mt-3 w-fit text-title font-bold tracking-[-0.03em] sm:text-heading"
               >
                 {block.text}
               </h2>
             ) : (
               <h3
                 key={key}
-                className="mt-1 text-[16.5px] font-bold tracking-[-0.02em] text-strong"
+                className="mt-1 text-lead font-bold tracking-[-0.02em] text-strong"
               >
                 {block.text}
               </h3>
@@ -579,7 +579,7 @@ export function ArticleBody({
             return (
               <p
                 key={key}
-                className="text-[15.5px] leading-[28px] text-body sm:text-base"
+                className="text-read leading-[28px] text-body sm:text-base"
               >
                 {renderInline(block.text, key)}
               </p>
@@ -591,14 +591,14 @@ export function ArticleBody({
                 {block.items.map((item, itemIndex) => (
                   <li
                     key={itemIndex}
-                    className="flex gap-3 text-[15.5px] leading-[27px] text-body"
+                    className="flex gap-3 text-read leading-[27px] text-body"
                   >
                     <span
                       aria-hidden
                       className={cn(
                         "shrink-0 select-none",
                         block.ordered
-                          ? "numeral pt-px text-[13px] font-bold text-primary"
+                          ? "numeral pt-px text-base font-bold text-primary"
                           : "pt-[10px]",
                       )}
                     >
@@ -618,7 +618,7 @@ export function ArticleBody({
             return (
               <blockquote
                 key={key}
-                className="border-l-2 border-primary-faint pl-4 text-[16px] italic leading-[28px] text-soft"
+                className="border-l-2 border-primary-faint pl-4 text-read italic leading-[28px] text-soft"
               >
                 {block.lines.map((line, lineIndex) => (
                   <p key={lineIndex}>
@@ -636,13 +636,13 @@ export function ArticleBody({
           case "table":
             return (
               <div key={key} className="scroll-x rounded-(--radius-lg) border border-line">
-                <table className="w-full min-w-[420px] text-left text-[14px]">
+                <table className="w-full min-w-[420px] text-left text-base">
                   <thead>
                     <tr className="border-b border-line bg-surface">
                       {block.head.map((cell, cellIndex) => (
                         <th
                           key={cellIndex}
-                          className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.07em] text-muted sm:px-4"
+                          className="px-3.5 py-2.5 text-tiny font-bold uppercase tracking-[0.07em] text-muted sm:px-4"
                         >
                           {cell}
                         </th>
@@ -678,7 +678,7 @@ export function ArticleBody({
             return (
               <div key={key} className="flex flex-col gap-2.5">
                 {block.label && (
-                  <p className="plate text-[10px] tracking-[0.09em]">
+                  <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
@@ -695,10 +695,10 @@ export function ArticleBody({
                       key={itemIndex}
                       className="rounded-(--radius-lg) border border-line bg-surface px-3.5 py-3"
                     >
-                      <p className="tote text-[22px] leading-none sm:text-[25px]">
+                      <p className="tote text-title leading-none sm:text-heading">
                         {item.value}
                       </p>
-                      <p className="mt-1.5 text-[11.5px] leading-[16px] text-muted">
+                      <p className="mt-1.5 text-tiny leading-[16px] text-muted">
                         {item.note}
                       </p>
                     </div>
@@ -712,7 +712,7 @@ export function ArticleBody({
             return (
               <div key={key} className="flex flex-col gap-2.5">
                 {block.label && (
-                  <p className="plate text-[10px] tracking-[0.09em]">
+                  <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
@@ -731,10 +731,10 @@ export function ArticleBody({
                           )}
                         </span>
                         <span className={cn("min-w-0", !last && "pb-4")}>
-                          <span className="numeral block text-[12px] font-bold uppercase tracking-[0.06em] text-primary">
+                          <span className="numeral block text-small font-bold uppercase tracking-[0.06em] text-primary">
                             {item.when}
                           </span>
-                          <span className="mt-1 block text-[14.5px] leading-[24px] text-body">
+                          <span className="mt-1 block text-read leading-[24px] text-body">
                             {renderInline(item.text, `${key}-${itemIndex}`)}
                           </span>
                         </span>
@@ -755,7 +755,7 @@ export function ArticleBody({
             return (
               <div key={key} className="flex flex-col gap-2.5">
                 {block.label && (
-                  <p className="plate text-[10px] tracking-[0.09em]">
+                  <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
@@ -763,7 +763,7 @@ export function ArticleBody({
                   {block.items.map((item, itemIndex) => (
                     <div
                       key={itemIndex}
-                      className="flex items-center gap-3 text-[13px]"
+                      className="flex items-center gap-3 text-base"
                     >
                       <span className="w-[122px] shrink-0 truncate text-body sm:w-[168px]">
                         {item.name}
@@ -811,7 +811,7 @@ export function ArticleBody({
             return (
               <div key={key} className="flex flex-col gap-2.5">
                 {block.label && (
-                  <p className="plate text-[10px] tracking-[0.09em]">
+                  <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
@@ -832,7 +832,7 @@ export function ArticleBody({
                     {block.items.map((item, itemIndex) => (
                       <li
                         key={itemIndex}
-                        className="flex items-center gap-2.5 text-[13px]"
+                        className="flex items-center gap-2.5 text-base"
                       >
                         <span
                           aria-hidden
@@ -860,7 +860,7 @@ export function ArticleBody({
             return (
               <div key={key} className="flex flex-col gap-2.5">
                 {block.label && (
-                  <p className="plate text-[10px] tracking-[0.09em]">
+                  <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
@@ -870,21 +870,21 @@ export function ArticleBody({
                       {itemIndex > 0 && (
                         <li
                           aria-hidden
-                          className="flex shrink-0 select-none items-center justify-center text-[15px] leading-none text-primary-soft sm:px-1.5"
+                          className="flex shrink-0 select-none items-center justify-center text-read leading-none text-primary-soft sm:px-1.5"
                         >
                           <span className="sm:hidden">↓</span>
                           <span className="hidden sm:inline">→</span>
                         </li>
                       )}
                       <li className="flex min-w-0 flex-col rounded-(--radius-lg) border border-line bg-surface px-3.5 py-3 sm:flex-1">
-                        <span className="numeral text-[10px] font-bold tracking-[0.09em] text-primary">
+                        <span className="numeral text-nano font-bold tracking-[0.09em] text-primary">
                           {String(itemIndex + 1).padStart(2, "0")}
                         </span>
-                        <span className="mt-1 text-[13.5px] font-bold leading-tight text-strong">
+                        <span className="mt-1 text-base font-bold leading-tight text-strong">
                           {item.name}
                         </span>
                         {item.note && (
-                          <span className="mt-1 text-[12px] leading-[17px] text-muted">
+                          <span className="mt-1 text-small leading-[17px] text-muted">
                             {item.note}
                           </span>
                         )}
@@ -910,7 +910,7 @@ export function ArticleBody({
             return (
               <div key={key} className="flex flex-col gap-2.5">
                 {block.label && (
-                  <p className="plate text-[10px] tracking-[0.09em]">
+                  <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
@@ -919,7 +919,7 @@ export function ArticleBody({
 
                   <span
                     aria-hidden
-                    className="select-none text-[16px] leading-none text-primary-soft sm:shrink-0 sm:text-[18px]"
+                    className="select-none text-read leading-none text-primary-soft sm:shrink-0 sm:text-lead"
                   >
                     <span className="sm:hidden">↓</span>
                     <span className="hidden sm:inline">→</span>
@@ -930,7 +930,7 @@ export function ArticleBody({
                   {block.deltaPct !== null && (
                     <span
                       className={cn(
-                        "numeral w-fit shrink-0 rounded-full px-2.5 py-1 text-[12.5px] font-bold sm:ml-auto",
+                        "numeral w-fit shrink-0 rounded-full px-2.5 py-1 text-small font-bold sm:ml-auto",
                         tone === "down"
                           ? "bg-down-wash text-down"
                           : tone === "up"
@@ -969,7 +969,7 @@ export function ArticleBody({
               >
                 <p
                   className={cn(
-                    "text-[10.5px] font-bold uppercase tracking-[0.1em]",
+                    "text-nano font-bold uppercase tracking-[0.1em]",
                     tone.kicker,
                   )}
                 >
@@ -979,7 +979,7 @@ export function ArticleBody({
                   {block.lines.map((line, lineIndex) => (
                     <p
                       key={lineIndex}
-                      className="text-[14.5px] leading-[25px] text-body"
+                      className="text-read leading-[25px] text-body"
                     >
                       {renderInline(line, `${key}-${lineIndex}`)}
                     </p>

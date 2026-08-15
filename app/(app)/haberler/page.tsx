@@ -59,7 +59,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
   return (
     <div className="flex flex-col gap-5">
       <header>
-        <h1 className="display-ink w-fit text-[26px] font-bold tracking-[-0.03em] sm:text-[34px]">
+        <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
           {t.news.title}
         </h1>
         <p className="mt-2 text-sm text-soft">{t.news.subtitle}</p>
@@ -97,7 +97,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                       {locale === "tr" && item.summaryTr ? item.summaryTr : item.summary}
                     </p>
                   )}
-                  <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-muted">
+                  <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-tiny text-muted">
                     {item.source && <span>{item.source}</span>}
                     <span aria-hidden>·</span>
                     <span>{timeAgo(item.publishedAt, locale)}</span>
@@ -109,7 +109,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                             <span
                               key={symbol}
                               className={cn(
-                                "numeral rounded bg-surface-sunken px-1.5 py-0.5 text-[10px] font-medium text-soft",
+                                "numeral rounded bg-surface-sunken px-1.5 py-0.5 text-nano font-medium text-soft",
                               )}
                             >
                               {symbol}

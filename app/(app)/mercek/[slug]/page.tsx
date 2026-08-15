@@ -60,11 +60,11 @@ async function StorySymbols({ symbols }: { symbols: string[] }) {
           >
             <LogoTile symbol={symbol} logoUrl={logo} size="sm" />
             <span className="min-w-0">
-              <span className="numeral block text-[12px] font-bold leading-tight text-strong">
+              <span className="numeral block text-small font-bold leading-tight text-strong">
                 {symbol}
               </span>
               {name && (
-                <span className="block max-w-32 truncate text-[10.5px] leading-tight text-muted">
+                <span className="block max-w-32 truncate text-nano leading-tight text-muted">
                   {name}
                 </span>
               )}
@@ -100,7 +100,7 @@ async function MoreStories({
 
   return (
     <nav className="flex flex-col gap-3 border-t border-line pt-6">
-      <p className="plate text-[10px] tracking-[0.09em]">
+      <p className="plate text-nano tracking-[0.09em]">
         {t.stories.moreStories}
       </p>
       <ul className="flex flex-col">
@@ -110,10 +110,10 @@ async function MoreStories({
               href={`/mercek/${story.slug}`}
               className="-mx-3 flex flex-col gap-0.5 rounded-(--radius-lg) px-3 py-3 transition-colors hover:bg-primary-tint sm:flex-row sm:items-baseline sm:gap-4"
             >
-              <span className="numeral shrink-0 text-[11.5px] text-muted sm:w-[124px]">
+              <span className="numeral shrink-0 text-tiny text-muted sm:w-[124px]">
                 {formatEtDateLong(story.eventDate, locale)}
               </span>
-              <span className="min-w-0 text-[14.5px] font-semibold leading-snug text-strong">
+              <span className="min-w-0 text-read font-semibold leading-snug text-strong">
                 {story.title}
               </span>
             </Link>
@@ -122,7 +122,7 @@ async function MoreStories({
       </ul>
       <Link
         href="/mercek"
-        className="-my-2 inline-flex w-fit min-h-8 items-center py-2 text-[12.5px] font-semibold text-primary transition-colors hover:text-primary-hover"
+        className="-my-2 inline-flex w-fit min-h-8 items-center py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
       >
         {t.stories.backToList}
       </Link>
@@ -145,15 +145,15 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
     <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
       <Link
         href="/mercek"
-        className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-[12.5px] font-semibold text-muted transition-colors hover:text-primary"
+        className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
       >
         <ArrowLeft weight="bold" size={13} />
         {t.stories.backToList}
       </Link>
 
       <header className="flex flex-col gap-4">
-        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11.5px]">
-          <span className="plate text-[10px] tracking-[0.09em] text-primary">
+        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-tiny">
+          <span className="plate text-nano tracking-[0.09em] text-primary">
             {t.stories.eyebrow}
           </span>
           <span className="numeral text-muted">
@@ -167,15 +167,15 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
           </span>
         </p>
 
-        <h1 className="display-ink w-fit text-[30px] font-bold leading-[1.12] tracking-[-0.035em] sm:text-[40px]">
+        <h1 className="display-ink w-fit text-subdisplay font-bold leading-[1.12] tracking-[-0.035em] sm:text-display">
           {story.title}
         </h1>
-        <p className="text-[17px] leading-[27px] text-soft">{story.dek}</p>
+        <p className="text-lead leading-[27px] text-soft">{story.dek}</p>
 
         {/* Çeviri henüz yoksa orijinal gösterilir — ama bunu söyleyerek.
             Rutin iki dili art arda yazdığı için bu not kısa ömürlüdür. */}
         {story.locale !== locale && (
-          <p className="w-fit rounded-full border border-line bg-surface-sunken px-3.5 py-1.5 text-[12px] text-muted">
+          <p className="w-fit rounded-full border border-line bg-surface-sunken px-3.5 py-1.5 text-small text-muted">
             {t.stories.fallbackNote}
           </p>
         )}
@@ -215,10 +215,10 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
       <footer className="mt-2 flex flex-col gap-3 border-t border-line pt-5">
         {sources.length > 0 && (
           <div className="flex flex-col gap-2">
-            <p className="plate text-[10px] tracking-[0.09em]">
+            <p className="plate text-nano tracking-[0.09em]">
               {t.stories.sources}
             </p>
-            <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-[12.5px]">
+            <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-small">
               {sources.map((source) => {
                 /* Adres /api/mercek üzerinden geliyor ve zod'un `.url()`
                    doğrulaması `javascript:` şemasını da geçiriyor; süzgeç
@@ -244,7 +244,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
             </ul>
           </div>
         )}
-        <p className="text-[11.5px] leading-relaxed text-muted">
+        <p className="text-tiny leading-relaxed text-muted">
           {t.stories.disclaimer}
         </p>
       </footer>

@@ -107,11 +107,11 @@ async function Gaps() {
         <AdminPanel key={section.title}>
           <AdminPanelTitle hint={section.hint}>{section.title}</AdminPanelTitle>
           {section.items.length === 0 ? (
-            <p className="py-6 text-center text-[13px] text-muted">
+            <p className="py-6 text-center text-base text-muted">
               Eksik yok.
             </p>
           ) : (
-            <ul className="flex flex-col gap-1.5 text-[13px]">
+            <ul className="flex flex-col gap-1.5 text-base">
               {section.items.slice(0, 20).map((item) => (
                 <li key={item}>
                   {section.href ? (
@@ -127,7 +127,7 @@ async function Gaps() {
                 </li>
               ))}
               {section.items.length > 20 && (
-                <li className="text-[12px] text-muted">
+                <li className="text-small text-muted">
                   …ve {section.items.length - 20} tane daha
                 </li>
               )}
@@ -149,7 +149,7 @@ async function Briefs() {
       </AdminPanelTitle>
 
       {rows.length === 0 ? (
-        <p className="py-8 text-center text-[13px] text-muted">
+        <p className="py-8 text-center text-base text-muted">
           Henüz bülten yazılmamış.
         </p>
       ) : (
@@ -172,7 +172,7 @@ async function Briefs() {
         </AdminTable>
       )}
 
-      <p className="mt-4 border-t border-line pt-3 text-[12px] text-muted">
+      <p className="mt-4 border-t border-line pt-3 text-small text-muted">
         Yazma yolu tek: rutinler <code>/api/brief</code>,{" "}
         <code>/api/mercek</code> ve <code>/api/analiz</code> uçlarına yazıyor.
         Talimatlar <code>docs/claude-rutinler.md</code> içinde.

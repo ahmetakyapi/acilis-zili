@@ -329,7 +329,7 @@ function ListPanel({
         />
       ) : (
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3 sm:px-5">
-        <h2 className="flex items-center gap-2.5 text-[15.5px] font-bold tracking-[-0.01em] text-strong">
+        <h2 className="flex items-center gap-2.5 text-read font-bold tracking-[-0.01em] text-strong">
           <span
             aria-hidden
             className={cn(
@@ -340,7 +340,7 @@ function ListPanel({
           {list.name}
           {/* Sayaç çıplak bir rakamdı ve liste adının devamı gibi
               okunuyordu ("Semiconductors 9"). Kendi hapına girdi. */}
-          <span className="numeral rounded-full bg-surface-elevated px-2 py-[2px] text-[11px] font-semibold text-muted">
+          <span className="numeral rounded-full bg-surface-elevated px-2 py-[2px] text-tiny font-semibold text-muted">
             {list.items.length}
           </span>
         </h2>
@@ -755,7 +755,7 @@ function AddSymbolRow({
 
       {/* Sonuçlar ya da hızlı öneriler */}
       {notice && (
-        <p role="alert" className="mt-2 text-[12.5px] text-brass">
+        <p role="alert" className="mt-2 text-small text-brass">
           {notice}
         </p>
       )}

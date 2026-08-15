@@ -36,11 +36,11 @@ export function LiveClock({ locale }: { locale: Locale }) {
     <p className="numeral flex items-stretch divide-x divide-line rounded-lg border border-line bg-surface-solid text-xs">
       <span className="flex items-baseline gap-1.5 px-2.5 py-1">
         <span className="font-semibold text-strong">{first.time}</span>
-        <span className="text-[10px] text-muted">{first.tag}</span>
+        <span className="text-nano text-muted">{first.tag}</span>
       </span>
       <span className="flex items-baseline gap-1.5 px-2.5 py-1">
         <span className="font-semibold text-soft">{second.time}</span>
-        <span className="text-[10px] text-muted">{second.tag}</span>
+        <span className="text-nano text-muted">{second.tag}</span>
       </span>
     </p>
   );

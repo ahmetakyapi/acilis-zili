@@ -170,7 +170,7 @@ export default async function AnalysesPage(
             )}
 
             <Panel className="flex min-w-0 flex-col gap-3 p-[18px] sm:p-5">
-              <h2 className="text-[13px] font-bold text-strong">
+              <h2 className="text-base font-bold text-strong">
                 {t.analysis.thisWeekAnalyzed}
               </h2>
               <div className="flex flex-1 flex-col justify-between">
@@ -191,15 +191,15 @@ export default async function AnalysesPage(
                           logoUrl={meta[row.symbol]?.logoUrl}
                           size="xs"
                         />
-                        <span className="w-[46px] shrink-0 text-[12.5px] font-bold text-strong">
+                        <span className="w-[46px] shrink-0 text-small font-bold text-strong">
                           {row.symbol}
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-[11.5px] text-body">
+                        <span className="min-w-0 flex-1 truncate text-tiny text-body">
                           {row.periodLabel}
                         </span>
                         <span
                           className={cn(
-                            "figure shrink-0 text-[11px] font-bold",
+                            "figure shrink-0 text-tiny font-bold",
                             verdictTextClass(verdict),
                           )}
                         >
@@ -212,14 +212,14 @@ export default async function AnalysesPage(
               </div>
               <Link
                 href={filterHref("hafta")}
-                className="-my-2 inline-flex min-h-10 items-center py-2 text-[11.5px] font-semibold text-primary hover:text-primary-hover sm:-my-1 sm:min-h-0 sm:py-1"
+                className="-my-2 inline-flex min-h-10 items-center py-2 text-tiny font-semibold text-primary hover:text-primary-hover sm:-my-1 sm:min-h-0 sm:py-1"
               >
                 {t.analysis.showAll}
               </Link>
             </Panel>
 
             <Panel className="flex min-w-0 flex-col gap-3 p-[18px] sm:p-5">
-              <h2 className="text-[13px] font-bold text-strong">
+              <h2 className="text-base font-bold text-strong">
                 {t.analysis.upcomingEarnings}
               </h2>
               <div className="flex flex-1 flex-col justify-between">
@@ -245,10 +245,10 @@ export default async function AnalysesPage(
                         logoUrl={row.logoUrl}
                         size="xs"
                       />
-                      <span className="w-[46px] shrink-0 text-[12.5px] font-bold text-strong">
+                      <span className="w-[46px] shrink-0 text-small font-bold text-strong">
                         {row.symbol}
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-[11.5px] text-body">
+                      <span className="min-w-0 flex-1 truncate text-tiny text-body">
                         {formatEtDateCompact(row.reportDate, locale)}
                         {row.hour === "bmo"
                           ? ` · ${t.earnings.beforeOpenShort}`
@@ -257,11 +257,11 @@ export default async function AnalysesPage(
                             : ""}
                       </span>
                       {watchSet.has(row.symbol) ? (
-                        <span className="shrink-0 rounded-full bg-primary-wash px-2 py-[2px] text-[10.5px] font-bold text-primary">
+                        <span className="shrink-0 rounded-full bg-primary-wash px-2 py-[2px] text-nano font-bold text-primary">
                           ★
                         </span>
                       ) : (
-                        <span className="figure shrink-0 text-[10.5px] text-muted">
+                        <span className="figure shrink-0 text-nano text-muted">
                           {row.epsEstimate !== null
                             ? formatPrice(row.epsEstimate, locale, {
                                 currency: true,
@@ -282,7 +282,7 @@ export default async function AnalysesPage(
               </div>
               <Link
                 href="/bilancolar"
-                className="-my-2 inline-flex min-h-10 items-center py-2 text-[11.5px] font-semibold text-primary hover:text-primary-hover sm:-my-1 sm:min-h-0 sm:py-1"
+                className="-my-2 inline-flex min-h-10 items-center py-2 text-tiny font-semibold text-primary hover:text-primary-hover sm:-my-1 sm:min-h-0 sm:py-1"
               >
                 {t.analysis.goToCalendar}
               </Link>
@@ -333,7 +333,7 @@ export default async function AnalysesPage(
                   action={
                     <Link
                       href={filterHref(null)}
-                      className="text-[12.5px] font-semibold text-primary"
+                      className="text-small font-semibold text-primary"
                     >
                       {t.earnings.clearFilter}
                     </Link>
@@ -364,7 +364,7 @@ export default async function AnalysesPage(
         </>
       )}
 
-      <p className="border-t border-line pt-3.5 text-[11px] text-muted">
+      <p className="border-t border-line pt-3.5 text-tiny text-muted">
         {t.analysis.publishNote}
       </p>
 
@@ -428,26 +428,26 @@ function FeaturedAnalysis({
     >
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-primary-faint bg-primary-wash px-2.5 py-[3px] text-[10.5px] font-bold text-primary">
+          <span className="rounded-full border border-primary-faint bg-primary-wash px-2.5 py-[3px] text-nano font-bold text-primary">
             {t.analysis.todaysAnalysis}
           </span>
-          <span className="text-[11px] font-semibold text-muted">
+          <span className="text-tiny font-semibold text-muted">
             {formatEtDateLong(row.reportDate, locale)}
           </span>
         </div>
         <div className="flex items-center gap-2.5">
           <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="lg" />
           <div className="min-w-0">
-            <p className="truncate text-[17px] font-bold tracking-[-0.03em] text-strong">
+            <p className="truncate text-lead font-bold tracking-[-0.03em] text-strong">
               {row.company} · {row.periodLabel}
             </p>
-            <p className="truncate text-[11.5px] font-medium text-muted">
+            <p className="truncate text-tiny font-medium text-muted">
               {row.symbol}
               {row.sector ? ` · ${row.sector}` : ""}
             </p>
           </div>
         </div>
-        <p className="text-[12.5px] leading-[19px] text-body [text-wrap:pretty]">
+        <p className="text-small leading-[19px] text-body [text-wrap:pretty]">
           {row.headline}
         </p>
         <div className="mt-auto flex flex-wrap gap-x-3.5 gap-y-1 pt-1">

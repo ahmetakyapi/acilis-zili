@@ -74,10 +74,10 @@ export default function AppError({
       </span>
 
       <div className="flex flex-col gap-2.5">
-        <h1 className="text-[21px] font-bold tracking-[-0.025em] text-strong">
+        <h1 className="text-title font-bold tracking-[-0.025em] text-strong">
           {copy.title}
         </h1>
-        <p className="text-[14px] leading-relaxed text-body">{copy.body}</p>
+        <p className="text-base leading-relaxed text-body">{copy.body}</p>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2.5">
@@ -87,7 +87,7 @@ export default function AppError({
         </Button>
         <Link
           href="/"
-          className="inline-flex h-10 items-center rounded-md border border-line bg-surface px-4 text-[13.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+          className="inline-flex h-10 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
         >
           {copy.home}
         </Link>
@@ -95,7 +95,7 @@ export default function AppError({
 
       {error.digest && (
         <Panel className="w-full px-4 py-3">
-          <p className="text-[11.5px] text-muted">
+          <p className="text-tiny text-muted">
             {copy.digest}{" "}
             <code className="numeral rounded-xs bg-surface-elevated px-1.5 py-0.5 font-bold text-strong">
               {error.digest}

@@ -74,21 +74,21 @@ export async function FearGauge({
   return (
     <Panel className="flex flex-col gap-3.5 px-4 py-4 sm:px-5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
+        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
           {labels.title}
         </h2>
-        <span className="numeral text-[11px] text-muted">
+        <span className="numeral text-tiny text-muted">
           VIX · {observedAt ? formatEtDateShort(observedAt, locale) : "—"}
         </span>
       </div>
 
       <div className="flex flex-wrap items-end gap-x-3.5 gap-y-1">
-        <p className="tote text-[34px] leading-none">
+        <p className="tote text-display leading-none">
           {formatPrice(level, locale, { digits: 2 })}
         </p>
         <span
           className={cn(
-            "mb-1 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold",
+            "mb-1 rounded-full px-2.5 py-0.5 text-tiny font-semibold",
             band.tone === "up" && "bg-up-wash text-up",
             band.tone === "flat" && "bg-surface-elevated text-body",
             band.tone === "warn" && "bg-brass-wash text-brass",
@@ -100,7 +100,7 @@ export async function FearGauge({
         {delta !== null && delta !== 0 && (
           <span
             className={cn(
-              "numeral mb-1 text-[12.5px] font-semibold",
+              "numeral mb-1 text-small font-semibold",
               // Yükselen VIX gerginlik demek — burada "yukarı" iyi haber
               // değil, o yüzden yön rengi hisse sözlüğünün tersine kurulu.
               delta > 0 ? "text-down" : "text-up",
@@ -136,18 +136,18 @@ export async function FearGauge({
             style={{ left: `${(20 / SCALE_MAX) * 100}%` }}
           />
         </div>
-        <p className="numeral flex justify-between text-[10px] text-muted">
+        <p className="numeral flex justify-between text-nano text-muted">
           <span>0</span>
           <span>{labels.average}</span>
           <span>{SCALE_MAX}+</span>
         </p>
       </div>
 
-      <p className="text-[12px] leading-[19px] text-muted">{labels.hint}</p>
+      <p className="text-small leading-[19px] text-muted">{labels.hint}</p>
 
       <Link
         href="/rehber/volatilite"
-        className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-[12.5px] font-semibold text-primary transition-colors hover:text-primary-hover"
+        className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
       >
         {labels.guideCta}
         <ArrowRight weight="bold" size={12} />

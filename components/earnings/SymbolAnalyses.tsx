@@ -57,7 +57,7 @@ export async function SymbolAnalyses({
                 <span className="flex shrink-0 items-center gap-2.5">
                   <span
                     className={cn(
-                      "figure rounded-full px-2.5 py-[3px] text-[11.5px] font-bold",
+                      "figure rounded-full px-2.5 py-[3px] text-tiny font-bold",
                       verdictPillClass(verdict),
                     )}
                   >
@@ -65,22 +65,22 @@ export async function SymbolAnalyses({
                   </span>
                   <span
                     className={cn(
-                      "w-9 text-[12.5px] font-bold",
+                      "w-9 text-small font-bold",
                       verdictTextClass(verdict),
                     )}
                   >
                     {verdictLabel(verdict, t)}
                   </span>
-                  <span className="text-[13.5px] font-bold text-strong">
+                  <span className="text-base font-bold text-strong">
                     {row.periodLabel}
                   </span>
                 </span>
                 {/* Manşet cümlesi tek satır: panel bir okuma listesi değil,
                     hangi çeyreğin okunduğunu gösteren bir dizin. */}
-                <span className="min-w-0 flex-1 truncate text-[12.5px] text-body">
+                <span className="min-w-0 flex-1 truncate text-small text-body">
                   {row.headline}
                 </span>
-                <span className="shrink-0 text-[11.5px] text-muted sm:text-right">
+                <span className="shrink-0 text-tiny text-muted sm:text-right">
                   {formatEtDateLong(row.reportDate, locale)}
                 </span>
               </Link>

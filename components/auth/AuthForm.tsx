@@ -69,7 +69,7 @@ export function AuthForm({
            itiyordu; `order` ile mobilde aşağı, geniş ekranda yine sola
            alınıyor. */}
       <div className="order-2 flex flex-col lg:order-1">
-        <h1 className="display-ink max-w-[17ch] text-[32px] font-bold leading-[1.1] tracking-[-0.03em] sm:text-[46px]">
+        <h1 className="display-ink max-w-[17ch] text-subdisplay font-bold leading-[1.1] tracking-[-0.03em] sm:text-hero">
           {pitchTitle}
         </h1>
         <p className="mt-5 max-w-[52ch] text-base leading-[26px] text-body">
@@ -85,10 +85,10 @@ export function AuthForm({
               >
                 ✓
               </span>
-              <span className="text-[14.5px] text-body">{feature}</span>
+              <span className="text-read text-body">{feature}</span>
             </p>
           ))}
-          <p className="mt-2.5 text-[12.5px] leading-relaxed text-muted">
+          <p className="mt-2.5 text-small leading-relaxed text-muted">
             {privacyNote}
           </p>
         </div>
@@ -96,10 +96,10 @@ export function AuthForm({
 
       {/* ---- Sağ: form ---- */}
       <div className="order-1 rounded-xl border border-line bg-surface p-6 sm:p-8 lg:order-2 lg:self-center">
-        <h2 className="text-[24px] font-bold tracking-[-0.03em] text-strong sm:text-[28px]">
+        <h2 className="text-heading font-bold tracking-[-0.03em] text-strong sm:text-heading">
           {title}
         </h2>
-        <p className="mt-2 text-[13.5px] text-body">{subtitle}</p>
+        <p className="mt-2 text-base text-body">{subtitle}</p>
 
         <form action={formAction} className="mt-6 flex flex-col gap-4">
           {/* Hedef gizli alanla taşınır; sunucu tarafı ayrıca doğrular —
@@ -111,7 +111,7 @@ export function AuthForm({
             const hasError = state.field === field.errorKey;
             return (
               <label key={field.name} className="flex flex-col gap-[7px]">
-                <span className="text-[12.5px] font-semibold text-body">
+                <span className="text-small font-semibold text-body">
                   {field.label}
                 </span>
                 <input
@@ -179,7 +179,7 @@ export function AuthForm({
           </Button>
         </form>
 
-        <p className="mt-5 border-t border-line pt-4 text-[13px] text-muted">
+        <p className="mt-5 border-t border-line pt-4 text-base text-muted">
           {altText}{" "}
           {/* Cümle içinde ama dokunulabilir: 16px yüksekliğindeydi ve giriş
               ile kayıt arasında geçiş yapmanın TEK yolu bu bağlantı.

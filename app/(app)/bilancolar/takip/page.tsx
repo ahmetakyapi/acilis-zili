@@ -147,7 +147,7 @@ export default async function WatchedEarningsPage(
             action={
               <Link
                 href="/favoriler"
-                className="text-[12.5px] font-semibold text-primary"
+                className="text-small font-semibold text-primary"
               >
                 {t.nav.watchlist} →
               </Link>

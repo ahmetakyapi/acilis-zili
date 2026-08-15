@@ -79,7 +79,7 @@ function BriefLines({
   });
 
   const text =
-    size === "page" ? "text-[15px] leading-[25px]" : "text-[13px] leading-5";
+    size === "page" ? "text-read leading-[25px]" : "text-base leading-5";
 
   return (
     <div
@@ -100,7 +100,7 @@ function BriefLines({
                 "display-ink display-ink-tight w-fit font-bold tracking-[-0.02em] text-strong",
                 // İlk başlık üstten boşluk almaz; sonrakiler bölümleri ayırır.
                 index > 0 && (size === "page" ? "mt-3" : "mt-1.5"),
-                size === "page" ? "text-[17px]" : "text-[14px]",
+                size === "page" ? "text-lead" : "text-base",
               )}
             >
               {heading}
@@ -168,7 +168,7 @@ export function BriefBody({
         /* Katlanan kısmın numarası, açıkta kalan kısmın SON BAŞLIĞINDAN
            sonraki madde sayısından devam eder; başlık yoksa baştan sayar. */
         <details className="group/brief mt-3">
-          <summary className="flex min-h-8 cursor-pointer list-none items-center gap-1.5 text-[12.5px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
+          <summary className="flex min-h-8 cursor-pointer list-none items-center gap-1.5 text-small font-semibold text-primary [&::-webkit-details-marker]:hidden">
             <span
               aria-hidden
               className="transition-transform group-open/brief:rotate-90"

@@ -93,7 +93,7 @@ export function BriefSwitch({
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <Kicker tone="primary">{labels.titles[period]}</Kicker>
         {brief && (
-          <span className="numeral ml-auto text-[11px] text-muted">
+          <span className="numeral ml-auto text-tiny text-muted">
             {brief.stamp}
           </span>
         )}
@@ -105,7 +105,7 @@ export function BriefSwitch({
       <div
         role="tablist"
         aria-label={labels.periodLabel}
-        className="mt-3 inline-flex overflow-hidden rounded-md border border-primary-faint text-[12.5px]"
+        className="mt-3 inline-flex overflow-hidden rounded-md border border-primary-faint text-small"
       >
         {(["daily", "weekly"] as const).map((key) => (
           <button
@@ -139,11 +139,11 @@ export function BriefSwitch({
         {brief ? (
           <>
             <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="numeral text-[11.5px] text-body">
+            <span className="numeral text-tiny text-body">
               {brief.dateLabel}
             </span>
               {brief.current && (
-                <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold tracking-[0.05em] text-on-primary">
+                <span className="rounded-full bg-primary px-2 py-0.5 text-nano font-bold tracking-[0.05em] text-on-primary">
                   {labels.currentBadge[period]}
                 </span>
               )}
@@ -152,7 +152,7 @@ export function BriefSwitch({
             {/* Uyarı metnin ÜSTÜNDE: aşağıdaki cümleleri hangi günün gözüyle
                 okuyacağını önce söylemek gerekiyor. */}
             {brief.staleNote && (
-              <p className="mt-2.5 rounded-md border border-line bg-surface-elevated px-3 py-2 text-[12px] leading-[18px] text-body">
+              <p className="mt-2.5 rounded-md border border-line bg-surface-elevated px-3 py-2 text-small leading-[18px] text-body">
                 {brief.staleNote}
               </p>
             )}
@@ -160,7 +160,7 @@ export function BriefSwitch({
             {/* Dil notu da metnin üstünde, aynı gerekçeyle: okur hangi dilde
                 bir metne baktığını okumaya başlamadan bilmeli. */}
             {brief.langNote && (
-              <p className="mt-2.5 w-fit rounded-full border border-line bg-surface-elevated px-3 py-1.5 text-[11.5px] text-muted">
+              <p className="mt-2.5 w-fit rounded-full border border-line bg-surface-elevated px-3 py-1.5 text-tiny text-muted">
                 {brief.langNote}
               </p>
             )}
@@ -176,7 +176,7 @@ export function BriefSwitch({
             {body}
             <Link
               href={brief.archiveHref}
-              className="mt-4 inline-flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-[12.5px] font-semibold text-primary transition-colors hover:text-primary-hover"
+              className="mt-4 inline-flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
             >
               {labels.archive}
               <span aria-hidden>→</span>

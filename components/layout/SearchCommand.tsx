@@ -367,11 +367,11 @@ export function SearchCommand({
         type="button"
         onClick={openPalette}
         aria-label={label}
-        className="inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface text-[13px] text-muted transition-colors hover:border-line-strong hover:text-soft lg:size-9 2xl:size-auto 2xl:w-[248px] 2xl:justify-start 2xl:rounded-md 2xl:px-3 2xl:py-2"
+        className="inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface text-base text-muted transition-colors hover:border-line-strong hover:text-soft lg:size-9 2xl:size-auto 2xl:w-[248px] 2xl:justify-start 2xl:rounded-md 2xl:px-3 2xl:py-2"
       >
         <MagnifyingGlass weight="duotone" size={15} className="shrink-0" />
         <span className="hidden 2xl:inline">{placeholderShort}</span>
-        <kbd className="ml-auto hidden rounded bg-surface-elevated px-[5px] py-0.5 text-[10.5px] 2xl:inline">
+        <kbd className="ml-auto hidden rounded bg-surface-elevated px-[5px] py-0.5 text-nano 2xl:inline">
           ⌘K
         </kbd>
       </button>
@@ -425,14 +425,14 @@ export function SearchCommand({
                 aria-activedescendant={
                   navItems[active] ? `palet-secenek-${active}` : undefined
                 }
-                className="palette-input h-14 flex-1 bg-transparent text-[17px] font-semibold text-strong outline-none placeholder:font-normal placeholder:text-muted"
+                className="palette-input h-14 flex-1 bg-transparent text-lead font-semibold text-strong outline-none placeholder:font-normal placeholder:text-muted"
                 autoComplete="off"
                 spellCheck={false}
               />
               <button
                 type="button"
                 onClick={close}
-                className="flex shrink-0 items-center justify-center rounded-xs bg-surface-elevated px-[7px] py-[3px] text-[11px] text-muted transition-colors hover:text-strong max-sm:size-11 max-sm:px-0"
+                className="flex shrink-0 items-center justify-center rounded-xs bg-surface-elevated px-[7px] py-[3px] text-tiny text-muted transition-colors hover:text-strong max-sm:size-11 max-sm:px-0"
                 aria-label="Kapat"
               >
                 <span className="max-sm:hidden">ESC</span>
@@ -455,7 +455,7 @@ export function SearchCommand({
               {/* Kutu boşken popüler semboller — boş bir pencere yerine yön */}
               {!query.trim() && (
                 <div role="presentation" className="px-5 pb-2 pt-2">
-                  <p className="plate text-[10.5px] tracking-[0.08em]">
+                  <p className="plate text-nano tracking-[0.08em]">
                     {popularLabel}
                   </p>
                   <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -479,7 +479,7 @@ export function SearchCommand({
               {shownHits.length > 0 && (
                 <p
                   id="palet-grup-semboller"
-                  className="plate px-5 pb-1.5 pt-2 text-[10.5px] tracking-[0.08em]"
+                  className="plate px-5 pb-1.5 pt-2 text-nano tracking-[0.08em]"
                 >
                   {companiesLabel}
                 </p>
@@ -495,7 +495,7 @@ export function SearchCommand({
                   onClick={() => go(`/hisse/${hit.symbol}`)}
                   onMouseEnter={() => setActive(index)}
                   className={cn(
-                    "flex w-full items-center gap-3.5 px-5 py-2.5 text-left text-[13.5px] transition-colors max-sm:py-3",
+                    "flex w-full items-center gap-3.5 px-5 py-2.5 text-left text-base transition-colors max-sm:py-3",
                     index === active ? "bg-primary-wash" : "hover:bg-surface",
                   )}
                 >
@@ -520,7 +520,7 @@ export function SearchCommand({
               {shownWritings.length > 0 && (
                 <p
                   id="palet-grup-yazilar"
-                  className="plate px-5 pb-1.5 pt-2 text-[10.5px] tracking-[0.08em]"
+                  className="plate px-5 pb-1.5 pt-2 text-nano tracking-[0.08em]"
                 >
                   {writingsLabel}
                 </p>
@@ -542,19 +542,19 @@ export function SearchCommand({
                       position === active ? "bg-primary-wash" : "hover:bg-surface",
                     )}
                   >
-                    <span className="plate w-[60px] shrink-0 pt-[3px] text-[9.5px] tracking-[0.08em] text-primary">
+                    <span className="plate w-[60px] shrink-0 pt-[3px] text-micro tracking-[0.08em] text-primary">
                       {writing.kind}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span
                         className={cn(
-                          "block truncate text-[13.5px] font-semibold",
+                          "block truncate text-base font-semibold",
                           position === active ? "text-strong" : "text-body",
                         )}
                       >
                         {writing.title}
                       </span>
-                      <span className="mt-0.5 block truncate text-[11.5px] text-muted">
+                      <span className="mt-0.5 block truncate text-tiny text-muted">
                         {writing.dek}
                       </span>
                     </span>
@@ -583,7 +583,7 @@ export function SearchCommand({
             </div>
 
             {/* Klavye ipuçları — palet açıkken ne yapılabileceğini söyler. */}
-            <div className="hidden gap-[18px] border-t border-line px-5 py-3 text-[11.5px] text-muted sm:flex">
+            <div className="hidden gap-[18px] border-t border-line px-5 py-3 text-tiny text-muted sm:flex">
               <span>↑↓ {hints.move}</span>
               <span>↵ {hints.open}</span>
               {shownHits.length > 0 && (

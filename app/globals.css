@@ -355,6 +355,48 @@
   --default-transition-timing-function: var(--ease-brand);
   --default-transition-duration: 180ms;
 
+  /* ==========================================================================
+     TİPOGRAFİ ÖLÇEĞİ
+
+     Ölçek YOKTU. Renk, yarıçap ve easing tokenları vardı ama tek bir punto
+     tokeni yoktu ve bileşenlerde 38 ayrı tek seferlik değer dolaşıyordu (600
+     kullanım): 8, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5,
+     15, 15.5, 16, 16.5, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30,
+     32, 34, 38, 40, 44, 46, 54, 66, 140. Yarım piksellik komşular AYNI rolde
+     kullanılıyordu — panel başlığı bir dosyada 15px, ötekinde 14.5px,
+     üçüncüsünde 15.5px; sayfa başlığı paylaşılan bileşende 34px ama rehberde
+     40, KVKK'da 38. Ölçek olmadığı için her yeni ekran kendi değerini
+     uyduruyor ve fark ekranlar arası gezinmede görülüyordu.
+
+     On iki basamak, rol adlarıyla. Komşu basamaklar arasındaki fark en az
+     1 piksel: yarım piksellik iki basamak zaten "aynı rolde iki değer"
+     demek ve sorunun kendisi buydu.
+
+     ADLANDIRMA TUZAĞI: `--text-*` bu projede İKİ ŞEY için kullanılıyor —
+     Tailwind punto ad alanı ve `:root` içindeki metin RENKLERİ
+     (`--text-strong`, `--text-body`, `--text-soft`, `--text-muted`). O
+     yüzden ölçek o dört adı KULLANAMAZ; okuma gövdesinin adı `read`.
+     Denendi, ölçüldü: `--text-body` eklendiğinde `.text-body` hem renk hem
+     punto yazan çakışık bir kurala dönüşüyor ve punto 16px'e düşüyor.
+
+     ÖLÇEK DIŞINDA KALAN TEK ŞEY GÖSTERGE RAKAMLARI: geri sayım (44/66),
+     404 (54) ve analiz sayfasının dekoratif tırnak işareti (140). Bunlar
+     metin değil, birer görsel öğe — bir rolü değil kendilerini temsil
+     ediyorlar.
+     ========================================================================== */
+  --text-micro: 0.5625rem;     /* 9px   — en küçük künye, plaka */
+  --text-nano: 0.65625rem;     /* 10.5  — mikro etiket, rozet */
+  --text-tiny: 0.71875rem;     /* 11.5  — künye satırı, veri damgası */
+  --text-small: 0.78125rem;    /* 12.5  — ikincil metin, çip */
+  --text-base: 0.84375rem;     /* 13.5  — kontrol ve tablo metni */
+  --text-read: 0.9375rem;      /* 15    — okuma gövdesi, panel başlığı */
+  --text-lead: 1.0625rem;      /* 17    — giriş cümlesi, öne çıkan satır */
+  --text-title: 1.3125rem;     /* 21    — kart ve bölüm başlığı */
+  --text-heading: 1.625rem;    /* 26    — panel manşeti */
+  --text-subdisplay: 1.875rem; /* 30    — ikinci düzey sayfa başlığı */
+  --text-display: 2.125rem;    /* 34    — sayfa başlığı */
+  --text-hero: 2.875rem;       /* 46    — giriş ekranı manşeti */
+
   --radius-xs: 0.375rem;
   --radius-sm: 0.5rem;
   --radius-md: 0.5625rem;
@@ -489,7 +531,7 @@
 /* KATMAN — @layer components.
    Bu blok bir dönem KATMANSIZ yazılıyordu ve sessiz bir hata üretiyordu:
    Tailwind yardımcıları `@layer utilities` içinde, katmansız bir kural ise
-   katmanlı olanı HER ZAMAN ezer. Yani `class="plate text-[10px] text-primary"`
+   katmanlı olanı HER ZAMAN ezer. Yani `class="plate text-nano text-primary"`
    yazan kırk çağrı yerinde punto ve renk hiç uygulanmıyordu — yazılmış ama
    ölü. Aynısı `.panel` için de geçerliydi: kendi `transition` shorthand'i,
    üstüne yazılan `transition-colors`'ı siliyordu.

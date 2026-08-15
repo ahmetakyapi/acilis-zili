@@ -32,7 +32,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-5">
-      <h1 className="display-ink self-start text-[26px] font-bold tracking-[-0.03em] sm:text-[34px]">
+      <h1 className="display-ink self-start text-heading font-bold tracking-[-0.03em] sm:text-display">
         {t.settings.title}
       </h1>
 
@@ -80,12 +80,12 @@ export default async function SettingsPage() {
       <Panel>
         <PanelHeader title={t.settings.privacyTitle} />
         <div className="flex flex-col gap-3 px-4 py-4 sm:px-5">
-          <p className="text-[13px] leading-relaxed text-body">
+          <p className="text-base leading-relaxed text-body">
             {t.settings.privacyHint}
           </p>
           <Link
             href="/kvkk"
-            className="inline-flex w-fit items-center gap-2 text-[13px] font-semibold text-primary transition-colors hover:text-primary-hover"
+            className="inline-flex w-fit items-center gap-2 text-base font-semibold text-primary transition-colors hover:text-primary-hover"
           >
             <ShieldCheck weight="duotone" size={16} />
             {t.settings.privacyLink}

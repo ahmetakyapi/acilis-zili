@@ -34,13 +34,13 @@ export default async function PrivacyPage() {
   return (
     <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
       <header className="flex flex-col gap-3">
-        <p className="plate text-[10px] tracking-[0.09em] text-primary">
+        <p className="plate text-nano tracking-[0.09em] text-primary">
           {t.legal.eyebrow}
         </p>
-        <h1 className="display-ink w-fit text-[30px] font-bold leading-[1.12] tracking-[-0.035em] sm:text-[38px]">
+        <h1 className="display-ink w-fit text-subdisplay font-bold leading-[1.12] tracking-[-0.035em] sm:text-display">
           {t.legal.privacyTitle}
         </h1>
-        <p className="numeral text-[12px] text-muted">
+        <p className="numeral text-small text-muted">
           {t.legal.updatedAt} {formatEtDateLong(LEGAL_UPDATED, locale)}
         </p>
       </header>
@@ -57,10 +57,10 @@ export default async function PrivacyPage() {
 
       <section className="flex flex-col gap-7">
         <header className="flex flex-col gap-3">
-          <p className="plate text-[10px] tracking-[0.09em] text-primary">
+          <p className="plate text-nano tracking-[0.09em] text-primary">
             {t.legal.disclaimerEyebrow}
           </p>
-          <h2 className="display-ink w-fit text-[26px] font-bold leading-[1.14] tracking-[-0.035em] sm:text-[32px]">
+          <h2 className="display-ink w-fit text-heading font-bold leading-[1.14] tracking-[-0.035em] sm:text-subdisplay">
             {t.legal.disclaimerTitle}
           </h2>
         </header>
@@ -69,7 +69,7 @@ export default async function PrivacyPage() {
         </div>
       </section>
 
-      <footer className="mt-2 flex flex-wrap gap-x-5 gap-y-2 border-t border-line pt-5 text-[12.5px]">
+      <footer className="mt-2 flex flex-wrap gap-x-5 gap-y-2 border-t border-line pt-5 text-small">
         <Link href="/ayarlar" className="font-semibold text-primary">
           {t.legal.manageAccount}
         </Link>

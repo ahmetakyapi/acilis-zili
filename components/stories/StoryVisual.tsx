@@ -130,12 +130,12 @@ export function StoryBrands({
             />
           ))}
           {rest > 0 && (
-            <span className="numeral flex size-[34px] shrink-0 items-center justify-center rounded-md bg-surface-elevated text-[11px] font-bold text-muted">
+            <span className="numeral flex size-[34px] shrink-0 items-center justify-center rounded-md bg-surface-elevated text-tiny font-bold text-muted">
               +{rest}
             </span>
           )}
         </span>
-        <span className="numeral truncate text-[11px] font-semibold tracking-[0.02em] text-body">
+        <span className="numeral truncate text-tiny font-semibold tracking-[0.02em] text-body">
           {shown.map((member) => member.symbol).join(" · ")}
         </span>
       </span>
@@ -144,16 +144,16 @@ export function StoryBrands({
         <span className="shrink-0 pl-2 text-right">
           <span
             className={cn(
-              "numeral block text-[15px] font-bold leading-none",
+              "numeral block text-read font-bold leading-none",
               directionText(tone),
             )}
           >
             {formatPercent(lead.sinceEvent, locale)}
           </span>
-          <span className="mt-1 block text-[9px] uppercase tracking-[0.07em] text-muted">
+          <span className="mt-1 block text-micro uppercase tracking-[0.07em] text-muted">
             {lead.symbol} · {sinceLabel}
           </span>
-          <span className="numeral block text-[9.5px] leading-tight text-muted">
+          <span className="numeral block text-micro leading-tight text-muted">
             {eventDate}
           </span>
         </span>
@@ -200,16 +200,16 @@ export function StoryCast({
           satıra kırılıp sola yaslandığında rakamlarla ilgisiz bir metin gibi
           okunuyordu. Sol başlık kırılır, sağdaki tek satır kalır. */}
       <div className="flex items-baseline justify-between gap-3 border-b border-primary-faint px-4 py-2.5">
-        <span className="plate min-w-0 text-[9.5px] tracking-[0.09em]">
+        <span className="plate min-w-0 text-micro tracking-[0.09em]">
           {title}
         </span>
         {/* Künyenin altında ölçünün BAŞLADIĞI GÜN: "olaydan bugüne" tek
             başına hangi günden beri olduğunu söylemiyordu. */}
         <span className="shrink-0 whitespace-nowrap text-right">
-          <span className="block text-[9.5px] uppercase tracking-[0.07em] text-muted">
+          <span className="block text-micro uppercase tracking-[0.07em] text-muted">
             {sinceLabel}
           </span>
-          <span className="numeral block text-[10px] leading-tight text-body">
+          <span className="numeral block text-nano leading-tight text-body">
             {eventDate}
           </span>
         </span>
@@ -229,18 +229,18 @@ export function StoryCast({
                 radius={9}
               />
               <span className="min-w-0 flex-1">
-                <span className="numeral block text-[12.5px] font-bold leading-tight text-strong">
+                <span className="numeral block text-small font-bold leading-tight text-strong">
                   {member.symbol}
                 </span>
                 {member.name && (
-                  <span className="block truncate text-[10.5px] leading-tight text-muted">
+                  <span className="block truncate text-nano leading-tight text-muted">
                     {member.name}
                   </span>
                 )}
               </span>
               <span
                 className={cn(
-                  "numeral shrink-0 text-[13px] font-bold",
+                  "numeral shrink-0 text-base font-bold",
                   member.sinceEvent === null ? "text-muted" : directionText(tone),
                 )}
               >
@@ -253,7 +253,7 @@ export function StoryCast({
         })}
       </ul>
       {rest > 0 && (
-        <p className="border-t border-line-soft px-4 py-2 text-[10.5px] text-muted">
+        <p className="border-t border-line-soft px-4 py-2 text-nano text-muted">
           {moreLabel.replace("{count}", String(rest))}
         </p>
       )}

@@ -111,7 +111,7 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
         <Panel className="flex flex-col gap-5 p-5 sm:p-6">
           <EmptyState title={t.compare.empty} hint={t.compare.emptyHint} />
           <div className="flex flex-col gap-2.5">
-            <p className="plate text-[10px] tracking-[0.09em]">
+            <p className="plate text-nano tracking-[0.09em]">
               {t.compare.presets}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -119,10 +119,10 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
                 <Link
                   key={preset.labelKey}
                   href={hrefFor(preset.symbols)}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-[12.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+                  className="inline-flex min-h-9 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-small font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
                 >
                   {t.compare[preset.labelKey]}
-                  <span className="numeral text-[11px] text-muted">
+                  <span className="numeral text-tiny text-muted">
                     {preset.symbols.join(" · ")}
                   </span>
                 </Link>
@@ -289,7 +289,7 @@ async function CompareBoard({
         if (!metrics?.ok || metrics.data.low52 === null || metrics.data.high52 === null)
           return "—";
         return (
-          <span className="numeral text-[12.5px] text-body">
+          <span className="numeral text-small text-body">
             {formatPrice(metrics.data.low52, locale)} —{" "}
             {formatPrice(metrics.data.high52, locale)}
           </span>
@@ -312,7 +312,7 @@ async function CompareBoard({
           return (
             <span
               key={symbol}
-              className="inline-flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-1.5 text-[13px]"
+              className="inline-flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-1.5 text-base"
             >
               {/* Yuvarlak: karo hap biçimli bir çipin içinde duruyor,
                   kabın yarıçapıyla aynı olmalı. */}
@@ -363,7 +363,7 @@ async function CompareBoard({
       {series.length > 0 && (
         <Panel className="flex flex-col gap-4 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
+            <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
               {t.compare.chartTitle}
             </h2>
             <Segment>
@@ -384,7 +384,7 @@ async function CompareBoard({
             locale={locale}
             readingLabel={t.compare.chartReading}
           />
-          <p className="text-[11.5px] leading-relaxed text-muted">
+          <p className="text-tiny leading-relaxed text-muted">
             {t.compare.chartHint}
           </p>
         </Panel>
@@ -395,14 +395,14 @@ async function CompareBoard({
         <div className="scroll-x">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-line-soft text-left text-[10px] uppercase tracking-wider text-muted">
+              <tr className="border-b border-line-soft text-left text-nano uppercase tracking-wider text-muted">
                 <th className="w-[104px] px-3 py-2.5 font-medium sm:w-[168px] sm:px-5">
                   {t.compare.metric}
                 </th>
                 {symbols.map((symbol) => (
                   <th
                     key={symbol}
-                    className="numeral px-2.5 py-2.5 text-right text-[11.5px] font-bold tracking-normal text-strong sm:px-4"
+                    className="numeral px-2.5 py-2.5 text-right text-tiny font-bold tracking-normal text-strong sm:px-4"
                   >
                     {symbol}
                   </th>
@@ -414,14 +414,14 @@ async function CompareBoard({
                 <tr key={row.label}>
                   <th
                     scope="row"
-                    className="px-3 py-2.5 text-left text-[12.5px] font-medium text-muted sm:px-5"
+                    className="px-3 py-2.5 text-left text-small font-medium text-muted sm:px-5"
                   >
                     {row.label}
                   </th>
                   {symbols.map((symbol, index) => (
                     <td
                       key={symbol}
-                      className="px-2.5 py-2.5 text-right text-[13px] text-body sm:px-4"
+                      className="px-2.5 py-2.5 text-right text-base text-body sm:px-4"
                     >
                       {row.value(index)}
                     </td>

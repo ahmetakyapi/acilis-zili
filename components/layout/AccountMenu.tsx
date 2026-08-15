@@ -215,7 +215,7 @@ export function AccountMenu({
            dolu accent kutu ve baş harfler — fark artık rastgele değil,
            durumu anlatıyor. */
         className={cn(
-          "inline-flex size-11 items-center justify-center rounded-lg border text-[12px] font-bold uppercase tracking-[0.02em] transition-colors",
+          "inline-flex size-11 items-center justify-center rounded-lg border text-small font-bold uppercase tracking-[0.02em] transition-colors",
           signedIn
             ? "border-transparent bg-primary text-on-primary hover:bg-primary-hover"
             : "border-line bg-surface text-muted hover:border-line-strong hover:text-soft",
@@ -261,7 +261,7 @@ export function AccountMenu({
                   /* Panelin künyesi düğmeyle AYNI biçim: düğme yumuşak
                      köşeli kare, künye daireydi ve panel açıldığında iki
                      ayrı şey gibi duruyordu. */
-                  "relative flex size-11 shrink-0 items-center justify-center rounded-lg text-[14px] font-bold uppercase",
+                  "relative flex size-11 shrink-0 items-center justify-center rounded-lg text-base font-bold uppercase",
                   signedIn
                     ? "bg-primary text-on-primary"
                     : "border border-line bg-surface-solid text-muted",
@@ -270,10 +270,10 @@ export function AccountMenu({
                 {signedIn ? initials || "?" : <UserCircle weight="duotone" size={22} />}
               </span>
               <span className="relative min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-bold tracking-[-0.01em] text-strong">
+                <span className="block truncate text-read font-bold tracking-[-0.01em] text-strong">
                   {signedIn ? (username ?? labels.account) : labels.guest}
                 </span>
-                <span className="mt-0.5 block text-[11.5px] leading-[16px] text-muted">
+                <span className="mt-0.5 block text-tiny leading-[16px] text-muted">
                   {signedIn ? labels.account : labels.guestHint}
                 </span>
               </span>
@@ -311,7 +311,7 @@ export function AccountMenu({
                   </ButtonLink>
                   <Link
                     href="/kayit"
-                    className="flex min-h-10 items-center justify-center rounded-md border border-line text-[12.5px] font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+                    className="flex min-h-10 items-center justify-center rounded-md border border-line text-small font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
                   >
                     {labels.signUp}
                   </Link>
@@ -323,7 +323,7 @@ export function AccountMenu({
                 Çökük zemin bölgeyi ayırıyor; sayılacak ayraç çizgisi yok. */}
             <div className="flex flex-col gap-3 border-t border-line-soft bg-surface px-4 py-3.5">
               <div className="flex flex-col gap-2">
-                <span className="plate text-[9.5px] tracking-[0.1em]">
+                <span className="plate text-micro tracking-[0.1em]">
                   {labels.theme}
                 </span>
                 <div className="grid grid-cols-2 gap-2">
@@ -345,7 +345,7 @@ export function AccountMenu({
               </div>
 
               <div className="flex items-center justify-between gap-3">
-                <span className="plate text-[9.5px] tracking-[0.1em]">
+                <span className="plate text-micro tracking-[0.1em]">
                   {labels.language}
                 </span>
                 <span className="flex overflow-hidden rounded-md border border-line bg-surface-solid">
@@ -356,7 +356,7 @@ export function AccountMenu({
                       onClick={() => pickLocale(locale)}
                       aria-pressed={locale === initialLocale}
                       className={cn(
-                        "min-h-8 px-3 text-[11.5px] uppercase transition-colors",
+                        "min-h-8 px-3 text-tiny uppercase transition-colors",
                         locale === initialLocale
                           ? "bg-primary font-bold text-on-primary"
                           : "text-muted hover:text-strong",
@@ -396,7 +396,7 @@ function MenuRow({
       >
         <Icon weight="duotone" size={16} />
       </span>
-      <span className="flex-1 text-[13.5px] font-semibold text-strong">
+      <span className="flex-1 text-base font-semibold text-strong">
         {label}
       </span>
       <CaretRight
@@ -465,7 +465,7 @@ function ThemeChoice({
       </span>
       <span
         className={cn(
-          "text-[11.5px] font-semibold",
+          "text-tiny font-semibold",
           active ? "text-primary" : "text-body",
         )}
       >

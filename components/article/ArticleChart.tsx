@@ -62,11 +62,11 @@ export async function ArticleChart({
       <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 border-b border-line px-4 pb-3 pt-4 sm:px-5">
         <Link
           href={`/hisse/${symbol}`}
-          className="numeral -my-1.5 inline-flex min-h-8 items-center py-1.5 text-[15px] font-bold tracking-[-0.02em] text-strong transition-colors hover:text-primary"
+          className="numeral -my-1.5 inline-flex min-h-8 items-center py-1.5 text-read font-bold tracking-[-0.02em] text-strong transition-colors hover:text-primary"
         >
           {symbol}
         </Link>
-        {name && <span className="text-[12.5px] text-muted">{name}</span>}
+        {name && <span className="text-small text-muted">{name}</span>}
       </div>
 
       <div className="px-1 py-1 sm:px-2 sm:py-2">
@@ -79,7 +79,7 @@ export async function ArticleChart({
       </div>
 
       {caption && (
-        <figcaption className="border-t border-line px-4 py-2.5 text-[11.5px] leading-relaxed text-muted sm:px-5">
+        <figcaption className="border-t border-line px-4 py-2.5 text-tiny leading-relaxed text-muted sm:px-5">
           {caption}
         </figcaption>
       )}

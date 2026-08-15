@@ -50,10 +50,10 @@ export function AdminPanelTitle({
   return (
     <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
       <div>
-        <h2 className="text-[15px] font-bold tracking-[-0.02em] text-strong">
+        <h2 className="text-read font-bold tracking-[-0.02em] text-strong">
           {children}
         </h2>
-        {hint && <p className="mt-1 text-[12px] text-muted">{hint}</p>}
+        {hint && <p className="mt-1 text-small text-muted">{hint}</p>}
       </div>
       {action}
     </div>
@@ -84,7 +84,7 @@ export function StatBox({
 }) {
   return (
     <div className="rounded-lg border border-line bg-surface-elevated px-4 py-3.5">
-      <p className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-muted">
+      <p className="text-tiny font-semibold uppercase tracking-[0.06em] text-muted">
         {label}
       </p>
       {/* `tabular-nums` YOK. Kutu içinde hizalanacak ikinci bir sayı olmadığı
@@ -97,7 +97,7 @@ export function StatBox({
       <p
         className={cn(
           "mt-1.5 font-bold leading-none tracking-[-0.03em] text-strong",
-          value.length > 9 ? "text-[19px]" : "text-[26px]",
+          value.length > 9 ? "text-title" : "text-heading",
         )}
       >
         {value}
@@ -106,7 +106,7 @@ export function StatBox({
         {delta && (
           <span
             className={cn(
-              "text-[12px] font-semibold tabular-nums",
+              "text-small font-semibold tabular-nums",
               delta.tone === "up" && "text-up",
               delta.tone === "down" && "text-down",
               delta.tone === "neutral" && "text-muted",
@@ -115,7 +115,7 @@ export function StatBox({
             {delta.text}
           </span>
         )}
-        {sub && <span className="text-[12px] text-muted">{sub}</span>}
+        {sub && <span className="text-small text-muted">{sub}</span>}
       </div>
     </div>
   );
@@ -156,7 +156,7 @@ export function RankList({
   emptyLabel?: string;
 }) {
   if (rows.length === 0) {
-    return <p className="py-6 text-center text-[13px] text-muted">{emptyLabel}</p>;
+    return <p className="py-6 text-center text-base text-muted">{emptyLabel}</p>;
   }
   const max = Math.max(...rows.map((r) => r.value), 1);
 
@@ -175,7 +175,7 @@ export function RankList({
               {row.label}
             </span>
             {row.secondary && (
-              <span className="relative shrink-0 pr-3 text-[11.5px] text-muted tabular-nums">
+              <span className="relative shrink-0 pr-3 text-tiny text-muted tabular-nums">
                 {row.secondary}
               </span>
             )}
@@ -190,12 +190,12 @@ export function RankList({
             {row.href ? (
               <Link
                 href={row.href}
-                className="relative flex items-center rounded-xs px-2.5 py-[7px] text-[13px] text-body transition-colors hover:bg-surface-elevated"
+                className="relative flex items-center rounded-xs px-2.5 py-[7px] text-base text-body transition-colors hover:bg-surface-elevated"
               >
                 {body}
               </Link>
             ) : (
-              <div className="relative flex items-center rounded-xs px-2.5 py-[7px] text-[13px] text-body">
+              <div className="relative flex items-center rounded-xs px-2.5 py-[7px] text-base text-body">
                 {body}
               </div>
             )}
@@ -222,7 +222,7 @@ export function AdminTable({
        kaymasına izin verilmiyor (globals.css'te html/body kilitli) ve
        dolayısıyla geniş içerik kendi kaydırmasını kendisi taşımak zorunda. */
     <div className="scroll-x -mx-1 overflow-x-auto px-1">
-      <table className="w-full min-w-[520px] border-collapse text-[13px]">
+      <table className="w-full min-w-[520px] border-collapse text-base">
         <thead>
           <tr className="border-b border-line-strong text-left">
             {head.map((cell, i) => (
@@ -230,7 +230,7 @@ export function AdminTable({
                 key={cell}
                 scope="col"
                 className={cn(
-                  "pb-2 text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted",
+                  "pb-2 text-tiny font-semibold uppercase tracking-[0.05em] text-muted",
                   i > 0 && "pl-3",
                   i === head.length - 1 && "text-right",
                 )}

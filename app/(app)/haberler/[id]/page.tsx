@@ -96,11 +96,11 @@ export default async function NewsDetailPage(
           <span aria-hidden>·</span>
           <span>{timeAgo(item.publishedAt, locale)}</span>
         </p>
-        <h1 className="mt-2 text-[26px] font-bold leading-snug tracking-[-0.03em] text-strong sm:text-[32px]">
+        <h1 className="mt-2 text-heading font-bold leading-snug tracking-[-0.03em] text-strong sm:text-subdisplay">
           {headline}
         </h1>
         {useTr && (
-          <p className="mt-2 text-[11px] text-muted">
+          <p className="mt-2 text-tiny text-muted">
             {t.news.translated} ·{" "}
             <span className="italic">{item.headline}</span>
           </p>
@@ -121,7 +121,7 @@ export default async function NewsDetailPage(
       )}
 
       {summary ? (
-        <div className="text-[17px] leading-8 text-body">
+        <div className="text-lead leading-8 text-body">
           {summary.split("\n").map(
             (paragraph, index) =>
               paragraph.trim() && (
@@ -279,7 +279,7 @@ async function RelatedNews({
               <p className="line-clamp-2 text-sm font-medium leading-snug text-strong">
                 {locale === "tr" && n.headlineTr ? n.headlineTr : n.headline}
               </p>
-              <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted">
+              <p className="mt-1 flex items-center gap-1.5 text-tiny text-muted">
                 {n.source && <span>{n.source}</span>}
                 <span aria-hidden>·</span>
                 <span>{timeAgo(n.publishedAt, locale)}</span>

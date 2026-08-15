@@ -48,10 +48,10 @@ export function MetricCards({
           key={metric.label}
           className="flex min-w-0 flex-col gap-1 rounded-lg border border-line bg-surface-solid px-4 py-4"
         >
-          <p className="truncate text-[11px] font-semibold text-muted">
+          <p className="truncate text-tiny font-semibold text-muted">
             {metric.label}
           </p>
-          <p className="figure text-[23px] font-bold leading-none tracking-[-0.035em] text-strong">
+          <p className="figure text-title font-bold leading-none tracking-[-0.035em] text-strong">
             {metric.value}
           </p>
           {metric.note && (
@@ -60,7 +60,7 @@ export function MetricCards({
                tırtıklı görünüyordu. Sığmazsa kesilir. */
             <p
               className={cn(
-                "truncate text-[12px] font-bold",
+                "truncate text-small font-bold",
                 metric.tone === "up"
                   ? "text-up"
                   : metric.tone === "down"
