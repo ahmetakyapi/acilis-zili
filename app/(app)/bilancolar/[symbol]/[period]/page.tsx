@@ -33,6 +33,7 @@ import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { missingMetadata } from "@/lib/page-meta";
+import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import {
   verdictLabel,
   verdictOf,
@@ -218,6 +219,11 @@ export async function generateMetadata(
   return {
     title: `${row.company} ${row.periodLabel} — ${row.symbol}`,
     description: row.headline,
+    openGraph: {
+      type: "article",
+      publishedTime: row.publishedAt?.toISOString(),
+      authors: ["Açılış Zili"],
+    },
   };
 }
 
@@ -435,6 +441,28 @@ export default async function AnalysisDetailPage(
 
   return (
     <div className="flex flex-col gap-5">
+      <ArticleJsonLd
+        headline={`${row.company} ${row.periodLabel}`}
+        description={row.headline}
+        path={`/bilancolar/${symbol}/${period}`}
+        locale={locale}
+        published={row.publishedAt}
+      />
+      <BreadcrumbJsonLd
+        locale={locale}
+        items={[
+          { name: t.analysis.title, path: "/bilancolar/analizler" },
+          {
+            name: sectorGroupLabel(group, locale),
+            path: `/bilancolar/analizler?filtre=${group.key}`,
+          },
+          {
+            name: `${row.company} · ${row.periodLabel}`,
+            path: `/bilancolar/${symbol}/${period}`,
+          },
+        ]}
+      />
+
       {/* ---- Künye ---- */}
       <nav
         aria-label="breadcrumb"
@@ -1011,7 +1039,7 @@ export default async function AnalysisDetailPage(
         )}
       >
         {peers.length > 0 && (
-          <Panel className="p-4 sm:p-[18px]">
+          <Panel className="px-4 py-4 sm:px-5">
             <h2 className="mb-3 flex items-center gap-2.5 text-[13.5px] font-bold text-strong">
               <span
                 aria-hidden
@@ -1033,7 +1061,7 @@ export default async function AnalysisDetailPage(
                      soldurup geri çekiyordu — tıklanabilir bir satırın
                      tersi. Negatif margin, dolguyu panelin kenarına
                      taşıyor. */
-                  className="relative -mx-4 flex items-center gap-2.5 border-b border-line-soft px-4 py-2.5 transition-colors last:border-b-0 hover:bg-primary-tint sm:-mx-[18px] sm:px-[18px]"
+                  className="relative -mx-4 flex items-center gap-2.5 border-b border-line-soft px-4 py-2.5 transition-colors last:border-b-0 hover:bg-primary-tint sm:-mx-5 sm:px-5"
                 >
                   <Link
                     href={`/hisse/${peer.symbol}`}
@@ -1214,7 +1242,7 @@ function VerdictStrip({
       : null);
 
   return (
-    <section className="flex flex-wrap items-center gap-4 rounded-xl border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-4 sm:gap-[18px] sm:px-[22px]">
+    <section className="flex flex-wrap items-center gap-4 rounded-xl border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-4 sm:gap-[18px] sm:px-5">
       <ScoreRing score={row.score} verdict={verdict} size={64} showDenominator />
       <div className="flex shrink-0 flex-col items-center gap-1">
         <span className="text-[11px] font-bold tracking-[0.04em] text-body">

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
+import { Heart } from "@phosphor-icons/react/dist/ssr";
 import { NewsImage } from "@/components/news/NewsImage";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { PriceChartLazy } from "@/components/stock/PriceChartLazy";
@@ -163,7 +164,22 @@ export default async function StockPage(
      ucundaki iki kademeli sınırın aynısı, aynı gerekçeyle. */
   if (!(await allowStockRender(symbol))) {
     return (
-      <EmptyState title={t.stock.throttled} hint={t.stock.throttledHint} />
+      /* ÇIKIŞ YOLU VAR. Ekran çıplak iki cümleydi: sembol geçerli, veri
+         birazdan gelecek ama "tekrar dene" bile yoktu. Aynı adrese giden
+         bağlantı sayfayı yeniden çizdiriyor — sınır dakikalık olduğu için
+         bekleyen okuyucunun ihtiyacı tam olarak bu. */
+      <EmptyState
+        title={t.stock.throttled}
+        hint={t.stock.throttledHint}
+        action={
+          <Link
+            href={`/hisse/${symbol}`}
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            {t.common.retry}
+          </Link>
+        }
+      />
     );
   }
 
@@ -367,7 +383,7 @@ async function StockHeader({
             <span className="text-base font-semibold text-muted sm:text-[19px]">
               {symbol}
             </span>
-            {session?.user && (
+            {session?.user ? (
               /* Kalp KENDİ istemci bileşeninde: tıklamanın karşılığını
                  anında vermesi gerekiyor (bkz. FavoriteToggle). */
               <FavoriteToggle
@@ -376,6 +392,21 @@ async function StockHeader({
                 addLabel={t.stock.addToWatchlist}
                 removeLabel={t.stock.removeFromWatchlist}
               />
+            ) : (
+              /* GİRİŞ YAPMAMIŞA DA GÖRÜNÜYOR. Düğme tamamen gizliydi: ürünün
+                 hesap açma gerekçesi tam olarak takip listesi ama bu vaat,
+                 dönüşüm ihtimalinin en yüksek olduğu yerde — okuyucu bir
+                 şirketin sayfasındayken — hiç gösterilmiyordu. `devam`
+                 parametresi `safeRedirectTarget` ile doğrulanıyor, giriş
+                 sonrası okuyucu aynı hisseye dönüyor. */
+              <Link
+                href={`/giris?devam=${encodeURIComponent(`/hisse/${symbol}`)}`}
+                aria-label={t.stock.addToWatchlist}
+                title={t.stock.addToWatchlist}
+                className="inline-flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-surface-elevated hover:text-soft"
+              >
+                <Heart weight="duotone" size={17} />
+              </Link>
             )}
           </div>
           {fund && (

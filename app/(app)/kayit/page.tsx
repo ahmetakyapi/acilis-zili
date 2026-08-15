@@ -2,6 +2,19 @@ import { signUpAction } from "@/app/actions/auth";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { getI18n } from "@/lib/i18n";
 
+import { pageMetadata } from "@/lib/page-meta";
+
+/* KİŞİSEL/OTURUM SAYFASI — DİZİNE GİRMEZ. robots.txt'te `Disallow` vardı ama
+   o yalnızca taramayı engelliyor, indekslemeyi değil; üstelik engellenen bir
+   sayfanın `noindex` etiketi hiç okunamıyordu. Engel kaldırıldı, etiket
+   buraya kondu. */
+export const generateMetadata = pageMetadata({
+  path: "/kayit",
+  robots: { index: false, follow: false },
+  tr: { title: "Hesap Oluştur", description: "Kendi takip listeni kurmak için hesap aç." },
+  en: { title: "Create Account", description: "Create an account to build your own watchlist." },
+});
+
 export default async function SignUpPage(props: PageProps<"/kayit">) {
   const [{ t }, search] = await Promise.all([getI18n(), props.searchParams]);
   const continueTo =
@@ -24,6 +37,7 @@ export default async function SignUpPage(props: PageProps<"/kayit">) {
         subtitle={t.auth.signUpSubtitle}
         action={signUpAction}
         submitLabel={t.auth.submitSignUp}
+        submittingLabel={t.common.submitting}
         fields={[
           {
             name: "username",

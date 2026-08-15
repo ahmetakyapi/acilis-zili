@@ -72,7 +72,11 @@ export function Countdown({
           ];
 
   return (
-    <p
+    /* `<span>`, `<p>` DEĞİL: bileşen sayfanın `<h1>`i içinde duruyor ve
+       `<h1><p>…</p></h1>` geçersiz HTML — başlık ayrıştıran araçlar bunu
+       güvenilir okumuyordu. Görsel çıktı aynı (`block` sınıfı zaten yok,
+       kapsayıcı flex). */
+    <span
       suppressHydrationWarning
       className={className}
       style={{ letterSpacing: "-0.05em" }}
@@ -90,6 +94,6 @@ export function Countdown({
           </span>
         </span>
       ))}
-    </p>
+    </span>
   );
 }

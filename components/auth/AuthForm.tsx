@@ -24,6 +24,8 @@ type AuthFormProps = {
   subtitle: string;
   fields: Field[];
   submitLabel: string;
+  /** Gönderim sürerken düğmede yazan metin. */
+  submittingLabel: string;
   action: (prev: AuthFormState, formData: FormData) => Promise<AuthFormState>;
   altText: string;
   altHref: string;
@@ -50,6 +52,7 @@ export function AuthForm({
   subtitle,
   fields,
   submitLabel,
+  submittingLabel,
   action,
   altText,
   altHref,
@@ -159,8 +162,20 @@ export function AuthForm({
             </p>
           )}
 
+          {/* BEKLEME GÖRÜNÜYOR. Düğme yalnızca `disabled` oluyor ve
+              soluklaşıyordu; metin değişmiyor, dönen bir gösterge yoktu.
+              Kayıtta bcrypt 12 tur artı iki veritabanı sorgusu çalışıyor,
+              yani bekleme yüzlerce milisaniye — kullanıcı formun donduğunu
+              sanıp tekrar tıklıyor, tıklama engelli olduğu için hiçbir şey
+              olmuyor ve "bozuk" hissi büyüyordu. */}
           <Button type="submit" disabled={pending} size="lg" className="mt-2">
-            {submitLabel}
+            {pending && (
+              <span
+                aria-hidden
+                className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+              />
+            )}
+            {pending ? submittingLabel : submitLabel}
           </Button>
         </form>
 

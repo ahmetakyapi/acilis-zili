@@ -66,6 +66,7 @@ export type BoardLabels = {
   moveUp: string;
   moveDown: string;
   cancel: string;
+  alreadyInList: string;
   renameList: string;
   save: string;
   /* Tutamağın fare balonu — sabit Türkçe yazılıydı; görsel arayüzde
@@ -640,6 +641,8 @@ function AddSymbolRow({
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [busy, setBusy] = useState(false);
+  /** "Bu sembol listede zaten var" — sonuç listesinin yerinde görünür. */
+  const [notice, setNotice] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reset = useCallback(() => {
@@ -647,6 +650,7 @@ function AddSymbolRow({
     setQuery("");
     setHits([]);
     setBusy(false);
+    setNotice(null);
   }, []);
 
   // Debounce'lu arama — setState yalnızca zamanlayıcı/ağ callback'inde.
@@ -675,14 +679,22 @@ function AddSymbolRow({
   const add = useCallback(
     async (symbol: string) => {
       setBusy(true);
+      setNotice(null);
       const fd = new FormData();
       fd.set("listId", listId);
       fd.set("symbol", symbol);
-      await addSymbolToList(fd);
+      const result = await addSymbolToList(fd);
+      /* Zaten ekliyse kutu KAPANMIYOR: okuyucu ne olduğunu görsün ve
+         isterse başka bir sembol arasın. */
+      if (result?.duplicate) {
+        setBusy(false);
+        setNotice(labels.alreadyInList);
+        return;
+      }
       reset();
       router.refresh();
     },
-    [listId, reset, router],
+    [labels.alreadyInList, listId, reset, router],
   );
 
   if (!open) {
@@ -742,6 +754,12 @@ function AddSymbolRow({
       </div>
 
       {/* Sonuçlar ya da hızlı öneriler */}
+      {notice && (
+        <p role="alert" className="mt-2 text-[12.5px] text-brass">
+          {notice}
+        </p>
+      )}
+
       {shownHits.length > 0 ? (
         <ul className="mt-2 overflow-hidden rounded-(--radius-md) border border-line-soft">
           {shownHits.map((hit) => (

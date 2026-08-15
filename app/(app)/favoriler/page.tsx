@@ -11,6 +11,19 @@ import { getStatus, getSymbolNames, getUserWatchlists } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { getQuotes } from "@/lib/providers";
 
+import { pageMetadata } from "@/lib/page-meta";
+
+/* KİŞİSEL/OTURUM SAYFASI — DİZİNE GİRMEZ. robots.txt'te `Disallow` vardı ama
+   o yalnızca taramayı engelliyor, indekslemeyi değil; üstelik engellenen bir
+   sayfanın `noindex` etiketi hiç okunamıyordu. Engel kaldırıldı, etiket
+   buraya kondu. */
+export const generateMetadata = pageMetadata({
+  path: "/favoriler",
+  robots: { index: false, follow: false },
+  tr: { title: "Favorilerim", description: "Kategorilere ayrılmış takip listelerin." },
+  en: { title: "My Watchlists", description: "Your watchlists, grouped the way you want." },
+});
+
 export default async function WatchlistPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/giris?devam=/favoriler");
@@ -69,6 +82,7 @@ export default async function WatchlistPage() {
     moveUp: t.watchlist.moveUp,
     moveDown: t.watchlist.moveDown,
     cancel: t.common.cancel,
+    alreadyInList: t.watchlist.alreadyInList,
     renameList: t.watchlist.renameList,
     save: t.common.save,
     dragHint: t.watchlist.dragHint,

@@ -264,6 +264,73 @@ export function SymbolBadge({
 }
 
 /* --------------------------------------------------------------------------
+   Sekme şeridi — alt çizgili gezinme
+
+   İKİ ŞERİT İKİ AYRI DİL KONUŞUYORDU. `EarningsTabs` ve `AdminTabs` aynı
+   deseni çiziyor ama hiçbir ölçüsü tutmuyordu: yükseklik 44'e karşı 40
+   (ikincisi dokunma eşiğinin altında), aralık 0.5'e karşı 1, aktif sekmenin
+   işareti birinde MÜREKKEP RENGİ (accent) öbüründe AĞIRLIK (koyu + yarı
+   kalın). Yani "hangi sekmedeyim" sorusunun cevabı iki ekranda iki farklı
+   şeye bakılarak veriliyordu.
+
+   Tek kural: aktif = accent kenar + accent mürekkep + kalın, pasif = gövde
+   mürekkebi. Yükseklik her yerde 44.
+   -------------------------------------------------------------------------- */
+
+export function TabBar({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <nav aria-label={label}>
+      {/* Dar ekranda sekmeler kırılmak yerine kayar. */}
+      <ul
+        className={cn(
+          "no-scrollbar -mx-4 flex min-w-max gap-0.5 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0",
+          className,
+        )}
+      >
+        {children}
+      </ul>
+    </nav>
+  );
+}
+
+export function TabItem({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <li>
+      <Link
+        href={href}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          /* -mb-px: alt çizgi çubuğun hairline'ının üstüne otursun, altına
+             inip 1px kalınlık farkı yaratmasın. */
+          "-mb-px inline-flex min-h-11 items-center whitespace-nowrap border-b-2 px-3.5 text-[13.5px] transition-colors sm:px-[18px]",
+          active
+            ? "border-primary font-bold text-primary"
+            : "border-transparent font-medium text-body hover:text-strong",
+        )}
+      >
+        {children}
+      </Link>
+    </li>
+  );
+}
+
+/* --------------------------------------------------------------------------
    Şirket logosu karosu
 
    TEK YERDE, ÇÜNKÜ ON İKİ YERDE FARKLIYDI. Doğru davranan bir karo vardı ama

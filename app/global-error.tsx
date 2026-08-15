@@ -7,7 +7,48 @@
  * düzen çalışmamış demektir. Aynı sebeple globals.css'in yüklendiğine de
  * güvenilemez: renkler ve tipografi burada satır içi yazılı. Tasarım
  * tokenlarının tekrarı bilinçli bir istisna, kopyala-yapıştır değil.
+ *
+ * KOYU TEMA DA BURADA. Bütün renkler yalnızca açık temaya göre sabitti:
+ * gece kullanan okuyucu hata anında tam ekran beyaz bir sayfayla
+ * karşılaşıyordu — hem rahatsız edici hem ürünün geri kalanıyla ilgisiz.
+ * Çerez okunamayacağı için (bu, `<html>`in kendisi) işletim sistemi
+ * tercihine bakılıyor: burada `prefers-color-scheme` doğru araç, çünkü
+ * ürünün tema durumu zaten kaybolmuş.
+ *
+ * DİL DE SABİT DEĞİL. Site iki dilli ve en kırılgan anında dilini
+ * kaybetmemeli; `navigator.language` burada tek elde kalan ipucu.
  */
+
+const COPY = {
+  tr: {
+    lang: "tr",
+    title: "Açılış Zili şu an açılamıyor",
+    body: "Beklenmedik bir hata oluştu. Sayfayı yenilemeyi dene; sorun sürerse birazdan tekrar bak.",
+    retry: "Tekrar Dene",
+    digest: "Hata kimliği:",
+  },
+  en: {
+    lang: "en",
+    title: "Opening Bell can't load right now",
+    body: "Something went wrong. Try reloading the page; if it keeps happening, check back shortly.",
+    retry: "Try Again",
+    digest: "Error id:",
+  },
+} as const;
+
+/* globals.css'teki değerlerin birebir kopyası — yukarıdaki gerekçeyle. */
+const CSS = `
+  :root { color-scheme: light dark; }
+  body { background: #f7f9fb; color: #54677c; }
+  h1 { color: #101c2b; }
+  .digest { color: #75879a; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #070d16; color: #94a7ba; }
+    h1 { color: #eaf1f8; }
+    .digest { color: #8497a9; }
+  }
+`;
+
 export default function GlobalError({
   error,
   reset,
@@ -15,8 +56,15 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  /* Sunucuda `navigator` yok; varsayılan Türkçe. Ekran zaten yalnızca
+     istemcide görünüyor. */
+  const copy =
+    typeof navigator !== "undefined" && navigator.language?.startsWith("en")
+      ? COPY.en
+      : COPY.tr;
+
   return (
-    <html lang="tr">
+    <html lang={copy.lang}>
       <body
         style={{
           margin: 0,
@@ -24,12 +72,11 @@ export default function GlobalError({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#f7f9fb",
-          color: "#54677c",
           fontFamily: "system-ui, -apple-system, sans-serif",
           padding: 24,
         }}
       >
+        <style dangerouslySetInnerHTML={{ __html: CSS }} />
         <main style={{ maxWidth: 420, textAlign: "center" }}>
           <h1
             style={{
@@ -37,14 +84,12 @@ export default function GlobalError({
               fontSize: 21,
               fontWeight: 700,
               letterSpacing: "-0.025em",
-              color: "#101c2b",
             }}
           >
-            Açılış Zili şu an açılamıyor
+            {copy.title}
           </h1>
           <p style={{ margin: "0 0 20px", fontSize: 14, lineHeight: 1.6 }}>
-            Beklenmedik bir hata oluştu. Sayfayı yenilemeyi dene; sorun
-            sürerse birazdan tekrar bak.
+            {copy.body}
           </p>
           <button
             type="button"
@@ -61,11 +106,11 @@ export default function GlobalError({
               cursor: "pointer",
             }}
           >
-            Tekrar Dene
+            {copy.retry}
           </button>
           {error.digest && (
-            <p style={{ marginTop: 18, fontSize: 11.5, color: "#75879a" }}>
-              Hata kimliği: {error.digest}
+            <p className="digest" style={{ marginTop: 18, fontSize: 11.5 }}>
+              {copy.digest} {error.digest}
             </p>
           )}
         </main>

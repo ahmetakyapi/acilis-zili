@@ -346,6 +346,15 @@
      birebir aynı, yani `rounded-xl` ve `rounded-2xl` aynı şeyi çiziyordu —
      iki farklı sınıf adı, tek sonuç. Token değişse ikisi sessizce ayrışırdı.
      Kullanımlar `rounded-xl`e çevrildi. */
+  /* GEÇİŞLERİN TAMAMI MARKA EĞRİSİNDE. `--ease-brand` tanımlıydı ve
+     globals'taki sekiz animasyon onu kullanıyordu, ama bileşenlerdeki 114
+     `transition-colors` Tailwind varsayılanına düşüyordu: panelin kenarlığı
+     250 ms marka eğrisiyle, içindeki bağlantının rengi 150 ms başka bir
+     eğriyle değişiyor — aynı hover'da iki farklı ritim. Bu iki satır bütün
+     `transition-*` yardımcılarını tek ritme alıyor. */
+  --default-transition-timing-function: var(--ease-brand);
+  --default-transition-duration: 180ms;
+
   --radius-xs: 0.375rem;
   --radius-sm: 0.5rem;
   --radius-md: 0.5625rem;

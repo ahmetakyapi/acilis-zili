@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { TabBar, TabItem } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
 
 /**
@@ -35,37 +34,12 @@ export function EarningsTabs({
   ];
 
   return (
-    <nav
-      aria-label={t.earnings.title}
-      className={cn(
-        // Dar ekranda üç sekme sığmayabilir; kırılmak yerine kayar.
-        "no-scrollbar -mx-4 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0",
-        className,
-      )}
-    >
-      <ul className="flex min-w-max gap-0.5">
-        {tabs.map((tab) => {
-          const current = tab.key === active;
-          return (
-            <li key={tab.key}>
-              <Link
-                href={tab.href}
-                aria-current={current ? "page" : undefined}
-                className={cn(
-                  // -mb-px: alt çizgi çubuğun hairline'ının üstüne otursun,
-                  // altına inip 1px kalınlık farkı yaratmasın.
-                  "-mb-px inline-flex min-h-11 items-center border-b-2 px-3.5 text-[13.5px] transition-colors sm:px-[18px]",
-                  current
-                    ? "border-primary font-bold text-primary"
-                    : "border-transparent font-medium text-body hover:text-strong",
-                )}
-              >
-                {tab.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+    <TabBar label={t.earnings.title} className={className}>
+      {tabs.map((tab) => (
+        <TabItem key={tab.key} href={tab.href} active={tab.key === active}>
+          {tab.label}
+        </TabItem>
+      ))}
+    </TabBar>
   );
 }

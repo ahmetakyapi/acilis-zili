@@ -31,7 +31,7 @@ import { pageMetadata } from "@/lib/page-meta";
    de gerekli — sekmede ve paylaşımda ana sayfanın başlığı görünüyordu. */
 export const generateMetadata = pageMetadata({
   path: "/bilancolar/takip",
-  robots: { index: false, follow: true },
+  robots: { index: false, follow: false },
   tr: {
     title: "Takip Ettiklerim",
     description: "Takip listendeki şirketlerin bilanço takvimi ve analizleri.",

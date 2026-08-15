@@ -2,6 +2,19 @@ import { signInAction } from "@/app/actions/auth";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { getI18n } from "@/lib/i18n";
 
+import { pageMetadata } from "@/lib/page-meta";
+
+/* KİŞİSEL/OTURUM SAYFASI — DİZİNE GİRMEZ. robots.txt'te `Disallow` vardı ama
+   o yalnızca taramayı engelliyor, indekslemeyi değil; üstelik engellenen bir
+   sayfanın `noindex` etiketi hiç okunamıyordu. Engel kaldırıldı, etiket
+   buraya kondu. */
+export const generateMetadata = pageMetadata({
+  path: "/giris",
+  robots: { index: false, follow: false },
+  tr: { title: "Giriş Yap", description: "Takip listelerine dönmek için giriş yap." },
+  en: { title: "Sign In", description: "Sign in to get back to your watchlists." },
+});
+
 export default async function SignInPage(props: PageProps<"/giris">) {
   const [{ t }, search] = await Promise.all([getI18n(), props.searchParams]);
   const continueTo =
@@ -24,6 +37,7 @@ export default async function SignInPage(props: PageProps<"/giris">) {
         subtitle={t.auth.signInSubtitle}
         action={signInAction}
         submitLabel={t.auth.submitSignIn}
+        submittingLabel={t.common.submitting}
         fields={[
           {
             name: "username",

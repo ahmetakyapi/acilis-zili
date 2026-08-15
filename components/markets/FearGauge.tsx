@@ -72,7 +72,7 @@ export async function FearGauge({
   const fill = Math.min(100, Math.max(2, (level / SCALE_MAX) * 100));
 
   return (
-    <Panel className="flex flex-col gap-3.5 px-[18px] py-4 sm:px-5">
+    <Panel className="flex flex-col gap-3.5 px-4 py-4 sm:px-5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
           {labels.title}

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { EmptyState } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 
@@ -12,5 +13,20 @@ import { getI18n } from "@/lib/i18n";
 export default async function StockNotFound() {
   const { t } = await getI18n();
 
-  return <EmptyState title={t.stock.notFound} hint={t.stock.notFoundHint} />;
+  return (
+    /* Çıkış yolu: dizin. Ekran `action` almadığı için tek bir bağlantı bile
+       taşımıyordu — okuyucu ortalanmış iki cümleyle baş başa kalıyordu. */
+    <EmptyState
+      title={t.stock.notFound}
+      hint={t.stock.notFoundHint}
+      action={
+        <Link
+          href="/sirketler"
+          className="text-sm font-semibold text-primary hover:underline"
+        >
+          {t.nav.companies}
+        </Link>
+      }
+    />
+  );
 }

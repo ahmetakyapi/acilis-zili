@@ -13,6 +13,7 @@ import {
   type GuideArticle,
 } from "@/content/guide";
 import { getI18n, type Dictionary } from "@/lib/i18n";
+import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 /**
  * Rehber yazısı.
@@ -36,7 +37,12 @@ export async function generateMetadata(props: PageProps<"/rehber/[slug]">) {
   const { locale } = await getI18n();
   const article = guideArticle(slug, locale);
   if (!article) return {};
-  return { title: article.title, description: article.dek };
+  return {
+    title: article.title,
+    description: article.dek,
+    /* Yazı, "website" değil: gerekçe mercek sayfasında. */
+    openGraph: { type: "article", authors: ["Açılış Zili"] },
+  };
 }
 
 export default async function GuideArticlePage(
@@ -59,6 +65,19 @@ export default async function GuideArticlePage(
 
   return (
     <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
+      <ArticleJsonLd
+        headline={article.title}
+        description={article.dek}
+        path={`/rehber/${article.slug}`}
+        locale={locale}
+      />
+      <BreadcrumbJsonLd
+        locale={locale}
+        items={[
+          { name: t.nav.guide, path: "/rehber" },
+          { name: article.title, path: `/rehber/${article.slug}` },
+        ]}
+      />
       <Link
         href="/rehber"
         className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-[12.5px] font-semibold text-muted transition-colors hover:text-primary"

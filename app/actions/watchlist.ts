@@ -166,13 +166,21 @@ export async function addSymbolToList(formData: FormData) {
 
   if (total >= MAX_ITEMS_PER_LIST) return;
 
-  await db
+  /* MÜKERRER EKLEME SESSİZ DEĞİL. `onConflictDoNothing()` ile bitiyordu:
+     aynı sembolü ikinci kez ekleyen kullanıcıya hiçbir şey söylenmiyor, kutu
+     kapanıyor, liste aynı kalıyordu — okuyucu işlemin başarısız mı olduğunu
+     yoksa zaten ekli mi olduğunu ayırt edemiyordu. Sözlükte bu durum için
+     yazılmış `alreadyInList` anahtarı da hiçbir yerde çizilmiyordu. */
+  const inserted = await db
     .insert(watchlistItems)
     .values({ watchlistId: listId, symbol, sortOrder: maxOrder + 1 })
-    .onConflictDoNothing();
+    .onConflictDoNothing()
+    .returning({ id: watchlistItems.id });
 
   revalidatePath("/favoriler");
   revalidatePath(`/hisse/${symbol}`);
+
+  return { ok: inserted.length > 0, duplicate: inserted.length === 0 };
 }
 
 /**

@@ -170,7 +170,7 @@ export function AnalysisTable({
           <div className="min-w-[1180px]" role="table">
             <div
               role="row"
-              className="flex items-center gap-4 border-b border-line px-4 py-3.5 text-[11px] font-bold text-muted sm:px-[22px]"
+              className="flex items-center gap-4 border-b border-line px-4 py-3.5 text-[11px] font-bold text-muted sm:px-5"
             >
               <span role="columnheader" className={COLS.symbol}>
                 {labels.colSymbol}
@@ -211,7 +211,7 @@ export function AnalysisTable({
             </div>
 
             {visible.length === 0 ? (
-              <p className="px-4 py-10 text-center text-sm text-body sm:px-[22px]">
+              <p className="px-4 py-10 text-center text-sm text-body sm:px-5">
                 {labels.searchEmpty.replace("{query}", query.trim())}
               </p>
             ) : (
@@ -231,7 +231,7 @@ export function AnalysisTable({
                   key={row.key}
                   role="row"
                   className={cn(
-                    "relative flex items-center gap-4 border-b border-line-soft px-4 py-3.5 transition-colors last:border-b-0 hover:bg-surface-elevated sm:px-[22px]",
+                    "relative flex items-center gap-4 border-b border-line-soft px-4 py-3.5 transition-colors last:border-b-0 hover:bg-surface-elevated sm:px-5",
                     highlightFirst && !searching && index === 0 && "bg-primary-tint",
                   )}
                 >

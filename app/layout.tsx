@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SiteJsonLd } from "@/components/seo/JsonLd";
 import { getI18n, getTheme } from "@/lib/i18n";
 import { INTL_LOCALE } from "@/lib/i18n/config";
 import { INDEXABLE, SITE_URL } from "@/lib/site";
@@ -141,6 +142,8 @@ export default async function RootLayout({
       className={`${bodyFace.variable} h-full`}
     >
       <body className="min-h-full antialiased">
+        {/* Kuruluş + site künyesi; sayfa bazlı künyeler kendi rotalarında. */}
+        <SiteJsonLd locale={locale} />
         {children}
         <Analytics />
       </body>

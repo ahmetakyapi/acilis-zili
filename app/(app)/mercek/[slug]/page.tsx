@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
 import { LogoTile } from "@/components/ui/primitives";
+import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { getStories, getStoryBySlug, getSymbolNames } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { missingMetadata } from "@/lib/page-meta";
@@ -22,7 +23,18 @@ export async function generateMetadata(props: PageProps<"/mercek/[slug]">) {
   const { locale } = await getI18n();
   const story = await getStoryBySlug(slug, locale);
   if (!story) return missingMetadata(locale);
-  return { title: story.title, description: story.dek };
+  return {
+    title: story.title,
+    description: story.dek,
+    /* `og:type` kökten "website" miras alınıyordu: uzun okuma metinleri
+       sosyal ağlara ve okuyucu uygulamalarına "bu bir web sitesi" diye
+       tanıtılıyor, yayın tarihi hiçbir yere çıkmıyordu. */
+    openGraph: {
+      type: "article",
+      publishedTime: story.publishedAt?.toISOString(),
+      authors: ["Açılış Zili"],
+    },
+  };
 }
 
 /**
@@ -174,6 +186,21 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
       </header>
 
       <hr className="border-t border-line" aria-hidden />
+
+      <ArticleJsonLd
+        headline={story.title}
+        description={story.dek}
+        path={`/mercek/${story.slug}`}
+        locale={locale}
+        published={story.publishedAt}
+      />
+      <BreadcrumbJsonLd
+        locale={locale}
+        items={[
+          { name: t.nav.stories, path: "/mercek" },
+          { name: story.title, path: `/mercek/${story.slug}` },
+        ]}
+      />
 
       {/* GÖVDE KENDİ DİLİNİ SÖYLÜYOR. Çevirisi olmayan yazı orijinal
           diliyle gösteriliyor (üstteki not bunu yazıyor) ama `lang`

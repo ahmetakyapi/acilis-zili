@@ -7,6 +7,10 @@ const tr = {
       "ABD borsalarında bugün ne var: ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin tek ekranda — saatleriyle birlikte.",
   },
 
+  /* BOŞ DURUM BAŞLIKLARI NOKTA ALMAZ. Aynı `EmptyState.title` yuvasına giren
+     metinlerin bir kısmı nokta ile bitiyor bir kısmı bitmiyordu — aynı
+     bileşen, aynı punto, iki farklı imla. Kural: `title` KISA BİR
+     BAŞLIKTIR, nokta almaz; `hint` ise cümledir ve nokta alır. */
   nav: {
     today: "Bugün",
     calendar: "Takvim",
@@ -36,7 +40,7 @@ const tr = {
     searchHintOpen: "aç",
     menu: "Menü",
     mainNav: "Ana gezinme",
-    skipToContent: "İçeriğe geç",
+    skipToContent: "İçeriğe Geç",
     groupMarket: "Piyasa",
     groupFollow: "Takip",
     clockNy: "New York",
@@ -49,6 +53,7 @@ const tr = {
 
   common: {
     loading: "Yükleniyor",
+    submitting: "Gönderiliyor…",
     error: "Bir sorun oluştu",
     retry: "Tekrar Dene",
     noData: "Veri yok",
@@ -137,7 +142,7 @@ const tr = {
     schedule: "Bugünün Takvimi",
     scheduleEmpty: "Bugün için planlanmış ekonomik veri yok.",
     earningsToday: "Bugün Bilanço Açıklayanlar",
-    earningsEmpty: "Bugün bilanço açıklayan takip ettiğin şirket yok.",
+    earningsEmpty: "Bugün bilanço açıklayan takip ettiğin şirket yok",
     watchlistSummary: "Favorilerin",
     watchlistEmpty: "Henüz favori eklemedin.",
     // Ana sayfadaki "son yazılanlar" bloğu
@@ -165,6 +170,7 @@ const tr = {
     unitS: "sn",
     macroSummary: "Makro",
     todayFlow: "Bugünün Akışı",
+    pageHeading: "Açılış Zili — ABD Piyasa Takibi",
     sourceLine: "Fiyat: Alpaca IEX · Profil ve bilanço: Finnhub · Makro: FRED",
     sourceNote: "Endeksler ETF üzerinden izlenir · veri gecikmeli olabilir",
   },
@@ -184,7 +190,7 @@ const tr = {
     day: "Gün",
     week: "Hafta",
     month: "Ay",
-    empty: "Bu aralıkta planlanmış veri açıklaması yok.",
+    empty: "Bu aralıkta planlanmış veri açıklaması yok",
     timesNote: "Saatler Türkiye saatiyle · altında New York (NY)",
     localTime: "Yerel saatin",
     // Gün başlığındaki uzaklık rozeti: "Bugün" · "Yarın" · "3 gün sonra"
@@ -232,7 +238,7 @@ const tr = {
        uygulanmamıştı. */
     companyOne: "şirket",
     companyMany: "şirket",
-    empty: "Bu aralıkta bilanço açıklaması yok.",
+    empty: "Bu aralıkta bilanço açıklaması yok",
     today: "Bugün",
     marketCapShort: "PD",
     rangeWeek: "Hafta",
@@ -375,16 +381,16 @@ const tr = {
     earningsOf: "{period} Bilançosu",
     readMinutes: "{count} Dakikalık Okuma",
 
-    empty: "Henüz yayımlanmış bilanço analizi yok.",
+    empty: "Henüz yayımlanmış bilanço analizi yok",
     emptyHint:
       "Bir şirket bilançosunu açıkladıktan sonra değerlendirmesi burada yayımlanır.",
-    emptyWatchlist: "Takip ettiklerin için henüz analiz yok.",
+    emptyWatchlist: "Takip ettiklerin için henüz analiz yok",
     emptyWatchlistHint:
       "Favorilerine eklediğin şirketlerden biri bilanço açıkladığında analizi burada görünür.",
     emptyFilter: "Bu filtreyle eşleşen analiz yok.",
     notFound: "Analiz bulunamadı",
     notFoundHint: "Bağlantı eski olabilir; listeden tekrar dene.",
-    signedOut: "Takip listesi için giriş yap",
+    signedOut: "Takip Listesi için Giriş Yap",
     signedOutHint:
       "Favorilerine eklediğin şirketlerin bilanço ve analizleri bu sekmede toplanır.",
     watchlistAnalyses: "Takip Ettiklerinin Analizleri",
@@ -413,7 +419,7 @@ const tr = {
     price: "Fiyat",
     change: "Değişim",
     weekChange: "Hafta",
-    empty: "Henüz şirket verisi yok.",
+    empty: "Henüz şirket verisi yok",
     emptyHint:
       "Şirket profilleri hisse sayfaları ziyaret edildikçe ve günlük senkronla dolar.",
     // Cümle, başlık değil: sayaç tablonun altında bir bilgi satırı.
@@ -564,7 +570,7 @@ const tr = {
     addSymbol: "Sembol Ekle",
     symbolPlaceholder: "Sembol ara — örn. NVDA",
     alreadyInList: "Bu sembol listede zaten var",
-    empty: "Bu listede henüz sembol yok.",
+    empty: "Bu listede henüz sembol yok",
     emptyAll: "Henüz bir takip listen yok.",
     emptyAllHint: "İlk listeni oluştur, sonra izlemek istediğin sembolleri ekle.",
     color: "Renk",

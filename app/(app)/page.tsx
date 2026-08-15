@@ -183,7 +183,14 @@ export default async function TodayPage() {
               başlıksız görünüyordu. Geri sayım + "Açılış Ziline Kaldı"
               zaten sayfanın ne anlattığını söyleyen cümle; görünüm
               değişmiyor, yalnızca etiket doğru olanla değişti. */}
+          {/* H1 KONUYU DA SÖYLÜYOR. Sitenin en değerli sayfasının tek
+              başlığı geri sayımdan ibaretti: taranan HTML'de "5 sa 42 dk
+              11 sn Açılış Ziline Kaldı" gibi, sayfanın ne hakkında olduğunu
+              hiç söylemeyen ve her istekte değişen bir metin duruyordu.
+              Görsel düzen aynı kalsın diye ad ekranda değil, yalnızca
+              erişilebilirlik ağacında ve tarayıcıda. */}
           <h1 className="mt-3.5 flex flex-wrap items-end gap-3.5">
+            <span className="sr-only">{t.today.pageHeading}</span>
             <Countdown
               targetIso={countdownTarget.toISOString()}
               units={{
@@ -206,7 +213,7 @@ export default async function TodayPage() {
         </header>
 
         {/* ---- Gün Şeridi ---- */}
-        <Panel className="px-4 pb-5 pt-5 sm:px-[22px]">
+        <Panel className="px-4 py-5 sm:px-5">
           {/* Şeridin kapsadığı pencere ("11:00 — 03:00 TR") burada, başlığın
               sağında duruyordu. Aynı iki saat artık eksenin kendi uçlarında
               yazılı — okuyucu "bu çizginin solu hangi saat" diye sorduğunda
@@ -1179,7 +1186,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
   ]);
 
   return (
-    <Panel className="px-[18px] py-4 sm:px-5">
+    <Panel className="px-4 py-4 sm:px-5">
       <div className="mb-1 flex items-baseline justify-between gap-3">
         <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
           {t.today.watchlistSummary}
@@ -1270,7 +1277,7 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   const shown = rows.slice(0, 4);
 
   return (
-    <Panel className="px-[18px] py-4 sm:px-5">
+    <Panel className="px-4 py-4 sm:px-5">
       <div className="mb-3.5 flex items-baseline justify-between gap-3">
         <h2 className="display-ink display-ink-tight w-fit text-[15px] font-bold">
           {t.today.macroSummary}
