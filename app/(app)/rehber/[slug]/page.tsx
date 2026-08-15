@@ -94,7 +94,7 @@ export default async function GuideArticlePage(
 
       <hr className="border-t border-line" aria-hidden />
 
-      <ArticleBody markdown={article.bodyMd} />
+      <ArticleBody markdown={article.bodyMd} locale={locale} />
 
       {related.length > 0 && (
         <section className="mt-2 flex flex-col gap-3">

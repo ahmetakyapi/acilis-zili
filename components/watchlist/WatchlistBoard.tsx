@@ -68,6 +68,9 @@ export type BoardLabels = {
   cancel: string;
   renameList: string;
   save: string;
+  /* Tutamağın fare balonu — sabit Türkçe yazılıydı; görsel arayüzde
+     çevrilmiş metinlerin yanında durduğu için gözden kaçmıştı. */
+  dragHint: string;
 };
 
 const LIST_COLOR_CLASS: Record<string, string> = {
@@ -500,7 +503,7 @@ function SortableRows({
             <span
               aria-hidden
               className="hidden cursor-grab touch-none text-muted/60 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-hover:text-muted [@media(hover:none)]:opacity-100 sm:block"
-              title="Sürükleyerek sırala"
+              title={labels.dragHint}
             >
               <DotsSixVertical weight="duotone" size={15} />
             </span>

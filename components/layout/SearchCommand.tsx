@@ -432,7 +432,7 @@ export function SearchCommand({
               <button
                 type="button"
                 onClick={close}
-                className="flex shrink-0 items-center justify-center rounded-xs bg-surface-elevated px-[7px] py-[3px] text-[11px] text-muted transition-colors hover:text-strong max-sm:size-8 max-sm:px-0"
+                className="flex shrink-0 items-center justify-center rounded-xs bg-surface-elevated px-[7px] py-[3px] text-[11px] text-muted transition-colors hover:text-strong max-sm:size-11 max-sm:px-0"
                 aria-label="Kapat"
               >
                 <span className="max-sm:hidden">ESC</span>

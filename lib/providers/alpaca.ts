@@ -1,4 +1,4 @@
-import { etParts } from "../market-hours";
+import { etParts, todayEt } from "../market-hours";
 import {
   fail,
   ok,
@@ -327,7 +327,13 @@ const RANGE_SPECS: Record<ChartRange, RangeSpec> = {
 
 function startDateFor(range: ChartRange, now: Date): string {
   if (range === "YTD") {
-    return `${now.getUTCFullYear()}-01-01`;
+    /* YIL ET'DEN OKUNUR. `getUTCFullYear()` 31 Aralık'ta New York saatiyle
+       19:00'dan sonra bir sonraki yılı veriyordu — ET hâlâ eski yılda ama
+       istek gelecek yılın 1 Ocak'ından başlayan boş bir aralık istiyor,
+       Alpaca bar döndürmüyor ve grafik "veri yok" gösteriyordu. Aynı
+       dosyadaki `lastTradingDayOnly` gün ayrımını bilinçli olarak ET ile
+       yapıyor; bu satır o kuralın dışında kalmıştı. */
+    return `${todayEt(now).slice(0, 4)}-01-01`;
   }
   const spec = RANGE_SPECS[range];
   const start = new Date(now.getTime() - spec.lookbackDays * 86400000);

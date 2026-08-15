@@ -52,27 +52,33 @@ import { cn, safeExternalUrl } from "@/lib/utils";
 
 type CalloutKind = "ornek" | "dikkat" | "ozet" | "tanim";
 
+/* VARSAYILAN ETİKETLER İKİ DİLLİ. Dördü de sabit Türkçe yazılıydı ve
+   bileşen `locale` almıyordu: yazar `::: ozet Summary` gibi kendi etiketini
+   verdiği sürece sorun görünmüyor ama etiketi yazılmamış tek bir
+   `::: ozet` bloğu İngilizce sayfada "ÖZET" başlığı basıyordu. Mercek
+   yazıları ve bilanço analizleri rutinle üretiliyor, etiketin unutulması an
+   meselesi. */
 const CALLOUT: Record<
   CalloutKind,
-  { defaultLabel: string; box: string; kicker: string }
+  { defaultLabel: { tr: string; en: string }; box: string; kicker: string }
 > = {
   ornek: {
-    defaultLabel: "Örnek",
+    defaultLabel: { tr: "Örnek", en: "Example" },
     box: "border-primary-faint bg-primary-tint",
     kicker: "text-primary",
   },
   dikkat: {
-    defaultLabel: "Dikkat",
+    defaultLabel: { tr: "Dikkat", en: "Heads-Up" },
     box: "border-brass/35 bg-brass-wash",
     kicker: "text-brass",
   },
   ozet: {
-    defaultLabel: "Özet",
+    defaultLabel: { tr: "Özet", en: "Summary" },
     box: "border-line-strong bg-surface-elevated",
     kicker: "text-body",
   },
   tanim: {
-    defaultLabel: "Tanım",
+    defaultLabel: { tr: "Tanım", en: "Definition" },
     box: "border-line bg-surface",
     kicker: "text-muted",
   },
@@ -271,7 +277,7 @@ function isTableDivider(line: string): boolean {
   return /^\|?[\s:|-]+\|[\s:|-]*$/.test(line) && line.includes("-");
 }
 
-function parseBlocks(markdown: string): Block[] {
+function parseBlocks(markdown: string, locale: string): Block[] {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   const blocks: Block[] = [];
   let i = 0;
@@ -434,7 +440,7 @@ function parseBlocks(markdown: string): Block[] {
       blocks.push({
         kind: "callout",
         tone,
-        label: label || CALLOUT[tone].defaultLabel,
+        label: label || CALLOUT[tone].defaultLabel[locale === "en" ? "en" : "tr"],
         lines: body,
       });
       continue;
@@ -536,12 +542,15 @@ function parseBlocks(markdown: string): Block[] {
 
 export function ArticleBody({
   markdown,
+  locale = "tr",
   className,
 }: {
   markdown: string;
+  /** Etiketi yazılmamış `:::` kutularının varsayılan başlığı bundan gelir. */
+  locale?: string;
   className?: string;
 }) {
-  const blocks = parseBlocks(markdown);
+  const blocks = parseBlocks(markdown, locale);
 
   return (
     <div className={cn("flex flex-col gap-[18px]", className)}>

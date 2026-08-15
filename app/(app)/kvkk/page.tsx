@@ -50,7 +50,7 @@ export default async function PrivacyPage() {
       {/* Yasal metinler yalnızca Türkçe yazılı — İngilizce arayüzde de
           Türkçe gösteriliyorlar, o yüzden dilleri sabit. */}
       <div lang="tr">
-        <ArticleBody markdown={PRIVACY_MD} />
+        <ArticleBody markdown={PRIVACY_MD} locale="tr" />
       </div>
 
       <hr className="mt-4 border-t border-line" aria-hidden />
@@ -65,7 +65,7 @@ export default async function PrivacyPage() {
           </h2>
         </header>
         <div lang="tr">
-          <ArticleBody markdown={DISCLAIMER_MD} />
+          <ArticleBody markdown={DISCLAIMER_MD} locale="tr" />
         </div>
       </section>
 

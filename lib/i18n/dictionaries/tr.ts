@@ -571,6 +571,7 @@ const tr = {
     note: "Not",
     notePlaceholder: "Bu sembol hakkında kendine bir not bırak",
     moveUp: "Yukarı Taşı",
+    dragHint: "Sürükleyerek sırala",
     moveDown: "Aşağı Taşı",
   },
 
@@ -851,6 +852,8 @@ const tr = {
       usernameFormat:
         "Kullanıcı adı 3-20 karakter olmalı; harf, rakam, alt çizgi kullanabilirsin.",
       passwordLength: "Şifre en az 8 karakter olmalı.",
+      passwordTooLong: "Şifre en fazla 72 karakter olabilir.",
+      passwordWeak: "Şifren kullanıcı adını ya da e-postanı içermemeli.",
       passwordMismatch: "Şifreler eşleşmiyor.",
       emailFormat: "Geçerli bir e-posta adresi gir.",
       generic: "Giriş yapılamadı. Tekrar dene.",

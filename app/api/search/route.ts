@@ -111,8 +111,16 @@ export async function GET(request: Request) {
      db/seed/aliases.ts içinde ve elle bakılıyor. */
   const aliased = aliasSymbols(query);
 
+  /* JOKER KARAKTERLER KAÇIRILIYOR. Sorgu `%${query}%` desenine ham
+     gömülüyordu; `%`, `_` ve `\` kaçırılmıyordu. Drizzle parametreleştirdiği
+     için SQL enjeksiyonu yok ama iki somut sonuç vardı: `q=%` bütün katalogla
+     eşleşip alakasız sonuç döndürüyor, ve `%_%_%_...` gibi bir desen
+     Postgres'in LIKE eşleyicisinde geri izlemeyi tetikleyip her istekte
+     boşuna işlemci yakıyordu — uç yetkisiz ve dakikada kırk istek serbest. */
+  const escaped = query.replace(/[\\%_]/g, (c) => `\\${c}`);
+
   try {
-    const pattern = `%${query}%`;
+    const pattern = `%${escaped}%`;
     const matches = [
       ilike(symbols.symbol, pattern),
       ilike(symbols.name, pattern),
@@ -133,7 +141,7 @@ export async function GET(request: Request) {
       .orderBy(
         sql`case
               when ${aliased.length > 0 ? inArray(symbols.symbol, aliased) : sql`false`} then 0
-              when ${symbols.symbol} ilike ${query + "%"} then 1
+              when ${symbols.symbol} ilike ${escaped + "%"} then 1
               else 2
             end`,
       )
@@ -182,7 +190,7 @@ export async function GET(request: Request) {
 
     if (writings.length < MAX_WRITINGS) {
       try {
-        const pattern = `%${query}%`;
+        const pattern = `%${escaped}%`;
         const rows = await db
           .select({ slug: stories.slug, title: stories.title, dek: stories.dek })
           .from(stories)

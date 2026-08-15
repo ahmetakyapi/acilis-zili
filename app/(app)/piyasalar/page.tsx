@@ -29,7 +29,7 @@ import type { Quote } from "@/lib/providers/types";
 import {
   cn,
   directionOf,
-  formatChange,
+  SIGN_GAP,
   formatCompact,
   formatEtDateShort,
   formatPercent,
@@ -419,6 +419,27 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
    Seçili endeks — genişlik, hareket edenler, tam liste
    ========================================================================== */
 
+/**
+ * Dow puan katkısı — YAKLAŞIK olduğu görünsün.
+ *
+ * Katkı, endeks böleninden hesaplanıyor ve bölen DIA fiyatı × 100
+ * varsayımından türüyor. DIA gerçek Dow'un tam yüzde biri DEĞİL: temettü
+ * dağıtımları, NAV primi/iskontosu ve IEX beslemesinin konsolide fiyattan
+ * sapması yüzünden bu yaklaşık bir oran. Sonuç iki ondalık haneyle
+ * ("+38,42 puan") basılıyordu — yaklaşık bir bölenden çıkan sayıya iki
+ * hanelik kesinlik giydirmek, projenin "uydurma kesinlik yok" kuralının
+ * tam karşılığı. Tam sayıya yuvarlanıp başına `~` konuyor.
+ */
+function approxPoints(value: number, locale: Locale): string {
+  const rounded = Math.round(value);
+  const sign = rounded > 0 ? "+" : rounded < 0 ? "−" : "";
+  const formatted = new Intl.NumberFormat(
+    locale === "tr" ? "tr-TR" : "en-US",
+    { maximumFractionDigits: 0 },
+  ).format(Math.abs(rounded));
+  return `~${sign}${SIGN_GAP}${formatted}`;
+}
+
 type Row = {
   member: IndexMember;
   quote: Quote | undefined;
@@ -469,8 +490,12 @@ async function IndexDetail({
      fiyat toplamı ile endeks seviyesinden türetilir (DIA ≈ Dow/100), böylece
      her hissenin puan katkısı = fiyat değişimi / bölen olarak hesaplanır.
      Diğer endeksler piyasa değeri ağırlıklı olduğundan katkı hesaplanmaz. */
+  /* BAYAT KOTASYONDAN BÖLEN TÜRETİLMEZ. Önbellekten gelen bir proxy fiyatı
+     (sağlayıcı düştüğünde) saatler öncesinin seviyesini taşıyor ve ondan
+     çıkan bölen bugünün katkısını yanlış ölçekliyor. Bölen yoksa katkı
+     sütunu hiç basılmıyor — yanlış sayı basmaktansa boş bırakmak doğru. */
   let divisor: number | null = null;
-  if (tab === "dow" && proxyResult.ok) {
+  if (tab === "dow" && proxyResult.ok && !proxyResult.stale) {
     const proxyQuote = proxyResult.data[proxy];
     let sumPrices = 0;
     let counted = 0;
@@ -749,7 +774,7 @@ function MoverPanel({
                   />
                   {showContribution && row.contribution !== null && (
                     <span className="numeral shrink-0 text-[10px] text-muted">
-                      {contributionLabel} {formatChange(row.contribution, locale)}
+                      {contributionLabel} {approxPoints(row.contribution, locale)}
                     </span>
                   )}
                 </div>
@@ -1075,7 +1100,7 @@ function MembersTable({
                   {showContribution && (
                     <td className="numeral hidden px-3 py-2 text-right text-soft sm:table-cell sm:pr-5">
                       {row.contribution !== null
-                        ? formatChange(row.contribution, locale)
+                        ? approxPoints(row.contribution, locale)
                         : "—"}
                     </td>
                   )}

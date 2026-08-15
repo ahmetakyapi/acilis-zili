@@ -71,6 +71,7 @@ export default async function WatchlistPage() {
     cancel: t.common.cancel,
     renameList: t.watchlist.renameList,
     save: t.common.save,
+    dragHint: t.watchlist.dragHint,
   };
 
   return (

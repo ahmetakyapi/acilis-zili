@@ -512,6 +512,7 @@ const en: typeof tr = {
     note: "Note",
     notePlaceholder: "Leave yourself a note about this symbol",
     moveUp: "Move Up",
+    dragHint: "Drag to reorder",
     moveDown: "Move Down",
   },
 
@@ -770,6 +771,8 @@ const en: typeof tr = {
       usernameFormat:
         "Username must be 3-20 characters using letters, numbers or underscores.",
       passwordLength: "Password must be at least 8 characters.",
+      passwordTooLong: "Passwords can be at most 72 characters.",
+      passwordWeak: "Your password shouldn't contain your username or email.",
       passwordMismatch: "Passwords don't match.",
       emailFormat: "Enter a valid email address.",
       generic: "Couldn't sign in. Try again.",

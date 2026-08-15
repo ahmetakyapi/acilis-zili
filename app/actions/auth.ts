@@ -68,11 +68,35 @@ const usernameSchema = z
   .transform(normalizeUsername)
   .refine((value) => /^[a-z0-9_]{3,20}$/.test(value));
 
+/**
+ * Şifre kuralı — alt VE üst sınır, artı bariz zayıflar.
+ *
+ * Tek koşul `min(8)` idi: "12345678" ve "password" kabul ediliyordu, üst
+ * sınır da yoktu. Üst sınır teknik bir zorunluluk: bcryptjs 72 baytın
+ * ötesini SESSİZCE yok sayıyor, yani çok uzun bir şifre yazan kullanıcı
+ * sandığından kısa bir sırra sahip oluyor ve bunu hiçbir yerde öğrenmiyordu.
+ *
+ * Zayıf şifre kontrolü liste tabanlı DEĞİL, kural tabanlı: kullanıcı adını
+ * ya da e-postanın yerel kısmını içeren şifre reddediliyor. Bir milyonluk
+ * sızıntı listesi taşımak bu ürünün ölçeğinde abartı; asıl yakalanmak
+ * istenen "ahmet123" tipi şifre ve onu bu kural yakalıyor.
+ */
+const MIN_PASSWORD = 8;
+const MAX_PASSWORD = 72;
+
 const signUpSchema = z.object({
   username: usernameSchema,
   email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(8),
+  password: z.string().min(MIN_PASSWORD).max(MAX_PASSWORD),
 });
+
+function weakPassword(password: string, username: string, email: string) {
+  const lower = password.toLowerCase();
+  const local = email.split("@")[0]?.toLowerCase() ?? "";
+  if (username.length >= 3 && lower.includes(username.toLowerCase())) return true;
+  if (local.length >= 3 && lower.includes(local)) return true;
+  return false;
+}
 
 /**
  * Postgres hata gövdesi — Drizzle onu bir kat sarıyor.
@@ -151,11 +175,18 @@ export async function signUpAction(
   if (!z.string().email().safeParse(rawEmail.trim().toLowerCase()).success) {
     return { error: t.emailFormat, field: "email" };
   }
-  if (password.length < 8) {
+  if (password.length < MIN_PASSWORD) {
     return { error: t.passwordLength, field: "password" };
+  }
+  if (password.length > MAX_PASSWORD) {
+    return { error: t.passwordTooLong, field: "password" };
   }
   if (password !== passwordConfirm) {
     return { error: t.passwordMismatch, field: "passwordConfirm" };
+  }
+
+  if (weakPassword(password, rawUsername, rawEmail)) {
+    return { error: t.passwordWeak, field: "password" };
   }
 
   const parsed = signUpSchema.parse({

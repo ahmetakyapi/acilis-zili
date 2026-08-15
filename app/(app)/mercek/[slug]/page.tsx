@@ -181,7 +181,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
           altında duruyordu: ekran okuyucu onu İngilizce fonetikle okuyor,
           tarayıcının "bu sayfayı çevir" önerisi de devreye girmiyordu. */}
       <div lang={story.locale}>
-        <ArticleBody markdown={story.bodyMd} />
+        <ArticleBody markdown={story.bodyMd} locale={story.locale} />
       </div>
 
       {/* ---- Künye ---- */}

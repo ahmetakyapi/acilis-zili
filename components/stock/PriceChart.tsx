@@ -17,8 +17,9 @@ import { CHART_RANGES } from "@/lib/providers/types";
 import { cn, formatPercent, formatPrice } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
 import type { ChartLabels } from "@/lib/chart-labels";
-import { etDateTimeToUtc, etParts } from "@/lib/market-hours";
+import { SESSION_BOUNDS, etDateTimeToUtc, etParts } from "@/lib/market-hours";
 import {
+  clockOf,
   displayZone,
   sessionWindows,
   zoneOffsetSeconds,
@@ -75,6 +76,13 @@ type PriceChartProps = {
    * Aralık düğmeleri aynı şekilde çalışmaya devam ediyor — effect yalnızca
    * istenen aralık ilk aralıktan farklıysa ağa çıkıyor.
    */
+  /**
+   * O günün kapanış dakikası (ET gün içi dakika) — yarım günlerde 13:00.
+   *
+   * Grafiğin seans gölgeleri buna dayanıyor; sunucu `getMarketStatus`ten
+   * zaten biliyor. Verilmezse normal kapanışa düşülür.
+   */
+  closeMinutes?: number;
   initialBars?: {
     bars: Bar[];
     source: string;
@@ -110,6 +118,7 @@ export function PriceChart({
   locale,
   labels,
   quote,
+  closeMinutes = SESSION_BOUNDS.regularClose,
   initialBars,
 }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -472,11 +481,24 @@ export function PriceChart({
         setZones([]);
         return;
       }
+      /* SINIRLAR SABİT DİZE DEĞİL, `SESSION_BOUNDS`TAN. Dört saat elle
+         yazılıydı ve YARIM GÜNLERDE yanlış yere düşüyordu: Şükran Günü
+         ertesi ve 24 Aralık'ta borsa 13:00 ET'de kapanıyor, uzatılmış seans
+         da erken bitiyor — grafik ise o günlerde 13:00-16:00 arasını ana
+         seans, 16:00-20:00 arasını akşam seansı diye gölgeliyordu, yani
+         piyasanın KAPALI olduğu üç saati açık gibi çiziyordu. Kapanış
+         sunucudan geliyor (`getMarketStatus` onu zaten hesaplıyor); akşam
+         bandı da kapanıştan dört saat sonra bitiyor — `afterHoursClose`
+         ile normal kapanış arasındaki farkın aynısı. */
+      const closeEt = clockOf(closeMinutes);
+      const afterEndMinutes =
+        closeMinutes +
+        (SESSION_BOUNDS.afterHoursClose - SESSION_BOUNDS.regularClose);
       const bounds = {
-        preOpen: displayTimeOf("04:00"),
-        bell: displayTimeOf("09:30"),
-        close: displayTimeOf("16:00"),
-        afterEnd: displayTimeOf("20:00"),
+        preOpen: displayTimeOf(clockOf(SESSION_BOUNDS.preMarketOpen)),
+        bell: displayTimeOf(clockOf(SESSION_BOUNDS.regularOpen)),
+        close: displayTimeOf(closeEt),
+        afterEnd: displayTimeOf(clockOf(afterEndMinutes)),
       };
       const paneWidth =
         container.clientWidth - chart.priceScale("right").width();
@@ -527,6 +549,7 @@ export function PriceChart({
     state,
     mode,
     locale,
+    closeMinutes,
     intraday,
     themeTick,
     period,

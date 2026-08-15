@@ -481,6 +481,9 @@ async function ChartSection({
       symbol={symbol}
       locale={locale}
       labels={chartLabels(t)}
+      /* Yarım günlerde kapanış 13:00 — grafik seans gölgelerini buna göre
+         çiziyor (sunucu zaten biliyor, istemcinin hesaplaması gerekmiyor). */
+      closeMinutes={status.closeMinutes}
       quote={
         result.ok
           ? { price: result.data.price, changePct: result.data.changePct }
@@ -802,7 +805,12 @@ async function MetricsCard({
       t.stock.dividend,
       /* İşaret elle SONA konuyordu ve Türkçede başa gelmesi gerekiyor;
          kural tek yerde: lib/utils.ts → withPercent. */
-      m.dividendYield ? formatPercentPlain(m.dividendYield, locale, 2) : "—",
+      /* `!== null` ile ayrılıyor: `m.dividendYield ?` sıfır temettüyü de
+         "—" yapıyordu, oysa "temettü ödemiyor" ile "bilinmiyor" aynı şey
+         değil. */
+      m.dividendYield !== null && m.dividendYield !== undefined
+        ? formatPercentPlain(m.dividendYield, locale, 2)
+        : "—",
     ],
     [t.stock.beta, m.beta ? formatPrice(m.beta, locale) : "—"],
     [

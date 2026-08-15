@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { earningsCalendar, economicEvents, symbols } from "@/lib/schema";
 import { etDateTimeToUtc } from "@/lib/market-hours";
-import { getLocale } from "@/lib/i18n";
+import { getDictionary, getLocale } from "@/lib/i18n";
 import { SITE_URL } from "@/lib/site";
 
 /**
@@ -137,10 +137,22 @@ function icsResponse(body: string, filename: string): Response {
   });
 }
 
+/** Ham `importance` değeri sözlükteki karşılığına çevrilir. */
+function impactLabel(
+  importance: string | null,
+  t: ReturnType<typeof getDictionary>,
+): string {
+  if (importance === "high") return t.calendar.impactHigh;
+  if (importance === "medium") return t.calendar.impactMedium;
+  if (importance === "low") return t.calendar.impactLow;
+  return importance ?? "-";
+}
+
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const tip = params.get("tip");
   const locale = await getLocale();
+  const t = getDictionary(locale);
   const tr = locale === "tr";
 
   if (tip === "bilanco") {
@@ -230,9 +242,13 @@ export async function GET(request: Request) {
       buildIcs({
         uid: `olay-${slug}@acilis-zili`,
         summary: title,
+        /* ÖNEM DEĞERİ ÇEVRİLİYOR. Ham veritabanı değeri basılıyordu:
+           Türkçe kayıtta "Önem: high" çıkıyor, üstelik bu, kullanıcının
+           takvim uygulamasında — sitenin DIŞINDA — gördüğü tek metin.
+           Sözlükte karşılığı zaten vardı. */
         description: tr
-          ? `Ekonomik veri açıklaması. Önem: ${row.importance}.`
-          : `Economic data release. Importance: ${row.importance}.`,
+          ? `Ekonomik veri açıklaması. Önem: ${impactLabel(row.importance, t)}.`
+          : `Economic data release. Importance: ${impactLabel(row.importance, t)}.`,
         url: `${SITE_URL}/takvim`,
         ...(start ? { start } : { date: row.eventDate }),
       }),

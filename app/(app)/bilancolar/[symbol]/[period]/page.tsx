@@ -440,13 +440,16 @@ export default async function AnalysisDetailPage(
         aria-label="breadcrumb"
         className="flex flex-wrap items-center gap-2 text-[12.5px] text-muted"
       >
-        <Link href="/bilancolar/analizler" className="hover:text-primary">
+        <Link
+          href="/bilancolar/analizler"
+          className="-my-2 inline-flex min-h-8 items-center py-2 hover:text-primary"
+        >
           {t.analysis.title}
         </Link>
         <span aria-hidden>›</span>
         <Link
           href={`/bilancolar/analizler?filtre=${group.key}`}
-          className="hover:text-primary"
+          className="-my-2 inline-flex min-h-8 items-center py-2 hover:text-primary"
         >
           {sectorGroupLabel(group, locale)}
         </Link>
@@ -1094,7 +1097,12 @@ export default async function AnalysisDetailPage(
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer nofollow"
-                    className="text-primary hover:underline"
+                    /* DOKUNMA HEDEFİ. Ölçülen yükseklik 14 pikseldi ve
+                       satır aralığı 4; telefonda alt alta dizilen üç-dört
+                       DIŞ bağlantıda yanlışına basmak neredeyse kaçınılmaz.
+                       Negatif kenar boşluğu satır yüksekliğini bozmadan
+                       hedefi 32 piksele çıkarıyor (PanelLink deseni). */
+                    className="-my-2 inline-flex min-h-8 items-center py-2 text-primary hover:underline"
                   >
                     {source.label}
                   </a>

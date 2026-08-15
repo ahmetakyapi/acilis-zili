@@ -65,6 +65,22 @@ async function signInKey(request: unknown): Promise<string> {
  */
 export const DB_UNAVAILABLE = "az:db-unavailable";
 
+/**
+ * Kullanıcı bulunamadığında karşılaştırılan SAHTE hash.
+ *
+ * KULLANICI ADI SAYIM ORAKÜLÜNÜ KAPATIR. `authorize()` kullanıcıyı
+ * bulamayınca bcrypt karşılaştırmasına hiç girmeden dönüyordu; var olan
+ * kullanıcıda ise cost 12 hash'i çalışıyordu. Aradaki fark birkaç
+ * milisaniye ile ~216 ms (ölçüldü) — yani uzaktan tek istekle okunabilen
+ * bir sinyal. Saldırgan kayıtlı kullanıcı adlarının listesini çıkarıp kaba
+ * kuvveti yalnızca gerçek hesaplara yöneltebilirdi.
+ *
+ * Sır DEĞİL: rastgele bir dizenin hash'i, hiçbir hesaba ait değil ve
+ * hiçbir zaman eşleşmiyor. Tek işi iki dalın aynı süreyi harcaması.
+ */
+const DUMMY_HASH =
+  "$2b$12$TjyHOgtBI3ZBWBa7RFOzgOP1aMG93k3eLq6fu2uz46SbM.KGCAi7K";
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Oturum 180 gün yaşar ve aktif kullanımda kayarak yenilenir —
   // kullanıcı her ziyarette yeniden giriş yapmak zorunda kalmaz.
@@ -127,7 +143,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new Error(DB_UNAVAILABLE);
         }
 
-        if (!user) return null;
+        if (!user) {
+          /* Sonuç atılıyor; amaç zamanı eşitlemek. */
+          await compare(password, DUMMY_HASH);
+          return null;
+        }
 
         const valid = await compare(password, user.passwordHash);
         if (!valid) return null;
