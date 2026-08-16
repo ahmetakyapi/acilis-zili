@@ -21,6 +21,7 @@ export type ShellLabels = {
   signIn: string;
   menu: string;
   mainNav: string;
+  bottomNav: string;
   skipToContent: string;
   loading: string;
 };
@@ -193,7 +194,10 @@ export function AppShell({
             bir süpürme denendi ve istenmedi. Bulunulan sayfa dolgulu hap ve
             kalın ağırlıkla ayrışır, renkle değil.
             "Bugün" burada yok — logo zaten oraya götürüyor. */}
-        <nav className="flex min-w-0 gap-[2px] text-base xl:gap-[3px] xl:text-read">
+        <nav
+          aria-label={labels.mainNav}
+          className="flex min-w-0 gap-[2px] text-base xl:gap-[3px] xl:text-read"
+        >
           {NAV_ITEMS.filter((item) => item.inMasthead).map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -301,8 +305,21 @@ export function AppShell({
           bırakır; mobilde ayrıca sekme çubuğu var. */}
       <main
         id="icerik"
+        /* ODAK GERÇEKTEN BURAYA GELİR. `tabIndex={-1}` olmadan atlama
+           bağlantısı yalnızca adresi `#icerik` yapıyordu: tarayıcı
+           odaklanamayan bir hedefe odağı taşımıyor, `document.activeElement`
+           `<body>`de kalıyor ve bir sonraki Tab okuyucuyu yine üst çubuğun
+           ilk bağlantısına götürüyordu — yani "İçeriğe Geç" hiçbir şeyi
+           atlamıyordu (WCAG 2.4.1). Negatif değer: fare/Tab sırasına
+           girmez, yalnızca programla odaklanılır.
+
+           Odak halkası basılmıyor (`outline-none`): burası bir denetim
+           değil, bir varış noktası; kutu boyunca çerçeve çizmek okuyucuya
+           "buraya tıklanır" diyor. Konumun nereye geldiğini `scroll-padding`
+           zaten garantiliyor (globals.css). */
+        tabIndex={-1}
         className={cn(
-          "mx-auto w-full max-w-[1400px] flex-1 pt-4 lg:pt-6",
+          "mx-auto w-full max-w-[1400px] flex-1 pt-4 outline-none lg:pt-6",
           CONTENT_GUTTER,
         )}
       >
@@ -347,7 +364,7 @@ export function AppShell({
           "chrome fixed inset-x-0 bottom-0 z-30 flex justify-between border-t pb-[max(env(safe-area-inset-bottom),16px)] lg:hidden",
           SAFE_X_12,
         )}
-        aria-label={labels.mainNav}
+        aria-label={labels.bottomNav}
       >
         {bottomItems.map((item) => {
           const active = item.key === activeBottomKey;

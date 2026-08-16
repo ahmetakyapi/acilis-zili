@@ -65,9 +65,24 @@ export async function SiteFooter() {
           </p>
         </div>
 
-        {columns.map((column) => (
-          <nav key={column.title} className="flex flex-col gap-2.5">
-            <p className="plate text-nano tracking-[0.09em]">{column.title}</p>
+        {columns.map((column, index) => {
+          /* HER YER İMİNİN ADI VAR. Üç sütun da adsız `<nav>` idi ve ekran
+             okuyucunun yer imi listesinde yalnızca "navigation, navigation,
+             navigation" görünüyordu — hangisinin piyasa, hangisinin hesap
+             olduğu ancak içine girip okuyunca anlaşılıyordu (WCAG 1.3.1).
+             Ad, zaten ekranda duran sütun başlığından geliyor: ayrı bir
+             sözlük anahtarı eklemeye gerek yok ve ikisi hiçbir zaman
+             birbirinden ayrı düşemez. */
+          const headingId = `footer-col-${index}`;
+          return (
+          <nav
+            key={column.title}
+            aria-labelledby={headingId}
+            className="flex flex-col gap-2.5"
+          >
+            <p id={headingId} className="plate text-nano tracking-[0.09em]">
+              {column.title}
+            </p>
             <ul className="flex flex-col gap-2">
               {column.links.map((link) => (
                 <li key={link.href}>
@@ -86,7 +101,8 @@ export async function SiteFooter() {
               ))}
             </ul>
           </nav>
-        ))}
+          );
+        })}
       </div>
 
       {/* ---- Yasal satır + geliştirici imzası ----

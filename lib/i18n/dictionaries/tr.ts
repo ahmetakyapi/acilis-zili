@@ -40,6 +40,11 @@ const tr = {
     searchHintOpen: "aç",
     menu: "Menü",
     mainNav: "Ana gezinme",
+    /* İki gezinme yer imi var ve ikisi de "Ana gezinme" adını
+       taşıyordu: ekran okuyucunun yer imi listesinde ayırt
+       edilemiyorlardı. Masaüstü şeridi ile telefonun alt çubuğu
+       kırılım noktasına göre değişse de ikisi de DOM da duruyor. */
+    bottomNav: "Alt gezinme",
     skipToContent: "İçeriğe Geç",
     groupMarket: "Piyasa",
     groupFollow: "Takip",

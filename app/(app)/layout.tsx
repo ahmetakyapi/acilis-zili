@@ -38,6 +38,7 @@ export default async function AppLayout({
     signIn: t.nav.signIn,
     menu: t.nav.menu,
     mainNav: t.nav.mainNav,
+    bottomNav: t.nav.bottomNav,
     skipToContent: t.nav.skipToContent,
     loading: t.common.loading,
   };
