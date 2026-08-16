@@ -102,8 +102,26 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
   const pages = paginate(groups, wide);
   const pageCount = Math.max(1, pages.length);
 
+  /* HAREKETİ DURDURMANIN BİR YOLU OLMALI (WCAG 2.2.2). Şerit altı saniyede
+     bir kendi kendine sayfa değiştiriyordu ve okuyucunun bunu durdurmasının
+     hiçbir yolu yoktu: okumakta olduğu sayı gözünün önünde kayıp gidiyordu.
+     İki kapı eklendi — imleç şeridin üstündeyken ya da içindeki bir bağlantı
+     odaktayken döngü duruyor; `prefers-reduced-motion: reduce` seçili
+     cihazda hiç başlamıyor (o ayarın anlamı zaten "kendiliğinden hareket
+     etme"). */
+  const [durduruldu, setDurduruldu] = useState(false);
+  const [azHareket, setAzHareket] = useState(false);
+
   useEffect(() => {
-    if (pageCount <= 1 || !onScreen) return;
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setAzHareket(query.matches);
+    apply();
+    query.addEventListener("change", apply);
+    return () => query.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    if (pageCount <= 1 || !onScreen || durduruldu || azHareket) return;
     /* İÇTEKİ ZAMANLAYICI DA TEMİZLENİYOR. Kimliği tutulmuyordu: `pageCount`
        değiştiğinde (ekran döndürme, veri güncellemesi) askıda kalan geri
        çağrı ESKİ `pageCount` kapanışıyla ateşleniyor ve sayfa indeksi
@@ -121,7 +139,7 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
       window.clearInterval(cycle);
       if (fade !== undefined) window.clearTimeout(fade);
     };
-  }, [pageCount, onScreen]);
+  }, [pageCount, onScreen, durduruldu, azHareket]);
 
   if (pages.length === 0) return null;
 
@@ -138,6 +156,10 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
        orada sayfanın dibinde kalıyor ve ortam bilgisi olarak işe yarıyor. */
     <div
       aria-live="off"
+      onMouseEnter={() => setDurduruldu(true)}
+      onMouseLeave={() => setDurduruldu(false)}
+      onFocusCapture={() => setDurduruldu(true)}
+      onBlurCapture={() => setDurduruldu(false)}
       className="chrome fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+63px)] z-20 hidden border-t pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:bottom-0 lg:block"
     >
       <div

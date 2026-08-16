@@ -188,14 +188,21 @@ export function SearchCommand({
           return !value;
         });
       }
-      if (event.key === "Escape") close();
+      /* ESCAPE YALNIZCA PALET AÇIKKEN. Dinleyici pencerede duruyor ve
+         koşulsuz `close()` çağırıyordu: palet kapalıyken basılan her Escape
+         — tarayıcının otomatik doldurma listesini kapatmak, bir menüden
+         çıkmak, alışkanlıktan — odağı sayfanın neresinde olursa olsun arama
+         DÜĞMESİNE zıplatıyordu, çünkü `close()` odağı tetikleyiciye geri
+         veriyor. Klavyeyle gezen okuyucu için bu, okuduğu yeri kaybetmek
+         demek. */
+      if (event.key === "Escape" && open) close();
     }
     /* Kısayolu YALNIZCA sahip dinler: iki örnek de dinleseydi ⌘K durumu iki
        kez çevirir ve palet hiç açılmazdı. */
     if (!owns) return;
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [close, owns]);
+  }, [close, owns, open]);
 
   // Açılınca odaklan — yalnızca DOM etkisi, setState yok.
   useEffect(() => {
