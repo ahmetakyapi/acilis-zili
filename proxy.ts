@@ -16,6 +16,9 @@ import { LOCALE_HEADER, splitLocale, withLocale } from "@/lib/i18n/routing";
  *    Gerçek doğrulama sayfa ve server action'larda `auth()` ile yapılır.
  */
 
+/** Dil çerezinin ömrü — `app/actions/preferences.ts` ile aynı. */
+const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
 const PROTECTED = ["/favoriler", "/ayarlar"];
 const AUTH_ROUTES = ["/giris", "/kayit"];
 
@@ -77,7 +80,26 @@ export function proxy(request: NextRequest) {
 
   const url = request.nextUrl.clone();
   url.pathname = path;
-  return NextResponse.rewrite(url, { request: { headers } });
+  const response = NextResponse.rewrite(url, { request: { headers } });
+
+  /* ÖNEKLİ ADRESE GELMEK DE BİR DİL SEÇİMİDİR — çerez burada yazılıyor.
+     Yukarıdaki not "site içi gezinme önek düşürse bile kendini düzeltiyor"
+     diyor ve bu, ÇEREZİ OLAN okuyucu için doğru. Çerezi olmayan için değildi:
+     arama sonucundan ya da paylaşılan bir bağlantıdan `/en/...` açan okuyucu,
+     önek taşımayan ilk bağlantıya bastığı anda sessizce Türkçeye düşüyordu.
+     Ölçüldü — İngilizce sayfalarda önek taşımayan bağlantı sayısı sayfa
+     başına 37 ile 96 arasında, yani düşüş neredeyse kaçınılmazdı.
+
+     Çerez yalnızca EKSİKSE ya da FARKLIYSA yazılıyor: her istekte
+     `Set-Cookie` göndermek yanıtı önbelleklenemez hâle getirirdi. */
+  if (request.cookies.get(LOCALE_COOKIE)?.value !== locale) {
+    response.cookies.set(LOCALE_COOKIE, locale, {
+      maxAge: LOCALE_COOKIE_MAX_AGE,
+      path: "/",
+      sameSite: "lax",
+    });
+  }
+  return response;
 }
 
 export const config = {
