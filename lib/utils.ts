@@ -609,9 +609,16 @@ export function formatPeriodLabel(
  * olduğu gibi yazıyordu. Aynı TÜFE rakamı bir ekranda "2,7" ötekinde "2.7"
  * görünüyordu — okuyucu için iki farklı sayı.
  *
- * BİRİM UYDURULMUYOR: yüzde mi puan mı bin adet mi olduğunu bilmiyoruz.
- * Yalnızca dizge baştan sona sayıysa ondalık ayracı yerelleşir; `unit` "%"
- * ise işaret dile göre yerleşir. Sayı olmayan her şey olduğu gibi basılır.
+ * BİRİM KAYITTAN GELİYOR ve YAZILIYOR. Bir dönem yalnızca "%" tanınıyordu;
+ * `unit` sütunundaki öteki değer olan "bin" hiç basılmıyordu ve tarım dışı
+ * istihdam ekranda çıplak "57" ya da "−23" olarak duruyordu — okuyucu 57 bin
+ * kişilik bir değişimi 57 kişi sanıyordu. Veritabanında 60 kayıt "bin", 32
+ * kayıt "%" taşıyor, 17'sinde birim yok; birimi olmayanda hâlâ hiçbir şey
+ * uydurulmuyor.
+ *
+ * Yalnızca dizge baştan sona sayıysa ondalık ayracı yerelleşir; "%" işareti
+ * dile göre yerleşir, öteki birimler sayının ardına yazılır. Sayı olmayan
+ * her şey olduğu gibi basılır.
  */
 const PLAIN_NUMBER_VALUE = /^-?\d+(\.\d+)?$/;
 
@@ -624,7 +631,19 @@ export function formatEventValue(
   if (!trimmed) return null;
   if (!PLAIN_NUMBER_VALUE.test(trimmed)) return trimmed;
 
-  const digits = trimmed.includes(".") ? trimmed.split(".")[1].length : 0;
+  /* SAHTE HASSASİYET KIRPILIYOR. Sağlayıcı hesaplanmış serilerde tam
+     duyarlık döndürüyor ("3.46353") ve ekranda "%3,46353" çıkıyordu; oysa
+     kurumun açıkladığı rakam iki hanelidir ve kalan basamaklar bizim
+     hesabımızın gürültüsü. Ham veride daha az hane varsa artırılmıyor —
+     yalnızca tavan konuyor. */
+  const rawDigits = trimmed.includes(".") ? trimmed.split(".")[1].length : 0;
+  const digits = Math.min(rawDigits, 2);
   const shown = formatPrice(Number(trimmed), locale, { digits });
-  return unit === "%" ? withPercent(shown, locale) : shown;
+  if (unit === "%") return withPercent(shown, locale);
+  const birim = unit?.trim();
+  if (!birim) return shown;
+  /* "bin" İngilizcede "K": kaynak dizesi Türkçe yazılı ama ekranın dili
+     okuyucununki. Tanımadığımız bir birim gelirse olduğu gibi geçiyor. */
+  const yazi = birim === "bin" && locale !== "tr" ? "K" : birim;
+  return `${shown}${MONEY_GAP}${yazi}`;
 }

@@ -1042,8 +1042,12 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
               {locale === "tr" ? event.titleTr : event.titleEn}
             </span>
             <span className="hidden w-[86px] shrink-0 text-right text-small text-muted sm:block">
-              {event.forecast
-                ? `${t.calendar.forecast} ${event.forecast}${event.unit === "%" ? "%" : ""}`
+              {/* Biçim paylaşılan yardımcıdan: elden yazılan bu satır yüzdeyi
+                  İNGİLİZCE kuralıyla sona koyuyor ("3.46353%") ve ondalık
+                  ayracını yerelleştirmiyordu — aynı sayı sayfanın üstündeki
+                  şeritte "%3,46" yazıyordu. */}
+              {formatEventValue(event.forecast, event.unit, locale)
+                ? `${t.calendar.forecast} ${formatEventValue(event.forecast, event.unit, locale)}`
                 : "—"}
             </span>
             <span
@@ -1056,9 +1060,7 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
                   : "text-muted",
               )}
             >
-              {event.actual
-                ? `${event.actual}${event.unit === "%" ? "%" : ""}`
-                : "—"}
+              {formatEventValue(event.actual, event.unit, locale) ?? "—"}
             </span>
           </li>
         );

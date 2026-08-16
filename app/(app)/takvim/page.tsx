@@ -77,18 +77,24 @@ function relativeDayLabel(away: number, t: Dictionary) {
 function ValueChip({
   label,
   value,
+  unit,
   locale,
   tone = "muted",
 }: {
   label: string;
   value: string;
+  /** "%" ise işaret dile göre yerleşir; yoksa çıplak sayı basılır. */
+  unit: string | null;
   locale: Locale;
   tone?: "strong" | "muted";
 }) {
   /* Biçimlendirme `lib/utils.ts` içindeki paylaşılan yardımcıda: ana
      sayfadaki Gün Şeridi de aynı değeri basıyor ve iki kopya birbirinden
      ayrı düşmüştü. */
-  const shown = formatEventValue(value, null, locale) ?? value.trim();
+  /* BİRİM GEÇİLİYOR. `null` yazılıydı ve yüzde işareti hiç basılmıyordu:
+     aynı TÜFE rakamı ana sayfada "%3,46", takvimde çıplak "3,46" olarak
+     duruyordu — okuyucu için iki farklı büyüklük. */
+  const shown = formatEventValue(value, unit, locale) ?? value.trim();
 
   return (
     <span className="flex flex-col items-end leading-tight">
@@ -345,6 +351,7 @@ export default async function CalendarPage(
                           <ValueChip
                             label={t.calendar.actual}
                             value={event.actual}
+                            unit={event.unit}
                             locale={locale}
                             tone="strong"
                           />
@@ -353,6 +360,7 @@ export default async function CalendarPage(
                           <ValueChip
                             label={t.calendar.forecast}
                             value={event.forecast}
+                            unit={event.unit}
                             locale={locale}
                           />
                         )}
@@ -360,6 +368,7 @@ export default async function CalendarPage(
                           <ValueChip
                             label={t.calendar.previous}
                             value={event.previous}
+                            unit={event.unit}
                             locale={locale}
                           />
                         )}
