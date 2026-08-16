@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { EmptyState, Panel } from "@/components/ui/primitives";
 import { NewsImage } from "@/components/news/NewsImage";
@@ -29,12 +30,72 @@ export const generateMetadata = pageMetadata({
   },
 });
 
+/**
+ * SAYFA İKİ PARÇAYA BÖLÜNDÜ. Başlık ve süzgeç şeridi hemen akıyor, haber
+ * listesi kendi `Suspense` sınırının içinde bekliyor.
+ *
+ * Eskiden sayfanın tamamı tek bir `await` zincirinin arkasındaydı ve rota
+ * yükleme iskeleti (`app/(app)/loading.tsx`) jenerik olduğu için gezinme
+ * sırasında ekranda sayfanın onda biri kadar bir taslak görünüyor, veri
+ * gelince düzen zıplıyordu. Şimdi sınır listeye özel bir iskelet gösteriyor:
+ * satır sayısı ve yükseklikler gerçek listeyle aynı, yani yer değişmiyor.
+ */
 export default async function NewsPage(props: PageProps<"/haberler">) {
   const search = await props.searchParams;
   const symbolFilter =
     typeof search.sembol === "string" ? search.sembol.toUpperCase() : null;
 
+  const { t } = await getI18n();
+  return (
+    <div className="flex flex-col gap-5">
+      <header>
+        <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
+          {t.news.title}
+        </h1>
+        <p className="mt-2 text-sm text-soft">{t.news.subtitle}</p>
+      </header>
+
+      {symbolFilter && (
+        <div className="flex items-center gap-2">
+          <span className="numeral rounded-full bg-primary-wash px-3 py-1 text-sm font-medium text-primary">
+            {symbolFilter}
+          </span>
+          <Link href="/haberler" className="text-xs text-muted hover:text-soft">
+            {t.common.all}
+          </Link>
+        </div>
+      )}
+
+      <Suspense fallback={<NewsSkeleton />}>
+        <NewsList symbolFilter={symbolFilter} />
+      </Suspense>
+    </div>
+  );
+}
+
+/** Liste iskeleti — gerçek satırla aynı yükseklik, düzen zıplamasın. */
+function NewsSkeleton() {
+  return (
+    <Panel>
+      <ul className="divide-y divide-line-soft">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <li key={index} className="flex gap-3.5 px-4 py-3.5 sm:gap-4 sm:px-5">
+            <span className="min-w-0 flex-1">
+              <span className="skeleton block h-4 w-[85%] rounded-md" />
+              <span className="skeleton mt-2 block h-3 w-[60%] rounded-md" />
+              <span className="skeleton mt-2.5 block h-3 w-32 rounded-md" />
+            </span>
+            <span className="skeleton size-14 shrink-0 rounded-lg" />
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
   const { locale, t } = await getI18n();
+
   /* Sembol süzgeci VERİTABANINDA. Bir dönem en yeni 60 haber çekilip bellekte
      süzülüyordu ve sembol o pencerede geçmiyorsa sayfa "haber yok" diyordu —
      tabloda dünden kalan haberler dururken. Gerekçenin tamamı
@@ -57,25 +118,6 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
   ]);
 
   return (
-    <div className="flex flex-col gap-5">
-      <header>
-        <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
-          {t.news.title}
-        </h1>
-        <p className="mt-2 text-sm text-soft">{t.news.subtitle}</p>
-      </header>
-
-      {symbolFilter && (
-        <div className="flex items-center gap-2">
-          <span className="numeral rounded-full bg-primary-wash px-3 py-1 text-sm font-medium text-primary">
-            {symbolFilter}
-          </span>
-          <Link href="/haberler" className="text-xs text-muted hover:text-soft">
-            {t.common.all}
-          </Link>
-        </div>
-      )}
-
       <Panel>
         {items.length === 0 ? (
           <EmptyState title={t.news.empty} />
@@ -163,6 +205,5 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
           </ul>
         )}
       </Panel>
-    </div>
   );
 }

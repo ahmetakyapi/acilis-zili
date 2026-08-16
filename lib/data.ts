@@ -84,7 +84,8 @@ export const getHolidays = cache(async function getHolidays(): Promise<
 > {
   try {
     return await loadHolidays();
-  } catch {
+  } catch (error) {
+    yutuldu("loadHolidays", error);
     return [];
   }
 });
@@ -93,6 +94,24 @@ export const getStatus = cache(async function getStatus(): Promise<MarketStatus>
   const holidays = await getHolidays();
   return getMarketStatus(new Date(), holidays);
 });
+
+/**
+ * Yutulan veritabanı hatası — SESSİZ DEĞİL, İZLİ.
+ *
+ * Bu dosyadaki okuma fonksiyonları hatayı yutup boş sonuç dönüyor ve bu
+ * bilinçli: bir sorgunun düşmesi sayfayı çökertmemeli. Ama iz de
+ * bırakmıyorlardı — Neon bir saat kesintiye girse sunucu günlüğünde tek satır
+ * çıkmıyor, ekranda yalnızca "kayıt yok" görünüyordu. Yani ürünün en kötü
+ * günü, en sessiz günü oluyordu.
+ *
+ * `console.error` sunucuda çalışıyor ve Vercel günlüklerine düşüyor;
+ * okuyucuya hiçbir şey gitmiyor. Mesaj kısa tutuluyor: hangi sorgu, hangi
+ * hata.
+ */
+function yutuldu(kaynak: string, error: unknown): void {
+  const mesaj = error instanceof Error ? error.message : String(error);
+  console.error(`[veri] ${kaynak} okunamadı: ${mesaj}`);
+}
 
 /* ---- Ekonomik takvim ---- */
 
@@ -109,7 +128,8 @@ export const getEventsBetween = cache(async function getEventsBetween(
       .from(economicEvents)
       .where(and(gte(economicEvents.eventDate, from), lte(economicEvents.eventDate, to)))
       .orderBy(asc(economicEvents.eventDate), asc(economicEvents.eventTimeEt));
-  } catch {
+  } catch (error) {
+    yutuldu("loadHolidays", error);
     return [];
   }
 });
@@ -128,7 +148,8 @@ export async function getUpcomingEvents(limit = 6): Promise<EconomicEventRow[]> 
       .where(gte(economicEvents.eventDate, todayEt()))
       .orderBy(asc(economicEvents.eventDate), asc(economicEvents.eventTimeEt))
       .limit(limit);
-  } catch {
+  } catch (error) {
+    yutuldu("getUpcomingEvents", error);
     return [];
   }
 }
@@ -150,7 +171,8 @@ export const getEarningsBetween = cache(async function getEarningsBetween(
         ),
       )
       .orderBy(asc(earningsCalendar.reportDate));
-  } catch {
+  } catch (error) {
+    yutuldu("getUpcomingEvents", error);
     return [];
   }
 });
@@ -267,7 +289,8 @@ export async function getUpcomingEarnings(
       ...row,
       logoUrl: logoSrc(row.symbol, row.logoUrl),
     }));
-  } catch {
+  } catch (error) {
+    yutuldu("getUpcomingEarnings", error);
     return [];
   }
 }
@@ -288,7 +311,8 @@ export async function getNextEarnings(
       .orderBy(asc(earningsCalendar.reportDate))
       .limit(1);
     return row ?? null;
-  } catch {
+  } catch (error) {
+    yutuldu("getNextEarnings", error);
     return null;
   }
 }
@@ -304,7 +328,8 @@ export async function getEarningsForSymbol(
       .where(eq(earningsCalendar.symbol, symbol))
       .orderBy(desc(earningsCalendar.reportDate))
       .limit(limit);
-  } catch {
+  } catch (error) {
+    yutuldu("getEarningsForSymbol", error);
     return [];
   }
 }
@@ -320,7 +345,8 @@ export const getNewsById = cache(async function getNewsById(
   try {
     const [row] = await db.select().from(news).where(eq(news.id, id)).limit(1);
     return row ?? null;
-  } catch {
+  } catch (error) {
+    yutuldu("getEarningsForSymbol", error);
     return null;
   }
 });
@@ -358,7 +384,8 @@ export async function getGenericImageUrls(
     for (const row of rows) {
       if (row.imageUrl && row.uses > 1) generic.add(row.imageUrl);
     }
-  } catch {
+  } catch (error) {
+    yutuldu("getGenericImageUrls", error);
     // Sorgu düşerse yalnızca ad kalıbıyla elenenler gizlenir.
   }
 
@@ -373,7 +400,8 @@ export async function isGenericNewsImage(imageUrl: string): Promise<boolean> {
       .from(news)
       .where(eq(news.imageUrl, imageUrl));
     return (row?.uses ?? 0) > 1;
-  } catch {
+  } catch (error) {
+    yutuldu("isGenericNewsImage", error);
     return false;
   }
 }
@@ -385,7 +413,8 @@ export async function getLatestNews(limit = 20): Promise<NewsRow[]> {
       .from(news)
       .orderBy(desc(news.publishedAt))
       .limit(limit);
-  } catch {
+  } catch (error) {
+    yutuldu("getLatestNews", error);
     return [];
   }
 }
@@ -413,7 +442,8 @@ export async function getNewsForSymbol(
       .where(sql`${news.symbols} @> ARRAY[${symbol}]::text[]`)
       .orderBy(desc(news.publishedAt))
       .limit(limit);
-  } catch {
+  } catch (error) {
+    yutuldu("getNewsForSymbol", error);
     return [];
   }
 }
@@ -461,7 +491,8 @@ export async function getBriefByDate(
       )
       .limit(4);
     return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
-  } catch {
+  } catch (error) {
+    yutuldu("getBriefByDate", error);
     return null;
   }
 }
@@ -504,7 +535,8 @@ export async function getLatestBrief(
     const latestDate = rows[0].briefDate;
     const sameDay = rows.filter((row) => row.briefDate === latestDate);
     return sameDay.find((row) => row.locale === locale) ?? sameDay[0];
-  } catch {
+  } catch (error) {
+    yutuldu("getLatestBrief", error);
     return null;
   }
 }
@@ -542,7 +574,8 @@ export async function getBriefArchive(
       }
     }
     return [...byDate.values()].slice(0, limit);
-  } catch {
+  } catch (error) {
+    yutuldu("getBriefArchive", error);
     return [];
   }
 }
@@ -561,7 +594,8 @@ export function weekAnchor(dateEt: string): string {
 export async function getMacroRows(): Promise<MacroSeriesRow[]> {
   try {
     return await db.select().from(macroSeries).orderBy(asc(macroSeries.slug));
-  } catch {
+  } catch (error) {
+    yutuldu("getMacroRows", error);
     return [];
   }
 }
@@ -615,7 +649,8 @@ export async function getUserWatchlists(
         .filter((item) => item.watchlistId === list.id)
         .map((item) => ({ id: item.id, symbol: item.symbol, note: item.note })),
     }));
-  } catch {
+  } catch (error) {
+    yutuldu("getUserWatchlists", error);
     return [];
   }
 }
@@ -729,7 +764,8 @@ async function loadSymbolNames(
         },
       ]),
     );
-  } catch {
+  } catch (error) {
+    yutuldu("loadSymbolNames", error);
     return {};
   }
 }
@@ -803,7 +839,8 @@ export async function getCompanies(): Promise<CompanyRow[]> {
             )
           : null,
     }));
-  } catch {
+  } catch (error) {
+    yutuldu("getCompanies", error);
     return [];
   }
 }
@@ -835,7 +872,8 @@ export async function getEarningsSymbolsMissingProfile(
       )
       .limit(limit * 3);
     return [...new Set(rows.map((r) => r.symbol))].slice(0, limit);
-  } catch {
+  } catch (error) {
+    yutuldu("getEarningsSymbolsMissingProfile", error);
     return [];
   }
 }
@@ -868,7 +906,8 @@ export const isKnownSymbol = cache(async function isKnownSymbol(
       .where(eq(symbolsTable.symbol, symbol))
       .limit(1);
     return Boolean(row);
-  } catch {
+  } catch (error) {
+    yutuldu("getEarningsSymbolsMissingProfile", error);
     // Veritabanı düştüyse sembolü tanınmış sayma; dar sınır uygulanır ve
     // sağlayıcı kotası korunur. Yanlış tarafa düşmek burada güvenli olan.
     return false;
@@ -931,7 +970,8 @@ export async function getIndexDriftCandidates(
         marketCap: row.marketCap as number,
       }))
       .sort((a, b) => b.marketCap - a.marketCap);
-  } catch {
+  } catch (error) {
+    yutuldu("getIndexDriftCandidates", error);
     return [];
   }
 }
@@ -945,7 +985,8 @@ export async function getStalestSymbols(limit: number): Promise<string[]> {
       .orderBy(asc(symbolsTable.updatedAt))
       .limit(limit);
     return rows.map((r) => r.symbol);
-  } catch {
+  } catch (error) {
+    yutuldu("getStalestSymbols", error);
     return [];
   }
 }
@@ -987,7 +1028,8 @@ export async function countStories(): Promise<number> {
       .select({ total: sql<number>`count(distinct ${stories.slug})::int` })
       .from(stories);
     return row?.total ?? 0;
-  } catch {
+  } catch (error) {
+    yutuldu("countStories", error);
     return 0;
   }
 }
@@ -1033,7 +1075,8 @@ export async function getStoriesForSymbol(
       }
     }
     return [...bySlug.values()].slice(0, limit);
-  } catch {
+  } catch (error) {
+    yutuldu("getStoriesForSymbol", error);
     return [];
   }
 }
@@ -1070,7 +1113,8 @@ export async function getStories(
       }
     }
     return [...bySlug.values()].slice(0, limit);
-  } catch {
+  } catch (error) {
+    yutuldu("getStories", error);
     return [];
   }
 }
@@ -1087,7 +1131,8 @@ export async function getStoryBySlug(
       .where(eq(stories.slug, slug))
       .limit(4);
     return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
-  } catch {
+  } catch (error) {
+    yutuldu("getStoryBySlug", error);
     return null;
   }
 }
@@ -1195,7 +1240,8 @@ export async function getAnalyses(
       .limit(limit * 2);
 
     return dedupeAnalyses(rows, locale, limit);
-  } catch {
+  } catch (error) {
+    yutuldu("getAnalyses", error);
     return [];
   }
 }
@@ -1218,7 +1264,8 @@ export async function getAnalysis(
       )
       .limit(4);
     return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
-  } catch {
+  } catch (error) {
+    yutuldu("getAnalysis", error);
     return null;
   }
 }
@@ -1287,7 +1334,8 @@ export async function getAnalysisBadges(
       }
     }
     return out;
-  } catch {
+  } catch (error) {
+    yutuldu("getAnalysisBadges", error);
     return {};
   }
 }
