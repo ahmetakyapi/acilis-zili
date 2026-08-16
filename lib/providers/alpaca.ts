@@ -126,7 +126,17 @@ function unwrapSnapshots(
   return record as Record<string, AlpacaSnapshot>;
 }
 
+/**
+ * Son işlemin üstünden bu kadar geçtiyse sembol "ölü" sayılır.
+ *
+ * Beş gün: uzun bir hafta sonu + tatil kombinasyonu dört günü buluyor
+ * (ör. Şükran Günü haftası) ve canlı bir sembol bu kadar sessiz kalabilir.
+ * Beşinci güne ulaşan bir sembol artık işlem görmüyor demektir.
+ */
+const STALE_TRADE_MS = 5 * 24 * 60 * 60 * 1000;
+
 function snapshotToQuote(symbol: string, snap: AlpacaSnapshot): Quote | null {
+  const tradedAt = snap.latestTrade?.t ? new Date(snap.latestTrade.t) : null;
   const price =
     snap.latestTrade?.p ?? snap.minuteBar?.c ?? snap.dailyBar?.c ?? null;
   const prevClose = snap.prevDailyBar?.c ?? null;
@@ -140,17 +150,31 @@ function snapshotToQuote(symbol: string, snap: AlpacaSnapshot): Quote | null {
       ? (change / prevClose) * 100
       : null;
 
+  /* ÖLÜ SEMBOLÜN DEĞİŞİMİ BUGÜNÜN DEĞİŞİMİ DEĞİL. Borsadan çıkmış ya da
+     işlemi durmuş semboller için sağlayıcı son işlem gününün fotoğrafını
+     döndürmeye devam ediyor: NLST'nin son işlemi 2021'de, CLSD'ninki
+     2025 Kasım'da ve ikisi de o günün yüzdesini taşıyor (−%27,7 gibi).
+     Bu sayı "değişime göre sırala" listelerinin tepesine oturuyor ve
+     okuyucu bugün böyle bir hareket olduğunu sanıyor — evrende bu durumda
+     34 sembol var (ölçüldü).
+
+     Fiyat KALIYOR (son bilinen değer bir bilgidir, künyesi de var), yalnızca
+     DEĞİŞİM bilinmiyor sayılıyor: sıfır yazmak da yanlış olurdu, çünkü
+     "bugün değişmedi" başka bir iddia. */
+  const stale =
+    tradedAt !== null && Date.now() - tradedAt.getTime() > STALE_TRADE_MS;
+
   return {
     symbol,
     price,
-    change,
-    changePct,
+    change: stale ? null : change,
+    changePct: stale ? null : changePct,
     open: snap.dailyBar?.o ?? null,
     high: snap.dailyBar?.h ?? null,
     low: snap.dailyBar?.l ?? null,
     prevClose,
     volume: snap.dailyBar?.v ?? null,
-    tradedAt: snap.latestTrade?.t ? new Date(snap.latestTrade.t) : null,
+    tradedAt,
   };
 }
 

@@ -647,13 +647,33 @@ export type SymbolMeta = {
  * yüzden değer canlı fiyattan hesaplanır ve gün içinde doğru kalır. Hisse
  * sayısı bilinmiyorsa kayıtlı değere düşülür.
  */
+/**
+ * SAĞLAYICININ HİSSE SAYISI DENETLENİYOR. Finnhub, BRK.B için A SINIFININ
+ * hisse sayısını döndürüyor (1,44 milyon — B sınıfı 2,2 milyar): çarpım
+ * 726 milyon dolar veriyordu ve Berkshire, şirketler dizininde mikro ölçekli
+ * bir şirket gibi listeleniyordu. Aynı satırda sağlayıcının kendi
+ * `marketCap` alanı 972 milyar diyordu, yani veri kendi içinde çelişiyordu.
+ *
+ * Kural: canlı hesap ile kayıtlı değer birbirinden ÜÇTE BİRDEN fazla
+ * ayrılıyorsa canlı hesap güvenilmez sayılır ve kayıtlı değer basılır.
+ * Sapma eşiği geniş bilerek — profil haftalarca eski olabiliyor ve o süre
+ * içindeki gerçek fiyat hareketi tek başına %30'a çıkabilir; yakalanmak
+ * istenen o değil, mertebe hatası.
+ */
+const CAP_SAPMA_ESIGI = 1 / 3;
+
 export function liveMarketCap(
   meta: SymbolMeta | undefined,
   price: number | null | undefined,
 ): number | null {
   if (!meta) return null;
   if (meta.shareOutstanding && typeof price === "number" && price > 0) {
-    return meta.shareOutstanding * price;
+    const canli = meta.shareOutstanding * price;
+    if (meta.marketCap && meta.marketCap > 0) {
+      const sapma = Math.abs(canli - meta.marketCap) / meta.marketCap;
+      if (sapma > CAP_SAPMA_ESIGI) return meta.marketCap;
+    }
+    return canli;
   }
   return meta.marketCap;
 }
@@ -763,14 +783,24 @@ export async function getCompanies(): Promise<CompanyRow[]> {
       industry: r.industry,
       volume: r.volume,
       logoUrl: logoSrc(r.symbol, r.logoUrl),
-      /* Canlı hesap: son fiyat × hisse sayısı. İkisinden biri yoksa kayıtlı
-         değere düşülüyor — `liveMarketCap` ile aynı kural, tek fark burada
-         fiyatın önbellekten gelmesi. */
+      /* Canlı hesap `liveMarketCap` ile AYNI FONKSİYONDAN geçiyor — kural
+         iki yerde ayrı yazılıyken sağlayıcının bozuk hisse sayısına karşı
+         konan denetim yalnızca birinde vardı ve şirketler dizini (asıl
+         listeleme ekranı) korumasız kalıyordu. Tek fark, burada fiyatın
+         önbellek tablosundan gelmesi. */
       marketCap:
         r.currency === "USD"
-          ? r.shareOutstanding && r.price
-            ? r.shareOutstanding * r.price
-            : r.marketCap
+          ? liveMarketCap(
+              {
+                name: r.name,
+                indexProxy: false,
+                marketCap: r.marketCap,
+                shareOutstanding: r.shareOutstanding,
+                logoUrl: null,
+                industry: null,
+              },
+              r.price,
+            )
           : null,
     }));
   } catch {
