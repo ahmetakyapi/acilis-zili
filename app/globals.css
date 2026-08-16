@@ -659,10 +659,18 @@
       var(--ease-brand);
   }
 
-  /* Tıklanabilir kartlar accent tintiyle karşılık verir — zıplamaz. */
-  .panel-hover:hover {
-    border-color: var(--line-strong);
-    background: var(--primary-tint);
+  /* Tıklanabilir kartlar accent tintiyle karşılık verir — zıplamaz.
+     `hover: hover` KAPISI ŞART: dokunmatikte parmak kalktıktan sonra WebKit
+     hover durumunu ELEMANIN ÜSTÜNDE BIRAKIYOR, yani dokunulan kart geri
+     gelindiğinde de vurgulu duruyor ve okuyucu onu "seçili" sanıyor.
+     Tailwind'in kendi `hover:` yardımcıları bu kapıyı zaten koyuyor
+     (üretilen CSS'te `@media (hover:hover)` sarmalı var); elden yazılan bu
+     kural atlanmıştı. */
+  @media (hover: hover) {
+    .panel-hover:hover {
+      border-color: var(--line-strong);
+      background: var(--primary-tint);
+    }
   }
 }
 
@@ -719,8 +727,15 @@
    Kabuk (masthead, alt şerit, sekmeler) yerinde kalır; yalnızca içerik
    alanı yeni sayfada kısa bir yükselişle görünür. Süre kasten kısa: geçiş
    hissi verecek kadar var, gezinmeyi geciktirecek kadar değil.
-   `both` bitiş karesini tutar — transform kalıcı olarak `none`'a döner,
-   böylece altındaki `background-clip: text` başlıklar etkilenmez.
+   FİLL `backwards`, `both` DEĞİL. `both` bitiş karesini TUTAR: animasyon
+   bittikten sonra da elemanın üstünde uygulanmış bir `transform` kalıyor
+   (değeri `none` olsa bile) ve WebKit bunu gördüğü sürece içerik alanını
+   kendi kompozit katmanında tutuyor — o katmandaki metin alt piksel
+   yumuşatmasını kaybedip gri tonlamalıya düşüyor, yani sayfa gezinme
+   sonrasında da bir tık yumuşak kalıyor. `backwards` yalnızca BAŞLANGIÇ
+   karesini erken uyguluyor; animasyon bitince eleman kendi normal stiline
+   dönüyor ve geride tutulan hiçbir şey kalmıyor. Görsel sonuç aynı, çünkü
+   bitiş karesi zaten elemanın doğal hâli (opaklık 1, dönüşüm yok).
    -------------------------------------------------------------------------- */
 @keyframes page-enter {
   from {
@@ -734,7 +749,7 @@
 }
 
 .page-enter {
-  animation: page-enter 0.24s var(--ease-brand) both;
+  animation: page-enter 0.24s var(--ease-brand) backwards;
 }
 
 /* --------------------------------------------------------------------------
@@ -808,8 +823,20 @@
   place-items: center;
   pointer-events: none;
   background: color-mix(in srgb, var(--page-bg) 58%, transparent);
-  backdrop-filter: blur(3px) saturate(1.08);
-  -webkit-backdrop-filter: blur(3px) saturate(1.08);
+  /* BULANIKLIK KALDIRILDI — `.chrome` ile AYNI GEREKÇE (yukarıdaki nota bak),
+     ama bu katman daha kötüsünü yapıyordu: tam ekran (`inset: 0`, z-index 60)
+     olduğu için yapışkan üst çubuğun da ÜSTÜNDE duruyor ve gezinme boyunca
+     onu da bulanıklaştırıyordu. Ekranda gezinme sırasında görsel olarak
+     değişmeyen tek şey o çubuk olduğu için bulanıklık en çok orada okunuyor.
+     420 ms'yi aşan her gezinmede — yani telefonda çoğu gezinmede — devreye
+     giriyordu.
+
+     ÜSTELİK YALNIZCA SAFARI'DE. İki satır `backdrop-filter` ve
+     `-webkit-backdrop-filter` sırayla yazılıydı ve lightningcss ikisini aynı
+     özellik sayıp SONDAKİNİ tutuyor: üretim CSS'inde yalnızca `-webkit-`
+     sürümü kalıyordu. Chrome bu takma adı hiç tanımıyor, yani efekt
+     masaüstünde HİÇ çalışmıyordu ve geliştirmede yeniden üretilemiyordu.
+     Perde işini zaten üstteki `color-mix` yapıyor. */
   animation: route-loader-fade 0.18s var(--ease-brand) both;
 }
 
@@ -1000,9 +1027,16 @@
   }
 }
 
-@media (max-width: 640px) {
-  /* iOS Safari, 16px altı font taşıyan input odaklanınca sayfayı yakınlaştırır.
-     Mobilde tüm form alanları 16px taban kullanır — arama zoom hatasının kökü. */
+/* iOS Safari, 16px altı font taşıyan input odaklanınca sayfayı yakınlaştırır
+   ve klavye kapanınca eski ölçeğe KENDİLİĞİNDEN dönmez.
+
+   Eşik GENİŞLİK DEĞİL, İŞARETÇİ TÜRÜ. Kural `max-width: 640px` içindeydi ve
+   iPad ile yan çevrilmiş iPhone bu eşiğin dışında kalıyordu: ölçüldü, iPhone
+   yatayda (844px) ve iPad'in her yöneliminde giriş alanları 14px, analizler
+   arama kutusu 13px iniyordu — yani düzeltme yazılıydı ama tam da dokunmatik
+   cihazların yarısını kaçırıyordu. `pointer: coarse` her dokunmatik cihazda
+   tutuyor, masaüstünde hiç devreye girmiyor. */
+@media (pointer: coarse) {
   input,
   select,
   textarea {

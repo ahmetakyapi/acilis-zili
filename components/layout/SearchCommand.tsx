@@ -220,8 +220,15 @@ export function SearchCommand({
      de tıklanamaz ve yazılamaz hâle geliyordu. */
   useEffect(() => {
     if (!open || !owns) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    /* KİLİT KÖK ELEMANDA, GÖVDEDE DEĞİL. Kaydıran eleman `html`
+       (`document.scrollingElement`), gövde değil: `body`ye yazılan
+       `overflow: hidden` hiçbir şeyi durdurmuyordu. Ölçüldü — palet açıkken
+       `window.scrollTo(0, 600)` sayfayı 600 piksel kaydırıyor, yani okuyucu
+       arama kutusunda yazarken arkadaki liste de kayıyordu (telefonda
+       parmak paletin dışına taştığında sürekli oluyor). */
+    const root = document.documentElement;
+    const previous = root.style.overflowY;
+    root.style.overflowY = "hidden";
 
     const marked: Element[] = [];
     for (const child of Array.from(document.body.children)) {
@@ -232,7 +239,7 @@ export function SearchCommand({
     }
 
     return () => {
-      document.body.style.overflow = previous;
+      root.style.overflowY = previous;
       for (const child of marked) child.removeAttribute("inert");
     };
   }, [open, owns]);
