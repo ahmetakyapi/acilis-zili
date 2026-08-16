@@ -309,11 +309,33 @@ export async function getQuote(
    Grafik barları
    -------------------------------------------------------------------------- */
 
+/**
+ * En son yazılan bar dizisinin imzası — "sembol:aralık" → "adet:son bar saati".
+ *
+ * DEĞİŞMEYEN GRAFİK YENİDEN YAZILMIYOR. Kotasyonlardaki sorunun aynısı, daha
+ * pahalı hâli: Alpaca yanıtı Next'in veri önbelleğinden geldiğinde de bu
+ * fonksiyon çalışıyor ve yüzlerce noktalı jsonb dizisi Neon'a yeniden
+ * gönderiliyordu — hisse sayfasını açan HER okuyucu için, üstelik barlar
+ * günlük grafikte 12 saat, gün içi grafikte seans kapalıyken saatlerce hiç
+ * değişmezken.
+ *
+ * İmza ucuz: dizinin uzunluğu ve son barın zamanı. Yeni bir bar geldiğinde
+ * ikisinden biri mutlaka değişiyor, yani gerçek güncelleme hiç kaçmıyor.
+ */
+const sonBarImzasi = new Map<string, string>();
+
+function barImzasi(bars: Bar[]): string {
+  return `${bars.length}:${bars.length > 0 ? bars[bars.length - 1]!.time : 0}`;
+}
+
 async function persistBars(
   symbol: string,
   range: ChartRange,
   bars: Bar[],
 ): Promise<void> {
+  const anahtar = `${symbol}:${range}`;
+  const imza = barImzasi(bars);
+  if (sonBarImzasi.get(anahtar) === imza) return;
   try {
     await db
       .insert(candlesCache)
@@ -322,6 +344,7 @@ async function persistBars(
         target: [candlesCache.symbol, candlesCache.timeframe],
         set: { bars, fetchedAt: new Date() },
       });
+    sonBarImzasi.set(anahtar, imza);
   } catch {
     // yoksay
   }
@@ -332,7 +355,9 @@ async function persistBarsMulti(
   range: ChartRange,
   bySymbol: Record<string, Bar[]>,
 ): Promise<void> {
-  const entries = Object.entries(bySymbol);
+  const entries = Object.entries(bySymbol).filter(
+    ([symbol, bars]) => sonBarImzasi.get(`${symbol}:${range}`) !== barImzasi(bars),
+  );
   if (entries.length === 0) return;
   try {
     const now = new Date();
@@ -353,6 +378,9 @@ async function persistBarsMulti(
           fetchedAt: sql`excluded.fetched_at`,
         },
       });
+    for (const [symbol, bars] of entries) {
+      sonBarImzasi.set(`${symbol}:${range}`, barImzasi(bars));
+    }
   } catch {
     // yoksay
   }
