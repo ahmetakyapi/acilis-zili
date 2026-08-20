@@ -581,8 +581,6 @@ const tr = {
     sessionAfter: "Akşam Seansı",
     sessionOvernight: "Gece",
     sessionOvernightNote: "Gece seansı konsolide tape'te akmaz",
-    // Lejantın alt satırı: üstteki saatlerin diğer dilimdeki karşılığı.
-    otherZoneTimes: "ABD saatiyle:",
   },
 
   watchlist: {

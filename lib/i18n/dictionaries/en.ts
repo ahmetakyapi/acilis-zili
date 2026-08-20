@@ -494,7 +494,6 @@ const en: typeof tr = {
     sessionAfter: "After Hours",
     sessionOvernight: "Overnight",
     sessionOvernightNote: "Overnight prices don't flow on the consolidated tape",
-    otherZoneTimes: "In Turkish time:",
   },
 
   watchlist: {

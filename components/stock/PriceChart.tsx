@@ -23,6 +23,7 @@ import {
   displayZone,
   sessionWindows,
   zoneOffsetSeconds,
+  zoneTag,
 } from "@/lib/session-clock";
 
 /**
@@ -695,43 +696,54 @@ export function PriceChart({
       </div>
 
       {/* Seans lejantı — gün içi görünümde günün saat haritası */}
+      {/* ---- Seans haritası ----
+           ESKİ HÂLİ İKİ SATIRLIK BİR BULMACAYDI. Üstte "Ön Seans 11:00-16:30 ·
+           Seans 16:30-23:00 · …" diye dört seans nokta ayraçlarıyla diziliyor,
+           altında "ABD saatiyle: 04:00-09:30 · 09:30-16:00 · …" diye dört
+           saat aralığı ADSIZ olarak sıralanıyordu. Okuyucu New York saatini
+           bulmak için iki satır arasında SIRA SAYARAK eşleştirmek zorundaydı;
+           "gece seansı konsolide tape'te akmaz" notu da satırın ucunda beşinci
+           bir seans gibi duruyordu.
+
+           Şimdi her seans kendi sütununda ve kendi iki saatini birlikte
+           taşıyor: eşleştirme görsel, sayılacak bir şey yok. Soldaki kare
+           grafikteki gölgeyle AYNI: ön ve akşam seansı çökük zeminle
+           gölgeleniyor, asıl seans açık zeminde ve accent noktayla, gece ise
+           kesikli boş kare — çünkü o pencerede veri yok, notu da altında. */}
       {range === "1D" && state.phase === "ready" && windows && (
-        <div className="mt-2 text-nano text-muted">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            {windows.map((window, index) => (
-              <span key={window.key} className="flex items-center gap-1.5">
-                {index > 0 && (
-                  <span aria-hidden className="mr-1.5">
-                    ·
+        <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line-soft pt-3 sm:grid-cols-4">
+          {windows.map((window) => {
+            const shaded = window.key === "pre" || window.key === "after";
+            const dark = window.key === "overnight";
+            return (
+              <div key={window.key} className="flex min-w-0 flex-col gap-1">
+                <span className="flex items-center gap-1.5 text-tiny font-semibold text-body">
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "size-2.5 shrink-0 rounded-[3px] border",
+                      window.key === "regular" &&
+                        "border-transparent bg-primary",
+                      shaded && "border-line bg-surface-sunken",
+                      dark && "border-dashed border-line-strong",
+                    )}
+                  />
+                  <span className="truncate">{sessionName[window.key]}</span>
+                </span>
+                <span className="numeral text-tiny leading-tight text-strong">
+                  {window.primary}
+                </span>
+                <span className="numeral text-micro leading-tight text-muted">
+                  {window.secondary} {zoneTag(locale).secondary}
+                </span>
+                {dark && (
+                  <span className="text-micro leading-[13px] text-muted">
+                    {labels.sessionOvernightNote}
                   </span>
                 )}
-                <span
-                  className={cn(
-                    "flex items-center gap-1",
-                    window.key === "regular" && "font-medium text-soft",
-                  )}
-                >
-                  {window.key === "regular" && (
-                    <span
-                      aria-hidden
-                      className="size-1.5 rounded-full bg-primary"
-                    />
-                  )}
-                  {sessionName[window.key]}
-                  <span className="numeral">{window.primary}</span>
-                </span>
-              </span>
-            ))}
-            <span className="basis-full sm:basis-auto">
-              {labels.sessionOvernightNote}
-            </span>
-          </div>
-          {/* Diğer saat dilimi tek satırda, aynı sırada: okumak isteyen
-              buradan eşler, istemeyenin gözüne girmez. */}
-          <p className="numeral mt-1 text-micro opacity-80">
-            {labels.otherZoneTimes}{" "}
-            {windows.map((window) => window.secondary).join(" · ")}
-          </p>
+              </div>
+            );
+          })}
         </div>
       )}
 
