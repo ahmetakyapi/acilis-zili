@@ -55,11 +55,17 @@ export function NewsImage({
      kırılır) `<img>` boş kalıyor ve kutunun içi bembeyaz görünüyor. 64
      piksellik bir künyede bu küçük bir kusurdu; ana sayfadaki haber kartında
      görsel 16:9 ve tam genişlik, yani beyaz bir delik oluyor. Çerçevenin
-     kendi zemini o durumda nötr bir yüzey bırakıyor. */
+     kendi zemini o durumda nötr bir yüzey bırakıyor.
+
+     ÇAĞIRANIN SINIFI EN SONDA — dalın kendi sınıflarından da sonra. Önce
+     `frame` içinde, yani dalların eklediği sınıflardan ÖNCE duruyordu:
+     tailwind-merge çakışmayı sona göre çözdüğü için yer tutucu dalın kendi
+     `border` sınıfı, çağıranın `border-0`ını eziyordu. Ana sayfadaki haber
+     kartı tam olarak o `border-0`a güveniyor ve yer tutucu, kartın içinde
+     ikinci bir kutu olarak çiziliyordu. */
   const frame = cn(
     "block shrink-0 overflow-hidden rounded-md bg-surface-elevated",
     sizeClass,
-    className,
   );
 
   /* Görsel yoksa sıradaki en iyi şey ŞİRKETİN LOGOSU: haberin konusu olan
@@ -69,7 +75,7 @@ export function NewsImage({
      temada kendi koyu harfleriyle kayboluyor. */
   if (!src && logoUrl) {
     return (
-      <span className={cn(frame, "bg-white")}>
+      <span className={cn(frame, "bg-white", className)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={logoUrl}
@@ -96,6 +102,7 @@ export function NewsImage({
         className={cn(
           frame,
           "flex items-center justify-center border border-line bg-surface-elevated text-muted",
+          className,
         )}
       >
         <Newspaper weight="duotone" className="size-1/3" />
@@ -104,7 +111,7 @@ export function NewsImage({
   }
 
   return (
-    <span className={frame}>
+    <span className={cn(frame, className)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}

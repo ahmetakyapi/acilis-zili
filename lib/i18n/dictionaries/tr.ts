@@ -178,8 +178,13 @@ const tr = {
     scheduleEmpty: "Bugün için planlanmış ekonomik veri yok.",
     earningsToday: "Bugün Bilanço Açıklayanlar",
     /* Başlığın yanındaki sayaç: bugün kaç şirket açıklıyor ve kaçı
-       listede. Listede piyasa değerine göre en büyük sekizi var. */
-    earningsCount: "{total} şirketten {n}'i",
+       listede. Listede piyasa değerine göre en büyük sekizi var.
+       "TANESİ" — İYELİK EKİ YAZILAMAZ. Kalıp bir dönem "{n}'i" idi ve
+       Türkçede o ek sayının son hecesine göre değişiyor: 3'ü, 6'sı, 7'si,
+       9'u. Sekiz olası değerin beşi yanlış çıkıyordu. "tanesi" her sayıyla
+       çalışıyor ve aynı çözüm arşiv sayacında (`stories.showing`) zaten
+       kullanılıyor. */
+    earningsCount: "{total} şirketin {n} tanesi",
     earningsEmpty: "Bugün bilanço açıklayan takip ettiğin şirket yok",
     watchlistSummary: "Favorilerin",
     watchlistEmpty: "Henüz favori eklemedin.",
@@ -190,7 +195,7 @@ const tr = {
     /* Bölüm başlığının yanındaki künye. Liste "son haberler" değil bir
        SEÇKİ: kırk haberlik havuzdan altısı alınıyor ve sembol başına en
        fazla ikisi giriyor. Başlık bunu söylemiyordu. */
-    topNewsNote: "son 40 haberden seçildi",
+    topNewsNote: "son {n} haberden seçildi",
     weekAhead: "Haftaya Bakış",
     weekAheadEmpty: "Önümüzdeki hafta için planlanmış önemli veri yok.",
     worldMarkets: "Dünya Piyasaları",

@@ -403,9 +403,21 @@ export default async function TodayPage() {
           <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
             {t.today.topNews}
           </h2>
-          <div className="flex items-center gap-3">
-            <span className="plate text-nano">{t.today.topNewsNote}</span>
-            <PanelLink href="/haberler">{t.common.showAll}</PanelLink>
+          <div className="flex shrink-0 items-center gap-3">
+            {/* KÜNYE DAR EKRANDA YOK. Türkçesi ("SON 40 HABERDEN SEÇİLDİ")
+                büyük harfle 154 piksel tutuyor; başlık ve bağlantıyla
+                birlikte 382 piksel ediyor ve 420 pikselin altındaki her
+                telefonda üçü de ikişer satıra kırılıyordu — sayfanın
+                kapanış bölümü üç satırlık düzensiz bir bloğa dönüşüyordu.
+                Seçkinin nasıl yapıldığı bir künye, manşet değil. */}
+            <span className="plate hidden whitespace-nowrap text-nano sm:inline">
+              {/* Havuz büyüklüğü SABİTTEN geliyor: metinde "40" yazılıydı ve
+                  `TOP_NEWS_POOL` değişirse künye sessizce yalan söylerdi. */}
+              {t.today.topNewsNote.replace("{n}", String(TOP_NEWS_POOL))}
+            </span>
+            <PanelLink href="/haberler" className="whitespace-nowrap">
+              {t.common.showAll}
+            </PanelLink>
           </div>
         </div>
         <Suspense fallback={<NewsGridSkeleton />}>
@@ -1245,13 +1257,19 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
     <Panel>
       <PanelHeader
         title={t.today.earningsToday}
-        /* SAYAÇ İKİ SAYIYI DA SÖYLÜYOR. Önce yalnızca toplam yazıyordu
-           ("47 şirket") ve altında sekiz satır duruyordu: okuyucu ya listenin
-           kırpıldığını fark etmiyor ya da sayıyı hatalı sanıyordu. Aynı kalıp
-           /mercek arşivinde de var. */
-        meta={t.today.earningsCount
-          .replace("{total}", String(rows.length))
-          .replace("{n}", String(shown.length))}
+        /* SAYAÇ YALNIZCA LİSTE KIRPILDIĞINDA. İki sayıyı da söylüyor
+           ("47 şirketin 8 tanesi") çünkü önce yalnızca toplam yazıyordu ve
+           altında sekiz satır duruyordu: okuyucu ya kırpıldığını fark
+           etmiyor ya da sayıyı hatalı sanıyordu. Ama kırpma yoksa sayaç
+           "6 şirketin 6 tanesi" diyor — hiçbir şey söylemeyen bir cümle.
+           Aynı kalıp /mercek arşivinde de var. */
+        meta={
+          rows.length > shown.length
+            ? t.today.earningsCount
+                .replace("{total}", String(rows.length))
+                .replace("{n}", String(shown.length))
+            : undefined
+        }
         action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
       />
       <ul>
@@ -1358,10 +1376,12 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
 
   return (
     <Panel className="px-4 py-4 sm:px-5">
+      {/* Plaka başlık — panelin iki boş dalı zaten `PanelHeader` üzerinden
+          plakaya inmişti; dolu dal kendi başlığını elden yazdığı için geride
+          kalmıştı ve aynı panel veriye göre iki farklı başlık tipografisi
+          basıyordu. */}
       <div className="mb-1 flex items-baseline justify-between gap-3">
-        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
-          {t.today.watchlistSummary}
-        </h2>
+        <h2 className="plate min-w-0 truncate">{t.today.watchlistSummary}</h2>
         <PanelLink href="/favoriler">{t.common.showAll}</PanelLink>
       </div>
       {result.ok ? (
@@ -1574,6 +1594,16 @@ const TOP_NEWS_COUNT = 6;
 const TOP_NEWS_POOL = 40;
 /** Aynı sembolden listeye en fazla kaç haber girer. */
 const TOP_NEWS_PER_SYMBOL = 2;
+/**
+ * Aynı KAYNAKTAN listeye en fazla kaç haber girer.
+ *
+ * Sembol sınırı vardı, kaynak sınırı yoktu. Seçim görseli olan haberleri öne
+ * aldığı için (Yahoo yer tutucu logo yolluyor, elenmesi gereken oydu) liste
+ * pratikte tek bir siteye kayabiliyor: ölçüldüğü gün altı kartın altısı da
+ * SeekingAlpha'ydı. Satır listesinde bu görünmüyordu, üç kolonluk görselli
+ * ızgarada "öne çıkan haberler" tek bir yayının bülteni gibi duruyor.
+ */
+const TOP_NEWS_PER_SOURCE = 2;
 
 async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
   // Bu kart "son haberler" değil "öne çıkanlar": son 40 haberlik havuzdan
@@ -1598,14 +1628,17 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
      dörtte birini doldurabiliyor (bir gün 40 haberin 12'si MU'ydu) ve
      "Öne Çıkan Haberler" tek şirketin bülteni gibi görünüyordu. Sembol
      başına en fazla iki haber alınır, kalanlar sıradakine yer açar. */
-  const bySymbolCap = (list: typeof pool) => {
-    const seen = new Map<string, number>();
+  const capped = (list: typeof pool) => {
+    const bySymbol = new Map<string, number>();
+    const bySource = new Map<string, number>();
     const kept: typeof pool = [];
     for (const item of list) {
-      const key = item.symbols?.[0] ?? "";
-      const count = seen.get(key) ?? 0;
-      if (key && count >= TOP_NEWS_PER_SYMBOL) continue;
-      seen.set(key, count + 1);
+      const symbol = item.symbols?.[0] ?? "";
+      const source = item.source ?? "";
+      if (symbol && (bySymbol.get(symbol) ?? 0) >= TOP_NEWS_PER_SYMBOL) continue;
+      if (source && (bySource.get(source) ?? 0) >= TOP_NEWS_PER_SOURCE) continue;
+      bySymbol.set(symbol, (bySymbol.get(symbol) ?? 0) + 1);
+      bySource.set(source, (bySource.get(source) ?? 0) + 1);
       kept.push(item);
     }
     return kept;
@@ -1613,7 +1646,7 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   const withImage = pool.filter(hasImage);
   const withoutImage = pool.filter((item) => !hasImage(item));
-  const ordered = bySymbolCap([...withImage, ...withoutImage]);
+  const ordered = capped([...withImage, ...withoutImage]);
   const items = (ordered.length >= TOP_NEWS_COUNT
     ? ordered
     : [...ordered, ...[...withImage, ...withoutImage].filter((i) => !ordered.includes(i))]
@@ -1650,56 +1683,94 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
        özet koymak bloğu iki katına çıkarıyordu. Künye (kaynak · ne zaman)
        manşetin üstünde, çünkü "hangi kaynaktan ve ne kadar taze" sorusu
        başlığı okumadan önce sorulan soru. */
-    <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {items.map((item) => (
-        <Link
-          key={item.id}
-          href={`/haberler/${item.id}`}
-          prefetch={false}
-          className="panel panel-hover flex min-w-0 flex-col overflow-hidden"
-        >
-          <NewsImage
-            src={
-              item.imageUrl && !genericImages.has(item.imageUrl)
-                ? item.imageUrl
-                : null
-            }
-            logoUrl={logoFor(item)}
-            /* Kartın kendi kenarlığı zaten var; görselin yalnızca ALT
-               kenarı gövdeden ayırıyor. `border-0` yer tutucu dalının kendi
-               dört kenarlığını da siliyor — kart içinde kutu içinde kutu
-               görünmesin. */
-            className="w-full rounded-none border-0 border-b border-line-soft"
-            sizeClass="aspect-[16/9] h-auto w-full"
-          />
-          <span className="flex min-w-0 flex-col gap-1.5 p-4">
-            <span className="plate text-nano tracking-[0.07em]">
-              <span className="numeral">{timeAgo(item.publishedAt, locale)}</span>
-              {item.source && (
-                <>
-                  <span aria-hidden className="mx-1">
-                    ·
-                  </span>
-                  {item.source}
-                </>
-              )}
-            </span>
-            <span className="text-read font-semibold leading-[19px] text-strong">
-              {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
-            </span>
-          </span>
-        </Link>
-      ))}
-    </div>
+    /* `<ul>/<li>` KALIYOR. Kartlara geçerken düz `<div>` ızgarasına
+       dönmüştü ve ekran okuyucu "altı öğelik liste" bilgisini kaybediyordu;
+       görsel olarak hiçbir şey değişmiyor. */
+    <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {items.map((item) => {
+        const headline =
+          locale === "tr" && item.headlineTr ? item.headlineTr : item.headline;
+        return (
+          <li key={item.id} className="min-w-0">
+            <Link
+              href={`/haberler/${item.id}`}
+              prefetch={false}
+              className="panel panel-hover flex h-full min-w-0 flex-col overflow-hidden"
+            >
+              <NewsImage
+                src={
+                  item.imageUrl && !genericImages.has(item.imageUrl)
+                    ? item.imageUrl
+                    : null
+                }
+                logoUrl={logoFor(item)}
+                /* Kartın kendi kenarlığı zaten var; görselin yalnızca ALT
+                   kenarı gövdeden ayırıyor. */
+                className="w-full rounded-none border-0 border-b border-line-soft"
+                sizeClass="aspect-[16/9] h-auto w-full"
+              />
+              {/* DOM'DA MANŞET ÖNCE, EKRANDA KÜNYE ÜSTTE.
+                  `flex-col-reverse` ikisini birden veriyor: bağlantının
+                  erişilebilir adı manşetle başlıyor (yoksa ekran okuyucu her
+                  kartta önce "7 saat önce · Benzinga" diyordu), görsel sıra
+                  ise künyeyi manşetin üstünde tutuyor. */}
+              <span className="flex min-w-0 flex-1 flex-col-reverse justify-end gap-1.5 p-4">
+                <span
+                  /* ÇEVRİLMEMİŞ SATIR KENDİ DİLİNİ TAŞIR. Çeviri rutini
+                     gecikince TR sayfada İngilizce manşet duruyor ve `lang`
+                     olmadan ekran okuyucu onu Türkçe fonemlerle sesletiyor.
+                     Aynı kural /haberler listesinde ve mercek yazılarında
+                     zaten uygulanıyor; kart yazılırken taşınmamıştı. */
+                  lang={locale === "tr" && !item.headlineTr ? "en" : undefined}
+                  className="line-clamp-3 text-read font-semibold leading-[19px] text-strong"
+                >
+                  {headline}
+                </span>
+                {/* KÜNYE BÜYÜK HARFE ÇEVRİLMİYOR. `.plate` ile yazılmıştı ve
+                    kaynak adları İngilizce: `<html lang="tr">` altında
+                    `text-transform: uppercase` Türkçe kuralı uyguluyor ve
+                    "Benzinga" ekranda "BENZİNGA", "SeekingAlpha"
+                    "SEEKİNGALPHA" oluyordu. */}
+                <span className="text-nano tracking-[0.02em] text-muted">
+                  <span className="numeral">{timeAgo(item.publishedAt, locale)}</span>
+                  {item.source && (
+                    <>
+                      <span aria-hidden className="mx-1">
+                        ·
+                      </span>
+                      {item.source}
+                    </>
+                  )}
+                </span>
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
-/** Haber ızgarasının iskeleti — kart oranı yerinde dursun diye 16:9. */
+/**
+ * Haber ızgarasının iskeleti.
+ *
+ * ÖLÇÜ GERÇEK KARTIN ÖLÇÜSÜ: tek bir 16/10 blok basılıyordu ve gerçek kart
+ * (16:9 görsel + üç satırlık metin bloğu) ondan seksen piksel uzundu — bant
+ * çözülünce altındaki her şey aşağı zıplıyordu. İskelet artık kartın iki
+ * parçasını ayrı ayrı taklit ediyor.
+ */
 function NewsGridSkeleton() {
   return (
-    <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <Skeleton key={i} className="aspect-[16/10] w-full rounded-xl" />
+        <div key={i} className="panel overflow-hidden">
+          <Skeleton className="aspect-[16/9] w-full rounded-none" />
+          <div className="flex flex-col gap-2 p-4">
+            <Skeleton className="h-4 w-full rounded-md" />
+            <Skeleton className="h-4 w-4/5 rounded-md" />
+            <Skeleton className="h-2.5 w-2/5 rounded-md" />
+          </div>
+        </div>
       ))}
     </div>
   );
@@ -2062,7 +2133,7 @@ async function LatestAnalyses({
   ]);
 
   return (
-    <Panel className="min-w-0 lg:col-start-1 lg:row-start-2">
+    <Panel className="min-w-0">
       <PanelHeader
         title={t.today.latestAnalyses}
         tone="plate"

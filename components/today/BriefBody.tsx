@@ -136,13 +136,18 @@ function BriefLines({
  * paragrafın tamamını açıkta bırakıyordu — ana sayfada özet kartı ekranın
  * yarısını kaplıyor, altındaki her şey katlamanın arkasına düşüyordu.
  *
- * Şimdi ölçü mutlak: manşetin altında iki paragraf. Kart bir GİRİŞ, metnin
+ * Şimdi ölçü mutlak: manşetin altında üç paragraf. Kart bir GİRİŞ, metnin
  * kendisi değil; okumaya devam etmek isteyen düğmeye basıyor. Geriye tek
  * satır kalıyorsa hiç katlanmıyor (aşağıdaki kural) — bir paragrafı saklayan
  * katlama kendi düğmesi kadar yer tutuyor ve okuyucuya hiçbir şey
  * kazandırmıyor.
+ *
+ * İKİYDİ, ÜÇE ÇIKTI. İki paragraf günün özetini kesiyordu: bülten tipik
+ * olarak "dün ne oldu" ile açılıp ikinci paragrafta mekanizmayı anlatıyor ve
+ * üçüncüde günün ikinci başlığına geçiyor. İkide kesmek, okuyucuyu tek bir
+ * hikâyenin ortasında bırakıyordu.
  */
-const OPEN_LINES = 2;
+const OPEN_LINES = 3;
 
 export function BriefBody({
   markdown,
