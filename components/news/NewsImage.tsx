@@ -51,8 +51,13 @@ export function NewsImage({
      ortasında duran ayrı bir nesne gibi gösteriyordu; görsel kutunun kendisi
      olmalı. Kenarlık yalnızca GÖRSEL OLMAYAN yer tutucuda kalıyor — orada
      kutuyu kutu yapan tek şey o. */
+  /* ZEMİN HER DALDA VAR. Görsel yüklenmezse (haber CDN'i düşer, adres
+     kırılır) `<img>` boş kalıyor ve kutunun içi bembeyaz görünüyor. 64
+     piksellik bir künyede bu küçük bir kusurdu; ana sayfadaki haber kartında
+     görsel 16:9 ve tam genişlik, yani beyaz bir delik oluyor. Çerçevenin
+     kendi zemini o durumda nötr bir yüzey bırakıyor. */
   const frame = cn(
-    "block shrink-0 overflow-hidden rounded-md",
+    "block shrink-0 overflow-hidden rounded-md bg-surface-elevated",
     sizeClass,
     className,
   );

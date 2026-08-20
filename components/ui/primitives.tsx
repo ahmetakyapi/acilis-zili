@@ -23,13 +23,30 @@ export function Panel({
 }
 
 /**
- * Panel başlığı — 15px/700, sağda isteğe bağlı accent bağlantı.
+ * Panel başlığı — sağda isteğe bağlı accent bağlantı.
  * Süs işareti yok; başlığı başlık yapan ağırlığı, kutusu değil.
+ *
+ * BAŞLIK PANELİN İŞİNE BAĞLI. Ana sayfada on bir panel vardı ve on biri de
+ * aynı başlığı taşıyordu: 14 piksel kalın degrade mürekkep, sağında "Tümünü
+ * Gör". Sayfa bu yüzden tek bir kutunun tekrarı gibi okunuyordu — göz
+ * nereye bakacağını içerikten değil, sırayla ilerleyerek buluyordu.
+ *
+ * İki ton var ve ayrım rol ayrımı:
+ *
+ *   `title` — OKUNACAK ya da TARANACAK panel. Bir manşet, bir liste, bir
+ *   kayıt. Başlık metnin parçası, o yüzden metin ağırlığında.
+ *
+ *   `plate` — BAKILACAK panel. Yan kolondaki gösterge tablosu: dünya
+ *   piyasaları, tahvil, makro, takvim. Oradaki başlık okunacak bir şey
+ *   değil, bir ETİKET — sayının ne olduğunu söylüyor ve kenara çekiliyor.
+ *   Aynı `.plate` künyesi zaten blok etiketlerinde ve veri damgalarında
+ *   kullanılıyor, yani yeni bir dil değil.
  */
 export function PanelHeader({
   title,
   action,
   meta,
+  tone = "title",
   className,
 }: {
   title: string;
@@ -37,18 +54,31 @@ export function PanelHeader({
   action?: React.ReactNode;
   /** Başlığın sağındaki sessiz bilgi — "04:00 — 20:00 ET" gibi. */
   meta?: string;
+  tone?: "title" | "plate";
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 px-4 py-4 sm:px-5",
+        "flex items-center justify-between gap-3 px-4 sm:px-5",
+        /* Plaka başlık daha kısa: 11 piksellik bir etiketin çevresinde 16
+           piksel dolgu, kutuyu başlığın kendisinden büyük gösteriyor. */
+        tone === "plate" ? "py-3.5" : "py-4",
         className,
       )}
     >
-      <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
-        {title}
-      </h2>
+      {tone === "plate" ? (
+        /* `min-w-0` + `truncate`: plaka başlık, yanındaki künye ve bağlantıyla
+           birlikte 376 piksellik yan kolonda 46 piksel boşluk bırakıyor
+           (ölçüldü). Daha uzun bir başlık ya da yedek yazı tipi devreye
+           girdiğinde satır kırılmak yerine kesiliyor — panelin dışına
+           taşmıyor. */
+        <h2 className="plate min-w-0 truncate">{title}</h2>
+      ) : (
+        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+          {title}
+        </h2>
+      )}
       {meta && <span className="text-xs text-muted">{meta}</span>}
       {action}
     </div>

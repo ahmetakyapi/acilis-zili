@@ -91,10 +91,13 @@ function Stats({ block }: { block: Extract<Block, { kind: "stats" }> }) {
             {item.value}
           </p>
           {item.note && (
-            /* Künye iki satırda kesiliyor: yazar bazen tam bir cümle
+            /* KÜNYE 10 PİKSEL, 8 DEĞİL. Bir süre `text-micro` (8px) idi ve
+               sistemdeki tek 8 piksellik CÜMLE oydu; o basamak iki kelimelik
+               plakalar için var (gün şeridinin ekseni gibi), tam cümle için
+               değil. İki satırda kesiliyor: yazar bazen uzun bir cümle
                yazıyor ve üç satıra çıkan tek bir hücre ızgaranın hizasını
                bozuyor. Cümlenin tamamı yazının içinde zaten duruyor. */
-            <p className="mt-1.5 line-clamp-2 text-micro leading-[14px] text-muted">
+            <p className="mt-1.5 line-clamp-2 text-nano leading-[13px] text-muted">
               {item.note}
             </p>
           )}
@@ -152,7 +155,7 @@ function Side({
         {value}
       </span>
       {label && (
-        <span className="mt-1.5 truncate text-micro leading-[14px] text-muted">
+        <span className="mt-1.5 truncate text-nano leading-[13px] text-muted">
           {label}
         </span>
       )}

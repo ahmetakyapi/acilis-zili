@@ -135,12 +135,18 @@ export default async function TodayPage() {
   const countdownLabel = trading ? t.today.untilClose : t.today.untilBell;
 
   return (
-    /* Izgara dört parçalı: ana kolon, yan kolon, okuma girişi ve haberler.
-       Son ikisi DOM'da yan kolondan SONRA gelir — mobilde tek kolona inince
-       ölçümlerin altına düşer, geniş ekranda `row-start` ile yine sol kolonun
-       devamı olarak ana yığının altına oturur. Mobilde okuma kartlarının
-       endekslerle dünya piyasaları arasına girmemesi bilinçli: ölçüm okurken
-       araya giren bir okuma davetiyesi akışı kesiyordu. */
+    /* IZGARA ÜÇ PARÇALI: ana kolon, yan kolon ve altlarında tam genişlik
+       haber bandı.
+
+       DÖRT PARÇAYDI ve sol kolonun kuyruğu çok uzundu: analizler ve haberler
+       de birinci sütunda, ana yığının altında duruyordu. Yan kolon sayfanın
+       üçte birinde bitiyor, kalan iki bin piksel boyunca sağ taraf boş
+       kalıyordu — ekranın üçte biri hiçbir şey söylemeyen bir oluktu.
+
+       Şimdi analizler yan kolona geçti (orası bir gösterge tablosu ve analiz
+       de bir ölçüm okuması), haberler ise iki kolonun ALTINA, tam genişliğe
+       indi. İki kolon böylece boyca eşitlendi ve haber bandı sayfanın kendi
+       kapanışı oldu. */
     <div className="grid gap-x-6 gap-y-5 lg:grid-cols-[minmax(0,1fr)_376px]">
       {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer
           kaplamaz. Geri sayım sıfıra inince orada kilitleniyor ve yeni güne
@@ -299,22 +305,16 @@ export default async function TodayPage() {
         </Suspense>
 
         {/* ---- Bugün bilanço açıklayanlar ---- */}
-        <Panel>
-          <PanelHeader
-            title={t.today.earningsToday}
-            action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
-          />
-          <Suspense fallback={<ListSkeleton rows={3} />}>
-            <EarningsToday locale={locale} t={t} />
-          </Suspense>
-        </Panel>
+        <Suspense fallback={<EarningsTodaySkeleton t={t} />}>
+          <EarningsToday locale={locale} t={t} />
+        </Suspense>
 
       </div>
 
       {/* ================= Yan kolon =================
           Yalnızca ölçüler: endeksler → dünya → tahviller → makro → senin
           listen. Okunacak metin sol kolonda. */}
-      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1 lg:row-span-3">
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1">
         <Suspense fallback={<IndexSkeleton />}>
           <IndexStrip locale={locale} t={t} />
         </Suspense>
@@ -355,6 +355,7 @@ export default async function TodayPage() {
         <Panel>
           <PanelHeader
             title={t.today.schedule}
+            tone="plate"
             action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
           />
           <Suspense fallback={<ListSkeleton rows={3} />}>
@@ -365,6 +366,7 @@ export default async function TodayPage() {
         <Panel>
           <PanelHeader
             title={t.today.weekAhead}
+            tone="plate"
             action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
           />
           <Suspense fallback={<ListSkeleton rows={3} />}>
@@ -372,48 +374,47 @@ export default async function TodayPage() {
           </Suspense>
         </Panel>
 
+        {/* Son analizler ANA KOLONDAN BURAYA. Bir bilanço analizi okunacak
+            bir metin değil, okunmuş bir ölçüm: şirket, çeyrek, karne notu.
+            Yeri takvimle favorilerin arası — üçü de "takip ettiğin şeyler
+            ne durumda" sorusunun parçası. Yan kolonun "yalnızca ölçüler"
+            kuralı bu satırla genişledi: ölçüm ve ölçümün okunuşu. */}
+        <Suspense fallback={<Skeleton className="h-52 w-full rounded-xl" />}>
+          <LatestAnalyses locale={locale} t={t} />
+        </Suspense>
+
         <Suspense fallback={<Skeleton className="h-56 w-full rounded-xl" />}>
           <WatchlistSummary locale={locale} t={t} />
         </Suspense>
       </div>
 
-      {/* ---- Son analizler ----
-           Burada bir süre iki STATİK karo vardı ("Mercek" ve "Rehber"), yani
-           yalnızca "şuraya git" diyen iki kapı. Okuyucu tıklamadan önce ne
-           bulacağını bilmiyordu ve yeni bir analiz ya da yazı çıktığında ana
-           sayfa bunu hiç haber vermiyordu. Sonra iki panel oldu: son
-           analizler ve son mercek yazıları, yan yana.
-
-           Mercek o ızgaradan ÇIKTI ve ana kolonun üstüne, günün özetinin
-           ardına taşındı (gerekçesi orada). Geriye analizler kaldı ve tek
-           başına tam genişlikte duruyor: bilanço analizi bir ölçüm okuması,
-           yeri de veri kartlarının yanı — okuma davetinin değil. */}
-      <Suspense
-        fallback={
-          <div className="lg:col-start-1 lg:row-start-2">
-            <Skeleton className="h-52 w-full rounded-xl" />
-          </div>
-        }
-      >
-        <LatestAnalyses locale={locale} t={t} />
-      </Suspense>
-
       {/* ---- Öne çıkan haberler ----
-           Okunacak metin ana kolonda durur: manşet dar kolonda iki satıra
-           kırılıyor, geniş kolonda bir bakışta okunuyor. Mobilde ise gün
-           verisi bittikten sonra, sayfanın en altında okunuyor. */}
-      <Panel className="min-w-0 lg:col-start-1 lg:row-start-3 lg:self-start">
-        <PanelHeader
-          title={t.today.topNews}
-          action={<PanelLink href="/haberler">{t.common.showAll}</PanelLink>}
-        />
-        <Suspense fallback={<ListSkeleton rows={4} />}>
+           TAM GENİŞLİK BANT, KUTU DEĞİL. Haberler bir süre sol kolonda,
+           analizlerin altında, altı satırlık düz bir listeydi: sayfanın en
+           son gördüğün ve en az tasarlanmış bloğuydu, üstelik sağında 470
+           piksel boş oluk duruyordu.
+
+           İki şey birden değişti. Blok iki kolonun ALTINA indi ve genişliğin
+           tamamını aldı; başlığı da bir panel başlığı değil BÖLÜM başlığı
+           oldu — kutu yok, altında hairline var. Sayfa böylece "kutu, kutu,
+           kutu" ritminden çıkıp bir bölümle kapanıyor. */}
+      <section className="min-w-0 lg:col-span-2 lg:row-start-2">
+        <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
+          <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+            {t.today.topNews}
+          </h2>
+          <div className="flex items-center gap-3">
+            <span className="plate text-nano">{t.today.topNewsNote}</span>
+            <PanelLink href="/haberler">{t.common.showAll}</PanelLink>
+          </div>
+        </div>
+        <Suspense fallback={<NewsGridSkeleton />}>
           <TopNews locale={locale} t={t} />
         </Suspense>
-      </Panel>
+      </section>
 
       {/* ---- Kaynak künyesi ---- */}
-      <footer className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted lg:col-span-2 lg:row-start-4">
+      <footer className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted lg:col-span-2 lg:row-start-3">
         <span>{t.today.sourceLine}</span>
         <span>{t.today.sourceNote}</span>
       </footer>
@@ -791,6 +792,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
     <Panel>
       <PanelHeader
         title={t.markets.yields}
+        tone="plate"
         meta={
           observedAt
             ? `FRED · ${formatEtDateShort(observedAt, locale)}`
@@ -915,7 +917,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   return (
     <Panel>
-      <PanelHeader title={t.today.worldMarkets} />
+      <PanelHeader title={t.today.worldMarkets} tone="plate" />
       <ul>
         {shown.map((market) => {
           const quote = result.data[market.symbol];
@@ -1178,12 +1180,40 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
   );
 }
 
+/** Başlıksız iskelet — panelin kendi başlığı bileşenin içinde. */
+function EarningsTodaySkeleton({ t }: { t: Dictionary }) {
+  return (
+    <Panel>
+      <PanelHeader
+        title={t.today.earningsToday}
+        action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
+      />
+      <ListSkeleton rows={4} />
+    </Panel>
+  );
+}
+
+/**
+ * Bugün bilanço açıklayanlar.
+ *
+ * PANELİ BİLEŞEN BASIYOR, sayfa değil: başlığın ortasındaki boşluğa listenin
+ * BOYU geliyor ("8 şirket") ve o sayı ancak sorgu döndükten sonra biliniyor.
+ * Başlık dışarıda, Suspense'in üstünde kalsaydı sayıya erişemezdi.
+ */
 async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
   const today = todayEt();
   const rows = await getEarningsBetween(today, today);
 
   if (rows.length === 0) {
-    return <EmptyState title={t.earnings.empty} />;
+    return (
+      <Panel>
+        <PanelHeader
+          title={t.today.earningsToday}
+          action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
+        />
+        <EmptyState title={t.earnings.empty} />
+      </Panel>
+    );
   }
 
   const names = await getSymbolNames(rows.map((row) => row.symbol));
@@ -1212,7 +1242,19 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
   };
 
   return (
-    <ul>
+    <Panel>
+      <PanelHeader
+        title={t.today.earningsToday}
+        /* SAYAÇ İKİ SAYIYI DA SÖYLÜYOR. Önce yalnızca toplam yazıyordu
+           ("47 şirket") ve altında sekiz satır duruyordu: okuyucu ya listenin
+           kırpıldığını fark etmiyor ya da sayıyı hatalı sanıyordu. Aynı kalıp
+           /mercek arşivinde de var. */
+        meta={t.today.earningsCount
+          .replace("{total}", String(rows.length))
+          .replace("{n}", String(shown.length))}
+        action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
+      />
+      <ul>
       {shown.map((row) => {
         const badge = badges[`${row.symbol}:${row.reportDate}`];
         return (
@@ -1268,7 +1310,8 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
           </li>
         );
       })}
-    </ul>
+      </ul>
+    </Panel>
   );
 }
 
@@ -1278,7 +1321,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
   if (!session?.user?.id) {
     return (
       <Panel>
-        <PanelHeader title={t.today.watchlistSummary} />
+        <PanelHeader title={t.today.watchlistSummary} tone="plate" />
         <EmptyState
           title={t.watchlist.emptyAll}
           hint={t.watchlist.emptyAllHint}
@@ -1297,7 +1340,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
   if (userSymbols.length === 0) {
     return (
       <Panel>
-        <PanelHeader title={t.today.watchlistSummary} />
+        <PanelHeader title={t.today.watchlistSummary} tone="plate" />
         <EmptyState
           title={t.today.watchlistEmpty}
           action={<PanelLink href="/favoriler">{t.watchlist.addSymbol}</PanelLink>}
@@ -1407,7 +1450,10 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <Panel className="px-4 py-4 sm:px-5">
       <div className="mb-3.5 flex items-baseline justify-between gap-3">
-        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+        {/* Plaka başlık — yan kolonun tamamı gibi. Gerekçe PanelHeader'da;
+            bu panel kendi başlığını elden yazıyor (ölçü ızgarası bir
+            `PanelHeader` düzeni değil), o yüzden sınıf burada tekrarlanıyor. */}
+        <h2 className="plate">
           {t.today.macroSummary}
         </h2>
         <PanelLink href="/makro">{t.common.showAll}</PanelLink>
@@ -1595,48 +1641,67 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
   };
 
   return (
-    <ul>
+    /* KART IZGARASI, SATIR LİSTESİ DEĞİL. Satırlar 64 piksellik bir küçük
+       resim + manşet + iki satırlık özet taşıyordu ve sağdaki görsel, metnin
+       arkasından gelen bir ek gibi duruyordu. Kartta görsel ÖNCE geliyor ve
+       16:9 oranında tam genişlik — haberi haber yapan şey orada.
+
+       Özet düştü: manşet zaten haberin özeti ve altı manşetin altına altı
+       özet koymak bloğu iki katına çıkarıyordu. Künye (kaynak · ne zaman)
+       manşetin üstünde, çünkü "hangi kaynaktan ve ne kadar taze" sorusu
+       başlığı okumadan önce sorulan soru. */
+    <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {items.map((item) => (
-        <li key={item.id}>
-          <Link
-            href={`/haberler/${item.id}`}
-            className="flex gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium leading-snug text-strong">
-                {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
-              </span>
-              {(item.summaryTr || item.summary) && (
-                <span className="mt-1 line-clamp-2 block text-xs leading-relaxed text-body">
-                  {locale === "tr" && item.summaryTr
-                    ? item.summaryTr
-                    : item.summary}
-                </span>
+        <Link
+          key={item.id}
+          href={`/haberler/${item.id}`}
+          prefetch={false}
+          className="panel panel-hover flex min-w-0 flex-col overflow-hidden"
+        >
+          <NewsImage
+            src={
+              item.imageUrl && !genericImages.has(item.imageUrl)
+                ? item.imageUrl
+                : null
+            }
+            logoUrl={logoFor(item)}
+            /* Kartın kendi kenarlığı zaten var; görselin yalnızca ALT
+               kenarı gövdeden ayırıyor. `border-0` yer tutucu dalının kendi
+               dört kenarlığını da siliyor — kart içinde kutu içinde kutu
+               görünmesin. */
+            className="w-full rounded-none border-0 border-b border-line-soft"
+            sizeClass="aspect-[16/9] h-auto w-full"
+          />
+          <span className="flex min-w-0 flex-col gap-1.5 p-4">
+            <span className="plate text-nano tracking-[0.07em]">
+              <span className="numeral">{timeAgo(item.publishedAt, locale)}</span>
+              {item.source && (
+                <>
+                  <span aria-hidden className="mx-1">
+                    ·
+                  </span>
+                  {item.source}
+                </>
               )}
-              <span className="mt-1.5 flex items-center gap-1.5 text-tiny text-muted">
-                <span className="numeral">{timeAgo(item.publishedAt, locale)}</span>
-                {item.source && (
-                  <>
-                    <span aria-hidden>·</span>
-                    <span className="truncate">{item.source}</span>
-                  </>
-                )}
-              </span>
             </span>
-            <NewsImage
-              src={
-                item.imageUrl && !genericImages.has(item.imageUrl)
-                  ? item.imageUrl
-                  : null
-              }
-              logoUrl={logoFor(item)}
-              className="shrink-0"
-              sizeClass="size-16"
-            />
-          </Link>
-        </li>
+            <span className="text-read font-semibold leading-[19px] text-strong">
+              {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
+            </span>
+          </span>
+        </Link>
       ))}
-    </ul>
+    </div>
+  );
+}
+
+/** Haber ızgarasının iskeleti — kart oranı yerinde dursun diye 16:9. */
+function NewsGridSkeleton() {
+  return (
+    <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Skeleton key={i} className="aspect-[16/10] w-full rounded-xl" />
+      ))}
+    </div>
   );
 }
 
@@ -2000,6 +2065,7 @@ async function LatestAnalyses({
     <Panel className="min-w-0 lg:col-start-1 lg:row-start-2">
       <PanelHeader
         title={t.today.latestAnalyses}
+        tone="plate"
         action={
           <PanelLink href="/bilancolar/analizler">{t.common.showAll}</PanelLink>
         }

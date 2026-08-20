@@ -177,6 +177,9 @@ const tr = {
     schedule: "Bugünün Takvimi",
     scheduleEmpty: "Bugün için planlanmış ekonomik veri yok.",
     earningsToday: "Bugün Bilanço Açıklayanlar",
+    /* Başlığın yanındaki sayaç: bugün kaç şirket açıklıyor ve kaçı
+       listede. Listede piyasa değerine göre en büyük sekizi var. */
+    earningsCount: "{total} şirketten {n}'i",
     earningsEmpty: "Bugün bilanço açıklayan takip ettiğin şirket yok",
     watchlistSummary: "Favorilerin",
     watchlistEmpty: "Henüz favori eklemedin.",
@@ -184,6 +187,10 @@ const tr = {
     latestAnalyses: "Son Analizler",
     latestStories: "Son Mercek Yazıları",
     topNews: "Öne Çıkan Haberler",
+    /* Bölüm başlığının yanındaki künye. Liste "son haberler" değil bir
+       SEÇKİ: kırk haberlik havuzdan altısı alınıyor ve sembol başına en
+       fazla ikisi giriyor. Başlık bunu söylemiyordu. */
+    topNewsNote: "son 40 haberden seçildi",
     weekAhead: "Haftaya Bakış",
     weekAheadEmpty: "Önümüzdeki hafta için planlanmış önemli veri yok.",
     worldMarkets: "Dünya Piyasaları",
