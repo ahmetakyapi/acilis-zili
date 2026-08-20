@@ -62,6 +62,7 @@ const en: typeof tr = {
     back: "Back",
     all: "All",
     more: "More",
+    less: "Less",
     showAll: "Show All",
     source: "Source",
     updated: "updated",

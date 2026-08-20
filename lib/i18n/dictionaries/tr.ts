@@ -72,6 +72,7 @@ const tr = {
     back: "Geri",
     all: "Tümü",
     more: "Daha Fazla",
+    less: "Daha Az",
     showAll: "Tümünü Gör",
     source: "Kaynak",
     updated: "güncellendi",

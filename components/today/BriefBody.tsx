@@ -128,15 +128,34 @@ function BriefLines({
   );
 }
 
+/**
+ * Katlanmadan önce açıkta kalan satır sayısı.
+ *
+ * ÖLÇÜ İKİ KEZ YANLIŞ KONDU. Önce "ilk paragraf + onu izleyen ilk üç madde"
+ * idi; günlük bültende maddeler metnin SONUNDA olduğu için bu, sekiz
+ * paragrafın tamamını açıkta bırakıyordu — ana sayfada özet kartı ekranın
+ * yarısını kaplıyor, altındaki her şey katlamanın arkasına düşüyordu.
+ *
+ * Şimdi ölçü mutlak: manşetin altında iki paragraf. Kart bir GİRİŞ, metnin
+ * kendisi değil; okumaya devam etmek isteyen düğmeye basıyor. Geriye tek
+ * satır kalıyorsa hiç katlanmıyor (aşağıdaki kural) — bir paragrafı saklayan
+ * katlama kendi düğmesi kadar yer tutuyor ve okuyucuya hiçbir şey
+ * kazandırmıyor.
+ */
+const OPEN_LINES = 2;
+
 export function BriefBody({
   markdown,
   moreLabel,
+  lessLabel,
   collapsible = true,
   size = "card",
 }: {
   markdown: string;
   /** `collapsible` iken katlanmış bölümün açma etiketi. */
   moreLabel?: string;
+  /** Açıkken düğmenin metni — kapatmanın da bir yolu olmalı. */
+  lessLabel?: string;
   collapsible?: boolean;
   size?: "card" | "page";
 }) {
@@ -146,14 +165,7 @@ export function BriefBody({
     return <BriefLines lines={lines} startNumber={1} size={size} />;
   }
 
-  /* Açıkta duran kısım: ilk paragraf + onu izleyen ilk üç madde.
-     Maddesiz metinde (haftalık bülten düz paragraf yazılıyor) eşik ikiydi
-     ve üç paragraflık bir özette "Tümünü Gör" TEK paragraf için çıkıyordu. */
-  const firstBulletAt = lines.findIndex((line) => line.trim().startsWith("- "));
-  const base =
-    firstBulletAt === -1
-      ? Math.min(lines.length, 3)
-      : Math.min(lines.length, firstBulletAt + 3);
+  const base = Math.min(lines.length, OPEN_LINES);
 
   /* Geriye tek satır kalıyorsa hiç katlanmıyor. Bir paragrafı saklayan
      katlama, kendi düğmesi kadar yer tutuyor ve okuyucuya hiçbir şey
@@ -167,15 +179,21 @@ export function BriefBody({
       {cut < lines.length && (
         /* Katlanan kısmın numarası, açıkta kalan kısmın SON BAŞLIĞINDAN
            sonraki madde sayısından devam eder; başlık yoksa baştan sayar. */
-        <details className="group/brief mt-3">
-          <summary className="flex min-h-8 cursor-pointer list-none items-center gap-1.5 text-small font-semibold text-primary [&::-webkit-details-marker]:hidden">
+        /* `<details>` KALIYOR, istemci durumu değil: katlama JS gelmeden de
+           çalışıyor ve kartın hidratlanmasını beklemiyor. Değişen tek şey
+           tetikleyicinin görünümü — okla önlenmiş bir metin satırıydı,
+           sayfanın en uzun metninin altında fark edilmiyordu. Artık kendi
+           kenarlığı olan bir denetim ve açıkken kapanma yolunu da veriyor. */
+        <details className="group/brief mt-3.5">
+          <summary className="inline-flex min-h-9 w-fit cursor-pointer list-none items-center gap-1.5 rounded-md border border-primary-faint px-3.5 text-small font-semibold text-primary transition-colors hover:bg-primary-tint [&::-webkit-details-marker]:hidden">
             <span
               aria-hidden
               className="transition-transform group-open/brief:rotate-90"
             >
               ›
             </span>
-            {moreLabel}
+            <span className="group-open/brief:hidden">{moreLabel}</span>
+            <span className="hidden group-open/brief:inline">{lessLabel}</span>
           </summary>
           <BriefLines
             lines={lines.slice(cut)}

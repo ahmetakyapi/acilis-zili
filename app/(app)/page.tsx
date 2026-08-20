@@ -298,31 +298,6 @@ export default async function TodayPage() {
           <StoriesSpotlight locale={locale} t={t} />
         </Suspense>
 
-        {/* ---- Bugünün ekonomik takvimi ---- */}
-        <Panel>
-          <PanelHeader
-            title={t.today.schedule}
-            action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
-          />
-          <Suspense fallback={<ListSkeleton rows={3} />}>
-            <ScheduleList locale={locale} t={t} />
-          </Suspense>
-        </Panel>
-
-        {/* ---- Haftaya bakış ----
-             Bugünün takviminin hemen ardından geliyor: ikisi de ekonomik
-             takvim ve aynı soruyu farklı ölçekte soruyor. Bilanço listesi
-             başka bir kaynağın verisi, o yüzden ikisinin arasına girmiyor. */}
-        <Panel>
-          <PanelHeader
-            title={t.today.weekAhead}
-            action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
-          />
-          <Suspense fallback={<ListSkeleton rows={3} />}>
-            <WeekAhead locale={locale} t={t} />
-          </Suspense>
-        </Panel>
-
         {/* ---- Bugün bilanço açıklayanlar ---- */}
         <Panel>
           <PanelHeader
@@ -366,6 +341,36 @@ export default async function TodayPage() {
         <Suspense fallback={<Skeleton className="h-44 w-full rounded-xl" />}>
           <MacroSummary locale={locale} t={t} />
         </Suspense>
+
+        {/* ---- Ekonomik takvim ----
+             ANA KOLONDAN BURAYA TAŞINDI. İkisi de kısa, tarifeli listeler:
+             saat, olayın adı ve bir rakam. Ana kolonda tam genişlikte
+             durduklarında satırın sağ yarısı boş kalıyor ve iki panel,
+             yanlarındaki uzun metinlerle (günün özeti, mercek manşeti) aynı
+             ağırlıkta görünüyordu. Yan kolon zaten ölçülerin sütunu — takvim
+             de bir ölçü, sadece geleceğin ölçüsü.
+
+             Sıra bilinçli: bugünün olayları, sonra hafta, sonra senin
+             listen. Ölçekten kişisel olana doğru. */}
+        <Panel>
+          <PanelHeader
+            title={t.today.schedule}
+            action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
+          />
+          <Suspense fallback={<ListSkeleton rows={3} />}>
+            <ScheduleList locale={locale} t={t} />
+          </Suspense>
+        </Panel>
+
+        <Panel>
+          <PanelHeader
+            title={t.today.weekAhead}
+            action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
+          />
+          <Suspense fallback={<ListSkeleton rows={3} />}>
+            <WeekAhead locale={locale} t={t} />
+          </Suspense>
+        </Panel>
 
         <Suspense fallback={<Skeleton className="h-56 w-full rounded-xl" />}>
           <WatchlistSummary locale={locale} t={t} />
@@ -1044,11 +1049,21 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
       /* Gövdeler BURADA çiziliyor: `BriefBody` ve iki bültenin ham metni
          sunucuda kalıyor, istemciye yalnızca çizilmiş ağaç gidiyor. */
       dailyBody={
-        daily && <BriefBody markdown={daily.bodyMd} moreLabel={t.common.showAll} />
+        daily && (
+          <BriefBody
+            markdown={daily.bodyMd}
+            moreLabel={t.common.showAll}
+            lessLabel={t.common.less}
+          />
+        )
       }
       weeklyBody={
         weekly && (
-          <BriefBody markdown={weekly.bodyMd} moreLabel={t.common.showAll} />
+          <BriefBody
+            markdown={weekly.bodyMd}
+            moreLabel={t.common.showAll}
+            lessLabel={t.common.less}
+          />
         )
       }
       labels={{
@@ -1088,11 +1103,17 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
           ? timePair(event.eventDate, event.eventTimeEt, locale)
           : null;
         const high = event.importance === "high";
+        /* Biçim paylaşılan yardımcıdan: elden yazılan satır yüzdeyi İNGİLİZCE
+           kuralıyla sona koyuyordu ("3.46353%") ve ondalık ayracını
+           yerelleştirmiyordu — aynı sayı sayfanın üstündeki şeritte "%3,46"
+           yazıyordu. */
+        const forecast = formatEventValue(event.forecast, event.unit, locale);
+        const actual = formatEventValue(event.actual, event.unit, locale);
         return (
           <li
             key={event.id}
             className={cn(
-              "flex items-center gap-3 border-t border-line px-4 py-3 sm:gap-4 sm:px-5",
+              "flex items-center gap-3 border-t border-line px-4 py-3 sm:px-5",
               high && "bg-down-wash",
             )}
           >
@@ -1124,27 +1145,32 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
             >
               {locale === "tr" ? event.titleTr : event.titleEn}
             </span>
-            <span className="hidden w-[86px] shrink-0 text-right text-small text-muted sm:block">
-              {/* Biçim paylaşılan yardımcıdan: elden yazılan bu satır yüzdeyi
-                  İNGİLİZCE kuralıyla sona koyuyor ("3.46353%") ve ondalık
-                  ayracını yerelleştirmiyordu — aynı sayı sayfanın üstündeki
-                  şeritte "%3,46" yazıyordu. */}
-              {formatEventValue(event.forecast, event.unit, locale)
-                ? `${t.calendar.forecast} ${formatEventValue(event.forecast, event.unit, locale)}`
-                : "—"}
-            </span>
-            <span
-              className={cn(
-                "numeral w-[62px] shrink-0 text-right text-sm",
-                event.actual
-                  ? high
-                    ? "font-bold text-down"
-                    : "font-semibold text-strong"
-                  : "text-muted",
-              )}
-            >
-              {formatEventValue(event.actual, event.unit, locale) ?? "—"}
-            </span>
+            {/* TEK SAYI SÜTUNU, İKİ DEĞİL. Kart ana kolondayken beklenti ve
+                gerçekleşen ayrı sütunlardaydı; yan kolona taşınınca (376px)
+                ikisi de çoğu satırda boş olduğu için yan yana iki tire
+                genişliğin üçte birini yiyor, olayın adı üç satıra
+                kırılıyordu. Gerçekleşen varsa o yazılıyor, yoksa beklenti —
+                ve altındaki künye hangisi olduğunu söylüyor. İkisini birden
+                görmek isteyen /takvim'e gidiyor. */}
+            {(actual || forecast) && (
+              <span className="shrink-0 text-right">
+                <span
+                  className={cn(
+                    "numeral block text-base leading-tight",
+                    actual
+                      ? high
+                        ? "font-bold text-down"
+                        : "font-semibold text-strong"
+                      : "text-body",
+                  )}
+                >
+                  {actual ?? forecast}
+                </span>
+                <span className="block text-nano leading-tight text-muted">
+                  {actual ? t.calendar.actual : t.calendar.forecast}
+                </span>
+              </span>
+            )}
           </li>
         );
       })}
@@ -1202,11 +1228,23 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
               aria-label={`${row.symbol} ${names[row.symbol]?.name ?? ""}`}
               className="absolute inset-0"
             />
-            <span className="w-[66px] shrink-0 text-base font-bold text-strong">
-              {row.symbol}
-            </span>
-            <span className="hidden min-w-0 flex-1 truncate text-base text-body sm:block">
-              {names[row.symbol]?.name ?? ""}
+            {/* LOGO VE İKİ SATIRLI KİMLİK. Satır "WMT ......... Walmart Inc"
+                diye iki uca yaslanmış iki metinden ibaretti: aradaki boşluk
+                satırın yarısıydı ve hemen altındaki "Son Analizler" paneli
+                aynı şirketleri logolu, iki satırlı künyeyle gösteriyordu.
+                Aynı sayfada aynı bilgi iki farklı ağırlıkta duruyordu. */}
+            <LogoTile
+              symbol={row.symbol}
+              logoUrl={names[row.symbol]?.logoUrl}
+              size="md"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="numeral block text-base font-bold leading-tight text-strong">
+                {row.symbol}
+              </span>
+              <span className="block truncate text-tiny leading-tight text-muted">
+                {names[row.symbol]?.name ?? ""}
+              </span>
             </span>
             {badge ? (
               <AnalysisBadge badge={badge} t={t} size="sm" />
@@ -1217,11 +1255,16 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
                 {row.hour ? (hourLabel[row.hour] ?? t.earnings.timeUnknown) : t.earnings.timeUnknown}
               </TimingChip>
             )}
-            <span className="ml-auto shrink-0 text-right text-small text-muted sm:ml-0 sm:w-[82px]">
-              {row.epsEstimate !== null
-                ? `${t.earnings.epsEstimate} ${formatPrice(row.epsEstimate, locale, { currency: true })}`
-                : "—"}
-            </span>
+            {row.epsEstimate !== null && (
+              <span className="hidden shrink-0 text-right sm:block">
+                <span className="numeral block text-base font-semibold leading-tight text-body">
+                  {formatPrice(row.epsEstimate, locale, { currency: true })}
+                </span>
+                <span className="block text-nano leading-tight text-muted">
+                  {t.earnings.epsEstimate}
+                </span>
+              </span>
+            )}
           </li>
         );
       })}
