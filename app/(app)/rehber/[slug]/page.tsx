@@ -14,6 +14,7 @@ import {
   type GuideArticle,
 } from "@/content/guide";
 import { getI18n, type Dictionary } from "@/lib/i18n";
+import { metaDescription } from "@/lib/page-meta";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
@@ -41,7 +42,7 @@ export async function generateMetadata(props: PageProps<"/rehber/[slug]">) {
   if (!article) return {};
   return {
     title: article.title,
-    description: article.dek,
+    description: metaDescription(article.dek),
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
        adresleri (yüzlerce hisse, her yazı, her analiz) canonical'sız ve

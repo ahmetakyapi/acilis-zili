@@ -531,21 +531,6 @@ export function formatEtDateCompact(dateStr: string, locale: string): string {
   }).format(date);
 }
 
-const TR_TIME = new Intl.DateTimeFormat("tr-TR", {
-  timeZone: "Europe/Istanbul",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-
-/**
- * ET saatini Türkiye saatiyle eşler.
- * Dönüş: { et: "08:30", tr: "15:30" } — DST farkları utcDate üzerinden doğru.
- */
-export function dualTime(utcDate: Date, etTime: string): { et: string; tr: string } {
-  return { et: etTime, tr: TR_TIME.format(utcDate) };
-}
-
 /**
  * Haber gerçekten bu şirketle mi ilgili?
  *

@@ -7,7 +7,7 @@ import { LogoTile } from "@/components/ui/primitives";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { getStories, getStoryBySlug, getSymbolNames } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { missingMetadata } from "@/lib/page-meta";
+import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
 import { formatEtDateLong, safeExternalUrl } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ export async function generateMetadata(props: PageProps<"/mercek/[slug]">) {
   if (!story) return missingMetadata(locale);
   return {
     title: story.title,
-    description: story.dek,
+    description: metaDescription(story.dek),
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
        adresleri (yüzlerce hisse, her yazı, her analiz) canonical'sız ve

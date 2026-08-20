@@ -55,25 +55,6 @@ export function PanelHeader({
   );
 }
 
-/** Panel içi satır — üstündeki hairline ayırır. */
-export function PanelRow({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div">) {
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-4 border-t border-line px-4 py-3 sm:px-5",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-}
-
 /** Panel başlığındaki "Tümü →" tipi sessiz bağlantı. */
 export function PanelLink({
   href,

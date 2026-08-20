@@ -84,3 +84,36 @@ export function missingMetadata(locale: string): Metadata {
     robots: { index: false, follow: false },
   };
 }
+
+/**
+ * Arama sonucuna sığan açıklama.
+ *
+ * Dinamik sayfaların künyesi yazının giriş cümlesinden geliyor ve o cümle
+ * ekran için yazılmış, arama sonucu için değil: mercek yazılarında 236
+ * karaktere kadar çıkıyor. Google açıklamayı ~155-160 karakterde kesiyor ve
+ * kesme noktası kelimenin ortasına düşebiliyor; paylaşım kartlarında da
+ * aynısı oluyor.
+ *
+ * Kesme KELİME SINIRINDA: son boşluktan geriye gidiliyor ve üç nokta
+ * konuyor. Metin zaten sığıyorsa hiç dokunulmuyor — kısa bir cümlenin
+ * sonuna üç nokta koymak, devamı varmış gibi göstermek olurdu.
+ */
+const META_DESCRIPTION_LIMIT = 158;
+
+export function metaDescription(
+  text: string | null | undefined,
+): string | undefined {
+  const clean = text?.trim();
+  if (!clean) return undefined;
+  if (clean.length <= META_DESCRIPTION_LIMIT) return clean;
+
+  const cut = clean.slice(0, META_DESCRIPTION_LIMIT);
+  const lastSpace = cut.lastIndexOf(" ");
+  /* Boşluksuz bir dizge gelirse (tek uzun kelime) sert kesmek zorundayız;
+     yoksa son kelime tamamen düşer. */
+  const trimmed = (lastSpace > META_DESCRIPTION_LIMIT * 0.6
+    ? cut.slice(0, lastSpace)
+    : cut
+  ).replace(/[\s.,;:—–-]+$/, "");
+  return `${trimmed}…`;
+}

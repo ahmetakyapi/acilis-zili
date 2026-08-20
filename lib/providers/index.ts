@@ -39,11 +39,6 @@ export function providerStatus() {
   };
 }
 
-export function isFullyConfigured(): boolean {
-  const status = providerStatus();
-  return status.alpaca && status.finnhub && status.fred;
-}
-
 /* --------------------------------------------------------------------------
    Fiyatlar
    -------------------------------------------------------------------------- */

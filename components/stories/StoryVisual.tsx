@@ -22,11 +22,6 @@ import type { Locale } from "@/lib/i18n/config";
  * karosunun; logolar onu taklit etmez.
  */
 
-export type SymbolMetaLite = {
-  name?: string | null;
-  logoUrl?: string | null;
-};
-
 /** Bir şirketin plakadaki satırı. */
 export type CastMember = {
   symbol: string;

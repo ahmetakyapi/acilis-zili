@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { ComponentProps } from "react";
 import type { PriceChart as PriceChartType } from "./PriceChart";
 
 /**
@@ -32,5 +31,3 @@ export const PriceChartLazy = dynamic(
     ),
   },
 ) as typeof PriceChartType;
-
-export type PriceChartLazyProps = ComponentProps<typeof PriceChartType>;

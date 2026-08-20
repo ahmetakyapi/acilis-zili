@@ -12,7 +12,7 @@ import {
   isGenericNewsImage,
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { missingMetadata } from "@/lib/page-meta";
+import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { getQuotes } from "@/lib/providers";
 import { formatPrice, safeExternalUrl, timeAgo } from "@/lib/utils";
@@ -46,7 +46,7 @@ export async function generateMetadata(
     locale === "tr" && item.summaryTr ? item.summaryTr : item.summary;
   return {
     title: headline,
-    description: summary ?? undefined,
+    description: metaDescription(summary),
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
        adresleri (yüzlerce hisse, her yazı, her analiz) canonical'sız ve

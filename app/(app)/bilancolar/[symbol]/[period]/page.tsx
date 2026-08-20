@@ -32,7 +32,7 @@ import { getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { missingMetadata } from "@/lib/page-meta";
+import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import {
@@ -225,7 +225,7 @@ export async function generateMetadata(
   if (!row) return missingMetadata(locale);
   return {
     title: `${row.company} ${row.periodLabel} — ${row.symbol}`,
-    description: row.headline,
+    description: metaDescription(row.headline),
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
        adresleri (yüzlerce hisse, her yazı, her analiz) canonical'sız ve

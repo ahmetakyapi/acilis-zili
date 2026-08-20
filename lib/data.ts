@@ -464,12 +464,6 @@ export const BRIEF_PUBLISH_TR: Record<BriefPeriod, string> = {
   weekly: "09:30",
 };
 
-export async function getDailyBrief(
-  locale: string,
-): Promise<DailyBriefRow | null> {
-  return getBriefByDate(todayEt(), locale);
-}
-
 /**
  * Belirli bir günün bülteni. Tablo (tarih, dil) benzersiz olduğu için her gün
  * kendi kaydını tutar — arşiv zaten birikmiş durumda, tek yaptığımız onu

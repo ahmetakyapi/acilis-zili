@@ -80,8 +80,6 @@ export const MACRO_SERIES = [
   },
 ] as const;
 
-export type MacroSeriesDefinition = (typeof MACRO_SERIES)[number];
-
 async function fredFetch<T>(
   path: string,
   params: Record<string, string>,

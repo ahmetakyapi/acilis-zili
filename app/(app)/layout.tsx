@@ -11,6 +11,28 @@ import { ViewBeacon } from "@/components/layout/ViewBeacon";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { getI18n, getTheme } from "@/lib/i18n";
 
+/* --------------------------------------------------------------------------
+   BU SEGMENTTE `loading.tsx` YOK — ve bu bilinçli.
+
+   Bir süre vardı: sayfa iskeleti basıyor, gezinmeye anında geri bildirim
+   veriyordu. Ama `loading.tsx` bulunduğu segmentte bir Suspense sınırı
+   açıyor ve Next yanıtı o sınıra kadar HEMEN akıtıyor — durum kodu da o an
+   yazılıyor. Sonuç: `notFound()` çağıran her dinamik rota gövdesinde 404
+   ekranını basıyor ama HTTP 200 dönüyordu. Ölçüldü — /rehber/olmayan,
+   /mercek/olmayan, /haberler/999, /bilancolar/YOK/2026Q1: dördü de 200.
+   Arama motorları için bu "soft 404": olmayan sayfalar taranıyor, tarama
+   bütçesi ve dizin kalitesi yanıyor.
+
+   Karşılığında kaybedilen şey küçük çıktı. Sayfaların yavaş parçaları zaten
+   kendi `<Suspense>` adalarında; kabuk ölçüldüğünde 43-350 ms arasında
+   akıyor (en yavaşı /bilancolar). Gezinme geri bildirimini de üstteki
+   `RouteProgress` şeridi veriyor — tıklamayla birlikte başlıyor, sayfa
+   hazır olunca kapanıyor.
+
+   Yeniden eklenecekse: 404 dönebilen dinamik rotaların ÜSTÜNDE bir yükleme
+   sınırı olmamalı.
+   -------------------------------------------------------------------------- */
+
 export default async function AppLayout({
   children,
 }: {

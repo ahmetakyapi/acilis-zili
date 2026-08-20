@@ -355,24 +355,3 @@ export function candleTtlSeconds(
   }
   return 43200; // 12 saat — günlük barlar gün içinde değişmez
 }
-
-/** Formatlanmış geri sayım: 1s 28dk / 1h 28m */
-export function formatCountdown(
-  target: Date,
-  now: Date,
-  locale: string,
-): string {
-  const totalMinutes = Math.max(0, Math.round((target.getTime() - now.getTime()) / 60000));
-  const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = totalMinutes % 60;
-
-  const unit =
-    locale === "tr"
-      ? { d: "g", h: "s", m: "dk" }
-      : { d: "d", h: "h", m: "m" };
-
-  if (days > 0) return `${days}${unit.d} ${hours}${unit.h}`;
-  if (hours > 0) return `${hours}${unit.h} ${minutes}${unit.m}`;
-  return `${minutes}${unit.m}`;
-}

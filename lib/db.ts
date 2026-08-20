@@ -29,8 +29,4 @@ export const db: Database = new Proxy({} as Database, {
   },
 });
 
-export function isDbConfigured(): boolean {
-  return Boolean(process.env.DATABASE_URL);
-}
-
 export { schema };
