@@ -139,9 +139,12 @@ drizzle/             # migration'lar — elle düzenlenmez, yenisi eklenir
 
 ## Bilinen sınırlar
 
-- Fiyatlar Alpaca **IEX** beslemesinden gelir (gerçek zamanlı, konsolide
-  banttan birkaç sent sapabilir) — ekranda damgalanır. SIP gerekirse
-  `lib/providers/alpaca.ts` içinde `DEFAULT_FEED = "sip"` yeterli.
+- Fiyatlar Alpaca'nın **konsolide tape** (SIP) beslemesinden gelir ve
+  ücretsiz katmanda **15 dakika gecikmelidir** — ekranda damgalanır. Anlık
+  uçlarda `delayed_sip`, tarihsel bar ucunda `sip` kullanılıyor; gerekçe ve
+  ölçümler `lib/providers/alpaca.ts` başında. Bir dönem IEX beslemesi
+  kullanıldı: gerçek zamanlıydı ama hacmin %2-8'ini görüyordu ve seans dışı
+  fiyat hiç akmıyordu.
 - Endeksler ETF üzerinden izlenir (QQQ/SPY/DIA/IWM) ve bu arayüzde belirtilir.
 - Finnhub ücretsiz katmanında ekonomik takvim ucu yoktur; takvim resmî
   kaynaklardan tohumlanır ve FRED ile doğrulanır.

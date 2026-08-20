@@ -404,7 +404,7 @@ Liquidity is plentiful on calm days and evaporates on panic days. On a morning w
 
 ## Where You'll See It on This Site
 
-The **volume** row on the stock page is the crudest liquidity gauge. Prices here come from the IEX feed, so the last price on screen can drift a few cents from the consolidated tape — which is itself another face of the spread.`,
+The **volume** row on the stock page is the crudest liquidity gauge, and it is the total across every exchange (the consolidated tape). For a while it showed a single exchange's volume (IEX), which was somewhere between 2% and 8% of the real figure — and because that share differs from stock to stock, ranking companies by volume gave the wrong order too. Prices on screen are delayed 15 minutes; to watch the spread live you need your broker's book.`,
   },
 
   /* ---------------------------------------------------------------------- */

@@ -10,7 +10,12 @@ import {
   LogoTile,
 } from "@/components/ui/primitives";
 import { primaryOnly } from "@/db/seed/indices";
-import { getCompanies, getStatus, type CompanyRow } from "@/lib/data";
+import {
+  getCompanies,
+  getStatus,
+  liveMarketCap,
+  type CompanyRow,
+} from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getQuotes, getWeeklyChanges } from "@/lib/providers";
 import {
@@ -356,6 +361,26 @@ async function CompaniesTable({
   ]);
   const quotes = quotesResult.ok ? quotesResult.data : {};
 
+  /* PİYASA DEĞERİ SATIRDAKİ FİYATLA AYNI KAYNAKTAN. `getCompanies()` değeri
+     `quotes_cache`teki fiyatla hesaplıyor; o fiyat bu sayfanın az önce
+     çektiği canlı kotasyondan bir tur eski. Aynı satırda "Fiyat" canlı
+     sayıyı, "Piyasa Değeri" bir önceki fiyattan çıkan sayıyı gösteriyordu —
+     normal bir günde fark görünmüyor ama MRNA'nın tek seansta üçe katlandığı
+     gün ekranda iki farklı fiyattan türemiş iki sayı yan yana duruyordu.
+     Kotasyon gelmeyen sembolde önbellekten hesaplanmış değer taban kalır. */
+  const capOf = (row: CompanyRow): number | null => {
+    const price = quotes[row.symbol]?.price;
+    return price != null
+      ? liveMarketCap(
+          {
+            marketCap: row.storedMarketCap,
+            shareOutstanding: row.shareOutstanding,
+          },
+          price,
+        )
+      : row.marketCap;
+  };
+
   /* Değeri OLMAYAN satır `null` döner, sayı değil.
      Eskiden eksik değerler `-Infinity` ile temsil ediliyordu ve bu, azalan
      sıralamada işe yarayıp artanda bozuluyordu: "Değişim"e tıklayıp artana
@@ -374,7 +399,7 @@ async function CompaniesTable({
       case "hacim":
         return quote?.volume ?? row.volume ?? null;
       default:
-        return row.marketCap ?? null;
+        return capOf(row) ?? null;
     }
   };
 
@@ -543,9 +568,10 @@ async function CompaniesTable({
                           altında duruyor; 390px'e dört sütun, kalan yerler
                           daraltılarak sığdı. */}
                       <td className="numeral py-3 pl-1 pr-3 text-right text-small font-semibold text-body sm:px-3 sm:text-base">
-                        {company.marketCap
-                          ? formatMoneyCompact(company.marketCap, locale)
-                          : "—"}
+                        {(() => {
+                          const cap = capOf(company);
+                          return cap ? formatMoneyCompact(cap, locale) : "—";
+                        })()}
                       </td>
                       <td className="numeral hidden px-4 py-3 text-right text-read text-soft sm:table-cell sm:px-5">
                         {formatVolume(quote?.volume ?? company.volume, locale)}

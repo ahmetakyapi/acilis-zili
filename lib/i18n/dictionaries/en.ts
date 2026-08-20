@@ -154,8 +154,9 @@ const en: typeof tr = {
     macroSummary: "Macro",
     todayFlow: "Today's Flow",
     pageHeading: "Opening Bell — US Market Tracking",
-    sourceLine: "Prices: Alpaca IEX · Profiles and earnings: Finnhub · Macro: FRED",
-    sourceNote: "Indices tracked via ETFs · data may be delayed",
+    sourceLine:
+      "Prices: Alpaca consolidated tape · Profiles and earnings: Finnhub · Macro: FRED",
+    sourceNote: "Indices tracked via ETFs · prices delayed 15 min",
   },
 
   calendar: {
@@ -476,7 +477,7 @@ const en: typeof tr = {
     sessionRegular: "Regular",
     sessionAfter: "After Hours",
     sessionOvernight: "Overnight",
-    sessionOvernightNote: "Extended-hours prices don't flow on the IEX feed",
+    sessionOvernightNote: "Overnight prices don't flow on the consolidated tape",
     otherZoneTimes: "In Turkish time:",
   },
 
@@ -880,9 +881,10 @@ const en: typeof tr = {
     failed: "Couldn't load data",
     failedHint: "The provider isn't responding. Showing the last known value.",
     lastKnown: "Last known value",
-    feedIex: "IEX · real-time",
+    feedTape: "Consolidated tape · 15 min delayed",
     delayedNote:
-      "Prices come from the IEX feed and may differ from the consolidated tape.",
+      "Prices come from the consolidated tape (SIP) with a 15-minute delay. Intraday volume, open-high-low and the previous close are the total across every exchange.",
+    delayed: "15 min delayed",
     sourceCache: "cache",
     sourceSeed: "calendar",
     updatedAt: "updated {time}",

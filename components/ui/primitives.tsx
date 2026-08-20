@@ -426,15 +426,25 @@ export type DataStampLabels = {
   sourceSeed: string;
   updatedAt: string;
   mayBeStale: string;
+  /** "15 dk gecikmeli" — yayını gecikmeli sağlayıcılarda damgaya eklenir. */
+  delayed: string;
 };
 
 /* Sağlayıcı adları çevrilmez — marka. "önbellek" ve "takvim" ise sözlükten
    geliyor: sabit tabloda dururken İngilizce sitede de Türkçe basılıyorlardı. */
 const PROVIDER_LABEL: Record<string, string> = {
-  alpaca: "Alpaca · IEX",
+  alpaca: "Alpaca · SIP",
   finnhub: "Finnhub",
   fred: "FRED",
 };
+
+/* GECİKME DAMGAYA YAZILIYOR. Damgadaki saat verinin YAŞI değil, bizim onu
+   ÇEKTİĞİMİZ an. Konsolide tape ücretsiz katmanda 15 dakika geriden
+   yayımlandığı için "güncellendi 12:00" satırı, 11:45'in fiyatını 12:00'nin
+   fiyatı gibi gösteriyordu — projenin "bayat veriyi taze gibi gösterme"
+   kuralının küçük ama gerçek bir ihlali. Gecikme sağlayıcının bir özelliği,
+   o yüzden tablo burada. */
+const DELAYED_PROVIDERS = new Set(["alpaca"]);
 
 export function DataStamp({
   source,
@@ -469,6 +479,7 @@ export function DataStamp({
       }).format(typeof at === "string" ? new Date(at) : at)
     : null;
 
+  const delayed = DELAYED_PROVIDERS.has(source);
   const sourceLabel =
     PROVIDER_LABEL[source] ??
     (source === "cache"
@@ -493,6 +504,12 @@ export function DataStamp({
           <span className="numeral">
             {labels.updatedAt.replace("{time}", time)}
           </span>
+        </>
+      )}
+      {delayed && (
+        <>
+          <span aria-hidden>·</span>
+          <span>{labels.delayed}</span>
         </>
       )}
       {stale && (

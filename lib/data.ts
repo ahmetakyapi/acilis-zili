@@ -689,24 +689,45 @@ export type SymbolMeta = {
  * bir şirket gibi listeleniyordu. Aynı satırda sağlayıcının kendi
  * `marketCap` alanı 972 milyar diyordu, yani veri kendi içinde çelişiyordu.
  *
- * Kural: canlı hesap ile kayıtlı değer birbirinden ÜÇTE BİRDEN fazla
- * ayrılıyorsa canlı hesap güvenilmez sayılır ve kayıtlı değer basılır.
- * Sapma eşiği geniş bilerek — profil haftalarca eski olabiliyor ve o süre
- * içindeki gerçek fiyat hareketi tek başına %30'a çıkabilir; yakalanmak
- * istenen o değil, mertebe hatası.
+ * EŞİK BİR KEZ YANLIŞ KONDU. Kural önce "canlı hesap kayıtlı değerden
+ * ÜÇTE BİRDEN fazla ayrılıyorsa kayıtlı değeri bas" diye yazıldı ve bu,
+ * gerçek fiyat hareketini de hata sayıyordu: MRNA 19 Ağustos 2026'da tek
+ * günde 62,96 dolardan 174,38 dolara çıktı ve denetim devreye girdi —
+ * ekranda hâlâ 25,1 milyar dolar yazıyordu, oysa şirket o gün 70 milyar
+ * dolar olmuştu. Yani denetimin kendisi, önlemeye çalıştığı şeyi
+ * (bayat sayıyı büyük puntoyla göstermek) yapıyordu.
+ *
+ * Ayırt edilmek istenen şey bir MERTEBE hatası: yanlış sınıfın hisse sayısı
+ * kullanıldığında çarpım yüzde otuz değil yüzlerce KAT sapıyor (BRK.B'de
+ * 1379 kat). Fiyat hareketiyse profil tazeleme penceresinde (~29 gün)
+ * en çok birkaç katla sınırlı. Eşik bu yüzden orana çevrildi.
+ *
+ * KABUL EDİLEN SINIR: iki değer arasındaki KAT farkı. Bu sınırın üstünde
+ * hisse sayısına güvenilmez ve sağlayıcının kendi `marketCap` alanı
+ * basılır. Bilinen açık: bir hisse profil penceresi içinde gerçekten on
+ * katına çıkarsa yine kayıtlı değere düşülür — o durumda da sayı bayat
+ * olur ama alternatif, BRK.B'yi mikro şirket göstermek.
  */
-const CAP_SAPMA_ESIGI = 1 / 3;
+const CAP_MERTEBE_KATI = 10;
 
 export function liveMarketCap(
-  meta: SymbolMeta | undefined,
+  /* Fonksiyonun ihtiyacı iki alan. Tam `SymbolMeta` isteniyordu ve şirketler
+     dizini bu yüzden yalnızca denetimi geçmek için sahte bir nesne kuruyordu
+     (ad, logo, sektör hep boş). İki alanlık bir imza, çağıranın elindekiyle
+     doğrudan çalışıyor. */
+  meta:
+    | Pick<SymbolMeta, "marketCap" | "shareOutstanding">
+    | undefined
+    | null,
   price: number | null | undefined,
 ): number | null {
   if (!meta) return null;
   if (meta.shareOutstanding && typeof price === "number" && price > 0) {
     const canli = meta.shareOutstanding * price;
     if (meta.marketCap && meta.marketCap > 0) {
-      const sapma = Math.abs(canli - meta.marketCap) / meta.marketCap;
-      if (sapma > CAP_SAPMA_ESIGI) return meta.marketCap;
+      const kat =
+        Math.max(canli, meta.marketCap) / Math.min(canli, meta.marketCap);
+      if (kat > CAP_MERTEBE_KATI) return meta.marketCap;
     }
     return canli;
   }
@@ -778,7 +799,7 @@ export type CompanyRow = {
   industry: string | null;
   logoUrl: string | null;
   /**
-   * Piyasa değeri — CANLI hesaplanmış.
+   * Piyasa değeri — ÖNBELLEKTEKİ fiyatla hesaplanmış taban değer.
    *
    * Sağlayıcının yazdığı `marketCap` profil çekildiği ANIN fotoğrafı ve o
    * profil ~29 günde bir tazeleniyor; hisse sayısı ise ancak geri
@@ -786,8 +807,20 @@ export type CompanyRow = {
    * canlı fiyattan hesaplıyordu ama `/sirketler` fotoğrafı basıyordu: aynı
    * şirket iki ekranda iki farklı piyasa değeriyle görünüyordu ve okuyucu
    * için bu bir hata demek.
+   *
+   * Burada hesap `quotes_cache`teki fiyatla yapılıyor ve o fiyat, sayfanın
+   * kendi çektiği canlı kotasyondan bir tur eski: aynı satırda "Fiyat"
+   * sütunu canlı sayıyı, "Piyasa Değeri" sütunu bir önceki fiyattan çıkan
+   * sayıyı gösteriyordu. Hızlı hareket eden bir hissede bu fark ekranda
+   * görülüyor. Bu yüzden sayfa değeri canlı kotasyonla YENİDEN hesaplıyor
+   * ve buradaki değer yalnızca kotasyon hiç gelmediğinde taban kalıyor —
+   * aşağıdaki iki alan o hesabın malzemesi.
    */
   marketCap: number | null;
+  /** Profil anındaki kayıtlı piyasa değeri — mertebe denetiminin tabanı. */
+  storedMarketCap: number | null;
+  /** Ödenmiş hisse sayısı; USD dışı para biriminde null. */
+  shareOutstanding: number | null;
   volume: number | null;
 };
 
@@ -813,32 +846,30 @@ export async function getCompanies(): Promise<CompanyRow[]> {
       )
       .where(eq(symbolsTable.isIndexProxy, false));
     // USD dışı piyasa değeri (ör. TWD) USD ile sıralanamaz — yok sayılır.
-    return rows.map((r) => ({
-      symbol: r.symbol,
-      name: r.name,
-      industry: r.industry,
-      volume: r.volume,
-      logoUrl: logoSrc(r.symbol, r.logoUrl),
-      /* Canlı hesap `liveMarketCap` ile AYNI FONKSİYONDAN geçiyor — kural
-         iki yerde ayrı yazılıyken sağlayıcının bozuk hisse sayısına karşı
-         konan denetim yalnızca birinde vardı ve şirketler dizini (asıl
-         listeleme ekranı) korumasız kalıyordu. Tek fark, burada fiyatın
-         önbellek tablosundan gelmesi. */
-      marketCap:
-        r.currency === "USD"
-          ? liveMarketCap(
-              {
-                name: r.name,
-                indexProxy: false,
-                marketCap: r.marketCap,
-                shareOutstanding: r.shareOutstanding,
-                logoUrl: null,
-                industry: null,
-              },
-              r.price,
-            )
-          : null,
-    }));
+    return rows.map((r) => {
+      const usd = r.currency === "USD";
+      const storedMarketCap = usd ? r.marketCap : null;
+      const shareOutstanding = usd ? r.shareOutstanding : null;
+      return {
+        symbol: r.symbol,
+        name: r.name,
+        industry: r.industry,
+        volume: r.volume,
+        logoUrl: logoSrc(r.symbol, r.logoUrl),
+        storedMarketCap,
+        shareOutstanding,
+        /* Canlı hesap `liveMarketCap` ile AYNI FONKSİYONDAN geçiyor — kural
+           iki yerde ayrı yazılıyken sağlayıcının bozuk hisse sayısına karşı
+           konan denetim yalnızca birinde vardı ve şirketler dizini (asıl
+           listeleme ekranı) korumasız kalıyordu. Tek fark, burada fiyatın
+           önbellek tablosundan gelmesi — sayfa aynı hesabı canlı kotasyonla
+           tekrar yapıyor. */
+        marketCap: liveMarketCap(
+          { marketCap: storedMarketCap, shareOutstanding },
+          r.price,
+        ),
+      };
+    });
   } catch (error) {
     yutuldu("getCompanies", error);
     return [];

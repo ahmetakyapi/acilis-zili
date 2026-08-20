@@ -557,6 +557,17 @@ async function RailSection({
   );
 }
 
+/* SAYI ENDEKSİN SEVİYESİ DEĞİL, FONUN FİYATI. Nasdaq 100 endeksi 25 binli
+   seviyelerde; karttaki 716 dolar QQQ'nun hisse fiyatı. Ücretsiz
+   sağlayıcılarda endeksin kendisi yok, o yüzden vekil fon izleniyor —
+   yüzdesi endeksle neredeyse aynı, seviyesi hiç değil.
+
+   Dünya piyasaları kartında bu sorun "fonun fiyatını hiç yazma" diye
+   çözülmüştü (db/seed/symbols.ts → WORLD_MARKETS); burada fiyat yazılıyor
+   çünkü QQQ/SPY kendi başına da alınıp satılan, tanınan bir enstrüman. O
+   zaman da hangi enstrüman olduğu HER genişlikte görünmeli: sembol bir süre
+   `hidden sm:inline` idi ve telefonda kart "Nasdaq 100 · 716,49" diye,
+   endeksin seviyesiymiş gibi okunuyordu. */
 const INDEX_LABEL: Record<string, string> = {
   QQQ: "Nasdaq 100",
   SPY: "S&P 500",
@@ -593,7 +604,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
           const quote = result.data[symbol];
           if (!quote) {
             return (
-              <Panel key={symbol} className="w-28 shrink-0 p-3.5 sm:w-auto">
+              <Panel key={symbol} className="w-32 shrink-0 p-3.5 sm:w-auto">
                 <p className="text-xs font-semibold text-strong">{symbol}</p>
                 <p className="mt-1 text-xs text-muted">{t.common.noData}</p>
               </Panel>
@@ -607,14 +618,18 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
             <Link
               key={symbol}
               href={`/hisse/${symbol}`}
-              className="w-28 shrink-0 sm:w-auto"
+              /* 128px: vekil fonun sembolü artık her genişlikte yazılıyor
+                 (yukarıdaki `INDEX_LABEL` yorumu) ve 112 pikselde
+                 "Nasdaq 100" ile "QQQ" yan yana sığmıyor, ad üç noktaya
+                 düşüyordu. Şerit zaten yatay kayıyor, genişlik bedava. */
+              className="w-32 shrink-0 sm:w-auto"
             >
               <Panel className="panel-hover flex h-full flex-col rounded-xl p-3 sm:rounded-lg sm:p-4">
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="truncate text-tiny font-semibold text-body">
                     {INDEX_LABEL[symbol] ?? symbol}
                   </span>
-                  <span className="hidden text-nano text-muted sm:inline">
+                  <span className="numeral shrink-0 text-nano text-muted">
                     {symbol}
                   </span>
                 </div>
@@ -680,10 +695,20 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
       label: t.markets[series.labelKey],
       latest: result.ok ? result.data.latestValue : null,
       prev: result.ok ? result.data.prevValue : null,
+      date: result.ok ? (result.data.observations.at(-1)?.date ?? null) : null,
     };
   });
 
   if (values.every((value) => value.latest === null)) return null;
+
+  /* GÖZLEM TARİHİ YAZILIYOR. FRED'in günlük hazine serileri bir-iki iş günü
+     geriden yayımlanıyor: 20 Ağustos'ta en yeni gözlem 18 Ağustos'undu ve
+     kart, iki gün önceki faizi bugünün faizi gibi 18 puntoyla basıyor,
+     altındaki "▲ 0,04 puan" da bugünün hareketi gibi okunuyordu. Aynı
+     sayılar /piyasalar'da zaten tarihiyle duruyor; ikisi arasındaki fark
+     tek başına bir hataydı. Bkz. CLAUDE.md → "bayat veriyi büyük puntoyla
+     gösterme". */
+  const observedAt = values.find((value) => value.date)?.date ?? null;
 
   const vixLevel = vixResult.ok ? vixResult.data.latestValue : null;
   const vixPrev = vixResult.ok ? vixResult.data.prevValue : null;
@@ -708,6 +733,11 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
     <Panel>
       <PanelHeader
         title={t.markets.yields}
+        meta={
+          observedAt
+            ? `FRED · ${formatEtDateShort(observedAt, locale)}`
+            : undefined
+        }
         action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
       />
       <div className="grid grid-cols-3 border-t border-line">

@@ -463,7 +463,7 @@ export function PriceChart({
 
     /* Seans bölgeleri — yalnızca 1G görünümünde. 04:00-09:30 ön seans,
        16:00-20:00 akşam seansı gölgelenir (ET). Gece seansı (20:00-04:00)
-       IEX beslemesinde işlem görmez, lejantta not düşülür.
+       konsolide tape'te akmaz, lejantta not düşülür.
 
        Sınırlar ET TAKVİMİNDEN hesaplanır, barların gününü ikiye bölerek
        değil: gösterim dilimi İstanbul olduğunda ABD'nin akşam seansı ertesi

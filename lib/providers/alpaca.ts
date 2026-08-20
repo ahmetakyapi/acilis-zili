@@ -12,13 +12,47 @@ import { withTimeout } from "./timeout";
 /**
  * Alpaca Market Data — fiyat ve grafik barları.
  *
- * Ücretsiz katman IEX beslemesini kullanır: gerçek zamanlıdır ama konsolide
- * (SIP) hacmin bir kısmını görür. Ekranda "IEX" damgası bu yüzden gösterilir.
- * Ücretli plana geçilirse tek yapılacak DEFAULT_FEED'i "sip" yapmaktır.
+ * BESLEME SEÇİMİ — ÖLÇÜLEREK DEĞİŞTİ.
+ *
+ * Uzun süre `iex` kullanıldı: "gerçek zamanlı" olduğu için doğru seçim gibi
+ * duruyordu. IEX tek bir borsa ve konsolide tape'in yalnızca küçük bir
+ * dilimini görüyor. Ölçüldü (19 Ağustos 2026 kapanışı, ekrandaki sayı /
+ * gerçek konsolide hacim):
+ *
+ *     MRNA 3,67M / 199,3M (%1,8)   ·   INTC  4,43M / 110,3M (%4,0)
+ *     NVDA 2,79M /  97,6M (%2,9)   ·   PFE   3,89M /  59,8M (%6,5)
+ *
+ * Oran sembolden sembole %2 ile %8 arasında değiştiği için asıl zarar
+ * sayının küçüklüğü değil SIRALAMANIN BOZULMASIYDI: Şirketler dizini
+ * "hacme göre sırala" dendiğinde gerçekte birinci olan MRNA'yı üçüncü,
+ * gerçekte listede olmayan CMG ile CMCSA'yı ilk ona koyuyordu. Aynı besleme
+ * gün barının açılış/en yüksek/en düşük değerlerini ve ÖNCEKİ KAPANIŞI da
+ * kendi dilimiyle üretiyor, yani değişim yüzdesi de resmî kapanışa göre
+ * değil IEX'in kendi kapanışına göre hesaplanıyordu.
+ *
+ * Daha kötüsü seans dışında: IEX'te açılış öncesi ve kapanış sonrası işlem
+ * akmıyor. Sabah 05:58 ET'de sorulduğunda IEX'in "son işlemi" DÜNKÜ
+ * kapanıştı (14 saat önce), oysa konsolide tape o dakikanın açılış öncesi
+ * fiyatını veriyordu. Adı "Açılış Zili" olan ve açılış öncesini anlatan bir
+ * sitede bu, ürünün tam merkezindeki veri boşluğuydu.
+ *
+ * Ücretsiz katman konsolide tape'i 15 dakika gecikmeyle veriyor ve iki
+ * kapıdan geçiyor — anlık uçlarda `delayed_sip`, tarihsel bar ucunda `sip`.
+ * Bu site gün sonu ve açılış öncesi okunuyor; 15 dakikalık gecikme, hacmin
+ * yirmide birini görmekten çok daha ucuz. Ekrandaki künye gecikmeyi yazıyor.
+ *
+ * TUZAK: tarihsel bar ucunda `sip` yalnızca `end` verilmediğinde (ya da
+ * `end` 15 dakikadan eskiyken) çalışıyor; "şimdi"yi kapsayan bir aralık
+ * istenirse uç 403 döndürüyor. Bu dosyada `/bars` çağrılarının hiçbiri
+ * `end` göndermiyor — Alpaca aralığı kendisi 15 dakika öncesinde kesiyor.
+ * Yeni bir çağrı eklerken `end` verme.
  */
 
 const BASE = "https://data.alpaca.markets/v2/stocks";
-const DEFAULT_FEED = "iex";
+/** Anlık uçlar (`/snapshots`) — konsolide tape, 15 dakika gecikmeli. */
+const SNAPSHOT_FEED = "delayed_sip";
+/** Tarihsel bar ucu — aynı tape'in tarihsel kapısı. `end` VERME. */
+const BAR_FEED = "sip";
 
 function credentials(): { key: string; secret: string } | null {
   const key = process.env.ALPACA_API_KEY_ID;
@@ -135,11 +169,45 @@ function unwrapSnapshots(
  */
 const STALE_TRADE_MS = 5 * 24 * 60 * 60 * 1000;
 
+/**
+ * "Önceki kapanış" HANGİ BAR?
+ *
+ * Alpaca `dailyBar` ile `prevDailyBar` veriyor ve doğal okuma "prevDailyBar
+ * önceki kapanıştır" oluyor. Seans açıkken doğru; AÇILIŞ ÖNCESİNDE DEĞİL.
+ *
+ * 20 Ağustos 2026, 05:41 ET (açılış öncesi) — MRNA'nın anlık görüntüsü:
+ *
+ *     latestTrade  20 Ağustos 05:41   154,65   ← bu sabahın ön seansı
+ *     dailyBar     19 Ağustos         174,38   ← DÜNKÜ seans, henüz kapanmış
+ *     prevDailyBar 18 Ağustos          62,96
+ *
+ * Alpaca gün barını yeni seansa ancak seans ilerleyince çeviriyor, yani o
+ * pencerede `prevDailyBar` DÜNÜN DEĞİL ÖNCEKİ GÜNÜN kapanışı. Ekranda MRNA
+ * "+%145,64" yazıyordu: bu iki günün toplam hareketiydi ve okuyucu onu
+ * bu sabahın hareketi sanıyordu.
+ *
+ * Kural: fiyatın ait olduğu ET günü, gün barının ET gününden SONRAYSA son
+ * kapanmış seans gün barının kendisidir — referans kapanış `dailyBar.c`.
+ * Aynı gündeyse gün barı içinde bulunduğumuz seanstır, referans
+ * `prevDailyBar.c` kalır. Gün ayrımı ET takvimiyle yapılıyor: UTC ile
+ * yapılırsa akşam seansı (20:00 ET = 00:00 UTC) ertesi güne kayıyor.
+ */
+function referenceClose(snap: AlpacaSnapshot, tradedAt: Date | null): number | null {
+  const barDay = snap.dailyBar?.t
+    ? etParts(new Date(snap.dailyBar.t)).dateStr
+    : null;
+  const priceDay = tradedAt ? etParts(tradedAt).dateStr : null;
+  if (barDay && priceDay && priceDay > barDay) {
+    return snap.dailyBar?.c ?? null;
+  }
+  return snap.prevDailyBar?.c ?? null;
+}
+
 function snapshotToQuote(symbol: string, snap: AlpacaSnapshot): Quote | null {
   const tradedAt = snap.latestTrade?.t ? new Date(snap.latestTrade.t) : null;
   const price =
     snap.latestTrade?.p ?? snap.minuteBar?.c ?? snap.dailyBar?.c ?? null;
-  const prevClose = snap.prevDailyBar?.c ?? null;
+  const prevClose = referenceClose(snap, tradedAt);
   if (price === null) return null;
 
   /* Önceki kapanış yoksa değişim SIFIR DEĞİL, BİLİNMİYOR. Sıfır yazmak
@@ -224,7 +292,7 @@ export async function getSnapshots(
     batches(unique).map((batch) =>
       alpacaFetch<unknown>(
         "/snapshots",
-        { symbols: batch.join(","), feed: DEFAULT_FEED },
+        { symbols: batch.join(","), feed: SNAPSHOT_FEED },
         { revalidate, tags: ["quotes"] },
       ).then((result) => ({ batch, result })),
     ),
@@ -310,7 +378,7 @@ export async function getPeriodChanges(
           start,
           limit: String(batch.length * (sessions + 8)),
           adjustment: "split",
-          feed: DEFAULT_FEED,
+          feed: BAR_FEED,
           sort: "asc",
         },
         { revalidate, tags: ["bars", `changes:${sessions}`] },
@@ -400,7 +468,7 @@ export async function getBars(
       start: startDateFor(range, now),
       limit: String(spec.limit),
       adjustment: "split",
-      feed: DEFAULT_FEED,
+      feed: BAR_FEED,
       sort: "asc",
     },
     { revalidate, tags: [`bars:${symbol}`] },
@@ -487,7 +555,7 @@ export async function getBarsMulti(
         start,
         limit: String(Math.min(MAX_BARS_PER_REQUEST, spec.limit * batch.length)),
         adjustment: "split",
-        feed: DEFAULT_FEED,
+        feed: BAR_FEED,
         sort: "asc",
       },
       { revalidate, tags: ["bars", `bars:${range}`] },

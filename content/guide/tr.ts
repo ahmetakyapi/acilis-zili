@@ -405,7 +405,7 @@ Likidite sakin günlerde boldur, panik günlerinde buharlaşır. Herkesin aynı 
 
 ## Bu Sitede Nerede Görürsün
 
-Hisse sayfasındaki **hacim** satırı likiditenin en kaba göstergesidir. Fiyat verisi IEX beslemesinden geldiği için ekrandaki son fiyat, konsolide piyasadaki fiyattan biraz sapabilir — bu da spread'in bir başka görünümüdür.`,
+Hisse sayfasındaki **hacim** satırı likiditenin en kaba göstergesidir ve bütün borsaların toplamıdır (konsolide tape). Bir dönem burada yalnızca tek bir borsanın (IEX) hacmi yazıyordu; o sayı gerçeğin %2 ile %8'i arasında bir dilimdi ve oran hisseden hisseye değiştiği için şirketleri hacme göre sıralamak da yanlış sonuç veriyordu. Ekrandaki fiyat 15 dakika gecikmelidir — spread'i canlı görmek istiyorsan aracı kurumunun defterine bakman gerekir.`,
   },
 
   /* ---------------------------------------------------------------------- */

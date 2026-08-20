@@ -25,11 +25,15 @@ const TICKER_YIELDS = [
   { seriesId: "DGS30", slug: "yield-30y", units: "lin" },
 ] as const;
 
+/* Etiket vekil fonun sembolünü de taşıyor: şeritteki sayı endeksin
+   seviyesi değil o fonun fiyatı (gerekçenin tamamı ana sayfadaki
+   `INDEX_LABEL` yorumunda). Şerit yalnızca 1024px üstünde görünüyor, yer
+   var. */
 const INDEX_LABEL: Record<string, string> = {
-  SPY: "S&P 500",
-  QQQ: "Nasdaq 100",
-  DIA: "Dow Jones",
-  IWM: "Russell 2000",
+  SPY: "S&P 500 · SPY",
+  QQQ: "Nasdaq 100 · QQQ",
+  DIA: "Dow Jones · DIA",
+  IWM: "Russell 2000 · IWM",
 };
 
 const YIELD_LABEL: Record<string, string> = {

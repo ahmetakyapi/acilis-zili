@@ -424,8 +424,7 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
  *
  * Katkı, endeks böleninden hesaplanıyor ve bölen DIA fiyatı × 100
  * varsayımından türüyor. DIA gerçek Dow'un tam yüzde biri DEĞİL: temettü
- * dağıtımları, NAV primi/iskontosu ve IEX beslemesinin konsolide fiyattan
- * sapması yüzünden bu yaklaşık bir oran. Sonuç iki ondalık haneyle
+ * dağıtımları ve NAV primi/iskontosu yüzünden bu yaklaşık bir oran. Sonuç iki ondalık haneyle
  * ("+38,42 puan") basılıyordu — yaklaşık bir bölenden çıkan sayıya iki
  * hanelik kesinlik giydirmek, projenin "uydurma kesinlik yok" kuralının
  * tam karşılığı. Tam sayıya yuvarlanıp başına `~` konuyor.

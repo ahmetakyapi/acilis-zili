@@ -176,8 +176,13 @@ const tr = {
     macroSummary: "Makro",
     todayFlow: "Bugünün Akışı",
     pageHeading: "Açılış Zili — ABD Piyasa Takibi",
-    sourceLine: "Fiyat: Alpaca IEX · Profil ve bilanço: Finnhub · Makro: FRED",
-    sourceNote: "Endeksler ETF üzerinden izlenir · veri gecikmeli olabilir",
+    /* KAYNAK SATIRI BESLEMEYİ ADIYLA SÖYLÜYOR. Bir dönem "Alpaca IEX"
+       yazıyordu ve o besleme konsolide hacmin yirmide birini görüyordu;
+       gerekçe `lib/providers/alpaca.ts` başında. Gecikme de artık "olabilir"
+       değil, bilinen bir sayı. */
+    sourceLine:
+      "Fiyat: Alpaca konsolide tape · Profil ve bilanço: Finnhub · Makro: FRED",
+    sourceNote: "Endeksler ETF üzerinden izlenir · fiyatlar 15 dk gecikmeli",
   },
 
   calendar: {
@@ -546,7 +551,7 @@ const tr = {
     sessionRegular: "Seans",
     sessionAfter: "Akşam Seansı",
     sessionOvernight: "Gece",
-    sessionOvernightNote: "Seans dışı fiyatlar IEX beslemesinde akmaz",
+    sessionOvernightNote: "Gece seansı konsolide tape'te akmaz",
     // Lejantın alt satırı: üstteki saatlerin diğer dilimdeki karşılığı.
     otherZoneTimes: "ABD saatiyle:",
   },
@@ -974,10 +979,12 @@ const tr = {
     failed: "Veri alınamadı",
     failedHint: "Sağlayıcıya ulaşılamıyor. Son bilinen değer gösteriliyor.",
     lastKnown: "Son Bilinen Değer",
-    feedIex: "IEX · gerçek zamanlı",
-    delayedNote: "Fiyatlar IEX beslemesinden gelir, konsolide fiyattan sapabilir.",
+    feedTape: "Konsolide tape · 15 dk gecikmeli",
+    delayedNote:
+      "Fiyatlar konsolide tape'ten (SIP) gelir ve 15 dakika gecikmelidir. Gün içi hacim, açılış-en yüksek-en düşük ve önceki kapanış bütün borsaların toplamıdır.",
     /* Kaynak adları SÖZLÜKTE: "önbellek" ve "takvim" sabit bir tablodan
        geliyordu ve İngilizce sitede de Türkçe basılıyordu. */
+    delayed: "15 dk gecikmeli",
     sourceCache: "önbellek",
     sourceSeed: "takvim",
     /* CÜMLE TAM YAZILIYOR, parça parça birleştirilmiyor. Damga
