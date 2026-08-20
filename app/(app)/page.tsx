@@ -35,6 +35,7 @@ import {
   getMacroRows,
   getStatus,
   getStories,
+  getStoryBySlug,
   getSymbolNames,
   getTodayEvents,
   getEarningsBetween,
@@ -81,10 +82,9 @@ import {
 } from "@/lib/utils";
 import { Sparkline } from "@/components/ui/Sparkline";
 import {
-  MIN_CURVE_POINTS,
-  StoryCurve,
-  curveFromEvent,
-} from "@/components/stories/StoryCurve";
+  StoryFigure,
+  storyFigureOf,
+} from "@/components/stories/StoryFigure";
 import { getChartBarsMulti } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
 import { VIX_SERIES, vixBand } from "@/components/markets/FearGauge";
@@ -1808,40 +1808,12 @@ async function StoriesSpotlight({
 
   const [lead, ...rest] = stories;
 
-  /* TEK EĞRİ, TEK CÜMLE. Yazıların çoğu birkaç şirketi birlikte anlatıyor ve
-     arşiv kartları bunu logo şeridiyle gösteriyor; ama manşette iki eğri yan
-     yana durunca kutu bir karşılaştırma aracına dönüşüyor ve okuyucu
-     "hangisi konu" diye soruyor.
-
-     SEMBOL SIRAYLA DEĞİL, HAREKETLE SEÇİLİYOR. Listedeki ilk sembol her
-     zaman yazının kahramanı değil: tahvil geri alımını anlatan bir yazının
-     sembolleri QQQ ve SPY olabiliyor ve QQQ'nun o günkü %0,2'si okuyucuya
-     hiçbir şey söylemiyor. Olay günü en çok kımıldayan sembol, olayın
-     gerçekten vurduğu şirket demek. */
-  const candidates = (lead.symbols ?? []).slice(0, 3);
-  const status = await getStatus();
-  const [meta, barsBySymbol] = await Promise.all([
-    candidates.length > 0
-      ? getSymbolNames(candidates)
-      : Promise.resolve<Awaited<ReturnType<typeof getSymbolNames>>>({}),
-    candidates.length > 0
-      ? getChartBarsMulti(candidates, "1Y", status)
-      : Promise.resolve<Awaited<ReturnType<typeof getChartBarsMulti>>>({}),
-  ]);
-
-  const drawn = candidates
-    .map((symbol) => ({
-      symbol,
-      curve: curveFromEvent(barsBySymbol[symbol], lead.eventDate),
-    }))
-    .filter(({ curve }) => curve.points.length >= MIN_CURVE_POINTS)
-    .sort(
-      (a, b) =>
-        Math.abs(b.curve.sinceEvent ?? b.curve.eventChange ?? 0) -
-        Math.abs(a.curve.sinceEvent ?? a.curve.eventChange ?? 0),
-    );
-
-  const hero = drawn[0] ?? null;
+  /* GÖRSEL YAZININ KENDİNDEN GELİYOR — gerekçesi StoryFigure'da. Manşetin
+     gövdesi bunun için ayrıca okunuyor: liste sorgusu `body_md` taşımıyor
+     (kırk satırlık arşivin tamamını gövdeleriyle çekmek için sebep yok),
+     yalnızca manşet için tek satırlık ikinci bir sorgu atılıyor. */
+  const full = await getStoryBySlug(lead.slug, locale);
+  const figure = storyFigureOf(full?.bodyMd, full?.locale ?? locale);
 
   return (
     <section className="overflow-hidden rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))]">
@@ -1911,30 +1883,10 @@ async function StoriesSpotlight({
             </p>
           </div>
 
-          {hero && (
-            <StoryCurve
-              symbol={hero.symbol}
-              name={meta[hero.symbol]?.name}
-              logoUrl={meta[hero.symbol]?.logoUrl}
-              points={hero.curve.points}
-              eventIndex={hero.curve.eventIndex}
-              sinceEvent={hero.curve.sinceEvent}
-              eventChange={hero.curve.eventChange}
-              startLabel={
-                hero.curve.startDate
-                  ? formatEtDateCompact(hero.curve.startDate, locale)
-                  : ""
-              }
-              endLabel={
-                hero.curve.endDate
-                  ? formatEtDateCompact(hero.curve.endDate, locale)
-                  : ""
-              }
-              sinceLabel={t.stories.sinceEvent}
-              eventDayLabel={t.stories.curveEventDay}
-              eventDateLabel={formatEtDateCompact(lead.eventDate, locale)}
-              locale={locale}
-              className="lg:w-[286px] lg:shrink-0"
+          {figure && (
+            <StoryFigure
+              block={figure}
+              className="lg:w-[292px] lg:shrink-0"
             />
           )}
         </div>

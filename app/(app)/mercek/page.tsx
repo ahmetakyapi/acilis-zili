@@ -4,9 +4,9 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import {
   StoryBrands,
   StoryCast,
+  sinceEventReturn,
   type CastMember,
 } from "@/components/stories/StoryVisual";
-import { curveFromEvent } from "@/components/stories/StoryCurve";
 import {
   EmptyState,
   FilterChip,
@@ -249,18 +249,15 @@ async function StoryBoard({
     getChartBarsMulti(curveSymbols, "1Y", status),
   ]);
 
-  /* Olaydan bugüne getiri KURALI TEK YERDE: ana sayfadaki olay eğrisi de
-     aynı fonksiyondan geçiyor (components/stories/StoryCurve.tsx). İki yerde
-     ayrı yazılıyken aralarında sessiz bir fark vardı — buradaki sürüm, olay
-     çekilen barlardan (bir yıl) daha eskiyse serinin EN ESKİ barını taban
-     alıyor ve çıkan sayıyı yine "olaydan bugüne" diye yazıyordu. Ortak
-     fonksiyon o durumda hiçbir şey döndürmüyor. */
+  /* Kural StoryVisual'da: olay çekilen barlardan eskiyse taban bulunamıyor
+     ve hiçbir şey dönmüyor. Bu sürüm bir dönem serinin EN ESKİ barını taban
+     alıp sonucu yine "olaydan bugüne" diye yazıyordu. */
   const sinceEventOf = (
     symbol: string | null | undefined,
     eventDate: string,
   ): number | null => {
     if (!symbol) return null;
-    return curveFromEvent(barsBySymbol[symbol], eventDate).sinceEvent;
+    return sinceEventReturn(barsBySymbol[symbol], eventDate);
   };
 
   /** Yazının kadrosu — logo, ad ve olaydan bugüne getiri. */

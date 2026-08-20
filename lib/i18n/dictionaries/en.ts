@@ -718,7 +718,6 @@ const en: typeof tr = {
     moreCompaniesOne: "+{count} more company",
     moreCompaniesMany: "+{count} more companies",
     sinceEvent: "since the event",
-    curveEventDay: "on the day",
     filterLabel: "By Company",
     filterAll: "All",
     emptyFilter: "No pieces about this company yet.",

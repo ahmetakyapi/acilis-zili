@@ -260,3 +260,50 @@ export function StoryCast({
     </div>
   );
 }
+
+/* --------------------------------------------------------------------------
+   Olaydan bugüne getiri
+
+   Arşiv kartlarındaki ve manşetteki tek rakam: yazının anlattığı olayın
+   gününden bugüne, o sembolün ne yaptığı. Kart "bu ay fiyat nasıl seyretti"
+   diye sormuyor — "bu olaydan sonra ne oldu" diye soruyor.
+   -------------------------------------------------------------------------- */
+
+/**
+ * Olayın barlarla eşleşmesi için tanınan boşluk.
+ *
+ * Olay gününden sonraki İLK işlem günü taban sayılıyor; hafta sonu ve tatil
+ * payı buradan geliyor.
+ */
+const MAX_EVENT_GAP_SECONDS = 10 * 86400;
+
+/**
+ * Olay gününden son kapanışa yüzde değişim.
+ *
+ * TABAN BULUNAMAZSA HİÇBİR ŞEY DÖNMÜYOR — ve bu, fonksiyonun asıl işi.
+ * Bir yıllık bar çekiliyor; olay üç yıl önceyse serinin en eski barı olayın
+ * günü değil, bir yıl öncesi oluyor. Bu sürüm bir dönem o tabandan yüzde
+ * hesaplayıp sonucu yine "olaydan bugüne" diye yazıyordu, yani ekrandaki
+ * künye sayının ne olduğu konusunda yanılıyordu. Uydurulmuş bir taban
+ * üzerinden yüzde üretmektense boş bırakmak doğru: kart o zaman rakamsız
+ * basılıyor.
+ */
+export function sinceEventReturn(
+  bars: readonly { time: number; close: number }[] | undefined,
+  eventDate: string,
+): number | null {
+  if (!bars || bars.length < 2) return null;
+
+  const eventTs = Date.parse(`${eventDate}T00:00:00Z`) / 1000;
+  if (!Number.isFinite(eventTs)) return null;
+
+  const at = bars.findIndex((bar) => bar.time >= eventTs);
+  if (at < 0) return null;
+
+  const base = bars[at];
+  const last = bars[bars.length - 1];
+  if (base.time - eventTs > MAX_EVENT_GAP_SECONDS) return null;
+  if (base.close <= 0 || base.time === last.time) return null;
+
+  return ((last.close - base.close) / base.close) * 100;
+}

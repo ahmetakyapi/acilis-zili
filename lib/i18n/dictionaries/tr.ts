@@ -819,10 +819,6 @@ const tr = {
     moreCompaniesOne: "+{count} şirket daha",
     moreCompaniesMany: "+{count} şirket daha",
     sinceEvent: "olaydan bugüne",
-    /* Olay eğrisindeki rakamın künyesi — yazı henüz taze olduğunda,
-       "olaydan bugüne" diye bir aralık daha oluşmamışken. Mikro künye,
-       başlık değil: Title Case almıyor (CLAUDE.md). */
-    curveEventDay: "olay günü",
     filterLabel: "Şirkete Göre",
     filterAll: "Tümü",
     emptyFilter: "Bu şirket hakkında henüz yazı yok.",

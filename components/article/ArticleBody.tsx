@@ -172,7 +172,17 @@ function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
    ardışık satırları topladığı için önce onların bittiği yer bulunur.
    -------------------------------------------------------------------------- */
 
-type Block =
+/**
+ * Gövdenin ayrıştırılmış hâli.
+ *
+ * DIŞA AÇIK, çünkü yazının görselini yalnızca yazı sayfası kullanmıyor: ana
+ * sayfadaki Mercek kartı da manşetin İLK görsel bloğunu kendi ölçüsünde
+ * çiziyor (components/stories/StoryFigure.tsx). Sözdizimi tek yerde —
+ * burada — ayrıştırılıyor; kart yalnızca kendi çizimini yapıyor. Yeni bir
+ * blok türü eklerken kartın da onu tanıması gerekiyorsa oradaki listeye
+ * eklemek yeter, ayrıştırma kendiliğinden geliyor.
+ */
+export type Block =
   | { kind: "heading"; level: 2 | 3; text: string }
   | { kind: "paragraph"; text: string }
   | { kind: "list"; ordered: boolean; items: string[] }
@@ -240,7 +250,7 @@ function Side({
 }
 
 /** "52,5 Mr $" → { value: 52.5, unit: "Mr $", display: "52,5 Mr $" } */
-type Magnitude = {
+export type Magnitude = {
   display: string;
   label: string;
   value: number | null;
@@ -277,7 +287,7 @@ function isTableDivider(line: string): boolean {
   return /^\|?[\s:|-]+\|[\s:|-]*$/.test(line) && line.includes("-");
 }
 
-function parseBlocks(markdown: string, locale: string): Block[] {
+export function parseBlocks(markdown: string, locale: string): Block[] {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   const blocks: Block[] = [];
   let i = 0;
