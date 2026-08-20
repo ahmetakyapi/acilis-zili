@@ -83,6 +83,7 @@ export function SearchCommand({
   popularLabel,
   companiesLabel,
   writingsLabel,
+  closeLabel,
   hints,
 }: {
   placeholder: string;
@@ -97,6 +98,9 @@ export function SearchCommand({
   companiesLabel: string;
   /** "Yazılar" — rehber ve mercek sonuçlarının başlığı. */
   writingsLabel: string;
+  /* Kapat düğmesinin ekran okuyucu adı. Sözlükten gelmiyordu: paletin tek
+     düğmesi İngilizce arayüzde de "Kapat" diye okunuyordu. */
+  closeLabel: string;
   /** Paletin alt şeridindeki klavye ipuçları. */
   hints: { move: string; open: string };
 }) {
@@ -452,7 +456,7 @@ export function SearchCommand({
                 type="button"
                 onClick={close}
                 className="flex shrink-0 items-center justify-center rounded-xs bg-surface-elevated px-[7px] py-[3px] text-tiny text-muted transition-colors hover:text-strong max-sm:size-11 max-sm:px-0"
-                aria-label="Kapat"
+                aria-label={closeLabel}
               >
                 <span className="max-sm:hidden">ESC</span>
                 <X size={16} className="sm:hidden" />

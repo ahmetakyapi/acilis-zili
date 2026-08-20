@@ -77,12 +77,22 @@ export function Countdown({
        güvenilir okumuyordu. Görsel çıktı aynı (`block` sınıfı zaten yok,
        kapsayıcı flex). */
     <span
+      /* Dıştaki bastırma da duruyor: gün/saat sınırında gösterilen birim
+         listesi değişebiliyor (3 parça → 2 parça) ve o zaman eşleşmeyen şey
+         metin değil, düğümün kendisi. */
       suppressHydrationWarning
       className={className}
       style={{ letterSpacing: "-0.05em" }}
     >
       {parts.map(([value, unit], index) => (
-        <span key={unit}>
+        /* BASTIRMA SAYININ DURDUĞU DÜĞÜMDE OLMALI. `suppressHydrationWarning`
+           yalnızca konduğu elemanın KENDİ metin çocuğunu kapsıyor, alt
+           ağacına inmiyor: sayı bu iç `<span>`in içinde durduğu için
+           dıştaki bastırma ona hiç ulaşmıyordu. Sunucu "39 sn" basıp
+           istemci bir tik sonra "38 sn" okuduğunda React eşleşmeyi hata
+           sayıyor, konsola yazıyor ve `<h1>`in tamamını atıp yeniden
+           çiziyordu — her ziyarette, her sayfa açılışında. */
+        <span key={unit} suppressHydrationWarning>
           {value}
           {/* Opaklık VERME: kapsayıcı `.display-ink` degradesini metne
               kırpıyor, opaklık bu çocuğu ayrı katmana taşıyıp bölgeden

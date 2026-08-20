@@ -153,8 +153,13 @@ export function AppShell({
   const matchedBottom = bottomItems.find(
     (item) => item.href !== "/menu" && isActive(pathname, item.href),
   );
+  /* Karşılaştırma DİLDEN ARINMIŞ yolla: İngilizce tarafta adres `/en`
+     olduğu için ham eşitlik tutmuyor ve ana sayfada işaret "Menü"ye
+     düşüyordu — okuyucu ana sayfadayken alt çubuk ona "menüdesin"
+     diyordu. Aynı tuzağın masthead sürümü `isActive()` içinde yazılı. */
+  const barePath = stripLocale(pathname);
   const activeBottomKey =
-    pathname === "/" ? null : (matchedBottom?.key ?? "/menu");
+    barePath === "/" ? null : (matchedBottom?.key ?? "/menu");
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -352,7 +357,7 @@ export function AppShell({
              eski dolgu sayfanın dibinde ölü boşluk bırakıyordu. */
           "mx-auto w-full max-w-[1400px] pb-24 pt-10 lg:pb-20",
           CONTENT_GUTTER,
-          pathname === "/menu" && "[&_footer_nav]:hidden",
+          barePath === "/menu" && "[&_footer_nav]:hidden",
         )}
       >
         {footer}
