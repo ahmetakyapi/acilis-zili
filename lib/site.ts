@@ -80,3 +80,19 @@ export function pageAlternates(path: string, locale: Locale = DEFAULT_LOCALE) {
     types: { "application/rss+xml": "/feed.xml" },
   } as const;
 }
+
+/**
+ * Bir yolun paylaşılabilir TAM adresi — şema, alan adı ve dil öneki dahil.
+ *
+ * Paylaş düğmesi bunu istiyor. Adresi tarayıcıdan (`window.location`) okumak
+ * kolay ama yanlış: o adres okuyucunun geldiği filtreleri ve çapaları da
+ * taşıyor ve paylaşılan bağlantıya sızıyorlar. Canonical ile aynı yerden
+ * üretmek, paylaşılan her bağlantının arama motoruna gösterdiğimiz adresle
+ * birebir aynı olmasını da garantiliyor.
+ */
+export function absoluteUrl(
+  path: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  return `${SITE_URL}${withLocale(path, locale)}`;
+}

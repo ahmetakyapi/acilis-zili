@@ -73,6 +73,16 @@ const en: typeof tr = {
     empty: "Nothing here yet",
   },
 
+  share: {
+    action: "Share",
+    title: "Share This Story",
+    copyLink: "Copy Link",
+    copied: "Copied",
+    onX: "Share on X",
+    onLinkedIn: "Share on LinkedIn",
+    onWhatsApp: "Share on WhatsApp",
+  },
+
   market: {
     status: "Market Status",
     open: "Market Open",

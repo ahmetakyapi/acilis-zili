@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocaleHref } from "@/components/layout/useLocaleHref";
-import { CalendarBlank, Gear } from "@phosphor-icons/react/dist/ssr";
+import { Gear, Scroll } from "@phosphor-icons/react/dist/ssr";
 import { BellMark, BrandLockup, BrandWord } from "@/components/brand/BellMark";
 import { RouteProgress } from "./RouteProgress";
 import { NAV_ITEMS } from "./nav-items";
@@ -113,24 +113,25 @@ export function AppShell({
      çalıştı: gezinme çubuğunun ÜÇÜ ekran, BİRİ formdu; göz her sayfada oraya
      takılıyor ve sekme bir davet gibi durduğu için kapatılamıyordu.
 
-     Artık yuvada giriş yapmamış okuyucu için TAKVİM var — gerçek bir ekran,
-     duvar değil. Takvim mobil alt çubuktan bilerek çıkarılmıştı (bugünün
-     olayları zaten ana sayfada) ama "hiç yoktan" değil "girişten" iyi:
-     haftaya bakış ana sayfada yok ve bu ekran mobilde başka türlü yalnızca
-     Menü'den açılıyor. Giriş bağlantısı kaybolmuyor — başlıktaki hesap
-     menüsünde, ait olduğu yerde duruyor.
+     Yuvada bir süre TAKVİM durdu ve o da doğru seçim değildi: takvimin
+     anlattığı iki şey (bugünün olayları, haftaya bakış) zaten ana sayfanın
+     iki bölümü, yani sekme ikinci bir kapıydı. Şimdi orada MERCEK var —
+     sitenin kendi yazdığı uzun metinler, başka hiçbir yerde olmayan içerik
+     ve mobilde başka türlü yalnızca Menü'den açılıyordu. Giriş bağlantısı
+     kaybolmuyor: başlıktaki hesap menüsünde, ait olduğu yerde duruyor.
 
      Giriş yapan kullanıcıda yuva Favoriler'e döner: onun için o sekme
-     ürünün en sık açılan ekranı. */
+     ürünün en sık açılan ekranı; Mercek ana sayfanın kendi bölümünden ve
+     Menü'den açılıyor. */
   const bottomItems = NAV_ITEMS.filter((item) => item.inBottomBar).map(
     (item) => {
       const swap = item.href === "/favoriler" && !signedIn;
       return {
         key: item.href,
-        href: swap ? "/takvim" : item.href,
-        icon: swap ? CalendarBlank : item.icon,
+        href: swap ? "/mercek" : item.href,
+        icon: swap ? Scroll : item.icon,
         text: swap
-          ? labels.nav["/takvim"]
+          ? labels.nav["/mercek"]
           : (labels.navShort[item.href] ?? labels.nav[item.href]),
       };
     },
@@ -246,7 +247,15 @@ export function AppShell({
               >
                 {(username ?? "?").slice(0, 2)}
               </span>
-              <span className="max-w-28 truncate">
+              {/* AD 1280px ALTINDA GİZLİ. Masthead'de yedi sekme var ve
+                  1024px'de sekmelerle sağdaki denetimler arasında yalnızca
+                  19 piksel kalıyordu: uzun bir kullanıcı adı (kutu 112
+                  piksele kadar açılıyor) sekmeleri arama düğmesinin ALTINA
+                  itiyor, ikisi üst üste biniyordu — sayfa taşmadığı için de
+                  hiçbir ölçüm bunu yakalamıyordu. Kimliği baş harfler zaten
+                  taşıyor, tam ad `title` içinde duruyor ve geniş ekranda
+                  yazıyla birlikte geri geliyor. */}
+              <span className="hidden max-w-28 truncate xl:inline">
                 {username ?? labels.settings}
               </span>
               <Gear weight="duotone" size={15} className="shrink-0" />

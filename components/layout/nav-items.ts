@@ -29,9 +29,9 @@ export type NavItem = {
   /** Alt çubukta kısaltılmış etiket kullanılır (Piyasalar → Piyasa). */
   shortLabel?: (t: Dictionary) => string;
   /**
-   * Masthead'de yalnızca 1536px üstünde görünsün. Sekiz sekme daha dar
-   * ekranlarda marka ile arama arasına sığmıyor; okuma ekranları o
-   * genişlikte ana sayfadaki kartlardan ve alt bilgiden açılıyor.
+   * Masthead'de yalnızca geniş ekranda (1280px üstü) görünsün. Sekiz sekme
+   * daha dar ekranlarda marka ile arama arasına sığmıyor; kalan ekran ana
+   * sayfadaki kartlardan ve alt bilgiden açılıyor.
    */
   wideOnly?: boolean;
 };
@@ -104,12 +104,18 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
   },
   {
+    /* HER GENİŞLİKTE MASTHEAD'DE. Bir süre `wideOnly` idi ve 1280px altındaki
+       ekranlarda — yani tipik dizüstünde — sitenin kendi yazdığı tek içerik
+       türü gezinmede hiç görünmüyordu; oysa yanındaki beş sekmenin hepsi
+       sağlayıcıdan gelen veriyi gösteriyor. Ölçüldü: 1024px'de altı sekme
+       ile arama kutusu arasında 136 piksel boşluk vardı, yedincisi rahat
+       sığıyor. Dar kalan tek okuma sekmesi Rehber — o durağan bir müfredat,
+       her gün değişmiyor ve ana sayfadan da açılıyor. */
     href: "/mercek",
     label: (t) => t.nav.stories,
     icon: Scroll,
     inMasthead: true,
     inBottomBar: false,
-    wideOnly: true,
   },
   {
     href: "/rehber",

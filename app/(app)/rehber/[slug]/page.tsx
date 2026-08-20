@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
+import { ShareButton } from "@/components/article/ShareButton";
 import { LevelBadge } from "@/components/article/LevelBadge";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { Panel } from "@/components/ui/primitives";
@@ -13,7 +14,7 @@ import {
   type GuideArticle,
 } from "@/content/guide";
 import { getI18n, type Dictionary } from "@/lib/i18n";
-import { pageAlternates } from "@/lib/site";
+import { absoluteUrl, pageAlternates } from "@/lib/site";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 /**
@@ -86,13 +87,24 @@ export default async function GuideArticlePage(
           { name: article.title, path: `/rehber/${article.slug}` },
         ]}
       />
-      <Link
-        href="/rehber"
-        className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
-      >
-        <ArrowLeft weight="bold" size={13} />
-        {t.guide.backToList}
-      </Link>
+      {/* Mercek yazılarıyla aynı denetim satırı: solda listeye çıkış, sağda
+          paylaşım. Rehber yazıları sitenin en çok paylaşılabilir metinleri —
+          bir kavramı anlatıyorlar ve bağlantısı bir cevap olarak
+          gönderiliyor. */}
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/rehber"
+          className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
+        >
+          <ArrowLeft weight="bold" size={13} />
+          {t.guide.backToList}
+        </Link>
+        <ShareButton
+          url={absoluteUrl(`/rehber/${article.slug}`, locale)}
+          title={article.title}
+          labels={t.share}
+        />
+      </div>
 
       <header className="flex flex-col gap-4">
         <div className="flex items-center gap-3.5">

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { NewsImage } from "@/components/news/NewsImage";
@@ -241,6 +242,26 @@ export default async function TodayPage() {
           <BriefCard locale={locale} t={t} />
         </Suspense>
 
+        {/* ---- Mercek ----
+             SAYFANIN EN ÜST ÜÇTE BİRİNDE, çünkü sitenin başka hiçbir yerde
+             bulunmayan içeriği bu. Uzun süre en altta, "son yazılanlar"
+             ızgarasının sağ yarısında dört satırlık bir liste olarak
+             duruyordu: ana sayfayı açan okuyucu ölçüleri, takvimi,
+             bilançoları ve haberleri geçtikten SONRA görüyordu onu — yani
+             çoğu hiç görmüyordu. Takvim ve bilanço listeleri her sitede var,
+             bu yazılar yalnızca burada.
+
+             Günün özetinin hemen ardında duruyor: ikisi de okunacak metin,
+             biri bugünü biri olayı anlatıyor. Ölçüm kartları aşağıda kalıyor,
+             araya okuma daveti girmiyor.
+
+             Yüzey de ayrışıyor — çevresindeki paneller nötr zeminde, bu blok
+             accent kenarlık ve çok soluk degrade taşıyor. Ana sayfada
+             degrade kullanan tek yüzey bu. */}
+        <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
+          <StoriesSpotlight locale={locale} t={t} />
+        </Suspense>
+
         {/* ---- Bugünün ekonomik takvimi ---- */}
         <Panel>
           <PanelHeader
@@ -315,29 +336,25 @@ export default async function TodayPage() {
         </Suspense>
       </div>
 
-      {/* ---- Son yazılanlar ----
+      {/* ---- Son analizler ----
            Burada bir süre iki STATİK karo vardı ("Mercek" ve "Rehber"), yani
            yalnızca "şuraya git" diyen iki kapı. Okuyucu tıklamadan önce ne
            bulacağını bilmiyordu ve yeni bir analiz ya da yazı çıktığında ana
-           sayfa bunu hiç haber vermiyordu.
+           sayfa bunu hiç haber vermiyordu. Sonra iki panel oldu: son
+           analizler ve son mercek yazıları, yan yana.
 
-           Şimdi iki panel de GERÇEK içerik taşıyor: son analizler ve son
-           mercek yazıları. Kapı hâlâ orada (başlıktaki "Tümünü Gör") ama
-           yanında ne olduğu da yazıyor.
-
-           İçerik yoksa panel hiç basılmıyor ve ızgara kalanla tek sütuna
-           iner; ikisi de boşsa eski keşif karoları geri geliyor — henüz
-           içerik yazılmamış bir sitede ana sayfanın okuma girişi büsbütün
-           kaybolmasın. */}
+           Mercek o ızgaradan ÇIKTI ve ana kolonun üstüne, günün özetinin
+           ardına taşındı (gerekçesi orada). Geriye analizler kaldı ve tek
+           başına tam genişlikte duruyor: bilanço analizi bir ölçüm okuması,
+           yeri de veri kartlarının yanı — okuma davetinin değil. */}
       <Suspense
         fallback={
-          <div className="grid gap-4 sm:grid-cols-2 lg:col-start-1 lg:row-start-2">
-            <Skeleton className="h-52 w-full rounded-xl" />
+          <div className="lg:col-start-1 lg:row-start-2">
             <Skeleton className="h-52 w-full rounded-xl" />
           </div>
         }
       >
-        <LatestWriting locale={locale} t={t} />
+        <LatestAnalyses locale={locale} t={t} />
       </Suspense>
 
       {/* ---- Öne çıkan haberler ----
@@ -1555,145 +1572,228 @@ function ListSkeleton({ rows }: { rows: number }) {
 }
 
 /* ==========================================================================
-   Son yazılanlar — analizler + mercek
+   Mercek — ana sayfanın okuma girişi
    ========================================================================== */
 
 /**
- * Ana sayfanın okuma girişi.
+ * Son mercek yazıları — manşet + üç satır.
  *
- * İki panel de son yazılanları gösteriyor; kapı (Tümünü Gör) başlıkta
- * duruyor. Boş liste basılmıyor: analiz ya da yazı yoksa o panel hiç
- * çıkmıyor, ikisi de yoksa keşif karoları geri geliyor.
+ * NEDEN LİSTE DEĞİL MANŞET. Bu blok eskiden dört başlıktan ibaret bir
+ * listeydi ve yanındaki analiz paneliyle aynı ağırlıktaydı; okuyucu
+ * başlıklara bakıp geçiyordu çünkü hiçbiri ne anlattığını söylemiyordu. En
+ * yeni yazı artık manşet: giriş cümlesi okunuyor, yazının kahramanı
+ * şirketlerin logoları görünüyor, tarih ve okuma süresi künyede. Arkasındaki
+ * üç satır arşivin devamı — onlar liste kalıyor, çünkü işleri "daha var"
+ * demek.
+ *
+ * LOGOLAR /mercek İLE AYNI KAYNAKTAN. Yazıların fotoğrafı yok ve olmayacak;
+ * elimizdeki tek gerçek görsel şirket logoları (`symbols.logo_url`). Blok
+ * onları manşetin künyesinde kullanıyor, arşiv kartlarındaki şeridin
+ * sıkıştırılmış hâli gibi.
+ *
+ * Yazı yoksa blok kaybolmuyor, keşif karolarına düşüyor: hiç içerik
+ * yazılmamış bir sitede ana sayfanın okuma girişi büsbütün yok olmasın.
  */
-async function LatestWriting({
+async function StoriesSpotlight({
   locale,
   t,
 }: {
   locale: Locale;
   t: Dictionary;
 }) {
-  const [analyses, stories] = await Promise.all([
-    getAnalyses(locale, { limit: 4 }),
-    getStories(locale, 3),
-  ]);
+  const stories = await getStories(locale, 4);
 
-  if (analyses.length === 0 && stories.length === 0) {
-    return <ReadingDoors t={t} />;
-  }
+  if (stories.length === 0) return <ReadingDoors t={t} />;
 
+  const [lead, ...rest] = stories;
+
+  /* Yalnızca MANŞETİN kadrosu için logo çekiliyor. Alt satırlar tek satırlık
+     başlıklar; oraya logo koymak satırı künyeye çeviriyor ve blok bir
+     tabloya dönüşüyordu. */
+  const leadSymbols = (lead.symbols ?? []).slice(0, 4);
   const meta =
-    analyses.length > 0
-      ? await getSymbolNames([...new Set(analyses.map((r) => r.symbol))])
-      : {};
+    leadSymbols.length > 0 ? await getSymbolNames(leadSymbols) : {};
+  const restSymbols = (lead.symbols?.length ?? 0) - leadSymbols.length;
 
   return (
-    <div
-      /* Paneller satırın en uzununa gerilir (grid'in stretch varsayılanı).
-         Önceden `items-start` ile her panel kendi boyundaydı ama kısa kartın
-         ALTINDA kalan boşluk, kartın İÇİNDE kalan boşluktan daha bozuk
-         görünüyor — yan yana kartlar hep aynı boyda olacak. */
-      className={cn(
-        "grid gap-4 lg:col-start-1 lg:row-start-2",
-        analyses.length > 0 && stories.length > 0 && "sm:grid-cols-2",
-      )}
-    >
-      {analyses.length > 0 && (
-        <Panel className="min-w-0">
-          <PanelHeader
-            title={t.today.latestAnalyses}
-            action={
-              <PanelLink href="/bilancolar/analizler">
-                {t.common.showAll}
-              </PanelLink>
-            }
-          />
-          <ul className="divide-y divide-line-soft">
-            {analyses.map((row) => {
-              const verdict = verdictOf(row.verdict);
-              const logo = meta[row.symbol]?.logoUrl;
-              return (
-                <li key={`${row.symbol}-${row.period}`}>
-                  <Link
-                    href={analysisHref(row.symbol, row.period)}
-                    prefetch={false}
-                    className="flex items-center gap-2.5 px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
-                  >
-                    <LogoTile symbol={row.symbol} logoUrl={logo} size="md" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-base font-semibold text-strong">
-                        {row.company}
-                      </span>
-                      <span className="numeral block text-tiny text-muted">
-                        {row.symbol} · {row.periodLabel}
-                        <span aria-hidden className="mx-1.5">
-                          ·
-                        </span>
-                        {formatEtDateShort(row.reportDate, locale)}
-                      </span>
-                    </span>
-                    <span
-                      className={cn(
-                        "shrink-0 rounded-md px-2 py-[3px] text-tiny font-bold",
-                        verdictPillClass(verdict),
-                      )}
-                    >
-                      {verdictLabel(verdict, t)} · {row.score}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </Panel>
-      )}
+    <section className="overflow-hidden rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))]">
+      {/* Başlık şeridi — panel başlıklarıyla aynı ölçü ve aynı "Tümünü Gör"
+          kapısı; bloğun kendisi ayrışıyor, başlığın dili değil. */}
+      <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
+        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+          {t.today.latestStories}
+        </h2>
+        <PanelLink href="/mercek">{t.common.showAll}</PanelLink>
+      </div>
 
-      {stories.length > 0 && (
-        <Panel className="min-w-0">
-          <PanelHeader
-            title={t.today.latestStories}
-            action={<PanelLink href="/mercek">{t.common.showAll}</PanelLink>}
-          />
-          <ul className="divide-y divide-line-soft">
-            {stories.map((story) => (
-              <li key={story.slug}>
-                <Link
-                  href={`/mercek/${story.slug}`}
-                  prefetch={false}
-                  className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
-                >
-                  <span className="block text-base font-semibold leading-[19px] text-strong">
-                    {story.title}
-                  </span>
-                  <span className="numeral mt-1 block text-tiny text-muted">
-                    {formatEtDateShort(story.eventDate, locale)}
-                    {story.readMinutes ? (
-                      <>
-                        <span aria-hidden className="mx-1.5">
-                          ·
-                        </span>
-                        {story.readMinutes} {t.guide.readMinutes}
-                      </>
-                    ) : null}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Panel>
+      <Link
+        href={`/mercek/${lead.slug}`}
+        prefetch={false}
+        className="block border-t border-primary-faint px-4 py-4 transition-colors hover:bg-primary-tint sm:px-5 sm:py-5"
+      >
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
+          {leadSymbols.length > 0 && (
+            <span className="flex shrink-0 items-center gap-1">
+              {leadSymbols.map((symbol) => (
+                <LogoTile
+                  key={symbol}
+                  symbol={symbol}
+                  logoUrl={meta[symbol]?.logoUrl}
+                  size="sm"
+                />
+              ))}
+              {restSymbols > 0 && (
+                <span className="numeral flex size-[26px] shrink-0 items-center justify-center rounded-sm bg-surface-elevated text-micro font-bold text-muted">
+                  +{restSymbols}
+                </span>
+              )}
+            </span>
+          )}
+          <span className="numeral flex items-baseline gap-1.5 text-tiny text-muted">
+            <span className="text-base font-semibold text-body">
+              {formatEtDateLong(lead.eventDate, locale)}
+            </span>
+            {lead.readMinutes ? (
+              <>
+                <span aria-hidden>·</span>
+                <span>
+                  {lead.readMinutes} {t.stories.readMinutes}
+                </span>
+              </>
+            ) : null}
+          </span>
+          {/* Çevirisi olmayan yazı orijinal diliyle listeleniyor; rozet
+              bunu tıklamadan önce söylüyor — /mercek ile aynı kural. */}
+          {lead.locale !== locale && (
+            <span className="plate ml-auto text-micro tracking-[0.09em]">
+              {lead.locale.toUpperCase()}
+            </span>
+          )}
+        </div>
+
+        <h3 className="display-ink mt-2.5 w-fit text-title font-bold leading-[1.16] tracking-[-0.028em] sm:text-heading">
+          {lead.title}
+        </h3>
+        <p className="mt-2 line-clamp-3 max-w-[62ch] text-base leading-[20px] text-body sm:line-clamp-2 sm:text-read sm:leading-[22px]">
+          {lead.dek}
+        </p>
+        <p className="mt-3.5 flex items-center gap-1.5 text-small font-semibold text-primary">
+          {t.guide.cardCta}
+          <ArrowRight weight="bold" size={12} />
+        </p>
+      </Link>
+
+      {rest.length > 0 && (
+        <ul className="border-t border-primary-faint bg-surface-solid">
+          {rest.map((story) => (
+            <li
+              key={story.slug}
+              className="border-t border-line-soft first:border-t-0"
+            >
+              <Link
+                href={`/mercek/${story.slug}`}
+                prefetch={false}
+                className="flex min-h-11 items-baseline justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-primary-tint sm:min-h-0 sm:px-5"
+              >
+                <span className="min-w-0 text-base font-semibold leading-[19px] text-strong">
+                  {story.title}
+                </span>
+                <span className="numeral shrink-0 text-tiny text-muted">
+                  {formatEtDateShort(story.eventDate, locale)}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       )}
-    </div>
+    </section>
+  );
+}
+
+/* ==========================================================================
+   Son analizler
+   ========================================================================== */
+
+/**
+ * Son bilanço analizleri.
+ *
+ * Kapı (Tümünü Gör) başlıkta duruyor. Boş liste basılmıyor: analiz yoksa
+ * panel hiç çıkmıyor ve ızgara satırı kendiliğinden kapanıyor — okuma girişi
+ * yukarıdaki Mercek bloğunda zaten var.
+ */
+async function LatestAnalyses({
+  locale,
+  t,
+}: {
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const analyses = await getAnalyses(locale, { limit: 5 });
+
+  if (analyses.length === 0) return null;
+
+  const meta = await getSymbolNames([
+    ...new Set(analyses.map((row) => row.symbol)),
+  ]);
+
+  return (
+    <Panel className="min-w-0 lg:col-start-1 lg:row-start-2">
+      <PanelHeader
+        title={t.today.latestAnalyses}
+        action={
+          <PanelLink href="/bilancolar/analizler">{t.common.showAll}</PanelLink>
+        }
+      />
+      <ul className="divide-y divide-line-soft">
+        {analyses.map((row) => {
+          const verdict = verdictOf(row.verdict);
+          const logo = meta[row.symbol]?.logoUrl;
+          return (
+            <li key={`${row.symbol}-${row.period}`}>
+              <Link
+                href={analysisHref(row.symbol, row.period)}
+                prefetch={false}
+                className="flex items-center gap-2.5 px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+              >
+                <LogoTile symbol={row.symbol} logoUrl={logo} size="md" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-base font-semibold text-strong">
+                    {row.company}
+                  </span>
+                  <span className="numeral block text-tiny text-muted">
+                    {row.symbol} · {row.periodLabel}
+                    <span aria-hidden className="mx-1.5">
+                      ·
+                    </span>
+                    {formatEtDateShort(row.reportDate, locale)}
+                  </span>
+                </span>
+                <span
+                  className={cn(
+                    "shrink-0 rounded-md px-2 py-[3px] text-tiny font-bold",
+                    verdictPillClass(verdict),
+                  )}
+                >
+                  {verdictLabel(verdict, t)} · {row.score}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </Panel>
   );
 }
 
 /**
- * Keşif karoları — yalnızca hiç içerik yokken.
+ * Keşif karoları — yalnızca hiç yazı yokken.
  *
- * Sitenin ilk günlerindeki hâl: iki bölüm de boşken ana sayfada okuma
- * girişinin büsbütün kaybolmaması için duruyor.
+ * Sitenin ilk günlerindeki hâl: arşiv boşken ana sayfada okuma girişinin
+ * büsbütün kaybolmaması için Mercek bloğunun yerine geçiyor.
  */
 function ReadingDoors({ t }: { t: Dictionary }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:col-start-1 lg:row-start-2">
+    <div className="grid gap-4 sm:grid-cols-2">
       {[
         { href: "/mercek", glyph: "◎", title: t.stories.title, hint: t.stories.subtitle },
         { href: "/rehber", glyph: "?", title: t.guide.title, hint: t.guide.subtitle },

@@ -78,8 +78,11 @@ export default async function MenuPage() {
     {
       title: t.menu.groupRead,
       entries: [
-        { href: "/rehber", icon: BookOpen, title: t.nav.guide, hint: t.menu.hintGuide },
+        /* Mercek başta: sitenin kendi yazdığı ve başka hiçbir yerde
+           bulunmayan içerik bu. Rehber durağan bir müfredat — bir kez
+           okunuyor, sonra referans kalıyor. */
         { href: "/mercek", icon: Scroll, title: t.nav.stories, hint: t.menu.hintStories },
+        { href: "/rehber", icon: BookOpen, title: t.nav.guide, hint: t.menu.hintGuide },
         { href: "/haberler", icon: Newspaper, title: t.nav.news, hint: t.menu.hintNews },
         { href: "/bulten", icon: Envelope, title: t.footer.briefArchive, hint: t.menu.hintBrief },
       ],

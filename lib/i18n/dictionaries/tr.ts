@@ -83,6 +83,22 @@ const tr = {
     empty: "Burada henüz bir şey yok",
   },
 
+  /* Paylaş düğmesinin metinleri.
+
+     Telefonda işletim sisteminin kendi paylaşım sayfası açılıyor ve buradaki
+     hiçbir metin görünmüyor; bunlar masaüstünde açılan küçük panelin
+     satırları. `copied` bir DURUM bildirimi, başlık değil — ama düğmenin
+     üstünde tek başına duruyor, o yüzden Title Case. */
+  share: {
+    action: "Paylaş",
+    title: "Bu Yazıyı Paylaş",
+    copyLink: "Bağlantıyı Kopyala",
+    copied: "Kopyalandı",
+    onX: "X'te Paylaş",
+    onLinkedIn: "LinkedIn'de Paylaş",
+    onWhatsApp: "WhatsApp'ta Paylaş",
+  },
+
   market: {
     status: "Piyasa Durumu",
     open: "Piyasa Açık",

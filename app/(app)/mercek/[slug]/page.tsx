@@ -2,12 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
+import { ShareButton } from "@/components/article/ShareButton";
 import { LogoTile } from "@/components/ui/primitives";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { getStories, getStoryBySlug, getSymbolNames } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { missingMetadata } from "@/lib/page-meta";
-import { pageAlternates } from "@/lib/site";
+import { absoluteUrl, pageAlternates } from "@/lib/site";
 import { formatEtDateLong, safeExternalUrl } from "@/lib/utils";
 
 /**
@@ -151,13 +152,24 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
 
   return (
     <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
-      <Link
-        href="/mercek"
-        className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
-      >
-        <ArrowLeft weight="bold" size={13} />
-        {t.stories.backToList}
-      </Link>
+      {/* Yazının iki denetimi aynı satırda: solda arşive çıkış, sağda
+          paylaşım. Paylaş düğmesi metnin İÇİNE değil kenarına konuyor —
+          okumayı kesen bir çağrı değil, elinin altında duran bir araç. İkisi
+          de sessiz: sayfada ilk görülmesi gereken şey manşet. */}
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/mercek"
+          className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
+        >
+          <ArrowLeft weight="bold" size={13} />
+          {t.stories.backToList}
+        </Link>
+        <ShareButton
+          url={absoluteUrl(`/mercek/${story.slug}`, locale)}
+          title={story.title}
+          labels={t.share}
+        />
+      </div>
 
       <header className="flex flex-col gap-4">
         <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-tiny">

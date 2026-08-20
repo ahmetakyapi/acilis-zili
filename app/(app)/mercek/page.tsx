@@ -16,8 +16,10 @@ import {
 } from "@/components/ui/primitives";
 import {
   countStories,
+  countStoriesBySymbol,
   getStatus,
   getStories,
+  getStoriesForSymbol,
   getSymbolNames,
   type StoryIndexRow,
 } from "@/lib/data";
@@ -189,12 +191,20 @@ async function StoryBoard({
   symbolFilter: string | null;
   limit: number;
 }) {
-  const [all, total] = await Promise.all([
-    getStories(locale, limit),
+  /* SÜZME VERİTABANINDA. Sembol filtresi bir dönem yüklenen listeyi bellekte
+     tarıyordu: arşiv 41 yazıya çıkıp ekranda 24'ü dururken, yalnızca eski
+     17'de geçen bir şirkete süzülmek BOŞ sayfa veriyordu — yazı vardı, sorgu
+     onu hiç görmüyordu. `getStoriesForSymbol` aynı aramayı Postgres'in
+     `jsonb` içi aramasıyla, arşivin tamamında yapıyor. */
+  const [rows, total, tally] = await Promise.all([
+    symbolFilter
+      ? getStoriesForSymbol(symbolFilter, locale, limit)
+      : getStories(locale, limit),
     countStories(),
+    countStoriesBySymbol(),
   ]);
 
-  if (all.length === 0) {
+  if (rows.length === 0 && !symbolFilter) {
     return (
       <Panel>
         <EmptyState title={t.stories.empty} hint={t.stories.emptyHint} />
@@ -202,18 +212,9 @@ async function StoryBoard({
     );
   }
 
-  const rows = symbolFilter
-    ? all.filter((story) => story.symbols?.includes(symbolFilter))
-    : all;
-
-  /* Filtre çipleri arşivin TAMAMINDAN türer, süzülmüş listeden değil: bir
-     sembole süzdükten sonra diğerlerine geçebilmek gerekiyor. */
-  const tally = new Map<string, number>();
-  for (const story of all) {
-    for (const symbol of story.symbols ?? []) {
-      tally.set(symbol, (tally.get(symbol) ?? 0) + 1);
-    }
-  }
+  /* Filtre çipleri arşivin TAMAMINDAN türer, ekrandaki listeden değil: bir
+     sembole süzdükten sonra diğerlerine geçebilmek gerekiyor ve sayının da
+     gerçek toplamı söylemesi lazım. */
   const chips = [...tally.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 8);
@@ -354,11 +355,11 @@ async function StoryBoard({
 
           {/* "Daha Fazla" — künyesiyle birlikte. `scroll={false}`: okuyucu
               listenin dibinde, sayfanın başına fırlatılmamalı. */}
-          {total > all.length && !symbolFilter && (
+          {total > rows.length && !symbolFilter && (
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
               <p className="numeral text-small text-muted">
                 {t.stories.showing
-                  .replace("{n}", String(all.length))
+                  .replace("{n}", String(rows.length))
                   .replace("{total}", String(total))}
               </p>
               <Link

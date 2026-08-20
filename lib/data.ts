@@ -1066,6 +1066,45 @@ export async function countStories(): Promise<number> {
 }
 
 /**
+ * Arşivdeki sembollerin yazı sayısı — filtre çipleri için.
+ *
+ * ÇİPLER YÜKLENEN PENCEREDEN DEĞİL ARŞİVİN TAMAMINDAN sayılıyor. Sayım
+ * ekrandaki listeden yapılırken iki şey birden yanlıştı: yalnızca eski
+ * yazılarda geçen bir şirket hiç çip almıyor (41 yazılık arşivin 24'ü
+ * yüklüydü), çip alanların sayısı da gerçek toplamdan küçük çıkıyordu.
+ *
+ * SORGU İKİ SÜTUN ÇEKİYOR. `jsonb` dizisini Postgres'te açıp gruplamak daha
+ * zarif olurdu ama ham SQL yazmayı gerektiriyor; slug ve sembol listesi iki
+ * küçük sütun ve arşiv bu ölçekte (yüzler mertebesi) tek gidiş-dönüşte
+ * geliyor. Binlere çıkarsa gruplama veritabanına taşınmalı.
+ *
+ * Dil satırları tekilleştiriliyor: aynı yazının TR ve EN sürümü iki değil
+ * bir sayılır.
+ */
+export async function countStoriesBySymbol(): Promise<Map<string, number>> {
+  try {
+    const rows = await db
+      .select({ slug: stories.slug, symbols: stories.symbols })
+      .from(stories);
+
+    const slugsOf = new Map<string, Set<string>>();
+    for (const row of rows) {
+      for (const symbol of row.symbols ?? []) {
+        const held = slugsOf.get(symbol) ?? new Set<string>();
+        held.add(row.slug);
+        slugsOf.set(symbol, held);
+      }
+    }
+    return new Map(
+      [...slugsOf].map(([symbol, slugs]) => [symbol, slugs.size]),
+    );
+  } catch (error) {
+    yutuldu("countStoriesBySymbol", error);
+    return new Map();
+  }
+}
+
+/**
  * Bir sembolün geçtiği mercek yazıları — hisse sayfası için.
  *
  * SORGU VERİTABANINDA SÜZÜYOR. Arşivin tamamını çekip bellekte `symbols`
