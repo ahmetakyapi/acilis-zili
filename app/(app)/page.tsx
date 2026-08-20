@@ -41,15 +41,22 @@ import {
   getUserSymbols,
   weekAnchor,
 } from "@/lib/data";
-import { addEtDays, todayEt } from "@/lib/market-hours";
+import {
+  SESSION_BOUNDS,
+  addEtDays,
+  etParts,
+  todayEt,
+} from "@/lib/market-hours";
 import {
   displayOffsets,
   timePair,
   zoneTag,
 } from "@/lib/session-clock";
 import { getQuotes } from "@/lib/providers";
+import { ChangePill } from "@/components/ui/primitives";
 import { isSpotlight } from "@/lib/spotlight";
 import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
+import { ALL_MEMBERS, primaryOnly } from "@/db/seed/indices";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import {
   analysisHref,
@@ -242,6 +249,29 @@ export default async function TodayPage() {
             />
           </Suspense>
         </Panel>
+
+        {/* ---- Ön seans / akşam seansı hareketleri ----
+             Yalnızca o iki pencerede var. Yeri geri sayımın hemen altı:
+             "açılış ziline 3 saat kaldı" diyen bir sayfada bir sonraki soru
+             "peki şu an ne oluyor" ve cevabı bu panel. Seans açıkken
+             basılmıyor — o zaman aynı bilgi /piyasalar'ın kendi
+             artanlar/düşenler listesinde ve gün boyu değişiyor. */}
+        {(status.session === "pre-market" ||
+          status.session === "after-hours") && (
+          <Suspense fallback={<Skeleton className="h-52 w-full rounded-xl" />}>
+            <SessionMovers
+              locale={locale}
+              t={t}
+              extended={status.session}
+              etDate={status.etDate}
+              sinceMinutes={
+                status.session === "pre-market"
+                  ? SESSION_BOUNDS.preMarketOpen
+                  : status.closeMinutes
+              }
+            />
+          </Suspense>
+        )}
 
         {/* ---- Günün özeti — ana kolonda, günü okumaya buradan başlanıyor ---- */}
         <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
@@ -1574,6 +1604,171 @@ function ListSkeleton({ rows }: { rows: number }) {
         <Skeleton key={i} className="h-9 w-full" />
       ))}
     </div>
+  );
+}
+
+/* ==========================================================================
+   Ön seans / akşam seansı hareketleri
+   ========================================================================== */
+
+/**
+ * Zil çalmadan önce (ya da kapandıktan sonra) kimin kımıldadığı.
+ *
+ * NEDEN VAR. Sitenin adı Açılış Zili ve ana sayfası "açılışa şu kadar kaldı"
+ * diyor; ama açılış öncesinde ekranda o pencereye ait tek bir sayı yoktu.
+ * Konsolide tape'e geçildikten sonra bu veri elimizde: ön seans ve akşam
+ * seansı işlemleri artık akıyor (eski IEX beslemesinde hiç akmıyordu, gerekçe
+ * lib/providers/alpaca.ts başında).
+ *
+ * YALNIZCA BU SEANSTA İŞLEM GÖRENLER LİSTELENİYOR — ve bu, panelin en önemli
+ * kuralı. Ön seansta bir hissenin çoğu hiç işlem görmüyor; o sembolün "son
+ * işlemi" dünkü kapanış oluyor ve değişimi de DÜNÜN değişimi. Süzgeç
+ * olmasaydı liste, bu sabah hiç kımıldamamış hisselerin dünkü hareketleriyle
+ * dolardı ve okuyucu onları bu sabahın hareketi sanırdı. Ölçü `tradedAt`:
+ * son işlem bugünün ET takviminde ve seansın başlangıcından sonraysa sembol
+ * bu seansta gerçekten işlem görmüş demektir.
+ *
+ * Evren endeks üyeleri (S&P 500 + Nasdaq 100 + Dow, tekilleştirilmiş): ön
+ * seansta asıl haber olan isimler bunlar ve künye kaç sembolün tarandığını
+ * yazıyor — liste "borsanın tamamı" gibi okunmasın.
+ */
+async function SessionMovers({
+  locale,
+  t,
+  extended,
+  etDate,
+  sinceMinutes,
+}: {
+  locale: Locale;
+  t: Dictionary;
+  extended: "pre-market" | "after-hours";
+  /** Bugünün New York takvim günü. */
+  etDate: string;
+  /** Seansın başladığı ET dakikası — son işlem bundan sonra olmalı. */
+  sinceMinutes: number;
+}) {
+  const universe = primaryOnly(ALL_MEMBERS);
+  const symbols = universe.map((member) => member.symbol);
+  const status = await getStatus();
+  const result = await getQuotes(symbols, status);
+
+  const title =
+    extended === "pre-market"
+      ? t.today.preMarketMovers
+      : t.today.afterHoursMovers;
+
+  if (!result.ok) {
+    return (
+      <Panel>
+        <PanelHeader title={title} />
+        <DataError message={t.data.failed} hint={t.data.failedHint} />
+      </Panel>
+    );
+  }
+
+  const traded = symbols
+    .map((symbol) => ({ symbol, quote: result.data[symbol] }))
+    .filter((row) => {
+      const quote = row.quote;
+      if (!quote || quote.changePct === null || !quote.tradedAt) return false;
+      const at = etParts(quote.tradedAt);
+      return at.dateStr === etDate && at.minutes >= sinceMinutes;
+    })
+    .map((row) => ({ symbol: row.symbol, quote: row.quote! }));
+
+  const ranked = [...traded].sort(
+    (a, b) => (b.quote.changePct ?? 0) - (a.quote.changePct ?? 0),
+  );
+  const gainers = ranked.filter((row) => (row.quote.changePct ?? 0) > 0).slice(0, 4);
+  const losers = ranked
+    .filter((row) => (row.quote.changePct ?? 0) < 0)
+    .slice(-4)
+    .reverse();
+
+  const note = t.today.moversNote.replace("{n}", String(symbols.length));
+
+  if (gainers.length === 0 && losers.length === 0) {
+    return (
+      <Panel>
+        <PanelHeader title={title} />
+        <EmptyState title={t.today.moversEmpty} hint={note} />
+      </Panel>
+    );
+  }
+
+  const meta = await getSymbolNames([
+    ...gainers.map((row) => row.symbol),
+    ...losers.map((row) => row.symbol),
+  ]);
+
+  const column = (
+    heading: string,
+    rows: typeof gainers,
+    side: "left" | "right",
+  ) => (
+    <div
+      className={cn(
+        side === "right" && "border-t border-line sm:border-l sm:border-t-0",
+      )}
+    >
+      <p className="plate px-4 pb-1.5 pt-3.5 text-nano tracking-[0.09em] sm:px-5">
+        {heading}
+      </p>
+      <ul>
+        {rows.length === 0 ? (
+          <li className="px-4 pb-3.5 text-small text-muted sm:px-5">—</li>
+        ) : (
+          rows.map((row) => (
+            <li key={row.symbol}>
+              <Link
+                href={`/hisse/${row.symbol}`}
+                prefetch={false}
+                className="flex items-center gap-2.5 px-4 py-2 transition-colors hover:bg-primary-tint sm:px-5"
+              >
+                <LogoTile
+                  symbol={row.symbol}
+                  logoUrl={meta[row.symbol]?.logoUrl}
+                  size="sm"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="numeral block text-base font-bold leading-tight text-strong">
+                    {row.symbol}
+                  </span>
+                  <span className="block truncate text-nano leading-tight text-muted">
+                    {meta[row.symbol]?.name ?? ""}
+                  </span>
+                </span>
+                <span className="numeral shrink-0 text-small text-body">
+                  {formatPrice(row.quote.price, locale)}
+                </span>
+                <ChangePill
+                  changePct={row.quote.changePct}
+                  locale={locale}
+                  size="sm"
+                  className="shrink-0"
+                />
+              </Link>
+            </li>
+          ))
+        )}
+      </ul>
+    </div>
+  );
+
+  return (
+    <Panel>
+      <PanelHeader
+        title={title}
+        action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
+      />
+      <div className="grid border-t border-line sm:grid-cols-2">
+        {column(t.today.moversUp, gainers, "left")}
+        {column(t.today.moversDown, losers, "right")}
+      </div>
+      <p className="border-t border-line-soft px-4 py-2 text-nano text-muted sm:px-5">
+        {note}
+      </p>
+    </Panel>
   );
 }
 

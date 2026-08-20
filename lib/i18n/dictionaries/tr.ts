@@ -160,6 +160,19 @@ const tr = {
     briefWeeklyStaleNote:
       "Bu, {range} haftasının özeti. Haftalık özet pazartesi {time}'da (TR) yayımlanır.",
     indices: "Endeksler",
+    /* Ön seans / akşam seansı hareketleri — yalnızca o pencerede basılan
+       panel. "Günün en çok artanları" burada kullanılamaz: gösterilen şey
+       günün değil, henüz açılmamış (ya da kapanmış) seansın hareketi. */
+    preMarketMovers: "Açılış Öncesi Hareket Edenler",
+    afterHoursMovers: "Kapanış Sonrası Hareket Edenler",
+    moversUp: "Yükselenler",
+    moversDown: "Düşenler",
+    moversEmpty: "Bu seansta henüz işlem gören sembol yok.",
+    /* Künye NE TARANDIĞINI söylüyor: liste bütün borsanın değil, endeks
+       üyelerinin taraması ve içinde yalnızca bu seansta gerçekten işlem
+       görenler var. */
+    moversNote:
+      "{n} endeks üyesi tarandı · yalnızca bu seansta işlem görenler",
     schedule: "Bugünün Takvimi",
     scheduleEmpty: "Bugün için planlanmış ekonomik veri yok.",
     earningsToday: "Bugün Bilanço Açıklayanlar",
@@ -1005,6 +1018,13 @@ const tr = {
     /* Kaynak adları SÖZLÜKTE: "önbellek" ve "takvim" sabit bir tablodan
        geliyordu ve İngilizce sitede de Türkçe basılıyordu. */
     delayed: "15 dk gecikmeli",
+    /* Seans dışında listelerdeki değişim sütununun künyesi.
+       Konsolide tape'e geçtikten sonra açılış öncesi işlemler akıyor ama
+       her sembol her sabah işlem görmüyor: gören sembol bu sabahın
+       hareketini, görmeyen son kapanışın hareketini gösteriyor. İkisi de
+       "son işleme göre değişim" ama referans günleri farklı — satır satır
+       aynı sütunda durduklarında bunu söylemek gerekiyor. */
+    extendedNote: "seans dışı: değişim her sembolün son işlemine göre",
     sourceCache: "önbellek",
     sourceSeed: "takvim",
     /* CÜMLE TAM YAZILIYOR, parça parça birleştirilmiyor. Damga

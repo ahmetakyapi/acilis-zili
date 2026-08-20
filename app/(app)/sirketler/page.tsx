@@ -610,11 +610,20 @@ async function CompaniesTable({
 
       {quotesResult.ok && (
         <DataStamp
-      labels={t.data}
+          labels={t.data}
           source={quotesResult.source}
           at={quotesResult.fetchedAt}
           stale={quotesResult.stale}
           locale={locale}
+          /* Seans dışında değişim sütunu satır satır farklı bir güne
+             dayanabiliyor; gerekçesi sözlükte. Seans içinde not yok —
+             orada bütün semboller aynı günü gösteriyor. */
+          note={
+            status.session === "pre-market" ||
+            status.session === "after-hours"
+              ? t.data.extendedNote
+              : undefined
+          }
         />
       )}
 

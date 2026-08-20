@@ -134,6 +134,12 @@ const en: typeof tr = {
     briefWeeklyStaleNote:
       "This is the brief for the week of {range}. The weekly brief is published Monday at {time} Istanbul time.",
     indices: "Indices",
+    preMarketMovers: "Pre-Market Movers",
+    afterHoursMovers: "After-Hours Movers",
+    moversUp: "Gainers",
+    moversDown: "Losers",
+    moversEmpty: "No symbol has traded in this session yet.",
+    moversNote: "{n} index members scanned · only those that traded in this session",
     schedule: "Today's Calendar",
     scheduleEmpty: "No economic releases scheduled for today.",
     earningsToday: "Reporting Today",
@@ -896,6 +902,7 @@ const en: typeof tr = {
     delayedNote:
       "Prices come from the consolidated tape (SIP) with a 15-minute delay. Intraday volume, open-high-low and the previous close are the total across every exchange.",
     delayed: "15 min delayed",
+    extendedNote: "outside regular hours: change is per symbol's last trade",
     sourceCache: "cache",
     sourceSeed: "calendar",
     updatedAt: "updated {time}",

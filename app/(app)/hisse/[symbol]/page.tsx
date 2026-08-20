@@ -457,6 +457,35 @@ async function StockHeader({
             </span>
             <ChangePill changePct={quoteResult.data.changePct} locale={locale} />
           </div>
+
+          {/* SEANS DIŞINDAKİ FİYAT KENDİNİ SÖYLÜYOR.
+              Konsolide tape'e geçtikten sonra açılış öncesi ve kapanış
+              sonrası işlemler akıyor (eski IEX beslemesinde hiç akmıyordu),
+              yani buradaki sayı artık "dünkü kapanış" değil o dakikanın ön
+              seans fiyatı. Ama ekranda bunu söyleyen hiçbir şey yoktu:
+              okuyucu seans dışı bir baskıyı normal seans fiyatı sanıyordu.
+              Yanındaki önceki kapanış da yüzdenin neye göre hesaplandığını
+              görünür kılıyor — aradaki fark elle doğrulanabiliyor. */}
+          {(status.session === "pre-market" ||
+            status.session === "after-hours") && (
+            <p className="mt-2 flex flex-wrap items-center justify-start gap-x-2 gap-y-1 text-tiny sm:justify-end">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-wash px-2.5 py-[3px] font-semibold text-primary">
+                <span aria-hidden className="size-1.5 rounded-full bg-current" />
+                {status.session === "pre-market"
+                  ? t.market.preMarket
+                  : t.market.afterHours}
+              </span>
+              {quoteResult.data.prevClose !== null && (
+                <span className="numeral text-muted">
+                  {t.market.prevClose}{" "}
+                  {formatPrice(quoteResult.data.prevClose, locale, {
+                    currency: true,
+                  })}
+                </span>
+              )}
+            </p>
+          )}
+
           <DataStamp
       labels={t.data}
             source={quoteResult.source}
