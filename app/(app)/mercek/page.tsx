@@ -6,6 +6,7 @@ import {
   StoryCast,
   type CastMember,
 } from "@/components/stories/StoryVisual";
+import { curveFromEvent } from "@/components/stories/StoryCurve";
 import {
   EmptyState,
   FilterChip,
@@ -248,33 +249,18 @@ async function StoryBoard({
     getChartBarsMulti(curveSymbols, "1Y", status),
   ]);
 
-  const seriesOf = new Map<string, { time: number; close: number }[]>();
-  for (const symbol of curveSymbols) {
-    const bars = barsBySymbol[symbol];
-    if (bars && bars.length > 1) {
-      seriesOf.set(
-        symbol,
-        bars.map((bar) => ({ time: bar.time, close: bar.close })),
-      );
-    }
-  }
-
-  /* Olay gününden bugüne getiri: o güne ait (ya da ondan sonraki ilk) günlük
-     kapanış ile son kapanış arasındaki fark. Olay barların başladığı tarihten
-     eskiyse ya da seri yoksa sayı hiç yazılmaz — uydurulmuş bir taban
-     üzerinden yüzde üretmektense boş bırakmak doğru. */
+  /* Olaydan bugüne getiri KURALI TEK YERDE: ana sayfadaki olay eğrisi de
+     aynı fonksiyondan geçiyor (components/stories/StoryCurve.tsx). İki yerde
+     ayrı yazılıyken aralarında sessiz bir fark vardı — buradaki sürüm, olay
+     çekilen barlardan (bir yıl) daha eskiyse serinin EN ESKİ barını taban
+     alıyor ve çıkan sayıyı yine "olaydan bugüne" diye yazıyordu. Ortak
+     fonksiyon o durumda hiçbir şey döndürmüyor. */
   const sinceEventOf = (
     symbol: string | null | undefined,
     eventDate: string,
   ): number | null => {
     if (!symbol) return null;
-    const series = seriesOf.get(symbol);
-    if (!series || series.length < 2) return null;
-    const eventTs = Date.parse(`${eventDate}T00:00:00Z`) / 1000;
-    const at = series.find((point) => point.time >= eventTs);
-    const last = series[series.length - 1];
-    if (!at || !last || at.close === 0 || at.time === last.time) return null;
-    return ((last.close - at.close) / at.close) * 100;
+    return curveFromEvent(barsBySymbol[symbol], eventDate).sinceEvent;
   };
 
   /** Yazının kadrosu — logo, ad ve olaydan bugüne getiri. */

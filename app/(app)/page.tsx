@@ -62,6 +62,7 @@ import {
   directionOf,
   directionText,
   formatEtDateLong,
+  formatEtDateCompact,
   formatEtDateShort,
   formatPercent,
   formatEventValue,
@@ -72,6 +73,11 @@ import {
   timeAgo,
 } from "@/lib/utils";
 import { Sparkline } from "@/components/ui/Sparkline";
+import {
+  MIN_CURVE_POINTS,
+  StoryCurve,
+  curveFromEvent,
+} from "@/components/stories/StoryCurve";
 import { getChartBarsMulti } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
 import { VIX_SERIES, vixBand } from "@/components/markets/FearGauge";
@@ -1607,18 +1613,46 @@ async function StoriesSpotlight({
 
   const [lead, ...rest] = stories;
 
-  /* Yalnızca MANŞETİN kadrosu için logo çekiliyor. Alt satırlar tek satırlık
-     başlıklar; oraya logo koymak satırı künyeye çeviriyor ve blok bir
-     tabloya dönüşüyordu. */
-  const leadSymbols = (lead.symbols ?? []).slice(0, 4);
-  const meta =
-    leadSymbols.length > 0 ? await getSymbolNames(leadSymbols) : {};
-  const restSymbols = (lead.symbols?.length ?? 0) - leadSymbols.length;
+  /* TEK EĞRİ, TEK CÜMLE. Yazıların çoğu birkaç şirketi birlikte anlatıyor ve
+     arşiv kartları bunu logo şeridiyle gösteriyor; ama manşette iki eğri yan
+     yana durunca kutu bir karşılaştırma aracına dönüşüyor ve okuyucu
+     "hangisi konu" diye soruyor.
+
+     SEMBOL SIRAYLA DEĞİL, HAREKETLE SEÇİLİYOR. Listedeki ilk sembol her
+     zaman yazının kahramanı değil: tahvil geri alımını anlatan bir yazının
+     sembolleri QQQ ve SPY olabiliyor ve QQQ'nun o günkü %0,2'si okuyucuya
+     hiçbir şey söylemiyor. Olay günü en çok kımıldayan sembol, olayın
+     gerçekten vurduğu şirket demek. */
+  const candidates = (lead.symbols ?? []).slice(0, 3);
+  const status = await getStatus();
+  const [meta, barsBySymbol] = await Promise.all([
+    candidates.length > 0
+      ? getSymbolNames(candidates)
+      : Promise.resolve<Awaited<ReturnType<typeof getSymbolNames>>>({}),
+    candidates.length > 0
+      ? getChartBarsMulti(candidates, "1Y", status)
+      : Promise.resolve<Awaited<ReturnType<typeof getChartBarsMulti>>>({}),
+  ]);
+
+  const drawn = candidates
+    .map((symbol) => ({
+      symbol,
+      curve: curveFromEvent(barsBySymbol[symbol], lead.eventDate),
+    }))
+    .filter(({ curve }) => curve.points.length >= MIN_CURVE_POINTS)
+    .sort(
+      (a, b) =>
+        Math.abs(b.curve.sinceEvent ?? b.curve.eventChange ?? 0) -
+        Math.abs(a.curve.sinceEvent ?? a.curve.eventChange ?? 0),
+    );
+
+  const hero = drawn[0] ?? null;
 
   return (
     <section className="overflow-hidden rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))]">
-      {/* Başlık şeridi — panel başlıklarıyla aynı ölçü ve aynı "Tümünü Gör"
-          kapısı; bloğun kendisi ayrışıyor, başlığın dili değil. */}
+      {/* Başlık şeridi panel başlıklarıyla aynı ölçüde: bloğu ayıran şey
+          başlığın boyu değil, altındaki manşet ve eğri. Cesaret TEK yerde
+          harcanıyor. */}
       <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
         <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
           {t.today.latestStories}
@@ -1629,58 +1663,86 @@ async function StoriesSpotlight({
       <Link
         href={`/mercek/${lead.slug}`}
         prefetch={false}
-        className="block border-t border-primary-faint px-4 py-4 transition-colors hover:bg-primary-tint sm:px-5 sm:py-5"
+        className="group block border-t border-primary-faint px-4 py-5 transition-colors hover:bg-primary-tint sm:px-5"
       >
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
-          {leadSymbols.length > 0 && (
-            <span className="flex shrink-0 items-center gap-1">
-              {leadSymbols.map((symbol) => (
-                <LogoTile
-                  key={symbol}
-                  symbol={symbol}
-                  logoUrl={meta[symbol]?.logoUrl}
-                  size="sm"
-                />
-              ))}
-              {restSymbols > 0 && (
-                <span className="numeral flex size-[26px] shrink-0 items-center justify-center rounded-sm bg-surface-elevated text-micro font-bold text-muted">
-                  +{restSymbols}
+        {/* DOM SIRASI METİN ÖNCE, GÖRÜNÜM MOBİLDE EĞRİ ÖNCE.
+            `flex-col-reverse` ikisini birden veriyor: ekran okuyucu manşeti
+            önce okuyor, telefonda ise sayfayı kaydıran kişi önce grafiği
+            görüyor — ölçü kartlarıyla dolu bir ekranda duraklatan şey o.
+            Geniş ekranda metin solda, eğri sağda: manşet dar kolonda üç
+            satıra kırılıyor, geniş kolonda bir bakışta okunuyor. */}
+        <div className="flex flex-col-reverse gap-5 lg:flex-row lg:items-start lg:gap-7">
+          <div className="min-w-0 flex-1">
+            <p className="numeral flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-tiny text-muted">
+              <span className="text-base font-semibold text-body">
+                {formatEtDateLong(lead.eventDate, locale)}
+              </span>
+              {lead.readMinutes ? (
+                <>
+                  <span aria-hidden>·</span>
+                  <span>
+                    {lead.readMinutes} {t.stories.readMinutes}
+                  </span>
+                </>
+              ) : null}
+              {/* Çevirisi olmayan yazı orijinal diliyle listeleniyor; rozet
+                  bunu tıklamadan önce söylüyor — /mercek ile aynı kural. */}
+              {lead.locale !== locale && (
+                <span className="plate ml-1 text-micro tracking-[0.09em]">
+                  {lead.locale.toUpperCase()}
                 </span>
               )}
-            </span>
-          )}
-          <span className="numeral flex items-baseline gap-1.5 text-tiny text-muted">
-            <span className="text-base font-semibold text-body">
-              {formatEtDateLong(lead.eventDate, locale)}
-            </span>
-            {lead.readMinutes ? (
-              <>
-                <span aria-hidden>·</span>
-                <span>
-                  {lead.readMinutes} {t.stories.readMinutes}
-                </span>
-              </>
-            ) : null}
-          </span>
-          {/* Çevirisi olmayan yazı orijinal diliyle listeleniyor; rozet
-              bunu tıklamadan önce söylüyor — /mercek ile aynı kural. */}
-          {lead.locale !== locale && (
-            <span className="plate ml-auto text-micro tracking-[0.09em]">
-              {lead.locale.toUpperCase()}
-            </span>
+            </p>
+
+            {/* MANŞET SAYFANIN İKİNCİ EN BÜYÜK METNİ. Blok bir süre 19
+                puntoyla yazıldı ve çevresindeki panel başlıklarından
+                ayrışmıyordu: aynı ağırlıkta bir kutu daha gibi duruyordu.
+                Ölçü farkı, bloğun "burada okunacak bir şey var" demesinin en
+                ucuz ve en sessiz yolu. */}
+            <h3 className="display-ink mt-2.5 w-fit text-heading font-bold leading-[1.14] tracking-[-0.03em] sm:text-subdisplay">
+              {lead.title}
+            </h3>
+            <p className="mt-3 line-clamp-3 max-w-[62ch] text-base leading-[21px] text-body sm:text-read sm:leading-[24px]">
+              {lead.dek}
+            </p>
+
+            <p className="mt-4 inline-flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-small font-semibold text-primary">
+              {t.guide.cardCta}
+              <ArrowRight
+                weight="bold"
+                size={12}
+                className="transition-transform group-hover:translate-x-0.5"
+              />
+            </p>
+          </div>
+
+          {hero && (
+            <StoryCurve
+              symbol={hero.symbol}
+              name={meta[hero.symbol]?.name}
+              logoUrl={meta[hero.symbol]?.logoUrl}
+              points={hero.curve.points}
+              eventIndex={hero.curve.eventIndex}
+              sinceEvent={hero.curve.sinceEvent}
+              eventChange={hero.curve.eventChange}
+              startLabel={
+                hero.curve.startDate
+                  ? formatEtDateCompact(hero.curve.startDate, locale)
+                  : ""
+              }
+              endLabel={
+                hero.curve.endDate
+                  ? formatEtDateCompact(hero.curve.endDate, locale)
+                  : ""
+              }
+              sinceLabel={t.stories.sinceEvent}
+              eventDayLabel={t.stories.curveEventDay}
+              eventDateLabel={formatEtDateCompact(lead.eventDate, locale)}
+              locale={locale}
+              className="lg:w-[286px] lg:shrink-0"
+            />
           )}
         </div>
-
-        <h3 className="display-ink mt-2.5 w-fit text-title font-bold leading-[1.16] tracking-[-0.028em] sm:text-heading">
-          {lead.title}
-        </h3>
-        <p className="mt-2 line-clamp-3 max-w-[62ch] text-base leading-[20px] text-body sm:line-clamp-2 sm:text-read sm:leading-[22px]">
-          {lead.dek}
-        </p>
-        <p className="mt-3.5 flex items-center gap-1.5 text-small font-semibold text-primary">
-          {t.guide.cardCta}
-          <ArrowRight weight="bold" size={12} />
-        </p>
       </Link>
 
       {rest.length > 0 && (
@@ -1693,13 +1755,21 @@ async function StoriesSpotlight({
               <Link
                 href={`/mercek/${story.slug}`}
                 prefetch={false}
-                className="flex min-h-11 items-baseline justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-primary-tint sm:min-h-0 sm:px-5"
+                className="flex min-h-11 items-baseline gap-3 px-4 py-2.5 transition-colors hover:bg-primary-tint sm:min-h-0 sm:px-5"
               >
-                <span className="min-w-0 text-base font-semibold leading-[19px] text-strong">
+                <span className="min-w-0 flex-1 text-base font-semibold leading-[19px] text-strong">
                   {story.title}
                 </span>
+                {/* Semboller künye, başlık değil: yazının kimi anlattığını
+                    tıklamadan söylüyor. Dar ekranda düşüyor — orada satırın
+                    işi yalnızca "daha var" demek. */}
+                {story.symbols && story.symbols.length > 0 && (
+                  <span className="numeral hidden shrink-0 text-tiny text-muted sm:inline">
+                    {story.symbols.slice(0, 2).join(" · ")}
+                  </span>
+                )}
                 <span className="numeral shrink-0 text-tiny text-muted">
-                  {formatEtDateShort(story.eventDate, locale)}
+                  {formatEtDateCompact(story.eventDate, locale)}
                 </span>
               </Link>
             </li>
