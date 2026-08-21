@@ -92,6 +92,10 @@ export const SECTOR_GROUPS: readonly SectorGroup[] = [
       "Insurance Brokers",
       "Reinsurance",
       "Multi-Sector Holdings",
+      /* Sağlayıcı GICS alt sektörü veremediğinde ana sektör adını
+         yolluyor ("Insurance"); 24 şirket bu genel adla geliyordu ve
+         hiçbir gruba bağlı olmadığı için "Diğer"e düşüyordu. */
+      "Insurance",
     ],
   },
   {
@@ -118,6 +122,12 @@ export const SECTOR_GROUPS: readonly SectorGroup[] = [
       "Professional Services",
       "Research & Consulting Services",
       "Human Resource & Employment Services",
+      /* Sağlayıcının genel adları — alt sektör kırılımı gelmediğinde
+         bunlar geliyor ve hepsi Sanayi'nin altında. */
+      "Machinery",
+      "Building",
+      "Packaging",
+      "Paper & Forest",
     ],
   },
   {
@@ -149,6 +159,8 @@ export const SECTOR_GROUPS: readonly SectorGroup[] = [
       "Integrated Telecommunication Services",
       "Wireless Telecommunication Services",
       "Telecommunication",
+      /* Sağlayıcının genel adı. */
+      "Communications",
     ],
   },
   {
@@ -176,6 +188,10 @@ export const SECTOR_GROUPS: readonly SectorGroup[] = [
       "Automotive Parts & Equipment",
       "Auto Components",
       "Homebuilding",
+      /* Sağlayıcının genel adları. */
+      "Automobiles",
+      "Textiles, Apparel & Luxury Goods",
+      "Diversified Consumer Services",
     ],
   },
   {
@@ -195,6 +211,9 @@ export const SECTOR_GROUPS: readonly SectorGroup[] = [
       "Household Products",
       "Personal Care Products",
       "Consumer products",
+      /* Sağlayıcının genel adları. */
+      "Food Products",
+      "Beverages",
     ],
   },
   {
@@ -261,6 +280,13 @@ export const SECTOR_GROUPS: readonly SectorGroup[] = [
       "Cargo Ground Transportation",
       "Passenger Ground Transportation",
       "Marine",
+      /* GENEL ADLAR. Bunlar bağlı değildi ve Ulaştırma grubu 802 şirketlik
+         evrende TEK ŞİRKET gösteriyordu: havayolları, demiryolu ve lojistik
+         şirketlerinin tamamı "Diğer"in içindeydi. */
+      "Airlines",
+      "Road & Rail",
+      "Logistics & Transportation",
+      "Transportation Infrastructure",
     ],
   },
   {
@@ -327,6 +353,27 @@ export function sectorGroupLabel(group: SectorGroup, locale: Locale): string {
    -------------------------------------------------------------------------- */
 
 const INDUSTRY_TR: Record<string, string> = {
+  /* SAĞLAYICININ GENEL ADLARI. Finnhub alt sektör kırılımını her şirket için
+     vermiyor; veremediğinde ana sektörün adını yolluyor ("Insurance",
+     "Machinery", "Beverages"). Bu on beş ad ne çeviride ne de grup
+     eşleşmesinde vardı: 802 şirketin 125'i Türkçe ekranda İngilizce sektör
+     adıyla duruyor ve hepsi filtre çiplerinde "Diğer"e düşüyordu — Ulaştırma
+     grubu bu yüzden tek şirket gösteriyordu. */
+  Insurance: "Sigorta",
+  Machinery: "Makine",
+  "Food Products": "Gıda Ürünleri",
+  Communications: "İletişim",
+  Building: "İnşaat",
+  Beverages: "İçecek",
+  "Road & Rail": "Kara ve Demiryolu",
+  Packaging: "Ambalaj",
+  "Textiles, Apparel & Luxury Goods": "Tekstil, Giyim ve Lüks Tüketim",
+  "Logistics & Transportation": "Lojistik ve Taşımacılık",
+  "Diversified Consumer Services": "Çeşitlendirilmiş Tüketici Hizmetleri",
+  Automobiles: "Otomotiv",
+  Airlines: "Havayolları",
+  "Paper & Forest": "Kâğıt ve Orman Ürünleri",
+  "Transportation Infrastructure": "Ulaştırma Altyapısı",
   // Teknoloji
   Technology: "Teknoloji",
   "Application Software": "Uygulama Yazılımı",

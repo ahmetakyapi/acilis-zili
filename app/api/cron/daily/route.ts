@@ -166,6 +166,10 @@ export async function GET(request: Request) {
       }
     }
     if (anyOk) {
+      /* Koşumun TEK damgası. Aşağıdaki temizlik "bu koşumda dokunulmayan
+         satır" diye ayırıyor; her paket kendi `new Date()`ini yazsaydı
+         paketler arasında milisaniyelik fark olur ve ölçüt bulanıklaşırdı. */
+      const runAt = new Date();
       const rows = [...unique.values()].map((entry) => ({
         symbol: entry.symbol,
         reportDate: entry.reportDate,
@@ -190,10 +194,39 @@ export async function GET(request: Request) {
               epsActual: sql`excluded.eps_actual`,
               revenueEstimate: sql`excluded.revenue_estimate`,
               revenueActual: sql`excluded.revenue_actual`,
-              updatedAt: new Date(),
+              updatedAt: runAt,
             },
           });
       }
+
+      /* ---- Revize edilmiş tarihin ölü satırını sil ----
+         Tekil anahtar `(symbol, report_date)`: sağlayıcı bir şirketin
+         beklenen rapor tarihini değiştirdiğinde upsert eski satırı
+         güncellemiyor, YENİSİNİ ekliyor ve eskisi tabloda kalıyordu.
+         Ölçüldü: 566 sembol-çeyrek çifti birden fazla tarihte duruyordu ve
+         takvimde aynı şirket aynı çeyrek için iki kez görünüyordu.
+
+         Silme ÜÇ KOŞULU BİRDEN istiyor, yani asla tekil bir satırı
+         düşüremez: satır bu koşumda gerçekten taranan pencerede olacak
+         (bütçe yüzünden atlanan günler hariç), bu koşumda dokunulmamış
+         olacak ve aynı sembol-çeyrek için DAHA YENİ bir kardeşi bulunacak.
+         Geçmiş tarihler pencerenin dışında; gerçekleşen rakamlar duruyor. */
+      const taranan = EARNINGS_HORIZON_DAYS - skippedDays;
+      if (taranan > 0) {
+        const silinen = await db.execute(sql`
+          delete from earnings_calendar e
+          where e.report_date between ${today} and ${addEtDays(today, taranan)}
+            and e.updated_at < ${runAt}
+            and e.quarter is not null and e.year is not null
+            and exists (
+              select 1 from earnings_calendar y
+              where y.symbol = e.symbol and y.quarter = e.quarter
+                and y.year = e.year and y.updated_at > e.updated_at
+            )
+        `);
+        report.earningsPurged = silinen.rowCount ?? 0;
+      }
+
       report.earnings =
         skippedDays > 0
           ? `${rows.length} (son ${skippedDays} gün bütçe yüzünden atlandı)`

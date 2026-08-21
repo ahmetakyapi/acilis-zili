@@ -156,6 +156,34 @@ export async function getUpcomingEvents(limit = 6): Promise<EconomicEventRow[]> 
 
 /* ---- Bilanço takvimi ---- */
 
+/**
+ * REVİZE EDİLMİŞ TARİHİN ESKİ SATIRINI ELER.
+ *
+ * Tablonun tekil anahtarı `(symbol, report_date)`. Sağlayıcı bir şirketin
+ * beklenen rapor tarihini değiştirdiğinde (sık oluyor: "27 Ağustos" derken
+ * "20 Ağustos"a çekiyor) upsert eski satırı GÜNCELLEMİYOR, yenisini
+ * ekliyor — eskisi tabloda ölü olarak kalıyor. Ölçüldü: 566 sembol-çeyrek
+ * çifti birden fazla tarihte duruyordu. Takvimde aynı şirket aynı çeyrek
+ * için iki kez görünüyor, hatta sağlayıcının artık söylemediği bir tarihte
+ * tek başına görünüyordu.
+ *
+ * Hangisi doğru: cron her koşuda sağlayıcının O AN söylediği satırları
+ * yazıyor, yani `updated_at` en yeni olan güncel olan. Ölçüldü: 566 çiftin
+ * 566'sında en yeni damga TEK, yani beraberlik yok.
+ *
+ * Çeyreği bilinmeyen satır elenmez — gruplanacak bir anahtarı yok.
+ */
+const guncelBilanco = sql`(
+  ${earningsCalendar.quarter} is null
+  or ${earningsCalendar.year} is null
+  or ${earningsCalendar.updatedAt} = (
+    select max(u.updated_at) from earnings_calendar u
+    where u.symbol = ${earningsCalendar.symbol}
+      and u.quarter = ${earningsCalendar.quarter}
+      and u.year = ${earningsCalendar.year}
+  )
+)`;
+
 export const getEarningsBetween = cache(async function getEarningsBetween(
   from: string,
   to: string,
@@ -168,6 +196,7 @@ export const getEarningsBetween = cache(async function getEarningsBetween(
         and(
           gte(earningsCalendar.reportDate, from),
           lte(earningsCalendar.reportDate, to),
+          guncelBilanco,
         ),
       )
       .orderBy(asc(earningsCalendar.reportDate));
@@ -246,6 +275,7 @@ export async function getUpcomingEarnings(
         and(
           gte(earningsCalendar.reportDate, from),
           lte(earningsCalendar.reportDate, to),
+          guncelBilanco,
           options.exclude
             ? sql`${earningsCalendar.symbol} <> ${options.exclude}`
             : undefined,
@@ -306,6 +336,7 @@ export async function getNextEarnings(
         and(
           eq(earningsCalendar.symbol, symbol),
           gte(earningsCalendar.reportDate, todayEt()),
+          guncelBilanco,
         ),
       )
       .orderBy(asc(earningsCalendar.reportDate))
@@ -325,7 +356,7 @@ export async function getEarningsForSymbol(
     return await db
       .select()
       .from(earningsCalendar)
-      .where(eq(earningsCalendar.symbol, symbol))
+      .where(and(eq(earningsCalendar.symbol, symbol), guncelBilanco))
       .orderBy(desc(earningsCalendar.reportDate))
       .limit(limit);
   } catch (error) {
