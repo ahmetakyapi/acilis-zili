@@ -74,9 +74,10 @@ export async function FearGauge({
   return (
     <Panel className="flex flex-col gap-3.5 px-4 py-4 sm:px-5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
-          {labels.title}
-        </h2>
+        {/* Plaka başlık — ölçü paneli. Yanındaki tahvil kartı ve ana
+            sayfadaki karşılığı da plaka taşıyor; rol ayrımının gerekçesi
+            components/ui/primitives.tsx → PanelHeader içinde. */}
+        <h2 className="plate min-w-0 truncate">{labels.title}</h2>
         <span className="numeral text-tiny text-muted">
           VIX · {observedAt ? formatEtDateShort(observedAt, locale) : "—"}
         </span>

@@ -6,6 +6,7 @@ import {
   DataStamp,
   EmptyState,
   Panel,
+  PanelHeader,
   Skeleton,
   LogoTile,
 } from "@/components/ui/primitives";
@@ -306,6 +307,11 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
           sort={sort}
           dir={dir}
           sortHref={sortHref}
+          groupLabel={
+            activeGroup
+              ? sectorGroupLabel(activeGroup, locale)
+              : t.companies.allSectors
+          }
           locale={locale}
           t={t}
         />
@@ -336,6 +342,7 @@ async function CompaniesTable({
   sort,
   dir,
   sortHref,
+  groupLabel,
   locale,
   t,
 }: {
@@ -346,6 +353,8 @@ async function CompaniesTable({
   sort: SortKey;
   dir: SortDir;
   sortHref: (key: SortKey) => string;
+  /** Panel başlığı — seçili sektörün adı ya da "Tüm Sektörler". */
+  groupLabel: string;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -422,6 +431,24 @@ async function CompaniesTable({
   return (
     <>
       <Panel>
+        {/* TABLONUN BAŞLIĞI VARDI AMA GÖRÜNMÜYORDU. Panel doğrudan sütun
+            satırıyla açılıyordu: hangi kümeye baktığın (bütün şirketler mi,
+            seçili sektör mü) ve listenin ne kadarını gördüğün yalnızca
+            tablonun DİBİNDEKİ sayaçtan okunuyordu. Sayfanın geri kalanı rol
+            ayrımını taşıyor (ölçü panelleri plaka, listeler başlık +
+            sayaç); bu tablo o dilin dışında kalmıştı. */}
+        {rows.length > 0 && (
+          <PanelHeader
+            title={groupLabel}
+            meta={
+              hasMore
+                ? t.companies.showing
+                    .replace("{n}", String(rows.length))
+                    .replace("{total}", String(sorted.length))
+                : undefined
+            }
+          />
+        )}
         {rows.length === 0 ? (
           <EmptyState title={t.companies.empty} hint={t.companies.emptyHint} />
         ) : (

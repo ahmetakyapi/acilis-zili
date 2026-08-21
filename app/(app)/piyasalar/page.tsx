@@ -343,7 +343,10 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   return (
     <Panel>
-      <PanelHeader title={t.markets.yields} />
+      {/* Plaka başlık — ölçü paneli. Rol ayrımının gerekçesi
+          components/ui/primitives.tsx → PanelHeader içinde; ana sayfadaki
+          tahvil kartı da aynı tonu taşıyor, aynı sayılar aynı görünsün. */}
+      <PanelHeader title={t.markets.yields} tone="plate" />
 
       <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-line-soft sm:p-0">
         {values.map((value) => {
@@ -552,6 +555,10 @@ async function IndexDetail({
       {withQuote.length > 0 && (
         <>
           <div className="grid gap-4 lg:grid-cols-2">
+            {/* Künye SEÇKİNİN PAYDASINI söylüyor: "Günün En Çok Artanları"
+                beş satır basıyor ama hangi kümenin beşi olduğunu yazmıyordu.
+                Endeks 102 şirketse "102 şirketin 5 tanesi" — aynı kalıp
+                bileşen tablosunda ve ana sayfadaki bilanço panelinde de var. */}
             <MoverPanel
               title={t.markets.topGainers}
               rows={gainers}
@@ -559,6 +566,9 @@ async function IndexDetail({
               showContribution={divisor !== null}
               contributionLabel={t.markets.contribution}
               locale={locale}
+              meta={t.companies.showing
+                .replace("{n}", String(gainers.length))
+                .replace("{total}", String(withQuote.length))}
             />
             <MoverPanel
               title={t.markets.topLosers}
@@ -567,6 +577,9 @@ async function IndexDetail({
               showContribution={divisor !== null}
               contributionLabel={t.markets.contribution}
               locale={locale}
+              meta={t.companies.showing
+                .replace("{n}", String(losers.length))
+                .replace("{total}", String(withQuote.length))}
             />
           </div>
         </>
@@ -708,6 +721,7 @@ function MoverPanel({
   showContribution,
   contributionLabel,
   locale,
+  meta,
 }: {
   title: string;
   rows: Row[];
@@ -715,6 +729,8 @@ function MoverPanel({
   showContribution: boolean;
   contributionLabel: string;
   locale: Locale;
+  /** Başlığın yanındaki künye — kaç şirketten seçildiği. */
+  meta?: string;
 }) {
   if (rows.length === 0) return null;
 
@@ -725,7 +741,7 @@ function MoverPanel({
 
   return (
     <Panel>
-      <PanelHeader title={title} />
+      <PanelHeader title={title} meta={meta} />
       <ul className="divide-y divide-line-soft">
         {rows.map((row) => {
           const changePct = row.quote?.changePct ?? 0;
@@ -923,7 +939,19 @@ function MembersTable({
 
   return (
     <Panel>
-      <PanelHeader title={t.markets.constituents} />
+      {/* Sayaç başlıkta: tablo kırpılıyor ve okuyucu tıklamadan önce
+          listenin ne kadarını gördüğünü bilmeli. Aynı kalıp ana sayfadaki
+          bilanço panelinde ve /mercek arşivinde de var. */}
+      <PanelHeader
+        title={t.markets.constituents}
+        meta={
+          hasMore
+            ? t.companies.showing
+                .replace("{n}", String(sorted.length))
+                .replace("{total}", String(ordered.length))
+            : undefined
+        }
+      />
       {/* Tablo telefonda `min-w-[680px]` ile açılıyordu: ilk bakışta yalnızca
           sıra, şirket ve değişimin bir kısmı görünüyor, FİYAT ekranın dışında
           kalıyordu. Bir bileşen listesinde "ne kadar oynamış" ile "kaç dolar"
