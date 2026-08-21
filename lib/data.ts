@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { and, asc, desc, eq, gte, inArray, isNull, lte, sql, type SQL } from "drizzle-orm";
 import { db } from "./db";
 import { logoSrc } from "./logos";
+import { indexMemberOf } from "../db/seed/indices";
 import {
   dailyBriefs,
   earningsAnalyses,
@@ -26,6 +27,7 @@ import {
 } from "./schema";
 import {
   addEtDays,
+  etParts,
   getMarketStatus,
   todayEt,
   type MarketHoliday,
@@ -437,13 +439,43 @@ export async function isGenericNewsImage(imageUrl: string): Promise<boolean> {
   }
 }
 
+/**
+ * AYNI HABER AYNI GÜN İKİ KEZ GELEBİLİYOR.
+ *
+ * Tekilleştirme sağlayıcının kimliğine (`provider_id`) bakıyor ve aynı yazı
+ * bazen iki ayrı kimlikle düşüyor — biri kaynağın kendi adresiyle, biri
+ * sağlayıcının yönlendirme adresiyle. Ölçüldü: son haftada bir yazı
+ * ("California AG tells CNBC…") aynı gün 10:51 ve 14:52'de iki kayıt olarak
+ * duruyordu ve listede iki kez görünüyordu.
+ *
+ * Ölçüt AYNI GÜN + AYNI MANŞET. Yalnızca manşete bakmak yanlış olurdu:
+ * bazı kaynaklar her gün aynı başlıkla köşe yazıyor ("10 Information
+ * Technology Stocks Whale Activity In Today's Session" son iki haftada altı
+ * kez) ve onlar gerçekten farklı yazılar. Gün ayrımı New York takviminden,
+ * çünkü haber akışı o günün seansına ait.
+ */
+function ayniGunTekille(rows: NewsRow[]): NewsRow[] {
+  const gorulen = new Set<string>();
+  const kept: NewsRow[] = [];
+  for (const row of rows) {
+    const key = `${etParts(row.publishedAt).dateStr}|${row.headline.trim().toLowerCase()}`;
+    if (gorulen.has(key)) continue;
+    gorulen.add(key);
+    kept.push(row);
+  }
+  return kept;
+}
+
 export async function getLatestNews(limit = 20): Promise<NewsRow[]> {
   try {
-    return await db
+    /* Tekilleştirme sorgudan SONRA olduğu için pencere geniş çekiliyor;
+       yoksa elenen her satır listeyi kısaltırdı. */
+    const rows = await db
       .select()
       .from(news)
       .orderBy(desc(news.publishedAt))
-      .limit(limit);
+      .limit(limit + 12);
+    return ayniGunTekille(rows).slice(0, limit);
   } catch (error) {
     yutuldu("getLatestNews", error);
     return [];
@@ -878,7 +910,20 @@ export async function getCompanies(): Promise<CompanyRow[]> {
       return {
         symbol: r.symbol,
         name: r.name,
-        industry: r.industry,
+        /* SEKTÖR ÖNCE GICS'TEN. `symbols.industry` sağlayıcının serbest
+           metinli alanı ve ana sektörle alt sektörü karıştırıyor: Cisco'ya
+           "Communications" diyor (site onu Medya grubuna koyuyordu), Walmart
+           ve Costco'ya "Retail" (Tüketim'e düşüyorlardı), Amphenol'e
+           "Electrical Equipment" (Sanayi). Endeks tohumundaki GICS alt
+           sektörü aynı şirketler için doğru olanı söylüyor: "Communications
+           Equipment" → Teknoloji, "Consumer Staples Merchandise Retail" →
+           Temel Tüketim.
+
+           Ölçüldü: 802 şirketin 517'si tohumda ve bunların 40'ı iki
+           taksonomide FARKLI gruba düşüyordu. Üstelik hisse sayfası zaten
+           GICS'i gösteriyordu, yani aynı şirket iki ekranda iki sektör
+           taşıyordu. Tohumda olmayan sembolde sağlayıcının alanı kalıyor. */
+        industry: indexMemberOf(r.symbol)?.sub ?? r.industry,
         volume: r.volume,
         logoUrl: logoSrc(r.symbol, r.logoUrl),
         storedMarketCap,
