@@ -10,10 +10,15 @@ import {
   ogFonts,
 } from "@/lib/og";
 import { getStoryBySlug } from "@/lib/data";
-import { getI18n } from "@/lib/i18n";
+import { DEFAULT_LOCALE, getDictionary } from "@/lib/i18n";
 
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
+
+/* DİL SABİT, İSTEKTEN OKUNMUYOR — gerekçenin tamamı lib/og.tsx başında.
+   Özeti: paylaşım kartının adresi önek taşımıyor, dolayısıyla `getI18n()`
+   buradan hiçbir zaman `en` döndürmüyordu; çıktıyı değiştirmeden yalnızca
+   her istekte `headers()` ve `cookies()` okuyordu. */
 export const alt = "Açılış Zili — Mercek";
 
 /** Mercek yazısının paylaşım kartı: başlık + spot. */
@@ -23,7 +28,8 @@ export default async function StoryOgImage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { locale, t } = await getI18n();
+  const locale = DEFAULT_LOCALE;
+  const t = getDictionary(locale);
   const story = await getStoryBySlug(slug, locale);
   const fonts = await ogFonts();
 

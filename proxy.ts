@@ -104,8 +104,28 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   /* Dil öneki HER rotada geçerli olduğu için eşleşme geniş; statik dosyalar,
-     görsel iyileştirici ve Next'in kendi varlıkları dışarıda tutuluyor. */
+     görsel iyileştirici ve Next'in kendi varlıkları dışarıda tutuluyor.
+
+     `api/`, `robots.txt`, `sitemap.xml` ve `manifest.webmanifest` DE dışarıda.
+     Next 16'da `proxy` Edge'de değil Node.js çalışma zamanında koşuyor, yani
+     her çalışması bir fonksiyon çağrısı; bu dört yol ise dili hiç
+     kullanmıyor (`robots.ts`, `sitemap.ts` ve `manifest.ts` dosyalarında
+     `getLocale` çağrısı yok, denetlendi).
+
+     API için bu bir davranış değişikliği DEĞİL. İstemciden atılan çağrıların
+     hepsi öneksiz (`/api/olcum`, `/api/search`, `/api/chart/...`), yani
+     `LOCALE_HEADER` o uçlara zaten ulaşmıyordu. Dili okuyan iki uç var
+     (`/api/search`, `/api/takvim`) ve ikisi de `getLocale()` kullanıyor;
+     o fonksiyon başlık yoksa ÇEREZE düşüyor ve düşmeye devam ediyor.
+
+     Kazanç bunun da ötesinde: yukarıdaki çerez yönlendirmesi, İngilizce
+     tercihli okuyucunun `/api/search` çağrısına 307 dönüp onu
+     `/en/api/search`e yolluyordu — ölçüldü. Her arama tuşuna basışta bir
+     gidiş-dönüş ve iki fonksiyon çalıştırması boşa gidiyordu.
+
+     `feed.xml` LİSTEDE YOK, bilerek: o gerçekten `LOCALE_HEADER` okuyor
+     (route.ts:62) ve `/en/feed.xml` İngilizce yayın vermeye devam etmeli. */
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon|logos/|.*\\.(?:png|jpg|jpeg|webp|svg|ico)$).*)",
+    "/((?!api/|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|logos/|.*\\.(?:png|jpg|jpeg|webp|svg|ico)$).*)",
   ],
 };

@@ -30,6 +30,37 @@ import { join } from "node:path";
  * sorgusunu bilmeyi gerektiriyor. Gerçek çözüm OG rotalarını `/en` altında
  * ikilemek; maliyeti faydasının şu an üstünde. Sayfanın BAŞLIĞI ve
  * AÇIKLAMASI iki dilli, doğru olmayan tek şey kartın içindeki metin.
+ *
+ * SONUCU: KART ROTALARI DİLİ İSTEKTEN OKUMUYOR.
+ *
+ * Yukarıdaki sınır yüzünden dört dinamik kart rotası (`hisse/[symbol]`,
+ * `mercek/[slug]`, `rehber/[slug]`, `bilancolar/[symbol]/[period]`)
+ * `getI18n()` çağırdığı hâlde ondan hiçbir zaman `en` alamıyordu: istek
+ * öneksiz geliyor, paylaşım tarayıcısı da çerez taşımıyor. Yani çağrı
+ * çıktıyı hiç değiştirmiyordu.
+ *
+ * Bu yüzden dört rota artık dili sabit alıyor (`DEFAULT_LOCALE`): çıktı bit
+ * bit aynı, yalnızca istek başına yapılan iki gereksiz okuma (`headers()`,
+ * `cookies()`) kalkıyor.
+ *
+ * ÖNBELLEK DENENDİ, İŞE YARAMADI — not düşülüyor ki bir daha denenmesin.
+ * `export const revalidate` eklendi ve ölçüldü: dört rota derleme
+ * çıktısında `prerender-manifest.json` → `dynamicRoutes` altına HİÇ
+ * girmiyor, üretim sunucusunda yanıtlarda `x-nextjs-cache` başlığı hiç
+ * çıkmıyor (öneksiz kardeşleri, ör. `/piyasalar/opengraph-image`, `HIT`
+ * veriyor). Sebebi dinamik segment: Next, metadata görsel rotalarını üst
+ * sayfanın `generateStaticParams`ından türetmiyor — `/rehber/[slug]`
+ * sayfasının bu fonksiyonu VAR ve OG rotası yine önceden üretilmiyor.
+ * Yani `revalidate` burada ölü yapılandırmaydı; kaldırıldı.
+ *
+ * Kart gerçekten önbelleklenecekse iki yol var: OG rotasının KENDİSİNE
+ * `generateStaticParams` yazmak (hisse için 800 sembol × PNG, canlı fiyat
+ * gösteren bir kartta anlamsız) ya da kartı bir Route Handler'a taşıyıp
+ * `Cache-Control`ü elle vermek. İkisi de bugünkü faydanın üstünde.
+ *
+ * Kartların gerçekten İngilizcesi istendiğinde çözüm yine burada değil:
+ * dilin adrese girmesi gerekiyor. O gün geldiğinde `params.locale` bu
+ * rotalara kendiliğinden gelir ve sabit dil kaldırılır.
  */
 
 export const OG_SIZE = { width: 1200, height: 630 } as const;
