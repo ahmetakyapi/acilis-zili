@@ -24,11 +24,23 @@ import { cn, formatPercent } from "@/lib/utils";
  * ANDAKİ yüzdeler bir kartta sıralanıyor. Bedeli birkaç yüz baytlık
  * etkileşim kodu; karşılığı grafiğin asıl sorusuna cevap verebilmesi.
  *
- * FARKLI UZUNLUKTAKİ SERİLER: her seri kendi uzunluğuyla tüm genişliğe
- * yayılıyor (çizim de böyle yapılıyor), yani i. nokta serilerde aynı tarihe
- * denk gelmeyebilir. Bu yüzden imleç konumu İNDİS olarak değil ORAN olarak
- * yorumlanıyor: her seri kendi dizisinde o orana düşen noktayı gösteriyor.
- * Çizimle birebir tutarlı olan tek yorum bu.
+ * FARKLI UZUNLUKTAKİ SERİLER: ORTAK ZAMAN EKSENİ.
+ *
+ * Burada her seri kendi nokta sayısına göre TÜM genişliğe yayılıyordu ve
+ * imleç de bu yüzden "oran" olarak yorumlanıyordu. İkisi kendi içinde
+ * tutarlıydı ama çizilen şey yanlıştı: 5Y aralığında AAPL'ın 261 barı ile
+ * SPCX'in 11 barı (8 Haziran 2026'da halka açıldı) aynı x aralığına
+ * yayılıyordu. SPCX'in Haziran 2026 noktası, AAPL'ın Ağustos 2021
+ * noktasıyla AYNI DİKEYDE duruyordu; imleç kartı grafiğin ortasında "Şubat
+ * 2024" yazarken SPCX için gösterdiği değer Temmuz 2026'ya aitti.
+ *
+ * Artık x ekseni takvim: tüm serilerin en erken ve en geç barı ortak alanı
+ * kuruyor, her nokta kendi TARİHİNE göre yerleşiyor. Sonradan listelenen
+ * bir hisse çizgiye ortadan başlıyor — ekranda gördüğün şey de tam olarak
+ * bu. İmleç bir orana değil bir ANA karşılık geliyor; o an serinin
+ * kapsamı dışındaysa o seri için okuma "—" oluyor, uydurma bir değer değil.
+ *
+ * Zamanı olmayan seri (eski çağrı biçimi) eski davranışa düşer.
  */
 
 export type CompareSeries = {
@@ -90,6 +102,34 @@ export function CompareChart({
     [usable],
   );
 
+  /**
+   * Ortak zaman alanı — bütün serilerin kapsadığı en geniş aralık.
+   * Hiç zaman verilmemişse null döner ve çizim eski (oransal) yola düşer.
+   */
+  const timeDomain = useMemo(() => {
+    let min = Infinity;
+    let max = -Infinity;
+    for (const entry of normalized) {
+      const ts = entry.times;
+      if (!ts || ts.length !== entry.points.length) continue;
+      if (ts[0] < min) min = ts[0];
+      if (ts[ts.length - 1] > max) max = ts[ts.length - 1];
+    }
+    if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) {
+      return null;
+    }
+    return { min, span: max - min };
+  }, [normalized]);
+
+  /** Bir serinin i. noktasının yatay yeri — takvime göre, indise göre değil. */
+  const xOf = (entry: { points: number[]; times?: number[] }, i: number) => {
+    const ts = entry.times;
+    if (timeDomain && ts && ts.length === entry.points.length) {
+      return ((ts[i] - timeDomain.min) / timeDomain.span) * WIDTH;
+    }
+    return i * (WIDTH / Math.max(1, entry.points.length - 1));
+  };
+
   const geometry = useMemo(() => {
     /* TEK GEÇİŞ, YAYMA YOK. Burada `Math.min(...all, 0)` vardı ve `all`
        serilerin tüm noktalarının düzleştirilmiş hâli: 5Y aralığında dört
@@ -121,15 +161,21 @@ export function CompareChart({
     const yAt = (value: number) =>
       PAD_Y + (1 - (value - geometry.min) / geometry.span) * (HEIGHT - PAD_Y * 2);
     return normalized.map((entry) => {
+      const ts = entry.times;
+      const takvim = Boolean(
+        timeDomain && ts && ts.length === entry.points.length,
+      );
       const step = WIDTH / Math.max(1, entry.points.length - 1);
       return entry.points
-        .map(
-          (value, i) =>
-            `${i === 0 ? "M" : "L"}${(i * step).toFixed(2)},${yAt(value).toFixed(2)}`,
-        )
+        .map((value, i) => {
+          const x = takvim
+            ? ((ts![i] - timeDomain!.min) / timeDomain!.span) * WIDTH
+            : i * step;
+          return `${i === 0 ? "M" : "L"}${x.toFixed(2)},${yAt(value).toFixed(2)}`;
+        })
         .join(" ");
     });
-  }, [normalized, geometry]);
+  }, [normalized, geometry, timeDomain]);
 
   if (!geometry || normalized.length === 0) return null;
 
@@ -137,12 +183,37 @@ export function CompareChart({
     PAD_Y + (1 - (value - geometry.min) / geometry.span) * (HEIGHT - PAD_Y * 2);
   const zeroY = yOf(0);
 
-  /** Oranı seri dizisindeki en yakın indise çevirir. */
-  const indexAt = (entry: { points: number[] }, f: number) =>
-    Math.min(
+  /**
+   * İmleç oranını serideki indise çevirir.
+   *
+   * Ortak zaman ekseni varsa oran önce bir ANA çevriliyor, sonra o ana en
+   * yakın bar aranıyor. O an serinin kapsamı dışındaysa `null` dönüyor —
+   * seri o tarihte HENÜZ YOKTU ve ona bir değer atfetmek uydurma olurdu.
+   */
+  const indexAt = (
+    entry: { points: number[]; times?: number[] },
+    f: number,
+  ): number | null => {
+    const ts = entry.times;
+    if (timeDomain && ts && ts.length === entry.points.length) {
+      const hedef = timeDomain.min + f * timeDomain.span;
+      if (hedef < ts[0] || hedef > ts[ts.length - 1]) return null;
+      let en = 0;
+      let fark = Infinity;
+      for (let i = 0; i < ts.length; i += 1) {
+        const d = Math.abs(ts[i] - hedef);
+        if (d < fark) {
+          fark = d;
+          en = i;
+        }
+      }
+      return en;
+    }
+    return Math.min(
       entry.points.length - 1,
       Math.max(0, Math.round(f * (entry.points.length - 1))),
     );
+  };
 
   /* İmleç okuması: her serinin o orandaki değeri + en uzun serinin tarihi.
      Tarih en çok noktası olan seriden alınır — en ince zaman çözünürlüğü
@@ -151,15 +222,28 @@ export function CompareChart({
     fraction === null
       ? null
       : (() => {
-          const values = normalized.map((entry, index) => ({
-            symbol: entry.symbol,
-            color: SERIES_COLORS[index % SERIES_COLORS.length],
-            value: entry.points[indexAt(entry, fraction)],
-          }));
-          const richest = normalized.reduce((best, entry) =>
-            entry.points.length > best.points.length ? entry : best,
-          );
-          const stamp = richest.times?.[indexAt(richest, fraction)];
+          const values = normalized.map((entry, index) => {
+            const i = indexAt(entry, fraction);
+            return {
+              symbol: entry.symbol,
+              color: SERIES_COLORS[index % SERIES_COLORS.length],
+              /* `null` = seri o tarihte henüz işlem görmüyordu. */
+              value: i === null ? null : entry.points[i],
+            };
+          });
+          /* Tarih ORTAK EKSENDEN okunuyor: imlecin bulunduğu an zaten
+             takvimin kendisi. Eskiden "en çok noktası olan seri"den
+             alınıyordu ve o seri kısa serilerle aynı hizada olmadığı için
+             kart yanlış tarihi yazıyordu. */
+          const stamp = timeDomain
+            ? Math.round(timeDomain.min + fraction * timeDomain.span)
+            : (() => {
+                const richest = normalized.reduce((best, entry) =>
+                  entry.points.length > best.points.length ? entry : best,
+                );
+                const i = indexAt(richest, fraction);
+                return i === null ? undefined : richest.times?.[i];
+              })();
           return {
             values,
             date: stamp
@@ -274,11 +358,14 @@ export function CompareChart({
             {fraction !== null &&
               normalized.map((entry, index) => {
                 const i = indexAt(entry, fraction);
-                const step = WIDTH / Math.max(1, entry.points.length - 1);
+                /* Seri o tarihte henüz yoksa nokta da çizilmiyor — çizgi
+                   orada başlamamışken üstünde bir işaret durması, olmayan
+                   bir barı varmış gibi gösterirdi. */
+                if (i === null) return null;
                 return (
                   <circle
                     key={entry.symbol}
-                    cx={i * step}
+                    cx={xOf(entry, i)}
                     cy={yOf(entry.points[i])}
                     r={3.5}
                     /* Nokta dolgusu OPAK: `var(--surface)` %3-5 opaklıkta
@@ -332,11 +419,13 @@ export function CompareChart({
                     <span
                       className={cn(
                         "numeral ml-auto font-semibold",
-                        row.value > 0
-                          ? "text-up"
-                          : row.value < 0
-                            ? "text-down"
-                            : "text-muted",
+                        row.value === null
+                          ? "text-muted"
+                          : row.value > 0
+                            ? "text-up"
+                            : row.value < 0
+                              ? "text-down"
+                              : "text-muted",
                       )}
                     >
                       {/* İŞARET ELLE BASILMIYOR: `formatPercent` artı/eksiyi
@@ -347,7 +436,12 @@ export function CompareChart({
                           yüzde işareti sayıdan SONRA yazılıyordu — Türkçede
                           önce gelir. Bileşen `locale`ı zaten alıyor ve
                           tarihi onunla biçimlendiriyordu. */}
-                      {formatPercent(row.value, locale, 1)}
+                      {/* Kapsam dışında tire: o an seri henüz işlem
+                          görmüyordu ve ona bir yüzde atfetmek uydurma
+                          olurdu. */}
+                      {row.value === null
+                        ? "—"
+                        : formatPercent(row.value, locale, 1)}
                     </span>
                   </div>
                 ))}

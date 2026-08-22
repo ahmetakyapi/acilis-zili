@@ -50,7 +50,7 @@ function LogoTile({
     return (
       <span
         aria-hidden
-        className="numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold text-primary"
+        className="numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold text-primary-ink"
         style={{
           width: size,
           height: size,
@@ -273,15 +273,29 @@ export function StoryCast({
 const MAX_EVENT_GAP_SECONDS = 10 * 86400;
 
 /**
- * Olay gününden son kapanışa yüzde değişim.
+ * Olaydan son kapanışa yüzde değişim.
  *
- * TABAN BULUNAMAZSA HİÇBİR ŞEY DÖNMÜYOR — ve bu, fonksiyonun asıl işi.
- * Bir yıllık bar çekiliyor; olay üç yıl önceyse serinin en eski barı olayın
- * günü değil, bir yıl öncesi oluyor. Bu sürüm bir dönem o tabandan yüzde
- * hesaplayıp sonucu yine "olaydan bugüne" diye yazıyordu, yani ekrandaki
- * künye sayının ne olduğu konusunda yanılıyordu. Uydurulmuş bir taban
- * üzerinden yüzde üretmektense boş bırakmak doğru: kart o zaman rakamsız
- * basılıyor.
+ * TABAN OLAYDAN ÖNCEKİ KAPANIŞ — olay gününün kapanışı DEĞİL.
+ *
+ * Taban olay gününün kendi kapanışıydı ve bu iki şeyi birden bozuyordu:
+ *
+ *   1. Olayın kendi etkisi ölçünün DIŞINDA kalıyordu. Sitedeki "Moderna
+ *      %177 Yükseldi" yazısı bunun en açık örneği: hisse olay günü %177
+ *      yükselmiş, ama olay gününün kapanışından ölçülünce kartta − %16,77
+ *      yazıyordu. Okuyucu başlıkta "yükseldi" okuyup rakamda düşüş
+ *      görüyordu. Aynı sayı doğru tabandan + %130,51.
+ *   2. Olay SON işlem gününe denk geldiğinde taban ile son bar aynı bar
+ *      oluyor ve fonksiyon hiçbir şey döndüremiyordu. Yani rakam tam da en
+ *      yeni — ve sayfada en üstte duran — yazılarda kayboluyordu: manşetin
+ *      kadro tablosundaki üç şirket de tire gösteriyordu.
+ *
+ * Olaydan önceki kapanış yoksa (olay serinin başında ya da öncesinde) taban
+ * olay barının kendisi kalır; o da son barsa hiçbir şey dönmez.
+ *
+ * TABAN UYDURULMAZ. Bir yıllık bar çekiliyor; olay üç yıl önceyse serinin en
+ * eski barı olayın günü değil. Bu fonksiyon bir dönem o tabandan yüzde
+ * hesaplayıp sonucu yine "olaydan bugüne" diye yazıyordu, yani künye sayının
+ * ne olduğu konusunda yanılıyordu. `MAX_EVENT_GAP_SECONDS` bunu engelliyor.
  */
 export function sinceEventReturn(
   bars: readonly { time: number; close: number }[] | undefined,
@@ -294,10 +308,10 @@ export function sinceEventReturn(
 
   const at = bars.findIndex((bar) => bar.time >= eventTs);
   if (at < 0) return null;
+  if (bars[at].time - eventTs > MAX_EVENT_GAP_SECONDS) return null;
 
-  const base = bars[at];
+  const base = at > 0 ? bars[at - 1] : bars[at];
   const last = bars[bars.length - 1];
-  if (base.time - eventTs > MAX_EVENT_GAP_SECONDS) return null;
   if (base.close <= 0 || base.time === last.time) return null;
 
   return ((last.close - base.close) / base.close) * 100;

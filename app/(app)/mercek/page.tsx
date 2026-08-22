@@ -411,7 +411,17 @@ function LeadStory({
               </span>
             </div>
 
-            <h2 className="display-ink mt-3 w-fit text-heading font-bold leading-[1.12] tracking-[-0.03em] sm:text-display">
+            {/* MANŞET BİR BASAMAK KÜÇÜK VE ÖLÇÜLÜ GENİŞLİKTE.
+                32 punto + `w-fit` ile başlık doğal genişliğini alıyordu:
+                mercek başlıkları ortalama 59 karakter ("iddia: nitelik"
+                kalıbı) ve geniş ekranda tek satırda 930 piksele uzuyordu.
+                Uzun görünmesinin sebebi metnin kendisi değil, satırın hiç
+                kırılmamasıydı.
+                28 punto sitenin kendi ölçeğinde bir basamak aşağısı ve ana
+                sayfadaki mercek manşetiyle aynı; `max-w-[34ch]` başlığı iki
+                satıra indiriyor, `text-balance` da iki satırı eşitliyor —
+                tek kelimelik yetim satır kalmıyor. */}
+            <h2 className="display-ink mt-3 w-fit max-w-[34ch] text-balance text-heading font-bold leading-[1.14] tracking-[-0.03em] sm:text-subdisplay">
               {story.title}
             </h2>
             <p className="mt-3.5 max-w-[58ch] text-read leading-[25px] text-body">

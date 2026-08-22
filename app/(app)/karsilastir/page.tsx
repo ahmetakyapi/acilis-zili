@@ -211,6 +211,29 @@ async function CompareBoard({
   };
   const yabanciSembol = symbols.filter((_, i) => yabanciPara(i));
 
+  /**
+   * Seri, seçilen aralığın tamamını kapsamıyorsa kapsadığı gerçek aralık.
+   * Kapsıyorsa null — o zaman söylenecek fazladan bir şey yok.
+   */
+  const enErken = Math.min(
+    ...series.map((entry) => entry.times?.[0] ?? Infinity),
+  );
+  const eksikDonem = (entry: (typeof series)[number] | undefined) => {
+    const ts = entry?.times;
+    if (!ts || ts.length < 2 || !Number.isFinite(enErken)) return null;
+    const kapsam = (ts[ts.length - 1] - ts[0]) || 1;
+    // Tam kapsayan serilerde künye basılmıyor; eşik seri başlangıcının
+    // ortak başlangıca oranı.
+    if (ts[0] - enErken < kapsam * 0.02) return null;
+    const bicim = (unix: number) =>
+      new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(new Date(unix * 1000));
+    return `${bicim(ts[0])} — ${bicim(ts[ts.length - 1])}`;
+  };
+
   /* Satırlar tek yerde tanımlı: hem geniş ekrandaki tablo hem mobildeki
      kart yığını aynı diziden besleniyor, ikisi birbirinden kayamıyor. */
   const rows: {
@@ -244,13 +267,35 @@ async function CompareBoard({
     {
       label: t.compare.periodChange,
       value: (i) => {
-        const closes = series.find((s) => s.symbol === symbols[i])?.closes;
+        const entry = series.find((s) => s.symbol === symbols[i]);
+        const closes = entry?.closes;
         if (!closes || closes.length < 2) return "—";
         const pct = ((closes[closes.length - 1] - closes[0]) / closes[0]) * 100;
+        /* KISA SERİ KENDİ DÖNEMİNİ SÖYLER.
+           Getiri serinin İLK barından hesaplanıyor; sonradan listelenen bir
+           hissede bu, seçilen aralığın tamamı değil. 5Y seçiliyken SPCX
+           satırında "− %14,90" yazıyordu ve okuyucu bunu beş yıllık kayıp
+           sanıyordu — oysa şirketin elimizdeki ilk barı 8 Haziran 2026, yani
+           gösterilen şey on haftalık getiri.
+           Ek kullanılmıyor ("2026'dan beri" gibi): Türkçede ek yılın
+           okunuşuna göre değişiyor (2026'DAN ama 2025'TEN) ve tek bir kalıp
+           ikisini birden doğru yazamıyor. Tarih aralığı hem eksiz hem daha
+           çok şey söylüyor. */
+        const kisa = eksikDonem(entry);
         return (
-          <span className={cn("numeral font-semibold", directionText(directionOf(pct)))}>
-            {formatPercent(pct, locale)}
-          </span>
+          <div className="flex flex-col items-end gap-0.5">
+            <span
+              className={cn(
+                "numeral font-semibold",
+                directionText(directionOf(pct)),
+              )}
+            >
+              {formatPercent(pct, locale)}
+            </span>
+            {kisa && (
+              <span className="numeral text-nano text-muted">{kisa}</span>
+            )}
+          </div>
         );
       },
     },
