@@ -348,7 +348,10 @@ async function StoryBoard({
               <Link
                 href={`/mercek?adet=${limit + PAGE_STEP}`}
                 scroll={false}
-                className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+                /* 44px: arşivin dibindeki tek eylem, mobilde dokunma
+                   eşiğinin altındaydı — aynı düzeltme /sirketler ve
+                   /piyasalar'daki ikizlerinde de var. */
+                className="inline-flex min-h-11 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-10"
               >
                 {t.stories.showMore}
               </Link>

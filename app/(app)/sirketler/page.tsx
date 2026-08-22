@@ -165,7 +165,11 @@ function SortHead({
         href={href}
         scroll={false}
         className={cn(
-          "-my-2 inline-flex min-h-8 items-center gap-1 py-2 transition-colors hover:text-primary",
+          /* MOBİLDE 44px. Sıralama başlığı tablonun ANA denetimi ama dokunma
+             hedefi 32 pikseldi. Negatif margin dolguyu emiyor, yani hedef
+             büyürken satır yüksekliği değişmiyor; masaüstünde imleç hassas,
+             orada 32px yeterli. */
+          "-my-3.5 inline-flex min-h-11 items-center gap-1 py-3.5 transition-colors hover:text-primary sm:-my-2 sm:min-h-8 sm:py-2",
           active && "text-primary",
         )}
       >
@@ -451,10 +455,20 @@ async function CompaniesTable({
             }
           />
         )}
+        {/* KAP KLAVYEYLE ODAKLANABİLİR. Tablo dar ekranda kendi kabında
+            kayıyor ve `tabindex` olmadan sağdaki sütunlara fare olmadan
+            ulaşmak mümkün değildi (WCAG 2.1.1). Aynı düzeltme hisse
+            sayfasındaki bilanço tablosunda zaten vardı, iki dizin tablosuna
+            taşınmamıştı. */}
         {rows.length === 0 ? (
           <EmptyState title={t.companies.empty} hint={t.companies.emptyHint} />
         ) : (
-          <div className="scroll-x">
+          <div
+            className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+            tabIndex={0}
+            role="region"
+            aria-label={t.companies.title}
+          >
             <table className="w-full text-sm sm:min-w-[700px]">
               <thead>
                 <tr className="border-b border-line text-left text-nano uppercase tracking-[0.08em] text-muted">
@@ -638,7 +652,9 @@ async function CompaniesTable({
             <Link
               href={moreHref}
               scroll={false}
-              className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+              /* 44px: sayfanın en altındaki tek eylem ve mobilde dokunma
+                 eşiğinin altındaydı (40px). */
+              className="inline-flex min-h-11 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-10"
             >
               {t.companies.showMore}
             </Link>

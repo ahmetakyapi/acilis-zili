@@ -291,6 +291,10 @@ async function IndexCards({
             key={entry.key}
             href={`/piyasalar?endeks=${entry.key}&sirala=${sort}&yon=${dir}`}
             scroll={false}
+            /* SEÇİLİ OLAN YALNIZCA RENKLE SÖYLENİYORDU. Kart seçildiğinde
+               accent kenarlık ve tint alıyor ama ekran okuyucuya hiçbir şey
+               ulaşmıyordu. Sektör çipleri (/sirketler) bunu zaten yapıyor. */
+            aria-current={selected ? "true" : undefined}
             className="group"
           >
             <Panel
@@ -912,7 +916,11 @@ function SortHead({
         href={href}
         scroll={false}
         className={cn(
-          "-my-2 inline-flex min-h-8 items-center gap-1 py-2 transition-colors hover:text-primary",
+          /* MOBİLDE 44px. Sıralama başlığı tablonun ANA denetimi ama dokunma
+             hedefi 32 pikseldi. Negatif margin dolguyu emiyor, yani hedef
+             büyürken satır yüksekliği değişmiyor; masaüstünde imleç hassas,
+             orada 32px yeterli. */
+          "-my-3.5 inline-flex min-h-11 items-center gap-1 py-3.5 transition-colors hover:text-primary sm:-my-2 sm:min-h-8 sm:py-2",
           active && "text-primary",
         )}
       >
@@ -1023,7 +1031,13 @@ function MembersTable({
           katkısı telefonda gizleniyor (sm+ hepsi geri geliyor), kalan üç sütun
           390px'e rahat sığıyor ve yatay kaydırma kalkıyor. Piyasa değeri
           kaybolmuyor — fiyatın altına ikinci satır olarak iniyor. */}
-      <div className="scroll-x">
+      {/* KAP KLAVYEYLE ODAKLANABİLİR — gerekçe ikizinde (sirketler). */}
+      <div
+        className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+        tabIndex={0}
+        role="region"
+        aria-label={t.markets.constituents}
+      >
         <table className="w-full text-sm sm:min-w-[680px]">
           <thead>
             <tr className="border-b border-line text-left text-nano uppercase tracking-[0.08em] text-muted">
@@ -1212,7 +1226,9 @@ function MembersTable({
           <Link
             href={moreHref}
             scroll={false}
-            className="inline-flex min-h-10 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+            /* 44px: sayfanın en altındaki tek eylem ve mobilde dokunma
+               eşiğinin altındaydı (40px). */
+            className="inline-flex min-h-11 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-10"
           >
             {t.companies.showMore}
           </Link>
