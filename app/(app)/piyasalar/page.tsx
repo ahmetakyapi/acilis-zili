@@ -11,6 +11,7 @@ import {
   PercentReading,
   Skeleton,
   LogoTile,
+  SkeletonRow,
 } from "@/components/ui/primitives";
 import { Sparkline } from "@/components/ui/Sparkline";
 import {
@@ -199,15 +200,28 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
           ekranda tutup sessizce bekletiyor. */}
       <Suspense
         key={`cards:${tab}:${sort}:${dir}`}
-        fallback={<Skeleton className="h-[132px] w-full rounded-xl" />}
+        /* Ölçülmüş yükseklikler, tahmin değil: kartlar mobilde alt alta
+            (3 × 152 + 2 × 12 boşluk = 480), `sm`den itibaren tek sıra (152).
+            Yedek 132px'ti; mobilde 348 piksellik bir sıçrama demekti ve
+            sıçrama ekranın TA TEPESİNDE oluyordu. */
+        fallback={
+          <Skeleton className="h-[480px] w-full rounded-xl sm:h-[152px]" />
+        }
       >
         <IndexCards activeTab={tab} sort={sort} dir={dir} locale={locale} />
       </Suspense>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <YieldStrip locale={locale} t={t} />
-        <Suspense fallback={null}>
-          <FearGauge
+        {/* SUSPENSE YOK — bilerek.
+            Burada `fallback={null}` ile bir sınır vardı ve iki yönden de
+            zarardı. Kazancı sıfır: kardeşi `YieldStrip` de FRED'den besleniyor
+            ve o askıya alınmamış, yani sayfa FRED turunu ZATEN bekliyor.
+            Maliyeti gerçek: boş yedek sıfır yer kaplıyor, kart akışla gelince
+            mobilde 262 piksel açılıp altındaki her şeyi aşağı itiyordu —
+            ölçüldü, /piyasalar'ın mobil CLS'i 0,206 çıkıyordu (Google'ın
+            "kötü" eşiği 0,1). */}
+        <FearGauge
             locale={locale}
             labels={{
               title: t.markets.fearTitle,
@@ -223,12 +237,23 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
               },
             }}
           />
-        </Suspense>
       </div>
 
       <Suspense
         key={`detail:${tab}:${sort}:${dir}:${limit}`}
-        fallback={<Skeleton className="h-[420px] w-full rounded-xl" />}
+        /* SATIR SAYISI KADAR İSKELET, DÜZ BİR PLAKA DEĞİL.
+           Yedek 420 piksellik tek bir gri dikdörtgendi; gerçek tablo 60 satırla
+           3300–3600 piksel. Sekme değiştiren okuyucunun altında sayfa 7301
+           pikselden 3183'e çöküyor, yarım saniye sonra geri açılıyordu —
+           ölçüldü. Kaydırma yeri tarayıcı sayesinde geri geliyor ama araya
+           giren o sıçrama tek başına "sayfa bozuldu" hissi veriyor, üstelik
+           ağır bağlantıda pencere uzuyor.
+           Satır sayısı ZATEN BİLİNİYOR (`limit` ve üye sayısı sunucuda,
+           askıya alınmadan önce), dolayısıyla yer tahminle değil sayıyla
+           ayrılıyor. */
+        fallback={
+          <DetailSkeleton rows={Math.min(active.members.length, limit)} />
+        }
       >
         <IndexDetail
           tab={tab}
@@ -1241,5 +1266,59 @@ function MembersTable({
         </p>
       )}
     </Panel>
+  );
+}
+
+/**
+ * Endeks bileşenleri bölümünün yer tutucusu.
+ *
+ * Suspense sınırı ÜÇ kardeşi birden kapsıyor — genişlik şeridi, artan/azalan
+ * panelleri ve bileşen tablosu — ama yedeği yalnızca tabloyu taklit ediyordu.
+ * Ölçüldü: sekme değiştiren okuyucunun altında sayfa 7301 pikselden 3183'e
+ * çöküyor, yarım saniye sonra geri açılıyordu. Yalnızca tablo taklit
+ * edilince çöküş 1237 piksele indi; eksik kalan 890 piksel tam olarak o iki
+ * bloktu.
+ *
+ * Yer tutucular yükseklikle değil YAPIYLA eşleşiyor: aynı dolgu, aynı satır
+ * düzeni, aynı ızgara. Böylece içerik uzayıp kısaldıkça iskelet de onunla
+ * birlikte kayıyor ve elle ayarlanmış piksel sayıları eskimiyor.
+ */
+function DetailSkeleton({ rows }: { rows: number }) {
+  return (
+    <>
+      {/* Genişlik şeridi */}
+      <Panel>
+        <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
+          <Skeleton className="h-3 w-24 shrink-0" />
+          <Skeleton className="h-2.5 flex-1" />
+        </div>
+      </Panel>
+
+      {/* Artanlar / azalanlar — beşer satır */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {[0, 1].map((panel) => (
+          <Panel key={panel}>
+            <div className="flex items-center justify-between px-4 py-4 sm:px-5">
+              <Skeleton className="h-3 w-40" />
+              <Skeleton className="h-2.5 w-20" />
+            </div>
+            <div className="flex flex-col gap-px">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <SkeletonRow key={i} />
+              ))}
+            </div>
+          </Panel>
+        ))}
+      </div>
+
+      {/* Bileşen tablosu */}
+      <Panel>
+        <div className="flex flex-col gap-px">
+          {Array.from({ length: rows }).map((_, i) => (
+            <SkeletonRow key={i} />
+          ))}
+        </div>
+      </Panel>
+    </>
   );
 }

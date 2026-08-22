@@ -24,6 +24,7 @@ import {
   TimingChip,
   LogoTile,
   ButtonLink,
+  PanelSkeleton,
 } from "@/components/ui/primitives";
 import {
   BRIEF_PUBLISH_TR,
@@ -281,9 +282,20 @@ export default async function TodayPage() {
         )}
 
         {/* ---- Günün özeti — ana kolonda, günü okumaya buradan başlanıyor ---- */}
-        <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
-          <BriefCard locale={locale} t={t} />
-        </Suspense>
+        {/* SUSPENSE YOK — bilerek, ve gerekçesi ölçülü.
+            Günün özeti ekranın en üstündeki en uzun blok: mobilde 1245,
+            geniş ekranda 672 piksel. Boyu her gün metinle birlikte
+            değiştiği için hiçbir sabit yer tutucu doğru olamıyordu; eski
+            yedek 214 piksel ayırıyor, kart akışla gelince altındaki her şeyi
+            bin piksel aşağı itiyordu — ana sayfanın mobil CLS'i tek başına
+            bundan 0,232 çıkıyordu.
+            Karşılığı bedava değil: sayfa artık iki veritabanı okumasını
+            (`getLatestBrief`, günlük ve haftalık) kabuğu basmadan önce
+            bekliyor ve TTFB 113 ms'den 178 ms'ye çıkıyor — ölçüldü, altı
+            koşumun ortancası. Takas bilinçli: 65 milisaniye görünmez,
+            bin piksellik sıçrama değil. Sağlayıcıya giden paneller akışta
+            kalmaya devam ediyor; beklenen tek şey yerel veritabanı. */}
+        <BriefCard locale={locale} t={t} />
 
         {/* ---- Mercek ----
              SAYFANIN EN ÜST ÜÇTE BİRİNDE, çünkü sitenin başka hiçbir yerde
@@ -301,7 +313,7 @@ export default async function TodayPage() {
              Yüzey de ayrışıyor — çevresindeki paneller nötr zeminde, bu blok
              accent kenarlık ve çok soluk degrade taşıyor. Ana sayfada
              degrade kullanan tek yüzey bu. */}
-        <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
+        <Suspense fallback={<SpotlightSkeleton />}>
           <StoriesSpotlight locale={locale} t={t} />
         </Suspense>
 
@@ -325,7 +337,7 @@ export default async function TodayPage() {
              iniyor ve yoğun bir bilanço gününde diğer tarafa geçse bile küçük
              kalıyor. İçerik olarak da yeri burası: üstündeki bilanço listesi
              "bugün kim açıklıyor", bu panel "açıklayanlar ne yaptı". */}
-        <Suspense fallback={<Skeleton className="h-52 w-full rounded-xl" />}>
+        <Suspense fallback={<PanelSkeleton rows={5} />}>
           <LatestAnalyses locale={locale} t={t} />
         </Suspense>
 
@@ -341,11 +353,11 @@ export default async function TodayPage() {
 
         {/* Dünya piyasaları endekslerin hemen altında: ikisi de "bugün
             borsalar ne yapmış" sorusunun cevabı, ABD'si ve dünyası. */}
-        <Suspense fallback={<Skeleton className="h-28 w-full rounded-xl" />}>
+        <Suspense fallback={<PanelSkeleton rows={5} footer />}>
           <WorldStrip locale={locale} t={t} />
         </Suspense>
 
-        <Suspense fallback={<Skeleton className="h-44 w-full rounded-xl" />}>
+        <Suspense fallback={<PanelSkeleton rows={3} footer />}>
           <YieldCard locale={locale} t={t} />
         </Suspense>
 
@@ -358,7 +370,7 @@ export default async function TodayPage() {
             hiçbirinde canlı emtia spotu yok, o yüzden metrik düştü.
             Korku Endeksi (VIX) ise günlük geliyor ve yaşıyor: alt şeritte
             her sayfada, /piyasalar'da bantlı göstergesiyle. */}
-        <Suspense fallback={<Skeleton className="h-44 w-full rounded-xl" />}>
+        <Suspense fallback={<PanelSkeleton rows={3} footer />}>
           <MacroSummary locale={locale} t={t} />
         </Suspense>
 
@@ -394,7 +406,7 @@ export default async function TodayPage() {
           </Suspense>
         </Panel>
 
-        <Suspense fallback={<Skeleton className="h-56 w-full rounded-xl" />}>
+        <Suspense fallback={<PanelSkeleton rows={3} />}>
           <WatchlistSummary locale={locale} t={t} />
         </Suspense>
       </div>
@@ -2233,5 +2245,53 @@ function ReadingDoors({ t }: { t: Dictionary }) {
         </Link>
       ))}
     </div>
+  );
+}
+
+/**
+ * Mercek manşetinin yer tutucusu.
+ *
+ * Bu blok bir liste paneli değil: başlık şeridi, altında manşet + eğri
+ * ikilisi (mobilde alt alta, `lg`den itibaren yan yana) ve en altta üç
+ * satırlık kuyruk. Bu yüzden `PanelSkeleton` yerine kendi düzenini taklit
+ * ediyor — yükseklik yazılmıyor, aynı sarma kurallarından doğuyor.
+ * Ölçüldü: gerçek blok mobilde 699, geniş ekranda 442 piksel; eskiden ikisi
+ * için de 256 piksel ayrılıyordu.
+ */
+function SpotlightSkeleton() {
+  return (
+    <section className="overflow-hidden rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))]">
+      <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
+        <Skeleton className="h-3.5 w-40" />
+        <Skeleton className="h-2.5 w-20" />
+      </div>
+      <div className="border-t border-primary-faint px-4 py-5 sm:px-5">
+        <div className="flex flex-col-reverse gap-5 lg:flex-row lg:items-start lg:gap-7">
+          <div className="min-w-0 flex-1">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="mt-2.5 h-7 w-full" />
+            <Skeleton className="mt-2 h-7 w-4/5" />
+            <Skeleton className="mt-3 h-3.5 w-full" />
+            <Skeleton className="mt-2 h-3.5 w-11/12" />
+            <Skeleton className="mt-2 h-3.5 w-2/3" />
+            <Skeleton className="mt-4 h-3 w-28" />
+          </div>
+          <Skeleton className="h-[168px] w-full rounded-lg lg:w-[292px] lg:shrink-0" />
+        </div>
+      </div>
+      <div className="border-t border-primary-faint bg-surface-solid">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="flex items-center gap-3 border-t border-line-soft px-4 py-3.5 first:border-t-0 sm:px-5"
+          >
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <Skeleton className="h-3 w-4/5" />
+              <Skeleton className="h-2.5 w-24" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

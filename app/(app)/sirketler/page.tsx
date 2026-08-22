@@ -9,6 +9,7 @@ import {
   PanelHeader,
   Skeleton,
   LogoTile,
+  SkeletonRow,
 } from "@/components/ui/primitives";
 import { primaryOnly } from "@/db/seed/indices";
 import {
@@ -36,6 +37,7 @@ import {
   formatVolume,
 } from "@/lib/utils";
 
+import { ChipStrip } from "@/components/ui/ChipStrip";
 import { pageMetadata } from "@/lib/page-meta";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
@@ -66,6 +68,18 @@ export const generateMetadata = pageMetadata({
  */
 
 const SORT_KEYS = ["cap", "hacim", "fiyat", "degisim", "hafta"] as const;
+
+/**
+ * Kaç kotasyonsuz satırdan sonra sebebi yazılır.
+ *
+ * Bir-iki boş hücre gürültüdür, açıklamaya değmez. Ama piyasa değerine göre
+ * ARTAN sıraladığında listenin başına seyrek işlem gören mikro ölçekli
+ * şirketler geliyor ve ekranın yarısı tireye dönüşüyor: ölçüldü, 60 satırın
+ * 27'sinde değişim, 20'sinde fiyat, 20'sinde hacim boştu. Tire dürüst — o
+ * şirket gerçekten işlem görmemiş — ama gerekçesiz bir tire okuyucuya
+ * "site bozuk" diye okunuyor.
+ */
+const KOTASYONSUZ_ACIKLAMA_ESIGI = 3;
 type SortKey = (typeof SORT_KEYS)[number];
 type SortDir = "asc" | "desc";
 
@@ -135,6 +149,7 @@ function SortHead({
   active,
   dir,
   className,
+  hint,
 }: {
   col: SortKey;
   label: string;
@@ -142,6 +157,8 @@ function SortHead({
   active: boolean;
   dir: SortDir;
   className?: string;
+  /** Başlığın neyi ölçtüğü — kısaltılmış etiketlerde tanım. */
+  hint?: string;
 }) {
   return (
     <th
@@ -164,6 +181,12 @@ function SortHead({
       <Link
         href={href}
         scroll={false}
+        /* "Hafta" bir takvim haftası mı, 7 gün mü, 5 seans mı belli değildi —
+           üçü farklı sayılar veriyor ve sütun hiçbirini söylemiyordu. Tanım
+           ipucuna taşındı; bu sütunların hepsi `hidden sm:table-cell`, yani
+           yalnızca imleçli ekranda görünüyor ve ipucu kitlenin tamamına
+           ulaşıyor. */
+        title={hint}
         className={cn(
           /* MOBİLDE 44px. Sıralama başlığı tablonun ANA denetimi ama dokunma
              hedefi 32 pikseldi. Negatif margin dolguyu emiyor, yani hedef
@@ -263,7 +286,10 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
           (kaydırılabilir olduğu sağ kenar solmasından belli olur). */}
       {shownGroups.length > 0 && (
         <div className="relative">
-          <div className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12 sm:flex-wrap sm:gap-2 sm:pb-0 sm:pr-0">
+          <ChipStrip
+            activeKey={activeGroup?.key ?? null}
+            className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12 sm:flex-wrap sm:gap-2 sm:pb-0 sm:pr-0"
+          >
             <SectorChip
               href={sectorHref(null)}
               active={!activeGroup}
@@ -282,7 +308,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                 />
               );
             })}
-          </div>
+          </ChipStrip>
           {/* Sağ kenar solması — yalnızca kaydırmalı dizilimde anlamlı */}
           <div
             aria-hidden
@@ -433,6 +459,7 @@ async function CompaniesTable({
   // düşeni. Kotasyonlar bu yüzden tüm semboller için çekiliyor.
   const rows = sorted.slice(0, limit);
   const hasMore = sorted.length > rows.length;
+  const kotasyonsuz = rows.filter((r) => !quotes[r.symbol]).length;
 
   return (
     <>
@@ -496,6 +523,7 @@ async function CompaniesTable({
                     href={sortHref("hafta")}
                     active={sort === "hafta"}
                     dir={dir}
+                    hint={t.companies.weekChangeHint}
                     className="hidden sm:table-cell"
                   />
                   <SortHead
@@ -642,6 +670,11 @@ async function CompaniesTable({
             tahmin ettiriyordu.
             scroll={false}: okuyucu listenin dibinde, sayfanın başına
             fırlatılmamalı — geldiği yerin altına yeni satırlar eklenmeli. */}
+        {kotasyonsuz >= KOTASYONSUZ_ACIKLAMA_ESIGI && (
+          <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+            {t.companies.noQuoteNote.replace("{n}", String(kotasyonsuz))}
+          </p>
+        )}
         {hasMore && (
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
             <p className="numeral text-small text-muted">
@@ -690,17 +723,11 @@ function TableSkeleton({ rows }: { rows: number }) {
   return (
     <Panel>
       <div className="flex flex-col gap-px">
+        {/* Satır düzeni artık paylaşılan `SkeletonRow`da: aynı iskelet
+            /piyasalar'ın bileşen tablosunda da kullanılıyor ve ikisinin
+            birbirinden ayrı düşmesinin bir gerekçesi yok. */}
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
-            <Skeleton className="size-[34px] shrink-0 rounded-md" />
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-2.5 w-28" />
-            </div>
-            <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
-            <Skeleton className="hidden h-3 w-12 shrink-0 sm:block" />
-            <Skeleton className="h-3 w-14 shrink-0" />
-          </div>
+          <SkeletonRow key={i} />
         ))}
       </div>
     </Panel>

@@ -384,11 +384,14 @@ const en: typeof tr = {
     price: "Price",
     change: "Change",
     weekChange: "Week",
+    weekChangeHint: "Change against the close five trading sessions ago — sessions, not calendar days.",
     empty: "No company data yet",
     emptyHint:
       "Company profiles fill in as stock pages are visited and via the daily sync.",
     showing: "{n} of {total} companies",
     showMore: "Show More",
+    noQuoteNote:
+      "The provider has no recent trade for {n} companies in this list, so their price, change and volume cells are left blank. Most of them are very small companies that trade infrequently.",
   },
 
   stock: {

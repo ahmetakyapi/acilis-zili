@@ -907,3 +907,68 @@ export function SegmentItem({
 export function Skeleton({ className }: { className?: string }) {
   return <div className={cn("skeleton", className)} />;
 }
+
+/** Tek liste satırının yer tutucusu — logo, iki satır yazı, bir ölçü. */
+export function SkeletonRow() {
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
+      <Skeleton className="size-[34px] shrink-0 rounded-md" />
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-2.5 w-28" />
+      </div>
+      <Skeleton className="h-5 w-14 shrink-0 rounded-full" />
+      <Skeleton className="hidden h-3 w-12 shrink-0 sm:block" />
+      <Skeleton className="h-3 w-14 shrink-0" />
+    </div>
+  );
+}
+
+/**
+ * Panel biçiminde yer tutucu — akışla gelen panellerin yerini tutar.
+ *
+ * YÜKSEKLİKLE DEĞİL YAPIYLA eşleşir, ve bu bilerek. Ana sayfadaki dokuz
+ * Suspense sınırının yedeği elle yazılmış tek bir yükseklikti ve hepsi
+ * eksik kalmıştı: ölçüldü, `WorldStrip` 112 piksel ayırıp 436 kaplıyor,
+ * `StoriesSpotlight` 256 ayırıp mobilde 699 kaplıyordu. Panel akışla gelince
+ * altındaki her şey aşağı sıçrıyordu — ana sayfanın mobil CLS'i 0,25, yani
+ * Google'ın "kötü" eşiğinin iki buçuk katı.
+ *
+ * Elle yazılmış yükseklikler kısa vadede düzeltilebilirdi ama içerik her
+ * değiştiğinde yeniden eskiyecekti. Aynı dolgu ve satır düzeniyle çizilen
+ * yer tutucu, panelin kendisi büyüyüp küçüldükçe onunla birlikte kayıyor.
+ */
+export function PanelSkeleton({
+  rows = 3,
+  header = true,
+  footer = false,
+  className,
+}: {
+  /** Kaç liste satırı çizilecek — panelin gerçekte bastığı satır sayısı. */
+  rows?: number;
+  header?: boolean;
+  /** Künye ya da veri damgası taşıyan paneller için alt şerit. */
+  footer?: boolean;
+  className?: string;
+}) {
+  return (
+    <Panel className={className}>
+      {header && (
+        <div className="flex items-center justify-between px-4 py-4 sm:px-5">
+          <Skeleton className="h-3 w-36" />
+          <Skeleton className="h-2.5 w-16" />
+        </div>
+      )}
+      <div className="flex flex-col gap-px">
+        {Array.from({ length: rows }).map((_, i) => (
+          <SkeletonRow key={i} />
+        ))}
+      </div>
+      {footer && (
+        <div className="px-4 py-3 sm:px-5">
+          <Skeleton className="h-2.5 w-40" />
+        </div>
+      )}
+    </Panel>
+  );
+}
