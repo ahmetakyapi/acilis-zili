@@ -186,6 +186,55 @@ export function Kicker({
   );
 }
 
+/**
+ * Yüzde okuması — sayı büyük, işaret küçük ve DOĞRU TARAFTA.
+ *
+ * İŞARETİN YERİ DİLE BAĞLI: Türkçede sayıdan önce (%4,19), İngilizcede sonra
+ * (4.19%). Bu iki yerde elden yazılıyordu ve biri yanlıştı — /piyasalar
+ * tahvil şeridi işareti koşulsuz SONA koyuyor, yani Türkçe ekranda "4,19 %"
+ * basıyordu; ana sayfadaki aynı sayı "%4,19" diyordu. Aynı panel, iki imla.
+ *
+ * `formatPercentPlain` işareti zaten doğru yere koyuyor ama tek bir dizge
+ * döndürüyor; buradaki iki yer işareti sayıdan küçük ve soluk basmak
+ * istiyor, o yüzden ayrı düğümler gerekiyor. Kural artık tek yerde.
+ */
+export function PercentReading({
+  value,
+  locale,
+  className,
+  signClassName,
+}: {
+  value: number | null | undefined;
+  locale: Locale;
+  className?: string;
+  /** İşaretin puntosu/rengi — çağıran ölçüye göre veriyor. */
+  signClassName?: string;
+}) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return <span className={className}>—</span>;
+  }
+  const number = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+  const sign = <span className={signClassName}>%</span>;
+  return (
+    <span className={className}>
+      {locale === "tr" ? (
+        <>
+          {sign}
+          {number}
+        </>
+      ) : (
+        <>
+          {number}
+          {sign}
+        </>
+      )}
+    </span>
+  );
+}
+
 /* --------------------------------------------------------------------------
    Değişim rozeti — yön rengi ve işareti tek yerden gelir.
    Renk tek başına anlam taşımaz: ▲/▼ işareti daima var.

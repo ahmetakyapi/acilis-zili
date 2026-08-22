@@ -8,6 +8,7 @@ import {
   PageHeader,
   Panel,
   PanelHeader,
+  PercentReading,
   Skeleton,
   LogoTile,
 } from "@/components/ui/primitives";
@@ -29,6 +30,7 @@ import type { Quote } from "@/lib/providers/types";
 import {
   cn,
   directionOf,
+  directionText,
   SIGN_GAP,
   formatMoneyCompact,
   formatEtDateShort,
@@ -388,16 +390,16 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
               <p className="text-nano font-semibold uppercase tracking-[0.08em] text-muted">
                 {value.label}
               </p>
-              <p className="tote mt-1 text-xl sm:text-2xl">
-                {value.latest !== null ? (
-                  <>
-                    {formatPrice(value.latest, locale)}
-                    <span className="ml-1 text-sm text-soft">%</span>
-                  </>
-                ) : (
-                  "—"
-                )}
-              </p>
+              {/* İşaretin yeri dile bağlı; kural tek yerde (primitives →
+                  PercentReading). Burada koşulsuz SONA konuyordu ve Türkçe
+                  ekranda "4,19 %" çıkıyordu — aynı sayı ana sayfada "%4,19"
+                  diyordu. */}
+              <PercentReading
+                value={value.latest}
+                locale={locale}
+                className="tote mt-1 block text-xl sm:text-2xl"
+                signClassName="mx-1 text-sm text-soft"
+              />
               {delta !== null && Math.abs(delta) > 0.001 && (
                 <p
                   className={cn(
@@ -559,9 +561,18 @@ async function IndexDetail({
   });
 
   const withQuote = rows.filter((row) => row.quote);
-  const advancing = withQuote.filter((row) => (row.quote!.changePct ?? 0) > 0).length;
-  const declining = withQuote.filter((row) => (row.quote!.changePct ?? 0) < 0).length;
-  const flat = withQuote.length - advancing - declining;
+  /* GENİŞLİK YALNIZCA DEĞİŞİMİ BİLİNEN SATIRLARDAN SAYILIYOR.
+     Sayaç `(changePct ?? 0)` ile yazılmıştı: değişimi bilinmeyen bir sembol
+     — borsadan çıkmış, işlemi durmuş ya da o gün hiç işlem görmemiş bir
+     satır — sıfır sayılıp "yatay" kutusuna düşüyordu. Sıfır ile bilinmiyor
+     ayrı şeyler; biri "fiyat değişmedi" diye bir İDDİA, öteki iddiasızlık.
+     Aynı ayrımı sıralama zaten yapıyor (bkz. `valueOf` yorumu). */
+  const withChange = withQuote.filter(
+    (row) => row.quote!.changePct !== null && row.quote!.changePct !== undefined,
+  );
+  const advancing = withChange.filter((row) => row.quote!.changePct! > 0).length;
+  const declining = withChange.filter((row) => row.quote!.changePct! < 0).length;
+  const flat = withChange.length - advancing - declining;
 
   const byChange = [...withQuote].sort(
     (a, b) => (b.quote!.changePct ?? 0) - (a.quote!.changePct ?? 0),
@@ -576,7 +587,7 @@ async function IndexDetail({
         advancing={advancing}
         declining={declining}
         flat={flat}
-        total={withQuote.length}
+        total={withChange.length}
         locale={locale}
         t={t}
       />
@@ -591,7 +602,6 @@ async function IndexDetail({
             <MoverPanel
               title={t.markets.topGainers}
               rows={gainers}
-              tone="up"
               showContribution={divisor !== null}
               contributionLabel={t.markets.contribution}
               locale={locale}
@@ -602,7 +612,6 @@ async function IndexDetail({
             <MoverPanel
               title={t.markets.topLosers}
               rows={losers}
-              tone="down"
               showContribution={divisor !== null}
               contributionLabel={t.markets.contribution}
               locale={locale}
@@ -761,7 +770,6 @@ function IndexToolbar({
 function MoverPanel({
   title,
   rows,
-  tone,
   showContribution,
   contributionLabel,
   locale,
@@ -769,7 +777,6 @@ function MoverPanel({
 }: {
   title: string;
   rows: Row[];
-  tone: "up" | "down";
   showContribution: boolean;
   contributionLabel: string;
   locale: Locale;
@@ -790,6 +797,12 @@ function MoverPanel({
         {rows.map((row) => {
           const changePct = row.quote?.changePct ?? 0;
           const width = Math.max((Math.abs(changePct) / peak) * 100, 4);
+          /* RENK SATIRIN KENDİ DEĞERİNDEN, PANELİN ADINDAN DEĞİL.
+             `tone` propu panelin tamamını boyuyordu: düşüşle geçen bir günde
+             "Günün En Çok Artanları" listesindeki beş satırın hepsi eksi
+             olabiliyor ve eksi yüzdeler YEŞİL basılıyordu. Panelin adı bir
+             sıralama yönü, satırın rengi ise bir olgu. */
+          const satirTon = directionOf(row.quote?.changePct);
           return (
             <li key={row.member.symbol}>
               {/* prefetch={false}: bu bağlantı bir LİSTE SATIRINDA ve satır
@@ -815,10 +828,10 @@ function MoverPanel({
                   <span
                     className={cn(
                       "numeral shrink-0 text-sm font-bold",
-                      tone === "up" ? "text-up" : "text-down",
+                      directionText(satirTon),
                     )}
                   >
-                    {formatPercent(changePct, locale)}
+                    {formatPercent(row.quote?.changePct, locale)}
                   </span>
                 </div>
 
@@ -828,7 +841,11 @@ function MoverPanel({
                     aria-hidden
                     className={cn(
                       "h-[5px] rounded-full",
-                      tone === "up" ? "bg-up/70" : "bg-down/70",
+                      satirTon === "up"
+                        ? "bg-up/70"
+                        : satirTon === "down"
+                          ? "bg-down/70"
+                          : "bg-flat/50",
                     )}
                     style={{ width: `${width}%` }}
                   />

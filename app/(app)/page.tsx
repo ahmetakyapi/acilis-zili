@@ -19,6 +19,7 @@ import {
   Panel,
   PanelHeader,
   PanelLink,
+  PercentReading,
   Skeleton,
   TimingChip,
   LogoTile,
@@ -838,23 +839,15 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
             >
               <p className="plate text-nano tracking-[0.08em]">{value.label}</p>
               {/* İşaret küçük ve sessiz kalıyor (birim künyesi gibi) ama YERİ
-                  dile bağlı: Türkçede sayıdan önce, İngilizcede sonra. Sabit
-                  "sonra" yazıldığında panel Türkçede "4,25 %" basıyordu. */}
-              <p className="tote mt-1 text-lg">
-                {value.latest === null ? (
-                  "—"
-                ) : locale === "tr" ? (
-                  <>
-                    <span className="mr-0.5 text-xs text-muted">%</span>
-                    {formatPrice(value.latest, locale)}
-                  </>
-                ) : (
-                  <>
-                    {formatPrice(value.latest, locale)}
-                    <span className="ml-0.5 text-xs text-muted">%</span>
-                  </>
-                )}
-              </p>
+                  dile bağlı: Türkçede sayıdan önce, İngilizcede sonra. Kural
+                  artık primitives → PercentReading içinde tek yerde; burada
+                  ve /piyasalar'da ayrı ayrı yazılıyken ikisi ayrışmıştı. */}
+              <PercentReading
+                value={value.latest}
+                locale={locale}
+                className="tote mt-1 block text-lg"
+                signClassName="mx-0.5 text-xs text-muted"
+              />
               <p className="numeral mt-0.5 text-tiny text-muted">
                 {/* `null` ile `0` AYRI ŞEYLER: biri "önceki gözlemi
                     bilmiyoruz", öteki "faiz gerçekten değişmedi". İkisini de

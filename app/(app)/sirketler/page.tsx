@@ -406,7 +406,9 @@ async function CompaniesTable({
       case "hafta":
         return weekly[row.symbol] ?? null;
       case "hacim":
-        return quote?.volume ?? row.volume ?? null;
+        /* ÖNBELLEK YEDEĞİ YOK. Hücre gibi sıralama da yalnızca canlı
+           kotasyonun hacmini kullanıyor — gerekçe aşağıda, hücrede. */
+        return quote?.volume ?? null;
       default:
         return capOf(row) ?? null;
     }
@@ -601,7 +603,16 @@ async function CompaniesTable({
                         })()}
                       </td>
                       <td className="numeral hidden px-4 py-3 text-right text-read text-soft sm:table-cell sm:px-5">
-                        {formatVolume(quote?.volume ?? company.volume, locale)}
+                        {/* HACİM YALNIZCA CANLI KOTASYONDAN. Buraya bir
+                            önbellek yedeği (`?? company.volume`) konmuştu ve
+                            o değer `quotes_cache`ten geliyor: kotasyonu
+                            gelmeyen bir sembolde başka bir GÜNÜN hacmi,
+                            komşularının bugünkü hacmiyle aynı başlığın
+                            altında duruyordu. Aynı sütunda iki farklı günün
+                            sayısı — projenin "aynı sayı aynı kaynaktan"
+                            kuralının ihlali. Satırın fiyat ve değişim
+                            hücreleri zaten "—" gösteriyor; hacim de öyle. */}
+                        {formatVolume(quote?.volume, locale)}
                       </td>
                     </tr>
                   );
