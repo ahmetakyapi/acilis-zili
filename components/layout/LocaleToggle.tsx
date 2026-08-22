@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { setLocalePreference } from "@/app/actions/preferences";
 import { withLocale } from "@/lib/i18n/routing";
 import {
@@ -26,7 +26,6 @@ export function LocaleToggle({
   label: string;
 }) {
   const [pending, startTransition] = useTransition();
-  const router = useRouter();
   const pathname = usePathname();
 
   /* Dil değişimi artık BİR GEZİNME: aynı sayfanın öteki dildeki adresine
@@ -46,9 +45,22 @@ export function LocaleToggle({
        React geçişi anında bitmiş sayıyor, `pending` bir kare true kalıp
        düşüyordu — ne buradaki soluklaşma ne de üstteki gösterge görünüyordu.
        (React 19 asenkron geçişleri.) */
+    /* TAM SAYFA GEZİNMESİ — `router.push` DEĞİL.
+       Dil değişimi bir rota değişimi değil, BÜTÜN AĞACIN değişimi: `<html
+       lang>` ve masthead kök düzende çiziliyor ve App Router istemci
+       gezinmesinde kök düzeni yeniden çizmiyor. Üstelik istemci yönlendirici
+       önbelleği aynı adresi eski dildeki yanıtıyla tutuyordu.
+
+       Ölçüldü: `/en/piyasalar`dan TR'ye dönüldüğünde adres `/piyasalar`
+       oluyor ve çerez `tr` yazılıyor ama ekranda "Markets" duruyordu; sonraki
+       sayfada gövde Türkçe geliyor, masthead İngilizce kalıyordu — yani
+       sayfanın yarısı bir dilde, yarısı ötekinde.
+
+       Tam gezinme bir tur ağ maliyeti demek ama dil değişimi ender ve
+       bilinçli bir eylem; doğruluk hızdan önce gelir. */
     startTransition(async () => {
       await setLocalePreference(locale);
-      router.push(withLocale(pathname, locale));
+      window.location.assign(withLocale(pathname, locale));
     });
   };
 

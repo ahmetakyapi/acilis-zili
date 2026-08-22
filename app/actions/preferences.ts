@@ -1,7 +1,6 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { refresh } from "next/cache";
 import {
   LOCALE_COOKIE,
   THEME_COOKIE,
@@ -11,6 +10,18 @@ import {
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
+/**
+ * Dil tercihini yazar — ve BAŞKA HİÇBİR ŞEY YAPMAZ.
+ *
+ * Burada bir `refresh()` çağrısı vardı ve zararlıydı: çerez yazıldıktan sonra
+ * O ANKİ adresi yeniden getiriyordu. Kullanıcı `/en/piyasalar`dayken Türkçeye
+ * geçtiğinde tazeleme hâlâ `/en/...` adresine gidiyor, proxy önek gördüğü
+ * için çerezi sessizce `en`e geri yazıyordu (bkz. proxy.ts — "önekli adrese
+ * gelmek de bir dil seçimidir").
+ *
+ * Dili değiştiren iki denetim de artık tam sayfa gezinmesi yapıyor, yani
+ * tazelemenin işi zaten yok.
+ */
 export async function setLocalePreference(value: string) {
   if (!isLocale(value)) return;
   const store = await cookies();
@@ -19,7 +30,6 @@ export async function setLocalePreference(value: string) {
     path: "/",
     sameSite: "lax",
   });
-  refresh();
 }
 
 export async function setThemePreference(value: string) {

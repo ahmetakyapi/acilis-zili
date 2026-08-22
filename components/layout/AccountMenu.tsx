@@ -8,7 +8,7 @@ import {
   useTransition,
 } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   CaretRight,
   Gear,
@@ -134,7 +134,6 @@ export function AccountMenu({
   const [openedAt, setOpenedAt] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const pathname = usePathname();
-  const router = useRouter();
   const open = openedAt !== null && openedAt === pathname;
   const theme = useSyncExternalStore(
     subscribeTheme,
@@ -179,11 +178,12 @@ export function AccountMenu({
        `pending` bir kare true olup hemen false'a düşüyor ve gösterge hiç
        görünmüyordu. Söz döndürülünce geçiş sunucu eylemi bitene kadar açık
        kalıyor — React 19'un asenkron geçişleri. */
+    /* TAM SAYFA GEZİNMESİ — gerekçe LocaleToggle içinde yazılı: `<html lang>`
+       ve masthead kök düzende çiziliyor, istemci gezinmesi onları yeniden
+       çizmiyor ve yönlendirici önbelleği eski dildeki yanıtı tutuyordu. */
     startTransition(async () => {
       await setLocalePreference(next);
-      /* Dil adreste yaşıyor: tercih yazıldıktan sonra aynı sayfanın öteki
-         dildeki adresine gidiliyor. */
-      router.push(withLocale(pathname, next));
+      window.location.assign(withLocale(pathname, next));
     });
   };
 
