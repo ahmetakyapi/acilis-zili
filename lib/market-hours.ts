@@ -17,6 +17,22 @@ export const SESSION_BOUNDS = {
   afterHoursClose: 20 * 60, // 20:00
 } as const;
 
+/**
+ * Uzatılmış seansın süresi — kapanış zilinden sonra kaç dakika.
+ *
+ * Normal günde 16:00→20:00, yani dört saat. Yarım günlerde de aynı dört
+ * saat işliyor: borsa 13:00'te kapanıyorsa uzatılmış seans 17:00'de bitiyor
+ * (Nasdaq'ın erken kapanış takvimi böyle yazıyor).
+ *
+ * SABİT BİR SAAT DEĞİL, BİR SÜRE. `getMarketStatus` yarım günlerde
+ * `closeMinutes + 60` yazıyordu — 13:00 kapanışta uzatılmış seansı 14:00'te
+ * bitiriyordu; grafik ise aynı günü doğru gölgeliyordu (kapanış + 240) ve
+ * seans lejantı üçüncü bir şey söylüyordu (sabit 20:00). Aynı an üç yerde
+ * üç farklı tanımla hesaplanıyordu. Kural artık tek yerde.
+ */
+export const AFTER_HOURS_MINUTES =
+  SESSION_BOUNDS.afterHoursClose - SESSION_BOUNDS.regularClose;
+
 export type MarketSession =
   | "pre-market"
   | "regular"
@@ -44,6 +60,17 @@ export type MarketStatus = {
   etMinutes: number;
   isWeekend: boolean;
   holiday: MarketHoliday | null;
+  /**
+   * Bugün işlem var mı — hafta içi ve tam tatil değilse doğru.
+   *
+   * TATİL BAYRAĞI BUNU SÖYLEMİYOR. `holiday` yarım günlerde de dolu
+   * (erken kapanış bir tatil kaydı) ve çağıranlar bunu "bugün seans yok"
+   * diye okuyordu: ana sayfadaki Gün Şeridi `!isWeekend && !holiday` ile
+   * hesaplıyor, 27 Kasım gibi bir yarım günde piyasa saatleri bandını
+   * griye çeviriyordu — oysa o gün 09:30–13:00 arası işlem vardı.
+   * Kural zaten `isTradingDay`de yazılıydı, yalnızca dışarı verilmiyordu.
+   */
+  tradingToday: boolean;
   /** Bugünün kapanış dakikası (yarım günlerde erken). */
   closeMinutes: number;
   /** Bir sonraki açılış zili — piyasa açıkken de dolu. */
@@ -240,10 +267,10 @@ export function getMarketStatus(
   const holiday = holidayOn(dateStr, holidays);
   const tradingToday = isTradingDay(dateStr, holidays);
   const closeMinutes = closeMinutesFor(dateStr, holidays);
-  // Yarım günlerde uzatılmış seans da erken biter.
-  const afterHoursEnd = holiday?.earlyCloseEt
-    ? closeMinutes + 60
-    : SESSION_BOUNDS.afterHoursClose;
+  /* Yarım günlerde uzatılmış seans da erken biter — ama bir saat sonra
+     değil, normal gündekiyle aynı süre kadar sonra. Gerekçe
+     `AFTER_HOURS_MINUTES` üzerinde. */
+  const afterHoursEnd = closeMinutes + AFTER_HOURS_MINUTES;
 
   let session: MarketSession = "closed";
   if (tradingToday) {
@@ -298,6 +325,18 @@ export function getMarketStatus(
     nextTransition = etDateWithMinutes(next, SESSION_BOUNDS.preMarketOpen);
   }
 
+  /* GECE YARISI DA BİR SINIR — seans değişmese bile TAKVİM GÜNÜ değişiyor.
+     Son sınır uzatılmış seansın bitişiydi ve ondan sonraki hedef doğrudan
+     ertesi günün ön seans açılışı oluyordu: 20:00 ET'den 04:00 ET'ye kadar
+     hiçbir tazeleme yok. Perşembe 23:30'da açık bırakılan bir sekmede New
+     York takvimi 00:00'da cumaya geçiyor ama ekran dört saat boyunca
+     perşembede kalıyordu — başlıktaki tarih, "Bugünün Akışı" şeridindeki
+     olaylar ve günün bilanço listesi hep dünün. Sayfanın "bugün" dediği
+     her şey `etDate`den türüyor, dolayısıyla o değerin değiştiği an da bir
+     geçiş. */
+  const geceYarisi = etDateWithMinutes(addEtDays(dateStr, 1), 0);
+  if (geceYarisi < nextTransition) nextTransition = geceYarisi;
+
   return {
     session,
     isRegularOpen: session === "regular",
@@ -306,6 +345,7 @@ export function getMarketStatus(
     etMinutes: minutes,
     isWeekend,
     holiday,
+    tradingToday,
     closeMinutes,
     nextOpen,
     nextClose,

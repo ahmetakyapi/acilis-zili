@@ -1,4 +1,9 @@
-import { ET_ZONE, SESSION_BOUNDS, etDateTimeToUtc } from "./market-hours";
+import {
+  AFTER_HOURS_MINUTES,
+  ET_ZONE,
+  SESSION_BOUNDS,
+  etDateTimeToUtc,
+} from "./market-hours";
 import type { Locale } from "./i18n/config";
 
 /**
@@ -157,20 +162,29 @@ const DASH = "–";
  * Günün dört penceresi — ön seans, ana seans, akşam seansı, gece.
  * Kapanış saati parametre: yarım günlerde borsa 13:00'te kapanır.
  */
+/**
+ * O günün seans pencereleri.
+ *
+ * `closeMinutes` GÜNÜN KENDİ KAPANIŞI — yarım günlerde 13:00. Parametre bir
+ * "HH:mm" dizesiydi ve yalnızca ana seansın bitişini kaydırıyordu: akşam
+ * seansının bitişi sabit 20:00 kalıyordu. Böylece 27 Kasım 2026 gibi bir
+ * yarım günde lejant "Akşam Seansı 13:00–20:00" yazıyordu — yedi saatlik
+ * bir uzatılmış seans, gerçeği dört saat. Üstelik grafiğin hemen üstündeki
+ * gölgeler aynı günü doğru çiziyordu, yani ekranın iki yarısı çelişiyordu.
+ * Dakika alınca pencere kapanıştan türetilebiliyor.
+ */
 export function sessionWindows(
   dateEt: string,
   locale: Locale,
-  closeEt = clockOf(SESSION_BOUNDS.regularClose),
+  closeMinutes: number = SESSION_BOUNDS.regularClose,
 ): SessionWindow[] {
+  const closeEt = clockOf(closeMinutes);
+  const afterEnd = clockOf(closeMinutes + AFTER_HOURS_MINUTES);
   const bounds: [SessionKey, string, string][] = [
     ["pre", clockOf(SESSION_BOUNDS.preMarketOpen), clockOf(SESSION_BOUNDS.regularOpen)],
     ["regular", clockOf(SESSION_BOUNDS.regularOpen), closeEt],
-    ["after", closeEt, clockOf(SESSION_BOUNDS.afterHoursClose)],
-    [
-      "overnight",
-      clockOf(SESSION_BOUNDS.afterHoursClose),
-      clockOf(SESSION_BOUNDS.preMarketOpen),
-    ],
+    ["after", closeEt, afterEnd],
+    ["overnight", afterEnd, clockOf(SESSION_BOUNDS.preMarketOpen)],
   ];
 
   return bounds.map(([key, from, to]) => {

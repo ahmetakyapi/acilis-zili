@@ -7,6 +7,7 @@ import {
   formatEtDateLong,
   formatPeriodLabel,
   formatPrice,
+  formatPercentPlain,
 } from "@/lib/utils";
 import type { MacroObservation } from "@/lib/providers/types";
 
@@ -72,7 +73,22 @@ export default async function MacroPage() {
               row.latestValue !== null && row.prevValue !== null
                 ? row.latestValue - row.prevValue
                 : null;
-            const digits = row.unit === "%" ? 1 : 0;
+            /* YÜZDE KURALINI ANA SAYFAYLA AYNI YERDEN OKUYOR.
+               Bu ekran işareti elle sayının ARDINA koyuyor ve bir ondalığa
+               yuvarlıyordu; ana sayfadaki makro paneli aynı seriyi
+               `formatPercentPlain` ile iki ondalıklı ve dile göre doğru
+               tarafa yazıyor. Sonuç: "Tümünü Gör" ile geçen okuyucu, ana
+               sayfada "%2,47" gördüğü sayıyı burada "2,5 %" diye buluyordu —
+               aynı kartta, aynı seride, iki farklı biçim ve iki farklı
+               hassasiyet. Kural tek yerde: lib/utils.ts → withPercent. */
+            const yuzde = row.unit === "%";
+            const digits = yuzde ? 2 : 0;
+            const olcu = (value: number | null) =>
+              value === null
+                ? "—"
+                : yuzde
+                  ? formatPercentPlain(value, locale, 2)
+                  : formatPrice(value, locale, { digits });
 
             return (
               <Panel key={row.seriesId} className="flex flex-col p-4 sm:p-5">
@@ -87,10 +103,7 @@ export default async function MacroPage() {
 
                 <div className="mt-3 flex items-baseline gap-2.5">
                   <span className="tote text-[2rem] leading-none">
-                    {formatPrice(row.latestValue, locale, { digits })}
-                    {row.unit === "%" && (
-                      <span className="ml-1.5 text-lg text-soft">%</span>
-                    )}
+                    {olcu(row.latestValue)}
                   </span>
                   {delta !== null && Math.abs(delta) > 0.001 && (
                     <span className="numeral inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-tiny font-medium text-body">
@@ -124,8 +137,7 @@ export default async function MacroPage() {
                   <div className="flex items-center justify-between py-2">
                     <dt className="text-muted">{t.macro.previous}</dt>
                     <dd className="numeral font-medium text-body">
-                      {formatPrice(row.prevValue, locale, { digits })}
-                      {row.unit === "%" ? "%" : ""}
+                      {olcu(row.prevValue)}
                     </dd>
                   </div>
                   <div className="flex items-center justify-between gap-3 py-2">

@@ -351,6 +351,11 @@ async function StockHeader({
   ]);
 
   const profile = profileResult.ok ? profileResult.data : null;
+  /* Künyedeki sektör, profil panelindekiyle AYNI tercih sırasından geliyor:
+     GICS varsa o, yoksa sağlayıcının serbest metinli alanı. */
+  const kunyeSektor =
+    sectorLabel(indexMemberOf(symbol)?.sector, locale) ??
+    industryLabel(profile?.industry, locale);
   // Fonlarda sağlayıcı profili boş döner — ad ve künye yerel kayıttan gelir.
   const fund = fundMetaOf(symbol);
 
@@ -402,12 +407,18 @@ async function StockHeader({
           </span>
         ) : null}
         <div>
-          {/* Künye şeridi — borsa · sektör · alt sektör */}
-          {(profile?.exchange || profile?.industry) && (
+          {/* Künye şeridi — borsa · sektör.
+              SEKTÖR AYNI KAYNAKTAN. Burası sağlayıcının serbest metinli
+              alanını yazıyordu, otuz piksel aşağıdaki profil paneli ise
+              GICS sınıflandırmasını: /hisse/CSCO'da künye "İletişim",
+              panel "Bilgi Teknolojileri" diyordu. /hisse/WMT'de künye
+              "Perakende", panel "Temel Tüketim". Tek sayfada iki farklı
+              sektör iddiası, üstelik ikisi de aynı ekranda görünüyor.
+              Tercih sırası panelinkiyle birebir: GICS varsa o, yoksa
+              sağlayıcının alanı. */}
+          {(profile?.exchange || kunyeSektor) && (
             <p className="text-xs font-semibold uppercase leading-tight tracking-[0.02em] text-muted">
-              {[profile?.exchange, industryLabel(profile?.industry, locale)]
-                .filter(Boolean)
-                .join(" · ")}
+              {[profile?.exchange, kunyeSektor].filter(Boolean).join(" · ")}
             </p>
           )}
           <div className="mt-[7px] flex flex-wrap items-baseline gap-x-3 gap-y-1">

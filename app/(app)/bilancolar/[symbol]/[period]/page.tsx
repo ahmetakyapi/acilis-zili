@@ -1188,33 +1188,36 @@ function formatGuidanceRange(
   unit: string | undefined,
   locale: Locale,
 ): string {
-  const digits = (value: number) => {
-    const abs = Math.abs(value);
-    if (abs >= 100) return 0;
-    if (abs >= 10) return 1;
-    return 2;
-  };
-  /* İki uç da tam sayıysa ondalık yazılmaz: "%83,0 – %85,0" şirketin
-     vermediği bir hassasiyeti uyduruyor, yönetim "%83–85" dedi. */
-  const scale = Math.max(Math.abs(low), Math.abs(high));
-  const base =
-    Number.isInteger(low) && Number.isInteger(high) ? 0 : digits(scale);
+  /* HANE SAYISI ŞİRKETİN VERDİĞİ SAYIDAN ÇIKIYOR — ölçekten değil.
+     
+     Burada ölçek tabanlı bir kural vardı (100'den büyükse 0, 10'dan
+     büyükse 1, değilse 2 hane) ve iki yönde birden bozuyordu. Otuz
+     analizin on altı kaleminde ekrandaki bant şirketin açıkladığından
+     FARKLI çıkıyordu:
 
-  /* HANE SAYISI, ARALIK GÖRÜNENE KADAR ARTIYOR.
-     Ölçek tabanlı sabit hane, dar bantları yok ediyordu: Palantir 3Ç26 geliri
-     için yönetim 2,160–2,164 Mr $ dedi, iki hanede ikisi de "2,16" oluyor ve
-     ekranda "2,16 – 2,16 Mr $" yazıyordu — bant kaybolduğu gibi sayı da hata
-     gibi okunuyor. Hassasiyet uydurulmuyor, VAR OLAN hassasiyet korunuyor;
-     üç hanede duruluyor çünkü ötesi şirketin verdiği bir şey değil. */
-  let d = base;
-  while (
-    d < 3 &&
-    formatPrice(low, locale, { digits: d }) ===
-      formatPrice(high, locale, { digits: d }) &&
-    low !== high
-  ) {
-    d += 1;
-  }
+       AMGN  yönetim 15,80–17,08 dedi, ekranda "15,8 – 17,1"
+       HWM   yönetim 2,565–2,585 dedi, ekranda "2,56 – 2,58"
+       APP   yönetim 2,055–2,085 dedi, ekranda "2,06 – 2,08"
+       PLTR  yönetim 1,292–1,296 dedi, ekranda "1,29 – 1,30"
+
+     Yani hem bant daralıyor/kayıyor hem de yanında ayrıca hesaplanan
+     "orta nokta" ekrandaki iki ucun ortası olmaktan çıkıyordu: okuyucu
+     aritmetiği tutturamıyordu.
+
+     Ters yönde de uyduruyordu: bir uç ondalıklıysa İKİSİNE de iki hane
+     veriyordu — "%7,00 – %8,50", oysa yönetim "%7–8,5" dedi.
+
+     Yeni kural: her ucu TAM gösteren en az hane sayısı, ikisinin büyüğü.
+     Ortak hane sayısı bilinçli — bir aralığın iki ucunu farklı
+     hassasiyetle yazmak ("2,16 – 2,164") sayıyı hatalı gösteriyor.
+     Üçte duruluyor; ötesi şirketin verdiği bir şey değil. */
+  const gerekliHane = (value: number) => {
+    for (let d = 0; d <= 3; d += 1) {
+      if (Math.abs(Number(value.toFixed(d)) - value) < 1e-9) return d;
+    }
+    return 3;
+  };
+  const d = Math.max(gerekliHane(low), gerekliHane(high));
 
   const a = formatPrice(low, locale, { digits: d });
   const b = formatPrice(high, locale, { digits: d });

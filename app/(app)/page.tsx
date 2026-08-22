@@ -248,9 +248,10 @@ export default async function TodayPage() {
               t={t}
               locale={locale}
               status={{
-                trading:
-                  status.session !== "closed" ||
-                  (!status.isWeekend && !status.holiday),
+                /* `!isWeekend && !holiday` diye hesaplanıyordu ve yarım
+                   günleri tatil sayıyordu — gerekçe `tradingToday`
+                   alanının üstünde. */
+                trading: status.session !== "closed" || status.tradingToday,
                 closeMinutes: status.closeMinutes,
                 nowMinutes: status.etMinutes,
               }}

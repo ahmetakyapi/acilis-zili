@@ -567,8 +567,12 @@ export function PriceChart({
   const windows = useMemo(() => {
     if (state.phase !== "ready" || state.bars.length === 0) return null;
     const dayEt = etParts(new Date(state.bars[0].time * 1000)).dateStr;
-    return sessionWindows(dayEt, locale);
-  }, [state, locale]);
+    /* GÜNÜN KENDİ KAPANIŞI VERİLİYOR. Üçüncü argüman atlanıyordu ve lejant
+       yarım günlerde varsayılan 16:00 kapanışını yazıyordu — oysa grafiğin
+       hemen üstündeki gölgeler aynı bileşende doğru kapanışı kullanıyor.
+       Ekranın iki yarısı aynı gün için iki farklı seans saati söylüyordu. */
+    return sessionWindows(dayEt, locale, closeMinutes);
+  }, [state, locale, closeMinutes]);
 
   const sessionName: Record<string, string> = {
     pre: labels.sessionPre,
