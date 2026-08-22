@@ -309,6 +309,25 @@ export default async function TodayPage() {
           <EarningsToday locale={locale} t={t} />
         </Suspense>
 
+        {/* ---- Son analizler ----
+             KOLON DENGESİ ÖLÇÜLEREK KURULDU. Bu panel bir tur yan kolonda
+             durdu ve orada yanlış yerdeydi: yan kolon neredeyse SABİT
+             yükseklikte (ölçüldü: 2265 piksel, sekiz panel, hepsi kısa
+             listeler), ana kolon ise veriye göre 1500 ile 2100 arasında
+             değişiyor — bültenin uzunluğu, mercek girişinin uzunluğu ve o
+             gün kaç şirketin bilanço açıkladığı. Yani sağ kolon neredeyse
+             HER ZAMAN daha uzundu ve altında 532 piksellik boş bir dikdörtgen
+             kalıyordu (1440px'te ölçüldü).
+
+             Panel buraya geçince iki kolon birbirinin etrafında salınıyor:
+             ana kolon 1800-2400, yan kolon 1965. Boşluk 532'den 70 piksele
+             iniyor ve yoğun bir bilanço gününde diğer tarafa geçse bile küçük
+             kalıyor. İçerik olarak da yeri burası: üstündeki bilanço listesi
+             "bugün kim açıklıyor", bu panel "açıklayanlar ne yaptı". */}
+        <Suspense fallback={<Skeleton className="h-52 w-full rounded-xl" />}>
+          <LatestAnalyses locale={locale} t={t} />
+        </Suspense>
+
       </div>
 
       {/* ================= Yan kolon =================
@@ -373,15 +392,6 @@ export default async function TodayPage() {
             <WeekAhead locale={locale} t={t} />
           </Suspense>
         </Panel>
-
-        {/* Son analizler ANA KOLONDAN BURAYA. Bir bilanço analizi okunacak
-            bir metin değil, okunmuş bir ölçüm: şirket, çeyrek, karne notu.
-            Yeri takvimle favorilerin arası — üçü de "takip ettiğin şeyler
-            ne durumda" sorusunun parçası. Yan kolonun "yalnızca ölçüler"
-            kuralı bu satırla genişledi: ölçüm ve ölçümün okunuşu. */}
-        <Suspense fallback={<Skeleton className="h-52 w-full rounded-xl" />}>
-          <LatestAnalyses locale={locale} t={t} />
-        </Suspense>
 
         <Suspense fallback={<Skeleton className="h-56 w-full rounded-xl" />}>
           <WatchlistSummary locale={locale} t={t} />
@@ -802,14 +812,14 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   return (
     <Panel>
+      {/* GÖZLEM TARİHİ BAŞLIKTA DEĞİL, PANELİN DİBİNDE. Başlıkta üçüncü öğe
+          olarak duruyordu ve 360 piksellik ekranda 324 piksellik panele üç
+          öğe sığmıyordu: başlık kesiliyor, künye ve bağlantı kelime
+          ortasından ikiye bölünüyordu. Aynı sayılar /piyasalar'da zaten
+          tarihini dipte taşıyor — iki ekran artık aynı yerde söylüyor. */}
       <PanelHeader
         title={t.markets.yields}
         tone="plate"
-        meta={
-          observedAt
-            ? `FRED · ${formatEtDateShort(observedAt, locale)}`
-            : undefined
-        }
         action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
       />
       <div className="grid grid-cols-3 border-t border-line">
@@ -866,6 +876,12 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
           );
         })}
       </div>
+
+      {observedAt && (
+        <p className="border-t border-line-soft px-4 py-2 text-nano text-muted sm:px-5">
+          FRED · {formatEtDateShort(observedAt, locale)}
+        </p>
+      )}
 
       {/* ---- Korku Endeksi ----
            Kendi kartı vardı ve o kart Brent'le eşleşmişti; Brent düşünce
@@ -947,7 +963,13 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                       {locale === "tr" ? market.nameTr : market.nameEn}
                     </span>
                   </span>
-                  <span className="mt-0.5 block truncate text-nano leading-tight text-muted">
+                  {/* DAR EKRANDA SARAR, KESİLMEZ. Bu satır fonun neyi
+                      izlediğini söylüyor ("MSCI Japonya · Nikkei'yi izleyen
+                      ABD fonu") ve kesildiğinde cümlenin taşıdığı tek bilgi
+                      — vekil olduğu — kayboluyordu; 320 ve 360 piksellik
+                      ekranlarda beş satırın üçü böyleydi. İki satıra kadar
+                      sarıyor, ondan sonrası kesiliyor. */}
+                  <span className="mt-0.5 line-clamp-2 block text-nano leading-tight text-muted sm:truncate">
                     {locale === "tr" ? market.tracksTr : market.tracksEn}
                   </span>
                 </span>
@@ -2135,8 +2157,10 @@ async function LatestAnalyses({
   return (
     <Panel className="min-w-0">
       <PanelHeader
+        /* Başlık tonu ANA KOLONDA `title`: rol ayrımı yere değil İŞE bağlı
+           ve bu bir kayıt listesi, gösterge değil. Panel bir tur yan kolonda
+           dururken plakaya inmişti. */
         title={t.today.latestAnalyses}
-        tone="plate"
         action={
           <PanelLink href="/bilancolar/analizler">{t.common.showAll}</PanelLink>
         }

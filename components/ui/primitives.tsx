@@ -58,9 +58,21 @@ export function PanelHeader({
   className?: string;
 }) {
   return (
+    /* SIĞMAYINCA SATIR ATLAR, KESMEZ.
+       Başlık bir süre `truncate` taşıyordu ve üç öğeli bir başlıkta (başlık +
+       künye + bağlantı) dar kaba girildiğinde sonuç şuydu: başlık
+       "ABD TAHVİL FAİZ…" diye kesiliyor, künye "FRED ·" / "20.08.2026" diye
+       ikiye bölünüyor, bağlantı "Tümünü" / "Gör" oluyordu. Ölçüldü: 360
+       piksellik ekranda panel 324 piksel, içerik 357 istiyor.
+
+       Kesmek yanlış çözümdü — başlığın adı bilgidir. Doğrusu satırın
+       kırılmasına İZİN VERMEK ama kırılmayı kelime ortasından değil ÖĞE
+       arasından yaptırmak: künye ve bağlantı tek grup hâlinde ikinci satıra
+       iniyor, ikisi de kendi içinde bölünmüyor. Sığdığında hiçbir şey
+       değişmiyor. */
     <div
       className={cn(
-        "flex items-center justify-between gap-3 px-4 sm:px-5",
+        "flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 sm:px-5",
         /* Plaka başlık daha kısa: 11 piksellik bir etiketin çevresinde 16
            piksel dolgu, kutuyu başlığın kendisinden büyük gösteriyor. */
         tone === "plate" ? "py-3.5" : "py-4",
@@ -68,19 +80,20 @@ export function PanelHeader({
       )}
     >
       {tone === "plate" ? (
-        /* `min-w-0` + `truncate`: plaka başlık, yanındaki künye ve bağlantıyla
-           birlikte 376 piksellik yan kolonda 46 piksel boşluk bırakıyor
-           (ölçüldü). Daha uzun bir başlık ya da yedek yazı tipi devreye
-           girdiğinde satır kırılmak yerine kesiliyor — panelin dışına
-           taşmıyor. */
-        <h2 className="plate min-w-0 truncate">{title}</h2>
+        <h2 className="plate">{title}</h2>
       ) : (
         <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
           {title}
         </h2>
       )}
-      {meta && <span className="text-xs text-muted">{meta}</span>}
-      {action}
+      {(meta || action) && (
+        <div className="flex items-center gap-3">
+          {meta && (
+            <span className="whitespace-nowrap text-xs text-muted">{meta}</span>
+          )}
+          {action}
+        </div>
+      )}
     </div>
   );
 }
@@ -102,7 +115,9 @@ export function PanelLink({
         /* -my-2 py-2: metnin kendisi 16px yüksekliğinde bir dokunma hedefi
            bırakıyordu. Dolgu tıklama alanını 32px'e çıkarır, negatif margin
            de satır yüksekliğini olduğu gibi bırakır — düzen kaymaz. */
-        "-my-2 inline-flex min-h-8 items-center py-2 text-xs text-primary transition-colors hover:text-primary-hover",
+        /* `whitespace-nowrap`: "Tümünü Gör" iki kelime ve dar bir başlık
+           satırında "Tümünü" / "Gör" diye bölünüyordu. */
+        "-my-2 inline-flex min-h-8 items-center whitespace-nowrap py-2 text-xs text-primary transition-colors hover:text-primary-hover",
         className,
       )}
     >
