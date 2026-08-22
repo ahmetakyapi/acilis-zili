@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Pause, Play } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/lib/utils";
 
 /**
@@ -70,7 +71,14 @@ function paginate(groups: TickerGroup[], wide: boolean): Page[] {
   return pages;
 }
 
-export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
+export function MarketTicker({
+  groups,
+  labels,
+}: {
+  groups: TickerGroup[];
+  /** Duraklatma düğmesinin erişilebilir adı — iki durumu da taşır. */
+  labels: { pause: string; resume: string };
+}) {
   const [page, setPage] = useState(0);
   const [visible, setVisible] = useState(true);
   // Sunucu geniş varsayar; dar ekranda ilk ölçümde daralır. CSS ile gizlemek
@@ -103,13 +111,17 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
   const pageCount = Math.max(1, pages.length);
 
   /* HAREKETİ DURDURMANIN BİR YOLU OLMALI (WCAG 2.2.2). Şerit altı saniyede
-     bir kendi kendine sayfa değiştiriyordu ve okuyucunun bunu durdurmasının
-     hiçbir yolu yoktu: okumakta olduğu sayı gözünün önünde kayıp gidiyordu.
-     İki kapı eklendi — imleç şeridin üstündeyken ya da içindeki bir bağlantı
-     odaktayken döngü duruyor; `prefers-reduced-motion: reduce` seçili
-     cihazda hiç başlamıyor (o ayarın anlamı zaten "kendiliğinden hareket
-     etme"). */
+     bir kendi kendine sayfa değiştiriyor.
+     Üç kapı var: imleç şeridin üstündeyken duruyor, `prefers-reduced-motion:
+     reduce` seçili cihazda hiç başlamıyor, ve AÇIK BİR DÜĞME var.
+     Düğme sonradan eklendi çünkü ilk iki kapı klavye kullanan okuyucuya
+     ulaşmıyordu: `onFocusCapture` ile "içeride bir şey odaktayken dur"
+     kuralı yazılıydı ama şeridin içinde odaklanabilir HİÇBİR öğe yoktu,
+     yani o kapı fiilen kapalıydı. Ölçütün istediği şey de zaten keşfedilebilir
+     bir denetim; gizli bir davranış değil. */
   const [durduruldu, setDurduruldu] = useState(false);
+  /** Okuyucunun açık tercihi — imleç ayrıldığında geri açılmaz. */
+  const [elleDurduruldu, setElleDurduruldu] = useState(false);
   const [azHareket, setAzHareket] = useState(false);
 
   useEffect(() => {
@@ -121,7 +133,8 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
   }, []);
 
   useEffect(() => {
-    if (pageCount <= 1 || !onScreen || durduruldu || azHareket) return;
+    if (pageCount <= 1 || !onScreen || durduruldu || elleDurduruldu || azHareket)
+      return;
     /* İÇTEKİ ZAMANLAYICI DA TEMİZLENİYOR. Kimliği tutulmuyordu: `pageCount`
        değiştiğinde (ekran döndürme, veri güncellemesi) askıda kalan geri
        çağrı ESKİ `pageCount` kapanışıyla ateşleniyor ve sayfa indeksi
@@ -139,7 +152,7 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
       window.clearInterval(cycle);
       if (fade !== undefined) window.clearTimeout(fade);
     };
-  }, [pageCount, onScreen, durduruldu, azHareket]);
+  }, [pageCount, onScreen, durduruldu, elleDurduruldu, azHareket]);
 
   if (pages.length === 0) return null;
 
@@ -195,6 +208,25 @@ export function MarketTicker({ groups }: { groups: TickerGroup[] }) {
           </span>
         ))}
       </div>
+
+      {/* Duraklatma düğmesi mutlak konumda: şeridin akışına girip değerleri
+          kaydırmıyor, ama Tab sırasında yerinde duruyor ve odak halkası
+          görünüyor. Tek sayfa varsa dönecek bir şey de yok, basılmıyor. */}
+      {pageCount > 1 && (
+        <button
+          type="button"
+          onClick={() => setElleDurduruldu((v) => !v)}
+          aria-pressed={elleDurduruldu}
+          aria-label={elleDurduruldu ? labels.resume : labels.pause}
+          className="absolute inset-y-0 right-1 my-auto inline-flex size-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-elevated hover:text-strong"
+        >
+          {elleDurduruldu ? (
+            <Play weight="fill" size={11} aria-hidden />
+          ) : (
+            <Pause weight="fill" size={11} aria-hidden />
+          )}
+        </button>
+      )}
     </div>
   );
 }

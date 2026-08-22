@@ -182,10 +182,14 @@ function SortHead({
         href={href}
         scroll={false}
         /* "Hafta" bir takvim haftası mı, 7 gün mü, 5 seans mı belli değildi —
-           üçü farklı sayılar veriyor ve sütun hiçbirini söylemiyordu. Tanım
-           ipucuna taşındı; bu sütunların hepsi `hidden sm:table-cell`, yani
-           yalnızca imleçli ekranda görünüyor ve ipucu kitlenin tamamına
-           ulaşıyor. */
+           üçü farklı sayılar veriyor ve sütun hiçbirini söylemiyordu.
+           Tanım bir süre yalnızca bu ipucunda durdu ve bu yetmiyordu:
+           sütun `hidden sm:table-cell` ile 640 pikselden itibaren
+           görünüyor, yani dokunmatik tablette de görünüyor ve orada balon
+           HİÇ açılmıyor (`hover: none`). Asıl çözüm ETİKETİN KENDİSİNDE:
+           sütun artık "5 Seans" yazıyor ve tanıma ihtiyaç bırakmıyor.
+           İpucu, imleçli ekranda ölçünün gerekçesini anlatmak için
+           kalıyor — bilgiyi taşıyan tek yer değil, fazladan bir katman. */
         title={hint}
         className={cn(
           /* MOBİLDE 44px. Sıralama başlığı tablonun ANA denetimi ama dokunma

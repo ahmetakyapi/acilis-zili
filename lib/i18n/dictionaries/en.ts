@@ -10,6 +10,8 @@ const en: typeof tr = {
   },
 
   nav: {
+    tickerPause: "Pause Ticker",
+    tickerResume: "Resume Ticker",
     today: "Today",
     calendar: "Calendar",
     earnings: "Earnings",
@@ -161,8 +163,8 @@ const en: typeof tr = {
     greetingDay: "Good Afternoon",
     greetingEvening: "Good Evening",
     // Reads after the number: "1d 15h 31m left until the opening bell".
-    untilBell: "Left Until The Opening Bell",
-    untilClose: "Left Until The Closing Bell",
+    untilBell: "Left Until the Opening Bell",
+    untilClose: "Left Until the Closing Bell",
     unitMinutes: "Minutes",
     unitHours: "Hours",
     unitDays: "Days",
@@ -258,10 +260,10 @@ const en: typeof tr = {
     symbolPanelTitle: "Earnings Analyses",
     recentStrip: "Recently Analyzed",
     symbolPanelAll: "All Analyses →",
-    todaysAnalysis: "Analysis Of The Day",
+    todaysAnalysis: "Analysis of the Day",
     thisWeekAnalyzed: "Analyzed This Week",
     upcomingEarnings: "Upcoming Earnings",
-    goToCalendar: "Go To Calendar →",
+    goToCalendar: "Go to Calendar →",
     showAll: "See All →",
     loadMore: "Load More",
     analysisLink: "Analysis →",
@@ -306,7 +308,7 @@ const en: typeof tr = {
     byTeam: "Claude",
     strengths: "Strengths",
     risks: "Risks",
-    upcomingDev: "What To Watch",
+    upcomingDev: "What to Watch",
     highlights: "Key Metrics",
     quarterlyRevenue: "Quarterly Revenue",
     unitBillionUsd: "$ billion",
@@ -325,7 +327,7 @@ const en: typeof tr = {
     epsSurprise: "EPS Surprise",
     stockReaction: "Post-Earnings Reaction",
     nextPeriod: "Next Period",
-    ceoMessage: "From The CEO",
+    ceoMessage: "From the CEO",
     analystTarget: "Avg. Analyst Target",
     analystTargetCount: "Avg. Analyst Target ({count})",
     upsidePotential: "Upside",
@@ -355,10 +357,10 @@ const en: typeof tr = {
     emptyFilter: "No analysis matches this filter.",
     notFound: "Analysis not found",
     notFoundHint: "The link may be stale; try again from the list.",
-    signedOut: "Sign in to use your watchlist",
+    signedOut: "Sign In to Use Your Watchlist",
     signedOutHint:
       "Earnings and analyses for the companies you follow are gathered in this tab.",
-    watchlistAnalyses: "Analyses From Your Watchlist",
+    watchlistAnalyses: "Analyses from Your Watchlist",
     watchlistCalendar: "Your Watchlist Calendar",
 
     fallbackNote:
@@ -383,7 +385,7 @@ const en: typeof tr = {
     name: "Company Name",
     price: "Price",
     change: "Change",
-    weekChange: "Week",
+    weekChange: "5 Sessions",
     weekChangeHint: "Change against the close five trading sessions ago — sessions, not calendar days.",
     empty: "No company data yet",
     emptyHint:
@@ -517,7 +519,7 @@ const en: typeof tr = {
        "Listeyi Sil"di: ekran okuyucu "Listeyi Sil: NVDA" diyor ve
        kullanıcı tüm listeyi sileceğini sanıyordu. Yıkıcı bir eylemde
        yanlış etiket, ya işlemi hiç yaptırmaz ya da istenmeyeni yaptırır. */
-    removeSymbol: "Remove From List",
+    removeSymbol: "Remove from List",
     /* Renk seçimi beş `sr-only` radio; etiketleri boştu ve ekran
        okuyucu beşini de ayırt edilemez biçimde okuyordu. */
     colorLegend: "List Color",
@@ -557,7 +559,7 @@ const en: typeof tr = {
   },
 
   compare: {
-    eyebrow: "Side By Side",
+    eyebrow: "Side by Side",
     title: "Compare",
     subtitle:
       "Read two to four stocks on the same scale — return, valuation and volatility in one table.",
@@ -605,8 +607,8 @@ const en: typeof tr = {
     yieldY30: "30-Year",
     point: "pt",
     curveTitle: "Yield Curve (10-Year − 2-Year)",
-    curveNormal: "Normal curve",
-    curveInverted: "Inverted curve",
+    curveNormal: "Normal Curve",
+    curveInverted: "Inverted Curve",
     curveHint:
       "When long-dated yields sit above short-dated ones the curve is normal and the economy is on its usual footing. If the spread turns negative — an inverted curve — the market expects rate cuts soon; historically it is the most closely watched recession signal.",
     breadth: "Market Breadth",
@@ -620,7 +622,7 @@ const en: typeof tr = {
       "Contribution shows how many index points a stock is adding or subtracting today. The Dow is price-weighted: each stock's dollar move is divided by the index divisor.",
     constituents: "Index Constituents",
     listedCompanies: "companies",
-    asOf: "List composition",
+    asOf: "List Composition",
   },
 
   news: {
@@ -684,12 +686,12 @@ const en: typeof tr = {
     allTopics: "All",
     readMinutes: "min read",
     related: "Read Next",
-    backToList: "Back To Guide",
+    backToList: "Back to Guide",
     empty: "Nothing here yet",
     cardCta: "Read",
     onlyThis: "Open Topic",
-    curriculum: "Where To Start",
-    startFirst: "Start From The Top",
+    curriculum: "Where to Start",
+    startFirst: "Start from the Top",
     curriculumHint:
       "Four topic blocks ordered easy to hard; a newcomer can read the guide start to finish like a curriculum.",
     articleOne: "article",
@@ -731,11 +733,11 @@ const en: typeof tr = {
     filterAll: "All",
     emptyFilter: "No pieces about this company yet.",
     sources: "Sources",
-    relatedSymbols: "Companies In This Piece",
+    relatedSymbols: "Companies in This Piece",
     eventDate: "Event Date",
     readMinutes: "min read",
-    backToList: "Back To Close-Up",
-    moreStories: "More From The Archive",
+    backToList: "Back to Close-Up",
+    moreStories: "More from the Archive",
     empty: "Nothing published yet",
     emptyHint:
       "When something worth explaining happens in the market, it lands here.",
@@ -822,13 +824,13 @@ const en: typeof tr = {
     privacyHint:
       "What is stored, why, where it goes and the full list of your rights are on the privacy page.",
     privacyLink: "Privacy notice",
-    deleteTitle: "Delete account",
+    deleteTitle: "Delete Account",
     deleteHint:
       "Your account and all watchlists are permanently removed. This cannot be undone.",
-    deleteOpen: "Delete my account",
+    deleteOpen: "Delete My Account",
     deleteConfirmLabel: "Confirmation",
     deleteConfirmHint: "Type your username to delete:",
-    deleteSubmit: "Delete permanently",
+    deleteSubmit: "Delete Permanently",
     deleteWarning:
       "This cannot be undone. Your account, watchlists and notes are removed from the database.",
     deleteNotSignedIn: "No session found. Please sign in again.",
@@ -843,8 +845,8 @@ const en: typeof tr = {
     disclaimerEyebrow: "Disclaimer",
     disclaimerTitle: "What This Site Is Not",
     updatedAt: "Last updated:",
-    manageAccount: "Go To Account Settings",
-    contact: "Requests And Contact",
+    manageAccount: "Go to Account Settings",
+    contact: "Requests and Contact",
   },
 
   menu: {
@@ -878,17 +880,17 @@ const en: typeof tr = {
 
   footer: {
     blurb:
-      "A personal project for following US markets in Turkish. Free, ad-free and open source.",
+      "A personal project for following the US markets. Free, ad-free and open source.",
     feed: "RSS",
     sectionMarket: "Market",
     sectionRead: "Reading",
     sectionAccount: "Account",
-    briefArchive: "Brief archive",
+    briefArchive: "Brief Archive",
     privacy: "Privacy",
-    sourceCode: "Source code",
+    sourceCode: "Source Code",
     builtBy: "Ahmet Akyapı",
     builtByHint: "GitHub",
-    copyright: "© 2026 Açılış Zili",
+    copyright: "© 2026 Opening Bell",
     disclaimer: "Not Investment Advice",
   },
 
@@ -905,7 +907,7 @@ const en: typeof tr = {
     stale: "This data may be out of date",
     failed: "Couldn't load data",
     failedHint: "The provider isn't responding. Showing the last known value.",
-    lastKnown: "Last known value",
+    lastKnown: "Last Known Value",
     feedTape: "Consolidated tape · 15 min delayed",
     delayedNote:
       "Prices come from the consolidated tape (SIP) with a 15-minute delay. Intraday volume, open-high-low and the previous close are the total across every exchange.",

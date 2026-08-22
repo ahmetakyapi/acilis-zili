@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BellMark } from "@/components/brand/BellMark";
 import { getI18n } from "@/lib/i18n";
+import { withLocale } from "@/lib/i18n/routing";
 
 /**
  * Kök 404 — uygulama kabuğunun DIŞINDA.
@@ -17,19 +18,33 @@ import { getI18n } from "@/lib/i18n";
  * aradığı şey hâlâ sitede.
  */
 
-export const metadata = {
-  title: "Sayfa Bulunamadı",
-  robots: { index: false, follow: false },
-};
+/**
+ * Başlık DİLE BAĞLI.
+ *
+ * `metadata` sabit bir nesneydi ve içindeki "Sayfa Bulunamadı" dizesi
+ * dilden bağımsız basılıyordu: İngilizce gezinen okuyucu olmayan bir adrese
+ * girdiğinde sayfanın GÖVDESİ İngilizce geliyor, tarayıcı sekmesinde ise
+ * "Sayfa Bulunamadı · Opening Bell" yazıyordu. Gövde `t`'yi zaten
+ * kullanıyordu, başlık atlanmıştı.
+ */
+export async function generateMetadata() {
+  const { t } = await getI18n();
+  return {
+    title: t.errors.notFoundTitle,
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function RootNotFound() {
-  const { t } = await getI18n();
+  const { locale, t } = await getI18n();
 
+  /* Adresler dile göre öneklendi: öneksiz hâlleri proxy'de bir yönlendirme
+     turu daha demekti ve 404'ten çıkmaya çalışan okuyucu için gereksiz. */
   const shortcuts = [
-    { href: "/", label: t.nav.today },
-    { href: "/piyasalar", label: t.nav.markets },
-    { href: "/bilancolar", label: t.nav.earnings },
-    { href: "/rehber", label: t.nav.guide },
+    { href: withLocale("/", locale), label: t.nav.today },
+    { href: withLocale("/piyasalar", locale), label: t.nav.markets },
+    { href: withLocale("/bilancolar", locale), label: t.nav.earnings },
+    { href: withLocale("/rehber", locale), label: t.nav.guide },
   ];
 
   return (

@@ -11,6 +11,7 @@ import {
   type SymbolSearchResult,
 } from "./types";
 import { withTimeout } from "./timeout";
+import { saglayiciMetni } from "@/lib/text";
 
 /**
  * Finnhub — şirket meta verisi, haberler, bilanço takvimi.
@@ -209,8 +210,11 @@ function toNewsItems(raw: RawNews[], fallbackSymbol?: string): NewsItem[] {
     .filter((n) => n.headline && n.url && n.datetime)
     .map((n) => ({
       providerId: `finnhub:${n.id}`,
-      headline: n.headline,
-      summary: n.summary?.trim() || null,
+      /* Sağlayıcı metni OLDUĞU GİBİ yazılıyordu ve iki tür bozukluk
+         taşıyordu: ham HTML varlıkları ("Reddit&#39;s") ve kodlama
+         hatası ("RenTec’s", "CorporaciÃ³n"). Gerekçe lib/text.ts'te. */
+      headline: saglayiciMetni(n.headline) ?? n.headline,
+      summary: saglayiciMetni(n.summary),
       url: n.url,
       imageUrl: n.image || null,
       source: n.source ?? null,

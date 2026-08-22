@@ -43,7 +43,7 @@ const YIELD_LABEL: Record<string, string> = {
 };
 
 export async function TickerFeed() {
-  const { locale } = await getI18n();
+  const { locale, t } = await getI18n();
   const status = await getStatus();
 
   const [quotes, usdTry, ...yields] = await Promise.all([
@@ -133,5 +133,10 @@ export async function TickerFeed() {
     });
   }
 
-  return <MarketTicker groups={groups} />;
+  return (
+    <MarketTicker
+      groups={groups}
+      labels={{ pause: t.nav.tickerPause, resume: t.nav.tickerResume }}
+    />
+  );
 }

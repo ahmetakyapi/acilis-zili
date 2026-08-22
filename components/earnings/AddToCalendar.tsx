@@ -43,7 +43,16 @@ export function AddToCalendar({
            sembolü tekrar etmesi onu gereksiz genişletiyordu. */
         aria-label={`${symbol} · ${label}`}
         className={cn(
-          "group/cal relative z-10 -my-2 inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-primary-wash hover:text-primary-ink",
+          /* MOBİLDE 44px. Düğme 32×32 pikseldi ve sitenin kendi dokunma
+             eşiğinin altında kalan tek denetim ailesiydi — üstelik bilanço
+             takviminde bir ekranda 25 tanesi yan yana duruyor ve her biri,
+             satırın tamamını kaplayan hisse bağlantısının ÜSTÜNDE. Küçük
+             hedef burada yalnızca ıskalamak değil, yanlışlıkla hisse
+             sayfasına gitmek demekti.
+             Negatif kenar boşluğu büyümeyi emiyor: hedef 44'e çıkarken
+             satır yüksekliği değişmiyor. İmleç hassas olduğu için geniş
+             ekranda ölçü 32'de kalıyor. */
+          "group/cal relative z-10 -mx-1.5 -my-1.5 inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-primary-wash hover:text-primary-ink sm:-mx-0 sm:-my-2 sm:size-8",
           className,
         )}
       >
@@ -59,7 +68,9 @@ export function AddToCalendar({
     <a
       href={href}
       className={cn(
-        "relative z-10 -my-1 inline-flex min-h-8 items-center gap-1 rounded-full border border-line px-2 py-1 text-nano font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary",
+        /* Adıyla yazılı sürüm de aynı eşiğe tabi; yükseklik negatif kenar
+           boşluğuyla emiliyor. */
+        "relative z-10 -my-3 inline-flex min-h-11 items-center gap-1 rounded-full border border-line px-2 py-1 text-nano font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary sm:-my-1 sm:min-h-8",
         className,
       )}
     >

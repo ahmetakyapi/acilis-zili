@@ -12,6 +12,8 @@ const tr = {
      bileşen, aynı punto, iki farklı imla. Kural: `title` KISA BİR
      BAŞLIKTIR, nokta almaz; `hint` ise cümledir ve nokta alır. */
   nav: {
+    tickerPause: "Şeridi Duraklat",
+    tickerResume: "Şeridi Sürdür",
     today: "Bugün",
     calendar: "Takvim",
     earnings: "Bilançolar",
@@ -475,7 +477,7 @@ const tr = {
     name: "Şirket Adı",
     price: "Fiyat",
     change: "Değişim",
-    weekChange: "Hafta",
+    weekChange: "5 Seans",
     weekChangeHint: "Son 5 işlem gününün kapanışına göre değişim — takvim haftası değil, seans sayısı.",
     empty: "Henüz şirket verisi yok",
     emptyHint:

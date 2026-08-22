@@ -78,6 +78,35 @@ export function BriefSwitch({
   labels: BriefSwitchLabels;
 }) {
   const [period, setPeriod] = useState<BriefPeriod>("daily");
+
+  /**
+   * Ok tuşlarıyla sekme gezinmesi (ARIA "tabs" kalıbı).
+   *
+   * Yeni sekme seçildiğinde odak da ona taşınıyor: gezici sekme sırasında
+   * eski sekme `tabIndex={-1}` oluyor ve odak hiçbir yere tutunmadan
+   * gövdeye düşerdi.
+   */
+  function sekmeTusu(olay: React.KeyboardEvent<HTMLButtonElement>) {
+    const sira = ["daily", "weekly"] as const;
+    const simdi = sira.indexOf(period);
+    let hedef = simdi;
+    if (olay.key === "ArrowRight" || olay.key === "ArrowDown") {
+      hedef = (simdi + 1) % sira.length;
+    } else if (olay.key === "ArrowLeft" || olay.key === "ArrowUp") {
+      hedef = (simdi - 1 + sira.length) % sira.length;
+    } else if (olay.key === "Home") {
+      hedef = 0;
+    } else if (olay.key === "End") {
+      hedef = sira.length - 1;
+    } else {
+      return;
+    }
+    olay.preventDefault();
+    setPeriod(sira[hedef]);
+    olay.currentTarget.parentElement
+      ?.querySelector<HTMLButtonElement>(`#brief-tab-${sira[hedef]}`)
+      ?.focus();
+  }
   const brief = period === "daily" ? daily : weekly;
   const body = period === "daily" ? dailyBody : weeklyBody;
 
@@ -101,7 +130,16 @@ export function BriefSwitch({
 
       {/* Sekmeler metnin hemen üstünde: hangi dönemi okuduğun, okumaya
           başlamadan önce görünür. Dokunma hedefi 34px — 12.5px'lik iki
-          kelimeyi parmakla ıskalanmayacak bir hapa oturtuyor. */}
+          kelimeyi parmakla ıskalanmayacak bir hapa oturtuyor.
+
+          SEKME SÖZLEŞMESİ EKSİKTİ. `role="tablist"` ve `role="tab"` yazılıydı
+          ama davranışı yoktu: ekran okuyucu "Günlük, sekme, 2 sekmeden 1'i,
+          seçili" diye duyuruyor, kullanıcı kalıbın gereği sağ oka basıyor ve
+          hiçbir şey olmuyordu. Rolü ilan edip davranışını vermemek, hiç
+          ilan etmemekten kötü — kullanıcıya çalışmayan bir söz veriyor.
+          Şimdi ok tuşları, Home ve End sekmeler arasında geziyor; sekme
+          sırası GEZİCİ (yalnızca seçili sekme Tab sırasında, ötekine ok
+          tuşuyla ulaşılıyor) — ARIA kalıbının istediği tam olarak bu. */}
       <div
         role="tablist"
         aria-label={labels.periodLabel}
@@ -115,6 +153,8 @@ export function BriefSwitch({
             id={`brief-tab-${key}`}
             aria-controls="brief-panel"
             aria-selected={period === key}
+            tabIndex={period === key ? 0 : -1}
+            onKeyDown={sekmeTusu}
             onClick={() => setPeriod(key)}
             className={cn(
               /* Telefonda 44px: 34px'lik sekmeler dokunma eşiğinin altındaydı

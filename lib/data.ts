@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { saglayiciMetni } from "@/lib/text";
 import { unstable_cache } from "next/cache";
 import { and, asc, desc, eq, gte, inArray, isNull, lte, sql, type SQL } from "drizzle-orm";
 import { db } from "./db";
@@ -369,6 +370,25 @@ export async function getEarningsForSymbol(
 
 /* ---- Haberler ---- */
 
+/**
+ * Satırın serbest metnini ekrana hazırlar.
+ *
+ * Temizlik girişte de yapılıyor (`toNewsItems`), ama veritabanında zaten
+ * yazılmış satırlar var: ölçüldü, 400 haberin 36'sı ham HTML varlığı, 19'u
+ * kodlama bozukluğu taşıyordu. Okuma tarafında da çalıştırmak geçmişi tek
+ * hamlede düzeltiyor; işlem idempotent ve yalnızca ekrana basılan birkaç
+ * düzine satırda dönüyor. Gerekçenin tamamı lib/text.ts'te.
+ */
+function haberiTemizle(row: NewsRow): NewsRow {
+  return {
+    ...row,
+    headline: saglayiciMetni(row.headline) ?? row.headline,
+    summary: saglayiciMetni(row.summary),
+    headlineTr: saglayiciMetni(row.headlineTr),
+    summaryTr: saglayiciMetni(row.summaryTr),
+  };
+}
+
 /* `cache()`: haber detayı aynı satırı İKİ KEZ istiyor — bir kez künye için
    (`generateMetadata`), bir kez sayfa gövdesi için. İkisi aynı istekte
    çalıştığı için tek sorguya iniyor. */
@@ -377,7 +397,7 @@ export const getNewsById = cache(async function getNewsById(
 ): Promise<NewsRow | null> {
   try {
     const [row] = await db.select().from(news).where(eq(news.id, id)).limit(1);
-    return row ?? null;
+    return row ? haberiTemizle(row) : null;
   } catch (error) {
     yutuldu("getEarningsForSymbol", error);
     return null;
@@ -475,7 +495,7 @@ export async function getLatestNews(limit = 20): Promise<NewsRow[]> {
       .from(news)
       .orderBy(desc(news.publishedAt))
       .limit(limit + 12);
-    return ayniGunTekille(rows).slice(0, limit);
+    return ayniGunTekille(rows).slice(0, limit).map(haberiTemizle);
   } catch (error) {
     yutuldu("getLatestNews", error);
     return [];
@@ -499,12 +519,13 @@ export async function getNewsForSymbol(
   limit = 60,
 ): Promise<NewsRow[]> {
   try {
-    return await db
+    const rows = await db
       .select()
       .from(news)
       .where(sql`${news.symbols} @> ARRAY[${symbol}]::text[]`)
       .orderBy(desc(news.publishedAt))
       .limit(limit);
+    return rows.map(haberiTemizle);
   } catch (error) {
     yutuldu("getNewsForSymbol", error);
     return [];
