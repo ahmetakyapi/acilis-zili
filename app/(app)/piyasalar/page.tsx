@@ -116,13 +116,42 @@ const YIELD_SERIES = [
  * sağlayıcının kendi sınırıyla hizalı değil, yani her iki katman da
  * bölünce paketler ufalıyordu.
  */
+/**
+ * KAYNAK VE TAZELİK DE TAŞINIYOR.
+ *
+ * Bu sarmalayıcı bir dönem sağlayıcı sonucundan yalnızca `data` ve
+ * `fetchedAt` alıyor, `source` ile `stale` alanlarını düşürüyordu; damga da
+ * kaynağı elden "alpaca" diye yazıyordu. Sonuç: Alpaca'ya ulaşılamadığında
+ * `getQuotes` son çare olarak `quotes_cache`ten okuyor ve o satırlar saatler
+ * — hafta sonuna denk gelirse günler — öncesine ait olabiliyorken ekranda
+ * "Alpaca · SIP · 12:40 güncellendi · 15 dk gecikmeli" yazıyordu. Üç bilgi
+ * birden yanlıştı: kaynak, gecikme iddiası ve bayatlık uyarısının hiç
+ * görünmemesi.
+ *
+ * Bu ekranda önbelleğe düşmek kenar bir durum da değil: Finnhub yedeği
+ * yalnızca sekiz sembole kadar deneniyor (lib/providers/index.ts) ve endeks
+ * bileşenleri her zaman 30-500 sembol soruyor, yani Alpaca düştüğünde tek
+ * yedek önbellek. İkiz ekran (/sirketler) bunu zaten doğru yapıyordu.
+ */
 async function quotesFor(
   symbols: string[],
   status: MarketStatus,
-): Promise<{ quotes: Record<string, Quote>; stampAt: Date | null }> {
+): Promise<{
+  quotes: Record<string, Quote>;
+  stampAt: Date | null;
+  source: string | null;
+  stale: boolean;
+}> {
   const result = await getQuotes(symbols, status);
-  if (!result.ok) return { quotes: {}, stampAt: null };
-  return { quotes: result.data, stampAt: result.fetchedAt };
+  if (!result.ok) {
+    return { quotes: {}, stampAt: null, source: null, stale: false };
+  }
+  return {
+    quotes: result.data,
+    stampAt: result.fetchedAt ?? null,
+    source: result.source,
+    stale: Boolean(result.stale),
+  };
 }
 
 export default async function MarketsPage(props: PageProps<"/piyasalar">) {
@@ -473,7 +502,7 @@ async function IndexDetail({
   t: Dictionary;
 }) {
   const status = await getStatus();
-  const [{ quotes, stampAt }, proxyResult, meta] = await Promise.all([
+  const [{ quotes, stampAt, source, stale }, proxyResult, meta] = await Promise.all([
     quotesFor(
       members.map((m) => m.symbol),
       status,
@@ -596,8 +625,23 @@ async function IndexDetail({
         t={t}
       />
 
-      {stampAt && <DataStamp
-      labels={t.data} source="alpaca" at={stampAt} locale={locale} />}
+      {source && (
+        <DataStamp
+          labels={t.data}
+          source={source}
+          at={stampAt}
+          stale={stale}
+          locale={locale}
+          /* Seans dışında değişim sütunu satır satır farklı bir güne
+             dayanabiliyor; not /sirketler'de vardı, burada yoktu. Seans
+             içinde not yok — orada bütün semboller aynı günü gösteriyor. */
+          note={
+            status.session === "pre-market" || status.session === "after-hours"
+              ? t.data.extendedNote
+              : undefined
+          }
+        />
+      )}
     </>
   );
 }
