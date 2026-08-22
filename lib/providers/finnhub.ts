@@ -118,7 +118,11 @@ export async function getProfile(
       logoUrl: raw.logo || null,
       country: raw.country ?? null,
       currency: raw.currency ?? null,
-      // Finnhub piyasa değerini milyon dolar olarak verir.
+      /* Finnhub değeri MİLYON cinsinden verir — ama dolar değil, şirketin ana
+         borsasının para biriminde. Yorum "milyon dolar" diyordu ve bu yanlış
+         okuma yüzünden ADR'lerde yabancı para birimi ekrana dolar diye
+         basılıyordu. Hangi para birimi olduğu `currency` alanında; çağıran
+         onu denetlemeden bu sayıyı dolar sanmamalı. */
       marketCap: raw.marketCapitalization
         ? raw.marketCapitalization * 1_000_000
         : null,

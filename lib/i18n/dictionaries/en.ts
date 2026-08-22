@@ -409,6 +409,8 @@ const en: typeof tr = {
     beta: "Beta",
     high52: "52-Week High",
     low52: "52-Week Low",
+    homeCurrencyNote:
+      "Earnings per share and the 52-week range come from the company's home listing in {code}, so they cannot be compared directly with the dollar price above. The P/E ratio is likewise computed within that market.",
     analysts: "Analyst Ratings",
     strongBuy: "Strong Buy",
     buy: "Buy",
@@ -574,6 +576,8 @@ const en: typeof tr = {
     dayChange: "Daily Change",
     periodChange: "Period Return",
     range52: "52-Week Range",
+    homeCurrencyNote:
+      "{symbols} trade in {codes} on their home exchange: earnings per share, the 52-week range and the P/E ratio come from that listing, while the price row is the ADR in dollars. The two are not directly comparable.",
     remove: "remove from list",
     addCta: "Compare",
     addSymbol: "Add Symbol",

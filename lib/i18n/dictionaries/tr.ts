@@ -502,6 +502,8 @@ const tr = {
     beta: "Beta",
     high52: "52 Hafta En Yüksek",
     low52: "52 Hafta En Düşük",
+    homeCurrencyNote:
+      "Hisse başı kâr ve 52 hafta bandı şirketin ana borsasından, {code} cinsinden geliyor; başlıktaki dolar fiyatıyla doğrudan karşılaştırılamaz. F/K oranı da o borsanın kendi içinde hesaplanmıştır.",
     analysts: "Analist Görüşleri",
     strongBuy: "Güçlü Al",
     buy: "Al",
@@ -671,6 +673,8 @@ const tr = {
     dayChange: "Günlük Değişim",
     periodChange: "Dönem Getirisi",
     range52: "52 Hafta Aralığı",
+    homeCurrencyNote:
+      "{symbols} ana borsasında {codes} cinsinden işlem görüyor: hisse başı kâr, 52 hafta bandı ve F/K oranı o borsadan geliyor, fiyat satırı ise ADR'nin doları. İki ölçü doğrudan karşılaştırılamaz.",
     remove: "listeden çıkar",
     addSymbol: "Sembol Ekle",
     addPlaceholder: "Sembol ya da şirket adı",

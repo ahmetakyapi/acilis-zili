@@ -196,6 +196,21 @@ async function CompareBoard({
     })
     .filter((entry) => entry.closes.length >= 2);
 
+  /**
+   * O sütundaki şirket ana borsasında DOLAR DIŞI bir para birimiyle mi
+   * işlem görüyor.
+   *
+   * Sağlayıcının hisse başı kâr ve 52 hafta bandı alanları ana borsanın
+   * parasında geliyor; fiyat ise ADR'nin doları. Tablo ikisini aynı sütunda
+   * yan yana bastığı için ayrımı bilmek zorunda. Depoda 21 sembol böyle:
+   * TSM (TWD), ASML (EUR), PDD/NTES (CNY), SKHY (KRW)…
+   */
+  const yabanciPara = (i: number) => {
+    const kod = names[symbols[i]]?.currency;
+    return Boolean(kod && kod !== "USD");
+  };
+  const yabanciSembol = symbols.filter((_, i) => yabanciPara(i));
+
   /* Satırlar tek yerde tanımlı: hem geniş ekrandaki tablo hem mobildeki
      kart yığını aynı diziden besleniyor, ikisi birbirinden kayamıyor. */
   const rows: {
@@ -260,11 +275,19 @@ async function CompareBoard({
          F/K'si geriden gelen bir fiyatla hesaplanmış oluyor; karşılaştırma
          tablosunda bu, iki şirketi farklı anların fiyatıyla yan yana koymak
          demekti. Gerekçenin tamamı `peRatioOf`'ta. */
+      /* ...AMA yalnızca fiyat ve kâr AYNI PARA BİRİMİNDEYSE. ADR'de fiyat
+         dolar, hisse başı kâr ana borsanın parası ve bölüm anlamsız bir sayı
+         veriyordu: tabloda TSM'nin F/K'si 4,80 çıkıyor, AAPL 35,50 iken TSM
+         yedi kat ucuz görünüyordu. USD dışında sağlayıcının kendi oranı
+         kullanılıyor — o oran ana borsanın içinde kurulduğu için birimsiz ve
+         tutarlı (TSM'de 27,87). */
       value: (i) => {
         const metrics = metricResults[i];
         if (!metrics?.ok) return "—";
         return formatPrice(
-          peRatioOf(quotes[symbols[i]]?.price, metrics.data.eps),
+          yabanciPara(i)
+            ? metrics.data.peRatio
+            : peRatioOf(quotes[symbols[i]]?.price, metrics.data.eps),
           locale,
         );
       },
@@ -296,10 +319,17 @@ async function CompareBoard({
         const metrics = metricResults[i];
         if (!metrics?.ok || metrics.data.low52 === null || metrics.data.high52 === null)
           return "—";
+        /* Bant da ana borsanın parasında: ASML'de fiyat satırı "1.763,39"
+           (dolar) derken bant "611,80 — 1.741,00" (euro) yazıyordu, yani
+           hisse kendi 52 haftalık zirvesinin ÜSTÜNDE duruyor gibi
+           görünüyordu. Kod yazılınca ikisinin farklı ölçüler olduğu
+           okunuyor. */
+        const kod = names[symbols[i]]?.currency;
+        const opts = { currency: kod ?? true } as const;
         return (
           <span className="numeral text-small text-body">
-            {formatPrice(metrics.data.low52, locale)} —{" "}
-            {formatPrice(metrics.data.high52, locale)}
+            {formatPrice(metrics.data.low52, locale, opts)} —{" "}
+            {formatPrice(metrics.data.high52, locale, opts)}
           </span>
         );
       },
@@ -439,6 +469,23 @@ async function CompareBoard({
             </tbody>
           </table>
         </div>
+        {/* USD dışı sembol varsa sebebi tablonun altında yazıyor — yoksa
+            okuyucu dolar fiyatıyla ana borsa bandını yan yana koyup birini
+            yanlış okuyor. */}
+        {yabanciSembol.length > 0 && (
+          <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+            {t.compare.homeCurrencyNote
+              .replace("{symbols}", yabanciSembol.join(", "))
+              .replace(
+                "{codes}",
+                [
+                  ...new Set(
+                    yabanciSembol.map((sym) => names[sym]?.currency ?? "?"),
+                  ),
+                ].join(", "),
+              )}
+          </p>
+        )}
       </Panel>
 
       {quotesResult.ok && (

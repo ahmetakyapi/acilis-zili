@@ -15,6 +15,7 @@ import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { getQuotes } from "@/lib/providers";
+import { displayZone, zoneTag } from "@/lib/session-clock";
 import { formatPrice, safeExternalUrl, timeAgo } from "@/lib/utils";
 
 /**
@@ -79,9 +80,22 @@ export default async function NewsDetailPage(
 
   const sourceHref = safeExternalUrl(item.url);
 
+  /* SAAT DİLİMİ ŞART. Burada `timeZone` verilmiyordu, yani biçimlendirici
+     SUNUCUNUN dilimini kullanıyordu — Vercel'de UTC. Türkiye'de 22 Ağustos
+     00:42'de yayımlanan bir haberin künyesi üretimde "21 Ağustos 21:42"
+     yazıyor, hemen yanındaki göreli saat ("11 saat önce") ise doğru
+     hesaplandığı için ikisi çelişiyordu: aynı satırda üç saat ve bir gün
+     fark eden iki zaman.
+     Dilim projenin kuralına göre seçiliyor (TR'de İstanbul, EN'de New York)
+     ve künyeye hangi saat olduğu yazılıyor — okuyucu "21:42" görüp hangi
+     duvar saati olduğunu tahmin etmek zorunda kalmamalı. */
   const publishedFull = new Intl.DateTimeFormat(
     locale === "tr" ? "tr-TR" : "en-US",
-    { dateStyle: "long", timeStyle: "short" },
+    {
+      dateStyle: "long",
+      timeStyle: "short",
+      timeZone: displayZone(locale),
+    },
   ).format(item.publishedAt);
 
   return (
@@ -100,7 +114,9 @@ export default async function NewsDetailPage(
             <span className="font-medium text-soft">{item.source}</span>
           )}
           <span aria-hidden>·</span>
-          <span>{publishedFull}</span>
+          <span>
+            {publishedFull} {zoneTag(locale).primary}
+          </span>
           <span aria-hidden>·</span>
           <span>{timeAgo(item.publishedAt, locale)}</span>
         </p>

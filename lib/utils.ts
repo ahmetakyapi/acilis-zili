@@ -173,8 +173,28 @@ const MONEY_GAP = "\u00A0";
  * İngilizce kayıtlarda ajan da öne yazıyor ("$9.12B"), yani dile bağlı kural
  * her iki tarafta da metinle uyuşuyor.
  */
-export function withCurrency(body: string, locale: string): string {
-  return locale === "tr" ? `${body}${MONEY_GAP}$` : `$${body}`;
+export function withCurrency(
+  body: string,
+  locale: string,
+  /**
+   * ISO para birimi kodu. Verilmezse ya da USD ise dolar simgesi kullanılır.
+   *
+   * DOLAR VARSAYILAMAZ. Finnhub'ın metrik ve profil uçları sayıları şirketin
+   * ANA BORSASININ para biriminde veriyor; site ise hepsini `$` ile basıyordu.
+   * /hisse/TSM'de başlıkta ADR fiyatı "419,55 $" dururken hemen altındaki
+   * tabloda "52 Hafta En Yüksek 2.535,00 $" yazıyordu — okuyucu, fiyatı
+   * 52 haftalık en düşüğünün üçte biri olan bir hisse görüyordu. Sayı yanlış
+   * değildi, para birimi yanlıştı (2.535 TWD).
+   *
+   * Kod bilinmiyorsa simge yerine kodun kendisi yazılır; "TWD" demek "$"
+   * demekten hem doğru hem de okuyucuya daha çok şey söylüyor.
+   */
+  code?: string | null,
+): string {
+  if (!code || code === "USD") {
+    return locale === "tr" ? `${body}${MONEY_GAP}$` : `$${body}`;
+  }
+  return `${body}${MONEY_GAP}${code}`;
 }
 
 /**
@@ -190,7 +210,8 @@ export function withCurrency(body: string, locale: string): string {
 export function formatPrice(
   value: number | null | undefined,
   locale: string,
-  opts: { currency?: boolean; digits?: number } = {},
+  /** `currency: true` dolar demek; ISO kodu verilirse o para birimi yazılır. */
+  opts: { currency?: boolean | string; digits?: number } = {},
 ) {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   const { currency = false, digits = 2 } = opts;
@@ -199,7 +220,11 @@ export function formatPrice(
     maximumFractionDigits: digits,
   });
   if (!currency) return nf.format(value);
-  const body = withCurrency(nf.format(Math.abs(value)), locale);
+  const body = withCurrency(
+    nf.format(Math.abs(value)),
+    locale,
+    typeof currency === "string" ? currency : null,
+  );
   return value < 0 ? `−${SIGN_GAP}${body}` : body;
 }
 
@@ -312,9 +337,20 @@ export function formatChange(value: number | null | undefined, locale: string) {
 export function formatMoneyCompact(
   value: number | null | undefined,
   locale: string,
+  /**
+   * ISO para birimi kodu — verilmezse dolar. `formatPrice` ile aynı gerekçe:
+   * sağlayıcının bilanço tahminleri de şirketin ana borsasının parasında
+   * geliyor ve dolar sanılıyordu. /hisse/TSM'de "Gelir Beklentisi 1,47 T $"
+   * yazıyordu — bir çeyrekte bir buçuk trilyon dolar; sayı TWD idi.
+   */
+  code?: string | null,
 ): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
-  const body = withCurrency(formatCompact(Math.abs(value), locale), locale);
+  const body = withCurrency(
+    formatCompact(Math.abs(value), locale),
+    locale,
+    code,
+  );
   return value < 0 ? `−${SIGN_GAP}${body}` : body;
 }
 

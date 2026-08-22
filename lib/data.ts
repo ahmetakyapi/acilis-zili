@@ -722,11 +722,39 @@ export async function getUserSymbols(userId: string): Promise<string[]> {
 export type SymbolMeta = {
   name: string;
   indexProxy: boolean;
-  /** Yalnızca USD cinsinden bilinen piyasa değeri — yabancı para birimleri
-      (ör. TSM/TWD) karşılaştırılamaz olduğundan null sayılır. */
+  /**
+   * Piyasa değeri — ÖNBELLEKTEKİ fiyattan hesaplanmış, kayıtlı fotoğraf
+   * değil. Yalnızca USD cinsinden; yabancı para birimleri (ör. TSM/TWD)
+   * karşılaştırılamaz olduğu için null.
+   *
+   * Aynı düzeltme `/sirketler` için yapılmıştı (bkz. `CompanyRow.marketCap`)
+   * ama `getSymbolNames` atlanmıştı — oysa bilanço takvimi, ana sayfadaki
+   * bilanço paneli ve hisse sayfasının benzer şirketler listesi hep buradan
+   * besleniyor. Ölçüldü: kayıtlı değer 772 sembolde ORTALAMA %28,9
+   * sapıyordu; WDAY takvimde 39,1 Mr $, dizinde 49,4 Mr $ görünüyordu.
+   *
+   * Sapma yalnızca ekrandaki sayıyı bozmuyordu: takvim günün en büyük iki
+   * şirketini bu alana göre seçiyor ve `HERO_MIN_CAP` eşiğini bununla
+   * ölçüyor, yani sıralama ve seçim de yanlış değerden çıkıyordu.
+   */
   marketCap: number | null;
+  /**
+   * Sağlayıcının profilinde yazan ham değer — fotoğraf.
+   * `liveMarketCap` mertebe koruması bunu referans alıyor; hesaplanmış değer
+   * onun yerine geçse koruma kendi kendini ölçer hâle gelirdi.
+   */
+  storedMarketCap: number | null;
   /** Ödenmiş hisse sayısı — canlı piyasa değeri hesabı bunu kullanır. */
   shareOutstanding: number | null;
+  /**
+   * Şirketin ANA BORSASININ para birimi (ISO kodu) — USD olmayabilir.
+   *
+   * Sorgu bu alanı zaten çekiyordu ama yalnızca `marketCap`i null'lamak için
+   * kullanıp dışarı vermiyordu. Oysa sağlayıcının hisse başı kâr, 52 hafta
+   * bandı ve bilanço tahminleri de aynı para biriminde geliyor; onları dolar
+   * sanıp `$` basan her ekranın bu alana ihtiyacı var.
+   */
+  currency: string | null;
   logoUrl: string | null;
   industry: string | null;
 };
@@ -826,20 +854,42 @@ async function loadSymbolNames(
         shareOutstanding: symbolsTable.shareOutstanding,
         logoUrl: symbolsTable.logoUrl,
         industry: symbolsTable.industry,
+        /* Önbellekteki son fiyat — piyasa değeri buradan hesaplanıyor.
+           `getCompanies` aynı join'i zaten yapıyor; sağlayıcıya ek bir tur
+           yok, tek bir sol birleştirme var. */
+        cachedPrice: quotesCacheTable.price,
       })
       .from(symbolsTable)
+      .leftJoin(
+        quotesCacheTable,
+        eq(quotesCacheTable.symbol, symbolsTable.symbol),
+      )
       .where(inArray(symbolsTable.symbol, list));
     return Object.fromEntries(
       rows.map((r) => [
         r.symbol,
-        {
-          name: r.name,
-          indexProxy: r.isIndexProxy,
-          marketCap: r.currency === "USD" ? r.marketCap : null,
-          shareOutstanding: r.currency === "USD" ? r.shareOutstanding : null,
-          logoUrl: logoSrc(r.symbol, r.logoUrl),
-          industry: r.industry,
-        },
+        ((): SymbolMeta => {
+          /* Yabancı para biriminde hisse sayısı × DOLAR fiyatı anlamsız bir
+             sayı verir (TSM'de 5,7 kat, NetEase'te 37 kat sapıyor: ADR
+             oranları bilinmiyor). O yüzden ikisi de null. */
+          const usd = r.currency === "USD";
+          const stored = usd ? r.marketCap : null;
+          const shares = usd ? r.shareOutstanding : null;
+          return {
+            name: r.name,
+            indexProxy: r.isIndexProxy,
+            marketCap:
+              liveMarketCap(
+                { marketCap: stored, shareOutstanding: shares },
+                r.cachedPrice,
+              ) ?? stored,
+            storedMarketCap: stored,
+            shareOutstanding: shares,
+            currency: r.currency,
+            logoUrl: logoSrc(r.symbol, r.logoUrl),
+            industry: r.industry,
+          };
+        })(),
       ]),
     );
   } catch (error) {

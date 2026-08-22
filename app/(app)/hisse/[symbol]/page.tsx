@@ -625,6 +625,14 @@ async function UpcomingEarnings({
   locale: Locale;
   t: Dictionary;
 }) {
+  /* PARA BİRİMİ — bilanço tahminleri de sağlayıcının ana borsa parasında
+     geliyor. /hisse/TSM'de "Gelir Beklentisi 1,47 T $" yazıyordu: bir
+     çeyrekte bir buçuk trilyon dolar. Sayı doğruydu, para birimi (TWD)
+     yanlıştı. Aynı düzeltme metrik tablosunda ve karşılaştırma sayfasında
+     da var; kural tek yerde: `SymbolMeta.currency`. */
+  const paraMeta = await getSymbolNames([symbol]);
+  const paraKodu = paraMeta[symbol]?.currency ?? null;
+  const paraOpt = paraKodu && paraKodu !== "USD" ? paraKodu : true;
   let next: EarningsItem | null = await getNextEarnings(symbol);
   if (!next) {
     const today = todayEt();
@@ -660,7 +668,7 @@ async function UpcomingEarnings({
                 {t.earnings.epsEstimate}
               </dt>
               <dd className="numeral mt-0.5 text-sm font-semibold text-strong">
-                {formatPrice(next.epsEstimate, locale, { currency: true })}
+                {formatPrice(next.epsEstimate, locale, { currency: paraOpt })}
               </dd>
             </div>
           )}
@@ -670,7 +678,11 @@ async function UpcomingEarnings({
                 {t.earnings.revenueEstimate}
               </dt>
               <dd className="numeral mt-0.5 text-sm font-semibold text-strong">
-                {formatMoneyCompact(next.revenueEstimate, locale)}
+                {formatMoneyCompact(
+                  next.revenueEstimate,
+                  locale,
+                  typeof paraOpt === "string" ? paraOpt : null,
+                )}
               </dd>
             </div>
           )}
@@ -760,9 +772,18 @@ async function ProfileCard({
     return <DataError message={t.data.failed} hint={t.data.failedHint} />;
   }
   const profile = result.data;
+  /* YEDEK YALNIZCA DOLAR CİNSİNDEYSE. Buradaki `?? profile.marketCap`
+     sağlayıcının ham alanına düşüyordu ve o alan şirketin ANA BORSASININ
+     para biriminde geliyor — Finnhub'ın kendi belgesi de öyle diyor, bizim
+     yorum "milyon dolar" yazıyordu ve yanlıştı. USD dışı bir ADR'de sayı
+     dolar işaretiyle basılıyordu: /hisse/SKHY künyesinde "Piyasa Değeri
+     1.233 T $", /hisse/TSM'de "61,6 T $" (Apple 4,55 T $ iken).
+     `SymbolMeta` bu ayrımı zaten yapıyor (USD dışında null); yedeğin de
+     aynı kuralı tanıması gerekiyordu. Bilinmiyorsa tire basılır — uydurma
+     bir dolar değerinden iyidir. */
   const marketCap =
     liveMarketCap(meta[symbol], quoteForCap.ok ? quoteForCap.data.price : null) ??
-    profile.marketCap;
+    (profile.currency === "USD" ? profile.marketCap : null);
   const member = indexMemberOf(symbol);
   const about = await describeSymbol(symbol, locale);
   const websiteHref = safeExternalUrl(profile.weburl);
@@ -860,9 +881,17 @@ async function MetricsCard({
   t: Dictionary;
 }) {
   const status = await getStatus();
-  const [metricsResult, quoteResult] = await Promise.all([
+  const [metricsResult, quoteResult, profileResult] = await Promise.all([
     getKeyMetrics(symbol),
     getQuote(symbol, status),
+    /* PARA BİRİMİ ŞART. Finnhub'ın metrik ucu EPS ve 52 hafta bandını
+       şirketin ANA BORSASININ para biriminde veriyor, bu tablo ise hepsini
+       dolar sanıp `$` basıyordu. TSM'de başlıktaki ADR fiyatı 419,55 $
+       dururken tabloda "52 Hafta En Yüksek 2.535,00 $" yazıyordu; sayı
+       doğru, para birimi yanlıştı (TWD) ve okuyucu fiyatı bandın çok
+       altında sanıyordu. Depoda 21 sembol USD dışı (TSM, ASML, PDD,
+       NTES, SKHY…). */
+    getCompanyProfile(symbol),
   ]);
 
   if (!metricsResult.ok) {
@@ -870,13 +899,28 @@ async function MetricsCard({
   }
   const m = metricsResult.data;
   const quote = quoteResult.ok ? quoteResult.data : null;
+  const currency = profileResult.ok ? profileResult.data.currency : null;
+  const homeCurrency = Boolean(currency && currency !== "USD");
 
   const rows: [string, string][] = [
     /* F/K sağlayıcının hazır alanından değil, sayfanın gösterdiği fiyattan
        kuruluyor — o alan geriden gelen bir fiyatla hesaplanmış oluyor ve
-       tablonun hemen üstündeki kotasyonla çelişiyordu. Bkz. `peRatioOf`. */
-    [t.stock.peRatio, formatPrice(peRatioOf(quote?.price, m.eps), locale)],
-    [t.stock.eps, m.eps ? formatPrice(m.eps, locale, { currency: true }) : "—"],
+       tablonun hemen üstündeki kotasyonla çelişiyordu. Bkz. `peRatioOf`.
+       AMA yalnızca ikisi aynı para birimindeyse: ADR'de fiyat dolar, EPS
+       ana borsanın parası ve bölüm anlamsız bir sayı veriyordu (TSM'de
+       4,80 gibi). Orada sağlayıcının kendi oranı kullanılıyor — o oran ana
+       borsanın içinde kurulduğu için birimsiz ve tutarlı. */
+    [
+      t.stock.peRatio,
+      formatPrice(
+        homeCurrency ? m.peRatio : peRatioOf(quote?.price, m.eps),
+        locale,
+      ),
+    ],
+    [
+      t.stock.eps,
+      m.eps ? formatPrice(m.eps, locale, { currency: currency ?? true }) : "—",
+    ],
     [
       t.stock.dividend,
       /* İşaret elle SONA konuyordu ve Türkçede başa gelmesi gerekiyor;
@@ -891,11 +935,15 @@ async function MetricsCard({
     [t.stock.beta, m.beta ? formatPrice(m.beta, locale) : "—"],
     [
       t.stock.high52,
-      m.high52 ? formatPrice(m.high52, locale, { currency: true }) : "—",
+      m.high52
+        ? formatPrice(m.high52, locale, { currency: currency ?? true })
+        : "—",
     ],
     [
       t.stock.low52,
-      m.low52 ? formatPrice(m.low52, locale, { currency: true }) : "—",
+      m.low52
+        ? formatPrice(m.low52, locale, { currency: currency ?? true })
+        : "—",
     ],
     [t.market.volume, quote?.volume ? formatVolume(quote.volume, locale) : "—"],
   ];
@@ -910,6 +958,13 @@ async function MetricsCard({
           </div>
         ))}
       </dl>
+      {/* Para birimi başlıktaki dolar fiyatından farklıysa sebebi yazılır —
+          yoksa okuyucu iki sayıyı yan yana koyup birini yanlış sanıyor. */}
+      {homeCurrency && (
+        <p className="mt-2 border-t border-line-soft pt-2.5 text-small text-muted">
+          {t.stock.homeCurrencyNote.replace("{code}", currency!)}
+        </p>
+      )}
     </div>
   );
 }
