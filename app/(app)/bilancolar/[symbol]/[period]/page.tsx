@@ -200,7 +200,7 @@ function PanelHead({
     <div className="mb-4 flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-line-soft pb-3">
       <span
         aria-hidden
-        className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary"
+        className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary-ink"
       >
         <Icon weight="duotone" size={15} />
       </span>
@@ -538,7 +538,7 @@ export default async function AnalysisDetailPage(
                   </h1>
                   <Link
                     href={`/hisse/${symbol}`}
-                    className="rounded-md border border-primary-faint bg-primary-wash px-2 py-[3px] text-tiny font-bold text-primary hover:bg-primary-tint"
+                    className="rounded-md border border-primary-faint bg-primary-wash px-2 py-[3px] text-tiny font-bold text-primary-ink hover:bg-primary-tint"
                   >
                     {symbol}
                     {row.exchange ? ` · ${row.exchange}` : ""}
@@ -563,7 +563,7 @@ export default async function AnalysisDetailPage(
                 {formatEtDateLong(row.reportDate, locale)}
               </span>
               {row.nextPeriodLabel && (
-                <span className="inline-flex min-h-7 items-center rounded-md border border-primary-faint bg-primary-wash px-2.5 text-nano font-bold text-primary">
+                <span className="inline-flex min-h-7 items-center rounded-md border border-primary-faint bg-primary-wash px-2.5 text-nano font-bold text-primary-ink">
                   {t.analysis.nextEarnings}: {row.nextPeriodLabel}
                   {row.nextReportEstimate ? ` · ${row.nextReportEstimate}` : ""}
                 </span>
@@ -654,7 +654,7 @@ export default async function AnalysisDetailPage(
                     className={cn(
                       "inline-flex min-h-7 items-center gap-1.5 rounded-md border px-2.5 text-nano font-bold transition-colors",
                       watched
-                        ? "border-primary-faint bg-primary-wash text-primary"
+                        ? "border-primary-faint bg-primary-wash text-primary-ink"
                         : "border-line bg-surface-solid text-body hover:border-line-strong hover:text-strong",
                     )}
                   >
@@ -907,7 +907,7 @@ export default async function AnalysisDetailPage(
                     {row.ceoQuote.topics.map((topic) => (
                       <li
                         key={topic}
-                        className="rounded-md border border-primary-faint bg-primary-wash px-3 py-2 text-tiny font-semibold leading-[15px] text-primary lg:text-center"
+                        className="rounded-md border border-primary-faint bg-primary-wash px-3 py-2 text-tiny font-semibold leading-[15px] text-primary-ink lg:text-center"
                       >
                         {topic}
                       </li>
@@ -1063,7 +1063,7 @@ export default async function AnalysisDetailPage(
             <h2 className="mb-3 flex items-center gap-2.5 text-base font-bold text-strong">
               <span
                 aria-hidden
-                className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary"
+                className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary-ink"
               >
                 <CalendarBlank weight="duotone" size={15} />
               </span>

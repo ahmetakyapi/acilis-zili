@@ -68,7 +68,7 @@ function HeartButton({ active, label }: { active: boolean; label: string }) {
       className={cn(
         "inline-flex size-8 items-center justify-center rounded-(--radius-sm) transition-colors",
         active
-          ? "text-primary hover:bg-primary-wash"
+          ? "text-primary-ink hover:bg-primary-wash"
           : "text-muted hover:bg-surface-elevated hover:text-soft",
         /* Bekleme yalnızca ikinci tıklamayı engelliyor; ikon zaten iyimser
            olarak döndüğü için ayrıca soluklaştırmaya gerek yok — soluk bir

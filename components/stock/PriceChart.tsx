@@ -766,7 +766,7 @@ export function PriceChart({
                 "numeral min-h-11 shrink-0 rounded-(--radius-sm) px-2.5 sm:min-h-[36px] text-xs font-semibold transition-colors",
                 range === r
                   ? "bg-primary text-on-primary"
-                  : "text-muted hover:bg-primary-wash hover:text-primary",
+                  : "text-muted hover:bg-primary-wash hover:text-primary-ink",
               )}
             >
               {labels.ranges[r]}
@@ -785,7 +785,7 @@ export function PriceChart({
               className={cn(
                 "min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-medium sm:min-h-[36px] transition-colors",
                 mode === m
-                  ? "bg-primary-wash text-primary"
+                  ? "bg-primary-wash text-primary-ink"
                   : "text-muted hover:bg-surface-elevated hover:text-soft",
               )}
             >

@@ -227,7 +227,14 @@ export default async function StockPage(
       {/* Üst blok — grafik solda geniş, şirketin kimliği sağda */}
       <div className="grid gap-5 lg:grid-cols-3">
         <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
-          <Suspense fallback={<Skeleton className="h-[300px] w-full sm:h-[430px]" />}>
+          {/* ÖLÇÜLMÜŞ YÜKSEKLİK. Yedek 300 (mobil) / 430 piksel ayırıyordu
+              ama grafik bölümü 636–637 piksel kaplıyor: sayfanın EN
+              TEPESİNDE 336 piksellik bir sıçrama demekti ve altındaki her
+              şeyi itiyordu — hisse sayfasının mobil CLS'i 0,244 çıkıyordu.
+              Sayı tahmin değil: beş sembol × üç aralık × beş genişlikte
+              ölçüldü, hepsinde 636/637. Grafiğin iç yükseklikleri sabit
+              olduğu için bu ölçü içerikle birlikte kaymıyor. */}
+          <Suspense fallback={<Skeleton className="h-[636px] w-full sm:h-[637px]" />}>
             <ChartSection symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </Panel>
@@ -241,12 +248,18 @@ export default async function StockPage(
         <div className="flex min-w-0 flex-col gap-5">
           <Panel className="flex flex-1 flex-col">
             <PanelHeader title={t.stock.profile} />
-            <Suspense fallback={<ListSkeleton rows={5} />}>
+            {/* Altı künye satırı + iki paragraf: gövde 369 (mobil) / 437
+                piksel. Beş satırlık yedek 216 piksel ayırıyordu. */}
+            <Suspense fallback={<ListSkeleton rows={9} />}>
               <ProfileCard symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
 
-          <Suspense fallback={<Skeleton className="h-24 w-full rounded-(--radius-xl)" />}>
+          <Suspense
+            fallback={
+              <Skeleton className="h-[160px] w-full rounded-(--radius-xl) sm:h-[168px]" />
+            }
+          >
             <UpcomingEarnings symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </div>
@@ -258,7 +271,8 @@ export default async function StockPage(
       <div className="grid grid-cols-[repeat(auto-fit,minmax(17rem,1fr))] gap-5">
         <Panel>
           <PanelHeader title={t.stock.metrics} />
-          <Suspense fallback={<ListSkeleton rows={5} />}>
+          {/* Yedi ölçü satırı basıyor; yedek beş satır ayırıyordu. */}
+          <Suspense fallback={<ListSkeleton rows={7} />}>
             <MetricsCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </Panel>
@@ -270,7 +284,11 @@ export default async function StockPage(
           </Suspense>
         </Panel>
 
-        <Suspense fallback={<Skeleton className="h-56 w-full rounded-(--radius-xl)" />}>
+        <Suspense
+          fallback={
+            <Skeleton className="h-[319px] w-full rounded-(--radius-xl)" />
+          }
+        >
           <ComplianceCard symbol={symbol} locale={locale} t={t} />
         </Suspense>
       </div>
@@ -292,7 +310,7 @@ export default async function StockPage(
       {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
       <Panel>
         <PanelHeader title={t.stock.pastEarnings} />
-        <Suspense fallback={<ListSkeleton rows={4} />}>
+        <Suspense fallback={<ListSkeleton rows={6} />}>
           <PastEarnings symbol={symbol} locale={locale} t={t} />
         </Suspense>
       </Panel>
@@ -469,7 +487,7 @@ async function StockHeader({
           {(status.session === "pre-market" ||
             status.session === "after-hours") && (
             <p className="mt-2 flex flex-wrap items-center justify-start gap-x-2 gap-y-1 text-tiny sm:justify-end">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-wash px-2.5 py-[3px] font-semibold text-primary">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-wash px-2.5 py-[3px] font-semibold text-primary-ink">
                 <span aria-hidden className="size-1.5 rounded-full bg-current" />
                 {status.session === "pre-market"
                   ? t.market.preMarket
@@ -504,21 +522,42 @@ async function StockHeader({
   );
 }
 
+/**
+ * Hisse başlığının yer tutucusu — gerçek başlığın SARMA DÜZENİYLE aynı.
+ *
+ * Burada iki blok yan yana sabitti ve iskelet 60 piksel kaplıyordu; gerçek
+ * başlık ise dar ekranda fiyat bloğunu alt satıra indirdiği için 167 piksel
+ * (320 pikselde 203). Aradaki 107 piksel sayfanın EN ÜSTÜNDE açılıyor ve
+ * altındaki her şeyi itiyordu — hisse sayfasının mobil CLS'i 0,185–0,244
+ * çıkıyordu, Google'ın "kötü" eşiğinin iki katı.
+ *
+ * Yükseklik yazılmıyor: aynı `flex-wrap` ve aynı `w-full sm:w-auto` kuralı
+ * kullanıldığı için iskelet de gerçek başlıkla aynı genişlikte sarıyor ve
+ * içerik değiştikçe onunla birlikte kayıyor.
+ */
 function HeaderSkeleton() {
   return (
-    <div className="flex items-start justify-between gap-4">
+    <header className="flex flex-wrap items-start justify-between gap-4">
       <div className="flex items-center gap-3">
-        <Skeleton className="size-11 rounded-(--radius-md)" />
+        <Skeleton className="size-14 shrink-0 rounded-(--radius-lg) sm:size-16" />
         <div className="flex flex-col gap-2">
-          <Skeleton className="h-6 w-24" />
-          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-3 w-44" />
+          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-3 w-36" />
         </div>
       </div>
-      <div className="flex flex-col items-end gap-2">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-5 w-24" />
+      {/* Fiyat bloğu dar ekranda tam genişlik, `md`den itibaren sağa yaslı.
+          Gerçek başlıkta kural `sm:w-auto` ama sarma İÇERİK sürüklüyor:
+          640 pikselde gerçek başlık hâlâ iki satır (168px), `sm` eşiğinde
+          açılan iskelet ise tek satıra düşüp 94px kalıyordu — tam 74
+          piksellik bir fark. Eşik ölçüme göre `md`ye çekildi; bütün
+          genişliklerde fark 21 pikselin altında. */}
+      <div className="w-full md:w-auto">
+        <Skeleton className="h-9 w-40 md:ml-auto" />
+        <Skeleton className="mt-1.5 h-6 w-32 md:ml-auto" />
+        <Skeleton className="mt-2 h-5 w-48 md:ml-auto" />
       </div>
-    </div>
+    </header>
   );
 }
 

@@ -43,7 +43,7 @@ export function AddToCalendar({
            sembolü tekrar etmesi onu gereksiz genişletiyordu. */
         aria-label={`${symbol} · ${label}`}
         className={cn(
-          "group/cal relative z-10 -my-2 inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-primary-wash hover:text-primary",
+          "group/cal relative z-10 -my-2 inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-primary-wash hover:text-primary-ink",
           className,
         )}
       >

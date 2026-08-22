@@ -174,10 +174,18 @@ export default async function CalendarPage(
               key={v}
               href={`/takvim?g=${v}${impactFilter ? `&onem=${impactFilter}` : ""}`}
               scroll={false}
+              /* SEÇİLİ OLMAK RENKTEN İBARET DEĞİL. Bu iki navda seçili
+                 durumu anlatan tek şey arka plan rengiydi; ekran okuyucu
+                 "Gün, bağlantı · Hafta, bağlantı · Ay, bağlantı" duyuruyor
+                 ve hangisinin açık olduğunu söyleyen hiçbir şey yoktu.
+                 Projedeki öteki bütün filtreler (`FilterChip`, sektör
+                 çipleri, sekme çubuğu) `aria-current` taşıyor; burası
+                 atlanmıştı. */
+              aria-current={view === v ? "true" : undefined}
               className={cn(
                 "min-h-11 rounded-(--radius-sm) px-3 py-1.5 sm:min-h-[36px] text-sm font-medium transition-colors",
                 view === v
-                  ? "bg-primary-wash text-primary"
+                  ? "bg-primary-wash text-primary-ink"
                   : "text-muted hover:bg-surface-elevated hover:text-soft",
               )}
             >
@@ -195,10 +203,11 @@ export default async function CalendarPage(
                   : `/takvim?g=${view}&onem=${level}`
               }
               scroll={false}
+              aria-current={impactFilter === level ? "true" : undefined}
               className={cn(
                 "flex min-h-11 items-center gap-1.5 rounded-(--radius-sm) px-2.5 py-1.5 sm:min-h-[36px] text-xs transition-colors",
                 impactFilter === level
-                  ? "bg-primary-wash text-primary"
+                  ? "bg-primary-wash text-primary-ink"
                   : "text-muted hover:bg-surface-elevated hover:text-soft",
               )}
             >

@@ -392,7 +392,7 @@ function MenuRow({
     >
       <span
         aria-hidden
-        className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary"
+        className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary-ink"
       >
         <Icon weight="duotone" size={16} />
       </span>

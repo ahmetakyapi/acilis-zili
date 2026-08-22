@@ -167,7 +167,7 @@ export default async function TodayPage() {
                   ? "bg-up-wash text-up"
                   : status.session === "closed"
                     ? "bg-surface-elevated text-body"
-                    : "bg-primary-wash text-primary",
+                    : "bg-primary-wash text-primary-ink",
               )}
             >
               <span

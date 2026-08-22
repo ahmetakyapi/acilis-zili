@@ -299,7 +299,7 @@ export function TimingChip({
         "inline-flex shrink-0 items-center whitespace-nowrap rounded-full font-semibold",
         size === "sm" ? "px-2 py-[3px] text-nano" : "px-[9px] py-[3px] text-tiny",
         tone === "pre" && "bg-up-wash text-up",
-        tone === "post" && "bg-primary-wash text-primary",
+        tone === "post" && "bg-primary-wash text-primary-ink",
         tone === "neutral" && "bg-surface-elevated text-body",
         className,
       )}
@@ -326,7 +326,7 @@ export function SymbolBadge({
     <span
       aria-hidden
       className={cn(
-        "flex shrink-0 items-center justify-center border border-line bg-primary-wash font-bold tracking-[-0.02em] text-primary",
+        "flex shrink-0 items-center justify-center border border-line bg-primary-wash font-bold tracking-[-0.02em] text-primary-ink",
         size === "sm"
           ? "size-8 rounded-md text-tiny"
           : "size-11 rounded-md text-base",
@@ -460,7 +460,7 @@ export function LogoTile({
       <span
         aria-hidden
         className={cn(
-          "numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold tracking-[-0.02em] text-primary",
+          "numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold tracking-[-0.02em] text-primary-ink",
           step.box,
           size === "xs" || size === "sm" ? "text-micro" : "text-tiny",
           className,

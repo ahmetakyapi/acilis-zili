@@ -103,7 +103,7 @@ async function RecentMembers() {
               <AdminCell strong rowHeader>
                 {row.username}
                 {row.role === "admin" && (
-                  <span className="ml-2 rounded-full bg-primary-wash px-2 py-0.5 text-nano font-semibold uppercase tracking-[0.05em] text-primary">
+                  <span className="ml-2 rounded-full bg-primary-wash px-2 py-0.5 text-nano font-semibold uppercase tracking-[0.05em] text-primary-ink">
                     Yönetici
                   </span>
                 )}

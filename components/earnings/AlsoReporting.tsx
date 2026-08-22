@@ -99,7 +99,7 @@ export function AlsoReporting({
                           // komşusuna basmak kolaydı.
                           "inline-flex min-h-8 items-center rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold transition-colors hover:border-line-strong hover:bg-primary-tint hover:text-primary",
                           item.watched
-                            ? "border-primary-faint bg-primary-wash text-primary"
+                            ? "border-primary-faint bg-primary-wash text-primary-ink"
                             : "text-body",
                         )}
                       >

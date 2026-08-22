@@ -110,7 +110,7 @@ export default async function MenuPage() {
       <Panel className="flex items-center gap-3.5 p-4 sm:p-5">
         <span
           aria-hidden
-          className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-wash text-base font-bold uppercase text-primary"
+          className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-wash text-base font-bold uppercase text-primary-ink"
         >
           {username ? (
             username.slice(0, 2)

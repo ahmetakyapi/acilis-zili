@@ -248,7 +248,7 @@ export function AppShell({
             >
               <span
                 aria-hidden
-                className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary-wash text-nano font-bold uppercase text-primary"
+                className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary-wash text-nano font-bold uppercase text-primary-ink"
               >
                 {(username ?? "?").slice(0, 2)}
               </span>

@@ -66,7 +66,15 @@ export function GuideHint({
               <span className="block text-base font-bold text-strong">
                 {article.title}
               </span>
-              <span className="mt-0.5 block truncate text-tiny text-muted">
+              {/* İKİ SATIR — tek satır değil.
+                  `truncate` cümleyi tek satıra sıkıştırıyordu ve dar
+                  ekranda cümlenin can alıcı yarısı gidiyordu: ölçüldü,
+                  390 ve 768 pikselde kutu 251 piksel, cümleler 360 ve 449
+                  piksel istiyor. "Faiz kararının kendisi çoğu zaman sürpriz
+                  değildir; sürpriz, kararın yanındaki cümlelerdedir" —
+                  kartın var oluş sebebi noktalı virgülden SONRAKİ yarı ve
+                  tam da o gidiyordu. */}
+              <span className="mt-0.5 block line-clamp-2 text-tiny leading-[1.35] text-muted">
                 {article.dek}
               </span>
             </span>

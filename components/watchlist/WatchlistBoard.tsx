@@ -355,7 +355,7 @@ function ListPanel({
           onClick={() => setRenaming(true)}
           aria-label={`${labels.renameList}: ${list.name}`}
           title={labels.renameList}
-          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-0 transition hover:bg-primary-wash hover:text-primary group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
+          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-0 transition hover:bg-primary-wash hover:text-primary-ink group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <PencilSimple weight="duotone" size={14} />
         </button>
@@ -706,7 +706,7 @@ function AddSymbolRow({
             setOpen(true);
             window.setTimeout(() => inputRef.current?.focus(), 20);
           }}
-          className="inline-flex min-h-11 items-center gap-2 rounded-(--radius-md) px-2 sm:min-h-[38px] text-sm font-medium text-primary transition-colors hover:bg-primary-wash"
+          className="inline-flex min-h-11 items-center gap-2 rounded-(--radius-md) px-2 sm:min-h-[38px] text-sm font-medium text-primary-ink transition-colors hover:bg-primary-wash"
         >
           <Plus weight="bold" size={15} />
           {labels.addSymbol}

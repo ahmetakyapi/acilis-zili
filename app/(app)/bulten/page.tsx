@@ -315,11 +315,25 @@ async function ArchiveBoard({
 }
 
 /** Sekme değişiminde anında görünen iskelet — boş ekran yerine yapı. */
+/**
+ * Bülten arşivinin yer tutucusu.
+ *
+ * İki kolon da 420 piksel ayırıyordu; gerçek içerik geniş ekranda 1094,
+ * telefonda 2369 piksel. Bülten metni her gün değiştiği için sabit bir
+ * yükseklik zaten eskiyecekti — ölçüldü, sayfanın CLS'i 0,141 çıkıyordu.
+ *
+ * Çözüm ölçünün kendi tanımından geliyor: düzen kayması yalnızca GÖRÜNÜR
+ * ALANDAKİ oynamayı sayıyor. Yer tutucu bir ekran boyu kadar yer ayırınca
+ * katlamanın altında kalan metnin uzayıp kısalması ekrandaki hiçbir şeyi
+ * itmiyor, dolayısıyla metnin uzunluğu ne olursa olsun kayma olmuyor.
+ * `svh` seçildi: mobil tarayıcıların adres çubuğu açıkken/kapalıyken
+ * değişen `vh` değeri yer tutucunun boyunu oynatıyordu.
+ */
 function ArchiveSkeleton() {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-      <Skeleton className="h-[420px] w-full rounded-xl" />
-      <Skeleton className="h-[420px] w-full rounded-(--radius-xl)" />
+      <Skeleton className="h-[80svh] w-full rounded-xl" />
+      <Skeleton className="h-[420px] w-full rounded-(--radius-xl) lg:h-[80svh]" />
     </div>
   );
 }

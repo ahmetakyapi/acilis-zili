@@ -48,7 +48,11 @@ import {
   verdictOf,
   verdictTextClass,
 } from "@/lib/analysis";
-import { sectorGroupLabel, sectorGroupOf, type SectorGroup } from "@/lib/sectors";
+import {
+  sectorGroupLabel,
+  sectorGroupOf,
+  type SectorGroup,
+} from "@/lib/sectors";
 import {
   cn,
   formatEtDateCompact,
@@ -80,7 +84,8 @@ export default async function AnalysesPage(
   props: PageProps<"/bilancolar/analizler">,
 ) {
   const search = await props.searchParams;
-  const sortParam = typeof search.sirala === "string" ? search.sirala : undefined;
+  const sortParam =
+    typeof search.sirala === "string" ? search.sirala : undefined;
   const sort: AnalysisSort = isSort(sortParam) ? sortParam : "tarih";
   const filter = typeof search.filtre === "string" ? search.filtre : null;
 
@@ -100,13 +105,16 @@ export default async function AnalysesPage(
      `getSymbolNames` çağrılıyordu. Ekrana giden beş satır için. Üstelik
      bu iş yukarıdaki sorgulara HİÇ bağlı olmadığı hâlde onları bekliyordu;
      artık takip listesiyle birlikte tek turda geliyor. */
-  const upcomingTop = await getUpcomingEarnings(today, addEtDays(today, 30), 5, {
-    preferred: userSymbols,
-  });
+  const upcomingTop = await getUpcomingEarnings(
+    today,
+    addEtDays(today, 30),
+    5,
+    {
+      preferred: userSymbols,
+    },
+  );
 
-  const meta = await getSymbolNames([
-    ...new Set(all.map((row) => row.symbol)),
-  ]);
+  const meta = await getSymbolNames([...new Set(all.map((row) => row.symbol))]);
 
   /* Filtre çipleri yalnızca ELDE OLAN sektörleri gösterir: hiçbir analizi
      olmayan bir sektör çipi tıklanınca boş ekran veriyordu. */
@@ -245,19 +253,44 @@ export default async function AnalysesPage(
                         logoUrl={row.logoUrl}
                         size="xs"
                       />
-                      <span className="w-[46px] shrink-0 text-small font-bold text-strong">
-                        {row.symbol}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate text-tiny text-body">
-                        {formatEtDateCompact(row.reportDate, locale)}
-                        {row.hour === "bmo"
-                          ? ` · ${t.earnings.beforeOpenShort}`
-                          : row.hour === "amc"
-                            ? ` · ${t.earnings.afterCloseShort}`
-                            : ""}
+                      {/* SEMBOL VE TARİH ALT ALTA.
+                          İkisi yan yanaydı ve satırdaki sabit genişlikler
+                          (logo 22, sembol 46, rozet, takvim düğmesi 32, artı
+                          dört boşluk) dar kolonda tarihe 53 piksel
+                          bırakıyordu. Alt alta dizilince tarih sembolün
+                          genişliğini de devralıyor ve seans penceresi
+                          okunuyor — sitenin öteki liste satırları (haberler,
+                          hareketliler, iskeletler) zaten bu düzende. */}
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate text-small font-bold text-strong">
+                          {row.symbol}
+                        </span>
+                        {/* KIRPMA YOK, SARMA VAR.
+                          `truncate` ile tek satıra sıkıştırılıyordu ve dar
+                          kolonda seans penceresini tamamen yutuyordu:
+                          ölçüldü, 1024 pikselde "26 Ağu · Kap. Sonrası"
+                          106 piksel istiyor, 53 piksel alıyordu — yani
+                          bilançonun açılıştan önce mi kapanıştan sonra mı
+                          geleceği, satırın taşıdığı asıl bilgi, hiçbir
+                          şekilde okunamıyordu.
+                          Seans etiketi kendi `span`ında ve bölünmez: alt
+                          satıra bütün hâlde iniyor, ortadan kırılmıyor. */}
+                        <span className="text-tiny leading-[1.35] text-body">
+                          {formatEtDateCompact(row.reportDate, locale)}
+                          {(row.hour === "bmo" || row.hour === "amc") && (
+                            <>
+                              {" · "}
+                              <span className="whitespace-nowrap">
+                                {row.hour === "bmo"
+                                  ? t.earnings.beforeOpenShort
+                                  : t.earnings.afterCloseShort}
+                              </span>
+                            </>
+                          )}
+                        </span>
                       </span>
                       {watchSet.has(row.symbol) ? (
-                        <span className="shrink-0 rounded-full bg-primary-wash px-2 py-[2px] text-nano font-bold text-primary">
+                        <span className="shrink-0 rounded-full bg-primary-wash px-2 py-[2px] text-nano font-bold text-primary-ink">
                           ★
                         </span>
                       ) : (
@@ -303,7 +336,10 @@ export default async function AnalysesPage(
                 <FilterChip href={filterHref(null)} active={!filter}>
                   {t.analysis.filterAll}
                 </FilterChip>
-                <FilterChip href={filterHref("hafta")} active={filter === "hafta"}>
+                <FilterChip
+                  href={filterHref("hafta")}
+                  active={filter === "hafta"}
+                >
                   {t.analysis.filterThisWeek}
                 </FilterChip>
                 {session?.user && (
@@ -347,13 +383,22 @@ export default async function AnalysesPage(
                 highlightFirst={!filter && sort === "tarih"}
                 toolbar={
                   <Segment>
-                    <SegmentItem href={sortHref("tarih")} active={sort === "tarih"}>
+                    <SegmentItem
+                      href={sortHref("tarih")}
+                      active={sort === "tarih"}
+                    >
                       {t.analysis.sortDate}
                     </SegmentItem>
-                    <SegmentItem href={sortHref("skor")} active={sort === "skor"}>
+                    <SegmentItem
+                      href={sortHref("skor")}
+                      active={sort === "skor"}
+                    >
                       {t.analysis.sortScore}
                     </SegmentItem>
-                    <SegmentItem href={sortHref("tepki")} active={sort === "tepki"}>
+                    <SegmentItem
+                      href={sortHref("tepki")}
+                      active={sort === "tepki"}
+                    >
                       {t.analysis.sortReaction}
                     </SegmentItem>
                   </Segment>
@@ -428,7 +473,7 @@ function FeaturedAnalysis({
     >
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-primary-faint bg-primary-wash px-2.5 py-[3px] text-nano font-bold text-primary">
+          <span className="rounded-full border border-primary-faint bg-primary-wash px-2.5 py-[3px] text-nano font-bold text-primary-ink">
             {t.analysis.todaysAnalysis}
           </span>
           <span className="text-tiny font-semibold text-muted">

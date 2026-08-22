@@ -198,7 +198,7 @@ export function ShareButton({
                   >
                     <span
                       aria-hidden
-                      className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary"
+                      className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary-ink"
                     >
                       <Icon weight="bold" size={14} />
                     </span>
@@ -217,7 +217,7 @@ export function ShareButton({
                     "flex size-7 shrink-0 items-center justify-center rounded-md",
                     copied
                       ? "bg-up-wash text-up"
-                      : "bg-primary-wash text-primary",
+                      : "bg-primary-wash text-primary-ink",
                   )}
                 >
                   {copied ? (

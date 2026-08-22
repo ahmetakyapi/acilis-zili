@@ -40,6 +40,15 @@
   --primary-faint: rgb(13 116 196 / 0.22);
   --primary-wash: rgb(13 116 196 / 0.1);
   --primary-tint: rgb(13 116 196 / 0.045);
+  /* WASH ÜZERİNE BASILAN METİN — bir basamak daha koyu.
+     `--primary` doğrudan `--primary-wash` üzerine yazıldığında AÇIK TEMADA
+     kontrast 4,14:1 (sayfa zemini) ve 4,25:1 (yüzey) ölçülüyor; AA normal
+     metin eşiği 4,5. Rozetler, seçili filtre çipleri ve sayaçlar hep bu
+     ikiliyi kullanıyor ve bazılarında seçili olmayı anlatan TEK şey o renk.
+     Ton aynı (206°), yalnızca parlaklık %4 düşük: 4,86:1 (sayfa) ve
+     5,00:1 (yüzey). Koyu temada `--primary` zaten 6,91:1 veriyor, orada
+     değişen bir şey yok. */
+  --primary-ink: #0c69b1;
   /* Accent üzerine basılan metin. */
   --on-primary: #ffffff;
 
@@ -184,6 +193,8 @@
   --primary-faint: rgb(53 184 255 / 0.22);
   --primary-wash: rgb(53 184 255 / 0.14);
   --primary-tint: rgb(53 184 255 / 0.06);
+  /* Koyu temada wash üzerinde kontrast zaten 6,91:1 — ayrı bir ton gerekmiyor. */
+  --primary-ink: var(--primary);
   --on-primary: #06121f;
 
   --up: #3ddc97;
@@ -295,6 +306,7 @@
   --color-primary-faint: var(--primary-faint);
   --color-primary-hover: var(--primary-hover);
   --color-primary-wash: var(--primary-wash);
+  --color-primary-ink: var(--primary-ink);
   --color-primary-tint: var(--primary-tint);
   --color-on-primary: var(--on-primary);
 
@@ -525,6 +537,29 @@
     outline: 2px solid var(--line-focus);
     outline-offset: 2px;
     border-radius: 4px;
+  }
+
+  /* KIRPAN KABIN İÇİNDE HALKA İÇERİ ALINIR.
+     `outline-offset: 2px` halkayı öğenin DIŞINA çiziyor ve taşmayı gizleyen
+     her ata onu kesiyor. Ölçüldü: /haberler'de 99 odaklanabilir öğenin
+     62'sinin halkası iki ya da daha çok kenardan kırpılıyordu, ana sayfada
+     22'sinin; dil seçicisinde geriye görünür kalan tek şey iki piksellik
+     dikey bir çizgiydi. Klavyeyle gezen okuyucu odağın nerede olduğunu
+     göremiyordu (WCAG 2.4.11).
+     Negatif kaydırma halkayı öğenin İÇİNE çiziyor: hiçbir ata onu kesemez.
+     Kural yalnızca kırpan kapların içinde geçerli — kırpılmayan yerlerde
+     dış halka daha ferah durduğu için orada değişen bir şey yok. */
+  :where(
+      .overflow-hidden,
+      .overflow-clip,
+      .overflow-auto,
+      .overflow-x-auto,
+      .overflow-y-auto,
+      .scroll-x,
+      .scroll-x-hint
+    )
+    :focus-visible {
+    outline-offset: -2px;
   }
 }
 

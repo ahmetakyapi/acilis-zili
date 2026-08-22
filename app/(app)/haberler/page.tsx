@@ -57,7 +57,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
 
       {symbolFilter && (
         <div className="flex items-center gap-2">
-          <span className="numeral rounded-full bg-primary-wash px-3 py-1 text-sm font-medium text-primary">
+          <span className="numeral rounded-full bg-primary-wash px-3 py-1 text-sm font-medium text-primary-ink">
             {symbolFilter}
           </span>
           <Link href="/haberler" className="text-xs text-muted hover:text-soft">
