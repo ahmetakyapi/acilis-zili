@@ -433,7 +433,11 @@ const en: typeof tr = {
     throttledHint:
       "You have opened too many different stocks in a short time. Please wait a minute so we can protect our data providers' free quota.",
     peers: "Companies in the Same Sector",
-    peersHint: "Sub-industry",
+    /* Türkçede iki yuva da "Alt Sektör" diyor; İngilizcede biri "Industry"
+       biri "Sub-industry" idi ve ikisi AYNI SAYFADA görünüyor
+       (/hisse/NVDA'da profil satırı ile benzer şirketler künyesi). İngilizce
+       okuyucu iki farklı sınıflandırma seviyesi olduğunu sanıyordu. */
+    peersHint: "Industry",
     fundProfile: "Fund Profile",
     fundKind: "Type",
     fundKindLabel: "Exchange-Traded Fund (ETF)",

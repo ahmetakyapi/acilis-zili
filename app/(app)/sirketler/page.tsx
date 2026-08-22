@@ -588,7 +588,17 @@ async function CompaniesTable({
                             <span className="block text-base font-bold leading-[18px] text-strong">
                               {company.symbol}
                             </span>
-                            <span className="block max-w-[66px] truncate text-tiny leading-[15px] text-muted sm:max-w-44">
+                            {/* SABİT SINIR YOK, HÜCRE NE VERİRSE.
+                                Ad kutusu `sm` altında 66 piksele
+                                çakılıydı; hücre ise 500–639 piksel arasında
+                                183–196 piksele kadar genişliyor ve sağında
+                                55–68 piksel boş duruyordu — ekran
+                                büyüdükçe ad daha az okunur hâle geliyordu.
+                                `min-w-0` + `truncate` ikilisi zaten
+                                gerekeni yapıyor: kutu hücreyi aşmıyor,
+                                sığmayan ad üç noktayla kesiliyor. Sabit
+                                sınır yalnızca büyümeyi engelliyordu. */}
+                            <span className="block truncate text-tiny leading-[15px] text-muted">
                               {company.name}
                             </span>
                           </span>

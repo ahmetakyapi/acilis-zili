@@ -807,6 +807,16 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   const vixLevel = vixResult.ok ? vixResult.data.latestValue : null;
   const vixPrev = vixResult.ok ? vixResult.data.prevValue : null;
+  /* VIX'İN KENDİ TARİHİ. Panelin tek "FRED · tarih" künyesi tahvil
+     serilerine ait ve VIX satırının ÜSTÜNDE duruyor; VIX ise tarihsiz
+     basılıyordu. Aynı gün olduklarında sorun görünmüyor ama tahvil
+     piyasasının kapalı, borsanın açık olduğu günlerde (Columbus Day,
+     Veterans Day) ikisi farklı günlere işaret ediyor ve okuyucu üstteki
+     tarihi VIX'e de ait sanıyor. Aynı gerekçe faiz künyesinin yazılma
+     sebebiydi zaten; VIX atlanmıştı. */
+  const vixDate = vixResult.ok
+    ? (vixResult.data.observations.at(-1)?.date ?? null)
+    : null;
   const vixDelta =
     vixLevel !== null && vixPrev !== null ? vixLevel - vixPrev : null;
   const bandLabel: Record<string, string> = {
@@ -915,6 +925,14 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
           >
             {vixTone.label}
           </span>
+          {/* Tarih yalnızca faiz künyesinden FARKLIYSA yazılıyor: aynı
+              günse üstteki künye zaten söylüyor ve tekrar etmek satırı
+              gereksiz kalabalıklaştırır. */}
+          {vixDate && vixDate !== observedAt && (
+            <span className="numeral shrink-0 text-nano text-muted">
+              {formatEtDateShort(vixDate, locale)}
+            </span>
+          )}
           {vixDelta !== null && vixDelta !== 0 && (
             <span
               className={cn(

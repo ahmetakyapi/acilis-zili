@@ -236,7 +236,15 @@ function isTradingDay(dateStr: string, holidays: MarketHoliday[]): boolean {
   return !holiday || holiday.earlyCloseEt !== null;
 }
 
-function closeMinutesFor(dateStr: string, holidays: MarketHoliday[]): number {
+/**
+ * Belirli bir ET gününün kapanış dakikası — yarım günlerde erken.
+ *
+ * Dışarı verildi çünkü "bugünün kapanışı" ile "grafikte çizilen günün
+ * kapanışı" farklı günler olabiliyor: cumartesi açılan bir hisse sayfasında
+ * `getMarketStatus` cumartesi için 16:00 döner, 1G grafiği ise cuma gününü
+ * çizer — ve o cuma bir yarım günse gölgeler yanlış saate kurulur.
+ */
+export function closeMinutesFor(dateStr: string, holidays: MarketHoliday[]): number {
   const holiday = holidayOn(dateStr, holidays);
   if (holiday?.earlyCloseEt) {
     const [hour, minute] = holiday.earlyCloseEt.split(":").map(Number);

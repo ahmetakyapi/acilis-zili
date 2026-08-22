@@ -31,6 +31,7 @@ import {
   getSymbolNames,
   liveMarketCap,
   isKnownSymbol,
+  getHolidays,
 } from "@/lib/data";
 import { rateLimit, requestKey } from "@/lib/rate-limit";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -54,7 +55,10 @@ import {
   getKeyMetrics,
   getRecommendations,
 } from "@/lib/providers/finnhub";
-import { addEtDays, todayEt } from "@/lib/market-hours";
+import { addEtDays, todayEt,
+  closeMinutesFor,
+  etParts,
+} from "@/lib/market-hours";
 import type { Metadata } from "next";
 import { describeSymbol } from "@/db/seed/descriptions";
 import {
@@ -597,19 +601,30 @@ async function ChartSection({
      ikinci kez istiyordu: "HTML → JS indir → hidrasyon → fetch → çizim".
      Veri sunucuda zaten erişilebilir ve `/api/chart` yanıtları `no-store`
      olduğu için o istek hiçbir katmanda önbelleğe de girmiyordu. */
-  const [result, bars] = await Promise.all([
+  const [result, bars, holidays] = await Promise.all([
     getQuote(symbol, status),
     getChartBars(symbol, "1D", status),
+    getHolidays(),
   ]);
+
+  /* KAPANIŞ, ÇİZİLEN GÜNÜN KAPANIŞI — "bugünün" değil.
+     Buraya `status.closeMinutes` veriliyordu, yani BUGÜNÜN kapanışı; 1G
+     grafiği ise son İŞLEM gününü çiziyor ve ikisi ayrışabiliyor. 28 Kasım
+     2026 cumartesi bir hisse sayfası açıldığında `getMarketStatus`
+     cumartesi için tatil kaydı bulamıyor ve 16:00 dönüyor, grafik ise 27
+     Kasım cumayı (13:00 erken kapanış) çiziyor: gölgeler piyasanın kapalı
+     olduğu üç saati ana seans gibi boyuyordu.
+     Barlar zaten burada, dolayısıyla çizilecek gün de biliniyor. */
+  const grafikGunu = bars.ok && bars.data.length > 0
+    ? etParts(new Date(bars.data[0].time * 1000)).dateStr
+    : status.etDate;
 
   return (
     <PriceChartLazy
       symbol={symbol}
       locale={locale}
       labels={chartLabels(t)}
-      /* Yarım günlerde kapanış 13:00 — grafik seans gölgelerini buna göre
-         çiziyor (sunucu zaten biliyor, istemcinin hesaplaması gerekmiyor). */
-      closeMinutes={status.closeMinutes}
+      closeMinutes={closeMinutesFor(grafikGunu, holidays)}
       quote={
         result.ok
           ? { price: result.data.price, changePct: result.data.changePct }

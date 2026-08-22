@@ -899,7 +899,10 @@ const tr = {
     signUpTitle: "Hesap Oluştur",
     signUpSubtitle: "Kendi takip listeni kurmak için hesap aç.",
     username: "Kullanıcı Adı",
-    usernamePlaceholder: "Kullanıcı Adı",
+    /* Yer tutucu etiketin Title Case kopyasıydı ve hiçbir bilgi
+       katmıyordu — üstelik yer tutucu bir başlık değil, beklenen biçimi
+       gösteren bir örnek. İngilizcesi zaten öyle yapıyor ("username"). */
+    usernamePlaceholder: "kullaniciadi",
     /* GİRİŞTE iki kapı da açık: `authorize` kullanıcı adı ya da e-posta ile
        eşleştiriyor. Alan etiketi bunu söylemezse ikinci kapı görünmez
        kalır — kullanıcı adını unutan biri hesabını kaybetmiş sanır. */

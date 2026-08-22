@@ -78,8 +78,20 @@ function BriefLines({
     }
   });
 
+  /* OKUMA ÖLÇÜSÜ SINIRLI.
+     Bülten sayfası (`size === "page"`) tam genişlikte akıyordu: ölçüldü,
+     1280 pikselde satırlar ~117, 1440 pikselde ~134 karakter. Rahat okuma
+     ölçüsü 50–75 karakter; 90'ın üstünde göz satır sonundan satır başına
+     dönerken yerini kaybediyor ve bülten sitenin ASIL okuma yüzeyi.
+     Ölçü `ch` ile veriliyor (punto değişirse birlikte değişiyor) ama `ch`
+     RAKAM genişliğini ölçüyor ve ortalama harften geniş: 74ch denendiğinde
+     gerçek satırlar 83–93 karakter çıktı, sayılarak doğrulandı. 62ch
+     sitenin başka okuma yüzeylerinde kullanılan ölçüyle de aynı.
+     Kart sürümünde (`size` başka) kolon zaten dar, sınıra gerek yok. */
   const text =
-    size === "page" ? "text-read leading-[25px]" : "text-base leading-5";
+    size === "page"
+      ? "max-w-[62ch] text-read leading-[25px]"
+      : "text-base leading-5";
 
   return (
     <div
