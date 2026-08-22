@@ -155,7 +155,7 @@ export default async function TodayPage() {
       <SessionRefresh atIso={status.nextTransition.toISOString()} />
 
       {/* ================= Ana kolon ================= */}
-      <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1 lg:justify-between">
         {/* ---- Oturum rozeti + tarih ---- */}
         <header>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
@@ -334,7 +334,7 @@ export default async function TodayPage() {
       {/* ================= Yan kolon =================
           Yalnızca ölçüler: endeksler → dünya → tahviller → makro → senin
           listen. Okunacak metin sol kolonda. */}
-      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1">
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1 lg:justify-between">
         <Suspense fallback={<IndexSkeleton />}>
           <IndexStrip locale={locale} t={t} />
         </Suspense>
@@ -912,7 +912,13 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
               )}
             >
               <span aria-hidden>{vixDelta > 0 ? "▲" : "▼"}</span>{" "}
-              {formatPrice(Math.abs(vixDelta), locale, { digits: 2 })}
+              {formatPrice(Math.abs(vixDelta), locale, { digits: 2 })}{" "}
+              {/* Birim ŞART: hemen üstteki faiz satırları değişimi "0,04 puan"
+                  diye yazıyor, VIX ise çıplak "1,12" yazıyordu. Yan yana
+                  duran iki ölçüden biri birimli biri birimsiz olunca okuyucu
+                  ikincisini yüzde sanıyor — VIX'te 1,12 puan ile %1,12 çok
+                  farklı iki haber. */}
+              {t.markets.point}
             </span>
           )}
         </div>
