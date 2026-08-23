@@ -7,7 +7,6 @@ import {
   EmptyState,
   Panel,
   PanelHeader,
-  Skeleton,
   LogoTile,
   SkeletonRow,
 } from "@/components/ui/primitives";
@@ -181,15 +180,18 @@ function SortHead({
       <Link
         href={href}
         scroll={false}
-        /* "Hafta" bir takvim haftası mı, 7 gün mü, 5 seans mı belli değildi —
-           üçü farklı sayılar veriyor ve sütun hiçbirini söylemiyordu.
-           Tanım bir süre yalnızca bu ipucunda durdu ve bu yetmiyordu:
-           sütun `hidden sm:table-cell` ile 640 pikselden itibaren
-           görünüyor, yani dokunmatik tablette de görünüyor ve orada balon
-           HİÇ açılmıyor (`hover: none`). Asıl çözüm ETİKETİN KENDİSİNDE:
-           sütun artık "5 Seans" yazıyor ve tanıma ihtiyaç bırakmıyor.
-           İpucu, imleçli ekranda ölçünün gerekçesini anlatmak için
-           kalıyor — bilgiyi taşıyan tek yer değil, fazladan bir katman. */
+        /* Sütun adı iki kez değişti, ikisinin de gerekçesi duruyor.
+           Önce "Hafta" idi: bir ad, bir ölçü değil — takvim haftası mı,
+           7 gün mü, 5 seans mı söylemiyordu ve tanım yalnızca bu balonda
+           duruyordu. Balon dokunmatik tablette hiç açılmıyor (`hover: none`)
+           ve sütun `hidden sm:table-cell` ile orada görünüyor, yani tanımı
+           göremeyen bir okuyucu kitlesi vardı. Sonra "5 Seans" oldu: kesindi
+           ama okuyucunun dili değildi, bir sütun başlığından çok bir
+           tanımdı. Şimdi "Haftalık" — sıfat olduğu için "haftalık değişim"
+           diye okunuyor, "Hafta"nın belirsizliği yok ve 5 seans zaten bir
+           haftanın kendisi. Kalan tek nüans (seans mı takvim günü mü) bu
+           ipucunda; bilmesi ölçüyü değiştirmeyen bir ayrıntı olduğu için
+           balonda kalması yeterli. */
         title={hint}
         className={cn(
           /* MOBİLDE 44px. Sıralama başlığı tablonun ANA denetimi ama dokunma

@@ -191,7 +191,10 @@ const tr = {
     watchlistSummary: "Favorilerin",
     watchlistEmpty: "Henüz favori eklemedin.",
     // Ana sayfadaki "son yazılanlar" bloğu
-    latestAnalyses: "Son Analizler",
+    /* "Son Analizler" ne analizi olduğunu söylemiyordu: ana sayfada
+       yanında mercek yazıları ve haberler duruyor, üçü de birer
+       "analiz" sayılabilir. Başlık artık türü adıyla söylüyor. */
+    latestAnalyses: "Son Bilanço Analizleri",
     latestStories: "Son Mercek Yazıları",
     topNews: "Öne Çıkan Haberler",
     /* Bölüm başlığının yanındaki künye. Liste "son haberler" değil bir
@@ -293,7 +296,6 @@ const tr = {
     companyOne: "şirket",
     companyMany: "şirket",
     empty: "Bu aralıkta bilanço açıklaması yok",
-    today: "Bugün",
     marketCapShort: "PD",
     rangeWeek: "Hafta",
     rangeMonth: "Ay",
@@ -314,7 +316,7 @@ const tr = {
     title: "Bilançolar",
     subtitle:
       "Takvimden bilançoları izle; açıklananlar için özet ve detaylı değerlendirme Analizler'de.",
-    listTitle: "Son Analizler",
+    listTitle: "Son Bilanço Analizleri",
     /* Paylaşım kartının üst künyesi — kart sabit Türkçe basıyordu. */
     ogEyebrow: "Bilanço Analizi",
     /* Hisse sayfasındaki panel — orada zaten şirketin içindesin, adı
@@ -477,7 +479,7 @@ const tr = {
     name: "Şirket Adı",
     price: "Fiyat",
     change: "Değişim",
-    weekChange: "5 Seans",
+    weekChange: "Haftalık",
     weekChangeHint: "Son 5 işlem gününün kapanışına göre değişim — takvim haftası değil, seans sayısı.",
     empty: "Henüz şirket verisi yok",
     emptyHint:
@@ -512,6 +514,12 @@ const tr = {
     hold: "Tut",
     sell: "Sat",
     strongSell: "Güçlü Sat",
+    /* Analist kartının dip künyesi — ölçünün altındaki mikro künye,
+       başlık değil: cümle düzeninde kalıyor. */
+    analystOne: "analist",
+    analystMany: "analist",
+    analystListingNote:
+      "Tavsiyeler şirketin ana kotasyonu ({code}) için toplanmıştır; bu sayfadaki fiyat ABD'de işlem gören payına aittir.",
     companyNews: "Şirket Haberleri",
     pastEarnings: "Geçmiş Bilançolar",
     nextEarnings: "Yaklaşan Bilanço",
@@ -839,6 +847,14 @@ const tr = {
     moreCompaniesOne: "+{count} şirket daha",
     moreCompaniesMany: "+{count} şirket daha",
     sinceEvent: "olaydan bugüne",
+    /* Hisse sayfasındaki blok. Kardeş panelle (analysis.symbolPanelTitle)
+       aynı kural: şirketin içindesin, adını başlıkta tekrar etme. Ama tür
+       adıyla söylensin — yalın "Mercek" bloğun ne listelediğini
+       söylemiyordu. */
+    symbolPanelTitle: "Mercek Yazıları",
+    symbolPanelAll: "Tüm Yazılar →",
+    symbolPanelCountOne: "{count} Yazı",
+    symbolPanelCountMany: "{count} Yazı",
     filterLabel: "Şirkete Göre",
     filterAll: "Tümü",
     emptyFilter: "Bu şirket hakkında henüz yazı yok.",

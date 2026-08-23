@@ -431,6 +431,10 @@ export async function getEarningsSurprises(
    -------------------------------------------------------------------------- */
 
 type RawRecommendation = {
+  /* Finnhub SORULAN sembolü değil, karşılık getirdiği KOTASYONU yazıyor:
+     TSM sorulduğunda "2330.TW" dönüyor. Alan yanıtta hep vardı ama tipte
+     tanımlı olmadığı için görünmezdi. */
+  symbol: string;
   period: string;
   strongBuy: number;
   buy: number;

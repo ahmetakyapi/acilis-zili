@@ -160,6 +160,13 @@ export type EarningsEntry = {
 };
 
 export type Recommendation = {
+  /**
+   * Tavsiyelerin toplandığı kotasyon — sorulan sembolle aynı olmayabilir.
+   * Finnhub ADR'lerde şirketin ANA borsasının sembolünü döndürüyor
+   * (TSM → "2330.TW"). Ekranda bunu söylemek şart: 419 dolarlık ADR
+   * fiyatının yanında duran dağılım Tayvan kotasyonu için toplanmış.
+   */
+  symbol: string;
   period: string;
   strongBuy: number;
   buy: number;

@@ -9,7 +9,10 @@ import { Heart } from "@phosphor-icons/react/dist/ssr";
 import { NewsImage } from "@/components/news/NewsImage";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { PriceChartLazy } from "@/components/stock/PriceChartLazy";
-import { SymbolStories } from "@/components/stock/SymbolStories";
+import {
+  SymbolStories,
+  SymbolStoriesSkeleton,
+} from "@/components/stock/SymbolStories";
 import { chartLabels } from "@/lib/chart-labels";
 import {
   ChangePill,
@@ -28,6 +31,7 @@ import {
   getNextEarnings,
   getGenericImageUrls,
   getStatus,
+  getStoriesForSymbol,
   getSymbolNames,
   liveMarketCap,
   isKnownSymbol,
@@ -74,6 +78,7 @@ import {
   headlineMentions,
   isValidSymbol,
   peRatioOf,
+  plural,
   safeExternalUrl,
   timeAgo,
 } from "@/lib/utils";
@@ -222,6 +227,10 @@ export default async function StockPage(
     );
   }
 
+  /* Mercek satırları AKIŞTAN ÖNCE — gerekçesi bloğun kendi yorumunda.
+     Yerel veritabanı okuması, sağlayıcıya gitmiyor. */
+  const storyRows = await getStoriesForSymbol(symbol, locale, 3);
+
   return (
     <div className="flex flex-col gap-5">
       <Suspense fallback={<HeaderSkeleton />}>
@@ -283,7 +292,9 @@ export default async function StockPage(
 
         <Panel>
           <PanelHeader title={t.stock.analysts} />
-          <Suspense fallback={<ListSkeleton rows={3} />}>
+          {/* Beş satır: kart beş tavsiye kovası basıyor. Yedek üç satır
+              ayırıyordu, o sayı kartın iki sütunlu eski düzeninden kalmıştı. */}
+          <Suspense fallback={<ListSkeleton rows={5} />}>
             <AnalystCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </Panel>
@@ -306,10 +317,31 @@ export default async function StockPage(
 
       {/* Mercek yazıları analizlerin ALTINDA: analiz bir çeyreğin okunmuş
           hâli ve sayfanın tablosuyla doğrudan bağlı; mercek ise bir olayın
-          anlatısı, yani bir adım geride duran bağlam. */}
-      <Suspense fallback={null}>
-        <SymbolStories symbol={symbol} locale={locale} t={t} />
-      </Suspense>
+          anlatısı, yani bir adım geride duran bağlam.
+
+          SATIRLAR AKIŞTAN ÖNCE ÇEKİLİYOR. Blok `fallback={null}` ile
+          akıyordu; kartlara geçince mobilde ~840 piksellik bir blok geç
+          gelip altındaki her şeyi itmeye başladı ve sayfanın mobil CLS'i
+          NVDA'da 0,266'ya çıktı. Yer tutucu koymak tek başına çözüm değil:
+          806 sembolün yalnızca 68'inde yazı var, yani yer tutucu çoğu
+          sayfada hiç gelmeyecek bir blok için boşluk ayırırdı.
+          "Yazı var mı" sorusu bu yüzden burada, yerel bir veritabanı
+          okumasıyla yanıtlanıyor — sağlayıcıya gitmiyor. Yazı yoksa hiçbir
+          şey basılmıyor; varsa iskelet gerçek kart sayısını çiziyor ve
+          sağlayıcıya giden iş (logolar, olaydan bugüne getirisi) akışta
+          kalıyor. */}
+      {storyRows.length > 0 && (
+        <Suspense
+          fallback={<SymbolStoriesSkeleton count={storyRows.length} />}
+        >
+          <SymbolStories
+            rows={storyRows}
+            symbol={symbol}
+            locale={locale}
+            t={t}
+          />
+        </Suspense>
+      )}
 
       {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
       <Panel>
@@ -1053,6 +1085,8 @@ async function AnalystCard({
     latest.strongBuy + latest.buy + latest.hold + latest.sell + latest.strongSell;
   if (total === 0) return <DataError message={t.common.noData} />;
 
+  const kotasyon = latest.symbol?.toUpperCase();
+
   const segments = [
     { label: t.stock.strongBuy, value: latest.strongBuy, cls: "bg-up" },
     { label: t.stock.buy, value: latest.buy, cls: "bg-up/60" },
@@ -1061,48 +1095,104 @@ async function AnalystCard({
     { label: t.stock.strongSell, value: latest.strongSell, cls: "bg-down" },
   ];
 
+  /* KART KOMŞUSUNUN RİTMİNE OTURUYOR.
+     Beş etiket iki sütuna diziliyordu ve üç satır tutuyordu; kart, üçlü
+     ızgarada yanındaki Anahtar Metrikler (yedi satır) ve Katılım Taraması
+     kadar uzuyor ama içeriği o boyun yarısını bile doldurmuyordu — panelin
+     alt yarısı boştu. Aynı veri tek sütunda, komşu kartla AYNI satır
+     düzeninde (`divide-y divide-line-soft`, `py-2.5`) beş satır tutuyor ve
+     boşluk kendiliğinden kapanıyor. Yeni bilgi eklenmedi; eklenen tek şey
+     payın yüzdesi, o da çubuğun zaten çizdiği oranın sayısı.
+
+     BURAYA DAHA FAZLASI EKLENMEZ. Finnhub `/stock/recommendation` dört
+     aylık anlık görüntü döndürüyor ve kart yalnızca ilkini çiziyor; kalan
+     üçüyle bir trend merdiveni çizmek ilk bakışta bu boşluğun doğal cevabı
+     gibi duruyor. Ölçüldü, değil: üç kart `repeat(auto-fit,minmax(17rem,1fr))`
+     ızgarasında AYNI satırda ve satırın boyu en uzun karta göre kuruluyor.
+     Bu düzenden sonra AAPL'de üçü de 346 piksel ve analist kartının içeriği
+     345'te bitiyor — yani satırın boyunu artık BU kart belirliyor. Merdiven
+     (~90px) eklenirse satır uzuyor ve boşluk komşu iki kartın altında
+     yeniden açılıyor; bir kartın sorunu iki karta dağıtılmış oluyor. Aynı
+     gerekçe kaynak damgası ve "alım tarafı payı" manşeti için de geçerli. */
   return (
-    <div className="px-4 py-4 sm:px-5">
-      <div className="flex h-2.5 w-full gap-px overflow-hidden rounded-full">
+    <div className="px-4 py-3 sm:px-5">
+      {/* Çubuk ARIA'dan gizli: altındaki liste aynı veriyi zaten okunabilir
+          hâlde taşıyor, ikisi birden okununca sayılar iki kez geçiyordu.
+          Dilim sınırını renk değil boşluk çiziyor — komşu basamaklar aynı
+          renk ailesinden ve kontrast ayırmaya yetmiyor. */}
+      <div
+        aria-hidden
+        className="flex h-3 w-full gap-[2px] overflow-hidden rounded-full"
+      >
         {segments.map(
           (segment) =>
             segment.value > 0 && (
               <span
                 key={segment.label}
-                className={segment.cls}
+                className={cn("block h-full", segment.cls)}
                 style={{ width: `${(segment.value / total) * 100}%` }}
-                title={`${segment.label}: ${segment.value}`}
               />
             ),
         )}
       </div>
-      <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
+      <dl className="mt-3 divide-y divide-line-soft border-t border-line-soft">
         {segments.map((segment) => (
-          <li
-            key={segment.label}
-            className="flex items-center justify-between gap-2 text-xs"
-          >
-            <span className="flex items-center gap-1.5 text-muted">
-              <span aria-hidden className={cn("size-2 rounded-full", segment.cls)} />
+          <div key={segment.label} className="flex items-center gap-3 py-2.5">
+            <dt className="flex min-w-0 flex-1 items-center gap-2 text-xs font-semibold text-strong">
+              <span
+                aria-hidden
+                className={cn("size-2 shrink-0 rounded-full", segment.cls)}
+              />
               {segment.label}
-            </span>
-            <span className="numeral text-body">{segment.value}</span>
-          </li>
+            </dt>
+            {/* Sayı sütunu da sabit genişlikte — tek haneli "3" ile iki
+                haneli "13" aynı sağ kenardan okunuyor. */}
+            <dd className="numeral w-7 shrink-0 text-right text-sm text-body">
+              {segment.value}
+            </dd>
+            {/* Sabit genişlik: yüzdeler sağ kenarda hizalı dursun, sayının
+                kaç hane olduğuna göre sağa sola kaymasın. */}
+            <dd className="numeral w-11 shrink-0 text-right text-tiny text-muted">
+              {formatPercentPlain((segment.value / total) * 100, locale, 0)}
+            </dd>
+          </div>
         ))}
-      </ul>
-      <p className="numeral mt-2 text-nano text-muted">
+      </dl>
+      {/* Künye artık yalnızca ayı değil KAÇ ANALİST olduğunu da söylüyor:
+          dağılımın ağırlığı sayıya bağlı ve "3 analistin 2'si Al diyor" ile
+          "54 analistin 37'si Al diyor" aynı şey değil. */}
+      <p className="numeral mt-2 border-t border-line-soft pt-2.5 text-small text-muted">
+        {total} {plural(total, t.stock.analystOne, t.stock.analystMany)} ·{" "}
         {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
           month: "long",
           year: "numeric",
           timeZone: "UTC",
         }).format(new Date(`${latest.period}T12:00:00Z`))}
       </p>
+      {/* TAVSİYELER BAŞKA BİR KOTASYONA AİT OLABİLİR. Finnhub sorulan
+          sembolü değil, karşılık getirdiği kotasyonu yanıtlıyor: TSM
+          sorulunca dönen kayıtların sembolü "2330.TW", yani dağılım
+          Tayvan'daki payı izleyen analistlerden toplanmış. Sayfanın
+          başlığındaki fiyat ise ABD'de işlem gören ADR'nin. İkisi yan yana
+          durunca aynı hisseymiş gibi okunuyordu — Anahtar Metrikler'deki
+          para birimi notunun (`homeCurrencyNote`) analist tarafındaki eşi.
+          `?.` şart: alan bir gün gelmezse uyarı hiç basılmamalı, yanlış
+          uyarı uyarısızlıktan kötü. */}
+      {kotasyon && kotasyon !== symbol.toUpperCase() && (
+        /* Kendi ayraç çizgisi YOK: hemen üstündeki künye zaten bir
+           `border-t` taşıyor ve ikisi on piksel arayla iki çizgi olarak
+           çiziliyordu. Not o künyenin devamı, ayrı bir bölüm değil. */
+        <p className="mt-1.5 text-small leading-relaxed text-muted">
+          {t.stock.analystListingNote.replace("{code}", kotasyon)}
+        </p>
+      )}
     </div>
   );
 }
 
 /**
- * Geçmiş bilançolar — dönem başına EPS beklentisi/gerçekleşeni ve sapma;
+ * Geçmiş bilançolar — dönem başına sapma, sonra onu üreten EPS beklentisi
+ * ve gerçekleşeni;
  * gelir verisi varsa ikinci satırda okunur. Açıklanmamış (gelecek) kayıtlar
  * bu listede yer almaz, onlar Yaklaşan Bilanço kartındadır.
  */
@@ -1207,14 +1297,21 @@ async function PastEarnings({
             <th className="hidden px-3 py-2.5 font-medium md:table-cell">
               {t.earnings.reportDate}
             </th>
+            {/* SAPMA EPS SÜTUNLARININ ÖNÜNDE. Tablo bir aritmetik defteri
+                değil, bir karne: okuyucunun aradığı cevap "tutturdu mu",
+                girdi sayıları değil. Sapma en sağdayken göz her satırda dört
+                sayı geçip sonuca varıyordu; artık dönemin hemen yanında
+                duruyor ve isteyen sağdaki iki sütunda nasıl hesaplandığını
+                görüyor. Dar ekranda rapor tarihi sütunu gizli, yani sıra
+                doğrudan Dönem → Sapma oluyor. */}
+            <th className="px-2 py-2.5 text-right font-medium sm:px-3">
+              {t.earnings.surprise}
+            </th>
             <th className="px-2 py-2.5 text-right font-medium sm:px-3">
               EPS · {t.calendar.forecast}
             </th>
             <th className="px-2 py-2.5 text-right font-medium sm:px-3">
               EPS · {t.calendar.actual}
-            </th>
-            <th className="px-2 py-2.5 text-right font-medium sm:px-3">
-              {t.earnings.surprise}
             </th>
             {hasRevenue && (
               <>
@@ -1257,6 +1354,13 @@ async function PastEarnings({
                 <td className="numeral hidden px-3 py-2.5 text-sm text-body md:table-cell">
                   {formatEtDateShort(row.reportDate, locale)}
                 </td>
+                <td className="px-2 py-2.5 text-right sm:px-3">
+                  {surprise !== null ? (
+                    <ChangePill changePct={surprise} locale={locale} size="sm" />
+                  ) : (
+                    <span className="text-xs text-muted">—</span>
+                  )}
+                </td>
                 <td className="numeral px-2 py-2.5 text-right text-muted sm:px-3">
                   {row.epsEstimate !== null
                     ? formatPrice(row.epsEstimate, locale, { currency: true })
@@ -1266,13 +1370,6 @@ async function PastEarnings({
                   {row.epsActual !== null
                     ? formatPrice(row.epsActual, locale, { currency: true })
                     : "—"}
-                </td>
-                <td className="px-2 py-2.5 text-right sm:px-3">
-                  {surprise !== null ? (
-                    <ChangePill changePct={surprise} locale={locale} size="sm" />
-                  ) : (
-                    <span className="text-xs text-muted">—</span>
-                  )}
                 </td>
                 {hasRevenue && (
                   <>

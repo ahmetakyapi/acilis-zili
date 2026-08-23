@@ -119,14 +119,20 @@ export function BriefSwitch({
        karne dokusu); uzun metin için daha da geçerli. Accent kenarlık
        kalıyor — bültenin günün başyazısı olduğu oradan belli. */
     <section className="rounded-xl border border-primary-faint bg-surface-solid p-5">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-        <Kicker tone="primary">{labels.titles[period]}</Kicker>
-        {brief && (
-          <span className="numeral ml-auto text-tiny text-muted">
-            {brief.stamp}
-          </span>
-        )}
-      </div>
+      {/* ÜST SATIR TEK SIRA. Künye, sekmeler ve arşiv bağlantısı üç ayrı
+          satırdaydı (sekmeler ortada, arşiv bağlantısı metnin en dibinde) ve
+          manşete gelene kadar üç kademe iniliyordu — bültenin başyazı olduğu
+          hissi orada kayboluyordu. Üçü de birer DENETİM ya da künye, yani
+          aynı satırın işi; manşet doğrudan onların altında başlıyor. Sarma
+          `flex-wrap` ile: dar ekranda denetim grubu kendi satırına iner. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1">
+          <Kicker tone="primary">{labels.titles[period]}</Kicker>
+          {brief && (
+            <span className="numeral text-tiny text-muted">{brief.stamp}</span>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
 
       {/* Sekmeler metnin hemen üstünde: hangi dönemi okuduğun, okumaya
           başlamadan önce görünür. Dokunma hedefi 34px — 12.5px'lik iki
@@ -143,7 +149,7 @@ export function BriefSwitch({
       <div
         role="tablist"
         aria-label={labels.periodLabel}
-        className="mt-3 inline-flex overflow-hidden rounded-md border border-primary-faint text-small"
+        className="inline-flex overflow-hidden rounded-md border border-primary-faint text-small"
       >
         {(["daily", "weekly"] as const).map((key) => (
           <button
@@ -169,6 +175,19 @@ export function BriefSwitch({
             {labels.tabs[key]}
           </button>
         ))}
+          </div>
+          {brief && (
+            <Link
+              href={brief.archiveHref}
+              /* Dokunma hedefi 40px: negatif margin dolguyu emiyor, yani
+                 hedef büyürken üst satırın yüksekliği değişmiyor. */
+              className="-my-2 inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-8"
+            >
+              {labels.archive}
+              <span aria-hidden>→</span>
+            </Link>
+          )}
+        </div>
       </div>
 
       <div
@@ -205,22 +224,24 @@ export function BriefSwitch({
               </p>
             )}
 
-            {/* Okunur bant: başlık ve gövde panelin tam genişliğine
-                yayılıyordu ve geniş ekranda satır boyu 110 karakteri
-                aşıyordu. Aynı sorun analiz sayfasında çok sütunla çözülmüştü;
-                bültende listeler ve ara başlıklar olduğu için sütun değil
-                ÖLÇÜ sınırı doğru araç. */}
-            <p className="mt-3 max-w-[74ch] text-base font-medium leading-[25px] text-strong">
+            {/* MANŞET GERÇEKTEN MANŞET. Cümle 13 puntoda, gövde metniyle
+                neredeyse aynı ağırlıkta duruyordu: bültenin en önemli satırı
+                bir giriş paragrafı gibi okunuyor, blok da günün başyazısı
+                değil bir bilgi kutusu gibi görünüyordu. Ölçek zaten var —
+                mercek manşetiyle (`LeadStory`) aynı basamak ve aynı üç kural:
+                `max-w-[34ch]` satırı iki-üç satıra indiriyor (manşetler
+                ortalama 55 karakter ve tek satırda 900 piksele uzuyordu),
+                `text-balance` o satırları eşitleyip yetim kelime bırakmıyor,
+                `w-fit` de `.display-ink` maskesi için ŞART — blok genişliğinde
+                bırakılırsa degrade harflerin bittiği yerde değil kabın
+                bittiği yerde biter.
+
+                Okunur bant gövdede kalıyor: gövde ölçü sınırını kendi
+                taşıyor, manşetin sınırı ondan dar. */}
+            <h2 className="display-ink mt-3.5 w-fit max-w-[34ch] text-balance text-heading font-bold leading-[1.16] tracking-[-0.03em] sm:text-subdisplay">
               {brief.headline}
-            </p>
+            </h2>
             {body}
-            <Link
-              href={brief.archiveHref}
-              className="mt-4 inline-flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
-            >
-              {labels.archive}
-              <span aria-hidden>→</span>
-            </Link>
           </>
         ) : (
           <EmptyState title={labels.empty[period]} />

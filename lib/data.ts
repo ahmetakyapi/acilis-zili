@@ -1207,6 +1207,28 @@ export async function countStories(): Promise<number> {
 }
 
 /**
+ * Tek bir sembolün yazı sayısı — hisse sayfasındaki mercek bloğu için.
+ *
+ * `countStoriesBySymbol()` DEĞİL: o, filtre çipleri için tablonun tamamını
+ * çekip bellekte grupluyor ve burada tek bir sayı isteniyor.
+ *
+ * `count(distinct slug)` ZORUNLU — tablo dil başına bir satır tutuyor, ham
+ * `count(*)` her yazıyı iki kez sayar.
+ */
+export async function countStoriesForSymbol(symbol: string): Promise<number> {
+  try {
+    const [row] = await db
+      .select({ total: sql<number>`count(distinct ${stories.slug})::int` })
+      .from(stories)
+      .where(sql`${stories.symbols} @> ${JSON.stringify([symbol])}::jsonb`);
+    return row?.total ?? 0;
+  } catch (error) {
+    yutuldu("countStoriesForSymbol", error);
+    return 0;
+  }
+}
+
+/**
  * Arşivdeki sembollerin yazı sayısı — filtre çipleri için.
  *
  * ÇİPLER YÜKLENEN PENCEREDEN DEĞİL ARŞİVİN TAMAMINDAN sayılıyor. Sayım
