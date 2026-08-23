@@ -151,17 +151,19 @@ async function ArchiveBoard({
   const currentAnchor = period === "weekly" ? weekAnchor(today) : today;
 
   return (
-    /* OKUMA KOLONU SİTENİN KENDİ ÖLÇÜSÜNDE (720px) VE ORTALANMIŞ.
-       Kolon `1fr` idi, yani geniş ekranda 1050 piksele kadar açılıyordu;
-       metnin kendisi 62ch ile sınırlı olduğu için panelin sağ yarısı boş
-       kalıyordu — okuyucu bir kutunun içinde yarım kalmış bir metin
-       görüyordu. Doğru yer paragrafın değil KABIN sınırlanması: mercek ve
-       rehber yazıları zaten `mx-auto w-full max-w-[720px]` ile aynı şeyi
-       yapıyor ve gövde o kabı dolduruyor. Bülten sitenin üçüncü okuma
-       yüzeyi, aynı ölçüyü konuşmalı. `justify-center` ikiliyi sayfanın
-       ortasında tutuyor; sola yaslansaydı boşluk bu sefer arşivin sağında
-       birikirdi. */
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,720px)_300px] lg:justify-center">
+    /* KOLON TAM GENİŞLİKTE, DARALTILMIYOR.
+       Ölçü sınırı iki kez denendi ve ikisi de geri alındı; ikisinin de
+       gerekçesi burada dursun ki üçüncü bir deneme yapılmasın.
+       Önce paragrafa `max-w-[62ch]` konmuştu: kolon 1050 piksele açılıyor,
+       metin 530'da kalıyor ve panelin sağ yarısı boş duruyordu — kutunun
+       içinde yarım kalmış bir metin.
+       Sonra kolonun kendisi 720'ye çekilip ortalandı (mercek ve rehber
+       yazılarının ölçüsü). Bu sefer boşluk panelin içinden çıkıp sayfanın
+       iki yanına geçti: okuma paneli ve arşiv ortada bir ada gibi duruyor,
+       üstündeki tam genişlik başlıkla hizasız kalıyordu.
+       Sayfa tam genişlikte akıyor ve gövde kabı dolduruyor. Uzun satırın
+       bedeli, iki yanı boş duran bir sayfadan az. */
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       {/* ---- Seçili kayıt ---- */}
       <article className="rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 sm:p-7">
         {brief ? (
@@ -341,7 +343,7 @@ async function ArchiveBoard({
  */
 function ArchiveSkeleton() {
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,720px)_300px] lg:justify-center">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <Skeleton className="h-[80svh] w-full rounded-xl" />
       <Skeleton className="h-[420px] w-full rounded-(--radius-xl) lg:h-[80svh]" />
     </div>

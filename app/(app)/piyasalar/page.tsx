@@ -419,7 +419,12 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                duruyor ve ikisi birden sayfanın ilk ekranını yiyordu; altında
                piyasa genişliği ve gün içi hareket var, onlar daha yukarıdan
                başlamalı. Bilgi kaybı yok, yalnızca boşluk. */
-            <div key={value.key} className="rounded-lg border border-line bg-surface px-3.5 py-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-5 sm:py-3">
+            <div key={value.key} className="rounded-lg border border-line bg-surface px-3.5 py-3 text-center sm:rounded-none sm:border-0 sm:bg-transparent sm:px-5 sm:py-3">
+              {/* SÜTUN ORTALANMIŞ. Etiket, sayı ve değişim sola dayalıydı ve
+                  üçü de farklı genişlikte olduğu için sağ kenarları tırtıklı
+                  bir merdiven çiziyordu: dört sütun yan yana durunca kart
+                  hizasız görünüyordu. Ortalanınca üçü tek bir eksende
+                  yığılıyor. */}
               <p className="text-nano font-semibold uppercase tracking-[0.08em] text-muted">
                 {value.label}
               </p>
@@ -436,7 +441,10 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
               {delta !== null && Math.abs(delta) > 0.001 && (
                 <p
                   className={cn(
-                    "numeral mt-0.5 text-tiny font-semibold",
+                    /* Değişim bir kademe büyük (11 → 12): sütunun taşıdığı
+                       ikinci bilgi bu ve künye puntosunda kalınca seviyenin
+                       altında kayboluyordu. */
+                    "numeral mt-0.5 text-small font-semibold",
                     delta > 0 ? "text-up" : "text-down",
                   )}
                 >

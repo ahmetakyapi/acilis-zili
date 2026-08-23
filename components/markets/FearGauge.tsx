@@ -105,7 +105,9 @@ export async function FearGauge({
         {delta !== null && delta !== 0 && (
           <span
             className={cn(
-              "numeral mb-1 text-small font-semibold",
+              /* Değişim bir kademe büyük (12 → 13): kartın yanındaki
+                 tahvil kartında da aynı ölçü, iki kart aynı dili konuşuyor. */
+              "numeral mb-1 text-base font-semibold",
               // Yükselen VIX gerginlik demek — burada "yukarı" iyi haber
               // değil, o yüzden yön rengi hisse sözlüğünün tersine kurulu.
               delta > 0 ? "text-down" : "text-up",
