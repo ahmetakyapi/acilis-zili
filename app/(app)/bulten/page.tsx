@@ -151,7 +151,17 @@ async function ArchiveBoard({
   const currentAnchor = period === "weekly" ? weekAnchor(today) : today;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+    /* OKUMA KOLONU SİTENİN KENDİ ÖLÇÜSÜNDE (720px) VE ORTALANMIŞ.
+       Kolon `1fr` idi, yani geniş ekranda 1050 piksele kadar açılıyordu;
+       metnin kendisi 62ch ile sınırlı olduğu için panelin sağ yarısı boş
+       kalıyordu — okuyucu bir kutunun içinde yarım kalmış bir metin
+       görüyordu. Doğru yer paragrafın değil KABIN sınırlanması: mercek ve
+       rehber yazıları zaten `mx-auto w-full max-w-[720px]` ile aynı şeyi
+       yapıyor ve gövde o kabı dolduruyor. Bülten sitenin üçüncü okuma
+       yüzeyi, aynı ölçüyü konuşmalı. `justify-center` ikiliyi sayfanın
+       ortasında tutuyor; sola yaslansaydı boşluk bu sefer arşivin sağında
+       birikirdi. */
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,720px)_300px] lg:justify-center">
       {/* ---- Seçili kayıt ---- */}
       <article className="rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 sm:p-7">
         {brief ? (
@@ -331,7 +341,7 @@ async function ArchiveBoard({
  */
 function ArchiveSkeleton() {
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,720px)_300px] lg:justify-center">
       <Skeleton className="h-[80svh] w-full rounded-xl" />
       <Skeleton className="h-[420px] w-full rounded-(--radius-xl) lg:h-[80svh]" />
     </div>

@@ -104,18 +104,18 @@ function BriefLines({
      ortalama harften geniş: 74ch denendiğinde gerçek satırlar 83–93 karakter
      çıktı, sayılarak doğrulandı.
 
-     KART SÜRÜMÜNDE ÖLÇÜ SINIRI YOK — DENENDİ VE GERİ ALINDI. Kart ana
-     kolona taşınınca satırlar 130 karaktere çıktı ve sayfadaki 62ch sınırı
-     karta da uygulandı. Ekranda karşılığı kötü çıktı: sayfa sürümü kendi
-     kabına oturuyor, kart ise 1240 piksellik tam genişlikte bir blok ve
-     metin sol yarıda kalınca sağda avuç içi kadar boş bir alan açılıyor.
-     Sınırı boşluğu kapatacak kadar genişletmek de anlamsız — 150ch pratikte
-     sınırsız demek. Uzun satırın bedeli, yarısı boş duran bir karttan az.
-     Kazanç puntoda alındı: 13/20 denetim ve tablo basamağıydı, 14/22 okuma
-     basamağı. Sayfa sürümü sınırını koruyor; tam metin orada okunuyor. */
+     ÖLÇÜYÜ PARAGRAF DEĞİL KAP TAŞIR. İki sürümde de `max-w` denendi ve
+     ikisinde de aynı sonucu verdi: metin kabın sol yarısında kalıyor, sağ
+     yarı boş duruyor ve blok yarım kalmış gibi okunuyor. Doğru yer kabın
+     kendisi — mercek ve rehber yazıları da `max-w-[720px]` bir kapla
+     çalışıyor ve gövde o kabı dolduruyor; bülten sayfası artık aynı ölçüde.
+     Ana sayfadaki kart 1240 piksellik tam genişlikte bir blok ve
+     daraltılamıyor, orada uzun satırın bedeli yarısı boş duran bir karttan
+     az. Kazanç ikisinde de puntoda alındı: 13/20 denetim ve tablo
+     basamağıydı, 14/22 (kart) ve 14/25 (sayfa) okuma basamağı. */
   const text =
     size === "page"
-      ? "max-w-[62ch] text-read leading-[25px]"
+      ? "text-read leading-[25px]"
       : "text-read leading-[22px]";
 
   return (

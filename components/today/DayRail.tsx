@@ -127,13 +127,20 @@ const RAIL_SPAN = RAIL_END - RAIL_START;
    piksele çıkarıldı — rozet yukarıda duruyor, bağ görünüyor, ikisi ayrı iki
    nesne olarak okunuyor. Eksen bir kademe aşağı alınarak yer açıldı;
    altındaki her ölçü eksene bağlı türediği için tek sabit yetiyor. */
+/* BANTLAR ARASINDA NEFES PAYI VAR.
+   Sınır etiketi bloğu (KAPANIŞ + iki saat) 6'da başlayıp ~40'ta bitiyordu ve
+   "şimdi" rozeti tam 40'ta başlıyordu: aralarında sıfır piksel vardı. Çoğu
+   akşam ikisi AYNI x'e denk geliyor (22:30 "şimdi", 23:00 kapanış) ve o
+   zaman iki bant birbirine yapışık iki satır gibi okunuyordu — rozet
+   saatlerin devamı sanılıyordu. Sekiz piksel ayrı duruyorlar; eksen de
+   birlikte indi, tırnak uzunluğu türetilmiş olduğu için aynı kaldı. */
 const BOUND_TOP = 6;
-const NOW_TOP = 40;
-const AXIS_TOP = 76;
+const NOW_TOP = 48;
+const AXIS_TOP = 84;
 const AXIS_HEIGHT = 6;
 const AXIS_CENTER = AXIS_TOP + AXIS_HEIGHT / 2;
 const EDGE_TOP = AXIS_TOP + AXIS_HEIGHT + 5;
-const CHIP_TOP = 116;
+const CHIP_TOP = 124;
 /** Kartlar metin etiketlerinden geniş; çakışma eşiği de ona göre geniş. */
 const COLLISION_MINUTES = 160;
 /** Alt bant en fazla üç kademe; daha derini şeridi bir duvara çeviriyor. */

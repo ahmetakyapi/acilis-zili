@@ -5,10 +5,12 @@ import {
   AreaSeries,
   CandlestickSeries,
   createChart,
+  TickMarkType,
   type IChartApi,
   type ISeriesApi,
   type MouseEventParams,
   type SeriesType,
+  type Time,
   type UTCTimestamp,
 } from "lightweight-charts";
 import type { ChartResponse } from "@/app/api/chart/[symbol]/route";
@@ -256,6 +258,19 @@ export function PriceChart({
     const grid = cssVar("--chart-grid");
 
     const intlLocale = locale === "tr" ? "tr-TR" : "en-US";
+    /* Eksen biçimlendiricileri — barlar gösterim dilimine kaydırıldığı için
+       ikisi de UTC okur. */
+    const eksenSaati = new Intl.DateTimeFormat(intlLocale, {
+      timeZone: "UTC",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const eksenGunu = new Intl.DateTimeFormat(intlLocale, {
+      timeZone: "UTC",
+      day: "numeric",
+      month: "short",
+    });
     const dateFormatter = new Intl.DateTimeFormat(intlLocale, {
       timeZone: "UTC", // barlar zaten gösterim dilimine kaydırıldı
       day: "numeric",
@@ -284,6 +299,25 @@ export function PriceChart({
         borderVisible: false,
         timeVisible: intraday,
         secondsVisible: false,
+        /* GÜN SINIRI ETİKETİ. Kütüphanenin varsayılanı, bir işaret yeni bir
+           güne geçtiğinde çıplak ayın gününü basıyor: eksende "21:00" ile
+           "02:00" arasında tek başına bir "22" duruyordu ve o sayı ne saat
+           ne yüzde ne fiyat — hiçbir komşusuyla aynı dilde değil.
+           Gün sınırı gerçek ve gösterilmeli: TR'de gün içi grafik 11:00'de
+           açılıp ertesi sabah 03:00'te bitiyor, yani eksenin ortasında
+           takvim günü değişiyor. Ama sayının kendisi değil, TARİH yazılmalı.
+           Saat işaretleri de aynı elden geçiyor ki iki biçim aynı yerelden
+           gelsin.
+           `null` dönmek kütüphanenin kendi biçimlendiricisine düşmek demek —
+           gün üstü aralıklarda (1A, 3A, 1Y…) varsayılan davranış korunuyor. */
+        tickMarkFormatter: (time: Time, tickMarkType: TickMarkType) => {
+          if (!intraday || typeof time !== "number") return null;
+          const at = new Date(time * 1000);
+          return tickMarkType === TickMarkType.Time ||
+            tickMarkType === TickMarkType.TimeWithSeconds
+            ? eksenSaati.format(at)
+            : eksenGunu.format(at);
+        },
       },
       /* İmleç arayüz kromudur, yön göstergesi değil: çizgi ve tarih etiketi
          accent maviyle çizilir. Eskiden etiket serinin yön rengini (yeşil/
