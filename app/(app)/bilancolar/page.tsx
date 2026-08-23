@@ -13,6 +13,7 @@ import {
 } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n } from "@/lib/i18n";
+import { formatEtDateCompact } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -87,13 +88,28 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
         title={t.earnings.title}
         subtitle={t.earnings.subtitleLong}
         action={
-          <Segment>
-            {(["hafta", "ay"] as const).map((key) => (
-              <SegmentItem key={key} href={rangeHref(key)} active={range === key}>
-                {key === "hafta" ? t.earnings.rangeWeek : t.earnings.rangeMonth}
-              </SegmentItem>
-            ))}
-          </Segment>
+          /* Anahtarın ALTINDA kapsadığı gerçek aralık. "Hafta" ve "Ay" birer
+             söz; sayfanın gösterdiği pencere `bugün → bugün + 6|29`.
+             Üçüncü günün başlığına inen okuyucu listenin nerede biteceğini
+             sona kadar kaydırarak öğreniyordu. İki tarih de hesaplanmış
+             değişkenlerde duruyor, uydurma yok. */
+          <div className="flex flex-col items-start gap-1.5 sm:items-end">
+            <Segment>
+              {(["hafta", "ay"] as const).map((key) => (
+                <SegmentItem
+                  key={key}
+                  href={rangeHref(key)}
+                  active={range === key}
+                >
+                  {key === "hafta" ? t.earnings.rangeWeek : t.earnings.rangeMonth}
+                </SegmentItem>
+              ))}
+            </Segment>
+            <p className="figure text-tiny text-muted">
+              {formatEtDateCompact(today, locale)} –{" "}
+              {formatEtDateCompact(rangeEnd, locale)}
+            </p>
+          </div>
         }
       />
 

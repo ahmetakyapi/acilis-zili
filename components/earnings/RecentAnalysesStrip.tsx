@@ -40,7 +40,15 @@ export async function RecentAnalysesStrip({
   return (
     <section
       aria-label={t.analysis.recentStrip}
-      className="flex flex-col gap-2.5 rounded-lg border border-line bg-surface-solid px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+      /* SAYFANIN TEK ACCENT YÜZEYİ. Takvim sayfasında dokuz-on nötr kutu alt
+         alta akıyor ve hiçbirinin önceliği yok; oysa burada OKUNACAK tek şey
+         bu şerit, gerisi bakılacak veri. Depoda bu tam olarak belgeli bir
+         desen (ana sayfadaki mercek bloğu, arşiv manşeti, bilanço karar
+         şeridi hepsi aynı yüzeyi kullanıyor) ve glow değil: iki accent
+         wash'ın ton farkı. Sayfada rakip bir accent yüzey yok — cesaret bir
+         kez harcanıyor. Çipler kendi `bg-surface-solid` zemininde kalıyor,
+         yani bu yüzeyin bir kademe ÖNÜNDE duruyorlar. */
+      className="flex flex-col gap-2.5 rounded-lg border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
     >
       <div className="flex shrink-0 items-center justify-between gap-3">
         <p className="plate whitespace-nowrap tracking-[0.09em]">
@@ -87,6 +95,11 @@ export async function RecentAnalysesStrip({
                   )}
                 >
                   {verdictLabel(verdict, t)} · {row.score}
+                </span>
+                {/* Hangi çeyreğin okunduğu yazılı değildi: `periodLabel`
+                    sorguda zaten geliyor ve sunumda atılıyordu. */}
+                <span className="figure whitespace-nowrap text-nano text-muted">
+                  {row.periodLabel}
                 </span>
               </Link>
             </li>

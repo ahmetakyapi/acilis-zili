@@ -25,6 +25,7 @@ import {
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
+import { formatEtDateCompact } from "@/lib/utils";
 
 /* Künye yoktu. Sayfa okuyucunun KENDİ listesine bağlı, yani herkese aynı
    şeyi göstermiyor: dizine girmesi anlamsız, `robots` kapalı. Başlık yine
@@ -94,12 +95,14 @@ export default async function WatchedEarningsPage(
 
   const userSymbols = await getUserSymbols(session.user.id);
   const watchSet = new Set(userSymbols);
+  /* Değişkene çıkarıldı: aralığın bitiş günü başlıktaki künyede de yazıyor. */
+  const rangeEnd = addEtDays(today, RANGES[range]);
 
   const [analyses, allRows] = await Promise.all([
     userSymbols.length > 0
       ? getAnalyses(locale, { limit: 20, symbols: userSymbols })
       : Promise.resolve([]),
-    getEarningsBetween(today, addEtDays(today, RANGES[range])),
+    getEarningsBetween(today, rangeEnd),
   ]);
 
   const rows = allRows.filter((row) => watchSet.has(row.symbol));
@@ -127,13 +130,25 @@ export default async function WatchedEarningsPage(
         title={t.analysis.title}
         subtitle={t.analysis.subtitle}
         action={
-          <Segment>
-            {(["hafta", "ay"] as const).map((key) => (
-              <SegmentItem key={key} href={rangeHref(key)} active={range === key}>
-                {key === "hafta" ? t.earnings.rangeWeek : t.earnings.rangeMonth}
-              </SegmentItem>
-            ))}
-          </Segment>
+          /* Aralık künyesi takvim sekmesindekiyle aynı — iki ekran aynı
+             segmenti kullanıyor, biri söyleyip öteki susmamalı. */
+          <div className="flex flex-col items-start gap-1.5 sm:items-end">
+            <Segment>
+              {(["hafta", "ay"] as const).map((key) => (
+                <SegmentItem
+                  key={key}
+                  href={rangeHref(key)}
+                  active={range === key}
+                >
+                  {key === "hafta" ? t.earnings.rangeWeek : t.earnings.rangeMonth}
+                </SegmentItem>
+              ))}
+            </Segment>
+            <p className="figure text-tiny text-muted">
+              {formatEtDateCompact(today, locale)} –{" "}
+              {formatEtDateCompact(rangeEnd, locale)}
+            </p>
+          </div>
         }
       />
 

@@ -42,13 +42,21 @@ export function verdictTextClass(verdict: VerdictKey): string {
       : "text-primary";
 }
 
-/** Rozet zemini — aynı üçlü, yıkanmış hâli. */
+/**
+ * Rozet zemini — aynı üçlü, yıkanmış hâli.
+ *
+ * "Tut" dalı `text-primary` değil `text-primary-ink` kullanıyor: accent
+ * mürekkep accent wash'ın üstünde açık temada 4,14:1 çıkıyor ve AA eşiğinin
+ * (4,5) altında kalıyordu. `--primary-ink` tam bu çift için var ve koyu
+ * temada zaten `--primary`e eşit, yani orada hiçbir şey değişmiyor. Depoda
+ * wash + `text-primary` çifti başka hiçbir yerde kalmadı.
+ */
 export function verdictPillClass(verdict: VerdictKey): string {
   return verdict === "buy"
     ? "bg-up-wash text-up"
     : verdict === "sell"
       ? "bg-down-wash text-down"
-      : "bg-primary-wash text-primary";
+      : "bg-primary-wash text-primary-ink";
 }
 
 /** SVG halkasının `stroke` değeri — CSS değişkeni doğrudan verilir. */

@@ -9,7 +9,7 @@ import {
 import { CalendarPlus } from "@phosphor-icons/react/dist/ssr";
 import { eventExplainer } from "@/lib/event-explainers";
 import { getEventsBetween } from "@/lib/data";
-import { addEtDays, todayEt } from "@/lib/market-hours";
+import { addEtDays, daysBetweenEt, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { timePair, zoneTag } from "@/lib/session-clock";
 import {
@@ -40,22 +40,6 @@ export const generateMetadata = pageMetadata({
 
 const VIEWS = ["day", "week", "month"] as const;
 type View = (typeof VIEWS)[number];
-
-/**
- * İki ET takvim günü arasındaki fark.
- *
- * Tarihler "YYYY-MM-DD" düz gün damgası — saat taşımıyorlar. UTC gece
- * yarısından kurup çıkarmak yaz saati kaymasından etkilenmez; yerel
- * `new Date(str)` ile kurmak, DST sınırını geçen aralıklarda bir gün
- * kaydırabilirdi.
- */
-function daysBetweenEt(from: string, to: string) {
-  const parse = (value: string) => {
-    const [year, month, day] = value.split("-").map(Number);
-    return Date.UTC(year, month - 1, day);
-  };
-  return Math.round((parse(to) - parse(from)) / 86_400_000);
-}
 
 /** "Bugün" · "Yarın" · "3 gün sonra" */
 function relativeDayLabel(away: number, t: Dictionary) {

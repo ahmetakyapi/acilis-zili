@@ -403,3 +403,23 @@ export function candleTtlSeconds(
   }
   return 43200; // 12 saat — günlük barlar gün içinde değişmez
 }
+
+/**
+ * İki ET takvim günü arasındaki fark.
+ *
+ * Tarihler "YYYY-MM-DD" düz gün damgası — saat taşımıyorlar. UTC gece
+ * yarısından kurup çıkarmak yaz saati kaymasından etkilenmez; yerel
+ * `new Date(str)` ile kurmak, DST sınırını geçen aralıklarda bir gün
+ * kaydırabilirdi.
+ *
+ * Ekonomik takvim sayfasında yerel bir kopyası vardı; bilanço takvimi de
+ * aynı hesabı isteyince buraya taşındı — `addEtDays` ve `todayEt` ile aynı
+ * aile, ikinci kopya bırakmaya gerek yok.
+ */
+export function daysBetweenEt(from: string, to: string) {
+  const parse = (value: string) => {
+    const [year, month, day] = value.split("-").map(Number);
+    return Date.UTC(year, month - 1, day);
+  };
+  return Math.round((parse(to) - parse(from)) / 86_400_000);
+}

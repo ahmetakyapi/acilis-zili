@@ -9,6 +9,7 @@ import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { AlsoReporting } from "@/components/earnings/AlsoReporting";
 import type { AnalysisBadge as AnalysisBadgeData, SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import { daysBetweenEt } from "@/lib/market-hours";
 import { isSpotlight } from "@/lib/spotlight";
 import { cn, formatMoneyCompact, formatEtDateLong, formatPrice, plural } from "@/lib/utils";
 import type { EarningsRow } from "@/lib/schema";
@@ -66,8 +67,9 @@ export function timingOf(
  * bakışta söylemiyordu. Artık başlık sayının ÜSTÜNDE, kalan ölçüler de
  * etiket–değer çiftleri hâlinde okunuyor.
  *
- * Manşet sayı gelir beklentisidir; o yoksa EPS beklentisi öne çıkar —
- * kartın en büyük yerinde bir "—" görmek bilgi taşımıyordu.
+ * Manşet sayı gelir beklentisidir; o yoksa EPS beklentisi, o da yoksa
+ * piyasa değeri öne çıkar — kartın en büyük yerinde bir "—" ya da hiçbir şey
+ * görmek bilgi taşımıyordu. Sıranın gerekçesi aşağıda.
  */
 type Figure = { label: string; value: string };
 
@@ -82,14 +84,25 @@ function cardFigures(
     row.revenueEstimate !== null && row.revenueEstimate !== undefined
       ? {
           label: short ? t.earnings.revenueShort : t.earnings.revenueEstimate,
-          value: formatMoneyCompact(row.revenueEstimate, locale),
+          /* Kod geçiliyor: sağlayıcının bilanço tahminleri şirketin ANA
+             borsasının parasında geliyor (PDD'nin gelir beklentisi CNY,
+             AFYA BRL). Bugün sızmıyor — piyasa değeri USD dışında null
+             olduğu için o semboller görünür katmanlara giremiyor — ama
+             `SPOTLIGHT_SYMBOLS` listesine USD dışı tek bir ad eklendiği gün
+             kart sessizce dolar basardı. */
+          value: formatMoneyCompact(row.revenueEstimate, locale, meta?.currency),
         }
       : null;
   const eps =
     row.epsEstimate !== null && row.epsEstimate !== undefined
       ? {
           label: short ? "EPS" : t.earnings.epsEstimate,
-          value: formatPrice(row.epsEstimate, locale, { currency: true }),
+          /* `|| true`, `?? true` DEĞİL: `symbols.currency` boş dize
+             olabiliyor ve `{ currency: "" }` `formatPrice` içinde
+             "para birimi yok" dalına düşüp çıplak sayı bastırıyordu. */
+          value: formatPrice(row.epsEstimate, locale, {
+            currency: meta?.currency || true,
+          }),
         }
       : null;
   // Gün içindeki sıralama zaten piyasa değerine göre; sayı da görünsün.
@@ -100,10 +113,26 @@ function cardFigures(
       }
     : null;
 
-  const headline = revenue ?? eps;
-  const rest = [revenue, eps, cap].filter(
+  /* MANŞET SIRASI: gelir beklentisi → EPS beklentisi → piyasa değeri.
+     Üçüncü basamak sonradan eklendi. Beklentisi olmayan şirkette (takvimde
+     çoğunluk: kapalı uçlu fonlar, mikro ölçekli şirketler) manşet boş
+     kalıyordu ve kart `h-full` ile satırın en uzun kartı kadar uzadığı için
+     ortasında avuç içi kadar bir boşluk açılıyordu — dört kartlık bir
+     satırda üçü böyleydi. Piyasa değeri o boşluğu dolduran uydurma bir sayı
+     değil: kartın zaten bastığı, sıralamayı belirleyen ölçü. Etiketi
+     sayının üstünde durduğu için hangi kartta ne yazdığı karışmıyor. */
+  const headline = revenue ?? eps ?? cap;
+  const tumu = [revenue, eps, cap].filter(
     (figure): figure is Figure => figure !== null && figure !== headline,
   );
+  /* MİNİ KARTTA EN FAZLA BİR İKİNCİL ÖLÇÜ. Yığın karttan karta 0–2 satır
+     arasında oynuyordu ve kart `h-full` ile satırın en uzun kartı kadar
+     uzadığı için fark, kısa kartların altında boşluk olarak birikiyordu.
+     Düşen ölçü hemen her zaman piyasa değeri: sıralamayı zaten o belirliyor
+     (kartın satırdaki yeri onu söylüyor), tam hâli hero satırında ve hisse
+     sayfasında duruyor. Hero satırı üçünü de basmaya devam ediyor — orada
+     yer var ve günün en büyük iki bilançosu karşılaştırılmak isteniyor. */
+  const rest = short ? tumu.slice(0, 1) : tumu;
   return { headline, rest };
 }
 
@@ -140,7 +169,7 @@ export function EarningsCalendar({
         <DaySection
           key={date}
           date={date}
-          isToday={date === today}
+          today={today}
           rows={dayRows}
           meta={meta}
           watchSet={watchSet}
@@ -155,7 +184,7 @@ export function EarningsCalendar({
 
 function DaySection({
   date,
-  isToday,
+  today,
   rows,
   meta,
   watchSet,
@@ -164,7 +193,7 @@ function DaySection({
   t,
 }: {
   date: string;
-  isToday: boolean;
+  today: string;
   rows: EarningsRow[];
   meta: Record<string, SymbolMeta>;
   watchSet: Set<string>;
@@ -216,6 +245,8 @@ function DaySection({
   const other = rest.filter((row) => row.hour !== "bmo" && row.hour !== "amc");
 
   const badgeOf = (row: EarningsRow) => badges[`${row.symbol}:${row.reportDate}`];
+  const away = daysBetweenEt(today, date);
+  const watched = rows.filter((row) => watchSet.has(row.symbol)).length;
 
   return (
     <section aria-label={date}>
@@ -242,15 +273,56 @@ function DaySection({
           <h2 className="text-title font-bold tracking-[-0.03em] text-strong">
             {formatEtDateLong(date, locale)}
           </h2>
-          <span className="figure text-small text-muted">
-            {rows.length}{" "}
-            {plural(rows.length, t.earnings.companyOne, t.earnings.companyMany)}
+          {/* UZAKLIK ROZETİ, YALNIZCA "BUGÜN" DEĞİL. Rozet iki şeyi birden
+              düzeltiyor.
+              Renk: eski rozet `bg-down-wash text-down` idi, yani bu üründe
+              "düşüş" demek olan kırmızı bir tarih etiketinde duruyordu.
+              Renk sözlüğü tek cümle — renk yalnızca yukarı, aşağı ve
+              etkileşim söyler; "bugün" üçüncüsü.
+              Kapsam: takvim beş gün alt alta akıyor ve ikinci günün yarın mı
+              üç gün sonra mı olduğu ancak tarih kafadan çözülerek
+              bulunuyordu. Ekonomik takvim aynı soruyu aynı rozetle çözmüş
+              durumda (`app/(app)/takvim/page.tsx`); burada da o dil
+              kullanılıyor, üçüncü bir dil icat edilmiyor — büyük harf de
+              orada yok, burada da kalktı. */}
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-nano font-bold",
+              away === 0
+                ? "bg-primary text-on-primary"
+                : "bg-surface-elevated text-soft",
+            )}
+          >
+            {away === 0
+              ? t.calendar.today
+              : away === 1
+                ? t.calendar.tomorrow
+                : `${away} ${t.calendar.daysAway}`}
           </span>
-          {isToday && (
-            <span className="rounded-full bg-down-wash px-[9px] py-[3px] text-nano font-bold tracking-[0.05em] text-down">
-              {t.earnings.today.toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
+          {/* Sayaç ve takip künyesi sağ uçta. Takip sayısı takvimin en
+              kişisel bilgisi ve yeni sorgu istemiyor — `watchSet` bileşene
+              zaten geliyor. Hepsi takipteyse basılmıyor: takip sekmesinde
+              (`/bilancolar/takip`) her satır zaten takipte ve "6 şirket ·
+              ★ 6 takipte" hiçbir şey söylemiyor. */}
+          <span className="figure ml-auto flex items-baseline gap-2 text-small text-muted">
+            <span>
+              {rows.length}{" "}
+              {plural(
+                rows.length,
+                t.earnings.companyOne,
+                t.earnings.companyMany,
+              )}
             </span>
-          )}
+            {watched > 0 && watched < rows.length && (
+              <>
+                <span aria-hidden>·</span>
+                <span className="text-primary-ink">
+                  <span aria-hidden>★ </span>
+                  {watched} {t.dayRail.watchedNote}
+                </span>
+              </>
+            )}
+          </span>
         </div>
       </div>
 
@@ -276,7 +348,9 @@ function DaySection({
                 className="absolute inset-0 rounded-lg"
               />
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                <LogoTile symbol={row.symbol} logoUrl={m?.logoUrl} size="lg" />
+                {/* Hero logosu bir basamak büyük (56px): katman farkı
+                    yalnızca puntoyla değil ölçüyle de konuşuyor. */}
+                <LogoTile symbol={row.symbol} logoUrl={m?.logoUrl} size="xl" />
                 <div className="min-w-0">
                   {/* Yıldız sembolün SOLUNDA ve sembol bloğu sabit
                       genişlikte: zamanlama çipleri kartlar arasında aynı
@@ -443,13 +517,29 @@ function DaySection({
                     aynı, okuma sırası farklı. Puntolar sonradan bir kademe
                     büyütüldü (16→18, 11→12.5): sayılar bir bakışta
                     okunmuyordu, hiyerarşi aynı kaldı. */}
-                <div className="mt-auto border-t border-line pt-[9px]">
+                {/* ÖLÇÜ BLOĞU KİMLİĞİN HEMEN ALTINDA, kartın dibinde DEĞİL.
+                    `mt-auto` bloğu alt kenara yapıştırıyordu ve kart
+                    `h-full` ile satırın en uzun kartı kadar uzadığı için
+                    aradaki fark kartın ORTASINDA bir delik olarak açılıyordu:
+                    üç ölçüsü olan bir kartın yanındaki tek ölçülü kartta
+                    ~90 piksellik boşluk vardı. Blok yukarı alınınca üstündeki
+                    her şey sabit yükseklikte olduğu için ayraç çizgisi
+                    satırdaki bütün kartlarda AYNI hizaya düşüyor — artan yer
+                    de deliğe değil, kartın altına, dolgunun devamı gibi
+                    kalıyor. */}
+                <div className="border-t border-line pt-[9px]">
+                  {/* Profili gelmemiş bir spotlight sembolünde üç ölçünün
+                      üçü de boş olabiliyor; şerit o zaman çıplak bir ayraç
+                      çizgisi olarak kalıyordu. */}
+                  {!headline && rest.length === 0 && (
+                    <p className="text-small text-muted">{t.common.noData}</p>
+                  )}
                   {headline && (
                     <>
                       <p className="plate text-nano tracking-[0.08em]">
                         {headline.label}
                       </p>
-                      <p className="figure mt-[3px] text-lead font-bold leading-none tracking-[-0.03em] text-strong">
+                      <p className="figure mt-[3px] truncate text-lead font-bold leading-none tracking-[-0.03em] text-strong">
                         {headline.value}
                       </p>
                     </>
