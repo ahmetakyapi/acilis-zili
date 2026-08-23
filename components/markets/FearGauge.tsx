@@ -72,7 +72,11 @@ export async function FearGauge({
   const fill = Math.min(100, Math.max(2, (level / SCALE_MAX) * 100));
 
   return (
-    <Panel className="flex flex-col gap-3.5 px-4 py-4 sm:px-5">
+    /* Blok aralıkları ve dolgu birer kademe dar. Kart, yanındaki tahvil
+       kartıyla aynı ızgara satırında ve ikisi birlikte sayfanın ilk ekranını
+       kaplıyordu; altındaki piyasa genişliği şeridi daha yukarıdan başlasın.
+       Hiçbir satır kaldırılmadı — yalnızca boşluk. */
+    <Panel className="flex flex-col gap-3 px-4 py-3.5 sm:px-5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         {/* Plaka başlık — ölçü paneli. Yanındaki tahvil kartı ve ana
             sayfadaki karşılığı da plaka taşıyor; rol ayrımının gerekçesi
@@ -144,7 +148,7 @@ export async function FearGauge({
         </p>
       </div>
 
-      <p className="text-small leading-[19px] text-muted">{labels.hint}</p>
+      <p className="text-small leading-[18px] text-muted">{labels.hint}</p>
 
       <Link
         href="/rehber/volatilite"

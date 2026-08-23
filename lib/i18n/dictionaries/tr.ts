@@ -516,6 +516,10 @@ const tr = {
     strongSell: "Güçlü Sat",
     /* Analist kartının dip künyesi — ölçünün altındaki mikro künye,
        başlık değil: cümle düzeninde kalıyor. */
+    /* "Al yönünde": Güçlü Al + Al toplamı. "Alım tarafı" YAZILMADI —
+       Türkçe finans dilinde o ifade kurumsal yatırımcıyı (buy-side)
+       çağrıştırıyor, burada kastedilen tavsiyenin yönü. */
+    analystLeaning: "Al yönünde",
     analystOne: "analist",
     analystMany: "analist",
     analystListingNote:

@@ -1086,6 +1086,7 @@ async function AnalystCard({
   if (total === 0) return <DataError message={t.common.noData} />;
 
   const kotasyon = latest.symbol?.toUpperCase();
+  const alimTarafi = latest.strongBuy + latest.buy;
 
   const segments = [
     { label: t.stock.strongBuy, value: latest.strongBuy, cls: "bg-up" },
@@ -1158,11 +1159,25 @@ async function AnalystCard({
           </div>
         ))}
       </dl>
-      {/* Künye artık yalnızca ayı değil KAÇ ANALİST olduğunu da söylüyor:
-          dağılımın ağırlığı sayıya bağlı ve "3 analistin 2'si Al diyor" ile
-          "54 analistin 37'si Al diyor" aynı şey değil. */}
+      {/* KÜNYE ÜÇ ŞEYİ SÖYLÜYOR: özet, kapsam, dönem.
+          Başta yalnızca ay yazıyordu. Analist sayısı eklendi, çünkü
+          dağılımın ağırlığı sayıya bağlı — "3 analistin 2'si Al diyor" ile
+          "54 analistin 37'si Al diyor" aynı şey değil. Sonra başa tek bir
+          okuma geldi: beş kovayı kafada toplamak okuyucunun işi olmamalı.
+
+          BU SAYI AĞIRLIKLANDIRILMIŞ BİR PUAN DEĞİL, İKİ TOPLAMA. Güçlü Al
+          ile Al'ın toplamının paya oranı; çubuğun yeşil kısmının yüzdesi.
+          Kasıtlı olarak 1-5 ortalaması ya da 0-100 puan değil: o iki biçim
+          "Güçlü Al, Al'dan tam bir basamak yukarıdadır" gibi bizim
+          uydurduğumuz bir ağırlıklandırma taşır ve 0-100 olanı sitenin
+          KENDİ bilanço analizi puanıyla (AL · 75 rozetleri) karışırdı —
+          okuyucu analist konsensüsünü bizim hükmümüz sanardı. */}
       <p className="numeral mt-2 border-t border-line-soft pt-2.5 text-small text-muted">
-        {total} {plural(total, t.stock.analystOne, t.stock.analystMany)} ·{" "}
+        <span className="font-bold text-strong">
+          {formatPercentPlain((alimTarafi / total) * 100, locale, 0)}
+        </span>{" "}
+        {t.stock.analystLeaning} · {total}{" "}
+        {plural(total, t.stock.analystOne, t.stock.analystMany)} ·{" "}
         {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
           month: "long",
           year: "numeric",

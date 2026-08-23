@@ -415,7 +415,11 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
               ? value.latest - value.prev
               : null;
           return (
-            <div key={value.key} className="rounded-lg border border-line bg-surface px-3.5 py-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-5 sm:py-4">
+            /* Dikey dolgu bir kademe dar (sm:py-3). Bu iki kart yan yana
+               duruyor ve ikisi birden sayfanın ilk ekranını yiyordu; altında
+               piyasa genişliği ve gün içi hareket var, onlar daha yukarıdan
+               başlamalı. Bilgi kaybı yok, yalnızca boşluk. */
+            <div key={value.key} className="rounded-lg border border-line bg-surface px-3.5 py-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-5 sm:py-3">
               <p className="text-nano font-semibold uppercase tracking-[0.08em] text-muted">
                 {value.label}
               </p>
@@ -426,13 +430,13 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
               <PercentReading
                 value={value.latest}
                 locale={locale}
-                className="tote mt-1 block text-xl sm:text-2xl"
+                className="tote mt-0.5 block text-xl sm:text-2xl"
                 signClassName="mx-1 text-sm text-soft"
               />
               {delta !== null && Math.abs(delta) > 0.001 && (
                 <p
                   className={cn(
-                    "numeral mt-1 text-tiny font-semibold",
+                    "numeral mt-0.5 text-tiny font-semibold",
                     delta > 0 ? "text-up" : "text-down",
                   )}
                 >
@@ -447,7 +451,7 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
       {/* Getiri eğrisi — sayının ne anlama geldiği burada yazar */}
       {spread !== null && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-line-soft px-4 py-3 sm:px-5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line-soft px-4 py-2.5 sm:px-5">
           <span className="text-xs font-semibold text-strong">
             {t.markets.curveTitle}
           </span>
@@ -463,7 +467,7 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
           <span className="text-xs text-soft">
             {inverted ? t.markets.curveInverted : t.markets.curveNormal}
           </span>
-          <span className="basis-full text-tiny leading-relaxed text-muted">
+          <span className="basis-full text-tiny leading-[17px] text-muted">
             {t.markets.curveHint}
           </span>
         </div>

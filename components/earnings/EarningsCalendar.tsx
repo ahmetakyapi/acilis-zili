@@ -464,7 +464,12 @@ function DaySection({
                   className="absolute inset-0 rounded-lg"
                 />
                 <div className="flex items-start gap-2">
-                  <LogoTile symbol={row.symbol} logoUrl={m?.logoUrl} />
+                  {/* Mini kart logosu da bir basamak büyük (44px). Izgara
+                      dar ekranda bile kart başına ~150 piksel bırakıyor,
+                      geniş ekranda 225-340; 32 piksellik karo o kutuda
+                      küçük kalıyordu. Hero satırı 56'da kaldığı için iki
+                      katman arasındaki ölçü farkı sürüyor. */}
+                  <LogoTile symbol={row.symbol} logoUrl={m?.logoUrl} size="lg" />
                   <TimingChip tone={timing.tone} size="sm" className="ml-auto">
                     {timing.short}
                   </TimingChip>

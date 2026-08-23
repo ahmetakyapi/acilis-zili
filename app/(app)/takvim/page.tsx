@@ -224,12 +224,18 @@ export default async function CalendarPage(
             >
               <div
                 className={cn(
-                  "flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-line-soft px-4 py-3 sm:px-5",
+                  "flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-line-soft px-4 py-3.5 sm:px-5",
                   isToday && "bg-primary-tint",
                 )}
               >
                 <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                  <h2 className="text-sm font-semibold text-strong">
+                  {/* GÜN BAŞLIĞI KARDEŞ EKRANLA AYNI ÖLÇÜDE. 13 puntoydu ve
+                      altındaki olay başlığından (13) ayrılmıyordu: panel
+                      başlığı ile içeriği aynı ağırlıkta durunca sayfa
+                      "kutu, kutu, kutu" diye okunuyordu. Bilanço takvimi
+                      aynı soruyu (önümüzdeki günlerde ne var) aynı ölçüyle
+                      açıyor; iki takvim ekranı aynı dili konuşmalı. */}
+                  <h2 className="text-title font-bold tracking-[-0.03em] text-strong">
                     {formatEtDateLong(date, locale)}
                   </h2>
                   {/* Uzaklık rozeti: takvimde asıl soru "ne zaman", ve
@@ -275,27 +281,57 @@ export default async function CalendarPage(
                   return (
                     <li
                       key={event.id}
-                      className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 px-4 py-3 sm:flex-nowrap sm:px-5"
+                      className="flex flex-wrap items-start gap-x-3 gap-y-2 px-4 py-3.5 sm:flex-nowrap sm:px-5"
                     >
-                      <span className="w-16 shrink-0">
+                      {/* SAAT ARTIK BİR KARO. Satırın solunda çıplak iki
+                          satır metin duruyordu ve satırların hiçbir görsel
+                          çapası yoktu: sayfa gri metin şeritlerinden bir
+                          duvara dönüşüyordu. Bu ekranın anlattığı şey bir
+                          PROGRAM ve programın çapası saattir — bilanço
+                          takviminde o çapa şirket logosu, burada saat.
+                          Fotoğraf ya da uydurma bir ikon eklenmiyor; var
+                          olan bilgi kendi kutusuna oturuyor. */}
+                      <span
+                        className={cn(
+                          "shrink-0 rounded-md px-2 py-1.5 text-center",
+                          event.importance === "high"
+                            ? "bg-primary-wash"
+                            : "bg-surface-elevated",
+                        )}
+                      >
                         {times ? (
                           <>
-                            <span className="numeral block text-sm font-semibold leading-tight text-strong">
+                            <span
+                              className={cn(
+                                "numeral block text-base font-bold leading-tight",
+                                event.importance === "high"
+                                  ? "text-primary-ink"
+                                  : "text-strong",
+                              )}
+                            >
                               {times.primary}
                             </span>
-                            <span className="numeral block text-tiny leading-tight text-muted">
+                            <span className="numeral block whitespace-nowrap text-nano leading-tight text-muted">
                               {times.secondary} {tags.secondary}
                             </span>
                           </>
                         ) : (
-                          <span className="numeral text-sm text-muted">—</span>
+                          <span className="numeral block text-base font-bold leading-tight text-muted">
+                            —
+                          </span>
                         )}
                       </span>
 
-                      <ImpactDots
-                        importance={event.importance}
-                        label={impactLabel[event.importance] ?? event.importance}
-                      />
+                      {/* Noktalar başlığın İLK SATIRIYLA hizalı: kendi
+                          yükseklikleri 6 piksel, satır `items-start`
+                          olduğu için hizalanmadan bırakılırsa metnin
+                          üstünde asılı kalıyorlar. */}
+                      <span className="flex h-[19px] shrink-0 items-center">
+                        <ImpactDots
+                          importance={event.importance}
+                          label={impactLabel[event.importance] ?? event.importance}
+                        />
+                      </span>
 
                       {/* Başlık + açıklama. Satır eskiden yalnızca başlıktı
                           ve "TÜFE — Temmuz Verisi", TÜFE'nin ne olduğunu
@@ -320,26 +356,33 @@ export default async function CalendarPage(
                             {eventExplainer(event.slug, locale)}
                           </span>
                         )}
-                        {/* Takvime ekleme YALNIZCA yüksek etkili olaylarda.
-                            Her satıra düğme koymak takvimi bir düğme
-                            listesine çeviriyordu; okuyucunun kendi takvimine
-                            geçirmek isteyeceği şey zaten bu üç beş olay. */}
-                        {event.importance === "high" && (
-                          <a
-                            href={`/api/takvim?tip=olay&slug=${event.slug}`}
-                            className="-my-1 mt-1 inline-flex w-fit min-h-8 items-center gap-1 rounded-full border border-line px-2 py-1 text-nano font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary"
-                          >
-                            <CalendarPlus weight="duotone" size={13} aria-hidden />
-                            {t.earnings.addToCalendar}
-                          </a>
-                        )}
                       </span>
 
                       {/* Değerler künye olarak, etiketi yanında. Eski hâlde
                           üç sabit sütun vardı ve açıklanmamış olaylarda
                           üçü de tire basıyordu: satırın yarısı boş tireydi.
                           Şimdi yalnızca DOLU olan yazılıyor. */}
-                      <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1 sm:shrink-0 sm:justify-end">
+                      {/* Sağ uç: ölçüler ve takvim düğmesi. Düğme metin
+                          sütununun İÇİNDE, açıklamanın altında duruyordu ve
+                          satırın altına tek başına asılı kalan bir hap gibi
+                          görünüyordu — üstelik açıklanmamış olaylarda satırın
+                          sağ yarısı bomboştu. İkisi aynı yerde: ölçü varsa
+                          ölçüler, yoksa düğme sağ ucu tutuyor.
+
+                          Takvime ekleme YALNIZCA yüksek etkili olaylarda.
+                          Her satıra düğme koymak takvimi bir düğme listesine
+                          çeviriyordu; okuyucunun kendi takvimine geçirmek
+                          isteyeceği şey zaten bu üç beş olay. */}
+                      <span className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:shrink-0 sm:justify-end">
+                        {event.importance === "high" && (
+                          <a
+                            href={`/api/takvim?tip=olay&slug=${event.slug}`}
+                            className="-my-1 inline-flex min-h-8 w-fit items-center gap-1 rounded-full border border-line px-2.5 py-1 text-nano font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary"
+                          >
+                            <CalendarPlus weight="duotone" size={13} aria-hidden />
+                            {t.earnings.addToCalendar}
+                          </a>
+                        )}
                         {event.actual !== null && (
                           <ValueChip
                             label={t.calendar.actual}

@@ -45,7 +45,14 @@ function bulletsSinceLastHeading(lines: string[]): number {
 function renderInline(text: string, keyPrefix: string) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
     part.startsWith("**") && part.endsWith("**") ? (
-      <strong key={`${keyPrefix}-${i}`} className="font-semibold text-strong">
+      /* ALT BAŞLIK AĞIRLIKLA AYRIŞIYOR, PUNTOYLA DEĞİL. Bülten
+         paragrafları "Haftanın asıl sınavı cuma günü Wyoming'de:" gibi
+         kalın bir giriş ibaresiyle açılıyor ve bu ibare işlevi gereği bir
+         alt başlık. Ama paragrafın İÇİNDE, aynı satırda devam ediyor:
+         puntosu büyütülseydi ilk satırın taban çizgisi bozulur, metin
+         basamaklı görünürdü. Ayrım bu yüzden 700 ağırlıkla kuruluyor;
+         gövde de bir basamak büyüdüğü için ibare zaten daha iri. */
+      <strong key={`${keyPrefix}-${i}`} className="font-bold text-strong">
         {part.slice(2, -2)}
       </strong>
     ) : (
@@ -88,10 +95,25 @@ function BriefLines({
      gerçek satırlar 83–93 karakter çıktı, sayılarak doğrulandı. 62ch
      sitenin başka okuma yüzeylerinde kullanılan ölçüyle de aynı.
      Kart sürümünde (`size` başka) kolon zaten dar, sınıra gerek yok. */
+  /* OKUMA ÖLÇÜSÜ VE PUNTO — İKİ YÜZEYDE DE.
+     Bülten sayfası tam genişlikte akıyordu: ölçüldü, 1280 pikselde satırlar
+     ~117, 1440 pikselde ~134 karakter. Rahat okuma ölçüsü 50–75 karakter;
+     90'ın üstünde göz satır sonundan satır başına dönerken yerini kaybediyor
+     ve bülten sitenin ASIL okuma yüzeyi. Ölçü `ch` ile veriliyor (punto
+     değişirse birlikte değişiyor) ama `ch` RAKAM genişliğini ölçüyor ve
+     ortalama harften geniş: 74ch denendiğinde gerçek satırlar 83–93 karakter
+     çıktı, sayılarak doğrulandı.
+
+     KART SÜRÜMÜ DE AYNI SINIRA GİRDİ. Uzun süre sınırsızdı ve gerekçesi
+     doğruydu: kart 376 piksellik yan kolonda duruyordu, sınıra ihtiyaç
+     yoktu. Kart ana kolona taşınınca o gerekçe düştü — satırlar 130
+     karaktere çıktı. Punto da 13/20'den 14/22'ye geldi; 13 basamağı denetim
+     ve tablo metni için var, bu blok ise sayfanın en uzun düz metni. Sayfa
+     sürümünün tek farkı satır arası: orada 25, kartta 22. */
   const text =
     size === "page"
       ? "max-w-[62ch] text-read leading-[25px]"
-      : "text-base leading-5";
+      : "max-w-[62ch] text-read leading-[22px]";
 
   return (
     <div
@@ -112,7 +134,9 @@ function BriefLines({
                 "display-ink display-ink-tight w-fit font-bold tracking-[-0.02em] text-strong",
                 // İlk başlık üstten boşluk almaz; sonrakiler bölümleri ayırır.
                 index > 0 && (size === "page" ? "mt-3" : "mt-1.5"),
-                size === "page" ? "text-lead" : "text-base",
+                /* İki yüzeyde de aynı basamak: gövde 14 punto, başlık 16.
+                   Kartta 13'tü ve gövdeyle aynı boya gelmişti. */
+                "text-lead",
               )}
             >
               {heading}
@@ -158,8 +182,14 @@ function BriefLines({
  * olarak "dün ne oldu" ile açılıp ikinci paragrafta mekanizmayı anlatıyor ve
  * üçüncüde günün ikinci başlığına geçiyor. İkide kesmek, okuyucuyu tek bir
  * hikâyenin ortasında bırakıyordu.
+ *
+ * SONRA DÖRDE. Kart ana kolona taşındı ve manşet manşet ölçüsüne çıktı; blok
+ * artık sayfanın başyazısı gibi duruyor ama açıkta kalan metin o hissi
+ * karşılamıyordu. Dördüncü paragraf tipik bültende günün ikinci başlığını
+ * tamamlıyor. Beşe çıkarmak sınırı anlamsızlaştırırdı — kart hâlâ bir GİRİŞ,
+ * metnin kendisi değil.
  */
-const OPEN_LINES = 3;
+const OPEN_LINES = 4;
 
 export function BriefBody({
   markdown,

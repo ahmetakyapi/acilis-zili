@@ -418,6 +418,7 @@ const en: typeof tr = {
     hold: "Hold",
     sell: "Sell",
     strongSell: "Strong Sell",
+    analystLeaning: "lean Buy",
     analystOne: "analyst",
     analystMany: "analysts",
     analystListingNote:

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
+import { ScoreRing } from "@/components/earnings/ScoreRing";
 import {
   analysisHref,
   verdictLabel,
   verdictOf,
-  verdictPillClass,
   verdictTextClass,
 } from "@/lib/analysis";
 import { getAnalyses } from "@/lib/data";
@@ -52,36 +52,41 @@ export async function SymbolAnalyses({
               <Link
                 href={analysisHref(row.symbol, row.period)}
                 prefetch={false}
-                className="flex flex-col gap-2 border-t border-line px-4 py-3.5 transition-colors hover:bg-primary-tint sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+                className="flex items-start gap-3.5 border-t border-line px-4 py-4 transition-colors hover:bg-primary-tint sm:gap-4 sm:px-5"
               >
-                <span className="flex shrink-0 items-center gap-2.5">
-                  <span
-                    className={cn(
-                      "figure rounded-full px-2.5 py-[3px] text-tiny font-bold",
-                      verdictPillClass(verdict),
-                    )}
-                  >
-                    {row.score}
+                {/* PUAN HALKASI, DÜZ HAP DEĞİL. Satırın tamamı tek bir metin
+                    şerididir: 12 puntoluk bir hap, üç kelime ve kırpılmış bir
+                    cümle — panelin taşıdığı asıl bilgi (bu çeyrek kaç puan
+                    aldı) hiçbir görsel ağırlık taşımıyordu. Halka bu sitede
+                    zaten var ve analiz sayfasının kendi dili
+                    (`components/earnings/ScoreRing.tsx`); panel de artık onu
+                    konuşuyor. Renk tek başına bırakılmıyor — yanında AL/TUT/
+                    SAT yazısı duruyor. */}
+                <ScoreRing score={row.score} verdict={verdict} size={44} />
+                <span className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                    <span className="text-read font-bold text-strong">
+                      {row.periodLabel}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-small font-bold",
+                        verdictTextClass(verdict),
+                      )}
+                    >
+                      {verdictLabel(verdict, t)}
+                    </span>
+                    <span className="numeral ml-auto shrink-0 text-tiny text-muted">
+                      {formatEtDateLong(row.reportDate, locale)}
+                    </span>
                   </span>
-                  <span
-                    className={cn(
-                      "w-9 text-small font-bold",
-                      verdictTextClass(verdict),
-                    )}
-                  >
-                    {verdictLabel(verdict, t)}
+                  {/* Manşet iki satıra kadar açılıyor. Tek satıra kırpılmıştı
+                      ve cümlenin yarısı "…" ile bitiyordu: dizin olsun diye
+                      okunmaz hâle gelmişti. İki satır, hem cümleyi
+                      tamamlıyor hem de satıra gövde kazandırıyor. */}
+                  <span className="line-clamp-2 text-small leading-[17px] text-body">
+                    {row.headline}
                   </span>
-                  <span className="text-base font-bold text-strong">
-                    {row.periodLabel}
-                  </span>
-                </span>
-                {/* Manşet cümlesi tek satır: panel bir okuma listesi değil,
-                    hangi çeyreğin okunduğunu gösteren bir dizin. */}
-                <span className="min-w-0 flex-1 truncate text-small text-body">
-                  {row.headline}
-                </span>
-                <span className="shrink-0 text-tiny text-muted sm:text-right">
-                  {formatEtDateLong(row.reportDate, locale)}
                 </span>
               </Link>
             </li>
