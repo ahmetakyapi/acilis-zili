@@ -62,19 +62,31 @@ export async function SymbolAnalyses({
                     (`components/earnings/ScoreRing.tsx`); panel de artık onu
                     konuşuyor. Renk tek başına bırakılmıyor — yanında AL/TUT/
                     SAT yazısı duruyor. */}
-                <ScoreRing score={row.score} verdict={verdict} size={44} />
+                {/* KARAR SÖZÜ PUANIN ALTINDA. Başlık satırında duruyordu ve
+                    orada dönem etiketiyle yarışıyordu; oysa "93" ile "AL"
+                    aynı hükmün iki yazımı — biri sayı, öteki kelime. Yan
+                    yana değil alt alta durunca tek bir işaret oluyorlar ve
+                    başlık satırı yalnızca döneme kalıyor. Renk yine tek
+                    başına konuşmuyor: kelime halkanın altında yazılı. */}
+                <span className="flex shrink-0 flex-col items-center gap-1">
+                  <ScoreRing score={row.score} verdict={verdict} size={44} />
+                  <span
+                    className={cn(
+                      /* `uppercase` YOK: sözlükteki değerler zaten
+                         büyük harfli ("AL"/"TUT"/"SAT") ve CSS ile
+                         ikinci kez büyütmek Türkçede i→I tuzağını
+                         davet ederdi. */
+                      "text-nano font-bold tracking-[0.06em]",
+                      verdictTextClass(verdict),
+                    )}
+                  >
+                    {verdictLabel(verdict, t)}
+                  </span>
+                </span>
                 <span className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
                     <span className="text-read font-bold text-strong">
                       {row.periodLabel}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-small font-bold",
-                        verdictTextClass(verdict),
-                      )}
-                    >
-                      {verdictLabel(verdict, t)}
                     </span>
                     <span className="numeral ml-auto shrink-0 text-tiny text-muted">
                       {formatEtDateLong(row.reportDate, locale)}

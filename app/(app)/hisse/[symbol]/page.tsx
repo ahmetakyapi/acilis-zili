@@ -22,6 +22,7 @@ import {
   Panel,
   PanelHeader,
   PanelLink,
+  PanelSkeleton,
   Skeleton,
 } from "@/components/ui/primitives";
 import { db } from "@/lib/db";
@@ -290,14 +291,13 @@ export default async function StockPage(
           </Suspense>
         </Panel>
 
-        <Panel>
-          <PanelHeader title={t.stock.analysts} />
-          {/* Beş satır: kart beş tavsiye kovası basıyor. Yedek üç satır
-              ayırıyordu, o sayı kartın iki sütunlu eski düzeninden kalmıştı. */}
-          <Suspense fallback={<ListSkeleton rows={5} />}>
-            <AnalystCard symbol={symbol} locale={locale} t={t} />
-          </Suspense>
-        </Panel>
+        {/* PANEL VE BAŞLIK KARTIN İÇİNDE. Başlığın sağındaki rozet
+            sağlayıcıdan gelen veriden hesaplanıyor, yani başlık akışın
+            dışında kalamıyor. Yedek de artık başlık şeridini çiziyor —
+            beş satır, kartın gerçekte bastığı kova sayısı. */}
+        <Suspense fallback={<PanelSkeleton rows={5} footer />}>
+          <AnalystCard symbol={symbol} locale={locale} t={t} />
+        </Suspense>
 
         <Suspense
           fallback={
@@ -1075,15 +1075,20 @@ async function AnalystCard({
   locale: Locale;
   t: Dictionary;
 }) {
+  const bos = (
+    <Panel>
+      <PanelHeader title={t.stock.analysts} />
+      <DataError message={t.common.noData} />
+    </Panel>
+  );
+
   const result = await getRecommendations(symbol);
-  if (!result.ok) {
-    return <DataError message={t.common.noData} />;
-  }
+  if (!result.ok) return bos;
 
   const latest = result.data[0];
   const total =
     latest.strongBuy + latest.buy + latest.hold + latest.sell + latest.strongSell;
-  if (total === 0) return <DataError message={t.common.noData} />;
+  if (total === 0) return bos;
 
   const kotasyon = latest.symbol?.toUpperCase();
   const alimTarafi = latest.strongBuy + latest.buy;
@@ -1116,7 +1121,23 @@ async function AnalystCard({
      yeniden açılıyor; bir kartın sorunu iki karta dağıtılmış oluyor. Aynı
      gerekçe kaynak damgası ve "alım tarafı payı" manşeti için de geçerli. */
   return (
-    <div className="px-4 py-3 sm:px-5">
+    <Panel>
+      <PanelHeader
+        title={t.stock.analysts}
+        /* ROZET BAŞLIĞIN SAĞINDA. Sayı bir süre dip künyesinde durdu ve
+           orada künyenin ilk kelimesiydi: kartın tek cümlelik cevabı, en son
+           okunan satırda kalıyordu. Başlığın yanında ilk bakışta okunuyor.
+           Yeşil, altındaki çubuğun yeşil kısmının payı olduğu için — rozet
+           o oranın sayısı, ayrı bir hüküm değil. Renk tek taşıyıcı da değil:
+           yön kelimesi rozetin içinde yazılı. */
+        action={
+          <span className="numeral shrink-0 whitespace-nowrap rounded-full bg-up-wash px-2 py-0.5 text-tiny font-bold text-up">
+            {formatPercentPlain((alimTarafi / total) * 100, locale, 0)}{" "}
+            {t.stock.analystLeaning}
+          </span>
+        }
+      />
+      <div className="px-4 pb-3 sm:px-5">
       {/* Çubuk ARIA'dan gizli: altındaki liste aynı veriyi zaten okunabilir
           hâlde taşıyor, ikisi birden okununca sayılar iki kez geçiyordu.
           Dilim sınırını renk değil boşluk çiziyor — komşu basamaklar aynı
@@ -1173,11 +1194,7 @@ async function AnalystCard({
           KENDİ bilanço analizi puanıyla (AL · 75 rozetleri) karışırdı —
           okuyucu analist konsensüsünü bizim hükmümüz sanardı. */}
       <p className="numeral mt-2 border-t border-line-soft pt-2.5 text-small text-muted">
-        <span className="font-bold text-strong">
-          {formatPercentPlain((alimTarafi / total) * 100, locale, 0)}
-        </span>{" "}
-        {t.stock.analystLeaning} · {total}{" "}
-        {plural(total, t.stock.analystOne, t.stock.analystMany)} ·{" "}
+        {total} {plural(total, t.stock.analystOne, t.stock.analystMany)} ·{" "}
         {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
           month: "long",
           year: "numeric",
@@ -1201,7 +1218,8 @@ async function AnalystCard({
           {t.stock.analystListingNote.replace("{code}", kotasyon)}
         </p>
       )}
-    </div>
+      </div>
+    </Panel>
   );
 }
 
@@ -1319,13 +1337,20 @@ async function PastEarnings({
                 duruyor ve isteyen sağdaki iki sütunda nasıl hesaplandığını
                 görüyor. Dar ekranda rapor tarihi sütunu gizli, yani sıra
                 doğrudan Dönem → Sapma oluyor. */}
-            <th className="px-2 py-2.5 text-right font-medium sm:px-3">
+            {/* SAYI SÜTUNLARI ORTALI, SAĞA DAYALI DEĞİL. Tablo hisse
+                sayfasının tam genişliğinde (1400 piksele kadar) ve beş
+                sütunlu: sağa dayandığında her sayı kendi sütununun uzak
+                kenarına yapışıyor, sütunlar arasında avuç içi kadar boşluk
+                kalıyor ve göz dönem ile değer arasında uzun bir yol
+                yürüyordu. Hane hizası burada bedeli küçük bir ödün: en fazla
+                sekiz satır var ve değerler aynı büyüklük sınıfında. */}
+            <th className="px-2 py-2.5 text-center font-medium sm:px-3">
               {t.earnings.surprise}
             </th>
-            <th className="px-2 py-2.5 text-right font-medium sm:px-3">
+            <th className="px-2 py-2.5 text-center font-medium sm:px-3">
               EPS · {t.calendar.forecast}
             </th>
-            <th className="px-2 py-2.5 text-right font-medium sm:px-3">
+            <th className="px-2 py-2.5 text-center font-medium sm:px-3">
               EPS · {t.calendar.actual}
             </th>
             {hasRevenue && (
@@ -1334,10 +1359,10 @@ async function PastEarnings({
                     tutturup geliri ıskalayan şirketi de satar. Beklenen ve
                     gerçekleşen ayrı kolonlarda durur ki karşılaştırılabilsin.
                     Dar ekranda ikisi de gizlenir — tablo kaydırmadan sığar. */}
-                <th className="hidden px-2 py-2.5 text-right font-medium sm:px-3 lg:table-cell">
+                <th className="hidden px-2 py-2.5 text-center font-medium sm:px-3 lg:table-cell">
                   {t.earnings.revenueShort} · {t.calendar.forecast}
                 </th>
-                <th className="hidden px-4 py-2.5 text-right font-medium sm:table-cell sm:px-5">
+                <th className="hidden px-4 py-2.5 text-center font-medium sm:table-cell sm:px-5">
                   {t.earnings.revenueShort} · {t.calendar.actual}
                 </th>
               </>
@@ -1369,31 +1394,31 @@ async function PastEarnings({
                 <td className="numeral hidden px-3 py-2.5 text-sm text-body md:table-cell">
                   {formatEtDateShort(row.reportDate, locale)}
                 </td>
-                <td className="px-2 py-2.5 text-right sm:px-3">
+                <td className="px-2 py-2.5 text-center sm:px-3">
                   {surprise !== null ? (
                     <ChangePill changePct={surprise} locale={locale} size="sm" />
                   ) : (
                     <span className="text-xs text-muted">—</span>
                   )}
                 </td>
-                <td className="numeral px-2 py-2.5 text-right text-muted sm:px-3">
+                <td className="numeral px-2 py-2.5 text-center text-muted sm:px-3">
                   {row.epsEstimate !== null
                     ? formatPrice(row.epsEstimate, locale, { currency: true })
                     : "—"}
                 </td>
-                <td className="numeral px-2 py-2.5 text-right font-semibold text-strong sm:px-3">
+                <td className="numeral px-2 py-2.5 text-center font-semibold text-strong sm:px-3">
                   {row.epsActual !== null
                     ? formatPrice(row.epsActual, locale, { currency: true })
                     : "—"}
                 </td>
                 {hasRevenue && (
                   <>
-                    <td className="numeral hidden px-2 py-2.5 text-right text-muted sm:px-3 lg:table-cell">
+                    <td className="numeral hidden px-2 py-2.5 text-center text-muted sm:px-3 lg:table-cell">
                       {row.revenueEstimate !== null
                         ? formatMoneyCompact(row.revenueEstimate, locale)
                         : "—"}
                     </td>
-                    <td className="numeral hidden px-4 py-2.5 text-right text-body sm:table-cell sm:px-5">
+                    <td className="numeral hidden px-4 py-2.5 text-center text-body sm:table-cell sm:px-5">
                       {row.revenueActual !== null ? (
                         <span className="font-semibold text-strong">
                           {formatMoneyCompact(row.revenueActual, locale)}
