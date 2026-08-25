@@ -373,7 +373,12 @@ export default async function CalendarPage(
                           Her satıra düğme koymak takvimi bir düğme listesine
                           çeviriyordu; okuyucunun kendi takvimine geçirmek
                           isteyeceği şey zaten bu üç beş olay. */}
-                      <span className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:shrink-0 sm:justify-end">
+                      {/* Dar ekranda KENDİ SATIRINDA (`basis-full`). Aynı
+                          satırda kalınca metin sütununa ~190 piksel kalıyor
+                          ve olay başlığı iki-üç satıra kırılıyordu: satırın
+                          taşıdığı asıl bilgi sıkışıp yanındaki düğmeye yer
+                          açıyordu. Geniş ekranda eskisi gibi sağ uçta. */}
+                      <span className="flex basis-full flex-wrap items-center gap-x-3 gap-y-1 pl-[76px] sm:basis-auto sm:shrink-0 sm:justify-end sm:pl-0">
                         {event.importance === "high" && (
                           <a
                             href={`/api/takvim?tip=olay&slug=${event.slug}`}

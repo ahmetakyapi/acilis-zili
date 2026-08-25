@@ -1362,6 +1362,7 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
               <AnalysisBadge badge={badge} t={t} size="sm" />
             ) : (
               <TimingChip
+                wide
                 tone={row.hour === "bmo" ? "pre" : row.hour === "amc" ? "post" : "neutral"}
               >
                 {row.hour ? (hourLabel[row.hour] ?? t.earnings.timeUnknown) : t.earnings.timeUnknown}
@@ -2063,13 +2064,17 @@ async function StoriesSpotlight({
         prefetch={false}
         className="group block border-t border-primary-faint px-4 py-5 transition-colors hover:bg-primary-tint sm:px-5"
       >
-        {/* DOM SIRASI METİN ÖNCE, GÖRÜNÜM MOBİLDE EĞRİ ÖNCE.
-            `flex-col-reverse` ikisini birden veriyor: ekran okuyucu manşeti
-            önce okuyor, telefonda ise sayfayı kaydıran kişi önce grafiği
-            görüyor — ölçü kartlarıyla dolu bir ekranda duraklatan şey o.
-            Geniş ekranda metin solda, eğri sağda: manşet dar kolonda üç
-            satıra kırılıyor, geniş kolonda bir bakışta okunuyor. */}
-        <div className="flex flex-col-reverse gap-5 lg:flex-row lg:items-start lg:gap-7">
+        {/* MOBİLDE ÖNCE MANŞET, SONRA GÖRSEL.
+            Bir süre tersiydi (`flex-col-reverse`): telefonda önce blok
+            görülsün, ölçü kartlarıyla dolu ekranda duraklatan şey o olsun
+            diye. Ekranda karşılığı başka çıktı — okuyucu bir kutu dolusu
+            rakamla karşılaşıp neyin rakamı olduğunu ancak altındaki başlığı
+            okuyunca anlıyordu; blok başlığın İLLÜSTRASYONU, tersi değil.
+            DOM sırası zaten metin önceydi, yani ekran okuyucu için de
+            değişen bir şey yok. Geniş ekranda metin solda, blok sağda:
+            manşet dar kolonda üç satıra kırılıyor, geniş kolonda bir
+            bakışta okunuyor. */}
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-7">
           <div className="min-w-0 flex-1">
             <p className="numeral flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-tiny text-muted">
               <span className="text-base font-semibold text-body">

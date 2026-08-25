@@ -165,7 +165,7 @@ async function ArchiveBoard({
        bedeli, iki yanı boş duran bir sayfadan az. */
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       {/* ---- Seçili kayıt ---- */}
-      <article className="rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 sm:p-7">
+      <article className="order-2 rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 sm:p-7 lg:order-1">
         {brief ? (
           <>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -250,24 +250,33 @@ async function ArchiveBoard({
         )}
       </article>
 
-      {/* ---- Arşiv listesi ---- */}
-      <Panel>
+      {/* ---- Arşiv listesi ----
+           MOBİLDE ÜSTTE VE YATAY. Geniş ekranda arşiv sağdaki kolonda,
+           bültenle birlikte görünüyor. Telefonda ise tek kolon var ve arşiv
+           bültenin ALTINDA kalıyordu: gövde ekranlarca uzun olduğu için
+           sayfayı açan okuyucu yalnızca o günün kaydını görüyor, sitede
+           başka bülten olduğunu hiç fark etmiyordu.
+           İki kopya basmak yerine aynı liste iki düzende çiziliyor: dar
+           ekranda kenardan kenara kayan bir şerit, geniş ekranda dikey
+           kolon. `order` yalnızca tek kolonda etkili — ızgara iki kolona
+           geçince kolon sırası zaten sabit. */}
+      <Panel className="order-1 lg:order-2">
         <div className="px-4 py-4 sm:px-5">
           <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
             {t.brief.archiveTitle}
           </h2>
         </div>
-        <ul className="max-h-[70dvh] overflow-y-auto">
+        <ul className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-4 sm:px-5 lg:max-h-[70dvh] lg:flex-col lg:gap-0 lg:overflow-x-visible lg:overflow-y-auto lg:px-0 lg:pb-0">
           {archive.map((row) => {
             const active = row.briefDate === selectedDate;
             return (
-              <li key={row.briefDate}>
+              <li key={row.briefDate} className="w-[15.5rem] shrink-0 lg:w-auto">
                 <Link
                   href={hrefFor({ date: row.briefDate })}
                   prefetch
                   aria-current={active ? "true" : undefined}
                   className={cn(
-                    "block border-t border-line px-4 py-3 transition-colors sm:px-5",
+                    "block h-full rounded-lg border border-line px-3 py-2.5 transition-colors lg:h-auto lg:rounded-none lg:border-0 lg:border-t lg:py-3 lg:px-5",
                     active ? "bg-primary-wash" : "hover:bg-primary-tint",
                   )}
                 >

@@ -286,11 +286,23 @@ export function TimingChip({
   tone,
   children,
   size = "md",
+  wide = false,
   className,
 }: {
   tone: TimingTone;
   children: React.ReactNode;
   size?: "sm" | "md";
+  /**
+   * Sabit genişlik — çipler ALT ALTA dizildiğinde.
+   *
+   * Listelerde her satırın çipi kendi metnine göre genişliyordu ve satırın
+   * sağ ucunda "Kapanış Sonrası" ile "Açılış Öncesi" farklı yerde bitiyordu:
+   * sekiz satırlık bir listede sağ kenar tırtıklı bir merdiven çiziyordu.
+   * Ölçü en uzun etikete göre (`Kapanış Sonrası`) ve metin ortalanıyor.
+   * Yan yana duran çiplerde (kart üstü) İSTENMEZ — orada çip kendi metni
+   * kadar yer kaplamalı.
+   */
+  wide?: boolean;
   className?: string;
 }) {
   return (
@@ -298,6 +310,7 @@ export function TimingChip({
       className={cn(
         "inline-flex shrink-0 items-center whitespace-nowrap rounded-full font-semibold",
         size === "sm" ? "px-2 py-[3px] text-nano" : "px-[9px] py-[3px] text-tiny",
+        wide && "min-w-[7rem] justify-center",
         tone === "pre" && "bg-up-wash text-up",
         tone === "post" && "bg-primary-wash text-primary-ink",
         tone === "neutral" && "bg-surface-elevated text-body",
@@ -863,9 +876,19 @@ export function FilterChip({
 }
 
 /** İki–üç seçenekli segment — Hafta/Ay, 1G/1H/1A gibi. */
+/**
+ * Aralık anahtarı — RAY + HAP.
+ *
+ * Eskiden kenarlıklı bir kutuydu ve seçili öğe o kutunun bir ucunu köşesine
+ * kadar dolduruyordu: denetim, iki hücreli minik bir tablo gibi duruyordu ve
+ * seçilinin köşeleri kabın köşelerine yapışıyordu. Şimdi denetim bir RAY
+ * (`bg-surface-elevated`, tam yuvarlak) ve seçili öğe o rayın içinde yüzen
+ * bir hap. Aynı dil sekmelerde ve tema anahtarında da var; kutuyu bırakmak
+ * denetimi kart olmaktan çıkarıp denetim yapıyor.
+ */
 export function Segment({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex overflow-hidden rounded-md border border-line text-small">
+    <span className="inline-flex gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small">
       {children}
     </span>
   );
@@ -889,7 +912,7 @@ export function SegmentItem({
         /* Dokunma hedefi 33px'ti. `FilterChip` bir denetimde 44px'e
            çıkarılmıştı ama aynı satırın öteki denetimi olan bu segment
            atlanmıştı — Hafta/Ay gibi en çok basılan seçicilerin hepsi bu. */
-        "inline-flex min-h-11 items-center px-[13px] py-[7px] transition-colors sm:min-h-9",
+        "inline-flex min-h-10 items-center justify-center rounded-full px-4 py-[7px] transition-colors sm:min-h-8",
         active
           ? "bg-primary font-semibold text-on-primary"
           : "text-body hover:text-strong",

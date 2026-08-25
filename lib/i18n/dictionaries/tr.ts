@@ -38,8 +38,8 @@ const tr = {
        olarak yanlış bilgi veriliyordu. */
     searchRateLimited: "Çok hızlı arıyorsun. {saniye} sn sonra tekrar dene.",
     searchFailed: "Arama şu an yapılamadı. Tekrar dene.",
-    searchHintMove: "gez",
-    searchHintOpen: "aç",
+    searchHintMove: "Gez",
+    searchHintOpen: "Aç",
     menu: "Menü",
     mainNav: "Ana gezinme",
     /* İki gezinme yer imi var ve ikisi de "Ana gezinme" adını
@@ -77,7 +77,7 @@ const tr = {
     less: "Daha Az",
     showAll: "Tümünü Gör",
     source: "Kaynak",
-    updated: "güncellendi",
+    updated: "Güncellendi",
     today: "Bugün",
     tomorrow: "Yarın",
     yesterday: "Dün",
@@ -128,14 +128,14 @@ const tr = {
 
   dayRail: {
     title: "Günün Seyri",
-    now: "şimdi",
+    now: "Şimdi",
     bell: "Açılış Zili",
     closingBell: "Kapanış Zili",
     // Şerit ekseninde kısa biçim kullanılır — "AÇILIŞ ZİLİ" komşu etiketlere girer.
     openShort: "Açılış",
     closeShort: "Kapanış",
-    earningsNote: "bilanço",
-    watchedNote: "takipte",
+    earningsNote: "Bilanço",
+    watchedNote: "Takipte",
     preOpen: "Açılış Öncesi Başlangıcı",
     afterClose: "Kapanış Sonrası Bitişi",
     /* Eksendeki kalın mavi bandın adı — açılış ile kapanış arası. Bandın
@@ -253,11 +253,11 @@ const tr = {
     // Gün başlığındaki uzaklık rozeti: "Bugün" · "Yarın" · "3 gün sonra"
     today: "Bugün",
     tomorrow: "Yarın",
-    daysAway: "gün sonra",
+    daysAway: "Gün Sonra",
     // Sayaç: Türkçede sayıdan sonra tekil kalır, ikisi de aynı.
-    eventOne: "olay",
-    eventMany: "olay",
-    highImpactShort: "yüksek etkili",
+    eventOne: "Olay",
+    eventMany: "Olay",
+    highImpactShort: "Yüksek Etkili",
   },
 
   earnings: {
@@ -293,8 +293,8 @@ const tr = {
        İngilizce için — "1 companies" yazıyordu. Desen `eventOne/eventMany`
        çiftinden geliyor, o zaten bu iş için vardı ama dört yere
        uygulanmamıştı. */
-    companyOne: "şirket",
-    companyMany: "şirket",
+    companyOne: "Şirket",
+    companyMany: "Şirket",
     empty: "Bu aralıkta bilanço açıklaması yok",
     marketCapShort: "PD",
     rangeWeek: "Hafta",
@@ -365,8 +365,8 @@ const tr = {
     searchPlaceholder: "Sembol veya şirket ara",
     searchEmpty: "\"{query}\" ile eşleşen analiz yok.",
     searchClear: "Aramayı Temizle",
-    resultCountOne: "{count} analiz",
-    resultCountMany: "{count} analiz",
+    resultCountOne: "{count} Analiz",
+    resultCountMany: "{count} Analiz",
     sortDate: "Tarihe Göre",
     sortScore: "Skora Göre",
     sortReaction: "Tepkiye Göre",
@@ -383,8 +383,8 @@ const tr = {
     highlights: "Öne Çıkan Metrikler",
     quarterlyRevenue: "Çeyreklik Gelir",
     /* Birim sütunların üstünde altı kez tekrar etmesin diye başlıkta. */
-    unitBillionUsd: "milyar $",
-    unitMillionUsd: "milyon $",
+    unitBillionUsd: "Milyar $",
+    unitMillionUsd: "Milyon $",
     legendActual: "Gerçekleşen",
     legendProjected: "Şirket Öngörüsü",
     guidanceTitle: "{period} Şirket Öngörüsü",
@@ -428,16 +428,16 @@ const tr = {
     /* Kayıttan gelen ölçülerin penceresi. Küçük harf çünkü künye, başlık
        değil. "analiz günü" denmedi: okuyucu analizin ne zaman yazıldığını
        bilmiyor, bilanço gününü ise kartın hemen üstünde okuyor. */
-    asOfReport: "bilanço günü",
-    asOfToday: "bugün",
+    asOfReport: "Bilanço Günü",
+    asOfToday: "Bugün",
     peRatio: "F/K",
     pegRatio: "PEG",
     netMargin: "Net Kâr Marjı",
     /* Ölçünün penceresi — künye, başlık değil; cümle düzeninde kalıyor.
        "TTM" yazılmadı: sitenin okuru Türkçe okuyor ve kısaltma burada
        kazanç sağlamıyor. */
-    trailing12m: "son 12 ay",
-    afterHours: "seans sonrası",
+    trailing12m: "Son 12 Ay",
+    afterHours: "Seans Sonrası",
     nextEarnings: "Sonraki Bilanço",
     earningsOf: "{period} Bilançosu",
     readMinutes: "{count} Dakikalık Okuma",
@@ -516,12 +516,13 @@ const tr = {
     strongSell: "Güçlü Sat",
     /* Analist kartının dip künyesi — ölçünün altındaki mikro künye,
        başlık değil: cümle düzeninde kalıyor. */
-    /* "Al yönünde": Güçlü Al + Al toplamı. "Alım tarafı" YAZILMADI —
+    /* "Al Yönünde": Güçlü Al + Al toplamı. Rozet etiketi olduğu için
+       Title Case. "Alım Tarafı" YAZILMADI —
        Türkçe finans dilinde o ifade kurumsal yatırımcıyı (buy-side)
        çağrıştırıyor, burada kastedilen tavsiyenin yönü. */
-    analystLeaning: "Al yönünde",
-    analystOne: "analist",
-    analystMany: "analist",
+    analystLeaning: "Al Yönünde",
+    analystOne: "Analist",
+    analystMany: "Analist",
     analystListingNote:
       "Tavsiyeler şirketin ana kotasyonu ({code}) için toplanmıştır; bu sayfadaki fiyat ABD'de işlem gören payına aittir.",
     companyNews: "Şirket Haberleri",
@@ -559,7 +560,7 @@ const tr = {
     complianceFail: "Ön Elemeyi Geçemiyor",
     complianceDebt: "Faizli Borç / Piyasa Değeri",
     complianceCash: "Nakit ve Faizli Varlık / Piyasa Değeri",
-    complianceLimit: "sınır",
+    complianceLimit: "Sınır",
     complianceUnknown: "Bu şirket için bilanço oranları alınamadı.",
     complianceMissing:
       "Faiz geliri oranı (gelirin %5'i sınırı) ücretsiz veri kaynağımızda yok; bu kriter taranamıyor.",
@@ -663,7 +664,7 @@ const tr = {
     statusExpected: "Beklenen",
     statusPriced: "Fiyatlandı",
     statusFiled: "Başvuruldu",
-    shares: "adet",
+    shares: "Adet",
     hint: "Fiyat aralığı ve büyüklük, arz tamamlanana kadar değişebilir; \u201cbeklenen\u201d kayıtlarda tarih de kayabilir. Yeni halka açılan hisselerin ilk haftalarındaki oynaklık için Hisse Senedi ve Likidite rehberlerine bakabilirsin.",
   },
 
@@ -689,7 +690,7 @@ const tr = {
     range52: "52 Hafta Aralığı",
     homeCurrencyNote:
       "{symbols} ana borsasında {codes} cinsinden işlem görüyor: hisse başı kâr, 52 hafta bandı ve F/K oranı o borsadan geliyor, fiyat satırı ise ADR'nin doları. İki ölçü doğrudan karşılaştırılamaz.",
-    remove: "listeden çıkar",
+    remove: "Listeden Çıkar",
     addSymbol: "Sembol Ekle",
     addPlaceholder: "Sembol ya da şirket adı",
     addHint: "Sembol eklemek için bir hisse sayfasından Karşılaştır'a bas.",
@@ -700,7 +701,7 @@ const tr = {
     fearTitle: "Korku Endeksi",
     fearHint:
       "VIX, S&P 500 opsiyonlarından türetilir ve piyasanın önümüzdeki 30 gün için beklediği oynaklığı gösterir. Yön söylemez; yalnızca hareketin ne kadar büyük beklendiğini söyler.",
-    fearAverage: "uzun dönem ort. ~20",
+    fearAverage: "Uzun Dönem Ort. ~20",
     fearGuideCta: "Volatilite Nedir?",
     fearCalm: "Sakin",
     fearNormal: "Normal",
@@ -714,23 +715,23 @@ const tr = {
     yieldY5: "5 Yıllık",
     yieldY10: "10 Yıllık",
     yieldY30: "30 Yıllık",
-    point: "puan",
+    point: "Puan",
     curveTitle: "Getiri Eğrisi (10 Yıllık − 2 Yıllık)",
     curveNormal: "Normal Eğri",
     curveInverted: "Ters Eğri",
     curveHint:
       "Uzun vadeli tahvilin faizi kısa vadeliden yüksekse eğri normaldir; ekonomi olağan seyrinde demektir. Fark eksiye dönerse (ters eğri) piyasa yakın vadede faiz indirimi bekliyor — tarihsel olarak durgunluğun en çok izlenen habercisidir.",
     breadth: "Piyasa Genişliği",
-    advancing: "artıda",
-    declining: "ekside",
-    unchanged: "yatay",
+    advancing: "Artıda",
+    declining: "Ekside",
+    unchanged: "Yatay",
     topGainers: "Günün En Çok Artanları",
     topLosers: "Günün En Çok Düşenleri",
     contribution: "Katkı",
     contributionHint:
       "Katkı, hissenin bugün endeksi kaç puan yukarı ya da aşağı taşıdığını gösterir. Dow fiyat ağırlıklı bir endekstir: her hissenin dolar bazındaki değişimi endeksin bölenine oranlanarak hesaplanır.",
     constituents: "Endeks Bileşenleri",
-    listedCompanies: "şirket",
+    listedCompanies: "Şirket",
     asOf: "Liste Kompozisyonu",
   },
 
@@ -772,7 +773,7 @@ const tr = {
     thisWeek: "Bu Hafta",
     periodDaily: "Günlük",
     periodWeekly: "Haftalık",
-    weekOf: "{date} haftası",
+    weekOf: "{date} Haftası",
     /* Haftalık bülten iki soruyu birlikte cevaplıyor ve bu, ekranda
        söylenmezse anlaşılmıyor: kayıt biten haftanın adına açılıyor ama
        içinde önümüzdeki haftanın takvimi de var. */
@@ -796,7 +797,7 @@ const tr = {
     subtitle:
       "Piyasada sürekli duyduğun kavramlar — tanımı, örneği ve nerede işine yaradığı.",
     allTopics: "Tümü",
-    readMinutes: "dk okuma",
+    readMinutes: "Dk Okuma",
     related: "Bunları da Oku",
     backToList: "Rehbere Dön",
     empty: "Bu başlıkta henüz yazı yok.",
@@ -812,8 +813,8 @@ const tr = {
     startFirst: "Baştan Başla",
     curriculumHint:
       "Dört konu bloğu kolaydan zora sıralı; hiç bilmeyen biri baştan sona bir müfredat gibi okuyabilir.",
-    articleOne: "yazı",
-    articleMany: "yazı",
+    articleOne: "Yazı",
+    articleMany: "Yazı",
     prevArticle: "Önceki Yazı",
     nextArticle: "Sıradaki Yazı",
     contextLabel: "Bunu Anlamak İçin",
@@ -848,9 +849,9 @@ const tr = {
     rhythmBody:
       "Her gün değil. Sıradan bir seans mercek konusu değildir; anlatmaya değer bir olay yaşandığında yayımlanır.",
     bridge: "Günlük haber akışı ve kavram anlatımları ayrı bölümlerde:",
-    moreCompaniesOne: "+{count} şirket daha",
-    moreCompaniesMany: "+{count} şirket daha",
-    sinceEvent: "olaydan bugüne",
+    moreCompaniesOne: "+{count} Şirket Daha",
+    moreCompaniesMany: "+{count} Şirket Daha",
+    sinceEvent: "Olaydan Bugüne",
     /* Hisse sayfasındaki blok. Kardeş panelle (analysis.symbolPanelTitle)
        aynı kural: şirketin içindesin, adını başlıkta tekrar etme. Ama tür
        adıyla söylensin — yalın "Mercek" bloğun ne listelediğini
@@ -865,7 +866,7 @@ const tr = {
     sources: "Kaynaklar",
     relatedSymbols: "Yazıda Geçen Şirketler",
     eventDate: "Olay Tarihi",
-    readMinutes: "dk okuma",
+    readMinutes: "Dk Okuma",
     backToList: "Mercek'e Dön",
     moreStories: "Arşivden Diğer Yazılar",
     empty: "Henüz yayımlanmış yazı yok.",
@@ -888,7 +889,7 @@ const tr = {
     period: "Dönem",
     nextRelease: "Sonraki Açıklama",
     noNextRelease: "Henüz açıklanmadı",
-    unchanged: "değişmedi",
+    unchanged: "Değişmedi",
     series: {
       cpi: "TÜFE (Yıllık)",
       coreCpi: "Çekirdek TÜFE (Yıllık)",
@@ -1051,12 +1052,12 @@ const tr = {
     failed: "Veri alınamadı",
     failedHint: "Sağlayıcıya ulaşılamıyor. Son bilinen değer gösteriliyor.",
     lastKnown: "Son Bilinen Değer",
-    feedTape: "Konsolide tape · 15 dk gecikmeli",
+    feedTape: "Konsolide Tape · 15 Dakika Gecikmeli",
     delayedNote:
       "Fiyatlar konsolide tape'ten (SIP) gelir ve 15 dakika gecikmelidir. Gün içi hacim, açılış-en yüksek-en düşük ve önceki kapanış bütün borsaların toplamıdır.",
     /* Kaynak adları SÖZLÜKTE: "önbellek" ve "takvim" sabit bir tablodan
        geliyordu ve İngilizce sitede de Türkçe basılıyordu. */
-    delayed: "15 dk gecikmeli",
+    delayed: "15 Dakika Gecikmeli",
     /* Seans dışında listelerdeki değişim sütununun künyesi.
        Konsolide tape'e geçtikten sonra açılış öncesi işlemler akıyor ama
        her sembol her sabah işlem görmüyor: gören sembol bu sabahın
@@ -1064,14 +1065,14 @@ const tr = {
        "son işleme göre değişim" ama referans günleri farklı — satır satır
        aynı sütunda durduklarında bunu söylemek gerekiyor. */
     extendedNote: "seans dışı: değişim her sembolün son işlemine göre",
-    sourceCache: "önbellek",
-    sourceSeed: "takvim",
+    sourceCache: "Önbellek",
+    sourceSeed: "Takvim",
     /* CÜMLE TAM YAZILIYOR, parça parça birleştirilmiyor. Damga
        "{saat} {kelime}" sırasıyla kuruluyordu; Türkçede doğru ama İngilizcede
        "5:05 PM updated" çıkıyordu — sözcük sırası dile ait, bu yüzden yer
        tutuculu tam cümle. */
-    updatedAt: "{time} güncellendi",
-    mayBeStale: "güncel olmayabilir",
+    updatedAt: "{time} Güncellendi",
+    mayBeStale: "Güncel Olmayabilir",
   },
 };
 

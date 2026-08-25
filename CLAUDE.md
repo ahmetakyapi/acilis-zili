@@ -32,11 +32,22 @@ Vurgu taşıyan her metin **Title Case** yazılır. Kapsam:
 - Rehber ve mercek yazılarındaki `##` / `###` başlıkları
 - Kısa vurgulu ifadeler ("Yatırım Tavsiyesi Değildir")
 
+Kural **künyeleri ve birimleri de kapsar**. Bir süre "ölçü altındaki mikro
+künyeler" muaf tutuldu ("olaydan bugüne", "15 dk gecikmeli", "0,05 puan") ve
+sonuç tutarsızlıktı: aynı ekranda Title Case bir rozetin altında küçük harfle
+başlayan bir künye duruyordu. Artık **cümle olmayan her metin Title Case**:
+"Olaydan Bugüne", "15 Dakika Gecikmeli", "0,05 Puan", "20:04 Güncellendi",
+"56 Analist", "Takipte", "Önbellek".
+
 Title Case OLMAYAN yerler — bunlar cümledir, başlık değil:
 
 - Paragraflar, açıklama satırları, kart altı ipuçları
 - Boş durum ve hata **mesajları** (başlıkları Title Case, gövdeleri değil)
-- Ölçü altındaki mikro künyeler ("olaydan bugüne", "bilanço", "son 1 ay")
+- Yer tutucu metinleri (`placeholder`) ve `aria-label` cümleleri
+- Sayı + isim kalıbındaki tam cümleler ("819 şirketin 60 tanesi",
+  "son 40 haberden seçildi") — bunlar bir künye değil, kısa bir cümle
+- Geri sayımın birim ekleri (`17 sa 59 dk 53 sn`) — orada küçük harf,
+  dev puntolu sayının yanında bilinçli bir tipografik karar
 
 Türkçe Title Case: bağlaç ve edatlar (ve, ile, için, de/da, mi) küçük kalır,
 başta gelirse büyür. "Faiz, Tahvil ve Getiri Eğrisi" · "Ne Kadar, Ne Zaman"

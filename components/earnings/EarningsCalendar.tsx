@@ -369,13 +369,27 @@ function DaySection({
                     </span>
                     <TimingChip tone={timing.tone}>{timing.label}</TimingChip>
                     {badge && <AnalysisBadge badge={badge} t={t} />}
-                    {/* Adıyla yazılı hâli yalnızca hero satırlarında —
-                        günün en büyük iki bilançosu, takvime girmeye en çok
-                        değen ikisi. Dar listelerde ikonlu (compact) sürüm. */}
+                    {/* Adıyla yazılı hâli yalnızca hero satırlarında ve
+                        yalnızca GENİŞ EKRANDA — günün en büyük iki bilançosu,
+                        takvime girmeye en çok değen ikisi.
+                        Telefonda metinli düğme ~130 piksel istiyor ve sembol
+                        (104) + zamanlama çipi (100) ile birlikte 286
+                        piksellik satıra sığmıyordu: satır kırılıyor, şirketin
+                        adı düğmenin altında öksüz bir üçüncü satır olarak
+                        kalıyordu. Dar ekranda ikonlu sürüm aynı işi 32
+                        pikselde yapıyor. */}
                     <AddToCalendar
                       symbol={row.symbol}
                       date={row.reportDate}
                       label={t.earnings.addToCalendar}
+                      compact
+                      className="sm:hidden"
+                    />
+                    <AddToCalendar
+                      symbol={row.symbol}
+                      date={row.reportDate}
+                      label={t.earnings.addToCalendar}
+                      className="hidden sm:inline-flex"
                     />
                   </div>
                   <p className="mt-[3px] truncate text-sm text-body">

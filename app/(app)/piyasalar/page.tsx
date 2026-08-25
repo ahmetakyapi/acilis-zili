@@ -3,6 +3,7 @@ import { FearGauge } from "@/components/markets/FearGauge";
 import { GuideHint } from "@/components/article/GuideHint";
 import Link from "next/link";
 import {
+  ChangePill,
   DataStamp,
   EmptyState,
   PageHeader,
@@ -625,6 +626,8 @@ async function IndexDetail({
     <>
       <IndexToolbar
         tab={tab}
+        proxy={proxy}
+        proxyQuote={proxyResult.ok ? (proxyResult.data[proxy] ?? null) : null}
         advancing={advancing}
         declining={declining}
         flat={flat}
@@ -705,6 +708,8 @@ async function IndexDetail({
 
 function IndexToolbar({
   tab,
+  proxy,
+  proxyQuote,
   advancing,
   declining,
   flat,
@@ -713,6 +718,8 @@ function IndexToolbar({
   t,
 }: {
   tab: TabKey;
+  proxy: string;
+  proxyQuote: Quote | null;
   advancing: number;
   declining: number;
   flat: number;
@@ -725,37 +732,65 @@ function IndexToolbar({
   return (
     <Panel className="overflow-hidden">
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 px-4 py-3 sm:px-5">
-        {INDEX_TABS.map((entry) => {
-          const activeTab = entry.key === tab;
-          return (
-            <Link
-              key={entry.key}
-              href={`/piyasalar?endeks=${entry.key}`}
-              scroll={false}
-              className={cn(
-                "flex min-h-11 items-center gap-2 rounded-full px-4 py-1.5 sm:min-h-[38px] text-sm font-semibold transition-colors",
-                activeTab
-                  ? "bg-primary text-on-primary"
-                  : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
-              )}
-            >
-              {entry.label}
-              <span
+        {/* ÜÇ ÇİP MOBİLDE TEK SATIRDA. `flex-wrap` ile diziliyorlardı ve
+            üçüncü çip (S&P 500) 390 pikselde alt satıra düşüyordu: üç eşit
+            seçenek iki-bir diye kırılınca denetim tek bir seçici olmaktan
+            çıkıp iki ayrı satır gibi okunuyordu. Dar ekranda üçlü ızgara,
+            geniş ekranda eskisi gibi doğal genişlikte akıyorlar.
+            Üye sayısı dar ekranda düşüyor: 106 piksellik hücreye sığmıyor ve
+            zaten bir alttaki "102 şirketin 5 tanesi" künyesinde yazılı. */}
+        <div className="grid w-full grid-cols-3 gap-1.5 sm:flex sm:w-auto sm:flex-wrap">
+          {INDEX_TABS.map((entry) => {
+            const activeTab = entry.key === tab;
+            return (
+              <Link
+                key={entry.key}
+                href={`/piyasalar?endeks=${entry.key}`}
+                scroll={false}
                 className={cn(
-                  "numeral text-xs font-normal",
-                  /* Saydamlık yerine punto — gerekçe şirketler dizininde. */
-                  activeTab ? "text-on-primary" : "text-muted",
+                  "flex min-h-11 items-center justify-center gap-2 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-colors sm:min-h-[38px] sm:px-4 sm:text-sm",
+                  activeTab
+                    ? "bg-primary text-on-primary"
+                    : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
                 )}
               >
-                {entry.members.length}
-              </span>
-            </Link>
-          );
-        })}
+                {entry.label}
+                <span
+                  className={cn(
+                    "numeral hidden text-xs font-normal sm:inline",
+                    /* Saydamlık yerine punto — gerekçe şirketler dizininde. */
+                    activeTab ? "text-on-primary" : "text-muted",
+                  )}
+                >
+                  {entry.members.length}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
         <span className="numeral ml-auto text-nano text-muted">
           {t.markets.asOf}: {formatEtDateShort(INDEX_COMPOSITION_DATE, locale)}
         </span>
       </div>
+
+      {/* SEÇİLİ ENDEKSİN KENDİ GÜNÜ. Çubuk "kaç şirket artıda" diyor ama
+          endeksin kendisinin ne yaptığını söylemiyordu: bir endeks üyelerinin
+          çoğu düşerken de yükselebiliyor (birkaç ağır şirket taşırsa) ve
+          okuyucu o farkı ancak sayfanın en üstündeki karta geri dönüp
+          görebiliyordu. Sayı seçimin hemen altında, genişliğin hemen üstünde.
+          Kaynak: endeksi izleyen fonun kotasyonu — hangi fon olduğu yazılı,
+          çünkü gösterilen endeksin kendisi değil onu izleyen fon. */}
+      {proxyQuote && proxyQuote.changePct !== null && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line-soft px-4 py-2.5 sm:px-5">
+          <span className="text-small font-semibold text-strong">
+            {INDEX_TABS.find((entry) => entry.key === tab)?.label}
+          </span>
+          <ChangePill changePct={proxyQuote.changePct} locale={locale} />
+          <span className="numeral text-tiny text-muted">
+            {proxy} · {formatPrice(proxyQuote.price, locale, { currency: true })}
+          </span>
+        </div>
+      )}
 
       {total > 0 && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 border-t border-line-soft px-4 py-3.5 sm:px-5">
