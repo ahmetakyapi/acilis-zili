@@ -318,12 +318,18 @@ async function CompareBoard({
   /* Satırlar tek yerde tanımlı: hem geniş ekrandaki tablo hem mobildeki
      kart yığını aynı diziden besleniyor, ikisi birbirinden kayamıyor. */
   const rows: {
+    /* Grup anahtarı satırın KENDİSİNDE. Önce diziyi dilimleyerek
+       gruplanıyordu ve dizinin sırası değişince gruplar sessizce kaydı:
+       net kâr marjı riske, beta değerlemeye düşmüştü. Anahtar satırla
+       birlikte taşınırsa sıra değişse de grup doğru kalır. */
+    group: "return" | "valuation" | "risk" | "company";
     label: string;
     /** Ölçünün altındaki mikro künye — cümle düzeninde. */
     caption?: string;
     value: (index: number) => React.ReactNode;
   }[] = [
     {
+      group: "return",
       label: t.market.lastPrice,
       value: (i) => {
         const quote = quotes[symbols[i]];
@@ -337,6 +343,7 @@ async function CompareBoard({
       },
     },
     {
+      group: "return",
       label: t.compare.dayChange,
       value: (i) => {
         const quote = quotes[symbols[i]];
@@ -348,6 +355,7 @@ async function CompareBoard({
       },
     },
     {
+      group: "return",
       label: t.compare.periodChange,
       value: (i) => {
         const entry = series.find((s) => s.symbol === symbols[i]);
@@ -383,6 +391,7 @@ async function CompareBoard({
       },
     },
     {
+      group: "valuation",
       label: t.market.marketCap,
       value: (i) => {
         /* CANLI hesap — sağlayıcının `marketCap` alanı profil çekildiği anın
@@ -398,6 +407,7 @@ async function CompareBoard({
       },
     },
     {
+      group: "valuation",
       label: t.stock.peRatio,
       /* Oran, tablonun kendi fiyat satırından kuruluyor. Sağlayıcının hazır
          F/K'si geriden gelen bir fiyatla hesaplanmış oluyor; karşılaştırma
@@ -421,6 +431,7 @@ async function CompareBoard({
       },
     },
     {
+      group: "valuation",
       label: t.stock.dividend,
       value: (i) => {
         const metrics = metricResults[i];
@@ -436,6 +447,7 @@ async function CompareBoard({
       },
     },
     {
+      group: "risk",
       label: t.stock.beta,
       value: (i) => {
         const metrics = metricResults[i];
@@ -445,6 +457,7 @@ async function CompareBoard({
       },
     },
     {
+      group: "risk",
       label: t.compare.range52,
       value: (i) => {
         const metrics = metricResults[i];
@@ -469,6 +482,7 @@ async function CompareBoard({
       /* AYNI İSTEKTEN GELİYOR: `getKeyMetrics` bu alanı zaten döndürüyordu
          (`netProfitMarginTTM`) ve sunum katmanı onu atıyordu. Değerleme
          karşılaştırmasında F/K'nin yanında duracak ölçü bu. */
+      group: "valuation",
       label: t.compare.netMargin,
       caption: t.analysis.trailing12m,
       value: (i) => {
@@ -482,10 +496,12 @@ async function CompareBoard({
       /* SEKTÖR GICS'TEN. Sağlayıcının serbest metni aynı şirkete iki ekranda
          iki farklı ad veriyordu; `/sirketler` GICS'i tercih ediyor, bu ekran
          tek kalmıştı. Alan aynı sorgudan geliyor, ek gidiş-dönüş yok. */
+      group: "company",
       label: t.compare.sector,
       value: (i) => sectorLabel(names[symbols[i]]?.sector, locale) ?? "—",
     },
     {
+      group: "company",
       label: t.stock.industry,
       value: (i) =>
         industryLabel(names[symbols[i]]?.industry, locale) ?? "—",
@@ -496,12 +512,19 @@ async function CompareBoard({
      okuyucu "getiri mi bakıyorum, değerleme mi" diye ayırt edemiyordu.
      Öbek başlığı bir kutu değil, bir ton basamağı ve tek hairline —
      kart içinde ikinci kutu yok. */
-  const groups: { label: string; rows: typeof rows }[] = [
-    { label: t.compare.groupReturn, rows: rows.slice(0, 3) },
-    { label: t.compare.groupValuation, rows: rows.slice(3, 7) },
-    { label: t.compare.groupRisk, rows: rows.slice(7, 9) },
-    { label: t.compare.groupCompany, rows: rows.slice(9) },
-  ];
+  const groups = (
+    [
+      ["return", t.compare.groupReturn],
+      ["valuation", t.compare.groupValuation],
+      ["risk", t.compare.groupRisk],
+      ["company", t.compare.groupCompany],
+    ] as const
+  )
+    .map(([key, label]) => ({
+      label,
+      rows: rows.filter((row) => row.group === key),
+    }))
+    .filter((group) => group.rows.length > 0);
 
   /* Ölçü bloğu çöken semboller — beş satır birden sessizce tireye
      düşüyordu. */
