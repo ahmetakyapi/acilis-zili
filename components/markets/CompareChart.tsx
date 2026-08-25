@@ -2,7 +2,13 @@
 
 import { useMemo, useRef, useState } from "react";
 import { cn, formatPercent } from "@/lib/utils";
-import { SERIES_COLORS, SERIES_DASH } from "@/lib/chart-series";
+import {
+  SERIES_COLORS,
+  SERIES_DASH,
+  seriesColorOf,
+  seriesDashOf,
+} from "@/lib/chart-series";
+import type { CompareSeries } from "@/lib/compare";
 
 /**
  * Normalize edilmiş karşılaştırma grafiği.
@@ -44,13 +50,10 @@ import { SERIES_COLORS, SERIES_DASH } from "@/lib/chart-series";
  * Zamanı olmayan seri (eski çağrı biçimi) eski davranışa düşer.
  */
 
-export type CompareSeries = {
-  symbol: string;
-  /** Kapanış dizisi; en az iki nokta. */
-  closes: number[];
-  /** Bar zamanları (unix saniye) — imleç kartındaki tarih için. */
-  times?: number[];
-};
+/* Seri tipi `lib/compare.ts`te: aynı şekli sunucu sayfası, toplu bar ucu ve
+   bu bileşen birlikte kullanıyor ve üçü ayrı tanım tutamaz. Eski çağıranlar
+   için buradan da dışa aktarılıyor. */
+export type { CompareSeries };
 
 /* Seri renkleri ve desenleri `lib/chart-series.ts`te — sunucu bileşenleri
    de aynı sabitleri okuyor, gerekçesi orada. */
@@ -61,12 +64,24 @@ const PAD_Y = 12;
 
 export function CompareChart({
   series,
+  order,
   className,
   title,
   locale,
   readingLabel,
 }: {
   series: CompareSeries[];
+  /**
+   * Sembollerin ADRESTEKİ sırası — renk buradan eşleniyor.
+   *
+   * BİR HATA DÜZELTMESİ: renkler `normalized` dizisinin indisinden
+   * alınıyordu ve o dizi barı gelmeyen sembolü ELİYOR. Üç sembolden
+   * ortadakinin barı gelmediğinde üçüncü sembol ikinci rengi çiziyor,
+   * şeritteki anahtar ise (`seriesColorOf`, sembolden eşliyor) üçüncü
+   * rengi gösteriyordu: grafikteki çizgiyle yanındaki renk anahtarı
+   * birbirini tutmuyordu. Eşleme artık iki yerde de sembolün kendisinden.
+   */
+  order?: readonly string[];
   className?: string;
   title: string;
   locale: string;
@@ -84,6 +99,14 @@ export function CompareChart({
     () => series.filter((entry) => entry.closes.length >= 2),
     [series],
   );
+
+  /* Renk sembolden; `order` verilmemişse eski indis davranışına düşülüyor. */
+  const colorOf = (symbol: string, index: number) =>
+    order
+      ? seriesColorOf(order, symbol)
+      : SERIES_COLORS[index % SERIES_COLORS.length];
+  const dashOf = (symbol: string, index: number) =>
+    order ? seriesDashOf(order, symbol) : SERIES_DASH[index % SERIES_DASH.length];
 
   const normalized = useMemo(
     () =>
@@ -222,7 +245,7 @@ export function CompareChart({
             const i = indexAt(entry, fraction);
             return {
               symbol: entry.symbol,
-              color: SERIES_COLORS[index % SERIES_COLORS.length],
+              color: colorOf(entry.symbol, index),
               /* `null` = seri o tarihte henüz işlem görmüyordu. */
               value: i === null ? null : entry.points[i],
             };
@@ -334,7 +357,7 @@ export function CompareChart({
             )}
 
             {normalized.map((entry, index) => {
-              const color = SERIES_COLORS[index % SERIES_COLORS.length];
+              const color = colorOf(entry.symbol, index);
               return (
                 <path
                   key={entry.symbol}
@@ -367,8 +390,8 @@ export function CompareChart({
                     /* Nokta dolgusu OPAK: `var(--surface)` %3-5 opaklıkta
                        bir ton ve çizgi işaretin altından geçiyordu. */
                     fill="var(--page-bg)"
-                    stroke={SERIES_COLORS[index % SERIES_COLORS.length]}
-                    strokeDasharray={SERIES_DASH[index % SERIES_DASH.length]}
+                    stroke={colorOf(entry.symbol, index)}
+                    strokeDasharray={dashOf(entry.symbol, index)}
                     strokeWidth={2}
                     vectorEffect="non-scaling-stroke"
                   />
@@ -463,10 +486,10 @@ export function CompareChart({
                   y1="3"
                   x2="16"
                   y2="3"
-                  stroke={SERIES_COLORS[index % SERIES_COLORS.length]}
+                  stroke={colorOf(entry.symbol, index)}
                   strokeWidth="2.5"
                   strokeLinecap="round"
-                  strokeDasharray={SERIES_DASH[index % SERIES_DASH.length]}
+                  strokeDasharray={dashOf(entry.symbol, index)}
                 />
               </svg>
               <span className="numeral font-bold text-strong">

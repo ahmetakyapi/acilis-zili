@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MagnifyingGlass, Plus, X } from "@phosphor-icons/react";
 import type { SearchHit } from "@/app/api/search/route";
+import { startRouteProgress } from "@/components/layout/RouteProgress";
+import { useCompareOptional } from "@/components/markets/CompareLive";
+import { compareHref } from "@/lib/compare";
+import { cn } from "@/lib/utils";
 
 /**
  * Karşılaştırma ekranına sembol EKLEME yolu.
@@ -23,11 +27,20 @@ export function CompareAdd({
   symbols,
   rangeParam,
   defaultOpen = false,
+  wide = false,
   labels,
 }: {
   symbols: string[];
   /** Boş ekranda kutu AÇIK başlar — orada eklemekten başka yapılacak yok. */
   defaultOpen?: boolean;
+  /**
+   * Kutu kabının TAMAMINI kaplar — boş ekranın kahraman bloğunda.
+   *
+   * Sabit `w-40 sm:w-48` giriş, şeritteki satır içi çip için doğru ölçü ama
+   * ortalanmış bir kahraman bloğunun içinde minik bir kutu olarak duruyordu:
+   * ekranın tek eylemi, ekranın en küçük öğesiydi.
+   */
+  wide?: boolean;
   /* Adres SUNUCUDAN GELEN FONKSİYONLA değil, veriyle kuruluyor: sunucu
      bileşeninden istemci bileşenine fonksiyon geçilemiyor. Seçili aralık
      varsayılan değilse korunuyor, değilse parametre hiç yazılmıyor. */
@@ -40,6 +53,11 @@ export function CompareAdd({
   };
 }) {
   const router = useRouter();
+  /* ARALIK CANLI OKUNUYOR. `rangeParam` sunucudan gelen bir fotoğraf ve
+     aralık artık istemcide değişiyor (`CompareLive`): 1Y'ye geçip sembol
+     ekleyen okuyucu 6A'ya geri düşüyordu. Sağlayıcı yoksa (boş ekran) prop
+     geçerli kalır. */
+  const compare = useCompareOptional();
   const [open, setOpen] = useState(defaultOpen);
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<SearchHit[]>([]);
@@ -78,13 +96,22 @@ export function CompareAdd({
   const pick = useCallback(
     (symbol: string) => {
       reset();
-      const params = new URLSearchParams({
-        semboller: [...symbols, symbol].join(","),
-      });
-      if (rangeParam) params.set("aralik", rangeParam);
-      router.push(`/karsilastir?${params}`);
+      const next = [...symbols, symbol];
+      /* GEZİNME ÇUBUĞU ELLE YAKILIYOR. `RouteProgress` yalnızca `<a>`
+         tıklamalarını yakalıyor; buradaki `router.push` onun göremediği bir
+         gezinme ve okuyucu sonucu seçtikten sonra hiçbir işaret almadan
+         bekliyordu. Aralık denetimi de bu bayrağa bakıp kendini kapatıyor —
+         sığ adres güncellemesi uçuştaki bu gezinmeyi iptal ediyor. */
+      startRouteProgress();
+      router.push(
+        compare
+          ? compareHref(next, compare.range)
+          : `/karsilastir?semboller=${next.join(",")}${
+              rangeParam ? `&aralik=${rangeParam}` : ""
+            }`,
+      );
     },
-    [rangeParam, reset, router, symbols],
+    [compare, rangeParam, reset, router, symbols],
   );
 
   if (!open) {
@@ -95,7 +122,7 @@ export function CompareAdd({
           setOpen(true);
           window.setTimeout(() => inputRef.current?.focus(), 20);
         }}
-        className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-dashed border-line-strong px-3.5 text-small font-semibold text-soft transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary"
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-dashed border-line-strong px-3.5 text-small font-semibold text-soft transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary sm:min-h-9"
       >
         <Plus weight="bold" size={13} />
         {labels.add}
@@ -110,8 +137,8 @@ export function CompareAdd({
     .slice(0, 6);
 
   return (
-    <div className="relative">
-      <div className="flex min-h-9 items-center gap-2 rounded-full border border-line bg-surface px-3">
+    <div className={cn("relative", wide && "w-full")}>
+      <div className="flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-3 sm:min-h-9">
         <MagnifyingGlass weight="duotone" size={14} className="shrink-0 text-muted" />
         <input
           ref={inputRef}
@@ -127,7 +154,10 @@ export function CompareAdd({
             }
           }}
           placeholder={labels.placeholder}
-          className="h-8 w-40 bg-transparent text-sm text-strong outline-none placeholder:text-muted sm:w-48"
+          className={cn(
+            "h-8 bg-transparent text-sm text-strong outline-none placeholder:text-muted",
+            wide ? "w-full min-w-0 flex-1" : "w-40 sm:w-48",
+          )}
           autoComplete="off"
           spellCheck={false}
         />
@@ -150,7 +180,14 @@ export function CompareAdd({
             Zemin `--overlay-surface`: katman üstü için tanımlı ve iki temada
             da OPAK; `--surface-elevated` saydam ve altındaki grafik
             sonuçların içinden okunuyordu. */
-        <ul className="absolute inset-x-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-(--radius-md) border border-line bg-overlay-surface sm:left-0 sm:right-auto sm:w-64">
+        <ul
+          className={cn(
+            "absolute inset-x-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-(--radius-md) border border-line bg-overlay-surface",
+            /* Geniş kutuda liste de kutu kadar: kahraman bloğunda 256
+               piksellik bir liste, altında durduğu alanın yarısı kadardı. */
+            !wide && "sm:left-0 sm:right-auto sm:w-64",
+          )}
+        >
           {shown.length === 0 ? (
             <li className="px-3 py-2.5 text-small text-muted">
               {labels.noResults}

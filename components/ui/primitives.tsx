@@ -909,27 +909,78 @@ export function SegmentItem({
   href,
   active,
   children,
+  label,
+  prefetch,
+  shallow,
+  disabled,
+  onClick,
+  onPointerEnter,
+  onFocus,
 }: {
   href: string;
   active: boolean;
   children: React.ReactNode;
+  /**
+   * Görünen kısaltmanın UZUN karşılığı — ekran okuyucu için.
+   *
+   * `aria-label` DEĞİL, `sr-only` bir ek. `aria-label` görünen metni EZİYOR
+   * ve erişilebilir ad görünen etiketi içermek zorunda (WCAG 2.5.3): ekranda
+   * "1A" yazarken adı "Son 1 Ay" olan bir düğmeyi sesle gezen kullanıcı
+   * "bir A" diyerek çalıştıramıyor. Ek olarak yazılınca ad "1A Son 1 Ay"
+   * oluyor — hem kısaltmayı içeriyor hem anlaşılır. ("YBB" tek başına harf
+   * harf, "1A" ise "bir a" diye okunuyordu.)
+   */
+  label?: string;
+  /** Sığ seçimde RSC ön yüklemesi boşa iş — kapatılabiliyor. */
+  prefetch?: boolean;
+  /**
+   * Geçici olarak çalışmıyor — denetim bir şey bekliyor.
+   *
+   * Bağlantı `<a>` olduğu için `disabled` özniteliği yok; klavye ve yardımcı
+   * teknolojiye durum `aria-disabled` ile söyleniyor, `tabIndex={-1}` odak
+   * sırasından çıkarıyor. Görsel sönme çağıranda.
+   */
+  disabled?: boolean;
+  /**
+   * Tıklama İSTEMCİDE karşılanıyor, gezinme olmuyor.
+   *
+   * `RouteProgress` belgeyi YAKALAMA evresinde dinliyor, yani `onClick`
+   * `preventDefault` çağırmadan önce gezinme çubuğunu yakıyor. Bu öznitelik
+   * ona "burada gezinme yok" diyor. Adres yine de gerçek: JavaScript
+   * çalışmazsa tıklama sunucu yoluna düşüyor.
+   */
+  shallow?: boolean;
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
+  onPointerEnter?: React.PointerEventHandler<HTMLAnchorElement>;
+  onFocus?: React.FocusEventHandler<HTMLAnchorElement>;
 }) {
   return (
     <Link
       href={href}
       scroll={false}
+      prefetch={prefetch}
       aria-current={active ? "true" : undefined}
+      aria-disabled={disabled || undefined}
+      tabIndex={disabled ? -1 : undefined}
+      data-shallow={shallow ? "" : undefined}
+      onClick={onClick}
+      onPointerEnter={onPointerEnter}
+      onFocus={onFocus}
       className={cn(
         /* Dokunma hedefi 33px'ti. `FilterChip` bir denetimde 44px'e
            çıkarılmıştı ama aynı satırın öteki denetimi olan bu segment
-           atlanmıştı — Hafta/Ay gibi en çok basılan seçicilerin hepsi bu. */
-        "inline-flex min-h-10 items-center justify-center rounded-full px-4 py-[7px] transition-colors sm:min-h-8",
+           atlanmıştı — Hafta/Ay gibi en çok basılan seçicilerin hepsi bu.
+           O düzeltme 40 pikselde YARIM kalmıştı: `FilterChip` `min-h-11`,
+           bu `min-h-10`. Karşılaştırma ekranının birincil denetimi artık bu
+           segment ve dar ekranda altı düğme yan yana duruyor. */
+        "inline-flex min-h-11 items-center justify-center rounded-full px-4 py-[7px] transition-colors sm:min-h-8",
         active
           ? "bg-primary font-semibold text-on-primary"
           : "text-body hover:text-strong",
       )}
     >
       {children}
+      {label && <span className="sr-only">{label}</span>}
     </Link>
   );
 }

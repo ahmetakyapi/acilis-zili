@@ -66,6 +66,26 @@ function subscribe(callback: () => void) {
 }
 
 /**
+ * Gezinme SÜRÜYOR MU — göstergeyi çizmeyen bileşenler için.
+ *
+ * Karşılaştırma ekranının aralık denetimi adresi `history.replaceState` ile
+ * sığ güncelliyor ve Next'in yamalı `replaceState`i O SIRADA UÇUŞTA OLAN bir
+ * gezinmeyi iptal ediyor — geri gelmiyor, yeniden denenmiyor, hata da
+ * vermiyor. Şeritten bir sembol çıkarıp yanıt inmeden aralığa basan okuyucu,
+ * çarpı tıklamasının sessizce yok olduğunu görüyordu. Denetim bu yüzden
+ * gezinme sürerken kendini kapatıyor; koşu numarası zaten burada.
+ */
+export function useRouteNavigating(): boolean {
+  return (
+    useSyncExternalStore(
+      subscribe,
+      () => runId,
+      () => 0,
+    ) !== 0
+  );
+}
+
+/**
  * `useSearchParams` okuduğu için ÇAĞIRAN taraf bunu `<Suspense>` içine almalı;
  * aksi halde altındaki bütün rota statik ön çizimden düşer.
  */
@@ -95,6 +115,14 @@ export function RouteProgress({ label }: { label: string }) {
       const target = event.target as Element | null;
       const anchor = target?.closest?.("a");
       if (!anchor || anchor.hasAttribute("download")) return;
+      /* SIĞ BAĞLANTI GEZİNME DEĞİL. Karşılaştırma ekranının aralık denetimi
+         gerçek bir adres taşıyor (JavaScript kapalıyken çalışsın diye) ama
+         tıklamayı kendisi karşılayıp `history.replaceState` ile yalnızca
+         adresi tazeliyor. Bu dinleyici YAKALAMA evresinde olduğu için
+         `preventDefault` çağrılmadan önce koşuyor: `defaultPrevented`
+         denetimi burada işe yaramıyor, işaret bağlantının kendisinde
+         durmak zorunda. */
+      if (anchor.hasAttribute("data-shallow")) return;
       const targetAttr = anchor.getAttribute("target");
       if (targetAttr && targetAttr !== "_self") return;
       const href = anchor.getAttribute("href");

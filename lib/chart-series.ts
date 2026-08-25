@@ -43,3 +43,9 @@ export function seriesColorOf(symbols: readonly string[], symbol: string) {
   const at = symbols.indexOf(symbol);
   return SERIES_COLORS[(at < 0 ? 0 : at) % SERIES_COLORS.length];
 }
+
+/** Sembolün çizgi deseni — renkle aynı gerekçe, aynı eşleme. */
+export function seriesDashOf(symbols: readonly string[], symbol: string) {
+  const at = symbols.indexOf(symbol);
+  return SERIES_DASH[(at < 0 ? 0 : at) % SERIES_DASH.length];
+}

@@ -1,36 +1,40 @@
 import { Fragment } from "react";
-import Link from "next/link";
-import { X } from "@phosphor-icons/react/dist/ssr";
 import { GuideHint } from "@/components/article/GuideHint";
-import { CompareChart, type CompareSeries } from "@/components/markets/CompareChart";
-import { seriesColorOf } from "@/lib/chart-series";
+import { CompareEmpty, type ComparePreset } from "@/components/markets/CompareEmpty";
+import {
+  CompareChartPanel,
+  ComparePeriodLabel,
+  ComparePeriodValue,
+  CompareProvider,
+  CompareRangeControl,
+  CompareStrip,
+  type CompareLabels,
+} from "@/components/markets/CompareLive";
 import {
   ChangePill,
-  DataError,
   DataStamp,
-  EmptyState,
   PageHeader,
   Panel,
-  SegmentItem,
-  Segment,
-  LogoTile,
 } from "@/components/ui/primitives";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { CompareAdd } from "@/components/markets/CompareAdd";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
-import type { ChartRange } from "@/lib/providers/types";
-import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { getI18n } from "@/lib/i18n";
 import { industryLabel, sectorLabel } from "@/lib/sectors";
 import {
-  cn,
-  directionOf,
-  directionText,
+  COMPARE_RANGES,
+  DEFAULT_COMPARE_RANGE,
+  MAX_COMPARE_SYMBOLS,
+  isCompareRange,
+  parseCompareSymbols,
+  type CompareRange,
+  type CompareSeries,
+} from "@/lib/compare";
+import {
   formatMoneyCompact,
-  formatPercent,
   formatPercentPlain,
   formatPrice,
-  isValidSymbol,
   peRatioOf,
 } from "@/lib/utils";
 import { pageMetadata } from "@/lib/page-meta";
@@ -44,20 +48,36 @@ import { pageMetadata } from "@/lib/page-meta";
  * tablo ve normalize edilmiş tek bir grafik.
  *
  * Seçim URL'de yaşıyor (?semboller=NVDA,AMD), yani paylaşılabilir ve
- * sunucuda çözülüyor; bu ekranda istemci tarafı durum yok.
+ * sunucuda çözülüyor.
  *
- * Dört sembol sınırı keyfi değil: beşinci sütun mobilde tabloyu okunmaz
- * yapıyor ve normalize grafikte renkler ayırt edilemez hâle geliyor.
+ * ARALIK ARTIK İSTEMCİDE. Sayfanın geri kalanı sunucu bileşeni olarak kaldı
+ * — kotasyonlar, ölçü blokları, şirket künyeleri hep burada çözülüyor.
+ * Aralığa BAĞLI olan tek şey barlar ve onlar `CompareProvider` içinde
+ * yaşıyor: düğmeye basınca yüzdeler anında değişiyor, sunucuya bir daha
+ * gidilmiyor. Gerekçenin tamamı `components/markets/CompareLive.tsx`te.
+ *
+ * Aralık listesi, sembol sınırı ve adres biçimi `lib/compare.ts`te: aynı üç
+ * kural sunucu sayfası, istemci denetimi ve toplu bar ucu tarafından
+ * okunuyor ve üçü ayrı liste tutamaz.
  */
 
-const MAX_SYMBOLS = 4;
-const DEFAULT_RANGE: ChartRange = "6M";
-
 /** Karşılaştırmaya hazır başlangıç setleri — boş ekranı doldurur. */
-const PRESETS: { labelKey: keyof Dictionary["compare"]; symbols: string[] }[] = [
-  { labelKey: "presetChips", symbols: ["NVDA", "AMD", "AVGO", "MU"] },
-  { labelKey: "presetMega", symbols: ["AAPL", "MSFT", "GOOGL", "AMZN"] },
-  { labelKey: "presetIndices", symbols: ["SPY", "QQQ", "DIA", "IWM"] },
+const PRESETS: readonly ComparePreset[] = [
+  {
+    labelKey: "presetChips",
+    noteKey: "presetChipsNote",
+    symbols: ["NVDA", "AMD", "AVGO", "MU"],
+  },
+  {
+    labelKey: "presetMega",
+    noteKey: "presetMegaNote",
+    symbols: ["AAPL", "MSFT", "GOOGL", "AMZN"],
+  },
+  {
+    labelKey: "presetIndices",
+    noteKey: "presetIndicesNote",
+    symbols: ["SPY", "QQQ", "DIA", "IWM"],
+  },
 ];
 
 export const generateMetadata = pageMetadata({
@@ -74,159 +94,36 @@ export const generateMetadata = pageMetadata({
   },
 });
 
-/**
- * Grafik aralıkları — `CHART_RANGES`in tamamı DEĞİL.
- *
- * `1D` ve `1W` dakikalık bar döndürüyor; dört sembol o çözünürlükte üst üste
- * çizilince normalize eğri okunmaz bir gürültüye dönüyor. Aralık listesi tek
- * yerde duruyor ki doğrulama ile denetim ayrışmasın — eskiden doğrulama
- * `CHART_RANGES`e (sekiz aralık), denetim beş düğmeye bakıyordu: adrese
- * `?aralik=1D` yazan biri hiçbir düğmenin seçili görünmediği bir ekran
- * alıyordu.
- */
-const COMPARE_RANGES = ["1M", "3M", "6M", "YTD", "1Y", "5Y"] as const;
-type CompareRange = (typeof COMPARE_RANGES)[number];
-
-/**
- * Adresteki sembol listesi — alınanlar ve DÜŞENLER.
- *
- * Düşenler ayrı dönüyor çünkü ekran onları söylemek zorunda: paylaşılan bir
- * bağlantıda beş sembol varsa beşincisi sessizce yok oluyordu ve okuyucu
- * "bağlantı bozuk" sanıyordu.
- *
- * Dizi biçimi de kurtarılıyor: `?semboller=A&semboller=B` Next tarafından
- * dizi olarak geliyor ve eski `typeof raw !== "string"` koşulu onu boş
- * ekrana düşürüyordu.
- */
-function parseSymbols(raw: string | string[] | undefined): {
-  kept: string[];
-  dropped: string[];
-} {
-  const metin = Array.isArray(raw) ? raw.join(",") : raw;
-  if (typeof metin !== "string") return { kept: [], dropped: [] };
-  const parcalar = metin
-    .split(",")
-    .map((entry) => entry.trim().toUpperCase())
-    .filter(Boolean);
-  const gecerli = [...new Set(parcalar.filter((entry) => isValidSymbol(entry)))];
-  const gecersiz = [...new Set(parcalar.filter((entry) => !isValidSymbol(entry)))];
-  return {
-    kept: gecerli.slice(0, MAX_SYMBOLS),
-    dropped: [...gecersiz, ...gecerli.slice(MAX_SYMBOLS)],
-  };
-}
-
 export default async function ComparePage(props: PageProps<"/karsilastir">) {
   const search = await props.searchParams;
   const { locale, t } = await getI18n();
 
-  const { kept: symbols, dropped } = parseSymbols(search.semboller);
-  const range: ChartRange = COMPARE_RANGES.includes(
-    search.aralik as CompareRange,
-  )
-    ? (search.aralik as ChartRange)
-    : DEFAULT_RANGE;
-
-  /* Virgül HAM yazılıyor. `URLSearchParams` onu `%2C`ye çeviriyor ama hisse
-     sayfasındaki karşılaştır bağlantısı ham virgül üretiyor: aynı içerik iki
-     ayrı adreste yaşıyor, önbellek iki kez doluyor ve paylaşılan bağlantılar
-     birbirine benzemiyordu. */
-  const hrefFor = (list: string[], nextRange: ChartRange = range) => {
-    if (list.length === 0) return "/karsilastir";
-    const ek = nextRange !== DEFAULT_RANGE ? `&aralik=${nextRange}` : "";
-    return `/karsilastir?semboller=${list.join(",")}${ek}`;
-  };
+  const { kept: symbols, dropped } = parseCompareSymbols(search.semboller);
+  const range: CompareRange = isCompareRange(search.aralik)
+    ? search.aralik
+    : DEFAULT_COMPARE_RANGE;
 
   return (
     <div className="flex flex-col gap-5">
-      {/* ARALIK DENETİMİ SAYFANIN DENETİMİ. Grafik panelinin başlığındaydı
-          ve orada yalnızca grafiği yönetiyormuş gibi duruyordu; oysa tablodaki
-          dönem getirisi de bu aralıktan çıkıyor. Kalıp bilanço takviminin
-          başlığındakiyle aynı. Dar ekranda altı düğme sığmıyor, ray
-          bölünmek yerine kayıyor. */}
-      <PageHeader
-        eyebrow={t.compare.eyebrow}
-        title={t.compare.title}
-        subtitle={t.compare.subtitle}
-        action={
-          symbols.length > 0 ? (
-            <div className="scroll-x-hint -mx-1 max-w-full px-1">
-              <Segment label={t.compare.rangeLabel}>
-                {COMPARE_RANGES.map((key) => (
-                  <SegmentItem
-                    key={key}
-                    href={hrefFor(symbols, key)}
-                    active={range === key}
-                  >
-                    {key}
-                  </SegmentItem>
-                ))}
-              </Segment>
-            </div>
-          ) : undefined
-        }
-      />
-
-      {/* Adresten düşen semboller SÖYLENİYOR: paylaşılan bir bağlantıda
-          beşinci sembol sessizce yok oluyordu. */}
-      {dropped.length > 0 && (
-        <p className="text-small text-muted">{t.compare.trimmedNote}</p>
-      )}
-
       {symbols.length === 0 ? (
-        <Panel className="flex flex-col gap-5 p-5 sm:p-6">
-          {/* Dolgusu kısılmış: `EmptyState` tek başına duran bir panel için
-              yazıldı ve altta 40px taşıyor; burada hemen altında hazır setler
-              var ve iki blok arasında altmış piksellik ölü bir bant
-              kalıyordu.
-              ARAMA KUTUSU BURADA AÇIK: boş ekran "bir hisse sayfasına git"
-              diyordu, oysa ekleme yolu bu ekranın içinde. */}
-          <EmptyState
-            title={t.compare.empty}
-            hint={t.compare.emptyHint}
-            className="pb-2 pt-6"
-            action={
-              <CompareAdd
-                symbols={[]}
-                rangeParam={null}
-                defaultOpen
-                labels={{
-                  add: t.compare.addSymbol,
-                  placeholder: t.compare.addPlaceholder,
-                  cancel: t.common.cancel,
-                  noResults: t.stock.notFound,
-                }}
-              />
-            }
+        <>
+          <PageHeader
+            eyebrow={t.compare.eyebrow}
+            title={t.compare.title}
+            subtitle={t.compare.subtitle}
           />
-          <div className="flex flex-col gap-2.5">
-            <p className="plate text-nano tracking-[0.09em]">
-              {t.compare.presets}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {PRESETS.map((preset) => (
-                <Link
-                  key={preset.labelKey}
-                  href={hrefFor(preset.symbols)}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-small font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-9"
-                >
-                  {t.compare[preset.labelKey]}
-                  <span className="numeral text-tiny text-muted">
-                    {preset.symbols.join(" · ")}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </Panel>
+          {/* Adresten düşen semboller SÖYLENİYOR: paylaşılan bir bağlantıda
+              beşinci sembol sessizce yok oluyordu. */}
+          {dropped.length > 0 && (
+            <p className="text-small text-muted">{t.compare.trimmedNote}</p>
+          )}
+          <CompareEmpty presets={PRESETS} t={t} />
+        </>
       ) : (
-        <CompareBoard
-          symbols={symbols}
-          range={range}
-          hrefFor={hrefFor}
-          locale={locale}
-          t={t}
-        />
+        /* BAŞLIK DA TAHTANIN İÇİNDE. Aralık denetimi sayfa başlığının sağında
+           duruyor ve artık istemci durumunu okuyor: sağlayıcının ağacın
+           kökünde olması gerekiyor, yani başlık da onun altında. */
+        <CompareBoard symbols={symbols} range={range} dropped={dropped} />
       )}
 
       <GuideHint
@@ -242,16 +139,13 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
 async function CompareBoard({
   symbols,
   range,
-  hrefFor,
-  locale,
-  t,
+  dropped,
 }: {
   symbols: string[];
-  range: ChartRange;
-  hrefFor: (list: string[], nextRange?: ChartRange) => string;
-  locale: Locale;
-  t: Dictionary;
+  range: CompareRange;
+  dropped: string[];
 }) {
+  const { locale, t } = await getI18n();
   const status = await getStatus();
 
   const [quotesResult, names, barsBySymbol, ...metricResults] =
@@ -264,7 +158,12 @@ async function CompareBoard({
 
   const quotes = quotesResult.ok ? quotesResult.data : {};
 
-  const series: CompareSeries[] = symbols
+  /* AÇILIŞ ARALIĞININ SERİLERİ SUNUCUDAN. Bunlar olmadan zincir "HTML → JS
+     indir → hidrasyon → fetch → çizim" diye işlerdi ve sayfanın en büyük
+     görsel öğesi gereksiz bir gidiş-dönüş kadar geç belirirdi. Aralık
+     değişince istemci `/api/karsilastir`e gidiyor; ilk aralık için hiç
+     çıkmıyor. */
+  const initialSeries: CompareSeries[] = symbols
     .map((symbol) => {
       const bars = barsBySymbol[symbol] ?? [];
       return {
@@ -276,6 +175,38 @@ async function CompareBoard({
       };
     })
     .filter((entry) => entry.closes.length >= 2);
+
+  /* Aralığa bağlı METİNLERİN tamamı tek nesnede: sağlayıcı bileşenden
+     istemciye fonksiyon değil VERİ geçiyor. Sözlük sunucuda çözülüyor. */
+  const labels: CompareLabels = {
+    rangeLabel: t.compare.rangeLabel,
+    ranges: Object.fromEntries(
+      COMPARE_RANGES.map((key) => [key, t.chart.ranges[key]]),
+    ) as CompareLabels["ranges"],
+    rangeLongs: Object.fromEntries(
+      COMPARE_RANGES.map((key) => [key, t.chart.rangeLabels[key]]),
+    ) as CompareLabels["rangeLongs"],
+    rangeAnnounce: Object.fromEntries(
+      COMPARE_RANGES.map((key) => [
+        key,
+        t.compare.rangeAnnounce.replace("{range}", t.chart.rangeLabels[key]),
+      ]),
+    ) as CompareLabels["rangeAnnounce"],
+    selected: t.compare.selected,
+    dayShort: t.compare.dayShort,
+    periodColumn: t.compare.periodColumn,
+    remove: t.compare.remove,
+    partialPeriod: t.compare.partialPeriod,
+    chartTitle: t.compare.chartTitle,
+    chartHint: t.compare.chartHint,
+    chartReading: t.compare.chartReading,
+    chartMissing: t.compare.chartMissing,
+    chartMissingHint: t.compare.chartMissingHint,
+    rangeFailed: t.compare.rangeFailed,
+    rangeFailedHint: t.compare.rangeFailedHint,
+    retry: t.common.retry,
+    periodChange: t.compare.periodChange,
+  };
 
   /**
    * O sütundaki şirket ana borsasında DOLAR DIŞI bir para birimiyle mi
@@ -292,29 +223,6 @@ async function CompareBoard({
   };
   const yabanciSembol = symbols.filter((_, i) => yabanciPara(i));
 
-  /**
-   * Seri, seçilen aralığın tamamını kapsamıyorsa kapsadığı gerçek aralık.
-   * Kapsıyorsa null — o zaman söylenecek fazladan bir şey yok.
-   */
-  const enErken = Math.min(
-    ...series.map((entry) => entry.times?.[0] ?? Infinity),
-  );
-  const eksikDonem = (entry: (typeof series)[number] | undefined) => {
-    const ts = entry?.times;
-    if (!ts || ts.length < 2 || !Number.isFinite(enErken)) return null;
-    const kapsam = (ts[ts.length - 1] - ts[0]) || 1;
-    // Tam kapsayan serilerde künye basılmıyor; eşik seri başlangıcının
-    // ortak başlangıca oranı.
-    if (ts[0] - enErken < kapsam * 0.02) return null;
-    const bicim = (unix: number) =>
-      new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }).format(new Date(unix * 1000));
-    return `${bicim(ts[0])} — ${bicim(ts[ts.length - 1])}`;
-  };
-
   /* Satırlar tek yerde tanımlı: hem geniş ekrandaki tablo hem mobildeki
      kart yığını aynı diziden besleniyor, ikisi birbirinden kayamıyor. */
   const rows: {
@@ -323,13 +231,18 @@ async function CompareBoard({
        net kâr marjı riske, beta değerlemeye düşmüştü. Anahtar satırla
        birlikte taşınırsa sıra değişse de grup doğru kalır. */
     group: "return" | "valuation" | "risk" | "company";
-    label: string;
+    /* React anahtarı ETİKETTEN AYRI: dönem getirisi satırının etiketi artık
+       bir düğüm (seçili aralığı da yazan istemci bileşeni) ve bir düğüm
+       anahtar olamaz. */
+    key: string;
+    label: React.ReactNode;
     /** Ölçünün altındaki mikro künye — cümle düzeninde. */
     caption?: string;
     value: (index: number) => React.ReactNode;
   }[] = [
     {
       group: "return",
+      key: "lastPrice",
       label: t.market.lastPrice,
       value: (i) => {
         const quote = quotes[symbols[i]];
@@ -344,6 +257,7 @@ async function CompareBoard({
     },
     {
       group: "return",
+      key: "dayChange",
       label: t.compare.dayChange,
       value: (i) => {
         const quote = quotes[symbols[i]];
@@ -355,43 +269,21 @@ async function CompareBoard({
       },
     },
     {
+      /* SATIRIN TAMAMI İSTEMCİDE — tablonun tek aralığa bağlı satırı bu.
+         Etiket seçili aralığın uzun adını da yazıyor ("Son 6 Ay"): "Dönem
+         Getirisi" tek başına hangi pencereye baktığını söylemiyordu ve
+         cevabı ekranın öteki ucundaki düğmedeydi. Değer, sembol şeridinde
+         okunan sayıyla AYNI kaynaktan geliyor (`lib/compare.ts` →
+         `periodChangePct`); iki yerde duran bir sayının iki hesaptan
+         çıkması bu depoda bir kez hata olarak yaşandı. */
       group: "return",
-      label: t.compare.periodChange,
-      value: (i) => {
-        const entry = series.find((s) => s.symbol === symbols[i]);
-        const closes = entry?.closes;
-        if (!closes || closes.length < 2) return "—";
-        const pct = ((closes[closes.length - 1] - closes[0]) / closes[0]) * 100;
-        /* KISA SERİ KENDİ DÖNEMİNİ SÖYLER.
-           Getiri serinin İLK barından hesaplanıyor; sonradan listelenen bir
-           hissede bu, seçilen aralığın tamamı değil. 5Y seçiliyken SPCX
-           satırında "− %14,90" yazıyordu ve okuyucu bunu beş yıllık kayıp
-           sanıyordu — oysa şirketin elimizdeki ilk barı 8 Haziran 2026, yani
-           gösterilen şey on haftalık getiri.
-           Ek kullanılmıyor ("2026'dan beri" gibi): Türkçede ek yılın
-           okunuşuna göre değişiyor (2026'DAN ama 2025'TEN) ve tek bir kalıp
-           ikisini birden doğru yazamıyor. Tarih aralığı hem eksiz hem daha
-           çok şey söylüyor. */
-        const kisa = eksikDonem(entry);
-        return (
-          <div className="flex flex-col items-end gap-0.5">
-            <span
-              className={cn(
-                "numeral font-semibold",
-                directionText(directionOf(pct)),
-              )}
-            >
-              {formatPercent(pct, locale)}
-            </span>
-            {kisa && (
-              <span className="numeral text-nano text-muted">{kisa}</span>
-            )}
-          </div>
-        );
-      },
+      key: "periodChange",
+      label: <ComparePeriodLabel labels={labels} />,
+      value: (i) => <ComparePeriodValue symbol={symbols[i]} />,
     },
     {
       group: "valuation",
+      key: "marketCap",
       label: t.market.marketCap,
       value: (i) => {
         /* CANLI hesap — sağlayıcının `marketCap` alanı profil çekildiği anın
@@ -408,6 +300,7 @@ async function CompareBoard({
     },
     {
       group: "valuation",
+      key: "peRatio",
       label: t.stock.peRatio,
       /* Oran, tablonun kendi fiyat satırından kuruluyor. Sağlayıcının hazır
          F/K'si geriden gelen bir fiyatla hesaplanmış oluyor; karşılaştırma
@@ -432,6 +325,7 @@ async function CompareBoard({
     },
     {
       group: "valuation",
+      key: "dividend",
       label: t.stock.dividend,
       value: (i) => {
         const metrics = metricResults[i];
@@ -448,6 +342,7 @@ async function CompareBoard({
     },
     {
       group: "risk",
+      key: "beta",
       label: t.stock.beta,
       value: (i) => {
         const metrics = metricResults[i];
@@ -458,6 +353,7 @@ async function CompareBoard({
     },
     {
       group: "risk",
+      key: "range52",
       label: t.compare.range52,
       value: (i) => {
         const metrics = metricResults[i];
@@ -483,6 +379,7 @@ async function CompareBoard({
          (`netProfitMarginTTM`) ve sunum katmanı onu atıyordu. Değerleme
          karşılaştırmasında F/K'nin yanında duracak ölçü bu. */
       group: "valuation",
+      key: "netMargin",
       label: t.compare.netMargin,
       caption: t.analysis.trailing12m,
       value: (i) => {
@@ -497,11 +394,13 @@ async function CompareBoard({
          iki farklı ad veriyordu; `/sirketler` GICS'i tercih ediyor, bu ekran
          tek kalmıştı. Alan aynı sorgudan geliyor, ek gidiş-dönüş yok. */
       group: "company",
+      key: "sector",
       label: t.compare.sector,
       value: (i) => sectorLabel(names[symbols[i]]?.sector, locale) ?? "—",
     },
     {
       group: "company",
+      key: "industry",
       label: t.stock.industry,
       value: (i) =>
         industryLabel(names[symbols[i]]?.industry, locale) ?? "—",
@@ -537,75 +436,60 @@ async function CompareBoard({
   );
 
   return (
-    <>
+    <CompareProvider
+      /* SEMBOL LİSTESİ DEĞİŞİNCE SAĞLAYICI YENİDEN KURULUYOR. Sembol
+         eklemek/çıkarmak gerçek bir gezinme ve sunucu yeni listenin
+         serilerini zaten gönderiyor; `key` olmasaydı React aynı örneği
+         korur, tembel `useState` başlatıcıları yeniden koşmaz ve ekran
+         elindeki veriyi bırakıp aynı şeyi bir de istemciden isterdi. */
+      key={symbols.join(",")}
+      symbols={symbols}
+      initialRange={range}
+      initialSeries={initialSeries}
+      locale={locale}
+      announce={labels.rangeAnnounce}
+    >
+      {/* ARALIK DENETİMİ SAYFANIN DENETİMİ. Grafik panelinin başlığındaydı
+          ve orada yalnızca grafiği yönetiyormuş gibi duruyordu; oysa şeritteki
+          ve tablodaki dönem getirisi de bu aralıktan çıkıyor. Dar ekranda
+          altı düğme sığmazsa ray bölünmek yerine kayıyor.
+          Etiketler artık sözlükten: düğmelerin içine ham anahtar
+          basılıyordu ve Türkçe ekranda "1M · 3M · 6M · YTD" yazıyordu, oysa
+          hisse sayfasının aynı denetimi yıllardır "1A · 3A · 6A · YBB"
+          diyor — aynı ürün, iki dil. */}
+      <PageHeader
+        eyebrow={t.compare.eyebrow}
+        title={t.compare.title}
+        subtitle={t.compare.subtitle}
+        action={<CompareRangeControl labels={labels} />}
+      />
+
+      {/* Adresten düşen semboller SÖYLENİYOR: paylaşılan bir bağlantıda
+          beşinci sembol sessizce yok oluyordu. */}
+      {dropped.length > 0 && (
+        <p className="text-small text-muted">{t.compare.trimmedNote}</p>
+      )}
+
       {/* ---- Sembol şeridi ----
-           Çip yığınıydı: logo, sembol ve çarpı. Üç şey eksikti — şirketin
-           ADI (alan `SymbolMeta.name` içinde geliyor ve hiç basılmıyordu),
-           günlük değişim ve en önemlisi GRAFİKTEKİ RENGİN ANAHTARI.
-           Okuyucu grafikteki mor çizginin hangi sembol olduğunu ancak
-           grafiğin altındaki küçük künyeye bakıp kurabiliyordu.
-           Renk sembolden eşleniyor, dizinin sırasından değil: `series`
-           barı gelmeyen sembolü eliyor ve indise bakan bir eşleme bütün
-           renkleri kaydırıyordu.
-           DÖNEM GETİRİSİ ŞERİDE GİRMİYOR — tabloda duruyor. Aynı sayıyı iki
-           yerde tutmak projenin veri kuralına aykırı. */}
-      <Panel>
-        <ul className="divide-y divide-line-soft">
-          {symbols.map((symbol) => {
-            const meta = names[symbol];
-            const quote = quotes[symbol];
-            return (
-              <li
-                key={symbol}
-                className="flex items-center gap-3 px-4 py-2.5 sm:px-5"
-              >
-                <span
-                  aria-hidden
-                  className="h-5 w-[3px] shrink-0 rounded-full"
-                  style={{ background: seriesColorOf(symbols, symbol) }}
-                />
-                <LogoTile symbol={symbol} logoUrl={meta?.logoUrl} size="sm" />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <Link
-                    href={`/hisse/${symbol}`}
-                    className="numeral w-fit text-base font-bold leading-tight text-strong transition-colors hover:text-primary"
-                  >
-                    {symbol}
-                  </Link>
-                  {meta?.name && (
-                    <span className="truncate text-tiny leading-tight text-muted">
-                      {meta.name}
-                    </span>
-                  )}
-                </span>
-                {quote && (
-                  <ChangePill
-                    changePct={quote.changePct}
-                    locale={locale}
-                    size="sm"
-                  />
-                )}
-                <Link
-                  href={hrefFor(symbols.filter((entry) => entry !== symbol))}
-                  aria-label={`${symbol} ${t.compare.remove}`}
-                  /* Dokunma hedefi 44px; görsel daire aynı, negatif margin
-                     satır yüksekliğini değiştirmiyor. */
-                  className="-m-2.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-down-wash hover:text-down focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus) sm:-m-1.5 sm:size-8"
-                >
-                  <X weight="bold" size={12} />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-        {symbols.length < MAX_SYMBOLS ? (
+           Gerekçesi `components/markets/CompareLive.tsx`te: renk anahtarı,
+           şirket adı ve ARALIĞIN SÜRDÜĞÜ yüzde burada. */}
+      <CompareStrip
+        rows={symbols.map((symbol) => ({
+          symbol,
+          name: names[symbol]?.name ?? null,
+          logoUrl: names[symbol]?.logoUrl ?? null,
+          changePct: quotes[symbol]?.changePct ?? null,
+        }))}
+        labels={labels}
+      >
+        {symbols.length < MAX_COMPARE_SYMBOLS ? (
           /* EKLEME YOLU EKRANIN İÇİNDE. Burada yalnızca "bir hisse
              sayfasından Karşılaştır'a bas" yazan bir cümle vardı: dörtten
              üçe düşen kullanıcı dördüncüyü geri koyamıyordu. */
           <div className="flex flex-wrap items-center gap-3 border-t border-line px-4 py-3 sm:px-5">
             <CompareAdd
               symbols={symbols}
-              rangeParam={range === DEFAULT_RANGE ? null : range}
+              rangeParam={range === DEFAULT_COMPARE_RANGE ? null : range}
               labels={{
                 add: t.compare.addSymbol,
                 placeholder: t.compare.addPlaceholder,
@@ -628,38 +512,10 @@ async function CompareBoard({
             {t.compare.fullHint}
           </p>
         )}
-      </Panel>
+      </CompareStrip>
 
-      {/* ---- Normalize grafik ----
-           PANEL HER HÂLDE BASILIYOR. `series.length > 0` koşulu paneli
-           tümüyle yutuyordu: sağlayıcı bar döndürmediğinde ekranda grafiğin
-           yerinde hiçbir şey yoktu ve okuyucu "bu ekranda grafik yok mu"
-           diye soruyordu. Aralık denetimi sayfa başlığına taşındı — o
-           denetim yalnızca grafiği değil tablodaki dönem getirisini de
-           yönetiyor.
-           İpucu grafiğin ÜSTÜNDE: "hepsi neden sıfırdan başlıyor" sorusu
-           doğmadan cevaplanıyor. */}
-      <Panel className="flex flex-col gap-4 px-4 py-4 sm:px-5">
-        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
-          {t.compare.chartTitle}
-        </h2>
-        <p className="text-tiny leading-relaxed text-muted">
-          {t.compare.chartHint}
-        </p>
-        {series.length > 0 ? (
-          <CompareChart
-            series={series}
-            title={t.compare.chartTitle}
-            locale={locale}
-            readingLabel={t.compare.chartReading}
-          />
-        ) : (
-          <DataError
-            message={t.compare.chartMissing}
-            hint={t.compare.chartMissingHint}
-          />
-        )}
-      </Panel>
+      {/* ---- Normalize grafik ---- */}
+      <CompareChartPanel labels={labels} />
 
       {/* ---- Metrik tablosu ----
            ETİKET SÜTUNU SABİT. 390 pikselde panel ~352 piksel, etiket 104,
@@ -723,7 +579,7 @@ async function CompareBoard({
                     </th>
                   </tr>
                   {group.rows.map((row) => (
-                    <tr key={row.label}>
+                    <tr key={row.key}>
                       <th
                         scope="row"
                         className="sticky left-0 z-10 bg-(--panel-fixed) px-3 py-2.5 text-left text-small font-medium text-muted sm:px-5"
@@ -791,13 +647,13 @@ async function CompareBoard({
 
       {quotesResult.ok && (
         <DataStamp
-      labels={t.data}
+          labels={t.data}
           source={quotesResult.source}
           at={quotesResult.fetchedAt}
           stale={quotesResult.stale}
           locale={locale}
         />
       )}
-    </>
+    </CompareProvider>
   );
 }
