@@ -674,14 +674,16 @@ const tr = {
     subtitle:
       "İki ile dört hisseyi aynı ölçekte oku — getiri, değerleme ve oynaklık tek tabloda.",
     empty: "Karşılaştırmak için sembol seç",
+    /* Eski metin ekranı yalanlıyordu: sembol eklemenin yolu bu ekranın
+       içinde de var (`CompareAdd`), bir hisse sayfasına gitmek gerekmiyor. */
     emptyHint:
-      "Bir hisse sayfasındaki \u201cKarşılaştır\u201d bağlantısıyla ekleyebilir ya da aşağıdaki hazır setlerden biriyle başlayabilirsin.",
+      "Aşağıdaki kutuya sembol ya da şirket adı yaz, ya da hazır setlerden biriyle başla.",
     presets: "Hazır Setler",
     presetChips: "Yarı İletken",
     presetMega: "Mega Ölçek",
     presetIndices: "Endeks Fonları",
     chartTitle: "Dönem Getirisi",
-    chartReading: "Ara değerler için grafiğin üzerine gel",
+    chartReading: "Ara değerler için grafiğe dokun ya da imleci üzerine getir",
     chartHint:
       "Her seri kendi başlangıcına göre yüzdeye çevrildi; hepsi sıfırdan başlar. Fiyat seviyeleri değil, dönem boyunca üretilen getiri karşılaştırılıyor.",
     metric: "Metrik",
@@ -693,8 +695,31 @@ const tr = {
     remove: "Listeden Çıkar",
     addSymbol: "Sembol Ekle",
     addPlaceholder: "Sembol ya da şirket adı",
-    addHint: "Sembol eklemek için bir hisse sayfasından Karşılaştır'a bas.",
     addCta: "Karşılaştır",
+    trimmedNote:
+      "Bağlantıdaki fazladan semboller alınmadı — bu ekran en çok dört sembol gösterir.",
+    unknownSymbols:
+      "{symbols} için veri bulunamadı; o sütun boş kalıyor.",
+    rangeLabel: "Grafik Aralığı",
+    chartMissing: "Grafik Verisi Alınamadı",
+    chartMissingHint:
+      "Sağlayıcı bu semboller için bar döndürmedi; dönem getirisi satırı da bu yüzden boş.",
+    tableRegion: "Karşılaştırma Tablosu",
+    secondSymbol: "İkinci Sembolü Ekle",
+    secondSymbolHint:
+      "Tek seri kendi başlangıcına göre normalize edildiği için sıfırdan çıkan bir çizgiden başka bir şey söylemiyor.",
+    fullHint: "Dört sembol dolu; birini çıkarınca yeni bir tane ekleyebilirsin.",
+    dividendNone: "Ödemiyor",
+    metricsUnavailable:
+      "{symbols} için ölçü verisi alınamadı: F/K, temettü, beta ve 52 hafta bandı o sütunda boş.",
+    quotesUnavailable: "Kotasyonlar alınamadı; fiyat ve günlük değişim boş.",
+    groupReturn: "Getiri",
+    groupValuation: "Değerleme",
+    groupRisk: "Risk",
+    groupCompany: "Şirket",
+    netMargin: "Net Kâr Marjı",
+    sector: "Sektör",
+    compareFirstFour: "İlk Dördünü Karşılaştır",
   },
 
   markets: {

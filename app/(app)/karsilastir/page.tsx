@@ -1,9 +1,12 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { X } from "@phosphor-icons/react/dist/ssr";
 import { GuideHint } from "@/components/article/GuideHint";
 import { CompareChart, type CompareSeries } from "@/components/markets/CompareChart";
+import { seriesColorOf } from "@/lib/chart-series";
 import {
   ChangePill,
+  DataError,
   DataStamp,
   EmptyState,
   PageHeader,
@@ -16,9 +19,9 @@ import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { CompareAdd } from "@/components/markets/CompareAdd";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
-import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
+import type { ChartRange } from "@/lib/providers/types";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { industryLabel } from "@/lib/sectors";
+import { industryLabel, sectorLabel } from "@/lib/sectors";
 import {
   cn,
   directionOf,
@@ -71,52 +74,130 @@ export const generateMetadata = pageMetadata({
   },
 });
 
-function parseSymbols(raw: string | string[] | undefined): string[] {
-  if (typeof raw !== "string") return [];
-  return [
-    ...new Set(
-      raw
-        .split(",")
-        .map((entry) => entry.trim().toUpperCase())
-        .filter((entry) => isValidSymbol(entry)),
-    ),
-  ].slice(0, MAX_SYMBOLS);
+/**
+ * Grafik aralıkları — `CHART_RANGES`in tamamı DEĞİL.
+ *
+ * `1D` ve `1W` dakikalık bar döndürüyor; dört sembol o çözünürlükte üst üste
+ * çizilince normalize eğri okunmaz bir gürültüye dönüyor. Aralık listesi tek
+ * yerde duruyor ki doğrulama ile denetim ayrışmasın — eskiden doğrulama
+ * `CHART_RANGES`e (sekiz aralık), denetim beş düğmeye bakıyordu: adrese
+ * `?aralik=1D` yazan biri hiçbir düğmenin seçili görünmediği bir ekran
+ * alıyordu.
+ */
+const COMPARE_RANGES = ["1M", "3M", "6M", "YTD", "1Y", "5Y"] as const;
+type CompareRange = (typeof COMPARE_RANGES)[number];
+
+/**
+ * Adresteki sembol listesi — alınanlar ve DÜŞENLER.
+ *
+ * Düşenler ayrı dönüyor çünkü ekran onları söylemek zorunda: paylaşılan bir
+ * bağlantıda beş sembol varsa beşincisi sessizce yok oluyordu ve okuyucu
+ * "bağlantı bozuk" sanıyordu.
+ *
+ * Dizi biçimi de kurtarılıyor: `?semboller=A&semboller=B` Next tarafından
+ * dizi olarak geliyor ve eski `typeof raw !== "string"` koşulu onu boş
+ * ekrana düşürüyordu.
+ */
+function parseSymbols(raw: string | string[] | undefined): {
+  kept: string[];
+  dropped: string[];
+} {
+  const metin = Array.isArray(raw) ? raw.join(",") : raw;
+  if (typeof metin !== "string") return { kept: [], dropped: [] };
+  const parcalar = metin
+    .split(",")
+    .map((entry) => entry.trim().toUpperCase())
+    .filter(Boolean);
+  const gecerli = [...new Set(parcalar.filter((entry) => isValidSymbol(entry)))];
+  const gecersiz = [...new Set(parcalar.filter((entry) => !isValidSymbol(entry)))];
+  return {
+    kept: gecerli.slice(0, MAX_SYMBOLS),
+    dropped: [...gecersiz, ...gecerli.slice(MAX_SYMBOLS)],
+  };
 }
 
 export default async function ComparePage(props: PageProps<"/karsilastir">) {
   const search = await props.searchParams;
   const { locale, t } = await getI18n();
 
-  const symbols = parseSymbols(search.semboller);
-  const range: ChartRange = CHART_RANGES.includes(search.aralik as ChartRange)
+  const { kept: symbols, dropped } = parseSymbols(search.semboller);
+  const range: ChartRange = COMPARE_RANGES.includes(
+    search.aralik as CompareRange,
+  )
     ? (search.aralik as ChartRange)
     : DEFAULT_RANGE;
 
+  /* Virgül HAM yazılıyor. `URLSearchParams` onu `%2C`ye çeviriyor ama hisse
+     sayfasındaki karşılaştır bağlantısı ham virgül üretiyor: aynı içerik iki
+     ayrı adreste yaşıyor, önbellek iki kez doluyor ve paylaşılan bağlantılar
+     birbirine benzemiyordu. */
   const hrefFor = (list: string[], nextRange: ChartRange = range) => {
     if (list.length === 0) return "/karsilastir";
-    const params = new URLSearchParams({ semboller: list.join(",") });
-    if (nextRange !== DEFAULT_RANGE) params.set("aralik", nextRange);
-    return `/karsilastir?${params}`;
+    const ek = nextRange !== DEFAULT_RANGE ? `&aralik=${nextRange}` : "";
+    return `/karsilastir?semboller=${list.join(",")}${ek}`;
   };
 
   return (
     <div className="flex flex-col gap-5">
+      {/* ARALIK DENETİMİ SAYFANIN DENETİMİ. Grafik panelinin başlığındaydı
+          ve orada yalnızca grafiği yönetiyormuş gibi duruyordu; oysa tablodaki
+          dönem getirisi de bu aralıktan çıkıyor. Kalıp bilanço takviminin
+          başlığındakiyle aynı. Dar ekranda altı düğme sığmıyor, ray
+          bölünmek yerine kayıyor. */}
       <PageHeader
         eyebrow={t.compare.eyebrow}
         title={t.compare.title}
         subtitle={t.compare.subtitle}
+        action={
+          symbols.length > 0 ? (
+            <div className="scroll-x-hint -mx-1 max-w-full px-1">
+              <Segment label={t.compare.rangeLabel}>
+                {COMPARE_RANGES.map((key) => (
+                  <SegmentItem
+                    key={key}
+                    href={hrefFor(symbols, key)}
+                    active={range === key}
+                  >
+                    {key}
+                  </SegmentItem>
+                ))}
+              </Segment>
+            </div>
+          ) : undefined
+        }
       />
+
+      {/* Adresten düşen semboller SÖYLENİYOR: paylaşılan bir bağlantıda
+          beşinci sembol sessizce yok oluyordu. */}
+      {dropped.length > 0 && (
+        <p className="text-small text-muted">{t.compare.trimmedNote}</p>
+      )}
 
       {symbols.length === 0 ? (
         <Panel className="flex flex-col gap-5 p-5 sm:p-6">
           {/* Dolgusu kısılmış: `EmptyState` tek başına duran bir panel için
               yazıldı ve altta 40px taşıyor; burada hemen altında hazır setler
               var ve iki blok arasında altmış piksellik ölü bir bant
-              kalıyordu. */}
+              kalıyordu.
+              ARAMA KUTUSU BURADA AÇIK: boş ekran "bir hisse sayfasına git"
+              diyordu, oysa ekleme yolu bu ekranın içinde. */}
           <EmptyState
             title={t.compare.empty}
             hint={t.compare.emptyHint}
             className="pb-2 pt-6"
+            action={
+              <CompareAdd
+                symbols={[]}
+                rangeParam={null}
+                defaultOpen
+                labels={{
+                  add: t.compare.addSymbol,
+                  placeholder: t.compare.addPlaceholder,
+                  cancel: t.common.cancel,
+                  noResults: t.stock.notFound,
+                }}
+              />
+            }
           />
           <div className="flex flex-col gap-2.5">
             <p className="plate text-nano tracking-[0.09em]">
@@ -127,7 +208,7 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
                 <Link
                   key={preset.labelKey}
                   href={hrefFor(preset.symbols)}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-small font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-small font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-9"
                 >
                   {t.compare[preset.labelKey]}
                   <span className="numeral text-tiny text-muted">
@@ -238,6 +319,8 @@ async function CompareBoard({
      kart yığını aynı diziden besleniyor, ikisi birbirinden kayamıyor. */
   const rows: {
     label: string;
+    /** Ölçünün altındaki mikro künye — cümle düzeninde. */
+    caption?: string;
     value: (index: number) => React.ReactNode;
   }[] = [
     {
@@ -344,9 +427,12 @@ async function CompareBoard({
         /* Yüzde işareti elle BAŞA konuyordu: İngilizce tarafta "%0.46"
            çıkıyordu, oysa orada sayıdan sonra gelir. İşaretin yeri dile
            bağlı ve o kural tek yerde: lib/utils.ts → withPercent. */
-        return metrics?.ok && metrics.data.dividendYield !== null
-          ? formatPercentPlain(metrics.data.dividendYield, locale, 2)
-          : "—";
+        /* SIFIR İLE BİLİNMİYOR AYRI ŞEY. "Temettü ödemiyor" bir bilgi,
+           "veri gelmedi" bilgisizlik; ikisi de aynı tireye düşüyordu. */
+        if (!metrics?.ok || metrics.data.dividendYield === null) return "—";
+        return metrics.data.dividendYield === 0
+          ? t.compare.dividendNone
+          : formatPercentPlain(metrics.data.dividendYield, locale, 2);
       },
     },
     {
@@ -380,140 +466,287 @@ async function CompareBoard({
       },
     },
     {
+      /* AYNI İSTEKTEN GELİYOR: `getKeyMetrics` bu alanı zaten döndürüyordu
+         (`netProfitMarginTTM`) ve sunum katmanı onu atıyordu. Değerleme
+         karşılaştırmasında F/K'nin yanında duracak ölçü bu. */
+      label: t.compare.netMargin,
+      caption: t.analysis.trailing12m,
+      value: (i) => {
+        const metrics = metricResults[i];
+        return metrics?.ok && metrics.data.netMarginPct !== null
+          ? formatPercentPlain(metrics.data.netMarginPct, locale, 1)
+          : "—";
+      },
+    },
+    {
+      /* SEKTÖR GICS'TEN. Sağlayıcının serbest metni aynı şirkete iki ekranda
+         iki farklı ad veriyordu; `/sirketler` GICS'i tercih ediyor, bu ekran
+         tek kalmıştı. Alan aynı sorgudan geliyor, ek gidiş-dönüş yok. */
+      label: t.compare.sector,
+      value: (i) => sectorLabel(names[symbols[i]]?.sector, locale) ?? "—",
+    },
+    {
       label: t.stock.industry,
       value: (i) =>
         industryLabel(names[symbols[i]]?.industry, locale) ?? "—",
     },
   ];
 
+  /* SATIRLAR ÜÇ ÖBEKTE. On iki satır düz bir liste hâlinde akıyordu ve
+     okuyucu "getiri mi bakıyorum, değerleme mi" diye ayırt edemiyordu.
+     Öbek başlığı bir kutu değil, bir ton basamağı ve tek hairline —
+     kart içinde ikinci kutu yok. */
+  const groups: { label: string; rows: typeof rows }[] = [
+    { label: t.compare.groupReturn, rows: rows.slice(0, 3) },
+    { label: t.compare.groupValuation, rows: rows.slice(3, 7) },
+    { label: t.compare.groupRisk, rows: rows.slice(7, 9) },
+    { label: t.compare.groupCompany, rows: rows.slice(9) },
+  ];
+
+  /* Ölçü bloğu çöken semboller — beş satır birden sessizce tireye
+     düşüyordu. */
+  const olcusuz = symbols.filter((_, i) => !metricResults[i]?.ok);
+  /* Hiçbir kaynaktan veri gelmeyen sembol: `?semboller=ZZZZ` doğrulamayı
+     geçiyor ve sütun baştan sona tire doluyordu. */
+  const bilinmeyen = symbols.filter(
+    (sym) =>
+      !names[sym] && !quotes[sym] && (barsBySymbol[sym]?.length ?? 0) === 0,
+  );
+
   return (
     <>
-      {/* ---- Seçili semboller ---- */}
-      <div className="flex flex-wrap items-center gap-2">
-        {symbols.map((symbol) => {
-          const meta = names[symbol];
-          return (
-            <span
-              key={symbol}
-              className="inline-flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-1.5 text-base"
-            >
-              {/* Yuvarlak: karo hap biçimli bir çipin içinde duruyor,
-                  kabın yarıçapıyla aynı olmalı. */}
-              <LogoTile
-                symbol={symbol}
-                logoUrl={meta?.logoUrl}
-                size="xs"
-                className="rounded-full"
-              />
-              <Link
-                href={`/hisse/${symbol}`}
-                className="numeral font-bold text-strong transition-colors hover:text-primary"
+      {/* ---- Sembol şeridi ----
+           Çip yığınıydı: logo, sembol ve çarpı. Üç şey eksikti — şirketin
+           ADI (alan `SymbolMeta.name` içinde geliyor ve hiç basılmıyordu),
+           günlük değişim ve en önemlisi GRAFİKTEKİ RENGİN ANAHTARI.
+           Okuyucu grafikteki mor çizginin hangi sembol olduğunu ancak
+           grafiğin altındaki küçük künyeye bakıp kurabiliyordu.
+           Renk sembolden eşleniyor, dizinin sırasından değil: `series`
+           barı gelmeyen sembolü eliyor ve indise bakan bir eşleme bütün
+           renkleri kaydırıyordu.
+           DÖNEM GETİRİSİ ŞERİDE GİRMİYOR — tabloda duruyor. Aynı sayıyı iki
+           yerde tutmak projenin veri kuralına aykırı. */}
+      <Panel>
+        <ul className="divide-y divide-line-soft">
+          {symbols.map((symbol) => {
+            const meta = names[symbol];
+            const quote = quotes[symbol];
+            return (
+              <li
+                key={symbol}
+                className="flex items-center gap-3 px-4 py-2.5 sm:px-5"
               >
-                {symbol}
-              </Link>
-              <Link
-                href={hrefFor(symbols.filter((entry) => entry !== symbol))}
-                aria-label={`${symbol} ${t.compare.remove}`}
-                /* 20×20'lik bir çarpı, parmakla ıskalanan bir hedefti — hem
-                   de yanlış basıldığında sembolü listeden düşüren bir
-                   hedef. Görsel daire aynı boyutta kalıyor, dokunma alanı
-                   dolguyla 32px'e çıkıyor. */
-                className="-m-1.5 flex size-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-down-wash hover:text-down"
-              >
-                <X weight="bold" size={11} />
-              </Link>
-            </span>
-          );
-        })}
-        {symbols.length < MAX_SYMBOLS && (
+                <span
+                  aria-hidden
+                  className="h-5 w-[3px] shrink-0 rounded-full"
+                  style={{ background: seriesColorOf(symbols, symbol) }}
+                />
+                <LogoTile symbol={symbol} logoUrl={meta?.logoUrl} size="sm" />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <Link
+                    href={`/hisse/${symbol}`}
+                    className="numeral w-fit text-base font-bold leading-tight text-strong transition-colors hover:text-primary"
+                  >
+                    {symbol}
+                  </Link>
+                  {meta?.name && (
+                    <span className="truncate text-tiny leading-tight text-muted">
+                      {meta.name}
+                    </span>
+                  )}
+                </span>
+                {quote && (
+                  <ChangePill
+                    changePct={quote.changePct}
+                    locale={locale}
+                    size="sm"
+                  />
+                )}
+                <Link
+                  href={hrefFor(symbols.filter((entry) => entry !== symbol))}
+                  aria-label={`${symbol} ${t.compare.remove}`}
+                  /* Dokunma hedefi 44px; görsel daire aynı, negatif margin
+                     satır yüksekliğini değiştirmiyor. */
+                  className="-m-2.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-down-wash hover:text-down focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus) sm:-m-1.5 sm:size-8"
+                >
+                  <X weight="bold" size={12} />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+        {symbols.length < MAX_SYMBOLS ? (
           /* EKLEME YOLU EKRANIN İÇİNDE. Burada yalnızca "bir hisse
              sayfasından Karşılaştır'a bas" yazan bir cümle vardı: dörtten
              üçe düşen kullanıcı dördüncüyü geri koyamıyordu. */
-          <CompareAdd
-            symbols={symbols}
-            rangeParam={range === DEFAULT_RANGE ? null : range}
-            labels={{
-              add: t.compare.addSymbol,
-              placeholder: t.compare.addPlaceholder,
-              cancel: t.common.cancel,
-              noResults: t.stock.notFound,
-            }}
-          />
-        )}
-      </div>
-
-      {/* ---- Normalize grafik ---- */}
-      {series.length > 0 && (
-        <Panel className="flex flex-col gap-4 px-4 py-4 sm:px-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
-              {t.compare.chartTitle}
-            </h2>
-            <Segment>
-              {(["1M", "3M", "6M", "1Y", "5Y"] as const).map((key) => (
-                <SegmentItem
-                  key={key}
-                  href={hrefFor(symbols, key)}
-                  active={range === key}
-                >
-                  {key}
-                </SegmentItem>
-              ))}
-            </Segment>
+          <div className="flex flex-wrap items-center gap-3 border-t border-line px-4 py-3 sm:px-5">
+            <CompareAdd
+              symbols={symbols}
+              rangeParam={range === DEFAULT_RANGE ? null : range}
+              labels={{
+                add: t.compare.addSymbol,
+                placeholder: t.compare.addPlaceholder,
+                cancel: t.common.cancel,
+                noResults: t.stock.notFound,
+              }}
+            />
+            {symbols.length === 1 && (
+              /* Tek seri kendi başlangıcına normalize edilmiş tek bir çizgi;
+                 ekran bunu söylemeden okuyucuyu bekletiyordu. */
+              <span className="min-w-0 flex-1 text-small text-muted">
+                {t.compare.secondSymbolHint}
+              </span>
+            )}
           </div>
+        ) : (
+          /* Dörtte ekleme çipi tümüyle kayboluyordu ve neden kaybolduğu
+             hiçbir yerde yazmıyordu. */
+          <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+            {t.compare.fullHint}
+          </p>
+        )}
+      </Panel>
+
+      {/* ---- Normalize grafik ----
+           PANEL HER HÂLDE BASILIYOR. `series.length > 0` koşulu paneli
+           tümüyle yutuyordu: sağlayıcı bar döndürmediğinde ekranda grafiğin
+           yerinde hiçbir şey yoktu ve okuyucu "bu ekranda grafik yok mu"
+           diye soruyordu. Aralık denetimi sayfa başlığına taşındı — o
+           denetim yalnızca grafiği değil tablodaki dönem getirisini de
+           yönetiyor.
+           İpucu grafiğin ÜSTÜNDE: "hepsi neden sıfırdan başlıyor" sorusu
+           doğmadan cevaplanıyor. */}
+      <Panel className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+          {t.compare.chartTitle}
+        </h2>
+        <p className="text-tiny leading-relaxed text-muted">
+          {t.compare.chartHint}
+        </p>
+        {series.length > 0 ? (
           <CompareChart
             series={series}
             title={t.compare.chartTitle}
             locale={locale}
             readingLabel={t.compare.chartReading}
           />
-          <p className="text-tiny leading-relaxed text-muted">
-            {t.compare.chartHint}
-          </p>
-        </Panel>
-      )}
+        ) : (
+          <DataError
+            message={t.compare.chartMissing}
+            hint={t.compare.chartMissingHint}
+          />
+        )}
+      </Panel>
 
-      {/* ---- Metrik tablosu ---- */}
-      <Panel className="overflow-hidden">
-        <div className="scroll-x">
+      {/* ---- Metrik tablosu ----
+           ETİKET SÜTUNU SABİT. 390 pikselde panel ~352 piksel, etiket 104,
+           kalan 248 piksel dört sütuna bölünüyor — kaydırma kaçınılmaz. Ama
+           kaydırırken etiket de kayıp gidiyordu ve okuyucu "bu satır neydi"
+           diye başa dönmek zorunda kalıyordu. Zemin `--panel-fixed`, çünkü
+           `--surface-solid` koyu temada saydam ve altından kayan sayılar
+           etiketin içinden okunuyordu.
+           Kap klavyeyle odaklanabilir (WCAG 2.1.1) ve `scroll-x-hint`
+           "devamı var" işaretini geri getiriyor — deponun dört yerdeki
+           yerleşik kalıbı. */}
+      <Panel>
+        <div
+          className="scroll-x-hint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+          tabIndex={0}
+          role="region"
+          aria-label={t.compare.tableRegion}
+        >
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-line-soft text-left text-nano uppercase tracking-wider text-muted">
-                <th className="w-[104px] px-3 py-2.5 font-medium sm:w-[168px] sm:px-5">
+                <th
+                  scope="col"
+                  className="sticky left-0 z-10 w-[104px] bg-(--panel-fixed) px-3 py-2.5 font-medium sm:w-[168px] sm:px-5"
+                >
                   {t.compare.metric}
                 </th>
                 {symbols.map((symbol) => (
                   <th
                     key={symbol}
-                    className="numeral px-2.5 py-2.5 text-right text-tiny font-bold tracking-normal text-strong sm:px-4"
+                    scope="col"
+                    className="px-2.5 py-2.5 text-right sm:px-4"
                   >
-                    {symbol}
+                    <span className="numeral block text-tiny font-bold tracking-normal text-strong">
+                      {symbol}
+                    </span>
+                    {names[symbol]?.name && (
+                      /* `ml-auto`: blok kutusu `max-w` ile daraldığı için
+                         `text-right` onu sağa yaslamıyor — hücrede sola
+                         kayıp sembolün altından çıkıyordu. */
+                      <span className="ml-auto block max-w-[9rem] truncate text-nano font-normal normal-case tracking-normal text-muted">
+                        {names[symbol].name}
+                      </span>
+                    )}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-line-soft">
-              {rows.map((row) => (
-                <tr key={row.label}>
-                  <th
-                    scope="row"
-                    className="px-3 py-2.5 text-left text-small font-medium text-muted sm:px-5"
-                  >
-                    {row.label}
-                  </th>
-                  {symbols.map((symbol, index) => (
-                    <td
-                      key={symbol}
-                      className="px-2.5 py-2.5 text-right text-base text-body sm:px-4"
+              {groups.map((group) => (
+                <Fragment key={group.label}>
+                  <tr>
+                    <th
+                      scope="colgroup"
+                      colSpan={symbols.length + 1}
+                      className="bg-surface px-3 py-1.5 text-left sm:px-5"
                     >
-                      {row.value(index)}
-                    </td>
+                      <span className="plate sticky left-0 text-nano tracking-[0.09em]">
+                        {group.label}
+                      </span>
+                    </th>
+                  </tr>
+                  {group.rows.map((row) => (
+                    <tr key={row.label}>
+                      <th
+                        scope="row"
+                        className="sticky left-0 z-10 bg-(--panel-fixed) px-3 py-2.5 text-left text-small font-medium text-muted sm:px-5"
+                      >
+                        {row.label}
+                        {row.caption && (
+                          <span className="block text-nano leading-tight text-muted">
+                            {row.caption}
+                          </span>
+                        )}
+                      </th>
+                      {symbols.map((symbol, index) => (
+                        <td
+                          key={symbol}
+                          className="px-2.5 py-2.5 text-right text-base text-body sm:px-4"
+                        >
+                          {row.value(index)}
+                        </td>
+                      ))}
+                    </tr>
                   ))}
-                </tr>
+                </Fragment>
               ))}
             </tbody>
           </table>
         </div>
+        {/* Eksik veri SESSİZ KALMIYOR. Üç ayrı hâl, üç ayrı cümle; hepsi
+            aynı hairline künye kalıbında, yeni kutu açmadan. */}
+        {bilinmeyen.length > 0 && (
+          <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+            {t.compare.unknownSymbols.replace("{symbols}", bilinmeyen.join(", "))}
+          </p>
+        )}
+        {olcusuz.length > 0 && (
+          <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+            {t.compare.metricsUnavailable.replace(
+              "{symbols}",
+              olcusuz.join(", "),
+            )}
+          </p>
+        )}
+        {!quotesResult.ok && (
+          <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+            {t.compare.quotesUnavailable}
+          </p>
+        )}
         {/* USD dışı sembol varsa sebebi tablonun altında yazıyor — yoksa
             okuyucu dolar fiyatıyla ana borsa bandını yan yana koyup birini
             yanlış okuyor. */}

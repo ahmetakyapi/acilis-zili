@@ -886,9 +886,20 @@ export function FilterChip({
  * bir hap. Aynı dil sekmelerde ve tema anahtarında da var; kutuyu bırakmak
  * denetimi kart olmaktan çıkarıp denetim yapıyor.
  */
-export function Segment({ children }: { children: React.ReactNode }) {
+export function Segment({
+  children,
+  label,
+}: {
+  children: React.ReactNode;
+  /** Ekran okuyucuya denetimin adı — "Grafik Aralığı" gibi. */
+  label?: string;
+}) {
   return (
-    <span className="inline-flex gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small">
+    <span
+      role={label ? "group" : undefined}
+      aria-label={label}
+      className="inline-flex gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small"
+    >
       {children}
     </span>
   );

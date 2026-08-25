@@ -22,9 +22,12 @@ import type { SearchHit } from "@/app/api/search/route";
 export function CompareAdd({
   symbols,
   rangeParam,
+  defaultOpen = false,
   labels,
 }: {
   symbols: string[];
+  /** Boş ekranda kutu AÇIK başlar — orada eklemekten başka yapılacak yok. */
+  defaultOpen?: boolean;
   /* Adres SUNUCUDAN GELEN FONKSİYONLA değil, veriyle kuruluyor: sunucu
      bileşeninden istemci bileşenine fonksiyon geçilemiyor. Seçili aralık
      varsayılan değilse korunuyor, değilse parametre hiç yazılmıyor. */
@@ -37,7 +40,7 @@ export function CompareAdd({
   };
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<SearchHit[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -139,7 +142,15 @@ export function CompareAdd({
       </div>
 
       {query.trim() && (
-        <ul className="absolute left-0 top-[calc(100%+6px)] z-20 w-64 overflow-hidden rounded-(--radius-md) border border-line bg-surface-elevated">
+        /* LİSTE MOBİLDE KIRPILMIYOR. `left-0 w-64` sabitti: düğme satırın
+            sağ yarısındayken 256 piksellik liste sayfanın dışına taşıyor ve
+            `html { overflow-x: clip }` yüzünden kaydırılamıyordu — sonuçlar
+            görünmez oluyordu. Dar ekranda liste iki kenara yaslanıyor,
+            geniş ekranda eski davranış.
+            Zemin `--overlay-surface`: katman üstü için tanımlı ve iki temada
+            da OPAK; `--surface-elevated` saydam ve altındaki grafik
+            sonuçların içinden okunuyordu. */
+        <ul className="absolute inset-x-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-(--radius-md) border border-line bg-overlay-surface sm:left-0 sm:right-auto sm:w-64">
           {shown.length === 0 ? (
             <li className="px-3 py-2.5 text-small text-muted">
               {labels.noResults}

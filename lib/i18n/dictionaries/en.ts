@@ -573,13 +573,13 @@ const en: typeof tr = {
       "Read two to four stocks on the same scale — return, valuation and volatility in one table.",
     empty: "Pick symbols to compare",
     emptyHint:
-      "Add one from the \u201cCompare\u201d link on any stock page, or start from one of the ready-made sets below.",
+      "Type a symbol or company name in the box below, or start from one of the ready-made sets.",
     presets: "Ready-Made Sets",
     presetChips: "Semiconductors",
     presetMega: "Mega Cap",
     presetIndices: "Index Funds",
     chartTitle: "Period Return",
-    chartReading: "Hover the chart for values along the way",
+    chartReading: "Tap or hover the chart for values along the way",
     chartHint:
       "Each series is converted to a percentage of its own starting point, so all of them begin at zero. What is compared is the return over the period, not price levels.",
     metric: "Metric",
@@ -590,9 +590,31 @@ const en: typeof tr = {
       "{symbols} trade in {codes} on their home exchange: earnings per share, the 52-week range and the P/E ratio come from that listing, while the price row is the ADR in dollars. The two are not directly comparable.",
     remove: "Remove From List",
     addCta: "Compare",
+    trimmedNote:
+      "Extra symbols in the link were dropped — this screen shows at most four.",
+    unknownSymbols: "No data found for {symbols}; that column stays empty.",
+    rangeLabel: "Chart Range",
+    chartMissing: "Chart Data Unavailable",
+    chartMissingHint:
+      "The provider returned no bars for these symbols, so the period return row is empty too.",
+    tableRegion: "Comparison Table",
+    secondSymbol: "Add a Second Symbol",
+    secondSymbolHint:
+      "A single series is normalized to its own start, so it says nothing beyond one line leaving zero.",
+    fullHint: "Four symbols is the limit; remove one to add another.",
+    dividendNone: "None",
+    metricsUnavailable:
+      "Metrics could not be loaded for {symbols}: P/E, dividend, beta and the 52-week range stay empty in that column.",
+    quotesUnavailable: "Quotes could not be loaded; price and daily change are empty.",
+    groupReturn: "Return",
+    groupValuation: "Valuation",
+    groupRisk: "Risk",
+    groupCompany: "Company",
+    netMargin: "Net Margin",
+    sector: "Sector",
+    compareFirstFour: "Compare First Four",
     addSymbol: "Add Symbol",
     addPlaceholder: "Symbol or company name",
-    addHint: "Add symbols with the Compare button on any stock page.",
   },
 
   markets: {

@@ -51,7 +51,7 @@ import {
 import { COMPLIANCE_THRESHOLD, screenCompliance } from "@/lib/compliance";
 import { industryLabel, sectorLabel } from "@/lib/sectors";
 import { indexMemberOf, peersOf } from "@/db/seed/indices";
-import { fundMetaOf } from "@/db/seed/symbols";
+import { fundMetaOf, INDEX_STRIP } from "@/db/seed/symbols";
 import { subIndustryName } from "@/db/seed/sub-industries";
 import {
   getCompanyNews,
@@ -836,7 +836,18 @@ async function FundCard({
 
   return (
     <Panel>
-      <PanelHeader title={t.stock.fundProfile} />
+      {/* FON SAYFALARINDAN KARŞILAŞTIRMAYA SIFIR YOL VARDI. Hisse sayfası
+          benzer şirketler panelinden karşılaştırmaya bağlanıyor ama ETF dalı
+          o panelden önce dönüyor — oysa hazır setlerden biri tam olarak bu
+          dört endeks fonu. */}
+      <PanelHeader
+        title={t.stock.fundProfile}
+        action={
+          <PanelLink href={`/karsilastir?semboller=${INDEX_STRIP.join(",")}`}>
+            {t.compare.addCta}
+          </PanelLink>
+        }
+      />
       <div className="px-4 py-3 sm:px-5">
         {about && (
           <p className="border-b border-line-soft pb-3 text-base leading-relaxed text-body">

@@ -7,6 +7,7 @@ import {
   EmptyState,
   Panel,
   PanelHeader,
+  PanelLink,
   LogoTile,
   SkeletonRow,
 } from "@/components/ui/primitives";
@@ -479,6 +480,22 @@ async function CompaniesTable({
         {rows.length > 0 && (
           <PanelHeader
             title={groupLabel}
+            /* Sıralı listenin ilk dördü karşılaştırmaya gidiyor: liste
+               sabit değil, o anki sıralamadan ve sektör süzgecinden
+               türüyor. Karşılaştırma ekranı gezinmede görünmüyor ve
+               siteye girenin çoğu varlığını bilmiyordu. */
+            action={
+              rows.length >= 2 ? (
+                <PanelLink
+                  href={`/karsilastir?semboller=${rows
+                    .slice(0, 4)
+                    .map((row) => row.symbol)
+                    .join(",")}`}
+                >
+                  {t.compare.compareFirstFour}
+                </PanelLink>
+              ) : undefined
+            }
             meta={
               hasMore
                 ? t.companies.showing

@@ -778,6 +778,15 @@ export type SymbolMeta = {
   currency: string | null;
   logoUrl: string | null;
   industry: string | null;
+  /**
+   * GICS sektörü — `symbols.sector`, günlük profil senkronu yazıyor.
+   *
+   * Sağlayıcının serbest metinli alanı (`industry`) aynı şirkete iki ekranda
+   * iki farklı ad veriyor: Cisco'ya "Communications", Walmart'a "Retail".
+   * `/sirketler` bu yüzden GICS'i tercih ediyor (bkz. `getCompanies`);
+   * karşılaştırma ekranı tek kalmıştı.
+   */
+  sector: string | null;
 };
 
 /**
@@ -875,6 +884,7 @@ async function loadSymbolNames(
         shareOutstanding: symbolsTable.shareOutstanding,
         logoUrl: symbolsTable.logoUrl,
         industry: symbolsTable.industry,
+        sector: symbolsTable.sector,
         /* Önbellekteki son fiyat — piyasa değeri buradan hesaplanıyor.
            `getCompanies` aynı join'i zaten yapıyor; sağlayıcıya ek bir tur
            yok, tek bir sol birleştirme var. */
@@ -909,6 +919,7 @@ async function loadSymbolNames(
             currency: r.currency,
             logoUrl: logoSrc(r.symbol, r.logoUrl),
             industry: r.industry,
+            sector: r.sector,
           };
         })(),
       ]),

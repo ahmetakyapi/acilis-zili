@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { cn, formatPercent } from "@/lib/utils";
+import { SERIES_COLORS, SERIES_DASH } from "@/lib/chart-series";
 
 /**
  * Normalize edilmiş karşılaştırma grafiği.
@@ -51,13 +52,8 @@ export type CompareSeries = {
   times?: number[];
 };
 
-/** Seri renkleri — accent'ten başlayıp ayırt edilebilir dört tona gider. */
-const SERIES_COLORS = [
-  "var(--primary)",
-  "var(--brass)",
-  "var(--up)",
-  "var(--down)",
-];
+/* Seri renkleri ve desenleri `lib/chart-series.ts`te — sunucu bileşenleri
+   de aynı sabitleri okuyor, gerekçesi orada. */
 
 const WIDTH = 720;
 const HEIGHT = 200;
@@ -372,6 +368,7 @@ export function CompareChart({
                        bir ton ve çizgi işaretin altından geçiyordu. */
                     fill="var(--page-bg)"
                     stroke={SERIES_COLORS[index % SERIES_COLORS.length]}
+                    strokeDasharray={SERIES_DASH[index % SERIES_DASH.length]}
                     strokeWidth={2}
                     vectorEffect="non-scaling-stroke"
                   />
@@ -458,13 +455,20 @@ export function CompareChart({
           const last = entry.points[entry.points.length - 1];
           return (
             <span key={entry.symbol} className="inline-flex items-center gap-1.5">
-              <span
-                aria-hidden
-                className="block size-2 rounded-full"
-                style={{
-                  background: SERIES_COLORS[index % SERIES_COLORS.length],
-                }}
-              />
+              {/* Anahtar bir NOKTA değil çizgi örneği: kesikli seriler
+                  ancak böyle ayırt ediliyor. */}
+              <svg aria-hidden width="16" height="6" className="block shrink-0">
+                <line
+                  x1="0"
+                  y1="3"
+                  x2="16"
+                  y2="3"
+                  stroke={SERIES_COLORS[index % SERIES_COLORS.length]}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeDasharray={SERIES_DASH[index % SERIES_DASH.length]}
+                />
+              </svg>
               <span className="numeral font-bold text-strong">
                 {entry.symbol}
               </span>

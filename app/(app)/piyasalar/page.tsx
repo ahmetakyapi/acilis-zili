@@ -9,6 +9,7 @@ import {
   PageHeader,
   Panel,
   PanelHeader,
+  PanelLink,
   PercentReading,
   Skeleton,
   LogoTile,
@@ -649,6 +650,7 @@ async function IndexDetail({
               showContribution={divisor !== null}
               contributionLabel={t.markets.contribution}
               locale={locale}
+              t={t}
               meta={t.companies.showing
                 .replace("{n}", String(gainers.length))
                 .replace("{total}", String(withQuote.length))}
@@ -659,6 +661,7 @@ async function IndexDetail({
               showContribution={divisor !== null}
               contributionLabel={t.markets.contribution}
               locale={locale}
+              t={t}
               meta={t.companies.showing
                 .replace("{n}", String(losers.length))
                 .replace("{total}", String(withQuote.length))}
@@ -849,6 +852,7 @@ function MoverPanel({
   showContribution,
   contributionLabel,
   locale,
+  t,
   meta,
 }: {
   title: string;
@@ -856,6 +860,7 @@ function MoverPanel({
   showContribution: boolean;
   contributionLabel: string;
   locale: Locale;
+  t: Dictionary;
   /** Başlığın yanındaki künye — kaç şirketten seçildiği. */
   meta?: string;
 }) {
@@ -868,7 +873,26 @@ function MoverPanel({
 
   return (
     <Panel>
-      <PanelHeader title={title} meta={meta} />
+      {/* KARŞILAŞTIRMAYA GİDEN YOL. Ekran gezinmede görünmüyor ve siteye
+          girenin çoğu varlığını bilmiyordu; oysa "günün en çok artan beşi"
+          listesi, karşılaştırmanın en doğal başlangıcı. Liste sabit değil,
+          o anki sıralamadan türüyor. */}
+      <PanelHeader
+        title={title}
+        meta={meta}
+        action={
+          rows.length >= 2 ? (
+            <PanelLink
+              href={`/karsilastir?semboller=${rows
+                .slice(0, 4)
+                .map((row) => row.member.symbol)
+                .join(",")}`}
+            >
+              {t.compare.compareFirstFour}
+            </PanelLink>
+          ) : undefined
+        }
+      />
       <ul className="divide-y divide-line-soft">
         {rows.map((row) => {
           const changePct = row.quote?.changePct ?? 0;

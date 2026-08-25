@@ -19,6 +19,11 @@
   --surface-elevated: rgb(16 32 52 / 0.07);
   /* Kart dolgusu gündüzde solid beyaz — saydamlık zeminde kayboluyor. */
   --surface-solid: #ffffff;
+  /* Yatay kayan tablolarda SABİT sütunun zemini. `--surface-solid` koyu
+     temada saydam (beyaz %8,5) ve sabit hücrenin altından kayan sayılar
+     etiketin içinden okunuyordu; bu token panelin gerçek bileşke rengi,
+     yani opak. Emsal: `--bar` da aynı sebeple ayrı tutuluyor. */
+  --panel-fixed: #ffffff;
   --surface-sunken: rgb(16 32 52 / 0.045);
 
   --text-strong: #101c2b;
@@ -98,6 +103,12 @@
   --chart-a: #0d74c4;
   --chart-b: #a4720f;
   --chart-a-fill: rgb(13 116 196 / 0.13);
+  /* Üçüncü ve dördüncü seri — karşılaştırma ekranı dört sembole kadar
+     çıkıyor. Aile aynı: mor ve teal, ikisi de yön renklerinden (yeşil,
+     kırmızı) uzak ve birbirinden ayrı. Karşılaştırma grafiğinde renk zaten
+     TEK taşıyıcı değil — üçüncü ve dördüncü seri kesikli çiziliyor. */
+  --chart-c: #6b4fd8;
+  --chart-d: #0f7d78;
 
   --impact-high: #c01a3d;
   --impact-med: #a4720f;
@@ -178,6 +189,8 @@
   --surface: rgb(255 255 255 / 0.05);
   --surface-elevated: rgb(255 255 255 / 0.12);
   --surface-solid: rgb(255 255 255 / 0.085);
+  /* #070d16 zemini üzerine beyaz %8,5'in bileşkesi. */
+  --panel-fixed: #1c222a;
   --surface-sunken: rgb(0 0 0 / 0.3);
 
   --text-strong: #eaf1f8;
@@ -232,6 +245,9 @@
   --chart-a: #2f92d2;
   --chart-b: #b3822a;
   --chart-a-fill: rgb(47 146 210 / 0.18);
+  /* Koyu zeminde açıklık bir kademe yukarı — aynı gerekçe, aynı aile. */
+  --chart-c: #9b8cf0;
+  --chart-d: #3faea6;
 
   --impact-high: #ff5c7a;
   --impact-med: #d3a04a;
@@ -327,8 +343,11 @@
   --color-brass-bright: var(--brass-bright);
   --color-brass-wash: var(--brass-wash);
 
+  --color-panel-fixed: var(--panel-fixed);
   --color-chart-a: var(--chart-a);
   --color-chart-b: var(--chart-b);
+  --color-chart-c: var(--chart-c);
+  --color-chart-d: var(--chart-d);
 
   --color-chrome: var(--chrome);
   --color-chrome-border: var(--chrome-border);
