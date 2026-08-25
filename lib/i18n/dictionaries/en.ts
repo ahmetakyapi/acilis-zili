@@ -719,6 +719,7 @@ const en: typeof tr = {
     backToList: "Back to Guide",
     empty: "Nothing here yet",
     cardCta: "Read",
+    curriculumRange: "curriculum articles {from}–{to}",
     onlyThis: "Open Topic",
     curriculum: "Where to Start",
     startFirst: "Start from the Top",

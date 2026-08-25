@@ -16,7 +16,7 @@ import {
   type GuideTopicKey,
 } from "@/content/guide";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { cn, plural } from "@/lib/utils";
+import { plural } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -92,6 +92,19 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
   const minutesOf = (articles: GuideArticle[]) =>
     articles.reduce((sum, article) => sum + readingMinutes(article.bodyMd), 0);
 
+  /* MÜFREDATTAKİ KONUM TÜRETİLİYOR, yazılmıyor. Sayfa dört konuyu kolaydan
+     zora sıralı bir müfredat olarak sunuyor ama okuyucu bir bölümün o
+     dizide nereye düştüğünü bilmiyordu. Konum `content/guide/index.ts`teki
+     sıralama kuralının çıktısı — orası değişirse künye de değişir. */
+  const konumKunyesi = (key: GuideTopicKey) => {
+    const group = groupOf(key);
+    if (group.length === 0) return undefined;
+    const from = all.findIndex((article) => article.topic === key) + 1;
+    return t.guide.curriculumRange
+      .replace("{from}", String(from))
+      .replace("{to}", String(from + group.length - 1));
+  };
+
   return (
     /* Bölümler arası boşluk sayfanın ritmini kuruyor: kartlar arası 16px,
        seviye bantları arası 20px, bölümler arası 40px. Üç ayrı ölçek, üç
@@ -124,19 +137,22 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
             const group = groupOf(topic.key);
             if (group.length === 0) return null;
             return (
-              /* scroll-mt: çapaya atlayınca bölüm başlığı yapışkan üst
-                 çubuğun altında kalmasın — çubuk 65px, 80px onu güvenle
-                 açıklıyor. */
+              /* ÇAPA PAYI BURADA VERİLMİYOR. `html { scroll-padding-block }`
+                 (app/globals.css) payı zaten veriyor ve o da `--app-bar-h`
+                 ile aynı formülü izliyor; buradaki `scroll-mt-20` onun
+                 ÜSTÜNE ekleniyordu, yani çentikli bir telefonda bölüm başlığı
+                 çubuğun ~87 piksel altına düşüyordu. Tek kaynak: globals. */
               <section
                 key={topic.key}
                 id={`konu-${topic.key}`}
-                className="flex scroll-mt-20 flex-col"
+                className="flex flex-col"
               >
                 <TopicHeading
                   index={index}
                   topic={topic.key}
                   articles={group}
                   minutes={minutesOf(group)}
+                  position={konumKunyesi(topic.key)}
                   locale={locale}
                   t={t}
                 />
@@ -197,21 +213,17 @@ function CurriculumStrip({
         {/* Müfredatın ilk durağına doğrudan giden tek bağlantı. Şeridin
             başlığı "Nereden Başlamalı" diyor ama başlamak, doğru karoyu
             bulup içindeki ilk kartı seçmeyi gerektiriyordu. */}
-        {first && (
-          <Link
-            href={`/rehber/${first.slug}`}
-            className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
-          >
-            {t.guide.startFirst}
-            <ArrowRight weight="bold" size={12} />
-          </Link>
-        )}
       </div>
       <p className="-mt-1.5 max-w-[72ch] text-small leading-[19px] text-muted">
         {t.guide.curriculumHint}
       </p>
 
-      <Panel className="grid grid-cols-2 divide-line-soft overflow-hidden sm:grid-cols-4 sm:divide-x">
+      {/* ŞERİT TELEFONDA SATIR, MASAÜSTÜNDE DÖRTLÜ IZGARA. İki sütunlu
+          ızgarada konu adları ("Makro ve Merkez Bankası") iki satıra
+          kırılıyor, seviye künyesi `truncate` yiyordu ve dört karo dikeyde
+          bir duvar kuruyordu. Dar ekranda müfredat zaten SIRALI bir liste —
+          satır düzeni o sırayı da gösteriyor. */}
+      <Panel className="flex flex-col divide-y divide-line-soft overflow-hidden sm:grid sm:grid-cols-4 sm:divide-x sm:divide-y-0">
         {GUIDE_TOPICS.map((topic, index) => {
           const group = groupOf(topic.key);
           const levels = levelsIn(group);
@@ -219,34 +231,58 @@ function CurriculumStrip({
             <a
               key={topic.key}
               href={`#konu-${topic.key}`}
-              className={cn(
-                "group flex min-w-0 flex-col gap-1 px-4 py-3.5 transition-colors hover:bg-primary-tint",
-                /* Telefonda şerit 2×2 kırılıyor ve iki sıra arasında hiçbir
-                   ayraç kalmıyordu; dörtlü sıraya geçince divide-x devralır. */
-                index >= 2 && "border-t border-line-soft sm:border-t-0",
-              )}
+              className="group flex min-h-12 min-w-0 items-center gap-2 px-4 transition-colors hover:bg-primary-tint sm:min-h-0 sm:flex-col sm:items-start sm:gap-1 sm:py-3.5"
             >
-              <span className="numeral text-tiny font-bold text-primary">
+              <span className="numeral shrink-0 text-tiny font-bold text-primary">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <span className="display-ink display-ink-tight w-fit text-read font-bold tracking-[-0.02em]">
+              <span className="display-ink display-ink-tight min-w-0 flex-1 text-read font-bold tracking-[-0.02em] sm:w-fit sm:flex-none">
                 {guideTopicLabel(topic.key, locale)}
               </span>
-              <span className="mt-auto flex items-center gap-1.5 pt-2 text-tiny text-muted">
+              <span className="flex shrink-0 items-center gap-1.5 text-tiny text-muted sm:mt-auto sm:w-full sm:pt-2">
                 <LevelDots level={levels[levels.length - 1] ?? "temel"} />
-                <span className="min-w-0 truncate">
+                {/* 320 pikselde seviye aralığı satırı taşırıyor; orada
+                    yalnızca noktalar kalıyor. */}
+                <span className="hidden min-w-0 truncate min-[360px]:inline">
                   {levelSpan(levels, locale)}
                 </span>
                 <ArrowRight
                   weight="bold"
                   size={11}
-                  className="ml-auto shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100"
+                  className="ml-auto hidden shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100 sm:block"
                   aria-hidden
                 />
               </span>
             </a>
           );
         })}
+        {/* PANELİN SON SATIRI — sayfanın TEK degrade yüzeyi.
+            "Baştan Başla" bağlantısı başlık satırının sağ ucundaydı ve orada
+            hem sarmayı tetikliyor hem de 32 piksellik bir dokunma hedefi
+            olarak kalıyordu. Burada tam genişlikte, adıyla ve ilk yazının
+            başlığıyla duruyor. Gliflerin kendi degradesi var, o yüzden bu
+            satırda glif YOK — iki degrade üst üste binmiyor. */}
+        {first && (
+          <Link
+            href={`/rehber/${first.slug}`}
+            className="flex min-h-14 items-center gap-3 bg-gradient-to-b from-(--primary-wash) to-(--primary-tint) px-4 transition-colors hover:to-(--primary-wash) sm:col-span-4"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-read font-bold text-primary-ink">
+                {t.guide.startFirst}
+              </span>
+              <span className="block truncate text-tiny text-muted">
+                {first.title}
+              </span>
+            </span>
+            <ArrowRight
+              weight="bold"
+              size={14}
+              aria-hidden
+              className="shrink-0 text-primary-ink"
+            />
+          </Link>
+        )}
       </Panel>
     </section>
   );
@@ -284,6 +320,7 @@ function TopicHeading({
   topic,
   articles,
   minutes,
+  position,
   locale,
   t,
 }: {
@@ -291,6 +328,8 @@ function TopicHeading({
   topic: GuideTopicKey;
   articles: GuideArticle[];
   minutes: number;
+  /** "müfredatın 9–17. yazısı" — türetilmiş konum künyesi. */
+  position?: string;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -304,21 +343,42 @@ function TopicHeading({
         {/* 2px'lik koyu kural — sayfadaki tek kalın çizgi. Bölüm sınırını
             renk kullanmadan işaretleyen şey bu; hairline denendi ve
             kartların kendi kenarlıklarından ayırt edilmiyordu. */}
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t-2 border-strong pb-3 pt-3">
+        {/* YAPIŞKAN SATIRDA YALNIZCA İKİ ÖĞE. Beş öğe vardı — numara,
+            başlık, sayaç, seviye rozeti ve "Konuyu Aç" — ve `flex-wrap` ile
+            telefonda üç satıra kırılıyordu: 320 pikselde bütçe 325 piksel
+            istiyordu, kanal 284. Yapışkan bir başlığın kırılması ekranın
+            tepesini yiyor. Numara ve ad kaldı; ölçüldü, 265 piksel. */}
+        <div className="flex items-baseline gap-x-3 border-t-2 border-strong pb-3 pt-3">
           <span
             aria-hidden
-            className="numeral text-heading font-bold leading-none tracking-[-0.03em] text-primary"
+            className="numeral shrink-0 text-heading font-bold leading-none tracking-[-0.03em] text-primary"
           >
             {String(index + 1).padStart(2, "0")}
           </span>
-          <h2 className="display-ink display-ink-tight w-fit text-title font-bold tracking-[-0.03em]">
+          <h2 className="display-ink display-ink-tight min-w-0 text-title font-bold tracking-[-0.03em]">
             {guideTopicLabel(topic, locale)}
           </h2>
-          <span className="numeral text-small text-muted">
-            {articles.length}{" "}
-            {plural(articles.length, t.guide.articleOne, t.guide.articleMany)} · ~{minutes}{" "}
-            {t.guide.readMinutes}
-          </span>
+        </div>
+      </div>
+      {/* Künye satırı YAPIŞKAN DEĞİL: sayaç, süre, müfredattaki konum,
+          seviye ve konuya giden bağlantı. Konum türetiliyor — hangi yazının
+          kaçıncı olduğu `content/guide/index.ts`teki sıralama kuralının
+          çıktısı, elle yazılmış bir sayı değil. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pb-3">
+        <span className="numeral text-tiny text-muted">
+          {articles.length}{" "}
+          {plural(articles.length, t.guide.articleOne, t.guide.articleMany)} · ~
+          {minutes} {t.guide.readMinutes}
+          {position && (
+            <>
+              <span aria-hidden className="mx-1">
+                ·
+              </span>
+              {position}
+            </>
+          )}
+        </span>
+        <span className="flex items-center gap-3">
           {/* Tek seviyeli konuda bant basılmıyor; seviye buraya çıkıyor. */}
           {levels.length === 1 && (
             <LevelBadge level={levels[0]} locale={locale} />
@@ -326,15 +386,12 @@ function TopicHeading({
           <Link
             href={`/rehber?konu=${topic}`}
             scroll={false}
-            /* -my-2 py-2: 12px'lik metin tek başına 18px'lik bir dokunma
-               hedefi bırakıyordu; dolgu 32px'e çıkarır, negatif margin satırı
-               olduğu yerde tutar. */
-            className="-my-2 ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 text-small font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-8"
           >
             {t.guide.onlyThis}
-            <ArrowRight weight="bold" size={12} />
+            <ArrowRight weight="bold" size={12} aria-hidden />
           </Link>
-        </div>
+        </span>
       </div>
       <p className="mb-5 max-w-[72ch] text-base leading-[20px] text-soft">
         {guideTopicDesc(topic, locale)}
@@ -488,7 +545,59 @@ function ArticleGrid({
   t: Dictionary;
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <>
+      {/* ---- Telefon: TEK PANEL, SATIRLAR ----
+          Kart ızgarası 640 pikselden önce bağlamıyor, yani telefonda otuz
+          bir kart tek sütunda alt alta diziliyordu: her biri 20 piksel
+          dolgulu, kendi kenarlıklı ve altında "Oku →" satırı olan bir kutu.
+          O satır bilgi taşımıyor — kartın tamamı zaten bağlantı — ve otuz
+          bir kutu, listeyi bir müfredat olmaktan çıkarıp bir kart denizine
+          çeviriyordu. Satır düzeni sırayı da gösteriyor: solda sıra numarası
+          ve onları birbirine bağlayan ince bir dikey çizgi.
+
+          İKİ AYRI DOM, bilerek: `.panel` bir utility değil bir bileşen
+          sınıfı, yani `sm:panel` yazılamıyor ve tek ağaçla iki düzen
+          kurulamıyor. `hidden` = `display:none` olduğu için erişilebilirlik
+          ağacında yalnızca biri kalıyor ve ikisi de sunucuda çiziliyor —
+          istemciye fazladan JS gitmiyor.
+
+          GLİF TELEFONDA DÜŞÜYOR: tek sütunda otuz bir karo, kart
+          düzeninin şikâyet ettiği "mavi kare ızgarası"nın dikey hâli
+          olurdu. Dizin ekranında sıra numarası glifden çok iş yapıyor. */}
+      <Panel className="flex flex-col divide-y divide-line-soft overflow-hidden sm:hidden">
+        {articles.map((article, index) => (
+          <Link
+            key={article.slug}
+            href={`/rehber/${article.slug}`}
+            prefetch={false}
+            className="flex gap-3 px-4 py-3.5 transition-colors hover:bg-primary-tint"
+          >
+            <span className="relative flex w-7 shrink-0 justify-center">
+              <span
+                aria-hidden
+                className="absolute inset-y-[-14px] left-1/2 w-px -translate-x-1/2 bg-line-soft"
+              />
+              <span className="numeral relative bg-surface-solid text-tiny font-bold text-primary">
+                {String(startIndex + index + 1).padStart(2, "0")}
+              </span>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-read font-bold leading-[19px] text-strong">
+                {article.title}
+              </span>
+              <span className="mt-1 line-clamp-2 block text-tiny leading-[15px] text-muted">
+                {article.dek}
+              </span>
+              <span className="numeral mt-1 block text-tiny text-muted">
+                {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
+              </span>
+            </span>
+          </Link>
+        ))}
+      </Panel>
+
+      {/* ---- Masaüstü: kart ızgarası ---- */}
+      <div className="hidden gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
       {articles.map((article, index) => (
         <Link
           key={article.slug}
@@ -520,16 +629,16 @@ function ArticleGrid({
               {article.dek}
             </p>
 
-            <p className="flex items-center gap-1.5 border-t border-line pt-3 text-small font-semibold text-primary">
-              {t.guide.cardCta}
-              <ArrowRight weight="bold" size={13} />
-              <span className="numeral ml-auto font-normal text-muted">
-                {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
-              </span>
+            {/* "Oku →" satırı KALKTI: kartın tamamı zaten bağlantı ve o
+                satır otuz bir kartta otuz bir kez aynı şeyi söylüyordu.
+                Geriye okuma süresi kaldı — kartın taşıdığı tek künye. */}
+            <p className="numeral mt-auto pt-1 text-small text-muted">
+              {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
             </p>
           </Panel>
         </Link>
       ))}
-    </div>
+      </div>
+    </>
   );
 }

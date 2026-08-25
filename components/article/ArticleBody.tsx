@@ -96,6 +96,30 @@ const INLINE_PATTERN =
   /(\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`]+`|\[[^\]]+\]\([^)\s]+\))/g;
 const LINK_PATTERN = /^\[([^\]]+)\]\(([^)\s]+)\)$/;
 
+/**
+ * Başlık metninden kalıcı bir çapa kimliği.
+ *
+ * Türkçe harfler ASCII karşılığına iniyor — `toLowerCase()` TEK BAŞINA
+ * yetmez ve tehlikelidir: "İ" küçültülünce "i̇" (birleşik nokta) üretiyor ve
+ * adres çubuğunda okunmaz bir dizeye dönüşüyor. Eşleme elle yazılı, çünkü
+ * `normalize("NFD")` ile aksan atmak "ı" ve "ş" gibi harfleri de öğütüyor.
+ */
+const HARF_ESLEME: Record<string, string> = {
+  ç: "c", ğ: "g", ı: "i", i: "i", ö: "o", ş: "s", ü: "u",
+  Ç: "c", Ğ: "g", I: "i", İ: "i", Ö: "o", Ş: "s", Ü: "u",
+};
+
+function basligaKimlik(text: string): string {
+  const gövde = [...text]
+    .map((ch) => HARF_ESLEME[ch] ?? ch)
+    .join("")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return gövde ? `b-${gövde}` : "";
+}
+
 function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
   return text.split(INLINE_PATTERN).map((part, index) => {
     const key = `${keyPrefix}-${index}`;
@@ -570,8 +594,14 @@ export function ArticleBody({
         switch (block.kind) {
           case "heading":
             return block.level === 2 ? (
+              /* BAŞLIKLARIN `id`si VAR. Yazılar ortalama beş `##` başlık
+                 taşıyor ve hiçbirine bağlantı verilemiyordu; `globals.css`
+                 içindeki `scroll-padding-block` da hedefsiz kaldığı için
+                 boşa yazılmıştı. Kimlik metinden türüyor (`basligaKimlik`),
+                 yani içerik değişmedikçe bağlantı da değişmiyor. */
               <h2
                 key={key}
+                id={basligaKimlik(block.text)}
                 className="display-ink display-ink-tight mt-3 w-fit text-title font-bold tracking-[-0.03em] sm:text-heading"
               >
                 {block.text}
@@ -579,6 +609,7 @@ export function ArticleBody({
             ) : (
               <h3
                 key={key}
+                id={basligaKimlik(block.text)}
                 className="mt-1 text-lead font-bold tracking-[-0.02em] text-strong"
               >
                 {block.text}
@@ -587,10 +618,18 @@ export function ArticleBody({
 
           case "paragraph":
             return (
-              <p
-                key={key}
-                className="text-read leading-[28px] text-body sm:text-base"
-              >
+              /* PUNTO HER GENİŞLİKTE 14. `sm:text-base` bir REGRESYON:
+                 yazıldığı gün `--text-base` diye bir token yoktu ve
+                 `text-base` Tailwind'in 16 pikseli demekti, yani niyet
+                 640 pikselden sonra metni BÜYÜTMEKTİ. Token ölçeği
+                 kurulduğunda `--text-base` 13 piksele oturdu ve aynı sınıf
+                 sessizce tersine döndü: geniş ekranda gövde 14'ten 13'e
+                 iniyordu. Daha kötüsü aynı sütundaki liste, alıntı ve metin
+                 kutuları 14'te kaldığı için masaüstünde paragraftan SONRA
+                 gelen liste büyüyor gibi görünüyordu — tek sütunda dört
+                 farklı boy. Satır arası da 13 puntoda 2,15 orana çıkıyordu.
+                 Bu, sitenin asıl okuma yüzeyi; ölçek tek basamakta. */
+              <p key={key} className="text-read leading-[28px] text-body">
                 {renderInline(block.text, key)}
               </p>
             );

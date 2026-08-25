@@ -830,6 +830,8 @@ const tr = {
     /* "Yalnızca Bunlar" Türkçede kurulmayan bir kalıptı — işaret zamiri
        neyi gösterdiğini söylemiyordu. Bağlantı konunun kendi sayfasını
        açıyor; adı da onu söylüyor. */
+    /* Mikro künye — konum bilgisi, başlık değil; cümle düzeninde. */
+    curriculumRange: "müfredatın {from}–{to}. yazısı",
     onlyThis: "Konuyu Aç",
     /* Müfredat şeridi — liste sayfasının girişindeki dört konu karosu. */
     curriculum: "Nereden Başlamalı",
