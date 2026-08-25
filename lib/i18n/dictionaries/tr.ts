@@ -673,12 +673,50 @@ const tr = {
     title: "Karşılaştır",
     subtitle:
       "İki ile dört hisseyi aynı ölçekte oku — getiri, değerleme ve oynaklık tek tabloda.",
-    empty: "Karşılaştırmak için sembol seç",
+    empty: "Karşılaştırmak için Sembol Seç",
     /* Eski metin ekranı yalanlıyordu: sembol eklemenin yolu bu ekranın
        içinde de var (`CompareAdd`), bir hisse sayfasına gitmek gerekmiyor. */
     emptyHint:
       "Aşağıdaki kutuya sembol ya da şirket adı yaz, ya da hazır setlerden biriyle başla.",
     presets: "Hazır Setler",
+    /* BOŞ EKRAN İKİNCİ TUR. "Sembol seç" demek yetmiyordu: hazır setler düz
+       birer çipti ("Yarı İletken · NVDA · AMD · AVGO · MU") ve okuyucu bir
+       seti seçmeden önce ne alacağını göremiyordu. Setler artık logolu
+       kartlar ve her biri NİYE bir arada durduğunu tek satırda söylüyor —
+       başlık setin adını veriyordu, sorusunu değil. */
+    presetsHint:
+      "Her set dört sembolle açılır; istediğini çıkarıp yerine başkasını koyabilirsin.",
+    presetChipsNote:
+      "Aynı talep döngüsünü paylaşan dört yonga üreticisi; ayrıştıkları yer görünür olur.",
+    presetMegaNote:
+      "Piyasa değerine göre en büyük dört teknoloji şirketi — endeksteki en ağır isimler.",
+    presetIndicesNote:
+      "Dört ayrı endeksi izleyen fonlar: geniş pazar, teknoloji, sanayi devleri ve küçük ölçek.",
+    howTitle: "Nasıl Okunur",
+    howScale: "Aynı Ölçek",
+    howScaleText:
+      "Her seri kendi başlangıç gününe göre yüzdeye çevrilir; hepsi sıfırdan çıkar, fiyat seviyeleri karşılaştırılmaz.",
+    howRange: "Tek Aralık",
+    howRangeText:
+      "Başlıktaki aralık düğmesi grafiği, şeritteki getiriyi ve tablodaki dönem satırını birlikte değiştirir.",
+    howGroups: "Dört Grup",
+    howGroupsText:
+      "Tablo getiri, değerleme, risk ve şirket bilgisi olmak üzere dört grupta okunur.",
+    /* ARALIK ARTIK İSTEMCİDE DEĞİŞİYOR. Şeridin sağ sütunu seçili aralığın
+       adını taşıyor: sayının hangi pencereye ait olduğu sayının kendi
+       üstünde yazıyor, ekranın öteki ucundaki düğmede değil. */
+    selected: "Seçilenler",
+    dayShort: "Bugün",
+    periodColumn: "{range} Getirisi",
+    rangeAnnounce: "Aralık {range} olarak değiştirildi",
+    /* METİN SEBEBİ DOĞRU SÖYLESİN. Önce "sağlayıcıdan yeni bar gelmedi"
+       yazıyordu ama bu hâl oraya hiç düşmüyor: sağlayıcı gerçekten bar
+       döndürmediğinde uç `{ok:true, series:[]}` veriyor ve ekran
+       `chartMissing` yoluna gidiyor. Buraya yalnızca ağ kopması ya da
+       reddedilen istek (429/400) düşüyor. */
+    rangeFailed: "Aralık Verisi Alınamadı",
+    rangeFailedHint:
+      "İstek tamamlanmadı; bağlantını kontrol edip tekrar deneyebilirsin. Ekrandaki öteki ölçüler aralıktan bağımsız, onlar yerinde duruyor.",
     presetChips: "Yarı İletken",
     presetMega: "Mega Ölçek",
     presetIndices: "Endeks Fonları",
@@ -692,7 +730,10 @@ const tr = {
     range52: "52 Hafta Aralığı",
     homeCurrencyNote:
       "{symbols} ana borsasında {codes} cinsinden işlem görüyor: hisse başı kâr, 52 hafta bandı ve F/K oranı o borsadan geliyor, fiyat satırı ise ADR'nin doları. İki ölçü doğrudan karşılaştırılamaz.",
-    remove: "Listeden Çıkar",
+    /* Sözcük sırası dile bağlı; birleştirme İngilizcede "NVDA Remove From
+       List" üretiyordu. Kalıp tam cümle, yer tutucu sözlükte. */
+    remove: "{symbol} Sembolünü Listeden Çıkar",
+    partialPeriod: "Kısmi Dönem",
     addSymbol: "Sembol Ekle",
     addPlaceholder: "Sembol ya da şirket adı",
     addCta: "Karşılaştır",

@@ -571,10 +571,35 @@ const en: typeof tr = {
     title: "Compare",
     subtitle:
       "Read two to four stocks on the same scale — return, valuation and volatility in one table.",
-    empty: "Pick symbols to compare",
+    empty: "Pick Symbols to Compare",
     emptyHint:
       "Type a symbol or company name in the box below, or start from one of the ready-made sets.",
     presets: "Ready-Made Sets",
+    presetsHint:
+      "Each set opens with four symbols; drop any of them and put another in its place.",
+    presetChipsNote:
+      "Four chipmakers riding the same demand cycle — where they diverge is the point.",
+    presetMegaNote:
+      "The four largest technology companies by market value — the heaviest names in the index.",
+    presetIndicesNote:
+      "Funds tracking four different indexes: the broad market, technology, industrial giants and small caps.",
+    howTitle: "How to Read It",
+    howScale: "One Scale",
+    howScaleText:
+      "Each series is converted to a percentage of its own first day, so they all leave zero; price levels are never compared.",
+    howRange: "One Range",
+    howRangeText:
+      "The range control in the header changes the chart, the return in the strip and the period row in the table together.",
+    howGroups: "Four Groups",
+    howGroupsText:
+      "The table reads in four groups: return, valuation, risk and company facts.",
+    selected: "Selected",
+    dayShort: "Today",
+    periodColumn: "{range} Return",
+    rangeAnnounce: "Range changed to {range}",
+    rangeFailed: "Range Data Didn't Load",
+    rangeFailedHint:
+      "The request did not complete; check your connection and try again. The other metrics on screen do not depend on the range and are unchanged.",
     presetChips: "Semiconductors",
     presetMega: "Mega Cap",
     presetIndices: "Index Funds",
@@ -588,7 +613,8 @@ const en: typeof tr = {
     range52: "52-Week Range",
     homeCurrencyNote:
       "{symbols} trade in {codes} on their home exchange: earnings per share, the 52-week range and the P/E ratio come from that listing, while the price row is the ADR in dollars. The two are not directly comparable.",
-    remove: "Remove From List",
+    remove: "Remove {symbol} From the List",
+    partialPeriod: "Partial Period",
     addCta: "Compare",
     trimmedNote:
       "Extra symbols in the link were dropped — this screen shows at most four.",
