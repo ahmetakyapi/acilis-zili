@@ -659,13 +659,20 @@ export function ArticleBody({
                 role="region"
                 aria-label={locale === "en" ? "Table" : "Tablo"}
               >
-                <table className="w-full min-w-[420px] text-left text-base">
+                {/* ASGARİ GENİŞLİK YALNIZCA `sm` ÜSTÜNDE. 420 piksellik
+                    taban her genişlikte geçerliydi ve 352 piksellik telefon
+                    kabında tabloyu yatay kaydırmaya zorluyordu: KVKK
+                    sayfasındaki beş tablonun beşi de sağ sütununu ancak
+                    parmakla kaydırınca gösteriyordu. İki-üç sütunlu bu
+                    tablolarda hücre metninin sarması kaydırmadan iyi —
+                    dar ekranda dolgu ve punto da bir kademe iniyor. */}
+                <table className="w-full text-left text-small sm:min-w-[420px] sm:text-base">
                   <thead>
                     <tr className="border-b border-line bg-surface">
                       {block.head.map((cell, cellIndex) => (
                         <th
                           key={cellIndex}
-                          className="px-3.5 py-2.5 text-tiny font-bold uppercase tracking-[0.07em] text-muted sm:px-4"
+                          className="px-2.5 py-2 text-micro font-bold uppercase tracking-[0.07em] text-muted sm:px-4 sm:py-2.5 sm:text-tiny"
                         >
                           {cell}
                         </th>
@@ -679,7 +686,7 @@ export function ArticleBody({
                           <td
                             key={cellIndex}
                             className={cn(
-                              "px-3.5 py-2.5 align-top leading-[22px] sm:px-4",
+                              "px-2.5 py-2 align-top leading-[18px] sm:px-4 sm:py-2.5 sm:leading-[22px]",
                               cellIndex === 0
                                 ? "font-semibold text-strong"
                                 : "text-body",

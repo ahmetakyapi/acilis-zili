@@ -502,7 +502,17 @@ async function CompaniesTable({
             role="region"
             aria-label={t.companies.title}
           >
-            <table className="w-full text-sm sm:min-w-[700px]">
+            {/* MOBİLDE SABİT DÜZEN. Otomatik düzende şirket sütunu
+                içeriğinin doğal genişliğini alıyordu: en uzun ad ("Space
+                Exploration Technologies Corp") sütunu 245 piksele çıkarıyor,
+                tablo 352 piksellik kanalda 453 piksele uzuyor ve okuyucu
+                piyasa değeri sütununu ancak yana kaydırarak görebiliyordu.
+                Ölçüldü: 101 piksel taşma.
+                Sabit düzende sayı sütunları kendi genişliğini alıyor, şirket
+                sütunu artan yeri; ad zaten `truncate` taşıyor. Geniş ekranda
+                otomatik düzen geri geliyor — orada yer bol ve sütunlar
+                içeriğe göre nefes almalı. */}
+            <table className="w-full table-fixed text-sm sm:table-auto sm:min-w-[700px]">
               <thead>
                 <tr className="border-b border-line text-left text-nano uppercase tracking-[0.08em] text-muted">
                   <th className="hidden w-10 px-4 py-2.5 font-semibold sm:table-cell sm:px-5">
@@ -522,6 +532,7 @@ async function CompaniesTable({
                     href={sortHref("degisim")}
                     active={sort === "degisim"}
                     dir={dir}
+                    className="w-[76px] sm:w-auto"
                   />
                   <SortHead
                     col="hafta"
@@ -538,7 +549,7 @@ async function CompaniesTable({
                     href={sortHref("fiyat")}
                     active={sort === "fiyat"}
                     dir={dir}
-                    className="px-1.5 sm:px-3"
+                    className="w-[62px] px-1.5 sm:w-auto sm:px-3"
                   />
                   <SortHead
                     col="cap"
@@ -546,7 +557,7 @@ async function CompaniesTable({
                     href={sortHref("cap")}
                     active={sort === "cap"}
                     dir={dir}
-                    className="pr-4 sm:pr-3"
+                    className="w-[74px] pr-4 sm:w-auto sm:pr-3"
                   />
                   <SortHead
                     col="hacim"

@@ -417,7 +417,7 @@ async function StockHeader({
 
   return (
     <header className="flex flex-wrap items-start justify-between gap-4">
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-4">
         {profile?.logoUrl ? (
           /* Logo ÇERÇEVESİZ ve tam oturur: kenarlık + iç dolgu, logoyu beyaz
              bir kutunun ortasında küçük bir damga gibi gösteriyordu. Artık
@@ -442,26 +442,20 @@ async function StockHeader({
             {fund.flag}
           </span>
         ) : null}
-        <div>
-          {/* Künye şeridi — borsa · sektör.
-              SEKTÖR AYNI KAYNAKTAN. Burası sağlayıcının serbest metinli
-              alanını yazıyordu, otuz piksel aşağıdaki profil paneli ise
-              GICS sınıflandırmasını: /hisse/CSCO'da künye "İletişim",
-              panel "Bilgi Teknolojileri" diyordu. /hisse/WMT'de künye
-              "Perakende", panel "Temel Tüketim". Tek sayfada iki farklı
-              sektör iddiası, üstelik ikisi de aynı ekranda görünüyor.
-              Tercih sırası panelinkiyle birebir: GICS varsa o, yoksa
-              sağlayıcının alanı. */}
-          {(profile?.exchange || kunyeSektor) && (
-            <p className="text-xs font-semibold uppercase leading-tight tracking-[0.02em] text-muted">
-              {[profile?.exchange, kunyeSektor].filter(Boolean).join(" · ")}
-            </p>
-          )}
-          <div className="mt-[7px] flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="display-ink text-heading font-bold tracking-[-0.03em] sm:text-display">
-              {profile?.name || fund?.name || symbol}
-            </h1>
-            <span className="text-base font-semibold text-muted sm:text-title">
+        <div className="min-w-0">
+          {/* SIRA: SEMBOL → AD → KÜNYE.
+              Önce künye (borsa · sektör) geliyordu, altında ad ve onun
+              yanında sembol ile kalp. Telefonda üçü de sığmıyordu: künye iki
+              satıra kırılıyor, 24 puntoluk ad satırı dolduruyor, sembol ve
+              kalp üçüncü satıra düşüyordu — kalp adın yanında bir eylem
+              olmaktan çıkıp havada asılı bir ikona dönüşüyordu.
+              Yeni sıra kimliği yukarı alıyor: sembol ve kalp aynı satırda ve
+              her zaman birlikte (ikisi de kısa, hiçbir genişlikte
+              ayrılmıyorlar), altında tam ad, en altta künye tek satırda
+              kırpılıyor. Künye bir etiket, başlık değil — en alta düşmesi
+              okuma sırasını da düzeltiyor. */}
+          <div className="flex items-center gap-2">
+            <span className="numeral text-lead font-bold text-soft sm:text-title">
               {symbol}
             </span>
             {session?.user ? (
@@ -490,6 +484,23 @@ async function StockHeader({
               </Link>
             )}
           </div>
+          <h1 className="display-ink mt-0.5 text-heading font-bold leading-[1.15] tracking-[-0.03em] sm:text-display">
+            {profile?.name || fund?.name || symbol}
+          </h1>
+          {/* Künye şeridi — borsa · sektör.
+              SEKTÖR AYNI KAYNAKTAN. Burası sağlayıcının serbest metinli
+              alanını yazıyordu, otuz piksel aşağıdaki profil paneli ise
+              GICS sınıflandırmasını: /hisse/CSCO'da künye "İletişim",
+              panel "Bilgi Teknolojileri" diyordu. /hisse/WMT'de künye
+              "Perakende", panel "Temel Tüketim". Tek sayfada iki farklı
+              sektör iddiası, üstelik ikisi de aynı ekranda görünüyor.
+              Tercih sırası panelinkiyle birebir: GICS varsa o, yoksa
+              sağlayıcının alanı. */}
+          {(profile?.exchange || kunyeSektor) && (
+            <p className="mt-1 truncate text-tiny font-semibold uppercase leading-tight tracking-[0.02em] text-muted">
+              {[profile?.exchange, kunyeSektor].filter(Boolean).join(" · ")}
+            </p>
+          )}
           {fund && (
             <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-tiny leading-tight text-muted">
               <span className="font-semibold text-soft">
@@ -504,10 +515,17 @@ async function StockHeader({
 
       {quoteResult.ok ? (
         <div className="w-full text-left sm:w-auto sm:text-right">
+          {/* FİYAT VE DEĞİŞİM AYNI SATIRDA. Değişim satırı fiyatın altına
+              iniyordu ve telefonda başlık dört satıra çıkıyordu; oysa ikisi
+              tek bir okuma — "şu fiyat, şu kadar değişmiş". Sığmadığında
+              kendiliğinden alt satıra iniyor (`flex-wrap`), sığdığında yan
+              yana duruyorlar. `items-baseline`: 28 puntoluk fiyat ile 13
+              puntoluk değişim taban çizgisinde hizalı. */}
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 sm:justify-end">
           <p className="tote text-subdisplay leading-none tracking-[-0.04em] sm:text-display">
             {formatPrice(quoteResult.data.price, locale, { currency: true })}
           </p>
-          <div className="mt-1.5 flex items-center justify-start gap-2 sm:justify-end">
+          <div className="flex items-center gap-2">
             <span
               className={cn(
                 "numeral text-sm",
@@ -521,6 +539,7 @@ async function StockHeader({
               {formatChange(quoteResult.data.change, locale)}
             </span>
             <ChangePill changePct={quoteResult.data.changePct} locale={locale} />
+          </div>
           </div>
 
           {/* SEANS DIŞINDAKİ FİYAT KENDİNİ SÖYLÜYOR.

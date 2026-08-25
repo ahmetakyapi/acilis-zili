@@ -149,7 +149,11 @@ export function BriefSwitch({
       <div
         role="tablist"
         aria-label={labels.periodLabel}
-        className="inline-flex overflow-hidden rounded-md border border-primary-faint text-small"
+        /* Sekmeler de aralık anahtarıyla aynı dilde: ray + hap
+           (`components/ui/primitives.tsx` → Segment). Kenarlıklı kutuydu ve
+           sayfadaki öteki iki denetimden (Günlük/Haftalık anahtarı, tema
+           anahtarı) farklı görünüyordu. */
+        className="inline-flex gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small"
       >
         {(["daily", "weekly"] as const).map((key) => (
           <button
@@ -166,7 +170,7 @@ export function BriefSwitch({
               /* Telefonda 44px: 34px'lik sekmeler dokunma eşiğinin altındaydı
                  ve bunlar bültenin tek denetimi. Masaüstünde imleç hassas,
                  orada 34px yeterli. */
-              "min-h-11 px-3.5 transition-colors sm:min-h-[34px]",
+              "min-h-10 rounded-full px-4 transition-colors sm:min-h-8",
               period === key
                 ? "bg-primary font-semibold text-on-primary"
                 : "text-body hover:text-strong",
