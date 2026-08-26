@@ -60,7 +60,6 @@ import { getQuotes } from "@/lib/providers";
 import { isSpotlight } from "@/lib/spotlight";
 import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
 import { ALL_MEMBERS, primaryOnly } from "@/db/seed/indices";
-import { sectorLabel } from "@/lib/sectors";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import {
   analysisHref,
@@ -90,7 +89,7 @@ import {
 } from "@/components/stories/StoryFigure";
 import { getChartBarsMulti } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
-import { VIX_SERIES, vixBand } from "@/components/markets/FearGauge";
+import { FearGauge } from "@/components/markets/FearGauge";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -342,21 +341,41 @@ export default async function TodayPage() {
           <WorldStrip locale={locale} t={t} />
         </Suspense>
 
-        {/* ---- Sektör performansı ve günün hareketleri ----
+        {/* ---- Günün hareketleri ----
              SIRA ÖLÇEKTEN İNCEYE. Üstteki iki panel endeksleri ve dünyayı
-             gösteriyor, yani "borsa bugün ne yaptı"; bu ikisi aynı soruyu
-             bir basamak daha inceden soruyor — önce kırılım (sektör), sonra
-             tek tek isimler. Faiz ve makro altta kalıyor: onlar hisse
-             senedi değil, farklı bir varlık sınıfı ve günün hareketiyle
-             aynı cümlenin parçası değil.
-             İKİSİ AYNI KOTASYON SETİNDEN besleniyor — gerekçe
-             `indexSnapshot`ta. */}
-        <Suspense fallback={<PanelSkeleton rows={5} footer />}>
-          <SectorPerformance locale={locale} t={t} />
-        </Suspense>
-
+             gösteriyor, yani "borsa bugün ne yaptı"; bu panel aynı soruyu
+             bir basamak inceden soruyor: tek tek hangi isimler taşıdı. */}
         <Suspense fallback={<PanelSkeleton rows={6} footer />}>
           <DayMovers locale={locale} t={t} />
+        </Suspense>
+
+        {/* ---- Korku Endeksi ----
+             Yeri hisse tarafının hemen ALTI ve faizin hemen ÜSTÜ, çünkü
+             cümlenin döndüğü yer burası: yukarısı "bugün ne oldu", VIX ise
+             "piyasa bundan sonrası için ne bekliyor" diyor — ürünün tek
+             ileriye bakan ölçüsü. Altındaki faiz ve makro da aynı arka plan
+             ailesinden.
+             Bir süre tahvil kartının dibinde tek satırdı; orada seviye,
+             bant ve değişim yan yana sıkışıyor, VIX'in asıl bilgisi olan
+             ölçek hiç görünmüyordu. Bileşen /piyasalar'daki bantlı
+             göstergenin AYNISI — eşikler tek yerde. */}
+        <Suspense fallback={<PanelSkeleton rows={3} />}>
+          <FearGauge
+            locale={locale}
+            labels={{
+              title: t.markets.fearTitle,
+              hint: t.markets.fearHint,
+              average: t.markets.fearAverage,
+              guideCta: t.markets.fearGuideCta,
+              bands: {
+                calm: t.markets.fearCalm,
+                normal: t.markets.fearNormal,
+                tense: t.markets.fearTense,
+                fear: t.markets.fearHigh,
+                panic: t.markets.fearPanic,
+              },
+            }}
+          />
         </Suspense>
 
         <Suspense fallback={<PanelSkeleton rows={3} footer />}>
@@ -779,10 +798,9 @@ const TODAY_YIELDS = [
 ] as const;
 
 async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const [vixResult, ...results] = await Promise.all([
-    getSeries(VIX_SERIES, 2),
-    ...TODAY_YIELDS.map((series) => getSeries(series, 2)),
-  ]);
+  const results = await Promise.all(
+    TODAY_YIELDS.map((series) => getSeries(series, 2)),
+  );
 
   const values = TODAY_YIELDS.map((series, index) => {
     const result = results[index];
@@ -805,35 +823,6 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
      tek başına bir hataydı. Bkz. CLAUDE.md → "bayat veriyi büyük puntoyla
      gösterme". */
   const observedAt = values.find((value) => value.date)?.date ?? null;
-
-  const vixLevel = vixResult.ok ? vixResult.data.latestValue : null;
-  const vixPrev = vixResult.ok ? vixResult.data.prevValue : null;
-  /* VIX'İN KENDİ TARİHİ. Panelin tek "FRED · tarih" künyesi tahvil
-     serilerine ait ve VIX satırının ÜSTÜNDE duruyor; VIX ise tarihsiz
-     basılıyordu. Aynı gün olduklarında sorun görünmüyor ama tahvil
-     piyasasının kapalı, borsanın açık olduğu günlerde (Columbus Day,
-     Veterans Day) ikisi farklı günlere işaret ediyor ve okuyucu üstteki
-     tarihi VIX'e de ait sanıyor. Aynı gerekçe faiz künyesinin yazılma
-     sebebiydi zaten; VIX atlanmıştı. */
-  const vixDate = vixResult.ok
-    ? (vixResult.data.observations.at(-1)?.date ?? null)
-    : null;
-  const vixDelta =
-    vixLevel !== null && vixPrev !== null ? vixLevel - vixPrev : null;
-  const bandLabel: Record<string, string> = {
-    calm: t.markets.fearCalm,
-    normal: t.markets.fearNormal,
-    tense: t.markets.fearTense,
-    fear: t.markets.fearHigh,
-    panic: t.markets.fearPanic,
-  };
-  const vixTone =
-    vixLevel !== null
-      ? (() => {
-          const band = vixBand(vixLevel);
-          return { band, label: bandLabel[band.key] ?? "" };
-        })()
-      : null;
 
   return (
     <Panel>
@@ -900,61 +889,14 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
         </p>
       )}
 
-      {/* ---- Korku Endeksi ----
-           Kendi kartı vardı ve o kart Brent'le eşleşmişti; Brent düşünce
-           (FRED'in spot serisi günlerce geriden geliyor) VIX tek başına
-           kaldı. Yeri burası: faiz de VIX de hisse tarafının arka planını
-           okuyan, tek sayıdan ibaret ölçüler ve ikisi de aynı FRED
-           beslemesinden günlük geliyor. Bantlı tam göstergesi
-           /piyasalar'da — eşikler oradan, tek yerden okunuyor. */}
-      {vixLevel !== null && vixTone && (
-        <div className="flex items-center gap-3 border-t border-line px-4 py-3">
-          <span className="plate shrink-0 text-nano tracking-[0.08em]">
-            {t.markets.fearTitle}
-          </span>
-          <span className="tote ml-auto text-lead leading-none">
-            {formatPrice(vixLevel, locale, { digits: 2 })}
-          </span>
-          <span
-            className={cn(
-              "shrink-0 rounded-full px-2 py-0.5 text-nano font-semibold",
-              vixTone.band.tone === "up" && "bg-up-wash text-up",
-              vixTone.band.tone === "flat" && "bg-surface-elevated text-body",
-              vixTone.band.tone === "warn" && "bg-brass-wash text-brass",
-              vixTone.band.tone === "down" && "bg-down-wash text-down",
-            )}
-          >
-            {vixTone.label}
-          </span>
-          {/* Tarih yalnızca faiz künyesinden FARKLIYSA yazılıyor: aynı
-              günse üstteki künye zaten söylüyor ve tekrar etmek satırı
-              gereksiz kalabalıklaştırır. */}
-          {vixDate && vixDate !== observedAt && (
-            <span className="numeral shrink-0 text-nano text-muted">
-              {formatEtDateShort(vixDate, locale)}
-            </span>
-          )}
-          {vixDelta !== null && vixDelta !== 0 && (
-            <span
-              className={cn(
-                "numeral shrink-0 text-tiny font-semibold",
-                // Yükselen VIX gerginlik demek — yön rengi hisse
-                // sözlüğünün tersine kurulu.
-                vixDelta > 0 ? "text-down" : "text-up",
-              )}
-            >
-              <span aria-hidden>{vixDelta > 0 ? "▲" : "▼"}</span>{" "}
-              {formatPrice(Math.abs(vixDelta), locale, { digits: 2 })}{" "}
-              {/* Birim ŞART: hemen üstteki faiz satırları değişimi "0,04 puan"
-                  diye yazıyor, VIX ise çıplak "1,12" yazıyordu. Yan yana
-                  duran iki ölçüden biri birimli biri birimsiz olunca okuyucu
-                  ikincisini yüzde sanıyor — VIX'te 1,12 puan ile %1,12 çok
-                  farklı iki haber. */}
-              {t.markets.point}
-            </span>
-          )}
-        </div>
-      )}
+      {/* Korku Endeksi BURADAN KALKTI, KENDİ PANELİNE ÇIKTI.
+          Satır bu kartın dibinde tek bir çizgide sıkışıyordu: seviye, bant
+          rozeti, tarih ve değişim yan yana dört öğe ve hiçbiri okunacak
+          ölçüde değildi — üstelik VIX'in asıl bilgisi olan ÖLÇEK (sayı 0-50
+          bandının neresinde) hiç yoktu. Panel `/piyasalar`'daki bantlı
+          göstergenin aynısı ve eşikler hâlâ tek yerde
+          (`components/markets/FearGauge.tsx`). Sayı artık bir yerde:
+          tahvil kartı yalnızca faizi okuyor. */}
     </Panel>
   );
 }
@@ -1264,9 +1206,6 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
    -------------------------------------------------------------------------- */
 const MOVER_UNIVERSE = primaryOnly(ALL_MEMBERS);
 
-/** Sektör sıralamasına girmek için gereken en az şirket sayısı. */
-const SECTOR_MIN_COMPANIES = 8;
-
 async function indexSnapshot(status: MarketStatus) {
   const symbols = MOVER_UNIVERSE.map((member) => member.symbol);
   return { symbols, result: await getQuotes(symbols, status) };
@@ -1440,174 +1379,6 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
       {block(t.today.moversDown, losers, true)}
       <p className="border-t border-line-soft px-4 py-2 text-nano text-muted sm:px-5">
         {note}
-      </p>
-    </Panel>
-  );
-}
-
-/**
- * Sektör performansı — bugün hangi kırılım önde, hangisi geride.
- *
- * SEKTÖR TOHUMDAN, `symbols.sector` SÜTUNUNDAN DEĞİL. O sütun sağlayıcı
- * verisi değil, endeks tohumunun aynası: takip edilen 822 şirketin 305'inde
- * boş (Finnhub profili `sector` alanı hiç döndürmüyor, yalnızca serbest
- * metinli `industry`). Evren zaten endeks üyeleri olduğu için tohum burada
- * eksiksiz — 635 satırın 635'inde GICS ana sektörü var.
- *
- * AĞIRLIK PİYASA DEĞERİNE GÖRE ve bu ölçülerek seçildi. Eşit ağırlıklı
- * ortalamada üç trilyonluk şirketle dört milyarlık şirket aynı oyu
- * kullanıyor: aynı seansta Finans eşit ağırlıkta −%0,31, ağırlıklı +%0,25
- * çıkıyordu — yalnızca büyüklük değil İŞARET bile ters. Bir sektörün
- * "bugün ne yaptığı" sorusunun cevabı ağırlıklı olan; endeks mantığı da,
- * deponun öteki kararları da (şirketler dizini sıralaması, bilanço kartı
- * seçimi) piyasa değerine bakıyor.
- *
- * Ağırlık `SymbolMeta.marketCap` — yalnızca USD, yabancı para birimindeki
- * şirketlerde null (SK Hynix'in değeri 1,23 katrilyon KRW yazıyor ve dolar
- * sanılsaydı yarı iletken sektörü tek başına o satırdan ibaret olurdu).
- * Ağırlığı olmayan sembol hesaba hiç girmiyor.
- *
- * EŞİK: sekiz şirketten az kalan sektör sıralanmıyor. Bugünkü evrende her
- * GICS sektörü bunu rahat geçiyor (en küçüğü Enerji, 21 şirket); eşik bir
- * gelecek koruması — sağlayıcı bir gün bir sektörün kotasyonlarını
- * veremezse "üç şirketle ölçülmüş sektör" diye bir satır çıkmasın.
- */
-async function SectorPerformance({
-  locale,
-  t,
-}: {
-  locale: Locale;
-  t: Dictionary;
-}) {
-  const status = await getStatus();
-  const { symbols, result } = await indexSnapshot(status);
-
-  if (!result.ok) {
-    return (
-      <Panel>
-        <PanelHeader title={t.today.sectorPerformance} tone="plate" />
-        <DataError message={t.data.failed} hint={t.data.failedHint} />
-      </Panel>
-    );
-  }
-
-  const meta = await getSymbolNames(symbols);
-
-  const buckets = new Map<
-    string,
-    { weighted: number; weight: number; count: number }
-  >();
-  for (const member of MOVER_UNIVERSE) {
-    const sector = member.sector;
-    const quote = result.data[member.symbol];
-    const cap = meta[member.symbol]?.marketCap;
-    if (!sector || !quote) continue;
-    if (quote.changePct === null || quote.changePct === undefined) continue;
-    if (!cap || cap <= 0) continue;
-    const bucket = buckets.get(sector) ?? { weighted: 0, weight: 0, count: 0 };
-    bucket.weighted += quote.changePct * cap;
-    bucket.weight += cap;
-    bucket.count += 1;
-    buckets.set(sector, bucket);
-  }
-
-  const sectors = [...buckets.entries()]
-    .filter(([, bucket]) => bucket.count >= SECTOR_MIN_COMPANIES)
-    .map(([sector, bucket]) => ({
-      sector,
-      label: sectorLabel(sector, locale) ?? sector,
-      changePct: bucket.weighted / bucket.weight,
-      count: bucket.count,
-    }))
-    .sort((a, b) => b.changePct - a.changePct);
-
-  if (sectors.length === 0) {
-    return (
-      <Panel>
-        <PanelHeader title={t.today.sectorPerformance} tone="plate" />
-        <EmptyState title={t.today.sectorEmpty} />
-      </Panel>
-    );
-  }
-
-  /* Çubuk EN BÜYÜK MUTLAK DEĞERE göre ölçekleniyor, sabit bir yüzdeye
-     değil: sakin bir günde bütün sektörler binde birkaç oynuyor ve sabit
-     ölçekte hepsi görünmez bir çizgiye iniyordu, oynak bir günde ise
-     çubuklar rayı taşıyordu. Ölçek göreli olduğu için çubuk bir MİKTAR
-     değil bir SIRA anlatıyor; sayı zaten yanında yazılı. */
-  const peak = Math.max(...sectors.map((entry) => Math.abs(entry.changePct)), 0.01);
-  const strongest = sectors.slice(0, 3);
-  const weakest = sectors.slice(-2).filter((entry) => !strongest.includes(entry));
-
-  const row = (entry: (typeof sectors)[number]) => {
-    const tone = directionOf(entry.changePct);
-    return (
-      <li
-        key={entry.sector}
-        className="flex items-center gap-2.5 border-t border-line px-4 py-2 sm:px-5"
-      >
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-base leading-tight text-body">
-            {entry.label}
-          </span>
-          <span className="numeral block text-nano leading-tight text-muted">
-            {t.today.sectorCount.replace("{n}", String(entry.count))}
-          </span>
-        </span>
-        {/* Ray ORTADAN bölünmüyor: sektörlerin hepsi aynı yöne gidebiliyor
-            ve sıfır ekseni ortada olan bir ray o gün yarısı boş duruyordu.
-            Çubuk soldan büyüyor, yönü rengi söylüyor. */}
-        <span
-          aria-hidden
-          className="hidden h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-surface-sunken sm:block"
-        >
-          <span
-            className={cn(
-              "block h-full rounded-full",
-              tone === "down" ? "bg-down" : tone === "up" ? "bg-up" : "bg-flat",
-            )}
-            style={{
-              width: `${Math.max(4, (Math.abs(entry.changePct) / peak) * 100)}%`,
-            }}
-          />
-        </span>
-        <span
-          className={cn(
-            "numeral w-[62px] shrink-0 text-right text-base font-bold",
-            directionText(tone),
-          )}
-        >
-          {formatPercent(entry.changePct, locale, 2)}
-        </span>
-      </li>
-    );
-  };
-
-  return (
-    <Panel>
-      <PanelHeader
-        title={t.today.sectorPerformance}
-        tone="plate"
-        action={<PanelLink href="/sirketler">{t.common.showAll}</PanelLink>}
-      />
-      <p className="plate px-4 pb-1.5 pt-3.5 text-nano tracking-[0.09em] sm:px-5">
-        {t.today.sectorStrongest}
-      </p>
-      <ul>{strongest.map(row)}</ul>
-      {weakest.length > 0 && (
-        <>
-          <p className="plate border-t border-line px-4 pb-1.5 pt-3.5 text-nano tracking-[0.09em] sm:px-5">
-            {t.today.sectorWeakest}
-          </p>
-          <ul>{weakest.map(row)}</ul>
-        </>
-      )}
-      {/* HESABIN NASIL YAPILDIĞI YAZILI. Bu satır olmadan okuyucu rakamı bir
-          sektör endeksinin ya da XLK gibi bir fonun getirisi sanıyor; bizde
-          sektör endeksi yok, sayı takip edilen endeks üyelerinden
-          hesaplanıyor. */}
-      <p className="border-t border-line px-4 py-3 text-tiny leading-relaxed text-muted sm:px-5">
-        {t.today.sectorNote}
       </p>
     </Panel>
   );

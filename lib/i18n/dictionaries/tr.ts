@@ -191,21 +191,6 @@ const tr = {
     dayMoversClosedNote: "{n} endeks üyesi tarandı · son kapanışa göre",
     dayMoversEmpty: "Sıralama için yeterli fiyat verisi yok.",
 
-    /* ---- Sektör performansı (yan kolon) ----
-       Sayı bir sektör endeksi ya da ETF DEĞİL; künyedeki cümle bunu açıkça
-       söylüyor, yoksa okuyucu rakamı XLK gibi bir fonun getirisi sanıyor.
-       AĞIRLIK PİYASA DEĞERİNE GÖRE ve bu ölçülerek seçildi: eşit ağırlıklı
-       ortalamada üç trilyonluk şirketle dört milyarlık şirket aynı oyu
-       kullanıyor ve sonuç birkaç küçük şirketin gürültüsüne dönüyordu —
-       aynı seansta Finans eşit ağırlıkta −%0,31, ağırlıklı +%0,25
-       çıkıyordu, yani işaret bile ters. */
-    sectorPerformance: "Sektör Performansı",
-    sectorStrongest: "En Güçlü",
-    sectorWeakest: "En Zayıf",
-    sectorCount: "{n} Şirket",
-    sectorNote:
-      "Her sektörün rakamı, o sektördeki endeks üyelerinin piyasa değerine göre ağırlıklı günlük değişimidir — bir sektör endeksi ya da ETF getirisi değil.",
-    sectorEmpty: "Sektör hesabı için yeterli fiyat verisi yok.",
     schedule: "Bugünün Takvimi",
     scheduleEmpty: "Bugün için planlanmış ekonomik veri yok.",
     earningsToday: "Bugün Bilanço Açıklayanlar",
