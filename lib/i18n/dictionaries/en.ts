@@ -251,6 +251,7 @@ const en: typeof tr = {
     tabWatchlist: "My Watchlist",
     beforeOpenShort: "Pre-Market",
     afterCloseShort: "After Close",
+    reactionShort: "Stock",
   },
 
   analysis: {

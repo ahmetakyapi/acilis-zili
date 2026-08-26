@@ -496,9 +496,15 @@ async function StockHeader({
               sektör iddiası, üstelik ikisi de aynı ekranda görünüyor.
               Tercih sırası panelinkiyle birebir: GICS varsa o, yoksa
               sağlayıcının alanı. */}
-          {(profile?.exchange || kunyeSektor) && (
+          {kunyeSektor && (
+            /* BORSA ADI KÜNYEDEN ÇIKTI. Satır "NASDAQ NMS - GLOBAL MARKET ·
+               BİLGİ TEKNOLOJİLERİ" diye kuruluyor ve 390 pikselde 39 piksel
+               kırpılıyordu — kesilen yer de sektördü. İkisi de aşağıdaki
+               Şirket Profili kartında kendi satırlarında zaten var; künye
+               genişliğinin tamamını tekrara harcayıp tekrar olmayan yarısını
+               kesiyordu. Sektör tek başına sığıyor. */
             <p className="mt-1 truncate text-tiny font-semibold uppercase leading-tight tracking-[0.02em] text-muted">
-              {[profile?.exchange, kunyeSektor].filter(Boolean).join(" · ")}
+              {kunyeSektor}
             </p>
           )}
           {fund && (
@@ -1204,7 +1210,15 @@ async function AnalystCard({
             </dd>
             {/* Sabit genişlik: yüzdeler sağ kenarda hizalı dursun, sayının
                 kaç hane olduğuna göre sağa sola kaymasın. */}
-            <dd className="numeral w-11 shrink-0 text-right text-tiny text-muted">
+            {/* YÜZDE SÜTUNU DAR EKRANDA YOK. Aynı dağılım bu kartta dört kez
+                çizilmiş: rozet, yığılmış çubuk, adet sütunu ve bu yüzde
+                sütunu. Yüzde yeni bir şey söylemiyor — çubuğun zaten çizdiği
+                oranın sayısı. Varlık sebebi masaüstündeki üç sütunlu ızgarada
+                kart boyunu eşitlemekti; mobilde o ızgara yok, paneller alt
+                alta. Üstelik üstteki "%94 Al Yönünde" rozetinin bazı FARKLI
+                (al tarafının toplam paya oranı) ve yan yana duran altı yüzde
+                iki ayrı bazı ayırt edilemez hâle getiriyordu. */}
+            <dd className="numeral hidden w-11 shrink-0 text-right text-tiny text-muted sm:block">
               {formatPercentPlain((segment.value / total) * 100, locale, 0)}
             </dd>
           </div>
@@ -1349,7 +1363,14 @@ async function PastEarnings({
         role="region"
         aria-label={t.stock.pastEarnings}
       >
-        <table className="w-full min-w-[560px] text-sm">
+        {/* DAR EKRANDA KAYDIRMASIZ. `min-w-[560px]` koşulsuzdu: 390 pikselde
+            kaba 352 piksel kalıyor ve tablonun 208 pikseli (%37) görüş
+            alanının dışında duruyordu — üstelik dışarıda kalan sütun
+            tablonun TEK CEVABI olan sayıydı, yani şirketin gerçekten ne
+            açıkladığı. Gelir sütunları zaten dar ekranda gizleniyordu ve
+            üstündeki yorum "tablo kaydırmadan sığar" diyordu; taban genişlik
+            o iddiayı boşa çıkarıyordu. */}
+        <table className="w-full min-w-0 text-sm sm:min-w-[560px]">
         <thead>
           <tr className="border-b border-line-soft text-left text-nano uppercase tracking-wider text-muted">
             <th className="px-4 py-2.5 font-medium sm:px-5">
@@ -1412,7 +1433,7 @@ async function PastEarnings({
             return (
               <tr key={row.reportDate}>
                 <td className="px-4 py-2.5 sm:px-5">
-                  <span className="numeral block text-sm font-semibold text-strong">
+                  <span className="numeral block whitespace-nowrap text-sm font-semibold text-strong">
                     {periodLabel.format(
                       new Date(`${row.periodEnd ?? row.reportDate}T12:00:00Z`),
                     )}
@@ -1678,8 +1699,13 @@ async function PeersCard({
                 </span>
                 {quote ? (
                   <span className="flex flex-wrap items-center justify-between gap-1.5">
-                    <span className="numeral text-sm text-body">
-                      {formatPrice(quote.price, locale)}
+                    {/* Fiyat sembolle AYNI PUNTODAYDI (ikisi de 14px) ve
+                        127 piksellik kartta hangisinin kimlik hangisinin ölçü
+                        olduğu okunmuyordu. Bir punto inince yer de açıldı ve
+                        para birimi geri kondu: sayfadaki başka her fiyatta
+                        "$" varken bu sekiz fiyatta yoktu. */}
+                    <span className="numeral text-tiny text-body">
+                      {formatPrice(quote.price, locale, { currency: true })}
                     </span>
                     <ChangePill
                       changePct={quote.changePct}

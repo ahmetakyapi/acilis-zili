@@ -90,18 +90,12 @@ function LogoTile({
 export function StoryBrands({
   cast,
   total,
-  sinceLabel,
-  eventDate,
   locale,
   max = 4,
 }: {
   cast: CastMember[];
   /** Yazıda geçen toplam sembol sayısı — şeride sığmayanlar sayıyla söylenir. */
   total: number;
-  sinceLabel: string;
-  /** Ölçünün başladığı gün — "olaydan bugüne" tek başına hangi gün olduğunu
-      söylemiyordu. */
-  eventDate: string;
   locale: Locale;
   max?: number;
 }) {
@@ -145,12 +139,12 @@ export function StoryBrands({
           >
             {formatPercent(lead.sinceEvent, locale)}
           </span>
-          <span className="mt-1 block text-micro uppercase tracking-[0.07em] text-muted">
-            {lead.symbol} · {sinceLabel}
-          </span>
-          <span className="numeral block text-micro leading-tight text-muted">
-            {eventDate}
-          </span>
+          {/* İKİ KÜNYE SATIRI KALKTI. İkisi de 8 punto — mobil okunabilirlik
+              tabanının altında — ve ikisi de tekrar: sembol hemen soldaki
+              şeritte ve logo karosunda zaten yazılı (üstelik hisse sayfasında
+              bu kapak her zaman sayfanın kendi sembolünü gösteriyor), tarih
+              ise 54 piksel aşağıda gövdenin ilk satırında okunaklı puntoyla
+              duruyor. Kapak 88 pikselden 62'ye indi. */}
         </span>
       )}
     </div>

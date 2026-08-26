@@ -3,7 +3,7 @@ import { StoryBrands, type CastMember } from "@/components/stories/StoryVisual";
 import { Panel } from "@/components/ui/primitives";
 import type { StoryIndexRow } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { cn, formatEtDateLong, formatEtDateShort } from "@/lib/utils";
+import { cn, formatEtDateLong } from "@/lib/utils";
 
 /**
  * Mercek kartı — marka şeridi, künye, başlık, giriş.
@@ -50,8 +50,6 @@ export function StoryCard({
           <StoryBrands
             cast={cast}
             total={total}
-            sinceLabel={t.stories.sinceEvent}
-            eventDate={formatEtDateShort(story.eventDate, locale)}
             locale={locale}
           />
         ) : (

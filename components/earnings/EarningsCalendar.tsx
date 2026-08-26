@@ -34,16 +34,22 @@ export function timingOf(
   hour: string | null,
   t: Dictionary,
 ): { label: string; short: string; tone: TimingTone } {
+  /* KISA HÂL GERÇEKTEN KISA. `short` alanı vardı ama uzun etiketin
+     kopyasıyla dolduruluyordu ve sözlükteki kısa karşılıklar hiç
+     kullanılmıyordu. Mini kartlarda çip 102 piksel, kartın kendisi 172:
+     logonun yanındaki bütün boşluğu tek bir çip yiyordu ve o çip bir
+     günün altı kartında da AYNI olduğu için hiçbir şey ayırt etmiyordu.
+     Kısa hâlde ~62 piksel. */
   if (hour === "bmo")
     return {
       label: t.earnings.beforeOpen,
-      short: t.earnings.beforeOpen,
+      short: t.earnings.beforeOpenShort,
       tone: "pre",
     };
   if (hour === "amc")
     return {
       label: t.earnings.afterClose,
-      short: t.earnings.afterClose,
+      short: t.earnings.afterCloseShort,
       tone: "post",
     };
   if (hour === "dmh")

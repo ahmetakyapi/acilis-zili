@@ -133,9 +133,19 @@ function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
   if (list.length === 0) return null;
 
   return (
+    /* DAR EKRANDA IZGARA DEĞİL SATIR.
+       İki sütunlu ızgarada hücreye ~150 piksel düşüyor ve etiket büyük harf +
+       geniş aralıkla yazıldığı için ("1 YILLIK GETİRİ") tek başına o genişliği
+       dolduruyordu; parantezli künye ikinci satıra, sayı üçüncü satıra
+       düşüyordu. Dört ölçü 400 piksellik bir blok oluyordu.
+       Telefonda her ölçü tek satır: solda adı ve koşulu, sağda sayısı. Aynı
+       kalıp hisse sayfasının seans haritasında ve karşılaştırmanın şirket
+       künyesinde de var — dar ekranda ızgara yerine satır, bu depoda artık
+       yerleşik bir çözüm. Geniş ekranda ızgara yerinde duruyor. */
     <dl
       className={cn(
-        "grid gap-x-5 gap-y-4 rounded-lg bg-surface-sunken px-4 py-3.5 sm:px-5",
+        "rounded-lg bg-surface-sunken px-4 py-3 sm:grid sm:gap-x-5 sm:gap-y-4 sm:px-5 sm:py-3.5",
+        "divide-y divide-line-soft sm:divide-y-0",
         RAIL_COLS[Math.min(list.length, 5)],
       )}
     >
@@ -146,10 +156,13 @@ function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
            aynı satırındayken farklı yüksekliklerde duruyordu. Hücre artık
            sütun ve sayı `mt-auto` ile alta yaslı; ızgara satırı zaten eşit
            yükseklik veriyor. */
-        <div key={fact.label} className="flex min-w-0 flex-col">
+        <div
+          key={fact.label}
+          className="flex min-w-0 items-baseline justify-between gap-3 py-1.5 first:pt-0 last:pb-0 sm:flex-col sm:items-stretch sm:justify-start sm:gap-0 sm:py-0"
+        >
           {/* Etiket ve künye 10px'ti ve okunmuyordu — ray zaten sakin bir
               katman, bir de puntoyu kısınca fısıltıya dönüşüyordu. */}
-          <dt className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+          <dt className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
             <span className={cn(PLATE_LABEL, "text-tiny text-muted")}>
               {fact.label}
             </span>
@@ -164,7 +177,9 @@ function FactRail({ facts }: { facts: (Fact | false | null)[] }) {
           </dt>
           <dd
             className={cn(
-              "figure mt-auto pt-1.5 text-title font-bold leading-none tracking-[-0.03em]",
+              /* Satır düzeninde sayı sağ uçta ve bir punto küçük; ızgarada
+                 eski yerinde ve eski boyunda. */
+              "figure shrink-0 text-lead font-bold leading-none tracking-[-0.03em] sm:mt-auto sm:pt-1.5 sm:text-title",
               fact.tone === "up" && "text-up",
               fact.tone === "down" && "text-down",
               !fact.tone && "text-strong",
@@ -550,20 +565,27 @@ export default async function AnalysisDetailPage(
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 sm:gap-1.5">
 
               {/* Bu künye bir süre dolu siyah bir kutuydu. Sayfadaki en koyu
                   yüzey oydu ve gözü ilk oraya çekiyordu — oysa taşıdığı bilgi
                   bir tarih, sayfanın en önemli şeyi değil. Komşusuyla aynı
                   aileye alındı: ikisi de kenarlıklı çip, biri nötr (olmuş
                   olan), öteki accent (olacak olan). */}
-              <span className="inline-flex min-h-7 items-center gap-1.5 rounded-md border border-line bg-surface-solid px-2.5 text-nano font-bold text-body">
+              {/* DAR EKRANDA KUTU DEĞİL KÜNYE.
+                  İki rozet telefonda alt alta, her biri satırın neredeyse
+                  tamamını kaplayan birer kutu olarak duruyordu; üstelik
+                  birincisi künye çubuğunun ("Bilançolar › Yarı İletken ›
+                  NVIDIA · 2Ç FY2027") zaten söylediğini tekrar ediyordu.
+                  Telefonda ikisi de çerçevesiz künye metni — bilgi duruyor,
+                  kutular gidiyor. Geniş ekranda yer var, rozetler orada. */}
+              <span className="inline-flex items-center gap-1.5 text-nano font-bold leading-tight text-body sm:min-h-7 sm:rounded-md sm:border sm:border-line sm:bg-surface-solid sm:px-2.5">
                 <CalendarBlank weight="duotone" size={12} className="text-muted" />
                 {t.analysis.earningsOf.replace("{period}", row.periodLabel)} ·{" "}
                 {formatEtDateLong(row.reportDate, locale)}
               </span>
               {row.nextPeriodLabel && (
-                <span className="inline-flex min-h-7 items-center rounded-md border border-primary-faint bg-primary-wash px-2.5 text-nano font-bold text-primary-ink">
+                <span className="inline-flex items-center text-nano font-bold leading-tight text-primary-ink sm:min-h-7 sm:rounded-md sm:border sm:border-primary-faint sm:bg-primary-wash sm:px-2.5">
                   {t.analysis.nextEarnings}: {row.nextPeriodLabel}
                   {row.nextReportEstimate ? ` · ${row.nextReportEstimate}` : ""}
                 </span>
@@ -608,14 +630,23 @@ export default async function AnalysisDetailPage(
                     : t.analysis.lastClose}
                 </span>
               </div>
-              <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 sm:justify-end">
-                <span className="figure text-subdisplay font-bold leading-none tracking-[-0.04em] text-strong">
+              {/* DAR EKRANDA MANŞET DEĞİL, BAĞLAM.
+                  İki fiyat mobilde aynı puntoda (28px) üst üste geliyordu:
+                  "son kapanış" ile "bilanço günü kapanışı". İkisi de manşet
+                  gibi durunca sayfanın konusunun hangisi olduğu okunmuyordu —
+                  oysa bu sayfa BİR ÇEYREĞİ anlatıyor ve manşet, o çeyreğin
+                  günündeki kapanış. Şimdi telefonda bu blok 19 puntoluk bir
+                  bağlam satırı; geniş ekranda kimlik bandının sağ yarısını
+                  dolduran eski manşet olarak kalıyor, orada yarışma yok
+                  çünkü öteki fiyat alt katmanda. */}
+              <div className="mt-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 sm:mt-1.5 sm:justify-end">
+                <span className="figure text-title font-bold leading-none tracking-[-0.04em] text-strong sm:text-subdisplay">
                   {formatPrice(live.quote.price, locale, { currency: true })}
                 </span>
                 {/* Değişim bilinmiyorsa yön rengi de yok: tire nötr basılır. */}
                 <span
                   className={cn(
-                    "figure text-read font-bold",
+                    "figure text-small font-bold sm:text-read",
                     live.quote.changePct === null
                       ? "text-muted"
                       : live.quote.changePct >= 0
@@ -631,11 +662,11 @@ export default async function AnalysisDetailPage(
                    oysa bu satır sayfanın ana sorusuna ("bilanço günden bugüne
                    ne oldu") doğrudan cevap veriyor. Etiket 12px gövde
                    mürekkebine, oran 13px'e çıktı. */
-                <p className="mt-2 text-small text-body">
+                <p className="mt-1 text-tiny text-body sm:mt-2 sm:text-small">
                   {t.analysis.sinceReport}{" "}
                   <span
                     className={cn(
-                      "figure text-base font-bold",
+                      "figure text-small font-bold sm:text-base",
                       sinceReportPct >= 0 ? "text-up" : "text-down",
                     )}
                   >

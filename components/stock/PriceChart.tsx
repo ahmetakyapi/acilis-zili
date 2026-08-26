@@ -679,7 +679,19 @@ export function PriceChart({
               <span className="text-sm text-soft">
                 {labels.rangeLabels[range]}
               </span>
-              <span className="tote text-heading sm:text-subdisplay">
+              {/* FİYAT DAR EKRANDA BURADA YOK — sayfa başlığında 119 piksel
+                  yukarıda, aynı sayı, daha büyük puntoyla zaten duruyor.
+                  İkisi telefonda üst üste geldiğinde okuyucu hangisinin
+                  sayfanın konusu olduğunu ayıramıyordu; üstelik yüzdede sıra
+                  tersine dönüyordu: buradaki kopya (18px kalın) başlıktaki
+                  rozetten (12px) daha güçlüydü. Geniş ekranda başlıktaki
+                  fiyat sağ uçta, ekranın öbür yanında — orada tekrar
+                  okunmuyor, kalıyor.
+                  YÜZDE HER GENİŞLİKTE KALIYOR ve burası onun asıl yeri:
+                  başlıktaki rozet GÜNLÜK değişimi söylüyor, bu ise SEÇİLİ
+                  ARALIĞIN getirisi ve aralık düğmeleriyle birlikte
+                  değişiyor. */}
+              <span className="tote hidden text-heading sm:inline sm:text-subdisplay">
                 {formatPrice(shownPrice, locale, { currency: true })}
               </span>
               <span className={cn("numeral text-lg font-bold", toneText)}>

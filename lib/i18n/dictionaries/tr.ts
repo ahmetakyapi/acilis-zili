@@ -329,6 +329,10 @@ const tr = {
     /* Dar sütunlarda tam etiket komşu hücreye taşıyor. */
     beforeOpenShort: "Açılış Öncesi",
     afterCloseShort: "Kap. Sonrası",
+    /* Günün analizi kartındaki üçüncü ölçünün adı. Yanındaki ikisi "Gelir"
+       ve "EPS" derken bu yalnızca bir ok ve yüzdeydi; okuyucu üç yüzdeden
+       birinin neyin yüzdesi olduğunu bilemiyordu. */
+    reactionShort: "Hisse",
   },
 
   /* Bilanço analizleri — açıklanmış çeyreğin okunmuş hâli. */
