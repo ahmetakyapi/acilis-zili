@@ -132,7 +132,13 @@ export function BriefSwitch({
             <span className="numeral text-tiny text-muted">{brief.stamp}</span>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-3">
+        {/* ARŞİV BAĞLANTISI DAR EKRANDA SAĞ UÇTA. Denetim grubu kendi
+            satırına indiğinde sekmeler ve bağlantı sola toplanıyor, sağında
+            yarım satır boşluk kalıyordu: bağlantı sekmelerin bir devamı gibi
+            duruyor, satırın öteki ucundaki eylem gibi durmuyordu. Grup o
+            satırın tamamını alıyor ve iki uç birbirinden ayrılıyor; tek
+            satıra sığdığında (sm) eski davranış. */}
+        <div className="flex w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:justify-start">
 
       {/* Sekmeler metnin hemen üstünde: hangi dönemi okuduğun, okumaya
           başlamadan önce görünür. Dokunma hedefi 34px — 12.5px'lik iki

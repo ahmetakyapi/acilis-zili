@@ -351,13 +351,28 @@ function DaySection({
                 {/* Hero logosu bir basamak büyük (56px): katman farkı
                     yalnızca puntoyla değil ölçüyle de konuşuyor. */}
                 <LogoTile symbol={row.symbol} logoUrl={m?.logoUrl} size="xl" />
-                <div className="min-w-0">
+                {/* DAR EKRANDA KALAN GENİŞLİĞİ KAPLIYOR (`flex-1`): içindeki
+                    takvim düğmesi ancak böyle kartın sağ kenarına
+                    yaslanabiliyor. Blok kendi içeriği kadar genişken
+                    `ml-auto` sembolün birkaç piksel sağına itiyordu ve düğme
+                    kartın ortasında, şirket adının üstünde asılı kalıyordu.
+                    Geniş ekranda blok yine içeriği kadar: sağdaki ölçü
+                    sütunu `sm:ml-auto` ile kendi yerini alıyor. */}
+                <div className="min-w-0 flex-1 sm:flex-initial">
                   {/* Yıldız sembolün SOLUNDA ve sembol bloğu sabit
                       genişlikte: zamanlama çipleri kartlar arasında aynı
                       hizada dursun, sembolün kaç harf olduğuna göre
                       sağa sola kaymasın. */}
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="flex min-w-[104px] items-center gap-1.5">
+                    {/* SABİT GENİŞLİK YALNIZCA GENİŞ EKRANDA. 104 piksellik
+                        rezervasyon zamanlama çiplerini kartlar arasında aynı
+                        hizada tutmak için; telefonda ise satırı taşırıyordu:
+                        sembol (104) + çip (130) + takvim düğmesi (32) 254
+                        piksellik alana sığmıyor, düğme tek başına ikinci
+                        satıra düşüp şirket adının üstünde asılı kalıyordu.
+                        Dar ekranda sembol kendi genişliği kadar ve üçü aynı
+                        satırda. */}
+                    <span className="flex items-center gap-1.5 sm:min-w-[104px]">
                       {watchSet.has(row.symbol) && (
                         <span aria-hidden className="text-sm text-primary">
                           ★
@@ -383,7 +398,7 @@ function DaySection({
                       date={row.reportDate}
                       label={t.earnings.addToCalendar}
                       compact
-                      className="sm:hidden"
+                      className="ml-auto sm:hidden"
                     />
                     <AddToCalendar
                       symbol={row.symbol}

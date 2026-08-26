@@ -1282,16 +1282,20 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   const names = await getSymbolNames(rows.map((row) => row.symbol));
 
-  /* Sekiz satır, PİYASA DEĞERİNE göre. Sağlayıcı takvimi alfabetik
-     döndürüyor ve liste "APC · ATI · ATII · ATLC" diye başlıyordu: bugünün
-     en büyük bilançosu 400 satır aşağıdaydı. Takvim ekranı zaten aynı
-     sıralamayı kullanıyor. */
+  /* Beş satır, PİYASA DEĞERİNE göre. Sağlayıcı takvimi alfabetik döndürüyor
+     ve liste "APC · ATI · ATII · ATLC" diye başlıyordu: bugünün en büyük
+     bilançosu 400 satır aşağıdaydı. Takvim ekranı zaten aynı sıralamayı
+     kullanıyor.
+     SEKİZDEN BEŞE. Panel ana sayfanın ortasında bir ÖZET; sekiz satır onu
+     telefonda tek başına bir ekran boyu yapıyor ve altındaki bölümleri
+     aşağı itiyordu. Kırpılan geri kalan zaten künyede sayıyla ("43 şirketin
+     5 tanesi") ve "Tümünü Gör" ile duruyor. */
   const shown = [...rows]
     .sort(
       (a, b) =>
         (names[b.symbol]?.marketCap ?? 0) - (names[a.symbol]?.marketCap ?? 0),
     )
-    .slice(0, 8);
+    .slice(0, 5);
 
   const badges = await getAnalysisBadges(
     shown.map((row) => row.symbol),

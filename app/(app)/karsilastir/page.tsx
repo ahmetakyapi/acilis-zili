@@ -11,11 +11,11 @@ import {
   type CompareLabels,
 } from "@/components/markets/CompareLive";
 import {
-  ChangePill,
   DataStamp,
   PageHeader,
   Panel,
 } from "@/components/ui/primitives";
+import { seriesColorOf } from "@/lib/chart-series";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { CompareAdd } from "@/components/markets/CompareAdd";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
@@ -32,7 +32,11 @@ import {
   type CompareSeries,
 } from "@/lib/compare";
 import {
+  cn,
+  directionOf,
+  directionText,
   formatMoneyCompact,
+  formatPercent,
   formatPercentPlain,
   formatPrice,
   peRatioOf,
@@ -256,15 +260,31 @@ async function CompareBoard({
       },
     },
     {
+      /* ROZET DEĞİL, DÜZ SAYI — hemen altındaki dönem getirisi satırıyla aynı.
+         İki gerekçe üst üste geldi. Biri tutarlılık: bu bir metrik ızgarası,
+         her hücresi düz bir sayı; rozet listelerin ve şeridin afordansı ve
+         yan yana duran iki getiri satırı sebepsiz yere birbirinden farklı
+         görünüyordu. Öteki yer: rozetin zemini, iç dolgusu ve ok işareti
+         sayının etrafına 23 piksel kabuk ekliyor ve dört sembolde tablonun
+         EN GENİŞ sütununu bu satır belirliyordu — 360 pikselde yatay
+         kaydırmanın tek başına en büyük sebebi oydu.
+         Renk tek taşıyıcı değil: `formatPercent` artı/eksi işaretini
+         kendisi yazıyor, yani yön renk körlüğünde de okunuyor. */
       group: "return",
       key: "dayChange",
       label: t.compare.dayChange,
       value: (i) => {
         const quote = quotes[symbols[i]];
-        return quote ? (
-          <ChangePill changePct={quote.changePct} locale={locale} size="sm" />
-        ) : (
-          "—"
+        if (!quote) return "—";
+        return (
+          <span
+            className={cn(
+              "numeral font-semibold",
+              directionText(directionOf(quote.changePct)),
+            )}
+          >
+            {formatPercent(quote.changePct, locale)}
+          </span>
         );
       },
     },
@@ -366,9 +386,18 @@ async function CompareBoard({
            okunuyor. */
         const kod = names[symbols[i]]?.currency;
         const opts = { currency: kod ?? true } as const;
+        /* PARA BİRİMİ BİR KEZ, TİRE ALT SINIRA YAPIŞIK.
+           Bant dar sütunda satır atlıyordu ve kırılma noktası tirenin iki
+           yanındaki boşluklardı: 360 pikselde hücre "164,07 $" / "—" /
+           "236,54 $" diye ÜÇ satıra bölünüyor, ortadaki satırda tek başına
+           bir tire kalıyordu. İki düzeltme birden: simge tek bir aralığın
+           iki ucunda iki kez yazılmasına gerek olmadığı için yalnızca üst
+           sınırda duruyor (yabancı borsa kodu da orada görünüyor), ve tire
+           alt sınıra bağlantısız boşlukla bağlı — artık tek başına satıra
+           düşemiyor. */
         return (
           <span className="numeral text-small text-body">
-            {formatPrice(metrics.data.low52, locale, opts)} —{" "}
+            {formatPrice(metrics.data.low52, locale)} —{" "}
             {formatPrice(metrics.data.high52, locale, opts)}
           </span>
         );
@@ -420,6 +449,7 @@ async function CompareBoard({
     ] as const
   )
     .map(([key, label]) => ({
+      key,
       label,
       rows: rows.filter((row) => row.group === key),
     }))
@@ -539,7 +569,7 @@ async function CompareBoard({
               <tr className="border-b border-line-soft text-left text-nano uppercase tracking-wider text-muted">
                 <th
                   scope="col"
-                  className="sticky left-0 z-10 w-[104px] bg-(--panel-fixed) px-3 py-2.5 font-medium sm:w-[168px] sm:px-5"
+                  className="sticky left-0 z-10 w-[104px] bg-(--panel-fixed) px-2.5 py-2.5 font-medium sm:w-[168px] sm:px-4 md:px-5"
                 >
                   {t.compare.metric}
                 </th>
@@ -547,7 +577,7 @@ async function CompareBoard({
                   <th
                     key={symbol}
                     scope="col"
-                    className="px-2.5 py-2.5 text-right sm:px-4"
+                    className="px-1 py-2.5 text-right sm:px-2.5 md:px-4"
                   >
                     <span className="numeral block text-tiny font-bold tracking-normal text-strong">
                       {symbol}
@@ -555,8 +585,16 @@ async function CompareBoard({
                     {names[symbol]?.name && (
                       /* `ml-auto`: blok kutusu `max-w` ile daraldığı için
                          `text-right` onu sağa yaslamıyor — hücrede sola
-                         kayıp sembolün altından çıkıyordu. */
-                      <span className="ml-auto block max-w-[9rem] truncate text-nano font-normal normal-case tracking-normal text-muted">
+                         kayıp sembolün altından çıkıyordu.
+                         ŞİRKET ADI DAR EKRANDA BAŞLIKTA YOK. Tablo dört
+                         sembolde 531 piksel istiyordu ve 360 pikselde kaba
+                         322 piksel kalıyor: yatay kaydırma kaçınılmazdı.
+                         Genişliği isteyen sayılar değil ADLARDI —
+                         "Advanced Micro Devices Inc" tek başına 153
+                         piksellik bir sütun açıyordu, oysa aynı ad hemen
+                         yukarıdaki şeritte her sembolün yanında duruyor.
+                         Adlar inince dört sütun kaydırmasız sığıyor. */
+                      <span className="ml-auto hidden max-w-[9rem] truncate text-nano font-normal normal-case tracking-normal text-muted sm:block">
                         {names[symbol].name}
                       </span>
                     )}
@@ -567,11 +605,18 @@ async function CompareBoard({
             <tbody className="divide-y divide-line-soft">
               {groups.map((group) => (
                 <Fragment key={group.label}>
-                  <tr>
+                  {/* ŞİRKET GRUBU DAR EKRANDA TABLODAN İNİYOR (aşağıdaki
+                      künyeye). Sektör ve alt sektör sayı değil, birer AD:
+                      sütunlar arasında karşılaştırılmıyor, şirket şirket
+                      okunuyor. Dört sütuna bölününce her birine ~50 piksel
+                      düşüyor ve "Bilgi Teknolojileri" kelime ortasından
+                      kırılıyordu ("Teknolojil / eri"). Geniş ekranda yer var,
+                      orada tablodaki yerinde duruyor. */}
+                  <tr className={cn(group.key === "company" && "hidden sm:table-row")}>
                     <th
                       scope="colgroup"
                       colSpan={symbols.length + 1}
-                      className="bg-surface px-3 py-1.5 text-left sm:px-5"
+                      className="bg-surface px-2.5 py-1.5 text-left sm:px-4 md:px-5"
                     >
                       <span className="plate sticky left-0 text-nano tracking-[0.09em]">
                         {group.label}
@@ -579,10 +624,15 @@ async function CompareBoard({
                     </th>
                   </tr>
                   {group.rows.map((row) => (
-                    <tr key={row.key}>
+                    <tr
+                      key={row.key}
+                      className={cn(
+                        group.key === "company" && "hidden sm:table-row",
+                      )}
+                    >
                       <th
                         scope="row"
-                        className="sticky left-0 z-10 bg-(--panel-fixed) px-3 py-2.5 text-left text-small font-medium text-muted sm:px-5"
+                        className="sticky left-0 z-10 bg-(--panel-fixed) px-2.5 py-2.5 text-left text-small font-medium text-muted sm:px-4 md:px-5"
                       >
                         {row.label}
                         {row.caption && (
@@ -594,7 +644,15 @@ async function CompareBoard({
                       {symbols.map((symbol, index) => (
                         <td
                           key={symbol}
-                          className="px-2.5 py-2.5 text-right text-base text-body sm:px-4"
+                          /* DAR EKRANDA DOLGU 4 PİKSEL. Dört sembolde tablo
+                             360 pikselde 437 piksel istiyordu ve kabına 322
+                             kalıyor. Dolgu sütun başına 20 piksel yiyordu —
+                             beş sütunda 100 piksel, yani taşmanın yaklaşık
+                             yarısı. Nefes payı iki basamakta geri geliyor:
+                             tam `sm`de (640px) şirket satırları da tabloya
+                             döndüğü için eski dolguya bir anda çıkmak beş
+                             piksellik bir kaydırma bırakıyordu. */
+                          className="px-1 py-2.5 text-right text-base text-body sm:px-2.5 md:px-4"
                         >
                           {row.value(index)}
                         </td>
@@ -606,6 +664,43 @@ async function CompareBoard({
             </tbody>
           </table>
         </div>
+
+        {/* ---- Şirket künyesi — YALNIZCA DAR EKRANDA ----
+             Tablodan inen sektör ve alt sektör satırlarının karşılığı.
+             Dört sütuna bölünmüş bir metin ızgarası yerine şirket şirket
+             okunan tek satırlık künyeler: kelime ortadan kırılmıyor, renk
+             anahtarı grafikle aynı ve satır tablonun genişliğiyle
+             yarışmıyor. */}
+        <div className="border-t border-line sm:hidden">
+          <p className="plate px-4 pb-1 pt-3 text-nano tracking-[0.09em]">
+            {t.compare.groupCompany}
+          </p>
+          <ul className="pb-3">
+            {symbols.map((symbol) => {
+              const sektor = sectorLabel(names[symbol]?.sector, locale);
+              const sanayi = industryLabel(names[symbol]?.industry, locale);
+              return (
+                <li
+                  key={symbol}
+                  className="flex items-baseline gap-2 px-4 py-1"
+                >
+                  <span
+                    aria-hidden
+                    className="h-3 w-[3px] shrink-0 translate-y-[2px] rounded-full"
+                    style={{ background: seriesColorOf(symbols, symbol) }}
+                  />
+                  <span className="numeral shrink-0 text-tiny font-bold text-strong">
+                    {symbol}
+                  </span>
+                  <span className="min-w-0 flex-1 text-tiny leading-snug text-muted">
+                    {[sektor, sanayi].filter(Boolean).join(" · ") || "—"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
         {/* Eksik veri SESSİZ KALMIYOR. Üç ayrı hâl, üç ayrı cümle; hepsi
             aynı hairline künye kalıbında, yeni kutu açmadan. */}
         {bilinmeyen.length > 0 && (

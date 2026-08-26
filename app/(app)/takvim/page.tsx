@@ -377,8 +377,15 @@ export default async function CalendarPage(
                           satırda kalınca metin sütununa ~190 piksel kalıyor
                           ve olay başlığı iki-üç satıra kırılıyordu: satırın
                           taşıdığı asıl bilgi sıkışıp yanındaki düğmeye yer
-                          açıyordu. Geniş ekranda eskisi gibi sağ uçta. */}
-                      <span className="flex basis-full flex-wrap items-center gap-x-3 gap-y-1 pl-[76px] sm:basis-auto sm:shrink-0 sm:justify-end sm:pl-0">
+                          açıyordu. Geniş ekranda eskisi gibi sağ uçta.
+                          SAĞ UÇ HER GENİŞLİKTE. Grup dar ekranda metin
+                          sütununun altına, 76 piksel içeriden başlıyordu ve
+                          ölçüsü olmayan olaylarda satırın altında tek başına
+                          asılı duran bir "Takvime Ekle" hapı kalıyordu —
+                          açıklamanın devamı gibi okunuyor, eylem gibi
+                          okunmuyordu. Okuma da eylem de artık satırın
+                          bittiği yerde. */}
+                      <span className="flex basis-full flex-wrap items-center justify-end gap-x-3 gap-y-1 sm:basis-auto sm:shrink-0 sm:pl-0">
                         {event.importance === "high" && (
                           <a
                             href={`/api/takvim?tip=olay&slug=${event.slug}`}

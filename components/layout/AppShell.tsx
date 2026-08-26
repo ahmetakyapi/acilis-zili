@@ -120,12 +120,15 @@ export function AppShell({
      ve mobilde başka türlü yalnızca Menü'den açılıyordu. Giriş bağlantısı
      kaybolmuyor: başlıktaki hesap menüsünde, ait olduğu yerde duruyor.
 
-     Giriş yapan kullanıcıda yuva Favoriler'e döner: onun için o sekme
-     ürünün en sık açılan ekranı; Mercek ana sayfanın kendi bölümünden ve
-     Menü'den açılıyor. */
+     YUVA GİRİŞ DURUMUNA BAKMIYOR. Bir süre giriş yapan kullanıcıda
+     Favoriler'e dönüyordu ama mobilde dört sekmenin biri kişisel bir listeye
+     gidiyordu ve o liste zaten başlıktaki hesap menüsünden, Menü sekmesinden
+     ve masaüstü gezinmesinden açılıyor. Mercek ise sitenin kendi yazdığı tek
+     içerik türü ve mobilde başka türlü yalnızca Menü'nün altında kalıyordu:
+     sekme onu herkes için görünür yapıyor. */
   const bottomItems = NAV_ITEMS.filter((item) => item.inBottomBar).map(
     (item) => {
-      const swap = item.href === "/favoriler" && !signedIn;
+      const swap = item.href === "/favoriler";
       return {
         key: item.href,
         href: swap ? "/mercek" : item.href,
