@@ -212,7 +212,32 @@ async function fetchQuotes(
   const primary = await alpaca.getSnapshots(unique, ttl);
   if (primary.ok) {
     await persistQuotes(Object.values(primary.data));
-    return primary;
+    /* DAMGA VERİNİN YAŞINI SÖYLÜYOR, İSTEĞİN ANINI DEĞİL.
+       Aynı hata bir kez önbellek yolunda bulunup düzeltilmişti (gerekçesi
+       `quotesFromCache` başında) ama CANLI yolda duruyordu: `alpacaFetch`
+       damga vermiyor, `ok()` de damgasız çağrıda `new Date()` koyuyor. Next
+       `fetch`i TTL dolduktan sonra bir süre eski gövdeyi servis edip
+       tazelemeyi arkada yaptığı için ekranda saatler öncesinin fiyatı "az
+       önce güncellendi" diye durabiliyordu — SNDK'da görüldü: başlık
+       1.477,21 yazarken hissenin gerçek fiyatı 1.507 civarıydı ve damga o
+       anın saatini gösteriyordu.
+
+       Yerine yükün KENDİ zaman damgası konuyor: paketteki EN YENİ son işlem
+       anı. Önbellek yolunda en ESKİSİ alınıyor çünkü orada her satırın ayrı
+       bir yazılma zamanı var ve soru "en geride kalan ne kadar geride";
+       burada bütün satırlar tek bir çekimden geliyor, sembollerin son işlem
+       anları ise likiditeye göre farklı — o yüzden paketin ön ucu, yani en
+       yenisi, o çekimin gerçek yaşını veriyor. Hiçbirinde işlem anı yoksa
+       eski davranış sürüyor. */
+    let enYeni: Date | null = null;
+    for (const quote of Object.values(primary.data)) {
+      if (quote.tradedAt && (!enYeni || quote.tradedAt > enYeni)) {
+        enYeni = quote.tradedAt;
+      }
+    }
+    return enYeni
+      ? ok(primary.data, "alpaca", { fetchedAt: enYeni })
+      : primary;
   }
 
   // Yedek: Finnhub tek tek sorgular. Sadece küçük listelerde denenir,
