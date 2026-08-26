@@ -177,7 +177,18 @@ export default async function AnalysesPage(
               />
             )}
 
-            <Panel className="flex min-w-0 flex-col gap-3 p-[18px] sm:p-5">
+            {/* TELEFONDA KAPALI — aynı satırlar 250 piksel aşağıda tekrar
+                geliyor. Bu panel haftanın beş analizini gösteriyor; sayfanın
+                asıl tablosu ise varsayılan hâlinde (filtresiz, tarihe göre)
+                tam olarak o beş satırla BAŞLIYOR. Geniş ekranda ikisi yan
+                yana duran iki sütun, biri öteki için özet; dar ekranda alt
+                alta düşünce okuyucu aynı listeyi iki kez geçiyor ve tabloya
+                varmadan önce boşuna 253 piksel kaydırıyor.
+
+                Yaklaşan Bilançolar paneli kalıyor: o, bu sayfada başka hiçbir
+                yerde olmayan veriyi (tarih, HBK beklentisi, takvime ekleme)
+                taşıyor — tekrar değil. */}
+            <Panel className="hidden min-w-0 flex-col gap-3 p-[18px] sm:p-5 lg:flex">
               <h2 className="text-base font-bold text-strong">
                 {t.analysis.thisWeekAnalyzed}
               </h2>
@@ -460,7 +471,7 @@ function FeaturedAnalysis({
   if (row.reactionPct !== null) {
     const up = row.reactionPct >= 0;
     figures.push({
-      label: `${up ? "▲" : "▼"} ${formatPercentPlain(row.reactionPct, locale, 1)}`,
+      label: `${up ? "▲" : "▼"} ${t.earnings.reactionShort} ${formatPercentPlain(row.reactionPct, locale, 1)}`,
       tone: up ? "up" : "down",
     });
   }

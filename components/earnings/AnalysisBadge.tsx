@@ -19,6 +19,28 @@ import type { Dictionary } from "@/lib/i18n";
  * (şirket sayfasına) gidiyor. İç içe `<a>` geçersiz HTML olduğu için kart,
  * yüzeyi kaplayan ayrı bir bağlantı katmanıyla kuruluyor; rozet o katmanın
  * üstünde duruyor (`relative z-10`).
+ *
+ * ---- Telefonda ıskalanıyordu ----
+ *
+ * Rozet yirmi piksel yüksekliğindeydi ve ALTINDA kartın tamamını kaplayan
+ * başka bir bağlantı var. Iskalayan dokunuş boşa gitmiyor, YANLIŞ YERE
+ * gidiyordu: okuyucu analize basıyor, kendini şirket sayfasında buluyordu.
+ * Bir hedefin ıskalanınca sessiz kalması kusurdur; başka bir ekrana götürmesi
+ * hatadır — geri gelip yeniden nişan almak gerekiyor.
+ *
+ * İki ayrı düzeltme, çünkü sorun da iki tane:
+ *
+ * 1. GÖRÜNÜR ÖLÇÜ. Hap bir kademe büyüdü (nano → tiny, dolgu 3px → 6px) ve
+ *    iç bir halka aldı. Sınırı olmayan renkli bir yazı, tıklanabilir bir
+ *    düğme gibi okunmuyordu; artık kendi kenarı var.
+ * 2. DOKUNMA ALANI. Görünür ölçüyü 44 piksele çıkarmak takvim satırını
+ *    şişirirdi, o yüzden hedef sözde öğeyle genişliyor: `::after` haptan
+ *    taşıp dokunma alanını kırk küsur piksele çıkarıyor, düzende hiçbir şey
+ *    kımıldamıyor. Sözde öğe bağlantının kendi boyama katmanında olduğu için
+ *    `z-10` onu da kapsıyor, yani kart katmanının üstünde kalıyor.
+ *
+ * Geniş ekranda ikisi de kapalı: imleç hassas, orada eski ölçü ve hedef
+ * genişletmesi komşu satırların üstüne taşardı.
  */
 export function AnalysisBadge({
   badge,
@@ -37,11 +59,17 @@ export function AnalysisBadge({
       href={analysisHref(badge.symbol, badge.period)}
       prefetch={false}
       className={cn(
-        "relative z-10 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full font-bold transition-opacity hover:opacity-80",
+        "relative z-10 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full font-bold ring-1 ring-current/25 ring-inset transition-opacity hover:opacity-80",
+        /* Hedef genişletmesi: yalnızca DİKEY. Yatayda hap zaten geniş
+           (~110px) ve yanlara taşmak komşu çipin alanını yerdi. */
+        "after:absolute after:inset-x-0 after:top-1/2 after:-translate-y-1/2 after:content-[''] sm:after:content-none",
         verdictPillClass(verdict),
         size === "sm"
-          ? "px-2 py-[3px] text-nano"
-          : "px-2.5 py-1 text-tiny",
+          ? /* Hero kartında hap dikey bir yığının içinde; üstündeki satırda
+               takvim düğmesi var. Genişletme orada 40 pikselde duruyor ki iki
+               hedef birbirine girmesin. */
+            "px-2.5 py-1 text-tiny after:h-10 sm:px-2 sm:py-[3px] sm:text-nano"
+          : "px-3 py-1.5 text-tiny after:h-11 sm:px-2.5 sm:py-1",
         className,
       )}
     >

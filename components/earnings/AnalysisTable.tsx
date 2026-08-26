@@ -59,9 +59,20 @@ export type AnalysisTableLabels = {
   resultCountMany: string;
 };
 
+/* DAR EKRANDA İKİ SÜTUN DÜŞÜYOR — ikisi de zaten satırda başka bir yerde
+   yazılı olanı tekrarlıyor:
+
+   · `company`, hemen solundaki sembolün uzun hâli. Dönem etiketini de
+     taşıdığı için o parça telefonda sembolün ALTINA iniyor, kaybolmuyor.
+   · `card`, "Karne →". Satırın tamamı zaten o karneye giden bir bağlantı;
+     sütun bunu üçüncü kez söylüyor.
+
+   Kazanç 320 piksel: 390'lık telefonda tablo 1180'den 860'a iniyor, yani
+   üç ekranlık kaydırma iki ekrana. Sütunları ÜST ÜSTE YIĞMAK hâlâ yapılmıyor
+   (aşağıdaki gerekçe duruyor); burada yığma değil eleme var. */
 const COLS = {
   symbol: "w-[104px] shrink-0",
-  company: "min-w-[190px] flex-1",
+  company: "hidden min-w-[190px] flex-1 sm:block",
   /* 124px'ti ve YETMİYORDU: "31 Tem · Açılış Öncesi" 157 piksel istiyor
      (İngilizcede 148) ve hücre `whitespace-nowrap` olduğu için metin
      kırpılmıyor, yandaki gelir sütununun üstüne taşıyordu — tablonun her
@@ -74,7 +85,7 @@ const COLS = {
   reaction: "w-[86px] shrink-0 text-right",
   score: "w-[78px] shrink-0 text-center",
   verdict: "w-14 shrink-0 text-center",
-  card: "w-[70px] shrink-0 text-right",
+  card: "hidden w-[70px] shrink-0 text-right sm:block",
 } as const;
 
 function toneClass(tone: CellTone): string {
@@ -173,7 +184,7 @@ export function AnalysisTable({
           role="region"
           aria-label={labels.tableRegion}
         >
-          <div className="min-w-[1180px]" role="table">
+          <div className="min-w-[860px] sm:min-w-[1180px]" role="table">
             <div
               role="row"
               className="flex items-center gap-4 border-b border-line px-4 py-3.5 text-tiny font-bold text-muted sm:px-5"
@@ -255,15 +266,24 @@ export function AnalysisTable({
                     className={cn(COLS.symbol, "flex items-center gap-2.5")}
                   >
                     <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
-                    <span
-                      className={cn(
-                        "text-base font-bold",
-                        highlightFirst && !searching && index === 0
-                          ? "text-primary"
-                          : "text-strong",
-                      )}
-                    >
-                      {row.symbol}
+                    <span className="flex min-w-0 flex-col">
+                      <span
+                        className={cn(
+                          "text-base font-bold",
+                          highlightFirst && !searching && index === 0
+                            ? "text-primary"
+                            : "text-strong",
+                        )}
+                      >
+                        {row.symbol}
+                      </span>
+                      {/* Dönem etiketi normalde şirket adının yanında;
+                          o sütun telefonda kapalı olduğu için buraya
+                          iniyor. Hangi çeyreğin okunduğu, satırın taşıdığı
+                          en temel bilgilerden biri. */}
+                      <span className="truncate text-nano text-muted sm:hidden">
+                        {row.periodLabel}
+                      </span>
                     </span>
                   </span>
                   <span
