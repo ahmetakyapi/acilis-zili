@@ -89,7 +89,7 @@ import {
 } from "@/components/stories/StoryFigure";
 import { getChartBarsMulti } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
-import { FearGauge } from "@/components/markets/FearGauge";
+import { VIX_SERIES, vixBand } from "@/components/markets/FearGauge";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -155,8 +155,18 @@ export default async function TodayPage() {
           ancak elle yenilemeyle geçiliyordu; gerekçenin tamamı bileşende. */}
       <SessionRefresh atIso={status.nextTransition.toISOString()} />
 
-      {/* ================= Ana kolon ================= */}
-      <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1 lg:justify-between">
+      {/* ================= Ana kolon =================
+          `justify-between` KALKTI ve bu bir hata düzeltmesi. İki kolon da
+          onu taşıyordu; ızgara satırı iki kolonu aynı yüksekliğe geriyor ve
+          KISA olan kolon, aradaki farkı panel aralarına dağıtıyordu. Yani
+          panellerin arasındaki boşluk kendi ölçüsü değil, ÖTEKİ KOLONUN
+          boyu tarafından belirleniyordu: sağ kolon kısayken oradaki
+          aralıklar 20 pikselden 92'ye çıkıyordu, sol kolon kısaldığında bu
+          kez geri sayımla "Bugünün Akışı" arası 35 piksele açılıyordu ve
+          okuyucunun gördüğü şey "sayfanın başında sebepsiz bir boşluk"
+          oluyordu. Aralık artık her zaman `gap-5`; kısa kolon erken bitiyor
+          ve iki sütunlu bir düzende olması gereken de bu. */}
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
         {/* ---- Oturum rozeti + tarih ---- */}
         <header>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
@@ -330,7 +340,7 @@ export default async function TodayPage() {
       {/* ================= Yan kolon =================
           Yalnızca ölçüler: endeksler → dünya → tahviller → makro → senin
           listen. Okunacak metin sol kolonda. */}
-      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1 lg:justify-between">
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1">
         <Suspense fallback={<IndexSkeleton />}>
           <IndexStrip locale={locale} t={t} />
         </Suspense>
@@ -347,35 +357,6 @@ export default async function TodayPage() {
              bir basamak inceden soruyor: tek tek hangi isimler taşıdı. */}
         <Suspense fallback={<PanelSkeleton rows={6} footer />}>
           <DayMovers locale={locale} t={t} />
-        </Suspense>
-
-        {/* ---- Korku Endeksi ----
-             Yeri hisse tarafının hemen ALTI ve faizin hemen ÜSTÜ, çünkü
-             cümlenin döndüğü yer burası: yukarısı "bugün ne oldu", VIX ise
-             "piyasa bundan sonrası için ne bekliyor" diyor — ürünün tek
-             ileriye bakan ölçüsü. Altındaki faiz ve makro da aynı arka plan
-             ailesinden.
-             Bir süre tahvil kartının dibinde tek satırdı; orada seviye,
-             bant ve değişim yan yana sıkışıyor, VIX'in asıl bilgisi olan
-             ölçek hiç görünmüyordu. Bileşen /piyasalar'daki bantlı
-             göstergenin AYNISI — eşikler tek yerde. */}
-        <Suspense fallback={<PanelSkeleton rows={3} />}>
-          <FearGauge
-            locale={locale}
-            labels={{
-              title: t.markets.fearTitle,
-              hint: t.markets.fearHint,
-              average: t.markets.fearAverage,
-              guideCta: t.markets.fearGuideCta,
-              bands: {
-                calm: t.markets.fearCalm,
-                normal: t.markets.fearNormal,
-                tense: t.markets.fearTense,
-                fear: t.markets.fearHigh,
-                panic: t.markets.fearPanic,
-              },
-            }}
-          />
         </Suspense>
 
         <Suspense fallback={<PanelSkeleton rows={3} footer />}>
@@ -798,9 +779,11 @@ const TODAY_YIELDS = [
 ] as const;
 
 async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const results = await Promise.all(
-    TODAY_YIELDS.map((series) => getSeries(series, 2)),
-  );
+  const [vixResult, ...results] = await Promise.all([
+    getSeries(VIX_SERIES, 2),
+    ...TODAY_YIELDS.map((series) => getSeries(series, 2)),
+  ]);
+
 
   const values = TODAY_YIELDS.map((series, index) => {
     const result = results[index];
@@ -823,6 +806,35 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
      tek başına bir hataydı. Bkz. CLAUDE.md → "bayat veriyi büyük puntoyla
      gösterme". */
   const observedAt = values.find((value) => value.date)?.date ?? null;
+
+  const vixLevel = vixResult.ok ? vixResult.data.latestValue : null;
+  const vixPrev = vixResult.ok ? vixResult.data.prevValue : null;
+  /* VIX'İN KENDİ TARİHİ. Panelin tek "FRED · tarih" künyesi tahvil
+     serilerine ait ve VIX satırının ÜSTÜNDE duruyor; VIX ise tarihsiz
+     basılıyordu. Aynı gün olduklarında sorun görünmüyor ama tahvil
+     piyasasının kapalı, borsanın açık olduğu günlerde (Columbus Day,
+     Veterans Day) ikisi farklı günlere işaret ediyor ve okuyucu üstteki
+     tarihi VIX'e de ait sanıyor. Aynı gerekçe faiz künyesinin yazılma
+     sebebiydi zaten; VIX atlanmıştı. */
+  const vixDate = vixResult.ok
+    ? (vixResult.data.observations.at(-1)?.date ?? null)
+    : null;
+  const vixDelta =
+    vixLevel !== null && vixPrev !== null ? vixLevel - vixPrev : null;
+  const bandLabel: Record<string, string> = {
+    calm: t.markets.fearCalm,
+    normal: t.markets.fearNormal,
+    tense: t.markets.fearTense,
+    fear: t.markets.fearHigh,
+    panic: t.markets.fearPanic,
+  };
+  const vixTone =
+    vixLevel !== null
+      ? (() => {
+          const band = vixBand(vixLevel);
+          return { band, label: bandLabel[band.key] ?? "" };
+        })()
+      : null;
 
   return (
     <Panel>
@@ -889,14 +901,61 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
         </p>
       )}
 
-      {/* Korku Endeksi BURADAN KALKTI, KENDİ PANELİNE ÇIKTI.
-          Satır bu kartın dibinde tek bir çizgide sıkışıyordu: seviye, bant
-          rozeti, tarih ve değişim yan yana dört öğe ve hiçbiri okunacak
-          ölçüde değildi — üstelik VIX'in asıl bilgisi olan ÖLÇEK (sayı 0-50
-          bandının neresinde) hiç yoktu. Panel `/piyasalar`'daki bantlı
-          göstergenin aynısı ve eşikler hâlâ tek yerde
-          (`components/markets/FearGauge.tsx`). Sayı artık bir yerde:
-          tahvil kartı yalnızca faizi okuyor. */}
+      {/* ---- Korku Endeksi ----
+           Kendi kartı vardı ve o kart Brent'le eşleşmişti; Brent düşünce
+           (FRED'in spot serisi günlerce geriden geliyor) VIX tek başına
+           kaldı. Yeri burası: faiz de VIX de hisse tarafının arka planını
+           okuyan, tek sayıdan ibaret ölçüler ve ikisi de aynı FRED
+           beslemesinden günlük geliyor. Bantlı tam göstergesi
+           /piyasalar'da — eşikler oradan, tek yerden okunuyor. */}
+      {vixLevel !== null && vixTone && (
+        <div className="flex items-center gap-3 border-t border-line px-4 py-3">
+          <span className="plate shrink-0 text-nano tracking-[0.08em]">
+            {t.markets.fearTitle}
+          </span>
+          <span className="tote ml-auto text-lead leading-none">
+            {formatPrice(vixLevel, locale, { digits: 2 })}
+          </span>
+          <span
+            className={cn(
+              "shrink-0 rounded-full px-2 py-0.5 text-nano font-semibold",
+              vixTone.band.tone === "up" && "bg-up-wash text-up",
+              vixTone.band.tone === "flat" && "bg-surface-elevated text-body",
+              vixTone.band.tone === "warn" && "bg-brass-wash text-brass",
+              vixTone.band.tone === "down" && "bg-down-wash text-down",
+            )}
+          >
+            {vixTone.label}
+          </span>
+          {/* Tarih yalnızca faiz künyesinden FARKLIYSA yazılıyor: aynı
+              günse üstteki künye zaten söylüyor ve tekrar etmek satırı
+              gereksiz kalabalıklaştırır. */}
+          {vixDate && vixDate !== observedAt && (
+            <span className="numeral shrink-0 text-nano text-muted">
+              {formatEtDateShort(vixDate, locale)}
+            </span>
+          )}
+          {vixDelta !== null && vixDelta !== 0 && (
+            <span
+              className={cn(
+                "numeral shrink-0 text-tiny font-semibold",
+                // Yükselen VIX gerginlik demek — yön rengi hisse
+                // sözlüğünün tersine kurulu.
+                vixDelta > 0 ? "text-down" : "text-up",
+              )}
+            >
+              <span aria-hidden>{vixDelta > 0 ? "▲" : "▼"}</span>{" "}
+              {formatPrice(Math.abs(vixDelta), locale, { digits: 2 })}{" "}
+              {/* Birim ŞART: hemen üstteki faiz satırları değişimi "0,04 puan"
+                  diye yazıyor, VIX ise çıplak "1,12" yazıyordu. Yan yana
+                  duran iki ölçüden biri birimli biri birimsiz olunca okuyucu
+                  ikincisini yüzde sanıyor — VIX'te 1,12 puan ile %1,12 çok
+                  farklı iki haber. */}
+              {t.markets.point}
+            </span>
+          )}
+        </div>
+      )}
     </Panel>
   );
 }
