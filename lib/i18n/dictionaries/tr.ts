@@ -176,6 +176,36 @@ const tr = {
        görenler var. */
     moversNote:
       "{n} endeks üyesi tarandı · yalnızca bu seansta işlem görenler",
+    /* ---- Günün hareketleri (yan kolon) ----
+       PANEL ARTIK HER SEANSTA VAR. Ön seans ve akşam seansı için yazılmıştı
+       ve yalnızca o iki pencerede basılıyordu; seans açıkken ana sayfada
+       tek bir hissenin bugün ne yaptığını gösteren hiçbir şey yoktu (kendi
+       favorilerin dışında). Başlık seansa göre değişiyor: kapalıyken
+       gösterilen şey "günün" değil son kapanışın sıralaması ve künye bunu
+       söylüyor.
+       "Öne Çıkanlar" DENMEDİ: aynı sayfanın altında `topNews` zaten "Öne
+       Çıkan Haberler" diyor, üstelik öne çıkarmak bir editör kararıdır —
+       burada yapılan şey sıralama. */
+    dayMovers: "Günün Hareketleri",
+    dayMoversNote: "{n} endeks üyesi tarandı · seans içi",
+    dayMoversClosedNote: "{n} endeks üyesi tarandı · son kapanışa göre",
+    dayMoversEmpty: "Sıralama için yeterli fiyat verisi yok.",
+
+    /* ---- Sektör performansı (yan kolon) ----
+       Sayı bir sektör endeksi ya da ETF DEĞİL; künyedeki cümle bunu açıkça
+       söylüyor, yoksa okuyucu rakamı XLK gibi bir fonun getirisi sanıyor.
+       AĞIRLIK PİYASA DEĞERİNE GÖRE ve bu ölçülerek seçildi: eşit ağırlıklı
+       ortalamada üç trilyonluk şirketle dört milyarlık şirket aynı oyu
+       kullanıyor ve sonuç birkaç küçük şirketin gürültüsüne dönüyordu —
+       aynı seansta Finans eşit ağırlıkta −%0,31, ağırlıklı +%0,25
+       çıkıyordu, yani işaret bile ters. */
+    sectorPerformance: "Sektör Performansı",
+    sectorStrongest: "En Güçlü",
+    sectorWeakest: "En Zayıf",
+    sectorCount: "{n} Şirket",
+    sectorNote:
+      "Her sektörün rakamı, o sektördeki endeks üyelerinin piyasa değerine göre ağırlıklı günlük değişimidir — bir sektör endeksi ya da ETF getirisi değil.",
+    sectorEmpty: "Sektör hesabı için yeterli fiyat verisi yok.",
     schedule: "Bugünün Takvimi",
     scheduleEmpty: "Bugün için planlanmış ekonomik veri yok.",
     earningsToday: "Bugün Bilanço Açıklayanlar",

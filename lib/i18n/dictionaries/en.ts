@@ -143,6 +143,18 @@ const en: typeof tr = {
     moversDown: "Losers",
     moversEmpty: "No symbol has traded in this session yet.",
     moversNote: "{n} index members scanned · only those that traded in this session",
+    dayMovers: "Today's Movers",
+    dayMoversNote: "{n} index members scanned · this session",
+    dayMoversClosedNote: "{n} index members scanned · versus the last close",
+    dayMoversEmpty: "Not enough price data to rank.",
+
+    sectorPerformance: "Sector Performance",
+    sectorStrongest: "Strongest",
+    sectorWeakest: "Weakest",
+    sectorCount: "{n} Companies",
+    sectorNote:
+      "Each sector figure is the market-cap weighted daily change of the index members in it — not the return of a sector index or ETF.",
+    sectorEmpty: "Not enough price data to compute sectors.",
     schedule: "Today's Calendar",
     scheduleEmpty: "No economic releases scheduled for today.",
     earningsToday: "Reporting Today",

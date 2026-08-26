@@ -49,6 +49,7 @@ import {
   addEtDays,
   etParts,
   todayEt,
+  type MarketStatus,
 } from "@/lib/market-hours";
 import {
   displayOffsets,
@@ -56,10 +57,10 @@ import {
   zoneTag,
 } from "@/lib/session-clock";
 import { getQuotes } from "@/lib/providers";
-import { ChangePill } from "@/components/ui/primitives";
 import { isSpotlight } from "@/lib/spotlight";
 import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
 import { ALL_MEMBERS, primaryOnly } from "@/db/seed/indices";
+import { sectorLabel } from "@/lib/sectors";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import {
   analysisHref,
@@ -259,28 +260,11 @@ export default async function TodayPage() {
           </Suspense>
         </Panel>
 
-        {/* ---- Ön seans / akşam seansı hareketleri ----
-             Yalnızca o iki pencerede var. Yeri geri sayımın hemen altı:
-             "açılış ziline 3 saat kaldı" diyen bir sayfada bir sonraki soru
-             "peki şu an ne oluyor" ve cevabı bu panel. Seans açıkken
-             basılmıyor — o zaman aynı bilgi /piyasalar'ın kendi
-             artanlar/düşenler listesinde ve gün boyu değişiyor. */}
-        {(status.session === "pre-market" ||
-          status.session === "after-hours") && (
-          <Suspense fallback={<Skeleton className="h-52 w-full rounded-xl" />}>
-            <SessionMovers
-              locale={locale}
-              t={t}
-              extended={status.session}
-              etDate={status.etDate}
-              sinceMinutes={
-                status.session === "pre-market"
-                  ? SESSION_BOUNDS.preMarketOpen
-                  : status.closeMinutes
-              }
-            />
-          </Suspense>
-        )}
+        {/* Ön seans / akşam seansı hareketleri BURADAN KALKTI. Panel
+             yalnızca o iki pencerede basılıyordu ve seans açıkken ana
+             sayfada tek bir hissenin bugün ne yaptığını gösteren hiçbir şey
+             kalmıyordu. Şimdi yan kolonda, her seansta ve seansa göre
+             başlık değiştirerek duruyor (`DayMovers`) — gerekçesi orada. */}
 
         {/* ---- Günün özeti — ana kolonda, günü okumaya buradan başlanıyor ---- */}
         {/* SUSPENSE YOK — bilerek, ve gerekçesi ölçülü.
@@ -356,6 +340,23 @@ export default async function TodayPage() {
             borsalar ne yapmış" sorusunun cevabı, ABD'si ve dünyası. */}
         <Suspense fallback={<PanelSkeleton rows={5} footer />}>
           <WorldStrip locale={locale} t={t} />
+        </Suspense>
+
+        {/* ---- Sektör performansı ve günün hareketleri ----
+             SIRA ÖLÇEKTEN İNCEYE. Üstteki iki panel endeksleri ve dünyayı
+             gösteriyor, yani "borsa bugün ne yaptı"; bu ikisi aynı soruyu
+             bir basamak daha inceden soruyor — önce kırılım (sektör), sonra
+             tek tek isimler. Faiz ve makro altta kalıyor: onlar hisse
+             senedi değil, farklı bir varlık sınıfı ve günün hareketiyle
+             aynı cümlenin parçası değil.
+             İKİSİ AYNI KOTASYON SETİNDEN besleniyor — gerekçe
+             `indexSnapshot`ta. */}
+        <Suspense fallback={<PanelSkeleton rows={5} footer />}>
+          <SectorPerformance locale={locale} t={t} />
+        </Suspense>
+
+        <Suspense fallback={<PanelSkeleton rows={6} footer />}>
+          <DayMovers locale={locale} t={t} />
         </Suspense>
 
         <Suspense fallback={<PanelSkeleton rows={3} footer />}>
@@ -1244,6 +1245,374 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
   );
 }
 
+/* --------------------------------------------------------------------------
+   Endeks evreninin BİR ANLIK GÖRÜNTÜSÜ — iki panel de bundan besleniyor.
+
+   `getQuotes` istek boyunca `cache()`li ve anahtarı sıralanmış sembol dizesi
+   (lib/providers/index.ts → quotesForKey), yani iki panel aynı listeyi
+   sorduğunda sağlayıcıya BİR kez gidiliyor. Bu, hız kadar DOĞRULUK meselesi:
+   ayrı ayrı çekilseler aynı ekranda aynı hissenin iki farklı yüzdesi
+   durabilir ve deponun kuralı "aynı sayı iki yerde duruyorsa aynı kaynaktan
+   gelmeli".
+
+   Evren endeks üyeleri (S&P 500 + Nasdaq 100 + Dow, tekilleştirilmiş) ve
+   bu da bir veri dürüstlüğü kararı: takip edilen 800 şirketin tamamı
+   alınsaydı sıralamanın tepesine mikro şirketler çıkardı — ölçüldü, bir
+   seansta 156 bin dolarlık bir şirket %250 hareketle listeyi açıyordu.
+   Endeks üyeliği "haber değeri olan isim" için ucuz ve savunulabilir bir
+   süzgeç, üstelik künye kaç sembolün tarandığını yazıyor.
+   -------------------------------------------------------------------------- */
+const MOVER_UNIVERSE = primaryOnly(ALL_MEMBERS);
+
+/** Sektör sıralamasına girmek için gereken en az şirket sayısı. */
+const SECTOR_MIN_COMPANIES = 8;
+
+async function indexSnapshot(status: MarketStatus) {
+  const symbols = MOVER_UNIVERSE.map((member) => member.symbol);
+  return { symbols, result: await getQuotes(symbols, status) };
+}
+
+/**
+ * Günün hareketleri — endeks üyeleri arasında en çok yükselen ve düşen üç.
+ *
+ * PANEL ARTIK HER SEANSTA VAR. Ön seans ve akşam seansı için yazılmıştı
+ * (`SessionMovers`) ve yalnızca o iki pencerede basılıyordu; seans açıkken
+ * ana sayfada tek bir hissenin bugün ne yaptığını gösteren hiçbir şey
+ * yoktu — kendi favorilerin dışında. Ölçüldü: sağ kolon panelleri toplamı
+ * 1797 piksel, kolon ise 2379 piksele uzuyordu ve aradaki 580 piksel
+ * `justify-between` tarafından panel aralarına dağıtılıyordu.
+ *
+ * YALNIZCA BU SEANSTA İŞLEM GÖRENLER — ve bu, panelin en önemli kuralı ama
+ * yalnızca UZATILMIŞ seansta geçerli. Ön seansta bir hissenin çoğu hiç işlem
+ * görmüyor; o sembolün "son işlemi" dünkü kapanış oluyor ve değişimi de
+ * DÜNÜN değişimi. Süzgeç olmasaydı liste, bu sabah hiç kımıldamamış
+ * hisselerin dünkü hareketleriyle dolardı. Normal seansta ve kapalıyken
+ * böyle bir ayrım yok: `changePct` zaten o günün kapanışına göre.
+ *
+ * BAŞLIK VE KÜNYE SEANSI SÖYLÜYOR. Piyasa kapalıyken gösterilen şey
+ * "günün" değil son kapanışın sıralaması; künye bunu yazmasa panel dünkü
+ * sıralamayı bugünmüş gibi basardı.
+ */
+async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
+  const status = await getStatus();
+  const { symbols, result } = await indexSnapshot(status);
+
+  const extended =
+    status.session === "pre-market" || status.session === "after-hours";
+  const title = !extended
+    ? t.today.dayMovers
+    : status.session === "pre-market"
+      ? t.today.preMarketMovers
+      : t.today.afterHoursMovers;
+
+  if (!result.ok) {
+    return (
+      <Panel>
+        <PanelHeader title={title} tone="plate" />
+        <DataError message={t.data.failed} hint={t.data.failedHint} />
+      </Panel>
+    );
+  }
+
+  const sinceMinutes =
+    status.session === "pre-market"
+      ? SESSION_BOUNDS.preMarketOpen
+      : status.closeMinutes;
+
+  const usable = symbols
+    .map((symbol) => ({ symbol, quote: result.data[symbol] }))
+    .filter((row) => {
+      const quote = row.quote;
+      /* Değişimi BİLİNMEYEN sembol eleniyor, sıfır sayılmıyor: sıfır
+         "bugün değişmedi" diye bir iddia, bilinmiyor iddiasızlık. */
+      if (!quote || quote.changePct === null || quote.changePct === undefined) {
+        return false;
+      }
+      if (!extended) return true;
+      if (!quote.tradedAt) return false;
+      const at = etParts(quote.tradedAt);
+      return at.dateStr === status.etDate && at.minutes >= sinceMinutes;
+    })
+    .map((row) => ({ symbol: row.symbol, quote: row.quote! }));
+
+  const ranked = [...usable].sort(
+    (a, b) => (b.quote.changePct ?? 0) - (a.quote.changePct ?? 0),
+  );
+  const gainers = ranked.filter((row) => (row.quote.changePct ?? 0) > 0).slice(0, 3);
+  const losers = ranked
+    .filter((row) => (row.quote.changePct ?? 0) < 0)
+    .slice(-3)
+    .reverse();
+
+  /* KÜNYE SEANSI SÖYLÜYOR — üç ayrı cümle, üç ayrı hâl.
+     Uzatılmış seansta liste yalnızca O SEANSTA işlem görenlerden kuruluyor.
+     Seans açıkken sıralama gün içinde ve canlı. Piyasa KAPALIYKEN ise
+     gösterilen şey "bugünün" değil son kapanışın sıralaması; tek bir künye
+     kullanılsaydı panel cumartesi günü cuma kapanışını "seans içi" diye
+     basardı. */
+  const note = (
+    extended
+      ? t.today.moversNote
+      : status.session === "closed"
+        ? t.today.dayMoversClosedNote
+        : t.today.dayMoversNote
+  ).replace("{n}", String(symbols.length));
+
+  if (gainers.length === 0 && losers.length === 0) {
+    return (
+      <Panel>
+        <PanelHeader title={title} tone="plate" />
+        <EmptyState
+          title={extended ? t.today.moversEmpty : t.today.dayMoversEmpty}
+          hint={note}
+        />
+      </Panel>
+    );
+  }
+
+  const meta = await getSymbolNames([
+    ...gainers.map((row) => row.symbol),
+    ...losers.map((row) => row.symbol),
+  ]);
+
+  /* DİKEY YIĞIN, İKİ SÜTUN DEĞİL. `SessionMovers` ana kolonda `sm:grid-cols-2`
+     ile iki sütun çiziyordu; yan kolon 376 piksel ve sütun 167 pikselden
+     düşüyor — satır 26 piksellik logo, sembol, ad ve yüzde istiyor, sığmıyor.
+     Ayrım sütunla değil ALT BAŞLIKLA kuruluyor ve bu aynı zamanda doğrusu:
+     düşüşle geçen bir günde "yükselenler" listesinin üçü de eksi olabiliyor,
+     tek liste + renk o gün "kim yükseldi" sorusunu cevapsız bırakırdı. */
+  const block = (heading: string, rows: typeof gainers, divided: boolean) => (
+    <div className={cn(divided && "border-t border-line")}>
+      <p className="plate px-4 pb-1.5 pt-3.5 text-nano tracking-[0.09em] sm:px-5">
+        {heading}
+      </p>
+      <ul>
+        {rows.length === 0 ? (
+          <li className="px-4 pb-3.5 text-small text-muted sm:px-5">—</li>
+        ) : (
+          rows.map((row) => (
+            <li key={row.symbol}>
+              <Link
+                href={`/hisse/${row.symbol}`}
+                prefetch={false}
+                className="flex items-center gap-2.5 px-4 py-2 transition-colors hover:bg-primary-tint sm:px-5"
+              >
+                <LogoTile
+                  symbol={row.symbol}
+                  logoUrl={meta[row.symbol]?.logoUrl}
+                  size="sm"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="numeral block text-base font-bold leading-tight text-strong">
+                    {row.symbol}
+                  </span>
+                  <span className="block truncate text-nano leading-tight text-muted">
+                    {meta[row.symbol]?.name ?? ""}
+                  </span>
+                </span>
+                {/* Yüzde ÇIPLAK, rozet değil: yan kolonun grameri bu
+                    (dünya şeridi, favoriler, endeksler hepsi böyle). Rozetin
+                    zemini dar sütunda satırın yarısını kaplıyor. */}
+                <span
+                  className={cn(
+                    "numeral shrink-0 text-base font-bold",
+                    directionText(directionOf(row.quote.changePct)),
+                  )}
+                >
+                  {formatPercent(row.quote.changePct, locale)}
+                </span>
+              </Link>
+            </li>
+          ))
+        )}
+      </ul>
+    </div>
+  );
+
+  return (
+    <Panel>
+      <PanelHeader
+        title={title}
+        tone="plate"
+        action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
+      />
+      {block(t.today.moversUp, gainers, true)}
+      {block(t.today.moversDown, losers, true)}
+      <p className="border-t border-line-soft px-4 py-2 text-nano text-muted sm:px-5">
+        {note}
+      </p>
+    </Panel>
+  );
+}
+
+/**
+ * Sektör performansı — bugün hangi kırılım önde, hangisi geride.
+ *
+ * SEKTÖR TOHUMDAN, `symbols.sector` SÜTUNUNDAN DEĞİL. O sütun sağlayıcı
+ * verisi değil, endeks tohumunun aynası: takip edilen 822 şirketin 305'inde
+ * boş (Finnhub profili `sector` alanı hiç döndürmüyor, yalnızca serbest
+ * metinli `industry`). Evren zaten endeks üyeleri olduğu için tohum burada
+ * eksiksiz — 635 satırın 635'inde GICS ana sektörü var.
+ *
+ * AĞIRLIK PİYASA DEĞERİNE GÖRE ve bu ölçülerek seçildi. Eşit ağırlıklı
+ * ortalamada üç trilyonluk şirketle dört milyarlık şirket aynı oyu
+ * kullanıyor: aynı seansta Finans eşit ağırlıkta −%0,31, ağırlıklı +%0,25
+ * çıkıyordu — yalnızca büyüklük değil İŞARET bile ters. Bir sektörün
+ * "bugün ne yaptığı" sorusunun cevabı ağırlıklı olan; endeks mantığı da,
+ * deponun öteki kararları da (şirketler dizini sıralaması, bilanço kartı
+ * seçimi) piyasa değerine bakıyor.
+ *
+ * Ağırlık `SymbolMeta.marketCap` — yalnızca USD, yabancı para birimindeki
+ * şirketlerde null (SK Hynix'in değeri 1,23 katrilyon KRW yazıyor ve dolar
+ * sanılsaydı yarı iletken sektörü tek başına o satırdan ibaret olurdu).
+ * Ağırlığı olmayan sembol hesaba hiç girmiyor.
+ *
+ * EŞİK: sekiz şirketten az kalan sektör sıralanmıyor. Bugünkü evrende her
+ * GICS sektörü bunu rahat geçiyor (en küçüğü Enerji, 21 şirket); eşik bir
+ * gelecek koruması — sağlayıcı bir gün bir sektörün kotasyonlarını
+ * veremezse "üç şirketle ölçülmüş sektör" diye bir satır çıkmasın.
+ */
+async function SectorPerformance({
+  locale,
+  t,
+}: {
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const status = await getStatus();
+  const { symbols, result } = await indexSnapshot(status);
+
+  if (!result.ok) {
+    return (
+      <Panel>
+        <PanelHeader title={t.today.sectorPerformance} tone="plate" />
+        <DataError message={t.data.failed} hint={t.data.failedHint} />
+      </Panel>
+    );
+  }
+
+  const meta = await getSymbolNames(symbols);
+
+  const buckets = new Map<
+    string,
+    { weighted: number; weight: number; count: number }
+  >();
+  for (const member of MOVER_UNIVERSE) {
+    const sector = member.sector;
+    const quote = result.data[member.symbol];
+    const cap = meta[member.symbol]?.marketCap;
+    if (!sector || !quote) continue;
+    if (quote.changePct === null || quote.changePct === undefined) continue;
+    if (!cap || cap <= 0) continue;
+    const bucket = buckets.get(sector) ?? { weighted: 0, weight: 0, count: 0 };
+    bucket.weighted += quote.changePct * cap;
+    bucket.weight += cap;
+    bucket.count += 1;
+    buckets.set(sector, bucket);
+  }
+
+  const sectors = [...buckets.entries()]
+    .filter(([, bucket]) => bucket.count >= SECTOR_MIN_COMPANIES)
+    .map(([sector, bucket]) => ({
+      sector,
+      label: sectorLabel(sector, locale) ?? sector,
+      changePct: bucket.weighted / bucket.weight,
+      count: bucket.count,
+    }))
+    .sort((a, b) => b.changePct - a.changePct);
+
+  if (sectors.length === 0) {
+    return (
+      <Panel>
+        <PanelHeader title={t.today.sectorPerformance} tone="plate" />
+        <EmptyState title={t.today.sectorEmpty} />
+      </Panel>
+    );
+  }
+
+  /* Çubuk EN BÜYÜK MUTLAK DEĞERE göre ölçekleniyor, sabit bir yüzdeye
+     değil: sakin bir günde bütün sektörler binde birkaç oynuyor ve sabit
+     ölçekte hepsi görünmez bir çizgiye iniyordu, oynak bir günde ise
+     çubuklar rayı taşıyordu. Ölçek göreli olduğu için çubuk bir MİKTAR
+     değil bir SIRA anlatıyor; sayı zaten yanında yazılı. */
+  const peak = Math.max(...sectors.map((entry) => Math.abs(entry.changePct)), 0.01);
+  const strongest = sectors.slice(0, 3);
+  const weakest = sectors.slice(-2).filter((entry) => !strongest.includes(entry));
+
+  const row = (entry: (typeof sectors)[number]) => {
+    const tone = directionOf(entry.changePct);
+    return (
+      <li
+        key={entry.sector}
+        className="flex items-center gap-2.5 border-t border-line px-4 py-2 sm:px-5"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-base leading-tight text-body">
+            {entry.label}
+          </span>
+          <span className="numeral block text-nano leading-tight text-muted">
+            {t.today.sectorCount.replace("{n}", String(entry.count))}
+          </span>
+        </span>
+        {/* Ray ORTADAN bölünmüyor: sektörlerin hepsi aynı yöne gidebiliyor
+            ve sıfır ekseni ortada olan bir ray o gün yarısı boş duruyordu.
+            Çubuk soldan büyüyor, yönü rengi söylüyor. */}
+        <span
+          aria-hidden
+          className="hidden h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-surface-sunken sm:block"
+        >
+          <span
+            className={cn(
+              "block h-full rounded-full",
+              tone === "down" ? "bg-down" : tone === "up" ? "bg-up" : "bg-flat",
+            )}
+            style={{
+              width: `${Math.max(4, (Math.abs(entry.changePct) / peak) * 100)}%`,
+            }}
+          />
+        </span>
+        <span
+          className={cn(
+            "numeral w-[62px] shrink-0 text-right text-base font-bold",
+            directionText(tone),
+          )}
+        >
+          {formatPercent(entry.changePct, locale, 2)}
+        </span>
+      </li>
+    );
+  };
+
+  return (
+    <Panel>
+      <PanelHeader
+        title={t.today.sectorPerformance}
+        tone="plate"
+        action={<PanelLink href="/sirketler">{t.common.showAll}</PanelLink>}
+      />
+      <p className="plate px-4 pb-1.5 pt-3.5 text-nano tracking-[0.09em] sm:px-5">
+        {t.today.sectorStrongest}
+      </p>
+      <ul>{strongest.map(row)}</ul>
+      {weakest.length > 0 && (
+        <>
+          <p className="plate border-t border-line px-4 pb-1.5 pt-3.5 text-nano tracking-[0.09em] sm:px-5">
+            {t.today.sectorWeakest}
+          </p>
+          <ul>{weakest.map(row)}</ul>
+        </>
+      )}
+      {/* HESABIN NASIL YAPILDIĞI YAZILI. Bu satır olmadan okuyucu rakamı bir
+          sektör endeksinin ya da XLK gibi bir fonun getirisi sanıyor; bizde
+          sektör endeksi yok, sayı takip edilen endeks üyelerinden
+          hesaplanıyor. */}
+      <p className="border-t border-line px-4 py-3 text-tiny leading-relaxed text-muted sm:px-5">
+        {t.today.sectorNote}
+      </p>
+    </Panel>
+  );
+}
+
 /** Başlıksız iskelet — panelin kendi başlığı bileşenin içinde. */
 function EarningsTodaySkeleton({ t }: { t: Dictionary }) {
   return (
@@ -1840,171 +2209,6 @@ function ListSkeleton({ rows }: { rows: number }) {
         <Skeleton key={i} className="h-9 w-full" />
       ))}
     </div>
-  );
-}
-
-/* ==========================================================================
-   Ön seans / akşam seansı hareketleri
-   ========================================================================== */
-
-/**
- * Zil çalmadan önce (ya da kapandıktan sonra) kimin kımıldadığı.
- *
- * NEDEN VAR. Sitenin adı Açılış Zili ve ana sayfası "açılışa şu kadar kaldı"
- * diyor; ama açılış öncesinde ekranda o pencereye ait tek bir sayı yoktu.
- * Konsolide tape'e geçildikten sonra bu veri elimizde: ön seans ve akşam
- * seansı işlemleri artık akıyor (eski IEX beslemesinde hiç akmıyordu, gerekçe
- * lib/providers/alpaca.ts başında).
- *
- * YALNIZCA BU SEANSTA İŞLEM GÖRENLER LİSTELENİYOR — ve bu, panelin en önemli
- * kuralı. Ön seansta bir hissenin çoğu hiç işlem görmüyor; o sembolün "son
- * işlemi" dünkü kapanış oluyor ve değişimi de DÜNÜN değişimi. Süzgeç
- * olmasaydı liste, bu sabah hiç kımıldamamış hisselerin dünkü hareketleriyle
- * dolardı ve okuyucu onları bu sabahın hareketi sanırdı. Ölçü `tradedAt`:
- * son işlem bugünün ET takviminde ve seansın başlangıcından sonraysa sembol
- * bu seansta gerçekten işlem görmüş demektir.
- *
- * Evren endeks üyeleri (S&P 500 + Nasdaq 100 + Dow, tekilleştirilmiş): ön
- * seansta asıl haber olan isimler bunlar ve künye kaç sembolün tarandığını
- * yazıyor — liste "borsanın tamamı" gibi okunmasın.
- */
-async function SessionMovers({
-  locale,
-  t,
-  extended,
-  etDate,
-  sinceMinutes,
-}: {
-  locale: Locale;
-  t: Dictionary;
-  extended: "pre-market" | "after-hours";
-  /** Bugünün New York takvim günü. */
-  etDate: string;
-  /** Seansın başladığı ET dakikası — son işlem bundan sonra olmalı. */
-  sinceMinutes: number;
-}) {
-  const universe = primaryOnly(ALL_MEMBERS);
-  const symbols = universe.map((member) => member.symbol);
-  const status = await getStatus();
-  const result = await getQuotes(symbols, status);
-
-  const title =
-    extended === "pre-market"
-      ? t.today.preMarketMovers
-      : t.today.afterHoursMovers;
-
-  if (!result.ok) {
-    return (
-      <Panel>
-        <PanelHeader title={title} />
-        <DataError message={t.data.failed} hint={t.data.failedHint} />
-      </Panel>
-    );
-  }
-
-  const traded = symbols
-    .map((symbol) => ({ symbol, quote: result.data[symbol] }))
-    .filter((row) => {
-      const quote = row.quote;
-      if (!quote || quote.changePct === null || !quote.tradedAt) return false;
-      const at = etParts(quote.tradedAt);
-      return at.dateStr === etDate && at.minutes >= sinceMinutes;
-    })
-    .map((row) => ({ symbol: row.symbol, quote: row.quote! }));
-
-  const ranked = [...traded].sort(
-    (a, b) => (b.quote.changePct ?? 0) - (a.quote.changePct ?? 0),
-  );
-  const gainers = ranked.filter((row) => (row.quote.changePct ?? 0) > 0).slice(0, 4);
-  const losers = ranked
-    .filter((row) => (row.quote.changePct ?? 0) < 0)
-    .slice(-4)
-    .reverse();
-
-  const note = t.today.moversNote.replace("{n}", String(symbols.length));
-
-  if (gainers.length === 0 && losers.length === 0) {
-    return (
-      <Panel>
-        <PanelHeader title={title} />
-        <EmptyState title={t.today.moversEmpty} hint={note} />
-      </Panel>
-    );
-  }
-
-  const meta = await getSymbolNames([
-    ...gainers.map((row) => row.symbol),
-    ...losers.map((row) => row.symbol),
-  ]);
-
-  const column = (
-    heading: string,
-    rows: typeof gainers,
-    side: "left" | "right",
-  ) => (
-    <div
-      className={cn(
-        side === "right" && "border-t border-line sm:border-l sm:border-t-0",
-      )}
-    >
-      <p className="plate px-4 pb-1.5 pt-3.5 text-nano tracking-[0.09em] sm:px-5">
-        {heading}
-      </p>
-      <ul>
-        {rows.length === 0 ? (
-          <li className="px-4 pb-3.5 text-small text-muted sm:px-5">—</li>
-        ) : (
-          rows.map((row) => (
-            <li key={row.symbol}>
-              <Link
-                href={`/hisse/${row.symbol}`}
-                prefetch={false}
-                className="flex items-center gap-2.5 px-4 py-2 transition-colors hover:bg-primary-tint sm:px-5"
-              >
-                <LogoTile
-                  symbol={row.symbol}
-                  logoUrl={meta[row.symbol]?.logoUrl}
-                  size="sm"
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="numeral block text-base font-bold leading-tight text-strong">
-                    {row.symbol}
-                  </span>
-                  <span className="block truncate text-nano leading-tight text-muted">
-                    {meta[row.symbol]?.name ?? ""}
-                  </span>
-                </span>
-                <span className="numeral shrink-0 text-small text-body">
-                  {formatPrice(row.quote.price, locale)}
-                </span>
-                <ChangePill
-                  changePct={row.quote.changePct}
-                  locale={locale}
-                  size="sm"
-                  className="shrink-0"
-                />
-              </Link>
-            </li>
-          ))
-        )}
-      </ul>
-    </div>
-  );
-
-  return (
-    <Panel>
-      <PanelHeader
-        title={title}
-        action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
-      />
-      <div className="grid border-t border-line sm:grid-cols-2">
-        {column(t.today.moversUp, gainers, "left")}
-        {column(t.today.moversDown, losers, "right")}
-      </div>
-      <p className="border-t border-line-soft px-4 py-2 text-nano text-muted sm:px-5">
-        {note}
-      </p>
-    </Panel>
   );
 }
 
