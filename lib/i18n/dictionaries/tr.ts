@@ -219,8 +219,15 @@ const tr = {
     weekAhead: "Haftaya Bakış",
     weekAheadEmpty: "Önümüzdeki hafta için planlanmış önemli veri yok.",
     worldMarkets: "Dünya Piyasaları",
+    /* KÜNYE DÖRT CÜMLEDEN BİRE İNDİ. Birinci cümle SATIRLARIN KENDİSİYLE
+       tekrar ediyordu — her satır zaten "MSCI Türkiye · BIST'i izleyen ABD
+       fonu" yazıyor, yani neyin gösterildiği künyeye kalmamış. Üçüncü cümle
+       ("fonun kendi fiyatı yazılmıyor, çünkü bir piyasa seviyesi değil") bir
+       TASARIM GEREKÇESİ, okuyucunun ihtiyacı değil; kararın kendisi bu
+       yorumda yaşıyor ve ekrandan indi. Kalan tek cümle okuyucunun gerçekten
+       bilmesi gereken şey: yön güvenilir, yüzde değil. */
     worldMarketsHint:
-      "Yerel endeksler ücretsiz sağlayıcılarda yok; bu oranlar o ülkenin hisselerini tutan ve ABD'de dolar bazında işlem gören MSCI ülke fonlarının günlük değişimidir. Yönü aynı gösterir, yüzdesi kur ve seans farkıyla ayrışabilir. Fonun kendi fiyatı bir piyasa seviyesi olmadığı için yazılmıyor.",
+      "ABD'de dolar bazında işlem gören MSCI ülke fonlarının günlük değişimi — yönü yerel endeksle aynı, yüzdesi kur ve seans farkıyla ayrışabilir.",
     greetingMorning: "Günaydın",
     greetingDay: "İyi Günler",
     greetingEvening: "İyi Akşamlar",

@@ -163,7 +163,7 @@ const en: typeof tr = {
     weekAheadEmpty: "No major releases scheduled for the coming week.",
     worldMarkets: "World Markets",
     worldMarketsHint:
-      "Local indices aren't available from free providers, so these are the daily moves of MSCI country funds that hold those markets' shares and trade in US dollars on US hours. They move in the same direction, but the percentage can differ with currency and session timing. The fund's own price isn't shown — it is not a market level.",
+      "Daily moves of MSCI country funds trading in US dollars — the direction matches the local index, the percentage can differ with currency and session hours.",
     greetingMorning: "Good Morning",
     greetingDay: "Good Afternoon",
     greetingEvening: "Good Evening",

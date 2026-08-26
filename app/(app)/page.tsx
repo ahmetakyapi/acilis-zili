@@ -56,6 +56,7 @@ import {
   timePair,
   zoneTag,
 } from "@/lib/session-clock";
+import { FillColumn } from "@/components/today/FillColumn";
 import { getQuotes } from "@/lib/providers";
 import { isSpotlight } from "@/lib/spotlight";
 import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
@@ -166,7 +167,10 @@ export default async function TodayPage() {
           okuyucunun gördüğü şey "sayfanın başında sebepsiz bir boşluk"
           oluyordu. Aralık artık her zaman `gap-5`; kısa kolon erken bitiyor
           ve iki sütunlu bir düzende olması gereken de bu. */}
-      <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
+      <div
+        data-col="main"
+        className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1"
+      >
         {/* ---- Oturum rozeti + tarih ---- */}
         <header>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
@@ -340,7 +344,10 @@ export default async function TodayPage() {
       {/* ================= Yan kolon =================
           Yalnızca ölçüler: endeksler → dünya → tahviller → makro → senin
           listen. Okunacak metin sol kolonda. */}
-      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1">
+      <div
+        data-col="side"
+        className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1"
+      >
         <Suspense fallback={<IndexSkeleton />}>
           <IndexStrip locale={locale} t={t} />
         </Suspense>
@@ -1589,6 +1596,10 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
   );
 }
 
+/** Favoriler listesinin taban satır sayısı ve yedeklerle birlikte tavanı. */
+const WATCHLIST_BASE = 5;
+const WATCHLIST_MAX = 10;
+
 async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   const session = await auth();
 
@@ -1624,7 +1635,14 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
   }
 
   const status = await getStatus();
-  const shown = userSymbols.slice(0, 8);
+  /* BEŞ SATIR TABAN, ONA KADAR YEDEK.
+     Sekiz sabitti ve o sayı hiçbir şeye bakmıyordu: bültenin kısa olduğu bir
+     günde sağ kolon sol kolonu aşıyor, uzun olduğu günde altında yüz
+     piksellik boşluk kalıyordu. Sunucu on satırın tamamını basıyor ama
+     beşten sonrası `hidden`; kaçının açılacağına tarayıcı, iki kolonun
+     dibini ölçerek karar veriyor (`FillColumn`). JavaScript kapalıysa beş
+     satır kalıyor ve bu da makul bir liste. */
+  const shown = userSymbols.slice(0, WATCHLIST_MAX);
   const [result, bars] = await Promise.all([
     getQuotes(shown, status),
     getChartBarsMulti(shown, "1D", status),
@@ -1642,15 +1660,24 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
       </div>
       {result.ok ? (
         <>
-          <ul>
-            {shown.map((symbol) => {
+          <FillColumn>
+            <ul>
+            {shown.map((symbol, index) => {
               const quote = result.data[symbol];
               const points = (bars[symbol] ?? []).map((bar) => ({
                 value: bar.close,
               }));
               const tone = directionOf(quote?.changePct);
               return (
-                <li key={symbol} className="border-t border-line first:border-t-0">
+                <li
+                  key={symbol}
+                  /* `data-fill-row` ölçü örneği, `data-fill` açılabilir
+                     yedek — ikisini de `FillColumn` okuyor. */
+                  data-fill-row=""
+                  data-fill={index >= WATCHLIST_BASE ? "" : undefined}
+                  hidden={index >= WATCHLIST_BASE}
+                  className="border-t border-line first:border-t-0"
+                >
                   <Link
                     href={`/hisse/${symbol}`}
                     className="flex items-center gap-3 py-2.5 transition-colors hover:opacity-80"
@@ -1692,9 +1719,10 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
                 </li>
               );
             })}
-          </ul>
+            </ul>
+          </FillColumn>
           <DataStamp
-      labels={t.data}
+            labels={t.data}
             source={result.source}
             at={result.fetchedAt}
             stale={result.stale}
