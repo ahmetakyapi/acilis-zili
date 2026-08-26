@@ -88,6 +88,31 @@ function isCalloutKind(value: string): value is CalloutKind {
   return value in CALLOUT;
 }
 
+/**
+ * `**Ne Oldu:** ABD'nin 30 yıllık…` satırını terim ve metne ayırır.
+ *
+ * Rutinle üretilen özet kutuları neredeyse her zaman bu kalıpta yazılıyor —
+ * "Ne Oldu", "Rakam", "Mekanizma", "Bundan Sonrası" — ama yapı yalnızca
+ * KALIN METİNDİ: dört ayrı olgu tek bir gri paragraf duvarı olarak
+ * okunuyordu. Terim ayrı bir alan olunca çizim onu künye gibi basabiliyor
+ * ve dört olgu dört satır oluyor.
+ *
+ * Kalıba uymayan satır olduğu gibi kalıyor (terim yok): serbest paragraflı
+ * kutular — rehber yazılarındaki tanımlar, uzun örnekler — hiç
+ * etkilenmiyor.
+ */
+const CALLOUT_TERM = /^\*\*(.{1,48}?):\*\*\s*(.*)$/;
+
+function parseCalloutLine(line: string): { term: string | null; text: string } {
+  const match = CALLOUT_TERM.exec(line.trim());
+  if (!match) return { term: null, text: line };
+  const [, term, rest] = match;
+  /* Metni olmayan bir terim künye değil başlık olurdu; o hâlde satır
+     bütün olarak bırakılıyor. */
+  if (!rest.trim()) return { term: null, text: line };
+  return { term: term.trim(), text: rest.trim() };
+}
+
 /* --------------------------------------------------------------------------
    Satır içi
    -------------------------------------------------------------------------- */
@@ -213,7 +238,15 @@ export type Block =
   | { kind: "quote"; lines: string[] }
   | { kind: "rule" }
   | { kind: "table"; head: string[]; rows: string[][] }
-  | { kind: "callout"; tone: CalloutKind; label: string; lines: string[] }
+  | {
+      kind: "callout";
+      tone: CalloutKind;
+      label: string;
+      /* Satır bir TERİM taşıyabilir: `**Ne Oldu:** …` kalıbı. Ayrıştırma
+         çizimde değil burada yapılıyor ki çizim tarafı tek bir şekle
+         baksın. */
+      lines: { term: string | null; text: string }[];
+    }
   | { kind: "stats"; label: string; items: { value: string; note: string }[] }
   | { kind: "timeline"; label: string; items: { when: string; text: string }[] }
   | {
@@ -475,7 +508,7 @@ export function parseBlocks(markdown: string, locale: string): Block[] {
         kind: "callout",
         tone,
         label: label || CALLOUT[tone].defaultLabel[locale === "en" ? "en" : "tr"],
-        lines: body,
+        lines: body.map(parseCalloutLine),
       });
       continue;
     }
@@ -1028,6 +1061,23 @@ export function ArticleBody({
 
           case "callout": {
             const tone = CALLOUT[block.tone];
+            /* ETİKETLİ KUTU BİR TANIM LİSTESİ.
+               Özet kutuları "Ne Oldu · Rakam · Mekanizma · Bundan Sonrası"
+               diye dört ayrı OLGU taşıyor ama ekranda tek bir gri paragraf
+               duvarıydı: etiketler yalnızca satır başındaki kalın metindi ve
+               göz nereden nereye baktığını ancak okuyarak buluyordu. Ölçüldü,
+               390 pikselde kutu 402 piksel — dört olgu için bir ekran boyu.
+
+               Şimdi her olgu kendi satırı: etiket künye tipografisinde
+               (`plate` ailesi, küçük ve seyrek), metin okuma puntosunda ve
+               ikisi hairline'la ayrılmış. Geniş ekranda etiket sola sabit bir
+               sütuna çekiliyor — künye ile metin aynı hizada başlıyor ve kutu
+               bir künye tablosu gibi taranıyor.
+
+               ETİKETSİZ SATIR ESKİSİ GİBİ. Rehberdeki tanım kutuları ve uzun
+               örnekler serbest paragraf; onlar için liste açılmıyor, sıradan
+               paragraf olarak basılıyorlar. */
+            const terimli = block.lines.some((line) => line.term !== null);
             return (
               <aside
                 key={key}
@@ -1044,16 +1094,47 @@ export function ArticleBody({
                 >
                   {block.label}
                 </p>
-                <div className="mt-2 flex flex-col gap-2">
-                  {block.lines.map((line, lineIndex) => (
-                    <p
-                      key={lineIndex}
-                      className="text-read leading-[25px] text-body"
-                    >
-                      {renderInline(line, `${key}-${lineIndex}`)}
-                    </p>
-                  ))}
-                </div>
+                {terimli ? (
+                  <dl className="mt-3 flex flex-col">
+                    {block.lines.map((line, lineIndex) => (
+                      <div
+                        key={lineIndex}
+                        className={cn(
+                          "flex flex-col gap-0.5 py-2.5 first:pt-0 last:pb-0",
+                          "sm:flex-row sm:gap-4",
+                          lineIndex > 0 && "border-t border-line-soft",
+                        )}
+                      >
+                        {line.term && (
+                          <dt className="shrink-0 text-nano font-bold uppercase leading-[18px] tracking-[0.09em] text-muted sm:w-[136px] sm:pt-[3px]">
+                            {line.term}
+                          </dt>
+                        )}
+                        <dd
+                          className={cn(
+                            "min-w-0 text-read leading-[25px] text-body",
+                            /* Etiketsiz satır iki sütunu birden alıyor:
+                               etiket sütununun altında öksüz kalmasın. */
+                            !line.term && "sm:ml-0",
+                          )}
+                        >
+                          {renderInline(line.text, `${key}-${lineIndex}`)}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <div className="mt-2 flex flex-col gap-2">
+                    {block.lines.map((line, lineIndex) => (
+                      <p
+                        key={lineIndex}
+                        className="text-read leading-[25px] text-body"
+                      >
+                        {renderInline(line.text, `${key}-${lineIndex}`)}
+                      </p>
+                    ))}
+                  </div>
+                )}
               </aside>
             );
           }

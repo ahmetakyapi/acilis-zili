@@ -714,6 +714,9 @@ const tr = {
       "Piyasa değerine göre en büyük dört teknoloji şirketi — endeksteki en ağır isimler.",
     presetIndicesNote:
       "Dört ayrı endeksi izleyen fonlar: geniş pazar, teknoloji, sanayi devleri ve küçük ölçek.",
+    presetMemory: "Bellek ve Depolama",
+    presetMemoryNote:
+      "Aynı yapay zekâ talebine satan dört üretici; ikisi ABD dışında listeli, tablo bunu künyesinde söyler.",
     howTitle: "Nasıl Okunur",
     howScale: "Aynı Ölçek",
     howScaleText:

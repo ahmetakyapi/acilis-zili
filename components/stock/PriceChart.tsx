@@ -141,6 +141,20 @@ export function PriceChart({
       : null,
   );
   const [hover, setHover] = useState<HoverReading>(null);
+  /* DOKUNULAN OKUMA ARALIKLA BİRLİKTE TEMİZLENİYOR.
+     Dokunmatikte okuma tek dokunuşla açılıyor ve grafiğin dışına
+     dokunulana kadar EKRANDA KALIYOR (gerekçesi bileşen başında). Ama
+     aralık düğmeleri grafiğin dışında değil: okuyucu bir noktaya dokunup
+     sonra 1G'den 1A'ya geçtiğinde okuma satırı hâlâ o eski noktayı
+     gösteriyor, yani yeni aralığın getirisi ekranda hiç görünmüyordu —
+     üstelik gösterilen sayı artık var olmayan bir barın okumasıydı.
+     Aralık değişimi okumayı bitirir; grafiğin kendisi zaten yeniden
+     kuruluyor ve imleç orada temizleniyor. */
+  const [hoverRange, setHoverRange] = useState<ChartRange>(initialRange);
+  if (hoverRange !== range) {
+    setHoverRange(range);
+    if (hover !== null) setHover(null);
+  }
   const [themeTick, setThemeTick] = useState(0);
   const [zones, setZones] = useState<SessionZone[]>([]);
 
@@ -749,13 +763,31 @@ export function PriceChart({
            gölgeleniyor, asıl seans açık zeminde ve accent noktayla, gece ise
            kesikli boş kare — çünkü o pencerede veri yok, notu da altında. */}
       {range === "1D" && state.phase === "ready" && windows && (
-        <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line-soft pt-3 sm:grid-cols-4">
+        /* DAR EKRANDA DÖRT SATIR, DÖRT SÜTUN DEĞİL.
+           2×2 ızgarada her hücre üç satır yazı taşıyordu (ad, TR saati, NY
+           saati) ve gecenin notu dördüncü satırı ekliyordu: harita 390
+           pikselde tek başına 400 piksel, yani grafiğin kendisi kadar yer
+           kaplıyordu — oysa burası bir LEJANT, okunacak bir bölüm değil.
+           Telefonda her seans tek satıra iniyor: ad solda, TR saati onun
+           yanında, NY saati satırın sağ ucunda. Üçü aynı hizada okunuyor ve
+           harita 400 pikselden ~110 piksele düşüyor. Geniş ekranda yer var,
+           orada eski dört sütunlu düzen duruyor. */
+        <div className="mt-3 flex flex-col gap-1 border-t border-line-soft pt-3 sm:grid sm:grid-cols-4 sm:gap-x-4 sm:gap-y-3">
           {windows.map((window) => {
             const shaded = window.key === "pre" || window.key === "after";
             const dark = window.key === "overnight";
             return (
-              <div key={window.key} className="flex min-w-0 flex-col gap-1">
-                <span className="flex items-center gap-1.5 text-tiny font-semibold text-body">
+              <div
+                key={window.key}
+                className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 sm:flex-col sm:items-stretch sm:gap-1"
+              >
+                {/* Ad SABİT GENİŞLİKTE (dar ekranda): adlar iki ile on iki
+                    karakter arasında değişiyor ve yanlarındaki TR saatleri
+                    her satırda başka bir yerden başlıyordu — dört satır bir
+                    tablo değil, ayrı ayrı cümleler gibi okunuyordu. Ölçü en
+                    uzun ada göre ("Akşam Seansı"). Geniş ekranda ad kendi
+                    satırında, orada rezervasyon gereksiz. */}
+                <span className="flex w-[108px] shrink-0 items-center gap-1.5 text-tiny font-semibold text-body sm:w-auto">
                   <span
                     aria-hidden
                     className={cn(
@@ -771,11 +803,13 @@ export function PriceChart({
                 <span className="numeral text-tiny leading-tight text-strong">
                   {window.primary}
                 </span>
-                <span className="numeral text-micro leading-tight text-muted">
+                <span className="numeral ml-auto text-micro leading-tight text-muted sm:ml-0">
                   {window.secondary} {zoneTag(locale).secondary}
                 </span>
                 {dark && (
-                  <span className="text-micro leading-[13px] text-muted">
+                  /* Not KENDİ SATIRINDA: tek satıra sıkıştırılınca saatleri
+                     ikinci satıra itiyordu. */
+                  <span className="basis-full text-micro leading-[13px] text-muted sm:basis-auto">
                     {labels.sessionOvernightNote}
                   </span>
                 )}

@@ -104,9 +104,11 @@ export async function CompareEmpty({
           <p className="text-tiny text-muted">{t.compare.presetsHint}</p>
         </div>
 
-        {/* Üç kart tek sütundan üç sütuna. Ara kırılım yok: iki sütunda
-            üçüncü kart yalnız kalıyor ve ızgara tırtıklı bitiyordu. */}
-        <div className="grid gap-3 md:grid-cols-3">
+        {/* Dört kart: telefonda tek sütun, tablette iki, geniş ekranda dört.
+            Üç kartken ara kırılım yoktu — iki sütunda üçüncü kart yalnız
+            kalıp ızgarayı tırtıklı bitiriyordu. Dörtte o sorun yok, iki
+            sütun tam oturuyor. */}
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {presets.map((preset) => (
             <Link
               key={preset.labelKey}

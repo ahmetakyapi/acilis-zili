@@ -588,6 +588,9 @@ const en: typeof tr = {
       "The four largest technology companies by market value — the heaviest names in the index.",
     presetIndicesNote:
       "Funds tracking four different indexes: the broad market, technology, industrial giants and small caps.",
+    presetMemory: "Memory and Storage",
+    presetMemoryNote:
+      "Four makers selling into the same AI demand; two are listed outside the US and the table says so.",
     howTitle: "How to Read It",
     howScale: "One Scale",
     howScaleText:

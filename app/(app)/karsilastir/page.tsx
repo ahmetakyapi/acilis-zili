@@ -82,6 +82,18 @@ const PRESETS: readonly ComparePreset[] = [
     noteKey: "presetIndicesNote",
     symbols: ["SPY", "QQQ", "DIA", "IWM"],
   },
+  /* BELLEK DÖRTLÜSÜ. Öteki üç set aynı endeksin ya da aynı büyüklüğün
+     içinden seçiliyor; bu set bir TEDARİK ZİNCİRİNDEN geliyor ve ekranın
+     asıl sorusuna en yakın duran örnek bu — dördü de aynı talebe (yapay
+     zekâ sunucularının belleği) satıyor ama biri Kore'de, biri ABD'de
+     listeli ve ikisi farklı para biriminde raporluyor. Tablonun ADR
+     uyarısı da (hisse başı kâr ve 52 hafta bandı ana borsanın parasında)
+     ilk kez burada gerçekten devreye giriyor. */
+  {
+    labelKey: "presetMemory",
+    noteKey: "presetMemoryNote",
+    symbols: ["MU", "SNDK", "SKHY", "MRVL"],
+  },
 ];
 
 export const generateMetadata = pageMetadata({
