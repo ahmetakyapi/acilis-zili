@@ -75,6 +75,33 @@ Kenarlık yalnızca görsel OLMAYAN yer tutucularda kalır. Elimizdeki tek gerç
 görsel kaynağı şirket logoları (`symbols.logo_url`, Finnhub): mercek kapakları
 ve haber künyeleri ondan besleniyor.
 
+## Düzen: ölçmeden değiştirme
+
+Yerleşim kararları tahminle verilmiyor. Bir boşluk "fazla duruyorsa" önce
+ölçülür, sonra değiştirilir ve **ölçüm yoruma yazılır** ki bir daha
+ölçülmesin. Chrome'u başsız koşturup rota × genişlik matrisini tarayan
+geçici betikler bunun için var (`.tmp-*.mjs`, commit'lenmez).
+
+**`justify-between` iki kolona konmaz.** Ana sayfanın iki kolonu bir süre
+onu taşıdı ve sonuç şuydu: ızgara satırı iki kolonu aynı yüksekliğe geriyor,
+kısa olan kolon aradaki farkı PANEL ARALARINA dağıtıyor. Yani aralık kendi
+ölçüsü olmaktan çıkıp öteki kolonun boyuna bağlanıyor — sağ kolon kısayken
+oradaki boşluklar 20 pikselden 92'ye, sağ dolduğunda bu kez sol kolonun
+aralıkları 35 piksele çıkıyordu. Panel eklemek sayfanın ÖTEKİ tarafındaki
+boşlukları oynatıyordu. Aralık her zaman `gap-5`; kısa kolon erken biter ve
+iki sütunlu bir düzende olması gereken de budur.
+
+**Kolonun dibi kutusunun dibi değildir.** Izgara satırı kolonları aynı
+yüksekliğe gerdiği için `kolon.getBoundingClientRect().bottom` ikisinde de
+aynı sayıyı verir. İçeriğin gerçekten bittiği yer SON ÇOCUĞUN dibidir;
+kolon boyu ölçen her hesap onu okumalı (bkz. `components/today/FillColumn.tsx`).
+
+**Boşluk esnetilmez, doldurulur.** Kısa kalan kolon, kırpılmış bir listeye
+satır açarak dengelenir: sunucu tavan kadar satır basar, fazlası `hidden`
+gelir ve tarayıcı kaçının sığdığını ölçüp o kadarını açar. JavaScript
+kapalıyken taban satır sayısı kalır ve hiçbir şey zıplamaz — açılan satırlar
+zaten boş olan alana iner.
+
 ## Saat kuralı: TR önce
 
 Kaynakların tamamı New York saatiyle yayın yapıyor ama okuyucu Türkiye'de.
@@ -83,6 +110,37 @@ New York; EN'de sıra tersine döner. Fark ABD yaz saatiyle kaydığı için hi�
 yere sabit saat yazılmaz, o günün tarihiyle hesaplanır (açılış yazın 16:30,
 kışın 17:30 TR). Seansın kendi saati `lib/market-hours.ts`'te kalır — ET↔UTC
 dönüşümünün tamamı orada, başka yerde manuel saat aritmetiği yapılmaz.
+
+## İstemci ile sunucu sınırı
+
+**`"use client"` bir modülden dışa aktarılan DEĞER sunucu bileşenine gerçek
+değer olarak gelmez** — Next onu bir istemci referansına çevirir ve sonuç
+sessizdir: ne derleme ne çalışma zamanı konuşur. Renk sabitleri bu yüzden
+`lib/chart-series.ts`te, aralık sözleşmesi `lib/compare.ts`te duruyor; ikisi
+de `"use client"` değil ve iki taraftan da okunuyor.
+
+**Sunucu bileşeni istemci sağlayıcıya `children` olarak geçebilir.** Aralık
+karşılaştırma ekranında böyle çalışıyor: sağlayıcı istemci ama sardığı ağacın
+çoğu sunucuda çiziliyor, yalnızca aralığa BAĞLI hücreler istemci. Tabloyu
+bütünüyle istemciye taşımak aralıkla hiç değişmeyen beş ölçü bloğunu da
+tarayıcıya indirmek olurdu.
+
+**Sığ adres güncellemesi uçuştaki gezinmeyi ÖLDÜRÜR.** Next'in yamalı
+`history.replaceState`i o sırada bekleyen bir gezinmeyi sessizce iptal
+ediyor — geri gelmiyor, yeniden denenmiyor, hata da vermiyor. Sığ güncelleme
+yapan bir denetim, gezinme sürerken kendini kapatmak zorunda
+(`useRouteNavigating`, `components/layout/RouteProgress.tsx`).
+
+**Sığ güncelleme geçmiş girdisini tazelemez.** O adres için sunucudan RSC
+yükü çekilmediği için geri tuşu ÖNCEKİ durumun ağacını geri yükler. Adresten
+okunan bir durum, prop'tan değil ADRESTEN başlatılmalı; prop yalnızca sunucu
+çiziminde geçerlidir.
+
+**`getQuotes` ve `getSeries` istek içinde önbellekli ve anahtar sıralanmış
+sembol dizesi.** İki panel birebir aynı listeyi sorarsa sağlayıcıya bir kez
+gidilir; listede tek bir sembol farkı anahtarı değiştirir ve tur ikiye çıkar.
+Aynı ekranda iki panel aynı veriyi gösteriyorsa aynı anahtarı sormalı — yoksa
+aynı hissenin iki farklı yüzdesi yan yana durabilir.
 
 ## Veri dürüstlüğü
 
@@ -105,6 +163,10 @@ dönüşümünün tamamı orada, başka yerde manuel saat aritmetiği yapılmaz.
 commit atma; kullanıcı arka arkaya iş sıraladığında hepsini bitir, sonra
 konu bazında topla. Ölçü: yapılanlar tek bir başlıkta özetlenebiliyorsa tek
 commit; "görsel iyileştirme" ile "performans" gibi iki farklı alan varsa iki.
+
+Commit'ten önce üçü de temiz olmalı: `npm run typecheck`, `npm run lint`,
+`npm run build`. Görsel bir değişiklikse ayrıca tarayıcıda ölçülmüş olmalı —
+"sığıyor gibi duruyor" bir doğrulama değil.
 
 Mesele commit SAYISI, mesaj detayı değil — gövdede her değişikliğin gerekçesi
 ayrı paragraf olarak yazılmaya devam eder. Sekiz-on küçük commit geçmişi
@@ -145,6 +207,25 @@ taranamaz hâle getiriyor.
   altında kalıyor.
 - **Yatay taşma** düzenli kontrol edilir; puppeteer koşumu route × genişlik
   matrisini tarar (`.tmp-*.mjs` geçici dosyaları commit'lenmez).
+- **Karşılaştırma ekranı üç dosyaya yayılı.** Ortak sözleşme (aralık listesi,
+  sembol sınırı, adres biçimi, dönem getirisi hesabı) `lib/compare.ts`te ve
+  üç yerden okunuyor: sunucu sayfası, istemci denetimi
+  (`components/markets/CompareLive.tsx`) ve toplu bar ucu
+  (`app/api/karsilastir/route.ts`). Aralık İSTEMCİDE değişiyor; sunucuya bir
+  daha gidilmiyor, barlar aralık başına önbelleğe alınıyor ve düğmenin
+  üzerinde durmak isteği önden başlatıyor.
+- **Makale kutularında `**Etiket:**` kalıbı yapıdır.** `:::` metin kutusunda
+  bu kalıpla başlayan satır terim ve metne bölünüp tanım listesi olarak
+  çiziliyor (dar ekranda iki satır, geniş ekranda iki sütun). Kalıba uymayan
+  satır sıradan paragraf kalır — rehberdeki serbest paragraflı tanım kutuları
+  etkilenmiyor.
+- **Grafikte dokunulan okuma aralıkla temizlenir.** Dokunmatikte imleç
+  okuması grafiğin dışına dokunulana kadar ekranda kalıyor; aralık düğmeleri
+  grafiğin dışında değil ve temizlenmezse okuma satırı artık var olmayan bir
+  barı göstermeye devam ediyor.
+- **`docs/ROUTEMAP.md` GÜNCEL DEĞİL** (son güncelleme 2026-08-01) ve on üç
+  rotayı bilmiyor. Rota listesi için README'yi ya da `app/` dizininin
+  kendisini oku.
 
 ## iCloud kopyaları — derlemeyi kırar
 
