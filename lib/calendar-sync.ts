@@ -64,7 +64,7 @@ const CALENDAR_RELEASES = [
     seriesId: "PCEPILFE",
     slug: "core-pce",
     timeEt: "08:30",
-    titleTr: "Çekirdek PCE — Fed'in Tercih Ettiği Enflasyon",
+    titleTr: "Çekirdek PCE — Fed'in Baktığı Enflasyon Ölçüsü",
     titleEn: "Core PCE — The Fed's Preferred Gauge",
     unit: "%",
   },

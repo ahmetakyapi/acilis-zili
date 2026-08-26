@@ -41,7 +41,7 @@ const EXPLAINERS: Record<string, Explainer> = {
     en: "Share of the labor force looking for work. Falling means a strong economy — but can also feed wage pressure.",
   },
   "jobless-claims": {
-    tr: "Haftalık ilk işsizlik maaşı başvuruları. En taze istihdam sinyali; tek bir hafta değil, birkaç haftalık eğilim okunur.",
+    tr: "Haftalık ilk işsizlik maaşı başvuruları. En güncel istihdam sinyali; tek bir hafta değil, birkaç haftalık eğilim okunur.",
     en: "Weekly first-time unemployment filings. The freshest labor signal — read the multi-week trend, not one print.",
   },
   "fomc-rate": {

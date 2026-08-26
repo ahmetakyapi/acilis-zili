@@ -482,7 +482,7 @@ export default async function AnalysisDetailPage(
 
       {/* ---- Künye ---- */}
       <nav
-        aria-label="breadcrumb"
+        aria-label={t.common.breadcrumb}
         className="flex flex-wrap items-center gap-2 text-small text-muted"
       >
         <Link

@@ -76,6 +76,7 @@ const tr = {
     more: "Daha Fazla",
     less: "Daha Az",
     showAll: "Tümünü Gör",
+    breadcrumb: "Sayfa Yolu",
     source: "Kaynak",
     updated: "Güncellendi",
     today: "Bugün",
@@ -117,10 +118,7 @@ const tr = {
     delayed: "Gecikmeli",
     lastPrice: "Son Fiyat",
     change: "Değişim",
-    dayRange: "Gün Aralığı",
     open_: "Açılış",
-    high: "Yüksek",
-    low: "Düşük",
     prevClose: "Önceki Kapanış",
     volume: "Hacim",
     marketCap: "Piyasa Değeri",
@@ -136,8 +134,8 @@ const tr = {
     closeShort: "Kapanış",
     earningsNote: "Bilanço",
     watchedNote: "Takipte",
-    preOpen: "Açılış Öncesi Başlangıcı",
-    afterClose: "Kapanış Sonrası Bitişi",
+    preOpen: "Açılış Öncesi Başlıyor",
+    afterClose: "Kapanış Sonrası Bitiyor",
     /* Eksendeki kalın mavi bandın adı — açılış ile kapanış arası. Bandın
        iki ucundaki saatler onun nerede başlayıp bittiğini söylüyordu ama
        bandın kendisinin ne olduğunu söyleyen bir şey yoktu. */
@@ -166,8 +164,8 @@ const tr = {
     /* Ön seans / akşam seansı hareketleri — yalnızca o pencerede basılan
        panel. "Günün en çok artanları" burada kullanılamaz: gösterilen şey
        günün değil, henüz açılmamış (ya da kapanmış) seansın hareketi. */
-    preMarketMovers: "Açılış Öncesi Hareket Edenler",
-    afterHoursMovers: "Kapanış Sonrası Hareket Edenler",
+    preMarketMovers: "Açılış Öncesi Hareketleri",
+    afterHoursMovers: "Kapanış Sonrası Hareketleri",
     moversUp: "Yükselenler",
     moversDown: "Düşenler",
     moversEmpty: "Bu seansta henüz işlem gören sembol yok.",
@@ -202,7 +200,7 @@ const tr = {
        çalışıyor ve aynı çözüm arşiv sayacında (`stories.showing`) zaten
        kullanılıyor. */
     earningsCount: "{total} şirketin {n} tanesi",
-    earningsEmpty: "Bugün bilanço açıklayan takip ettiğin şirket yok",
+    earningsEmpty: "Takip ettiğin şirketlerden bugün bilanço açıklayan yok",
     watchlistSummary: "Favorilerin",
     watchlistEmpty: "Henüz favori eklemedin.",
     // Ana sayfadaki "son yazılanlar" bloğu
@@ -250,7 +248,7 @@ const tr = {
        gerekçe `lib/providers/alpaca.ts` başında. Gecikme de artık "olabilir"
        değil, bilinen bir sayı. */
     sourceLine:
-      "Fiyat: Alpaca konsolide tape · Profil ve bilanço: Finnhub · Makro: FRED",
+      "Fiyat: Alpaca konsolide veri akışı · Profil ve bilanço: Finnhub · Makro: FRED",
     sourceNote: "Endeksler ETF üzerinden izlenir · fiyatlar 15 dk gecikmeli",
   },
 
@@ -306,7 +304,7 @@ const tr = {
     revenueShort: "Gelir",
     epsFull: "EPS (Hisse Başına Kâr)",
     epsExplainer:
-      "şirketin çeyrek boyunca kazandığı net kârın hisse sayısına bölünmüş hâlidir — bir hissenin o dönemde ne kadar kâr ürettiğini gösterir. Analistler her çeyrek için bir beklenti açıklar; gerçekleşen rakamın bu beklentinin ne kadar üstünde veya altında kaldığı sapmadır. Gelir (ciro) ise kârdan önceki toplam satıştır: piyasa çoğu zaman kârı tutturup geliri ıskalayan şirketi de satar, bu yüzden ikisi birlikte okunur.",
+      "şirketin çeyrek boyunca kazandığı net kârın hisse sayısına bölünmüş hâlidir — bir hissenin o dönemde ne kadar kâr ürettiğini gösterir. Analistler her çeyrek için bir beklenti açıklar; gerçekleşen rakamın bu beklentinin ne kadar üstünde veya altında kaldığı sapmadır. Gelir (ciro) ise kârdan önceki toplam satıştır: piyasa çoğu zaman kâr beklentisini tutturup gelirde beklentinin altında kalan şirketin hissesini de satar, bu yüzden ikisi birlikte okunur.",
     onlyWatchlist: "Sadece Favorilerim",
     spotlight: "Öne Çıkanlar",
     addToCalendar: "Takvime Ekle",
@@ -378,7 +376,7 @@ const tr = {
     colCompany: "Şirket · Dönem",
     colReported: "Açıklanma",
     colRevenue: "Gelir · Yıllık",
-    colEps: "HBK vs Beklenti",
+    colEps: "HBK / Beklenti",
     colReaction: "Hisse Tepkisi",
     colScore: "Skor",
     colVerdict: "Görüş",
@@ -402,7 +400,6 @@ const tr = {
     strengths: "Güçlü Yönler",
     risks: "Riskler",
     upcomingDev: "Beklenen Gelişmeler",
-    highlights: "Öne Çıkan Metrikler",
     quarterlyRevenue: "Çeyreklik Gelir",
     /* Birim sütunların üstünde altı kez tekrar etmesin diye başlıkta. */
     unitBillionUsd: "Milyar $",
@@ -425,13 +422,13 @@ const tr = {
     guidanceInline: "Beklentiyle Uyumlu",
     /* Grafik künyeleri — kayıtta künye yoksa gövdedeki sayılardan kurulur. */
     revenueGrowthYoy: "Yıllık Gelir Büyümesi",
-    epsSurprise: "Hisse Başı Kâr Sürprizi",
+    epsSurprise: "Hisse Başına Kâr Sapması",
     stockReaction: "Bilanço Sonrası Tepki",
     nextPeriod: "Sonraki Dönem",
     ceoMessage: "CEO Mesajı",
     analystTarget: "Ort. Analist Hedefi",
     analystTargetCount: "Ort. Analist Hedefi ({count})",
-    upsidePotential: "Potansiyel",
+    upsidePotential: "Yükseliş Potansiyeli",
     closePrice: "Bilanço Günü Kapanışı",
     /* Kayıttaki fiyat donuk, bu canlı. İkisi tanımı gereği farklı sayı;
        adları da farklı olmalı ki yan yana dururken hata gibi okunmasın. */
@@ -510,7 +507,7 @@ const tr = {
     showing: "{total} şirketin {n} tanesi",
     showMore: "Daha Fazla Göster",
     noQuoteNote:
-      "Bu listedeki {n} şirket için sağlayıcıda güncel işlem yok; fiyat, değişim ve hacim hücreleri boş bırakıldı. Çoğu seyrek işlem gören çok küçük ölçekli şirketler.",
+      "Bu listedeki {n} şirket için sağlayıcıda güncel işlem yok; fiyat, değişim ve hacim hücreleri boş bırakıldı. Çoğu, seyrek işlem gören çok küçük ölçekli şirkettir.",
   },
 
   stock: {
@@ -523,7 +520,7 @@ const tr = {
     website: "Web Sitesi",
     metrics: "Anahtar Metrikler",
     peRatio: "F/K Oranı",
-    eps: "Hisse Başı Kâr",
+    eps: "Hisse Başına Kâr",
     dividend: "Temettü Verimi",
     beta: "Beta",
     high52: "52 Hafta En Yüksek",
@@ -585,7 +582,7 @@ const tr = {
     complianceLimit: "Sınır",
     complianceUnknown: "Bu şirket için bilanço oranları alınamadı.",
     complianceMissing:
-      "Faiz geliri oranı (gelirin %5'i sınırı) ücretsiz veri kaynağımızda yok; bu kriter taranamıyor.",
+      "Faiz geliri oranı (sınır: gelirin %5'i) ücretsiz veri kaynağımızda yok; bu ölçüt taranamıyor.",
     complianceDisclaimer:
       "Bu bir fetva değildir. Faaliyet alanı ve AAOIFI'nin yaygın finansal eşiklerine dayanan otomatik bir ön elemedir; kesin hüküm için bağlı olduğun görüşe ve uzman kurulların denetimine bakmalısın.",
     complianceReasons: {
@@ -635,7 +632,7 @@ const tr = {
     sessionRegular: "Seans",
     sessionAfter: "Akşam Seansı",
     sessionOvernight: "Gece",
-    sessionOvernightNote: "Gece seansı konsolide tape'te akmaz",
+    sessionOvernightNote: "Gece seansı konsolide veri akışında yok",
   },
 
   watchlist: {
@@ -694,7 +691,7 @@ const tr = {
     eyebrow: "Yan Yana",
     title: "Karşılaştır",
     subtitle:
-      "İki ile dört hisseyi aynı ölçekte oku — getiri, değerleme ve oynaklık tek tabloda.",
+      "İkiden dörde kadar hisseyi aynı ölçekte oku — getiri, değerleme ve oynaklık tek tabloda.",
     empty: "Karşılaştırmak için Sembol Seç",
     /* Eski metin ekranı yalanlıyordu: sembol eklemenin yolu bu ekranın
        içinde de var (`CompareAdd`), bir hisse sayfasına gitmek gerekmiyor. */
@@ -713,10 +710,10 @@ const tr = {
     presetMegaNote:
       "Piyasa değerine göre en büyük dört teknoloji şirketi — endeksteki en ağır isimler.",
     presetIndicesNote:
-      "Dört ayrı endeksi izleyen fonlar: geniş pazar, teknoloji, sanayi devleri ve küçük ölçek.",
+      "Dört ayrı endeksi izleyen fonlar: piyasanın tamamı, teknoloji, sanayi devleri ve küçük ölçekli şirketler.",
     presetMemory: "Bellek ve Depolama",
     presetMemoryNote:
-      "Aynı yapay zekâ talebine satan dört üretici; ikisi ABD dışında listeli, tablo bunu künyesinde söyler.",
+      "Aynı yapay zekâ talebinden beslenen dört üretici; ikisi ABD dışında işlem görüyor ve tablo bunu künyesinde söylüyor.",
     howTitle: "Nasıl Okunur",
     howScale: "Aynı Ölçek",
     howScaleText:
@@ -771,10 +768,9 @@ const tr = {
     chartMissingHint:
       "Sağlayıcı bu semboller için bar döndürmedi; dönem getirisi satırı da bu yüzden boş.",
     tableRegion: "Karşılaştırma Tablosu",
-    secondSymbol: "İkinci Sembolü Ekle",
     secondSymbolHint:
-      "Tek seri kendi başlangıcına göre normalize edildiği için sıfırdan çıkan bir çizgiden başka bir şey söylemiyor.",
-    fullHint: "Dört sembol dolu; birini çıkarınca yeni bir tane ekleyebilirsin.",
+      "Tek seri kendi başlangıcına göre yüzdeye çevrildiği için sıfırdan çıkan bir çizgiden başka bir şey söylemiyor.",
+    fullHint: "Sınır dört sembol; birini çıkarınca yenisini ekleyebilirsin.",
     dividendNone: "Ödemiyor",
     metricsUnavailable:
       "{symbols} için ölçü verisi alınamadı: F/K, temettü, beta ve 52 hafta bandı o sütunda boş.",
@@ -845,7 +841,7 @@ const tr = {
     related: "Benzer Haberler",
     fullStoryTitle: "Haberin Tamamı Kaynağında",
     fullStoryHint:
-      "Burada gördüğün özet haber sağlayıcısından geliyor; metnin devamı yayıncının sitesinde",
+      "Burada gördüğün özet, haber sağlayıcısından geliyor; metnin devamı yayıncının sitesinde",
     sentiment: "Ton",
     positive: "Olumlu",
     negative: "Olumsuz",
@@ -937,7 +933,7 @@ const tr = {
       "Bir fonun kapanması, bir satın almanın bozulması, bir tezin piyasada sınanıp çökmesi — altı ay sonra da merak edilecek olaylar.",
     howTitle: "Nasıl Yazılır",
     howBody:
-      "Olay baştan sona anlatılır, mekanizması işlenmiş bir hesapla açıklanır. Her rakam doğrulanır, kaynaklar künyede sayılır.",
+      "Olay baştan sona anlatılır, mekanizması adım adım bir hesapla açıklanır. Her rakam doğrulanır, kaynaklar künyede sayılır.",
     rhythmTitle: "Ne Sıklıkla",
     rhythmBody:
       "Her gün değil. Sıradan bir seans mercek konusu değildir; anlatmaya değer bir olay yaşandığında yayımlanır.",
@@ -964,7 +960,7 @@ const tr = {
     moreStories: "Arşivden Diğer Yazılar",
     empty: "Henüz yayımlanmış yazı yok.",
     emptyHint:
-      "Piyasada anlatmaya değer bir olay yaşandığında merceğe burada alınır.",
+      "Piyasada anlatmaya değer bir olay yaşandığında burada mercek altına alınır.",
     notFound: "Yazı bulunamadı",
     notFoundHint: "Bağlantı eski olabilir; listeden tekrar dene.",
     /* Yazı henüz bu dile çevrilmediyse orijinal gösterilir; bu not onu söyler. */
@@ -1147,7 +1143,7 @@ const tr = {
     lastKnown: "Son Bilinen Değer",
     feedTape: "Konsolide Tape · 15 Dakika Gecikmeli",
     delayedNote:
-      "Fiyatlar konsolide tape'ten (SIP) gelir ve 15 dakika gecikmelidir. Gün içi hacim, açılış-en yüksek-en düşük ve önceki kapanış bütün borsaların toplamıdır.",
+      "Fiyatlar konsolide veri akışından (SIP) gelir ve 15 dakika gecikmelidir. Gün içi hacim, açılış-en yüksek-en düşük ve önceki kapanış bütün borsaların toplamıdır.",
     /* Kaynak adları SÖZLÜKTE: "önbellek" ve "takvim" sabit bir tablodan
        geliyordu ve İngilizce sitede de Türkçe basılıyordu. */
     delayed: "15 Dakika Gecikmeli",

@@ -616,8 +616,8 @@ export async function getHealthChecks(): Promise<HealthCheck[]> {
     ["Finnhub", process.env.FINNHUB_API_KEY],
     ["FRED", process.env.FRED_API_KEY],
     ["Anthropic", process.env.ANTHROPIC_API_KEY],
-    ["Cron Sırrı", process.env.CRON_SECRET],
-    ["Rutin Sırrı", process.env.BRIEF_SECRET],
+    ["Cron Anahtarı", process.env.CRON_SECRET],
+    ["Rutin Anahtarı", process.env.BRIEF_SECRET],
   ];
   for (const [label, value] of keys) {
     checks.push({
@@ -713,7 +713,7 @@ export async function getHealthChecks(): Promise<HealthCheck[]> {
       group: "data",
       value: hours === null ? "kayıt yok" : `${Math.floor(hours / 24)} gün önce`,
       tone: hours === null ? "down" : hours <= 48 ? "ok" : "warn",
-      note: "en uzun süredir güncellenmeyen serinin tazelenme zamanı",
+      note: "en uzun süredir güncellenmeyen serinin son güncellenme zamanı",
     });
   } catch {
     checks.push(failed("Makro Seriler"));

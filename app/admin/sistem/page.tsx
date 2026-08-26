@@ -99,7 +99,7 @@ async function Checks() {
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <AdminPanel>
-        <AdminPanelTitle hint="Sağlayıcı verisi ve takvimlerin tazeliği">
+        <AdminPanelTitle hint="Sağlayıcı verisi ve takvimlerin güncelliği">
           Veri Sağlığı
         </AdminPanelTitle>
         <ul className="flex flex-col divide-y divide-line">

@@ -45,8 +45,6 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       çok değeri olan ilk adım muhtemelen `lib/market-hours.ts` ve
       `lib/compare.ts` gibi saf yardımcıların birim testi olurdu.
 - [ ] **Kayıt → giriş → favori akışının canlıda kullanıcı testi.**
-- [ ] **Ölü sözlük anahtarı:** `compare.secondSymbol` iki dilde de duruyor
-      ama hiçbir yerde okunmuyor.
 - [ ] **Bilinen dokunma hedefi boşluğu:** `app/(app)/rehber/page.tsx` içinde
       32 piksellik bir hedef kaldı; kalan her yer telefonda 44.
 - [ ] (İsteğe bağlı) Neon şifresi + Finnhub anahtarı rotasyonu.

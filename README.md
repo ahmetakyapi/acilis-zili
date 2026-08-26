@@ -288,7 +288,7 @@ endeks bileşimleri.
 |---|---|---|
 | Günlük bülten | her gün 16:00 TR | `POST /api/brief` → ana sayfa · Günün Özeti |
 | Haftalık bülten | pazartesi 09:30 TR | `POST /api/brief` (`period: weekly`) → `/bulten` |
-| Mercek yazısı | her gün 23:30 TR | `POST /api/mercek` → `/mercek` |
+| Mercek yazısı | her gün 11:30 ve 23:30 TR | `POST /api/mercek` → `/mercek` |
 | Bilanço analizi | her gün 09:00 TR | `POST /api/analiz` → `/bilancolar/analizler` |
 
 Dördü de `BRIEF_SECRET` ile korunuyor ve her uç `?slug=` / `?symbol=&period=` ile

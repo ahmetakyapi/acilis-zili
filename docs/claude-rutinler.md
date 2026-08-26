@@ -21,7 +21,7 @@ Environment Variables → `BRIEF_SECRET`.
 |---|---|---|---|---|
 | 1 | Günlük Bülten | her gün 16:00 TR | `0 13 * * *` | Ana sayfa · Günün Özeti |
 | 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
-| 3 | Mercek Yazısı | her gün 23:30 TR | `30 20 * * *` | /mercek |
+| 3 | Mercek Yazısı | her gün 11:30 ve 23:30 TR | `30 08,20 * * *` | /mercek |
 | 4 | Bilanço Analizi | her gün 09:00 TR | `0 6 * * *` | /bilancolar/analizler |
 
 > **Bu saatler kodda da yazılı.** Ana sayfadaki özet kartı, günün kaydı henüz
@@ -186,7 +186,7 @@ notuyla görür.
 
 # 3 · Mercek Yazısı
 
-**Zamanlama:** her gün 23:30 TR (`30 20 * * *` UTC)
+**Zamanlama:** her gün 11:30 ve 23:30 TR (`30 08,20 * * *` UTC) — günde iki koşum
 
 Saat ABD kapanışının sonrasına çekildi: 23:30 TR, New York'ta 16:30 (kışın
 15:30), yani kapanış zili çalmış ve günün hikâyesi tamamlanmış oluyor. Daha
