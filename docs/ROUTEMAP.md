@@ -1,45 +1,103 @@
-# ROUTEMAP — Açılış Zili
+# Proje durumu — Açılış Zili
 
-> Tek kaynak: proje durumu burada izlenir. Yeni session'da önce bunu oku.
+> **Bu belge bir rota listesi değil, bir DURUM kaydıdır.** Rotaların tamamı,
+> ne yaptıkları ve mimari kararlar `README.md` içinde. Burada yalnızca
+> zamanla değişen şey duruyor: neyin canlı olduğu, neyin yarım kaldığı,
+> neyin bilinçli olarak yapılmadığı.
+>
+> Dosyanın adı geçmişten kalma; bir dönem rota listesi tutuyordu ve **tam da
+> bu yüzden güncelliğini yitirdi** — 2026-08-01'de donmuş bir tabloda on üç
+> rota eksikti ve okuyan onu güncel sanıyordu. İki yerde tutulan bir liste er geç
+> birbirinden ayrı düşer. Rota tablosu artık yalnızca README'de.
 
-**Son güncelleme:** 2026-08-01 (v3 — hiyerarşi + brief köprüsü)
+**Son güncelleme:** 2026-08-26
 **Durum:** 🟢 CANLI — https://acilis-zili.vercel.app
 
-## Rotalar
+---
 
-| Route | Durum | Not |
+## Canlıda ne var
+
+| | |
+|---|---|
+| Sayfa rotası | 29 (`/en` önekiyle ikinci bir adreste daha) |
+| API ucu | 14 |
+| Veritabanı tablosu | 15 · 15 migration |
+| Sağlayıcı | Alpaca · Finnhub · FRED · TCMB |
+| Ortam değişkeni | 11 (`.env.example`) |
+| Cron | `/api/cron/daily` — hafta içi 10:30 UTC (13:30 TR) |
+| İçerik rutini | 4 adet, claude.ai üzerinde elle kurulu |
+
+**Tohumlanan veri:** 23 NYSE tatili (üçü yarım gün) · CPI/FOMC/istihdam yayın
+takvimi · 81 temel sembol · 635 endeks üyesi (S&P 500 + Nasdaq 100 + Dow,
+GICS sektörleriyle).
+
+**Depo herkese açık.** `BRIEF_SECRET` ve `CRON_SECRET` asla commit'lenmez;
+gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
+
+---
+
+## Açık işler
+
+Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
+
+- [ ] **Otomatik test yok.** Doğrulama typecheck + lint + build ve elle
+      koşturulan tarayıcı taramalarıyla yapılıyor (README → Doğrulama). En
+      çok değeri olan ilk adım muhtemelen `lib/market-hours.ts` ve
+      `lib/compare.ts` gibi saf yardımcıların birim testi olurdu.
+- [ ] **Kayıt → giriş → favori akışının canlıda kullanıcı testi.**
+- [ ] **Ölü sözlük anahtarı:** `compare.secondSymbol` iki dilde de duruyor
+      ama hiçbir yerde okunmuyor.
+- [ ] **Bilinen dokunma hedefi boşluğu:** `app/(app)/rehber/page.tsx` içinde
+      32 piksellik bir hedef kaldı; kalan her yer telefonda 44.
+- [ ] (İsteğe bağlı) Neon şifresi + Finnhub anahtarı rotasyonu.
+
+---
+
+## Bilinçli olarak yapılmayanlar
+
+Bunlar eksik değil, **karar**. Yeniden gündeme gelirse gerekçesiyle birlikte
+gelsin.
+
+- **Tam CSP yok.** Next'in satır içi önyükleme script'i ve satır içi stilleri
+  `unsafe-inline` gerektiriyor; o da CSP'nin XSS'e karşı faydasının büyük
+  kısmını götürüyor. Nonce tabanlı doğru bir CSP ayrı bir iş, yarım hâli
+  yanlış bir güvenlik hissi verir. `frame-ancestors`, `nosniff`, HSTS ve
+  `Permissions-Policy` yerinde (`next.config.ts`).
+- **`cacheComponents` kapalı.** Ürün auth ve canlı veri ağırlıklı; klasik
+  fetch-revalidate daha öngörülebilir.
+- **`loading.tsx` yok.** Bulunduğu segmentte bir Suspense sınırı açıyor ve
+  Next yanıtı oraya kadar hemen akıtıyor — durum kodu da o an yazılıyor.
+  Sonuç: `notFound()` çağıran her dinamik rota 404 ekranını basıp **HTTP 200**
+  dönüyordu. Sayfaların yavaş parçaları zaten kendi Suspense adalarında.
+- **Emtia metriği yok.** Ücretsiz sağlayıcılarımızın hiçbirinde canlı emtia
+  spotu yok; FRED'in EIA serisi günlerce geriden geliyor.
+- **Mercek yazılarında kapak görseli alanı yok.** Şema bir kez `image_url`
+  aldı ve hemen geri alındı; görsel dili metinden çizilen `:::` blokları.
+- **Yönetim yetkisi ortam değişkeninde değil veritabanında**, ve yetkisiz
+  istek 404 görüyor — "yetkiniz yok" demek panelin varlığını ele verirdi.
+
+---
+
+## Bakım ritmi
+
+| Ne | Ne zaman | Nasıl |
 |---|---|---|
-| `/` Bugün | ✅ | Gün Şeridi + endeksler + takvim + bilançolar + özet + favoriler + haberler |
-| `/takvim` | ✅ | Gün/hafta/ay + önem filtresi, beklenti/gerçekleşen |
-| `/bilancolar` | ✅ | 14 günlük, BMO/AMC rozetleri, favori filtresi |
-| `/hisse/[symbol]` | ✅ | lightweight-charts (1G→5Y, alan/mum), profil, metrik, analist, haber, geçmiş bilanço, favori yıldızı |
-| `/favoriler` | ✅ | Çoklu liste, renk, sembol ekle/sil — korumalı |
-| `/haberler` | ✅ | Akış + sembol filtresi |
-| `/makro` | ✅ | 6 FRED serisi, sparkline, sonraki açıklama |
-| `/giris` `/kayit` `/ayarlar` | ✅ | Credentials auth, proxy.ts ön eleme |
-| `/api/chart/[symbol]` | ✅ | range=1D…5Y |
-| `/api/search` | ✅ | Yerel + Finnhub birleşik |
-| `/api/cron/daily` | ✅ | Bilanço+haber+makro+actual+özet, CRON_SECRET korumalı |
-| `/api/debug/providers` | ✅ | Yalnız dev — anahtar sağlık kontrolü |
-| `/sirketler` | ✅ | Sektör şeridi (öncelik sıralı, sayı rozetli) + tıklanabilir kolon sıralama |
-| `/haberler/[id]` | ✅ | Site içi haber detayı, kaynak linki altta |
-| `POST /api/brief` + `GET /api/brief/context` | ✅ | Kullanıcının kendi Claude'u özet yazar — BRIEF_SECRET, rehber: docs/claude-brief-agent.md |
+| Tatil takvimi | yılda bir | `db/seed/holidays.ts` elle güncellenir, NYSE resmî takviminden |
+| FOMC takvimi | yılda bir | `db/seed/economic-events.ts` — Fed toplantı tarihleri elle |
+| Endeks bileşimi | çeyrekte bir | `scripts/sync-indices.ts` |
+| Şirket profilleri | kendiliğinden | cron turu + sayfa isteği |
+| İçerik rutinleri | değişince | `docs/claude-rutinler.md`, claude.ai arayüzünden |
 
-## Deploy durumu (2026-08-01)
+---
 
-- [x] 4/4 sağlayıcı anahtarı alındı ve doğrulandı (Alpaca, Finnhub, FRED, Neon)
-- [x] `db:migrate` + `db:seed` uygulandı (23 tatil, 90 olay, 62 sembol)
-- [x] GitHub: github.com/ahmetakyapi/acilis-zili (private) — push → otomatik deploy
-- [x] Vercel production: acilis-zili.vercel.app · 8 env değişkeni · cron kayıtlı (hafta içi 10:30 UTC)
-- [x] Prod cron elle doğrulandı: 1500 bilanço + 60 haber + 6 makro + brief
-- [ ] Kayıt→giriş→favori akışının canlıda kullanıcı testi
-- [ ] (İsteğe bağlı) Neon şifresi + Finnhub anahtarı rotasyonu — sohbette paylaşıldı
-- [ ] (İsteğe bağlı) ANTHROPIC_API_KEY → günlük özet Claude ile yazılsın
+## Belgeler
 
-## Mimari kararlar
-
-- Next 16: `proxy.ts` (middleware değil), async `params`, `cacheComponents` KAPALI (auth+canlı veri ağırlıklı, klasik fetch-revalidate daha öngörülebilir)
-- ET↔UTC tek yerde: `lib/market-hours.ts` (24 birim test scratchpad'de koşturuldu, hepsi geçti)
-- Sağlayıcı sözleşmesi: throw yok, `ProviderResult` döner; zincir canlı→yedek→Neon cache; uydurma veri asla
-- Ekonomik takvim: Finnhub premium gerektirdiğinden resmî kaynak tohumu (FOMC/CPI/NFP) + FRED actual doldurma
-- Tasarım: Mimio mavi+bej DNA'sı; mono display; yön renkleri sakin (yosun/kiremit); imza bileşen Gün Şeridi; `data-theme` + anti-FOUC
+| Dosya | Ne için |
+|---|---|
+| `README.md` | Ürünün tamamı: rotalar, mimari, veri modeli, kurulum, sınırlar |
+| `CLAUDE.md` | Kod üzerinde çalışırken bilinmesi gerekenler — kurallar ve tuzaklar |
+| `docs/claude-rutinler.md` | İçerik rutinlerinin prompt'ları ve `:::` blok sözdizimi |
+| `docs/claude-brief-agent.md` | Bülten ajanının ayrıntılı yönergesi |
+| `docs/claude-mercek-ajani.md` | Mercek ajanının kısa yönergesi |
+| `docs/design/` | Tasarım notları |
+| bu dosya | Durum: canlıda ne var, ne bekliyor, ne bilinçli olarak yok |

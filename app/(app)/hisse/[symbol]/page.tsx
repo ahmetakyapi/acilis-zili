@@ -122,7 +122,7 @@ async function allowStockRender(symbol: string): Promise<boolean> {
  *
  * Sayfa kendi başlığını vermediğinde Next kökteki varsayılanı miras alıyor
  * ve her hisse linki "Açılış Zili — ABD Piyasa Takibi" diye paylaşılıyordu.
- * Fiyat BURAYA yazılmıyor: künye önbelleğe giriyor ve saatler sonra bayat
+ * Fiyat BURAYA yazılmıyor: künye önbelleğe giriyor ve saatler sonra eski
  * bir fiyatı sanki güncelmiş gibi gösterirdi (bkz. CLAUDE.md → veri
  * dürüstlüğü). Fiyat yalnızca her istekte yeniden çizilen OG kartında.
  */

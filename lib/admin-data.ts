@@ -698,7 +698,7 @@ export async function getHealthChecks(): Promise<HealthCheck[]> {
       note:
         days === null
           ? "profil yok"
-          : `en bayat kayıt ${days} günlük · piyasa değeri boş: ${Number(row?.noCap ?? 0)}`,
+          : `en eski kayıt ${days} günlük · piyasa değeri boş: ${Number(row?.noCap ?? 0)}`,
     });
   } catch {
     checks.push(failed("Sembol Profilleri"));
@@ -713,7 +713,7 @@ export async function getHealthChecks(): Promise<HealthCheck[]> {
       group: "data",
       value: hours === null ? "kayıt yok" : `${Math.floor(hours / 24)} gün önce`,
       tone: hours === null ? "down" : hours <= 48 ? "ok" : "warn",
-      note: "en bayat serinin tazelenme zamanı",
+      note: "en uzun süredir güncellenmeyen serinin tazelenme zamanı",
     });
   } catch {
     checks.push(failed("Makro Seriler"));

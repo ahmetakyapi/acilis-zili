@@ -810,7 +810,7 @@ export type SymbolMeta = {
  * günde 62,96 dolardan 174,38 dolara çıktı ve denetim devreye girdi —
  * ekranda hâlâ 25,1 milyar dolar yazıyordu, oysa şirket o gün 70 milyar
  * dolar olmuştu. Yani denetimin kendisi, önlemeye çalıştığı şeyi
- * (bayat sayıyı büyük puntoyla göstermek) yapıyordu.
+ * (eski sayıyı büyük puntoyla göstermek) yapıyordu.
  *
  * Ayırt edilmek istenen şey bir MERTEBE hatası: yanlış sınıfın hisse sayısı
  * kullanıldığında çarpım yüzde otuz değil yüzlerce KAT sapıyor (BRK.B'de
@@ -820,7 +820,7 @@ export type SymbolMeta = {
  * KABUL EDİLEN SINIR: iki değer arasındaki KAT farkı. Bu sınırın üstünde
  * hisse sayısına güvenilmez ve sağlayıcının kendi `marketCap` alanı
  * basılır. Bilinen açık: bir hisse profil penceresi içinde gerçekten on
- * katına çıkarsa yine kayıtlı değere düşülür — o durumda da sayı bayat
+ * katına çıkarsa yine kayıtlı değere düşülür — o durumda da sayı eski
  * olur ama alternatif, BRK.B'yi mikro şirket göstermek.
  */
 const CAP_MERTEBE_KATI = 10;
@@ -1098,12 +1098,12 @@ export const isKnownSymbol = cache(async function isKnownSymbol(
 });
 
 /* --------------------------------------------------------------------------
-   Endeks listesi bayatlama dedektörü
+   Endeks listesi eskime dedektörü
 
    `db/seed/indices.ts` elle bakılan tek büyük veri parçası ve otomatikleşmesi
    mümkün değil: Finnhub'ın /index/constituents ucu ücretsiz katmanda 403
    dönüyor, başka ücretsiz kaynak da yok. Dosya elle tazeleniyor ve bir kez
-   gerçekten bayatladı — SPCX 7 Temmuz 2026'da Nasdaq-100'e girdi, dosya 1
+   gerçekten eskidi — SPCX 7 Temmuz 2026'da Nasdaq-100'e girdi, dosya 1
    Ağustos damgalı olmasına rağmen içermiyordu ve /piyasalar bileşenleri
    eksik gösterdi.
 
@@ -1159,7 +1159,8 @@ export async function getIndexDriftCandidates(
   }
 }
 
-/** Profili en bayat semboller — cron her gün bir dilimini tazeler. */
+/** Profili en uzun süredir güncellenmeyen semboller — cron her gün bir
+ *  dilimini tazeler. */
 export async function getStalestSymbols(limit: number): Promise<string[]> {
   try {
     const rows = await db

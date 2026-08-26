@@ -11,7 +11,7 @@ export type ProviderOk<T> = {
   data: T;
   source: DataSource;
   fetchedAt: Date;
-  /** Neon önbelleğinden gelen bayat veri mi? */
+  /** Neon önbelleğinden gelen eski veri mi? */
   stale?: boolean;
 };
 

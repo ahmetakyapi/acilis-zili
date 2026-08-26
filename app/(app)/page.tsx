@@ -810,7 +810,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
      kart, iki gün önceki faizi bugünün faizi gibi 18 puntoyla basıyor,
      altındaki "▲ 0,04 puan" da bugünün hareketi gibi okunuyordu. Aynı
      sayılar /piyasalar'da zaten tarihiyle duruyor; ikisi arasındaki fark
-     tek başına bir hataydı. Bkz. CLAUDE.md → "bayat veriyi büyük puntoyla
+     tek başına bir hataydı. Bkz. CLAUDE.md → "eski veriyi büyük puntoyla
      gösterme". */
   const observedAt = values.find((value) => value.date)?.date ?? null;
 

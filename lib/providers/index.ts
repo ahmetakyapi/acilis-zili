@@ -149,7 +149,7 @@ async function persistQuotes(quotes: Quote[]): Promise<void> {
  * `new Date()` koyuyor, yani ekranda "önbellek · 14:32 güncellendi" görünüyordu
  * — 14:32 verinin yazıldığı an değil, SAYFANIN ÇİZİLDİĞİ an. Fiyat dünden
  * kalmış olabilirken damga onu az önce alınmış gösteriyordu; projenin
- * "bayat veriyi taze gibi gösterme" kuralının doğrudan ihlali.
+ * "eski veriyi güncelmiş gibi gösterme" kuralının doğrudan ihlali.
  */
 async function quotesFromCache(
   symbolList: string[],
@@ -165,7 +165,7 @@ async function quotesFromCache(
     for (const row of rows) {
       if (row.price === null) continue;
       /* En ESKİ damga alınıyor, en yenisi değil: kartta tek bir tarih
-         yazılıyor ve o tarih "bu ekrandaki en bayat sayı ne kadar eski"
+         yazılıyor ve o tarih "bu ekrandaki en eski sayı ne kadar geride"
          sorusunu cevaplamalı. */
       if (row.updatedAt && (!oldest || row.updatedAt < oldest)) {
         oldest = row.updatedAt;

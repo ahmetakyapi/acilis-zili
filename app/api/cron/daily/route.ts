@@ -343,7 +343,7 @@ export async function GET(request: Request) {
      dakikada 60 istek sınırı ve fonksiyonun 120 sn bütçesi buna izin verir. */
   try {
     /* Sıra: adla seçilen şirketler → yaklaşan bilançoların tanınmayan
-       sembolleri → kalan bütçeyle en bayat kayıtlar. getCompanyProfile
+       sembolleri → kalan bütçeyle en uzun süredir güncellenmeyenler. getCompanyProfile
        symbols tablosuna kendisi yazar (insert/update).
 
        Adla seçilenler en başta çünkü onların künyesi EKRANDA KULLANILIYOR:
@@ -409,8 +409,8 @@ export async function GET(request: Request) {
     report.calendar = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
-  /* ---- 2f. Endeks listesi bayatladı mı ----
-     indices.ts elle bakiliyor ve bir kez gercekten bayatladi (SPCX Nasdaq-100'e
+  /* ---- 2f. Endeks listesi güncelliğini yitirdi mi ----
+     indices.ts elle bakiliyor ve bir kez gercekten eskidi (SPCX Nasdaq-100'e
      girdi, dosya kacirdi). Otomatik duzeltemiyoruz — Finnhub'in bilesen ucu
      ucretsiz katmanda 403 — ama dev bir sirketin hicbir endekste gorunmemesi
      tespit edilebilir bir tutarsizlik. Raporda cikar, insan bakar. */

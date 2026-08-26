@@ -12,21 +12,75 @@ her gün yazılan bir bülten, olay bazlı uzun anlatımlar ve bilanço analizle
 
 ---
 
-## Neden bu proje
+## Ne yapar
 
-ABD piyasasını Türkiye'den takip etmenin iki zorluğu var ve ikisi de saatle ilgili.
+Beş konu başlığı var ve her biri ayrı bir soruya cevap veriyor.
 
-**Birincisi:** bütün kaynaklar New York saatiyle yayın yapıyor. Bir bilançonun
-"after the close" açıklanacağını bilmek yetmiyor; okuyucunun kafasında bunu
-23:00'a çevirmesi gerekiyor — üstelik ABD yaz saati kaydıkça bu dönüşüm yılda iki
-kez değişiyor. Bu üründe **birincil saat İstanbul**, New York künyede durur;
-İngilizceye geçince sıra tersine döner. Hiçbir yere sabit saat yazılmaz, o günün
-tarihiyle hesaplanır (açılış yazın 16:30, kışın 17:30 TR).
+### Piyasayı takip et
 
-**İkincisi:** ücretsiz sağlayıcılar dünyayı yarım gösteriyor. Bu proje eksik veriyi
-gizlemek yerine **söylemeyi** seçiyor: veri yoksa kart boş durur, gecikmeliyse
-damgalanır, sağlayıcı dakika vermiyorsa saat `~` ile yaklaşık yazılır. Ekranda
-uydurma tek bir sayı yok.
+Endeksler (S&P 500, Nasdaq 100, Dow, Russell 2000), günün seans haritası ve
+açılışa geri sayım, gün içi en çok yükselen ve düşen isimler, piyasa
+genişliği, ABD tahvil faizleri ve getiri eğrisi, VIX korku endeksi, dünya
+piyasaları. Ana sayfa bunu tek ekranda topluyor; `/piyasalar` aynı soruyu
+endeks bileşenlerine kadar iniyor.
+
+### Şirketleri ve hisseleri incele
+
+Her hisse için gün içinden beş yıla kadar grafik (alan ya da mum), şirket
+profili, değerleme ve risk ölçüleri (F/K, temettü, beta, net kâr marjı, 52
+hafta bandı), analist tavsiye dağılımı ve hedef fiyat, o şirkete ait haberler
+ve geçmiş bilanço sürprizleri. `/sirketler` 800'ü aşkın şirketi sektör
+şeridiyle ve sıralanabilir bir dizinle veriyor; `/karsilastir` iki ile dört
+hisseyi **aynı ölçekte** yan yana koyuyor — normalize tek grafik ve getiri,
+değerleme, risk, şirket künyesi olmak üzere dört öbekli tek tablo.
+
+### Bilançoları izle
+
+Kim ne zaman açıklıyor (açılış öncesi mi kapanış sonrası mı), analist EPS ve
+gelir beklentisi ne, gerçekleşen ne çıktı. Takvimi kendi takvimine `.ics`
+olarak ekleyebiliyorsun. Açıklanan çeyrekler için ayrıca uzun analizler var:
+skor, görüş, hedef fiyat, güçlü yönler ve riskler, beklenen gelişmeler.
+
+### Ekonomik veriyi ve makroyu oku
+
+CPI, çekirdek enflasyon, FOMC kararları ve basın toplantıları, tarım dışı
+istihdam, işsizlik, PCE — takvimde saatleriyle, beklenti ve gerçekleşen
+değerleriyle. `/makro` altı FRED serisini sparkline ve bir sonraki açıklama
+tarihiyle gösteriyor. Önümüzdeki altı haftanın halka arz takvimi de burada.
+
+### Haberleri ve analizleri takip et
+
+Piyasa haber akışı, sembol süzgeciyle ve siteden çıkmadan okunabilir hâlde.
+Üstüne her gün yazılan bir bülten (haftalık özeti pazartesi), olayın
+arkasındaki **mekanizmayı** anlatan uzun yazılar ve borsayı sıfırdan
+öğreten sıralı bir rehber.
+
+Bir de kişisel taraf: çoklu takip listeleri, renkli etiketler, ana sayfada
+kendi listenin özeti ve yalnızca senin izlediklerinin bilanço takvimi.
+
+---
+
+## İki kurucu karar
+
+Ürünün geri kalanı bu iki karardan türüyor.
+
+### Saat Türkiye saatiyle
+
+Bütün kaynaklar New York saatiyle yayın yapıyor. Bir bilançonun "after the
+close" açıklanacağını bilmek yetmiyor; okuyucunun kafasında bunu 23:00'a
+çevirmesi gerekiyor — üstelik ABD yaz saati kaydıkça bu dönüşüm yılda iki kez
+değişiyor. Bu üründe **birincil saat İstanbul**, New York künyede durur;
+İngilizceye geçince sıra tersine döner. Hiçbir yere sabit saat yazılmaz, o
+günün tarihiyle hesaplanır (açılış yazın 16:30, kışın 17:30 TR).
+
+### Ekranda uydurma sayı yok
+
+Ücretsiz sağlayıcılar dünyayı yarım gösteriyor ve bu proje eksik veriyi
+gizlemek yerine **söylemeyi** seçiyor. Veri yoksa kart boş durur; her kartın
+altında `kaynak · saat` damgası vardır; gecikmeli besleme gecikmeli olduğunu
+yazar; sağlayıcı dakika vermiyorsa saat `~` ile yaklaşık yazılır ve hangi
+pencere olduğu adıyla söylenir. Bir metrik dürüstçe gösterilemiyorsa
+gösterilmez — Brent kartı bu yüzden kaldırıldı.
 
 ---
 
@@ -125,7 +179,7 @@ geldi:
 
 1. **Uydurma kesinlik yok.** Sağlayıcı dakika vermiyorsa saat `~` ile yazılır ve
    hangi pencere olduğu adıyla söylenir ("~23:00 · kapanış sonrası").
-2. **Bayat veriyi büyük puntoyla gösterme.** Brent kartı FRED'in EIA spot
+2. **Eski veriyi büyük puntoyla gösterme.** Brent kartı FRED'in EIA spot
    serisinden geliyordu ve o seri günlerce geriden yayımlanıyor; ekranda bir
    haftalık eski fiyat duruyordu. Küçük puntoda tarih yazmak bunu kurtarmaz —
    metrik kaldırıldı.

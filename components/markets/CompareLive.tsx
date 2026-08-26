@@ -551,7 +551,7 @@ export function CompareStrip({
               {/* Dokunma hedefi 44px; görsel daire aynı, negatif margin
                   satır yüksekliğini değiştirmiyor. Adres CANLI aralığı
                   taşıyor — sunucudan gelen sabit bir bağlantı, aralık
-                  istemcide değiştikten sonra bayat kalırdı. */}
+                  istemcide değiştikten sonra eski kalırdı. */}
               <Link
                 href={compareHref(
                   symbols.filter((entry) => entry !== row.symbol),

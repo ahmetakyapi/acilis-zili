@@ -299,7 +299,7 @@ export default async function AnalysisDetailPage(
      sayfanın kimlik bandında "şu an" diye yazdığı fiyat; bölenler ya
      analizle birlikte yazılıyor ya sağlayıcıdan geliyor. Böylece okuyucu
      üstteki fiyatı yandaki bölene bölüp oranı doğrulayabiliyor — ve oran
-     fiyat oynadıkça bayatlamıyor. Sağlayıcının hazır F/K'si tam bu yüzden
+     fiyat oynadıkça eskimiyor. Sağlayıcının hazır F/K'si tam bu yüzden
      kullanılmıyor: SNDK'da %5,6 geriden geliyordu (bkz. `peRatioOf`).
 
      BÖLEN ÖNCE KAYITTAN okunuyor. Analizi yazan, bilançonun kendisinden

@@ -130,7 +130,7 @@ const YIELD_SERIES = [
  * `getQuotes` son çare olarak `quotes_cache`ten okuyor ve o satırlar saatler
  * — hafta sonuna denk gelirse günler — öncesine ait olabiliyorken ekranda
  * "Alpaca · SIP · 12:40 güncellendi · 15 dk gecikmeli" yazıyordu. Üç bilgi
- * birden yanlıştı: kaynak, gecikme iddiası ve bayatlık uyarısının hiç
+ * birden yanlıştı: kaynak, gecikme iddiası ve güncellik uyarısının hiç
  * görünmemesi.
  *
  * Bu ekranda önbelleğe düşmek kenar bir durum da değil: Finnhub yedeği

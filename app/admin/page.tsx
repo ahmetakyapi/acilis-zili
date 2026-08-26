@@ -162,7 +162,7 @@ async function AttentionCard() {
       {problems.length === 0 && gaps.length === 0 ? (
         <p className="flex items-center gap-2 py-2 text-base text-body">
           <HealthDot tone="ok" />
-          Her şey yolunda — eksik veri ya da bayat kayıt yok.
+          Her şey yolunda — eksik ya da güncellenmemiş kayıt yok.
         </p>
       ) : (
         <ul className="flex flex-col gap-2.5">

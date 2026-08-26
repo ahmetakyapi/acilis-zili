@@ -529,7 +529,7 @@ const PROVIDER_LABEL: Record<string, string> = {
 /* GECİKME DAMGAYA YAZILIYOR. Damgadaki saat verinin YAŞI değil, bizim onu
    ÇEKTİĞİMİZ an. Konsolide tape ücretsiz katmanda 15 dakika geriden
    yayımlandığı için "güncellendi 12:00" satırı, 11:45'in fiyatını 12:00'nin
-   fiyatı gibi gösteriyordu — projenin "bayat veriyi taze gibi gösterme"
+   fiyatı gibi gösteriyordu — projenin "eski veriyi güncelmiş gibi gösterme"
    kuralının küçük ama gerçek bir ihlali. Gecikme sağlayıcının bir özelliği,
    o yüzden tablo burada. */
 const DELAYED_PROVIDERS = new Set(["alpaca"]);

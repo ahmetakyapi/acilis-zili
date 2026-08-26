@@ -126,7 +126,8 @@ export function directionWash(d: Direction) {
  * SAĞLAYICININ HAZIR `peTTM` DEĞERİ KULLANILMIYOR ve gerekçesi ölçüldü:
  * Finnhub o oranı kendi tarafında, geriden gelen bir fiyatla hesaplıyor.
  * 8 Ağustos 2026'da bakıldığında SNDK için `peTTM × epsTTM` çarpımı 1.144 $
- * veriyordu, oysa aynı anda kotasyon 1.212 $'dı — oran %5,6 bayattı. MU'da
+ * veriyordu, oysa aynı anda kotasyon 1.212 $'dı — oran %5,6 eski fiyattan
+ * geliyordu. MU'da
  * fark daha küçüktü ama aynı yöndeydi (867 $ / 878 $).
  *
  * Ekranda bunun bedeli şu: sayfanın üstünde "şu an 1.212 $" yazarken hemen
@@ -603,7 +604,7 @@ export function headlineMentions(
  * NEDEN PAYLAŞILAN: makro ekranı bu künyeyi sayının yanına koyuyordu ama ana
  * sayfadaki Makro Özeti paneli koymuyordu — aynı sayı orada 23 puntoyla ve
  * TARİHSİZ duruyordu. TÜFE ve istihdam haftalar geriden yayımlanır; okuyucu
- * büyük puntolu bir sayıyı bugünün verisi sanıyordu. Projenin "bayat veriyi
+ * büyük puntolu bir sayıyı bugünün verisi sanıyordu. Projenin "eski veriyi
  * damgasız gösterme" kuralı tam olarak bunu yasaklıyor.
  */
 export function formatPeriodLabel(

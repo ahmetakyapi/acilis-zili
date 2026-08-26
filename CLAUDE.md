@@ -149,7 +149,7 @@ aynı hissenin iki farklı yüzdesi yan yana durabilir.
 1. **Uydurma kesinlik yok.** Sağlayıcı dakika vermiyorsa saat `~` ile yazılır
    ve hangi pencere olduğu adıyla söylenir (bilanço satırları: "~23:00 ·
    kapanış sonrası").
-2. **Bayat veriyi büyük puntoyla gösterme.** Brent kartı FRED'in EIA spot
+2. **Eski veriyi büyük puntoyla gösterme.** Brent kartı FRED'in EIA spot
    serisinden geliyordu ve o seri günlerce geriden yayımlanıyor; ekranda bir
    haftalık eski fiyat duruyordu. Küçük puntoda tarih yazmak bunu kurtarmaz —
    metrik kaldırıldı.
@@ -223,9 +223,10 @@ taranamaz hâle getiriyor.
   okuması grafiğin dışına dokunulana kadar ekranda kalıyor; aralık düğmeleri
   grafiğin dışında değil ve temizlenmezse okuma satırı artık var olmayan bir
   barı göstermeye devam ediyor.
-- **`docs/ROUTEMAP.md` GÜNCEL DEĞİL** (son güncelleme 2026-08-01) ve on üç
-  rotayı bilmiyor. Rota listesi için README'yi ya da `app/` dizininin
-  kendisini oku.
+- **Rota listesi tek yerde: `README.md`.** `docs/ROUTEMAP.md` bir dönem
+  ikinci bir rota tablosu tutuyordu ve tam da bu yüzden güncelliğini yitirdi — on üç
+  rota eksik kalmıştı. O dosya artık yalnızca DURUM tutuyor: canlıda ne var,
+  ne yarım kaldı, ne bilinçli olarak yapılmadı.
 
 ## iCloud kopyaları — derlemeyi kırar
 

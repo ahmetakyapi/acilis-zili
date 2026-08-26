@@ -2,7 +2,7 @@
  * Nasdaq-100 bileşen listesini resmî kaynaktan tazeler.
  *
  * NEDEN VAR: `db/seed/indices.ts` elle bakılan tek büyük veri parçasıydı ve
- * bir kez gerçekten bayatladı — SPCX 7 Temmuz 2026'da endekse girdi, dosya
+ * bir kez gerçekten eskidi — SPCX 7 Temmuz 2026'da endekse girdi, dosya
  * 1 Ağustos damgalı olmasına rağmen içermiyordu ve /piyasalar bileşenleri
  * eksik gösterdi.
  *
