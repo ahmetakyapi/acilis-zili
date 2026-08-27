@@ -4,6 +4,7 @@ import {
   type MacroObservation,
   type MacroSeriesData,
   type ProviderResult,
+  responseDate,
 } from "./types";
 import { withTimeout } from "./timeout";
 
@@ -112,7 +113,9 @@ async function fredFetch<T>(
       return fail("fred", "upstream-error", `FRED ${res.status}`);
     }
 
-    return ok((await res.json()) as T, "fred");
+    return ok((await res.json()) as T, "fred", {
+      fetchedAt: responseDate(res),
+    });
   } catch (error) {
     return fail(
       "fred",
@@ -203,11 +206,9 @@ export async function getSeriesRelease(
   if (!release || typeof release.id !== "number") {
     return fail("fred", "empty", `${seriesId} için yayın bulunamadı`);
   }
-  return ok(
-    { id: release.id, name: release.name ?? "" },
-    "fred",
-    { fetchedAt: result.fetchedAt },
-  );
+  return ok({ id: release.id, name: release.name ?? "" }, "fred", {
+    fetchedAt: result.fetchedAt,
+  });
 }
 
 type RawReleaseDates = {

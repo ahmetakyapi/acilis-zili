@@ -6,6 +6,7 @@ import {
   type ChartRange,
   type ProviderResult,
   type Quote,
+  responseDate,
 } from "./types";
 import { withTimeout } from "./timeout";
 
@@ -110,7 +111,9 @@ async function alpacaFetch<T>(
       );
     }
 
-    return ok((await res.json()) as T, "alpaca");
+    return ok((await res.json()) as T, "alpaca", {
+      fetchedAt: responseDate(res),
+    });
   } catch (error) {
     return fail(
       "alpaca",
@@ -192,7 +195,10 @@ const STALE_TRADE_MS = 5 * 24 * 60 * 60 * 1000;
  * `prevDailyBar.c` kalır. Gün ayrımı ET takvimiyle yapılıyor: UTC ile
  * yapılırsa akşam seansı (20:00 ET = 00:00 UTC) ertesi güne kayıyor.
  */
-function referenceClose(snap: AlpacaSnapshot, tradedAt: Date | null): number | null {
+function referenceClose(
+  snap: AlpacaSnapshot,
+  tradedAt: Date | null,
+): number | null {
   const barDay = snap.dailyBar?.t
     ? etParts(new Date(snap.dailyBar.t)).dateStr
     : null;
@@ -321,13 +327,13 @@ export async function getSnapshots(
       if (quote) quotes[symbol] = quote;
     }
 
-    if (!fetchedAt || result.fetchedAt > fetchedAt) fetchedAt = result.fetchedAt;
+    if (!fetchedAt || result.fetchedAt > fetchedAt)
+      fetchedAt = result.fetchedAt;
   }
 
   if (Object.keys(quotes).length === 0) {
     return (
-      lastFailure ??
-      fail("alpaca", "empty", "Hiçbir sembol için fiyat dönmedi")
+      lastFailure ?? fail("alpaca", "empty", "Hiçbir sembol için fiyat dönmedi")
     );
   }
 
@@ -553,7 +559,9 @@ export async function getBarsMulti(
         symbols: batch.join(","),
         timeframe: spec.timeframe,
         start,
-        limit: String(Math.min(MAX_BARS_PER_REQUEST, spec.limit * batch.length)),
+        limit: String(
+          Math.min(MAX_BARS_PER_REQUEST, spec.limit * batch.length),
+        ),
         adjustment: "split",
         feed: BAR_FEED,
         sort: "asc",

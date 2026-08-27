@@ -9,6 +9,7 @@ import {
   type Quote,
   type Recommendation,
   type SymbolSearchResult,
+  responseDate,
 } from "./types";
 import { withTimeout } from "./timeout";
 import { saglayiciMetni } from "@/lib/text";
@@ -67,7 +68,9 @@ async function finnhubFetch<T>(
       return fail("finnhub", "upstream-error", `Finnhub ${res.status}`);
     }
 
-    return ok((await res.json()) as T, "finnhub");
+    return ok((await res.json()) as T, "finnhub", {
+      fetchedAt: responseDate(res),
+    });
   } catch (error) {
     return fail(
       "finnhub",
@@ -287,11 +290,10 @@ export async function getEarningsCalendar(
   const params: Record<string, string> = { from, to };
   if (symbol) params.symbol = symbol;
 
-  const result = await finnhubFetch<RawEarnings>(
-    "/calendar/earnings",
-    params,
-    { revalidate: 21600, tags: ["earnings"] },
-  );
+  const result = await finnhubFetch<RawEarnings>("/calendar/earnings", params, {
+    revalidate: 21600,
+    tags: ["earnings"],
+  });
   if (!result.ok) return result;
 
   const list = result.data?.earningsCalendar ?? [];

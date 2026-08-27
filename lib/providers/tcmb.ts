@@ -1,4 +1,4 @@
-import { fail, ok, type ProviderResult } from "./types";
+import { fail, ok, type ProviderResult, responseDate } from "./types";
 import { withTimeout } from "./timeout";
 
 /**
@@ -122,5 +122,7 @@ export async function getUsdTry(): Promise<ProviderResult<UsdTryRate>> {
     return fail("tcmb", "empty", "Bülten beklenen alanları taşımıyor");
   }
 
-  return ok({ buying, selling, bulletinDate }, "tcmb");
+  return ok({ buying, selling, bulletinDate }, "tcmb", {
+    fetchedAt: responseDate(res),
+  });
 }

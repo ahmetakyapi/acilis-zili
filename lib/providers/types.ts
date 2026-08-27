@@ -25,12 +25,7 @@ export type ProviderFail = {
 export type ProviderResult<T> = ProviderOk<T> | ProviderFail;
 
 export type DataSource =
-  | "alpaca"
-  | "finnhub"
-  | "fred"
-  | "tcmb"
-  | "cache"
-  | "seed";
+  "alpaca" | "finnhub" | "fred" | "tcmb" | "cache" | "seed";
 
 export type FailReason =
   | "missing-key"
@@ -52,6 +47,32 @@ export function ok<T>(
     fetchedAt: extra.fetchedAt ?? new Date(),
     stale: extra.stale,
   };
+}
+
+/**
+ * Yanıtın gerçekten ne zaman üretildiği — `Date` başlığından.
+ *
+ * NEDEN GEREKLİ: `ok()` çağrıldığı anı damgalıyor ve sağlayıcı sarmalayıcıları
+ * onu her istekte yeniden çağırıyor. Ama aradaki `fetch` Next'in veri
+ * önbelleğinden dönebilir: şirket profili 24 saat, makro serileri saatlerce
+ * önbellekli. Sonuç, ekranda "Finnhub · 20:56 Güncellendi" yazan bir künyenin
+ * altında bir gün önce çekilmiş bir kaydın durmasıydı — projenin kendi
+ * kuralının ("eski veriyi güncelmiş gibi gösterme") tam ihlali. Damga
+ * yalanmıyordu bile: hiç kimsenin bakmadığı bir saati, RENDER anını basıyordu.
+ *
+ * Next önbellek isabetinde yanıtı BAŞLIKLARIYLA birlikte yeniden kuruyor,
+ * yani `Date` başlığı ilk çekimin saatini taşımaya devam ediyor. Aranan sayı
+ * tam olarak bu. Sağlayıcının saati kendi sunucusunun saati ama fark
+ * saniyeler mertebesinde; önemli olan gün ve saattir.
+ *
+ * Başlık yoksa `undefined` döner ve `ok()` eski davranışına düşer — bir
+ * gerileme değil, bugünkü durumun aynısı.
+ */
+export function responseDate(res: Response): Date | undefined {
+  const raw = res.headers.get("date");
+  if (!raw) return undefined;
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
 export function fail(
