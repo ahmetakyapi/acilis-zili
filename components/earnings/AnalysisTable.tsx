@@ -120,7 +120,18 @@ export function AnalysisTable({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2.5">
-        <label className="relative flex min-w-0 flex-1 items-center sm:max-w-xs">
+        {/* ARAMA KUTUSU TELEFONDA TAM GENİŞLİK. `flex-1` her genişlikte
+            duruyordu ve sıralama segmenti (305 piksel, `shrink-0`) aynı
+            satırda yer kapıyordu: kutuya 390 pikselde 39, 360'ta 9 piksel
+            kalıyor, `pl-9 pr-9` dolgusuyla birlikte içine tek harf bile
+            sığmıyordu. Altmış satırlık arşivin telefondaki tek arama yolu
+            budur ve kullanılamaz hâldeydi.
+
+            `flex-1`in `sm`e ertelenmesi kaptaki `flex-wrap`ı serbest
+            bırakıyor: segment kendiliğinden alt satıra iniyor. `basis-full`
+            eklemek de aynı sonucu verirdi ama `flex-1` dururken sonuç
+            utility sırasına bağlı kalırdı. */}
+        <label className="relative flex w-full min-w-0 items-center sm:w-auto sm:max-w-xs sm:flex-1">
           <MagnifyingGlass
             weight="duotone"
             size={15}

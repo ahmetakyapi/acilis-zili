@@ -200,7 +200,14 @@ export function CompareAdd({
                   onClick={() => pick(hit.symbol)}
                   className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-primary-wash"
                 >
-                  <span className="numeral flex h-5 w-12 shrink-0 items-center justify-center rounded bg-primary-tint text-tiny font-semibold text-primary">
+                  {/* Rozet satırın yüksekliğini o belirliyor: `h-5` ile
+                      satır 10+20+10 = 40 piksel kalıyordu. `h-6` onu 44'e
+                      çıkarıyor ve aynı listeyi kuran kardeşiyle hizalıyor
+                      (WatchlistBoard, `h-6 w-14`). Burada `.tap-44`
+                      ÇALIŞMAZ: kapsayıcı liste `overflow-hidden` taşıyor
+                      (ortak yuvarlak köşe onu gerektiriyor) ve sözde öğeyle
+                      yapılan genişletme kırpılır. */}
+                  <span className="numeral flex h-6 w-12 shrink-0 items-center justify-center rounded bg-primary-tint text-tiny font-semibold text-primary">
                     {hit.symbol}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-small text-body">

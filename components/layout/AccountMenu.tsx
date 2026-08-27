@@ -355,8 +355,14 @@ export function AccountMenu({
                       type="button"
                       onClick={() => pickLocale(locale)}
                       aria-pressed={locale === initialLocale}
+                      /* GERÇEK YÜKSEKLİK, `.tap-44` DEĞİL: iki düğme
+                         `overflow-hidden` bir kabın içinde (ortak yuvarlak
+                         köşeyi o kırpıyor) ve orada sözde öğeyle yapılan
+                         hedef genişletmesi de kırpılır. Segment zaten kendi
+                         satırında; telefonda 44 piksele çıkması menüyü
+                         bozmuyor, rahatlatıyor. */
                       className={cn(
-                        "min-h-8 px-3 text-tiny uppercase transition-colors",
+                        "min-h-11 px-3 text-tiny uppercase transition-colors sm:min-h-8",
                         locale === initialLocale
                           ? "bg-primary font-bold text-on-primary"
                           : "text-muted hover:text-strong",

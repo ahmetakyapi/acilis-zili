@@ -176,7 +176,7 @@ export function BriefSwitch({
               /* Telefonda 44px: 34px'lik sekmeler dokunma eşiğinin altındaydı
                  ve bunlar bültenin tek denetimi. Masaüstünde imleç hassas,
                  orada 34px yeterli. */
-              "min-h-10 rounded-full px-4 transition-colors sm:min-h-8",
+              "min-h-11 rounded-full px-4 transition-colors sm:min-h-8",
               period === key
                 ? "bg-primary font-semibold text-on-primary"
                 : "text-body hover:text-strong",
