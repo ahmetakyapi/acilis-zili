@@ -1737,6 +1737,25 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
   );
 }
 
+/* DÖRT SERİ AÇIKÇA SEÇİLİYOR — bir dönem `rows.slice(0, 4)` yazıyordu ve
+   `getMacroRows` satırları SLUG'A GÖRE ALFABETİK döndürüyor. Yani panelin
+   künyesi "dört ana seri" derken ekrana çıkanlar tesadüfen alfabenin ilk
+   dördüydü: core-cpi, core-pce, cpi, fed-funds. Dördün üçü enflasyon ölçüsü,
+   ikisi (TÜFE ve Çekirdek TÜFE) 2×2 ızgarada yan yana duran neredeyse aynı
+   sayı, ve iş gücü tarafı ana sayfada HİÇ görünmüyordu — oysa aynı sayfanın
+   gün şeridi istihdam raporunu yüksek etkili olay diye basıyor.
+
+   Sıralama bir sunum niyeti taşımıyor; taşıdığını sanmak da seri listesine
+   yeni bir slug eklendiği gün paneli sessizce değiştirirdi. Seçim artık
+   editoryal: enflasyondan bir ölçü, fiyat tercihinden bir ölçü, iş gücünden
+   bir ölçü, politikadan bir ölçü. Kalıp TODAY_YIELDS ile aynı. */
+const MACRO_HOME_SLUGS = [
+  "cpi",
+  "core-pce",
+  "unemployment",
+  "fed-funds",
+] as const;
+
 /**
  * Makro özeti — dört ana seri, 23px sayı ve yön oklu önceki değer.
  *
@@ -1749,7 +1768,12 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   const rows = await getMacroRows();
   if (rows.length === 0) return null;
 
-  const shown = rows.slice(0, 4);
+  /* Listede olmayan bir slug sessizce atlanır; tohumlama eksikse panel
+     üç ölçüyle çıkar, boş bir hücre basmaz. */
+  const shown = MACRO_HOME_SLUGS.map((slug) =>
+    rows.find((row) => row.slug === slug),
+  ).filter((row) => row !== undefined);
+  if (shown.length === 0) return null;
 
   return (
     <Panel className="px-4 py-4 sm:px-5">
@@ -1774,10 +1798,15 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
              `formatPercentPlain` ile doğru yazarken bu panel kuralı
              çiğniyordu (bkz. lib/utils.ts → withPercent). */
           const isPct = row.unit === "%";
+          /* Yüzde OLMAYAN seri (istihdam, bin kişi) `digits: 0` ister.
+             `formatPrice`in varsayılanı 2 ve /makro aynı seriyi 0 ile
+             yazıyor: seçim düzeltilip `payrolls` panele girdiği anda bu
+             panel "147,00", /makro "147" diyecekti. Aynı sayının iki ekranda
+             farklı görünmesi bu depoda bir kez düzeltilmiş bir hata. */
           const show = (value: number) =>
             isPct
               ? formatPercentPlain(value, locale, 2)
-              : formatPrice(value, locale);
+              : formatPrice(value, locale, { digits: 0 });
           return (
             <div key={row.seriesId}>
               <p className="truncate text-tiny text-muted">

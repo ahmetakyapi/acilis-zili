@@ -66,8 +66,6 @@ export const generateMetadata = pageMetadata({
  * rehberdeki konu filtresiyle aynı desen, istemci JS'i yok.
  */
 
-/** Kapakta ve kartlarda canlı fiyat gösterilen sembol sayısı sınırı. */
-const QUOTE_LIMIT = 40;
 /** "Olaydan bugüne" getirisi hesaplanan farklı sembol sayısı. */
 const CURVE_LIMIT = 12;
 /**
@@ -220,9 +218,23 @@ async function StoryBoard({
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 8);
 
+  /* LİSTE ÇİZİLENDEN TÜRÜYOR, TAVANDAN DEĞİL.
+     Burada bir dönem yazıların BÜTÜN sembolleri toplanıp 40'ta kesiliyordu.
+     İki ayrı kusur birden: liste ekranda çizilmeyen sembollere de yer
+     ayırıyordu (bir yazı yedi sembol taşıyabiliyor, kapak dördünü çiziyor)
+     ve tavanın dışında kalan sembol için `meta[symbol]` boş dönüyordu — kart
+     o zaman gerçek logo yerine gri harf karosuna düşüyordu. Varsayılan
+     listede bile beş sembol tavanın dışındaydı; `?adet=48`de altı kart
+     bütünüyle logosuz çiziliyordu.
+
+     Kapak en çok dört sembol çiziyor (StoryVisual `max = 4`), o yüzden
+     yazı başına ilk dördü alınıyor: kota artık görünmeyen sembollere
+     harcanmıyor. Tavan gerekmiyor çünkü liste zaten iki kez sınırlı —
+     sayfa en çok 600 yazı basıyor ve semboller tekilleştiriliyor, yani
+     sonuç sembol evreninden (~800 satır) büyük olamaz. */
   const shownSymbols = [
-    ...new Set(rows.flatMap((story) => story.symbols ?? [])),
-  ].slice(0, QUOTE_LIMIT);
+    ...new Set(rows.flatMap((story) => (story.symbols ?? []).slice(0, 4))),
+  ];
 
   const status = await getStatus();
   const lead = rows[0] ?? null;

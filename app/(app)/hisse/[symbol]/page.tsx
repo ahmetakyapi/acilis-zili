@@ -738,6 +738,37 @@ async function symbolEarnings(symbol: string): Promise<EarningsItem[]> {
  * Yaklaşan bilanço — sağ kolonun tepesinde pirinç vurgulu kart.
  * Tarih, seans zamanı ve analistlerin EPS + gelir beklentisi bir arada.
  */
+/**
+ * Sembolün para birimi — `formatPrice`/`formatMoneyCompact`e verilecek biçimde.
+ *
+ * NEDEN: sağlayıcının bilanço rakamları dolar değil, ŞİRKETİN ANA BORSASININ
+ * parasında geliyor. /hisse/TSM'de "Gelir Beklentisi 1,47 T $" yazıyordu —
+ * bir çeyrekte bir buçuk trilyon dolar; sayı doğru, para birimi (TWD) yanlıştı.
+ *
+ * Kural bu sayfada üç yerde uygulanmıştı (anahtar metrikler, yaklaşan bilanço
+ * kartı, karşılaştırma tablosu) ama GEÇMİŞ BİLANÇOLAR tablosu dışarıda
+ * kalmıştı: orada her hücre koşulsuz `{ currency: true }` ile basılıyordu.
+ * Sonuç TSM'de 27,25 TWD'nin "27,25 $" görünmesi, PDD'de 118 milyar CNY'nin
+ * "118 Mr $" görünmesiydi — yedi kat şişik bir sayı, üstelik ekranın en
+ * güvenilir görünen yerinde, bir tablonun içinde.
+ *
+ * Üç ayrı kopya yerine tek yardımcı: dördüncü bir kullanım yeri çıktığında
+ * kuralın yeniden unutulacağı bir yer kalmasın. `getSymbolNames` istek içinde
+ * önbellekli, yani ikinci çağrı sağlayıcıya gitmiyor.
+ *
+ * `true` "dolar olarak biçimlendir" demek — `formatPrice`in sözleşmesi bu.
+ */
+async function paraSecenegi(symbol: string): Promise<string | true> {
+  const meta = await getSymbolNames([symbol]);
+  const kod = meta[symbol]?.currency ?? null;
+  return kod && kod !== "USD" ? kod : true;
+}
+
+/** `formatMoneyCompact` kod ya da `null` ister; `true` orada geçmiyor. */
+function paraKoduOf(opt: string | true): string | null {
+  return typeof opt === "string" ? opt : null;
+}
+
 async function UpcomingEarnings({
   symbol,
   locale,
@@ -747,14 +778,7 @@ async function UpcomingEarnings({
   locale: Locale;
   t: Dictionary;
 }) {
-  /* PARA BİRİMİ — bilanço tahminleri de sağlayıcının ana borsa parasında
-     geliyor. /hisse/TSM'de "Gelir Beklentisi 1,47 T $" yazıyordu: bir
-     çeyrekte bir buçuk trilyon dolar. Sayı doğruydu, para birimi (TWD)
-     yanlıştı. Aynı düzeltme metrik tablosunda ve karşılaştırma sayfasında
-     da var; kural tek yerde: `SymbolMeta.currency`. */
-  const paraMeta = await getSymbolNames([symbol]);
-  const paraKodu = paraMeta[symbol]?.currency ?? null;
-  const paraOpt = paraKodu && paraKodu !== "USD" ? paraKodu : true;
+  const paraOpt = await paraSecenegi(symbol);
   let next: EarningsItem | null = await getNextEarnings(symbol);
   if (!next) {
     const today = todayEt();
@@ -1283,6 +1307,8 @@ async function PastEarnings({
   t: Dictionary;
 }) {
   const today = todayEt();
+  /* Bu tablo bir dönem koşulsuz dolar basıyordu — gerekçe `paraSecenegi`de. */
+  const paraOpt = await paraSecenegi(symbol);
 
   // Takvim satırları (yerel tablo, yoksa sağlayıcı) — gelir alanlarını taşır.
   let calRows: EarningsItem[] = (await getEarningsForSymbol(symbol, 12)).filter(
@@ -1454,25 +1480,35 @@ async function PastEarnings({
                 </td>
                 <td className="numeral px-2 py-2.5 text-center text-muted sm:px-3">
                   {row.epsEstimate !== null
-                    ? formatPrice(row.epsEstimate, locale, { currency: true })
+                    ? formatPrice(row.epsEstimate, locale, {
+                        currency: paraOpt,
+                      })
                     : "—"}
                 </td>
                 <td className="numeral px-2 py-2.5 text-center font-semibold text-strong sm:px-3">
                   {row.epsActual !== null
-                    ? formatPrice(row.epsActual, locale, { currency: true })
+                    ? formatPrice(row.epsActual, locale, { currency: paraOpt })
                     : "—"}
                 </td>
                 {hasRevenue && (
                   <>
                     <td className="numeral hidden px-2 py-2.5 text-center text-muted sm:px-3 lg:table-cell">
                       {row.revenueEstimate !== null
-                        ? formatMoneyCompact(row.revenueEstimate, locale)
+                        ? formatMoneyCompact(
+                            row.revenueEstimate,
+                            locale,
+                            paraKoduOf(paraOpt),
+                          )
                         : "—"}
                     </td>
                     <td className="numeral hidden px-4 py-2.5 text-center text-body sm:table-cell sm:px-5">
                       {row.revenueActual !== null ? (
                         <span className="font-semibold text-strong">
-                          {formatMoneyCompact(row.revenueActual, locale)}
+                          {formatMoneyCompact(
+                            row.revenueActual,
+                            locale,
+                            paraKoduOf(paraOpt),
+                          )}
                         </span>
                       ) : (
                         "—"
@@ -1604,7 +1640,14 @@ async function ComplianceCard({
               );
             })}
             <p className="numeral text-nano text-muted">
-              {t.stock.complianceLimit}: %{COMPLIANCE_THRESHOLD}
+              {/* Yüzde işareti biçimlendiriciye ait — kartın 18 satır
+                  yukarısındaki kural bunu açıkça yazıyor ve oranların
+                  kendisi ona uyuyor. Sınır satırı atlanmıştı: elden yazılan
+                  "%" iki dilde de önde kalıyordu, oysa İngilizcede sonda
+                  yazılır ("33%"). `digits: 0` şart — varsayılan 1 olduğu için
+                  argümansız çağrı "%33,0" basardı. */}
+              {t.stock.complianceLimit}:{" "}
+              {formatPercentPlain(COMPLIANCE_THRESHOLD, locale, 0)}
             </p>
           </dl>
         ) : (

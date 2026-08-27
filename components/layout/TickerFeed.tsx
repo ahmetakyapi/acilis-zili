@@ -9,7 +9,12 @@ import { getSeries } from "@/lib/providers/fred";
 import { getUsdTry } from "@/lib/providers/tcmb";
 import { INDEX_STRIP } from "@/db/seed/symbols";
 import { getI18n } from "@/lib/i18n";
-import { formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils";
+import {
+  formatEtDateCompact,
+  formatPercent,
+  formatPercentPlain,
+  formatPrice,
+} from "@/lib/utils";
 
 /**
  * Şeridin verisini toplar. Kabuğun içinde <Suspense> ile sarılıdır — bu
@@ -119,7 +124,18 @@ export async function TickerFeed() {
   if (usdTry.ok) {
     groups.push({
       key: "fx",
-      caption: locale === "tr" ? "TCMB Kuru" : "TCMB Rate",
+      /* TARİH KÜNYEDE, çünkü bu canlı bir kur değil. Sağlayıcının kendi
+         karar kaydı (lib/providers/tcmb.ts başı) bunu şöyle yazıyor: TCMB
+         gün içinde TEK bülten yayımlar, hafta sonu ve tatilde son iş gününün
+         bülteni durur, "bu yüzden dönen veri bültenin tarihini taşır ve
+         ekranda o tarih yazılır — 'anlık kur' iddiası taşımıyoruz". Tarih
+         ekranda YAZMIYORDU: sağlayıcı `bulletinDate`i döndürüyor, şerit onu
+         atıyordu. Pazartesi sabahı cuma bültenini anlık kur gibi gösteren
+         bir satır, sitenin veri dürüstlüğü kuralının tam karşısında. */
+      caption:
+        locale === "tr"
+          ? `TCMB Kuru · ${formatEtDateCompact(usdTry.data.bulletinDate, locale)}`
+          : `TCMB Rate · ${formatEtDateCompact(usdTry.data.bulletinDate, locale)}`,
       items: [
         {
           label: "USD/TRY",
