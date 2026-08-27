@@ -165,14 +165,14 @@ function IntroLine({ t }: { t: Dictionary }) {
         {t.stories.bridge}
         <Link
           href="/haberler"
-          className="-my-2 inline-flex min-h-8 items-center py-2 font-semibold text-primary transition-colors hover:text-primary-hover"
+          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 font-semibold text-primary transition-colors hover:text-primary-hover"
         >
           {t.nav.news}
         </Link>
         <span aria-hidden>·</span>
         <Link
           href="/rehber"
-          className="-my-2 inline-flex min-h-8 items-center py-2 font-semibold text-primary transition-colors hover:text-primary-hover"
+          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 font-semibold text-primary transition-colors hover:text-primary-hover"
         >
           {t.nav.guide}
         </Link>

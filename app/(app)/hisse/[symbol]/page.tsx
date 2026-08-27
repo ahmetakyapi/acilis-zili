@@ -478,7 +478,7 @@ async function StockHeader({
                 href={`/giris?devam=${encodeURIComponent(`/hisse/${symbol}`)}`}
                 aria-label={t.stock.addToWatchlist}
                 title={t.stock.addToWatchlist}
-                className="inline-flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-surface-elevated hover:text-soft"
+                className="tap-44 inline-flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-surface-elevated hover:text-soft"
               >
                 <Heart weight="duotone" size={17} />
               </Link>
@@ -577,7 +577,7 @@ async function StockHeader({
           )}
 
           <DataStamp
-      labels={t.data}
+            labels={t.data}
             source={quoteResult.source}
             at={quoteResult.fetchedAt}
             stale={quoteResult.stale}
@@ -984,7 +984,7 @@ async function ProfileCard({
                 href={websiteHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="-my-2 block min-h-8 truncate py-2 text-primary hover:underline"
+                className="tap-44 -my-2 block min-h-8 truncate py-2 text-primary hover:underline"
               >
                 {websiteHref.replace(/^https?:\/\/(www\.)?/, "")}
               </a>
@@ -993,7 +993,7 @@ async function ProfileCard({
         )}
       </dl>
       <DataStamp
-      labels={t.data}
+        labels={t.data}
         source={result.source}
         at={result.fetchedAt}
         stale={result.stale}

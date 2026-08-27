@@ -76,7 +76,11 @@ export async function RecentAnalysesStrip({
                 href={analysisHref(row.symbol, row.period)}
                 prefetch={false}
                 title={row.headline}
-                className="flex items-center gap-2 rounded-full border border-line bg-surface-solid py-1 pl-1 pr-2.5 transition-colors hover:border-line-strong"
+                /* Çip 32 piksel yüksekliğinde ve yatay kayan bir şeridin
+                   içinde: parmak kaydırırken nişan alıyor, en zor hedef
+                   biçimi. `.tap-44` görünür hapı büyütmeden alanı açıyor —
+                   şerit tek satır kalmalı, gerekçe yukarıda. */
+                className="tap-44 flex items-center gap-2 rounded-full border border-line bg-surface-solid py-1 pl-1 pr-2.5 transition-colors hover:border-line-strong"
               >
                 {/* Yuvarlak: karo hap biçimli bir çipin içinde. */}
                 <LogoTile

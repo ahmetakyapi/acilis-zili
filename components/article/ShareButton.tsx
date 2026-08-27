@@ -155,7 +155,7 @@ export function ShareButton({
           /* Yanındaki "Mercek'e Dön" bağlantısıyla aynı ağırlıkta duruyor:
              ikisi de yazının çevresindeki sessiz denetimler, hiçbiri
              metinden önce görülmemeli. Dokunma hedefi yine de 32px. */
-          "-my-2 inline-flex min-h-8 items-center gap-1.5 rounded-md py-2 pl-2 pr-2.5 text-small font-semibold transition-colors",
+          "tap-44 -my-2 inline-flex min-h-8 items-center gap-1.5 rounded-md py-2 pl-2 pr-2.5 text-small font-semibold transition-colors",
           copied
             ? "text-up"
             : "text-muted hover:bg-primary-tint hover:text-primary",

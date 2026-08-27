@@ -502,14 +502,14 @@ export default async function AnalysisDetailPage(
       >
         <Link
           href="/bilancolar/analizler"
-          className="-my-2 inline-flex min-h-8 items-center py-2 hover:text-primary"
+          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 hover:text-primary"
         >
           {t.analysis.title}
         </Link>
         <span aria-hidden>›</span>
         <Link
           href={`/bilancolar/analizler?filtre=${group.key}`}
-          className="-my-2 inline-flex min-h-8 items-center py-2 hover:text-primary"
+          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 hover:text-primary"
         >
           {sectorGroupLabel(group, locale)}
         </Link>
@@ -553,7 +553,7 @@ export default async function AnalysisDetailPage(
                   </h1>
                   <Link
                     href={`/hisse/${symbol}`}
-                    className="rounded-md border border-primary-faint bg-primary-wash px-2 py-[3px] text-tiny font-bold text-primary-ink hover:bg-primary-tint"
+                    className="tap-44 rounded-md border border-primary-faint bg-primary-wash px-2 py-[3px] text-tiny font-bold text-primary-ink hover:bg-primary-tint"
                   >
                     {symbol}
                     {row.exchange ? ` · ${row.exchange}` : ""}
@@ -1180,7 +1180,16 @@ export default async function AnalysisDetailPage(
                        satır aralığı 4; telefonda alt alta dizilen üç-dört
                        DIŞ bağlantıda yanlışına basmak neredeyse kaçınılmaz.
                        Negatif kenar boşluğu satır yüksekliğini bozmadan
-                       hedefi 32 piksele çıkarıyor (PanelLink deseni). */
+                       hedefi 32 piksele çıkarıyor (PanelLink deseni).
+
+                       32'DE DURUYOR, `.tap-44` ALMIYOR. Bunlar bir cümlenin
+                       içinde " · " ile ayrılmış SATIR İÇİ bağlantılar ve
+                       satırlara sarıyorlar; 44 piksele genişletilince her
+                       biri bir alttaki satırın bağlantısının üstüne biniyor.
+                       Ölçüldü: beş bağlantının beşi de komşusunun dokunma
+                       hedefini kapıyordu. Satır içi bağlantı zaten hedef
+                       ölçüsü kuralının istisnası (WCAG 2.5.8); burada doğru
+                       araç sözde öğe değil, aralarındaki mesafe. */
                     className="-my-2 inline-flex min-h-8 items-center py-2 text-primary hover:underline"
                   >
                     {source.label}

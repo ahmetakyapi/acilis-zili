@@ -165,7 +165,7 @@ export function CompareAdd({
           type="button"
           onClick={reset}
           aria-label={labels.cancel}
-          className="-mr-1 flex size-7 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-strong"
+          className="tap-44 -mr-1 flex size-7 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-strong"
         >
           <X size={13} />
         </button>

@@ -66,7 +66,7 @@ function HeartButton({ active, label }: { active: boolean; label: string }) {
          boş mu olduğu yalnızca görene bilgi veriyordu. */
       aria-pressed={active}
       className={cn(
-        "inline-flex size-8 items-center justify-center rounded-(--radius-sm) transition-colors",
+        "tap-44 inline-flex size-8 items-center justify-center rounded-(--radius-sm) transition-colors",
         active
           ? "text-primary-ink hover:bg-primary-wash"
           : "text-muted hover:bg-surface-elevated hover:text-soft",

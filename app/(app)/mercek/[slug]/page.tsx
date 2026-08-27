@@ -131,7 +131,7 @@ async function MoreStories({
       </ul>
       <Link
         href="/mercek"
-        className="-my-2 inline-flex w-fit min-h-8 items-center py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
+        className="tap-44 -my-2 inline-flex w-fit min-h-8 items-center py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
       >
         {t.stories.backToList}
       </Link>
@@ -159,7 +159,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
       <div className="flex items-center justify-between gap-3">
         <Link
           href="/mercek"
-          className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
+          className="tap-44 -my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
         >
           <ArrowLeft weight="bold" size={13} />
           {t.stories.backToList}

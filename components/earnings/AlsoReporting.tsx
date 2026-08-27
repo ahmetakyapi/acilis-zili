@@ -97,7 +97,7 @@ export function AlsoReporting({
                           // min-h-8: sembol çipleri 26px'lik dokunma hedefi
                           // bırakıyordu; sık dizilmiş bir ızgarada parmakla
                           // komşusuna basmak kolaydı.
-                          "inline-flex min-h-8 items-center rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold transition-colors hover:border-line-strong hover:bg-primary-tint hover:text-primary",
+                          "tap-44 inline-flex min-h-8 items-center rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold transition-colors hover:border-line-strong hover:bg-primary-tint hover:text-primary",
                           item.watched
                             ? "border-primary-faint bg-primary-wash text-primary-ink"
                             : "text-body",

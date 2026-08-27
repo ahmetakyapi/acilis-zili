@@ -508,7 +508,7 @@ export function CompareStrip({
               <span className="flex min-w-0 flex-1 flex-col">
                 <Link
                   href={`/hisse/${row.symbol}`}
-                  className="numeral w-fit text-base font-bold leading-tight text-strong transition-colors hover:text-primary"
+                  className="tap-44 numeral w-fit text-base font-bold leading-tight text-strong transition-colors hover:text-primary"
                 >
                   {row.symbol}
                 </Link>

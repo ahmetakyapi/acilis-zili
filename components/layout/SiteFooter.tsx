@@ -54,7 +54,9 @@ export async function SiteFooter() {
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
         {/* ---- Künye ---- */}
         <div className="flex flex-col gap-3">
-          <Link href="/" className="flex w-fit items-center gap-2.5">
+          {/* Marka bağlantısı 34 piksel — zil işaretinin kendi boyu.
+              Genişletme görünen künyeye dokunmuyor. */}
+          <Link href="/" className="tap-44 flex w-fit items-center gap-2.5">
             <BellMark size={34} />
             <span className="display-ink display-ink-tight text-read font-bold tracking-[-0.03em]">
               {t.brand.name}
@@ -111,12 +113,15 @@ export async function SiteFooter() {
            olmak. Artık aynı satırda küçük bir imza: ikon + ad. */}
       {/* 11.5px'lik satırda bağlantılar 17px yüksekliğinde bir dokunma hedefi
           bırakıyordu; dolgu ikisini de 32px'e çıkarır, negatif margin satırın
-          kendi yüksekliğini korur. */}
+          kendi yüksekliğini korur. `.tap-44` telefonda kalan 12 pikseli de
+          kapatıyor: burası sayfanın en dibi, başparmağın en zor nişan aldığı
+          yer ve ölçüldüğünde 33 piksel çıkıyordu — sitenin kendi standardı
+          44. Görünür satır aynı kalıyor. */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-tiny text-muted">
         <span>{t.footer.copyright}</span>
         <Link
           href="/kvkk"
-          className="-my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"
+          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"
         >
           {t.footer.privacy}
         </Link>
@@ -125,7 +130,7 @@ export async function SiteFooter() {
           href={GITHUB_URL}
           target="_blank"
           rel="noreferrer noopener"
-          className="-my-2 inline-flex min-h-8 items-center gap-1.5 py-2 transition-colors hover:text-primary sm:ml-auto"
+          className="tap-44 -my-2 inline-flex min-h-8 items-center gap-1.5 py-2 transition-colors hover:text-primary sm:ml-auto"
         >
           <GithubLogo weight="fill" size={14} aria-hidden />
           {t.footer.builtBy}

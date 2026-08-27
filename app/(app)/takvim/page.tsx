@@ -389,7 +389,7 @@ export default async function CalendarPage(
                         {event.importance === "high" && (
                           <a
                             href={`/api/takvim?tip=olay&slug=${event.slug}`}
-                            className="-my-1 inline-flex min-h-8 w-fit items-center gap-1 rounded-full border border-line px-2.5 py-1 text-nano font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary"
+                            className="tap-44 -my-1 inline-flex min-h-8 w-fit items-center gap-1 rounded-full border border-line px-2.5 py-1 text-nano font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary"
                           >
                             <CalendarPlus weight="duotone" size={13} aria-hidden />
                             {t.earnings.addToCalendar}

@@ -114,10 +114,15 @@ export function PanelLink({
       className={cn(
         /* -my-2 py-2: metnin kendisi 16px yüksekliğinde bir dokunma hedefi
            bırakıyordu. Dolgu tıklama alanını 32px'e çıkarır, negatif margin
-           de satır yüksekliğini olduğu gibi bırakır — düzen kaymaz. */
-        /* `whitespace-nowrap`: "Tümünü Gör" iki kelime ve dar bir başlık
-           satırında "Tümünü" / "Gör" diye bölünüyordu. */
-        "-my-2 inline-flex min-h-8 items-center whitespace-nowrap py-2 text-xs text-primary transition-colors hover:text-primary-hover",
+           de satır yüksekliğini olduğu gibi bırakır — düzen kaymaz.
+
+           32 PİKSEL SİTENİN KENDİ STANDARDININ ALTINDAYDI. Bu bağlantı on
+           yediden fazla yerde kullanılıyor ve çoğunda bir panel başlığının
+           sağ ucunda, yani parmağın en zor nişan aldığı yerde duruyor.
+           `.tap-44` telefonda hedefi 44'e çıkarıyor; görünür ölçü ve düzen
+           aynı kalıyor. Negatif margin'i büyütmek de aynı sayıyı verirdi ama
+           hedefi başlığın kendi satırının üstüne taşırırdı. */
+        "tap-44 -my-2 inline-flex min-h-8 items-center whitespace-nowrap py-2 text-xs text-primary transition-colors hover:text-primary-hover",
         className,
       )}
     >
@@ -762,11 +767,16 @@ const BUTTON_VARIANTS = {
    dokunma hedefi 36px ile 44px arasında değişiyordu. Form gönderme
    düğmelerinin girdi alanlarıyla aynı yükseklikte (44px) olması gerekiyor;
    o ölçü artık `md`nin yanında kendi basamağı. */
+/* `md` telefonda zaten 44 (`min-h-11`); `sm` ve `icon` ise 32 ve 36
+   pikselde kalıyordu ve ikisi de gerçek eylem taşıyor — boş durumdaki
+   "Giriş Yap", panel köşelerindeki ikon düğmeleri. `.tap-44` görünür ölçüyü
+   değiştirmeden hedefi açıyor: bir buton ölçüsü tipografik bir karar, hedef
+   ise ergonomik; ikisi aynı sayı olmak zorunda değil. */
 const BUTTON_SIZES = {
-  sm: "h-8 px-3 text-xs",
+  sm: "tap-44 h-8 px-3 text-xs",
   md: "h-10 px-4 text-base min-h-11 sm:min-h-0 sm:h-10",
   lg: "h-11 px-4 text-read",
-  icon: "size-9 p-0",
+  icon: "tap-44 size-9 p-0",
 } as const;
 
 /**

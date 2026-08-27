@@ -62,7 +62,7 @@ export async function ArticleChart({
       <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 border-b border-line px-4 pb-3 pt-4 sm:px-5">
         <Link
           href={`/hisse/${symbol}`}
-          className="numeral -my-1.5 inline-flex min-h-8 items-center py-1.5 text-read font-bold tracking-[-0.02em] text-strong transition-colors hover:text-primary"
+          className="tap-44 numeral -my-1.5 inline-flex min-h-8 items-center py-1.5 text-read font-bold tracking-[-0.02em] text-strong transition-colors hover:text-primary"
         >
           {symbol}
         </Link>

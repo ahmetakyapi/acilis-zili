@@ -1068,6 +1068,51 @@
 }
 
 /* --------------------------------------------------------------------------
+   Dokunma hedefi — görünür ölçüyü büyütmeden 44 piksel
+   -------------------------------------------------------------------------- */
+
+/* Telefonda parmak yaklaşık 44 piksellik bir alana basıyor; sitenin standardı
+   da bu. Ama her hedefi 44 piksel YÜKSEKLİĞİNDE çizmek mümkün değil: bir
+   panel başlığındaki "Tümünü Gör" bağlantısı ya da takvim satırındaki analiz
+   rozeti o kadar büyütülürse satırı şişirir ve düzeni bozar.
+
+   Ayrım şurada: görünür ölçü tipografinin işi, DOKUNMA ALANI ise ayrı bir
+   ölçü. Sözde öğe ikincisini birincisine dokunmadan büyütüyor — hedef
+   genişliyor, düzende hiçbir şey kımıldamıyor.
+
+   NEDEN ÖNEMLİ: bu hedeflerin çoğu, yüzeyi kaplayan BAŞKA bir bağlantı
+   taşıyan kartların içinde duruyor. Iskalayan dokunuş orada boşa gitmiyor,
+   yanlış ekrana gidiyor — takvimdeki analiz rozetinin dersi buydu. Bir
+   hedefin ıskalanınca sessiz kalması kusurdur; başka bir yere götürmesi hata.
+
+   Yalnızca DİKEY genişletir. Yatayda taşmak yan yana duran çiplerin alanını
+   yerdi; zaten dar olan hedefler genişlik değil yükseklik sorunu yaşıyor.
+
+   640 pikselin üstünde kapalı: imleç hassas, orada genişletme yalnızca komşu
+   satırların üstüne taşar. Kullanan öğe `position` taşımıyorsa buradan alır.
+
+   Kapsayıcısı `overflow: hidden` olan bir öğede genişletme KIRPILIR; öyle bir
+   yerde bunun yerine gerçek dolgu vermek gerekir. */
+.tap-44 {
+  position: relative;
+}
+
+.tap-44::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 44px;
+  translate: 0 -50%;
+}
+
+@media (min-width: 640px) {
+  .tap-44::after {
+    content: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
    Erişilebilirlik
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {

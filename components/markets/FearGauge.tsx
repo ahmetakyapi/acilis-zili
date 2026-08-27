@@ -154,7 +154,7 @@ export async function FearGauge({
 
       <Link
         href="/rehber/volatilite"
-        className="-my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
+        className="tap-44 -my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
       >
         {labels.guideCta}
         <ArrowRight weight="bold" size={12} />

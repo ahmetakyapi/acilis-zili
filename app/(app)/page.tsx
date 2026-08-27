@@ -762,7 +762,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
         })}
       </div>
       <DataStamp
-      labels={t.data}
+        labels={t.data}
         source={result.source}
         at={result.fetchedAt}
         stale={result.stale}
