@@ -128,7 +128,6 @@ export default async function WatchedEarningsPage(
     <div className="flex flex-col gap-6">
       <PageHeader
         title={t.analysis.title}
-        subtitle={t.analysis.subtitle}
         action={
           /* Aralık künyesi takvim sekmesindekiyle aynı — iki ekran aynı
              segmenti kullanıyor, biri söyleyip öteki susmamalı. */

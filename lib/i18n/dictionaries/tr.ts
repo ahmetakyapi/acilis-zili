@@ -49,9 +49,6 @@ const tr = {
     bottomNav: "Alt gezinme",
     skipToContent: "İçeriğe Geç",
     groupMarket: "Piyasa",
-    groupFollow: "Takip",
-    clockNy: "New York",
-    clockIst: "İstanbul",
     signIn: "Giriş Yap",
     signUp: "Kayıt Ol",
     signOut: "Çıkış Yap",
@@ -68,22 +65,17 @@ const tr = {
     save: "Kaydet",
     cancel: "İptal",
     delete: "Sil",
-    edit: "Düzenle",
     add: "Ekle",
     close: "Kapat",
     back: "Geri",
     all: "Tümü",
-    more: "Daha Fazla",
     less: "Daha Az",
     showAll: "Tümünü Gör",
     breadcrumb: "Sayfa Yolu",
     source: "Kaynak",
-    updated: "Güncellendi",
     today: "Bugün",
     tomorrow: "Yarın",
-    yesterday: "Dün",
     thisWeek: "Bu Hafta",
-    thisMonth: "Bu Ay",
     empty: "Burada henüz bir şey yok",
   },
 
@@ -111,14 +103,10 @@ const tr = {
     afterHours: "Kapanış Sonrası",
     holiday: "Resmî Tatil",
     weekend: "Hafta Sonu",
-    opensIn: "Açılışa",
-    closesIn: "Kapanışa",
-    nextSession: "Sonraki Seans",
     live: "Canlı",
     delayed: "Gecikmeli",
     lastPrice: "Son Fiyat",
     change: "Değişim",
-    open_: "Açılış",
     prevClose: "Önceki Kapanış",
     volume: "Hacim",
     marketCap: "Piyasa Değeri",
@@ -128,7 +116,6 @@ const tr = {
     title: "Günün Seyri",
     now: "Şimdi",
     bell: "Açılış Zili",
-    closingBell: "Kapanış Zili",
     // Şerit ekseninde kısa biçim kullanılır — "AÇILIŞ ZİLİ" komşu etiketlere girer.
     openShort: "Açılış",
     closeShort: "Kapanış",
@@ -200,7 +187,6 @@ const tr = {
        çalışıyor ve aynı çözüm arşiv sayacında (`stories.showing`) zaten
        kullanılıyor. */
     earningsCount: "{total} şirketin {n} tanesi",
-    earningsEmpty: "Takip ettiğin şirketlerden bugün bilanço açıklayan yok",
     watchlistSummary: "Favorilerin",
     watchlistEmpty: "Henüz favori eklemedin.",
     // Ana sayfadaki "son yazılanlar" bloğu
@@ -226,15 +212,9 @@ const tr = {
        bilmesi gereken şey: yön güvenilir, yüzde değil. */
     worldMarketsHint:
       "ABD'de dolar bazında işlem gören MSCI ülke fonlarının günlük değişimi — yönü yerel endeksle aynı, yüzdesi kur ve seans farkıyla ayrışabilir.",
-    greetingMorning: "Günaydın",
-    greetingDay: "İyi Günler",
-    greetingEvening: "İyi Akşamlar",
     // Sayının ARDINDAN okunur: "1g 15sa 31dk açılış ziline kaldı".
     untilBell: "Açılış Ziline Kaldı",
     untilClose: "Kapanış Ziline Kaldı",
-    unitMinutes: "Dakika",
-    unitHours: "Saat",
-    unitDays: "Gün",
     // Geri sayımın kısa birimleri — "18 dk 42 sn"
     unitD: "g",
     unitH: "sa",
@@ -269,7 +249,6 @@ const tr = {
     month: "Ay",
     empty: "Bu aralıkta planlanmış veri açıklaması yok",
     timesNote: "Saatler Türkiye saatiyle · altında New York (NY)",
-    localTime: "Yerel saatin",
     // Gün başlığındaki uzaklık rozeti: "Bugün" · "Yarın" · "3 gün sonra"
     today: "Bugün",
     tomorrow: "Yarın",
@@ -285,7 +264,6 @@ const tr = {
     emptyWatchlistHint:
       "Takip ettiğin şirketlerden hiçbiri bu tarih aralığında sonuç açıklamıyor.",
     clearFilter: "Filtreyi Kaldır",
-    title: "Bilanço Takvimi",
     subtitle: "Şirketlerin finansal sonuç açıklama tarihleri",
     beforeOpen: "Açılış Öncesi",
     afterClose: "Kapanış Sonrası",
@@ -297,7 +275,6 @@ const tr = {
     revenueActual: "Açıklanan Gelir",
     surprise: "Sapma",
     quarter: "Çeyrek",
-    thisFortnight: "Önümüzdeki İki Hafta",
     timing: "Zamanlama",
     period: "Dönem",
     reportDate: "Rapor Tarihi",
@@ -305,7 +282,6 @@ const tr = {
     epsFull: "EPS (Hisse Başına Kâr)",
     epsExplainer:
       "şirketin çeyrek boyunca kazandığı net kârın hisse sayısına bölünmüş hâlidir — bir hissenin o dönemde ne kadar kâr ürettiğini gösterir. Analistler her çeyrek için bir beklenti açıklar; gerçekleşen rakamın bu beklentinin ne kadar üstünde veya altında kaldığı sapmadır. Gelir (ciro) ise kârdan önceki toplam satıştır: piyasa çoğu zaman kâr beklentisini tutturup gelirde beklentinin altında kalan şirketin hissesini de satar, bu yüzden ikisi birlikte okunur.",
-    onlyWatchlist: "Sadece Favorilerim",
     spotlight: "Öne Çıkanlar",
     addToCalendar: "Takvime Ekle",
     alsoReporting: "Diğer Açıklayanlar",
@@ -338,8 +314,6 @@ const tr = {
   /* Bilanço analizleri — açıklanmış çeyreğin okunmuş hâli. */
   analysis: {
     title: "Bilançolar",
-    subtitle:
-      "Takvimden bilançoları izle; açıklananlar için özet ve detaylı değerlendirme Analizler'de.",
     listTitle: "Son Bilanço Analizleri",
     /* Paylaşım kartının üst künyesi — kart sabit Türkçe basıyordu. */
     ogEyebrow: "Bilanço Analizi",
@@ -350,12 +324,10 @@ const tr = {
        olduğu için ileriye bakan takvimde kendiliğinden görünmüyorlar. */
     recentStrip: "Son Yazılan Analizler",
     symbolPanelAll: "Tüm Analizler →",
-    todaysAnalysis: "Günün Analizi",
     thisWeekAnalyzed: "Bu Hafta Analiz Edilenler",
     upcomingEarnings: "Yaklaşan Bilançolar",
     goToCalendar: "Takvime Git →",
     showAll: "Tümünü Gör →",
-    loadMore: "Daha Fazla Yükle",
     /* Rozetin kuyruğundaki bağlantı. Bir süre "Karne →" yazıyordu ve o
        kelime artık var olmayan bir PNG'yi işaret ediyordu — bağlantının
        gittiği yer baştan beri analiz sayfasıydı. */
@@ -368,7 +340,6 @@ const tr = {
     verdictLabel: "Genel Görüş",
     /* Paylaşım kartındaki hedef fiyat çipi — sabit "Hedef" yazıyordu. */
     ogTarget: "Hedef",
-    scoreOutOf: "/ 100",
 
     /* Tablo 1180px ve kendi kabında yatay kayıyor; kap klavyeyle
        odaklanabilir olduğu için bir adı olmak zorunda. */
@@ -486,16 +457,11 @@ const tr = {
     disclaimer:
       "Bu analiz şirketin resmi bilanço bülteni ve kazanç çağrısına dayanır. Yatırım Tavsiyesi Değildir.",
     sourcesLabel: "Kaynaklar",
-    marketExpectation: "Piyasa Beklentisi",
   },
 
   companies: {
     title: "Şirketler",
     subtitle: "Takip edilen şirketler — sektör, piyasa değeri ve hacim",
-    directory: "Dizin",
-    sortBy: "Sırala",
-    byCap: "Piyasa Değeri",
-    byVolume: "Hacim",
     sector: "Sektör",
     allSectors: "Tüm Sektörler",
     company: "Şirket",
@@ -516,7 +482,6 @@ const tr = {
 
   stock: {
     profile: "Şirket Profili",
-    about: "Şirket Hakkında",
     sector: "Sektör",
     industry: "Alt Sektör",
     exchange: "Borsa",
@@ -552,7 +517,6 @@ const tr = {
     pastEarnings: "Geçmiş Bilançolar",
     nextEarnings: "Yaklaşan Bilanço",
     addToWatchlist: "Favorilere Ekle",
-    inWatchlist: "Favorilerde",
     removeFromWatchlist: "Favorilerden Çıkar",
     /* Künye açıklaması ŞABLON. Sabit Türkçe yazılmıştı ve dil ne olursa
        olsun "Fiyat, grafik, bilanço geçmişi ve haberler." gidiyordu — aynı
@@ -572,7 +536,6 @@ const tr = {
     fundKindLabel: "Borsa Yatırım Fonu (ETF)",
     fundTracks: "İzlediği Piyasa",
     fundIssuer: "Fon Yöneticisi",
-    fundExchange: "İşlem Gördüğü Borsa",
     fundNoteCountry:
       "Bu bir ABD borsa yatırım fonudur; ilgili ülkenin endeksinin kendisi değildir. Dolar cinsinden ve ABD seansında işlem görür — yerel endeksle aynı yönü gösterir, ama kur farkı ve seans kayması yüzünden yüzdeler birebir tutmaz.",
     fundNoteIndex:
@@ -673,7 +636,6 @@ const tr = {
     emptyAllHint: "İlk listeni oluştur, sonra izlemek istediğin sembolleri ekle.",
     color: "Renk",
     note: "Not",
-    notePlaceholder: "Bu sembol hakkında kendine bir not bırak",
     moveUp: "Yukarı Taşı",
     dragHint: "Sürükleyerek sırala",
     moveDown: "Aşağı Taşı",
@@ -822,7 +784,6 @@ const tr = {
     contributionHint:
       "Katkı, hissenin bugün endeksi kaç puan yukarı ya da aşağı taşıdığını gösterir. Dow fiyat ağırlıklı bir endekstir: her hissenin dolar bazındaki değişimi endeksin bölenine oranlanarak hesaplanır.",
     constituents: "Endeks Bileşenleri",
-    listedCompanies: "Şirket",
     asOf: "Liste Kompozisyonu",
   },
 
@@ -831,14 +792,9 @@ const tr = {
     subtitle: "Piyasa ve şirket haberleri",
     all: "Tümü",
     general: "Genel",
-    forex: "Döviz",
-    crypto: "Kripto",
-    merger: "Birleşme",
     empty: "Şu an gösterilecek haber yok.",
-    readMore: "Devamını Oku",
     readAtSource: "Kaynakta Oku",
     translated: "Türkçeye Çevrildi",
-    originalTitle: "Orijinal Başlık",
     notFound: "Haber bulunamadı",
     notFoundHint: "Bu haber kaldırılmış olabilir.",
     relatedSymbols: "Haberde Geçen Şirketler",
@@ -846,9 +802,6 @@ const tr = {
     fullStoryTitle: "Haberin Tamamı Kaynağında",
     fullStoryHint:
       "Burada gördüğün özet, haber sağlayıcısından geliyor; metnin devamı yayıncının sitesinde",
-    sentiment: "Ton",
-    positive: "Olumlu",
-    negative: "Olumsuz",
     neutral: "Nötr",
   },
 
@@ -864,7 +817,6 @@ const tr = {
     thisWeek: "Bu Hafta",
     periodDaily: "Günlük",
     periodWeekly: "Haftalık",
-    weekOf: "{date} Haftası",
     /* Haftalık bülten iki soruyu birlikte cevaplıyor ve bu, ekranda
        söylenmezse anlaşılmıyor: kayıt biten haftanın adına açılıyor ama
        içinde önümüzdeki haftanın takvimi de var. */
@@ -896,8 +848,11 @@ const tr = {
     /* "Yalnızca Bunlar" Türkçede kurulmayan bir kalıptı — işaret zamiri
        neyi gösterdiğini söylemiyordu. Bağlantı konunun kendi sayfasını
        açıyor; adı da onu söylüyor. */
-    /* Mikro künye — konum bilgisi, başlık değil; cümle düzeninde. */
-    curriculumRange: "müfredatın {from}–{to}. yazısı",
+    /* Bir dönem "mikro künye, cümle düzeninde" diye muaf tutuluyordu.
+       CLAUDE.md o muafiyeti gerekçesiyle geri aldı: aynı ekranda Title Case
+       bir rozetin altında küçük harfle başlayan bir künye duruyordu ve sonuç
+       tutarsızlıktı. Cümle olmayan her metin Title Case. */
+    curriculumRange: "Müfredatın {from}–{to}. Yazısı",
     onlyThis: "Konuyu Aç",
     /* Müfredat şeridi — liste sayfasının girişindeki dört konu karosu. */
     curriculum: "Nereden Başlamalı",
@@ -911,9 +866,6 @@ const tr = {
     prevArticle: "Önceki Yazı",
     nextArticle: "Sıradaki Yazı",
     contextLabel: "Bunu Anlamak İçin",
-    homeTitle: "Rehber ve Mercek",
-    homeHint:
-      "Kavramları örnekleriyle anlatan yazılar ve piyasada yaşanan olayların ayrıntılı anlatımı.",
   },
 
   stories: {
@@ -933,14 +885,8 @@ const tr = {
     howShort: "doğrulanmış rakamlar, künyede kaynaklar",
     rhythmShort: "her gün değil, olay olduğunda",
     whatTitle: "Ne Yazılır",
-    whatBody:
-      "Bir fonun kapanması, bir satın almanın bozulması, bir tezin piyasada sınanıp çökmesi — altı ay sonra da merak edilecek olaylar.",
     howTitle: "Nasıl Yazılır",
-    howBody:
-      "Olay baştan sona anlatılır, mekanizması adım adım bir hesapla açıklanır. Her rakam doğrulanır, kaynaklar künyede sayılır.",
     rhythmTitle: "Ne Sıklıkla",
-    rhythmBody:
-      "Her gün değil. Sıradan bir seans mercek konusu değildir; anlatmaya değer bir olay yaşandığında yayımlanır.",
     bridge: "Günlük haber akışı ve kavram anlatımları ayrı bölümlerde:",
     moreCompaniesOne: "+{count} Şirket Daha",
     moreCompaniesMany: "+{count} Şirket Daha",
@@ -977,20 +923,10 @@ const tr = {
   macro: {
     title: "Makro Göstergeler",
     subtitle: "Enflasyon, istihdam ve faiz verileri",
-    latest: "Son Değer",
     previous: "Önceki",
-    period: "Dönem",
     nextRelease: "Sonraki Açıklama",
     noNextRelease: "Henüz açıklanmadı",
     unchanged: "Değişmedi",
-    series: {
-      cpi: "TÜFE (Yıllık)",
-      coreCpi: "Çekirdek TÜFE (Yıllık)",
-      unemployment: "İşsizlik Oranı",
-      fedFunds: "Fed Politika Faizi",
-      pce: "Çekirdek PCE (Yıllık)",
-      payrolls: "Tarım Dışı İstihdam",
-    },
   },
 
   auth: {
@@ -1056,7 +992,6 @@ const tr = {
     themeLight: "Açık",
     themeDark: "Koyu",
     account: "Hesap",
-    saved: "Kaydedildi",
     privacyTitle: "Verilerin",
     privacyHint:
       "Hangi verini neden sakladığımız, nereye gittiği ve haklarının tamamı KVKK sayfasında yazılı.",
@@ -1124,9 +1059,7 @@ const tr = {
     sectionAccount: "Hesap",
     briefArchive: "Bülten Arşivi",
     privacy: "KVKK ve Gizlilik",
-    sourceCode: "Kaynak Kodu",
     builtBy: "Ahmet Akyapı",
-    builtByHint: "GitHub",
     copyright: "© 2026 Açılış Zili",
     disclaimer: "Yatırım Tavsiyesi Değildir",
   },
@@ -1140,12 +1073,9 @@ const tr = {
   },
 
   data: {
-    sourceLabel: "Kaynak",
     stale: "Bu veri güncel olmayabilir",
     failed: "Veri alınamadı",
     failedHint: "Sağlayıcıya ulaşılamıyor. Son bilinen değer gösteriliyor.",
-    lastKnown: "Son Bilinen Değer",
-    feedTape: "Konsolide Tape · 15 Dakika Gecikmeli",
     delayedNote:
       "Fiyatlar konsolide veri akışından (SIP) gelir ve 15 dakika gecikmelidir. Gün içi hacim, açılış-en yüksek-en düşük ve önceki kapanış bütün borsaların toplamıdır.",
     /* Kaynak adları SÖZLÜKTE: "önbellek" ve "takvim" sabit bir tablodan
@@ -1157,7 +1087,7 @@ const tr = {
        hareketini, görmeyen son kapanışın hareketini gösteriyor. İkisi de
        "son işleme göre değişim" ama referans günleri farklı — satır satır
        aynı sütunda durduklarında bunu söylemek gerekiyor. */
-    extendedNote: "seans dışı: değişim her sembolün son işlemine göre",
+    extendedNote: "Seans Dışı: Değişim Her Sembolün Son İşlemine Göre",
     sourceCache: "Önbellek",
     sourceSeed: "Takvim",
     /* CÜMLE TAM YAZILIYOR, parça parça birleştirilmiyor. Damga

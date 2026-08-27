@@ -39,9 +39,6 @@ const en: typeof tr = {
     bottomNav: "Bottom navigation",
     skipToContent: "Skip to Content",
     groupMarket: "Market",
-    groupFollow: "Following",
-    clockNy: "New York",
-    clockIst: "Istanbul",
     signIn: "Sign In",
     signUp: "Sign Up",
     signOut: "Sign Out",
@@ -58,22 +55,17 @@ const en: typeof tr = {
     save: "Save",
     cancel: "Cancel",
     delete: "Delete",
-    edit: "Edit",
     add: "Add",
     close: "Close",
     back: "Back",
     all: "All",
-    more: "More",
     less: "Less",
     showAll: "Show All",
     breadcrumb: "Breadcrumb",
     source: "Source",
-    updated: "Updated",
     today: "Today",
     tomorrow: "Tomorrow",
-    yesterday: "Yesterday",
     thisWeek: "This Week",
-    thisMonth: "This Month",
     empty: "Nothing here yet",
   },
 
@@ -95,14 +87,10 @@ const en: typeof tr = {
     afterHours: "After Hours",
     holiday: "Market Holiday",
     weekend: "Weekend",
-    opensIn: "Opens in",
-    closesIn: "Closes in",
-    nextSession: "Next Session",
     live: "Live",
     delayed: "Delayed",
     lastPrice: "Last Price",
     change: "Change",
-    open_: "Open",
     prevClose: "Previous Close",
     volume: "Volume",
     marketCap: "Market Cap",
@@ -112,7 +100,6 @@ const en: typeof tr = {
     title: "The Day Ahead",
     now: "Now",
     bell: "Opening Bell",
-    closingBell: "Closing Bell",
     openShort: "Open",
     closeShort: "Close",
     earningsNote: "Earnings",
@@ -150,7 +137,6 @@ const en: typeof tr = {
     scheduleEmpty: "No economic releases scheduled for today.",
     earningsToday: "Reporting Today",
     earningsCount: "{n} of {total} reporting",
-    earningsEmpty: "None of the companies you follow report today",
     watchlistSummary: "Your Watchlist",
     watchlistEmpty: "You haven't added any symbols yet.",
     latestAnalyses: "Latest Earnings Analyses",
@@ -162,15 +148,9 @@ const en: typeof tr = {
     worldMarkets: "World Markets",
     worldMarketsHint:
       "Daily moves of MSCI country funds trading in US dollars — the direction matches the local index, the percentage can differ with currency and session hours.",
-    greetingMorning: "Good Morning",
-    greetingDay: "Good Afternoon",
-    greetingEvening: "Good Evening",
     // Reads after the number: "1d 15h 31m left until the opening bell".
     untilBell: "Left Until the Opening Bell",
     untilClose: "Left Until the Closing Bell",
-    unitMinutes: "Minutes",
-    unitHours: "Hours",
-    unitDays: "Days",
     unitD: "d",
     unitH: "h",
     unitM: "m",
@@ -200,7 +180,6 @@ const en: typeof tr = {
     month: "Month",
     empty: "No releases scheduled in this range",
     timesNote: "Times in New York (ET) · Turkish time below",
-    localTime: "Your local time",
     today: "Today",
     tomorrow: "Tomorrow",
     daysAway: "Days Away",
@@ -214,7 +193,6 @@ const en: typeof tr = {
     emptyWatchlistHint:
       "None of the companies you follow report in this date range.",
     clearFilter: "Clear Filter",
-    title: "Earnings Calendar",
     subtitle: "When companies report their results",
     beforeOpen: "Before Open",
     afterClose: "After Close",
@@ -226,7 +204,6 @@ const en: typeof tr = {
     revenueActual: "Reported Revenue",
     surprise: "Surprise",
     quarter: "Quarter",
-    thisFortnight: "Next Two Weeks",
     timing: "Timing",
     period: "Period",
     reportDate: "Report Date",
@@ -234,7 +211,6 @@ const en: typeof tr = {
     epsFull: "EPS (Earnings Per Share)",
     epsExplainer:
       "is the company's quarterly net profit divided by its share count — how much profit a single share produced in that period. Analysts publish an estimate for each quarter, and the surprise is how far the reported figure landed above or below it. Revenue is total sales before profit: the market often sells a company that beats on earnings but misses on revenue, so the two are read together.",
-    onlyWatchlist: "Watchlist Only",
     spotlight: "Spotlight",
     addToCalendar: "Add to Calendar",
     alsoReporting: "Also Reporting",
@@ -256,19 +232,15 @@ const en: typeof tr = {
 
   analysis: {
     title: "Earnings",
-    subtitle:
-      "Track earnings on the calendar; once a company reports, the summary and full review land in Analyses.",
     listTitle: "Latest Earnings Analyses",
     ogEyebrow: "Earnings Analysis",
     symbolPanelTitle: "Earnings Analyses",
     recentStrip: "Recently Analyzed",
     symbolPanelAll: "All Analyses →",
-    todaysAnalysis: "Analysis of the Day",
     thisWeekAnalyzed: "Analyzed This Week",
     upcomingEarnings: "Upcoming Earnings",
     goToCalendar: "Go to Calendar →",
     showAll: "See All →",
-    loadMore: "Load More",
     analysisLink: "Analysis →",
 
     verdictBuy: "BUY",
@@ -276,7 +248,6 @@ const en: typeof tr = {
     verdictSell: "SELL",
     verdictLabel: "Verdict",
     ogTarget: "Target",
-    scoreOutOf: "/ 100",
 
     /* Tablo 1180px ve kendi kabında yatay kayıyor; kap klavyeyle
        odaklanabilir olduğu için bir adı olmak zorunda. */
@@ -371,16 +342,11 @@ const en: typeof tr = {
     disclaimer:
       "This analysis is based on the company's official earnings release and call. Not Investment Advice.",
     sourcesLabel: "Sources",
-    marketExpectation: "Market Expectation",
   },
 
   companies: {
     title: "Companies",
     subtitle: "Tracked companies — sector, market cap and volume",
-    directory: "Directory",
-    sortBy: "Sort By",
-    byCap: "Market Cap",
-    byVolume: "Volume",
     sector: "Sector",
     allSectors: "All Sectors",
     company: "Company",
@@ -400,7 +366,6 @@ const en: typeof tr = {
 
   stock: {
     profile: "Company Profile",
-    about: "About the Company",
     sector: "Sector",
     industry: "Industry",
     exchange: "Exchange",
@@ -430,7 +395,6 @@ const en: typeof tr = {
     pastEarnings: "Past Earnings",
     nextEarnings: "Next Earnings",
     addToWatchlist: "Add to Watchlist",
-    inWatchlist: "In Watchlist",
     removeFromWatchlist: "Remove from Watchlist",
     metaWithSector: "{ad} — {sektor}. Price, chart, earnings history and news.",
     metaPlain: "{ad} stock — price, chart, earnings history and news.",
@@ -450,7 +414,6 @@ const en: typeof tr = {
     fundKindLabel: "Exchange-Traded Fund (ETF)",
     fundTracks: "Tracks",
     fundIssuer: "Issuer",
-    fundExchange: "Listed On",
     fundNoteCountry:
       "This is a US-listed exchange-traded fund, not the country's index itself. It trades in dollars during the US session — it moves in the same direction as the local index, but currency moves and the session offset keep the percentages from matching exactly.",
     fundNoteIndex:
@@ -551,7 +514,6 @@ const en: typeof tr = {
     emptyAllHint: "Create your first list, then add the symbols you want to follow.",
     color: "Color",
     note: "Note",
-    notePlaceholder: "Leave yourself a note about this symbol",
     moveUp: "Move Up",
     dragHint: "Drag to reorder",
     moveDown: "Move Down",
@@ -682,7 +644,6 @@ const en: typeof tr = {
     contributionHint:
       "Contribution shows how many index points a stock is adding or subtracting today. The Dow is price-weighted: each stock's dollar move is divided by the index divisor.",
     constituents: "Index Constituents",
-    listedCompanies: "Companies",
     asOf: "List Composition",
   },
 
@@ -691,14 +652,9 @@ const en: typeof tr = {
     subtitle: "Market and company headlines",
     all: "All",
     general: "General",
-    forex: "Forex",
-    crypto: "Crypto",
-    merger: "M&A",
     empty: "No stories to show right now",
-    readMore: "Read More",
     readAtSource: "Read at Source",
     translated: "Translated to Turkish",
-    originalTitle: "Original Headline",
     notFound: "Story not found",
     notFoundHint: "This story may have been removed.",
     relatedSymbols: "Companies in This Story",
@@ -706,9 +662,6 @@ const en: typeof tr = {
     fullStoryTitle: "Read the Full Story at the Source",
     fullStoryHint:
       "The summary here comes from the news provider; the rest of the article lives on the publisher's site",
-    sentiment: "Tone",
-    positive: "Positive",
-    negative: "Negative",
     neutral: "Neutral",
   },
 
@@ -725,7 +678,6 @@ const en: typeof tr = {
     thisWeek: "This Week",
     periodDaily: "Daily",
     periodWeekly: "Weekly",
-    weekOf: "Week of {date}",
     weeklySubtitle:
       "Written every Monday · what happened last week, what is coming this week",
     weeklyFrame: "What Happened Last Week · What Is Coming This Week",
@@ -750,7 +702,7 @@ const en: typeof tr = {
     backToList: "Back to Guide",
     empty: "Nothing here yet",
     cardCta: "Read",
-    curriculumRange: "curriculum articles {from}–{to}",
+    curriculumRange: "Curriculum Articles {from}–{to}",
     onlyThis: "Open Topic",
     curriculum: "Where to Start",
     startFirst: "Start from the Top",
@@ -761,9 +713,6 @@ const en: typeof tr = {
     prevArticle: "Previous",
     nextArticle: "Up Next",
     contextLabel: "To Understand This",
-    homeTitle: "Guide & Close-Up",
-    homeHint:
-      "Concepts explained with examples, plus long reads on what actually happened in the market.",
   },
 
   stories: {
@@ -779,14 +728,8 @@ const en: typeof tr = {
     howShort: "verified numbers, sources listed",
     rhythmShort: "not daily — only when something happens",
     whatTitle: "What Gets Covered",
-    whatBody:
-      "A fund unwinding, an acquisition falling apart, a thesis tested and broken by the market — events still worth reading about six months later.",
     howTitle: "How It Is Written",
-    howBody:
-      "The event end to end, with the mechanism explained through a worked calculation. Every number is verified and the sources are listed at the foot.",
     rhythmTitle: "How Often",
-    rhythmBody:
-      "Not daily. An ordinary session is not a story; a piece is published when something worth telling actually happens.",
     bridge: "Daily headlines and concept explainers live in their own sections:",
     moreCompaniesOne: "+{count} More Company",
     moreCompaniesMany: "+{count} More Companies",
@@ -818,20 +761,10 @@ const en: typeof tr = {
   macro: {
     title: "Macro Indicators",
     subtitle: "Inflation, employment and rates",
-    latest: "Latest",
     previous: "Previous",
-    period: "Period",
     nextRelease: "Next Release",
     noNextRelease: "Not announced yet",
     unchanged: "Unchanged",
-    series: {
-      cpi: "CPI (Year over Year)",
-      coreCpi: "Core CPI (Year over Year)",
-      unemployment: "Unemployment Rate",
-      fedFunds: "Fed Funds Rate",
-      pce: "Core PCE (Year over Year)",
-      payrolls: "Nonfarm Payrolls",
-    },
   },
 
   auth: {
@@ -885,7 +818,6 @@ const en: typeof tr = {
     themeLight: "Light",
     themeDark: "Dark",
     account: "Account",
-    saved: "Saved",
     privacyTitle: "Your data",
     privacyHint:
       "What is stored, why, where it goes and the full list of your rights are on the privacy page.",
@@ -953,9 +885,7 @@ const en: typeof tr = {
     sectionAccount: "Account",
     briefArchive: "Brief Archive",
     privacy: "Privacy",
-    sourceCode: "Source Code",
     builtBy: "Ahmet Akyapı",
-    builtByHint: "GitHub",
     copyright: "© 2026 Opening Bell",
     disclaimer: "Not Investment Advice",
   },
@@ -969,16 +899,13 @@ const en: typeof tr = {
   },
 
   data: {
-    sourceLabel: "Source",
     stale: "This data may be out of date",
     failed: "Couldn't load data",
     failedHint: "The provider isn't responding. Showing the last known value.",
-    lastKnown: "Last Known Value",
-    feedTape: "Consolidated Tape · 15 Minutes Delayed",
     delayedNote:
       "Prices come from the consolidated tape (SIP) with a 15-minute delay. Intraday volume, open-high-low and the previous close are the total across every exchange.",
     delayed: "15 Minutes Delayed",
-    extendedNote: "outside regular hours: change is per symbol's last trade",
+    extendedNote: "Outside Regular Hours: Change Is per Symbol's Last Trade",
     sourceCache: "Cache",
     sourceSeed: "Calendar",
     updatedAt: "Updated {time}",

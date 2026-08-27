@@ -86,10 +86,16 @@ type PriceChartProps = {
    * zaten biliyor. Verilmezse normal kapanışa düşülür.
    */
   closeMinutes?: number;
+  /* `source` ve `stale` BİLEREK YOK. Sağlayıcı yanıtı ikisini de taşıyor ve
+     bir dönem buraya kadar getiriliyordu — prop tipinde, `ChartResult`ta, ilk
+     durumda ve fetch yanıtının setState'inde — ama çizimde hiçbirine
+     dokunulmuyordu. Sunucu da her istekte iki alanı boşuna RSC yüküne
+     yazıyordu. Damga eklemek de çözüm değil: aynı sembolün künyesi sayfa
+     başlığında zaten var, grafiğin altına ikincisini koymak aynı sayıyı iki
+     yerde göstermek olurdu. `/api/chart` yanıtı alanları taşımaya devam
+     ediyor — orası bir uç nokta sözleşmesi. */
   initialBars?: {
     bars: Bar[];
-    source: string;
-    stale?: boolean;
     prevClose?: number | null;
   } | null;
 };
@@ -100,8 +106,6 @@ type ChartResult =
       key: string;
       phase: "ready";
       bars: Bar[];
-      source: string;
-      stale: boolean;
       prevClose: number | null;
     };
 
@@ -134,8 +138,6 @@ export function PriceChart({
           key: `${symbol}:${initialRange}`,
           phase: "ready",
           bars: initialBars.bars,
-          source: initialBars.source,
-          stale: initialBars.stale ?? false,
           prevClose: initialBars.prevClose ?? null,
         }
       : null,
@@ -236,8 +238,6 @@ export function PriceChart({
           key,
           phase: "ready",
           bars: data.bars,
-          source: data.source,
-          stale: data.stale,
           prevClose: data.prevClose ?? null,
         });
       })

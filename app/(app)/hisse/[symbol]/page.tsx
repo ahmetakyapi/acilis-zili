@@ -691,8 +691,6 @@ async function ChartSection({
         bars.ok
           ? {
               bars: bars.data,
-              source: bars.source,
-              stale: bars.stale,
               prevClose: result.ok ? result.data.prevClose : null,
             }
           : null
