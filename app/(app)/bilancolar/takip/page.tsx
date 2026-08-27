@@ -72,7 +72,7 @@ export default async function WatchedEarningsPage(
   if (!session?.user?.id) {
     return (
       <div className="flex flex-col gap-6">
-        <PageHeader title={t.analysis.title} subtitle={t.analysis.subtitle} />
+        <PageHeader title={t.analysis.title} />
         <EarningsTabs active="watchlist" t={t} className="-mt-1" />
         <Panel>
           <EmptyState

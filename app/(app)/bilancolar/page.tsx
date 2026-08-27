@@ -84,8 +84,15 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
 
   return (
     <div className="flex flex-col gap-7">
+      {/* BAŞLIK BÖLÜMÜN ADI, SEKME GÖRÜNÜMÜN ADI. Burada "Bilanço Takvimi"
+          yazıyordu ve hemen altındaki sekme çubuğunda "Takvim" duruyordu —
+          aynı şey iki kez. Öteki iki sekmede ise başlık "Bilançolar" idi,
+          yani okuyucu sekme değiştirdiğinde ekrandaki başlık değişiyor ama
+          hangi görünümde olduğunu söylemiyordu. Üçü de artık bölüm adını
+          taşıyor; alt başlık bu sekmenin ne gösterdiğini anlatmaya devam
+          ediyor. */}
       <PageHeader
-        title={t.earnings.title}
+        title={t.analysis.title}
         subtitle={t.earnings.subtitleLong}
         action={
           /* Anahtarın ALTINDA kapsadığı gerçek aralık. "Hafta" ve "Ay" birer

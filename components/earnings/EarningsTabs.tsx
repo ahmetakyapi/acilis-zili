@@ -33,8 +33,11 @@ export function EarningsTabs({
     { key: "watchlist", href: "/bilancolar/takip", label: t.earnings.tabWatchlist },
   ];
 
+  /* Çubuğun erişilebilirlik etiketi BÖLÜMÜN adı. "Bilanço Takvimi" idi ve
+     üç sekmede de aynı etiket duyuruluyordu — Analizler sekmesindeyken ekran
+     okuyucu "Bilanço Takvimi, sekme listesi" diyordu. */
   return (
-    <TabBar label={t.earnings.title} className={className}>
+    <TabBar label={t.analysis.title} className={className}>
       {tabs.map((tab) => (
         <TabItem key={tab.key} href={tab.href} active={tab.key === active}>
           {tab.label}

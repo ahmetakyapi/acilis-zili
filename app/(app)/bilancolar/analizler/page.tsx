@@ -133,7 +133,18 @@ export default async function AnalysesPage(
     return sectorGroupOf(meta[row.symbol]?.industry).key === filter;
   });
 
-  const featured = all[0] ?? null;
+  /* ÖNE ÇIKAN KART LİSTENİN İLK SATIRI — ve artık öyle olduğunu söylüyor.
+     Kart `all[0]`dan geliyordu, yani filtreyi hiç görmüyordu: okuyucu
+     "Enerji" çipine bastığında altındaki tablo enerjiye düşerken kart bir
+     teknoloji şirketini göstermeye devam ediyordu. Aynı kart rozetinde
+     koşulsuz "Günün Analizi" yazıyordu; oysa `all` aktif SIRALAMAYA göre
+     çekiliyor, yani `?sirala=skor` ile kart iki ay önceki bir analizi günün
+     analizi diye ilan ediyordu. Var olmayan bir kesinlik iddiası.
+
+     Rozet kalktı, kart filtrelenmiş listenin başına bağlandı. Tarih satırı
+     kartın ne olduğunu zaten söylüyor ve tablodaki ilk satır vurgusu artık
+     her koşulda kartla aynı satırı gösteriyor. */
+  const featured = rows[0] ?? null;
   const thisWeek = all.filter((row) => row.reportDate >= weekAgo).slice(0, 5);
 
   const tableRows = rows.map((analysis) =>
@@ -157,7 +168,11 @@ export default async function AnalysesPage(
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t.analysis.title} subtitle={t.analysis.subtitle} />
+      {/* ALT BAŞLIK YOK: buradaki metin "detaylı değerlendirme Analizler'de"
+          diyordu, yani okuyucuyu ZATEN ÜSTÜNDE DURDUĞU sekmeye yolluyordu.
+          Hangi görünümde olunduğunu hemen altındaki sekme çubuğu söylüyor;
+          başlık bölümün adı, sekme de görünümün adı. */}
+      <PageHeader title={t.analysis.title} />
 
       <EarningsTabs active="analyses" t={t} className="-mt-1" />
 
@@ -391,7 +406,7 @@ export default async function AnalysesPage(
               <AnalysisTable
                 rows={tableRows}
                 labels={analysisTableLabels(t)}
-                highlightFirst={!filter && sort === "tarih"}
+                highlightFirst
                 toolbar={
                   <Segment>
                     <SegmentItem
@@ -483,14 +498,9 @@ function FeaturedAnalysis({
       className="flex min-w-0 flex-col gap-4 rounded-xl border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-5 transition-colors hover:border-primary sm:flex-row sm:gap-5"
     >
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-primary-faint bg-primary-wash px-2.5 py-[3px] text-nano font-bold text-primary-ink">
-            {t.analysis.todaysAnalysis}
-          </span>
-          <span className="text-tiny font-semibold text-muted">
-            {formatEtDateLong(row.reportDate, locale)}
-          </span>
-        </div>
+        <span className="text-tiny font-semibold text-muted">
+          {formatEtDateLong(row.reportDate, locale)}
+        </span>
         <div className="flex items-center gap-2.5">
           <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="lg" />
           <div className="min-w-0">
