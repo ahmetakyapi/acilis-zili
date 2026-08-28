@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getStatus, getSymbolNames } from "@/lib/data";
 import { getChartBarsMulti } from "@/lib/providers";
 import {
-  MAX_COMPARE_SYMBOLS,
   isCompareRange,
   parseCompareSymbols,
   type CompareSeries,
@@ -65,7 +64,14 @@ export async function GET(request: Request) {
   const { kept: symbols } = parseCompareSymbols(params.get("semboller") ?? undefined);
   const range = params.get("aralik");
 
-  if (symbols.length === 0 || symbols.length > MAX_COMPARE_SYMBOLS) {
+  /* `> MAX_COMPARE_SYMBOLS` dalı ÖLÜYDÜ ve sessizce yanıltıcıydı:
+     `parseCompareSymbols` listeyi zaten `slice(0, MAX_COMPARE_SYMBOLS)` ile
+     kırpıp döndürüyor (lib/compare.ts), yani `kept` hiçbir girdiyle tavanı
+     aşamaz. Denetimi okuyan biri ucun fazla sembollü isteği reddettiğini
+     sanıyordu; uç onu kırpıyor. Kırpma davranışı SAYFAYLA AYNI kalmalı —
+     beş sembollü paylaşılmış bir bağlantıda sayfa dördünü çizerken barların
+     400 dönmesi tabloyu dolu, grafiği boş bırakırdı. */
+  if (symbols.length === 0) {
     return NextResponse.json<CompareBarsResponse>(
       { ok: false, reason: "invalid-symbols" },
       { status: 400 },

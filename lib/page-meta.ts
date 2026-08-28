@@ -65,15 +65,14 @@ export function pageMetadata({
 /**
  * Olmayan kaydın künyesi — DİZİNE GİRMESİN.
  *
- * `notFound()` doğru ekranı gösteriyor ama HTTP durumu 200 kalıyor:
- * `app/(app)/loading.tsx` tüm rotaları bir yükleme sınırıyla sarıyor, yani
- * yanıt sayfa çözülmeden akmaya başlıyor ve durum kodu o an yazılıyor.
- * Sınır bilinçli bir tercih (gezinme geri bildirimi) ve bir 404 uğruna
- * kaldırılmadı — ölçüldü, `loading.tsx` kaldırıldığında durum 404'e dönüyor,
- * sayfa içinde ya da `generateMetadata` içinde `notFound()` çağırmak fark
- * ettirmiyor.
+ * DURUM KODU ARTIK DOĞRU. Bu not yazıldığında `app/(app)/loading.tsx` tüm
+ * rotaları bir yükleme sınırıyla sarıyordu: yanıt sayfa çözülmeden akmaya
+ * başlıyor, durum kodu o an yazılıyor ve `notFound()` çağıran her dinamik
+ * rota 404 ekranını basıp HTTP 200 dönüyordu. O dosya sonradan tam bu
+ * yüzden kaldırıldı — gerekçenin tamamı `app/(app)/layout.tsx` başında.
+ * Yani bu künyenin var oluş sebebi olan durum kodu sorunu kapandı.
  *
- * Arama motoru tarafındaki asıl zarar durum kodu değil, ADRESİN DİZİNE
+ * Künye YİNE DE GEREKLİ, çünkü asıl zarar durum kodu değil, ADRESİN DİZİNE
  * GİRMESİ. Haber satırları 90 günde budanıyor (cron), yani bu adresler
  * düzenli olarak ölüyor. `noindex` o zararı doğrudan kesiyor: Google boş
  * sayfayı ne dizine alır ne de "yumuşak 404" diye siteye yazar.

@@ -91,8 +91,19 @@ export function proxy(request: NextRequest) {
      başına 37 ile 96 arasında, yani düşüş neredeyse kaçınılmazdı.
 
      Çerez yalnızca EKSİKSE ya da FARKLIYSA yazılıyor: her istekte
-     `Set-Cookie` göndermek yanıtı önbelleklenemez hâle getirirdi. */
-  if (request.cookies.get(LOCALE_COOKIE)?.value !== locale) {
+     `Set-Cookie` göndermek yanıtı önbelleklenemez hâle getirirdi.
+
+     BESLEME BU KORUMANIN DIŞINDA KALIYORDU. Koşul çerezi olmayan istemciyi
+     korumuyor — `undefined !== "en"` her seferinde doğru, yani /en/feed.xml'e
+     gelen HER yanıt `Set-Cookie` taşıyordu ve besleme hiçbir zaman kenar
+     önbelleğine girmiyordu. Bir RSS istemcisi çerez taşımaz ve zaten çereze
+     ihtiyacı yok: beslemenin dili adresin kendisinde. Yazmayı orada atlamak
+     hem yanıtı önbelleklenebilir kılıyor hem de anlamsız bir çerezi
+     göndermiyor. */
+  if (
+    path !== "/feed.xml" &&
+    request.cookies.get(LOCALE_COOKIE)?.value !== locale
+  ) {
     response.cookies.set(LOCALE_COOKIE, locale, {
       maxAge: LOCALE_COOKIE_MAX_AGE,
       path: "/",

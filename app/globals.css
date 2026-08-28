@@ -1091,8 +1091,19 @@
    640 pikselin üstünde kapalı: imleç hassas, orada genişletme yalnızca komşu
    satırların üstüne taşar. Kullanan öğe `position` taşımıyorsa buradan alır.
 
-   Kapsayıcısı `overflow: hidden` olan bir öğede genişletme KIRPILIR; öyle bir
-   yerde bunun yerine gerçek dolgu vermek gerekir. */
+   İKİ YERDE İŞE YARAMAZ, ikisi de ölçerek bulundu:
+
+   1. Kapsayıcısı `overflow: hidden` ise genişletme KIRPILIR — menüdeki dil
+      segmenti (ortak yuvarlak köşe için kırpma gerekiyor) ve karşılaştırma
+      arama listesi böyle.
+   2. Öğe SARAN bir listenin içindeyse genişletme alt satırdaki komşusunun
+      hedefini KAPAR. Kaynak künyelerinde ölçüldü: satır adımı 24 pikselken
+      44 piksellik görünmez bir alan beş bağlantının beşinde de bir alttaki
+      satıra taşıyordu. Iskalanan dokunuş orada boşa gitmez, YANLIŞ KAYNAĞA
+      gider — düzeltmeye çalıştığımız kusurun aynısı.
+
+   İkisinde de doğru araç gerçek yükseklik: `min-h-11 sm:min-h-8` ve dikey
+   aralığın ona göre ayarlanması. */
 .tap-44 {
   position: relative;
 }

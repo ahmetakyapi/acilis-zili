@@ -4,6 +4,7 @@ import { getAnalyses, getStories } from "@/lib/data";
 import { SITE_URL } from "@/lib/site";
 import { LOCALES } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
+import { analysisHref } from "@/lib/analysis";
 
 /**
  * Site haritası.
@@ -75,10 +76,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
      aksine bunların çevirisi OLMAYABİLİR. Var olmayan bir çeviriyi
      `hreflang` ile göstermek arama motoruna yanlış söz vermek olur — sayfa
      açıldığında orijinali "TR" rozetiyle çıkıyor, o adres o dilin sayfası
-     değil. Bu yüzden her dil kendi yazdıklarıyla listeleniyor. */
+     değil. Bu yüzden her dil kendi yazdıklarıyla listeleniyor.
+
+     SÜZME BURADA YAPILIYOR, YÜKLEYİCİDE DEĞİL. `getStories` ve `getAnalyses`
+     dile göre SÜZMÜYOR: slug başına tek satır seçerken istenen dili TERCİH
+     ediyorlar ama çevirisi olmayan kaydı da orijinal diliyle döndürüyorlar —
+     sayfa boş kalmasın diye, doğru bir karar. Sonuç haritada şuydu: iki
+     döngü de aynı slug kümesini basıyor, yani yalnızca Türkçe yazılmış her
+     yazı `/en/...` adresiyle de listeleniyordu. Yukarıdaki söz ("her dil
+     kendi yazdıklarıyla") tutulmuyordu. Dönen satır `locale` alanını zaten
+     taşıyor; ek sorgu yok. */
   try {
     for (const locale of LOCALES) {
-      const rows = await getStories(locale, 200);
+      const rows = (await getStories(locale, 200)).filter(
+        (row) => row.locale === locale,
+      );
       for (const story of rows) {
         entries.push({
           // eventDate olayın günü (YYYY-MM-DD); yazının yazıldığı gün değil ama
@@ -96,11 +108,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     for (const locale of LOCALES) {
-      const rows = await getAnalyses(locale, { limit: 200 });
+      /* Süzme gerekçesi mercek döngüsünde. Adres `analysisHref`ten geliyor:
+         sayfanın canonical'ı ve JSON-LD'si de aynı yardımcıyı kullanıyor,
+         yani harita ile sayfa aynı adresi yazıyor. */
+      const rows = (await getAnalyses(locale, { limit: 200 })).filter(
+        (row) => row.locale === locale,
+      );
       for (const analysis of rows) {
         entries.push({
           url: `${SITE_URL}${withLocale(
-            `/bilancolar/${analysis.symbol.toLowerCase()}/${analysis.period}`,
+            analysisHref(analysis.symbol, analysis.period),
             locale,
           )}`,
           lastModified: new Date(analysis.reportDate),

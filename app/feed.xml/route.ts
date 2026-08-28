@@ -4,7 +4,11 @@ import { dailyBriefs, stories } from "@/lib/schema";
 import { headers } from "next/headers";
 import { briefSummary } from "@/lib/brief";
 import { DEFAULT_LOCALE } from "@/lib/i18n/config";
-import { LOCALE_HEADER, localeFromHeader } from "@/lib/i18n/routing";
+import {
+  LOCALE_HEADER,
+  localeFromHeader,
+  withLocale,
+} from "@/lib/i18n/routing";
 import { SITE_URL, INDEXABLE } from "@/lib/site";
 
 /**
@@ -21,10 +25,16 @@ import { SITE_URL, INDEXABLE } from "@/lib/site";
  * ait olan tam olarak bu. Rehber yazıları dışarıda: onlar durağan ve
  * güncellendiklerinde beslemede yeniden "yeni" görünürlerdi.
  *
- * DİLE GÖRE. Besleme okuyucunun çerezindeki dile göre üretiliyor; TR okuyan
- * Türkçe, EN okuyan İngilizce kayıtları görüyor. Ayrı iki adres açmak yerine
- * bu tercih edildi çünkü sitenin geri kalanı da aynı çerezle çalışıyor ve
- * adres tek: `/feed.xml`.
+ * DİLE GÖRE, VE ADRES İKİ TANE. Bu not bir dönem "adres tek: `/feed.xml`,
+ * dil çerezden okunuyor" diyordu ve artık doğru değil: `/feed.xml` ile
+ * `/en/feed.xml` ayrı iki besleme. Sebebi bir RSS istemcisinin çerez
+ * taşımamasıdır — çereze bakan tek adres, İngilizce okuyucuya her seferinde
+ * Türkçe besleme verirdi.
+ *
+ * Bu yüzden beslemenin İÇİNDEKİ her adres de dil önekini taşır: öğe
+ * bağlantıları, kanal `<link>`i ve `atom:link rel="self"`. Öneksiz
+ * bırakıldıkları sürece /en/feed.xml İngilizce başlıkları Türkçe sayfalara
+ * bağlıyordu.
  */
 
 /** Beslemede taşınan en yeni kayıt sayısı — okuyucular zaten geçmişi tutar. */
@@ -82,10 +92,18 @@ export async function GET() {
     /* Boş ama GEÇERLİ besleme: kanal künyesi yazılır, öğe listesi boş kalır. */
   }
 
+  /* BESLEMEDEKİ ADRESLER DE DİLE GÖRE. Öğe bağlantıları, kanal `<link>`i ve
+     `atom:link rel="self"` hepsi öneksiz yazılıyordu; oysa içerik gerçekten
+     dile göre süzülüyor. Sonuç: /en/feed.xml İngilizce başlıkları TÜRKÇE
+     adreslerle sunuyordu. Öneksiz adres proxy'de çereze bakıyor ve bir RSS
+     istemcisinde çerez olmadığı için TR'ye düşüyor — yani kopukluk teorik
+     değil, İngilizce aboneyi Türkçe sayfaya götürüyordu. */
+  const adres = (path: string) => `${SITE_URL}${withLocale(path, locale)}`;
+
   const items: Item[] = [
     ...storyRows.map((row) => ({
       title: row.title,
-      link: `${SITE_URL}/mercek/${row.slug}`,
+      link: adres(`/mercek/${row.slug}`),
       description: row.dek,
       date: row.publishedAt ?? new Date(`${row.eventDate}T12:00:00Z`),
       guid: `mercek-${row.slug}-${locale}`,
@@ -96,9 +114,9 @@ export async function GET() {
          haftalık öğe `/bulten?tur=haftalik`a gidiyordu: okuyucu üç gün
          önceki bülteni tıkladığında bugünün bülteni açılıyordu. Sayfa
          `?tarih=` parametresini zaten destekliyor. */
-      link: `${SITE_URL}/bulten?${
-        row.period === "weekly" ? "tur=haftalik&" : ""
-      }tarih=${row.briefDate}`,
+      link: adres(
+        `/bulten?${row.period === "weekly" ? "tur=haftalik&" : ""}tarih=${row.briefDate}`,
+      ),
       /* Gövde markdown; beslemede tek cümle yeterli. Kural `lib/brief.ts`te:
          başlık satırları atlanır, işaretleme temizlenir. */
       description: briefSummary(row.bodyMd),
@@ -123,11 +141,11 @@ export async function GET() {
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${escapeXml(title)}</title>
-    <link>${SITE_URL}</link>
+    <link>${adres("/")}</link>
     <description>${escapeXml(description)}</description>
     <language>${tr ? "tr" : "en"}</language>
     <lastBuildDate>${rfc822(items[0]?.date ?? new Date())}</lastBuildDate>
-    <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="${adres("/feed.xml")}" rel="self" type="application/rss+xml" />
 ${items
   .map(
     (item) => `    <item>

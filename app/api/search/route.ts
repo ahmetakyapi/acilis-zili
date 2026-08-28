@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
-import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  or,
+  sql,
+  type AnyColumn,
+} from "drizzle-orm";
 import { db } from "@/lib/db";
 import { stories, symbols } from "@/lib/schema";
 import { searchSymbols } from "@/lib/providers/finnhub";
@@ -190,14 +199,35 @@ export async function GET(request: Request) {
 
     if (writings.length < MAX_WRITINGS) {
       try {
-        const pattern = `%${escaped}%`;
+        /* MERCEK YARISI DA KATLANIYOR. Rehber yarısı `fold()` ile bellekte
+           eşleşiyor — Türkçe küçültme, aksan ayıklama ve noktasız "ı"nın
+           noktalıya inmesi orada var. Mercek yarısı ise ham `ILIKE` ile
+           gidiyordu ve ILIKE yalnızca büyük-küçük harfi eşitler: "sirket"
+           araması "Şirket" başlığını, "ucus" araması "Uçuş"u bulamıyordu.
+           Aynı arama kutusunda iki yarım iki farklı kurala göre çalışıyordu.
+
+           Katlama SQL tarafına `translate` ile taşındı: `stories` küçük bir
+           tablo, tam tarama önemsiz ve şema değişikliği gerekmiyor. Harf
+           eşlemesi `fold()` ile birebir aynı — ikisi ayrı düşerse arama
+           yeniden yarım çalışır, o yüzden aynı satırda tutuluyorlar.
+
+           Desen `needle`den kuruluyor, `escaped`ten değil: eşleşecek olan
+           katlanmış metin. `%` ve `_` kaçışı `escaped`te yapılıyordu, aynı
+           kaçış burada da gerekiyor. */
+        const foldedNeedle = needle.replace(/[\\%_]/g, (c) => `\\${c}`);
+        const pattern = `%${foldedNeedle}%`;
+        const katla = (kolon: AnyColumn) =>
+          sql`lower(translate(${kolon}, 'ıİşŞğĞüÜöÖçÇâÂîÎûÛ', 'iIsSgGuUoOcCaAiIuU'))`;
         const rows = await db
           .select({ slug: stories.slug, title: stories.title, dek: stories.dek })
           .from(stories)
           .where(
             and(
               eq(stories.locale, locale),
-              or(ilike(stories.title, pattern), ilike(stories.dek, pattern)),
+              or(
+                sql`${katla(stories.title)} like ${pattern}`,
+                sql`${katla(stories.dek)} like ${pattern}`,
+              ),
             ),
           )
           .orderBy(desc(stories.eventDate))

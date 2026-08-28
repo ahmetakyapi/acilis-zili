@@ -247,12 +247,33 @@ async function fetchQuotes(
       unique.map((symbol) => finnhub.getQuote(symbol, ttl)),
     );
     const quotes: Record<string, Quote> = {};
+    /* YEDEK YOL DA KENDİ DAMGASINI TAŞIR. Burası `ok(quotes, "finnhub")`
+       diyordu, yani `types.ts` damgasız çağrıya `new Date()` koyuyor ve
+       ekranda RENDER anı yazıyordu. Alpaca dalı ve önbellek dalı bu hatadan
+       çoktan kurtarılmıştı; yedek yol arada kalmıştı ve tam da sağlayıcı
+       düştüğünde, yani damganın en çok işe yaradığı anda yanlış saati
+       basıyordu.
+
+       Tercih sırası Alpaca dalıyla aynı: önce paketin EN YENİ işlem anı —
+       veri o kadar taze. İşlem anı yoksa çekimlerin EN ESKİ `fetchedAt`i;
+       Alpaca'daki gibi tek bir çekim yok, sembol başına ayrı `fetch` var ve
+       her birinin önbellek yaşı bağımsız, yani sorulan soru "en geride
+       kalan ne kadar geride". */
+    let enYeniIslem: Date | null = null;
+    let enEskiCekim: Date | null = null;
     for (const result of results) {
-      if (result.ok) quotes[result.data.symbol] = result.data;
+      if (!result.ok) continue;
+      quotes[result.data.symbol] = result.data;
+      const islem = result.data.tradedAt;
+      if (islem && (!enYeniIslem || islem > enYeniIslem)) enYeniIslem = islem;
+      if (!enEskiCekim || result.fetchedAt < enEskiCekim) {
+        enEskiCekim = result.fetchedAt;
+      }
     }
     if (Object.keys(quotes).length > 0) {
       await persistQuotes(Object.values(quotes));
-      return ok(quotes, "finnhub");
+      const damga = enYeniIslem ?? enEskiCekim ?? undefined;
+      return ok(quotes, "finnhub", { fetchedAt: damga });
     }
   }
 

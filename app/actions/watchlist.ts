@@ -272,9 +272,16 @@ export async function toggleSymbolFavorite(formData: FormData) {
     .where(and(eq(watchlists.userId, userId), eq(watchlistItems.symbol, symbol)));
 
   if (existing.length > 0) {
-    for (const row of existing) {
-      await db.delete(watchlistItems).where(eq(watchlistItems.id, row.itemId));
-    }
+    /* TEK İSTEK. Silme bir dönem döngüdeydi ve her öğe için ayrı bir
+       neon-http gidiş dönüşü açıyordu; aynı sembol birden çok listede
+       olabildiği için sayı birden büyük olabiliyor. `inArray` hepsini tek
+       ifadede siliyor — dosyanın kendi `inArray` içe aktarımı zaten var. */
+    await db.delete(watchlistItems).where(
+      inArray(
+        watchlistItems.id,
+        existing.map((row) => row.itemId),
+      ),
+    );
   } else {
     let [list] = await db
       .select({ id: watchlists.id })
@@ -289,6 +296,19 @@ export async function toggleSymbolFavorite(formData: FormData) {
         .values({ userId, name: "Takip listem", sortOrder: 0 })
         .returning({ id: watchlists.id });
     }
+
+    /* TAVAN BU KAPIDA DA GEÇERLİ. `MAX_ITEMS_PER_LIST` yalnızca
+       `addSymbolToList` içinde uygulanıyordu; kalp düğmesi buradan geçiyor
+       ve hiç sayım yapmadan INSERT ediyordu. Tavanın kendi gerekçe yorumu
+       tehdidi birebir bu senaryo olarak tarif ediyor — "giriş yapmış tek bir
+       hesap döngüyle yüz binlerce satır yazabilir" — yani ikinci kapının
+       açık olması bilinçli bir istisna değil, korunmak istenen tehdidin ta
+       kendisiydi. Aynı desen, aynı sessiz dönüş. */
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(watchlistItems)
+      .where(eq(watchlistItems.watchlistId, list.id));
+    if (total >= MAX_ITEMS_PER_LIST) return;
 
     await db
       .insert(watchlistItems)

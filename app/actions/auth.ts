@@ -50,15 +50,35 @@ export type AuthFormState = {
  *
  * Doğrulama şart: kullanıcıdan gelen bir adrese sorgusuz yönlendirmek açık
  * yönlendirme (open redirect) açığıdır ve kimlik avında kullanılır. Kabul
- * edilen tek biçim, tek eğik çizgiyle başlayan göreli yol. `//baska.site`
- * ve `/\baska.site` protokole göreli adreslerdir ve dışarı çıkarlar; bu
- * yüzden ikinci karakter de kontrol ediliyor.
+ * edilen tek biçim, tek eğik çizgiyle başlayan göreli yol.
+ *
+ * ÖN EK ELEMEK YETMEDİ. Önce yalnızca `//` ve `/\` ön ekleri eleniyordu;
+ * `.trim()` de baş ve sondaki boşluğu attığı için ARADAKİ sekme hayatta
+ * kalıyordu. Sonuç: `/<TAB>/evil.com` iki denetimden de geçiyordu ama
+ * tarayıcı onu çözerken WHATWG kuralı gereği sekme, satır başı ve satır
+ * sonunu AYRIŞTIRMADAN ÖNCE siliyor — geriye protokole göreli `//evil.com`
+ * kalıyor ve kullanıcı https://evil.com'da açılıyordu. Açık yönlendirme
+ * kapatıldı sanılıyordu, kapanmamıştı.
+ *
+ * Doğru yol dizeyi elemek değil ÇÖZMEK: adres, sitenin kendi kökü taban
+ * alınarak ayrıştırılıyor ve çıkan `origin` tabanla aynı değilse
+ * reddediliyor. Tarayıcı hangi kuralla çözüyorsa doğrulama da o kuralla
+ * çözüyor, yani aradaki fark kapanıyor. `startsWith("/")` denetimi
+ * ayrıştırmadan ÖNCE duruyor: `https://evil.com` mutlak bir adres ve
+ * ayrıştırıcı onu sorunsuz çözerdi, oysa buraya hiç girmemeli.
  */
+const REDIRECT_BASE = "https://acilis-zili.local";
+
 function safeRedirectTarget(raw: FormDataEntryValue | null): string {
   const value = typeof raw === "string" ? raw.trim() : "";
   if (!value.startsWith("/")) return "/";
-  if (value.startsWith("//") || value.startsWith("/\\")) return "/";
-  return value;
+  try {
+    const url = new URL(value, REDIRECT_BASE);
+    if (url.origin !== REDIRECT_BASE) return "/";
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return "/";
+  }
 }
 
 const usernameSchema = z
@@ -262,13 +282,39 @@ export async function signUpAction(
     return { error: t.generic, field: "form" };
   }
 
-  await signIn("credentials", {
-    username: parsed.username,
-    password: parsed.password,
-    redirect: false,
-  });
-
   const target = safeRedirectTarget(formData.get("devam"));
+
+  /* HESAP AÇILDIKTAN SONRAKİ GİRİŞ SARILI. Bu çağrı çıplaktı ve aynı
+     dosyadaki `signInAction` aynı çağrıyı try/catch ile sarıyordu — yani
+     asimetri bir karar değil, unutmaydı.
+
+     Fırlatabilir, üstelik kullanıcının hiçbir hatası olmadan: `authorize()`
+     oran sınırını şifre karşılaştırmasından ÖNCE okuyor ve kayıt akışındaki
+     bu `signIn` giriş formuyla AYNI kovayı tüketiyor. Aynı ağdan arka arkaya
+     kayıt olan birkaç kişi kovayı doldurabiliyor.
+
+     Fırlarsa kaybedilen şey yalnızca OTURUM: hesap açıldı, şifre çalışıyor.
+     Kullanıcıyı "bir şeyler ters gitti" ekranına düşürmek yerine giriş
+     sayfasına gönderiyoruz — oradaki akış oran sınırı mesajını zaten doğru
+     gösteriyor ve `devam` korunduğu için okuyucu gitmek istediği yere
+     varıyor. Yeni bir sözlük anahtarı da gerekmiyor.
+
+     `redirect()` Next'te bir hata fırlatarak çalışır; catch bloğu içinde
+     çağrılamaz, o yüzden bayrakla dışarı taşınıyor. */
+  let oturumAcildi = true;
+  try {
+    await signIn("credentials", {
+      username: parsed.username,
+      password: parsed.password,
+      redirect: false,
+    });
+  } catch {
+    oturumAcildi = false;
+  }
+
+  if (!oturumAcildi) {
+    redirect(`/giris?devam=${encodeURIComponent(target === "/" ? "/favoriler" : target)}`);
+  }
   redirect(target === "/" ? "/favoriler" : target);
 }
 

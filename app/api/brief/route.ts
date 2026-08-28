@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { dailyBriefs } from "@/lib/schema";
 import { todayEt } from "@/lib/market-hours";
 import { isLocale } from "@/lib/i18n/config";
+import { weekAnchor } from "@/lib/data";
 
 /**
  * Günlük özet alım ucu.
@@ -61,8 +62,19 @@ export async function POST(request: Request) {
   }
 
   const locale = isLocale(parsed.locale) ? parsed.locale : "tr";
-  const briefDate = parsed.date ?? todayEt();
   const period = parsed.period ?? "daily";
+  /* HAFTALIK KAYIT PAZARTESİYE ÇAPALANIR. Şemanın kendi yorumu bunu
+     söylüyordu ("Haftalıkta `date` dönemin PAZARTESİsi olmalı") ama uç onu
+     UYGULAMIYORDU: gelen tarih ne ise o yazılıyordu. Kardeş uç
+     (/api/brief/context) çapayı zaten kuruyor; yani sözleşmeyi bir taraf
+     tutuyor, öteki tutmuyordu. Rutin salı günü çalışıp `date` göndermezse
+     kayıt salı tarihine düşüyor, okuma tarafı ise pazartesi arıyor ve aynı
+     haftanın bülteni iki ayrı satıra bölünüyordu. Çapa artık burada, yani
+     hangi yoldan gelirse gelsin tek bir tarihe oturuyor. */
+  const briefDate =
+    period === "weekly"
+      ? weekAnchor(parsed.date ?? todayEt())
+      : (parsed.date ?? todayEt());
 
   await db
     .insert(dailyBriefs)

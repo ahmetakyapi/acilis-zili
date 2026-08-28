@@ -36,6 +36,7 @@ import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import {
+  analysisHref,
   verdictLabel,
   verdictOf,
   verdictTextClass,
@@ -247,10 +248,15 @@ export async function generateMetadata(
        "öteki dildeki karşılığı şu" bilgisi olmadan yayımlanıyordu. Kök
        layout canonical yazmıyor (orada gerekçesi var), yani miras da yok.
        `pageAlternates` RSS keşif etiketini de birlikte taşıyor. */
-    alternates: pageAlternates(
-      `/bilancolar/${symbol.toUpperCase()}/${period}`,
-      locale,
-    ),
+    /* ADRES `analysisHref`TEN — sayfanın canonical'ı ile sitenin bu sayfaya
+       giden bütün bağlantıları aynı dizeyi yazsın diye. Burada sembol BÜYÜK
+       harfle yazılıyordu; oysa site haritası, ana sayfa, takvim rozeti,
+       analiz tablosu ve şerit — hepsi `analysisHref` üzerinden KÜÇÜK harf
+       basıyor. Aynı içeriğe giden iki farklı adres, üstelik canonical
+       hiçbirinin işaret etmediği üçüncü bir yazım demekti. `symbol`
+       değişkeni veri okuması için büyük harf kalıyor; yalnızca adres
+       üretenler yardımcıdan geçiyor. */
+    alternates: pageAlternates(analysisHref(symbol, period), locale),
     openGraph: {
       type: "article",
       publishedTime: row.publishedAt?.toISOString(),
@@ -476,7 +482,7 @@ export default async function AnalysisDetailPage(
       <ArticleJsonLd
         headline={`${row.company} ${row.periodLabel}`}
         description={row.headline}
-        path={`/bilancolar/${symbol}/${period}`}
+        path={analysisHref(symbol, period)}
         locale={locale}
         published={row.publishedAt}
       />
@@ -490,7 +496,7 @@ export default async function AnalysisDetailPage(
           },
           {
             name: `${row.company} · ${row.periodLabel}`,
-            path: `/bilancolar/${symbol}/${period}`,
+            path: analysisHref(symbol, period),
           },
         ]}
       />
