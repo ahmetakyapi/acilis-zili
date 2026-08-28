@@ -103,18 +103,19 @@ export default async function AnalysesPage(
      TAMAMI çekilip (bilanço sezonunda birkaç bin satır) bellekte
      sıralanıyordu, ardından o satırların tekil sembolleriyle ikinci bir
      `getSymbolNames` çağrılıyordu. Ekrana giden beş satır için. Üstelik
-     bu iş yukarıdaki sorgulara HİÇ bağlı olmadığı hâlde onları bekliyordu;
-     artık takip listesiyle birlikte tek turda geliyor. */
-  const upcomingTop = await getUpcomingEarnings(
-    today,
-    addEtDays(today, 30),
-    5,
-    {
-      preferred: userSymbols,
-    },
-  );
+     bu iş yukarıdaki sorgulara HİÇ bağlı olmadığı hâlde onları bekliyordu.
 
-  const meta = await getSymbolNames([...new Set(all.map((row) => row.symbol))]);
+     İKİSİ AYNI TURDA. Yorum bir dönem "artık tek turda geliyor" diyordu ama
+     kod öyle yapmıyordu: yaklaşanlar ile künye sorgusu ardışık bekleniyordu.
+     İkisi birbirinden bağımsız — biri takvime ve takip listesine, öteki
+     yalnızca analiz listesine bakıyor — yani sayfanın kritik yolunda
+     gereksiz bir Neon turu duruyordu. Zincir üç kademeden ikiye indi. */
+  const [upcomingTop, meta] = await Promise.all([
+    getUpcomingEarnings(today, addEtDays(today, 30), 5, {
+      preferred: userSymbols,
+    }),
+    getSymbolNames([...new Set(all.map((row) => row.symbol))]),
+  ]);
 
   /* Filtre çipleri yalnızca ELDE OLAN sektörleri gösterir: hiçbir analizi
      olmayan bir sektör çipi tıklanınca boş ekran veriyordu. */

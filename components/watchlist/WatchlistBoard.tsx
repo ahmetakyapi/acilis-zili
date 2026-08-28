@@ -434,17 +434,40 @@ function SortableRows({
   const router = useRouter();
   const [order, setOrder] = useState<string[] | null>(null);
   const dragId = useRef<string | null>(null);
+  /* Sürükleme BAŞLARKENKİ sıra — geri alma hedefi bu. `onDragOver` yerel
+     sırayı adım adım değiştiriyor, yani bırakma anındaki `order` artık
+     "önceki" değil. */
+  const dragOncesi = useRef<string[] | null>(null);
 
   const ordered = useMemo(
     () => applyOrder(list.items, order),
     [list.items, order],
   );
 
+  /* İYİMSER SIRA GERİ ALINIYOR. Çağrı `void` ile atılıyordu: eylem
+     başarısız olduğunda ekrandaki sıra olduğu gibi kalıyor, veritabanı eski
+     sırayı koruyor ve okuyucu yalanı ancak tam sayfa yenilemede görüyordu.
+     `applyOrder` yerel sırayı sunucudan gelen listenin ÜSTÜNE katladığı için
+     yalan, başka eylemlerin tetiklediği tazelemelerden bile sağ çıkıyordu.
+
+     `.catch()` tek başına yetmezdi — eylemin erken dönüşleri fırlatmıyor,
+     `{ ok: false }` dönüyor. Bu yüzden iki yol da kapatılıyor: yanıt
+     olumsuzsa ya da çağrı fırlarsa önceki sıraya dönülüyor ve sunucudan
+     taze veri isteniyor, yani ekran her hâlde veritabanıyla aynı şeyi
+     gösteriyor. */
   const persist = useCallback(
-    (ids: string[]) => {
-      void reorderWatchlistItems(list.id, ids);
+    (ids: string[], previous: string[] | null) => {
+      const geriAl = () => {
+        setOrder(previous);
+        router.refresh();
+      };
+      reorderWatchlistItems(list.id, ids)
+        .then((sonuc) => {
+          if (!sonuc?.ok) geriAl();
+        })
+        .catch(geriAl);
     },
-    [list.id],
+    [list.id, router],
   );
 
   const moveTo = useCallback(
@@ -466,10 +489,11 @@ function SortableRows({
       const to = from + delta;
       if (from === -1 || to < 0 || to >= ids.length) return;
       ids.splice(to, 0, ...ids.splice(from, 1));
+      const onceki = order;
       setOrder(ids);
-      persist(ids);
+      persist(ids, onceki);
     },
-    [ordered, persist],
+    [order, ordered, persist],
   );
 
   return (
@@ -482,6 +506,7 @@ function SortableRows({
             draggable
             onDragStart={(event) => {
               dragId.current = item.id;
+              dragOncesi.current = order;
               event.dataTransfer.effectAllowed = "move";
             }}
             onDragOver={(event) => {
@@ -494,7 +519,8 @@ function SortableRows({
             onDrop={(event) => event.preventDefault()}
             onDragEnd={() => {
               dragId.current = null;
-              if (order) persist(order);
+              if (order) persist(order, dragOncesi.current);
+              dragOncesi.current = null;
             }}
             className="group flex items-center gap-2 px-2 py-2.5 transition-colors hover:bg-primary-tint sm:px-3"
           >

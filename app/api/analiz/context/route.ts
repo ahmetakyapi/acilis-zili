@@ -194,7 +194,26 @@ export async function GET(request: Request) {
     }
   }
 
-  const analyzed = new Set(existing.map((row) => row.symbol));
+  /* ÖLÇÜT PENCERE, SEMBOL DEĞİL. Bayrak `existing.map(row => row.symbol)`
+     ile kuruluyordu ve `existing` sorgusu TARİHE BAKMIYOR (son 400 analiz,
+     aylar geriye gidiyor). Sonuç: bir kez analiz edilmiş her şirket, YENİ
+     çeyreğini açıkladığında da "zaten analiz edildi" görünüyordu — rutin onu
+     bir daha hiç aday listesine almıyordu. Aynı dosyadaki `grouped` haritası
+     doğru granülerliği (`sembol:dönem`) zaten kullanıyor; ikisi çelişiyordu.
+
+     Anahtar olarak `sembol:reportDate` seçilmedi: analizin `report_date`i
+     takvimden türemiyor, rutinin POST gövdesinde elle yazılıyor ve uç
+     yalnızca biçimini doğruluyor. Takvimle bir gün oynadığında bayrak bu kez
+     YANLIŞ NEGATİF verir ve aynı çeyrek ikinci kez yazılır.
+
+     Aday penceresi daha dayanıklı: aday listesi zaten `from`–`today`
+     aralığında bilanço açıklamış şirketler, yani o pencerede tarihi olan bir
+     analiz o çeyreğe ait demektir. Bir gün kayması pencereyi değiştirmiyor. */
+  const analyzed = new Set(
+    existing
+      .filter((row) => row.reportDate >= from)
+      .map((row) => row.symbol),
+  );
 
   const candidates = reported
     .flatMap((row) => {

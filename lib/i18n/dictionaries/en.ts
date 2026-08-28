@@ -902,7 +902,7 @@ const en: typeof tr = {
   data: {
     stale: "This data may be out of date",
     failed: "Couldn't load data",
-    failedHint: "The provider isn't responding. Showing the last known value.",
+    failedHint: "The provider isn't responding; this card is empty for now.",
     delayedNote:
       "Prices come from the consolidated tape (SIP) with a 15-minute delay. Intraday volume, open-high-low and the previous close are the total across every exchange.",
     delayed: "15 Minutes Delayed",

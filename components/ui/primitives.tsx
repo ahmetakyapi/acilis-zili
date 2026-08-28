@@ -630,11 +630,24 @@ export function EmptyState({
   hint,
   action,
   className,
+  titleAs: TitleTag = "p",
 }: {
   title: string;
   hint?: string;
   action?: React.ReactNode;
   className?: string;
+  /**
+   * Başlığın etiketi. Varsayılan `p` — boş durumların çoğu bir listenin
+   * içinde ve sayfanın kendi `h1`i zaten var.
+   *
+   * SEGMENT 404'LERİ İÇİN `h1`. Üç dinamik rota (`/hisse/[symbol]`,
+   * `/haberler/[id]`, `/mercek/[slug]`) bulunamayan kaydı yalnızca bu
+   * bileşenle çiziyor ve sayfanın başka hiçbir başlığı yok: sonuç, tarayıcı
+   * anahat listesinde ve ekran okuyucuda başlıksız bir sayfaydı. Aynı durum
+   * genel 404'te tam bir ekran alıyor. Metnin sayfaya özgü kalması bilinçli
+   * (gerekçeleri o dosyalarda); eksik olan yalnızca başlık düzeyiydi.
+   */
+  titleAs?: "p" | "h1";
 }) {
   return (
     <div
@@ -643,7 +656,7 @@ export function EmptyState({
         className,
       )}
     >
-      <p className="text-sm text-body">{title}</p>
+      <TitleTag className="text-sm text-body">{title}</TitleTag>
       {hint && <p className="max-w-sm text-xs text-muted">{hint}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>

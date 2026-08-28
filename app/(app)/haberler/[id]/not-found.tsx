@@ -20,6 +20,7 @@ export default async function NewsNotFound() {
   return (
     <div className="mx-auto max-w-2xl">
       <EmptyState
+        titleAs="h1"
         title={t.news.notFound}
         hint={t.news.notFoundHint}
         action={

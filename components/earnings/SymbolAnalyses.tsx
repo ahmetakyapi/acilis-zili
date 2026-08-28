@@ -7,7 +7,7 @@ import {
   verdictOf,
   verdictTextClass,
 } from "@/lib/analysis";
-import { getAnalyses } from "@/lib/data";
+import type { AnalysisIndexRow } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn, formatEtDateLong } from "@/lib/utils";
 
@@ -22,16 +22,24 @@ import { cn, formatEtDateLong } from "@/lib/utils";
  * kartı, beş yüzden fazla hisse sayfasının her birinde tekrar eden ve
  * hiçbir şey söylemeyen bir gürültü olurdu.
  */
-export async function SymbolAnalyses({
-  symbol,
+/* SATIRLAR PROP — bileşen kendi sorgusunu ARTIK ATMIYOR. Panel
+   `<Suspense fallback={null}>` içinde akıyordu ve geç gelince altındaki her
+   şeyi aşağı itiyordu; aynı hatanın ölçülmüş hâli bu sayfanın mercek
+   bloğunda yazılı (NVDA'da mobil CLS 0,266). Yer tutucu koymak da çözüm
+   değildi: sembollerin çoğunda analiz yok, yani yer tutucu çoğu sayfada hiç
+   gelmeyecek bir blok için boşluk ayırırdı.
+   Sorgu yerel bir veritabanı okuması, sağlayıcıya gitmiyor — o yüzden
+   sayfanın kendisi çekiyor, akışa bırakmıyor. Bloğun akacak hiçbir parçası
+   kalmadığı için Suspense sınırı da gitti. */
+export function SymbolAnalyses({
+  rows,
   locale,
   t,
 }: {
-  symbol: string;
+  rows: AnalysisIndexRow[];
   locale: Locale;
   t: Dictionary;
 }) {
-  const rows = await getAnalyses(locale, { symbols: [symbol], limit: 6 });
   if (rows.length === 0) return null;
 
   return (

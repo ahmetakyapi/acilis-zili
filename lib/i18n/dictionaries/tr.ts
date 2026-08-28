@@ -1086,7 +1086,12 @@ const tr = {
   data: {
     stale: "Bu veri güncel olmayabilir",
     failed: "Veri alınamadı",
-    failedHint: "Sağlayıcıya ulaşılamıyor. Son bilinen değer gösteriliyor.",
+    /* İkinci cümle "Son bilinen değer gösteriliyor." idi ve YANLIŞTI:
+       `DataError` yalnızca `!result.ok` dalında çiziliyor, yani ekranda hiçbir
+       değer YOK — kart boş. Okuyucuya gördüğü sayının eski olduğunu söylemek
+       ile hiç sayı olmadığını söylemek farklı iki şey; birincisi de zaten
+       ayrı bir anahtarda yazılı (`stale`). */
+    failedHint: "Sağlayıcıya ulaşılamıyor; bu kart şimdilik boş.",
     delayedNote:
       "Fiyatlar konsolide veri akışından (SIP) gelir ve 15 dakika gecikmelidir. Gün içi hacim, açılış-en yüksek-en düşük ve önceki kapanış bütün borsaların toplamıdır.",
     /* Kaynak adları SÖZLÜKTE: "önbellek" ve "takvim" sabit bir tablodan

@@ -57,6 +57,17 @@ const PROFILE_REFRESH_LIMIT = 25;
  * Adımlar bu süreyi aşmaya başlayınca KALANI ATLIYOR ve raporda söylüyor.
  * Yarıda kesilen bir fonksiyon hiçbir şey söylemeden ölüyordu; atlanan iş
  * ertesi gün zaten tekrar sıraya giriyor.
+ *
+ * DENETİM ÜÇ DÖNGÜNÜN İÇİNDEYDİ, ADIMLARIN ARASINDA DEĞİL. Sekiz adımdan
+ * yalnızca üçü (takvim, şirket haberleri, profiller) bütçeye bakıyordu; o
+ * üçü bütçeyi doldurup çıktığında geri kalan beş adım — çeviri, takvim
+ * doldurma, endeks denetimi, makro seriler, gerçekleşen değerler — hiçbir
+ * şey sormadan koşmaya devam ediyordu. Yani söz verilen "kalanı atla"
+ * davranışı tam da gerekli olduğu anda çalışmıyordu.
+ *
+ * BUDAMA MUAF. Beşinci adım iki `DELETE` ve saniyenin altında; atlanması
+ * hiçbir şey kazandırmaz, atlanması tablonun sonsuza kadar büyümesi
+ * demektir. Pahalı olanlar 2c, 3 ve 4 — atlanması gerekenler de onlar.
  */
 const BUDGET_MS = 100_000;
 
@@ -325,6 +336,9 @@ export async function GET(request: Request) {
   }
 
   /* ---- 2c. Haber çevirisi (Claude — anahtar varsa) ---- */
+  if (outOfTime()) {
+    report.translate = "atlandı: bütçe";
+  } else
   try {
     if (isTranslateConfigured()) {
       report.translate = await translatePendingNews(40);
@@ -400,6 +414,9 @@ export async function GET(request: Request) {
      ekranı sessizce boşaltıyordu. Artık FRED'in yayın takviminden bir yıl
      ileriye kadar kendi kendine uzuyor; elle işlenmiş kayıtlara dokunmuyor.
      Ayrıntı ve FOMC'nin neden buradan gelmediği: lib/calendar-sync.ts */
+  if (outOfTime()) {
+    report.calendar = "atlandı: bütçe";
+  } else
   try {
     const sync = await syncCalendar(today);
     report.calendar = `+${sync.inserted} yayın, +${sync.rolling} haftalık`;
@@ -433,6 +450,9 @@ export async function GET(request: Request) {
   }
 
   /* ---- 3. Makro seriler ---- */
+  if (outOfTime()) {
+    report.macro = "atlandı: bütçe";
+  } else
   try {
     let count = 0;
     for (const definition of MACRO_SERIES) {
@@ -469,6 +489,9 @@ export async function GET(request: Request) {
 
      Kural: olayın kendi saati geçmediyse dokunma. Payı 30 dakika — FRED
      yayını anında yansıtmıyor. */
+  if (outOfTime()) {
+    report.actuals = "atlandı: bütçe";
+  } else
   try {
     let filled = 0;
     let skippedUnreleased = 0;

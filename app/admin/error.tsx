@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { startTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { Button, ButtonLink, Panel } from "@/components/ui/primitives";
 
@@ -25,6 +26,17 @@ export default function AdminError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
+  /* "Tekrar Dene" gerçekten yeniden çeker: Next'in `reset()`i yalnızca hata
+     durumunu temizliyor, ağa çıkmıyor. Gerekçenin tamamı app/(app)/error.tsx
+     başındaki notta. */
+  const tekrarDene = () => {
+    startTransition(() => {
+      router.refresh();
+      reset();
+    });
+  };
+
   useEffect(() => {
     console.error("Yönetim ekranı hatası:", error);
   }, [error]);
@@ -51,7 +63,7 @@ export default function AdminError({
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2.5">
-        <Button type="button" onClick={reset}>
+        <Button type="button" onClick={tekrarDene}>
           <ArrowClockwise weight="bold" size={15} />
           Tekrar Dene
         </Button>

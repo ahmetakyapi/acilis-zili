@@ -32,6 +32,7 @@ import {
   getNextEarnings,
   getGenericImageUrls,
   getStatus,
+  getAnalyses,
   getStoriesForSymbol,
   getSymbolNames,
   liveMarketCap,
@@ -228,9 +229,14 @@ export default async function StockPage(
     );
   }
 
-  /* Mercek satırları AKIŞTAN ÖNCE — gerekçesi bloğun kendi yorumunda.
-     Yerel veritabanı okuması, sağlayıcıya gitmiyor. */
-  const storyRows = await getStoriesForSymbol(symbol, locale, 3);
+  /* Mercek satırları ve analizler AKIŞTAN ÖNCE — gerekçesi blokların kendi
+     yorumlarında. İkisi de yerel veritabanı okuması, sağlayıcıya gitmiyor.
+     TEK TURDA: ardışık beklenirlerse kabuk iki Neon gidiş dönüşü bekler ve
+     kazanılan CLS, gecikmeye geri verilir. */
+  const [storyRows, analysisRows] = await Promise.all([
+    getStoriesForSymbol(symbol, locale, 3),
+    getAnalyses(locale, { symbols: [symbol], limit: 6 }),
+  ]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -310,10 +316,8 @@ export default async function StockPage(
 
       {/* Analizler tablonun HEMEN üstünde: tablo çeyreklerin rakamları,
           panel o rakamların okunmuş hâli. Analizi olmayan şirkette hiçbir
-          şey basılmaz. */}
-      <Suspense fallback={null}>
-        <SymbolAnalyses symbol={symbol} locale={locale} t={t} />
-      </Suspense>
+          şey basılmaz. Akışta DEĞİL — gerekçesi bileşenin kendi yorumunda. */}
+      <SymbolAnalyses rows={analysisRows} locale={locale} t={t} />
 
       {/* Mercek yazıları analizlerin ALTINDA: analiz bir çeyreğin okunmuş
           hâli ve sayfanın tablosuyla doğrudan bağlı; mercek ise bir olayın

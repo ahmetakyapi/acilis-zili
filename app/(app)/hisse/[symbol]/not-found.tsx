@@ -17,6 +17,7 @@ export default async function StockNotFound() {
     /* Çıkış yolu: dizin. Ekran `action` almadığı için tek bir bağlantı bile
        taşımıyordu — okuyucu ortalanmış iki cümleyle baş başa kalıyordu. */
     <EmptyState
+      titleAs="h1"
       title={t.stock.notFound}
       hint={t.stock.notFoundHint}
       action={

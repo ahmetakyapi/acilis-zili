@@ -132,7 +132,7 @@ export const getEventsBetween = cache(async function getEventsBetween(
       .where(and(gte(economicEvents.eventDate, from), lte(economicEvents.eventDate, to)))
       .orderBy(asc(economicEvents.eventDate), asc(economicEvents.eventTimeEt));
   } catch (error) {
-    yutuldu("loadHolidays", error);
+    yutuldu("getEventsBetween", error);
     return [];
   }
 });
@@ -204,7 +204,7 @@ export const getEarningsBetween = cache(async function getEarningsBetween(
       )
       .orderBy(asc(earningsCalendar.reportDate));
   } catch (error) {
-    yutuldu("getUpcomingEvents", error);
+    yutuldu("getEarningsBetween", error);
     return [];
   }
 });
@@ -399,7 +399,7 @@ export const getNewsById = cache(async function getNewsById(
     const [row] = await db.select().from(news).where(eq(news.id, id)).limit(1);
     return row ? haberiTemizle(row) : null;
   } catch (error) {
-    yutuldu("getEarningsForSymbol", error);
+    yutuldu("getNewsById", error);
     return null;
   }
 });
@@ -740,9 +740,16 @@ export async function getUserSymbols(userId: string): Promise<string[]> {
 
 /* ---- Sembol adları (kartlarda isim göstermek için) ---- */
 
+/* `indexProxy` ve `storedMarketCap` BURADA YOK — ikisi de yalnızca
+   yazılıyordu, hiçbir yerden okunmuyordu. `storedMarketCap`in gerekçesi
+   ("`liveMarketCap` mertebe koruması bunu referans alıyor") kendi
+   hesabında YEREL bir değişkenle karşılanıyor (`stored`), tipe çıkmasına
+   gerek yok. `symbols.is_index_proxy` sütunu şemada duruyor ve
+   `/piyasalar` onu kendi sorgusundan okuyor; ölü olan bu tipteki kopyaydı.
+   Alanların bedeli görünmez değil: `getSymbolNames` bu ekranların çoğunda
+   çağrılıyor ve her satır iki alan fazla taşıyordu. */
 export type SymbolMeta = {
   name: string;
-  indexProxy: boolean;
   /**
    * Piyasa değeri — ÖNBELLEKTEKİ fiyattan hesaplanmış, kayıtlı fotoğraf
    * değil. Yalnızca USD cinsinden; yabancı para birimleri (ör. TSM/TWD)
@@ -759,12 +766,6 @@ export type SymbolMeta = {
    * ölçüyor, yani sıralama ve seçim de yanlış değerden çıkıyordu.
    */
   marketCap: number | null;
-  /**
-   * Sağlayıcının profilinde yazan ham değer — fotoğraf.
-   * `liveMarketCap` mertebe koruması bunu referans alıyor; hesaplanmış değer
-   * onun yerine geçse koruma kendi kendini ölçer hâle gelirdi.
-   */
-  storedMarketCap: number | null;
   /** Ödenmiş hisse sayısı — canlı piyasa değeri hesabı bunu kullanır. */
   shareOutstanding: number | null;
   /**
@@ -878,7 +879,6 @@ async function loadSymbolNames(
       .select({
         symbol: symbolsTable.symbol,
         name: symbolsTable.name,
-        isIndexProxy: symbolsTable.isIndexProxy,
         marketCap: symbolsTable.marketCap,
         currency: symbolsTable.currency,
         shareOutstanding: symbolsTable.shareOutstanding,
@@ -908,13 +908,11 @@ async function loadSymbolNames(
           const shares = usd ? r.shareOutstanding : null;
           return {
             name: r.name,
-            indexProxy: r.isIndexProxy,
             marketCap:
               liveMarketCap(
                 { marketCap: stored, shareOutstanding: shares },
                 r.cachedPrice,
               ) ?? stored,
-            storedMarketCap: stored,
             shareOutstanding: shares,
             currency: r.currency,
             logoUrl: logoSrc(r.symbol, r.logoUrl),
@@ -1090,7 +1088,7 @@ export const isKnownSymbol = cache(async function isKnownSymbol(
       .limit(1);
     return Boolean(row);
   } catch (error) {
-    yutuldu("getEarningsSymbolsMissingProfile", error);
+    yutuldu("isKnownSymbol", error);
     // Veritabanı düştüyse sembolü tanınmış sayma; dar sınır uygulanır ve
     // sağlayıcı kotası korunur. Yanlış tarafa düşmek burada güvenli olan.
     return false;

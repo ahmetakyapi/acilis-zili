@@ -9,6 +9,7 @@ export default async function StoryNotFound() {
   return (
     <Panel>
       <EmptyState
+        titleAs="h1"
         title={t.stories.notFound}
         hint={t.stories.notFoundHint}
         action={

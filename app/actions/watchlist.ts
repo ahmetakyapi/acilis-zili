@@ -187,23 +187,37 @@ export async function addSymbolToList(formData: FormData) {
  * Sürükle-bırak sonrası kalıcı sıra. Yalnızca kullanıcının kendi listesi ve
  * o listeye ait öğe kimlikleri işlenir; listede olmayan id sessizce atlanır.
  */
+/**
+ * Sıralamayı yazar ve BAŞARIYI BİLDİRİR.
+ *
+ * Eskiden `void` dönüyordu ve çağıran taraf sonucu hiç göremiyordu. Sorun
+ * yalnızca sessizlik değildi: aşağıdaki erken dönüşlerin hiçbiri FIRLATMIYOR
+ * (oturum düşmesi, listenin başkasına ait olması, sınır aşımı, geçersiz
+ * kimlikler). Yani istemci `.catch()` yazsa bile hiçbir şey yakalayamazdı —
+ * söz reddedilmiyor ki. Sürükleme ekranda kalıyor, veritabanı eski sırada
+ * duruyor ve yalan sıra tam sayfa yenilemeye kadar görünüyordu.
+ *
+ * `{ ok }` sözleşmesi `addSymbolToList`te zaten kurulu; ikisi aynı kalıpta.
+ */
 export async function reorderWatchlistItems(
   listId: string,
   orderedIds: string[],
-) {
+): Promise<{ ok: boolean }> {
   const userId = await requireUserId();
-  if (!userId || !listId || !Array.isArray(orderedIds)) return;
+  if (!userId || !listId || !Array.isArray(orderedIds)) return { ok: false };
   /* Sınırı AŞAN İSTEK KIRPILMAZ, HİÇ İŞLENMEZ. Kırpmak, gönderenin niyetini
      tahmin etmek olurdu: gerçek bir sürükle-bırak asla bu boyda olmaz, yani
      bu istek ya bozuk ya kasıtlı. İkisinde de doğru cevap dokunmamak. */
-  if (orderedIds.length === 0 || orderedIds.length > MAX_REORDER_ITEMS) return;
+  if (orderedIds.length === 0 || orderedIds.length > MAX_REORDER_ITEMS) {
+    return { ok: false };
+  }
 
   const [list] = await db
     .select({ id: watchlists.id })
     .from(watchlists)
     .where(and(eq(watchlists.id, listId), eq(watchlists.userId, userId)))
     .limit(1);
-  if (!list) return;
+  if (!list) return { ok: false };
 
   const rows = await db
     .select({ id: watchlistItems.id })
@@ -214,7 +228,7 @@ export async function reorderWatchlistItems(
   /* Tekilleştirme sıradan ÖNCE: aynı kimlik iki kez gelirse ikinci geçişi
      birincinin sırasını eziyor ve sonuç, gönderilen sıradan farklı çıkıyordu. */
   const ordered = [...new Set(orderedIds)].filter((id) => valid.has(id));
-  if (ordered.length === 0) return;
+  if (ordered.length === 0) return { ok: false };
 
   /* TEK SORGU. Öğe başına bir UPDATE, on beş sembollük bir listede on beş
      ayrı HTTP gidiş-dönüşü demekti (Neon serverless sürücüsü her sorguyu
@@ -234,6 +248,7 @@ export async function reorderWatchlistItems(
     );
 
   revalidatePath("/favoriler");
+  return { ok: true };
 }
 
 export async function removeSymbolFromList(formData: FormData) {
