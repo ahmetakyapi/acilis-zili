@@ -68,18 +68,39 @@ function nextDay(isoDate: string): string {
 }
 
 /**
- * 75 oktetlik satır sınırı. Uzun bir SUMMARY tek satırda gönderilince bazı
- * istemciler (özellikle Outlook) dosyayı bozuk sayıyor.
+ * 75 oktetlik satır sınırı (RFC 5545 § 3.1). Uzun bir SUMMARY tek satırda
+ * gönderilince bazı istemciler (özellikle Outlook) dosyayı bozuk sayıyor.
+ *
+ * OKTET SAYILIYOR, KARAKTER DEĞİL — ve bu fark bu depoda teoriden ibaret
+ * değil. Fonksiyon `line.length` ile UTF-16 kod birimi sayıyordu; Türkçe
+ * metinde ç, ğ, ı, ö, ş, ü harflerinin her biri UTF-8'de İKİ oktet.
+ * Ölçüldü: gerçek bir bilanço açıklaması ("…çeyrek sonuçlarını açıklıyor.
+ * Sağlayıcı kesin saat vermiyor; açıklama kapanış sonrası bekleniyor.")
+ * 74 karakterlik satırlara katlanıyor ama o satırlar 80 ve 83 oktet
+ * tutuyordu. Yani sınırı aşmayı önlemek için yazılmış fonksiyon, Türkçe
+ * üreten HER satırda sınırı aşıyordu.
+ *
+ * `for..of` kod NOKTASI geziyor: vekil çift (emoji gibi) ortadan bölünmez.
+ * Devam satırı bir boşlukla başlıyor ve o boşluk da bütçeden düşüyor.
  */
+const FOLD_LIMIT = 75;
+
 function fold(line: string): string {
-  if (line.length <= 74) return line;
-  const parts = [line.slice(0, 74)];
-  let rest = line.slice(74);
-  while (rest.length > 73) {
-    parts.push(` ${rest.slice(0, 73)}`);
-    rest = rest.slice(73);
+  if (Buffer.byteLength(line, "utf8") <= FOLD_LIMIT) return line;
+
+  const parts: string[] = [];
+  let current = "";
+  let budget = FOLD_LIMIT;
+
+  for (const ch of line) {
+    if (Buffer.byteLength(current + ch, "utf8") > budget) {
+      parts.push(current);
+      current = " ";
+      budget = FOLD_LIMIT;
+    }
+    current += ch;
   }
-  if (rest) parts.push(` ${rest}`);
+  if (current) parts.push(current);
   return parts.join(CRLF);
 }
 

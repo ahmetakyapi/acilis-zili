@@ -861,16 +861,36 @@ export function ArticleBody({
                     {block.label}
                   </p>
                 )}
-                <div className="flex flex-col gap-2 rounded-(--radius-lg) border border-line bg-surface px-4 py-4">
+                <div className="flex flex-col gap-3 rounded-(--radius-lg) border border-line bg-surface px-4 py-4">
+                  {/* İKİ SATIR: üstte ad ve değer, altta tam genişlikte çubuk.
+                      Üçü bir dönem tek satırdaydı ve ad sütunu SABİT genişlik
+                      taşıyordu (dar ekranda 122px). Ölçüldü: 390 piksellik
+                      ekranda makale satırı 290 piksel, yani 122 + 12 + 82 +
+                      12 + 62 — ada 122 piksel, çubuğa yalnızca 82. Ad
+                      `truncate` ile kırpılıyordu ve bu blokta adlar uzun
+                      oluyor ("SK Securities (geri alımı yürütecek aracı
+                      kurum)"); kırpılınca satırın neyi ölçtüğü okunmuyordu.
+
+                      Sabit genişliklerin üçü de gitti: ad kalan alanı alıyor
+                      ve gerekirse SARIYOR, çubuk kendi satırında tam genişlik
+                      kullanıyor. Kalıp bu dosyadaki `pay` bloğuyla aynı —
+                      iki çizim bloğu artık aynı düzeni kuruyor. */}
                   {block.items.map((item, itemIndex) => (
-                    <div
-                      key={itemIndex}
-                      className="flex items-center gap-3 text-base"
-                    >
-                      <span className="w-[122px] shrink-0 truncate text-body sm:w-[168px]">
-                        {item.name}
-                      </span>
-                      <span className="h-2 flex-1 overflow-hidden rounded-full bg-surface-sunken">
+                    <div key={itemIndex} className="flex flex-col gap-1.5">
+                      <div className="flex items-baseline gap-3 text-base">
+                        <span className="min-w-0 flex-1 text-body">
+                          {item.name}
+                        </span>
+                        <span
+                          className={cn(
+                            "numeral shrink-0 font-semibold",
+                            item.value < 0 ? "text-down" : "text-up",
+                          )}
+                        >
+                          {item.display}
+                        </span>
+                      </div>
+                      <span className="h-2 overflow-hidden rounded-full bg-surface-sunken">
                         <span
                           className={cn(
                             "block h-full rounded-full",
@@ -883,14 +903,6 @@ export function ArticleBody({
                             )}%`,
                           }}
                         />
-                      </span>
-                      <span
-                        className={cn(
-                          "numeral w-[62px] shrink-0 text-right font-semibold",
-                          item.value < 0 ? "text-down" : "text-up",
-                        )}
-                      >
-                        {item.display}
                       </span>
                     </div>
                   ))}

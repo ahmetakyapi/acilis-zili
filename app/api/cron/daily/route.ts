@@ -339,8 +339,11 @@ export async function GET(request: Request) {
      Profil; hisse sayısı, sektör ve logoyu taşır. Piyasa değeri sayfalarda
      canlı fiyat × hisse sayısı olarak hesaplandığı için bu kayıtların gün
      içinde tazelenmesi gerekmez — hisse sayısı ancak geri alım/ihraçla
-     değişir. Günde 60 sembol dönerek ~9 günde tüm evren yenilenir; Finnhub'ın
-     dakikada 60 istek sınırı ve fonksiyonun 120 sn bütçesi buna izin verir. */
+     değişir. Günde 25 sembol dönerek ~29 günde tüm evren yenilenir; sayı bir
+     dönem 60'tı ve koşum 120 saniyelik fonksiyon bütçesini aşıyordu, bu
+     yüzden kuyruğun sonundaki profiller sessizce hiç çalışmıyordu (gerekçe
+     dosyanın başında). Finnhub'ın dakikada 60 istek sınırı da aynı kapıdan
+     geçiyor. */
   try {
     /* Sıra: adla seçilen şirketler → yaklaşan bilançoların tanınmayan
        sembolleri → kalan bütçeyle en uzun süredir güncellenmeyenler. getCompanyProfile
@@ -350,8 +353,9 @@ export async function GET(request: Request) {
        takvimde görünür katmana, gün şeridine ve analiz aday havuzuna sembolle
        giriyorlar ama ad, sektör ve logo profilden geliyor. ONDS bu yüzden
        aylarca künyesiz kaldı — bilanço takviminde kaydı vardı, `symbols`
-       tablosunda hiç satırı yoktu. Yedi sembol, günlük 60'lık bütçenin
-       görünmeyecek kadar küçük bir parçası. */
+       tablosunda hiç satırı yoktu. Sekiz sembol; günlük 25'lik bütçenin
+       yanında küçük ama görmezden gelinecek kadar değil — sayı büyürse
+       bütçenin de büyümesi gerekir. */
     const [upcoming, stalest] = await Promise.all([
       getEarningsSymbolsMissingProfile(7, 10),
       getStalestSymbols(PROFILE_REFRESH_LIMIT),

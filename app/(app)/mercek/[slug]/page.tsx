@@ -238,7 +238,16 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
             <p className="plate text-nano tracking-[0.09em]">
               {t.stories.sources}
             </p>
-            <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-small">
+            {/* HEDEF YÜKSEKLİĞİ GERÇEK, `.tap-44` DEĞİL. Bağlantılar 15
+                piksellik metin kutularıydı ve dokunma hedefi turunda
+                atlanmışlardı. Ama burada sözde öğe işe yaramaz: liste
+                SARIYOR ve 44 piksellik görünmez bir genişletme, satır adımı
+                24 pikselken alt satırın bağlantısını kapardı — aynı hatayı
+                bilanço künyesinde ölçerek gördük. Doğru araç yükseklik:
+                bağlantı telefonda 44 piksel, dikey aralık sıfır, yani satır
+                adımı da 44 ve örtüşme yok. Geniş ekranda imleç hassas,
+                orada 32. */}
+            <ul className="flex flex-wrap gap-x-4 text-small">
               {sources.map((source) => {
                 /* Adres /api/mercek üzerinden geliyor ve zod'un `.url()`
                    doğrulaması `javascript:` şemasını da geçiriyor; süzgeç
@@ -251,12 +260,14 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
                         href={href}
                         target="_blank"
                         rel="noreferrer noopener"
-                        className="text-primary transition-colors hover:text-primary-hover"
+                        className="inline-flex min-h-11 items-center text-primary transition-colors hover:text-primary-hover sm:min-h-8"
                       >
                         {source.label}
                       </a>
                     ) : (
-                      <span className="text-body">{source.label}</span>
+                      <span className="inline-flex min-h-11 items-center text-body sm:min-h-8">
+                        {source.label}
+                      </span>
                     )}
                   </li>
                 );

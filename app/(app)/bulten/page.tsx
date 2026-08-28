@@ -76,7 +76,7 @@ export default async function BriefArchivePage(props: PageProps<"/bulten">) {
       {/* Kabuk veri beklemez: sekmeler hemen boyanır, tıklama anında tepki
           verir ve altındaki içerik akarak gelir. */}
       <PageHeader
-        title={period === "weekly" ? t.brief.periodWeekly : t.brief.title}
+        title={period === "weekly" ? t.brief.weeklyTitle : t.brief.title}
         subtitle={
           period === "weekly" ? t.brief.weeklySubtitle : t.brief.subtitle
         }

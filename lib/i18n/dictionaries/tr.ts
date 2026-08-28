@@ -650,7 +650,13 @@ const tr = {
     statusPriced: "Fiyatlandı",
     statusFiled: "Başvuruldu",
     shares: "Adet",
-    hint: "Fiyat aralığı ve büyüklük, arz tamamlanana kadar değişebilir; \u201cbeklenen\u201d kayıtlarda tarih de kayabilir. Yeni halka açılan hisselerin ilk haftalarındaki oynaklık için Hisse Senedi ve Likidite rehberlerine bakabilirsin.",
+    /* İkinci bir cümle daha vardı ve okuyucuyu "Hisse Senedi ve Likidite
+       rehberlerine" yolluyordu — ama DÜZ METİNDİ, tıklanmıyordu; üstelik
+       İngilizce karşılığı hiç yazılmamıştı, yani aynı yuvada iki dil iki
+       farklı şey söylüyordu. Yönlendirme kaldırılmadı, doğru araca taşındı:
+       sayfanın altındaki GuideHint artık halka arz ve likidite rehberlerini
+       de gerçek bağlantı olarak basıyor. */
+    hint: "Fiyat aralığı ve büyüklük, arz tamamlanana kadar değişebilir; \u201cbeklenen\u201d kayıtlarda tarih de kayabilir.",
   },
 
   compare: {
@@ -816,7 +822,12 @@ const tr = {
     today: "Bugün",
     thisWeek: "Bu Hafta",
     periodDaily: "Günlük",
+    /* Sayfa başlığı ile SEKME adı ayrı: sekmede "Haftalık" doğru (yanında
+       "Günlük" duruyor, tamlama gereksiz), sayfa başlığında ise çıplak bir
+       sıfat kalıyordu — günlük görünüm "Günlük Bülten" derken haftalık
+       görünüm yalnızca "Haftalık" diyordu. */
     periodWeekly: "Haftalık",
+    weeklyTitle: "Haftalık Bülten",
     /* Haftalık bülten iki soruyu birlikte cevaplıyor ve bu, ekranda
        söylenmezse anlaşılmıyor: kayıt biten haftanın adına açılıyor ama
        içinde önümüzdeki haftanın takvimi de var. */
@@ -917,7 +928,7 @@ const tr = {
     fallbackNote:
       "Bu yazı henüz Türkçeye çevrilmedi; orijinal diliyle gösteriliyor.",
     disclaimer:
-      "Bu yazı yayımlandığı tarihteki kamuya açık haber kaynaklarına dayanır. Yatırım tavsiyesi değildir.",
+      "Bu yazı yayımlandığı tarihteki kamuya açık haber kaynaklarına dayanır. Yatırım Tavsiyesi Değildir.",
   },
 
   macro: {

@@ -434,10 +434,18 @@ export default async function CalendarPage(
           günlerde ne olacak" sorusuna cevap veriyor. */}
       <IpoCalendar locale={locale} t={t} />
 
+      {/* DÖRT SLUG, İKİ DEĞİL — sayfa iki yarım taşıyor. Üstteki ekonomik
+          takvim Fed ve enflasyona bakıyor, alttaki halka arz takvimi bambaşka
+          bir konuya; rehber satırı yalnızca ilk yarıyı karşılıyordu. Halka
+          arz künyesindeki "Hisse Senedi ve Likidite rehberlerine bakabilirsin"
+          cümlesi de düz metindi, yani tıklanmıyordu — o yönlendirme buraya
+          taşındı ve gerçek bağlantı oldu.
+          Sayı ÇİFT olmalı: GuideHint birden çok yazıda `sm:grid-cols-2`
+          veriyor, üçüncü slug ikinci satırda yarım kart bırakırdı. */}
       <GuideHint
         label={t.guide.contextLabel}
         locale={locale}
-        slugs={["sahin-guvercin", "enflasyon"]}
+        slugs={["sahin-guvercin", "enflasyon", "halka-arz", "spread-likidite"]}
         className="pt-1"
       />
     </div>

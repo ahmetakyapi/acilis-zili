@@ -336,14 +336,22 @@ düzeltmeye bağlı:
   yüzey rampası 1,03:1 kontrastla görünmezken açıldı.
 - **Renk tek taşıyıcı değil.** Yön her zaman işaretle de söylenir (▲/▼ ya da
   +/−), grafik serileri renk körlüğünde ayrışsın diye kesikli çizilir.
-- **Dokunma hedefi** telefonda 44 piksel, masaüstünde 32–36'ya iner. Görünür
-  ölçüyü büyütmeden bunu sağlayan tek bir yardımcı var: `.tap-44`
-  (`app/globals.css`). Bir panel başlığındaki "Tümünü Gör" bağlantısını 44
-  piksel yüksekliğinde çizmek satırı şişirirdi; hedef sözde öğeyle genişliyor,
-  düzen kımıldamıyor. Tek istisna bir cümlenin içine gömülü SATIR İÇİ
-  bağlantılar: onlar genişletilince birbirinin hedefini kapıyor ve kural
-  zaten onları muaf tutuyor (WCAG 2.5.8). Ölçüm otomatik değil, tarayıcıdan
-  yapılıyor — bkz. Doğrulama.
+- **Dokunma hedefi** telefonda 44 piksel, masaüstünde 32–36'ya iner. İki araç
+  var ve hangisinin kullanılacağı yapıya bağlı:
+  - `.tap-44` (`app/globals.css`) hedefi sözde öğeyle büyütür, görünür ölçüye
+    ve düzene dokunmaz. Bir panel başlığındaki "Tümünü Gör" bağlantısını 44
+    piksel yüksekliğinde çizmek satırı şişirirdi; hedef genişler, düzen
+    kımıldamaz.
+  - Öğe SARAN bir listenin içindeyse ya da `overflow: hidden` bir kabın
+    altındaysa sözde öğe işe yaramaz — ilkinde alt satırın hedefini kapar,
+    ikincisinde kırpılır. Orada gerçek yükseklik verilir (`min-h-11
+    sm:min-h-8`) ve dikey aralık ona göre ayarlanır. Kaynak künyeleri ve
+    menüdeki dil segmenti bu yoldan geçti.
+
+  Kuralın dışında kalan tek şey bir cümlenin içine gömülü satır içi
+  bağlantılar (bir paragraftaki "bilançonun" gibi); onları genişletmek
+  satırları birbirine geçirir ve kural zaten muaf tutuyor (WCAG 2.5.8).
+  Ölçüm otomatik değil, tarayıcıdan yapılıyor — bkz. Doğrulama.
 - **Hareket** azaltılmış hareket tercihine saygı gösterir; piyasa şeridi hover,
   `prefers-reduced-motion` ve açık bir duraklat düğmesiyle durur.
 

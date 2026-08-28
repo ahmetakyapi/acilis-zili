@@ -678,6 +678,7 @@ const en: typeof tr = {
     thisWeek: "This Week",
     periodDaily: "Daily",
     periodWeekly: "Weekly",
+    weeklyTitle: "Weekly Brief",
     weeklySubtitle:
       "Written every Monday · what happened last week, what is coming this week",
     weeklyFrame: "What Happened Last Week · What Is Coming This Week",
@@ -755,7 +756,7 @@ const en: typeof tr = {
     fallbackNote:
       "This piece hasn't been translated to English yet — you're reading the Turkish original.",
     disclaimer:
-      "This piece is based on public reporting available at the time of publication. It is not investment advice.",
+      "This piece is based on public reporting available at the time of publication. Not Investment Advice.",
   },
 
   macro: {

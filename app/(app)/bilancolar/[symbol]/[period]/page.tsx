@@ -1158,50 +1158,57 @@ export default async function AnalysisDetailPage(
       <footer className="flex flex-col gap-2 border-t border-line pt-3.5">
         <p className="text-tiny text-muted">{t.analysis.disclaimer}</p>
         {sources.length > 0 && (
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-tiny text-muted">
-            <span className="font-semibold">{t.analysis.sourcesLabel}:</span>
-            {sources.map((source, index) => {
-              /* ADRES SÜZGEÇTEN GEÇER. Kaynak listesi `/api/analiz` POST
-                 gövdesinden geliyor ve oradaki `z.string().url()` yetmiyor:
-                 doğrulama `new URL()` tabanlı olduğu için `javascript:alert(1)`
-                 de geçerli bir adres sayılıyor. React'in JSX kaçışı `href`
-                 özniteliğini kapsamaz, yani tıklanan bağlantı çalışan bir
-                 betiğe dönüşürdü. Aynı süzgeç mercek sayfasında zaten vardı;
-                 burası o düzeltmenin dışında kalmıştı. */
-              const href = safeExternalUrl(source.url);
-              return (
-              <span key={`${source.label}-${index}`}>
-                {href ? (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer nofollow"
-                    /* DOKUNMA HEDEFİ. Ölçülen yükseklik 14 pikseldi ve
-                       satır aralığı 4; telefonda alt alta dizilen üç-dört
-                       DIŞ bağlantıda yanlışına basmak neredeyse kaçınılmaz.
-                       Negatif kenar boşluğu satır yüksekliğini bozmadan
-                       hedefi 32 piksele çıkarıyor (PanelLink deseni).
+          /* KAYNAK KÜNYESİ MERCEK'TEKİYLE AYNI KALIPTA. Burası bir dönem tek
+             bir cümleydi: etiket satır başında, bağlantılar " · " ile
+             ayrılmış satır içi `<span>`lerde. İki sorun birden çıkarıyordu.
 
-                       32'DE DURUYOR, `.tap-44` ALMIYOR. Bunlar bir cümlenin
-                       içinde " · " ile ayrılmış SATIR İÇİ bağlantılar ve
-                       satırlara sarıyorlar; 44 piksele genişletilince her
-                       biri bir alttaki satırın bağlantısının üstüne biniyor.
-                       Ölçüldü: beş bağlantının beşi de komşusunun dokunma
-                       hedefini kapıyordu. Satır içi bağlantı zaten hedef
-                       ölçüsü kuralının istisnası (WCAG 2.5.8); burada doğru
-                       araç sözde öğe değil, aralarındaki mesafe. */
-                    className="-my-2 inline-flex min-h-8 items-center py-2 text-primary hover:underline"
-                  >
-                    {source.label}
-                  </a>
-                ) : (
-                  source.label
-                )}
-                {index < sources.length - 1 && <span aria-hidden> ·</span>}
-              </span>
-              );
-            })}
-          </p>
+             Bağlantılar 14 piksellik metin kutularıydı. Negatif kenar
+             boşluğuyla 32'ye çıkarılmışlardı ama 44'e çıkarılamıyorlardı:
+             ölçüldü, satır içi oldukları ve satırlara sardıkları için
+             genişletme her seferinde bir alttaki satırın bağlantısını
+             kapıyordu — beşinin beşi de.
+
+             Aynı iş mercek yazılarında zaten LİSTE olarak kuruluydu ve orada
+             ayraç da gerekmiyordu; aralık zaten ayırıyor. Aynı künye iki
+             ekranda iki farklı biçimde yazılıyordu. Liste kalıbına geçince
+             üçü birden çözüldü: ayraç öğeleri gitti, negatif kenar boşluğu
+             gitti, hedef telefonda gerçekten 44 oldu. */
+          <>
+            <p className="text-tiny font-semibold text-muted">
+              {t.analysis.sourcesLabel}
+            </p>
+            <ul className="flex flex-wrap gap-x-4 text-tiny text-muted">
+              {sources.map((source, index) => {
+                /* ADRES SÜZGEÇTEN GEÇER. Kaynak listesi `/api/analiz` POST
+                   gövdesinden geliyor ve oradaki `z.string().url()` yetmiyor:
+                   doğrulama `new URL()` tabanlı olduğu için
+                   `javascript:alert(1)` de geçerli bir adres sayılıyor.
+                   React'in JSX kaçışı `href` özniteliğini kapsamaz, yani
+                   tıklanan bağlantı çalışan bir betiğe dönüşürdü. Aynı süzgeç
+                   mercek sayfasında zaten vardı; burası o düzeltmenin dışında
+                   kalmıştı. */
+                const href = safeExternalUrl(source.url);
+                return (
+                  <li key={`${source.label}-${index}`}>
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer nofollow"
+                        className="inline-flex min-h-11 items-center text-primary hover:underline sm:min-h-8"
+                      >
+                        {source.label}
+                      </a>
+                    ) : (
+                      <span className="inline-flex min-h-11 items-center sm:min-h-8">
+                        {source.label}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
       </footer>
     </div>
