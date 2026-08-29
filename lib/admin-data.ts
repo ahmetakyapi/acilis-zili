@@ -596,6 +596,140 @@ export async function getRecentBriefs(limit = 14): Promise<BriefRow[]> {
 }
 
 /* --------------------------------------------------------------------------
+   Yayın ritmi — hangi gün ne yazıldı
+   -------------------------------------------------------------------------- */
+
+export type PublishDay = {
+  /** "YYYY-MM-DD" ET */
+  day: string;
+  /** O günün günlük bülteni yazıldı mı. */
+  daily: boolean;
+  /** O güne pazartesi çapasıyla düşen haftalık bülten yazıldı mı. */
+  weekly: boolean;
+  /** O gün yayımlanan FARKLI mercek yazısı sayısı. */
+  stories: number;
+  /** O gün yayımlanan FARKLI bilanço analizi sayısı. */
+  analyses: number;
+  /** Hafta sonu ya da NYSE tatili — rutin o gün bülten YAZMAZ. */
+  offDay: boolean;
+  /** Bugün — gün henüz bitmedi, eksik görünmesi normal. */
+  isToday: boolean;
+};
+
+/**
+ * Son N haftanın gün gün yayın ritmi.
+ *
+ * NE İŞE YARAR: panel bugüne kadar "bugünün bülteni var mı" sorusunu
+ * cevaplıyordu; "geçen ay hangi günler boş kaldı" sorusunu değil. Bir rutin
+ * birkaç gün durup sonra devam ettiğinde geriye dönüp bakmanın hiçbir yolu
+ * yoktu. Izgara o boşlukları tek bakışta gösteriyor ve dolu günden kaydına
+ * gidiliyor.
+ *
+ * SAYIM DISTINCT. Her içerik iki dilli ve `stories` ile `earnings_analyses`
+ * aynı içerik için İKİ satır tutuyor; ham `count(*)` her günü "2" gösterir
+ * ve ızgara sürekli dolu görünürdü.
+ *
+ * GÜN TANIMI ET. Sitenin her yerinde takvim günü ET; `published_at` ise
+ * `timestamptz`. Dönüşüm sorguda yapılıyor, JavaScript tarafında yerel
+ * saate düşmesin.
+ *
+ * BÜLTENDE HAFTA SONU BOŞ OLMASI EKSİK DEĞİL. Rutinin kendi kuralı "piyasa
+ * kapalıysa o gün için yazı yazma" diyor — cron her gün koşuyor ama yazı
+ * çıkmıyor. Bayrak olmadan ızgaranın her haftası iki kırmızı hücreyle
+ * biterdi.
+ *
+ * MERCEK GÜNDE İKİ KOŞUM. Rutin 11:30 ve 23:30'da çalışıyor, yani bir günde
+ * iki yazı olabilir; hücre adet sayıyor, dolu/boş değil.
+ *
+ * ANALİZ HÜCRESİ YARGI TAŞIMAZ. Rutin yalnızca aday çeyrek varsa yazıyor ve
+ * aday geçmişi tutulmuyor — boş bir gün "yazılmadı" değil, "aday yoktu"
+ * olabilir. Bu yüzden analiz şeridinde boş hücre nötr.
+ */
+export type PublishRhythm = {
+  days: PublishDay[];
+  /** Arşivdeki EN ESKİ bülten günü — tarih seçicinin alt sınırı. */
+  firstBriefDay: string | null;
+};
+
+export async function getPublishRhythm(weeks = 8): Promise<PublishRhythm> {
+  const today = todayEt();
+  /* Izgara PAZARTESİ başlıyor: haftalık bülten pazartesiye çapalanıyor ve
+     satır başı ile çapa aynı güne düşmezse okuma bozulur. */
+  const sonPazartesi = weekAnchor(today);
+  const ilkGun = addEtDays(sonPazartesi, -7 * (weeks - 1));
+
+  try {
+    const [briefRows, storyRows, analysisRows, holidays, firstRow] =
+      await Promise.all([
+      db
+        .select({ day: dailyBriefs.briefDate, period: dailyBriefs.period })
+        .from(dailyBriefs)
+        .where(gte(dailyBriefs.briefDate, ilkGun))
+        .groupBy(dailyBriefs.briefDate, dailyBriefs.period),
+      db
+        .select({
+          day: sql<string>`(${stories.publishedAt} at time zone 'America/New_York')::date::text`,
+          n: countDistinct(stories.slug),
+        })
+        .from(stories)
+        .groupBy(sql`(${stories.publishedAt} at time zone 'America/New_York')::date`),
+      db
+        .select({
+          day: sql<string>`(${earningsAnalyses.publishedAt} at time zone 'America/New_York')::date::text`,
+          n: countDistinct(
+            sql`${earningsAnalyses.symbol} || ':' || ${earningsAnalyses.period}`,
+          ),
+        })
+        .from(earningsAnalyses)
+        .groupBy(
+          sql`(${earningsAnalyses.publishedAt} at time zone 'America/New_York')::date`,
+        ),
+      getHolidays(),
+      /* Izgara sekiz haftalık ama arşiv daha eskiye gidiyor; tarih
+         seçicinin alt sınırı ızgaranın değil ARŞİVİN başlangıcı olmalı,
+         yoksa seçici veri olan günleri dışarıda bırakır. */
+      db
+        .select({ first: sql<string | null>`min(${dailyBriefs.briefDate})` })
+        .from(dailyBriefs),
+    ]);
+
+    const daily = new Set(
+      briefRows.filter((r) => r.period === "daily").map((r) => r.day),
+    );
+    const weekly = new Set(
+      briefRows.filter((r) => r.period === "weekly").map((r) => r.day),
+    );
+    const storyByDay = new Map(storyRows.map((r) => [r.day, Number(r.n)]));
+    const analysisByDay = new Map(analysisRows.map((r) => [r.day, Number(r.n)]));
+    const tatil = new Set(holidays.map((h) => h.date));
+
+    const out: PublishDay[] = [];
+    for (let i = 0; i < weeks * 7; i++) {
+      const day = addEtDays(ilkGun, i);
+      const gun = etWeekday(day);
+      out.push({
+        day,
+        daily: daily.has(day),
+        /* Haftalık bülten o haftanın PAZARTESİsine yazılıyor; hücre de
+           orada işaretleniyor, haftanın her gününe yayılmıyor. */
+        weekly: weekly.has(day),
+        stories: storyByDay.get(day) ?? 0,
+        analyses: analysisByDay.get(day) ?? 0,
+        offDay: gun === 0 || gun === 6 || tatil.has(day),
+        isToday: day === today,
+      });
+    }
+    /* Gelecek günler ızgaraya girmiyor: bu haftanın kalanı henüz olmadı. */
+    return {
+      days: out.filter((d) => d.day <= today),
+      firstBriefDay: firstRow[0]?.first ?? null,
+    };
+  } catch {
+    return { days: [], firstBriefDay: null };
+  }
+}
+
+/* --------------------------------------------------------------------------
    Veri sağlığı
    -------------------------------------------------------------------------- */
 

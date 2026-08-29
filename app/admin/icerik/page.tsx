@@ -10,11 +10,17 @@ import {
   StatGrid,
 } from "@/components/admin/AdminUI";
 import { Skeleton } from "@/components/ui/primitives";
-import { getContentSummary, getRecentBriefs } from "@/lib/admin-data";
+import {
+  getContentSummary,
+  getPublishRhythm,
+  getRecentBriefs,
+} from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/admin";
 import { agoLabel } from "@/lib/admin-format";
 import { formatEtDateShort } from "@/lib/utils";
+import { todayEt } from "@/lib/market-hours";
 import { analysisHref } from "@/lib/analysis";
+import { PublishGrid } from "@/components/admin/PublishGrid";
 
 /**
  * İçerik.
@@ -42,6 +48,10 @@ export default async function ContentPage() {
 
       <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
         <Gaps />
+      </Suspense>
+
+      <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
+        <Rhythm />
       </Suspense>
 
       <Suspense fallback={<Skeleton className="h-72 w-full rounded-xl" />}>
@@ -80,6 +90,76 @@ async function Summary() {
         sub="tamamlanmayı bekliyor"
       />
     </StatGrid>
+  );
+}
+
+async function Rhythm() {
+  const { days, firstBriefDay } = await getPublishRhythm(8);
+  const bosIsGunu = days.filter(
+    (d) => !d.daily && !d.offDay && !d.isToday,
+  ).length;
+  const today = todayEt();
+
+  return (
+    <AdminPanel>
+      {/* Künye YARGI DEĞİL SAYI veriyor: kaç iş gününde bülten yazılmadığı
+          ızgaraya bakmadan da okunsun. Sıfırsa cümle de olumlu. */}
+      <AdminPanelTitle
+        hint={
+          bosIsGunu === 0
+            ? "son 8 hafta · bülten beklenen her iş gününde yazılmış"
+            : `son 8 hafta · ${bosIsGunu} iş gününde bülten yazılmamış`
+        }
+      >
+        Yayın Ritmi
+      </AdminPanelTitle>
+      <PublishGrid days={days} />
+
+      {/* TARİH SEÇİMİ — ızgaranın kapsamadığı geçmişe gitmek için.
+          Izgara son sekiz haftayı gösteriyor; arşiv daha eskiye gidiyor ve
+          oraya ulaşmanın hiçbir yolu yoktu.
+
+          JAVASCRIPT YOK: düz bir GET formu, tarayıcının kendi takvimi.
+          `min`/`max` ARŞİVİN gerçek aralığından geliyor, yani seçici veri
+          olmayan bir güne hiç izin vermiyor — "veri olan günü işaretlemek"
+          kuralının en ucuz hâli. `max` bugün: yarının bülteni yok. */}
+      <form
+        action="/bulten"
+        method="get"
+        className="mt-3 flex flex-wrap items-end gap-2 border-t border-line pt-3"
+      >
+        <label className="flex flex-col gap-1">
+          <span className="text-tiny font-semibold text-muted">
+            Geçmiş Bir Güne Git
+          </span>
+          <input
+            type="date"
+            name="tarih"
+            defaultValue={today}
+            min={firstBriefDay ?? undefined}
+            max={today}
+            className="numeral h-11 rounded-(--radius-md) border border-line bg-surface px-3 text-base text-strong outline-none focus:border-line-focus sm:h-9"
+          />
+        </label>
+        <button
+          type="submit"
+          className="inline-flex h-11 items-center rounded-(--radius-md) border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:h-9"
+        >
+          Bülteni Aç
+        </button>
+        <span className="text-tiny text-muted">
+          {firstBriefDay
+            ? `arşiv ${formatEtDateShort(firstBriefDay, "tr")} tarihinde başlıyor`
+            : "arşivde henüz kayıt yok"}
+        </span>
+      </form>
+
+      <p className="mt-3 text-tiny text-muted">
+        Dolu bir bülten hücresine basmak o günün bültenini açar. Pazartesi
+        hücresindeki küçük nokta, haftalık bültenin de o güne yazıldığını
+        söyler.
+      </p>
+    </AdminPanel>
   );
 }
 
