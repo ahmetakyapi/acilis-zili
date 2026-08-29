@@ -36,7 +36,7 @@ export default async function SystemPage() {
   await requireAdmin();
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <Suspense fallback={<Skeleton className="h-24 w-full rounded-xl" />}>
         <Pulse />
       </Suspense>
@@ -78,12 +78,12 @@ async function Pulse() {
     <StatGrid>
       <StatBox
         label="Cron"
-        value={pulse.ranToday ? "Bugün koştu" : "Koşmadı"}
+        value={pulse.ranToday ? "Bugün Koştu" : "Koşmadı"}
         sub={agoLabel(pulse.lastNewsFetch)}
         delta={
           pulse.ranToday
-            ? { text: "sağlıklı", tone: "up", srLabel: "sağlıklı" }
-            : { text: "kontrol et", tone: "down", srLabel: "kontrol et" }
+            ? { text: "Sağlıklı", tone: "up", srLabel: "sağlıklı" }
+            : { text: "Kontrol Et", tone: "down", srLabel: "kontrol et" }
         }
       />
       <StatBox
@@ -93,12 +93,12 @@ async function Pulse() {
            büyük punto sunucunun saatindeydi — oysa o, bir sorun anında
            bakılacak son sayı. Saat yine görünüyor, yalnızca künye
            ölçüsünde; büyük punto operasyonel sayılara kaldı. */
-        sub={`ET ${status.etTime} · sunucu ${formatInZone(now, TR_ZONE)} TR`}
+        sub={`ET ${status.etTime} · Sunucu ${formatInZone(now, TR_ZONE)} TR`}
       />
       <StatBox
         label="Sonraki Geçiş"
         value={formatInZone(status.nextTransition, TR_ZONE)}
-        sub={`${formatInZone(status.nextTransition, ET_ZONE)} NY · seans anlatısı burada değişir`}
+        sub={`${formatInZone(status.nextTransition, ET_ZONE)} NY · Seans Anlatısı Burada Değişir`}
       />
       {/* Dördüncü kutu artık bir SAYI: kaç sağlık satırı ilgi istiyor.
           Aşağıdaki liste hangileri olduğunu söylüyor, kutu kaç tane
@@ -109,13 +109,13 @@ async function Pulse() {
         value={sorunlu === 0 ? "Tümü Sağlıklı" : `${sorunlu} Satır`}
         sub={
           sorunlu === 0
-            ? `${checks.length} kontrolün tamamı geçti`
-            : "aşağıdaki listede işaretli"
+            ? `${checks.length} Kontrolün Tamamı Geçti`
+            : "Aşağıdaki Listede İşaretli"
         }
         delta={
           sorunlu === 0
-            ? { text: "sorun yok", tone: "up", srLabel: "sorun yok" }
-            : { text: "ilgi bekliyor", tone: "down", srLabel: "ilgi bekliyor" }
+            ? { text: "Sorun Yok", tone: "up", srLabel: "sorun yok" }
+            : { text: "İlgi Bekliyor", tone: "down", srLabel: "ilgi bekliyor" }
         }
       />
     </StatGrid>
@@ -172,29 +172,29 @@ async function Checks() {
   const routines = checks.filter((c) => c.group === "routine");
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       {/* RUTİNLER EN ÜSTTE. Sitenin yazılı içeriğinin tamamını kod dışında
           koşan dört rutin üretiyor; bir tanesi durduğunda ana sayfa eski
           metni göstermeye devam ediyor ve panel bugüne kadar hiçbir şey
           demiyordu. Sağlayıcı senkronu bir altta — o zaten kendi kendini
           onaran bir cron, bu ise elle kurulmuş bir zincir. */}
       <AdminPanel>
-        <AdminPanelTitle hint="içeriği yazan claude.ai görevleri · saatler TR">
+        <AdminPanelTitle hint="İçeriği Yazan claude.ai Görevleri · Saatler TR">
           Rutinler
         </AdminPanelTitle>
         <CheckList items={routines} />
       </AdminPanel>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <AdminPanel>
-          <AdminPanelTitle hint="Sağlayıcı verisi ve takvimlerin güncelliği">
+          <AdminPanelTitle hint="Sağlayıcı Verisi ve Takvimlerin Güncelliği">
             Veri Sağlığı
           </AdminPanelTitle>
           <CheckList items={data} />
         </AdminPanel>
 
         <AdminPanel>
-          <AdminPanelTitle hint="Ortam değişkeni tanımlı mı — DEĞERİ hiçbir yerde gösterilmez">
+          <AdminPanelTitle hint="Ortam Değişkeni Tanımlı mı — DEĞERİ Hiçbir Yerde Gösterilmez">
             Anahtarlar
           </AdminPanelTitle>
           <ul className="flex flex-col divide-y divide-line">

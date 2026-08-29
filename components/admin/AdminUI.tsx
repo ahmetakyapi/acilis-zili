@@ -29,7 +29,10 @@ export function AdminPanel({
   return (
     <section
       className={cn(
-        "rounded-xl border border-line bg-surface p-5 sm:p-6",
+        /* Dolgu bir kademe açıldı (20/24 → 20/28) ve panel köşesi
+           yumuşadı: yönetim ekranları veri yoğun ve panel içi nefes
+           payı, satır aralığından daha çok işe yarıyor. */
+        "rounded-(--radius-xl) border border-line bg-surface p-5 sm:p-7",
         className,
       )}
     >
@@ -48,12 +51,19 @@ export function AdminPanelTitle({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-      <div>
-        <h2 className="text-read font-bold tracking-[-0.02em] text-strong">
+    /* BAŞLIK BİR KADEME BÜYÜDÜ ve künyeyle arası açıldı. Panel başlığı ile
+       künye 13/12,5 puntoyla neredeyse aynı boydaydı; ikisi tek bir gri blok
+       gibi okunuyor, gözün panele girdiği yer belli olmuyordu. Başlık artık
+       15,5 punto ve künye 12,5'te kalıyor — hiyerarşi ölçüden geliyor,
+       renkten değil. */
+    <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1.5">
+      <div className="min-w-0">
+        <h2 className="text-lead font-bold tracking-[-0.02em] text-strong">
           {children}
         </h2>
-        {hint && <p className="mt-1 text-small text-muted">{hint}</p>}
+        {hint && (
+          <p className="mt-1.5 text-small leading-relaxed text-muted">{hint}</p>
+        )}
       </div>
       {action}
     </div>
@@ -83,8 +93,10 @@ export function StatBox({
   delta?: { text: string; tone: StatTone; srLabel: string } | null;
 }) {
   return (
-    <div className="rounded-lg border border-line bg-surface-elevated px-4 py-3.5">
-      <p className="text-tiny font-semibold uppercase tracking-[0.06em] text-muted">
+    /* Kutu dolgusu ve etiket–sayı aralığı açıldı: dört kutu yan yana
+       duruyor ve sıkışık dolgu onları tek bir şerit gibi gösteriyordu. */
+    <div className="rounded-(--radius-lg) border border-line bg-surface-elevated px-4 py-4 sm:px-5">
+      <p className="text-tiny font-semibold uppercase tracking-[0.07em] text-muted">
         {label}
       </p>
       {/* `tabular-nums` YOK. Kutu içinde hizalanacak ikinci bir sayı olmadığı
@@ -96,13 +108,13 @@ export function StatBox({
           bir metin 26 puntoda dar kutuda ikiye bölünüyordu. */}
       <p
         className={cn(
-          "mt-1.5 font-bold leading-none tracking-[-0.03em] text-strong",
+          "mt-2 font-bold leading-none tracking-[-0.03em] text-strong",
           value.length > 9 ? "text-title" : "text-heading",
         )}
       >
         {value}
       </p>
-      <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
+      <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
         {delta && (
           <span
             className={cn(
@@ -126,7 +138,7 @@ export function StatBox({
 
 export function StatGrid({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{children}</div>
+    <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">{children}</div>
   );
 }
 
@@ -145,11 +157,28 @@ export type RankRow = {
 };
 
 /**
- * Payı bar olarak da gösteren sıralı liste.
+ * Sıralı liste — "en çok okunan sayfalar" gibi.
  *
- * Bar arka planda duruyor, ayrı bir sütunda değil: on beş satırlık bir
- * listede ayrı bar sütunu satır yüksekliğini ikiye katlıyor ve okuma yönünü
- * bölüyordu. Zemin dolgusu aynı bilgiyi yer kaplamadan veriyor.
+ * ÇUBUK SATIRIN ZEMİNİ DEĞİL, ALTINDAKİ İNCE ŞERİT.
+ *
+ * Dolgu bir dönem satırın arka planıydı (`bg-primary-wash`) ve iki sorun
+ * birden üretiyordu. Birincisi görünürlük: o token panel yüzeyinden ancak
+ * 1,1–1,3 kat ayrışıyor, yani çubuk neredeyse yok. Depoda bu tam olarak
+ * bilinen bir hata — `--bar` tokeni "gece temasında çubuklar 1,35'e düşüp
+ * kayboluyordu" diye ayrıca açılmış ve bu liste onu hiç kullanmıyordu.
+ * İkincisi okunabilirlik: metin çubuğun üstünde durduğu için dolgu
+ * koyulaştırılamıyordu — koyulaştırınca kontrast AA eşiğinin altına
+ * düşüyordu. Yani çubuk ya görünmez ya metin okunmaz oluyordu.
+ *
+ * Şerit satırın ALTINA inince ikisi de çözülüyor: dolgu artık tam accent
+ * renkte, üstünde metin olmadığı için kontrast kısıtı yok, metin de temiz
+ * bir zeminde duruyor. Ayrı bir bar SÜTUNU değil — o, satır yüksekliğini
+ * ikiye katlayıp okuma yönünü bölüyordu; şerit satırın kendi genişliğinde
+ * ve üç piksel.
+ *
+ * SAYI SÜTUNU SABİT GENİŞLİKTE. Değerler sağa yaslıydı ama genişlikleri
+ * satırdan satıra değiştiği için sütun kenarı zikzak çiziyordu; on beş
+ * satırlık bir listede göz her satırda sayıyı yeniden arıyordu.
  */
 export function RankList({
   rows,
@@ -164,7 +193,7 @@ export function RankList({
   const max = Math.max(...rows.map((r) => r.value), 1);
 
   return (
-    <ol className="flex flex-col gap-px">
+    <ol className="flex flex-col">
       {rows.map((row) => {
         /* SIFIR SIFIR ÇİZİLİR. Taban `Math.max(2, …)` idi ve değeri sıfır
            olan satıra da %2'lik bir çubuk çiziyordu — bileşen genel, "hiç"
@@ -172,55 +201,47 @@ export function RankList({
         const share = Math.round((row.value / max) * 100);
         const body = (
           <>
-            {/* UÇ KAPAĞI. Dolgu `bg-primary-wash` panel yüzeyinden ancak
-                1,1–1,3 kat ayrışıyor — projenin kendi `--bar` notunun
-                "kayboluyor" dediği eşiğin altında. Dolguyu koyulaştırmak
-                çözüm değil: üstünde metin duruyor ve %22 opaklıkta kontrast
-                AA eşiğinin altına düşüyor. Bunun yerine dolgunun SAĞ UCUNA
-                accent bir kapak; üstünde metin olmadığı için metin
-                kontrastına dokunmuyor ve çubuğun nerede bittiği görünüyor.
-                Pay %98'de sınırlı: tam 100'de kapak satırın sağ kenarına
-                oturup değer sütununun kenarlığı gibi okunuyordu. */}
-            {share > 0 && (
-              <span
-                aria-hidden
-                className="absolute inset-y-0 left-0 rounded-l-xs border-r-2 border-primary bg-primary-wash"
-                style={{ width: `${Math.min(share, 98)}%` }}
-              />
-            )}
-            <span className="relative min-w-0 flex-1 truncate pr-3">
-              {row.label}
-            </span>
-            {row.secondary && (
-              <span className="numeral relative shrink-0 pr-3 text-tiny text-muted">
-                {row.secondary}
+            <span className="flex items-baseline gap-3">
+              <span className="min-w-0 flex-1 truncate">{row.label}</span>
+              {row.secondary && (
+                <span className="numeral shrink-0 text-tiny text-muted">
+                  {row.secondary}
+                </span>
+              )}
+              <span className="numeral w-16 shrink-0 text-right text-read font-bold text-strong">
+                {row.value.toLocaleString("tr-TR")}
               </span>
-            )}
-            <span className="numeral relative shrink-0 font-semibold text-strong">
-              {row.value.toLocaleString("tr-TR")}
+            </span>
+            <span
+              aria-hidden
+              /* Ray `--bar` tokeninde: o token zaten "gece temasında çubuklar
+                 kayboluyordu" diye açılmış ve tam bu iş için ayarlı.
+                 Opaklık modifikatörü YOK — token kendi alfasını taşıyor,
+                 üstüne bir kat daha koymak rayı görünmez yapıyordu. */
+              className="block h-[3px] w-full overflow-hidden rounded-full bg-bar"
+            >
+              <span
+                className="block h-full rounded-full bg-primary"
+                style={{ width: `${share}%` }}
+              />
             </span>
           </>
         );
 
-        /* DOKUNMA HEDEFİ 44 PİKSEL — yalnızca bağlantı dalında. Satır
-           `px-2.5 py-[7px] text-base` ile 33,5 piksel ediyordu ve iki liste
-           (Trafik → Sayfalar, Üyeler → En Çok Takip Edilenler) on beşer
-           tıklanabilir satır basıyor. Salt dolguyla 44 verilmiyor
-           (`py-[11px]` 41,5 eder), o yüzden gerçek yükseklik. `.tap-44`
+        /* DOKUNMA HEDEFİ 44 PİKSEL — yalnızca bağlantı dalında. `.tap-44`
            BURADA KULLANILMAZ: satırlar alt alta ve sözde öğe bir alttaki
-           satırın hedefini kapardı — gerekçe app/globals.css'te yazılı.
-           Bağlantı olmayan dal (Cihaz, Dil) eski ölçüsünde kalıyor. */
+           satırın hedefini kapardı, gerekçe app/globals.css'te yazılı. */
         return (
           <li key={row.key}>
             {row.href ? (
               <Link
                 href={row.href}
-                className="relative flex min-h-11 items-center rounded-xs px-2.5 py-[7px] text-base text-body transition-colors hover:bg-surface-elevated sm:min-h-8"
+                className="flex min-h-11 flex-col justify-center gap-1.5 rounded-(--radius-sm) px-2.5 py-2.5 text-base text-body transition-colors hover:bg-surface-elevated sm:min-h-0"
               >
                 {body}
               </Link>
             ) : (
-              <div className="relative flex items-center rounded-xs px-2.5 py-[7px] text-base text-body">
+              <div className="flex flex-col justify-center gap-1.5 rounded-(--radius-sm) px-2.5 py-2.5 text-base text-body">
                 {body}
               </div>
             )}
@@ -268,7 +289,7 @@ export function AdminTable({
                 key={cell}
                 scope="col"
                 className={cn(
-                  "pb-2 text-tiny font-semibold uppercase tracking-[0.05em] text-muted",
+                  "pb-2.5 text-tiny font-semibold uppercase tracking-[0.06em] text-muted",
                   i > 0 && "pl-3",
                   i === head.length - 1 && "text-right",
                 )}
@@ -322,7 +343,7 @@ export function AdminCell({
     <Tag
       scope={rowHeader ? "row" : undefined}
       className={cn(
-        "py-2.5 pl-3 first:pl-0",
+        "py-3 pl-3 first:pl-0",
         align === "right" && "text-right",
         strong ? "font-semibold text-strong" : "text-body",
         numeral && "numeral",

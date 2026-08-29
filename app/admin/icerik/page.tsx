@@ -41,7 +41,7 @@ export default async function ContentPage() {
   await requireAdmin();
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <Suspense fallback={<Skeleton className="h-24 w-full rounded-xl" />}>
         <Summary />
       </Suspense>
@@ -77,17 +77,17 @@ async function Summary() {
       <StatBox
         label="Mercek Yazısı"
         value={content.storySlugs.toLocaleString("tr-TR")}
-        sub={`${content.storiesMissingEn.length} tanesi tek dilli`}
+        sub={`${content.storiesMissingEn.length} Tanesi Tek Dilli`}
       />
       <StatBox
         label="Bilanço Analizi"
         value={content.analyses.toLocaleString("tr-TR")}
-        sub={`${content.analysesMissingEn.length} tanesi tek dilli`}
+        sub={`${content.analysesMissingEn.length} Tanesi Tek Dilli`}
       />
       <StatBox
         label="Grafiksiz Analiz"
         value={content.analysesWithoutCharts.length.toLocaleString("tr-TR")}
-        sub="tamamlanmayı bekliyor"
+        sub="Tamamlanmayı Bekliyor"
       />
     </StatGrid>
   );
@@ -107,8 +107,8 @@ async function Rhythm() {
       <AdminPanelTitle
         hint={
           bosIsGunu === 0
-            ? "son 8 hafta · bülten beklenen her iş gününde yazılmış"
-            : `son 8 hafta · ${bosIsGunu} iş gününde bülten yazılmamış`
+            ? "Son 8 Hafta · Bülten Beklenen Her İş Gününde Yazılmış"
+            : `Son 8 Hafta · ${bosIsGunu} İş Gününde Bülten Yazılmamış`
         }
       >
         Yayın Ritmi
@@ -206,7 +206,7 @@ async function Gaps() {
   ];
 
   return (
-    <div className="grid gap-5 lg:grid-cols-3">
+    <div className="grid gap-6 lg:grid-cols-3">
       {sections.map((section) => (
         <AdminPanel key={section.title}>
           <AdminPanelTitle hint={section.hint}>{section.title}</AdminPanelTitle>
@@ -245,7 +245,7 @@ async function Briefs() {
 
   return (
     <AdminPanel>
-      <AdminPanelTitle hint="En yeniden eskiye · yazan rutin künyede">
+      <AdminPanelTitle hint="En Yeniden Eskiye · Yazan Rutin Künyede">
         Son Bültenler
       </AdminPanelTitle>
 

@@ -34,12 +34,19 @@ export function deltaOf(
   };
 }
 
-/** "4 saat önce" / "3 gün önce" — panelin tazelik künyeleri. */
+/**
+ * "4 Saat Önce" / "3 Gün Önce" — panelin tazelik künyeleri.
+ *
+ * TITLE CASE, çünkü bunlar cümle değil künye. Kural CLAUDE.md'de yazılı ve
+ * bir dönem "ölçü altındaki mikro künyeler" muaf tutulduğunda sonuç
+ * tutarsızlık olmuştu: aynı ekranda Title Case bir rozetin altında küçük
+ * harfle başlayan bir künye duruyordu.
+ */
 export function agoLabel(date: Date | null): string {
-  if (!date) return "hiç";
+  if (!date) return "Hiç";
   const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60_000));
-  if (minutes < 60) return `${minutes} dakika önce`;
+  if (minutes < 60) return `${minutes} Dakika Önce`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 48) return `${hours} saat önce`;
-  return `${Math.floor(hours / 24)} gün önce`;
+  if (hours < 48) return `${hours} Saat Önce`;
+  return `${Math.floor(hours / 24)} Gün Önce`;
 }

@@ -846,7 +846,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push({
       label,
       group: "key",
-      value: value ? "tanımlı" : "yok",
+      value: value ? "Tanımlı" : "Yok",
       tone: value ? "ok" : "down",
       /* "anahtar" kelimesi NOTTA: özet ekranı bu satırları kendi panelinin
          dışında, başlıksız listeliyor ve orada yalnızca "Anthropic" yazması
@@ -864,7 +864,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push({
       label: "Bilanço Takvimi",
       group: "data",
-      value: `${days} gün ileri`,
+      value: `${days} Gün İleri`,
       /* Cron 30 gün dolduruyor; 20'nin altına düşmesi koşumun aksadığını
          söyler, 7'nin altı ekranın boşalmaya başladığı yer. */
       tone: days >= 20 ? "ok" : days >= 7 ? "warn" : "down",
@@ -881,7 +881,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push({
       label: "Ekonomik Takvim",
       group: "data",
-      value: `${days} gün ileri`,
+      value: `${days} Gün İleri`,
       /* FRED bir yıl ileriye dolduruyor; 90 günün altı senkronun durduğunu
          gösterir ve bunu takvim boşalmadan görmek gerekiyor. */
       tone: days >= 90 ? "ok" : days >= 30 ? "warn" : "down",
@@ -898,7 +898,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push({
       label: "Haber Akışı",
       group: "data",
-      value: hours === null ? "kayıt yok" : `${hours} saat önce`,
+      value: hours === null ? "Kayıt Yok" : `${hours} Saat Önce`,
       tone: hours === null ? "down" : hours <= 30 ? "ok" : "warn",
       note: `çevrilmemiş başlık: ${pulse.untranslated}`,
     });
@@ -914,7 +914,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push({
       label: "Sembol Profilleri",
       group: "data",
-      value: `${Number(row?.total ?? 0)} kayıt`,
+      value: `${Number(row?.total ?? 0)} Kayıt`,
       /* Cron günde 60 profil tazeliyor; ~700 sembollük evren 12 günde bir
          tur atıyor. 20 günü aşan bir kayıt turun aksadığını gösterir. */
       tone: days === null ? "idle" : days <= 20 ? "ok" : "warn",
@@ -934,7 +934,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push({
       label: "Makro Seriler",
       group: "data",
-      value: hours === null ? "kayıt yok" : `${Math.floor(hours / 24)} gün önce`,
+      value: hours === null ? "Kayıt Yok" : `${Math.floor(hours / 24)} Gün Önce`,
       tone: hours === null ? "down" : hours <= 48 ? "ok" : "warn",
       note: "en uzun süredir güncellenmeyen serinin son güncellenme zamanı",
     });
@@ -973,7 +973,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push({
       label: "Günlük Bülten",
       group: "routine",
-      value: gunlukVar ? "bugün yazıldı" : (gunluk?.latest ?? "kayıt yok"),
+      value: gunlukVar ? "Bugün Yazıldı" : (gunluk?.latest ?? "Kayıt Yok"),
       tone: gunlukVar ? "ok" : gectiMi(gunlukSaat) ? "warn" : "idle",
       note: gunlukVar
         ? `son yazma ${agoText(gunluk?.wrote ?? null)}`
@@ -993,7 +993,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push({
       label: "Haftalık Bülten",
       group: "routine",
-      value: haftalikVar ? "bu hafta yazıldı" : (haftalik?.latest ?? "kayıt yok"),
+      value: haftalikVar ? "Bu Hafta Yazıldı" : (haftalik?.latest ?? "Kayıt Yok"),
       tone: haftalikVar ? "ok" : pazartesiGecti ? "warn" : "idle",
       note: haftalikVar
         ? `${capa} haftası · son yazma ${agoText(haftalik?.wrote ?? null)}`
@@ -1018,7 +1018,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
       checks.push({
         label: etiket,
         group: "routine",
-        value: row?.latest ? agoText(row.latest) : "kayıt yok",
+        value: row?.latest ? agoText(row.latest) : "Kayıt Yok",
         tone: "idle",
         note: not,
       });
@@ -1034,7 +1034,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push({
       label: "Sayfa Ölçümü",
       group: "data",
-      value: `${range.rows.toLocaleString("tr-TR")} kayıt`,
+      value: `${range.rows.toLocaleString("tr-TR")} Kayıt`,
       tone: range.rows > 0 ? "ok" : "idle",
       note: range.firstDay
         ? `ilk kayıt ${range.firstDay} · 180 gün sonra otomatik silinir`
@@ -1051,7 +1051,7 @@ function failed(label: string): HealthCheck {
   return {
     label,
     group: "data",
-    value: "okunamadı",
+    value: "Okunamadı",
     tone: "down",
     note: "veritabanı sorgusu başarısız",
   };

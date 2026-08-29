@@ -52,7 +52,7 @@ export default async function TrafficPage(props: PageProps<"/admin/trafik">) {
   const days = windowOf(search.gun);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <nav
         aria-label="Zaman aralığı"
         className="flex items-center gap-1 rounded-lg border border-line bg-surface p-1"
@@ -95,7 +95,7 @@ export default async function TrafficPage(props: PageProps<"/admin/trafik">) {
         <Chart days={days} />
       </Suspense>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Suspense
           key={`routes-${days}`}
           fallback={<Skeleton className="h-64 w-full rounded-xl" />}
@@ -154,19 +154,19 @@ async function Totals({ days }: { days: WindowDays }) {
       <StatBox
         label="Görüntüleme"
         value={current.views.toLocaleString("tr-TR")}
-        sub={`önceki ${days} tam gün`}
+        sub={`Önceki ${days} Tam Gün`}
         delta={deltaOf(current.views, previous.views)}
       />
       <StatBox
         label="Ziyaretçi Günü"
         value={current.visitorDays.toLocaleString("tr-TR")}
-        sub={`${days} tam gün · aynı kişi her gün yeniden sayılır`}
+        sub={`${days} Tam Gün · Aynı Kişi Her Gün Yeniden Sayılır`}
         delta={deltaOf(current.visitorDays, previous.visitorDays)}
       />
       <StatBox
         label="Ziyaret Başı Sayfa"
         value={perVisitDay}
-        sub="bir günde okunan sayfa"
+        sub="Bir Günde Okunan Sayfa"
       />
       <StatBox
         label="Ölçüm Başlangıcı"
@@ -291,7 +291,7 @@ async function Splits({ days }: { days: WindowDays }) {
     <AdminPanel>
       <AdminPanelTitle hint={`Son ${days} tam gün · cihaz, dil ve üyelik`}>Okuyucu</AdminPanelTitle>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-6">
         <div>
           <h3 className="mb-1.5 text-tiny font-semibold uppercase tracking-[0.06em] text-muted">
             Cihaz

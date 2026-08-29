@@ -37,16 +37,16 @@ export default async function AdminOverviewPage() {
   await requireAdmin();
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <Suspense fallback={<Skeleton className="h-28 w-full rounded-xl" />}>
         <Headline />
       </Suspense>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <Suspense fallback={<Skeleton className="h-72 w-full rounded-xl" />}>
           <TrafficCard />
         </Suspense>
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-6">
           <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
             <AttentionCard />
           </Suspense>
@@ -74,7 +74,7 @@ async function Headline() {
       <StatBox
         label="Görüntüleme"
         value={last7.views.toLocaleString("tr-TR")}
-        sub="son 7 tam gün"
+        sub="Son 7 Tam Gün"
         delta={deltaOf(last7.views, prev7.views)}
       />
       {/* "Tekil Ziyaretçi" DEĞİL: özet her gün döndüğü için çok günlük
@@ -82,13 +82,13 @@ async function Headline() {
       <StatBox
         label="Ziyaretçi Günü"
         value={last7.visitorDays.toLocaleString("tr-TR")}
-        sub="son 7 tam gün · aynı kişi her gün yeniden sayılır"
+        sub="Son 7 Tam Gün · Aynı Kişi Her Gün Yeniden Sayılır"
         delta={deltaOf(last7.visitorDays, prev7.visitorDays)}
       />
       <StatBox
         label="Üye"
         value={members.total.toLocaleString("tr-TR")}
-        sub={`${members.withWatchlistItems} kişi liste kurmuş`}
+        sub={`${members.withWatchlistItems} Kişi Liste Kurmuş`}
         delta={
           members.last7 > 0
             ? {
@@ -102,7 +102,7 @@ async function Headline() {
       <StatBox
         label="Yeni Üye"
         value={members.last30.toLocaleString("tr-TR")}
-        sub="son 30 gün"
+        sub="Son 30 Gün"
       />
     </StatGrid>
   );
@@ -115,7 +115,7 @@ async function TrafficCard() {
       <AdminPanelTitle
         /* Cümle /admin/trafik'tekiyle AYNI: iki ekran aynı seriyi çiziyor ve
            biri bugünün dahil olduğunu söylerken öteki susuyordu. */
-        hint="Son 30 gün · bugün dahil, ET takvim günü"
+        hint="Son 30 Gün · Bugün Dahil, ET Takvim Günü"
         action={
           /* Sitenin kendi ilkeli: dokunma hedefini `.tap-44` ile açıyor,
              görünür ölçü aynı kalıyor. Elle yazılan bağlantı 18 piksellik
@@ -157,7 +157,7 @@ async function AttentionCard() {
       {/* Panelin çıkışı VAR. Sorunu gören yöneticinin bir sonraki adımı
           Sistem sekmesi — o adım bugüne kadar elle gezinmeyle atılıyordu. */}
       <AdminPanelTitle
-        hint="yalnızca sorunlu ve eksik olanlar"
+        hint="Yalnızca Sorunlu ve Eksik Olanlar"
         action={<PanelLink href="/admin/sistem">Sistemi Aç</PanelLink>}
       >
         Dikkat İsteyenler
@@ -207,7 +207,7 @@ async function TopRoutesCard() {
           Yalnızca başlık bağlanıyor — satır anahtarları `/hisse/[symbol]`
           gibi rota ŞABLONLARI, gidilebilir adres değil. */}
       <AdminPanelTitle
-        hint="son 7 tam gün · rota şablonuna göre"
+        hint="Son 7 Tam Gün · Rota Şablonuna Göre"
         action={<PanelLink href="/admin/trafik?gun=7">Tümünü Gör</PanelLink>}
       >
         En Çok Okunan Bölümler

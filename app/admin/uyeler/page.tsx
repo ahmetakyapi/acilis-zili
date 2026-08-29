@@ -34,16 +34,16 @@ export default async function MembersPage() {
   await requireAdmin();
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <Suspense fallback={<Skeleton className="h-24 w-full rounded-xl" />}>
         <Summary />
       </Suspense>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <Suspense fallback={<Skeleton className="h-80 w-full rounded-xl" />}>
           <RecentMembers />
         </Suspense>
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-6">
           <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
             <WatchedSymbols />
           </Suspense>
@@ -67,17 +67,17 @@ async function Summary() {
       <StatBox
         label="Son 7 Gün"
         value={s.last7.toLocaleString("tr-TR")}
-        sub="yeni kayıt"
+        sub="Yeni Kayıt"
       />
       <StatBox
         label="Son 30 Gün"
         value={s.last30.toLocaleString("tr-TR")}
-        sub="yeni kayıt"
+        sub="Yeni Kayıt"
       />
       <StatBox
         label="Liste Kurmuş"
         value={s.withWatchlistItems.toLocaleString("tr-TR")}
-        sub={`üyelerin %${activeShare}'ı`}
+        sub={`Üyelerin %${activeShare}'ı`}
       />
     </StatGrid>
   );
@@ -88,7 +88,7 @@ async function RecentMembers() {
 
   return (
     <AdminPanel>
-      <AdminPanelTitle hint="En yeniden eskiye · e-posta gösterilmez">
+      <AdminPanelTitle hint="En Yeniden Eskiye · E-posta Gösterilmez">
         Son Kaydolanlar
       </AdminPanelTitle>
 
@@ -134,7 +134,7 @@ async function WatchedSymbols() {
   const rows = await getMostWatchedSymbols(15);
   return (
     <AdminPanel>
-      <AdminPanelTitle hint="Kaç ayrı üyenin listesinde">
+      <AdminPanelTitle hint="Kaç Ayrı Üyenin Listesinde">
         En Çok Takip Edilenler
       </AdminPanelTitle>
       <RankList
