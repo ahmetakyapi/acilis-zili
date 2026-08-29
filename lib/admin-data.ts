@@ -621,6 +621,81 @@ export async function getRecentBriefs(limit = 14): Promise<BriefRow[]> {
 }
 
 /* --------------------------------------------------------------------------
+   Düzenlenebilir içerik
+   -------------------------------------------------------------------------- */
+
+export type EditableStory = {
+  slug: string;
+  title: string;
+  eventDate: string;
+  /** Hangi dillerde kaydı var — "TR", "EN". */
+  locales: string[];
+  /** Rutin mi yazdı, panelden mi düzeltildi. */
+  generatedBy: string;
+  updatedAt: Date | null;
+};
+
+/**
+ * Panelden düzenlenebilecek mercek yazıları — en yeniden eskiye.
+ *
+ * SLUG BAŞINA TEK SATIR. Tablo (slug, locale) benzersiz, yani iki dilli bir
+ * yazı iki satır tutuyor; listede ikisini ayrı göstermek aynı yazıyı iki kez
+ * saymak olurdu. Diller satırın kendi rozetinde duruyor ve editör hangi dili
+ * açacağını sorgudan alıyor.
+ *
+ * Gövde ÇEKİLMİYOR: liste yalnızca kimlik ve künye gösteriyor, kırk satırlık
+ * arşivi gövdeleriyle çekmenin sebebi yok. Gövde editör sayfasında, tek
+ * kayıt için okunuyor.
+ */
+export async function getEditableStories(limit = 40): Promise<EditableStory[]> {
+  try {
+    const rows = await db
+      .select({
+        slug: stories.slug,
+        locale: stories.locale,
+        title: stories.title,
+        eventDate: stories.eventDate,
+        generatedBy: stories.generatedBy,
+        updatedAt: stories.updatedAt,
+        publishedAt: stories.publishedAt,
+      })
+      .from(stories)
+      .orderBy(desc(stories.publishedAt))
+      .limit(limit * 2);
+
+    const bySlug = new Map<string, EditableStory>();
+    for (const row of rows) {
+      const held = bySlug.get(row.slug);
+      const rozet = row.locale === "en" ? "EN" : "TR";
+      if (!held) {
+        bySlug.set(row.slug, {
+          slug: row.slug,
+          /* Başlık TÜRKÇE kayıttan tercih ediliyor: panel tek dilde ve
+             listede İngilizce bir başlık görmek şaşırtıcı olurdu. */
+          title: row.title,
+          eventDate: row.eventDate,
+          locales: [rozet],
+          generatedBy: row.generatedBy,
+          updatedAt: row.updatedAt,
+        });
+        continue;
+      }
+      if (!held.locales.includes(rozet)) held.locales.push(rozet);
+      if (row.locale === "tr") held.title = row.title;
+      /* En son dokunulan sürüm künyeyi belirliyor: bir dili panelden
+         düzeltmek satırın "elden geçti" demesi için yeter. */
+      if (row.updatedAt && (!held.updatedAt || row.updatedAt > held.updatedAt)) {
+        held.updatedAt = row.updatedAt;
+        held.generatedBy = row.generatedBy;
+      }
+    }
+    return [...bySlug.values()].slice(0, limit);
+  } catch {
+    return [];
+  }
+}
+
+/* --------------------------------------------------------------------------
    Yayın ritmi — hangi gün ne yazıldı
    -------------------------------------------------------------------------- */
 

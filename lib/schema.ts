@@ -371,6 +371,41 @@ export const stories = pgTable(
 );
 
 /**
+ * Mercek yazısının ÖNCEKİ hâlleri — üzerine yazılmadan önce alınan fotoğraf.
+ *
+ * NEDEN VAR: `stories` upsert'ü gövdeyi geçmişsiz eziyordu. Rutin aynı
+ * slug'a ikinci kez yazdığında ya da panelden bir düzeltme yapıldığında eski
+ * metin kayboluyor, yanlış bir düzenlemeden dönmenin hiçbir yolu kalmıyordu.
+ * Panelden yazı düzenlemek açıldığı anda bu bir kayıp değil, bir risk oldu.
+ *
+ * FOTOĞRAF JSONB: satırın yazılmadan önceki hâli olduğu gibi saklanıyor.
+ * Sütun sütun açmak, `stories` şeması her değiştiğinde bu tabloyu da
+ * değiştirmek demekti; geri yükleme zaten fotoğrafı doğrulama şemasından
+ * geçirip normal yazma yoluna veriyor, yani alanları burada tanımanın bir
+ * faydası yok.
+ *
+ * SAYI SINIRLI: slug+dil başına son on sürüm tutuluyor, fazlası yazma
+ * sırasında budanıyor. Sınırsız geçmiş, bir düzeltme aracının ödemesi
+ * gereken bir bedel değil.
+ */
+export const storyRevisions = pgTable(
+  "story_revisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").notNull(),
+    locale: text("locale").notNull(),
+    /** Yazılmadan ÖNCEKİ satır — geri yükleme bunu okuyor. */
+    snapshot: jsonb("snapshot").notNull(),
+    /** Bu fotoğrafın üzerine kimin yazdığı: "claude" ya da "admin". */
+    replacedBy: text("replaced_by").notNull(),
+    replacedAt: timestamp("replaced_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("story_revisions_key_idx").on(t.slug, t.locale, t.replacedAt)],
+);
+
+/**
  * Bilanço analizleri — açıklanmış bir çeyreğin okunmuş hâli.
  *
  * `earnings_calendar` ne zaman açıklanacağını söyler; bu tablo açıklandıktan

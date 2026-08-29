@@ -113,6 +113,13 @@
       "when": 1788025469375,
       "tag": "0015_friendly_dark_phoenix",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788028668863,
+      "tag": "0016_lovely_warstar",
+      "breakpoints": true
     }
   ]
 }

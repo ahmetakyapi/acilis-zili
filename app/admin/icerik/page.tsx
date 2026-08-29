@@ -12,6 +12,7 @@ import {
 import { Skeleton } from "@/components/ui/primitives";
 import {
   getContentSummary,
+  getEditableStories,
   getPublishRhythm,
   getRecentBriefs,
 } from "@/lib/admin-data";
@@ -52,6 +53,10 @@ export default async function ContentPage() {
 
       <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
         <Rhythm />
+      </Suspense>
+
+      <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+        <Editable />
       </Suspense>
 
       <Suspense fallback={<Skeleton className="h-72 w-full rounded-xl" />}>
@@ -159,6 +164,69 @@ async function Rhythm() {
         hücresindeki küçük nokta, haftalık bültenin de o güne yazıldığını
         söyler.
       </p>
+    </AdminPanel>
+  );
+}
+
+async function Editable() {
+  const rows = await getEditableStories(40);
+
+  return (
+    <AdminPanel>
+      {/* PANELİN YÖNETTİĞİ ŞEY BURADA LİSTELENİYOR. Ekran bugüne kadar
+          içeriği SAYIYORDU; hangi yazının var olduğunu ve ona nasıl
+          dokunulacağını söylemiyordu. Satırdan editöre, editörden yayındaki
+          sayfaya gidiliyor. */}
+      <AdminPanelTitle hint="En Yeniden Eskiye · Satıra Basınca Editör Açılır">
+        Mercek Yazıları
+      </AdminPanelTitle>
+
+      {rows.length === 0 ? (
+        <p className="py-8 text-center text-base text-muted">
+          Henüz mercek yazısı yok.
+        </p>
+      ) : (
+        <ul className="flex flex-col divide-y divide-line-soft">
+          {rows.map((row) => (
+            <li key={row.slug}>
+              <Link
+                href={`/admin/icerik/${row.slug}`}
+                className="flex min-h-11 flex-col gap-1 rounded-(--radius-sm) px-2 py-3 transition-colors hover:bg-surface-elevated sm:flex-row sm:items-center sm:gap-4"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-base font-semibold text-strong">
+                    {row.title}
+                  </span>
+                  <span className="numeral block truncate text-tiny text-muted">
+                    {row.slug}
+                  </span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  {/* Diller rozette: iki dilli mi, tek dilde mi kalmış —
+                      eksik çeviri listesi ayrıca var ama burada da bir
+                      bakışta görünüyor. */}
+                  {row.locales.map((dil) => (
+                    <span
+                      key={dil}
+                      className="numeral rounded-full bg-primary-wash px-2 py-0.5 text-nano font-bold text-primary-ink"
+                    >
+                      {dil}
+                    </span>
+                  ))}
+                  {row.generatedBy === "admin" && (
+                    <span className="rounded-full bg-surface-elevated px-2 py-0.5 text-nano font-semibold text-muted">
+                      Elden Geçti
+                    </span>
+                  )}
+                  <span className="numeral w-24 text-right text-tiny text-muted">
+                    {formatEtDateShort(row.eventDate, "tr")}
+                  </span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </AdminPanel>
   );
 }
