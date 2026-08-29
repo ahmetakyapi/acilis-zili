@@ -5,6 +5,7 @@ import {
   AdminPanelTitle,
   StatBox,
   StatGrid,
+  StatGridSkeleton,
 } from "@/components/admin/AdminUI";
 import { Skeleton } from "@/components/ui/primitives";
 import { getContentSummary, getPublishRhythm } from "@/lib/admin-data";
@@ -38,7 +39,7 @@ export default async function ContentPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Suspense fallback={<Skeleton className="h-24 w-full rounded-xl" />}>
+      <Suspense fallback={<StatGridSkeleton boxes={4} cols={4} />}>
         <Summary />
       </Suspense>
 
@@ -76,8 +77,8 @@ async function Summary() {
         value={content.briefs.toLocaleString("tr-TR")}
         sub={
           content.briefsLatest
-            ? `son: ${formatEtDateShort(content.briefsLatest, "tr")}`
-            : "hiç yazılmamış"
+            ? `Son: ${formatEtDateShort(content.briefsLatest, "tr")}`
+            : "Hiç Yazılmamış"
         }
       />
       <StatBox

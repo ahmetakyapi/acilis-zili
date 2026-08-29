@@ -192,7 +192,17 @@ export function TrafficChart({
         </span>
         {/* Hangi günü okuduğu YAZILI. Sayıyı gösterip gününü söylememek,
             okuyucunun imlecin nerede durduğunu tahmin etmesini istemek
-            olurdu. `aria-live`: klavyeyle gezen okuyucu değişimi duyar. */}
+            olurdu.
+
+            CANLI BÖLGE SAYILARI DA SÖYLÜYOR. `aria-live` yalnızca bu
+            span'deydi ve içinde sadece tarih vardı: ok tuşlarıyla gün gün
+            gezen okuyucu "27 Ağustos", "26 Ağustos" diye tarih duyuyor ama
+            hiçbir sayı duymuyordu — grafiğin tamamı sessizdi. Sayılar
+            yanındaki iki kutuda ve onlar canlı DEĞİL. `sr-only` bir özet
+            aynı bölgenin içinde duruyor; görsel künye olduğu gibi kalıyor.
+
+            KÜNYE DE TITLE CASE: "bugün · sürüyor" idi ve aynı bileşenin
+            gösterge satırı "Hafta Sonu ve Tatil" yazıyordu. */}
         <span
           aria-live="polite"
           className={
@@ -201,12 +211,20 @@ export function TrafficChart({
               : "numeral text-tiny text-muted"
           }
         >
-          {seciliMi
-            ? formatEtDateShort(gosterilen.day, locale) +
-              (gosterilen.isToday ? " · sürüyor" : "")
-            : bugunVar
-              ? "bugün · sürüyor"
-              : "son gün"}
+          <span aria-hidden>
+            {seciliMi
+              ? formatEtDateShort(gosterilen.day, locale) +
+                (gosterilen.isToday ? " · Sürüyor" : "")
+              : bugunVar
+                ? "Bugün · Sürüyor"
+                : "Son Gün"}
+          </span>
+          <span className="sr-only">
+            {formatEtDateShort(gosterilen.day, locale)}
+            {gosterilen.isToday ? " (gün sürüyor)" : ""}:{" "}
+            {gosterilen.views.toLocaleString("tr-TR")} görüntüleme,{" "}
+            {gosterilen.visitors.toLocaleString("tr-TR")} tekil ziyaretçi
+          </span>
         </span>
       </div>
 
@@ -232,6 +250,16 @@ export function TrafficChart({
           onPointerDown={(event) => setOkunan(konumdanIndeks(event.clientX))}
           onPointerLeave={(event) => {
             if (event.pointerType === "mouse") setOkunan(null);
+          }}
+          /* PARMAK KAYDIRMAYA DÖNERSE OKUMA SİLİNİYOR. `touch-pan-y` sayfayı
+             dikey kaydırmaya izin veriyor ve tarayıcı kaydırmayı üstlendiği
+             anda `pointercancel` atıp `pointerup`/`pointerleave` ATMIYOR.
+             İşlenmediği için okuma satırı, artık dokunulmayan bir günü
+             göstermeye devam ediyordu — grafikte dokunulan okumanın aralık
+             değişince temizlenmesiyle aynı kural. */
+          onPointerCancel={() => setOkunan(null)}
+          onPointerUp={(event) => {
+            if (event.pointerType !== "mouse") setOkunan(null);
           }}
           onBlur={() => setOkunan(null)}
         >
@@ -315,13 +343,18 @@ export function TrafficChart({
             />
           )}
 
-          {/* İMLEÇ ÇİZGİSİ VE İŞARETLER. Daireler `vectorEffect` almıyor
-              çünkü `preserveAspectRatio="none"` altında esneyip elipse
-              dönerlerdi; onun yerine yatayda ölçekten bağımsız kalan ince
-              bir dikdörtgen ve ölçeği ters çevrilmiş küçük daireler
-              yerine — en sade çözüm: işaretler de dikdörtgen. Kare bir
-              işaret elips olmuyor, yalnızca genişliği değişiyor ve o da
-              `non-scaling-stroke` ile sabit kalıyor. */}
+          {/* İMLEÇ ÇİZGİSİ VE İŞARETLER, ÖLÇEKTEN BAĞIMSIZ.
+              `preserveAspectRatio="none"` altında geometri iki eksende
+              farklı ölçekleniyor: daire elipse döner, dikdörtgenin de
+              GENİŞLİĞİ ekrana göre değişir. İşaretler bir dönem dikdörtgendi
+              ve yorumu "genişliği `non-scaling-stroke` ile sabit kalıyor"
+              diyordu — o koruma dolgu (`fill`) taşıyan bir `rect`e
+              UYGULANMIYOR, çünkü kural yalnızca çizgi kalınlığına bakıyor.
+              Ölçüldü: `?gun=90` + 390 piksel ekranda işaret 1,2 × 4,3
+              piksele iniyor, yani imleç çizgisinden ayırt edilemiyor.
+              Sıfır uzunluklu bir `line` + yuvarlak uç, dolgu değil ÇİZGİ
+              kalınlığı olduğu için `non-scaling-stroke`un kapsamına giriyor:
+              her ölçekte 7 piksellik bir daire, elipse de dönmüyor. */}
           {seciliMi && (
             <g pointerEvents="none">
               <line
@@ -333,19 +366,25 @@ export function TrafficChart({
                 strokeWidth="1"
                 vectorEffect="non-scaling-stroke"
               />
-              <rect
-                x={x(okunan) - slotW / 6}
-                y={y(gosterilen.views) - 3}
-                width={slotW / 3}
-                height={6}
-                fill="var(--chart-a)"
+              <line
+                x1={x(okunan)}
+                y1={y(gosterilen.views)}
+                x2={x(okunan)}
+                y2={y(gosterilen.views)}
+                stroke="var(--chart-a)"
+                strokeWidth="7"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
               />
-              <rect
-                x={x(okunan) - slotW / 6}
-                y={y(gosterilen.visitors) - 3}
-                width={slotW / 3}
-                height={6}
-                fill="var(--chart-b)"
+              <line
+                x1={x(okunan)}
+                y1={y(gosterilen.visitors)}
+                x2={x(okunan)}
+                y2={y(gosterilen.visitors)}
+                stroke="var(--chart-b)"
+                strokeWidth="7"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
               />
             </g>
           )}
@@ -387,10 +426,23 @@ export function TrafficChart({
 
       {/* Tablo görünümü — grafiğin okunamadığı her durumda aynı sayılar. */}
       <details className="mt-3">
-        <summary className="cursor-pointer text-small text-muted hover:text-body">
+        {/* 44 PİKSEL: `<summary>` çıplak bir metin satırıydı ve yüksekliği
+            18 piksele iniyordu. Altında ve üstünde başka hedef yok, yani
+            `min-h-11` komşusunu ezmiyor. */}
+        <summary className="inline-flex min-h-11 w-fit cursor-pointer items-center text-small text-muted hover:text-body sm:min-h-9">
           Sayıları Tablo Olarak Gör
         </summary>
-        <div className="scroll-x mt-2 max-h-64 overflow-auto">
+        {/* KAYDIRMA KABI KLAVYEYLE ODAKLANABİLİR — `AdminTable`daki kuralın
+            aynısı: 30 günlük pencerede ~780 piksellik tablo 256 piksele
+            sıkışıyor ve içinde odaklanabilir hiçbir şey olmadığı için
+            klavyeyle gezen okuyucu ilk on günün ötesine hiç ulaşamıyordu
+            (WCAG 2.1.1). */}
+        <div
+          className="scroll-x mt-2 max-h-64 overflow-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+          tabIndex={0}
+          role="region"
+          aria-label="Gün gün trafik tablosu"
+        >
           <table className="w-full text-small">
             <caption className="sr-only">
               Gün gün görüntüleme ve tekil ziyaretçi

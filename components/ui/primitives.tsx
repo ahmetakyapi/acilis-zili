@@ -385,19 +385,30 @@ export function TabBar({
        `min-w-max` kabın KENDİSİNİ içerik kadar genişletiyordu — kap hiçbir
        zaman içerikten dar olmadığı için kaydırma da hiç doğmuyordu. Taşma
        sayfaya çıkıyor, sayfa gövdesi yatay kaydırmaya kilitli olduğu için
-       (globals.css) son sekmeler dar ekranda tamamen erişilemez kalıyordu. */
+       (globals.css) son sekmeler dar ekranda tamamen erişilemez kalıyordu.
+
+       DIŞARIDAN GELEN `className` KABA GİDİYOR, listeye değil. Bir dönem
+       `ul`e veriliyordu ve dört çağrı yerinin dördü de düzen boşluğu için
+       negatif ÜST marj geçiyor (`-mt-1` / `-mt-2`). O marj listeyi kabın
+       içerik kutusunun yukarısına çekiyor, kabın boyu da o kadar kısalıyordu;
+       `overflow-x: auto` yazıldığında `overflow-y` de `auto` hesaplandığı için
+       kap dikeyde KIRPIYOR ve yukarı taşan bant kaydırmayla geri
+       getirilemiyor. Ölçüldü: `/bilancolar` 390 pikselde sekmenin kendisi 44
+       piksel ama kabı 36 — üst 8 piksel erişilemez, yani aşağıdaki yorumun
+       söz verdiği 44 piksellik dokunma hedefi fiilen 36'ya iniyordu (öteki
+       iki bilanço sekmesinde 40). Marj artık kabın kendisine biniyor.
+
+       ALT ÇİZGİ DE KAPTA. `ul`de dururken çizgi listeyle birlikte KAYIYORDU:
+       sona kadar kaydırıldığında sağda kabın dolgusu kadar bir bant çizgisiz
+       kalıyor, başa dönüldüğünde de aynı boşluk solda açılıyordu. */
     <nav
       aria-label={label}
-      className="no-scrollbar -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0"
+      className={cn(
+        "no-scrollbar -mx-4 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0",
+        className,
+      )}
     >
-      <ul
-        className={cn(
-          "flex min-w-max gap-0.5 border-b border-line",
-          className,
-        )}
-      >
-        {children}
-      </ul>
+      <ul className="flex min-w-max gap-0.5">{children}</ul>
     </nav>
   );
 }

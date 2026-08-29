@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { TabBar, TabItem } from "@/components/ui/primitives";
 
@@ -19,6 +20,14 @@ import { TabBar, TabItem } from "@/components/ui/primitives";
  * İÇERİK VE YAZILAR AYRI İKİ SEKME: ilki ölçüyor (kaç yazı, hangi çeviri
  * eksik, ritim), ikincisi değiştiriyor. Bölünmenin gerekçesi
  * `app/admin/yazilar/page.tsx` başındaki yorumda.
+ *
+ * ETKİN SEKME GÖRÜNÜR ALANA KAYDIRILIYOR. Çubuk dar ekranda kayıyor ve altı
+ * sekme 390 pikselde sığmıyor; kaydırma her zaman başta durduğu için
+ * "Sistem" sayfasındayken ETKİN SEKME ekranın dışında kalıyordu — okuyucu
+ * hangi bölümde olduğunu göremiyor, üstelik oraya nasıl geldiğini de.
+ * `inline: "center"` kaydırma aralığına kırpılıyor: ilk sekme zaten
+ * görünürse hiçbir şey olmuyor. `block: "nearest"` de sayfanın dikey olarak
+ * zıplamasını engelliyor.
  */
 
 const TABS = [
@@ -32,20 +41,28 @@ const TABS = [
 
 export function AdminTabs() {
   const pathname = usePathname();
+  const kap = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const etkin = kap.current?.querySelector('[aria-current="page"]');
+    etkin?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, [pathname]);
 
   return (
-    <TabBar label="Yönetim bölümleri">
-      {TABS.map((tab) => {
-        const active =
-          tab.href === "/admin"
-            ? pathname === "/admin"
-            : pathname.startsWith(tab.href);
-        return (
-          <TabItem key={tab.href} href={tab.href} active={active}>
-            {tab.label}
-          </TabItem>
-        );
-      })}
-    </TabBar>
+    <div ref={kap}>
+      <TabBar label="Yönetim bölümleri">
+        {TABS.map((tab) => {
+          const active =
+            tab.href === "/admin"
+              ? pathname === "/admin"
+              : pathname.startsWith(tab.href);
+          return (
+            <TabItem key={tab.href} href={tab.href} active={active}>
+              {tab.label}
+            </TabItem>
+          );
+        })}
+      </TabBar>
+    </div>
   );
 }

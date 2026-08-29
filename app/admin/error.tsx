@@ -57,8 +57,8 @@ export default function AdminError({
           Panel Yüklenemedi
         </h2>
         <p className="text-base leading-relaxed text-body">
-          Bu ekranın verisi çekilemedi. Çoğu zaman veritabanı bağlantısı
-          geçici olarak düşmüştür; tekrar denemek genellikle yeter.
+          Bu ekranın verisi çekilemedi. Çoğu zaman veritabanı bağlantısı geçici
+          olarak düşmüştür; tekrar denemek genellikle yeter.
         </p>
       </div>
 

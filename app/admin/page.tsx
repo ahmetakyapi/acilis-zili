@@ -8,6 +8,7 @@ import {
   RankList,
   StatBox,
   StatGrid,
+  StatGridSkeleton,
 } from "@/components/admin/AdminUI";
 import { TrafficChart } from "@/components/admin/TrafficChart";
 import {
@@ -38,22 +39,39 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Suspense fallback={<Skeleton className="h-28 w-full rounded-xl" />}>
+      {/* YER TUTUCU IZGARANIN KENDİ ŞEKLİ. Tek bir `h-28` çubuktu ve o ölçü
+          masaüstünde doğru: dört kutu tek satırda. Telefonda ızgara iki
+          kolona iniyor ve gerçek yükseklik 250–285 piksel — akış inince
+          altındaki her şey 155+ piksel aşağı kayıyordu. Sabit bir piksel
+          değeri yazmak yerine yer tutucu gerçek ızgarayı çiziyor: hangi
+          kırılımda kaç satır olursa olsun boy kendiliğinden doğru. */}
+      <Suspense fallback={<StatGridSkeleton boxes={4} />}>
         <Headline />
       </Suspense>
 
+      {/* TELEFONDA SIRA: SAYILAR → DİKKAT → TRAFİK.
+          Izgara `lg` altında tek kolon ve orada DOM sırası geçerliydi; grafik
+          önce geldiği için "bugün bakmam gereken bir şey var mı" sorusunun
+          cevabı (sorunlu sağlık satırları) ~950 piksel aşağıda, ikinci
+          ekranın da altında başlıyordu — bu ekranın kendi başlık yorumundaki
+          söze aykırı. DOM sırası artık mobil sıra; masaüstü yerleşim
+          `col-start`/`row-start` ile açıkça veriliyor ve birebir aynı. */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <Suspense fallback={<Skeleton className="h-72 w-full rounded-xl" />}>
-          <TrafficCard />
-        </Suspense>
-        <div className="flex flex-col gap-6">
-          <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
+        <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
+          <div className="lg:col-start-2 lg:row-start-1">
             <AttentionCard />
-          </Suspense>
-          <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
+          </div>
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-72 w-full rounded-xl" />}>
+          <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1">
+            <TrafficCard />
+          </div>
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
+          <div className="lg:col-start-2 lg:row-start-2">
             <TopRoutesCard />
-          </Suspense>
-        </div>
+          </div>
+        </Suspense>
       </div>
     </div>
   );
@@ -109,7 +127,10 @@ async function Headline() {
 }
 
 async function TrafficCard() {
-  const [series, locale] = await Promise.all([getTrafficSeries(30), getLocale()]);
+  const [series, locale] = await Promise.all([
+    getTrafficSeries(30),
+    getLocale(),
+  ]);
   return (
     <AdminPanel>
       <AdminPanelTitle
@@ -143,7 +164,9 @@ async function AttentionCard() {
 
   const gaps: string[] = [];
   if (content.storiesMissingEn.length > 0) {
-    gaps.push(`${content.storiesMissingEn.length} mercek yazısının İngilizcesi yok`);
+    gaps.push(
+      `${content.storiesMissingEn.length} mercek yazısının İngilizcesi yok`,
+    );
   }
   if (content.analysesMissingEn.length > 0) {
     gaps.push(`${content.analysesMissingEn.length} analizin İngilizcesi yok`);
@@ -171,7 +194,10 @@ async function AttentionCard() {
       ) : (
         <ul className="flex flex-col gap-2.5">
           {problems.map((check) => (
-            <li key={check.label} className="flex items-start gap-2.5 text-base">
+            <li
+              key={check.label}
+              className="flex items-start gap-2.5 text-base"
+            >
               <span className="mt-[5px]">
                 <HealthDot tone={check.tone} />
               </span>
@@ -222,7 +248,7 @@ async function TopRoutesCard() {
              ziyaretçi-günü. Aynı ayrım `TrafficTotals` yorumunda yazılı ve
              üstteki kutu zaten doğru adı kullanıyordu; bu satır geride
              kalmıştı. */
-          secondary: `${r.visitors.toLocaleString("tr-TR")} ziyaretçi-günü`,
+          secondary: `${r.visitors.toLocaleString("tr-TR")} Ziyaretçi-Günü`,
         }))}
         emptyLabel="Henüz ölçüm kaydı yok."
       />

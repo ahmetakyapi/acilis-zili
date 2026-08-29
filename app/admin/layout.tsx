@@ -72,9 +72,19 @@ export default async function AdminLayout({
             Yönetim
           </h1>
         </div>
-        <p className="text-small text-muted">
-          <span className="font-semibold text-body">{admin.username}</span> ·{" "}
-          <Link href="/" className="text-primary hover:text-primary-hover">
+        {/* PANELDEN ÇIKIŞIN TEK YOLU 44 PİKSEL. Bağlantı çıplak bir
+            `<Link>`ti ve telefonda 59 × 15 piksellik bir hedefti; sardığı
+            satır bir cümle değil, "kullanıcı adı · bağlantı" künyesi, yani
+            metin içi bağlantı muafiyeti geçerli değil. `.tap-44` yerine
+            gerçek yükseklik: görünmez genişletme başlık bandındaki
+            komşusunun hedefini kapardı. */}
+        <p className="flex flex-wrap items-center gap-x-1.5 text-small text-muted">
+          <span className="font-semibold text-body">{admin.username}</span>
+          <span aria-hidden>·</span>
+          <Link
+            href="/"
+            className="inline-flex min-h-11 items-center text-primary hover:text-primary-hover sm:min-h-8"
+          >
             Siteye Dön
           </Link>
         </p>

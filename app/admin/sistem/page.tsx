@@ -6,6 +6,7 @@ import {
   HealthDot,
   StatBox,
   StatGrid,
+  StatGridSkeleton,
 } from "@/components/admin/AdminUI";
 import { Skeleton } from "@/components/ui/primitives";
 import {
@@ -37,7 +38,7 @@ export default async function SystemPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Suspense fallback={<Skeleton className="h-24 w-full rounded-xl" />}>
+      <Suspense fallback={<StatGridSkeleton boxes={4} cols={4} />}>
         <Pulse />
       </Suspense>
 
@@ -61,14 +62,19 @@ async function Pulse() {
     (c) => c.tone === "warn" || c.tone === "down",
   ).length;
 
+  /* TITLE CASE — bunlar cümle değil, ızgaranın en büyük puntosundaki
+     künyeler ve yanlarındaki değerler ("Bugün Koştu", "Tümü Sağlıklı")
+     zaten öyle. Sitenin kendi sözlüğü de aynı yazımı kullanıyor
+     (`lib/i18n/dictionaries/tr.ts`: "Ön Seans", "Akşam Seansı",
+     "Hafta Sonu"); panel ondan sapmamalı. */
   const sessionLabel: Record<string, string> = {
-    regular: "Ana seans açık",
-    "pre-market": "Ön seans",
-    "after-hours": "Akşam seansı",
+    regular: "Ana Seans Açık",
+    "pre-market": "Ön Seans",
+    "after-hours": "Akşam Seansı",
     closed: status.holiday
       ? `Tatil · ${status.holiday.nameTr}`
       : status.isWeekend
-        ? "Hafta sonu"
+        ? "Hafta Sonu"
         : "Kapalı",
   };
 

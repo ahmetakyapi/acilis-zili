@@ -10,6 +10,7 @@ import {
   RankList,
   StatBox,
   StatGrid,
+  StatGridSkeleton,
 } from "@/components/admin/AdminUI";
 import { Skeleton } from "@/components/ui/primitives";
 import {
@@ -36,7 +37,7 @@ export default async function MembersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Suspense fallback={<Skeleton className="h-24 w-full rounded-xl" />}>
+      <Suspense fallback={<StatGridSkeleton boxes={5} cols={5} />}>
         <Summary />
       </Suspense>
 
@@ -65,7 +66,7 @@ async function Summary() {
     s.total > 0 ? Math.round((s.activeLast30 / s.total) * 100) : 0;
 
   return (
-    <StatGrid>
+    <StatGrid cols={5}>
       <StatBox label="Toplam Üye" value={s.total.toLocaleString("tr-TR")} />
       <StatBox
         label="Son 7 Gün"
@@ -116,7 +117,10 @@ async function RecentMembers() {
           Henüz kayıtlı üye yok.
         </p>
       ) : (
-        <AdminTable label="Son kaydolan üyeler" head={["Kullanıcı", "Kayıt", "Son Giriş", "Dil", "Sembol"]}>
+        <AdminTable
+          label="Son kaydolan üyeler"
+          head={["Kullanıcı", "Kayıt", "Son Giriş", "Dil", "Sembol"]}
+        >
           {rows.map((row) => (
             <AdminRow key={row.id}>
               <AdminCell strong rowHeader>
@@ -143,7 +147,9 @@ async function RecentMembers() {
               <AdminCell numeral>
                 {row.lastSeenAt ? agoLabel(row.lastSeenAt) : "—"}
               </AdminCell>
-              <AdminCell>{row.locale === "en" ? "İngilizce" : "Türkçe"}</AdminCell>
+              <AdminCell>
+                {row.locale === "en" ? "İngilizce" : "Türkçe"}
+              </AdminCell>
               <AdminCell align="right" numeral strong={row.symbolCount > 0}>
                 {row.symbolCount}
               </AdminCell>
@@ -189,7 +195,7 @@ async function SignupCurve() {
 
   return (
     <AdminPanel>
-      <AdminPanelTitle hint="Son 30 gün">Kayıt Günleri</AdminPanelTitle>
+      <AdminPanelTitle hint="Son 30 Gün">Kayıt Günleri</AdminPanelTitle>
       {withSignups.length === 0 ? (
         <p className="py-6 text-center text-base text-muted">
           Son 30 günde yeni kayıt yok.
@@ -213,6 +219,14 @@ async function SignupCurve() {
               </li>
             ))}
           </ul>
+          {/* SESSİZ KIRPMA YOK. Üstteki cümle "N ayrı güne yayılmış" diyor
+              ama liste en yeni ondan sonrasını basmıyordu; okuyan sayıyı
+              satırlarla doğrulayamıyordu. */}
+          {withSignups.length > 10 && (
+            <p className="mt-2 text-small text-muted">
+              En Yeni 10 Gün · {withSignups.length - 10} Gün Daha
+            </p>
+          )}
         </>
       )}
       <p className="mt-4 border-t border-line pt-3 text-small text-muted">

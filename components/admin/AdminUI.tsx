@@ -112,10 +112,17 @@ export function StatBox({
           "11 : 00" diye okunuyordu.
 
           Uzun değerler bir basamak küçülüyor: tarih ya da "Bugün koştu" gibi
-          bir metin 26 puntoda dar kutuda ikiye bölünüyordu. */}
+          bir metin 26 puntoda dar kutuda ikiye bölünüyordu.
+
+          SATIR ARALIĞI SARDIĞINDA AÇILIYOR. `leading-none` tek satırlık bir
+          sayı için doğru — büyük puntoda satır kutusu rakamın kendisi kadar
+          olmalı. Ama değer sarınca (dar kutuda "Ana Seans Açık", "Tatil ·
+          Şükran Günü") iki satır üst üste yapışıyor, harflerin altı üsttekinin
+          içine giriyordu. `leading-[1.05]` tek satırda gözle fark edilmiyor,
+          iki satırda nefes açıyor. */}
       <p
         className={cn(
-          "mt-2 font-bold leading-none tracking-[-0.03em] text-strong",
+          "mt-2 font-bold leading-[1.05] tracking-[-0.03em] text-strong",
           value.length > 9 ? "text-title" : "text-heading",
         )}
       >
@@ -143,9 +150,66 @@ export function StatBox({
   );
 }
 
-export function StatGrid({ children }: { children: React.ReactNode }) {
+/**
+ * Sayı kutularının ızgarası.
+ *
+ * SÜTUN SAYISI KUTU SAYISINA GÖRE. Izgara sabit dört sütundu ve Üyeler
+ * ekranında beş kutu var: beşincisi tek başına ikinci satıra düşüyor, o
+ * satırın kalan dörtte üçü boş kalıyordu — ekranın en üstünde, en çok
+ * bakılan yerde. Beş kutulu ızgara `lg`de beş sütuna açılıyor; orta
+ * kırılımda üçe bölünüyor (3+2), telefonda ikiye (2+2+1).
+ *
+ * SINIF ADLARI TAM YAZILI: Tailwind sınıfları kaynakta birebir arıyor,
+ * `lg:grid-cols-${n}` gibi kurulan bir ad üretilen CSS'e hiç girmez.
+ */
+export function StatGrid({
+  children,
+  cols = 4,
+}: {
+  children: React.ReactNode;
+  cols?: 4 | 5;
+}) {
   return (
-    <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">{children}</div>
+    <div
+      className={cn(
+        "grid grid-cols-2 gap-3.5",
+        cols === 5 ? "sm:grid-cols-3 lg:grid-cols-5" : "lg:grid-cols-4",
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Sayı ızgarasının yer tutucusu — GERÇEK IZGARAYI çiziyor.
+ *
+ * Yer tutucular tek bir yüksekliği sabitlenmiş çubuktu ve o ölçü yalnızca
+ * masaüstünde doğruydu: telefonda ızgara iki kolona iniyor, gerçek yükseklik
+ * ikiye üçe katlanıyor ve akış inince altındaki her şey aşağı sıçrıyordu.
+ * Aynı ızgarayı boş kutularla çizmek, sabit bir piksel değeri yazmadan her
+ * kırılımda doğru boyu veriyor.
+ */
+export function StatGridSkeleton({
+  boxes = 4,
+  cols = 4,
+}: {
+  boxes?: number;
+  cols?: 4 | 5;
+}) {
+  return (
+    <StatGrid cols={cols}>
+      {Array.from({ length: boxes }, (_, i) => (
+        <div
+          key={i}
+          className="rounded-(--radius-lg) border border-line bg-surface-elevated p-4"
+        >
+          <div className="h-3.5 w-20 animate-pulse rounded bg-bar" />
+          <div className="mt-2 h-8 w-24 animate-pulse rounded bg-bar" />
+          <div className="mt-2 h-3 w-28 animate-pulse rounded bg-bar" />
+        </div>
+      ))}
+    </StatGrid>
   );
 }
 
@@ -195,7 +259,9 @@ export function RankList({
   emptyLabel?: string;
 }) {
   if (rows.length === 0) {
-    return <p className="py-6 text-center text-base text-muted">{emptyLabel}</p>;
+    return (
+      <p className="py-6 text-center text-base text-muted">{emptyLabel}</p>
+    );
   }
   const max = Math.max(...rows.map((r) => r.value), 1);
 
@@ -208,10 +274,19 @@ export function RankList({
         const share = Math.round((row.value / max) * 100);
         const body = (
           <>
+            {/* SATIRIN ASIL BİLGİSİ TELEFONDA KIRPILIYORDU. Daralan tek
+                öğe etiket: künye `shrink-0`, sayı `w-16 shrink-0`. 390
+                pikselde etikete ~100 piksel kalıyor ve
+                "/bilancolar/[symbol]/[period]" ile "/bilancolar/analizler"
+                aynı görünüyordu. Künye dar ekranda ALT SATIRA iniyor, yani
+                etiket satırın tamamını alıyor; `title` da kırpılan hâlin
+                tamamını veriyor. */}
             <span className="flex items-baseline gap-3">
-              <span className="min-w-0 flex-1 truncate">{row.label}</span>
+              <span className="min-w-0 flex-1 truncate" title={row.label}>
+                {row.label}
+              </span>
               {row.secondary && (
-                <span className="numeral shrink-0 text-tiny text-muted">
+                <span className="numeral hidden shrink-0 text-tiny text-muted sm:inline">
                   {row.secondary}
                 </span>
               )}
@@ -219,6 +294,11 @@ export function RankList({
                 {row.value.toLocaleString("tr-TR")}
               </span>
             </span>
+            {row.secondary && (
+              <span className="numeral text-tiny text-muted sm:hidden">
+                {row.secondary}
+              </span>
+            )}
             <span
               aria-hidden
               /* Ray `--bar` tokeninde: o token zaten "gece temasında çubuklar
@@ -285,8 +365,13 @@ export function AdminTable({
        ulaşamıyordu — fare ya da dokunma olmadan tablonun yarısı erişilemez
        kalıyordu (WCAG 2.1.1). `role="region"` + ad, ekran okuyucunun da
        "kaydırılabilir bir bölge" diye duyurmasını sağlıyor. */
+    /* ÇUBUK GÖRÜNÜR (`scroll-x-hint`), gizli değil. `.scroll-x` çubuğu
+       tamamen saklıyor ve tablo `min-w-[520px]`: 390 piksellik telefonda
+       kaba ~314 piksel düşüyor, yani son iki sütun ekranın dışında ve
+       kaydırılabileceğine dair HİÇBİR işaret yok. Aynı gerekçe
+       `components/earnings/AnalysisTable.tsx`te de yazılı. */
     <div
-      className="scroll-x -mx-1 overflow-x-auto px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+      className="scroll-x-hint -mx-1 px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
       tabIndex={0}
       role="region"
       aria-label={label}

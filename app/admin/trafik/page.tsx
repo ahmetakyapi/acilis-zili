@@ -181,10 +181,10 @@ async function Totals({ days }: { days: WindowDays }) {
            panel kurulumun yeni olduğunu söylüyordu. */
         sub={
           !range.ok
-            ? "ölçüm okunamadı"
+            ? "Ölçüm Okunamadı"
             : range.firstDay
-              ? `${range.rows.toLocaleString("tr-TR")} kayıt`
-              : "henüz kayıt yok"
+              ? `${range.rows.toLocaleString("tr-TR")} Kayıt`
+              : "Henüz Kayıt Yok"
         }
       />
     </StatGrid>
@@ -210,7 +210,9 @@ async function Routes({ days }: { days: WindowDays }) {
   const rows = await getTopRoutes(days, 12);
   return (
     <AdminPanel>
-      <AdminPanelTitle hint={`Son ${days} tam gün · dinamik sayfalar şablonlarında toplanır`}>
+      <AdminPanelTitle
+        hint={`Son ${days} tam gün · dinamik sayfalar şablonlarında toplanır`}
+      >
         Bölümler
       </AdminPanelTitle>
       <RankList
@@ -218,7 +220,7 @@ async function Routes({ days }: { days: WindowDays }) {
           key: r.key,
           label: r.key,
           value: r.views,
-          secondary: `${r.visitors} ziyaretçi-günü`,
+          secondary: `${r.visitors} Ziyaretçi-Günü`,
         }))}
       />
     </AdminPanel>
@@ -240,7 +242,7 @@ async function Paths({ days }: { days: WindowDays }) {
              nasıl görünüyordu" sorusu hemen orada cevaplanıyor. */
           href: r.key,
           value: r.views,
-          secondary: `${r.visitors} ziyaretçi-günü`,
+          secondary: `${r.visitors} Ziyaretçi-Günü`,
         }))}
       />
     </AdminPanel>
@@ -251,7 +253,9 @@ async function Referrers({ days }: { days: WindowDays }) {
   const rows = await getTopReferrers(days, 12);
   return (
     <AdminPanel>
-      <AdminPanelTitle hint={`Son ${days} tam gün · yalnızca alan adı, arama terimi saklanmaz`}>
+      <AdminPanelTitle
+        hint={`Son ${days} tam gün · yalnızca alan adı, arama terimi saklanmaz`}
+      >
         Nereden Geliniyor
       </AdminPanelTitle>
       <RankList
@@ -259,7 +263,7 @@ async function Referrers({ days }: { days: WindowDays }) {
           key: r.key,
           label: r.key,
           value: r.views,
-          secondary: `${r.visitors} ziyaretçi-günü`,
+          secondary: `${r.visitors} Ziyaretçi-Günü`,
         }))}
         emptyLabel="Dış yönlendirme kaydı yok — gelenler adresi doğrudan açmış."
       />
@@ -285,11 +289,14 @@ async function Splits({ days }: { days: WindowDays }) {
   };
 
   const total = signed.signedIn + signed.anonymous;
-  const signedShare = total > 0 ? Math.round((signed.signedIn / total) * 100) : 0;
+  const signedShare =
+    total > 0 ? Math.round((signed.signedIn / total) * 100) : 0;
 
   return (
     <AdminPanel>
-      <AdminPanelTitle hint={`Son ${days} tam gün · cihaz, dil ve üyelik`}>Okuyucu</AdminPanelTitle>
+      <AdminPanelTitle hint={`Son ${days} tam gün · cihaz, dil ve üyelik`}>
+        Okuyucu
+      </AdminPanelTitle>
 
       <div className="flex flex-col gap-6">
         <div>
