@@ -24,6 +24,16 @@ import { cn } from "@/lib/utils";
  *     tutulmuyor — boş bir gün "yazılmadı" değil, "aday yoktu" olabilir.
  *     Bu yüzden o şeritte boş hücre nötr.
  *
+ * ÜÇÜ YAN YANA, ALT ALTA DEĞİL. Şeritler bir dönem alt alta duruyordu ve
+ * karşılaştırma o düzende çalışmıyordu: "mercek yazılmayan hafta bülten de
+ * eksik miydi" sorusu, iki ızgaranın aynı SÜTUNUNA bakmayı gerektiriyor ve
+ * alt alta dizilmiş şeritlerde o sütunlar birbirinden yüz piksel uzaktaydı.
+ * Yan yana dizilince aynı hafta üç şeritte de aynı yatay konumda duruyor.
+ *
+ * HÜCRE 20 PİKSELDEN 28'E ÇIKTI. Küçük hâlinde adet yazısı 10 punto idi ve
+ * ızgara okunacak bir tablo değil, bakılacak bir doku gibi duruyordu; üç
+ * şerit yan yana gelince genişlik de bunu kaldırıyor.
+ *
  * RENK TEK TAŞIYICI DEĞİL: dolu hücre hem renk hem adet yazısı taşıyor,
  * eksik hücre de kendi işaretini. Hücrenin `title`ı tam tarihi ve durumu
  * söylüyor; ızgarayı hiç okuyamayan için altında aynı bilgi metin olarak
@@ -33,6 +43,24 @@ import { cn } from "@/lib/utils";
 const GUNLER = ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"] as const;
 
 type Serit = "daily" | "stories" | "analyses";
+
+const SERITLER = [
+  {
+    key: "daily" as const,
+    baslik: "Günlük Bülten",
+    not: "Hafta Sonu ve Tatilde Yazılmaz",
+  },
+  {
+    key: "stories" as const,
+    baslik: "Mercek Yazısı",
+    not: "Koşullu — Günde En Çok İki Koşum",
+  },
+  {
+    key: "analyses" as const,
+    baslik: "Bilanço Analizi",
+    not: "Koşullu — Aday Çeyrek Varsa Yazılır",
+  },
+] satisfies { key: Serit; baslik: string; not: string }[];
 
 export function PublishGrid({ days }: { days: PublishDay[] }) {
   if (days.length === 0) {
@@ -49,98 +77,96 @@ export function PublishGrid({ days }: { days: PublishDay[] }) {
   for (let i = 0; i < days.length; i += 7) haftalar.push(days.slice(i, i + 7));
 
   return (
-    <div className="flex flex-col gap-4">
-      {(
-        [
-          {
-            key: "daily" as const,
-            baslik: "Günlük Bülten",
-            not: "hafta sonu ve tatilde yazılmaz",
-          },
-          {
-            key: "stories" as const,
-            baslik: "Mercek Yazısı",
-            not: "koşullu — günde en çok iki koşum",
-          },
-          {
-            key: "analyses" as const,
-            baslik: "Bilanço Analizi",
-            not: "koşullu — aday çeyrek varsa yazılır",
-          },
-        ] satisfies { key: Serit; baslik: string; not: string }[]
-      ).map((serit) => (
-        <div key={serit.key} className="flex flex-col gap-1.5">
-          <p className="flex flex-wrap items-baseline gap-x-2">
-            <span className="text-small font-semibold text-strong">
-              {serit.baslik}
-            </span>
-            <span className="text-tiny text-muted">{serit.not}</span>
-          </p>
+    <div className="flex flex-col gap-5">
+      {/* Üç şerit üç kolonda. Ölçü: sekiz hafta × 28 piksel + 7 × 3 piksel
+          aralık = 245, artı gün etiketleri sütunu 24 = 269 piksel. Panelin
+          içinde lg kırılımında kolon başına ~298 piksel düşüyor, yani
+          sığıyor; yine de `scroll-x` duruyor çünkü hafta sayısı büyürse ilk
+          kırılan yer burası olur. */}
+      <div className="grid gap-5 lg:grid-cols-3">
+        {SERITLER.map((serit) => (
+          <div key={serit.key} className="flex min-w-0 flex-col gap-2">
+            <p className="flex flex-col gap-0.5">
+              <span className="text-base font-semibold text-strong">
+                {serit.baslik}
+              </span>
+              <span className="text-tiny text-muted">{serit.not}</span>
+            </p>
 
-          <div className="flex gap-1.5">
-            {/* Gün başlıkları solda tek sütun: yedi sütunun üstüne yazmak
-                üç şeritte üç kez tekrar demekti. */}
-            <div className="flex shrink-0 flex-col gap-[3px] pt-[2px]">
-              {GUNLER.map((g) => (
-                <span
-                  key={g}
-                  className="numeral flex h-5 items-center text-nano text-muted"
-                >
-                  {g}
-                </span>
-              ))}
-            </div>
+            <div className="flex gap-1.5">
+              {/* Gün başlıkları solda tek sütun: yedi sütunun üstüne yazmak
+                  üç şeritte üç kez tekrar demekti. */}
+              <div className="flex shrink-0 flex-col gap-[3px] pt-[1px]">
+                {GUNLER.map((g) => (
+                  <span
+                    key={g}
+                    className="flex h-7 items-center text-tiny text-muted"
+                  >
+                    {g}
+                  </span>
+                ))}
+              </div>
 
-            {/* Haftalar sütun sütun, en eskiden yeniye — okuma yönü zamanla
-                aynı. Dar ekranda kayıyor; sekiz hafta 8×22 = 176 piksel,
-                zaten sığıyor ama şerit büyürse kaymaya hazır. */}
-            <div className="scroll-x flex min-w-0 flex-1 gap-[3px]">
-              {haftalar.map((hafta) => (
-                <div key={hafta[0].day} className="flex flex-col gap-[3px]">
-                  {Array.from({ length: 7 }, (_, i) => hafta[i]).map(
-                    (gun, i) =>
-                      gun ? (
-                        <Hucre key={gun.day} gun={gun} serit={serit.key} />
-                      ) : (
-                        <span
-                          key={`bos-${i}`}
-                          aria-hidden
-                          className="h-5 w-5 rounded-xs"
-                        />
-                      ),
-                  )}
-                </div>
-              ))}
+              {/* Haftalar sütun sütun, en eskiden yeniye — okuma yönü zamanla
+                  aynı. */}
+              <div className="scroll-x flex min-w-0 flex-1 gap-[3px]">
+                {haftalar.map((hafta) => (
+                  <div key={hafta[0].day} className="flex flex-col gap-[3px]">
+                    {Array.from({ length: 7 }, (_, i) => hafta[i]).map(
+                      (gun, i) =>
+                        gun ? (
+                          <Hucre key={gun.day} gun={gun} serit={serit.key} />
+                        ) : (
+                          <span
+                            key={`bos-${i}`}
+                            aria-hidden
+                            className="h-7 w-7 rounded-sm"
+                          />
+                        ),
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
       {/* İŞARETLERİN ANLAMI YAZILI — renk tek taşıyıcı değil. */}
       <p className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-line pt-3 text-tiny text-muted">
         <span className="inline-flex items-center gap-1.5">
-          <span aria-hidden className="h-3 w-3 rounded-xs bg-primary" />
+          <span aria-hidden className="h-3.5 w-3.5 rounded-xs bg-primary" />
           Yazıldı
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span
             aria-hidden
-            className="h-3 w-3 rounded-xs border border-down bg-down-wash"
+            className="h-3.5 w-3.5 rounded-xs border border-down bg-down-wash"
           />
-          Beklenirken yazılmadı
+          Beklenirken Yazılmadı
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span aria-hidden className="h-3 w-3 rounded-xs bg-surface-sunken" />
-          Hafta sonu ve tatil
+          <span
+            aria-hidden
+            className="h-3.5 w-3.5 rounded-xs bg-surface-sunken"
+          />
+          Hafta Sonu ve Tatil
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span aria-hidden className="h-3 w-3 rounded-xs border border-line" />
-          Yazılmadı — beklenmiyordu da
+          <span
+            aria-hidden
+            className="h-3.5 w-3.5 rounded-xs border border-line"
+          />
+          Yazılmadı — Beklenmiyordu Da
         </span>
       </p>
     </div>
   );
 }
+
+/** Hücrenin ortak ölçüsü — üç şerit de aynı ızgaraya oturmak zorunda. */
+const HUCRE =
+  "flex h-7 w-7 items-center justify-center rounded-sm text-tiny font-bold";
 
 function Hucre({ gun, serit }: { gun: PublishDay; serit: Serit }) {
   const tarih = formatEtDateShort(gun.day, "tr");
@@ -162,7 +188,8 @@ function Hucre({ gun, serit }: { gun: PublishDay; serit: Serit }) {
       <span
         title={`${tarih} · Günlük bülten: ${durum}${gun.weekly ? " · haftalık bülten de bu güne yazıldı" : ""}`}
         className={cn(
-          "relative flex h-5 w-5 items-center justify-center rounded-xs text-nano font-bold",
+          "relative",
+          HUCRE,
           gun.daily
             ? "bg-primary text-on-primary"
             : gun.offDay
@@ -176,7 +203,7 @@ function Hucre({ gun, serit }: { gun: PublishDay; serit: Serit }) {
         {gun.weekly && (
           <span
             aria-hidden
-            className="absolute -right-px -top-px h-1.5 w-1.5 rounded-full bg-chart-b"
+            className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-chart-b"
           />
         )}
       </span>
@@ -197,7 +224,8 @@ function Hucre({ gun, serit }: { gun: PublishDay; serit: Serit }) {
     <span
       title={`${tarih} · ${adet === 0 ? "yazılmadı" : `${adet} kayıt`}`}
       className={cn(
-        "numeral flex h-5 w-5 items-center justify-center rounded-xs text-nano font-bold",
+        "numeral",
+        HUCRE,
         adet === 0
           ? gun.offDay
             ? "bg-surface-sunken"
