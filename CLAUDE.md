@@ -102,6 +102,18 @@ gelir ve tarayıcı kaçının sığdığını ölçüp o kadarını açar. Java
 kapalıyken taban satır sayısı kalır ve hiçbir şey zıplamaz — açılan satırlar
 zaten boş olan alana iner.
 
+Doldurma İKİ YÖNLÜ ve kapasite iki kolonda da var (`LatestAnalyses` solda,
+`WeekAhead` ile favoriler sağda). Bir dönem yalnızca sağ kolonu
+dolduruyordu — kısa kalanın hep o olduğu varsayılmıştı — ve bilanço açıklayan
+şirketin olmadığı bir günde sol kolon 127 piksel açıkta kalıyordu.
+
+**Gözlemci kolonu değil PANELLERİ izler.** Izgara satırı iki kolonu aynı
+yüksekliğe geriyor, yani kolonun kutusu UZUN kolonun boyuna kilitli: kısa
+kolonun içindeki bir panel akışla gelip büyüdüğünde hiçbir kolon kutusu
+değişmiyor ve `ResizeObserver` hiç ateşlenmiyor. Doldurma o zaman ilk
+karedeki (paneller henüz inmemiş) ölçüye göre karar verip orada kalıyor;
+belirtisi, aynı sayfanın aynı genişlikte bazen dolup bazen dolmamasıdır.
+
 ## Saat kuralı: TR önce
 
 Kaynakların tamamı New York saatiyle yayın yapıyor ama okuyucu Türkiye'de.

@@ -630,12 +630,27 @@ export function EmptyState({
   hint,
   action,
   className,
+  compact = false,
   titleAs: TitleTag = "p",
 }: {
   title: string;
   hint?: string;
   action?: React.ReactNode;
   className?: string;
+  /**
+   * Dar dolgu — bir panelin İÇİNDEKİ tek satırlık boş durum için.
+   *
+   * Varsayılan dolgu (40 piksel alt, 40 üst) tam ekran boş durumlar için
+   * yazılmıştı ve orada doğru. Ama ana sayfanın iki kolonlu ızgarasında
+   * aynı kutu, tek cümlelik bir "bugün veri yok" mesajı için 100 piksel
+   * harcıyordu — ölçüldü, içeriğin kendisi 20 piksel. Bilanço açıklayan
+   * şirketin olmadığı bir günde yan yana iki panel birden böyle duruyor ve
+   * sayfa boşluklarla dolu görünüyor.
+   *
+   * Mesaj bir ÇAĞRI taşıyorsa (düğme, bağlantı) dar dolgu kullanılmaz:
+   * orada boşluk mesajın kendisinin bir parçası.
+   */
+  compact?: boolean;
   /**
    * Başlığın etiketi. Varsayılan `p` — boş durumların çoğu bir listenin
    * içinde ve sayfanın kendi `h1`i zaten var.
@@ -652,7 +667,8 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-2 px-4 py-10 text-center",
+        "flex flex-col items-center gap-2 px-4 text-center",
+        compact ? "py-6" : "py-10",
         className,
       )}
     >

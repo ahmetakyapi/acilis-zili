@@ -457,6 +457,12 @@ export default async function TodayPage() {
         </Suspense>
       </section>
 
+      {/* Kolon dengeleyici — hiçbir şey çizmez. İki kolonun dibini ölçüp
+          kısa kalanın yedek satırlarını açıyor. Sayfa seviyesinde TEK KEZ
+          duruyor: bir dönem favoriler listesinin içindeydi ve o yüzden
+          yalnızca sağ kolonu doldurabiliyordu. */}
+      <FillColumn />
+
       {/* ---- Kaynak künyesi ---- */}
       <footer className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted lg:col-span-2 lg:row-start-3">
         <span>{t.today.sourceLine}</span>
@@ -1164,7 +1170,7 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
   const events = await getTodayEvents();
 
   if (events.length === 0) {
-    return <EmptyState title={t.today.scheduleEmpty} />;
+    return <EmptyState compact title={t.today.scheduleEmpty} />;
   }
 
   const tags = zoneTag(locale);
@@ -1481,7 +1487,7 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
           title={t.today.earningsToday}
           action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
         />
-        <EmptyState title={t.earnings.empty} />
+        <EmptyState compact title={t.earnings.empty} />
       </Panel>
     );
   }
@@ -1597,6 +1603,14 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
 }
 
 /** Favoriler listesinin taban satır sayısı ve yedeklerle birlikte tavanı. */
+/* Sol kolonun yedek kapasitesi — gerekçe `LatestAnalyses` içinde. */
+const ANALYSES_BASE = 5;
+const ANALYSES_MAX = 8;
+
+/* Sağ kolonunki — gerekçe `WeekAhead` içinde. */
+const WEEK_AHEAD_BASE = 3;
+const WEEK_AHEAD_MAX = 6;
+
 const WATCHLIST_BASE = 5;
 const WATCHLIST_MAX = 10;
 
@@ -1660,8 +1674,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
       </div>
       {result.ok ? (
         <>
-          <FillColumn>
-            <ul>
+          <ul>
             {shown.map((symbol, index) => {
               const quote = result.data[symbol];
               const points = (bars[symbol] ?? []).map((bar) => ({
@@ -1671,9 +1684,9 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
               return (
                 <li
                   key={symbol}
-                  /* `data-fill-row` ölçü örneği, `data-fill` açılabilir
-                     yedek — ikisini de `FillColumn` okuyor. */
-                  data-fill-row=""
+                  /* `data-fill`: açılabilir yedek satır. Boyu `FillColumn`
+                     satırı açıp ölçerek buluyor, ayrı bir örnek satır
+                     işaretlemeye gerek yok. */
                   data-fill={index >= WATCHLIST_BASE ? "" : undefined}
                   hidden={index >= WATCHLIST_BASE}
                   className="border-t border-line first:border-t-0"
@@ -1719,8 +1732,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
                 </li>
               );
             })}
-            </ul>
-          </FillColumn>
+          </ul>
           <DataStamp
             labels={t.data}
             source={result.source}
@@ -1862,20 +1874,27 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
   ).filter((event) => event.importance !== "low");
 
   if (events.length === 0) {
-    return <EmptyState title={t.today.weekAheadEmpty} />;
+    return <EmptyState compact title={t.today.weekAheadEmpty} />;
   }
 
   const tags = zoneTag(locale);
 
+  /* ÜÇ SATIR TABAN, ALTIYA KADAR YEDEK — sağ kolonun doldurma kapasitesi.
+     Kapasite bir dönem YALNIZCA favoriler listesindeydi ve o liste giriş
+     yapmamış okuyucuda hiç yok: ölçüldü, 1024–1100 pikselde sağ kolon 114 ile
+     244 piksel kısa kalıyordu ve açılacak tek bir satır bile bulunmuyordu.
+     Haftaya bakış her okuyucuda var ve zaten kırpılmış bir liste. */
   return (
     <ul>
-      {events.slice(0, 6).map((event) => {
+      {events.slice(0, WEEK_AHEAD_MAX).map((event, index) => {
         const times = event.eventTimeEt
           ? timePair(event.eventDate, event.eventTimeEt, locale)
           : null;
         return (
           <li
             key={event.id}
+            data-fill={index >= WEEK_AHEAD_BASE ? "" : undefined}
+            hidden={index >= WEEK_AHEAD_BASE}
             className="flex items-start gap-3 border-t border-line px-4 py-3 sm:px-5"
           >
             <span className="w-[86px] shrink-0">
@@ -2276,7 +2295,16 @@ async function LatestAnalyses({
   locale: Locale;
   t: Dictionary;
 }) {
-  const analyses = await getAnalyses(locale, { limit: 5 });
+  /* BEŞ SATIR TABAN, SEKİZE KADAR YEDEK — favoriler listesindekiyle aynı
+     kurgu, bu kez SOL kolon için. Sol kolonun boyu o günün verisine bağlı:
+     bilanço açıklayan şirket yoksa "Bugün Bilanço Açıklayanlar" boş duruma
+     düşüyor ve panel 156 piksele iniyor. Ölçüldü — böyle bir günde sol kolon
+     1440 pikselde 127 piksel kısa kalıyordu ve o boşluğu kapatacak hiçbir
+     şey yoktu.
+     Sunucu sekiz satırın tamamını basıyor, beşten sonrası `hidden`;
+     kaçının açılacağına tarayıcı iki kolonun dibini ölçerek karar veriyor
+     (`FillColumn`). JavaScript kapalıysa beş satır kalıyor. */
+  const analyses = await getAnalyses(locale, { limit: ANALYSES_MAX });
 
   if (analyses.length === 0) return null;
 
@@ -2296,11 +2324,15 @@ async function LatestAnalyses({
         }
       />
       <ul className="divide-y divide-line-soft">
-        {analyses.map((row) => {
+        {analyses.map((row, index) => {
           const verdict = verdictOf(row.verdict);
           const logo = meta[row.symbol]?.logoUrl;
           return (
-            <li key={`${row.symbol}-${row.period}`}>
+            <li
+              key={`${row.symbol}-${row.period}`}
+              data-fill={index >= ANALYSES_BASE ? "" : undefined}
+              hidden={index >= ANALYSES_BASE}
+            >
               <Link
                 href={analysisHref(row.symbol, row.period)}
                 prefetch={false}
