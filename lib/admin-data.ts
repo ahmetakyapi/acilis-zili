@@ -17,6 +17,7 @@ import {
   watchlists,
 } from "./schema";
 import { addEtDays, todayEt } from "./market-hours";
+import { getHolidays } from "./data";
 
 /**
  * Yönetim panelinin sorguları.
@@ -51,7 +52,31 @@ export type TrafficPoint = {
   day: string;
   views: number;
   visitors: number;
+  /** Bugün — sayısı henüz TAMAMLANMADI, gün sürüyor. */
+  isToday: boolean;
+  /**
+   * Planlı olarak sessiz gün: hafta sonu ya da NYSE tatili.
+   *
+   * Grafikteki düşüşün sebebi bilgisi olmadan okunuyordu — cumartesi
+   * çukurunu gören yönetici "trafik mi düştü, ölçüm mü bozuldu" diye
+   * ayırt edemiyordu. Bayrak SUNUCUDA hesaplanıyor çünkü grafik
+   * `"use client"` ve oradan takvim okunamaz.
+   */
+  offDay: boolean;
 };
+
+/**
+ * ET tarih dizesinin hafta günü — 0 pazar, 6 cumartesi.
+ *
+ * `new Date("YYYY-MM-DD")` UTC gece yarısı olarak ayrıştırılıp YEREL saate
+ * çevriliyor: UTC-5'te sonuç bir önceki güne kayıyor ve cumartesi cuma
+ * görünüyor. Dizeyi parçalayıp `Date.UTC` ile kurmak o dönüşümü hiç
+ * başlatmıyor.
+ */
+function etWeekday(day: string): number {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+}
 
 /**
  * GERÇEK TEKİL KİŞİ SAYISI ÜRETİLEMEZ ve bu bilinçli bir tasarım sonucu:
@@ -89,14 +114,19 @@ export async function getTrafficSeries(days: number): Promise<TrafficPoint[]> {
     /* Kayıt olmayan günler sorgudan HİÇ dönmez ve grafik o günleri atlayıp
        çizgiyi yalancı bir eğime sokar. Boş günler sıfırla dolduruluyor. */
     const found = new Map(rows.map((r) => [r.day, r]));
+    /* Tatiller `cache()`li ve bu istekte zaten okunmuş olabilir. */
+    const tatiller = new Set((await getHolidays()).map((h) => h.date));
     const series: TrafficPoint[] = [];
     for (let i = days - 1; i >= 0; i--) {
       const day = addEtDays(today, -i);
       const row = found.get(day);
+      const gun = etWeekday(day);
       series.push({
         day,
         views: Number(row?.views ?? 0),
         visitors: Number(row?.visitors ?? 0),
+        isToday: day === today,
+        offDay: gun === 0 || gun === 6 || tatiller.has(day),
       });
     }
     return series;

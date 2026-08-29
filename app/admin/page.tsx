@@ -114,7 +114,9 @@ async function TrafficCard() {
   return (
     <AdminPanel>
       <AdminPanelTitle
-        hint="Son 30 gün · ET takvim günü"
+        /* Cümle /admin/trafik'tekiyle AYNI: iki ekran aynı seriyi çiziyor ve
+           biri bugünün dahil olduğunu söylerken öteki susuyordu. */
+        hint="Son 30 gün · bugün dahil, ET takvim günü"
         action={
           <Link
             href="/admin/trafik"
