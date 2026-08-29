@@ -203,10 +203,10 @@ export function GuidanceRanges({
           </span>
           {hasConsensus && (
             <span className="flex items-center gap-1.5">
-              <span
-                aria-hidden
-                className="h-0 w-0 border-x-[4px] border-t-[6px] border-x-transparent border-t-strong"
-              />
+              <span aria-hidden className="flex flex-col items-center">
+                <span className="block h-0 w-0 border-x-[6px] border-t-[9px] border-x-transparent border-t-strong" />
+                <span className="block h-[4px] w-[2px] bg-strong" />
+              </span>
               {legendConsensus}
             </span>
           )}
@@ -285,13 +285,35 @@ export function GuidanceRanges({
                      · ORTA NOKTA şeridin içine kesilmiş açık bir yarık —
                        eksenin çapası, bandın kendi ortası.
                    Üst dolgu üçgeni barındırıyor. */
-                <div className="relative w-full pt-2">
+                <div className="relative w-full pt-3.5">
+                  {/* İŞARET ÜÇGEN + ŞERİDİ KESEN ÇİZGİ.
+                      Önce yalnızca şeridin İÇİNDE duran siyah bir kapsüldü ve
+                      orta nokta çizgisiyle karışıyordu; sonra şeridin üstünde
+                      duran bir üçgene çevrildi ama üçgen tek başına on iki
+                      piksellik şeridin yanında küçük kalıyordu.
+
+                      Şimdi ikisi birden: üstte üçgen, altında şeridi baştan
+                      sona kesen iki piksellik dikey çizgi. Beraber tek bir
+                      nesne — "piyasa tam ŞURAYI bekliyordu".
+
+                      ORTA NOKTAYLA KARIŞMIYOR, çünkü ikisi artık ayrı dilde:
+                      beklenti KOYU ve dolu bir çizgi, üstünde de bir üçgen
+                      taşıyor; orta nokta ise kartın zemin renginde bir
+                      BOŞLUK — şeridi kesen bir çentik. Biri ekleniyor, öteki
+                      çıkarılıyor.
+
+                      Çizgi şeridin üstüne biniyor (`z` sırası: bardan sonra
+                      çiziliyor), mavinin üstünde `--strong` ile açık ara
+                      görünür duruyor ve gri rayda da öyle. */}
                   {spread.consensusOffset !== null && (
                     <span
                       aria-hidden
-                      className="absolute top-0 h-0 w-0 -translate-x-1/2 border-x-[4px] border-t-[6px] border-x-transparent border-t-strong"
+                      className="pointer-events-none absolute inset-y-0 z-10 flex -translate-x-1/2 flex-col items-center"
                       style={{ left: `${pos(spread.consensusOffset)}%` }}
-                    />
+                    >
+                      <span className="block h-0 w-0 border-x-[6px] border-t-[9px] border-x-transparent border-t-strong" />
+                      <span className="block w-[2px] flex-1 rounded-full bg-strong" />
+                    </span>
                   )}
                   <div className="relative h-3 w-full rounded-full bg-surface-elevated">
                     {lo === hi ? (

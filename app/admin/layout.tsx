@@ -52,7 +52,14 @@ export default async function AdminLayout({
       lang="tr"
       className="mx-auto flex w-full max-w-[1180px] flex-col gap-6 py-6 pl-[max(env(safe-area-inset-left),18px)] pr-[max(env(safe-area-inset-right),18px)] pb-[max(env(safe-area-inset-bottom),24px)] sm:py-8 sm:pl-[max(env(safe-area-inset-left),24px)] sm:pr-[max(env(safe-area-inset-right),24px)]"
     >
-      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+      {/* BAŞLIK ALANI ACCENT ZEMİNDE. Panel bir araç ve sayfa başlığı düz
+          zeminde yüzüyordu; ince bir mavi geçiş bandı ona bir "burası
+          yönetim" kimliği veriyor. Yüzey sitenin kendi kalıbı (mercek
+          şeridiyle aynı geçiş), yani panel siteden kopmuyor.
+          CESARET BİR KEZ HARCANIYOR: sayfada bununla yarışan ikinci bir
+          accent yüzey yok — sayı kutuları aynı ailenin daha soluk tonunda,
+          gerisi nötr. */}
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 rounded-(--radius-xl) border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] px-5 py-5 sm:px-7 sm:py-6">
         <div>
           {/* Üst etiket ve başlık artık sitenin kendi ilkelleriyle: panel de
               bir sayfa başlığı gibi görünsün. Etiket elle yazılmış

@@ -399,7 +399,7 @@ const tr = {
        sorduğu soru "mavi ne, siyah ne" idi ve cevabı hiçbir yerde yazmıyordu.
        Cümle olduğu için Title Case kapsamı dışında. */
     guidanceAxis:
-      "Mavi şerit şirketin verdiği alt–üst aralık; uzunluğu şirketin kendine bıraktığı payı gösterir. Siyah üçgen piyasanın beklediği yeri işaretler, şeridin ortasındaki çentik ise aralığın orta noktasıdır. Üçgen yalnızca piyasa beklentisi bilinen satırlarda çıkar. Eksen orta noktaya göre ±{value}.",
+      "Mavi şerit şirketin verdiği alt–üst aralık; uzunluğu şirketin kendine bıraktığı payı gösterir. Siyah üçgen ve altındaki çizgi piyasanın beklediği yeri işaretler, şeridin ortasındaki çentik ise aralığın orta noktasıdır. Üçgen yalnızca piyasa beklentisi bilinen satırlarda çıkar. Eksen orta noktaya göre ±{value}.",
     /* Öngörü satırındaki renkli yargı. Kayıtta `evaluation` yoksa bandın
        iki ucu ile piyasa beklentisi karşılaştırılıp buradan seçilir. */
     guidanceAbove: "Beklenti Aralığın Üstünde",

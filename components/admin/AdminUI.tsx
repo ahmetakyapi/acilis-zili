@@ -94,8 +94,15 @@ export function StatBox({
 }) {
   return (
     /* Kutu dolgusu ve etiket–sayı aralığı açıldı: dört kutu yan yana
-       duruyor ve sıkışık dolgu onları tek bir şerit gibi gösteriyordu. */
-    <div className="rounded-(--radius-lg) border border-line bg-surface-elevated px-4 py-4 sm:px-5">
+       duruyor ve sıkışık dolgu onları tek bir şerit gibi gösteriyordu.
+
+       ZEMİN DÜZ DEĞİL, İNCE BİR MAVİ GEÇİŞ. Sitenin kendi kalıbı bu:
+       accent wash'tan tint'e 160 derecelik bir geçiş — mercek şeridi ve
+       öne çıkan analiz kartı da aynı yüzeyi kullanıyor. Glow ya da cam
+       değil; derinlik ton farkından geliyor (CLAUDE.md § görsel dil).
+       Kutu yüzeyi accent olduğu için kenarlık da `primary-faint`e
+       geçiyor — nötr çizgi mavi zeminde yabancı duruyordu. */
+    <div className="rounded-(--radius-lg) border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] px-4 py-4 sm:px-5">
       <p className="text-tiny font-semibold uppercase tracking-[0.07em] text-muted">
         {label}
       </p>
@@ -220,8 +227,11 @@ export function RankList({
                  üstüne bir kat daha koymak rayı görünmez yapıyordu. */
               className="block h-[3px] w-full overflow-hidden rounded-full bg-bar"
             >
+              {/* Dolgu da geçişli: koyudan yumuşağa. Uzun çubuklarda düz
+                  tek renk yassı duruyordu; geçiş çubuğa yön veriyor ve
+                  ucunun nerede olduğu daha kolay okunuyor. */}
               <span
-                className="block h-full rounded-full bg-primary"
+                className="block h-full rounded-full bg-[linear-gradient(90deg,var(--primary-deep),var(--primary))]"
                 style={{ width: `${share}%` }}
               />
             </span>

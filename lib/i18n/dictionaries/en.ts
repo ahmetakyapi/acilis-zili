@@ -295,7 +295,7 @@ const en: typeof tr = {
     legendRange: "Guidance Range",
     legendConsensus: "Market Expectation",
     guidanceAxis:
-      "The blue band is the company's low–high range; its length shows how much room the company left itself. The black triangle marks where the market expected, and the notch in the band is the range's midpoint. The triangle appears only where a market expectation is known. Axis is ±{value} around the midpoint.",
+      "The blue band is the company's low–high range; its length shows how much room the company left itself. The black triangle and the line beneath it mark where the market expected, and the notch in the band is the range's midpoint. The triangle appears only where a market expectation is known. Axis is ±{value} around the midpoint.",
     guidanceAbove: "Expectation Above the Range",
     guidanceBelow: "Expectation Below the Range",
     guidanceInline: "In Line with Expectations",
