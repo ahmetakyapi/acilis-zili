@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/primitives";
  */
 
 export type DeleteAccountLabels = {
-  title: string;
   hint: string;
   open: string;
   confirmLabel: string;
@@ -45,13 +44,18 @@ export function DeleteAccount({
 
   if (!open) {
     return (
-      <div className="flex flex-col gap-2 border-t border-line pt-4">
-        <p className="text-base font-semibold text-strong">{labels.title}</p>
+      /* BAŞLIK VE AYRAÇ ARTIK BURADA DEĞİL. Bileşen bir dönem hesap
+         panelinin içinde, "Çıkış Yap"ın altında duruyordu ve kendi
+         başlığını, kendi üst ayracını basıyordu. Şimdi kendi panelinde ve
+         panelin başlığı zaten adını söylüyor — ikinci bir başlık aynı şeyi
+         iki kez yazmak olurdu.
+         Düğme de `sm` değil: geri alınamayan eylem, geri alınabilir olandan
+         daha küçük bir hedef taşımamalı. */
+      <div className="flex flex-col gap-2">
         <p className="text-small leading-relaxed text-muted">{labels.hint}</p>
         <Button
           type="button"
           variant="danger"
-          size="sm"
           className="mt-1 w-fit"
           onClick={() => setOpen(true)}
         >
