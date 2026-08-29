@@ -393,7 +393,13 @@ const tr = {
        içinde ortak: en geniş bant ekseni belirliyor. Bu satır olmadan uzun
        bir çubuk "geniş aralık" diye okunuyor, oysa yalnızca "bu karttaki en
        geniş bant" demek. {value} eksenin ucundaki yüzdeyle doluyor. */
-    guidanceAxis: "Çubuklar orta noktaya göre ölçekli · eksen ±{value}",
+    /* İŞARETLERİN NE ANLATTIĞI DÜZ TÜRKÇEYLE. Not bir dönem yalnızca
+       "Çubuklar orta noktaya göre ölçekli · eksen ±%5,8" diyordu: doğru ama
+       yalnızca grafiği zaten çözmüş birine bir şey söylüyordu. Okuyucunun
+       sorduğu soru "mavi ne, siyah ne" idi ve cevabı hiçbir yerde yazmıyordu.
+       Cümle olduğu için Title Case kapsamı dışında. */
+    guidanceAxis:
+      "Mavi şerit şirketin verdiği alt–üst aralık; uzunluğu şirketin kendine bıraktığı payı gösterir. Siyah üçgen piyasanın beklediği yeri işaretler, şeridin ortasındaki çentik ise aralığın orta noktasıdır. Üçgen yalnızca piyasa beklentisi bilinen satırlarda çıkar. Eksen orta noktaya göre ±{value}.",
     /* Öngörü satırındaki renkli yargı. Kayıtta `evaluation` yoksa bandın
        iki ucu ile piyasa beklentisi karşılaştırılıp buradan seçilir. */
     guidanceAbove: "Beklenti Aralığın Üstünde",

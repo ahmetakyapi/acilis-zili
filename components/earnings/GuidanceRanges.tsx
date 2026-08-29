@@ -149,6 +149,9 @@ export function GuidanceRanges({
   title: string;
   legendRange: string;
   legendConsensus: string;
+  /* Yokluk açıklaması SATIR SATIR DEĞİL, bir kez lejantta: kayıtların
+     çoğunda beklenti yok ve satır başına bir cümle yazmak kartın yarısını
+     aynı ifadeyle dolduruyordu. Açıklamanın tamamı `axisNote` içinde. */
   /** "Çubuklar orta noktaya göre ölçekli · eksen ±{value}" */
   axisNote: string;
   /** Eksen ucundaki yüzdeyi okuyucunun dilinde yazar. */
@@ -191,16 +194,19 @@ export function GuidanceRanges({
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
         <h2 className="text-read font-bold text-strong">{title}</h2>
         <div className="flex items-center gap-3 text-tiny text-muted">
+          {/* LEJANT İŞARETLERİ BARDAKİLERİN AYNISI. Mavi olan bir ARALIK —
+              iki ucu olan yatay bir şerit; kısa bir hap onu bir nokta gibi
+              gösteriyordu. Siyah olan bir KONUM — aşağıyı gösteren üçgen. */}
           <span className="flex items-center gap-1.5">
-            <span aria-hidden className="h-2 w-3 rounded-full bg-primary" />
+            <span aria-hidden className="h-2 w-6 rounded-full bg-primary" />
             {legendRange}
           </span>
           {hasConsensus && (
             <span className="flex items-center gap-1.5">
-              {/* Gösterge işareti bandın üstündeki İŞARETİN aynısı: yuvarlak
-                  bir nokta çizilip barda kapsül göstermek, okuyucuya iki ayrı
-                  şey varmış gibi geliyordu. */}
-              <span aria-hidden className="h-3 w-[5px] rounded-full bg-strong" />
+              <span
+                aria-hidden
+                className="h-0 w-0 border-x-[4px] border-t-[6px] border-x-transparent border-t-strong"
+              />
               {legendConsensus}
             </span>
           )}
@@ -262,48 +268,66 @@ export function GuidanceRanges({
 
               {/* Çubuk her satırda çizilir — eksen ortak olduğu için artık
                   bir şey söylüyor: bandın uzunluğu şirketin kendine bıraktığı
-                  hareket alanı, konumu ise beklentiyle arasındaki fark.
-                  Ortadaki ince çizgi orta noktayı işaretliyor; band ona göre
-                  simetrik. */}
+                  hareket alanı, konumu ise beklentiyle arasındaki fark. */}
               {spread && axis > 0 && (
-                <div className="relative h-3 w-full rounded-full bg-surface-elevated">
-                  <span
-                    aria-hidden
-                    className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-line-strong"
-                  />
-                  {lo === hi ? (
-                    /* Şirket aralık değil TEK bir sayı verdiyse band çizilmez:
+                /* ÜÇ İŞARET, ÜÇ AYRI DİL. Üçü de çubuğun içindeyken hangisinin
+                   ne olduğu okunmuyordu: piyasa beklentisi siyah bir kapsül
+                   olarak bandın İÇİNE düşüyor, orta nokta da ince bir çizgi
+                   olarak aynı yerde duruyordu — iki farklı soruya iki farklı
+                   cevap, aynı biçimde.
+
+                   Artık:
+                     · ARALIK yatay mavi şerit — iki ucu var, uzunluğu bir
+                       şey söylüyor.
+                     · PİYASA BEKLENTİSİ şeridin DIŞINDA, üstünde duran ve
+                       aşağıyı gösteren bir üçgen. Bir konum işareti; şeridin
+                       parçası değil, ona bakıyor.
+                     · ORTA NOKTA şeridin içine kesilmiş açık bir yarık —
+                       eksenin çapası, bandın kendi ortası.
+                   Üst dolgu üçgeni barındırıyor. */
+                <div className="relative w-full pt-2">
+                  {spread.consensusOffset !== null && (
+                    <span
+                      aria-hidden
+                      className="absolute top-0 h-0 w-0 -translate-x-1/2 border-x-[4px] border-t-[6px] border-x-transparent border-t-strong"
+                      style={{ left: `${pos(spread.consensusOffset)}%` }}
+                    />
+                  )}
+                  <div className="relative h-3 w-full rounded-full bg-surface-elevated">
+                    {lo === hi ? (
+                      /* Şirket aralık değil TEK bir sayı verdiyse band çizilmez:
                      genişliği sıfır olan bir bandı görünür kılmak için
                      verilen asgari pay, eksenin ortasında rastgele duran
                      mavi bir noktaya dönüşüyordu. Beklenti işaretiyle aynı
                      biçim — ikisi de tek bir değer gösteriyor. */
-                    <span
-                      aria-hidden
-                      className="absolute top-1/2 h-[17px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
-                      style={{ left: "50%" }}
-                    />
-                  ) : (
-                    <span
-                      aria-hidden
-                      className="absolute inset-y-0 rounded-full bg-primary"
-                      style={{
-                        left: `${pos(-spread.half)}%`,
-                        width: `${Math.max(2, pos(spread.half) - pos(-spread.half))}%`,
-                      }}
-                    />
-                  )}
-                  {/* İşaret bandın ÜSTÜNE biniyor ve kendi zemin renginde bir
-                    halka taşıyor: bandın içine düştüğünde maviye karışıp
-                    kayboluyordu. Yuvarlak nokta yerine DİKEY kapsül —
-                    nokta bir veri işareti gibi okunuyordu, oysa bu bir
-                    eşik: "piyasa tam burayı bekliyordu". */}
-                  {spread.consensusOffset !== null && (
-                    <span
-                      aria-hidden
-                      className="absolute top-1/2 h-[17px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-strong ring-2 ring-surface-solid"
-                      style={{ left: `${pos(spread.consensusOffset)}%` }}
-                    />
-                  )}
+                      <span
+                        aria-hidden
+                        className="absolute top-1/2 h-[17px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
+                        style={{ left: "50%" }}
+                      />
+                    ) : (
+                      <span
+                        aria-hidden
+                        className="absolute inset-y-0 rounded-full bg-primary"
+                        style={{
+                          left: `${pos(-spread.half)}%`,
+                          width: `${Math.max(2, pos(spread.half) - pos(-spread.half))}%`,
+                        }}
+                      />
+                    )}
+                    {/* ORTA NOKTA YARIĞI EN ÜSTTE. Band orta noktaya göre
+                      simetrik kurulduğu için yarık her zaman mavinin
+                      üstüne düşüyor ve kartın zemin renginde olduğu için
+                      şeridi kesiyormuş gibi okunuyor. Eski ince gri çizgi
+                      mavinin altında kalıp görünmüyordu, yani "Orta Nokta
+                      3,15" yazısının barda hiçbir karşılığı yoktu. */}
+                    {lo !== hi && (
+                      <span
+                        aria-hidden
+                        className="absolute inset-y-0 left-1/2 w-[2px] -translate-x-1/2 bg-surface-solid"
+                      />
+                    )}
+                  </div>
                 </div>
               )}
 
