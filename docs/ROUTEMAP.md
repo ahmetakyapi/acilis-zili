@@ -23,7 +23,7 @@
 | API ucu | 14 |
 | Veritabanı tablosu | 15 · 15 migration |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB |
-| Ortam değişkeni | 11 (`.env.example`) |
+| Ortam değişkeni | 12 (`.env.example`) |
 | Cron | `/api/cron/daily` — hafta içi 10:30 UTC (13:30 TR) |
 | İçerik rutini | 4 adet, claude.ai üzerinde elle kurulu |
 

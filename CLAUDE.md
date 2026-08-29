@@ -136,11 +136,21 @@ yükü çekilmediği için geri tuşu ÖNCEKİ durumun ağacını geri yükler. 
 okunan bir durum, prop'tan değil ADRESTEN başlatılmalı; prop yalnızca sunucu
 çiziminde geçerlidir.
 
-**`getQuotes` ve `getSeries` istek içinde önbellekli ve anahtar sıralanmış
-sembol dizesi.** İki panel birebir aynı listeyi sorarsa sağlayıcıya bir kez
-gidilir; listede tek bir sembol farkı anahtarı değiştirir ve tur ikiye çıkar.
-Aynı ekranda iki panel aynı veriyi gösteriyorsa aynı anahtarı sormalı — yoksa
-aynı hissenin iki farklı yüzdesi yan yana durabilir.
+**`getQuotes` ve `getSymbolNames` istek içinde önbellekli ve anahtar
+sıralanmış sembol dizesi.** İki panel birebir aynı listeyi sorarsa
+sağlayıcıya bir kez gidilir; listede tek bir sembol farkı anahtarı değiştirir
+ve tur ikiye çıkar. Aynı ekranda iki panel aynı veriyi gösteriyorsa aynı
+anahtarı sormalı — yoksa aynı hissenin iki farklı yüzdesi yan yana durabilir.
+
+Bu cümle bir dönem `getSeries`i sayıyordu ve YANLIŞTI: o düz bir `async
+function`, `cache()` sarmalı yok ve argümanı sembol listesi değil bir
+`SeriesRequest`. Makro serilerde istek-içi tekilleştirme YOK; oradaki tek
+koruma `fetch`in kendi veri önbelleği (`revalidate`), yani farklı bir
+mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
+(`getHolidays`, `getStatus`, `getEventsBetween`, `getEarningsBetween`,
+`getNewsById`, `symbolNamesForKey`, `isKnownSymbol`), `lib/admin.ts`
+(`getAdmin`), `lib/admin-data.ts` ve `lib/providers/index.ts`
+(`quotesForKey`).
 
 ## Veri dürüstlüğü
 
@@ -171,6 +181,23 @@ Commit'ten önce üçü de temiz olmalı: `npm run typecheck`, `npm run lint`,
 Mesele commit SAYISI, mesaj detayı değil — gövdede her değişikliğin gerekçesi
 ayrı paragraf olarak yazılmaya devam eder. Sekiz-on küçük commit geçmişi
 taranamaz hâle getiriyor.
+
+## Belgeli istisna: `eslint-disable`
+
+Ekosistem kuralı `eslint-disable` yorumunu yasaklıyor ("sorunu düzelt").
+Depoda **tek** istisna var ve gerekçesi güvenlik: `components/news/NewsImage.tsx`
+iki yerde `@next/next/no-img-element` kuralını kapatıyor.
+
+Haber görselleri onlarca farklı haber CDN'inden geliyor ve `next/image` her
+host için `remotePatterns` kaydı istiyor. Hepsini kapsamanın tek yolu
+`hostname: "**"` ve o da `/_next/image` ucunu HERKESİN kullanabileceği bir
+görsel proxy'sine çevirir. Şirket logosu dalı da kurtulmuyor: `logoSrc`
+bilinen sembollerde yerel dosya döndürüyor ama bilinmeyende Finnhub'ın uzak
+adresine düşüyor.
+
+Yani buradaki "sorunu düzeltmek" optimizasyon için bir güvenlik açığı açmak
+olurdu. Kural yerinde; istisna da yerinde ve tek. Yeni bir `eslint-disable`
+eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye bak.
 
 ## Bilinmesi gerekenler
 

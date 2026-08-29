@@ -51,10 +51,11 @@ const CSS = `
 
 export default function GlobalError({
   error,
-  reset,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  /* Next bu prop'u geçiyor ama BURADA KULLANILMIYOR — gerekçesi düğmenin
+     yanındaki notta. İmzada duruyor ki sözleşme okunur kalsın. */
+  reset?: () => void;
 }) {
   /* Sunucuda `navigator` yok; varsayılan Türkçe. Ekran zaten yalnızca
      istemcide görünüyor. */
@@ -91,9 +92,16 @@ export default function GlobalError({
           <p style={{ margin: "0 0 20px", fontSize: 14, lineHeight: 1.6 }}>
             {copy.body}
           </p>
+          {/* SAYFAYI YENİDEN YÜKLER, `reset()` ÇAĞIRMAZ. Next'in `reset()`i
+              yalnızca hata durumunu temizliyor, ağa çıkmıyor — ve burası kök
+              hata sınırı, yani kök layout'un kendisi çökmüş demek. Durumu
+              temizlemek aynı çökük ağacı yeniden çizmekten ibaret olurdu.
+              Metnin verdiği söz de zaten bu: "Sayfayı yenilemeyi dene."
+              `router.refresh()` burada kullanılamaz: bu bileşen kök layout'un
+              YERİNE geçiyor, yani App Router bağlamının dışında. */}
           <button
             type="button"
-            onClick={reset}
+            onClick={() => window.location.reload()}
             style={{
               height: 40,
               padding: "0 18px",

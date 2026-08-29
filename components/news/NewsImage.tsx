@@ -76,6 +76,10 @@ export function NewsImage({
   if (!src && logoUrl) {
     return (
       <span className={cn(frame, "bg-white", className)}>
+        {/* `next/image` DEĞİL: uzak görsel hostlarının tamamını kapsamak
+            `hostname: "**"` demek ve o da `/_next/image`i açık bir görsel
+            proxy'sine çevirir. Gerekçenin tamamı dosyanın başındaki notta,
+            istisnanın kaydı CLAUDE.md'de. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={logoUrl}
@@ -112,6 +116,8 @@ export function NewsImage({
 
   return (
     <span className={cn(frame, className)}>
+      {/* `next/image` DEĞİL — gerekçe dosyanın başındaki notta, istisnanın
+          kaydı CLAUDE.md'de. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}

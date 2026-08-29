@@ -403,6 +403,7 @@ npm run dev
 | `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri ve sitemap için) |
 | `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisi (DeepL yoksa) |
 | `DEEPL_API_KEY` | opsiyonel | haber başlığı çevirisi (önce bu denenir) |
+| `ANALYTICS_SALT` | opsiyonel | ziyaretçi özetinin tuzu; verilmezse `AUTH_SECRET` kullanılır |
 
 Anahtarlar olmadan da uygulama açılır; ilgili kartlar "veri alınamadı" gösterir ve
 sayfa çökmez. Doğrulamak için: `/api/debug/providers`.
