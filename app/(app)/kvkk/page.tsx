@@ -63,15 +63,23 @@ export default async function PrivacyPage() {
         <ArticleBody markdown={disclaimerMd(locale)} locale={locale} />
       </section>
 
-      <footer className="mt-2 flex flex-wrap gap-x-5 gap-y-2 border-t border-line pt-5 text-small">
-        <Link href="/ayarlar" className="font-semibold text-primary">
+      {/* İki bağlantı 18 piksellik metin kutularıydı — dokunma hedefi
+          turlarında atlanmış son yer. `.tap-44` burada da yanlış araç:
+          kap SARIYOR ve görünmez genişletme alt satırdaki bağlantıyı
+          kapardı (aynı ölçüm kaynak künyelerinde yapıldı). Doğru araç
+          gerçek yükseklik; dikey aralık da ona göre. */}
+      <footer className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-line pt-5 text-small">
+        <Link
+          href="/ayarlar"
+          className="inline-flex min-h-11 items-center font-semibold text-primary sm:min-h-8"
+        >
           {t.legal.manageAccount}
         </Link>
         <a
           href="https://github.com/ahmetakyapi/acilis-zili/issues"
           target="_blank"
           rel="noreferrer noopener"
-          className="font-semibold text-primary"
+          className="inline-flex min-h-11 items-center font-semibold text-primary sm:min-h-8"
         >
           {t.legal.contact}
         </a>
