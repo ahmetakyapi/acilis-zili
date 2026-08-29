@@ -82,6 +82,18 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   const rangeHref = (key: RangeKey) =>
     key === "ay" ? "/bilancolar?aralik=ay" : "/bilancolar";
 
+  /* Aralık anahtarı İKİ YERDE ve aynı düğüm iki kez çiziliyor — markup
+     kopyalanmıyor. Sayfanın altındaki gerekçe aşağıda. */
+  const anahtar = (
+    <Segment>
+      {(["hafta", "ay"] as const).map((key) => (
+        <SegmentItem key={key} href={rangeHref(key)} active={range === key}>
+          {key === "hafta" ? t.earnings.rangeWeek : t.earnings.rangeMonth}
+        </SegmentItem>
+      ))}
+    </Segment>
+  );
+
   return (
     <div className="flex flex-col gap-7">
       {/* BAŞLIK BÖLÜMÜN ADI, SEKME GÖRÜNÜMÜN ADI. Burada "Bilanço Takvimi"
@@ -101,17 +113,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
              sona kadar kaydırarak öğreniyordu. İki tarih de hesaplanmış
              değişkenlerde duruyor, uydurma yok. */
           <div className="flex flex-col items-start gap-1.5 sm:items-end">
-            <Segment>
-              {(["hafta", "ay"] as const).map((key) => (
-                <SegmentItem
-                  key={key}
-                  href={rangeHref(key)}
-                  active={range === key}
-                >
-                  {key === "hafta" ? t.earnings.rangeWeek : t.earnings.rangeMonth}
-                </SegmentItem>
-              ))}
-            </Segment>
+            {anahtar}
             <p className="figure text-tiny text-muted">
               {formatEtDateCompact(today, locale)} –{" "}
               {formatEtDateCompact(rangeEnd, locale)}
@@ -140,6 +142,29 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           locale={locale}
           t={t}
         />
+      )}
+
+      {/* ARALIK ANAHTARI LİSTENİN ALTINDA DA. Haftalık listeyi sonuna kadar
+          okuyan okuyucunun bir sonraki adımı aylık görünüm ama anahtar
+          sayfanın en üstündeydi: devam etmek için ekranlarca yukarı
+          kaydırmak gerekiyordu. Aynı düğüm burada da çiziliyor.
+
+          Anahtar `scroll={false}` taşıyor (SegmentItem'ın kendi kararı), yani
+          aralık değişince sayfa başa fırlamıyor: haftalık listenin sonundaki
+          okuyucu aylık listede aşağı yukarı aynı tarihte kalıyor ve
+          devamı altında açılıyor.
+
+          Yalnızca liste DOLUYKEN çiziliyor — boş bir sayfada iki anahtar
+          arasında sekiz piksel kalırdı. */}
+      {rows.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-line pt-4">
+          <p className="text-small text-muted">
+            {range === "hafta"
+              ? t.earnings.endOfWeekList
+              : t.earnings.endOfMonthList}
+          </p>
+          {anahtar}
+        </div>
       )}
 
       <GuideHint

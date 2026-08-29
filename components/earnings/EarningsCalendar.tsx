@@ -85,7 +85,7 @@ function cardFigures(
   locale: Locale,
   t: Dictionary,
   short: boolean,
-): { headline: Figure | null; rest: Figure[] } {
+): { headline: Figure | null; rest: Figure[]; capNote: Figure | null } {
   const revenue =
     row.revenueEstimate !== null && row.revenueEstimate !== undefined
       ? {
@@ -134,12 +134,22 @@ function cardFigures(
   /* MİNİ KARTTA EN FAZLA BİR İKİNCİL ÖLÇÜ. Yığın karttan karta 0–2 satır
      arasında oynuyordu ve kart `h-full` ile satırın en uzun kartı kadar
      uzadığı için fark, kısa kartların altında boşluk olarak birikiyordu.
-     Düşen ölçü hemen her zaman piyasa değeri: sıralamayı zaten o belirliyor
-     (kartın satırdaki yeri onu söylüyor), tam hâli hero satırında ve hisse
-     sayfasında duruyor. Hero satırı üçünü de basmaya devam ediyor — orada
-     yer var ve günün en büyük iki bilançosu karşılaştırılmak isteniyor. */
+     Düşen ölçü hemen her zaman piyasa değeri oluyordu.
+
+     PİYASA DEĞERİ GERİ GELDİ — ama DEĞİŞKEN satır olarak değil, kartın
+     dibinde SABİT bir künye olarak. Yükseklik sorunu ölçünün kendisinden
+     değil, kaç satır çizildiğinin karttan karta oynamasından geliyordu;
+     her kartta tam olarak bir künye satırı olunca fark ortadan kalkıyor.
+     Sayı zaten kartın sıralamasını belirleyen ölçü ve okuyucunun "bu şirket
+     ne büyüklükte" sorusunu soracağı ilk yer bilanço kartı.
+
+     Künye yalnızca manşet ya da ikincil listede ZATEN yoksa basılıyor:
+     beklentisi olmayan kartlarda piyasa değeri manşete çıkıyor ve aynı sayı
+     iki kez yazılmamalı. */
   const rest = short ? tumu.slice(0, 1) : tumu;
-  return { headline, rest };
+  const capNote =
+    short && cap && headline !== cap && !rest.includes(cap) ? cap : null;
+  return { headline, rest, capNote };
 }
 
 export type CalendarProps = {
@@ -485,7 +495,13 @@ function DaySection({
           {mid.map((row) => {
             const m = meta[row.symbol];
             const timing = timingOf(row.hour, t);
-            const { headline, rest } = cardFigures(row, m, locale, t, true);
+            const { headline, rest, capNote } = cardFigures(
+              row,
+              m,
+              locale,
+              t,
+              true,
+            );
             const badge = badgeOf(row);
             return (
               <div
@@ -603,6 +619,18 @@ function DaySection({
                         </div>
                       ))}
                     </dl>
+                  )}
+                  {/* PİYASA DEĞERİ KÜNYESİ — her mini kartta aynı yerde,
+                      aynı satır sayısında. Üstündeki ölçüler karttan karta
+                      oynayabiliyor ama bu satır oynamıyor, o yüzden kart
+                      yükseklikleri de oynamıyor. */}
+                  {capNote && (
+                    <p className="mt-2 flex items-baseline justify-between gap-2 text-tiny">
+                      <span className="text-muted">{capNote.label}</span>
+                      <span className="figure font-semibold text-body">
+                        {capNote.value}
+                      </span>
+                    </p>
                   )}
                 </div>
               </div>

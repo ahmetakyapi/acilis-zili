@@ -219,6 +219,8 @@ const en: typeof tr = {
     marketCapShort: "Mkt cap",
     rangeWeek: "Week",
     rangeMonth: "Month",
+    endOfWeekList: "End of the week. Switch the range to see a month ahead.",
+    endOfMonthList: "End of the month. Switch back to the week for a closer window.",
     subtitleLong:
       "Company results release dates · ranked by market cap within each day",
     empty: "No earnings reports in this range",

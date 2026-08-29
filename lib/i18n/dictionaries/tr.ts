@@ -295,6 +295,10 @@ const tr = {
     marketCapShort: "PD",
     rangeWeek: "Hafta",
     rangeMonth: "Ay",
+    /* Listenin altındaki aralık anahtarının yanındaki satır. Cümle, künye
+       değil — Title Case kapsamı dışında. */
+    endOfWeekList: "Haftanın sonu. Bir ay ilerisini görmek için aralığı değiştir.",
+    endOfMonthList: "Ayın sonu. Daha yakın bir pencere için haftaya dön.",
     subtitleLong:
       "Şirketlerin finansal sonuç açıklama tarihleri · gün içinde piyasa değerine göre sıralı",
     /* Bilançolar ekranının üç sekmesi — takvim, analizler ve takip listesi
