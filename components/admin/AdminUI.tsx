@@ -106,7 +106,7 @@ export function StatBox({
         {delta && (
           <span
             className={cn(
-              "text-small font-semibold tabular-nums",
+              "numeral text-small font-semibold",
               delta.tone === "up" && "text-up",
               delta.tone === "down" && "text-down",
               delta.tone === "neutral" && "text-muted",
@@ -166,34 +166,56 @@ export function RankList({
   return (
     <ol className="flex flex-col gap-px">
       {rows.map((row) => {
-        const share = Math.max(2, Math.round((row.value / max) * 100));
+        /* SIFIR SIFIR ÇİZİLİR. Taban `Math.max(2, …)` idi ve değeri sıfır
+           olan satıra da %2'lik bir çubuk çiziyordu — bileşen genel, "hiç"
+           ile "çok az" aynı görünmemeli. */
+        const share = Math.round((row.value / max) * 100);
         const body = (
           <>
-            <span
-              aria-hidden
-              className="absolute inset-y-0 left-0 rounded-xs bg-primary-wash"
-              style={{ width: `${share}%` }}
-            />
+            {/* UÇ KAPAĞI. Dolgu `bg-primary-wash` panel yüzeyinden ancak
+                1,1–1,3 kat ayrışıyor — projenin kendi `--bar` notunun
+                "kayboluyor" dediği eşiğin altında. Dolguyu koyulaştırmak
+                çözüm değil: üstünde metin duruyor ve %22 opaklıkta kontrast
+                AA eşiğinin altına düşüyor. Bunun yerine dolgunun SAĞ UCUNA
+                accent bir kapak; üstünde metin olmadığı için metin
+                kontrastına dokunmuyor ve çubuğun nerede bittiği görünüyor.
+                Pay %98'de sınırlı: tam 100'de kapak satırın sağ kenarına
+                oturup değer sütununun kenarlığı gibi okunuyordu. */}
+            {share > 0 && (
+              <span
+                aria-hidden
+                className="absolute inset-y-0 left-0 rounded-l-xs border-r-2 border-primary bg-primary-wash"
+                style={{ width: `${Math.min(share, 98)}%` }}
+              />
+            )}
             <span className="relative min-w-0 flex-1 truncate pr-3">
               {row.label}
             </span>
             {row.secondary && (
-              <span className="relative shrink-0 pr-3 text-tiny text-muted tabular-nums">
+              <span className="numeral relative shrink-0 pr-3 text-tiny text-muted">
                 {row.secondary}
               </span>
             )}
-            <span className="relative shrink-0 font-semibold text-strong tabular-nums">
+            <span className="numeral relative shrink-0 font-semibold text-strong">
               {row.value.toLocaleString("tr-TR")}
             </span>
           </>
         );
 
+        /* DOKUNMA HEDEFİ 44 PİKSEL — yalnızca bağlantı dalında. Satır
+           `px-2.5 py-[7px] text-base` ile 33,5 piksel ediyordu ve iki liste
+           (Trafik → Sayfalar, Üyeler → En Çok Takip Edilenler) on beşer
+           tıklanabilir satır basıyor. Salt dolguyla 44 verilmiyor
+           (`py-[11px]` 41,5 eder), o yüzden gerçek yükseklik. `.tap-44`
+           BURADA KULLANILMAZ: satırlar alt alta ve sözde öğe bir alttaki
+           satırın hedefini kapardı — gerekçe app/globals.css'te yazılı.
+           Bağlantı olmayan dal (Cihaz, Dil) eski ölçüsünde kalıyor. */
         return (
           <li key={row.key}>
             {row.href ? (
               <Link
                 href={row.href}
-                className="relative flex items-center rounded-xs px-2.5 py-[7px] text-base text-body transition-colors hover:bg-surface-elevated"
+                className="relative flex min-h-11 items-center rounded-xs px-2.5 py-[7px] text-base text-body transition-colors hover:bg-surface-elevated sm:min-h-8"
               >
                 {body}
               </Link>
@@ -270,13 +292,25 @@ export function AdminCell({
   children,
   align = "left",
   strong,
-  mono,
+  numeral,
   rowHeader,
 }: {
   children: React.ReactNode;
   align?: "left" | "right";
   strong?: boolean;
-  mono?: boolean;
+  /**
+   * Ayırıcı taşıyan sayı hücresi — tarih, binlik noktalı adet.
+   *
+   * Prop bir dönem `mono` adını taşıyordu ve hiçbir mono aile
+   * uygulamıyordu: ad yaptığı işi yanlış söylüyordu. Uyguladığı şey
+   * sitenin `.numeral` sınıfı, adı da o.
+   *
+   * `.numeral` yalnızca harf aralığını sıkıştırır — RAKAM HİZASI GERİ
+   * GELMEZ. Kök `font-variant-numeric` ayarı ölçülerek kapatılmıştı
+   * ("$1.258,58" → "$1 . 258 , 58"). Hizayı bu hücrelerde `text-right`
+   * sağlıyor, sınıf değil.
+   */
+  numeral?: boolean;
   /** Satırı TANIMLAYAN ilk hücre — `th scope="row"` olarak basılır. */
   rowHeader?: boolean;
 }) {
@@ -291,7 +325,7 @@ export function AdminCell({
         "py-2.5 pl-3 first:pl-0",
         align === "right" && "text-right",
         strong ? "font-semibold text-strong" : "text-body",
-        mono && "tabular-nums",
+        numeral && "numeral",
         rowHeader && "text-left font-semibold",
       )}
     >

@@ -115,11 +115,11 @@ async function RecentMembers() {
                   "12.08" satırında gösteriyordu. Yaz saatinde her günün
                   20:00-24:00 ET aralığı — günün altıda biri — bir gün
                   ileri görünüyordu. */}
-              <AdminCell mono>
+              <AdminCell numeral>
                 {formatEtDateShort(row.createdOn, "tr")}
               </AdminCell>
               <AdminCell>{row.locale === "en" ? "İngilizce" : "Türkçe"}</AdminCell>
-              <AdminCell align="right" mono strong={row.symbolCount > 0}>
+              <AdminCell align="right" numeral strong={row.symbolCount > 0}>
                 {row.symbolCount}
               </AdminCell>
             </AdminRow>
@@ -182,7 +182,7 @@ async function SignupCurve() {
                 <span className="text-body">
                   {formatEtDateShort(point.day, "tr")}
                 </span>
-                <span className="font-semibold tabular-nums text-strong">
+                <span className="numeral font-semibold text-strong">
                   {point.signups}
                 </span>
               </li>

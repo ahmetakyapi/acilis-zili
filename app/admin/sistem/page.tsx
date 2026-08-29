@@ -45,7 +45,17 @@ export default async function SystemPage() {
 }
 
 async function Pulse() {
-  const [pulse, status] = await Promise.all([getCronPulse(), getStatus()]);
+  const [pulse, status, checks] = await Promise.all([
+    getCronPulse(),
+    getStatus(),
+    getHealthChecks(),
+  ]);
+  /* Aynı istekte `Checks()` de çağırıyor; ikisi ayrı Suspense sınırında ve
+     prop olarak geçmek mümkün değil. `getHealthChecks` bu yüzden `cache()`li
+     — altı yoklama iki kez koşmuyor. */
+  const sorunlu = checks.filter(
+    (c) => c.tone === "warn" || c.tone === "down",
+  ).length;
 
   const sessionLabel: Record<string, string> = {
     regular: "Ana seans açık",
@@ -75,17 +85,34 @@ async function Pulse() {
       <StatBox
         label="Seans"
         value={sessionLabel[status.session]}
-        sub={`ET ${status.etTime}`}
+        /* Sunucunun kendi saati BURAYA indi. Dört kutunun üçü saatti ve en
+           büyük punto sunucunun saatindeydi — oysa o, bir sorun anında
+           bakılacak son sayı. Saat yine görünüyor, yalnızca künye
+           ölçüsünde; büyük punto operasyonel sayılara kaldı. */
+        sub={`ET ${status.etTime} · sunucu ${formatInZone(now, TR_ZONE)} TR`}
       />
       <StatBox
         label="Sonraki Geçiş"
         value={formatInZone(status.nextTransition, TR_ZONE)}
         sub={`${formatInZone(status.nextTransition, ET_ZONE)} NY · seans anlatısı burada değişir`}
       />
+      {/* Dördüncü kutu artık bir SAYI: kaç sağlık satırı ilgi istiyor.
+          Aşağıdaki liste hangileri olduğunu söylüyor, kutu kaç tane
+          olduğunu — sayfanın en üstünde cevaplanması gereken soru bu.
+          Yön rengi yüklenmiyor: sıfır sorun `up`, varsa `down`. */}
       <StatBox
-        label="Sunucu Saati"
-        value={formatInZone(now, TR_ZONE)}
-        sub={`${formatInZone(now, ET_ZONE)} NY`}
+        label="Sağlık"
+        value={sorunlu === 0 ? "Tümü Sağlıklı" : `${sorunlu} Satır`}
+        sub={
+          sorunlu === 0
+            ? `${checks.length} kontrolün tamamı geçti`
+            : "aşağıdaki listede işaretli"
+        }
+        delta={
+          sorunlu === 0
+            ? { text: "sorun yok", tone: "up", srLabel: "sorun yok" }
+            : { text: "ilgi bekliyor", tone: "down", srLabel: "ilgi bekliyor" }
+        }
       />
     </StatGrid>
   );
@@ -122,7 +149,7 @@ async function Checks() {
                 </span>
               </span>
               <span className="shrink-0 text-right">
-                <span className="block text-base font-semibold tabular-nums text-body">
+                <span className="numeral block text-base font-semibold text-body">
                   {check.value}
                 </span>
                 <span className="block text-tiny text-muted">

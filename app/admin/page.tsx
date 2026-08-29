@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
 import { Suspense } from "react";
 import {
@@ -21,7 +20,7 @@ import {
 } from "@/lib/admin-data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getLocale } from "@/lib/i18n";
-import { Skeleton } from "@/components/ui/primitives";
+import { PanelLink, Skeleton } from "@/components/ui/primitives";
 import { deltaOf } from "@/lib/admin-format";
 
 /**
@@ -83,7 +82,7 @@ async function Headline() {
       <StatBox
         label="Ziyaretçi Günü"
         value={last7.visitorDays.toLocaleString("tr-TR")}
-        sub="son 7 gün · aynı kişi her gün yeniden sayılır"
+        sub="son 7 tam gün · aynı kişi her gün yeniden sayılır"
         delta={deltaOf(last7.visitorDays, prev7.visitorDays)}
       />
       <StatBox
@@ -118,12 +117,10 @@ async function TrafficCard() {
            biri bugünün dahil olduğunu söylerken öteki susuyordu. */
         hint="Son 30 gün · bugün dahil, ET takvim günü"
         action={
-          <Link
-            href="/admin/trafik"
-            className="text-small font-semibold text-primary hover:text-primary-hover"
-          >
-            Tümünü Gör
-          </Link>
+          /* Sitenin kendi ilkeli: dokunma hedefini `.tap-44` ile açıyor,
+             görünür ölçü aynı kalıyor. Elle yazılan bağlantı 18 piksellik
+             bir hedefti. */
+          <PanelLink href="/admin/trafik">Tümünü Gör</PanelLink>
         }
       >
         Trafik
@@ -157,7 +154,12 @@ async function AttentionCard() {
 
   return (
     <AdminPanel>
-      <AdminPanelTitle hint="Yalnızca sorunlu ve eksik olanlar">
+      {/* Panelin çıkışı VAR. Sorunu gören yöneticinin bir sonraki adımı
+          Sistem sekmesi — o adım bugüne kadar elle gezinmeyle atılıyordu. */}
+      <AdminPanelTitle
+        hint="yalnızca sorunlu ve eksik olanlar"
+        action={<PanelLink href="/admin/sistem">Sistemi Aç</PanelLink>}
+      >
         Dikkat İsteyenler
       </AdminPanelTitle>
 
@@ -200,7 +202,14 @@ async function TopRoutesCard() {
   const routes = await getTopRoutes(7, 8);
   return (
     <AdminPanel>
-      <AdminPanelTitle hint="Son 7 gün · rota şablonuna göre">
+      {/* Bağlantı KARTIN PENCERESİYLE aynı pencereye gidiyor (7 gün); başka
+          bir pencereye götürmek okuyucuya farklı sayılar gösterirdi.
+          Yalnızca başlık bağlanıyor — satır anahtarları `/hisse/[symbol]`
+          gibi rota ŞABLONLARI, gidilebilir adres değil. */}
+      <AdminPanelTitle
+        hint="son 7 tam gün · rota şablonuna göre"
+        action={<PanelLink href="/admin/trafik?gun=7">Tümünü Gör</PanelLink>}
+      >
         En Çok Okunan Bölümler
       </AdminPanelTitle>
       <RankList
@@ -208,7 +217,12 @@ async function TopRoutesCard() {
           key: r.key,
           label: r.key,
           value: r.views,
-          secondary: `${r.visitors} kişi`,
+          /* "kişi" DEĞİL. Sayı `countDistinct(visitorHash)` ve özet her
+             gün dönüyor: çok günlük pencerede sayılan şey kişi değil
+             ziyaretçi-günü. Aynı ayrım `TrafficTotals` yorumunda yazılı ve
+             üstteki kutu zaten doğru adı kullanıyordu; bu satır geride
+             kalmıştı. */
+          secondary: `${r.visitors.toLocaleString("tr-TR")} ziyaretçi-günü`,
         }))}
         emptyLabel="Henüz ölçüm kaydı yok."
       />

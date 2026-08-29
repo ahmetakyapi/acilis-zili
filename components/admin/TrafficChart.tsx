@@ -173,7 +173,7 @@ export function TrafficChart({
       {/* OKUMA SATIRI. Lejant ve okuma aynı satırda: kimlik hiçbir zaman
           yalnızca renkle taşınmaz, o yüzden renk kutusu işaretin yanında ve
           metin mürekkep renginde — etiketin kendisi seri rengini giymiyor.
-          Sayılar `tabular-nums`: imleç gezerken rakam genişliği değişirse
+          Sayılar `.numeral`: imleç gezerken rakam genişliği değişirse
           satır titriyor. */}
       <div className="mb-3 flex flex-wrap items-baseline gap-x-5 gap-y-1.5 text-small">
         <span className="inline-flex items-center gap-2 text-body">

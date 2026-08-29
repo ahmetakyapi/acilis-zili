@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Kicker } from "@/components/ui/primitives";
 import type { Metadata } from "next";
 import { getAdmin } from "@/lib/admin";
 import { AdminTabs } from "@/components/admin/AdminTabs";
@@ -53,10 +54,14 @@ export default async function AdminLayout({
     >
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
-          <p className="text-nano font-semibold uppercase tracking-[0.09em] text-primary">
-            Açılış Zili
-          </p>
-          <h1 className="mt-1 text-heading font-bold leading-none tracking-[-0.035em] text-strong sm:text-display">
+          {/* Üst etiket ve başlık artık sitenin kendi ilkelleriyle: panel de
+              bir sayfa başlığı gibi görünsün. Etiket elle yazılmış
+              10px/600/0,09em idi, `Kicker` 11px/700/0,1em veriyor — yani bir
+              tık büyüyüp koyulaşıyor; bilinçli. Başlıktaki degrade mürekkep
+              tokenlanmış, `@supports` korumalı ve solid fallback'li
+              (globals.css), "Yönetim" de tek kelimelik display metni. */}
+          <Kicker tone="primary">Açılış Zili</Kicker>
+          <h1 className="display-ink mt-1 w-fit text-heading font-bold leading-none tracking-[-0.035em] sm:text-display">
             Yönetim
           </h1>
         </div>

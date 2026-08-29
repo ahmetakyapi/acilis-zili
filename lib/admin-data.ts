@@ -452,14 +452,22 @@ export async function getMostWatchedSymbols(
    İçerik
    -------------------------------------------------------------------------- */
 
+/** Bir analiz kaydının adresini kurmaya yeten en küçük künye. */
+export type AnalysisRef = { symbol: string; period: string; label: string };
+
 export type ContentSummary = {
   briefs: number;
   briefsLatest: string | null;
   storySlugs: number;
   storiesMissingEn: string[];
   analyses: number;
-  analysesMissingEn: string[];
-  analysesWithoutCharts: string[];
+  /* ANALİZ LİSTELERİ YAPI TAŞIYOR, DİZE DEĞİL. Eskiden `"NVDA 2Ç FY2027"`
+     gibi tek bir dizeydi ve panel onu bağlantıya çeviremiyordu: adres
+     `analysisHref(symbol, period)` ile kuruluyor ve dizeden geri
+     ayrıştırmak ikinci bir adres biçimi doğururdu — ölçüm de o adresi ayrı
+     bir yol olarak sayıp okunmayı bölerdi. */
+  analysesMissingEn: AnalysisRef[];
+  analysesWithoutCharts: AnalysisRef[];
 };
 
 /**
@@ -519,16 +527,23 @@ export const getContentSummary = cache(async function getContentSummary(): Promi
     }
 
     const analysisLocales = new Map<string, Set<string>>();
-    const chartless = new Set<string>();
+    const analysisRefs = new Map<string, AnalysisRef>();
+    const chartless = new Map<string, AnalysisRef>();
     for (const row of analysisRows) {
       const key = `${row.symbol} ${row.period}`;
+      const ref: AnalysisRef = {
+        symbol: row.symbol,
+        period: row.period,
+        label: key,
+      };
+      analysisRefs.set(key, ref);
       const seen = analysisLocales.get(key) ?? new Set<string>();
       seen.add(row.locale);
       analysisLocales.set(key, seen);
       /* İki dilden biri grafiksizse analiz eksik sayılır — sayfası metin
          yığını gibi duruyor demektir. Aynı kural rutinin okuduğu
          /api/analiz/context ucunda da geçerli. */
-      if (!row.hasCharts) chartless.add(key);
+      if (!row.hasCharts) chartless.set(key, ref);
     }
 
     return {
@@ -541,8 +556,9 @@ export const getContentSummary = cache(async function getContentSummary(): Promi
       analyses: analysisLocales.size,
       analysesMissingEn: [...analysisLocales]
         .filter(([, locales]) => !locales.has("en"))
-        .map(([key]) => key),
-      analysesWithoutCharts: [...chartless],
+        .map(([key]) => analysisRefs.get(key))
+        .filter((ref): ref is AnalysisRef => ref !== undefined),
+      analysesWithoutCharts: [...chartless.values()],
     };
   } catch {
     return empty;
@@ -603,7 +619,13 @@ export type HealthCheck = {
  * gerçeğine göre: bilanço takvimi 30 gün ileriye doldurulur (cron), ekonomik
  * takvim bir yıla; ikisini aynı eşikle ölçmek yanlış alarm üretir.
  */
-export async function getHealthChecks(): Promise<HealthCheck[]> {
+/* `cache()`: aynı istekte iki ayrı Suspense sınırı bunu çağırıyor —
+   /admin/sistem'de hem üstteki nabız kutusu hem aşağıdaki liste. Sarmalsız
+   bırakılırsa altı yoklama iki kez koşuyor ve hepsi ağ ya da veritabanı
+   turu. */
+export const getHealthChecks = cache(async function getHealthChecks(): Promise<
+  HealthCheck[]
+> {
   const today = todayEt();
   const checks: HealthCheck[] = [];
 
@@ -767,7 +789,7 @@ export async function getHealthChecks(): Promise<HealthCheck[]> {
   }
 
   return checks;
-}
+});
 
 function failed(label: string): HealthCheck {
   return {

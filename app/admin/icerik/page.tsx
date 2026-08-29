@@ -14,6 +14,7 @@ import { getContentSummary, getRecentBriefs } from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/admin";
 import { agoLabel } from "@/lib/admin-format";
 import { formatEtDateShort } from "@/lib/utils";
+import { analysisHref } from "@/lib/analysis";
 
 /**
  * İçerik.
@@ -85,25 +86,44 @@ async function Summary() {
 async function Gaps() {
   const content = await getContentSummary();
 
-  const sections: { title: string; hint: string; items: string[]; href?: (item: string) => string }[] =
-    [
-      {
-        title: "İngilizcesi Eksik Mercek Yazıları",
-        hint: "Sayfa boş kalmıyor — orijinali TR rozetiyle gösteriliyor.",
-        items: content.storiesMissingEn,
-        href: (slug) => `/mercek/${slug}`,
-      },
-      {
-        title: "İngilizcesi Eksik Analizler",
-        hint: "Rutin bunları yeni analiz yazmaya tercih ediyor.",
-        items: content.analysesMissingEn,
-      },
-      {
-        title: "Grafiksiz Analizler",
-        hint: "quarterly_revenue ve guidance alanları boş — sayfa metin yığını gibi duruyor.",
-        items: content.analysesWithoutCharts,
-      },
-    ];
+  /* HER SATIR ARTIK GİDİLEBİLİR. Analiz listeleri düz metindi: eksiği gören
+     yönetici kaydı açmak için sembolü kopyalayıp siteden aramak zorundaydı.
+     Adres `analysisHref` ile kuruluyor — elle `/bilancolar/NVDA/...` yazmak
+     sayfayı açardı ama sitede olmayan İKİNCİ bir adres biçimi doğurur ve
+     ölçüm onu ayrı bir yol olarak sayıp okunmayı bölerdi. */
+  const sections: {
+    title: string;
+    hint: string;
+    items: { key: string; label: string; href: string }[];
+  }[] = [
+    {
+      title: "İngilizcesi Eksik Mercek Yazıları",
+      hint: "Sayfa boş kalmıyor — orijinali TR rozetiyle gösteriliyor.",
+      items: content.storiesMissingEn.map((slug) => ({
+        key: slug,
+        label: slug,
+        href: `/mercek/${slug}`,
+      })),
+    },
+    {
+      title: "İngilizcesi Eksik Analizler",
+      hint: "Rutin bunları yeni analiz yazmaya tercih ediyor.",
+      items: content.analysesMissingEn.map((ref) => ({
+        key: ref.label,
+        label: ref.label,
+        href: analysisHref(ref.symbol, ref.period),
+      })),
+    },
+    {
+      title: "Grafiksiz Analizler",
+      hint: "quarterly_revenue ve guidance alanları boş — sayfa metin yığını gibi duruyor.",
+      items: content.analysesWithoutCharts.map((ref) => ({
+        key: ref.label,
+        label: ref.label,
+        href: analysisHref(ref.symbol, ref.period),
+      })),
+    },
+  ];
 
   return (
     <div className="grid gap-5 lg:grid-cols-3">
@@ -115,26 +135,23 @@ async function Gaps() {
               Eksik yok.
             </p>
           ) : (
-            <ul className="flex flex-col gap-1.5 text-base">
-              {section.items.slice(0, 20).map((item) => (
-                <li key={item}>
-                  {section.href ? (
-                    <Link
-                      href={section.href(item)}
-                      className="text-body hover:text-primary"
-                    >
-                      {item}
-                    </Link>
-                  ) : (
-                    <span className="text-body">{item}</span>
-                  )}
+            /* YİRMİ SATIR TAVANI KALKTI. Fazlası "…ve N tane daha" diye
+               yazılıyordu ve o satır hiçbir yere gitmiyordu: eksik listesi
+               tam da tamamlanması için var, kırpılmış hâli işe yaramıyor.
+               Listeler onlarca satır mertebesinde, sayfalama gerekmiyor.
+               Dokunma hedefi 44 piksel: satırlar alt alta ve `.tap-44`
+               burada bir alttakinin hedefini kapardı. */
+            <ul className="flex flex-col text-base">
+              {section.items.map((item) => (
+                <li key={item.key}>
+                  <Link
+                    href={item.href}
+                    className="numeral flex min-h-11 items-center text-body transition-colors hover:text-primary sm:min-h-8"
+                  >
+                    {item.label}
+                  </Link>
                 </li>
               ))}
-              {section.items.length > 20 && (
-                <li className="text-small text-muted">
-                  …ve {section.items.length - 20} tane daha
-                </li>
-              )}
             </ul>
           )}
         </AdminPanel>
@@ -157,11 +174,25 @@ async function Briefs() {
           Henüz bülten yazılmamış.
         </p>
       ) : (
-        <AdminTable label="Bülten arşivi" head={["Tarih", "Başlık", "Dil", "Dönem", "Yazılma"]}>
+        /* "YAZAN" SÜTUNU EKLENDİ. Panelin kendi ipucu "yazan rutin künyede"
+           diye söz veriyordu ama tablo o sütunu hiç basmıyordu — `generatedBy`
+           sorguda zaten çekiliyordu. Bültenin rutinden mi yoksa kural tabanlı
+           yedekten mi geldiği, rutin durduğunda ilk bakılacak şey. */
+        <AdminTable
+          label="Bülten arşivi"
+          head={["Tarih", "Başlık", "Dil", "Dönem", "Yazan", "Yazılma"]}
+        >
           {rows.map((row) => (
             <AdminRow key={`${row.briefDate}-${row.locale}-${row.period}`}>
-              <AdminCell mono strong>
-                {formatEtDateShort(row.briefDate, "tr")}
+              {/* Tarih hücresi kendi bültenine gidiyor: eksiği ya da tuhaf
+                  bir başlığı gören yönetici kaydı doğrudan açabiliyor. */}
+              <AdminCell numeral strong>
+                <Link
+                  href={`/bulten?${row.period === "weekly" ? "tur=haftalik&" : ""}tarih=${row.briefDate}`}
+                  className="transition-colors hover:text-primary"
+                >
+                  {formatEtDateShort(row.briefDate, "tr")}
+                </Link>
               </AdminCell>
               <AdminCell>
                 <span className="line-clamp-1">{row.headline}</span>
@@ -169,6 +200,9 @@ async function Briefs() {
               <AdminCell>{row.locale === "en" ? "EN" : "TR"}</AdminCell>
               <AdminCell>
                 {row.period === "weekly" ? "Haftalık" : "Günlük"}
+              </AdminCell>
+              <AdminCell>
+                {row.generatedBy === "claude" ? "Rutin" : "Kural Tabanlı"}
               </AdminCell>
               <AdminCell align="right">{agoLabel(row.generatedAt)}</AdminCell>
             </AdminRow>
