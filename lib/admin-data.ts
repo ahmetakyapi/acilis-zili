@@ -17,7 +17,9 @@ import {
   watchlists,
 } from "./schema";
 import { addEtDays, todayEt } from "./market-hours";
-import { getHolidays } from "./data";
+import { BRIEF_PUBLISH_TR, getHolidays, weekAnchor } from "./data";
+import { agoLabel } from "./admin-format";
+import { TR_ZONE, formatInZone } from "./session-clock";
 
 /**
  * Yönetim panelinin sorguları.
@@ -599,10 +601,15 @@ export async function getRecentBriefs(limit = 14): Promise<BriefRow[]> {
 
 export type HealthCheck = {
   label: string;
-  /* Satır hangi listeye ait. Sistem sayfası iki panel çiziyor ve ayrımı
-     `label.endsWith("anahtarı")` ile yapıyordu: etiketin sonundaki bir kelime
-     görünmez bir protokole dönüşmüştü, etiketi düzeltmek listeyi bozuyordu. */
-  group: "data" | "key";
+  /* Satır hangi listeye ait. Sistem sayfası panelleri buna göre çiziyor ve
+     ayrım bir dönem `label.endsWith("anahtarı")` ile yapılıyordu: etiketin
+     sonundaki bir kelime görünmez bir protokole dönüşmüştü, etiketi
+     düzeltmek listeyi bozuyordu.
+
+     "routine" grubu, sitenin yazılı içeriğini üreten dört claude.ai
+     rutininin nabzı — kodun DIŞINDA koşan ve panelin bugüne kadar hiç
+     sormadığı şey. */
+  group: "data" | "key" | "routine";
   /** Ekranda basılan değer — "142 gün", "4 saat önce". */
   value: string;
   /** "ok" yeşil, "warn" sarı, "down" kırmızı, "idle" nötr. */
@@ -653,6 +660,36 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     db
       .select({ stalest: sql<string | null>`min(${macroSeries.updatedAt})` })
       .from(macroSeries),
+    /* ---- Rutin nabzı ---- */
+    db
+      .select({
+        period: dailyBriefs.period,
+        latest: sql<string | null>`max(${dailyBriefs.briefDate})`,
+        wrote: sql<string | null>`max(${dailyBriefs.generatedAt})`,
+      })
+      .from(dailyBriefs)
+      .groupBy(dailyBriefs.period),
+    /* TAZELİK `published_at`TAN OKUNMAZ. `/api/mercek` ve `/api/analiz`
+       POST'ları var olan kaydın üstüne `onConflictDoUpdate` ile yazıyor ve
+       güncellenen alanlar arasında `published_at` YOK — yani rutin aynı
+       slug'ı güncellediğinde o sütun kıpırdamıyor. Mercek rutininin belgeli
+       akışı da tam bunu söylüyor: "aynı olayda ciddi gelişme olduysa aynı
+       slug ile güncelle". İkisinin büyüğü alınmazsa panel çalışan bir
+       rutini durmuş sanır. */
+    db
+      .select({
+        latest: sql<string | null>`max(greatest(${stories.publishedAt}, ${stories.updatedAt}))`,
+      })
+      .from(stories),
+    db
+      .select({
+        latest: sql<string | null>`max(greatest(${earningsAnalyses.publishedAt}, ${earningsAnalyses.updatedAt}))`,
+      })
+      .from(earningsAnalyses),
+    /* Ölçüm aralığı da buraya alındı: fonksiyonun kendi yorumu "ALTI SONDA
+       PARALEL" derken yedincisi aşağıda ardışık bekleniyordu ve neon-http'de
+       bu fazladan bir tam gidiş-dönüş. */
+    getTrackingRange(),
   ]);
 
   /* Düşen sorgu fırlatır ve aşağıdaki blokların kendi `catch`i onu
@@ -771,9 +808,94 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push(failed("Makro Seriler"));
   }
 
+  /* ---- Rutinler ----
+     Sitenin yazılı içeriğinin TAMAMINI kod dışında, claude.ai üzerinde
+     kurulu dört rutin üretiyor. Panel bugüne kadar yalnızca SONUCU
+     sayıyordu — kaç bülten, kaç yazı — ama üretimin kendisini hiç
+     sormuyordu: bir rutin askıya alındığında bunu fark etmenin tek yolu
+     siteye çıkıp bültenin tarihine bakmaktı.
+
+     EŞİK HER RUTİNİN KENDİ DOĞASINA GÖRE. Tek eşik yanlış alarm üretirdi:
+     bülten her gün yazılıyor ve yazılmaması bir arıza; mercek ise koşullu —
+     rutinin kendi yönergesi "sıradan bir seans mercek konusu değildir"
+     diyor, yani çoğu gün hiçbir şey yazmaması NORMAL. Ona eşik koymak
+     uydurma alarm olurdu; o satır yalnızca son yazma anını söylüyor.
+
+     SAATLER TEK KAYNAKTAN: `BRIEF_PUBLISH_TR`. Rutin saatlerini koda ikinci
+     kez yazmak, docs/claude-rutinler.md ile ayrışan bir sayı doğururdu. */
+  const trSaat = formatInZone(new Date(), TR_ZONE);
+  const gectiMi = (esik: string) => trSaat >= esik;
+
+  try {
+    const rows = unwrap(probes[5]);
+    const bulten = new Map(rows.map((r) => [r.period, r]));
+
+    /* Günlük: bugünün ET tarihinde kayıt var mı. Karşılaştırma ana
+       sayfadaki `BriefCard` ile aynı kalıp — ikinci bir kopya yazılırsa
+       ikisi ayrışır. */
+    const gunluk = bulten.get("daily");
+    const gunlukVar = gunluk?.latest === today;
+    const gunlukSaat = BRIEF_PUBLISH_TR.daily;
+    checks.push({
+      label: "Günlük Bülten",
+      group: "routine",
+      value: gunlukVar ? "bugün yazıldı" : (gunluk?.latest ?? "kayıt yok"),
+      tone: gunlukVar ? "ok" : gectiMi(gunlukSaat) ? "warn" : "idle",
+      note: gunlukVar
+        ? `son yazma ${agoText(gunluk?.wrote ?? null)}`
+        : gectiMi(gunlukSaat)
+          ? `${gunlukSaat} TR geçti, bugünün kaydı yok`
+          : `${gunlukSaat} TR'de bekleniyor`,
+    });
+
+    /* Haftalık: o haftanın PAZARTESİ çapası. Çapa `/api/brief`in kendi
+       `weekAnchor`ı ile aynı olmalı, yoksa panel yazılmış bülteni yok
+       sayar. */
+    const haftalik = bulten.get("weekly");
+    const capa = weekAnchor(today);
+    const haftalikVar = haftalik?.latest === capa;
+    const haftalikSaat = BRIEF_PUBLISH_TR.weekly;
+    const pazartesiGecti = etWeekday(today) !== 1 || gectiMi(haftalikSaat);
+    checks.push({
+      label: "Haftalık Bülten",
+      group: "routine",
+      value: haftalikVar ? "bu hafta yazıldı" : (haftalik?.latest ?? "kayıt yok"),
+      tone: haftalikVar ? "ok" : pazartesiGecti ? "warn" : "idle",
+      note: haftalikVar
+        ? `${capa} haftası · son yazma ${agoText(haftalik?.wrote ?? null)}`
+        : pazartesiGecti
+          ? `${capa} haftasının kaydı yok`
+          : `pazartesi ${haftalikSaat} TR'de bekleniyor`,
+    });
+  } catch {
+    checks.push(failed("Günlük Bülten"));
+    checks.push(failed("Haftalık Bülten"));
+  }
+
+  /* Mercek ve analiz YARGI VERMEZ. İkisi de koşullu rutin: yazacak bir şey
+     yoksa yazmamak doğru davranış. Satırlar yalnızca son yazma anını
+     söylüyor — yönetici o sayıya bakıp kendi kararını veriyor. */
+  for (const [etiket, indeks, not] of [
+    ["Mercek Yazısı", 6, "koşullu rutin — anlatmaya değer olay yoksa yazmaz"],
+    ["Bilanço Analizi", 7, "koşullu rutin — aday yoksa yazmaz"],
+  ] as const) {
+    try {
+      const [row] = unwrap(probes[indeks]);
+      checks.push({
+        label: etiket,
+        group: "routine",
+        value: row?.latest ? agoText(row.latest) : "kayıt yok",
+        tone: "idle",
+        note: not,
+      });
+    } catch {
+      checks.push(failed(etiket));
+    }
+  }
+
   /* ---- Ölçüm ---- */
   try {
-    const range = await getTrackingRange();
+    const range = unwrap(probes[8]);
     if (!range.ok) throw new Error("olcum okunamadi");
     checks.push({
       label: "Sayfa Ölçümü",
@@ -816,6 +938,13 @@ function daysBetween(from: string, to: string): number {
  * çözmüyor, yalnızca gizliyordu — `getTime()` çağrısı çalışma zamanında
  * patlıyor, hata yutuluyor ve üç sağlık satırı "okunamadı" gösteriyordu.
  */
+/** "4 saat önce" — sorgudan Date ya da ISO dize gelebiliyor, ikisini de alır. */
+function agoText(value: Date | string | null): string {
+  if (!value) return "hiç";
+  const d = value instanceof Date ? value : new Date(value);
+  return Number.isFinite(d.getTime()) ? agoLabel(d) : "hiç";
+}
+
 function hoursSince(value: Date | string | null): number | null {
   if (!value) return null;
   const ms = value instanceof Date ? value.getTime() : Date.parse(value);

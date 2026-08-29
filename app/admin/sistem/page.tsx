@@ -8,7 +8,11 @@ import {
   StatGrid,
 } from "@/components/admin/AdminUI";
 import { Skeleton } from "@/components/ui/primitives";
-import { getCronPulse, getHealthChecks } from "@/lib/admin-data";
+import {
+  getCronPulse,
+  getHealthChecks,
+  type HealthCheck,
+} from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/admin";
 import { getStatus } from "@/lib/data";
 import { agoLabel } from "@/lib/admin-format";
@@ -118,72 +122,101 @@ async function Pulse() {
   );
 }
 
+/**
+ * Sağlık satırı listesi — üç panel de aynı satırı çiziyor.
+ *
+ * MODÜL SEVİYESİNDE: bileşen `Checks()` içinde tanımlıydı ve her çizimde
+ * yeni bir bileşen türü doğuruyordu (`react-hooks/static-components`).
+ *
+ * Sorunlu satırlar Özet ekranındaki "Dikkat İsteyenler" listesine
+ * kendiliğinden düşüyor — orası zaten `tone` süzüyor, yeni bir bant açmaya
+ * gerek yok.
+ */
+function CheckList({ items }: { items: HealthCheck[] }) {
+  return (
+    <ul className="flex flex-col divide-y divide-line">
+      {items.map((check) => (
+        <li
+          key={check.label}
+          className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
+        >
+          <span className="flex min-w-0 items-start gap-2.5">
+            <span className="mt-[6px]">
+              <HealthDot tone={check.tone} />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-base font-semibold text-strong">
+                {check.label}
+              </span>
+              <span className="block text-small text-muted">{check.note}</span>
+            </span>
+          </span>
+          <span className="shrink-0 text-right">
+            <span className="numeral block text-base font-semibold text-body">
+              {check.value}
+            </span>
+            <span className="block text-tiny text-muted">
+              {HEALTH_LABEL[check.tone]}
+            </span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 async function Checks() {
   const checks = await getHealthChecks();
   const keys = checks.filter((c) => c.group === "key");
   const data = checks.filter((c) => c.group === "data");
+  const routines = checks.filter((c) => c.group === "routine");
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="flex flex-col gap-5">
+      {/* RUTİNLER EN ÜSTTE. Sitenin yazılı içeriğinin tamamını kod dışında
+          koşan dört rutin üretiyor; bir tanesi durduğunda ana sayfa eski
+          metni göstermeye devam ediyor ve panel bugüne kadar hiçbir şey
+          demiyordu. Sağlayıcı senkronu bir altta — o zaten kendi kendini
+          onaran bir cron, bu ise elle kurulmuş bir zincir. */}
       <AdminPanel>
-        <AdminPanelTitle hint="Sağlayıcı verisi ve takvimlerin güncelliği">
-          Veri Sağlığı
+        <AdminPanelTitle hint="içeriği yazan claude.ai görevleri · saatler TR">
+          Rutinler
         </AdminPanelTitle>
-        <ul className="flex flex-col divide-y divide-line">
-          {data.map((check) => (
-            <li
-              key={check.label}
-              className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
-            >
-              <span className="flex min-w-0 items-start gap-2.5">
-                <span className="mt-[6px]">
-                  <HealthDot tone={check.tone} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-base font-semibold text-strong">
-                    {check.label}
-                  </span>
-                  <span className="block text-small text-muted">
-                    {check.note}
-                  </span>
-                </span>
-              </span>
-              <span className="shrink-0 text-right">
-                <span className="numeral block text-base font-semibold text-body">
-                  {check.value}
-                </span>
-                <span className="block text-tiny text-muted">
-                  {HEALTH_LABEL[check.tone]}
-                </span>
-              </span>
-            </li>
-          ))}
-        </ul>
+        <CheckList items={routines} />
       </AdminPanel>
 
-      <AdminPanel>
-        <AdminPanelTitle hint="Ortam değişkeni tanımlı mı — DEĞERİ hiçbir yerde gösterilmez">
-          Anahtarlar
-        </AdminPanelTitle>
-        <ul className="flex flex-col divide-y divide-line">
-          {keys.map((check) => (
-            <li
-              key={check.label}
-              className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
-            >
-              <span className="flex items-center gap-2.5 text-base text-strong">
-                <HealthDot tone={check.tone} />
-                {check.label}
-              </span>
-              <span className="text-small text-muted">{check.note}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-4 border-t border-line pt-3 text-small text-muted">
-          Eksik anahtar sayfayı çökertmez: ilgili kart &ldquo;veri
-          alınamadı&rdquo; gösterir ve gerisi çalışmaya devam eder.
-        </p>
-      </AdminPanel>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <AdminPanel>
+          <AdminPanelTitle hint="Sağlayıcı verisi ve takvimlerin güncelliği">
+            Veri Sağlığı
+          </AdminPanelTitle>
+          <CheckList items={data} />
+        </AdminPanel>
+
+        <AdminPanel>
+          <AdminPanelTitle hint="Ortam değişkeni tanımlı mı — DEĞERİ hiçbir yerde gösterilmez">
+            Anahtarlar
+          </AdminPanelTitle>
+          <ul className="flex flex-col divide-y divide-line">
+            {keys.map((check) => (
+              <li
+                key={check.label}
+                className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+              >
+                <span className="flex items-center gap-2.5 text-base text-strong">
+                  <HealthDot tone={check.tone} />
+                  {check.label}
+                </span>
+                <span className="text-small text-muted">{check.note}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 border-t border-line pt-3 text-small text-muted">
+            Eksik anahtar sayfayı çökertmez: ilgili kart &ldquo;veri
+            alınamadı&rdquo; gösterir ve gerisi çalışmaya devam eder.
+          </p>
+        </AdminPanel>
+      </div>
     </div>
   );
 }
