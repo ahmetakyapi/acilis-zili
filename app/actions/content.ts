@@ -317,7 +317,7 @@ function bulteniTazele() {
   revalidatePath("/");
   revalidatePath("/bulten");
   revalidatePath("/feed.xml");
-  revalidatePath("/admin/yazilar");
+  revalidatePath("/admin/yazilar/bulten");
   revalidatePath("/admin/icerik");
 }
 

@@ -139,6 +139,27 @@ export function useOnizleme(
  * GENİŞ EKRANDA YAPIŞKAN: gövde yirmi küsur satır ve aşağı inildikçe
  * önizleme ekrandan çıkıyordu — yazarken bakılacak şey görünmüyorsa
  * önizleme değil, ikinci bir sayfa olur.
+ *
+ * ÖNİZLEME KENDİ İÇİNDE KAYIYOR, sayfayı uzatmıyor. Uzun bir yazının
+ * çizimi on ekran boyundaydı ve iki sorun birden çıkarıyordu: geniş ekranda
+ * yapışkan kolon ekranın dışına taşıyor (yapışkanlık kabın kendisi
+ * viewport'tan uzunsa çalışmaz), dar ekranda ise önizleme gövde ile KAYDET
+ * düğmesinin arasına giriyor ve kaydetmek için on ekran kaydırmak
+ * gerekiyordu.
+ *
+ * ÖLÇÜ ESNEK, SABİT DEĞİL: kap `max-h` ile sınırlı, kutu `flex-auto` +
+ * `min-h-0` ile artan yeri alıyor. Kısa bir önizleme kendi boyunda kalıyor
+ * (`flex-basis: auto` olduğu için serbest yer doğmuyor), uzun olan sınıra
+ * dayanıp içeride kayıyor. `flex-1` OLMAZ: `flex-basis: 0` ile kabın
+ * içerikten türeyen yüksekliği sıfıra düşer ve `min-h-0` da koruyucu
+ * taban yüksekliğini kaldırdığı için kutu tamamen çöker.
+ *
+ * `dvh` KULLANILIYOR: telefonda adres çubuğu kayarken `vh` sabit kalıyor ve
+ * kutunun altı ekranın dışına düşüyordu.
+ *
+ * KAP KLAVYEYLE ODAKLANABİLİR (`tabIndex` + `role="region"`): kaydırılabilir
+ * bir bölge klavyeyle gezen okuyucu için de kaydırılabilir olmalı — tablo
+ * kabında da aynı gerekçe yazılı (WCAG 2.1.1).
  */
 export function OnizlemePaneli({
   preview,
@@ -154,7 +175,7 @@ export function OnizlemePaneli({
   yenile: () => void;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-3 xl:sticky xl:top-6 xl:self-start">
+    <div className="flex min-w-0 flex-col gap-3 max-h-[70dvh] xl:sticky xl:top-6 xl:max-h-[calc(100dvh-3rem)] xl:self-start">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-small font-semibold text-strong">Önizleme</p>
         {/* Düğme bir GEREKLİLİK değil, bir kısayol: önizleme kendiliğinden
@@ -180,7 +201,13 @@ export function OnizlemePaneli({
         </p>
       )}
 
-      <div className="min-h-64 rounded-(--radius-lg) border border-line bg-surface-solid p-4 sm:p-5">
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Yazının önizlemesi"
+        aria-busy={previewing}
+        className="min-h-64 min-w-0 flex-auto overflow-y-auto overscroll-contain rounded-(--radius-lg) border border-line bg-surface-solid p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus) sm:p-5"
+      >
         {preview ?? (
           <p className="py-10 text-center text-base text-muted">
             Önizleme hazırlanıyor…

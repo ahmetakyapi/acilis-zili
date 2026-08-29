@@ -7,9 +7,11 @@ import {
   desc,
   eq,
   gte,
+  ilike,
   inArray,
   isNotNull,
   lte,
+  or,
   sql,
 } from "drizzle-orm";
 import type { PgColumn } from "drizzle-orm/pg-core";
@@ -547,6 +549,11 @@ export const getContentSummary = cache(
           .select({
             symbol: earningsAnalyses.symbol,
             period: earningsAnalyses.period,
+            /* EKRANDA GÖRÜNEN DÖNEM ADI. `period` bir URL parçası
+               ("4c-fy2026", şema yorumunda yazılı) ve eksik listelerine o
+               basılıyordu; `period_label` tam bu iş için var, notNull ve
+               her satırda dolu ("4Ç FY2026"). */
+            periodLabel: earningsAnalyses.periodLabel,
             locale: earningsAnalyses.locale,
             hasCharts: sql<boolean>`
             coalesce(jsonb_array_length(${earningsAnalyses.quarterlyRevenue}), 0) > 0
@@ -567,12 +574,20 @@ export const getContentSummary = cache(
       const analysisRefs = new Map<string, AnalysisRef>();
       const chartless = new Map<string, AnalysisRef>();
       for (const row of analysisRows) {
+        /* ANAHTAR SLUG'DAN, ETİKET `period_label`DAN. İkisi ayrı: anahtar
+           iki dilin aynı kaydını birleştiriyor, etiket okunacak metin.
+           Etiketi anahtar yapmak, dile göre farklı yazılan bir alanın aynı
+           kaydı ikiye bölmesi demekti. Türkçe satır geldiğinde etiket
+           üzerine yazılıyor — panel yalnızca Türkçe. */
         const key = `${row.symbol} ${row.period}`;
-        const ref: AnalysisRef = {
+        const ref: AnalysisRef = analysisRefs.get(key) ?? {
           symbol: row.symbol,
           period: row.period,
-          label: key,
+          label: `${row.symbol} ${row.periodLabel}`,
         };
+        if (row.locale === "tr") {
+          ref.label = `${row.symbol} ${row.periodLabel}`;
+        }
         analysisRefs.set(key, ref);
         const seen = analysisLocales.get(key) ?? new Set<string>();
         seen.add(row.locale);
@@ -619,32 +634,66 @@ export type BriefRow = {
  * yirmi dört satır ancak altı günü kapsıyor. Haftalık bülten haftada bir
  * yazıldığı için o pencereye çoğu zaman HİÇ girmiyordu — süzgeç olmadan
  * haftalık bir bülteni panelden düzeltmenin yolu yoktu.
+ *
+ * TOPLAM DA DÖNÜYOR. Kırpılmış bir liste, kaç kaydın dışarıda kaldığını
+ * söylemediği sürece "hepsi bu" diye okunuyor; ekran "24 / 312" yazabilsin
+ * diye sayım da aynı turda alınıyor.
  */
 export async function getRecentBriefs(
   limit = 14,
-  filters: { period?: string; locale?: string } = {},
-): Promise<BriefRow[]> {
+  filters: { period?: string; locale?: string; date?: string } = {},
+): Promise<{ rows: BriefRow[]; total: number }> {
   try {
     const kosullar = [
       filters.period ? eq(dailyBriefs.period, filters.period) : undefined,
       filters.locale ? eq(dailyBriefs.locale, filters.locale) : undefined,
+      filters.date ? eq(dailyBriefs.briefDate, filters.date) : undefined,
     ].filter(Boolean);
+    const where = kosullar.length > 0 ? and(...kosullar) : undefined;
 
-    return await db
-      .select({
-        briefDate: dailyBriefs.briefDate,
-        locale: dailyBriefs.locale,
-        period: dailyBriefs.period,
-        headline: dailyBriefs.headline,
-        generatedBy: dailyBriefs.generatedBy,
-        generatedAt: dailyBriefs.generatedAt,
-      })
-      .from(dailyBriefs)
-      .where(kosullar.length > 0 ? and(...kosullar) : undefined)
-      .orderBy(desc(dailyBriefs.briefDate), desc(dailyBriefs.generatedAt))
-      .limit(limit);
+    const [rows, [sayim]] = await Promise.all([
+      db
+        .select({
+          briefDate: dailyBriefs.briefDate,
+          locale: dailyBriefs.locale,
+          period: dailyBriefs.period,
+          headline: dailyBriefs.headline,
+          generatedBy: dailyBriefs.generatedBy,
+          generatedAt: dailyBriefs.generatedAt,
+        })
+        .from(dailyBriefs)
+        .where(where)
+        .orderBy(desc(dailyBriefs.briefDate), desc(dailyBriefs.generatedAt))
+        .limit(limit),
+      db.select({ n: count() }).from(dailyBriefs).where(where),
+    ]);
+
+    return { rows, total: Number(sayim?.n ?? rows.length) };
   } catch {
-    return [];
+    return { rows: [], total: 0 };
+  }
+}
+
+/**
+ * Arşivin ilk ve son bülten günü — tarih seçicinin `min`/`max` sınırı.
+ *
+ * SINIR ARŞİVDEN GELİYOR, takvimden değil: veri olmayan bir güne izin veren
+ * bir seçici, kullanıcıyı boş bir listeye götüren bir düğmedir.
+ */
+export async function getBriefDateRange(): Promise<{
+  first: string | null;
+  last: string | null;
+}> {
+  try {
+    const [row] = await db
+      .select({
+        first: sql<string | null>`min(${dailyBriefs.briefDate})`,
+        last: sql<string | null>`max(${dailyBriefs.briefDate})`,
+      })
+      .from(dailyBriefs);
+    return { first: row?.first ?? null, last: row?.last ?? null };
+  } catch {
+    return { first: null, last: null };
   }
 }
 
@@ -656,6 +705,16 @@ export type EditableStory = {
   slug: string;
   title: string;
   eventDate: string;
+  /**
+   * İLK YAYIN ANI — listenin sıralama anahtarı.
+   *
+   * Liste `published_at`e göre sıralanıyor ama ekranda `event_date`
+   * yazıyordu: künye "en yeniden eskiye" diye söz verirken görünen sütun
+   * aşağı doğru bir artıp bir azalıyordu. Aynı ekranda iki farklı zaman
+   * ölçüsü, biri sıralamayı öteki metni yönetince liste bozuk görünüyor.
+   * Sıralama neyse görünen de o.
+   */
+  publishedAt: Date | null;
   /** Hangi dillerde kaydı var — "TR", "EN". */
   locales: string[];
   updatedAt: Date | null;
@@ -673,20 +732,44 @@ export type EditableStory = {
  * arşivi gövdeleriyle çekmenin sebebi yok. Gövde editör sayfasında, tek
  * kayıt için okunuyor.
  */
-export async function getEditableStories(limit = 40): Promise<EditableStory[]> {
+export async function getEditableStories(
+  limit = 40,
+  filters: { search?: string } = {},
+): Promise<{ rows: EditableStory[]; total: number }> {
   try {
-    const rows = await db
-      .select({
-        slug: stories.slug,
-        locale: stories.locale,
-        title: stories.title,
-        eventDate: stories.eventDate,
-        updatedAt: stories.updatedAt,
-        publishedAt: stories.publishedAt,
-      })
-      .from(stories)
-      .orderBy(desc(stories.publishedAt))
-      .limit(limit * 2);
+    /* ARAMA HEM BAŞLIKTA HEM SLUG'DA. Slug ASCII kebab olduğu için Türkçe
+       büyük/küçük harf tuzağından bağışık; başlık aramasını `ilike`
+       yapıyoruz ve bunun bilinen bir sınırı var — Postgres'in harf küçültmesi
+       veritabanının derlemesine bağlı ve "İ" ile "ı" beklendiği gibi
+       eşleşmeyebiliyor. Aranan sözcük genelde bir şirket adı ("nvidia",
+       "gümrük") ve orada sorun çıkmıyor; çıktığında slug dalı yakalıyor. */
+    const aranan = filters.search?.trim();
+    const where = aranan
+      ? or(
+          ilike(stories.title, `%${aranan}%`),
+          ilike(stories.slug, `%${aranan}%`),
+        )
+      : undefined;
+
+    const [rows, [sayim]] = await Promise.all([
+      db
+        .select({
+          slug: stories.slug,
+          locale: stories.locale,
+          title: stories.title,
+          eventDate: stories.eventDate,
+          updatedAt: stories.updatedAt,
+          publishedAt: stories.publishedAt,
+        })
+        .from(stories)
+        .where(where)
+        .orderBy(desc(stories.publishedAt))
+        .limit(limit * 2),
+      db
+        .select({ n: countDistinct(stories.slug) })
+        .from(stories)
+        .where(where),
+    ]);
 
     const bySlug = new Map<string, EditableStory>();
     for (const row of rows) {
@@ -700,6 +783,9 @@ export async function getEditableStories(limit = 40): Promise<EditableStory[]> {
           title: row.title,
           eventDate: row.eventDate,
           locales: [rozet],
+          /* Sorgu `published_at` azalan sırada geliyor, yani slug'ın İLK
+             görülen satırı en yeni yayını taşıyor. */
+          publishedAt: row.publishedAt,
           updatedAt: row.updatedAt,
         });
         continue;
@@ -724,9 +810,12 @@ export async function getEditableStories(limit = 40): Promise<EditableStory[]> {
         held.updatedAt = row.updatedAt;
       }
     }
-    return [...bySlug.values()].slice(0, limit);
+    return {
+      rows: [...bySlug.values()].slice(0, limit),
+      total: Number(sayim?.n ?? bySlug.size),
+    };
   } catch {
-    return [];
+    return { rows: [], total: 0 };
   }
 }
 
@@ -756,6 +845,33 @@ export const getAdminEditedKeys = cache(
       return new Set(rows.map((row) => row.slug));
     } catch {
       return new Set();
+    }
+  },
+);
+
+/**
+ * Yazılar sekmelerinin yanındaki sayılar.
+ *
+ * LİSTENİN UZUNLUĞU DEĞİL, ARŞİVİN BÜYÜKLÜĞÜ. Sekme "kaç mercek yazısı var"
+ * sorusunu cevaplıyor; listeler kırpılmış ve süzgeçli olduğu için oradaki
+ * satır sayısı bu soruya yanlış cevap verirdi.
+ *
+ * İKİ SAYIM, tek `cache()`: iki sekme de aynı sayfada duruyor ve ikisi de
+ * bu değeri okuyor.
+ */
+export const getWritingCounts = cache(
+  async function getWritingCounts(): Promise<{
+    stories: number;
+    briefs: number;
+  }> {
+    try {
+      const [[s], [b]] = await Promise.all([
+        db.select({ n: countDistinct(stories.slug) }).from(stories),
+        db.select({ n: count() }).from(dailyBriefs),
+      ]);
+      return { stories: Number(s?.n ?? 0), briefs: Number(b?.n ?? 0) };
+    } catch {
+      return { stories: 0, briefs: 0 };
     }
   },
 );

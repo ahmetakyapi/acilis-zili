@@ -1,25 +1,19 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import {
-  AdminCell,
-  AdminPanel,
-  AdminPanelTitle,
-  AdminRow,
-  AdminTable,
-} from "@/components/admin/AdminUI";
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
+import { AdminPanel, AdminPanelTitle } from "@/components/admin/AdminUI";
+import { YazilarTabs } from "@/components/admin/YazilarTabs";
 import { Skeleton } from "@/components/ui/primitives";
 import {
   getAdminEditedKeys,
   getEditableStories,
-  getRecentBriefs,
+  getWritingCounts,
 } from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/admin";
 import { agoLabel } from "@/lib/admin-format";
-import { formatEtDateShort } from "@/lib/utils";
-import { briefRevisionKey } from "@/lib/content-write";
 
 /**
- * Yazılar — panelin DÜZENLEME ekranı.
+ * Yazılar → Mercek yazıları.
  *
  * İÇERİK EKRANINDAN AYRILDI ve ayrımın adı şu: İçerik ÖLÇER, Yazılar
  * DEĞİŞTİRİR. İkisi bir dönem tek sayfadaydı ve o sayfa aynı anda hem bir
@@ -27,6 +21,14 @@ import { briefRevisionKey } from "@/lib/content-write";
  * yazılmamış) hem de bir editör girişiydi; iki farklı iş için açılan tek
  * ekran, ikisinde de uzun ve dağınık kalıyordu. Buraya gelen "bir metni
  * düzeltmeye" geliyor.
+ *
+ * İKİ TÜR ARTIK İKİ SEKME. Mercek listesi burada, bülten listesi
+ * `/admin/yazilar/bulten`te. Tek sayfada alt alta duruyorlardı ve mercek
+ * listesi kırk satır olduğu için bültenlere ulaşmak sayfanın dibine kadar
+ * kaydırmak demekti — bültene bakmaya gelen kişi her seferinde ilgilenmediği
+ * kırk satırı geçiyordu. Sekme çubuğu paylaşılan bir layout'ta DEĞİL, iki
+ * liste sayfasının her biri kendi basıyor: editörler aynı segmentin altında
+ * ve orada sekme istenmiyor (bilançolar ekranındaki kuralın aynısı).
  *
  * İKİ TÜR, İKİ EDİTÖR. Mercek yazısı `:::` bloklarıyla yazılıyor ve
  * `ArticleBody` ile çiziliyor; bülten `BriefBody`nin mini biçimlendiricisini
@@ -40,85 +42,92 @@ import { briefRevisionKey } from "@/lib/content-write";
  * onları kendi ucundan tamamlıyor.
  */
 
+/** Listede en çok kaç yazı — fazlası aramayla bulunuyor. */
+const TAVAN = 40;
+
 export default async function StoriesPage(props: PageProps<"/admin/yazilar">) {
   /* Yetki kapısı SAYFADA da: layout yumuşak gezinmede yeniden koşmuyor. */
   await requireAdmin();
 
   const search = await props.searchParams;
-  const donem =
-    search.donem === "haftalik" || search.donem === "gunluk"
-      ? search.donem
-      : null;
-  const dil = search.dil === "en" || search.dil === "tr" ? search.dil : null;
+  const ara = typeof search.ara === "string" ? search.ara.slice(0, 80) : "";
+  const counts = await getWritingCounts();
 
   return (
-    <div className="flex flex-col gap-6">
-      <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
-        <Stories />
-      </Suspense>
+    <div className="flex flex-col gap-5">
+      <YazilarTabs active="mercek" counts={counts} />
 
-      {/* Süzgeç ADRESTE: `key` ile Suspense sınırı süzgeç değiştiğinde
-          yeniden kuruluyor, yani liste yenilenirken iskelet görünüyor. */}
+      {/* `key` ile Suspense sınırı arama değiştiğinde yeniden kuruluyor,
+          yani liste yenilenirken iskelet görünüyor. */}
       <Suspense
-        key={`${donem}-${dil}`}
-        fallback={<Skeleton className="h-72 w-full rounded-xl" />}
+        key={ara}
+        fallback={<Skeleton className="h-96 w-full rounded-xl" />}
       >
-        <Briefs donem={donem} dil={dil} />
+        <Stories ara={ara} />
       </Suspense>
     </div>
   );
 }
 
-/** Süzgeç seçeneği — seçili olan bağlantı değil, düz metin olur. */
-function Suzgec({
-  secili,
-  href,
-  children,
-}: {
-  secili: boolean;
-  href: string;
-  children: React.ReactNode;
-}) {
-  const bicim =
-    "inline-flex min-h-8 items-center rounded-full px-3 text-tiny font-semibold transition-colors";
-  if (secili) {
-    return (
-      <span
-        className={`${bicim} bg-primary text-on-primary`}
-        aria-current="true"
-      >
-        {children}
-      </span>
-    );
-  }
-  return (
-    /* `scroll={false}`: süzgeç sayfanın ortasında ve her basışta başa
-       fırlamak, listeyi karşılaştırarak okumayı imkânsız kılıyordu. */
-    <Link
-      href={href}
-      scroll={false}
-      className={`${bicim} border border-line bg-surface text-body hover:border-line-strong hover:text-strong`}
-    >
-      {children}
-    </Link>
-  );
-}
-
-async function Stories() {
-  const [rows, elden] = await Promise.all([
-    getEditableStories(40),
+async function Stories({ ara }: { ara: string }) {
+  const [{ rows, total }, elden] = await Promise.all([
+    getEditableStories(TAVAN, { search: ara || undefined }),
     getAdminEditedKeys(),
   ]);
 
   return (
     <AdminPanel>
-      <AdminPanelTitle hint="En Yeniden Eskiye · Satıra Basınca Editör Açılır">
+      <AdminPanelTitle
+        hint="En Son Yayımlanandan Eskiye · Satıra Basınca Editör Açılır"
+        action={
+          /* ARAMA OLMADAN ESKİ YAZIYA ULAŞILAMIYORDU: liste kırk satırla
+             kırpılı ve arşiv büyüyor. Düz bir GET formu — JavaScript yok,
+             tarayıcının kendi gönderimi, adres paylaşılabilir. */
+          <form
+            action="/admin/yazilar"
+            method="get"
+            className="flex w-full items-center gap-2 sm:w-auto"
+          >
+            <label className="relative flex min-w-0 flex-1 items-center sm:w-64 sm:flex-none">
+              <span className="sr-only">Yazılarda ara</span>
+              <MagnifyingGlass
+                aria-hidden
+                weight="bold"
+                size={15}
+                className="pointer-events-none absolute left-3 text-muted"
+              />
+              <input
+                type="search"
+                name="ara"
+                defaultValue={ara}
+                maxLength={80}
+                placeholder="Başlık ya da slug'da ara"
+                className="h-11 w-full rounded-(--radius-md) border border-line bg-surface pl-9 pr-3 text-base text-strong outline-none transition-colors placeholder:text-muted focus:border-line-focus sm:h-9"
+              />
+            </label>
+            <button
+              type="submit"
+              className="inline-flex h-11 shrink-0 items-center rounded-(--radius-md) border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:h-9"
+            >
+              Ara
+            </button>
+            {ara && (
+              <Link
+                href="/admin/yazilar"
+                className="inline-flex h-11 shrink-0 items-center px-1 text-base font-semibold text-primary transition-colors hover:text-primary-hover sm:h-9"
+              >
+                Temizle
+              </Link>
+            )}
+          </form>
+        }
+      >
         Mercek Yazıları
       </AdminPanelTitle>
 
       {rows.length === 0 ? (
         <p className="py-8 text-center text-base text-muted">
-          Henüz mercek yazısı yok.
+          {ara ? `“${ara}” ile eşleşen yazı yok.` : "Henüz mercek yazısı yok."}
         </p>
       ) : (
         <ul className="flex flex-col divide-y divide-line-soft">
@@ -126,10 +135,15 @@ async function Stories() {
             <li key={row.slug}>
               <Link
                 href={`/admin/yazilar/mercek/${row.slug}`}
-                className="flex min-h-11 flex-col gap-1 rounded-(--radius-sm) px-2 py-3 transition-colors hover:bg-surface-elevated sm:flex-row sm:items-center sm:gap-4"
+                className="flex min-h-11 flex-col gap-1.5 rounded-(--radius-sm) px-2 py-3 transition-colors hover:bg-surface-elevated sm:flex-row sm:items-center sm:gap-4"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-base font-semibold text-strong">
+                  {/* DAR EKRANDA BAŞLIK KIRPILMIYOR, SARIYOR. `truncate` tek
+                      satıra kilitliyor ve 390 pikselde uzun başlıkların
+                      yarısı "…" oluyordu — listede yazıyı ayırt eden tek
+                      şey başlık. Geniş ekranda satır düzeni yatay olduğu
+                      için orada kırpma kalıyor. */}
+                  <span className="block text-base font-semibold text-strong sm:truncate">
                     {row.title}
                   </span>
                   <span className="numeral block truncate text-tiny text-muted">
@@ -153,8 +167,20 @@ async function Stories() {
                       Elden Geçti
                     </span>
                   )}
-                  <span className="numeral w-24 text-right text-tiny text-muted">
-                    {formatEtDateShort(row.eventDate, "tr")}
+                  {/* SÜTUN SIRALAMA ANAHTARINI GÖSTERİYOR. Burada olay
+                      tarihi yazıyordu ama liste yayın anına göre sıralı ve
+                      ikisi aynı şey değil: künye "en yeniden eskiye" derken
+                      görünen tarih bir artıp bir azalıyordu. Olay tarihi
+                      editörün künye kutusunda duruyor. */}
+                  <span
+                    className="numeral text-tiny text-muted sm:w-24 sm:text-right"
+                    title={
+                      row.publishedAt
+                        ? row.publishedAt.toLocaleString("tr-TR")
+                        : undefined
+                    }
+                  >
+                    {row.publishedAt ? agoLabel(row.publishedAt) : "—"}
                   </span>
                 </span>
               </Link>
@@ -162,152 +188,16 @@ async function Stories() {
           ))}
         </ul>
       )}
-    </AdminPanel>
-  );
-}
 
-async function Briefs({
-  donem,
-  dil,
-}: {
-  donem: "gunluk" | "haftalik" | null;
-  dil: "tr" | "en" | null;
-}) {
-  const [rows, elden] = await Promise.all([
-    getRecentBriefs(24, {
-      period: donem ? (donem === "haftalik" ? "weekly" : "daily") : undefined,
-      locale: dil ?? undefined,
-    }),
-    getAdminEditedKeys(),
-  ]);
-
-  /* Süzgeç adresleri: seçili olmayan boyut korunuyor, yani dönem seçip
-     sonra dil seçmek ilkini sıfırlamıyor. */
-  const adres = (yeni: { donem?: string | null; dil?: string | null }) => {
-    const p = new URLSearchParams();
-    const d = yeni.donem === undefined ? donem : yeni.donem;
-    const l = yeni.dil === undefined ? dil : yeni.dil;
-    if (d) p.set("donem", d);
-    if (l) p.set("dil", l);
-    const q = p.toString();
-    return q ? `/admin/yazilar?${q}` : "/admin/yazilar";
-  };
-
-  return (
-    <AdminPanel>
-      <AdminPanelTitle
-        hint="En Yeniden Eskiye · Satıra Basınca Editör Açılır"
-        action={
-          /* HAFTALIK BÜLTEN SÜZGEÇSİZ ULAŞILAMIYORDU: liste iki dönem ve iki
-             dili birlikte taşıyor, yirmi dört satır ancak altı günü
-             kapsıyor ve haftada bir yazılan bülten o pencereye çoğu zaman
-             hiç girmiyor. */
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Suzgec secili={!donem} href={adres({ donem: null })}>
-              Tümü
-            </Suzgec>
-            <Suzgec
-              secili={donem === "gunluk"}
-              href={adres({ donem: "gunluk" })}
-            >
-              Günlük
-            </Suzgec>
-            <Suzgec
-              secili={donem === "haftalik"}
-              href={adres({ donem: "haftalik" })}
-            >
-              Haftalık
-            </Suzgec>
-            <span aria-hidden className="mx-1 h-4 w-px bg-line" />
-            <Suzgec secili={!dil} href={adres({ dil: null })}>
-              İki Dil
-            </Suzgec>
-            <Suzgec secili={dil === "tr"} href={adres({ dil: "tr" })}>
-              TR
-            </Suzgec>
-            <Suzgec secili={dil === "en"} href={adres({ dil: "en" })}>
-              EN
-            </Suzgec>
-          </div>
-        }
-      >
-        Bültenler
-      </AdminPanelTitle>
-
-      {rows.length === 0 ? (
-        <p className="py-8 text-center text-base text-muted">
-          {donem || dil
-            ? "Bu süzgeçle eşleşen bülten yok."
-            : "Henüz bülten yazılmamış."}
+      {/* SESSİZ KIRPMA YOK. Liste tavana dayandığında kaçının dışarıda
+          kaldığı yazılı — yoksa kırk satır "hepsi bu" diye okunuyor. */}
+      {total > rows.length && (
+        <p className="mt-4 border-t border-line pt-3 text-small text-muted">
+          {total.toLocaleString("tr-TR")} yazının en yenisi{" "}
+          {rows.length.toLocaleString("tr-TR")} tanesi listede. Aradığın yazı
+          burada yoksa yukarıdaki kutudan başlığıyla ara.
         </p>
-      ) : (
-        /* SATIRIN TAMAMI DEĞİL, TARİH HÜCRESİ BAĞLANTI: tablo hücrelerinin
-           tamamını saran bir `<a>` geçersiz HTML olurdu ve satırı tıklanır
-           yapan bir istemci betiği, bu ekranın tamamen sunucuda çizilme
-           avantajını yakardı. Manşet de aynı yere gidiyor — iki hedef, tek
-           adres. */
-        <AdminTable
-          label="Bülten arşivi"
-          head={["Tarih", "Manşet", "Dil", "Dönem", "Yazan", "Yazılma"]}
-        >
-          {rows.map((row) => {
-            const href = `/admin/yazilar/bulten/${row.briefDate}?tur=${
-              row.period === "weekly" ? "haftalik" : "gunluk"
-            }&dil=${row.locale}`;
-            return (
-              <AdminRow key={`${row.briefDate}-${row.locale}-${row.period}`}>
-                <AdminCell numeral strong>
-                  <Link
-                    href={href}
-                    className="transition-colors hover:text-primary"
-                  >
-                    {formatEtDateShort(row.briefDate, "tr")}
-                  </Link>
-                </AdminCell>
-                <AdminCell>
-                  <Link
-                    href={href}
-                    className="line-clamp-1 transition-colors hover:text-primary"
-                  >
-                    {row.headline}
-                  </Link>
-                </AdminCell>
-                <AdminCell>{row.locale === "en" ? "EN" : "TR"}</AdminCell>
-                <AdminCell>
-                  {row.period === "weekly" ? "Haftalık" : "Günlük"}
-                </AdminCell>
-                {/* KÜNYE VE İZ AYRI SÜTUN DEĞİL, AYNI HÜCREDE İKİ SATIR.
-                    "Yazan" rutinin çalışıp çalışmadığını söylüyor ve
-                    panelden düzeltme onu DEĞİŞTİRMİYOR (gerekçe
-                    `lib/content-write.ts`te). Ama metne elle dokunulduğunu
-                    da görmek gerekiyor; ikisi ayrı şeyler ve ayrı
-                    kaynaklardan geliyor. */}
-                <AdminCell>
-                  {row.generatedBy === "claude" ? "Rutin" : "Kural Tabanlı"}
-                  {elden.has(
-                    briefRevisionKey(
-                      row.briefDate,
-                      row.period === "weekly" ? "weekly" : "daily",
-                    ),
-                  ) && (
-                    <span className="block text-tiny text-muted">
-                      Elden Geçti
-                    </span>
-                  )}
-                </AdminCell>
-                <AdminCell align="right">{agoLabel(row.generatedAt)}</AdminCell>
-              </AdminRow>
-            );
-          })}
-        </AdminTable>
       )}
-
-      <p className="mt-4 border-t border-line pt-3 text-small text-muted">
-        Yeni bülten ve yeni mercek yazısı rutinlerden geliyor (
-        <code>/api/brief</code>, <code>/api/mercek</code>); buradan var olan
-        metin düzeltiliyor. İki yol da aynı doğrulamadan ve aynı yazma yolundan
-        geçiyor.
-      </p>
     </AdminPanel>
   );
 }

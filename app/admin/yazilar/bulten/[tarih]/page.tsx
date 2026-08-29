@@ -59,11 +59,11 @@ export default async function BriefEditorPage(
   return (
     <div className="flex flex-col gap-6">
       <Link
-        href="/admin/yazilar"
+        href="/admin/yazilar/bulten"
         className="inline-flex min-h-11 w-fit items-center gap-1.5 text-base font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-9"
       >
         <CaretLeft weight="bold" size={15} />
-        Yazılara Dön
+        Bültenlere Dön
       </Link>
 
       <AdminPanel>
