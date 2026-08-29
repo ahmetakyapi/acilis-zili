@@ -290,6 +290,16 @@ export type MemberSummary = {
   last30: number;
   withWatchlistItems: number;
   admins: number;
+  /**
+   * Son 30 günde GİRİŞ YAPMIŞ üye — "kayıtlı" ile "kullanan" ayrı sayılar.
+   *
+   * Toplam üye sayısı tek başına bir şey anlatmıyordu: otuz kayıtlı hesabın
+   * yirmi beşi bir daha hiç girmediyse o sayı yalnızca geçmişi ölçüyor.
+   * Damga `users.last_seen_at`ten ve yalnızca girişte yazılıyor.
+   */
+  activeLast30: number;
+  /** Hiç giriş damgası olmayan üye — damga eklenmeden önce açılmış hesaplar. */
+  neverSeen: number;
 };
 
 export async function getMemberSummary(): Promise<MemberSummary> {
@@ -304,6 +314,8 @@ export async function getMemberSummary(): Promise<MemberSummary> {
         last7: sql<number>`count(*) filter (where ${users.createdAt} >= ${new Date(now.getTime() - 7 * day)})`,
         last30: sql<number>`count(*) filter (where ${users.createdAt} >= ${new Date(now.getTime() - 30 * day)})`,
         admins: sql<number>`count(*) filter (where ${users.role} = 'admin')`,
+        activeLast30: sql<number>`count(*) filter (where ${users.lastSeenAt} >= ${new Date(now.getTime() - 30 * day)})`,
+        neverSeen: sql<number>`count(*) filter (where ${users.lastSeenAt} is null)`,
       })
       .from(users),
       db
@@ -317,10 +329,20 @@ export async function getMemberSummary(): Promise<MemberSummary> {
       last7: Number(totals?.last7 ?? 0),
       last30: Number(totals?.last30 ?? 0),
       admins: Number(totals?.admins ?? 0),
+      activeLast30: Number(totals?.activeLast30 ?? 0),
+      neverSeen: Number(totals?.neverSeen ?? 0),
       withWatchlistItems: Number(active?.n ?? 0),
     };
   } catch {
-    return { total: 0, last7: 0, last30: 0, withWatchlistItems: 0, admins: 0 };
+    return {
+      total: 0,
+      last7: 0,
+      last30: 0,
+      withWatchlistItems: 0,
+      admins: 0,
+      activeLast30: 0,
+      neverSeen: 0,
+    };
   }
 }
 
@@ -357,6 +379,8 @@ export async function getSignupSeries(days: number): Promise<SignupPoint[]> {
 }
 
 export type MemberRow = {
+  /** Son başarılı giriş — hiç giriş yapmamışsa null. */
+  lastSeenAt: Date | null;
   id: string;
   username: string;
   role: string;
@@ -392,6 +416,7 @@ export async function getRecentMembers(limit = 25): Promise<MemberRow[]> {
            kaynaktan beslensin (ikisi ayrı tanım kullanınca aynı kayıt iki
            farklı güne düşüyordu). */
         createdOn: sql<string>`to_char(${users.createdAt} at time zone 'America/New_York', 'YYYY-MM-DD')`,
+        lastSeenAt: users.lastSeenAt,
       })
       .from(users)
       .orderBy(desc(users.createdAt))

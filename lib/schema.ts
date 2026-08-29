@@ -41,6 +41,22 @@ export const users = pgTable(
      * TOKEN'DAN DEĞİL veritabanından doğrular (lib/admin.ts).
      */
     role: text("role").notNull().default("user"),
+    /**
+     * Son başarılı giriş anı.
+     *
+     * NEDEN: panel üye SAYISINI biliyordu ama kaçının hâlâ kullandığını
+     * bilmiyordu — otuz kayıtlı hesabın yirmi beşi bir daha hiç girmediyse
+     * "toplam üye" sayısı bir şey anlatmıyor. Ölçü hesabı olan, yani kimliği
+     * zaten bilinen kişilere ait; anonim ziyaretçi ölçümüne dokunmuyor.
+     *
+     * Yalnızca GİRİŞTE yazılıyor, her istekte değil: her sayfa isteğinde bir
+     * UPDATE atmak Neon'da istek başına fazladan bir tur demek ve "son
+     * giriş" sorusunun cevabı zaten girişte belli.
+     *
+     * KVKK metnindeki üye verisi tablosuna da eklendi — kaydedilen her alan
+     * orada sayılı olmak zorunda.
+     */
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

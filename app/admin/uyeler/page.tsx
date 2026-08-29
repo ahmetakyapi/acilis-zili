@@ -19,6 +19,7 @@ import {
   getSignupSeries,
 } from "@/lib/admin-data";
 import { formatEtDateShort } from "@/lib/utils";
+import { agoLabel } from "@/lib/admin-format";
 
 /**
  * Üyeler.
@@ -60,6 +61,8 @@ async function Summary() {
   const s = await getMemberSummary();
   const activeShare =
     s.total > 0 ? Math.round((s.withWatchlistItems / s.total) * 100) : 0;
+  const activeRate =
+    s.total > 0 ? Math.round((s.activeLast30 / s.total) * 100) : 0;
 
   return (
     <StatGrid>
@@ -73,6 +76,22 @@ async function Summary() {
         label="Son 30 Gün"
         value={s.last30.toLocaleString("tr-TR")}
         sub="Yeni Kayıt"
+      />
+      {/* KAYITLI İLE KULLANAN AYRI. "Toplam Üye" tek başına geçmişi
+          ölçüyor: otuz kayıtlı hesabın yirmi beşi bir daha hiç girmediyse o
+          sayı bugün hakkında bir şey söylemiyor. Bu kutu son otuz günde
+          giriş yapanı sayıyor.
+          Damga yeni eklendi, yani ondan önce açılmış hesaplarda `null` —
+          künye bunu SÖYLÜYOR, yoksa sayı olduğundan düşük görünür ve
+          sebebi anlaşılmaz. */}
+      <StatBox
+        label="Aktif Üye"
+        value={s.activeLast30.toLocaleString("tr-TR")}
+        sub={
+          s.neverSeen > 0
+            ? `Son 30 Günde Giriş · ${s.neverSeen} Hesapta Henüz Damga Yok`
+            : `Son 30 Günde Giriş · Üyelerin %${activeRate}'ı`
+        }
       />
       <StatBox
         label="Liste Kurmuş"
@@ -97,7 +116,7 @@ async function RecentMembers() {
           Henüz kayıtlı üye yok.
         </p>
       ) : (
-        <AdminTable label="Son kaydolan üyeler" head={["Kullanıcı", "Kayıt", "Dil", "Sembol"]}>
+        <AdminTable label="Son kaydolan üyeler" head={["Kullanıcı", "Kayıt", "Son Giriş", "Dil", "Sembol"]}>
           {rows.map((row) => (
             <AdminRow key={row.id}>
               <AdminCell strong rowHeader>
@@ -117,6 +136,12 @@ async function RecentMembers() {
                   ileri görünüyordu. */}
               <AdminCell numeral>
                 {formatEtDateShort(row.createdOn, "tr")}
+              </AdminCell>
+              {/* "Hiç" ile "eski" ayrı: damga eklenmeden önce açılmış
+                  hesapta giriş olmuş olabilir ama kaydı yok — o yüzden
+                  boş hücre değil, açıkça söyleniyor. */}
+              <AdminCell numeral>
+                {row.lastSeenAt ? agoLabel(row.lastSeenAt) : "—"}
               </AdminCell>
               <AdminCell>{row.locale === "en" ? "İngilizce" : "Türkçe"}</AdminCell>
               <AdminCell align="right" numeral strong={row.symbolCount > 0}>

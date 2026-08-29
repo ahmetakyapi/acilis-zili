@@ -152,6 +152,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const valid = await compare(password, user.passwordHash);
         if (!valid) return null;
 
+        /* SON GİRİŞ DAMGASI. Panel üye SAYISINI biliyordu ama kaçının hâlâ
+           kullandığını bilmiyordu.
+
+           Yazma BEKLENMİYOR (`void` + `catch`): damga bir ölçü, girişin
+           koşulu değil. Bekleseydik Neon'un yavaşladığı bir anda giriş de
+           yavaşlardı; düşerse giriş yine olmalı, yalnızca o damga eksik
+           kalır. Aynı sebeple hata yutuluyor. */
+        void db
+          .update(users)
+          .set({ lastSeenAt: new Date() })
+          .where(eq(users.id, user.id))
+          .catch(() => {});
+
         return {
           id: user.id,
           name: user.username,
