@@ -1,18 +1,10 @@
 "use client";
 
-import {
-  useActionState,
-  useRef,
-  useState,
-  useTransition,
-  type ReactNode,
-} from "react";
+import { useActionState, useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowCounterClockwise,
   ArrowSquareOut,
-  ClockCounterClockwise,
-  Eye,
   FloppyDisk,
 } from "@phosphor-icons/react/dist/ssr";
 import {
@@ -22,21 +14,26 @@ import {
   type StoryRevision,
 } from "@/app/actions/content";
 import { previewStoryBody } from "@/app/actions/content-preview";
+import {
+  Alan,
+  DurumSeridi,
+  OnizlemePaneli,
+  SurumGecmisi,
+  girdi,
+  useOnizleme,
+} from "@/components/admin/editor-parts";
 import { cn } from "@/lib/utils";
 
 /**
  * Mercek yazısı editörü.
  *
- * ÖNİZLEME SUNUCUDAN GELİYOR. Buton, taslak metni bir sunucu eylemine
- * yolluyor ve eylem `ArticleBody`yi SUNUCUDA çizip JSX döndürüyor; istemciye
- * yalnızca çizilmiş yük iniyor. Gerekçesi `content-preview.tsx`te: markdown
- * çözümleyicisini panele indirmek ~30KB ve ikinci bir çizici yazmak iki
- * farklı markdown yorumu demekti. Böylece önizleme, yayındaki çizimin
- * KENDİSİ — bir `:::` bloğu burada nasıl görünüyorsa sitede de öyle.
- *
- * ÖNİZLEME OTOMATİK TAZELENMİYOR, düğmeyle. Her tuş vuruşunda sunucuya
- * gitmek uzun bir metinde saniyede birkaç tur demek; yazarken beklemek de
- * istemiyoruz. Düğme metnin değiştiğini biliyor ve bunu söylüyor.
+ * ÖNİZLEME SUNUCUDAN GELİYOR ve kendiliğinden tazeleniyor: taslak metin bir
+ * sunucu eylemine gidiyor, eylem `ArticleBody`yi SUNUCUDA çizip JSX
+ * döndürüyor; istemciye yalnızca çizilmiş yük iniyor. Gerekçesi
+ * `content-preview.tsx`te: markdown çözümleyicisini panele indirmek ~30KB ve
+ * ikinci bir çizici yazmak iki farklı markdown yorumu demekti. Böylece
+ * önizleme, yayındaki çizimin KENDİSİ — bir `:::` bloğu burada nasıl
+ * görünüyorsa sitede de öyle. Tazeleme ölçüsü `useOnizleme` içinde.
  *
  * SLUG DÜZENLENMİYOR. Panelin işi var olan yazıyı düzeltmek; yeni yazı
  * rutinin işi. Slug'ı serbest bırakmak yanlışlıkla ikinci bir kayıt açmanın
@@ -64,7 +61,10 @@ const BOS: EditorState = {};
  * `docs/claude-rutinler.md` § 3'te; yeni blok eklenirse ORASI da güncellenir.
  */
 const BLOKLAR = [
-  { ad: "sayilar", ornek: "::: sayilar Rakamlarla\n- 4,2 Mr $ | Toplam tutar\n:::" },
+  {
+    ad: "sayilar",
+    ornek: "::: sayilar Rakamlarla\n- 4,2 Mr $ | Toplam tutar\n:::",
+  },
   { ad: "bar", ornek: "::: bar Karşılaştırma\n- Etiket | 58,4\n:::" },
   { ad: "pay", ornek: "::: pay Pazar Payı\n- Şirket | 42\n:::" },
   { ad: "akis", ornek: "::: akis Zincir\n- Adım\n:::" },
@@ -83,10 +83,7 @@ export function StoryEditor({
   draft: StoryDraft;
   revisions: StoryRevision[];
 }) {
-  const [state, formAction, pending] = useActionState(
-    saveStoryFromAdmin,
-    BOS,
-  );
+  const [state, formAction, pending] = useActionState(saveStoryFromAdmin, BOS);
 
   const [restoreState, restoreAction, restoring] = useActionState(
     restoreStoryRevision,
@@ -95,7 +92,12 @@ export function StoryEditor({
 
   const [body, setBody] = useState(draft.bodyMd);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
-  const [gecmisAcik, setGecmisAcik] = useState(false);
+
+  const ciz = useCallback(
+    (metin: string) => previewStoryBody(metin, draft.locale),
+    [draft.locale],
+  );
+  const onizleme = useOnizleme(body, ciz);
 
   /* YÜKLENDİĞİ HÂLE DÖN. Kaydetmeden önce yapılan her değişikliği geri alan
      en ucuz yol: sayfa açıldığında gelen taslak zaten elimizde. Sunucuya
@@ -103,8 +105,7 @@ export function StoryEditor({
   const kirli = body !== draft.bodyMd;
   const sifirla = () => {
     setBody(draft.bodyMd);
-    setPreview(null);
-    setPreviewOf(null);
+    onizleme.unut();
   };
 
   /* Blok kısayolu imlecin OLDUĞU YERE yazıyor, metnin sonuna değil: yazar
@@ -115,26 +116,13 @@ export function StoryEditor({
     const metin = body;
     const konum = el ? el.selectionStart : metin.length;
     const ayrac = konum > 0 && metin[konum - 1] !== "\n" ? "\n\n" : "";
-    const yeni = metin.slice(0, konum) + ayrac + ornek + "\n" + metin.slice(konum);
+    const yeni =
+      metin.slice(0, konum) + ayrac + ornek + "\n" + metin.slice(konum);
     setBody(yeni);
     queueMicrotask(() => {
       el?.focus();
       const imlec = konum + ayrac.length + ornek.length + 1;
       el?.setSelectionRange(imlec, imlec);
-    });
-  };
-  const [preview, setPreview] = useState<ReactNode>(null);
-  const [previewOf, setPreviewOf] = useState<string | null>(null);
-  const [previewing, startPreview] = useTransition();
-
-  const stale = preview !== null && previewOf !== body;
-
-  const onizle = () => {
-    const anlik = body;
-    startPreview(async () => {
-      const cizim = await previewStoryBody(anlik, draft.locale);
-      setPreview(cizim);
-      setPreviewOf(anlik);
     });
   };
 
@@ -143,24 +131,19 @@ export function StoryEditor({
       <input type="hidden" name="slug" value={draft.slug} />
       <input type="hidden" name="locale" value={draft.locale} />
 
-      {/* ---- Durum şeridi ---- */}
-      {(state.error || state.ok) && (
-        <p
-          role="status"
-          className={cn(
-            "rounded-(--radius-md) border px-4 py-3 text-base",
-            state.error
-              ? "border-down/40 bg-down-wash text-strong"
-              : "border-up/40 bg-up-wash text-strong",
-          )}
-        >
-          {state.error ?? "Kaydedildi. Yayındaki sayfa tazelendi."}
-        </p>
-      )}
+      <DurumSeridi
+        state={state}
+        basarili="Kaydedildi. Yayındaki sayfa tazelendi."
+      />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         {/* ================= Yazı alanları ================= */}
-        <div className="flex flex-col gap-4">
+        {/* SIRA İŞE GÖRE: başlık, giriş, sonra GÖVDE. Gövde bir dönem beş
+            alanın altındaydı ve editörün asıl işi olduğu hâlde ekranın
+            dışında başlıyordu — tarih ve kaynak gibi nadiren dokunulan
+            alanlar, her açılışta üzerinden atlanan bir engel oluyordu.
+            Künye alanları artık gövdenin ALTINDA. */}
+        <div className="flex flex-col gap-5">
           <Alan
             label="Başlık"
             hata={state.fieldErrors?.title}
@@ -170,7 +153,7 @@ export function StoryEditor({
               name="title"
               defaultValue={draft.title}
               maxLength={160}
-              className={girdi}
+              className={cn(girdi, "text-lead font-semibold")}
             />
           </Alan>
 
@@ -179,59 +162,22 @@ export function StoryEditor({
             hata={state.fieldErrors?.dek}
             hint="Başlığın altındaki tek cümle; listede de bu görünüyor."
           >
+            {/* Dört satır: iki satırda metin ortadan kesiliyordu ve giriş
+                cümlesi tam olarak okunması gereken yer. */}
             <textarea
               name="dek"
               defaultValue={draft.dek}
-              rows={2}
+              rows={4}
               maxLength={400}
               className={cn(girdi, "resize-y leading-relaxed")}
             />
           </Alan>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Alan
-              label="Olay Tarihi"
-              hata={state.fieldErrors?.event_date}
-              hint="Olayın yaşandığı gün (ET)."
-            >
-              <input
-                type="date"
-                name="event_date"
-                defaultValue={draft.eventDate}
-                className={cn(girdi, "numeral")}
-              />
-            </Alan>
-            <Alan
-              label="Semboller"
-              hata={state.fieldErrors?.symbols}
-              hint="Virgülle ayır: NVDA, MU"
-            >
-              <input
-                name="symbols"
-                defaultValue={draft.symbols.join(", ")}
-                className={cn(girdi, "numeral")}
-              />
-            </Alan>
-          </div>
-
-          <Alan
-            label="Kaynaklar"
-            hata={state.fieldErrors?.sources}
-            hint="Her satıra bir kaynak — Etiket | https://adres"
-          >
-            <textarea
-              name="sources"
-              defaultValue={draft.sources
-                .map((s) => (s.url ? `${s.label} | ${s.url}` : s.label))
-                .join("\n")}
-              rows={3}
-              className={cn(girdi, "resize-y font-mono text-small")}
-            />
-          </Alan>
-
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <span className="text-small font-semibold text-strong">Gövde</span>
+              <span className="text-small font-semibold text-strong">
+                Gövde
+              </span>
               {/* YÜKLENDİĞİ HÂLE DÖN yalnızca değişiklik varken çiziliyor:
                   hiçbir şey değişmemişken duran bir "geri al" düğmesi, ne
                   yapacağı belirsiz bir düğmedir. */}
@@ -247,18 +193,17 @@ export function StoryEditor({
               )}
             </div>
 
-            {/* BLOK ÇUBUĞU. Yazının görseli metinden çiziliyor — `:::`
-                blokları bu editörün asıl işi ve sözdizimini ezberden yazmak
-                zorunda kalmak, aracı kullanılmaz yapardı. Kısayol imlecin
-                olduğu yere örneği bırakıyor, yazar üstüne yazıyor. */}
-            <div className="scroll-x -mx-1 flex gap-1.5 px-1 pb-1">
+            {/* BLOK ÇUBUĞU SARIYOR, KAYMIYOR. Kayan şeritte son çipler
+                sağdan kırpılıyordu ve kırpılmış bir düğme, var olmayan bir
+                düğmedir. */}
+            <div className="flex flex-wrap gap-1.5">
               {BLOKLAR.map((blok) => (
                 <button
                   key={blok.ad}
                   type="button"
                   onClick={() => blokEkle(blok.ornek)}
                   title={`::: ${blok.ad} bloğu ekle`}
-                  className="numeral inline-flex min-h-8 shrink-0 items-center rounded-full border border-line bg-surface px-2.5 text-tiny font-semibold text-body transition-colors hover:border-primary hover:text-primary"
+                  className="numeral inline-flex min-h-8 items-center rounded-full border border-line bg-surface px-2.5 text-tiny font-semibold text-body transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary"
                 >
                   {blok.ad}
                 </button>
@@ -270,7 +215,7 @@ export function StoryEditor({
               name="body_md"
               value={body}
               onChange={(event) => setBody(event.target.value)}
-              rows={24}
+              rows={26}
               spellCheck={false}
               className={cn(
                 girdi,
@@ -295,48 +240,67 @@ export function StoryEditor({
               </span>
             </div>
           </div>
-        </div>
 
-        {/* ================= Önizleme ================= */}
-        {/* Önizleme geniş ekranda YAPIŞKAN: gövde yirmi dört satır ve
-            aşağı inildikçe önizleme ekrandan çıkıyordu — yazarken bakılacak
-            şey görünmüyorsa önizleme değil, ikinci bir sayfa olur. */}
-        <div className="flex min-w-0 flex-col gap-3 xl:sticky xl:top-6 xl:self-start">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-small font-semibold text-strong">Önizleme</p>
-            <button
-              type="button"
-              onClick={onizle}
-              disabled={previewing}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-(--radius-md) border border-line bg-surface px-3.5 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong disabled:opacity-60 sm:min-h-9"
+          {/* KÜNYE ALANLARI GÖVDENİN ALTINDA ve kendi kutusunda: tarih,
+              sembol ve kaynak nadiren değişiyor, ama değiştiğinde bir arada
+              bulunmaları gerekiyor. */}
+          <div className="flex flex-col gap-4 rounded-(--radius-lg) border border-line bg-surface-elevated p-4">
+            <p className="text-small font-semibold text-strong">Künye</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Alan
+                label="Olay Tarihi"
+                hata={state.fieldErrors?.event_date}
+                hint="Olayın yaşandığı gün (ET)."
+              >
+                <input
+                  type="date"
+                  name="event_date"
+                  defaultValue={draft.eventDate}
+                  className={cn(girdi, "numeral")}
+                />
+              </Alan>
+              <Alan
+                label="Semboller"
+                hata={state.fieldErrors?.symbols}
+                hint="Virgülle ayır: NVDA, MU"
+              >
+                <input
+                  name="symbols"
+                  defaultValue={draft.symbols.join(", ")}
+                  className={cn(girdi, "numeral")}
+                />
+              </Alan>
+            </div>
+
+            <Alan
+              label="Kaynaklar"
+              hata={state.fieldErrors?.sources}
+              hint="Her satıra bir kaynak — Etiket | https://adres"
             >
-              <Eye weight="duotone" size={16} />
-              {previewing
-                ? "Çiziliyor…"
-                : preview === null
-                  ? "Önizle"
-                  : "Yenile"}
-            </button>
-          </div>
-
-          {/* Bayat önizleme SÖYLENİYOR: metin değişti ama ekrandaki çizim
-              eski taslağa ait. Sessiz kalsa okuyucu düzeltmesinin işe
-              yaramadığını sanırdı. */}
-          {stale && (
-            <p className="rounded-(--radius-md) border border-line bg-surface-elevated px-3 py-2 text-tiny text-muted">
-              Gövde değişti — önizleme bir önceki hâli gösteriyor.
-            </p>
-          )}
-
-          <div className="min-h-64 rounded-(--radius-lg) border border-line bg-surface-solid p-4 sm:p-5">
-            {preview ?? (
-              <p className="py-10 text-center text-base text-muted">
-                Gövdenin sitede nasıl görüneceğini görmek için Önizle&apos;ye
-                bas. Çizim sunucuda, yayındaki bileşenle yapılıyor.
-              </p>
-            )}
+              {/* Altı satır: adresler uzun ve üç satırda liste ortadan
+                  kesiliyordu. */}
+              <textarea
+                name="sources"
+                defaultValue={draft.sources
+                  .map((s) => (s.url ? `${s.label} | ${s.url}` : s.label))
+                  .join("\n")}
+                rows={6}
+                className={cn(
+                  girdi,
+                  "resize-y font-mono text-small leading-relaxed",
+                )}
+              />
+            </Alan>
           </div>
         </div>
+
+        <OnizlemePaneli
+          preview={onizleme.preview}
+          previewing={onizleme.previewing}
+          bayat={onizleme.bayat}
+          guncel={onizleme.guncel}
+          yenile={() => onizleme.onizle(body)}
+        />
       </div>
 
       {/* ---- Eylem şeridi ---- */}
@@ -365,107 +329,12 @@ export function StoryEditor({
         </p>
       </div>
 
-      {/* ================= Sürüm geçmişi ================= */}
-      <div className="flex flex-col gap-3 border-t border-line pt-4">
-        <button
-          type="button"
-          onClick={() => setGecmisAcik((a) => !a)}
-          aria-expanded={gecmisAcik}
-          className="inline-flex min-h-11 w-fit items-center gap-2 text-base font-semibold text-strong transition-colors hover:text-primary sm:min-h-9"
-        >
-          <ClockCounterClockwise weight="duotone" size={17} />
-          Sürüm Geçmişi
-          <span className="numeral rounded-full bg-surface-elevated px-2 py-0.5 text-tiny font-bold text-muted">
-            {revisions.length}
-          </span>
-        </button>
-
-        {gecmisAcik &&
-          (revisions.length === 0 ? (
-            <p className="text-small text-muted">
-              Bu yazının önceki bir hâli kaydedilmemiş. Geçmiş, ilk üzerine
-              yazmadan sonra birikmeye başlar.
-            </p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-line-soft">
-              {revisions.map((rev) => (
-                <li
-                  key={rev.id}
-                  className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2.5"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate text-base text-strong">
-                      {rev.title}
-                    </span>
-                    <span className="numeral block text-tiny text-muted">
-                      {new Date(rev.replacedAt).toLocaleString("tr-TR")} ·{" "}
-                      {rev.length.toLocaleString("tr-TR")} Karakter ·{" "}
-                      {rev.replacedBy === "admin"
-                        ? "Panelden Yazıldı"
-                        : "Rutin Yazdı"}
-                    </span>
-                  </span>
-                  {/* GERİ YÜKLEME AYRI BİR FORM: ana formun içinde ikinci bir
-                      submit düğmesi, Enter'a basıldığında hangisinin
-                      çalışacağını belirsiz bırakırdı. `formAction` ile aynı
-                      formdan başka bir eyleme gitmek de gövdeyi taşırdı;
-                      geri yükleme gövdeyi DEĞİL sürüm kimliğini yolluyor. */}
-                  <button
-                    type="submit"
-                    name="revisionId"
-                    value={rev.id}
-                    formAction={restoreAction}
-                    disabled={restoring}
-                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-(--radius-md) border border-line bg-surface px-3.5 text-base font-semibold text-body transition-colors hover:border-primary hover:text-primary disabled:opacity-60 sm:min-h-9"
-                  >
-                    <ArrowCounterClockwise weight="bold" size={15} />
-                    Bu Hâle Dön
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ))}
-
-        {restoreState.error && (
-          <p role="status" className="text-small font-semibold text-down">
-            {restoreState.error}
-          </p>
-        )}
-        {restoreState.ok && (
-          <p role="status" className="text-small font-semibold text-up">
-            Geri yüklendi. Sayfayı yenile — form hâlâ eski taslağı gösteriyor.
-          </p>
-        )}
-      </div>
+      <SurumGecmisi
+        revisions={revisions}
+        restoreAction={restoreAction}
+        restoring={restoring}
+        restoreState={restoreState}
+      />
     </form>
-  );
-}
-
-const girdi =
-  "w-full rounded-(--radius-md) border border-line bg-surface px-3 py-2.5 text-base text-strong outline-none transition-colors focus:border-line-focus";
-
-function Alan({
-  label,
-  hint,
-  hata,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  hata?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-small font-semibold text-strong">{label}</span>
-      {children}
-      {/* Hata varsa ipucunun YERİNE geçiyor: ikisi alt alta durunca hangisinin
-          okunacağı belirsizdi ve hata gri bir cümlenin altında kayboluyordu. */}
-      {hata ? (
-        <span className="text-tiny font-semibold text-down">{hata}</span>
-      ) : hint ? (
-        <span className="text-tiny text-muted">{hint}</span>
-      ) : null}
-    </label>
   );
 }

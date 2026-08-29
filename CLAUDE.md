@@ -65,8 +65,13 @@ alanı aldı (migration 0004) ve hemen geri alındı (0005) — gerekçesi
 Blok ailesi `components/article/ArticleBody.tsx` içinde:
 `sayilar` · `bar` · `pay` · `akis` · `oncesi` · `zaman` · `grafik`, artı dört
 metin kutusu `ornek` · `dikkat` · `ozet` · `tanim`. Sözdizimi ve yazım
-kuralları `docs/claude-rutinler.md` § 3'te; rutin prompt'u oradan kopyalanıyor,
-yeni blok eklersen orayı da güncelle.
+kuralları `docs/claude-rutinler.md` § 3'te; rutin prompt'u oradan kopyalanıyor.
+
+**Yeni blok eklersen ÜÇ yeri birden güncelle:** çizici (`ArticleBody.tsx`),
+rutin prompt'u (`docs/claude-rutinler.md` § 3) ve panel editörünün çip
+listesi (`components/admin/StoryEditor.tsx` → `BLOKLAR`). Çipler yazıya
+örnek blok basıyor; listede olmayan blok editörden hiç eklenemez, listede
+olup çizicide olmayan blok da sayfada düz metne döner.
 
 **Görselin etrafında çerçeve yok.** Kenarlık ve iç dolgu, resmi kutunun
 ortasında duran ayrı bir nesne gibi gösteriyor; görsel kutunun kendisi olmalı
@@ -225,6 +230,21 @@ eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye ba
 - **Rehber yazıları** depoda (`content/guide/`), **mercek yazıları**
   veritabanında (`stories` tablosu). `/api/mercek` POST ile yazılır, aynı uç
   `?slug=` ile gövdeyi geri okur — rutin güncelleme yaparken onu kullanıyor.
+- **İçeriğin yazma yolu TEK: `lib/content-write.ts`.** Doğrulama şeması,
+  sürüm fotoğrafı ve upsert orada; `/api/mercek`, `/api/brief` ve panelin
+  sunucu eylemleri (`app/actions/content.ts`) hepsi oradan geçiyor. Bir dönem
+  "panelden içerik yazılmasın" kararı vardı ve gerekçesi ikilikti — iki
+  doğrulama, iki biçim kontrolü, ayrı düşen iki kod yolu. Karar
+  savuşturulmadı, gerekçesi ortadan kaldırıldı; yeni bir giriş eklerken de
+  aynı kural: şema ve yazma tek yerde kalır.
+  Panelden **yeni kayıt üretilmiyor**, yalnızca var olan düzeltiliyor:
+  mercek `/admin/yazilar/mercek/[slug]`, bülten
+  `/admin/yazilar/bulten/[tarih]?tur=haftalik&dil=en`. Üzerine yazılan hâlin
+  fotoğrafı `story_revisions`a düşüyor (bülten anahtarı
+  `bulten:{tarih}:{donem}` — mercek slug'ıyla çakışamaz, slug şeması iki
+  nokta üst üste kabul etmiyor).
+  Panel sekmelerinden **İçerik ÖLÇER, Yazılar DEĞİŞTİRİR** — biri sağlık
+  panosu (sayım, eksik çeviri, yayın ritmi), öteki editör girişi.
 - **Bilanço analizleri** de veritabanında (`earnings_analyses`) ve aynı
   köprüden geliyor: `/api/analiz` POST yazar, `?symbol=&period=` geri okur,
   `/api/analiz/context` rutine aday listesi verir. Rutin promptu

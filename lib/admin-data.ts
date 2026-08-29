@@ -1,5 +1,17 @@
 import { cache } from "react";
-import { and, asc, count, countDistinct, desc, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  countDistinct,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  lte,
+  sql,
+} from "drizzle-orm";
 import type { PgColumn } from "drizzle-orm/pg-core";
 import { db } from "./db";
 import {
@@ -11,6 +23,7 @@ import {
   news,
   pageViews,
   stories,
+  storyRevisions,
   symbols,
   users,
   watchlistItems,
@@ -241,9 +254,7 @@ export async function getSignedInShare(
     const rows = await db
       .select({ signedIn: pageViews.signedIn, views: count() })
       .from(pageViews)
-      .where(
-        and(gte(pageViews.viewedOn, from), lte(pageViews.viewedOn, to)),
-      )
+      .where(and(gte(pageViews.viewedOn, from), lte(pageViews.viewedOn, to)))
       .groupBy(pageViews.signedIn);
     return {
       signedIn: Number(rows.find((r) => r.signedIn)?.views ?? 0),
@@ -309,19 +320,22 @@ export async function getMemberSummary(): Promise<MemberSummary> {
     /* İki sorgu bağımsız — sırayla beklemenin sebebi yoktu. */
     const [[totals], [active]] = await Promise.all([
       db
-      .select({
-        total: count(),
-        last7: sql<number>`count(*) filter (where ${users.createdAt} >= ${new Date(now.getTime() - 7 * day)})`,
-        last30: sql<number>`count(*) filter (where ${users.createdAt} >= ${new Date(now.getTime() - 30 * day)})`,
-        admins: sql<number>`count(*) filter (where ${users.role} = 'admin')`,
-        activeLast30: sql<number>`count(*) filter (where ${users.lastSeenAt} >= ${new Date(now.getTime() - 30 * day)})`,
-        neverSeen: sql<number>`count(*) filter (where ${users.lastSeenAt} is null)`,
-      })
-      .from(users),
+        .select({
+          total: count(),
+          last7: sql<number>`count(*) filter (where ${users.createdAt} >= ${new Date(now.getTime() - 7 * day)})`,
+          last30: sql<number>`count(*) filter (where ${users.createdAt} >= ${new Date(now.getTime() - 30 * day)})`,
+          admins: sql<number>`count(*) filter (where ${users.role} = 'admin')`,
+          activeLast30: sql<number>`count(*) filter (where ${users.lastSeenAt} >= ${new Date(now.getTime() - 30 * day)})`,
+          neverSeen: sql<number>`count(*) filter (where ${users.lastSeenAt} is null)`,
+        })
+        .from(users),
       db
         .select({ n: countDistinct(watchlists.userId) })
         .from(watchlists)
-        .innerJoin(watchlistItems, eq(watchlistItems.watchlistId, watchlists.id)),
+        .innerJoin(
+          watchlistItems,
+          eq(watchlistItems.watchlistId, watchlists.id),
+        ),
     ]);
 
     return {
@@ -358,12 +372,7 @@ export async function getSignupSeries(days: number): Promise<SignupPoint[]> {
         signups: count(),
       })
       .from(users)
-      .where(
-        gte(
-          users.createdAt,
-          new Date(Date.now() - days * 86_400_000),
-        ),
-      )
+      .where(gte(users.createdAt, new Date(Date.now() - days * 86_400_000)))
       .groupBy(sql`1`);
 
     const found = new Map(rows.map((r) => [r.day, Number(r.signups)]));
@@ -507,90 +516,92 @@ export type ContentSummary = {
 /* `cache()`: `/admin/icerik` bu özeti İKİ ayrı Suspense sınırından çağırıyor
    (`Summary` ve `Gaps`) ve sarmalı olmadığı için tek sayfa açılışında iki kez
    koşuyordu — üç ardışık sorgu × iki = altı HTTP gidiş-dönüşü. */
-export const getContentSummary = cache(async function getContentSummary(): Promise<ContentSummary> {
-  const empty: ContentSummary = {
-    briefs: 0,
-    briefsLatest: null,
-    storySlugs: 0,
-    storiesMissingEn: [],
-    analyses: 0,
-    analysesMissingEn: [],
-    analysesWithoutCharts: [],
-  };
+export const getContentSummary = cache(
+  async function getContentSummary(): Promise<ContentSummary> {
+    const empty: ContentSummary = {
+      briefs: 0,
+      briefsLatest: null,
+      storySlugs: 0,
+      storiesMissingEn: [],
+      analyses: 0,
+      analysesMissingEn: [],
+      analysesWithoutCharts: [],
+    };
 
-  try {
-    /* ÜÇÜ DE BAĞIMSIZ — sırayla beklenmelerinin bir sebebi yoktu.
+    try {
+      /* ÜÇÜ DE BAĞIMSIZ — sırayla beklenmelerinin bir sebebi yoktu.
        neon-http'de her sorgu ayrı bir HTTP gidiş-dönüşü; üç tur bire indi. */
-    const [[briefRow], storyRows, analysisRows] = await Promise.all([
-      db
-        .select({
-          n: count(),
-          latest: sql<string | null>`max(${dailyBriefs.briefDate})`,
-        })
-        .from(dailyBriefs),
-      db.select({ slug: stories.slug, locale: stories.locale }).from(stories),
-      /* GRAFİK DİZİLERİ ÇEKİLMİYOR, yalnızca DOLU MU diye soruluyor. İki
+      const [[briefRow], storyRows, analysisRows] = await Promise.all([
+        db
+          .select({
+            n: count(),
+            latest: sql<string | null>`max(${dailyBriefs.briefDate})`,
+          })
+          .from(dailyBriefs),
+        db.select({ slug: stories.slug, locale: stories.locale }).from(stories),
+        /* GRAFİK DİZİLERİ ÇEKİLMİYOR, yalnızca DOLU MU diye soruluyor. İki
          `jsonb` sütunu (çeyreklik gelir ve öngörü) tek kullanım amacı
          `?.length > 0` kontrolüyken tamamen ağdan geçiyordu — altmış analiz
          × iki dil, yüzlerce kilobayt. Karar veritabanında veriliyor. */
-      db
-        .select({
-          symbol: earningsAnalyses.symbol,
-          period: earningsAnalyses.period,
-          locale: earningsAnalyses.locale,
-          hasCharts: sql<boolean>`
+        db
+          .select({
+            symbol: earningsAnalyses.symbol,
+            period: earningsAnalyses.period,
+            locale: earningsAnalyses.locale,
+            hasCharts: sql<boolean>`
             coalesce(jsonb_array_length(${earningsAnalyses.quarterlyRevenue}), 0) > 0
             and coalesce(jsonb_array_length(${earningsAnalyses.guidance}), 0) > 0
           `,
-        })
-        .from(earningsAnalyses),
-    ]);
+          })
+          .from(earningsAnalyses),
+      ]);
 
-    const storyLocales = new Map<string, Set<string>>();
-    for (const row of storyRows) {
-      const seen = storyLocales.get(row.slug) ?? new Set<string>();
-      seen.add(row.locale);
-      storyLocales.set(row.slug, seen);
-    }
+      const storyLocales = new Map<string, Set<string>>();
+      for (const row of storyRows) {
+        const seen = storyLocales.get(row.slug) ?? new Set<string>();
+        seen.add(row.locale);
+        storyLocales.set(row.slug, seen);
+      }
 
-    const analysisLocales = new Map<string, Set<string>>();
-    const analysisRefs = new Map<string, AnalysisRef>();
-    const chartless = new Map<string, AnalysisRef>();
-    for (const row of analysisRows) {
-      const key = `${row.symbol} ${row.period}`;
-      const ref: AnalysisRef = {
-        symbol: row.symbol,
-        period: row.period,
-        label: key,
-      };
-      analysisRefs.set(key, ref);
-      const seen = analysisLocales.get(key) ?? new Set<string>();
-      seen.add(row.locale);
-      analysisLocales.set(key, seen);
-      /* İki dilden biri grafiksizse analiz eksik sayılır — sayfası metin
+      const analysisLocales = new Map<string, Set<string>>();
+      const analysisRefs = new Map<string, AnalysisRef>();
+      const chartless = new Map<string, AnalysisRef>();
+      for (const row of analysisRows) {
+        const key = `${row.symbol} ${row.period}`;
+        const ref: AnalysisRef = {
+          symbol: row.symbol,
+          period: row.period,
+          label: key,
+        };
+        analysisRefs.set(key, ref);
+        const seen = analysisLocales.get(key) ?? new Set<string>();
+        seen.add(row.locale);
+        analysisLocales.set(key, seen);
+        /* İki dilden biri grafiksizse analiz eksik sayılır — sayfası metin
          yığını gibi duruyor demektir. Aynı kural rutinin okuduğu
          /api/analiz/context ucunda da geçerli. */
-      if (!row.hasCharts) chartless.set(key, ref);
-    }
+        if (!row.hasCharts) chartless.set(key, ref);
+      }
 
-    return {
-      briefs: Number(briefRow?.n ?? 0),
-      briefsLatest: briefRow?.latest ?? null,
-      storySlugs: storyLocales.size,
-      storiesMissingEn: [...storyLocales]
-        .filter(([, locales]) => !locales.has("en"))
-        .map(([slug]) => slug),
-      analyses: analysisLocales.size,
-      analysesMissingEn: [...analysisLocales]
-        .filter(([, locales]) => !locales.has("en"))
-        .map(([key]) => analysisRefs.get(key))
-        .filter((ref): ref is AnalysisRef => ref !== undefined),
-      analysesWithoutCharts: [...chartless.values()],
-    };
-  } catch {
-    return empty;
-  }
-});
+      return {
+        briefs: Number(briefRow?.n ?? 0),
+        briefsLatest: briefRow?.latest ?? null,
+        storySlugs: storyLocales.size,
+        storiesMissingEn: [...storyLocales]
+          .filter(([, locales]) => !locales.has("en"))
+          .map(([slug]) => slug),
+        analyses: analysisLocales.size,
+        analysesMissingEn: [...analysisLocales]
+          .filter(([, locales]) => !locales.has("en"))
+          .map(([key]) => analysisRefs.get(key))
+          .filter((ref): ref is AnalysisRef => ref !== undefined),
+        analysesWithoutCharts: [...chartless.values()],
+      };
+    } catch {
+      return empty;
+    }
+  },
+);
 
 export type BriefRow = {
   briefDate: string;
@@ -601,8 +612,24 @@ export type BriefRow = {
   generatedAt: Date;
 };
 
-export async function getRecentBriefs(limit = 14): Promise<BriefRow[]> {
+/**
+ * Son bültenler — en yeniden eskiye.
+ *
+ * SÜZGEÇ ŞART, SÜS DEĞİL: liste iki dönem ve iki dili birlikte taşıyor, yani
+ * yirmi dört satır ancak altı günü kapsıyor. Haftalık bülten haftada bir
+ * yazıldığı için o pencereye çoğu zaman HİÇ girmiyordu — süzgeç olmadan
+ * haftalık bir bülteni panelden düzeltmenin yolu yoktu.
+ */
+export async function getRecentBriefs(
+  limit = 14,
+  filters: { period?: string; locale?: string } = {},
+): Promise<BriefRow[]> {
   try {
+    const kosullar = [
+      filters.period ? eq(dailyBriefs.period, filters.period) : undefined,
+      filters.locale ? eq(dailyBriefs.locale, filters.locale) : undefined,
+    ].filter(Boolean);
+
     return await db
       .select({
         briefDate: dailyBriefs.briefDate,
@@ -613,6 +640,7 @@ export async function getRecentBriefs(limit = 14): Promise<BriefRow[]> {
         generatedAt: dailyBriefs.generatedAt,
       })
       .from(dailyBriefs)
+      .where(kosullar.length > 0 ? and(...kosullar) : undefined)
       .orderBy(desc(dailyBriefs.briefDate), desc(dailyBriefs.generatedAt))
       .limit(limit);
   } catch {
@@ -630,8 +658,6 @@ export type EditableStory = {
   eventDate: string;
   /** Hangi dillerde kaydı var — "TR", "EN". */
   locales: string[];
-  /** Rutin mi yazdı, panelden mi düzeltildi. */
-  generatedBy: string;
   updatedAt: Date | null;
 };
 
@@ -655,7 +681,6 @@ export async function getEditableStories(limit = 40): Promise<EditableStory[]> {
         locale: stories.locale,
         title: stories.title,
         eventDate: stories.eventDate,
-        generatedBy: stories.generatedBy,
         updatedAt: stories.updatedAt,
         publishedAt: stories.publishedAt,
       })
@@ -675,21 +700,138 @@ export async function getEditableStories(limit = 40): Promise<EditableStory[]> {
           title: row.title,
           eventDate: row.eventDate,
           locales: [rozet],
-          generatedBy: row.generatedBy,
           updatedAt: row.updatedAt,
         });
         continue;
       }
-      if (!held.locales.includes(rozet)) held.locales.push(rozet);
+      if (!held.locales.includes(rozet)) {
+        held.locales.push(rozet);
+        /* SIRA SABİT: TR önce. Diziye ekleme sırası yayın zamanından
+           geliyordu ve aynı listede bir satır "TR EN", bir sonraki "EN TR"
+           yazıyordu — okuyan göz sıranın bir anlamı olduğunu sanıyor. */
+        held.locales.sort((a, b) => (a === "TR" ? -1 : b === "TR" ? 1 : 0));
+      }
       if (row.locale === "tr") held.title = row.title;
-      /* En son dokunulan sürüm künyeyi belirliyor: bir dili panelden
-         düzeltmek satırın "elden geçti" demesi için yeter. */
-      if (row.updatedAt && (!held.updatedAt || row.updatedAt > held.updatedAt)) {
+      /* İki dilden en son dokunulanın zamanı satırın zamanı: yazının bir
+         yerine dokunulmuşsa satır bunu göstermeli. KÜNYE (`generated_by`)
+         BURADA OKUNMUYOR — panelden düzeltme o alanı hiç değiştirmiyor ve
+         "elden geçti" rozeti bir dönem ondan besleniyordu, yani hiç
+         çizilmiyordu. Doğru kaynak `getAdminEditedKeys`. */
+      if (
+        row.updatedAt &&
+        (!held.updatedAt || row.updatedAt > held.updatedAt)
+      ) {
         held.updatedAt = row.updatedAt;
-        held.generatedBy = row.generatedBy;
       }
     }
     return [...bySlug.values()].slice(0, limit);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Panelden en az bir kez düzeltilmiş kayıtların anahtarları.
+ *
+ * KÜNYE DEĞİL, İZ. `generatedBy` sütunu bilerek dokunulmadan duruyor —
+ * "yazıyı yine rutin yazdı, insan yalnızca elden geçirdi" (gerekçe
+ * `lib/content-write.ts`te) ve o sütun rutin durduğunda ilk bakılan yer.
+ * Ama listede "buna elle dokunulmuş" demenin bir yolu olmalıydı ve bir dönem
+ * `generatedBy === "admin"` diye yazıldı: HİÇBİR ZAMAN DOĞRU OLMAYAN bir
+ * koşul, çünkü upsert'ün `set` bloğunda o alan yok. Rozet ekranda hiç
+ * çizilmiyordu.
+ *
+ * Doğru kaynak sürüm tablosu: `replacedBy` alanı, o fotoğrafın ÜZERİNE
+ * kimin yazdığını söylüyor. "admin" satırı varsa panelden düzeltilmiştir.
+ * Tek sorgu, `cache()` sarmalı — aynı sayfadaki iki liste de aynı turu
+ * paylaşıyor.
+ */
+export const getAdminEditedKeys = cache(
+  async function getAdminEditedKeys(): Promise<Set<string>> {
+    try {
+      const rows = await db
+        .selectDistinct({ slug: storyRevisions.slug })
+        .from(storyRevisions)
+        .where(eq(storyRevisions.replacedBy, "admin"));
+      return new Set(rows.map((row) => row.slug));
+    } catch {
+      return new Set();
+    }
+  },
+);
+
+export type EditableBrief = {
+  briefDate: string;
+  locale: string;
+  period: string;
+  headline: string;
+  bodyMd: string;
+  generatedBy: string;
+  generatedAt: Date;
+};
+
+/**
+ * Tek bir bülten kaydı — editörün okuduğu satır.
+ *
+ * `getBriefByDate` KULLANILAMAZ: o okuma tarafının fonksiyonu ve istenen dil
+ * yoksa BAŞKA bir dildeki kayda düşüyor ("çevirisi yoksa orijinali göster"
+ * kuralı). Editörde bu sessiz bir veri kaybı olurdu — İngilizceyi düzenlemek
+ * için açılan sayfa Türkçe metni yükler, kaydet denince Türkçe metin
+ * İngilizce satırın üzerine yazılırdı. Burada eşleşme ÜÇÜ DE TAM: tarih,
+ * dil, dönem. Kayıt yoksa `null` ve sayfa 404 veriyor.
+ */
+export async function getBriefForEdit(
+  briefDate: string,
+  locale: string,
+  period: string,
+): Promise<EditableBrief | null> {
+  try {
+    const [row] = await db
+      .select({
+        briefDate: dailyBriefs.briefDate,
+        locale: dailyBriefs.locale,
+        period: dailyBriefs.period,
+        headline: dailyBriefs.headline,
+        bodyMd: dailyBriefs.bodyMd,
+        generatedBy: dailyBriefs.generatedBy,
+        generatedAt: dailyBriefs.generatedAt,
+      })
+      .from(dailyBriefs)
+      .where(
+        and(
+          eq(dailyBriefs.briefDate, briefDate),
+          eq(dailyBriefs.locale, locale),
+          eq(dailyBriefs.period, period),
+        ),
+      )
+      .limit(1);
+    return row ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Aynı bültenin ÖTEKİ dildeki kaydı var mı — dil geçiş düğmesi için.
+ *
+ * Var olmayan bir kayda giden düğme 404'e götürürdü; mercek editöründe de
+ * aynı kural işliyor.
+ */
+export async function briefLocalesFor(
+  briefDate: string,
+  period: string,
+): Promise<string[]> {
+  try {
+    const rows = await db
+      .select({ locale: dailyBriefs.locale })
+      .from(dailyBriefs)
+      .where(
+        and(
+          eq(dailyBriefs.briefDate, briefDate),
+          eq(dailyBriefs.period, period),
+        ),
+      );
+    return rows.map((row) => row.locale);
   } catch {
     return [];
   }
@@ -761,37 +903,39 @@ export async function getPublishRhythm(weeks = 8): Promise<PublishRhythm> {
   try {
     const [briefRows, storyRows, analysisRows, holidays, firstRow] =
       await Promise.all([
-      db
-        .select({ day: dailyBriefs.briefDate, period: dailyBriefs.period })
-        .from(dailyBriefs)
-        .where(gte(dailyBriefs.briefDate, ilkGun))
-        .groupBy(dailyBriefs.briefDate, dailyBriefs.period),
-      db
-        .select({
-          day: sql<string>`(${stories.publishedAt} at time zone 'America/New_York')::date::text`,
-          n: countDistinct(stories.slug),
-        })
-        .from(stories)
-        .groupBy(sql`(${stories.publishedAt} at time zone 'America/New_York')::date`),
-      db
-        .select({
-          day: sql<string>`(${earningsAnalyses.publishedAt} at time zone 'America/New_York')::date::text`,
-          n: countDistinct(
-            sql`${earningsAnalyses.symbol} || ':' || ${earningsAnalyses.period}`,
+        db
+          .select({ day: dailyBriefs.briefDate, period: dailyBriefs.period })
+          .from(dailyBriefs)
+          .where(gte(dailyBriefs.briefDate, ilkGun))
+          .groupBy(dailyBriefs.briefDate, dailyBriefs.period),
+        db
+          .select({
+            day: sql<string>`(${stories.publishedAt} at time zone 'America/New_York')::date::text`,
+            n: countDistinct(stories.slug),
+          })
+          .from(stories)
+          .groupBy(
+            sql`(${stories.publishedAt} at time zone 'America/New_York')::date`,
           ),
-        })
-        .from(earningsAnalyses)
-        .groupBy(
-          sql`(${earningsAnalyses.publishedAt} at time zone 'America/New_York')::date`,
-        ),
-      getHolidays(),
-      /* Izgara sekiz haftalık ama arşiv daha eskiye gidiyor; tarih
+        db
+          .select({
+            day: sql<string>`(${earningsAnalyses.publishedAt} at time zone 'America/New_York')::date::text`,
+            n: countDistinct(
+              sql`${earningsAnalyses.symbol} || ':' || ${earningsAnalyses.period}`,
+            ),
+          })
+          .from(earningsAnalyses)
+          .groupBy(
+            sql`(${earningsAnalyses.publishedAt} at time zone 'America/New_York')::date`,
+          ),
+        getHolidays(),
+        /* Izgara sekiz haftalık ama arşiv daha eskiye gidiyor; tarih
          seçicinin alt sınırı ızgaranın değil ARŞİVİN başlangıcı olmalı,
          yoksa seçici veri olan günleri dışarıda bırakır. */
-      db
-        .select({ first: sql<string | null>`min(${dailyBriefs.briefDate})` })
-        .from(dailyBriefs),
-    ]);
+        db
+          .select({ first: sql<string | null>`min(${dailyBriefs.briefDate})` })
+          .from(dailyBriefs),
+      ]);
 
     const daily = new Set(
       briefRows.filter((r) => r.period === "daily").map((r) => r.day),
@@ -800,7 +944,9 @@ export async function getPublishRhythm(weeks = 8): Promise<PublishRhythm> {
       briefRows.filter((r) => r.period === "weekly").map((r) => r.day),
     );
     const storyByDay = new Map(storyRows.map((r) => [r.day, Number(r.n)]));
-    const analysisByDay = new Map(analysisRows.map((r) => [r.day, Number(r.n)]));
+    const analysisByDay = new Map(
+      analysisRows.map((r) => [r.day, Number(r.n)]),
+    );
     const tatil = new Set(holidays.map((h) => h.date));
 
     const out: PublishDay[] = [];
@@ -877,10 +1023,14 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
      gösteriyor, diğer beşi eskisi gibi yerinde. */
   const probes = await Promise.allSettled([
     db
-      .select({ furthest: sql<string | null>`max(${earningsCalendar.reportDate})` })
+      .select({
+        furthest: sql<string | null>`max(${earningsCalendar.reportDate})`,
+      })
       .from(earningsCalendar),
     db
-      .select({ furthest: sql<string | null>`max(${economicEvents.eventDate})` })
+      .select({
+        furthest: sql<string | null>`max(${economicEvents.eventDate})`,
+      })
       .from(economicEvents)
       .where(eq(economicEvents.importance, "high")),
     newsPulse(),
@@ -912,12 +1062,16 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
        rutini durmuş sanır. */
     db
       .select({
-        latest: sql<string | null>`max(greatest(${stories.publishedAt}, ${stories.updatedAt}))`,
+        latest: sql<
+          string | null
+        >`max(greatest(${stories.publishedAt}, ${stories.updatedAt}))`,
       })
       .from(stories),
     db
       .select({
-        latest: sql<string | null>`max(greatest(${earningsAnalyses.publishedAt}, ${earningsAnalyses.updatedAt}))`,
+        latest: sql<
+          string | null
+        >`max(greatest(${earningsAnalyses.publishedAt}, ${earningsAnalyses.updatedAt}))`,
       })
       .from(earningsAnalyses),
     /* Ölçüm aralığı da buraya alındı: fonksiyonun kendi yorumu "ALTI SONDA
@@ -1034,7 +1188,8 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push({
       label: "Makro Seriler",
       group: "data",
-      value: hours === null ? "Kayıt Yok" : `${Math.floor(hours / 24)} Gün Önce`,
+      value:
+        hours === null ? "Kayıt Yok" : `${Math.floor(hours / 24)} Gün Önce`,
       tone: hours === null ? "down" : hours <= 48 ? "ok" : "warn",
       note: "en uzun süredir güncellenmeyen serinin son güncellenme zamanı",
     });
@@ -1093,7 +1248,9 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push({
       label: "Haftalık Bülten",
       group: "routine",
-      value: haftalikVar ? "Bu Hafta Yazıldı" : (haftalik?.latest ?? "Kayıt Yok"),
+      value: haftalikVar
+        ? "Bu Hafta Yazıldı"
+        : (haftalik?.latest ?? "Kayıt Yok"),
       tone: haftalikVar ? "ok" : pazartesiGecti ? "warn" : "idle",
       note: haftalikVar
         ? `${capa} haftası · son yazma ${agoText(haftalik?.wrote ?? null)}`
@@ -1159,7 +1316,8 @@ function failed(label: string): HealthCheck {
 
 function daysBetween(from: string, to: string): number {
   return Math.round(
-    (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000,
+    (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
+      86_400_000,
   );
 }
 

@@ -6,9 +6,19 @@ import { TabBar, TabItem } from "@/components/ui/primitives";
 /**
  * Panelin sekme çubuğu.
  *
- * Layout'ta duruyor, beş sayfada tekrarlanmıyor: bilançolar ekranındaki
- * sekmelerin aksine burada layout altında "sekme istemeyen" bir detay
- * sayfası yok — panelin bütün adresleri sekmelerden biri.
+ * Layout'ta duruyor, altı sayfada tekrarlanmıyor.
+ *
+ * DETAY SAYFALARI DA SEKMENİN ALTINDA. Yazı editörleri
+ * (`/admin/yazilar/mercek/...`, `/admin/yazilar/bulten/...`) bilançolar
+ * ekranındaki detay sayfasının aksine sekme çubuğunu KORUYOR: orada sekme
+ * paylaşılan bir layout'ta değil ve detay onu basmıyor, burada ise panelin
+ * gezinmesi tek bir yerde ve editörden başka bir bölüme geçmenin yolu bu.
+ * Etkin sekme `startsWith` ile bulunuyor, yani editör açıkken de "Yazılar"
+ * vurgulu duruyor.
+ *
+ * İÇERİK VE YAZILAR AYRI İKİ SEKME: ilki ölçüyor (kaç yazı, hangi çeviri
+ * eksik, ritim), ikincisi değiştiriyor. Bölünmenin gerekçesi
+ * `app/admin/yazilar/page.tsx` başındaki yorumda.
  */
 
 const TABS = [
@@ -16,6 +26,7 @@ const TABS = [
   { href: "/admin/trafik", label: "Trafik" },
   { href: "/admin/uyeler", label: "Üyeler" },
   { href: "/admin/icerik", label: "İçerik" },
+  { href: "/admin/yazilar", label: "Yazılar" },
   { href: "/admin/sistem", label: "Sistem" },
 ] as const;
 

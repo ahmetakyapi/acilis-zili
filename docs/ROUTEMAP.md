@@ -10,7 +10,7 @@
 > rota eksikti ve okuyan onu güncel sanıyordu. İki yerde tutulan bir liste er geç
 > birbirinden ayrı düşer. Rota tablosu artık yalnızca README'de.
 
-**Son güncelleme:** 2026-08-26
+**Son güncelleme:** 2026-08-29
 **Durum:** 🟢 CANLI — https://acilis-zili.vercel.app
 
 ---
@@ -19,9 +19,9 @@
 
 | | |
 |---|---|
-| Sayfa rotası | 29 (`/en` önekiyle ikinci bir adreste daha) |
+| Sayfa rotası | 32 (`/en` önekiyle ikinci bir adreste daha) |
 | API ucu | 14 |
-| Veritabanı tablosu | 15 · 15 migration |
+| Veritabanı tablosu | 16 · 17 migration |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB |
 | Ortam değişkeni | 12 (`.env.example`) |
 | Cron | `/api/cron/daily` — hafta içi 10:30 UTC (13:30 TR) |
@@ -71,6 +71,14 @@ gelsin.
   aldı ve hemen geri alındı; görsel dili metinden çizilen `:::` blokları.
 - **Yönetim yetkisi ortam değişkeninde değil veritabanında**, ve yetkisiz
   istek 404 görüyor — "yetkiniz yok" demek panelin varlığını ele verirdi.
+- **Panelden YENİ içerik üretilmiyor.** Yazılar ekranı (`/admin/yazilar`) var
+  olan mercek yazısını ve bülteni düzeltiyor; yeni kayıt yazmak rutinlerin
+  işi. İki giriş de aynı doğrulamadan ve aynı upsert'ten geçiyor
+  (`lib/content-write.ts`) — ikinci bir yazma yolu açmak bir dönem bu işi
+  tümüyle engelleyen gerekçenin kendisiydi.
+- **Bilanço analizi panelden düzenlenmiyor.** Analiz serbest metin değil, on
+  beş alanlı yapılandırılmış bir kayıt; bir metin kutusuna indirmek
+  düzenlemek değil bozmak olurdu. Eksikleri İçerik ekranı listeliyor.
 
 ---
 

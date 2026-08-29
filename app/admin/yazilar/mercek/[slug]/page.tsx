@@ -9,7 +9,7 @@ import { listStoryRevisions } from "@/app/actions/content";
 import { pageMetadata } from "@/lib/page-meta";
 
 export const generateMetadata = pageMetadata({
-  path: "/admin/icerik",
+  path: "/admin/yazilar",
   robots: { index: false, follow: false },
   tr: { title: "Yazıyı Düzenle", description: "Yönetim." },
   en: { title: "Edit Story", description: "Admin." },
@@ -24,10 +24,11 @@ export const generateMetadata = pageMetadata({
  *
  * DİL ADRESTE DEĞİL SORGUDA (`?dil=en`). Aynı slug iki dilde iki ayrı satır
  * ve ikisi ayrı ayrı düzenlenebilmeli; slug'ı dille birleştirmek adresi
- * `/admin/icerik/leopold-tasfiyesi-en` gibi sahte bir kimliğe çevirirdi.
+ * `/admin/yazilar/mercek/leopold-tasfiyesi-en` gibi sahte bir kimliğe
+ * çevirirdi.
  */
 export default async function StoryEditorPage(
-  props: PageProps<"/admin/icerik/[slug]">,
+  props: PageProps<"/admin/yazilar/mercek/[slug]">,
 ) {
   await requireAdmin();
 
@@ -45,11 +46,11 @@ export default async function StoryEditorPage(
   return (
     <div className="flex flex-col gap-6">
       <Link
-        href="/admin/icerik"
+        href="/admin/yazilar"
         className="inline-flex min-h-11 w-fit items-center gap-1.5 text-base font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-9"
       >
         <CaretLeft weight="bold" size={15} />
-        İçerik Ekranına Dön
+        Yazılara Dön
       </Link>
 
       <AdminPanel>
@@ -60,7 +61,7 @@ export default async function StoryEditorPage(
                yoksa bağlantı hiç çizilmiyor — var olmayan bir kayda giden
                düğme 404'e götürürdü. */
             <Link
-              href={`/admin/icerik/${slug}${locale === "en" ? "" : "?dil=en"}`}
+              href={`/admin/yazilar/mercek/${slug}${locale === "en" ? "" : "?dil=en"}`}
               className="inline-flex min-h-11 items-center rounded-(--radius-md) border border-line bg-surface px-3.5 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-9"
             >
               {locale === "en" ? "Türkçesine Geç" : "İngilizcesine Geç"}

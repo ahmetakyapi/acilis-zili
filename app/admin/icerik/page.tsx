@@ -1,40 +1,35 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import {
-  AdminCell,
   AdminPanel,
   AdminPanelTitle,
-  AdminRow,
-  AdminTable,
   StatBox,
   StatGrid,
 } from "@/components/admin/AdminUI";
 import { Skeleton } from "@/components/ui/primitives";
-import {
-  getContentSummary,
-  getEditableStories,
-  getPublishRhythm,
-  getRecentBriefs,
-} from "@/lib/admin-data";
+import { getContentSummary, getPublishRhythm } from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/admin";
-import { agoLabel } from "@/lib/admin-format";
 import { formatEtDateShort } from "@/lib/utils";
 import { todayEt } from "@/lib/market-hours";
 import { analysisHref } from "@/lib/analysis";
 import { PublishGrid } from "@/components/admin/PublishGrid";
 
 /**
- * İçerik.
+ * İçerik — yayının SAĞLIK PANOSU.
  *
- * Bu ekran yayın YAPMIYOR ve bilerek: bülten, mercek yazısı ve bilanço
- * analizi `/api/brief`, `/api/mercek`, `/api/analiz` uçlarından yazılıyor ve
- * o uçları claude.ai rutinleri çağırıyor (docs/claude-rutinler.md). İkinci
- * bir yazma yolu açmak iki ayrı doğrulama, iki ayrı biçim kontrolü ve er geç
- * birbirinden ayrı düşen iki kod yolu demek.
+ * Bu ekran metin DEĞİŞTİRMİYOR ve bu bir bölünmenin sonucu: düzenleme
+ * Yazılar ekranına taşındı (`/admin/yazilar`). İkisi bir dönem tek sayfadaydı
+ * ve o sayfa aynı anda hem ölçüyor hem düzenletiyordu; iki farklı iş için
+ * açılan tek ekran, ikisinde de uzun ve dağınık kalıyordu.
  *
- * Panelin işi EKSİĞİ GÖSTERMEK: hangi yazının İngilizcesi yok, hangi analiz
- * grafiksiz kalmış, bülten kaç gündür yazılmamış. Rutin bu listeyi kendi
- * ucundan zaten okuyor; buradaki insanın bakabildiği hâli.
+ * Burada kalan iş EKSİĞİ GÖSTERMEK: hangi yazının İngilizcesi yok, hangi
+ * analiz grafiksiz kalmış, bülten hangi iş gününde yazılmamış. Rutin bu
+ * listeyi kendi ucundan zaten okuyor; buradaki insanın bakabildiği hâli.
+ *
+ * YENİ İÇERİK YİNE UÇLARDAN geliyor: `/api/brief`, `/api/mercek`,
+ * `/api/analiz` — onları claude.ai rutinleri çağırıyor
+ * (docs/claude-rutinler.md). Panel var olanı düzeltiyor ve ikisi de aynı
+ * doğrulamadan, aynı yazma yolundan geçiyor (`lib/content-write.ts`).
  */
 
 export default async function ContentPage() {
@@ -55,13 +50,19 @@ export default async function ContentPage() {
         <Rhythm />
       </Suspense>
 
-      <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
-        <Editable />
-      </Suspense>
-
-      <Suspense fallback={<Skeleton className="h-72 w-full rounded-xl" />}>
-        <Briefs />
-      </Suspense>
+      {/* DÜZENLEMENİN YOLU YAZILI. Sekme çubuğu "Yazılar"ı zaten gösteriyor
+          ama eksiği burada gören kişinin bir sonraki adımı orası; sekmeye
+          bakıp aradaki bağı kendi kurması gerekmesin. */}
+      <p className="text-small text-muted">
+        Var olan bir metni düzeltmek için{" "}
+        <Link
+          href="/admin/yazilar"
+          className="font-semibold text-primary transition-colors hover:text-primary-hover"
+        >
+          Yazılar
+        </Link>{" "}
+        ekranına geç — mercek yazıları ve bültenler oradan açılıyor.
+      </p>
     </div>
   );
 }
@@ -168,69 +169,6 @@ async function Rhythm() {
   );
 }
 
-async function Editable() {
-  const rows = await getEditableStories(40);
-
-  return (
-    <AdminPanel>
-      {/* PANELİN YÖNETTİĞİ ŞEY BURADA LİSTELENİYOR. Ekran bugüne kadar
-          içeriği SAYIYORDU; hangi yazının var olduğunu ve ona nasıl
-          dokunulacağını söylemiyordu. Satırdan editöre, editörden yayındaki
-          sayfaya gidiliyor. */}
-      <AdminPanelTitle hint="En Yeniden Eskiye · Satıra Basınca Editör Açılır">
-        Mercek Yazıları
-      </AdminPanelTitle>
-
-      {rows.length === 0 ? (
-        <p className="py-8 text-center text-base text-muted">
-          Henüz mercek yazısı yok.
-        </p>
-      ) : (
-        <ul className="flex flex-col divide-y divide-line-soft">
-          {rows.map((row) => (
-            <li key={row.slug}>
-              <Link
-                href={`/admin/icerik/${row.slug}`}
-                className="flex min-h-11 flex-col gap-1 rounded-(--radius-sm) px-2 py-3 transition-colors hover:bg-surface-elevated sm:flex-row sm:items-center sm:gap-4"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-base font-semibold text-strong">
-                    {row.title}
-                  </span>
-                  <span className="numeral block truncate text-tiny text-muted">
-                    {row.slug}
-                  </span>
-                </span>
-                <span className="flex shrink-0 items-center gap-2">
-                  {/* Diller rozette: iki dilli mi, tek dilde mi kalmış —
-                      eksik çeviri listesi ayrıca var ama burada da bir
-                      bakışta görünüyor. */}
-                  {row.locales.map((dil) => (
-                    <span
-                      key={dil}
-                      className="numeral rounded-full bg-primary-wash px-2 py-0.5 text-nano font-bold text-primary-ink"
-                    >
-                      {dil}
-                    </span>
-                  ))}
-                  {row.generatedBy === "admin" && (
-                    <span className="rounded-full bg-surface-elevated px-2 py-0.5 text-nano font-semibold text-muted">
-                      Elden Geçti
-                    </span>
-                  )}
-                  <span className="numeral w-24 text-right text-tiny text-muted">
-                    {formatEtDateShort(row.eventDate, "tr")}
-                  </span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </AdminPanel>
-  );
-}
-
 async function Gaps() {
   const content = await getContentSummary();
 
@@ -279,9 +217,7 @@ async function Gaps() {
         <AdminPanel key={section.title}>
           <AdminPanelTitle hint={section.hint}>{section.title}</AdminPanelTitle>
           {section.items.length === 0 ? (
-            <p className="py-6 text-center text-base text-muted">
-              Eksik yok.
-            </p>
+            <p className="py-6 text-center text-base text-muted">Eksik yok.</p>
           ) : (
             /* YİRMİ SATIR TAVANI KALKTI. Fazlası "…ve N tane daha" diye
                yazılıyordu ve o satır hiçbir yere gitmiyordu: eksik listesi
@@ -305,64 +241,5 @@ async function Gaps() {
         </AdminPanel>
       ))}
     </div>
-  );
-}
-
-async function Briefs() {
-  const rows = await getRecentBriefs(16);
-
-  return (
-    <AdminPanel>
-      <AdminPanelTitle hint="En Yeniden Eskiye · Yazan Rutin Künyede">
-        Son Bültenler
-      </AdminPanelTitle>
-
-      {rows.length === 0 ? (
-        <p className="py-8 text-center text-base text-muted">
-          Henüz bülten yazılmamış.
-        </p>
-      ) : (
-        /* "YAZAN" SÜTUNU EKLENDİ. Panelin kendi ipucu "yazan rutin künyede"
-           diye söz veriyordu ama tablo o sütunu hiç basmıyordu — `generatedBy`
-           sorguda zaten çekiliyordu. Bültenin rutinden mi yoksa kural tabanlı
-           yedekten mi geldiği, rutin durduğunda ilk bakılacak şey. */
-        <AdminTable
-          label="Bülten arşivi"
-          head={["Tarih", "Başlık", "Dil", "Dönem", "Yazan", "Yazılma"]}
-        >
-          {rows.map((row) => (
-            <AdminRow key={`${row.briefDate}-${row.locale}-${row.period}`}>
-              {/* Tarih hücresi kendi bültenine gidiyor: eksiği ya da tuhaf
-                  bir başlığı gören yönetici kaydı doğrudan açabiliyor. */}
-              <AdminCell numeral strong>
-                <Link
-                  href={`/bulten?${row.period === "weekly" ? "tur=haftalik&" : ""}tarih=${row.briefDate}`}
-                  className="transition-colors hover:text-primary"
-                >
-                  {formatEtDateShort(row.briefDate, "tr")}
-                </Link>
-              </AdminCell>
-              <AdminCell>
-                <span className="line-clamp-1">{row.headline}</span>
-              </AdminCell>
-              <AdminCell>{row.locale === "en" ? "EN" : "TR"}</AdminCell>
-              <AdminCell>
-                {row.period === "weekly" ? "Haftalık" : "Günlük"}
-              </AdminCell>
-              <AdminCell>
-                {row.generatedBy === "claude" ? "Rutin" : "Kural Tabanlı"}
-              </AdminCell>
-              <AdminCell align="right">{agoLabel(row.generatedAt)}</AdminCell>
-            </AdminRow>
-          ))}
-        </AdminTable>
-      )}
-
-      <p className="mt-4 border-t border-line pt-3 text-small text-muted">
-        Yazma yolu tek: rutinler <code>/api/brief</code>,{" "}
-        <code>/api/mercek</code> ve <code>/api/analiz</code> uçlarına yazıyor.
-        Talimatlar <code>docs/claude-rutinler.md</code> içinde.
-      </p>
-    </AdminPanel>
   );
 }

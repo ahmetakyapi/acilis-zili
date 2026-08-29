@@ -126,8 +126,10 @@ istenmiyor.
 ### Hesap ve yönetim
 
 `/giris` · `/kayit` · `/favoriler` · `/ayarlar` · `/menu` · `/kvkk`, ve kabuğun
-dışında beş yönetim ekranı (`/admin`, `/admin/icerik`, `/admin/sistem`,
-`/admin/trafik`, `/admin/uyeler`). Yönetim yetkisi ortam değişkeninde değil
+dışında altı yönetim ekranı (`/admin`, `/admin/trafik`, `/admin/uyeler`,
+`/admin/icerik`, `/admin/yazilar`, `/admin/sistem`). Yazılar ekranından iki
+editör açılıyor: `/admin/yazilar/mercek/[slug]` ve
+`/admin/yazilar/bulten/[tarih]`. Yönetim yetkisi ortam değişkeninde değil
 veritabanında; yetkisiz istek **404** görür — "yetkiniz yok" demek panelin
 varlığını ele verirdi.
 

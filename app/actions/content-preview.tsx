@@ -2,6 +2,7 @@
 
 import { requireAdmin } from "@/lib/admin";
 import { ArticleBody } from "@/components/article/ArticleBody";
+import { BriefBody } from "@/components/today/BriefBody";
 import { isLocale } from "@/lib/i18n/config";
 
 /**
@@ -25,5 +26,21 @@ import { isLocale } from "@/lib/i18n/config";
 export async function previewStoryBody(markdown: string, locale: string) {
   await requireAdmin();
   const dil = isLocale(locale) ? locale : "tr";
-  return <ArticleBody markdown={markdown} locale={dil} />;
+  return <ArticleBody markdown={markdown} locale={dil} chartPlaceholder />;
+}
+
+/**
+ * Bülten taslağının önizlemesi.
+ *
+ * Mercekten AYRI BİR ÇİZİCİ, çünkü bülten ayrı bir biçimlendiriciyle
+ * yazılıyor: `BriefBody` tam markdown değil, brifingin kullandığı alt küme
+ * (kalın, "- " maddesi, `## Başlık`) ve maddeleri 01/02/03 diye numaralıyor.
+ * Aynı metni `ArticleBody`ye vermek, sitede görünmeyen bir çizim gösterirdi.
+ *
+ * `collapsible={false}`: katlama okuyucu için, editör için değil — yazının
+ * tamamı görünmeli. `size="page"` de bülten sayfasının kendi ölçüsü.
+ */
+export async function previewBriefBody(markdown: string) {
+  await requireAdmin();
+  return <BriefBody markdown={markdown} collapsible={false} size="page" />;
 }

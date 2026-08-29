@@ -611,11 +611,28 @@ export function ArticleBody({
   markdown,
   locale = "tr",
   className,
+  chartPlaceholder = false,
 }: {
   markdown: string;
   /** Etiketi yazılmamış `:::` kutularının varsayılan başlığı bundan gelir. */
   locale?: string;
   className?: string;
+  /**
+   * `::: grafik` bloklarını GERÇEK grafik yerine künyeli bir yer tutucu
+   * olarak çizer — yalnızca yönetim panelinin önizlemesi kullanıyor.
+   *
+   * NEDEN: önizleme bir sunucu eyleminin döndürdüğü JSX ve o ağaçtaki
+   * `ArticleChart`, `PriceChartLazy` adında bir İSTEMCİ bileşeni yüklüyor.
+   * Sunucu eyleminin istemci manifestinde o modül bulunmuyor ve React
+   * "Could not find the module … in the React Client Manifest" diye
+   * düşüyordu — ölçüldü, hata birebir buydu ve grafik bloğu taşıyan her
+   * yazının önizlemesi bu yüzden açılmıyordu.
+   *
+   * Yer tutucu bir kayıp değil: editörün işi metni denetlemek ve grafiğin
+   * içeriği metinden gelmiyor, sembol ile aralıktan geliyor — ikisi de
+   * kutunun üstünde yazıyor. Yayındaki sayfada gerçek grafik çiziliyor.
+   */
+  chartPlaceholder?: boolean;
 }) {
   const blocks = parseBlocks(markdown, locale);
 
@@ -1062,6 +1079,26 @@ export function ArticleBody({
           }
 
           case "chart":
+            if (chartPlaceholder) {
+              return (
+                <figure
+                  key={key}
+                  className="m-0 flex flex-col gap-2 rounded-(--radius-lg) border border-dashed border-line-strong bg-surface-sunken px-4 py-6 text-center"
+                >
+                  <span className="numeral text-base font-bold text-strong">
+                    {block.symbol} · {block.range}
+                  </span>
+                  <span className="text-small text-muted">
+                    Grafik yayındaki sayfada çizilir
+                  </span>
+                  {block.caption && (
+                    <figcaption className="text-small text-body">
+                      {block.caption}
+                    </figcaption>
+                  )}
+                </figure>
+              );
+            }
             return (
               <ArticleChart
                 key={key}
