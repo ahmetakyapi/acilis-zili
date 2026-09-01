@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "app/globals.css"
+        ],
+        "createdAt": "2026-09-01T18:46:16.044Z",
+        "reason": "CLAUDE.md'de belgeli istisna: .display-ink token'lanmis, @supports korumali, solid fallback'li (color: var(--text-strong)), descender duzeltmeli ve yalnizca kisa display metninde. Proje kural dosyasi bunu ekosistem yasagina acik istisna olarak kaydediyor."
+      }
+    ]
+  }
+}

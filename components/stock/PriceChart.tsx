@@ -370,6 +370,42 @@ export function PriceChart({
     });
     chartRef.current = chart;
 
+    /* `lastValueVisible: false` — EKSENDEKİ ROZET DE KAPALI, çizgi kadar.
+       Yukarıdaki `quote` künyesi "ekranda yan yana duran iki fiyatın
+       birbirini tutmaması okuyucu için hata demek" diyor ve büyük punto
+       düzeltilmişti (`shownPrice` kotasyondan geliyor). Ama kütüphanenin
+       fiyat eksenine bastığı SON DEĞER ROZETİ ayrı bir ayar ve varsayılanı
+       açık: o rozet seri verisinden, yani son BARIN KAPANIŞINDAN besleniyor.
+       Sonuç ekranda görüldü — başlık 324,79 yazarken rozet 325,12 diyordu,
+       aralarında birkaç santim var. `priceLineVisible` yalnızca yatay
+       kesikli çizgiyi kapatıyor, rozeti değil; ikisi ayrı ayrı verilmeli.
+
+       Mum dalında İKİSİ DE eksikti, yani orada hem çizgi hem rozet
+       çıkıyordu. Aynı sayı zaten sayfa başlığında ve grafiğin üstünde
+       yazılı; eksene üçüncü bir kopyasını basmanın okuyucuya kattığı şey
+       yok, tutarsızlık riski ise net.
+
+       "AMA ROZETTEKİ DAHA GÜNCEL DEĞİL Mİ, ONU ÜSTE YAZSAK?" — hayır, tam
+       tersi. Ölçüldü:
+         · Üstteki fiyat `latestTrade.p`, yani SON İŞLEM
+           (`lib/providers/alpaca.ts` — snapshot okuması).
+         · Rozet son TAMAMLANMIŞ dakika barının kapanışı; bar kapanmadan
+           değer üretmediği için tanımı gereği geriden gelir.
+         · Önbellek de aynı yöne çalışıyor: seans içinde kotasyon 15 sn,
+           1G barları 300 sn (`lib/market-hours.ts` · quoteTtlSeconds /
+           candleTtlSeconds). İkisi de aynı Alpaca beslemesinden ve aynı
+           SIP gecikmesiyle geliyor; birbirlerine göre üstteki önde.
+       Belirtisi de buydu: rozet iki ayrı çekimde bir kez üstte bir kez
+       altta çıkıyordu. Sistematik olarak ileri olsa hep aynı yöne saparadı;
+       iki yöne birden sapmak geriden gelen bir okumanın imzası.
+       Rozeti üste yazmak, ESKİ veriyi en büyük puntoya koymak olurdu —
+       CLAUDE.md "Veri dürüstlüğü" § 2 tam olarak bunu yasaklıyor.
+
+       1G DIŞINDAKİ ARALIKLARDA DAHA DA KÖTÜ: orada bar günlük, yani rozet
+       günlük kapanış gösterir ve canlı fiyattan iyice uzaklaşır. Üstelik
+       aralık düğmesi `/api/chart`ten yeni bar çekerken kotasyonu
+       tazelemiyor, yani o dar durumda iki sayının kaynağı da zaman damgası
+       da ayrışıyor. Rozetin gitmesi orada en çok işe yarıyor. */
     let series: ISeriesApi<SeriesType>;
     if (mode === "area") {
       series = chart.addSeries(AreaSeries, {
@@ -378,6 +414,7 @@ export function PriceChart({
         topColor: lineToRgba(line, 0.16),
         bottomColor: lineToRgba(line, 0),
         priceLineVisible: false,
+        lastValueVisible: false,
         crosshairMarkerRadius: 5,
         crosshairMarkerBorderColor: cssVar("--surface"),
         crosshairMarkerBackgroundColor: line,
@@ -395,6 +432,8 @@ export function PriceChart({
         wickUpColor: up,
         wickDownColor: down,
         borderVisible: false,
+        priceLineVisible: false,
+        lastValueVisible: false,
       });
       series.setData(
         bars.map((bar) => ({

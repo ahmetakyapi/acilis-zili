@@ -13,8 +13,15 @@ import "./globals.css";
  */
 /**
  * Tek aile — Schibsted Grotesk. Manşetten kicker'a kadar her rol bu ailenin
- * ağırlık basamaklarıyla ayrışır; ikinci bir aile yok. SAYILAR DA aynı aile:
- * gövdede açık `tnum` sütunları hizalar, ayrı bir mono yüklenmez.
+ * ağırlık basamaklarıyla ayrışır; ikinci bir aile yok. SAYILAR DA aynı aile,
+ * ayrı bir mono yüklenmez.
+ *
+ * Bu künye bir dönem "gövdede açık `tnum` sütunları hizalar" diyordu ve
+ * ARTIK YANLIŞ: `tnum` kökte KAPALI (bkz. `app/globals.css` § Sayısal
+ * okumalar). Schibsted Grotesk'te `tnum` virgülü ve noktayı da rakam
+ * genişliğine çekiyor, "8,97" ekranda "8 , 97" diye çıkıyordu. Cümle
+ * Archivo döneminden kalmıştı; iki dosya birbirine zıt şey söylüyordu.
+ * Hiza artık sütunların SAĞA yaslanmasıyla kuruluyor.
  *
  * Önce Archivo vardı. Haber-editoryal kökenli bu grotesk sıkı başlıkta daha
  * karakterli, 400'de gövde metni olarak daha sessiz; ekosistemde Mimio da

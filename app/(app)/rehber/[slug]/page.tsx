@@ -21,9 +21,29 @@ import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 /**
  * Rehber yazısı.
  *
- * Metin sütunu kasten dar (68ch): uzun satır okumayı yorar ve bu sayfanın
- * tek işi okutmak. Yan kolon yok — dikkat dağıtacak bir ölçüm kartı burada
- * bilinçli olarak bulunmuyor.
+ * Metin sütunu kasten dar: uzun satır okumayı yorar ve bu sayfanın tek işi
+ * okutmak. Yan kolon yok — dikkat dağıtacak bir ölçüm kartı burada bilinçli
+ * olarak bulunmuyor.
+ *
+ * KÜNYE BİR DÖNEM "(68ch)" DİYORDU, O SAYI YANLIŞTI. `<article>` 720
+ * pikselken Chrome'da ölçülen değer satır başına 97 KARAKTER (rehber 97,3 ·
+ * mercek 98,3). Fark `ch` biriminden geliyor: `ch` "0" glifinin genişliği,
+ * ortalama harfin değil, ve Schibsted Grotesk'te "0" ortalama harften
+ * belirgin geniş. Yani 720px "85ch" görünüyor ama 97 karakter taşıyor.
+ * Sayı künyeden kaldırıldı; niyet ("dar tut") yerinde duruyor.
+ *
+ * DARALTMA DENENDİ VE GERİ ALINDI — dördüncü bir deneme yapılmasın.
+ * Düz metin 520 piksele çekilip veri blokları 720'de bırakıldı; ölçüm
+ * hedefi tutturuyordu (97 → 75,3 / 73,4) ama görsel sonuç beğenilmedi:
+ * metin 520'de bitip kutular 720'ye kadar gidince sağ kenar tırtıklı
+ * kalıyor ve kasıtlı bir editoryal düzenden çok hizasızlık gibi okunuyor.
+ * Ortalamak daha kötü: manşet 720'nin solunda, gövde 520'nin ortasında
+ * başlıyor ve sol kenar üç ayrı yerden iniyor.
+ * Bir daha denenecekse mesele ÖLÇÜ DEĞİL, iki kenarın da hizalı kalması:
+ * kapsayıcının kendisi daraltılmalı. O da bedava değil — `:::` bloklarının
+ * çok sütunlu düzenleri `sm:` (640px GÖRÜNÜM ALANI) sorgusuna bağlı, yani
+ * kap daralsa da o düzenler devrede kalıp sıkışıyor. Kap 600'de ölçüldü:
+ * bloklar 447/525/314 piksele düşüyor ve `akis` taşıyor.
  *
  * Sayfa sonunda müfredat gezinmesi var: rehber sıralı bir okuma listesi ve
  * bir yazıyı bitiren okuyucunun en olası sorusu "sırada ne var". İlişkili

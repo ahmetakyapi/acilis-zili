@@ -59,3 +59,7 @@ next-env.d.ts
 # Geçici ölçüm betikleri — puppeteer koşumları, tarama çıktıları.
 # Bir tanesi (.tmp-a11y.mjs) desen yokken commit'e sızmıştı.
 .tmp-*
+
+# impeccable hook'unun yerel önbelleği. `config.json` PAYLAŞILAN ayar
+# (display-ink istisnası) ve depoda durur; bu dosya makineye özel.
+.impeccable/hook.cache.json
