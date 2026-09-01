@@ -15,6 +15,19 @@ import { cn } from "@/lib/utils";
  * `relative z-10` ŞART: bu düğmelerin bulunduğu satır ve kartlarda yüzeyi
  * kaplayan mutlak bir bağlantı var (gövdenin tamamı hisse sayfasına gidiyor).
  * Katman verilmezse dokunuş her zaman o bağlantıya düşer ve takvim inmez.
+ *
+ * `download` ŞART VE BİR HATA DÜZELTMESİ. `RouteProgress` gezinme şeridini
+ * belge düzeyinde her `<a>` tıklamasında başlatıyor ve yalnızca dört şeyde
+ * atlıyor: `download`, `data-shallow`, `target` ve `#` ile başlayan adres
+ * (`components/layout/RouteProgress.tsx`). Bu bağlantı dördünü de
+ * taşımıyordu; oysa `/api/takvim` `Content-Disposition: attachment`
+ * döndürüyor, yani tarayıcı dosyayı indiriyor ve HİÇ GEZİNME OLMUYOR.
+ * Sonuç: şerit başlıyor, bitecek bir gezinme olmadığı için kendi kendine
+ * durmuyor ve 420 ms sonra çıkan "Yükleniyor" hapı `MAX_RUN` freni devreye
+ * girene kadar EKRANDA KALIYORDU — ölçüldü, 10 saniye. Kullanıcı takvim
+ * dosyasını indirmiş ama sayfa yükleniyormuş gibi duruyordu.
+ * `download` özniteliği bu depoda başka hiçbir yerde kullanılmıyordu;
+ * RouteProgress'teki kontrol yazılmış ama hiç takılmamıştı.
  */
 export function AddToCalendar({
   symbol,
@@ -36,6 +49,7 @@ export function AddToCalendar({
     return (
       <a
         href={href}
+        download
         /* Erişilebilir ad sembolü TAŞIR, balon taşımaz. Ekran okuyucu
            düğmeleri bağlamından koparıp liste hâlinde okuyabiliyor; orada
            "Takvime Ekle" tek başına hangi şirket olduğunu söylemiyor. Balon
@@ -67,6 +81,7 @@ export function AddToCalendar({
   return (
     <a
       href={href}
+      download
       className={cn(
         /* Adıyla yazılı sürüm de aynı eşiğe tabi; yükseklik negatif kenar
            boşluğuyla emiliyor. */

@@ -558,6 +558,12 @@ const tr = {
     complianceCash: "Nakit ve Faizli Varlık / Piyasa Değeri",
     complianceLimit: "Sınır",
     complianceUnknown: "Bu şirket için bilanço oranları alınamadı.",
+    /* Alt sektör yalnızca endeks tohumundan geliyor; tohumda olmayan
+       sembolde faaliyet alanı kriteri hiç çalışmıyor. Eskiden bu sessizdi
+       ve kart yine "Ön Elemeyi Geçiyor" diyordu — bkz. lib/compliance.ts
+       → `businessKnown`. */
+    complianceNoSector:
+      "Bu şirketin alt sektörü elimizdeki listede yok; faaliyet alanı ölçütü taranamadı. Aşağıdaki oranlar yalnızca bilançoya bakar.",
     complianceMissing:
       "Faiz geliri oranı (sınır: gelirin %5'i) ücretsiz veri kaynağımızda yok; bu ölçüt taranamıyor.",
     complianceDisclaimer:

@@ -37,6 +37,29 @@ export type ComplianceResult = {
   cashRatio: number | null;
   /** Finansal eşikler hesaplanabildi mi? */
   ratiosKnown: boolean;
+  /**
+   * Faaliyet alanı (A kriteri) DEĞERLENDİRİLEBİLDİ Mİ?
+   *
+   * Alt sektör yalnızca statik endeks tohumundan geliyor
+   * (`db/seed/indices` → `indexMemberOf`). Tohumda olmayan bir sembolde `sub`
+   * boş kalıyor ve A kriteri sessizce HİÇ ÇALIŞMIYORDU; kart yine de üç
+   * kriterden yalnızca ikisine bakıp "Ön Elemeyi Geçiyor" diyordu.
+   *
+   * Ölçüldü ve tam da taramanın var olma sebebi olan iki kategoride
+   * yanlış sonuç veriyordu: DKNG (bahis) ve SOFI (faizli kredi) ikisi de
+   * "Ön Elemeyi Geçiyor" alıyordu. `EXCLUDED_SUBS` listesi doğru —
+   * "Casinos & Gaming" ve "Consumer Finance" orada duruyor; kusur listede
+   * değil ARAMADA.
+   *
+   * Finnhub profilindeki sektöre düşmek çözüm DEĞİL: o taksonomi kaba
+   * ("Otel, Restoran ve Eğlence", "Finansal Hizmetler") ve bu listenin
+   * beklediği GICS alt sektör adlarıyla eşleşmiyor — DKNG yine kaçardı,
+   * "Finansal Hizmetler" ise fazla geniş elerdi.
+   *
+   * O yüzden çözüm kapsamı büyütmek değil, DÜRÜSTLÜK: bilinmiyorsa
+   * "geçiyor" denmez. CLAUDE.md § Veri dürüstlüğü 1 — uydurma kesinlik yok.
+   */
+  businessKnown: boolean;
 };
 
 export type BusinessReasonKey =
@@ -105,6 +128,8 @@ export type ComplianceInputs = {
 export function screenCompliance(inputs: ComplianceInputs): ComplianceResult {
   const member = indexMemberOf(inputs.symbol);
   const sub = member?.sub ?? null;
+  /* A kriteri değerlendirilebiliyor mu — gerekçe tip künyesinde. */
+  const businessKnown = sub !== null;
 
   // A. Faaliyet alanı — kesin eleme
   const excluded = sub ? EXCLUDED_SUBS[sub] : undefined;
@@ -137,6 +162,7 @@ export function screenCompliance(inputs: ComplianceInputs): ComplianceResult {
       debtRatio,
       cashRatio,
       ratiosKnown,
+      businessKnown,
     };
   }
 
@@ -150,17 +176,21 @@ export function screenCompliance(inputs: ComplianceInputs): ComplianceResult {
       debtRatio,
       cashRatio,
       ratiosKnown,
+      businessKnown,
     };
   }
 
-  // Oranlar bilinmiyorsa ya da faaliyet alanı gri bölgedeyse: inceleme.
-  if (!ratiosKnown || needsReview) {
+  /* Oranlar bilinmiyorsa, FAALİYET ALANI BİLİNMİYORSA ya da alan gri
+     bölgedeyse: inceleme. Ortadaki koşul sonradan eklendi; onsuz üç
+     kriterden ikisine bakıp "geçiyor" deniyordu. */
+  if (!ratiosKnown || !businessKnown || needsReview) {
     return {
       verdict: "review",
       businessReasonKey: needsReview ? (excluded ?? null) : null,
       debtRatio,
       cashRatio,
       ratiosKnown,
+      businessKnown,
     };
   }
 
@@ -170,6 +200,7 @@ export function screenCompliance(inputs: ComplianceInputs): ComplianceResult {
     debtRatio,
     cashRatio,
     ratiosKnown,
+    businessKnown,
   };
 }
 

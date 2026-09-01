@@ -65,7 +65,17 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
   const today = todayEt();
   const result = await getIpoCalendar(today, addEtDays(today, WEEKS_AHEAD * 7));
 
-  if (!result.ok || result.data.length === 0) {
+  /* SAĞLAYICI HATASI İLE BOŞ SONUÇ AYRI ŞEYLER — ikisi aynı daldaydı.
+     `t.ipo.empty` bir OLGU İDDİASI: "Bu aralıkta planlanmış halka arz yok",
+     alt satırı da "Sağlayıcı takvimi henüz yeni kayıt yayımlamadı" diyerek
+     sağlayıcının YANIT VERDİĞİNİ söylüyor. Finnhub düştüğünde kullanıcı bu
+     iki cümleyi okuyup gerçekten halka arz olmadığına inanıyordu.
+     CLAUDE.md § Veri dürüstlüğü: bilinmeyen, "yok" diye yazılmaz. */
+  if (!result.ok) {
+    return <EmptyState title={t.common.noData} hint={t.common.noDataHint} />;
+  }
+
+  if (result.data.length === 0) {
     return <EmptyState title={t.ipo.empty} hint={t.ipo.emptyHint} />;
   }
 

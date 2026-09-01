@@ -82,6 +82,7 @@ import {
   formatPrice,
   headlineMentions,
   timeAgo,
+  unitLabel,
 } from "@/lib/utils";
 import { Sparkline } from "@/components/ui/Sparkline";
 import {
@@ -1814,11 +1815,17 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
              `formatPrice`in varsayılanı 2 ve /makro aynı seriyi 0 ile
              yazıyor: seçim düzeltilip `payrolls` panele girdiği anda bu
              panel "147,00", /makro "147" diyecekti. Aynı sayının iki ekranda
-             farklı görünmesi bu depoda bir kez düzeltilmiş bir hata. */
+             farklı görünmesi bu depoda bir kez düzeltilmiş bir hata.
+
+             BİRİM DE YAZILIYOR — aynı hatanın ikinci yarısıydı. Basamak
+             sayısı hizalanmıştı ama birim düşüyordu: PAYEMS burada ve
+             /makro'da birimsiz "-23", ekonomik takvimde ise "-23 bin"
+             görünüyordu. Etiket kararı lib/utils.ts → `unitLabel`. */
+          const birim = unitLabel(row.unit, locale);
           const show = (value: number) =>
             isPct
               ? formatPercentPlain(value, locale, 2)
-              : formatPrice(value, locale, { digits: 0 });
+              : `${formatPrice(value, locale, { digits: 0 })} ${birim}`.trimEnd();
           return (
             <div key={row.seriesId}>
               <p className="truncate text-tiny text-muted">

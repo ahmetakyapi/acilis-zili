@@ -1603,6 +1603,19 @@ async function ComplianceCard({
           </p>
         )}
 
+        {/* FAALİYET ALANI TARANAMADIYSA BUNU SÖYLE. Alt sektör yalnızca
+            endeks tohumundan geliyor ve tohumda olmayan sembolde A kriteri
+            hiç çalışmıyor. Eskiden bu sessizdi: kart üç ölçütten ikisine
+            bakıp "Ön Elemeyi Geçiyor" diyordu ve tam da taramanın var olma
+            sebebi olan kategorilerde yanılıyordu (DKNG bahis, SOFI faizli
+            kredi — ikisi de geçiyor görünüyordu). Artık hüküm "İnceleme
+            Gerekir" ve eksiğin ne olduğu burada yazılı. */}
+        {!result.businessKnown && (
+          <p className="mt-2.5 text-xs leading-relaxed text-body">
+            {t.stock.complianceNoSector}
+          </p>
+        )}
+
         {result.ratiosKnown ? (
           <dl className="mt-3 flex flex-col gap-2.5">
             {ratios.map(([label, value]) => {
@@ -1783,7 +1796,14 @@ async function CompanyNews({
   const from = addEtDays(to, -14);
   const result = await getCompanyNews(symbol, from, to);
 
-  if (!result.ok || result.data.length === 0) {
+  /* Sağlayıcı hatası "haber yok" DEĞİLDİR — ikisi aynı daldaydı ve uç
+     düştüğünde ekranda "Şu an gösterilecek haber yok." yazıyordu. Aynı
+     düzeltmenin emsali components/markets/IpoCalendar.tsx'te. */
+  if (!result.ok) {
+    return <EmptyState title={t.common.noData} hint={t.common.noDataHint} />;
+  }
+
+  if (result.data.length === 0) {
     return <EmptyState title={t.news.empty} />;
   }
 

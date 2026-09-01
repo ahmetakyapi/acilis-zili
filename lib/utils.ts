@@ -662,10 +662,32 @@ export function formatEventValue(
   const digits = Math.min(rawDigits, 2);
   const shown = formatPrice(Number(trimmed), locale, { digits });
   if (unit === "%") return withPercent(shown, locale);
-  const birim = unit?.trim();
-  if (!birim) return shown;
-  /* "bin" İngilizcede "K": kaynak dizesi Türkçe yazılı ama ekranın dili
-     okuyucununki. Tanımadığımız bir birim gelirse olduğu gibi geçiyor. */
-  const yazi = birim === "bin" && locale !== "tr" ? "K" : birim;
+  const yazi = unitLabel(unit, locale);
+  if (!yazi) return shown;
   return `${shown}${MONEY_GAP}${yazi}`;
+}
+
+/**
+ * Birim etiketi — DİLE göre, yüzde HARİÇ.
+ *
+ * "bin" İngilizcede "K": kaynak dizesi Türkçe yazılı (FRED seri tanımları
+ * `lib/providers/fred.ts`te `unit: "bin"` diyor) ama ekranın dili okuyucunun
+ * dili. Tanımadığımız bir birim gelirse olduğu gibi geçer.
+ *
+ * AYRI FONKSİYON OLMASININ SEBEBİ: bu kural bir dönem yalnızca
+ * `formatEventValue` içindeydi ve ekonomik takvim onu kullanıyordu. Makro
+ * ekranları (`/makro` ve ana sayfanın makro paneli) ise biçimlendirmeyi elde
+ * yapıp `%` DIŞINDAKİ her birimi düşürüyordu. Sonuç ölçüldü: PAYEMS serisi
+ * (`unit: "bin"`) takvimde "-23 bin", makroda birimsiz "-23" görünüyordu —
+ * aynı seri, üç ekran, iki farklı okuma. Birimsiz "-23", komşusundaki
+ * "%3,30" ve "%4,10" kartlarının yanında yüzde ya da endeks seviyesi gibi de
+ * okunabiliyordu. Kural artık tek yerde; üç ekran da buradan okuyor.
+ */
+export function unitLabel(
+  unit: string | null | undefined,
+  locale: string,
+): string {
+  const birim = unit?.trim();
+  if (!birim || birim === "%") return "";
+  return birim === "bin" && locale !== "tr" ? "K" : birim;
 }

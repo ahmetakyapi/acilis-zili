@@ -8,6 +8,7 @@ import {
   formatPeriodLabel,
   formatPrice,
   formatPercentPlain,
+  unitLabel,
 } from "@/lib/utils";
 import type { MacroObservation } from "@/lib/providers/types";
 
@@ -81,14 +82,22 @@ export default async function MacroPage() {
                sayfada "%2,47" gördüğü sayıyı burada "2,5 %" diye buluyordu —
                aynı kartta, aynı seride, iki farklı biçim ve iki farklı
                hassasiyet. Kural tek yerde: lib/utils.ts → withPercent. */
+            /* BİRİM DE YAZILIYOR, yalnızca yüzde değil.
+               Bu ekran `%` dışındaki her birimi düşürüyordu ve PAYEMS serisi
+               (`unit: "bin"`) burada birimsiz "-23" olarak duruyordu; ekonomik
+               takvim aynı seriyi `formatEventValue` ile "-23 bin" yazarken.
+               Komşu kartlar "%3,30" ve "%4,10" olduğu için birimsiz sayı
+               yüzde ya da endeks seviyesi gibi de okunabiliyordu.
+               Etiket kararı lib/utils.ts → `unitLabel`; üç ekran aynı yerden. */
             const yuzde = row.unit === "%";
             const digits = yuzde ? 2 : 0;
+            const birim = unitLabel(row.unit, locale);
             const olcu = (value: number | null) =>
               value === null
                 ? "—"
                 : yuzde
                   ? formatPercentPlain(value, locale, 2)
-                  : formatPrice(value, locale, { digits });
+                  : `${formatPrice(value, locale, { digits })} ${birim}`.trimEnd();
 
             return (
               <Panel key={row.seriesId} className="flex flex-col p-4 sm:p-5">
@@ -120,7 +129,13 @@ export default async function MacroPage() {
                         {delta > 0 ? "▲" : "▼"}
                       </span>
                       {formatPrice(Math.abs(delta), locale, { digits })}
-                      {row.unit === "%" ? (locale === "tr" ? " puan" : " pt") : ""}
+                      {yuzde
+                        ? locale === "tr"
+                          ? " puan"
+                          : " pt"
+                        : birim
+                          ? ` ${birim}`
+                          : ""}
                     </span>
                   )}
                 </div>

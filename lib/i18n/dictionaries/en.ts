@@ -429,6 +429,8 @@ const en: typeof tr = {
     complianceCash: "Cash and Interest-Bearing Assets / Market Cap",
     complianceLimit: "Limit",
     complianceUnknown: "Balance-sheet ratios aren't available for this company.",
+    complianceNoSector:
+      "We don't have this company's sub-industry, so the line-of-business criterion wasn't screened. The ratios below only look at the balance sheet.",
     complianceMissing:
       "The interest-income test (5% of revenue) needs a revenue breakdown our free data source doesn't provide, so that criterion isn't screened.",
     complianceDisclaimer:
