@@ -81,6 +81,21 @@ const BUDGET_MS = 100_000;
  * yukarıdaki bütçe dağılımı buna göre kuruldu.
  */
 const EARNINGS_HORIZON_DAYS = 30;
+/**
+ * GERİYE DOĞRU YENİDEN ÇEKİLEN GÜN SAYISI — gerçekleşen rakamlar için.
+ *
+ * Pencere yalnızca ileriye bakıyordu (bugün → +30). Bir rapor tarihi geçince
+ * o gün bir daha hiç çekilmiyordu; oysa Finnhub `revenueActual`ı ancak
+ * rapordan SONRA dolduruyor. Yani hisse sayfasındaki "Gelir · Gerçekleşen"
+ * sütunu yapısal olarak hiç dolamıyordu — ölçüldü: 4.022 geçmiş satırın
+ * 2.882'sinde gelir beklentisi var, yalnızca 224'ünde gerçekleşen. EPS
+ * gerçekleşeni ayrı uçtan (sürprizler) geldiği için o sütun doluyordu ve
+ * fark yanındaki boş sütunu daha da göze batırıyordu.
+ *
+ * Yedi gün geriye bakmak yediyi de yakalıyor: rapor günü + hafta sonu +
+ * sağlayıcının gecikmesi. 7 ek istek, 60/dk limitinin çok altında.
+ */
+const EARNINGS_BACKFILL_DAYS = 7;
 
 /** Sayfa ölçümü kaç gün saklanır — panelin en geniş penceresi altı ay. */
 const VIEW_RETENTION_DAYS = 180;
@@ -139,7 +154,8 @@ export async function GET(request: Request) {
   /* ---- 1. Bilanço takvimi (bugün → +30 gün) ----
      Finnhub tek yanıtı ~1500 kayıtla keser; geniş aralık limit yüzünden bazı
      günleri düşürür (SNDK böyle kaybolmuştu). Bu yüzden GÜN GÜN çekilir —
-     31 istek, 60/dk limitine sığar. Yazım yine toplu upsert'tir.
+     38 istek (7 geri + 31 ileri), 60/dk limitine sığar. Yazım yine toplu
+     upsert'tir.
 
      Beklenti ve gerçekleşen (epsEstimate/epsActual, revenueEstimate/
      revenueActual) her koşumda ÜZERİNE YAZILIR: analist beklentisi bilanço
@@ -157,12 +173,21 @@ export async function GET(request: Request) {
     let anyOk = false;
     let firstError = "";
     let skippedDays = 0;
-    for (let offset = 0; offset <= EARNINGS_HORIZON_DAYS; offset++) {
+    /* Negatif ofsetler geçmiş haftayı yeniden çekiyor (gerekçe
+       `EARNINGS_BACKFILL_DAYS`). Sıra geriden ileriye: gerçekleşenler önce
+       düşsün, bütçe biterse uzak gelecek eksik kalsın. */
+    for (
+      let offset = -EARNINGS_BACKFILL_DAYS;
+      offset <= EARNINGS_HORIZON_DAYS;
+      offset++
+    ) {
       /* Takvim ilk adım ve en önemlisi; yine de sınırsız değil. Bütçe
          biterse kalan günler ertesi koşumda çekilir — o güne kadar takvimin
-         uzak ucu eksik kalır, yakın ucu değil. */
+         uzak ucu eksik kalır, yakın ucu değil. `skippedDays` yalnızca İLERİ
+         pencereyi sayar; temizlik sorgusu o sayıyla çalışıyor ve geçmiş
+         günler zaten onun kapsamı dışında. */
       if (outOfTime()) {
-        skippedDays = EARNINGS_HORIZON_DAYS - offset + 1;
+        skippedDays = EARNINGS_HORIZON_DAYS - Math.max(offset, 0) + 1;
         break;
       }
       const day = addEtDays(today, offset);

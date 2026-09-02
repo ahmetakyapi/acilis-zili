@@ -430,7 +430,9 @@ const en: typeof tr = {
     complianceLimit: "Limit",
     complianceUnknown: "Balance-sheet ratios aren't available for this company.",
     complianceNoSector:
-      "We don't have this company's sub-industry, so the line-of-business criterion wasn't screened. The ratios below only look at the balance sheet.",
+      "We don't have this company's sub-industry, so the line-of-business criterion wasn't screened.",
+    complianceForeignCurrency:
+      "This company reports its balance sheet in a currency other than the dollar; the ratios can't be computed against the dollar price.",
     complianceMissing:
       "The interest-income test (5% of revenue) needs a revenue breakdown our free data source doesn't provide, so that criterion isn't screened.",
     complianceDisclaimer:
@@ -778,8 +780,8 @@ const en: typeof tr = {
     pitchTitle: "Be Ready Before the Bell",
     pitchBody:
       "What gets released today, who reports, where your watchlist stands — one screen, with the times. No account needed to read it; sign in and your lists stay with you.",
-    featureLists: "Your watchlist, with your notes",
-    featureAlerts: "Earnings and economic calendar, with times",
+    featureLists: "Your watchlists, on every device",
+    featureAlerts: "Earnings for the companies you follow, in one tab, with times",
     featureBrief: "A daily brief written each morning",
     featureFree: "Free, and no ads",
     privacyNote:

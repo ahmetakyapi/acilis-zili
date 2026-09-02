@@ -303,7 +303,20 @@ export function CompareChart({
 
   return (
     <figure className={cn("flex flex-col gap-3", className)}>
-      <div className="scroll-x -mx-1 px-1">
+      {/* KAYDIRILABİLİRLİK GÖRÜNÜR VE KLAVYEYLE ERİŞİLİR.
+          Kap `.scroll-x` idi: çubuğu saklıyor ve odaklanamıyordu. Ölçüldü —
+          390px telefonda çerçeve 520px, kap 328px; dönemin %38'i sağda
+          duruyor ve ekranda "devamı var" diyen HİÇBİR işaret yoktu, klavyeyle
+          de hiç kaydırılamıyordu (parmakla kayması ayrı bir düzeltmeydi,
+          aşağıdaki yorum). `.scroll-x-hint` tam bu iş için var: ince çubuk
+          görünür kalıyor. `tabIndex` + `role="region"` hisse sayfasındaki
+          geçmiş bilançolar tablosunun emsali (WCAG 2.1.1). */}
+      <div
+        className="scroll-x-hint -mx-1 px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+        tabIndex={0}
+        role="region"
+        aria-label={title}
+      >
         {/* DOKUNMATİKTE KAYDIRMA SERBEST. Burada `touch-pan-y` vardı ve
             tarayıcıya yalnızca dikey kaydırmayı bırakıyordu; grafik ise
             `min-w-[520px]` ile kendi kabında yatay kayıyor. Sonuç: 390px'lik

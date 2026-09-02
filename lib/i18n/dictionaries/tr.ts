@@ -563,7 +563,12 @@ const tr = {
        ve kart yine "Ön Elemeyi Geçiyor" diyordu — bkz. lib/compliance.ts
        → `businessKnown`. */
     complianceNoSector:
-      "Bu şirketin alt sektörü elimizdeki listede yok; faaliyet alanı ölçütü taranamadı. Aşağıdaki oranlar yalnızca bilançoya bakar.",
+      "Bu şirketin alt sektörü elimizdeki listede yok; faaliyet alanı ölçütü taranamadı.",
+    /* Hisse başı bilanço değerleri ana borsanın parasında, fiyat dolar;
+       oran hesaplanmıyor, kur uydurulmuyor. Para birimi kodu JSX'te
+       yanına basılıyor. Bkz. lib/compliance.ts → `currency`. */
+    complianceForeignCurrency:
+      "Şirket bilançosunu dolar dışında bir para birimiyle raporluyor; oranlar dolar fiyatıyla hesaplanamıyor.",
     complianceMissing:
       "Faiz geliri oranı (sınır: gelirin %5'i) ücretsiz veri kaynağımızda yok; bu ölçüt taranamıyor.",
     complianceDisclaimer:
@@ -966,8 +971,15 @@ const tr = {
     pitchTitle: "Zil Çalmadan Önce Hazır Ol",
     pitchBody:
       "Bugün ne açıklanacak, hangi şirket bilanço verecek, takip ettiklerin nerede duruyor — hepsi tek ekranda ve Türkiye saatiyle. Okumak için hesap gerekmiyor; giriş yaparsan listelerin seninle kalır.",
-    featureLists: "Takip listen, notlarınla birlikte",
-    featureAlerts: "Bilanço ve ekonomi takvimi, saatleriyle",
+    /* "Takip listen, notlarınla birlikte" diyordu ve NOT DİYE BİR ŞEY YOK:
+       şemada sütun duruyor (`symbols`e bağlı `note`), yazan-okuyan arayüz
+       hiç yazılmadı. Hesap açmaya ikna etmesi gereken sayfa olmayan bir
+       özelliği vadediyordu. Not eklememe kararı verildi; vaat, hesabın
+       gerçekten verdiği şeyle değiştirildi: listeler cihazlar arasında
+       taşınıyor ve takip edilenlerin bilançoları ayrı sekmede toplanıyor
+       (/bilancolar/takip). */
+    featureLists: "Takip listelerin her cihazda seninle",
+    featureAlerts: "Takip ettiklerinin bilançoları tek sekmede, saatleriyle",
     featureBrief: "Her sabah yazılan günlük bülten",
     featureFree: "Reklamsız ve ücretsiz",
     privacyNote:

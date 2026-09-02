@@ -977,7 +977,14 @@ export default async function AnalysisDetailPage(
                 okuyamıyordu. Bir kademe iri ve koyu bir giriş, sütunun
                 başlangıcını işaretliyor — kalan paragraflar gövde ölçüsünde
                 kalıyor, yani hiyerarşi bir kademe, iki değil. */}
-            <div className={PROSE_COLUMNS}>
+            {/* GÖVDE KENDİ DİLİNİ SÖYLÜYOR — mercek sayfasındaki kuralın
+                aynısı. Çevirisi olmayan analiz orijinal dilinde gösteriliyor
+                (üstteki rozet bunu yazıyor) ama `lang` verilmediği için
+                Türkçe paragraflar `<html lang="en">` altında kalıyordu:
+                ekran okuyucu yanlış fonetikle okuyor, tarayıcının "çevir"
+                önerisi devreye girmiyordu. Mercek düzeltilmiş, burası
+                atlanmıştı. */}
+            <div className={PROSE_COLUMNS} lang={row.locale}>
               {row.summary.map((paragraph, index) => (
                 <p
                   key={index}
@@ -1028,6 +1035,7 @@ export default async function AnalysisDetailPage(
                     ? "xl:grid-cols-3"
                     : "xl:grid-cols-2",
                 )}
+                lang={row.locale}
               >
                 {/* Sıra numarası başlığın YANINDA değil ÜSTÜNDE: karo,
                     başlığın ilk satırını içeri itiyor ve iki satıra taşan
@@ -1055,7 +1063,12 @@ export default async function AnalysisDetailPage(
             </Panel>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
+          {/* Maddeler de analizin dilinde; başlıklar arayüz dilinde ama
+              kart içindeki metin kayıttan geliyor. */}
+          <div
+            className="grid gap-3 sm:grid-cols-[repeat(3,minmax(0,1fr))]"
+            lang={row.locale}
+          >
             <PointsCard
               title={t.analysis.strengths}
               points={row.strengths ?? []}

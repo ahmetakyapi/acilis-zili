@@ -1549,17 +1549,25 @@ async function ComplianceCard({
   t: Dictionary;
 }) {
   const status = await getStatus();
-  const [metricsResult, quoteResult] = await Promise.all([
+  const [metricsResult, quoteResult, meta] = await Promise.all([
     getKeyMetrics(symbol),
     getQuote(symbol, status),
+    /* PARA BİRİMİ ŞART — MetricsCard'daki gerekçenin aynısı (500 satır
+       yukarıda). Metrik ucu hisse başı değerleri ana borsanın parasında
+       veriyor, fiyat dolar; kart ikisini bölüp SKHY'de %47.685 gibi
+       imkânsız oranlar, PDD ve NTES'te yanlış "Geçemiyor" basıyordu.
+       `getSymbolNames` istek içinde önbellekli, sayfa başı zaten çağırıyor. */
+    getSymbolNames([symbol]),
   ]);
 
   const metrics = metricsResult.ok ? metricsResult.data : null;
   const price = quoteResult.ok ? quoteResult.data.price : null;
+  const currency = meta[symbol]?.currency ?? null;
 
   const result = screenCompliance({
     symbol,
     price,
+    currency,
     bookValuePerShare: metrics?.bookValuePerShare ?? null,
     debtToEquity: metrics?.debtToEquity ?? null,
     cashPerShare: metrics?.cashPerShare ?? null,
@@ -1665,6 +1673,13 @@ async function ComplianceCard({
               {formatPercentPlain(COMPLIANCE_THRESHOLD, locale, 0)}
             </p>
           </dl>
+        ) : currency && currency !== "USD" ? (
+          /* Oranlar bilerek hesaplanmadı: pay ana borsanın parasında, payda
+             dolar. Kur uydurulmuyor; gerekçe lib/compliance.ts → `currency`. */
+          <p className="mt-3 text-xs text-muted">
+            {t.stock.complianceForeignCurrency}{" "}
+            <span className="numeral font-semibold text-body">({currency})</span>
+          </p>
         ) : (
           <p className="mt-3 text-xs text-muted">{t.stock.complianceUnknown}</p>
         )}

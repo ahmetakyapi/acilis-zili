@@ -117,6 +117,31 @@ export type ComplianceInputs = {
   symbol: string;
   /** Son işlem fiyatı — hisse başına piyasa değeri. */
   price: number | null;
+  /**
+   * Şirketin ANA BORSASININ para birimi (ISO kodu) — `symbols.currency`.
+   *
+   * PARA BİRİMİ ŞART ve bu bir hata düzeltmesi. Finnhub'ın metrik ucu
+   * `bookValuePerShare` ve `cashPerShare`i şirketin ana borsasının
+   * parasında veriyor; fiyat ise Alpaca'dan DOLAR. Oran hesabı ikisini
+   * doğrudan bölüyordu. Depoda 21 sembol USD dışı ve sonuç canlıda ölçüldü:
+   *   SKHY (KRW)  nakit/PD %47.685 — aritmetik olarak imkânsız, iki çubuk
+   *               kırmızı ve tam dolu, rozet "Ön Elemeyi Geçemiyor"
+   *   PDD  (CNY)  %95,9 → yanlışlıkla eleniyor
+   *   NTES (CNY)  %45,6 → yanlışlıkla eleniyor
+   *   TSM  (TWD)  %32,7 → eşiğin 0,34 puan altında; gerçek değer ~%5.
+   *               ADR fiyatı biraz düşse rozet sessizce "Geçemiyor"a dönerdi
+   *   ASML (EUR)  %0,6 → sayı yanlış ama eşiğin altında kaldığı için
+   *               hüküm tesadüfen doğru
+   * Aynı hata sınıfı MetricsCard, karşılaştırma ve hisse sayfasında ayrı
+   * ayrı düzeltilmişti (bkz. `lib/data.ts` → `currency` künyesi); katılım
+   * kartı atlanmış dördüncü yerdi.
+   *
+   * KUR DÖNÜŞÜMÜ DENENMİYOR: elde kur yok, üstelik ADR oranı (TSM 1:5)
+   * sembolden sembole değiştiği için kur tek başına yetmezdi. Uydurma kur
+   * uydurma orandan farksız. USD dışında oranlar hiç hesaplanmaz, kart
+   * neden hesaplanmadığını yazar. `null` da "bilinmiyor" sayılır.
+   */
+  currency: string | null;
   /** bookValuePerShareQuarterly */
   bookValuePerShare: number | null;
   /** totalDebt/totalEquityQuarterly */
@@ -135,10 +160,13 @@ export function screenCompliance(inputs: ComplianceInputs): ComplianceResult {
   const excluded = sub ? EXCLUDED_SUBS[sub] : undefined;
   const needsReview = sub ? REVIEW_SUBS.has(sub) : false;
 
-  // B ve C. Finansal oranlar — hisse başına, fiyata oranlanır
+  // B ve C. Finansal oranlar — hisse başına, fiyata oranlanır.
+  // Yalnızca USD: pay ve payda aynı para biriminde değilse oran anlamsız
+  // (gerekçe `ComplianceInputs.currency` künyesinde).
+  const usd = inputs.currency === "USD";
   let debtRatio: number | null = null;
   let cashRatio: number | null = null;
-  if (inputs.price && inputs.price > 0) {
+  if (usd && inputs.price && inputs.price > 0) {
     if (
       inputs.bookValuePerShare !== null &&
       inputs.debtToEquity !== null &&
