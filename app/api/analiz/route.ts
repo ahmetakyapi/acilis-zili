@@ -33,9 +33,27 @@ const SourceSchema = z.object({
   url: z.string().trim().url().max(500).nullish(),
 });
 
+/* Değer SERBEST METİN — site biçimlendirmiyor, analiz yazarken karar
+   veriliyor (bkz. components/earnings/MetricCards.tsx). Ama para birimi
+   kısaltması sitenin kendi biçimine uymak zorunda: aynı sayfada
+   `formatCompact` "11,54 Mr $" ve "740 Mn $" yazarken üç analizde kartlar
+   "779 M$", "551 M$" ve "4,07 mn" diyordu (ölçüldü, 35 analizden 3'ü).
+   "M" Türkçe okuyucu için belirsiz (milyon mu, milyar mı) ve bitişik "$"
+   hiçbir dilde sitenin biçimi değil — İngilizce sürüm "$779M" yazar.
+   Yazma yolunda reddediliyor ki rutin kendi çıktısını düzeltsin. */
+const PARA_KISALTMASI_YANLIS = /\d\s?[MBK]\$|\b(mn|bn)\b/;
+
 const HighlightSchema = z.object({
   label: z.string().trim().min(1).max(80),
-  value: z.string().trim().min(1).max(60),
+  value: z
+    .string()
+    .trim()
+    .min(1)
+    .max(60)
+    .refine((v) => !PARA_KISALTMASI_YANLIS.test(v), {
+      message:
+        "para birimi kısaltması sitenin biçimine uymuyor: Türkçe için 'Mn $' / 'Mr $', İngilizce için '$…M' / '$…B' yaz",
+    }),
   /** Değerin yanındaki renkli kısa not: "▲ %372", "Rekor". */
   note: z.string().trim().max(40).nullish(),
   tone: z.enum(["up", "down", "neutral"]).nullish(),

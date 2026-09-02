@@ -969,8 +969,10 @@ const tr = {
        bir cümleydi ve sitenin adıyla hiç konuşmuyordu. Zil bu ürünün
        merkezindeki nesne — ana sayfanın en büyük sayısı ona geri sayıyor. */
     pitchTitle: "Zil Çalmadan Önce Hazır Ol",
+    /* KISA CÜMLELER. Tek uzun cümle ve bir uzun tire vardı; vurgu
+       dağılıyordu. Dört kısa cümle her iddiayı tek başına bırakıyor. */
     pitchBody:
-      "Bugün ne açıklanacak, hangi şirket bilanço verecek, takip ettiklerin nerede duruyor — hepsi tek ekranda ve Türkiye saatiyle. Okumak için hesap gerekmiyor; giriş yaparsan listelerin seninle kalır.",
+      "Bugün ne açıklanacak, kim bilanço verecek, takip ettiklerin nerede duruyor. Hepsi tek ekranda, Türkiye saatiyle. Okumak için hesap gerekmiyor. Hesap açarsan listelerin seninle kalır.",
     /* "Takip listen, notlarınla birlikte" diyordu ve NOT DİYE BİR ŞEY YOK:
        şemada sütun duruyor (`symbols`e bağlı `note`), yazan-okuyan arayüz
        hiç yazılmadı. Hesap açmaya ikna etmesi gereken sayfa olmayan bir
@@ -980,7 +982,8 @@ const tr = {
        (/bilancolar/takip). */
     featureLists: "Takip listelerin her cihazda seninle",
     featureAlerts: "Takip ettiklerinin bilançoları tek sekmede, saatleriyle",
-    featureBrief: "Her sabah yazılan günlük bülten",
+    /* Manşetle aynı imgeyi kullanıyor: "Zil Çalmadan Önce Hazır Ol". */
+    featureBrief: "Her sabah, zil çalmadan önce yazılmış bülten",
     featureFree: "Reklamsız ve ücretsiz",
     privacyNote:
       "Reklam yok, veri satışı yok. Hesabını yalnızca listelerini saklamak için kullanırız.",

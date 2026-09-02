@@ -165,7 +165,8 @@ function`, `cache()` sarmalı yok ve argümanı sembol listesi değil bir
 koruma `fetch`in kendi veri önbelleği (`revalidate`), yani farklı bir
 mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
 (`getHolidays`, `getStatus`, `getEventsBetween`, `getEarningsBetween`,
-`getNewsById`, `symbolNamesForKey`, `isKnownSymbol`), `lib/admin.ts`
+`getNewsById`, `getStoryBySlug`, `getAnalysis`, `symbolNamesForKey`,
+`isKnownSymbol`), `lib/admin.ts`
 (`getAdmin`), `lib/admin-data.ts` ve `lib/providers/index.ts`
 (`quotesForKey`).
 

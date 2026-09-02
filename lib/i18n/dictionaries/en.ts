@@ -779,10 +779,10 @@ const en: typeof tr = {
     signInTitle: "Sign In",
     pitchTitle: "Be Ready Before the Bell",
     pitchBody:
-      "What gets released today, who reports, where your watchlist stands — one screen, with the times. No account needed to read it; sign in and your lists stay with you.",
+      "What gets released today, who reports, where your watchlist stands. One screen, with the times. No account needed to read. Sign in and your lists stay with you.",
     featureLists: "Your watchlists, on every device",
     featureAlerts: "Earnings for the companies you follow, in one tab, with times",
-    featureBrief: "A daily brief written each morning",
+    featureBrief: "A daily brief, written before the bell each morning",
     featureFree: "Free, and no ads",
     privacyNote:
       "No ads, no data selling. Your account exists only to keep your lists.",

@@ -740,6 +740,15 @@ Dil kuralları (mercek yazılarıyla aynı):
     "gelirin %77'si", "2026'ya taşındı". Kesmesiz yazım ("%35ten", "%77si")
     ekranda yazım hatası olarak duruyor ve düzeltmesi elle veritabanına
     girmeyi gerektiriyor.
+  - PARA BİRİMİ KISALTMASI sitenin biçimine uyar. Türkçede binlik basamak
+    adları AYRI yazılır ve `$` boşlukla ayrılır: "779 Mn $", "11,54 Mr $",
+    "1,2 T $". İngilizce gönderimde tersi: "$779M", "$11.54B".
+    YASAK: "779 M$", "863 M$", "4,07 mn" gibi biçimler — "M" Türkçe okuyucu
+    için belirsiz (milyon mu milyar mı) ve bitişik `$` hiçbir dilde sitenin
+    yazımı değil. Aynı kartta site kendi sayısını "740 Mn $" diye yazarken
+    senin serbest metnin "779 M$" derse ızgarada iki imla yan yana duruyor.
+    Kural `highlights`, `revenue_footer` ve `guidance_footer` alanlarının
+    `value`'sunda UÇTA DOĞRULANIYOR: uymayan gönderi 400 ile geri döner.
   - "Katalizörler" KULLANMA — Beklenen Gelişmeler
   - Her sayının yanında tek bakışta anlaşılan bir kıyas olsun
   - HAM HTML YAZMA. summary, analysis.body, strengths/risks/upcoming

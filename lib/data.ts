@@ -1363,7 +1363,12 @@ export async function getStories(
 }
 
 /** İstenen dil yoksa yazının orijinali döner — sayfa dil notunu kendisi basar. */
-export async function getStoryBySlug(
+/* `cache()` SARMALI — `getNewsById` ile aynı sebep. Yazı sayfası aynı
+   satırı iki kez istiyor: `generateMetadata` bir kez, gövde bir kez; ikisi
+   de aynı istekte ve birebir aynı SQL iki kez Neon'a gidiyordu (ölçüldü).
+   İstek içi tekilleştirme ikinci turu düşürüyor. Argümanlar ilkel olduğu
+   için anahtar doğrudan (slug, locale) çifti. */
+export const getStoryBySlug = cache(async function getStoryBySlug(
   slug: string,
   locale: string,
 ): Promise<StoryRow | null> {
@@ -1378,7 +1383,7 @@ export async function getStoryBySlug(
     yutuldu("getStoryBySlug", error);
     return null;
   }
-}
+});
 
 /* --------------------------------------------------------------------------
    Bilanço analizleri
@@ -1490,7 +1495,9 @@ export async function getAnalyses(
 }
 
 /** İstenen dil yoksa analizin orijinali döner — sayfa dil notunu kendi basar. */
-export async function getAnalysis(
+/* `cache()` SARMALI — gerekçe `getStoryBySlug` künyesinde; analiz detay
+   sayfası da aynı satırı künye ve gövde için iki kez istiyor. */
+export const getAnalysis = cache(async function getAnalysis(
   symbol: string,
   period: string,
   locale: string,
@@ -1511,7 +1518,7 @@ export async function getAnalysis(
     yutuldu("getAnalysis", error);
     return null;
   }
-}
+});
 
 /**
  * Takvim satırına düşecek rozetler.

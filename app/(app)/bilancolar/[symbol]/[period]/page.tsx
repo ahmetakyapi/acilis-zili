@@ -30,7 +30,7 @@ import {
 } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
-import { addEtDays, todayEt } from "@/lib/market-hours";
+import { addEtDays, etParts, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
@@ -309,6 +309,34 @@ export default async function AnalysisDetailPage(
     sinceReportRaw !== null && Math.abs(sinceReportRaw) >= 0.05
       ? sinceReportRaw
       : null;
+
+  /* FİYAT ETİKETİ SEANSA GÖRE. Eskiden iki hâl vardı: normal seans ve taze
+     ise "Şu An", gerisi "Son Kapanış". Ama `live.quote.price` son İŞLEM
+     (`latestTrade.p`) ve ön/akşam seansında o, o dakikanın uzatılmış seans
+     fiyatı — ona "Son Kapanış" demek sayıyı olduğundan eski gösteriyordu:
+     TR 17:30'da (ABD ön seansı) 28 puntoyla "SON KAPANIŞ · 181,20 $"
+     yazıyordu, oysa o sayı hiçbir kapanış değildi.
+
+     Uzatılmış seans etiketi yalnızca son işlem BUGÜN olduysa basılıyor.
+     Likit olmayan bir sembolde ön seansta henüz işlem yoksa son işlem dünkü
+     kapanıştır ve etiket doğru olarak "Son Kapanış" kalır. Bayat kotasyon
+     (`stale`) her durumda "Son Kapanış": sağlayıcı geriden geliyorsa
+     "şu an" iddiası da düşer. */
+  const islemBugun =
+    live?.quote.tradedAt !== null &&
+    live?.quote.tradedAt !== undefined &&
+    etParts(live.quote.tradedAt).dateStr === todayEt();
+  const priceLabel = !live
+    ? null
+    : live.stale
+      ? t.analysis.lastClose
+      : status.session === "regular"
+        ? t.analysis.livePrice
+        : status.session === "pre-market" && islemBugun
+          ? t.market.preMarket
+          : status.session === "after-hours" && islemBugun
+            ? t.market.afterHours
+            : t.analysis.lastClose;
 
   const symbolMeta = meta[symbol];
 
@@ -631,9 +659,7 @@ export default async function AnalysisDetailPage(
                   gösteriyor. Etiket artık durumu tek başına söylüyor. */}
               <div className="flex items-baseline gap-2 sm:justify-end">
                 <span className={cn(PLATE_LABEL, "text-primary")}>
-                  {status.session === "regular" && !live.stale
-                    ? t.analysis.livePrice
-                    : t.analysis.lastClose}
+                  {priceLabel}
                 </span>
               </div>
               {/* DAR EKRANDA MANŞET DEĞİL, BAĞLAM.
