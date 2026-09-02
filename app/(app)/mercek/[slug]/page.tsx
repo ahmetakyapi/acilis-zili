@@ -5,9 +5,18 @@ import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
 import { ShareButton } from "@/components/article/ShareButton";
 import { LogoTile } from "@/components/ui/primitives";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
-import { getStories, getStoryBySlug, getSymbolNames } from "@/lib/data";
+import {
+  getStories,
+  getStoryBySlug,
+  getStoryLocales,
+  getSymbolNames,
+} from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { metaDescription, missingMetadata } from "@/lib/page-meta";
+import {
+  articleOpenGraph,
+  metaDescription,
+  missingMetadata,
+} from "@/lib/page-meta";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
 import { formatEtDateLong, safeExternalUrl } from "@/lib/utils";
 
@@ -23,7 +32,10 @@ import { formatEtDateLong, safeExternalUrl } from "@/lib/utils";
 export async function generateMetadata(props: PageProps<"/mercek/[slug]">) {
   const { slug } = await props.params;
   const { locale } = await getI18n();
-  const story = await getStoryBySlug(slug, locale);
+  const [story, diller] = await Promise.all([
+    getStoryBySlug(slug, locale),
+    getStoryLocales(slug),
+  ]);
   if (!story) return missingMetadata(locale);
   return {
     title: story.title,
@@ -34,15 +46,18 @@ export async function generateMetadata(props: PageProps<"/mercek/[slug]">) {
        "öteki dildeki karşılığı şu" bilgisi olmadan yayımlanıyordu. Kök
        layout canonical yazmıyor (orada gerekçesi var), yani miras da yok.
        `pageAlternates` RSS keşif etiketini de birlikte taşıyor. */
-    alternates: pageAlternates(`/mercek/${slug}`, locale),
+    /* HREFLANG YALNIZCA VAR OLAN DİLLERİ İLAN EDER. Çevirisi yazılmamış bir
+       yazıda koşulsuz `hreflang="en"` var olmayan bir İngilizce sürüm vaat
+       ediyordu. Gerekçe `lib/data.ts` → `getStoryLocales`. */
+    alternates: pageAlternates(`/mercek/${slug}`, locale, diller),
     /* `og:type` kökten "website" miras alınıyordu: uzun okuma metinleri
        sosyal ağlara ve okuyucu uygulamalarına "bu bir web sitesi" diye
-       tanıtılıyor, yayın tarihi hiçbir yere çıkmıyordu. */
-    openGraph: {
-      type: "article",
+       tanıtılıyor, yayın tarihi hiçbir yere çıkmıyordu.
+       Blok `articleOpenGraph`tan: kendi `openGraph`ını veren sayfa kökteki
+       `siteName` ve `locale`ı düşürüyordu, gerekçe orada. */
+    openGraph: articleOpenGraph(locale, {
       publishedTime: story.publishedAt?.toISOString(),
-      authors: ["Açılış Zili"],
-    },
+    }),
   };
 }
 

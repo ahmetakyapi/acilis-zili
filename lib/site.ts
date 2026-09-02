@@ -47,7 +47,7 @@ export const SITE_URL = (
  */
 export const INDEXABLE = process.env.VERCEL_ENV !== "preview";
 
-import { DEFAULT_LOCALE, type Locale } from "./i18n/config";
+import { DEFAULT_LOCALE, LOCALES, type Locale } from "./i18n/config";
 import { languageAlternates, stripLocale, withLocale } from "./i18n/routing";
 
 /**
@@ -62,7 +62,21 @@ import { languageAlternates, stripLocale, withLocale } from "./i18n/routing";
  * Bu yüzden canonical yazan her sayfa bloğu buradan üretiliyor — `types`
  * unutulamıyor.
  */
-export function pageAlternates(path: string, locale: Locale = DEFAULT_LOCALE) {
+export function pageAlternates(
+  path: string,
+  locale: Locale = DEFAULT_LOCALE,
+  /**
+   * İçeriğin GERÇEKTEN var olduğu diller. Verilmezse ikisi de yazılır.
+   *
+   * Yalnızca veritabanından gelen içerik (mercek yazısı, bilanço analizi)
+   * bunu vermek zorunda: orada çeviri eksik olabiliyor. Sözlükten gelen
+   * arayüz sayfaları her zaman iki dilde var, onlar varsayılanı kullanır.
+   * Gerekçenin tamamı `lib/i18n/routing.ts` → `languageAlternates`.
+   */
+  availableLocales?: readonly Locale[],
+) {
+  const mevcut =
+    availableLocales && availableLocales.length > 0 ? availableLocales : LOCALES;
   return {
     /* CANONICAL HER DİLDE KENDİSİ. Bir dönem her iki dil de Türkçe adresi
        canonical gösteriyordu ve bu, İngilizce sayfayı Türkçenin mükerreri
@@ -72,10 +86,13 @@ export function pageAlternates(path: string, locale: Locale = DEFAULT_LOCALE) {
     /* hreflang: aynı içeriğin öteki dildeki adresi. Bu olmadan arama motoru
        iki sayfayı birbirinin çevirisi olarak değil, ayrı iki sayfa (hatta
        mükerrer içerik) olarak görüyordu. `x-default` önekSİZ Türkçeyi
-       gösteriyor — dili bilinmeyen istemcinin gideceği adres o. */
+       gösteriyor — dili bilinmeyen istemcinin gideceği adres o; Türkçesi
+       olmayan bir kayıtta o satır da yazılmaz. */
     languages: {
-      ...languageAlternates(path),
-      "x-default": stripLocale(path) || "/",
+      ...languageAlternates(path, mevcut),
+      ...(mevcut.includes(DEFAULT_LOCALE)
+        ? { "x-default": stripLocale(path) || "/" }
+        : {}),
     },
     types: { "application/rss+xml": "/feed.xml" },
   } as const;

@@ -77,13 +77,26 @@ export function stripLocale(pathname: string): string {
  * Bir yolun bütün dillerdeki karşılığı — `hreflang` ve site haritası için.
  * Anahtarlar `Metadata.alternates.languages` biçiminde.
  */
-export function languageAlternates(path: string): Record<string, string> {
+export function languageAlternates(
+  path: string,
+  /**
+   * GERÇEKTEN VAR OLAN diller. Verilmezse ikisi de yazılır.
+   *
+   * Varsayılan doğru davranış çünkü sitenin sayfalarının çoğu iki dilde de
+   * var: arayüz sözlükten geliyor. Ama veritabanından gelen içerikte
+   * (mercek yazısı, bilanço analizi) çeviri EKSİK OLABİLİYOR ve o durumda
+   * sayfa orijinal dilinde, "TR" rozetiyle gösteriliyor. Koşulsuz `hreflang`
+   * o sayfalar için var olmayan bir İngilizce sürüm ilan ediyordu: İngilizce
+   * arayan biri arama sonucunda "İngilizce sürüm" görüp tıkladığında baştan
+   * sona Türkçe bir yazıya düşüyordu. Site haritası aynı hatayı YAPMIYOR —
+   * `app/sitemap.ts` yalnızca dönen satırın kendi dilini yazıyor ve gerekçesi
+   * orada kayıtlı; bu parametre aynı kuralı künyeye taşıyor.
+   */
+  locales: readonly Locale[] = LOCALES,
+): Record<string, string> {
   const clean = splitLocale(path).path;
   return Object.fromEntries(
-    LOCALES.map((locale) => [
-      locale,
-      withLocale(clean, locale) || "/",
-    ]),
+    locales.map((locale) => [locale, withLocale(clean, locale) || "/"]),
   );
 }
 

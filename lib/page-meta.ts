@@ -1,6 +1,39 @@
 import type { Metadata } from "next";
-import { getLocale } from "./i18n";
+import { getDictionary, getLocale, INTL_LOCALE, type Locale } from "./i18n";
 import { pageAlternates } from "./site";
+
+/**
+ * Makale sayfalarının `openGraph` bloğu — MARKA SATIRI UNUTULAMIYOR.
+ *
+ * TUZAK, `pageAlternates`teki tuzağın birebir aynısı: Next metadata
+ * birleştirmesinde `openGraph` DERİN BİRLEŞMEZ, tümüyle değiştirilir. Kök
+ * künye `siteName` ve `locale` yazıyor (`app/layout.tsx`), ama kendi
+ * `openGraph`ını veren her sayfa o iki alanı SESSİZCE düşürüyordu.
+ *
+ * Ölçüldü: sitenin en çok paylaşılan üç sayfa tipinin — mercek yazısı,
+ * rehber yazısı, bilanço analizi — HTML'inde `og:site_name` ve `og:locale`
+ * hiç yoktu; aynı anda `/piyasalar` ve ana sayfa ikisini de taşıyordu.
+ * Sonuç: WhatsApp, Slack, LinkedIn ve Discord önizlemesinde tam da en çok
+ * paylaşılan sayfalarda marka satırı görünmüyordu.
+ *
+ * Üç sayfa da `type: "article"` ve yazar istiyordu; ikisi de buraya taşındı
+ * ki blok tek yerden üretilsin. `authors` da markanın DİLE göre adı: kök
+ * `siteName` "Opening Bell" derken yazarın "Açılış Zili" kalması aynı
+ * kartta iki farklı marka adı demekti.
+ */
+export function articleOpenGraph(
+  locale: Locale,
+  extra?: { publishedTime?: string; modifiedTime?: string },
+): NonNullable<Metadata["openGraph"]> {
+  const brand = getDictionary(locale).brand.name;
+  return {
+    type: "article",
+    siteName: brand,
+    locale: INTL_LOCALE[locale].replace("-", "_"),
+    authors: [brand],
+    ...extra,
+  };
+}
 
 /**
  * Sayfa künyesi — İKİ DİLLİ ve kendi adresine bağlı.

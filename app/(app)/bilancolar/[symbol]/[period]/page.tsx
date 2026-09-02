@@ -27,12 +27,17 @@ import {
   getSymbolNames,
   getUserSymbols,
   liveMarketCap,
+  getAnalysisLocales,
 } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { addEtDays, etParts, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { metaDescription, missingMetadata } from "@/lib/page-meta";
+import {
+  articleOpenGraph,
+  metaDescription,
+  missingMetadata,
+} from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import {
@@ -237,7 +242,10 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { symbol, period } = await props.params;
   const { locale } = await getI18n();
-  const row = await getAnalysis(symbol.toUpperCase(), period, locale);
+  const [row, diller] = await Promise.all([
+    getAnalysis(symbol.toUpperCase(), period, locale),
+    getAnalysisLocales(symbol.toUpperCase(), period),
+  ]);
   if (!row) return missingMetadata(locale);
   return {
     title: `${row.company} ${row.periodLabel} — ${row.symbol}`,
@@ -256,12 +264,14 @@ export async function generateMetadata(
        hiçbirinin işaret etmediği üçüncü bir yazım demekti. `symbol`
        değişkeni veri okuması için büyük harf kalıyor; yalnızca adres
        üretenler yardımcıdan geçiyor. */
-    alternates: pageAlternates(analysisHref(symbol, period), locale),
-    openGraph: {
-      type: "article",
+    /* HREFLANG YALNIZCA VAR OLAN DİLLERİ İLAN EDER — gerekçe
+       `lib/data.ts` → `getStoryLocales` künyesinde. */
+    alternates: pageAlternates(analysisHref(symbol, period), locale, diller),
+    /* Blok `articleOpenGraph`tan: kendi `openGraph`ını veren sayfa kökteki
+       `siteName` ve `locale`ı düşürüyordu, gerekçe orada. */
+    openGraph: articleOpenGraph(locale, {
       publishedTime: row.publishedAt?.toISOString(),
-      authors: ["Açılış Zili"],
-    },
+    }),
   };
 }
 

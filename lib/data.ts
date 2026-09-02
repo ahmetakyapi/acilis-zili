@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { isLocale, type Locale } from "./i18n/config";
 import { saglayiciMetni } from "@/lib/text";
 import { unstable_cache } from "next/cache";
 import { and, asc, desc, eq, gte, inArray, isNull, lte, sql, type SQL } from "drizzle-orm";
@@ -1385,6 +1386,41 @@ export const getStoryBySlug = cache(async function getStoryBySlug(
   }
 });
 
+/**
+ * Bir mercek yazısının GERÇEKTEN yazıldığı diller.
+ *
+ * `hreflang` için. Künye koşulsuz iki dili ilan ediyordu ve çevirisi
+ * olmayan yazıda bu, var olmayan bir İngilizce sürüm vaat etmek demekti:
+ * İngilizce arayan biri arama sonucunda "İngilizce sürüm" görüp tıklıyor,
+ * baştan sona Türkçe bir yazıya düşüyordu (sayfa orijinali "TR" rozetiyle
+ * gösteriyor — bu doğru davranış, yanlış olan vaat).
+ *
+ * Site haritası aynı hatayı yapmıyor; `app/sitemap.ts` yalnızca dönen
+ * satırın kendi dilini yazıyor ve gerekçesi orada kayıtlı. Bu fonksiyon
+ * aynı kuralı sayfa künyesine taşıyor.
+ *
+ * Ayrı ve KÜÇÜK bir sorgu: yalnızca `locale` sütunu okunuyor ve
+ * `stories_slug_locale_key` indeksinden geçiyor. `cache()` sarmalı olduğu
+ * için künye ve gövde aynı istekte iki kez sormuyor.
+ */
+export const getStoryLocales = cache(async function getStoryLocales(
+  slug: string,
+): Promise<Locale[]> {
+  try {
+    const rows = await db
+      .select({ locale: stories.locale })
+      .from(stories)
+      .where(eq(stories.slug, slug))
+      .limit(4);
+    return rows
+      .map((row) => row.locale)
+      .filter((value): value is Locale => isLocale(value));
+  } catch (error) {
+    yutuldu("getStoryLocales", error);
+    return [];
+  }
+});
+
 /* --------------------------------------------------------------------------
    Bilanço analizleri
 
@@ -1517,6 +1553,36 @@ export const getAnalysis = cache(async function getAnalysis(
   } catch (error) {
     yutuldu("getAnalysis", error);
     return null;
+  }
+});
+
+/**
+ * Bir bilanço analizinin GERÇEKTEN yazıldığı diller.
+ *
+ * Gerekçe `getStoryLocales` künyesinde — aynı `hreflang` sorunu, aynı
+ * çözüm. Anahtar `earnings_analyses_key` (symbol, period, locale).
+ */
+export const getAnalysisLocales = cache(async function getAnalysisLocales(
+  symbol: string,
+  period: string,
+): Promise<Locale[]> {
+  try {
+    const rows = await db
+      .select({ locale: earningsAnalyses.locale })
+      .from(earningsAnalyses)
+      .where(
+        and(
+          eq(earningsAnalyses.symbol, symbol.toUpperCase()),
+          eq(earningsAnalyses.period, period),
+        ),
+      )
+      .limit(4);
+    return rows
+      .map((row) => row.locale)
+      .filter((value): value is Locale => isLocale(value));
+  } catch (error) {
+    yutuldu("getAnalysisLocales", error);
+    return [];
   }
 });
 

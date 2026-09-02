@@ -14,7 +14,7 @@ import {
   type GuideArticle,
 } from "@/content/guide";
 import { getI18n, type Dictionary } from "@/lib/i18n";
-import { metaDescription } from "@/lib/page-meta";
+import { articleOpenGraph, metaDescription } from "@/lib/page-meta";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
@@ -69,9 +69,15 @@ export async function generateMetadata(props: PageProps<"/rehber/[slug]">) {
        "öteki dildeki karşılığı şu" bilgisi olmadan yayımlanıyordu. Kök
        layout canonical yazmıyor (orada gerekçesi var), yani miras da yok.
        `pageAlternates` RSS keşif etiketini de birlikte taşıyor. */
+    /* REHBERDE DİL LİSTESİ VERİLMİYOR ve bu doğru: rehber içeriği depoda üç
+       katmanlı (meta + tr + en) ve eksik çeviri DERLEMEYİ KIRIYOR. Yani her
+       rehber yazısının iki dili de her zaman var; koşulsuz `hreflang` burada
+       yanlış bir vaat değil. Eksik çeviri yalnızca veritabanından gelen
+       içerikte olabiliyor (mercek, bilanço analizi). */
     alternates: pageAlternates(`/rehber/${slug}`, locale),
-    /* Yazı, "website" değil: gerekçe mercek sayfasında. */
-    openGraph: { type: "article", authors: ["Açılış Zili"] },
+    /* Yazı, "website" değil: gerekçe mercek sayfasında. Blok
+       `articleOpenGraph`tan — kökteki `siteName` ve `locale` düşmesin diye. */
+    openGraph: articleOpenGraph(locale),
   };
 }
 
