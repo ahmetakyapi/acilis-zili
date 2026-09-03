@@ -499,6 +499,17 @@ const tr = {
     website: "Web Sitesi",
     metrics: "Anahtar Metrikler",
     peRatio: "F/K Oranı",
+    forwardPe: "İleri F/K",
+    movingAverages: "Hareketli Ortalamalar",
+    movingAverageRow: "{n} Günlük",
+    movingAveragesNote:
+      "Son 50, 100 ve 200 işlem gününün kapanış ortalaması. Yanındaki yüzde, güncel fiyatın ortalamaya göre farkı.",
+    movingAveragesShort:
+      "Ortalama için yeterli geçmiş yok; elimizde {n} işlem günü var.",
+    /* Sağlayıcı başka bir menkul kıymetin rakamlarını gönderdiğinde.
+       Ölçüldü: BRK.B için A sınıfının rakamları geliyor. */
+    metricsMismatch:
+      "Veri sağlayıcı bu sembol için başka bir hisse sınıfının rakamlarını döndürüyor; hisse başına ölçüler gösterilmiyor.",
     eps: "Hisse Başına Kâr",
     dividend: "Temettü Verimi",
     beta: "Beta",

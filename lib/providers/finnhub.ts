@@ -483,6 +483,7 @@ export async function getKeyMetrics(
     {
       peRatio: m.peTTM ?? m.peBasicExclExtraTTM ?? null,
       eps: m.epsTTM ?? m.epsBasicExclExtraItemsTTM ?? null,
+      forwardPe: m.forwardPE ?? null,
       dividendYield: m.dividendYieldIndicatedAnnual ?? null,
       beta: m.beta ?? null,
       high52: m["52WeekHigh"] ?? null,

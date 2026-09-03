@@ -1,4 +1,5 @@
 import { indexMemberOf } from "@/db/seed/indices";
+import { bandFiyatiKapsiyorMu } from "./utils";
 
 /**
  * Katılım finansı (İslami uyum) ön taraması.
@@ -148,6 +149,24 @@ export type ComplianceInputs = {
   debtToEquity: number | null;
   /** cashPerSharePerShareQuarterly */
   cashPerShare: number | null;
+  /**
+   * Sağlayıcının 52 hafta bandı — ÖLÇÜLERİN BU HİSSEYE AİT OLDUĞUNU SINAMAK
+   * İÇİN, gösterilmek için değil.
+   *
+   * Para birimi kapısı BRK.B'yi tutmuyordu: hem fiyat hem metrikler dolar,
+   * yani `usd` doğru çıkıyor ve oranlar hesaplanıyordu. Ama sağlayıcı B
+   * sınıfı için A SINIFININ hisse başı değerlerini döndürüyor ve ikisi
+   * arasında ~1500 kat var. Ekranda "Faizli Borç / Piyasa Değeri %17.693,8"
+   * ve "Nakit / Piyasa Değeri %5.588,8" duruyordu — aritmetik olarak
+   * imkânsız iki sayı — ve hisse bu yüzden haksız yere "Ön Elemeyi
+   * Geçemiyor" alıyordu.
+   *
+   * Test `lib/utils.ts` → `bandFiyatiKapsiyorMu`: canlı fiyat sağlayıcının
+   * kendi 52 hafta bandının içinde olmalı. Ölçüldü — 60 sembolün 59'unda
+   * içinde, tek aykırı BRK.B ve orada band fiyatın 1379 KATI.
+   */
+  low52: number | null;
+  high52: number | null;
 };
 
 export function screenCompliance(inputs: ComplianceInputs): ComplianceResult {
@@ -164,9 +183,16 @@ export function screenCompliance(inputs: ComplianceInputs): ComplianceResult {
   // Yalnızca USD: pay ve payda aynı para biriminde değilse oran anlamsız
   // (gerekçe `ComplianceInputs.currency` künyesinde).
   const usd = inputs.currency === "USD";
+  /* Ölçüler bu hisseye mi ait — gerekçe `ComplianceInputs.low52` künyesinde.
+     Para birimi kapısından ayrı bir kapı: BRK.B ikisinde de dolar. */
+  const olculerTutarli = bandFiyatiKapsiyorMu(
+    inputs.price,
+    inputs.low52,
+    inputs.high52,
+  );
   let debtRatio: number | null = null;
   let cashRatio: number | null = null;
-  if (usd && inputs.price && inputs.price > 0) {
+  if (usd && olculerTutarli && inputs.price && inputs.price > 0) {
     if (
       inputs.bookValuePerShare !== null &&
       inputs.debtToEquity !== null &&

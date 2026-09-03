@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { Trash, Warning } from "@phosphor-icons/react/dist/ssr";
 import {
   deleteAccountAction,
@@ -37,6 +37,12 @@ export function DeleteAccount({
   labels: DeleteAccountLabels;
 }) {
   const [open, setOpen] = useState(false);
+  /* ODAK GERİ DÖNER. Vazgeçildiğinde form kapanıyor ve "Hesabımı Sil"
+     düğmesi yeniden çiziliyordu ama odak hiçbir yere konmuyordu: klavyeyle
+     vazgeçen okuyucu `<body>`de kalıp Tab'a devam ettiğinde sayfanın
+     başından sıralanıyordu. Yıkıcı bir akışın çıkışında bu daha da kötü —
+     okuyucu formu kapattığını göremiyor. */
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const [state, formAction, pending] = useActionState<
     DeleteAccountState,
     FormData
@@ -54,6 +60,7 @@ export function DeleteAccount({
       <div className="flex flex-col gap-2">
         <p className="text-small leading-relaxed text-muted">{labels.hint}</p>
         <Button
+          ref={triggerRef}
           type="button"
           variant="danger"
           className="mt-1 w-fit"
@@ -86,8 +93,14 @@ export function DeleteAccount({
             {username}
           </code>
         </span>
+        {/* FORM AÇILINCA ODAK BURAYA. Tık formu açıyor ve tetikleyici düğme
+            aynı anda ağaçtan kalkıyordu: odak `<body>`ye düşüyor, klavye
+            kullanıcısı açtığı formu görmüyor ve alanlara ulaşmak için
+            sayfanın başından Tab'lamak zorunda kalıyordu. Aynı kalıp
+            favorilerin liste formlarında zaten var. */}
         <input
           name="confirm"
+          autoFocus
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
@@ -119,12 +132,21 @@ export function DeleteAccount({
         <Button
           type="submit"
           size="sm"
-          disabled={pending}
+          /* `disabled` DEĞİL: odaklı düğme devre dışı kalınca tarayıcı odağı
+             `<body>`ye atıyor. Burada bedeli en yüksek — şifre yanlışsa
+             sunucu `role="alert"` ile hata basıyor ama okuyucunun odağı
+             kaybolmuş oluyor ve alanı düzeltmek için sayfanın başından
+             Tab'lamak gerekiyor. Aynı tuzak kalp düğmesinde ve favoriler
+             kutusunda da düzeltildi. */
+          aria-disabled={pending}
+          onClick={(event) => {
+            if (pending) event.preventDefault();
+          }}
           /* text-page: sayfa zemini iki temada da --down'un zıddı — açıkta
              beyaza, koyuda lacivere düşüyor ve ikisinde de okunuyor.
              Sabit beyaz, koyu temanın açık kırmızısında AA'nın altına
              iniyordu. */
-          className="bg-down text-page hover:bg-down/85"
+          className="bg-down text-page hover:bg-down/85 aria-disabled:opacity-45"
         >
           <Trash weight="duotone" size={15} />
           {labels.submit}
@@ -133,7 +155,11 @@ export function DeleteAccount({
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setOpen(false);
+            /* Düğme kapanışın ardından yeniden çiziliyor. */
+            window.setTimeout(() => triggerRef.current?.focus(), 20);
+          }}
         >
           {labels.cancel}
         </Button>

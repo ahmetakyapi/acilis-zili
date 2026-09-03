@@ -157,6 +157,80 @@ export function peRatioOf(
 }
 
 /**
+ * Basit hareketli ortalama — son `pencere` kapanışın aritmetik ortalaması.
+ *
+ * PENCERE DOLMADIYSA NULL. Yarım pencereyle hesaplanmış bir "200 günlük
+ * ortalama" 200 günlük ortalama değildir; kısa geçmişli bir sembolde
+ * (yeni halka arz, yeni eklenen sembol) sayı üretmek uydurma kesinlik olurdu.
+ * Çağıran null'ı "—" olarak yazıyor.
+ *
+ * BARLAR GÜNLÜK OLMALI. `getChartBars(symbol, "1Y")` 254 bar döndürüyor
+ * (ölçüldü) ve hepsi günlük; 200 günlük pencere oradan doluyor. "5Y" aralığı
+ * TOPLULAŞTIRILMIŞ — 5 yıl için yalnızca 262 bar geliyor, yani barlar günlük
+ * değil ve o aralıkla hesaplanan ortalama "200 gün" demek olmaz.
+ *
+ * Para birimi sorunu YOK: barlar da kotasyon da Alpaca'dan, ikisi de ABD
+ * kotasyonu yani dolar. Finnhub metriklerindeki ana-borsa parası tuzağı
+ * (bkz. `bandFiyatiKapsiyorMu`) buraya uğramıyor.
+ */
+export function hareketliOrtalama(
+  closes: readonly number[],
+  pencere: number,
+): number | null {
+  if (!Number.isInteger(pencere) || pencere <= 0) return null;
+  if (closes.length < pencere) return null;
+  const dilim = closes.slice(-pencere);
+  let toplam = 0;
+  for (const c of dilim) {
+    if (typeof c !== "number" || !Number.isFinite(c)) return null;
+    toplam += c;
+  }
+  return toplam / pencere;
+}
+
+/**
+ * Sağlayıcının hisse başı ölçüleri BU menkul kıymete mi ait?
+ *
+ * BRK.B'de değildi. Finnhub metrik ucu B sınıfı için A SINIFININ rakamlarını
+ * döndürüyor ve ekranda şunlar duruyordu: 506 dolarlık bir hisse için
+ * "F/K 0,01", "Hisse Başına Kâr 59.668,81 $" ve "52 Hafta Bandı
+ * 698.000 – 806.102 $". Üç sayı da sayfanın en üstündeki fiyatla açıkça
+ * çelişiyordu; okuyucunun elinde onları düzeltecek hiçbir ipucu yoktu.
+ *
+ * TEST 52 HAFTA BANDI: canlı fiyat o bandın içinde olmalı. Band günlük
+ * güncelleniyor ve gün içi hareket onu bir miktar aşabildiği için sınırlar
+ * gevşek tutuldu (%30). Ölçüldü — 70 sembolün 69'unda fiyat bandın içinde,
+ * tek aykırı BRK.B ve orada band fiyatın 1379 KATI. Yani eşik sınırda bir
+ * karar değil: iki kat bile yanlış pozitif vermezdi.
+ *
+ * Para birimi farkı bu testi TETİKLEMEZ: ADR'de fiyat dolar, band ana
+ * borsanın parası ve ikisi birbirini tutmaz (TSM'de band fiyatın ~6 katı).
+ * Bu yüzden çağıran, testi yalnızca para birimi AYNIYKEN uyguluyor; ADR'nin
+ * kendi çözümü ayrı ve zaten yazılı (`homeCurrency` dalı).
+ */
+export function bandFiyatiKapsiyorMu(
+  price: number | null | undefined,
+  low52: number | null | undefined,
+  high52: number | null | undefined,
+): boolean {
+  if (
+    typeof price !== "number" ||
+    typeof low52 !== "number" ||
+    typeof high52 !== "number" ||
+    !Number.isFinite(price) ||
+    !Number.isFinite(low52) ||
+    !Number.isFinite(high52) ||
+    price <= 0 ||
+    low52 <= 0
+  ) {
+    /* Ölçülerden biri yoksa test YAPILAMAZ — "başarısız" değil "bilinmiyor".
+       Çağıran bu durumda ölçüleri gizlemiyor; elde olanı gösteriyor. */
+    return true;
+  }
+  return price >= low52 * 0.7 && price <= high52 * 1.3;
+}
+
+/**
  * Sayı ile para simgesi arasındaki BÖLÜNMEZ boşluk (U+00A0).
  * Türkçe yazımda simge sayıdan sonra ve arada boşlukla durur; satır sonunda
  * ayrılmamalı, yoksa dolar işareti tek başına bir alt satıra düşüyor.

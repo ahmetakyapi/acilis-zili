@@ -205,6 +205,22 @@ export type KeyMetrics = {
   peRatio: number | null;
   /** Hisse başı kâr, TTM. F/K'nin böleni. */
   eps: number | null;
+  /**
+   * İleriye dönük F/K — sağlayıcının analist beklentilerinden kurduğu oran.
+   *
+   * TTM F/K'nin aksine BU ALAN OLDUĞU GİBİ GÖSTERİLİYOR ve sebebi şu:
+   * ileri EPS elimizde yok. Kendi takvimimiz yalnızca otuz gün ileri gidiyor
+   * (cron penceresi), yani dört çeyreklik bir beklenti toplayamıyoruz;
+   * `peRatioOf` gibi canlı fiyattan yeniden kurmanın yolu kapalı.
+   *
+   * Oranın kendisi PARA BİRİMİNDEN BAĞIMSIZ: pay da payda da ana borsanın
+   * parasında, bölümde sadeleşiyor. Bu yüzden `eps` ve 52 hafta bandının
+   * aksine ADR'lerde de doğru okunuyor — onlar mutlak tutar, bu bir oran.
+   *
+   * ETF'lerde ve fonlarda gelmiyor (ölçüldü: SPY ve QQQ boş), gerçek
+   * şirketlerde geniş kapsamlı. Gelmezse satır hiç yazılmaz.
+   */
+  forwardPe: number | null;
   dividendYield: number | null;
   beta: number | null;
   high52: number | null;

@@ -376,6 +376,15 @@ const en: typeof tr = {
     website: "Website",
     metrics: "Key Metrics",
     peRatio: "P/E Ratio",
+    forwardPe: "Forward P/E",
+    movingAverages: "Moving Averages",
+    movingAverageRow: "{n}-Day",
+    movingAveragesNote:
+      "Average close over the last 50, 100 and 200 trading days. The percentage next to it is how far the current price sits from that average.",
+    movingAveragesShort:
+      "Not enough history for an average; we have {n} trading days.",
+    metricsMismatch:
+      "Our data provider returns another share class\u2019s figures for this symbol, so the per-share metrics are hidden.",
     eps: "Earnings per Share",
     dividend: "Dividend Yield",
     beta: "Beta",

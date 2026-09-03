@@ -70,7 +70,9 @@ import { describeSymbol } from "@/db/seed/descriptions";
 import {
   cn,
   directionOf,
+  directionText,
   formatChange,
+  formatPercent,
   formatMoneyCompact,
   formatEtDateLong,
   formatEtDateShort,
@@ -79,6 +81,8 @@ import {
   formatVolume,
   headlineMentions,
   isValidSymbol,
+  bandFiyatiKapsiyorMu,
+  hareketliOrtalama,
   peRatioOf,
   plural,
   safeExternalUrl,
@@ -221,9 +225,25 @@ export default async function StockPage(
             </Suspense>
           </Panel>
 
-          <Suspense fallback={<Skeleton className="h-96 w-full rounded-(--radius-xl)" />}>
-            <FundCard symbol={symbol} locale={locale} t={t} />
-          </Suspense>
+          <div className="flex min-w-0 flex-col gap-5">
+            <Suspense fallback={<Skeleton className="h-96 w-full rounded-(--radius-xl)" />}>
+              <FundCard symbol={symbol} locale={locale} t={t} />
+            </Suspense>
+
+            {/* HAREKETLİ ORTALAMA FONDA DA VAR. Yukarıdaki künye "metrikler
+                bir ETF için anlamsızdır" diyor ve doğru — F/K, analist
+                tavsiyesi ve katılım taraması bir sepet için tanımsız. Ama
+                ortalama bir DEĞERLEME ölçüsü değil, fiyatın kendi geçmişine
+                göre yeri; sepette de tam olarak aynı şeyi söylüyor ve SPY'nin
+                200 günlük ortalaması piyasanın en çok izlediği sayılardan
+                biri. Barlar da kotasyon da öteki dalla aynı yerden geliyor. */}
+            <Panel>
+              <PanelHeader title={t.stock.movingAverages} />
+              <Suspense fallback={<ListSkeleton rows={3} />}>
+                <MovingAverages symbol={symbol} locale={locale} t={t} />
+              </Suspense>
+            </Panel>
+          </div>
         </div>
       </div>
     );
@@ -348,6 +368,16 @@ export default async function StockPage(
       )}
 
       {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
+      {/* Hareketli ortalamalar metrik kartının hemen ardında: ikisi de
+          "bu hisse nerede duruyor" sorusunun parçası, biri değerleme
+          tarafından biri fiyat tarafından bakıyor. */}
+      <Panel>
+        <PanelHeader title={t.stock.movingAverages} />
+        <Suspense fallback={<ListSkeleton rows={3} />}>
+          <MovingAverages symbol={symbol} locale={locale} t={t} />
+        </Suspense>
+      </Panel>
+
       <Panel>
         <PanelHeader title={t.stock.pastEarnings} />
         <Suspense fallback={<ListSkeleton rows={6} />}>
@@ -853,6 +883,114 @@ async function UpcomingEarnings({
   );
 }
 
+
+/**
+ * Hareketli ortalamalar — 50, 100 ve 200 günlük.
+ *
+ * NE SÖYLER: fiyatın kendi son elli/yüz/iki yüz günlük ortalamasına göre
+ * nerede durduğu. Teknik analizin en yaygın üç penceresi; sitenin geri
+ * kalanı gibi burada da bir tavsiye yok, yalnızca hesaplanmış bir ölçü.
+ *
+ * VERİ: `getChartBars(symbol, "1Y")` — 254 günlük bar (ölçüldü), 200'lük
+ * pencere oradan doluyor. "5Y" KULLANILMIYOR: o aralık topluşturulmuş
+ * (5 yıl için yalnızca 262 bar) ve barları günlük değil.
+ *
+ * FİYAT KOTASYONDAN, son bardan değil. Sayfa başlığı, grafik okuması ve bu
+ * panel aynı sayıyı yazsın diye — aynı gerekçe grafik künyesinde de yazılı;
+ * son barın kapanışı ile son işlem tanımı gereği farklı sayılar.
+ *
+ * PENCERE DOLMAZSA SATIR "—". Yeni halka arz olmuş bir şirkette 200 günlük
+ * geçmiş yok ve yarım pencereden "200 günlük ortalama" üretmek uydurma
+ * kesinlik olurdu (bkz. lib/utils.ts → `hareketliOrtalama`).
+ */
+async function MovingAverages({
+  symbol,
+  locale,
+  t,
+}: {
+  symbol: string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const status = await getStatus();
+  const [barsResult, quoteResult] = await Promise.all([
+    getChartBars(symbol, "1Y", status),
+    getQuote(symbol, status),
+  ]);
+
+  if (!barsResult.ok) return <DataError message={t.data.failed} />;
+
+  const closes = barsResult.data.map((bar) => bar.close);
+  const quote = quoteResult.ok ? quoteResult.data : null;
+  const price = quote?.price ?? null;
+
+  const pencereler = [50, 100, 200] as const;
+  const satirlar = pencereler.map((pencere) => ({
+    pencere,
+    deger: hareketliOrtalama(closes, pencere),
+  }));
+
+  /* Hiçbiri hesaplanamadıysa panel boş bir liste basmıyor: sebebi tek
+     satırda söyleniyor. */
+  if (satirlar.every((s) => s.deger === null)) {
+    return (
+      <EmptyState
+        compact
+        title={t.stock.movingAveragesShort.replace(
+          "{n}",
+          String(closes.length),
+        )}
+      />
+    );
+  }
+
+  return (
+    <div className="px-4 py-3 sm:px-5">
+      <dl className="divide-y divide-line-soft">
+        {satirlar.map(({ pencere, deger }) => {
+          /* Fark yalnızca İKİSİ de varken yazılıyor; ortalama yoksa fiyatla
+             kıyaslanacak bir şey de yok. */
+          const fark =
+            deger !== null && price !== null && deger > 0
+              ? ((price - deger) / deger) * 100
+              : null;
+          const ton = directionOf(fark);
+          return (
+            <div
+              key={pencere}
+              className="flex items-center justify-between gap-3 py-2"
+            >
+              <dt className="text-xs font-semibold text-strong">
+                {t.stock.movingAverageRow.replace("{n}", String(pencere))}
+              </dt>
+              <dd className="flex items-baseline gap-2.5">
+                <span className="numeral text-sm text-body">
+                  {deger !== null
+                    ? formatPrice(deger, locale, { currency: true })
+                    : "—"}
+                </span>
+                {fark !== null && (
+                  <span
+                    className={cn(
+                      "numeral shrink-0 text-tiny font-semibold",
+                      directionText(ton),
+                    )}
+                  >
+                    {formatPercent(fark, locale)}
+                  </span>
+                )}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+      <p className="mt-2 border-t border-line-soft pt-2.5 text-small text-muted">
+        {t.stock.movingAveragesNote}
+      </p>
+    </div>
+  );
+}
+
 /**
  * Fon künyesi — ETF'ler için profil kartının karşılığı.
  *
@@ -1074,6 +1212,24 @@ async function MetricsCard({
   const currency = profileResult.ok ? profileResult.data.currency : null;
   const homeCurrency = Boolean(currency && currency !== "USD");
 
+  /* ÖLÇÜLER BU HİSSEYE AİT Mİ. Sağlayıcı BRK.B için A SINIFININ rakamlarını
+     döndürüyor: 506 dolarlık hissenin sayfasında "F/K 0,01", "Hisse Başına
+     Kâr 59.668,81 $" ve "52 Hafta Bandı 698.000 – 806.102 $" yazıyordu.
+     Gerekçe ve ölçüm lib/utils.ts → `bandFiyatiKapsiyorMu`.
+
+     Test yalnızca PARA BİRİMİ AYNIYKEN çalışıyor: ADR'de band ana borsanın
+     parasında ve fiyatla zaten tutmuyor — orada ayrı ve yazılı bir çözüm var
+     (`homeCurrency` dalı, aşağıdaki not). */
+  const olculerTutarli =
+    homeCurrency ||
+    bandFiyatiKapsiyorMu(quote?.price, m.low52, m.high52);
+
+  /* Hisse başına ölçüler tutarsızsa GÖSTERİLMİYOR. Oranlar (beta, temettü
+     verimi, ileri F/K) sınıflar arasında ortak olduğu için kalıyor; mutlak
+     tutarlar (EPS, band) ve onlardan türeyen F/K düşüyor. */
+  const hisseBasi = <T,>(value: T): T | null =>
+    olculerTutarli ? value : null;
+
   const rows: [string, string][] = [
     /* F/K sağlayıcının hazır alanından değil, sayfanın gösterdiği fiyattan
        kuruluyor — o alan geriden gelen bir fiyatla hesaplanmış oluyor ve
@@ -1085,13 +1241,27 @@ async function MetricsCard({
     [
       t.stock.peRatio,
       formatPrice(
-        homeCurrency ? m.peRatio : peRatioOf(quote?.price, m.eps),
+        hisseBasi(homeCurrency ? m.peRatio : peRatioOf(quote?.price, m.eps)),
         locale,
       ),
     ],
+    /* İLERİ F/K sağlayıcının kendi oranı — TTM F/K'nin aksine yeniden
+       KURULMUYOR, çünkü ileri EPS elimizde yok (gerekçe
+       `KeyMetrics.forwardPe` künyesinde). Oran para biriminden bağımsız:
+       pay da payda da ana borsanın parasında ve bölümde sadeleşiyor. Bu
+       yüzden ADR'de de, sınıf karışıklığında da doğru okunuyor — mutlak
+       tutar değil. ETF'de gelmiyor, o zaman satır hiç yazılmıyor. */
+    ...(m.forwardPe
+      ? ([[t.stock.forwardPe, formatPrice(m.forwardPe, locale)]] as [
+          string,
+          string,
+        ][])
+      : []),
     [
       t.stock.eps,
-      m.eps ? formatPrice(m.eps, locale, { currency: currency ?? true }) : "—",
+      hisseBasi(m.eps)
+        ? formatPrice(m.eps, locale, { currency: currency ?? true })
+        : "—",
     ],
     [
       t.stock.dividend,
@@ -1107,13 +1277,13 @@ async function MetricsCard({
     [t.stock.beta, m.beta ? formatPrice(m.beta, locale) : "—"],
     [
       t.stock.high52,
-      m.high52
+      hisseBasi(m.high52)
         ? formatPrice(m.high52, locale, { currency: currency ?? true })
         : "—",
     ],
     [
       t.stock.low52,
-      m.low52
+      hisseBasi(m.low52)
         ? formatPrice(m.low52, locale, { currency: currency ?? true })
         : "—",
     ],
@@ -1135,6 +1305,14 @@ async function MetricsCard({
       {homeCurrency && (
         <p className="mt-2 border-t border-line-soft pt-2.5 text-small text-muted">
           {t.stock.homeCurrencyNote.replace("{code}", currency!)}
+        </p>
+      )}
+      {/* Sessizce "—" basmak da yanlış olurdu: okuyucu veriyi bizim
+          alamadığımızı sanır, oysa sağlayıcı BAŞKA bir menkul kıymetin
+          rakamlarını gönderiyor ve biz onları bilerek yazmıyoruz. */}
+      {!olculerTutarli && (
+        <p className="mt-2 border-t border-line-soft pt-2.5 text-small text-muted">
+          {t.stock.metricsMismatch}
         </p>
       )}
     </div>
@@ -1584,6 +1762,10 @@ async function ComplianceCard({
     bookValuePerShare: metrics?.bookValuePerShare ?? null,
     debtToEquity: metrics?.debtToEquity ?? null,
     cashPerShare: metrics?.cashPerShare ?? null,
+    /* Ölçülerin bu hisseye ait olduğunu sınamak için — gerekçe
+       lib/compliance.ts → `ComplianceInputs.low52`. Gösterilmiyorlar. */
+    low52: metrics?.low52 ?? null,
+    high52: metrics?.high52 ?? null,
   });
 
   const verdictLabel =
