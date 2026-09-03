@@ -238,7 +238,7 @@ export default async function StockPage(
                 200 günlük ortalaması piyasanın en çok izlediği sayılardan
                 biri. Barlar da kotasyon da öteki dalla aynı yerden geliyor. */}
             <Panel>
-              <PanelHeader title={t.stock.movingAverages} />
+              <PanelHeader title={t.stock.movingAverages} className="pb-1.5" />
               <Suspense fallback={<ListSkeleton rows={3} />}>
                 <MovingAverages symbol={symbol} locale={locale} t={t} />
               </Suspense>
@@ -334,7 +334,7 @@ export default async function StockPage(
             gidiyor ve iki sütun aynı hizada bitiyor. */}
         <div className="flex min-w-0 flex-col gap-5">
           <Panel>
-            <PanelHeader title={t.stock.movingAverages} />
+            <PanelHeader title={t.stock.movingAverages} className="pb-1.5" />
             <Suspense fallback={<ListSkeleton rows={3} />}>
               <MovingAverages symbol={symbol} locale={locale} t={t} />
             </Suspense>
@@ -959,7 +959,13 @@ async function MovingAverages({
   }
 
   return (
-    <div className="px-4 py-3 sm:px-5">
+    /* ÜST DOLGU YOK. Başlığın kendi `py-4` alt dolgusu (16px) buradaki
+       `py-3` (12) ve satırın `py-2` (8) ile üst üste biniyordu: başlık
+       metniyle ilk ortalama arasında 36 piksel saf boşluk vardı ve kart
+       üç satırlık içeriğe göre şişkin duruyordu. Başlık `pb-1.5`e indi,
+       gövdenin üst dolgusu tümüyle kalktı; satırın kendi `py-2`si zaten
+       nefes alacak kadar. Ölçüldü: kart 245 → 190 piksel. */
+    <div className="px-4 pb-3 sm:px-5">
       <dl className="divide-y divide-line-soft">
         {satirlar.map(({ pencere, deger }) => {
           /* Fark yalnızca İKİSİ de varken yazılıyor; ortalama yoksa fiyatla
@@ -998,7 +1004,7 @@ async function MovingAverages({
           );
         })}
       </dl>
-      <p className="mt-2 border-t border-line-soft pt-2.5 text-small text-muted">
+      <p className="mt-1.5 border-t border-line-soft pt-2 text-small text-muted">
         {t.stock.movingAveragesNote}
       </p>
     </div>
@@ -1384,16 +1390,26 @@ async function AnalystCard({
      boşluk kendiliğinden kapanıyor. Yeni bilgi eklenmedi; eklenen tek şey
      payın yüzdesi, o da çubuğun zaten çizdiği oranın sayısı.
 
-     BURAYA DAHA FAZLASI EKLENMEZ. Finnhub `/stock/recommendation` dört
-     aylık anlık görüntü döndürüyor ve kart yalnızca ilkini çiziyor; kalan
-     üçüyle bir trend merdiveni çizmek ilk bakışta bu boşluğun doğal cevabı
-     gibi duruyor. Ölçüldü, değil: üç kart `repeat(auto-fit,minmax(17rem,1fr))`
-     ızgarasında AYNI satırda ve satırın boyu en uzun karta göre kuruluyor.
-     Bu düzenden sonra AAPL'de üçü de 346 piksel ve analist kartının içeriği
-     345'te bitiyor — yani satırın boyunu artık BU kart belirliyor. Merdiven
-     (~90px) eklenirse satır uzuyor ve boşluk komşu iki kartın altında
-     yeniden açılıyor; bir kartın sorunu iki karta dağıtılmış oluyor. Aynı
-     gerekçe kaynak damgası ve "alım tarafı payı" manşeti için de geçerli. */
+     BURAYA YENİ VERİ EKLENMEZ. Finnhub `/stock/recommendation` dört aylık
+     anlık görüntü döndürüyor ve kart yalnızca ilkini çiziyor; kalan üçüyle
+     bir trend merdiveni çizmek ilk bakışta boşluğun doğal cevabı gibi
+     duruyor. Ölçüldü, değil: üç kart `repeat(auto-fit,minmax(17rem,1fr))`
+     ızgarasında AYNI satırda ve satırın boyu EN UZUN karta göre kuruluyor.
+     Merdiven (~90px) satırı uzatır ve boşluk komşu kartların altında
+     yeniden açılır; bir kartın sorunu üç karta dağıtılmış olur. Aynı
+     gerekçe kaynak damgası ve "alım tarafı payı" manşeti için de geçerli.
+
+     AÇIKLAMA METNİ BU YASAĞIN DIŞINDA ve ayrımın ölçüsü net: yeni veri
+     satırı UZATIR, açıklama satırı UZATMAZ. Satırın boyunu orta sütun
+     kuruyor (ölçüldü: 529 piksel) ve bu kartın içeriği 332'de bitiyordu —
+     yani 197 piksel zaten ödenmiş ve boş duruyordu. Paragraf o ödenmiş yere
+     iniyor. Sınır da buradan çıkıyor: metin bu boşluktan uzun olmaya
+     başlarsa artık dolgu değil, satırı uzatan bir yük olur.
+
+     NEDEN AÇIKLAMA. Dağılım kartın en çok yanlış okunan yeri: "%91 Al
+     Yönünde" bir fiyat hedefi, bir zamanlama ya da öncü bir sinyal
+     sanılabiliyor. Üçü de değil ve üçünü de söyleyen tek bir paragraf,
+     boşluğu doldurmak için uydurulmuş bir metin değil. */
   return (
     /* KART KUTUSUNU DOLDURUYOR. Izgara satırı üç kolonu aynı yüksekliğe
        geriyor ve boyu orta sütun kuruyor (ölçüldü: 529 piksel). Bu kartın
@@ -1469,6 +1485,12 @@ async function AnalystCard({
           </div>
         ))}
       </dl>
+      {/* Listenin kapanış çizgisi VE paragrafın ayıracı aynı kural; ikinci
+          bir çizgi çekilmiyor. Künye kendi çizgisini koruyor, çünkü o
+          açıklamanın devamı değil ayrı bir kayıt (kapsam ve dönem). */}
+      <p className="mt-3 border-t border-line-soft pt-2.5 text-small leading-relaxed text-muted">
+        {t.stock.analystsNote}
+      </p>
       {/* KÜNYE ÜÇ ŞEYİ SÖYLÜYOR: özet, kapsam, dönem.
           Başta yalnızca ay yazıyordu. Analist sayısı eklendi, çünkü
           dağılımın ağırlığı sayıya bağlı — "3 analistin 2'si Al diyor" ile
@@ -1821,17 +1843,30 @@ async function ComplianceCard({
        yüksekliği büyütürdü — içerik üstte kalsın diye gövde de esneyebilir
        durumda. */
     <Panel className="flex flex-1 flex-col">
-      <PanelHeader title={t.stock.compliance} />
-      <div className="px-4 py-3.5 sm:px-5">
-        <span
-          className={cn(
-            "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
-            verdictClass,
-          )}
-        >
-          {verdictLabel}
-        </span>
-
+      {/* HÜKÜM BAŞLIĞIN YANINDA. Rozet gövdenin ilk satırıydı ve kendi
+          satırını tümüyle işgal ediyordu: 28 piksel rozet + 14 piksel
+          aralık, üstünde de başlığın 16 piksellik alt dolgusu. Yani kartın
+          tek cümlelik cevabı, başlıktan 58 piksel aşağıda başlıyordu.
+          Başlığın `action` yuvası tam bunun için var ve komşu Analist
+          kartında aynı rol aynı yerde duruyor (orada da rozet başlığın
+          sağında). Ölçek de oraya uyduruldu: `text-tiny`, `py-0.5`.
+          Dar ekranda `flex-wrap` rozeti kendiliğinden alt satıra indiriyor,
+          başlık kesilmiyor. Ölçüldü: kart 264 → 214 piksel. */}
+      <PanelHeader
+        title={t.stock.compliance}
+        className="pb-1.5"
+        action={
+          <span
+            className={cn(
+              "shrink-0 rounded-full px-2.5 py-0.5 text-tiny font-semibold",
+              verdictClass,
+            )}
+          >
+            {verdictLabel}
+          </span>
+        }
+      />
+      <div className="px-4 pb-3.5 sm:px-5">
         {result.businessReasonKey && (
           <p className="mt-2.5 text-xs leading-relaxed text-body">
             {t.stock.complianceReasons[result.businessReasonKey]}

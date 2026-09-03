@@ -393,6 +393,8 @@ const en: typeof tr = {
     homeCurrencyNote:
       "Earnings per share and the 52-week range come from the company's home listing in {code}, so they cannot be compared directly with the dollar price above. The P/E ratio is likewise computed within that market.",
     analysts: "Analyst Ratings",
+    analystsNote:
+      "These five buckets are the 12-month ratings of the analysts covering the stock. They are not a price target and they say nothing about timing. Ratings move slowly and in step, so the distribution usually turns after the price rather than before it.",
     strongBuy: "Strong Buy",
     buy: "Buy",
     hold: "Hold",

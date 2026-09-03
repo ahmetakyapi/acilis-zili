@@ -189,7 +189,28 @@ export function MarketTicker({
     >
       <div
         className={cn(
-          "mx-auto flex h-9 max-w-[1400px] items-center gap-3 overflow-hidden px-[18px] text-small transition-opacity motion-reduce:transition-none sm:gap-5 sm:px-6 sm:text-base xl:px-10",
+          /* ÖĞE ARASI, ÖĞE İÇİNDEKİNİN BEŞ KATI. Aralık 20 pikseldi ve bir
+             öğenin İÇİ 6: iki ölçü birbirine yeterince uzak olmadığı için
+             şerit tek bir kesintisiz akış gibi okunuyordu, "Nasdaq 100 · QQQ
+             708,91 −%0,05 S&P 500 · SPY" diye. Sayıyı etiketine bağlayan da,
+             komşu endeksten ayıran da aynı büyüklükteki boşluktu.
+
+             Yeni ölçüler ölçümle seçildi, tahminle değil. Şeridin EN DAR
+             hâli 1024 piksel: dört endeksli grup orada 852 piksel yer
+             kaplıyordu, kullanılabilir alan 976. Üç aralık 32'ye ve sekiz
+             öğe-içi aralık 8'e çıkınca içerik 908'e geliyor, pay 68 kalıyor;
+             sağdaki duraklat düğmesi (28px + 4px kenar) düşülünce 36 piksel
+             açıklık var. `overflow-hidden` olduğu için bu payın var olması
+             ŞART, yoksa son endeks sessizce kesilirdi.
+
+             ARALIĞIN BÜYÜDÜĞÜ EŞİK, ÖĞE SAYISININ ARTTIĞI EŞİKLE ÇAKIŞMIYOR
+             ve bu bir tesadüf değil, kontrol edildi: `lg` (1024) şeridin
+             GÖRÜNDÜĞÜ eşikle aynı, `WIDE_QUERY` ise 640. Yani şerit
+             göründüğü her an zaten `wide` ve sayfa başına dört endeks
+             basıyor; "aralık büyümüş ama öğe de çoğalmış" diye bir bant yok.
+             1280'den sonra kap 1400'de sabitlendiği için aralık 40'a
+             çıkıyor; orada pay 260 pikselin altına hiç inmiyor. */
+          "mx-auto flex h-9 max-w-[1400px] items-center gap-3 overflow-hidden px-[18px] text-small transition-opacity motion-reduce:transition-none sm:gap-5 sm:px-6 sm:text-base lg:gap-8 xl:gap-10 xl:px-10",
           visible ? "opacity-100" : "opacity-0",
         )}
         style={{ transitionDuration: `${FADE_MS}ms` }}
@@ -200,7 +221,7 @@ export function MarketTicker({
           </span>
         )}
         {shown.items.map((item) => (
-          <span key={item.label} className="flex shrink-0 items-center gap-1.5">
+          <span key={item.label} className="flex shrink-0 items-center gap-2">
             <span className="text-muted">{item.label}</span>
             <span className="numeral font-semibold text-body">{item.value}</span>
             {shown.showChange && item.change && (

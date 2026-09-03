@@ -518,6 +518,12 @@ const tr = {
     homeCurrencyNote:
       "Hisse başı kâr ve 52 hafta bandı şirketin ana borsasından, {code} cinsinden geliyor; başlıktaki dolar fiyatıyla doğrudan karşılaştırılamaz. F/K oranı da o borsanın kendi içinde hesaplanmıştır.",
     analysts: "Analist Görüşleri",
+    /* Kartın boşluğunu DOLDURAN değil, boşluğa HAK EDEN metin. Gerekçesi
+       bileşenin kendi künyesinde: dağılımın en sık yanlış okunan üç yanı
+       (hedef sanılması, zamanlama sanılması, öncü sanılması) tek paragrafta.
+       Cümle olduğu için Title Case değil. */
+    analystsNote:
+      "Bu beş kova, hisseyi izleyen analistlerin 12 aylık tavsiyesidir; bir fiyat hedefi değildir ve ne zaman sorusunu yanıtlamaz. Tavsiyeler topluca ve geç değişir: dağılım çoğunlukla fiyatın ardından döner, önünden değil.",
     strongBuy: "Güçlü Al",
     buy: "Al",
     hold: "Tut",
