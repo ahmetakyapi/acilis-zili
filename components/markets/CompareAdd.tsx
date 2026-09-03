@@ -191,6 +191,15 @@ export function CompareAdd({
             }
           }}
           placeholder={labels.placeholder}
+          /* YER TUTUCU ERİŞİLEBİLİR AD DEĞİL. Kutunun görünen tek açıklaması
+             `placeholder`dı ve o, yazmaya başlayınca KAYBOLUYOR; ekran
+             okuyucu desteği de tutarsız. Sonuç, alanın adsız duyurulmasıydı
+             ("düzenleme, boş"). Aynı yerde ⌘K paleti bunu doğru yapıyor
+             (`SearchCommand` → `aria-label={placeholder}`); bu kutu ve
+             favorilerdeki eşi atlanmış. Görünür etiket EKLENMİYOR: kutu bir
+             büyüteç ikonuyla birlikte tek satırlık bir çip ve üstüne etiket
+             koymak düzeni bozardı — ad erişilebilirlik ağacında duruyor. */
+          aria-label={labels.placeholder}
           className={cn(
             "h-8 bg-transparent text-sm text-strong outline-none placeholder:text-muted",
             wide ? "w-full min-w-0 flex-1" : "w-40 sm:w-48",

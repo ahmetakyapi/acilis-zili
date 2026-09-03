@@ -679,6 +679,7 @@ function AddSymbolRow({
   );
   const [hataliTerim, setHataliTerim] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   /** "Bu sembol listede zaten var" — sonuç listesinin yerinde görünür. */
   const [notice, setNotice] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -690,6 +691,13 @@ function AddSymbolRow({
     setHataliTerim(null);
     setBusy(false);
     setNotice(null);
+    /* ODAK "SEMBOL EKLE" DÜĞMESİNE DÖNER. Kutu kapanınca odak hiçbir yere
+       konmuyordu: sembol ekleyen, Escape'e basan ya da vazgeçen klavye
+       kullanıcısı `<body>`de kalıyor ve Tab'a devam ettiğinde panelin
+       başından değil SAYFANIN başından sıralanıyordu. Düğme kapanışın
+       ardından yeniden çiziliyor, o yüzden odak bir sonraki kareye
+       bırakılıyor — kutuyu AÇARKEN kullanılan kalıbın aynısı. */
+    window.setTimeout(() => triggerRef.current?.focus(), 20);
   }, []);
 
   // Debounce'lu arama — setState yalnızca zamanlayıcı/ağ callback'inde.
@@ -745,6 +753,7 @@ function AddSymbolRow({
     return (
       <div className="border-b border-line-soft px-4 py-2.5 sm:px-5">
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => {
             setOpen(true);
@@ -791,7 +800,20 @@ function AddSymbolRow({
             }
           }}
           placeholder={labels.symbolPlaceholder}
-          disabled={busy}
+          /* Yer tutucu erişilebilir ad değil — gerekçe
+             components/markets/CompareAdd.tsx künyesinde; iki arama kutusu
+             da aynı kusuru taşıyordu. */
+          aria-label={labels.symbolPlaceholder}
+          /* `disabled` DEĞİL `readOnly`. Kalp düğmesindekiyle aynı tuzak:
+             odaklı bir alan `disabled` olduğu anda tarayıcı odağı
+             `<body>`ye düşürüyor. Burada ekleme isteği uçarken kutu bir an
+             devre dışı kalıyor ve klavyeyle sembol ekleyen okuyucu, istek
+             dönünce kutuya değil sayfanın başına düşüyordu — üstelik
+             arkasından açılan sonuç listesini de kaybediyordu.
+             `readOnly` yazmayı aynı şekilde engelliyor ama odağı ve
+             `aria-disabled` ile durumu koruyor. */
+          readOnly={busy}
+          aria-disabled={busy}
           className="h-10 flex-1 bg-transparent text-base text-strong outline-none placeholder:text-muted sm:text-sm"
           autoComplete="off"
           spellCheck={false}
@@ -819,9 +841,20 @@ function AddSymbolRow({
             <li key={hit.symbol}>
               <button
                 type="button"
-                disabled={busy}
-                onClick={() => void add(hit.symbol)}
-                className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-primary-wash disabled:opacity-50"
+                /* `disabled` DEĞİL — odaklı düğme devre dışı kalınca odak
+                   `<body>`ye düşüyor. "Zaten ekli" dalında kutu AÇIK
+                   kalıyor, yani okuyucu uyarıyı görüyor ama odağını
+                   kaybetmiş oluyordu. Gerekçe components/stock/
+                   FavoriteToggle.tsx künyesinde. */
+                aria-disabled={busy}
+                onClick={(event) => {
+                  if (busy) {
+                    event.preventDefault();
+                    return;
+                  }
+                  void add(hit.symbol);
+                }}
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-primary-wash aria-disabled:opacity-50"
               >
                 <span className="numeral flex h-6 w-14 shrink-0 items-center justify-center rounded bg-primary-tint text-xs font-semibold text-primary">
                   {hit.symbol}
@@ -848,9 +881,15 @@ function AddSymbolRow({
             <button
               key={symbol}
               type="button"
-              disabled={busy}
-              onClick={() => void add(symbol)}
-              className="numeral min-h-[32px] rounded-full border border-line bg-surface px-3 text-xs font-semibold text-strong transition-colors hover:border-line-strong hover:bg-primary-tint disabled:opacity-50"
+              aria-disabled={busy}
+              onClick={(event) => {
+                if (busy) {
+                  event.preventDefault();
+                  return;
+                }
+                void add(symbol);
+              }}
+              className="numeral min-h-[32px] rounded-full border border-line bg-surface px-3 text-xs font-semibold text-strong transition-colors hover:border-line-strong hover:bg-primary-tint aria-disabled:opacity-50"
             >
               {symbol}
             </button>
