@@ -1307,6 +1307,48 @@ async function MetricsCard({
         ? formatPrice(m.low52, locale, { currency: currency ?? true })
         : "—",
     ],
+    /* NET KÂR MARJI — kartın tek KÂRLILIK ölçüsü. Sekiz satırın hepsi
+       değerleme (F/K, ileri F/K), dağıtım (temettü), oynaklık (beta) ya da
+       fiyatın kendi geçmişindeki yeri (52 hafta bandı, hacim) hakkındaydı;
+       "bu şirket kazanıyor mu" sorusunu hiçbiri yanıtlamıyordu. Gelirin
+       yüzde kaçının net kâra döndüğü tek satırda onu söylüyor.
+
+       PARA BİRİMİ SORUNU YOK, çünkü ORAN: pay da payda da ana borsanın
+       parasında ve bölümde sadeleşiyor. Bu yüzden `hisseBasi()` ile
+       sarılmıyor — o sarmalayıcı MUTLAK tutarlar için ve BRK.B'de yanlış
+       sınıfın rakamını düşürmek üzere var. Marj şirket düzeyinde bir ölçü;
+       iki hisse sınıfı için de aynı sayı, ADR'de de doğru okunuyor
+       (ölçüldü: TSM %50,70, ASML %29,49 — ikisi de kendi gerçek marjı).
+
+       Alan zaten çekiliyordu ve iki ekranda daha basılıyor (bilanço detayı
+       ve karşılaştırma); yeni bir sağlayıcı turu ya da yeni sözlük anahtarı
+       getirmiyor. Kapsam ölçüldü: 24 sembolün 22'sinde geliyor, gelmeyen
+       ikisi ETF (SPY, QQQ) ve onlar zaten fon dalına gidip bu kartı hiç
+       görmüyor. `!== null` ile ayrılıyor — zarardaki şirketin marjı negatif
+       bir sayı, "bilinmiyor" değil (DKNG %-2,68, SOFI %-19,79). */
+    ...(m.netMarginPct !== null && m.netMarginPct !== undefined
+      ? ([
+          [t.stock.netMargin, formatPercentPlain(m.netMarginPct, locale, 1)],
+        ] as [string, string][])
+      : []),
+    /* BORÇ / ÖZSERMAYE — kartın tek KALDIRAÇ ölçüsü, marjın kâr tarafına
+       karşılık bilanço tarafı. Marjla aynı gerekçelerle güvenli: oran
+       olduğu için para birimi sadeleşiyor, şirket düzeyinde olduğu için
+       hisse sınıfından bağımsız. Kapsam ölçüldü: 20 sembolün 20'sinde
+       geliyor ve hepsi çeyreklik alandan (`totalDebt/totalEquityQuarterly`).
+
+       ORAN, YÜZDE DEĞİL — beta gibi biçimlendiriliyor. Ölçülen değerler
+       0,04 (NVDA, neredeyse borçsuz) ile 7,52 (BA) arasında; yüzde sanılıp
+       "%0,04" basılsaydı borçsuz bir bilanço "sıfıra yakın borç" değil
+       "ölçülemeyecek kadar küçük" gibi okunurdu.
+
+       `> 0` DEĞİL `!== null`: sıfır borç gerçek bir bilanço durumu ve
+       "bilinmiyor"dan farklı — temettü satırındaki aynı ayrım. */
+    ...(m.debtToEquity !== null && m.debtToEquity !== undefined
+      ? ([
+          [t.stock.debtToEquity, formatPrice(m.debtToEquity, locale)],
+        ] as [string, string][])
+      : []),
     [t.market.volume, quote?.volume ? formatVolume(quote.volume, locale) : "—"],
   ];
 
@@ -1479,7 +1521,15 @@ async function AnalystCard({
                 alta. Üstelik üstteki "%94 Al Yönünde" rozetinin bazı FARKLI
                 (al tarafının toplam paya oranı) ve yan yana duran altı yüzde
                 iki ayrı bazı ayırt edilemez hâle getiriyordu. */}
-            <dd className="numeral hidden w-11 shrink-0 text-right text-tiny text-muted sm:block">
+            {/* ÖLÇEK FARKI YÜZDEYİ SİLİYORDU. Sütun 11 piksel (`text-tiny`)
+                ve `text-muted` ile çiziliyordu; hemen solundaki adet sütunu
+                ise 14 piksel ve `text-body`. Kontrast zaten AA'yı geçiyordu
+                (açık temada 5,57:1, koyuda 5,32:1) — sorun renk değil, üç
+                piksellik punto farkının yüzdeyi komşusunun gölgesine
+                itmesiydi. 12 piksele ve aynı renk ailesine çekildi; sayının
+                altında değil YANINDA duruyor artık. Hâlâ ikincil: adet
+                sütunundan iki punto küçük ve ağırlığı yok. */}
+            <dd className="numeral hidden w-11 shrink-0 text-right text-small text-body sm:block">
               {formatPercentPlain((segment.value / total) * 100, locale, 0)}
             </dd>
           </div>

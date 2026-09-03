@@ -388,6 +388,8 @@ const en: typeof tr = {
     eps: "Earnings per Share",
     dividend: "Dividend Yield",
     beta: "Beta",
+    netMargin: "Net Margin",
+    debtToEquity: "Debt / Equity",
     high52: "52-Week High",
     low52: "52-Week Low",
     homeCurrencyNote:

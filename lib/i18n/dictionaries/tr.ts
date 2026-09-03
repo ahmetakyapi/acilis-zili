@@ -513,6 +513,18 @@ const tr = {
     eps: "Hisse Başına Kâr",
     dividend: "Temettü Verimi",
     beta: "Beta",
+    /* Aynı dize `analysis` ve `compare` bölümlerinde de var. Üçüncü kopya
+       bilinçli: bu kartın satır etiketlerinin TAMAMI `stock` altında ve
+       tek bir satır için başka bölüme uzanmak, sözlüğün bölüm sınırını
+       ekranın sınırı olmaktan çıkarırdı. */
+    netMargin: "Net Kâr Marjı",
+    /* PAYDA ETİKETTE YAZILI ve bu zorunlu: hemen yanındaki Katılım
+       Taraması da bir borç oranı gösteriyor ama paydası PİYASA DEĞERİ
+       ("Faizli Borç / Piyasa Değeri"). İki oran aynı ekranda ve farklı
+       tabanda; "Borç Oranı" gibi paydasız bir ad ikisini ayırt edilemez
+       hâle getirirdi. Analist kartındaki iki farklı yüzde tabanının
+       karışması tam olarak bu yüzden bir kez sorun olmuştu. */
+    debtToEquity: "Borç / Özsermaye",
     high52: "52 Hafta En Yüksek",
     low52: "52 Hafta En Düşük",
     homeCurrencyNote:
