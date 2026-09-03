@@ -313,8 +313,13 @@ export default async function StockPage(
             gerekçe MetricsCard'ın kendi künyesinde. */}
         <Panel className="flex flex-col">
           <PanelHeader title={t.stock.metrics} />
-          {/* Sekiz ölçü satırı basıyor (ileri F/K ile birlikte). */}
-          <Suspense fallback={<ListSkeleton rows={8} />}>
+          {/* ON ölçü satırı: sekiz sabit (F/K, hisse başına kâr, temettü,
+              beta, 52 hafta yüksek/düşük, hacim) artı üç koşullu (ileri
+              F/K, net kâr marjı, borç/özsermaye) — üçü de gelmezse yedi.
+              Yedek ON satır ayırıyor çünkü koşulluların üçü de gerçek
+              şirketlerde neredeyse hep geliyor; sayı bir dönem sekizde
+              kalmıştı ve iki satırlık (74 piksel) bir sıçrama yapıyordu. */}
+          <Suspense fallback={<ListSkeleton rows={10} />}>
             <MetricsCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </Panel>
@@ -1351,6 +1356,30 @@ async function MetricsCard({
       : []),
     [t.market.volume, quote?.volume ? formatVolume(quote.volume, locale) : "—"],
   ];
+
+  /* FİYAT / SATIŞ DEĞERLENDİRİLDİ, EKLENMEDİ — gerekçe yazılıyor çünkü
+     aday güçlü ve yeniden önerilmesi çok olası.
+
+     Lehine olan taraf gerçek: `psTTM` bir ORAN, yani para birimi bölümde
+     sadeleşiyor (TSM'de baştan sona TWD içinde kuruluyor) ve hisse
+     sınıfından bağımsız (BRK.A ile BRK.B birebir aynı 2,5391 dönüyor, çünkü
+     pay ve payda birlikte 1500'e bölünüyor). Kapsam 67/68. Üstelik kartın
+     değerleme tarafının TÜMÜYLE çöktüğü yeri dolduruyor: CRWV, RKLB, ASTS
+     ve NBIS'te ne F/K ne İleri F/K geliyor, F/S dördünde de dolu.
+
+     ENGEL FİYAT TABANI. `psTTM` sağlayıcının KENDİ fiyatından kurulu ve o
+     fiyat geriden geliyor: ölçüldü, AAPL'de oran 301,07 dolarlık bir fiyat
+     ima ediyor, canlı kotasyon 324,96 — %7,4 sapma. Depo sağlayıcının hazır
+     `peTTM`ini tam bu yüzden zaten reddetmiş ve oradaki ölçüm %5,6'ydı
+     (lib/utils.ts → `peRatioOf`), yani bu daha büyük. Aynı kartta F/K CANLI
+     fiyattan kuruluyor; F/S eklenseydi iki değerleme oranı iki farklı fiyat
+     tabanında yan yana dururdu.
+
+     İleri F/K'nin neden kabul edildiği sorulursa: orada yeniden kurmanın
+     yolu KAPALI, ileri EPS elimizde yok (types.ts → `forwardPe`). F/S'de
+     ise yol açık görünüyor ama açılırsa yanlış — `price / revenuePerShare`
+     ADR'de dolar/TWD karışımı verir, BRK.B'de 0,002 basar. Yani ne olduğu
+     gibi alınabiliyor ne yeniden kurulabiliyor. */
 
   return (
     /* LİSTE KUTUYU DOLDURUYOR. Izgara satırının boyunu orta sütun kuruyor
