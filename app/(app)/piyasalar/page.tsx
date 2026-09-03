@@ -617,8 +617,19 @@ async function IndexDetail({
   const declining = withChange.filter((row) => row.quote!.changePct! < 0).length;
   const flat = withChange.length - advancing - declining;
 
-  const byChange = [...withQuote].sort(
-    (a, b) => (b.quote!.changePct ?? 0) - (a.quote!.changePct ?? 0),
+  /* SIRALAMA DA YALNIZCA DEĞİŞİMİ BİLİNEN SATIRLARDAN.
+     Sayaç yukarıda `withChange` ile düzeltilmişti ama bu liste hâlâ
+     `withQuote`u `?? 0` ile sıralıyordu: değişimi bilinmeyen bir sembol
+     sıfır sayılıp diziye giriyor ve az hareketli bir günde — beşten az
+     sembol artıya ya da eksiye geçtiğinde — "Günün En Çok Artanları"
+     listesine "—" yüzdesiyle çıkabiliyordu. Bir hareket sıralamasında
+     hareketi bilinmeyen satırın yeri yok.
+
+     Künyenin PAYDASI da düzeldi: üstteki sayaç "102 şirketin" derken bu
+     künye `withQuote.length` ile başka bir toplam yazıyordu — aynı ekranda
+     iki farklı payda. İkisi de artık `withChange`. */
+  const byChange = [...withChange].sort(
+    (a, b) => b.quote!.changePct! - a.quote!.changePct!,
   );
   const gainers = byChange.slice(0, 5);
   const losers = [...byChange].reverse().slice(0, 5);
@@ -653,7 +664,7 @@ async function IndexDetail({
               t={t}
               meta={t.companies.showing
                 .replace("{n}", String(gainers.length))
-                .replace("{total}", String(withQuote.length))}
+                .replace("{total}", String(withChange.length))}
             />
             <MoverPanel
               title={t.markets.topLosers}
@@ -664,7 +675,7 @@ async function IndexDetail({
               t={t}
               meta={t.companies.showing
                 .replace("{n}", String(losers.length))
-                .replace("{total}", String(withQuote.length))}
+                .replace("{total}", String(withChange.length))}
             />
           </div>
         </>

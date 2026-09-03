@@ -50,6 +50,10 @@ export function CompareAdd({
     placeholder: string;
     cancel: string;
     noResults: string;
+    /** İstek uçarken — "sonuç yok" demeden önce. */
+    searching: string;
+    /** Arama ucu düştüğünde; "sembol yok" DEĞİL. */
+    searchFailed: string;
   };
 }) {
   const router = useRouter();
@@ -60,13 +64,32 @@ export function CompareAdd({
   const compare = useCompareOptional();
   const [open, setOpen] = useState(defaultOpen);
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<SearchHit[]>([]);
+  /* ARAMA DURUMU TÜRETİLİYOR, SAKLANMIYOR.
+     "Sonuç yok" ile "henüz bakmadık" ayrı şeyler. `hits` boş başlıyor ve
+     liste yalnızca uzunluğa bakıyordu: kutuya bir harf yazan okuyucu,
+     200 ms'lik gecikme artı ağ turu boyunca "Bu sembol bulunamadı" cümlesini
+     okuyordu — daha hiçbir yere sorulmamışken. İstek DÜŞTÜĞÜNDE de aynı
+     cümle çıkıyordu (`!res.ok` sessizce dönüyordu), yani sağlayıcı hatası
+     "böyle bir sembol yok" diye yazılıyordu. Aynı sınıf hata halka arz
+     takviminde ve şirket haberlerinde de vardı; oradaki düzeltmenin emsali.
+
+     Ayrı bir `durum` state'i denendi ve LİNT REDDETTİ: "aranıyor"u yazmanın
+     tek yeri efekt gövdesiydi, o da `react-hooks/set-state-in-effect`e
+     takılıyor. Kural yerinde — bu dosyanın kendi künyesi de "setState
+     yalnızca zamanlayıcı/ağ callback'inde" diyor. Bilgi zaten elimizde:
+     sonucu HANGİ TERİM için tuttuğumuzu saklarsak, "aranıyor" bunun
+     yokluğundan çıkıyor. */
+  const [sonuc, setSonuc] = useState<{ term: string; hits: SearchHit[] } | null>(
+    null,
+  );
+  const [hataliTerim, setHataliTerim] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reset = useCallback(() => {
     setOpen(false);
     setQuery("");
-    setHits([]);
+    setSonuc(null);
+    setHataliTerim(null);
   }, []);
 
   // Debounce'lu arama — setState yalnızca zamanlayıcı/ağ callback'inde.
@@ -80,11 +103,16 @@ export function CompareAdd({
         const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`, {
           signal: controller.signal,
         });
-        if (!res.ok) return;
+        if (!res.ok) {
+          setHataliTerim(term);
+          return;
+        }
         const data = (await res.json()) as { hits?: SearchHit[] };
-        setHits(data.hits ?? []);
-      } catch {
-        // iptal edilen istekler sessizce geçilir
+        setSonuc({ term, hits: data.hits ?? [] });
+      } catch (error) {
+        /* İPTAL HATA DEĞİL. Her tuş vuruşu bir öncekini iptal ediyor;
+           onu "hata" saymak yazarken kutuyu kırmızıya boyardı. */
+        if ((error as Error)?.name !== "AbortError") setHataliTerim(term);
       }
     }, 200);
     return () => {
@@ -130,9 +158,18 @@ export function CompareAdd({
     );
   }
 
+  const term = query.trim();
+  /* Sonucu hangi terim için tuttuğumuz belli; "aranıyor" onun yokluğu. */
+  const durum: "bos" | "araniyor" | "hazir" | "hata" = !term
+    ? "bos"
+    : hataliTerim === term
+      ? "hata"
+      : sonuc?.term === term
+        ? "hazir"
+        : "araniyor";
   /* Zaten seçili olan sembol sonuçlarda GÖRÜNMEZ: tıklanınca aynı listeyi
      üreteceği için hiçbir şey olmuyormuş gibi görünürdü. */
-  const shown = hits
+  const shown = (sonuc?.hits ?? [])
     .filter((hit) => !symbols.includes(hit.symbol))
     .slice(0, 6);
 
@@ -190,7 +227,11 @@ export function CompareAdd({
         >
           {shown.length === 0 ? (
             <li className="px-3 py-2.5 text-small text-muted">
-              {labels.noResults}
+              {durum === "araniyor"
+                ? labels.searching
+                : durum === "hata"
+                  ? labels.searchFailed
+                  : labels.noResults}
             </li>
           ) : (
             shown.map((hit) => (

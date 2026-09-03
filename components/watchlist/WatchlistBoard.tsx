@@ -63,6 +63,10 @@ export type BoardLabels = {
   emptyAll: string;
   emptyAllHint: string;
   noResults: string;
+  /** İstek uçarken — "sonuç yok" demeden önce. */
+  searching: string;
+  /** Arama ucu düştüğünde; "sembol yok" DEĞİL. */
+  searchFailed: string;
   moveUp: string;
   moveDown: string;
   cancel: string;
@@ -665,7 +669,15 @@ function AddSymbolRow({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<SearchHit[]>([]);
+  /* ARAMA DURUMU TÜRETİLİYOR — gerekçe ve lint kısıtı
+     components/markets/CompareAdd.tsx künyesinde: "sonuç yok" ile "henüz
+     bakmadık" ayrı şeyler, istek düşünce sağlayıcı hatası "böyle bir sembol
+     yok" diye yazılıyordu, ve ayrı bir `durum` state'i efekt gövdesinde
+     yazılamıyor (`react-hooks/set-state-in-effect`). */
+  const [sonuc, setSonuc] = useState<{ term: string; hits: SearchHit[] } | null>(
+    null,
+  );
+  const [hataliTerim, setHataliTerim] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   /** "Bu sembol listede zaten var" — sonuç listesinin yerinde görünür. */
   const [notice, setNotice] = useState<string | null>(null);
@@ -674,7 +686,8 @@ function AddSymbolRow({
   const reset = useCallback(() => {
     setOpen(false);
     setQuery("");
-    setHits([]);
+    setSonuc(null);
+    setHataliTerim(null);
     setBusy(false);
     setNotice(null);
   }, []);
@@ -690,10 +703,15 @@ function AddSymbolRow({
         const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`, {
           signal: controller.signal,
         });
+        if (!res.ok) {
+          setHataliTerim(term);
+          return;
+        }
         const data = (await res.json()) as { hits: SearchHit[] };
-        setHits(data.hits ?? []);
-      } catch {
-        // iptal edilen istekler sessizce geçilir
+        setSonuc({ term, hits: data.hits ?? [] });
+      } catch (error) {
+        /* İptal hata değil — her tuş vuruşu bir öncekini iptal ediyor. */
+        if ((error as Error)?.name !== "AbortError") setHataliTerim(term);
       }
     }, 200);
     return () => {
@@ -741,7 +759,16 @@ function AddSymbolRow({
     );
   }
 
-  const shownHits = query.trim() ? hits.slice(0, 6) : [];
+  const aranan = query.trim();
+  /* Sonucu hangi terim için tuttuğumuz belli; "aranıyor" onun yokluğu. */
+  const durum: "bos" | "araniyor" | "hazir" | "hata" = !aranan
+    ? "bos"
+    : hataliTerim === aranan
+      ? "hata"
+      : sonuc?.term === aranan
+        ? "hazir"
+        : "araniyor";
+  const shownHits = aranan ? (sonuc?.hits ?? []).slice(0, 6) : [];
 
   return (
     <div className="border-b border-line-soft px-4 py-3 sm:px-5">
@@ -808,7 +835,13 @@ function AddSymbolRow({
           ))}
         </ul>
       ) : query.trim() ? (
-        <p className="mt-2 px-1 text-xs text-muted">{labels.noResults}</p>
+        <p className="mt-2 px-1 text-xs text-muted">
+          {durum === "araniyor"
+            ? labels.searching
+            : durum === "hata"
+              ? labels.searchFailed
+              : labels.noResults}
+        </p>
       ) : (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {QUICK_PICKS.map((symbol) => (

@@ -89,6 +89,8 @@ export async function CompareEmpty({
                 placeholder: t.compare.addPlaceholder,
                 cancel: t.common.cancel,
                 noResults: t.stock.notFound,
+                searching: t.common.loading,
+                searchFailed: t.common.error,
               }}
             />
           </div>

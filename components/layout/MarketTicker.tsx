@@ -150,7 +150,19 @@ export function MarketTicker({
     }, ROTATE_MS);
     return () => {
       window.clearInterval(cycle);
-      if (fade !== undefined) window.clearTimeout(fade);
+      if (fade !== undefined) {
+        window.clearTimeout(fade);
+        /* SÖNME ORTASINDA DURULURSA ŞERİT GÖRÜNMEZ KALIYORDU.
+           Döngü önce `visible`ı false yapıyor, `FADE_MS` sonra sıradaki
+           gruba geçip yeniden yakıyor. Duraklatma (imleç, duraklat düğmesi,
+           `prefers-reduced-motion`, sekmenin görünürden çıkması) tam o
+           pencerede gelirse temizlik zamanlayıcıyı iptal ediyor ve "yeniden
+           yak" adımı HİÇ çalışmıyordu: şerit `opacity-0`da kalıyor, yeri
+           37 piksel boş duruyor ve duraklat düğmesine basan okuyucu şeridi
+           dondurmak yerine kaybediyordu. Yalnızca gerçekten bekleyen bir
+           sönme varsa geri yakılıyor. */
+        setVisible(true);
+      }
     };
   }, [pageCount, onScreen, durduruldu, elleDurduruldu, azHareket]);
 

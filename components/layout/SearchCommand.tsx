@@ -285,6 +285,23 @@ export function SearchCommand({
     return () => document.removeEventListener("keydown", onTab, true);
   }, [open, owns]);
 
+  /* SEÇİLİ SATIR GÖRÜNÜR ALANA KAYDIRILIYOR.
+     Ok tuşları `active` indeksini ilerletiyor ve `aria-activedescendant`
+     ekran okuyucuya doğru satırı söylüyordu, ama liste kabı kendi içinde
+     kayıyor (`max-h-[60dvh] overflow-y-auto`) ve GÖRSEL olarak hiçbir şey
+     kaymıyordu: altıncı satırdan sonra klavye kullanan okuyucunun seçimi
+     ekranın dışına çıkıyor, ne seçtiğini göremeden Enter'a basıyordu.
+     `block: "nearest"` sayfayı zıplatmıyor — yalnızca gerekiyorsa ve
+     yalnızca kabın içinde kaydırıyor.
+     Kimlikle arama güvenli: paleti tek örnek sahipleniyor (bkz. dosya
+     başındaki "PALET TEK ÖRNEK OLMALI" künyesi), yani bu id belgede tek. */
+  useEffect(() => {
+    if (!open || !owns) return;
+    document
+      .getElementById(`palet-secenek-${active}`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [active, open, owns]);
+
   // Debounce'lu arama — tüm setState çağrıları zamanlayıcı/ağ callback'inde.
   useEffect(() => {
     if (!open || !owns) return;

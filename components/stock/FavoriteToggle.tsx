@@ -59,7 +59,17 @@ function HeartButton({ active, label }: { active: boolean; label: string }) {
   return (
     <button
       type="submit"
-      disabled={pending}
+      /* `disabled` DEĞİL `aria-disabled`. Odaklı bir düğme `disabled`
+         olduğu anda tarayıcı odağı `<body>`ye düşürüyor: klavyeyle kalbe
+         gelip Enter'a basan okuyucu, istek dönene kadar sayfanın başında
+         kalıyor ve Tab'a devam ettiğinde en baştan sıralanıyordu. Sunucu
+         eylemi bittiğinde odağı geri koyacak bir şey de yok.
+         `aria-disabled` durumu ekran okuyucuya söylüyor ama düğmeyi odak
+         sırasında tutuyor; ikinci gönderimi `onClick` engelliyor. */
+      aria-disabled={pending}
+      onClick={(event) => {
+        if (pending) event.preventDefault();
+      }}
       aria-label={label}
       title={label}
       /* `aria-pressed` durumu ekran okuyucuya da söylüyor: ikonun dolu mu

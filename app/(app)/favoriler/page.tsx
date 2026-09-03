@@ -79,6 +79,8 @@ export default async function WatchlistPage() {
     emptyAll: t.watchlist.emptyAll,
     emptyAllHint: t.watchlist.emptyAllHint,
     noResults: t.stock.notFound,
+    searching: t.common.loading,
+    searchFailed: t.common.error,
     moveUp: t.watchlist.moveUp,
     moveDown: t.watchlist.moveDown,
     cancel: t.common.cancel,
