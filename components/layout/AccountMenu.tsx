@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   useSyncExternalStore,
   useTransition,
@@ -149,16 +150,28 @@ export function AccountMenu({
     else stopRouteProgress();
   }, [pending]);
 
-  const close = useCallback(() => setOpenedAt(null), []);
+  /* ODAK TETİKLEYİCİYE GERİ DÖNER. Panel kapanınca odak hiçbir yere
+     konmuyordu: Escape'e basan ya da perdeye tıklayan klavye kullanıcısı
+     `<body>`de kalıyor ve Tab'a devam ettiğinde sayfanın en başından
+     sıralanıyordu — oysa bulunduğu yer masthead'in sağ ucuydu.
+     `aria-haspopup="dialog"` açan düğmenin kuralı bu.
+
+     DİL DEĞİŞİMİNDE ODAK GERİ KONMUYOR: orada tam sayfa gezinmesi var
+     (gerekçe aşağıda) ve gidecek olan belgeye odak vermek anlamsız. */
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const close = useCallback((odagiGeriVer = true) => {
+    setOpenedAt(null);
+    if (odagiGeriVer) triggerRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpenedAt(null);
+      if (event.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, close]);
 
   const pickTheme = (next: Theme) => {
     if (next === readTheme()) return;
@@ -172,7 +185,7 @@ export function AccountMenu({
     if (next === initialLocale) return;
     // Panel hemen kapanır: dil geçişi arkada sürerken açık kalan menü, yeni
     // dilde yeniden çizilip gözün önünde kendi kendine değişiyordu.
-    close();
+    close(false);
     /* Geçiş gövdesi ASENKRON. `startTransition(() => void action())` yazılırsa
        gövde `undefined` döndürdüğü için React geçişi o anda bitmiş sayıyor:
        `pending` bir kare true olup hemen false'a düşüyor ve gösterge hiç
@@ -195,8 +208,9 @@ export function AccountMenu({
           içinde jenerik bir kullanıcı ikonu + aşağı ok duruyordu: üç ayrı
           şekil 44 pikselin içine sıkışıyor, hiçbiri "hesap" demiyordu. */}
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setOpenedAt(open ? null : pathname)}
+        onClick={() => (open ? close() : setOpenedAt(pathname))}
         aria-expanded={open}
         /* `menu` DEĞİL `dialog`: aşağıdaki panel bir menü değil, içinde
            kimlik başlığı, iki tema düğmesi ve iki dil düğmesi olan küçük bir
@@ -235,7 +249,7 @@ export function AccountMenu({
               yani yığında altında kalır. */}
           <span
             aria-hidden
-            onClick={close}
+            onClick={() => close()}
             className="fixed inset-0 z-10 cursor-default"
           />
 

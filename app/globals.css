@@ -503,7 +503,17 @@
       calc(env(safe-area-inset-bottom) + 80px);
   }
 
-  @media (min-width: 640px) {
+  /* KÜÇÜK ALT DEĞER 1024'TEN SONRA — 640'tan değil.
+     Kural `sm:`de (640px) yazılıydı ama alt sekme çubuğu `lg:hidden`, yani
+     1023 pikselse kadar EKRANDA. Ölçüldü: çubuk 80 piksel, dolgu 640'tan
+     sonra 52'ye düşüyor ve aradaki bütün genişliklerde (640-1023 — yani her
+     tablet) odaklanan öğe, atlama bağlantısı hedefi ve her `#çapa`
+     çubuğun 28 piksel altında kalıyordu. Üst değer 76'da kalıyor; yapışkan
+     başlık her genişlikte aynı.
+
+     Sınır artık çubuğun kendi sınırı: `lg` (1024px). Orada dipteki tek
+     katman 37 piksellik piyasa şeridi ve 52 ona yetiyor. */
+  @media (min-width: 1024px) {
     html {
       scroll-padding-block: 76px 52px;
     }

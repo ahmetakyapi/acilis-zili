@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Check,
   LinkSimple,
@@ -62,6 +62,18 @@ export function ShareButton({
 }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  /* ODAK TETİKLEYİCİYE GERİ DÖNER. Panel kapanınca odak hiçbir yere
+     konmuyordu: Escape'e basan ya da bir paylaşım bağlantısı seçen
+     klavye kullanıcısı `<body>`de kalıyor ve Tab'a devam ettiğinde
+     sayfanın en başından sıralanıyordu — oysa okuduğu yer yazının
+     üstündeki denetim satırıydı. ARIA kalıbının kendi kuralı da bu:
+     `aria-haspopup="dialog"` açan düğme, diyalog kapanınca odağı geri
+     almalı. */
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const kapat = useCallback(() => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     if (!copied) return;
@@ -72,11 +84,11 @@ export function ShareButton({
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") kapat();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, kapat]);
 
   const copy = useCallback(async () => {
     try {
@@ -147,6 +159,7 @@ export function ShareButton({
   return (
     <div className={cn("relative", className)}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={onClick}
         aria-expanded={open}
@@ -173,7 +186,7 @@ export function ShareButton({
         <>
           <span
             aria-hidden
-            onClick={() => setOpen(false)}
+            onClick={kapat}
             className="fixed inset-0 z-10 cursor-default"
           />
           <div
@@ -193,7 +206,7 @@ export function ShareButton({
                     href={target.href}
                     target="_blank"
                     rel="noreferrer noopener"
-                    onClick={() => setOpen(false)}
+                    onClick={kapat}
                     className="flex min-h-10 items-center gap-2.5 rounded-md px-2 text-base font-semibold text-strong transition-colors hover:bg-surface"
                   >
                     <span

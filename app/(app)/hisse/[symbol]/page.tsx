@@ -361,7 +361,20 @@ export default async function StockPage(
 
       {/* Haberler en altta — mobilde de masaüstünde de son durak */}
       <Panel>
-        <PanelHeader title={t.stock.companyNews} />
+        {/* SEMBOL SÜZGECİNE KÖPRÜ. `/haberler?sembol=XXX` çalışıyor ve bir
+            hata düzeltmesiyle sağlamlaştırılmış (60 haberlik pencere,
+            `getNewsForSymbol`) ama SİTEDE HİÇBİR YERDEN bağlantı verilmiyordu:
+            yalnızca adresi elle yazan bulabiliyordu. Bu panel şirketin son
+            sekiz haberini gösteriyor, süzgeç altmışını; okuyucunun "devamı
+            var mı" sorusunun cevabı buradaydı ve gösterilmiyordu. */}
+        <PanelHeader
+          title={t.stock.companyNews}
+          action={
+            <PanelLink href={`/haberler?sembol=${symbol}`}>
+              {t.common.showAll}
+            </PanelLink>
+          }
+        />
         <Suspense fallback={<ListSkeleton rows={4} />}>
           <CompanyNews symbol={symbol} locale={locale} t={t} />
         </Suspense>
@@ -1893,7 +1906,20 @@ async function CompanyNews({
         const inner = (
           <span className="flex items-start gap-3">
             <span className="min-w-0 flex-1">
-              <span className="line-clamp-2 block text-sm font-medium leading-snug text-strong">
+              {/* ÇEVİRİSİ OLMAYAN BAŞLIK DİLİNİ SÖYLER. Türkçe arayüzde
+                  çeviri yoksa sağlayıcının İngilizce başlığına düşülüyor ama
+                  metin `<html lang="tr">` altında kalıyordu: ekran okuyucu
+                  İngilizce cümleyi Türkçe sesletim kurallarıyla okuyor.
+                  Kural üç ekranda uygulanmış (`/haberler`, haber detayı ve
+                  oradaki ilgili haberler listesi), bu panel atlanmış. */}
+              <span
+                lang={
+                  locale === "tr" && !trByProvider.get(item.providerId)
+                    ? "en"
+                    : undefined
+                }
+                className="line-clamp-2 block text-sm font-medium leading-snug text-strong"
+              >
                 {(locale === "tr" && trByProvider.get(item.providerId)) ||
                   item.headline}
               </span>
