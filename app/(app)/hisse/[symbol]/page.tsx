@@ -309,13 +309,45 @@ export default async function StockPage(
           Eskiden bunlar tek sütuna dizildiği için sağ kolon uzayıp sol taraf
           boş kalıyordu; artık sayfanın tam genişliğini kullanıyorlar. */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(17rem,1fr))] gap-5">
-        <Panel>
+        {/* `flex flex-col` — içerideki liste kutuyu doldurabilsin diye;
+            gerekçe MetricsCard'ın kendi künyesinde. */}
+        <Panel className="flex flex-col">
           <PanelHeader title={t.stock.metrics} />
-          {/* Yedi ölçü satırı basıyor; yedek beş satır ayırıyordu. */}
-          <Suspense fallback={<ListSkeleton rows={7} />}>
+          {/* Sekiz ölçü satırı basıyor (ileri F/K ile birlikte). */}
+          <Suspense fallback={<ListSkeleton rows={8} />}>
             <MetricsCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </Panel>
+
+        {/* ORTA SÜTUN İKİ PARÇA. Üstte hareketli ortalamalar, altında
+            katılım taraması. İkisi de kısa kartlar ve tek başlarına
+            bırakıldıklarında yanlarındaki uzun kartların yanında bir sütunu
+            yarıya kadar dolduruyorlardı; alt alta gelince şerit üç eşit
+            kolona oturuyor.
+
+            SON PANEL BÜYÜYOR (`flex-1`), ARALIK DEĞİL. Izgara satırı üç
+            kolonu aynı yüksekliğe geriyor ve fark bir yere gitmek zorunda.
+            `justify-between` bu farkı PANEL ARASINA dağıtırdı — CLAUDE.md
+            "Düzen" bölümü tam olarak bunu yasaklıyor, çünkü o zaman aralık
+            kendi ölçüsü olmaktan çıkıp komşu kolonun boyuna bağlanıyor.
+            Aralık `gap-5` sabit kalıyor; artan yer alttaki kartın İÇİNE
+            gidiyor ve iki sütun aynı hizada bitiyor. */}
+        <div className="flex min-w-0 flex-col gap-5">
+          <Panel>
+            <PanelHeader title={t.stock.movingAverages} />
+            <Suspense fallback={<ListSkeleton rows={3} />}>
+              <MovingAverages symbol={symbol} locale={locale} t={t} />
+            </Suspense>
+          </Panel>
+
+          <Suspense
+            fallback={
+              <Skeleton className="h-[319px] w-full flex-1 rounded-(--radius-xl)" />
+            }
+          >
+            <ComplianceCard symbol={symbol} locale={locale} t={t} />
+          </Suspense>
+        </div>
 
         {/* PANEL VE BAŞLIK KARTIN İÇİNDE. Başlığın sağındaki rozet
             sağlayıcıdan gelen veriden hesaplanıyor, yani başlık akışın
@@ -323,14 +355,6 @@ export default async function StockPage(
             beş satır, kartın gerçekte bastığı kova sayısı. */}
         <Suspense fallback={<PanelSkeleton rows={5} footer />}>
           <AnalystCard symbol={symbol} locale={locale} t={t} />
-        </Suspense>
-
-        <Suspense
-          fallback={
-            <Skeleton className="h-[319px] w-full rounded-(--radius-xl)" />
-          }
-        >
-          <ComplianceCard symbol={symbol} locale={locale} t={t} />
         </Suspense>
       </div>
 
@@ -368,16 +392,6 @@ export default async function StockPage(
       )}
 
       {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
-      {/* Hareketli ortalamalar metrik kartının hemen ardında: ikisi de
-          "bu hisse nerede duruyor" sorusunun parçası, biri değerleme
-          tarafından biri fiyat tarafından bakıyor. */}
-      <Panel>
-        <PanelHeader title={t.stock.movingAverages} />
-        <Suspense fallback={<ListSkeleton rows={3} />}>
-          <MovingAverages symbol={symbol} locale={locale} t={t} />
-        </Suspense>
-      </Panel>
-
       <Panel>
         <PanelHeader title={t.stock.pastEarnings} />
         <Suspense fallback={<ListSkeleton rows={6} />}>
@@ -1291,10 +1305,17 @@ async function MetricsCard({
   ];
 
   return (
-    <div className="px-4 py-3 sm:px-5">
-      <dl className="divide-y divide-line-soft">
+    /* LİSTE KUTUYU DOLDURUYOR. Izgara satırının boyunu orta sütun kuruyor
+       ve bu kartın içeriği 156 piksel erken bitiyordu: son satırın altında
+       kartın üçte biri kadar boş yer kalıyor, kart yarım kalmış gibi
+       duruyordu. Satırlar artan yeri PAYLAŞIYOR (`flex-1`) — sekiz satıra
+       yirmişer piksel, yani liste seyreliyor ama hiçbir yerde delik yok.
+       Dar ekranda ızgara tek sütuna düşüyor, gerilme olmuyor ve satırlar
+       kendi doğal boylarında kalıyor. */
+    <div className="flex flex-1 flex-col px-4 py-3 sm:px-5">
+      <dl className="flex flex-1 flex-col divide-y divide-line-soft">
         {rows.map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between gap-3 py-2">
+          <div key={label} className="flex flex-1 items-center justify-between gap-3 py-2">
             <dt className="text-xs font-semibold text-strong">{label}</dt>
             <dd className="numeral text-sm text-body">{value}</dd>
           </div>
@@ -1374,7 +1395,14 @@ async function AnalystCard({
      yeniden açılıyor; bir kartın sorunu iki karta dağıtılmış oluyor. Aynı
      gerekçe kaynak damgası ve "alım tarafı payı" manşeti için de geçerli. */
   return (
-    <Panel>
+    /* KART KUTUSUNU DOLDURUYOR. Izgara satırı üç kolonu aynı yüksekliğe
+       geriyor ve boyu orta sütun kuruyor (ölçüldü: 529 piksel). Bu kartın
+       içeriği 332'de bitiyordu, yani künyenin ALTINDA 197 piksel boş kalıyor
+       ve kart yarım kalmış gibi duruyordu. Künye artık kartın dibinde;
+       artan yer künye ile satırlar ARASINA gidiyor, künyenin altına değil.
+       Tek sütuna düşen dar ekranda gerilme olmadığı için hiçbir şey
+       değişmiyor. */
+    <Panel className="flex flex-col">
       <PanelHeader
         title={t.stock.analysts}
         /* ROZET BAŞLIĞIN SAĞINDA. Sayı bir süre dip künyesinde durdu ve
@@ -1390,7 +1418,7 @@ async function AnalystCard({
           </span>
         }
       />
-      <div className="px-4 pb-3 sm:px-5">
+      <div className="flex flex-1 flex-col px-4 pb-3 sm:px-5">
       {/* Çubuk ARIA'dan gizli: altındaki liste aynı veriyi zaten okunabilir
           hâlde taşıyor, ikisi birden okununca sayılar iki kez geçiyordu.
           Dilim sınırını renk değil boşluk çiziyor — komşu basamaklar aynı
@@ -1454,7 +1482,7 @@ async function AnalystCard({
           uydurduğumuz bir ağırlıklandırma taşır ve 0-100 olanı sitenin
           KENDİ bilanço analizi puanıyla (AL · 75 rozetleri) karışırdı —
           okuyucu analist konsensüsünü bizim hükmümüz sanardı. */}
-      <p className="numeral mt-2 border-t border-line-soft pt-2.5 text-small text-muted">
+      <p className="numeral mt-auto border-t border-line-soft pt-2.5 text-small text-muted">
         {total} {plural(total, t.stock.analystOne, t.stock.analystMany)} ·{" "}
         {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
           month: "long",
@@ -1788,9 +1816,13 @@ async function ComplianceCard({
   ];
 
   return (
-    <Panel>
+    /* `flex-1` orta sütunun ARTAN YERİNİ bu kart yutuyor; gerekçe sütunun
+       kendi yorumunda. `flex flex-col` olmadan `flex-1` yalnızca dış
+       yüksekliği büyütürdü — içerik üstte kalsın diye gövde de esneyebilir
+       durumda. */
+    <Panel className="flex flex-1 flex-col">
       <PanelHeader title={t.stock.compliance} />
-      <div className="px-4 py-4 sm:px-5">
+      <div className="px-4 py-3.5 sm:px-5">
         <span
           className={cn(
             "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
@@ -1879,12 +1911,37 @@ async function ComplianceCard({
           <p className="mt-3 text-xs text-muted">{t.stock.complianceUnknown}</p>
         )}
 
-        <p className="mt-3 border-t border-line-soft pt-2.5 text-nano leading-relaxed text-muted">
-          {t.stock.complianceMissing}
-        </p>
-        <p className="mt-1.5 text-nano leading-relaxed text-muted">
-          {t.stock.complianceDisclaimer}
-        </p>
+        {/* İKİ UYARI KATLANDI — kart artık ÜÇ KOLONUN BOYUNU BELİRLİYOR.
+            Ölçüldü: şerit 580 piksel ve bu boyu orta sütun kuruyor; sol
+            (metrikler) ve sağ (analist) kartların içeriği 310-340'ta bitip
+            altlarında ~240 piksel boş kalıyordu. Kartın 315 pikselinin 120'si
+            bu iki paragraftı.
+
+            EN ÖNEMLİ CÜMLE AÇIKTA: "Bu bir fetva değildir" katlanan yerin
+            değil, tetikleyicinin kendisi. Katlanan şey o cümlenin
+            AÇIKLAMASI ve taranamayan ölçüt — ikisi de sayfada duruyor, bir
+            tık ötede. Uyarıyı tümüyle gizlemek dini uyum ekranında kabul
+            edilebilir olmazdı.
+
+            `<details>` KALIYOR, istemci durumu değil: katlama JS gelmeden de
+            çalışıyor — emsali components/today/BriefBody.tsx. */}
+        <details className="group/uyum mt-3 border-t border-line-soft pt-2.5">
+          <summary className="inline-flex min-h-9 w-fit cursor-pointer list-none items-center gap-1.5 text-nano font-semibold text-muted transition-colors hover:text-body [&::-webkit-details-marker]:hidden">
+            <span
+              aria-hidden
+              className="transition-transform group-open/uyum:rotate-90"
+            >
+              ›
+            </span>
+            {t.stock.complianceNotFatwa}
+          </summary>
+          <p className="mt-1 text-nano leading-relaxed text-muted">
+            {t.stock.complianceDisclaimer}
+          </p>
+          <p className="mt-1.5 text-nano leading-relaxed text-muted">
+            {t.stock.complianceMissing}
+          </p>
+        </details>
       </div>
     </Panel>
   );

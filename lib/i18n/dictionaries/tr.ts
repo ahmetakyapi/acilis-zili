@@ -582,8 +582,11 @@ const tr = {
       "Şirket bilançosunu dolar dışında bir para birimiyle raporluyor; oranlar dolar fiyatıyla hesaplanamıyor.",
     complianceMissing:
       "Faiz geliri oranı (sınır: gelirin %5'i) ücretsiz veri kaynağımızda yok; bu ölçüt taranamıyor.",
+    /* Katlanan bloğun TETİKLEYİCİSİ — en önemli cümle açıkta kalsın diye
+       disclaimer'ın ilk cümlesi buraya alındı. */
+    complianceNotFatwa: "Bu Bir Fetva Değildir",
     complianceDisclaimer:
-      "Bu bir fetva değildir. Faaliyet alanı ve AAOIFI'nin yaygın finansal eşiklerine dayanan otomatik bir ön elemedir; kesin hüküm için bağlı olduğun görüşe ve uzman kurulların denetimine bakmalısın.",
+      "Faaliyet alanı ve AAOIFI'nin yaygın finansal eşiklerine dayanan otomatik bir ön elemedir; kesin hüküm için bağlı olduğun görüşe ve uzman kurulların denetimine bakmalısın.",
     complianceReasons: {
       banking: "Ana faaliyeti faizli finans (bankacılık, aracılık, ödeme)",
       insurance: "Ana faaliyeti konvansiyonel sigortacılık",

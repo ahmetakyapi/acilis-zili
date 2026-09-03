@@ -444,8 +444,9 @@ const en: typeof tr = {
       "This company reports its balance sheet in a currency other than the dollar; the ratios can't be computed against the dollar price.",
     complianceMissing:
       "The interest-income test (5% of revenue) needs a revenue breakdown our free data source doesn't provide, so that criterion isn't screened.",
+    complianceNotFatwa: "This Is Not a Religious Ruling",
     complianceDisclaimer:
-      "This is not a religious ruling. It is an automated pre-screen based on the line of business and AAOIFI's widely used financial thresholds; a final judgement rests with your own school of thought and the certification boards that audit the filings.",
+      "It is an automated pre-screen based on the line of business and AAOIFI's widely used financial thresholds; a final judgement rests with your own school of thought and the certification boards that audit the filings.",
     complianceReasons: {
       banking: "Core business is interest-based finance (banking, brokerage, payments)",
       insurance: "Core business is conventional insurance",
