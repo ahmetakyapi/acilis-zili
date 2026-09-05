@@ -183,6 +183,9 @@ export function GuidanceRanges({
      Kayıtların çoğunda piyasa beklentisi yok ve gösterge her koşulda
      basıldığı için kart olmayan bir işareti tarif ediyordu. */
   const hasConsensus = spreads.some((s) => s?.consensusOffset != null);
+  /* Panelde en az bir GERÇEK aralık var mı — lejantın mavi şeridi
+     yalnızca o zaman bir şeyi açıklıyor. */
+  const hasRange = spreads.some((s) => s !== null && s.half > 0);
 
   return (
     <section
@@ -197,10 +200,15 @@ export function GuidanceRanges({
           {/* LEJANT İŞARETLERİ BARDAKİLERİN AYNISI. Mavi olan bir ARALIK —
               iki ucu olan yatay bir şerit; kısa bir hap onu bir nokta gibi
               gösteriyordu. Siyah olan bir KONUM — aşağıyı gösteren üçgen. */}
-          <span className="flex items-center gap-1.5">
-            <span aria-hidden className="h-2 w-6 rounded-full bg-primary" />
-            {legendRange}
-          </span>
+          {/* LEJANT ÇİZİLEN ŞEYİ ANLATIR. Hiçbir satırda aralık yoksa
+              "Şirket Aralığı" diye bir işaret açıklamak, ekranda olmayan bir
+              nesneyi tarif etmek olurdu. */}
+          {hasRange && (
+            <span className="flex items-center gap-1.5">
+              <span aria-hidden className="h-2 w-6 rounded-full bg-primary" />
+              {legendRange}
+            </span>
+          )}
           {hasConsensus && (
             <span className="flex items-center gap-1.5">
               <span aria-hidden className="flex flex-col items-center">
@@ -269,7 +277,18 @@ export function GuidanceRanges({
               {/* Çubuk her satırda çizilir — eksen ortak olduğu için artık
                   bir şey söylüyor: bandın uzunluğu şirketin kendine bıraktığı
                   hareket alanı, konumu ise beklentiyle arasındaki fark. */}
-              {spread && axis > 0 && (
+              {/* EKSEN YALNIZCA BİR ŞEY SÖYLÜYORSA ÇİZİLİR.
+                  Eksenin iki işi var: şeridin UZUNLUĞU şirketin kendine
+                  bıraktığı payı, KONUMU beklentiyle farkı gösteriyor. Nokta
+                  tahminde (6,07 Mr $, %14,5 gibi tek sayı) uzunluk sıfır;
+                  piyasa beklentisi de yoksa konum diye bir şey kalmıyor.
+                  Geriye boş gri bir rayda tek çentik kalıyordu ve okuyucu
+                  haklı olarak "bu çizgi neyi anlatıyor" diye soruyordu —
+                  hiçbir şeyi. Öyle bir satırda ray hiç basılmıyor; sayı,
+                  künye ve revizyon yargısı zaten hepsini söylüyor.
+                  Aralık VARSA ya da beklenti VARSA eksen eskisi gibi çizilir;
+                  nokta tahmin + beklenti hâlâ anlamlı, çünkü konum konuşuyor. */}
+              {spread && axis > 0 && (spread.half > 0 || spread.consensusOffset !== null) && (
                 /* ÜÇ İŞARET, ÜÇ AYRI DİL. Üçü de çubuğun içindeyken hangisinin
                    ne olduğu okunmuyordu: piyasa beklentisi siyah bir kapsül
                    olarak bandın İÇİNE düşüyor, orta nokta da ince bir çizgi

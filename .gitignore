@@ -63,3 +63,6 @@ next-env.d.ts
 # impeccable hook'unun yerel önbelleği. `config.json` PAYLAŞILAN ayar
 # (display-ink istisnası) ve depoda durur; bu dosya makineye özel.
 .impeccable/hook.cache.json
+
+# Playwright MCP geçici çıktıları — ekran görüntüsü ve izleme dosyaları
+.playwright-mcp/
