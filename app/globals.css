@@ -1261,7 +1261,33 @@
   animation: fade-in-soft 0.32s var(--ease-brand) both;
 }
 
+/* MAKALE BLOKLARI KAYDIRDIKÇA GELİYOR. Neden: rehber ve mercek yazıları
+   3–9 bin piksel ve okuma akışı DOĞRUSAL — bloklar sitenin "görselleri"
+   (CLAUDE.md "Görsel dili": fotoğraf yok, görsel metinden çizilir). Sparkline
+   yüklemede kendini nasıl çiziyorsa, bunlar da okuyucu onlara vardığında
+   kuruluyor: blok belirirken çubuğu doluyor, yani sayı önce gelmiyor,
+   BÜYÜYEREK geliyor.
+
+   Aralık paneldekinden KISA (140px): makale blokları panelden küçük ve
+   okuma temposu daha hızlı; 220 pikselde blok tamamlanmadan göz bir sonraki
+   paragrafa geçiyordu. Çubuk bloğun kendisinden biraz sonra başlıyor
+   (`entry 60px`) — önce kutu geliyor, sonra içi doluyor. */
+@supports (animation-timeline: view()) {
+  .oku-blok {
+    animation: panel-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 140px;
+  }
+  .oku-bar {
+    transform-origin: left center;
+    animation: bar-fill linear both;
+    animation-timeline: view();
+    animation-range: entry 60px entry 260px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .oku-blok, .oku-bar { animation: none; }
   .panel { animation: none; }
   .spark-line { stroke-dasharray: none; animation: none; }
   .spark-area, .spark-dot, .bar-fill, .ring-fill { animation: none; }

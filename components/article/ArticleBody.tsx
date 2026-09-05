@@ -795,7 +795,7 @@ export function ArticleBody({
              kaybolan bir sayı, kutuda bir bakışta okunuyor. */
           case "stats":
             return (
-              <div key={key} className="flex flex-col gap-2.5">
+              <div key={key} className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
                   <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
@@ -829,7 +829,7 @@ export function ArticleBody({
           /* Zaman çizelgesi — kronolojiyi paragrafa gömmek yerine gösterir. */
           case "timeline":
             return (
-              <div key={key} className="flex flex-col gap-2.5">
+              <div key={key} className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
                   <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
@@ -872,7 +872,7 @@ export function ArticleBody({
               0.01,
             );
             return (
-              <div key={key} className="flex flex-col gap-2.5">
+              <div key={key} className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
                   <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
@@ -910,7 +910,7 @@ export function ArticleBody({
                       <span className="h-2 overflow-hidden rounded-full bg-surface-sunken">
                         <span
                           className={cn(
-                            "block h-full rounded-full",
+                            "oku-bar block h-full rounded-full",
                             item.value < 0 ? "bg-down" : "bg-up",
                           )}
                           style={{
@@ -940,14 +940,18 @@ export function ArticleBody({
             const swatch = (index: number) =>
               index < 4 ? `var(--share-${index + 1})` : "var(--share-rest)";
             return (
-              <div key={key} className="flex flex-col gap-2.5">
+              <div key={key} className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
                   <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
                 <div className="rounded-(--radius-lg) border border-line bg-surface px-4 py-4">
-                  <div className="flex h-3.5 w-full gap-[2px] overflow-hidden rounded-full">
+                  {/* ÖLÇEK KABA VERİLİYOR, SEGMENTLERE DEĞİL: her segment
+                      kendi içinde büyüseydi aralarındaki 2 piksellik boşluklar
+                      da ölçeklenir ve şerit büyürken kayardı. Kap soldan
+                      büyüyor, paylar baştan doğru oranda. */}
+                  <div className="oku-bar flex h-3.5 w-full gap-[2px] overflow-hidden rounded-full">
                     {block.items.map((item, itemIndex) => (
                       <span
                         key={itemIndex}
@@ -989,7 +993,7 @@ export function ArticleBody({
              yön işareti, süs değil: sıra bilgiyi taşıyor. */
           case "flow":
             return (
-              <div key={key} className="flex flex-col gap-2.5">
+              <div key={key} className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
                   <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
@@ -1039,7 +1043,7 @@ export function ArticleBody({
                     ? "down"
                     : "flat";
             return (
-              <div key={key} className="flex flex-col gap-2.5">
+              <div key={key} className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
                   <p className="plate text-nano tracking-[0.09em]">
                     {block.label}
