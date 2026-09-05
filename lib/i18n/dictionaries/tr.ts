@@ -4,7 +4,7 @@ const tr = {
     marketTagline: "ABD Piyasa Takibi",
     tagline: "Zil Çalmadan Önce Bugünü Gör",
     description:
-      "ABD borsalarında bugün ne var: ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin tek ekranda — saatleriyle birlikte.",
+      "ABD borsalarında bugün ne var: ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin tek ekranda, saatleriyle birlikte.",
   },
 
   /* BOŞ DURUM BAŞLIKLARI NOKTA ALMAZ. Aynı `EmptyState.title` yuvasına giren
@@ -29,7 +29,7 @@ const tr = {
     marketsShort: "Piyasa",
     settings: "Ayarlar",
     search: "Ara",
-    searchPlaceholder: "Hisse ara — sembol veya şirket adı",
+    searchPlaceholder: "Hisse ara: sembol veya şirket adı",
     searchTrigger: "Sembol veya Olay Ara",
     searchPopular: "Popüler",
     searchWritings: "Yazılar",
@@ -211,7 +211,7 @@ const tr = {
        yorumda yaşıyor ve ekrandan indi. Kalan tek cümle okuyucunun gerçekten
        bilmesi gereken şey: yön güvenilir, yüzde değil. */
     worldMarketsHint:
-      "ABD'de dolar bazında işlem gören MSCI ülke fonlarının günlük değişimi — yönü yerel endeksle aynı, yüzdesi kur ve seans farkıyla ayrışabilir.",
+      "ABD'de dolar bazında işlem gören MSCI ülke fonlarının günlük değişimi. Yönü yerel endeksle aynı, yüzdesi kur ve seans farkıyla ayrışabilir.",
     // Sayının ARDINDAN okunur: "1g 15sa 31dk açılış ziline kaldı".
     untilBell: "Açılış Ziline Kaldı",
     untilClose: "Kapanış Ziline Kaldı",
@@ -222,7 +222,7 @@ const tr = {
     unitS: "sn",
     macroSummary: "Makro",
     todayFlow: "Bugünün Akışı",
-    pageHeading: "Açılış Zili — ABD Piyasa Takibi",
+    pageHeading: "Açılış Zili: ABD Piyasa Takibi",
     /* KAYNAK SATIRI BESLEMEYİ ADIYLA SÖYLÜYOR. Bir dönem "Alpaca IEX"
        yazıyordu ve o besleme konsolide hacmin yirmide birini görüyordu;
        gerekçe `lib/providers/alpaca.ts` başında. Gecikme de artık "olabilir"
@@ -281,7 +281,7 @@ const tr = {
     revenueShort: "Gelir",
     epsFull: "EPS (Hisse Başına Kâr)",
     epsExplainer:
-      "şirketin çeyrek boyunca kazandığı net kârın hisse sayısına bölünmüş hâlidir — bir hissenin o dönemde ne kadar kâr ürettiğini gösterir. Analistler her çeyrek için bir beklenti açıklar; gerçekleşen rakamın bu beklentinin ne kadar üstünde veya altında kaldığı sapmadır. Gelir (ciro) ise kârdan önceki toplam satıştır: piyasa çoğu zaman kâr beklentisini tutturup gelirde beklentinin altında kalan şirketin hissesini de satar, bu yüzden ikisi birlikte okunur.",
+      "şirketin çeyrek boyunca kazandığı net kârın hisse sayısına bölünmüş hâlidir; bir hissenin o dönemde ne kadar kâr ürettiğini gösterir. Analistler her çeyrek için bir beklenti açıklar; gerçekleşen rakamın bu beklentinin ne kadar üstünde veya altında kaldığı sapmadır. Gelir (ciro) ise kârdan önceki toplam satıştır: piyasa çoğu zaman kâr beklentisini tutturup gelirde beklentinin altında kalan şirketin hissesini de satar, bu yüzden ikisi birlikte okunur.",
     spotlight: "Öne Çıkanlar",
     addToCalendar: "Takvime Ekle",
     alsoReporting: "Diğer Açıklayanlar",
@@ -399,7 +399,7 @@ const tr = {
        sorduğu soru "mavi ne, siyah ne" idi ve cevabı hiçbir yerde yazmıyordu.
        Cümle olduğu için Title Case kapsamı dışında. */
     guidanceAxis:
-      "Mavi şerit şirketin verdiği alt–üst aralık; uzunluğu şirketin kendine bıraktığı payı gösterir. Siyah üçgen ve altındaki çizgi piyasanın beklediği yeri işaretler, şeridin ortasındaki çentik ise aralığın orta noktasıdır. Üçgen yalnızca piyasa beklentisi bilinen satırlarda çıkar. Eksen orta noktaya göre ±{value}.",
+      "Mavi şerit şirketin verdiği alt-üst aralık; uzunluğu şirketin kendine bıraktığı payı gösterir. Siyah üçgen ve altındaki çizgi piyasanın beklediği yeri işaretler, şeridin ortasındaki çentik ise aralığın orta noktasıdır. Üçgen yalnızca piyasa beklentisi bilinen satırlarda çıkar. Eksen orta noktaya göre ±{value}.",
     /* Öngörü satırındaki renkli yargı. Kayıtta `evaluation` yoksa bandın
        iki ucu ile piyasa beklentisi karşılaştırılıp buradan seçilir. */
     guidanceAbove: "Beklenti Aralığın Üstünde",
@@ -471,7 +471,7 @@ const tr = {
 
   companies: {
     title: "Şirketler",
-    subtitle: "Takip edilen şirketler — sektör, piyasa değeri ve hacim",
+    subtitle: "Takip edilen şirketler: sektör, piyasa değeri ve hacim",
     sector: "Sektör",
     allSectors: "Tüm Sektörler",
     company: "Şirket",
@@ -479,7 +479,7 @@ const tr = {
     price: "Fiyat",
     change: "Değişim",
     weekChange: "Haftalık",
-    weekChangeHint: "Son 5 işlem gününün kapanışına göre değişim — takvim haftası değil, seans sayısı.",
+    weekChangeHint: "Son 5 işlem gününün kapanışına göre değişim. Takvim haftası değil, seans sayısı.",
     empty: "Henüz şirket verisi yok",
     emptyHint:
       "Şirket profilleri hisse sayfaları ziyaret edildikçe ve günlük senkronla dolar.",
@@ -561,8 +561,8 @@ const tr = {
        olsun "Fiyat, grafik, bilanço geçmişi ve haberler." gidiyordu — aynı
        fonksiyon sektör etiketini zaten çeviriyor olmasına rağmen.
        `{ad}` şirket adı ya da sembol, `{sektor}` varsa sektör. */
-    metaWithSector: "{ad} — {sektor}. Fiyat, grafik, bilanço geçmişi ve haberler.",
-    metaPlain: "{ad} hissesi — fiyat, grafik, bilanço geçmişi ve haberler.",
+    metaWithSector: "{ad}, {sektor}. Fiyat, grafik, bilanço geçmişi ve haberler.",
+    metaPlain: "{ad} hissesi: fiyat, grafik, bilanço geçmişi ve haberler.",
     notFound: "Bu sembol bulunamadı",
     notFoundHint: "Sembolü kontrol et veya arama kutusundan tekrar dene.",
     throttled: "Biraz Yavaşla",
@@ -576,7 +576,7 @@ const tr = {
     fundTracks: "İzlediği Piyasa",
     fundIssuer: "Fon Yöneticisi",
     fundNoteCountry:
-      "Bu bir ABD borsa yatırım fonudur; ilgili ülkenin endeksinin kendisi değildir. Dolar cinsinden ve ABD seansında işlem görür — yerel endeksle aynı yönü gösterir, ama kur farkı ve seans kayması yüzünden yüzdeler birebir tutmaz.",
+      "Bu bir ABD borsa yatırım fonudur; ilgili ülkenin endeksinin kendisi değildir. Dolar cinsinden ve ABD seansında işlem görür. Yerel endeksle aynı yönü gösterir, ama kur farkı ve seans kayması yüzünden yüzdeler birebir tutmaz.",
     fundNoteIndex:
       "Bu bir borsa yatırım fonudur; endeksin kendisi değil, onu izleyen üründür. Fiyatı endeks seviyesinin bir oranıdır, günlük değişimi ise endeksle neredeyse birebir aynıdır.",
     compliance: "Katılım Taraması",
@@ -612,8 +612,8 @@ const tr = {
       tobacco: "Tütün ürünleri",
       gambling: "Kumar ve bahis",
       weapons: "Savunma sanayi ve silah",
-      adult: "Eğlence içeriği — gelir kırılımı incelenmeli",
-      pork: "Gıda üretimi — domuz ürünü içerip içermediği incelenmeli",
+      adult: "Eğlence içeriği, gelir kırılımı incelenmeli",
+      pork: "Gıda üretimi, domuz ürünü içerip içermediği incelenmeli",
     },
   },
 
@@ -682,7 +682,7 @@ const tr = {
     deleteListConfirm:
       "Bu liste ve içindeki tüm semboller silinecek. Devam edilsin mi?",
     addSymbol: "Sembol Ekle",
-    symbolPlaceholder: "Sembol ara — örn. NVDA",
+    symbolPlaceholder: "Sembol ara: örn. NVDA",
     alreadyInList: "Bu sembol listede zaten var",
     empty: "Bu listede henüz sembol yok",
     emptyAll: "Henüz bir takip listen yok.",
@@ -716,7 +716,7 @@ const tr = {
     eyebrow: "Yan Yana",
     title: "Karşılaştır",
     subtitle:
-      "İkiden dörde kadar hisseyi aynı ölçekte oku — getiri, değerleme ve oynaklık tek tabloda.",
+      "İkiden dörde kadar hisseyi aynı ölçekte oku: getiri, değerleme ve oynaklık tek tabloda.",
     empty: "Karşılaştırmak için Sembol Seç",
     /* Eski metin ekranı yalanlıyordu: sembol eklemenin yolu bu ekranın
        içinde de var (`CompareAdd`), bir hisse sayfasına gitmek gerekmiyor. */
@@ -733,7 +733,7 @@ const tr = {
     presetChipsNote:
       "Aynı talep döngüsünü paylaşan dört yonga üreticisi; ayrıştıkları yer görünür olur.",
     presetMegaNote:
-      "Piyasa değerine göre en büyük dört teknoloji şirketi — endeksteki en ağır isimler.",
+      "Piyasa değerine göre en büyük dört teknoloji şirketi: endeksteki en ağır isimler.",
     presetIndicesNote:
       "Dört ayrı endeksi izleyen fonlar: piyasanın tamamı, teknoloji, sanayi devleri ve küçük ölçekli şirketler.",
     presetMemory: "Bellek ve Depolama",
@@ -785,7 +785,7 @@ const tr = {
     addPlaceholder: "Sembol ya da şirket adı",
     addCta: "Karşılaştır",
     trimmedNote:
-      "Bağlantıdaki fazladan semboller alınmadı — bu ekran en çok dört sembol gösterir.",
+      "Bağlantıdaki fazladan semboller alınmadı. Bu ekran en çok dört sembol gösterir.",
     unknownSymbols:
       "{symbols} için veri bulunamadı; o sütun boş kalıyor.",
     rangeLabel: "Grafik Aralığı",
@@ -821,7 +821,7 @@ const tr = {
     fearHigh: "Gergin",
     fearPanic: "Panik",
     title: "Piyasalar",
-    subtitle: "Endeksler, tahvil faizleri ve gün içi hareket — piyasanın nabzı",
+    subtitle: "Endeksler, tahvil faizleri ve gün içi hareket: piyasanın nabzı",
     yields: "ABD Tahvil Faizleri",
     yieldY2: "2 Yıllık",
     yieldY5: "5 Yıllık",
@@ -832,7 +832,7 @@ const tr = {
     curveNormal: "Normal Eğri",
     curveInverted: "Ters Eğri",
     curveHint:
-      "Uzun vadeli tahvilin faizi kısa vadeliden yüksekse eğri normaldir; ekonomi olağan seyrinde demektir. Fark eksiye dönerse (ters eğri) piyasa yakın vadede faiz indirimi bekliyor — tarihsel olarak durgunluğun en çok izlenen habercisidir.",
+      "Uzun vadeli tahvilin faizi kısa vadeliden yüksekse eğri normaldir; ekonomi olağan seyrinde demektir. Fark eksiye dönerse (ters eğri) piyasa yakın vadede faiz indirimi bekliyor; tarihsel olarak durgunluğun en çok izlenen habercisidir.",
     breadth: "Piyasa Genişliği",
     advancing: "Artıda",
     declining: "Ekside",
@@ -887,7 +887,7 @@ const tr = {
     weeklySubtitle:
       "Her pazartesi hazırlanan hafta değerlendirmesi · geçen hafta ne oldu, bu hafta ne var",
     weeklyFrame: "Geçen Hafta Ne Oldu · Bu Hafta Ne Var",
-    weeklyRange: "{start} – {end}",
+    weeklyRange: "{start} - {end}",
     weeklyNotForecast:
       "Bu hafta bölümü bir takvimdir, tahmin değil: neyin açıklanacağını söyler, ne çıkacağını değil.",
     writtenBy: "Hazırlayan",
@@ -902,7 +902,7 @@ const tr = {
     title: "Rehber",
     eyebrow: "Kavramlar",
     subtitle:
-      "Piyasada sürekli duyduğun kavramlar — tanımı, örneği ve nerede işine yaradığı.",
+      "Piyasada sürekli duyduğun kavramlar: tanımı, örneği ve nerede işine yaradığı.",
     allTopics: "Tümü",
     readMinutes: "Dk Okuma",
     related: "Bunları da Oku",
@@ -916,7 +916,7 @@ const tr = {
        CLAUDE.md o muafiyeti gerekçesiyle geri aldı: aynı ekranda Title Case
        bir rozetin altında küçük harfle başlayan bir künye duruyordu ve sonuç
        tutarsızlıktı. Cümle olmayan her metin Title Case. */
-    curriculumRange: "Müfredatın {from}–{to}. Yazısı",
+    curriculumRange: "Müfredatın {from}-{to}. Yazısı",
     onlyThis: "Konuyu Aç",
     /* Müfredat şeridi — liste sayfasının girişindeki dört konu karosu. */
     curriculum: "Nereden Başlamalı",
@@ -936,7 +936,7 @@ const tr = {
     title: "Mercek",
     eyebrow: "Mercek Altında",
     subtitle:
-      "Piyasada yaşanan olayları yakından anlatan uzun yazılar — ne oldu, neden oldu, ne öğretti.",
+      "Piyasada yaşanan olayları yakından anlatan uzun yazılar: ne oldu, neden oldu, ne öğretti.",
     latest: "Son Yazı",
     archive: "Önceki Yazılar",
     /* Sayaç `companies.showing`den ödünç alınıyordu ve "25 şirketin 24

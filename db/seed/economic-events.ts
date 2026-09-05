@@ -81,14 +81,28 @@ const PAYROLL_RELEASES: { date: string; refTr: string; refEn: string }[] = [
   { date: "2027-01-08", refTr: "Aralık", refEn: "December" },
 ];
 
+/* BAŞLIKLARDA EM DASH YOK. Sekiz olay adı "TÜFE — Ağustos Verisi" kalıbıyla
+   yazılıyordu ve tire burada gösterge adıyla referans dönemini ayırıyordu.
+   Bunlar makale nesri değil, takvim satırında okunan ETİKETLER; tasarım
+   kuralı (design-taste-frontend §9.G) tam bu tür arayüz metnini hedefliyor.
+
+   Tire kaldırılırken cümle yeniden kurulmadı, SIRALAMA değişti: dönem başa
+   geldi. "Ağustos TÜFE Verisi" hem Türkçede hem "August CPI Data" biçimiyle
+   İngilizcede doğal sıralama; ayırıcıya hiç gerek kalmıyor. Virgül ya da
+   parantez de olurdu ama ikisi de ayırıcının kendisini koruyup yalnızca
+   şeklini değiştirirdi.
+
+   VERİTABANI KENDİLİĞİNDEN GÜNCELLENMEZ. Bu dosya tohum; mevcut satırlar
+   eski başlığı taşımaya devam eder. `npm run db:seed` `onConflictDoUpdate`
+   ile yazıyor, yani bir kez koşturulması gerekiyor. */
 function cpiEvents(): EconomicEventSeed[] {
   return CPI_RELEASES.flatMap(({ date, refTr, refEn }) => [
     {
       eventDate: date,
       eventTimeEt: "08:30",
       slug: `cpi-${date}`,
-      titleTr: `TÜFE — ${refTr} Verisi`,
-      titleEn: `CPI — ${refEn} Data`,
+      titleTr: `${refTr} TÜFE Verisi`,
+      titleEn: `${refEn} CPI Data`,
       importance: "high" as const,
       unit: "%",
       fredSeriesId: "CPIAUCSL",
@@ -98,8 +112,8 @@ function cpiEvents(): EconomicEventSeed[] {
       eventDate: date,
       eventTimeEt: "08:30",
       slug: `core-cpi-${date}`,
-      titleTr: `Çekirdek TÜFE — ${refTr} Verisi`,
-      titleEn: `Core CPI — ${refEn} Data`,
+      titleTr: `${refTr} Çekirdek TÜFE Verisi`,
+      titleEn: `${refEn} Core CPI Data`,
       importance: "high" as const,
       unit: "%",
       fredSeriesId: "CPILFESL",
@@ -159,8 +173,8 @@ function payrollEvents(): EconomicEventSeed[] {
       eventDate: date,
       eventTimeEt: "08:30",
       slug: `nfp-${date}`,
-      titleTr: `Tarım Dışı İstihdam — ${refTr} Verisi`,
-      titleEn: `Nonfarm Payrolls — ${refEn} Data`,
+      titleTr: `${refTr} Tarım Dışı İstihdam Verisi`,
+      titleEn: `${refEn} Nonfarm Payrolls Data`,
       importance: "high" as const,
       unit: "bin",
       fredSeriesId: "PAYEMS",
@@ -170,8 +184,8 @@ function payrollEvents(): EconomicEventSeed[] {
       eventDate: date,
       eventTimeEt: "08:30",
       slug: `unemployment-${date}`,
-      titleTr: `İşsizlik Oranı — ${refTr} Verisi`,
-      titleEn: `Unemployment Rate — ${refEn} Data`,
+      titleTr: `${refTr} İşsizlik Oranı Verisi`,
+      titleEn: `${refEn} Unemployment Rate Data`,
       importance: "high" as const,
       unit: "%",
       fredSeriesId: "UNRATE",

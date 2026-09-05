@@ -6,7 +6,7 @@ const en: typeof tr = {
     marketTagline: "US Market Tracker",
     tagline: "See the Day Before the Bell",
     description:
-      "What's happening in US markets today: economic calendar, earnings dates, news and your watchlist on one screen — with the times.",
+      "What's happening in US markets today: economic calendar, earnings dates, news and your watchlist on one screen, with the times.",
   },
 
   nav: {
@@ -26,7 +26,7 @@ const en: typeof tr = {
     marketsShort: "Markets",
     settings: "Settings",
     search: "Search",
-    searchPlaceholder: "Search stocks — symbol or company name",
+    searchPlaceholder: "Search stocks: symbol or company name",
     searchTrigger: "Search Symbol or Event",
     searchPopular: "Popular",
     searchWritings: "Writing",
@@ -147,7 +147,7 @@ const en: typeof tr = {
     weekAheadEmpty: "No major releases scheduled for the coming week.",
     worldMarkets: "World Markets",
     worldMarketsHint:
-      "Daily moves of MSCI country funds trading in US dollars — the direction matches the local index, the percentage can differ with currency and session hours.",
+      "Daily moves of MSCI country funds trading in US dollars. The direction matches the local index, the percentage can differ with currency and session hours.",
     // Reads after the number: "1d 15h 31m left until the opening bell".
     untilBell: "Left Until the Opening Bell",
     untilClose: "Left Until the Closing Bell",
@@ -157,7 +157,7 @@ const en: typeof tr = {
     unitS: "s",
     macroSummary: "Macro",
     todayFlow: "Today's Flow",
-    pageHeading: "Opening Bell — US Market Tracking",
+    pageHeading: "Opening Bell: US Market Tracking",
     sourceLine:
       "Prices: Alpaca consolidated tape · Profiles and earnings: Finnhub · Macro: FRED",
     sourceNote: "Indices tracked via ETFs · prices delayed 15 min",
@@ -210,7 +210,7 @@ const en: typeof tr = {
     revenueShort: "Revenue",
     epsFull: "EPS (Earnings Per Share)",
     epsExplainer:
-      "is the company's quarterly net profit divided by its share count — how much profit a single share produced in that period. Analysts publish an estimate for each quarter, and the surprise is how far the reported figure landed above or below it. Revenue is total sales before profit: the market often sells a company that beats on earnings but misses on revenue, so the two are read together.",
+      "is the company's quarterly net profit divided by its share count; how much profit a single share produced in that period. Analysts publish an estimate for each quarter, and the surprise is how far the reported figure landed above or below it. Revenue is total sales before profit: the market often sells a company that beats on earnings but misses on revenue, so the two are read together.",
     spotlight: "Spotlight",
     addToCalendar: "Add to Calendar",
     alsoReporting: "Also Reporting",
@@ -295,7 +295,7 @@ const en: typeof tr = {
     legendRange: "Guidance Range",
     legendConsensus: "Market Expectation",
     guidanceAxis:
-      "The blue band is the company's low–high range; its length shows how much room the company left itself. The black triangle and the line beneath it mark where the market expected, and the notch in the band is the range's midpoint. The triangle appears only where a market expectation is known. Axis is ±{value} around the midpoint.",
+      "The blue band is the company's low-high range; its length shows how much room the company left itself. The black triangle and the line beneath it mark where the market expected, and the notch in the band is the range's midpoint. The triangle appears only where a market expectation is known. Axis is ±{value} around the midpoint.",
     guidanceAbove: "Expectation Above the Range",
     guidanceBelow: "Expectation Below the Range",
     guidanceInline: "In Line with Expectations",
@@ -349,7 +349,7 @@ const en: typeof tr = {
 
   companies: {
     title: "Companies",
-    subtitle: "Tracked companies — sector, market cap and volume",
+    subtitle: "Tracked companies: sector, market cap and volume",
     sector: "Sector",
     allSectors: "All Sectors",
     company: "Company",
@@ -357,7 +357,7 @@ const en: typeof tr = {
     price: "Price",
     change: "Change",
     weekChange: "Weekly",
-    weekChangeHint: "Change against the close five trading sessions ago — sessions, not calendar days.",
+    weekChangeHint: "Change against the close five trading sessions ago. Sessions, not calendar days.",
     empty: "No company data yet",
     emptyHint:
       "Company profiles fill in as stock pages are visited and via the daily sync.",
@@ -412,8 +412,8 @@ const en: typeof tr = {
     nextEarnings: "Next Earnings",
     addToWatchlist: "Add to Watchlist",
     removeFromWatchlist: "Remove from Watchlist",
-    metaWithSector: "{ad} — {sektor}. Price, chart, earnings history and news.",
-    metaPlain: "{ad} stock — price, chart, earnings history and news.",
+    metaWithSector: "{ad}, {sektor}. Price, chart, earnings history and news.",
+    metaPlain: "{ad} stock: price, chart, earnings history and news.",
     notFound: "Symbol not found",
     notFoundHint: "Check the symbol or search for it again.",
     throttled: "Slow Down a Little",
@@ -431,9 +431,9 @@ const en: typeof tr = {
     fundTracks: "Tracks",
     fundIssuer: "Issuer",
     fundNoteCountry:
-      "This is a US-listed exchange-traded fund, not the country's index itself. It trades in dollars during the US session — it moves in the same direction as the local index, but currency moves and the session offset keep the percentages from matching exactly.",
+      "This is a US-listed exchange-traded fund, not the country's index itself. It trades in dollars during the US session. It moves in the same direction as the local index, but currency moves and the session offset keep the percentages from matching exactly.",
     fundNoteIndex:
-      "This is an exchange-traded fund — the product that tracks the index, not the index itself. Its price is a fraction of the index level, while its daily change is nearly identical.",
+      "This is an exchange-traded fund, the product that tracks the index, not the index itself. Its price is a fraction of the index level, while its daily change is nearly identical.",
     compliance: "Sharia Screening",
     compliancePass: "Passes the Screen",
     complianceReview: "Needs Review",
@@ -458,8 +458,8 @@ const en: typeof tr = {
       tobacco: "Tobacco products",
       gambling: "Gambling and betting",
       weapons: "Defense and weapons manufacturing",
-      adult: "Entertainment content — revenue mix should be reviewed",
-      pork: "Packaged foods — pork exposure should be reviewed",
+      adult: "Entertainment content, revenue mix should be reviewed",
+      pork: "Packaged foods, pork exposure should be reviewed",
     },
   },
 
@@ -528,7 +528,7 @@ const en: typeof tr = {
     deleteListConfirm:
       "This list and every symbol in it will be deleted. Continue?",
     addSymbol: "Add Symbol",
-    symbolPlaceholder: "Search symbol — e.g. NVDA",
+    symbolPlaceholder: "Search symbol: e.g. NVDA",
     alreadyInList: "That symbol is already in this list",
     empty: "No symbols in this list yet",
     emptyAll: "You don't have any lists yet.",
@@ -556,7 +556,7 @@ const en: typeof tr = {
     eyebrow: "Side by Side",
     title: "Compare",
     subtitle:
-      "Read two to four stocks on the same scale — return, valuation and volatility in one table.",
+      "Read two to four stocks on the same scale: return, valuation and volatility in one table.",
     empty: "Pick Symbols to Compare",
     emptyHint:
       "Type a symbol or company name in the box below, or start from one of the ready-made sets.",
@@ -564,9 +564,9 @@ const en: typeof tr = {
     presetsHint:
       "Each set opens with four symbols; drop any of them and put another in its place.",
     presetChipsNote:
-      "Four chipmakers riding the same demand cycle — where they diverge is the point.",
+      "Four chipmakers riding the same demand cycle. Where they diverge is the point.",
     presetMegaNote:
-      "The four largest technology companies by market value — the heaviest names in the index.",
+      "The four largest technology companies by market value: the heaviest names in the index.",
     presetIndicesNote:
       "Funds tracking four different indexes: the broad market, technology, industrial giants and small caps.",
     presetMemory: "Memory and Storage",
@@ -606,7 +606,7 @@ const en: typeof tr = {
     partialPeriod: "Partial Period",
     addCta: "Compare",
     trimmedNote:
-      "Extra symbols in the link were dropped — this screen shows at most four.",
+      "Extra symbols in the link were dropped. This screen shows at most four.",
     unknownSymbols: "No data found for {symbols}; that column stays empty.",
     rangeLabel: "Chart Range",
     chartMissing: "Chart Data Unavailable",
@@ -634,7 +634,7 @@ const en: typeof tr = {
   markets: {
     fearTitle: "Fear Index",
     fearHint:
-      "VIX is derived from S&P 500 options and shows the volatility the market expects over the next 30 days. It says nothing about direction — only how large the move is expected to be.",
+      "VIX is derived from S&P 500 options and shows the volatility the market expects over the next 30 days. It says nothing about direction, only how large the move is expected to be.",
     fearAverage: "Long-Run Avg ~20",
     fearGuideCta: "What Is Volatility?",
     fearCalm: "Calm",
@@ -643,7 +643,7 @@ const en: typeof tr = {
     fearHigh: "Tense",
     fearPanic: "Panic",
     title: "Markets",
-    subtitle: "Indices, treasury yields and intraday moves — the market's pulse",
+    subtitle: "Indices, treasury yields and intraday moves: the market's pulse",
     yields: "US Treasury Yields",
     yieldY2: "2-Year",
     yieldY5: "5-Year",
@@ -654,7 +654,7 @@ const en: typeof tr = {
     curveNormal: "Normal Curve",
     curveInverted: "Inverted Curve",
     curveHint:
-      "When long-dated yields sit above short-dated ones the curve is normal and the economy is on its usual footing. If the spread turns negative — an inverted curve — the market expects rate cuts soon; historically it is the most closely watched recession signal.",
+      "When long-dated yields sit above short-dated ones the curve is normal and the economy is on its usual footing. If the spread turns negative (an inverted curve) the market expects rate cuts soon; historically it is the most closely watched recession signal.",
     breadth: "Market Breadth",
     advancing: "Advancing",
     declining: "Declining",
@@ -703,28 +703,28 @@ const en: typeof tr = {
     weeklySubtitle:
       "Written every Monday · what happened last week, what is coming this week",
     weeklyFrame: "What Happened Last Week · What Is Coming This Week",
-    weeklyRange: "{start} – {end}",
+    weeklyRange: "{start} - {end}",
     weeklyNotForecast:
       "The week-ahead section is a calendar, not a forecast: it says what will be released, not what the numbers will be.",
     writtenBy: "Written by",
     byClaude: "Claude",
     byRules: "Rule-Based",
     fallbackNote:
-      "This brief hasn't been translated to English yet — you're reading the Turkish original.",
+      "This brief hasn't been translated to English yet. You're reading the Turkish original.",
   },
 
   guide: {
     title: "Guide",
     eyebrow: "Concepts",
     subtitle:
-      "The terms you keep hearing — what they mean, with examples and where they matter.",
+      "The terms you keep hearing: what they mean, with examples and where they matter.",
     allTopics: "All",
     readMinutes: "Min Read",
     related: "Read Next",
     backToList: "Back to Guide",
     empty: "Nothing here yet",
     cardCta: "Read",
-    curriculumRange: "Curriculum Articles {from}–{to}",
+    curriculumRange: "Curriculum Articles {from}-{to}",
     onlyThis: "Open Topic",
     curriculum: "Where to Start",
     startFirst: "Start from the Top",
@@ -741,14 +741,14 @@ const en: typeof tr = {
     title: "Close-Up",
     eyebrow: "Close-Up",
     subtitle:
-      "Long reads on what happened in the market — what took place, why, and what it taught.",
+      "Long reads on what happened in the market: what took place, why, and what it taught.",
     latest: "Latest Piece",
     archive: "Earlier Pieces",
     showing: "{n} of {total} pieces",
     showMore: "Show More",
     whatShort: "events still worth reading six months later",
     howShort: "verified numbers, sources listed",
-    rhythmShort: "not daily — only when something happens",
+    rhythmShort: "not daily, only when something happens",
     whatTitle: "What Gets Covered",
     howTitle: "How It Is Written",
     rhythmTitle: "How Often",
@@ -775,7 +775,7 @@ const en: typeof tr = {
     notFound: "Piece not found",
     notFoundHint: "The link may be stale; try again from the list.",
     fallbackNote:
-      "This piece hasn't been translated to English yet — you're reading the Turkish original.",
+      "This piece hasn't been translated to English yet. You're reading the Turkish original.",
     disclaimer:
       "This piece is based on public reporting available at the time of publication. Not Investment Advice.",
   },

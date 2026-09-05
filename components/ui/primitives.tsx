@@ -768,17 +768,38 @@ export function ImpactDot({
       className="flex shrink-0 items-center"
       style={{ height: lineHeight }}
     >
+      {/* RENK TEK TAŞIYICI DEĞİL — biçim de anlatıyor. Nokta üç önem düzeyini
+          yalnızca TONLA ayırıyordu ve ölçüldüğünde bunun işe yaramadığı çıktı:
+          "yüksek" (kırmızı) ile "düşük" (gri) arasındaki parlaklık oranı koyu
+          temada 1,01:1, açıkta 1,09:1. Yani kırmızıyı griden tonla ayıramayan
+          biri için iki nokta BİREBİR AYNI. Kırmızı-yeşil renk körlüğü
+          erkeklerin yaklaşık %8'inde var ve burada ayırt edilen şey "bu veri
+          piyasayı oynatır mı" — atlanacak bir ayrım değil.
+
+          `sr-only` etiketi ekran okuyucuyu zaten kurtarıyordu, `title` ise
+          yalnızca imleçle çalışıyor: dokunmatikte hiç açılmıyor. İkisi de
+          GÖREN renk körü kullanıcıya ulaşmıyor; çözüm ikinci bir görsel kanal.
+
+          Üç biçim: dolu daire (yüksek), halka (orta), küçük dolu nokta
+          (düşük). Grinin tonlarına indirildiğinde bile üçü ayrı okunuyor.
+          Dış kutu her düzeyde `size-2` kalıyor — küçük noktanın kendi kutusu
+          küçülseydi yanındaki başlık satır satır 2 piksel kayardı.
+
+          Kardeşi `ImpactDots` aynı sorunu dolu nokta SAYISIYLA çözüyor ve
+          takvim sayfası onu kullanıyor; bu tekil sürüm dar satırlar için var,
+          o yüzden sayı değil biçim ayrımı. */}
       <span
         aria-hidden
-        className={cn(
-          "block size-2 rounded-full",
-          importance === "high"
-            ? "bg-down"
-            : importance === "medium"
-              ? "bg-impact-med"
-              : "bg-muted",
+        className="flex size-2 items-center justify-center"
+      >
+        {importance === "high" ? (
+          <span className="block size-2 rounded-full bg-impact-high" />
+        ) : importance === "medium" ? (
+          <span className="block size-2 rounded-full border-2 border-impact-med" />
+        ) : (
+          <span className="block size-1 rounded-full bg-impact-low" />
         )}
-      />
+      </span>
       <span className="sr-only">{label}</span>
     </span>
   );

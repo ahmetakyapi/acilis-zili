@@ -48,8 +48,8 @@ const CALENDAR_RELEASES = [
     /* BLS ve BEA yayınları 08:30 ET'de çıkar — bu bir kural, tahmin değil.
        FRED yalnızca tarihi veriyor, saati vermiyor. */
     timeEt: "08:30",
-    titleTr: "TÜFE — Enflasyon Verisi",
-    titleEn: "CPI — Inflation Data",
+    titleTr: "TÜFE Enflasyon Verisi",
+    titleEn: "CPI Inflation Data",
     unit: "%",
   },
   {
@@ -64,8 +64,8 @@ const CALENDAR_RELEASES = [
     seriesId: "PCEPILFE",
     slug: "core-pce",
     timeEt: "08:30",
-    titleTr: "Çekirdek PCE — Fed'in Baktığı Enflasyon Ölçüsü",
-    titleEn: "Core PCE — The Fed's Preferred Gauge",
+    titleTr: "Çekirdek PCE, Fed'in Baktığı Enflasyon Ölçüsü",
+    titleEn: "Core PCE, the Fed's Preferred Gauge",
     unit: "%",
   },
 ] as const;
