@@ -1519,7 +1519,7 @@ async function AnalystCard({
             segment.value > 0 && (
               <span
                 key={segment.label}
-                className={cn("block h-full", segment.cls)}
+                className={cn("bar-fill block h-full", segment.cls)}
                 style={{ width: `${(segment.value / total) * 100}%` }}
               />
             ),
@@ -1996,7 +1996,7 @@ async function ComplianceCard({
                   {/* Eşiğe ne kadar yakın — çubuk %33'te dolar */}
                   <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-surface-sunken">
                     <div
-                      className={cn("h-full", over ? "bg-down" : "bg-up")}
+                      className={cn("bar-fill h-full", over ? "bg-down" : "bg-up")}
                       style={{ width: `${width}%` }}
                     />
                   </div>

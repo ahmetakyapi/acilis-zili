@@ -1163,3 +1163,107 @@
     font-size: 16px;
   }
 }
+
+/* --------------------------------------------------------------------------
+   HAREKET DİLİ — kütüphanesiz, yalnızca transform ve opacity.
+
+   Projede animasyon kütüphanesi yok ve bu bilinçli: veri sitesi, paket
+   yükü sıfır, her şey sunucu bileşeni. Aşağıdaki her hareketin TEK
+   CÜMLELİK bir nedeni var; nedeni yazılamayan hareket eklenmez.
+
+   Zamanlama `--ease-brand` (varsayılan geçiş eğrisi) ve süreler kısa:
+   göz hareketi fark eder ama beklemez. `prefers-reduced-motion` genel
+   bloğu süreyi 0,01 ms'ye indirdiği için yükleme animasyonları orada
+   kendiliğinden kapanıyor; KAYDIRMA GÜDÜMLÜ olan ayrı kapatılıyor (aşağıda),
+   çünkü zaman çizelgesi süreyi umursamıyor.
+   -------------------------------------------------------------------------- */
+
+/* SPARKLINE KENDİNİ ÇİZİYOR. Neden: günün hareketini anlatır — göz çizgiyi
+   soldan sağa izleyip yönü okur, sonra alan "dolar", en son nokta "bugün
+   burada" der. `pathLength="1"` sayesinde uzunluk ölçmeden birim
+   normalize; dasharray 1, offset 1 → 0. Alan ve nokta çizgiden sonra
+   gelir ki sıralama hikâyeyi taşısın. */
+@keyframes spark-draw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes fade-in-soft {
+  from { opacity: 0; }
+}
+@keyframes dot-in {
+  from { transform: scale(0); }
+}
+.spark-line {
+  stroke-dasharray: 1;
+  animation: spark-draw 0.85s var(--ease-brand) both;
+}
+.spark-area {
+  animation: fade-in-soft 0.45s var(--ease-brand) 0.55s both;
+}
+.spark-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dot-in 0.3s var(--ease-brand) 0.7s backwards;
+}
+
+/* ÇUBUK DOLUYOR. Neden: oran "dolar", göz büyüklüğü yüzdeden değil
+   hareketten okur. Genişlik değil `scaleX` — genişlik animasyonu yeniden
+   düzen (layout) tetikler, transform kompozitörde kalır. Kaynak soldan:
+   çubuklar soldan sağa büyür. */
+@keyframes bar-fill {
+  from { transform: scaleX(0); }
+}
+.bar-fill {
+  transform-origin: left center;
+  animation: bar-fill 0.7s var(--ease-brand) both;
+}
+
+/* PUAN HALKASI ÇİZİLİYOR. Sparkline ile aynı mantık, daire üzerinde:
+   puan sıfırdan kendi değerine kadar dolar. */
+@keyframes ring-draw {
+  from { stroke-dashoffset: var(--ring-circumference); }
+}
+.ring-fill {
+  animation: ring-draw 0.9s var(--ease-brand) both;
+}
+
+/* PANELLER GİRERKEN BELİRİYOR — kaydırma güdümlü, JavaScript yok.
+   Neden: 3–7 bin piksellik sayfalarda tempo; alt bölümler tek seferde
+   yığılmak yerine kaydırdıkça geliyor.
+
+   ARALIK UZUNLUK CİNSİNDEN, yüzde değil. `entry 0% entry 35%` olsaydı
+   aralık panelin kendi boyuna bağlanırdı: 7000 pikselli haber listesi
+   ancak 2450 piksel kaydırıldıktan sonra tam görünürdü. `entry 220px` ile
+   kısa panel kendi girişinde, uzun panel ilk 220 pikselde tamamlanıyor.
+
+   `@supports` kapısı: desteklemeyen tarayıcı paneli olduğu gibi görür,
+   hiçbir şey gizli kalmaz. Yüklemede zaten görünür olan paneller giriş
+   aralığını geçmiş sayılır ve doğrudan bitiş karesinde durur — ilk
+   boyamada solukluk yok. */
+@supports (animation-timeline: view()) {
+  @keyframes panel-reveal {
+    from { opacity: 0; transform: translate3d(0, 10px, 0); }
+    to   { opacity: 1; transform: none; }
+  }
+  .panel {
+    animation: panel-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 220px;
+  }
+}
+
+/* BASMA GERİ BİLDİRİMİ. Tıklanabilir kart parmağın altında hafifçe
+   çöker. Hover'da KALDIRMA YOK: `.panel-hover` yorumu "zıplamaz" diye
+   yazılı bir karar ve marka derinliği gölgeyle değil tonla kuruyor. */
+.panel-hover {
+  transition-property: border-color, background-color, transform;
+}
+.panel-hover:active {
+  transform: scale(0.992);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel { animation: none; }
+  .spark-line { stroke-dasharray: none; animation: none; }
+  .spark-area, .spark-dot, .bar-fill, .ring-fill { animation: none; }
+}

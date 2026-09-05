@@ -821,13 +821,13 @@ function IndexToolbar({
               geçsin diye taban genişliği var. */}
           <div className="flex h-2.5 min-w-[180px] flex-1 gap-px overflow-hidden rounded-full bg-surface-sunken">
             {advancing > 0 && (
-              <span className="bg-up" style={{ width: `${pct(advancing)}%` }} />
+              <span className="bar-fill bg-up" style={{ width: `${pct(advancing)}%` }} />
             )}
             {flat > 0 && (
-              <span className="bg-flat/50" style={{ width: `${pct(flat)}%` }} />
+              <span className="bar-fill bg-flat/50" style={{ width: `${pct(flat)}%` }} />
             )}
             {declining > 0 && (
-              <span className="bg-down" style={{ width: `${pct(declining)}%` }} />
+              <span className="bar-fill bg-down" style={{ width: `${pct(declining)}%` }} />
             )}
           </div>
 
@@ -951,7 +951,7 @@ function MoverPanel({
                   <span
                     aria-hidden
                     className={cn(
-                      "h-[5px] rounded-full",
+                      "bar-fill h-[5px] rounded-full",
                       satirTon === "up"
                         ? "bg-up/70"
                         : satirTon === "down"

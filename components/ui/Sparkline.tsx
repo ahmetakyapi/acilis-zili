@@ -80,8 +80,18 @@ export function Sparkline({
       preserveAspectRatio="none"
     >
       <title>{title}</title>
-      {showArea && <polygon points={area} fill={stroke} opacity={AREA_OPACITY} />}
+      {showArea && (
+        <polygon
+          className="spark-area"
+          points={area}
+          fill={stroke}
+          opacity={AREA_OPACITY}
+        />
+      )}
+      {/* `pathLength="1"`: uzunluk ölçmeden çizim animasyonu; kural globals.css → .spark-line */}
       <polyline
+        className="spark-line"
+        pathLength={1}
         points={line}
         fill="none"
         stroke={stroke}
@@ -92,6 +102,7 @@ export function Sparkline({
       />
       {showLastDot && (
         <circle
+          className="spark-dot"
           cx={lastX}
           cy={lastY}
           r={strokeWidth + 1.5}

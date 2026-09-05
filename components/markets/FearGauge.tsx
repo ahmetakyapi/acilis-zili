@@ -128,7 +128,7 @@ export async function FearGauge({
         >
           <span
             className={cn(
-              "block h-full rounded-full",
+              "bar-fill block h-full rounded-full",
               band.tone === "up" && "bg-up",
               band.tone === "flat" && "bg-primary",
               band.tone === "warn" && "bg-brass",

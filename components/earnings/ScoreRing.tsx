@@ -1,3 +1,4 @@
+import type React from "react";
 import { cn } from "@/lib/utils";
 import { verdictStroke, type VerdictKey } from "@/lib/analysis";
 
@@ -49,7 +50,11 @@ export function ScoreRing({
           stroke="var(--line-strong)"
           strokeWidth="6"
         />
+        {/* Halka kendini çiziyor — kural globals.css → .ring-fill. Çevre CSS
+            değişkeniyle geçiyor ki keyframe ölçmeden başlangıç ofsetini bilsin. */}
         <circle
+          className="ring-fill"
+          style={{ "--ring-circumference": circumference } as React.CSSProperties}
           cx="32"
           cy="32"
           r={radius}
