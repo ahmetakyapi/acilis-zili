@@ -214,13 +214,26 @@ export default async function StockPage(
   if (fund) {
     return (
       <div className="flex flex-col gap-5">
-        <Suspense fallback={<HeaderSkeleton />}>
-          <StockHeader symbol={symbol} locale={locale} t={t} />
-        </Suspense>
-
         <div className="grid gap-5 lg:grid-cols-3">
           <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
-            <Suspense fallback={<Skeleton className="h-[300px] w-full sm:h-[430px]" />}>
+            {/* KİMLİK GRAFİĞİN İÇİNE GİRDİ. Başlık (logo, sembol, ad, sektör,
+                canlı fiyat) panelin DIŞINDA çıplak bir satırdı ve hemen altındaki
+                grafik paneli aynı fiyatı bir kez daha basıyordu: ölçüldü,
+                "229,49 $" sayfada iki kez, aralarında yüz piksel. Fiyat ile onun
+                grafiği aynı cümle; ayrı iki kutuda durmalarının bir sebebi yoktu.
+                Ana sayfadaki geri sayım + gün şeridi birleştirmesiyle aynı hamle.
+
+                GRAFİĞİN KOPYA FİYATI KALKTI ve bu, var olan bir kararın
+                DAYANAĞINI güncelliyor: PriceChart'ta o fiyat "dar ekranda yok,
+                geniş ekranda kalıyor" diye yazılıydı ve gerekçesi "başlıktaki
+                fiyat sağ uçta, ekranın öbür yanında" idi. Birleştirmeden sonra
+                öbür yanda değil, tam üstünde — dayanak düştüğü için kopya her
+                genişlikte kalktı. Aralığa bağlı YÜZDE grafikte kaldı; o başka
+                bir sayı (seçili aralığın getirisi) ve gerekçesi orada yazılı. */}
+            <Suspense fallback={<HeaderSkeleton />}>
+              <StockHeader symbol={symbol} locale={locale} t={t} />
+            </Suspense>
+            <Suspense fallback={<Skeleton className="mt-4 h-[300px] w-full sm:h-[430px]" />}>
               <ChartSection symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
@@ -260,13 +273,26 @@ export default async function StockPage(
 
   return (
     <div className="flex flex-col gap-5">
-      <Suspense fallback={<HeaderSkeleton />}>
-        <StockHeader symbol={symbol} locale={locale} t={t} />
-      </Suspense>
-
-      {/* Üst blok — grafik solda geniş, şirketin kimliği sağda */}
+      {/* Üst blok — kimlik ve grafik solda tek panelde, şirket künyesi sağda */}
       <div className="grid gap-5 lg:grid-cols-3">
         <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
+        {/* KİMLİK GRAFİĞİN İÇİNE GİRDİ. Başlık (logo, sembol, ad, sektör,
+            canlı fiyat) panelin DIŞINDA çıplak bir satırdı ve hemen altındaki
+            grafik paneli aynı fiyatı bir kez daha basıyordu: ölçüldü,
+            "229,49 $" sayfada iki kez, aralarında yüz piksel. Fiyat ile onun
+            grafiği aynı cümle; ayrı iki kutuda durmalarının bir sebebi yoktu.
+            Ana sayfadaki geri sayım + gün şeridi birleştirmesiyle aynı hamle.
+
+            GRAFİĞİN KOPYA FİYATI KALKTI ve bu, var olan bir kararın
+            DAYANAĞINI güncelliyor: PriceChart'ta o fiyat "dar ekranda yok,
+            geniş ekranda kalıyor" diye yazılıydı ve gerekçesi "başlıktaki
+            fiyat sağ uçta, ekranın öbür yanında" idi. Birleştirmeden sonra
+            öbür yanda değil, tam üstünde — dayanak düştüğü için kopya her
+            genişlikte kalktı. Aralığa bağlı YÜZDE grafikte kaldı; o başka
+            bir sayı (seçili aralığın getirisi) ve gerekçesi orada yazılı. */}
+          <Suspense fallback={<HeaderSkeleton />}>
+            <StockHeader symbol={symbol} locale={locale} t={t} />
+          </Suspense>
           {/* ÖLÇÜLMÜŞ YÜKSEKLİK. Yedek 300 (mobil) / 430 piksel ayırıyordu
               ama grafik bölümü 636–637 piksel kaplıyor: sayfanın EN
               TEPESİNDE 336 piksellik bir sıçrama demekti ve altındaki her
