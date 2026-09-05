@@ -1134,13 +1134,37 @@ function IndexSkeleton() {
  * yazıldığı için gün içinde saatlerce boş duran bir kutu vardı; artık dünkü
  * metin duruyor ve üstünde tarihini söyleyen bir uyarı var.
  */
+/* ÖZET, BİLANÇO LİSTESİ KISAYSA UZUYOR. Sol kolonun boyu büyük ölçüde iki
+   panele bağlı: günün özeti ve bugün bilanço açıklayanlar. İkincisi o günün
+   takvimine bakıyor ve boş bir günde 113 piksele düşüyor (ölçüldü, iki
+   satır) — o gün sol kolon sağdan 197 piksel kısa kalıyor ve `FillColumn`
+   kapatacak yalnızca bir gizli satır buluyor.
+
+   Kısa günde özetin katlanma noktası iki paragraf aşağı iniyor. Sayı
+   ölçümden: açık dört paragraf 308 piksel tutuyor, yani paragraf başına
+   ortalama 77 — iki paragraf açığın çoğunu kapatıyor, kalanı doldurma
+   mekanizmasına kalıyor. Paragraf boyları 44 ile 132 piksel arasında
+   değiştiği için hedef tam tutturulmuyor; amaç eşitlemek değil, uçurumu
+   kapatmak.
+
+   SAYIM BEDAVA: `getEarningsBetween` `cache()` sarmalı ve aynı istek içinde
+   `EarningsToday` de aynı sorguyu soruyor — sağlayıcıya bir kez gidiliyor. */
+const KISA_BILANCO_ESIGI = 3;
+const OZET_TABAN_SATIR = 4;
+const OZET_EK_SATIR = 4;
+
 async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const [daily, weekly] = await Promise.all([
+  const today = todayEt();
+  const [daily, weekly, bugunBilanco] = await Promise.all([
     getLatestBrief(locale, "daily"),
     getLatestBrief(locale, "weekly"),
+    getEarningsBetween(today, today),
   ]);
+  const acikSatir =
+    bugunBilanco.length < KISA_BILANCO_ESIGI
+      ? OZET_TABAN_SATIR + OZET_EK_SATIR
+      : OZET_TABAN_SATIR;
 
-  const today = todayEt();
   const thisWeek = weekAnchor(today);
 
   const stampOf = (row: NonNullable<typeof daily>) => {
@@ -1199,12 +1223,14 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
             markdown={daily.bodyMd}
             moreLabel={t.common.showAll}
             lessLabel={t.common.less}
+            openLines={acikSatir}
           />
         )
       }
       weeklyBody={
         weekly && (
           <BriefBody
+            openLines={acikSatir}
             markdown={weekly.bodyMd}
             moreLabel={t.common.showAll}
             lessLabel={t.common.less}

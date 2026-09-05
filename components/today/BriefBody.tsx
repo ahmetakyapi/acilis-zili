@@ -200,6 +200,7 @@ export function BriefBody({
   lessLabel,
   collapsible = true,
   size = "card",
+  openLines = OPEN_LINES,
 }: {
   markdown: string;
   /** `collapsible` iken katlanmış bölümün açma etiketi. */
@@ -208,6 +209,9 @@ export function BriefBody({
   lessLabel?: string;
   collapsible?: boolean;
   size?: "card" | "page";
+  /** Katlanmadan önce açık kalan satır sayısı. Ana sayfa bunu kolonların
+      dengesine göre yükseltiyor — gerekçe `app/(app)/page.tsx` → BriefCard. */
+  openLines?: number;
 }) {
   const lines = markdown.split("\n").filter((line) => line.trim());
 
@@ -215,7 +219,7 @@ export function BriefBody({
     return <BriefLines lines={lines} startNumber={1} size={size} />;
   }
 
-  const base = Math.min(lines.length, OPEN_LINES);
+  const base = Math.min(lines.length, Math.max(1, openLines));
 
   /* Geriye tek satır kalıyorsa hiç katlanmıyor. Bir paragrafı saklayan
      katlama, kendi düğmesi kadar yer tutuyor ve okuyucuya hiçbir şey
