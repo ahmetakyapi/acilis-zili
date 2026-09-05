@@ -714,6 +714,11 @@ export function PriceChart({
           </>
         ) : period ? (
           <>
+            {/* 1G'DE ETİKET VE BAND AYNI GRUPTA. Yüzde 1G'de kalkınca
+                "Bugün" satırın solunda tek başına kalıyor ve alt-üst band
+                karşı uca yaslanıyordu — iki kopuk parça gibi okunuyordu.
+                Yüzde varken (öteki aralıklar) o boşluğu yüzde dolduruyor,
+                orada ayrılık doğru. */}
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
               <span className="text-sm text-soft">
                 {labels.rangeLabels[range]}
@@ -727,17 +732,46 @@ export function PriceChart({
                   YÜZDE KALIYOR ve burası onun asıl yeri: başlıktaki rozet GÜNLÜK
                   değişimi söylüyor, bu ise SEÇİLİ ARALIĞIN getirisi ve aralık
                   düğmeleriyle birlikte değişiyor. */}
-              <span className={cn("numeral text-lg font-bold", toneText)}>
-                {formatPercent(shownChangePct, locale)}
-              </span>
+              {/* 1G'DE YÜZDE YOK — başlık rozeti aynı sayıyı zaten söylüyor.
+                  Bu satır SEÇİLİ ARALIĞIN getirisini yazıyor; 1G'de o getiri
+                  tanımı gereği GÜNLÜK değişimin ta kendisi, yani kimlik
+                  bloğundaki rozetle birebir aynı sayı. Ölçüldü: üst blokta
+                  "+%0,45" iki kez geçiyordu, aralarında yüz piksel.
+                  Kimlik grafiğin içine girmeden önce rozet sayfanın en üstünde
+                  ayrı bir satırdaydı; şimdi aynı panelde. Öteki aralıklarda
+                  (1H, 1Y, 5Y…) iki sayı FARKLI ve yüzde burada kalıyor. */}
+              {range !== "1D" && (
+                <span className={cn("numeral text-lg font-bold", toneText)}>
+                  {formatPercent(shownChangePct, locale)}
+                </span>
+              )}
+              {range === "1D" && (
+                <span className="numeral text-xs text-muted">
+                  {labels.periodLow}{" "}
+                  <span className="text-soft">{formatPrice(period.low, locale)}</span>
+                  {"  ·  "}
+                  {labels.periodHigh}{" "}
+                  <span className="text-soft">{formatPrice(period.high, locale)}</span>
+                </span>
+              )}
             </div>
-            <span className="numeral text-xs text-muted">
-              {labels.periodLow}{" "}
-              <span className="text-soft">{formatPrice(period.low, locale)}</span>
-              {"  ·  "}
-              {labels.periodHigh}{" "}
-              <span className="text-soft">{formatPrice(period.high, locale)}</span>
-            </span>
+            {/* ÖTEKİ ARALIKLARDA BAND KARŞI UÇTA. Orada solda etiket ve
+                yüzde var, yani sol taraf zaten dolu; band sağa yaslanınca
+                satır iki uçtan dengeleniyor. 1G'de yüzde olmadığı için band
+                yukarıda, etiketin yanına alındı. */}
+            {range !== "1D" && (
+              <span className="numeral text-xs text-muted">
+                {labels.periodLow}{" "}
+                <span className="text-soft">
+                  {formatPrice(period.low, locale)}
+                </span>
+                {"  ·  "}
+                {labels.periodHigh}{" "}
+                <span className="text-soft">
+                  {formatPrice(period.high, locale)}
+                </span>
+              </span>
+            )}
           </>
         ) : (
           <span className="skeleton h-7 w-40" />
@@ -784,7 +818,14 @@ export function PriceChart({
               <span
                 key={`${zone.key}-label`}
                 aria-hidden
-                className="chart-in plate pointer-events-none absolute top-1.5 text-micro"
+                /* MOBİLDE GİZLİ. Etiket bölgenin sol kenarına konuyor ve
+                   390 pikselde akşam seansı bölgesi sağa yakın düşüyor:
+                   "AKŞAM SEANSI" grafiğin sağ fiyat ekseninin üstüne biniyor,
+                   iki metin üst üste okunuyordu. Bölgelerin kendisi gölgeyle
+                   zaten görünür ve hemen altındaki seans cetveli dördünü de
+                   aynı gölge kareleriyle adlandırıyor — telefonda etiket
+                   bilgi eklemiyor, çakışma ekliyordu. */
+                className="chart-in plate pointer-events-none absolute top-1.5 hidden text-micro sm:block"
                 style={{ left: zone.left + 6 }}
               >
                 {zone.label}

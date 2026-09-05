@@ -1150,14 +1150,15 @@ async function ProfileCard({
   const websiteHref = safeExternalUrl(profile.weburl);
 
   const rows: [string, React.ReactNode][] = [
-    // GICS sınıflandırması varsa o gösterilir — sağlayıcının serbest metinli
-    // sektör alanından daha tutarlıdır.
-    [
-      t.stock.sector,
-      sectorLabel(member?.sector, locale) ??
-        industryLabel(profile.industry, locale) ??
-        "—",
-    ],
+    /* SEKTÖR SATIRI YOK — kimlik künyesinde, bu kartın hemen SOLUNDA duruyor.
+       İkisi AYNI tercih zincirinden besleniyor (GICS varsa o, yoksa
+       sağlayıcının serbest metinli alanı; StockHeader'daki `kunyeSektor`
+       yorumu da bunu yazıyor), yani üretilen dize garantili aynı. Kimlik
+       grafiğin içine girmeden önce başlık sayfanın en üstünde ayrı bir
+       satırdı ve tekrar göze batmıyordu; şimdi iki panel yan yana ve aynı
+       cümle iki kez okunuyor. Değeri boşsa ikisi de boş — "Sektör: —"
+       basmanın da bir faydası olmuyordu.
+       ALT SEKTÖR KALIYOR: daha dar bir sınıflandırma ve künyede yok. */
     ...(member?.sub
       ? ([[t.stock.industry, subIndustryName(member.sub, locale)]] as [
           string,
@@ -1196,16 +1197,26 @@ async function ProfileCard({
       {/* Satırlar artan yere yayılır: kart grafiğin boyuna gerildiğinde
           altta ölü boşluk yerine nefes alan bir liste kalıyor. İçerik
           kartı zaten dolduruyorsa `justify-between`in etkisi olmuyor. */}
-      <dl className="flex flex-1 flex-col justify-between divide-y divide-line-soft">
+      {/* `justify-between` KALKTI — artan yer ARALIKLARA gidiyordu.
+          CLAUDE.md "Düzen" bölümü bunu açıkça yasaklıyor: aralık kendi
+          ölçüsü olmaktan çıkıp komşu kolonun boyuna bağlanıyor. Burada tam
+          o oluyordu: kart grafik panelinin boyuna geriliyor ve 37 piksellik
+          satırların ARASI 54 piksele açılıyordu. Kimlik grafiğin içine
+          girince panel doksan piksel uzadı ve kusur gözle görülür hâle
+          geldi — sebebi birleştirme değil, birleştirmenin ortaya çıkardığı
+          bu satırdı.
+          Artan yer artık satırların İÇİNE gidiyor (`flex-1`), ayıraçlar eşit
+          aralıkta kalıyor; emsali aynı sayfadaki Anahtar Metrikler kartı. */}
+      <dl className="flex flex-1 flex-col divide-y divide-line-soft">
         {rows.map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between gap-3 py-2">
+          <div key={label} className="flex flex-1 items-center justify-between gap-3 py-2">
             <dt className="text-xs font-semibold text-strong">{label}</dt>
             <dd className="text-right text-sm text-body">{value}</dd>
           </div>
         ))}
         {/* Adres sağlayıcıdan geliyor; şeması süzülmeden href'e konmaz. */}
         {websiteHref && (
-          <div className="flex items-center justify-between gap-3 py-2">
+          <div className="flex flex-1 items-center justify-between gap-3 py-2">
             <dt className="text-xs font-semibold text-strong">{t.stock.website}</dt>
             <dd className="min-w-0 text-right text-sm">
               <a
