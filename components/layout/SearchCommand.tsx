@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
 import type {
@@ -418,10 +419,21 @@ export function SearchCommand({
 
       {/* Portal: sticky/backdrop-filter atalarının stacking bağlamından kaçar —
           Safari'de karartmanın yalnızca üst şeride uygulanma hatasını da çözer. */}
-      {open &&
-        owns &&
+      {/* PORTAL HER ZAMAN, PANEL KOŞULLU. `AnimatePresence` çıkış
+          animasyonunu oynatabilmek için kaldırılan çocuğu bir süre daha
+          ağaçta tutar; bunun için kendisi kalıcı olmalı, koşul onun İÇİNDE.
+          Karartma yalnızca opaklık, panel üstten iner ve ölçeklenir —
+          Motion `reducedMotion="user"` ile dönüşümleri kapatır, opaklık kalır. */}
+      {owns &&
         createPortal(
-        <div
+          <AnimatePresence>
+            {open && (
+        <motion.div
+          key="search-scrim"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
           /* Mobilde palet ekranın en tepesinden açılıyor; üst dolgu güvenli
              alanı taşımazsa arama kutusu çentiğin altında kalıyor ve
              dokunulamıyor. Masaüstünde 112px'lik boşluk zaten var. */
@@ -431,8 +443,12 @@ export function SearchCommand({
         >
           {/* Mobilde üstten tam genişlik bir sayfa gibi açılır — küçük ekranda
               yüzen kutu yerine ferah, zoom'suz bir arama yüzeyi. */}
-          <div
+          <motion.div
             ref={panelRef}
+            initial={{ opacity: 0, y: -8, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.985 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="w-full overflow-hidden border-b border-line-strong bg-overlay-surface shadow-(--shadow-overlay) sm:max-w-[640px] sm:rounded-xl sm:border"
             onClick={(event) => event.stopPropagation()}
             role="dialog"
@@ -632,10 +648,12 @@ export function SearchCommand({
                 </span>
               )}
             </div>
-          </div>
-        </div>,
-        document.body,
-      )}
+          </motion.div>
+        </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
     </>
   );
 }

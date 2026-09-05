@@ -998,21 +998,11 @@
 /* Hesap menüsü — avatarın altından açılırken kısa bir yükseliş.
    Kaynak noktası sağ üst: panel avatardan çıkıyormuş gibi büyüsün, ekranın
    ortasından belirmesin. */
-.account-menu {
-  transform-origin: top right;
-  animation: account-menu-in 0.16s var(--ease-brand) both;
-}
-
-@keyframes account-menu-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, -4px, 0) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
+/* `.account-menu` giriş animasyonu ve `account-menu-in` keyframe'i buradan
+   KALDIRILDI: panel artık Motion ile giriyor VE ÇIKIYOR
+   (components/layout/AccountMenu.tsx). CSS keyframe yalnızca girişi
+   yapabiliyordu; kaldırılan bir öğeye çıkış animasyonu vermek CSS'in
+   yapamadığı tek şey ve kütüphanenin buradaki gerekçesi bu. */
 
 .skeleton {
   background: linear-gradient(

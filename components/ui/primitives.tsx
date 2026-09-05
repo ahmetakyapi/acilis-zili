@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { TabUnderline } from "./TabUnderline";
 import { cn, directionOf, directionWash, formatPercent } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -417,11 +418,16 @@ export function TabItem({
   href,
   active,
   children,
+  underlineId,
 }: {
   href: string;
   active: boolean;
   children: React.ReactNode;
+  /** Verilirse aktif çizgi sekmeden sekmeye kayar (bkz. TabUnderline).
+      Verilmezse eski davranış: statik `border-b-2`. AdminTabs vermiyor. */
+  underlineId?: string;
 }) {
+  const kayan = underlineId !== undefined;
   return (
     <li>
       <Link
@@ -431,12 +437,14 @@ export function TabItem({
           /* -mb-px: alt çizgi çubuğun hairline'ının üstüne otursun, altına
              inip 1px kalınlık farkı yaratmasın. */
           "-mb-px inline-flex min-h-11 items-center whitespace-nowrap border-b-2 px-3.5 text-base transition-colors sm:px-[18px]",
+          kayan && "relative",
           active
-            ? "border-primary font-bold text-primary"
+            ? cn("font-bold text-primary", kayan ? "border-transparent" : "border-primary")
             : "border-transparent font-medium text-body hover:text-strong",
         )}
       >
         {children}
+        {kayan && active && <TabUnderline layoutId={underlineId} />}
       </Link>
     </li>
   );

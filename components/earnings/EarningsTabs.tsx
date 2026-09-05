@@ -39,7 +39,12 @@ export function EarningsTabs({
   return (
     <TabBar label={t.analysis.title} className={className}>
       {tabs.map((tab) => (
-        <TabItem key={tab.key} href={tab.href} active={tab.key === active}>
+        <TabItem
+          key={tab.key}
+          href={tab.href}
+          active={tab.key === active}
+          underlineId="earnings-tabs"
+        >
           {tab.label}
         </TabItem>
       ))}

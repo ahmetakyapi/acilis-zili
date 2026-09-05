@@ -9,6 +9,7 @@ import {
   useTransition,
 } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
 import { usePathname } from "next/navigation";
 import {
   CaretRight,
@@ -243,23 +244,38 @@ export function AccountMenu({
         )}
       </button>
 
-      {open && (
-        <>
-          {/* Dışarı dokunuş paneli kapatır. Panelin kendisinden ÖNCE basılır,
-              yani yığında altında kalır. */}
-          <span
+      {/* ÇIKIŞ DA ANİMASYONLU. `AnimatePresence` kaldırılan çocuğu çıkış
+          animasyonu bitene kadar ağaçta tutar — CSS keyframe yalnızca girişi
+          yapabiliyordu, panel kapanırken pat diye yok oluyordu. İki çocuk da
+          AYRI anahtarlı motion öğesi: fragment `exit` almaz. Karartma
+          saydam, yalnızca kapanış sırasında tıklamayı yakalamak için tutuluyor.
+          Giriş eğrisi eski `account-menu-in` ile aynı (−4px, ölçek .97, 160 ms);
+          Motion `reducedMotion="user"` ile dönüşümleri kapatır, opaklık kalır. */}
+      <AnimatePresence>
+        {open && (
+          <motion.span
+            key="account-scrim"
             aria-hidden
             onClick={() => close()}
             className="fixed inset-0 z-10 cursor-default"
+            initial={false}
+            exit={{ opacity: 0 }}
           />
-
-          <div
+        )}
+        {open && (
+          <motion.div
+            key="account-panel"
             role="dialog"
             aria-label={labels.account}
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            style={{ transformOrigin: "top right" }}
             /* Zemin `--overlay-surface`, `--surface-solid` DEĞİL: ikincisi koyu
                temada saydam (beyazın %4,5'i) çünkü sayfa üstündeki kartlar için
                tasarlandı — panelin arkasından sayfa başlığı okunuyordu. */
-            className="account-menu absolute right-0 top-[calc(100%+9px)] z-20 w-[268px] overflow-hidden rounded-xl border border-line bg-overlay-surface shadow-(--shadow-overlay)"
+            className="absolute right-0 top-[calc(100%+9px)] z-20 w-[268px] overflow-hidden rounded-xl border border-line bg-overlay-surface shadow-(--shadow-overlay)"
           >
             {/* ===== 1 · Kimlik ===== */}
             <div className="relative flex items-center gap-3 px-4 py-4">
@@ -388,9 +404,9 @@ export function AccountMenu({
                 </span>
               </div>
             </div>
-          </div>
-        </>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { MotionProvider } from "@/components/motion/MotionProvider";
 import { Suspense } from "react";
 import { auth } from "@/auth";
 import { AccountMenu } from "@/components/layout/AccountMenu";
@@ -123,7 +124,7 @@ export default async function AppLayout({
     >
       {/* Sayfa ölçümü — çerezsiz, kimliksiz, hiçbir şey çizmez. */}
       <ViewBeacon locale={locale} />
-      {children}
+      <MotionProvider>{children}</MotionProvider>
     </AppShell>
   );
 }
