@@ -1262,6 +1262,15 @@
   transform: scale(0.992);
 }
 
+/* GRAFİK YUMUŞAK GİRİYOR. Neden: aralık değişince (1G → 1Y) yeni veri pat
+   diye düşüyordu; artık iskeletin ardından beliriyor. Tetik `state.phase`in
+   "ready"ye geçişi — sınıf kalkıp yeniden konduğu için her aralıkta tekrar
+   oynar. Kap `key` ile YENİDEN BAĞLANMIYOR: grafik kütüphanesi o düğüme
+   imperatif çiziyor, yeniden bağlamak örneği yok ederdi. */
+.chart-in {
+  animation: fade-in-soft 0.32s var(--ease-brand) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .panel { animation: none; }
   .spark-line { stroke-dasharray: none; animation: none; }

@@ -764,7 +764,7 @@ export function PriceChart({
         )}
         <div
           ref={containerRef}
-          className={cn("h-full w-full", state.phase !== "ready" && "invisible")}
+          className={cn("h-full w-full", state.phase !== "ready" ? "invisible" : "chart-in")}
         />
         {/* Seans gölgeleri — 1G görünümünde ön/akşam seansları ayrışır */}
         {state.phase === "ready" &&
@@ -772,7 +772,7 @@ export function PriceChart({
             <div
               key={zone.key}
               aria-hidden
-              className="pointer-events-none absolute inset-y-0 border-line-soft"
+              className="chart-in pointer-events-none absolute inset-y-0 border-line-soft"
               style={{
                 left: zone.left,
                 width: zone.width,
@@ -790,7 +790,7 @@ export function PriceChart({
               <span
                 key={`${zone.key}-label`}
                 aria-hidden
-                className="plate pointer-events-none absolute top-1.5 text-micro"
+                className="chart-in plate pointer-events-none absolute top-1.5 text-micro"
                 style={{ left: zone.left + 6 }}
               >
                 {zone.label}
