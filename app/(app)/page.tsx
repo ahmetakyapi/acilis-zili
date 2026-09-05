@@ -108,12 +108,12 @@ export const generateMetadata = pageMetadata({
   path: "/",
   absoluteTitle: true,
   tr: {
-    title: "Açılış Zili — ABD Piyasa Takibi",
+    title: "Açılış Zili · ABD Piyasa Takibi",
     description:
       "ABD borsalarında bugün ne var: ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin tek ekranda — saatleriyle birlikte.",
   },
   en: {
-    title: "Opening Bell — US Market Tracker",
+    title: "Opening Bell · US Market Tracker",
     description:
       "What's happening in US markets today: economic calendar, earnings dates, news and your watchlist on one screen — with the times.",
   },

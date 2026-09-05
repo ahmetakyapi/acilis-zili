@@ -248,7 +248,7 @@ export async function generateMetadata(
   ]);
   if (!row) return missingMetadata(locale);
   return {
-    title: `${row.company} ${row.periodLabel} — ${row.symbol}`,
+    title: `${row.company} ${row.periodLabel} (${row.symbol})`,
     description: metaDescription(row.headline),
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık

@@ -33,11 +33,11 @@ export const generateMetadata = pageMetadata({
   path: "/bilancolar/analizler",
   tr: {
     title: "Bilanço Analizleri",
-    description: "Okunmuş çeyrek sonuçları — skor, görüş ve hedef fiyatla.",
+    description: "Okunmuş çeyrek sonuçları: skor, görüş ve hedef fiyatla.",
   },
   en: {
     title: "Earnings Analyses",
-    description: "Quarters we read — score, verdict and price target.",
+    description: "Quarters we read: score, verdict and price target.",
   },
 });
 import {
@@ -321,12 +321,25 @@ export default async function AnalysesPage(
                           ★
                         </span>
                       ) : (
+                        /* ÇIPLAK SAYI YOK. Yuva "32,21 $" basıyordu ve ne
+                           olduğu hiçbir yerde yazmıyordu: fiyat mı, HBK
+                           beklentisi mi, hedef mi? Aynı yuva favorideyse ★
+                           basıyor, yani iki farklı şey aynı yerde ve ikisi
+                           de etiketsizdi. Sayının önüne tek kelimelik önek
+                           geldi; tablonun başlığındaki kısaltmayla aynı. */
                         <span className="figure shrink-0 text-nano text-muted">
-                          {row.epsEstimate !== null
-                            ? formatPrice(row.epsEstimate, locale, {
+                          {row.epsEstimate !== null ? (
+                            <>
+                              <span className="font-semibold">
+                                {t.earnings.epsEstimateShort}
+                              </span>{" "}
+                              {formatPrice(row.epsEstimate, locale, {
                                 currency: true,
-                              })
-                            : "—"}
+                              })}
+                            </>
+                          ) : (
+                            "—"
+                          )}
                         </span>
                       )}
                       <AddToCalendar

@@ -270,6 +270,10 @@ const tr = {
     duringMarket: "Seans İçi",
     timeUnknown: "Saat Belirsiz",
     epsEstimate: "EPS Beklentisi",
+    /* Kompakt yuvanın öneki — "Yaklaşan Bilançolar" panelinde sayının
+       yanında tek kelime. Analizler tablosunun başlığı "HBK / Beklenti"
+       dediği için aynı sayfada aynı kısaltma. */
+    epsEstimateShort: "HBK",
     epsActual: "Açıklanan EPS",
     revenueEstimate: "Gelir Beklentisi",
     revenueActual: "Açıklanan Gelir",

@@ -3,7 +3,7 @@ import { OG_CONTENT_TYPE, OG_SIZE, ogFonts, sectionOg } from "@/lib/og";
 
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
-export const alt = "Açılış Zili — Bilançolar";
+export const alt = "Bilançolar · Açılış Zili";
 
 export default async function SectionOgImage() {
   return new ImageResponse(

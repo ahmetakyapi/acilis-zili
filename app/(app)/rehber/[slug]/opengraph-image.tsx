@@ -20,7 +20,7 @@ export const contentType = OG_CONTENT_TYPE;
    Özeti: paylaşım kartının adresi önek taşımıyor, dolayısıyla `getI18n()`
    buradan hiçbir zaman `en` döndürmüyordu; çıktıyı değiştirmeden yalnızca
    her istekte `headers()` ve `cookies()` okuyordu. */
-export const alt = "Açılış Zili — Rehber";
+export const alt = "Rehber · Açılış Zili";
 
 /** Rehber yazısının paylaşım kartı: başlık, spot, konu ve okuma süresi. */
 export default async function GuideOgImage({

@@ -199,6 +199,7 @@ const en: typeof tr = {
     duringMarket: "During Market",
     timeUnknown: "Time TBA",
     epsEstimate: "EPS Estimate",
+    epsEstimateShort: "EPS",
     epsActual: "Reported EPS",
     revenueEstimate: "Revenue Estimate",
     revenueActual: "Reported Revenue",

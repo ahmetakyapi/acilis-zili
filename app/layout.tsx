@@ -59,7 +59,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${brand} — ${t.brand.marketTagline}`,
+    default: `${brand} · ${t.brand.marketTagline}`,
     template: `%s · ${brand}`,
   },
   description: t.brand.description,

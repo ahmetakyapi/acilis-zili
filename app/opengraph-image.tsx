@@ -14,7 +14,7 @@ import { clockOf, timePair } from "@/lib/session-clock";
 
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
-export const alt = "Açılış Zili — ABD Piyasa Takibi";
+export const alt = "Açılış Zili · ABD Piyasa Takibi";
 
 /**
  * Ana sayfanın paylaşım kartı.
