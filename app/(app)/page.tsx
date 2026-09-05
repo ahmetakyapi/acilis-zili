@@ -173,7 +173,20 @@ export default async function TodayPage() {
         className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1"
       >
         {/* ---- Oturum rozeti + tarih ---- */}
-        <header>
+        {/* KAHRAMAN TEK BLOK. Geri sayım ile gün şeridi ayrı iki kutudaydı
+            ve ikisi de AYNI SORUYU yanıtlıyordu: "seans ne zaman". Ürünün
+            adını taşıyan sayı (Açılış Zili) panelin dışında, kendi başına
+            bir durum satırı gibi duruyordu; altındaki 282 piksellik panel
+            ise altı piksellik bir çizgiyi taşımak için o alanı kaplıyordu.
+            Şimdi biri ötekinin manşeti: künye şeridi üstte, geri sayım
+            manşet, şerit onun görseli. Yeni veri yok, kutu sayısı bir
+            azaldı ve sayfanın en değerli sayısı hak ettiği ağırlıkta.
+
+            `panel` sınıfı elden veriliyor, `<Panel>` bileşeniyle değil:
+            bileşen `<section>` basıyor ve bu blok anlamsal olarak sayfanın
+            `<header>`ı — h1'i taşıyan eleman o. Görünüm aynı token'lardan
+            geliyor (globals.css → .panel). */}
+        <header className="panel overflow-hidden px-4 py-5 sm:px-5">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
             <span
               className={cn(
@@ -247,15 +260,18 @@ export default async function TodayPage() {
               {countdownLabel}
             </span>
           </h1>
-        </header>
 
-        {/* ---- Gün Şeridi ---- */}
-        <Panel className="px-4 py-5 sm:px-5">
+          {/* ---- Gün Şeridi ---- */}
           {/* Şeridin kapsadığı pencere ("11:00 — 03:00 TR") burada, başlığın
               sağında duruyordu. Aynı iki saat artık eksenin kendi uçlarında
               yazılı — okuyucu "bu çizginin solu hangi saat" diye sorduğunda
               cevabın ekranın öbür ucunda olması gerekmiyor. */}
-          <h2 className="display-ink display-ink-tight mb-5 w-fit text-read font-bold">
+          {/* Başlık `display-ink` manşetti; hemen üstündeki geri sayımla
+              aynı ağırlıkta iki manşet yan yana geliyordu. Şeridin adı bir
+              manşet değil bir ETİKET ve `plate` tam bu rol için var
+              (gerekçe components/ui/primitives.tsx → PanelHeader `tone`).
+              Başlık düzeyi korunuyor, yalnızca ağırlığı düşüyor. */}
+          <h2 className="plate mb-3.5 mt-6 w-fit text-nano tracking-[0.09em]">
             {t.today.todayFlow}
           </h2>
           <Suspense fallback={<Skeleton className="h-28 w-full" />}>
@@ -272,7 +288,7 @@ export default async function TodayPage() {
               }}
             />
           </Suspense>
-        </Panel>
+        </header>
 
         {/* Ön seans / akşam seansı hareketleri BURADAN KALKTI. Panel
              yalnızca o iki pencerede basılıyordu ve seans açıkken ana
