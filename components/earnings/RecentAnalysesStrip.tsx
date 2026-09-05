@@ -51,7 +51,15 @@ export async function RecentAnalysesStrip({
       className="flex flex-col gap-2.5 rounded-lg border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
     >
       <div className="flex shrink-0 items-center justify-between gap-3">
-        <p className="plate whitespace-nowrap tracking-[0.09em]">
+        {/* ETİKET YÜZEYİN KENDİ MÜREKKEBİNDE. `plate` künyeyi `--text-muted`
+            ile basıyor ve o gri, sayfanın nötr zemini için ayarlı; accent
+            wash'ın üstünde şeridin ne olduğunu söyleyen TEK metin geri plana
+            düşüyordu, içerik çipleri öne çıkarken. `--primary-ink` hem
+            yüzeyle aynı aileden hem bir tık daha kontrastlı (ölçüldü: wash
+            zemininde 4,67:1, muted 4,56:1 — ikisi de AA geçiyor, ama biri
+            bandın parçası gibi okunuyor). Punto ve harf aralığı DEĞİŞMEDİ:
+            rol hâlâ künye, yalnızca aidiyeti düzeldi. */}
+        <p className="plate whitespace-nowrap text-primary-ink tracking-[0.09em]">
           {t.analysis.recentStrip}
         </p>
         {/* Mobilde "Tümü" etiketle aynı satırda: altına inince şerit üç

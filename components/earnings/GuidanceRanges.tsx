@@ -369,6 +369,47 @@ export function GuidanceRanges({
                       />
                     )}
                   </div>
+
+                  {/* UÇLARA GERÇEK SAYILAR. Eksen orta noktaya göre YÜZDE
+                      SAPMA ve bu soyut: okuyucu şeridin nerede başlayıp
+                      nerede bittiğini görüyor ama o iki ucun kaç ettiğini
+                      bilmiyordu, altındaki açıklama paragrafını okumadan.
+                      Sayılar uçlara yazılınca şerit kendi kendini anlatıyor.
+
+                      YALNIZCA GERÇEK ARALIKLARDA. Nokta tahminde iki uç aynı
+                      sayı olurdu ve aynı değeri iki kez yazmak bilgi değil
+                      gürültü — o satırda zaten sağ üstte tek bir değer var.
+
+                      SAĞ UÇ SAĞA HİZALI: sayı büyüdükçe sola doğru uzuyor,
+                      şeridin dışına taşmıyor. */}
+                  {spread.half > 0 && (
+                    /* ETİKETLER ŞERİDİN UÇLARINDA, RAYIN DEĞİL. İlk denemede
+                       `justify-between` ile satırın iki ucuna konmuşlardı ve
+                       sonuç yanlıştı: ray tüm ekseni gösteriyor, şerit onun
+                       ortasında bir yerde duruyor. "89,2 Mr $" en solda
+                       yazınca aralık rayın başında başlıyormuş gibi
+                       okunuyordu. Şimdi ikisi de şeridin kendi ucuna
+                       çapalanıyor, aynı `pos()` hesabıyla.
+
+                       `-translate-x-1/2` ile sayı kendi çapasına ortalanıyor;
+                       uçlar eksenin kenarına dayanırsa taşmasın diye kap
+                       `overflow-hidden` DEĞİL — taşma yerine kayma tercih
+                       edildi, çünkü kırpılmış bir sayı yanlış okunur. */
+                    <div className="relative mt-1 h-3.5">
+                      <span
+                        className="numeral absolute -translate-x-1/2 whitespace-nowrap text-nano text-muted"
+                        style={{ left: `${pos(-spread.half)}%` }}
+                      >
+                        {formatRange(lo, lo, row.unit)}
+                      </span>
+                      <span
+                        className="numeral absolute -translate-x-1/2 whitespace-nowrap text-nano text-muted"
+                        style={{ left: `${pos(spread.half)}%` }}
+                      >
+                        {formatRange(hi, hi, row.unit)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
