@@ -200,6 +200,10 @@ const en: typeof tr = {
     timeUnknown: "Time TBA",
     epsEstimate: "EPS Estimate",
     epsEstimateShort: "EPS",
+    lastReported: "Last Reported",
+    beatBy: "Beat",
+    missBy: "Missed",
+    inlineWith: "In Line",
     epsActual: "Reported EPS",
     revenueEstimate: "Revenue Estimate",
     revenueActual: "Reported Revenue",
@@ -393,6 +397,7 @@ const en: typeof tr = {
     debtToEquity: "Debt / Equity",
     high52: "52-Week High",
     low52: "52-Week Low",
+    country: "Country",
     week52Range: "52-Week Range",
     week52Position: "{value} Into the Band",
     homeCurrencyNote:

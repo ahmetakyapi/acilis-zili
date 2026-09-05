@@ -274,6 +274,13 @@ const tr = {
        yanında tek kelime. Analizler tablosunun başlığı "HBK / Beklenti"
        dediği için aynı sayfada aynı kısaltma. */
     epsEstimateShort: "HBK",
+    /* Yaklaşan bilanço kartındaki geçmiş bağlamı. "Geçen çeyrek" DEĞİL
+       "son açıklanan": aradaki çeyrek atlanmış olabilir ve tarih zaten
+       yanında yazıyor. */
+    lastReported: "Son Açıklanan",
+    beatBy: "Aştı",
+    missBy: "Altında Kaldı",
+    inlineWith: "Beklentiyle Uyumlu",
     epsActual: "Açıklanan EPS",
     revenueEstimate: "Gelir Beklentisi",
     revenueActual: "Açıklanan Gelir",
@@ -532,6 +539,7 @@ const tr = {
     high52: "52 Hafta En Yüksek",
     low52: "52 Hafta En Düşük",
     /* Bant bloğunun başlığı — iki ayrı satırın yerini alıyor. */
+    country: "Ülke",
     week52Range: "52 Hafta Aralığı",
     /* İşaretçinin ne olduğunu SÖYLEYEN künye: dipten tepeye giden yolun ne
        kadarı geride kaldı. SAYI EKİ YOK ve bu zorunlu — Türkçede ek sayının

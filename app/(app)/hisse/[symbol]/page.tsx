@@ -75,6 +75,7 @@ import {
   formatPercent,
   formatMoneyCompact,
   formatEtDateLong,
+  formatEtDateCompact,
   formatEtDateShort,
   formatPercentPlain,
   formatPrice,
@@ -869,15 +870,37 @@ async function UpcomingEarnings({
   t: Dictionary;
 }) {
   const paraOpt = await paraSecenegi(symbol);
+  const today = todayEt();
+  /* Tüm takvim satırları TEK SORGUDA: hem sıradaki bilanço hem son açıklanan
+     aynı listeden çıkıyor, sağlayıcıya ikinci tur yok. */
+  const tumu = await symbolEarnings(symbol);
   let next: EarningsItem | null = await getNextEarnings(symbol);
   if (!next) {
-    const today = todayEt();
     next =
-      (await symbolEarnings(symbol))
+      tumu
         .filter((row) => row.reportDate >= today)
         .sort((a, b) => a.reportDate.localeCompare(b.reportDate))[0] ?? null;
   }
   if (!next) return null;
+
+  /* SON AÇIKLANAN ÇEYREK — kartın boşluğunu dolduran şey süs değil, bağlam:
+     "şirket bir sonraki bilançoya nasıl giriyor". Gerçekleşen ile beklenti
+     yan yana durunca okuyucu sıradaki beklentiyi bir ölçekle okuyor.
+     "Geçen çeyrek" DEĞİL "son açıklanan": aradaki çeyrek atlanmış olabilir.
+     Yalnızca GERÇEKLEŞEN varsa basılıyor; beklenti yoksa sapma yazılmıyor,
+     uydurulmuyor. */
+  const sonAciklanan =
+    tumu
+      .filter((row) => row.reportDate < today && row.epsActual !== null)
+      .sort((a, b) => b.reportDate.localeCompare(a.reportDate))[0] ?? null;
+  const sapma =
+    sonAciklanan?.epsActual != null &&
+    sonAciklanan.epsEstimate != null &&
+    sonAciklanan.epsEstimate !== 0
+      ? ((sonAciklanan.epsActual - sonAciklanan.epsEstimate) /
+          Math.abs(sonAciklanan.epsEstimate)) *
+        100
+      : null;
 
   const earningsHourLabel: Record<string, string> = {
     bmo: t.earnings.beforeOpen,
@@ -923,6 +946,51 @@ async function UpcomingEarnings({
             </div>
           )}
         </dl>
+      )}
+
+      {sonAciklanan && sonAciklanan.epsActual !== null && (
+        <div className="mt-3 border-t border-line-soft pt-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+            <span className="text-nano uppercase tracking-wider text-muted">
+              {t.earnings.lastReported}
+            </span>
+            <span className="numeral text-tiny text-muted">
+              {formatEtDateCompact(sonAciklanan.reportDate, locale)}
+            </span>
+          </div>
+          <div className="mt-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+            <span className="numeral text-sm font-semibold text-strong">
+              {formatPrice(sonAciklanan.epsActual, locale, {
+                currency: paraOpt,
+              })}
+            </span>
+            {sapma !== null && (
+              /* Yön rengi sapmanın işaretinden; eşikte "uyumlu" diyoruz
+                 çünkü yüzde ondalığı yuvarlanınca sıfır görünen bir sapmayı
+                 "aştı" diye yazmak uydurma kesinlik olurdu. */
+              <span
+                className={cn(
+                  "numeral text-tiny font-semibold",
+                  directionText(directionOf(sapma)),
+                )}
+              >
+                {Math.abs(sapma) < 0.05
+                  ? t.earnings.inlineWith
+                  : `${formatPercentPlain(Math.abs(sapma), locale, 1)} ${
+                      sapma > 0 ? t.earnings.beatBy : t.earnings.missBy
+                    }`}
+              </span>
+            )}
+          </div>
+          {sonAciklanan.epsEstimate !== null && (
+            <p className="numeral mt-0.5 text-tiny text-muted">
+              {t.earnings.epsEstimate}{" "}
+              {formatPrice(sonAciklanan.epsEstimate, locale, {
+                currency: paraOpt,
+              })}
+            </p>
+          )}
+        </div>
       )}
     </Panel>
   );
@@ -1149,6 +1217,21 @@ async function ProfileCard({
   const about = await describeSymbol(symbol, locale);
   const websiteHref = safeExternalUrl(profile.weburl);
 
+  /* Ülke adı — kod tanınmazsa `of()` girdiyi aynen geri veriyor, o durumda
+     "US" gibi ham bir kod basmak yerine satırı hiç açmıyoruz. */
+  const ulkeAdi = (() => {
+    const kod = profile.country?.trim();
+    if (!kod || kod.length !== 2) return null;
+    try {
+      const ad = new Intl.DisplayNames([locale === "tr" ? "tr" : "en"], {
+        type: "region",
+      }).of(kod.toUpperCase());
+      return ad && ad !== kod.toUpperCase() ? ad : null;
+    } catch {
+      return null;
+    }
+  })();
+
   const rows: [string, React.ReactNode][] = [
     /* SEKTÖR SATIRI YOK — kimlik künyesinde, bu kartın hemen SOLUNDA duruyor.
        İkisi AYNI tercih zincirinden besleniyor (GICS varsa o, yoksa
@@ -1165,15 +1248,30 @@ async function ProfileCard({
           React.ReactNode,
         ][])
       : []),
+    /* ÜLKE — sağlayıcı ISO-2 kodu veriyor ("US", "TW", "NL") ve çeviri
+       `Intl.DisplayNames` ile yapılıyor: yeni bir ülke sözlüğü kurmaya gerek
+       yok, kural tarayıcının ve Node'un kendisinde. Satır ADR'lerde asıl
+       işini görüyor — TSM "Tayvan", ASML "Hollanda" — ve o sembollerde
+       zaten para birimi notu duran kartın hemen yanında duruyor.
+       Kod tanınmazsa `of()` girdiyi aynen döndürüyor; o zaman ham kod
+       basmak yerine satır hiç yazılmıyor. */
+    ...(ulkeAdi ? ([[t.stock.country, ulkeAdi]] as [string, React.ReactNode][]) : []),
     [t.stock.exchange, profile.exchange ?? "—"],
-    [
-      t.market.marketCap,
-      marketCap ? (
-        <span className="numeral">{formatMoneyCompact(marketCap, locale)}</span>
-      ) : (
-        "—"
-      ),
-    ],
+    /* DEĞER YOKSA SATIR DA YOK. Koruma bilinçli (dolar dışı para biriminde
+       null döner, gerekçe yukarıda) ama sonucu hep "—" olan bir satır yer
+       kaplayıp hiçbir şey söylemiyordu — üstelik tam da ADR'lerde, kartın
+       en havadar olduğu yerde. Boş satır sildikçe kalanlar gerçek bilgi
+       taşıyor; aynı desen `ulkeAdi` ve alt sektörde de var. */
+    ...(marketCap
+      ? ([
+          [
+            t.market.marketCap,
+            <span key="cap" className="numeral">
+              {formatMoneyCompact(marketCap, locale)}
+            </span>,
+          ],
+        ] as [string, React.ReactNode][])
+      : []),
     [
       t.stock.ipoDate,
       profile.ipoDate ? (
