@@ -277,10 +277,13 @@ const tr = {
     /* Yaklaşan bilanço kartındaki geçmiş bağlamı. "Geçen çeyrek" DEĞİL
        "son açıklanan": aradaki çeyrek atlanmış olabilir ve tarih zaten
        yanında yazıyor. */
-    lastReported: "Son Açıklanan",
-    beatBy: "Aştı",
-    missBy: "Altında Kaldı",
-    inlineWith: "Beklentiyle Uyumlu",
+    /* Yaklaşan bilanço kartındaki geçmiş bağlamı. Ham sayı DEĞİL karne:
+       tarih, gerçekleşen ve sapma zaten aşağıdaki Geçmiş Bilançolar
+       tablosunda var; burada olan şey o tablonun SÖYLEMEDİĞİ özet. */
+    beatRecord: "Beklenti Karnesi",
+    beatRecordLine: "Son {total} çeyreğin {beat} tanesinde beklenti aşıldı",
+    beatRecordNone: "Son {total} çeyrekte beklenti aşılmadı",
+    beatRecordAll: "Son {total} çeyreğin tamamında beklenti aşıldı",
     epsActual: "Açıklanan EPS",
     revenueEstimate: "Gelir Beklentisi",
     revenueActual: "Açıklanan Gelir",

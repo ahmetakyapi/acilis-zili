@@ -883,24 +883,31 @@ async function UpcomingEarnings({
   }
   if (!next) return null;
 
-  /* SON AÇIKLANAN ÇEYREK — kartın boşluğunu dolduran şey süs değil, bağlam:
-     "şirket bir sonraki bilançoya nasıl giriyor". Gerçekleşen ile beklenti
-     yan yana durunca okuyucu sıradaki beklentiyi bir ölçekle okuyor.
-     "Geçen çeyrek" DEĞİL "son açıklanan": aradaki çeyrek atlanmış olabilir.
-     Yalnızca GERÇEKLEŞEN varsa basılıyor; beklenti yoksa sapma yazılmıyor,
-     uydurulmuyor. */
-  const sonAciklanan =
-    tumu
-      .filter((row) => row.reportDate < today && row.epsActual !== null)
-      .sort((a, b) => b.reportDate.localeCompare(a.reportDate))[0] ?? null;
-  const sapma =
-    sonAciklanan?.epsActual != null &&
-    sonAciklanan.epsEstimate != null &&
-    sonAciklanan.epsEstimate !== 0
-      ? ((sonAciklanan.epsActual - sonAciklanan.epsEstimate) /
-          Math.abs(sonAciklanan.epsEstimate)) *
-        100
-      : null;
+  /* BEKLENTİ KARNESİ — kartın boşluğunu dolduran şey tablonun KOPYASI değil,
+     tablonun söylemediği ÖZET. Aşağıdaki Geçmiş Bilançolar zaten her çeyreğin
+     tarihini, beklentisini, gerçekleşenini ve sapmasını satır satır yazıyor;
+     bu kart forward bakıyor ve "şirket bu bilançoya nasıl giriyor" sorusunu
+     yanıtlıyor. İlk hâlinde son çeyreğin ham sayılarını basıyordum ve o
+     tablonun tam bir alt kümesiydi — aynı sayfada aynı sayı iki kez.
+
+     Yalnızca İKİSİ DE bilinen çeyrekler sayılıyor: gerçekleşen var ama
+     beklenti yoksa o çeyrek "aşıldı mı" sorusuna cevap veremez, sayıma
+     girmiyor. Eşik yok: gerçekleşen beklentinin üstündeyse aşılmış sayılıyor.
+     Dört çeyrek yeterli — daha uzun geçmiş şirketin bugünkü hâlini anlatmıyor
+     ve kart bir özet, bir seri değil. */
+  /* KAYNAK SÜRPRİZ GEÇMİŞİ, TAKVİM DEĞİL. Takvim tablosu geçmiş tarafında
+     sembol başına TEK satır tutuyor (ölçüldü: NVDA ve SNOW'da birer tane) —
+     bir çeyrekten karne kurulamaz. `getEarningsSurprises` dört çeyreği
+     birden veriyor ve sayfanın Geçmiş Bilançolar tablosu da zaten onu
+     kullanıyor; `finnhubFetch` altı saatlik `revalidate` ile önbelleklediği
+     için ikinci bileşenden çağırmak yeni bir tur açmıyor. */
+  const surpriz = await getEarningsSurprises(symbol);
+  const karneler = (surpriz.ok ? surpriz.data : [])
+    .filter((row) => row.epsActual !== null && row.epsEstimate !== null)
+    .sort((a, b) => b.period.localeCompare(a.period))
+    .slice(0, 4)
+    .map((row) => (row.epsActual! > row.epsEstimate! ? "asti" : "kaldi"));
+  const asilan = karneler.filter((x) => x === "asti").length;
 
   const earningsHourLabel: Record<string, string> = {
     bmo: t.earnings.beforeOpen,
@@ -948,48 +955,39 @@ async function UpcomingEarnings({
         </dl>
       )}
 
-      {sonAciklanan && sonAciklanan.epsActual !== null && (
+      {/* TEK ÇEYREK KARNE DEĞİLDİR. "Son 1 çeyreğin tamamında beklenti
+          aşıldı" hem Türkçe olarak tuhaf hem de istatistik olarak boş;
+          en az iki çeyrek gerekiyor. */}
+      {karneler.length > 1 && (
         <div className="mt-3 border-t border-line-soft pt-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-            <span className="text-nano uppercase tracking-wider text-muted">
-              {t.earnings.lastReported}
-            </span>
-            <span className="numeral text-tiny text-muted">
-              {formatEtDateCompact(sonAciklanan.reportDate, locale)}
-            </span>
-          </div>
-          <div className="mt-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
-            <span className="numeral text-sm font-semibold text-strong">
-              {formatPrice(sonAciklanan.epsActual, locale, {
-                currency: paraOpt,
-              })}
-            </span>
-            {sapma !== null && (
-              /* Yön rengi sapmanın işaretinden; eşikte "uyumlu" diyoruz
-                 çünkü yüzde ondalığı yuvarlanınca sıfır görünen bir sapmayı
-                 "aştı" diye yazmak uydurma kesinlik olurdu. */
+          <p className="text-nano uppercase tracking-wider text-muted">
+            {t.earnings.beatRecord}
+          </p>
+          {/* Dört işaret: her çeyrek bir kutu, dolu olan aşılmış. Renk TEK
+              TAŞIYICI DEĞİL — dolu/boş ayrımı gri tonlamada da okunuyor ve
+              altındaki cümle sayıyı zaten yazıyor. Sıra ESKİDEN YENİYE:
+              soldan sağa okuma yönü zamanla aynı. */}
+          <div aria-hidden className="mt-1.5 flex gap-1">
+            {[...karneler].reverse().map((durum, i) => (
               <span
+                key={i}
                 className={cn(
-                  "numeral text-tiny font-semibold",
-                  directionText(directionOf(sapma)),
+                  "h-1.5 flex-1 rounded-full",
+                  durum === "asti" ? "bg-up" : "bg-line-strong",
                 )}
-              >
-                {Math.abs(sapma) < 0.05
-                  ? t.earnings.inlineWith
-                  : `${formatPercentPlain(Math.abs(sapma), locale, 1)} ${
-                      sapma > 0 ? t.earnings.beatBy : t.earnings.missBy
-                    }`}
-              </span>
-            )}
+              />
+            ))}
           </div>
-          {sonAciklanan.epsEstimate !== null && (
-            <p className="numeral mt-0.5 text-tiny text-muted">
-              {t.earnings.epsEstimate}{" "}
-              {formatPrice(sonAciklanan.epsEstimate, locale, {
-                currency: paraOpt,
-              })}
-            </p>
-          )}
+          <p className="mt-1.5 text-tiny leading-relaxed text-body">
+            {(asilan === karneler.length
+              ? t.earnings.beatRecordAll
+              : asilan === 0
+                ? t.earnings.beatRecordNone
+                : t.earnings.beatRecordLine
+            )
+              .replace("{total}", String(karneler.length))
+              .replace("{beat}", String(asilan))}
+          </p>
         </div>
       )}
     </Panel>
