@@ -151,6 +151,163 @@ export default async function TodayPage() {
        de bir ölçüm okuması), haberler ise iki kolonun ALTINA, tam genişliğe
        indi. İki kolon böylece boyca eşitlendi ve haber bandı sayfanın kendi
        kapanışı oldu. */
+    <div className="flex flex-col gap-5">
+      {/* MASTHEAD IZGARANIN DIŞINDA, TAM GENİŞLİKTE. Kahraman blok sol
+          kolonun içindeyken 878 piksele sıkışıyordu ve sayfanın imza anı —
+          ürünün adını taşıyan geri sayım — yan kolondaki endeks kartlarıyla
+          neredeyse aynı ölçekte kalıyordu. Izgaranın ÜSTÜNE alındı.
+          `lg:col-span-2` denenmedi: sol kolon `lg:row-start-1` ile satır bire
+          çivili ve kahraman ızgaraya girince iki kolonun satır yerleşimi
+          çakışıyor. Dışarı almak aynı sonucu veriyor, ızgara hiç değişmiyor.
+
+          İKİ KOLONUN DOLDURMA DENGESİ DEĞİŞİYOR: sol kolon kahraman kadar
+          kısaldı ve `FillColumn` bunu kırpılmış listelere satır açarak
+          kapatıyor — zaten bunun için var (CLAUDE.md "Boşluk esnetilmez,
+          doldurulur"). Ölçüldü. */}
+      {/* ---- Oturum rozeti + tarih ---- */}
+      {/* KAHRAMAN TEK BLOK. Geri sayım ile gün şeridi ayrı iki kutudaydı
+          ve ikisi de AYNI SORUYU yanıtlıyordu: "seans ne zaman". Ürünün
+          adını taşıyan sayı (Açılış Zili) panelin dışında, kendi başına
+          bir durum satırı gibi duruyordu; altındaki 282 piksellik panel
+          ise altı piksellik bir çizgiyi taşımak için o alanı kaplıyordu.
+          Şimdi biri ötekinin manşeti: künye şeridi üstte, geri sayım
+          manşet, şerit onun görseli. Yeni veri yok, kutu sayısı bir
+          azaldı ve sayfanın en değerli sayısı hak ettiği ağırlıkta.
+
+          `panel` sınıfı elden veriliyor, `<Panel>` bileşeniyle değil:
+          bileşen `<section>` basıyor ve bu blok anlamsal olarak sayfanın
+          `<header>`ı — h1'i taşıyan eleman o. Görünüm aynı token'lardan
+          geliyor (globals.css → .panel). */}
+      <header className="panel overflow-hidden px-4 py-5 sm:px-6 sm:py-7">
+        {/* MANŞET SOLDA, KÜNYE SAĞDA. Künye şeridi geri sayımın ÜSTÜNDEydi,
+            yani sayfanın en büyük sayısı ikinci satırda başlıyordu; blok tam
+            genişliğe çıkınca da sağda 800 pikselden fazla boş yer kaldı.
+            İkisi yan yana gelince manşet bloğun sol kenarından başlıyor,
+            künye karşı kenara yaslanıyor ve aradaki boşluk artık artık
+            değil, kompozisyonun kendisi.
+            `lg` altında eski davranış sürüyor: alt alta ve künye önce. */}
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-[11px] py-1 text-tiny font-semibold",
+              trading
+                ? "bg-up-wash text-up"
+                : status.session === "closed"
+                  ? "bg-surface-elevated text-body"
+                  : "bg-primary-wash text-primary-ink",
+            )}
+          >
+            <span
+              aria-hidden
+              className={cn(
+                "size-1.5 rounded-full bg-current",
+                trading && "pulse-live",
+              )}
+            />
+            {sessionLabel[status.session]}
+          </span>
+          {/* Tarih 13px sessiz gövdeydi ve yanındaki rozetle saatin
+              arasında üçüncü bir ağırlık gibi duruyordu; oysa "bugün hangi
+              gün" bu şeridin ana bilgisi. Yarı kalın koyu mürekkebe çıktı,
+              rozet ve saat ise künye kaldı. */}
+          {/* TARİH NEW YORK TAKVİMİNDEN ve bu artık yazıyor.
+              Yanındaki saat Türkçe okuyanda İstanbul'u gösteriyor; Türkiye
+              saatiyle gece yarısı ile sabah 07:00 arasında ikisi BİR GÜN
+              ayrışıyor ve ekranda "11 Ağustos Salı · 02:14 TR" gibi kendi
+              kendisiyle çelişen bir satır kalıyordu. Künye, hangi takvimin
+              konuştuğunu söylüyor — saatlerin yanındaki TR/NY künyesiyle
+              aynı dil. */}
+          <span className="flex items-baseline gap-1 text-base font-semibold text-strong">
+            {formatEtDateLong(status.etDate, locale)}
+            <span className="text-nano font-bold tracking-[0.06em] text-muted">
+              NY
+            </span>
+          </span>
+          <LiveClock locale={locale} />
+        </div>
+
+        {/* Sayfanın en büyük sayısı — zil geri sayımı.
+            Bu satır aynı zamanda sayfanın H1'i: ana sayfada hiç `h1` yoktu
+            (denetimde çıktı), ekran okuyucu ve arama motoru için sayfa
+            başlıksız görünüyordu. Geri sayım + "Açılış Ziline Kaldı"
+            zaten sayfanın ne anlattığını söyleyen cümle; görünüm
+            değişmiyor, yalnızca etiket doğru olanla değişti. */}
+        {/* H1 KONUYU DA SÖYLÜYOR. Sitenin en değerli sayfasının tek
+            başlığı geri sayımdan ibaretti: taranan HTML'de "5 sa 42 dk
+            11 sn Açılış Ziline Kaldı" gibi, sayfanın ne hakkında olduğunu
+            hiç söylemeyen ve her istekte değişen bir metin duruyordu.
+            Görsel düzen aynı kalsın diye ad ekranda değil, yalnızca
+            erişilebilirlik ağacında ve tarayıcıda. */}
+        <div className="mt-3.5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
+        <h1 className="flex flex-wrap items-end gap-3.5">
+          <span className="sr-only">{t.today.pageHeading}</span>
+          <Countdown
+            targetIso={countdownTarget.toISOString()}
+            units={{
+              d: t.today.unitD,
+              h: t.today.unitH,
+              m: t.today.unitM,
+              s: t.today.unitS,
+            }}
+            /* ÖLÇEK ÖLÇÜLDÜ, seçilmedi. Tam genişlikte kap 1320 piksel ve
+               96 pikselde sayaç 402 piksel tutuyor: manşet bloğun üçte
+               birinden azını kaplıyor, künyeye 900 piksel kalıyor. 1024'te
+               de sığıyor. MOBİLDE 44'TE KALIYOR — ölçüldü, 52 pikselde sayaç
+               320 piksellik kaba sığmayıp etiketi ikinci satıra atıyor ve h1
+               47'den 95 piksele fırlıyor. */
+            className="tote display-ink text-[44px] leading-none sm:text-[66px] lg:text-[96px]"
+          />
+          {/* Etiket sözlükteki hâliyle basılır. Bir süre burada
+              `toLocaleLowerCase` vardı ve sözlükte Title Case yazan metni
+              ekranda küçültüyordu — sayfanın H1'i "açılış ziline kaldı"
+              diye okunuyordu. Vurgu taşıyan metin Title Case yazılır ve
+              bundan büyük vurgulu bir yer yok. */}
+          <span className="pb-1.5 text-base font-normal text-body sm:pb-2.5 sm:text-read">
+            {countdownLabel}
+          </span>
+        </h1>
+
+          {/* ENDEKSLER MANŞETİN KARŞISINDA. Geri sayım 402 piksel tutuyor,
+              blok 1320; sağda kalan yer dört endeks kartını yan yana almaya
+              yetiyor. Manşetle aynı taban çizgisine oturuyorlar
+              (`items-end`), yani ikisi tek bir satır gibi okunuyor.
+              `lg` altında alt alta ve kartlar eski 2×2 düzenine dönüyor. */}
+          <div className="min-w-0 lg:max-w-[780px] lg:flex-1">
+            <Suspense fallback={<IndexSkeleton />}>
+              <IndexStrip locale={locale} t={t} />
+            </Suspense>
+          </div>
+        </div>
+
+        {/* ---- Gün Şeridi ---- */}
+        {/* Şeridin kapsadığı pencere ("11:00 — 03:00 TR") burada, başlığın
+            sağında duruyordu. Aynı iki saat artık eksenin kendi uçlarında
+            yazılı — okuyucu "bu çizginin solu hangi saat" diye sorduğunda
+            cevabın ekranın öbür ucunda olması gerekmiyor. */}
+        {/* Başlık `display-ink` manşetti; hemen üstündeki geri sayımla
+            aynı ağırlıkta iki manşet yan yana geliyordu. Şeridin adı bir
+            manşet değil bir ETİKET ve `plate` tam bu rol için var
+            (gerekçe components/ui/primitives.tsx → PanelHeader `tone`).
+            Başlık düzeyi korunuyor, yalnızca ağırlığı düşüyor. */}
+        <h2 className="plate mb-3.5 mt-6 w-fit text-nano tracking-[0.09em]">
+          {t.today.todayFlow}
+        </h2>
+        <Suspense fallback={<Skeleton className="h-28 w-full" />}>
+          <RailSection
+            t={t}
+            locale={locale}
+            status={{
+              /* `!isWeekend && !holiday` diye hesaplanıyordu ve yarım
+                 günleri tatil sayıyordu — gerekçe `tradingToday`
+                 alanının üstünde. */
+              trading: status.session !== "closed" || status.tradingToday,
+              closeMinutes: status.closeMinutes,
+              nowMinutes: status.etMinutes,
+            }}
+          />
+        </Suspense>
+      </header>
+
     <div className="grid gap-x-6 gap-y-5 lg:grid-cols-[minmax(0,1fr)_376px]">
       {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer
           kaplamaz. Geri sayım sıfıra inince orada kilitleniyor ve yeni güne
@@ -172,123 +329,6 @@ export default async function TodayPage() {
         data-col="main"
         className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1"
       >
-        {/* ---- Oturum rozeti + tarih ---- */}
-        {/* KAHRAMAN TEK BLOK. Geri sayım ile gün şeridi ayrı iki kutudaydı
-            ve ikisi de AYNI SORUYU yanıtlıyordu: "seans ne zaman". Ürünün
-            adını taşıyan sayı (Açılış Zili) panelin dışında, kendi başına
-            bir durum satırı gibi duruyordu; altındaki 282 piksellik panel
-            ise altı piksellik bir çizgiyi taşımak için o alanı kaplıyordu.
-            Şimdi biri ötekinin manşeti: künye şeridi üstte, geri sayım
-            manşet, şerit onun görseli. Yeni veri yok, kutu sayısı bir
-            azaldı ve sayfanın en değerli sayısı hak ettiği ağırlıkta.
-
-            `panel` sınıfı elden veriliyor, `<Panel>` bileşeniyle değil:
-            bileşen `<section>` basıyor ve bu blok anlamsal olarak sayfanın
-            `<header>`ı — h1'i taşıyan eleman o. Görünüm aynı token'lardan
-            geliyor (globals.css → .panel). */}
-        <header className="panel overflow-hidden px-4 py-5 sm:px-5">
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-[11px] py-1 text-tiny font-semibold",
-                trading
-                  ? "bg-up-wash text-up"
-                  : status.session === "closed"
-                    ? "bg-surface-elevated text-body"
-                    : "bg-primary-wash text-primary-ink",
-              )}
-            >
-              <span
-                aria-hidden
-                className={cn(
-                  "size-1.5 rounded-full bg-current",
-                  trading && "pulse-live",
-                )}
-              />
-              {sessionLabel[status.session]}
-            </span>
-            {/* Tarih 13px sessiz gövdeydi ve yanındaki rozetle saatin
-                arasında üçüncü bir ağırlık gibi duruyordu; oysa "bugün hangi
-                gün" bu şeridin ana bilgisi. Yarı kalın koyu mürekkebe çıktı,
-                rozet ve saat ise künye kaldı. */}
-            {/* TARİH NEW YORK TAKVİMİNDEN ve bu artık yazıyor.
-                Yanındaki saat Türkçe okuyanda İstanbul'u gösteriyor; Türkiye
-                saatiyle gece yarısı ile sabah 07:00 arasında ikisi BİR GÜN
-                ayrışıyor ve ekranda "11 Ağustos Salı · 02:14 TR" gibi kendi
-                kendisiyle çelişen bir satır kalıyordu. Künye, hangi takvimin
-                konuştuğunu söylüyor — saatlerin yanındaki TR/NY künyesiyle
-                aynı dil. */}
-            <span className="flex items-baseline gap-1 text-base font-semibold text-strong">
-              {formatEtDateLong(status.etDate, locale)}
-              <span className="text-nano font-bold tracking-[0.06em] text-muted">
-                NY
-              </span>
-            </span>
-            <LiveClock locale={locale} />
-          </div>
-
-          {/* Sayfanın en büyük sayısı — zil geri sayımı.
-              Bu satır aynı zamanda sayfanın H1'i: ana sayfada hiç `h1` yoktu
-              (denetimde çıktı), ekran okuyucu ve arama motoru için sayfa
-              başlıksız görünüyordu. Geri sayım + "Açılış Ziline Kaldı"
-              zaten sayfanın ne anlattığını söyleyen cümle; görünüm
-              değişmiyor, yalnızca etiket doğru olanla değişti. */}
-          {/* H1 KONUYU DA SÖYLÜYOR. Sitenin en değerli sayfasının tek
-              başlığı geri sayımdan ibaretti: taranan HTML'de "5 sa 42 dk
-              11 sn Açılış Ziline Kaldı" gibi, sayfanın ne hakkında olduğunu
-              hiç söylemeyen ve her istekte değişen bir metin duruyordu.
-              Görsel düzen aynı kalsın diye ad ekranda değil, yalnızca
-              erişilebilirlik ağacında ve tarayıcıda. */}
-          <h1 className="mt-3.5 flex flex-wrap items-end gap-3.5">
-            <span className="sr-only">{t.today.pageHeading}</span>
-            <Countdown
-              targetIso={countdownTarget.toISOString()}
-              units={{
-                d: t.today.unitD,
-                h: t.today.unitH,
-                m: t.today.unitM,
-                s: t.today.unitS,
-              }}
-              className="tote display-ink text-[44px] leading-none sm:text-[66px]"
-            />
-            {/* Etiket sözlükteki hâliyle basılır. Bir süre burada
-                `toLocaleLowerCase` vardı ve sözlükte Title Case yazan metni
-                ekranda küçültüyordu — sayfanın H1'i "açılış ziline kaldı"
-                diye okunuyordu. Vurgu taşıyan metin Title Case yazılır ve
-                bundan büyük vurgulu bir yer yok. */}
-            <span className="pb-1.5 text-base font-normal text-body sm:pb-2.5 sm:text-read">
-              {countdownLabel}
-            </span>
-          </h1>
-
-          {/* ---- Gün Şeridi ---- */}
-          {/* Şeridin kapsadığı pencere ("11:00 — 03:00 TR") burada, başlığın
-              sağında duruyordu. Aynı iki saat artık eksenin kendi uçlarında
-              yazılı — okuyucu "bu çizginin solu hangi saat" diye sorduğunda
-              cevabın ekranın öbür ucunda olması gerekmiyor. */}
-          {/* Başlık `display-ink` manşetti; hemen üstündeki geri sayımla
-              aynı ağırlıkta iki manşet yan yana geliyordu. Şeridin adı bir
-              manşet değil bir ETİKET ve `plate` tam bu rol için var
-              (gerekçe components/ui/primitives.tsx → PanelHeader `tone`).
-              Başlık düzeyi korunuyor, yalnızca ağırlığı düşüyor. */}
-          <h2 className="plate mb-3.5 mt-6 w-fit text-nano tracking-[0.09em]">
-            {t.today.todayFlow}
-          </h2>
-          <Suspense fallback={<Skeleton className="h-28 w-full" />}>
-            <RailSection
-              t={t}
-              locale={locale}
-              status={{
-                /* `!isWeekend && !holiday` diye hesaplanıyordu ve yarım
-                   günleri tatil sayıyordu — gerekçe `tradingToday`
-                   alanının üstünde. */
-                trading: status.session !== "closed" || status.tradingToday,
-                closeMinutes: status.closeMinutes,
-                nowMinutes: status.etMinutes,
-              }}
-            />
-          </Suspense>
-        </header>
 
         {/* Ön seans / akşam seansı hareketleri BURADAN KALKTI. Panel
              yalnızca o iki pencerede basılıyordu ve seans açıkken ana
@@ -365,12 +405,14 @@ export default async function TodayPage() {
         data-col="side"
         className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1"
       >
-        <Suspense fallback={<IndexSkeleton />}>
-          <IndexStrip locale={locale} t={t} />
-        </Suspense>
-
-        {/* Dünya piyasaları endekslerin hemen altında: ikisi de "bugün
-            borsalar ne yapmış" sorusunun cevabı, ABD'si ve dünyası. */}
+        {/* ENDEKS ŞERİDİ BURADAN MASTHEAD'E TAŞINDI. Dört endeks piyasanın
+            MANŞET sayıları; yan kolonda bir gösterge tablosu satırıydılar,
+            oysa "bugün borsa ne yaptı" sorusunun ilk cevabı onlar. Taşınma
+            aynı zamanda iki kolonun dengesini geri kurdu: kahraman ızgaranın
+            dışına çıkınca sol kolon 552 piksel kısa kalmıştı ve doldurma
+            mekanizmasında kapatacak yalnızca bir gizli satır vardı. */}
+        {/* Dünya piyasaları en üstte: "bugün borsalar ne yapmış" sorusunun
+            ABD'den sonraki halkası. */}
         <Suspense fallback={<PanelSkeleton rows={5} footer />}>
           <WorldStrip locale={locale} t={t} />
         </Suspense>
@@ -485,6 +527,7 @@ export default async function TodayPage() {
         <span>{t.today.sourceLine}</span>
         <span>{t.today.sourceNote}</span>
       </footer>
+    </div>
     </div>
   );
 }
@@ -725,7 +768,11 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="scroll-x -mx-[18px] flex gap-2.5 px-[18px] sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:gap-3">
+      {/* Dört sütun `xl`den (1280) itibaren, `lg`den değil. Ölçüldü: 1024'te
+          dört kart 84 piksele düşüyor ve başlıklar "N…", "S&…", "Do…" diye
+          kırpılıyor — okuyucu hangi endekse baktığını yalnızca sembolden
+          çıkarabiliyordu. 1024-1280 arasında 2×2 kalıyorlar. */}
+      <div className="scroll-x -mx-[18px] flex gap-2.5 px-[18px] sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:gap-3 xl:grid-cols-4">
         {INDEX_STRIP.map((symbol) => {
           const quote = result.data[symbol];
           if (!quote) {
