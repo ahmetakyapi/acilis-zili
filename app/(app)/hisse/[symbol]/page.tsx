@@ -1300,18 +1300,6 @@ async function MetricsCard({
         : "—",
     ],
     [t.stock.beta, m.beta ? formatPrice(m.beta, locale) : "—"],
-    [
-      t.stock.high52,
-      hisseBasi(m.high52)
-        ? formatPrice(m.high52, locale, { currency: currency ?? true })
-        : "—",
-    ],
-    [
-      t.stock.low52,
-      hisseBasi(m.low52)
-        ? formatPrice(m.low52, locale, { currency: currency ?? true })
-        : "—",
-    ],
     /* NET KÂR MARJI — kartın tek KÂRLILIK ölçüsü. Sekiz satırın hepsi
        değerleme (F/K, ileri F/K), dağıtım (temettü), oynaklık (beta) ya da
        fiyatın kendi geçmişindeki yeri (52 hafta bandı, hacim) hakkındaydı;
@@ -1357,6 +1345,31 @@ async function MetricsCard({
     [t.market.volume, quote?.volume ? formatVolume(quote.volume, locale) : "—"],
   ];
 
+  /* 52 HAFTA BANDI İKİ SATIRDAN BİR BLOĞA DÖNDÜ.
+     "En Yüksek 236,54" ve "En Düşük 164,07" iki ayrı satırdaydı ve okuyucunun
+     asıl sorusunu ikisi de yanıtlamıyordu: fiyat şu an bu bandın NERESİNDE?
+     Okuyucu iki sayıyı ve başlıktaki fiyatı kafasında oranlamak zorundaydı.
+     Tek blok üçünü birden gösteriyor ve kartın en boş yerini —satırların
+     ortasındaki yatay boşluğu— anlamla dolduruyor. Yeni veri yok: üç sayı da
+     zaten ekrandaydı.
+
+     İŞARETÇİ PARA BİRİMİ AYNIYSA ÇIKAR. Bant şirketin ana borsasının
+     parasında, başlıktaki fiyat dolar; ADR'de ikisini oranlamak TSM'de
+     "fiyat bandın %0'ında" gibi anlamsız bir sonuç verirdi. `homeCurrency`
+     dalında bant yine çiziliyor (iki uç okunuyor) ama işaretçi ve yüzde
+     basılmıyor. `olculerTutarli` de şart: BRK.B'de band A sınıfının. */
+  const bantGecerli =
+    hisseBasi(m.low52) !== null &&
+    hisseBasi(m.high52) !== null &&
+    m.high52! > m.low52!;
+  const bantKonumu =
+    bantGecerli && !homeCurrency && quote?.price
+      ? Math.min(
+          100,
+          Math.max(0, ((quote.price - m.low52!) / (m.high52! - m.low52!)) * 100),
+        )
+      : null;
+
   /* FİYAT / SATIŞ DEĞERLENDİRİLDİ, EKLENMEDİ — gerekçe yazılıyor çünkü
      aday güçlü ve yeniden önerilmesi çok olası.
 
@@ -1398,6 +1411,43 @@ async function MetricsCard({
           </div>
         ))}
       </dl>
+      {bantGecerli && (
+        <div className="mt-3 border-t border-line-soft pt-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-xs font-semibold text-strong">
+              {t.stock.week52Range}
+            </span>
+            {bantKonumu !== null && (
+              <span className="numeral text-tiny text-muted">
+                {t.stock.week52Position.replace(
+                  "{value}",
+                  formatPercentPlain(bantKonumu, locale, 0),
+                )}
+              </span>
+            )}
+          </div>
+          {/* Ray dolu değil ÇİZGİ: bant bir oran değil bir ARALIK, doldurmak
+              "şu kadarı tamamlandı" gibi okunurdu. İşaretçi fiyatın yerini
+              gösteren tek bir nokta; rayın kendisi nötr. */}
+          <div className="relative mt-2 h-1.5 w-full rounded-full bg-surface-sunken">
+            {bantKonumu !== null && (
+              <span
+                aria-hidden
+                className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-2 ring-surface-solid"
+                style={{ left: `${bantKonumu}%` }}
+              />
+            )}
+          </div>
+          <div className="mt-1.5 flex items-baseline justify-between gap-3">
+            <span className="numeral text-tiny text-muted">
+              {formatPrice(m.low52, locale, { currency: currency ?? true })}
+            </span>
+            <span className="numeral text-tiny text-muted">
+              {formatPrice(m.high52, locale, { currency: currency ?? true })}
+            </span>
+          </div>
+        </div>
+      )}
       {/* Para birimi başlıktaki dolar fiyatından farklıysa sebebi yazılır —
           yoksa okuyucu iki sayıyı yan yana koyup birini yanlış sanıyor. */}
       {homeCurrency && (

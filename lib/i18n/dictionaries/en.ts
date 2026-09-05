@@ -393,6 +393,8 @@ const en: typeof tr = {
     debtToEquity: "Debt / Equity",
     high52: "52-Week High",
     low52: "52-Week Low",
+    week52Range: "52-Week Range",
+    week52Position: "{value} Into the Band",
     homeCurrencyNote:
       "Earnings per share and the 52-week range come from the company's home listing in {code}, so they cannot be compared directly with the dollar price above. The P/E ratio is likewise computed within that market.",
     analysts: "Analyst Ratings",

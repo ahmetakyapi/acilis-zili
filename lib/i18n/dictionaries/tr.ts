@@ -531,6 +531,14 @@ const tr = {
     debtToEquity: "Borç / Özsermaye",
     high52: "52 Hafta En Yüksek",
     low52: "52 Hafta En Düşük",
+    /* Bant bloğunun başlığı — iki ayrı satırın yerini alıyor. */
+    week52Range: "52 Hafta Aralığı",
+    /* İşaretçinin ne olduğunu SÖYLEYEN künye: dipten tepeye giden yolun ne
+       kadarı geride kaldı. SAYI EKİ YOK ve bu zorunlu — Türkçede ek sayının
+       OKUNUŞUNA göre değişiyor ("%90'ında" ama "%5'inde", "%72'sinde") ve
+       yüzde her hissede farklı. Sabit bir ek çoğu sayıda yanlış olurdu;
+       "içinde" edatı sayıdan önce gelip sorunu tümüyle ortadan kaldırıyor. */
+    week52Position: "Bant İçinde {value}",
     homeCurrencyNote:
       "Hisse başı kâr ve 52 hafta bandı şirketin ana borsasından, {code} cinsinden geliyor; başlıktaki dolar fiyatıyla doğrudan karşılaştırılamaz. F/K oranı da o borsanın kendi içinde hesaplanmıştır.",
     analysts: "Analist Görüşleri",
