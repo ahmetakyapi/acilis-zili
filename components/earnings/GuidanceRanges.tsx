@@ -447,7 +447,10 @@ export function GuidanceRanges({
           "bu karttaki en geniş bant" demek. Ucundaki yüzde, çubukları mutlak
           olarak da okunur kılıyor. */}
       {axis > 0 && (
-        <p className="-mt-1 text-tiny text-muted">
+        /* Ölçü sınırı: kart tam genişlikte olduğunda bu açıklama satır
+           başına 104 karaktere çıkıyordu (ölçüldü). Metin kartın altında
+           tek blok hâlinde duruyor, kısıtlayacak bir komşusu yok. */
+        <p className="-mt-1 max-w-[62ch] text-tiny text-muted">
           {axisNote.replace("{value}", formatPercent(axis * 100))}
         </p>
       )}

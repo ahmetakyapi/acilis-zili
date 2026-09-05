@@ -1386,7 +1386,14 @@ function VerdictStrip({
         aria-hidden
         className="hidden w-px self-stretch bg-primary-faint sm:block"
       />
-      <p className="min-w-[16rem] flex-1 text-base font-medium leading-[22px] text-strong [text-wrap:pretty]">
+      {/* ÖLÇÜ SINIRI. Paragraf hüküm bloğunun ortasında ve `flex-1` ile
+          kalan yerin tamamını alıyordu: ölçüldü, 1440 pikselde satır başına
+          127 karakter — okunabilir aralığın (45-75) çok üstünde ve göz satır
+          sonunda yerini kaybediyor. Sayfanın öteki uzun metinleri zaten
+          54-64 karakterde (Özet ve Detaylı Değerlendirme, üç kolon).
+          `max-w` ile aynı bandın içine çekildi; `flex-1` duruyor, yani dar
+          ekranda hâlâ esniyor ve sınır yalnızca geniş ekranda bağlanıyor. */}
+      <p className="min-w-[16rem] max-w-[62ch] flex-1 text-base font-medium leading-[22px] text-strong [text-wrap:pretty]">
         {row.headline}
       </p>
       {row.targetPrice !== null && (
@@ -1400,9 +1407,14 @@ function VerdictStrip({
            potansiyel ortak bir MERKEZ ekseninde — sağa yaslıyken etiket
            sayıdan geniş olduğu için ikisi hizasız görünüyordu. */
         <>
+          {/* AYRAÇ SAĞ BLOĞU SAĞA İTİYOR (`sm:ml-auto`). Özet paragrafı ölçü
+              sınırı alınca `flex-1` doyuyor ve artan yer en sona, yani
+              analist ölçüsünün SAĞINA düşüyordu — blok şeridin sağ kenarından
+              kopup ortada asılı kalıyordu. Otomatik sol marj artan yeri
+              ayracın ÖNÜNE alıyor; ölçü yine sağ uçta. */}
           <span
             aria-hidden
-            className="hidden w-px self-stretch bg-primary-faint sm:block"
+            className="hidden w-px self-stretch bg-primary-faint sm:ml-auto sm:block"
           />
           {/* Telefonda şerit alt alta diziliyor ve dikey ayraç gizleniyor:
               orada ölçü, sola yaslı bir paragrafın altında ortada kalıyordu.
