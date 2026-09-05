@@ -129,10 +129,15 @@ export default async function MacroPage() {
                         {delta > 0 ? "▲" : "▼"}
                       </span>
                       {formatPrice(Math.abs(delta), locale, { digits })}
+                      {/* BİRİM SÖZLÜKTEN, elden yazılmış değil. Bu rozet " puan" diye
+                          küçük harfle basıyordu; aynı künye /piyasalar'ın tahvil
+                          kartında `t.markets.point` ile "Puan" duruyor. İki ekran aynı
+                          ölçüyü iki biçimde yazıyordu ve CLAUDE.md'nin Title Case kuralı
+                          künyeleri açıkça kapsıyor. "bin" bilerek küçük kaldı: dev
+                          puntolu sayının yanındaki sayı sözcüğü, geri sayımın sa/dk/sn
+                          ekleriyle aynı bilinçli istisna. */}
                       {yuzde
-                        ? locale === "tr"
-                          ? " puan"
-                          : " pt"
+                        ? ` ${t.markets.point}`
                         : birim
                           ? ` ${birim}`
                           : ""}
