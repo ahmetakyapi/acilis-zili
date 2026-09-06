@@ -395,9 +395,20 @@ export default async function StockPage(
           şey basılmaz. Akışta DEĞİL — gerekçesi bileşenin kendi yorumunda. */}
       <SymbolAnalyses rows={analysisRows} locale={locale} t={t} />
 
-      {/* Mercek yazıları analizlerin ALTINDA: analiz bir çeyreğin okunmuş
-          hâli ve sayfanın tablosuyla doğrudan bağlı; mercek ise bir olayın
-          anlatısı, yani bir adım geride duran bağlam.
+      {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
+      <Panel>
+        <PanelHeader title={t.stock.pastEarnings} />
+        <Suspense fallback={<ListSkeleton rows={6} />}>
+          <PastEarnings symbol={symbol} locale={locale} t={t} />
+        </Suspense>
+      </Panel>
+
+      {/* MERCEK EN SONDA, GEÇMİŞ BİLANÇOLARIN DA ALTINDA. Sıralama kodun
+          kendi gerekçesini takip ediyor: analiz bir çeyreğin okunmuş hâli,
+          geçmiş bilançolar o çeyreklerin tablosu — ikisi aynı malzeme ve
+          yan yana durmalı. Mercek ise bir olayın anlatısı, yani bir adım
+          geride duran bağlam; araya girdiğinde analizle tabloyu birbirinden
+          ayırıyordu.
 
           SATIRLAR AKIŞTAN ÖNCE ÇEKİLİYOR. Blok `fallback={null}` ile
           akıyordu; kartlara geçince mobilde ~840 piksellik bir blok geç
@@ -423,13 +434,6 @@ export default async function StockPage(
         </Suspense>
       )}
 
-      {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
-      <Panel>
-        <PanelHeader title={t.stock.pastEarnings} />
-        <Suspense fallback={<ListSkeleton rows={6} />}>
-          <PastEarnings symbol={symbol} locale={locale} t={t} />
-        </Suspense>
-      </Panel>
 
       <Suspense fallback={<Skeleton className="h-48 w-full rounded-(--radius-xl)" />}>
         <PeersCard symbol={symbol} locale={locale} t={t} />

@@ -48,7 +48,15 @@ export async function RecentAnalysesStrip({
          wash'ın ton farkı. Sayfada rakip bir accent yüzey yok — cesaret bir
          kez harcanıyor. Çipler kendi `bg-surface-solid` zemininde kalıyor,
          yani bu yüzeyin bir kademe ÖNÜNDE duruyorlar. */
-      className="flex flex-col gap-2.5 rounded-lg border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+      /* BELİRGİNLİK KENARLIK VE YÜKSEKLİKTEN, ZEMİNDEN DEĞİL. Zemini bir
+         kademe derinleştirmek denendi ve ÖLÇÜMDE DÜŞTÜ: `--primary-faint`
+         yoğunluğunda etiketin kontrastı 4,04:1'e iniyor, yani AA'yı
+         kaybediyor (mevcut wash'ta 4,77). Metin okunabilirliğini görsel
+         ağırlığa değişmek olmazdı.
+         Kalan kaldıraçlar metni etkilemiyor: kenarlık bir kademe koyu,
+         dolgu 3.5 → 4, köşe yarıçapı panellerinkiyle aynı (`xl`). Şerit
+         artık sayfadaki öteki kutularla aynı dilde ve kenarı belirgin. */
+      className="flex flex-col gap-2.5 rounded-xl border border-primary-soft/45 bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
     >
       <div className="flex shrink-0 items-center justify-between gap-3">
         {/* ETİKET YÜZEYİN KENDİ MÜREKKEBİNDE. `plate` künyeyi `--text-muted`

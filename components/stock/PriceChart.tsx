@@ -313,6 +313,15 @@ export function PriceChart({
         borderVisible: false,
         timeVisible: intraday,
         secondsVisible: false,
+        /* KENARLAR VERİYE SABİT. Kütüphane varsayılanında serinin iki ucunda
+           boşluk bırakıyor ve eksen ilk tick'i o boşluktan sonra atıyordu:
+           gün içi veri 11:00'de başlayıp 02:55'te bittiği hâlde eksen
+           "12:00 … 02:00" okunuyordu. Altındaki seans cetveli ise günü
+           "11:00–03:00" diye tarif ediyor — aynı ekranda iki farklı pencere.
+           Uçlar sabitlenince seri kabın iki kenarına dayanıyor ve eksen
+           gerçek pencereyi gösteriyor. */
+        fixLeftEdge: intraday,
+        fixRightEdge: intraday,
         /* GÜN SINIRI ETİKETİ. Kütüphanenin varsayılanı, bir işaret yeni bir
            güne geçtiğinde çıplak ayın gününü basıyor: eksende "21:00" ile
            "02:00" arasında tek başına bir "22" duruyordu ve o sayı ne saat
