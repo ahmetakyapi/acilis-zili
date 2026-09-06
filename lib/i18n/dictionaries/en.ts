@@ -198,6 +198,7 @@ const en: typeof tr = {
     afterClose: "After Close",
     duringMarket: "During Market",
     timeUnknown: "Time TBA",
+    noEstimate: "No Estimates",
     epsEstimate: "EPS Estimate",
     epsEstimateShort: "EPS",
     beatRecord: "Beat Record",

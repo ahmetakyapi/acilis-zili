@@ -269,6 +269,9 @@ const tr = {
     afterClose: "Kapanış Sonrası",
     duringMarket: "Seans İçi",
     timeUnknown: "Saat Belirsiz",
+    /* Takvim kartında beklenti satırlarının yerini alan künye. Cümle değil
+       künye olduğu için Title Case. */
+    noEstimate: "Beklenti Yok",
     epsEstimate: "EPS Beklentisi",
     /* Kompakt yuvanın öneki — "Yaklaşan Bilançolar" panelinde sayının
        yanında tek kelime. Analizler tablosunun başlığı "HBK / Beklenti"

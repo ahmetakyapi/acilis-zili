@@ -632,6 +632,23 @@ function DaySection({
                       </span>
                     </p>
                   )}
+                  {/* BEKLENTİSİ OLMAYAN KARTTA KÜNYE YERİNE NEDENİ YAZILI.
+                      Üstteki künyenin varlık sebebi "her kartta tam olarak
+                      bir alt satır olsun ki yükseklikler oynamasın" — ama o
+                      satır yalnızca piyasa değeri MANŞET DEĞİLKEN basılıyor.
+                      Beklentisi olmayan şirkette piyasa değeri manşete
+                      çıkıyor, künye düşüyor ve kart tek satırla kalıyordu:
+                      ölçüldü, tahminli kartta alt ölü boşluk 15 piksel,
+                      beklentisizde 66 — dört katı, ve 230 piksellik kutunun
+                      görünür şekilde yarısı boş kalıyordu.
+                      Satır bir sayı UYDURMUYOR, eksiği söylüyor: okuyucu
+                      kartın neden seyrek olduğunu görüyor. Küçük şirketlerde
+                      analist kapsamının olmaması bilgi, kusur değil. */}
+                  {!capNote && rest.length === 0 && (
+                    <p className="mt-2 text-tiny text-muted">
+                      {t.earnings.noEstimate}
+                    </p>
+                  )}
                 </div>
               </div>
             );
