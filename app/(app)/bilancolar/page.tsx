@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { EmptyState, Panel, Segment, SegmentItem } from "@/components/ui/primitives";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
-import { EarningsRhythm } from "@/components/earnings/EarningsRhythm";
+import { EarningsRadar } from "@/components/earnings/EarningsRadar";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { EarningsCalendar } from "@/components/earnings/EarningsCalendar";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
@@ -112,9 +112,8 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
         eyebrow={t.directory.earningsEyebrow}
         title={t.analysis.title}
         description={t.earnings.subtitleLong}
-        visual={<EarningsRhythm rows={rows} today={today} locale={locale} t={t} />}
+        visual={<EarningsRadar rows={rows} meta={meta} locale={locale} t={t} />}
       >
-        <dl className={styles.metrics}><div><dt>{t.directory.scheduledReports}</dt><dd>{rows.length}</dd></div><div><dt>{t.directory.reportingDays}</dt><dd>{new Set(rows.map((row) => row.reportDate)).size}</dd></div></dl>
         {
           /* Anahtarın ALTINDA kapsadığı gerçek aralık. "Hafta" ve "Ay" birer
              söz; sayfanın gösterdiği pencere `bugün → bugün + 6|29`.

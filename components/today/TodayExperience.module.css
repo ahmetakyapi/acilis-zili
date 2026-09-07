@@ -46,7 +46,7 @@
 .brief > section { padding: 26px; border-color: var(--primary-faint); border-radius: 20px; background: var(--premium-surface); box-shadow: var(--premium-shadow); }
 .brief h2 { font-size: clamp(25px, 2.2vw, 33px); line-height: 1.16; letter-spacing: -.035em; max-width: 30ch; }
 .storySpotlight { overflow: hidden; border: 1px solid var(--primary-faint); border-radius: 20px; background: linear-gradient(150deg,var(--primary-wash),var(--premium-surface) 65%); box-shadow: var(--premium-shadow); }
-.storySpotlight h3 { color: var(--text-strong); background: none; -webkit-text-fill-color: currentColor; font-size: clamp(26px, 2.3vw, 33px); font-weight: 650; line-height: 1.13; }
+.storySpotlight h3 { color: var(--text-strong); font-size: clamp(26px, 2.3vw, 33px); font-weight: 650; line-height: 1.13; }
 .storySpotlight > a { padding: 26px; }
 .analyses { scroll-margin-top: 150px; }
 .analyses :global(.panel) { border-top: 3px solid var(--primary); }

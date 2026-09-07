@@ -113,6 +113,11 @@ const tr = {
   },
 
   directory: {
+    marketLeaders: "Piyasanın Devleri",
+    exploreCompanies: "Şirketleri Keşfet",
+    openCompany: "Şirketi İncele",
+    earningsRadar: "Takvimde Öne Çıkanlar",
+
     companiesEyebrow: "ABD Piyasalarının Şirketleri",
     earningsEyebrow: "Finansal Sonuçlar ve Beklentiler",
     companyCount: "Dizindeki Şirket",
@@ -578,7 +583,7 @@ const tr = {
     showing: "{total} şirketin {n} tanesi",
     showMore: "Daha Fazla Göster",
     noQuoteNote:
-      "Bu listedeki {n} şirket için sağlayıcıda güncel işlem yok; fiyat, değişim ve hacim hücreleri boş bırakıldı. Çoğu, seyrek işlem gören çok küçük ölçekli şirkettir.",
+      "Bu listedeki {n} şirketin fiyat, değişim ve hacim verisi sağlayıcıdan alınamadı. Kapsam dışındaki veya seyrek işlem gören semboller boş görünebilir.",
   },
 
   stock: {

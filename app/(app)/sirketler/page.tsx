@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { CompanyLeaders } from "@/components/companies/CompanyLeaders";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/DirectoryExperience.module.css";
@@ -245,8 +246,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         (c) => sectorGroupOf(c.industry).key === activeGroup.key,
       )
     : companies;
-  const topGroups = [...shownGroups].sort((a, b) => (groupCounts.get(b.key) ?? 0) - (groupCounts.get(a.key) ?? 0)).slice(0, 3);
-  const largestGroup = Math.max(1, ...topGroups.map((group) => groupCounts.get(group.key) ?? 0));
+  const leaders = [...companies].filter(company => company.marketCap != null && company.marketCap > 0).sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, 6);
 
   /* Kaç satır basılacak. Sıralama ya da filtre değişince sayaç başa döner:
      "daha fazla" bir okuma derinliğidir, yeni bir listeye taşınmaz. */
@@ -289,13 +289,8 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       <DirectoryHeader eyebrow={t.directory.companiesEyebrow} title={t.companies.title} description={t.companies.subtitle}
-        visual={topGroups.length > 0 && <>
-          <h2 className={styles.visualHeading}>{t.directory.sectorDistribution}<span>{t.directory.distributionUnit}</span></h2>
-          <div className={styles.distribution} data-motion-stagger>{topGroups.map((group) => <Link key={group.key} href={sectorHref(group.key)} scroll={false}>
-            <span>{sectorGroupLabel(group, locale)}</span><b>{groupCounts.get(group.key)}</b>
-            <span className={styles.distributionTrack}><span data-motion-draw="line" className={styles.distributionFill} style={{ width: `${(groupCounts.get(group.key) ?? 0) / largestGroup * 100}%` }} /></span>
-          </Link>)}</div>
-        </>}>
+        visual={<CompanyLeaders leaders={leaders.map(company => ({ symbol: company.symbol, name: company.name, logoUrl: company.logoUrl, cap: formatMoneyCompact(company.marketCap, locale) }))} labels={t.directory} capLabel={t.market.marketCap} />}>
+
         <dl className={styles.metrics}><div><dt>{t.directory.companyCount}</dt><dd>{companies.length.toLocaleString(locale)}</dd></div><div><dt>{t.directory.sectorCount}</dt><dd>{shownGroups.length}</dd></div></dl>
       </DirectoryHeader>
 

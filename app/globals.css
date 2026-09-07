@@ -1307,3 +1307,29 @@
   .spark-line { stroke-dasharray: none; animation: none; }
   .spark-area, .spark-dot, .bar-fill, .ring-fill { animation: none; }
 }
+
+/* All public page/section headings share the existing brand ink. Numeric
+   readings and semantic up/down values retain their own colors. Kept outside
+   utility layers so a page's ordinary text color cannot remove the text mask. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  main h1,
+  main h2:not(.plate) {
+    background-image: var(--display-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding-bottom: .06em;
+  }
+  main h1 { width: fit-content; max-width: 100%; }
+  /* Badges and controls inside a heading own a separate painted surface. */
+  main :is(h1,h2) :is(button, a, .plate, [role="status"]) {
+    -webkit-text-fill-color: currentColor;
+  }
+}
+@media (forced-colors: active) {
+  main :is(h1,h2), main .display-ink {
+    background: none;
+    -webkit-text-fill-color: CanvasText;
+    color: CanvasText;
+  }
+}

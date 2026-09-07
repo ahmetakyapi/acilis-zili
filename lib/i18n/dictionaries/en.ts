@@ -97,6 +97,11 @@ const en: typeof tr = {
   },
 
   directory: {
+    marketLeaders: "Market Leaders",
+    exploreCompanies: "Explore Companies",
+    openCompany: "Explore Company",
+    earningsRadar: "Earnings in Focus",
+
     companiesEyebrow: "Companies of the US Markets",
     earningsEyebrow: "Financial Results and Expectations",
     companyCount: "Companies in Directory",
@@ -444,7 +449,7 @@ const en: typeof tr = {
     showing: "{n} of {total} companies",
     showMore: "Show More",
     noQuoteNote:
-      "The provider has no recent trade for {n} companies in this list, so their price, change and volume cells are left blank. Most of them are very small companies that trade infrequently.",
+      "Price, change and volume data could not be retrieved for {n} companies in this list. Symbols outside provider coverage or with infrequent trades may have empty cells.",
   },
 
   stock: {
