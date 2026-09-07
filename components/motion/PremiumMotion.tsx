@@ -5,7 +5,6 @@ import {
   motion,
   useMotionTemplate,
   useMotionValue,
-  useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
@@ -19,6 +18,7 @@ import {
   type ReactNode,
 } from "react";
 import styles from "./PremiumMotion.module.css";
+import { useMotionPreference } from "./useMotionPreference";
 
 function classes(...values: (string | undefined)[]) {
   return values.filter(Boolean).join(" ");
@@ -41,7 +41,7 @@ export function Reveal({
   const ref = useRef<HTMLDivElement>(null);
   const opacity = useMotionValue(1);
   const y = useMotionValue(0);
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useMotionPreference();
 
   useEffect(() => {
     const element = ref.current;
@@ -112,7 +112,7 @@ export function SpotlightCard({
   className?: string;
 }) {
   const enabled = useRef(false);
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useMotionPreference();
   const pointerX = useMotionValue(50);
   const pointerY = useMotionValue(50);
   const visible = useMotionValue(0);
@@ -166,7 +166,7 @@ export function ScrollProgress({ className }: { className?: string }) {
     damping: 32,
     restDelta: 0.001,
   });
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useMotionPreference();
 
   return (
     <motion.div
@@ -325,7 +325,7 @@ export function ScrollStage({ children, className }: { children: ReactNode; clas
  */
 export function MotionExperience({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
-  const reduced = useReducedMotion();
+  const reduced = useMotionPreference();
   useEffect(() => {
     const root = ref.current;
     if (!root || reduced || !("animate" in root)) return;

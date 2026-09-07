@@ -100,6 +100,6 @@
  .detail { position:static; padding:19px; border-radius:16px; } .detailHeading h4 { font-size:22px; } .results { gap:14px; } .results dd { font-size:27px; } .results > div:first-child { padding:17px; } .results > div:first-child dd { font-size:38px; }
  .member { padding:16px; } .empty { padding:20px 16px; gap:14px; align-items:flex-start; } .empty > span { height:42px; width:42px; border-radius:12px; } .empty h3 { font-size:17px; }
 }
-@media(prefers-reduced-motion:reduce) { .flow *,.flow *::before { animation:none!important; transition:none!important; } }
+@media(prefers-reduced-motion:reduce) { .flow *,.flow *::before { animation:none!important; transition:none!important; } .detail { opacity:1!important; transform:none!important; } }
 .unavailable { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:15px; padding:36px 16px; color:var(--text-muted); font-size:13px; }
 .unavailable button { display:flex; align-items:center; gap:8px; color:var(--primary-ink); border:1px solid var(--line); border-radius:9px; padding:10px 14px; cursor:pointer; }

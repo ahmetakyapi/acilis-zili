@@ -75,3 +75,21 @@ Kontroller yerel Chrome üzerinde yapıldı. Gerçek iOS/Safari cihaz ölçümü
 - Akış: açık/koyu temada 360, 390, 768, 1024, 1440px genişliklerde taşma yok. Klavyeyle seçim ve azaltılmış harekette sonuç görünürlüğü doğrulandı.
 - Zilin işaretçiye tepki veren derinliği, şirket bölümünün kaydırmayla tam boyuta ulaşması ve gelir sütunlarının görünürken çizilmesi gerçek tarayıcıda ölçüldü. Sayısal değerler sıfırdan saydırılmaz.
 - Azaltılmış harekette CSS ilk boyamadan itibaren dönüşümleri kapatır; sunucu ve istemci aynı başlangıç özniteliklerini üretir.
+
+## Dizinler ve Akış Okunabilirliği — 7 Eylül
+
+- Önceki çalışma `dev` dalında `b17cd01` ile kaydedildi. Sonraki dizin ve akış düzenleri `bbe2963` ve `40366ce` commitlerinde yer alıyor.
+- Şirketler dizininde başlık, gerçek şirket/sektör sayısı ve en kalabalık üç sektörün dağılımı birlikte okunur. Çubuklar piyasa payını değil dizindeki şirket sayısını gösterir ve mevcut sektör filtresine bağlanır. Sıralama, sayfalama ve sunucudan akan tablo korunur.
+- Bilanço takviminde seçili aralığın gerçek açıklama sayıları ve önümüzdeki yedi günün yoğunluğu bulunur. Sütuna basmak ilgili gün başlığına götürür; boş günler sıfır kalır. Kartlarda şirket adı kırpılmaz; tutarlar dar ekranda gerektiğinde sarılır. Takvim, analizler ve takip görünümleri aynı başlık/sekme dilini kullanır.
+- Analiz arşivinin öne çıkan özeti 14px, masaüstünde beş/mobilde dört satırlık önizlemedir; tam metne giden bağlantı görünür. Son analiz şeridinin puan ve dönem etiketleri 9px yerine 11px.
+- Akışın eski 9–10px künyeleri 12–13px, olay başlıkları 17px oldu. Masaüstünde olay listesi ve sonuç paneli yan yana; mobilde tam başlıkları gösteren yatay liste ve altında sonuç bulunur. Önceki/sonraki okları seçimi değiştirir, cihaz döndürülünce seçili kart görünür kalır. Sonuç, beklenti, önceki değer ve her şirketin analiz durumu ayrı okunur.
+- Mobil kontrolünde zaman çizgisinin `TR` etiketi alt satıra düşüyordu; saat ve birim birlikte tutuldu. Bilanço sekmelerinin 16px negatif kenar boşluğu kaldırıldı. 390px'te dizin tablosunun başlangıcı yaklaşık 683→607px, takvimin ilk gün başlığı 865→811px oldu; veri gizlenmeden üst alanlar sıkılaştırıldı.
+- Sayfa giriş animasyonunun kalıcı `translate:0 0` değeri sabit ilerleme çizgisinin referansını değiştiriyordu. Animasyon sonunda dönüşüm serbest bırakılır.
+- Kurulu Motion 13 sürümünün hareket azaltma hook'u tercihi yalnız montaj anında alıyor. Ortak `useMotionPreference` dış mağazası sistem tercihini açık sayfada da izler; devam eden Web Animations temizlenir. CSS sunucu boyamasından itibaren metinleri görünür tutar.
+
+### Bu Turun Son Kontrolleri
+
+- Yerel üretim sürümünde ana sayfa, şirketler, bilanço takvimi, analiz arşivi, takip giriş ekranı, NVDA detay ve AVGO raporu: TR/EN × açık/koyu × 320/390/768/1024/1440px, toplam 140 düzende belge taşması ve JavaScript hatası yok. Her rotada açık sayfada hareket azaltma tercihine geçildi; soluk kalan işaretli öğe ve hareketli bölüm dönüşümü yok.
+- Şirket listesi 60→120 satır genişledi; fiyat sıralaması ve sektör grafiğinden Sağlık filtresine geçiş çalıştı. Takvim sütunu ilgili gün başlığını üst menünün altında yaklaşık 165px'e taşıdı; ay görünümünde 22 açıklama günü listelendi. SNOW araması ve sonuçsuz arama doğrulandı.
+- Tarayıcıya özel uzun başlık/saat belirsizliği/sıfır sonuç/karma bilanço grubu yanıtlarıyla 12 tema-genişlik birleşiminde başlık kesilmesi, saat birimi sarılması ve seçili kartın ekran dışında kalması görülmedi. Analiz bağlantısı şirket bazında belirdi, başarısız yenileme son sonuçları korudu. Klavye seçimi ve azaltılmış hareket doğrulandı; JavaScript hatası yok.
+- `npm run lint`, `npm run typecheck`, `npm run build` ve 14 veri/sağlayıcı testi başarılı. Test yanıtları yalnız tarayıcıda kullanıldı; gerçek veri tabanına örnek olay eklenmedi. Oturum açılmış takip sayfası gerçek bir kullanıcı hesabıyla ayrıca denenmedi.

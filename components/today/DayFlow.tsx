@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useMotionPreference } from "@/components/motion/useMotionPreference";
 import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Bell, CalendarBlank, Check, CircleNotch, Clock, TrendUp } from "@phosphor-icons/react";
 import { LogoTile } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -33,7 +34,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
   const cards = useRef<HTMLDivElement>(null);
   const refresh = useRef<() => void>(() => {});
   const announcedResults = useRef(flowResultSignature(initial.events));
-  const reduced = useReducedMotion();
+  const reduced = useMotionPreference();
   const detailId = useId();
 
   useEffect(() => {
