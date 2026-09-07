@@ -1,4 +1,5 @@
 import Image from "next/image";
+import styles from "./StoryVisual.module.css";
 import { cn, directionOf, directionText, formatPercent } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -106,7 +107,7 @@ export function StoryBrands({
   const tone = directionOf(lead.sinceEvent);
 
   return (
-    <div className="flex items-center gap-3 border-b border-line bg-[linear-gradient(135deg,var(--primary-wash),var(--primary-tint))] px-5 py-3.5">
+    <div className={`${styles.brands} flex items-center gap-3 border-b border-line bg-[linear-gradient(135deg,var(--primary-wash),var(--primary-tint))] px-5 py-3.5`}>
       <span className="flex min-w-0 flex-1 flex-col gap-2">
         <span className="flex items-center gap-1.5">
           {shown.map((member) => (
@@ -184,11 +185,11 @@ export function StoryCast({
   const rest = total - shown.length;
 
   return (
-    <div className="overflow-hidden rounded-(--radius-lg) border border-primary-faint bg-surface-solid/70">
+    <div className={`${styles.cast} overflow-hidden rounded-(--radius-lg) border border-primary-faint bg-surface-solid/70`}>
       {/* Sağdaki künye, ALTINDAKİ SAYI SÜTUNUYLA aynı hizada durur: iki
           satıra kırılıp sola yaslandığında rakamlarla ilgisiz bir metin gibi
           okunuyordu. Sol başlık kırılır, sağdaki tek satır kalır. */}
-      <div className="flex items-baseline justify-between gap-3 border-b border-primary-faint px-4 py-2.5">
+      <div className={styles.castHeader}>
         <span className="plate min-w-0 text-micro tracking-[0.09em]">
           {title}
         </span>
@@ -203,18 +204,18 @@ export function StoryCast({
           </span>
         </span>
       </div>
-      <ul>
+      <ul data-motion-stagger>
         {shown.map((member) => {
           const tone = directionOf(member.sinceEvent);
           return (
             <li
               key={member.symbol}
-              className="flex items-center gap-3 border-t border-line-soft px-4 py-2.5 first:border-t-0"
+              className={styles.castRow}
             >
               <LogoTile
                 symbol={member.symbol}
                 logoUrl={member.logoUrl}
-                size={30}
+                size={44}
                 radius={9}
               />
               <span className="min-w-0 flex-1">

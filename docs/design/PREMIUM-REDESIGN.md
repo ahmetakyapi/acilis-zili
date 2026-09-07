@@ -93,3 +93,19 @@ Kontroller yerel Chrome üzerinde yapıldı. Gerçek iOS/Safari cihaz ölçümü
 - Şirket listesi 60→120 satır genişledi; fiyat sıralaması ve sektör grafiğinden Sağlık filtresine geçiş çalıştı. Takvim sütunu ilgili gün başlığını üst menünün altında yaklaşık 165px'e taşıdı; ay görünümünde 22 açıklama günü listelendi. SNOW araması ve sonuçsuz arama doğrulandı.
 - Tarayıcıya özel uzun başlık/saat belirsizliği/sıfır sonuç/karma bilanço grubu yanıtlarıyla 12 tema-genişlik birleşiminde başlık kesilmesi, saat birimi sarılması ve seçili kartın ekran dışında kalması görülmedi. Analiz bağlantısı şirket bazında belirdi, başarısız yenileme son sonuçları korudu. Klavye seçimi ve azaltılmış hareket doğrulandı; JavaScript hatası yok.
 - `npm run lint`, `npm run typecheck`, `npm run build` ve 14 veri/sağlayıcı testi başarılı. Test yanıtları yalnız tarayıcıda kullanıldı; gerçek veri tabanına örnek olay eklenmedi. Oturum açılmış takip sayfası gerçek bir kullanıcı hesabıyla ayrıca denenmedi.
+
+## Piyasalar, Mercek ve Rehber — 7 Eylül
+
+- Ana sayfadaki **Piyasayı Keşfet** bağlantısı kaldırıldı. Geri sayım açıklaması boşalan alanı kullanır; ilgili kullanılmayan stil ve çeviri anahtarları temizlendi.
+- Üç dizinde ortak, açık bir başlık düzeni kullanıldı: büyük sayfa adı, ayrı açıklama ve ince ayırıcı. Mevcut marka, gezinme, URL'ler, içerik ve veri kaynakları korundu.
+- Piyasalar'da seçili endeks geniş grafik kartına dönüştü; diğer iki endeks yanında, mobilde altında bulunur. Görsel sıra ve klavye sırası birlikte değişir. Gerçek fiyat, grafik, kaynak ve gecikme bilgileri korunur. Tahvil, piyasa katılımı ve günün hareketlerinde daha belirgin değerler, aşamalı girişler ve gerçek değerleri çizen çubuklar kullanıldı.
+- Mercek'te öne çıkan haber, daha geniş başlık ve gerçek şirket/getiri paneliyle sunulur. Arşiv masaüstünde iki sütuna geçer; mobil filtreler tek satırda kayar. Uzun şirket adları, tarih ve okuma süresi sarılır. Mobilde öne çıkan haber başlığı yaklaşık 578→400px konumuna taşındı.
+- Rehber'de öğrenme sırası, konu başlıkları ve makale kartları yeniden düzenlendi. Mobil adımlar numara, ad ve seviyeyi yaklaşık 66px satırlarda birlikte gösterir. Mercek ve Rehber yazı detaylarına ortak başlık ölçeği, giriş geçişi ve okuma ilerleme çizgisi uygulandı; içerik sütunu 720px sınırını korur.
+- Kartların görünürken sıralı girişi ve işaretçi geçişleri ortak hareket sistemini kullanır. Aynı öğede iki giriş animasyonu oluşmaması için eski panel animasyonu bu sayfalarda kapatıldı. Hareket azaltma tercihi ve JavaScript olmadan içerik görünürlüğü korunur.
+
+### Bu Turun Doğrulaması
+
+- Yerel üretim sürümünde ana sayfa, Piyasalar, Mercek, Rehber, bir Mercek yazısı, bir Rehber yazısı ve NVDA detay: TR/EN × açık/koyu × 320/390/768/1024/1440px, toplam **140 yerleşim kontrolü**. Belge taşması, kesilen endeks grafiği veya JavaScript hatası görülmedi. Ana sayfa butonunun kaldırıldığı doğrulandı.
+- Açık sayfada 14 hareket azaltma tercihi değişimi ve üç dizinde JavaScript kapalı yükleme doğrulandı; görünmez kalan içerik yok.
+- Üç endeks seçimi, NASDAQ listesinin 60→102 satır açılması, fiyat sıralaması, MU filtresi ve sonuçsuz Mercek araması çalıştı. Rehber konu bağlantısı başlığı üst menünün altında yaklaşık 76px'e yerleştirdi; konu filtresi, sonraki yazı bağlantısı ve sabit okuma ilerlemesi doğrulandı.
+- `npm run lint`, `npm run typecheck`, `npm run build` ve `git diff --check` başarılı. Bu tur veri/sağlayıcı mantığını değiştirmedi; gerçek veri tabanına test içeriği eklenmedi. Kontroller yerel Chrome'da yapıldı; gerçek iOS/Safari cihaz kontrolü yapılmadı.

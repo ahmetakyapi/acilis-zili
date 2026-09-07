@@ -1,0 +1,14 @@
+.cast { border-radius:18px; background:var(--premium-surface); }
+.castHeader { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:10px; padding:17px 20px; border-bottom:1px solid var(--line); }
+.castHeader > span:first-child { font-size:11px; line-height:1.5; color:var(--text-body); letter-spacing:.035em; }
+.castHeader > span:last-child > span { font-size:11px; line-height:1.5; }
+.castRow { display:grid; grid-template-columns:44px minmax(0,1fr) auto; align-items:center; gap:12px; padding:20px; border-top:1px solid var(--line); }
+.castRow:first-child { border-top:0; }
+.castRow > span:nth-child(2) > span:first-child { font-size:15px; line-height:1.4; }
+.castRow > span:nth-child(2) > span:last-child:not(:first-child) { margin-top:4px; font-size:12px; line-height:1.5; white-space:normal; }
+.castRow > span:last-child { font-size:23px; letter-spacing:-.035em; }
+.brands { flex-wrap:wrap; }
+.brands > span:first-child { min-width:160px; }
+.brands > span:first-child > span:first-child { flex-wrap:wrap; }
+@media(max-width:767px) { .castHeader { padding:14px 16px; } .castRow { padding:16px; gap:11px; } .castRow > span:last-child { font-size:21px; } }
+@media(max-width:359px) { .castRow { grid-template-columns:36px minmax(0,1fr); } .castRow > span:first-child { width:36px!important; height:36px!important; } .castRow > span:last-child { grid-column:2; } }

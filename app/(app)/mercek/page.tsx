@@ -1,4 +1,7 @@
 import { Suspense } from "react";
+import { SectionMasthead } from "@/components/motion/SectionMasthead";
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import styles from "@/components/motion/EditorialExperience.module.css";
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { StoryCard } from "@/components/stories/StoryCard";
@@ -11,7 +14,6 @@ import {
   EmptyState,
   FilterChip,
   Kicker,
-  PageHeader,
   Panel,
   Skeleton,
 } from "@/components/ui/primitives";
@@ -99,14 +101,13 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
       : PAGE_STEP;
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
+    <MotionExperience className={styles.page}>
+      <ScrollProgress />
+      <SectionMasthead
         eyebrow={t.stories.eyebrow}
         title={t.stories.title}
-        subtitle={t.stories.subtitle}
+        description={t.stories.subtitle}
       />
-
-      <IntroLine t={t} />
 
       <Suspense
         key={`${symbolFilter ?? "all"}:${limit}`}
@@ -119,7 +120,7 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
           limit={limit}
         />
       </Suspense>
-    </div>
+    </MotionExperience>
   );
 }
 
@@ -141,7 +142,7 @@ function IntroLine({ t }: { t: Dictionary }) {
   ];
 
   return (
-    <div className="-mt-1 flex flex-col gap-2">
+    <div className={`${styles.intro} -mt-1 flex flex-col gap-2`}>
       <ul className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-small leading-[18px] text-muted">
         {items.map((item, index) => (
           <li key={item.title} className="flex items-center gap-2.5">
@@ -284,7 +285,7 @@ async function StoryBoard({
   return (
     <div className="flex flex-col gap-6">
       {chips.length > 1 && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className={`${styles.storyFilters} flex flex-wrap items-center gap-2`}>
           <span className="plate mr-0.5 text-nano tracking-[0.09em]">
             {t.stories.filterLabel}
           </span>
@@ -329,15 +330,21 @@ async function StoryBoard({
             />
           )}
 
+          {/* The editorial introduction follows the lead: at 390px it
+              previously pushed the story title down to 629px. The symbol
+              filter remains above the story and scrolls as one row. */}
+          <IntroLine t={t} />
+
           {rows.length > 1 && (
             <div className="flex flex-col gap-3">
-              <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+              <h2 className={styles.archiveHeading}>
                 {t.stories.archive}
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className={styles.archiveGrid} data-motion-stagger>
                 {rows.slice(1).map((story) => (
                   <StoryCard
                     key={story.slug}
+                    className={styles.archiveCard}
                     story={story}
                     cast={castOf(story, 4)}
                     locale={locale}
@@ -396,7 +403,7 @@ function LeadStory({
   const total = story.symbols?.length ?? 0;
 
   return (
-    <Link href={`/mercek/${story.slug}`} prefetch className="min-w-0">
+    <Link href={`/mercek/${story.slug}`} prefetch className={styles.lead} data-motion-reveal>
       <section className="panel-hover overflow-hidden rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 transition-colors sm:p-7">
         {/* İki kolon: solda okunacak metin, sağda yazının kadrosu. Kadro
             manşette bir tabloya dönüşüyor çünkü burada yer var ve bu
@@ -404,7 +411,7 @@ function LeadStory({
             vuruyor — "sonra ne oldu" sorusunun cevabı şirket şirket
             değişiyor. Tek logo göstermek yazıyı tek firmalık gibi
             okutuyordu. */}
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+        <div className={styles.leadLayout}>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <Kicker tone="primary">{t.stories.latest}</Kicker>
@@ -433,10 +440,10 @@ function LeadStory({
                 sayfadaki mercek manşetiyle aynı; `max-w-[34ch]` başlığı iki
                 satıra indiriyor, `text-balance` da iki satırı eşitliyor —
                 tek kelimelik yetim satır kalmıyor. */}
-            <h2 className="display-ink mt-3 w-fit max-w-[34ch] text-balance text-heading font-bold leading-[1.14] tracking-[-0.03em] sm:text-subdisplay">
+            <h2 className={styles.leadTitle} lang={story.locale}>
               {story.title}
             </h2>
-            <p className="mt-3.5 max-w-[58ch] text-read leading-[25px] text-body">
+            <p className={styles.leadDek} lang={story.locale}>
               {story.dek}
             </p>
 
@@ -452,7 +459,7 @@ function LeadStory({
           </div>
 
           {cast.length > 0 && (
-            <div className="lg:w-[300px] lg:shrink-0">
+            <div className={styles.leadCast}>
               <StoryCast
                 cast={cast}
                 total={total}

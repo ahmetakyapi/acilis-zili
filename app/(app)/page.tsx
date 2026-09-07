@@ -215,9 +215,6 @@ export default async function TodayPage() {
             </div>
             <div className={styles.heroFooter}>
               <p className={styles.description}>{t.today.countdownDescription}</p>
-              <Link href="/piyasalar" className={styles.exploreLink}>
-                <span>{t.today.experienceExplore}</span><ArrowUpRight size={18} weight="bold" />
-              </Link>
             </div>
           </div>
           <section className={styles.indexDeck} aria-labelledby="hero-indices">

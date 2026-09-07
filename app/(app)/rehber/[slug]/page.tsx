@@ -1,3 +1,5 @@
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import experience from "@/components/motion/EditorialExperience.module.css";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
@@ -100,6 +102,8 @@ export default async function GuideArticlePage(
   const next = position < all.length - 1 ? all[position + 1] : null;
 
   return (
+    <MotionExperience className={experience.article}>
+    <ScrollProgress />
     <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
       <ArticleJsonLd
         headline={article.title}
@@ -133,7 +137,7 @@ export default async function GuideArticlePage(
         />
       </div>
 
-      <header className="flex flex-col gap-4">
+      <header className={`${experience.articleHeader} flex flex-col gap-4`}>
         <div className="flex items-center gap-3.5">
           <GlyphTile glyph={article.glyph} size={56} />
           <div className="min-w-0">
@@ -221,6 +225,7 @@ export default async function GuideArticlePage(
         </nav>
       )}
     </article>
+    </MotionExperience>
   );
 }
 

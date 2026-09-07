@@ -16,10 +16,8 @@
 .targetDate time { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 12px; }
 .targetDate strong { font-weight: 650; color: var(--text-strong); }
 .targetDate small { font-size: 9px; font-weight: 550; color: var(--text-muted); }
-.heroFooter { display: flex; align-items: center; gap: 22px; margin-top: 24px; }
-.description { max-width: 34ch; font-size: 12px; line-height: 1.7; color: var(--text-body); text-wrap: pretty; }
-.exploreLink { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 43px; padding: 10px 16px; border: 1px solid var(--line-strong); border-radius: 12px; font-size: 11px; font-weight: 650; color: var(--text-strong); background: var(--premium-highlight); transition: background .25s, border-color .25s, transform .25s; white-space: nowrap; }
-.exploreLink svg { color: var(--primary); transition: transform .25s; }
+.heroFooter { margin-top: 24px; }
+.description { max-width: 52ch; font-size: 12px; line-height: 1.7; color: var(--text-body); text-wrap: pretty; }
 .indexDeck { min-width: 0; padding-left: 28px; border-left: 1px solid var(--line); }
 .indexHeading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 5px 15px; margin-bottom: 14px; font-size: 10px; font-weight: 550; color: var(--text-muted); }
 .indexHeading h2 { color: var(--text-strong); font-size: 14px; font-weight: 650; }
@@ -69,8 +67,6 @@
 .newsHeading { color: var(--text-strong); font-size: clamp(23px,2.8vw,36px); font-weight: 650; letter-spacing: -.045em; line-height: 1.1; }
 .news > div:first-child { padding-bottom: 20px; }
 @media (hover: hover) and (pointer: fine) {
-  .exploreLink:hover { border-color: var(--primary); background: var(--primary-wash); transform: translateY(-2px); }
-  .exploreLink:hover svg { transform: translate(2px,-2px); }
   .indexLink:hover .indexCard { border-color: var(--primary-faint); box-shadow: var(--premium-shadow); }
 }
 @media (min-width: 1024px) {
@@ -81,7 +77,6 @@
   .hero { padding: 22px 24px 16px; }
   .heroMain { grid-template-columns: minmax(0,1fr); gap: 26px; }
   .indexDeck { padding-left: 0; padding-top: 20px; border-left: 0; border-top: 1px solid var(--line); }
-  .heroFooter { flex-wrap: wrap; gap: 14px; }
   .flowHeader { align-items: flex-start; flex-direction: column; gap: 14px; }
   .flowNav { flex: auto; width: 100%; }
   .dateline > span { display: none; }
@@ -104,8 +99,7 @@
   .countdown { margin-top: 18px; }
   .description { max-width: 39ch; font-size: 11px; }
   .targetDate { margin-top: 18px; font-size: 11px; }
-  .heroFooter { gap: 13px; margin-top: 18px; }
-  .exploreLink { padding: 10px 12px; font-size: 10px; gap: 10px; }
+  .heroFooter { margin-top: 18px; }
   .indexGrid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
   .indexHeading { font-size: 9px; }
   .indexCard { min-height: 138px; padding: 12px 13px; border-radius: 12px; }
@@ -126,9 +120,7 @@
   .news > div:first-child { align-items: flex-start; }
 }
 @media (max-width: 379px) {
-  .exploreLink { gap: 5px; padding: 9px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .exploreLink, .exploreLink svg, .indexCard { transition: none; }
-  .exploreLink:hover, .exploreLink:hover svg { transform: none; }
+  .indexCard { transition: none; }
 }

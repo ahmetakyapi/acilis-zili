@@ -1,4 +1,7 @@
 import { Suspense } from "react";
+import { SectionMasthead } from "@/components/motion/SectionMasthead";
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import styles from "@/components/markets/MarketExperience.module.css";
 import { FearGauge } from "@/components/markets/FearGauge";
 import { GuideHint } from "@/components/article/GuideHint";
 import Link from "next/link";
@@ -6,7 +9,6 @@ import {
   ChangePill,
   DataStamp,
   EmptyState,
-  PageHeader,
   Panel,
   PanelHeader,
   PanelLink,
@@ -182,11 +184,12 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
   const active = INDEX_TABS.find((entry) => entry.key === tab)!;
 
   return (
-    <div className="flex flex-col gap-5">
-      <PageHeader
+    <MotionExperience className={styles.page}>
+      <ScrollProgress />
+      <SectionMasthead
         eyebrow={locale === "tr" ? "ABD Piyasası" : "US Market"}
         title={t.markets.title}
-        subtitle={t.markets.subtitle}
+        description={t.markets.subtitle}
       />
 
       {/* KABUK ÖNCE AKAR. `IndexCards` ve `IndexDetail` doğrudan gövdede
@@ -207,13 +210,13 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
             Yedek 132px'ti; mobilde 348 piksellik bir sıçrama demekti ve
             sıçrama ekranın TA TEPESİNDE oluyordu. */
         fallback={
-          <Skeleton className="h-[480px] w-full rounded-xl sm:h-[152px]" />
+          <Skeleton className={styles.indexSkeleton} />
         }
       >
-        <IndexCards activeTab={tab} sort={sort} dir={dir} locale={locale} />
+        <IndexCards activeTab={tab} sort={sort} dir={dir} locale={locale} t={t} />
       </Suspense>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className={styles.macro} data-motion-stagger>
         <YieldStrip locale={locale} t={t} />
         {/* SUSPENSE YOK — bilerek.
             Burada `fallback={null}` ile bir sınır vardı ve iki yönden de
@@ -275,7 +278,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         slugs={["endeks", "faiz-tahvil"]}
         className="pt-1"
       />
-    </div>
+    </MotionExperience>
   );
 }
 
@@ -288,11 +291,13 @@ async function IndexCards({
   sort,
   dir,
   locale,
+  t,
 }: {
   activeTab: TabKey;
   sort: SortKey;
   dir: SortDir;
   locale: Locale;
+  t: Dictionary;
 }) {
   const status = await getStatus();
   const proxies = INDEX_TABS.map((entry) => entry.proxy);
@@ -301,11 +306,16 @@ async function IndexCards({
     getChartBarsMulti([...proxies], "1D", status),
   ]);
 
-  if (!quotesResult.ok) return null;
+  if (!quotesResult.ok) return <Panel className={styles.indexUnavailable}><EmptyState title={t.common.noData} hint={t.common.noDataHint} /></Panel>;
+
+  // The selected index occupies the first visual position. Keep DOM and
+  // keyboard order aligned with that position; the toolbar keeps its order.
+  const orderedTabs = [...INDEX_TABS].sort((a, b) => Number(b.key === activeTab) - Number(a.key === activeTab));
 
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
-      {INDEX_TABS.map((entry) => {
+    <div className={styles.indexOverview}>
+    <div className={styles.indexGrid} data-motion-stagger>
+      {orderedTabs.map((entry) => {
         const quote = quotesResult.data[entry.proxy];
         const points = (bars[entry.proxy] ?? []).map((bar) => ({
           value: bar.close,
@@ -322,22 +332,22 @@ async function IndexCards({
                accent kenarlık ve tint alıyor ama ekran okuyucuya hiçbir şey
                ulaşmıyordu. Sektör çipleri (/sirketler) bunu zaten yapıyor. */
             aria-current={selected ? "true" : undefined}
-            className="group"
+            className={styles.indexLink}
           >
             <Panel
               className={cn(
-                "panel-hover flex h-full flex-col p-4",
+                "panel-hover flex h-full flex-col", styles.indexCard,
                 selected && "border-primary-faint bg-primary-tint",
               )}
             >
-              <div className="flex items-baseline justify-between gap-2">
+              <div className={styles.identity}>
                 <p className="text-sm font-semibold text-strong">{entry.label}</p>
                 <p className="numeral text-nano text-muted">{entry.proxy}</p>
               </div>
               {quote ? (
                 <>
-                  <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                    <p className="tote text-heading">
+                  <div className={styles.reading}>
+                    <p className={styles.price}>
                       {formatPrice(quote.price, locale)}
                     </p>
                     <p
@@ -356,12 +366,12 @@ async function IndexCards({
                   {points.length > 1 && (
                     <Sparkline
                       points={points}
-                      title={`${entry.label} · 1G`}
+                      title={`${entry.label} · ${locale === "tr" ? "1G" : "1D"}`}
                       tone={tone}
-                      height={44}
+                      height={selected ? 116 : 44}
                       showLastDot={false}
                       strokeWidth={1.6}
-                      className="mt-3 h-11 w-full opacity-90"
+                      className={styles.spark}
                     />
                   )}
                 </>
@@ -372,6 +382,8 @@ async function IndexCards({
           </Link>
         );
       })}
+    </div>
+    <div className={styles.indexStamp}><span>{t.today.experienceIndexNote}</span><DataStamp labels={t.data} source={quotesResult.source} at={quotesResult.fetchedAt} stale={Boolean(quotesResult.stale)} locale={locale} /></div>
     </div>
   );
 }
@@ -404,13 +416,13 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   const inverted = spread !== null && spread < 0;
 
   return (
-    <Panel>
+    <Panel className={styles.yields}>
       {/* Plaka başlık — ölçü paneli. Rol ayrımının gerekçesi
           components/ui/primitives.tsx → PanelHeader içinde; ana sayfadaki
           tahvil kartı da aynı tonu taşıyor, aynı sayılar aynı görünsün. */}
       <PanelHeader title={t.markets.yields} tone="plate" />
 
-      <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-line-soft sm:p-0">
+      <div className={cn("grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-line-soft sm:p-0", styles.yieldsGrid)} data-motion-stagger>
         {values.map((value) => {
           const delta =
             value.latest !== null && value.prev !== null
@@ -650,7 +662,7 @@ async function IndexDetail({
 
       {withQuote.length > 0 && (
         <>
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className={styles.movers} data-motion-stagger>
             {/* Künye SEÇKİNİN PAYDASINI söylüyor: "Günün En Çok Artanları"
                 beş satır basıyor ama hangi kümenin beşi olduğunu yazmıyordu.
                 Endeks 102 şirketse "102 şirketin 5 tanesi" — aynı kalıp
@@ -744,7 +756,7 @@ function IndexToolbar({
   const pct = (value: number) => (total > 0 ? (value / total) * 100 : 0);
 
   return (
-    <Panel className="overflow-hidden">
+    <Panel className={styles.breadth}>
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 px-4 py-3 sm:px-5">
         {/* ÜÇ ÇİP MOBİLDE TEK SATIRDA. `flex-wrap` ile diziliyorlardı ve
             üçüncü çip (S&P 500) 390 pikselde alt satıra düşüyordu: üç eşit
@@ -807,7 +819,7 @@ function IndexToolbar({
       )}
 
       {total > 0 && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 border-t border-line-soft px-4 py-3.5 sm:px-5">
+        <div className={styles.breadthReading}>
           <h2 className="flex items-baseline gap-2 text-base font-bold tracking-tight text-strong">
             {t.markets.breadth}
             {/* Oran etiketin yanında: çubuğun kesin karşılığı burada okunur,
@@ -821,13 +833,13 @@ function IndexToolbar({
               geçsin diye taban genişliği var. */}
           <div className="flex h-2.5 min-w-[180px] flex-1 gap-px overflow-hidden rounded-full bg-surface-sunken">
             {advancing > 0 && (
-              <span className="bar-fill bg-up" style={{ width: `${pct(advancing)}%` }} />
+              <span data-motion-draw="line" className="bar-fill bg-up" style={{ width: `${pct(advancing)}%` }} />
             )}
             {flat > 0 && (
-              <span className="bar-fill bg-flat/50" style={{ width: `${pct(flat)}%` }} />
+              <span data-motion-draw="line" className="bar-fill bg-flat/50" style={{ width: `${pct(flat)}%` }} />
             )}
             {declining > 0 && (
-              <span className="bar-fill bg-down" style={{ width: `${pct(declining)}%` }} />
+              <span data-motion-draw="line" className="bar-fill bg-down" style={{ width: `${pct(declining)}%` }} />
             )}
           </div>
 
@@ -883,7 +895,7 @@ function MoverPanel({
   );
 
   return (
-    <Panel>
+    <Panel className={styles.mover}>
       {/* KARŞILAŞTIRMAYA GİDEN YOL. Ekran gezinmede görünmüyor ve siteye
           girenin çoğu varlığını bilmiyordu; oysa "günün en çok artan beşi"
           listesi, karşılaştırmanın en doğal başlangıcı. Liste sabit değil,
@@ -904,7 +916,7 @@ function MoverPanel({
           ) : undefined
         }
       />
-      <ul className="divide-y divide-line-soft">
+      <ul className="divide-y divide-line-soft" data-motion-stagger>
         {rows.map((row) => {
           const changePct = row.quote?.changePct ?? 0;
           const width = Math.max((Math.abs(changePct) / peak) * 100, 4);
@@ -950,6 +962,7 @@ function MoverPanel({
                 <div className="mt-1.5 flex items-center gap-2">
                   <span
                     aria-hidden
+                    data-motion-draw="line"
                     className={cn(
                       "bar-fill h-[5px] rounded-full",
                       satirTon === "up"
@@ -1114,7 +1127,7 @@ function MembersTable({
   const moreHref = `/piyasalar?endeks=${tab}&sirala=${sort}&yon=${dir}&adet=${limit + PAGE_STEP}`;
 
   return (
-    <Panel>
+    <Panel className={styles.members}>
       {/* Sayaç başlıkta: tablo kırpılıyor ve okuyucu tıklamadan önce
           listenin ne kadarını gördüğünü bilmeli. Aynı kalıp ana sayfadaki
           bilanço panelinde ve /mercek arşivinde de var. */}

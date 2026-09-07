@@ -1,3 +1,5 @@
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import experience from "@/components/motion/EditorialExperience.module.css";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
@@ -166,6 +168,8 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
   const sources = story.sources ?? [];
 
   return (
+    <MotionExperience className={experience.article}>
+    <ScrollProgress />
     <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
       {/* Yazının iki denetimi aynı satırda: solda arşive çıkış, sağda
           paylaşım. Paylaş düğmesi metnin İÇİNE değil kenarına konuyor —
@@ -186,7 +190,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
         />
       </div>
 
-      <header className="flex flex-col gap-4">
+      <header className={`${experience.articleHeader} flex flex-col gap-4`}>
         <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-tiny">
           <span className="plate text-nano tracking-[0.09em] text-primary">
             {t.stories.eyebrow}
@@ -297,5 +301,6 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
 
       <MoreStories slug={slug} locale={locale} t={t} />
     </article>
+    </MotionExperience>
   );
 }

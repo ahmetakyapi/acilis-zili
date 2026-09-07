@@ -194,7 +194,6 @@ const tr = {
     experienceHeading: "Piyasanın Ritmini",
     experienceHeadingAccent: "Yakala.",
     experienceDescription: "Endekslerden şirketlere, bilançolardan büyük resme. Piyasayı hareket ettiren her şey, tek yerde.",
-    experienceExplore: "Piyasayı Keşfet",
     experienceClock: "New York Saati",
     experienceOverview: "Piyasa Özeti",
     experienceReading: "Gündemi Oku",

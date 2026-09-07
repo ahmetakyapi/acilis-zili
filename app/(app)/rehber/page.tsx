@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { SectionMasthead } from "@/components/motion/SectionMasthead";
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import styles from "@/components/motion/EditorialExperience.module.css";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { LevelBadge, LevelDots } from "@/components/article/LevelBadge";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { readingMinutes } from "@/components/article/ArticleBody";
-import { EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
+import { EmptyState, Panel } from "@/components/ui/primitives";
 import {
   GUIDE_LEVELS,
   GUIDE_TOPICS,
@@ -109,11 +112,12 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
     /* Bölümler arası boşluk sayfanın ritmini kuruyor: kartlar arası 16px,
        seviye bantları arası 20px, bölümler arası 40px. Üç ayrı ölçek, üç
        ayrı düzey. */
-    <div className="flex flex-col gap-10">
-      <PageHeader
+    <MotionExperience className={styles.guidePage}>
+      <ScrollProgress />
+      <SectionMasthead
         eyebrow={t.guide.eyebrow}
         title={t.guide.title}
-        subtitle={t.guide.subtitle}
+        description={t.guide.subtitle}
       />
 
       {activeTopic ? (
@@ -162,7 +166,7 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
           })}
         </>
       )}
-    </div>
+    </MotionExperience>
   );
 }
 
@@ -201,7 +205,7 @@ function CurriculumStrip({
   const first = all[0];
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className={`${styles.curriculum} flex flex-col gap-3`}>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
           {t.guide.curriculum}
@@ -223,7 +227,7 @@ function CurriculumStrip({
           kırılıyor, seviye künyesi `truncate` yiyordu ve dört karo dikeyde
           bir duvar kuruyordu. Dar ekranda müfredat zaten SIRALI bir liste —
           satır düzeni o sırayı da gösteriyor. */}
-      <Panel className="flex flex-col divide-y divide-line-soft overflow-hidden sm:grid sm:grid-cols-4 sm:divide-x sm:divide-y-0">
+      <Panel className={`${styles.curriculumGrid} flex flex-col divide-y divide-line-soft overflow-hidden sm:grid sm:grid-cols-4 sm:divide-x sm:divide-y-0`} data-motion-stagger>
         {GUIDE_TOPICS.map((topic, index) => {
           const group = groupOf(topic.key);
           const levels = levelsIn(group);
@@ -339,7 +343,7 @@ function TopicHeading({
     <>
       {/* z-20: gerekçe EarningsCalendar.tsx içinde — eşit z-index'te
           sonraki eleman kazanıyor ve kart içeriği başlığın üstüne çıkıyor. */}
-      <div className="sticky top-(--app-bar-h) z-20 bg-page pt-1">
+      <div className={`${styles.topicHeading} sticky top-(--app-bar-h) z-20 bg-page pt-1`}>
         {/* 2px'lik koyu kural — sayfadaki tek kalın çizgi. Bölüm sınırını
             renk kullanmadan işaretleyen şey bu; hairline denendi ve
             kartların kendi kenarlıklarından ayırt edilmiyordu. */}
@@ -564,7 +568,7 @@ function ArticleGrid({
           GLİF TELEFONDA DÜŞÜYOR: tek sütunda otuz bir karo, kart
           düzeninin şikâyet ettiği "mavi kare ızgarası"nın dikey hâli
           olurdu. Dizin ekranında sıra numarası glifden çok iş yapıyor. */}
-      <Panel className="flex flex-col divide-y divide-line-soft overflow-hidden sm:hidden">
+      <Panel className={`${styles.guideMobile} flex flex-col divide-y divide-line-soft overflow-hidden sm:hidden`} data-motion-stagger>
         {articles.map((article, index) => (
           <Link
             key={article.slug}
@@ -597,13 +601,13 @@ function ArticleGrid({
       </Panel>
 
       {/* ---- Masaüstü: kart ızgarası ---- */}
-      <div className="hidden gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
+      <div className={`${styles.articleGrid} hidden gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3`} data-motion-stagger>
       {articles.map((article, index) => (
         <Link
           key={article.slug}
           href={`/rehber/${article.slug}`}
           prefetch={false}
-          className="min-w-0"
+          className={`${styles.guideCard} min-w-0`}
         >
           <Panel className="panel-hover flex h-full flex-col gap-3 p-5">
             {/* KARO BAŞLIĞIN YANINDA, kendi satırında değil. 52px'lik karo

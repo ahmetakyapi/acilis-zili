@@ -62,7 +62,7 @@ export function StoryCard({
               yazılarda tarih başlıktan sonra gelen ikinci bilgi — metin bir
               OLAYI anlatıyor ve olayın ne zaman olduğu hikâyenin parçası.
               Okuma süresi geride kalıyor: o bir künye, tarih değil. */}
-          <p className="numeral flex items-baseline gap-1.5 text-tiny text-muted">
+          <p className="numeral flex flex-wrap items-baseline gap-1.5 text-tiny text-muted">
             <span className="text-base font-semibold text-body">
               {formatEtDateLong(story.eventDate, locale)}
             </span>

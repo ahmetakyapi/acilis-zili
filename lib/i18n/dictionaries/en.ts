@@ -174,7 +174,6 @@ const en: typeof tr = {
     experienceHeading: "Feel the Pulse.",
     experienceHeadingAccent: "Follow the Market.",
     experienceDescription: "From indices to companies, earnings to the bigger picture. Everything moving the market, in one place.",
-    experienceExplore: "Explore Markets",
     experienceClock: "New York Time",
     experienceOverview: "Market Overview",
     experienceReading: "The Briefing",
