@@ -286,7 +286,7 @@ export default async function TodayPage() {
             koşumun ortancası. Takas bilinçli: 65 milisaniye görünmez,
             bin piksellik sıçrama değil. Sağlayıcıya giden paneller akışta
             kalmaya devam ediyor; beklenen tek şey yerel veritabanı. */}
-        <div data-motion-reveal id="gundem" className={styles.brief}><BriefCard locale={locale} t={t} /></div>
+        <div data-motion-reveal id="gundem" data-home-section="brief" className={styles.brief}><BriefCard locale={locale} t={t} /></div>
 
         {/* ---- Mercek ----
              SAYFANIN EN ÜST ÜÇTE BİRİNDE, çünkü sitenin başka hiçbir yerde
@@ -304,14 +304,18 @@ export default async function TodayPage() {
              Yüzey de ayrışıyor — çevresindeki paneller nötr zeminde, bu blok
              accent kenarlık ve çok soluk degrade taşıyor. Ana sayfada
              degrade kullanan tek yüzey bu. */}
-        <Suspense fallback={<SpotlightSkeleton />}>
-          <StoriesSpotlight locale={locale} t={t} />
-        </Suspense>
+        <div data-home-section="stories">
+          <Suspense fallback={<SpotlightSkeleton />}>
+            <StoriesSpotlight locale={locale} t={t} />
+          </Suspense>
+        </div>
 
         {/* ---- Bugün bilanço açıklayanlar ---- */}
-        <Suspense fallback={<EarningsTodaySkeleton t={t} />}>
-          <EarningsToday locale={locale} t={t} />
-        </Suspense>
+        <div data-home-section="earnings">
+          <Suspense fallback={<EarningsTodaySkeleton t={t} />}>
+            <EarningsToday locale={locale} t={t} />
+          </Suspense>
+        </div>
 
         {/* ---- Son analizler ----
              KOLON DENGESİ ÖLÇÜLEREK KURULDU. Bu panel bir tur yan kolonda
@@ -328,7 +332,7 @@ export default async function TodayPage() {
              iniyor ve yoğun bir bilanço gününde diğer tarafa geçse bile küçük
              kalıyor. İçerik olarak da yeri burası: üstündeki bilanço listesi
              "bugün kim açıklıyor", bu panel "açıklayanlar ne yaptı". */}
-        <div id="bilanco-analizleri" className={styles.analyses}>
+        <div id="bilanco-analizleri" data-home-section="analyses" className={styles.analyses}>
           <Suspense fallback={<PanelSkeleton rows={5} />}>
             <LatestAnalyses locale={locale} t={t} />
           </Suspense>
@@ -351,21 +355,27 @@ export default async function TodayPage() {
             mekanizmasında kapatacak yalnızca bir gizli satır vardı. */}
         {/* Dünya piyasaları en üstte: "bugün borsalar ne yapmış" sorusunun
             ABD'den sonraki halkası. */}
-        <Suspense fallback={<PanelSkeleton rows={5} footer />}>
-          <WorldStrip locale={locale} t={t} />
-        </Suspense>
+        <div data-home-section="world">
+          <Suspense fallback={<PanelSkeleton rows={5} footer />}>
+            <WorldStrip locale={locale} t={t} />
+          </Suspense>
+        </div>
 
         {/* ---- Günün hareketleri ----
              SIRA ÖLÇEKTEN İNCEYE. Üstteki iki panel endeksleri ve dünyayı
              gösteriyor, yani "borsa bugün ne yaptı"; bu panel aynı soruyu
              bir basamak inceden soruyor: tek tek hangi isimler taşıdı. */}
-        <Suspense fallback={<PanelSkeleton rows={6} footer />}>
-          <DayMovers locale={locale} t={t} />
-        </Suspense>
+        <div data-home-section="movers">
+          <Suspense fallback={<PanelSkeleton rows={6} footer />}>
+            <DayMovers locale={locale} t={t} />
+          </Suspense>
+        </div>
 
-        <Suspense fallback={<PanelSkeleton rows={3} footer />}>
-          <YieldCard locale={locale} t={t} />
-        </Suspense>
+        <div data-home-section="yields">
+          <Suspense fallback={<PanelSkeleton rows={3} footer />}>
+            <YieldCard locale={locale} t={t} />
+          </Suspense>
+        </div>
 
         {/* Burada bir "Petrol ve Korku Endeksi" kartı vardı; kaldırıldı.
             Brent, FRED'in EIA spot serisinden geliyordu ve o seri günlerce
@@ -376,9 +386,11 @@ export default async function TodayPage() {
             hiçbirinde canlı emtia spotu yok, o yüzden metrik düştü.
             Korku Endeksi (VIX) ise günlük geliyor ve yaşıyor: alt şeritte
             her sayfada, /piyasalar'da bantlı göstergesiyle. */}
-        <Suspense fallback={<PanelSkeleton rows={3} footer />}>
-          <MacroSummary locale={locale} t={t} />
-        </Suspense>
+        <div data-home-section="macro">
+          <Suspense fallback={<PanelSkeleton rows={3} footer />}>
+            <MacroSummary locale={locale} t={t} />
+          </Suspense>
+        </div>
 
         {/* ---- Ekonomik takvim ----
              ANA KOLONDAN BURAYA TAŞINDI. İkisi de kısa, tarifeli listeler:
@@ -390,7 +402,7 @@ export default async function TodayPage() {
 
              Sıra bilinçli: bugünün olayları, sonra hafta, sonra senin
              listen. Ölçekten kişisel olana doğru. */}
-        <Panel>
+        <Panel data-home-section="schedule">
           <PanelHeader
             title={t.today.schedule}
             tone="plate"
@@ -401,7 +413,7 @@ export default async function TodayPage() {
           </Suspense>
         </Panel>
 
-        <Panel>
+        <Panel data-home-section="week">
           <PanelHeader
             title={t.today.weekAhead}
             tone="plate"
@@ -412,9 +424,11 @@ export default async function TodayPage() {
           </Suspense>
         </Panel>
 
-        <Suspense fallback={<PanelSkeleton rows={3} />}>
-          <WatchlistSummary locale={locale} t={t} />
-        </Suspense>
+        <div data-home-section="watchlist">
+          <Suspense fallback={<PanelSkeleton rows={3} />}>
+            <WatchlistSummary locale={locale} t={t} />
+          </Suspense>
+        </div>
       </div>
 
       {/* ---- Öne çıkan haberler ----
@@ -427,7 +441,7 @@ export default async function TodayPage() {
            tamamını aldı; başlığı da bir panel başlığı değil BÖLÜM başlığı
            oldu — kutu yok, altında hairline var. Sayfa böylece "kutu, kutu,
            kutu" ritminden çıkıp bir bölümle kapanıyor. */}
-      <section id="haber-akisi" className={cn(styles.news, "min-w-0 lg:col-span-2 lg:row-start-2")}>
+      <section data-home-section="news" id="haber-akisi" className={cn(styles.news, "min-w-0 lg:col-span-2 lg:row-start-2")}>
         <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
           <h2 className={styles.newsHeading}>
             {t.today.topNews}
@@ -461,7 +475,7 @@ export default async function TodayPage() {
       <FillColumn />
 
       {/* ---- Kaynak künyesi ---- */}
-      <footer className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted lg:col-span-2 lg:row-start-3">
+      <footer data-home-section="sources" className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted lg:col-span-2 lg:row-start-3">
         <span>{t.today.sourceLine}</span>
         <span>{t.today.sourceNote}</span>
       </footer>

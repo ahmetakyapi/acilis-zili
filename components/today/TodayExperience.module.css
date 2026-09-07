@@ -143,3 +143,26 @@
  .storyRowMeta svg { margin-left:auto; }
 }
 @media(prefers-reduced-motion:reduce) { .storyRow,.storyRowMeta svg { transition:none; } }
+
+/* At 390px the world/movers headings started at 4397/4817px, after both
+   earnings panels. Flatten only the single-column layout: streamed content
+   and its skeleton share one ordered slot, while desktop column sizing and
+   FillColumn keep the same wrappers and data sources. */
+.dashboard [data-home-section] { min-width:0; }
+.dashboard [data-home-section]:empty { display:none; }
+@media(max-width:1023px) {
+ .dashboard > [data-col] { display:contents; }
+ .dashboard [data-home-section="world"] { order:1; }
+ .dashboard [data-home-section="movers"] { order:2; }
+ .dashboard [data-home-section="brief"] { order:3; }
+ .dashboard [data-home-section="stories"] { order:4; }
+ .dashboard [data-home-section="yields"] { order:5; }
+ .dashboard [data-home-section="macro"] { order:6; }
+ .dashboard [data-home-section="schedule"] { order:7; }
+ .dashboard [data-home-section="week"] { order:8; }
+ .dashboard [data-home-section="watchlist"] { order:9; }
+ .dashboard [data-home-section="news"] { order:10; }
+ .dashboard [data-home-section="earnings"] { order:11; }
+ .dashboard [data-home-section="analyses"] { order:12; }
+ .dashboard [data-home-section="sources"] { order:13; }
+}
