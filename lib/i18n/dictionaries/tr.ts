@@ -112,6 +112,19 @@ const tr = {
     marketCap: "Piyasa Değeri",
   },
 
+  directory: {
+    companiesEyebrow: "ABD Piyasalarının Şirketleri",
+    earningsEyebrow: "Finansal Sonuçlar ve Beklentiler",
+    companyCount: "Dizindeki Şirket",
+    sectorCount: "Sektör Grubu",
+    sectorDistribution: "Sektörlere Bir Bakış",
+    distributionUnit: "Şirket Sayısı",
+    reportingRhythm: "Önümüzdeki 7 Gün",
+    scheduledReports: "Takvimdeki Bilanço",
+    reportingDays: "Açıklama Günü",
+    analysisDescription: "Gerçekleşen sonuçlar, piyasanın beklentileri ve bir sonraki çeyreğe bakış.",
+  },
+
   dayFlow: {
     auto: "Otomatik Güncelleme",
     checked: "Son Kontrol",

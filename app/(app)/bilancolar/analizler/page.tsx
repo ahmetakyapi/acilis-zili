@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import styles from "@/components/motion/DirectoryExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { auth } from "@/auth";
 import {
   EmptyState,
   FilterChip,
-  PageHeader,
   Panel,
   Segment,
   SegmentItem,
@@ -168,12 +170,13 @@ export default async function AnalysesPage(
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <MotionExperience className={styles.page}>
+      <ScrollProgress />
       {/* ALT BAŞLIK YOK: buradaki metin "detaylı değerlendirme Analizler'de"
           diyordu, yani okuyucuyu ZATEN ÜSTÜNDE DURDUĞU sekmeye yolluyordu.
           Hangi görünümde olunduğunu hemen altındaki sekme çubuğu söylüyor;
           başlık bölümün adı, sekme de görünümün adı. */}
-      <PageHeader title={t.analysis.title} />
+      <DirectoryHeader eyebrow={t.directory.earningsEyebrow} title={t.analysis.title} description={t.directory.analysisDescription} />
 
       <EarningsTabs active="analyses" t={t} className="-mt-1" />
 
@@ -183,7 +186,7 @@ export default async function AnalysesPage(
         </Panel>
       ) : (
         <>
-          <div className="grid gap-4 lg:grid-cols-[1.7fr_minmax(0,1fr)_minmax(0,1fr)]">
+          <div data-motion-stagger className={cn("grid gap-4 lg:grid-cols-[1.7fr_minmax(0,1fr)_minmax(0,1fr)]", styles.analysisPanels)}>
             {featured && (
               <FeaturedAnalysis
                 row={featured}
@@ -458,7 +461,7 @@ export default async function AnalysesPage(
         locale={locale}
         slugs={["bilanco", "degerleme"]}
       />
-    </div>
+    </MotionExperience>
   );
 }
 
@@ -509,7 +512,7 @@ function FeaturedAnalysis({
     <Link
       href={analysisHref(row.symbol, row.period)}
       prefetch={false}
-      className="flex min-w-0 flex-col gap-4 rounded-xl border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-5 transition-colors hover:border-primary sm:flex-row sm:gap-5"
+      className={cn("flex min-w-0 flex-col gap-4 rounded-xl border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-5 transition-colors hover:border-primary sm:flex-row sm:gap-5", styles.analysisFeature)}
     >
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
         <span className="text-tiny font-semibold text-muted">
@@ -527,9 +530,10 @@ function FeaturedAnalysis({
             </p>
           </div>
         </div>
-        <p className="text-small leading-[19px] text-body [text-wrap:pretty]">
+        <p className={styles.featureHeadline}>
           {row.headline}
         </p>
+        <span className={styles.featureRead}>{t.dayFlow.readAnalysis} ↗</span>
         <div className="mt-auto flex flex-wrap gap-x-3.5 gap-y-1 pt-1">
           {figures.map((figure) => (
             <span
@@ -548,7 +552,7 @@ function FeaturedAnalysis({
           yazısıyla yan yana durur: 66px'lik halka + kenar dolgusu 390px
           genişlikte metin sütununu sıfıra indiriyordu. */}
       <div className="flex shrink-0 items-center gap-3 border-t border-primary-faint pt-3 sm:flex-col sm:justify-center sm:gap-2 sm:border-0 sm:pt-0">
-        <ScoreRing score={row.score} verdict={verdict} size={66} />
+        <ScoreRing score={row.score} verdict={verdict} size={80} />
         <span className={cn("text-base font-bold", verdictTextClass(verdict))}>
           {verdictLabel(verdict, t)}
         </span>

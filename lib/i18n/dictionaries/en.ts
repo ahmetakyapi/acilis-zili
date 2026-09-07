@@ -96,6 +96,19 @@ const en: typeof tr = {
     marketCap: "Market Cap",
   },
 
+  directory: {
+    companiesEyebrow: "Companies of the US Markets",
+    earningsEyebrow: "Financial Results and Expectations",
+    companyCount: "Companies in Directory",
+    sectorCount: "Sector Groups",
+    sectorDistribution: "Sectors at a Glance",
+    distributionUnit: "Company Count",
+    reportingRhythm: "The Next 7 Days",
+    scheduledReports: "Scheduled Reports",
+    reportingDays: "Reporting Days",
+    analysisDescription: "Reported results, market expectations and a look at the next quarter.",
+  },
+
   dayFlow: {
     auto: "Automatic Updates",
     checked: "Last Checked",

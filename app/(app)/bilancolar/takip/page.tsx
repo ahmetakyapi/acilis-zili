@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import styles from "@/components/motion/DirectoryExperience.module.css";
 import { auth } from "@/auth";
 import {
   ButtonLink,
   EmptyState,
-  PageHeader,
   Panel,
   Segment,
   SegmentItem,
@@ -71,8 +73,9 @@ export default async function WatchedEarningsPage(
 
   if (!session?.user?.id) {
     return (
-      <div className="flex flex-col gap-6">
-        <PageHeader title={t.analysis.title} />
+      <MotionExperience className={styles.page}>
+        <ScrollProgress />
+        <DirectoryHeader eyebrow={t.directory.earningsEyebrow} title={t.analysis.title} description={t.directory.analysisDescription} />
         <EarningsTabs active="watchlist" t={t} className="-mt-1" />
         <Panel>
           <EmptyState
@@ -89,7 +92,7 @@ export default async function WatchedEarningsPage(
             }
           />
         </Panel>
-      </div>
+      </MotionExperience>
     );
   }
 
@@ -125,13 +128,17 @@ export default async function WatchedEarningsPage(
     key === "ay" ? "/bilancolar/takip?aralik=ay" : "/bilancolar/takip";
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
+    <MotionExperience className={styles.page}>
+      <ScrollProgress />
+      <DirectoryHeader
+        eyebrow={t.directory.earningsEyebrow}
         title={t.analysis.title}
-        action={
+        description={t.directory.analysisDescription}
+      >
+        {
           /* Aralık künyesi takvim sekmesindekiyle aynı — iki ekran aynı
              segmenti kullanıyor, biri söyleyip öteki susmamalı. */
-          <div className="flex flex-col items-start gap-1.5 sm:items-end">
+          <div className={styles.calendarControls}>
             <Segment>
               {(["hafta", "ay"] as const).map((key) => (
                 <SegmentItem
@@ -149,7 +156,7 @@ export default async function WatchedEarningsPage(
             </p>
           </div>
         }
-      />
+      </DirectoryHeader>
 
       <EarningsTabs active="watchlist" t={t} className="-mt-1" />
 
@@ -214,6 +221,6 @@ export default async function WatchedEarningsPage(
           </section>
         </>
       )}
-    </div>
+    </MotionExperience>
   );
 }

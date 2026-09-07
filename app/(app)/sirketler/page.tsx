@@ -1,4 +1,7 @@
 import { Suspense } from "react";
+import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import styles from "@/components/motion/DirectoryExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import Link from "next/link";
 import {
@@ -242,6 +245,8 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         (c) => sectorGroupOf(c.industry).key === activeGroup.key,
       )
     : companies;
+  const topGroups = [...shownGroups].sort((a, b) => (groupCounts.get(b.key) ?? 0) - (groupCounts.get(a.key) ?? 0)).slice(0, 3);
+  const largestGroup = Math.max(1, ...topGroups.map((group) => groupCounts.get(group.key) ?? 0));
 
   /* Kaç satır basılacak. Sıralama ya da filtre değişince sayaç başa döner:
      "daha fazla" bir okuma derinliğidir, yeni bir listeye taşınmaz. */
@@ -281,18 +286,23 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <header>
-        <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
-          {t.companies.title}
-        </h1>
-        <p className="mt-2 text-sm text-soft">{t.companies.subtitle}</p>
-      </header>
+    <MotionExperience className={styles.page}>
+      <ScrollProgress />
+      <DirectoryHeader eyebrow={t.directory.companiesEyebrow} title={t.companies.title} description={t.companies.subtitle}
+        visual={topGroups.length > 0 && <>
+          <h2 className={styles.visualHeading}>{t.directory.sectorDistribution}<span>{t.directory.distributionUnit}</span></h2>
+          <div className={styles.distribution} data-motion-stagger>{topGroups.map((group) => <Link key={group.key} href={sectorHref(group.key)} scroll={false}>
+            <span>{sectorGroupLabel(group, locale)}</span><b>{groupCounts.get(group.key)}</b>
+            <span className={styles.distributionTrack}><span data-motion-draw="line" className={styles.distributionFill} style={{ width: `${(groupCounts.get(group.key) ?? 0) / largestGroup * 100}%` }} /></span>
+          </Link>)}</div>
+        </>}>
+        <dl className={styles.metrics}><div><dt>{t.directory.companyCount}</dt><dd>{companies.length.toLocaleString(locale)}</dd></div><div><dt>{t.directory.sectorCount}</dt><dd>{shownGroups.length}</dd></div></dl>
+      </DirectoryHeader>
 
       {/* Kategori şeridi — geniş ekranda iki satıra sarar, mobilde kayar
           (kaydırılabilir olduğu sağ kenar solmasından belli olur). */}
       {shownGroups.length > 0 && (
-        <div className="relative">
+        <div className={cn("relative", styles.filters)}>
           <ChipStrip
             activeKey={activeGroup?.key ?? null}
             className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12 sm:flex-wrap sm:gap-2 sm:pb-0 sm:pr-0"
@@ -360,7 +370,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         slugs={["degerleme", "piyasa-degeri"]}
         className="pt-1"
       />
-    </div>
+    </MotionExperience>
   );
 }
 /* ==========================================================================
@@ -470,7 +480,7 @@ async function CompaniesTable({
 
   return (
     <>
-      <Panel>
+      <Panel className={styles.tablePanel}>
         {/* TABLONUN BAŞLIĞI VARDI AMA GÖRÜNMÜYORDU. Panel doğrudan sütun
             satırıyla açılıyordu: hangi kümeye baktığın (bütün şirketler mi,
             seçili sektör mü) ve listenin ne kadarını gördüğün yalnızca
@@ -586,7 +596,7 @@ async function CompaniesTable({
                   />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line-soft">
+              <tbody data-motion-stagger className="divide-y divide-line-soft">
                 {rows.map((company, index) => {
                   const quote = quotes[company.symbol];
                   return (

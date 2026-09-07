@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
 import { auth } from "@/auth";
-import { EmptyState, PageHeader, Panel, Segment, SegmentItem } from "@/components/ui/primitives";
+import { EmptyState, Panel, Segment, SegmentItem } from "@/components/ui/primitives";
+import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import { EarningsRhythm } from "@/components/earnings/EarningsRhythm";
+import styles from "@/components/motion/DirectoryExperience.module.css";
 import { EarningsCalendar } from "@/components/earnings/EarningsCalendar";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
 import { RecentAnalysesStrip } from "@/components/earnings/RecentAnalysesStrip";
@@ -95,7 +99,8 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   );
 
   return (
-    <div className="flex flex-col gap-7">
+    <MotionExperience className={styles.page}>
+      <ScrollProgress />
       {/* BAŞLIK BÖLÜMÜN ADI, SEKME GÖRÜNÜMÜN ADI. Burada "Bilanço Takvimi"
           yazıyordu ve hemen altındaki sekme çubuğunda "Takvim" duruyordu —
           aynı şey iki kez. Öteki iki sekmede ise başlık "Bilançolar" idi,
@@ -103,16 +108,20 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           hangi görünümde olduğunu söylemiyordu. Üçü de artık bölüm adını
           taşıyor; alt başlık bu sekmenin ne gösterdiğini anlatmaya devam
           ediyor. */}
-      <PageHeader
+      <DirectoryHeader
+        eyebrow={t.directory.earningsEyebrow}
         title={t.analysis.title}
-        subtitle={t.earnings.subtitleLong}
-        action={
+        description={t.earnings.subtitleLong}
+        visual={<EarningsRhythm rows={rows} today={today} locale={locale} t={t} />}
+      >
+        <dl className={styles.metrics}><div><dt>{t.directory.scheduledReports}</dt><dd>{rows.length}</dd></div><div><dt>{t.directory.reportingDays}</dt><dd>{new Set(rows.map((row) => row.reportDate)).size}</dd></div></dl>
+        {
           /* Anahtarın ALTINDA kapsadığı gerçek aralık. "Hafta" ve "Ay" birer
              söz; sayfanın gösterdiği pencere `bugün → bugün + 6|29`.
              Üçüncü günün başlığına inen okuyucu listenin nerede biteceğini
              sona kadar kaydırarak öğreniyordu. İki tarih de hesaplanmış
              değişkenlerde duruyor, uydurma yok. */
-          <div className="flex flex-col items-start gap-1.5 sm:items-end">
+          <div className={styles.calendarControls}>
             {anahtar}
             <p className="figure text-tiny text-muted">
               {formatEtDateCompact(today, locale)} –{" "}
@@ -120,7 +129,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
             </p>
           </div>
         }
-      />
+      </DirectoryHeader>
 
       <EarningsTabs active="calendar" t={t} className="-mt-2" />
 
@@ -173,6 +182,6 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
         slugs={["bilanco", "degerleme"]}
         className="pt-1"
       />
-    </div>
+    </MotionExperience>
   );
 }

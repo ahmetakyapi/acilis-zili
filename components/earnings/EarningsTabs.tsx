@@ -1,5 +1,6 @@
 import { TabBar, TabItem } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
+import styles from "@/components/motion/DirectoryExperience.module.css";
 
 /**
  * Bilançolar ekranının sekme çubuğu.
@@ -37,7 +38,7 @@ export function EarningsTabs({
      üç sekmede de aynı etiket duyuruluyordu — Analizler sekmesindeyken ekran
      okuyucu "Bilanço Takvimi, sekme listesi" diyordu. */
   return (
-    <TabBar label={t.analysis.title} className={className}>
+    <TabBar label={t.analysis.title} className={`${styles.tabs} ${className ?? ""}`}>
       {tabs.map((tab) => (
         <TabItem
           key={tab.key}

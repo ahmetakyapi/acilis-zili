@@ -1,0 +1,17 @@
+.day { min-width:0; scroll-margin-top:calc(var(--app-bar-h) + 20px); }
+.dateHeader { margin-bottom:18px; }
+.dateHeader > div { border-top:1px solid var(--line-strong); padding-block:17px; }
+.dateHeader h2 { font-size:25px; font-weight:600; letter-spacing:-.04em; }
+.heroCard,.miniCard { border-radius:18px; background:radial-gradient(ellipse at 0 0,var(--primary-tint),transparent 70%),var(--premium-surface); box-shadow:0 2px 3px color-mix(in srgb,var(--text-strong) 2%,transparent); transition:transform .3s,border-color .3s,box-shadow .3s; }
+.heroCard { padding:24px; }
+.miniCard { padding:18px; gap:14px; }
+.miniCard > a:first-child,.heroCard > a:first-child { border-radius:inherit; }
+.miniIdentity { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.companyName { font-size:12px; line-height:1.5; color:var(--text-muted); overflow-wrap:anywhere; }
+.miniCard :global(.plate) { font-size:11px; letter-spacing:.035em; }
+.miniCard :global(.text-lead) { font-size:22px; line-height:1.2; white-space:normal; overflow-wrap:anywhere; }
+.miniCard dl { font-size:12px; line-height:1.6; }
+.day details > summary { min-height:44px; font-size:13px; }
+@media(hover:hover) and (pointer:fine) { .miniCard:hover,.heroCard:hover { transform:translateY(-4px); border-color:var(--primary-faint); box-shadow:var(--premium-shadow); } }
+@media(max-width:639px) { .dateHeader h2 { font-size:21px; } .dateHeader > div { gap:8px; } .miniGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .miniCard { padding:13px; gap:12px; } .miniCard :global(.text-lead) { font-size:19px; } .heroCard { padding:18px; } .miniIdentity > :last-child { font-size:10px; } }
+@media(prefers-reduced-motion:reduce) { .miniCard,.heroCard { transition:none; } .miniCard:hover,.heroCard:hover { transform:none; } }

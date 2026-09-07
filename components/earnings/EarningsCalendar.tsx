@@ -1,4 +1,5 @@
 import Link from "next/link";
+import styles from "./EarningsCalendar.module.css";
 import {
   TimingChip,
   type TimingTone,
@@ -265,7 +266,7 @@ function DaySection({
   const watched = rows.filter((row) => watchSet.has(row.symbol)).length;
 
   return (
-    <section aria-label={date}>
+    <section id={`earnings-day-${date}`} aria-label={date} className={styles.day}>
       {/* ---- Gün başlığı ----
           YAPIŞKAN VE KURALLI. Takvim beş gün alt alta akıyordu ve günleri
           birbirinden ayıran tek şey 19px'lik bir tarihti; kartların kendi
@@ -284,7 +285,7 @@ function DaySection({
           başlığı ekranın tepesine yapıştığında altından geçen kartın takvim
           ikonu başlığın "83 şirket" sayacının üstüne çiziliyordu. Üst çubuk
           z-30, yani 20 aradaki doğru basamak. */}
-      <div className="sticky top-(--app-bar-h) z-20 mb-4 bg-page pt-1">
+      <div className={cn("sticky top-(--app-bar-h) z-20 mb-4 bg-page pt-1", styles.dateHeader)}>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 border-t-2 border-strong pb-3 pt-3">
           <h2 className="text-title font-bold tracking-[-0.03em] text-strong">
             {formatEtDateLong(date, locale)}
@@ -343,7 +344,7 @@ function DaySection({
       </div>
 
       {/* ---- Katman 1: hero satırları ---- */}
-      <div className="flex flex-col gap-2.5">
+      <div data-motion-stagger className="flex flex-col gap-2.5">
         {heroes.map((row) => {
           const m = meta[row.symbol];
           const timing = timingOf(row.hour, t);
@@ -355,7 +356,7 @@ function DaySection({
                bağlantı geçersiz HTML. Görünüm birebir aynı kalıyor. */
             <div
               key={row.id}
-              className="panel-hover relative flex flex-col gap-3 rounded-lg border border-line bg-surface-solid px-4 py-4 transition-colors sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+              className={cn("panel-hover relative flex flex-col gap-3 rounded-lg border border-line bg-surface-solid px-4 py-4 transition-colors sm:flex-row sm:items-center sm:gap-4 sm:px-5", styles.heroCard)}
             >
               <Link
                 href={`/hisse/${row.symbol}`}
@@ -485,8 +486,10 @@ function DaySection({
           germek yerine olduğu gibi bırakmak dürüst duruyor. */}
       {mid.length > 0 && (
         <div
+          data-motion-stagger
           className={cn(
             "mt-2.5 grid gap-2.5",
+            styles.miniGrid,
             mid.length >= 4
               ? "grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))]"
               : "grid-cols-[repeat(auto-fit,minmax(9.5rem,15rem))] justify-start",
@@ -506,7 +509,7 @@ function DaySection({
             return (
               <div
                 key={row.id}
-                className="panel-hover relative flex h-full min-w-0 flex-col gap-[11px] rounded-lg border border-line bg-surface-solid p-3.5 transition-colors"
+                className={cn("panel-hover relative flex h-full min-w-0 flex-col gap-[11px] rounded-lg border border-line bg-surface-solid p-3.5 transition-colors", styles.miniCard)}
               >
                 <Link
                   href={`/hisse/${row.symbol}`}
@@ -514,7 +517,7 @@ function DaySection({
                   aria-label={`${row.symbol} ${m?.name ?? ""}`}
                   className="absolute inset-0 rounded-lg"
                 />
-                <div className="flex items-start gap-2">
+                <div className={styles.miniIdentity}>
                   {/* Mini kart logosu da bir basamak büyük (44px). Izgara
                       dar ekranda bile kart başına ~150 piksel bırakıyor,
                       geniş ekranda 225-340; 32 piksellik karo o kutuda
@@ -541,7 +544,7 @@ function DaySection({
                       )}
                       {row.symbol}
                     </p>
-                    <p className="truncate text-small text-muted">
+                    <p className={styles.companyName}>
                       {m?.name ?? ""}
                     </p>
                   </div>

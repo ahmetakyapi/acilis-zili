@@ -339,6 +339,12 @@ export function MotionExperience({ children, className }: { children: ReactNode;
     }, { threshold: .12, rootMargin: "0px 0px -3% 0px" });
     function prepare() {
       if (!root) return;
+      // Filtering directories replaces rows inside this persistent wrapper.
+      // Release their animation objects instead of retaining every old list.
+      for (const [element, animation] of prepared) {
+        if (root.contains(element)) continue;
+        animation.cancel(); observer.unobserve(element); prepared.delete(element);
+      }
       const elements = root.querySelectorAll<HTMLElement>("[data-motion-reveal], [data-motion-draw], [data-motion-stagger] > *");
       elements.forEach((element) => {
         if (prepared.has(element)) return;
@@ -346,12 +352,14 @@ export function MotionExperience({ children, className }: { children: ReactNode;
           ? Array.from(element.parentElement.children) : [];
         const delay = Math.min(400, Math.max(0, siblings.indexOf(element)) * 75);
         const bar = element.dataset.motionDraw === "bar";
-        if (bar) element.getAnimations().forEach((animation) => animation.cancel());
+        const line = element.dataset.motionDraw === "line";
+        if (bar || line) element.getAnimations().forEach((animation) => animation.cancel());
         /* Web Animations paints without mutating style/data attributes.
            Inline mutations on streamed Link nodes raced their hydration
            and produced a server/client mismatch. No timing guess is needed. */
         const animation = element.animate(bar
           ? [{ transform: "scaleY(.04)", transformOrigin: "center bottom" }, { transform: "scaleY(1)", transformOrigin: "center bottom" }]
+          : line ? [{ transform: "scaleX(.04)", transformOrigin: "left center" }, { transform: "scaleX(1)", transformOrigin: "left center" }]
           : [{ opacity: .25, transform: "translateY(24px)" }, { opacity: 1, transform: "none" }],
           { duration: bar ? 1050 : 750, delay, easing: "cubic-bezier(.22,1,.36,1)", fill: "both" });
         animation.pause();

@@ -110,7 +110,7 @@ export async function RecentAnalysesStrip({
                 </span>
                 <span
                   className={cn(
-                    "figure whitespace-nowrap rounded-full px-1.5 py-px text-nano font-bold",
+                    "figure whitespace-nowrap rounded-full px-1.5 py-px text-[11px] font-bold",
                     verdictPillClass(verdict),
                   )}
                 >
@@ -118,7 +118,7 @@ export async function RecentAnalysesStrip({
                 </span>
                 {/* Hangi çeyreğin okunduğu yazılı değildi: `periodLabel`
                     sorguda zaten geliyor ve sunumda atılıyordu. */}
-                <span className="figure whitespace-nowrap text-nano text-muted">
+                <span className="figure whitespace-nowrap text-[11px] text-muted">
                   {row.periodLabel}
                 </span>
               </Link>
