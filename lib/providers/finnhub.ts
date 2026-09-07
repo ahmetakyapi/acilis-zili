@@ -286,12 +286,15 @@ export async function getEarningsCalendar(
   from: string,
   to: string,
   symbol?: string,
+  freshness: "calendar" | "results" = "calendar",
 ): Promise<ProviderResult<EarningsEntry[]>> {
   const params: Record<string, string> = { from, to };
   if (symbol) params.symbol = symbol;
 
   const result = await finnhubFetch<RawEarnings>("/calendar/earnings", params, {
-    revalidate: 21600,
+    // Gün akışı, bugünün gerçekleşen sonuçlarını bir dakikalık ortak
+    // fetch önbelleğiyle okur. İleri tarihli takvim altı saat kalır.
+    revalidate: freshness === "results" ? 60 : 21600,
     tags: ["earnings"],
   });
   if (!result.ok) return result;

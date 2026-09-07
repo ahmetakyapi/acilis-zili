@@ -1,6 +1,7 @@
 import type React from "react";
 import { cn } from "@/lib/utils";
 import { verdictStroke, type VerdictKey } from "@/lib/analysis";
+import styles from "@/components/earnings/EarningsReport.module.css";
 
 /**
  * 0–100 skor halkası.
@@ -39,16 +40,28 @@ export function ScoreRing({
         width={size}
         height={size}
         viewBox="0 0 64 64"
-        className="block"
+        className={cn("block", size >= 96 && styles.scoreDial)}
         aria-hidden
       >
+        {size >= 96 && Array.from({ length: 50 }, (_, index) => (
+          <line
+            key={index}
+            x1="32"
+            y1={index % 5 === 0 ? "0.5" : "1.2"}
+            x2="32"
+            y2={index % 5 === 0 ? "3" : "2.4"}
+            stroke="var(--line-strong)"
+            strokeWidth={index % 5 === 0 ? "0.75" : "0.4"}
+            transform={`rotate(${index * 7.2} 32 32)`}
+          />
+        ))}
         <circle
           cx="32"
           cy="32"
           r={radius}
           fill="none"
           stroke="var(--line-strong)"
-          strokeWidth="6"
+          strokeWidth={size >= 96 ? 3 : 6}
         />
         {/* Halka kendini çiziyor — kural globals.css → .ring-fill. Çevre CSS
             değişkeniyle geçiyor ki keyframe ölçmeden başlangıç ofsetini bilsin. */}
@@ -60,7 +73,7 @@ export function ScoreRing({
           r={radius}
           fill="none"
           stroke={verdictStroke(verdict)}
-          strokeWidth="6"
+          strokeWidth={size >= 96 ? 3 : 6}
           strokeLinecap="round"
           strokeDasharray={`${filled.toFixed(1)} ${circumference.toFixed(1)}`}
           transform="rotate(-90 32 32)"

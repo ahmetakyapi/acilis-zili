@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
   Article,
+  ArrowDownRight,
+  ArrowUpRight,
   CalendarBlank,
   Scales,
   Star,
@@ -18,6 +20,8 @@ import { RevenueColumns } from "@/components/earnings/RevenueColumns";
 import { GuidanceRanges } from "@/components/earnings/GuidanceRanges";
 import type { FooterStat } from "@/components/earnings/ChartFooter";
 import { RichText } from "@/components/earnings/RichText";
+import { MotionExperience, ScrollStage, Reveal, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
+import styles from "@/components/earnings/EarningsReport.module.css";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
 import { auth } from "@/auth";
 import {
@@ -63,6 +67,7 @@ import {
   peRatioOf,
   safeExternalUrl,
   SIGN_GAP,
+  titleCaseLabel,
 } from "@/lib/utils";
 import type { EarningsAnalysisRow } from "@/lib/schema";
 
@@ -218,7 +223,7 @@ function PanelHead({
     /* flex-wrap: künye metni ("Açılış Zili Analiz Ekibi") telefonda başlığı
        iki satıra sıkıştırıyordu — sığmadığında kendi satırına düşer, başlık
        hep tek satır kalır. */
-    <div className="mb-4 flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-line-soft pb-3">
+    <div className={cn(styles.panelHead, "mb-4 flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-line-soft pb-3")}>
       <span
         aria-hidden
         className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-wash text-primary-ink"
@@ -458,6 +463,18 @@ export default async function AnalysisDetailPage(
     revenueScale === 1e9 ? t.analysis.unitBillionUsd : t.analysis.unitMillionUsd;
   const hasGuidance = (row.guidance?.length ?? 0) > 0;
 
+  /* 1440px ölçümünde büyük mali dönem satırı tek başına 111px tutuyordu.
+     Dönem artık üst künyede; kapağın odağı kayıttaki ilk iki gerçek sonuç.
+     Bu ölçüler aşağıdaki ızgaradan taşınır, iki yerde tekrar edilmez.
+     Mini grafik yalnızca gerçekleşen gelirleri içerir; öngörüleri gerçek
+     sonuç gibi göstermemek için projected öğeler burada yer almaz. */
+  const coverMetrics = (row.highlights ?? []).slice(0, 2);
+  const detailMetrics = (row.highlights ?? []).slice(2);
+  const coverRevenue = (row.quarterlyRevenue ?? [])
+    .filter((bar) => !bar.projected && Number.isFinite(bar.value) && bar.value >= 0)
+    .slice(-5);
+  const coverRevenueMax = Math.max(0, ...coverRevenue.map((bar) => bar.value));
+
   /* ---- Grafik künyeleri ----
      Karnede grafiklerin altında üçer mini ölçü duruyor ve kartı tamamlayan
      şey o; onsuz kart "işte bir grafik" diyor. Alanlar sonradan eklendiği
@@ -516,7 +533,8 @@ export default async function AnalysisDetailPage(
   const bottomCards = 1 + (peers.length > 0 ? 1 : 0);
 
   return (
-    <div className="flex flex-col gap-5">
+    <MotionExperience className={styles.report}>
+      <ScrollProgress />
       <ArticleJsonLd
         headline={`${row.company} ${row.periodLabel}`}
         description={row.headline}
@@ -576,7 +594,14 @@ export default async function AnalysisDetailPage(
           Ölçüler alt satıra alınıp yatay bir şeride dönüşünce delik
           kapanıyor, her ölçü kendi sütununda okunuyor ve şerit kartın
           genişliğini gerçekten kullanıyor. */}
-      <header className="flex flex-col gap-4 rounded-xl border border-line bg-surface-solid p-4 sm:p-5">
+      <header id="report-overview" className={cn(styles.cover, "flex flex-col gap-4 rounded-xl border border-line bg-surface-solid p-4 sm:p-5")}>
+        <div className={styles.coverEdition}>
+          <span className={styles.coverEyebrow}>
+            <span aria-hidden className={styles.editionMark} />
+            {t.analysis.ogEyebrow}
+          </span>
+          <span className={styles.coverSerial}>{row.periodLabel}</span>
+        </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           {/* Sol kolon: kimlik + künye çipleri.
               Çipler bir süre KENDİ BANDINDAYDI ve solda iki çip, sağında bin
@@ -592,7 +617,7 @@ export default async function AnalysisDetailPage(
               />
               <div className="flex min-w-0 flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.035em]">
+                  <h1 className={cn(styles.companyTitle, "w-fit text-heading font-bold tracking-[-0.035em]")}>
                     {row.company}
                   </h1>
                   <Link
@@ -625,7 +650,6 @@ export default async function AnalysisDetailPage(
                   kutular gidiyor. Geniş ekranda yer var, rozetler orada. */}
               <span className="inline-flex items-center gap-1.5 text-nano font-bold leading-tight text-body sm:min-h-7 sm:rounded-md sm:border sm:border-line sm:bg-surface-solid sm:px-2.5">
                 <CalendarBlank weight="duotone" size={12} className="text-muted" />
-                {t.analysis.earningsOf.replace("{period}", row.periodLabel)} ·{" "}
                 {formatEtDateLong(row.reportDate, locale)}
               </span>
               {row.nextPeriodLabel && (
@@ -740,6 +764,72 @@ export default async function AnalysisDetailPage(
           )}
         </div>
 
+        {/* İlk kapakta dönem büyük bir manşetti; kullanıcı geri bildirimiyle
+            görsel ağırlık çeyreğin sonuçlarına geçti. Etiketler ve notlar
+            doğrudan analiz kaydından gelir; şirkete özgü ölçü tanımları
+            (ürün geliri, düzeltilmiş kâr vb.) genelleştirilmez. */}
+        {(coverMetrics.length > 0 || coverRevenueMax > 0) && (
+          <div
+            className={styles.coverResults}
+            data-has-trend={coverRevenueMax > 0}
+            data-has-metrics={coverMetrics.length > 0}
+          >
+            {coverMetrics.length > 0 && (
+              <dl data-motion-stagger className={styles.coverLeadFacts}>
+                {coverMetrics.map((metric) => (
+                  <div key={metric.label}>
+                    <dt>{metric.label}</dt>
+                    <dd className="figure">{metric.value}</dd>
+                    {metric.note && (
+                      <dd
+                        className={cn(
+                          styles.coverMetricNote,
+                          metric.tone === "up"
+                            ? "text-up"
+                            : metric.tone === "down"
+                              ? "text-down"
+                              : "text-primary-ink",
+                        )}
+                      >
+                        {titleCaseLabel(metric.note, locale)}
+                      </dd>
+                    )}
+                  </div>
+                ))}
+              </dl>
+            )}
+            {coverRevenueMax > 0 && (
+              <figure className={styles.coverTrend}>
+                <figcaption>
+                  <a href="#report-figures" className={styles.coverTrendLink}>
+                    {t.analysis.quarterlyRevenue}
+                    <ArrowDownRight size={14} aria-hidden />
+                  </a>
+                  <span>{t.analysis.legendActual} · {revenueUnit}</span>
+                </figcaption>
+                <div data-motion-stagger className={styles.coverTrendPlot}>
+                  {coverRevenue.map((bar, index) => (
+                    <div key={`${bar.label}-${index}`} className={styles.coverTrendColumn}>
+                      <div className={styles.coverTrendTrack}>
+                        <div
+                          className={styles.coverTrendBar}
+                          data-latest={index === coverRevenue.length - 1}
+                          style={{ height: `${(bar.value / coverRevenueMax) * 100}%` }}
+                        >
+                          <span className="figure">
+                            {formatPrice(bar.value / revenueScale, locale, { digits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={styles.coverTrendPeriod}>{bar.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </figure>
+            )}
+          </div>
+        )}
+
         {/* ---- Ölçü katmanı ----
             İKİ KATMAN, tek ızgara değil.
 
@@ -760,8 +850,8 @@ export default async function AnalysisDetailPage(
             basılmadığı için sayı 3 ile 6 arasında değişiyor ve sabit bir
             sütun sayısı satır sonunda boşluk bırakırdı. */}
         {row.price !== null && (
-          <div className="flex flex-col gap-4 border-t border-line pt-4">
-            <div className="min-w-0">
+          <div className={cn(styles.coverFacts, "flex flex-col gap-4 border-t border-line pt-4")}>
+            <div className={styles.reportClose}>
               {/* Tarih etiketin YANINDA, hücrenin öbür ucunda değil.
                   `justify-between` onu geniş hücrede 250px öteye savuruyordu
                   ve hangi etikete ait olduğu okunmuyordu. */}
@@ -848,14 +938,27 @@ export default async function AnalysisDetailPage(
         )}
       </header>
 
+      <SectionNav
+        label={t.analysis.reportNavigation}
+        items={[
+          { id: "report-overview", label: t.analysis.reportOverview },
+          { id: "report-figures", label: t.stock.metrics },
+          { id: "report-reading", label: t.analysis.detailed },
+          { id: "report-outlook", label: t.analysis.reportOutlook },
+          ...(sources.length > 0 ? [{ id: "report-sources", label: t.analysis.sourcesLabel }] : []),
+        ]}
+      />
+
       {/* ---- Tek kolon ----
           Sağda karne + yaklaşan bilançolar + rehber taşıyan yapışkan bir
           kolon vardı ve içeriğin genişliğini 340px kısıyordu. Grafikler
           asıl anlatan parça; onlara yer açmak için kolon kaldırıldı, oradaki
           üç kart sayfanın altına indi. Metin panellerinde satır uzunluğu
           `max-w` ile sınırlı — 1300px'lik bir paragraf okunmuyor. */}
-      <div className="flex min-w-0 flex-col gap-4">
-          <VerdictStrip row={row} verdict={verdict} locale={locale} t={t} />
+      <div className={styles.reportBody}>
+          <Reveal>
+            <VerdictStrip row={row} verdict={verdict} locale={locale} t={t} />
+          </Reveal>
 
           {/* ---- Görsel katman ----
               Sayfa uzun metinle açılıyordu ve çeyreğin rakamları dokuz
@@ -863,7 +966,17 @@ export default async function AnalysisDetailPage(
               önce ölçüler, sonra grafikler, sonra CEO, en sonda metin.
               Rakamı gören okuyucu metne inmek zorunda değil; inmek isteyen
               için metin zaten altında duruyor. */}
-          <MetricCards metrics={row.highlights ?? []} locale={locale} />
+          <section id="report-figures" className={styles.figuresSection}>
+            <Reveal>
+              <div className={styles.chapterHeading}>
+                <div>
+                  <span className={styles.chapterLabel}>{row.periodLabel}</span>
+                  <h2>{t.analysis.reportInNumbers}</h2>
+                </div>
+                <ArrowDownRight aria-hidden size={30} weight="light" />
+              </div>
+              <MetricCards metrics={detailMetrics} locale={locale} />
+            </Reveal>
 
           {(hasColumns || hasGuidance) && (
             /* YAN YANA KARTLAR AYNI HİZADA BİTER. Izgaranın varsayılanı olan
@@ -876,6 +989,7 @@ export default async function AnalysisDetailPage(
                `RevenueColumns` artık taban yükseklikli ve `flex-1`; fazla
                alanın tamamı çizime gidiyor, sütunlar uzuyor, delik kalmıyor.
                Öngörü kartı da satırlarını kartın boyuna yayıyor. */
+            <Reveal>
             <div
               className={cn(
                 "grid gap-4",
@@ -931,7 +1045,9 @@ export default async function AnalysisDetailPage(
                 />
               )}
             </div>
+            </Reveal>
           )}
+          </section>
 
           {row.ceoQuote && (
             /* CEO şeridi: solda kim, ortada ne dediği, sağda çağrıda
@@ -941,7 +1057,8 @@ export default async function AnalysisDetailPage(
 
                Dev tırnak dekoratif ve `aria-hidden`: metnin alıntı olduğunu
                blockquote zaten söylüyor. */
-            <section className="relative overflow-hidden rounded-xl border border-line bg-surface-solid p-4 sm:p-5">
+            <Reveal>
+            <section className={cn(styles.ceoQuote, "relative overflow-hidden rounded-xl border border-line bg-surface-solid p-4 sm:p-5")}>
               <span
                 aria-hidden
                 className="pointer-events-none absolute -top-8 right-5 select-none font-serif text-[140px] leading-none text-primary opacity-[0.06]"
@@ -989,6 +1106,7 @@ export default async function AnalysisDetailPage(
                 )}
               </div>
             </section>
+            </Reveal>
           )}
 
           {/* ---- Metin katmanı ----
@@ -1002,7 +1120,9 @@ export default async function AnalysisDetailPage(
               Bloklar `break-inside-avoid`: bir paragrafın ortasından
               bölünüp iki sütuna yayılması, sayfayı gazete değil bozuk bir
               düzen gibi gösteriyordu. */}
-          <Panel className="p-5 sm:p-6">
+          <ScrollStage><section id="report-reading" className={styles.readingSection}>
+          <Reveal>
+          <Panel className={cn(styles.summaryPanel, "p-5 sm:p-6")}>
             {/* Okuma süresi künyesi kaldırıldı: metin zaten ekranda ve ne
                 kadar sürdüğü, okunup okunmayacağına dair bir karar
                 değiştirmiyordu — panelin sağ ucunda taşıdığı tek şey
@@ -1036,9 +1156,11 @@ export default async function AnalysisDetailPage(
               ))}
             </div>
           </Panel>
+          </Reveal>
 
           {row.analysis.length > 0 && (
-            <Panel className="p-5 sm:p-6">
+            <Reveal>
+            <Panel className={cn(styles.analysisPanel, "p-5 sm:p-6")}>
               <PanelHead
                 icon={Scales}
                 title={t.analysis.detailed}
@@ -1080,7 +1202,7 @@ export default async function AnalysisDetailPage(
                     satırına çıkınca başlık tam genişlikte, sol kenar
                     hizalı — rehberdeki müfredat şeridiyle aynı dil. */}
                 {row.analysis.map((section, index) => (
-                  <section key={index} className="border-t border-line pt-3.5">
+                  <section key={index} className={cn(styles.analysisItem, "border-t border-line pt-3.5")}>
                     <span
                       aria-hidden
                       className="numeral mb-1.5 block text-tiny font-bold tracking-[0.04em] text-primary"
@@ -1097,12 +1219,15 @@ export default async function AnalysisDetailPage(
                 ))}
               </div>
             </Panel>
+            </Reveal>
           )}
+          </section></ScrollStage>
 
           {/* Maddeler de analizin dilinde; başlıklar arayüz dilinde ama
               kart içindeki metin kayıttan geliyor. */}
           <div
-            className="grid gap-3 sm:grid-cols-[repeat(3,minmax(0,1fr))]"
+            id="report-outlook"
+            className={cn(styles.pointsGrid, "grid gap-3 sm:grid-cols-[repeat(3,minmax(0,1fr))]")}
             lang={row.locale}
           >
             <PointsCard
@@ -1210,7 +1335,7 @@ export default async function AnalysisDetailPage(
       </div>
 
       {/* ---- Alt bilgi ---- */}
-      <footer className="flex flex-col gap-2 border-t border-line pt-3.5">
+      <footer id="report-sources" className={cn(styles.reportFooter, "flex flex-col gap-2 border-t border-line pt-3.5")}>
         <p className="text-tiny text-muted">{t.analysis.disclaimer}</p>
         {sources.length > 0 && (
           /* KAYNAK KÜNYESİ MERCEK'TEKİYLE AYNI KALIPTA. Burası bir dönem tek
@@ -1253,6 +1378,7 @@ export default async function AnalysisDetailPage(
                         className="inline-flex min-h-11 items-center text-primary hover:underline sm:min-h-8"
                       >
                         {source.label}
+                        <ArrowUpRight aria-hidden size={14} />
                       </a>
                     ) : (
                       <span className="inline-flex min-h-11 items-center sm:min-h-8">
@@ -1266,7 +1392,7 @@ export default async function AnalysisDetailPage(
           </>
         )}
       </footer>
-    </div>
+    </MotionExperience>
   );
 }
 
@@ -1367,9 +1493,10 @@ function VerdictStrip({
       : null);
 
   return (
-    <section className="flex flex-wrap items-center gap-4 rounded-xl border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-4 sm:gap-[18px] sm:px-5">
-      <ScoreRing score={row.score} verdict={verdict} size={64} showDenominator />
-      <div className="flex shrink-0 flex-col items-center gap-1">
+    <section className={styles.verdictPanel}>
+      <div className={styles.verdictScore}>
+      <ScoreRing score={row.score} verdict={verdict} size={108} showDenominator />
+      <div className={styles.verdictDecision}>
         <span className="text-tiny font-bold tracking-[0.04em] text-body">
           {t.analysis.verdictLabel}
         </span>
@@ -1382,6 +1509,7 @@ function VerdictStrip({
           {verdictLabel(verdict, t)}
         </span>
       </div>
+      </div>
       <span
         aria-hidden
         className="hidden w-px self-stretch bg-primary-faint sm:block"
@@ -1393,7 +1521,7 @@ function VerdictStrip({
           54-64 karakterde (Özet ve Detaylı Değerlendirme, üç kolon).
           `max-w` ile aynı bandın içine çekildi; `flex-1` duruyor, yani dar
           ekranda hâlâ esniyor ve sınır yalnızca geniş ekranda bağlanıyor. */}
-      <p className="min-w-[16rem] max-w-[62ch] flex-1 text-base font-medium leading-[22px] text-strong [text-wrap:pretty]">
+      <p className={styles.verdictHeadline} lang={row.locale}>
         {row.headline}
       </p>
       {row.targetPrice !== null && (
@@ -1420,7 +1548,7 @@ function VerdictStrip({
               orada ölçü, sola yaslı bir paragrafın altında ortada kalıyordu.
               Dar ekranda sola yaslanıp kendi üst çizgisini taşıyor; sm'den
               itibaren ortak merkez eksenine ve dikey ayraca dönüyor. */}
-          <div className="flex w-full shrink-0 flex-col items-start gap-1.5 border-t border-primary-faint pt-3 sm:w-auto sm:items-center sm:border-t-0 sm:pt-0">
+          <div className={styles.verdictTarget}>
             <span className={cn(PLATE_LABEL, "text-muted")}>
               {row.analystCount
                 ? t.analysis.analystTargetCount.replace(
@@ -1483,8 +1611,10 @@ function PointsCard({
     tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-primary";
 
   return (
+    <Reveal className={styles.pointReveal}>
     <section
       className={cn(
+        styles.pointsCard,
         "flex min-w-0 flex-col rounded-xl border p-4",
         tone === "up" && "border-up/25 bg-up-wash/40",
         tone === "down" && "border-down/25 bg-down-wash/40",
@@ -1542,6 +1672,6 @@ function PointsCard({
         ))}
       </ol>
     </section>
+    </Reveal>
   );
 }
-

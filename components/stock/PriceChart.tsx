@@ -310,6 +310,12 @@ export function PriceChart({
       },
       rightPriceScale: { borderVisible: false },
       timeScale: {
+        // Preserve the selected time window on responsive layout changes.
+        // At 1440 → 390px the latest session bars previously left the viewport.
+        lockVisibleTimeRangeOnResize: true,
+        // A full extended session can contain ~960 minute bars. The default
+        // 0.5px floor needs 480px and clips the session on a 254px mobile plot.
+        minBarSpacing: 0.1,
         borderVisible: false,
         timeVisible: intraday,
         secondsVisible: false,

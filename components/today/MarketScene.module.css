@@ -1,0 +1,66 @@
+.scene {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 30px;
+  padding-block: 28px 30px;
+  min-width: 0;
+}
+.content { position: relative; z-index: 2; min-width: 0; }
+.visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  height: 328px;
+  isolation: isolate;
+}
+.halo { position: absolute; inset: -30px; background: radial-gradient(ellipse, var(--primary-faint), transparent 66%); opacity: .8; }
+.echoes { position: absolute; inset: 26px -4px 38px; pointer-events: none; }
+.echoes i { position: absolute; inset: 0; border: 1px solid var(--primary-faint); border-radius: 50%; }
+.echoes i:nth-child(2) { inset: 24px -14px; opacity: .7; }
+.echoes i:nth-child(3) { inset: 48px -28px; opacity: .45; }
+.exchange { position: absolute; top: 8px; color: var(--text-muted); font-size: 9px; font-weight: 600; letter-spacing: .18em; }
+.sculpture { position: relative; width: 240px; height: 240px; margin-top: -8px; transform-origin: 50% 15%; }
+.bellFront, .bellBack { position: absolute; inset: 0; display: block; }
+.sculpture svg { height: 100%; width: 100%; }
+.bellBack { transform: translate(7px, 7px); color: var(--primary-ink); filter: drop-shadow(0 16px 14px var(--primary-faint)); }
+.bellFront { color: var(--primary); filter: drop-shadow(-2px -3px 1px var(--premium-highlight)); }
+.bellFront svg path[opacity] { opacity: .55; }
+/* Koyu temada primary-ink ve primary aynı: arka katman tek renge
+   karışıyordu. Daha koyu mavi, zilin kalınlığını iki temada da korur. */
+:global(html[data-theme="dark"]) .bellBack { color: color-mix(in srgb, var(--primary) 58%, var(--page-bg)); }
+:global(html[data-theme="dark"]) .bellHighlight { background: linear-gradient(125deg, var(--primary-soft), transparent 60%); opacity: .38; }
+.bellHighlight { position: absolute; inset: 19% 26% 35% 32%; border-radius: 50%; background: linear-gradient(125deg, var(--premium-highlight), transparent 52%); opacity: .5; pointer-events: none; }
+.pedestal { position: absolute; z-index: -1; bottom: 40px; width: 180px; height: 24px; border-radius: 50%; background: radial-gradient(ellipse, var(--primary-faint), transparent 69%); }
+.session { position: absolute; bottom: 7px; display: inline-flex; align-items: center; gap: 8px; color: var(--text-body); font-size: 11px; font-weight: 600; }
+.liveDot, .closedDot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); }
+.liveDot { background: var(--up); box-shadow: 0 0 0 4px var(--up-wash); }
+@media (max-width: 1023px) {
+  .scene { grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); gap: 10px; }
+  .visual { height: 300px; }
+  .sculpture { width: 195px; height: 195px; }
+}
+@media (max-width: 767px) {
+  .scene { grid-template-columns: minmax(0, 1fr); gap: 10px; padding-block: 22px 14px; }
+  .visual { height: 142px; width: 100%; }
+  .sculpture { width: 112px; height: 112px; margin-top: -10px; }
+  .bellBack { transform: translate(4px, 4px); }
+  .exchange { top: 22px; left: 0; font-size: 8px; max-width: 65px; line-height: 1.8; letter-spacing: .12em; }
+  .echoes { inset: 8px 23% 20px; }
+  .echoes i:nth-child(2) { inset: 12px -12px; }
+  .echoes i:nth-child(3) { inset: 24px -24px; }
+  .session { bottom: 10px; right: 0; max-width: 90px; font-size: 9px; }
+  .pedestal { bottom: 8px; width: 110px; height: 16px; }
+  .halo { inset: -10px 15%; }
+}
+@media (prefers-reduced-motion: reduce) { .sculpture, .echoes { transform: none !important; } }
+
+.visual { perspective:800px; }
+.bellFloat { position:absolute; inset:0; animation:bell-settle 1800ms cubic-bezier(.22,1,.36,1) both; }
+.lightSweep { position:absolute; top:20%; width:90px; height:60%; background:linear-gradient(90deg,transparent,var(--primary-wash),transparent); filter:blur(18px); transform:rotate(24deg); pointer-events:none; }
+.echoes i { transition:border-color 500ms; }
+.visual:hover .echoes i { border-color:var(--primary); }
+@keyframes bell-settle { from { opacity:.2; transform:translateY(28px) rotate(13deg) scale(.88); } to { opacity:1; transform:translateY(0) rotate(0) scale(1); } }
+@media (prefers-reduced-motion:reduce) { .bellFloat { animation:none; } .lightSweep { display:none; } .echoes i { transition:none; } }

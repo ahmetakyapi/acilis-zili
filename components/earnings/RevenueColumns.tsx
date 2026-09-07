@@ -1,5 +1,6 @@
 import { ChartFooter, type FooterStat } from "@/components/earnings/ChartFooter";
 import { cn } from "@/lib/utils";
+import styles from "@/components/earnings/EarningsReport.module.css";
 
 /**
  * Çeyreklik gelir sütun grafiği — sunucuda çizilir, istemci JS'i yok.
@@ -66,7 +67,7 @@ const SHADES = [
  * kalmıyor ve iki kart aynı hizada bitiyor. Sütun yükseklikleri piksel
  * yerine YÜZDE veriliyor (aşağıdaki `calc`), yani oran her boyda korunuyor.
  */
-const MIN_CHART_HEIGHT = 208;
+const MIN_CHART_HEIGHT = 248;
 
 /**
  * Sütunun üstündeki değer etiketinin kapladığı şerit: 18px kutu + 6px boşluk.
@@ -136,10 +137,11 @@ export function RevenueColumns({
     <section
       className={cn(
         "flex min-w-0 flex-col gap-4 rounded-xl border border-line bg-surface-solid p-4 sm:p-5",
+        styles.chartPanel,
         className,
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+      <div className={cn(styles.chartHead, "flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5")}>
         <h2 className="text-read font-bold text-strong">{title}</h2>
         <div className="flex items-center gap-3 text-tiny text-muted">
           <span className="flex items-center gap-1.5">
@@ -163,7 +165,7 @@ export function RevenueColumns({
       {/* `flex-1` + taban yükseklik: kart komşusu yüzünden uzadığında fazla
           alanın tamamı buraya, yani grafiğe gidiyor. */}
       <div
-        className="relative flex-1"
+        className={cn(styles.revenuePlot, "relative flex-1")}
         style={{ minHeight: MIN_CHART_HEIGHT + LABEL_BAND }}
       >
         {/* Izgara çizgileri de etiket şeridinin ALTINDAN başlıyor: çizim
@@ -193,7 +195,7 @@ export function RevenueColumns({
             (calc) doğru bir yüksekliğe göre çözülsün. Sütun zaten kendi
             içinde `justify-end` ile tabana yaslanıyor. */}
         <ul
-          className={cn("relative grid h-full", GRID_SHAPE)}
+          className={cn(styles.revenueBars, "relative grid h-full", GRID_SHAPE)}
           style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}
         >
           {bars.map((bar, index) => {
@@ -257,8 +259,10 @@ export function RevenueColumns({
                     </p>
                   </div>
                   <div
+                    data-motion-draw="bar"
                     className={cn(
                       "w-full rounded-t-[3px]",
+                      styles.revenueBar,
                       bar.projected &&
                         "border border-dashed border-primary bg-primary-tint",
                     )}

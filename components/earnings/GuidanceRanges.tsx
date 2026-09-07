@@ -3,6 +3,7 @@ import {
   type FooterStat,
 } from "@/components/earnings/ChartFooter";
 import { cn } from "@/lib/utils";
+import styles from "@/components/earnings/EarningsReport.module.css";
 
 /**
  * Gelecek çeyrek şirket öngörüsü — yatay aralık barları.
@@ -191,10 +192,11 @@ export function GuidanceRanges({
     <section
       className={cn(
         "flex min-w-0 flex-col gap-4 rounded-xl border border-line bg-surface-solid p-4 sm:p-5",
+        styles.chartPanel,
         className,
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+      <div className={cn(styles.chartHead, "flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5")}>
         <h2 className="text-read font-bold text-strong">{title}</h2>
         <div className="flex items-center gap-3 text-tiny text-muted">
           {/* LEJANT İŞARETLERİ BARDAKİLERİN AYNISI. Mavi olan bir ARALIK —
@@ -264,7 +266,7 @@ export function GuidanceRanges({
             : null;
 
           return (
-            <li key={`${row.label}-${index}`} className="flex flex-col gap-1.5">
+            <li key={`${row.label}-${index}`} className={cn(styles.guidanceRow, "flex flex-col gap-1.5")}>
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
                 <span className="text-base font-bold text-strong">
                   {row.label}

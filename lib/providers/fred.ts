@@ -1,3 +1,5 @@
+import { addEtDays } from "@/lib/market-hours";
+import { isNewObservation } from "@/lib/day-flow";
 import {
   fail,
   ok,
@@ -242,4 +244,37 @@ export async function getReleaseDates(
     return fail("fred", "empty", "Yayın tarihi dönmedi");
   }
   return ok(dates, "fred", { fetchedAt: result.fetchedAt });
+}
+
+/**
+ * Gün içi yayın kontrolü: sadece saat geçti diye son gözlemi kullanmayız.
+ * Olay gününün vintage'ını bir önceki günle karşılaştırırız; en yeni gözlem
+ * tarihi ilerlemediyse sonuç henüz doğrulanmamıştır. Revizyon tek başına
+ * yeni açıklama sayılmaz. FEDFUNDS aylık ortalaması FOMC kararını temsil
+ * etmediğinden burada desteklenmez.
+ * https://fred.stlouisfed.org/docs/api/fred/series_observations.html
+ */
+export async function getReleasedObservation(seriesId: string, dateEt: string) {
+  const definition = seriesId === "ICSA"
+    ? { seriesId, units: "lin", slug: "jobless-claims" }
+    : MACRO_SERIES.find((entry) => entry.seriesId === seriesId && entry.seriesId !== "FEDFUNDS");
+  if (!definition) return null;
+  const read = (date: string, revalidate: number) => fredFetch<RawObservations>(
+    "/series/observations",
+    { series_id: seriesId, units: definition.units, sort_order: "desc", limit: "3", realtime_start: date, realtime_end: date },
+    { revalidate, tags: ["day-flow"] },
+  );
+  const [current, previous] = await Promise.all([read(dateEt, 60), read(addEtDays(dateEt, -1), 86400)]);
+  if (!current.ok || !previous.ok) return null;
+  const valid = (data: RawObservations) => (data.observations ?? []).filter((point) =>
+    point.value.trim() !== "" && point.value !== "." && Number.isFinite(Number(point.value)));
+  const points = valid(current.data);
+  if (!isNewObservation(points[0]?.date, valid(previous.data)[0]?.date)) return null;
+  // ICSA kişi sayısı; takvim birimi bin kişi. PAYEMS zaten bin birimindedir.
+  const divisor = seriesId === "ICSA" ? 1000 : 1;
+  return {
+    actual: String(Number(points[0].value) / divisor),
+    previous: points[1] ? String(Number(points[1].value) / divisor) : null,
+    fetchedAt: current.fetchedAt,
+  };
 }

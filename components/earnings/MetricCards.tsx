@@ -1,4 +1,6 @@
 import { cn, titleCaseLabel } from "@/lib/utils";
+import { SpotlightCard } from "@/components/motion/PremiumMotion";
+import styles from "@/components/earnings/EarningsReport.module.css";
 
 /**
  * Altı metrik kartı — karnedeki 3×2 ızgaranın sayfa karşılığı.
@@ -38,20 +40,25 @@ export function MetricCards({
   if (metrics.length === 0) return null;
   return (
     <ul
+      data-motion-stagger
+      data-count={metrics.length}
       className={cn(
-        "grid gap-3 sm:grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-[repeat(3,minmax(0,1fr))]",
+        styles.metricGrid,
         className,
       )}
     >
       {metrics.map((metric) => (
         <li
           key={metric.label}
-          className="flex min-w-0 flex-col gap-1 rounded-lg border border-line bg-surface-solid px-4 py-4"
+          className={styles.metricItem}
         >
-          <p className="truncate text-tiny font-semibold text-muted">
+          <SpotlightCard className={styles.metricCard}>
+          <div className={styles.metricTop}>
+          <p className={styles.metricLabel}>
             {metric.label}
           </p>
-          <p className="figure text-title font-bold leading-none tracking-[-0.035em] text-strong">
+          </div>
+          <p className={cn(styles.metricValue, "figure")}>
             {metric.value}
           </p>
           {metric.note && (
@@ -60,7 +67,8 @@ export function MetricCards({
                tırtıklı görünüyordu. Sığmazsa kesilir. */
             <p
               className={cn(
-                "truncate text-small font-bold",
+                styles.metricNote,
+                "text-small font-bold",
                 metric.tone === "up"
                   ? "text-up"
                   : metric.tone === "down"
@@ -71,6 +79,7 @@ export function MetricCards({
               {titleCaseLabel(metric.note, locale)}
             </p>
           )}
+          </SpotlightCard>
         </li>
       ))}
     </ul>

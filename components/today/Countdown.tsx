@@ -1,109 +1,84 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-/**
- * Zil geri sayımı — sayfanın en büyük sayısı (66px), saniye saniye akar.
- *
- * Sunucu ilk değeri basar, istemci devralır: JS gelmeden önce de doğru bir
- * sayı görünür. `suppressHydrationWarning` şart — sunucunun bastığı saniye
- * ile istemcinin ilk okuduğu saniye arasında bir tik fark olabilir.
- */
+import styles from "./Countdown.module.css";
 
 type Units = { d: string; h: string; m: string; s: string };
 
 function split(targetMs: number, nowMs: number) {
   const total = Math.max(0, Math.floor((targetMs - nowMs) / 1000));
-  return {
-    days: Math.floor(total / 86400),
-    hours: Math.floor((total % 86400) / 3600),
-    minutes: Math.floor((total % 3600) / 60),
-    seconds: total % 60,
-  };
+  return [
+    Math.floor(total / 86400),
+    Math.floor((total % 86400) / 3600),
+    Math.floor((total % 3600) / 60),
+    total % 60,
+  ];
 }
 
+/**
+ * Geri sayım artık kahramanın ana okuması: dört sabit sütun, saniye dahil.
+ * Önceki üç birimli görünüm gün varken saniyeyi gizlediği için dakikada bir
+ * yenileniyordu. Saniye artık görünür; tek saniyelik zamanlayıcı yalnızca
+ * bu küçük yaprağı yeniler ve gizli sekmede durur. Seansın hedefini yine
+ * market-hours belirler, sınırı geçince SessionRefresh yeni hedefi alır.
+ */
 export function Countdown({
   targetIso,
+  initialNowMs,
   units,
+  label,
   className,
 }: {
   targetIso: string;
+  initialNowMs: number;
   units: Units;
+  label: string;
   className?: string;
 }) {
   const targetMs = new Date(targetIso).getTime();
-  const [nowMs, setNowMs] = useState(() => Date.now());
-
-  /* TİK, GÖSTERİLEN EN KÜÇÜK BİRİME BAĞLI. Aralık her durumda 1 saniyeydi;
-     oysa zil bir günden uzaksa ekranda gün/saat/dakika var, saniye yok —
-     yani saniyede bir çizim aynı çıktıyı üretiyordu. Ana sayfa açık
-     bırakıldığında saatlerce süren, karşılığı olmayan bir döngü. Hedef bir
-     günün altına indiğinde bağımlılık değişiyor ve saniyelik tike kendi
-     kendine geçiliyor. */
-  const coarse = split(targetMs, nowMs).days > 0;
+  // Aynı sunucu damgası hidratasyonda da kullanılır; saniye sınırında
+  // farklı düğüm ağacı veya metin oluşmaz. JS yokken ilk okuma görünürdür.
+  const [nowMs, setNowMs] = useState(initialNowMs);
 
   useEffect(() => {
-    const step = coarse ? 60_000 : 1_000;
-    const id = window.setInterval(() => setNowMs(Date.now()), step);
-    return () => window.clearInterval(id);
-  }, [coarse]);
+    let timer = 0;
+    function tick() {
+      if (document.hidden) return;
+      setNowMs(Date.now());
+      timer = window.setTimeout(tick, 1000 - (Date.now() % 1000) + 15);
+    }
+    function resume() {
+      window.clearTimeout(timer);
+      if (!document.hidden) tick();
+    }
+    timer = window.setTimeout(tick, 0);
+    document.addEventListener("visibilitychange", resume);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", resume);
+    };
+  }, []);
 
-  const { days, hours, minutes, seconds } = split(targetMs, nowMs);
-
-  // En anlamlı üç birim gösterilir. Dakika her zaman listede: "1g 16sa"
-  // kalan sürenin bir saatlik penceresini gizliyordu. Gün varken saniye
-  // gürültü olduğu için en küçük birim kaydırılarak düşer.
-  const parts: [number, string][] =
-    days > 0
-      ? [
-          [days, units.d],
-          [hours, units.h],
-          [minutes, units.m],
-        ]
-      : hours > 0
-        ? [
-            [hours, units.h],
-            [minutes, units.m],
-            [seconds, units.s],
-          ]
-        : [
-            [minutes, units.m],
-            [seconds, units.s],
-          ];
+  const values = split(targetMs, nowMs);
+  const names = [units.d, units.h, units.m, units.s];
 
   return (
-    /* `<span>`, `<p>` DEĞİL: bileşen sayfanın `<h1>`i içinde duruyor ve
-       `<h1><p>…</p></h1>` geçersiz HTML — başlık ayrıştıran araçlar bunu
-       güvenilir okumuyordu. Görsel çıktı aynı (`block` sınıfı zaten yok,
-       kapsayıcı flex). */
-    <span
-      /* Dıştaki bastırma da duruyor: gün/saat sınırında gösterilen birim
-         listesi değişebiliyor (3 parça → 2 parça) ve o zaman eşleşmeyen şey
-         metin değil, düğümün kendisi. */
-      suppressHydrationWarning
-      className={className}
-      style={{ letterSpacing: "-0.05em" }}
+    <div
+      role="timer"
+      aria-label={label}
+      aria-live="off"
+      className={[styles.countdown, className].filter(Boolean).join(" ")}
     >
-      {parts.map(([value, unit], index) => (
-        /* BASTIRMA SAYININ DURDUĞU DÜĞÜMDE OLMALI. `suppressHydrationWarning`
-           yalnızca konduğu elemanın KENDİ metin çocuğunu kapsıyor, alt
-           ağacına inmiyor: sayı bu iç `<span>`in içinde durduğu için
-           dıştaki bastırma ona hiç ulaşmıyordu. Sunucu "39 sn" basıp
-           istemci bir tik sonra "38 sn" okuduğunda React eşleşmeyi hata
-           sayıyor, konsola yazıyor ve `<h1>`in tamamını atıp yeniden
-           çiziyordu — her ziyarette, her sayfa açılışında. */
-        <span key={unit} suppressHydrationWarning>
-          {value}
-          {/* Opaklık VERME: kapsayıcı `.display-ink` degradesini metne
-              kırpıyor, opaklık bu çocuğu ayrı katmana taşıyıp bölgeden
-              çıkarıyor ve birim tamamen kayboluyor. Ayrım puntoyla kurulur. */}
-          <span className="text-[0.41em] font-semibold tracking-[-0.02em]">
-            {" "}
-            {unit}
-            {index < parts.length - 1 ? " " : ""}
+      {values.map((value, index) => (
+        <div className={styles.unit} key={names[index]}>
+          <span className={styles.numberWindow}>
+            <span key={value} className={styles.number}>
+              {String(value).padStart(2, "0")}
+            </span>
           </span>
-        </span>
+          <span className={styles.label}>{names[index]}</span>
+        </div>
       ))}
-    </span>
+    </div>
   );
 }

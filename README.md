@@ -461,6 +461,12 @@ Otomatik test paketi yok; doğrulama üç ayaklı:
 5. claude.ai görevlerini kur (`docs/claude-rutinler.md`) — yoksa bülten ve mercek
    boş kalır.
 
+Ana sayfanın gün akışı `GET /api/day-flow?locale=tr|en` ile görünürken 30 saniyede bir
+kontrol edilir. Uç kullanıcıya özel, `no-store` bir yanıt verir; bugünün Finnhub
+sonuçları ve uygun FRED yayınları ortak 60 saniyelik sağlayıcı önbelleğinden
+okunur. Sonuç veya analiz oluşmadan "Açıklandı" etiketi/analiz bağlantısı
+üretilmez. Bu okuma yolu veritabanına yazmaz; yayımlama ve cron iş akışı korunur.
+
 Günlük cron (`/api/cron/daily`, hafta içi 10:30 UTC) bilanço takvimi, haber, FRED
 serileri, gerçekleşen değerler, profil tazeleme ve budama işlerini sırayla yapar.
 Yüz saniyelik bir bütçesi vardır: bütçe dolarsa kalan adımları atlar ve neyi
@@ -475,7 +481,7 @@ app/
   (app)/             # sayfalar — Bugün, piyasalar, şirketler, hisse, karşılaştır,
                      #   takvim, bilançolar, mercek, rehber, bülten, haberler, hesap
   admin/             # yönetim — kabuğun dışında, yetkisizde 404
-  api/               # chart, karsilastir, search, takvim, olcum,
+  api/               # chart, day-flow, karsilastir, search, takvim, olcum,
                      #   brief, mercek, analiz (+ context uçları), cron, auth, debug
 components/
   article/           # ArticleBody — ::: blok ailesi burada çizilir

@@ -177,7 +177,7 @@ export async function getUpcomingEvents(limit = 6): Promise<EconomicEventRow[]> 
  *
  * Çeyreği bilinmeyen satır elenmez — gruplanacak bir anahtarı yok.
  */
-const guncelBilanco = sql`(
+export const guncelBilanco = sql`(
   ${earningsCalendar.quarter} is null
   or ${earningsCalendar.year} is null
   or ${earningsCalendar.updatedAt} = (
@@ -865,10 +865,20 @@ const symbolNamesForKey = cache(async function symbolNamesForKey(
 
 export async function getSymbolNames(
   list: string[],
+  options: { throwOnError?: boolean } = {},
 ): Promise<Record<string, SymbolMeta>> {
   const unique = [...new Set(list)].sort();
   if (unique.length === 0) return {};
-  return symbolNamesForKey(unique.join(","));
+  try {
+    return await symbolNamesForKey(unique.join(","));
+  } catch (error) {
+    // Gün akışında meta yokluğu şirketleri 50B filtresinden eleyebilir:
+    // sorgu hatası boş bir takvim gününe dönüşmemeli. Karar cache DIŞINDA
+    // verilir; aynı sembol listesi strict/fallback çağrılarında yine tek
+    // sorgudur ve önceki bir fallback gerçek hatayı cache'te gizleyemez.
+    if (options.throwOnError) throw error;
+    return {};
+  }
 }
 
 async function loadSymbolNames(
@@ -925,7 +935,7 @@ async function loadSymbolNames(
     );
   } catch (error) {
     yutuldu("loadSymbolNames", error);
-    return {};
+    throw error;
   }
 }
 

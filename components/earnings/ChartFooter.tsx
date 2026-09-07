@@ -1,4 +1,5 @@
 import { cn, titleCaseLabel } from "@/lib/utils";
+import styles from "@/components/earnings/EarningsReport.module.css";
 
 /**
  * Grafik kartlarının altındaki üçlü mini künye.
@@ -37,6 +38,7 @@ export function ChartFooter({
     <dl
       className={cn(
         "mt-auto grid gap-x-3 gap-y-2.5 border-t border-line pt-3",
+        styles.chartFooter,
         /* Üçlü künye telefonda ALT ALTA: 390 pikselde üç sütun etiketleri
            kırpıyor ("Serbest Nakit Akı...") ve değerler satır ortasından
            kırılıyordu. Kırpılmış bir etiket hiç etiket olmamasından kötü. */

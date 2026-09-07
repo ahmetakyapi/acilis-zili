@@ -5,7 +5,9 @@ import { notFound } from "next/navigation";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
-import { Heart } from "@phosphor-icons/react/dist/ssr";
+import { ArrowDownRight, ArrowLeft, ArrowUpRight, CalendarBlank, Heart } from "@phosphor-icons/react/dist/ssr";
+import { MotionExperience, ScrollStage, Reveal, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
+import styles from "./stock.module.css";
 import { NewsImage } from "@/components/news/NewsImage";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { PriceChartLazy } from "@/components/stock/PriceChartLazy";
@@ -75,7 +77,6 @@ import {
   formatPercent,
   formatMoneyCompact,
   formatEtDateLong,
-  formatEtDateCompact,
   formatEtDateShort,
   formatPercentPlain,
   formatPrice,
@@ -214,9 +215,11 @@ export default async function StockPage(
   const fund = fundMetaOf(symbol);
   if (fund) {
     return (
-      <div className="flex flex-col gap-5">
-        <div className="grid gap-5 lg:grid-cols-3">
-          <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
+      <MotionExperience className={styles.page}>
+        <ScrollProgress />
+        <StockBreadcrumb symbol={symbol} t={t} />
+        <div className={styles.heroGrid}>
+          <Panel className={styles.chartPanel}>
             {/* KİMLİK GRAFİĞİN İÇİNE GİRDİ. Başlık (logo, sembol, ad, sektör,
                 canlı fiyat) panelin DIŞINDA çıplak bir satırdı ve hemen altındaki
                 grafik paneli aynı fiyatı bir kez daha basıyordu: ölçüldü,
@@ -259,7 +262,7 @@ export default async function StockPage(
             </Panel>
           </div>
         </div>
-      </div>
+      </MotionExperience>
     );
   }
 
@@ -273,10 +276,21 @@ export default async function StockPage(
   ]);
 
   return (
-    <div className="flex flex-col gap-5">
+    <MotionExperience className={styles.page}>
+      <ScrollProgress />
+      <StockBreadcrumb symbol={symbol} t={t} />
+      <SectionNav
+        label={t.stock.experienceNav}
+        items={[
+          { id: "stock-overview", label: t.stock.experienceOverview },
+          { id: "stock-fundamentals", label: t.stock.metrics },
+          { id: "stock-earnings", label: t.stock.pastEarnings },
+          { id: "stock-context", label: t.stock.experienceContext },
+        ]}
+      />
       {/* Üst blok — kimlik ve grafik solda tek panelde, şirket künyesi sağda */}
-      <div className="grid gap-5 lg:grid-cols-3">
-        <Panel className="min-w-0 p-4 sm:p-5 lg:col-span-2">
+      <div id="stock-overview" className={styles.heroGrid}>
+        <Panel className={styles.chartPanel}>
         {/* KİMLİK GRAFİĞİN İÇİNE GİRDİ. Başlık (logo, sembol, ad, sektör,
             canlı fiyat) panelin DIŞINDA çıplak bir satırdı ve hemen altındaki
             grafik paneli aynı fiyatı bir kez daha basıyordu: ölçüldü,
@@ -313,7 +327,7 @@ export default async function StockPage(
             hizalanıyor. Veri çoksa `flex-1` zaten bağlayıcı olmuyor ve kart
             eskisi gibi içeriği kadar yer kaplıyor. */}
         <div className="flex min-w-0 flex-col gap-5">
-          <Panel className="flex flex-1 flex-col">
+          <Panel className={styles.profilePanel}>
             <PanelHeader title={t.stock.profile} />
             {/* Altı künye satırı + iki paragraf: gövde 369 (mobil) / 437
                 piksel. Beş satırlık yedek 216 piksel ayırıyordu. */}
@@ -335,10 +349,13 @@ export default async function StockPage(
       {/* Ölçüler şeridi — üç kart yan yana; dar ekranda kendiliğinden alt alta.
           Eskiden bunlar tek sütuna dizildiği için sağ kolon uzayıp sol taraf
           boş kalıyordu; artık sayfanın tam genişliğini kullanıyorlar. */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(17rem,1fr))] gap-5">
+      <section id="stock-fundamentals" className={styles.chapter}>
+        <SectionHeading title={t.stock.experienceFundamentals} hint={t.stock.experienceFundamentalsHint} />
+        <ScrollStage>
+        <div className={styles.fundamentalsGrid}>
         {/* `flex flex-col` — içerideki liste kutuyu doldurabilsin diye;
             gerekçe MetricsCard'ın kendi künyesinde. */}
-        <Panel className="flex flex-col">
+        <Panel className={styles.metricsPanel}>
           <PanelHeader title={t.stock.metrics} />
           {/* ON ölçü satırı: sekiz sabit (F/K, hisse başına kâr, temettü,
               beta, 52 hafta yüksek/düşük, hacim) artı üç koşullu (ileri
@@ -390,19 +407,30 @@ export default async function StockPage(
         </Suspense>
       </div>
 
+        </ScrollStage>
+      </section>
+
+      <section id="stock-earnings" className={styles.chapter}>
+        <SectionHeading title={t.stock.experienceEarnings} hint={t.stock.experienceEarningsHint} />
       {/* Analizler tablonun HEMEN üstünde: tablo çeyreklerin rakamları,
           panel o rakamların okunmuş hâli. Analizi olmayan şirkette hiçbir
           şey basılmaz. Akışta DEĞİL — gerekçesi bileşenin kendi yorumunda. */}
-      <SymbolAnalyses rows={analysisRows} locale={locale} t={t} />
+      <Reveal><SymbolAnalyses rows={analysisRows} locale={locale} t={t} /></Reveal>
 
       {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
-      <Panel>
+      <Reveal>
+      <Panel className={styles.earningsPanel}>
         <PanelHeader title={t.stock.pastEarnings} />
         <Suspense fallback={<ListSkeleton rows={6} />}>
           <PastEarnings symbol={symbol} locale={locale} t={t} />
         </Suspense>
       </Panel>
 
+      </Reveal>
+      </section>
+
+      <section id="stock-context" className={styles.chapter}>
+        <SectionHeading title={t.stock.experienceContext} hint={t.stock.experienceContextHint} />
       {/* MERCEK EN SONDA, GEÇMİŞ BİLANÇOLARIN DA ALTINDA. Sıralama kodun
           kendi gerekçesini takip ediyor: analiz bir çeyreğin okunmuş hâli,
           geçmiş bilançolar o çeyreklerin tablosu — ikisi aynı malzeme ve
@@ -440,7 +468,8 @@ export default async function StockPage(
       </Suspense>
 
       {/* Haberler en altta — mobilde de masaüstünde de son durak */}
-      <Panel>
+      <Reveal>
+      <Panel className={styles.newsPanel}>
         {/* SEMBOL SÜZGECİNE KÖPRÜ. `/haberler?sembol=XXX` çalışıyor ve bir
             hata düzeltmesiyle sağlamlaştırılmış (60 haberlik pencere,
             `getNewsForSymbol`) ama SİTEDE HİÇBİR YERDEN bağlantı verilmiyordu:
@@ -459,7 +488,35 @@ export default async function StockPage(
           <CompanyNews symbol={symbol} locale={locale} t={t} />
         </Suspense>
       </Panel>
+      </Reveal>
+      </section>
+    </MotionExperience>
+  );
+}
+
+function StockBreadcrumb({ symbol, t }: { symbol: string; t: Dictionary }) {
+  return (
+    <div className={styles.breadcrumb}>
+      <Link href="/sirketler" className={styles.backLink}>
+        <ArrowLeft size={15} weight="bold" />
+        {t.nav.companies}
+      </Link>
+      <span aria-hidden className={styles.breadcrumbSlash}>/</span>
+      <span className="numeral text-xs font-semibold text-strong">{symbol}</span>
+      <span className={styles.pageLabel}>{t.stock.experienceEyebrow}</span>
     </div>
+  );
+}
+
+function SectionHeading({ title, hint }: { title: string; hint: string }) {
+  return (
+    <Reveal className={styles.sectionHeading}>
+      <div>
+        <h2>{title}</h2>
+        <p>{hint}</p>
+      </div>
+      <ArrowDownRight aria-hidden size={30} weight="light" />
+    </Reveal>
   );
 }
 
@@ -513,15 +570,15 @@ async function StockHeader({
   }
 
   return (
-    <header className="flex flex-wrap items-start justify-between gap-4">
-      <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-4">
+    <header className={styles.stockHeader}>
+      <div data-motion-reveal className={styles.identity}>
         {profile?.logoUrl ? (
           /* Logo ÇERÇEVESİZ ve tam oturur: kenarlık + iç dolgu, logoyu beyaz
              bir kutunun ortasında küçük bir damga gibi gösteriyordu. Artık
              kare kendi köşe yarıçapıyla kırpılıyor, görsel kutuyu tümüyle
              dolduruyor. Beyaz zemin duruyor çünkü logoların çoğu şeffaf PNG
              ve koyu temada kendi koyu harfleriyle kayboluyor. */
-          <span className="block size-16 shrink-0 overflow-hidden rounded-(--radius-lg) bg-white">
+          <span className={styles.companyLogo}>
             <Image
               src={profile.logoUrl}
               alt=""
@@ -552,7 +609,7 @@ async function StockHeader({
               kırpılıyor. Künye bir etiket, başlık değil — en alta düşmesi
               okuma sırasını da düzeltiyor. */}
           <div className="flex items-center gap-2">
-            <span className="numeral text-lead font-bold text-soft sm:text-title">
+            <span className={cn("numeral", styles.symbol)}>
               {symbol}
             </span>
             {session?.user ? (
@@ -581,7 +638,7 @@ async function StockHeader({
               </Link>
             )}
           </div>
-          <h1 className="display-ink mt-0.5 text-heading font-bold leading-[1.15] tracking-[-0.03em] sm:text-display">
+          <h1 className={styles.companyName}>
             {profile?.name || fund?.name || symbol}
           </h1>
           {/* Künye şeridi — borsa · sektör.
@@ -600,7 +657,7 @@ async function StockHeader({
                Şirket Profili kartında kendi satırlarında zaten var; künye
                genişliğinin tamamını tekrara harcayıp tekrar olmayan yarısını
                kesiyordu. Sektör tek başına sığıyor. */
-            <p className="mt-1 truncate text-tiny font-semibold uppercase leading-tight tracking-[0.02em] text-muted">
+            <p className={styles.sector}>
               {kunyeSektor}
             </p>
           )}
@@ -617,18 +674,18 @@ async function StockHeader({
       </div>
 
       {quoteResult.ok ? (
-        <div className="w-full text-left sm:w-auto sm:text-right">
+        <div className={styles.priceBlock}>
           {/* FİYAT VE DEĞİŞİM AYNI SATIRDA. Değişim satırı fiyatın altına
               iniyordu ve telefonda başlık dört satıra çıkıyordu; oysa ikisi
               tek bir okuma — "şu fiyat, şu kadar değişmiş". Sığmadığında
               kendiliğinden alt satıra iniyor (`flex-wrap`), sığdığında yan
               yana duruyorlar. `items-baseline`: 28 puntoluk fiyat ile 13
               puntoluk değişim taban çizgisinde hizalı. */}
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 sm:justify-end">
-          <p className="tote text-subdisplay leading-none tracking-[-0.04em] sm:text-display">
+          <div className={styles.priceLine}>
+          <p className={cn("tote", styles.livePrice)}>
             {formatPrice(quoteResult.data.price, locale, { currency: true })}
           </p>
-          <div className="flex items-center gap-2">
+          <div className={styles.priceChange}>
             <span
               className={cn(
                 "numeral text-sm",
@@ -655,7 +712,7 @@ async function StockHeader({
               görünür kılıyor — aradaki fark elle doğrulanabiliyor. */}
           {(status.session === "pre-market" ||
             status.session === "after-hours") && (
-            <p className="mt-2 flex flex-wrap items-center justify-start gap-x-2 gap-y-1 text-tiny sm:justify-end">
+            <p className="mt-2 flex flex-wrap items-center justify-start gap-x-2 gap-y-1 text-tiny">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-wash px-2.5 py-[3px] font-semibold text-primary-ink">
                 <span aria-hidden className="size-1.5 rounded-full bg-current" />
                 {status.session === "pre-market"
@@ -679,7 +736,7 @@ async function StockHeader({
             at={quoteResult.fetchedAt}
             stale={quoteResult.stale}
             locale={locale}
-            className="mt-1.5 justify-start sm:justify-end"
+            className="mt-2 justify-start"
           />
         </div>
       ) : (
@@ -706,7 +763,7 @@ async function StockHeader({
  */
 function HeaderSkeleton() {
   return (
-    <header className="flex flex-wrap items-start justify-between gap-4">
+    <header className={styles.stockHeader}>
       <div className="flex items-center gap-3">
         <Skeleton className="size-14 shrink-0 rounded-(--radius-lg) sm:size-16" />
         <div className="flex flex-col gap-2">
@@ -721,10 +778,10 @@ function HeaderSkeleton() {
           açılan iskelet ise tek satıra düşüp 94px kalıyordu — tam 74
           piksellik bir fark. Eşik ölçüme göre `md`ye çekildi; bütün
           genişliklerde fark 21 pikselin altında. */}
-      <div className="w-full md:w-auto">
-        <Skeleton className="h-9 w-40 md:ml-auto" />
-        <Skeleton className="mt-1.5 h-6 w-32 md:ml-auto" />
-        <Skeleton className="mt-2 h-5 w-48 md:ml-auto" />
+      <div className={styles.priceBlock}>
+        <Skeleton className="h-16 w-52" />
+        <Skeleton className="mt-1.5 h-6 w-32" />
+        <Skeleton className="mt-2 h-5 w-48" />
       </div>
     </header>
   );
@@ -920,9 +977,9 @@ async function UpcomingEarnings({
   };
 
   return (
-    <Panel className="border-primary-faint bg-primary-tint p-4 sm:p-5">
-      <p className="plate text-micro">{t.stock.nextEarnings}</p>
-      <p className="numeral mt-1.5 text-lg font-bold text-strong">
+    <Panel className={styles.upcomingPanel}>
+      <div className={styles.eventKicker}><p className="plate text-micro">{t.stock.nextEarnings}</p><CalendarBlank aria-hidden size={21} weight="duotone" /></div>
+      <p className={cn("numeral", styles.earningsDate)}>
         {formatEtDateLong(next.reportDate, locale)}
       </p>
       <p className="mt-0.5 text-xs text-soft">
@@ -1264,16 +1321,8 @@ async function ProfileCard({
        kaplayıp hiçbir şey söylemiyordu — üstelik tam da ADR'lerde, kartın
        en havadar olduğu yerde. Boş satır sildikçe kalanlar gerçek bilgi
        taşıyor; aynı desen `ulkeAdi` ve alt sektörde de var. */
-    ...(marketCap
-      ? ([
-          [
-            t.market.marketCap,
-            <span key="cap" className="numeral">
-              {formatMoneyCompact(marketCap, locale)}
-            </span>,
-          ],
-        ] as [string, React.ReactNode][])
-      : []),
+    /* Piyasa değeri artık listenin üstündeki büyük okumada; aynı kaynağı
+       iki defa basmamak için bu satır oraya taşındı. */
     [
       t.stock.ipoDate,
       profile.ipoDate ? (
@@ -1287,10 +1336,49 @@ async function ProfileCard({
   ];
 
   return (
-    <div className="flex flex-1 flex-col px-4 py-3 sm:px-5">
+    <div className={styles.profileBody}>
+      <div className={styles.profileVisual}>
+        <span className={styles.profileTicker} aria-hidden>{symbol}</span>
+        <div className={styles.orbits} aria-hidden><i /><i /><i /></div>
+        {/* Son fiyat, başlık ve piyasa değerinin kullandığı aynı kotasyon.
+            Grafikte geçmiş bir nokta seçilse de bu referans değişmez. */}
+        <dl className={styles.profileMetrics}>
+          <div className={styles.profileMetric}>
+            <dt>{t.market.lastPrice}</dt>
+            <dd className={cn("numeral", styles.profilePrice)}>
+              {quoteForCap.ok
+                ? formatPrice(quoteForCap.data.price, locale, { currency: true })
+                : "—"}
+            </dd>
+            {quoteForCap.ok ? (
+              <dd className={styles.profileChange}>
+                <ChangePill changePct={quoteForCap.data.changePct} locale={locale} />
+              </dd>
+            ) : <dd className="text-tiny text-muted">{t.common.noData}</dd>}
+          </div>
+          {marketCap !== null && (
+            <div className={styles.profileMetric}>
+              <dt>{t.market.marketCap}</dt>
+              <dd className={cn("numeral", styles.profileCapValue)}>
+                {formatMoneyCompact(marketCap, locale)}
+              </dd>
+            </div>
+          )}
+        </dl>
+        {quoteForCap.ok && (
+          <DataStamp
+            labels={t.data}
+            source={quoteForCap.source}
+            at={quoteForCap.fetchedAt}
+            stale={quoteForCap.stale}
+            locale={locale}
+            className={styles.profileQuoteStamp}
+          />
+        )}
+      </div>
       {/* Şirket ne iş yapar — sektör satırından önce düz cümleyle anlatılır */}
       {about && (
-        <p className="border-b border-line-soft pb-3 text-base leading-relaxed text-body">
+        <p className={styles.about}>
           {about}
         </p>
       )}
@@ -1539,17 +1627,17 @@ async function MetricsCard({
        yirmişer piksel, yani liste seyreliyor ama hiçbir yerde delik yok.
        Dar ekranda ızgara tek sütuna düşüyor, gerilme olmuyor ve satırlar
        kendi doğal boylarında kalıyor. */
-    <div className="flex flex-1 flex-col px-4 py-3 sm:px-5">
-      <dl className="flex flex-1 flex-col divide-y divide-line-soft">
+    <div className={styles.metricsBody}>
+      <dl data-motion-stagger className={styles.metricsList}>
         {rows.map(([label, value]) => (
-          <div key={label} className="flex flex-1 items-center justify-between gap-3 py-2">
-            <dt className="text-xs font-semibold text-strong">{label}</dt>
-            <dd className="numeral text-sm text-body">{value}</dd>
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd className="numeral">{value}</dd>
           </div>
         ))}
       </dl>
       {bantGecerli && (
-        <div className="mt-3 border-t border-line-soft pt-3">
+        <div className={styles.rangeBlock}>
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-xs font-semibold text-strong">
               {t.stock.week52Range}
@@ -1632,11 +1720,11 @@ async function AnalystCard({
   const alimTarafi = latest.strongBuy + latest.buy;
 
   const segments = [
-    { label: t.stock.strongBuy, value: latest.strongBuy, cls: "bg-up" },
-    { label: t.stock.buy, value: latest.buy, cls: "bg-up/60" },
-    { label: t.stock.hold, value: latest.hold, cls: "bg-flat" },
-    { label: t.stock.sell, value: latest.sell, cls: "bg-down/60" },
-    { label: t.stock.strongSell, value: latest.strongSell, cls: "bg-down" },
+    { label: t.stock.strongBuy, value: latest.strongBuy, cls: "bg-up", color: "var(--up)" },
+    { label: t.stock.buy, value: latest.buy, cls: "bg-up/60", color: "color-mix(in srgb, var(--up) 60%, var(--surface-solid))" },
+    { label: t.stock.hold, value: latest.hold, cls: "bg-flat", color: "var(--flat)" },
+    { label: t.stock.sell, value: latest.sell, cls: "bg-down/60", color: "color-mix(in srgb, var(--down) 60%, var(--surface-solid))" },
+    { label: t.stock.strongSell, value: latest.strongSell, cls: "bg-down", color: "var(--down)" },
   ];
 
   /* KART KOMŞUSUNUN RİTMİNE OTURUYOR.
@@ -1676,7 +1764,7 @@ async function AnalystCard({
        artan yer künye ile satırlar ARASINA gidiyor, künyenin altına değil.
        Tek sütuna düşen dar ekranda gerilme olmadığı için hiçbir şey
        değişmiyor. */
-    <Panel className="flex flex-col">
+    <Panel className={styles.analystPanel}>
       <PanelHeader
         title={t.stock.analysts}
         /* ROZET BAŞLIĞIN SAĞINDA. Sayı bir süre dip künyesinde durdu ve
@@ -1685,33 +1773,30 @@ async function AnalystCard({
            Yeşil, altındaki çubuğun yeşil kısmının payı olduğu için — rozet
            o oranın sayısı, ayrı bir hüküm değil. Renk tek taşıyıcı da değil:
            yön kelimesi rozetin içinde yazılı. */
-        action={
-          <span className="numeral shrink-0 whitespace-nowrap rounded-full bg-up-wash px-2 py-0.5 text-tiny font-bold text-up">
-            {formatPercentPlain((alimTarafi / total) * 100, locale, 0)}{" "}
-            {t.stock.analystLeaning}
-          </span>
-        }
+        /* Yeni grafik başlığın hemen altında aynı özeti taşıyor;
+           rozetin sayısı burada tekrarlanmıyor. */
       />
       <div className="flex flex-1 flex-col px-4 pb-3 sm:px-5">
+      <div className={styles.consensus}>
+        <svg viewBox="0 0 120 120" className={styles.consensusRing} aria-hidden>
+          <circle cx="60" cy="60" r="47" fill="none" stroke="var(--surface-elevated)" strokeWidth="8" />
+          {segments.map((segment, index) => {
+            const circumference = 2 * Math.PI * 47;
+            const length = segment.value / total * circumference;
+            const offset = segments.slice(0, index).reduce((sum, item) => sum + item.value, 0) / total * circumference;
+            return segment.value > 0 ? <circle key={segment.label} cx="60" cy="60" r="47" fill="none" stroke={segment.color} strokeWidth="8" strokeDasharray={`${Math.max(0, length - 2)} ${circumference - Math.max(0, length - 2)}`} strokeDashoffset={-offset} transform="rotate(-90 60 60)" /> : null;
+          })}
+          <circle cx="60" cy="60" r="33" fill="none" stroke="var(--line-soft)" strokeWidth="1" />
+        </svg>
+        <div className={styles.consensusValue}>
+          <strong className="numeral">{formatPercentPlain((alimTarafi / total) * 100, locale, 0)}</strong>
+          <span>{t.stock.analystLeaning}</span>
+        </div>
+      </div>
       {/* Çubuk ARIA'dan gizli: altındaki liste aynı veriyi zaten okunabilir
           hâlde taşıyor, ikisi birden okununca sayılar iki kez geçiyordu.
           Dilim sınırını renk değil boşluk çiziyor — komşu basamaklar aynı
           renk ailesinden ve kontrast ayırmaya yetmiyor. */}
-      <div
-        aria-hidden
-        className="flex h-3 w-full gap-[2px] overflow-hidden rounded-full"
-      >
-        {segments.map(
-          (segment) =>
-            segment.value > 0 && (
-              <span
-                key={segment.label}
-                className={cn("bar-fill block h-full", segment.cls)}
-                style={{ width: `${(segment.value / total) * 100}%` }}
-              />
-            ),
-        )}
-      </div>
       <dl className="mt-3 divide-y divide-line-soft border-t border-line-soft">
         {segments.map((segment) => (
           <div key={segment.label} className="flex items-center gap-3 py-2.5">
@@ -2289,7 +2374,7 @@ async function PeersCard({
     .slice(0, 4);
 
   return (
-    <Panel>
+    <Panel className={styles.peersPanel}>
       <PanelHeader
         title={t.stock.peers}
         action={
@@ -2306,17 +2391,22 @@ async function PeersCard({
           </span>
         </p>
       )}
-      <ul className="grid grid-cols-2 gap-2.5 p-4 lg:grid-cols-4 sm:px-5">
+      <ul className={styles.peersGrid}>
         {ranked.map((peer) => {
           const quote = quotes[peer.symbol];
           return (
             <li key={peer.symbol} className="min-w-0">
+              <SpotlightCard className={styles.peerSpotlight}>
               <Link
                 href={`/hisse/${peer.symbol}`}
-                className="flex h-full flex-col justify-between gap-2.5 rounded-(--radius-lg) border border-line-soft bg-surface-elevated px-3.5 py-3 transition-colors hover:border-line-strong hover:bg-primary-tint"
+                className={styles.peerCard}
               >
+                <span className={styles.peerTop}>
+                  {meta[peer.symbol]?.logoUrl ? <span className={styles.peerLogo}><Image src={meta[peer.symbol].logoUrl!} alt="" width={36} height={36} /></span> : <span className={styles.peerMonogram} aria-hidden>{peer.symbol.slice(0, 1)}</span>}
+                  <ArrowUpRight className={styles.peerArrow} aria-hidden size={19} />
+                </span>
                 <span className="min-w-0">
-                  <span className="numeral block text-sm font-bold text-strong">
+                  <span className="numeral block text-lg font-bold tracking-tight text-strong">
                     {peer.symbol}
                   </span>
                   <span className="mt-0.5 block truncate text-tiny text-muted">
@@ -2343,6 +2433,7 @@ async function PeersCard({
                   <span className="text-xs text-muted">—</span>
                 )}
               </Link>
+              </SpotlightCard>
             </li>
           );
         })}
@@ -2440,11 +2531,11 @@ async function CompanyNews({
   const logoUrl = meta[symbol]?.logoUrl ?? null;
 
   return (
-    <ul className="divide-y divide-line-soft">
+    <ul className={styles.newsGrid}>
       {shown.map((item) => {
         const newsId = idByProvider.get(item.providerId);
         const inner = (
-          <span className="flex items-start gap-3">
+          <span className={styles.newsInner}>
             <span className="min-w-0 flex-1">
               {/* ÇEVİRİSİ OLMAYAN BAŞLIK DİLİNİ SÖYLER. Türkçe arayüzde
                   çeviri yoksa sağlayıcının İngilizce başlığına düşülüyor ama
@@ -2483,7 +2574,7 @@ async function CompanyNews({
                   ? logoUrl
                   : null
               }
-              sizeClass="size-14"
+              sizeClass={styles.newsImage}
             />
           </span>
         );
@@ -2494,7 +2585,7 @@ async function CompanyNews({
             {newsId ? (
               <Link
                 href={`/haberler/${newsId}`}
-                className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+                className={styles.newsLink}
               >
                 {inner}
               </Link>
@@ -2503,12 +2594,12 @@ async function CompanyNews({
                 href={sourceHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-4 py-3 transition-colors hover:bg-surface-elevated sm:px-5"
+                className={styles.newsLink}
               >
                 {inner}
               </a>
             ) : (
-              <div className="block px-4 py-3 sm:px-5">{inner}</div>
+              <div className={styles.newsLink}>{inner}</div>
             )}
           </li>
         );

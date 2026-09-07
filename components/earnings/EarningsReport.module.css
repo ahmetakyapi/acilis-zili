@@ -1,0 +1,886 @@
+.report {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1.5rem;
+}
+
+.report [id] {
+  scroll-margin-top: 10rem;
+}
+
+.cover {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  /* İlk sonuçlu kapak 1440px'te 598px ölçüldü. Dolgu ve bant aralıkları
+     içerik ölçeğini küçültmeden daraltıldı; AVGO ve SNOW son ölçümü 549px.
+     Dönem için ayrılan eski boş alan sonuçlar eklendiğinde geri oluşmaz. */
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  border-radius: 1.5rem;
+  background: var(--premium-surface, var(--surface-solid));
+  box-shadow: var(--premium-shadow);
+  gap: 1.4rem;
+}
+
+.cover::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 23% 42%;
+  content: "";
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size: 3.4rem 3.4rem;
+  mask-image: linear-gradient(110deg, transparent, var(--text-strong));
+  opacity: 0.8;
+}
+
+.cover::after {
+  position: absolute;
+  z-index: -1;
+  top: -15rem;
+  right: -6rem;
+  width: 40rem;
+  height: 40rem;
+  border-radius: 50%;
+  content: "";
+  background: radial-gradient(circle, var(--primary-wash), transparent 65%);
+  pointer-events: none;
+}
+
+.coverEdition {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.coverEyebrow,
+.coverSerial,
+.chapterLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+}
+
+.coverEyebrow {
+  color: var(--primary-ink);
+}
+
+.coverSerial {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--primary-faint);
+  border-radius: 0.4rem;
+  background: var(--primary-tint);
+  color: var(--primary-ink);
+  letter-spacing: 0.035em;
+}
+
+.editionMark {
+  display: inline-block;
+  width: 0.48rem;
+  height: 0.48rem;
+  background: currentColor;
+  box-shadow: 0.35rem -0.2rem 0 color-mix(in srgb, var(--primary) 28%, transparent);
+  margin-right: 0.25rem;
+}
+
+.companyTitle {
+  color: var(--text-strong);
+  font-size: clamp(2rem, 4.7vw, 4.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.065em;
+  font-weight: 650;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.coverResults {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1.5rem, 3vw, 3rem);
+  padding: 0.65rem 0 0.25rem;
+}
+
+.coverResults[data-has-trend="false"],
+.coverResults[data-has-metrics="false"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.coverLeadFacts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.coverLeadFacts > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.coverLeadFacts dt {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 550;
+}
+
+.coverLeadFacts dd:not(.coverMetricNote) {
+  margin-top: 0.65rem;
+  font-size: clamp(2.1rem, 3.65vw, 3.55rem);
+  font-weight: 550;
+  letter-spacing: -0.065em;
+  line-height: 1.12;
+  color: var(--primary-ink);
+  overflow-wrap: anywhere;
+}
+
+.coverLeadFacts > div + div dd:not(.coverMetricNote) {
+  color: var(--text-strong);
+}
+
+.coverMetricNote {
+  margin-top: 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 550;
+  line-height: 1.55;
+}
+
+.coverTrend {
+  min-width: 0;
+  padding-left: 1.75rem;
+  border-left: 1px solid var(--line);
+}
+
+.coverResults[data-has-metrics="false"] .coverTrend {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.coverTrend figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.72rem;
+  color: var(--text-body);
+  font-weight: 550;
+}
+
+.coverTrend figcaption > span:last-child {
+  color: var(--text-muted);
+  font-size: 0.63rem;
+  font-weight: 450;
+}
+
+.coverTrendLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 0.2rem;
+  transition: color 180ms;
+}
+
+.coverTrendLink:hover {
+  color: var(--primary-ink);
+}
+
+.coverTrendLink:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+
+.coverTrendPlot {
+  display: flex;
+  gap: clamp(0.6rem, 1.1vw, 1.1rem);
+  margin-top: 1.75rem;
+}
+
+.coverTrendColumn {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.coverTrendTrack {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 4.6rem;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.coverTrendBar {
+  position: relative;
+  width: 100%;
+  max-width: 3.7rem;
+  border-radius: 0.3rem 0.3rem 0 0;
+  background: var(--primary-faint);
+  transform-origin: center bottom;
+}
+
+.coverTrendBar[data-latest="true"] {
+  background: var(--primary);
+}
+
+.coverTrendBar > span {
+  position: absolute;
+  bottom: calc(100% + 0.3rem);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.69rem;
+  line-height: 1;
+  color: var(--text-body);
+  white-space: nowrap;
+}
+
+.coverTrendBar[data-latest="true"] > span {
+  font-weight: 650;
+  color: var(--primary-ink);
+}
+
+.coverTrendPeriod {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 0.58rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.coverTrendColumn:last-child .coverTrendPeriod {
+  color: var(--primary-ink);
+  font-weight: 600;
+}
+
+.coverFacts {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 2fr);
+  gap: 1.5rem;
+  align-items: center;
+  padding-top: 1.25rem;
+}
+
+.reportClose > p:last-child > span:first-child {
+  font-size: clamp(1.8rem, 3vw, 2.55rem);
+}
+
+.coverFacts > dl {
+  padding: 0 0 0 1.5rem;
+  background: transparent;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.coverFacts > dl dd {
+  padding-top: 0.65rem;
+  font-size: 1.2rem;
+}
+
+.reportBody,
+.figuresSection,
+.readingSection {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.reportBody {
+  gap: clamp(2rem, 4vw, 3.5rem);
+}
+
+.verdictPanel {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.8rem 2rem;
+  border: 1px solid var(--primary-faint);
+  border-radius: 1.25rem;
+  background: linear-gradient(110deg, var(--primary-wash), var(--primary-tint));
+}
+
+.verdictPanel > span {
+  display: none;
+}
+
+.verdictScore {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.verdictDecision {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.verdictDecision > span:last-child {
+  font-size: 2.45rem;
+  letter-spacing: -0.05em;
+}
+
+.verdictHeadline {
+  min-width: 0;
+  max-width: 53ch;
+  font-size: clamp(1rem, 1.55vw, 1.3rem);
+  line-height: 1.55;
+  letter-spacing: -0.025em;
+  color: var(--text-strong);
+  font-weight: 550;
+  text-wrap: pretty;
+}
+
+.verdictTarget {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding-left: 1.5rem;
+  border-left: 1px solid var(--primary-faint);
+}
+
+.verdictTarget > span:nth-child(2) {
+  font-size: 2rem;
+}
+
+.chapterHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin: 0 0 1.5rem;
+  color: var(--primary);
+}
+
+.chapterHeading h2 {
+  color: var(--text-strong);
+  font-size: clamp(1.6rem, 3vw, 2.55rem);
+  line-height: 1.12;
+  letter-spacing: -0.055em;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.metricGrid[data-count="4"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.metricGrid[data-count="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metricGrid[data-count="1"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.metricItem {
+  min-width: 0;
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  padding: 1.4rem 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  background: var(--premium-surface, var(--surface-solid));
+  box-shadow: var(--premium-shadow);
+  transition: transform 240ms, border-color 240ms, box-shadow 240ms;
+}
+
+.metricTop {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.metricLabel {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+
+.metricValue {
+  color: var(--text-strong);
+  font-size: clamp(1.8rem, 3vw, 2.75rem);
+  letter-spacing: -0.065em;
+  line-height: 1.1;
+  padding: 1.4rem 0 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.metricNote {
+  margin-top: auto;
+  line-height: 1.5;
+  font-size: 0.75rem;
+}
+
+.metricGrid[data-count="6"] {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.metricGrid[data-count="6"] .metricItem {
+  grid-column: span 3;
+}
+
+.metricGrid[data-count="6"] .metricItem:nth-child(-n + 2) {
+  grid-column: span 6;
+}
+
+.metricGrid[data-count="6"] .metricItem:nth-child(-n + 2) .metricCard {
+  background: linear-gradient(120deg, var(--premium-surface, var(--surface-solid)) 55%, var(--primary-tint));
+}
+
+.metricGrid[data-count="6"] .metricItem:nth-child(-n + 2) .metricValue {
+  font-size: clamp(2.3rem, 4.5vw, 4rem);
+  padding-top: 1.3rem;
+}
+
+.chartPanel {
+  padding: clamp(1.1rem, 2.5vw, 2rem);
+  border-radius: 1.35rem;
+  box-shadow: var(--premium-shadow);
+  background: var(--premium-surface, var(--surface-solid));
+  gap: 1.5rem;
+}
+
+.chartHead {
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.chartHead h2 {
+  max-width: 27ch;
+  font-size: clamp(1rem, 1.6vw, 1.3rem);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+}
+
+.revenuePlot {
+  isolation: isolate;
+  padding-top: 0.5rem;
+}
+
+/* The plot has a definite inset, so percentage bar heights resolve even
+   when the neighboring guidance panel makes the grid row taller. */
+.revenueBars {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+
+.revenueBar {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.45rem 0.45rem 0 0;
+  transform-origin: center bottom;
+}
+
+.revenueBar::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, transparent 60%, color-mix(in srgb, var(--on-primary) 15%, transparent));
+  border: 1px solid var(--line-soft);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.guidanceRow {
+  padding: 0.8rem 0 1rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.guidanceRow:last-child {
+  border-bottom: 0;
+}
+
+.guidanceRow > div:first-child > span:last-child {
+  font-size: 1.25rem;
+  letter-spacing: -0.04em;
+  white-space: normal;
+}
+
+.chartFooter {
+  padding-top: 1.2rem;
+}
+
+.chartFooter dt {
+  white-space: normal;
+  line-height: 1.45;
+}
+
+.chartFooter dd {
+  margin-top: 0.45rem;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  letter-spacing: -0.035em;
+}
+
+.ceoQuote {
+  padding: 2.5rem 2rem;
+  border-radius: 0;
+  border: 0;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  background: transparent;
+}
+
+.ceoQuote blockquote {
+  max-width: 60ch;
+  color: var(--text-strong);
+  font-size: clamp(1.15rem, 2.2vw, 1.75rem);
+  font-weight: 450;
+  font-style: normal;
+  letter-spacing: -0.04em;
+  line-height: 1.48;
+}
+
+.ceoQuote > span:first-child {
+  top: -1.8rem;
+  right: 12%;
+  font-size: 18rem;
+}
+
+.summaryPanel,
+.analysisPanel {
+  padding: clamp(1.35rem, 3vw, 2.5rem);
+  border-radius: 1.3rem;
+  background: var(--premium-surface, var(--surface-solid));
+}
+
+.summaryPanel {
+  border-top: 3px solid var(--primary);
+}
+
+.panelHead {
+  margin-bottom: 1.6rem;
+  padding-bottom: 1.25rem;
+  gap: 0.85rem;
+}
+
+.panelHead > span:first-child {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+}
+
+.panelHead h2 {
+  white-space: normal;
+  font-size: clamp(1.35rem, 2.5vw, 2rem);
+  line-height: 1.2;
+  letter-spacing: -0.045em;
+  font-weight: 600;
+}
+
+.summaryPanel > div:last-child > p {
+  font-size: 0.94rem;
+  line-height: 1.8;
+}
+
+.summaryPanel > div:last-child > p:first-child {
+  font-size: 1.14rem;
+  line-height: 1.65;
+  letter-spacing: -0.025em;
+}
+
+.analysisItem {
+  padding-top: 1.35rem;
+}
+
+.analysisItem > span:first-child {
+  margin-bottom: 1rem;
+  font-size: 2.15rem;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  font-weight: 450;
+}
+
+.analysisItem h3 {
+  margin-bottom: 0.85rem;
+  font-size: 1.1rem;
+  line-height: 1.45;
+  letter-spacing: -0.03em;
+}
+
+.analysisItem p {
+  font-size: 0.93rem;
+  line-height: 1.8;
+}
+
+.pointsGrid {
+  gap: 1rem;
+}
+
+.pointReveal {
+  display: flex;
+  min-width: 0;
+}
+
+.pointsCard {
+  width: 100%;
+  height: 100%;
+  padding: 1.6rem;
+  border-radius: 1.25rem;
+  background: var(--premium-surface, var(--surface-solid));
+  border-color: var(--line);
+}
+
+.pointsCard > div:first-child {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.pointsCard h2 {
+  font-size: 1.05rem;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+}
+
+.pointsCard ol {
+  gap: 1rem;
+}
+
+.pointsCard li {
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+
+.pointsCard li > span:first-child {
+  margin-top: 0.15rem;
+}
+
+.reportFooter {
+  padding-top: 1.5rem;
+  margin-top: 0.75rem;
+}
+
+.reportFooter a {
+  gap: 0.35rem;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .metricCard:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary-faint);
+    box-shadow: var(--premium-shadow-hover);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .revenueBar {
+      animation: barArrival linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 100%;
+    }
+  }
+}
+
+@keyframes barArrival {
+  from { transform: scaleY(0.04); }
+  to { transform: scaleY(1); }
+}
+
+@media (max-width: 1100px) {
+  .coverResults {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+
+  .coverLeadFacts {
+    gap: 1rem;
+  }
+
+  .coverLeadFacts dd:not(.coverMetricNote) {
+    font-size: clamp(1.9rem, 3.5vw, 2.6rem);
+  }
+
+  .coverFacts {
+    grid-template-columns: 1fr;
+  }
+
+  .coverFacts > dl {
+    padding: 1rem 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .verdictPanel {
+    gap: 1.4rem;
+  }
+
+  .verdictScore {
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .verdictDecision {
+    align-items: center;
+  }
+
+  .verdictTarget {
+    max-width: 12rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .cover {
+    border-radius: 1.1rem;
+    gap: 1.35rem;
+  }
+
+  .coverEdition {
+    padding-bottom: 0.9rem;
+  }
+
+  .coverSerial {
+    font-size: 0.62rem;
+    letter-spacing: 0.015em;
+  }
+
+  .coverResults {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.4rem;
+    padding-top: 0.3rem;
+  }
+
+  .coverLeadFacts dd:not(.coverMetricNote) {
+    font-size: clamp(1.8rem, 7.8vw, 2.8rem);
+  }
+
+  .coverLeadFacts dt {
+    font-size: 0.75rem;
+  }
+
+  .coverMetricNote {
+    font-size: 0.69rem;
+  }
+
+  .coverTrend {
+    padding: 1rem 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .coverTrendTrack {
+    height: 3.5rem;
+  }
+
+  .coverFacts {
+    padding-top: 1.15rem;
+  }
+
+  .coverFacts > dl dd {
+    padding-top: 0;
+  }
+
+  .verdictPanel {
+    grid-template-columns: 1fr;
+    padding: 1.4rem;
+  }
+
+  .verdictScore {
+    flex-direction: row;
+    gap: 1.2rem;
+  }
+
+  .verdictDecision {
+    align-items: flex-start;
+  }
+
+  .verdictHeadline {
+    font-size: 1.15rem;
+  }
+
+  .verdictTarget {
+    max-width: none;
+    border-left: 0;
+    border-top: 1px solid var(--primary-faint);
+    padding: 1.1rem 0 0;
+  }
+
+  .metricGrid,
+  .metricGrid[data-count="4"],
+  .metricGrid[data-count="6"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .metricGrid[data-count="6"] .metricItem,
+  .metricGrid[data-count="6"] .metricItem:nth-child(-n + 2) {
+    grid-column: auto;
+  }
+
+  .metricCard {
+    padding: 1rem;
+    border-radius: 0.9rem;
+  }
+
+  .metricTop {
+    gap: 0.35rem;
+  }
+
+
+  .metricLabel {
+    font-size: 0.73rem;
+  }
+
+  .metricValue,
+  .metricGrid[data-count="6"] .metricItem:nth-child(-n + 2) .metricValue {
+    font-size: clamp(1.6rem, 6vw, 2.5rem);
+    padding-top: 1rem;
+  }
+
+  .metricNote {
+    font-size: 0.69rem;
+  }
+
+  .ceoQuote {
+    padding: 1.8rem 0.5rem;
+  }
+
+  .pointsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .chartFooter dd {
+    font-size: 1.05rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metricCard,
+  .coverTrendLink {
+    transition: none;
+  }
+}
+
+.scoreDial { overflow: visible; }

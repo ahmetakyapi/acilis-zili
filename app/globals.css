@@ -302,6 +302,21 @@
    Tailwind token köprüsü — @theme inline, var() referanslarını korur.
    Kullanım: bg-page, text-strong, border-line ... veya bg-(--surface)
    -------------------------------------------------------------------------- */
+/* Premium data surfaces: brand tokens stay stable across the redesigned
+   pages. Specular highlights and tinted shadows add depth without blur on text. */
+:root {
+  --premium-surface: #ffffff;
+  --premium-highlight: rgb(255 255 255 / .85);
+  --premium-shadow: 0 3px 8px rgb(16 32 52 / .025), 0 18px 45px rgb(16 32 52 / .055), inset 0 1px 0 rgb(255 255 255 / .8);
+  --premium-shadow-hover: 0 6px 14px rgb(16 32 52 / .05), 0 24px 55px rgb(16 32 52 / .08);
+}
+:root[data-theme="dark"] {
+  --premium-surface: #101a28;
+  --premium-highlight: rgb(183 213 245 / .07);
+  --premium-shadow: 0 3px 8px rgb(2 8 17 / .16), 0 18px 45px rgb(2 8 17 / .2), inset 0 1px 0 rgb(183 213 245 / .08);
+  --premium-shadow-hover: 0 6px 14px rgb(2 8 17 / .2), 0 24px 55px rgb(2 8 17 / .3);
+}
+
 @theme inline {
   --color-page: var(--page-bg);
   --color-surface: var(--surface);

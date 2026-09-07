@@ -1,14 +1,18 @@
-import { Suspense } from "react";
+import { cache, Suspense } from "react";
+import { MotionExperience, ScrollStage, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
+import styles from "@/components/today/TodayExperience.module.css";
 import Link from "next/link";
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, ArrowUpRight, CalendarBlank, Waveform } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { NewsImage } from "@/components/news/NewsImage";
 import { BriefBody } from "@/components/today/BriefBody";
 import { BriefSwitch, type BriefView } from "@/components/today/BriefSwitch";
 import { Countdown } from "@/components/today/Countdown";
-import { DayRail, type RailEvent } from "@/components/today/DayRail";
+import { DayFlowLoader } from "@/components/today/DayFlow";
+import { loadDayFlow } from "@/lib/day-flow-data";
 import { SessionRefresh } from "@/components/today/SessionRefresh";
+import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
 import { LiveClock } from "@/components/today/LiveClock";
 import {
@@ -52,13 +56,13 @@ import {
   type MarketStatus,
 } from "@/lib/market-hours";
 import {
-  displayOffsets,
+  displayZone,
+  formatInZone,
   timePair,
   zoneTag,
 } from "@/lib/session-clock";
 import { FillColumn } from "@/components/today/FillColumn";
 import { getQuotes } from "@/lib/providers";
-import { isSpotlight } from "@/lib/spotlight";
 import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
 import { ALL_MEMBERS, primaryOnly } from "@/db/seed/indices";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -119,6 +123,9 @@ export const generateMetadata = pageMetadata({
   },
 });
 
+// İstek boyunca tek damga: tarih ve sunucu geri sayımı aynı anı okur.
+const getPageTimestamp = cache(() => Date.now());
+
 export default async function TodayPage() {
   const { locale, t } = await getI18n();
   const status = await getStatus();
@@ -136,7 +143,14 @@ export default async function TodayPage() {
 
   const trading = status.session === "regular";
   const countdownTarget = trading ? status.nextClose : status.nextOpen;
-  const countdownLabel = trading ? t.today.untilClose : t.today.untilBell;
+  const countdownLabel = trading ? t.today.countdownClose : t.today.countdownOpen;
+  const nowMs = getPageTimestamp();
+  const readerZone = displayZone(locale);
+  const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    timeZone: readerZone, day: "numeric", month: "long", weekday: "long",
+  });
+  const targetDate = dateFormat.format(countdownTarget);
+  const targetTime = formatInZone(countdownTarget, readerZone);
 
   return (
     /* IZGARA ÜÇ PARÇALI: ana kolon, yan kolon ve altlarında tam genişlik
@@ -151,7 +165,8 @@ export default async function TodayPage() {
        de bir ölçüm okuması), haberler ise iki kolonun ALTINA, tam genişliğe
        indi. İki kolon böylece boyca eşitlendi ve haber bandı sayfanın kendi
        kapanışı oldu. */
-    <div className="flex flex-col gap-5">
+    <MotionExperience className={styles.page}>
+      <ScrollProgress />
       {/* MASTHEAD IZGARANIN DIŞINDA, TAM GENİŞLİKTE. Kahraman blok sol
           kolonun içindeyken 878 piksele sıkışıyordu ve sayfanın imza anı —
           ürünün adını taşıyan geri sayım — yan kolondaki endeks kartlarıyla
@@ -164,151 +179,75 @@ export default async function TodayPage() {
           kısaldı ve `FillColumn` bunu kırpılmış listelere satır açarak
           kapatıyor — zaten bunun için var (CLAUDE.md "Boşluk esnetilmez,
           doldurulur"). Ölçüldü. */}
-      {/* ---- Oturum rozeti + tarih ---- */}
-      {/* KAHRAMAN TEK BLOK. Geri sayım ile gün şeridi ayrı iki kutudaydı
-          ve ikisi de AYNI SORUYU yanıtlıyordu: "seans ne zaman". Ürünün
-          adını taşıyan sayı (Açılış Zili) panelin dışında, kendi başına
-          bir durum satırı gibi duruyordu; altındaki 282 piksellik panel
-          ise altı piksellik bir çizgiyi taşımak için o alanı kaplıyordu.
-          Şimdi biri ötekinin manşeti: künye şeridi üstte, geri sayım
-          manşet, şerit onun görseli. Yeni veri yok, kutu sayısı bir
-          azaldı ve sayfanın en değerli sayısı hak ettiği ağırlıkta.
-
-          `panel` sınıfı elden veriliyor, `<Panel>` bileşeniyle değil:
-          bileşen `<section>` basıyor ve bu blok anlamsal olarak sayfanın
-          `<header>`ı — h1'i taşıyan eleman o. Görünüm aynı token'lardan
-          geliyor (globals.css → .panel). */}
-      <header className="panel overflow-hidden px-4 py-5 sm:px-6 sm:py-7">
-        {/* MANŞET SOLDA, KÜNYE SAĞDA. Künye şeridi geri sayımın ÜSTÜNDEydi,
-            yani sayfanın en büyük sayısı ikinci satırda başlıyordu; blok tam
-            genişliğe çıkınca da sağda 800 pikselden fazla boş yer kaldı.
-            İkisi yan yana gelince manşet bloğun sol kenarından başlıyor,
-            künye karşı kenara yaslanıyor ve aradaki boşluk artık artık
-            değil, kompozisyonun kendisi.
-            `lg` altında eski davranış sürüyor: alt alta ve künye önce. */}
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-[11px] py-1 text-tiny font-semibold",
-              trading
-                ? "bg-up-wash text-up"
-                : status.session === "closed"
-                  ? "bg-surface-elevated text-body"
-                  : "bg-primary-wash text-primary-ink",
-            )}
-          >
-            <span
-              aria-hidden
-              className={cn(
-                "size-1.5 rounded-full bg-current",
-                trading && "pulse-live",
-              )}
-            />
-            {sessionLabel[status.session]}
-          </span>
-          {/* Tarih 13px sessiz gövdeydi ve yanındaki rozetle saatin
-              arasında üçüncü bir ağırlık gibi duruyordu; oysa "bugün hangi
-              gün" bu şeridin ana bilgisi. Yarı kalın koyu mürekkebe çıktı,
-              rozet ve saat ise künye kaldı. */}
-          {/* TARİH NEW YORK TAKVİMİNDEN ve bu artık yazıyor.
-              Yanındaki saat Türkçe okuyanda İstanbul'u gösteriyor; Türkiye
-              saatiyle gece yarısı ile sabah 07:00 arasında ikisi BİR GÜN
-              ayrışıyor ve ekranda "11 Ağustos Salı · 02:14 TR" gibi kendi
-              kendisiyle çelişen bir satır kalıyordu. Künye, hangi takvimin
-              konuştuğunu söylüyor — saatlerin yanındaki TR/NY künyesiyle
-              aynı dil. */}
-          <span className="flex items-baseline gap-1 text-base font-semibold text-strong">
-            {formatEtDateLong(status.etDate, locale)}
-            <span className="text-nano font-bold tracking-[0.06em] text-muted">
-              NY
-            </span>
-          </span>
-          <LiveClock locale={locale} />
-        </div>
-
-        {/* Sayfanın en büyük sayısı — zil geri sayımı.
-            Bu satır aynı zamanda sayfanın H1'i: ana sayfada hiç `h1` yoktu
-            (denetimde çıktı), ekran okuyucu ve arama motoru için sayfa
-            başlıksız görünüyordu. Geri sayım + "Açılış Ziline Kaldı"
-            zaten sayfanın ne anlattığını söyleyen cümle; görünüm
-            değişmiyor, yalnızca etiket doğru olanla değişti. */}
-        {/* H1 KONUYU DA SÖYLÜYOR. Sitenin en değerli sayfasının tek
-            başlığı geri sayımdan ibaretti: taranan HTML'de "5 sa 42 dk
-            11 sn Açılış Ziline Kaldı" gibi, sayfanın ne hakkında olduğunu
-            hiç söylemeyen ve her istekte değişen bir metin duruyordu.
-            Görsel düzen aynı kalsın diye ad ekranda değil, yalnızca
-            erişilebilirlik ağacında ve tarayıcıda. */}
-        <div className="mt-3.5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
-        <h1 className="flex flex-wrap items-end gap-3.5">
-          <span className="sr-only">{t.today.pageHeading}</span>
-          <Countdown
-            targetIso={countdownTarget.toISOString()}
-            units={{
-              d: t.today.unitD,
-              h: t.today.unitH,
-              m: t.today.unitM,
-              s: t.today.unitS,
-            }}
-            /* ÖLÇEK ÖLÇÜLDÜ, seçilmedi. Tam genişlikte kap 1320 piksel ve
-               96 pikselde sayaç 402 piksel tutuyor: manşet bloğun üçte
-               birinden azını kaplıyor, künyeye 900 piksel kalıyor. 1024'te
-               de sığıyor. MOBİLDE 44'TE KALIYOR — ölçüldü, 52 pikselde sayaç
-               320 piksellik kaba sığmayıp etiketi ikinci satıra atıyor ve h1
-               47'den 95 piksele fırlıyor. */
-            className="tote display-ink text-[44px] leading-none sm:text-[66px] lg:text-[96px]"
-          />
-          {/* Etiket sözlükteki hâliyle basılır. Bir süre burada
-              `toLocaleLowerCase` vardı ve sözlükte Title Case yazan metni
-              ekranda küçültüyordu — sayfanın H1'i "açılış ziline kaldı"
-              diye okunuyordu. Vurgu taşıyan metin Title Case yazılır ve
-              bundan büyük vurgulu bir yer yok. */}
-          <span className="pb-1.5 text-base font-normal text-body sm:pb-2.5 sm:text-read">
-            {countdownLabel}
-          </span>
-        </h1>
-
-          {/* ENDEKSLER MANŞETİN KARŞISINDA. Geri sayım 402 piksel tutuyor,
-              blok 1320; sağda kalan yer dört endeks kartını yan yana almaya
-              yetiyor. Manşetle aynı taban çizgisine oturuyorlar
-              (`items-end`), yani ikisi tek bir satır gibi okunuyor.
-              `lg` altında alt alta ve kartlar eski 2×2 düzenine dönüyor. */}
-          <div className="min-w-0 lg:max-w-[780px] lg:flex-1">
-            <Suspense fallback={<IndexSkeleton />}>
-              <IndexStrip locale={locale} t={t} />
-            </Suspense>
+      {/* 1440px ölçümünde eski ana okuma 66px pazarlama başlığıydı;
+          geri sayım 45px, NY kadranı 288px'ti. Kullanıcının önceliği zil:
+          saat kadranı kaldırıldı, süre ana okuma oldu. Tarih ve hedef saat
+          displayZone üzerinden TR'de İstanbul'a çevrilir, sabit fark yok. */}
+      {/* 7 Eylül tercihi: dekoratif zilin yerine endeksler taşındı.
+          Önceki kahraman 1440px'te 679px, 390px'te 848px yüksekliğindeydi.
+          Geri sayım ve 2×2 piyasa paneli masaüstünde yan yana; mobilde
+          doğal sırayla alt alta. Seans bilgisi geri sayımda korunur. */}
+      <header id="piyasa-ozeti" className={styles.hero}>
+        <div className={styles.heroTopline}>
+          <span className={styles.eyebrow}><Waveform size={15} weight="bold" />{t.today.experienceEyebrow}</span>
+          <div className={styles.dateline}>
+            <span>{dateFormat.format(new Date(nowMs))}</span>
+            <LiveClock locale={locale} />
           </div>
         </div>
-
-        {/* ---- Gün Şeridi ---- */}
-        {/* Şeridin kapsadığı pencere ("11:00 — 03:00 TR") burada, başlığın
-            sağında duruyordu. Aynı iki saat artık eksenin kendi uçlarında
-            yazılı — okuyucu "bu çizginin solu hangi saat" diye sorduğunda
-            cevabın ekranın öbür ucunda olması gerekmiyor. */}
-        {/* Başlık `display-ink` manşetti; hemen üstündeki geri sayımla
-            aynı ağırlıkta iki manşet yan yana geliyordu. Şeridin adı bir
-            manşet değil bir ETİKET ve `plate` tam bu rol için var
-            (gerekçe components/ui/primitives.tsx → PanelHeader `tone`).
-            Başlık düzeyi korunuyor, yalnızca ağırlığı düşüyor. */}
-        <h2 className="plate mb-3.5 mt-6 w-fit text-nano tracking-[0.09em]">
-          {t.today.todayFlow}
-        </h2>
-        <Suspense fallback={<Skeleton className="h-28 w-full" />}>
-          <RailSection
-            t={t}
-            locale={locale}
-            status={{
-              /* `!isWeekend && !holiday` diye hesaplanıyordu ve yarım
-                 günleri tatil sayıyordu — gerekçe `tradingToday`
-                 alanının üstünde. */
-              trading: status.session !== "closed" || status.tradingToday,
-              closeMinutes: status.closeMinutes,
-              nowMinutes: status.etMinutes,
-            }}
-          />
-        </Suspense>
+        <div className={styles.heroMain}>
+          <div className={styles.heroCopy}>
+            <div className={styles.heroSession} data-trading={trading}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
+            <h1 className={styles.headline}>{countdownLabel}</h1>
+            <Countdown
+              targetIso={countdownTarget.toISOString()}
+              initialNowMs={nowMs}
+              units={{ d: t.today.countdownDays, h: t.today.countdownHours, m: t.today.countdownMinutes, s: t.today.countdownSeconds }}
+              label={countdownLabel}
+              className={styles.countdown}
+            />
+            <div className={styles.targetDate}>
+              <CalendarBlank size={16} aria-hidden="true" />
+              <time dateTime={countdownTarget.toISOString()}>
+                <span>{targetDate}</span>
+                <strong>{targetTime} <small>{zoneTag(locale).primary}</small></strong>
+              </time>
+            </div>
+            <div className={styles.heroFooter}>
+              <p className={styles.description}>{t.today.countdownDescription}</p>
+              <Link href="/piyasalar" className={styles.exploreLink}>
+                <span>{t.today.experienceExplore}</span><ArrowUpRight size={18} weight="bold" />
+              </Link>
+            </div>
+          </div>
+          <section className={styles.indexDeck} aria-labelledby="hero-indices">
+            <div className={styles.indexHeading}><h2 id="hero-indices">{t.today.indices}</h2><span>{t.today.experienceIndexNote}</span></div>
+            <Suspense fallback={<IndexSkeleton />}><IndexStrip locale={locale} t={t} /></Suspense>
+          </section>
+        </div>
       </header>
 
-    <div className="grid gap-x-6 gap-y-5 lg:grid-cols-[minmax(0,1fr)_376px]">
+      {/* Bölüm bağlantıları artık bağımsız bir şerit değil, gün akışının
+          araçları. Çapalar ve klavye erişimi korunur; içerik gizlenmez. */}
+      <ScrollStage><section id="gunun-akisi" className={styles.flowPanel}>
+        <div className={styles.flowHeader}>
+          <div className={styles.sectionHeading}>
+            <h2>{t.today.todayFlow}</h2>
+            <p>{t.today.experienceFlowNote}</p>
+          </div>
+          <SectionNav className={styles.flowNav} label={t.today.todayFlow} items={[
+            { id: "gunun-akisi", label: t.today.flowTimeline },
+            { id: "gundem", label: t.today.experienceReading },
+            { id: "bilanco-analizleri", label: t.today.experienceReports },
+            { id: "haber-akisi", label: t.today.experienceNews },
+          ]} />
+        </div>
+        <Suspense fallback={<Skeleton className="h-28 w-full" />}>
+          <RailSection t={t} locale={locale} />
+        </Suspense>
+      </section></ScrollStage>
+
+    <div className={styles.dashboard}>
       {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer
           kaplamaz. Geri sayım sıfıra inince orada kilitleniyor ve yeni güne
           ancak elle yenilemeyle geçiliyordu; gerekçenin tamamı bileşende. */}
@@ -350,7 +289,7 @@ export default async function TodayPage() {
             koşumun ortancası. Takas bilinçli: 65 milisaniye görünmez,
             bin piksellik sıçrama değil. Sağlayıcıya giden paneller akışta
             kalmaya devam ediyor; beklenen tek şey yerel veritabanı. */}
-        <BriefCard locale={locale} t={t} />
+        <div data-motion-reveal id="gundem" className={styles.brief}><BriefCard locale={locale} t={t} /></div>
 
         {/* ---- Mercek ----
              SAYFANIN EN ÜST ÜÇTE BİRİNDE, çünkü sitenin başka hiçbir yerde
@@ -392,9 +331,11 @@ export default async function TodayPage() {
              iniyor ve yoğun bir bilanço gününde diğer tarafa geçse bile küçük
              kalıyor. İçerik olarak da yeri burası: üstündeki bilanço listesi
              "bugün kim açıklıyor", bu panel "açıklayanlar ne yaptı". */}
-        <Suspense fallback={<PanelSkeleton rows={5} />}>
-          <LatestAnalyses locale={locale} t={t} />
-        </Suspense>
+        <div id="bilanco-analizleri" className={styles.analyses}>
+          <Suspense fallback={<PanelSkeleton rows={5} />}>
+            <LatestAnalyses locale={locale} t={t} />
+          </Suspense>
+        </div>
 
       </div>
 
@@ -489,9 +430,9 @@ export default async function TodayPage() {
            tamamını aldı; başlığı da bir panel başlığı değil BÖLÜM başlığı
            oldu — kutu yok, altında hairline var. Sayfa böylece "kutu, kutu,
            kutu" ritminden çıkıp bir bölümle kapanıyor. */}
-      <section className="min-w-0 lg:col-span-2 lg:row-start-2">
+      <section id="haber-akisi" className={cn(styles.news, "min-w-0 lg:col-span-2 lg:row-start-2")}>
         <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
-          <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+          <h2 className={styles.newsHeading}>
             {t.today.topNews}
           </h2>
           <div className="flex shrink-0 items-center gap-3">
@@ -528,7 +469,7 @@ export default async function TodayPage() {
         <span>{t.today.sourceNote}</span>
       </footer>
     </div>
-    </div>
+    </MotionExperience>
   );
 }
 
@@ -541,189 +482,10 @@ export default async function TodayPage() {
  * Mockup 4a'da ikisi de aynı eksende duruyor — gün gerçekten böyle akıyor,
  * "08:30 istihdam" ile "16:30 AAPL" aynı zaman çizgisinin olayları.
  */
-async function RailSection({
-  t,
-  status,
-  locale,
-}: {
-  t: Dictionary;
-  status: { trading: boolean; closeMinutes: number; nowMinutes: number };
-  locale: Locale;
-}) {
-  const today = todayEt();
+async function RailSection({ t, locale }: { t: Dictionary; locale: Locale }) {
   const session = await auth();
-  const [events, earnings, watched] = await Promise.all([
-    getTodayEvents(),
-    getEarningsBetween(today, today),
-    session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
-  ]);
-
-  const watchedSet = new Set(watched);
-
-  /* Şeritteki bilanço işaretleri yalnızca okuyucunun tanıyacağı isimleri
-     taşıyacak; kimin büyük olduğunu bilmek için piyasa değeri çekiliyor.
-     Tablo cron'la profillenmiş sembollerden dolu; tabloda olmayan küçük
-     isimler zaten eşiği geçemez. */
-  const earningsMeta = await getSymbolNames(earnings.map((row) => row.symbol));
-
-  const eventItems: RailEvent[] = events
-    .filter((e) => e.eventTimeEt)
-    .map((e) => ({
-      id: e.id,
-      timeEt: e.eventTimeEt as string,
-      title: locale === "tr" ? e.titleTr : e.titleEn,
-      importance: (e.importance as RailEvent["importance"]) ?? "medium",
-      kind: "event",
-      /* Değerler PAYLAŞILAN biçimlendiriciden geçiyor. Burada şablon dizesiyle
-         ham yazılıyordu: `actual` bir `text` sütunu ve içinde sağlayıcının
-         nokta ayraçlı dizesi duruyor, yani aynı TÜFE rakamı takvimde "2,7"
-         burada "2.7" görünüyordu. Yüzde işaretinin yeri de elle konuyordu ve
-         İngilizcede yanlıştı. Gerekçe: lib/utils.ts → formatEventValue */
-      detail: (() => {
-        const actual = formatEventValue(e.actual, e.unit, locale);
-        const forecast = formatEventValue(e.forecast, e.unit, locale);
-        if (actual) {
-          return forecast
-            ? `${actual} · ${t.calendar.forecast} ${forecast}`
-            : actual;
-        }
-        return forecast ? `${t.calendar.forecast} ${forecast}` : undefined;
-      })(),
-    }));
-
-  /* Bilanço saatleri YAKLAŞIKTIR ve şeritte "~" ile yazılır.
-     Sağlayıcı yalnızca pencereyi veriyor — bmo (açılış öncesi), amc (kapanış
-     sonrası), dmh (seans içi) — dakika vermiyor. Kayıtlar bu yüzden gerçek
-     dağılımın merkezine oturtuluyor: ABD'de açılış öncesi açıklamalar
-     06:30-08:00 ET arasında yığılıyor, kapanış sonrası olanlar 16:05-16:30'da.
-     Kapanış sonrası kayıtlar KAPANIŞ ZİLİNİN KENDİSİNE oturuyor (16:00 ET =
-     23:00 TR): bir süre 16:30'a konmuştu, "sonrası" olduğu okunsun diye, ama
-     zilin yarım saat ötesine atmak da uydurma bir kesinlik veriyordu. Şerit
-     zaten "~" ile yaklaşık olduğunu ve alt satırda hangi pencere olduğunu
-     söylüyor; konumun zille aynı olması doğruyu bozmuyor, etiket bir kademe
-     aşağıya kaçıyor (bkz. BOUND_COLLISION_MINUTES). */
-  /**
-   * Bilanço penceresinin şeritteki temsilî saati — ET.
-   *
-   * Sağlayıcı dakika vermiyor, yalnızca pencereyi söylüyor (bmo/amc/dmh); bu
-   * yüzden şeritte "~" ile yazılıyor ve pencerenin adı da yanında duruyor.
-   * Buradaki değer o pencerenin AĞIRLIK MERKEZİ olmalı, en erken ucu değil.
-   *
-   * `bmo` 07:00'dı ve okuyucunun saatiyle 14:00'e düşüyordu — Türkiye'de
-   * öğleden hemen sonraya, hiçbir şeyin açıklanmadığı bir saate. Açılış
-   * öncesi bilançoların büyük kısmı 07:00-08:30 ET arasında, kalabalık da
-   * 08:00'e yakın çıkıyor; 08:00 hem pencerenin ortasına daha yakın hem de
-   * okuyucunun saatiyle 15:00'e, gerçekten bir şeylerin olduğu saate denk
-   * geliyor.
-   *
-   * Saat SABİT DEĞİL, ET olarak yazılıyor ve ekrana TR'ye çevrilerek
-   * basılıyor: yaz-kış farkı kendiliğinden doğru kalıyor (yazın 15:00,
-   * kışın 16:00 TR).
-   */
-  const EARNINGS_TIME: Record<string, string> = {
-    bmo: "08:00",
-    amc: "16:00",
-    dmh: "12:00",
-  };
-  /* Pencere adı sözlükteki Title Case hâliyle basılır. Bir süre burada
-     küçültülüyordu — künye kuralı gereği — ama bu satır bir ölçünün altındaki
-     mikro künye değil, kartın taşıdığı iki bilgiden biri: "ne zaman". */
-  const EARNINGS_WINDOW: Record<string, string> = {
-    bmo: t.earnings.beforeOpen,
-    amc: t.earnings.afterClose,
-    dmh: t.earnings.duringMarket,
-  };
-
-  const earningsItems: RailEvent[] = earnings
-    .filter((row) => row.hour && EARNINGS_TIME[row.hour])
-    .map((row) => {
-      const window = EARNINGS_WINDOW[row.hour as string];
-      return {
-        id: `earnings-${row.id}`,
-        timeEt: EARNINGS_TIME[row.hour as string],
-        title: row.symbol,
-        importance: "low" as const,
-        kind: "earnings" as const,
-        approx: true,
-        watched: watchedSet.has(row.symbol),
-        detail: watchedSet.has(row.symbol)
-          ? `${window} · ${t.dayRail.watchedNote}`
-          : window,
-      };
-    });
-
-  /* Şeride adıyla çıkmanın eşiği: 50 milyar dolar. Bir dönem kalabalık
-     "182 bilanço" diye sayıyla yazıldı — o sayı da kimsenin planını
-     değiştirmiyordu. İşarete yalnızca takip edilenler, adla seçilen şirketler
-     (lib/spotlight.ts) ve eşik üstü şirketler çıkar; hiçbiri yoksa o
-     pencerenin işareti HİÇ çizilmez. Tam liste zaten /bilancolar'da. */
-  const RAIL_CAP_FLOOR = 50e9;
-
-  // Aynı saate düşen bilançolar tek noktada toplanır — 229 şirketlik bir gün
-  // ekseni okunmaz hale getirir.
-  const groupedEarnings = Object.values(
-    earningsItems.reduce<Record<string, RailEvent[]>>((acc, item) => {
-      (acc[item.timeEt] ??= []).push(item);
-      return acc;
-    }, {}),
-  ).flatMap((group) => {
-    const capOf = (symbol: string) => earningsMeta[symbol]?.marketCap ?? 0;
-    const notable = group
-      .filter(
-        (item) =>
-          item.watched ||
-          isSpotlight(item.title) ||
-          capOf(item.title) >= RAIL_CAP_FLOOR,
-      )
-      .sort(
-        (a, b) =>
-          Number(b.watched) - Number(a.watched) ||
-          Number(isSpotlight(b.title)) - Number(isSpotlight(a.title)) ||
-          capOf(b.title) - capOf(a.title),
-      );
-    if (notable.length === 0) return [];
-
-    const shown = notable.slice(0, 3);
-    const rest = notable.length - shown.length;
-    return [
-      {
-        ...shown[0],
-        id: `earnings-${group[0].timeEt}`,
-        title:
-          shown.map((item) => item.title).join(" · ") +
-          (rest > 0 ? ` +${rest}` : ""),
-        watched: notable.some((item) => item.watched),
-        /* Kart, sembollerin logolarını başlıkla aynı sırada basar — logo,
-           "bunlar şirket" bilgisini sembol kısaltmasından hızlı veriyor. */
-        logos: shown.map((item) => ({
-          symbol: item.title,
-          logoUrl: earningsMeta[item.title]?.logoUrl ?? null,
-        })),
-      },
-    ];
-  });
-
-  /* Şerit ET dakikasıyla konumlanır ama okuyucunun saatiyle yazılır. İki saat
-     arasındaki fark ABD yaz saatiyle kaydığı için sabit değil, o günün
-     tarihiyle hesaplanıp şeride veriliyor. */
-  return (
-    <DayRail
-      events={[...eventItems, ...groupedEarnings]}
-      initialNowMinutes={status.nowMinutes}
-      tradingDay={status.trading}
-      closeMinutes={status.closeMinutes}
-      offsets={displayOffsets(today, locale)}
-      tags={zoneTag(locale)}
-      labels={{
-        bell: t.dayRail.openShort,
-        close: t.dayRail.closeShort,
-        now: t.dayRail.now,
-        marketHours: t.dayRail.marketHours,
-        noEvents: t.dayRail.noEvents,
-        earnings: t.dayRail.earningsNote,
-      }}
-    />
-  );
+  const initial = await loadDayFlow(locale, session?.user?.id).catch(() => null);
+  return <DayFlowLoader key={locale} initial={initial} locale={locale} labels={t.dayFlow} railLabels={t.dayRail} />;
 }
 
 /* SAYI ENDEKSİN SEVİYESİ DEĞİL, FONUN FİYATI. Nasdaq 100 endeksi 25 binli
@@ -745,7 +507,7 @@ const INDEX_LABEL: Record<string, string> = {
 };
 
 /**
- * Endeks kartları — yan kolonda 2×2 ızgara, mobilde yatay kayan şerit.
+ * Endeks kartları — geri sayımın sağında, mobilde altında 2×2 ızgara.
  * Dar kolonda dört sütun okunmuyordu; ikişerli dizilim aynı bilgiyi
  * sıkışmadan taşıyor.
  */
@@ -768,19 +530,20 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   return (
     <div className="flex flex-col gap-2.5">
-      {/* Dört sütun `xl`den (1280) itibaren, `lg`den değil. Ölçüldü: 1024'te
-          dört kart 84 piksele düşüyor ve başlıklar "N…", "S&…", "Do…" diye
+      {/* Önceki yan kolon ölçümünde 1024'te dört sütunlu düzenin
+          kartları 84 piksele düşüyor ve başlıklar "N…", "S&…", "Do…" diye
           kırpılıyor — okuyucu hangi endekse baktığını yalnızca sembolden
-          çıkarabiliyordu. 1024-1280 arasında 2×2 kalıyorlar. */}
-      <div className="scroll-x -mx-[18px] flex gap-2.5 px-[18px] sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:gap-3 xl:grid-cols-4">
+          çıkarabiliyordu. Yeni sağ panelde her genişlikte 2×2 kalırlar. */}
+      <div data-motion-stagger className={styles.indexGrid}>
         {INDEX_STRIP.map((symbol) => {
           const quote = result.data[symbol];
           if (!quote) {
             return (
-              <Panel key={symbol} className="w-32 shrink-0 p-3.5 sm:w-auto">
-                <p className="text-xs font-semibold text-strong">{symbol}</p>
+              <div key={symbol} className={styles.indexCard}>
+                <p className="text-xs font-semibold text-strong">{INDEX_LABEL[symbol] ?? symbol}</p>
+                <p className="text-tiny text-muted">{symbol}</p>
                 <p className="mt-1 text-xs text-muted">{t.common.noData}</p>
-              </Panel>
+              </div>
             );
           }
           const points = (bars[symbol] ?? []).map((bar) => ({
@@ -791,22 +554,21 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
             <Link
               key={symbol}
               href={`/hisse/${symbol}`}
-              /* 128px: vekil fonun sembolü artık her genişlikte yazılıyor
-                 (yukarıdaki `INDEX_LABEL` yorumu) ve 112 pikselde
-                 "Nasdaq 100" ile "QQQ" yan yana sığmıyor, ad üç noktaya
-                 düşüyordu. Şerit zaten yatay kayıyor, genişlik bedava. */
-              className="w-32 shrink-0 sm:w-auto"
+              /* Önceki şeritte 128px gerekiyordu: 112px'te ad ve sembol
+                 yan yana sığmıyordu. Yeni 2×2 düzende dar başlık sarılır;
+                 vekil fonun sembolü hiçbir genişlikte gizlenmez. */
+              className={styles.indexLink}
             >
-              <Panel className="panel-hover flex h-full flex-col rounded-xl p-3 sm:rounded-lg sm:p-4">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-tiny font-semibold text-body">
+              <SpotlightCard className={styles.indexCard}>
+                <div className={styles.indexIdentity}>
+                  <span className="text-tiny font-semibold text-body">
                     {INDEX_LABEL[symbol] ?? symbol}
                   </span>
                   <span className="numeral shrink-0 text-nano text-muted">
                     {symbol}
                   </span>
                 </div>
-                <p className="tote mt-[3px] text-lg sm:mt-1.5 sm:text-title">
+                <p className={styles.indexValue}>
                   {formatPrice(quote.price, locale)}
                 </p>
                 <p
@@ -823,10 +585,10 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                     title={`${INDEX_LABEL[symbol] ?? symbol} · 1D`}
                     tone={tone}
                     height={40}
-                    className="mt-[7px] h-6 w-full sm:mt-2 sm:h-9"
+                    className={styles.indexSpark}
                   />
                 )}
-              </Panel>
+              </SpotlightCard>
             </Link>
           );
         })}
@@ -1113,11 +875,16 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 }
 
 function IndexSkeleton() {
+  // The previous deck measured 156px / mobile 135px. Use the final card's
+  // minimum size and shared 2×2 grid while the right-hand panel streams in.
   return (
-    <div className="flex gap-2.5 sm:grid sm:grid-cols-2 lg:gap-3">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-28 w-28 shrink-0 rounded-lg sm:w-auto" />
-      ))}
+    <div className="flex flex-col gap-2.5">
+      <div data-motion-stagger className={styles.indexGrid}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className={styles.indexSkeleton} />
+        ))}
+      </div>
+      <Skeleton className="h-3 w-64 max-w-full" />
     </div>
   );
 }
@@ -2258,7 +2025,7 @@ async function StoriesSpotlight({
   const figure = storyFigureOf(full?.bodyMd, full?.locale ?? locale);
 
   return (
-    <section className="overflow-hidden rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))]">
+    <section className={styles.storySpotlight}>
       {/* Başlık şeridi panel başlıklarıyla aynı ölçüde: bloğu ayıran şey
           başlığın boyu değil, altındaki manşet ve eğri. Cesaret TEK yerde
           harcanıyor. */}
@@ -2423,6 +2190,26 @@ async function LatestAnalyses({
         {analyses.map((row, index) => {
           const verdict = verdictOf(row.verdict);
           const logo = meta[row.symbol]?.logoUrl;
+          if (index === 0) {
+            return (
+              <li key={`${row.symbol}-${row.period}`}>
+                <Link href={analysisHref(row.symbol, row.period)} prefetch={false} className={styles.analysisLeadLink}>
+                  <SpotlightCard className={styles.analysisLead}>
+                    <div className={styles.analysisIdentity}>
+                      <LogoTile symbol={row.symbol} logoUrl={logo} size="md" />
+                      <div><h3>{row.company}</h3><small>{row.symbol} · {row.periodLabel} · {formatEtDateShort(row.reportDate, locale)}</small></div>
+                    </div>
+                    <ScoreRing score={row.score} verdict={verdict} size={72} showDenominator className={styles.analysisScore} />
+                    <p lang={row.locale} className={styles.analysisExcerpt}>{row.headline}</p>
+                    <div className={styles.analysisFooter}>
+                      <span className={styles.analysisCta}>{t.guide.cardCta}<ArrowUpRight size={16} /></span>
+                      <span className={cn("rounded-md px-2 py-1 text-tiny font-bold", verdictPillClass(verdict))}>{verdictLabel(verdict, t)}</span>
+                    </div>
+                  </SpotlightCard>
+                </Link>
+              </li>
+            );
+          }
           return (
             <li
               key={`${row.symbol}-${row.period}`}
