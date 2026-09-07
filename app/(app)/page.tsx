@@ -2112,22 +2112,20 @@ async function StoriesSpotlight({
               <Link
                 href={`/mercek/${story.slug}`}
                 prefetch={false}
-                className="flex min-h-11 items-baseline gap-3 px-4 py-2.5 transition-colors hover:bg-primary-tint sm:min-h-0 sm:px-5"
+                className={styles.storyRow}
               >
-                <span className="min-w-0 flex-1 text-base font-semibold leading-[19px] text-strong">
-                  {story.title}
-                </span>
-                {/* Semboller künye, başlık değil: yazının kimi anlattığını
-                    tıklamadan söylüyor. Dar ekranda düşüyor — orada satırın
-                    işi yalnızca "daha var" demek. */}
-                {story.symbols && story.symbols.length > 0 && (
-                  <span className="numeral hidden shrink-0 text-tiny text-muted sm:inline">
-                    {story.symbols.slice(0, 2).join(" · ")}
-                  </span>
-                )}
-                <span className="numeral shrink-0 text-tiny text-muted">
-                  {formatEtDateCompact(story.eventDate, locale)}
-                </span>
+                <div className={styles.storyRowCopy}>
+                  <h4 lang={story.locale}>{story.title}</h4>
+                  {story.dek && <p lang={story.locale}>{story.dek}</p>}
+                </div>
+                {/* Semboller başlığın yanında bir künye olarak kalır. Mobilde
+                    açıklama tam genişliği kullanır; künye alt satıra geçer. */}
+                <div className={styles.storyRowMeta}>
+                  <span className="numeral">{formatEtDateCompact(story.eventDate, locale)}</span>
+                  {story.symbols && story.symbols.length > 0 && <span>{story.symbols.slice(0, 2).join(" · ")}</span>}
+                  {story.locale !== locale && <span>{story.locale.toUpperCase()}</span>}
+                  <ArrowUpRight size={15} aria-hidden />
+                </div>
               </Link>
             </li>
           ))}

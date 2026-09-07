@@ -45,3 +45,24 @@ export function briefSummary(bodyMd: string): string {
   }
   return "";
 }
+
+/** A preview ends after a complete paragraph/list, with enough text to read.
+ * Raw line counts alone treated two tiny list items like two paragraphs.
+ * Keep the existing minimum-line preference, then extend to a natural boundary.
+ */
+export function briefPreviewCut(lines: string[], minimumLines = 4): number {
+  const minimum = Math.max(1, minimumLines);
+  const textLength = (line: string) => line.replace(/^\s*(?:##\s+|-\s+)/, "").replace(/\*\*/g, "").trim().length;
+  let length = 0;
+  for (let index = 0; index < lines.length; index++) {
+    length += textLength(lines[index]);
+    if (index + 1 < minimum || length < 900 || headingOf(lines[index])) continue;
+    // A heading stays with its first paragraph; a contiguous list stays whole.
+    if (lines[index + 1]?.trim().startsWith("- ")) continue;
+    const remainder = lines.slice(index + 1);
+    // A tiny tail does not earn a disclosure control of its own.
+    return remainder.length <= 1 || remainder.reduce((sum, line) => sum + textLength(line), 0) < 240
+      ? lines.length : index + 1;
+  }
+  return lines.length;
+}

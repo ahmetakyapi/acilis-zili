@@ -124,3 +124,22 @@
 @media (prefers-reduced-motion: reduce) {
   .indexCard { transition: none; }
 }
+
+/* The three secondary stories were title-only ~40px rows. Each now includes
+   its existing dek, with a small separate date/symbol column on desktop. */
+.storyRow { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:14px 24px; padding:17px 26px; transition:background .2s; }
+.storyRow:hover { background:var(--primary-tint); }
+.storyRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
+.storyRowCopy { min-width:0; }
+.storyRowCopy h4 { color:var(--text-strong); font-size:14px; line-height:1.45; font-weight:600; letter-spacing:-.015em; overflow-wrap:anywhere; }
+.storyRowCopy p { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin-top:6px; color:var(--text-body); font-size:13px; line-height:1.6; }
+.storyRowMeta { display:flex; align-items:center; gap:12px; padding-top:2px; color:var(--text-muted); font-size:11px; }
+.storyRowMeta svg { flex-shrink:0; color:var(--primary-ink); transition:transform .2s; }
+.storyRow:hover .storyRowMeta svg { transform:translate(2px,-2px); }
+@media(max-width:767px) {
+ .storyRow { grid-template-columns:minmax(0,1fr); gap:10px; padding:16px 20px; }
+ .storyRowCopy p { -webkit-line-clamp:3; }
+ .storyRowMeta { flex-wrap:wrap; padding-top:0; }
+ .storyRowMeta svg { margin-left:auto; }
+}
+@media(prefers-reduced-motion:reduce) { .storyRow,.storyRowMeta svg { transition:none; } }

@@ -1,0 +1,10 @@
+/* Native disclosure stays usable before hydration and with JavaScript off.
+   The expanded control sits after the continuation, never between list items. */
+.disclosure { position:relative; margin-top:14px; }
+.toggle { display:inline-flex; align-items:center; gap:7px; min-height:40px; width:fit-content; padding:8px 14px; border:1px solid var(--primary-faint); border-radius:8px; color:var(--primary-ink); font-size:12px; font-weight:550; cursor:pointer; list-style:none; transition:background .2s; }
+.toggle::-webkit-details-marker { display:none; }
+.toggle:hover { background:var(--primary-tint); }
+.toggle:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+.disclosure[open] { margin-top:0; padding-bottom:54px; }
+.disclosure[open] > .toggle { position:absolute; bottom:0; left:0; }
+@media(prefers-reduced-motion:reduce) { .toggle { transition:none; } }

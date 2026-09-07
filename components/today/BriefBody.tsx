@@ -1,5 +1,6 @@
-import { headingOf } from "@/lib/brief";
+import { briefPreviewCut, headingOf } from "@/lib/brief";
 import { cn } from "@/lib/utils";
+import styles from "./BriefBody.module.css";
 
 /**
  * Günlük bülten gövdesi için mini biçimlendirici — tam markdown değil,
@@ -219,13 +220,15 @@ export function BriefBody({
     return <BriefLines lines={lines} startNumber={1} size={size} />;
   }
 
-  const base = Math.min(lines.length, Math.max(1, openLines));
+  /* 7 Eylül: dört dolu satır, iki paragraf + listenin ilk iki maddesi
+     demekti. Önizleme artık en az 900 karakter okutur ve liste/başlık
+     sınırını tamamlar; openLines yalnızca asgari satır tercihi olarak kalır. */
 
   /* Geriye tek satır kalıyorsa hiç katlanmıyor. Bir paragrafı saklayan
      katlama, kendi düğmesi kadar yer tutuyor ve okuyucuya hiçbir şey
      kazandırmıyor — üstelik "arkada çok şey var" diye yanlış bir izlenim
      bırakıyor. Kural iki bülten türüne de aynı işliyor. */
-  const cut = lines.length - base <= 1 ? lines.length : base;
+  const cut = briefPreviewCut(lines, openLines);
 
   return (
     <>
@@ -238,8 +241,8 @@ export function BriefBody({
            tetikleyicinin görünümü — okla önlenmiş bir metin satırıydı,
            sayfanın en uzun metninin altında fark edilmiyordu. Artık kendi
            kenarlığı olan bir denetim ve açıkken kapanma yolunu da veriyor. */
-        <details className="group/brief mt-3.5">
-          <summary className="inline-flex min-h-9 w-fit cursor-pointer list-none items-center gap-1.5 rounded-md border border-primary-faint px-3.5 text-small font-semibold text-primary transition-colors hover:bg-primary-tint [&::-webkit-details-marker]:hidden">
+        <details className={`group/brief ${styles.disclosure}`}>
+          <summary className={styles.toggle}>
             <span
               aria-hidden
               className="transition-transform group-open/brief:rotate-90"
