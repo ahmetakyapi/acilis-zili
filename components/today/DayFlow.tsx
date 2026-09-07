@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Bell, CalendarBlank, Check, CircleNotch, Clock, TrendUp } from "@phosphor-icons/react";
@@ -34,6 +34,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
   const refresh = useRef<() => void>(() => {});
   const announcedResults = useRef(flowResultSignature(initial.events));
   const reduced = useReducedMotion();
+  const detailId = useId();
 
   useEffect(() => {
     // SessionRefresh can bring a partial provider response too. Merge it
@@ -131,6 +132,23 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
 
   const events = snapshot.events;
   const selected = events.find((event) => event.id === selectedId) ?? events[0];
+  const selectedIndex = events.findIndex((event) => event.id === selected?.id);
+  const activeEventId = selected?.id;
+  useEffect(() => {
+    const container = cards.current;
+    if (!container || !activeEventId) return;
+    // Keep the selected agenda item visible when the two-column layout
+    // becomes a horizontal mobile list (including device rotation).
+    let width = container.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (container.clientWidth === width) return;
+      width = container.clientWidth;
+      const card = container.querySelector<HTMLElement>(`[data-event-id="${CSS.escape(activeEventId)}"]`);
+      if (card) container.scrollTo({ left: card.offsetLeft, top: card.offsetTop, behavior: "instant" });
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [activeEventId]);
   const markerTimes = [...new Set(events.flatMap((event) => event.timeEt ? [event.timeEt] : []))];
   const nowEt = new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(nowMs));
   const now = minutesOf(nowEt);
@@ -141,7 +159,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
   function select(id: string) {
     setSelectedId(id);
     const card = cards.current?.querySelector<HTMLElement>(`[data-event-id="${CSS.escape(id)}"]`);
-    if (card && cards.current) cards.current.scrollTo({ left: card.offsetLeft - cards.current.offsetLeft, behavior: reduced ? "instant" : "smooth" });
+    if (card && cards.current) cards.current.scrollTo({ left: card.offsetLeft, top: card.offsetTop, behavior: reduced ? "instant" : "smooth" });
   }
 
   return <div ref={ref} className={styles.flow} data-day-flow>
@@ -150,7 +168,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
       <div className={styles.connection} data-state={connection}>
         {connection === "checking" ? <CircleNotch className={styles.spinner} size={13} /> : <span className={styles.connectionDot} />}
         <span>{connection === "error" ? labels.offline : labels.auto}</span>
-        <button onClick={() => refresh.current()} disabled={connection === "checking"} aria-label={connection === "error" ? labels.retry : labels.updating} title={labels.liveNote}><Clock size={13} />{checked} {snapshot.tags.primary}</button>
+        <button onClick={() => refresh.current()} disabled={connection === "checking"} aria-label={connection === "error" ? labels.retry : `${labels.checked}: ${checked} ${snapshot.tags.primary}`} title={labels.liveNote}><Clock size={14} /><span>{labels.checked}</span>{checked} {snapshot.tags.primary}</button>
       </div>
     </div>
 
@@ -172,17 +190,18 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
     </div>
 
     {events.length ? <>
-      <div className={styles.eventHeading}><h3>{labels.events}<span>{events.length}</span></h3><div><button aria-label={labels.back} onClick={() => cards.current?.scrollBy({ left: -(cards.current.clientWidth * .75), behavior: reduced ? "instant" : "smooth" })}><ArrowLeft size={16} /></button><button aria-label={labels.next} onClick={() => cards.current?.scrollBy({ left: cards.current.clientWidth * .75, behavior: reduced ? "instant" : "smooth" })}><ArrowRight size={16} /></button></div></div>
+      <div className={styles.eventHeading}><h3>{labels.events}<span>{events.length}</span></h3><div><button aria-label={labels.back} disabled={selectedIndex <= 0} onClick={() => events[selectedIndex - 1] && select(events[selectedIndex - 1].id)}><ArrowLeft size={18} /></button><button aria-label={labels.next} disabled={selectedIndex >= events.length - 1} onClick={() => events[selectedIndex + 1] && select(events[selectedIndex + 1].id)}><ArrowRight size={18} /></button></div></div>
+      <div className={styles.eventLayout}>
       <div ref={cards} className={styles.eventCards}>
-        {events.map((event) => <button key={event.id} data-event-id={event.id} className={styles.eventCard} data-selected={selected?.id === event.id} onClick={() => select(event.id)} aria-pressed={selected?.id === event.id}>
-          <span className={styles.cardTop}><span>{timeOf(event)}</span><Status event={event} nowMs={nowMs} labels={labels} /></span>
+        {events.map((event) => <button key={event.id} data-event-id={event.id} className={styles.eventCard} data-selected={selected?.id === event.id} onClick={() => select(event.id)} aria-pressed={selected?.id === event.id} aria-controls={detailId}>
+          <span className={styles.cardTop}><span>{timeOf(event)} {event.timeEt && <small>{snapshot.tags.primary}</small>}</span><Status event={event} nowMs={nowMs} labels={labels} /></span>
           <span className={styles.cardKind}>{event.kind === "earnings" ? <Bell size={13} /> : <TrendUp size={13} />}{event.kind === "earnings" ? labels.earnings : labels.economic}</span>
           <strong>{event.title}</strong>
           <span className={styles.cardBottom}>{event.actual ? <b>{event.actual}</b> : event.members ? <span className={styles.logos}>{event.members.slice(0, 4).map((member) => <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="xs" />)}</span> : <span>{event.forecast ? `${labels.forecast} ${event.forecast}` : labels[displayFlowStatus(event, nowMs)]}</span>}<ArrowDownRight size={20} /></span>
         </button>)}
       </div>
       <AnimatePresence initial={false} mode="wait">
-        {selected && <motion.div key={selected.id} className={styles.detail} initial={reduced ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -6 }} transition={{ duration: .23 }}>
+        {selected && <motion.div key={selected.id} id={detailId} role="region" aria-label={selected.title} className={styles.detail} initial={reduced ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -6 }} transition={{ duration: .23 }}>
           <div className={styles.detailHeading}><div><span>{selected.detail ?? (selected.kind === "earnings" ? labels.earnings : labels.economic)}</span><h4>{selected.title}</h4></div><Status event={selected} nowMs={nowMs} labels={labels} /></div>
           {selected.members ? <div className={styles.members}>{selected.members.map((member) => <div key={member.symbol} className={styles.member}>
             <div className={styles.memberIdentity}><LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" /><div><strong>{member.symbol}</strong><Status event={{ status: member.status, scheduledAt: selected.scheduledAt }} nowMs={nowMs} labels={labels} /></div></div>
@@ -195,6 +214,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
           <div className={styles.detailFooter}><span>{labels.source}: {selected.source}</span><Link href={selected.href}>{labels.calendar}<ArrowUpRight size={13} /></Link></div>
         </motion.div>}
       </AnimatePresence>
+      </div>
     </> : <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{labels.emptyTitle}</h3><p>{labels.emptyHint}</p></div></div>}
     {snapshot.sourceDelayed && <p className={styles.sourceDelay}>{labels.sourceDelayed}</p>}
     <span className="sr-only" role="status" aria-live="polite">{announcement}</span>

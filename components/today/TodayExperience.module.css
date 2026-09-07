@@ -35,10 +35,11 @@
    Gün akışının başlığıyla aynı satıra yerleşir; kendi yüzeyini çoğaltmaz. */
 .flowHeader { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .flowNav { position: static; flex: 0 1 570px; border: 0; box-shadow: none; background: var(--surface-sunken); border-radius: 12px; }
-.flowNav a { min-height: 38px; padding: 9px 12px; font-size: 11px; }
+.flowNav > div { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); overflow: visible; }
+.flowNav a { min-height: 44px; padding: 9px 10px; font-size: 12px; white-space: normal; text-align: center; }
 .sectionHeading { display: flex; flex-direction: column; gap: 5px; }
-.sectionHeading h2 { font-size: 20px; font-weight: 650; letter-spacing: -.035em; color: var(--text-strong); }
-.sectionHeading p { font-size: 11px; color: var(--text-muted); }
+.sectionHeading h2 { font-size: 25px; font-weight: 600; letter-spacing: -.035em; color: var(--text-strong); }
+.sectionHeading p { font-size: 13px; line-height: 1.6; color: var(--text-body); }
 .dashboard { display: grid; grid-template-columns: minmax(0,1fr) 350px; gap: 28px 24px; }
 .dashboard > [data-col] { gap: 24px; }
 .dashboard :global(.panel) { border-radius: 18px; box-shadow: 0 2px 3px color-mix(in srgb, var(--text-strong) 2%, transparent); }
@@ -112,8 +113,9 @@
   .indexValue { margin-top: 9px; font-size: 25px; }
   .indexSpark { height: 29px; }
   .flowPanel { padding: 20px 18px 4px; }
-  .sectionHeading h2 { font-size: 20px; }
-  .sectionHeading p { font-size: 11px; line-height: 1.5; }
+  .sectionHeading h2 { font-size: 23px; }
+  .sectionHeading p { font-size: 13px; line-height: 1.6; }
+  .flowNav > div { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .dashboard { gap: 24px; }
   .dashboard > [data-col] { gap: 20px; }
   .storySpotlight > a { padding: 20px; }
