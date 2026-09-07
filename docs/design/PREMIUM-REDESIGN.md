@@ -109,3 +109,13 @@ Kontroller yerel Chrome üzerinde yapıldı. Gerçek iOS/Safari cihaz ölçümü
 - Açık sayfada 14 hareket azaltma tercihi değişimi ve üç dizinde JavaScript kapalı yükleme doğrulandı; görünmez kalan içerik yok.
 - Üç endeks seçimi, NASDAQ listesinin 60→102 satır açılması, fiyat sıralaması, MU filtresi ve sonuçsuz Mercek araması çalıştı. Rehber konu bağlantısı başlığı üst menünün altında yaklaşık 76px'e yerleştirdi; konu filtresi, sonraki yazı bağlantısı ve sabit okuma ilerlemesi doğrulandı.
 - `npm run lint`, `npm run typecheck`, `npm run build` ve `git diff --check` başarılı. Bu tur veri/sağlayıcı mantığını değiştirmedi; gerçek veri tabanına test içeriği eklenmedi. Kontroller yerel Chrome'da yapıldı; gerçek iOS/Safari cihaz kontrolü yapılmadı.
+
+## Bugünün Akışı: Daha Sade Yerleşim — 7 Eylül
+
+- Kullanıcının yönlendirmesiyle çalışma dalı `main` oldu; önceki iki yerel commit geçmişi korunarak ileri alındı.
+- Olay kartları saat, tür/durum ve tam başlıktan oluşan kısa satırlara dönüştü. Mobil yatay kart dizisi yerine yüksekliği sınırlı olay listesi kullanılır. Seçim ve ekran boyutu değişimi yalnız görünüm dışındaki satırı gerektiği kadar kaydırır.
+- İç içe şirket kartları kaldırıldı; logo, sonuçlar ve analiz bağlantısı düz satırlarda gösterilir. Makro gerçekleşen/beklenti/önceki değerleri üç sütunda birlikte okunur. Detay başlığı ve boşlukları küçültüldü; başlık veya sonuç kırpılmaz.
+- Seans grafiği saat ızgarası, seans bandı ve veri/bilanço işaretleriyle yenilendi. Aynı saate denk gelen açıklamalar tek işarette sayılır; işarete tekrar basmak o saatin diğer olayını seçer. Fare, klavye ve dokunma hedefleri aynı detay alanına bağlıdır. Geçen süre çizgisi genişlik yerine dönüşümle ilerler.
+- Aynı üç uzun başlıklı olay ve iki şirketli test yanıtıyla 1440px'te detay 433→288px, bütün akış 940→571px; 390px'te detay 645→375px, bütün akış 1288→919px ölçüldü. Saat bilgisi bilinmeyen olaylarda etiketin komşu başlığa taşması ayrıca giderildi.
+- Gerçek sonuç, analiz bağlantısı, TR/NY saat dönüşümü ve 30 saniyelik yenileme yolu korunur. Test yanıtları yalnız tarayıcıda kullanıldı; veritabanına örnek olay eklenmedi.
+- Yerel üretim sürümünde TR/EN × açık/koyu × 320/390/768/1024/1440px × ekonomik sonuç/bilanço/belirsiz saat: **60 durum kontrolü**; belge ve metin taşması, görünmez detay veya JavaScript hatası yok. Aynı saatteki olaylar arasında grafikten geçiş, klavye seçimi, yeniden boyutlandırmada seçili satırın görünürlüğü ve azaltılmış hareket iki dilde doğrulandı. Bekleyen → sıfır sonuç → şirket bazında analiz → bağlantı hatası akışı çalıştı. Lint, typecheck, build ve 14 veri/sağlayıcı testi başarılı.

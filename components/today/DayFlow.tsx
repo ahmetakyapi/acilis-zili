@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
-import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Bell, CalendarBlank, Check, CircleNotch, Clock, TrendUp } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Bell, CalendarBlank, Check, CircleNotch, Clock, TrendUp } from "@phosphor-icons/react";
 import { LogoTile } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { displayFlowStatus, flowResultSignature, preserveConfirmedResults, type DayFlowSnapshot, type FlowEvent } from "@/lib/day-flow";
@@ -14,6 +14,14 @@ import styles from "./DayFlow.module.css";
 type Props = { initial: DayFlowSnapshot; locale: Locale; labels: Dictionary["dayFlow"]; railLabels: Dictionary["dayRail"] };
 const pct = (minutes: number) => Math.max(0, Math.min(100, (minutes - 240) / 960 * 100));
 const minutesOf = (time: string) => { const [h, m] = time.split(":").map(Number); return h * 60 + m; };
+
+function revealRow(container: HTMLDivElement, card: HTMLElement, behavior: ScrollBehavior) {
+  const bounds = container.getBoundingClientRect();
+  const row = card.getBoundingClientRect();
+  const delta = row.top < bounds.top ? row.top - bounds.top
+    : row.bottom > bounds.bottom ? Math.min(row.top - bounds.top, row.bottom - bounds.bottom) : 0;
+  if (delta) container.scrollTo({ top: container.scrollTop + delta, left: 0, behavior });
+}
 
 function Status({ event, nowMs, labels }: { event: Pick<FlowEvent, "status" | "scheduledAt">; nowMs: number; labels: Props["labels"] }) {
   const status = displayFlowStatus(event, nowMs);
@@ -138,14 +146,14 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
   useEffect(() => {
     const container = cards.current;
     if (!container || !activeEventId) return;
-    // Keep the selected agenda item visible when the two-column layout
-    // becomes a horizontal mobile list (including device rotation).
+    // Keep the selected agenda row visible across responsive width changes.
+    // The compact list keeps a bounded height on both desktop and mobile.
     let width = container.clientWidth;
     const observer = new ResizeObserver(() => {
       if (container.clientWidth === width) return;
       width = container.clientWidth;
       const card = container.querySelector<HTMLElement>(`[data-event-id="${CSS.escape(activeEventId)}"]`);
-      if (card) container.scrollTo({ left: card.offsetLeft, top: card.offsetTop, behavior: "instant" });
+      if (card) revealRow(container, card, "instant");
     });
     observer.observe(container);
     return () => observer.disconnect();
@@ -160,7 +168,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
   function select(id: string) {
     setSelectedId(id);
     const card = cards.current?.querySelector<HTMLElement>(`[data-event-id="${CSS.escape(id)}"]`);
-    if (card && cards.current) cards.current.scrollTo({ left: card.offsetLeft, top: card.offsetTop, behavior: reduced ? "instant" : "smooth" });
+    if (card && cards.current) revealRow(cards.current, card, reduced ? "instant" : "smooth");
   }
 
   return <div ref={ref} className={styles.flow} data-day-flow>
@@ -178,12 +186,20 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
         {[{ minutes: 570, label: railLabels.openShort }, { minutes: snapshot.closeMinutes, label: railLabels.closeShort }].map(({ minutes, label }) => <div key={label} className={styles.bound} style={{ left: `${pct(minutes)}%` }}><span>{label}</span><strong>{primary(minutes)} <small>{snapshot.tags.primary}</small></strong></div>)}
       </div>
       <div className={styles.axis}>
+        <div className={styles.ticks} aria-hidden="true">{Array.from({ length: 17 }, (_, hour) => <i key={hour} />)}</div>
         <div className={styles.sessionBand} data-open={snapshot.tradingDay} style={{ left: `${pct(570)}%`, width: `${pct(snapshot.closeMinutes) - pct(570)}%` }} />
-        <motion.div className={styles.elapsed} animate={{ width: `${pct(now)}%` }} transition={{ duration: reduced ? 0 : 1.2, ease: "easeOut" }} />
+        <motion.div className={styles.elapsed} style={{ transformOrigin: "left" }} animate={{ scaleX: pct(now) / 100 }} transition={{ duration: reduced ? 0 : 1.2, ease: "easeOut" }} />
         {[570, snapshot.closeMinutes].map((minutes) => <span key={minutes} className={styles.boundDot} style={{ left: `${pct(minutes)}%` }} />)}
         {markerTimes.map((time) => {
           const group = events.filter((event) => event.timeEt === time);
-          return <button key={time} className={styles.eventDot} data-selected={group.some((event) => event.id === selected?.id)} data-released={group.some((event) => event.status !== "scheduled")} style={{ left: `${pct(minutesOf(time))}%` }} onClick={() => select(group[0].id)} aria-label={`${primary(minutesOf(time))} ${group.map((event) => event.title).join(", ")}`} title={group.map((event) => event.title).join(", ")} />;
+          const active = group.findIndex((event) => event.id === selected?.id);
+          // Coincident releases share a timestamp, not a destination. Repeated
+          // activation advances through every release at that time.
+          const target = group[(active + 1) % group.length];
+          const released = group.some((event) => event.status !== "scheduled");
+          return <button key={time} className={styles.eventDot} data-selected={active >= 0} data-released={released} style={{ left: `${pct(minutesOf(time))}%` }} onClick={() => select(target.id)} aria-pressed={active >= 0} aria-controls={detailId} aria-label={`${labels.selectEvent}: ${timeOf(target)} ${snapshot.tags.primary} · ${target.title}`} title={`${primary(minutesOf(time))} · ${group.map((event) => event.title).join(", ")}`}>
+            {group.length > 1 ? <span>{group.length}</span> : group[0].kind === "earnings" ? <Bell size={13} weight="bold" /> : <TrendUp size={13} weight="bold" />}
+          </button>;
         })}
         {now >= 240 && now <= 1200 && <motion.div className={styles.now} animate={{ left: `${pct(now)}%` }} transition={{ duration: reduced ? 0 : 1 }}><span>{railLabels.now}</span><i /></motion.div>}
       </div>
@@ -195,15 +211,17 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
       <div className={styles.eventLayout}>
       <div ref={cards} className={styles.eventCards}>
         {events.map((event) => <button key={event.id} data-event-id={event.id} className={styles.eventCard} data-selected={selected?.id === event.id} onClick={() => select(event.id)} aria-pressed={selected?.id === event.id} aria-controls={detailId}>
-          <span className={styles.cardTop}><span>{timeOf(event)} {event.timeEt && <small>{snapshot.tags.primary}</small>}</span><Status event={event} nowMs={nowMs} labels={labels} /></span>
-          <span className={styles.cardKind}>{event.kind === "earnings" ? <Bell size={13} /> : <TrendUp size={13} />}{event.kind === "earnings" ? labels.earnings : labels.economic}</span>
-          <strong>{event.title}</strong>
-          <span className={styles.cardBottom}>{event.actual ? <b>{event.actual}</b> : event.members ? <span className={styles.logos}>{event.members.slice(0, 4).map((member) => <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="xs" />)}</span> : <span>{event.forecast ? `${labels.forecast} ${event.forecast}` : labels[displayFlowStatus(event, nowMs)]}</span>}<ArrowDownRight size={20} /></span>
+          <span className={styles.cardTime} data-unknown={!event.timeEt}>{timeOf(event)}{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
+          <span className={styles.cardSummary}>
+            <span className={styles.cardKind}>{event.kind === "earnings" ? <Bell size={12} /> : <TrendUp size={12} />}{event.kind === "earnings" ? labels.earnings : labels.economic}<Status event={event} nowMs={nowMs} labels={labels} /></span>
+            <strong>{event.title}</strong>
+          </span>
+          <span className={styles.cardBottom}>{event.actual && <b>{event.actual}</b>}<ArrowRight size={15} /></span>
         </button>)}
       </div>
       <AnimatePresence initial={false} mode="wait">
-        {selected && <motion.div key={selected.id} id={detailId} role="region" aria-label={selected.title} className={styles.detail} initial={reduced ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -6 }} transition={{ duration: .23 }}>
-          <div className={styles.detailHeading}><div><span>{selected.detail ?? (selected.kind === "earnings" ? labels.earnings : labels.economic)}</span><h4>{selected.title}</h4></div><Status event={selected} nowMs={nowMs} labels={labels} /></div>
+        {selected && <motion.div key={selected.id} id={detailId} role="region" aria-label={selected.title} className={styles.detail} initial={reduced ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -3 }} transition={{ duration: .18 }}>
+          <div className={styles.detailHeading}><div><span>{timeOf(selected)} {selected.timeEt && snapshot.tags.primary} · {selected.detail ?? (selected.kind === "earnings" ? labels.earnings : labels.economic)}</span><h4>{selected.title}</h4></div><Status event={selected} nowMs={nowMs} labels={labels} /></div>
           {selected.members ? <div className={styles.members}>{selected.members.map((member) => <div key={member.symbol} className={styles.member}>
             <div className={styles.memberIdentity}><LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" /><div><strong>{member.symbol}</strong><Status event={{ status: member.status, scheduledAt: selected.scheduledAt }} nowMs={nowMs} labels={labels} /></div></div>
             {(member.revenue || member.eps) && <dl className={styles.memberNumbers}>{member.revenue && <div><dt>{labels.revenue}</dt><dd>{member.revenue}</dd></div>}{member.eps && <div><dt>{labels.eps}</dt><dd>{member.eps}</dd></div>}</dl>}
