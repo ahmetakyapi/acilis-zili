@@ -1,3 +1,5 @@
+import { canonicalSymbol } from "../../lib/symbols";
+
 /**
  * Endeks bileşen listeleri — Piyasalar sayfasının ve sektör önerilerinin tabanı.
  *
@@ -722,14 +724,25 @@ export const SECONDARY_SHARE_CLASSES: Record<string, string> = {
 };
 
 export function isSecondaryShareClass(symbol: string): boolean {
-  return symbol in SECONDARY_SHARE_CLASSES;
+  return canonicalSymbol(symbol) in SECONDARY_SHARE_CLASSES;
 }
 
 /** Aynı şirketin ikinci sınıf kotasyonlarını listeden düşürür. */
 export function primaryOnly<T extends { symbol: string }>(
   rows: readonly T[],
 ): T[] {
-  return rows.filter((row) => !isSecondaryShareClass(row.symbol));
+  // BRK-B and BRK.B once appeared as two companies. Prefer the canonical
+  // database row (its logo, GICS and price cache are complete), regardless
+  // of input order. Normalize an alias-only row without deleting stored data.
+  const canonical = new Map<string, T>();
+  for (const row of rows) {
+    const symbol = canonicalSymbol(row.symbol);
+    if (isSecondaryShareClass(symbol)) continue;
+    if (!canonical.has(symbol) || row.symbol === symbol) {
+      canonical.set(symbol, row.symbol === symbol ? row : { ...row, symbol });
+    }
+  }
+  return [...canonical.values()];
 }
 
 /** Aynı GICS alt sektöründeki diğer şirketler — hisse detayındaki öneriler. */

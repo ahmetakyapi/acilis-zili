@@ -1,3 +1,4 @@
+import { canonicalSymbol } from "../symbols";
 import { etParts, todayEt } from "../market-hours";
 import {
   fail,
@@ -129,6 +130,24 @@ async function safeText(res: Response): Promise<string> {
   } catch {
     return "gövde okunamadı";
   }
+}
+
+/** A single rejected identifier must not erase the other 199 symbols.
+ * Only remove an explicitly named member of this request; network/429 errors
+ * are never retried here. The retry budget prevents malformed lists flooding
+ * the provider. Known share-class aliases are normalized before this point.
+ */
+async function symbolBatchFetch<T>(path: string, params: Record<string, string>, opts: FetchOpts): Promise<ProviderResult<T>> {
+  let symbols = params.symbols.split(",");
+  let result = await alpacaFetch<T>(path, params, opts);
+  for (let retry = 0; retry < 8 && !result.ok; retry++) {
+    const invalid = /^Alpaca 400:.*invalid symbol: ([A-Za-z0-9./_-]+)/.exec(result.message)?.[1];
+    if (!invalid || !symbols.includes(invalid)) break;
+    symbols = symbols.filter(symbol => symbol !== invalid);
+    if (!symbols.length) break;
+    result = await alpacaFetch<T>(path, { ...params, symbols: symbols.join(",") }, opts);
+  }
+  return result;
 }
 
 /* --------------------------------------------------------------------------
@@ -285,7 +304,7 @@ export async function getSnapshots(
 ): Promise<ProviderResult<Record<string, Quote>>> {
   if (symbols.length === 0) return ok({}, "alpaca");
 
-  const unique = [...new Set(symbols)];
+  const unique = [...new Set(symbols.map(canonicalSymbol))];
   const quotes: Record<string, Quote> = {};
   let fetchedAt: Date | undefined;
   let lastFailure: ProviderResult<Record<string, Quote>> | null = null;
@@ -296,7 +315,7 @@ export async function getSnapshots(
      birbirine bağlı değil; hiçbiri ötekinin sonucunu okumuyor. */
   const results = await Promise.all(
     batches(unique).map((batch) =>
-      alpacaFetch<unknown>(
+      symbolBatchFetch<unknown>(
         "/snapshots",
         { symbols: batch.join(","), feed: SNAPSHOT_FEED },
         { revalidate, tags: ["quotes"] },
@@ -337,6 +356,10 @@ export async function getSnapshots(
     );
   }
 
+  for (const symbol of symbols) {
+    const quote = quotes[canonicalSymbol(symbol)];
+    if (quote && symbol !== quote.symbol) quotes[symbol] = { ...quote, symbol };
+  }
   return ok(quotes, "alpaca", { fetchedAt });
 }
 
@@ -363,7 +386,7 @@ export async function getPeriodChanges(
 ): Promise<ProviderResult<Record<string, number>>> {
   if (symbols.length === 0) return ok({}, "alpaca");
 
-  const unique = [...new Set(symbols)];
+  const unique = [...new Set(symbols.map(canonicalSymbol))];
   const lookbackDays = Math.max(12, sessions * 2 + 6);
   const start = new Date(Date.now() - lookbackDays * 86400000)
     .toISOString()
@@ -376,7 +399,7 @@ export async function getPeriodChanges(
   /* Paketler PARALEL — gerekçe `getSnapshots` içinde. */
   const results = await Promise.all(
     batches(unique).map((batch) =>
-      alpacaFetch<{ bars?: Record<string, AlpacaBar[]> }>(
+      symbolBatchFetch<{ bars?: Record<string, AlpacaBar[]> }>(
         "/bars",
         {
           symbols: batch.join(","),
@@ -411,6 +434,10 @@ export async function getPeriodChanges(
   }
 
   if (!anyOk && lastFailure) return lastFailure;
+  for (const symbol of symbols) {
+    const change = changes[canonicalSymbol(symbol)];
+    if (change !== undefined) changes[symbol] = change;
+  }
   return ok(changes, "alpaca");
 }
 
@@ -469,7 +496,7 @@ export async function getBars(
   }>(
     "/bars",
     {
-      symbols: symbol,
+      symbols: canonicalSymbol(symbol),
       timeframe: spec.timeframe,
       start: startDateFor(range, now),
       limit: String(spec.limit),
@@ -482,7 +509,7 @@ export async function getBars(
   if (!result.ok) return result;
 
   const raw = result.data.bars;
-  const list = Array.isArray(raw) ? raw : (raw?.[symbol] ?? []);
+  const list = Array.isArray(raw) ? raw : (raw?.[canonicalSymbol(symbol)] ?? []);
 
   if (!list || list.length === 0) {
     return fail("alpaca", "empty", `${symbol} için bar verisi yok`);
@@ -537,7 +564,7 @@ export async function getBarsMulti(
   if (symbols.length === 0) return ok({}, "alpaca");
 
   const spec = RANGE_SPECS[range];
-  const unique = [...new Set(symbols)];
+  const unique = [...new Set(symbols.map(canonicalSymbol))];
   const perRequest = Math.max(
     1,
     Math.min(BATCH_SIZE, Math.floor(MAX_BARS_PER_REQUEST / spec.limit)),
@@ -551,7 +578,7 @@ export async function getBarsMulti(
 
   for (let i = 0; i < unique.length; i += perRequest) {
     const batch = unique.slice(i, i + perRequest);
-    const result = await alpacaFetch<{
+    const result = await symbolBatchFetch<{
       bars?: Record<string, AlpacaBar[]>;
     }>(
       "/bars",
@@ -592,6 +619,10 @@ export async function getBarsMulti(
   }
 
   if (!anyOk && lastFailure) return lastFailure;
+  for (const symbol of symbols) {
+    const bars = out[canonicalSymbol(symbol)];
+    if (bars) out[symbol] = bars;
+  }
   return ok(out, "alpaca", { fetchedAt });
 }
 
