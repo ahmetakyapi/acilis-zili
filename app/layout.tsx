@@ -176,7 +176,13 @@ export default async function RootLayout({
         {/* Kuruluş + site künyesi; sayfa bazlı künyeler kendi rotalarında. */}
         <SiteJsonLd locale={locale} />
         {children}
-        <Analytics />
+        {/* Vercel Analytics YALNIZCA Vercel'de basılır. Başka bir barındırmada
+            bileşen `/_vercel/insights/script.js` çekmeye çalışıyor, o adres
+            orada yok ve script 404'le sessizce ölüyor — ekranda hiçbir belirti
+            olmadan her sayfa yüklemesine boşa bir istek ekliyor.
+            Sitenin KENDİ ölçümü buna bağlı değil: `lib/analytics.ts` +
+            `page_views` her yerde çalışır, bu yalnızca ek bir katman. */}
+        {process.env.VERCEL === "1" && <Analytics />}
       </body>
     </html>
   );

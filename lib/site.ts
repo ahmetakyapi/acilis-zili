@@ -44,8 +44,27 @@ export const SITE_URL = (
  *
  * Önizleme (preview) dağıtımları asla indekslenmez: aynı içeriğin ikinci bir
  * adreste görünmesi arama motorlarında kopya içerik sayılır.
+ *
+ * AYNI GEREKÇE İKİNCİ BİR BARINDIRMA İÇİN DE GEÇERLİ. Site iki yerde birden
+ * canlıysa (Vercel + kendi sunucumuz) ikisi de indekslenirse tam olarak o
+ * kopya içerik durumu oluşur — üstelik hangisinin kazanacağına arama motoru
+ * karar verir. Hangi kopyanın asıl olduğu bir DAĞITIM kararı, kod kararı
+ * değil; bu yüzden `SITE_INDEXABLE` ile dışarıdan bastırılabiliyor.
+ * Değişken yoksa eski davranış aynen sürüyor.
+ *
+ * DERLEME ZAMANINDA OKUNUR. `robots.ts` ve `sitemap.ts` varsayılan olarak
+ * statik üretiliyor, yani bu değer o rotalara BUILD sırasında pişiyor.
+ * Değişkeni deploy'dan sonra ayarlamak yetmez — `npm run build` öncesinde
+ * ortamda olmalı.
  */
-export const INDEXABLE = process.env.VERCEL_ENV !== "preview";
+function resolveIndexable(): boolean {
+  const explicit = process.env.SITE_INDEXABLE?.trim().toLowerCase();
+  if (explicit === "false" || explicit === "0") return false;
+  if (explicit === "true" || explicit === "1") return true;
+  return process.env.VERCEL_ENV !== "preview";
+}
+
+export const INDEXABLE = resolveIndexable();
 
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "./i18n/config";
 import { languageAlternates, stripLocale, withLocale } from "./i18n/routing";

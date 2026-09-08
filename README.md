@@ -153,7 +153,7 @@ sökülüyor ve dil bir başlıkla taşınıyor; tarayıcının adresi `/en/...`
 | Auth | next-auth v5 — Credentials + bcrypt, JWT |
 | İkon | Phosphor (duotone) |
 | Yazı tipi | Schibsted Grotesk — tek aile, değişken 400–900 |
-| Barındırma | Vercel + Vercel Cron |
+| Barındırma | Vercel + Vercel Cron · ikinci kopya: kendi sunucusu (`docs/deploy-vps.md`) |
 
 ---
 
@@ -402,7 +402,9 @@ npm run dev
 | `FRED_API_KEY` | makro için | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) — 32 karakter, küçük harf |
 | `CRON_SECRET` | üretimde | `openssl rand -hex 32` — Vercel Cron bunu `Bearer` ile gönderir |
 | `BRIEF_SECRET` | içerik için | `openssl rand -hex 32` — bülten, mercek ve analiz uçlarının kapısı |
-| `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri ve sitemap için) |
+| `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri ve sitemap için) — Vercel dışında zorunlu |
+| `AUTH_TRUST_HOST` | Vercel dışında | ters vekil arkasında `true`; yoksa giriş yönlendirmesi şaşar |
+| `SITE_INDEXABLE` | ikinci kopyada | ikincil kopyada `false` — aynı içeriğin iki adresi kopya içerik sayılır |
 | `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisi (DeepL yoksa) |
 | `DEEPL_API_KEY` | opsiyonel | haber başlığı çevirisi (önce bu denenir) |
 | `ANALYTICS_SALT` | opsiyonel | ziyaretçi özetinin tuzu; verilmezse `AUTH_SECRET` kullanılır |
@@ -449,7 +451,9 @@ Otomatik test paketi yok; doğrulama üç ayaklı:
 
 ---
 
-## Deploy (Vercel)
+## Deploy
+
+### Vercel
 
 1. Repo'yu Vercel'e bağla.
 2. Environment Variables: `.env.example` içindeki değişkenler +
@@ -460,6 +464,20 @@ Otomatik test paketi yok; doğrulama üç ayaklı:
    üretim `DATABASE_URL` ile).
 5. claude.ai görevlerini kur (`docs/claude-rutinler.md`) — yoksa bülten ve mercek
    boş kalır.
+
+### Kendi sunucusu
+
+Tam yol `docs/deploy-vps.md`'de; sunucudaki dosyalar `deploy/` altında
+(systemd birimi, Caddy yapılandırması, cron ve güncelleme betikleri).
+
+Kısaca: `next start` + systemd, TLS için Caddy, cron için crontab. Vercel'e
+özgü üç şey ortam değişkenine çevrildi — `NEXT_PUBLIC_SITE_URL` (orada
+`VERCEL_PROJECT_PRODUCTION_URL`'e düşüyordu), `AUTH_TRUST_HOST` ve
+`SITE_INDEXABLE`. Vercel Analytics yalnızca Vercel'de basılıyor.
+
+İki kopya birden canlıysa iki kural: **cron tek yerde çalışır** (iki koşum
+Finnhub'ın dakikalık kotasını aşar) ve **ikincil kopya indekslenmez**
+(`SITE_INDEXABLE=false`).
 
 Ana sayfanın gün akışı `GET /api/day-flow?locale=tr|en` ile görünürken 30 saniyede bir
 kontrol edilir. Uç kullanıcıya özel, `no-store` bir yanıt verir; bugünün Finnhub

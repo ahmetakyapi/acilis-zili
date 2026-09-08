@@ -1,0 +1,65 @@
+# Açılış Zili — Next.js üretim sunucusu (systemd birimi)
+#
+# Kurulum:
+#   sudo cp deploy/acilis-zili.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now acilis-zili
+#
+# NEDEN `next start`, `output: "standalone"` DEĞİL.
+# Standalone çıktısı node_modules'ü izleyerek buduyor ve `assets/fonts`
+# klasörünü izleyemiyor: paylaşım kartları o TTF'leri çalışma anında
+# `process.cwd()/assets/fonts` altından OKUYOR (lib/og.tsx). İzlemeye
+# girmediği için imaja kopyalanmıyor ve kartlar üretimde SESSİZCE kırılıyor —
+# derleme temiz, hata yok, yalnızca OG görselleri boş. Standalone'un kazancı
+# disk ve o disk burada bedava (200 GB blok depolama); risk kazancın üstünde.
+#
+# NEDEN doğrudan `node`, `npm run start` DEĞİL.
+# npm ara süreç olarak duruyor ve SIGTERM'i çocuğuna güvenilir iletmiyor;
+# `systemctl restart` her seferinde 90 saniyelik zaman aşımına dayanıp
+# SIGKILL'e düşüyordu. Doğrudan çağrıda sinyal Next'e gidiyor.
+
+[Unit]
+Description=Acilis Zili - Next.js uretim sunucusu
+Documentation=https://github.com/ahmetakyapi/acilis-zili
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=acilis
+Group=acilis
+WorkingDirectory=/srv/acilis-zili
+
+# Secret'lar DEPONUN İÇİNDE DEĞİL. Depo herkese açık ve `git pull` ile
+# güncelleniyor; anahtarların çalışma dizininde durması onları bir yanlış
+# `git add`e bir tuş uzaklıkta bırakır. Dosya root:acilis 0640 olmalı.
+EnvironmentFile=/etc/acilis-zili.env
+Environment=NODE_ENV=production
+
+# YALNIZCA LOOPBACK. Dışarıya açılan tek şey Caddy; 3000 portu doğrudan
+# internete bakarsa TLS'siz ve `X-Forwarded-For`suz bir ikinci kapı olur
+# (giriş sayacı o başlığı okuyor — auth.ts).
+ExecStart=/usr/bin/node /srv/acilis-zili/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Sertleştirme. `.next` yazılabilir kalmalı: ISR önbelleği ve
+# `revalidatePath` oraya yazıyor, salt-okunur bir kökte yeniden doğrulama
+# sessizce başarısız olur.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+ReadWritePaths=/srv/acilis-zili/.next
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=acilis-zili
+
+[Install]
+WantedBy=multi-user.target

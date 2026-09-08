@@ -1,0 +1,29 @@
+# Açılış Zili — Caddy ters vekil yapılandırması
+#
+#   sudo cp deploy/Caddyfile /etc/caddy/Caddyfile
+#   # alan adını düzenle, sonra:
+#   sudo systemctl reload caddy
+#
+# NEDEN Caddy, nginx DEĞİL: TLS sertifikası otomatik alınıyor ve otomatik
+# yenileniyor. nginx + certbot aynı işi yapar ama iki ayrı parça, iki ayrı
+# zamanlayıcı ve yenileme unutulduğunda site sessizce kapanır.
+#
+# GÜVENLİK BAŞLIKLARI BURADA DEĞİL. Hepsi `next.config.ts` içinde ve tek
+# kaynak orası olmalı; burada ikinci bir kopya tutmak ikisinin ayrı düşmesini
+# bekletmekten başka bir şey değil. HSTS'i de Next basıyor.
+
+acilis-zili.ornek.com {
+	encode zstd gzip
+
+	# Caddy `X-Forwarded-For`, `X-Forwarded-Proto` ve `X-Forwarded-Host`
+	# başlıklarını kendiliğinden ekliyor. İlki giriş kaba kuvvet sayacının
+	# anahtarı (auth.ts → signInKey), ikincisi Auth.js'in çerezi `Secure`
+	# işaretlemesi için gerekli.
+	reverse_proxy 127.0.0.1:3000 {
+		# Gün akışı ucu 30 saniyede bir yoklanıyor; cron ucu ise 100 saniye
+		# bütçeli. Varsayılan vekil zaman aşımı ikincisini keserdi.
+		transport http {
+			response_header_timeout 180s
+		}
+	}
+}
