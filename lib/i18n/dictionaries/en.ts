@@ -98,6 +98,7 @@ const en: typeof tr = {
 
   directory: {
     marketLeaders: "Market Leaders",
+    selectCompany: "Select a Company",
     exploreCompanies: "Explore Companies",
     openCompany: "Explore Company",
     earningsRadar: "Earnings in Focus",

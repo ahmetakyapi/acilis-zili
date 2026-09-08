@@ -114,6 +114,7 @@ const tr = {
 
   directory: {
     marketLeaders: "Piyasanın Devleri",
+    selectCompany: "Bir Şirket Seç",
     exploreCompanies: "Şirketleri Keşfet",
     openCompany: "Şirketi İncele",
     earningsRadar: "Takvimde Öne Çıkanlar",
