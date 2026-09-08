@@ -13,7 +13,7 @@
 .leaderCenter { position:absolute; inset:29% 21% 25%; display:grid; place-items:center; text-align:center; }
 .leaderCenter > div { min-width:0; width:100%; }
 .leaderCenter span { color:var(--text-muted); font-size:11px; }
-.leaderCenter strong { display:block; margin:4px 0; font-size:clamp(25px,2.6vw,35px); line-height:1.2; letter-spacing:-.045em; color:var(--primary-ink); font-weight:600; font-variant-numeric:tabular-nums; }
+.leaderCenter strong { display:block; margin:4px 0; font-size:clamp(23px,2.2vw,30px); line-height:1.2; letter-spacing:-.045em; color:var(--primary-ink); font-weight:600; font-variant-numeric:tabular-nums; }
 .leaderCenter p { color:var(--text-strong); font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
 .leaderCenter a { display:inline-flex; align-items:center; gap:5px; min-height:32px; color:var(--primary-ink); font-size:11px; }
 .radarLead { display:block; padding:18px 0 12px; }

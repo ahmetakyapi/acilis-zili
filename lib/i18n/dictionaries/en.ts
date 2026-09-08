@@ -730,6 +730,7 @@ const en: typeof tr = {
 
   markets: {
     fearTitle: "Fear Index",
+    fearDetails: "What Does the Index Measure?",
     fearHint:
       "VIX is derived from S&P 500 options and shows the volatility the market expects over the next 30 days. It says nothing about direction, only how large the move is expected to be.",
     fearAverage: "Long-Run Avg ~20",
@@ -750,6 +751,7 @@ const en: typeof tr = {
     curveTitle: "Yield Curve (10-Year − 2-Year)",
     curveNormal: "Normal Curve",
     curveInverted: "Inverted Curve",
+    curveExplain: "What Does the Curve Show?",
     curveHint:
       "When long-dated yields sit above short-dated ones the curve is normal and the economy is on its usual footing. If the spread turns negative (an inverted curve) the market expects rate cuts soon; historically it is the most closely watched recession signal.",
     breadth: "Market Breadth",

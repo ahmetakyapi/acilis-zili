@@ -1,4 +1,5 @@
 import Link from "next/link";
+import styles from "./MarketExperience.module.css";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { Panel } from "@/components/ui/primitives";
 import { getSeries } from "@/lib/providers/fred";
@@ -45,6 +46,7 @@ const SCALE_MAX = 50;
 
 export type FearGaugeLabels = {
   title: string;
+  details: string;
   hint: string;
   bands: Record<"calm" | "normal" | "tense" | "fear" | "panic", string>;
   average: string;
@@ -76,12 +78,12 @@ export async function FearGauge({
        kartıyla aynı ızgara satırında ve ikisi birlikte sayfanın ilk ekranını
        kaplıyordu; altındaki piyasa genişliği şeridi daha yukarıdan başlasın.
        Hiçbir satır kaldırılmadı — yalnızca boşluk. */
-    <Panel className="flex flex-col gap-3 px-4 py-3.5 sm:px-5">
+    <Panel className={styles.fear}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         {/* Plaka başlık — ölçü paneli. Yanındaki tahvil kartı ve ana
             sayfadaki karşılığı da plaka taşıyor; rol ayrımının gerekçesi
             components/ui/primitives.tsx → PanelHeader içinde. */}
-        <h2 className="plate min-w-0 truncate">{labels.title}</h2>
+        <h2 className="plate min-w-0">{labels.title}</h2>
         <span className="numeral text-tiny text-muted">
           VIX · {observedAt ? formatEtDateShort(observedAt, locale) : "—"}
         </span>
@@ -150,7 +152,9 @@ export async function FearGauge({
         </p>
       </div>
 
-      <p className="text-small leading-[18px] text-muted">{labels.hint}</p>
+      <details className={styles.explainer}>
+      <summary>{labels.details}</summary>
+      <p>{labels.hint}</p>
 
       <Link
         href="/rehber/volatilite"
@@ -159,6 +163,7 @@ export async function FearGauge({
         {labels.guideCta}
         <ArrowRight weight="bold" size={12} />
       </Link>
+      </details>
     </Panel>
   );
 }

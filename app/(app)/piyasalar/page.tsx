@@ -186,11 +186,14 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
+      <div className={styles.marketHeader}>
+      <div className={styles.masthead}>
       <SectionMasthead
         eyebrow={locale === "tr" ? "ABD Piyasası" : "US Market"}
         title={t.markets.title}
         description={t.markets.subtitle}
       />
+      </div>
 
       {/* KABUK ÖNCE AKAR. `IndexCards` ve `IndexDetail` doğrudan gövdede
           await ediliyordu ve S&P 500 sekmesinde `IndexDetail` 499 sembol için
@@ -216,32 +219,6 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         <IndexCards activeTab={tab} sort={sort} dir={dir} locale={locale} t={t} />
       </Suspense>
 
-      <div className={styles.macro} data-motion-stagger>
-        <YieldStrip locale={locale} t={t} />
-        {/* SUSPENSE YOK — bilerek.
-            Burada `fallback={null}` ile bir sınır vardı ve iki yönden de
-            zarardı. Kazancı sıfır: kardeşi `YieldStrip` de FRED'den besleniyor
-            ve o askıya alınmamış, yani sayfa FRED turunu ZATEN bekliyor.
-            Maliyeti gerçek: boş yedek sıfır yer kaplıyor, kart akışla gelince
-            mobilde 262 piksel açılıp altındaki her şeyi aşağı itiyordu —
-            ölçüldü, /piyasalar'ın mobil CLS'i 0,206 çıkıyordu (Google'ın
-            "kötü" eşiği 0,1). */}
-        <FearGauge
-            locale={locale}
-            labels={{
-              title: t.markets.fearTitle,
-              hint: t.markets.fearHint,
-              average: t.markets.fearAverage,
-              guideCta: t.markets.fearGuideCta,
-              bands: {
-                calm: t.markets.fearCalm,
-                normal: t.markets.fearNormal,
-                tense: t.markets.fearTense,
-                fear: t.markets.fearHigh,
-                panic: t.markets.fearPanic,
-              },
-            }}
-          />
       </div>
 
       <Suspense
@@ -368,7 +345,7 @@ async function IndexCards({
                       points={points}
                       title={`${entry.label} · ${locale === "tr" ? "1G" : "1D"}`}
                       tone={tone}
-                      height={selected ? 116 : 44}
+                      height={38}
                       showLastDot={false}
                       strokeWidth={1.6}
                       className={styles.spark}
@@ -420,7 +397,7 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
       {/* Plaka başlık — ölçü paneli. Rol ayrımının gerekçesi
           components/ui/primitives.tsx → PanelHeader içinde; ana sayfadaki
           tahvil kartı da aynı tonu taşıyor, aynı sayılar aynı görünsün. */}
-      <PanelHeader title={t.markets.yields} tone="plate" />
+      <PanelHeader title={t.markets.yields} tone="plate" className={styles.yieldHeader} meta={values[0].date ? `FRED · ${formatEtDateShort(values[0].date, locale)}` : undefined} />
 
       <div className={cn("grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-line-soft sm:p-0", styles.yieldsGrid)} data-motion-stagger>
         {values.map((value) => {
@@ -473,7 +450,7 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
       {/* Getiri eğrisi — sayının ne anlama geldiği burada yazar */}
       {spread !== null && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line-soft px-4 py-2.5 sm:px-5">
+        <div className={styles.curve}>
           <span className="text-xs font-semibold text-strong">
             {t.markets.curveTitle}
           </span>
@@ -489,17 +466,13 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
           <span className="text-xs text-soft">
             {inverted ? t.markets.curveInverted : t.markets.curveNormal}
           </span>
-          <span className="basis-full text-tiny leading-[17px] text-muted">
-            {t.markets.curveHint}
-          </span>
+          <details className={styles.explainer}>
+            <summary>{t.markets.curveExplain}</summary>
+            <p>{t.markets.curveHint}</p>
+          </details>
         </div>
       )}
 
-      {values[0].date && (
-        <p className="border-t border-line-soft px-4 py-2 text-nano text-muted sm:px-5">
-          FRED · {formatEtDateShort(values[0].date, locale)}
-        </p>
-      )}
     </Panel>
   );
 }
@@ -692,6 +665,37 @@ async function IndexDetail({
           </div>
         </>
       )}
+
+      {/* Quotes and breadth are the primary reading path. Treasury/VIX
+          context now follows the movers, before the full constituent list. */}
+      <div className={styles.macro} data-motion-stagger>
+        <YieldStrip locale={locale} t={t} />
+        {/* SUSPENSE YOK — bilerek.
+            Burada `fallback={null}` ile bir sınır vardı ve iki yönden de
+            zarardı. Kazancı sıfır: kardeşi `YieldStrip` de FRED'den besleniyor
+            ve o askıya alınmamış, yani sayfa FRED turunu ZATEN bekliyor.
+            Maliyeti gerçek: boş yedek sıfır yer kaplıyor, kart akışla gelince
+            mobilde 262 piksel açılıp altındaki her şeyi aşağı itiyordu —
+            ölçüldü, /piyasalar'ın mobil CLS'i 0,206 çıkıyordu (Google'ın
+            "kötü" eşiği 0,1). */}
+        <FearGauge
+            locale={locale}
+            labels={{
+              title: t.markets.fearTitle,
+              details: t.markets.fearDetails,
+              hint: t.markets.fearHint,
+              average: t.markets.fearAverage,
+              guideCta: t.markets.fearGuideCta,
+              bands: {
+                calm: t.markets.fearCalm,
+                normal: t.markets.fearNormal,
+                tense: t.markets.fearTense,
+                fear: t.markets.fearHigh,
+                panic: t.markets.fearPanic,
+              },
+            }}
+          />
+      </div>
 
       <MembersTable
         tab={tab}
@@ -1382,17 +1386,23 @@ function DetailSkeleton({ rows }: { rows: number }) {
   return (
     <>
       {/* Genişlik şeridi */}
-      <Panel>
-        <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
+      <Panel className={styles.breadth}>
+        <div className="flex h-16 items-center gap-3 border-b border-line px-4">
+          <Skeleton className="h-9 w-28" /><Skeleton className="h-9 w-24" />
+        </div>
+        <div className="flex h-10 items-center gap-3 border-b border-line px-4">
+          <Skeleton className="h-3 w-24" /><Skeleton className="h-5 w-16" />
+        </div>
+        <div className={styles.breadthSkeleton}>
           <Skeleton className="h-3 w-24 shrink-0" />
           <Skeleton className="h-2.5 flex-1" />
         </div>
       </Panel>
 
       {/* Artanlar / azalanlar — beşer satır */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className={styles.movers}>
         {[0, 1].map((panel) => (
-          <Panel key={panel}>
+          <Panel key={panel} className={styles.mover}>
             <div className="flex items-center justify-between px-4 py-4 sm:px-5">
               <Skeleton className="h-3 w-40" />
               <Skeleton className="h-2.5 w-20" />
@@ -1404,6 +1414,11 @@ function DetailSkeleton({ rows }: { rows: number }) {
             </div>
           </Panel>
         ))}
+      </div>
+
+      <div className={styles.macro}>
+        <Skeleton className={styles.yieldSkeleton} />
+        <Skeleton className={styles.fearSkeleton} />
       </div>
 
       {/* Bileşen tablosu */}

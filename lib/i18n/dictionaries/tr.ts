@@ -925,6 +925,7 @@ const tr = {
 
   markets: {
     fearTitle: "Korku Endeksi",
+    fearDetails: "Endeks Neyi Ölçer?",
     fearHint:
       "VIX, S&P 500 opsiyonlarından türetilir ve piyasanın önümüzdeki 30 gün için beklediği oynaklığı gösterir. Yön söylemez; yalnızca hareketin ne kadar büyük beklendiğini söyler.",
     fearAverage: "Uzun Dönem Ort. ~20",
@@ -945,6 +946,7 @@ const tr = {
     curveTitle: "Getiri Eğrisi (10 Yıllık − 2 Yıllık)",
     curveNormal: "Normal Eğri",
     curveInverted: "Ters Eğri",
+    curveExplain: "Eğri Neyi Gösterir?",
     curveHint:
       "Uzun vadeli tahvilin faizi kısa vadeliden yüksekse eğri normaldir; ekonomi olağan seyrinde demektir. Fark eksiye dönerse (ters eğri) piyasa yakın vadede faiz indirimi bekliyor; tarihsel olarak durgunluğun en çok izlenen habercisidir.",
     breadth: "Piyasa Genişliği",

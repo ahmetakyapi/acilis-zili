@@ -1,15 +1,17 @@
+/* Directory headings measured 58/38px at 1440/390px; use a quieter
+   46/32px scale so controls and actual data keep their visual priority. */
 .page { display:flex; flex-direction:column; min-width:0; gap:28px; }
 .hero { position:relative; isolation:isolate; display:grid; min-width:0; gap:32px; padding:34px 36px; border:1px solid var(--line); border-radius:24px; background:radial-gradient(ellipse at 92% 0,var(--primary-wash),transparent 58%),var(--premium-surface); box-shadow:var(--premium-shadow); }
 .hero[data-has-visual="true"] { grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); align-items:center; }
 .heroCopy,.heroVisual { min-width:0; }
 .heroVisual { padding-left:32px; border-left:1px solid var(--line); }
 .eyebrow { color:var(--primary-ink); font-size:12px; line-height:1.5; font-weight:600; letter-spacing:.04em; }
-.hero h1 { margin:10px 0 13px; font-size:clamp(36px,4.2vw,58px); line-height:1.04; letter-spacing:-.055em; font-weight:600; color:var(--text-strong); }
+.hero h1 { margin:10px 0 13px; font-size:clamp(32px,3.5vw,46px); line-height:1.04; letter-spacing:-.055em; font-weight:600; color:var(--text-strong); }
 .description { max-width:52ch; color:var(--text-body); font-size:15px; line-height:1.7; text-wrap:pretty; }
 .metrics { display:flex; flex-wrap:wrap; gap:20px 34px; margin-top:24px; }
 .metrics > div { display:flex; flex-direction:column; gap:5px; }
 .metrics dt { order:2; font-size:12px; color:var(--text-muted); }
-.metrics dd { font-size:32px; line-height:1.15; letter-spacing:-.04em; font-weight:550; color:var(--text-strong); font-variant-numeric:tabular-nums; }
+.metrics dd { font-size:26px; line-height:1.15; letter-spacing:-.04em; font-weight:550; color:var(--text-strong); font-variant-numeric:tabular-nums; }
 .visualHeading { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:22px; font-size:14px; font-weight:600; color:var(--text-strong); }
 .visualHeading > span { font-size:12px; font-weight:450; color:var(--text-muted); }
 .distribution { display:grid; gap:18px; }
@@ -47,9 +49,9 @@
 @media(max-width:1023px) { .hero { padding:28px; gap:24px; } .heroVisual { padding-left:24px; } .page { gap:24px; } }
 @media(max-width:767px) {
  .hero,.hero[data-has-visual="true"] { grid-template-columns:minmax(0,1fr); padding:22px 20px; gap:20px; border-radius:20px; }
- .hero h1 { font-size:38px; } .description { font-size:14px; line-height:1.6; }
+ .hero h1 { font-size:32px; } .description { font-size:14px; line-height:1.6; }
  .heroVisual { padding:16px 0 0; border-left:0; border-top:1px solid var(--line); }
- .metrics { gap:28px; margin-top:18px; } .metrics dd { font-size:28px; }
+ .metrics { gap:28px; margin-top:18px; } .metrics dd { font-size:24px; }
  .visualHeading { font-size:13px; margin-bottom:12px; }
  .distribution { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; } .distribution a { grid-template-columns:minmax(0,1fr); align-content:end; font-size:12px; gap:7px; }
  .distribution b { font-size:18px; } .calendarControls { margin-top:18px; }
