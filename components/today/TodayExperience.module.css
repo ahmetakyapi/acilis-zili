@@ -152,9 +152,10 @@
 .dashboard [data-home-section]:empty { display:none; }
 @media(max-width:1023px) {
  .dashboard > [data-col] { display:contents; }
- .dashboard [data-home-section="world"] { order:1; }
- .dashboard [data-home-section="movers"] { order:2; }
- .dashboard [data-home-section="brief"] { order:3; }
+ /* Mobile reading order: day flow, daily brief, world markets, movers. */
+ .dashboard [data-home-section="brief"] { order:1; }
+ .dashboard [data-home-section="world"] { order:2; }
+ .dashboard [data-home-section="movers"] { order:3; }
  .dashboard [data-home-section="stories"] { order:4; }
  .dashboard [data-home-section="yields"] { order:5; }
  .dashboard [data-home-section="macro"] { order:6; }
