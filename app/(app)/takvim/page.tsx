@@ -1,3 +1,5 @@
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import styles from "@/components/calendar/CalendarExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { IpoCalendar } from "@/components/markets/IpoCalendar";
 import Link from "next/link";
@@ -138,20 +140,35 @@ export default async function CalendarPage(
   // Saat sütunu: üstte okuyucunun saati, altında kaynağın saati.
   const tags = zoneTag(locale);
 
+  const featured = events.find((event) => event.importance === "high" && event.actual === null) ?? events.find((event) => event.importance === "high");
+  const featureTimes = featured?.eventTimeEt ? timePair(featured.eventDate, featured.eventTimeEt, locale) : null;
+  const datePart = (date: string, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", { ...options, timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`));
+  const dates = Array.from({ length: daysBetweenEt(today, to) + 1 }, (_, index) => addEtDays(today, index));
+
   return (
-    <div className="flex flex-col gap-5">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+    <MotionExperience className={styles.page}>
+      <ScrollProgress />
+      <header className={styles.hero}>
         <div>
+          <p className={styles.eyebrow}>{locale === "tr" ? "Ekonominin Ajandası" : "The Economic Agenda"}</p>
           <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
             {t.calendar.title}
           </h1>
           <p className="mt-2 text-sm text-soft">{t.calendar.subtitle}</p>
+          <p className="mt-3 text-tiny text-muted">{t.calendar.timesNote}</p>
         </div>
-        <p className="text-tiny text-muted">{t.calendar.timesNote}</p>
+        {featured && <a className={styles.feature} href={`#gun-${featured.eventDate}`}>
+          <span className={styles.dateBadge}><strong>{datePart(featured.eventDate, { day: "numeric" })}</strong><span>{datePart(featured.eventDate, { month: "short" })}</span></span>
+          <span className={styles.featureBody}>
+            <span>{locale === "tr" ? "Öne Çıkan Açıklama ↗" : "Release in Focus ↗"}</span>
+            <strong>{locale === "tr" ? featured.titleTr : featured.titleEn}</strong>
+            <span>{datePart(featured.eventDate, { weekday: "long" })}{featureTimes && ` · ${featureTimes.primary} ${tags.primary}`}</span>
+          </span>
+        </a>}
       </header>
 
       {/* Görünüm + önem filtresi */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className={styles.filters}>
         <nav className="flex gap-1" aria-label={t.calendar.title}>
           {VIEWS.map((v) => (
             <Link
@@ -202,6 +219,15 @@ export default async function CalendarPage(
         </nav>
       </div>
 
+      <nav className={styles.dayRail} data-view={view} aria-label={locale === "tr" ? "Açıklama günleri" : "Release dates"}>
+        {dates.map((date) => {
+          const count = byDay.get(date)?.length ?? 0;
+          const contents = <><span>{datePart(date, { weekday: "short" })}</span><strong>{datePart(date, { day: "numeric" })}</strong><span>{count ? `${count} ${count === 1 ? t.calendar.eventOne : t.calendar.eventMany}` : "—"}</span></>;
+          const label = `${formatEtDateLong(date, locale)} · ${count} ${t.calendar.eventMany}`;
+          return count ? <a key={date} className={styles.day} href={`#gun-${date}`} data-active="true" data-today={date === today} aria-label={label}>{contents}</a> : <span key={date} className={styles.day} data-empty="true" data-today={date === today} aria-label={label}>{contents}</span>;
+        })}
+      </nav>
+
       {byDay.size === 0 ? (
         <Panel>
           <EmptyState title={t.calendar.empty} />
@@ -217,14 +243,16 @@ export default async function CalendarPage(
           return (
             <Panel
               key={date}
+              id={`gun-${date}`}
+              data-motion-reveal
               className={cn(
-                "overflow-hidden",
+                styles.dayPanel,
                 isToday && "border-primary-faint",
               )}
             >
               <div
                 className={cn(
-                  "flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-line-soft px-4 py-3.5 sm:px-5",
+                  styles.dayHeader,
                   isToday && "bg-primary-tint",
                 )}
               >
@@ -272,7 +300,7 @@ export default async function CalendarPage(
                 </span>
               </div>
 
-              <ul className="divide-y divide-line-soft">
+              <ul className={`${styles.eventList} divide-y divide-line-soft`}>
                 {dayEvents.map((event) => {
                   const times = event.eventTimeEt
                     ? timePair(event.eventDate, event.eventTimeEt, locale)
@@ -281,7 +309,8 @@ export default async function CalendarPage(
                   return (
                     <li
                       key={event.id}
-                      className="flex flex-wrap items-start gap-x-3 gap-y-2 px-4 py-3.5 sm:flex-nowrap sm:px-5"
+                      className={styles.event}
+                      data-impact={event.importance}
                     >
                       {/* SAAT ARTIK BİR KARO. Satırın solunda çıplak iki
                           satır metin duruyordu ve satırların hiçbir görsel
@@ -293,7 +322,7 @@ export default async function CalendarPage(
                           olan bilgi kendi kutusuna oturuyor. */}
                       <span
                         className={cn(
-                          "shrink-0 rounded-md px-2 py-1.5 text-center",
+                          `${styles.eventTime} shrink-0 text-center`,
                           event.importance === "high"
                             ? "bg-primary-wash"
                             : "bg-surface-elevated",
@@ -340,7 +369,7 @@ export default async function CalendarPage(
                           Açıklama olayın TÜRÜNE bağlı (bkz.
                           `lib/event-explainers.ts`), tanınmayan türde satır
                           eskisi gibi tek satır kalır. */}
-                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className={`${styles.eventBody} flex min-w-0 flex-1 flex-col gap-0.5`}>
                         <span
                           className={cn(
                             "text-sm",
@@ -356,6 +385,8 @@ export default async function CalendarPage(
                             {eventExplainer(event.slug, locale)}
                           </span>
                         )}
+                        {/* Publication is authoritative only when the provider supplies an actual value. Passing the scheduled time is not a release confirmation. */}
+                        <span className={styles.status} data-published={event.actual !== null}>{event.actual !== null ? (locale === "tr" ? "Açıklandı" : "Released") : (locale === "tr" ? "Planlandı" : "Scheduled")}</span>
                       </span>
 
                       {/* Değerler künye olarak, etiketi yanında. Eski hâlde
@@ -385,7 +416,7 @@ export default async function CalendarPage(
                           açıklamanın devamı gibi okunuyor, eylem gibi
                           okunmuyordu. Okuma da eylem de artık satırın
                           bittiği yerde. */}
-                      <span className="flex basis-full flex-wrap items-center justify-end gap-x-3 gap-y-1 sm:basis-auto sm:shrink-0 sm:pl-0">
+                      <span className={`${styles.eventValues} flex flex-wrap items-center justify-end gap-x-3 gap-y-1`}>
                         {event.importance === "high" && (
                           <a
                             href={`/api/takvim?tip=olay&slug=${event.slug}`}
@@ -453,6 +484,6 @@ export default async function CalendarPage(
         slugs={["sahin-guvercin", "enflasyon", "halka-arz", "spread-likidite"]}
         className="pt-1"
       />
-    </div>
+    </MotionExperience>
   );
 }

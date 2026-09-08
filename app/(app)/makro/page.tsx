@@ -1,3 +1,7 @@
+import Link from "next/link";
+import { MacroExplorer } from "@/components/macro/MacroExplorer";
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import styles from "@/components/macro/MacroExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { DataStamp, EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
@@ -52,20 +56,63 @@ export default async function MacroPage() {
     (row) => row.latestValue !== null && row.observations,
   );
 
+  // Historical observations carry their exact dates and units into the client.
+  // The published reading remains separate when a previous point is inspected.
+  const explorerSeries = withData.map((row) => {
+    const format = (value: number) => row.unit === "%"
+      ? formatPercentPlain(value, locale, 2)
+      : `${formatPrice(value, locale, { digits: 0 })} ${unitLabel(row.unit, locale)}`.trim();
+    const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+      day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
+    });
+    return {
+      id: row.seriesId,
+      title: locale === "tr" ? row.titleTr : row.titleEn,
+      latest: format(row.latestValue!),
+      period: formatPeriod(row.periodLabel, locale),
+      points: ((row.observations as MacroObservation[] | null) ?? [])
+        .filter((point) => Number.isFinite(point.value))
+        .slice().sort((a, b) => a.date.localeCompare(b.date))
+        .map((point) => {
+          const date = new Date(`${point.date}T12:00:00Z`);
+          return { value: point.value, date: dateFormat.format(date), timestamp: date.getTime(), label: format(point.value) };
+        }),
+    };
+  });
+
   return (
-    <div className="flex flex-col gap-5">
-      <PageHeader
-        eyebrow={locale === "tr" ? "ABD Ekonomisi" : "US Economy"}
-        title={t.macro.title}
-        subtitle={t.macro.subtitle}
-      />
+    <MotionExperience className={styles.page}>
+      <ScrollProgress />
+      <div className={styles.hero}>
+        <div className={styles.intro}>
+        <PageHeader
+          eyebrow={locale === "tr" ? "ABD Ekonomisi" : "US Economy"}
+          title={t.macro.title}
+          subtitle={t.macro.subtitle}
+        />
+        <div className={styles.introNote}>
+          <p>{locale === "tr" ? "Tek bir rakamdan ötesi. Enflasyonun, istihdamın ve faizin zaman içindeki yönünü incele." : "Beyond a single reading. Explore the direction of inflation, employment and interest rates over time."}</p>
+          <Link href="/takvim">{locale === "tr" ? "Veri Takvimine Git ↗" : "Open Release Calendar ↗"}</Link>
+        </div>
+        </div>
+        <MacroExplorer
+          labels={{
+            title: locale === "tr" ? "Gösterge Merceği · FRED" : "Indicator Explorer · FRED",
+            latest: locale === "tr" ? "Son Açıklanan" : "Latest Release",
+            history: locale === "tr" ? "Geçmiş Gözlem" : "Historical Reading",
+            hint: locale === "tr" ? "Grafiğin üzerinde gezin veya alttaki sürgüyü kullan." : "Explore the chart or use the slider below.",
+            empty: locale === "tr" ? "Geçmiş gözlemler henüz yeterli değil." : "Not enough historical observations yet.",
+          }}
+          series={explorerSeries}
+        />
+      </div>
 
       {withData.length === 0 ? (
         <Panel>
           <EmptyState title={t.common.noData} hint={t.common.noDataHint} />
         </Panel>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={styles.grid} data-motion-stagger>
           {withData.map((row) => {
             const title = locale === "tr" ? row.titleTr : row.titleEn;
             const observations =
@@ -100,7 +147,7 @@ export default async function MacroPage() {
                   : `${formatPrice(value, locale, { digits })} ${birim}`.trimEnd();
 
             return (
-              <Panel key={row.seriesId} className="flex flex-col p-4 sm:p-5">
+              <Panel key={row.seriesId} className={`${styles.card} flex flex-col p-4 sm:p-5`}>
                 <div className="flex items-start justify-between gap-2">
                   <h2 className="text-sm font-semibold leading-snug text-strong">
                     {title}
@@ -195,6 +242,6 @@ export default async function MacroPage() {
         slugs={["enflasyon", "sahin-guvercin"]}
         className="pt-1"
       />
-    </div>
+    </MotionExperience>
   );
 }

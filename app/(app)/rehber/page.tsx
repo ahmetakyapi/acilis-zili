@@ -1,3 +1,5 @@
+import { TopicDiagram } from "@/components/guide/TopicDiagram";
+import guideStyles from "@/components/guide/GuideExperience.module.css";
 import Link from "next/link";
 import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
@@ -112,7 +114,7 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
     /* Bölümler arası boşluk sayfanın ritmini kuruyor: kartlar arası 16px,
        seviye bantları arası 20px, bölümler arası 40px. Üç ayrı ölçek, üç
        ayrı düzey. */
-    <MotionExperience className={styles.guidePage}>
+    <MotionExperience className={`${styles.guidePage} ${guideStyles.guide}`}>
       <ScrollProgress />
       <SectionMasthead
         eyebrow={t.guide.eyebrow}
@@ -149,6 +151,7 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
               <section
                 key={topic.key}
                 id={`konu-${topic.key}`}
+                data-guide-topic
                 className="flex flex-col"
               >
                 <TopicHeading
@@ -205,7 +208,7 @@ function CurriculumStrip({
   const first = all[0];
 
   return (
-    <section className={`${styles.curriculum} flex flex-col gap-3`}>
+    <section className={`${styles.curriculum} ${guideStyles.curriculum} flex flex-col gap-3`}>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
           {t.guide.curriculum}
@@ -227,7 +230,7 @@ function CurriculumStrip({
           kırılıyor, seviye künyesi `truncate` yiyordu ve dört karo dikeyde
           bir duvar kuruyordu. Dar ekranda müfredat zaten SIRALI bir liste —
           satır düzeni o sırayı da gösteriyor. */}
-      <Panel className={`${styles.curriculumGrid} flex flex-col divide-y divide-line-soft overflow-hidden sm:grid sm:grid-cols-4 sm:divide-x sm:divide-y-0`} data-motion-stagger>
+      <Panel className={`${styles.curriculumGrid} ${guideStyles.chapters} flex flex-col sm:grid sm:grid-cols-4`} data-motion-stagger>
         {GUIDE_TOPICS.map((topic, index) => {
           const group = groupOf(topic.key);
           const levels = levelsIn(group);
@@ -238,7 +241,8 @@ function CurriculumStrip({
               className="group flex min-h-12 min-w-0 items-center gap-2 px-4 transition-colors hover:bg-primary-tint sm:min-h-0 sm:flex-col sm:items-start sm:gap-1 sm:py-3.5"
             >
               <span className="numeral shrink-0 text-tiny font-bold text-primary">
-                {String(index + 1).padStart(2, "0")}
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <TopicDiagram index={index} />
               </span>
               <span className="display-ink display-ink-tight min-w-0 flex-1 text-read font-bold tracking-[-0.02em] sm:w-fit sm:flex-none">
                 {guideTopicLabel(topic.key, locale)}
@@ -278,6 +282,7 @@ function CurriculumStrip({
               <span className="block truncate text-tiny text-muted">
                 {first.title}
               </span>
+              <span className={guideStyles.startDescription}>{first.dek}</span>
             </span>
             <ArrowRight
               weight="bold"

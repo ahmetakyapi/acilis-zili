@@ -1,0 +1,51 @@
+/* Baseline: first topic started at y666 desktop / y836 mobile (1440/390).
+   Keep the reading path compact; visual diagrams occupy the existing tile
+   header, and remain decorative so they add no mobile reading overhead. */
+.guide.guide { gap:26px; }
+.guide > header { padding-bottom:18px; }
+.guide .curriculum { padding:24px; background:radial-gradient(ellipse at 95% 0,var(--primary-wash),transparent 70%),var(--premium-surface); border-color:var(--primary-faint); }
+.guide .curriculum h2 { font-size:23px; }
+.guide .chapters { background:transparent; border:0; gap:12px; overflow:visible; }
+.guide .chapters > a[href^="#"] { border:1px solid var(--line); border-radius:15px; background:var(--premium-surface); padding:16px; gap:12px; transition:border-color .25s,box-shadow .25s,transform .35s; }
+.guide .chapters > a[href^="#"] > span:first-child { display:flex; align-items:flex-start; justify-content:space-between; width:100%; height:60px; border:0; border-radius:0; }
+.guide .chapters > a[href^="#"] > span:first-child > span { font-size:11px; padding-top:4px; color:var(--text-muted); }
+.guide .chapters > a[href^="#"] > span:nth-child(2) { font-size:17px; }
+.guide .chapters > a[href^="#"] > span:last-child { font-size:11px; }
+.diagram { width:130px; height:64px; overflow:visible; color:var(--primary); }
+.sheet,.balance,.column,.transmission { transform-box:fill-box; transform-origin:center; transition:translate .6s,rotate .6s,scale .6s; }
+.column { transform-origin:center bottom; }
+.guide .chapters > a[href^="/rehber/"] { border:1px solid var(--primary-faint); border-radius:12px; margin-top:2px; padding:14px 18px; background:var(--primary-tint); }
+.startDescription { display:block; max-width:70ch; margin-top:5px; font-size:12px; line-height:1.65; color:var(--text-soft); }
+.guide [data-guide-topic] > div:first-child h2 { font-size:25px; }
+.guide [data-guide-topic] > div:first-child > div { padding-block:12px; }
+.guide [data-guide-topic] { min-width:0; }
+.guide [data-guide-topic] > div:last-child > a > div { background:var(--premium-surface); }
+@media(hover:hover) and (pointer:fine) {
+ .guide .chapters > a[href^="#"]:hover { transform:translateY(-4px); box-shadow:var(--premium-shadow); border-color:var(--primary-faint); }
+ .guide .chapters > a:hover .sheet:nth-child(2) { translate:2px -3px; }
+ .guide .chapters > a:hover .sheet:nth-child(3) { translate:4px -6px; }
+ .guide .chapters > a:hover .balance { rotate:6deg; }
+ .guide .chapters > a:hover .column { scale:1 1.12; }
+ .guide .chapters > a:hover .transmission { scale:1.1; }
+}
+.guide .chapters > a:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+@media(min-width:640px) and (max-width:1000px) { .guide .chapters { grid-template-columns:repeat(2,minmax(0,1fr)); } .guide .chapters > a[href^="/rehber/"] { grid-column:1/-1; } }
+@media(max-width:639px) {
+ .guide.guide { gap:22px; }
+ .guide > header { gap:10px; padding-bottom:16px; }
+ .guide .curriculum { padding:16px; border-radius:18px; gap:9px; }
+ .guide .curriculum h2 { font-size:20px; }
+ .guide .curriculum > p { font-size:12px; line-height:1.6; }
+ .guide .chapters { margin-top:4px; gap:6px; }
+ .guide .chapters > a[href^="#"] { grid-template-columns:26px minmax(0,1fr); padding:9px 10px; border-radius:10px; gap:2px 10px; }
+ .guide .chapters > a[href^="#"] > span:first-child { width:26px; height:26px; border:1px solid var(--primary-faint); border-radius:50%; justify-content:center; align-items:center; }
+ .guide .chapters > a[href^="#"] > span:first-child > span { padding:0; color:var(--primary); }
+ .guide .chapters > a[href^="#"] > span:nth-child(2) { font-size:14px; }
+ .guide .chapters > a[href^="#"] > span:last-child { font-size:10px; }
+ .diagram { display:none; }
+ .guide .chapters > a[href^="/rehber/"] { padding:12px; }
+ .guide .chapters > a[href^="/rehber/"] > span > span:first-child { font-size:15px; }
+ .startDescription { display:none; }
+ .guide [data-guide-topic] > div:first-child h2 { font-size:22px; }
+}
+@media(prefers-reduced-motion:reduce) { .guide .chapters > a[href^="#"],.sheet,.balance,.column,.transmission { transition:none; } .guide .chapters > a:hover,.guide .chapters > a:hover .sheet,.guide .chapters > a:hover .balance,.guide .chapters > a:hover .column,.guide .chapters > a:hover .transmission { transform:none; translate:none; rotate:none; scale:none; } }
