@@ -186,10 +186,10 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
         {[{ minutes: 570, label: railLabels.openShort }, { minutes: snapshot.closeMinutes, label: railLabels.closeShort }].map(({ minutes, label }) => <div key={label} className={styles.bound} style={{ left: `${pct(minutes)}%` }}><span>{label}</span><strong>{primary(minutes)} <small>{snapshot.tags.primary}</small></strong></div>)}
       </div>
       <div className={styles.axis}>
-        <div className={styles.ticks} aria-hidden="true">{Array.from({ length: 17 }, (_, hour) => <i key={hour} />)}</div>
-        <div className={styles.sessionBand} data-open={snapshot.tradingDay} style={{ left: `${pct(570)}%`, width: `${pct(snapshot.closeMinutes) - pct(570)}%` }} />
-        <motion.div className={styles.elapsed} style={{ transformOrigin: "left" }} animate={{ scaleX: pct(now) / 100 }} transition={{ duration: reduced ? 0 : 1.2, ease: "easeOut" }} />
-        {[570, snapshot.closeMinutes].map((minutes) => <span key={minutes} className={styles.boundDot} style={{ left: `${pct(minutes)}%` }} />)}
+        <div className={styles.track} aria-hidden="true" />
+        <div aria-hidden="true" className={styles.sessionBand} data-open={snapshot.tradingDay} style={{ left: `${pct(570)}%`, width: `${pct(snapshot.closeMinutes) - pct(570)}%` }} />
+        <motion.div aria-hidden="true" className={styles.elapsed} style={{ transformOrigin: "left" }} animate={{ scaleX: pct(now) / 100 }} transition={{ duration: reduced ? 0 : 1.2, ease: "easeOut" }} />
+        {[570, snapshot.closeMinutes].map((minutes) => <span aria-hidden="true" key={minutes} className={styles.boundDot} style={{ left: `${pct(minutes)}%` }} />)}
         {markerTimes.map((time) => {
           const group = events.filter((event) => event.timeEt === time);
           const active = group.findIndex((event) => event.id === selected?.id);
@@ -201,7 +201,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
             {group.length > 1 ? <span>{group.length}</span> : group[0].kind === "earnings" ? <Bell size={13} weight="bold" /> : <TrendUp size={13} weight="bold" />}
           </button>;
         })}
-        {now >= 240 && now <= 1200 && <motion.div className={styles.now} animate={{ left: `${pct(now)}%` }} transition={{ duration: reduced ? 0 : 1 }}><span>{railLabels.now}</span><i /></motion.div>}
+        {now >= 240 && now <= 1200 && <div className={styles.now} data-live={snapshot.tradingDay} data-edge={pct(now) < 8 ? "start" : pct(now) > 92 ? "end" : undefined} style={{ left: `${pct(now)}%` }}><span>{railLabels.now}</span><i /></div>}
       </div>
       <div className={styles.axisLabels}><span>{primary(240)}</span><span>{snapshot.tradingDay ? railLabels.marketHours : labels.closed}</span><span>{primary(1200)} {snapshot.tags.primary}</span></div>
     </div>

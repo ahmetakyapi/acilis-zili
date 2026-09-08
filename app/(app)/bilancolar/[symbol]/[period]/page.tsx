@@ -20,7 +20,7 @@ import { RevenueColumns } from "@/components/earnings/RevenueColumns";
 import { GuidanceRanges } from "@/components/earnings/GuidanceRanges";
 import type { FooterStat } from "@/components/earnings/ChartFooter";
 import { RichText } from "@/components/earnings/RichText";
-import { MotionExperience, ScrollStage, Reveal, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
+import { MotionExperience, ScrollStage, Reveal, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/earnings/EarningsReport.module.css";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
 import { auth } from "@/auth";
@@ -594,6 +594,7 @@ export default async function AnalysisDetailPage(
           Ölçüler alt satıra alınıp yatay bir şeride dönüşünce delik
           kapanıyor, her ölçü kendi sütununda okunuyor ve şerit kartın
           genişliğini gerçekten kullanıyor. */}
+      <SpotlightCard>
       <header id="report-overview" className={cn(styles.cover, "flex flex-col gap-4 rounded-xl border border-line bg-surface-solid p-4 sm:p-5")}>
         <div className={styles.coverEdition}>
           <span className={styles.coverEyebrow}>
@@ -937,8 +938,10 @@ export default async function AnalysisDetailPage(
           </div>
         )}
       </header>
+      </SpotlightCard>
 
       <SectionNav
+        className={styles.reportNav}
         label={t.analysis.reportNavigation}
         items={[
           { id: "report-overview", label: t.analysis.reportOverview },
@@ -1140,7 +1143,7 @@ export default async function AnalysisDetailPage(
                 ekran okuyucu yanlış fonetikle okuyor, tarayıcının "çevir"
                 önerisi devreye girmiyordu. Mercek düzeltilmiş, burası
                 atlanmıştı. */}
-            <div className={PROSE_COLUMNS} lang={row.locale}>
+            <div className={cn(PROSE_COLUMNS, styles.summaryProse)} lang={row.locale}>
               {row.summary.map((paragraph, index) => (
                 <p
                   key={index}
@@ -1188,6 +1191,7 @@ export default async function AnalysisDetailPage(
                   bir miktar uzuyor, ama yarım kalmış bir ızgaradan iyi. */}
               <div
                 className={cn(
+                  styles.analysisGrid,
                   "grid gap-x-8 gap-y-6 md:grid-cols-2",
                   row.analysis.length % 3 === 0 || row.analysis.length % 2 !== 0
                     ? "xl:grid-cols-3"
@@ -1202,7 +1206,7 @@ export default async function AnalysisDetailPage(
                     satırına çıkınca başlık tam genişlikte, sol kenar
                     hizalı — rehberdeki müfredat şeridiyle aynı dil. */}
                 {row.analysis.map((section, index) => (
-                  <section key={index} className={cn(styles.analysisItem, "border-t border-line pt-3.5")}>
+                  <section key={index} data-motion-reveal className={cn(styles.analysisItem, "border-t border-line pt-3.5")}>
                     <span
                       aria-hidden
                       className="numeral mb-1.5 block text-tiny font-bold tracking-[0.04em] text-primary"

@@ -14,28 +14,31 @@
 .connectionDot { width:5px; height:5px; flex-shrink:0; border-radius:50%; background:var(--up); box-shadow:0 0 0 3px var(--up-wash); }
 .connection[data-state="error"] .connectionDot { background:var(--text-muted); box-shadow:none; }
 .spinner { animation:flow-spin 1.2s linear infinite; }
-.rail { position:relative; margin-top:16px; padding:12px 16px 10px; }
-.bounds { position:relative; height:43px; }
-.bound { position:absolute; transform:translateX(-50%); display:flex; align-items:center; flex-direction:column; gap:2px; }
+/* The former 54px axis had 17 full-height grid lines. A single soft
+   session track retains the exact ET positions, with no decorative ticks. */
+.rail { position:relative; margin-top:16px; padding:14px 22px 12px; border-radius:16px; background:radial-gradient(ellipse at 50% 0,var(--primary-tint),transparent 80%); }
+.bounds { position:relative; height:49px; }
+.bound { position:absolute; transform:translateX(-50%); display:flex; align-items:center; flex-direction:column; gap:4px; }
 .bound > span { color:var(--text-muted); font-size:11px; }
-.bound strong { white-space:nowrap; color:var(--text-strong); font-size:15px; font-weight:550; letter-spacing:-.025em; font-variant-numeric:tabular-nums; }
-.bound small { font-size:10px; color:var(--text-muted); }
-.axis { position:relative; height:54px; border-block:1px solid var(--line); background:var(--surface-sunken); }
-.ticks { position:absolute; inset:0; display:flex; justify-content:space-between; pointer-events:none; }
-.ticks i { height:100%; width:1px; background:var(--line); opacity:.65; }
-.sessionBand { position:absolute; height:100%; top:0; background:var(--rail-track); opacity:.45; }
-.sessionBand[data-open="true"] { background:var(--primary-faint); }
-.elapsed { position:absolute; inset:auto 0 0; height:2px; background:var(--primary); }
-.boundDot { position:absolute; height:100%; width:1px; top:0; background:var(--text-muted); opacity:.4; }
-.eventDot { position:absolute; top:13px; width:26px; height:26px; display:grid; place-items:center; border:1px solid var(--line-strong); background:var(--premium-surface); color:var(--text-body); border-radius:8px; transform:translateX(-50%); cursor:pointer; z-index:2; transition:background .2s,box-shadow .2s,color .2s; }
-.eventDot::before { content:""; position:absolute; inset:-9px; }
+.bound strong { white-space:nowrap; color:var(--primary-ink); font-size:16px; font-weight:600; letter-spacing:-.035em; font-variant-numeric:tabular-nums; }
+.bound small { font-size:10px; color:var(--text-muted); font-weight:450; }
+.axis { position:relative; height:48px; }
+.track { position:absolute; inset:20px 0 auto; height:6px; border-radius:20px; background:var(--rail-track); }
+.sessionBand { position:absolute; height:12px; top:17px; border-radius:20px; background:var(--line-strong); }
+.sessionBand[data-open="true"] { background:var(--primary-faint); box-shadow:0 0 20px var(--primary-wash); }
+.elapsed { position:absolute; inset:22px 0 auto; height:2px; border-radius:20px; background:linear-gradient(90deg,var(--primary-faint),var(--primary)); }
+.boundDot { position:absolute; height:8px; width:8px; top:19px; border-radius:50%; transform:translateX(-50%); background:var(--primary-ink); box-shadow:0 0 0 4px var(--premium-surface); }
+.eventDot { position:absolute; top:7px; width:32px; height:32px; display:grid; place-items:center; border:1px solid var(--primary-faint); background:var(--premium-surface); color:var(--primary-ink); border-radius:50%; transform:translateX(-50%); cursor:pointer; z-index:2; box-shadow:0 3px 10px var(--primary-wash); transition:background .2s,box-shadow .2s,color .2s; }
+.eventDot::before { content:""; position:absolute; inset:-6px; }
 .eventDot > span { font-size:11px; font-weight:650; }
 .eventDot[data-released="true"] { color:var(--up); border-color:var(--up); }
-.eventDot[data-selected="true"] { color:var(--on-primary); background:var(--primary-ink); border-color:var(--primary-ink); box-shadow:0 0 0 4px var(--primary-wash); }
-.now { position:absolute; z-index:3; top:-5px; bottom:0; transform:translateX(-50%); display:flex; align-items:center; flex-direction:column; pointer-events:none; }
-.now span { padding:2px 5px; color:var(--on-primary); background:var(--primary-ink); font-size:10px; font-weight:600; border-radius:4px; }
-.now i { flex:1; width:1px; background:var(--primary); }
-.axisLabels { display:flex; justify-content:space-between; gap:8px; margin-top:8px; color:var(--text-muted); font-size:11px; }
+.eventDot[data-selected="true"] { color:var(--on-primary); background:var(--primary-ink); border-color:var(--primary-ink); box-shadow:0 0 0 5px var(--primary-wash),0 4px 14px var(--primary-faint); }
+.now { position:absolute; z-index:3; top:34px; transform:translateX(-50%); display:flex; align-items:center; flex-direction:column; pointer-events:none; }
+.now span { padding:2px 6px; color:var(--primary-ink); background:var(--premium-surface); box-shadow:0 2px 8px var(--primary-wash); font-size:10px; line-height:16px; font-weight:600; border-radius:6px; white-space:nowrap; }
+.now i { position:absolute; top:-14px; width:6px; height:6px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 4px var(--primary-wash); }
+.now[data-edge="start"] span { transform:translateX(30%); }
+.now[data-edge="end"] span { transform:translateX(-30%); }
+.axisLabels { display:flex; justify-content:space-between; gap:8px; margin-top:16px; color:var(--text-muted); font-size:11px; }
 .axisLabels > span:nth-child(2) { color:var(--text-body); text-align:center; }
 .eventHeading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:12px 0 8px; }
 .eventHeading h3 { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:550; color:var(--text-strong); }
@@ -124,3 +127,8 @@
 @media(prefers-reduced-motion:reduce) { .flow *,.flow *::before { animation:none!important; transition:none!important; } .detail { opacity:1!important; transform:none!important; } }
 .unavailable { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:15px; padding:36px 16px; color:var(--text-muted); font-size:13px; }
 .unavailable button { display:flex; align-items:center; gap:8px; color:var(--primary-ink); border:1px solid var(--line); border-radius:9px; padding:10px 14px; cursor:pointer; }
+@media(prefers-reduced-motion:no-preference) {
+ .now[data-live="true"] i::after { content:""; position:absolute; inset:-3px; border:1px solid var(--primary); border-radius:50%; animation:time-beacon 3s ease-out infinite; }
+}
+@media(hover:hover) and (prefers-reduced-motion:no-preference) { .eventDot:hover { box-shadow:0 0 0 5px var(--primary-wash); } }
+@keyframes time-beacon { from { transform:scale(.7); opacity:.6; } 80%,to { transform:scale(1.9); opacity:0; } }

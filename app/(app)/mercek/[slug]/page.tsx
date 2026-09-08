@@ -1,8 +1,10 @@
-import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import { MotionExperience, ScrollProgress, ScrollStage, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import experience from "@/components/motion/EditorialExperience.module.css";
+import detail from "@/components/stories/StoryDetail.module.css";
+import { StoryFigure, storyFigureOf } from "@/components/stories/StoryFigure";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
 import { ShareButton } from "@/components/article/ShareButton";
 import { LogoTile } from "@/components/ui/primitives";
@@ -125,13 +127,13 @@ async function MoreStories({
   if (rows.length === 0) return null;
 
   return (
-    <nav className="flex flex-col gap-3 border-t border-line pt-6">
+    <nav id="story-more" className={detail.moreStories}>
       <p className="plate text-nano tracking-[0.09em]">
         {t.stories.moreStories}
       </p>
       <ul className="flex flex-col">
         {rows.map((story) => (
-          <li key={story.slug}>
+          <li key={story.slug} data-motion-reveal>
             <Link
               href={`/mercek/${story.slug}`}
               className="-mx-3 flex flex-col gap-0.5 rounded-(--radius-lg) px-3 py-3 transition-colors hover:bg-primary-tint sm:flex-row sm:items-baseline sm:gap-4"
@@ -139,9 +141,11 @@ async function MoreStories({
               <span className="numeral shrink-0 text-tiny text-muted sm:w-[124px]">
                 {formatEtDateLong(story.eventDate, locale)}
               </span>
-              <span className="min-w-0 text-read font-semibold leading-snug text-strong">
-                {story.title}
+              <span className={detail.moreCopy}>
+                <strong>{story.title}</strong>
+                {story.dek && <span>{story.dek}</span>}
               </span>
+              <ArrowUpRight size={20} aria-hidden />
             </Link>
           </li>
         ))}
@@ -166,16 +170,17 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
 
   const minutes = story.readMinutes ?? readingMinutes(story.bodyMd);
   const sources = story.sources ?? [];
+  const figure = storyFigureOf(story.bodyMd, story.locale);
 
   return (
     <MotionExperience className={experience.article}>
     <ScrollProgress />
-    <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
+    <article className={detail.article}>
       {/* Yazının iki denetimi aynı satırda: solda arşive çıkış, sağda
           paylaşım. Paylaş düğmesi metnin İÇİNE değil kenarına konuyor —
           okumayı kesen bir çağrı değil, elinin altında duran bir araç. İkisi
           de sessiz: sayfada ilk görülmesi gereken şey manşet. */}
-      <div className="flex items-center justify-between gap-3">
+      <div className={detail.utility}>
         <Link
           href="/mercek"
           className="tap-44 -my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
@@ -190,7 +195,12 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
         />
       </div>
 
-      <header className={`${experience.articleHeader} flex flex-col gap-4`}>
+      {/* The former 720px masthead measured 385px at 1440px. A wider
+          editorial cover now gives the headline and its own published
+          figures separate space; body text keeps its 720px reading width. */}
+      <SpotlightCard className={detail.coverSurface}>
+      <header className={detail.cover} data-has-figure={Boolean(figure)}>
+      <div className={detail.coverCopy}>
         <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-tiny">
           <span className="plate text-nano tracking-[0.09em] text-primary">
             {t.stories.eyebrow}
@@ -206,10 +216,10 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
           </span>
         </p>
 
-        <h1 className="display-ink w-fit text-subdisplay font-bold leading-[1.12] tracking-[-0.035em] sm:text-display">
+        <h1 className={detail.title}>
           {story.title}
         </h1>
-        <p className="text-lead leading-[27px] text-soft">{story.dek}</p>
+        <p className={detail.dek}>{story.dek}</p>
 
         {/* Çeviri henüz yoksa orijinal gösterilir — ama bunu söyleyerek.
             Rutin iki dili art arda yazdığı için bu not kısa ömürlüdür. */}
@@ -222,9 +232,16 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
         {story.symbols && story.symbols.length > 0 && (
           <StorySymbols symbols={story.symbols} />
         )}
+      </div>
+      {figure && <ScrollStage className={detail.coverFigure}>
+        <StoryFigure block={figure} className={detail.figure} />
+      </ScrollStage>}
       </header>
-
-      <hr className="border-t border-line" aria-hidden />
+      </SpotlightCard>
+      <SectionNav className={detail.readingNav} label={t.stories.eyebrow} items={[
+        { id: "story-reading", label: t.stories.eyebrow },
+        { id: "story-sources", label: t.stories.sources },
+      ]} />
 
       <ArticleJsonLd
         headline={story.title}
@@ -246,12 +263,12 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
           verilmediği için sayfalarca Türkçe metin `<html lang="en">`
           altında duruyordu: ekran okuyucu onu İngilizce fonetikle okuyor,
           tarayıcının "bu sayfayı çevir" önerisi de devreye girmiyordu. */}
-      <div lang={story.locale}>
+      <div id="story-reading" data-motion-article className={detail.readingBody} lang={story.locale}>
         <ArticleBody markdown={story.bodyMd} locale={story.locale} />
       </div>
 
       {/* ---- Künye ---- */}
-      <footer className="mt-2 flex flex-col gap-3 border-t border-line pt-5">
+      <footer id="story-sources" className={detail.sources}>
         {sources.length > 0 && (
           <div className="flex flex-col gap-2">
             <p className="plate text-nano tracking-[0.09em]">

@@ -345,7 +345,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         if (root.contains(element)) continue;
         animation.cancel(); observer.unobserve(element); prepared.delete(element);
       }
-      const elements = root.querySelectorAll<HTMLElement>("[data-motion-reveal], [data-motion-draw], [data-motion-stagger] > *");
+      const elements = root.querySelectorAll<HTMLElement>("[data-motion-reveal], [data-motion-draw], [data-motion-stagger] > *, [data-motion-article] .oku-blok");
       elements.forEach((element) => {
         if (prepared.has(element)) return;
         const siblings = element.parentElement?.hasAttribute("data-motion-stagger")

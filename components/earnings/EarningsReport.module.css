@@ -884,3 +884,48 @@
 }
 
 .scoreDial { overflow: visible; }
+
+/* Measured AVGO cover: 553px desktop / 864px at 390px. Keep the period
+   secondary and use the existing results as the visual centre of gravity. */
+.cover::before { inset:-220px -180px auto auto; width:650px; height:650px; border:1px solid var(--primary-faint); border-radius:50%; background:none; mask-image:linear-gradient(130deg,transparent,var(--text-strong)); opacity:.8; }
+.coverResults { padding:24px; border-radius:18px; background:linear-gradient(115deg,var(--primary-tint),transparent 70%); border:1px solid var(--line-soft); }
+.coverLeadFacts { gap:24px; }
+.coverLeadFacts > div + div { padding-left:24px; border-left:1px solid var(--primary-faint); }
+.coverTrend { padding-left:24px; border-left:0; }
+.coverTrendTrack { height:90px; }
+.coverTrendBar { max-width:48px; border-radius:7px 7px 2px 2px; background:linear-gradient(180deg,var(--primary-faint),var(--primary-tint)); }
+.coverTrendBar[data-latest="true"] { background:linear-gradient(180deg,var(--primary-soft),var(--primary-ink)); box-shadow:0 -8px 24px var(--primary-wash); }
+.coverLeadFacts dd:not(.coverMetricNote) { font-size:clamp(30px,3.4vw,49px); }
+.coverFacts { padding-top:8px; }
+.reportNav { border-color:var(--line); border-radius:12px; box-shadow:0 8px 24px color-mix(in srgb,var(--primary) 5%,transparent); }
+.reportNav > div { counter-reset:report-section; }
+.reportNav a { counter-increment:report-section; }
+.reportNav a::before { content:counter(report-section,decimal-leading-zero); font-size:10px; font-variant-numeric:tabular-nums; color:var(--primary); z-index:1; }
+.reportNav a[aria-current="location"] { color:var(--primary-ink); }
+.verdictPanel { background:radial-gradient(ellipse at 0 0,var(--primary-wash),transparent 75%),var(--premium-surface); box-shadow:var(--premium-shadow); }
+.chapterHeading { padding-top:22px; border-top:1px solid var(--line); }
+.metricCard { box-shadow:none; background:linear-gradient(150deg,var(--premium-surface),var(--primary-tint)); }
+.metricValue { font-weight:550; }
+.analysisPanel { background:transparent; padding-inline:0; border:0; border-radius:0; box-shadow:none; }
+.analysisGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:28px 40px; }
+.analysisItem { position:relative; padding:24px 0 0 48px; }
+.analysisItem > span:first-child { position:absolute; left:0; top:28px; font-size:16px; font-weight:550; letter-spacing:-.025em; }
+.analysisItem h3 { font-size:22px; line-height:1.25; letter-spacing:-.04em; color:var(--primary-ink); }
+.analysisItem p { max-width:62ch; font-size:15px; line-height:1.85; }
+.ceoQuote { padding:40px 32px; border-color:var(--primary-faint); background:radial-gradient(ellipse at 10% 50%,var(--primary-tint),transparent 70%); }
+@media(min-width:1101px) { .summaryProse { columns:2; column-gap:40px; } .summaryPanel > .summaryProse > p:first-child { font-size:1.35rem; line-height:1.65; } }
+@media(max-width:767px) {
+ .coverResults { padding:18px 14px; gap:20px; border-radius:14px; }
+ .coverLeadFacts { gap:12px; }
+ .coverLeadFacts > div + div { padding-left:12px; }
+ .coverLeadFacts dd:not(.coverMetricNote) { font-size:clamp(23px,6.9vw,31px); }
+ .coverTrend { padding:18px 0 0; }
+ .coverTrendTrack { height:62px; }
+ .coverFacts { gap:16px; }
+ .analysisGrid { grid-template-columns:minmax(0,1fr); gap:24px; }
+ .analysisItem { padding-left:34px; }
+ .analysisItem > span:first-child { font-size:13px; }
+ .analysisItem h3 { font-size:20px; }
+ .analysisItem p { font-size:14px; line-height:1.8; }
+ .ceoQuote { padding:28px 14px; }
+}
