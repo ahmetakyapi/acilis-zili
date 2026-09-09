@@ -10,7 +10,10 @@
 # Crontab girdisi (sudo -u acilis crontab -e):
 #
 #   CRON_TZ=UTC
-#   30 10 * * 1-5 /srv/acilis-zili/deploy/cron-daily.sh
+#   30 10 * * 1-5 /srv/acilis-zili/current/deploy/cron-daily.sh
+#
+# (bootstrap.sh bu girdiyi kendisi yazıyor; yol `current` bağı üzerinden
+# ki her sürümde betiğin o sürümdeki hâli çalışsın.)
 #
 # `CRON_TZ=UTC` ŞART. `vercel.json` içindeki `30 10 * * 1-5` ifadesi UTC'dir;
 # sistem crontab'ı ise sunucunun YEREL saatini kullanır. Sunucu İstanbul'a

@@ -27,27 +27,33 @@ Wants=network-online.target
 Type=simple
 User=acilis
 Group=acilis
-WorkingDirectory=/srv/acilis-zili
+# `current`, releases/<sürüm> dizinlerinden birine bağ (bkz. update.sh).
+# Yeniden başlatmada yeniden çözülür; servis her zaman bağın o anki
+# hedefinden çalışır.
+WorkingDirectory=/srv/acilis-zili/current
 
 # Secret'lar DEPONUN İÇİNDE DEĞİL. Depo herkese açık ve `git pull` ile
 # güncelleniyor; anahtarların çalışma dizininde durması onları bir yanlış
 # `git add`e bir tuş uzaklıkta bırakır. Dosya root:acilis 0640 olmalı.
 EnvironmentFile=/etc/acilis-zili.env
 Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
 
 # YALNIZCA LOOPBACK. Dışarıya açılan tek şey Caddy; 3000 portu doğrudan
 # internete bakarsa TLS'siz ve `X-Forwarded-For`suz bir ikinci kapı olur
 # (giriş sayacı o başlığı okuyor — auth.ts).
-ExecStart=/usr/bin/node /srv/acilis-zili/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+ExecStart=/usr/bin/node /srv/acilis-zili/current/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
 
 Restart=always
 RestartSec=5
 KillSignal=SIGTERM
 TimeoutStopSec=30
 
-# Sertleştirme. `.next` yazılabilir kalmalı: ISR önbelleği ve
+# Sertleştirme: işletim sistemi salt-okunur, yalnızca uygulama kökü
+# yazılabilir. `.next` yazılabilir KALMALI — ISR önbelleği ve
 # `revalidatePath` oraya yazıyor, salt-okunur bir kökte yeniden doğrulama
-# sessizce başarısız olur.
+# sessizce başarısız olur. Yol, bağ üzerinden değil kökten veriliyor:
+# `current` her sürümde başka bir dizine döner, kök sabit.
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
@@ -55,7 +61,7 @@ ProtectHome=true
 ProtectKernelTunables=true
 ProtectControlGroups=true
 RestrictSUIDSGID=true
-ReadWritePaths=/srv/acilis-zili/.next
+ReadWritePaths=/srv/acilis-zili
 
 StandardOutput=journal
 StandardError=journal

@@ -5,8 +5,11 @@ Vercel'in yanında ikinci bir canlı kopya. Gerekçesi kota: barındırma
 Kendi sunucusunda ne fonksiyon süresi sınırı var ne çağrı kotası — günlük
 cron'un 100 saniyelik bütçesi de ilk kez olduğu gibi çalışabiliyor.
 
-Bu belge sunucuyu açmaktan ilk isteğe kadar olan yolu anlatır. Sunucudaki
-dosyaların kendisi `deploy/` altında ve her birinin gerekçesi kendi içinde.
+Kurulumun TAMAMI tek komutla yapılıyor: `deploy/remote.sh`, yerel makineden
+sunucuya `deploy/` dizinini ve ortam dosyasını yükleyip `deploy/bootstrap.sh`'ı
+orada çalıştırıyor. Bu belge o komuttan önce yapılması gerekenleri ve
+komutun ne yaptığını anlatır; betiklerin kendisi (`deploy/*.sh`) her
+adımın gerekçesini kendi içinde taşıyor.
 
 ---
 
@@ -14,19 +17,25 @@ dosyaların kendisi `deploy/` altında ve her birinin gerekçesi kendi içinde.
 
 **Cron İKİ YERDE BİRDEN ÇALIŞMAMALI.** `/api/cron/daily` Finnhub'a ~84 istek
 atıyor ve ücretsiz katman dakikada 60 kabul ediyor. Aynı dakikada iki koşum
-168 istek demek — ikisi de 429 yiyip yarım kalır. Sunucudaki crontab
-açıldığında `vercel.json` içindeki `crons` bloğu kaldırılmalı (ya da tersi).
-Hangisi kalacaksa kalsın, **tek**.
+168 istek demek — ikisi de 429 yiyip yarım kalır. `bootstrap.sh` sunucuda
+crontab'ı kendisi kuruyor; bunu doğruladıktan sonra `vercel.json` içindeki
+`crons` bloğu kaldırılmalı (ya da tersi). Hangisi kalacaksa kalsın, **tek**.
 
 **İkinci kopya indekslenmemeli.** Aynı içerik iki adreste durursa arama
-motoru bunu kopya içerik sayar ve hangisini göstereceğine kendisi karar
-verir. Bu yüzden ikincil kopyada `SITE_INDEXABLE=false` — hangi kopyanın
-asıl olduğu bir dağıtım kararı, `lib/site.ts` onu dışarıdan okuyor.
+motoru bunu kopya içerik sayar. `bootstrap.sh` bunu kendisi ayarlıyor
+(`SITE_INDEXABLE=false`, yalnızca anahtar dosyada yoksa) — asıl kopya bu
+sunucuya taşınırsa `/etc/acilis-zili.env` içinde elle `true` yapılır.
 
 **Neon bölgesi gecikmeyi belirler.** `@neondatabase/serverless` her sorgu
 için ayrı bir HTTPS turu atıyor. Sunucu ile veritabanı ayrı kıtadaysa bu tur
 ~100 ms ve bir sayfa onlarca sorgu yapıyor. Oracle bölgesini Neon
 bölgesine EN YAKIN olandan seç; ölçmeden "yeterince yakın" deme.
+
+**Sürümler `releases/<zaman>-<sha>` altında yaşıyor, `current` bağı en
+sondaki sağlıklı sürümü gösteriyor.** Her `deploy/update.sh` koşumu yeni bir
+klasöre klonlayıp orada derliyor, ancak sağlık kontrolü geçince bağı çeviriyor
+— derleme dakikalarca sürerken canlı sunucu asla yarım bir sürümün üstünde
+durmuyor. Sağlık geçmezse bağ öncekine döner.
 
 ---
 
@@ -50,140 +59,95 @@ Bu adım en çok vakit kaybettiren yer: Oracle'da güvenlik duvarı **iki
 katmanlı** ve yalnızca birini açmak sessizce yetmez — site dışarıdan
 zaman aşımına düşer, hiçbir hata mesajı çıkmaz.
 
-**Katman 1 — Security List** (Oracle konsolu → VCN → Subnet → Security List):
-`0.0.0.0/0` kaynağından TCP 80 ve 443'e Ingress kuralı ekle.
+**Katman 1 — Security List.** Konsolda örneğe tıkla → aşağıdaki "Primary
+VNIC" bölümünden Subnet'e gir → "Security Lists" → "Default Security List
+for vcn-…" → **Security rules** sekmesi → **Add Ingress Rules**. İki kural
+ekle: Source Type `CIDR`, Source CIDR `0.0.0.0/0`, IP Protocol `TCP`,
+Destination Port Range `80` — sonra aynısı `443` için.
 
-**Katman 2 — sunucunun kendi iptables'ı.** Oracle'ın Ubuntu görüntüleri
-SSH dışındaki her şeyi DROP eden kurallarla geliyor:
+**Katman 2 — sunucunun kendi iptables'ı.** Bunu **elle açmana gerek yok**,
+`bootstrap.sh` kendisi açıyor (REJECT kuralının önüne, sıra numarasını
+okuyarak) ve `netfilter-persistent save` ile kalıcılaştırıyor. Bu belgede
+duruyor çünkü ilk katmanı açmak bu katmanı unutturur — ikisi ayrı sistemler.
 
-```bash
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
-sudo netfilter-persistent save
-```
+## 3. Yerelde hazırlık
 
-## 3. Node ve Caddy
-
-```bash
-sudo apt update && sudo apt install -y git curl
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-
-sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
-  | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
-  | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-sudo apt update && sudo apt install -y caddy
-```
-
-## 4. Kullanıcı ve depo
+**SSH anahtarı.** Oracle örneğine SSH ile bağlanacak bir anahtar çifti
+gerekiyor; yoksa:
 
 ```bash
-sudo useradd --system --create-home --home-dir /home/acilis --shell /bin/bash acilis
-sudo mkdir -p /srv/acilis-zili && sudo chown acilis:acilis /srv/acilis-zili
-sudo -u acilis git clone https://github.com/<kullanici>/acilis-zili.git /srv/acilis-zili
+ssh-keygen -t ed25519 -f ~/.ssh/acilis-zili -N "" -C "acilis-zili-deploy"
 ```
 
-## 5. Ortam değişkenleri
+Public key'i (`~/.ssh/acilis-zili.pub`) örnek oluşturulurken "SSH keys" alanına
+yapıştır (ya da sonradan `ssh-copy-id` ile ekle).
 
-Secret'lar **depo dizininde değil**, `/etc/acilis-zili.env` içinde: depo
-herkese açık ve `git pull` ile güncelleniyor.
+**Ortam dosyası.** `deploy/remote.sh` yerelde `.env.production.local`
+dosyasını arıyor:
 
 ```bash
-sudo install -o root -g acilis -m 0640 /dev/null /etc/acilis-zili.env
-sudo nano /etc/acilis-zili.env
+npx vercel login
+npx vercel link
+npx vercel env pull --environment=production .env.production.local
 ```
 
-```ini
-# HER DEĞER TIRNAKLI. DATABASE_URL içinde `&` ve `?` var; tırnaksız bir
-# satır betikler dosyayı `source` ettiğinde komutu arka plana atar.
-DATABASE_URL="postgresql://...?sslmode=require"
-AUTH_SECRET="..."
-ALPACA_API_KEY_ID="..."
-ALPACA_API_SECRET_KEY="..."
-FINNHUB_API_KEY="..."
-FRED_API_KEY="..."
-CRON_SECRET="..."
-BRIEF_SECRET="..."
-ANTHROPIC_API_KEY="..."
-DEEPL_API_KEY="..."
+Vercel kullanmıyorsan `.env.example`'ı kopyalayıp elle doldur. Dosya
+`.env*` deseniyle gitignore'da, depoya girmez.
 
-NEXT_PUBLIC_SITE_URL="https://acilis-zili.ornek.com"
-
-# Auth.js üretimde Host başlığına varsayılan olarak güvenmiyor; ters vekil
-# arkasında bu değişken olmadan giriş yönlendirmeleri yanlış adrese gider.
-AUTH_TRUST_HOST="true"
-
-# Bu kopya İKİNCİL ise açık kalsın. Asıl kopya buraya taşınırsa `true` yap
-# ve Vercel tarafını `false`a çevir — ikisi aynı anda indekslenmemeli.
-SITE_INDEXABLE="false"
-```
-
-`.env.example` içindeki bütün açıklamalar geçerli; buradaki tek fark
-`AUTH_TRUST_HOST` ve `SITE_INDEXABLE`.
-
-## 6. İlk derleme
+## 4. Kurulumu çalıştır
 
 ```bash
-cd /srv/acilis-zili
-sudo -u acilis bash -c 'set -a; . /etc/acilis-zili.env; set +a; npm ci && npm run build'
+HOST=ubuntu@<SUNUCU_IP> DOMAIN=acilis.ornek.com deploy/remote.sh
 ```
 
-Şema henüz uygulanmadıysa bir kez (lokalden de yapılabilir):
+`DOMAIN` verilmezse sunucu kendi genel IP'sinden bir `sslip.io` adresi
+türetir (`1-2-3-4.sslip.io`) — alan adı olmadan da geçerli TLS sertifikasıyla
+yayına çıkmak için. Betik sırayla:
+
+1. `deploy/` dizinini ve ortam dosyasını sunucuya yükler (izinler daraltılmış
+   olarak — sır dünya-okunur hiçbir noktada durmaz).
+2. `bootstrap.sh`'ı root olarak çalıştırır: takas alanı, iptables, paketler
+   (Node 22, Caddy), kullanıcı, systemd birimi, TLS, crontab, ilk sürüm.
+3. Siteyi **dışarıdan** (senin makinenden) yoklar. Sunucunun kendi içinden
+   yapılan bir kontrol Security List'in kapalı olduğunu göremez; bu adım
+   görür ve HTTP durumunu basar.
+
+Betik **yeniden çalıştırılabilir** — ortam dosyası zaten sunucudaysa
+tekrar göndermez (elle yapılmış değişiklikleri, örn. `SITE_INDEXABLE=true`,
+korur); yeniden göndermek istersen `ENV_FORCE=1` ver.
+
+Şema henüz uygulanmadıysa bir kez (lokalden `DATABASE_URL` ile):
 `npm run db:migrate && npm run db:seed`
 
-## 7. Servis
+## 5. Cron'u tekile indir
+
+`bootstrap.sh` crontab'ı kendisi yazdı (`CRON_TZ=UTC`, hafta içi 10:30 UTC).
+Bir kez elle sına:
 
 ```bash
-sudo cp deploy/acilis-zili.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now acilis-zili
-curl -I http://127.0.0.1:3000/     # 200 beklenir
+ssh -i ~/.ssh/acilis-zili ubuntu@<SUNUCU_IP> \
+  'sudo -u acilis bash /srv/acilis-zili/current/deploy/cron-daily.sh'
+ssh -i ~/.ssh/acilis-zili ubuntu@<SUNUCU_IP> \
+  'journalctl -t acilis-cron -n 20 --no-pager'
 ```
 
-## 8. TLS ve alan adı
+Başarılıysa **Vercel tarafındaki cron'u kapat** (§ 0) — iki koşum Finnhub
+kotasını aşar.
 
-Alan adının A kaydını sunucunun genel IP'sine yönlendir, sonra:
+## 6. Sonraki dağıtımlar
 
 ```bash
-sudo cp deploy/Caddyfile /etc/caddy/Caddyfile
-sudo nano /etc/caddy/Caddyfile      # alan adını yaz
-sudo systemctl reload caddy
+HOST=ubuntu@<SUNUCU_IP> deploy/remote.sh
 ```
 
-Caddy sertifikayı ilk istekte kendisi alıyor. DNS henüz yayılmadıysa
-sertifika başarısız olur — `journalctl -u caddy -f` ile izle.
-
-## 9. Cron
+Aynı komut: `deploy/` dizinini yeniden yükler (birim/Caddy/betik
+düzeltmeleri sunucuya gider), ortam dosyası zaten varsa dokunmaz, yeni bir
+sürüm klonlayıp derler, sağlık kontrolü geçince canlıya alır. Elle,
+sunucunun üzerinden de yapılabilir:
 
 ```bash
-sudo -u acilis crontab -e
+sudo -u acilis -H bash /srv/acilis-zili/current/deploy/update.sh
 ```
-
-```cron
-CRON_TZ=UTC
-30 10 * * 1-5 /srv/acilis-zili/deploy/cron-daily.sh
-```
-
-`CRON_TZ=UTC` şart: `vercel.json` içindeki ifade UTC, sistem crontab'ı ise
-sunucunun yerel saatini kullanır. Elle bir kez sına:
-
-```bash
-sudo -u acilis /srv/acilis-zili/deploy/cron-daily.sh
-journalctl -t acilis-cron -n 20 --no-pager
-```
-
-Sınadıktan sonra **Vercel tarafındaki cron'u kapat** (§ 0).
-
-## 10. Güncelleme
-
-```bash
-sudo -u acilis /srv/acilis-zili/deploy/update.sh
-```
-
-Çeker, derler, yeniden başlatır ve ayağa kalktığını doğrular; kalkmazsa
-son 40 satır günlüğü basıp sıfırdan farklı çıkar.
 
 ---
 
@@ -191,10 +155,14 @@ son 40 satır günlüğü basıp sıfırdan farklı çıkar.
 
 | Belirti | Bakılacak yer |
 |---|---|
-| Dışarıdan zaman aşımı, içeriden 200 | § 2 — iki katmandan biri kapalı |
-| Site haritasında `localhost:3000` | `NEXT_PUBLIC_SITE_URL` derleme sırasında yoktu |
-| Giriş sonrası yanlış adrese dönüş | `AUTH_TRUST_HOST` eksik |
-| Paylaşım kartları boş | `assets/fonts` eksik — standalone çıktısına geçilmiş olabilir |
+| Dışarıdan zaman aşımı, `remote.sh` sonunda "ULAŞILAMADI" | § 2 Katman 1 — Security List kapalı |
+| Site haritasında `localhost:3000` | `NEXT_PUBLIC_SITE_URL` derleme sırasında yoktu — `update.sh` build'den önce ortamı okuyor mu kontrol et |
+| Giriş sonrası yanlış adrese dönüş | `AUTH_TRUST_HOST` eksik — `bootstrap.sh` bunu zorluyor, elle silinmiş olabilir |
+| Paylaşım kartları boş | `assets/fonts` eksik — her sürüm taze `git clone` olduğu için normalde olmaz; olduysa klon yarım kalmış demektir |
 | Cron 503 | `CRON_SECRET` tanımsız (`lib/api-auth.ts` üretimde açık kapı bırakmıyor) |
-| Cron 3 saat erken | crontab'da `CRON_TZ=UTC` yok |
+| Cron "Permission denied" | betik çalıştırılabilir değil — `deploy/*.sh` depoda `100755` olmalı (`git ls-files -s deploy/`) |
+| Cron 401 her gün | ortam dosyasında `$` veya `` ` `` içeren bir sır var ve iki tüketici (systemd, bash `source`) farklı okuyor — `bootstrap.sh`'taki `normalize_env` bunu artık kaçışlıyor; eski bir sürümdeyse güncelle |
+| Cron 3 saat erken/geç | crontab'da `CRON_TZ=UTC` yok |
 | Sayfalar yavaş | Neon bölgesi uzak (§ 0) — `journalctl` değil, sorgu turunu ölç |
+| `update.sh` "AYAĞA KALKMADI" diyip geri alıyor | `journalctl -u acilis-zili -n 40` çıktısı zaten basılıyor, oradan devam et |
+| Disk doluyor | `du -sh /srv/acilis-zili/releases/*` — yalnızca canlıya çıkmış son 2 sürüm kalmalı; kalmıyorsa `update.sh`'ın budama adımını kontrol et |
