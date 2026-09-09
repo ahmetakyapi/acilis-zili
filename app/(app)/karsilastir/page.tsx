@@ -198,6 +198,7 @@ async function CompareBoard({
   /* Aralığa bağlı METİNLERİN tamamı tek nesnede: sağlayıcı bileşenden
      istemciye fonksiyon değil VERİ geçiyor. Sözlük sunucuda çözülüyor. */
   const labels: CompareLabels = {
+    loading: t.common.loading,
     rangeLabel: t.compare.rangeLabel,
     ranges: Object.fromEntries(
       COMPARE_RANGES.map((key) => [key, t.chart.ranges[key]]),

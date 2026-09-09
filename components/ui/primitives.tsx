@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { TabUnderline } from "./TabUnderline";
 import { cn, directionOf, directionWash, formatPercent } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";

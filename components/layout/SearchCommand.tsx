@@ -1,5 +1,7 @@
 "use client";
 
+import { startRouteProgress } from "./RouteProgress";
+
 import {
   useCallback,
   useEffect,
@@ -368,6 +370,7 @@ export function SearchCommand({
     (href: string) => {
       navigatingRef.current = true;
       close();
+      startRouteProgress(href);
       router.push(href);
     },
     [router, close],

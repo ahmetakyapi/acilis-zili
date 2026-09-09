@@ -1,8 +1,9 @@
+import { QueryTransition } from "@/components/layout/QueryTransition";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/calendar/CalendarExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { IpoCalendar } from "@/components/markets/IpoCalendar";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import {
   EmptyState,
   ImpactDots,
@@ -228,6 +229,7 @@ export default async function CalendarPage(
         })}
       </nav>
 
+      <QueryTransition label={t.common.loading}>
       {byDay.size === 0 ? (
         <Panel>
           <EmptyState title={t.calendar.empty} />
@@ -465,6 +467,8 @@ export default async function CalendarPage(
           );
         })
       )}
+
+      </QueryTransition>
 
       {/* Makro takvimin altında halka arz takvimi: ikisi de "önümüzdeki
           günlerde ne olacak" sorusuna cevap veriyor. */}

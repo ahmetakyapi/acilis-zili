@@ -1,7 +1,9 @@
+import { QueryTransition } from "@/components/layout/QueryTransition";
+import { LoadingFallback } from "@/components/ui/LoadingState";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/news/NewsExperience.module.css";
 import { Suspense } from "react";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState, PageHeader } from "@/components/ui/primitives";
 import { NewsImage } from "@/components/news/NewsImage";
 import {
@@ -64,9 +66,11 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
         </div>
       )}
 
-      <Suspense fallback={<NewsSkeleton />}>
+      <QueryTransition label={t.common.loading}>
+      <Suspense key={symbolFilter ?? "all"} fallback={<LoadingFallback label={t.common.loading}><NewsSkeleton /></LoadingFallback>}>
         <NewsList symbolFilter={symbolFilter} />
       </Suspense>
+      </QueryTransition>
     </MotionExperience>
   );
 }

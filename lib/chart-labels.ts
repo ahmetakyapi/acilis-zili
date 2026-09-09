@@ -25,6 +25,7 @@ import type { Dictionary } from "./i18n";
  */
 
 export type ChartLabels = {
+  loading: string;
   ranges: Record<ChartRange, string>;
   rangeLabels: Record<ChartRange, string>;
   area: string;
@@ -46,6 +47,7 @@ export type ChartLabels = {
 
 export function chartLabels(t: Dictionary): ChartLabels {
   return {
+    loading: t.common.loading,
     ranges: t.chart.ranges,
     rangeLabels: t.chart.rangeLabels,
     area: t.chart.area,

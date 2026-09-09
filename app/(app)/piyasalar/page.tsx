@@ -1,10 +1,12 @@
+import { QueryTransition } from "@/components/layout/QueryTransition";
+import { LoadingFallback } from "@/components/ui/LoadingState";
 import { Suspense } from "react";
 import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/markets/MarketExperience.module.css";
 import { FearGauge } from "@/components/markets/FearGauge";
 import { GuideHint } from "@/components/article/GuideHint";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import {
   ChangePill,
   DataStamp,
@@ -203,11 +205,11 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
           bekliyordu. Aynı düzeltme /sirketler'de zaten yapılmış (orada
           gerekçesi yorumla yazılı); burası atlanmıştı.
 
-          `key`: sekme ya da sıralama değişince Suspense yeni bir sınır
-          sayıyor ve iskelet tekrar görünüyor — yoksa React eski içeriği
-          ekranda tutup sessizce bekletiyor. */}
+          İlk düzende hem kartlar hem detay seçimle sıfırlanıyordu.
+          Artık kartların konumu ve sınırı sabit: yalnız seçimin sonuç alanı
+          yenilenir; QueryTransition beklerken mevcut yüksekliği korur. */}
       <Suspense
-        key={`cards:${tab}:${sort}:${dir}`}
+        key={`cards:${locale}`}
         /* Ölçülmüş yükseklikler, tahmin değil: kartlar mobilde alt alta
             (3 × 152 + 2 × 12 boşluk = 480), `sm`den itibaren tek sıra (152).
             Yedek 132px'ti; mobilde 348 piksellik bir sıçrama demekti ve
@@ -221,6 +223,43 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
 
       </div>
 
+      <Suspense fallback={<div className={styles.macro}><Skeleton className={styles.yieldSkeleton} /><Skeleton className={styles.fearSkeleton} /></div>}>
+      {/* Treasury/VIX previously followed movers. Reader preference now
+          puts this compact, independent context before index selection. */}
+      <div className={styles.macro} data-motion-stagger>
+        <YieldStrip locale={locale} t={t} />
+        {/* AYRI, BOŞ YEDEK YOK — bilerek. İki gösterge artık yukarıdaki
+            ölçülü ortak sınırda. Burada `fallback={null}` ile ayrı bir
+            sınır vardı ve iki yönden de
+            zarardı. Kazancı sıfır: kardeşi `YieldStrip` de FRED'den besleniyor
+            ve o askıya alınmamış, yani sayfa FRED turunu ZATEN bekliyor.
+            Maliyeti gerçek: boş yedek sıfır yer kaplıyor, kart akışla gelince
+            mobilde 262 piksel açılıp altındaki her şeyi aşağı itiyordu —
+            ölçüldü, /piyasalar'ın mobil CLS'i 0,206 çıkıyordu (Google'ın
+            "kötü" eşiği 0,1). */}
+        <FearGauge
+            locale={locale}
+            labels={{
+              title: t.markets.fearTitle,
+              details: t.markets.fearDetails,
+              hint: t.markets.fearHint,
+              average: t.markets.fearAverage,
+              guideCta: t.markets.fearGuideCta,
+              bands: {
+                calm: t.markets.fearCalm,
+                normal: t.markets.fearNormal,
+                tense: t.markets.fearTense,
+                fear: t.markets.fearHigh,
+                panic: t.markets.fearPanic,
+              },
+            }}
+          />
+      </div>
+
+      </Suspense>
+
+      <IndexTabs tab={tab} locale={locale} t={t} />
+      <QueryTransition label={t.common.loading}>
       <Suspense
         key={`detail:${tab}:${sort}:${dir}:${limit}`}
         /* SATIR SAYISI KADAR İSKELET, DÜZ BİR PLAKA DEĞİL.
@@ -234,7 +273,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
            askıya alınmadan önce), dolayısıyla yer tahminle değil sayıyla
            ayrılıyor. */
         fallback={
-          <DetailSkeleton rows={Math.min(active.members.length, limit)} />
+          <LoadingFallback label={t.common.loading}><DetailSkeleton rows={Math.min(active.members.length, limit)} /></LoadingFallback>
         }
       >
         <IndexDetail
@@ -248,6 +287,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
           t={t}
         />
       </Suspense>
+      </QueryTransition>
 
       <GuideHint
         label={t.guide.contextLabel}
@@ -287,7 +327,8 @@ async function IndexCards({
 
   // The selected index occupies the first visual position. Keep DOM and
   // keyboard order aligned with that position; the toolbar keeps its order.
-  const orderedTabs = [...INDEX_TABS].sort((a, b) => Number(b.key === activeTab) - Number(a.key === activeTab));
+  // Keep all three positions stable when the active index changes.
+  const orderedTabs = INDEX_TABS;
 
   return (
     <div className={styles.indexOverview}>
@@ -666,36 +707,6 @@ async function IndexDetail({
         </>
       )}
 
-      {/* Quotes and breadth are the primary reading path. Treasury/VIX
-          context now follows the movers, before the full constituent list. */}
-      <div className={styles.macro} data-motion-stagger>
-        <YieldStrip locale={locale} t={t} />
-        {/* SUSPENSE YOK — bilerek.
-            Burada `fallback={null}` ile bir sınır vardı ve iki yönden de
-            zarardı. Kazancı sıfır: kardeşi `YieldStrip` de FRED'den besleniyor
-            ve o askıya alınmamış, yani sayfa FRED turunu ZATEN bekliyor.
-            Maliyeti gerçek: boş yedek sıfır yer kaplıyor, kart akışla gelince
-            mobilde 262 piksel açılıp altındaki her şeyi aşağı itiyordu —
-            ölçüldü, /piyasalar'ın mobil CLS'i 0,206 çıkıyordu (Google'ın
-            "kötü" eşiği 0,1). */}
-        <FearGauge
-            locale={locale}
-            labels={{
-              title: t.markets.fearTitle,
-              details: t.markets.fearDetails,
-              hint: t.markets.fearHint,
-              average: t.markets.fearAverage,
-              guideCta: t.markets.fearGuideCta,
-              bands: {
-                calm: t.markets.fearCalm,
-                normal: t.markets.fearNormal,
-                tense: t.markets.fearTense,
-                fear: t.markets.fearHigh,
-                panic: t.markets.fearPanic,
-              },
-            }}
-          />
-      </div>
 
       <MembersTable
         tab={tab}
@@ -734,33 +745,12 @@ async function IndexDetail({
    İkisi tek panelde: seçici başıboş bir düğme satırıydı, genişlik ise tek
    bir çubuk için ayrı bir paneldi. Bilgi olarak da aynı şeye bakıyorlar —
    "hangi endeks" ve "o endeksin bugünü". Ayrı dururken sayfada iki blok
-   yüksekliği harcıyor, birleşince seçimin karşılığı hemen altında okunuyor. */
+   yüksekliği harcıyor, birleşince seçimin karşılığı hemen altında okunuyor.
+   Sonraki yükleme düzeninde seçimler sonuç sınırının dışına çıktı: veri
+   beklenirken çipler kaybolmaz veya devre dışı kalmaz; genişlik yine altındadır. */
 
-function IndexToolbar({
-  tab,
-  proxy,
-  proxyQuote,
-  advancing,
-  declining,
-  flat,
-  total,
-  locale,
-  t,
-}: {
-  tab: TabKey;
-  proxy: string;
-  proxyQuote: Quote | null;
-  advancing: number;
-  declining: number;
-  flat: number;
-  total: number;
-  locale: Locale;
-  t: Dictionary;
-}) {
-  const pct = (value: number) => (total > 0 ? (value / total) * 100 : 0);
-
-  return (
-    <Panel className={styles.breadth}>
+function IndexTabs({ tab, locale, t }: { tab: TabKey; locale: Locale; t: Dictionary }) {
+  return <Panel className={styles.indexTabs}>
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 px-4 py-3 sm:px-5">
         {/* ÜÇ ÇİP MOBİLDE TEK SATIRDA. `flex-wrap` ile diziliyorlardı ve
             üçüncü çip (S&P 500) 390 pikselde alt satıra düşüyordu: üç eşit
@@ -803,6 +793,34 @@ function IndexToolbar({
         </span>
       </div>
 
+  </Panel>;
+}
+
+function IndexToolbar({
+  tab,
+  proxy,
+  proxyQuote,
+  advancing,
+  declining,
+  flat,
+  total,
+  locale,
+  t,
+}: {
+  tab: TabKey;
+  proxy: string;
+  proxyQuote: Quote | null;
+  advancing: number;
+  declining: number;
+  flat: number;
+  total: number;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const pct = (value: number) => (total > 0 ? (value / total) * 100 : 0);
+
+  return (
+    <Panel className={styles.breadth}>
       {/* SEÇİLİ ENDEKSİN KENDİ GÜNÜ. Çubuk "kaç şirket artıda" diyor ama
           endeksin kendisinin ne yaptığını söylemiyordu: bir endeks üyelerinin
           çoğu düşerken de yükselebiliyor (birkaç ağır şirket taşırsa) ve
@@ -1387,9 +1405,6 @@ function DetailSkeleton({ rows }: { rows: number }) {
     <>
       {/* Genişlik şeridi */}
       <Panel className={styles.breadth}>
-        <div className="flex h-16 items-center gap-3 border-b border-line px-4">
-          <Skeleton className="h-9 w-28" /><Skeleton className="h-9 w-24" />
-        </div>
         <div className="flex h-10 items-center gap-3 border-b border-line px-4">
           <Skeleton className="h-3 w-24" /><Skeleton className="h-5 w-16" />
         </div>
@@ -1414,11 +1429,6 @@ function DetailSkeleton({ rows }: { rows: number }) {
             </div>
           </Panel>
         ))}
-      </div>
-
-      <div className={styles.macro}>
-        <Skeleton className={styles.yieldSkeleton} />
-        <Skeleton className={styles.fearSkeleton} />
       </div>
 
       {/* Bileşen tablosu */}

@@ -1,10 +1,12 @@
+import { QueryTransition } from "@/components/layout/QueryTransition";
+import { LoadingFallback } from "@/components/ui/LoadingState";
 import { Suspense } from "react";
 import { CompanyLeaders } from "@/components/companies/CompanyLeaders";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import {
   ChangePill,
   DataStamp,
@@ -338,9 +340,10 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
           `key` filtreye ve sıralamaya bağlı: değiştiğinde Suspense sınırı
           sıfırlanıyor ve iskelet ANINDA görünüyor — tıklamanın karşılığı
           hemen ekranda. */}
+      <QueryTransition label={t.common.loading}>
       <Suspense
         key={`${activeGroup?.key ?? "hepsi"}:${sort}:${dir}:${limit}`}
-        fallback={<TableSkeleton rows={Math.min(rows.length || 12, 12)} />}
+        fallback={<LoadingFallback label={t.common.loading}><TableSkeleton rows={Math.min(rows.length || 12, limit)} /></LoadingFallback>}
       >
         <CompaniesTable
           rows={rows}
@@ -358,6 +361,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
           t={t}
         />
       </Suspense>
+      </QueryTransition>
 
       <GuideHint
         label={t.guide.contextLabel}

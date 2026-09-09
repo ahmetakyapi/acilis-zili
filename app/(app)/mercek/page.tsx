@@ -1,8 +1,10 @@
+import { QueryTransition } from "@/components/layout/QueryTransition";
+import { LoadingFallback } from "@/components/ui/LoadingState";
 import { Suspense } from "react";
 import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/EditorialExperience.module.css";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { StoryCard } from "@/components/stories/StoryCard";
 import {
@@ -109,9 +111,10 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
         description={t.stories.subtitle}
       />
 
+      <QueryTransition label={t.common.loading}>
       <Suspense
         key={`${symbolFilter ?? "all"}:${limit}`}
-        fallback={<BoardSkeleton />}
+        fallback={<LoadingFallback label={t.common.loading}><BoardSkeleton /></LoadingFallback>}
       >
         <StoryBoard
           locale={locale}
@@ -120,6 +123,7 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
           limit={limit}
         />
       </Suspense>
+      </QueryTransition>
     </MotionExperience>
   );
 }

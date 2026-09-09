@@ -1,6 +1,7 @@
+import { QueryTransition } from "@/components/layout/QueryTransition";
 import { TopicDiagram } from "@/components/guide/TopicDiagram";
 import guideStyles from "@/components/guide/GuideExperience.module.css";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/EditorialExperience.module.css";
@@ -122,6 +123,7 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
         description={t.guide.subtitle}
       />
 
+      <QueryTransition label={t.common.loading}>
       {activeTopic ? (
         <TopicView
           topic={activeTopic}
@@ -169,6 +171,7 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
           })}
         </>
       )}
+      </QueryTransition>
     </MotionExperience>
   );
 }

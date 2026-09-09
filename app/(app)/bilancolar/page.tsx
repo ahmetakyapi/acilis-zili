@@ -1,3 +1,4 @@
+import { QueryTransition } from "@/components/layout/QueryTransition";
 import { redirect } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
 import { auth } from "@/auth";
@@ -136,6 +137,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           son yazılanlar sekmeye tıklanmadan burada görünüyor. */}
       <RecentAnalysesStrip locale={locale} t={t} />
 
+      <QueryTransition label={t.common.loading}>
       {rows.length === 0 ? (
         <Panel>
           <EmptyState title={t.earnings.empty} />
@@ -151,6 +153,8 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           t={t}
         />
       )}
+
+      </QueryTransition>
 
       {/* ARALIK ANAHTARI LİSTENİN ALTINDA DA. Haftalık listeyi sonuna kadar
           okuyan okuyucunun bir sonraki adımı aylık görünüm ama anahtar

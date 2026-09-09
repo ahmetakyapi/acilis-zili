@@ -116,3 +116,19 @@
 @media(max-width:767px) { .fearSkeleton { min-height:140px; } }
 .breadthSkeleton { display:flex; align-items:center; gap:12px; padding:14px 16px; min-height:56px; }
 @media(max-width:767px) { .breadthSkeleton { flex-direction:column; align-items:stretch; min-height:108px; } }
+
+/* Treasury context now precedes selection. A side label and four compact
+   readings replace the previous 206px panel without dropping observation dates. */
+.yields { display:grid; grid-template-columns:155px minmax(0,1fr); border-radius:14px; background:var(--premium-surface); }
+.yieldHeader { flex-direction:column; align-items:flex-start; justify-content:center; gap:6px; padding:14px 16px; }
+.yieldsGrid { padding:10px 0; align-items:center; }
+.yieldsGrid > div { padding:6px 8px; }
+.yieldsGrid :global(.tote) { font-size:22px; }
+.curve { grid-column:1/-1; padding:5px 14px; }
+.curve > details { flex:1 1 140px; }
+.curve .explainer p { padding-top:8px; }
+.yieldSkeleton { min-height:144px; }
+@media(max-width:1023px) { .yields { grid-template-columns:minmax(0,1fr); } .yieldHeader { flex-direction:row; align-items:center; justify-content:space-between; padding:12px 14px 2px; } .yieldsGrid { padding:6px 0; } }
+@media(max-width:767px) { .yieldsGrid :global(.tote) { font-size:20px; } .curve > details { flex-basis:100%; } .yieldSkeleton { min-height:184px; } }
+.indexTabs { border:0; background:transparent; box-shadow:none; }
+.indexTabs > div { padding:0; }

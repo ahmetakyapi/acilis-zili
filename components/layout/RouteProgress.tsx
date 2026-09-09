@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { BellMark } from "@/components/brand/BellMark";
+import { LoadingMark } from "@/components/ui/LoadingState";
 
 /* --------------------------------------------------------------------------
    Gezinme göstergesi — üstte ince çubuk, gecikirse "Yükleniyor" hapı.
@@ -40,14 +40,30 @@ const MAX_RUN = 10_000;
    düşüyor, sıfırlayacak effect kalmıyor. */
 let runId = 0;
 let counter = 0;
+let localQuery = false;
+let inlineFeedback = false;
 const listeners = new Set<() => void>();
 
 function emit() {
   for (const listener of listeners) listener();
 }
 
-export function startRouteProgress() {
-  if (runId !== 0) return;
+export function startRouteProgress(href?: string) {
+  if (runId !== 0 && !href) return;
+  const target = href ? new URL(href, window.location.href) : null;
+  const regions = [...document.querySelectorAll("[data-query-transition]")];
+  const nextLocal = Boolean(target && target.pathname === window.location.pathname && regions.length);
+  // A result below the fold cannot acknowledge a tap on a header control.
+  // In that case the existing global mark remains visible as well.
+  const nextInline = nextLocal && regions.some((region) => {
+    const rect = region.getBoundingClientRect();
+    return rect.top < window.innerHeight - 160 && rect.bottom > 180;
+  });
+  // Consecutive filters share the visible wait. Resetting its delay briefly
+  // revealed the old result between clicks (measured at ~140ms).
+  if (runId !== 0 && localQuery && nextLocal && inlineFeedback === nextInline) return;
+  localQuery = nextLocal;
+  inlineFeedback = nextInline;
   runId = ++counter;
   emit();
 }
@@ -63,6 +79,13 @@ function subscribe(callback: () => void) {
   return () => {
     listeners.delete(callback);
   };
+}
+
+/** Only query navigation uses the inline result skeleton; page navigation
+ * retains the global mark. Consecutive filters share the same active wait
+ * so the previous result does not flash between rapid selections. */
+export function useQueryNavigationRun(): number {
+  return useSyncExternalStore(subscribe, () => localQuery ? runId : 0, () => 0);
 }
 
 /**
@@ -142,12 +165,18 @@ export function RouteProgress({ label }: { label: string }) {
       )
         return;
 
-      startRouteProgress();
+      startRouteProgress(url.href);
     };
 
+    const onHistory = () => {
+      if (`${window.location.pathname}?${window.location.search.slice(1)}` !== settled.current) startRouteProgress();
+    };
     document.addEventListener("click", onClick, { capture: true });
-    return () =>
+    window.addEventListener("popstate", onHistory);
+    return () => {
       document.removeEventListener("click", onClick, { capture: true });
+      window.removeEventListener("popstate", onHistory);
+    };
   }, []);
 
   /* Hedef ekran bağlandı — adres ya da sorgu değiştiyse iş bitmiştir.
@@ -180,15 +209,8 @@ export function RouteProgress({ label }: { label: string }) {
           bağlıyor — zil, etrafında dönen accent halka ve altında tek
           kelime. Katman tıklamayı ENGELLEMEZ (`pointer-events: none`):
           gösterge takılırsa ekranı kilitlemesin. */}
-      {slow && (
-        <div className="route-loader" role="status" aria-live="polite">
-          <div className="route-loader-card">
-            <span aria-hidden className="route-loader-mark">
-              <BellMark size={34} className="route-loader-bell" />
-            </span>
-            <span className="route-loader-label">{label}</span>
-          </div>
-        </div>
+      {slow && !inlineFeedback && (
+        <div className="route-loader"><LoadingMark label={label} /></div>
       )}
     </>
   );

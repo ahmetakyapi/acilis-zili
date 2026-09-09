@@ -1,5 +1,7 @@
 "use client";
 
+import { LoadingSurface } from "@/components/ui/LoadingState";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AreaSeries,
@@ -796,9 +798,9 @@ export function PriceChart({
       {/* Grafik alanı — yükseklik kasten cömert: yanındaki künye kartı daha
           uzun olduğu için grafik kartının altında ölü boşluk kalıyordu ve
           gün içi hareket 288px'e sıkışınca düzleşiyordu. */}
-      <div className="relative h-[300px] w-full sm:h-[430px]">
+      <div className="relative h-[300px] w-full sm:h-[430px]" aria-busy={state.phase === "loading"}>
         {state.phase === "loading" && (
-          <div className="skeleton absolute inset-0" aria-hidden />
+          <LoadingSurface label={labels.loading} />
         )}
         {state.phase === "error" && (
           <div className="absolute inset-0 flex items-center justify-center">

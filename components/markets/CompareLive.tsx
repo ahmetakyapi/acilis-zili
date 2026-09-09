@@ -1,5 +1,7 @@
 "use client";
 
+import { LoadingSurface } from "@/components/ui/LoadingState";
+
 import {
   createContext,
   useCallback,
@@ -72,6 +74,7 @@ const NO_SERIES: CompareSeries[] = [];
 const PREFETCH_DELAY_MS = 180;
 
 export type CompareLabels = {
+  loading: string;
   /** Aralık denetiminin adı — "Grafik Aralığı". */
   rangeLabel: string;
   /** Kısa aralık etiketleri: TR'de 1A · 3A · 6A · YBB · 1Y · 5Y. */
@@ -609,10 +612,7 @@ export function CompareChartPanel({ labels }: { labels: CompareLabels }) {
 
       <div className="relative min-h-[240px]" aria-busy={phase === "loading"}>
         {phase === "loading" && (
-          <div
-            aria-hidden
-            className="skeleton absolute inset-0 rounded-(--radius-md)"
-          />
+          <LoadingSurface label={labels.loading} />
         )}
         {phase === "error" && (
           /* BAŞARISIZLIK DUYURULUYOR. Aralık değişimi `role="status"` ile

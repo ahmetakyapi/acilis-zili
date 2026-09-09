@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { QueryTransition } from "@/components/layout/QueryTransition";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/DirectoryExperience.module.css";
@@ -405,6 +406,7 @@ export default async function AnalysesPage(
               </div>
             </div>
 
+            <QueryTransition label={t.common.loading}>
             {rows.length === 0 ? (
               <Panel>
                 <EmptyState
@@ -448,6 +450,7 @@ export default async function AnalysesPage(
                 }
               />
             )}
+            </QueryTransition>
           </div>
         </>
       )}
