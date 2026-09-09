@@ -266,7 +266,11 @@ ensure_env NEXT_PUBLIC_SITE_URL "https://$DOMAIN" force
 ensure_env AUTH_TRUST_HOST true force
 ensure_env SITE_INDEXABLE false
 for key in DATABASE_URL AUTH_SECRET CRON_SECRET BRIEF_SECRET; do
-	grep -qE "^${key}=(\042.+\042|\047.+\047)$" "$ENV_FILE" ||
+	# \042/\047 (çift/tek tırnak) düz çift-tırnaklı bir bash dizesinde oktal
+	# kaçış OLARAK ÇÖZÜLMÜYOR — yalnızca $'...' (ANSI-C) içinde çalışır. Bu
+	# yüzden bu denetim değer GERÇEKTEN doluyken bile hep "boş" diyordu
+	# (yerelde doğrulandı). Köşeli parantez içinde iki tırnak karakteri.
+	grep -qE "^${key}=([\"'].+[\"'])\$" "$ENV_FILE" ||
 		warn "$key boş — ilgili özellik üretimde kapalı/503 olur"
 done
 
