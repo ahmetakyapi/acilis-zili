@@ -215,10 +215,16 @@ function RenameListForm({
 
 function NewListForm({ labels }: { labels: BoardLabels }) {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const close = () => {
+    setOpen(false);
+    requestAnimationFrame(() => triggerRef.current?.focus());
+  };
 
   if (!open) {
     return (
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(true)}
         className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-(--radius-md) border border-dashed border-line-strong px-4 text-sm font-medium text-soft transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary"
@@ -234,7 +240,7 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
       <form
         action={async (formData: FormData) => {
           await createWatchlist(formData);
-          setOpen(false);
+          close();
         }}
         className="flex flex-wrap items-end gap-3"
       >
@@ -285,7 +291,7 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
           </Button>
           <button
             type="button"
-            onClick={() => setOpen(false)}
+            onClick={close}
             className="inline-flex size-11 items-center justify-center rounded-(--radius-md) text-muted transition-colors hover:bg-surface-elevated hover:text-strong"
             aria-label={labels.cancel}
           >
@@ -318,6 +324,7 @@ function ListPanel({
 }) {
   const router = useRouter();
   const [renaming, setRenaming] = useState(false);
+  const renameTriggerRef = useRef<HTMLButtonElement>(null);
 
   return (
     /* `group/list`: liste başlığındaki silme düğmesi de satırlardaki gibi
@@ -329,32 +336,41 @@ function ListPanel({
         <RenameListForm
           list={list}
           labels={labels}
-          onDone={() => setRenaming(false)}
+          onDone={() => {
+            setRenaming(false);
+            // Like symbol search, closing an inline editor returns to its
+            // opener. The authenticated audit found focus falling to body.
+            requestAnimationFrame(() => renameTriggerRef.current?.focus());
+          }}
         />
       ) : (
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3 sm:px-5">
-        <h2 className="flex items-center gap-2.5 text-read font-bold tracking-[-0.01em] text-strong">
+        <h2 className="flex min-w-0 flex-1 items-center gap-2.5 text-read font-bold tracking-[-0.01em] text-strong">
           <span
             aria-hidden
             className={cn(
-              "size-2.5 rounded-full",
+              "size-2.5 shrink-0 rounded-full",
               LIST_COLOR_CLASS[list.color] ?? "bg-primary",
             )}
           />
-          {list.name}
+          {/* A valid 40-character name measured 349px and pushed both
+              controls outside 320/390px screens. Wrap the name while the
+              color, count and editing controls keep their own space. */}
+          <span className="min-w-0 [overflow-wrap:anywhere]">{list.name}</span>
           {/* Sayaç çıplak bir rakamdı ve liste adının devamı gibi
               okunuyordu ("Semiconductors 9"). Kendi hapına girdi. */}
-          <span className="numeral rounded-full bg-surface-elevated px-2 py-[2px] text-tiny font-semibold text-muted">
+          <span className="numeral shrink-0 rounded-full bg-surface-elevated px-2 py-[2px] text-tiny font-semibold text-muted">
             {list.items.length}
           </span>
         </h2>
-        <div className="flex items-center gap-0.5">
+        <div className="flex shrink-0 items-center gap-0.5">
         {/* YIKICI OLMAYAN DÜZELTMENİN YOLU. `renameWatchlist` eylemi ve
             sözlük anahtarı yazılıydı ama onu çağıran hiçbir düğme yoktu:
             liste adını yanlış yazan ya da kapsamı değişen kullanıcının tek
             seçeneği listeyi SİLMEKTİ — ve silme, cascade ile içindeki bütün
             sembolleri de götürüyordu. */}
         <button
+          ref={renameTriggerRef}
           type="button"
           onClick={() => setRenaming(true)}
           aria-label={`${labels.renameList}: ${list.name}`}
@@ -556,11 +572,16 @@ function SortableRows({
                   üstüne biniyor, şirket adı sıfır genişliğe düşüp tamamen
                   kayboluyordu. Sabit genişliğin işi geniş ekranda sütunları
                   hizalamak; telefonda hizalanacak yer zaten yok. */}
-              <span className="numeral shrink-0 text-sm font-semibold text-strong sm:w-14">
-                {item.symbol}
-              </span>
-              <span className="min-w-0 truncate text-xs text-soft">
-                {names[item.symbol] ?? ""}
+              {/* At 320px the company name had only 12–23px beside the
+                  symbol. Stack the identity on phones; desktop retains
+                  the aligned symbol and name columns through contents. */}
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5 sm:contents">
+                <span className="numeral shrink-0 text-sm font-semibold text-strong sm:w-14">
+                  {item.symbol}
+                </span>
+                <span className="min-w-0 truncate text-xs text-soft">
+                  {names[item.symbol] ?? ""}
+                </span>
               </span>
             </Link>
 
@@ -614,7 +635,7 @@ function SortableRows({
 
                 Klavyeyle gezen okuyucu için `group-focus-within` var: sekme
                 tuşu satıra girdiğinde hepsi görünür oluyor. */}
-            <span className="flex shrink-0 flex-col opacity-100 transition-opacity opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+            <span className="flex shrink-0 flex-col transition-opacity opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
               <button
                 type="button"
                 onClick={() => nudge(item.id, -1)}

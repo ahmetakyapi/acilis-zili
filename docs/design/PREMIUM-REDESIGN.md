@@ -192,3 +192,7 @@ Kullanıcının yeni sırasına göre 1024px altındaki tek sütun **Bugünün A
 ## Sayfalar Arası Bütünlük — 9 Eylül
 
 Haberler ve haber detayı, Bülten, Karşılaştırma, Menü, Giriş/Kayıt, KVKK, boş/hata durumları ve alt bilgi ortak yüzey/başlık/hareket diline alındı. Dizin ve yardımcı başlıklar ortak 28–40px ölçeği kullanır; finansal okumaların kendi ölçekleri korunur. Ayarlar/Favoriler yüzeyleri de kaynak düzeyinde uyarlandı. Mobil aramada gerçek açıcıya odak dönüşü ve haber etiketlerinin metinde geçen şirketlerle sınırlandırılması, görsel incelemede bulunan iki işlevsel düzeltmedir. **540 genel + 60 odaklı yerleşim kontrolü** başarılı. Bulgular, ölçümler, etkileşimler ve kapsam sınırları [Arayüz Bütünlüğü İncelemesi](INTERFACE-AUDIT-2026-09.md) belgesinde.
+
+## Test Hesabıyla Favoriler ve Ayarlar — 9 Eylül
+
+Kullanıcının izniyle kayıt formundan açılan test hesabıyla Favoriler, Ayarlar ve Bilanço Takip akışları doğrulandı. Uzun liste adlarının mobilde eylem düğmelerini ekran dışına itmesi düzeltildi; 320px'te şirket adı alanı 12–23px'ten 65–69px'e çıkarıldı. Liste oluşturma/yeniden adlandırma formundan çıkınca odak açıcıya döner. Masaüstü sıralama oklarının çelişkili görünürlük sınıfları temizlendi. **60 boş + 60 düzeltilmiş dolu hesap yerleşimi**, sekiz form/odak durumu ve gerçek liste, favori, bilanço bağlantısı, tercih ve giriş/çıkış işlemleri kontrol edildi. Ayrıntılar [ek hesap denetiminde](INTERFACE-AUDIT-2026-09.md#oturum-açıkken-ek-denetim--9-eylül).

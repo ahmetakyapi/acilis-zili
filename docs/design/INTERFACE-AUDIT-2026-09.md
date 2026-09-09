@@ -39,4 +39,29 @@ Yerel kanıtlar: `/tmp/acilis-redesign/site-audit-before.json`, `site-consistenc
 
 ## Kapsam Sınırları
 
-Ayarlar ve Favoriler'in oturum gerektiren içerikleri kaynak kodu ve derleme düzeyinde güncellendi; canlı hesapla uçtan uca test yapılmadı. Misafir yönlendirmeleri incelendi. Yönetim paneli için ayrı görsel yenileme veya yetkili tarayıcı denetimi yapılmadı. Fiziksel iOS/Safari testi yok; ölçümler Chrome'un farklı ekran genişliklerinde alındı. Yeni bağımlılık, örnek piyasa verisi veya uydurma görsel eklenmedi.
+İlk incelemede Ayarlar ve Favoriler'in oturum gerektiren içerikleri yalnız kaynak/derleme düzeyinde incelenmişti. Kullanıcının test hesabı açma talebiyle bu eksik aşağıdaki ek denetimde kapatıldı. Yönetim paneli için ayrı görsel yenileme veya yetkili tarayıcı denetimi yapılmadı. Fiziksel iOS/Safari testi yok; ölçümler Chrome'un farklı ekran genişliklerinde alındı. Yeni bağımlılık, örnek piyasa verisi veya uydurma görsel eklenmedi.
+
+## Oturum Açıkken Ek Denetim — 9 Eylül
+
+Hesap, uygulamanın gerçek kayıt formuyla yerel üretim sürümünde oluşturuldu. Test hesabına ait kayıtlar uygulamanın bağlı olduğu veritabanına yazıldı; başka kullanıcıların listelerine dokunulmadı. E-posta gönderimi kullanılmadı. Favoriler, Ayarlar ve Bilanço Takip ekranlarında TR/EN × açık/koyu × 320/390/768/1024/1440px matrisi uygulandı. Telefon genişliklerinde mobil/dokunmatik tarayıcı emülasyonu da açıldı.
+
+### Bulunan ve Düzeltilen Sorunlar
+
+- Geçerli, boşluksuz uzun liste adı başlığının genişliği 349px'ti. 320 ve 390px ekranlarda ad ve düzenleme/silme düğmeleri görünür alanın dışına çıkıyordu. Belgenin yatay kaydırması kapalı olduğu için yalnız `scrollWidth` denetimi bunu yakalamıyordu; eleman sınırları da ölçüldü. Başlık esnek alana alındı, ad sarılırken renk, sayaç ve eylem düğmeleri yerini korur.
+- 320px'te şirket adları sembolün yanında 12–23px'e sıkışıyordu. Mobilde sembol ve ad alt alta alındı; ad alanı 65–69px'e çıktı. 390px'te 135–139px. Satır yüksekliği 92px olarak korundu; masaüstündeki 60px satır ve hizalı sütunlar değişmedi.
+- Yeni liste ve yeniden adlandırma formları iptal edilince odak `<body>`'ye düşüyordu. Kaydetme/iptal sonrasında ilgili açıcı düğmeye döner. Sembol ekleme ve hesap silme formlarının mevcut odak davranışları da kontrol edildi.
+- Sıralama oklarının aynı anda taşıdığı çelişkili `opacity-100`/`opacity-0` sınıfları temizlendi. Fareli masaüstünde hover/klavye odağıyla, dokunmatik ekranlarda sürekli görünürler.
+
+### Gerçek Hesapla İşlem Kontrolleri
+
+- Kayıt ve otomatik oturum; varsayılan listenin oluşturulması; NVDA/AAPL/SNOW ekleme; aramada SNOW sonucu ve aynı sembolün ikinci kez eklenmesini engelleyen mesaj.
+- Mobil oklarla ve masaüstünde gerçek sürükle-bırak olaylarıyla sıralama; tam yenilemeden sonra sıranın korunması.
+- İkinci liste oluşturma, adını/rengini değiştirme, yalnız seçilen listeye MU ekleme, sembol çıkarma; liste silme onayını iptal etme ve onaylayarak silme.
+- Şirket detayında MSFT kalbinden favoriye ekleme; yenilemeden sonra seçimin korunması ve Favoriler'de görünmesi; listeden çıkarma.
+- Takip edilen SNOW'un gerçek bilanço analizini açma; aylık takvim aralığına geçince analiz bağlantısının korunması.
+- Hesap menüsünden tema ve dil değişimi, yenilemede tercihin korunması; çıkış sonrası korumalı sayfanın girişe yönlenmesi; e-postayla yeniden girişte aynı Favoriler sayfasına ve kaydedilmiş öğelere dönüş.
+- Hesap silmede yanlış şifrenin reddedilmesi ve oturumun korunması; doğru onay/şifreyle test hesabının silinmesi, çıkış yapılması ve silinen hesabın bilgileriyle tekrar girişin reddedilmesi. Test hesabı ve yalnız ona ait listeler temizlendi; geçici şifre/çerez dosyası silindi.
+
+Boş hesapta **60**, düzeltme sonrası dolu/uzun adlı listelerde **60 yerleşim kontrolü** geçti. Düzeltme öncesi dolu liste taramasında 8 dil/tema/genişlik birleşiminde ekran dışına çıkan başlık/düğmeler bulunmuştu; son taramada yok. Ayrıca TR/EN × dört genişlikte **8 form/odak kontrolü** geçti. Görsel yerleşimler, tarayıcı JavaScript hataları ve beklenen erişim durumları denetlendi. Lint, typecheck, build ve diff kontrolü başarılı.
+
+Ek yerel kanıtlar: `auth-empty-audit.json`, `auth-populated-before-audit.json`, `auth-populated-after-audit.json`, `auth-forms-before.json`, `auth-forms-after.json`, `auth-watchlist-interactions.json`, `auth-e2e.json`, `auth-cleanup.json` ve `auth-*` ekran görüntüleri; tümü `/tmp/acilis-redesign/` altında. Kimlik bilgileri ve oturum çerezleri depoya eklenmez.
