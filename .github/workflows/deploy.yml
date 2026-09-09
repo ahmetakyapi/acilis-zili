@@ -1,0 +1,61 @@
+name: Deploy
+
+# `main`'e her push — merge dahil — sunucuda YENİ BİR SÜRÜM çıkarır.
+#
+# İKİ İŞ VAR ve ikinci, birincisi geçmeden BAŞLAMAZ:
+#
+# 1. verify — GitHub'ın runner'ında typecheck + lint + build. Kırık bir
+#    commit sunucuya hiç dokunmadan burada elenir; VPS'e SSH atıp derlemenin
+#    ortasında patlamasını beklemek hem yavaş hem de o sırada eski sürüm
+#    zaten ayaktayken gereksiz bir risk.
+#
+# 2. deploy — `deploy/update.sh`'ı sunucuda ÇALIŞTIRIR, kod BURADAN
+#    KOPYALANMAZ. Betik kendi `git clone`'unu yapıyor (releases/<sürüm>),
+#    kendi sağlık kontrolünü yapıyor, geçmezse önceki sürüme kendi geri
+#    dönüyor — bu iş akışı `deploy/remote.sh` ile elle yapılanın AYNISI,
+#    tek fark tetikleyicinin insan değil push olması.
+#
+# Otomatik deploy'un GEREKÇESİ `docs/deploy-vps.md`'de.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Sıra bilinçli: typecheck `.next/types` altındaki üretilmiş tipleri
+      # (PageProps, RouteContext) okuyor ve onlar yalnızca build sırasında
+      # üretiliyor — CLAUDE.md'nin de belirttiği gibi build'den önce
+      # typecheck çalıştırmak "Cannot find name 'PageProps'" verir.
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH ile sunucuda update.sh çalıştır
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ vars.VPS_HOST }}
+        run: |
+          set -euo pipefail
+          install -m 600 /dev/null /tmp/deploy_key
+          printf '%s\n' "$SSH_KEY" > /tmp/deploy_key
+          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
+            "ubuntu@${HOST}" \
+            'sudo -u acilis -H bash /srv/acilis-zili/current/deploy/update.sh'
