@@ -1,5 +1,7 @@
 "use client";
 
+import polish from "@/components/motion/UtilityExperience.module.css";
+
 import { startTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -36,7 +38,7 @@ const COPY = {
     title: "Bir Şeyler Ters Gitti",
     body: "Bu ekran yüklenemedi. Çoğu zaman geçici bir veri sağlayıcı sorunudur; tekrar denemek genellikle yeter.",
     retry: "Tekrar Dene",
-    home: "Bugün ekranına dön",
+    home: "Bugüne Dön",
     digest: "Sorun sürerse bu kimliği bildir:",
   },
   en: {
@@ -80,7 +82,7 @@ export default function AppError({
   }, [error]);
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6 py-14 text-center sm:py-24">
+    <div className={`${polish.recovery} mx-auto flex w-full max-w-md flex-col items-center gap-6 text-center`}>
       <span
         aria-hidden
         className="flex size-14 items-center justify-center rounded-xl bg-down-wash text-down"

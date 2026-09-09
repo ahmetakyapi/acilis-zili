@@ -1111,6 +1111,8 @@ const tr = {
   },
 
   auth: {
+    showPassword: "Şifreyi Göster",
+    hidePassword: "Şifreyi Gizle",
     signInTitle: "Giriş Yap",
     /* Başlık markanın kendi cümlesi. Bir dönem "Sabah Altı Sekmeye Bakmayı
        Bırak" yazıyordu: ürünün ne olduğunu değil, kullanıcının neyi

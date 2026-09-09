@@ -1,3 +1,5 @@
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import polish from "@/components/motion/UtilityExperience.module.css";
 import Link from "next/link";
 import {
   Bell,
@@ -98,7 +100,8 @@ export default async function MenuPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <MotionExperience className={`${polish.page} ${polish.menu}`}>
+      <ScrollProgress />
       <PageHeader
         eyebrow={t.menu.eyebrow}
         title={t.menu.title}
@@ -143,7 +146,7 @@ export default async function MenuPage() {
         )}
       </Panel>
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={`${polish.menuGrid} grid gap-5 sm:grid-cols-2 lg:grid-cols-3`} data-motion-stagger>
         {groups.map((group) => (
           <Panel key={group.title} className="flex flex-col">
             <p className="plate px-4 pb-3 pt-4 text-nano tracking-[0.09em] sm:px-5">
@@ -190,6 +193,6 @@ export default async function MenuPage() {
 
       {/* GitHub bandı burada YOK — sayfanın hemen altındaki alt bilgi zaten
           aynı bandı taşıyor ve iki kez göstermek gereksiz tekrar oluyordu. */}
-    </div>
+    </MotionExperience>
   );
 }

@@ -23,6 +23,8 @@ export default async function SignUpPage(props: PageProps<"/kayit">) {
   return (
     <>
       <AuthForm
+        showPasswordLabel={t.auth.showPassword}
+        hidePasswordLabel={t.auth.hidePassword}
         continueTo={continueTo}
         pitchTitle={t.auth.pitchTitle}
         pitchBody={t.auth.pitchBody}

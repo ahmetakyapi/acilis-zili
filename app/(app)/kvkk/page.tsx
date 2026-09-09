@@ -1,3 +1,5 @@
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import polish from "@/components/motion/UtilityExperience.module.css";
 import Link from "next/link";
 import { ArticleBody } from "@/components/article/ArticleBody";
 import { LEGAL_UPDATED, disclaimerMd, privacyMd } from "@/content/legal";
@@ -32,7 +34,9 @@ export default async function PrivacyPage() {
   const { locale, t } = await getI18n();
 
   return (
-    <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
+    <MotionExperience>
+    <ScrollProgress />
+    <article className={`${polish.legal} mx-auto flex w-full flex-col gap-7`}>
       <header className="flex flex-col gap-3">
         <p className="plate text-nano tracking-[0.09em] text-primary">
           {t.legal.eyebrow}
@@ -85,5 +89,6 @@ export default async function PrivacyPage() {
         </a>
       </footer>
     </article>
+    </MotionExperience>
   );
 }

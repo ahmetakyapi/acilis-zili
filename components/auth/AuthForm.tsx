@@ -1,6 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { Eye, EyeSlash } from "@phosphor-icons/react";
+import { MotionExperience } from "@/components/motion/PremiumMotion";
+import styles from "./AuthExperience.module.css";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import type { AuthFormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/primitives";
@@ -21,6 +24,8 @@ type AuthFormProps = {
   features: string[];
   privacyNote: string;
   title: string;
+  showPasswordLabel: string;
+  hidePasswordLabel: string;
   subtitle: string;
   fields: Field[];
   submitLabel: string;
@@ -49,6 +54,8 @@ export function AuthForm({
   features,
   privacyNote,
   title,
+  showPasswordLabel,
+  hidePasswordLabel,
   subtitle,
   fields,
   submitLabel,
@@ -60,30 +67,28 @@ export function AuthForm({
   continueTo,
 }: AuthFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
 
   return (
-    <div className="grid items-stretch gap-8 py-4 lg:grid-cols-[minmax(0,1.1fr)_460px] lg:gap-14 lg:py-10">
+    <MotionExperience className={styles.layout}>
       {/* ---- Sol: ürün ne yapıyor ----
            MOBİLDE İKİNCİ SIRADA: "Giriş Yap"a basan biri formu arıyor.
            Tanıtım metni tam ekranı doldurup formu katlamanın altına
            itiyordu; `order` ile mobilde aşağı, geniş ekranda yine sola
            alınıyor. */}
-      <div className="order-2 flex flex-col lg:order-1">
-        <h1 className="display-ink max-w-[17ch] text-subdisplay font-bold leading-[1.1] tracking-[-0.03em] sm:text-hero">
+      <div className={styles.pitch}>
+        <h2 className="display-ink">
           {pitchTitle}
-        </h1>
+        </h2>
         <p className="mt-5 max-w-[52ch] text-base leading-[26px] text-body">
           {pitchBody}
         </p>
 
-        <div className="mt-auto flex flex-col gap-3 pt-10 lg:pt-12">
-          {features.map((feature) => (
-            <p key={feature} className="flex items-center gap-3">
-              <span
-                aria-hidden
-                className="flex size-[22px] shrink-0 items-center justify-center rounded-xs bg-up-wash text-xs font-bold text-up"
-              >
-                ✓
+        <div className={styles.features} data-motion-stagger>
+          {features.map((feature, index) => (
+            <p key={feature} className={styles.feature}>
+              <span aria-hidden>
+                {String(index + 1).padStart(2, "0")}
               </span>
               <span className="text-read text-body">{feature}</span>
             </p>
@@ -95,10 +100,11 @@ export function AuthForm({
       </div>
 
       {/* ---- Sağ: form ---- */}
-      <div className="order-1 rounded-xl border border-line bg-surface p-6 sm:p-8 lg:order-2 lg:self-center">
-        <h2 className="text-heading font-bold tracking-[-0.03em] text-strong sm:text-heading">
+      <div className={styles.formCard}>
+        {/* The form action is the page heading, including the form-first mobile layout. */}
+        <h1>
           {title}
-        </h2>
+        </h1>
         <p className="mt-2 text-base text-body">{subtitle}</p>
 
         <form action={formAction} className="mt-6 flex flex-col gap-4">
@@ -110,13 +116,15 @@ export function AuthForm({
           {fields.map((field) => {
             const hasError = state.field === field.errorKey;
             return (
-              <label key={field.name} className="flex flex-col gap-[7px]">
-                <span className="text-small font-semibold text-body">
+              <div key={field.name} className={styles.field}>
+                <label htmlFor={`auth-${field.name}`}>
                   {field.label}
-                </span>
+                </label>
+                <div className={styles.inputWrap} data-password={field.type === "password"}>
                 <input
+                  id={`auth-${field.name}`}
                   name={field.name}
-                  type={field.type}
+                  type={field.type === "password" && visiblePasswords[field.name] ? "text" : field.type}
                   required
                   placeholder={field.placeholder}
                   autoComplete={field.autoComplete}
@@ -139,12 +147,23 @@ export function AuthForm({
                     hasError ? "border-down" : "border-line-strong",
                   )}
                 />
+                {field.type === "password" && <button
+                  type="button"
+                  className={styles.visibility}
+                  aria-label={visiblePasswords[field.name] ? hidePasswordLabel : showPasswordLabel}
+                  aria-pressed={Boolean(visiblePasswords[field.name])}
+                  aria-controls={`auth-${field.name}`}
+                  onClick={() => setVisiblePasswords((current) => ({ ...current, [field.name]: !current[field.name] }))}
+                >
+                  {visiblePasswords[field.name] ? <EyeSlash size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                </button>}
+                </div>
                 {hasError && (
                   <span id={`${field.name}-hata`} className="text-xs text-down">
                     {state.error}
                   </span>
                 )}
-              </label>
+              </div>
             );
           })}
 
@@ -193,6 +212,6 @@ export function AuthForm({
           </Link>
         </p>
       </div>
-    </div>
+    </MotionExperience>
   );
 }

@@ -5,7 +5,7 @@
 .page :global(.panel),.guidePage :global(.panel) { animation:none; }
 .masthead { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:end; gap:24px; padding:12px 0 23px; border-bottom:1px solid var(--line); }
 .eyebrow { font-size:12px; line-height:1.5; font-weight:600; letter-spacing:.04em; color:var(--primary-ink); }
-.masthead h1 { margin-top:9px; font-size:clamp(32px,3.5vw,46px); line-height:1.04; letter-spacing:-.05em; color:var(--text-strong); font-weight:600; }
+.masthead h1 { margin-top:9px; font-size:var(--heading-page); line-height:1.04; letter-spacing:-.05em; color:var(--text-strong); font-weight:600; }
 .mastheadDescription { max-width:52ch; padding-bottom:4px; font-size:15px; line-height:1.7; color:var(--text-body); text-wrap:pretty; }
 .intro { font-size:12px; }
 .intro li { font-size:12px; line-height:1.7; }
@@ -65,7 +65,7 @@
 @media(max-width:767px) {
  .page { gap:24px; } .guidePage { gap:30px; }
  .masthead { grid-template-columns:minmax(0,1fr); gap:15px; padding-top:4px; padding-bottom:20px; }
- .masthead h1 { font-size:32px; } .mastheadDescription { font-size:14px; line-height:1.65; }
+ .masthead h1 { font-size:var(--heading-page); } .mastheadDescription { font-size:14px; line-height:1.65; }
  .lead > section { padding:21px 20px; border-radius:20px; } .leadTitle { font-size:28px; line-height:1.16; margin-top:16px; } .leadDek { font-size:14px; line-height:1.7; margin-top:15px; }
  .archiveGrid { grid-template-columns:minmax(0,1fr); gap:18px; } .archiveCard h3 { font-size:22px; }
  .curriculum { padding:20px 18px; } .curriculum h2 { font-size:22px; } .curriculum > p { font-size:13px; }

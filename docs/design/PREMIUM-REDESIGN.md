@@ -188,3 +188,7 @@ Kontroller yerel Chrome üzerinde yapıldı. Gerçek iOS/Safari cihaz ölçümü
 ## Mobil Ana Sayfa: Özet Önce — 9 Eylül
 
 Kullanıcının yeni sırasına göre 1024px altındaki tek sütun **Bugünün Akışı → Özet → Dünya Piyasaları → Günün Hareketleri** olarak düzenlendi. 390px ölçümünde özet y2259'dan y1392'ye, akışın hemen arkasına geldi (akışın alt kenarı y1374). Diğer bölümlerin sıraları ve masaüstü kolonları korunur. 320/390/768/1023px'te bölüm konumları; 1024/1440px'te masaüstü sırasının aynı kaldığı tarayıcıda doğrulandı. Altı genişlikte yatay taşma yok. Lint, typecheck, build ve diff kontrolü başarılı. Ölçümler: `/tmp/acilis-redesign/home-order-before.json` ve `home-order-after.json`.
+
+## Sayfalar Arası Bütünlük — 9 Eylül
+
+Haberler ve haber detayı, Bülten, Karşılaştırma, Menü, Giriş/Kayıt, KVKK, boş/hata durumları ve alt bilgi ortak yüzey/başlık/hareket diline alındı. Dizin ve yardımcı başlıklar ortak 28–40px ölçeği kullanır; finansal okumaların kendi ölçekleri korunur. Ayarlar/Favoriler yüzeyleri de kaynak düzeyinde uyarlandı. Mobil aramada gerçek açıcıya odak dönüşü ve haber etiketlerinin metinde geçen şirketlerle sınırlandırılması, görsel incelemede bulunan iki işlevsel düzeltmedir. **540 genel + 60 odaklı yerleşim kontrolü** başarılı. Bulgular, ölçümler, etkileşimler ve kapsam sınırları [Arayüz Bütünlüğü İncelemesi](INTERFACE-AUDIT-2026-09.md) belgesinde.

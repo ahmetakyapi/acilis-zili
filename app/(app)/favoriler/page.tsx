@@ -1,3 +1,5 @@
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import polish from "@/components/motion/UtilityExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -91,7 +93,8 @@ export default async function WatchlistPage() {
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <MotionExperience className={`${polish.page} ${polish.watchlist}`}>
+      <ScrollProgress />
       <PageHeader title={t.watchlist.title} subtitle={t.watchlist.subtitle} />
 
       <WatchlistBoard
@@ -124,6 +127,6 @@ export default async function WatchlistPage() {
         slugs={["risk-yonetimi", "cesitlendirme"]}
         className="pt-1"
       />
-    </div>
+    </MotionExperience>
   );
 }

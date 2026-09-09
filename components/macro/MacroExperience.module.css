@@ -1,7 +1,7 @@
 .page { display:flex; flex-direction:column; gap:24px; }
 .hero { display:grid; grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr); gap:40px; align-items:center; }
 .intro { min-width:0; padding:12px 0; }
-.intro h1 { font-size:clamp(30px,3vw,42px); line-height:1.12; max-width:12ch; }
+.intro h1 { font-size:var(--heading-page); line-height:1.12; max-width:12ch; }
 .intro p { max-width:37ch; }
 .introNote { display:flex; flex-direction:column; gap:8px; margin-top:26px; padding-left:15px; border-left:2px solid var(--primary-faint); font-size:13px; line-height:1.7; color:var(--text-soft); }
 .introNote a { color:var(--primary); font-weight:600; width:fit-content; }
@@ -31,7 +31,7 @@
 .card dl { margin-top:12px; }
 .page :is(select,input,a):focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
 @media(hover:hover) and (pointer:fine) { .card:hover { transform:translateY(-3px); border-color:var(--primary-faint); box-shadow:var(--premium-shadow); } }
-@media(max-width:900px) { .hero { grid-template-columns:1fr; gap:18px; } .intro h1 { max-width:none; font-size:32px; } .introNote { margin-top:14px; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:900px) { .hero { grid-template-columns:1fr; gap:18px; } .intro h1 { max-width:none; font-size:var(--heading-page); } .introNote { margin-top:14px; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:540px) { .page { gap:18px; } .intro { padding:0; } .intro h1 { font-size:28px; } .introNote { font-size:12px; gap:4px; } .explorer { padding:14px 16px 10px; border-radius:17px; } .explorerToolbar { align-items:flex-start; flex-direction:column; gap:6px; } .explorerToolbar select { max-width:100%; width:100%; min-height:40px; } .explorerReading p { display:none; } .explorerReading strong { font-size:27px; } .history svg { height:105px; } .grid { grid-template-columns:1fr; gap:12px; } .card > div:first-child { min-height:0; } .card :global(.tote) { font-size:26px; } .card svg { height:48px; } }
 @media(prefers-reduced-motion:reduce) { .card { transition:none; } .card:hover { transform:none; } }
 

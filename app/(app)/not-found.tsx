@@ -1,3 +1,4 @@
+import polish from "@/components/motion/UtilityExperience.module.css";
 import Link from "next/link";
 import { ArrowRight, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { BellMark } from "@/components/brand/BellMark";
@@ -32,7 +33,7 @@ export default async function NotFound() {
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6 py-14 text-center sm:py-24">
+    <div className={`${polish.recovery} mx-auto flex w-full max-w-md flex-col items-center gap-6 text-center`}>
       <BellMark size={60} />
 
       <div className="flex flex-col gap-2.5">

@@ -1,3 +1,5 @@
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import polish from "@/components/motion/UtilityExperience.module.css";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
@@ -35,7 +37,8 @@ export default async function SettingsPage() {
   const username = session.user.name ?? "";
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-5">
+    <MotionExperience className={`${polish.page} ${polish.settings} mx-auto w-full`}>
+      <ScrollProgress />
       <h1 className="display-ink self-start text-heading font-bold tracking-[-0.03em] sm:text-display">
         {t.settings.title}
       </h1>
@@ -131,6 +134,6 @@ export default async function SettingsPage() {
       </Panel>
 
       <p className="text-xs text-muted">{t.data.delayedNote}</p>
-    </div>
+    </MotionExperience>
   );
 }

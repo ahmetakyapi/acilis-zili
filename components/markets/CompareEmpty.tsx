@@ -1,3 +1,4 @@
+import polish from "@/components/motion/UtilityExperience.module.css";
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { CompareAdd } from "@/components/markets/CompareAdd";
@@ -65,7 +66,7 @@ export async function CompareEmpty({
           cümle ve 384 piksellik bir kutu, geri kalanı hava. Yatay düzende
           başlık solda, kutu sağda — aynı içerik, ölü alan yok. Telefonda
           yan yana koyacak yer olmadığı için dikey ve ortalı kalıyor. */}
-      <Panel>
+      <Panel className={polish.compareIntro}>
         <div className="flex flex-col items-center gap-3 px-5 py-8 text-center sm:px-8 lg:flex-row lg:justify-between lg:gap-10 lg:py-7 lg:text-left">
           <div className="flex flex-col items-center gap-2 lg:items-start">
             {/* Sayfa başlığı ürünün ADINI veriyor ("Karşılaştır"); buradaki
@@ -110,12 +111,12 @@ export async function CompareEmpty({
             Üç kartken ara kırılım yoktu — iki sütunda üçüncü kart yalnız
             kalıp ızgarayı tırtıklı bitiriyordu. Dörtte o sorun yok, iki
             sütun tam oturuyor. */}
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className={`${polish.presets} grid gap-3 sm:grid-cols-2 xl:grid-cols-4`} data-motion-stagger>
           {presets.map((preset) => (
             <Link
               key={preset.labelKey}
               href={compareHref(preset.symbols)}
-              className="group flex flex-col gap-4 rounded-(--radius-lg) border border-line bg-surface p-4 transition-colors hover:border-primary-faint hover:bg-primary-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+              className={`${polish.preset} group flex flex-col gap-4 border border-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)`}
             >
               <div className="flex items-start gap-2.5">
                 <div className="min-w-0 flex-1">

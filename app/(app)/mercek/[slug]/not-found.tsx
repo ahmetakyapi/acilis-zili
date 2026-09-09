@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EmptyState, Panel } from "@/components/ui/primitives";
+import { EmptyState } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 
 /** Olmayan mercek yazısı — yumuşak 404 değil, gerçek 404. Gerekçe: `haberler/[id]/not-found.tsx`. */
@@ -7,7 +7,7 @@ export default async function StoryNotFound() {
   const { t } = await getI18n();
 
   return (
-    <Panel>
+    <>
       <EmptyState
         titleAs="h1"
         title={t.stories.notFound}
@@ -21,6 +21,6 @@ export default async function StoryNotFound() {
           </Link>
         }
       />
-    </Panel>
+    </>
   );
 }

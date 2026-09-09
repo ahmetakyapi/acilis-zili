@@ -730,10 +730,12 @@
   /* --------------------------------------------------------------------------
      Yüzeyler — gölge yok, ayrım saydamlık + tek hairline ile
      -------------------------------------------------------------------------- */
+  /* Shared material, including utility screens. Page-specific fills and
+     utility classes still override this component-layer foundation. */
   .panel {
-    background: var(--surface-solid);
+    background: var(--premium-surface);
     border: 1px solid var(--line);
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-panel, var(--radius-xl));
     transition: border-color 0.25s var(--ease-brand), background-color 0.25s
       var(--ease-brand);
   }
@@ -1333,3 +1335,19 @@
     color: CanvasText;
   }
 }
+
+/* Public directory/utility headings measured 24–46px for the same role.
+   One compact scale now spans these routes; report/article display type
+   and financial readings keep their own hierarchy. */
+:root { --heading-page:clamp(28px,3vw,40px); --radius-panel:18px; --radius-feature:22px; }
+.page-heading h1 { font-size:var(--heading-page); line-height:1.12; font-weight:600; letter-spacing:-.045em; }
+.page-heading > div > p:last-child { max-width:64ch; font-size:14px; line-height:1.7; }
+@media(max-width:767px) { :root { --heading-page:28px; } }
+
+/* Route-level empty states use the same composed recovery surface. Inline
+   no-data messages retain their compact footprint inside data panels. */
+.empty-page { max-width:620px; margin:32px auto; padding:34px 24px; border:1px solid var(--primary-faint); border-radius:var(--radius-feature); background:radial-gradient(ellipse at 100% 0,var(--primary-wash),transparent 65%),var(--premium-surface); box-shadow:var(--premium-shadow); gap:14px; }
+.empty-page > h1 { font-size:28px; font-weight:600; line-height:1.15; }
+.empty-page > p { font-size:14px; line-height:1.8; }
+.empty-page a { display:inline-flex; min-height:44px; align-items:center; gap:8px; }
+@media(max-width:767px) { .empty-page { margin-block:12px; padding:28px 20px; } }

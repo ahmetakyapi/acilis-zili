@@ -1,3 +1,5 @@
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import polish from "@/components/motion/UtilityExperience.module.css";
 import { Suspense } from "react";
 import Link from "next/link";
 import { BriefBody } from "@/components/today/BriefBody";
@@ -72,7 +74,8 @@ export default async function BriefArchivePage(props: PageProps<"/bulten">) {
   };
 
   return (
-    <div className="flex flex-col gap-7">
+    <MotionExperience className={polish.page}>
+      <ScrollProgress />
       {/* Kabuk veri beklemez: sekmeler hemen boyanır, tıklama anında tepki
           verir ve altındaki içerik akarak gelir. */}
       <PageHeader
@@ -106,7 +109,7 @@ export default async function BriefArchivePage(props: PageProps<"/bulten">) {
           t={t}
         />
       </Suspense>
-    </div>
+    </MotionExperience>
   );
 }
 
@@ -163,9 +166,9 @@ async function ArchiveBoard({
        üstündeki tam genişlik başlıkla hizasız kalıyordu.
        Sayfa tam genişlikte akıyor ve gövde kabı dolduruyor. Uzun satırın
        bedeli, iki yanı boş duran bir sayfadan az. */
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className={`${polish.bulletinGrid} grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]`}>
       {/* ---- Seçili kayıt ---- */}
-      <article className="order-2 rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 sm:p-7 lg:order-1">
+      <article className={`${polish.bulletinArticle} order-2 border border-primary-faint p-5 sm:p-7 lg:order-1`} data-motion-article>
         {brief ? (
           <>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -260,7 +263,7 @@ async function ArchiveBoard({
            ekranda kenardan kenara kayan bir şerit, geniş ekranda dikey
            kolon. `order` yalnızca tek kolonda etkili — ızgara iki kolona
            geçince kolon sırası zaten sabit. */}
-      <Panel className="order-1 lg:order-2">
+      <Panel className={`${polish.archive} order-1 lg:order-2`}>
         <div className="px-4 py-4 sm:px-5">
           <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
             {t.brief.archiveTitle}
@@ -352,7 +355,7 @@ async function ArchiveBoard({
  */
 function ArchiveSkeleton() {
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className={`${polish.bulletinGrid} grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]`}>
       <Skeleton className="h-[80svh] w-full rounded-xl" />
       <Skeleton className="h-[420px] w-full rounded-(--radius-xl) lg:h-[80svh]" />
     </div>

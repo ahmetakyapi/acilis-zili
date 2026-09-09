@@ -1,3 +1,4 @@
+import polish from "@/components/motion/UtilityExperience.module.css";
 import Link from "next/link";
 import { BellMark } from "@/components/brand/BellMark";
 import { getI18n } from "@/lib/i18n";
@@ -49,7 +50,7 @@ export default async function RootNotFound() {
 
   return (
     <main
-      className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center gap-6 px-[max(env(safe-area-inset-left),20px)] py-16 text-center"
+      className={`${polish.recovery} mx-auto flex w-full max-w-md flex-col items-center justify-center gap-6 px-[max(env(safe-area-inset-left),20px)] text-center`}
       style={{ paddingRight: "max(env(safe-area-inset-right),20px)" }}
     >
       <BellMark size={56} />

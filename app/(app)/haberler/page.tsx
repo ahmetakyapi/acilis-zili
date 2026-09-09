@@ -1,6 +1,8 @@
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import styles from "@/components/news/NewsExperience.module.css";
 import { Suspense } from "react";
 import Link from "next/link";
-import { EmptyState, Panel } from "@/components/ui/primitives";
+import { EmptyState, PageHeader } from "@/components/ui/primitives";
 import { NewsImage } from "@/components/news/NewsImage";
 import {
   getGenericImageUrls,
@@ -47,13 +49,9 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
 
   const { t } = await getI18n();
   return (
-    <div className="flex flex-col gap-5">
-      <header>
-        <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
-          {t.news.title}
-        </h1>
-        <p className="mt-2 text-sm text-soft">{t.news.subtitle}</p>
-      </header>
+    <MotionExperience className={styles.page}>
+      <ScrollProgress />
+      <PageHeader title={t.news.title} subtitle={t.news.subtitle} />
 
       {symbolFilter && (
         <div className="flex items-center gap-2">
@@ -69,17 +67,17 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
       <Suspense fallback={<NewsSkeleton />}>
         <NewsList symbolFilter={symbolFilter} />
       </Suspense>
-    </div>
+    </MotionExperience>
   );
 }
 
 /** Liste iskeleti — gerçek satırla aynı yükseklik, düzen zıplamasın. */
 function NewsSkeleton() {
   return (
-    <Panel>
-      <ul className="divide-y divide-line-soft">
+    <div>
+      <ul className={styles.list}>
         {Array.from({ length: 8 }).map((_, index) => (
-          <li key={index} className="flex gap-3.5 px-4 py-3.5 sm:gap-4 sm:px-5">
+          <li key={index} className={styles.row}>
             <span className="min-w-0 flex-1">
               <span className="skeleton block h-4 w-[85%] rounded-md" />
               <span className="skeleton mt-2 block h-3 w-[60%] rounded-md" />
@@ -89,7 +87,7 @@ function NewsSkeleton() {
           </li>
         ))}
       </ul>
-    </Panel>
+    </div>
   );
 }
 
@@ -112,25 +110,31 @@ async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
     getGenericImageUrls(items.map((item) => item.imageUrl)),
     getSymbolNames([
       ...new Set(
-        items.map((item) => item.symbols?.[0]).filter((s): s is string => Boolean(s)),
+        items.flatMap((item) => item.symbols ?? []),
       ),
     ]),
   ]);
 
   return (
-      <Panel>
+      <div>
         {items.length === 0 ? (
           <EmptyState title={t.news.empty} />
         ) : (
-          <ul className="divide-y divide-line-soft">
-            {items.map((item) => (
-              <li key={item.id}>
+          <ul className={styles.list} data-motion-stagger>
+            {items.map((item) => {
+              // Feed membership alone is not a company mention. Apply the
+              // same textual subject check already used for company logos.
+              const shownSymbols = (item.symbols ?? []).filter((symbol) => headlineMentions(`${item.headline} ${item.summary ?? ""}`, symbol, logos[symbol]?.name));
+              const symbol = item.symbols?.[0];
+              const company = symbol ? logos[symbol] : null;
+              const hasVisual = Boolean((item.imageUrl && !genericImages.has(item.imageUrl)) || (company?.logoUrl && symbol && headlineMentions(item.headline, symbol, company.name)));
+              return <li key={item.id}>
                 <Link
                   href={`/haberler/${item.id}`}
                   prefetch={false}
-                  className="flex gap-3.5 px-4 py-3.5 transition-colors hover:bg-primary-tint sm:gap-4 sm:px-5"
+                  className={styles.row}
                 >
-                  <span className="min-w-0 flex-1">
+                  <div className={styles.copy}>
                   {/* ÇEVRİLMEMİŞ SATIR KENDİ DİLİNİ TAŞIR. Türkçe sayfada
                       çevirisi henüz gelmemiş haber orijinal İngilizce
                       başlığıyla görünüyor (çeviri cron'da ve sağlayıcı
@@ -138,29 +142,29 @@ async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
                       olmadan ekran okuyucu İngilizce cümleyi Türkçe
                       sesletmeye çalışıyordu. Mercek yazılarında aynı kural
                       zaten uygulanıyor. */}
-                  <p
+                  <h2
                     lang={locale === "tr" && !item.headlineTr ? "en" : undefined}
-                    className="text-sm font-medium leading-snug text-strong"
+                    className={styles.title}
                   >
                     {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
-                  </p>
+                  </h2>
                   {(item.summaryTr || item.summary) && (
                     <p
                       lang={locale === "tr" && !item.summaryTr ? "en" : undefined}
-                      className="mt-1 line-clamp-2 text-xs leading-relaxed text-soft"
+                      className={styles.summary}
                     >
                       {locale === "tr" && item.summaryTr ? item.summaryTr : item.summary}
                     </p>
                   )}
-                  <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-tiny text-muted">
+                  <p className={styles.meta}>
                     {item.source && <span>{item.source}</span>}
                     <span aria-hidden>·</span>
                     <span>{timeAgo(item.publishedAt, locale)}</span>
-                    {item.symbols && item.symbols.length > 0 && (
+                    {shownSymbols.length > 0 && (
                       <>
                         <span aria-hidden>·</span>
                         <span className="flex gap-1">
-                          {item.symbols.slice(0, 4).map((symbol) => (
+                          {shownSymbols.slice(0, 4).map((symbol) => (
                             <span
                               key={symbol}
                               className={cn(
@@ -174,13 +178,16 @@ async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
                       </>
                     )}
                   </p>
-                  </span>
+                  </div>
 
                   {/* Mobilde de görünür. Ana sayfadaki haber listesi küçük
                       resmi telefonda zaten gösteriyordu; burada gizlemek iki
                       listeyi birbirinden farklı kılıyordu ve küçük resim
                       listeyi taranabilir yapan asıl şey. */}
-                  <NewsImage
+                  {/* No repeated empty image tile: a story without a real
+                      image or verified subject logo keeps an editorial text layout. */}
+                  {hasVisual && <NewsImage
+                    className={styles.thumb}
                     src={
                       item.imageUrl && !genericImages.has(item.imageUrl)
                         ? item.imageUrl
@@ -197,13 +204,13 @@ async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
                         ? meta.logoUrl
                         : null;
                     })()}
-                    sizeClass="size-16 sm:size-20"
-                  />
+                    sizeClass=""
+                  />}
                 </Link>
-              </li>
-            ))}
+              </li>;
+            })}
           </ul>
         )}
-      </Panel>
+      </div>
   );
 }

@@ -1,3 +1,4 @@
+import polish from "@/components/motion/UtilityExperience.module.css";
 import Link from "next/link";
 import { GithubLogo } from "@phosphor-icons/react/dist/ssr";
 import { BellMark } from "@/components/brand/BellMark";
@@ -50,7 +51,7 @@ export async function SiteFooter() {
     ];
 
   return (
-    <footer className="flex flex-col gap-7 border-t border-line pt-8">
+    <footer className={`${polish.footer} flex flex-col gap-7`}>
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
         {/* ---- Künye ---- */}
         <div className="flex flex-col gap-3">

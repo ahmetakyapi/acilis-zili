@@ -1,3 +1,5 @@
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import polish from "@/components/motion/UtilityExperience.module.css";
 import { Fragment } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
 import { CompareEmpty, type ComparePreset } from "@/components/markets/CompareEmpty";
@@ -120,7 +122,8 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
     : DEFAULT_COMPARE_RANGE;
 
   return (
-    <div className="flex flex-col gap-5">
+    <MotionExperience className={`${polish.page} ${polish.compare}`}>
+      <ScrollProgress />
       {symbols.length === 0 ? (
         <>
           <PageHeader
@@ -148,7 +151,7 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
         slugs={["degerleme", "cesitlendirme"]}
         className="pt-1"
       />
-    </div>
+    </MotionExperience>
   );
 }
 

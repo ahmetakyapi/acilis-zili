@@ -151,7 +151,7 @@ export function PageHeader({
 }) {
   return (
     <header
-      className={cn("flex flex-wrap items-end justify-between gap-4", className)}
+      className={cn("page-heading flex flex-wrap items-end justify-between gap-4", className)}
     >
       <div className="min-w-0">
         {eyebrow && <p className="plate mb-2">{eyebrow}</p>}
@@ -688,6 +688,7 @@ export function EmptyState({
       className={cn(
         "flex flex-col items-center gap-2 px-4 text-center",
         compact ? "py-6" : "py-10",
+        TitleTag === "h1" && "empty-page",
         className,
       )}
     >

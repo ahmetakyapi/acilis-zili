@@ -40,6 +40,9 @@ import { cn, isValidSymbol } from "@/lib/utils";
  */
 let paletteOwner: symbol | null = null;
 let paletteOpen = false;
+// The portal owner can be the hidden desktop instance on mobile. Return
+// focus to the actual opener, not to the owner's responsive trigger.
+let paletteReturnFocus: HTMLElement | null = null;
 const paletteListeners = new Set<() => void>();
 
 function emitPalette() {
@@ -124,6 +127,7 @@ export function SearchCommand({
       if (paletteOwner === idRef.current) {
         paletteOwner = null;
         paletteOpen = false;
+        paletteReturnFocus = null;
         emitPalette();
       }
     };
@@ -173,18 +177,30 @@ export function SearchCommand({
        da nerede olduğunu kaybediyordu. WCAG 2.4.3 gereği odak, diyaloğu
        açan öğeye döner. */
     if (!navigatingRef.current) {
-      requestAnimationFrame(() => triggerRef.current?.focus());
+      const opener = paletteReturnFocus;
+      requestAnimationFrame(() => {
+        if (opener?.isConnected && opener.getClientRects().length) opener.focus();
+      });
     }
+    paletteReturnFocus = null;
     navigatingRef.current = false;
   }, []);
 
-  const openPalette = useCallback(() => togglePalette(true), []);
+  const openPalette = useCallback(() => {
+    paletteReturnFocus = triggerRef.current;
+    togglePalette(true);
+  }, []);
 
   // ⌘K / Ctrl+K
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
+        if (!open) {
+          paletteReturnFocus = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+        }
         togglePalette((value) => {
           if (value) {
             // Kapanırken alanları da temizle

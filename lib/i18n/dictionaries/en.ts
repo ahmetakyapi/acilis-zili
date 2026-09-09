@@ -890,6 +890,8 @@ const en: typeof tr = {
   },
 
   auth: {
+    showPassword: "Show Password",
+    hidePassword: "Hide Password",
     signInTitle: "Sign In",
     pitchTitle: "Be Ready Before the Bell",
     pitchBody:

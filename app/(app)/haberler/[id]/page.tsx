@@ -1,3 +1,5 @@
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import styles from "@/components/news/NewsExperience.module.css";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -16,7 +18,7 @@ import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { getQuotes } from "@/lib/providers";
 import { displayZone, zoneTag } from "@/lib/session-clock";
-import { formatPrice, safeExternalUrl, timeAgo } from "@/lib/utils";
+import { formatPrice, headlineMentions, safeExternalUrl, timeAgo } from "@/lib/utils";
 
 /**
  * Haber detayı — kullanıcı siteden ayrılmadan okur.
@@ -99,7 +101,9 @@ export default async function NewsDetailPage(
   ).format(item.publishedAt);
 
   return (
-    <article className="mx-auto flex w-full max-w-2xl flex-col gap-5">
+    <MotionExperience>
+    <ScrollProgress />
+    <article className={styles.detail}>
       <Link
         href="/haberler"
         className="inline-flex items-center gap-1.5 self-start text-sm text-soft transition-colors hover:text-strong"
@@ -192,6 +196,7 @@ export default async function NewsDetailPage(
       {item.symbols && item.symbols.length > 0 && (
         <MentionedSymbols
           symbols={item.symbols}
+          context={`${item.headline} ${item.summary ?? ""}`}
           locale={locale}
           t={t}
         />
@@ -204,6 +209,7 @@ export default async function NewsDetailPage(
         title={t.news.related}
       />
     </article>
+    </MotionExperience>
   );
 }
 
@@ -213,10 +219,12 @@ export default async function NewsDetailPage(
  */
 async function MentionedSymbols({
   symbols,
+  context,
   locale,
   t,
 }: {
   symbols: string[];
+  context: string;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -227,12 +235,15 @@ async function MentionedSymbols({
     getSymbolNames(shown),
   ]);
   const quotes = result.ok ? result.data : {};
+  // Provider feed tags may include a stock absent from the story itself.
+  const mentioned = shown.filter((symbol) => headlineMentions(context, symbol, names[symbol]?.name));
+  if (mentioned.length === 0) return null;
 
   return (
     <Panel>
       <PanelHeader title={t.news.relatedSymbols} />
       <ul className="divide-y divide-line-soft">
-        {shown.map((symbol) => {
+        {mentioned.map((symbol) => {
           const quote = quotes[symbol];
           return (
             <li key={symbol}>

@@ -23,6 +23,8 @@ export default async function SignInPage(props: PageProps<"/giris">) {
   return (
     <>
       <AuthForm
+        showPasswordLabel={t.auth.showPassword}
+        hidePasswordLabel={t.auth.hidePassword}
         continueTo={continueTo}
         pitchTitle={t.auth.pitchTitle}
         pitchBody={t.auth.pitchBody}
