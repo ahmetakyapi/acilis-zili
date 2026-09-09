@@ -53,6 +53,32 @@ export function proxy(request: NextRequest) {
   }
 
   if (!locale) {
+    /* BU İSTEK PROXY'NİN KENDİ İÇ YENİDEN-YAZMA ÇAĞRISI OLABİLİR — önce onu ele.
+     *
+     * Next 16'da bir REWRITE'ı tamamlamak, aşağıdaki bloğun yaptığı gibi
+     * hedefe gerçek bir iç HTTP isteği atmak demek (bkz. satır ~90'daki not).
+     * O iç istek ÖNEKSİZ bir yola gidiyor (`/en/piyasalar` → `/piyasalar`) ve
+     * ORİJİNAL İSTEĞİN ÇEREZLERİNİ AYNEN TAŞIYOR — ve bu istek de proxy'den
+     * BİR DAHA geçiyor. `proxy()` onu sanki gerçek bir tarayıcı önekSİZ bir
+     * sayfa istemiş gibi görüyor: `locale` burada null, çerezde `az-locale=en`
+     * varsa alttaki blok onu `/en/piyasalar`e YÖNLENDİRİYORDU — yani Next'in
+     * kendi iç çağrısı bir 307 ile dönüyor ve bu, YENİDEN YAZMANIN SONUCU
+     * olarak dış isteğe aynen yansıyor: tarayıcı `/en/piyasalar` istiyor,
+     * `/en/piyasalar`e yönlendirilen bir yanıt alıyor — kendi isteğine geri
+     * dönen bir döngü. Sonucu ERR_TOO_MANY_REDIRECTS: `az-locale` çerezi bir
+     * kez `en` yazıldıktan sonra (ilk `/en` ziyaretinde proxy'nin kendisi
+     * yazıyor, aşağıya bak) o oturumdaki HER `/en/*` sayfası bu döngüye
+     * giriyordu — yerelde doğrulandı.
+     *
+     * Ayırt edici işaret: bu iç isteğin başlıklarında `LOCALE_HEADER` zaten
+     * VAR, çünkü REWRITE onu birkaç satır aşağıda kendisi ekliyor. Gerçek bir
+     * tarayıcı bu başlığı hiçbir zaman göndermez — yalnızca bu fonksiyonun
+     * kendisi yazar. Var olması bu isteğin plumbing olduğunu, bir kullanıcı
+     * gezinmesi olmadığını kanıtlar; aşağıdaki çerez yönlendirmesini es geç. */
+    if (request.headers.has(LOCALE_HEADER)) {
+      return NextResponse.next();
+    }
+
     /* ÖNEK YOKSA ÇEREZE BAKILIR — ve varsayılan dışı bir tercih varsa okuyucu
        kendi dilinin ADRESİNE yönlendirilir.
 
