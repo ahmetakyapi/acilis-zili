@@ -1,23 +1,51 @@
-.visualHeader { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; color:var(--primary-ink); }
+/* At 1440/390px the original earnings hero measured 392/590px.
+   A date stamp beside the identity and two parallel follow-up companies
+   replace the stacked date/rows. Keep every estimate and session readable. */
+.radar { min-width:0; display:grid; gap:12px; }
+.visualHeader { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--primary-ink); }
 .visualHeader h2 { font-size:13px; font-weight:600; }
-.visualHeader > span { font-size:11px; color:var(--text-muted); }
-.radarLead { display:block; padding:18px 0 12px; }
-.radarIdentity { display:flex; align-items:center; gap:12px; }
-.radarIdentity > div { display:flex; flex:1; flex-direction:column; min-width:0; gap:3px; }
-.radarIdentity strong { color:var(--text-strong); font-size:24px; font-weight:600; letter-spacing:-.035em; }
-.radarIdentity span { font-size:12px; color:var(--text-body); }
-.radarIdentity > svg { color:var(--primary-ink); flex-shrink:0; transition:transform .2s; }
-.radarLead:hover .radarIdentity > svg { transform:translate(3px,-3px); }
-.radarDate { display:flex; align-items:center; gap:11px; margin:17px 0; color:var(--primary-ink); font-size:14px; font-weight:550; }
-.radarDate i { height:7px; width:7px; flex-shrink:0; background:var(--primary); border-radius:50%; box-shadow:0 0 0 4px var(--primary-wash); }
-.radarDate small { display:block; margin-top:3px; color:var(--text-muted); font-size:11px; font-weight:450; }
-.radarEstimates { display:flex; flex-wrap:wrap; gap:12px 28px; }
-.radarEstimates dt { font-size:11px; color:var(--text-muted); }
-.radarEstimates dd { font-size:22px; font-weight:550; letter-spacing:-.035em; color:var(--text-strong); font-variant-numeric:tabular-nums; }
-.radarFollowing { border-top:1px solid var(--line); }
-.radarFollowing a { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:11px 0; color:var(--text-body); font-size:12px; border-bottom:1px solid var(--line); }
-.radarFollowing strong { font-weight:600; }
-.radarFollowingDate { margin-left:auto; font-size:11px; color:var(--text-muted); }
-.radarFollowing svg { color:var(--primary-ink); }
+.visualHeader > svg { opacity:.7; flex-shrink:0; }
+.radarSpotlight { border-radius:16px; background:linear-gradient(115deg,var(--primary-wash),var(--primary-tint) 70%,transparent); }
+.radarLead { position:relative; display:block; padding:16px 18px; border-radius:inherit; }
+.radarTop { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.radarIdentity { display:flex; align-items:center; gap:11px; min-width:0; }
+.radarLogo { width:42px; height:42px; border-radius:11px; }
+.radarIdentity > div { display:flex; flex-direction:column; min-width:0; gap:3px; }
+.radarIdentity strong { color:var(--text-strong); font-size:22px; line-height:1.15; font-weight:600; letter-spacing:-.035em; }
+.radarIdentity div > span { font-size:12px; line-height:1.5; color:var(--text-body); overflow-wrap:anywhere; }
+.radarDate { flex-shrink:0; display:grid; align-content:center; justify-items:center; min-width:54px; padding-left:14px; border-left:1px solid var(--primary-faint); color:var(--primary-ink); font-variant-numeric:tabular-nums; }
+.radarDate > span { font-size:10px; font-weight:600; letter-spacing:.06em; }
+.radarDate strong { font-size:32px; line-height:1.05; font-weight:550; letter-spacing:-.05em; }
+.radarSession { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:11px; color:var(--primary-ink); font-size:11px; line-height:1.5; }
+.radarSession i { margin-inline:4px; font-style:normal; opacity:.5; }
+.radarSession > svg { flex-shrink:0; transition:transform .25s; }
+.radarEstimates { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:12px; padding-top:11px; border-top:1px solid var(--primary-faint); }
+.radarEstimates > div { min-width:0; }
+.radarEstimates > div + div { padding-left:16px; border-left:1px solid var(--primary-faint); }
+.radarEstimates dt { font-size:11px; line-height:1.5; color:var(--text-muted); }
+.radarEstimates dd { margin-top:3px; font-size:20px; line-height:1.2; font-weight:550; letter-spacing:-.035em; color:var(--text-strong); font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.radarFollowing { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.radarFollowing a { display:grid; grid-template-columns:auto minmax(0,1fr) auto; column-gap:8px; row-gap:7px; align-items:center; padding:9px 10px; border-radius:10px; color:var(--text-body); background:var(--primary-tint); transition:background .25s,transform .25s; }
+.radarFollowing a > div { display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 8px; min-width:0; }
+.radarFollowing strong { color:var(--text-strong); font-size:12px; font-weight:600; overflow-wrap:anywhere; }
+.radarFollowing time { font-size:11px; color:var(--text-muted); white-space:nowrap; }
+.radarFollowing svg { color:var(--primary-ink); transition:transform .25s; }
+.radarFollowingSession { grid-column:1/-1; font-size:10px; line-height:1.5; color:var(--text-muted); }
 .radarEmpty { display:flex; align-items:center; gap:14px; color:var(--text-muted); font-size:14px; }
-@media(prefers-reduced-motion:reduce) { .radarIdentity > svg { transition:none; } }
+.radar a:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+@media(hover:hover) and (pointer:fine) {
+ .radarLead:hover .radarSession > svg,.radarFollowing a:hover svg { transform:translate(2px,-2px); }
+ .radarFollowing a:hover { background:var(--primary-wash); transform:translateY(-2px); }
+}
+@media(max-width:1023px) and (min-width:768px), (max-width:359px) {
+ .radarLead { padding:14px 12px; }
+ .radarFollowing { gap:8px; }
+ .radarFollowing a { padding:9px 8px; column-gap:6px; }
+ .radarFollowing a > svg { display:none; }
+ .radarFollowing a { grid-template-columns:auto minmax(0,1fr); }
+ .radarEstimates dd { font-size:18px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .radarSession > svg,.radarFollowing a,.radarFollowing svg { transition:none; }
+ .radarLead:hover .radarSession > svg,.radarFollowing a:hover,.radarFollowing a:hover svg { transform:none; }
+}
