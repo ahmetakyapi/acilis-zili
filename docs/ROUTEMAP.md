@@ -11,7 +11,7 @@
 > birbirinden ayrı düşer. Rota tablosu artık yalnızca README'de.
 
 **Son güncelleme:** 2026-08-29
-**Durum:** 🟢 CANLI — https://acilis-zili.vercel.app
+**Durum:** 🟢 CANLI — https://aciliszili.com
 
 ---
 

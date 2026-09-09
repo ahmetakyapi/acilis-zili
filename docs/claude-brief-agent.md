@@ -31,7 +31,7 @@ değildir, bilgisayar kapalıyken de çalışır:
 - **Yönetim:** https://claude.ai/code/routines — durdurma/silme buradan
 - Bulut ajanı yerel dosya okuyamadığı için `BRIEF_SECRET` rutinin prompt'una
   gömülüdür; secret'ı değiştirirsen rutini de güncelle.
-- **Ağ şartı:** Bulut ortamının egress politikası `acilis-zili.vercel.app`
+- **Ağ şartı:** Bulut ortamının egress politikası `aciliszili.com`
   alan adına izin vermek ZORUNDA — aksi hâlde proxy 403 döner ve görev
   başlamadan düşer (2026-08-01'de yaşandı). İzin, claude.ai'de ortam
   (environment) ayarlarındaki ağ erişimi bölümünden verilir.
@@ -50,7 +50,7 @@ Sen bir piyasa bülteni editörüsün. Aşağıdaki adımları uygula:
 
 ```bash
 curl -s -H "Authorization: Bearer $BRIEF_SECRET" \
-  https://acilis-zili.vercel.app/api/brief/context
+  https://aciliszili.com/api/brief/context
 ```
 
 2. Bu veriye dayanarak **Türkçe** bir sabah brifingi yaz:
@@ -67,7 +67,7 @@ curl -s -H "Authorization: Bearer $BRIEF_SECRET" \
 3. Siteye gönder:
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/brief \
+curl -s -X POST https://aciliszili.com/api/brief \
   -H "Authorization: Bearer $BRIEF_SECRET" \
   -H "Content-Type: application/json" \
   -d '{"headline": "<başlık>", "body_md": "<gövde>", "locale": "tr"}'
@@ -93,7 +93,7 @@ anda koşup aynı bağlamı iki kez çekmesin.
 ```bash
 LAST_WEEK=$(date -u -d '7 days ago' +%F)   # macOS: date -u -v-7d +%F
 curl -s -H "Authorization: Bearer $BRIEF_SECRET" \
-  "https://acilis-zili.vercel.app/api/brief/context?period=weekly&date=$LAST_WEEK"
+  "https://aciliszili.com/api/brief/context?period=weekly&date=$LAST_WEEK"
 ```
 
 2. Yanıttaki `brief_date` (dönemin Pazartesisi) ve `range_et` alanlarını not
@@ -110,7 +110,7 @@ curl -s -H "Authorization: Bearer $BRIEF_SECRET" \
 4. Gönder — `date` alanına **`brief_date`** değerini yaz:
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/brief \
+curl -s -X POST https://aciliszili.com/api/brief \
   -H "Authorization: Bearer $BRIEF_SECRET" \
   -H "Content-Type: application/json" \
   -d '{"period":"weekly","date":"<brief_date>","locale":"tr","headline":"<başlık>","body_md":"<gövde>"}'
@@ -132,7 +132,7 @@ boşsa o gün için yazı yazma — uydurma kayıt açmaktansa boşluk kalsın.
 for i in $(seq 30 -1 1); do
   D=$(date -u -d "$i days ago" +%F)
   curl -s -H "Authorization: Bearer $BRIEF_SECRET" \
-    "https://acilis-zili.vercel.app/api/brief/context?date=$D"
+    "https://aciliszili.com/api/brief/context?date=$D"
   # → yaz, sonra POST /api/brief  {"date":"$D","locale":"tr", ...}
 done
 ```

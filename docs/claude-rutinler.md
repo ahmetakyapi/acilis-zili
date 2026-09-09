@@ -14,8 +14,8 @@ Her görev için: yeni görev → zamanlamayı gir → aşağıdaki prompt bloğ
 **tamamını** yapıştır → kaydet.
 
 Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
-`BRIEF_SECRET` değeriyle değiştir. Değer: Vercel → acilis-zili → Settings →
-Environment Variables → `BRIEF_SECRET`.
+`BRIEF_SECRET` değeriyle değiştir. Değer sunucuda: `/etc/acilis-zili.env` →
+`BRIEF_SECRET` (`sudo cat /etc/acilis-zili.env | grep BRIEF_SECRET`).
 
 | # | Görev | Zamanlama | Cron (UTC) | Nereye yazar |
 |---|---|---|---|---|
@@ -29,8 +29,9 @@ Environment Variables → `BRIEF_SECRET`.
 > yayımlanır" der. Sayı `lib/data.ts` → `BRIEF_PUBLISH_TR` sabitinden geliyor;
 > aşağıdaki zamanlamayı değiştirirsen orayı da değiştir.
 
-> **Saatler neden böyle.** Vercel cron'u (`/api/cron/daily`, 13:30 TR) veriyi
-> veritabanına yazan taraftır; bültenler onu OKUR. Günlük bülten uzun süre
+> **Saatler neden böyle.** Günlük senkron (`/api/cron/daily`, 13:30 TR —
+> sunucu crontab'ından tetikleniyor) veriyi veritabanına yazan taraftır;
+> bültenler onu OKUR. Günlük bülten uzun süre
 > 09:00 TR'de koşuyordu, yani senkrondan **4,5 saat önce** — her sabahki yazı
 > bir önceki günün makro değerleriyle yazılıyordu. 16:00 bu sırayı düzeltir.
 >
@@ -41,7 +42,7 @@ Environment Variables → `BRIEF_SECRET`.
 
 **Dördünde de ortak iki şart:**
 
-1. **Ağ izni** — ortam ayarlarında `acilis-zili.vercel.app` alan adına izin
+1. **Ağ izni** — ortam ayarlarında `aciliszili.com` alan adına izin
    verilmiş olmalı. Verilmezse proxy 403 döner, görev başlamadan düşer.
 2. **Model** — 1 ve 2 için Sonnet yeterli, 3 ve 4 için Opus belirgin şekilde
    daha iyi yazar.
@@ -62,7 +63,7 @@ SECRET=BURAYA_SECRET
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  https://acilis-zili.vercel.app/api/brief/context
+  https://aciliszili.com/api/brief/context
 ```
 
 2) Bu veriye dayanarak Türkçe bir sabah brifingi yaz.
@@ -86,7 +87,7 @@ Kurallar:
 3) Siteye gönder:
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/brief \
+curl -s -X POST https://aciliszili.com/api/brief \
   -H "Authorization: Bearer $SECRET" \
   -H "Content-Type: application/json" \
   -d '{"headline": "<başlık>", "body_md": "<gövde>", "locale": "tr"}'
@@ -99,7 +100,7 @@ tekrar deneme — aynı gün iki kez yazmak kaydın üzerine yazar.
 yaz (birebir çeviri değil) ve "locale": "en" ile ikinci kez POST et:
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/brief \
+curl -s -X POST https://aciliszili.com/api/brief \
   -H "Authorization: Bearer $SECRET" \
   -H "Content-Type: application/json" \
   -d '{"headline": "<English headline>", "body_md": "<English body>", "locale": "en"}'
@@ -123,7 +124,7 @@ takvim. İkisi de sabah okunur. Pazartesi 09:30 TR = 02:30 ET, yani ABD ön
 seansı bile başlamamıştır — bu, "bu hafta" bölümünün tahmine kaymasını
 zorlaştıran bir avantajdır: o saatte yorumlanacak bir fiyat hareketi yok.
 
-Bir kabul: Pazartesi 09:30, o günkü Vercel senkronundan (13:30 TR) önce.
+Bir kabul: Pazartesi 09:30, o günkü senkrondan (13:30 TR) önce.
 Yani haftalık, Cuma günkü senkronun verisini okur. Sorun değil — geçen
 haftanın rakamları Alpaca barlarından geliyor (senkrona bağlı değil) ve
 gelecek haftanın bilanço takvimi Cuma koşumunda zaten çekilmiş durumda
@@ -141,7 +142,7 @@ gün olabilir; uç, o günü kapsayan haftanın Pazartesi-Cuma paketini döner:
 ```bash
 LAST_WEEK=$(date -u -d '7 days ago' +%F)
 curl -s -H "Authorization: Bearer $SECRET" \
-  "https://acilis-zili.vercel.app/api/brief/context?period=weekly&date=$LAST_WEEK"
+  "https://aciliszili.com/api/brief/context?period=weekly&date=$LAST_WEEK"
 ```
 
 2) Yanıttaki iki alanı not et:
@@ -167,7 +168,7 @@ Kurallar:
 4) Gönder. date alanına mutlaka yanıttaki brief_date değerini yaz:
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/brief \
+curl -s -X POST https://aciliszili.com/api/brief \
   -H "Authorization: Bearer $SECRET" \
   -H "Content-Type: application/json" \
   -d '{"period":"weekly","date":"<brief_date>","locale":"tr","headline":"<başlık>","body_md":"<gövde>"}'
@@ -208,7 +209,7 @@ SECRET=BURAYA_SECRET
 
 Yazmaya başlamadan önce sitedeki referans yazıyı aç ve oku:
 
-  https://acilis-zili.vercel.app/mercek/leopold-aschenbrenner-96-saat
+  https://aciliszili.com/mercek/leopold-aschenbrenner-96-saat
 
 Bu yazı standardı belirler. Uzunluğu, tonu, bölüm kurgusu, görsel blokların
 nereye konduğu ve özellikle "olayı anlatmak" yerine "mekanizmayı açıklamak"
@@ -219,7 +220,7 @@ yazıdan çıkarıldı.
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  https://acilis-zili.vercel.app/api/mercek/context
+  https://aciliszili.com/api/mercek/context
 ```
 
 Yanıtta:
@@ -247,7 +248,7 @@ Kurallar:
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  "https://acilis-zili.vercel.app/api/mercek?slug=<slug>"
+  "https://aciliszili.com/api/mercek?slug=<slug>"
 ```
 
     Yanıt POST gövdesiyle aynı alan adlarını kullanır (body_md, event_date,
@@ -485,7 +486,7 @@ BAĞLANTI KURALLARI
     Makro:     /rehber/faiz-tahvil · /rehber/enflasyon · /rehber/istihdam ·
                /rehber/sahin-guvercin · /rehber/kur-riski
 
-    Bu liste değişebilir. Emin değilsen https://acilis-zili.vercel.app/rehber
+    Bu liste değişebilir. Emin değilsen https://aciliszili.com/rehber
     sayfasını aç ve oradaki bağlantıyı kullan — var olmayan bir slug'a
     bağlantı vermek 404 üretir.
   - Bağlantılar cümlenin içine doğal biçimde girsin, liste hâlinde dipnot
@@ -520,7 +521,7 @@ o günü pas geçmek daha iyidir.
 --- 7. GÖNDER ---
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/mercek \
+curl -s -X POST https://aciliszili.com/api/mercek \
   -H "Authorization: Bearer $SECRET" \
   -H "Content-Type: application/json" \
   -d '{
@@ -604,7 +605,7 @@ SECRET=BURAYA_SECRET
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  https://acilis-zili.vercel.app/api/analiz/context
+  https://aciliszili.com/api/analiz/context
 ```
 
 Yanıtta:
@@ -761,7 +762,7 @@ sayıyı okuyucunun diline göre kendisi yazar. Yüzdeler yüzde OLARAK verilir
 (372 = %372), oran olarak değil.
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
+curl -s -X POST https://aciliszili.com/api/analiz \
   -H "Authorization: Bearer $SECRET" \
   -H "Content-Type: application/json" \
   -d '{
@@ -953,7 +954,7 @@ Var olan bir analizi düzeltmek istersen önce gövdeyi geri oku:
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  "https://acilis-zili.vercel.app/api/analiz?symbol=SNDK&period=4c-fy2026&locale=tr"
+  "https://aciliszili.com/api/analiz?symbol=SNDK&period=4c-fy2026&locale=tr"
 ```
 
 Alan adları POST gövdesiyle aynıdır; okuduğun paketi düzenleyip doğrudan
@@ -978,7 +979,7 @@ Son 30 günün her biri için sırayla:
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  "https://acilis-zili.vercel.app/api/brief/context?date=YYYY-MM-DD"
+  "https://aciliszili.com/api/brief/context?date=YYYY-MM-DD"
 ```
 
 Yanıt retrospective: true döner; metni GEÇMİŞ zamanda, o günün gerçekleşen
@@ -991,7 +992,7 @@ için yazı YAZMA. Uydurma kayıt açmaktansa arşivde boşluk kalsın.
 Yazdığın her gün için:
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/brief \
+curl -s -X POST https://aciliszili.com/api/brief \
   -H "Authorization: Bearer $SECRET" \
   -H "Content-Type: application/json" \
   -d '{"date":"YYYY-MM-DD","locale":"tr","headline":"<başlık>","body_md":"<gövde>"}'
@@ -1015,7 +1016,7 @@ SECRET=BURAYA_SECRET
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  https://acilis-zili.vercel.app/api/mercek/context
+  https://aciliszili.com/api/mercek/context
 ```
 
 Sonra bugünden bir ay geriye giderek, o dönemde ABD piyasalarında yaşanmış
@@ -1056,7 +1057,7 @@ SECRET=BURAYA_SECRET
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  https://acilis-zili.vercel.app/api/analiz/context
+  https://aciliszili.com/api/analiz/context
 ```
 
    existing_analyses içinde "has_charts": false olan her kayıt işlenecek.
@@ -1066,7 +1067,7 @@ curl -s -H "Authorization: Bearer $SECRET" \
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  "https://acilis-zili.vercel.app/api/analiz?symbol=<SEMBOL>&period=<period>&locale=tr"
+  "https://aciliszili.com/api/analiz?symbol=<SEMBOL>&period=<period>&locale=tr"
 ```
 
 3. Şirketin resmi bilanço bültenlerinden şu iki alanı topla:
@@ -1094,7 +1095,7 @@ curl -s -H "Authorization: Bearer $SECRET" \
    alana dokunma — score, verdict, summary, analysis, highlights aynı kalır:
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/analiz \
+curl -s -X POST https://aciliszili.com/api/analiz \
   -H "Authorization: Bearer $SECRET" \
   -H "Content-Type: application/json" \
   -d '{ ...okuduğun gövdenin tamamı..., "quarterly_revenue": [...],
@@ -1128,14 +1129,14 @@ SECRET=BURAYA_SECRET
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  https://acilis-zili.vercel.app/api/analiz/context
+  https://aciliszili.com/api/analiz/context
 ```
 
 2. Her kayıt için gövdeyi geri oku (POST bütün gövdenin üzerine yazar):
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  "https://acilis-zili.vercel.app/api/analiz?symbol=<SEMBOL>&period=<period>&locale=tr"
+  "https://aciliszili.com/api/analiz?symbol=<SEMBOL>&period=<period>&locale=tr"
 ```
 
 3. YALNIZCA şu üç alanın içindeki `note` değerlerini düzelt:
@@ -1180,7 +1181,7 @@ SECRET=BURAYA_SECRET
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  https://acilis-zili.vercel.app/api/mercek/context
+  https://aciliszili.com/api/mercek/context
 ```
 
    existing_stories içindeki her kayıtta "locales" listesi var.
@@ -1190,13 +1191,13 @@ curl -s -H "Authorization: Bearer $SECRET" \
 
 ```bash
 curl -s -H "Authorization: Bearer $SECRET" \
-  "https://acilis-zili.vercel.app/api/mercek?slug=<slug>"
+  "https://aciliszili.com/api/mercek?slug=<slug>"
 ```
 
 3. İngilizcesini yaz ve AYNI slug ile gönder — tek fark "locale": "en":
 
 ```bash
-curl -s -X POST https://acilis-zili.vercel.app/api/mercek \
+curl -s -X POST https://aciliszili.com/api/mercek \
   -H "Authorization: Bearer $SECRET" \
   -H "Content-Type: application/json" \
   -d '{ "slug": "<slug>", "locale": "en", "title": "...", "dek": "...",

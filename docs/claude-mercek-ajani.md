@@ -12,4 +12,4 @@ bar · zaman · grafik · ornek · dikkat · ozet), dil kuralları ve gönderim
 kayıyordu; rutine yapıştırılan metnin tek bir kaynağı olması gerekiyor.
 
 Referans yazı — ölçü budur:
-https://acilis-zili.vercel.app/mercek/leopold-aschenbrenner-96-saat
+https://aciliszili.com/mercek/leopold-aschenbrenner-96-saat
