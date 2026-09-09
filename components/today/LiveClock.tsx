@@ -1,47 +1,37 @@
 "use client";
 
 import { useDualClock } from "@/components/layout/useDualClock";
+import { formatInZone } from "@/lib/session-clock";
 import type { Locale } from "@/lib/i18n/config";
+import styles from "./LiveClock.module.css";
 
-/**
- * Ana sayfa canlı saati — New York ve İstanbul'un şu anki duvar saati.
- * Oturum rozeti ile aynı hizada durur; sayı mono, etiketler sessiz.
- *
- * Sıra dile bağlı: Türkçe okuyanın duvar saati önce gelir, seansın kendi
- * saati arkasından. İngilizcede tersi — kaynağın saati başta durur.
- */
-export function LiveClock({ locale }: { locale: Locale }) {
-  const { ny, ist } = useDualClock();
+/** The reader's current wall clock leads (TR in Turkish, NY in English).
+ * The small dial shows that same time; the secondary market clock stays
+ * quiet. The former five inline nodes made zone labels look detached;
+ * each time still owns its adjacent zone, now on separate reading lines.
+ * The server timestamp avoids an empty clock before hydration. */
+export function LiveClock({ locale, initialNowMs }: { locale: Locale; initialNowMs: number }) {
+  const clock = useDualClock();
+  const ist = clock.ist === "--:--" ? formatInZone(new Date(initialNowMs), "Europe/Istanbul") : clock.ist;
+  const ny = clock.ny === "--:--" ? formatInZone(new Date(initialNowMs), "America/New_York") : clock.ny;
+  const [first, second] = locale === "tr"
+    ? [{ time: ist, tag: "TR" }, { time: ny, tag: "NY" }]
+    : [{ time: ny, tag: "NY" }, { time: ist, tag: "TR" }];
+  const [hours, minutes] = first.time.split(":").map(Number);
 
-  const [first, second] =
-    locale === "tr"
-      ? ([
-          { time: ist, tag: "TR" },
-          { time: ny, tag: "NY" },
-        ] as const)
-      : ([
-          { time: ny, tag: "NY" },
-          { time: ist, tag: "TR" },
-        ] as const);
-
-  /* Saat İKİ BÖLMELİ bir künye. Eskiden beş ayrı düğüm ("11:15", "TR", "·",
-     "04:15", "NY") aynı boşlukla diziliyordu ve hangi etiketin hangi saate
-     ait olduğu ancak okunarak çıkarılıyordu — ayraç, sayı ile etiket
-     arasındaki bağdan daha güçlü duruyordu.
-
-     Şimdi her saat kendi bölmesinde: sayı ve künyesi bitişik, bölmeler
-     arasında hairline. Birincil saat tam mürekkep, ikincil sessiz — hangisi
-     okuyucunun kendi saati olduğu tondan anlaşılıyor. */
   return (
-    <p className="numeral flex items-stretch divide-x divide-line rounded-lg border border-line bg-surface-solid text-xs">
-      <span className="flex items-baseline gap-1.5 px-2.5 py-1">
-        <span className="font-semibold text-strong">{first.time}</span>
-        <span className="text-nano text-muted">{first.tag}</span>
-      </span>
-      <span className="flex items-baseline gap-1.5 px-2.5 py-1">
-        <span className="font-semibold text-soft">{second.time}</span>
-        <span className="text-nano text-muted">{second.tag}</span>
-      </span>
-    </p>
+    <div className={styles.clock}>
+      <svg className={styles.dial} viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="18" />
+        <path className={styles.ticks} d="M20 4v3M36 20h-3M20 36v-3M4 20h3" />
+        <path className={styles.hour} d="M20 21V11" transform={`rotate(${(hours % 12) * 30 + minutes / 2} 20 20)`} />
+        <path className={styles.minute} d="M20 23V7" transform={`rotate(${minutes * 6} 20 20)`} />
+        <circle className={styles.pivot} cx="20" cy="20" r="1.6" />
+      </svg>
+      <div className={styles.readings}>
+        <span className={styles.primary}><time>{first.time}</time><span>{first.tag}</span></span>
+        <span className={styles.secondary}><time>{second.time}</time><span>{second.tag}</span></span>
+      </div>
+    </div>
   );
 }

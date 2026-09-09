@@ -16,7 +16,9 @@ function split(targetMs: number, nowMs: number) {
 }
 
 /**
- * Geri sayım artık kahramanın ana okuması: dört sabit sütun, saniye dahil.
+ * Geri sayım kahramanın ana okuması; saniye her zaman görünür.
+ * Başlangıçta dört sabit sütundu. Artık tam gün kalmadığında gün sütunu
+ * ve kendi ayıracı hiç basılmaz; kalan üç birim alanı birlikte kullanır.
  * Önceki üç birimli görünüm gün varken saniyeyi gizlediği için dakikada bir
  * yenileniyordu. Saniye artık görünür; tek saniyelik zamanlayıcı yalnızca
  * bu küçük yaprağı yeniler ve gizli sekmede durur. Seansın hedefini yine
@@ -67,9 +69,10 @@ export function Countdown({
       role="timer"
       aria-label={label}
       aria-live="off"
+      data-days={values[0] > 0}
       className={[styles.countdown, className].filter(Boolean).join(" ")}
     >
-      {values.map((value, index) => (
+      {values.map((value, index) => index === 0 && value === 0 ? null : (
         <div className={styles.unit} key={names[index]}>
           <span className={styles.numberWindow}>
             <span key={value} className={styles.number}>

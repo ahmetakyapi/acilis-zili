@@ -1,22 +1,22 @@
 .page { display: flex; flex-direction: column; gap: 24px; }
-.hero { position: relative; isolation: isolate; padding: 24px 32px 16px; border: 1px solid var(--line); border-radius: 24px; background: radial-gradient(ellipse at 88% 16%, var(--primary-wash), transparent 45%), var(--premium-surface); box-shadow: var(--premium-shadow); scroll-margin-top: 160px; }
+.hero { position: relative; isolation: isolate; padding: 24px 32px 20px; border: 1px solid var(--line); border-radius: 24px; background: radial-gradient(ellipse at 88% 16%, var(--primary-wash), transparent 45%), var(--premium-surface); box-shadow: var(--premium-shadow); scroll-margin-top: 160px; }
 .heroTopline { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 650; letter-spacing: .025em; color: var(--primary-ink); }
 .dateline { display: flex; align-items: center; gap: 16px; font-size: 11px; font-weight: 550; color: var(--text-body); }
 .dateline small { font-size: 9px; color: var(--text-muted); }
 .heroMain { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); align-items: center; gap: 36px; padding-top: 28px; padding-bottom: 10px; }
 .heroCopy { min-width: 0; }
-.heroSession { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 18px; color: var(--text-muted); font-size: 11px; font-weight: 550; }
+.heroSession { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 14px; color: var(--text-muted); font-size: 11px; font-weight: 550; }
 .heroSession > span { width: 5px; height: 5px; border-radius: 50%; background: var(--text-muted); }
 .heroSession[data-trading="true"] > span { background: var(--up); box-shadow: 0 0 0 3px var(--up-wash); }
 .headline { max-width: 25ch; font-size: clamp(25px, 2.55vw, 36px); font-weight: 550; line-height: 1.12; letter-spacing: -.045em; color: var(--text-strong); text-wrap: balance; }
-.countdown { margin-top: 22px; }
+.countdown { margin-top: 16px; }
 .targetDate { display: flex; align-items: center; gap: 9px; margin-top: 22px; color: var(--text-muted); font-size: 12px; }
 .targetDate > svg { flex-shrink: 0; color: var(--primary); }
 .targetDate time { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 12px; }
 .targetDate strong { font-weight: 650; color: var(--text-strong); }
 .targetDate small { font-size: 9px; font-weight: 550; color: var(--text-muted); }
-.heroFooter { margin-top: 24px; }
+.heroFooter { margin-top: 18px; }
 .description { max-width: 52ch; font-size: 12px; line-height: 1.7; color: var(--text-body); text-wrap: pretty; }
 .indexDeck { min-width: 0; padding-left: 28px; border-left: 1px solid var(--line); }
 .indexHeading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 5px 15px; margin-bottom: 14px; font-size: 10px; font-weight: 550; color: var(--text-muted); }
@@ -89,12 +89,10 @@
   .hero { padding: 19px 19px 14px; border-radius: 20px; overflow: hidden; }
   .heroMain { padding-top: 22px; padding-bottom: 0; gap: 24px; }
   .heroSession { margin-bottom: 12px; font-size: 10px; }
-  .heroTopline { align-items: flex-start; }
-  .eyebrow { font-size: 10px; gap: 6px; }
+  .heroTopline { gap: 12px; align-items: center; }
+  .eyebrow { font-size: 10px; gap: 6px; min-width: 0; }
   .dateline { display: flex; }
-  .dateline > p { font-size: 10px; }
-  .dateline > p > span { padding: 3px 6px; }
-  .dateline > p > span:last-child { display: none; }
+  .eyebrow > svg { flex-shrink: 0; }
   .headline { font-size: clamp(25px, 6.4vw, 34px); }
   .countdown { margin-top: 18px; }
   .description { max-width: 39ch; font-size: 11px; }
@@ -152,7 +150,9 @@
 .dashboard [data-home-section]:empty { display:none; }
 @media(max-width:1023px) {
  .dashboard > [data-col] { display:contents; }
- /* Mobile reading order: day flow, daily brief, world markets, movers. */
+ /* Mobile reading order: day flow, daily brief, world markets, movers.
+    The English source-news feed follows both earnings panels, last among
+    content sections; the data-source footnote remains the page footer. */
  .dashboard [data-home-section="brief"] { order:1; }
  .dashboard [data-home-section="world"] { order:2; }
  .dashboard [data-home-section="movers"] { order:3; }
@@ -162,8 +162,8 @@
  .dashboard [data-home-section="schedule"] { order:7; }
  .dashboard [data-home-section="week"] { order:8; }
  .dashboard [data-home-section="watchlist"] { order:9; }
- .dashboard [data-home-section="news"] { order:10; }
- .dashboard [data-home-section="earnings"] { order:11; }
- .dashboard [data-home-section="analyses"] { order:12; }
+ .dashboard [data-home-section="news"] { order:12; }
+ .dashboard [data-home-section="earnings"] { order:10; }
+ .dashboard [data-home-section="analyses"] { order:11; }
  .dashboard [data-home-section="sources"] { order:13; }
 }

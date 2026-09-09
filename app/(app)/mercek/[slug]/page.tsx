@@ -1,4 +1,4 @@
-import { MotionExperience, ScrollProgress, ScrollStage, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
+import { MotionExperience, ScrollProgress, ScrollStage, SpotlightCard } from "@/components/motion/PremiumMotion";
 import experience from "@/components/motion/EditorialExperience.module.css";
 import detail from "@/components/stories/StoryDetail.module.css";
 import { StoryFigure, storyFigureOf } from "@/components/stories/StoryFigure";
@@ -197,7 +197,8 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
 
       {/* The former 720px masthead measured 385px at 1440px. A wider
           editorial cover now gives the headline and its own published
-          figures separate space; body text keeps its 720px reading width. */}
+          figures separate space. Later reader feedback widens the body
+          to 1040px and replaces the reading/source tabs with one flow. */}
       <SpotlightCard className={detail.coverSurface}>
       <header className={detail.cover} data-has-figure={Boolean(figure)}>
       <div className={detail.coverCopy}>
@@ -238,10 +239,6 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
       </ScrollStage>}
       </header>
       </SpotlightCard>
-      <SectionNav className={detail.readingNav} label={t.stories.eyebrow} items={[
-        { id: "story-reading", label: t.stories.eyebrow },
-        { id: "story-sources", label: t.stories.sources },
-      ]} />
 
       <ArticleJsonLd
         headline={story.title}

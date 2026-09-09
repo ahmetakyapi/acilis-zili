@@ -246,7 +246,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         (c) => sectorGroupOf(c.industry).key === activeGroup.key,
       )
     : companies;
-  const leaders = [...companies].filter(company => company.marketCap != null && company.marketCap > 0).sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, 6);
+  const leaders = [...companies].filter(company => company.marketCap != null && company.marketCap > 0).sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, 10);
 
   /* Kaç satır basılacak. Sıralama ya da filtre değişince sayaç başa döner:
      "daha fazla" bir okuma derinliğidir, yeni bir listeye taşınmaz. */

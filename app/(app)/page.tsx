@@ -192,7 +192,7 @@ export default async function TodayPage() {
           <span className={styles.eyebrow}><Waveform size={15} weight="bold" />{t.today.experienceEyebrow}</span>
           <div className={styles.dateline}>
             <span>{dateFormat.format(new Date(nowMs))}</span>
-            <LiveClock locale={locale} />
+            <LiveClock locale={locale} initialNowMs={nowMs} />
           </div>
         </div>
         <div className={styles.heroMain}>

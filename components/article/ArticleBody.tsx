@@ -872,13 +872,13 @@ export function ArticleBody({
               0.01,
             );
             return (
-              <div key={key} className="oku-blok flex flex-col gap-2.5">
+              <figure key={key} className="oku-blok flex flex-col gap-2.5" data-article-visual="bars">
                 {block.label && (
-                  <p className="plate text-nano tracking-[0.09em]">
+                  <figcaption className="plate text-nano tracking-[0.09em]">
                     {block.label}
-                  </p>
+                  </figcaption>
                 )}
-                <div className="flex flex-col gap-3 rounded-(--radius-lg) border border-line bg-surface px-4 py-4">
+                <div className="flex flex-col gap-4">
                   {/* İKİ SATIR: üstte ad ve değer, altta tam genişlikte çubuk.
                       Üçü bir dönem tek satırdaydı ve ad sütunu SABİT genişlik
                       taşıyordu (dar ekranda 122px). Ölçüldü: 390 piksellik
@@ -907,24 +907,22 @@ export function ArticleBody({
                           {item.display}
                         </span>
                       </div>
-                      <span className="h-2 overflow-hidden rounded-full bg-surface-sunken">
+                      <span className="h-2.5 overflow-hidden rounded-full bg-surface-sunken">
                         <span
+                          data-motion-draw="line"
                           className={cn(
                             "oku-bar block h-full rounded-full",
                             item.value < 0 ? "bg-down" : "bg-up",
                           )}
                           style={{
-                            width: `${Math.max(
-                              (Math.abs(item.value) / peak) * 100,
-                              3,
-                            )}%`,
+                            width: `${(Math.abs(item.value) / peak) * 100}%`,
                           }}
                         />
                       </span>
                     </div>
                   ))}
                 </div>
-              </div>
+              </figure>
             );
           }
 
@@ -951,7 +949,7 @@ export function ArticleBody({
                       kendi içinde büyüseydi aralarındaki 2 piksellik boşluklar
                       da ölçeklenir ve şerit büyürken kayardı. Kap soldan
                       büyüyor, paylar baştan doğru oranda. */}
-                  <div className="oku-bar flex h-3.5 w-full gap-[2px] overflow-hidden rounded-full">
+                  <div className="oku-bar flex h-3.5 w-full gap-[2px] overflow-hidden rounded-full" data-motion-draw="line">
                     {block.items.map((item, itemIndex) => (
                       <span
                         key={itemIndex}

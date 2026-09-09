@@ -10,7 +10,6 @@ import type { Dictionary } from "@/lib/i18n";
 import styles from "./CompanyLeaders.module.css";
 
 type Leader = { symbol: string; name: string; logoUrl: string | null; cap: string };
-const elevations = [32, 8, 0, 0, 8, 32];
 
 /** A company selector, not an invented price chart. Every amount is supplied
  * by the same company directory; the orbital lines are decorative only. */
@@ -21,7 +20,7 @@ export function CompanyLeaders({ leaders, labels, capLabel }: {
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const reduced = useMotionPreference();
-  const visible = leaders.slice(0, 6);
+  const visible = leaders.slice(0, 10);
   const leader = visible.find((item) => item.symbol === selected) ?? visible[0];
   if (!leader) return null;
 
@@ -31,23 +30,24 @@ export function CompanyLeaders({ leaders, labels, capLabel }: {
       <span>{labels.selectCompany}</span>
     </div>
     {/* The old 270/250px orbit enclosed an unrelated-looking metric and
-        a second box around the active logo. This open shelf separates
-        company selection from the reading, without framing any button. */}
+        a second box around the active logo. The open shelf separated
+        selection from the reading. Ten companies now use two ranked
+        rows, with the same unframed selection and shared information. */}
     <div className={styles.shelf}>
-      <svg className={styles.arc} viewBox="0 0 480 140" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M18 99C112 11 368 11 462 99" />
-        <path className={styles.trace} d="M18 99C112 11 368 11 462 99" />
+      <svg className={styles.arc} viewBox="0 0 480 180" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M24 44H456M24 134H456" />
+        <path className={styles.trace} d="M24 44H456M24 134H456" />
       </svg>
       <div className={styles.choices} role="group" aria-label={labels.selectCompany}>
         {visible.map((item, index) => <button
           key={item.symbol}
           type="button"
           className={styles.company}
-          style={{ translate: `0 ${visible.length === 6 ? elevations[index] : 0}px` }}
           aria-pressed={leader.symbol === item.symbol}
           aria-label={`${item.name} · ${item.cap}`}
           onClick={() => setSelected(item.symbol)}
         >
+          <span className={styles.rank} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
           <span className={styles.logo}><LogoTile symbol={item.symbol} logoUrl={item.logoUrl} className="size-11" /></span>
           <span className={styles.symbol}>{item.symbol}</span>
           <span className={styles.selection} aria-hidden="true" />

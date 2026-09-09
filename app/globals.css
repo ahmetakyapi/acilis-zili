@@ -1295,13 +1295,14 @@
     animation-timeline: view();
     animation-range: entry 0% entry 140px;
   }
-  .oku-bar {
-    transform-origin: left center;
-    animation: bar-fill linear both;
-    animation-timeline: view();
-    animation-range: entry 60px entry 260px;
-  }
 }
+
+/* A bar's overflow-hidden track became its view() scroll container: the
+   60px entry offset never completed inside an 8px track. Measured bars
+   stayed at scaleX(0) even in view. MotionExperience now draws them once
+   via IntersectionObserver; without JS or with reduced motion they are
+   fully painted at their true proportional width. */
+.oku-bar { transform-origin:left center; }
 
 @media (prefers-reduced-motion: reduce) {
   .oku-blok, .oku-bar { animation: none; }
