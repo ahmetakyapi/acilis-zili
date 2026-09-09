@@ -80,6 +80,27 @@ export function proxy(request: NextRequest) {
 
   const url = request.nextUrl.clone();
   url.pathname = path;
+
+  /* TERS VEKİL ARKASINDA PROTOKOLÜ ZORLA `http:` YAP.
+   *
+   * Next 16'da `proxy` artık Node.js çalışma zamanında koşuyor ve bir
+   * YENİDEN YAZMAYI tamamlamak için bu URL'ye gerçek bir iç HTTP çağrısı
+   * yapıyor (eski Edge middleware'de bu yalnızca yönlendirme meta verisiydi,
+   * ağ turu yoktu). `request.nextUrl` ters vekilin gönderdiği
+   * `X-Forwarded-Proto: https` başlığını yansıtıyor — TARAYICI için doğru
+   * ama SUNUCUNUN KENDİSİ (`next start -H 127.0.0.1 -p 3000`, Caddy TLS'i
+   * burada sonlandırıyor) o portta düz HTTP dinliyor. Sonuç: iç çağrı
+   * `https://localhost:3000/...`e gidiyor ve `EPROTO: wrong version number`
+   * ile düşüyor — HER dil önekli istek (bkz. `/en`, `/en/piyasalar`) 500
+   * veriyordu, önek taşımayan istekler bu yeniden yazmadan hiç geçmediği
+   * için etkilenmiyordu. Bilinen, açık bir Next.js hatası:
+   * https://github.com/vercel/next.js/issues/87071
+   *
+   * Yalnızca bu değişkenin protokolü değişiyor — tarayıcıya giden yanıtta,
+   * çerezlerde ya da başka bir yerde okunan `X-Forwarded-Proto` etkilenmiyor;
+   * bu obje sadece Next'in iç yeniden-yazma hedefi. */
+  url.protocol = "http:";
+
   const response = NextResponse.rewrite(url, { request: { headers } });
 
   /* ÖNEKLİ ADRESE GELMEK DE BİR DİL SEÇİMİDİR — çerez burada yazılıyor.
