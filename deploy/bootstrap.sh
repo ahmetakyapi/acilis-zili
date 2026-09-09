@@ -123,9 +123,16 @@ log "paketler"
 apt-get update -qq
 apt-get install -y -qq git curl ca-certificates gnupg cron >/dev/null
 
+# Node 24 ŞART, 22 DEĞİL. Next.js'in kendi RSC akışı (streaming) Node'un
+# dahili `TransformStream`ını kullanıyor ve orada bilinen bir yarış durumu
+# hatası var (nodejs/node#62036): bir istemci bağlantıyı yarıda keserken
+# `cancel()` bekleyen bir `write()` ile çakışırsa "transformAlgorithm is not
+# a function" ile o istek 500 düşüyor — canlıda dil önekli sayfalarda böyle
+# görüldü. Düzeltme (nodejs/node#62040) 22.x hattına HİÇ gelmedi, yalnızca
+# 24.15.0+ ve 25.8.1+'ta var. 22'de kalmak bu hatayı kalıcı bırakır.
 node_major() { node -v 2>/dev/null | sed 's/^v//; s/\..*//'; }
-if ! command -v node >/dev/null || [[ $(node_major) -lt 20 ]]; then
-	curl -fsSL https://deb.nodesource.com/setup_22.x | bash - >/dev/null
+if ! command -v node >/dev/null || [[ $(node_major) -lt 24 ]]; then
+	curl -fsSL https://deb.nodesource.com/setup_24.x | bash - >/dev/null
 	apt-get install -y -qq nodejs >/dev/null
 fi
 note "node $(node -v), npm $(npm -v)"
