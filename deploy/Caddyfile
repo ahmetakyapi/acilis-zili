@@ -11,6 +11,15 @@
 # GÜVENLİK BAŞLIKLARI BURADA DEĞİL. Hepsi `next.config.ts` içinde ve tek
 # kaynak orası olmalı; burada ikinci bir kopya tutmak ikisinin ayrı düşmesini
 # bekletmekten başka bir şey değil. HSTS'i de Next basıyor.
+#
+# TEK KANONİK ADRES. `www.` alt alanı gerçek içerik SUNMUYOR, apex'e kalıcı
+# (301) yönlendiriyor — aksi hâlde aynı içerik iki adreste durur ve arama
+# motoru hangisinin asıl olduğuna kendi karar verir (`NEXT_PUBLIC_SITE_URL`,
+# canonical etiketleri ve site haritası zaten yalnızca apex'i biliyor).
+
+www.acilis-zili.ornek.com {
+	redir https://acilis-zili.ornek.com{uri} permanent
+}
 
 acilis-zili.ornek.com {
 	encode zstd gzip
