@@ -153,7 +153,7 @@ sökülüyor ve dil bir başlıkla taşınıyor; tarayıcının adresi `/en/...`
 | Auth | next-auth v5 — Credentials + bcrypt, JWT |
 | İkon | Phosphor (duotone) |
 | Yazı tipi | Schibsted Grotesk — tek aile, değişken 400–900 |
-| Barındırma | Vercel + Vercel Cron · ikinci kopya: kendi sunucusu (`docs/deploy-vps.md`) |
+| Barındırma | Vercel · ikinci kopya: kendi sunucusu (`docs/deploy-vps.md`) — cron ORADA (§ Deploy) |
 
 ---
 
@@ -400,7 +400,7 @@ npm run dev
 | `ALPACA_API_KEY_ID` + `ALPACA_API_SECRET_KEY` | fiyat için | [alpaca.markets](https://alpaca.markets) → API Keys (paper yeterli) |
 | `FINNHUB_API_KEY` | profil/haber için | [finnhub.io](https://finnhub.io) → Get free API key |
 | `FRED_API_KEY` | makro için | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) — 32 karakter, küçük harf |
-| `CRON_SECRET` | üretimde | `openssl rand -hex 32` — Vercel Cron bunu `Bearer` ile gönderir |
+| `CRON_SECRET` | üretimde | `openssl rand -hex 32` — cron ucunu `Bearer` ile çağıran taraf (bkz. § Deploy) gönderir |
 | `BRIEF_SECRET` | içerik için | `openssl rand -hex 32` — bülten, mercek ve analiz uçlarının kapısı |
 | `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri ve sitemap için) — Vercel dışında zorunlu |
 | `AUTH_TRUST_HOST` | Vercel dışında | ters vekil arkasında `true`; yoksa giriş yönlendirmesi şaşar |
@@ -485,8 +485,11 @@ sonuçları ve uygun FRED yayınları ortak 60 saniyelik sağlayıcı önbelleğ
 okunur. Sonuç veya analiz oluşmadan "Açıklandı" etiketi/analiz bağlantısı
 üretilmez. Bu okuma yolu veritabanına yazmaz; yayımlama ve cron iş akışı korunur.
 
-Günlük cron (`/api/cron/daily`, hafta içi 10:30 UTC) bilanço takvimi, haber, FRED
-serileri, gerçekleşen değerler, profil tazeleme ve budama işlerini sırayla yapar.
+Günlük cron (`/api/cron/daily`, hafta içi 10:30 UTC) **kendi sunucumuzdaki
+crontab'dan** tetikleniyor (`deploy/cron-daily.sh`) — `vercel.json` bilerek
+boş, iki yerde birden koşarsa Finnhub'ın dakikalık kotası taşar. Uç bilanço
+takvimi, haber, FRED serileri, gerçekleşen değerler, profil tazeleme ve
+budama işlerini sırayla yapar.
 Yüz saniyelik bir bütçesi vardır: bütçe dolarsa kalan adımları atlar ve neyi
 atladığını raporlar — yarım kalmış bir tur sessizce başarılı görünmez.
 
