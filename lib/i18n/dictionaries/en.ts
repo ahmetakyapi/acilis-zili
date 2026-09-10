@@ -592,6 +592,7 @@ const en: typeof tr = {
     periodHigh: "High",
     periodLow: "Low",
     noChartData: "No chart data for this range.",
+    sessionHours: "Session Hours",
     sessionPre: "Pre-Market",
     sessionRegular: "Regular",
     sessionAfter: "After Hours",

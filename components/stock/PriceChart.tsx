@@ -1,5 +1,6 @@
 "use client";
 
+import styles from "./PriceChart.module.css";
 import { LoadingSurface } from "@/components/ui/LoadingState";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -57,6 +58,7 @@ type SessionZone = {
 };
 
 type PriceChartProps = {
+  compact?: boolean;
   symbol: string;
   initialRange?: ChartRange;
   locale: Locale;
@@ -129,6 +131,7 @@ export function PriceChart({
   quote,
   closeMinutes = SESSION_BOUNDS.regularClose,
   initialBars,
+  compact = false,
 }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -714,9 +717,9 @@ export function PriceChart({
         : "text-soft";
 
   return (
-    <div>
+    <div className={styles.root} data-compact={compact}>
       {/* Okuma satırı — imleç gezerken nokta okuması, değilse dönem özeti */}
-      <div className="flex min-h-[3.5rem] flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2">
+      <div className={cn(styles.reading, "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2")}>
         {hover ? (
           <>
             <div className="flex items-baseline gap-3">
@@ -798,7 +801,7 @@ export function PriceChart({
       {/* Grafik alanı — yükseklik kasten cömert: yanındaki künye kartı daha
           uzun olduğu için grafik kartının altında ölü boşluk kalıyordu ve
           gün içi hareket 288px'e sıkışınca düzleşiyordu. */}
-      <div className="relative h-[300px] w-full sm:h-[430px]" aria-busy={state.phase === "loading"}>
+      <div className={cn(styles.plot, "relative w-full")} aria-busy={state.phase === "loading"}>
         {state.phase === "loading" && (
           <LoadingSurface label={labels.loading} />
         )}
@@ -875,6 +878,8 @@ export function PriceChart({
            yanında, NY saati satırın sağ ucunda. Üçü aynı hizada okunuyor ve
            harita 400 pikselden ~110 piksele düşüyor. Geniş ekranda yer var,
            orada eski dört sütunlu düzen duruyor. */
+        <details className={styles.sessions} open={!compact}>
+          <summary className={styles.sessionSummary}>{labels.sessionHours}<span aria-hidden>+</span></summary>
         <div className="mt-3 flex flex-col gap-1 border-t border-line-soft pt-3 sm:grid sm:grid-cols-4 sm:gap-x-4 sm:gap-y-3">
           {windows.map((window) => {
             const shaded = window.key === "pre" || window.key === "after";
@@ -920,10 +925,11 @@ export function PriceChart({
             );
           })}
         </div>
+        </details>
       )}
 
       {/* Aralık ve mod seçici — grafiğin altında, Midas düzeni */}
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3">
+      <div className={cn(styles.controls, "mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3")}>
         {/* SEKME DEĞİL, AÇMA-KAPAMA GRUBU. `role="tablist"` + `role="tab"`
             yazılıydı ama ne `aria-controls` ne de bir `tabpanel` vardı; grafik
             kabı sade bir `div`. Ekran okuyucu "sekme, seçili" diyor, kullanıcı

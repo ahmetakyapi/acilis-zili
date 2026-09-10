@@ -763,6 +763,7 @@ const tr = {
     periodHigh: "En Yüksek",
     periodLow: "En Düşük",
     noChartData: "Bu aralık için grafik verisi yok.",
+    sessionHours: "Seans Saatleri",
     sessionPre: "Ön Seans",
     sessionRegular: "Seans",
     sessionAfter: "Akşam Seansı",

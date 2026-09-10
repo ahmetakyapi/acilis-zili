@@ -38,6 +38,7 @@ export type ChartLabels = {
   periodLow: string;
   noData: string;
   failed: string;
+  sessionHours: string;
   sessionPre: string;
   sessionRegular: string;
   sessionAfter: string;
@@ -59,6 +60,7 @@ export function chartLabels(t: Dictionary): ChartLabels {
     periodLow: t.chart.periodLow,
     noData: t.chart.noChartData,
     failed: t.data.failed,
+    sessionHours: t.chart.sessionHours,
     sessionPre: t.chart.sessionPre,
     sessionRegular: t.chart.sessionRegular,
     sessionAfter: t.chart.sessionAfter,

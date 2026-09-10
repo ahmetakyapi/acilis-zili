@@ -3,6 +3,7 @@
 import { LoadingSurface } from "@/components/ui/LoadingState";
 
 import dynamic from "next/dynamic";
+import styles from "./PriceChart.module.css";
 import type { PriceChart as PriceChartType } from "./PriceChart";
 
 /**
@@ -39,13 +40,13 @@ export const PriceChartLazy = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex flex-col">
-        <div className="skeleton h-14 w-full rounded-(--radius-md)" />
-        <div className="relative mt-2 h-[300px] w-full sm:h-[430px]"><LoadingSurface /></div>
-        <div className="mt-3 border-t border-line-soft pt-3">
-          <div className="skeleton h-[83px] w-full rounded-(--radius-md) sm:h-[53px]" />
+        <div className={`skeleton w-full rounded-(--radius-md) ${styles.reading}`} />
+        <div className={`relative w-full ${styles.plot}`}><LoadingSurface /></div>
+        <div className={`mt-3 border-t border-line-soft pt-3 ${styles.legendSkeleton}`}>
+          <div className={`skeleton w-full rounded-(--radius-md) ${styles.legendSkeletonContent}`} />
         </div>
-        <div className="mt-3 border-t border-line-soft pt-3">
-          <div className="skeleton h-[84px] w-full rounded-(--radius-md) sm:h-6" />
+        <div className={`mt-3 border-t border-line-soft pt-3 ${styles.controlsSkeletonWrap}`}>
+          <div className={`skeleton w-full rounded-(--radius-md) ${styles.controlsSkeleton}`} />
         </div>
       </div>
     ),

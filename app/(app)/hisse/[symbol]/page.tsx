@@ -279,17 +279,8 @@ export default async function StockPage(
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       <StockBreadcrumb symbol={symbol} t={t} />
-      <SectionNav
-        label={t.stock.experienceNav}
-        items={[
-          { id: "stock-overview", label: t.stock.experienceOverview },
-          { id: "stock-fundamentals", label: t.stock.metrics },
-          { id: "stock-earnings", label: t.stock.pastEarnings },
-          { id: "stock-context", label: t.stock.experienceContext },
-        ]}
-      />
       {/* Üst blok — kimlik ve grafik solda tek panelde, şirket künyesi sağda */}
-      <div id="stock-overview" className={styles.heroGrid}>
+      <div id="stock-overview" className={cn(styles.heroGrid, styles.companyOverview)}>
         <Panel className={styles.chartPanel}>
         {/* KİMLİK GRAFİĞİN İÇİNE GİRDİ. Başlık (logo, sembol, ad, sektör,
             canlı fiyat) panelin DIŞINDA çıplak bir satırdı ve hemen altındaki
@@ -315,8 +306,10 @@ export default async function StockPage(
               Sayı tahmin değil: beş sembol × üç aralık × beş genişlikte
               ölçüldü, hepsinde 636/637. Grafiğin iç yükseklikleri sabit
               olduğu için bu ölçü içerikle birlikte kaymıyor. */}
-          <Suspense fallback={<Skeleton className="h-[636px] w-full sm:h-[637px]" />}>
-            <ChartSection symbol={symbol} locale={locale} t={t} />
+          {/* Kompakt görünüm bu eski sabit ölçüyü günceller: gerçek çizim ve
+              iki yükleme aşaması aynı viewport değişkenlerini kullanır. */}
+          <Suspense fallback={<Skeleton className={styles.chartSkeleton} />}>
+            <ChartSection symbol={symbol} locale={locale} t={t} compact />
           </Suspense>
         </Panel>
 
@@ -326,7 +319,9 @@ export default async function StockPage(
             satırlar boşluğa yayılıyor, kartın alt kenarı grafiğinkiyle
             hizalanıyor. Veri çoksa `flex-1` zaten bağlayıcı olmuyor ve kart
             eskisi gibi içeriği kadar yer kaplıyor. */}
-        <div className="flex min-w-0 flex-col gap-5">
+        {/* İlk ekran artık doğal boydaki özeti gösterir; satırlar grafiğin
+            yüksekliğine göre esnetilmez. Yaklaşan bilanço kendi bölümündedir. */}
+        <div className={styles.profileColumn}>
           <Panel className={styles.profilePanel}>
             <PanelHeader title={t.stock.profile} />
             {/* Altı künye satırı + iki paragraf: gövde 369 (mobil) / 437
@@ -335,16 +330,22 @@ export default async function StockPage(
               <ProfileCard symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
-
-          <Suspense
-            fallback={
-              <Skeleton className="h-[160px] w-full rounded-(--radius-xl) sm:h-[168px]" />
-            }
-          >
-            <UpcomingEarnings symbol={symbol} locale={locale} t={t} />
-          </Suspense>
         </div>
       </div>
+
+      {/* Bölüm menüsü ilk ekranı bölmez; özetin ardından doğal akışta gelir
+          ve kaydırınca üstte kalır. 1280×720 ölçümünde eski menü/boşluk
+          grafiğin önünde 80px harcıyordu. */}
+      <SectionNav
+        className={styles.chapterNav}
+        label={t.stock.experienceNav}
+        items={[
+          { id: "stock-overview", label: t.stock.experienceOverview },
+          { id: "stock-fundamentals", label: t.stock.metrics },
+          { id: "stock-earnings", label: t.stock.pastEarnings },
+          { id: "stock-context", label: t.stock.experienceContext },
+        ]}
+      />
 
       {/* Ölçüler şeridi — üç kart yan yana; dar ekranda kendiliğinden alt alta.
           Eskiden bunlar tek sütuna dizildiği için sağ kolon uzayıp sol taraf
@@ -412,6 +413,14 @@ export default async function StockPage(
 
       <section id="stock-earnings" className={styles.chapter}>
         <SectionHeading title={t.stock.experienceEarnings} hint={t.stock.experienceEarningsHint} />
+        {/* Yaklaşan bilanço, geçmiş sonuçlarla aynı bölümde; ilk fiyat ekranının boyunu uzatmaz. */}
+        <Suspense
+          fallback={
+            <Skeleton className="h-[160px] w-full rounded-(--radius-xl) sm:h-[168px]" />
+          }
+        >
+          <UpcomingEarnings symbol={symbol} locale={locale} t={t} />
+        </Suspense>
       {/* Analizler tablonun HEMEN üstünde: tablo çeyreklerin rakamları,
           panel o rakamların okunmuş hâli. Analizi olmayan şirkette hiçbir
           şey basılmaz. Akışta DEĞİL — gerekçesi bileşenin kendi yorumunda. */}
@@ -795,10 +804,12 @@ async function ChartSection({
   symbol,
   locale,
   t,
+  compact = false,
 }: {
   symbol: string;
   locale: Locale;
   t: Dictionary;
+  compact?: boolean;
 }) {
   /* Grafiğin okuma satırı ile sayfa başlığındaki fiyat AYNI kaynaktan gelmeli.
      Eskiden başlık anlık kotasyonu (son işlem), grafik ise son DAKİKA BARININ
@@ -833,6 +844,7 @@ async function ChartSection({
   return (
     <PriceChartLazy
       symbol={symbol}
+      compact={compact}
       locale={locale}
       labels={chartLabels(t)}
       closeMinutes={closeMinutesFor(grafikGunu, holidays)}

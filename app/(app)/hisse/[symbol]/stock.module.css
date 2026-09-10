@@ -171,3 +171,75 @@
   .peerSpotlight, .peerArrow, .newsLink { transition:none; }
   .peerSpotlight:hover, .peerCard:hover .peerArrow { transform:none; }
 }
+
+/* The previous NVDA overview ended at y1179 on a 1440×900 viewport:
+   246px header + fixed 430px plot, with the section menu before both.
+   Reserve the first screen for the quote/chart and profile. Upcoming
+   earnings now belong to the earnings chapter. Only this overview sets
+   chart sizing variables; embedded article and fund charts keep theirs. */
+.companyOverview .chartPanel {
+  --price-chart-height:clamp(140px,calc(100svh - 620px),300px);
+  --price-chart-reading:48px;
+  --price-chart-legend:30px;
+  --price-chart-legend-margin:8px;
+  --price-chart-legend-padding:6px;
+  --price-chart-controls:44px;
+  --price-chart-controls-margin:0px;
+  --price-chart-controls-padding:8px;
+  padding:20px;
+}
+.companyOverview .stockHeader { gap:14px; margin-bottom:14px; }
+.companyOverview .companyLogo { width:48px; height:48px; border-radius:12px; }
+.companyOverview .companyName { font-size:clamp(23px,2.1vw,30px); }
+.companyOverview .livePrice { font-size:clamp(36px,3.3vw,48px); }
+.companyOverview .sector { margin-top:4px; }
+.profileColumn { display:flex; min-width:0; flex-direction:column; }
+.companyOverview .profilePanel { flex:initial; }
+.companyOverview .profilePanel > div:first-child { padding-top:17px; padding-bottom:8px; }
+.companyOverview .profileBody { flex:initial; padding:0 18px 14px; }
+.companyOverview .profileVisual { margin:0 -18px 12px; padding:12px 18px; gap:8px; }
+.companyOverview .profileMetric { gap:6px; }
+.companyOverview .profilePrice,.companyOverview .profileCapValue { font-size:clamp(24px,2vw,28px); }
+.companyOverview .about { padding-bottom:12px; font-size:12px; line-height:1.7; }
+.companyOverview .profileBody > dl { flex:initial; }
+.companyOverview .profileBody > dl > div { flex:initial; min-height:36px; padding-block:7px; }
+.companyOverview .profileBody > dl dd { font-size:11px; }
+.chartSkeleton { width:100%; height:calc(var(--price-chart-height) + 145px); }
+.chapterNav { box-shadow:0 6px 24px var(--primary-tint); border-color:var(--line); }
+.chapterNav + .chapter { padding-top:10px; }
+@media(min-width:1100px) {
+ .companyOverview { align-items:start; }
+ .companyOverview .chartPanel { --price-chart-height:clamp(180px,calc(100svh - 496px),280px); --price-chart-controls:36px; }
+ .companyOverview .stockHeader { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; column-gap:20px; }
+ .companyOverview .identity { gap:12px; }
+ .companyOverview .priceLine { gap:6px 12px; }
+ .companyOverview .priceChange { padding-bottom:0; }
+ .companyOverview .priceBlock { padding-top:5px; }
+ .chartSkeleton { height:calc(var(--price-chart-height) + 137px); }
+}
+@media(max-width:639px) {
+ .companyOverview .chartPanel { padding:16px 14px 12px; }
+ .companyOverview .stockHeader { gap:12px; margin-bottom:12px; }
+ .companyOverview .companyName { font-size:23px; }
+ .companyOverview .livePrice { font-size:38px; }
+ .companyOverview .priceLine { gap:6px 10px; }
+ .companyOverview .companyLogo { width:44px; height:44px; border-radius:11px; }
+ .chapterNav { margin-inline:0; }
+}
+@media(max-width:359px) {
+ .companyOverview .livePrice { font-size:34px; }
+ .companyOverview .companyName { font-size:21px; }
+ .companyOverview .priceChange > span { font-size:11px; }
+}
+
+/* The upcoming report is a horizontal briefing in its earnings chapter,
+   rather than a full-width copy of the former narrow sidebar card. */
+@media(min-width:768px) {
+ .chapter .upcomingPanel { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); gap:4px 28px; padding:20px 24px; }
+ .chapter .eventKicker { grid-column:1; grid-row:1; justify-content:flex-start; }
+ .chapter .eventKicker svg { width:16px; height:16px; }
+ .chapter .earningsDate { grid-column:1; grid-row:2; margin-top:6px; font-size:22px; }
+ .chapter .upcomingPanel > p:nth-of-type(2) { grid-column:1; grid-row:3; }
+ .chapter .upcomingPanel > dl { grid-column:2; grid-row:1/4; margin:0; padding:8px 0 8px 24px; border-top:0; border-left:1px solid var(--primary-faint); align-content:center; }
+ .chapter .upcomingPanel > div:last-child:not(.eventKicker) { grid-column:3; grid-row:1/4; margin:0; padding:8px 0 8px 24px; border-top:0; border-left:1px solid var(--primary-faint); }
+}
