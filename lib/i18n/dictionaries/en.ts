@@ -474,6 +474,9 @@ const en: typeof tr = {
     forwardPe: "Forward P/E",
     movingAverages: "Moving Averages",
     movingAverageRow: "{n}-Day",
+    currentQuote: "Latest Price",
+    averageDistance: "Distance From Average",
+    analystReading: "12-Month Recommendation Mix",
     movingAveragesNote:
       "Average close over the last 50, 100 and 200 trading days. The percentage next to it is how far the current price sits from that average.",
     movingAveragesShort:

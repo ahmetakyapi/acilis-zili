@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
-import { ArrowDownRight, ArrowLeft, ArrowUpRight, CalendarBlank, Heart } from "@phosphor-icons/react/dist/ssr";
+import { ArrowDownRight, ArrowLeft, ArrowUpRight, CalendarBlank, Heart, SquaresFour, ChartLineUp, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import { MotionExperience, ScrollStage, Reveal, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "./stock.module.css";
 import { NewsImage } from "@/components/news/NewsImage";
@@ -24,7 +24,6 @@ import {
   Panel,
   PanelHeader,
   PanelLink,
-  PanelSkeleton,
   Skeleton,
 } from "@/components/ui/primitives";
 import { db } from "@/lib/db";
@@ -350,21 +349,21 @@ export default async function StockPage(
       {/* Ölçüler şeridi — üç kart yan yana; dar ekranda kendiliğinden alt alta.
           Eskiden bunlar tek sütuna dizildiği için sağ kolon uzayıp sol taraf
           boş kalıyordu; artık sayfanın tam genişliğini kullanıyorlar. */}
-      <section id="stock-fundamentals" className={styles.chapter}>
+      <section id="stock-fundamentals" className={cn(styles.chapter, styles.fundamentalsChapter)}>
         <SectionHeading title={t.stock.experienceFundamentals} hint={t.stock.experienceFundamentalsHint} />
         <ScrollStage>
         <div className={styles.fundamentalsGrid}>
         {/* `flex flex-col` — içerideki liste kutuyu doldurabilsin diye;
             gerekçe MetricsCard'ın kendi künyesinde. */}
         <Panel className={styles.metricsPanel}>
-          <PanelHeader title={t.stock.metrics} />
+          <PanelHeader title={t.stock.metrics} action={<SquaresFour className={styles.cardIcon} size={19} weight="duotone" aria-hidden />} />
           {/* ON ölçü satırı: sekiz sabit (F/K, hisse başına kâr, temettü,
               beta, 52 hafta yüksek/düşük, hacim) artı üç koşullu (ileri
               F/K, net kâr marjı, borç/özsermaye) — üçü de gelmezse yedi.
               Yedek ON satır ayırıyor çünkü koşulluların üçü de gerçek
               şirketlerde neredeyse hep geliyor; sayı bir dönem sekizde
               kalmıştı ve iki satırlık (74 piksel) bir sıçrama yapıyordu. */}
-          <Suspense fallback={<ListSkeleton rows={10} />}>
+          <Suspense fallback={<Skeleton className={styles.metricsSkeleton} />}>
             <MetricsCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </Panel>
@@ -382,30 +381,29 @@ export default async function StockPage(
             kendi ölçüsü olmaktan çıkıp komşu kolonun boyuna bağlanıyor.
             Aralık `gap-5` sabit kalıyor; artan yer alttaki kartın İÇİNE
             gidiyor ve iki sütun aynı hizada bitiyor. */}
-        <div className="flex min-w-0 flex-col gap-5">
-          <Panel>
-            <PanelHeader title={t.stock.movingAverages} className="pb-1.5" />
-            <Suspense fallback={<ListSkeleton rows={3} />}>
+        {/* Four independent cards now share two rows. No card absorbs the height of a neighboring column. */}
+          <Panel className={styles.averagesPanel}>
+            <PanelHeader title={t.stock.movingAverages} action={<ChartLineUp className={styles.cardIcon} size={19} weight="duotone" aria-hidden />} />
+            <Suspense fallback={<Skeleton className={styles.averagesSkeleton} />}>
               <MovingAverages symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
-
-          <Suspense
-            fallback={
-              <Skeleton className="h-[319px] w-full flex-1 rounded-(--radius-xl)" />
-            }
-          >
-            <ComplianceCard symbol={symbol} locale={locale} t={t} />
-          </Suspense>
-        </div>
 
         {/* PANEL VE BAŞLIK KARTIN İÇİNDE. Başlığın sağındaki rozet
             sağlayıcıdan gelen veriden hesaplanıyor, yani başlık akışın
             dışında kalamıyor. Yedek de artık başlık şeridini çiziyor —
             beş satır, kartın gerçekte bastığı kova sayısı. */}
-        <Suspense fallback={<PanelSkeleton rows={5} footer />}>
+        <Suspense fallback={<Skeleton className={styles.analystSkeleton} />}>
           <AnalystCard symbol={symbol} locale={locale} t={t} />
         </Suspense>
+          <Suspense
+            fallback={
+              <Skeleton className="h-[220px] w-full rounded-(--radius-xl)" />
+            }
+          >
+            <ComplianceCard symbol={symbol} locale={locale} t={t} />
+          </Suspense>
+
       </div>
 
         </ScrollStage>
@@ -1128,6 +1126,11 @@ async function MovingAverages({
     );
   }
 
+  const differences = satirlar.map(({ deger }) =>
+    deger !== null && deger > 0 && price !== null ? ((price - deger) / deger) * 100 : null,
+  );
+  const extent = Math.max(1, ...differences.filter((value): value is number => value !== null).map(Math.abs));
+
   return (
     /* ÜST DOLGU YOK. Başlığın kendi `py-4` alt dolgusu (16px) buradaki
        `py-3` (12) ve satırın `py-2` (8) ile üst üste biniyordu: başlık
@@ -1135,8 +1138,13 @@ async function MovingAverages({
        üç satırlık içeriğe göre şişkin duruyordu. Başlık `pb-1.5`e indi,
        gövdenin üst dolgusu tümüyle kalktı; satırın kendi `py-2`si zaten
        nefes alacak kadar. Ölçüldü: kart 245 → 190 piksel. */
-    <div className="px-4 pb-3 sm:px-5">
-      <dl className="divide-y divide-line-soft">
+    <div className={styles.averagesBody}>
+      <div className={styles.averageReference}>
+        <span>{t.stock.currentQuote}</span>
+        <strong className="numeral">{formatPrice(price, locale, { currency: true })}</strong>
+        <span className={styles.axisKey}><i aria-hidden />{t.stock.averageDistance}</span>
+      </div>
+      <dl className={styles.averageRows}>
         {satirlar.map(({ pencere, deger }) => {
           /* Fark yalnızca İKİSİ de varken yazılıyor; ortalama yoksa fiyatla
              kıyaslanacak bir şey de yok. */
@@ -1148,7 +1156,7 @@ async function MovingAverages({
           return (
             <div
               key={pencere}
-              className="flex items-center justify-between gap-3 py-2"
+              className={styles.averageRow}
             >
               <dt className="text-xs font-semibold text-strong">
                 {t.stock.movingAverageRow.replace("{n}", String(pencere))}
@@ -1170,11 +1178,25 @@ async function MovingAverages({
                   </span>
                 )}
               </dd>
+              {fark !== null && (
+                <div className={styles.deviationTrack} aria-hidden>
+                  <span data-motion-draw="line" className={styles.deviationFill} style={{
+                    left: `${fark < 0 ? 50 - Math.abs(fark) / extent * 50 : 50}%`,
+                    width: `${Math.abs(fark) / extent * 50}%`,
+                    background: fark >= 0 ? "var(--up)" : "var(--down)",
+                    transformOrigin: fark < 0 ? "right" : "left",
+                  }} />
+                  <i />
+                </div>
+              )}
             </div>
           );
         })}
       </dl>
-      <p className="mt-1.5 border-t border-line-soft pt-2 text-small text-muted">
+      {differences.some((value) => value !== null) && <div className={styles.deviationScale} aria-hidden>
+        <span>{formatPercent(-extent, locale)}</span><span>0</span><span>{formatPercent(extent, locale)}</span>
+      </div>}
+      <p className={styles.cardNote}>
         {t.stock.movingAveragesNote}
       </p>
     </div>
@@ -1714,7 +1736,7 @@ async function AnalystCard({
   t: Dictionary;
 }) {
   const bos = (
-    <Panel>
+    <Panel className={styles.analystPanel}>
       <PanelHeader title={t.stock.analysts} />
       <DataError message={t.common.noData} />
     </Panel>
@@ -1779,6 +1801,7 @@ async function AnalystCard({
     <Panel className={styles.analystPanel}>
       <PanelHeader
         title={t.stock.analysts}
+        action={<UsersThree className={styles.cardIcon} size={19} weight="duotone" aria-hidden />}
         /* ROZET BAŞLIĞIN SAĞINDA. Sayı bir süre dip künyesinde durdu ve
            orada künyenin ilk kelimesiydi: kartın tek cümlelik cevabı, en son
            okunan satırda kalıyordu. Başlığın yanında ilk bakışta okunuyor.
@@ -1788,7 +1811,8 @@ async function AnalystCard({
         /* Yeni grafik başlığın hemen altında aynı özeti taşıyor;
            rozetin sayısı burada tekrarlanmıyor. */
       />
-      <div className="flex flex-1 flex-col px-4 pb-3 sm:px-5">
+      <div className={styles.analystBody}>
+      <div className={styles.analystOverview}>
       <div className={styles.consensus}>
         <svg viewBox="0 0 120 120" className={styles.consensusRing} aria-hidden>
           <circle cx="60" cy="60" r="47" fill="none" stroke="var(--surface-elevated)" strokeWidth="8" />
@@ -1809,9 +1833,9 @@ async function AnalystCard({
           hâlde taşıyor, ikisi birden okununca sayılar iki kez geçiyordu.
           Dilim sınırını renk değil boşluk çiziyor — komşu basamaklar aynı
           renk ailesinden ve kontrast ayırmaya yetmiyor. */}
-      <dl className="mt-3 divide-y divide-line-soft border-t border-line-soft">
+      <dl className={styles.analystDistribution}>
         {segments.map((segment) => (
-          <div key={segment.label} className="flex items-center gap-3 py-2.5">
+          <div key={segment.label} className={styles.analystRow}>
             <dt className="flex min-w-0 flex-1 items-center gap-2 text-xs font-semibold text-strong">
               <span
                 aria-hidden
@@ -1842,18 +1866,20 @@ async function AnalystCard({
                 itmesiydi. 12 piksele ve aynı renk ailesine çekildi; sayının
                 altında değil YANINDA duruyor artık. Hâlâ ikincil: adet
                 sütunundan iki punto küçük ve ağırlığı yok. */}
-            <dd className="numeral hidden w-11 shrink-0 text-right text-small text-body sm:block">
+            <dd className="numeral w-11 shrink-0 text-right text-small text-body">
               {formatPercentPlain((segment.value / total) * 100, locale, 0)}
             </dd>
           </div>
         ))}
       </dl>
+      </div>
       {/* Listenin kapanış çizgisi VE paragrafın ayıracı aynı kural; ikinci
           bir çizgi çekilmiyor. Künye kendi çizgisini koruyor, çünkü o
           açıklamanın devamı değil ayrı bir kayıt (kapsam ve dönem). */}
-      <p className="mt-3 border-t border-line-soft pt-2.5 text-small leading-relaxed text-muted">
-        {t.stock.analystsNote}
-      </p>
+      <details className={styles.analystExplanation}>
+        <summary>{t.stock.analystReading}<span aria-hidden>+</span></summary>
+        <p className={styles.cardNote}>{t.stock.analystsNote}</p>
+      </details>
       {/* KÜNYE ÜÇ ŞEYİ SÖYLÜYOR: özet, kapsam, dönem.
           Başta yalnızca ay yazıyordu. Analist sayısı eklendi, çünkü
           dağılımın ağırlığı sayıya bağlı — "3 analistin 2'si Al diyor" ile
@@ -1867,7 +1893,7 @@ async function AnalystCard({
           uydurduğumuz bir ağırlıklandırma taşır ve 0-100 olanı sitenin
           KENDİ bilanço analizi puanıyla (AL · 75 rozetleri) karışırdı —
           okuyucu analist konsensüsünü bizim hükmümüz sanardı. */}
-      <p className="numeral mt-auto border-t border-line-soft pt-2.5 text-small text-muted">
+      <p className={cn("numeral", styles.analystStamp)}>
         {total} {plural(total, t.stock.analystOne, t.stock.analystMany)} ·{" "}
         {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
           month: "long",
@@ -2205,7 +2231,7 @@ async function ComplianceCard({
        kendi yorumunda. `flex flex-col` olmadan `flex-1` yalnızca dış
        yüksekliği büyütürdü — içerik üstte kalsın diye gövde de esneyebilir
        durumda. */
-    <Panel className="flex flex-1 flex-col">
+    <Panel className={styles.compliancePanel}>
       {/* HÜKÜM BAŞLIĞIN YANINDA. Rozet gövdenin ilk satırıydı ve kendi
           satırını tümüyle işgal ediyordu: 28 piksel rozet + 14 piksel
           aralık, üstünde de başlığın 16 piksellik alt dolgusu. Yani kartın
@@ -2229,7 +2255,7 @@ async function ComplianceCard({
           </span>
         }
       />
-      <div className="px-4 pb-3.5 sm:px-5">
+      <div className={styles.complianceBody}>
         {result.businessReasonKey && (
           <p className="mt-2.5 text-xs leading-relaxed text-body">
             {t.stock.complianceReasons[result.businessReasonKey]}
@@ -2250,7 +2276,7 @@ async function ComplianceCard({
         )}
 
         {result.ratiosKnown ? (
-          <dl className="mt-3 flex flex-col gap-2.5">
+          <dl className={styles.complianceRatios}>
             {ratios.map(([label, value]) => {
               const over = value !== null && value >= COMPLIANCE_THRESHOLD;
               const width =
@@ -2258,8 +2284,8 @@ async function ComplianceCard({
                   ? 0
                   : Math.min((value / COMPLIANCE_THRESHOLD) * 100, 100);
               return (
-                <div key={label}>
-                  <div className="flex items-baseline justify-between gap-2">
+                <div key={label} className={styles.complianceRatio}>
+                  <div className={styles.complianceReading}>
                     <dt className="text-tiny leading-tight text-muted">
                       {label}
                     </dt>
@@ -2278,25 +2304,23 @@ async function ComplianceCard({
                     </dd>
                   </div>
                   {/* Eşiğe ne kadar yakın — çubuk %33'te dolar */}
-                  <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-surface-sunken">
+                  <div className={styles.complianceTrack}>
                     <div
-                      className={cn("bar-fill h-full", over ? "bg-down" : "bg-up")}
+                      data-motion-draw="line"
+                      className={cn("h-full", over ? "bg-down" : "bg-up")}
                       style={{ width: `${width}%` }}
                     />
                   </div>
+                  <div className={styles.complianceScale}><span className="numeral">0</span><span>{t.stock.complianceLimit} <b className="numeral">{formatPercentPlain(COMPLIANCE_THRESHOLD, locale, 0)}</b></span></div>
                 </div>
               );
             })}
-            <p className="numeral text-nano text-muted">
               {/* Yüzde işareti biçimlendiriciye ait — kartın 18 satır
                   yukarısındaki kural bunu açıkça yazıyor ve oranların
                   kendisi ona uyuyor. Sınır satırı atlanmıştı: elden yazılan
                   "%" iki dilde de önde kalıyordu, oysa İngilizcede sonda
                   yazılır ("33%"). `digits: 0` şart — varsayılan 1 olduğu için
                   argümansız çağrı "%33,0" basardı. */}
-              {t.stock.complianceLimit}:{" "}
-              {formatPercentPlain(COMPLIANCE_THRESHOLD, locale, 0)}
-            </p>
           </dl>
         ) : currency && currency !== "USD" ? (
           /* Oranlar bilerek hesaplanmadı: pay ana borsanın parasında, payda

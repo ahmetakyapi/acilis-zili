@@ -608,6 +608,9 @@ const tr = {
     forwardPe: "İleri F/K",
     movingAverages: "Hareketli Ortalamalar",
     movingAverageRow: "{n} Günlük",
+    currentQuote: "Son Fiyat",
+    averageDistance: "Ortalamaya Göre Fark",
+    analystReading: "12 Aylık Tavsiye Dağılımı",
     movingAveragesNote:
       "Son 50, 100 ve 200 işlem gününün kapanış ortalaması. Yanındaki yüzde, güncel fiyatın ortalamaya göre farkı.",
     movingAveragesShort:

@@ -353,13 +353,16 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         const delay = Math.min(400, Math.max(0, siblings.indexOf(element)) * 75);
         const bar = element.dataset.motionDraw === "bar";
         const line = element.dataset.motionDraw === "line";
+        // Signed distance bars start at their zero reference: negative
+        // values grow from the right. Existing lines retain their origin.
+        const lineOrigin = element.style.transformOrigin || "left center";
         if (bar || line) element.getAnimations().forEach((animation) => animation.cancel());
         /* Web Animations paints without mutating style/data attributes.
            Inline mutations on streamed Link nodes raced their hydration
            and produced a server/client mismatch. No timing guess is needed. */
         const animation = element.animate(bar
           ? [{ transform: "scaleY(.04)", transformOrigin: "center bottom" }, { transform: "scaleY(1)", transformOrigin: "center bottom" }]
-          : line ? [{ transform: "scaleX(.04)", transformOrigin: "left center" }, { transform: "scaleX(1)", transformOrigin: "left center" }]
+          : line ? [{ transform: "scaleX(.04)", transformOrigin: lineOrigin }, { transform: "scaleX(1)", transformOrigin: lineOrigin }]
           : [{ opacity: .25, transform: "translateY(24px)" }, { opacity: 1, transform: "none" }],
           { duration: bar ? 1050 : 750, delay, easing: "cubic-bezier(.22,1,.36,1)", fill: "both" });
         animation.pause();
