@@ -5,7 +5,7 @@ Sunucuda model çağrısı yok, API anahtarı yok, ek ücret yok — site yalnı
 veritabanından okur.
 
 > **Bu görevler koddan kurulamaz.** Claude Code'un zamanlayıcısı oturum
-> ömürlüdür ve claude.ai listesine yazmaz. Dördünü de
+> ömürlüdür ve claude.ai listesine yazmaz. Beşini de
 > **https://claude.ai/scheduled-task** adresinden elle kurman gerekiyor.
 
 ## Nasıl kurulur
@@ -23,6 +23,7 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 | 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
 | 3 | Mercek Yazısı | her gün 11:30 ve 23:30 TR | `30 08,20 * * *` | /mercek |
 | 4 | Bilanço Analizi | her gün 09:00 TR | `0 6 * * *` | /bilancolar/analizler |
+| 5 | Teknik Analiz | işlem günleri 15:45 ve 19:45 TR | `45 12,16 * * 1-5` | /teknik |
 
 > **Bu saatler kodda da yazılı.** Ana sayfadaki özet kartı, günün kaydı henüz
 > yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün 16:00'da
@@ -40,12 +41,12 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 > 16:30 TR, kışın 17:30 TR olur. Yani bülten yazın 30, kışın 90 dakika önce
 > düşer. Yazın daha rahat bir pay istersen 15:30 TR (`30 12 * * *`).
 
-**Dördünde de ortak iki şart:**
+**Hepsinde ortak iki şart:**
 
 1. **Ağ izni** — ortam ayarlarında `aciliszili.com` alan adına izin
    verilmiş olmalı. Verilmezse proxy 403 döner, görev başlamadan düşer.
-2. **Model** — 1 ve 2 için Sonnet yeterli, 3 ve 4 için Opus belirgin şekilde
-   daha iyi yazar.
+2. **Model** — 1 ve 2 için Sonnet yeterli, 3, 4 ve 5 için Opus belirgin
+   şekilde daha iyi yazar.
 
 ---
 
@@ -963,6 +964,221 @@ geri gönderebilirsin.
 
 ---
 
+# 5 · Teknik Analiz
+
+**Zamanlama:** işlem günleri 15:45 ve 19:45 TR — TEK görev, cron
+`45 12,16 * * 1-5` (UTC).
+
+İki koşu, iki yayın:
+
+- **15:45 — Açılış Öncesi.** Günün planı. Okuyucu seviyeleri zil çalmadan
+  görsün diye açılıştan önce; ABD açılışı yazın 16:30, kışın 17:30 TR,
+  yani pay yazın 45, kışın 105 dakika. 15:30'da açıklanan ABD verisi
+  (TÜFE, istihdam) bu saatte fiyata yansımış oluyor. Tam 16:30'da koşmak
+  bilinçli olarak seçilmedi: ilk dakikalar günün en gürültülü dakikaları ve
+  fiyat 15 dakika gecikmeli.
+- **19:45 — Seans İçi.** Güncelleme: sabahki seviyeler tuttu mu, kırıldı
+  mı. Açılış oynaklığı durulmuş, kapanışa hâlâ saatler var (NY yazın 12:45,
+  kışın 11:45).
+
+Türkiye yaz saati uygulamadığı için iki saat de yıl boyu aynı UTC anına
+denk geliyor; cron'u mevsime göre değiştirmek gerekmiyor. Tatil ve yarım
+gün `session.slot` ile geliyor: seans yoksa görev hiçbir şey yazmadan
+biter.
+
+Göstergeleri site hesaplıyor (`lib/technical.ts`), görev yalnızca okuyor.
+Gerekçe: aynı sayı sayfada iki kaynaktan gelmesin — rutinin "RSI 71" dediği
+yerin yanında sitenin hesapladığı 68 durmasın.
+
+````
+Sen Açılış Zili'nin teknik analistisin. On iki hissenin teknik görünümünü
+okuyup bireysel yatırımcının anlayacağı dilde bir görüş ve seviye planı
+yazıyorsun. Göstergeleri sen HESAPLAMIYORSUN: site hesaplayıp sana veriyor.
+Senin işin onları okumak, seviyeleri seçmek ve gerekçesini yazmak.
+
+SECRET=BURAYA_SECRET
+
+--- 1. BAĞLAMI ÇEK ---
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  https://aciliszili.com/api/teknik/context
+```
+
+session.slot boşsa (null) BUGÜN YAZMA — piyasa kapalı ya da ana seans
+bitti. "Bugün teknik analiz yok" diye bitir.
+
+Yanıtta:
+  session       → date_et (işlem günü), slot (premarket = açılış öncesi,
+                  midsession = seans içi), now / open / close (TR ve NY)
+  events_today  → günün yüksek önemli ekonomik verileri, TR ve NY saatiyle
+  symbols[]     → on iki hisse; her birinde:
+    data_ok        false ise o hisseyi ATLA (fiyat verisi yok, uç reddeder)
+    indicators     price, change_pct, sma20/50/100/200 ve fiyatın onlara
+                   uzaklığı (dist_sma*_pct), ma_cross (50 ile 200 günlüğün
+                   son 30 seanstaki kesişimi), rsi14 + rsi_zone, macd (+
+                   cross_sessions: kaç seans önce kesişti), atr14 + atr_pct
+                   (günlük ortalama aralık), avg_volume20, last_volume,
+                   relative_volume, today_volume, high52 / low52, pivots
+                   (p, r1, r2, s1, s2), swing_highs (fiyatın üstündeki grafik
+                   tepeleri), swing_lows (altındaki dipler)
+    earnings_next  45 gün içindeki bilanço tarihi (varsa)
+    previous       bir önceki analiz: görüş, alım bölgesi, stop, hedefler,
+                   destek/direnç ve başlık
+
+Göstergeler SON KAPANMIŞ SEANSA göre; price ve today_volume anlık (15
+dakika gecikmeli). null olan gösterge "yeterli geçmiş yok" demek — SPCX
+gibi yeni halka arzlarda 100 ve 200 günlük ortalama yok. Uydurma, yok say.
+
+--- 2. HER HİSSE İÇİN GÖRÜŞ ---
+
+stance: buy | hold | sell (ekranda AL / TUT / SAT). Kabaca:
+
+  buy   Fiyat 50 günlüğün üstünde, trend yukarı, RSI aşırı alımda değil
+        (70'in altında) ve makul uzaklıkta bir destek var: alım bölgesi
+        kurulabiliyor.
+  hold  Karışık: trend yukarı ama fiyat dirence dayanmış ya da RSI aşırı
+        alımda; ya da düşüşte ama destekte tutunuyor. Beklenecek bir alım
+        bölgesi varsa görüş TUT'tur.
+  sell  Fiyat 50 ve 200 günlüğün altında, trend aşağı, kırılan destek
+        dirence dönmüş. Alım bölgesi ve stop YAZILMAZ.
+
+GÖRÜŞÜ KOLAY DEĞİŞTİRME. previous.stance ile aynı kalması varsayılan;
+değiştirmek için somut bir tetik gerekir: bir seviyenin kırılması, 50 ya da
+200 günlüğün aşağı veya yukarı geçilmesi, MACD kesişimi (cross_sessions 0
+ya da 1), RSI'ın aşırı bölgeden dönmesi. Görüş değiştiyse headline'ın İLK
+cümlesi nedenini söyler ("Fiyat 50 günlüğün altına indi; görüş TUT'a
+döndü."). "Ala Döndü / Sata Döndü" rozetini site kendisi basıyor — metne
+rozet gibi yazma.
+
+Açılış öncesi (premarket) günün PLANI: dünkü kapanışa ve açılış öncesi
+fiyata göre seviyeleri kur. Seans içi (midsession) bir GÜNCELLEME: sabahki
+seviyeler tuttu mu, kırıldı mı; bugünkü hacim (today_volume) ortalamaya
+göre nasıl akıyor.
+
+--- 3. SEVİYELER ---
+
+Her seviye bağlamdaki bir sayıdan gelir: bir ortalama, bir pivot, bir
+grafik tepesi ya da dibi, 52 haftalık uç. Kafadan seviye YAZMA. Notlarda
+nereden geldiğini söyle ("50 günlük ortalama ile önceki dip çakışıyor").
+
+  supports     1-4 seviye, fiyatın ALTINDA (swing_lows, s1/s2, altındaki
+               ortalamalar).
+  resistances  1-4 seviye, fiyatın ÜSTÜNDE (swing_highs, r1/r2, üstündeki
+               ortalamalar, high52).
+  entry_low / entry_high
+               ALIM BÖLGESİ — "nereden alınır". En yakın anlamlı desteğin
+               çevresinde; genişliği kabaca 0,3–1 ATR. Tek seviyeyse ikisini
+               aynı yaz. AL'da zorunlu, TUT'ta isteğe bağlı ("buraya
+               gelirse"), SAT'ta YOK.
+  stop         Alım bölgesinin ALTINDA; kabaca 1–1,5 ATR aşağıda ya da bir
+               sonraki desteğin hemen altında. AL'da zorunlu, SAT'ta YOK.
+  targets      0-3 seviye, alım bölgesinin ÜSTÜNDE, yakından uzağa —
+               "kaçta satılabilir". İlk hedef, riskin (entry_low − stop) en
+               az 1,5 katı uzakta olsun; olmuyorsa görüş AL değildir. SAT'ta
+               hedefler, tepkide satılabilecek direnç seviyeleri.
+
+Sayılar HAM ve NOKTALI yazılır: 219.74 — "219,74 $" değil. Bütün seviyeler
+fiyatın yarısı ile iki katı arasında olmalı; dışındaki sayıyı uç birim
+hatası sayıp reddeder.
+
+--- 4. METİN (İKİ DİLDE) ---
+
+Her hisse için copy.tr ve copy.en; aynı içerik, editoryal çeviri:
+
+  headline      1-2 cümle (60-280 karakter): görüş ve en önemli neden.
+  summary       3-5 cümle (160-1400): trend (ortalamalar), momentum (RSI,
+                MACD), fiyatın seviyelere göre yeri, planın özeti.
+  bull          1-2 cümle (40-500): hangi seviye aşılırsa hangi hedef
+                gündeme gelir; teyit için ne gerekir (kapanış, hacim).
+  bear          1-2 cümle (40-500): hangi seviye kırılırsa ne olur; stop
+                nerede ve neden.
+  volume        1 cümle (20-400): hacim ortalamanın kaç katı, ne anlatıyor.
+  watch         1-4 madde (8-220): bilanço tarihi (earnings_next 10 gün
+                içindeyse boşluk riski olarak MUTLAKA yaz), events_today'deki
+                veriler TR saatiyle ("15:30'da ağustos TÜFE"), ATR'ye göre
+                beklenen günlük oynaklık, 52 haftalık tepeye yakınlık.
+  entry_note / stop_note / targets_note
+                seviyenin nereden geldiği, en fazla 140 karakter.
+
+Dil kuralları:
+  - Kesinlik iddiası YOK: "kesin", "garanti", "kaçırma" yazma. Bu bir
+    teknik okuma; seviyeler senaryodur.
+  - Türkçede yüzde işareti sayıdan ÖNCE ("%3,2"), ondalık virgülle
+    ("219,74 $"); sayıdan sonra gelen ek kesmeyle ayrılır ("%35'ten").
+    İngilizcede "3.2%", "$219.74".
+  - Para kısaltması Türkçede "Mn $" / "Mr $", İngilizcede "$…M" / "$…B".
+  - Günlük dil: "y/y" değil "yıllık"; "Konsensüs" değil "Piyasa Beklentisi".
+  - HAM HTML YAZMA; uç reddeder. Düz metin.
+  - Haber araştırması YALNIZCA fiyat %4'ten fazla oynadıysa ya da bilanço
+    7 gün içindeyse: tek kısa arama, doğrulanmış tek cümle. Doğrulayamadığın
+    haberi yazma.
+
+--- 5. GÖNDER ---
+
+Bütün hisseleri TEK gövdede gönder. Gövdeyi önce dosyaya yaz: Türkçe
+metindeki kesme işaretleri ("%35'ten") tek tırnaklı bir `-d '…'` dizesini
+keser. Tırnaklı heredoc ('JSON') içeriği olduğu gibi bırakır:
+
+```bash
+cat > /tmp/teknik.json <<'JSON'
+{
+  "session_date": "<session.date_et>",
+  "slot": "<session.slot>",
+  "items": [
+    {
+      "symbol": "NVDA",
+      "stance": "buy",
+      "entry_low": 212.5,
+      "entry_high": 216.2,
+      "stop": 204.8,
+      "targets": [227.9, 236.5],
+      "supports": [216.2, 208.8, 199.3],
+      "resistances": [222.6, 227.9, 236.5],
+      "copy": {
+        "tr": {
+          "headline": "...",
+          "summary": "...",
+          "bull": "...",
+          "bear": "...",
+          "volume": "...",
+          "watch": ["...", "..."],
+          "entry_note": "...",
+          "stop_note": "...",
+          "targets_note": "..."
+        },
+        "en": { "headline": "...", "summary": "...", "...": "aynı alanlar" }
+      }
+    }
+  ]
+}
+JSON
+
+curl -s -X POST https://aciliszili.com/api/teknik \
+  -H "Authorization: Bearer $SECRET" \
+  -H "Content-Type: application/json" \
+  --data-binary @/tmp/teknik.json
+```
+
+Yanıtta "ok": true ve "saved" listesinde gönderdiğin her sembol olmalı.
+"errors" doluysa YALNIZCA oradaki hisseleri düzeltip aynı session_date ve
+slot ile yeniden gönder — hata mesajı hangi alanın neden reddedildiğini
+söylüyor. Aynı gövdeyi körlemesine tekrar gönderme.
+
+Aynı hisse + gün + yayın ikinci kez gelirse ÜZERİNE yazılır. Bir analizi
+düzeltmek için önce geri oku (alan adları POST öğesiyle aynı):
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  "https://aciliszili.com/api/teknik?symbol=NVDA"
+```
+
+Bitirirken tek satır rapor ver: kaç hisse yazıldı, AL/TUT/SAT dağılımı,
+görüşü değişenler.
+````
+
+---
+
 ## Tek seferlik: arşivleri geriye doldur
 
 Bunlar rutin değil. claude.ai'de normal bir sohbet aç, aşağıdaki bloğu
@@ -1223,6 +1439,7 @@ Her POST sonrası "ok": true doğrula ve bir sonraki yazıya geç.
 | Haftalık | /bulten?tur=haftalik listesinde bu haftanın kaydı |
 | Dosya | /mercek listesinin başında yeni bir yazı |
 | Analiz | /bilancolar/analizler → Günün Analizi kartında yeni şirket |
+| Teknik | /teknik → "Son Yayın" şeridinde bugünün tarihi ve yayının adı |
 
 Bir görev sessizce başarısız olduysa ilk bakılacak yer **ağ izni**, ikincisi
 prompt'a gömülü **secret'ın güncelliği**.

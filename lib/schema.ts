@@ -13,6 +13,9 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+/* Yalnızca TİP: derlemede siliniyor. drizzle-kit bu dosyayı `@/` takma
+   adlarını çözmeden yüklüyor, yani buradan bir DEĞER içe aktarılamaz. */
+import type { TechnicalCopy, TechnicalSnapshot } from "./technical";
 
 /* ==========================================================================
    Kullanıcı ve takip listeleri
@@ -598,6 +601,63 @@ export const earningsAnalyses = pgTable(
   ],
 );
 
+/**
+ * Teknik analizler — on iki hissenin günde iki kez yazılan görüşü.
+ *
+ * Kaynak `lib/technical.ts` (liste, göstergeler) ve rutin
+ * (docs/claude-rutinler.md § 5). Anahtar `symbol + session_date + slot`:
+ * her işlem günü iki analiz, açılış öncesi ve seans içi. Aynı üçlü ikinci
+ * kez gelirse ÜZERİNE yazılır — rutin bir analizi düzeltebilir.
+ *
+ * DİL BAŞINA SATIR DEĞİL, TEK SATIR. Mercek ve bilanço analizi dil başına
+ * ayrı satır tutuyor; burada o düzen bir tutarsızlığa kapı açardı: görüş
+ * ve seviyeler DİLDEN BAĞIMSIZ sayılar ve iki ayrı gönderim, İngilizcede
+ * farklı bir stop ya da farklı bir görüş taşıyabilirdi. Sayılar satırda bir
+ * kez, iki dilin metni `copy` içinde. İngilizce yoksa sayfa Türkçesini not
+ * düşerek gösterir.
+ *
+ * `snapshot` göstergelerin YAZMA ANINDAKİ fotoğrafı; gerekçesi
+ * `TechnicalSnapshot` yorumunda. Uç onu rutinden almıyor, kendisi
+ * hesaplıyor — gövdede sayı göndermek sayıyı değiştirmek demek olurdu.
+ */
+export const technicalAnalyses = pgTable(
+  "technical_analyses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    symbol: text("symbol").notNull(),
+    /** Analizin ait olduğu işlem günü (ET). */
+    sessionDate: date("session_date").notNull(),
+    /** premarket | midsession — açılış öncesi ya da seans içi. */
+    slot: text("slot").notNull(),
+    /** buy | hold | sell — ekranda AL/TUT/SAT; bilanço görüşüyle aynı sözlük. */
+    stance: text("stance").notNull(),
+    /** Alım bölgesi. İkisi birlikte gelir; tek seviye verilirse ikisi aynı. */
+    entryLow: doublePrecision("entry_low"),
+    entryHigh: doublePrecision("entry_high"),
+    /** Bunun altında kapanış senaryoyu bozar. */
+    stop: doublePrecision("stop"),
+    /** Kâr alma / satış seviyeleri — fiyatın ÜSTÜNDE, yakından uzağa. */
+    targets: jsonb("targets").$type<number[]>().notNull(),
+    supports: jsonb("supports").$type<number[]>().notNull(),
+    resistances: jsonb("resistances").$type<number[]>().notNull(),
+    copy: jsonb("copy")
+      .$type<{ tr: TechnicalCopy; en?: TechnicalCopy | null }>()
+      .notNull(),
+    snapshot: jsonb("snapshot").$type<TechnicalSnapshot>().notNull(),
+    generatedBy: text("generated_by").notNull().default("claude"),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("technical_analyses_key").on(t.symbol, t.sessionDate, t.slot),
+    index("technical_analyses_session_idx").on(t.sessionDate),
+  ],
+);
+
 
 /* ==========================================================================
    Ölçüm — birinci taraf, çerezsiz sayfa görüntülemeleri
@@ -676,6 +736,7 @@ export type DailyBriefRow = typeof dailyBriefs.$inferSelect;
 export type StoryRow = typeof stories.$inferSelect;
 export type MarketHolidayRow = typeof marketHolidays.$inferSelect;
 export type EarningsAnalysisRow = typeof earningsAnalyses.$inferSelect;
+export type TechnicalAnalysisRow = typeof technicalAnalyses.$inferSelect;
 export type PageViewRow = typeof pageViews.$inferSelect;
 
 /** Kullanıcı rolleri — "admin" yönetim ekranını açar, başka ayrıcalığı yok. */

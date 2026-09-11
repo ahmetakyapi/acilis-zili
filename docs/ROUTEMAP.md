@@ -10,7 +10,7 @@
 > rota eksikti ve okuyan onu güncel sanıyordu. İki yerde tutulan bir liste er geç
 > birbirinden ayrı düşer. Rota tablosu artık yalnızca README'de.
 
-**Son güncelleme:** 2026-08-29
+**Son güncelleme:** 2026-09-11
 **Durum:** 🟢 CANLI — https://aciliszili.com
 
 ---
@@ -19,13 +19,13 @@
 
 | | |
 |---|---|
-| Sayfa rotası | 32 (`/en` önekiyle ikinci bir adreste daha) |
-| API ucu | 14 |
-| Veritabanı tablosu | 16 · 17 migration |
+| Sayfa rotası | 34 (`/en` önekiyle ikinci bir adreste daha) |
+| API ucu | 16 |
+| Veritabanı tablosu | 17 · 18 migration |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB |
 | Ortam değişkeni | 12 (`.env.example`) |
 | Cron | `/api/cron/daily` — hafta içi 10:30 UTC (13:30 TR) |
-| İçerik rutini | 4 adet, claude.ai üzerinde elle kurulu |
+| İçerik rutini | 5 adet, claude.ai üzerinde elle kurulu (teknik analiz günde iki koşu) |
 
 **Tohumlanan veri:** 23 NYSE tatili (üçü yarım gün) · CPI/FOMC/istihdam yayın
 takvimi · 81 temel sembol · 635 endeks üyesi (S&P 500 + Nasdaq 100 + Dow,
@@ -45,6 +45,9 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       çok değeri olan ilk adım muhtemelen `lib/market-hours.ts` ve
       `lib/compare.ts` gibi saf yardımcıların birim testi olurdu.
 - [ ] **Kayıt → giriş → favori akışının canlıda kullanıcı testi.**
+- [ ] **Teknik analiz rutininin claude.ai'de kurulması** — tek görev, günde
+      iki koşu (`docs/claude-rutinler.md` § 5). Kurulana kadar `/teknik` boş
+      durumu gösterir.
 - [ ] (İsteğe bağlı) Neon şifresi + Finnhub anahtarı rotasyonu.
 
 ---
@@ -79,6 +82,11 @@ gelsin.
 - **Bilanço analizi panelden düzenlenmiyor.** Analiz serbest metin değil, on
   beş alanlı yapılandırılmış bir kayıt; bir metin kutusuna indirmek
   düzenlemek değil bozmak olurdu. Eksikleri İçerik ekranı listeliyor.
+- **Teknik analizin masthead sekmesi yok.** Sığmıyor: 1024px'de İngilizce
+  masthead'de sekmesiz bile 20 piksel kalıyor, sekmeyle 1280'de −39,
+  1536'da −8 (ölçüm `components/layout/nav-items.ts` içinde). Yer açmak
+  başka bir sekmeyi daraltmak demek; o karar masthead sırasının sahibine
+  ait. Menü'den ve alt bilgiden açılıyor.
 
 ---
 

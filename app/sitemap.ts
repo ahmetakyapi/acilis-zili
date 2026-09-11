@@ -5,12 +5,14 @@ import { SITE_URL } from "@/lib/site";
 import { LOCALES } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
 import { analysisHref } from "@/lib/analysis";
+import { technicalHref } from "@/lib/technical";
+import { getTechnicalBoard } from "@/lib/technical-data";
 
 /**
  * Site haritası.
  *
- * Dört kaynaktan derlenir: durağan ekranlar, depodaki rehber yazıları,
- * veritabanındaki mercek yazıları ve bilanço analizleri. Şirket sayfaları (/hisse/*) bilinçli
+ * Beş kaynaktan derlenir: durağan ekranlar, depodaki rehber yazıları,
+ * veritabanındaki mercek yazıları, bilanço analizleri ve teknik analizler. Şirket sayfaları (/hisse/*) bilinçli
  * olarak YOK — beş yüzden fazla sayfa üretirdi, içerikleri neredeyse
  * tamamen sağlayıcı verisi ve her biri her gün değişiyor. Arama motoruna
  * gönderilecek asıl değer, yazılan metinler.
@@ -29,6 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/piyasalar", priority: 0.8, frequency: "hourly" },
     { path: "/bilancolar", priority: 0.8, frequency: "daily" },
     { path: "/bilancolar/analizler", priority: 0.9, frequency: "daily" },
+    { path: "/teknik", priority: 0.8, frequency: "hourly" },
     { path: "/takvim", priority: 0.8, frequency: "daily" },
     { path: "/makro", priority: 0.7, frequency: "daily" },
     { path: "/sirketler", priority: 0.6, frequency: "weekly" },
@@ -128,6 +131,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch {
     // Aynı gerekçe: analiz tablosu okunamazsa harita eksik ama geçerli kalır.
+  }
+
+  /* TEKNİK ANALİZ SAYFALARI yazılmış metin taşıyor, hisse sayfası gibi
+     yalnızca sağlayıcı verisi değil — o yüzden haritada. Dil kuralı mercekle
+     aynı: İngilizce metni olmayan analiz /en adresiyle listelenmiyor.
+     Yükleyici hatayı kendisi yutuyor (boş liste döner). */
+  for (const { row } of await getTechnicalBoard()) {
+    for (const locale of LOCALES) {
+      if (locale === "en" && !row.copy.en) continue;
+      entries.push({
+        url: `${SITE_URL}${withLocale(technicalHref(row.symbol), locale)}`,
+        lastModified: row.updatedAt,
+        changeFrequency: "daily",
+        priority: 0.6,
+      });
+    }
   }
 
   return entries;

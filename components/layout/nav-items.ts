@@ -4,6 +4,7 @@ import {
   BookOpen,
   Buildings,
   CalendarBlank,
+  ChartLineUp,
   Heart,
   ListDashes,
   Newspaper,
@@ -95,6 +96,20 @@ export const NAV_ITEMS: NavItem[] = [
     inMasthead: true,
     inBottomBar: true,
     shortLabel: (t) => t.nav.earningsShort,
+  },
+  {
+    /* MASTHEAD'DE YOK — SIĞMIYOR. Ölçüldü (misafir, sekmeyle): 1024px'de
+       TR aralık 2px, EN −70px; 1280'de EN −39px; 1536'da (künye satırı
+       açılınca) EN −8px — sekmeler arama düğmesinin altına biniyordu ve
+       sayfa taşmadığı için taşma taraması bunu görmüyor. Sekmesiz EN aralık
+       1024'te zaten 20px; hiçbir İngilizce etiket oraya sığmıyor. Yeri
+       açmak başka bir sekmeyi daraltmak demek ve masthead sırası
+       kullanıcının kararı. Şimdilik Menü'den ve alt bilgiden açılıyor. */
+    href: "/teknik",
+    label: (t) => t.nav.technical,
+    icon: ChartLineUp,
+    inMasthead: false,
+    inBottomBar: false,
   },
   {
     href: "/takvim",

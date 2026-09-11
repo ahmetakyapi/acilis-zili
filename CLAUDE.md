@@ -256,6 +256,16 @@ eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye ba
   `/bilancolar/{sembol}/{donem}`. Sekme çubuğu paylaşılan bir layout'ta
   DEĞİL, üç sayfanın her biri kendi basıyor: detay sayfası aynı segmentin
   altında ve orada sekme istenmiyor.
+- **Teknik analizler** de veritabanında (`technical_analyses`) ve aynı
+  köprüden: `/api/teknik` POST bir yayını TOPLU yazar (`{session_date,
+  slot, items}`), `?symbol=` geri okur, `/api/teknik/context` göstergeleri
+  HESAPLAYIP verir. Rutin sayı üretmez, yorum yazar; gösterge fotoğrafını
+  (`snapshot`) yazma ucu kendisi hesaplar. Satır dil başına değil YAYIN
+  başına — görüş ve seviyeler iki dilde aynı sayı, metin `copy.{tr,en}`
+  içinde. Sembol listesi tek yerde: `lib/technical.ts` →
+  `TECHNICAL_SYMBOLS`; yazma yolu `lib/technical-data.ts`. Rutin promptu
+  `docs/claude-rutinler.md` § 5. Masthead'de sekmesi YOK, sığmıyor
+  (ölçüm `components/layout/nav-items.ts`te).
 - **İçerik iki dilli.** Rehber: `content/guide/` üç katman (meta + tr + en),
   eksik çeviri derlemeyi kırar. Mercek: aynı slug iki `locale` satırı; çeviri
   yoksa sayfa orijinali "TR" rozeti ve notla gösterir, boş kalmaz.

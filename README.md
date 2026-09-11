@@ -41,6 +41,15 @@ gelir beklentisi ne, gerçekleşen ne çıktı. Takvimi kendi takvimine `.ics`
 olarak ekleyebiliyorsun. Açıklanan çeyrekler için ayrıca uzun analizler var:
 skor, görüş, hedef fiyat, güçlü yönler ve riskler, beklenen gelişmeler.
 
+### Teknik görünümü oku
+
+On iki hissenin (MU, SNDK, NVDA, SPCX, TSLA, GOOGL, META, NBIS, BE, RKLB, MRVL,
+ONDS) her işlem günü iki kez yenilenen teknik analizi: açılıştan önce ve seans
+içinde. Al/Tut/Sat görüşü, alım bölgesi, hedefler ve stop, destek ve dirençler,
+yükseliş ve düşüş senaryosu. Ortalamaları, RSI'ı, MACD'yi, hacmi ve pivotları
+site kendi fiyat verisinden hesaplıyor; görüşü ve seviyeleri claude.ai rutini
+yazıyor. Görüş bir önceki analizden farklıysa kartta "Ala Döndü" rozeti çıkıyor.
+
 ### Ekonomik veriyi ve makroyu oku
 
 CPI, çekirdek enflasyon, FOMC kararları ve basın toplantıları, tarım dışı
@@ -86,7 +95,7 @@ gösterilmez — Brent kartı bu yüzden kaldırıldı.
 
 ## Ekranlar
 
-29 sayfa rotası var; hepsi istek başına sunucuda çiziliyor (kök layout dili ve
+31 sayfa rotası var; hepsi istek başına sunucuda çiziliyor (kök layout dili ve
 temayı çerezden okuduğu için statik ön çizim yapılmıyor).
 
 ### Ana akış
@@ -114,6 +123,16 @@ istenmiyor.
 | `/bilancolar/analizler` | Okunmuş çeyrekler — skor, görüş, hedef fiyat |
 | `/bilancolar/takip` | Benim izlediklerimin bilançoları |
 | `/bilancolar/[symbol]/[period]` | Bu çeyrek ne anlattı — tam analiz |
+
+### Teknik analiz
+
+Masthead'de sekmesi yok — sığmıyor (ölçümü `components/layout/nav-items.ts`
+içinde); Menü'den ve alt bilgiden açılıyor.
+
+| Rota | Soru |
+|---|---|
+| `/teknik` | On iki hisse bugün teknik olarak nerede — görüş, seviye çizgisi, göstergeler |
+| `/teknik/[symbol]` | Nereden alınır, nerede satılır, nerede vazgeçilir — seviye merdiveni, göstergeler, senaryolar, görüş geçmişi |
 
 ### Okuma
 
@@ -234,7 +253,7 @@ hatanın onu doğurduğunu anlatırlar.
 
 ## Veri modeli
 
-15 tablo. Kim yazar sütunu önemli: bir tablonun tazeliği onu yazanın ritmine bağlı.
+17 tablo. Kim yazar sütunu önemli: bir tablonun tazeliği onu yazanın ritmine bağlı.
 
 | Tablo | Ne tutar | Kim yazar |
 |---|---|---|
@@ -249,7 +268,9 @@ hatanın onu doğurduğunu anlatırlar.
 | `news` | Haber akışı + çevirisi | Cron + hisse sayfası açılışı |
 | `daily_briefs` | Günlük ve haftalık bülten | claude.ai rutini |
 | `stories` | Mercek yazıları | claude.ai rutini |
+| `story_revisions` | Mercek ve bülten düzeltilirken üzerine yazılan hâlin fotoğrafı (son on sürüm) | İçerik yazma yolu |
 | `earnings_analyses` | Bilanço analizleri — sayılar **ham** tutulur (8.97e9), sunum katmanı biçimlendirir | claude.ai rutini |
+| `technical_analyses` | Teknik analizler — sembol × işlem günü × yayın başına tek satır, iki dilin metni `copy` içinde, göstergelerin yazma anındaki fotoğrafı `snapshot`ta | claude.ai rutini (gösterge fotoğrafını uç hesaplar) |
 | `page_views` | Çerezsiz sayfa ölçümü | İstemci beacon |
 
 Migration disiplini: şema değişince **yeni** migration dosyası üretilir, eskisi
@@ -292,10 +313,12 @@ endeks bileşimleri.
 | Haftalık bülten | pazartesi 09:30 TR | `POST /api/brief` (`period: weekly`) → `/bulten` |
 | Mercek yazısı | her gün 11:30 ve 23:30 TR | `POST /api/mercek` → `/mercek` |
 | Bilanço analizi | her gün 09:00 TR | `POST /api/analiz` → `/bilancolar/analizler` |
+| Teknik analiz | işlem günleri 15:45 ve 19:45 TR | `POST /api/teknik` → `/teknik` |
 
-Dördü de `BRIEF_SECRET` ile korunuyor ve her uç `?slug=` / `?symbol=&period=` ile
-yazdığını geri okuyabiliyor — rutin güncelleme yaparken bu köprüyü kullanıyor.
-Ayrıca üç `context` ucu rutine ham veri ve aday listesi veriyor.
+Beşi de `BRIEF_SECRET` ile korunuyor ve her uç `?slug=` / `?symbol=&period=` /
+`?symbol=` ile yazdığını geri okuyabiliyor — rutin güncelleme yaparken bu
+köprüyü kullanıyor. Ayrıca dört `context` ucu rutine ham veri ve aday listesi
+veriyor; teknik analizinki göstergeleri de hesaplayıp veriyor.
 
 Prompt'ların tamamı ve kurulum adımları `docs/claude-rutinler.md` içinde.
 **Görevler koddan kurulamaz**, claude.ai arayüzünden elle kurulur.
@@ -500,20 +523,22 @@ atladığını raporlar — yarım kalmış bir tur sessizce başarılı görün
 ```
 app/
   (app)/             # sayfalar — Bugün, piyasalar, şirketler, hisse, karşılaştır,
-                     #   takvim, bilançolar, mercek, rehber, bülten, haberler, hesap
+                     #   takvim, bilançolar, teknik, mercek, rehber, bülten, haberler, hesap
   admin/             # yönetim — kabuğun dışında, yetkisizde 404
   api/               # chart, day-flow, karsilastir, search, takvim, olcum,
-                     #   brief, mercek, analiz (+ context uçları), cron, auth, debug
+                     #   brief, mercek, analiz, teknik (+ context uçları), cron, auth, debug
 components/
   article/           # ArticleBody — ::: blok ailesi burada çizilir
   layout/            # AppShell, masthead, alt sekme çubuğu, piyasa şeridi, arama paleti
   today/             # gün şeridi, bülten anahtarı, geri sayım, kolon doldurucu
   markets/           # karşılaştırma (canlı aralık katmanı), korku endeksi
-  stock/ earnings/ stories/ watchlist/ ui/
+  stock/ earnings/ stories/ technical/ watchlist/ ui/
 lib/
   market-hours.ts    # ET↔UTC, seans durumu, önbellek süreleri
   session-clock.ts   # dile göre birincil saat dilimi (TR/NY)
   compare.ts         # karşılaştırma ekranının ortak sözleşmesi
+  technical.ts       # teknik analiz: sembol listesi, yayın saatleri, göstergeler (saf)
+  technical-data.ts  # teknik analiz: fotoğraf, tek yazma yolu, okuma
   providers/         # alpaca · finnhub · fred · tcmb
   i18n/              # tr + en sözlükleri (en, tr tipinden türer)
 content/guide/       # rehber yazıları — meta + tr + en, eksik çeviri derlemeyi kırar
