@@ -477,6 +477,14 @@
      (AppShell.tsx, sistem çubuğu notu). İki değer birlikte değişmeli,
      yoksa yapışkan bölüm başlıkları çubuğun altına giriyor. */
   --app-bar-h: calc(env(safe-area-inset-top) + 69px);
+  /* Masthead sekmesinin yatay dolgusu. Konum işareti ve hover çizgisi aynı
+     değeri `inset-x` olarak okuyor: çizgi etiketin genişliğinde duruyor,
+     kutunun değil. 1280 altında 10px, üstünde 12px; genişlik bütçesi
+     nav-items.ts yorumunda. */
+  --masthead-tab-px: 0.625rem;
+}
+@media (min-width: 1280px) {
+  :root { --masthead-tab-px: 0.75rem; }
 }
 
 /* --------------------------------------------------------------------------
@@ -630,6 +638,59 @@
    Bileşen katmanı utilities'ten ÖNCE geldiği için artık sıra doğru: sınıf
    tabanı verir, yardımcı istisnayı yazar. */
 @layer components {
+  /* ---- Masthead şeridi ----
+     Konum işareti: 2px `--primary`, etiketin genişliğinde, hairline'ın
+     üstüne biniyor (ul +1px aşağı taşıyor). Yeni sekmede CSS ile çiziliyor;
+     paylaşılan layoutId ile kaydırılmıyor (gerekçe MastheadNav'da). */
+  .masthead-mark {
+    position: absolute;
+    inset-inline: var(--masthead-tab-px);
+    bottom: 0;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--primary);
+    transform-origin: center;
+    animation: masthead-mark-in 180ms var(--ease-brand) both;
+  }
+  /* Hover: hairline'ın üstünde soluk bir hayalet çizgi, yalnızca opaklık.
+     Aktif sekmede yok — işaret zaten orada. `hover:hover` kapısı: iPad'de
+     dokunulan sekmede takılı kalmasın. */
+  .masthead-link::after {
+    content: "";
+    position: absolute;
+    inset-inline: var(--masthead-tab-px);
+    bottom: 0;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--line-strong);
+    opacity: 0;
+    transition: opacity 180ms;
+  }
+  @media (hover: hover) {
+    .masthead-link:not([aria-current]):hover::after { opacity: 1; }
+  }
+  .masthead-link[data-open]::after { opacity: 1; }
+  /* Odak halkası etiketin kendisinde: bağlantı 68px boyunca uzanıyor ve
+     halka kutuya çizilince başlığın tamamını çerçeveliyordu. */
+  .masthead-link:focus-visible { outline: none; }
+  .masthead-link:focus-visible > span:first-child {
+    outline: 2px solid var(--line-focus);
+    outline-offset: 4px;
+    border-radius: var(--radius-xs);
+  }
+  /* Panelde güncel sayfa: solda 2×16 işaret. */
+  .masthead-row[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 2px;
+    height: 16px;
+    border-radius: 1px;
+    background: var(--primary);
+    transform: translateY(-50%);
+  }
+
   .display-ink {
     color: var(--text-strong);
   }
@@ -1327,6 +1388,20 @@
   /* Badges and controls inside a heading own a separate painted surface. */
   main :is(h1,h2) :is(button, a, .plate, [role="status"]) {
     -webkit-text-fill-color: currentColor;
+  }
+}
+@keyframes masthead-mark-in {
+  from { opacity: 0; transform: scaleX(0.5); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .masthead-mark { animation: none; }
+}
+/* Zorunlu renk modunda arka plan rengi siliniyor ve işaret kayboluyordu:
+   konum yalnızca bu çizgiyle söyleniyor (emsal: aşağıdaki başlık kuralı). */
+@media (forced-colors: active) {
+  .masthead-mark, .masthead-row[aria-current="page"]::before {
+    forced-color-adjust: none;
+    background: CanvasText;
   }
 }
 @media (forced-colors: active) {
