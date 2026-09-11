@@ -88,6 +88,7 @@ export function SearchCommand({
   failedLabel,
   popularLabel,
   companiesLabel,
+  technicalLabel,
   writingsLabel,
   closeLabel,
   hints,
@@ -102,6 +103,8 @@ export function SearchCommand({
   failedLabel: string;
   popularLabel: string;
   companiesLabel: string;
+  /** Teknik analizi olan sembolün altındaki ikinci satır — "Teknik Analiz". */
+  technicalLabel: string;
   /** "Yazılar" — rehber ve mercek sonuçlarının başlığı. */
   writingsLabel: string;
   /* Kapat düğmesinin ekran okuyucu adı. Sözlükten gelmiyordu: paletin tek
@@ -383,8 +386,14 @@ export function SearchCommand({
   /* Klavye gezinmesi TEK bir düz liste üzerinde yürür. İki ayrı bölüm iki
      ayrı indeks tutsaydı ok tuşu sembollerin sonunda takılırdı; okuyucu için
      bunlar tek bir sonuç listesi, başlıklar yalnızca gruplama. */
+  /* Teknik analizi olan sembol İKİ satır: şirket sayfası ve hemen altında
+     teknik analiz. İkisi de aynı düz listede, ok tuşu ikisinden de geçer. */
+  const hitRows = shownHits.flatMap((hit) => [
+    { hit, kind: "stock" as const, href: `/hisse/${hit.symbol}` },
+    ...(hit.technical ? [{ hit, kind: "technical" as const, href: `/teknik/${hit.symbol}` }] : []),
+  ]);
   const navItems = [
-    ...shownHits.map((hit) => `/hisse/${hit.symbol}`),
+    ...hitRows.map((row) => row.href),
     ...shownWritings.map((w) => `/${w.kind}/${w.slug}`),
   ];
 
@@ -560,33 +569,57 @@ export function SearchCommand({
                 </p>
               )}
 
-              {shownHits.map((hit, index) => (
-                <button
-                  key={hit.symbol}
-                  id={`palet-secenek-${index}`}
-                  role="option"
-                  aria-selected={index === active}
-                  type="button"
-                  onClick={() => go(`/hisse/${hit.symbol}`)}
-                  onMouseEnter={() => setActive(index)}
-                  className={cn(
-                    "flex w-full items-center gap-3.5 px-5 py-2.5 text-left text-base transition-colors max-sm:py-3",
-                    index === active ? "bg-primary-wash" : "hover:bg-surface",
-                  )}
-                >
-                  <span className="w-[60px] shrink-0 font-bold text-strong">
-                    {hit.symbol}
-                  </span>
-                  <span
+              {hitRows.map(({ hit, kind, href }, index) =>
+                kind === "stock" ? (
+                  <button
+                    key={href}
+                    id={`palet-secenek-${index}`}
+                    role="option"
+                    aria-selected={index === active}
+                    type="button"
+                    onClick={() => go(href)}
+                    onMouseEnter={() => setActive(index)}
                     className={cn(
-                      "min-w-0 flex-1 truncate",
-                      index === active ? "text-strong" : "text-body",
+                      "flex w-full items-center gap-3.5 px-5 py-2.5 text-left text-base transition-colors max-sm:py-3",
+                      index === active ? "bg-primary-wash" : "hover:bg-surface",
                     )}
                   >
-                    {hit.name}
-                  </span>
-                </button>
-              ))}
+                    <span className="w-[60px] shrink-0 font-bold text-strong">
+                      {hit.symbol}
+                    </span>
+                    <span
+                      className={cn(
+                        "min-w-0 flex-1 truncate",
+                        index === active ? "text-strong" : "text-body",
+                      )}
+                    >
+                      {hit.name}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    key={href}
+                    id={`palet-secenek-${index}`}
+                    role="option"
+                    aria-selected={index === active}
+                    type="button"
+                    onClick={() => go(href)}
+                    onMouseEnter={() => setActive(index)}
+                    className={cn(
+                      "flex w-full items-center gap-3.5 py-2 pl-5 pr-5 text-left text-small transition-colors max-sm:py-2.5",
+                      index === active ? "bg-primary-wash" : "hover:bg-surface",
+                    )}
+                  >
+                    <span aria-hidden className="w-[60px] shrink-0 text-right text-muted">
+                      ↳
+                    </span>
+                    <span className={cn("min-w-0 flex-1 truncate font-semibold", index === active ? "text-primary-ink" : "text-primary")}>
+                      {technicalLabel}
+                      <span className="sr-only"> · {hit.symbol}</span>
+                    </span>
+                  </button>
+                ),
+              )}
 
               {/* ---- Yazılar ----
                   Sembolden SONRA: paletin ana işi hâlâ hisseye gitmek ve
@@ -602,7 +635,7 @@ export function SearchCommand({
               )}
 
               {shownWritings.map((writing, index) => {
-                const position = shownHits.length + index;
+                const position = hitRows.length + index;
                 return (
                   <button
                     key={`${writing.kind}-${writing.slug}`}

@@ -30,7 +30,7 @@ import { pageMetadata } from "@/lib/page-meta";
 /**
  * Menü — mobilde ürünün tam dizini.
  *
- * Alt çubukta beş yer var, ürünün on bir ekranı. Diğerlerine eskiden yalnızca
+ * Alt çubukta dört yer var, ürünün on bir ekranı. Diğerlerine eskiden yalnızca
  * masaüstü masthead'inden ya da ana sayfadaki kartlardan ulaşılabiliyordu; bu
  * sayfa o boşluğu kapatıyor. Masaüstünde de çalışır ama oraya bir sekme
  * koymadık — masthead zaten aynı işi yapıyor.

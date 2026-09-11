@@ -7,51 +7,129 @@
    genişliğine çekiyor (gerekçenin tamamı globals.css → "Sayısal okumalar").
    Sayılar sitenin geri kalanı gibi yalnızca sıkı aralık alıyor. */
 
-/* ---- Yayın şeridi ---- */
-.strip { display:flex; flex-wrap:wrap; align-items:center; gap:10px 28px; padding:14px 18px; border:1px solid var(--line); border-radius:18px; background:var(--surface-solid); }
-.stripItem { display:flex; flex-direction:column; gap:3px; min-width:0; }
-.stripLabel { font-size:11px; font-weight:600; letter-spacing:.03em; color:var(--text-muted); }
-.stripValue { font-size:14px; font-weight:600; color:var(--text-strong); }
-.stripCounts { display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; }
-.count { display:inline-flex; align-items:baseline; gap:6px; padding:5px 11px; border-radius:999px; font-size:12px; font-weight:700; }
-.count b { letter-spacing:-.02em; font-size:13px; }
+/* ---- Yayın künyesi (başlığın içinde) ----
+   Ayrı bir şerit kutusu olarak duruyordu: başlık kutusu, şerit kutusu ve
+   kartlar üç ayrı çerçeve olunca sayfa üst üste yığılmış paneller gibi
+   okunuyordu. Künye artık başlığın metin sütununda, açıklamanın altında. */
+.edition { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:16px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.editionItem { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.editionLabel { font-size:11px; font-weight:600; letter-spacing:.03em; color:var(--text-muted); }
+.editionValue { font-size:14px; font-weight:600; color:var(--text-strong); }
+
+/* ---- Görüş dağılımı (başlığın görseli) ----
+   Oran çubuğu bütünü, satırlar kimin nerede olduğunu gösteriyor. Çubukta
+   yazı yok: sayı satırda bir kez yazılıyor, iki yerde aynı sayı durmuyor. */
+.pulse { display:grid; gap:14px; min-width:0; }
+.pulseBar { display:flex; gap:3px; height:10px; overflow:hidden; border-radius:999px; }
+.pulseBar > span { min-width:10px; border-radius:999px; transform-origin:left center; }
+.pulseBar > span[data-verdict="buy"] { background:var(--up); }
+.pulseBar > span[data-verdict="hold"] { background:var(--primary); opacity:.55; }
+.pulseBar > span[data-verdict="sell"] { background:var(--down); }
+.pulseRows { display:grid; gap:4px; }
+.pulseRow { display:grid; grid-template-columns:74px minmax(0,1fr); align-items:center; gap:12px; padding:8px 10px; border-radius:14px; transition:background-color .2s; }
+.pulseRow:hover { background:var(--surface); }
+.pulseStance { display:flex; align-items:baseline; gap:7px; font-size:13px; font-weight:700; letter-spacing:.03em; cursor:pointer; }
+.pulseStance b { font-size:20px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
+.pulseStanceStatic { cursor:default; }
+.pulseLogos { display:flex; flex-wrap:wrap; gap:6px; min-width:0; }
+.pulseLogo { display:inline-flex; border-radius:10px; transition:transform .2s; }
+.pulseLogo:hover { transform:translateY(-2px); }
+.pulseLogo:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.pulseChanges { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
+.pulseChange { display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 4px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:600; color:var(--text-strong); }
+.pulseChange:hover { border-color:var(--primary-faint); }
+
+/* ---- Görüş süzgeci ----
+   JavaScript YOK: dört radyo düğmesi ve `:has()`. Adres değişmiyor; sığ
+   adres güncellemesinin uçuştaki gezinmeyi öldürdüğü tuzağa (CLAUDE.md,
+   "İstemci ile sunucu sınırı") hiç girilmiyor. Başlıktaki görüş satırları
+   da aynı radyolara `for` ile bağlı etiketler: satıra basmak süzüyor. */
+.board { display:flex; flex-direction:column; gap:16px; min-width:0; }
+.filter { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0; padding:0; border:0; }
+.filter legend { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.filter input { position:absolute; opacity:0; pointer-events:none; }
+.filter label { display:inline-flex; align-items:baseline; gap:7px; min-height:36px; padding:8px 14px; border:1px solid var(--line); border-radius:999px; background:var(--surface-solid); font-size:13px; font-weight:600; color:var(--text-body); cursor:pointer; transition:border-color .2s, background-color .2s, color .2s; }
+.filter label b { font-weight:600; letter-spacing:-.02em; color:var(--text-muted); }
+.filter label:hover { border-color:var(--line-strong); color:var(--text-strong); }
+.filter input:checked + label { border-color:transparent; background:var(--text-strong); color:var(--page-bg); }
+.filter input:checked + label b { color:inherit; opacity:.7; }
+.filter input:focus-visible + label { outline:2px solid var(--line-focus); outline-offset:2px; }
+.board:has(input[value="buy"]:checked) .cell:not([data-verdict="buy"]),
+.board:has(input[value="hold"]:checked) .cell:not([data-verdict="hold"]),
+.board:has(input[value="sell"]:checked) .cell:not([data-verdict="sell"]) { display:none; }
 
 /* ---- Kart ızgarası ---- */
 .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap:16px; }
-.card { position:relative; display:flex; flex-direction:column; gap:12px; min-width:0; padding:18px 18px 14px; border:1px solid var(--line); border-radius:20px; background:var(--premium-surface); box-shadow:var(--premium-shadow); transition:border-color .2s ease; }
-.card:hover { border-color:var(--primary-faint); }
+.cell { display:flex; min-width:0; }
+/* Kartın TAMAMI tek bağlantı değil. Öyleydi ve bağlantının erişilebilir adı
+   kartın bütün metniydi (sembol, fiyat, 280 karaktere kadar başlık, lejant,
+   çipler); ekran okuyucuda hisseler arasında başlıkla da gezinilemiyordu.
+   Bağlantı artık sembol başlığının içinde; `::after` kartı kaplıyor, yani
+   tıklama alanı aynı kalıyor. */
+.card { position:relative; display:flex; flex:1; flex-direction:column; gap:12px; min-width:0; padding:18px 18px 14px; border:1px solid var(--line); border-radius:20px; background:var(--premium-surface); box-shadow:var(--premium-shadow); transition:border-color .2s, box-shadow .25s, transform .25s; }
+.card:hover { border-color:var(--primary-faint); box-shadow:var(--premium-shadow-hover); transform:translateY(-2px); }
+.card:has(.cardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
+.cardLink { color:inherit; }
+.cardLink::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; }
+.cardLink:focus-visible { outline:none; }
 .cardHead { display:flex; align-items:center; gap:10px; min-width:0; }
 .cardName { display:flex; min-width:0; flex:1; flex-direction:column; }
-.cardSymbol { font-size:15px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+.cardSymbol { font-size:16px; line-height:1.25; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
 .cardCompany { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; color:var(--text-muted); }
 .badges { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
 .stance { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; letter-spacing:.04em; }
 .change { display:inline-flex; align-items:center; gap:4px; padding:1px 7px; border:1px solid currentColor; border-radius:999px; font-size:10px; font-weight:700; white-space:nowrap; }
 .cardPrice { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; }
-.cardPrice strong { font-size:22px; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
+.cardPrice strong { font-size:24px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
 .cardPriceLabel { font-size:11px; color:var(--text-muted); }
 .cardHeadline { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; color:var(--text-body); font-size:13px; line-height:1.6; text-wrap:pretty; }
+/* Plan konumu: fiyatın alım planına göre yeri, tek kısa etiket. Ton
+   anlamdan: bölgede yükseliş, stop altında düşüş, dışında nötr. */
+.plan { display:inline-flex; align-self:flex-start; align-items:center; gap:6px; padding:3px 9px; border-radius:8px; font-size:11px; font-weight:700; letter-spacing:.01em; }
+.plan[data-kind="inZone"] { background:var(--up-wash); color:var(--up); }
+.plan[data-kind="above"], .plan[data-kind="below"] { background:var(--primary-tint); color:var(--primary-ink); }
+.plan[data-kind="belowStop"] { background:var(--down-wash); color:var(--down); }
 .chips { display:flex; flex-wrap:wrap; gap:6px; }
 .chip { display:inline-flex; align-items:center; padding:3px 8px; border-radius:8px; background:var(--surface-sunken); color:var(--text-body); font-size:11px; font-weight:600; white-space:nowrap; }
 .cardFoot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:10px; border-top:1px solid var(--line-soft); font-size:11px; color:var(--text-muted); }
-.cardRead { color:var(--primary-ink); font-weight:600; }
+.cardRead { display:inline-flex; align-items:center; gap:4px; color:var(--primary-ink); font-weight:600; }
+.cardRead svg { transition:transform .2s; }
+.card:hover .cardRead svg { transform:translate(2px,-2px); }
 
 /* ---- Seviye çizgisi (yatay) ----
    Kartta ve kapakta aynı çizim: stop, alım bölgesi, hedefler ve fiyat tek
    eksende. Çizim yalnızca görsel (aria-hidden); aynı bilgi altındaki
-   lejantta metin olarak duruyor. */
-.track { position:relative; height:26px; }
-.trackLine { position:absolute; left:0; right:0; top:12px; height:2px; border-radius:1px; background:var(--line-strong); }
-.trackBand { position:absolute; top:7px; height:12px; border-radius:4px; background:var(--up-wash); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 45%, transparent); }
-.trackTick { position:absolute; top:6px; width:2px; height:14px; border-radius:1px; transform:translateX(-1px); }
+   lejantta metin olarak duruyor.
+
+   İŞARET HALKASI KENARLIKLA DEĞİL GÖLGEYLE. Halka `--surface-solid`
+   kenarlığıydı ve o token koyu temada saydam (beyaz %8,5): halka noktanın
+   kendi renginin açık bir tonuna dönüşüyor, noktayı raydan ayıran boşluk
+   kayboluyordu. Kart ve kapak `--premium-surface` üzerinde, halka onun
+   rengiyle çiziliyor. */
+.track { position:relative; height:28px; }
+.trackLine { position:absolute; left:0; right:0; top:12px; height:4px; border-radius:2px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft); }
+.trackBand { position:absolute; top:7px; height:14px; border-radius:5px; background:var(--up-wash); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 45%, transparent); }
+.trackTick { position:absolute; top:5px; width:2px; height:18px; border-radius:1px; transform:translateX(-1px); }
 .trackTick[data-kind="stop"] { background:var(--down); }
 .trackTick[data-kind="target"] { background:var(--up); }
-.trackTick[data-kind="support"], .trackTick[data-kind="resistance"] { top:9px; height:8px; background:var(--text-muted); opacity:.55; }
-.trackPrice { position:absolute; top:5px; width:16px; height:16px; border:3px solid var(--surface-solid); border-radius:50%; background:var(--primary); transform:translateX(-8px); box-shadow:0 0 0 1px var(--primary); }
+.trackTick[data-kind="sellLevel"] { background:var(--down); opacity:.55; }
+.trackTick[data-kind="support"], .trackTick[data-kind="resistance"] { top:9px; height:10px; background:var(--text-muted); opacity:.55; }
+.trackPrice { position:absolute; top:7px; width:14px; height:14px; border-radius:50%; background:var(--primary); margin-left:-7px; box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 4px var(--primary); }
+.trackLg { height:38px; }
+.trackLg .trackLine { top:16px; height:6px; border-radius:3px; }
+.trackLg .trackBand { top:10px; height:18px; border-radius:6px; }
+.trackLg .trackTick { top:7px; height:24px; }
+.trackLg .trackTick[data-kind="support"], .trackLg .trackTick[data-kind="resistance"] { top:12px; height:14px; }
+.trackLg .trackPrice { top:9px; width:20px; height:20px; margin-left:-10px; box-shadow:0 0 0 4px var(--premium-surface), 0 0 0 5px var(--primary), 0 6px 16px color-mix(in srgb, var(--primary) 30%, transparent); }
 .legend { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:11px; color:var(--text-muted); }
 .legend span { display:inline-flex; align-items:baseline; gap:4px; white-space:nowrap; }
 .legend b { font-weight:600; color:var(--text-body); letter-spacing:-.02em; }
 .legendDot { display:inline-block; width:8px; height:8px; border-radius:2px; align-self:center; }
+.legendDot[data-kind="stop"] { background:var(--down); }
+.legendDot[data-kind="entry"] { background:var(--up-wash); box-shadow:inset 0 0 0 1px var(--up); }
+.legendDot[data-kind="target"] { background:var(--up); }
+.legendDot[data-kind="sellLevel"] { background:var(--down); opacity:.55; }
+.legendDot[data-kind="support"], .legendDot[data-kind="resistance"] { background:var(--text-muted); opacity:.55; }
 
 /* ---- Detay kapağı ---- */
 .cover { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:28px; padding:28px 30px; border:1px solid var(--line); border-radius:24px; background:radial-gradient(ellipse at 92% 0,var(--primary-wash),transparent 58%),var(--premium-surface); box-shadow:var(--premium-shadow); }
@@ -68,6 +146,9 @@
 .priceNow { font-size:30px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
 .priceNote { font-size:12px; color:var(--text-muted); }
 
+/* Bölüm gezinmesi — şirket sayfasındaki `chapterNav` ile aynı gölge. */
+.sectionNav { box-shadow:0 6px 24px var(--primary-tint); border-color:var(--line); }
+
 /* ---- Bölüm başlığı ve iki kolon ---- */
 .sectionTitle { font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
 .twoCol { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; align-items:start; }
@@ -80,10 +161,13 @@
 .ladder::before { content:""; position:absolute; left:6px; top:14px; bottom:14px; width:2px; border-radius:1px; background:var(--line); }
 .rung { position:relative; display:grid; grid-template-columns:14px minmax(0,1fr) auto auto; align-items:center; gap:4px 12px; padding:9px 0; border-bottom:1px solid var(--line-soft); }
 .rung:last-child { border-bottom:0; }
-.rungMark { position:relative; z-index:1; width:14px; height:14px; border:2px solid var(--surface-solid); border-radius:50%; background:var(--text-muted); }
+/* Halka `--panel-fixed`: blok `--surface-solid` üzerinde ve o token koyu
+   temada saydam; opak bileşkesi halkayı raydan ayırıyor (bkz. .trackPrice). */
+.rungMark { position:relative; z-index:1; width:14px; height:14px; border:2px solid var(--panel-fixed); border-radius:50%; background:var(--text-muted); }
 .rung[data-kind="target"] .rungMark { background:var(--up); }
 .rung[data-kind="stop"] .rungMark { background:var(--down); }
-.rung[data-kind="entry"] .rungMark { border-radius:4px; background:var(--up-wash); box-shadow:inset 0 0 0 2px var(--up); }
+.rung[data-kind="sellLevel"] .rungMark { background:var(--down); opacity:.6; }
+.rung[data-kind="entry"] .rungMark { border-radius:4px; background:linear-gradient(var(--up-wash), var(--up-wash)), var(--panel-fixed); box-shadow:inset 0 0 0 2px var(--up); }
 .rung[data-kind="price"] .rungMark { width:14px; height:14px; background:var(--primary); box-shadow:0 0 0 3px var(--primary-wash); }
 .rung[data-kind="price"] { background:linear-gradient(90deg,var(--primary-tint),transparent 70%); }
 .rung[data-kind="entry"] { background:linear-gradient(90deg,var(--up-wash),transparent 75%); }
@@ -158,8 +242,7 @@
 }
 
 @media (max-width: 767px) {
-  .strip { padding:12px 14px; gap:10px 18px; }
-  .stripCounts { margin-left:0; }
+  .pulseRow { grid-template-columns:64px minmax(0,1fr); padding:6px 4px; }
   .cover { padding:20px 18px; border-radius:20px; }
   .stanceValue { font-size:28px; }
   .priceNow { font-size:26px; }

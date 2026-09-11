@@ -4,23 +4,23 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import styles from "@/components/technical/Technical.module.css";
 import { TechnicalCard } from "@/components/technical/TechnicalCard";
+import { TechnicalPulse, stanceFilterId } from "@/components/technical/TechnicalPulse";
 import { EmptyState, Panel } from "@/components/ui/primitives";
-import { verdictLabel, verdictOf, verdictPillClass, type VerdictKey } from "@/lib/analysis";
+import { verdictLabel, verdictOf, type VerdictKey } from "@/lib/analysis";
 import { getStatus, getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
 import { displayZone, formatInZone } from "@/lib/session-clock";
 import {
-  SLOT_RANK,
   TECHNICAL_SYMBOLS,
   editionTime,
+  newestEdition,
   slotInstant,
   slotLabel,
-  type TechnicalSlot,
 } from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
-import { cn, formatEtDateLong } from "@/lib/utils";
+import { formatEtDateLong } from "@/lib/utils";
 
 export const generateMetadata = pageMetadata({
   path: "/teknik",
@@ -66,12 +66,7 @@ export default async function TechnicalPage() {
       ? t.technical.now
       : t.market.lastPrice;
 
-  const latest = board.reduce<{ sessionDate: string; slot: string } | null>((best, { row }) => {
-    if (!best) return row;
-    const rank = (r: { sessionDate: string; slot: string }) =>
-      `${r.sessionDate}:${SLOT_RANK[r.slot as TechnicalSlot] ?? 0}`;
-    return rank(row) > rank(best) ? row : best;
-  }, null);
+  const latest = newestEdition(board);
 
   const counts: Record<VerdictKey, number> = { buy: 0, hold: 0, sell: 0 };
   for (const { row } of board) counts[verdictOf(row.stance)] += 1;
@@ -89,51 +84,72 @@ export default async function TechnicalPage() {
         eyebrow={t.technical.eyebrow}
         title={t.technical.title}
         description={t.technical.description}
-      />
+        visual={latest ? <TechnicalPulse board={board} meta={meta} t={t} /> : undefined}
+      >
+        {latest && (
+          <div className={styles.edition}>
+            <div className={styles.editionItem}>
+              <span className={styles.editionLabel}>{t.technical.latestEdition}</span>
+              <span className={styles.editionValue}>
+                {slotLabel(latest.slot, t)} · {formatEtDateLong(latest.sessionDate, locale)} ·{" "}
+                <span className="numeral">{editionTime(latest.sessionDate, latest.slot, locale)}</span>
+              </span>
+            </div>
+            <div className={styles.editionItem}>
+              <span className={styles.editionLabel}>{t.technical.scheduleLabel}</span>
+              <span className={styles.editionValue}>{scheduleText}</span>
+            </div>
+          </div>
+        )}
+      </DirectoryHeader>
 
       {board.length === 0 || !latest ? (
         <Panel>
           <EmptyState title={t.technical.empty} hint={t.technical.emptyHint} />
         </Panel>
       ) : (
-        <>
-          <div className={styles.strip}>
-            <div className={styles.stripItem}>
-              <span className={styles.stripLabel}>{t.technical.latestEdition}</span>
-              <span className={styles.stripValue}>
-                {slotLabel(latest.slot, t)} · {formatEtDateLong(latest.sessionDate, locale)} ·{" "}
-                <span className="numeral">{editionTime(latest.sessionDate, latest.slot, locale)}</span>
-              </span>
-            </div>
-            <div className={styles.stripItem}>
-              <span className={styles.stripLabel}>{t.technical.scheduleLabel}</span>
-              <span className={styles.stripValue}>{scheduleText}</span>
-            </div>
-            <div className={styles.stripCounts}>
-              {(["buy", "hold", "sell"] as const).map((verdict) => (
-                <span key={verdict} className={cn(styles.count, verdictPillClass(verdict))}>
-                  {verdictLabel(verdict, t)} <b>{counts[verdict]}</b>
+        <section className={styles.board} aria-labelledby="technical-board">
+          <h2 id="technical-board" className="sr-only">
+            {t.technical.stockCount.replace("{n}", String(board.length))}
+          </h2>
+          <fieldset className={styles.filter}>
+            <legend>{t.technical.filterLabel}</legend>
+            {(["all", "buy", "hold", "sell"] as const)
+              .filter((key) => key === "all" || counts[key] > 0)
+              .map((key) => (
+                <span key={key} className="contents">
+                  <input
+                    type="radio"
+                    name="technical-stance"
+                    id={stanceFilterId(key)}
+                    value={key}
+                    defaultChecked={key === "all"}
+                  />
+                  <label htmlFor={stanceFilterId(key)}>
+                    {key === "all" ? t.technical.filterAll : verdictLabel(key, t)}
+                    <b className="numeral">{key === "all" ? board.length : counts[key]}</b>
+                  </label>
                 </span>
               ))}
-            </div>
-          </div>
+          </fieldset>
 
           <div className={styles.grid} data-motion-stagger>
             {board.map(({ row, previousStance }) => (
-              <TechnicalCard
-                key={row.symbol}
-                row={row}
-                previousStance={previousStance}
-                quote={quoteMap[row.symbol] ?? null}
-                company={meta[row.symbol]?.name ?? null}
-                logoUrl={meta[row.symbol]?.logoUrl ?? null}
-                priceLabel={priceLabel}
-                locale={locale}
-                t={t}
-              />
+              <div key={row.symbol} className={styles.cell} data-verdict={verdictOf(row.stance)}>
+                <TechnicalCard
+                  row={row}
+                  previousStance={previousStance}
+                  quote={quoteMap[row.symbol] ?? null}
+                  company={meta[row.symbol]?.name ?? null}
+                  logoUrl={meta[row.symbol]?.logoUrl ?? null}
+                  priceLabel={priceLabel}
+                  locale={locale}
+                  t={t}
+                />
+              </div>
             ))}
           </div>
-        </>
+        </section>
       )}
 
       <div className={styles.footNote}>

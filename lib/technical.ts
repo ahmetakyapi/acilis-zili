@@ -427,7 +427,12 @@ export function computeSnapshot(
   const done = completedBars(bars, status);
   const closes = done.map((bar) => bar.close);
   const last = done.at(-1) ?? null;
-  const price = quote?.price ?? last?.close ?? null;
+  /* FİYAT YALNIZCA CANLI KOTASYONDAN. Kotasyonda sembol yoksa fiyat sessizce
+     dünkü kapanış oluyordu ve fotoğraf "analiz anında" diye onu taşıyordu:
+     bağlam `data_ok: true` dönüyor, rutin eski bir fiyatın üstüne seviye
+     yazıyordu. Fiyat yoksa null; bağlam o sembolü `data_ok: false` ile
+     işaretliyor, prompt onu atlıyor, yazma ucu da reddediyor. */
+  const price = quote?.price ?? null;
   const year = done.slice(-252);
   const volumes = done.slice(-20).map((bar) => bar.volume);
   const macd = macdOf(closes);
@@ -482,6 +487,25 @@ export function computeSnapshot(
    Sunum yardımcıları — sayfa ve bağlam ucu aynı kuralı okusun
    -------------------------------------------------------------------------- */
 
+/**
+ * Panodaki en yeni yayın — tarih, sonra gün içi sıra (`SLOT_RANK`).
+ *
+ * Sıra alfabeyle yapılamaz: "midsession" alfabede "premarket"ten önce
+ * geliyor. Liste sayfası ve ana sayfa paneli aynı künyeyi basıyor, hesap
+ * tek yerde.
+ */
+export function newestEdition(
+  entries: readonly { row: { sessionDate: string; slot: string } }[],
+): { sessionDate: string; slot: string } | null {
+  const rank = (row: { sessionDate: string; slot: string }) =>
+    `${row.sessionDate}:${SLOT_RANK[row.slot as TechnicalSlot] ?? 0}`;
+  let best: { sessionDate: string; slot: string } | null = null;
+  for (const { row } of entries) {
+    if (!best || rank(row) > rank(best)) best = row;
+  }
+  return best;
+}
+
 /** Detay sayfasının adresi — küçük harf, `analysisHref` ile aynı gerekçe. */
 export function technicalHref(symbol: string): string {
   return `/teknik/${symbol.toLowerCase()}`;
@@ -519,6 +543,33 @@ export function stanceChangeLabel(
 export function distancePct(price: number | null, level: number | null): number | null {
   if (price === null || level === null || level <= 0) return null;
   return ((price - level) / level) * 100;
+}
+
+export type PlanPosition =
+  | { kind: "inZone" }
+  | { kind: "above" | "below"; pct: number }
+  | { kind: "belowStop" };
+
+/**
+ * Fiyatın plana göre yeri — kartın "şimdi nerede" okuması.
+ *
+ * Yalnızca alım bölgesi varken anlamlı: SAT'ta ve bölgesiz TUT'ta okunacak
+ * bir alım planı yok, orada null. Uzaklık bölgenin YAKIN ucuna ölçülür:
+ * fiyat üstteyse üst uca, alttaysa alt uca, çünkü okuyucunun sorusu "bölgeye
+ * ne kadar var". Stopun altındaki fiyat "bölgenin altında" değil, planın
+ * bozulduğu yer; ayrı söylenir.
+ */
+export function planPosition(
+  price: number | null,
+  entryLow: number | null,
+  entryHigh: number | null,
+  stop: number | null,
+): PlanPosition | null {
+  if (price === null || entryLow === null || entryHigh === null) return null;
+  if (stop !== null && price < stop) return { kind: "belowStop" };
+  if (price > entryHigh) return { kind: "above", pct: ((price - entryHigh) / entryHigh) * 100 };
+  if (price < entryLow) return { kind: "below", pct: ((entryLow - price) / entryLow) * 100 };
+  return { kind: "inZone" };
 }
 
 export type RsiZone = "overbought" | "oversold" | "neutral";

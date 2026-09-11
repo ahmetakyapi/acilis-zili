@@ -11,6 +11,7 @@ import {
   TECHNICAL_SLOTS,
   TECHNICAL_SYMBOLS,
   computeSnapshot,
+  currentSlot,
   distancePct,
   isTechnicalSymbol,
   rsiZone,
@@ -63,7 +64,11 @@ export async function getTechnicalSnapshots(
     getChartBarsMulti(list, "1Y", status),
     getQuotes(list, status),
   ]);
-  const quoteMap = quotes.ok ? quotes.data : {};
+  /* BAYAT KOTASYON FOTOĞRAFA GİRMEZ. Sağlayıcı düşünce kotasyon veritabanı
+     önbelleğinden geliyor (`stale: true`) ve saatler önceki bir fiyat
+     işaretsiz olarak "analiz anındaki fiyat" oluyordu. Bayatsa hiç
+     kullanılmıyor: fiyat null olur, sembol atlanır (bkz. computeSnapshot). */
+  const quoteMap = quotes.ok && !quotes.stale ? quotes.data : {};
   const now = new Date();
   return {
     bySymbol: Object.fromEntries(
@@ -192,8 +197,8 @@ export const TECHNICAL_INPUT_SHAPE = {
       entry_high: "sayı — üst ucu; tek seviyede entry_low ile aynı",
       stop: "sayı — alım bölgesinin altında (AL'da zorunlu, SAT'ta yok)",
       targets: "[sayı] ≤3 — alım bölgesinin üstünde, yakından uzağa",
-      supports: "[sayı] 1-4",
-      resistances: "[sayı] 1-4",
+      supports: "[sayı] 1-4 — fiyatın ALTINDA (yarım ATR pay)",
+      resistances: "[sayı] 1-4 — fiyatın ÜSTÜNDE (yarım ATR pay)",
       copy: {
         tr: "{headline 60-280, summary 160-1400, bull 40-500, bear 40-500, volume 20-400, watch [1-4], entry_note?, stop_note?, targets_note?}",
         en: "aynı biçim (isteğe bağlı; yoksa sayfa Türkçesini gösterir)",
@@ -267,6 +272,13 @@ function levelsOf(item: ItemInput): number[] {
  * anında hesaplanıyor; dünün analizine bugünün göstergeleri eklenirse metin
  * ile sayılar farklı günleri anlatırdı. Geçmiş bir kayıt düzeltilirken
  * eski fotoğrafı korunuyor.
+ *
+ * AYNI KURAL GÜN İÇİNDE DE: yayının penceresi geçtiyse yeni kayıt yok. Kural
+ * bir dönem yalnızca bağlam ucundaydı ve yazma ucu tarihe bakıyordu; kapanış
+ * sonrası `?slot=premarket` ile koşan bir rutin "Açılış Öncesi · bugün"
+ * kaydını BUGÜNÜN kapanışıyla hesaplanmış pivotlarla yazabiliyordu. Taze
+ * fotoğraf artık yalnızca şu anki slota ya da henüz yazılmamış DAHA ERKEN
+ * bir slota çekiliyor; gerisi var olan kaydın düzeltmesi.
  */
 export async function saveTechnicalBatch(body: unknown): Promise<BatchOutcome> {
   const header = BatchSchema.safeParse(body);
@@ -310,39 +322,54 @@ export async function saveTechnicalBatch(body: unknown): Promise<BatchOutcome> {
     return { ok: true, sessionDate, slot, saved: [], errors };
   }
 
-  /* Fotoğraf: bugünse taze hesaplanır, geçmişse var olan kayıttan alınır. */
+  /* Fotoğraf: yayının penceresi açıksa taze hesaplanır, değilse var olan
+     kayıttan alınır (düzeltme). Var olan kayıt bugün için de okunuyor:
+     aynı slotun düzeltmesi fotoğrafı korumalı. */
   const symbols = valid.map(({ item }) => item.symbol);
   const isToday = sessionDate === today;
-  const fresh = isToday
-    ? (await getTechnicalSnapshots(symbols, await getStatus())).bySymbol
-    : {};
-  const kept = isToday
-    ? new Map<string, TechnicalSnapshot>()
-    : new Map(
-        (
-          await db
-            .select({ symbol: technicalAnalyses.symbol, snapshot: technicalAnalyses.snapshot })
-            .from(technicalAnalyses)
-            .where(
-              and(
-                inArray(technicalAnalyses.symbol, symbols),
-                eq(technicalAnalyses.sessionDate, sessionDate),
-                eq(technicalAnalyses.slot, slot),
-              ),
-            )
-        ).map((row) => [row.symbol, row.snapshot]),
-      );
+  const status = await getStatus();
+  const live = isToday ? currentSlot(status) : null;
+  if (isToday && !status.tradingToday) {
+    return {
+      ok: false,
+      status: 400,
+      error: "not-a-trading-day",
+      detail: "bugün işlem günü değil; teknik analiz yazılmaz.",
+    };
+  }
+  const windowOpen = live !== null && SLOT_RANK[slot] <= SLOT_RANK[live];
+  const fresh = windowOpen ? (await getTechnicalSnapshots(symbols, status)).bySymbol : {};
+  const kept = new Map(
+    (
+      await db
+        .select({ symbol: technicalAnalyses.symbol, snapshot: technicalAnalyses.snapshot })
+        .from(technicalAnalyses)
+        .where(
+          and(
+            inArray(technicalAnalyses.symbol, symbols),
+            eq(technicalAnalyses.sessionDate, sessionDate),
+            eq(technicalAnalyses.slot, slot),
+          ),
+        )
+    ).map((row) => [row.symbol, row.snapshot]),
+  );
 
   const rows: (typeof technicalAnalyses.$inferInsert)[] = [];
   for (const { index, item } of valid) {
-    const snapshot = isToday ? fresh[item.symbol] : kept.get(item.symbol);
+    /* Taze fotoğraf: şu anki slot her zaman; daha erken slot yalnızca o
+       sembolün kaydı henüz yoksa (geç kalmış bir yayın). Aksi hâlde var olan
+       kaydın fotoğrafı korunuyor. */
+    const shoot = windowOpen && (slot === live || !kept.has(item.symbol));
+    const snapshot = shoot ? fresh[item.symbol] : kept.get(item.symbol);
     if (!snapshot || snapshot.price === null) {
       errors.push({
         index,
         symbol: item.symbol,
-        issues: isToday
+        issues: shoot
           ? "bu sembolün fiyat verisi alınamadı; göstergesi olmayan analiz yazılmaz"
-          : "geçmiş seansa yeni analiz yazılamaz, yalnızca var olan düzeltilir",
+          : isToday
+            ? "bu yayının penceresi geçti; yalnızca var olan kayıt düzeltilir (fotoğrafı korunur)"
+            : "geçmiş seansa yeni analiz yazılamaz, yalnızca var olan düzeltilir",
       });
       continue;
     }
@@ -355,6 +382,31 @@ export async function saveTechnicalBatch(body: unknown): Promise<BatchOutcome> {
         index,
         symbol: item.symbol,
         issues: `seviye fiyatın (${price}) yarısı ile iki katı dışında: ${outside.join(", ")} — birim hatası mı?`,
+      });
+      continue;
+    }
+    /* SEVİYE DOĞRU TARAFTA MI. Prompt "destek fiyatın ALTINDA, direnç
+       ÜSTÜNDE" diyor ama şema yalnızca stop < alım < hedef sırasına
+       bakıyordu; fiyatın üstündeki bir "destek" merdivende canlı fiyatın
+       üstünde "Destek" diye basılıyordu. Pay yarım günlük aralık: fiyat
+       yazım sırasında birkaç sent oynamış olabilir. Hedef yalnızca alım
+       bölgesi YOKKEN denetleniyor: geri çekilme bekleyen bir TUT planında
+       hedef anlık fiyatın altında kalabilir. */
+    const tolerance = 0.5 * (snapshot.atr14 ?? price * 0.02);
+    const wrongSide = [
+      ...item.supports.filter((value) => value > price + tolerance).map((value) => `destek ${value} fiyatın üstünde`),
+      ...item.resistances.filter((value) => value < price - tolerance).map((value) => `direnç ${value} fiyatın altında`),
+      ...(item.entry_low === undefined || item.entry_low === null
+        ? (item.targets ?? [])
+            .filter((value) => value <= price - tolerance)
+            .map((value) => `hedef ${value} fiyatın altında`)
+        : []),
+    ];
+    if (wrongSide.length > 0) {
+      errors.push({
+        index,
+        symbol: item.symbol,
+        issues: `seviye fiyatın (${price}) yanlış tarafında: ${wrongSide.join("; ")}`,
       });
       continue;
     }
@@ -435,6 +487,18 @@ export async function saveTechnicalBatch(body: unknown): Promise<BatchOutcome> {
  */
 const BOARD_WINDOW_DAYS = 5;
 
+/**
+ * "Önceki görüş" bu kadar geriye bakar — panonun penceresinden AYRI.
+ *
+ * İki rol tek pencereyi paylaşıyordu: beş günlük bayatlık kuralı hem "hangi
+ * analiz panoda durur" hem "önceki görüş neydi" sorusunu cevaplıyordu. Rutin
+ * bir hafta durup dönünce yeni kaydın öncesi pencerenin dışında kalıyor ve
+ * "Ala Döndü" rozeti sessizce kayboluyordu; detay sayfası ise aynı soruyu
+ * penceresiz son 24 kayıttan cevaplıyordu. Bayatlık kuralı yerinde, önceki
+ * görüş üç haftalık geriye bakışla bulunuyor.
+ */
+const PREVIOUS_LOOKBACK_DAYS = 21;
+
 type EditionRef = {
   id: string;
   symbol: string;
@@ -474,7 +538,9 @@ export const getTechnicalBoard = cache(async function getTechnicalBoard(): Promi
   TechnicalBoardEntry[]
 > {
   try {
-    const since = addEtDays(todayEt(), -BOARD_WINDOW_DAYS);
+    const today = todayEt();
+    const since = addEtDays(today, -PREVIOUS_LOOKBACK_DAYS);
+    const fresh = addEtDays(today, -BOARD_WINDOW_DAYS);
     const index: EditionRef[] = await db
       .select({
         id: technicalAnalyses.id,
@@ -495,7 +561,8 @@ export const getTechnicalBoard = cache(async function getTechnicalBoard(): Promi
     const heads = new Map<string, { id: string; previous: VerdictKey | null }>();
     for (const [symbol, list] of bySymbol) {
       const [latest, previous] = newestFirst(list);
-      if (latest) {
+      /* Bayatlık kuralı yalnızca panoda duracak kayda uygulanıyor. */
+      if (latest && latest.sessionDate >= fresh) {
         heads.set(symbol, {
           id: latest.id,
           previous: previous ? verdictOf(previous.stance) : null,
@@ -594,9 +661,17 @@ export async function getPreviousEditions(
   exclude: { sessionDate: string; slot: TechnicalSlot } | null,
 ): Promise<Record<string, TechnicalAnalysisRow>> {
   try {
-    const since = addEtDays(todayEt(), -BOARD_WINDOW_DAYS);
-    const rows = await db
-      .select()
+    /* İKİ AŞAMA, pano gibi: üç haftalık pencerede tam satırları çekmek iki
+       dilin metni ve fotoğrafıyla yüzlerce satır demek. Önce hafif dizin,
+       sonra her sembol için seçilen tek satır. */
+    const since = addEtDays(todayEt(), -PREVIOUS_LOOKBACK_DAYS);
+    const index = await db
+      .select({
+        id: technicalAnalyses.id,
+        symbol: technicalAnalyses.symbol,
+        sessionDate: technicalAnalyses.sessionDate,
+        slot: technicalAnalyses.slot,
+      })
       .from(technicalAnalyses)
       .where(
         and(
@@ -604,14 +679,19 @@ export async function getPreviousEditions(
           gte(technicalAnalyses.sessionDate, since),
         ),
       );
-    const out: Record<string, TechnicalAnalysisRow> = {};
-    for (const row of newestFirst(rows)) {
-      if (exclude && row.sessionDate === exclude.sessionDate && row.slot === exclude.slot) {
+    const picked = new Map<string, string>();
+    for (const ref of newestFirst(index)) {
+      if (exclude && ref.sessionDate === exclude.sessionDate && ref.slot === exclude.slot) {
         continue;
       }
-      out[row.symbol] ??= row;
+      if (!picked.has(ref.symbol)) picked.set(ref.symbol, ref.id);
     }
-    return out;
+    if (picked.size === 0) return {};
+    const rows = await db
+      .select()
+      .from(technicalAnalyses)
+      .where(inArray(technicalAnalyses.id, [...picked.values()]));
+    return Object.fromEntries(rows.map((row) => [row.symbol, row]));
   } catch (error) {
     yutuldu("getPreviousEditions", error);
     return {};

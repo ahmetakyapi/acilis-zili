@@ -83,6 +83,7 @@ export default async function AppLayout({
           failedLabel={t.nav.searchFailed}
           popularLabel={t.nav.searchPopular}
           companiesLabel={t.nav.companies}
+          technicalLabel={t.technical.title}
           writingsLabel={t.nav.searchWritings}
           closeLabel={t.common.close}
           hints={{ move: t.nav.searchHintMove, open: t.nav.searchHintOpen }}

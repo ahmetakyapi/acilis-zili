@@ -8,7 +8,9 @@ import {
   formatPercent,
   formatPercentPlain,
   formatPrice,
+  plural,
 } from "@/lib/utils";
+import { displayZone, formatInZone, zoneTag } from "@/lib/session-clock";
 import styles from "./Technical.module.css";
 
 /**
@@ -51,7 +53,9 @@ function Head({ title, tag, tagClass }: { title: string; tag?: string | null; ta
 }
 
 function crossText(sessions: number, t: Dictionary): string {
-  return sessions === 0 ? t.technical.lastSession : t.technical.sessionsAgo.replace("{n}", String(sessions));
+  if (sessions === 0) return t.technical.lastSession;
+  /* "1 Sessions Ago" — İngilizcede sayı 1 iken çoğul kalıyordu. */
+  return plural(sessions, t.technical.sessionsAgoOne, t.technical.sessionsAgo).replace("{n}", String(sessions));
 }
 
 function MovingAveragesPanel({
@@ -88,6 +92,10 @@ function MovingAveragesPanel({
         tag={cross ? `${cross.kind === "golden" ? t.technical.goldenCross : t.technical.deathCross} · ${crossText(cross.sessions, t)}` : null}
         tagClass={cross?.kind === "golden" ? "text-up" : "text-down"}
       />
+      {/* İKİ YÖN, TEK SAYFA. Bu panel "fiyat ortalamanın ne kadar üstünde"
+          diyor (hisse sayfasındaki ortalama paneliyle aynı okuma); merdiven
+          ve pivotlar ise "seviyeye ne kadar var". Aynı 50 günlük burada yeşil
+          +, merdivende destek olarak kırmızı − duruyordu ve açıklamasızdı. */}
       <dl className={styles.rows}>
         {rows.map(({ window, value, distance }) => (
           <div key={window} className={styles.row}>
@@ -123,6 +131,7 @@ function MovingAveragesPanel({
           </div>
         ))}
       </dl>
+      <p className={styles.indicatorNote}>{t.technical.maNote}</p>
     </section>
   );
 }
@@ -190,7 +199,10 @@ function MacdPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; local
             <p className={styles.indicatorNote}>
               {macd.crossSessions === 0
                 ? t.technical.crossedLastSession
-                : t.technical.crossedSessionsAgo.replace("{n}", String(macd.crossSessions))}
+                : plural(macd.crossSessions, t.technical.crossedSessionsAgoOne, t.technical.crossedSessionsAgo).replace(
+                    "{n}",
+                    String(macd.crossSessions),
+                  )}
             </p>
           )}
         </>
@@ -223,9 +235,18 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
           <dt>{t.technical.volumeAverage}</dt>
           <dd>{formatCompact(snapshot.avgVolume20, locale)}</dd>
         </div>
+        {/* DONMUŞ SAYI, KENDİ SAATİYLE. Değer yazma anındaki kotasyonun hacmi
+            ve fotoğrafta sabit; "Bugün (Şu Ana Kadar)" diye basılınca Cuma
+            öğlen yazılmış bir sayı hafta sonu boyunca "şu ana kadar" diye
+            okunuyordu. Saat fotoğrafın kendi anı (`asOf`), takvim saati değil. */}
         {snapshot.todayVolume !== null && (
           <div className={styles.row}>
-            <dt>{t.technical.volumeToday}</dt>
+            <dt>
+              {t.technical.volumeToday.replace(
+                "{time}",
+                `${formatInZone(new Date(snapshot.asOf), displayZone(locale))} ${zoneTag(locale).primary}`,
+              )}
+            </dt>
             <dd>{formatCompact(snapshot.todayVolume, locale)}</dd>
           </div>
         )}
@@ -274,9 +295,13 @@ function RangePanel({
       <div className="flex flex-col gap-2 border-t border-line-soft pt-2.5">
         <div className={styles.indicatorHead}>
           <h3 className={styles.indicatorTitle}>{t.technical.range52}</h3>
+          {/* İşaretsiz ve sözle: "Tepeye Uzaklık −%12" okuyucuya yön mü mesafe
+              mi olduğunu söylemiyordu. */}
           {fromHigh !== null && (
             <span className={cn(styles.indicatorTag, "text-muted")}>
-              {t.technical.range52Distance} {formatPercent(fromHigh, locale, 1)}
+              {fromHigh < -0.05
+                ? t.technical.range52Below.replace("{n}", formatPercentPlain(Math.abs(fromHigh), locale, 1))
+                : t.technical.range52AtHigh}
             </span>
           )}
         </div>

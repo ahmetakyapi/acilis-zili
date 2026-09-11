@@ -26,7 +26,7 @@ export type NavItem = {
   icon: typeof Bell;
   /** Masaüstü masthead'inde görünsün mü. */
   inMasthead: boolean;
-  /** Mobil alt çubukta görünsün mü — orada yalnızca beş yer var. */
+  /** Mobil alt çubukta görünsün mü — orada yalnızca dört yer var. */
   inBottomBar: boolean;
   /** Alt çubukta kısaltılmış etiket kullanılır (Piyasalar → Piyasa). */
   shortLabel?: (t: Dictionary) => string;
@@ -39,7 +39,12 @@ export type NavItem = {
 };
 
 /**
- * Mobil alt çubuk dört sekme: Piyasa · Bilanço · Favoriler · Menü.
+ * Mobil alt çubuk dört sekme: Piyasa · Bilanço · Mercek · Menü.
+ *
+ * VERİ MODELİ ÇUBUĞUN KENDİSİ. Favoriler bir dönem burada `inBottomBar`
+ * işaretliydi ve AppShell o yuvayı basarken sessizce Mercek'e çeviriyordu:
+ * model bir şey, ekran başka bir şey söylüyordu. Yuvanın neden Mercek olduğu
+ * AppShell'deki yorumda; işaret artık doğrudan Mercek'te.
  *
  * Takvim buradan çıkarıldı — bugünün takvimi ve haftaya bakış zaten Bugün
  * ekranının iki bölümü, sekmenin taşıdığı ek bilgi azdı. Yerine gelen Menü
@@ -131,7 +136,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.stories,
     icon: Scroll,
     inMasthead: true,
-    inBottomBar: false,
+    inBottomBar: true,
   },
   {
     href: "/rehber",
@@ -146,7 +151,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.watchlist,
     icon: Heart,
     inMasthead: true,
-    inBottomBar: true,
+    inBottomBar: false,
   },
   {
     href: "/haberler",

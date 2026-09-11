@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocaleHref } from "@/components/layout/useLocaleHref";
-import { Gear, Scroll } from "@phosphor-icons/react/dist/ssr";
+import { Gear } from "@phosphor-icons/react/dist/ssr";
 import { BellMark, BrandLockup, BrandWord } from "@/components/brand/BellMark";
 import { RouteProgress } from "./RouteProgress";
 import { NavOverflow } from "./NavOverflow";
@@ -93,7 +93,7 @@ export function AppShell({
      önekSİZ bir bağlantı proxy'de fazladan bir yönlendirmeye mal oluyor. */
   const { href: L } = useLocaleHref();
 
-  /* Alt çubuk: Piyasa · Bilanço · Favoriler · Menü.
+  /* Alt çubuk: Piyasa · Bilanço · Mercek · Menü.
      Giriş yapmamış kullanıcıda Favoriler sekmesi ÇIKMAZ SOKAKTI — sayfa onu
      doğrudan /giris'e atıyor, yani dört sekmeden biri o kullanıcı için içerik
      değil bir duvardı. Yuvaya bir süre "Giriş Yap" yazıldı ve bu daha da kötü
@@ -113,19 +113,12 @@ export function AppShell({
      ve masaüstü gezinmesinden açılıyor. Mercek ise sitenin kendi yazdığı tek
      içerik türü ve mobilde başka türlü yalnızca Menü'nün altında kalıyordu:
      sekme onu herkes için görünür yapıyor. */
-  const bottomItems = NAV_ITEMS.filter((item) => item.inBottomBar).map(
-    (item) => {
-      const swap = item.href === "/favoriler";
-      return {
-        key: item.href,
-        href: swap ? "/mercek" : item.href,
-        icon: swap ? Scroll : item.icon,
-        text: swap
-          ? labels.nav["/mercek"]
-          : (labels.navShort[item.href] ?? labels.nav[item.href]),
-      };
-    },
-  );
+  const bottomItems = NAV_ITEMS.filter((item) => item.inBottomBar).map((item) => ({
+    key: item.href,
+    href: item.href,
+    icon: item.icon,
+    text: labels.navShort[item.href] ?? labels.nav[item.href],
+  }));
 
   /**
    * Alt çubukta hangi sekme işaretli.
@@ -358,7 +351,7 @@ export function AppShell({
 
       {ticker}
 
-      {/* ---- Mobil alt gezinme — 5 sekme, dokunma hedefi min 64px ---- */}
+      {/* ---- Mobil alt gezinme — 4 sekme, dokunma hedefi min 64px ---- */}
       <nav
         className={cn(
           /* ALT DOLGU TABAN DEĞERLİ. `viewport-fit=auto`ya geçtikten sonra

@@ -1,3 +1,4 @@
+import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { distancePct, ladderOf, type Level, type TechnicalCopy } from "@/lib/technical";
 import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
@@ -14,6 +15,11 @@ type Rung = Level | { kind: "price"; price: number };
  *
  * UZAKLIK SEVİYEDEN FİYATA DEĞİL FİYATTAN SEVİYEYE: "hedefe %4,2 var"
  * okunuşu. Yani hedef için pozitif, stop için negatif; işaret yönü söylüyor.
+ *
+ * FİYAT SATIRININ ADI ÇAĞIRANDAN GELİR. Satır bir süre koşulsuz "Şu An"
+ * yazıyordu; kapak aynı sayfada seans dışında "Son Fiyat", kotasyon yokken
+ * "Analiz Anında" derken merdiven eski fiyata "Şu An" diyordu. Etiket
+ * kapakla tek yerde hesaplanıyor ve buraya geçiyor.
  */
 export function LevelLadder({
   price,
@@ -24,6 +30,9 @@ export function LevelLadder({
   supports,
   resistances,
   copy,
+  verdict,
+  priceLabel,
+  lang,
   locale,
   t,
 }: {
@@ -35,6 +44,10 @@ export function LevelLadder({
   supports: readonly number[];
   resistances: readonly number[];
   copy: TechnicalCopy;
+  verdict: VerdictKey;
+  priceLabel: string;
+  /** Notların dili — İngilizce sayfada çevrilmemiş metin Türkçe okunur. */
+  lang: string;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -51,7 +64,11 @@ export function LevelLadder({
   const labelOf = (rung: Rung): string => {
     switch (rung.kind) {
       case "target":
-        return t.technical.target.replace("{n}", String(rung.order ?? 1));
+        /* SAT'ta hedef "tepkide satılacak seviye" (bkz. LevelTrack). */
+        return (verdict === "sell" ? t.technical.sellLevel : t.technical.target).replace(
+          "{n}",
+          String(rung.order ?? 1),
+        );
       case "resistance":
         return t.technical.resistance;
       case "entry":
@@ -61,7 +78,7 @@ export function LevelLadder({
       case "stop":
         return t.technical.stop;
       case "price":
-        return t.technical.now;
+        return priceLabel;
     }
   };
   const noteOf = (rung: Rung): string | null => {
@@ -72,7 +89,7 @@ export function LevelLadder({
   };
 
   return (
-    <ol className={styles.ladder}>
+    <ol className={styles.ladder} data-motion-stagger>
       {rungs.map((rung) => {
         const value =
           rung.kind === "entry" && "high" in rung && rung.high !== undefined
@@ -87,14 +104,22 @@ export function LevelLadder({
         const distance = rung.kind === "price" ? null : distancePct(reference, price);
         const note = noteOf(rung);
         return (
-          <li key={`${rung.kind}-${rung.price}`} className={styles.rung} data-kind={rung.kind}>
+          <li
+            key={`${rung.kind}-${rung.price}`}
+            className={styles.rung}
+            data-kind={rung.kind === "target" && verdict === "sell" ? "sellLevel" : rung.kind}
+          >
             <span aria-hidden className={styles.rungMark} />
             <span className={styles.rungLabel}>{labelOf(rung)}</span>
             <span className={styles.rungPrice}>{value}</span>
             <span className={cn(styles.rungDistance, distance !== null && directionText(directionOf(distance)))}>
               {distance !== null ? formatPercent(distance, locale, 1) : ""}
             </span>
-            {note && <span className={styles.rungNote}>{note}</span>}
+            {note && (
+              <span className={styles.rungNote} lang={lang}>
+                {note}
+              </span>
+            )}
           </li>
         );
       })}

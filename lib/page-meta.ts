@@ -112,7 +112,7 @@ export function pageMetadata({
  */
 export function missingMetadata(locale: string): Metadata {
   return {
-    title: locale === "en" ? "Not found" : "Bulunamadı",
+    title: locale === "en" ? "Not Found" : "Bulunamadı",
     robots: { index: false, follow: false },
   };
 }

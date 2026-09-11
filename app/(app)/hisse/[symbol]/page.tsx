@@ -68,6 +68,7 @@ import { addEtDays, todayEt,
 } from "@/lib/market-hours";
 import type { Metadata } from "next";
 import { describeSymbol } from "@/db/seed/descriptions";
+import { isTechnicalSymbol, technicalHref } from "@/lib/technical";
 import {
   cn,
   directionOf,
@@ -383,7 +384,21 @@ export default async function StockPage(
             gidiyor ve iki sütun aynı hizada bitiyor. */}
         {/* Four independent cards now share two rows. No card absorbs the height of a neighboring column. */}
           <Panel className={styles.averagesPanel}>
-            <PanelHeader title={t.stock.movingAverages} action={<ChartLineUp className={styles.cardIcon} size={19} weight="duotone" aria-hidden />} />
+            {/* KAPSAMDAKİ ON İKİ HİSSEDE ORTALAMALAR PANELİ TEKNİK ANALİZE AÇILIYOR.
+                Bağlantı yalnızca tek yöndeydi: teknik sayfa şirkete gidiyor,
+                şirket sayfası hissenin günlük teknik analizinin var olduğunu
+                hiç söylemiyordu. `isTechnicalSymbol` saf bir küme sorgusu;
+                öteki semboller için ek sorgu ya da maliyet yok. */}
+            <PanelHeader
+              title={t.stock.movingAverages}
+              action={
+                isTechnicalSymbol(symbol) ? (
+                  <PanelLink href={technicalHref(symbol)}>{t.technical.title}</PanelLink>
+                ) : (
+                  <ChartLineUp className={styles.cardIcon} size={19} weight="duotone" aria-hidden />
+                )
+              }
+            />
             <Suspense fallback={<Skeleton className={styles.averagesSkeleton} />}>
               <MovingAverages symbol={symbol} locale={locale} t={t} />
             </Suspense>

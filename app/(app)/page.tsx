@@ -63,6 +63,9 @@ import {
   zoneTag,
 } from "@/lib/session-clock";
 import { FillColumn } from "@/components/today/FillColumn";
+import { TechnicalPulse } from "@/components/technical/TechnicalPulse";
+import { editionTime, newestEdition, slotLabel } from "@/lib/technical";
+import { getTechnicalBoard } from "@/lib/technical-data";
 import { getQuotes } from "@/lib/providers";
 import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
 import { ALL_MEMBERS, primaryOnly } from "@/db/seed/indices";
@@ -340,6 +343,7 @@ export default async function TodayPage() {
           </Suspense>
         </div>
 
+
       </div>
 
       {/* ================= Yan kolon =================
@@ -391,6 +395,25 @@ export default async function TodayPage() {
         <div data-home-section="macro">
           <Suspense fallback={<PanelSkeleton rows={3} footer />}>
             <MacroSummary locale={locale} t={t} />
+          </Suspense>
+        </div>
+
+        {/* ---- Teknik görünüm ----
+             SİTENİN YAZDIĞI İÇERİĞİN ANA SAYFADA KENDİ YERİ VAR; teknik
+             analizin yoktu ve ona yalnızca alt bilgiden ulaşılıyordu. Panel
+             yan kolonda çünkü içeriği okunacak bir metin değil bir ölçü: on iki
+             hissenin görüş dağılımı ve kimin hangi görüşte olduğu. Ana kolonda
+             denendi ve ölçüldü: 292 piksel ana kolonu yan kolondan 1440'ta 345,
+             1024'te 543 piksel uzun bırakıyordu (panelsiz fark ~33 piksel).
+             Burada dengeyi iyileştiriyor. Aynı veriyle, aynı sayfada paneli
+             gizleyerek ölçüldü: ana kolon panelsiz 1024'te 443, 1280'de 328
+             piksel uzun kalıyor; panelle fark 158 ve 43 piksele iniyor
+             (1440/1600'de ~40). Kolon boyları o günün verisiyle oynuyor, bu
+             sayılar 11 Eylül akşamının verisi.
+             Pano boşsa panel hiç basılmıyor, yer tutucu yok. */}
+        <div data-home-section="technical">
+          <Suspense fallback={null}>
+            <TechnicalPanel locale={locale} t={t} />
           </Suspense>
         </div>
 
@@ -2162,6 +2185,34 @@ async function StoriesSpotlight({
  * panel hiç çıkmıyor ve ızgara satırı kendiliğinden kapanıyor — okuma girişi
  * yukarıdaki Mercek bloğunda zaten var.
  */
+async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) {
+  const board = await getTechnicalBoard();
+  if (board.length === 0) return null;
+  const meta = await getSymbolNames(board.map(({ row }) => row.symbol));
+  const latest = newestEdition(board);
+  return (
+    <Panel className="min-w-0">
+      <PanelHeader
+        title={t.technical.title}
+        tone="plate"
+        action={<PanelLink href="/teknik">{t.common.showAll}</PanelLink>}
+      />
+      <div className="flex flex-col gap-3 px-4 pb-4 sm:px-5">
+        {latest && (
+          <p className="text-tiny text-muted">
+            {t.technical.latestEdition} ·{" "}
+            <span className="font-semibold text-body">
+              {slotLabel(latest.slot, t)} · {formatEtDateCompact(latest.sessionDate, locale)} ·{" "}
+              <span className="numeral">{editionTime(latest.sessionDate, latest.slot, locale)}</span>
+            </span>
+          </p>
+        )}
+        <TechnicalPulse board={board} meta={meta} t={t} variant="panel" />
+      </div>
+    </Panel>
+  );
+}
+
 async function LatestAnalyses({
   locale,
   t,

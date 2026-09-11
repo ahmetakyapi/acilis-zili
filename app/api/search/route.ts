@@ -16,11 +16,16 @@ import { aliasSymbols } from "@/db/seed/aliases";
 import { guideArticles } from "@/content/guide";
 import { getLocale } from "@/lib/i18n";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { isTechnicalSymbol } from "@/lib/technical";
 
 export type SearchHit = {
   symbol: string;
   name: string;
   industry?: string | null;
+  /** Günlük teknik analizi olan on iki hisseden biri mi. Palet o sembolün
+      altına ikinci bir satır açıyor: "NVDA" yazan okuyucu hissenin teknik
+      analizine şirket sayfasına uğramadan gidebilsin. */
+  technical?: boolean;
 };
 
 /**
@@ -246,5 +251,9 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ hits, writings } satisfies SearchResponse);
+  /* Bayrak sunucuda ekleniyor: liste on iki sembollük sabit bir küme ve
+     palete `lib/technical`i taşımak istemci demetine gösterge kodunu da
+     çekerdi. */
+  const flagged = hits.map((hit) => (isTechnicalSymbol(hit.symbol) ? { ...hit, technical: true } : hit));
+  return NextResponse.json({ hits: flagged, writings } satisfies SearchResponse);
 }

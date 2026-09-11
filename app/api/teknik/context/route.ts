@@ -7,6 +7,7 @@ import { ET_ZONE, SESSION_BOUNDS, addEtDays } from "@/lib/market-hours";
 import { earningsCalendar } from "@/lib/schema";
 import { TR_ZONE, clockOf, formatInZone, timePair } from "@/lib/session-clock";
 import {
+  SLOT_RANK,
   TECHNICAL_CRON,
   TECHNICAL_SYMBOLS,
   currentSlot,
@@ -50,11 +51,16 @@ export async function GET(request: Request) {
   const override = url.searchParams.get("slot");
   const status = await getStatus();
   const sessionDate = status.etDate;
-  const slot = status.tradingToday
-    ? isTechnicalSlot(override)
+  /* GEÇERSİZ KILMA YALNIZCA YAZILABİLECEK SLOTA. Yazma ucu yeni kaydı
+     yalnızca şu anki ya da daha erken slota kabul ediyor (bkz.
+     saveTechnicalBatch); bağlam bir dönem işlem günü boyunca her saatte
+     her slotu veriyordu ve kapanıştan sonra "premarket" isteyen rutin,
+     yazılamayacak bir yayının bağlamını alıyordu. */
+  const live = status.tradingToday ? currentSlot(status) : null;
+  const slot =
+    live !== null && isTechnicalSlot(override) && SLOT_RANK[override] <= SLOT_RANK[live]
       ? override
-      : currentSlot(status)
-    : null;
+      : live;
   const now = new Date();
 
   /* Saatler iki dilde: rutin Türkçe metinde TR saatini, İngilizcede NY

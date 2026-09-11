@@ -1095,7 +1095,13 @@ nereden geldiğini söyle ("50 günlük ortalama ile önceki dip çakışıyor")
 
 Sayılar HAM ve NOKTALI yazılır: 219.74 — "219,74 $" değil. Bütün seviyeler
 fiyatın yarısı ile iki katı arasında olmalı; dışındaki sayıyı uç birim
-hatası sayıp reddeder.
+hatası sayıp reddeder. Taraf da denetlenir: fiyatın üstündeki bir destek,
+altındaki bir direnç ve (alım bölgesi yokken) fiyatın altındaki bir hedef
+yarım ATR paydan fazlaysa o hisse reddedilir.
+
+Yayının penceresi geçtiyse uç yeni kayıt kabul etmez, yalnızca var olan
+kaydı düzeltir: kapanıştan sonra ya da tatilde yeni analiz yazılmaz. Bağlam
+`session.slot` null dönüyorsa bu yüzden.
 
 --- 4. METİN (İKİ DİLDE) ---
 

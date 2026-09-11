@@ -1,4 +1,6 @@
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { SpotlightCard } from "@/components/motion/PremiumMotion";
 import { LogoTile } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, verdictPillClass, type VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -6,10 +8,12 @@ import type { Quote } from "@/lib/providers/types";
 import type { TechnicalAnalysisRow } from "@/lib/schema";
 import {
   distancePct,
+  planPosition,
   rsiZone,
   slotLabel,
   stanceChangeLabel,
   technicalHref,
+  type PlanPosition,
 } from "@/lib/technical";
 import {
   cn,
@@ -17,6 +21,7 @@ import {
   directionText,
   formatEtDateCompact,
   formatPercent,
+  formatPercentPlain,
   formatPrice,
 } from "@/lib/utils";
 import { LevelTrack } from "./LevelTrack";
@@ -27,16 +32,32 @@ export function changeToneClass(verdict: VerdictKey): string {
   return verdict === "buy" ? "text-up" : verdict === "sell" ? "text-down" : "text-primary-ink";
 }
 
+/** Plan konumunun etiketi; uzaklık işaretsiz, yönü cümle söylüyor. */
+export function planPositionLabel(position: PlanPosition, locale: Locale, t: Dictionary): string {
+  switch (position.kind) {
+    case "inZone":
+      return t.technical.planInZone;
+    case "belowStop":
+      return t.technical.planBelowStop;
+    case "above":
+      return t.technical.planAbove.replace("{n}", formatPercentPlain(position.pct, locale, 1));
+    case "below":
+      return t.technical.planBelow.replace("{n}", formatPercentPlain(position.pct, locale, 1));
+  }
+}
+
 /**
  * Liste kartı — bir hissenin son analizi tek bakışta.
  *
  * Sıra okuyucunun sorusunun sırası: ne diyor (görüş), değişti mi (rozet),
- * şimdi nerede (fiyat), neden (tek cümle), nereden alınır nerede satılır
- * (seviye çizgisi), göstergeler ne gösteriyor (çipler).
+ * şimdi nerede (fiyat ve plana göre yeri), neden (tek cümle), nereden alınır
+ * nerede satılır (seviye çizgisi), göstergeler ne gösteriyor (çipler).
  *
  * FİYAT CANLI, SEVİYELER KAYITTAN. Çizgideki nokta şu anki fiyat: okuyucu
  * sabah yazılmış alım bölgesine fiyatın şimdi ne kadar yaklaştığını görsün.
- * Kotasyon gelmezse fotoğraftaki fiyata düşülür.
+ * Kotasyon gelmezse fotoğraftaki fiyata düşülür ve etiket de ona göre
+ * "Analiz Anında" olur: eski bir fiyata "Şu An" demek sayıyı olduğundan
+ * taze gösterirdi.
  */
 export function TechnicalCard({
   row,
@@ -53,6 +74,7 @@ export function TechnicalCard({
   quote: Quote | null;
   company: string | null;
   logoUrl: string | null;
+  /** Kotasyon varken kullanılacak etiket ("Şu An" ya da "Son Fiyat"). */
   priceLabel: string;
   locale: Locale;
   t: Dictionary;
@@ -67,6 +89,8 @@ export function TechnicalCard({
   const { snapshot } = row;
   const price = quote?.price ?? snapshot.price;
   const changePct = quote ? quote.changePct : snapshot.changePct;
+  const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
+  const headingId = `technical-${row.symbol}`;
 
   const chips: string[] = [];
   if (snapshot.rsi14 !== null) {
@@ -101,13 +125,17 @@ export function TechnicalCard({
   }
 
   return (
-    <Link href={technicalHref(row.symbol)} prefetch={false} className={styles.card}>
+    <SpotlightCard className={styles.card}>
       <div className={styles.cardHead}>
         <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
-        <span className={styles.cardName}>
-          <span className={styles.cardSymbol}>{row.symbol}</span>
+        <div className={styles.cardName}>
+          <h2 id={headingId} className={styles.cardSymbol}>
+            <Link href={technicalHref(row.symbol)} prefetch={false} className={styles.cardLink}>
+              {row.symbol}
+            </Link>
+          </h2>
           {company && <span className={styles.cardCompany}>{company}</span>}
-        </span>
+        </div>
         <span className={styles.badges}>
           <span className={cn(styles.stance, verdictPillClass(verdict))}>
             {verdictLabel(verdict, t)}
@@ -125,8 +153,14 @@ export function TechnicalCard({
             {formatPercent(changePct, locale)}
           </span>
         )}
-        <span className={styles.cardPriceLabel}>{priceLabel}</span>
+        <span className={styles.cardPriceLabel}>{quote ? priceLabel : t.technical.atAnalysis}</span>
       </div>
+
+      {position && (
+        <span className={styles.plan} data-kind={position.kind}>
+          {planPositionLabel(position, locale, t)}
+        </span>
+      )}
 
       <p className={styles.cardHeadline} lang={untranslated ? "tr" : locale}>
         {untranslated && (
@@ -135,6 +169,7 @@ export function TechnicalCard({
             className="mr-1.5 inline-flex rounded bg-surface-sunken px-1.5 align-[1px] text-nano font-bold text-muted"
           >
             {t.technical.originalBadge}
+            <span className="sr-only">{t.technical.langNote}</span>
           </span>
         )}
         {copy.headline}
@@ -148,6 +183,7 @@ export function TechnicalCard({
         targets={row.targets}
         supports={row.supports}
         resistances={row.resistances}
+        verdict={verdict}
         locale={locale}
         t={t}
       />
@@ -166,8 +202,13 @@ export function TechnicalCard({
         <span>
           {slotLabel(row.slot, t)} · {formatEtDateCompact(row.sessionDate, locale)}
         </span>
-        <span className={styles.cardRead}>{t.technical.readAnalysis} ↗</span>
+        {/* Bağlantı zaten başlıkta ve kartı kaplıyor; bu yazı yalnızca bir
+            işaret, ekran okuyucuya ikinci bir bağlantı gibi okunmasın. */}
+        <span className={styles.cardRead} aria-hidden>
+          {t.technical.readAnalysis}
+          <ArrowUpRight size={12} weight="bold" />
+        </span>
       </div>
-    </Link>
+    </SpotlightCard>
   );
 }

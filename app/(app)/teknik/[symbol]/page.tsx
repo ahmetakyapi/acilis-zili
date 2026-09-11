@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import { MotionExperience, Reveal, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
 import { LevelLadder } from "@/components/technical/LevelLadder";
 import { LevelTrack } from "@/components/technical/LevelTrack";
-import { changeToneClass } from "@/components/technical/TechnicalCard";
+import { changeToneClass, planPositionLabel } from "@/components/technical/TechnicalCard";
 import styles from "@/components/technical/Technical.module.css";
 import { EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
 import {
@@ -18,14 +18,15 @@ import {
   verdictTextClass,
 } from "@/lib/analysis";
 import { getStatus, getSymbolNames } from "@/lib/data";
-import { getI18n } from "@/lib/i18n";
-import { metaDescription, missingMetadata } from "@/lib/page-meta";
+import { getDictionary, getI18n } from "@/lib/i18n";
+import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
 import { pageAlternates } from "@/lib/site";
 import {
   TECHNICAL_SYMBOLS,
   editionTime,
   isTechnicalSymbol,
+  planPosition,
   slotLabel,
   stanceChangeLabel,
   technicalHref,
@@ -54,9 +55,17 @@ export async function generateMetadata(
       ? (detail.row.copy.en ?? detail.row.copy.tr)
       : detail.row.copy.tr
     : null;
+  const t = getDictionary(locale);
   return {
     title: locale === "en" ? `${upper} Technical Analysis` : `${upper} Teknik Analiz`,
-    description: metaDescription(copy?.headline),
+    /* ANALİZ YOKKEN SAYFA BOŞ BİR KABUK. Açıklaması da yoktu ve arama
+       motoruna "başlık var, içerik yok" bir sayfa ilan ediliyordu; o hâlde
+       dizine girmiyor, bağlantıları izleniyor. */
+    description: copy ? metaDescription(copy.headline) : t.technical.emptyHint,
+    ...(detail ? {} : { robots: { index: false, follow: true } }),
+    openGraph: detail
+      ? articleOpenGraph(locale, { modifiedTime: new Date(detail.row.updatedAt).toISOString() })
+      : undefined,
     /* HREFLANG YALNIZCA VAR OLAN DİLLERİ İLAN EDER — İngilizce metin yoksa
        /en adresi Türkçesini gösteriyor, o adres İngilizce sayfa değil. */
     alternates: pageAlternates(
@@ -126,10 +135,22 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   const quote = quotes.ok ? (quotes.data[symbol] ?? null) : null;
   const price = quote?.price ?? row.snapshot.price;
   const changePct = quote ? quote.changePct : row.snapshot.changePct;
-  const priceLabel =
-    status.session === "regular" && quotes.ok && quote && !quotes.stale
+  /* ETİKET TEK YERDE: kapak ve merdiven aynı adı kullanıyor. Kotasyon yoksa
+     fiyat fotoğraftan geliyor ve adı "Analiz Anında"; seans dışında "Son
+     Fiyat"; yalnızca açık seansta taze kotasyon "Şu An". */
+  const priceLabel = !quote
+    ? t.technical.atAnalysis
+    : status.session === "regular" && quotes.ok && !quotes.stale
       ? t.technical.now
       : t.market.lastPrice;
+  const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
+  const sectionItems = [
+    { id: "technical-levels", label: t.technical.levels },
+    { id: "technical-reading", label: t.technical.summary },
+    { id: "technical-indicators", label: t.technical.indicators },
+    { id: "technical-watch", label: t.technical.watch },
+    ...(history.length > 1 ? [{ id: "technical-history", label: t.technical.history }] : []),
+  ];
   const levelProps = {
     entryLow: row.entryLow,
     entryHigh: row.entryHigh,
@@ -153,7 +174,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
 
       {/* ---- Kapak ---- */}
       <header className={styles.cover}>
-        <div className={styles.coverMain}>
+        <div className={styles.coverMain} data-motion-intro>
           <div className={styles.coverIdentity}>
             <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="lg" />
             <div className="min-w-0">
@@ -194,27 +215,43 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             </div>
             {/* Analiz anındaki fiyat ancak FARKLIYSA yazılıyor: aynı sayının
                 iki etiketle yan yana durması bilgi değil. */}
+            {position && (
+              <span className={cn(styles.plan, "mt-1")} data-kind={position.kind}>
+                {planPositionLabel(position, locale, t)}
+              </span>
+            )}
             {row.snapshot.price !== null && price !== null && Math.abs(row.snapshot.price - price) >= 0.005 && (
               <span className={styles.priceNote}>
                 {t.technical.atAnalysis}: {formatPrice(row.snapshot.price, locale, { currency: true })}
               </span>
             )}
           </div>
-          <LevelTrack price={price} {...levelProps} locale={locale} t={t} />
+          <LevelTrack price={price} {...levelProps} verdict={verdict} size="lg" locale={locale} t={t} />
         </div>
       </header>
 
+      <SectionNav className={styles.sectionNav} label={t.technical.sectionsLabel} items={sectionItems} />
+
       {/* ---- Seviyeler ve değerlendirme ---- */}
       <div className={styles.twoCol}>
-        <section className={styles.block}>
+        <section id="technical-levels" className={styles.block}>
           <div className={styles.blockHead}>
             <h2 className={styles.sectionTitle}>{t.technical.levels}</h2>
             <span className="text-tiny text-muted">{t.technical.levelsNote}</span>
           </div>
-          <LevelLadder price={price} {...levelProps} copy={copy} locale={locale} t={t} />
+          <LevelLadder
+            price={price}
+            {...levelProps}
+            copy={copy}
+            verdict={verdict}
+            priceLabel={priceLabel}
+            lang={copyLang}
+            locale={locale}
+            t={t}
+          />
         </section>
 
-        <div className="flex min-w-0 flex-col gap-4">
+        <div id="technical-reading" className="flex min-w-0 flex-col gap-4">
           <section className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.summary}</h2>
             <p className={styles.prose} lang={copyLang}>
@@ -223,7 +260,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           </section>
           <section className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.scenarios}</h2>
-            <div className={styles.scenarios}>
+            <div className={styles.scenarios} data-motion-stagger>
               <div className={styles.scenario} data-tone="up">
                 <h3>{t.technical.bullCase}</h3>
                 <p lang={copyLang}>{copy.bull}</p>
@@ -238,13 +275,15 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       </div>
 
       {/* ---- Göstergeler ---- */}
-      <section className="flex flex-col gap-3">
-        <h2 className={styles.sectionTitle}>{t.technical.indicators}</h2>
-        <IndicatorPanels snapshot={row.snapshot} price={price} locale={locale} t={t} />
-      </section>
+      <Reveal>
+        <section id="technical-indicators" className="flex flex-col gap-3">
+          <h2 className={styles.sectionTitle}>{t.technical.indicators}</h2>
+          <IndicatorPanels snapshot={row.snapshot} price={price} locale={locale} t={t} />
+        </section>
+      </Reveal>
 
       {/* ---- Hacim ve dikkat edilecekler ---- */}
-      <div className={styles.twoCol}>
+      <div id="technical-watch" className={styles.twoCol}>
         <section className={styles.block}>
           <h2 className={styles.sectionTitle}>{t.technical.volumeRead}</h2>
           <p className={styles.prose} lang={copyLang}>
@@ -263,7 +302,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
 
       {/* ---- Görüş geçmişi ---- */}
       {history.length > 1 && (
-        <section className={styles.block}>
+        <section id="technical-history" className={styles.block}>
           <h2 className={styles.sectionTitle}>{t.technical.history}</h2>
           <div className={styles.tableWrap}>
             <table className={styles.table}>
