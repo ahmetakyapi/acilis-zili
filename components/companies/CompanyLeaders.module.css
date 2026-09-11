@@ -34,3 +34,14 @@
 @media(max-width:767px) { .shelf { height:202px; } .choices { gap:8px 4px; } .company { min-height:90px; } .rank { left:0; top:0; font-size:8px; } .logo > span { width:36px; height:36px; } .symbol { font-size:9px; } .reading { padding-top:16px; min-height:112px; } .detail { column-gap:12px; } .identity h3 { font-size:18px; } .cap dd { font-size:23px; } }
 @media(max-width:360px) { .choices { column-gap:3px; } .logo > span { width:31px; height:31px; } .company { gap:7px; } .detail { column-gap:9px; } .identity h3 { font-size:16px; } .cap dd { font-size:21px; } }
 @media(prefers-reduced-motion:reduce) { .arc .trace { animation:none; } .logo,.symbol,.selection,.open svg { transition:none; } .company:hover .logo,.company[aria-pressed="true"] .logo,.detail:hover .open svg { transform:none; } }
+
+/* Ten companies remain visible; trim the oversized shelves instead of
+   centering the page title in the resulting empty column. */
+.shelf { height:182px; margin-top:10px; }
+.company { min-height:78px; padding-top:13px; gap:5px; }
+.logo > span { width:36px; height:36px; }
+.choices { gap:7px 8px; }
+.reading { padding-top:12px; min-height:90px; }
+.detail { row-gap:8px; }
+@media(max-width:767px) { .shelf { height:178px; } .choices { gap:6px 4px; } .company { min-height:77px; } }
+@media(max-width:359px) { .logo > span { width:30px; height:30px; } }

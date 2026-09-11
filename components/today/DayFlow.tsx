@@ -173,7 +173,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
 
   return <div ref={ref} className={styles.flow} data-day-flow>
     <div className={styles.toolbar}>
-      <span className={styles.date}><CalendarBlank size={15} />{dayLabel}<small>NY</small></span>
+      <span className={styles.date}><CalendarBlank size={15} /><span className={styles.marketDay}>{labels.marketDay}</span>{dayLabel}<small>NY</small></span>
       <div className={styles.connection} data-state={connection}>
         {connection === "checking" ? <CircleNotch className={styles.spinner} size={13} /> : <span className={styles.connectionDot} />}
         <span>{connection === "error" ? labels.offline : labels.auto}</span>
@@ -198,20 +198,22 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
           const target = group[(active + 1) % group.length];
           const released = group.some((event) => event.status !== "scheduled");
           return <button key={time} className={styles.eventDot} data-selected={active >= 0} data-released={released} style={{ left: `${pct(minutesOf(time))}%` }} onClick={() => select(target.id)} aria-pressed={active >= 0} aria-controls={detailId} aria-label={`${labels.selectEvent}: ${timeOf(target)} ${snapshot.tags.primary} · ${target.title}`} title={`${primary(minutesOf(time))} · ${group.map((event) => event.title).join(", ")}`}>
-            {group.length > 1 ? <span>{group.length}</span> : group[0].kind === "earnings" ? <Bell size={13} weight="bold" /> : <TrendUp size={13} weight="bold" />}
+            <span>{String(events.indexOf(active >= 0 ? group[active] : group[0]) + 1).padStart(2, "0")}</span>
+            {group.length > 1 && <small aria-hidden="true">+</small>}
           </button>;
         })}
         {now >= 240 && now <= 1200 && <div className={styles.now} data-live={snapshot.tradingDay} data-edge={pct(now) < 8 ? "start" : pct(now) > 92 ? "end" : undefined} style={{ left: `${pct(now)}%` }}><span>{railLabels.now}</span><i /></div>}
       </div>
       <div className={styles.axisLabels}><span>{primary(240)}</span><span>{snapshot.tradingDay ? railLabels.marketHours : labels.closed}</span><span>{primary(1200)} {snapshot.tags.primary}</span></div>
+      <div className={styles.railLegend}><span><TrendUp size={12} />{labels.economic}</span><span><Bell size={12} />{labels.earnings}</span><p>{labels.timelineHint}</p></div>
     </div>
 
     {events.length ? <>
       <div className={styles.eventHeading}><h3>{labels.events}<span>{events.length}</span></h3><div><button aria-label={labels.back} disabled={selectedIndex <= 0} onClick={() => events[selectedIndex - 1] && select(events[selectedIndex - 1].id)}><ArrowLeft size={18} /></button><button aria-label={labels.next} disabled={selectedIndex >= events.length - 1} onClick={() => events[selectedIndex + 1] && select(events[selectedIndex + 1].id)}><ArrowRight size={18} /></button></div></div>
       <div className={styles.eventLayout}>
       <div ref={cards} className={styles.eventCards}>
-        {events.map((event) => <button key={event.id} data-event-id={event.id} className={styles.eventCard} data-selected={selected?.id === event.id} onClick={() => select(event.id)} aria-pressed={selected?.id === event.id} aria-controls={detailId}>
-          <span className={styles.cardTime} data-unknown={!event.timeEt}>{timeOf(event)}{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
+        {events.map((event, index) => <button key={event.id} data-event-id={event.id} className={styles.eventCard} data-selected={selected?.id === event.id} onClick={() => select(event.id)} aria-pressed={selected?.id === event.id} aria-controls={detailId}>
+          <span className={styles.cardTime} data-unknown={!event.timeEt}><span className={styles.eventNumber}>{String(index + 1).padStart(2, "0")}</span>{timeOf(event)}{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
           <span className={styles.cardSummary}>
             <span className={styles.cardKind}>{event.kind === "earnings" ? <Bell size={12} /> : <TrendUp size={12} />}{event.kind === "earnings" ? labels.earnings : labels.economic}<Status event={event} nowMs={nowMs} labels={labels} /></span>
             <strong>{event.title}</strong>
@@ -220,15 +222,15 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
         </button>)}
       </div>
       <AnimatePresence initial={false} mode="wait">
-        {selected && <motion.div key={selected.id} id={detailId} role="region" aria-label={selected.title} className={styles.detail} initial={reduced ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -3 }} transition={{ duration: .18 }}>
-          <div className={styles.detailHeading}><div><span>{timeOf(selected)} {selected.timeEt && snapshot.tags.primary} · {selected.detail ?? (selected.kind === "earnings" ? labels.earnings : labels.economic)}</span><h4>{selected.title}</h4></div><Status event={selected} nowMs={nowMs} labels={labels} /></div>
+        {selected && <motion.div key={selected.id} id={detailId} role="region" aria-label={selected.title} className={styles.detail} data-kind={selected.kind} initial={reduced ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -3 }} transition={{ duration: .18 }}>
+          <div className={styles.detailHeading}><div><span className={styles.detailKicker}><b className="numeral">{String(selectedIndex + 1).padStart(2, "0")}</b>{timeOf(selected)} {selected.timeEt && snapshot.tags.primary} · {selected.detail ?? (selected.kind === "earnings" ? labels.earnings : labels.economic)}</span><h4>{selected.title}</h4></div><Status event={selected} nowMs={nowMs} labels={labels} /></div>
           {selected.members ? <div className={styles.members}>{selected.members.map((member) => <div key={member.symbol} className={styles.member}>
             <div className={styles.memberIdentity}><LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" /><div><strong>{member.symbol}</strong><Status event={{ status: member.status, scheduledAt: selected.scheduledAt }} nowMs={nowMs} labels={labels} /></div></div>
             {(member.revenue || member.eps) && <dl className={styles.memberNumbers}>{member.revenue && <div><dt>{labels.revenue}</dt><dd>{member.revenue}</dd></div>}{member.eps && <div><dt>{labels.eps}</dt><dd>{member.eps}</dd></div>}</dl>}
             <Link href={member.href} className={styles.detailLink} data-analysis={member.status === "analyzed"}>{member.status === "analyzed" ? labels.readAnalysis : labels.viewCompany}<ArrowUpRight size={16} /></Link>
           </div>)}</div> : <>
-            <dl className={styles.results}>{[[labels.actual, selected.actual], [labels.forecast, selected.forecast], [labels.previous, selected.previous]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value ?? "—"}</dd></div>)}</dl>
-            {!selected.actual && <p className={styles.waiting}>{labels.pendingHint}</p>}
+            {(selected.actual || selected.forecast || selected.previous) && <dl className={styles.results}>{[[labels.actual, selected.actual], [labels.forecast, selected.forecast], [labels.previous, selected.previous]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value ?? "—"}</dd></div>)}</dl>}
+            {!selected.actual && <p className={styles.waiting}>{displayFlowStatus(selected, nowMs) === "scheduled" ? labels.scheduledHint : labels.pendingHint}</p>}
           </>}
           <div className={styles.detailFooter}><span>{labels.source}: {selected.source}</span><Link href={selected.href}>{labels.calendar}<ArrowUpRight size={13} /></Link></div>
         </motion.div>}

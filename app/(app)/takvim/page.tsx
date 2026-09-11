@@ -149,9 +149,9 @@ export default async function CalendarPage(
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <header className={styles.hero}>
-        <div>
-          <p className={styles.eyebrow}>{locale === "tr" ? "Ekonominin Ajandası" : "The Economic Agenda"}</p>
+      <header className={`${styles.hero} page-frame`}>
+        <div className="page-heading-copy">
+          <p className={`${styles.eyebrow} page-eyebrow`}>{locale === "tr" ? "Ekonominin Ajandası" : "The Economic Agenda"}</p>
           <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
             {t.calendar.title}
           </h1>

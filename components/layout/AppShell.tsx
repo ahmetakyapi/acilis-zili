@@ -187,7 +187,7 @@ export function AppShell({
       {/* ---- Masaüstü masthead ----
            Üst güvenli alan burada da eklenir; masaüstünde 0 döner, tablette
            tam ekran (standalone) açıldığında değil. */}
-      <header className="chrome sticky top-0 z-30 hidden items-center gap-4 border-b px-5 pb-3.5 pt-[calc(env(safe-area-inset-top)+14px)] lg:flex xl:gap-6 xl:px-10">
+      <header className="chrome sticky top-0 z-30 hidden min-h-[var(--app-bar-h)] items-center gap-4 border-b px-5 pb-3.5 pt-[calc(env(safe-area-inset-top)+14px)] lg:flex xl:gap-6 xl:px-10">
         <Link href={L("/")} className="shrink-0" aria-label={labels.brandName}>
           <BrandLockup
             name={labels.brandName}

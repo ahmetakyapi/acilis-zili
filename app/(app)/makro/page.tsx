@@ -83,9 +83,10 @@ export default async function MacroPage() {
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <div className={styles.hero}>
+      <div className={`${styles.hero} page-frame`}>
         <div className={styles.intro}>
         <PageHeader
+          embedded
           eyebrow={locale === "tr" ? "ABD Ekonomisi" : "US Economy"}
           title={t.macro.title}
           subtitle={t.macro.subtitle}

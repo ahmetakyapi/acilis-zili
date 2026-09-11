@@ -10,7 +10,7 @@ import {
 import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
 import { DeleteAccount } from "@/components/auth/DeleteAccount";
-import { Panel, PanelHeader } from "@/components/ui/primitives";
+import { Panel, PanelHeader, PageHeader } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -39,9 +39,7 @@ export default async function SettingsPage() {
   return (
     <MotionExperience className={`${polish.page} ${polish.settings} mx-auto w-full`}>
       <ScrollProgress />
-      <h1 className="display-ink self-start text-heading font-bold tracking-[-0.03em] sm:text-display">
-        {t.settings.title}
-      </h1>
+      <PageHeader title={t.settings.title} />
 
       <Panel>
         <PanelHeader title={t.settings.account} />

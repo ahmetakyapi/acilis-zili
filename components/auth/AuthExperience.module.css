@@ -22,3 +22,11 @@
 @media(max-width:1023px) { .layout { display:flex; flex-direction:column; align-items:stretch; gap:28px; max-width:580px; padding:8px 0 12px; } .formCard { order:1; } .pitch { order:2; padding:10px 4px; } .pitch h2 { max-width:24ch; font-size:28px; } .features { margin-top:22px; } }
 @media(max-width:540px) { .formCard { padding:24px 20px; border-radius:18px; } .formCard h1 { font-size:26px; } .inputWrap input { font-size:16px; } .pitch > p { margin-top:14px; } }
 @media(prefers-reduced-motion:reduce) { .visibility { transition:none; } }
+
+/* Sign-in and sign-up used center alignment, putting the shorter form
+   lower on the page. Both now start at the content origin. */
+.layout { align-items:start; padding-top:0; }
+.pitch { padding-top:24px; }
+.formCard { padding:24px; }
+@media(max-width:1023px) { .layout { padding-top:0; } }
+@media(max-width:540px) { .formCard { padding:22px 18px; } }

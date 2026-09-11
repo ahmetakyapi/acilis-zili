@@ -132,3 +132,74 @@
 }
 @media(hover:hover) and (prefers-reduced-motion:no-preference) { .eventDot:hover { box-shadow:0 0 0 5px var(--primary-wash); } }
 @keyframes time-beacon { from { transform:scale(.7); opacity:.6; } 80%,to { transform:scale(1.9); opacity:0; } }
+
+/* A compact session diagram and numbered agenda share the same event IDs.
+   Result values retain their source units; no inferred numeric charts. */
+.flow { padding-bottom:14px; }
+.toolbar { padding-top:12px; font-size:11px; }
+.marketDay { color:var(--text-muted); font-weight:450; }
+.connection { font-size:10px; }
+.connection button { min-height:30px; border-color:var(--line-soft); }
+.rail { margin-top:10px; padding:10px 14px 8px; background:linear-gradient(180deg,var(--primary-tint),transparent); border-radius:12px; }
+.bounds { height:36px; }
+.bound { gap:2px; }
+.bound > span { font-size:10px; }
+.bound strong { font-size:14px; }
+.axis { height:40px; }
+.track { top:16px; height:4px; }
+.sessionBand { top:14px; height:8px; background:var(--line-strong); }
+.elapsed { top:17px; height:2px; }
+.boundDot { top:14px; width:7px; height:7px; box-shadow:0 0 0 3px var(--premium-surface); }
+.eventDot { top:4px; width:28px; height:28px; border-radius:9px; box-shadow:0 2px 5px var(--primary-wash); }
+.eventDot > span { font-size:10px; font-variant-numeric:tabular-nums; }
+.eventDot > small { position:absolute; right:-3px; top:-7px; font-size:11px; color:var(--primary-ink); background:var(--surface-solid); border-radius:50%; width:12px; height:12px; line-height:12px; }
+.eventDot[data-selected="true"] { box-shadow:0 0 0 3px var(--primary-wash); }
+.now { top:28px; }
+.now i { top:-13px; }
+.axisLabels { margin-top:8px; font-size:10px; }
+.railLegend { display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; padding-top:9px; color:var(--text-muted); font-size:10px; }
+.railLegend > span { display:flex; align-items:center; gap:5px; }
+.railLegend p { margin-left:auto; }
+.eventHeading { margin:10px 0 6px; }
+.eventHeading h3 { font-size:12px; }
+.eventHeading button { width:30px; height:30px; }
+.eventLayout { grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:16px; }
+.eventCards { max-height:260px; }
+.eventCard { grid-template-columns:70px minmax(0,1fr) auto; gap:10px; padding:9px 10px; }
+.eventNumber { display:block; margin-bottom:3px; color:var(--primary-ink); font-size:10px; line-height:1; letter-spacing:.04em; }
+.cardTime { font-size:13px; }
+.cardSummary > strong { font-size:12px; line-height:1.5; }
+.cardKind,.status { font-size:10px; }
+.cardBottom > b { font-size:12px; }
+.detail { padding:12px 14px; border-color:var(--primary-faint); border-radius:12px; background:radial-gradient(ellipse at 0 0,var(--primary-tint),transparent 75%),var(--premium-surface); }
+.detailHeading { gap:6px; margin-bottom:10px; }
+.detailHeading > div { flex-basis:210px; }
+.detailHeading h4 { font-size:15px; margin-top:6px; }
+.detailKicker { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.detailKicker b { display:grid; place-items:center; min-width:22px; height:22px; color:var(--primary-ink); background:var(--primary-wash); border-radius:5px; font-size:10px; }
+.results { gap:10px; padding:10px 0; }
+.results dd { font-size:20px; }
+.results > div:first-child { padding-left:9px; border-left:2px solid var(--primary); }
+.results > div + div { padding-left:10px; }
+.detailFooter { font-size:10px; margin-top:6px; }
+.detailFooter a { min-height:28px; font-size:10px; }
+.member { padding-block:9px; }
+@media(max-width:1023px) {
+ .eventCard { grid-template-columns:60px minmax(0,1fr); }
+ .cardBottom { grid-column:2; }
+}
+@media(max-width:767px) {
+ .connection { width:auto; margin-left:auto; }
+ .toolbar { gap:8px; }
+ .date { font-size:11px; }
+ .marketDay { display:none; }
+ .rail { padding-inline:8px; }
+ .railLegend { gap:6px 12px; }
+ .railLegend p { flex-basis:100%; margin:0; }
+ .eventLayout { grid-template-columns:minmax(0,1fr); gap:10px; }
+ .eventCards { max-height:206px; }
+ .eventCard { padding-block:8px; }
+ .eventHeading button { width:36px; height:36px; }
+ .detail { padding:12px; }
+ .results dd { font-size:19px; }
+}

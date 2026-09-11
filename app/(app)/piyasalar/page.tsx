@@ -188,9 +188,10 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <div className={styles.marketHeader}>
+      <div className={`${styles.marketHeader} page-frame`}>
       <div className={styles.masthead}>
       <SectionMasthead
+        embedded
         eyebrow={locale === "tr" ? "ABD Piyasası" : "US Market"}
         title={t.markets.title}
         description={t.markets.subtitle}

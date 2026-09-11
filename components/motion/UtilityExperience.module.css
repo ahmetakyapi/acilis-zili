@@ -1,6 +1,6 @@
 /* Utility and reading routes share the same materials and control rhythm as
    the market directories, without restyling financial chart internals. */
-.page { display:flex; flex-direction:column; min-width:0; gap:24px; }
+.page { display:flex; flex-direction:column; min-width:0; gap:var(--page-section-gap); }
 .page > header { padding:8px 0 20px; border-bottom:1px solid var(--line); }
 .page :global(.panel) { border-radius:var(--radius-panel); background:var(--premium-surface); animation:none; }
 .page :is(a,button,input,select,summary):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }

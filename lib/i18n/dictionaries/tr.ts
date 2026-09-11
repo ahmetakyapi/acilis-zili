@@ -132,6 +132,9 @@ const tr = {
   },
 
   dayFlow: {
+    marketDay: "Piyasa Günü",
+    timelineHint: "Sonuç ve analiz için bir olay seç.",
+
     auto: "Otomatik Güncelleme",
     checked: "Son Kontrol",
     updating: "Kontrol Ediliyor",
@@ -161,6 +164,7 @@ const tr = {
     source: "Kaynak",
     revenue: "Gelir",
     eps: "Hisse Başına Kâr",
+    scheduledHint: "Açıklandığında sonuçlar burada güncellenir.",
     pendingHint: "Açıklama saatinin gelmesi sonucun yayımlandığı anlamına gelmez. Kaynak verisi bekleniyor.",
     analyzedHint: "Yayımlanan bilanço analizine şirketin yanındaki bağlantıdan ulaşabilirsin.",
     liveNote: "30 Saniyede Bir Kontrol",

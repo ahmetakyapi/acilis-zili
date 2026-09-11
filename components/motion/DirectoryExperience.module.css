@@ -1,6 +1,6 @@
 /* Directory headings measured 58/38px at 1440/390px; use a quieter
    46/32px scale so controls and actual data keep their visual priority. */
-.page { display:flex; flex-direction:column; min-width:0; gap:28px; }
+.page { display:flex; flex-direction:column; min-width:0; gap:var(--page-section-gap); }
 .hero { position:relative; isolation:isolate; display:grid; min-width:0; gap:32px; padding:34px 36px; border:1px solid var(--line); border-radius:24px; background:radial-gradient(ellipse at 92% 0,var(--primary-wash),transparent 58%),var(--premium-surface); box-shadow:var(--premium-shadow); }
 .hero[data-has-visual="true"] { grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); align-items:center; }
 .heroCopy,.heroVisual { min-width:0; }

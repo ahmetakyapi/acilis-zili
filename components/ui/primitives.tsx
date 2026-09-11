@@ -142,19 +142,22 @@ export function PageHeader({
   subtitle,
   action,
   className,
+  embedded = false,
 }: {
   eyebrow?: string;
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
   className?: string;
+  embedded?: boolean;
 }) {
   return (
     <header
-      className={cn("page-heading flex flex-wrap items-end justify-between gap-4", className)}
+      className={cn("page-heading page-masthead flex flex-wrap items-start justify-between gap-4", className)}
+      data-embedded={embedded}
     >
-      <div className="min-w-0">
-        {eyebrow && <p className="plate mb-2">{eyebrow}</p>}
+      <div className="min-w-0 page-heading-copy" data-has-eyebrow={!!eyebrow}>
+        {eyebrow && <p className="plate page-eyebrow">{eyebrow}</p>}
         <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
           {title}
         </h1>

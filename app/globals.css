@@ -1370,3 +1370,42 @@
 .loading-fallback-status > div { position:sticky; top:calc(var(--app-bar-h) + 100px); }
 @keyframes loading-region-shimmer { from { transform:translateX(-100%); } to { transform:translateX(100%); } }
 @media(prefers-reduced-motion:reduce) { .loading-surface-lines::after { animation:none; } }
+
+/* Shared opening rhythm. The audit found directory title tops from 101px
+   to 248px at 1440px, mostly caused by vertical centering and nested padding.
+   Data-rich openings keep their content height; their top and text geometry
+   use the same frame instead of adding blank space to shorter pages. */
+:root { --page-section-gap:24px; --page-frame-inset:24px; }
+.page-frame.page-frame.page-frame,
+.page-masthead.page-masthead[data-embedded="false"] {
+  position:relative;
+  min-width:0;
+  padding:var(--page-frame-inset);
+  border:1px solid var(--line);
+  border-radius:var(--radius-feature);
+  background:radial-gradient(ellipse at 95% 0,var(--primary-wash),transparent 65%),var(--premium-surface);
+  box-shadow:var(--premium-shadow);
+  align-items:start;
+}
+.page-frame.page-frame.page-frame { gap:24px; }
+.page-masthead.page-masthead[data-embedded="false"] { min-height:176px; }
+.page-masthead[data-embedded="true"] { padding:0; border:0; background:none; box-shadow:none; }
+header.page-masthead { display:flex; flex-direction:column; align-items:stretch; gap:10px; }
+header.page-heading.page-masthead { flex-direction:row; align-items:flex-start; }
+.page-heading-copy.page-heading-copy { min-width:0; padding:0; align-self:start; }
+.page-heading-copy.page-heading-copy > .page-eyebrow { margin:0; min-height:18px; font-size:12px; line-height:18px; font-weight:600; letter-spacing:.04em; color:var(--primary-ink); }
+.page-heading-copy[data-has-eyebrow="false"]::before { content:""; display:block; height:18px; }
+.page-heading-copy.page-heading-copy h1 { margin:8px 0 0; font-size:var(--heading-page); line-height:1.12; letter-spacing:-.045em; font-weight:600; max-width:none; }
+.page-heading-copy.page-heading-copy > p:not(.page-eyebrow),
+.page-masthead.page-masthead > p { margin:10px 0 0; max-width:64ch; font-size:14px; line-height:1.65; color:var(--text-body); }
+.page-masthead.page-masthead > p { margin-top:0; }
+@media(max-width:767px) {
+ :root { --page-section-gap:18px; --page-frame-inset:18px; }
+ .page-frame.page-frame.page-frame { grid-template-columns:minmax(0,1fr); gap:18px; }
+ .page-masthead.page-masthead[data-embedded="false"] { min-height:158px; }
+ .page-heading-copy.page-heading-copy > .page-eyebrow { font-size:11px; }
+ .page-heading-copy.page-heading-copy h1 { margin-top:7px; }
+}
+
+.page-frame.page-frame[data-has-visual="false"] { min-height:176px; }
+@media(max-width:767px) { .page-frame.page-frame[data-has-visual="false"] { min-height:158px; } }

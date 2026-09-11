@@ -1,6 +1,6 @@
 /* Shared mastheads measured 62/42px at 1440/390px. Reduce display
    emphasis while keeping article body text and small UI labels readable. */
-.page { display:flex; flex-direction:column; min-width:0; gap:28px; }
+.page { display:flex; flex-direction:column; min-width:0; gap:var(--page-section-gap); }
 .guidePage { display:flex; flex-direction:column; min-width:0; gap:36px; }
 .page :global(.panel),.guidePage :global(.panel) { animation:none; }
 .masthead { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:end; gap:24px; padding:12px 0 23px; border-bottom:1px solid var(--line); }

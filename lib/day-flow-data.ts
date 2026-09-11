@@ -62,7 +62,7 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
       forecast: formatEventValue(event.forecast, event.unit, locale) || undefined,
       previous: formatEventValue(fresh?.previous ?? event.previous, event.unit, locale) || undefined,
       href: withLocale("/takvim?g=day", locale),
-      source: fresh ? "FRED" : event.source === "seed" ? t.dayFlow.calendarSource : event.source,
+      source: fresh ? "FRED" : event.source === "seed" ? t.dayFlow.calendarSource : event.source === "bls-schedule" ? "BLS" : event.source,
       updatedAt: (fresh?.fetchedAt ?? event.updatedAt).toISOString(),
     };
   }));

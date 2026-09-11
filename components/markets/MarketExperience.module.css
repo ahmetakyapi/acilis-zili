@@ -1,7 +1,7 @@
 /* Before: selected quote 60px; constituents started at 1647px desktop and
    2761px at 390px. The header now shares space with three equal index cards.
    Yield/VIX explanations expand in place; observations and dates stay visible. */
-.page { display:flex; flex-direction:column; gap:20px; min-width:0; }
+.page { display:flex; flex-direction:column; gap:var(--page-section-gap); min-width:0; }
 .page :global(.panel) { animation:none; }
 .marketHeader { display:grid; grid-template-columns:minmax(200px,.8fr) minmax(0,2fr); gap:30px; align-items:center; }
 .masthead { min-width:0; }

@@ -1,4 +1,4 @@
-.page { display:flex; flex-direction:column; gap:24px; }
+.page { display:flex; flex-direction:column; gap:var(--page-section-gap); }
 .hero { display:grid; grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr); gap:40px; align-items:center; }
 .intro { min-width:0; padding:12px 0; }
 .intro h1 { font-size:var(--heading-page); line-height:1.12; max-width:12ch; }
@@ -39,3 +39,12 @@
 .historyLabel input::-webkit-slider-thumb { appearance:none; width:13px; height:13px; border-radius:50%; background:var(--primary); border:2px solid var(--panel-fixed); margin-top:-5px; box-shadow:0 0 0 1px var(--primary-faint); }
 .historyLabel input::-moz-range-track { height:3px; background:var(--primary-faint); border-radius:3px; }
 .historyLabel input::-moz-range-thumb { width:10px; height:10px; border-radius:50%; background:var(--primary); border:2px solid var(--panel-fixed); box-shadow:0 0 0 1px var(--primary-faint); }
+
+/* The shared frame owns the outside surface. The explorer is its visual
+   column, so a second card and its inset no longer shift the chart down. */
+.hero { align-items:start; }
+.intro { padding:0; }
+.explorer { padding:0 0 0 24px; border:0; border-left:1px solid var(--line); border-radius:0; background:none; box-shadow:none; }
+.introNote { margin-top:18px; font-size:12px; }
+.history svg { height:110px; }
+@media(max-width:767px) { .explorer { padding:16px 0 0; border-left:0; border-top:1px solid var(--line); } }

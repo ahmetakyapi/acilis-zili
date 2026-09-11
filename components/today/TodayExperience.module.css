@@ -167,3 +167,37 @@
  .dashboard [data-home-section="analyses"] { order:11; }
  .dashboard [data-home-section="sources"] { order:13; }
 }
+
+/* September cross-page audit: the centered countdown started 177px below
+   the hero top. Align both readings and preserve the complete daily charts. */
+.hero { padding:20px 24px; border-radius:var(--radius-feature); }
+.heroMain { align-items:start; gap:28px; padding-top:18px; padding-bottom:0; }
+.heroSession { margin-bottom:9px; }
+.headline { font-size:clamp(26px,2.3vw,32px); }
+.countdown { margin-top:10px; }
+.targetDate { margin-top:16px; }
+.heroFooter { margin-top:12px; }
+.indexDeck { padding-left:24px; }
+.indexHeading { margin-bottom:10px; }
+.indexCard { min-height:132px; padding:12px 14px 10px; }
+.indexSkeleton { height:132px; }
+.indexValue { margin-top:8px; font-size:26px; }
+.indexSpark { margin-top:6px; height:28px; }
+.flowPanel { padding:18px 24px 0; }
+.flowHeader { align-items:start; }
+@media(max-width:767px) {
+ .hero { padding:18px; }
+ .heroMain { padding-top:16px; gap:18px; }
+ .indexDeck { padding:14px 0 0; }
+ .indexCard { min-height:117px; padding:10px 11px; }
+ .indexSkeleton { height:117px; }
+ .indexValue { font-size:23px; margin-top:6px; }
+ .indexSpark { height:24px; }
+ .targetDate { margin-top:12px; }
+ .heroFooter { margin-top:10px; }
+ .flowPanel { padding:16px 14px 0; }
+}
+.flowNav { flex-basis:520px; padding:3px; border:1px solid var(--line-soft); background:var(--surface-sunken); }
+.flowNav a { min-height:36px; font-size:11px; }
+.flowHeader .sectionHeading p { margin-top:6px; font-size:12px; }
+@media(max-width:767px) { .flowNav { flex-basis:auto; } .flowNav a { min-height:40px; } }

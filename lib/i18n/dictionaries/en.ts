@@ -116,6 +116,9 @@ const en: typeof tr = {
   },
 
   dayFlow: {
+    marketDay: "Market Day",
+    timelineHint: "Select an event for results and analysis.",
+
     auto: "Automatic Updates",
     checked: "Last Checked",
     updating: "Checking",
@@ -145,6 +148,7 @@ const en: typeof tr = {
     source: "Source",
     revenue: "Revenue",
     eps: "Earnings Per Share",
+    scheduledHint: "Results will update here once released.",
     pendingHint: "The scheduled time does not confirm publication. Waiting for results from the source.",
     analyzedHint: "Open the published earnings analysis using the link next to each company.",
     liveNote: "Checked Every 30 Seconds",
