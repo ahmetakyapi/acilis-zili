@@ -13,6 +13,7 @@ import {
   Scroll,
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
+import { stripLocale } from "@/lib/i18n/routing";
 import type { Dictionary } from "@/lib/i18n";
 
 /**
@@ -106,7 +107,7 @@ export const NAV_ITEMS: NavItem[] = [
        açmak başka bir sekmeyi daraltmak demek ve masthead sırası
        kullanıcının kararı. Şimdilik Menü'den ve alt bilgiden açılıyor. */
     href: "/teknik",
-    label: (t) => t.nav.technical,
+    label: (t) => t.technical.title,
     icon: ChartLineUp,
     inMasthead: false,
     inBottomBar: false,
@@ -169,3 +170,22 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: true,
   },
 ];
+
+/**
+ * Aktif sekme — KARŞILAŞTIRMA DİLDEN ARINDIRILMIŞ yolla yapılır.
+ *
+ * `usePathname()` tarayıcının adresini veriyor, yani `/en/piyasalar`. Gezinme
+ * hedefleri ise dilsiz yazılıyor (`/piyasalar`). İkisi ham hâlde
+ * karşılaştırılınca İngilizce tarafta HİÇBİR sekme aktif görünmüyordu —
+ * `startsWith` yalnızca "/" ile eşleşiyor ve vurgu "Menü"ye düşüyordu.
+ *
+ * Masthead ve masaüstü "Menü" açılır listesi (NavOverflow) İKİSİ DE buradan
+ * okur. Açılır liste bir dönem kendi `startsWith` kopyasını taşıdı ve "/"
+ * hedefli "Bugün"ü her sayfada aktif saydı: Menü düğmesi hiç sönmüyor,
+ * "Bugün" her sayfada `aria-current="page"` taşıyordu (ölçüldü, 1024–1920).
+ */
+export function isActive(pathname: string, href: string): boolean {
+  const path = stripLocale(pathname);
+  if (href === "/") return path === "/";
+  return path.startsWith(href);
+}

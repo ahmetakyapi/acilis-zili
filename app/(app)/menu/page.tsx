@@ -71,10 +71,10 @@ export default async function MenuPage() {
       title: t.menu.groupMarket,
       entries: [
         { href: "/piyasalar", icon: TrendUp, title: t.nav.markets, hint: t.menu.hintMarkets },
+        { href: "/teknik", icon: ChartLineUp, title: t.technical.title, hint: t.menu.hintTechnical },
         { href: "/sirketler", icon: Buildings, title: t.nav.companies, hint: t.menu.hintCompanies },
         { href: "/makro", icon: Percent, title: t.nav.macro, hint: t.menu.hintMacro },
         { href: "/bilancolar", icon: FileText, title: t.nav.earnings, hint: t.menu.hintEarnings },
-        { href: "/teknik", icon: ChartLineUp, title: t.technical.title, hint: t.menu.hintTechnical },
         { href: "/takvim", icon: CalendarBlank, title: t.nav.calendar, hint: t.menu.hintCalendar },
         { href: "/karsilastir", icon: ChartBar, title: t.compare.title, hint: t.menu.hintCompare },
       ],
@@ -162,7 +162,8 @@ export default async function MenuPage() {
                     <Link
                       href={entry.href}
                       prefetch={false}
-                      className="flex min-h-[52px] items-center gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+                      data-featured={entry.href === "/teknik"}
+                      className="data-[featured=true]:bg-primary-tint flex min-h-[52px] items-center gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
                     >
                       <Icon
                         weight="duotone"

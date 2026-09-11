@@ -7,7 +7,8 @@ import { useLocaleHref } from "@/components/layout/useLocaleHref";
 import { Gear, Scroll } from "@phosphor-icons/react/dist/ssr";
 import { BellMark, BrandLockup, BrandWord } from "@/components/brand/BellMark";
 import { RouteProgress } from "./RouteProgress";
-import { NAV_ITEMS } from "./nav-items";
+import { NavOverflow } from "./NavOverflow";
+import { NAV_ITEMS, isActive } from "./nav-items";
 import { stripLocale } from "@/lib/i18n/routing";
 import { ButtonLink } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
@@ -39,20 +40,6 @@ type AppShellProps = {
   footer: React.ReactNode;
   children: React.ReactNode;
 };
-
-/**
- * Aktif sekme — KARŞILAŞTIRMA DİLDEN ARINDIRILMIŞ yolla yapılır.
- *
- * `usePathname()` tarayıcının adresini veriyor, yani `/en/piyasalar`. Gezinme
- * hedefleri ise dilsiz yazılıyor (`/piyasalar`). İkisi ham hâlde
- * karşılaştırılınca İngilizce tarafta HİÇBİR sekme aktif görünmüyordu —
- * `startsWith` yalnızca "/" ile eşleşiyor ve vurgu "Menü"ye düşüyordu.
- */
-function isActive(pathname: string, href: string): boolean {
-  const path = stripLocale(pathname);
-  if (href === "/") return path === "/";
-  return path.startsWith(href);
-}
 
 /* --------------------------------------------------------------------------
    Kabuk — masaüstünde masthead, mobilde başlık + alt sekme çubuğu.
@@ -216,7 +203,7 @@ export function AppShell({
                 prefetch
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "shrink-0 whitespace-nowrap rounded-lg px-2.5 py-[7px] transition-colors duration-150 xl:px-3.5",
+                  "shrink-0 whitespace-nowrap rounded-lg px-2 py-[7px] transition-colors duration-150 xl:px-3",
                   item.wideOnly && "hidden xl:block",
                   /* Pasif sekmeler de KALIN: `font-medium` ile yazılınca
                      masthead soluk bir bağlantı şeridi gibi duruyordu ve
@@ -237,6 +224,9 @@ export function AppShell({
               </Link>
             );
           })}
+          {/* Keep every existing destination; tighter horizontal padding makes
+              room for the desktop index without overlapping search controls. */}
+          <NavOverflow label={labels.menu} labels={labels.nav} />
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2.5">
