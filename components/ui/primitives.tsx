@@ -112,6 +112,7 @@ export function PanelLink({
   return (
     <Link
       href={href}
+      data-motion-action
       className={cn(
         /* -my-2 py-2: metnin kendisi 16px yüksekliğinde bir dokunma hedefi
            bırakıyordu. Dolgu tıklama alanını 32px'e çıkarır, negatif margin

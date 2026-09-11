@@ -1409,3 +1409,13 @@ header.page-heading.page-masthead { flex-direction:row; align-items:flex-start; 
 
 .page-frame.page-frame[data-has-visual="false"] { min-height:176px; }
 @media(max-width:767px) { .page-frame.page-frame[data-has-visual="false"] { min-height:158px; } }
+
+/* Shared motion surfaces retain the compact frame geometry. Link feedback
+   paints within its existing hit area and does not shift adjacent readings. */
+.page-frame,.page-masthead { isolation:isolate; }
+[data-motion-action] { text-decoration:underline; text-decoration-color:transparent; text-underline-offset:4px; transition:color 180ms,text-decoration-color 240ms; }
+[data-motion-action]:is(:hover,:focus-visible) { text-decoration-color:currentColor; }
+[data-motion-action] svg { transition:transform 260ms var(--ease-brand); }
+[data-motion-action]:is(:hover,:focus-visible) svg { transform:translateX(3px); }
+[data-motion-action]:active { opacity:.72; }
+@media(prefers-reduced-motion:reduce) { [data-motion-action],[data-motion-action] svg { transition:none; } [data-motion-action] svg { transform:none!important; } }

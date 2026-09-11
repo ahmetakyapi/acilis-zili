@@ -201,7 +201,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
           to 1040px and replaces the reading/source tabs with one flow. */}
       <SpotlightCard className={detail.coverSurface}>
       <header className={detail.cover} data-has-figure={Boolean(figure)}>
-      <div className={detail.coverCopy}>
+      <div className={detail.coverCopy} data-motion-intro>
         <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-tiny">
           <span className="plate text-nano tracking-[0.09em] text-primary">
             {t.stories.eyebrow}

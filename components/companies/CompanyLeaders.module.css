@@ -45,3 +45,8 @@
 .detail { row-gap:8px; }
 @media(max-width:767px) { .shelf { height:178px; } .choices { gap:6px 4px; } .company { min-height:77px; } }
 @media(max-width:359px) { .logo > span { width:30px; height:30px; } }
+
+/* The active underline travels between actual choices. A fixed-size slot
+   keeps both logo rows and the selected-company reading stationary. */
+.selectionSlot { position:relative; display:block; width:16px; height:2px; }
+.selectionLine { position:absolute; inset:0; border-radius:2px; background:var(--primary); }

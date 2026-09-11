@@ -167,3 +167,41 @@
   .experience :is([data-motion-reveal],[data-motion-draw]),
   .experience [data-motion-stagger] > * { opacity:1!important; transform:none!important; }
 }
+
+/* One conductor owns entrances. The former whole-page translation briefly
+   changed the containing block of fixed/sticky navigation; only leaf content
+   moves now. Offscreen sparklines used to finish before they were reached. */
+.experience { animation:none; }
+.experience :global(.spark-line),
+.experience :global(.spark-area),
+.experience :global(.spark-dot),
+.experience :global(.ring-fill),
+.experience :global(.panel),
+.experience :global([data-motion-draw]) { animation:none; }
+
+/* Geometry shares the frame, adds no layout height, and never covers controls.
+   The scrolling contour is decoration, not a fabricated market chart. */
+.heroAccent { position:absolute; z-index:-1; inset:0; overflow:hidden; border-radius:inherit; pointer-events:none; view-timeline-name:--hero-contour; view-timeline-axis:block; }
+.heroAccent svg { position:absolute; right:0; top:0; width:min(70%,680px); height:100%; opacity:.45; }
+.accentContours { stroke:var(--primary-faint); stroke-width:1; transform-origin:85% 0; }
+.accentContours > * { vector-effect:non-scaling-stroke; }
+.accentTrace { stroke:var(--primary); stroke-opacity:.24; stroke-dasharray:1; animation:contour-arrive 1400ms cubic-bezier(.22,1,.36,1) both; }
+@keyframes contour-arrive { from { stroke-dashoffset:1; opacity:0; } to { stroke-dashoffset:0; opacity:1; } }
+@supports (animation-timeline:view()) {
+ .accentContours { animation:contour-scroll linear both; animation-timeline:--hero-contour; animation-range:exit 0% exit 100%; }
+ @keyframes contour-scroll { from { transform:translateY(0) rotate(0deg); } to { transform:translateY(34px) rotate(9deg); } }
+}
+
+.spotlight { transition:border-color 240ms,box-shadow 300ms; }
+.spotlightGlow { mix-blend-mode:normal; }
+.spotlight:focus-within { box-shadow:0 0 0 1px var(--primary-faint),var(--premium-shadow); }
+@media(hover:hover) and (pointer:fine) {
+ .spotlight:hover { border-color:var(--primary-faint); box-shadow:0 8px 26px color-mix(in srgb,var(--primary) 9%,transparent),inset 0 1px var(--premium-highlight); }
+}
+@media(max-width:767px) { .heroAccent svg { width:100%; opacity:.3; } }
+@media(prefers-reduced-motion:reduce) {
+ .accentContours,.accentTrace { animation:none; }
+ .spotlight { transition:none; }
+}
+
+@media(forced-colors:active) { .heroAccent { display:none; } }

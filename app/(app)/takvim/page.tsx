@@ -1,3 +1,4 @@
+import { HeroAccent } from "@/components/motion/HeroAccent";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/calendar/CalendarExperience.module.css";
@@ -150,6 +151,7 @@ export default async function CalendarPage(
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       <header className={`${styles.hero} page-frame`}>
+        <HeroAccent />
         <div className="page-heading-copy">
           <p className={`${styles.eyebrow} page-eyebrow`}>{locale === "tr" ? "Ekonominin Ajandası" : "The Economic Agenda"}</p>
           <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">

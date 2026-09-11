@@ -1,3 +1,4 @@
+import { HeroAccent } from "@/components/motion/HeroAccent";
 import { cache, Suspense } from "react";
 import { MotionExperience, ScrollStage, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
@@ -188,6 +189,7 @@ export default async function TodayPage() {
           Geri sayım ve 2×2 piyasa paneli masaüstünde yan yana; mobilde
           doğal sırayla alt alta. Seans bilgisi geri sayımda korunur. */}
       <header id="piyasa-ozeti" className={styles.hero}>
+        <HeroAccent />
         <div className={styles.heroTopline}>
           <span className={styles.eyebrow}><Waveform size={15} weight="bold" />{t.today.experienceEyebrow}</span>
           <div className={styles.dateline}>
@@ -196,7 +198,7 @@ export default async function TodayPage() {
           </div>
         </div>
         <div className={styles.heroMain}>
-          <div className={styles.heroCopy}>
+          <div className={styles.heroCopy} data-motion-intro>
             <div className={styles.heroSession} data-trading={trading}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
             <h1 className={styles.headline}>{countdownLabel}</h1>
             <Countdown

@@ -1,3 +1,4 @@
+import { HeroAccent } from "@/components/motion/HeroAccent";
 import Link from "next/link";
 import { MacroExplorer } from "@/components/macro/MacroExplorer";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
@@ -84,6 +85,7 @@ export default async function MacroPage() {
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       <div className={`${styles.hero} page-frame`}>
+        <HeroAccent />
         <div className={styles.intro}>
         <PageHeader
           embedded

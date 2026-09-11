@@ -1,3 +1,4 @@
+import { HeroAccent } from "@/components/motion/HeroAccent";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
 import { Suspense } from "react";
@@ -189,6 +190,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       <div className={`${styles.marketHeader} page-frame`}>
+        <HeroAccent />
       <div className={styles.masthead}>
       <SectionMasthead
         embedded

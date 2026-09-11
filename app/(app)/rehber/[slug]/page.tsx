@@ -137,7 +137,7 @@ export default async function GuideArticlePage(
         />
       </div>
 
-      <header className={`${experience.articleHeader} flex flex-col gap-4`}>
+      <header className={`${experience.articleHeader} flex flex-col gap-4`} data-motion-intro>
         <div className="flex items-center gap-3.5">
           <GlyphTile glyph={article.glyph} size={56} />
           <div className="min-w-0">

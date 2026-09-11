@@ -328,15 +328,16 @@ export function MotionExperience({ children, className }: { children: ReactNode;
   const reduced = useMotionPreference();
   useEffect(() => {
     const root = ref.current;
-    if (!root || reduced || !("animate" in root)) return;
+    if (!root || reduced || !("animate" in root) || !("IntersectionObserver" in window)) return;
     const prepared = new Map<Element, Animation>();
+    const selector = "[data-motion-reveal], [data-motion-draw], [data-motion-stagger] > *, [data-motion-article] .oku-blok, .page-heading-copy > *, [data-motion-intro] > *, .spark-line, .spark-area, .spark-dot, .ring-fill, .panel";
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         observer.unobserve(entry.target);
         prepared.get(entry.target)?.play();
       }
-    }, { threshold: .12, rootMargin: "0px 0px -3% 0px" });
+    }, { threshold: 0, rootMargin: "0px 0px -24px 0px" });
     function prepare() {
       if (!root) return;
       // Filtering directories replaces rows inside this persistent wrapper.
@@ -345,40 +346,78 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         if (root.contains(element)) continue;
         animation.cancel(); observer.unobserve(element); prepared.delete(element);
       }
-      const elements = root.querySelectorAll<HTMLElement>("[data-motion-reveal], [data-motion-draw], [data-motion-stagger] > *, [data-motion-article] .oku-blok");
+      const elements = root.querySelectorAll<HTMLElement | SVGElement>(selector);
       elements.forEach((element) => {
-        if (prepared.has(element)) return;
-        const siblings = element.parentElement?.hasAttribute("data-motion-stagger")
-          ? Array.from(element.parentElement.children) : [];
-        const delay = Math.min(400, Math.max(0, siblings.indexOf(element)) * 75);
+        if (prepared.has(element) || element.closest("[data-motion-root]") !== root) return;
+        const parent = element.parentElement;
+        const intro = parent?.hasAttribute("data-motion-intro") || parent?.classList.contains("page-heading-copy");
+        const siblings = intro || parent?.hasAttribute("data-motion-stagger") ? Array.from(parent!.children) : [];
+        const delay = Math.min(240, Math.max(0, siblings.indexOf(element)) * (intro ? 55 : 65));
         const bar = element.dataset.motionDraw === "bar";
         const line = element.dataset.motionDraw === "line";
+        const spark = element.classList.contains("spark-line");
+        const area = element.classList.contains("spark-area");
+        const dot = element.classList.contains("spark-dot");
+        const ring = element.classList.contains("ring-fill");
+        const origin = element.style.transformOrigin || "left center";
+        const tall = element.getBoundingClientRect().height > window.innerHeight * .7;
         // Signed distance bars start at their zero reference: negative
         // values grow from the right. Existing lines retain their origin.
-        const lineOrigin = element.style.transformOrigin || "left center";
-        if (bar || line) element.getAnimations().forEach((animation) => animation.cancel());
+        // Curves reveal along the actual SVG path, never squeeze the series.
+        const frames: Keyframe[] = spark
+          ? [{ strokeDashoffset: "1" }, { strokeDashoffset: "0" }]
+          : ring ? [{ strokeDashoffset: element.style.getPropertyValue("--ring-circumference") }, { strokeDashoffset: getComputedStyle(element).strokeDashoffset }]
+          : area ? [{ opacity: 0 }, { opacity: element.getAttribute("opacity") || 1 }]
+          : dot ? [{ opacity: 0, transform: "scale(.5)" }, { opacity: 1, transform: "none" }]
+          : bar ? [{ transform: "scaleY(.04)", transformOrigin: "center bottom" }, { transform: "scaleY(1)", transformOrigin: "center bottom" }]
+          : line ? [{ transform: "scaleX(.04)", transformOrigin: origin }, { transform: "scaleX(1)", transformOrigin: origin }]
+          : [{ opacity: intro ? .6 : .35, transform: tall ? "none" : `translateY(${intro ? 12 : 20}px)` }, { opacity: 1, transform: "none" }];
         /* Web Animations paints without mutating style/data attributes.
            Inline mutations on streamed Link nodes raced their hydration
-           and produced a server/client mismatch. No timing guess is needed. */
-        const animation = element.animate(bar
-          ? [{ transform: "scaleY(.04)", transformOrigin: "center bottom" }, { transform: "scaleY(1)", transformOrigin: "center bottom" }]
-          : line ? [{ transform: "scaleX(.04)", transformOrigin: lineOrigin }, { transform: "scaleX(1)", transformOrigin: lineOrigin }]
-          : [{ opacity: .25, transform: "translateY(24px)" }, { opacity: 1, transform: "none" }],
-          { duration: bar ? 1050 : 750, delay, easing: "cubic-bezier(.22,1,.36,1)", fill: "both" });
+           and produced a server/client mismatch. No timing guess is needed.
+           Finish/cancel releases transforms for sticky descendants. CSS
+           leaves charts fully drawn when JavaScript is absent. */
+        const animation = element.animate(frames, {
+          duration: spark || bar || ring ? 1000 : 650,
+          delay: delay + (area ? 220 : dot ? 700 : 0),
+          easing: "cubic-bezier(.22,1,.36,1)", fill: "both",
+        });
         animation.pause();
         animation.currentTime = 0;
         animation.onfinish = () => animation.cancel();
         prepared.set(element, animation);
+        // A zero threshold also admits flat SVG strokes with zero-height bounds.
         observer.observe(element);
       });
     }
     prepare();
-    const mutations = new MutationObserver(prepare);
+    let frame = 0;
+    const relevantNode = (node: Node) => node instanceof Element &&
+      (prepared.has(node) || node.matches(selector) || Boolean(node.querySelector(selector)));
+    const mutations = new MutationObserver((records) => {
+      // The clock changes every second. Text-only updates need no DOM scan;
+      // streamed cards and filter replacements are batched into one frame.
+      if (!records.some((record) => [...record.addedNodes, ...record.removedNodes].some(relevantNode))) return;
+      if (!frame) frame = requestAnimationFrame(() => { frame = 0; prepare(); });
+    });
     mutations.observe(root, { childList: true, subtree: true });
+    // A keyboard jump to an offscreen link reveals its entire ancestry at
+    // once; no focused control should remain in its pending entrance pose.
+    const revealFocus = (event: FocusEvent) => {
+      if (!(event.target instanceof Element)) return;
+      for (const [element, animation] of prepared) {
+        if (element === event.target || element.contains(event.target)) {
+          animation.cancel(); observer.unobserve(element);
+        }
+      }
+    };
+    root.addEventListener("focusin", revealFocus);
     return () => {
+      cancelAnimationFrame(frame);
       observer.disconnect(); mutations.disconnect();
+      root.removeEventListener("focusin", revealFocus);
       prepared.forEach((animation) => animation.cancel());
     };
   }, [reduced]);
-  return <div ref={ref} className={classes(styles.experience, className)}>{children}</div>;
+  return <div ref={ref} className={classes(styles.experience, className)} data-motion-root>{children}</div>;
 }

@@ -1,3 +1,4 @@
+import { HeroAccent } from "./HeroAccent";
 import type { ReactNode } from "react";
 import styles from "./DirectoryExperience.module.css";
 
@@ -6,6 +7,7 @@ export function DirectoryHeader({ eyebrow, title, description, children, visual 
   eyebrow: string; title: string; description?: string; children?: ReactNode; visual?: ReactNode;
 }) {
   return <header className={`${styles.hero} page-frame`} data-has-visual={!!visual}>
+    <HeroAccent />
     <div className={`${styles.heroCopy} page-heading-copy`}>
       <p className={`${styles.eyebrow} page-eyebrow`}>{eyebrow}</p>
       <h1>{title}</h1>

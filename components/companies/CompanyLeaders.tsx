@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight } from "@phosphor-icons/react";
@@ -20,6 +20,7 @@ export function CompanyLeaders({ leaders, labels, capLabel }: {
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const reduced = useMotionPreference();
+  const selectionId = useId();
   const visible = leaders.slice(0, 10);
   const leader = visible.find((item) => item.symbol === selected) ?? visible[0];
   if (!leader) return null;
@@ -38,7 +39,7 @@ export function CompanyLeaders({ leaders, labels, capLabel }: {
         <path d="M24 44H456M24 134H456" />
         <path className={styles.trace} d="M24 44H456M24 134H456" />
       </svg>
-      <div className={styles.choices} role="group" aria-label={labels.selectCompany}>
+      <div className={styles.choices} data-motion-stagger role="group" aria-label={labels.selectCompany}>
         {visible.map((item, index) => <button
           key={item.symbol}
           type="button"
@@ -50,7 +51,7 @@ export function CompanyLeaders({ leaders, labels, capLabel }: {
           <span className={styles.rank} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
           <span className={styles.logo}><LogoTile symbol={item.symbol} logoUrl={item.logoUrl} className="size-11" /></span>
           <span className={styles.symbol}>{item.symbol}</span>
-          <span className={styles.selection} aria-hidden="true" />
+          <span className={styles.selectionSlot} aria-hidden="true">{leader.symbol === item.symbol && <motion.span className={styles.selectionLine} layoutId={selectionId} transition={{ type: "spring", stiffness: 420, damping: 34 }} />}</span>
         </button>)}
       </div>
     </div>
