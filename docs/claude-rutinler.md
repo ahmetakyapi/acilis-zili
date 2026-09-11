@@ -4,9 +4,10 @@ Sitenin bütün yazılı içeriğini **claude.ai zamanlanmış görevleri** üre
 Sunucuda model çağrısı yok, API anahtarı yok, ek ücret yok — site yalnızca
 veritabanından okur.
 
-> **Bu görevler koddan kurulamaz.** Claude Code'un zamanlayıcısı oturum
-> ömürlüdür ve claude.ai listesine yazmaz. Beşini de
-> **https://claude.ai/scheduled-task** adresinden elle kurman gerekiyor.
+> **Bu görevler claude.ai rutinleridir.** Claude Code'un yerel zamanlayıcısı
+> oturum ömürlüdür ve bu listeye yazmaz. Altısı da
+> **https://claude.ai/code/routines** adresinden kurulur; Claude Code'daki
+> `/schedule` komutu da aynı listeye yazar.
 
 ## Nasıl kurulur
 
@@ -21,9 +22,10 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 |---|---|---|---|---|
 | 1 | Günlük Bülten | her gün 16:00 TR | `0 13 * * *` | Ana sayfa · Günün Özeti |
 | 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
-| 3 | Mercek Yazısı | her gün 11:30 ve 23:30 TR | `30 08,20 * * *` | /mercek |
-| 4 | Bilanço Analizi | her gün 09:00 TR | `0 6 * * *` | /bilancolar/analizler |
+| 3 | Mercek Yazısı | her gün 11:30 ve 23:30 TR (ABD kış saatinde 00:30) | `30 8,20 * * *` · kışın `30 8,21 * * *` | /mercek |
+| 4 | Bilanço Analizi | her gün 08:45 ve 23:45 TR (ABD kış saatinde 00:45) | `45 5,20 * * *` · kışın `45 5,21 * * *` | /bilancolar/analizler |
 | 5 | Teknik Analiz | işlem günleri 15:45 ve 19:45 TR | `45 12,16 * * 1-5` | /teknik |
+| 6 | Yaz Saati Nöbetçisi | Mart ve Kasım'da her Pazar 15:00 TR | `0 12 * 3,11 0` | 3 ve 4'ün akşam cron'u |
 
 > **Bu saatler kodda da yazılı.** Ana sayfadaki özet kartı, günün kaydı henüz
 > yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün 16:00'da
@@ -43,8 +45,13 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 
 **Hepsinde ortak iki şart:**
 
-1. **Ağ izni** — ortam ayarlarında `aciliszili.com` alan adına izin
-   verilmiş olmalı. Verilmezse proxy 403 döner, görev başlamadan düşer.
+1. **Ağ izni** — rutinin bağlı olduğu ortamın ağ erişimi Full olmalı (ya da
+   `aciliszili.com` o ortamın izin listesinde durmalı). Değilse proxy
+   CONNECT'e 403 döner ve istek siteye hiç ulaşmaz. Ayar ORTAMA uygulanır,
+   rutine değil: 11 Eylül 2026'da rutinler hesabın ortam listesinde
+   görünmeyen eski bir ortama (`env_011111111111111111111117`) bağlıydı ve
+   o gün Trusted'a düştü; Default ortamını Full yapmak hiçbirini
+   düzeltmedi. Her rutinin kendi ayarında hangi ortamı kullandığına bak.
 2. **Model** — 1 ve 2 için Sonnet yeterli, 3, 4 ve 5 için Opus belirgin
    şekilde daha iyi yazar.
 
@@ -190,8 +197,12 @@ notuyla görür.
 
 **Zamanlama:** her gün 11:30 ve 23:30 TR (`30 08,20 * * *` UTC) — günde iki koşum
 
-Saat ABD kapanışının sonrasına çekildi: 23:30 TR, New York'ta 16:30 (kışın
-15:30), yani kapanış zili çalmış ve günün hikâyesi tamamlanmış oluyor. Daha
+Saat ABD kapanışının sonrasına çekildi: 23:30 TR, New York'ta 16:30, yani
+kapanış zili çalmış ve günün hikâyesi tamamlanmış oluyor. ABD kış saatinde
+aynı 20:30 UTC New York'ta 15:30'a, yani kapanıştan ÖNCEYE düşer; o dönem
+akşam koşusunu § 6'daki nöbetçi 21:30 UTC'ye (00:30 TR) alır. Prompt akşamı
+bu yüzden tek bir saatle değil eşikle tanımalı: "UTC saat 20'den büyük ya
+da eşitse akşam, değilse sabah çalışmasıdır". Daha
 erken yazılan bir metin, seans biterken değişen bir olayı yarım anlatma
 riski taşıyordu.
 
@@ -578,7 +589,11 @@ görmek için sitede dil EN'e çevrilir, adres aynıdır.
 
 # 4 · Bilanço Analizi
 
-**Zamanlama:** her gün 09:00 TR (`0 6 * * *` UTC)
+**Zamanlama:** her gün 08:45 ve 23:45 TR (`45 5,20 * * *` UTC). ABD kış
+saatinde akşam nöbeti 21:45 UTC'ye (00:45 TR) alınır; bkz. § 6.
+
+> Canlı rutin günde iki nöbet koşuyor; bu bölümün gerekçesi ve prompt'u tek
+> nöbetli ilk sürümü anlatıyor. Güncel prompt claude.ai'deki rutinde.
 
 Saat sabaha konuldu çünkü ABD bilançolarının çoğu kapanış sonrası (amc)
 açıklanıyor: 09:00 TR'de New York'ta saat 02:00 olmuş, kazanç çağrısı
@@ -1179,6 +1194,97 @@ görüşü değişenler.
 
 ---
 
+# 6 · Yaz Saati Nöbetçisi
+
+**Zamanlama:** Mart ve Kasım'da her Pazar 12:00 UTC, yani 15:00 TR
+(`0 12 * 3,11 0`)
+
+İçerik üretmez. Mercek ve Bilanço'nun AKŞAM koşusunu ABD saat dilimine göre
+kaydırır. İkisi de seansın nasıl bittiğini yazıyor, yani New York'ta 16:00'daki
+kapanıştan sonra koşmak zorunda; Türkiye yaz saati uygulamadığı için sabit bir
+UTC saati bunu yılın yalnızca bir kısmında tutturur:
+
+| | ABD yaz saati (EDT) | ABD kış saati (EST) |
+|---|---|---|
+| Mercek akşam | `30 8,20 * * *` → 16:30 NY · 23:30 TR | `30 8,21 * * *` → 16:30 NY · 00:30 TR |
+| Bilanço akşam | `45 5,20 * * *` → 16:45 NY · 23:45 TR | `45 5,21 * * *` → 16:45 NY · 00:45 TR |
+
+**Tarih ezberlenmez.** Nöbetçi dönemi `TZ=America/New_York date +%Z` ile
+saat dilimi veritabanından okur. Önce sabit tarihli tek seferlik rutinler
+denendi ve ilk taslakta ABD yaz saatinin 2027 başlangıcı 8 Mart yazılmıştı;
+doğrusu 14 Mart (8 Mart 2026'nın tarihiydi). O not uygulansaydı Mercek bir
+hafta boyunca kapanıştan önce yazacaktı. Pazar çalışmasının sebebi iki
+geçişin de Pazar sabahı olması: Mart'ın ikinci, Kasım'ın ilk Pazarı,
+06:00–07:00 UTC. 12:00 UTC'deki kontrol geçişi aynı gün yakalar, cron zaten
+doğruysa hiçbir şey yapmaz.
+
+**Prompt'lar da buna hazır olmalı.** Bilanço akşamı "UTC saat 20'den büyük ya
+da eşitse" diye tanıyor, 21'de de doğru çalışır. Mercek'in canlı prompt'u
+"saat 08 ise sabah, 20 ise akşam" diyordu ve 21'de koşan akşam çalışmasını
+tanımazdı; aynı eşiğe çekilmeli. Nöbetçi bu cümleyi her çalışmada arar ve
+hâlâ duruyorsa bildirir.
+
+Teknik Analiz, Günlük ve Haftalık Bülten bilerek listede yok: saatleri yıl
+boyu doğru pencereye düşüyor (Teknik'in gerekçesi § 5'te).
+
+**Bağlayıcı:** Claude_Code_Remote şart; rutin öteki rutinleri onunla okuyup
+cron'larını değiştiriyor. Model olarak Sonnet yeterli. Yalnızca
+`cron_expression` gönderir: `update_trigger`e prompt gönderilirse 40.000
+karakterlik metin üzerine yazılır.
+
+````
+Sen Açılış Zili'nin yaz saati nöbetçisisin. İki rutinin AKŞAM koşusunu ABD'nin o anki saat dilimine göre ayarlarsın. Görev her yıl Mart ve Kasım'da, her Pazar 12:00 UTC'de çalışır. Çoğu çalışmada yapılacak bir şey yoktur; bu normaldir.
+
+NEDEN
+New York borsası 16:00 NY saatinde kapanır. Türkiye yaz saati uygulamaz, ABD uygular. Akşam koşuları kapanıştan SONRA çalışmak zorunda, çünkü seansın nasıl bittiğini ve kapanış sonrası tepkileri yazıyorlar:
+  · ABD yaz saati (EDT, UTC-4): 20:30 UTC = 16:30 NY → kapanış sonrası
+  · ABD kış saati (EST, UTC-5): 20:30 UTC = 15:30 NY → seans HÂLÂ AÇIK, akşam koşusu 21'e alınmalı
+Geçiş tarihlerini ezberden bilme ve kendin hesaplama; işletim sisteminin saat dilimi veritabanına sor.
+
+--- 1. DÖNEMİ BUL ---
+
+```bash
+TZ=America/New_York date +%Z
+```
+
+EDT → YAZ · EST → KIŞ. Başka bir çıktı gelirse hiçbir şeyi değiştirme, kullanıcıya bildir ve dur.
+
+--- 2. HEDEF CRON'LAR (UTC) ---
+
+  Açılış Zili · Mercek Yazısı     trig_019PVh6YoNGGu4y6VksN7Bym   YAZ: 30 8,20 * * *   KIŞ: 30 8,21 * * *
+  Açılış Zili · Bilanço Analizi   trig_01N3DF2QbduuGX2QjVZuGcDt   YAZ: 45 5,20 * * *   KIŞ: 45 5,21 * * *
+
+Sabah koşuları (08:30 ve 05:45 UTC) değişmez. Teknik Analist, Günlük Bülten ve Haftalık Bülten BİLEREK listede yok: saatleri yıl boyu doğru, onlara dokunma.
+
+--- 3. MEVCUT DURUMU OKU ---
+
+Claude_Code_Remote (ya da claude-code-remote) MCP sunucusunun `list_triggers` aracını kullan; araç yüklü değilse ToolSearch ile ara. Çıktı büyüktür ve bir dosyaya kaydedilir; o dosyayı python3 ile ayrıştır ve yalnızca bu iki rutinin id, name, enabled, cron_expression değerlerini ve prompt UZUNLUĞUNU yazdır. Prompt METNİNİ asla ekrana basma: içinde gizli bir anahtar var.
+
+Prompt metni her kayıtta `derived_state.prompt` alanındadır. Uzunluk 0 çıkarsa yanlış alanı okuyorsun demektir (iki rutinin prompt'u da 40.000 karakterin üzerinde); doğru alanı bulmadan 4. adıma geçme, çünkü 5. adımdaki ezilme kontrolü bu uzunluğa dayanıyor.
+
+Aynı ayrıştırmada Mercek prompt'unda `saat 08 ise sabah, 20 ise` ifadesinin geçip geçmediğini de yazdır (yalnızca True/False). Geçiyorsa o prompt akşamı yalnızca saat 20'de tanıyor demektir ve kışın 21'de koşunca hangi çalışmada olduğunu bilemez. Cron'u yine düzelt ama kullanıcıya bildir: o cümle `UTC saat 20'den büyük ya da eşitse akşam, değilse sabah çalışmasıdır` olarak değiştirilmeli.
+
+--- 4. GEREKİYORSA DEĞİŞTİR ---
+
+Her iki rutin için ayrı ayrı:
+  · Mevcut cron dönemin hedefiyle aynıysa DOKUNMA.
+  · Öteki dönemin hedefiyse `update_trigger` ile YALNIZCA `cron_expression` alanını gönder. Başka HİÇBİR alan gönderme, özellikle `prompt` gönderme: prompt'lar 40.000 karakterin üzerinde ve çağrıya dahil edilirse üzerine yazılır.
+  · İki hedeften hiçbiri değilse DEĞİŞTİRME; kullanıcı elle başka bir saat seçmiş olabilir. Bildir ve o rutini geç.
+  · Rutin kapalıysa (enabled=false) dokunma, yalnızca raporda belirt.
+
+--- 5. DOĞRULA ---
+
+Değişiklik yaptıysan `list_triggers` ile yeniden oku. Değişen her rutin için üçünü kontrol et: cron hedefte mi, enabled hâlâ true mu, prompt uzunluğu 3. adımdaki okumayla aynı mı. Prompt kısaldıysa ezilmiştir; bu ciddi bir hatadır, kullanıcıya hemen bildir.
+
+--- 6. RAPOR ---
+
+Bir şey değiştirdiysen ya da bir sorun çıktıysa (araç yok, needs_device_approval, beklenmeyen cron, Mercek saat kontrolü uyarısı) PushNotification ile kısa bir Türkçe bildirim gönder: ne değişti ya da ne yapılamadı; elle yapılması gerekiyorsa trigger_id ve hedef cron'u yaz. Araç needs_device_approval dönerse ya da yetkin yoksa HİÇBİR ŞEY DEĞİŞMEMİŞTİR, bunu açıkça söyle.
+
+Hiçbir şey değişmediyse ve sorun yoksa bildirim GÖNDERME. Son mesajına tek satır yaz: Dönem: YAZ ya da KIŞ · Mercek ve Bilanço doğru saatte · değişiklik yok.
+````
+
+---
+
 ## Tek seferlik: arşivleri geriye doldur
 
 Bunlar rutin değil. claude.ai'de normal bir sohbet aç, aşağıdaki bloğu
@@ -1440,9 +1546,14 @@ Her POST sonrası "ok": true doğrula ve bir sonraki yazıya geç.
 | Dosya | /mercek listesinin başında yeni bir yazı |
 | Analiz | /bilancolar/analizler → Günün Analizi kartında yeni şirket |
 | Teknik | /teknik → "Son Yayın" şeridinde bugünün tarihi ve yayının adı |
+| Nöbetçi | Değişiklik yaptığı ya da yapamadığı Pazar bildirim gelir; iş yoksa sessiz |
 
-Bir görev sessizce başarısız olduysa ilk bakılacak yer **ağ izni**, ikincisi
-prompt'a gömülü **secret'ın güncelliği**.
+Bir görev sessizce başarısız olduysa ilk bakılacak yer rutinin **koşum
+logu**. `CONNECT tunnel failed, response 403` ya da `connect_rejected`
+görüyorsan istek siteye hiç ulaşmamıştır: rutinin bağlı olduğu ortamın ağ
+ayarına bak, siteye değil (aynı oturumda `example.com` da düşüyorsa kesin).
+Site 401 dönüyorsa prompt'a gömülü **secret** eskimiş ya da yer tutucu
+kalmıştır.
 
 Ayrıntılı arka plan ve uçların tam sözleşmesi: `docs/claude-brief-agent.md`
 (bülten) ve `docs/claude-mercek-ajani.md` (mercek). Bilanço analizinin veri
