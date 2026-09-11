@@ -606,7 +606,9 @@ export function SearchCommand({
                     onClick={() => go(href)}
                     onMouseEnter={() => setActive(index)}
                     className={cn(
-                      "flex w-full items-center gap-3.5 py-2 pl-5 pr-5 text-left text-small transition-colors max-sm:py-2.5",
+                      /* Telefonda 44px: hisse satırıyla bitişik ve daha küçük
+                         bir hedef parmakla ıskalanıyordu (tap-44 notu). */
+                      "flex w-full items-center gap-3.5 py-2 pl-5 pr-5 text-left text-small transition-colors max-sm:min-h-11",
                       index === active ? "bg-primary-wash" : "hover:bg-surface",
                     )}
                   >

@@ -142,13 +142,23 @@ const ItemSchema = z
     entry_high: level.nullish(),
     stop: level.nullish(),
     targets: z.array(level).max(3).nullish(),
-    supports: z.array(level).min(1).max(4),
-    resistances: z.array(level).min(1).max(4),
+    /* BOŞ OLABİLİR. Fiyat bilançonun ardından bütün seviyelerin ötesine
+       boşlukla geçtiğinde bağlamda fiyatın üstünde tek bir aday kalmıyor
+       (tepe yok, r2 ve high52 aşağıda); `min(1)` rutini fiyatın altındaki bir
+       sayıyı "direnç" diye yazmaya zorluyordu ve taraf denetimi onu haklı
+       olarak reddedince hisse hiç yazılamıyordu. Aday yoksa dizi boş. */
+    supports: z.array(level).max(4),
+    resistances: z.array(level).max(4),
     copy: z.object({ tr: CopySchema, en: CopySchema.nullish() }),
   })
   .superRefine((item, ctx) => {
     const issue = (path: string, message: string) =>
       ctx.addIssue({ code: "custom", path: [path], message });
+    /* Diziler tek tek boş olabilir (fiyat bir yönde bütün seviyelerin
+       ötesine sıçradıysa) ama ikisi birden değil: seviyesiz bir plan yok. */
+    if (item.supports.length + item.resistances.length === 0) {
+      issue("supports", "destek ve direnç ikisi birden boş olamaz");
+    }
     const low = item.entry_low ?? null;
     const high = item.entry_high ?? null;
 
@@ -197,8 +207,8 @@ export const TECHNICAL_INPUT_SHAPE = {
       entry_high: "sayı — üst ucu; tek seviyede entry_low ile aynı",
       stop: "sayı — alım bölgesinin altında (AL'da zorunlu, SAT'ta yok)",
       targets: "[sayı] ≤3 — alım bölgesinin üstünde, yakından uzağa",
-      supports: "[sayı] 1-4 — fiyatın ALTINDA (yarım ATR pay)",
-      resistances: "[sayı] 1-4 — fiyatın ÜSTÜNDE (yarım ATR pay)",
+      supports: "[sayı] 0-4 — fiyatın ALTINDA (yarım ATR pay); altında aday yoksa []",
+      resistances: "[sayı] 0-4 — fiyatın ÜSTÜNDE (yarım ATR pay); üstünde aday yoksa []",
       copy: {
         tr: "{headline 60-280, summary 160-1400, bull 40-500, bear 40-500, volume 20-400, watch [1-4], entry_note?, stop_note?, targets_note?}",
         en: "aynı biçim (isteğe bağlı; yoksa sayfa Türkçesini gösterir)",
@@ -392,13 +402,23 @@ export async function saveTechnicalBatch(body: unknown): Promise<BatchOutcome> {
        yazım sırasında birkaç sent oynamış olabilir. Hedef yalnızca alım
        bölgesi YOKKEN denetleniyor: geri çekilme bekleyen bir TUT planında
        hedef anlık fiyatın altında kalabilir. */
-    const tolerance = 0.5 * (snapshot.atr14 ?? price * 0.02);
+    /* Referans, seviyelerin SEÇİLDİĞİ andaki fiyat: düzeltmede var olan
+       kaydın fotoğrafı, ilk yazımda taze fotoğraf. Düzeltme de taze fiyata
+       göre denetlenseydi fiyat o arada bir desteğin altına inmişse yalnızca
+       metni düzelten bir gönderim reddedilirdi. */
+    const reference = kept.get(item.symbol) ?? snapshot;
+    const referencePrice = reference.price ?? price;
+    const tolerance = 0.5 * (reference.atr14 ?? referencePrice * 0.02);
     const wrongSide = [
-      ...item.supports.filter((value) => value > price + tolerance).map((value) => `destek ${value} fiyatın üstünde`),
-      ...item.resistances.filter((value) => value < price - tolerance).map((value) => `direnç ${value} fiyatın altında`),
+      ...item.supports
+        .filter((value) => value > referencePrice + tolerance)
+        .map((value) => `destek ${value} fiyatın üstünde`),
+      ...item.resistances
+        .filter((value) => value < referencePrice - tolerance)
+        .map((value) => `direnç ${value} fiyatın altında`),
       ...(item.entry_low === undefined || item.entry_low === null
         ? (item.targets ?? [])
-            .filter((value) => value <= price - tolerance)
+            .filter((value) => value <= referencePrice - tolerance)
             .map((value) => `hedef ${value} fiyatın altında`)
         : []),
     ];
@@ -406,7 +426,7 @@ export async function saveTechnicalBatch(body: unknown): Promise<BatchOutcome> {
       errors.push({
         index,
         symbol: item.symbol,
-        issues: `seviye fiyatın (${price}) yanlış tarafında: ${wrongSide.join("; ")}`,
+        issues: `seviye fiyatın (${referencePrice}) yanlış tarafında: ${wrongSide.join("; ")} — o tarafta aday yoksa diziyi boş gönder`,
       });
       continue;
     }

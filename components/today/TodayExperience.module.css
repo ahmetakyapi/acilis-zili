@@ -162,10 +162,15 @@
  .dashboard [data-home-section="schedule"] { order:7; }
  .dashboard [data-home-section="week"] { order:8; }
  .dashboard [data-home-section="watchlist"] { order:9; }
- .dashboard [data-home-section="news"] { order:12; }
  .dashboard [data-home-section="earnings"] { order:10; }
  .dashboard [data-home-section="analyses"] { order:11; }
+ .dashboard [data-home-section="news"] { order:12; }
  .dashboard [data-home-section="sources"] { order:13; }
+ /* Teknik görünüm: düzleşince sırası yoksa `order:0` alıyor ve telefonda
+    Günün Özeti'nin ÜSTÜNE çıkıyordu. Makroyla aynı sıra: eşitlikte belge
+    sırası geçerli ve makro önce geliyor, yani panel masaüstündeki yan
+    kolon yerinde, makronun ardında ve takvimin önünde duruyor. */
+ .dashboard [data-home-section="technical"] { order:6; }
 }
 
 /* September cross-page audit: the centered countdown started 177px below

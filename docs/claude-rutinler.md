@@ -1077,10 +1077,12 @@ Her seviye bağlamdaki bir sayıdan gelir: bir ortalama, bir pivot, bir
 grafik tepesi ya da dibi, 52 haftalık uç. Kafadan seviye YAZMA. Notlarda
 nereden geldiğini söyle ("50 günlük ortalama ile önceki dip çakışıyor").
 
-  supports     1-4 seviye, fiyatın ALTINDA (swing_lows, s1/s2, altındaki
-               ortalamalar).
-  resistances  1-4 seviye, fiyatın ÜSTÜNDE (swing_highs, r1/r2, üstündeki
-               ortalamalar, high52).
+  supports     0-4 seviye, fiyatın ALTINDA (swing_lows, s1/s2, altındaki
+               ortalamalar). Altında aday yoksa boş dizi.
+  resistances  0-4 seviye, fiyatın ÜSTÜNDE (swing_highs, r1/r2, üstündeki
+               ortalamalar, high52). Fiyat bütün seviyelerin üstüne
+               sıçradıysa (bilanço sonrası boşluk) aday yok: boş dizi, sayı
+               uydurma.
   entry_low / entry_high
                ALIM BÖLGESİ — "nereden alınır". En yakın anlamlı desteğin
                çevresinde; genişliği kabaca 0,3–1 ATR. Tek seviyeyse ikisini

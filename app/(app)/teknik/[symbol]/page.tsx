@@ -61,7 +61,7 @@ export async function generateMetadata(
     /* ANALİZ YOKKEN SAYFA BOŞ BİR KABUK. Açıklaması da yoktu ve arama
        motoruna "başlık var, içerik yok" bir sayfa ilan ediliyordu; o hâlde
        dizine girmiyor, bağlantıları izleniyor. */
-    description: copy ? metaDescription(copy.headline) : t.technical.emptyHint,
+    description: copy ? metaDescription(copy.headline) : t.technical.noAnalysisHint,
     ...(detail ? {} : { robots: { index: false, follow: true } }),
     openGraph: detail
       ? articleOpenGraph(locale, { modifiedTime: new Date(detail.row.updatedAt).toISOString() })
@@ -120,7 +120,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       <MotionExperience className={directory.page}>
         {breadcrumb}
         <Panel>
-          <EmptyState title={t.technical.noAnalysis} hint={t.technical.emptyHint} titleAs="h1" />
+          <EmptyState title={t.technical.noAnalysis} hint={t.technical.noAnalysisHint} titleAs="h1" />
         </Panel>
       </MotionExperience>
     );

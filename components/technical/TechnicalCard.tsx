@@ -129,11 +129,12 @@ export function TechnicalCard({
       <div className={styles.cardHead}>
         <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
         <div className={styles.cardName}>
-          <h2 id={headingId} className={styles.cardSymbol}>
+          {/* h3: kartlar sayfanın "12 Hisse" bölümünün (sr-only h2) altında. */}
+          <h3 id={headingId} className={styles.cardSymbol}>
             <Link href={technicalHref(row.symbol)} prefetch={false} className={styles.cardLink}>
               {row.symbol}
             </Link>
-          </h2>
+          </h3>
           {company && <span className={styles.cardCompany}>{company}</span>}
         </div>
         <span className={styles.badges}>
@@ -164,12 +165,17 @@ export function TechnicalCard({
 
       <p className={styles.cardHeadline} lang={untranslated ? "tr" : locale}>
         {untranslated && (
+          /* `relative z-[3]`: kartı kaplayan bağlantı katmanının (z-1) ve
+             ışığın (z-2) üstünde, yoksa fare ipucu hiç açılmıyordu. Not kendi
+             dilinde: paragraf `lang="tr"`, not arayüzün dilinde. */
           <span
             title={t.technical.langNote}
-            className="mr-1.5 inline-flex rounded bg-surface-sunken px-1.5 align-[1px] text-nano font-bold text-muted"
+            className="relative z-[3] mr-1.5 inline-flex rounded bg-surface-sunken px-1.5 align-[1px] text-nano font-bold text-muted"
           >
             {t.technical.originalBadge}
-            <span className="sr-only">{t.technical.langNote}</span>
+            <span className="sr-only" lang={locale}>
+              {t.technical.langNote}
+            </span>
           </span>
         )}
         {copy.headline}

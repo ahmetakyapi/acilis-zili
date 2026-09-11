@@ -118,12 +118,16 @@ export default async function TechnicalPage() {
               .filter((key) => key === "all" || counts[key] > 0)
               .map((key) => (
                 <span key={key} className="contents">
+                  {/* Radyonun iki etiketi var (bu çip ve başlıktaki dağılım
+                      satırı); açık ad olmadan ekran okuyucu ikisini birleştirip
+                      "SAT 2 SAT 2" diyordu. */}
                   <input
                     type="radio"
                     name="technical-stance"
                     id={stanceFilterId(key)}
                     value={key}
                     defaultChecked={key === "all"}
+                    aria-label={`${key === "all" ? t.technical.filterAll : verdictLabel(key, t)} ${key === "all" ? board.length : counts[key]}`}
                   />
                   <label htmlFor={stanceFilterId(key)}>
                     {key === "all" ? t.technical.filterAll : verdictLabel(key, t)}

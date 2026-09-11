@@ -2175,15 +2175,13 @@ async function StoriesSpotlight({
 }
 
 /* ==========================================================================
-   Son analizler
+   Teknik görünüm
    ========================================================================== */
 
 /**
- * Son bilanço analizleri.
- *
- * Kapı (Tümünü Gör) başlıkta duruyor. Boş liste basılmıyor: analiz yoksa
- * panel hiç çıkmıyor ve ızgara satırı kendiliğinden kapanıyor — okuma girişi
- * yukarıdaki Mercek bloğunda zaten var.
+ * Teknik analiz paneli — yan kolonda (gerekçe ve ölçüm yerleşim yorumunda).
+ * Pano boşsa hiç basılmıyor; başlığı panelin kendisi taşıyor, görüş
+ * dağılımının iç başlığı ve süzgeç bağlantısı burada yok (`variant="panel"`).
  */
 async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) {
   const board = await getTechnicalBoard();
@@ -2213,6 +2211,17 @@ async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) 
   );
 }
 
+/* ==========================================================================
+   Son analizler
+   ========================================================================== */
+
+/**
+ * Son bilanço analizleri.
+ *
+ * Kapı (Tümünü Gör) başlıkta duruyor. Boş liste basılmıyor: analiz yoksa
+ * panel hiç çıkmıyor ve ızgara satırı kendiliğinden kapanıyor — okuma girişi
+ * yukarıdaki Mercek bloğunda zaten var.
+ */
 async function LatestAnalyses({
   locale,
   t,

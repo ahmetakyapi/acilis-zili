@@ -23,7 +23,9 @@
 .pulseBar { display:flex; gap:3px; height:10px; overflow:hidden; border-radius:999px; }
 .pulseBar > span { min-width:10px; border-radius:999px; transform-origin:left center; }
 .pulseBar > span[data-verdict="buy"] { background:var(--up); }
-.pulseBar > span[data-verdict="hold"] { background:var(--primary); opacity:.55; }
+/* Opaklık DEĞİL karışım: dilim bir hareket kancası ve azaltılmış harekette
+   ortak kural opaklığı !important ile 1'e eziyor, TUT tam doygun kalıyordu. */
+.pulseBar > span[data-verdict="hold"] { background:color-mix(in srgb, var(--primary) 55%, transparent); }
 .pulseBar > span[data-verdict="sell"] { background:var(--down); }
 .pulseRows { display:grid; gap:4px; }
 .pulseRow { display:grid; grid-template-columns:74px minmax(0,1fr); align-items:center; gap:12px; padding:8px 10px; border-radius:14px; transition:background-color .2s; }
