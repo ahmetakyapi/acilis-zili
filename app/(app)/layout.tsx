@@ -3,10 +3,8 @@ import { Suspense } from "react";
 import { auth } from "@/auth";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { AppShell, type ShellLabels } from "@/components/layout/AppShell";
-import { LocaleToggle } from "@/components/layout/LocaleToggle";
 import { SearchCommand } from "@/components/layout/SearchCommand";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { TickerFeed } from "@/components/layout/TickerFeed";
 import { ViewBeacon } from "@/components/layout/ViewBeacon";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
@@ -47,7 +45,6 @@ export default async function AppLayout({
 
   const labels: ShellLabels = {
     brandName: t.brand.name,
-    tagline: t.brand.marketTagline,
     nav: Object.fromEntries(
       NAV_ITEMS.map((item) => [item.href, item.label(t)]),
     ),
@@ -57,75 +54,95 @@ export default async function AppLayout({
         item.shortLabel!(t),
       ]),
     ),
-    settings: t.nav.settings,
-    signIn: t.nav.signIn,
-    menu: t.nav.menu,
+    /* Etiketler sunucuda çözülüyor: sözlük istemciye inmiyor, kabuğa
+       yalnızca metinler gidiyor. */
+    strip: NAV_ITEMS.flatMap((item) =>
+      item.strip
+        ? [
+            {
+              href: item.href,
+              label: (item.strip.label ?? item.label)(t),
+              full: item.label(t),
+              hint: item.hint?.(t) ?? "",
+              rank: item.strip.rank,
+            },
+          ]
+        : [],
+    ),
+    moreItems: NAV_ITEMS.flatMap((item) =>
+      item.more
+        ? [{ href: item.href, label: item.label(t), hint: item.hint?.(t) ?? "" }]
+        : [],
+    ),
+    more: t.nav.more,
     mainNav: t.nav.mainNav,
     bottomNav: t.nav.bottomNav,
     skipToContent: t.nav.skipToContent,
     loading: t.common.loading,
   };
 
+  /* MotionProvider KABUĞU SARIYOR, yalnızca sayfayı değil. Bir dönem
+     yalnızca `children`ı sarıyordu: başlıktaki hesap paneli, "Daha Fazla"
+     ve arama paleti `reducedMotion="user"` ayarının dışında kalıyor,
+     "hareketi azalt" diyen okuyucuda da kayarak açılıyordu. */
   return (
-    <AppShell
-      labels={labels}
-      signedIn={Boolean(session?.user)}
-      username={session?.user?.name ?? null}
-      themeToggle={<ThemeToggle initial={theme} label={t.settings.theme} />}
-      localeToggle={<LocaleToggle initial={locale} label={t.settings.language} />}
-      searchTrigger={
-        <SearchCommand
-          placeholder={t.nav.searchPlaceholder}
-          placeholderShort={t.nav.searchTrigger}
-          label={t.nav.search}
-          emptyLabel={t.stock.notFound}
-          rateLimitedLabel={t.nav.searchRateLimited}
-          failedLabel={t.nav.searchFailed}
-          popularLabel={t.nav.searchPopular}
-          companiesLabel={t.nav.companies}
-          technicalLabel={t.technical.title}
-          writingsLabel={t.nav.searchWritings}
-          closeLabel={t.common.close}
-          hints={{ move: t.nav.searchHintMove, open: t.nav.searchHintOpen }}
-        />
-      }
-      accountMenu={
-        <AccountMenu
-          signedIn={Boolean(session?.user)}
-          username={session?.user?.name ?? null}
-          /* Oturum token'ındaki rol yalnızca BAĞLANTIYI göstermek için
-             yeterli; panelin kendisi yetkiyi veritabanından doğruluyor
-             (lib/admin.ts). Burada sorgu yapmak her sayfada bir gidiş-dönüş
-             daha demek olurdu. */
-          isAdmin={session?.user?.role === "admin"}
-          initialTheme={theme}
-          initialLocale={locale}
-          labels={{
-            account: t.nav.account,
-            settings: t.nav.settings,
-            signIn: t.nav.signIn,
-            signUp: t.nav.signUp,
-            guest: t.menu.guestTitle,
-            guestHint: t.menu.guestHint,
-            watchlist: t.nav.watchlist,
-            theme: t.settings.theme,
-            themeLight: t.settings.themeLight,
-            themeDark: t.settings.themeDark,
-            language: t.settings.language,
-          }}
-          className="lg:hidden"
-        />
-      }
-      ticker={
-        <Suspense fallback={null}>
-          <TickerFeed />
-        </Suspense>
-      }
-      footer={<SiteFooter />}
-    >
-      {/* Sayfa ölçümü — çerezsiz, kimliksiz, hiçbir şey çizmez. */}
-      <ViewBeacon locale={locale} />
-      <MotionProvider>{children}</MotionProvider>
-    </AppShell>
+    <MotionProvider>
+      <AppShell
+        labels={labels}
+        locale={locale}
+        searchTrigger={
+          <SearchCommand
+            placeholder={t.nav.searchPlaceholder}
+            placeholderShort={t.nav.searchTrigger}
+            label={t.nav.search}
+            emptyLabel={t.stock.notFound}
+            rateLimitedLabel={t.nav.searchRateLimited}
+            failedLabel={t.nav.searchFailed}
+            popularLabel={t.nav.searchPopular}
+            companiesLabel={t.nav.companies}
+            technicalLabel={t.technical.title}
+            writingsLabel={t.nav.searchWritings}
+            closeLabel={t.common.close}
+            hints={{ move: t.nav.searchHintMove, open: t.nav.searchHintOpen }}
+          />
+        }
+        accountMenu={
+          <AccountMenu
+            signedIn={Boolean(session?.user)}
+            username={session?.user?.name ?? null}
+            /* Oturum token'ındaki rol yalnızca BAĞLANTIYI göstermek için
+               yeterli; panelin kendisi yetkiyi veritabanından doğruluyor
+               (lib/admin.ts). Burada sorgu yapmak her sayfada bir gidiş-dönüş
+               daha demek olurdu. */
+            isAdmin={session?.user?.role === "admin"}
+            initialTheme={theme}
+            initialLocale={locale}
+            labels={{
+              account: t.nav.account,
+              settings: t.nav.settings,
+              signIn: t.nav.signIn,
+              signUp: t.nav.signUp,
+              guest: t.menu.guestTitle,
+              guestHint: t.menu.guestHint,
+              watchlist: t.nav.watchlist,
+              theme: t.settings.theme,
+              themeLight: t.settings.themeLight,
+              themeDark: t.settings.themeDark,
+              language: t.settings.language,
+            }}
+          />
+        }
+        ticker={
+          <Suspense fallback={null}>
+            <TickerFeed />
+          </Suspense>
+        }
+        footer={<SiteFooter />}
+      >
+        {/* Sayfa ölçümü — çerezsiz, kimliksiz, hiçbir şey çizmez. */}
+        <ViewBeacon locale={locale} />
+        {children}
+      </AppShell>
+    </MotionProvider>
   );
 }

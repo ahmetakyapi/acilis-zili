@@ -126,8 +126,8 @@ istenmiyor.
 
 ### Teknik analiz
 
-Masthead'de sekmesi yok — sığmıyor (ölçümü `components/layout/nav-items.ts`
-içinde); Menü'den ve alt bilgiden açılıyor.
+Masaüstü şeridinde beşinci sekme (Bilançolar ile Takvim arası); mobilde
+Menü'den, her yerde aramadan ve alt bilgiden açılıyor.
 
 | Rota | Soru |
 |---|---|

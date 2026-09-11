@@ -423,24 +423,30 @@ export function SearchCommand({
 
   return (
     <>
-      {/* 1536px altında kare düğme, üstünde 248px'lik ⌘K alanı.
-          Gezinme dokuz sekmeye çıkınca geniş arama kutusu masthead'i
-          taşırıyordu; kısayol yine çalışıyor, ikon da yerinde. */}
+      {/* 1280px altında 36'lık kare, üstünde 240px'lik ⌘K alanı.
+          Masthead dokuz sekme taşırken alan yalnızca 1536 üstünde
+          açılabiliyordu; tek şeride inen düzen 1280'de yer açtı (ölçüm
+          nav-items.ts yorumunda). Kısayol her genişlikte çalışıyor. */}
       <button
         ref={triggerRef}
         type="button"
         onClick={openPalette}
-        aria-label={label}
+        /* AD GÖRÜNEN METİNLE AYNI. Geniş alanda "Sembol veya Olay Ara"
+           yazıyor; erişilebilir ad "Ara" kalınca sesle kumanda eden biri
+           gördüğü metni söylediğinde düğme bulunmuyordu (WCAG 2.5.3). */
+        aria-label={placeholderShort}
+        aria-keyshortcuts="Meta+K Control+K"
         /* KONTRAST. Kutu neredeyse görünmez bir yüzey (`bg-surface`,
            açık temada beyazın üstünde %3) ve ikon en soluk ton
            (`text-muted`) taşıyordu: telefonda düğme bir leke gibi
            duruyor, ikon da bulanık okunuyordu. Yüzey bir kademe yukarı,
            ikon gövde mürekkebine çıktı. */
-        className="inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface-elevated text-base text-body transition-colors hover:border-line-strong hover:text-strong lg:size-9 2xl:size-auto 2xl:w-[248px] 2xl:justify-start 2xl:rounded-md 2xl:px-3 2xl:py-2"
+        className="inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface-elevated text-base text-body transition-colors hover:border-line-strong hover:text-strong lg:size-9 lg:rounded-md xl:w-60 xl:justify-start xl:px-3"
       >
         <MagnifyingGlass weight="duotone" size={16} className="shrink-0" />
-        <span className="hidden 2xl:inline">{placeholderShort}</span>
-        <kbd className="ml-auto hidden rounded bg-surface-elevated px-[5px] py-0.5 text-nano 2xl:inline">
+        <span className="hidden truncate xl:inline">{placeholderShort}</span>
+        {/* Kutusuz: başlığın yarıçapları yalnızca 9 ve 16. */}
+        <kbd aria-hidden className="ml-auto hidden font-sans text-nano font-semibold text-muted xl:inline">
           ⌘K
         </kbd>
       </button>

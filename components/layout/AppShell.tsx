@@ -3,24 +3,23 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useLocaleHref } from "@/components/layout/useLocaleHref";
-import { Gear } from "@phosphor-icons/react/dist/ssr";
-import { BellMark, BrandLockup, BrandWord } from "@/components/brand/BellMark";
-import { RouteProgress } from "./RouteProgress";
-import { NavOverflow } from "./NavOverflow";
-import { NAV_ITEMS, isActive } from "./nav-items";
-import { stripLocale } from "@/lib/i18n/routing";
-import { ButtonLink } from "@/components/ui/primitives";
+import { BellMark, BrandWord } from "@/components/brand/BellMark";
+import type { Locale } from "@/lib/i18n/config";
+import { stripLocale, withLocale } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
+import { MastheadNav, type MastheadMoreItem, type MastheadStripItem } from "./MastheadNav";
+import { RouteProgress } from "./RouteProgress";
+import { NAV_ITEMS, isActive } from "./nav-items";
 
 export type ShellLabels = {
   brandName: string;
-  tagline: string;
   nav: Record<string, string>;
   navShort: Record<string, string>;
-  settings: string;
-  signIn: string;
-  menu: string;
+  /** Masaüstü şeridinin sekmeleri, dizi sırasıyla. */
+  strip: MastheadStripItem[];
+  /** "Daha Fazla" panelinin sabit satırları. */
+  moreItems: MastheadMoreItem[];
+  more: string;
   mainNav: string;
   bottomNav: string;
   skipToContent: string;
@@ -29,12 +28,10 @@ export type ShellLabels = {
 
 type AppShellProps = {
   labels: ShellLabels;
-  signedIn: boolean;
-  username: string | null;
-  themeToggle: React.ReactNode;
-  localeToggle: React.ReactNode;
+  /** Sunucunun çözdüğü dil — bağlantılar bununla önek alır (aşağıda). */
+  locale: Locale;
   searchTrigger: React.ReactNode;
-  /** Mobil başlığın sağ ucu: hesap + tema + dil tek panelde. */
+  /** İki başlığın da sağ ucu: hesap + tema + dil tek panelde. */
   accountMenu: React.ReactNode;
   ticker: React.ReactNode;
   footer: React.ReactNode;
@@ -69,6 +66,16 @@ const SAFE_X_18 =
 const SAFE_X_12 =
   "pl-[max(env(safe-area-inset-left),12px)] pr-[max(env(safe-area-inset-right),12px)]";
 
+/**
+ * İçerik çerçevesi — main, alt bilgi ve masthead AYNI sabitten okur. Başlık
+ * bir dönem tam genişlikte kendi dolgusunu taşıyordu ve 1400 pikselden geniş
+ * ekranda logo içeriğin sol kenarından, hesap düğmesi sağ kenarından
+ * kopuyordu: başlık sayfanın değil pencerenin hizasında duruyordu. Ölçüldü:
+ * 1024-1920 arasında logo ve hesap düğmesi main'in iç kenarlarıyla 0 piksel
+ * farkla hizalı.
+ */
+const CONTENT_FRAME = "mx-auto w-full max-w-[1400px]";
+
 /** İçerik kanalı — 18/24/40px dolgu, çentik daha genişse o kazanır. */
 const CONTENT_GUTTER = [
   "pl-[max(env(safe-area-inset-left),18px)] pr-[max(env(safe-area-inset-right),18px)]",
@@ -78,10 +85,7 @@ const CONTENT_GUTTER = [
 
 export function AppShell({
   labels,
-  signedIn,
-  username,
-  themeToggle,
-  localeToggle,
+  locale,
   searchTrigger,
   accountMenu,
   ticker,
@@ -90,8 +94,15 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   /* Kabuktaki bağlantılar dili taşır: en çok tıklanan yerler bunlar ve
-     önekSİZ bir bağlantı proxy'de fazladan bir yönlendirmeye mal oluyor. */
-  const { href: L } = useLocaleHref();
+     önekSİZ bir bağlantı proxy'de fazladan bir yönlendirmeye mal oluyor.
+
+     DİL PROP'TAN, ADRESTEN DEĞİL. Bir dönem `useLocaleHref` ile adresten
+     okunuyordu ama `/en/...` proxy'de yeniden yazılıyor ve sunucu çiziminde
+     `usePathname()` yeniden yazılmış yolu (`/piyasalar`) veriyor: canlı /en
+     HTML'inde kabuğun bütün bağlantıları öneksiz geliyordu (curl ile
+     görüldü). Hidrasyon öznitelik farkını düzeltmediği için bağlantılar
+     tarayıcıda da öyle kalıyordu. */
+  const L = (path: string) => withLocale(path, locale);
 
   /* Alt çubuk: Piyasa · Bilanço · Mercek · Menü.
      Giriş yapmamış kullanıcıda Favoriler sekmesi ÇIKMAZ SOKAKTI — sayfa onu
@@ -109,8 +120,8 @@ export function AppShell({
 
      YUVA GİRİŞ DURUMUNA BAKMIYOR. Bir süre giriş yapan kullanıcıda
      Favoriler'e dönüyordu ama mobilde dört sekmenin biri kişisel bir listeye
-     gidiyordu ve o liste zaten başlıktaki hesap menüsünden, Menü sekmesinden
-     ve masaüstü gezinmesinden açılıyor. Mercek ise sitenin kendi yazdığı tek
+     gidiyordu ve o liste zaten iki başlıktaki hesap panelinden ve Menü
+     sekmesinden açılıyor. Mercek ise sitenin kendi yazdığı tek
      içerik türü ve mobilde başka türlü yalnızca Menü'nün altında kalıyordu:
      sekme onu herkes için görünür yapıyor. */
   const bottomItems = NAV_ITEMS.filter((item) => item.inBottomBar).map((item) => ({
@@ -154,7 +165,7 @@ export function AppShell({
         <RouteProgress label={labels.loading} />
       </Suspense>
 
-      {/* Klavyeyle gezen biri her sayfada sekiz sekmeyi geçmek zorunda
+      {/* Klavyeyle gezen biri her sayfada yedi sekmeyi geçmek zorunda
           kalmasın. Odaklanana kadar görünmez; odakta masthead'in üstüne
           oturur. */}
       <a
@@ -165,97 +176,51 @@ export function AppShell({
       </a>
 
       {/* ---- Masaüstü masthead ----
-           Üst güvenli alan burada da eklenir; masaüstünde 0 döner, tablette
-           tam ekran (standalone) açıldığında değil. */}
-      <header className="chrome sticky top-0 z-30 hidden min-h-[var(--app-bar-h)] items-center gap-4 border-b px-5 pb-3.5 pt-[calc(env(safe-area-inset-top)+14px)] lg:flex xl:gap-6 xl:px-10">
-        <Link href={L("/")} className="shrink-0" aria-label={labels.brandName}>
-          <BrandLockup
-            name={labels.brandName}
-            tagline={labels.tagline}
-            size={38}
-            // Alt satır yalnızca çok geniş ekranda: dokuz sekmeyle birlikte
-            // masthead 1536px altında sıkışıyor, marka adı zaten yeterli.
-            taglineClassName="hidden 2xl:block"
-          />
-        </Link>
+           ÜÇ SÜTUN, TEK SATIR: marka · şerit · araçlar. Eski başlık altı
+           ayrı parçaydı (künyeli marka, sekmeler, "Menü" hapı, tema, dil,
+           oturum çipi ya da Giriş düğmesi) ve beş farklı kontrol boyu, dört
+           farklı köşe yarıçapı taşıyordu. Şimdi sağda iki kare var ve
+           ikisi de mobil başlıktaki AYNI iki bileşen: arama ve hesap paneli.
+           Tema, dil, Favoriler ve giriş o panelde.
 
-        {/* Her etiket degradesini KENDİ kutusunda çizer; şerit boyunca tek
-            bir süpürme denendi ve istenmedi. Bulunulan sayfa dolgulu hap ve
-            kalın ağırlıkla ayrışır, renkle değil.
-            "Bugün" burada yok — logo zaten oraya götürüyor. */}
-        <nav
-          aria-label={labels.mainNav}
-          className="flex min-w-0 gap-[2px] text-base xl:gap-[3px] xl:text-read"
-        >
-          {NAV_ITEMS.filter((item) => item.inMasthead).map((item) => {
-            const active = isActive(pathname, item.href);
-            return (
-              <Link
-                key={item.href}
-                href={L(item.href)}
-                prefetch
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "shrink-0 whitespace-nowrap rounded-lg px-2 py-[7px] transition-colors duration-150 xl:px-3",
-                  item.wideOnly && "hidden xl:block",
-                  /* Pasif sekmeler de KALIN: `font-medium` ile yazılınca
-                     masthead soluk bir bağlantı şeridi gibi duruyordu ve
-                     seçili sekme tek başına ağır kalıyordu. İkisi de kalın,
-                     ayrım artık ağırlıkta değil zeminde ve mürekkepte. */
-                  /* Sekmelerin TAMAMI kalın. Pasifler önce `font-medium`,
-                     sonra `font-semibold` idi ve masthead yine soluk bir
-                     bağlantı şeridi gibi duruyordu. Ayrım ağırlıkta değil
-                     zeminde ve mürekkepte: seçili olan zemin alıyor. */
-                  "font-bold",
-                  active ? "bg-surface-elevated" : "hover:bg-surface",
-                )}
-              >
-                {/* Gezinme etiketleri de maskesiz: 13-14 pikselde degrade
-                    maske metni yumuşatıyor ve bu, sekme adları gibi sürekli
-                    okunan metinlerde en çok görülen yer. */}
-                <span>{labels.nav[item.href]}</span>
-              </Link>
-            );
-          })}
-          {/* Keep every existing destination; tighter horizontal padding makes
-              room for the desktop index without overlapping search controls. */}
-          <NavOverflow label={labels.menu} labels={labels.nav} />
-        </nav>
-
-        <div className="ml-auto flex shrink-0 items-center gap-2.5">
-          {searchTrigger}
-          {themeToggle}
-          {localeToggle}
-          {signedIn ? (
-            <Link
-              href={L("/ayarlar")}
-              title={username ?? labels.settings}
-              className="flex items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-[7px] text-base text-body transition-colors hover:border-line-strong hover:text-strong"
-            >
-              <span
-                aria-hidden
-                className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary-wash text-nano font-bold uppercase text-primary-ink"
-              >
-                {(username ?? "?").slice(0, 2)}
-              </span>
-              {/* AD 1280px ALTINDA GİZLİ. Masthead'de yedi sekme var ve
-                  1024px'de sekmelerle sağdaki denetimler arasında yalnızca
-                  19 piksel kalıyordu: uzun bir kullanıcı adı (kutu 112
-                  piksele kadar açılıyor) sekmeleri arama düğmesinin ALTINA
-                  itiyor, ikisi üst üste biniyordu — sayfa taşmadığı için de
-                  hiçbir ölçüm bunu yakalamıyordu. Kimliği baş harfler zaten
-                  taşıyor, tam ad `title` içinde duruyor ve geniş ekranda
-                  yazıyla birlikte geri geliyor. */}
-              <span className="hidden max-w-28 truncate xl:inline">
-                {username ?? labels.settings}
-              </span>
-              <Gear weight="duotone" size={15} className="shrink-0" />
-            </Link>
-          ) : (
-            <ButtonLink href={L("/giris")} variant="primary">
-              {labels.signIn}
-            </ButtonLink>
+           Dikey dolgu yok: 68 içerik + 1 hairline = 69, `--app-bar-h`.
+           Sekmeler başlığın tam boyunu kaplıyor ki konum işareti
+           hairline'ın üstüne otursun. Üst güvenli alan masaüstünde 0 döner,
+           tablette tam ekran (standalone) açıldığında değil. */}
+      <header className="chrome sticky top-0 z-30 hidden min-h-[var(--app-bar-h)] border-b pt-[env(safe-area-inset-top)] lg:flex">
+        <div
+          className={cn(
+            CONTENT_FRAME,
+            CONTENT_GUTTER,
+            "grid grid-cols-[auto_minmax(0,1fr)_auto] items-stretch gap-x-4 xl:gap-x-6",
           )}
+        >
+          {/* KÜNYE SATIRI YOK. "ABD Piyasa Takibi" 9,5 piksellik bir alt
+              satırdı ve yalnızca 1536 üstünde görünüyordu: aynı başlık
+              genişliğe göre iki farklı marka bloğu çiziyordu. Tanıtımı sayfa
+              başlıkları ve arama motoru künyesi zaten yapıyor. */}
+          <Link
+            href={L("/")}
+            aria-label={labels.brandName}
+            aria-current={barePath === "/" ? "page" : undefined}
+            className="flex items-center gap-2.5 self-center"
+          >
+            <BellMark size={38} />
+            <BrandWord name={labels.brandName} className="text-title leading-none" />
+          </Link>
+
+          <MastheadNav
+            locale={locale}
+            label={labels.mainNav}
+            moreLabel={labels.more}
+            strip={labels.strip}
+            more={labels.moreItems}
+          />
+
+          <div className="flex h-full items-center gap-2">
+            {searchTrigger}
+            {accountMenu}
+          </div>
         </div>
       </header>
 
@@ -264,7 +229,7 @@ export function AppShell({
            çubuğunun altından değil, altındaki güvenli bandın içinden başlar. */}
       <header
         className={cn(
-          /* Üstte 14px — masaüstü şeridiyle aynı. Kullanıcı "gerekirse
+          /* Üstte 14px. Kullanıcı "gerekirse
              üstten biraz boşluk bırak" dedi; sistem çubuğunun altına
              girmeyi bıraktıktan sonra da yazının tepeye yapışmaması için
              dört piksel daha ferahlık. */
@@ -294,7 +259,7 @@ export function AppShell({
             anlatmaya çalışıyordu (güneş mi şu anki tema mı, basınca gelecek
             olan mı?). İkisi de hesap menüsünün içine, adlarıyla yazılı
             seçenekler hâline geldi. Başlıkta içeriği değiştiren tek şey
-            kalıyor: arama. */}
+            kalıyor: arama. Masaüstü başlık da artık aynı iki düğmeyi taşıyor. */}
         <div className="ml-auto flex items-center gap-2">
           {searchTrigger}
           {accountMenu}
@@ -319,7 +284,8 @@ export function AppShell({
            zaten garantiliyor (globals.css). */
         tabIndex={-1}
         className={cn(
-          "mx-auto w-full max-w-[1400px] flex-1 pt-4 outline-none lg:pt-6",
+          CONTENT_FRAME,
+          "flex-1 pt-4 outline-none lg:pt-6",
           CONTENT_GUTTER,
         )}
       >
@@ -341,7 +307,8 @@ export function AppShell({
           /* pb: telefonda yalnızca sekme çubuğunu (64px + güvenli alan)
              temizlemesi yeter — şerit artık orada basılmıyor, 128px'lik
              eski dolgu sayfanın dibinde ölü boşluk bırakıyordu. */
-          "mx-auto w-full max-w-[1400px] pb-24 pt-10 lg:pb-20",
+          CONTENT_FRAME,
+          "pb-24 pt-10 lg:pb-20",
           CONTENT_GUTTER,
           barePath === "/menu" && "[&_footer_nav]:hidden",
         )}

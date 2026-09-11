@@ -97,14 +97,6 @@ export function BellMark({
 }
 
 /**
- * İşaret + kelime + alt satır.
- *
- * İki metin satırı birbirine göre ORTALANIR: alt satır seyrek aralıklı
- * olduğu için marka adından geniş çıkıyor, sola dayalıyken kilit sağa doğru
- * kayık görünüyordu. Ortalanınca ikisi tek blok gibi oturuyor ve zil karosu
- * bu bloğun tam ortasına denk geliyor.
- */
-/**
  * Marka adı — DEGRADE MASKE YOK.
  *
  * Ad bir dönem `display-ink` ile çiziliyordu: `-webkit-background-clip: text`
@@ -136,41 +128,6 @@ export function BrandWord({
     >
       {head}
       {tail && <span className="text-primary"> {tail}</span>}
-    </span>
-  );
-}
-
-export function BrandLockup({
-  name,
-  tagline,
-  size = 34,
-  className,
-  taglineClassName,
-}: {
-  name: string;
-  tagline?: string;
-  size?: number;
-  className?: string;
-  /** Alt satırı gizlemek için — masthead dar ekranda yalnızca adı taşır. */
-  taglineClassName?: string;
-}) {
-  return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <BellMark size={size} />
-      <span className="flex flex-col items-center justify-center leading-none">
-        <BrandWord name={name} style={{ fontSize: size * 0.5 }} />
-        {tagline && (
-          <span
-            className={cn(
-              "mt-[3px] text-center font-semibold uppercase tracking-[0.13em] text-muted",
-              taglineClassName,
-            )}
-            style={{ fontSize: Math.max(9, size * 0.25) }}
-          >
-            {tagline}
-          </span>
-        )}
-      </span>
     </span>
   );
 }

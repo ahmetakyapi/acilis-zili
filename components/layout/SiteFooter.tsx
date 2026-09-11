@@ -7,9 +7,10 @@ import { getI18n } from "@/lib/i18n";
 /**
  * Sayfa altı — künye ve bölüm dizini.
  *
- * Masthead dar ekranda sekiz sekmenin hepsini taşıyamıyor; burası o eksiği
- * kapatan ikinci dizin. Mobilde de Menü sekmesinin altında aynı bağlantılar
- * var, yani hiçbir ekran yalnızca tek yoldan erişilebilir değil.
+ * Masthead'de yedi sekme ve "Daha Fazla" var; burası ekranların hepsini
+ * tek bakışta sıralayan ikinci dizin, KVKK ve RSS de yalnızca burada. Mobilde
+ * Menü sekmesinin altında aynı bağlantılar var, yani hiçbir ekran yalnızca
+ * tek yoldan erişilebilir değil.
  */
 
 const GITHUB_URL = "https://github.com/ahmetakyapi";

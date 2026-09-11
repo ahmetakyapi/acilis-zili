@@ -82,11 +82,12 @@ gelsin.
 - **Bilanço analizi panelden düzenlenmiyor.** Analiz serbest metin değil, on
   beş alanlı yapılandırılmış bir kayıt; bir metin kutusuna indirmek
   düzenlemek değil bozmak olurdu. Eksikleri İçerik ekranı listeliyor.
-- **Teknik analizin masthead sekmesi yok.** Sığmıyor: 1024px'de İngilizce
-  masthead'de sekmesiz bile 20 piksel kalıyor, sekmeyle 1280'de −39,
-  1536'da −8 (ölçüm `components/layout/nav-items.ts` içinde). Yer açmak
-  başka bir sekmeyi daraltmak demek; o karar masthead sırasının sahibine
-  ait. Menü'den ve alt bilgiden açılıyor.
+- **Masthead tek şerit: yedi sekme ve "Daha Fazla".** Teknik Analiz bir
+  dönem hiçbir genişlikte sığmıyordu (1024 EN'de sekmesiz 20 piksel); tema,
+  dil, oturum çipi ve Favoriler hesap paneline taşınınca şeritte yer açıldı.
+  Rehber, Karşılaştır, Haberler ve Bülten Arşivi "Daha Fazla"da. Büyütülmüş
+  yazıda sekmeler öncelik sırasıyla o panele iniyor (ölçüm
+  `components/layout/nav-items.ts` içinde).
 
 ---
 

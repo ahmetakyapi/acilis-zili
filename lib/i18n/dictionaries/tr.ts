@@ -24,7 +24,9 @@ const tr = {
     markets: "Piyasalar",
     guide: "Rehber",
     stories: "Mercek",
-    technical: "Teknik",
+    /* Şeritteki ad. EN kısa ("Technicals"), TR tam ad: "Teknik" tek başına
+       neyin tekniği olduğunu söylemiyordu ve TR aralığı buna yetiyor. */
+    technical: "Teknik Analiz",
     // Mobil alt çubuk etiketleri — 64px sekmede tam sığar.
     earningsShort: "Bilanço",
     marketsShort: "Piyasa",
@@ -42,6 +44,10 @@ const tr = {
     searchHintMove: "Gez",
     searchHintOpen: "Aç",
     menu: "Menü",
+    /* Masaüstü şeridinin sonundaki açılır liste. "Menü" DEĞİL: o ad mobilde
+       ürünün tamamını açan dizinin adı; bu liste yalnızca şeritte olmayan
+       dört ekranı taşıyor. */
+    more: "Daha Fazla",
     mainNav: "Ana gezinme",
     /* İki gezinme yer imi var ve ikisi de "Ana gezinme" adını
        taşıyordu: ekran okuyucunun yer imi listesinde ayırt

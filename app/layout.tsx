@@ -158,7 +158,8 @@ export async function generateViewport(): Promise<Viewport> {
 
 /**
  * Varsayılan tema açık: cookie yoksa sunucu light basar, script gerekmez.
- * <html suppressHydrationWarning> — ThemeToggle data-theme'i DOM'a yazar.
+ * <html suppressHydrationWarning> — hesap panelindeki tema seçimi
+ * (AccountMenu) data-theme'i DOM'a yazar.
  */
 export default async function RootLayout({
   children,

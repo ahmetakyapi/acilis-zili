@@ -36,6 +36,7 @@ const en: typeof tr = {
     searchHintMove: "Move",
     searchHintOpen: "Open",
     menu: "Menu",
+    more: "More",
     mainNav: "Main navigation",
     bottomNav: "Bottom navigation",
     skipToContent: "Skip to Content",

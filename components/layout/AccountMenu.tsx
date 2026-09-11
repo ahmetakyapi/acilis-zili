@@ -33,7 +33,7 @@ import { ButtonLink } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
 /* --------------------------------------------------------------------------
-   Hesap menüsü — mobil başlığın sağ ucu.
+   Hesap menüsü — İKİ başlığın da sağ ucu.
 
    Telefonda başlıkta üç ayrı düğme duruyordu: arama, tema, dil. Üçü de aynı
    ağırlıkta ve hangisinin ne yaptığı ancak ikonuna bakıp tahmin edilerek
@@ -41,6 +41,16 @@ import { cn } from "@/lib/utils";
    tek soruya göre kuruldu: bu düğme İÇERİĞİ mi değiştiriyor yoksa ORTAMI mı?
    Arama içeriktir, başlıkta kalır. Hesap, tema ve dil ortamdır — üçü de bu
    menünün altında.
+
+   MASAÜSTÜ DE AYNI BÖLÜŞÜMÜ ALDI. Masthead'in sağında bir dönem beş ayrı
+   denetim duruyordu: arama, tek ikonlu tema düğmesi, TR/EN segmenti,
+   oturum çipi ya da Giriş düğmesi — beş kontrol boyu (30-40px), dört köşe
+   yarıçapı. Tek ikonlu tema düğmesi telefonda neden kaldırıldıysa orada da
+   aynı soruyu cevaplayamıyordu: güneş şu anki temayı mı gösteriyor, basınca
+   geleceği mi? Şimdi iki başlık da aynı iki kareyi taşıyor; masaüstünde 36,
+   telefonda 44 piksel. Aynı öğe iki başlıkta basıldığı için İKİ örnek var:
+   ikisi de temayı aşağıdaki kaynaktan okuyor, biri değiştirince öteki de
+   güncelleniyor.
 
    PANEL İKİ KEZ YENİDEN YAZILDI, ikisinin de gerekçesi burada:
 
@@ -60,9 +70,9 @@ import { cn } from "@/lib/utils";
    doğruydu ama sönüktü; oysa seçilen şey görsel bir şey ve karşılığı
    gösterilebilir. İki minik sayfa maketi, seçili olan accent çerçeveyle.
 
-   Tema burada da <html data-theme> üzerinden okunur (ThemeToggle ile aynı
-   kaynak): iki bileşen aynı anda ekranda olabilir ve biri değiştirince
-   diğeri attribute'u dinlediği için kendiliğinden güncellenir.
+   TEMANIN TEK DOĞRULUK KAYNAĞI <html data-theme>: anti-FOUC betiği React'ten
+   önce yazar, seçim doğrudan DOM'a yazar, bileşen özniteliği dinleyerek
+   çizer. Tercih arka planda çereze kaydedilir — tıklama anında görsel değişir.
    -------------------------------------------------------------------------- */
 
 function subscribeTheme(callback: () => void) {
@@ -176,8 +186,8 @@ export function AccountMenu({
 
   const pickTheme = (next: Theme) => {
     if (next === readTheme()) return;
-    // Görsel değişim tıklama anında, çerez arka planda — ThemeToggle ile aynı
-    // sıra. Sunucuyu beklersek tema geç dönüyor ve düğme donmuş gibi duruyor.
+    // Görsel değişim tıklama anında, çerez arka planda. Sunucuyu beklersek
+    // tema geç dönüyor ve düğme donmuş gibi duruyor.
     document.documentElement.setAttribute("data-theme", next);
     void setThemePreference(next);
   };
@@ -192,9 +202,20 @@ export function AccountMenu({
        `pending` bir kare true olup hemen false'a düşüyor ve gösterge hiç
        görünmüyordu. Söz döndürülünce geçiş sunucu eylemi bitene kadar açık
        kalıyor — React 19'un asenkron geçişleri. */
-    /* TAM SAYFA GEZİNMESİ — gerekçe LocaleToggle içinde yazılı: `<html lang>`
-       ve masthead kök düzende çiziliyor, istemci gezinmesi onları yeniden
-       çizmiyor ve yönlendirici önbelleği eski dildeki yanıtı tutuyordu. */
+    /* TAM SAYFA GEZİNMESİ — `router.push` DEĞİL.
+       Dil değişimi bir rota değişimi değil, BÜTÜN AĞACIN değişimi: `<html
+       lang>` ve masthead kök düzende çiziliyor ve App Router istemci
+       gezinmesinde kök düzeni yeniden çizmiyor. Üstelik istemci yönlendirici
+       önbelleği aynı adresi eski dildeki yanıtıyla tutuyordu.
+
+       Ölçüldü: `/en/piyasalar`dan TR'ye dönüldüğünde adres `/piyasalar`
+       oluyor ve çerez `tr` yazılıyor ama ekranda "Markets" duruyordu; sonraki
+       sayfada gövde Türkçe geliyor, masthead İngilizce kalıyordu — yani
+       sayfanın yarısı bir dilde, yarısı ötekinde.
+
+       Tam gezinme bir tur ağ maliyeti demek ama dil değişimi ender ve
+       bilinçli bir eylem; doğruluk hızdan önce gelir. Çerez de yazılıyor ama
+       ikincil: önekSİZ adreslerde tercihi hatırlatan şey o. */
     startTransition(async () => {
       await setLocalePreference(next);
       window.location.assign(withLocale(pathname, next));
@@ -204,7 +225,10 @@ export function AccountMenu({
   const initials = (username ?? "").slice(0, 2);
 
   return (
-    <div className={cn("relative", className)}>
+    /* Masaüstünde kök başlığın tam boyunu alıyor: panelin `top` değeri
+       düğmenin değil başlığın altından ölçülüyor ve panel hairline'ın 8
+       piksel altına iniyor — "Daha Fazla" paneliyle aynı üst çizgi. */
+    <div className={cn("relative lg:flex lg:h-full lg:items-center", className)}>
       {/* AVATAR, kutu değil. Önce arama düğmesiyle aynı kenarlıklı kareydi ve
           içinde jenerik bir kullanıcı ikonu + aşağı ok duruyordu: üç ayrı
           şekil 44 pikselin içine sıkışıyor, hiçbiri "hesap" demiyordu. */}
@@ -228,9 +252,10 @@ export function AccountMenu({
            Giriş yapılmamışken düğme bir kimlik değil bir DAVET: arama gibi
            dolgusuz ve sakin duruyor. Giriş yapılmışken kimlik var, o yüzden
            dolu accent kutu ve baş harfler — fark artık rastgele değil,
-           durumu anlatıyor. */
+           durumu anlatıyor. Masaüstünde 36 piksel ve 9'luk köşe: başlığın
+           yarıçapları yalnızca 9 (kontroller) ve 16 (katmanlar). */
         className={cn(
-          "inline-flex size-11 items-center justify-center rounded-lg border text-small font-bold uppercase tracking-[0.02em] transition-colors",
+          "inline-flex size-11 items-center justify-center rounded-lg border text-small font-bold uppercase tracking-[0.02em] transition-colors lg:size-9 lg:rounded-md",
           signedIn
             ? "border-transparent bg-primary text-on-primary hover:bg-primary-hover"
             : "border-line bg-surface-elevated text-body hover:border-line-strong hover:text-strong",
@@ -314,16 +339,20 @@ export function AccountMenu({
               {signedIn ? (
                 <>
                   <MenuRow
-                    href="/favoriler"
+                    href={withLocale("/favoriler", initialLocale)}
                     icon={Heart}
                     label={labels.watchlist}
                   />
-                  <MenuRow href="/ayarlar" icon={Gear} label={labels.settings} />
+                  <MenuRow
+                    href={withLocale("/ayarlar", initialLocale)}
+                    icon={Gear}
+                    label={labels.settings}
+                  />
                   {/* Panel yalnızca Türkçe (gerekçe: components/admin/AdminUI.tsx),
                       etiketi de öyle — sözlüğe girmiyor. */}
                   {isAdmin && (
                     <MenuRow
-                      href="/admin"
+                      href={withLocale("/admin", initialLocale)}
                       icon={SlidersHorizontal}
                       label="Yönetim"
                     />
@@ -335,12 +364,16 @@ export function AccountMenu({
                       konduğunda hangisine basılacağı kararı okuyucuya
                       kalıyordu; kayıt olmak isteyen ikinci satırı zaten
                       okuyor. */}
-                  <ButtonLink href="/giris" variant="primary" className="w-full">
+                  <ButtonLink
+                    href={withLocale("/giris", initialLocale)}
+                    variant="primary"
+                    className="w-full"
+                  >
                     <SignIn weight="bold" size={15} aria-hidden />
                     {labels.signIn}
                   </ButtonLink>
                   <Link
-                    href="/kayit"
+                    href={withLocale("/kayit", initialLocale)}
                     className="flex min-h-10 items-center justify-center rounded-md border border-line text-small font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
                   >
                     {labels.signUp}

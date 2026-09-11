@@ -24,6 +24,9 @@ export type MastheadStripItem = {
 
 export type MastheadMoreItem = { href: string; label: string; hint: string };
 
+/** Panelin genişliği rem cinsinden — sınıftaki `w-60` ile aynı sayı. */
+const PANEL_REM = 15;
+
 /**
  * Masaüstü şeridi — yedi sekme ve "Daha Fazla".
  *
@@ -73,6 +76,21 @@ export function MastheadNav({
     if (focusTrigger) buttonRef.current?.focus();
   }, []);
 
+  /* SAĞA TAŞARSA SAĞDAN HİZALANIR. Panel etiketin sol kenarından açılıyor;
+     büyütülmüş yazıda (24px kök, 1024) genişliği 360 piksele çıkıyor ve
+     düğme sağa kaydığı için panelin sağ yarısı pencerenin dışında
+     kalıyordu (ölçüldü). Karar açılış anında veriliyor, efektte değil. */
+  const [alignEnd, setAlignEnd] = useState(false);
+  const openPanel = () => {
+    const more = moreRef.current;
+    if (more) {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const right = more.getBoundingClientRect().left + PANEL_REM * rem;
+      setAlignEnd(right > document.documentElement.clientWidth - rem);
+    }
+    setOpenedAt(pathname);
+  };
+
   const overflow = strip.filter((item) => hidden.has(item.href));
   const rows: MastheadMoreItem[] = [
     ...overflow.map((item) => ({ href: item.href, label: item.full, hint: item.hint })),
@@ -95,7 +113,7 @@ export function MastheadNav({
   function onButtonKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setOpenedAt(pathname);
+      openPanel();
       /* Panel bir sonraki karede DOM'da. */
       requestAnimationFrame(() => rowLinks()[0]?.focus());
     } else if (event.key === "Escape" && open) {
@@ -148,6 +166,10 @@ export function MastheadNav({
                   active ? "text-primary-ink" : "text-body hover:text-strong",
                 )}
               >
+                {/* TABAN ÇİZGİSİ. Marka adı 19, etiket 13/14 piksel ve ikisi de
+                    ortalanıyor: küçük punto merkeze göre daha yukarıda
+                    oturuyordu. 2 piksellik kaydırmayla fark 0,4 (1024) ve 0,6
+                    (1440) piksel — metin aralığıyla ölçüldü. */}
                 <span className="translate-y-0.5">{item.label}</span>
                 {active && <span aria-hidden className="masthead-mark" />}
               </Link>
@@ -168,7 +190,7 @@ export function MastheadNav({
           type="button"
           aria-expanded={open}
           aria-controls={open ? "masthead-more" : undefined}
-          onClick={() => setOpenedAt(open ? null : pathname)}
+          onClick={() => (open ? setOpenedAt(null) : openPanel())}
           onKeyDown={onButtonKeyDown}
           data-open={open || undefined}
           className={cn(
@@ -198,9 +220,14 @@ export function MastheadNav({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }}
               transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-              style={{ transformOrigin: "top left" }}
+              style={{ transformOrigin: alignEnd ? "top right" : "top left" }}
               onKeyDown={onPanelKeyDown}
-              className="absolute left-[calc(var(--masthead-tab-px)-1rem)] top-[calc(100%+0.5rem)] z-40 w-60 rounded-xl border border-line bg-overlay-surface p-1.5 shadow-(--shadow-overlay)"
+              className={cn(
+                "absolute top-[calc(100%+0.5rem)] z-40 w-60 rounded-xl border border-line bg-overlay-surface p-1.5 shadow-(--shadow-overlay)",
+                alignEnd
+                  ? "right-[calc(var(--masthead-tab-px)-1rem)]"
+                  : "left-[calc(var(--masthead-tab-px)-1rem)]",
+              )}
             >
               <ul className="flex flex-col">
                 {rows.map((row, index) => {
