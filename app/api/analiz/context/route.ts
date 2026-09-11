@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
-import { and, desc, gte, inArray, lte } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  inArray,
+  lte,
+  sql,
+  type AnyColumn,
+} from "drizzle-orm";
 import { checkBearer, type AuthOutcome } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { earningsAnalyses, earningsCalendar, symbols } from "@/lib/schema";
@@ -12,7 +21,7 @@ import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
  *
  * Rutin bu ucu çeker ve iki soruyu cevaplar:
  *   1. Son günlerde hangi BÜYÜK şirketler bilanço açıkladı?
- *   2. Hangilerini zaten yazdım, hangi dilde eksiğim var?
+ *   2. Hangilerini zaten yazdım, hangi dilde ya da hangi alanda eksiğim var?
  *
  * Uç bir sıra ÖNERİR ama seçmez: aday listesi piyasa değerine göre sıralı
  * gelir, hangisinin yazılacağına rutin karar verir. Talimatı
@@ -90,6 +99,79 @@ function isTechInfra(industry: string | null): boolean {
 /** Geriye bakış penceresi — bir haftadan eski bilanço artık haber değil. */
 const LOOKBACK_DAYS = 7;
 
+/** Eksik denetiminin okuduğu satır — dizi alanlarının yalnızca UZUNLUĞU. */
+type AuditRow = {
+  price: number | null;
+  marketCap: number | null;
+  return1yPct: number | null;
+  targetPrice: number | null;
+  analystCount: number | null;
+  highlights: number;
+  quarterlyRevenue: number;
+  guidance: number;
+  revenueFooter: number;
+  guidanceFooter: number;
+  /** Halka arzı bilanço gününden bir yıldan yakın mı? */
+  listedUnderAYear: boolean;
+};
+
+/**
+ * Sayfanın yarım kalmaması için DOLU OLMASI GEREKEN alanlar.
+ *
+ * Denetim bir süre yalnızca iki grafiğe bakıyordu (`has_charts`), oysa rutin
+ * prompt'u (docs/claude-rutinler.md § 4, adım 3 ve 4) on bir alanı zorunlu
+ * sayıyor. Aradaki fark SESSİZDİ: başlık kartı ya da görüş şeridi boş kalmış
+ * bir analiz, iki grafiği dolu olduğu sürece "tamam" görünüyordu ve rutin onu
+ * bir daha hiç açmıyordu. Liste artık prompt'un sözleşmesi; biri değişirse
+ * öteki de değişir.
+ *
+ * Sıra sayfanın sırası: başlık kartı, görüş şeridi, metrik kartları,
+ * grafikler, grafik künyeleri. Rutin `missing`i bu sırayla okur.
+ *
+ * Listede OLMAYANLAR bilerek dışarıda:
+ *   - `upside_pct` — prompt onu da zorunlu sayıyor ama görüş şeridi alan boşsa
+ *     yüzdeyi fiyattan ve hedeften kendisi hesaplıyor; eksik bir şey yok.
+ *   - `eps_ttm`, `growth_pct` — prompt'ta isteğe bağlı. Doğrulanamayan bölen
+ *     yazılmıyor, oran da basılmıyor; boşluk eksik değil, dürüstlük.
+ */
+const REQUIRED_FIELDS: ReadonlyArray<
+  readonly [field: string, isMissing: (row: AuditRow) => boolean]
+> = [
+  /* Başlık kartının manşeti. Yoksa kapanış fiyatı ile altındaki künye rayı
+     BİRLİKTE basılmıyor — piyasa değeri ve getiri dolu olsa bile. */
+  ["price", (row) => row.price === null],
+  /* Künye rayı. Sayfa canlı piyasa değerini tercih ediyor ama o yalnızca
+     sağlayıcı ayaktayken var; düştüğünde yerine bu geçiyor. */
+  ["market_cap", (row) => row.marketCap === null],
+  /* Künye rayı — ama halka arzı bilanço gününden bir yıl yakın bir şirkette
+     "son 12 ayın getirisi" diye bir sayı YOK. Ölçüldü: SPCX 2Ç 2026'yı arzdan
+     53 gün sonra açıkladı ve rutin alanı doğru olarak boş bıraktı. Eksik
+     sayılsaydı rutin her gün aynı kayda dönecek, ya takılacak ya da arzdan bu
+     yana getiriyi "12 ay" diye yazacaktı. Arz tarihi bilinmiyorsa (951
+     sembolün 4'ü) alan istenir. */
+  ["return_1y_pct", (row) => row.return1yPct === null && !row.listedUnderAYear],
+  /* Görüş şeridinin sağ ucu; yoksa uç bomboş kalıyor. */
+  ["target_price", (row) => row.targetPrice === null],
+  /* Hedefin etiketi "Ort. Analist Hedefi (22)". Sayı yoksa etiket kaç
+     analistin ortalaması olduğunu söylemiyor. */
+  ["analyst_count", (row) => row.analystCount === null],
+  /* Altı metrik kartı: ilk ikisi kapağa çıkıyor, kalan dördü ölçü
+     ızgarasında. İki kart ya da daha azıyla ızgaraya hiç kart düşmüyor ve
+     bölüm başlığı boş duruyor. */
+  ["highlights", (row) => row.highlights < 6],
+  ["quarterly_revenue", (row) => row.quarterlyRevenue === 0],
+  ["guidance", (row) => row.guidance === 0],
+  /* Künyeler boşsa site gövdedeki sayılardan birini türetiyor, yani sayfa
+     kırılmıyor — ama o künye sayfanın başka yerinde duran üç sayıyı
+     tekrarlıyor. Prompt ikisini de grafiklerle aynı gruba koyuyor. */
+  ["revenue_footer", (row) => row.revenueFooter === 0],
+  ["guidance_footer", (row) => row.guidanceFooter === 0],
+];
+
+/** Dizi alanının uzunluğu; `null` sıfır sayılır. */
+const arrayLength = (column: AnyColumn) =>
+  sql<number>`coalesce(jsonb_array_length(${column}), 0)`;
+
 export async function GET(request: Request) {
   const auth = authorized(request);
   if (!auth.ok) {
@@ -133,6 +215,11 @@ export async function GET(request: Request) {
           .from(symbols)
           .where(inArray(symbols.symbol, symbolList))
       : Promise.resolve([]),
+    /* DİZİLER ÇEKİLMİYOR, UZUNLUKLARI SORULUYOR. Uç eskiden iki grafik
+       dizisini TAMAMEN çekip yalnızca boş mu diye bakıyordu; denetim beş
+       `jsonb` alanına çıkınca bu 400 satır × beş dizi olurdu ve hepsinde
+       tek soru "kaç öğe var". Panelin aynı sorusu (`lib/admin-data.ts`,
+       `getContentSummary`) da kararı veritabanında veriyor. */
     db
       .select({
         symbol: earningsAnalyses.symbol,
@@ -142,10 +229,22 @@ export async function GET(request: Request) {
         reportDate: earningsAnalyses.reportDate,
         verdict: earningsAnalyses.verdict,
         score: earningsAnalyses.score,
-        quarterlyRevenue: earningsAnalyses.quarterlyRevenue,
-        guidance: earningsAnalyses.guidance,
+        price: earningsAnalyses.price,
+        marketCap: earningsAnalyses.marketCap,
+        return1yPct: earningsAnalyses.return1yPct,
+        targetPrice: earningsAnalyses.targetPrice,
+        analystCount: earningsAnalyses.analystCount,
+        highlights: arrayLength(earningsAnalyses.highlights),
+        quarterlyRevenue: arrayLength(earningsAnalyses.quarterlyRevenue),
+        guidance: arrayLength(earningsAnalyses.guidance),
+        revenueFooter: arrayLength(earningsAnalyses.revenueFooter),
+        guidanceFooter: arrayLength(earningsAnalyses.guidanceFooter),
+        /* Arz tarihi yoksa `false`: bilinmeyen tarih "ölçü yok" demek
+           değil, alan istenmeye devam eder. */
+        listedUnderAYear: sql<boolean>`coalesce(${symbols.ipoDate} > ${earningsAnalyses.reportDate} - interval '1 year', false)`,
       })
       .from(earningsAnalyses)
+      .leftJoin(symbols, eq(symbols.symbol, earningsAnalyses.symbol))
       .orderBy(desc(earningsAnalyses.reportDate))
       .limit(400),
   ]);
@@ -166,20 +265,34 @@ export async function GET(request: Request) {
       score: number;
       locales: string[];
       /* Grafik alanları sonradan eklendi; onlardan önce yazılmış analizler
-         sayfada metin yığını olarak duruyor. Rutin bu bayrağa bakıp eski
-         kayıtları tamamlıyor. */
+         sayfada metin yığını olarak duruyor.
+
+         `missing` onu da kapsıyor (`quarterly_revenue`, `guidance`) ama
+         bayrak YERİNDE KALIYOR: rutin prompt'u claude.ai'ye kopyalanıp orada
+         yaşıyor ve eski kopyalar bu alana bakıyor. Alan kalkarsa o kopyalar
+         grafiksiz bir kaydı bir daha hiç görmez — hata da vermeden. */
       has_charts: boolean;
+      /* Dolu olması gereken ama boş kalmış alanlar, `REQUIRED_FIELDS`
+         sırasıyla. İki dilden BİRİNDE boş olan da listeye girer — sayfa o
+         dilde yarım duruyor. Boş dizi: analiz tam. */
+      missing: string[];
     }
   >();
   for (const row of existing) {
     const key = `${row.symbol}:${row.period}`;
     const held = grouped.get(key);
-    const charts =
-      (row.quarterlyRevenue?.length ?? 0) > 0 && (row.guidance?.length ?? 0) > 0;
+    const charts = row.quarterlyRevenue > 0 && row.guidance > 0;
+    /* Öteki dilin eksikleriyle birleşim; sırayı satırların geliş sırası
+       değil `REQUIRED_FIELDS` belirliyor. */
+    const missing = REQUIRED_FIELDS.filter(
+      ([field, isMissing]) =>
+        (held?.missing.includes(field) ?? false) || isMissing(row),
+    ).map(([field]) => field);
     if (held) {
       if (!held.locales.includes(row.locale)) held.locales.push(row.locale);
       /* İki dilden biri grafiksizse analiz eksik sayılır. */
       held.has_charts = held.has_charts && charts;
+      held.missing = missing;
     } else {
       grouped.set(key, {
         symbol: row.symbol,
@@ -190,6 +303,7 @@ export async function GET(request: Request) {
         score: row.score,
         locales: [row.locale],
         has_charts: charts,
+        missing,
       });
     }
   }
@@ -269,7 +383,8 @@ export async function GET(request: Request) {
        olanlar atlanır ya da güncellenir. */
     candidates,
     /* Zaten yazılmış analizler — `locales` hangi dillerin mevcut olduğunu
-       söyler; "en" eksikse çevirisi bekleniyor. */
+       söyler; "en" eksikse çevirisi bekleniyor. `missing` boş değilse
+       sayfa yarım duruyor ve listedeki alanlar tamamlanmayı bekliyor. */
     existing_analyses: [...grouped.values()],
   });
 }

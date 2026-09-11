@@ -612,7 +612,9 @@ Yanıtta:
   candidates        → son 7 günde açıklamış ve eşiği geçen şirketler,
                       piyasa değerine göre sıralı
   thresholds        → o an geçerli eşikler ve izlenen sembol listesi
-  existing_analyses → daha önce yazdıkların (symbol, period, locales)
+  existing_analyses → daha önce yazdıkların (symbol, period, locales) ve
+                      her birinin `missing` listesi: dolu olması gereken
+                      ama boş kalmış alanlar. Boş liste = analiz tam.
 
 Her adayda bir `tier` alanı var — hangi kapıdan girdiğini söyler:
 
@@ -636,18 +638,30 @@ Her adayda bir `tier` alanı var — hangi kapıdan girdiğini söyler:
 candidates listesinin başından, already_analyzed=false olan İLK şirketi al.
 Hepsi yazılmışsa o gün YAZMA — "bugün yeni analiz yok" diye bitir.
 
-İki istisna:
+Üç istisna:
 
   1. Liste piyasa değerine göre sıralı, yani `tier: "izlenen"` şirketler
      sona düşer. O gün başka aday YOKSA ya da yalnızca zaten yazılmış
      şirketler varsa, izlenen listeden yazılmamış olanı yaz.
   2. existing_analyses içinde locales yalnızca ["tr"] olan bir kayıt varsa,
      yeni analiz yazmak yerine onun İNGİLİZCESİNİ tamamla (adım 6).
-  3. existing_analyses içinde has_charts: false olan bir kayıt varsa, o
-     analiz grafiksiz yazılmış demektir ve sayfası metin yığını gibi
-     duruyor. Yeni analiz yazmak yerine onu GERİ OKU (adım 6'daki GET),
-     quarterly_revenue ve guidance alanlarını ekleyip iki dilde de yeniden
-     gönder. Diğer alanlara dokunma.
+  3. existing_analyses içinde `missing` listesi BOŞ OLMAYAN bir kayıt
+     varsa, o analizin sayfası yarım duruyor: listedeki her ad, adım 3 ve
+     4'te zorunlu sayılan ama boş kalmış bir alan (başlık kartı, görüş
+     şeridi, metrik kartları, grafikler ya da grafik künyeleri). Yeni analiz
+     yazmak yerine onu TAMAMLA:
+
+       - İki dili de GERİ OKU (adım 6'daki GET, locale=tr ve locale=en).
+         Alan yalnızca birinde boş olabilir.
+       - YALNIZCA `missing` içindeki alanları doldur. Diğer alanlara
+         dokunma: score, verdict, summary, analysis aynı kalır.
+       - Sayısal alanlar iki dilde AYNIDIR; metin alanları (highlights,
+         künyeler, guidance etiketleri) o dilin yazımıyla gider.
+       - Okuduğun gövdeyi bu alanlarla birlikte iki dilde de yeniden gönder.
+
+     Doğrulayamadığın alanı UYDURMA, boş kalsın. Listedeki alanların
+     HİÇBİRİNİ doğrulayamadıysan o kaydı bırak ve o gün normal seçime dön —
+     aynı kayda her gün takılıp yeni analizi atlama.
 
 --- 3. GERÇEK VERİYİ TOPLA ---
 
@@ -664,6 +678,11 @@ Doğrulayamadığın sayıyı YAZMA. Alan boş kalsın; uydurma rakam en büyük
 Şu üçü sayfanın BAŞLIK kartında yan yana duruyor ve biri eksik kalınca kart
 yarım görünüyor — üçünü de doldur: price (bilanço günü kapanışı),
 market_cap ve return_1y_pct (son 12 ayın getirisi, yüzde olarak).
+
+Tek istisna: şirket bilanço gününden bir yıldan KISA süre önce halka arz
+olduysa return_1y_pct BOŞ kalır. Son 12 ayın getirisi diye bir sayı yok;
+arzdan bu yana getiriyi onun yerine yazma. Uç bu durumda alanı `missing`e
+koymuyor.
 
 Şu üçü de GÖRÜŞ ŞERİDİNİN sağ ucudur ve aynı şekilde zorunludur:
 target_price (analistlerin ortalama 12 aylık hedefi), analyst_count (hedefi
