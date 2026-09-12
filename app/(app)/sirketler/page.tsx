@@ -291,7 +291,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       <DirectoryHeader eyebrow={t.directory.companiesEyebrow} title={t.companies.title} description={t.companies.subtitle}
-        visual={<CompanyLeaders leaders={leaders.map(company => ({ symbol: company.symbol, name: company.name, logoUrl: company.logoUrl, cap: formatMoneyCompact(company.marketCap, locale) }))} labels={t.directory} capLabel={t.market.marketCap} />}>
+        visual={<CompanyLeaders leaders={leaders} labels={t.directory} locale={locale} />}>
 
         <dl className={styles.metrics}><div><dt>{t.directory.companyCount}</dt><dd>{companies.length.toLocaleString(locale)}</dd></div><div><dt>{t.directory.sectorCount}</dt><dd>{shownGroups.length}</dd></div></dl>
       </DirectoryHeader>

@@ -264,7 +264,9 @@ eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye ba
   başına — görüş ve seviyeler iki dilde aynı sayı, metin `copy.{tr,en}`
   içinde. Sembol listesi tek yerde: `lib/technical.ts` →
   `TECHNICAL_SYMBOLS`; yazma yolu `lib/technical-data.ts`. Rutin promptu
-  `docs/claude-rutinler.md` § 5. Masthead'de sekmesi YOK, sığmıyor
+  `docs/claude-rutinler.md` § 5. İlk masthead düzeninde sekmesi yoktu; sığmıyordu. Sadeleştirilmiş
+  başlıkta artık doğrudan Teknik Analiz sekmesi var; büyütülmüş yazıda
+  taşma önceliğiyle Daha Fazla paneline alınabilir
   (ölçüm `components/layout/nav-items.ts`te).
 - **İçerik iki dilli.** Rehber: `content/guide/` üç katman (meta + tr + en),
   eksik çeviri derlemeyi kırar. Mercek: aynı slug iki `locale` satırı; çeviri

@@ -121,6 +121,7 @@ const tr = {
 
   directory: {
     marketLeaders: "Piyasanın Devleri",
+    leadersByCap: "Piyasa Değerine Göre",
     selectCompany: "Bir Şirket Seç",
     exploreCompanies: "Şirketleri Keşfet",
     openCompany: "Şirketi İncele",
@@ -584,7 +585,7 @@ const tr = {
     eyebrow: "Günlük Teknik Görünüm",
     title: "Teknik Analiz",
     description:
-      "On iki hissenin ortalamaları, destek ve dirençleri, alım bölgesi ve stop seviyesi. Her işlem günü iki kez yenilenir: açılıştan önce ve seans içinde.",
+      "On iki hissenin trendi, destek ve dirençleri, alım bölgesi ve stop seviyeleri.",
     slotPremarket: "Açılış Öncesi",
     slotMidsession: "Seans İçi",
     latestEdition: "Son Yayın",
@@ -624,6 +625,7 @@ const tr = {
     macdLine: "MACD",
     macdSignal: "Sinyal",
     macdHistogram: "Histogram",
+    macdNote: "Sıfır çizgisinin sağı pozitif, solu negatif. Histogram, MACD ile sinyal arasındaki farktır.",
     macdAbove: "Sinyalin Üzerinde",
     macdBelow: "Sinyalin Altında",
     crossedLastSession: "Son Seansta Kesişti",

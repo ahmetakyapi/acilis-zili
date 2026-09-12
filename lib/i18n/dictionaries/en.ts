@@ -100,6 +100,7 @@ const en: typeof tr = {
 
   directory: {
     marketLeaders: "Market Leaders",
+    leadersByCap: "By Market Cap",
     selectCompany: "Select a Company",
     exploreCompanies: "Explore Companies",
     openCompany: "Explore Company",
@@ -443,7 +444,7 @@ const en: typeof tr = {
     eyebrow: "Daily Technical Outlook",
     title: "Technical Analysis",
     description:
-      "Moving averages, support and resistance, entry zone and stop level for twelve stocks. Refreshed twice every trading day: before the open and during the session.",
+      "Trends, support and resistance, entry zones and stops for twelve stocks.",
     slotPremarket: "Pre-Market",
     slotMidsession: "Midday",
     latestEdition: "Latest Edition",
@@ -483,6 +484,7 @@ const en: typeof tr = {
     macdLine: "MACD",
     macdSignal: "Signal",
     macdHistogram: "Histogram",
+    macdNote: "Right of zero is positive; left is negative. The histogram is the difference between MACD and its signal.",
     macdAbove: "Above Signal",
     macdBelow: "Below Signal",
     crossedLastSession: "Crossed Last Session",

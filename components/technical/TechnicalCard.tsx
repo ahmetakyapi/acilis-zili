@@ -147,21 +147,22 @@ export function TechnicalCard({
         </span>
       </div>
 
-      <div className={styles.cardPrice}>
-        <strong className="numeral">{formatPrice(price, locale, { currency: true })}</strong>
-        {changePct !== null && (
-          <span className={cn("numeral text-small font-semibold", directionText(directionOf(changePct)))}>
-            {formatPercent(changePct, locale)}
-          </span>
-        )}
-        <span className={styles.cardPriceLabel}>{quote ? priceLabel : t.technical.atAnalysis}</span>
+      <div className={styles.cardQuote}>
+        <div className={styles.cardQuoteLabel}>
+          <span>{quote ? priceLabel : t.technical.atAnalysis}</span>
+          {position && <span className={styles.plan} data-kind={position.kind}>
+            {planPositionLabel(position, locale, t)}
+          </span>}
+        </div>
+        <div className={styles.cardPrice}>
+          <strong className="numeral">{formatPrice(price, locale, { currency: true })}</strong>
+          {changePct !== null && (
+            <span className={cn("numeral text-small font-semibold", directionText(directionOf(changePct)))}>
+              {formatPercent(changePct, locale)}
+            </span>
+          )}
+        </div>
       </div>
-
-      {position && (
-        <span className={styles.plan} data-kind={position.kind}>
-          {planPositionLabel(position, locale, t)}
-        </span>
-      )}
 
       <p className={styles.cardHeadline} lang={untranslated ? "tr" : locale}>
         {untranslated && (

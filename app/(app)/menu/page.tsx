@@ -25,6 +25,7 @@ import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
 import { PageHeader, Panel, ButtonLink } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
+import { withLocale } from "@/lib/i18n/routing";
 import { pageMetadata } from "@/lib/page-meta";
 
 /**
@@ -62,7 +63,7 @@ type Entry = {
 };
 
 export default async function MenuPage() {
-  const { t } = await getI18n();
+  const { t, locale } = await getI18n();
   const session = await auth();
   const username = session?.user?.name ?? null;
 
@@ -142,12 +143,14 @@ export default async function MenuPage() {
             </button>
           </form>
         ) : (
-          <ButtonLink href="/giris" variant="primary" className="shrink-0">
+          <ButtonLink href={withLocale("/giris", locale)} variant="primary" className="shrink-0">
             {t.nav.signIn}
           </ButtonLink>
         )}
       </Panel>
 
+      {/* The server-resolved locale also owns these destinations. An /en/menu
+          visit without a preference cookie previously linked back to Turkish. */}
       <div className={`${polish.menuGrid} grid gap-5 sm:grid-cols-2 lg:grid-cols-3`} data-motion-stagger>
         {groups.map((group) => (
           <Panel key={group.title} className="flex flex-col">
@@ -160,7 +163,7 @@ export default async function MenuPage() {
                 return (
                   <li key={entry.href}>
                     <Link
-                      href={entry.href}
+                      href={withLocale(entry.href, locale)}
                       prefetch={false}
                       data-featured={entry.href === "/teknik"}
                       className="data-[featured=true]:bg-primary-tint flex min-h-[52px] items-center gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"

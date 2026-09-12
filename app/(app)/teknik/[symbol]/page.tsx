@@ -215,16 +215,18 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             </div>
             {/* Analiz anındaki fiyat ancak FARKLIYSA yazılıyor: aynı sayının
                 iki etiketle yan yana durması bilgi değil. */}
-            {position && (
-              <span className={cn(styles.plan, "mt-1")} data-kind={position.kind}>
-                {planPositionLabel(position, locale, t)}
-              </span>
-            )}
-            {row.snapshot.price !== null && price !== null && Math.abs(row.snapshot.price - price) >= 0.005 && (
-              <span className={styles.priceNote}>
-                {t.technical.atAnalysis}: {formatPrice(row.snapshot.price, locale, { currency: true })}
-              </span>
-            )}
+            <div className={styles.priceContext}>
+              {position && (
+                <span className={styles.plan} data-kind={position.kind}>
+                  {planPositionLabel(position, locale, t)}
+                </span>
+              )}
+              {row.snapshot.price !== null && price !== null && Math.abs(row.snapshot.price - price) >= 0.005 && (
+                <span className={styles.priceNote}>
+                  {t.technical.atAnalysis}: {formatPrice(row.snapshot.price, locale, { currency: true })}
+                </span>
+              )}
+            </div>
           </div>
           <LevelTrack price={price} {...levelProps} verdict={verdict} size="lg" locale={locale} t={t} />
         </div>

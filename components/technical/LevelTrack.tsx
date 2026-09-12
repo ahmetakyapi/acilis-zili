@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn, formatPrice } from "@/lib/utils";
@@ -104,40 +105,57 @@ export function LevelTrack({
         {price !== null && <span className={`${styles.trackPrice} spark-dot`} style={{ left: pos(price) }} />}
       </div>
 
-      <p className={styles.legend}>
+      <dl className={styles.legend}>
         {stop !== null && (
-          <span>
-            <i aria-hidden className={styles.legendDot} data-kind="stop" />
-            {t.technical.stop} <b>{money(stop)}</b>
-          </span>
+          <div>
+            <dt>
+              <i aria-hidden className={styles.legendDot} data-kind="stop" />
+              {t.technical.stop}
+            </dt>
+            <dd>{money(stop)}</dd>
+          </div>
         )}
         {hasEntry && (
-          <span>
-            <i aria-hidden className={styles.legendDot} data-kind="entry" />
-            {t.technical.entryZone}{" "}
-            <b>{entryLow === entryHigh ? money(entryLow) : `${money(entryLow)} – ${money(entryHigh)}`}</b>
-          </span>
+          <div>
+            <dt>
+              <i aria-hidden className={styles.legendDot} data-kind="entry" />
+              {t.technical.entryZone}
+            </dt>
+            <dd>{entryLow === entryHigh ? money(entryLow) : `${money(entryLow)} – ${money(entryHigh)}`}</dd>
+          </div>
         )}
         {targets.length > 0 && (
-          <span>
-            <i aria-hidden className={styles.legendDot} data-kind={targetKind} />
-            {sellSide ? t.technical.sellLevels : t.technical.targets}{" "}
-            <b>{targets.map(money).join(" · ")}</b>
-          </span>
+          <div>
+            <dt>
+              <i aria-hidden className={styles.legendDot} data-kind={targetKind} />
+              {sellSide ? t.technical.sellLevels : t.technical.targets}
+            </dt>
+            <dd>
+              {targets.map((value, index) => (
+                <Fragment key={value}>{index > 0 && " · "}<span>{money(value)}</span></Fragment>
+              ))}
+            </dd>
+          </div>
         )}
         {showLevels && supports[0] !== undefined && (
-          <span>
-            <i aria-hidden className={styles.legendDot} data-kind="support" />
-            {t.technical.support} <b>{money(supports[0])}</b>
-          </span>
+          <div>
+            <dt>
+              <i aria-hidden className={styles.legendDot} data-kind="support" />
+              {t.technical.support}
+            </dt>
+            <dd>{money(supports[0])}</dd>
+          </div>
         )}
         {showLevels && resistances[0] !== undefined && (
-          <span>
-            <i aria-hidden className={styles.legendDot} data-kind="resistance" />
-            {t.technical.resistance} <b>{money(resistances[0])}</b>
-          </span>
+          <div>
+            <dt>
+              <i aria-hidden className={styles.legendDot} data-kind="resistance" />
+              {t.technical.resistance}
+            </dt>
+            <dd>{money(resistances[0])}</dd>
+          </div>
         )}
-      </p>
+      </dl>
     </div>
   );
 }

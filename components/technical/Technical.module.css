@@ -251,3 +251,81 @@
   .scenarios { grid-template-columns:minmax(0,1fr); }
   .block { padding:16px; }
 }
+
+/* Indicator audit, September 12: RSI used only the first 110px of a
+   262px row. Its semicircle and threshold key now explain the existing
+   0–100 reading; MACD uses three signed bars instead of a bare number list.
+   These are snapshot comparisons, never fabricated price histories. */
+.indicator { background:linear-gradient(145deg,var(--primary-tint),transparent 48%),var(--premium-surface); padding:16px; gap:12px; }
+.indicatorHead { align-items:flex-start; flex-wrap:wrap; gap:6px 12px; }
+.indicatorTitle { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--primary-ink); }
+.indicatorTitle svg { flex:none; opacity:.8; }
+.indicatorTag { margin-left:auto; text-align:right; }
+.indicator .row { padding-block:4px; }
+.indicator .deviation { margin-block:4px 2px; }
+.indicatorNote { text-wrap:pretty; }
+.rsiReading { display:flex; flex:1; align-items:center; gap:14px; }
+.rsiDial { position:relative; flex:1; min-width:0; max-width:210px; }
+.rsiDial svg { width:100%; overflow:visible; }
+.rsiDial path { fill:none; stroke-width:7; }
+.dialBase { stroke:var(--line); }
+.dialLow { stroke:color-mix(in srgb,var(--up) 55%,var(--premium-surface)); }
+.dialHigh { stroke:color-mix(in srgb,var(--down) 55%,var(--premium-surface)); }
+.dialTick { stroke:var(--text-muted); stroke-width:1; opacity:.65; }
+.dialMarker { fill:var(--primary); stroke:var(--premium-surface); stroke-width:3; }
+.rsiDial text { fill:var(--text-muted); font-size:10px; }
+.rsiValue { position:absolute; bottom:8%; left:0; right:0; text-align:center; color:var(--text-strong); font-size:30px; font-weight:600; line-height:1; letter-spacing:-.045em; }
+.rsiValue span { display:block; margin-top:5px; font-size:10px; color:var(--text-muted); letter-spacing:0; }
+.rsiZones { display:grid; flex:none; gap:12px; font-size:11px; color:var(--text-body); }
+.rsiZones > span { display:grid; grid-template-columns:6px auto; align-items:center; column-gap:6px; row-gap:2px; }
+.rsiZones i { width:6px; height:6px; border-radius:50%; background:var(--text-muted); }
+.rsiZones i[data-zone="low"] { background:var(--up); }
+.rsiZones i[data-zone="high"] { background:var(--down); }
+.rsiZones b { grid-column:2; color:var(--text-muted); font-size:10px; font-weight:500; }
+.volumeScale { position:relative; height:12px; margin-top:-5px; color:var(--text-muted); font-size:10px; }
+.volumeScale > span { position:absolute; }
+.volumeScale > span:nth-child(2) { left:33.333%; transform:translateX(-50%); }
+.volumeScale > span:last-child { right:0; }
+/* Compact cover: stance belongs beside identity, not as a second 34px
+   headline. MU cover: 254.5→246px at 1440, 495.3→472.1px at 390.
+   The current quote and stored plan retain separate labels. */
+.cover { padding:24px; gap:24px; }
+.coverMain { gap:12px; }
+.coverHeadline { font-size:14px; line-height:1.65; }
+.stanceValue { font-size:18px; }
+.coverSide { padding-left:24px; gap:14px; }
+.scenario { border-radius:12px; padding:12px 14px; border-left:2px solid var(--line); }
+.scenario[data-tone="up"] { border-left-color:var(--up); background:linear-gradient(120deg,var(--up-wash),transparent); }
+.scenario[data-tone="down"] { border-left-color:var(--down); background:linear-gradient(120deg,var(--down-wash),transparent); }
+@media(max-width:1023px) { .coverSide { padding-left:0; } }
+@media(max-width:767px) { .cover { padding:18px; gap:16px; } .rsiReading { min-height:144px; } .rsiValue { font-size:27px; } }
+@media(prefers-reduced-motion:reduce) { .card,.cardRead svg { transition:none; } .card:hover,.card:hover .cardRead svg { transform:none; } }
+
+/* Quote context shares one line: a separate plan pill previously added
+   an entire 24px row to every card. Labels now precede the actual reading. */
+.cardQuote { display:grid; gap:5px; }
+.cardQuoteLabel { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:3px 8px; color:var(--text-muted); font-size:11px; }
+.cardQuote .plan { padding:0; background:none; font-size:10px; }
+.cardPrice strong { font-size:23px; }
+.card { gap:12px; }
+/* Labels and numbers have their own columns, including long four-digit
+   targets. Values may wrap between prices, never inside a price. */
+.legend { display:grid; gap:5px; padding-top:2px; }
+.legend > div { display:grid; grid-template-columns:88px minmax(0,1fr); align-items:baseline; gap:8px; }
+.legend dt { display:flex; align-items:center; gap:5px; font-size:10px; }
+.legend dd { color:var(--text-body); font-weight:600; font-size:11px; letter-spacing:-.02em; text-align:right; }
+.legend dd span { display:inline; white-space:nowrap; }
+.legendDot { flex:none; width:6px; height:6px; }
+.coverSide .legend { gap:7px; }
+.coverSide .legend dt,.coverSide .legend dd { font-size:12px; }
+.coverSide .legend > div { grid-template-columns:110px minmax(0,1fr); }
+.priceContext { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; }
+@media(min-width:1024px) {
+ .coverSide .legend { grid-template-columns:.8fr 1.3fr 1.5fr; gap:10px; }
+ .coverSide .legend > div { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
+ .coverSide .legend dd { text-align:left; }
+}
+/* Numeric tracking must not leak into the ATR's small explanatory label:
+   at 320px it made "Fiyata Oranı" look like one joined word. */
+.bigFigure:has(> span) { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px 8px; }
+.bigFigure > span { margin-left:0; letter-spacing:0; line-height:1.4; }

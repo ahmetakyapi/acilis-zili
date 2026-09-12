@@ -1,3 +1,5 @@
+import type { Icon } from "@phosphor-icons/react";
+import { ChartBar, Compass, Crosshair, Pulse, Stack, Waveform } from "@phosphor-icons/react/dist/ssr";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { distancePct, rsiZone, type TechnicalSnapshot } from "@/lib/technical";
 import {
@@ -43,10 +45,10 @@ export function IndicatorPanels({
   );
 }
 
-function Head({ title, tag, tagClass }: { title: string; tag?: string | null; tagClass?: string }) {
+function Head({ title, tag, tagClass, icon: Mark }: { title: string; tag?: string | null; tagClass?: string; icon?: Icon }) {
   return (
     <div className={styles.indicatorHead}>
-      <h3 className={styles.indicatorTitle}>{title}</h3>
+      <h3 className={styles.indicatorTitle}>{Mark && <Mark size={16} weight="duotone" aria-hidden />}<span>{title}</span></h3>
       {tag && <span className={cn(styles.indicatorTag, tagClass)}>{tag}</span>}
     </div>
   );
@@ -88,6 +90,7 @@ function MovingAveragesPanel({
   return (
     <section className={styles.indicator}>
       <Head
+        icon={Stack}
         title={t.technical.movingAverages}
         tag={cross ? `${cross.kind === "golden" ? t.technical.goldenCross : t.technical.deathCross} · ${crossText(cross.sessions, t)}` : null}
         tagClass={cross?.kind === "golden" ? "text-up" : "text-down"}
@@ -144,24 +147,42 @@ function RsiPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; locale
   return (
     <section className={styles.indicator}>
       <Head
+        icon={Compass}
         title={t.technical.rsi}
         tag={zoneLabel}
         tagClass={zone === "overbought" ? "text-down" : zone === "oversold" ? "text-up" : "text-muted"}
       />
-      <p className={styles.bigFigure}>{rsi !== null ? formatPrice(rsi, locale, { digits: 1 }) : "—"}</p>
-      {rsi !== null && (
-        <>
-          <div className={styles.gauge} aria-hidden>
-            <span style={{ left: `${Math.min(100, Math.max(0, rsi))}%` }} />
+      {rsi !== null ? (
+        <div className={styles.rsiReading}>
+          {/* A bounded 0–100 reading, not an invented time series. Thresholds
+              and marker use the same semicircle; missing RSI draws no dial. */}
+          <div className={styles.rsiDial}>
+            <svg viewBox="0 0 200 112" aria-hidden="true">
+              <path className={styles.dialBase} d="M20 98 A80 80 0 0 1 180 98" pathLength="100" />
+              <path className={styles.dialLow} d="M20 98 A80 80 0 0 1 180 98" pathLength="100" strokeDasharray="30 70" />
+              <path className={styles.dialHigh} d="M20 98 A80 80 0 0 1 180 98" pathLength="100" strokeDasharray="30 70" strokeDashoffset="-70" />
+              {[0, 30, 70, 100].map((value) => {
+                const angle = Math.PI * (1 - value / 100);
+                return <line key={value} className={styles.dialTick}
+                  x1={100 + 72 * Math.cos(angle)} y1={98 - 72 * Math.sin(angle)}
+                  x2={100 + 88 * Math.cos(angle)} y2={98 - 88 * Math.sin(angle)} />;
+              })}
+              <circle className={styles.dialMarker} r="5"
+                cx={100 + 80 * Math.cos(Math.PI * (1 - Math.min(100, Math.max(0, rsi)) / 100))}
+                cy={98 - 80 * Math.sin(Math.PI * (1 - Math.min(100, Math.max(0, rsi)) / 100))} />
+              <text x="5" y="110">0</text><text x="35" y="24">30</text>
+              <text x="157" y="24">70</text><text x="180" y="110">100</text>
+            </svg>
+            <p className={styles.rsiValue}>{formatPrice(rsi, locale, { digits: 1 })}<span>/ 100</span></p>
           </div>
-          <div className={styles.gaugeScale} aria-hidden>
-            <span>0</span>
-            <span style={{ left: "30%" }}>30</span>
-            <span style={{ left: "70%" }}>70</span>
-            <span>100</span>
+          <div className={styles.rsiZones}>
+            <span><i data-zone="low" />{t.technical.rsiOversold}<b>0–30</b></span>
+            <span><i data-zone="mid" />{t.technical.rsiNeutral}<b>30–70</b></span>
+            <span><i data-zone="high" />{t.technical.rsiOverbought}<b>70–100</b></span>
           </div>
-        </>
-      )}
+        </div>
+      ) : <p className={styles.indicatorNote}>{t.technical.notEnoughHistory}</p>}
+
     </section>
   );
 }
@@ -172,6 +193,7 @@ function MacdPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; local
   return (
     <section className={styles.indicator}>
       <Head
+        icon={Waveform}
         title={t.technical.macd}
         tag={above === null ? null : above ? t.technical.macdAbove : t.technical.macdBelow}
         tagClass={above ? "text-up" : "text-down"}
@@ -179,21 +201,28 @@ function MacdPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; local
       {macd ? (
         <>
           <dl className={styles.rows}>
-            <div className={styles.row}>
-              <dt>{t.technical.macdLine}</dt>
-              <dd>{formatPrice(macd.macd, locale, { digits: 2 })}</dd>
-            </div>
-            <div className={styles.row}>
-              <dt>{t.technical.macdSignal}</dt>
-              <dd>{formatPrice(macd.signal, locale, { digits: 2 })}</dd>
-            </div>
-            <div className={styles.row}>
-              <dt>{t.technical.macdHistogram}</dt>
-              <dd className={directionText(directionOf(macd.histogram))}>
-                {formatPrice(macd.histogram, locale, { digits: 2 })}
-              </dd>
-            </div>
+            {([
+              [t.technical.macdLine, macd.macd],
+              [t.technical.macdSignal, macd.signal],
+              [t.technical.macdHistogram, macd.histogram],
+            ] as const).map(([label, value]) => {
+              const extent = Math.max(Math.abs(macd.macd), Math.abs(macd.signal), Math.abs(macd.histogram), 0.01);
+              return <div className={styles.row} key={label}>
+                <dt>{label}</dt>
+                <dd>{formatPrice(value, locale, { digits: 2 })}</dd>
+                {/* All three readings share one symmetric zero axis. */}
+                <div className={styles.deviation} aria-hidden="true">
+                  <span data-motion-draw="line" style={{
+                    left: `${value < 0 ? 50 - Math.abs(value) / extent * 50 : 50}%`,
+                    width: `${Math.abs(value) / extent * 50}%`,
+                    background: label === t.technical.macdHistogram ? (value >= 0 ? "var(--up)" : "var(--down)") : "var(--primary)",
+                    transformOrigin: value < 0 ? "right" : "left",
+                  }} /><i />
+                </div>
+              </div>;
+            })}
           </dl>
+          <p className={styles.indicatorNote}>{t.technical.macdNote}</p>
           {/* Yirmi seanstan eski kesişme "yeni bir sinyal" değil. */}
           {macd.crossSessions !== null && macd.crossSessions <= 20 && (
             <p className={styles.indicatorNote}>
@@ -222,6 +251,7 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
   return (
     <section className={styles.indicator}>
       <Head
+        icon={ChartBar}
         title={t.technical.volume}
         tag={ratio !== null ? `${formatPrice(ratio, locale, { digits: 1 })}×` : null}
         tagClass={ratio !== null && ratio >= 1 ? "text-primary-ink" : "text-muted"}
@@ -257,6 +287,7 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
             <span data-motion-draw="bar" style={{ width: `${Math.min(100, (ratio / scale) * 100)}%` }} />
             <i style={{ left: `${100 / scale}%` }} />
           </div>
+          <div className={styles.volumeScale} aria-hidden="true"><span>0</span><span>1×</span><span>3×+</span></div>
           <p className={styles.indicatorNote}>{t.technical.volumeRatio}</p>
         </>
       )}
@@ -283,7 +314,7 @@ function RangePanel({
   const atrShare = atr14 !== null && price ? (atr14 / price) * 100 : null;
   return (
     <section className={styles.indicator}>
-      <Head title={t.technical.atr} />
+      <Head title={t.technical.atr} icon={Pulse} />
       <p className={styles.bigFigure}>
         {formatPrice(atr14, locale, { currency: true })}
         {atrShare !== null && (
@@ -345,7 +376,7 @@ function PivotPanel({
   ] as const;
   return (
     <section className={styles.indicator}>
-      <Head title={t.technical.pivots} />
+      <Head title={t.technical.pivots} icon={Crosshair} />
       <dl className={styles.rows}>
         {rows.map(([label, value]) => {
           const distance = distancePct(value, price);

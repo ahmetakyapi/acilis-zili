@@ -132,3 +132,15 @@
 @media(max-width:767px) { .yieldsGrid :global(.tote) { font-size:20px; } .curve > details { flex-basis:100%; } .yieldSkeleton { min-height:184px; } }
 .indexTabs { border:0; background:transparent; box-shadow:none; }
 .indexTabs > div { padding:0; }
+
+/* Measured at 1440px: yields 138.9px, VIX 156.5px. The two context
+   panels share a bottom edge; compact VIX spacing removes the excess
+   before stretching the row. Expanded explanations remain fully readable. */
+.macro { align-items:stretch; }
+.yields { grid-template-rows:minmax(0,1fr) auto; }
+.fear { gap:6px; padding-block:10px; }
+.fear :global(.tote) { font-size:24px; }
+.fear .explainer { margin-top:auto; }
+.yieldSkeleton,.fearSkeleton { min-height:144px; }
+@media(max-width:1023px) { .yields { grid-template-rows:auto minmax(0,1fr) auto; } }
+@media(max-width:767px) { .yields { grid-template-rows:auto; } .fear .explainer { margin-top:0; } .yieldSkeleton { min-height:184px; } .fearSkeleton { min-height:140px; } }
