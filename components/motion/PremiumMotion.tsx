@@ -59,10 +59,12 @@ export function Reveal({
     opacity.set(0);
     y.set(26);
     let stopAnimation: (() => void) | undefined;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
+    let revealed = false;
+    const reveal = () => {
+        if (revealed) return;
+        revealed = true;
         observer.disconnect();
+        window.removeEventListener("scroll", passedBy);
         const opacityAnimation = animate(opacity, 1, {
           duration: 0.55,
           delay: Math.min(Math.max(delay, 0), 0.3),
@@ -79,13 +81,27 @@ export function Reveal({
           opacityAnimation.stop();
           positionAnimation.stop();
         };
+    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) reveal();
       },
       { rootMargin: "0px 0px -5% 0px", threshold: 0 },
     );
+    // Bir kerede ATLANAN bölüm hiç açılmıyordu: End tuşu ya da uzun bir
+    // parmak kaydırması bölümü iki kare arasında geçtiğinde gözlemci kesişme
+    // görmüyor ve bölüm görünmez kalıyordu (teknik detayda Göstergeler
+    // bölümü ölçüldü: 549px'lik bölüm 2271px'lik sıçramada kayboldu).
+    // Kaydırmada bölüm görünüm alanının ÜSTÜNDE kaldıysa hemen açılır.
+    const passedBy = () => {
+      if (element.getBoundingClientRect().bottom < 0) reveal();
+    };
     observer.observe(element);
+    window.addEventListener("scroll", passedBy, { passive: true });
 
     return () => {
       observer.disconnect();
+      window.removeEventListener("scroll", passedBy);
       stopAnimation?.();
       opacity.set(1);
       y.set(0);
@@ -231,10 +247,13 @@ export function SectionNav({
       if (settledReading) window.removeEventListener("scrollend", settledReading);
       if (!nav) return;
       const top = Number.parseFloat(getComputedStyle(nav).top) || 0;
-      const readingLine = Math.min(window.innerHeight - 2, Math.max(
+      // Clamped at zero: a viewport shorter than the bar (a resize in
+      // flight, a headless capture) yielded a negative line and an
+      // invalid "--2px" root margin that threw on construction.
+      const readingLine = Math.max(0, Math.min(window.innerHeight - 2, Math.max(
         top + nav.getBoundingClientRect().height + 24,
         window.innerHeight * 0.3,
-      ));
+      )));
       const updateActive = () => {
         const passed = sections.filter((section) => section.getBoundingClientRect().top <= readingLine + 2);
         const last = sections.at(-1)!;
@@ -391,6 +410,20 @@ export function MotionExperience({ children, className }: { children: ReactNode;
       });
     }
     prepare();
+    // Aynı atlama sorunu (bkz. Reveal): tek sıçramada geçilen kartlar ve
+    // çubuklar giriş pozunda (%35 opaklık, 20px aşağıda) takılı kalıyordu.
+    let passFrame = 0;
+    const playPassed = () => {
+      if (passFrame) return;
+      passFrame = requestAnimationFrame(() => {
+        passFrame = 0;
+        for (const [element, animation] of prepared) {
+          if (animation.playState !== "paused") continue;
+          if (element.getBoundingClientRect().bottom < 0) { observer.unobserve(element); animation.play(); }
+        }
+      });
+    };
+    window.addEventListener("scroll", playPassed, { passive: true });
     let frame = 0;
     const relevantNode = (node: Node) => node instanceof Element &&
       (prepared.has(node) || node.matches(selector) || Boolean(node.querySelector(selector)));
@@ -414,6 +447,8 @@ export function MotionExperience({ children, className }: { children: ReactNode;
     root.addEventListener("focusin", revealFocus);
     return () => {
       cancelAnimationFrame(frame);
+      cancelAnimationFrame(passFrame);
+      window.removeEventListener("scroll", playPassed);
       observer.disconnect(); mutations.disconnect();
       root.removeEventListener("focusin", revealFocus);
       prepared.forEach((animation) => animation.cancel());
