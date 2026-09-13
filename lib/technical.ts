@@ -642,3 +642,234 @@ export function ladderOf(source: LevelSource): Level[] {
 
   return levels.sort((a, b) => (b.high ?? b.price) - (a.high ?? a.price));
 }
+
+/* --------------------------------------------------------------------------
+   Planın okuması — kayıttaki seviyelerden TÜRETİLEN sayılar ve cümleler.
+
+   Rutin görüş ve seviyeleri yazıyor; buradaki hiçbir şey yeni bir iddia
+   değil, o seviyelerin aritmetiği ve fiyata göre yeri. Okuyucunun üç sorusu
+   ("nereden alınır, nerede satılır, nerede vazgeçilir") kartta ve kapakta
+   aynı üç hücreyle cevaplanıyor; bu bölüm o hücrelerin ve altındaki tek
+   cümlenin kaynağı.
+   -------------------------------------------------------------------------- */
+
+export type RiskReward = {
+  /** Getiri / risk — "1 : 2,4" diye yazılır. */
+  ratio: number;
+  /** Alım bölgesinin üst ucundan stopa uzaklık, yüzde (pozitif). */
+  riskPct: number;
+  /** Alım bölgesinin üst ucundan ilk hedefe uzaklık, yüzde (pozitif). */
+  rewardPct: number;
+};
+
+/**
+ * Risk / getiri — EN KÖTÜ GİRİŞ NOKTASINDAN.
+ *
+ * Risk bölgenin ÜST ucundan stopa, getiri aynı noktadan İLK hedefe ölçülür:
+ * bölgenin tepesinden alan okuyucunun taşıdığı risk budur ve ilk hedef en
+ * yakın kâr alma yeridir. Bölgenin ortasından ya da en uzak hedeften ölçmek
+ * oranı olduğundan iyi gösterirdi. Rutin promptu ilk hedefi riskin en az
+ * 1,5 katı uzağa koymayı istiyor (docs/claude-rutinler.md § 5); bu sayı
+ * sayfada o kuralın tutup tutmadığını da gösteriyor.
+ */
+export function riskReward(
+  entryHigh: number | null,
+  stop: number | null,
+  targets: readonly number[],
+): RiskReward | null {
+  const first = [...targets].sort((a, b) => a - b)[0];
+  if (entryHigh === null || stop === null || first === undefined) return null;
+  const risk = entryHigh - stop;
+  const reward = first - entryHigh;
+  if (risk <= 0 || reward <= 0) return null;
+  return {
+    ratio: reward / risk,
+    riskPct: (risk / entryHigh) * 100,
+    rewardPct: (reward / entryHigh) * 100,
+  };
+}
+
+export type PlanReading =
+  | { kind: "inZone"; stop: number | null; hold: boolean }
+  | { kind: "above"; pct: number; high: number }
+  | { kind: "below"; pct: number; stop: number | null }
+  | { kind: "belowStop"; stop: number }
+  | { kind: "wait"; support: number | null; resistance: number | null }
+  | { kind: "sell"; level: number | null; support: number | null };
+
+/**
+ * "Şu an ne diyor" — tek cümlenin girdisi.
+ *
+ * Görüş ve fiyatın plana göre yeri birleşince altı durum çıkıyor; cümleler
+ * sözlükte, sayılar buradan. TUT'ta bölge varsa AL ile aynı okuma (plan
+ * aynı), yalnızca bölgenin içindeyken teyit beklendiği söyleniyor. SAT'ta
+ * hedefler alım hedefi değil tepkide satış seviyesi (bkz. LevelTrack).
+ */
+export function planReading(
+  verdict: VerdictKey,
+  price: number | null,
+  row: {
+    entryLow: number | null;
+    entryHigh: number | null;
+    stop: number | null;
+    targets: readonly number[];
+    supports: readonly number[];
+    resistances: readonly number[];
+  },
+): PlanReading {
+  if (verdict === "sell") {
+    return { kind: "sell", level: row.targets[0] ?? row.resistances[0] ?? null, support: row.supports[0] ?? null };
+  }
+  const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
+  if (position === null || row.entryHigh === null) {
+    return { kind: "wait", support: row.supports[0] ?? null, resistance: row.resistances[0] ?? null };
+  }
+  switch (position.kind) {
+    case "inZone":
+      return { kind: "inZone", stop: row.stop, hold: verdict === "hold" };
+    case "above":
+      return { kind: "above", pct: position.pct, high: row.entryHigh };
+    case "below":
+      return { kind: "below", pct: position.pct, stop: row.stop };
+    case "belowStop":
+      return { kind: "belowStop", stop: row.stop! };
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Gösterge özeti — üç kelime: trend, momentum, hacim.
+
+   Altı panelin sayıları göstergeyi bilen okuyucu için; bilmeyen okuyucu
+   "yani ne diyor" diye soruyor. Kurallar rutin promptunun görüş
+   ölçütleriyle aynı (docs/claude-rutinler.md § 5 → "buy / hold / sell"),
+   yani sayfa rutinin baktığı yere aynı sözlükle bakıyor. Eşikler
+   göstergelerin kendi tanımından (RSI 30/70) ya da en yalın kuraldan
+   (ortalamanın üstü/altı); ince ayar yok, ayar olsaydı ikinci bir görüş
+   olurdu.
+   -------------------------------------------------------------------------- */
+
+export type TrendSignal = {
+  tone: "up" | "down" | "mixed";
+  /** Fiyat 50 günlüğün üstünde mi; 50 günlük yoksa null. */
+  above50: boolean | null;
+  /** Fiyat 200 günlüğün üstünde mi; 200 günlük yoksa null (yeni halka arz). */
+  above200: boolean | null;
+};
+
+export type MomentumSignal = {
+  tone: "strong" | "weak" | "overbought" | "oversold";
+  rsi: number;
+  /** MACD histogramı sıfırın üstünde mi; MACD yoksa null. */
+  macdAbove: boolean | null;
+};
+
+export type VolumeSignal = { tone: "heavy" | "normal" | "light"; ratio: number };
+
+export type IndicatorSignals = {
+  trend: TrendSignal | null;
+  momentum: MomentumSignal | null;
+  volume: VolumeSignal | null;
+};
+
+/** Ortalamanın 1,5 katı "yoğun", %60'ı "zayıf" — arada olağan. */
+const VOLUME_HEAVY = 1.5;
+const VOLUME_LIGHT = 0.6;
+
+export function indicatorSignals(snapshot: TechnicalSnapshot, price: number | null): IndicatorSignals {
+  const above = (avg: number | null) => (price === null || avg === null ? null : price >= avg);
+  const above50 = above(snapshot.sma50);
+  const above200 = above(snapshot.sma200);
+  let trend: TrendSignal | null = null;
+  if (above50 !== null || above200 !== null) {
+    const votes = [above50, above200].filter((v): v is boolean => v !== null);
+    const tone = votes.every(Boolean) ? "up" : votes.every((v) => !v) ? "down" : "mixed";
+    trend = { tone, above50, above200 };
+  }
+
+  let momentum: MomentumSignal | null = null;
+  if (snapshot.rsi14 !== null) {
+    const zone = rsiZone(snapshot.rsi14);
+    const macdAbove = snapshot.macd ? snapshot.macd.histogram >= 0 : null;
+    momentum = {
+      tone:
+        zone === "overbought" ? "overbought" : zone === "oversold" ? "oversold" : macdAbove === false ? "weak" : "strong",
+      rsi: snapshot.rsi14,
+      macdAbove,
+    };
+  }
+
+  let volume: VolumeSignal | null = null;
+  if (snapshot.lastVolume !== null && snapshot.avgVolume20) {
+    const ratio = snapshot.lastVolume / snapshot.avgVolume20;
+    volume = { tone: ratio >= VOLUME_HEAVY ? "heavy" : ratio <= VOLUME_LIGHT ? "light" : "normal", ratio };
+  }
+
+  return { trend, momentum, volume };
+}
+
+/* --------------------------------------------------------------------------
+   Fiyat haritası — seviyelerin dikey eksende ORANTILI yerleşimi.
+
+   Merdiven eşit aralıklı satırlardı ve 2 dolar ile 20 dolar uzaktaki iki
+   seviye aynı mesafede duruyordu; harita her seviyeyi fiyata orantılı
+   koyuyor, yani "hedef uzak, stop yakın" göze kendiliğinden görünüyor.
+   Üst üste binen etiketler birbirinden en az `gap` piksel itiliyor; işaret
+   gerçek yerinde kalıyor, etiket kayıyor ve ikisini ince bir bağ çizgisi
+   birleştiriyor.
+   -------------------------------------------------------------------------- */
+
+export type MapRung = (Level | { kind: "price"; price: number }) & {
+  /** İşaretin gerçek yeri (piksel, üstten). */
+  markY: number;
+  /** Etiketin yeri — çakışma çözülünce işaretten kayabilir. */
+  labelY: number;
+};
+
+/**
+ * `height` piksellik bir eksende seviyeleri yerleştirir.
+ *
+ * Eksen en düşük ile en yüksek seviye arasında, %6 pay ile (LevelTrack ile
+ * aynı gerekçe). Alım bölgesi işaretini bölgenin ORTASINA koyuyor; bant
+ * ayrıca çiziliyor. Çakışma iki geçişle çözülüyor: yukarıdan aşağı it, alt
+ * sınırı aşarsa aşağıdan yukarı geri çek.
+ */
+const topOf = (rung: Level | { kind: "price"; price: number }) =>
+  "high" in rung && rung.high !== undefined ? rung.high : rung.price;
+
+export function priceMapLayout(
+  levels: readonly Level[],
+  price: number | null,
+  { height, gap = 44, inset = 22 }: { height: number; gap?: number; inset?: number },
+): { rungs: MapRung[]; scale: (value: number) => number } {
+  const points = [
+    price,
+    ...levels.flatMap((level) => [level.price, level.high ?? level.price]),
+  ].filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const pad = (max - min) * 0.06 || max * 0.02;
+  const lo = min - pad;
+  const hi = max + pad;
+  const usable = height - inset * 2;
+  const scale = (value: number) => inset + (1 - (value - lo) / (hi - lo)) * usable;
+
+  const base: (Level | { kind: "price"; price: number })[] = [...levels];
+  if (price !== null) base.push({ kind: "price", price });
+  const rungs: MapRung[] = base
+    .map((rung) => {
+      const anchor = rung.kind === "entry" && rung.high !== undefined ? (rung.price + rung.high) / 2 : rung.price;
+      const y = scale(anchor);
+      return { ...rung, markY: y, labelY: y };
+    })
+    .sort((a, b) => a.markY - b.markY || topOf(b) - topOf(a));
+
+  for (let i = 1; i < rungs.length; i++) {
+    rungs[i]!.labelY = Math.max(rungs[i]!.labelY, rungs[i - 1]!.labelY + gap);
+  }
+  const floor = height - inset;
+  for (let i = rungs.length - 1; i >= 0; i--) {
+    const ceiling = i === rungs.length - 1 ? floor : rungs[i + 1]!.labelY - gap;
+    rungs[i]!.labelY = Math.max(inset, Math.min(rungs[i]!.labelY, ceiling));
+  }
+  return { rungs, scale };
+}
