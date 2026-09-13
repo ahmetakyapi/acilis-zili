@@ -131,8 +131,8 @@ Menü'den, her yerde aramadan ve alt bilgiden açılıyor.
 
 | Rota | Soru |
 |---|---|
-| `/teknik` | On iki hisse bugün teknik olarak nerede — görüş, seviye çizgisi, göstergeler |
-| `/teknik/[symbol]` | Nereden alınır, nerede satılır, nerede vazgeçilir — seviye merdiveni, göstergeler, senaryolar, görüş geçmişi |
+| `/teknik` | On iki hisse bugün teknik olarak nerede — görüş, plan şeridi (alım · satış · vazgeçme), seviye çizgisi, üç kelimelik gösterge okuması |
+| `/teknik/[symbol]` | Nereden alınır, nerede satılır, nerede vazgeçilir — plan şeridi ve planın okuması, gösterge özeti, fiyata orantılı fiyat haritası, gösterge panelleri, senaryolar, görüş geçmişi |
 
 ### Okuma
 

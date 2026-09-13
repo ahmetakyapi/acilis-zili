@@ -7,13 +7,13 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import type { Quote } from "@/lib/providers/types";
 import type { TechnicalAnalysisRow } from "@/lib/schema";
 import {
-  distancePct,
+  indicatorSignals,
   planPosition,
-  rsiZone,
   slotLabel,
   stanceChangeLabel,
   technicalHref,
   type PlanPosition,
+  type PlanReading,
 } from "@/lib/technical";
 import {
   cn,
@@ -25,6 +25,7 @@ import {
   formatPrice,
 } from "@/lib/utils";
 import { LevelTrack } from "./LevelTrack";
+import { PlanStrip } from "./PlanStrip";
 import styles from "./Technical.module.css";
 
 /** Değişim rozetinin rengi — yeni görüşün rengi. */
@@ -47,11 +48,62 @@ export function planPositionLabel(position: PlanPosition, locale: Locale, t: Dic
 }
 
 /**
+ * Planın okuması — tek cümle. Sayılar `planReading`ten, cümleler sözlükten;
+ * eksik seviye (stop yok, destek yok) cümlenin daha kısa bir sürümüne düşer,
+ * "—" basılmaz.
+ */
+export function planReadingText(reading: PlanReading, locale: Locale, t: Dictionary): string {
+  const money = (value: number) => formatPrice(value, locale, { currency: true });
+  const pct = (value: number) => formatPercentPlain(value, locale, 1);
+  switch (reading.kind) {
+    case "inZone":
+      if (reading.hold) return t.technical.readingHoldInZone;
+      return reading.stop === null
+        ? t.technical.readingInZoneNoStop
+        : t.technical.readingInZone.replace("{stop}", money(reading.stop));
+    case "above":
+      return t.technical.readingAbove.replace("{n}", pct(reading.pct)).replace("{high}", money(reading.high));
+    case "below":
+      return reading.stop === null
+        ? t.technical.readingBelowNoStop.replace("{n}", pct(reading.pct))
+        : t.technical.readingBelow.replace("{n}", pct(reading.pct)).replace("{stop}", money(reading.stop));
+    case "belowStop":
+      return t.technical.readingBelowStop.replace("{stop}", money(reading.stop));
+    case "wait":
+      if (reading.support !== null && reading.resistance !== null) {
+        return t.technical.readingWait
+          .replace("{support}", money(reading.support))
+          .replace("{resistance}", money(reading.resistance));
+      }
+      if (reading.support !== null) return t.technical.readingWaitSupport.replace("{support}", money(reading.support));
+      if (reading.resistance !== null) {
+        return t.technical.readingWaitResistance.replace("{resistance}", money(reading.resistance));
+      }
+      return t.technical.readingWaitPlain;
+    case "sell":
+      if (reading.level !== null && reading.support !== null) {
+        return t.technical.readingSell.replace("{level}", money(reading.level)).replace("{support}", money(reading.support));
+      }
+      if (reading.level !== null) return t.technical.readingSellLevel.replace("{level}", money(reading.level));
+      if (reading.support !== null) return t.technical.readingSellSupport.replace("{support}", money(reading.support));
+      return t.technical.readingSellPlain;
+  }
+}
+
+/** Okumanın tonu — bölgede ve stop altı kesin, gerisi nötr. */
+export function planReadingTone(reading: PlanReading): "up" | "down" | "flat" {
+  if (reading.kind === "inZone" && !reading.hold) return "up";
+  if (reading.kind === "belowStop" || reading.kind === "sell") return "down";
+  return "flat";
+}
+
+/**
  * Liste kartı — bir hissenin son analizi tek bakışta.
  *
  * Sıra okuyucunun sorusunun sırası: ne diyor (görüş), değişti mi (rozet),
- * şimdi nerede (fiyat ve plana göre yeri), neden (tek cümle), nereden alınır
- * nerede satılır (seviye çizgisi), göstergeler ne gösteriyor (çipler).
+ * şimdi nerede (fiyat ve plana göre yeri), NEREDEN ALINIR / NEREDE SATILIR /
+ * NEREDE VAZGEÇİLİR (plan şeridi), o seviyeler fiyata göre nerede (çizgi),
+ * neden (tek cümle), göstergeler ne diyor (üç kelime).
  *
  * FİYAT CANLI, SEVİYELER KAYITTAN. Çizgideki nokta şu anki fiyat: okuyucu
  * sabah yazılmış alım bölgesine fiyatın şimdi ne kadar yaklaştığını görsün.
@@ -91,37 +143,40 @@ export function TechnicalCard({
   const changePct = quote ? quote.changePct : snapshot.changePct;
   const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
   const headingId = `technical-${row.symbol}`;
+  const levelProps = {
+    entryLow: row.entryLow,
+    entryHigh: row.entryHigh,
+    stop: row.stop,
+    targets: row.targets,
+    supports: row.supports,
+    resistances: row.resistances,
+  };
 
-  const chips: string[] = [];
-  if (snapshot.rsi14 !== null) {
-    const zone = rsiZone(snapshot.rsi14);
-    chips.push(
-      `RSI ${formatPrice(snapshot.rsi14, locale, { digits: 0 })}${
-        zone === "overbought"
-          ? ` · ${t.technical.rsiOverbought}`
-          : zone === "oversold"
-            ? ` · ${t.technical.rsiOversold}`
-            : ""
+  /* Üç kelime: trend, RSI, hacim. Ayrıntı detay sayfasında (`SignalStrip`). */
+  const signals = indicatorSignals(snapshot, price);
+  const chips: { text: string; tone?: "up" | "down" }[] = [];
+  if (signals.trend) {
+    chips.push({
+      text: `${t.technical.signalTrend} ${
+        signals.trend.tone === "up" ? t.technical.trendUp : signals.trend.tone === "down" ? t.technical.trendDown : t.technical.trendMixed
       }`,
-    );
+      tone: signals.trend.tone === "up" ? "up" : signals.trend.tone === "down" ? "down" : undefined,
+    });
   }
-  /* Trend çipi en uzun dolu ortalamaya bakıyor: 200 günlük yoksa (SPCX)
-     50 günlük. Yarım pencereden ortalama zaten üretilmiyor. */
-  const trendWindow = snapshot.sma200 !== null ? 200 : snapshot.sma50 !== null ? 50 : null;
-  const trendAvg = trendWindow === 200 ? snapshot.sma200 : snapshot.sma50;
-  const trendDistance = distancePct(price, trendAvg);
-  if (trendWindow !== null && trendDistance !== null) {
-    chips.push(
-      (trendDistance >= 0 ? t.technical.aboveMa : t.technical.belowMa).replace(
-        "{n}",
-        String(trendWindow),
-      ),
-    );
+  if (signals.momentum) {
+    const zone =
+      signals.momentum.tone === "overbought"
+        ? ` · ${t.technical.rsiOverbought}`
+        : signals.momentum.tone === "oversold"
+          ? ` · ${t.technical.rsiOversold}`
+          : "";
+    chips.push({
+      text: `RSI ${formatPrice(signals.momentum.rsi, locale, { digits: 0 })}${zone}`,
+      tone: signals.momentum.tone === "overbought" ? "down" : signals.momentum.tone === "oversold" ? "up" : undefined,
+    });
   }
-  if (snapshot.lastVolume !== null && snapshot.avgVolume20) {
-    chips.push(
-      `${t.technical.volume} ${formatPrice(snapshot.lastVolume / snapshot.avgVolume20, locale, { digits: 1 })}×`,
-    );
+  if (signals.volume) {
+    chips.push({ text: `${t.technical.volume} ${formatPrice(signals.volume.ratio, locale, { digits: 1 })}×` });
   }
 
   return (
@@ -150,18 +205,25 @@ export function TechnicalCard({
       <div className={styles.cardQuote}>
         <div className={styles.cardQuoteLabel}>
           <span>{quote ? priceLabel : t.technical.atAnalysis}</span>
-          {position && <span className={styles.plan} data-kind={position.kind}>
-            {planPositionLabel(position, locale, t)}
-          </span>}
+          {position && (
+            <span className={styles.plan} data-kind={position.kind}>
+              {planPositionLabel(position, locale, t)}
+            </span>
+          )}
         </div>
         <div className={styles.cardPrice}>
           <strong className="numeral">{formatPrice(price, locale, { currency: true })}</strong>
           {changePct !== null && (
-            <span className={cn("numeral text-small font-semibold", directionText(directionOf(changePct)))}>
+            <span className={cn("numeral text-base font-semibold", directionText(directionOf(changePct)))}>
               {formatPercent(changePct, locale)}
             </span>
           )}
         </div>
+      </div>
+
+      <div className={styles.cardPlan}>
+        <PlanStrip verdict={verdict} {...levelProps} locale={locale} t={t} />
+        <LevelTrack price={price} {...levelProps} verdict={verdict} />
       </div>
 
       <p className={styles.cardHeadline} lang={untranslated ? "tr" : locale}>
@@ -182,24 +244,11 @@ export function TechnicalCard({
         {copy.headline}
       </p>
 
-      <LevelTrack
-        price={price}
-        entryLow={row.entryLow}
-        entryHigh={row.entryHigh}
-        stop={row.stop}
-        targets={row.targets}
-        supports={row.supports}
-        resistances={row.resistances}
-        verdict={verdict}
-        locale={locale}
-        t={t}
-      />
-
       {chips.length > 0 && (
         <div className={styles.chips}>
           {chips.map((chip) => (
-            <span key={chip} className={styles.chip}>
-              {chip}
+            <span key={chip.text} className={styles.chip} data-tone={chip.tone}>
+              {chip.text}
             </span>
           ))}
         </div>
@@ -213,7 +262,7 @@ export function TechnicalCard({
             işaret, ekran okuyucuya ikinci bir bağlantı gibi okunmasın. */}
         <span className={styles.cardRead} aria-hidden>
           {t.technical.readAnalysis}
-          <ArrowUpRight size={12} weight="bold" />
+          <ArrowUpRight size={13} weight="bold" />
         </span>
       </div>
     </SpotlightCard>

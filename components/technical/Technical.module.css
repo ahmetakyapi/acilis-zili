@@ -1,19 +1,26 @@
-/* Teknik analiz — liste kartları, seviye çizgisi, merdiven ve gösterge
-   panelleri. Renk yalnızca belirteçlerden; yön rengi (--up/--down) yönü,
-   accent (--primary) fiyatın kendisini anlatıyor.
+/* Teknik analiz — liste kartları, plan şeridi, seviye çizgisi, fiyat
+   haritası, gösterge özeti ve gösterge panelleri. Renk yalnızca
+   belirteçlerden; yön rengi (--up/--down) yönü, accent (--primary) fiyatın
+   kendisini anlatıyor.
 
    SAYILARDA TABULAR FİGÜR YOK. İlk hâlde vardı ve telefonda lejant
    "209 , 61 $" diye çıkıyordu: Schibsted Grotesk'te `tnum` virgülü de rakam
    genişliğine çekiyor (gerekçenin tamamı globals.css → "Sayısal okumalar").
-   Sayılar sitenin geri kalanı gibi yalnızca sıkı aralık alıyor. */
+   Sayılar sitenin geri kalanı gibi yalnızca sıkı aralık alıyor.
+
+   PUNTO TABANI 13-14, 11 DEĞİL. İlk sürümde kartın gövdesi 11-13 punto
+   arasında dolaşıyordu (lejant 10-11, başlık 13, çipler 11) ve okuyucunun
+   ilk geri bildirimi "yazılar net okunmuyor"du. Şerit etiketleri ve künyeler
+   dışında hiçbir metin 12'nin altına inmiyor; sayı ne kadar önemliyse o
+   kadar büyük (kartta fiyat 26, kapakta 40). */
 
 /* ---- Yayın künyesi (başlığın içinde) ----
    Ayrı bir şerit kutusu olarak duruyordu: başlık kutusu, şerit kutusu ve
    kartlar üç ayrı çerçeve olunca sayfa üst üste yığılmış paneller gibi
    okunuyordu. Künye artık başlığın metin sütununda, açıklamanın altında. */
-.edition { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:16px; padding-top:14px; border-top:1px solid var(--line-soft); }
-.editionItem { display:flex; flex-direction:column; gap:2px; min-width:0; }
-.editionLabel { font-size:11px; font-weight:600; letter-spacing:.03em; color:var(--text-muted); }
+.edition { display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:18px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.editionItem { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.editionLabel { font-size:11px; font-weight:600; letter-spacing:.04em; color:var(--text-muted); }
 .editionValue { font-size:14px; font-weight:600; color:var(--text-strong); }
 
 /* ---- Görüş dağılımı (başlığın görseli) ----
@@ -28,10 +35,10 @@
 .pulseBar > span[data-verdict="hold"] { background:color-mix(in srgb, var(--primary) 55%, transparent); }
 .pulseBar > span[data-verdict="sell"] { background:var(--down); }
 .pulseRows { display:grid; gap:4px; }
-.pulseRow { display:grid; grid-template-columns:74px minmax(0,1fr); align-items:center; gap:12px; padding:8px 10px; border-radius:14px; transition:background-color .2s; }
+.pulseRow { display:grid; grid-template-columns:78px minmax(0,1fr); align-items:center; gap:12px; padding:8px 10px; border-radius:14px; transition:background-color .2s; }
 .pulseRow:hover { background:var(--surface); }
-.pulseStance { display:flex; align-items:baseline; gap:7px; font-size:13px; font-weight:700; letter-spacing:.03em; cursor:pointer; }
-.pulseStance b { font-size:20px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
+.pulseStance { display:flex; align-items:baseline; gap:8px; font-size:13px; font-weight:700; letter-spacing:.03em; cursor:pointer; }
+.pulseStance b { font-size:22px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
 .pulseStanceStatic { cursor:default; }
 .pulseLogos { display:flex; flex-wrap:wrap; gap:6px; min-width:0; }
 .pulseLogo { display:inline-flex; border-radius:10px; transition:transform .2s; }
@@ -46,11 +53,11 @@
    adres güncellemesinin uçuştaki gezinmeyi öldürdüğü tuzağa (CLAUDE.md,
    "İstemci ile sunucu sınırı") hiç girilmiyor. Başlıktaki görüş satırları
    da aynı radyolara `for` ile bağlı etiketler: satıra basmak süzüyor. */
-.board { display:flex; flex-direction:column; gap:16px; min-width:0; }
+.board { display:flex; flex-direction:column; gap:18px; min-width:0; }
 .filter { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0; padding:0; border:0; }
 .filter legend { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .filter input { position:absolute; opacity:0; pointer-events:none; }
-.filter label { display:inline-flex; align-items:baseline; gap:7px; min-height:36px; padding:8px 14px; border:1px solid var(--line); border-radius:999px; background:var(--surface-solid); font-size:13px; font-weight:600; color:var(--text-body); cursor:pointer; transition:border-color .2s, background-color .2s, color .2s; }
+.filter label { display:inline-flex; align-items:baseline; gap:7px; min-height:38px; padding:8px 15px; border:1px solid var(--line); border-radius:999px; background:var(--surface-solid); font-size:13px; font-weight:600; color:var(--text-body); cursor:pointer; transition:border-color .2s, background-color .2s, color .2s; }
 .filter label b { font-weight:600; letter-spacing:-.02em; color:var(--text-muted); }
 .filter label:hover { border-color:var(--line-strong); color:var(--text-strong); }
 .filter input:checked + label { border-color:transparent; background:var(--text-strong); color:var(--page-bg); }
@@ -60,134 +67,209 @@
 .board:has(input[value="hold"]:checked) .cell:not([data-verdict="hold"]),
 .board:has(input[value="sell"]:checked) .cell:not([data-verdict="sell"]) { display:none; }
 
-/* ---- Kart ızgarası ---- */
-.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap:16px; }
+/* ---- Kart ızgarası ----
+   Kart tabanı 340px, 300 değil: dört sütunda (1440'ta 300'lük kartlar)
+   14 puntoluk başlık üç satıra sığmıyor, plan satırlarında üç hedef
+   fiyatın yanında kırılıyordu. 1440'ta üç sütun, 1024'te iki, telefonda
+   bir; kart 470-520px boyunda (ölçüldü). */
+.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap:18px; }
 .cell { display:flex; min-width:0; }
 /* Kartın TAMAMI tek bağlantı değil. Öyleydi ve bağlantının erişilebilir adı
    kartın bütün metniydi (sembol, fiyat, 280 karaktere kadar başlık, lejant,
    çipler); ekran okuyucuda hisseler arasında başlıkla da gezinilemiyordu.
    Bağlantı artık sembol başlığının içinde; `::after` kartı kaplıyor, yani
    tıklama alanı aynı kalıyor. */
-.card { position:relative; display:flex; flex:1; flex-direction:column; gap:12px; min-width:0; padding:18px 18px 14px; border:1px solid var(--line); border-radius:20px; background:var(--premium-surface); box-shadow:var(--premium-shadow); transition:border-color .2s, box-shadow .25s, transform .25s; }
+.card { position:relative; display:flex; flex:1; flex-direction:column; gap:14px; min-width:0; padding:20px 20px 16px; border:1px solid var(--line); border-radius:22px; background:var(--premium-surface); box-shadow:var(--premium-shadow); transition:border-color .2s, box-shadow .25s, transform .25s; }
 .card:hover { border-color:var(--primary-faint); box-shadow:var(--premium-shadow-hover); transform:translateY(-2px); }
 .card:has(.cardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
 .cardLink { color:inherit; }
 .cardLink::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; }
 .cardLink:focus-visible { outline:none; }
-.cardHead { display:flex; align-items:center; gap:10px; min-width:0; }
-.cardName { display:flex; min-width:0; flex:1; flex-direction:column; }
-.cardSymbol { font-size:16px; line-height:1.25; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
-.cardCompany { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; color:var(--text-muted); }
+.cardHead { display:flex; align-items:center; gap:12px; min-width:0; }
+.cardName { display:flex; min-width:0; flex:1; flex-direction:column; gap:1px; }
+.cardSymbol { font-size:19px; line-height:1.2; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
+.cardCompany { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
 .badges { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
-.stance { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; letter-spacing:.04em; }
-.change { display:inline-flex; align-items:center; gap:4px; padding:1px 7px; border:1px solid currentColor; border-radius:999px; font-size:10px; font-weight:700; white-space:nowrap; }
-.cardPrice { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; }
-.cardPrice strong { font-size:24px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
-.cardPriceLabel { font-size:11px; color:var(--text-muted); }
-.cardHeadline { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; color:var(--text-body); font-size:13px; line-height:1.6; text-wrap:pretty; }
+.stance { display:inline-flex; align-items:center; padding:4px 12px; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:.06em; }
+.change { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border:1px solid currentColor; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; }
+/* Fiyat satırı: etiket ve plana göre yer aynı satırda, sayı altında büyük. */
+.cardQuote { display:grid; gap:4px; }
+.cardQuoteLabel { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:3px 10px; color:var(--text-muted); font-size:12px; }
+.cardPrice { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
+.cardPrice strong { font-size:27px; line-height:1.1; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
 /* Plan konumu: fiyatın alım planına göre yeri, tek kısa etiket. Ton
    anlamdan: bölgede yükseliş, stop altında düşüş, dışında nötr. */
-.plan { display:inline-flex; align-self:flex-start; align-items:center; gap:6px; padding:3px 9px; border-radius:8px; font-size:11px; font-weight:700; letter-spacing:.01em; }
+.plan { display:inline-flex; align-self:flex-start; align-items:center; gap:6px; padding:3px 10px; border-radius:8px; font-size:12px; font-weight:700; letter-spacing:.01em; }
 .plan[data-kind="inZone"] { background:var(--up-wash); color:var(--up); }
 .plan[data-kind="above"], .plan[data-kind="below"] { background:var(--primary-tint); color:var(--primary-ink); }
 .plan[data-kind="belowStop"] { background:var(--down-wash); color:var(--down); }
+.cardQuoteLabel .plan { padding:2px 8px; font-size:11px; }
+.cardPlan { display:grid; gap:10px; }
+.cardHeadline { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; color:var(--text-body); font-size:14px; line-height:1.6; text-wrap:pretty; }
 .chips { display:flex; flex-wrap:wrap; gap:6px; }
-.chip { display:inline-flex; align-items:center; padding:3px 8px; border-radius:8px; background:var(--surface-sunken); color:var(--text-body); font-size:11px; font-weight:600; white-space:nowrap; }
-.cardFoot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:10px; border-top:1px solid var(--line-soft); font-size:11px; color:var(--text-muted); }
+.chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:8px; background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
+.chip::before { content:""; width:6px; height:6px; border-radius:50%; background:var(--text-muted); opacity:.6; }
+.chip[data-tone="up"]::before { background:var(--up); opacity:1; }
+.chip[data-tone="down"]::before { background:var(--down); opacity:1; }
+.cardFoot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
 .cardRead { display:inline-flex; align-items:center; gap:4px; color:var(--primary-ink); font-weight:600; }
 .cardRead svg { transition:transform .2s; }
 .card:hover .cardRead svg { transform:translate(2px,-2px); }
 
-/* ---- Seviye çizgisi (yatay) ----
-   Kartta ve kapakta aynı çizim: stop, alım bölgesi, hedefler ve fiyat tek
-   eksende. Çizim yalnızca görsel (aria-hidden); aynı bilgi altındaki
-   lejantta metin olarak duruyor.
-
-   İŞARET HALKASI KENARLIKLA DEĞİL GÖLGEYLE. Halka `--surface-solid`
-   kenarlığıydı ve o token koyu temada saydam (beyaz %8,5): halka noktanın
-   kendi renginin açık bir tonuna dönüşüyor, noktayı raydan ayıran boşluk
-   kayboluyordu. Kart ve kapak `--premium-surface` üzerinde, halka onun
-   rengiyle çiziliyor. */
-.track { position:relative; height:28px; }
-.trackLine { position:absolute; left:0; right:0; top:12px; height:4px; border-radius:2px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft); }
-.trackBand { position:absolute; top:7px; height:14px; border-radius:5px; background:var(--up-wash); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 45%, transparent); }
-.trackTick { position:absolute; top:5px; width:2px; height:18px; border-radius:1px; transform:translateX(-1px); }
-.trackTick[data-kind="stop"] { background:var(--down); }
-.trackTick[data-kind="target"] { background:var(--up); }
-.trackTick[data-kind="sellLevel"] { background:var(--down); opacity:.55; }
-.trackTick[data-kind="support"], .trackTick[data-kind="resistance"] { top:9px; height:10px; background:var(--text-muted); opacity:.55; }
-.trackPrice { position:absolute; top:7px; width:14px; height:14px; border-radius:50%; background:var(--primary); margin-left:-7px; box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 4px var(--primary); }
-.trackLg { height:38px; }
-.trackLg .trackLine { top:16px; height:6px; border-radius:3px; }
-.trackLg .trackBand { top:10px; height:18px; border-radius:6px; }
-.trackLg .trackTick { top:7px; height:24px; }
-.trackLg .trackTick[data-kind="support"], .trackLg .trackTick[data-kind="resistance"] { top:12px; height:14px; }
-.trackLg .trackPrice { top:9px; width:20px; height:20px; margin-left:-10px; box-shadow:0 0 0 4px var(--premium-surface), 0 0 0 5px var(--primary), 0 6px 16px color-mix(in srgb, var(--primary) 30%, transparent); }
-.legend { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:11px; color:var(--text-muted); }
-.legend span { display:inline-flex; align-items:baseline; gap:4px; white-space:nowrap; }
-.legend b { font-weight:600; color:var(--text-body); letter-spacing:-.02em; }
-.legendDot { display:inline-block; width:8px; height:8px; border-radius:2px; align-self:center; }
+/* ---- Plan şeridi: NEREDEN ALINIR · NEREDE SATILIR · NEREDE VAZGEÇİLİR ----
+   Kartta SATIR düzeni: soru solda, sayı sağda. Üç sütun 340px'lik kartta
+   ölçüldü — "Nerede Vazgeçilir" iki satıra, üç hedef üç satıra kırılıyordu.
+   Satırda fiyat hiç kırılmıyor, hedef listesi ayırıcıdan kırılıyor. Kapakta
+   (lg, ≥640px) üç sütun: orada yer var ve sayı 19 punto. */
+.planStrip { display:grid; gap:8px; }
+.planCells { display:flex; flex-direction:column; gap:8px; margin:0; padding:12px 14px; border-radius:14px; background:var(--surface-sunken); }
+.planCell { display:flex; min-width:0; align-items:baseline; justify-content:space-between; gap:6px 14px; }
+.planCell dt { display:flex; flex:none; align-items:center; gap:7px; font-size:12px; font-weight:700; letter-spacing:.02em; color:var(--text-muted); }
+.planCell dd { min-width:0; font-size:14px; line-height:1.35; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); text-align:right; }
+.planCell dd > span { white-space:nowrap; }
+.planSep { color:var(--text-muted); font-weight:500; }
+.planEmpty { font-weight:500; color:var(--text-muted); }
+.planRisk { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; padding:0 4px; font-size:12px; color:var(--text-muted); }
+.planRisk b { font-size:13px; font-weight:700; color:var(--text-strong); }
+.planRisk .text-up, .planRisk .text-down { font-weight:600; }
+.planStripLg .planRisk { font-size:13px; }
+.planStripLg .planRisk b { font-size:15px; }
+@media (min-width: 640px) {
+  .planStripLg .planCells { display:grid; grid-template-columns:repeat(var(--cells, 3), minmax(0,1fr)); gap:12px 16px; padding:16px 18px; border-radius:16px; }
+  .planStripLg .planCell { flex-direction:column; align-items:flex-start; gap:5px; }
+  .planStripLg .planCell dd { font-size:19px; line-height:1.25; text-align:left; overflow-wrap:anywhere; }
+}
+.legendDot { display:inline-block; flex:none; width:7px; height:7px; border-radius:2px; }
 .legendDot[data-kind="stop"] { background:var(--down); }
 .legendDot[data-kind="entry"] { background:var(--up-wash); box-shadow:inset 0 0 0 1px var(--up); }
 .legendDot[data-kind="target"] { background:var(--up); }
 .legendDot[data-kind="sellLevel"] { background:var(--down); opacity:.55; }
 .legendDot[data-kind="support"], .legendDot[data-kind="resistance"] { background:var(--text-muted); opacity:.55; }
 
-/* ---- Detay kapağı ---- */
-.cover { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:28px; padding:28px 30px; border:1px solid var(--line); border-radius:24px; background:radial-gradient(ellipse at 92% 0,var(--primary-wash),transparent 58%),var(--premium-surface); box-shadow:var(--premium-shadow); }
+/* ---- Seviye çizgisi (yatay) ----
+   Kartta ve kapakta aynı çizim: stop, alım bölgesi, hedefler ve fiyat tek
+   eksende. Çizim yalnızca görsel (aria-hidden); sayılar plan şeridinde.
+
+   İŞARET HALKASI KENARLIKLA DEĞİL GÖLGEYLE. Halka `--surface-solid`
+   kenarlığıydı ve o token koyu temada saydam (beyaz %8,5): halka noktanın
+   kendi renginin açık bir tonuna dönüşüyor, noktayı raydan ayıran boşluk
+   kayboluyordu. Kart ve kapak `--premium-surface` üzerinde, halka onun
+   rengiyle çiziliyor. */
+.track { position:relative; height:30px; }
+.trackLine { position:absolute; left:0; right:0; top:13px; height:4px; border-radius:2px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft); }
+.trackVoid { position:absolute; left:0; top:13px; height:4px; border-radius:2px 0 0 2px; background:repeating-linear-gradient(90deg, var(--down) 0 3px, transparent 3px 7px); opacity:.35; }
+.trackBand { position:absolute; top:8px; height:14px; border-radius:5px; background:var(--up-wash); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 45%, transparent); }
+.trackTick { position:absolute; top:6px; width:2px; height:18px; border-radius:1px; transform:translateX(-1px); }
+.trackTick[data-kind="stop"] { background:var(--down); }
+.trackTick[data-kind="target"] { background:var(--up); }
+.trackTick[data-kind="sellLevel"] { background:var(--down); opacity:.55; }
+.trackTick[data-kind="support"], .trackTick[data-kind="resistance"] { top:10px; height:10px; background:var(--text-muted); opacity:.55; }
+.trackPrice { position:absolute; top:8px; width:14px; height:14px; border-radius:50%; background:var(--primary); margin-left:-7px; box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 4px var(--primary); }
+.trackLg { height:40px; }
+.trackLg .trackLine, .trackLg .trackVoid { top:17px; height:6px; border-radius:3px; }
+.trackLg .trackBand { top:11px; height:18px; border-radius:6px; }
+.trackLg .trackTick { top:8px; height:24px; }
+.trackLg .trackTick[data-kind="support"], .trackLg .trackTick[data-kind="resistance"] { top:13px; height:14px; }
+.trackLg .trackPrice { top:10px; width:20px; height:20px; margin-left:-10px; box-shadow:0 0 0 4px var(--premium-surface), 0 0 0 5px var(--primary), 0 6px 16px color-mix(in srgb, var(--primary) 30%, transparent); }
+
+/* ---- Detay kapağı ----
+   İki sütun: solda kimlik, görüş, başlık ve planın okuması; sağda fiyat,
+   plan şeridi ve çizgi; altta tam genişlikte gösterge özeti. Zemin bilanço
+   raporunun kapağıyla aynı dil — maskeli ızgara ve tek ışıma. */
+.cover { position:relative; isolation:isolate; overflow:hidden; display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:24px 32px; padding:30px 32px 26px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); box-shadow:var(--premium-shadow); }
+.cover::before { content:""; position:absolute; z-index:-1; inset:0 0 30% 45%; background-image:linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px); background-size:3.2rem 3.2rem; mask-image:linear-gradient(110deg, transparent, var(--text-strong)); opacity:.8; pointer-events:none; }
+.cover::after { content:""; position:absolute; z-index:-1; top:-14rem; right:-6rem; width:36rem; height:36rem; border-radius:50%; background:radial-gradient(circle, var(--primary-wash), transparent 65%); pointer-events:none; }
+.cover[data-verdict="buy"]::after { background:radial-gradient(circle, var(--up-wash), transparent 65%); }
+.cover[data-verdict="sell"]::after { background:radial-gradient(circle, var(--down-wash), transparent 65%); }
 .coverMain { display:flex; min-width:0; flex-direction:column; gap:16px; }
-.coverIdentity { display:flex; align-items:center; gap:12px; min-width:0; }
-.coverIdentity h1 { font-size:var(--heading-page); line-height:1.04; letter-spacing:-.05em; font-weight:600; color:var(--text-strong); }
-.coverMeta { font-size:12px; color:var(--text-muted); }
-.stanceBlock { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; }
-.stanceLabel { font-size:11px; font-weight:600; letter-spacing:.04em; color:var(--text-muted); }
-.stanceValue { font-size:34px; line-height:1; font-weight:700; letter-spacing:-.03em; }
-.coverHeadline { max-width:62ch; color:var(--text-body); font-size:15px; line-height:1.7; text-wrap:pretty; }
-.coverSide { display:flex; min-width:0; flex-direction:column; justify-content:center; gap:14px; padding-left:28px; border-left:1px solid var(--line); }
+.coverIdentity { display:flex; align-items:center; gap:14px; min-width:0; }
+.coverIdentity h1 { font-size:clamp(32px, 3.2vw, 44px); line-height:1.02; letter-spacing:-.05em; font-weight:650; color:var(--text-strong); }
+.coverMeta { margin-top:4px; font-size:13px; color:var(--text-muted); }
+.stanceRow { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+.stanceLabel { font-size:11px; font-weight:700; letter-spacing:.05em; color:var(--text-muted); }
+.stancePill { display:inline-flex; align-items:center; padding:6px 16px; border-radius:999px; font-size:14px; font-weight:800; letter-spacing:.08em; }
+.coverHeadline { max-width:58ch; color:var(--text-strong); font-size:17px; line-height:1.6; font-weight:500; letter-spacing:-.012em; text-wrap:pretty; }
+/* Planın okuması — sol şerit tonu okumanın tonu: bölgede yükseliş, stop
+   altı ve SAT düşüş, bekleyiş nötr. */
+.reading { display:grid; gap:4px; padding:12px 16px; border-left:3px solid var(--line-strong); border-radius:0 14px 14px 0; background:var(--surface-sunken); }
+.reading[data-tone="up"] { border-left-color:var(--up); background:var(--up-wash); }
+.reading[data-tone="down"] { border-left-color:var(--down); background:var(--down-wash); }
+.reading[data-tone="flat"] { border-left-color:var(--primary); background:var(--primary-tint); }
+.readingLabel { font-size:11px; font-weight:700; letter-spacing:.05em; color:var(--text-muted); }
+.reading p { color:var(--text-strong); font-size:14px; line-height:1.6; text-wrap:pretty; }
+.coverSide { display:flex; min-width:0; flex-direction:column; justify-content:center; gap:18px; padding-left:32px; border-left:1px solid var(--line); }
+.coverQuote { display:flex; flex-direction:column; gap:4px; }
 .priceRow { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px; }
-.priceNow { font-size:30px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
+.priceNow { font-size:40px; line-height:1.05; font-weight:600; letter-spacing:-.045em; color:var(--text-strong); }
+.priceContext { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-top:4px; }
 .priceNote { font-size:12px; color:var(--text-muted); }
+.coverSignals { grid-column:1 / -1; padding-top:20px; border-top:1px solid var(--line); }
+
+/* ---- Gösterge özeti: dört kelime ---- */
+.signals { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px 20px; margin:0; }
+.signal { display:flex; min-width:0; flex-direction:column; gap:5px; padding-left:14px; border-left:2px solid var(--line); }
+.signal[data-tone="up"] { border-left-color:var(--up); }
+.signal[data-tone="down"] { border-left-color:var(--down); }
+.signal[data-tone="primary"] { border-left-color:var(--primary); }
+.signal dt { font-size:11px; font-weight:700; letter-spacing:.05em; color:var(--text-muted); }
+.signal dd { display:flex; flex-direction:column; gap:2px; }
+.signal strong { font-size:19px; line-height:1.15; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); }
+.signal span { font-size:12px; line-height:1.45; color:var(--text-muted); }
 
 /* Bölüm gezinmesi — şirket sayfasındaki `chapterNav` ile aynı gölge. */
 .sectionNav { box-shadow:0 6px 24px var(--primary-tint); border-color:var(--line); }
 
 /* ---- Bölüm başlığı ve iki kolon ---- */
-.sectionTitle { font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
-.twoCol { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; align-items:start; }
-.block { display:flex; min-width:0; flex-direction:column; gap:12px; padding:18px 20px; border:1px solid var(--line); border-radius:20px; background:var(--surface-solid); }
-.blockHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
-.prose { color:var(--text-body); font-size:14px; line-height:1.75; text-wrap:pretty; }
+.sectionTitle { font-size:19px; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
+.twoCol { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start; }
+.block { display:flex; min-width:0; flex-direction:column; gap:14px; padding:22px 24px; border:1px solid var(--line); border-radius:20px; background:var(--premium-surface); box-shadow:var(--premium-shadow); }
+.blockHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 14px; }
+.blockNote { font-size:12px; color:var(--text-muted); }
+.prose { color:var(--text-body); font-size:15px; line-height:1.75; text-wrap:pretty; }
+.footHint { font-size:12px; line-height:1.55; color:var(--text-muted); }
 
-/* ---- Seviye merdiveni ---- */
-.ladder { position:relative; display:flex; flex-direction:column; }
-.ladder::before { content:""; position:absolute; left:6px; top:14px; bottom:14px; width:2px; border-radius:1px; background:var(--line); }
-.rung { position:relative; display:grid; grid-template-columns:14px minmax(0,1fr) auto auto; align-items:center; gap:4px 12px; padding:9px 0; border-bottom:1px solid var(--line-soft); }
-.rung:last-child { border-bottom:0; }
-/* Halka `--panel-fixed`: blok `--surface-solid` üzerinde ve o token koyu
-   temada saydam; opak bileşkesi halkayı raydan ayırıyor (bkz. .trackPrice). */
-.rungMark { position:relative; z-index:1; width:14px; height:14px; border:2px solid var(--panel-fixed); border-radius:50%; background:var(--text-muted); }
-.rung[data-kind="target"] .rungMark { background:var(--up); }
-.rung[data-kind="stop"] .rungMark { background:var(--down); }
-.rung[data-kind="sellLevel"] .rungMark { background:var(--down); opacity:.6; }
-.rung[data-kind="entry"] .rungMark { border-radius:4px; background:linear-gradient(var(--up-wash), var(--up-wash)), var(--panel-fixed); box-shadow:inset 0 0 0 2px var(--up); }
-.rung[data-kind="price"] .rungMark { width:14px; height:14px; background:var(--primary); box-shadow:0 0 0 3px var(--primary-wash); }
-.rung[data-kind="price"] { background:linear-gradient(90deg,var(--primary-tint),transparent 70%); }
-.rung[data-kind="entry"] { background:linear-gradient(90deg,var(--up-wash),transparent 75%); }
-.rungLabel { font-size:13px; font-weight:600; color:var(--text-strong); }
-.rung[data-kind="support"] .rungLabel, .rung[data-kind="resistance"] .rungLabel { font-weight:500; color:var(--text-body); }
-.rungPrice { font-size:13px; font-weight:600; color:var(--text-strong); letter-spacing:-.02em; text-align:right; white-space:nowrap; }
-.rungDistance { min-width:58px; font-size:11px; font-weight:600; letter-spacing:-.02em; text-align:right; white-space:nowrap; color:var(--text-muted); }
-.rungNote { grid-column:2 / -1; font-size:12px; line-height:1.5; color:var(--text-muted); }
+/* ---- Fiyat haritası ----
+   Sol 56px ray; bant, gölge ve fiyat çizgisi rayda; basamaklar sağda,
+   etiket yeri `priceMapLayout`tan (top). Her basamak kendi ortasını
+   etiket yerine getiriyor (translateY(-50%)); işaret ve bağ çizgisi o
+   ortaya göre kayıyor, yani gerçek fiyat yerinde duruyor. Ray ile basamak
+   listesi arasındaki 28px'lik yatay çentik `::before`. */
+.map { position:relative; min-width:0; }
+.mapRail { position:absolute; left:0; top:0; bottom:0; width:56px; }
+.mapLine { position:absolute; left:27px; top:0; bottom:0; width:2px; border-radius:1px; background:var(--line); }
+.mapBand { position:absolute; left:15px; width:26px; border-radius:6px; background:var(--up-wash); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 45%, transparent); }
+.mapVoid { position:absolute; left:8px; right:8px; bottom:0; border-top:1px dashed var(--down); border-radius:0 0 8px 8px; background:repeating-linear-gradient(135deg, var(--down-wash) 0 4px, transparent 4px 10px); }
+.mapVoid i { position:absolute; top:10px; left:2px; writing-mode:vertical-rl; font-size:10px; font-style:normal; font-weight:700; letter-spacing:.06em; color:var(--down); white-space:nowrap; }
+.mapPriceLine { position:absolute; left:20px; right:0; border-top:2px dashed var(--primary); opacity:.45; pointer-events:none; }
+.mapRungs { position:absolute; left:56px; right:0; top:0; bottom:0; margin:0; padding:0; list-style:none; }
+.mapRung { position:absolute; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; column-gap:12px; padding:7px 14px 7px 16px; border-radius:12px; transform:translateY(-50%); }
+.mapRung::before { content:""; position:absolute; left:-28px; top:50%; width:28px; height:1px; background:var(--line-strong); }
+.mapMark { position:absolute; left:-35px; width:14px; height:14px; border:2px solid var(--panel-fixed); border-radius:50%; background:var(--text-muted); transform:translateY(-50%); z-index:1; }
+.mapRung[data-kind="target"] .mapMark { background:var(--up); }
+.mapRung[data-kind="stop"] .mapMark { background:var(--down); }
+.mapRung[data-kind="sellLevel"] .mapMark { background:var(--down); opacity:.6; }
+.mapRung[data-kind="entry"] .mapMark { border-radius:4px; background:linear-gradient(var(--up-wash), var(--up-wash)), var(--panel-fixed); box-shadow:inset 0 0 0 2px var(--up); }
+.mapRung[data-kind="price"] .mapMark { background:var(--primary); box-shadow:0 0 0 3px var(--primary-wash); }
+.mapLink { position:absolute; left:-29px; width:2px; background:var(--line-strong); }
+.mapRung[data-kind="price"] { background:linear-gradient(90deg, var(--primary-tint), transparent 75%); }
+.mapRung[data-kind="entry"] { background:linear-gradient(90deg, var(--up-wash), transparent 80%); }
+.mapRung[data-kind="stop"] { background:linear-gradient(90deg, var(--down-wash), transparent 80%); }
+.mapLabel { font-size:14px; font-weight:600; color:var(--text-strong); }
+.mapRung[data-kind="price"] .mapLabel { color:var(--primary-ink); font-weight:700; }
+.mapRung[data-kind="support"] .mapLabel, .mapRung[data-kind="resistance"] .mapLabel { font-weight:500; color:var(--text-body); }
+.mapPrice { font-size:14px; font-weight:600; color:var(--text-strong); text-align:right; white-space:nowrap; }
+.mapDistance { min-width:60px; font-size:12px; font-weight:600; text-align:right; white-space:nowrap; color:var(--text-muted); }
+.mapNote { grid-column:1 / -1; margin-top:-2px; font-size:12px; line-height:1.45; color:var(--text-muted); }
 
 /* ---- Senaryolar ---- */
 .scenarios { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
-.scenario { display:flex; flex-direction:column; gap:8px; padding:14px 16px; border-radius:16px; }
-.scenario[data-tone="up"] { background:var(--up-wash); }
-.scenario[data-tone="down"] { background:var(--down-wash); }
-.scenario h3 { font-size:13px; font-weight:700; }
+.scenario { display:flex; flex-direction:column; gap:8px; padding:14px 16px; border-left:2px solid var(--line); border-radius:12px; }
+.scenario[data-tone="up"] { border-left-color:var(--up); background:linear-gradient(120deg, var(--up-wash), transparent); }
+.scenario[data-tone="down"] { border-left-color:var(--down); background:linear-gradient(120deg, var(--down-wash), transparent); }
+.scenario h3 { font-size:13px; font-weight:700; letter-spacing:.01em; }
 .scenario[data-tone="up"] h3 { color:var(--up); }
 .scenario[data-tone="down"] h3 { color:var(--down); }
-.scenario p { color:var(--text-body); font-size:13px; line-height:1.65; text-wrap:pretty; }
+.scenario p { color:var(--text-body); font-size:14px; line-height:1.65; text-wrap:pretty; }
 
 /* ---- Gösterge panelleri ---- */
 /* SÜTUN SAYISI SABİT, `auto-fill` DEĞİL. Altı panel 1440px'de 4+2
@@ -196,136 +278,101 @@
 .indicators { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; }
 @media (min-width: 640px) { .indicators { grid-template-columns:repeat(2, minmax(0,1fr)); } }
 @media (min-width: 1100px) { .indicators { grid-template-columns:repeat(3, minmax(0,1fr)); } }
-.indicator { display:flex; min-width:0; flex-direction:column; gap:10px; padding:16px 18px; border:1px solid var(--line); border-radius:18px; background:var(--surface-solid); }
-.indicatorHead { display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
-.indicatorTitle { font-size:12px; font-weight:700; letter-spacing:.02em; color:var(--text-strong); }
-.indicatorTag { font-size:11px; font-weight:700; }
+.indicator { display:flex; min-width:0; flex-direction:column; gap:12px; padding:18px; border:1px solid var(--line); border-radius:18px; background:linear-gradient(145deg, var(--primary-tint), transparent 48%), var(--premium-surface); }
+.indicatorHead { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:6px 12px; }
+.indicatorTitle { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:700; letter-spacing:.01em; color:var(--primary-ink); }
+.indicatorTitle svg { flex:none; opacity:.8; }
+.indicatorTag { margin-left:auto; font-size:12px; font-weight:700; text-align:right; }
 .bigFigure { font-size:26px; line-height:1.1; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
+/* Sayısal sıkı aralık ATR'nin küçük açıklama etiketine sızmasın: 320px'de
+   "Fiyata Oranı" tek kelime gibi görünüyordu. */
+.bigFigure:has(> span) { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px 8px; }
+.bigFigure > span { margin-left:0; letter-spacing:0; line-height:1.4; }
 .rows { display:flex; flex-direction:column; }
-.row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:2px 10px; padding:5px 0; border-bottom:1px solid var(--line-soft); font-size:12px; }
+.row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:2px 10px; padding:5px 0; border-bottom:1px solid var(--line-soft); font-size:13px; }
 .row:last-child { border-bottom:0; }
 .row dt { color:var(--text-body); }
 .row dd { display:flex; align-items:baseline; gap:8px; font-weight:600; color:var(--text-strong); letter-spacing:-.02em; }
-.deviation { position:relative; grid-column:1/-1; height:5px; margin-top:3px; border-radius:3px; background:var(--surface-sunken); }
+.deviation { position:relative; grid-column:1/-1; height:5px; margin:4px 0 2px; border-radius:3px; background:var(--surface-sunken); }
 .deviation > i { position:absolute; top:-3px; left:50%; width:1px; height:11px; background:var(--text-muted); opacity:.6; }
 .deviation > span { position:absolute; top:0; bottom:0; border-radius:3px; opacity:.75; }
-.gauge { position:relative; height:8px; border-radius:4px; background:linear-gradient(90deg,var(--up-wash) 0 30%,var(--surface-sunken) 30% 70%,var(--down-wash) 70% 100%); }
-.gauge > span { position:absolute; top:-4px; width:4px; height:16px; border-radius:2px; background:var(--text-strong); transform:translateX(-2px); }
-/* Etiketler eşiğin TAM ALTINDA: kenar boşluğuyla yaklaştırılan hâli 30'u
-   %39'a, 70'i %56'ya koyuyordu (ölçüldü) — eşik çizgisiyle etiketi ayrı
-   yerlerde duruyordu. */
-.gaugeScale { position:relative; height:14px; font-size:10px; color:var(--text-muted); }
-.gaugeScale span { position:absolute; top:0; transform:translateX(-50%); }
-.gaugeScale span:first-child { left:0; transform:none; }
-.gaugeScale span:last-child { right:0; left:auto; transform:none; }
 .ratioTrack { position:relative; height:8px; border-radius:4px; background:var(--surface-sunken); }
 .ratioTrack > span { position:absolute; left:0; top:0; bottom:0; border-radius:4px; background:var(--primary); opacity:.7; }
 .ratioTrack > i { position:absolute; top:-3px; width:1px; height:14px; background:var(--text-muted); }
-.band { position:relative; height:8px; border-radius:4px; background:linear-gradient(90deg,var(--down-wash),var(--surface-sunken),var(--up-wash)); }
+.volumeScale { position:relative; height:12px; margin-top:-5px; color:var(--text-muted); font-size:11px; }
+.volumeScale > span { position:absolute; }
+.volumeScale > span:nth-child(2) { left:33.333%; transform:translateX(-50%); }
+.volumeScale > span:last-child { right:0; }
+.band { position:relative; height:8px; border-radius:4px; background:linear-gradient(90deg, var(--down-wash), var(--surface-sunken), var(--up-wash)); }
 .band > span { position:absolute; top:-4px; width:4px; height:16px; border-radius:2px; background:var(--primary); transform:translateX(-2px); }
-.indicatorNote { font-size:11px; line-height:1.55; color:var(--text-muted); }
-
-/* ---- Liste ve tablo ---- */
-.watch { display:flex; flex-direction:column; gap:8px; padding-left:18px; list-style:disc; color:var(--text-body); font-size:13px; line-height:1.6; }
-.watch li::marker { color:var(--primary); }
-.tableWrap { overflow-x:auto; }
-.table { width:100%; border-collapse:collapse; font-size:12px; }
-.table th { padding:8px 10px; border-bottom:1px solid var(--line); font-size:11px; font-weight:600; letter-spacing:.02em; text-align:left; color:var(--text-muted); white-space:nowrap; }
-.table td { padding:9px 10px; border-bottom:1px solid var(--line-soft); color:var(--text-body); letter-spacing:-.02em; white-space:nowrap; }
-.table tr:last-child td { border-bottom:0; }
-.table th:first-child, .table td:first-child { padding-left:0; }
-
-.footNote { display:flex; flex-direction:column; gap:6px; padding-top:14px; border-top:1px solid var(--line); font-size:12px; line-height:1.6; color:var(--text-muted); }
-
-@media (max-width: 1023px) {
-  .cover { grid-template-columns:minmax(0,1fr); padding:24px; gap:20px; }
-  .coverSide { padding-left:0; padding-top:18px; border-left:0; border-top:1px solid var(--line); }
-  .twoCol { grid-template-columns:minmax(0,1fr); }
-}
-
-@media (max-width: 767px) {
-  .pulseRow { grid-template-columns:64px minmax(0,1fr); padding:6px 4px; }
-  .cover { padding:20px 18px; border-radius:20px; }
-  .stanceValue { font-size:28px; }
-  .priceNow { font-size:26px; }
-  .scenarios { grid-template-columns:minmax(0,1fr); }
-  .block { padding:16px; }
-}
-
-/* Indicator audit, September 12: RSI used only the first 110px of a
-   262px row. Its semicircle and threshold key now explain the existing
-   0–100 reading; MACD uses three signed bars instead of a bare number list.
-   These are snapshot comparisons, never fabricated price histories. */
-.indicator { background:linear-gradient(145deg,var(--primary-tint),transparent 48%),var(--premium-surface); padding:16px; gap:12px; }
-.indicatorHead { align-items:flex-start; flex-wrap:wrap; gap:6px 12px; }
-.indicatorTitle { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--primary-ink); }
-.indicatorTitle svg { flex:none; opacity:.8; }
-.indicatorTag { margin-left:auto; text-align:right; }
-.indicator .row { padding-block:4px; }
-.indicator .deviation { margin-block:4px 2px; }
-.indicatorNote { text-wrap:pretty; }
+.indicatorNote { font-size:12px; line-height:1.55; color:var(--text-muted); text-wrap:pretty; }
+/* RSI yarım daire: 0-100'lük sınırlı bir okuma, uydurma bir zaman serisi
+   değil. Eşikler ve işaret aynı yayın üstünde. */
 .rsiReading { display:flex; flex:1; align-items:center; gap:14px; }
 .rsiDial { position:relative; flex:1; min-width:0; max-width:210px; }
 .rsiDial svg { width:100%; overflow:visible; }
 .rsiDial path { fill:none; stroke-width:7; }
 .dialBase { stroke:var(--line); }
-.dialLow { stroke:color-mix(in srgb,var(--up) 55%,var(--premium-surface)); }
-.dialHigh { stroke:color-mix(in srgb,var(--down) 55%,var(--premium-surface)); }
+.dialLow { stroke:color-mix(in srgb, var(--up) 55%, var(--premium-surface)); }
+.dialHigh { stroke:color-mix(in srgb, var(--down) 55%, var(--premium-surface)); }
 .dialTick { stroke:var(--text-muted); stroke-width:1; opacity:.65; }
 .dialMarker { fill:var(--primary); stroke:var(--premium-surface); stroke-width:3; }
 .rsiDial text { fill:var(--text-muted); font-size:10px; }
 .rsiValue { position:absolute; bottom:8%; left:0; right:0; text-align:center; color:var(--text-strong); font-size:30px; font-weight:600; line-height:1; letter-spacing:-.045em; }
-.rsiValue span { display:block; margin-top:5px; font-size:10px; color:var(--text-muted); letter-spacing:0; }
-.rsiZones { display:grid; flex:none; gap:12px; font-size:11px; color:var(--text-body); }
+.rsiValue span { display:block; margin-top:5px; font-size:11px; color:var(--text-muted); letter-spacing:0; }
+.rsiZones { display:grid; flex:none; gap:12px; font-size:12px; color:var(--text-body); }
 .rsiZones > span { display:grid; grid-template-columns:6px auto; align-items:center; column-gap:6px; row-gap:2px; }
 .rsiZones i { width:6px; height:6px; border-radius:50%; background:var(--text-muted); }
 .rsiZones i[data-zone="low"] { background:var(--up); }
 .rsiZones i[data-zone="high"] { background:var(--down); }
-.rsiZones b { grid-column:2; color:var(--text-muted); font-size:10px; font-weight:500; }
-.volumeScale { position:relative; height:12px; margin-top:-5px; color:var(--text-muted); font-size:10px; }
-.volumeScale > span { position:absolute; }
-.volumeScale > span:nth-child(2) { left:33.333%; transform:translateX(-50%); }
-.volumeScale > span:last-child { right:0; }
-/* Compact cover: stance belongs beside identity, not as a second 34px
-   headline. MU cover: 254.5→246px at 1440, 495.3→472.1px at 390.
-   The current quote and stored plan retain separate labels. */
-.cover { padding:24px; gap:24px; }
-.coverMain { gap:12px; }
-.coverHeadline { font-size:14px; line-height:1.65; }
-.stanceValue { font-size:18px; }
-.coverSide { padding-left:24px; gap:14px; }
-.scenario { border-radius:12px; padding:12px 14px; border-left:2px solid var(--line); }
-.scenario[data-tone="up"] { border-left-color:var(--up); background:linear-gradient(120deg,var(--up-wash),transparent); }
-.scenario[data-tone="down"] { border-left-color:var(--down); background:linear-gradient(120deg,var(--down-wash),transparent); }
-@media(max-width:1023px) { .coverSide { padding-left:0; } }
-@media(max-width:767px) { .cover { padding:18px; gap:16px; } .rsiReading { min-height:144px; } .rsiValue { font-size:27px; } }
-@media(prefers-reduced-motion:reduce) { .card,.cardRead svg { transition:none; } .card:hover,.card:hover .cardRead svg { transform:none; } }
+.rsiZones b { grid-column:2; color:var(--text-muted); font-size:11px; font-weight:500; }
 
-/* Quote context shares one line: a separate plan pill previously added
-   an entire 24px row to every card. Labels now precede the actual reading. */
-.cardQuote { display:grid; gap:5px; }
-.cardQuoteLabel { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:3px 8px; color:var(--text-muted); font-size:11px; }
-.cardQuote .plan { padding:0; background:none; font-size:10px; }
-.cardPrice strong { font-size:23px; }
-.card { gap:12px; }
-/* Labels and numbers have their own columns, including long four-digit
-   targets. Values may wrap between prices, never inside a price. */
-.legend { display:grid; gap:5px; padding-top:2px; }
-.legend > div { display:grid; grid-template-columns:88px minmax(0,1fr); align-items:baseline; gap:8px; }
-.legend dt { display:flex; align-items:center; gap:5px; font-size:10px; }
-.legend dd { color:var(--text-body); font-weight:600; font-size:11px; letter-spacing:-.02em; text-align:right; }
-.legend dd span { display:inline; white-space:nowrap; }
-.legendDot { flex:none; width:6px; height:6px; }
-.coverSide .legend { gap:7px; }
-.coverSide .legend dt,.coverSide .legend dd { font-size:12px; }
-.coverSide .legend > div { grid-template-columns:110px minmax(0,1fr); }
-.priceContext { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; }
-@media(min-width:1024px) {
- .coverSide .legend { grid-template-columns:.8fr 1.3fr 1.5fr; gap:10px; }
- .coverSide .legend > div { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
- .coverSide .legend dd { text-align:left; }
+/* ---- Liste ve tablo ---- */
+.watch { display:flex; flex-direction:column; gap:9px; padding-left:18px; list-style:disc; color:var(--text-body); font-size:14px; line-height:1.6; }
+.watch li::marker { color:var(--primary); }
+.tableWrap { overflow-x:auto; }
+.table { width:100%; border-collapse:collapse; font-size:13px; }
+.table th { padding:8px 12px; border-bottom:1px solid var(--line); font-size:11px; font-weight:700; letter-spacing:.03em; text-align:left; color:var(--text-muted); white-space:nowrap; }
+.table td { padding:10px 12px; border-bottom:1px solid var(--line-soft); color:var(--text-body); letter-spacing:-.01em; white-space:nowrap; }
+.table tr:last-child td { border-bottom:0; }
+.table th:first-child, .table td:first-child { padding-left:0; }
+
+.footNote { display:flex; flex-direction:column; gap:6px; padding-top:14px; border-top:1px solid var(--line); font-size:12px; line-height:1.6; color:var(--text-muted); }
+
+/* ---- Kırılımlar ---- */
+@media (max-width: 1023px) {
+  .cover { grid-template-columns:minmax(0,1fr); padding:24px; gap:20px; }
+  .cover::before { inset:0 0 55% 40%; }
+  .coverSide { padding-left:0; padding-top:20px; border-left:0; border-top:1px solid var(--line); }
+  .twoCol { grid-template-columns:minmax(0,1fr); }
+  .signals { grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px 16px; }
 }
-/* Numeric tracking must not leak into the ATR's small explanatory label:
-   at 320px it made "Fiyata Oranı" look like one joined word. */
-.bigFigure:has(> span) { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px 8px; }
-.bigFigure > span { margin-left:0; letter-spacing:0; line-height:1.4; }
+
+@media (max-width: 767px) {
+  .pulseRow { grid-template-columns:68px minmax(0,1fr); padding:6px 4px; }
+  .card { padding:18px 16px 14px; border-radius:20px; }
+  .cardPrice strong { font-size:25px; }
+  .cover { padding:20px 18px; border-radius:20px; gap:18px; }
+  .coverHeadline { font-size:16px; }
+  .priceNow { font-size:34px; }
+  .planCells { padding:12px; }
+  .scenarios { grid-template-columns:minmax(0,1fr); }
+  .block { padding:18px 16px; }
+  .prose { font-size:14px; line-height:1.7; }
+  .rsiReading { min-height:144px; }
+  .rsiValue { font-size:27px; }
+  .mapRail { width:44px; }
+  .mapLine { left:21px; }
+  .mapBand { left:11px; width:22px; }
+  .mapRungs { left:44px; }
+  .mapRung { padding:6px 10px 6px 12px; column-gap:8px; }
+  .mapRung::before { left:-22px; width:22px; }
+  .mapMark { left:-29px; }
+  .mapLink { left:-23px; }
+  .mapDistance { min-width:52px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .cardRead svg, .pulseLogo, .pulseRow { transition:none; }
+  .card:hover, .card:hover .cardRead svg, .pulseLogo:hover { transform:none; }
+}

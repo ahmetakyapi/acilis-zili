@@ -6,17 +6,19 @@ import { MotionExperience, Reveal, ScrollProgress, SectionNav } from "@/componen
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
-import { LevelLadder } from "@/components/technical/LevelLadder";
 import { LevelTrack } from "@/components/technical/LevelTrack";
-import { changeToneClass, planPositionLabel } from "@/components/technical/TechnicalCard";
+import { PlanStrip } from "@/components/technical/PlanStrip";
+import { PriceMap } from "@/components/technical/PriceMap";
+import { SignalStrip } from "@/components/technical/SignalStrip";
+import {
+  changeToneClass,
+  planPositionLabel,
+  planReadingText,
+  planReadingTone,
+} from "@/components/technical/TechnicalCard";
 import styles from "@/components/technical/Technical.module.css";
 import { EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
-import {
-  verdictLabel,
-  verdictOf,
-  verdictPillClass,
-  verdictTextClass,
-} from "@/lib/analysis";
+import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
 import { getStatus, getSymbolNames } from "@/lib/data";
 import { getDictionary, getI18n } from "@/lib/i18n";
 import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
@@ -27,6 +29,7 @@ import {
   editionTime,
   isTechnicalSymbol,
   planPosition,
+  planReading,
   slotLabel,
   stanceChangeLabel,
   technicalHref,
@@ -79,10 +82,11 @@ export async function generateMetadata(
 /**
  * Tek hissenin teknik analizi.
  *
- * Sıra okuyucunun sorusunun sırası: ne diyor ve neden (kapak), nereden
- * alınır nerede satılır (merdiven + değerlendirme), hangi göstergeye
- * dayanıyor (paneller), ne olursa ne olur (senaryolar), neye dikkat
- * (hacim ve takvim), daha önce ne demişti (geçmiş).
+ * Sıra okuyucunun sorusunun sırası: ne diyor ve neden (kapak: görüş, başlık,
+ * planın okuması), nereden alınır nerede satılır nerede vazgeçilir (kapağın
+ * sağı: plan şeridi ve çizgi), göstergeler tek kelimeyle ne diyor (özet
+ * şeridi), seviyeler fiyata göre nerede (harita), gerekçe ve senaryolar,
+ * göstergelerin ayrıntısı, neye dikkat, daha önce ne demişti.
  *
  * Liste dışı sembol 404: `/teknik/aapl` bir analiz sayfası değil, "bu hisse
  * takip edilmiyor" demek. Listede olup henüz analizi olmayan sembol ise
@@ -135,7 +139,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   const quote = quotes.ok ? (quotes.data[symbol] ?? null) : null;
   const price = quote?.price ?? row.snapshot.price;
   const changePct = quote ? quote.changePct : row.snapshot.changePct;
-  /* ETİKET TEK YERDE: kapak ve merdiven aynı adı kullanıyor. Kotasyon yoksa
+  /* ETİKET TEK YERDE: kapak ve harita aynı adı kullanıyor. Kotasyon yoksa
      fiyat fotoğraftan geliyor ve adı "Analiz Anında"; seans dışında "Son
      Fiyat"; yalnızca açık seansta taze kotasyon "Şu An". */
   const priceLabel = !quote
@@ -144,8 +148,9 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       ? t.technical.now
       : t.market.lastPrice;
   const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
+  const reading = planReading(verdict, price, row);
   const sectionItems = [
-    { id: "technical-levels", label: t.technical.levels },
+    { id: "technical-levels", label: t.technical.priceMap },
     { id: "technical-reading", label: t.technical.summary },
     { id: "technical-indicators", label: t.technical.indicators },
     { id: "technical-watch", label: t.technical.watch },
@@ -173,7 +178,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       {breadcrumb}
 
       {/* ---- Kapak ---- */}
-      <header className={styles.cover}>
+      <header className={styles.cover} data-verdict={verdict}>
         <div className={styles.coverMain} data-motion-intro>
           <div className={styles.coverIdentity}>
             <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="lg" />
@@ -185,30 +190,32 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
               </p>
             </div>
           </div>
-          <div className={styles.stanceBlock}>
+          <div className={styles.stanceRow}>
             <span className={styles.stanceLabel}>{t.technical.stanceLabel}</span>
-            <span className={cn(styles.stanceValue, verdictTextClass(verdict))}>
-              {verdictLabel(verdict, t)}
-            </span>
+            <span className={cn(styles.stancePill, verdictPillClass(verdict))}>{verdictLabel(verdict, t)}</span>
             {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
           </div>
           <p className={styles.coverHeadline} lang={copyLang}>
             {copy.headline}
           </p>
           {locale === "en" && !hasEnglish && (
-            <p className="text-tiny text-muted">{t.technical.langNote}</p>
+            <p className="text-small text-muted">{t.technical.langNote}</p>
           )}
+          <div className={styles.reading} data-tone={planReadingTone(reading)}>
+            <span className={styles.readingLabel}>{t.technical.readingLabel}</span>
+            <p>{planReadingText(reading, locale, t)}</p>
+          </div>
         </div>
 
         <div className={styles.coverSide}>
-          <div className="flex flex-col gap-1">
+          <div className={styles.coverQuote}>
             <span className={styles.stanceLabel}>{priceLabel}</span>
             <div className={styles.priceRow}>
               <span className={cn(styles.priceNow, "numeral")}>
                 {formatPrice(price, locale, { currency: true })}
               </span>
               {changePct !== null && (
-                <span className={cn("numeral text-read font-semibold", directionText(directionOf(changePct)))}>
+                <span className={cn("numeral text-lead font-semibold", directionText(directionOf(changePct)))}>
                   {formatPercent(changePct, locale)}
                 </span>
               )}
@@ -228,20 +235,25 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
               )}
             </div>
           </div>
-          <LevelTrack price={price} {...levelProps} verdict={verdict} size="lg" locale={locale} t={t} />
+          <PlanStrip verdict={verdict} {...levelProps} size="lg" locale={locale} t={t} />
+          <LevelTrack price={price} {...levelProps} verdict={verdict} size="lg" />
+        </div>
+
+        <div className={styles.coverSignals}>
+          <SignalStrip snapshot={row.snapshot} price={price} locale={locale} t={t} />
         </div>
       </header>
 
       <SectionNav className={styles.sectionNav} label={t.technical.sectionsLabel} items={sectionItems} />
 
-      {/* ---- Seviyeler ve değerlendirme ---- */}
+      {/* ---- Fiyat haritası ve değerlendirme ---- */}
       <div className={styles.twoCol}>
         <section id="technical-levels" className={styles.block}>
           <div className={styles.blockHead}>
-            <h2 className={styles.sectionTitle}>{t.technical.levels}</h2>
-            <span className="text-tiny text-muted">{t.technical.levelsNote}</span>
+            <h2 className={styles.sectionTitle}>{t.technical.priceMap}</h2>
+            <span className={styles.blockNote}>{t.technical.levelsNote}</span>
           </div>
-          <LevelLadder
+          <PriceMap
             price={price}
             {...levelProps}
             copy={copy}
@@ -251,6 +263,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             locale={locale}
             t={t}
           />
+          <p className={styles.footHint}>{t.technical.priceMapNote}</p>
         </section>
 
         <div id="technical-reading" className="flex min-w-0 flex-col gap-4">
@@ -278,8 +291,15 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
 
       {/* ---- Göstergeler ---- */}
       <Reveal>
-        <section id="technical-indicators" className="flex flex-col gap-3">
-          <h2 className={styles.sectionTitle}>{t.technical.indicators}</h2>
+        <section id="technical-indicators" className="flex flex-col gap-4">
+          <div className={styles.blockHead}>
+            <h2 className={styles.sectionTitle}>{t.technical.indicators}</h2>
+            {row.snapshot.lastSession && (
+              <span className={styles.blockNote}>
+                {t.technical.snapshotNote.replace("{date}", formatEtDateCompact(row.snapshot.lastSession, locale))}
+              </span>
+            )}
+          </div>
           <IndicatorPanels snapshot={row.snapshot} price={price} locale={locale} t={t} />
         </section>
       </Reveal>
@@ -327,19 +347,19 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                       <td>{formatEtDateCompact(entry.sessionDate, locale)}</td>
                       <td>{slotLabel(entry.slot, t)}</td>
                       <td>
-                        <span className={cn("inline-flex rounded-full px-2 py-[1px] text-nano font-bold", verdictPillClass(stance))}>
+                        <span className={cn("inline-flex rounded-full px-2.5 py-[2px] text-tiny font-bold", verdictPillClass(stance))}>
                           {verdictLabel(stance, t)}
                         </span>
-                        {turned && <span className={cn("ml-2 text-nano font-bold", changeToneClass(stance))}>{turned}</span>}
+                        {turned && <span className={cn("ml-2 text-tiny font-bold", changeToneClass(stance))}>{turned}</span>}
                       </td>
-                      <td>
+                      <td className="numeral">
                         {entry.entryLow !== null && entry.entryHigh !== null
                           ? entry.entryLow === entry.entryHigh
                             ? formatPrice(entry.entryLow, locale, { currency: true })
                             : `${formatPrice(entry.entryLow, locale, { currency: true })} – ${formatPrice(entry.entryHigh, locale, { currency: true })}`
                           : "—"}
                       </td>
-                      <td>{formatPrice(entry.stop, locale, { currency: true })}</td>
+                      <td className="numeral">{formatPrice(entry.stop, locale, { currency: true })}</td>
                     </tr>
                   );
                 })}
@@ -350,14 +370,6 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       )}
 
       <div className={styles.footNote}>
-        {row.snapshot.lastSession && (
-          <p>
-            {t.technical.snapshotNote.replace(
-              "{date}",
-              formatEtDateCompact(row.snapshot.lastSession, locale),
-            )}
-          </p>
-        )}
         <p>{t.technical.method}</p>
         <p>{t.technical.disclaimer}</p>
         <p className="flex flex-wrap gap-x-4 gap-y-1">
