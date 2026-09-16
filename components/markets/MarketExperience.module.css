@@ -98,7 +98,14 @@
  .yieldsGrid > div > p:last-child:not(:first-child) { font-size:10px; }
  .curve { padding:8px 12px; }
  .fear { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:9px 16px; padding:12px 14px; }
- .fear > div:first-child { align-content:center; align-items:flex-start; flex-direction:column; gap:4px; }
+ /* `align-content:center` DEĞİL `align-self:center`. Amaç başlık bloğunu
+    yanındaki daha uzun sayı bloğuna göre DİKEYDE ortalamaktı; ama bu blok
+    sarmalı bir KOLON flex ve orada `align-content` çapraz ekseni, yani
+    YATAYI yönetiyor. Tek satırlık blok bu yüzden yatayda ortalanıyordu:
+    390 pikselde içerik kenarı 32, ölçek çubuğu 33'te başlarken başlık
+    70'te duruyordu — 38 piksellik sebepsiz girinti, kartın başlığı ortada
+    asılı görünüyordu (ölçüldü). Dikey ortalama ızgara öğesinin kendi işi. */
+ .fear > div:first-child { align-self:center; align-items:flex-start; flex-direction:column; gap:4px; }
  .fear > div:nth-child(2) { justify-content:flex-end; gap:4px 8px; }
  .fear > div:nth-child(2) > span { font-size:10px; }
  .fear > div:nth-child(3),.fear > details { grid-column:1/-1; }
