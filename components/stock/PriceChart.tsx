@@ -105,7 +105,7 @@ type PriceChartProps = {
 };
 
 type ChartResult =
-  | { key: string; phase: "error"; message: string }
+  | { key: string; phase: "error"; message: string; hint?: string }
   | {
       key: string;
       phase: "ready";
@@ -232,7 +232,7 @@ export function PriceChart({
       .then((data) => {
         if (cancelled) return;
         if (!data.ok) {
-          setResult({ key, phase: "error", message: labels.failed });
+          setResult({ key, phase: "error", message: labels.failed, hint: labels.failedHint });
           return;
         }
         if (data.bars.length === 0) {
@@ -247,13 +247,13 @@ export function PriceChart({
         });
       })
       .catch(() => {
-        if (!cancelled) setResult({ key, phase: "error", message: labels.failed });
+        if (!cancelled) setResult({ key, phase: "error", message: labels.failed, hint: labels.failedHint });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [symbol, range, result, labels.failed, labels.noData]);
+  }, [symbol, range, result, labels.failed, labels.failedHint, labels.noData]);
 
   const intraday = range === "1D" || range === "1W";
 
@@ -806,8 +806,22 @@ export function PriceChart({
           <LoadingSurface label={labels.loading} />
         )}
         {state.phase === "error" && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          /* BOŞ GRAFİK DE BİR CÜMLE KURAR. Tek satır "Veri alınamadı"
+             yazıyordu ve grafik yüksekliği kadar boşluğun ortasında tek
+             başına duruyordu; oysa hemen altındaki profil kartı aynı
+             durumda ne olduğunu da söylüyor ("Sağlayıcıya ulaşılamıyor…").
+             Aynı sözlük anahtarı burada da kullanılıyor, yani iki kart
+             aynı cümleyi kuruyor. "Bu aralık için grafik verisi yok"
+             dalı ipucu ALMIYOR: o zaten tam bir cümle ve sebebi başka —
+             sağlayıcı ulaşılabilir, o aralıkta bar yok.
+             `role="status"`: hata sessizce geliyordu, klavyeyle gezen
+             okuyucu grafiğin neden boş olduğunu hiç öğrenmiyordu. */
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-6 text-center"
+            role="status"
+          >
             <p className="text-sm text-muted">{state.message}</p>
+            {state.hint && <p className="max-w-[42ch] text-tiny text-muted">{state.hint}</p>}
           </div>
         )}
         <div

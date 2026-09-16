@@ -38,6 +38,8 @@ export type ChartLabels = {
   periodLow: string;
   noData: string;
   failed: string;
+  /** "Veri alınamadı" başlığının altındaki açıklama satırı. */
+  failedHint: string;
   sessionHours: string;
   sessionPre: string;
   sessionRegular: string;
@@ -60,6 +62,7 @@ export function chartLabels(t: Dictionary): ChartLabels {
     periodLow: t.chart.periodLow,
     noData: t.chart.noChartData,
     failed: t.data.failed,
+    failedHint: t.data.failedHint,
     sessionHours: t.chart.sessionHours,
     sessionPre: t.chart.sessionPre,
     sessionRegular: t.chart.sessionRegular,
