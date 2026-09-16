@@ -664,8 +664,14 @@ export function ladderOf(source: LevelSource): Level[] {
 export type RiskReward = {
   /** Getiri / risk — "1 : 2,4" diye yazılır. */
   ratio: number;
+  /** Ölçümün başladığı fiyat: alım bölgesinin üst ucu. */
+  anchor: number;
+  /** Alım bölgesinin üst ucundan stopa uzaklık, para (pozitif). */
+  riskAbs: number;
   /** Alım bölgesinin üst ucundan stopa uzaklık, yüzde (pozitif). */
   riskPct: number;
+  /** Alım bölgesinin üst ucundan ilk hedefe uzaklık, para (pozitif). */
+  rewardAbs: number;
   /** Alım bölgesinin üst ucundan ilk hedefe uzaklık, yüzde (pozitif). */
   rewardPct: number;
 };
@@ -679,6 +685,14 @@ export type RiskReward = {
  * oranı olduğundan iyi gösterirdi. Rutin promptu ilk hedefi riskin en az
  * 1,5 katı uzağa koymayı istiyor (docs/claude-rutinler.md § 5); bu sayı
  * sayfada o kuralın tutup tutmadığını da gösteriyor.
+ *
+ * ÇAPA VE HAM TUTAR DA DÖNÜYOR. Bir dönem yalnızca oran ve iki yüzde
+ * veriliyordu ve ekranda şu okunuyordu: "Son Fiyat 928,88 · Risk %3,0".
+ * Okuyucunun doğal çıkarımı yüzdenin O FİYATTAN ölçüldüğüydü; oysa ölçüm
+ * bölgenin tepesinden (916,84) başlıyor ve arada on iki dolar var. Yüzde
+ * hangi sayıdan alındığı söylenmeden eksik bir ifade. `anchor` o sayıyı,
+ * `riskAbs`/`rewardAbs` ise yüzdenin arkasındaki ham mesafeyi taşıyor —
+ * "%3,0" soyut, "27,84 $" değil.
  */
 export function riskReward(
   entryHigh: number | null,
@@ -692,7 +706,10 @@ export function riskReward(
   if (risk <= 0 || reward <= 0) return null;
   return {
     ratio: reward / risk,
+    anchor: entryHigh,
+    riskAbs: risk,
     riskPct: (risk / entryHigh) * 100,
+    rewardAbs: reward,
     rewardPct: (reward / entryHigh) * 100,
   };
 }

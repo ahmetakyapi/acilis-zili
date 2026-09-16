@@ -118,7 +118,12 @@
 .plan[data-kind="above"], .plan[data-kind="below"] { background:var(--primary-tint); color:var(--primary-ink); }
 .plan[data-kind="belowStop"] { background:var(--down-wash); color:var(--down); }
 .cardQuoteLabel .plan { padding:2px 8px; font-size:11px; }
-.cardPlan { display:grid; gap:10px; }
+/* 10 → 16: risk çubuğu geldikten sonra kartta ALT ALTA İKİ YATAY ÇİZİM
+   oluşuyor — risk şeridinin oranı ve seviye çizgisinin fiyat ekseni. İkisi de
+   tam genişlikte ve aynı x'ten başlıyor; 10 pikselde tek bir bileşik çizim
+   gibi okunuyordu. Aradaki bacak satırı zaten ayırıyor, boşluk onu
+   tamamlıyor. */
+.cardPlan { display:grid; gap:16px; }
 .cardHeadline { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; color:var(--text-body); font-size:14px; line-height:1.6; text-wrap:pretty; }
 .chips { display:flex; flex-wrap:wrap; gap:6px; }
 .chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:8px; background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
@@ -144,11 +149,34 @@
 .planItem { white-space:nowrap; }
 .planSep { color:var(--text-muted); font-weight:500; }
 .planEmpty { font-weight:500; color:var(--text-muted); }
-.planRisk { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; padding:0 4px; font-size:12px; color:var(--text-muted); }
-.planRisk b { font-size:13px; font-weight:700; color:var(--text-strong); }
-.planRisk .text-up, .planRisk .text-down { font-weight:600; }
-.planStripLg .planRisk { font-size:13px; }
-.planStripLg .planRisk b { font-size:15px; }
+/* ---- Risk şeridi ----
+   Üç satır: künye (oran + çapa), ölçekli çubuk, iki bacak. Gerekçe
+   PlanStrip.tsx içinde. Bacak adları ton rengini, ham tutar `--text-strong`u
+   taşıyor: renk bacağı çubuğa bağlar, ağırlık okumayı sayıya çeker. */
+.risk { display:grid; gap:6px; padding:0 4px; font-size:12px; color:var(--text-muted); }
+.riskHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; }
+.riskHead b { font-size:14px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
+/* Çapa künyesi sağa yapışır; sığmadığında alt satıra düşer (360'ta düşüyor).
+   TABULAR-NUMS DENENDİ VE GERİ ALINDI: bu ailede virgül de tabular genişliğe
+   çekiliyor ve "916,84" ekranda "916 , 84" diye okunuyordu. Künye bir sütunda
+   hizalanmıyor zaten — sabit genişliğe ihtiyacı yok. */
+.riskAnchor { margin-left:auto; letter-spacing:-.01em; }
+.riskBar { display:flex; gap:2px; height:5px; }
+.riskBar i { flex:0 1 0; min-width:6px; border-radius:2px; }
+.riskBar i[data-leg="risk"] { background:var(--down); }
+.riskBar i[data-leg="reward"] { background:var(--up); }
+.riskLegs { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 14px; }
+.riskLegs > span { display:flex; align-items:baseline; gap:4px; white-space:nowrap; }
+/* Getiri bacağı sağ uca yapışıyor — çubuğun sağ ucu da o renkte. */
+.riskLegs > span[data-leg="reward"] { margin-left:auto; }
+.riskName { font-weight:700; letter-spacing:.02em; }
+.riskLegs [data-leg="risk"] .riskName { color:var(--down); }
+.riskLegs [data-leg="reward"] .riskName { color:var(--up); }
+.riskLegs b { font-size:13px; font-weight:700; color:var(--text-strong); }
+.planStripLg .risk { gap:7px; font-size:13px; }
+.planStripLg .riskHead b { font-size:16px; }
+.planStripLg .riskBar { height:6px; }
+.planStripLg .riskLegs b { font-size:14px; }
 @media (min-width: 640px) {
   .planStripLg .planCells { display:grid; grid-template-columns:repeat(var(--cells, 3), minmax(0,1fr)); gap:12px 16px; padding:16px 18px; border-radius:16px; }
   .planStripLg .planCell { flex-direction:column; align-items:flex-start; gap:5px; }

@@ -721,8 +721,11 @@ const tr = {
     riskReward: "Risk / Getiri",
     /* "1 : 2,4" — bir birim riske karşı kaç birim getiri. */
     riskRewardValue: "1 : {n}",
-    riskPct: "Risk {n}",
-    rewardPct: "Getiri {n}",
+    /* Bacakların adı; yanına ham tutar ve yüzde yazılıyor. */
+    riskLeg: "Risk",
+    rewardLeg: "Getiri",
+    /* Yüzdenin çapası — hangi fiyattan ölçüldüğü söylenmeden eksik. */
+    riskAnchor: "Bölgenin Tepesinden · {n}",
     readingLabel: "Planın Okuması",
     /* Cümleler: görüş ve fiyatın plana göre yeri birleşince altı durum. */
     readingInZone: "Fiyat alım bölgesinin içinde; plan alımı burada, vazgeçme noktasını {stop} altında görüyor.",

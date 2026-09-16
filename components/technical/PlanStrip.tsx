@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatRange, riskReward } from "@/lib/technical";
@@ -58,14 +59,26 @@ export function PlanStrip({
      yazılıyordu ve satır ondan ÖNCE kırılabiliyordu: masaüstünde üç hedef
      sütuna sığmayınca "941,65 · 955,70" üstte, "· 989,96 $" altta kalıyordu —
      baştaki nokta satırı kırık gösteriyor. Ayraç artık sayıyla aynı kutuda
-     ve kutu `nowrap`: kırılma yalnızca öğelerin ARASINDA olabiliyor, dolayısıyla
-     nokta satır sonunda kalıyor. Bir sayı ile onu izleyen nokta hiç ayrılmıyor. */
+     ve kutu `nowrap`: bir sayı ile onu izleyen nokta hiç ayrılmıyor.
+
+     KIRILMA NOKTASI AYRI BİR BOŞLUK OLARAK YAZILIYOR. İlk hâlde boşluk da
+     `nowrap` kutunun İÇİNDEYDİ (" · ") ve kutular arasında JSX'te hiç boşluk
+     yok — yani satırın kırılabileceği tek bir yer kalmamıştı. Kart tek
+     sütunlu olduğu için orada görünmedi; detay kapağında hücreler üç sütunlu
+     ızgaraya girince "Nerede Satılır" sütunu (üç hedef, 380 piksel) 300
+     piksellik sütundan taşıp "Nerede Vazgeçilir"in üstüne biniyordu —
+     "989,96 $" ile "889,00 $" üst üste basılıyordu (1440'ta ölçüldü).
+     Boşluk artık kutuların ARASINDA duran ayrı bir metin düğümü: kırılma
+     yeri var, nokta yine önceki sayıya yapışık. */
   const list = (values: readonly number[]) =>
     values.length === 0 ? null : values.map((value, index) => (
-      <span key={value} className={styles.planItem}>
-        {index === values.length - 1 ? money(value) : formatPrice(value, locale)}
-        {index < values.length - 1 && <span className={styles.planSep} aria-hidden> · </span>}
-      </span>
+      <Fragment key={value}>
+        <span className={styles.planItem}>
+          {index === values.length - 1 ? money(value) : formatPrice(value, locale)}
+          {index < values.length - 1 && <span className={styles.planSep} aria-hidden> ·</span>}
+        </span>
+        {index < values.length - 1 && " "}
+      </Fragment>
     ));
   const hasEntry = entryLow !== null && entryHigh !== null;
 
@@ -107,12 +120,46 @@ export function PlanStrip({
         ))}
       </dl>
       {rr && (
-        <p className={styles.planRisk}>
-          <span>{t.technical.riskReward}</span>
-          <b className="numeral">{t.technical.riskRewardValue.replace("{n}", formatPrice(rr.ratio, locale, { digits: 1 }))}</b>
-          <span className="numeral text-down">{t.technical.riskPct.replace("{n}", formatPercentPlain(rr.riskPct, locale, 1))}</span>
-          <span className="numeral text-up">{t.technical.rewardPct.replace("{n}", formatPercentPlain(rr.rewardPct, locale, 1))}</span>
-        </p>
+        /* RİSK ŞERİDİ: ORAN, ÇAPA, İKİ BACAK VE ÖLÇEKLİ ÇUBUK.
+           Şerit bir dönem tek satırdı: "Risk / Getiri · 1 : 0,3 · Risk %3,0 ·
+           Getiri %1,0". Üç şey eksikti. (1) ÇAPA: yüzdeler bölgenin
+           tepesinden ölçülüyor ama ekranda onun hemen üstünde "Son Fiyat
+           928,88 $" duruyor ve okuyucu yüzdeyi ondan sanıyor — aradaki fark
+           MU'da on iki dolar. Çapa artık adıyla yazılı. (2) HAM TUTAR: "%3,0"
+           soyut, "27,84 $" değil; hisse fiyatını bilmeyen okuyucu yüzdeyi
+           paraya çeviremiyor. İkisi yan yana. (3) ÖLÇEK: oran bir sayı olarak
+           "1 : 0,3" okunmuyordu — iki bacağın GENİŞLİĞİ okunuyor. Çubuk
+           tutarlarla orantılı (`flex-grow`), yani riskin getiriden üç kat
+           geniş durduğu bir kurulum tek bakışta belli oluyor. Çubuk yalnızca
+           görsel; sayıların tamamı altındaki satırda. */
+        <div className={styles.risk}>
+          <p className={styles.riskHead}>
+            <span>{t.technical.riskReward}</span>
+            <b className="numeral">{t.technical.riskRewardValue.replace("{n}", formatPrice(rr.ratio, locale, { digits: 1 }))}</b>
+            <span className={styles.riskAnchor}>{t.technical.riskAnchor.replace("{n}", money(rr.anchor))}</span>
+          </p>
+          {/* Bacak genişlikleri tutarların kendisi: flex-grow oranı çiziyor,
+              yüzde hesabı yok. `flex-basis:0` + `min-width` CSS'te — uçta
+              kalan bacak (1 : 8 gibi) tamamen kaybolmasın. */}
+          <span aria-hidden className={styles.riskBar}>
+            <i data-leg="risk" style={{ flexGrow: rr.riskAbs }} />
+            <i data-leg="reward" style={{ flexGrow: rr.rewardAbs }} />
+          </span>
+          <p className={styles.riskLegs}>
+            <span data-leg="risk">
+              <span className={styles.riskName}>{t.technical.riskLeg}</span>
+              <b className="numeral">{money(rr.riskAbs)}</b>
+              <span className={styles.planSep} aria-hidden>·</span>
+              <span className="numeral">{formatPercentPlain(rr.riskPct, locale, 1)}</span>
+            </span>
+            <span data-leg="reward">
+              <span className={styles.riskName}>{t.technical.rewardLeg}</span>
+              <b className="numeral">{money(rr.rewardAbs)}</b>
+              <span className={styles.planSep} aria-hidden>·</span>
+              <span className="numeral">{formatPercentPlain(rr.rewardPct, locale, 1)}</span>
+            </span>
+          </p>
+        </div>
       )}
     </div>
   );
