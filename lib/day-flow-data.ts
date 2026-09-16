@@ -12,7 +12,7 @@ import { formatEventValue, formatMoneyCompact, formatPrice } from "./utils";
 import { isSpotlight } from "./spotlight";
 import { getEarningsCalendar } from "./providers/finnhub";
 import { getReleasedObservation } from "./providers/fred";
-import { earningsStatus, groupStatus, hasActual, type DayFlowSnapshot, type FlowEvent, type FlowMember } from "./day-flow";
+import { earningsStatus, eventFamily, groupStatus, hasActual, type DayFlowSnapshot, type FlowEvent, type FlowMember } from "./day-flow";
 
 /** One source for SSR and polling. GET reads providers, never mutates the DB. */
 export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayFlowSnapshot> {
@@ -36,6 +36,11 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
         .where(eq(watchlists.userId, userId))
       : Promise.resolve([]),
   ]);
+  /* Sözlükteki iki kayıt `Record` olarak okunuyor: `tr` sabit anahtarlarla
+     yazıldığı için `en` aynı anahtarları vermek zorunda (tip oradan türüyor),
+     ama arama anahtarı çalışma zamanında geldiğinden indeksleme serbest. */
+  const notes: Record<string, string> = t.dayFlow.notes;
+  const issuers: Record<string, string> = t.dayFlow.issuers;
   const watchedSet = new Set(watched.map((row) => row.symbol));
   const analysisMap = new Map<string, (typeof analyses)[number]>();
   for (const row of analyses) if (!analysisMap.has(row.symbol) || row.locale === locale) analysisMap.set(row.symbol, row);
@@ -62,7 +67,11 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
       forecast: formatEventValue(event.forecast, event.unit, locale) || undefined,
       previous: formatEventValue(fresh?.previous ?? event.previous, event.unit, locale) || undefined,
       href: withLocale("/takvim?g=day", locale),
-      source: fresh ? "FRED" : event.source === "seed" ? t.dayFlow.calendarSource : event.source === "bls-schedule" ? "BLS" : event.source,
+      note: notes[eventFamily(event.slug)],
+      /* Ham sağlayıcı anahtarı ekrana basılmaz: panelde "Kaynak:
+         federalreserve" yazıyordu. Listede olmayan kaynak olduğu gibi kalır —
+         yanlış bir ada çevirmektense ham anahtar dürüsttür. */
+      source: fresh ? "FRED" : event.source === "seed" ? t.dayFlow.calendarSource : issuers[event.source] ?? event.source,
       updatedAt: (fresh?.fetchedAt ?? event.updatedAt).toISOString(),
     };
   }));
@@ -104,9 +113,23 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
     return {
       id: `earnings-${hour}`, timeEt: window.time,
       scheduledAt: window.time ? etDateTimeToUtc(date, window.time).toISOString() : null,
-      title: members.slice(0, 3).map((member) => member.symbol).join(" · ") + (members.length > 3 ? ` +${members.length - 3}` : ""),
+      /* TEK ŞİRKETLİK SATIRDA ŞİRKETİN ADI DA YAZILIR. "FDX" tek başına
+         okuyucuya ne olduğunu söylemiyordu: sembolü bilmeyen için üç harf,
+         bilen için de satırın bilanço mu haber mi olduğu belirsiz. Ad veri
+         tabanında zaten var (`symbols.name`), bir sorgu daha açmıyor. Birden
+         çok şirket varsa adlar sığmaz; orada semboller kalır ve satırı
+         künyedeki "Bilanço" tanımlar. */
+      title: members.length === 1 && meta[members[0]!.symbol]?.name
+        ? `${members[0]!.symbol} · ${meta[members[0]!.symbol]!.name}`
+        : members.slice(0, 3).map((member) => member.symbol).join(" · ") + (members.length > 3 ? ` +${members.length - 3}` : ""),
       importance: "medium", kind: "earnings", status: groupStatus(members), approx: !!window.time,
-      detail: window.title, members,
+      /* Künye TÜRÜ önce söyler. Yalnız pencere adı ("Kapanış Sonrası")
+         yazıyordu ve satırda bilançoyu gösteren tek işaret zil simgesiydi —
+         simge tek başına "bu bir bilanço" demiyor. */
+      /* Saati belirsizse pencere adı EKLENMEZ: `windows.unknown.title` zaten
+         "Saat Belirtilmedi" ve aynı cümle satırın saat sütununda, panelin
+         künyesinde de duruyor. Üç kez yazılıyordu. */
+      detail: window.time ? `${t.dayFlow.earnings} · ${window.title}` : t.dayFlow.earnings, members,
       href: withLocale("/bilancolar", locale), source: "Finnhub",
       updatedAt: provider?.ok ? provider.fetchedAt.toISOString() : now.toISOString(),
     };

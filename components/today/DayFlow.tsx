@@ -311,7 +311,12 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
                 DURUM — o her satırda farklı. */}
             <span className={styles.cardKind}>
               <i data-kind={event.kind} aria-hidden="true">{event.kind === "earnings" ? <Bell size={13} /> : <TrendUp size={13} />}</i>
-              <span className="sr-only">{event.kind === "earnings" ? labels.earnings : labels.economic}</span>
+              {/* TÜR BİR KEZ SÖYLENİR. Künye varsa türü zaten o taşıyor
+                  (bilanço satırında "Bilanço · Kapanış Sonrası"); ikinci bir
+                  gizli etiket ekran okuyucuya aynı kelimeyi iki kez okutur.
+                  Künyesi olmayan satırda tür yalnızca simgede kalıyor, o
+                  yüzden orada gizli etiket şart. */}
+              {!event.detail && <span className="sr-only">{event.kind === "earnings" ? labels.earnings : labels.economic}</span>}
               <Status event={event} nowMs={nowMs} labels={labels} />
               {/* Sütundan düşen "Saat Belirtilmedi" künyeye burada iniyor;
                   olayın kendi künyesi varsa o öncelikli. */}
@@ -327,6 +332,11 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
       <AnimatePresence initial={false} mode="wait">
         {selected && <motion.div key={selected.id} id={detailId} role="region" aria-label={selected.title} className={styles.detail} data-kind={selected.kind} initial={reduced ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -3 }} transition={{ duration: .18 }}>
           <div className={styles.detailHeading}><div><span className={styles.detailKicker}><b className="numeral">{String(selectedIndex + 1).padStart(2, "0")}</b><span className="numeral">{timeOf(selected)} {selected.timeEt && snapshot.tags.primary}</span> · {selected.detail ?? (selected.kind === "earnings" ? labels.earnings : labels.economic)}</span><h4>{selected.title}</h4></div><Status event={selected} nowMs={nowMs} labels={labels} /></div>
+          {/* "BU DA NE?" — başlığın altındaki tek cümle. Başlık olayın ADINI
+              söylüyor ama adı bilmeyene bir şey anlatmıyor; "FOMC" ve "Nokta
+              Grafiği" okuyucunun yarısı için boş. Cümle tür başına sözlükte
+              (`dayFlow.notes`), karşılığı olmayan olayda hiç basılmıyor. */}
+          {selected.note && <p className={styles.note}>{selected.note}</p>}
           {selected.members ? <div className={styles.members}>{selected.members.map((member) => <div key={member.symbol} className={styles.member}>
             <div className={styles.memberIdentity}><LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" /><div><strong>{member.symbol}</strong><Status event={{ status: member.status, scheduledAt: selected.scheduledAt }} nowMs={nowMs} labels={labels} /></div></div>
             {(member.revenue || member.eps) && <dl className={styles.memberNumbers}>{member.revenue && <div><dt>{labels.revenue}</dt><dd className="numeral">{member.revenue}</dd></div>}{member.eps && <div><dt>{labels.eps}</dt><dd className="numeral">{member.eps}</dd></div>}</dl>}

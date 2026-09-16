@@ -158,6 +158,24 @@ const en: typeof tr = {
     closed: "Session Closed",
     updatedAnnouncement: "Today's flow has been updated.",
     sourceDelayed: "Waiting for Source Update",
+
+    notes: {
+      "fomc-rate": "The outcome of the meeting where the Fed, the US central bank, sets its policy rate. It lands eight times a year and moves borrowing costs directly, which is why markets watch nothing more closely.",
+      "fomc-sep": "Fed officials\u2019 projections for rates, growth, inflation and unemployment over the coming years. Each official\u2019s rate view is one dot on the chart \u2014 hence \u201cdot plot\u201d \u2014 and where the dots cluster hints at the Fed\u2019s direction. Published four times a year.",
+      "fomc-presser": "The Fed Chair takes questions right after the rate decision. Reasoning that never makes the written statement comes out here, so markets often react to the press conference rather than the decision.",
+      nfp: "The net difference between people hired and let go across US non-farm sectors in a month. It measures the strength of hiring and is one of the two readings the Fed weighs on rates.",
+      cpi: "The Consumer Price Index: how prices of the goods and services households buy have changed \u2014 inflation. This is the other reading the Fed weighs on rates.",
+      "core-cpi": "CPI excluding food and energy. Those two swing hard on weather and oil prices, so stripping them out leaves a cleaner read on where inflation is settling.",
+      unemployment: "The share of the labour force looking for work and unable to find it. It lands in the same report as non-farm payrolls and shows whether the jobs market is cooling.",
+      "jobless-claims": "How many people filed for unemployment benefits for the first time that week. Because it is weekly, it flags a deteriorating jobs market before the monthly readings do.",
+    },
+
+    issuers: {
+      federalreserve: "the Fed",
+      "bls-rule": "US Bureau of Labor Statistics (BLS)",
+      "bls-schedule": "US Bureau of Labor Statistics (BLS)",
+      "dol-rule": "US Department of Labor",
+    },
   },
 
   dayRail: {

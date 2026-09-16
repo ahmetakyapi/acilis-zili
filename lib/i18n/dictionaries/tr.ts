@@ -179,6 +179,34 @@ const tr = {
     closed: "Seans Kapalı",
     updatedAnnouncement: "Günün akışı güncellendi.",
     sourceDelayed: "Kaynak Güncellemesi Bekleniyor",
+
+    /* AÇIKLAMA CÜMLELERİ — "bu da ne?" sorusunun cevabı.
+       Başlıklar olayın ADINI söylüyor ama adı bilmeyene bir şey anlatmıyor:
+       "FOMC" ile "Nokta Grafiği" okuyucunun yarısına hiçbir şey ifade etmez.
+       Anahtar tarihi atılmış slug, yani cümle olay TÜRÜ başına yazılıyor ve
+       her tekrarında aynısı görünüyor. Cümleler kısa ve tanım niteliğinde:
+       ne olduğu, kimin açıkladığı ve niye izlendiği. Tahmin ya da yorum YOK —
+       "faizler düşebilir" demek yatırım tavsiyesi olurdu. */
+    notes: {
+      "fomc-rate": "ABD merkez bankası Fed'in politika faizini belirlediği toplantının sonucu. Yılda sekiz kez açıklanır ve borçlanma maliyetini doğrudan değiştirdiği için piyasanın en yakından izlediği başlıktır.",
+      "fomc-sep": "Fed üyelerinin önümüzdeki yıllar için faiz, büyüme, enflasyon ve işsizlik tahminleri. Her üyenin faiz beklentisi grafikte bir nokta olduğu için \u201cnokta grafiği\u201d deniyor: noktaların nerede toplandığı Fed'in yönü hakkında fikir verir. Yılda dört kez yayımlanır.",
+      "fomc-presser": "Faiz kararının ardından Fed Başkanı'nın soruları yanıtladığı toplantı. Kararın metninde yer almayan gerekçeler burada söylendiği için piyasa çoğu zaman karara değil bu toplantıya tepki verir.",
+      "nfp": "ABD'de bir ayda tarım dışı sektörlerde işe alınan ve işten çıkarılan kişilerin net farkı. İstihdamın gücünü gösterdiği için Fed'in faiz kararlarında baktığı iki veriden biridir.",
+      "cpi": "Tüketici Fiyat Endeksi: hanelerin aldığı mal ve hizmetlerin fiyatlarındaki değişim, yani enflasyon. Fed'in faiz kararlarında baktığı öteki veri budur.",
+      "core-cpi": "TÜFE'nin gıda ve enerji hariç hesaplanmış hâli. Bu iki kalem hava koşulu ve petrol fiyatıyla sert oynadığı için çıkarılır; kalan sayı enflasyonun kalıcı eğilimini daha iyi gösterir.",
+      "unemployment": "İş arayan ama iş bulamayanların iş gücüne oranı. Tarım dışı istihdamla aynı raporda açıklanır ve iş gücü piyasasının soğuyup soğumadığını gösterir.",
+      "jobless-claims": "O hafta ilk kez işsizlik maaşı başvurusu yapan kişi sayısı. Haftalık yayımlandığı için iş gücü piyasasındaki bozulmayı aylık verilerden önce haber verir.",
+    },
+
+    /* Kaynak adları — ham sağlayıcı anahtarı ekrana basılmaz. Panelde
+       "Kaynak: federalreserve" yazıyordu; bu bir veri tabanı değeri, okuyucuya
+       söylenecek bir ad değil. Listede olmayan kaynak olduğu gibi yazılır. */
+    issuers: {
+      federalreserve: "Fed",
+      "bls-rule": "ABD İstatistik Bürosu (BLS)",
+      "bls-schedule": "ABD İstatistik Bürosu (BLS)",
+      "dol-rule": "ABD Çalışma Bakanlığı",
+    },
   },
 
   dayRail: {

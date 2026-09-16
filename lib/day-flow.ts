@@ -26,6 +26,8 @@ export type FlowEvent = {
   source: string;
   updatedAt: string;
   members?: FlowMember[];
+  /** Olayın NE OLDUĞUNU düz Türkçeyle söyleyen tek cümle; sözlükten gelir. */
+  note?: string;
 };
 export type DayFlowSnapshot = {
   dateEt: string;
@@ -114,4 +116,16 @@ export function preserveConfirmedResults(previous: DayFlowSnapshot, next: DayFlo
     return { ...event, members, status: groupStatus(members) };
   });
   return { ...next, events, sourceDelayed: next.sourceDelayed || retained };
+}
+
+/**
+ * Olayın tür anahtarı — tarihi atılmış slug ("fomc-rate-2026-09-16" → "fomc-rate").
+ *
+ * Şema slug'ı zaten "aynı olayın tekrarlarını eşleştiren sabit anahtar" diye
+ * tanımlıyor (`lib/schema.ts`); açıklama metinleri de tekrar başına değil TÜR
+ * başına yazılıyor, yani anahtar bu. Sözlükte karşılığı olmayan tür sessizce
+ * açıklamasız kalır — uydurma bir cümle basmaktansa hiç basmamak doğru.
+ */
+export function eventFamily(slug: string): string {
+  return slug.replace(/-\d{4}-\d{2}-\d{2}$/, "");
 }

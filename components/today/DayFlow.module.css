@@ -164,6 +164,10 @@
 .results dd { margin-top:5px; color:var(--text-strong); font-size:26px; line-height:1.2; font-weight:650; letter-spacing:-.035em; overflow-wrap:anywhere; }
 .results > div:first-child dd { color:var(--primary-ink); }
 .waiting { margin-top:12px; color:var(--text-body); font-size:13px; line-height:1.65; text-wrap:pretty; }
+/* Açıklama cümlesi — CÜMLE olduğu için Title Case değil (CLAUDE.md). Soldaki
+   ince çizgi onu paneldeki sayı ve durum satırlarından ayırıyor: burası
+   olayın tanımı, o günün sonucu değil. */
+.note { margin:12px 0 0; padding-left:11px; border-left:2px solid var(--primary-faint); color:var(--text-body); font-size:13px; line-height:1.65; text-wrap:pretty; }
 .members { display:grid; }
 .member { display:grid; min-width:0; grid-template-columns:minmax(120px,1fr) minmax(0,1.2fr) auto; align-items:center; gap:10px 16px; padding:13px 0; border-top:1px solid var(--line); }
 .memberIdentity { display:flex; align-items:center; gap:10px; }
