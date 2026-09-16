@@ -310,7 +310,22 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
                 söylüyor, lejant simgeyi adlandırıyor; okunacak bilgi
                 DURUM — o her satırda farklı. */}
             <span className={styles.cardKind}>
-              <i data-kind={event.kind} aria-hidden="true">{event.kind === "earnings" ? <Bell size={13} /> : <TrendUp size={13} />}</i>
+              {/* BİLANÇO SATIRINDA SİMGE DEĞİL ŞİRKETİN LOGOSU.
+                  Zil her bilanço satırında aynı ve o satırların tamamı zaten
+                  künyesinde "Bilanço" yazıyor — yani simge hiçbir şey ayırt
+                  etmiyordu. Logo ayırt ediyor: listede gözü çeken şey şirket.
+                  Logolar zaten `event.members` içinde istemciye inmiş
+                  durumda (`lib/day-flow-data.ts`), yeni bir sorgu yok.
+                  Üçten fazlası sığmıyor; başlık kaçının olduğunu söylüyor. */}
+              {event.kind === "earnings" && event.members?.length ? (
+                <span className={styles.cardLogos} aria-hidden="true">
+                  {event.members.slice(0, 3).map((member) => (
+                    <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="xs" className={styles.cardLogo} />
+                  ))}
+                </span>
+              ) : (
+                <i data-kind={event.kind} aria-hidden="true">{event.kind === "earnings" ? <Bell size={13} /> : <TrendUp size={13} />}</i>
+              )}
               {/* TÜR BİR KEZ SÖYLENİR. Künye varsa türü zaten o taşıyor
                   (bilanço satırında "Bilanço · Kapanış Sonrası"); ikinci bir
                   gizli etiket ekran okuyucuya aynı kelimeyi iki kez okutur.

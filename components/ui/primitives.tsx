@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { logoSrc } from "@/lib/logos";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { TabUnderline } from "./TabUnderline";
 import { cn, directionOf, directionWash, formatPercent } from "@/lib/utils";
@@ -495,8 +496,17 @@ export function LogoTile({
   className?: string;
 }) {
   const step = LOGO_TILE_SIZE[size];
+  /* LOGO DEPODAYSA VERİTABANI SATIRINA BAĞLI DEĞİL.
+     `logoUrl` çağrı yerlerine `symbols.logo_url`dan geliyor ve o satır
+     yoksa null oluyordu: sembol tabloda değilse, günlük senkron onu henüz
+     eklemediyse ya da sorgu düştüyse ekranda iki harf duruyordu — oysa
+     `public/logos/MU.webp` deponun içinde, o anda servis edilebilir
+     durumda. `logoSrc` zaten "önce depodan" diyor; eksik olan, çağrı
+     yerinin bu kararı yalnızca bir veri tabanı satırı geldiğinde
+     sorabilmesiydi. Artık son söz burada: harf yerine dosya. */
+  const source = logoUrl ?? logoSrc(symbol, null);
 
-  if (!logoUrl) {
+  if (!source) {
     return (
       <span
         aria-hidden
@@ -523,7 +533,7 @@ export function LogoTile({
       )}
     >
       <Image
-        src={logoUrl}
+        src={source}
         alt=""
         width={step.px}
         height={step.px}

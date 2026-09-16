@@ -1555,9 +1555,17 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
      dibini ölçerek karar veriyor (`FillColumn`). JavaScript kapalıysa beş
      satır kalıyor ve bu da makul bir liste. */
   const shown = userSymbols.slice(0, WATCHLIST_MAX);
-  const [result, bars] = await Promise.all([
+  /* LOGO: favori satırı sayfadaki tek çıplak sembol sütunuydu. Aynı sayfada
+     yükselenler, günün bilançoları ve son analizler hep logosuyla duruyor;
+     okuyucunun EN ÇOK taradığı liste, yani kendi favorileri, iki harflik
+     yedeğe düşüyordu. `/favoriler` sayfası bu düzeltmeyi zaten yapmış
+     (orada gerekçesi yazılı); ana sayfadaki özet atlanmış.
+     Sorgu ücretsiz sayılır: `getSymbolNames` istek içinde önbellekli ve
+     anahtarı sıralı sembol dizesi, aynı sayfada beş kez daha çağrılıyor. */
+  const [result, bars, names] = await Promise.all([
     getQuotes(shown, status),
     getChartBarsMulti(shown, "1D", status),
+    getSymbolNames(shown),
   ]);
 
   return (
@@ -1593,10 +1601,14 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
                     href={`/hisse/${symbol}`}
                     className="flex items-center gap-3 py-2.5 transition-colors hover:opacity-80"
                   >
+                    <LogoTile symbol={symbol} logoUrl={names[symbol]?.logoUrl} size="sm" />
                     <span className="min-w-0 flex-1">
                       <span className="block text-base font-bold text-strong">
                         {symbol}
                       </span>
+                      {names[symbol]?.name && (
+                        <span className="block truncate text-tiny text-muted">{names[symbol]!.name}</span>
+                      )}
                     </span>
                     {points.length > 1 && (
                       <Sparkline

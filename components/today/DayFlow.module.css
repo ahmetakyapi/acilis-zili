@@ -96,6 +96,14 @@
 .eventHeading button:hover:not(:disabled) { border-color:var(--primary-faint); background:var(--primary-tint); }
 .eventHeading button:disabled { opacity:.3; cursor:default; }
 
+/* Logo yığını — bilanço satırının tür işareti. Üst üste binen daireler ve
+   aralarındaki çizgi, GÖRSELİN ÇERÇEVESİ DEĞİL iki dairenin ayracı; CLAUDE.md
+   "görselin etrafında çerçeve yok" kuralının bilinen istisnası (aynı desen
+   `components/today/DayRail.tsx` içinde de böyle gerekçelendirilmişti). */
+.cardLogos { display:flex; flex:none; align-items:center; }
+.cardLogos > *:not(:first-child) { margin-left:-4px; }
+.cardLogo { width:18px; height:18px; border:1px solid var(--line); border-radius:50%; }
+
 /* ---- "Şimdi" ayracı ----
    Listenin neresinde olduğumuzu ŞERİT değil bu satır söylüyor. Şerit bunu bir
    eksende anlatıyordu ama olaylar kümelendiğinde (bir FOMC gününde dördü de
