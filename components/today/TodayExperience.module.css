@@ -107,7 +107,14 @@
   .flowPanel { padding: 20px 18px 4px; }
   .sectionHeading h2 { font-size: 23px; }
   .sectionHeading p { font-size: 13px; line-height: 1.6; }
-  .flowNav > div { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  /* İKİ SATIRLIK IZGARA DEĞİL, TEK ŞERİT. Dört sekme telefonda 2×2
+     diziliyordu ve kırık bir segment denetimi gibi okunuyordu: seçili
+     sekme ikinci sırada, gri kutu 90 piksel yer kaplıyor. Sekmeler artık
+     tek satırda ve sığmayınca yatay kayıyor — sitenin başka şeritlerinde
+     (analiz çipleri, filtre satırları) kullanılan desenin aynısı. */
+  .flowNav > div { display: flex; grid-template-columns: none; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .flowNav > div::-webkit-scrollbar { display: none; }
+  .flowNav a { flex: 1 0 auto; white-space: nowrap; scroll-snap-align: start; }
   .dashboard { gap: 24px; }
   .dashboard > [data-col] { gap: 20px; }
   .storySpotlight > a { padding: 20px; }
@@ -203,6 +210,16 @@
  .flowPanel { padding:16px 14px 0; }
 }
 .flowNav { flex-basis:520px; padding:3px; border:1px solid var(--line-soft); background:var(--surface-sunken); }
-.flowNav a { min-height:36px; font-size:11px; }
+.flowNav a { min-height:38px; font-size:12px; }
 .flowHeader .sectionHeading p { margin-top:6px; font-size:12px; }
-@media(max-width:767px) { .flowNav { flex-basis:auto; } .flowNav a { min-height:40px; } }
+/* `flex-basis` SATIR YÖNÜ İÇİN YAZILDI ve sütunda YÜKSEKLİK oluyor.
+   Başlık 1023 altında `flex-direction: column`a dönüyor; orada 520 piksellik
+   temel ölçü sekme şeridinin BOYU olarak uygulanıyordu ve 768-1023 arasında
+   şerit 510 piksellik boş bir gri kutuya dönüşüyordu (ölçüldü). Üstteki
+   satır bunu `flex: auto` ile düzeltiyordu ama bu dosyanın sonuna eklenen
+   ikinci katman `flex-basis:520px`i geri getiriyor ve kaynak sırası
+   kazanıyordu — düzeltme yalnızca 767 altında geçerliydi, yani tam da
+   tablet aralığı açıkta kalmıştı. Temel ölçü artık sütuna dönen her
+   genişlikte iptal. */
+@media(max-width:1023px) { .flowNav { flex-basis:auto; } }
+@media(max-width:767px) { .flowNav a { min-height:40px; } }
