@@ -89,8 +89,22 @@
 .cardName { display:flex; min-width:0; flex:1; flex-direction:column; gap:1px; }
 .cardSymbol { font-size:19px; line-height:1.2; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
 .cardCompany { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
-.badges { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
-.stance { display:inline-flex; align-items:center; padding:4px 12px; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:.06em; }
+/* ROZETLER YAN YANA — başlıklar eşit yükseklikte kalsın diye.
+   Sütundu ve değişim rozeti olan kartın başlığı 54, olmayanınki 32 piksel
+   oluyordu: ızgaranın her satırında fiyat, plan kutusu ve altındaki her şey
+   22 piksel kayık duruyordu (ölçüldü, 768 ve 1440'ta altı satırın beşinde).
+   Kartlar aynı yüksekliğe gerildiği için ayak hizalıydı ama İÇERİDE hiçbir
+   şey hizalanmıyordu; on iki kartlık bir ızgarada göz satırı tarayamıyor.
+   `wrap` duruyor: sembolü uzun bir kartta rozet yine alta iner, ama o zaman
+   hizasızlık kuralın kendisi değil istisnası olur. */
+.badges { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px; }
+/* Kartın cevabı da görüş. 12 pikseldi: sembolün (19) ve fiyatın (25-27)
+   altında, kartın EN KÜÇÜK öğesi — oysa on iki kart taranırken gözün
+   aradığı şey o. 15 piksel kapaktaki sıralamanın aynısını kuruyor (sembol,
+   fiyat, sonra görüş) ve kart yoğunluğunu bozmuyor; kapaktaki 19-22 burada
+   satırı şişirirdi. Yalnızca `TechnicalCard` kullanıyor, nabız şeridinin
+   kendi sınıfı var. */
+.stance { display:inline-flex; align-items:center; padding:5px 14px; border-radius:999px; font-size:15px; font-weight:800; letter-spacing:.06em; line-height:1.15; }
 .change { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border:1px solid currentColor; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; }
 /* Fiyat satırı: etiket ve plana göre yer aynı satırda, sayı altında büyük. */
 .cardQuote { display:grid; gap:4px; }
