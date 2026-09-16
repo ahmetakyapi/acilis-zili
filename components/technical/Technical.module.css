@@ -127,6 +127,7 @@
 .planCell dt { display:flex; flex:none; align-items:center; gap:7px; font-size:12px; font-weight:700; letter-spacing:.02em; color:var(--text-muted); }
 .planCell dd { min-width:0; font-size:14px; line-height:1.35; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); text-align:right; }
 .planCell dd > span { white-space:nowrap; }
+.planItem { white-space:nowrap; }
 .planSep { color:var(--text-muted); font-weight:500; }
 .planEmpty { font-weight:500; color:var(--text-muted); }
 .planRisk { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; padding:0 4px; font-size:12px; color:var(--text-muted); }
@@ -184,10 +185,21 @@
 .coverMain { display:flex; min-width:0; flex-direction:column; gap:16px; }
 .coverIdentity { display:flex; align-items:center; gap:14px; min-width:0; }
 .coverIdentity h1 { font-size:clamp(32px, 3.2vw, 44px); line-height:1.02; letter-spacing:-.05em; font-weight:650; color:var(--text-strong); }
-.coverMeta { margin-top:4px; font-size:13px; color:var(--text-muted); }
-.stanceRow { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+.coverCompany { margin-top:5px; font-size:15px; font-weight:600; line-height:1.3; color:var(--text-body); letter-spacing:-.01em; text-wrap:balance; }
+.coverMeta { margin-top:3px; font-size:12.5px; line-height:1.4; color:var(--text-muted); }
+/* GÖRÜŞ KAPAĞIN ODAĞI. Sayfanın tek sorusu "bu hissede ne görünüyor" ve
+   cevabı bu tek kelime; oysa 14 piksellik bir çipti — sembolün (32px) ve
+   fiyatın (34px) çok altında, gri bir etiketin yanında. Kapakta sekiz blok
+   neredeyse eşit ağırlıkta duruyordu ve göz nereye bakacağını bilmiyordu.
+   Çip artık sembol ile fiyattan sonra üçüncü ölçek: onları bastırmıyor ama
+   kendi başına duruyor.
+   "Teknik Görünüm" etiketi GÖRÜNMEZ oldu, silinmedi: yalnızca çipi tanıtmak
+   için vardı ve rozetin kendi kelimesi (AL / TUT / SAT) sayfanın başlığıyla
+   birlikte zaten söylüyor. Liste kartları da etiketsiz basıyor; kapak
+   onlarla aynı dile geldi. Ekran okuyucu etiketi okumaya devam ediyor. */
+.stanceRow { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; }
 .stanceLabel { font-size:11px; font-weight:700; letter-spacing:.05em; color:var(--text-muted); }
-.stancePill { display:inline-flex; align-items:center; padding:6px 16px; border-radius:999px; font-size:14px; font-weight:800; letter-spacing:.08em; }
+.stancePill { display:inline-flex; align-items:center; padding:9px 22px; border-radius:999px; font-size:clamp(19px,1.7vw,22px); font-weight:800; letter-spacing:.07em; line-height:1.1; }
 .coverHeadline { max-width:58ch; color:var(--text-strong); font-size:17px; line-height:1.6; font-weight:500; letter-spacing:-.012em; text-wrap:pretty; }
 /* Planın okuması — sol şerit tonu okumanın tonu: bölgede yükseliş, stop
    altı ve SAT düşüş, bekleyiş nötr. */

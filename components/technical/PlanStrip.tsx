@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatRange, riskReward } from "@/lib/technical";
@@ -55,12 +54,18 @@ export function PlanStrip({
      "Nerede Satılır" hücresi sayfanın en uzun satırı oluyordu ve 390
      pikselde etiketin üstüne dayanıyordu. Hepsi aynı para biriminde;
      tekrarlanan sembol bilgi değil gürültü. `formatRange` ile aynı karar. */
+  /* AYRAÇ KENDİNDEN ÖNCEKİ SAYIYA BAĞLI. Ayraç ayrı bir kardeş olarak
+     yazılıyordu ve satır ondan ÖNCE kırılabiliyordu: masaüstünde üç hedef
+     sütuna sığmayınca "941,65 · 955,70" üstte, "· 989,96 $" altta kalıyordu —
+     baştaki nokta satırı kırık gösteriyor. Ayraç artık sayıyla aynı kutuda
+     ve kutu `nowrap`: kırılma yalnızca öğelerin ARASINDA olabiliyor, dolayısıyla
+     nokta satır sonunda kalıyor. Bir sayı ile onu izleyen nokta hiç ayrılmıyor. */
   const list = (values: readonly number[]) =>
     values.length === 0 ? null : values.map((value, index) => (
-      <Fragment key={value}>
-        {index > 0 && <span className={styles.planSep}> · </span>}
-        <span>{index === values.length - 1 ? money(value) : formatPrice(value, locale)}</span>
-      </Fragment>
+      <span key={value} className={styles.planItem}>
+        {index === values.length - 1 ? money(value) : formatPrice(value, locale)}
+        {index < values.length - 1 && <span className={styles.planSep} aria-hidden> · </span>}
+      </span>
     ));
   const hasEntry = entryLow !== null && entryHigh !== null;
 

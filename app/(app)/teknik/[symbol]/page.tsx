@@ -185,14 +185,24 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="lg" />
             <div className="min-w-0">
               <h1>{symbol}</h1>
+              {/* ŞİRKET ADI KENDİ SATIRINDA. Dört parça tek künyeye dizilince
+                  ("Micron Technology Inc · Seans İçi · 16 Eylül Çarşamba ·
+                  19:45 TR") telefonda sarıp son parçayı tek başına alta
+                  atıyordu — "TR" bir satır kaplıyordu. Adın uzunluğu şirkete
+                  göre değiştiği için sarmanın nereden olacağı da her sayfada
+                  farklıydı. Ad artık kendi satırında ve künyede yalnızca
+                  YAYIN bilgisi kalıyor; liste kartı da sembol ile adı ayrı
+                  satırda basıyor, kapak onunla aynı dile geldi. */}
+              {company && <p className={styles.coverCompany}>{company}</p>}
               <p className={styles.coverMeta}>
-                {company} · {slotLabel(row.slot, t)} · {formatEtDateLong(row.sessionDate, locale)} ·{" "}
+                {slotLabel(row.slot, t)} · {formatEtDateLong(row.sessionDate, locale)} ·{" "}
                 <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
               </p>
             </div>
           </div>
           <div className={styles.stanceRow}>
-            <span className={styles.stanceLabel}>{t.technical.stanceLabel}</span>
+            {/* Etiket yalnızca ekran okuyucuya: gerekçe `.stancePill` yorumunda. */}
+            <span className="sr-only">{t.technical.stanceLabel}</span>
             <span className={cn(styles.stancePill, verdictPillClass(verdict))}>{verdictLabel(verdict, t)}</span>
             {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
           </div>
