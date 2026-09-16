@@ -1,4 +1,3 @@
-import { HeroAccent } from "@/components/motion/HeroAccent";
 import { cache, Suspense } from "react";
 import { MotionExperience, ScrollStage, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
@@ -191,8 +190,14 @@ export default async function TodayPage() {
           Önceki kahraman 1440px'te 679px, 390px'te 848px yüksekliğindeydi.
           Geri sayım ve 2×2 piyasa paneli masaüstünde yan yana; mobilde
           doğal sırayla alt alta. Seans bilgisi geri sayımda korunur. */}
+      {/* KÖŞE MOTİFİ BURADA YOK. `HeroAccent` sağ üst köşeye yerleşiyor ve bu
+          kahramanda orası DOLU: tarih ile canlı saat tam oraya oturuyor,
+          yay saatin arkasından geçiyordu (ölçüldü — 1440'ta "16 Eylül
+          Çarşamba" ve saat satırlarıyla çakışıyor). Kartın kendi ışıması
+          (`styles.hero` içindeki radial-gradient) zaten aynı köşeden
+          geliyor; ikinci bir süs katmanı bilgi taşımıyor, yalnızca
+          okunacak metnin arkasını kalabalıklaştırıyordu. */}
       <header id="piyasa-ozeti" className={styles.hero}>
-        <HeroAccent />
         <div className={styles.heroTopline}>
           <span className={styles.eyebrow}><Waveform size={15} weight="bold" />{t.today.experienceEyebrow}</span>
           <div className={styles.dateline}>

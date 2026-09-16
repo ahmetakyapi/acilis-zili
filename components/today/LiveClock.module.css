@@ -1,4 +1,11 @@
-.clock { display:flex; align-items:center; gap:10px; flex-shrink:0; font-variant-numeric:tabular-nums; }
+/* TABULAR FİGÜR YOK — `.clock` bir dönem taşıyordu ve ekranda "15 : 26"
+   çıkıyordu: Schibsted Grotesk'te bu ayar iki noktayı da rakam genişliğine
+   çekiyor ve saat, ana sayfanın en üstünde bu kusurla duruyordu. Kural
+   globals.css'te yazılı ("Sayısal okumalar"); bu dosya ondan kaçmıştı.
+   Geri sayım (`Countdown.module.css`) istisna olarak kalıyor: oradaki metin
+   saf rakam, ayraç ayrı bir elemanda ve saniye tikledikçe zıplamayı
+   önlemek gerçek bir kazanç. */
+.clock { display:flex; align-items:center; gap:10px; flex-shrink:0; }
 .dial { width:38px; height:38px; fill:none; stroke:var(--primary-faint); stroke-width:1; }
 .ticks { stroke:var(--text-muted); opacity:.6; }
 .hour { stroke:var(--text-strong); stroke-width:2; stroke-linecap:round; }

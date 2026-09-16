@@ -278,7 +278,7 @@
 .deviationTrack { position:relative; grid-column:1/-1; height:6px; border-radius:3px; background:var(--surface-sunken); }
 .deviationTrack > i { position:absolute; height:12px; width:1px; left:50%; top:-3px; background:var(--text-muted); opacity:.6; }
 .deviationFill { position:absolute; top:0; bottom:0; border-radius:3px; opacity:.75; }
-.deviationScale { display:flex; justify-content:space-between; padding-top:2px; color:var(--text-muted); font-size:10px; font-variant-numeric:tabular-nums; }
+.deviationScale { display:flex; justify-content:space-between; padding-top:2px; color:var(--text-muted); font-size:10px; }
 .cardNote { margin-top:10px; padding-top:9px; border-top:1px solid var(--line-soft); font-size:11px; line-height:1.65; color:var(--text-muted); }
 .fundamentalsGrid .analystPanel { grid-column:auto; background:radial-gradient(ellipse at 8% 40%,var(--up-wash),transparent 50%),var(--surface-solid); }
 .fundamentalsGrid .analystPanel > .analystBody { display:block; padding:0 18px 14px; }
