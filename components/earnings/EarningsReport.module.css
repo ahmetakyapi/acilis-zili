@@ -900,7 +900,7 @@
 .reportNav { border-color:var(--line); border-radius:12px; box-shadow:0 8px 24px color-mix(in srgb,var(--primary) 5%,transparent); }
 .reportNav > div { counter-reset:report-section; }
 .reportNav a { counter-increment:report-section; }
-.reportNav a::before { content:counter(report-section,decimal-leading-zero); font-size:10px; font-variant-numeric:tabular-nums; color:var(--primary); z-index:1; }
+.reportNav a::before { content:counter(report-section,decimal-leading-zero); font-size:10px; color:var(--primary); z-index:1; }
 .reportNav a[aria-current="location"] { color:var(--primary-ink); }
 .verdictPanel { background:radial-gradient(ellipse at 0 0,var(--primary-wash),transparent 75%),var(--premium-surface); box-shadow:var(--premium-shadow); }
 .chapterHeading { padding-top:22px; border-top:1px solid var(--line); }

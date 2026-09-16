@@ -15,9 +15,9 @@
 .indexLink[aria-current="true"] .indexCard { border-color:var(--primary-faint); background:radial-gradient(ellipse at 100% 0,var(--primary-wash),transparent 75%),var(--premium-surface); box-shadow:0 5px 16px var(--primary-wash); }
 .identity { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 8px; }
 .identity > p:first-child { color:var(--text-strong); font-size:13px; font-weight:600; }
-.identity > p:last-child { color:var(--text-muted); font-size:10px; font-variant-numeric:tabular-nums; }
+.identity > p:last-child { color:var(--text-muted); font-size:10px; }
 .reading { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; margin-top:12px; }
-.price { font-size:28px; line-height:1.1; letter-spacing:-.04em; font-weight:600; color:var(--text-strong); font-variant-numeric:tabular-nums; }
+.price { font-size:28px; line-height:1.1; letter-spacing:-.04em; font-weight:600; color:var(--text-strong); }
 .reading > p:last-child { font-size:12px; }
 .spark { width:100%; height:38px; margin-top:12px; }
 .indexCard :global(.spark-line) { animation-duration:1.1s; }
