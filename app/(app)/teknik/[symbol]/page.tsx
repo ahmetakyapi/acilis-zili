@@ -262,7 +262,6 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         <section id="technical-levels" className={styles.block}>
           <div className={styles.blockHead}>
             <h2 className={styles.sectionTitle}>{t.technical.priceMap}</h2>
-            <span className={styles.blockNote}>{t.technical.levelsNote}</span>
           </div>
           <PriceMap
             price={price}

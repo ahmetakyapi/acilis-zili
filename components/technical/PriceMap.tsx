@@ -109,18 +109,29 @@ export function PriceMap({
   const stopY = stop !== null ? scale(stop) : null;
   const priceY = price !== null ? scale(price) : null;
 
+  const kindOf = (rung: MapRung) =>
+    rung.kind === "target" && sellSide ? "sellLevel" : rung.kind;
+
   return (
     <>
+    {/* SÜTUN BAŞLIĞI HARİTANIN İÇİNDE. "Fiyata Uzaklık" bölüm başlığının
+        sağ ucunda duruyordu ve orası panelin tam genişliği; harita 460
+        pikselle sınırlanınca başlık yüzde sütununun 300 piksel sağında
+        kaldı (1440'ta ölçüldü) ve neyi anlattığı okunmaz oldu. Artık
+        haritanın kendi sağ kenarına hizalı: satırın sağ dolgusu 14 piksel,
+        başlığınki de öyle, yani yüzdelerle aynı hatta biter. */}
+    <p className={styles.mapHead}>{t.technical.levelsNote}</p>
     <div className={styles.map} style={{ height }} data-verdict={verdict}>
-      {/* ---- Eksen: bantlar ve ray ---- */}
+      {/* ---- Eksen: çizgi, bölge, çentikler ---- */}
       <div className={styles.mapRail} aria-hidden>
+        <span className={styles.mapLine} />
         {stopY !== null && (
           /* "Plan Geçersiz" yazısı DİKEY ve 75 piksel yer istiyor (ölçüldü).
              Stop haritanın dibine yakınsa altında kalan bölge o kadar
              değil — 39 piksellik bir şeride 75 piksellik yazı konunca 47
              piksel taşıyıp notların üstüne biniyordu. Bölge dar kaldığında
-             tarama deseni ve kesikli çizgi tek başına kalıyor: "buradan
-             aşağısı plan dışı" bilgisi zaten stop satırının kendisinde. */
+             soluk alan ve kesikli çizgi tek başına kalıyor: "buradan aşağısı
+             plan dışı" bilgisi zaten stop satırının kendisinde. */
           <span className={styles.mapVoid} style={{ top: stopY }}>
             {height - stopY >= 90 && <i>{t.technical.zoneBelowStop}</i>}
           </span>
@@ -128,34 +139,67 @@ export function PriceMap({
         {entryTop !== null && entryBottom !== null && (
           <span className={styles.mapBand} style={{ top: entryTop, height: Math.max(6, entryBottom - entryTop) }} />
         )}
-        <span className={styles.mapLine} />
+        {/* ÇENTİK, NOKTA DEĞİL. Noktalar 14 piksel çapındaydı ve eksen fiyata
+            orantılı: MU'da direnç (930,88), son fiyat (929,53) ve ilk hedef
+            (926,44) 6 ve 13 piksel arayla düşüyor (ölçüldü), yani üç nokta
+            iç içe geçip tek bir lekeye dönüşüyordu. Çentik yatay ve 3 piksel
+            kalın: aynı üç seviye artık bir cetvelin yakın gradasyonları gibi
+            okunuyor, çakışma diye bir şey kalmıyor. Yakınlık gizlenmiyor,
+            DOĞRU gösteriliyor. */}
+        {rungs
+          .filter((rung) => rung.kind !== "price" && rung.kind !== "entry")
+          .map((rung) => (
+            <span
+              key={`tick-${rung.kind}-${rung.price}`}
+              className={styles.mapTick}
+              data-kind={kindOf(rung)}
+              style={{ top: rung.markY }}
+            />
+          ))}
+        {/* Eksendeki TEK nokta şu anki fiyat: "buradasın" işareti başka hiçbir
+            şeye benzemiyor ve panel renginde bir halkayla komşu çentiklerden
+            ayrılıyor. */}
+        {priceY !== null && <span className={styles.mapHere} style={{ top: priceY }} />}
       </div>
-      {priceY !== null && <span className={styles.mapPriceLine} style={{ top: priceY }} aria-hidden />}
+
+      {/* ---- Kılavuz çizgileri ----
+          Etiketler eşit aralıklı (ROW_GAP), çentikler fiyata orantılı; ikisi
+          arasındaki bağ bir dönem iki parçaydı — dikey bir çubuk ve satırın
+          solundaki yatay bir tırnak. Parçalar birbirine değmediği için hangi
+          çentiğin hangi satıra ait olduğu okunmuyordu; üstelik yatay tırnak
+          satırın altını çizen bir ayraç gibi duruyordu. Tek bir eğri ikisini
+          uçtan uca birleştiriyor. `viewBox` genişliği 100 ve
+          `preserveAspectRatio="none"`: kutu kırılma noktasına göre daralıyor,
+          eğri onunla birlikte yatayda eziliyor ama `non-scaling-stroke`
+          sayesinde kalınlık sabit kalıyor. */}
+      <svg
+        className={styles.mapLeaders}
+        aria-hidden
+        viewBox={`0 0 100 ${height}`}
+        preserveAspectRatio="none"
+      >
+        {rungs.map((rung) => (
+          <path
+            key={`lead-${rung.kind}-${rung.price}`}
+            data-kind={kindOf(rung)}
+            vectorEffect="non-scaling-stroke"
+            d={`M 0 ${rung.markY} C 62 ${rung.markY}, 38 ${rung.labelY}, 100 ${rung.labelY}`}
+          />
+        ))}
+      </svg>
 
       {/* ---- Basamaklar ---- */}
       <ol className={styles.mapRungs}>
         {rungs.map((rung) => {
-          const kind = rung.kind === "target" && sellSide ? "sellLevel" : rung.kind;
+          const kind = kindOf(rung);
           const reference = rung.kind === "entry" && rung.high !== undefined ? rung.high : rung.price;
           const distance = rung.kind === "price" ? null : distancePct(reference, price);
           const value =
             rung.kind === "entry" && rung.high !== undefined
               ? formatRange(rung.price, rung.high, locale)
               : money(rung.price);
-          const shifted = Math.abs(rung.labelY - rung.markY) > 1;
           return (
             <li key={`${rung.kind}-${rung.price}`} className={styles.mapRung} data-kind={kind} style={{ top: rung.labelY }}>
-              <span aria-hidden className={styles.mapMark} style={{ top: rung.markY - rung.labelY }} />
-              {shifted && (
-                <span
-                  aria-hidden
-                  className={styles.mapLink}
-                  style={{
-                    top: Math.min(0, rung.markY - rung.labelY),
-                    height: Math.abs(rung.markY - rung.labelY),
-                  }}
-                />
-              )}
               <span className={styles.mapLabel}>{labelOf(rung)}</span>
               <span className={cn(styles.mapPrice, "numeral")}>{value}</span>
               <span className={cn(styles.mapDistance, "numeral", distance !== null && directionText(directionOf(distance)))}>

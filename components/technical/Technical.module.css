@@ -297,35 +297,78 @@
    etiket yerine getiriyor (translateY(-50%)); işaret ve bağ çizgisi o
    ortaya göre kayıyor, yani gerçek fiyat yerinde duruyor. Ray ile basamak
    listesi arasındaki 28px'lik yatay çentik `::before`. */
-.map { position:relative; min-width:0; }
-.mapRail { position:absolute; left:0; top:0; bottom:0; width:56px; }
-.mapLine { position:absolute; left:27px; top:0; bottom:0; width:2px; border-radius:1px; background:var(--line); }
-.mapBand { position:absolute; left:15px; width:26px; border-radius:6px; background:var(--up-wash); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 45%, transparent); }
-.mapVoid { position:absolute; left:8px; right:8px; bottom:0; border-top:1px dashed var(--down); border-radius:0 0 8px 8px; background:repeating-linear-gradient(135deg, var(--down-wash) 0 4px, transparent 4px 10px); }
-.mapVoid i { position:absolute; top:10px; left:2px; writing-mode:vertical-rl; font-size:10px; font-style:normal; font-weight:700; letter-spacing:.06em; color:var(--down); white-space:nowrap; }
-/* Fiyat çizgisi EKSENDE biter, satırların üstünden geçmez. Tam genişlikte
-   2 piksellik kesikli bir kuraldı ve en yakın satırın altını çiziyordu:
-   "Direnç 930,89 $" bir ayracın üstünde duruyormuş gibi okunuyordu, üstelik
-   geniş ekranda haritanın en baskın çizgisi oydu. İşi fiyatın bantlara göre
-   nereye düştüğünü göstermek ve o bilgi eksende; etiket sütununa girmesi
-   bilgi katmıyor, gürültü katıyor. Kayan etiketle işareti zaten `.mapLink`
-   birleştiriyor. */
-/* Genişlik rayın bittiği yere göre: ray 56, basamak dolgusu 16, yani ilk
-   harf ~72 pikselde başlıyor — çizgi 66'da bitiyor ve metne değmiyor. */
-.mapPriceLine { position:absolute; left:6px; width:60px; border-top:2px dashed var(--primary); opacity:.5; pointer-events:none; }
+/* EKSENİN ORTASI 27,5 PİKSEL. Ray 56 geniş; çizgi, çentik, bant ve fiyat
+   işareti bu ortaya göre hizalanıyor (çizgi 26+3, çentik 14+27, bant 12+31,
+   fiyat 5+45 — dördünün de ortası 27,5). Mobilde ray 44 ve orta 21,5; aynı
+   dört kural aşağıdaki kırılma noktasında yeniden yazılıyor. Bir sayı
+   kayarsa eksen dağılır, o yüzden hepsi burada yan yana duruyor. */
+/* GENİŞLİK SINIRLI. Etiket sütunu `1fr` olduğu için bütün boşluğu o
+   yutuyordu: 768'de satır 670 piksel geniş, etiket ~190'da bitiyor ve fiyat
+   530'da başlıyordu — aradaki 340 piksel bomboş, satırın iki ucu birbirine
+   yabancı iki parça gibi duruyordu (ölçüldü: 768/1024/1280/1440'ta sırasıyla
+   670/429/541/601 piksel). Harita dikey bir sıralama; satırın uzaması ona
+   bir şey katmıyor. 460 piksel en uzun içeriğe (ray 56 + "Alım Bölgesi" +
+   "894,23 – 916,84 $" + uzaklık) rahat yetiyor, altındaki not listesi tam
+   genişlikte kalmaya devam ediyor. */
+/* Negatif alt boşluk bölümün 14 piksellik ritmini kapatıyor: başlık
+   haritaya ait, bir sonraki blok değil. */
+.mapHead { max-width:460px; margin:0 0 -8px; padding-right:14px; text-align:right; font-size:var(--text-nano); font-weight:650; letter-spacing:.04em; color:var(--text-muted); }
+.map { position:relative; min-width:0; max-width:460px; }
+/* RAY KILAVUZUN ÜSTÜNDE. Kılavuz eksenin ortasından başlıyor, yani hizalı
+   bir satırda çentikle aynı y'de ve onun sağ yarısını gri bir çizgiyle
+   örtüyordu: tek bir bağ yerine üst üste iki paralel çizgi okunuyordu.
+   Sıra değişince çentik kılavuzun BAŞI oluyor — renkli uç, ardından ince
+   gri gövde. */
+.mapRail { position:absolute; left:0; top:0; bottom:0; width:56px; z-index:2; }
+/* Uçları solan bir eksen: harita yukarıda ve aşağıda kesilmiyor, bitiyor. */
+.mapLine { position:absolute; left:26px; top:0; bottom:0; width:3px; border-radius:2px; background:linear-gradient(transparent, var(--line) 9%, var(--line) 91%, transparent); }
+/* EKSEN TEK GENİŞLİKTE BİR SÜTUN. Çentik, bant ve stop altı bölgesi aynı
+   27 piksele oturuyor (14–41; mobilde 9–34): ray dağınık bir işaret
+   topluluğu değil, tek bir şerit. Sütunu bilerek aşan tek şey fiyat
+   işareti — "buradasın" her şeyden ayrı okunmalı.
+   Bandın ÜST VE ALT KENARI birer fiyat (alım bölgesinin iki ucu) ve
+   çentiklerle aynı kalınlıkta: bant, iki çentiğin arası dolu hâli. */
+.mapBand { position:absolute; left:14px; width:27px; border-radius:4px; background:linear-gradient(color-mix(in srgb, var(--up-wash) 85%, transparent), color-mix(in srgb, var(--up-wash) 45%, transparent)); box-shadow:inset 0 3px 0 color-mix(in srgb, var(--up) 88%, transparent), inset 0 -3px 0 color-mix(in srgb, var(--up) 88%, transparent); }
+/* Stopun altı: tarama deseni yerine SOLAN bir alan. Desen 135 derecelik
+   çizgilerden oluşuyordu ve haritadaki tek dokuydu — gözü seviyelerden
+   alıp kendine çekiyor, üstelik altta sert bir kenarla bitiyordu. Soluk
+   alan aynı şeyi söylüyor: aşağı indikçe plan biter. */
+.mapVoid { position:absolute; left:14px; width:27px; bottom:0; border-top:2px dashed color-mix(in srgb, var(--down) 55%, transparent); border-radius:0 0 4px 4px; background:linear-gradient(color-mix(in srgb, var(--down-wash) 95%, transparent), transparent 88%); }
+.mapVoid i { position:absolute; top:12px; left:50%; translate:-50% 0; writing-mode:vertical-rl; font-size:var(--text-nano); font-style:normal; font-weight:700; letter-spacing:.08em; color:color-mix(in srgb, var(--down) 80%, transparent); white-space:nowrap; }
+/* Çentik: eksene dik, 3 piksel kalın. Gerekçe PriceMap.tsx içinde. */
+.mapTick { position:absolute; left:14px; width:27px; height:3px; border-radius:2px; background:var(--text-muted); opacity:.45; translate:0 -50%; }
+.mapTick[data-kind="target"] { background:var(--up); opacity:1; }
+.mapTick[data-kind="resistance"] { background:var(--up); opacity:.5; }
+.mapTick[data-kind="stop"] { background:var(--down); opacity:1; }
+.mapTick[data-kind="sellLevel"] { background:var(--down); opacity:.65; }
+/* "Buradasın": eksenden geçen bir çizgi ve SOL UCUNDA halkalı nokta.
+   NOKTA EKSENİN ORTASINDA DEĞİL, ÇÜNKÜ ORASI DOLU. Ortadayken halkasıyla
+   birlikte 19 piksel yer kaplıyor ve MU'da direnç çentiği fiyattan yalnızca
+   6 piksel yukarıda (ölçüldü) — çentik noktanın altında tamamen kayboluyor,
+   yani çakışmayı çözmek için getirilen çentik yine görünmez oluyordu. Nokta
+   kenara çekilince eksen çentiklere kalıyor; çizgi ikisini birleştirdiği
+   için nokta eksenden kopmuyor, bir sürgü başlığı gibi okunuyor. */
+.mapHere { position:absolute; left:5px; width:45px; height:2px; border-radius:1px; background:color-mix(in srgb, var(--primary) 55%, transparent); translate:0 -50%; }
+.mapHere::after { content:""; position:absolute; left:6px; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 3px var(--panel-fixed), 0 0 0 5px var(--primary-wash); }
+/* Kılavuz katmanı eksenin ortasında başlar, basamak listesinde biter.
+   YÜKSEKLİK AÇIKÇA %100. `top:0; bottom:0` yetmiyor: `<svg>` yerini
+   doldurulan (replaced) bir öğe ve mutlak konumlu replaced öğede
+   `height:auto` iken tarayıcı `bottom`u yok sayıp İÇSEL yüksekliği
+   kullanıyor (CSS 2.1 §10.6.5). Sonuç, 408 piksellik haritanın eğrilerinin
+   150 piksellik bir kutuya sıkışıp haritanın tepesinde toplanmasıydı. */
+.mapLeaders { position:absolute; left:27px; width:29px; top:0; height:100%; z-index:1; overflow:visible; fill:none; pointer-events:none; }
+.mapLeaders path { stroke:var(--line-strong); stroke-width:1.5; opacity:.85; }
+.mapLeaders path[data-kind="price"] { stroke:var(--primary); opacity:.65; }
+.mapLeaders path[data-kind="target"] { stroke:color-mix(in srgb, var(--up) 55%, transparent); }
+.mapLeaders path[data-kind="stop"], .mapLeaders path[data-kind="sellLevel"] { stroke:color-mix(in srgb, var(--down) 55%, transparent); }
 .mapRungs { position:absolute; left:56px; right:0; top:0; bottom:0; margin:0; padding:0; list-style:none; }
-.mapRung { position:absolute; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; column-gap:12px; padding:7px 14px 7px 16px; border-radius:12px; transform:translateY(-50%); }
-.mapRung::before { content:""; position:absolute; left:-28px; top:50%; width:28px; height:1px; background:var(--line-strong); }
-.mapMark { position:absolute; left:-35px; width:14px; height:14px; border:2px solid var(--panel-fixed); border-radius:50%; background:var(--text-muted); transform:translateY(-50%); z-index:1; }
-.mapRung[data-kind="target"] .mapMark { background:var(--up); }
-.mapRung[data-kind="stop"] .mapMark { background:var(--down); }
-.mapRung[data-kind="sellLevel"] .mapMark { background:var(--down); opacity:.6; }
-.mapRung[data-kind="entry"] .mapMark { border-radius:4px; background:linear-gradient(var(--up-wash), var(--up-wash)), var(--panel-fixed); box-shadow:inset 0 0 0 2px var(--up); }
-.mapRung[data-kind="price"] .mapMark { background:var(--primary); box-shadow:0 0 0 3px var(--primary-wash); }
-.mapLink { position:absolute; left:-29px; width:2px; background:var(--line-strong); }
-.mapRung[data-kind="price"] { background:linear-gradient(90deg, var(--primary-tint), transparent 75%); }
-.mapRung[data-kind="entry"] { background:linear-gradient(90deg, var(--up-wash), transparent 80%); }
-.mapRung[data-kind="stop"] { background:linear-gradient(90deg, var(--down-wash), transparent 80%); }
+.mapRung { position:absolute; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; column-gap:12px; padding:7px 14px 7px 14px; border-radius:12px; transform:translateY(-50%); }
+/* Üç vurgulu satır AYNI kalıpta: aynı yarıçap, aynı bitiş noktası, aynı
+   şiddet. Eskiden %75 ve %80'de biten iki ayrı geçiş vardı ve yan yana
+   duran satırların dolgusu farklı yerde bitiyordu. */
+.mapRung[data-kind="price"] { background:linear-gradient(90deg, var(--primary-tint), transparent 72%); }
+.mapRung[data-kind="entry"] { background:linear-gradient(90deg, var(--up-wash), transparent 72%); }
+.mapRung[data-kind="stop"] { background:linear-gradient(90deg, var(--down-wash), transparent 72%); }
 .mapLabel { font-size:14px; font-weight:600; color:var(--text-strong); }
 .mapRung[data-kind="price"] .mapLabel { color:var(--primary-ink); font-weight:700; }
 .mapRung[data-kind="support"] .mapLabel, .mapRung[data-kind="resistance"] .mapLabel { font-weight:500; color:var(--text-body); }
@@ -448,10 +491,15 @@
   .prose { font-size:14px; line-height:1.7; }
   .rsiReading { min-height:144px; }
   .rsiValue { font-size:27px; }
+  /* Mobilde eksenin ortası 21,5 (ray 44). Dört öğe de ona göre. */
   .mapRail { width:44px; }
-  .mapPriceLine { left:4px; width:50px; }
-  .mapLine { left:21px; }
-  .mapBand { left:11px; width:22px; }
+  .mapLine { left:20px; }
+  .mapBand { left:9px; width:25px; }
+  .mapVoid { left:9px; width:25px; }
+  .mapTick { left:9px; width:25px; }
+  .mapHere { left:2px; width:39px; }
+  .mapHere::after { left:9px; }
+  .mapLeaders { left:21px; width:23px; }
   .mapRungs { left:44px; }
   /* DAR EKRANDA SATIR SIKIŞTIRILIR VE SARMA GÜVENLİ HÂLE GETİRİLİR.
      En uzun etiket ("Alım Bölgesi") tek satır için 112 piksel istiyor ama
@@ -464,8 +512,6 @@
      40,6 < 46. Tersi, "sarmasın" deyip taşırmak olurdu. */
   .mapRung { padding:4px 8px 4px 10px; column-gap:6px; line-height:1.25; }
   .mapRung::before { left:-22px; width:22px; }
-  .mapMark { left:-29px; }
-  .mapLink { left:-23px; }
   .mapLabel, .mapPrice { font-size:13px; }
   .mapDistance { min-width:46px; font-size:11px; }
 
