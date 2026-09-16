@@ -96,6 +96,16 @@
 .eventHeading button:hover:not(:disabled) { border-color:var(--primary-faint); background:var(--primary-tint); }
 .eventHeading button:disabled { opacity:.3; cursor:default; }
 
+/* ---- "Şimdi" ayracı ----
+   Listenin neresinde olduğumuzu ŞERİT değil bu satır söylüyor. Şerit bunu bir
+   eksende anlatıyordu ama olaylar kümelendiğinde (bir FOMC gününde dördü de
+   21:00 civarı) eksen hiçbir şey ayırt etmiyor. Liste zaten sıralı; ayraç onu
+   ikiye bölüyor. BÜYÜK HARFE ÇEVRİLMİYOR: `text-transform:uppercase` Türkçede
+   "i → I" üretiyor (CLAUDE.md, Title Case notu), ayrım aralık ve renkle. */
+.nowRow { display:flex; align-items:center; gap:10px; padding:12px 2px 10px; }
+.nowRow > span { flex:1; height:1px; background:var(--primary-faint); }
+.nowRow b { flex:none; color:var(--primary-ink); font-size:12px; font-weight:700; letter-spacing:.04em; }
+
 /* ---- Ajanda ve sonuç paneli ----
    İÇ KAYDIRMA YOK. Liste 206 piksellik kendi kutusunda kayıyordu ve mobilde
    sonuç paneli o kutunun altında kalıyordu: okuyucu bir satıra basıyor,
@@ -199,16 +209,27 @@
   .marketDay { display:none; }
   .connection { margin-left:auto; font-size:11px; }
   .connection button > span { display:none; }
-  .rail { margin-top:12px; padding:14px 14px 12px; border-radius:16px; }
-  .bounds { height:42px; }
+  /* ŞERİT MOBİLDE TEK SATIRA İNİYOR ve numaralı rozetler HİÇ basılmıyor.
+     Rozetler on altı saatlik bir ekseni 350 piksele sığdırmaya çalışıyordu:
+     21:00 ile 21:30 arası %3, yani on piksel. İtme algoritması onları
+     ayırıyor ama bu ölçekte ayrılmış iki rozet de yan yana yapışık duruyor
+     ("01 +1" ile "03" tek bir blok gibi okunuyordu) ve sapları eksende
+     yanlış çentiğe işaret ediyormuş gibi eğiliyordu. Aynı olaylar hemen
+     altta, numaralarıyla ve tam adlarıyla listede zaten var: rozetler
+     ÜÇÜNCÜ bir temsildi ve hiçbirini ötekinden iyi anlatmıyordu.
+     Kalan şey günün iskeleti: açılış, kapanış ve dolan çubuk. Yaklaşık 200
+     pikselden 60'a iniyor. */
+  .rail { margin-top:12px; padding:14px; border-radius:16px; }
+  .bounds { position:static; height:auto; display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .bound { position:static; transform:none; flex-direction:row; align-items:baseline; gap:6px; }
+  .bound > span { font-size:12px; }
   .bound strong { font-size:15px; }
-  .bound > span,.bound small { font-size:11px; }
-  .nowBand { height:22px; }
-  .markers { height:42px; }
-  .marker { min-width:28px; height:28px; padding:0 6px; font-size:12px; }
-  .axisFoot,.railLegend { font-size:11px; }
-  .railLegend { gap:6px 14px; }
-  .railLegend p { flex-basis:100%; margin:0; }
+  .bound small { font-size:11px; }
+  /* Çentikler de kalkıyor: rozetsiz kaldıklarında etiketsiz iki çizgi
+     oluyorlar ve 21:00 ile 21:30 bu ölçekte yine tek bir kalınlık gibi
+     birleşiyor — kaldırdığımız karışıklığın etiketsiz hâli. Eksende kalan
+     tek imleç dolan çubuğun ucu, adı da listedeki "Şimdi" ayracında. */
+  .nowBand,.markers,.axisFoot,.railLegend,.tick { display:none; }
   .eventHeading { margin:16px 0 8px; }
   .eventCard { grid-template-columns:62px minmax(0,1fr); gap:10px; padding:12px 10px; }
   .cardTime b { font-size:16px; }

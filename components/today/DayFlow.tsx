@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
@@ -183,12 +183,33 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
     [events],
   );
   const markerX = useMemo(
-    () => spread(markerTimes.map((time) => pct(minutesOf(time))), railWidth, 30),
+    /* 54 PİKSEL: rozetin kendi genişliği. `gap` merkezden merkeze ölçülüyor,
+       yani iki rozetin yan yana durabilmesi için yarı genişliklerinin
+       toplamından büyük olmalı. Ölçüldü (16 Eylül, FOMC günü): sade rozet
+       30-34 piksel, "+n" ekli olan 46. En kötü çift (46+46)/2 = 46; üstüne
+       8 piksel nefes payı. Eski değer 30'du ve rozetler birbirine giriyordu —
+       768 ve 1024'te 10 piksel, 1440'ta 2 piksel ÜST ÜSTE (ölçüldü); ekranda
+       "02 +1" ile "04" tek bir blok gibi okunuyordu. Sap (stem) gerçek saate
+       eğilmeye devam ediyor, kayan yalnızca etiket. */
+    () => spread(markerTimes.map((time) => pct(minutesOf(time))), railWidth, 54),
     [markerTimes, railWidth],
   );
   const nowEt = new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(nowMs));
   const now = minutesOf(nowEt);
+  /* "ŞİMDİ" AYRACI — listenin neresindeyiz.
+     Şerit bunu bir eksende söylüyordu ama olaylar kümelendiğinde (bir FOMC
+     gününde dördü de 21:00 civarı) eksen hiçbir şey ayırt etmiyor: on altı
+     saatlik bir çizginin tek bir noktasında üst üste binen rozetler. Liste
+     ise zaten sıralı; ayraç onu ikiye bölüyor ve "bunlar geçti, bunlar
+     gelecek" tek bakışta okunuyor.
+     Yalnızca GERÇEKTEN böldüğünde basılıyor: gün başlamadıysa hepsi zaten
+     gelecek demektir ve ayraç fazladan bir satır olurdu. Saati belirsiz
+     olaylar ayracı tetiklemiyor — onların hangi tarafta olduğu bilinmiyor. */
+  const firstUpcoming = events.findIndex((event) => event.timeEt !== null && minutesOf(event.timeEt) > now);
+  const hasPast = events.some((event) => event.timeEt !== null && minutesOf(event.timeEt) <= now);
+  const dividerAt = !hasPast ? null : firstUpcoming === -1 ? events.length : firstUpcoming;
   const primary = (minutes: number) => clockOf(minutes + snapshot.offsets.primary);
+  const nowLabel = `${railLabels.now} · ${primary(now)} ${snapshot.tags.primary}`;
   const timeOf = (event: FlowEvent) => event.timeEt ? `${event.approx ? "~" : ""}${primary(minutesOf(event.timeEt))}` : labels.timeUnknown;
   const checked = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: displayZone(locale), hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(snapshot.asOf));
   const dayLabel = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "UTC", month: "long", day: "numeric", weekday: "long" }).format(new Date(snapshot.dateEt + "T12:00:00Z"));
@@ -274,9 +295,14 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
       {/* İÇ KAYDIRMA YOK. Liste sayfayla birlikte kayıyor; günün olayları
           altı-sekiz satır ve hepsi tek bakışta okunuyor. */}
       <ol className={styles.eventCards}>
-        {events.map((event, index) => <li key={event.id}>
-          <button data-event-id={event.id} className={styles.eventCard} data-selected={selected?.id === event.id} data-kind={event.kind} onClick={() => select(event.id)} aria-pressed={selected?.id === event.id} aria-controls={detailId}>
-          <span className={styles.cardTime} data-unknown={!event.timeEt}><span className={styles.eventNumber}>{String(index + 1).padStart(2, "0")}</span><b className="numeral">{timeOf(event)}</b>{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
+        {events.map((event, index) => <Fragment key={event.id}>
+          {index === dividerAt && <li className={styles.nowRow} aria-hidden="true"><span /><b>{nowLabel}</b><span /></li>}
+          <li><button data-event-id={event.id} className={styles.eventCard} data-selected={selected?.id === event.id} data-kind={event.kind} onClick={() => select(event.id)} aria-pressed={selected?.id === event.id} aria-controls={detailId}>
+          {/* SAATİ BELİRSİZ OLAYDA SÜTUN TİRE BASIYOR. "Saat Belirtilmedi"
+              62 piksellik sütuna sığmıyor ve "Saat / Belirtilme / di" diye üç
+              satıra bölünüyordu; üstelik aynı cümle satırın künyesinde İKİNCİ
+              kez duruyordu. Sebep künyeye ait, sütun yalnızca saati taşır. */}
+          <span className={styles.cardTime} data-unknown={!event.timeEt}><span className={styles.eventNumber}>{String(index + 1).padStart(2, "0")}</span><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : "—"}</b>{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
           <span className={styles.cardSummary}>
             <strong>{event.title}</strong>
             {/* Tür ADI değil İŞARETİ: altı satırın altısında da "Ekonomik
@@ -287,11 +313,15 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
               <i data-kind={event.kind} aria-hidden="true">{event.kind === "earnings" ? <Bell size={13} /> : <TrendUp size={13} />}</i>
               <span className="sr-only">{event.kind === "earnings" ? labels.earnings : labels.economic}</span>
               <Status event={event} nowMs={nowMs} labels={labels} />
-              {event.detail && <em>{event.detail}</em>}
+              {/* Sütundan düşen "Saat Belirtilmedi" künyeye burada iniyor;
+                  olayın kendi künyesi varsa o öncelikli. */}
+              {event.detail ? <em>{event.detail}</em> : !event.timeEt && <em>{labels.timeUnknown}</em>}
             </span>
           </span>
           <span className={styles.cardBottom}>{event.actual && <b className="numeral">{event.actual}</b>}<ArrowRight size={16} /></span>
-        </button></li>)}
+        </button></li>
+        </Fragment>)}
+        {dividerAt === events.length && <li className={styles.nowRow} aria-hidden="true"><span /><b>{nowLabel}</b><span /></li>}
       </ol>
       <div ref={detailRef} className={styles.detailSlot}>
       <AnimatePresence initial={false} mode="wait">
