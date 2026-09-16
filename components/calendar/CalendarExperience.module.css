@@ -63,7 +63,7 @@
  .dayRail[data-view="week"] { gap:4px; }
  .dayRail[data-view="week"] .day { flex:1 0 40px; padding:10px 2px; }
  .dayRail[data-view="week"] .day > strong { font-size:21px; }
- .dayRail[data-view="week"] .day > span:last-child { font-size:9px; }
+ .dayRail[data-view="week"] .day > span:last-child { font-size:var(--text-nano); }
  .dayRail[data-view="week"] .day[data-today="true"]::before { top:5px; right:5px; width:3px; height:3px; }
  .feature { padding-block:12px; }
 }

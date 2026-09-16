@@ -2370,7 +2370,9 @@ async function ComplianceCard({
             `<details>` KALIYOR, istemci durumu değil: katlama JS gelmeden de
             çalışıyor — emsali components/today/BriefBody.tsx. */}
         <details className="group/uyum mt-3 border-t border-line-soft pt-2.5">
-          <summary className="inline-flex min-h-9 w-fit cursor-pointer list-none items-center gap-1.5 text-nano font-semibold text-muted transition-colors hover:text-body [&::-webkit-details-marker]:hidden">
+          {/* `tap-44`: özet satırı 35 piksel yüksekliğindeydi (390'da ölçüldü);
+              `min-h-9` (36) fare için yeterli, parmak için değil. */}
+          <summary className="tap-44 inline-flex min-h-9 w-fit cursor-pointer list-none items-center gap-1.5 text-nano font-semibold text-muted transition-colors hover:text-body [&::-webkit-details-marker]:hidden">
             <span
               aria-hidden
               className="transition-transform group-open/uyum:rotate-90"

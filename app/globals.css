@@ -448,6 +448,15 @@
      miktar daha sıkı.
      Ölçeğin faydası tam da burada görüldü — tek bir blokta on iki satır
      değiştirmek, 621 kullanımın hepsini birden ayarladı. */
+  /* MOBİL GEÇERSİZ KILMALAR BU TABANIN ALTINA İNMEZ. Bir dönem birkaç
+     bileşen dar ekranda puntoyu AYRICA küçültüyordu — ikincil saat 11'den
+     9'a, endeks başlığı 10'dan 9'a, sıra numarası 8'e. Yön tersti: ekran
+     küçülünce metin daha da okunmaz oluyordu, üstelik sığma sorunu
+     olmadığı yerlerde (ölçüldü: 360/390/430'da hiçbiri taşmıyordu).
+     Mobilde ölçek masaüstündekiyle aynı; dar ekranda ayarlanacak şey punto
+     değil, boşluk ve sütun sayısı.
+     `--text-micro` yalnızca METİN OLMAYAN yerde kalır: logo künyesindeki
+     iki harf gibi, 26 piksellik bir kutunun içinde. */
   --text-micro: 0.5rem;        /* 8px   — en küçük künye, plaka */
   --text-nano: 0.625rem;       /* 10    — mikro etiket, rozet */
   --text-tiny: 0.6875rem;      /* 11    — künye satırı, veri damgası */

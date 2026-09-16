@@ -16,4 +16,7 @@
 .primary time { font-size:22px; line-height:1.1; letter-spacing:-.035em; color:var(--text-strong); font-weight:600; }
 .primary > span,.secondary { font-size:10px; color:var(--text-muted); font-weight:500; }
 .secondary time { font-size:11px; }
-@media(max-width:767px) { .clock { gap:7px; } .dial { width:30px; height:30px; } .primary time { font-size:20px; } .primary,.secondary { gap:5px; } .secondary,.secondary time { font-size:9px; } }
+/* Mobilde yalnızca boşluk ve kadran küçülüyor; PUNTO KÜÇÜLMÜYOR.
+   İkincil satır (New York saati) 10/11'den 9'a iniyordu — sığma sorunu
+   yoktu, sadece okunmuyordu. */
+@media(max-width:767px) { .clock { gap:7px; } .dial { width:30px; height:30px; } .primary time { font-size:20px; } .primary,.secondary { gap:5px; } }

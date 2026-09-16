@@ -253,7 +253,9 @@
 .coverTrendPeriod {
   display: block;
   margin-top: 0.45rem;
-  font-size: 0.58rem;
+  /* 0.58rem (9,3px) idi — sütun altındaki çeyrek etiketi metindir, künye
+     değil; ölçeğin metin tabanına çekildi. */
+  font-size: var(--text-nano);
   line-height: 1.35;
   color: var(--text-muted);
 }
@@ -762,7 +764,8 @@
   }
 
   .coverSerial {
-    font-size: 0.62rem;
+    /* Punto mobilde ölçeğin metin tabanının altına inmiyor (globals.css). */
+    font-size: var(--text-nano);
     letter-spacing: 0.015em;
   }
 

@@ -925,13 +925,16 @@ export function PriceChart({
                 <span className="numeral text-tiny leading-tight text-strong">
                   {window.primary}
                 </span>
-                <span className="numeral ml-auto text-micro leading-tight text-muted sm:ml-0">
+                {/* `text-micro` (8px) METİN İÇİN KULLANILMAZ: burada saat
+                    aralığı yazıyor, künye değil. `text-nano` (10px) ölçeğin
+                    metin tabanı. */}
+                <span className="numeral ml-auto text-nano leading-tight text-muted sm:ml-0">
                   {window.secondary} {zoneTag(locale).secondary}
                 </span>
                 {dark && (
                   /* Not KENDİ SATIRINDA: tek satıra sıkıştırılınca saatleri
                      ikinci satıra itiyordu. */
-                  <span className="basis-full text-micro leading-[13px] text-muted sm:basis-auto">
+                  <span className="basis-full text-nano leading-[14px] text-muted sm:basis-auto">
                     {labels.sessionOvernightNote}
                   </span>
                 )}

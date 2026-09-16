@@ -132,7 +132,7 @@
 }
 @media (max-width:639px) {
   .page { gap:18px; }
-  .pageLabel { font-size:9px; letter-spacing:.06em; }
+  .pageLabel { letter-spacing:.06em; }
   .breadcrumb { gap:9px; }
   .chartPanel { padding:20px 16px 16px; border-radius:20px; }
   .stockHeader { gap:22px; margin-bottom:20px; }
@@ -295,7 +295,7 @@
 .analystOverview { display:grid; grid-template-columns:112px minmax(0,1fr); gap:18px; align-items:center; }
 .fundamentalsGrid .consensus { width:112px; margin:0; grid-row:auto; }
 .fundamentalsGrid .consensusValue strong { font-size:28px; }
-.fundamentalsGrid .consensusValue span { font-size:9px; }
+.fundamentalsGrid .consensusValue span { font-size:var(--text-nano); }
 .fundamentalsGrid .analystDistribution { grid-row:auto; margin:0; }
 .analystRow { display:flex; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid var(--line-soft); }
 .analystRow:last-child { border-bottom:0; }

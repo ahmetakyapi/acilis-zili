@@ -95,7 +95,8 @@ export default async function MacroPage() {
         />
         <div className={styles.introNote}>
           <p>{locale === "tr" ? "Tek bir rakamdan ötesi. Enflasyonun, istihdamın ve faizin zaman içindeki yönünü incele." : "Beyond a single reading. Explore the direction of inflation, employment and interest rates over time."}</p>
-          <Link href="/takvim">{locale === "tr" ? "Veri Takvimine Git ↗" : "Open Release Calendar ↗"}</Link>
+          {/* `tap-44`: bağlantı 20 piksel yüksekliğindeydi (390'da ölçüldü). */}
+          <Link href="/takvim" className="tap-44">{locale === "tr" ? "Veri Takvimine Git ↗" : "Open Release Calendar ↗"}</Link>
         </div>
         </div>
         <MacroExplorer

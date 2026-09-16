@@ -381,11 +381,15 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       <div className={styles.footNote}>
         <p>{t.technical.method}</p>
         <p>{t.technical.disclaimer}</p>
+        {/* `tap-44`: iki bağlantı 19 piksel yüksekliğindeydi (390'da ölçüldü)
+            ve parmakla ıskalanıyordu. Sınıf yalnızca dokunma alanını
+            büyütüyor, düzen değişmiyor; 640'tan geniş ekranda kapanıyor.
+            İkisi 202 piksel, tek satıra sığıyor — alanları üst üste binmiyor. */}
         <p className="flex flex-wrap gap-x-4 gap-y-1">
-          <Link href={`/hisse/${symbol}`} className="font-semibold text-primary hover:text-primary-hover">
+          <Link href={`/hisse/${symbol}`} className="tap-44 font-semibold text-primary hover:text-primary-hover">
             {t.technical.companyPage} ↗
           </Link>
-          <Link href="/teknik" className="font-semibold text-primary hover:text-primary-hover">
+          <Link href="/teknik" className="tap-44 font-semibold text-primary hover:text-primary-hover">
             {t.technical.allStocks} ↗
           </Link>
         </p>

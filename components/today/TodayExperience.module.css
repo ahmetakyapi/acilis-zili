@@ -3,7 +3,7 @@
 .heroTopline { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 650; letter-spacing: .025em; color: var(--primary-ink); }
 .dateline { display: flex; align-items: center; gap: 16px; font-size: 11px; font-weight: 550; color: var(--text-body); }
-.dateline small { font-size: 9px; color: var(--text-muted); }
+.dateline small { font-size: var(--text-nano); color: var(--text-muted); }
 .heroMain { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); align-items: center; gap: 36px; padding-top: 28px; padding-bottom: 10px; }
 .heroCopy { min-width: 0; }
 .heroSession { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 14px; color: var(--text-muted); font-size: 11px; font-weight: 550; }
@@ -15,7 +15,7 @@
 .targetDate > svg { flex-shrink: 0; color: var(--primary); }
 .targetDate time { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 12px; }
 .targetDate strong { font-weight: 650; color: var(--text-strong); }
-.targetDate small { font-size: 9px; font-weight: 550; color: var(--text-muted); }
+.targetDate small { font-size: var(--text-nano); font-weight: 550; color: var(--text-muted); }
 .heroFooter { margin-top: 18px; }
 .description { max-width: 52ch; font-size: 12px; line-height: 1.7; color: var(--text-body); text-wrap: pretty; }
 .indexDeck { min-width: 0; padding-left: 28px; border-left: 1px solid var(--line); }
@@ -99,7 +99,6 @@
   .targetDate { margin-top: 18px; font-size: 11px; }
   .heroFooter { margin-top: 18px; }
   .indexGrid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
-  .indexHeading { font-size: 9px; }
   .indexCard { min-height: 138px; padding: 12px 13px; border-radius: 12px; }
   .indexSkeleton { height: 138px; border-radius: 12px; }
   .indexValue { margin-top: 9px; font-size: 25px; }

@@ -201,7 +201,12 @@ export function CompareAdd({
              koymak düzeni bozardı — ad erişilebilirlik ağacında duruyor. */
           aria-label={labels.placeholder}
           className={cn(
-            "h-8 bg-transparent text-sm text-strong outline-none placeholder:text-muted",
+            /* KUTU HAPIN BOYUNU ALIR. Sabit `h-8` ile giriş 32 piksel kalıyordu
+               ama hap mobilde 44 (`min-h-11`); aradaki 6'şar piksellik bant
+               sarmalayıcıya düşüyor ve o bir `label` olmadığı için dokunuş
+               kutuyu odaklamıyordu. `self-stretch` ile giriş hapın iç
+               yüksekliğine uzuyor: dokunulabilir alan hapın kendisi. */
+            "self-stretch bg-transparent text-sm text-strong outline-none placeholder:text-muted",
             wide ? "w-full min-w-0 flex-1" : "w-40 sm:w-48",
           )}
           autoComplete="off"

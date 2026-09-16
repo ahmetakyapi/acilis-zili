@@ -323,10 +323,19 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
               );
             })}
           </ChipStrip>
-          {/* Sağ kenar solması — yalnızca kaydırmalı dizilimde anlamlı */}
+          {/* Sağ kenar solması — yalnızca kaydırmalı dizilimde anlamlı.
+
+              SOLMA ŞERİDİN ALTINDAKİ RENGE GİDER. Bir dönem `--page-bg`
+              yazıyordu ama şerit sayfa zemininde değil, `--premium-surface`
+              zeminli bir kartın içinde duruyor (`.filters`). Ölçüldü:
+              kart açık temada rgb(255,255,255), koyu temada rgb(16,26,40);
+              solma ise rgb(247,249,251) ve rgb(7,13,22)'ye gidiyordu. Sonuç
+              solma değil, kartın üstüne serilmiş yabancı renkte bir perdeydi
+              ve koyu temada bariz duruyordu — son çip yine sert kesiliyor,
+              kaydırılabildiğini hiçbir şey söylemiyordu. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-(--page-bg) to-transparent sm:hidden"
+            className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-(--premium-surface) to-transparent sm:hidden"
           />
         </div>
       )}

@@ -216,7 +216,17 @@
 }
 
 @media (max-width:767px) {
+  /* DOKUNMA HEDEFLERİ MOBİLDE 44. Ölçüldü (390px): olay okları 35×35,
+     "Son Kontrol" düğmesi 90×33, "Takvimde Gör" bağlantısı 96×31 — üçü de
+     parmakla ıskalanan boyutta (WCAG 2.5.8 hedefi 44). Masaüstünde ölçü
+     değişmiyor: fare için 32-36 yeterli ve orada şerit daha sıkı. Oklar
+     kendi satırının sağ ucunda, aralarında 6 piksel var; 44'e çıkınca
+     birbirine değmiyorlar. */
   .toolbar { align-items:flex-start; gap:8px; padding-top:12px; }
+  .eventHeading button { width:44px; height:44px; }
+  .connection button { min-height:44px; }
+  .detailFooter a { min-height:44px; }
+  .detailLink { min-height:44px; }
   .date { font-size:12px; }
   .marketDay { display:none; }
   .connection { margin-left:auto; font-size:11px; }

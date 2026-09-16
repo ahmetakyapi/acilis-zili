@@ -808,7 +808,9 @@ export default async function AnalysisDetailPage(
             {coverRevenueMax > 0 && (
               <figure className={styles.coverTrend}>
                 <figcaption>
-                  <a href="#report-figures" className={styles.coverTrendLink}>
+                  {/* `tap-44`: bağlantı 17 piksel yüksekliğindeydi (390'da
+                      ölçüldü) — sayfadaki en küçük dokunma hedefi. */}
+                  <a href="#report-figures" className={`${styles.coverTrendLink} tap-44`}>
                     {t.analysis.quarterlyRevenue}
                     <ArrowDownRight size={14} aria-hidden />
                   </a>
