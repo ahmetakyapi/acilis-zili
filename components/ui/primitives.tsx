@@ -544,6 +544,8 @@ export type DataStampLabels = {
   mayBeStale: string;
   /** "15 dk gecikmeli" — yayını gecikmeli sağlayıcılarda damgaya eklenir. */
   delayed: string;
+  /** Damga bugünden DEĞİLSE kullanılan biçim — tarihi de taşır. */
+  updatedOn: string;
 };
 
 /* Sağlayıcı adları çevrilmez — marka. "önbellek" ve "takvim" ise sözlükten
@@ -586,14 +588,45 @@ export function DataStamp({
      24 SAAT, İKİ DİLDE DE. `en-US` varsayılanı 12 saatlik biçim veriyor ve
      aynı ekranda sitenin geri kalanıyla (lib/session-clock.ts, iki dilde de
      24 saat) iki farklı saat biçimi yan yana duruyordu. */
-  const time = at
+  const stamp = at ? (typeof at === "string" ? new Date(at) : at) : null;
+  const valid = stamp !== null && Number.isFinite(stamp.getTime());
+  const time = valid
     ? new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
         timeZone: "Europe/Istanbul",
         hour: "2-digit",
         minute: "2-digit",
         hourCycle: "h23",
-      }).format(typeof at === "string" ? new Date(at) : at)
+      }).format(stamp)
     : null;
+
+  /* GÜN DEĞİŞTİYSE TARİH DE YAZILIR.
+     Damga yalnızca saat basıyordu ve dünden kalmış bir kayıt ekranda
+     "22:47 Güncellendi" diye, bugünmüş gibi duruyordu — okuyucunun
+     bildirdiği "başka bir tarihin verisi geliyor" şikâyetinin görünen
+     yüzü tam olarak bu. Damganın doğru anı TAŞIMASI bir kez düzeltilmişti
+     (gerekçesi `quotesFromCache` başında) ama biçim onu geri gizliyordu:
+     doğru sayı yanlış okunuyordu.
+
+     Karşılaştırma İSTANBUL TAKVİM GÜNÜYLE yapılıyor, sunucunun yerel
+     günüyle değil: damga da o saat dilimiyle basılıyor ve sunucu UTC'de
+     koşuyor — UTC ile karşılaştırmak, gece yarısı ile 03:00 arasındaki her
+     damgayı "dün" ilan ederdi. `en-CA` sıralanabilir "YYYY-MM-DD" veriyor,
+     yani dize karşılaştırması gün karşılaştırmasıdır. */
+  const istanbulDay = (value: Date) =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Istanbul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(value);
+  const stampDate =
+    valid && istanbulDay(stamp) !== istanbulDay(new Date())
+      ? new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+          timeZone: "Europe/Istanbul",
+          day: "numeric",
+          month: "long",
+        }).format(stamp)
+      : null;
 
   const delayed = DELAYED_PROVIDERS.has(source);
   const sourceLabel =
@@ -618,7 +651,9 @@ export function DataStamp({
           {/* Cümle TEK PARÇA: sözcük sırası sözlükten geliyor. Parça parça
               birleştirilince İngilizcede "5:05 PM updated" çıkıyordu. */}
           <span className="numeral">
-            {labels.updatedAt.replace("{time}", time)}
+            {stampDate
+              ? labels.updatedOn.replace("{date}", stampDate).replace("{time}", time)
+              : labels.updatedAt.replace("{time}", time)}
           </span>
         </>
       )}

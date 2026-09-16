@@ -1197,6 +1197,7 @@ const en: typeof tr = {
     sourceCache: "Cache",
     sourceSeed: "Calendar",
     updatedAt: "Updated {time}",
+    updatedOn: "Updated {date} {time}",
     mayBeStale: "May Be Out Of Date",
   },
 };

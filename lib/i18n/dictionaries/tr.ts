@@ -1471,6 +1471,14 @@ const tr = {
        "5:05 PM updated" çıkıyordu — sözcük sırası dile ait, bu yüzden yer
        tutuculu tam cümle. */
     updatedAt: "{time} Güncellendi",
+    /* TARİH DE YAZILIYOR — ve bu bir hata düzeltmesiydi. Damga yalnızca saat
+       basıyordu ("22:47 Güncellendi") ve dünden kalmış bir kayıt ekranda
+       bugünmüş gibi duruyordu: okuyucunun bildirdiği "başka bir tarihin
+       verisi geliyor" şikâyetinin görünen yüzü buydu. Damganın doğru anı
+       taşıması bir kez düzeltilmişti (bkz. `quotesFromCache`) ama BİÇİM
+       onu geri gizliyordu. Tarih yalnızca bugün DEĞİLSE yazılır; bugünse
+       fazladan bir kelime olurdu. */
+    updatedOn: "{date} {time} Güncellendi",
     mayBeStale: "Güncel Olmayabilir",
   },
 };
