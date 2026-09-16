@@ -2,7 +2,7 @@ import { cache } from "react";
 import { inArray, eq, and, sql } from "drizzle-orm";
 import { db } from "../db";
 import { candlesCache, quotesCache, symbols as symbolsTable } from "../schema";
-import { candleTtlSeconds, quoteTtlSeconds, type MarketStatus } from "../market-hours";
+import { boundedTtl, candleTtlSeconds, quoteTtlSeconds, type MarketStatus } from "../market-hours";
 import * as alpaca from "./alpaca";
 import * as finnhub from "./finnhub";
 import * as fred from "./fred";
@@ -324,7 +324,10 @@ export async function getWeeklyChanges(
   symbolList: string[],
   status: MarketStatus,
 ): Promise<Record<string, number>> {
-  const ttl = Math.max(candleTtlSeconds("1M", status), 900);
+  /* Taban 900 saniye ama SINIRI AŞMADAN: `Math.max` doğrudan yazıldığında
+     seans sınırına kırpılmış ömrü geri büyütüyor ve kayıt yeniden iki
+     seansa birden ait olabiliyordu (bkz. `boundedTtl`). */
+  const ttl = boundedTtl(Math.max(candleTtlSeconds("1M", status), 900), status);
   const result = await alpaca.getPeriodChanges(symbolList, 5, ttl);
   return result.ok ? result.data : {};
 }

@@ -382,26 +382,94 @@ export function getMarketStatus(
  * Piyasa kapalıyken uzun süre kalır: fiyat zaten hareket etmiyor, sorgulamak
  * kotayı boşa harcamak olur.
  */
-export function quoteTtlSeconds(status: MarketStatus): number {
+export function quoteTtlSeconds(
+  status: MarketStatus,
+  now: Date = new Date(),
+): number {
   switch (status.session) {
     case "regular":
-      return 15;
+      return boundedTtl(15, status, now);
     case "pre-market":
     case "after-hours":
-      return 60;
+      return boundedTtl(60, status, now);
     default:
-      return 900;
+      return boundedTtl(900, status, now);
   }
 }
 
+/**
+ * ÖMÜR BİR SONRAKİ SEANS SINIRINI AŞAMAZ.
+ *
+ * Süreler yalnızca "bu veri ne sıklıkla değişir" diye seçilmişti ve hiçbiri
+ * o günün NEREsinde olduğumuza bakmıyordu: gece yarısından önce yazılan
+ * 900 saniyelik bir kotasyon ya da 12 saatlik bir bar paketi, ertesi günün
+ * ön seansına sarkabiliyordu. Okuyucu sabah şirket sayfasını açtığında
+ * ekranda DÜNKÜ fotoğraf duruyor, bir yenilemeden sonra bugünkü geliyordu —
+ * bildirilen hata tam olarak buydu.
+ *
+ * Kayıt artık en geç ekrandaki anlatının değiştiği anda (`nextTransition`;
+ * ön seans, açılış, kapanış, gece) ölüyor. Sınıra yaklaşırken ömür kısalıyor
+ * ve orada sağlayıcıya birkaç istek daha gidiyor — günde birkaç dakikalık
+ * bir bedel; karşılığında hiçbir kayıt iki seansa birden ait olmuyor.
+ *
+ * Taban 15 saniye: sınırın son saniyelerinde ömür sıfıra inip önbelleği
+ * tamamen devre dışı bırakmasın.
+ */
+const MIN_TTL_SECONDS = 15;
+
+export function boundedTtl(
+  seconds: number,
+  status: MarketStatus,
+  now: Date = new Date(),
+): number {
+  const remaining = Math.floor(
+    (status.nextTransition.getTime() - now.getTime()) / 1000,
+  );
+  /* Sınır geçmişte kalmışsa (durum nesnesi istek boyunca belleklenmiş ve
+     arada sınır geçilmiş olabilir) kısa bir ömürle devam edilir. */
+  if (!Number.isFinite(remaining) || remaining <= 0) {
+    return Math.max(MIN_TTL_SECONDS, Math.min(seconds, 60));
+  }
+  return Math.max(MIN_TTL_SECONDS, Math.min(seconds, remaining));
+}
+
+/**
+ * Grafik barlarının tazeliği.
+ *
+ * ÖNCEKİ KURAL YANLIŞ BİR VARSAYIMA DAYANIYORDU: "günlük barlar gün içinde
+ * değişmez" deyip 1D ve 1W dışındaki her aralığa 12 saat veriyordu. Günlük
+ * barlar gün içinde DEĞİŞİR — bugünün barı seans kapanana kadar yarımdır ve
+ * sağlayıcı onu sürekli güncelliyor. Depo bunu başka bir yerde zaten
+ * yazmıştı (`lib/technical.ts` → `completedBars`): "Günün barı ana seans
+ * kapanana kadar YARIM: sağlayıcı onu gün içinde güncelliyor." İki dosya
+ * aynı veri hakkında birbirine zıt şey söylüyordu.
+ *
+ * Sonucu ölçülebilirdi: hisse sayfasındaki hareketli ortalama paneli
+ * `getChartBars(symbol, "1Y")` ile besleniyor, yani 12 saatlik bir
+ * fotoğrafla. Sabah açılan sayfa akşamki paketi gösteriyordu.
+ *
+ * Her aralık BUGÜNDE bitiyor, yani hepsi hareketli barı taşıyor. Ayrım
+ * artık aralığın uzunluğunda değil ÇÖZÜNÜRLÜĞÜNDE: gün içi aralıklar (1D,
+ * 1W) dakikalık barlarla çiziliyor ve daha sık değişiyor; günlük barlı uzun
+ * aralıklarda bir bar günde bir kez kapanıyor. Hepsi seans sınırına kırpılı.
+ */
 export function candleTtlSeconds(
   timeframe: string,
   status: MarketStatus,
+  now: Date = new Date(),
 ): number {
-  if (timeframe === "1D" || timeframe === "1W") {
-    return status.session === "regular" ? 300 : 3600;
-  }
-  return 43200; // 12 saat — günlük barlar gün içinde değişmez
+  const intraday = timeframe === "1D" || timeframe === "1W";
+  const base =
+    status.session === "regular"
+      ? intraday
+        ? 300
+        : 900
+      : status.session === "pre-market" || status.session === "after-hours"
+        ? intraday
+          ? 600
+          : 1800
+        : 3600;
+  return boundedTtl(base, status, now);
 }
 
 /**
