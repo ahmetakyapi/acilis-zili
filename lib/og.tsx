@@ -208,8 +208,8 @@ export function BrandLock({
  * Gün şeridi — ürünün imzası.
  *
  * Kartın altında ince bir seans çizgisi: kapalı uçlar sessiz, seans bandı
- * accent. Sitedeki `DayRail`in tek satıra indirilmiş hâli; kartı marka
- * olarak tanınır kılan şey bu.
+ * accent. Sitedeki gün şeridinin (`components/today/DayFlow.tsx`) tek satıra
+ * indirilmiş hâli; kartı marka olarak tanınır kılan şey bu.
  */
 export function DayRailMark() {
   return (

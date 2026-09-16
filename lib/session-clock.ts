@@ -200,4 +200,4 @@ export function sessionWindows(
 
 /* `railSpan` burada dururdu: şerit başlığının sağına "11:00 — 03:00 TR"
    yazan tek satırlık pencere. Aynı iki saat artık eksenin uçlarında
-   basıldığı için (components/today/DayRail.tsx) kaldırıldı. */
+   basıldığı için (`components/today/DayFlow.tsx` → `.axisFoot`) kaldırıldı. */

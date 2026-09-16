@@ -100,8 +100,14 @@ const PROSE_COLUMNS =
 /**
  * Küçük büyük-harf etiket — `.plate`'in rengi serbest bırakılmış hâli.
  *
- * `.plate` katmansız bir kural olduğu için yanına yazılan `text-primary`
- * uygulanmıyor (aynı tuzak `components/today/DayRail.tsx` içinde de anlatılı).
+ * Bu sabit, `.plate` KATMANSIZ yazıldığı dönemden kalma: o zaman yanına
+ * yazılan `text-primary` hiç uygulanmıyordu, çünkü katmansız bir kural
+ * `@layer utilities` içindeki yardımcıyı her zaman eziyor. Tuzağın kanonik
+ * anlatımı `app/globals.css` → "KATMAN — @layer components" bloğunda ve
+ * sorun ORADA çözüldü: `.plate` artık katmanlı, yani renk yardımcısı
+ * geçiyor. Sabit yine de duruyor çünkü punto da farklı (`text-nano`
+ * ile `.plate`in 0.6875rem'i aynı şey değil); çağrı yerleri üstüne kendi
+ * puntosunu yazıyor. Sadeleştirmek isteyen önce o farkı ölçsün.
  */
 const PLATE_LABEL =
   "text-nano font-bold uppercase leading-none tracking-[0.09em]";

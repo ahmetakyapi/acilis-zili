@@ -240,7 +240,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
     </div>
 
     {/* ---- Gün şeridi ----
-        KAT DÜZENİ, `DayRail` ile aynı karar: günün İSKELETİ (açılış, kapanış,
+        KAT DÜZENİ: günün İSKELETİ (açılış, kapanış,
         şimdi) eksenin ÜSTÜNDE, günün İÇERİĞİ (olaylar) eksenin ALTINDA.
         Önceki düzende olay rozetleri eksenin ÜSTÜNE oturuyordu; rayı
         kapatıyor, açılış/kapanış saatleriyle aynı banda giriyor ve
