@@ -801,7 +801,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
               "shrink-0 rounded-full px-2 py-0.5 text-nano font-semibold",
               vixTone.band.tone === "up" && "bg-up-wash text-up",
               vixTone.band.tone === "flat" && "bg-surface-elevated text-body",
-              vixTone.band.tone === "warn" && "bg-brass-wash text-brass",
+              vixTone.band.tone === "warn" && "bg-brass-wash text-brass-ink",
               vixTone.band.tone === "down" && "bg-down-wash text-down",
             )}
           >

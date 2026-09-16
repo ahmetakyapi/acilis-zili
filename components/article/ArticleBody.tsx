@@ -70,7 +70,7 @@ const CALLOUT: Record<
   dikkat: {
     defaultLabel: { tr: "Dikkat", en: "Heads-Up" },
     box: "border-brass/35 bg-brass-wash",
-    kicker: "text-brass",
+    kicker: "text-brass-ink",
   },
   ozet: {
     defaultLabel: { tr: "Özet", en: "Summary" },

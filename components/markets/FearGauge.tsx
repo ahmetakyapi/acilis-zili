@@ -98,7 +98,7 @@ export async function FearGauge({
             "mb-1 rounded-full px-2.5 py-0.5 text-tiny font-semibold",
             band.tone === "up" && "bg-up-wash text-up",
             band.tone === "flat" && "bg-surface-elevated text-body",
-            band.tone === "warn" && "bg-brass-wash text-brass",
+            band.tone === "warn" && "bg-brass-wash text-brass-ink",
             band.tone === "down" && "bg-down-wash text-down",
           )}
         >

@@ -851,7 +851,7 @@ function AddSymbolRow({
 
       {/* Sonuçlar ya da hızlı öneriler */}
       {notice && (
-        <p role="alert" className="mt-2 text-small text-brass">
+        <p role="alert" className="mt-2 text-small text-brass-ink">
           {notice}
         </p>
       )}
