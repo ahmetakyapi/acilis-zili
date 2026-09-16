@@ -27,6 +27,7 @@ import { pageAlternates } from "@/lib/site";
 import {
   TECHNICAL_SYMBOLS,
   editionTime,
+  formatRange,
   isTechnicalSymbol,
   planPosition,
   planReading,
@@ -344,22 +345,20 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                   const turned = older ? stanceChangeLabel(stance, verdictOf(older.stance), t) : null;
                   return (
                     <tr key={`${entry.sessionDate}-${entry.slot}`}>
-                      <td>{formatEtDateCompact(entry.sessionDate, locale)}</td>
-                      <td>{slotLabel(entry.slot, t)}</td>
-                      <td>
+                      <td data-cell="date">{formatEtDateCompact(entry.sessionDate, locale)}</td>
+                      <td data-cell="edition">{slotLabel(entry.slot, t)}</td>
+                      <td data-cell="stance">
                         <span className={cn("inline-flex rounded-full px-2.5 py-[2px] text-tiny font-bold", verdictPillClass(stance))}>
                           {verdictLabel(stance, t)}
                         </span>
                         {turned && <span className={cn("ml-2 text-tiny font-bold", changeToneClass(stance))}>{turned}</span>}
                       </td>
-                      <td className="numeral">
+                      <td className="numeral" data-cell="entry" data-label={t.technical.entryZone}>
                         {entry.entryLow !== null && entry.entryHigh !== null
-                          ? entry.entryLow === entry.entryHigh
-                            ? formatPrice(entry.entryLow, locale, { currency: true })
-                            : `${formatPrice(entry.entryLow, locale, { currency: true })} – ${formatPrice(entry.entryHigh, locale, { currency: true })}`
+                          ? formatRange(entry.entryLow, entry.entryHigh, locale)
                           : "—"}
                       </td>
-                      <td className="numeral">{formatPrice(entry.stop, locale, { currency: true })}</td>
+                      <td className="numeral" data-cell="stop" data-label={t.technical.stop}>{formatPrice(entry.stop, locale, { currency: true })}</td>
                     </tr>
                   );
                 })}

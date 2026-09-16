@@ -1,10 +1,10 @@
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { distancePct, ladderOf, priceMapLayout, type MapRung, type TechnicalCopy } from "@/lib/technical";
+import { distancePct, formatRange, ladderOf, priceMapLayout, type MapRung, type TechnicalCopy } from "@/lib/technical";
 import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
 import styles from "./Technical.module.css";
 
-/** Etiket başına ayrılan dikey yer; notlu satır daha uzun. */
+/** Etiket başına ayrılan dikey yer. Bütün satırlar aynı yükseklikte. */
 const ROW_GAP = 46;
 const MIN_HEIGHT = 360;
 const MAX_HEIGHT = 720;
@@ -22,8 +22,18 @@ const MAX_HEIGHT = 720;
  * Çakışan etiketler `priceMapLayout` ile itiliyor; işaret gerçek yerinde
  * kalır, etiket kayar ve ince bir bağ ikisini birleştirir.
  *
+ * NOTLAR HARİTANIN İÇİNDE DEĞİL ALTINDA. Bir dönem her not kendi seviyesinin
+ * satırına giriyordu ve satırlar ÇAKIŞIYORDU: itme algoritması her satıra
+ * sabit `ROW_GAP` ayırıyor ama notlu bir satır 390 pikselde üç satıra
+ * sarıp 104 piksele çıkıyordu (ölçüldü: dört çakışma, en kötüsü 39 piksel;
+ * "Alım Bölgesi"nin notu "Stop"un fiyatının üstüne biniyordu). Notun
+ * yüksekliği sarmaya, sarma genişliğe bağlı — sunucu bunu bilemez, yani
+ * sabit bir pay vermek tahmin olurdu. Haritanın işi sıralama ve uzaklık;
+ * "bu seviye nereden geldi" bir cümle ve cümlenin yeri listedir. Artık her
+ * satır aynı yükseklikte (33 piksel) ve 46 piksellik ayrım her zaman yeter.
+ *
  * Yükseklik satır sayısından hesaplanıyor (ölçmeye gerek yok): her satıra
- * en az `ROW_GAP` piksel, alt sınır 360, üst 720. Uzaklık fiyattan seviyeye
+ * `ROW_GAP` piksel, alt sınır 360, üst 720. Uzaklık fiyattan seviyeye
  * (LevelLadder'daki gerekçe): hedef için artı, stop için eksi.
  */
 export function PriceMap({
@@ -59,9 +69,8 @@ export function PriceMap({
   const levels = ladderOf({ entryLow, entryHigh, stop, targets, supports, resistances });
   if (levels.length + (price !== null ? 1 : 0) < 2) return null;
 
-  const notes = levels.filter((level) => noteOf(level, copy) !== null).length;
   const rows = levels.length + (price !== null ? 1 : 0);
-  const height = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, rows * ROW_GAP + notes * 18 + 40));
+  const height = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, rows * ROW_GAP + 40));
   const { rungs, scale } = priceMapLayout(levels, price, { height, gap: ROW_GAP });
   const money = (value: number) => formatPrice(value, locale, { currency: true });
   const sellSide = verdict === "sell";
@@ -83,18 +92,37 @@ export function PriceMap({
     }
   };
 
+  /* Notlar seviye sırasına göre: hedefler, alım bölgesi, stop. Yalnızca
+     yazılmış olanlar listeye giriyor; hiçbiri yoksa liste hiç basılmıyor. */
+  const noteList = rungs
+    .map((rung) => ({
+      /* Hedef notu ÜÇ hedefi birden anlatıyor ("ilk iki hedef … üçüncüsü …")
+         ama ilk hedefin satırına bağlı; "Hedef 1" diye etiketlenince not
+         yalnız o seviyeyi tarif ediyormuş gibi okunuyordu. */
+      label: rung.kind === "target" ? (sellSide ? t.technical.planTargets : t.technical.targetsLabel) : labelOf(rung),
+      text: noteOf(rung, copy),
+    }))
+    .filter((item): item is { label: string; text: string } => item.text !== null);
+
   const entryTop = entryLow !== null && entryHigh !== null ? scale(entryHigh) : null;
   const entryBottom = entryLow !== null && entryHigh !== null ? scale(entryLow) : null;
   const stopY = stop !== null ? scale(stop) : null;
   const priceY = price !== null ? scale(price) : null;
 
   return (
+    <>
     <div className={styles.map} style={{ height }} data-verdict={verdict}>
       {/* ---- Eksen: bantlar ve ray ---- */}
       <div className={styles.mapRail} aria-hidden>
         {stopY !== null && (
+          /* "Plan Geçersiz" yazısı DİKEY ve 75 piksel yer istiyor (ölçüldü).
+             Stop haritanın dibine yakınsa altında kalan bölge o kadar
+             değil — 39 piksellik bir şeride 75 piksellik yazı konunca 47
+             piksel taşıyıp notların üstüne biniyordu. Bölge dar kaldığında
+             tarama deseni ve kesikli çizgi tek başına kalıyor: "buradan
+             aşağısı plan dışı" bilgisi zaten stop satırının kendisinde. */
           <span className={styles.mapVoid} style={{ top: stopY }}>
-            <i>{t.technical.zoneBelowStop}</i>
+            {height - stopY >= 90 && <i>{t.technical.zoneBelowStop}</i>}
           </span>
         )}
         {entryTop !== null && entryBottom !== null && (
@@ -110,12 +138,9 @@ export function PriceMap({
           const kind = rung.kind === "target" && sellSide ? "sellLevel" : rung.kind;
           const reference = rung.kind === "entry" && rung.high !== undefined ? rung.high : rung.price;
           const distance = rung.kind === "price" ? null : distancePct(reference, price);
-          const note = rung.kind === "price" ? null : noteOf(rung, copy);
           const value =
             rung.kind === "entry" && rung.high !== undefined
-              ? rung.price === rung.high
-                ? money(rung.price)
-                : `${money(rung.price)} – ${money(rung.high)}`
+              ? formatRange(rung.price, rung.high, locale)
               : money(rung.price);
           const shifted = Math.abs(rung.labelY - rung.markY) > 1;
           return (
@@ -136,16 +161,25 @@ export function PriceMap({
               <span className={cn(styles.mapDistance, "numeral", distance !== null && directionText(directionOf(distance)))}>
                 {distance !== null ? formatPercent(distance, locale, 1) : ""}
               </span>
-              {note && (
-                <span className={styles.mapNote} lang={lang}>
-                  {note}
-                </span>
-              )}
             </li>
           );
         })}
       </ol>
     </div>
+    {noteList.length > 0 && (
+      /* Tanım listesi: terim seviyenin adı, tanım nereden geldiği. Dar
+         ekranda alt alta, geniş ekranda iki sütun — makale kutularındaki
+         `**Etiket:**` kalıbıyla aynı okuma biçimi. */
+      <dl className={styles.mapNotes} lang={lang}>
+        {noteList.map((item) => (
+          <div key={item.label}>
+            <dt>{item.label}</dt>
+            <dd>{item.text}</dd>
+          </div>
+        ))}
+      </dl>
+    )}
+    </>
   );
 }
 

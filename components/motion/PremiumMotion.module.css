@@ -49,6 +49,21 @@
   box-shadow: var(--premium-shadow);
 }
 
+/* Çubuğun ALTINDA yumuşak bir geçiş. Yapışkan çubuk içeriğin üstünden
+   geçerken alt kenarında satırlar bıçakla kesilmiş gibi bitiyordu: yarısı
+   görünen bir cümle, panelin ortasında duran bir çubuk. Sayfa zemininden
+   şeffafa giden kısa bir bant kesiği yumuşatıyor — içerik çubuğun altına
+   girerken soluyor, kesilmiyor. `pointer-events:none`: bandın altındaki
+   bağlantılar tıklanabilir kalmalı. */
+.sectionNav::after {
+  content: "";
+  position: absolute;
+  inset: 100% -1px auto;
+  height: 16px;
+  background: linear-gradient(var(--page-bg), transparent);
+  pointer-events: none;
+}
+
 :global(html):has(.sectionNav) {
   scroll-behavior: smooth;
 }
@@ -65,6 +80,19 @@
 
 .navItems::-webkit-scrollbar {
   display: none;
+}
+
+/* Kesilen kenar SOLARAK biter: kaydırılacak bir şey olduğu böyle anlaşılıyor.
+   Maske yalnızca gerçekten kayan yönde uygulanıyor (`data-edge`), yoksa
+   taşmayan bir şeridin kenarındaki sekme sebepsiz soluk görünürdü. */
+.navItems[data-edge="end"] {
+  mask-image: linear-gradient(90deg, var(--text-strong) calc(100% - 28px), transparent 100%);
+}
+.navItems[data-edge="start"] {
+  mask-image: linear-gradient(90deg, transparent 0, var(--text-strong) 28px);
+}
+.navItems[data-edge="both"] {
+  mask-image: linear-gradient(90deg, transparent 0, var(--text-strong) 28px, var(--text-strong) calc(100% - 28px), transparent 100%);
 }
 
 .navLink {

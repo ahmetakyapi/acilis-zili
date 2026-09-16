@@ -3,7 +3,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { SESSION_BOUNDS, etParts, type MarketStatus } from "@/lib/market-hours";
 import type { Bar, Quote } from "@/lib/providers/types";
 import { displayZone, formatInZone, zoneTag } from "@/lib/session-clock";
-import { hareketliOrtalama } from "@/lib/utils";
+import { formatPrice, hareketliOrtalama } from "@/lib/utils";
 
 /**
  * Teknik analiz — on iki hissenin günde iki kez yazılan görüşü ve seviyeleri.
@@ -872,4 +872,19 @@ export function priceMapLayout(
     rungs[i]!.labelY = Math.max(inset, Math.min(rungs[i]!.labelY, ceiling));
   }
   return { rungs, scale };
+}
+
+/**
+ * Fiyat aralığı — para birimi BİR KEZ. "906,08 $ – 926,44 $" yerine
+ * "906,08 – 926,44 $".
+ *
+ * İşareti iki kez yazmak aralığı 18 piksel uzatıyordu ve fiyat haritasında
+ * "Alım Bölgesi" etiketini 390 pikselde iki satıra sarıyordu (ölçüldü).
+ * Aralığın iki ucu zaten aynı para biriminde; ikinci sembol bilgi taşımıyor.
+ * Üç yerden birden okunuyor: harita, plan şeridi ve görüş geçmişi tablosu —
+ * biçim tek yerde kalsın ki üçü aynı görünsün.
+ */
+export function formatRange(low: number, high: number, locale: Locale): string {
+  if (low === high) return formatPrice(low, locale, { currency: true });
+  return `${formatPrice(low, locale)} – ${formatPrice(high, locale, { currency: true })}`;
 }

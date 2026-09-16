@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { riskReward } from "@/lib/technical";
+import { formatRange, riskReward } from "@/lib/technical";
 import { cn, formatPercentPlain, formatPrice } from "@/lib/utils";
 import styles from "./Technical.module.css";
 
@@ -51,9 +51,16 @@ export function PlanStrip({
   t: Dictionary;
 }) {
   const money = (value: number) => formatPrice(value, locale, { currency: true });
+  /* PARA BİRİMİ LİSTEDE BİR KEZ, SONDA. Üç hedef üç kez "$" taşıyınca
+     "Nerede Satılır" hücresi sayfanın en uzun satırı oluyordu ve 390
+     pikselde etiketin üstüne dayanıyordu. Hepsi aynı para biriminde;
+     tekrarlanan sembol bilgi değil gürültü. `formatRange` ile aynı karar. */
   const list = (values: readonly number[]) =>
     values.length === 0 ? null : values.map((value, index) => (
-      <Fragment key={value}>{index > 0 && <span className={styles.planSep}> · </span>}<span>{money(value)}</span></Fragment>
+      <Fragment key={value}>
+        {index > 0 && <span className={styles.planSep}> · </span>}
+        <span>{index === values.length - 1 ? money(value) : formatPrice(value, locale)}</span>
+      </Fragment>
     ));
   const hasEntry = entryLow !== null && entryHigh !== null;
 
@@ -65,7 +72,7 @@ export function PlanStrip({
     ];
   } else if (hasEntry) {
     cells = [
-      { kind: "entry", label: t.technical.planEntry, value: entryLow === entryHigh ? money(entryLow) : `${money(entryLow)} – ${money(entryHigh)}` },
+      { kind: "entry", label: t.technical.planEntry, value: formatRange(entryLow, entryHigh, locale) },
       { kind: "target", label: t.technical.planTargets, value: list(targets) },
       { kind: "stop", label: t.technical.planStop, value: stop !== null ? money(stop) : null },
     ];

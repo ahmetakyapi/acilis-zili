@@ -259,7 +259,15 @@
 .mapRung[data-kind="support"] .mapLabel, .mapRung[data-kind="resistance"] .mapLabel { font-weight:500; color:var(--text-body); }
 .mapPrice { font-size:14px; font-weight:600; color:var(--text-strong); text-align:right; white-space:nowrap; }
 .mapDistance { min-width:60px; font-size:12px; font-weight:600; text-align:right; white-space:nowrap; color:var(--text-muted); }
-.mapNote { grid-column:1 / -1; margin-top:-2px; font-size:12px; line-height:1.45; color:var(--text-muted); }
+/* Seviye notları — haritanın ALTINDA. Gerekçe `PriceMap.tsx` yorumunda:
+   not satırı mutlak konumlu basamağın içindeyken satırları çakıştırıyordu. */
+.mapNotes { display:grid; gap:10px 20px; margin:16px 0 0; padding-top:14px; border-top:1px solid var(--line-soft); }
+.mapNotes > div { display:grid; grid-template-columns:minmax(0,1fr); gap:2px; }
+.mapNotes dt { font-size:12px; font-weight:700; letter-spacing:.02em; color:var(--text-strong); }
+.mapNotes dd { margin:0; font-size:13px; line-height:1.55; color:var(--text-muted); text-wrap:pretty; }
+@media (min-width: 640px) {
+  .mapNotes > div { grid-template-columns:132px minmax(0,1fr); gap:4px 14px; align-items:baseline; }
+}
 
 /* ---- Senaryolar ---- */
 .scenarios { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
@@ -365,11 +373,42 @@
   .mapLine { left:21px; }
   .mapBand { left:11px; width:22px; }
   .mapRungs { left:44px; }
-  .mapRung { padding:6px 10px 6px 12px; column-gap:8px; }
+  /* DAR EKRANDA SATIR SIKIŞTIRILIR VE SARMA GÜVENLİ HÂLE GETİRİLİR.
+     En uzun etiket ("Alım Bölgesi") tek satır için 112 piksel istiyor ama
+     390'da etiket sütununa 72 piksel düşüyor (ölçüldü) — çünkü aynı satırda
+     bir de aralık fiyatı ("906,08 – 926,44 $", 114 piksel) ve uzaklık var.
+     Punto ve boşlukları kısmak çoğu durumda tek satıra indiriyor; indirmediği
+     durum da kırık olmamalı. Sunucu sarmanın olup olmayacağını BİLEMEZ
+     (genişliğe bağlı), o yüzden satır aralığı ve dolgu iki satırlık bir
+     etiket de 46 piksellik ayrıma sığacak şekilde ayarlandı: 2 × 16,3 + 8 =
+     40,6 < 46. Tersi, "sarmasın" deyip taşırmak olurdu. */
+  .mapRung { padding:4px 8px 4px 10px; column-gap:6px; line-height:1.25; }
   .mapRung::before { left:-22px; width:22px; }
   .mapMark { left:-29px; }
   .mapLink { left:-23px; }
-  .mapDistance { min-width:52px; }
+  .mapLabel, .mapPrice { font-size:13px; }
+  .mapDistance { min-width:46px; font-size:11px; }
+
+  /* GÖRÜŞ GEÇMİŞİ MOBİLDE TABLO DEĞİL, SATIR YIĞINI.
+     Beş sütun 390 pikselde sığmıyordu: kutu 176 piksel yatay kayıyordu
+     (ölçüldü) ve "Alım Bölgesi" ile "Stop" ekranın dışında kalıyordu —
+     yani tablodaki beş sütunun ikisi hiç görünmüyordu. Yatay kaydırma
+     burada bir çözüm değil: okuyucu kaydırılacak bir şey olduğunu bilmiyor
+     ve tablo başlığı kayınca hangi sayının ne olduğu da kayboluyor.
+     Her kayıt artık iki satır: üstte tarih, yayın ve görüş; altta seviyeler
+     kendi adlarıyla (`data-label`). Başlık satırı gizleniyor çünkü adlar
+     hücrenin yanına indi. */
+  .tableWrap { overflow-x:visible; }
+  .table, .table tbody, .table tr, .table td { display:block; }
+  .table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .table tr { display:grid; grid-template-columns:auto auto 1fr; align-items:center; gap:2px 10px; padding:12px 0; border-bottom:1px solid var(--line-soft); }
+  .table tr:last-child { border-bottom:0; }
+  .table td { padding:0; border-bottom:0; white-space:normal; }
+  .table td[data-cell="stance"] { justify-self:end; }
+  /* Seviyeler ikinci satırda, adlarıyla: "Alım Bölgesi 906,08 – 926,44 $". */
+  .table td[data-cell="entry"], .table td[data-cell="stop"] { grid-column:1/-1; display:flex; gap:6px; margin-top:2px; font-size:12px; color:var(--text-muted); }
+  .table td[data-cell="entry"]::before, .table td[data-cell="stop"]::before { content:attr(data-label) ":"; flex:none; font-weight:600; color:var(--text-muted); }
+  .table td[data-cell="date"] { font-weight:700; color:var(--text-strong); }
 }
 
 @media (prefers-reduced-motion: reduce) {

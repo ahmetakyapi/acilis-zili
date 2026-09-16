@@ -477,6 +477,7 @@ const en: typeof tr = {
     atAnalysis: "At Analysis",
     levelsNote: "Distance From Price",
     target: "Target {n}",
+    targetsLabel: "Targets",
     resistance: "Resistance",
     entryZone: "Entry Zone",
     support: "Support",

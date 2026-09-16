@@ -628,6 +628,7 @@ const tr = {
     atAnalysis: "Analiz Anında",
     levelsNote: "Fiyata Uzaklık",
     target: "Hedef {n}",
+    targetsLabel: "Hedefler",
     resistance: "Direnç",
     entryZone: "Alım Bölgesi",
     support: "Destek",

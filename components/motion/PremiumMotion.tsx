@@ -209,6 +209,7 @@ export function SectionNav({
   className?: string;
 }) {
   const ref = useRef<HTMLElement>(null);
+  const stripRef = useRef<HTMLDivElement>(null);
   const navId = useId();
   const [activeId, setActiveId] = useState(items[0]?.id ?? "");
   const itemIds = items.map((item) => item.id).join("\n");
@@ -289,11 +290,44 @@ export function SectionNav({
     };
   }, [itemIds]);
 
+  /* AKTİF SEKME GÖRÜNÜRDE KALIR VE KENAR SOLAR.
+     Beş sekme 390 pikselde 513 piksel istiyor (ölçüldü), yani şerit yatay
+     kayıyor. Kaydırma kendi başına sorun değil; sorun İKİ eksikti. Birincisi
+     okuyucu sayfayı aşağı kaydırdıkça aktif sekme şeridin dışına çıkıyordu:
+     "Görüş Geçmişi"ni okurken çubukta hâlâ ilk üç sekme duruyor ve nerede
+     olduğun hiçbir yerde yazmıyor. İkincisi kenarda kesilen sekme, kesildiği
+     belli olmadan duruyordu — kaydırılacak bir şey olduğu anlaşılmıyordu.
+     Kaydırma YATAY kutunun kendi içinde yapılıyor (`scrollLeft`), sayfa
+     kaydırması değil: `scrollIntoView` burada sayfayı da zıplatırdı. */
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    const markEdges = () => {
+      const max = strip.scrollWidth - strip.clientWidth;
+      strip.dataset.edge = max <= 1
+        ? "none"
+        : strip.scrollLeft <= 1 ? "end" : strip.scrollLeft >= max - 1 ? "start" : "both";
+    };
+    const active = strip.querySelector<HTMLElement>('[aria-current="location"]');
+    if (active && strip.scrollWidth > strip.clientWidth + 1) {
+      const target = active.offsetLeft - (strip.clientWidth - active.offsetWidth) / 2;
+      strip.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
+    }
+    markEdges();
+    strip.addEventListener("scroll", markEdges, { passive: true });
+    const resizeObserver = new ResizeObserver(markEdges);
+    resizeObserver.observe(strip);
+    return () => {
+      strip.removeEventListener("scroll", markEdges);
+      resizeObserver.disconnect();
+    };
+  }, [selectedId, itemIds]);
+
   if (!items.length) return null;
 
   return (
     <nav ref={ref} aria-label={label} className={classes(styles.sectionNav, className)}>
-      <div className={styles.navItems}>
+      <div ref={stripRef} className={styles.navItems}>
         {items.map((item) => {
           const active = selectedId === item.id;
           return (
