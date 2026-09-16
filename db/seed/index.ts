@@ -4,7 +4,6 @@ config({ path: ".env.local" });
 
 import { db } from "../../lib/db";
 import {
-  economicEvents,
   macroSeries,
   marketHolidays,
   stories,
@@ -12,11 +11,7 @@ import {
 } from "../../lib/schema";
 import { MACRO_SERIES } from "../../lib/providers/fred";
 import { MARKET_HOLIDAYS } from "./holidays";
-import {
-  COVERAGE_WARN_DAYS,
-  economicEventSeeds,
-  manualCoverage,
-} from "./economic-events";
+import { reportCoverage, seedEconomicEvents } from "./economic-step";
 import { STORY_SEEDS } from "./stories";
 import { ALL_SYMBOL_SEEDS } from "./symbols";
 
@@ -44,33 +39,10 @@ async function main() {
   console.log(`  tatiller           ${MARKET_HOLIDAYS.length} kayıt`);
 
   // ---- Ekonomik takvim ----
-  const events = economicEventSeeds();
-  for (const event of events) {
-    await db
-      .insert(economicEvents)
-      .values({
-        eventDate: event.eventDate,
-        eventTimeEt: event.eventTimeEt,
-        slug: event.slug,
-        titleTr: event.titleTr,
-        titleEn: event.titleEn,
-        importance: event.importance,
-        unit: event.unit,
-        fredSeriesId: event.fredSeriesId,
-        source: event.source,
-      })
-      .onConflictDoUpdate({
-        target: [economicEvents.slug, economicEvents.eventDate],
-        set: {
-          eventTimeEt: event.eventTimeEt,
-          titleTr: event.titleTr,
-          titleEn: event.titleEn,
-          importance: event.importance,
-          updatedAt: new Date(),
-        },
-      });
-  }
-  console.log(`  ekonomik olaylar   ${events.length} kayıt`);
+  // Adımın kendisi `economic-step.ts`te: aynı iş `npm run db:seed:events`
+  // ile tek başına da koşturulabiliyor ve iki kod yolu olmasın.
+  const eventCount = await seedEconomicEvents();
+  console.log(`  ekonomik olaylar   ${eventCount} kayıt`);
   reportCoverage();
 
   // ---- Semboller ----
@@ -145,34 +117,6 @@ async function main() {
   console.log(`  mercek yazıları   ${STORY_SEEDS.length} kayıt`);
 
   console.log("\nSeed tamamlandı.");
-}
-
-/**
- * Elle bakımı gereken takvimlerin ne kadar ömrü kaldığını yazar.
- *
- * CPI, FOMC ve istihdam tarihleri kurala bağlı değil, ilan edilmiş
- * takvimlerden elle işleniyor — bir gün bitiyorlar ve bittiklerinde takvim
- * sessizce boşalıyor. Bu satırlar o sessizliği kırıyor.
- */
-function reportCoverage() {
-  const coverage = manualCoverage();
-  const short = coverage.filter((c) => c.daysLeft < COVERAGE_WARN_DAYS);
-
-  for (const entry of coverage) {
-    const mark = entry.daysLeft < COVERAGE_WARN_DAYS ? "!" : " ";
-    console.log(
-      `   ${mark} ${entry.label.padEnd(16)} son tarih ${entry.lastDate ?? "—"} (${entry.daysLeft} gün)`,
-    );
-  }
-
-  if (short.length > 0) {
-    console.log(
-      `\n  UYARI: ${short.map((c) => c.label).join(", ")} takvimi ${COVERAGE_WARN_DAYS} günden az kaldı.` +
-        `\n  Yeni tarihleri db/seed/economic-events.ts içine işle:` +
-        `\n    TÜFE ve istihdam → bls.gov/schedule/news_release/` +
-        `\n    FOMC             → federalreserve.gov/monetarypolicy/fomccalendars.htm`,
-    );
-  }
 }
 
 main()
