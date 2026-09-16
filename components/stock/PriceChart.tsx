@@ -936,7 +936,34 @@ export function PriceChart({
             ok tuşlarıyla gezmeyi bekliyor ve öyle bir yönetim yok — ARIA sözü
             tutulmuyordu. Aralık seçimi zaten bir sekme değil: aynı grafiğin
             penceresini değiştiriyor. */}
-        <div className="scroll-x flex gap-1" role="group" aria-label={labels.rangeGroup}>
+        {/* KAYDIRILABİLİRLİK GÖRÜNÜR OLDU; SATIRI İKİYE BÖLMEK GÜVENLİ DEĞİL.
+            Kap `.scroll-x` idi ve o çubuğu SAKLIYOR: 390px telefonda sekiz
+            aralık düğmesinin 72 pikseli sağda kalıyordu (ölçüldü, 320'de
+            142) ve ekranda "devamı var" diyen hiçbir işaret yoktu — okuyucu
+            1Y ile 5Y'nin var olduğunu göremiyordu. `.scroll-x-hint` ince ama
+            görünür bir çubuk bırakıyor; aynı düzeltme karşılaştırma
+            grafiğinde ve bilanço tablosunda zaten yapılmıştı, hisse sayfası
+            atlanmıştı.
+
+            DAHA İYİSİ DENENDİ VE BIRAKILDI. Ölçüm şunu söylüyordu: aralıklar
+            291 piksel istiyor, satır 324 — sıkıştıran şey aynı satırdaki 95
+            piksellik mod grubu (Çizgi/Mum). Mod grubunu alta indirince
+            sekizi de boşlukla sığıyordu. Ama bu grafik hisse sayfasında
+            `compact` modunda çiziliyor ve orada `flex-wrap:nowrap` BİLEREK
+            var: yukarıdaki CLS notu (0,244'ten düşürüldü) sabit yükseklik
+            ölçüleriyle duruyor ve denetim iskeleti mobilde 84 piksel yer
+            ayırıyor. Satırı ikiye çıkarmak gerçek yüksekliği iskeletin
+            ayırdığından büyütür, yani kaydırmayı görünür kılarken düzen
+            kaymasını geri getirirdik. Bir kusuru ötekiyle değişmek değil.
+
+            `tabIndex` EKLENMEDİ: düğmeler zaten klavyeyle geziliyor ve
+            tarayıcı odaklananı görünüre kaydırıyor — fazladan tab durağı
+            kazanç değil, gürültü olurdu. */}
+        <div
+          className="scroll-x-hint -mb-1 flex gap-1 pb-1"
+          role="group"
+          aria-label={labels.rangeGroup}
+        >
           {CHART_RANGES.map((r) => (
             <button
               key={r}

@@ -519,7 +519,14 @@ export default async function StockPage(
 function StockBreadcrumb({ symbol, t }: { symbol: string; t: Dictionary }) {
   return (
     <div className={styles.breadcrumb}>
-      <Link href="/sirketler" className={styles.backLink}>
+      {/* `tap-44`: bağlantı 18 piksel yüksekliğinde ve telefonda parmak ~44
+          piksellik bir alana basıyor — künyedeki öteki geri bağlantıları
+          (rehber, mercek) bu sınıfı zaten taşıyor, hisse sayfası atlanmıştı.
+          Genişletme yalnızca DİKEY ve 13'er piksel; ölçüldü, en yakın
+          dokunulabilir komşu yukarıda 34, aşağıda 40 piksel uzakta, yani
+          `globals.css`teki "saran listede komşunun hedefini kapar" istisnası
+          burada geçerli değil. */}
+      <Link href="/sirketler" className={cn("tap-44", styles.backLink)}>
         <ArrowLeft size={15} weight="bold" />
         {t.nav.companies}
       </Link>
