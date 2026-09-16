@@ -60,8 +60,16 @@ export async function getTechnicalSnapshots(
   status: MarketStatus,
 ): Promise<SnapshotBatch> {
   const list = [...new Set(symbols)];
+  /* BAYAT BAR DA FOTOĞRAFA GİRMEZ — bayat kotasyon kuralının ikizi.
+     `getChartBarsMulti` sağlayıcı düşünce veritabanındaki son barlara
+     düşüyor ve bunu söyleyen bir bayrak taşımıyor. Ekrana çizen bir sayfa
+     için eski bir seri hiç seriden iyidir; burası ekran değil YAZMA yolu:
+     buradan çıkan fotoğraf `technical_analyses.snapshot` olarak kalıcı
+     yazılıyor. Eski barlardan hesaplanmış bir RSI, kaydın içinde "analiz
+     anındaki gösterge" diye sonsuza kadar duracaktı. Yedek kapalı: bar
+     gelmezse sembol atlanıyor. */
   const [bars, quotes] = await Promise.all([
-    getChartBarsMulti(list, "1Y", status),
+    getChartBarsMulti(list, "1Y", status, { allowCache: false }),
     getQuotes(list, status),
   ]);
   /* BAYAT KOTASYON FOTOĞRAFA GİRMEZ. Sağlayıcı düşünce kotasyon veritabanı
