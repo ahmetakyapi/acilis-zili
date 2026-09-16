@@ -269,6 +269,20 @@ export type SeriesCoverage = {
   lastDate: string | null;
   /** Bugünden itibaren kaç gün kaldı. */
   daysLeft: number;
+  /**
+   * Bu seriyi günlük senkron KENDİ uzatıyor mu?
+   *
+   * `lib/calendar-sync.ts` FRED'in `/release/dates` ucundan TÜFE (CPIAUCSL)
+   * ve istihdam (PAYEMS) tarihlerini çekip takvimi dolduruyor; FOMC oradan
+   * gelmiyor çünkü Fed'in toplantı takvimi bir FRED "yayını" değil.
+   *
+   * Ayrım rapora yazılıyor çünkü olmadığında uyarı YANLIŞ İŞ yaptırıyor:
+   * "tarihleri elle işle" diyen satır, aslında kendi kendine dolan iki seri
+   * için de aynı şeyi söylüyordu. Bu yüzden bir kez BLS takvimini elle
+   * çekmeye kalkıldı; oysa yapılacak bir şey yoktu — BLS 2027'yi henüz ilan
+   * etmemişti ve ilan ettiği gün senkron zaten alacaktı.
+   */
+  auto: boolean;
 };
 
 /** Elle bakımı gereken serilerin kapsamı — kural tabanlı olanlar hariç. */
@@ -283,11 +297,12 @@ export function manualCoverage(today: string = todayEt()): SeriesCoverage[] {
     dates.length > 0 ? [...dates].sort().at(-1)! : null;
 
   return [
-    { label: "TÜFE (BLS)", lastDate: lastOf(CPI_RELEASES.map((r) => r.date)) },
-    { label: "FOMC (Fed)", lastDate: lastOf(FOMC_DECISIONS.map((r) => r.date)) },
+    { label: "TÜFE (BLS)", lastDate: lastOf(CPI_RELEASES.map((r) => r.date)), auto: true },
+    { label: "FOMC (Fed)", lastDate: lastOf(FOMC_DECISIONS.map((r) => r.date)), auto: false },
     {
       label: "İstihdam (BLS)",
       lastDate: lastOf(PAYROLL_RELEASES.map((r) => r.date)),
+      auto: true,
     },
   ].map((entry) => ({
     ...entry,

@@ -65,17 +65,36 @@ export function reportCoverage(): void {
 
   for (const entry of coverage) {
     const mark = entry.daysLeft < COVERAGE_WARN_DAYS ? "!" : " ";
+    const how = entry.auto ? "senkron uzatıyor" : "ELLE";
     console.log(
-      `   ${mark} ${entry.label.padEnd(16)} son tarih ${entry.lastDate ?? "—"} (${entry.daysLeft} gün)`,
+      `   ${mark} ${entry.label.padEnd(16)} son tarih ${entry.lastDate ?? "—"} (${entry.daysLeft} gün · ${how})`,
     );
   }
 
-  if (short.length > 0) {
+  /* ÇARE SERİYE GÖRE DEĞİŞİR, o yüzden iki ayrı cümle.
+     Tek bir "tarihleri elle işle" satırı yanlış iş yaptırıyordu: TÜFE ile
+     istihdamı günlük senkron FRED'den zaten çekiyor (`lib/calendar-sync.ts`)
+     ve orada yapılacak bir şey yok — kaynak ilan etmediyse kimse o tarihi
+     bilmiyor demektir. Elle işlenmesi gereken tek takvim FOMC. */
+  const autoShort = short.filter((c) => c.auto);
+  const manualShort = short.filter((c) => !c.auto);
+
+  if (autoShort.length > 0) {
     console.log(
-      `\n  UYARI: ${short.map((c) => c.label).join(", ")} takvimi ${COVERAGE_WARN_DAYS} günden az kaldı.` +
-        `\n  Yeni tarihleri db/seed/economic-events.ts içine işle:` +
-        `\n    TÜFE ve istihdam → bls.gov/schedule/news_release/` +
-        `\n    FOMC             → federalreserve.gov/monetarypolicy/fomccalendars.htm`,
+      `\n  BİLGİ: ${autoShort.map((c) => c.label).join(", ")} tohumda ${COVERAGE_WARN_DAYS} günden az.` +
+        `\n  Yapılacak bir şey yok: günlük senkron bu tarihleri FRED'den çekiyor` +
+        `\n  ve kaynak yeni takvimi ilan ettiği gün kendiliğinden uzatıyor.` +
+        `\n  Takvimin GERÇEK ömrü tohumda değil veritabanında — cron raporundaki` +
+        `\n  calendarRunwayDays ona bakar.`,
+    );
+  }
+
+  if (manualShort.length > 0) {
+    console.log(
+      `\n  UYARI: ${manualShort.map((c) => c.label).join(", ")} takvimi ${COVERAGE_WARN_DAYS} günden az kaldı` +
+        `\n  ve bu seri kendiliğinden UZAMAZ. Yeni tarihleri elle işle:` +
+        `\n    db/seed/economic-events.ts → FOMC_DECISIONS` +
+        `\n    Kaynak: federalreserve.gov/monetarypolicy/fomccalendars.htm`,
     );
   }
 }
