@@ -637,6 +637,14 @@ export function ladderOf(source: LevelSource): Level[] {
   for (const price of source.supports) {
     if (inEntry(price)) continue;
     if (source.stop !== null && same(source.stop, price)) continue;
+    /* AYNI FİYAT İKİ KEZ YAZILMAZ. Rutin destek ve direnç listelerini ayrı
+       yazıyor ve bir seviye ikisinde birden olabiliyor (kırılıp rol
+       değiştirmiş bir seviye böyle işaretleniyor). Haritada sonuç saçmaydı:
+       "Direnç 930,89 $" satırının hemen altında "Destek 930,89 $". Aynı
+       çizgiyi iki kez göstermek okuyucuya iki seviye varmış gibi geliyor.
+       Direnç önce eklendiği için o kalıyor; hedef ve stop çakışmaları da
+       yukarıdaki iki satırda aynı mantıkla eleniyor. */
+    if (levels.some((level) => level.kind === "resistance" && same(level.price, price))) continue;
     levels.push({ kind: "support", price });
   }
 

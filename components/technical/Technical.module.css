@@ -240,7 +240,16 @@
 .mapBand { position:absolute; left:15px; width:26px; border-radius:6px; background:var(--up-wash); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 45%, transparent); }
 .mapVoid { position:absolute; left:8px; right:8px; bottom:0; border-top:1px dashed var(--down); border-radius:0 0 8px 8px; background:repeating-linear-gradient(135deg, var(--down-wash) 0 4px, transparent 4px 10px); }
 .mapVoid i { position:absolute; top:10px; left:2px; writing-mode:vertical-rl; font-size:10px; font-style:normal; font-weight:700; letter-spacing:.06em; color:var(--down); white-space:nowrap; }
-.mapPriceLine { position:absolute; left:20px; right:0; border-top:2px dashed var(--primary); opacity:.45; pointer-events:none; }
+/* Fiyat çizgisi EKSENDE biter, satırların üstünden geçmez. Tam genişlikte
+   2 piksellik kesikli bir kuraldı ve en yakın satırın altını çiziyordu:
+   "Direnç 930,89 $" bir ayracın üstünde duruyormuş gibi okunuyordu, üstelik
+   geniş ekranda haritanın en baskın çizgisi oydu. İşi fiyatın bantlara göre
+   nereye düştüğünü göstermek ve o bilgi eksende; etiket sütununa girmesi
+   bilgi katmıyor, gürültü katıyor. Kayan etiketle işareti zaten `.mapLink`
+   birleştiriyor. */
+/* Genişlik rayın bittiği yere göre: ray 56, basamak dolgusu 16, yani ilk
+   harf ~72 pikselde başlıyor — çizgi 66'da bitiyor ve metne değmiyor. */
+.mapPriceLine { position:absolute; left:6px; width:60px; border-top:2px dashed var(--primary); opacity:.5; pointer-events:none; }
 .mapRungs { position:absolute; left:56px; right:0; top:0; bottom:0; margin:0; padding:0; list-style:none; }
 .mapRung { position:absolute; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; column-gap:12px; padding:7px 14px 7px 16px; border-radius:12px; transform:translateY(-50%); }
 .mapRung::before { content:""; position:absolute; left:-28px; top:50%; width:28px; height:1px; background:var(--line-strong); }
@@ -345,7 +354,14 @@
 .table tr:last-child td { border-bottom:0; }
 .table th:first-child, .table td:first-child { padding-left:0; }
 
-.footNote { display:flex; flex-direction:column; gap:6px; padding-top:14px; border-top:1px solid var(--line); font-size:12px; line-height:1.6; color:var(--text-muted); }
+/* SATIR UZUNLUĞU SINIRLI. Dipnot sayfanın tam genişliğine yayılıyordu ve
+   1440'ta satır başına 220 karakter düşüyordu (ölçüldü, 1320 piksel) — göz
+   satır sonundan bir sonraki satır başına dönerken yerini kaybediyor. Ölçü
+   `ch` cinsinden, yani punto değişirse kendiliğinden uyum sağlıyor; aynı
+   yaklaşım kapak manşetinde de var (`.coverHeadline`, 58ch). 78 burada
+   biraz cömert ama metin 12 piksel ve yasal nitelikte: okunacak değil,
+   bakılacak bir blok. */
+.footNote { display:flex; flex-direction:column; gap:6px; max-width:78ch; padding-top:14px; border-top:1px solid var(--line); font-size:12px; line-height:1.6; color:var(--text-muted); }
 
 /* ---- Kırılımlar ---- */
 @media (max-width: 1023px) {
@@ -370,6 +386,7 @@
   .rsiReading { min-height:144px; }
   .rsiValue { font-size:27px; }
   .mapRail { width:44px; }
+  .mapPriceLine { left:4px; width:50px; }
   .mapLine { left:21px; }
   .mapBand { left:11px; width:22px; }
   .mapRungs { left:44px; }
