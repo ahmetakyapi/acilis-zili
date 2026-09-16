@@ -10,6 +10,27 @@
 .root[data-compact="true"] .controls { flex-wrap:nowrap; gap:10px; margin-top:0; padding-top:8px; }
 .root[data-compact="true"] .controls > div:first-child { flex:1; min-width:0; }
 .root[data-compact="true"] .controls > div:last-child { flex-shrink:0; }
+
+/* TELEFONDA ARALIKLAR KENDİ SATIRINDA — üçü ekran dışında kalıyordu.
+   Kompakt düzen her şeyi tek satırda tutuyor ve dar ekranda aralık grubuna
+   219 piksel düşüyordu; oysa sekiz düğme 291 piksel istiyor (ölçüldü,
+   390px'te). YBB, 1Y ve 5Y hiç görünmüyordu — kaydırma çubuğu görünür
+   olsa bile okuyucunun "5 yıl" diye bir seçenek olduğunu bilmesi için
+   önce kaydırması gerekiyordu.
+
+   Sığmamasının sebebi aralıkların çokluğu değil, aynı satırdaki 95
+   piksellik mod grubuydu (Çizgi/Mum). Mod grubu alta inince sekizi de
+   boşlukla sığıyor.
+
+   CLS RİSKİ ÖLÇÜLDÜ, YOK. `--price-chart-controls` iskeletin ayırdığı
+   yer ve bu ekranda 44 piksele kurulu; satır ise ZATEN 53 pikseldi, yani
+   ortada 9 piksellik bir uyumsuzluk vardı. İki satıra çıkan gerçek ölçü
+   ile birlikte o değişken de düzeltildi (`stock.module.css`), yani bu
+   değişiklik kaymayı büyütmüyor — var olanı kapatıyor. */
+@media (max-width: 639px) {
+  .root[data-compact="true"] .controls { flex-wrap:wrap; gap:8px 10px; }
+  .root[data-compact="true"] .controls > div:first-child { flex-basis:100%; flex-grow:0; }
+}
 .root[data-compact="true"] .controls button { padding-inline:9px; }
 .root[data-compact="true"] .reading :global(.tote) { font-size:24px; }
 .legendSkeleton { margin-top:var(--price-chart-legend-margin,12px); padding-top:var(--price-chart-legend-padding,12px); }

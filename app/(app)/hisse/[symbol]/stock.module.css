@@ -183,7 +183,15 @@
   --price-chart-legend:30px;
   --price-chart-legend-margin:8px;
   --price-chart-legend-padding:6px;
-  --price-chart-controls:44px;
+  /* İskeletin denetim satırı için ayırdığı yer — HEPSİ ÖLÇÜLDÜ.
+     Burada 44 yazıyordu ama satır 53 pikseldi, yani yükleme sırasında 9
+     piksellik bir kayma zaten vardı; dar ve geniş kırılımlar da aşağıda
+     kendi ölçüleriyle düzeltildi. Değer değişirse yeniden ölçülmeli:
+     iskeletin ayırdığı yer gerçeğin altında kalırsa sayfa yüklenirken
+     zıplıyor, üstünde kalırsa altta boşluk duruyor.
+     Taban yalnızca 640-1099 aralığını yönetiyor: altını `max-width:639px`,
+     üstünü `min-width:1100px` bloğu devralıyor. */
+  --price-chart-controls:45px;
   --price-chart-controls-margin:0px;
   --price-chart-controls-padding:8px;
   padding:20px;
@@ -209,7 +217,7 @@
 .chapterNav + .chapter { padding-top:10px; }
 @media(min-width:1100px) {
  .companyOverview { align-items:start; }
- .companyOverview .chartPanel { --price-chart-height:clamp(180px,calc(100svh - 496px),280px); --price-chart-controls:36px; }
+ .companyOverview .chartPanel { --price-chart-height:clamp(180px,calc(100svh - 496px),280px); --price-chart-controls:45px; }
  .companyOverview .stockHeader { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; column-gap:20px; }
  .companyOverview .identity { gap:12px; }
  .companyOverview .priceLine { gap:6px 12px; }
@@ -218,7 +226,9 @@
  .chartSkeleton { height:calc(var(--price-chart-height) + 137px); }
 }
 @media(max-width:639px) {
- .companyOverview .chartPanel { padding:16px 14px 12px; }
+ /* 105px: aralıklar burada kendi satırına iniyor (gerekçe
+    `PriceChart.module.css`), yani denetimler iki satır. */
+ .companyOverview .chartPanel { padding:16px 14px 12px; --price-chart-controls:105px; }
  .companyOverview .stockHeader { gap:12px; margin-bottom:12px; }
  .companyOverview .companyName { font-size:23px; }
  .companyOverview .livePrice { font-size:38px; }
