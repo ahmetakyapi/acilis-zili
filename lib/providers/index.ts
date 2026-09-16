@@ -440,11 +440,28 @@ async function persistBarsMulti(
  *
  * Sağlayıcı düşerse önbellekteki son barlara düşülür — tek sembollük
  * yoldaki davranışın aynısı, tek sorguda.
+ *
+ * YEDEK YOL SESSİZ: dönüş tipi yalnızca barlar, yani çağıran bir serinin
+ * sağlayıcıdan mı yoksa aylar öncesinden kalmış bir satırdan mı geldiğini
+ * ANLAYAMIYOR. Tek sembollük yol bunu `stale` bayrağıyla söylüyor ve ekranda
+ * damga çıkıyor; burada öyle bir kanal yok. İki koruma eklendi:
+ *
+ *   · Satırın yaşı sınırlı. Süresiz bir yedek "son bilinen grafik" değil,
+ *     bir enkaz: bir aylık bir satır bugünün grafiği diye çizilirdi. Beş gün,
+ *     `alpaca.ts`teki ölü sembol eşiğiyle aynı gerekçe — uzun hafta sonu ve
+ *     tatil birleşince dört günü buluyor.
+ *   · `allowCache: false` yedeği tamamen kapatıyor. Ekrana çizen çağıranlar
+ *     için eski bir seri hiç seriden iyidir; VERİTABANINA YAZAN çağıran için
+ *     değil. Teknik analiz fotoğrafı bu yüzden kapalı istiyor (gerekçesi
+ *     `getTechnicalSnapshots`te, bayat kotasyon kuralının aynısı).
  */
+const BARS_CACHE_MAX_AGE_MS = 5 * 24 * 60 * 60 * 1000;
+
 export async function getChartBarsMulti(
   symbolList: string[],
   range: ChartRange,
   status: MarketStatus,
+  options: { allowCache?: boolean } = {},
 ): Promise<Record<string, Bar[]>> {
   const unique = [...new Set(symbolList)];
   if (unique.length === 0) return {};
@@ -458,7 +475,7 @@ export async function getChartBarsMulti(
   }
 
   const missing = unique.filter((symbol) => !out[symbol]);
-  if (missing.length === 0) return out;
+  if (missing.length === 0 || options.allowCache === false) return out;
 
   try {
     const rows = await db
@@ -470,8 +487,11 @@ export async function getChartBarsMulti(
           eq(candlesCache.timeframe, range),
         ),
       );
+    const floor = Date.now() - BARS_CACHE_MAX_AGE_MS;
     for (const row of rows) {
-      if (row.bars) out[row.symbol] = row.bars as Bar[];
+      if (!row.bars) continue;
+      if (row.fetchedAt && row.fetchedAt.getTime() < floor) continue;
+      out[row.symbol] = row.bars as Bar[];
     }
   } catch {
     // yoksay
