@@ -5,6 +5,7 @@ import { candlesCache, quotesCache, symbols as symbolsTable } from "../schema";
 import {
   boundedTtl,
   candleTtlSeconds,
+  etParts,
   expectsSessionData,
   isSessionTrade,
   quoteTtlSeconds,
@@ -525,6 +526,44 @@ async function persistBarsMulti(
  */
 const BARS_CACHE_MAX_AGE_MS = 5 * 24 * 60 * 60 * 1000;
 
+/**
+ * Gün içi aralıklar — bir SEANSIN şeklini çiziyorlar, bir dönemin değil.
+ *
+ * "1D" tek işlem gününün beş dakikalık barları, "1W" beş günün yarım saatlik
+ * barları; ikisinin de son barı içinde bulunduğumuz seansa ait olmalı.
+ */
+const INTRADAY_RANGES = new Set<ChartRange>(["1D", "1W"]);
+
+/**
+ * Önbellekten gelen bar dizisi EKRANIN ANLATTIĞI SEANSI mı çiziyor?
+ *
+ * Yaş sınırı tek başına yetmiyordu ve eksiği gün içi aralıklarda görünüyor:
+ * beş günlük tavan, DÜNKÜ seansın 1G serisini geçerli sayıyor. Ana sayfanın
+ * endeks kartlarında bu şöyle çıkıyor — yüzdenin altındaki kıvılcım çizgisi
+ * bugünün yüzdesiyle dünün seans şeklini yan yana koyuyor. Aynı hata
+ * kotasyon tarafında bir kez bulundu (gerekçesi `MarketStatus.sessionDate`
+ * üzerinde); bar tarafında da aynı kural geçerli.
+ *
+ * Dönemsel aralıklarda (1A ve üstü) kural yaş sınırı olarak kalıyor: oradaki
+ * seri zaten günlük/haftalık barlardan kuruluyor ve son barın bugün olması
+ * beklenmiyor — seans açıkken günün barı henüz kapanmamış olabilir.
+ */
+function cachedBarsUsable(
+  range: ChartRange,
+  bars: Bar[],
+  fetchedAt: Date | null,
+  status: MarketStatus,
+  now: Date = new Date(),
+): boolean {
+  if (bars.length === 0) return false;
+  if (fetchedAt && fetchedAt.getTime() < now.getTime() - BARS_CACHE_MAX_AGE_MS) {
+    return false;
+  }
+  if (!INTRADAY_RANGES.has(range)) return true;
+  const last = bars[bars.length - 1];
+  return etParts(new Date(last.time * 1000)).dateStr === status.sessionDate;
+}
+
 export async function getChartBarsMulti(
   symbolList: string[],
   range: ChartRange,
@@ -555,11 +594,11 @@ export async function getChartBarsMulti(
           eq(candlesCache.timeframe, range),
         ),
       );
-    const floor = Date.now() - BARS_CACHE_MAX_AGE_MS;
     for (const row of rows) {
       if (!row.bars) continue;
-      if (row.fetchedAt && row.fetchedAt.getTime() < floor) continue;
-      out[row.symbol] = row.bars as Bar[];
+      const cached = row.bars as Bar[];
+      if (!cachedBarsUsable(range, cached, row.fetchedAt, status)) continue;
+      out[row.symbol] = cached;
     }
   } catch {
     // yoksay
@@ -595,8 +634,13 @@ export async function getChartBars(
       )
       .limit(1);
 
-    if (row?.bars) {
-      return ok(row.bars as Bar[], "cache", {
+    /* YAŞ SINIRI BU YOLDA YOKTU. Çoklu yol satırın yaşına bakıyordu, tek
+       sembollük yol bakmıyordu: aylar öncesinden kalmış bir satır "1Y grafiği"
+       diye çizilebiliyordu. Aynı kural, aynı yardımcı — gün içi aralıklarda
+       seans günü, dönemsel aralıklarda beş günlük tavan. */
+    const cached = row?.bars ? (row.bars as Bar[]) : null;
+    if (cached && cachedBarsUsable(range, cached, row.fetchedAt, status)) {
+      return ok(cached, "cache", {
         stale: true,
         fetchedAt: row.fetchedAt,
       });

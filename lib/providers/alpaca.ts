@@ -234,25 +234,32 @@ const STALE_TRADE_MS = 5 * 24 * 60 * 60 * 1000;
  * `prevDailyBar.c` kalır. Gün ayrımı ET takvimiyle yapılıyor: UTC ile
  * yapılırsa akşam seansı (20:00 ET = 00:00 UTC) ertesi güne kayıyor.
  */
-function referenceClose(
+function dailyBarIsPreviousSession(
   snap: AlpacaSnapshot,
   tradedAt: Date | null,
-): number | null {
+): boolean {
   const barDay = snap.dailyBar?.t
     ? etParts(new Date(snap.dailyBar.t)).dateStr
     : null;
   const priceDay = tradedAt ? etParts(tradedAt).dateStr : null;
-  if (barDay && priceDay && priceDay > barDay) {
-    return snap.dailyBar?.c ?? null;
-  }
-  return snap.prevDailyBar?.c ?? null;
+  return Boolean(barDay && priceDay && priceDay > barDay);
+}
+
+function referenceClose(
+  snap: AlpacaSnapshot,
+  previousSessionBar: boolean,
+): number | null {
+  return previousSessionBar
+    ? (snap.dailyBar?.c ?? null)
+    : (snap.prevDailyBar?.c ?? null);
 }
 
 function snapshotToQuote(symbol: string, snap: AlpacaSnapshot): Quote | null {
   const tradedAt = snap.latestTrade?.t ? new Date(snap.latestTrade.t) : null;
   const price =
     snap.latestTrade?.p ?? snap.minuteBar?.c ?? snap.dailyBar?.c ?? null;
-  const prevClose = referenceClose(snap, tradedAt);
+  const oncekiSeansBari = dailyBarIsPreviousSession(snap, tradedAt);
+  const prevClose = referenceClose(snap, oncekiSeansBari);
   if (price === null) return null;
 
   /* Önceki kapanış yoksa değişim SIFIR DEĞİL, BİLİNMİYOR. Sıfır yazmak
@@ -282,11 +289,25 @@ function snapshotToQuote(symbol: string, snap: AlpacaSnapshot): Quote | null {
     price,
     change: stale ? null : change,
     changePct: stale ? null : changePct,
-    open: snap.dailyBar?.o ?? null,
-    high: snap.dailyBar?.h ?? null,
-    low: snap.dailyBar?.l ?? null,
+    /* GÜN BARI BU SEANSA AİT DEĞİLSE ALANLARI DA DEĞİL.
+       `referenceClose` üstteki karar kaydında açılış öncesinde `dailyBar`ın
+       DÜNKÜ seans olduğunu ölçüyor ve DEĞİŞİM hesabını ona göre düzeltiyordu;
+       aynı bardan gelen açılış, en yüksek, en düşük ve HACİM düzeltilmeden
+       kalmıştı. Sonuç, sabah 05:41'de bu sabahın fiyatının yanında dünün
+       gün hacminin "Hacim" diye durmasıydı — Şirketler dizininde sütun ve
+       sıralama, hisse sayfasında ölçü satırı. İkisi de hangi güne ait
+       olduğunu yazmıyor, çünkü normal seansta bugüne ait.
+
+       Değer null'a iniyor, sıfıra değil: "bu sabah henüz gün barı yok" ile
+       "hacim sıfır" farklı iki iddia — ölü sembolün değişiminde kurulan
+       ayrımın aynısı. Aynı tuzağı `lib/technical.ts` fotoğrafta zaten
+       yakalamıştı (`todayVolume` yalnızca normal seansta doluyor); kural
+       artık kaynağında. */
+    open: oncekiSeansBari ? null : (snap.dailyBar?.o ?? null),
+    high: oncekiSeansBari ? null : (snap.dailyBar?.h ?? null),
+    low: oncekiSeansBari ? null : (snap.dailyBar?.l ?? null),
     prevClose,
-    volume: snap.dailyBar?.v ?? null,
+    volume: oncekiSeansBari ? null : (snap.dailyBar?.v ?? null),
     tradedAt,
   };
 }

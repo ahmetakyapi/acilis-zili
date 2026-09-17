@@ -196,6 +196,12 @@ mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
    gösterebilir; YAZMA katmanı gösteremez** — teknik fotoğraf, bülten ve
    mercek uçları bayat kotasyonu hiç kullanmıyor, çünkü oradan çıkan sayı
    metne geçip kalıcı oluyor.
+   Aynı kural BARLARDA da işliyor: gün içi aralıklar (1G, 1H) bir seansın
+   şeklini çiziyor, o yüzden önbellekten gelen seri ancak son barı seans
+   gününe aitse kullanılıyor; dönemsel aralıklarda beş günlük yaş tavanı
+   geçerli (`cachedBarsUsable`). Sağlayıcının GÜN BARI da her zaman bugünün
+   değil — açılış öncesinde dünkü seansı taşıyor, o yüzden açılış/en
+   yüksek/en düşük/hacim o pencerede boş dönüyor.
 
 ## Commit'leme
 
