@@ -41,6 +41,7 @@ import {
   formatPercent,
   formatPrice,
   formatVolume,
+  staleMark,
 } from "@/lib/utils";
 
 import { ChipStrip } from "@/components/ui/ChipStrip";
@@ -516,12 +517,27 @@ async function CompaniesTable({
                 </PanelLink>
               ) : undefined
             }
+            /* KÜNYE BAYATLIĞI DA TAŞIYOR. Sayfanın damgası tablonun
+               ALTINDA duruyor ve 500 satırlık bir listede okuyucuya hiç
+               ulaşmıyor; oysa "Değişim" sütunu sıralamanın varsayılanı ve
+               bir gün iddiası taşıyor ("listeye bakan önce bugün ne olmuş
+               diye bakıyor" — aşağıdaki sütun yorumu). Sağlayıcı düşüp
+               paket önbellekten geldiğinde o sütun ÖNCEKİ seansın
+               yüzdelerini gösteriyor. İşaret başlığın yanına, iddianın
+               kurulduğu yere yazılıyor; damga aşağıda kalıyor. */
             meta={
-              hasMore
-                ? t.companies.showing
-                    .replace("{n}", String(rows.length))
-                    .replace("{total}", String(sorted.length))
-                : undefined
+              [
+                hasMore
+                  ? t.companies.showing
+                      .replace("{n}", String(rows.length))
+                      .replace("{total}", String(sorted.length))
+                  : null,
+                quotesResult.ok && quotesResult.stale
+                  ? staleMark(t.data.mayBeStale, quotesResult.fetchedAt, locale)
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ") || undefined
             }
           />
         )}

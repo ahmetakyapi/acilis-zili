@@ -52,6 +52,7 @@ import {
   SESSION_BOUNDS,
   addEtDays,
   etParts,
+  isSessionTrade,
   todayEt,
   type MarketStatus,
 } from "@/lib/market-hours";
@@ -936,9 +937,22 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
           );
         })}
       </ul>
-      <p className="border-t border-line px-4 py-3 text-tiny leading-relaxed text-muted sm:px-5">
-        {t.today.worldMarketsHint}
-      </p>
+      {/* DAMGA BURADA DA VAR. Künye fonun neyi vekil ettiğini söylüyordu ama
+          yüzdelerin yaşını söyleyen hiçbir şey yoktu; panel tam da bayat
+          veriyi büyük puntoyla göstermenin yasak olduğu yerdi. */}
+      <div className="border-t border-line px-4 py-3 sm:px-5">
+        <p className="text-tiny leading-relaxed text-muted">
+          {t.today.worldMarketsHint}
+        </p>
+        <DataStamp
+          labels={t.data}
+          source={result.source}
+          at={result.fetchedAt}
+          stale={result.stale}
+          locale={locale}
+          className="mt-1.5"
+        />
+      </div>
     </Panel>
   );
 }
@@ -1219,12 +1233,26 @@ async function indexSnapshot(status: MarketStatus) {
  * 1797 piksel, kolon ise 2379 piksele uzuyordu ve aradaki 580 piksel
  * `justify-between` tarafından panel aralarına dağıtılıyordu.
  *
- * YALNIZCA BU SEANSTA İŞLEM GÖRENLER — ve bu, panelin en önemli kuralı ama
- * yalnızca UZATILMIŞ seansta geçerli. Ön seansta bir hissenin çoğu hiç işlem
- * görmüyor; o sembolün "son işlemi" dünkü kapanış oluyor ve değişimi de
- * DÜNÜN değişimi. Süzgeç olmasaydı liste, bu sabah hiç kımıldamamış
- * hisselerin dünkü hareketleriyle dolardı. Normal seansta ve kapalıyken
- * böyle bir ayrım yok: `changePct` zaten o günün kapanışına göre.
+ * YALNIZCA BU SEANSTA İŞLEM GÖRENLER — panelin en önemli kuralı.
+ * Ön seansta bir hissenin çoğu hiç işlem görmüyor; o sembolün "son işlemi"
+ * dünkü kapanış oluyor ve değişimi de DÜNÜN değişimi. Süzgeç olmasaydı liste,
+ * bu sabah hiç kımıldamamış hisselerin dünkü hareketleriyle dolardı.
+ *
+ * SÜZGEÇ BİR DÖNEM YALNIZCA UZATILMIŞ SEANSTA ÇALIŞIYORDU ve buradaki
+ * gerekçe şöyle yazılıydı: "Normal seansta ve kapalıyken böyle bir ayrım yok,
+ * `changePct` zaten o günün kapanışına göre." Cümle sağlayıcı taze veri
+ * döndürdüğü sürece doğru — ama `changePct`in hangi günün kapanışına göre
+ * olduğuna sağlayıcı karar veriyor, biz değil. Alpaca düştüğünde (514
+ * sembollük evrende Finnhub yedeği hiç denenmiyor, sınır sekiz sembol) Neon
+ * önbelleğine düşülüyor ve o önbellek ÖNCEKİ seansın yüzdelerini taşıyor.
+ * 17 Eylül 11:51'de, seans açıkken, panelde 16 Eylül kapanışının sıralaması
+ * duruyordu: GNRC %+20,66 · SMCI %+10,35 · INTC %+9,73, künyesi de "seans
+ * içi". Okuyucunun gördüğü şey dünkü hareketti.
+ *
+ * Kural artık her seansta aynı: sıralamaya giren her sayının işlem günü
+ * `status.sessionDate` olmalı (gerekçesi o alanın üzerinde). Uzatılmış
+ * seansta dakika tabanı da duruyor — orada soru yalnızca "bugün mü" değil,
+ * "bu seansta mı".
  *
  * BAŞLIK VE KÜNYE SEANSI SÖYLÜYOR. Piyasa kapalıyken gösterilen şey
  * "günün" değil son kapanışın sıralaması; künye bunu yazmasa panel dünkü
@@ -1265,10 +1293,12 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
       if (!quote || quote.changePct === null || quote.changePct === undefined) {
         return false;
       }
+      /* İşlem günü seansın günü olmalı — her seansta. */
+      const tradedAt = quote.tradedAt;
+      if (!tradedAt || !isSessionTrade(tradedAt, status)) return false;
       if (!extended) return true;
-      if (!quote.tradedAt) return false;
-      const at = etParts(quote.tradedAt);
-      return at.dateStr === status.etDate && at.minutes >= sinceMinutes;
+      /* Uzatılmış seansta gün yetmiyor: işlem o PENCEREDE olmalı. */
+      return etParts(tradedAt).minutes >= sinceMinutes;
     })
     .map((row) => ({ symbol: row.symbol, quote: row.quote! }));
 
@@ -1295,14 +1325,23 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
         : t.today.dayMoversNote
   ).replace("{n}", String(symbols.length));
 
+  /* BOŞ LİSTENİN İKİ AYRI SEBEBİ VAR ve ikisi aynı cümleyle anlatılamaz:
+     ya gerçekten sıralanacak hareket yok, ya elimizdeki paket bu seansa ait
+     değil. İkincisinde "bugün hareket yok" demek olmayan bir şeyi iddia
+     etmek olurdu; doğru cümle "bu seansın verisi alınamadı" — kart boş, ama
+     boşluğun sebebi piyasa değil biz. */
   if (gainers.length === 0 && losers.length === 0) {
     return (
       <Panel>
         <PanelHeader title={title} tone="plate" />
-        <EmptyState
-          title={extended ? t.today.moversEmpty : t.today.dayMoversEmpty}
-          hint={note}
-        />
+        {result.stale ? (
+          <DataError message={t.data.failed} hint={t.data.failedHint} />
+        ) : (
+          <EmptyState
+            title={extended ? t.today.moversEmpty : t.today.dayMoversEmpty}
+            hint={note}
+          />
+        )}
       </Panel>
     );
   }
@@ -1375,9 +1414,21 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
       />
       {block(t.today.moversUp, gainers, true)}
       {block(t.today.moversDown, losers, true)}
-      <p className="border-t border-line-soft px-4 py-2 text-nano text-muted sm:px-5">
-        {note}
-      </p>
+      {/* KÜNYE VE DAMGA BİRLİKTE. Panel uzun süre yalnızca "514 endeks üyesi
+          tarandı · seans içi" yazıyordu: kaç sembolün tarandığını söylüyor,
+          sayıların NE ZAMAN alındığını söylemiyordu. Yan kolondaki
+          komşularının (endeksler, favoriler) hepsinde damga vardı; en hızlı
+          bayatlayan sayıları basan panelde yoktu. */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-line-soft px-4 py-2 sm:px-5">
+        <p className="text-nano text-muted">{note}</p>
+        <DataStamp
+          labels={t.data}
+          source={result.source}
+          at={result.fetchedAt}
+          stale={result.stale}
+          locale={locale}
+        />
+      </div>
     </Panel>
   );
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { NewsImage } from "@/components/news/NewsImage";
 import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react/dist/ssr";
-import { ChangePill, Panel, PanelHeader, buttonClass } from "@/components/ui/primitives";
+import { ChangePill, DataStamp, Panel, PanelHeader, buttonClass } from "@/components/ui/primitives";
 import {
   getLatestNews,
   getNewsById,
@@ -278,6 +278,21 @@ async function MentionedSymbols({
           );
         })}
       </ul>
+      {/* DAMGA — panel yüzde basıyor ve yaşını söylemiyordu. Haber detayı
+          sitenin en uzun ömürlü sayfası: bir hafta önceki habere gelen
+          okuyucu da bu paneli görüyor ve oradaki yüzde "haberin günündeki
+          hareket" değil, o anki seansın hareketi. Damga hangisi olduğunu
+          söyleyen tek şey. */}
+      {result.ok && (
+        <DataStamp
+          labels={t.data}
+          source={result.source}
+          at={result.fetchedAt}
+          stale={result.stale}
+          locale={locale}
+          className="border-t border-line px-4 py-2.5 sm:px-5"
+        />
+      )}
     </Panel>
   );
 }

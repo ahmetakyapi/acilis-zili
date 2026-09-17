@@ -67,7 +67,25 @@ export function isAlpacaConfigured(): boolean {
   return credentials() !== null;
 }
 
-type FetchOpts = { revalidate: number; tags?: string[] };
+type FetchOpts = {
+  revalidate: number;
+  tags?: string[];
+  /**
+   * Next'in veri önbelleğini TAMAMEN atla.
+   *
+   * `revalidate` süresi dolmuş bir kaydı Next hemen atmıyor: isteğe eski
+   * gövdeyi verip tazelemeyi arkasında yapıyor (stale-while-revalidate).
+   * Trafiği yoğun bir sitede fark birkaç saniye; günde birkaç kez okunan bir
+   * sayfada aradaki boşluk SEANS DEĞİŞTİRECEK kadar açılıyor — okuyucunun
+   * gördüğü paket, onun bir önceki ziyaretinde çekilmiş olan.
+   *
+   * Bayrak bu yüzden var ve yalnızca bir yerde açılıyor: `fetchQuotes` elindeki
+   * paketin seans gününü kontrol ediyor, paket eskiyse aynı isteği bir kez
+   * önbelleksiz tekrarlıyor. Normal yolda kapalı — her çizimde sağlayıcıya
+   * gitmek TTL'in var oluş sebebini ortadan kaldırırdı.
+   */
+  fresh?: boolean;
+};
 
 async function alpacaFetch<T>(
   path: string,
@@ -94,7 +112,9 @@ async function alpacaFetch<T>(
           "APCA-API-SECRET-KEY": creds.secret,
           accept: "application/json",
         },
-        next: { revalidate: opts.revalidate, tags: opts.tags },
+        ...(opts.fresh
+          ? { cache: "no-store" as const }
+          : { next: { revalidate: opts.revalidate, tags: opts.tags } }),
       }),
     );
 
@@ -301,6 +321,7 @@ function batches(symbols: string[]): string[][] {
 export async function getSnapshots(
   symbols: string[],
   revalidate: number,
+  opts: { fresh?: boolean } = {},
 ): Promise<ProviderResult<Record<string, Quote>>> {
   if (symbols.length === 0) return ok({}, "alpaca");
 
@@ -318,7 +339,7 @@ export async function getSnapshots(
       symbolBatchFetch<unknown>(
         "/snapshots",
         { symbols: batch.join(","), feed: SNAPSHOT_FEED },
-        { revalidate, tags: ["quotes"] },
+        { revalidate, tags: ["quotes"], fresh: opts.fresh },
       ).then((result) => ({ batch, result })),
     ),
   );

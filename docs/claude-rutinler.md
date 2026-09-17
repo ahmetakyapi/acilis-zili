@@ -170,6 +170,11 @@ Gövde: 8-12 cümle, 2-3 paragraf. Şunlar birlikte okunur:
 
 Kurallar:
   - indices[].change_pct burada HAFTALIK değişimdir, günlük değil.
+  - indices_stale: true geldiyse endeks sayıları BU SEANSA AİT DEĞİL ve
+    change_pct boş gelir. O zaman endeks cümlesini hiç kurma; yazının geri
+    kalanı (makro, bilanço, takvim) kendi kaynaklarından gelmeye devam
+    ediyor. Sağlayıcı düştüğünde uç önceki seansın yüzdesini vermek yerine
+    boş veriyor — kalıcı bir metne yanlış sayı geçmesin diye.
   - Gelecek hakkında tahmin yok. Bu bir arşiv kaydı, bir görüş yazısı değil.
   - Sadece çektiğin veriyi kullan.
 
@@ -239,6 +244,8 @@ Yanıtta:
   existing_stories → daha önce yazdığın yazılar (slug, başlık, tarih)
   recent_news      → son 60 haber başlığı, konu SEÇMEK için ipucu
   indices          → günün endeks hareketi
+  indices_stale    → true ise endeks sayıları bu seansa ait değil (boş
+                     gelirler); yazıda endeks yüzdesi kullanma
 
 --- 2. KARAR VER: BU GÜN MERCEK KONUSU MU? ---
 

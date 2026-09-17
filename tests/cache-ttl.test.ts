@@ -22,6 +22,7 @@ function statusAt(session: MarketSession, secondsToTransition: number): MarketSt
     session,
     isRegularOpen: session === "regular",
     etDate: "2026-09-16",
+    sessionDate: "2026-09-16",
     etTime: "08:00",
     etMinutes: 480,
     isWeekend: false,

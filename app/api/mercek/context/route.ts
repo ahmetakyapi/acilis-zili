@@ -88,18 +88,30 @@ export async function GET(request: Request) {
   return NextResponse.json({
     today_et: todayEt(),
     session: status.session,
-    indices: quotes.ok
-      ? INDEX_STRIP.map((symbol) => {
-          const quote = quotes.data[symbol];
-          return quote
-            ? {
-                symbol,
-                price: quote.price,
-                change_pct: quote.changePct,
-              }
-            : { symbol, price: null, change_pct: null };
-        })
-      : [],
+    /* BAYAT KOTASYON YAZIYA GİRMEZ — gerekçesi `/api/brief/context` içinde
+       ve kuralın kaynağı `lib/technical-data.ts`: bu paketten çıkan sayı
+       rutinin yazdığı metne geçip `stories` tablosunda kalıcı duruyor.
+       Sağlayıcı düştüğünde `getQuotes` önbelleğe düşüyor ve orada ÖNCEKİ
+       seansın yüzdeleri var. Değer null'a iniyor, `indices_stale` sebebini
+       söylüyor; rutin o cümleyi kurmuyor. */
+    indices:
+      quotes.ok && !quotes.stale
+        ? INDEX_STRIP.map((symbol) => {
+            const quote = quotes.data[symbol];
+            return quote
+              ? {
+                  symbol,
+                  price: quote.price,
+                  change_pct: quote.changePct,
+                }
+              : { symbol, price: null, change_pct: null };
+          })
+        : INDEX_STRIP.map((symbol) => ({
+            symbol,
+            price: null,
+            change_pct: null,
+          })),
+    indices_stale: !quotes.ok || Boolean(quotes.stale),
     /* Zaten yazılmış dosyalar — aynı olayı ikinci kez yazma. `locales`
        hangi dillerin mevcut olduğunu söyler; "en" eksikse çevirisi bekleniyor. */
     existing_stories: [...grouped.values()],

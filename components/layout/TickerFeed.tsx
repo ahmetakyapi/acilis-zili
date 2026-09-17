@@ -14,6 +14,7 @@ import {
   formatPercent,
   formatPercentPlain,
   formatPrice,
+  staleMark,
 } from "@/lib/utils";
 
 /**
@@ -98,6 +99,23 @@ export async function TickerFeed() {
   if (indexItems.length > 0) {
     groups.push({
       key: "indices",
+      /* ENDEKS GRUBUNUN KÜNYESİ YALNIZCA VERİ ESKİYSE VAR.
+         Şerit sitedeki en görünür canlı iddia: her sayfanın başında, 1024
+         pikselin üstünde her zaman açık. Sağlayıcı düşüp paket Neon
+         önbelleğinden geldiğinde şerit ÖNCEKİ seansın yüzdelerini hiçbir
+         işaret olmadan basıyordu — üstelik sayfanın geri kalanındaki
+         paneller damgalarında "önbellek" yazarken.
+
+         Çözüm aynı şeritte zaten vardı: TCMB kuru kendi künyesinde
+         bültenin tarihini taşıyor ve o satırın karar kaydı gerekçeyi
+         tam olarak böyle yazıyor ("pazartesi sabahı cuma bültenini anlık kur
+         gibi göstermek"). Aynı kalıp endekslere de uygulandı. Veri taze
+         olduğunda künye hiç basılmıyor; endeks etiketleri kendi adlarını
+         zaten taşıyor. */
+      caption:
+        quotes.ok && quotes.stale
+          ? staleMark(t.data.mayBeStale, quotes.fetchedAt, locale)
+          : undefined,
       items: indexItems,
       narrowSize: 2,
       wideSize: 4,

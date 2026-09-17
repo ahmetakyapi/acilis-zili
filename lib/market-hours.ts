@@ -54,6 +54,29 @@ export type MarketStatus = {
   isRegularOpen: boolean;
   /** ET tarihi "YYYY-MM-DD" */
   etDate: string;
+  /**
+   * EKRANIN ANLATTIĞI SEANSIN ET GÜNÜ — `etDate` ile aynı şey DEĞİL.
+   *
+   * Sitedeki her yüzde "bu seansta ne oldu" sorusunun cevabı ve o seans
+   * çoğu zaman bugün değil: cumartesi günü cuma seansı, çarşamba 02:00'de
+   * salı seansı, tatil pazartesisinde önceki cuma anlatılıyor. `etDate`
+   * takvim günü; bu alan SEANS günü.
+   *
+   * Alan bir hata düzeltmesinden geldi. Ana sayfanın "Günün Hareketleri"
+   * paneli bir kotasyonun hangi güne ait olduğunu yalnızca UZATILMIŞ
+   * seansta kontrol ediyordu; normal seansta `changePct`in tanımı gereği
+   * bugüne ait olduğu varsayılıyordu. Varsayım sağlayıcı taze veri
+   * döndürdüğü sürece doğru — sağlayıcı düştüğünde Neon önbelleğine
+   * düşülüyor ve o önbellek ÖNCEKİ seansın yüzdelerini taşıyor. Ekranda
+   * 11:51'de "seans içi" künyesiyle bir önceki günün sıralaması duruyordu
+   * (GNRC %+20,66 · SMCI %+10,35), yani okuyucu dünkü hareketi bugünün
+   * hareketi sanıyordu.
+   *
+   * Tek bir kural bütün seansları kapsıyor: bir kotasyonun yüzdesi ancak
+   * işlem günü bu alana eşitse o seansı anlatır. Kapalıyken de doğru
+   * çalışıyor — orada beklenen hâl son kapanış ve alan da onu gösteriyor.
+   */
+  sessionDate: string;
   /** ET saati "HH:mm" */
   etTime: string;
   /** Gün içi ET dakikası */
@@ -253,6 +276,16 @@ export function closeMinutesFor(dateStr: string, holidays: MarketHoliday[]): num
   return SESSION_BOUNDS.regularClose;
 }
 
+/** Verilen tarihten önceki ilk işlem gününü bulur (o gün dahil değil). */
+function prevTradingDay(dateStr: string, holidays: MarketHoliday[]): string {
+  let cursor = addEtDays(dateStr, -1);
+  for (let i = 0; i < 14; i++) {
+    if (isTradingDay(cursor, holidays)) return cursor;
+    cursor = addEtDays(cursor, -1);
+  }
+  return cursor;
+}
+
 /** Verilen tarihten sonraki ilk işlem gününü bulur (o gün dahil değil). */
 function nextTradingDay(dateStr: string, holidays: MarketHoliday[]): string {
   let cursor = addEtDays(dateStr, 1);
@@ -274,6 +307,16 @@ export function getMarketStatus(
   const isWeekend = p.weekday === 0 || p.weekday === 6;
   const holiday = holidayOn(dateStr, holidays);
   const tradingToday = isTradingDay(dateStr, holidays);
+  /* SEANS GÜNÜ — gerekçesi `MarketStatus.sessionDate` üzerinde.
+     Ön seans açılışına gelinmiş bir işlem gününde anlatılan seans bugündür.
+     Onun dışındaki her an (gece yarısı ile 04:00 arası, hafta sonu, tam
+     tatil) en son KAPANMIŞ seansı anlatıyor. Sınır olarak ön seans açılışı
+     seçildi, açılış zili değil: 04:00'ten sonra ekrandaki yüzdeler artık
+     bu sabahın hareketini gösteriyor. */
+  const sessionDate =
+    tradingToday && minutes >= SESSION_BOUNDS.preMarketOpen
+      ? dateStr
+      : prevTradingDay(dateStr, holidays);
   const closeMinutes = closeMinutesFor(dateStr, holidays);
   /* Yarım günlerde uzatılmış seans da erken biter — ama bir saat sonra
      değil, normal gündekiyle aynı süre kadar sonra. Gerekçe
@@ -349,6 +392,7 @@ export function getMarketStatus(
     session,
     isRegularOpen: session === "regular",
     etDate: dateStr,
+    sessionDate,
     etTime: `${pad(p.hour)}:${pad(p.minute)}`,
     etMinutes: minutes,
     isWeekend,
@@ -359,6 +403,71 @@ export function getMarketStatus(
     nextClose,
     nextTransition,
   };
+}
+
+/* --------------------------------------------------------------------------
+   Kotasyon tazeliği — "bu sayı hangi seansı anlatıyor"
+
+   İki soru birbirinden ayrı ve ikisi de burada cevaplanıyor:
+
+   1. Elimdeki kotasyon o seansa ait mi (`isSessionTrade`)? Ekranda yüzde
+      basan her yer bunu sormak zorunda; sağlayıcı düştüğünde Neon
+      önbelleğinden ÖNCEKİ seansın yüzdesi geliyor ve hiçbir alan onu
+      kendiliğinden ayırt etmiyor.
+   2. Şu anda o seansa ait veri BEKLEMEK makul mü (`expectsSessionData`)?
+      Besleme 15 dakika geriden yayımlandığı için günün küçük bir diliminde
+      (ön seans açılışının ilk çeyreği) henüz bu seansa ait tek bir işlem
+      yok — ve orada eski paket bir arıza değil, beklenen hâl. Bu ayrım
+      olmadan sağlayıcıya boş yere taze istek atılır.
+   -------------------------------------------------------------------------- */
+
+/**
+ * Konsolide tape kaç dakika geriden yayımlanıyor.
+ *
+ * Besleme seçiminin gerekçesi `lib/providers/alpaca.ts` başında; sayı burada
+ * çünkü tazelik kararı seans aritmetiğinin parçası ve sağlayıcıdan bağımsız
+ * okunuyor (sayfa bileşenleri bu dosyayı okuyor, o dosyayı okumuyor).
+ */
+export const FEED_DELAY_MINUTES = 15;
+
+/** Beslemenin ŞU AN verebileceği en yeni an. */
+export function feedCutoff(now: Date = new Date()): Date {
+  return new Date(now.getTime() - FEED_DELAY_MINUTES * 60_000);
+}
+
+/**
+ * Bu kotasyon, ekranın anlattığı seansa mı ait?
+ *
+ * İşlem anı YOKSA cevap hayır: iddiasız bir kayıt, seansa ait olduğunu
+ * kanıtlamıyor. Sıfır/boş yüzdeyle aynı mantık — bilinmiyor, "değişmedi"
+ * değil.
+ */
+export function isSessionTrade(
+  tradedAt: Date | null | undefined,
+  status: MarketStatus,
+): boolean {
+  if (!tradedAt) return false;
+  return etParts(tradedAt).dateStr === status.sessionDate;
+}
+
+/**
+ * Şu anda beslemeden SEANSA AİT veri beklenir mi?
+ *
+ * Gecikme düşülmüş an hâlâ seans gününün ön seans açılışından önceyse cevap
+ * hayır. Örnek: pazartesi 04:05 ET'de beslemenin verebildiği en yeni an
+ * 03:50 ve o dakikada tek bir işlem yok — elde cuma kapanışı olması normal.
+ * Aynı hesap gece yarısını da doğru geçiyor: cumartesi 00:05'te gecikmeli an
+ * cuma 23:50, seans günü de cuma.
+ */
+export function expectsSessionData(
+  status: MarketStatus,
+  now: Date = new Date(),
+): boolean {
+  const cutoff = etParts(feedCutoff(now));
+  return (
+    cutoff.dateStr === status.sessionDate &&
+    cutoff.minutes >= SESSION_BOUNDS.preMarketOpen
+  );
 }
 
 /* --------------------------------------------------------------------------

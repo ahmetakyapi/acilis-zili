@@ -633,6 +633,42 @@ export function formatEtDateShort(dateStr: string, locale: string): string {
  * her satırda aynı ve bilgi taşımıyor. Yılı gerçekten gereken yerlerde
  * `formatEtDateShort` duruyor.
  */
+/**
+ * "Güncel Olmayabilir" işareti — gerekirse tarihiyle.
+ *
+ * `DataStamp` bir panelin altına sığıyor ama her yere sığmıyor: uzun bir
+ * tablonun başlığı, bir çipin künyesi ve alt şeridin grup başlığı tek satırlık
+ * bir metin istiyor. Bu üç yer de aynı cümleyi kendi içinde kuruyordu.
+ *
+ * TARİH YALNIZCA BUGÜN DEĞİLSE yazılıyor — damganın kuralının aynısı
+ * (gerekçesi sözlükteki `updatedOn` üzerinde): bugünse fazladan bir kelime,
+ * dünse iddianın kendisi. Gün karşılaştırması İSTANBUL takvimiyle yapılıyor,
+ * sunucunun yerel günüyle değil; sunucu UTC'de koşuyor ve gece yarısı ile
+ * 03:00 arasındaki her damgayı "dün" ilan ederdi.
+ */
+export function staleMark(
+  label: string,
+  at: Date | null | undefined,
+  locale: string,
+  now: Date = new Date(),
+): string {
+  if (!at || !Number.isFinite(at.getTime())) return label;
+  const day = (value: Date) =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Istanbul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(value);
+  if (day(at) === day(now)) return label;
+  const date = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    timeZone: "Europe/Istanbul",
+    day: "numeric",
+    month: "short",
+  }).format(at);
+  return `${label} · ${date}`;
+}
+
 export function formatEtDateCompact(dateStr: string, locale: string): string {
   const date = new Date(`${dateStr}T12:00:00Z`);
   return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {

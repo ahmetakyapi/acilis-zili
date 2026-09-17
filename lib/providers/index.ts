@@ -2,7 +2,14 @@ import { cache } from "react";
 import { inArray, eq, and, sql } from "drizzle-orm";
 import { db } from "../db";
 import { candlesCache, quotesCache, symbols as symbolsTable } from "../schema";
-import { boundedTtl, candleTtlSeconds, quoteTtlSeconds, type MarketStatus } from "../market-hours";
+import {
+  boundedTtl,
+  candleTtlSeconds,
+  expectsSessionData,
+  isSessionTrade,
+  quoteTtlSeconds,
+  type MarketStatus,
+} from "../market-hours";
 import * as alpaca from "./alpaca";
 import * as finnhub from "./finnhub";
 import * as fred from "./fred";
@@ -190,6 +197,24 @@ async function quotesFromCache(
 }
 
 /**
+ * Paketteki EN YENİ son işlem anı — hiçbirinde yoksa null.
+ *
+ * İki soruya birden cevap veriyor: paketin yaşı (damga) ve paketin hangi
+ * seansa ait olduğu (tazelik kararı). İkisi de "en yeni"yi istiyor çünkü
+ * paket tek bir çekimden geliyor; likiditesi düşük semboller günler öncesini
+ * taşıyabilir ve paketin yaşını onlar tayin etmez.
+ */
+function newestTrade(quotes: Record<string, Quote>): Date | null {
+  let newest: Date | null = null;
+  for (const quote of Object.values(quotes)) {
+    if (quote.tradedAt && (!newest || quote.tradedAt > newest)) {
+      newest = quote.tradedAt;
+    }
+  }
+  return newest;
+}
+
+/**
  * Kotasyon çekmenin gerçek gövdesi — sarmalayıcı aşağıda.
  *
  * AYNI İSTEKTE İKİ KEZ ÇALIŞMAMALI. Alpaca çağrısı Next'in `fetch`
@@ -209,9 +234,31 @@ async function fetchQuotes(
   const unique = [...new Set(symbolList)];
   const ttl = quoteTtlSeconds(status);
 
-  const primary = await alpaca.getSnapshots(unique, ttl);
+  let primary = await alpaca.getSnapshots(unique, ttl);
+
+  /* PAKET SEANSA AİT DEĞİLSE BİR KEZ ÖNBELLEKSİZ TEKRARLANIR.
+     Sağlayıcı "ok" dediğinde paketin taze olduğu varsayılıyordu ve varsayım
+     yanlıştı: Next'in veri önbelleği süresi dolmuş kaydı atmıyor, isteğe eski
+     gövdeyi verip tazelemeyi arkasında yapıyor. Günde birkaç kez okunan bir
+     sayfada bu, okuyucuya BİR ÖNCEKİ ZİYARETİNDE çekilmiş paketi vermek
+     demek — ana sayfanın hareket paneli seans açıkken önceki günün
+     sıralamasını basıyordu ve hiçbir katman itiraz etmiyordu, çünkü
+     `primary.ok` doğruydu.
+
+     Tek istek, tek koşul: gecikmeli besleme bu seansa ait veri verebilecek
+     durumdaysa (`expectsSessionData`) ve paketteki en yeni işlem o seansın
+     günü DEĞİLSE. Ön seansın ilk çeyreğinde ya da hafta sonunda koşul hiç
+     kurulmuyor, yani boşa istek gitmiyor. */
+  if (
+    primary.ok &&
+    expectsSessionData(status) &&
+    !isSessionTrade(newestTrade(primary.data), status)
+  ) {
+    const retaze = await alpaca.getSnapshots(unique, ttl, { fresh: true });
+    if (retaze.ok) primary = retaze;
+  }
+
   if (primary.ok) {
-    await persistQuotes(Object.values(primary.data));
     /* DAMGA VERİNİN YAŞINI SÖYLÜYOR, İSTEĞİN ANINI DEĞİL.
        Aynı hata bir kez önbellek yolunda bulunup düzeltilmişti (gerekçesi
        `quotesFromCache` başında) ama CANLI yolda duruyordu: `alpacaFetch`
@@ -229,15 +276,26 @@ async function fetchQuotes(
        anları ise likiditeye göre farklı — o yüzden paketin ön ucu, yani en
        yenisi, o çekimin gerçek yaşını veriyor. Hiçbirinde işlem anı yoksa
        eski davranış sürüyor. */
-    let enYeni: Date | null = null;
-    for (const quote of Object.values(primary.data)) {
-      if (quote.tradedAt && (!enYeni || quote.tradedAt > enYeni)) {
-        enYeni = quote.tradedAt;
-      }
-    }
-    return enYeni
-      ? ok(primary.data, "alpaca", { fetchedAt: enYeni })
-      : primary;
+    const enYeni = newestTrade(primary.data);
+
+    /* Doğru damga yetmedi — İDDİA DA DÜZELTİLİYOR.
+       Damganın gerçeği söylemesi bir adımdı; paket yine de `stale`
+       işaretsiz dönüyordu, yani ekranlar onu canlı veri sayıp sıralamaya
+       sokuyordu. Önbelleksiz tekrardan sonra bile seansa ait olmayan bir
+       paket artık kendini eski ilan ediyor ve künye onu öyle basıyor. */
+    const guncel = expectsSessionData(status)
+      ? isSessionTrade(enYeni, status)
+      : true;
+
+    /* SEANSA AİT OLMAYAN PAKET ÖNBELLEĞE YAZILMIYOR. `persistQuotes`
+       satırlara `updated_at = now` basıyor ve o damga `quotesFromCache`
+       tarafından "bu sayıyı ne zaman öğrendik" diye okunuyor: eski bir
+       paketi yazmak, son bilinen değer tablosuna hiçbir yeni bilgi katmadan
+       oradaki yaşı sıfırlamak olurdu. */
+    if (guncel) await persistQuotes(Object.values(primary.data));
+
+    if (!enYeni) return guncel ? primary : { ...primary, stale: true };
+    return ok(primary.data, "alpaca", { fetchedAt: enYeni, stale: !guncel });
   }
 
   // Yedek: Finnhub tek tek sorgular. Sadece küçük listelerde denenir,
@@ -271,9 +329,19 @@ async function fetchQuotes(
       }
     }
     if (Object.keys(quotes).length > 0) {
-      await persistQuotes(Object.values(quotes));
+      /* TAZELİK KARARI ALPACA DALIYLA AYNI KURALDAN GEÇİYOR — gerekçesi
+         orada. Yedek yol da Next'in veri önbelleğini kullanıyor, yani aynı
+         biçimde bir önceki seansın paketini "canlı" diye döndürebilir.
+         Önbelleksiz tekrar burada YOK: yol sembol başına ayrı istek atıyor ve
+         yalnızca sekiz sembole kadar deneniyor, yani kazancı küçük, bedeli
+         (sekiz ek istek, 60 istek/dk sınırı) büyük. İddia yine de
+         düzeltiliyor: eski paket kendini eski ilan ediyor. */
       const damga = enYeniIslem ?? enEskiCekim ?? undefined;
-      return ok(quotes, "finnhub", { fetchedAt: damga });
+      const guncel = expectsSessionData(status)
+        ? isSessionTrade(enYeniIslem, status)
+        : true;
+      if (guncel) await persistQuotes(Object.values(quotes));
+      return ok(quotes, "finnhub", { fetchedAt: damga, stale: !guncel });
     }
   }
 

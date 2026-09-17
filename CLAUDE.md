@@ -184,6 +184,18 @@ mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
 3. **Aynı sayı iki yerde duruyorsa aynı kaynaktan gelmeli.** Hisse başlığı
    anlık kotasyonu, grafik son dakika barının kapanışını yazıyordu; ikisi
    tanımı gereği farklı sayılar ve yan yana durunca hata gibi okunuyor.
+4. **Bir yüzde hangi seansı anlattığını KANITLAMALI.** `changePct` kendi
+   başına "bugün" demiyor; hangi güne ait olduğuna sağlayıcı karar veriyor.
+   Sağlayıcı düştüğünde `getQuotes` Neon önbelleğine düşüyor ve orada önceki
+   seansın yüzdeleri duruyor — ana sayfanın hareket paneli seans açıkken
+   dünkü sıralamayı "seans içi" künyesiyle basıyordu. Tek kural, tek alan:
+   `status.sessionDate` (lib/market-hours.ts). Bir kotasyon ancak işlem günü
+   o alana eşitse (`isSessionTrade`) seansı anlatır. Sağlayıcı katmanı
+   paketin seansa ait olmadığını görürse bir kez önbelleksiz tekrarlıyor,
+   sonra `stale: true` diyor. **Ekran katmanı bayat veriyi künyesiyle
+   gösterebilir; YAZMA katmanı gösteremez** — teknik fotoğraf, bülten ve
+   mercek uçları bayat kotasyonu hiç kullanmıyor, çünkü oradan çıkan sayı
+   metne geçip kalıcı oluyor.
 
 ## Commit'leme
 

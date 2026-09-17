@@ -45,6 +45,7 @@ import {
   formatPercent,
   formatPercentPlain,
   formatPrice,
+  staleMark,
 } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
@@ -664,6 +665,21 @@ async function IndexDetail({
   const gainers = byChange.slice(0, 5);
   const losers = [...byChange].reverse().slice(0, 5);
 
+  /* "GÜNÜN EN ÇOK ARTANLARI" — HANGİ GÜNÜN?
+     İki panelin başlığı bir gün iddiası taşıyor ve o iddia yalnızca paket bu
+     seansa aitse doğru. Sağlayıcı düştüğünde (bu ekranda kenar durum değil:
+     Finnhub yedeği sekiz sembole kadar deneniyor, endeks bileşenleri
+     30-500 sembol soruyor) sıralama Neon önbelleğinden, yani ÖNCEKİ seansın
+     yüzdelerinden kuruluyor. Sayfanın damgası bunu yazıyor ama damga başka
+     bir blokta; iddianın yanında bir şey yazmıyordu.
+
+     Panel gizlenmiyor: son kapanışın sıralaması bir bilgi ve bu ekranın
+     tablosu da aynı önbellekten besleniyor. Yazılan şey künyeye ekleniyor —
+     aynı kalıp ana sayfanın hareket panelinde damgayla, alt şeritte grup
+     künyesiyle kuruluyor. */
+  const staleNote =
+    stale && stampAt ? ` · ${staleMark(t.data.mayBeStale, stampAt, locale)}` : "";
+
   return (
     <>
       <IndexToolbar
@@ -692,9 +708,11 @@ async function IndexDetail({
               contributionLabel={t.markets.contribution}
               locale={locale}
               t={t}
-              meta={t.companies.showing
-                .replace("{n}", String(gainers.length))
-                .replace("{total}", String(withChange.length))}
+              meta={
+                t.companies.showing
+                  .replace("{n}", String(gainers.length))
+                  .replace("{total}", String(withChange.length)) + staleNote
+              }
             />
             <MoverPanel
               title={t.markets.topLosers}
@@ -703,9 +721,11 @@ async function IndexDetail({
               contributionLabel={t.markets.contribution}
               locale={locale}
               t={t}
-              meta={t.companies.showing
-                .replace("{n}", String(losers.length))
-                .replace("{total}", String(withChange.length))}
+              meta={
+                t.companies.showing
+                  .replace("{n}", String(losers.length))
+                  .replace("{total}", String(withChange.length)) + staleNote
+              }
             />
           </div>
         </>

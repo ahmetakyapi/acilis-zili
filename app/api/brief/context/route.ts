@@ -80,11 +80,26 @@ export async function GET(request: Request) {
     price: number | null;
     change_pct: number | null;
   }[];
+  /** Endeks sayıları bu seansa ait değil — gerekçe aşağıda. */
+  let indicesStale = false;
 
   if (!retrospective && period === "daily") {
+    /* BAYAT KOTASYON BÜLTENE GİRMEZ — teknik fotoğraf kuralının ikizi
+       (gerekçesi `lib/technical-data.ts` → `getTechnicalSnapshots`).
+       Burası ekran değil YAZMA yolu: bu paketten çıkan sayı rutinin yazdığı
+       metne geçiyor ve `daily_briefs` içinde kalıcı duruyor. Sağlayıcı
+       düştüğünde `getQuotes` Neon önbelleğine düşüyor ve o önbellek ÖNCEKİ
+       seansın yüzdelerini taşıyor; bülten "S&P 500 bugün %1,2 yükseldi"
+       diye yazar ve o cümle bir daha düzelmez.
+
+       Ekran katmanı bayat veriyi künyesiyle gösterebilir, yazma katmanı
+       gösteremez: değer null'a düşüyor ve `indices_stale` rutine neden
+       olduğunu söylüyor. Sayı yoksa rutin o cümleyi kurmaz. */
     const quotes = await getQuotes([...INDEX_STRIP], status);
+    const usable = quotes.ok && !quotes.stale;
+    indicesStale = quotes.ok ? Boolean(quotes.stale) : true;
     indices = INDEX_STRIP.map((symbol) => {
-      const quote = quotes.ok ? quotes.data[symbol] : null;
+      const quote = usable ? quotes.data[symbol] : null;
       return {
         symbol,
         price: quote?.price ?? null,
@@ -172,6 +187,10 @@ export async function GET(request: Request) {
       notable,
     },
     indices,
+    /* Rutin bu bayrağı görürse endeks cümlesini hiç kurmaz: değerler null
+       ve sebebi bu. Alan HER ZAMAN var, yalnızca bayat olduğunda değil —
+       eksik bir alan "yok" diye değil "sormamışlar" diye okunuyor. */
+    indices_stale: indicesStale,
     macro_latest: macro
       .filter((row) => row.latestValue !== null)
       .map((row) => ({
