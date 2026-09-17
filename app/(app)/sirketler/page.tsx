@@ -303,7 +303,20 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         <div className={cn("relative", styles.filters)}>
           <ChipStrip
             activeKey={activeGroup?.key ?? null}
-            className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12 sm:flex-wrap sm:gap-2 sm:pb-0 sm:pr-0"
+            /* ŞERİT HER GENİŞLİKTE TEK SATIR — `sm:flex-wrap` kalktı.
+               Sarma, yüksekliği METNİN GENİŞLİĞİNE bağlıyordu ve o genişlik
+               yazı tipi yüklenirken değişiyor: ölçüldü, 1440'ta kap yedek
+               yazı tipiyle 114 piksel (çipler iki satır), gerçek yazı
+               tipiyle 72 (tek satır). Font takası satırı bir anda 42 piksel
+               kısaltıyor ve altındaki 1320×369'luk tablo yukarı zıplıyordu —
+               yavaş bağlantıda masaüstünde CLS 0,379 ölçüldü, sitenin en
+               kötü değeri. Tek satırda yükseklik metne bağlı değil, yani
+               takas hiçbir şeyi oynatmıyor.
+               Görsel olarak bugünkü hâl de zaten tek satır: on bir sektör
+               1440'ta sığıyor. Sığmadığında sarmak yerine kayıyor ve
+               kaydığı kenar solmasından belli oluyor (`ScrollEdges`) —
+               mobildeki davranışın aynısı. */
+            className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12 sm:gap-2 sm:pb-0 sm:pr-0"
           >
             <SectorChip
               href={sectorHref(null)}
@@ -324,20 +337,6 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
               );
             })}
           </ChipStrip>
-          {/* Sağ kenar solması — yalnızca kaydırmalı dizilimde anlamlı.
-
-              SOLMA ŞERİDİN ALTINDAKİ RENGE GİDER. Bir dönem `--page-bg`
-              yazıyordu ama şerit sayfa zemininde değil, `--premium-surface`
-              zeminli bir kartın içinde duruyor (`.filters`). Ölçüldü:
-              kart açık temada rgb(255,255,255), koyu temada rgb(16,26,40);
-              solma ise rgb(247,249,251) ve rgb(7,13,22)'ye gidiyordu. Sonuç
-              solma değil, kartın üstüne serilmiş yabancı renkte bir perdeydi
-              ve koyu temada bariz duruyordu — son çip yine sert kesiliyor,
-              kaydırılabildiğini hiçbir şey söylemiyordu. */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-(--premium-surface) to-transparent sm:hidden"
-          />
         </div>
       )}
 

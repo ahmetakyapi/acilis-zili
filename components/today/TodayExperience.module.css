@@ -59,7 +59,7 @@
 /* Gerçek SNOW özeti 1440px'te 9, 360px'te 23 satırdı (kart 649px).
    Kart bir okuma önizlemesi: 3/4 satır, tam metin analiz bağlantısında.
    Mobilde halka metnin yanında yer kaplamaz; önizleme tüm satırı kullanır. */
-.analysisExcerpt { grid-area: excerpt; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; min-width: 0; max-width: 64ch; font-size: 16px; letter-spacing: -.015em; line-height: 1.55; color: var(--text-body); font-weight: 500; }
+.analysisExcerpt { grid-area: excerpt; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; min-width: 0; max-width: 64ch; font-size: 16px; letter-spacing: -.015em; line-height: 1.55; color: var(--text-body); font-weight: 500; }
 .analysisFooter { grid-area: footer; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .analysisCta { display: inline-flex; align-items: center; gap: 10px; color: var(--primary-ink); font-size: 11px; font-weight: 650; }
 .analysisScore { grid-area: score; justify-self: end; }

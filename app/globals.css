@@ -1368,6 +1368,46 @@
   transform: scale(0.992);
 }
 
+/* KIRPILAN METİNDE UZUN SÖZCÜK KIRILIR. `-webkit-line-clamp` kutusu satır
+   SAYISINI sınırlıyor ama satırın kendisi taşabiliyor: kırılamayan tek bir
+   uzun sözcük — bir adres, bir birleşik ad, "NASDAQ:TSM" gibi bir künye —
+   kutudan yatayda çıkıyor ve `overflow:hidden` onu üç nokta bile koymadan
+   ortasından kesiyor. Ölçüldü: 320 pikselde ana sayfanın analiz özetinde
+   218, analiz listesinin manşetinde 197 piksel metin görünmez oluyordu.
+   `anywhere` yalnızca taşacağı anda kırıyor, olağan metne dokunmuyor.
+   `:where()` ile özgüllük sıfır: hiçbir kuralla yarışmıyor. */
+:where([class*="line-clamp-"]) {
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------------------
+   YATAY MODDA KABUK SIKIŞIR
+   -------------------------------------------------------------------------- */
+
+/* Sabit katmanlar 149 piksel: yapışkan başlık 69, alt sekme çubuğu 80
+   (ölçüldü). Dikeyde bu, 844 piksellik bir ekranın %18'i — sorun değil.
+   YATAYDA aynı 149 piksel, 390 piksellik ekranın %38'i: okuyucuya 241
+   piksel kalıyor, yani bir kartın iki satırı. Telefonu yan çevirmenin tek
+   sebebi daha çok görmek ve site tam tersini yapıyordu.
+
+   Dar olan YÜKSEKLİK, o yüzden kısalan da yalnızca dikey boşluk: etiketler,
+   ikonlar ve dokunma hedefleri yerinde kalıyor (sekme yüksekliği 44'ün
+   altına inmiyor). Kazanç ~33 piksel, yani içerik alanında %14. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .app-bar {
+    padding-top: calc(env(safe-area-inset-top) + 7px);
+    padding-bottom: 7px;
+  }
+  .tab-bar {
+    padding-bottom: max(env(safe-area-inset-bottom), 6px);
+  }
+  .tab-bar a {
+    gap: 2px;
+    padding-top: 7px;
+    padding-bottom: 5px;
+  }
+}
+
 /* --------------------------------------------------------------------------
    DOKUNMATİKTE BASMA İZİ — her hedefte, yalnızca parmakla
    -------------------------------------------------------------------------- */

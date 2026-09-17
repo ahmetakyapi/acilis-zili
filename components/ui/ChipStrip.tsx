@@ -29,6 +29,38 @@ export function ChipStrip({
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
+  /* KENAR SOLMASI ŞERİDİN KENDİSİNDE. Eskiden kabın içinde ayrı bir gradyan
+     `div` duruyordu ve iki kusuru vardı: `sm:hidden` olduğu için yalnızca
+     mobilde çiziliyordu (masaüstünde şerit sarıyordu, taşma yoktu) ve rengi
+     sabitti. Şerit her genişlikte tek satıra dönünce masaüstünde de taşabilir
+     hâle geldi — 1024'te on iki çip 980 piksellik kaba sığmıyor — ve o
+     gradyan orada hiç görünmüyordu. `edge-fade` maskesi hem her genişlikte
+     çalışıyor hem kaydırma konumunu okuyor hem de zemin renginden bağımsız
+     (gerekçenin tamamı `ScrollEdges` içinde). */
+  useEffect(() => {
+    const strip = ref.current;
+    if (!strip) return;
+    const mark = () => {
+      const max = strip.scrollWidth - strip.clientWidth;
+      strip.dataset.edge =
+        max <= 1
+          ? "none"
+          : strip.scrollLeft <= 1
+            ? "end"
+            : strip.scrollLeft >= max - 1
+              ? "start"
+              : "both";
+    };
+    mark();
+    strip.addEventListener("scroll", mark, { passive: true });
+    const resize = new ResizeObserver(mark);
+    resize.observe(strip);
+    return () => {
+      strip.removeEventListener("scroll", mark);
+      resize.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     const strip = ref.current;
     if (!strip) return;
@@ -48,7 +80,7 @@ export function ChipStrip({
   }, [activeKey]);
 
   return (
-    <div ref={ref} className={className}>
+    <div ref={ref} className={`edge-fade ${className ?? ""}`}>
       {children}
     </div>
   );

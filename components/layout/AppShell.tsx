@@ -249,7 +249,7 @@ export function AppShell({
              üstten biraz boşluk bırak" dedi; sistem çubuğunun altına
              girmeyi bıraktıktan sonra da yazının tepeye yapışmaması için
              dört piksel daha ferahlık. */
-          "chrome sticky top-0 z-30 flex items-center gap-2.5 border-b pb-2.5 pt-[calc(env(safe-area-inset-top)+14px)] lg:hidden",
+          "app-bar chrome sticky top-0 z-30 flex items-center gap-2.5 border-b pb-2.5 pt-[calc(env(safe-area-inset-top)+14px)] lg:hidden",
           SAFE_X_18,
         )}
       >
@@ -344,7 +344,7 @@ export function AppShell({
              iOS'un alttaki yüzen araç çubuğu ve ev göstergesi tam o bandın
              üstünde duruyor. `max()` ile taban 16px: env geri gelirse
              (cover'a dönülürse) büyük olan kazanır. */
-          "chrome fixed inset-x-0 bottom-0 z-30 flex justify-between border-t pb-[max(env(safe-area-inset-bottom),16px)] lg:hidden",
+          "tab-bar chrome fixed inset-x-0 bottom-0 z-30 flex justify-between border-t pb-[max(env(safe-area-inset-bottom),16px)] lg:hidden",
           SAFE_X_12,
         )}
         aria-label={labels.bottomNav}

@@ -249,7 +249,35 @@ export default async function TodayPage() {
             { id: "haber-akisi", label: t.today.experienceNews },
           ]} />
         </div>
-        <Suspense fallback={<Skeleton className="h-28 w-full" />}>
+        {/* İSKELET GERÇEK ÖLÇÜYÜ AYIRIYOR. `h-28` yazıyordu, yani 112 piksel;
+            akışın kendisi ölçüldüğünde 594–864 piksel (320'de 864, 390'da
+            778, 430'da 731, 768'de 826, 1024 ve üstünde 594). Aradaki fark
+            yer tutucu içerikle değişince altındaki her şeyin birden aşağı
+            inmesi demekti: yavaş ağda masaüstünde CLS 0,131 ölçüldü ve
+            kaynağı tam olarak bu sıçramaydı (bölüm 201 pikselden 346'ya
+            büyüyor, altındaki pano yeniden konumlanıyor). Mobilde sayı
+            küçük görünüyordu (0,002) ama sebebi düzeltilmiş olması değil,
+            panelin o sırada ekranın altında kalması — CLS yalnızca
+            görünümdeki kaymayı sayıyor.
+
+            Yer tutucu artık akışın ŞEKLİNİ de taşıyor (araç çubuğu, gün
+            şeridi, üç olay satırı): boy doğru ayrıldığı için sıçrama
+            kalmıyor, üstelik bekleyen alan tek bir dev gri blok gibi
+            durmuyor. Olay sayısı güne göre değiştiği için ölçü tam
+            tutmuyor; amaç da tamlık değil, 600 piksellik sıçramayı
+            kapatmak. */}
+        <Suspense
+          fallback={
+            <div aria-hidden className="grid min-h-[780px] gap-3 lg:min-h-[600px]">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          }
+        >
           <RailSection t={t} locale={locale} />
         </Suspense>
       </section></ScrollStage>

@@ -42,7 +42,7 @@
 .analysisFeature::after { content:""; position:absolute; right:-45px; top:-70px; width:180px; height:180px; border:1px solid var(--primary-faint); border-radius:50%; pointer-events:none; }
 .analysisPanels > :global(.panel) { border-radius:20px; }
 .analysisPanels h2 { font-size:15px; }
-.featureHeadline { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:5; overflow:hidden; color:var(--text-body); font-size:14px; line-height:1.7; text-wrap:pretty; }
+.featureHeadline { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:5; overflow:hidden; overflow-wrap:anywhere; color:var(--text-body); font-size:14px; line-height:1.7; text-wrap:pretty; }
 .featureRead { color:var(--primary-ink); font-size:12px; font-weight:600; }
 :global(html):has(.page) { scroll-behavior:smooth; }
 .page :is(a,button):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
