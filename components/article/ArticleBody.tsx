@@ -65,7 +65,10 @@ const CALLOUT: Record<
   ornek: {
     defaultLabel: { tr: "Örnek", en: "Example" },
     box: "border-primary-faint bg-primary-tint",
-    kicker: "text-primary",
+    /* Künye kendi kutusunun tintli zemininde duruyor: `--primary` orada 10
+       pikselde 4,36'ya iniyor (gereken 4,5). Kardeş kutu `dikkat` aynı
+       sebeple zaten mürekkep tonunu kullanıyor. */
+    kicker: "text-primary-ink",
   },
   dikkat: {
     defaultLabel: { tr: "Dikkat", en: "Heads-Up" },
@@ -199,7 +202,12 @@ function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
       const [, label, href] = link;
       const internal = href.startsWith("/");
       const className =
-        "font-medium text-primary underline decoration-primary-faint underline-offset-2 transition-colors hover:text-primary-hover";
+        /* `--primary` düz zeminde 4,63 ile geçiyor ama makale bağlantılarının
+           çoğu RENKLİ KUTULARIN içinde (dikkat, ornek, ozet): orada zemin bir
+           tık koyulaşıyor ve oran 4,01'e iniyor (ölçüldü, mercek yazısında
+           14 piksel). `--primary-ink` tam bu iş için var — düz zeminde 5,75,
+           kutuların içinde 5,4 — ve gözle iki ton neredeyse ayırt edilmiyor. */
+        "font-medium text-primary-ink underline decoration-primary-faint underline-offset-2 transition-colors hover:text-primary-hover";
 
       if (internal) {
         return (

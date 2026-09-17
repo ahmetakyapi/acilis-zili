@@ -211,7 +211,9 @@ function SortHead({
         )}
       >
         {label}
-        <span aria-hidden className="numeral text-micro">
+        {/* 8 piksellik ok `--primary` ile 4,48'de kalıyordu (gereken 4,5);
+            mürekkep tonu aynı aileden ama eşiğin üstünde. */}
+        <span aria-hidden className="numeral text-micro text-primary-ink">
           {active ? (dir === "desc" ? "▼" : "▲") : "▽"}
         </span>
       </Link>

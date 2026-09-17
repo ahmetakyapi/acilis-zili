@@ -1619,8 +1619,11 @@ function PointsCard({
   if (points.length === 0) return null;
 
   const Icon = tone === "up" ? TrendUp : tone === "down" ? Warning : CalendarBlank;
+  /* Mavi ton hem başlıkta hem 8 piksellik sıra numaralarında kullanılıyor ve
+     ikisi de `--primary-wash` zemininde duruyor: `--primary` orada 4,26'ya
+     iniyor (ölçüldü, gereken 4,5). Mürekkep tonu aynı aileden ve 5,4. */
   const accent =
-    tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-primary";
+    tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-primary-ink";
 
   return (
     <Reveal className={styles.pointReveal}>

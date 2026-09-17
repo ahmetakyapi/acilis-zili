@@ -344,7 +344,14 @@ export default async function CalendarPage(
                             >
                               {times.primary}
                             </span>
-                            <span className="numeral block whitespace-nowrap text-nano leading-tight text-muted">
+                            {/* KARONUN İÇİNDE KÜNYE TONU YETMİYOR. Karo koyu
+                                temada %12 beyaz zemin taşıyor, yani metnin
+                                altındaki yüzey açılıyor: `--text-muted` orada
+                                10 pikselde 4,09'a iniyor (ölçüldü, gereken
+                                4,5). Gövde tonu karoyu bozmuyor, ikincil
+                                satır hâlâ birincilden geride duruyor —
+                                punto ve ağırlık farkı onu zaten söylüyor. */}
+                            <span className="numeral block whitespace-nowrap text-nano leading-tight text-body">
                               {times.secondary} {tags.secondary}
                             </span>
                           </>

@@ -676,7 +676,11 @@ export function DataStamp({
       {stale && (
         <>
           <span aria-hidden>·</span>
-          <span className="text-impact-med">{labels.mayBeStale}</span>
+          {/* `--impact-med` ZEMİN rengi (takvimdeki önem noktaları) ve metin
+              olarak kullanılınca eşiğin altında kalıyor: 11 pikselde ölçüldü,
+              3,99–4,21 — gereken 4,5. Pirinç tonunun METİN karşılığı zaten
+              var ve tam bu yüzden eklenmişti; künye onu kullanıyor (5,2). */}
+          <span className="text-brass-ink">{labels.mayBeStale}</span>
         </>
       )}
       {note && (

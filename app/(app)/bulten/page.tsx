@@ -287,7 +287,10 @@ async function ArchiveBoard({
                   <span
                     className={cn(
                       "flex items-center gap-2 text-tiny",
-                      active ? "text-primary" : "text-muted",
+                      /* Seçili satırın zemini `--primary-wash`: `--primary`
+                         orada 11 pikselde 4,26'ya iniyor (gereken 4,5).
+                         Mürekkep tonu aynı aileden, 5,4. */
+                      active ? "text-primary-ink" : "text-muted",
                     )}
                   >
                     <span className="numeral font-semibold">
