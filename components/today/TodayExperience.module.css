@@ -178,27 +178,40 @@
 .dashboard [data-home-section]:empty { display:none; }
 @media(max-width:1023px) {
  .dashboard > [data-col] { display:contents; }
- /* Mobile reading order: day flow, daily brief, world markets, movers.
-    The English source-news feed follows both earnings panels, last among
-    content sections; the data-source footnote remains the page footer. */
+ /* Telefonda okuma sırası: günün özeti, dünya, hareketler, mercek, teknik
+    görünüm, ölçüler, takvim, listeler, bilanço, haber akışı, künye.
+
+    SIRA HER BÖLÜME AÇIKÇA YAZILIYOR. Değeri olmayan bir bölüm `order:0`
+    alıyor ve düzleşmiş yığının EN BAŞINA, günün özetinin üstüne çıkıyor —
+    teknik panel bir kez tam olarak böyle kaymıştı. Yeni bir panel eklerken
+    buraya da bir satır düşmeli; eşit değerlerde belge sırası geçerli
+    olduğu için "aynı sayıyı ver" bir çözüm değil, iki kolonun DOM sırası
+    o eşitliği rastgele bozuyor.
+
+    TEKNİK GÖRÜNÜM MERCEĞİN HEMEN ALTINDA. Panel masaüstünde yan kolonun
+    ortasında duruyor (gerekçesi `page.tsx` içinde, ölçülmüş kolon
+    dengesi) ve telefonda o yer makro ile takvimin arasına düşüyordu:
+    okuyucu ona ancak dört ölçü panelini geçtikten sonra varıyordu. Oysa
+    mercek ile teknik görünüm sitenin KENDİ ÜRETTİĞİ iki içerik — biri
+    olayı anlatıyor, öteki on iki hissede ne görüldüğünü. İkisi yan yana
+    duruyor; ölçü panelleri arkalarından geliyor.
+
+    Masaüstünde hiçbir şey değişmiyor: bu blok yalnızca 1024'ün altında
+    çalışıyor, iki kolonlu düzende paneller kendi kolonlarında kalıyor. */
  .dashboard [data-home-section="brief"] { order:1; }
  .dashboard [data-home-section="world"] { order:2; }
  .dashboard [data-home-section="movers"] { order:3; }
  .dashboard [data-home-section="stories"] { order:4; }
- .dashboard [data-home-section="yields"] { order:5; }
- .dashboard [data-home-section="macro"] { order:6; }
- .dashboard [data-home-section="schedule"] { order:7; }
- .dashboard [data-home-section="week"] { order:8; }
- .dashboard [data-home-section="watchlist"] { order:9; }
- .dashboard [data-home-section="earnings"] { order:10; }
- .dashboard [data-home-section="analyses"] { order:11; }
- .dashboard [data-home-section="news"] { order:12; }
- .dashboard [data-home-section="sources"] { order:13; }
- /* Teknik görünüm: düzleşince sırası yoksa `order:0` alıyor ve telefonda
-    Günün Özeti'nin ÜSTÜNE çıkıyordu. Makroyla aynı sıra: eşitlikte belge
-    sırası geçerli ve makro önce geliyor, yani panel masaüstündeki yan
-    kolon yerinde, makronun ardında ve takvimin önünde duruyor. */
- .dashboard [data-home-section="technical"] { order:6; }
+ .dashboard [data-home-section="technical"] { order:5; }
+ .dashboard [data-home-section="yields"] { order:6; }
+ .dashboard [data-home-section="macro"] { order:7; }
+ .dashboard [data-home-section="schedule"] { order:8; }
+ .dashboard [data-home-section="week"] { order:9; }
+ .dashboard [data-home-section="watchlist"] { order:10; }
+ .dashboard [data-home-section="earnings"] { order:11; }
+ .dashboard [data-home-section="analyses"] { order:12; }
+ .dashboard [data-home-section="news"] { order:13; }
+ .dashboard [data-home-section="sources"] { order:14; }
 }
 
 /* September cross-page audit: the centered countdown started 177px below
@@ -213,6 +226,17 @@
 .indexDeck { padding-left:24px; }
 .indexHeading { margin-bottom:10px; }
 .indexCard { min-height:132px; padding:12px 14px 10px; }
+/* KIVILCIM ÇİZGİSİ YOKSA TABAN YÜKSEKLİK DE YOK.
+   `min-height` çizginin yerini ayırmak için var. Çizgi artık kotasyon bu
+   seansa ait değilse hiç çizilmiyor (gerekçesi `IndexStrip` içinde) ve o
+   hâlde kart, fiyatın altında 90 piksellik boş bir dikdörtgenle duruyordu
+   (390'da ölçüldü). Taban yükseklik dört kartta birden kalkıyor — biri
+   çizgisizse hepsi çizgisiz, çünkü tazelik paketin tamamına ait — yani
+   kartlar yine eşit boyda kalıyor. Yedek iskelet o hâlde fazla yer ayırmış
+   oluyor; içerik akışla gelince yukarı toplanıyor. Takas bilinçli: fazla
+   ayrılan yer yalnızca sağlayıcı düştüğünde ortaya çıkıyor, boş dikdörtgen
+   ise orada her zaman duruyordu. */
+.indexCard:not(:has(.indexSpark)) { min-height:0; }
 .indexSkeleton { height:132px; }
 .indexValue { margin-top:8px; font-size:26px; }
 .indexSpark { margin-top:6px; height:28px; }

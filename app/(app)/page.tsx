@@ -590,6 +590,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
     getChartBarsMulti([...INDEX_STRIP], "1D", status),
   ]);
 
+
   if (!result.ok) {
     return (
       <Panel>
@@ -597,6 +598,17 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
       </Panel>
     );
   }
+
+  /* KIVILCIM ÇİZGİSİ SAYIYLA AYNI SEANSI ANLATMALI.
+     Kartta iki şey yan yana duruyor ve ikisi AYRI kaynaktan geliyor: yüzde
+     kotasyondan, çizgi 1G barlarından. Barlar artık seansa bağlı
+     (`cachedBarsUsable`) ama kotasyon sağlayıcı düştüğünde önbelleğe
+     düşüyor ve önceki seansın yüzdesini taşıyor. O hâlde kartta bir
+     önceki seansın yüzdesinin ALTINDA bu seansın şekli çiziliyor —
+     damga "güncel olmayabilir" dese de çizgi sessizce başka bir gün
+     anlatıyor. Şekil de bir iddia; sayı o seansa ait değilse çizilmiyor.
+     Aynı kural favoriler özetinde de var. */
+  const sparkOk = !result.stale;
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -649,7 +661,7 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                 >
                   {formatPercent(quote.changePct, locale)}
                 </p>
-                {points.length > 1 && (
+                {sparkOk && points.length > 1 && (
                   <Sparkline
                     points={points}
                     title={`${INDEX_LABEL[symbol] ?? symbol} · 1D`}
@@ -879,10 +891,36 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
     WORLD_MARKETS.map((market) => market.symbol),
     status,
   );
-  if (!result.ok) return null;
+  /* SAĞLAYICI DÜŞTÜĞÜNDE PANEL KAYBOLMUYOR, SÖYLÜYOR.
+     `!result.ok` dalı `null` dönüyordu: aynı arıza endeks şeridinde ve
+     hareket panelinde "Veri alınamadı" yazarken bu panel sessizce sayfadan
+     siliniyordu. İki zarar birden — okuyucu sitenin dünya piyasalarını
+     izlediğini hiç öğrenemiyor, ve sayfanın o günkü hâli ile bir başka
+     günkü hâli arasındaki fark açıklanmıyor. Ayrımı doğru yerden kurmak
+     gerekiyordu: SAĞLAYICI ARIZASI bir haber, YAYIN OLMAMASI değil. Pano
+     boş diye çizilmeyen teknik panel ile faizi hiç gelmeyen tahvil kartı
+     (ikisi de `null` dönüyor) ikinci gruba giriyor — orada bir arıza yok,
+     gösterilecek bir şey yok. Burada bir arıza var. */
+  if (!result.ok) {
+    return (
+      <Panel>
+        <PanelHeader title={t.today.worldMarkets} tone="plate" />
+        <DataError message={t.data.failed} hint={t.data.failedHint} />
+      </Panel>
+    );
+  }
 
+  /* Kotasyon geldi ama HİÇBİR dünya sembolü dönmediyse bu da bir arıza:
+     liste sabit (`WORLD_MARKETS`), "bugün bu fonlar yok" diye bir hâl yok. */
   const shown = WORLD_MARKETS.filter((market) => result.data[market.symbol]);
-  if (shown.length === 0) return null;
+  if (shown.length === 0) {
+    return (
+      <Panel>
+        <PanelHeader title={t.today.worldMarkets} tone="plate" />
+        <DataError message={t.data.failed} hint={t.data.failedHint} />
+      </Panel>
+    );
+  }
 
   return (
     <Panel>
@@ -1646,6 +1684,8 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
     getChartBarsMulti(shown, "1D", status),
     getSymbolNames(shown),
   ]);
+  /* Şekil sayıyla aynı seansı anlatmalı — gerekçe `IndexStrip` içinde. */
+  const sparkOk = result.ok && !result.stale;
 
   return (
     <Panel className="px-4 py-4 sm:px-5">
@@ -1689,7 +1729,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
                         <span className="block truncate text-tiny text-muted">{names[symbol]!.name}</span>
                       )}
                     </span>
-                    {points.length > 1 && (
+                    {sparkOk && points.length > 1 && (
                       <Sparkline
                         points={points}
                         title={`${symbol} · 1D`}
@@ -1775,6 +1815,15 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
     rows.find((row) => row.slug === slug),
   ).filter((row) => row !== undefined);
   if (shown.length === 0) return null;
+  /* HİÇBİRİNİN DEĞERİ YOKSA PANEL HİÇ BASILMIYOR. Satırlar veritabanında
+     tohumla açılıyor ve değerleri FRED senkronu dolduruyor; senkron hiç
+     koşmamışsa dört başlık, dört tire ve dört "Veri yok" satırı 208 piksel
+     yer kaplıyor (390'da ölçüldü) ve tek söylediği şey hiçbir şey
+     bilmediğimiz. Aynı kural tahvil kartında zaten var (`YieldCard`,
+     `values.every(...)`): bir ölçü panelinin boş hâli, boş bir ölçü paneli
+     değil, hiç panel olmamasıdır. Tek tek boş kalan satır duruyor — orada
+     "bilinmiyor" bir bilgi, çünkü yanındaki satırda bir sayı var. */
+  if (shown.every((row) => row.latestValue === null)) return null;
 
   return (
     <Panel className="px-4 py-4 sm:px-5">
