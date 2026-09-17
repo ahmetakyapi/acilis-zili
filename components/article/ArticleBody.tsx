@@ -145,6 +145,21 @@ function basligaKimlik(text: string): string {
   return gövde ? `b-${gövde}` : "";
 }
 
+/**
+ * İÇ İÇE BİÇİM ÇALIŞIR — kalının içindeki bağlantı ham metin kalmıyordu.
+ *
+ * `**[Bilançolar](/bilancolar)**` kalıbı kalın dalına düşüyor ve içerideki
+ * metin olduğu gibi basılıyordu: rehberde okuyucunun gördüğü şey, kalın
+ * puntoyla yazılmış `[Bilançolar](/bilancolar)` dizesiydi — hem tıklanmıyor
+ * hem köşeli parantezler ekranda duruyordu. Depoda dört yerde var (iki dil ×
+ * iki yazı) ve mercek gövdeleri veritabanından geldiği için ileride yenisi
+ * yazılabilir. Kalın ve eğik artık içeriğini yeniden çözümlüyor; bağlantının
+ * etiketi de öyle, yani `[**Kalın**](/adres)` de çalışıyor.
+ *
+ * Özyineleme kendiliğinden bitiyor: her adımda işaretçiler kırpılıyor, yani
+ * bir sonraki metin aynı kalıba bir daha uymuyor. `kod` dalı BİLEREK dışarıda
+ * — kod verbatim demektir, içinde biçim aranmaz.
+ */
 function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
   return text.split(INLINE_PATTERN).map((part, index) => {
     const key = `${keyPrefix}-${index}`;
@@ -152,15 +167,19 @@ function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
 
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
-        <strong key={key} className="font-semibold text-strong">
-          {part.slice(2, -2)}
+        /* `[&_a]` : içerideki bağlantı kendi `font-medium`ini taşıyor ve
+           kalının ağırlığını yutuyordu — `**[Bilançolar](/bilancolar)**`
+           komşu kalın etiketlerden bir kademe ince duruyordu. Torun
+           seçici özgüllükte kazanıyor, yani bağlantı hem mavi hem kalın. */
+        <strong key={key} className="font-semibold text-strong [&_a]:font-semibold">
+          {renderInline(part.slice(2, -2), key)}
         </strong>
       );
     }
     if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
       return (
         <em key={key} className="italic">
-          {part.slice(1, -1)}
+          {renderInline(part.slice(1, -1), key)}
         </em>
       );
     }
@@ -185,7 +204,7 @@ function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
       if (internal) {
         return (
           <Link key={key} href={href} className={className}>
-            {label}
+            {renderInline(label!, key)}
           </Link>
         );
       }
@@ -195,7 +214,7 @@ function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
          geçer — href öznitelikleri kaçışın kapsamı dışında. Şema
          süzülmezse bağlantı düz metne düşer. */
       const external = safeExternalUrl(href);
-      if (!external) return <span key={key}>{label}</span>;
+      if (!external) return <span key={key}>{renderInline(label!, key)}</span>;
 
       return (
         <a
@@ -205,7 +224,7 @@ function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
           rel="noreferrer noopener"
           className={className}
         >
-          {label}
+          {renderInline(label!, key)}
         </a>
       );
     }
