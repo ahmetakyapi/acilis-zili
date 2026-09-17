@@ -1183,6 +1183,22 @@
   );
 }
 
+/* ODAK HALKASI MASKEYİ KALDIRIR. Maske öğenin ÇİZİMİNE uygulanıyor ve
+   `outline` kenarlık kutusunun DIŞINA çiziliyor: yani maskenin alanına hiç
+   girmiyor ve tamamen siliniyor — kenarda solmuyor, yok oluyor. Ölçüldü:
+   aynı kutunun maskesiz hâlinde 4 piksellik kırmızı çerçeve duruyor,
+   maskelisinde hiç çizilmiyor. Bu kaplardan üçü klavyeyle odaklanabilir
+   (`tabIndex={0}` ile kaydırılabilir bölgeler: piyasalar, şirketler, hisse
+   tabloları) ve halkasız bir odak, klavyeyle gezenin nerede olduğunu
+   göremeyeceği anlamına geliyordu.
+   `:has(:focus-visible)` de var: şeridin ucundaki bir çipe klavyeyle
+   gelindiğinde çipin kendisi solmasın. Solma yalnızca bir işaret; odak
+   varken zaten "devamı var" demenin sırası değil. */
+.edge-fade:focus-visible,
+.edge-fade:has(:focus-visible) {
+  mask-image: none;
+}
+
 /* --------------------------------------------------------------------------
    Dokunma hedefi — görünür ölçüyü büyütmeden 44 piksel
    -------------------------------------------------------------------------- */

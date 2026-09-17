@@ -38,6 +38,7 @@ import {
 } from "@/lib/compare";
 import type { Locale } from "@/lib/i18n/config";
 import { cn, directionOf, directionText, formatPercent } from "@/lib/utils";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /**
  * Karşılaştırma ekranının CANLI KATMANI — aralık istemcide değişiyor.
@@ -376,7 +377,7 @@ export function CompareRangeControl({ labels }: { labels: CompareLabels }) {
   );
 
   return (
-    <div
+    <ScrollEdges
       className={cn(
         "scroll-x-hint -mx-1 max-w-full px-1 transition-opacity",
         gezinmede && "pointer-events-none opacity-50",
@@ -417,7 +418,7 @@ export function CompareRangeControl({ labels }: { labels: CompareLabels }) {
           </SegmentItem>
         ))}
       </Segment>
-    </div>
+    </ScrollEdges>
   );
 }
 

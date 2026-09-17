@@ -525,7 +525,14 @@ function FeaturedAnalysis({
         <div className="flex items-center gap-2.5">
           <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="lg" />
           <div className="min-w-0">
-            <p className="truncate text-lead font-bold tracking-[-0.03em] text-strong">
+            {/* TEK SATIRA SIKIŞTIRMAK YERİNE İKİ SATIR. `truncate` idi ve
+                390 pikselde 258 piksellik yere 262 piksellik metin
+                giriyordu: dört piksel yüzünden "2. Çeyrek 2026" ekranda
+                "2. Çeyrek 20…" oluyor, yani kartın en önemli ikinci
+                bilgisi — hangi çeyrek — kayboluyordu. İki satırda hem
+                şirket hem çeyrek tam okunuyor; sığdığı yerde (masaüstü)
+                görüntü hiç değişmiyor, ikinci satır hiç açılmıyor. */}
+            <p className="line-clamp-2 text-lead font-bold tracking-[-0.03em] text-strong">
               {row.company} · {row.periodLabel}
             </p>
             <p className="truncate text-tiny font-medium text-muted">

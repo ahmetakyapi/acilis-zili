@@ -44,6 +44,7 @@ import {
   peRatioOf,
 } from "@/lib/utils";
 import { pageMetadata } from "@/lib/page-meta";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /**
  * Karşılaştırma — iki ile dört hisseyi yan yana okumak.
@@ -576,7 +577,7 @@ async function CompareBoard({
            "devamı var" işaretini geri getiriyor — deponun dört yerdeki
            yerleşik kalıbı. */}
       <Panel>
-        <div
+        <ScrollEdges
           className="scroll-x-hint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
           tabIndex={0}
           role="region"
@@ -681,7 +682,7 @@ async function CompareBoard({
               ))}
             </tbody>
           </table>
-        </div>
+        </ScrollEdges>
 
         {/* ---- Şirket künyesi — YALNIZCA DAR EKRANDA ----
              Tablodan inen sektör ve alt sektör satırlarının karşılığı.

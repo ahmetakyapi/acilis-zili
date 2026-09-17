@@ -9,6 +9,7 @@ import {
   seriesDashOf,
 } from "@/lib/chart-series";
 import type { CompareSeries } from "@/lib/compare";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /**
  * Normalize edilmiş karşılaştırma grafiği.
@@ -311,7 +312,7 @@ export function CompareChart({
           aşağıdaki yorum). `.scroll-x-hint` tam bu iş için var: ince çubuk
           görünür kalıyor. `tabIndex` + `role="region"` hisse sayfasındaki
           geçmiş bilançolar tablosunun emsali (WCAG 2.1.1). */}
-      <div
+      <ScrollEdges
         className="scroll-x-hint -mx-1 px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
         tabIndex={0}
         role="region"
@@ -482,7 +483,7 @@ export function CompareChart({
             </div>
           )}
         </div>
-      </div>
+      </ScrollEdges>
 
       {/* Künye dönem SONU farkını gösterir; imleç kartı ara anları.
           İkisi birbirinin yerine geçmiyor, biri özet biri detay. */}
