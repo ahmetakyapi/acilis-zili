@@ -6,7 +6,6 @@ import { MotionExperience, Reveal, ScrollProgress, SectionNav } from "@/componen
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
-import { LevelTrack } from "@/components/technical/LevelTrack";
 import { PlanStrip } from "@/components/technical/PlanStrip";
 import { PriceMap } from "@/components/technical/PriceMap";
 import { SignalStrip } from "@/components/technical/SignalStrip";
@@ -246,8 +245,17 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
               )}
             </div>
           </div>
+          {/* SEVİYE ÇİZGİSİ BURADAN KALKTI — aynı plan sayfada ÜÇ KEZ
+              çiziliyordu: plan şeridi sayılarla, çizgi yatay eksende, fiyat
+              haritası dikey eksende. Üçünün de kaynağı aynı beş sayı.
+              Çizgi `aria-hidden` ve etiketsiz: ekranda soluk bir ray,
+              yeşil bir kapsül, mavi bir nokta ve iki çentik duruyordu —
+              okuyucunun gördüğü şey bir ölçü değil, bozuk bir sürgü
+              denetimi. Aynı bilgiyi harita adlarıyla, fiyatlarıyla ve
+              uzaklıklarıyla zaten veriyor.
+              Liste kartında DURUYOR: orada harita yok, çizgi planın tek
+              geometrisi (`TechnicalCard`). */}
           <PlanStrip verdict={verdict} {...levelProps} size="lg" locale={locale} t={t} />
-          <LevelTrack price={price} {...levelProps} verdict={verdict} size="lg" />
         </div>
 
         <div className={styles.coverSignals}>

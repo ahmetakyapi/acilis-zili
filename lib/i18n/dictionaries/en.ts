@@ -475,6 +475,8 @@ const en: typeof tr = {
     readAnalysis: "Read Analysis",
     now: "Now",
     atAnalysis: "At Analysis",
+    levelPassed: "Passed",
+    levelBroken: "Broken",
     levelsNote: "Distance From Price",
     target: "Target {n}",
     targetsLabel: "Targets",

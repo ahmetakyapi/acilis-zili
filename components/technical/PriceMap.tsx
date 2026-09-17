@@ -1,7 +1,7 @@
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { distancePct, formatRange, ladderOf, priceMapLayout, type MapRung, type TechnicalCopy } from "@/lib/technical";
-import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
+import { cn, formatPercent, formatPrice } from "@/lib/utils";
 import styles from "./Technical.module.css";
 
 /** Etiket başına ayrılan dikey yer. Bütün satırlar aynı yükseklikte. */
@@ -198,12 +198,20 @@ export function PriceMap({
             rung.kind === "entry" && rung.high !== undefined
               ? formatRange(rung.price, rung.high, locale)
               : money(rung.price);
+          const crossed = crossedState(rung.kind, distance);
           return (
             <li key={`${rung.kind}-${rung.price}`} className={styles.mapRung} data-kind={kind} style={{ top: rung.labelY }}>
               <span className={styles.mapLabel}>{labelOf(rung)}</span>
               <span className={cn(styles.mapPrice, "numeral")}>{value}</span>
-              <span className={cn(styles.mapDistance, "numeral", distance !== null && directionText(directionOf(distance)))}>
-                {distance !== null ? formatPercent(distance, locale, 1) : ""}
+              <span className={styles.mapDistance}>
+                {crossed && (
+                  <b className={styles.mapCrossed} data-state={crossed}>
+                    {crossed === "passed" ? t.technical.levelPassed : t.technical.levelBroken}
+                  </b>
+                )}
+                {distance !== null && (
+                  <span className="numeral">{formatPercent(distance, locale, 1)}</span>
+                )}
               </span>
             </li>
           );
@@ -225,6 +233,38 @@ export function PriceMap({
     )}
     </>
   );
+}
+
+/**
+ * Fiyat bu seviyeyi GEÇTİ Mİ — ve geçmesi ne anlama geliyor?
+ *
+ * Uzaklık sütunu yönü işaretin ARTI/EKSİ oluşuna göre renklendiriyordu ve o
+ * renk bu haritada ters okunuyor: ekranda "Hedef 1 · 208,16 $ · −%1,7"
+ * KIRMIZI duruyordu, oysa fiyatın ilk hedefi geçmiş olması planın iyi
+ * gitmesi demek. Aynı kural stopta doğru çalışıyordu (stop yukarıda kalmışsa
+ * kırmızı) — yani tek bir işaret kuralı iki zıt anlamı birden taşıyamıyor.
+ *
+ * Yön artık HARİTANIN KENDİSİNDE: satır fiyat satırının üstündeyse seviye
+ * yukarıda, altındaysa aşağıda. Sütun yalnızca mesafeyi söylüyor ve rengi
+ * nötr. Geçilmiş seviyeye ayrıca tek kelimelik bir işaret düşüyor, çünkü
+ * geçilmek seviyenin ANLAMINI değiştiriyor: hedef gerçekleşti, stop
+ * kırıldı — ikisi de plana dair bir haber.
+ */
+function crossedState(
+  kind: string,
+  distance: number | null,
+): "passed" | "broken" | null {
+  if (distance === null) return null;
+  /* Hedef ve direnç fiyatın ALTINA düştüyse geçilmiştir; stop ve destek
+     fiyatın ÜSTÜNDE kaldıysa kırılmıştır. Alım bölgesinin iki ucu var ve
+     fiyatın bölgeye göre yeri kapakta zaten tek bir çiple yazılı. */
+  if (kind === "target" || kind === "resistance") {
+    return distance < 0 ? "passed" : null;
+  }
+  if (kind === "stop" || kind === "support") {
+    return distance > 0 ? "broken" : null;
+  }
+  return null;
 }
 
 function noteOf(level: { kind: string; order?: number }, copy: TechnicalCopy): string | null {

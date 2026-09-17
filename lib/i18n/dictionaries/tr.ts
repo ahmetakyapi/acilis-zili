@@ -626,6 +626,8 @@ const tr = {
     readAnalysis: "Analizi Oku",
     now: "Şu An",
     atAnalysis: "Analiz Anında",
+    levelPassed: "Geçildi",
+    levelBroken: "Kırıldı",
     levelsNote: "Fiyata Uzaklık",
     target: "Hedef {n}",
     targetsLabel: "Hedefler",

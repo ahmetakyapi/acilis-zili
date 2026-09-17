@@ -169,7 +169,17 @@
    TABULAR-NUMS DENENDİ VE GERİ ALINDI: bu ailede virgül de tabular genişliğe
    çekiliyor ve "916,84" ekranda "916 , 84" diye okunuyordu. Künye bir sütunda
    hizalanmıyor zaten — sabit genişliğe ihtiyacı yok. */
-.riskAnchor { margin-left:auto; letter-spacing:-.01em; }
+/* ÇAPA KÜNYESİ YALNIZCA SIĞDIĞI YERDE SAĞA YAPIŞIYOR. `margin-left:auto`
+   koşulsuzdu: 390 pikselde künye alt satıra düşüyor ve orada TEK BAŞINA
+   sağa yapışıyordu — "Risk / Getiri 1 : 0,4" solda, altında sağa dayalı
+   "Bölgenin Tepesinden · 204,43 $". İki parça aynı cümlenin parçası, ayrı
+   hizalarda duran iki satır değil. Alt satıra düştüğünde oranın altına,
+   aynı hizaya iniyor; tek satıra sığdığında (kapakta, ≥480px) sağ uca
+   gidiyor ve orada bir künye gibi okunuyor. */
+.riskAnchor { letter-spacing:-.01em; }
+@container (min-width: 480px) {
+  .riskAnchor { margin-left:auto; }
+}
 .riskBar { display:flex; gap:2px; height:5px; }
 .riskBar i { flex:0 1 0; min-width:6px; border-radius:2px; }
 .riskBar i[data-leg="risk"] { background:var(--down); }
@@ -197,9 +207,29 @@
    üç sütun), 844 yatay 420 ve 390 telefon 330 (ikisi de alt alta). */
 .planStrip { container-type: inline-size; }
 @container (min-width: 480px) {
-  .planStripLg .planCells { display:grid; grid-template-columns:repeat(var(--cells, 3), minmax(0,1fr)); gap:12px 16px; padding:16px 18px; border-radius:16px; }
-  .planStripLg .planCell { flex-direction:column; align-items:flex-start; gap:5px; }
-  .planStripLg .planCell dd { font-size:19px; line-height:1.25; text-align:left; overflow-wrap:anywhere; }
+  /* KAPAKTA GRİ KUTU YOK, İNCE ÇİZGİ VAR. `--surface-sunken` bir panel
+     İÇİNDE ikinci bir yüzey kuruyor ve kapağın kendi zemini zaten
+     `--premium-surface`: üç sayı, kutunun içinde kapağın üstünde duran ayrı
+     bir nesne gibi okunuyordu. Kutu kalkınca sayılar kapağın kendi
+     yüzeyine oturuyor; hücreleri ayıran şey dikey bir kıl çizgi — gazete
+     künyelerinin ayrımı. Kart (sm) kutuyu koruyor: orada şeridin etrafında
+     ayıracak bir yüzey yok. */
+  .planStripLg .planCells { display:grid; grid-template-columns:repeat(var(--cells, 3), minmax(0,1fr)); gap:0; padding:0; border-radius:0; background:none; }
+  /* ÜSTTEN HİZA. Taban kural `justify-content:space-between` taşıyor ve
+     ızgara hücreleri aynı yüksekliğe gerdiği için sayılar ALTA yapışıyordu:
+     üç hedefi tek satıra sığmayan "Nerede Satılır" iki satıra çıkınca onun
+     ilk satırı komşularının 38 piksel üstünde kalıyordu (1440'ta ölçüldü).
+     Üstten hizada üç sayının ilk satırı aynı taban çizgisinde; taşan hücre
+     aşağı doğru uzuyor. */
+  .planStripLg .planCell { flex-direction:column; justify-content:flex-start; align-items:flex-start; gap:6px; padding:0 18px; border-left:1px solid var(--line); }
+  .planStripLg .planCell:first-child { padding-left:0; border-left:0; }
+  /* ETİKET 11 PİKSEL, 10 DEĞİL. `--text-nano` (10) bu dosyanın kendi punto
+     tabanının altında ve o taban bir geri bildirimden geldi ("yazılar net
+     okunmuyor", dosyanın başındaki not). 11 + büyük harf + 700, gösterge
+     özetindeki `.signal dt` ile aynı ölçü: kapakta iki etiket ailesi değil
+     tek bir etiket dili var. */
+  .planStripLg .planCell dt { font-size:11px; letter-spacing:.055em; text-transform:uppercase; }
+  .planStripLg .planCell dd { font-size:21px; line-height:1.2; text-align:left; overflow-wrap:anywhere; letter-spacing:-.03em; }
 }
 .legendDot { display:inline-block; flex:none; width:7px; height:7px; border-radius:2px; }
 .legendDot[data-kind="stop"] { background:var(--down); }
@@ -227,12 +257,9 @@
 .trackTick[data-kind="sellLevel"] { background:var(--down); opacity:.55; }
 .trackTick[data-kind="support"], .trackTick[data-kind="resistance"] { top:10px; height:10px; background:var(--text-muted); opacity:.55; }
 .trackPrice { position:absolute; top:8px; width:14px; height:14px; border-radius:50%; background:var(--primary); margin-left:-7px; box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 4px var(--primary); }
-.trackLg { height:40px; }
-.trackLg .trackLine, .trackLg .trackVoid { top:17px; height:6px; border-radius:3px; }
-.trackLg .trackBand { top:11px; height:18px; border-radius:6px; }
-.trackLg .trackTick { top:8px; height:24px; }
-.trackLg .trackTick[data-kind="support"], .trackLg .trackTick[data-kind="resistance"] { top:13px; height:14px; }
-.trackLg .trackPrice { top:10px; width:20px; height:20px; margin-left:-10px; box-shadow:0 0 0 4px var(--premium-surface), 0 0 0 5px var(--primary), 0 6px 16px color-mix(in srgb, var(--primary) 30%, transparent); }
+/* `lg` ÖLÇÜSÜ KALKTI. Çizgi yalnızca liste kartında kullanılıyor; detay
+   kapağındaki büyük hâli fiyat haritasıyla aynı planı üçüncü kez çiziyordu
+   (gerekçe `teknik/[symbol]/page.tsx` içinde, çağrının yerinde). */
 
 /* ---- Detay kapağı ----
    İki sütun: solda kimlik, görüş, başlık ve planın okuması; sağda fiyat,
@@ -261,7 +288,13 @@
 .stanceRow { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; }
 .stanceLabel { font-size:11px; font-weight:700; letter-spacing:.05em; color:var(--text-muted); }
 .stancePill { display:inline-flex; align-items:center; padding:9px 22px; border-radius:999px; font-size:clamp(19px,1.7vw,22px); font-weight:800; letter-spacing:.07em; line-height:1.1; }
-.coverHeadline { max-width:58ch; color:var(--text-strong); font-size:17px; line-height:1.6; font-weight:500; letter-spacing:-.012em; text-wrap:pretty; }
+/* BAŞLIK CÜMLESİ KAPAĞIN İKİNCİ SESİ. 17 punto/1,6 ile gövde metniyle aynı
+   ölçüdeydi ve kapakta sekiz blok arasında kayboluyordu: görüş çipi bir
+   kelime, bu cümle o kelimenin GEREKÇESİ ve okuyucunun ilk okuduğu tam
+   cümle. Ölçek 19-25 arası, satır aralığı 1,5'e, aralık -0,022'ye iniyor —
+   editoryal bir giriş cümlesi ritmi. Genişlik 54ch: daha uzun satırlar
+   telefonda değil masaüstünde okumayı zorlaştırıyor. */
+.coverHeadline { max-width:54ch; color:var(--text-strong); font-size:clamp(19px, 1.35vw, 25px); line-height:1.5; font-weight:550; letter-spacing:-.022em; text-wrap:pretty; }
 /* Planın okuması — sol şerit tonu okumanın tonu: bölgede yükseliş, stop
    altı ve SAT düşüş, bekleyiş nötr. */
 .reading { display:grid; gap:4px; padding:12px 16px; border-left:3px solid var(--line-strong); border-radius:0 14px 14px 0; background:var(--surface-sunken); }
@@ -289,8 +322,22 @@
 .signal strong { font-size:19px; line-height:1.15; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); }
 .signal span { font-size:12px; line-height:1.45; color:var(--text-muted); }
 
-/* Bölüm gezinmesi — şirket sayfasındaki `chapterNav` ile aynı gölge. */
+/* Bölüm gezinmesi — şirket sayfasındaki `chapterNav` ile aynı gölge.
+
+   GENİŞ EKRANDA İÇERİĞİ KADAR GENİŞ. Paylaşılan bileşende sekmeler
+   `flex:1` taşıyor: çubuk sayfanın tamamını kaplayınca dört sekme 1320
+   pikseli dörde bölüyor ve her biri 330 piksellik bir kutunun ortasında
+   duran 12 puntoluk bir kelimeye dönüşüyordu (ölçüldü — sekme merkezleri
+   155, 378, 600 ve 822). `flex:1` şirket sayfasında doğru, orada sekiz
+   bölüm var ve çubuğu dolduruyorlar; burada dört bölüm var.
+   `width:fit-content` çubuğu içeriğine indiriyor, sekmeler kendi
+   genişliklerini alıyor ve çubuk sola yaslı yüzen bir denetim gibi
+   okunuyor. Telefonda kural yok: orada çubuk zaten tam genişlik ve
+   sekmeler yatay kayıyor. */
 .sectionNav { box-shadow:0 6px 24px var(--primary-tint); border-color:var(--line); }
+@media (min-width: 768px) {
+  .sectionNav { width:fit-content; max-width:100%; }
+}
 
 /* ---- Bölüm başlığı ve iki kolon ---- */
 .sectionTitle { font-size:19px; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
@@ -322,8 +369,14 @@
    genişlikte kalmaya devam ediyor. */
 /* Negatif alt boşluk bölümün 14 piksellik ritmini kapatıyor: başlık
    haritaya ait, bir sonraki blok değil. */
-.mapHead { max-width:460px; margin:0 0 -8px; padding-right:14px; text-align:right; font-size:var(--text-nano); font-weight:650; letter-spacing:.04em; color:var(--text-muted); }
-.map { position:relative; min-width:0; max-width:460px; }
+/* TAVAN 460'TAN 520'YE. Bölüm iki kolonlu ızgarada duruyor ve 1440'ta
+   kolon 651 piksel: 460'lık harita kartın sağında 190 piksellik boş bir
+   şerit bırakıyordu. Tavanın kendisi duruyor — etiket sütunu `1fr` olduğu
+   için sınırsız genişlikte satırın iki ucu birbirine yabancı iki parçaya
+   dönüşüyor (gerekçe aşağıda). 520, boş şeridi 130'dan 60 piksele indiriyor
+   ve en uzun satır ("Alım Bölgesi" + aralık + uzaklık) hâlâ rahat. */
+.mapHead { max-width:520px; margin:0 0 -8px; padding-right:14px; text-align:right; font-size:var(--text-nano); font-weight:650; letter-spacing:.04em; color:var(--text-muted); }
+.map { position:relative; min-width:0; max-width:520px; }
 /* RAY KILAVUZUN ÜSTÜNDE. Kılavuz eksenin ortasından başlıyor, yani hizalı
    bir satırda çentikle aynı y'de ve onun sağ yarısını gri bir çizgiyle
    örtüyordu: tek bir bağ yerine üst üste iki paralel çizgi okunuyordu.
@@ -379,11 +432,35 @@
 .mapRung[data-kind="price"] { background:linear-gradient(90deg, var(--primary-tint), transparent 72%); }
 .mapRung[data-kind="entry"] { background:linear-gradient(90deg, var(--up-wash), transparent 72%); }
 .mapRung[data-kind="stop"] { background:linear-gradient(90deg, var(--down-wash), transparent 72%); }
+/* Satırın üstünde durmak onu eksene bağlıyor: geniş ekranda göz etiketi
+   okurken hangi çentiğe ait olduğunu arıyor ve kılavuz eğrisi tek başına
+   ince kalıyor. Dokunmatikte hover yok, orada satırın kendi zemini yeter. */
+@media (hover: hover) {
+  .mapRung:hover { background:var(--surface-sunken); }
+  .mapRung[data-kind="price"]:hover { background:linear-gradient(90deg, var(--primary-tint), transparent 55%); }
+}
 .mapLabel { font-size:14px; font-weight:600; color:var(--text-strong); }
+/* FİYAT SATIRI HARİTANIN ÇAPASI. Bütün uzaklıklar ona göre ölçülüyor ama
+   satır komşularıyla aynı puntodaydı; okuyucu "buradasın" satırını ancak
+   rengiyle ayırıyordu. Bir kademe büyük ve daha sıkı aralıklı: harita
+   tarandığında göz önce oraya düşüyor, mesafeler oradan okunuyor. */
 .mapRung[data-kind="price"] .mapLabel { color:var(--primary-ink); font-weight:700; }
+.mapRung[data-kind="price"] .mapPrice { font-size:17px; font-weight:700; letter-spacing:-.03em; color:var(--primary-ink); }
 .mapRung[data-kind="support"] .mapLabel, .mapRung[data-kind="resistance"] .mapLabel { font-weight:500; color:var(--text-body); }
 .mapPrice { font-size:14px; font-weight:600; color:var(--text-strong); text-align:right; white-space:nowrap; }
-.mapDistance { min-width:60px; font-size:12px; font-weight:600; text-align:right; white-space:nowrap; color:var(--text-muted); }
+/* UZAKLIK SÜTUNU NÖTR. Yön rengini taşıyordu ve bu haritada ters okunuyor:
+   geçilmiş bir hedef eksi işaret aldığı için KIRMIZI duruyordu, oysa fiyatın
+   hedefi geçmiş olması planın iyi gittiği anlamına geliyor (gerekçenin
+   tamamı `PriceMap.tsx` → `crossedState`). Yön zaten haritada: satır fiyat
+   satırının üstündeyse seviye yukarıda. Sütun mesafeyi söylüyor, yorumu
+   değil. */
+.mapDistance { display:flex; align-items:baseline; justify-content:flex-end; gap:7px; min-width:60px; font-size:12px; font-weight:600; text-align:right; white-space:nowrap; color:var(--text-muted); }
+/* Geçilmiş seviyenin tek kelimelik işareti — hedef gerçekleşti ya da stop
+   kırıldı. İkisi de plana dair bir haber, o yüzden renk taşıyor; mesafe
+   yanında nötr kalıyor. */
+.mapCrossed { padding:1px 7px; border-radius:999px; font-size:var(--text-nano); font-weight:700; letter-spacing:.03em; }
+.mapCrossed[data-state="passed"] { background:var(--up-wash); color:var(--up); }
+.mapCrossed[data-state="broken"] { background:var(--down-wash); color:var(--down); }
 /* Seviye notları — haritanın ALTINDA. Gerekçe `PriceMap.tsx` yorumunda:
    not satırı mutlak konumlu basamağın içindeyken satırları çakıştırıyordu. */
 .mapNotes { display:grid; gap:10px 20px; margin:16px 0 0; padding-top:14px; border-top:1px solid var(--line-soft); }
