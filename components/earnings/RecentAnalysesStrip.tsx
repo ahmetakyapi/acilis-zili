@@ -9,6 +9,7 @@ import { getAnalyses, getSymbolNames } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { LogoTile } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /**
  * Takvim sekmesinin altındaki "son yazılan analizler" şeridi.
@@ -82,7 +83,7 @@ export async function RecentAnalysesStrip({
 
       {/* Dar ekranda çipler kırılmak yerine kayar — sekiz analiz alt alta
           dizilince şerit bir listeye dönüşüyordu. */}
-      <ul className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:min-w-0 sm:flex-1 sm:px-0">
+      <ScrollEdges as="ul" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:min-w-0 sm:flex-1 sm:px-0">
         {rows.map((row) => {
           const verdict = verdictOf(row.verdict);
           const logoUrl = meta[row.symbol]?.logoUrl;
@@ -125,7 +126,7 @@ export async function RecentAnalysesStrip({
             </li>
           );
         })}
-      </ul>
+      </ScrollEdges>
 
       <Link
         href="/bilancolar/analizler"

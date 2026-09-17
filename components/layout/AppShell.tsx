@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BellMark, BrandWord } from "@/components/brand/BellMark";
@@ -154,6 +154,22 @@ export function AppShell({
   const barePath = stripLocale(pathname);
   const activeBottomKey =
     barePath === "/" ? null : (matchedBottom?.key ?? "/menu");
+
+  /* BOŞ DOKUNMA DİNLEYİCİSİ — iOS Safari'de `:active` bunsuz hiç çalışmıyor.
+     Basma geri bildirimi (globals.css → "DOKUNMATİKTE BASMA İZİ") `:active`
+     üstüne kurulu. Safari mobilde bu sözde sınıfı yalnızca sayfada bir
+     dokunma dinleyicisi varsa uyguluyor; yoksa parmak basılıyken hiçbir
+     kural eşleşmiyor ve geri bildirim iPhone'da hiç görünmüyor. Chrome
+     Android'de böyle bir koşul yok, yani kusur yalnızca bir platformda ve
+     tam da okuyucuların çoğunun bulunduğu yerde.
+
+     Dinleyici bilerek boş ve `passive`: hiçbir şey yapmıyor, kaydırmayı
+     engellemiyor, yalnızca Safari'nin koşulunu karşılıyor. */
+  useEffect(() => {
+    const noop = () => {};
+    document.addEventListener("touchstart", noop, { passive: true });
+    return () => document.removeEventListener("touchstart", noop);
+  }, []);
 
   return (
     <div className="flex min-h-dvh flex-col">

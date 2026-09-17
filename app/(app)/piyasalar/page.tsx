@@ -48,6 +48,7 @@ import {
 } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
@@ -1177,7 +1178,7 @@ function MembersTable({
           390px'e rahat sığıyor ve yatay kaydırma kalkıyor. Piyasa değeri
           kaybolmuyor — fiyatın altına ikinci satır olarak iniyor. */}
       {/* KAP KLAVYEYLE ODAKLANABİLİR — gerekçe ikizinde (sirketler). */}
-      <div
+      <ScrollEdges
         className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
         tabIndex={0}
         role="region"
@@ -1357,7 +1358,7 @@ function MembersTable({
             })}
           </tbody>
         </table>
-      </div>
+      </ScrollEdges>
       {/* Sayaç + devamı — /sirketler dizinindeki ölçünün aynısı.
           scroll={false}: okuyucu tablonun dibinde, yeni satırlar geldiğinde
           sayfanın başına fırlatılmamalı. */}

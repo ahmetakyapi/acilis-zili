@@ -33,6 +33,7 @@ import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong, formatEtDateShort, plural } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
@@ -289,7 +290,7 @@ async function StoryBoard({
   return (
     <div className="flex flex-col gap-6">
       {chips.length > 1 && (
-        <div className={`${styles.storyFilters} flex flex-wrap items-center gap-2`}>
+        <ScrollEdges className={`${styles.storyFilters} flex flex-wrap items-center gap-2`}>
           <span className="plate mr-0.5 text-nano tracking-[0.09em]">
             {t.stories.filterLabel}
           </span>
@@ -306,7 +307,7 @@ async function StoryBoard({
               <span className="ml-1.5 opacity-70">{count}</span>
             </FilterChip>
           ))}
-        </div>
+        </ScrollEdges>
       )}
 
       {rows.length === 0 ? (

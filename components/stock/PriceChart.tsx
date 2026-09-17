@@ -23,6 +23,7 @@ import { cn, formatPercent, formatPrice } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
 import type { ChartLabels } from "@/lib/chart-labels";
 import { SESSION_BOUNDS, etDateTimeToUtc, etParts } from "@/lib/market-hours";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import {
   clockOf,
   displayZone,
@@ -976,7 +977,7 @@ export function PriceChart({
             `tabIndex` EKLENMEDİ: düğmeler zaten klavyeyle geziliyor ve
             tarayıcı odaklananı görünüre kaydırıyor — fazladan tab durağı
             kazanç değil, gürültü olurdu. */}
-        <div
+        <ScrollEdges
           className="scroll-x-hint -mb-1 flex gap-1 pb-1"
           role="group"
           aria-label={labels.rangeGroup}
@@ -997,7 +998,7 @@ export function PriceChart({
               {labels.ranges[r]}
             </button>
           ))}
-        </div>
+        </ScrollEdges>
         <div className="flex gap-1" role="group" aria-label={labels.modeGroup}>
           {(["area", "candles"] as const).map((m) => (
             <button

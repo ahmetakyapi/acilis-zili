@@ -1163,6 +1163,26 @@
   border-radius: 999px;
 }
 
+/* Kenar solması — `ScrollEdges` kabın `data-edge`ini yazıyor, gerekçe orada.
+   Maske RENKTEN BAĞIMSIZ: kabın altındaki zemin ne olursa olsun doğru
+   çalışıyor, renkli bir perdenin aksine. 34 piksel, bir çipin ya da tablo
+   hücresinin kesildiğini göstermeye yetiyor, içeriği yutmuyor. */
+.edge-fade[data-edge="end"] {
+  mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent);
+}
+.edge-fade[data-edge="start"] {
+  mask-image: linear-gradient(90deg, transparent, #000 34px);
+}
+.edge-fade[data-edge="both"] {
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 34px,
+    #000 calc(100% - 34px),
+    transparent
+  );
+}
+
 /* --------------------------------------------------------------------------
    Dokunma hedefi — görünür ölçüyü büyütmeden 44 piksel
    -------------------------------------------------------------------------- */
@@ -1346,6 +1366,43 @@
 }
 .panel-hover:active {
   transform: scale(0.992);
+}
+
+/* --------------------------------------------------------------------------
+   DOKUNMATİKTE BASMA İZİ — her hedefte, yalnızca parmakla
+   -------------------------------------------------------------------------- */
+
+/* Sayfanın en üstünde `-webkit-tap-highlight-color: transparent` var ve
+   gerekçesi doğru: tarayıcının kendi vurgusu köşe yarıçapını tanımayan gri
+   bir dikdörtgen. Ama YERİNE BİR ŞEY KONMAMIŞTI. Ölçüldü (Chrome'da
+   `:active` zorlanarak, beş rotada on iki hedefte): alt sekme çubuğu, sektör
+   çipi, tablo satırı, sıralama başlığı, görüş çipi, teknik kart, haber
+   satırı, arama düğmesi, metin bağlantısı — hiçbirinde basıldığında hiçbir
+   şey değişmiyordu. Depodaki tek basma kuralı `.panel-hover:active` ve o da
+   yalnızca on iki kartta.
+
+   Telefonda sonucu şu: parmak kalkıyor, ekran bir sonraki sayfa boyanana
+   kadar hiçbir şey söylemiyor ve dokunuşun kaydedilip kaydedilmediği belli
+   olmuyor — gecikme kadar zarar veren şey belirsizliğin kendisi.
+   
+   `hover: none` KOŞULU BİLEREK: masaüstünde hover zaten cevap veriyor ve
+   tıklama anında sonuçlanıyor; orada ikinci bir sönme gürültü olurdu.
+   
+   Opaklık seçildi, zemin rengi değil: her yüzeyde çalışıyor (kart, çip,
+   satır, ikon, metin), tema token'ı gerektirmiyor ve yerleşimi hiç
+   oynatmıyor. Geçiş 90 ms — parmağın altında anında, kalkarken de takılıp
+   kalmıyor. `:active` kaydırma başlayınca tarayıcı tarafından zaten
+   düşürülüyor, yani listede gezinirken satırlar yanıp sönmüyor. */
+@media (hover: none) {
+  :is(a[href], button, summary, label, [role="button"], [tabindex="0"]):active {
+    opacity: 0.6;
+    transition: opacity 90ms var(--ease-brand);
+  }
+  /* Devre dışı düğme basılmıyor; sönmesi "çalıştı" der. */
+  button:disabled:active,
+  [aria-disabled="true"]:active {
+    opacity: inherit;
+  }
 }
 
 /* GRAFİK YUMUŞAK GİRİYOR. Neden: aralık değişince (1G → 1Y) yeni veri pat

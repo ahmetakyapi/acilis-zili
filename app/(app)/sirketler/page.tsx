@@ -45,6 +45,7 @@ import {
 
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import { pageMetadata } from "@/lib/page-meta";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
@@ -531,7 +532,7 @@ async function CompaniesTable({
         {rows.length === 0 ? (
           <EmptyState title={t.companies.empty} hint={t.companies.emptyHint} />
         ) : (
-          <div
+          <ScrollEdges
             className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
             tabIndex={0}
             role="region"
@@ -723,7 +724,7 @@ async function CompaniesTable({
                 })}
               </tbody>
             </table>
-          </div>
+          </ScrollEdges>
         )}
 
         {/* Sayaç + devamı. Sayaç düğmeden ÖNCE geliyor çünkü asıl soru

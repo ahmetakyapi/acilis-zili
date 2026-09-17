@@ -69,6 +69,7 @@ import { addEtDays, todayEt,
 import type { Metadata } from "next";
 import { describeSymbol } from "@/db/seed/descriptions";
 import { isTechnicalSymbol, technicalHref } from "@/lib/technical";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import {
   cn,
   directionOf,
@@ -2037,7 +2038,7 @@ async function PastEarnings({
           KAP KLAVYEYLE ODAKLANABİLİR: 560px'lik tablo 352px'lik kapta kayıyor
           ve `tabindex` olmadan sağdaki sütunlara fare olmadan ulaşılamıyordu
           (WCAG 2.1.1). */}
-      <div
+      <ScrollEdges
         className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
         tabIndex={0}
         role="region"
@@ -2175,7 +2176,7 @@ async function PastEarnings({
           })}
         </tbody>
         </table>
-      </div>
+      </ScrollEdges>
 
       {/* Tablo kısaltmalarının karşılığı — EPS ne demek, sapma neye göre.
           Rakamı okuyanın sözlüğe gitmesi gerekmesin. */}

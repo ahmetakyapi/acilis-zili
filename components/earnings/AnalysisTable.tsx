@@ -12,6 +12,7 @@ import {
 } from "@/lib/analysis";
 import { LogoTile } from "@/components/ui/primitives";
 import { cn, plural } from "@/lib/utils";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /**
  * Son Analizler tablosu — arama kutusuyla birlikte.
@@ -189,7 +190,7 @@ export function AnalysisTable({
             gelir, EPS, tepki, skor, karar sütunlarının hepsi ekran dışında
             kalıyor. Gizli çubuk burada "devamı var" işaretini de siliyordu;
             `scroll-x-hint` tam bu durum için yazılmış ince bir çubuk. */}
-        <div
+        <ScrollEdges
           className="scroll-x-hint overflow-x-auto"
           tabIndex={0}
           role="region"
@@ -377,7 +378,7 @@ export function AnalysisTable({
               ))
             )}
           </div>
-        </div>
+        </ScrollEdges>
       </div>
     </div>
   );

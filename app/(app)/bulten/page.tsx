@@ -38,6 +38,7 @@ export const generateMetadata = pageMetadata({
 });
 import { cn, formatEtDateLong, formatEtDateShort } from "@/lib/utils";
 import type { BriefPeriod } from "@/lib/brief";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /**
  * Bülten arşivi — solda seçili günün/haftanın tam metni, sağda tarih listesi.
@@ -269,7 +270,7 @@ async function ArchiveBoard({
             {t.brief.archiveTitle}
           </h2>
         </div>
-        <ul className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-4 sm:px-5 lg:max-h-[70dvh] lg:flex-col lg:gap-0 lg:overflow-x-visible lg:overflow-y-auto lg:px-0 lg:pb-0">
+        <ScrollEdges as="ul" className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-4 sm:px-5 lg:max-h-[70dvh] lg:flex-col lg:gap-0 lg:overflow-x-visible lg:overflow-y-auto lg:px-0 lg:pb-0">
           {archive.map((row) => {
             const active = row.briefDate === selectedDate;
             return (
@@ -332,7 +333,7 @@ async function ArchiveBoard({
               </li>
             );
           })}
-        </ul>
+        </ScrollEdges>
       </Panel>
     </div>
   );

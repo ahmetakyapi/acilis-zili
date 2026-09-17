@@ -56,6 +56,7 @@ import {
   sectorGroupOf,
   type SectorGroup,
 } from "@/lib/sectors";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import {
   cn,
   formatEtDateCompact,
@@ -376,7 +377,7 @@ export default async function AnalysesPage(
                 {t.analysis.listTitle}
               </h2>
               {/* Dar ekranda çipler kırılmak yerine kayar. */}
-              <div className="no-scrollbar -mx-4 flex max-w-full gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+              <ScrollEdges className="no-scrollbar -mx-4 flex max-w-full gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
                 <FilterChip href={filterHref(null)} active={!filter}>
                   {t.analysis.filterAll}
                 </FilterChip>
@@ -403,7 +404,7 @@ export default async function AnalysesPage(
                     {sectorGroupLabel(group, locale)}
                   </FilterChip>
                 ))}
-              </div>
+              </ScrollEdges>
             </div>
 
             <QueryTransition label={t.common.loading}>
