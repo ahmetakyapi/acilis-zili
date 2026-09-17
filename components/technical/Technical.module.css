@@ -186,7 +186,17 @@
 .planStripLg .riskHead b { font-size:16px; }
 .planStripLg .riskBar { height:6px; }
 .planStripLg .riskLegs b { font-size:14px; }
-@media (min-width: 640px) {
+/* ÜÇ SÜTUN KARARI KAPSAYICIYA BAKIYOR, PENCEREYE DEĞİL.
+   Kural `@media (min-width: 640px)` idi ve bu, "kapak geniştir" demenin
+   dolaylı yoluydu — pencere genişse kapak da geniştir varsayımı. Yan
+   çevrilmiş telefonda varsayım çöküyor: pencere 844 ama kapak iki kolona
+   bölündüğü için şeride 420 piksel kalıyor ve üç hücre 130'ar piksele
+   sıkışıp "Nereden Alınır" iki satıra sarıyor. `@container` tam olarak
+   doğru soruyu soruyor: şeridin KENDİ genişliği 480'i geçiyor mu.
+   Ölçülen genişlikler — 1440 masaüstü 590, 768 dikey tablet 670 (ikisi de
+   üç sütun), 844 yatay 420 ve 390 telefon 330 (ikisi de alt alta). */
+.planStrip { container-type: inline-size; }
+@container (min-width: 480px) {
   .planStripLg .planCells { display:grid; grid-template-columns:repeat(var(--cells, 3), minmax(0,1fr)); gap:12px 16px; padding:16px 18px; border-radius:16px; }
   .planStripLg .planCell { flex-direction:column; align-items:flex-start; gap:5px; }
   .planStripLg .planCell dd { font-size:19px; line-height:1.25; text-align:left; overflow-wrap:anywhere; }
@@ -476,6 +486,18 @@
   .coverSide { padding-left:0; padding-top:20px; border-left:0; border-top:1px solid var(--line); }
   .twoCol { grid-template-columns:minmax(0,1fr); }
   .signals { grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px 16px; }
+}
+
+/* YATAY MODDA İKİ KOLON GERİ GELİYOR. Kırılma noktası yalnızca genişliğe
+   bakıyor ve 1024'ün altında kapak da değerlendirme de tek kolona iniyor;
+   yan çevrilmiş telefonda (844×390) sonuç, sayfanın masaüstündekinin bir
+   buçuk katına uzaması oluyordu (ölçüldü: 4363'e karşı 2973 piksel).
+   Yatayda kıt olan yükseklik, bol olan genişlik — düzen de onu izliyor.
+   Dolgular mobil değerlerinde kalıyor, yalnızca sütunlar değişiyor. */
+@media (orientation: landscape) and (max-height: 560px) and (min-width: 700px) {
+  .cover { grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); }
+  .coverSide { padding-left:20px; padding-top:0; border-left:1px solid var(--line); border-top:0; }
+  .twoCol { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
 }
 
 @media (max-width: 767px) {

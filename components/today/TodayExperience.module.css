@@ -123,6 +123,28 @@
   .analysisExcerpt { max-width: none; -webkit-line-clamp: 4; font-size: 14px; line-height: 1.6; }
   .news > div:first-child { align-items: flex-start; }
 }
+/* ---- Yatay mod: genişlik var, yükseklik yok ----
+   Kırılma noktaları yalnızca GENİŞLİĞE bakıyor ve 1024'ün altında her şey
+   tek kolona iniyor. Yan çevrilmiş telefonda (844×390, 926×428) bu iki kez
+   yanlış: ölçüldü, 844'te kahraman kartının içeriği 746 pikselin solunda
+   bitiyor ve sağdaki üçte iki bomboş kalıyor — üstelik zaten 390 piksel olan
+   yükseklik, tek kolona inince iki katına uzayan bir sayfayla dövüşüyor.
+   Yatayda ve yükseklik darken iki kolon geri geliyor: boşluk doluyor, sayfa
+   kısalıyor. Eşik 560 piksel — yan çevrilmiş telefonların tamamı (390–430)
+   ve küçük tabletlerin yatayı bunun altında, dikey tablet (768×1024) üstünde
+   kalıyor ve orada tek kolon doğru olmaya devam ediyor.
+   Pano sütunları oranlı: 350 piksellik sabit yan sütun 844'lük bir ekranda
+   ana sütunu 420'ye düşürüyordu. */
+@media (orientation: landscape) and (max-height: 560px) and (min-width: 700px) {
+  .heroMain { grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 24px; }
+  .indexDeck { padding-left: 22px; padding-top: 0; border-left: 1px solid var(--line); border-top: 0; }
+  .flowHeader { flex-direction: row; align-items: center; gap: 20px; }
+  .flowNav { flex: 0 1 420px; width: auto; }
+  .dashboard { grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); }
+  .dashboard > [data-col="main"] { grid-column: 1; grid-row: 1; }
+  .dashboard > [data-col="side"] { grid-column: 2; grid-row: 1; }
+}
+
 @media (max-width: 379px) {
 }
 @media (prefers-reduced-motion: reduce) {
