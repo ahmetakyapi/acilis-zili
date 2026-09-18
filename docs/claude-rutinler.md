@@ -1058,9 +1058,11 @@ bitti. "Bugün teknik analiz yok" diye bitir.
 
 Yanıtta:
   session       → date_et (işlem günü), slot (premarket = açılış öncesi,
-                  midsession = seans içi), now / open / close (TR ve NY)
+                  midsession = seans içi, lateday = kapanış öncesi),
+                  now / open / close (TR ve NY)
   events_today  → günün yüksek önemli ekonomik verileri, TR ve NY saatiyle
-  symbols[]     → on iki hisse; her birinde:
+  symbols[]     → takip listesindeki hisseler (liste `lib/technical.ts` →
+                  TECHNICAL_SYMBOLS); her birinde:
     data_ok        false ise o hisseyi ATLA (fiyat verisi yok, uç reddeder)
     indicators     price, change_pct, sma20/50/100/200 ve fiyatın onlara
                    uzaklığı (dist_sma*_pct), ma_cross (50 ile 200 günlüğün

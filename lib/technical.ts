@@ -47,10 +47,21 @@ export const TECHNICAL_SYMBOLS = [
   "MU",
   "SNDK",
   "NVDA",
+  /* AMD ve INTC yarı iletken kümesinin yanına, NVDA'nın hemen ardına
+     giriyor: liste NVDA/MU/MRVL ile AI tarafını zaten anlatıyordu ama
+     yarışın öteki iki adı yoktu. PLTR mega-cap yazılım sırasında, META'nın
+     ardında. Üçü de 18 Eylül 2026'da eklendi; seçim sitenin kendi
+     verisiyle yapıldı (3 aylık / 1 aylık getiri ve hacim sıralaması),
+     gerekçe: AMD 1 ayda +%16,3 ve derin likidite, PLTR 3 ayda +%30,6 ile
+     listedeki en çok takip edilen retail adı, INTC sitenin hacim
+     sıralamasında mega-cap'lerin hemen ardında. */
+  "AMD",
+  "INTC",
   "SPCX",
   "TSLA",
   "GOOGL",
   "META",
+  "PLTR",
   "NBIS",
   "BE",
   "RKLB",
