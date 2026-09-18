@@ -640,3 +640,73 @@
   .card, .cardRead svg, .pulseLogo, .pulseRow { transition:none; }
   .card:hover, .card:hover .cardRead svg, .pulseLogo:hover { transform:none; }
 }
+
+/* ---- Şirket sayfasının teknik analiz kartı ----
+   Kısa hâl: görüş, konum, bir cümle ve künye. Gerekçesi bileşende
+   (`StockTechnicalCard`). Ölçüler profil kartıyla aynı aileden — aynı
+   yüzey, aynı yarıçap, aynı gölge — çünkü sağ kolonda yan yana duruyorlar
+   ve iki ayrı tasarım dili gibi okunmamalılar. */
+.stockCard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--premium-surface);
+  box-shadow: var(--premium-shadow);
+  transition: border-color .2s, box-shadow .25s, transform .25s;
+}
+.stockCard:hover { border-color:var(--primary-faint); box-shadow:var(--premium-shadow-hover); transform:translateY(-2px); }
+.stockCard:has(.stockCardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
+/* Görüşün rengi kartın zemininde çok soluk bir ışıma olarak duruyor —
+   kapaktaki (`.cover::after`) kalıbın küçültülmüşü. Renk YALNIZCA burada;
+   metin ve çip kendi tokenlarını taşımaya devam ediyor. */
+.stockCard::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -7rem;
+  right: -4rem;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--primary-wash), transparent 65%);
+  pointer-events: none;
+}
+.stockCard[data-verdict="buy"]::after { background:radial-gradient(circle, var(--up-wash), transparent 65%); }
+.stockCard[data-verdict="sell"]::after { background:radial-gradient(circle, var(--down-wash), transparent 65%); }
+
+.stockCardHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
+.stockCardMeta { font-size:var(--text-nano); font-weight:650; letter-spacing:.03em; color:var(--text-muted); white-space:nowrap; }
+
+.stockCardStance { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; }
+.stockCardLink { display:inline-flex; color:inherit; }
+.stockCardLink::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; }
+.stockCardLink:focus-visible { outline:none; }
+/* Çip liste kartındakiyle aynı ölçüde: kapaktaki 19-22 punto burada satırı
+   şişirir, kartın kendisi zaten kısa. */
+.stockCard .stancePill { padding:5px 16px; font-size:16px; letter-spacing:.06em; }
+
+.stockCardHeadline {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  color: var(--text-body);
+  font-size: 14px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.stockCardFoot { display:inline-flex; align-items:center; gap:4px; color:var(--primary-ink); font-size:12px; font-weight:600; }
+.stockCardFoot svg { transition:transform .2s; }
+.stockCard:hover .stockCardFoot svg { transform:translate(2px,-2px); }
+@media (prefers-reduced-motion: reduce) {
+  .stockCard, .stockCardFoot svg { transition:none; }
+  .stockCard:hover { transform:none; }
+}

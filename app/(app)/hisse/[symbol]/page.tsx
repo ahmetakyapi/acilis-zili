@@ -11,6 +11,7 @@ import styles from "./stock.module.css";
 import { NewsImage } from "@/components/news/NewsImage";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { PriceChartLazy } from "@/components/stock/PriceChartLazy";
+import { StockTechnicalCard } from "@/components/technical/StockTechnicalCard";
 import {
   SymbolStories,
   SymbolStoriesSkeleton,
@@ -323,6 +324,16 @@ export default async function StockPage(
         {/* İlk ekran artık doğal boydaki özeti gösterir; satırlar grafiğin
             yüksekliğine göre esnetilmez. Yaklaşan bilanço kendi bölümündedir. */}
         <div className={styles.profileColumn}>
+          {/* TEKNİK ANALİZ KARTI PROFİLİN ÜSTÜNDE. Kapsamdaki on iki
+              sembolde şirket sayfasının sağ kolonu buradan başlıyor; öteki
+              sembollerde bileşen hiç basılmıyor ve kolon eskisi gibi
+              profille açılıyor. Yer seçimi bilinçli: analiz günlük
+              yenilenen bir GÖRÜŞ, profil ise aylarca değişmeyen künye —
+              taze olan üstte. Telefonda ızgara tek kolona indiği için kart
+              grafiğin hemen altına, katlamanın bir ekran altına düşüyor. */}
+          <Suspense fallback={null}>
+            <StockTechnicalCard symbol={symbol} locale={locale} t={t} />
+          </Suspense>
           <Panel className={styles.profilePanel}>
             <PanelHeader title={t.stock.profile} />
             {/* Altı künye satırı + iki paragraf: gövde 369 (mobil) / 437
@@ -389,7 +400,15 @@ export default async function StockPage(
                 Bağlantı yalnızca tek yöndeydi: teknik sayfa şirkete gidiyor,
                 şirket sayfası hissenin günlük teknik analizinin var olduğunu
                 hiç söylemiyordu. `isTechnicalSymbol` saf bir küme sorgusu;
-                öteki semboller için ek sorgu ya da maliyet yok. */}
+                öteki semboller için ek sorgu ya da maliyet yok.
+
+                ARTIK ASIL KÖPRÜ YUKARIDA: sayfanın en üstünde, profil
+                kartının üzerinde duran teknik analiz kartı
+                (`StockTechnicalCard`) görüşü ve gerekçesinin ilk cümlesini
+                de gösteriyor. Buradaki bağlantı duruyor çünkü BAĞLAMI
+                başka: okuyucu ortalamalara bakarken "bu seviyelerin
+                yorumu nerede" diye soruyor ve cevabı satırın yanında
+                buluyor. */}
             <PanelHeader
               title={t.stock.movingAverages}
               action={

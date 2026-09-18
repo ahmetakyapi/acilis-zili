@@ -214,7 +214,9 @@
 .companyOverview .companyName { font-size:clamp(23px,2.1vw,30px); }
 .companyOverview .livePrice { font-size:clamp(36px,3.3vw,48px); }
 .companyOverview .sector { margin-top:4px; }
-.profileColumn { display:flex; min-width:0; flex-direction:column; }
+/* Kolon artık iki kart taşıyabiliyor (teknik analiz + profil); aralık
+   ızgaranınkiyle aynı. Tek kart kaldığında `gap` hiçbir şey yapmıyor. */
+.profileColumn { display:flex; min-width:0; flex-direction:column; gap:20px; }
 .companyOverview .profilePanel { flex:initial; }
 .companyOverview .profilePanel > div:first-child { padding-top:17px; padding-bottom:8px; }
 .companyOverview .profileBody { flex:initial; padding:0 18px 14px; }
