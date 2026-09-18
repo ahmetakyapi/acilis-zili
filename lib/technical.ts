@@ -1,6 +1,14 @@
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { SESSION_BOUNDS, etParts, type MarketStatus } from "@/lib/market-hours";
+import {
+  SESSION_BOUNDS,
+  addEtDays,
+  etParts,
+  getMarketStatus,
+  todayEt,
+  type MarketHoliday,
+  type MarketStatus,
+} from "@/lib/market-hours";
 import type { Bar, Quote } from "@/lib/providers/types";
 import { displayZone, formatInZone, zoneTag } from "@/lib/session-clock";
 import { formatPrice, hareketliOrtalama } from "@/lib/utils";
@@ -547,14 +555,58 @@ export function slotLabel(slot: string, t: Dictionary): string {
   return t.technical.slotPremarket;
 }
 
+/** Bir anın okuyucunun saatiyle ve künyesiyle yazılışı: "19:45 TR" / "12:45 NY". */
+export function editionClock(instant: Date, locale: Locale): string {
+  return `${formatInZone(instant, displayZone(locale))} ${zoneTag(locale).primary}`;
+}
+
 /**
  * Yayının saati, okuyucunun saatiyle ve künyesiyle: "19:45 TR" / "12:45 NY".
  * Kayıttan değil takvimden: rutin birkaç dakika geç koşsa da yayının adı
  * o saattir; gerçek yazılma anı `published_at`te duruyor.
  */
 export function editionTime(sessionDate: string, slot: string, locale: Locale): string {
-  const instant = slotInstant(sessionDate, isTechnicalSlot(slot) ? slot : "premarket");
-  return `${formatInZone(instant, displayZone(locale))} ${zoneTag(locale).primary}`;
+  return editionClock(
+    slotInstant(sessionDate, isTechnicalSlot(slot) ? slot : "premarket"),
+    locale,
+  );
+}
+
+/**
+ * SIRADAKİ YAYIN — okuyucunun "ne zaman tazelenecek" sorusu.
+ *
+ * Ekranda yayının kendi saati vardı ("Seans İçi · 19:45 TR") ama bir
+ * SONRAKİNİN saati hiçbir yerde yazmıyordu. Okuyucu elindeki görüşün ne
+ * kadar taze olduğunu görüyor, ne kadar süre geçerli olduğunu görmüyordu;
+ * cuma akşamı açılan bir sayfada "bu görüş pazartesi sabaha kadar böyle"
+ * bilgisi tek başına sayfanın yarısı kadar iş görüyor.
+ *
+ * TAKVİMİ SİTE BİLİYOR, VARSAYMIYOR. Saatler `SLOT_UTC`de, hangi nöbetin
+ * gerçekten yayımlanacağını ise `currentSlot` söylüyor — yani tatil, hafta
+ * sonu ve yarım gün kendiliğinden eleniyor: yarım günde (13:00 ET kapanış)
+ * kapanış öncesi nöbeti kapanıştan sonraya düşüyor ve o gün hiç
+ * yayımlanmıyor. Cron `1-5` yazıyor ama asıl süzgeç bu; iki yerde iki ayrı
+ * takvim tutmuyoruz.
+ *
+ * Ondört gün ileriye bakılıyor: en uzun tatil penceresi bile buna sığıyor.
+ * Hiçbir şey bulunamazsa null döner ve çağıran satırı hiç basmaz.
+ */
+export function nextEdition(
+  now: Date,
+  holidays: MarketHoliday[],
+): { at: Date; slot: TechnicalSlot } | null {
+  let day = todayEt(now);
+  for (let i = 0; i < 14; i++) {
+    for (const slot of TECHNICAL_SLOTS) {
+      const at = slotInstant(day, slot);
+      if (at.getTime() <= now.getTime()) continue;
+      /* Nöbetin O ANDAKİ karşılığı kendisi mi — yarım günde kapanış öncesi
+         nöbeti seans dışına düşüyor ve `currentSlot` null dönüyor. */
+      if (currentSlot(getMarketStatus(at, holidays)) === slot) return { at, slot };
+    }
+    day = addEtDays(day, 1);
+  }
+  return null;
 }
 
 /** Görüş bir öncekinden farklıysa rozet metni, aynıysa null. */

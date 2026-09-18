@@ -19,16 +19,18 @@ import {
 import styles from "@/components/technical/Technical.module.css";
 import { EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
-import { getStatus, getSymbolNames } from "@/lib/data";
+import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getDictionary, getI18n } from "@/lib/i18n";
 import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
 import {
   TECHNICAL_SYMBOLS,
+  editionClock,
   editionTime,
   formatRange,
   isTechnicalSymbol,
+  nextEdition,
   planPosition,
   planReading,
   slotLabel,
@@ -36,6 +38,7 @@ import {
   technicalHref,
 } from "@/lib/technical";
 import { getTechnicalDetail } from "@/lib/technical-data";
+import { todayEt } from "@/lib/market-hours";
 import {
   cn,
   directionOf,
@@ -103,10 +106,11 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   /* Kotasyon listenin TAMAMIYLA isteniyor, tek sembolle değil: istek içi
      önbellek anahtarı sıralanmış sembol dizesi (bkz. `getQuotes`) ve liste
      sayfasıyla aynı anahtar aynı sayıyı verir. */
-  const [detail, meta, quotes] = await Promise.all([
+  const [detail, meta, quotes, holidays] = await Promise.all([
     getTechnicalDetail(symbol),
     getSymbolNames([symbol]),
     getQuotes([...TECHNICAL_SYMBOLS], status),
+    getHolidays(),
   ]);
   const company = meta[symbol]?.name ?? symbol;
 
@@ -158,6 +162,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
     : status.session === "regular" && quotes.ok && !quotes.stale
       ? t.technical.now
       : t.market.lastPrice;
+  const next = nextEdition(new Date(), holidays);
   const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
   const reading = planReading(verdict, price, row);
   const sectionItems = [
@@ -223,6 +228,24 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                 {slotLabel(row.slot, t)} · {formatEtDateLong(row.sessionDate, locale)} ·{" "}
                 <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
               </p>
+              {/* SIRADAKİ YAYIN — okuyucunun ikinci sorusu.
+                  Künye bu yayının saatini söylüyordu ama bir sonrakininkini
+                  hiçbir yer söylemiyordu: okuyucu elindeki görüşün ne kadar
+                  taze olduğunu görüyor, NE KADAR SÜRE geçerli olduğunu
+                  görmüyordu. Cuma akşamı açılan bir sayfada "pazartesi
+                  sabaha kadar böyle" bilgisi tek başına sayfanın yarısı
+                  kadar iş görüyor. Tarih yalnızca BUGÜN değilse yazılıyor;
+                  bugünse fazladan bir kelime olurdu (damganın kendi
+                  kuralıyla aynı). */}
+              {next && (
+                <p className={styles.coverNext}>
+                  {t.technical.nextEdition} · {slotLabel(next.slot, t)} ·{" "}
+                  <span className="numeral">{editionClock(next.at, locale)}</span>
+                  {todayEt(next.at) !== status.etDate && (
+                    <> · {formatEtDateCompact(todayEt(next.at), locale)}</>
+                  )}
+                </p>
+              )}
             </div>
           </div>
           <div className={styles.stanceRow}>

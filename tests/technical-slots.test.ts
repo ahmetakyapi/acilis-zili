@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getMarketStatus, type MarketHoliday } from "../lib/market-hours";
-import { SLOT_RANK, TECHNICAL_CRON, currentSlot } from "../lib/technical";
+import {
+  SLOT_RANK,
+  TECHNICAL_CRON,
+  currentSlot,
+  nextEdition,
+} from "../lib/technical";
 
 /**
  * Teknik analiz nöbetleri — üçüncü nöbetin testi.
@@ -16,7 +21,9 @@ import { SLOT_RANK, TECHNICAL_CRON, currentSlot } from "../lib/technical";
  */
 
 const HOLIDAYS: MarketHoliday[] = [
-  /* Şükran Günü ertesi — yarım gün, 13:00 ET kapanış. */
+  /* Şükran Günü (26 Kasım, perşembe) — TAM tatil, `earlyCloseEt` null. */
+  { date: "2026-11-26", nameTr: "Şükran Günü", nameEn: "Thanksgiving", earlyCloseEt: null },
+  /* Ertesi gün — yarım gün, 13:00 ET kapanış. */
   { date: "2026-11-27", nameTr: "Yarım Gün", nameEn: "Half Day", earlyCloseEt: "13:00" },
 ];
 
@@ -60,4 +67,52 @@ test("yarım günde üçüncü nöbet kapanıştan sonraya düşer, slot yok", (
 
 test("hafta sonu hiçbir nöbet yok", () => {
   assert.equal(slotAt("2026-09-19", 16, 45), null);
+});
+
+/* --------------------------------------------------------------------------
+   Sıradaki yayın — okuyucuya "ne zaman tazelenecek" diyen satırın kaynağı.
+
+   Takvimi hesap tutuyor, varsayım değil: tatil, hafta sonu ve yarım gün
+   `currentSlot` üzerinden kendiliğinden eleniyor.
+   -------------------------------------------------------------------------- */
+
+const nextAt = (dateStr: string, hour: number, minute: number) =>
+  nextEdition(utc(dateStr, hour, minute), HOLIDAYS);
+
+test("gün içinde sıradaki nöbet bir sonraki saat", () => {
+  // 18 Eylül cuma, 12:46 UTC — sabah nöbeti yeni geçti.
+  const a = nextAt("2026-09-18", 12, 46);
+  assert.equal(a?.slot, "midsession");
+  assert.equal(a?.at.toISOString(), "2026-09-18T16:45:00.000Z");
+  // Öğlen nöbetinden sonra kapanış öncesi.
+  assert.equal(nextAt("2026-09-18", 16, 46)?.slot, "lateday");
+});
+
+test("günün son nöbetinden sonra sıradaki PAZARTESİ sabahı", () => {
+  /* Cuma 18:46 UTC: o gün bitti, cumartesi ve pazar işlem günü değil. */
+  const a = nextAt("2026-09-18", 18, 46);
+  assert.equal(a?.slot, "premarket");
+  assert.equal(a?.at.toISOString(), "2026-09-21T12:45:00.000Z");
+});
+
+test("hafta sonunda sıradaki pazartesi sabahı", () => {
+  const a = nextAt("2026-09-19", 10, 0);
+  assert.equal(a?.slot, "premarket");
+  assert.equal(a?.at.toISOString(), "2026-09-21T12:45:00.000Z");
+});
+
+test("yarım günde kapanış öncesi nöbeti atlanıyor", () => {
+  /* 27 Kasım 2026 · 13:00 ET kapanış. Öğlen nöbetinden (16:45 UTC) sonra
+     o günün 18:45'i seans dışına düşüyor; sıradaki 30 Kasım pazartesi. */
+  const a = nextAt("2026-11-27", 16, 46);
+  assert.equal(a?.slot, "premarket");
+  assert.equal(a?.at.toISOString(), "2026-11-30T12:45:00.000Z");
+});
+
+test("tam tatil gününün tamamı atlanıyor", () => {
+  /* Şükran Günü (26 Kasım, perşembe) tam tatil: 25 Kasım çarşamba akşamı
+     sorulduğunda sıradaki yayın 27 Kasım cumanın sabahı. */
+  const a = nextAt("2026-11-25", 18, 46);
+  assert.equal(a?.slot, "premarket");
+  assert.equal(a?.at.toISOString(), "2026-11-27T12:45:00.000Z");
 });

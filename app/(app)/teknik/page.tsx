@@ -7,20 +7,23 @@ import { TechnicalCard } from "@/components/technical/TechnicalCard";
 import { TechnicalPulse, stanceFilterId } from "@/components/technical/TechnicalPulse";
 import { EmptyState, Panel } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, type VerdictKey } from "@/lib/analysis";
-import { getStatus, getSymbolNames } from "@/lib/data";
+import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
+import { todayEt } from "@/lib/market-hours";
 import { displayZone, formatInZone } from "@/lib/session-clock";
 import {
   TECHNICAL_SYMBOLS,
+  editionClock,
   editionTime,
   newestEdition,
+  nextEdition,
   slotInstant,
   slotLabel,
 } from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
-import { formatEtDateLong } from "@/lib/utils";
+import { formatEtDateCompact, formatEtDateLong } from "@/lib/utils";
 
 export const generateMetadata = pageMetadata({
   path: "/teknik",
@@ -66,16 +69,26 @@ export default async function TechnicalPage() {
       ? t.technical.now
       : t.market.lastPrice;
 
+  const holidays = await getHolidays();
   const latest = newestEdition(board);
 
   const counts: Record<VerdictKey, number> = { buy: 0, hold: 0, sell: 0 };
   for (const { row } of board) counts[verdictOf(row.stance)] += 1;
 
   /* Program cümlesi o günün tarihiyle: New York karşılığı yaz saatiyle
-     kayıyor, künye yalnızca sonda bir kez yazılıyor. */
+     kayıyor, künye yalnızca sonda bir kez yazılıyor.
+
+     ÜÇÜNCÜ NÖBET BURAYA DA GİRDİ. Rutin günde üç koşuyor ama bu cümle iki
+     saat yazıyordu: okuyucuya ilan edilen program, sitenin gerçekte
+     yaptığından eksikti. */
   const scheduleText = t.technical.schedule
     .replace("{pre}", formatInZone(slotInstant(status.etDate, "premarket"), displayZone(locale)))
-    .replace("{mid}", editionTime(status.etDate, "midsession", locale));
+    .replace("{mid}", formatInZone(slotInstant(status.etDate, "midsession"), displayZone(locale)))
+    .replace("{late}", editionTime(status.etDate, "lateday", locale));
+
+  /* Sıradaki yayın — gerekçesi `nextEdition` üzerinde. Tatil ve hafta sonu
+     kendiliğinden eleniyor, o yüzden burada ek bir koşul yok. */
+  const next = nextEdition(new Date(), holidays);
 
   return (
     <MotionExperience className={directory.page}>
@@ -95,6 +108,18 @@ export default async function TechnicalPage() {
                 <span className="numeral">{editionTime(latest.sessionDate, latest.slot, locale)}</span>
               </span>
             </div>
+            {next && (
+              <div className={styles.editionItem}>
+                <span className={styles.editionLabel}>{t.technical.nextEdition}</span>
+                <span className={styles.editionValue}>
+                  {slotLabel(next.slot, t)} ·{" "}
+                  <span className="numeral">{editionClock(next.at, locale)}</span>
+                  {todayEt(next.at) !== status.etDate && (
+                    <> · {formatEtDateCompact(todayEt(next.at), locale)}</>
+                  )}
+                </span>
+              </div>
+            )}
             <div className={styles.editionItem}>
               <span className={styles.editionLabel}>{t.technical.scheduleLabel}</span>
               <span className={styles.editionValue}>{scheduleText}</span>

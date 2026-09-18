@@ -710,3 +710,11 @@
   .stockCard, .stockCardFoot svg { transition:none; }
   .stockCard:hover { transform:none; }
 }
+
+/* Sıradaki yayın künyesi — bu yayının künyesinin hemen altında, bir kademe
+   daha sessiz. Gerekçesi `nextEdition` üzerinde. */
+.coverNext { margin-top:3px; font-size:12px; line-height:1.4; color:var(--text-muted); }
+/* Kartın ayak satırı: solda "Analizi Oku", sağda sıradaki yayın. Dar
+   kapta alt alta düşüyor — kart 354 pikselde de duruyor. */
+.stockCardFootRow { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; }
+.stockCardNext { font-size:var(--text-nano); font-weight:650; letter-spacing:.02em; color:var(--text-muted); white-space:nowrap; }

@@ -1,11 +1,13 @@
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
-import { getStatus } from "@/lib/data";
+import { getHolidays, getStatus } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getQuote } from "@/lib/providers";
 import {
+  editionClock,
   isTechnicalSymbol,
+  nextEdition,
   planPosition,
   slotLabel,
   stanceChangeLabel,
@@ -63,7 +65,14 @@ export async function StockTechnicalCard({
   const copyLang = locale === "en" && !hasEnglish ? "tr" : locale;
 
   const status = await getStatus();
-  const quote = await getQuote(symbol, status);
+  const [quote, holidays] = await Promise.all([
+    getQuote(symbol, status),
+    getHolidays(),
+  ]);
+  /* Sıradaki yayın kartta da yazılı: okuyucu görüşün ne kadar taze
+     olduğunu künyeden görüyor, ne kadar süre geçerli olduğunu buradan.
+     Gerekçenin tamamı `nextEdition` üzerinde. */
+  const next = nextEdition(new Date(), holidays);
   const price = quote.ok ? quote.data.price : row.snapshot.price;
   const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
 
@@ -102,10 +111,18 @@ export async function StockTechnicalCard({
         {copy.headline}
       </p>
 
-      <p className={styles.stockCardFoot} aria-hidden>
-        {t.technical.readAnalysis}
-        <ArrowUpRight size={13} weight="bold" />
-      </p>
+      <div className={styles.stockCardFootRow}>
+        <p className={styles.stockCardFoot} aria-hidden>
+          {t.technical.readAnalysis}
+          <ArrowUpRight size={13} weight="bold" />
+        </p>
+        {next && (
+          <p className={styles.stockCardNext}>
+            {t.technical.nextEdition} ·{" "}
+            <span className="numeral">{editionClock(next.at, locale)}</span>
+          </p>
+        )}
+      </div>
     </section>
   );
 }

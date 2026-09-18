@@ -35,6 +35,7 @@ import {
   getAnalyses,
   getAnalysisBadges,
   getEventsBetween,
+  getHolidays,
   getGenericImageUrls,
   getLatestBrief,
   getLatestNews,
@@ -64,7 +65,7 @@ import {
 } from "@/lib/session-clock";
 import { FillColumn } from "@/components/today/FillColumn";
 import { TechnicalPulse } from "@/components/technical/TechnicalPulse";
-import { editionTime, newestEdition, slotLabel } from "@/lib/technical";
+import { editionClock, editionTime, newestEdition, nextEdition, slotLabel } from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
 import { getQuotes } from "@/lib/providers";
 import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
@@ -2331,6 +2332,8 @@ async function StoriesSpotlight({
 async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) {
   const board = await getTechnicalBoard();
   if (board.length === 0) return null;
+  const holidays = await getHolidays();
+  const next = nextEdition(new Date(), holidays);
   const meta = await getSymbolNames(board.map(({ row }) => row.symbol));
   const latest = newestEdition(board);
   return (
@@ -2347,6 +2350,20 @@ async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) 
             <span className="font-semibold text-body">
               {slotLabel(latest.slot, t)} · {formatEtDateCompact(latest.sessionDate, locale)} ·{" "}
               <span className="numeral">{editionTime(latest.sessionDate, latest.slot, locale)}</span>
+            </span>
+          </p>
+        )}
+        {/* Sıradaki yayın — panel de aynı soruyu cevaplıyor: elindeki görüş
+            ne kadar süre geçerli. Gerekçesi `nextEdition` üzerinde. */}
+        {next && (
+          <p className="text-tiny text-muted">
+            {t.technical.nextEdition} ·{" "}
+            <span className="font-semibold text-body">
+              {slotLabel(next.slot, t)} ·{" "}
+              <span className="numeral">{editionClock(next.at, locale)}</span>
+              {todayEt(next.at) !== todayEt() && (
+                <> · {formatEtDateCompact(todayEt(next.at), locale)}</>
+              )}
             </span>
           </p>
         )}
