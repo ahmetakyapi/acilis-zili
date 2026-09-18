@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
+import { ShareButton } from "@/components/article/ShareButton";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MotionExperience, Reveal, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
 import directory from "@/components/motion/DirectoryExperience.module.css";
@@ -22,7 +23,7 @@ import { getStatus, getSymbolNames } from "@/lib/data";
 import { getDictionary, getI18n } from "@/lib/i18n";
 import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
-import { pageAlternates } from "@/lib/site";
+import { absoluteUrl, pageAlternates } from "@/lib/site";
 import {
   TECHNICAL_SYMBOLS,
   editionTime,
@@ -119,6 +120,16 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
     </nav>
   );
 
+  /* PAYLAŞ DÜĞMESİ KIRINTININ SAĞINDA, KAPAĞIN İÇİNDE DEĞİL.
+     Kapak sayfanın cevabını taşıyor (görüş, gerekçe, plan) ve oraya bir
+     denetim koymak okumanın önüne bir düğme koymak olurdu — mercek ve
+     rehber yazılarında da düğme metnin ÜSTÜNDEKİ sessiz şeritte duruyor,
+     aynı kalıp. Şirket sayfasının kırıntı satırı da sağ ucunu bir eyleme
+     ("Şirket Dosyası") veriyor; bu satır boştu.
+
+     DÜĞME YALNIZCA ANALİZ VARKEN. Analizi olmayan sembolde sayfa "henüz
+     yayın yok" diyor; paylaşılacak bir şey yok, düğme de yok. */
+
   if (!detail) {
     return (
       <MotionExperience className={directory.page}>
@@ -175,7 +186,22 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           { name: `${symbol} · ${company}`, path: technicalHref(symbol) },
         ]}
       />
-      {breadcrumb}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        {breadcrumb}
+        {/* Paylaşılan başlık KISA: sayfanın kendi manşeti iki-üç cümle ve
+            bir sohbet penceresinde okunmuyor. Sorunun cevabı zaten tek
+            kelime — sembol, sayfanın adı ve görüş. Gerisini bağlantının
+            kendi önizlemesi taşıyor (`opengraph-image`). */}
+        <ShareButton
+          url={absoluteUrl(technicalHref(symbol), locale)}
+          title={`${symbol} ${t.technical.title} · ${verdictLabel(verdict, t)}`}
+          /* Panelin başlığı "Bu Yazıyı Paylaş" değil "Bu Analizi Paylaş":
+             ortak sözlük mercek ve rehber yazıları için yazılmış, burada
+             paylaşılan şey bir yazı değil bir analiz. Öteki etiketler
+             (X'te Paylaş, Bağlantıyı Kopyala) aynı kalıyor. */
+          labels={{ ...t.share, title: t.technical.shareTitle }}
+        />
+      </div>
 
       {/* ---- Kapak ---- */}
       <header className={styles.cover} data-verdict={verdict}>

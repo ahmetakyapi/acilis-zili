@@ -474,6 +474,7 @@ const en: typeof tr = {
     changedToSell: "Turned Sell",
     stanceLabel: "Technical Stance",
     readAnalysis: "Read Analysis",
+    shareTitle: "Share This Analysis",
     now: "Now",
     atAnalysis: "At Analysis",
     levelPassed: "Passed",

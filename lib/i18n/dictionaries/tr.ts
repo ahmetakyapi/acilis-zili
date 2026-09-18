@@ -625,6 +625,7 @@ const tr = {
     changedToSell: "Sata Döndü",
     stanceLabel: "Teknik Görünüm",
     readAnalysis: "Analizi Oku",
+    shareTitle: "Bu Analizi Paylaş",
     now: "Şu An",
     atAnalysis: "Analiz Anında",
     levelPassed: "Geçildi",
