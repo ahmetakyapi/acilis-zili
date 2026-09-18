@@ -615,7 +615,6 @@ const en: typeof tr = {
     rangeDetail: "Low {low} · High {high}",
     priceMap: "Price Map",
     priceMapNote: "Levels are placed to scale; distances are measured from the current price.",
-    zoneBelowStop: "Plan Void",
     sectionsLabel: "Analysis Sections",
   },
 

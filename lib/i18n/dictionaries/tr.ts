@@ -774,7 +774,6 @@ const tr = {
     /* ---- Fiyat haritası ---- */
     priceMap: "Fiyat Haritası",
     priceMapNote: "Seviyeler fiyata orantılı yerleşir; uzaklıklar şu anki fiyattan ölçülür.",
-    zoneBelowStop: "Plan Geçersiz",
     sectionsLabel: "Analiz Bölümleri",
   },
 

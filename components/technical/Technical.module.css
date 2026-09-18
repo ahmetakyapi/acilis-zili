@@ -397,23 +397,32 @@
 .mapRail { position:absolute; left:0; top:0; bottom:0; width:56px; z-index:2; }
 /* Uçları solan bir eksen: harita yukarıda ve aşağıda kesilmiyor, bitiyor. */
 .mapLine { position:absolute; left:26px; top:0; bottom:0; width:3px; border-radius:2px; background:linear-gradient(transparent, var(--line) 9%, var(--line) 91%, transparent); }
-/* EKSEN TEK GENİŞLİKTE BİR SÜTUN. Çentik, bant ve stop altı bölgesi aynı
-   27 piksele oturuyor (14–41; mobilde 9–34): ray dağınık bir işaret
-   topluluğu değil, tek bir şerit. Sütunu bilerek aşan tek şey fiyat
-   işareti — "buradasın" her şeyden ayrı okunmalı.
-   Bandın ÜST VE ALT KENARI birer fiyat (alım bölgesinin iki ucu) ve
-   çentiklerle aynı kalınlıkta: bant, iki çentiğin arası dolu hâli. */
-.mapBand { position:absolute; left:14px; width:27px; border-radius:4px; background:linear-gradient(color-mix(in srgb, var(--up-wash) 85%, transparent), color-mix(in srgb, var(--up-wash) 45%, transparent)); box-shadow:inset 0 3px 0 color-mix(in srgb, var(--up) 88%, transparent), inset 0 -3px 0 color-mix(in srgb, var(--up) 88%, transparent); }
+/* EKSEN TEK GENİŞLİKTE BİR SÜTUN. Çentikler aynı 27 piksele oturuyor
+   (14–41; mobilde 9–34): ray dağınık bir işaret topluluğu değil, tek bir
+   şerit. Sütunu bilerek aşan tek şey fiyat işareti — "buradasın" her
+   şeyden ayrı okunmalı. Bölgeler de şeritten ÇIKTI (aşağıya bak): onlar
+   birer seviye değil, alan.
+
+   ---- Bölgeler: alım bandı ve stop altı ----
+   Kuşaklar satırların ARKASINDA duruyor (z-index 0) ve haritanın sağ
+   kenarına kadar uzanıyor, böylece "şu fiyatla şu fiyat arası" bir grafik
+   bölgesi gibi okunuyor. Şerit hâlindeyken ikisi de 27 piksellik birer
+   işaretti ve alan olduklarını söylemiyorlardı. Zemin soluk (%45-55):
+   üstünde duran satırın metni kontrastını kaybetmemeli — kuşak bilgiyi
+   taşıyan değil, konumlandıran katman. */
+.mapZones { position:absolute; inset:0; z-index:0; pointer-events:none; }
+/* Bandın ÜST VE ALT KENARI birer fiyat (alım bölgesinin iki ucu); çentikle
+   aynı kalınlıkta çiziliyor, yani bant iki çentiğin arası dolu hâli. */
+.mapZoneEntry { position:absolute; left:14px; right:0; border-radius:6px; background:linear-gradient(color-mix(in srgb, var(--up-wash) 55%, transparent), color-mix(in srgb, var(--up-wash) 30%, transparent)); box-shadow:inset 0 3px 0 color-mix(in srgb, var(--up) 70%, transparent), inset 0 -3px 0 color-mix(in srgb, var(--up) 70%, transparent); }
 /* Stopun altı: tarama deseni yerine SOLAN bir alan. Desen 135 derecelik
    çizgilerden oluşuyordu ve haritadaki tek dokuydu — gözü seviyelerden
    alıp kendine çekiyor, üstelik altta sert bir kenarla bitiyordu. Soluk
    alan aynı şeyi söylüyor: aşağı indikçe plan biter. */
-.mapVoid { position:absolute; left:14px; width:27px; bottom:0; border-top:2px dashed color-mix(in srgb, var(--down) 55%, transparent); border-radius:0 0 4px 4px; background:linear-gradient(color-mix(in srgb, var(--down-wash) 95%, transparent), transparent 88%); }
-.mapVoid i { position:absolute; top:12px; left:50%; translate:-50% 0; writing-mode:vertical-rl; font-size:var(--text-nano); font-style:normal; font-weight:700; letter-spacing:.08em; color:color-mix(in srgb, var(--down) 80%, transparent); white-space:nowrap; }
+.mapZoneVoid { position:absolute; left:14px; right:0; bottom:0; border-top:2px dashed color-mix(in srgb, var(--down) 45%, transparent); border-radius:0 0 6px 6px; background:linear-gradient(color-mix(in srgb, var(--down-wash) 60%, transparent), transparent 92%); }
 /* Çentik: eksene dik, 3 piksel kalın. Gerekçe PriceMap.tsx içinde. */
-.mapTick { position:absolute; left:14px; width:27px; height:3px; border-radius:2px; background:var(--text-muted); opacity:.45; translate:0 -50%; }
+.mapTick { position:absolute; left:14px; width:27px; height:3px; border-radius:2px; background:var(--text-muted); opacity:.6; translate:0 -50%; }
 .mapTick[data-kind="target"] { background:var(--up); opacity:1; }
-.mapTick[data-kind="resistance"] { background:var(--up); opacity:.5; }
+.mapTick[data-kind="resistance"] { background:var(--up); opacity:.6; }
 .mapTick[data-kind="stop"] { background:var(--down); opacity:1; }
 .mapTick[data-kind="sellLevel"] { background:var(--down); opacity:.65; }
 /* "Buradasın": eksenden geçen bir çizgi ve SOL UCUNDA halkalı nokta.
@@ -432,26 +441,42 @@
    kullanıyor (CSS 2.1 §10.6.5). Sonuç, 408 piksellik haritanın eğrilerinin
    150 piksellik bir kutuya sıkışıp haritanın tepesinde toplanmasıydı. */
 .mapLeaders { position:absolute; left:27px; width:29px; top:0; height:100%; z-index:1; overflow:visible; fill:none; pointer-events:none; }
-.mapLeaders path { stroke:var(--line-strong); stroke-width:1.5; opacity:.85; }
-.mapLeaders path[data-kind="price"] { stroke:var(--primary); opacity:.65; }
+.mapLeaders path { stroke:var(--line-strong); stroke-width:1.25; opacity:.55; }
+.mapLeaders path[data-kind="price"] { stroke:var(--primary); opacity:.7; }
 .mapLeaders path[data-kind="target"] { stroke:color-mix(in srgb, var(--up) 55%, transparent); }
 .mapLeaders path[data-kind="stop"], .mapLeaders path[data-kind="sellLevel"] { stroke:color-mix(in srgb, var(--down) 55%, transparent); }
 .mapRungs { position:absolute; left:56px; right:0; top:0; bottom:0; margin:0; padding:0; list-style:none; }
 .mapRung { position:absolute; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; column-gap:12px; padding:7px 14px 7px 14px; border-radius:12px; transform:translateY(-50%); }
-/* Üç vurgulu satır AYNI kalıpta: aynı yarıçap, aynı bitiş noktası, aynı
-   şiddet. Eskiden %75 ve %80'de biten iki ayrı geçiş vardı ve yan yana
-   duran satırların dolgusu farklı yerde bitiyordu. */
-.mapRung[data-kind="price"] { background:linear-gradient(90deg, var(--primary-tint), transparent 72%); }
-.mapRung[data-kind="entry"] { background:linear-gradient(90deg, var(--up-wash), transparent 72%); }
-.mapRung[data-kind="stop"] { background:linear-gradient(90deg, var(--down-wash), transparent 72%); }
+/* ÜÇ VURGULU SATIR: ŞU AN, ALIM BÖLGESİ, STOP.
+   Zemin bir dönem sağa doğru saydamlaşan bir geçişti ve telefonda satırın
+   sağ yarısı — yani fiyatın ve uzaklığın durduğu yer — zeminsiz kalıyordu:
+   vurgulu satır yarısından sonra sıradan bir satıra dönüşüyordu. Artık
+   düz ton ve solda 3 piksellik bir vurgu çubuğu; satır nereye kadar
+   sürüyorsa vurgu da oraya kadar sürüyor ve hangi satırın "plan" satırı
+   olduğu tek bakışta okunuyor. */
+.mapRung[data-kind="price"] { background:var(--primary-tint); }
+/* ALIM BÖLGESİ VE STOP SATIRINDA ZEMİN YOK, YALNIZCA VURGU ÇUBUĞU.
+   İkisinin de arkasında zaten bir kuşak var (yeşil bant, kırmızı alan) ve
+   satıra ayrıca ton verilince kutu içinde kutu çıkıyordu: aynı yeşilin iki
+   tonu, biri ötekinin içinde, kenarları birbirini tutmayan iki dikdörtgen.
+   Kuşak alanı, çubuk satırı işaretliyor. Şu An satırının kuşağı yok, tonu
+   orada kalıyor. */
+.mapRung[data-kind="entry"], .mapRung[data-kind="stop"] { background:transparent; }
+.mapRung:is([data-kind="price"], [data-kind="entry"], [data-kind="stop"])::before {
+  content:""; position:absolute; left:0; top:4px; bottom:4px; width:3px; border-radius:0 3px 3px 0; background:var(--primary);
+}
+.mapRung[data-kind="entry"]::before { background:var(--up); }
+.mapRung[data-kind="stop"]::before { background:var(--down); }
 /* Satırın üstünde durmak onu eksene bağlıyor: geniş ekranda göz etiketi
    okurken hangi çentiğe ait olduğunu arıyor ve kılavuz eğrisi tek başına
    ince kalıyor. Dokunmatikte hover yok, orada satırın kendi zemini yeter. */
 @media (hover: hover) {
   .mapRung:hover { background:var(--surface-sunken); }
-  .mapRung[data-kind="price"]:hover { background:linear-gradient(90deg, var(--primary-tint), transparent 55%); }
+  .mapRung[data-kind="price"]:hover { background:color-mix(in srgb, var(--primary-tint) 80%, var(--surface-sunken)); }
+  .mapRung[data-kind="entry"]:hover { background:color-mix(in srgb, var(--up-wash) 55%, transparent); }
+  .mapRung[data-kind="stop"]:hover { background:color-mix(in srgb, var(--down-wash) 55%, transparent); }
 }
-.mapLabel { font-size:14px; font-weight:600; color:var(--text-strong); }
+.mapLabel { font-size:14px; font-weight:650; letter-spacing:-.01em; color:var(--text-strong); }
 /* FİYAT SATIRI HARİTANIN ÇAPASI. Bütün uzaklıklar ona göre ölçülüyor ama
    satır komşularıyla aynı puntodaydı; okuyucu "buradasın" satırını ancak
    rengiyle ayırıyordu. Bir kademe büyük ve daha sıkı aralıklı: harita
@@ -459,14 +484,14 @@
 .mapRung[data-kind="price"] .mapLabel { color:var(--primary-ink); font-weight:700; }
 .mapRung[data-kind="price"] .mapPrice { font-size:17px; font-weight:700; letter-spacing:-.03em; color:var(--primary-ink); }
 .mapRung[data-kind="support"] .mapLabel, .mapRung[data-kind="resistance"] .mapLabel { font-weight:500; color:var(--text-body); }
-.mapPrice { font-size:14px; font-weight:600; color:var(--text-strong); text-align:right; white-space:nowrap; }
+.mapPrice { font-size:15px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); text-align:right; white-space:nowrap; }
 /* UZAKLIK SÜTUNU NÖTR. Yön rengini taşıyordu ve bu haritada ters okunuyor:
    geçilmiş bir hedef eksi işaret aldığı için KIRMIZI duruyordu, oysa fiyatın
    hedefi geçmiş olması planın iyi gittiği anlamına geliyor (gerekçenin
    tamamı `PriceMap.tsx` → `crossedState`). Yön zaten haritada: satır fiyat
    satırının üstündeyse seviye yukarıda. Sütun mesafeyi söylüyor, yorumu
    değil. */
-.mapDistance { display:flex; align-items:baseline; justify-content:flex-end; gap:7px; min-width:60px; font-size:12px; font-weight:600; text-align:right; white-space:nowrap; color:var(--text-muted); }
+.mapDistance { display:flex; align-items:baseline; justify-content:flex-end; gap:7px; min-width:62px; font-size:12.5px; font-weight:650; text-align:right; white-space:nowrap; color:var(--text-body); }
 /* Geçilmiş seviyenin tek kelimelik işareti — hedef gerçekleşti ya da stop
    kırıldı. İkisi de plana dair bir haber, o yüzden renk taşıyor; mesafe
    yanında nötr kalıyor. */
@@ -605,8 +630,8 @@
   /* Mobilde eksenin ortası 21,5 (ray 44). Dört öğe de ona göre. */
   .mapRail { width:44px; }
   .mapLine { left:20px; }
-  .mapBand { left:9px; width:25px; }
-  .mapVoid { left:9px; width:25px; }
+  .mapZoneEntry { left:9px; }
+  .mapZoneVoid { left:9px; }
   .mapTick { left:9px; width:25px; }
   .mapHere { left:2px; width:39px; }
   .mapHere::after { left:9px; }
@@ -622,9 +647,14 @@
      etiket de 46 piksellik ayrıma sığacak şekilde ayarlandı: 2 × 16,3 + 8 =
      40,6 < 46. Tersi, "sarmasın" deyip taşırmak olurdu. */
   .mapRung { padding:4px 8px 4px 10px; column-gap:6px; line-height:1.25; }
-  .mapRung::before { left:-22px; width:22px; }
-  .mapLabel, .mapPrice { font-size:13px; }
-  .mapDistance { min-width:46px; font-size:11px; }
+  /* Punto burada bir kademe küçük ama ETİKETLE FİYAT ARTIK AYNI DEĞİL:
+     ikisi de 13 pikselken satır tek bir gri bloğa dönüşüyordu ve göz
+     "hangi seviye, kaç dolar" ayrımını yapmak için duraklıyordu. Sayı bir
+     punto büyük ve kalın; sarma payı hâlâ tutuyor (2 × 16,9 + 8 = 41,8 <
+     46). */
+  .mapLabel { font-size:13.5px; }
+  .mapPrice { font-size:14px; }
+  .mapDistance { min-width:52px; font-size:12px; }
 
   /* GÖRÜŞ GEÇMİŞİ MOBİLDE TABLO DEĞİL, SATIR YIĞINI.
      Beş sütun 390 pikselde sığmıyordu: kutu 176 piksel yatay kayıyordu

@@ -15,9 +15,9 @@ const MAX_HEIGHT = 720;
  * Merdivenin (eşit aralıklı satırlar) yerine geldi. Orada 2 dolar uzaktaki
  * destek ile 20 dolar uzaktaki hedef aynı mesafede duruyordu ve "hedef uzak,
  * stop yakın" bilgisi yalnızca yüzde sütununda yaşıyordu. Haritada her
- * seviye kendi yerinde: alım bölgesi bir bant, stopun altı gölgeli (plan
- * orada geçersiz), şu anki fiyat kesikli bir çizgiyle bütün haritayı
- * kesiyor. Sıra ve uzaklık ilk bakışta okunuyor.
+ * seviye kendi yerinde: alım bölgesi haritayı boydan boya geçen bir kuşak,
+ * stopun altı soluk kırmızı bir alan (plan orada geçersiz), şu anki fiyat
+ * eksendeki tek nokta. Sıra ve uzaklık ilk bakışta okunuyor.
  *
  * Çakışan etiketler `priceMapLayout` ile itiliyor; işaret gerçek yerinde
  * kalır, etiket kayar ve ince bir bağ ikisini birleştirir.
@@ -122,23 +122,34 @@ export function PriceMap({
         başlığınki de öyle, yani yüzdelerle aynı hatta biter. */}
     <p className={styles.mapHead}>{t.technical.levelsNote}</p>
     <div className={styles.map} style={{ height }} data-verdict={verdict}>
-      {/* ---- Eksen: çizgi, bölge, çentikler ---- */}
+      {/* ---- Bölgeler: alım bandı ve stop altı ----
+          Haritanın TAMAMINA yayılıyorlar, 27 piksellik ray şeridine değil.
+          Şeritteyken ikisi de birer işaretti; oysa bunlar seviye değil
+          ALAN: "şu fiyatla şu fiyat arası" ve "şu fiyatın altı". Bir grafik
+          bunu nasıl gösteriyorsa öyle — arkaya serilmiş soluk bir kuşak,
+          üstünde satırlar. Yan fayda: alım bölgesi ve stop satırlarının
+          kendi zeminine gerek kalmıyor, satır zaten bandın içinde duruyor.
+
+          Kuşağın altında DİKEY bir "Plan Geçersiz" yazısı vardı ve
+          haritanın en karmaşık öğesiydi. Ölçüldü: 10 puntoluk yazı 25
+          piksellik şeritte 75 piksel yer istiyor; yatay hâline haritada yer
+          yok — bölgenin üst ucunda stop satırı, altında öteki satırlar var
+          (satır aralığı 46, satır yüksekliği 34, arada 12 piksel kalıyor).
+          Bilgi zaten stop satırının kendisinde ve kırmızı kuşak onu
+          tekrarlıyor. */}
+      <div className={styles.mapZones} aria-hidden>
+        {stopY !== null && <span className={styles.mapZoneVoid} style={{ top: stopY }} />}
+        {entryTop !== null && entryBottom !== null && (
+          <span
+            className={styles.mapZoneEntry}
+            style={{ top: entryTop, height: Math.max(6, entryBottom - entryTop) }}
+          />
+        )}
+      </div>
+
+      {/* ---- Eksen: çizgi, çentikler ---- */}
       <div className={styles.mapRail} aria-hidden>
         <span className={styles.mapLine} />
-        {stopY !== null && (
-          /* "Plan Geçersiz" yazısı DİKEY ve 75 piksel yer istiyor (ölçüldü).
-             Stop haritanın dibine yakınsa altında kalan bölge o kadar
-             değil — 39 piksellik bir şeride 75 piksellik yazı konunca 47
-             piksel taşıyıp notların üstüne biniyordu. Bölge dar kaldığında
-             soluk alan ve kesikli çizgi tek başına kalıyor: "buradan aşağısı
-             plan dışı" bilgisi zaten stop satırının kendisinde. */
-          <span className={styles.mapVoid} style={{ top: stopY }}>
-            {height - stopY >= 90 && <i>{t.technical.zoneBelowStop}</i>}
-          </span>
-        )}
-        {entryTop !== null && entryBottom !== null && (
-          <span className={styles.mapBand} style={{ top: entryTop, height: Math.max(6, entryBottom - entryTop) }} />
-        )}
         {/* ÇENTİK, NOKTA DEĞİL. Noktalar 14 piksel çapındaydı ve eksen fiyata
             orantılı: MU'da direnç (930,88), son fiyat (929,53) ve ilk hedef
             (926,44) 6 ve 13 piksel arayla düşüyor (ölçüldü), yani üç nokta
@@ -170,22 +181,37 @@ export function PriceMap({
           satırın altını çizen bir ayraç gibi duruyordu. Tek bir eğri ikisini
           uçtan uca birleştiriyor. `viewBox` genişliği 100 ve
           `preserveAspectRatio="none"`: kutu kırılma noktasına göre daralıyor,
-          eğri onunla birlikte yatayda eziliyor ama `non-scaling-stroke`
-          sayesinde kalınlık sabit kalıyor. */}
+          çizgi onunla birlikte yatayda eziliyor ama `non-scaling-stroke`
+          sayesinde kalınlık sabit kalıyor.
+
+          BAĞ ARTIK DÜZ. Eğri bir S'ti ve komşu iki bağ birbirinin içinden
+          geçiyormuş gibi okunuyordu: telefonda kılavuz katmanı 23 piksel
+          geniş ve eğrinin iki kontrol noktası (62 ile 38) o darlıkta
+          tepeleri birbirine değen iki kavis üretiyor. Düz çizgi bunu
+          yapısal olarak çözüyor — çentikler de etiketler de fiyat sırasında
+          olduğu için iki düz bağ KESİŞEMEZ. */}
       <svg
         className={styles.mapLeaders}
         aria-hidden
         viewBox={`0 0 100 ${height}`}
         preserveAspectRatio="none"
       >
-        {rungs.map((rung) => (
-          <path
-            key={`lead-${rung.kind}-${rung.price}`}
-            data-kind={kindOf(rung)}
-            vectorEffect="non-scaling-stroke"
-            d={`M 0 ${rung.markY} C 62 ${rung.markY}, 38 ${rung.labelY}, 100 ${rung.labelY}`}
-          />
-        ))}
+        {/* HİZALI SATIRIN BAĞI ÇİZİLMİYOR. Etiket kendi çentiğinin
+            hizasındaysa (fark 6 pikselden az) bağ bir bilgi taşımıyor,
+            yalnızca çentikten satıra uzanan kısa bir tırnak oluyor —
+            haritada dört-beş satır böyle ve hepsi birden çizilince ray
+            saçaklı görünüyor. Bağ yalnızca etiket İTİLMİŞSE var; orada da
+            zaten "bu satır aslında şurada" demek için var. */}
+        {rungs
+          .filter((rung) => Math.abs(rung.labelY - rung.markY) >= 6)
+          .map((rung) => (
+            <path
+              key={`lead-${rung.kind}-${rung.price}`}
+              data-kind={kindOf(rung)}
+              vectorEffect="non-scaling-stroke"
+              d={`M 0 ${rung.markY} L 100 ${rung.labelY}`}
+            />
+          ))}
       </svg>
 
       {/* ---- Basamaklar ---- */}
