@@ -190,8 +190,12 @@ mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
    seansın yüzdeleri duruyor — ana sayfanın hareket paneli seans açıkken
    dünkü sıralamayı "seans içi" künyesiyle basıyordu. Tek kural, tek alan:
    `status.sessionDate` (lib/market-hours.ts). Bir kotasyon ancak işlem günü
-   o alana eşitse (`isSessionTrade`) seansı anlatır. Sağlayıcı katmanı
-   paketin seansa ait olmadığını görürse bir kez önbelleksiz tekrarlıyor,
+   o alana eşitse (`isSessionTrade`) seansı anlatır. **Gün tek başına
+   yetmiyor, YAŞ da sorulur** (`packCurrent`, lib/providers/index.ts): paket
+   bugüne ait ama yetmiş üç dakika önce çekilmiş olabilir ve canlı seansta bu
+   da bayattır — ölçü sağlayıcının `Date` başlığı, son işlem anı değil
+   (likiditesi düşük sembol canlı seansta da uzun süre işlem görmeyebilir).
+   Sağlayıcı katmanı paketi güncel bulmazsa bir kez önbelleksiz tekrarlıyor,
    sonra `stale: true` diyor. **Ekran katmanı bayat veriyi künyesiyle
    gösterebilir; YAZMA katmanı gösteremez** — teknik fotoğraf, bülten ve
    mercek uçları bayat kotasyonu hiç kullanmıyor, çünkü oradan çıkan sayı

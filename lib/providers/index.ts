@@ -20,6 +20,7 @@ import {
   type Bar,
   type ChartRange,
   type CompanyProfile,
+  type ProviderOk,
   type ProviderResult,
   type Quote,
 } from "./types";
@@ -216,6 +217,59 @@ function newestTrade(quotes: Record<string, Quote>): Date | null {
 }
 
 /**
+ * Yanıtın kendi yaşı için tanınan pay (saniye).
+ *
+ * Damga sağlayıcının `Date` başlığından geliyor ve saatler birebir aynı
+ * değil; ağ gecikmesi de var. Altmış saniye, seans içi 15 saniyelik ömrün
+ * yanında bol bir pay ama iki-üç dakikalık bir gecikmeyi yakalamaya yetiyor.
+ */
+const RESPONSE_AGE_SLACK_SECONDS = 60;
+
+/**
+ * Paket ŞU ANI anlatıyor mu — iki soru, iki ölçü.
+ *
+ * (1) GÜN: paketteki en yeni işlem, ekranın anlattığı seansın gününe ait mi
+ *     (`isSessionTrade`). Bu kontrol önce eklendi ve bir hata düzeltmesinden
+ *     geldi: sağlayıcı düşünce Neon önbelleğine düşülüyor ve önceki seansın
+ *     yüzdeleri "seans içi" künyesiyle basılıyordu.
+ *
+ * (2) YAŞ: yanıtın kendisi ne kadar eski. Gün kontrolü tek başına YETMİYOR
+ *     ve eksiği canlı seansın ortasında görünüyor — paket bugüne ait ama
+ *     yetmiş üç dakika önce çekilmiş olabilir. Next'in veri önbelleği süresi
+ *     dolmuş kaydı atmıyor, isteğe eski gövdeyi verip tazelemeyi arkasında
+ *     yapıyor; günde birkaç kez okunan bir sayfada okuyucunun gördüğü paket,
+ *     bir önceki ziyaretçinin çektiği paket oluyor. SNDK sayfasında tam
+ *     olarak bu görüldü: başlıkta 1.689,93 $ ("17:02 Güncellendi") yazarken
+ *     aynı ekrandaki 1G grafiği 18:15'e kadar bar taşıyordu ve son barın
+ *     kapanışı 1.711,24 $ idi. İki fiyat yan yana, aradaki fark yüzde 1,3 —
+ *     okuyucu için bu bir hata, bizim için bir önbellek isabeti.
+ *
+ * Yaş ölçüsü SAĞLAYICININ `Date` BAŞLIĞINDAN geliyor (`responseDate`), son
+ * işlem anından değil: likiditesi düşük bir sembol canlı seansta da bir
+ * saat işlem görmeyebilir ve onu bayat saymak yanlış olurdu. Başlık
+ * önbellek isabetinde de ilk çekimin saatini taşıyor — gerekçesi
+ * `types.ts` → `responseDate`.
+ *
+ * İkisi de yalnızca beslemenin bu seansa ait veri verebildiği anlarda
+ * sorulur; hafta sonunda ve ön seansın ilk çeyreğinde eski paket beklenen
+ * hâl, orada boşa istek gitmez.
+ */
+/* Dışa açık YALNIZCA test için: kural bir cümleye sığmıyor ve takvimin
+   köşelerinde (gece yarısı, hafta sonu, ön seansın ilk çeyreği) davranışı
+   ancak doğrudan çağrılarak tutulabiliyor. Çağıran tek yer `fetchQuotes`. */
+export function packCurrent(
+  pack: ProviderOk<Record<string, Quote>>,
+  status: MarketStatus,
+  ttl: number,
+  now: Date = new Date(),
+): boolean {
+  if (!expectsSessionData(status, now)) return true;
+  if (!isSessionTrade(newestTrade(pack.data), status)) return false;
+  const age = now.getTime() - pack.fetchedAt.getTime();
+  return age <= (ttl + RESPONSE_AGE_SLACK_SECONDS) * 1000;
+}
+
+/**
  * Kotasyon çekmenin gerçek gövdesi — sarmalayıcı aşağıda.
  *
  * AYNI İSTEKTE İKİ KEZ ÇALIŞMAMALI. Alpaca çağrısı Next'in `fetch`
@@ -237,24 +291,9 @@ async function fetchQuotes(
 
   let primary = await alpaca.getSnapshots(unique, ttl);
 
-  /* PAKET SEANSA AİT DEĞİLSE BİR KEZ ÖNBELLEKSİZ TEKRARLANIR.
-     Sağlayıcı "ok" dediğinde paketin taze olduğu varsayılıyordu ve varsayım
-     yanlıştı: Next'in veri önbelleği süresi dolmuş kaydı atmıyor, isteğe eski
-     gövdeyi verip tazelemeyi arkasında yapıyor. Günde birkaç kez okunan bir
-     sayfada bu, okuyucuya BİR ÖNCEKİ ZİYARETİNDE çekilmiş paketi vermek
-     demek — ana sayfanın hareket paneli seans açıkken önceki günün
-     sıralamasını basıyordu ve hiçbir katman itiraz etmiyordu, çünkü
-     `primary.ok` doğruydu.
-
-     Tek istek, tek koşul: gecikmeli besleme bu seansa ait veri verebilecek
-     durumdaysa (`expectsSessionData`) ve paketteki en yeni işlem o seansın
-     günü DEĞİLSE. Ön seansın ilk çeyreğinde ya da hafta sonunda koşul hiç
-     kurulmuyor, yani boşa istek gitmiyor. */
-  if (
-    primary.ok &&
-    expectsSessionData(status) &&
-    !isSessionTrade(newestTrade(primary.data), status)
-  ) {
+  /* PAKET GÜNCEL DEĞİLSE BİR KEZ ÖNBELLEKSİZ TEKRARLANIR — gerekçesi
+     `packCurrent` üzerinde. */
+  if (primary.ok && !packCurrent(primary, status, ttl)) {
     const retaze = await alpaca.getSnapshots(unique, ttl, { fresh: true });
     if (retaze.ok) primary = retaze;
   }
@@ -284,9 +323,7 @@ async function fetchQuotes(
        işaretsiz dönüyordu, yani ekranlar onu canlı veri sayıp sıralamaya
        sokuyordu. Önbelleksiz tekrardan sonra bile seansa ait olmayan bir
        paket artık kendini eski ilan ediyor ve künye onu öyle basıyor. */
-    const guncel = expectsSessionData(status)
-      ? isSessionTrade(enYeni, status)
-      : true;
+    const guncel = packCurrent(primary, status, ttl);
 
     /* SEANSA AİT OLMAYAN PAKET ÖNBELLEĞE YAZILMIYOR. `persistQuotes`
        satırlara `updated_at = now` basıyor ve o damga `quotesFromCache`

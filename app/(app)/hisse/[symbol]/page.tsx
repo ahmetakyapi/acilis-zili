@@ -871,7 +871,15 @@ async function ChartSection({
       closeMinutes={closeMinutesFor(grafikGunu, holidays)}
       quote={
         result.ok
-          ? { price: result.data.price, changePct: result.data.changePct }
+          ? {
+              price: result.data.price,
+              changePct: result.data.changePct,
+              /* İŞLEM ANI DA GİDİYOR. Okuma satırı 1G'nin SON noktasında
+                 başlıktaki fiyatı yazıyor (gerekçesi `PriceChart` içinde) ama
+                 bunu ancak kotasyon son bardan yeniyse yapmalı; ölçü bu
+                 damga. */
+              tradedAt: result.data.tradedAt?.toISOString() ?? null,
+            }
           : null
       }
       initialBars={

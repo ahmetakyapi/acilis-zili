@@ -73,7 +73,12 @@ type PriceChartProps = {
    * tutmaması ise okuyucu için hata demek. Büyük punto ile yazılan fiyat bu
    * yüzden başlıktakiyle aynı kaynaktan geliyor.
    */
-  quote?: { price: number | null; changePct: number | null } | null;
+  quote?: {
+    price: number | null;
+    changePct: number | null;
+    /** Son işlem anı (ISO) — son noktanın okumasını kotasyona bağlar. */
+    tradedAt?: string | null;
+  } | null;
   /**
    * Açılış aralığının barları — SUNUCUDAN.
    *
@@ -469,6 +474,53 @@ export function PriceChart({
 
     // İmleç okuması — Midas tarzı: tarih · fiyat · dönem başından değişim.
     const byTime = new Map(bars.map((bar) => [bar.time, bar]));
+
+    /* SON NOKTANIN OKUMASI BAŞLIKTAKİ FİYATTIR.
+       Okuma satırının BÜYÜK fiyatı imleç gezmezken zaten kotasyondan geliyor
+       (gerekçesi `quote` prop'unun üzerinde: "ekranda yan yana duran iki
+       fiyatın birbirini tutmaması okuyucu için hata demek"). İmleç son
+       noktaya gelince o kural düşüyordu: orada bar kapanışı yazılıyor ve
+       başlıktaki fiyatın yüz piksel altında, aynı puntoda, BAŞKA bir sayı
+       duruyordu. Bildirilen hâlinde fark yüzde 1,3 idi — SNDK'da başlık
+       1.689,93 $, son noktanın okuması 1.711,24 $.
+
+       Kural yalnızca 1G'nin SON noktasında geçerli: orası "şu an" demek ve
+       şu anın sayfada tek bir sayısı var. Geçmiş noktalarda barın kendi
+       kapanışı okunuyor, çünkü orada soru "o an ne idi".
+
+       KOTASYON BARDAN ESKİYSE KURAL UYGULANMIYOR. Kotasyonun kendi işlem anı
+       son barın zamanından geride kalabiliyor (sağlayıcı yanıtı önbellekten
+       geldiğinde); o hâlde en güncel veri barın kendisidir ve onu başlıktaki
+       eski sayıyla değiştirmek bilgiyi geri götürmek olurdu. Sağlayıcı
+       katmanı bu durumu ayrıca yakalıyor (`packCurrent`), burası son çare.
+       Karşılaştırma HAM zaman damgalarıyla: `bars` gösterim dilimine
+       kaydırılmış, `state.bars` kaydırılmamış — ikisi aynı sırada. */
+    const sonBarZamani = bars.length > 0 ? bars[bars.length - 1].time : null;
+    const sonBarHamZamani =
+      state.bars.length > 0 ? state.bars[state.bars.length - 1].time : null;
+    const kotasyonAni = quote?.tradedAt
+      ? Math.floor(new Date(quote.tradedAt).getTime() / 1000)
+      : null;
+    const kotasyonSonNoktada =
+      range === "1D" &&
+      typeof quote?.price === "number" &&
+      kotasyonAni !== null &&
+      Number.isFinite(kotasyonAni) &&
+      sonBarHamZamani !== null &&
+      kotasyonAni >= sonBarHamZamani;
+
+    const okuma = (bar: Bar): HoverReading => {
+      const price =
+        kotasyonSonNoktada && bar.time === sonBarZamani
+          ? (quote!.price as number)
+          : bar.close;
+      return {
+        dateLabel: dateFormatter.format(new Date(bar.time * 1000)),
+        price,
+        changePct:
+          baseline !== 0 ? ((price - baseline) / baseline) * 100 : 0,
+      };
+    };
     // `param.point` kontrol EDİLMİYOR: imleç elle sürüldüğünde (dokunmatik
     // okuma) o alan gelmeyebiliyor, oysa okunacak bar `time` ile belli.
     const onCrosshair = (param: MouseEventParams) => {
@@ -481,12 +533,7 @@ export function PriceChart({
         setHover(null);
         return;
       }
-      setHover({
-        dateLabel: dateFormatter.format(new Date(bar.time * 1000)),
-        price: bar.close,
-        changePct:
-          baseline !== 0 ? ((bar.close - baseline) / baseline) * 100 : 0,
-      });
+      setHover(okuma(bar));
     };
     chart.subscribeCrosshairMove(onCrosshair);
 
@@ -512,12 +559,7 @@ export function PriceChart({
          kütüphane imleci kendi içinde işledikten SONRA — bazen bir sonraki
          karede — geliyordu. Okunacak bar burada zaten belli; state'i beklemek
          için bir sebep yok. Abonelik yine duruyor (fare, klavye, temizleme). */
-      setHover({
-        dateLabel: dateFormatter.format(new Date(bar.time * 1000)),
-        price: bar.close,
-        changePct:
-          baseline !== 0 ? ((bar.close - baseline) / baseline) * 100 : 0,
-      });
+      setHover(okuma(bar));
       chart.setCrosshairPosition(bar.close, bar.time as UTCTimestamp, series);
     };
 
@@ -666,6 +708,11 @@ export function PriceChart({
     range,
     labels.sessionPre,
     labels.sessionAfter,
+    /* Okuma satırının son noktası kotasyona bağlı; fiyat değişince
+       aboneliğin kapanışı da yenilenmeli. Nesnenin KENDİSİ veriliyor:
+       kimliği sunucu yükünden geliyor ve istemci durumu değişince
+       değişmiyor, yani effect boşuna yeniden kurulmuyor. */
+    quote,
   ]);
 
   /* Seans lejantı — okuyucunun saatiyle yazılır, diğer saat alt satırda tek
