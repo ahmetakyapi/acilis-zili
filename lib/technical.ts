@@ -14,7 +14,8 @@ import { displayZone, formatInZone, zoneTag } from "@/lib/session-clock";
 import { formatPrice, hareketliOrtalama } from "@/lib/utils";
 
 /**
- * Teknik analiz — on iki hissenin günde iki kez yazılan görüşü ve seviyeleri.
+ * Teknik analiz — takip listesindeki hisselerin her işlem günü üç kez
+ * yazılan görüşü ve seviyeleri.
  *
  * İŞ BÖLÜMÜ KESİN. Sayılar SİTEDEN, yorum RUTİNDEN geliyor. Ortalamalar, RSI,
  * MACD, ATR, hacim, pivot ve grafikteki tepe/dipler bu dosyada, sitenin kendi

@@ -8,6 +8,7 @@ import { MotionExperience, Reveal, ScrollProgress, SectionNav } from "@/componen
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
+import { MoreSymbols, type MoreSymbolEntry } from "@/components/technical/MoreSymbols";
 import { PlanStrip } from "@/components/technical/PlanStrip";
 import { PriceMap } from "@/components/technical/PriceMap";
 import { SignalStrip } from "@/components/technical/SignalStrip";
@@ -38,7 +39,7 @@ import {
   stanceChangeLabel,
   technicalHref,
 } from "@/lib/technical";
-import { getTechnicalDetail } from "@/lib/technical-data";
+import { getTechnicalBoard, getTechnicalDetail } from "@/lib/technical-data";
 import { todayEt } from "@/lib/market-hours";
 import {
   cn,
@@ -107,13 +108,33 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   /* Kotasyon listenin TAMAMIYLA isteniyor, tek sembolle değil: istek içi
      önbellek anahtarı sıralanmış sembol dizesi (bkz. `getQuotes`) ve liste
      sayfasıyla aynı anahtar aynı sayıyı verir. */
-  const [detail, meta, quotes, holidays] = await Promise.all([
+  const [detail, meta, quotes, holidays, board] = await Promise.all([
     getTechnicalDetail(symbol),
-    getSymbolNames([symbol]),
+    /* İsim ve logo da LİSTENİN TAMAMI için isteniyor: sayfanın dibindeki
+       çıkış kartları on bir şirketi daha basıyor ve `getSymbolNames` de
+       anahtarı sıralanmış sembol dizesi olan bir istek-içi önbellek — tek
+       sembol sormak ikinci bir sorgu açardı (bkz. kotasyon yorumu). */
+    getSymbolNames([...TECHNICAL_SYMBOLS]),
     getQuotes([...TECHNICAL_SYMBOLS], status),
     getHolidays(),
+    getTechnicalBoard(),
   ]);
   const company = meta[symbol]?.name ?? symbol;
+
+  /* ÇIKIŞ KARTLARI. Sıra `TECHNICAL_SYMBOLS`in sırası — liste sayfası da
+     onu kullanıyor, iki ekran aynı dizilimi gösteriyor. Görüş panodan
+     geliyor (beş günden eski yayın orada zaten yok), değişim sayfanın
+     kendi kotasyon paketinden: aynı anahtar, aynı sayı. */
+  const stanceOf = new Map(board.map((entry) => [entry.row.symbol, verdictOf(entry.row.stance)]));
+  const moreEntries: MoreSymbolEntry[] = TECHNICAL_SYMBOLS.filter(
+    (other) => other !== symbol,
+  ).map((other) => ({
+    symbol: other,
+    name: meta[other]?.name ?? null,
+    logoUrl: meta[other]?.logoUrl ?? null,
+    verdict: stanceOf.get(other) ?? null,
+    changePct: (quotes.ok ? quotes.data[other]?.changePct : null) ?? null,
+  }));
 
   const breadcrumb = (
     <nav aria-label={t.common.breadcrumb} className="flex flex-wrap items-center gap-2 text-small text-muted">
@@ -142,6 +163,10 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         <Panel>
           <EmptyState title={t.technical.noAnalysis} hint={t.technical.noAnalysisHint} titleAs="h1" />
         </Panel>
+        {/* Çıkış kartları BURADA DA duruyor — hatta asıl burada: boş durum
+            okuyucuya "bu hissede yayın yok" diyor ve tek başına bıraksa
+            sayfanın sonu geri tuşu olurdu. */}
+        <MoreSymbols entries={moreEntries} locale={locale} t={t} />
       </MotionExperience>
     );
   }
@@ -453,6 +478,10 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           </div>
         </section>
       )}
+
+      {/* Sayfanın son bloğu: okuyucunun bir sonraki durağı. Dipnot bunun
+          ALTINDA kalıyor — yöntem ve uyarı metni bir çıkış değil, künye. */}
+      <MoreSymbols entries={moreEntries} locale={locale} t={t} />
 
       <div className={styles.footNote}>
         <p>{t.technical.method}</p>

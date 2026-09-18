@@ -730,3 +730,27 @@
    kapta alt alta düşüyor — kart 354 pikselde de duruyor. */
 .stockCardFootRow { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; }
 .stockCardNext { font-size:var(--text-nano); font-weight:650; letter-spacing:.02em; color:var(--text-muted); white-space:nowrap; }
+
+/* ---- Çıkış kartları: öteki şirketler ----
+   Izgara kart genişliğine göre sarıyor: ölçüldü, 390'da iki sütun, 768'de
+   dört, 1440'ta yedi. Taban ölçü 168 pikselken telefonda TEK sütun
+   kalıyordu — bloğun iç genişliği 390'da 326 piksel ve iki kart + aralık
+   346 istiyor. 150'de ikisi de sığıyor; on bir kart 1.139 pikselden 570'e
+   iniyor, yani dipnot bir ekran kaydırma uzağında kalmıyor. */
+.moreGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; margin:0; padding:0; list-style:none; }
+.moreCard { display:grid; gap:10px; height:100%; padding:12px 13px; border:1px solid var(--line); border-radius:16px; background:var(--surface-solid); transition:border-color .18s ease, background-color .18s ease; }
+.moreCard:is(:hover, :focus-visible) { border-color:var(--primary-faint); background:var(--primary-tint); }
+.moreHead { display:flex; align-items:center; gap:9px; min-width:0; }
+.moreIdentity { display:grid; min-width:0; }
+.moreIdentity strong { font-size:14px; font-weight:750; line-height:1.15; letter-spacing:-.02em; color:var(--text-strong); }
+/* Ad KIRPILMIYOR, SARIYOR. Tek satır + üç nokta 150 piksellik kartta
+   "NVIDIA Corporati…" üretiyordu; iki satırlık kutu adı tam gösteriyor
+   ve satır ızgarayı bozmuyor — kartlar `height:100%` ile satır boyunca
+   eşitleniyor. */
+.moreIdentity span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:var(--text-nano); font-weight:600; line-height:1.3; color:var(--text-muted); }
+.moreFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 8px; }
+.morePill { display:inline-flex; padding:2px 9px; border-radius:999px; font-size:var(--text-nano); font-weight:800; letter-spacing:.02em; }
+.moreSoon { font-size:var(--text-nano); font-weight:650; color:var(--text-muted); }
+.moreChange { font-size:12.5px; font-weight:700; }
+.moreAll { font-size:12px; font-weight:650; color:var(--primary); }
+.moreAll:hover { color:var(--primary-hover); }

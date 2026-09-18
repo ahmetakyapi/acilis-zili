@@ -22,7 +22,7 @@ export type SearchHit = {
   symbol: string;
   name: string;
   industry?: string | null;
-  /** Günlük teknik analizi olan on iki hisseden biri mi. Palet o sembolün
+  /** Günlük teknik analizi olan hisselerden biri mi. Palet o sembolün
       altına ikinci bir satır açıyor: "NVDA" yazan okuyucu hissenin teknik
       analizine şirket sayfasına uğramadan gidebilsin. */
   technical?: boolean;

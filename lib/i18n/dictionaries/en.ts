@@ -462,7 +462,7 @@ const en: typeof tr = {
     eyebrow: "Daily Technical Outlook",
     title: "Technical Analysis",
     description:
-      "Trends, support and resistance, entry zones and stops for twelve stocks.",
+      "Trends, support and resistance, entry zones and stops for the stocks we follow.",
     slotPremarket: "Pre-Market",
     slotMidsession: "Midday",
     slotLateday: "Late Session",
@@ -536,6 +536,8 @@ const en: typeof tr = {
     historyDate: "Date",
     historyEdition: "Edition",
     historyStance: "Stance",
+    moreSymbols: "Other Companies",
+    noEditionYet: "Awaiting Edition",
     companyPage: "Company Page",
     allStocks: "All Stocks",
     snapshotNote:
@@ -550,7 +552,7 @@ const en: typeof tr = {
     emptyHint:
       "Analyses are published every trading day before the open and during the session; stances older than five days are not shown here.",
     notListed: "This Stock Is Not on the Technical List",
-    notListedHint: "The twelve stocks with a technical analysis every trading day:",
+    notListedHint: "The {n} stocks with a technical analysis every trading day:",
     noAnalysis: "No Analysis for This Stock Yet",
     noAnalysisHint: "This stock's analysis is published every trading day before the open and during the session.",
     distribution: "Stance Breakdown",

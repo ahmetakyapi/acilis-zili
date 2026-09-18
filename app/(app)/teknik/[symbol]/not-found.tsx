@@ -13,7 +13,7 @@ import { TECHNICAL_SYMBOLS, technicalHref } from "@/lib/technical";
  * Bu durum için yazılmış iki anahtar (`notListed`, `notListedHint`) da hiç
  * kullanılmıyordu.
  *
- * Çıkış yolu listedeki on iki hisse ve dizinin kendisi. Sembol `params`'tan
+ * Çıkış yolu listenin kendisi. Sembol `params`'tan
  * okunamıyor (not-found bileşeni parametre almıyor), şirket sayfasına bu
  * yüzden bağlanılmıyor.
  */
@@ -24,7 +24,7 @@ export default async function TechnicalNotFound() {
     <EmptyState
       titleAs="h1"
       title={t.technical.notListed}
-      hint={t.technical.notListedHint}
+      hint={t.technical.notListedHint.replace("{n}", String(TECHNICAL_SYMBOLS.length))}
       action={
         <div className="flex flex-col items-center gap-3">
           <div className="flex max-w-md flex-wrap justify-center gap-1.5">

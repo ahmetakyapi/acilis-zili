@@ -30,17 +30,17 @@ export const generateMetadata = pageMetadata({
   tr: {
     title: "Teknik Analiz",
     description:
-      "On iki hissenin günlük teknik görünümü: ortalamalar, destek ve direnç, alım bölgesi ve stop.",
+      "Takip edilen hisselerin günlük teknik görünümü: ortalamalar, destek ve direnç, alım bölgesi ve stop.",
   },
   en: {
     title: "Technical Analysis",
     description:
-      "Daily technical outlook for twelve stocks: moving averages, support and resistance, entry zone and stop.",
+      "Daily technical outlook for the stocks we follow: moving averages, support and resistance, entry zone and stop.",
   },
 });
 
 /**
- * Teknik analiz — on iki hissenin günlük görünümü.
+ * Teknik analiz — takip listesindeki hisselerin günlük görünümü.
  *
  * Kart başına tek hisse, sıra `TECHNICAL_SYMBOLS`in sırası: okuyucu her
  * gün aynı hisseyi aynı yerde bulsun. Görüşe göre sıralamak (önce AL'lar)

@@ -613,7 +613,7 @@ const tr = {
     eyebrow: "Günlük Teknik Görünüm",
     title: "Teknik Analiz",
     description:
-      "On iki hissenin trendi, destek ve dirençleri, alım bölgesi ve stop seviyeleri.",
+      "Takip edilen hisselerin trendi, destek ve dirençleri, alım bölgesi ve stop seviyeleri.",
     slotPremarket: "Açılış Öncesi",
     slotMidsession: "Seans İçi",
     slotLateday: "Kapanış Öncesi",
@@ -687,6 +687,8 @@ const tr = {
     historyDate: "Tarih",
     historyEdition: "Yayın",
     historyStance: "Görüş",
+    moreSymbols: "Diğer Şirketler",
+    noEditionYet: "Yayın Bekliyor",
     companyPage: "Şirket Sayfası",
     allStocks: "Bütün Hisseler",
     snapshotNote:
@@ -702,7 +704,7 @@ const tr = {
     emptyHint:
       "Analizler her işlem günü açılıştan önce ve seans içinde yayımlanır; beş günden eski görüşler burada gösterilmez.",
     notListed: "Bu Hisse Teknik Analiz Listesinde Yok",
-    notListedHint: "Teknik analizi her işlem günü yayımlanan on iki hisse:",
+    notListedHint: "Teknik analizi her işlem günü yayımlanan {n} hisse:",
     noAnalysis: "Bu Hisse için Henüz Analiz Yok",
     noAnalysisHint: "Bu hissenin analizi her işlem günü açılıştan önce ve seans içinde yayımlanır.",
     distribution: "Görüş Dağılımı",

@@ -602,7 +602,8 @@ export const earningsAnalyses = pgTable(
 );
 
 /**
- * Teknik analizler — on iki hissenin günde iki kez yazılan görüşü.
+ * Teknik analizler — takip listesindeki hisselerin her işlem günü üç kez
+ * yazılan görüşü (liste `lib/technical.ts` → TECHNICAL_SYMBOLS).
  *
  * Kaynak `lib/technical.ts` (liste, göstergeler) ve rutin
  * (docs/claude-rutinler.md § 5). Anahtar `symbol + session_date + slot`:

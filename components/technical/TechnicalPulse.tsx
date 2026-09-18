@@ -19,7 +19,7 @@ export function stanceFilterId(verdict: VerdictKey | "all"): string {
 }
 
 /**
- * Başlığın görseli — on iki hissenin görüşe göre dağılımı.
+ * Başlığın görseli — takip listesinin görüşe göre dağılımı.
  *
  * Sayılar tek yerde: oran çubuğunda yazı yok, sayı satırın başında bir kez.
  * Eski yayın şeridinde "AL 5 · TUT 5 · SAT 2" hapları vardı ve hangi hissenin
