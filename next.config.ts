@@ -48,6 +48,31 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex" },
         ],
       },
+      {
+        /* LOGOLAR TARAYICIDA KALIR.
+           `public/` altındaki her dosya Next'in varsayılanıyla
+           `public, max-age=0` dönüyordu: 1,4 KB'lık bir logo bile HER
+           gezinmede yeniden isteniyor. Endeks bileşenleri tablosunda altmış
+           logo var, yani sayfa her açıldığında altmış koşullu istek — ve
+           telefonda (5G, yüksek gecikme, tembel yükleme) bunların bir kısmı
+           düşüyor. Düşen istek ekranda kırık görsel simgesi olarak duruyor;
+           okuyucunun gördüğü "bazı şirketlerin logosu yok" oluyor
+           (ölçüldü: dosyalar 200 dönüyor, bayt bayt doğru).
+
+           Dosyalar içerik adresli DEĞİL (`/logos/NVDA.webp` sabit bir ad),
+           o yüzden `immutable` değil bir haftalık tazelik + bir aylık
+           `stale-while-revalidate`: logo değişirse (`npm run build:logos`)
+           okuyucu en geç bir hafta içinde yenisini alır, o zamana kadar da
+           hiçbir istek atmaz. Logolar yılda birkaç kez değişiyor, bir
+           haftalık gecikme bedeli yok. */
+        source: "/logos/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=2592000",
+          },
+        ],
+      },
     ];
   },
   // Ana dizinde başka bir lockfile var; kökü açıkça bu projeye sabitle.

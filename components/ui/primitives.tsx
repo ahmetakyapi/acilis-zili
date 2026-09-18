@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { logoSrc } from "@/lib/logos";
+import { LogoImage } from "./LogoImage";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { TabUnderline } from "./TabUnderline";
 import { cn, directionOf, directionWash, formatPercent } from "@/lib/utils";
@@ -506,40 +506,36 @@ export function LogoTile({
      sorabilmesiydi. Artık son söz burada: harf yerine dosya. */
   const source = logoUrl ?? logoSrc(symbol, null);
 
-  if (!source) {
-    return (
-      <span
-        aria-hidden
-        className={cn(
-          "numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold tracking-[-0.02em] text-primary-ink",
-          step.box,
-          size === "xs" || size === "sm" ? "text-micro" : "text-tiny",
-          className,
-        )}
-      >
-        {symbol.slice(0, 2)}
-      </span>
-    );
-  }
+  /* Harf karosu İKİ DURUMDA birden çiziliyor: logo hiç yokken ve adres
+     varken görsel düşerken. İkincisini ancak tarayıcı bilebiliyor, o yüzden
+     karo `LogoImage`e yedek olarak geçiyor — gerekçesi o dosyada. */
+  const letters = (
+    <span
+      aria-hidden
+      className={cn(
+        "numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold tracking-[-0.02em] text-primary-ink",
+        step.box,
+        size === "xs" || size === "sm" ? "text-micro" : "text-tiny",
+        className,
+      )}
+    >
+      {symbol.slice(0, 2)}
+    </span>
+  );
+
+  if (!source) return letters;
 
   return (
-    /* Zemin BEYAZ: logoların çoğu şeffaf PNG ve koyu mürekkeple çizilmiş —
-       koyu temada zeminsiz bırakılırsa görünmüyorlar. */
-    <span
-      className={cn(
+    <LogoImage
+      src={source}
+      px={step.px}
+      boxClass={cn(
         "block shrink-0 overflow-hidden bg-white",
         step.box,
         className,
       )}
-    >
-      <Image
-        src={source}
-        alt=""
-        width={step.px}
-        height={step.px}
-        className="size-full object-contain"
-      />
-    </span>
+      fallback={letters}
+    />
   );
 }
 
