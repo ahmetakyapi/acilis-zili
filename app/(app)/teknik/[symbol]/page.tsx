@@ -1,3 +1,4 @@
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -211,42 +212,61 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       {/* ---- Kapak ---- */}
       <header className={styles.cover} data-verdict={verdict}>
         <div className={styles.coverMain} data-motion-intro>
+          {/* KİMLİK BLOĞU HİSSE SAYFASINA GİDİYOR.
+              Logo ile ad sayfanın en büyük öğesiydi ve hiçbir yere
+              gitmiyordu: teknik görüşü okuyan okuyucunun bir sonraki isteği
+              şirketin grafiğine bakmak ama künye çubuğu /teknik LİSTESİNE
+              çıkıyor, hisseye değil. Bağlantı logo + sembol + adı BİRLİKTE
+              sarıyor; üçü aynı şeyi söylüyor, üç ayrı sekme durağı olmaları
+              gerekmiyor. Künye satırları (bu yayının saati, sıradaki yayın)
+              bağlantının DIŞINDA: onlar şirketin kimliği değil yayının
+              damgası — ekran okuyucuya bağlantının adı olarak okunmaları da
+              yanlış olurdu. */}
           <div className={styles.coverIdentity}>
-            <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="lg" />
-            <div className="min-w-0">
-              <h1>{symbol}</h1>
-              {/* ŞİRKET ADI KENDİ SATIRINDA. Dört parça tek künyeye dizilince
-                  ("Micron Technology Inc · Seans İçi · 16 Eylül Çarşamba ·
-                  19:45 TR") telefonda sarıp son parçayı tek başına alta
-                  atıyordu — "TR" bir satır kaplıyordu. Adın uzunluğu şirkete
-                  göre değiştiği için sarmanın nereden olacağı da her sayfada
-                  farklıydı. Ad artık kendi satırında ve künyede yalnızca
-                  YAYIN bilgisi kalıyor; liste kartı da sembol ile adı ayrı
-                  satırda basıyor, kapak onunla aynı dile geldi. */}
-              {company && <p className={styles.coverCompany}>{company}</p>}
-              <p className={styles.coverMeta}>
-                {slotLabel(row.slot, t)} · {formatEtDateLong(row.sessionDate, locale)} ·{" "}
-                <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
+            <Link href={`/hisse/${symbol}`} className={styles.coverNameLink}>
+              <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="lg" />
+              <div className="min-w-0">
+                <h1>
+                  {symbol}
+                  {/* Dokunmatikte `:hover` yok: bağlantı olduğunu söyleyen
+                      tek şey bu ok. Ölçüsü `em` — sembolün puntosu
+                      genişlikle değiştiği için okun da onunla değişmesi
+                      gerekiyor. */}
+                  <ArrowUpRight className={styles.coverGo} weight="bold" aria-hidden />
+                </h1>
+                {/* ŞİRKET ADI KENDİ SATIRINDA. Dört parça tek künyeye dizilince
+                    ("Micron Technology Inc · Seans İçi · 16 Eylül Çarşamba ·
+                    19:45 TR") telefonda sarıp son parçayı tek başına alta
+                    atıyordu — "TR" bir satır kaplıyordu. Adın uzunluğu şirkete
+                    göre değiştiği için sarmanın nereden olacağı da her sayfada
+                    farklıydı. Ad artık kendi satırında ve künyede yalnızca
+                    YAYIN bilgisi kalıyor; liste kartı da sembol ile adı ayrı
+                    satırda basıyor, kapak onunla aynı dile geldi. */}
+                {company && <p className={styles.coverCompany}>{company}</p>}
+              </div>
+            </Link>
+            <p className={styles.coverMeta}>
+              {slotLabel(row.slot, t)} · {formatEtDateLong(row.sessionDate, locale)} ·{" "}
+              <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
+            </p>
+            {/* SIRADAKİ YAYIN — okuyucunun ikinci sorusu.
+                Künye bu yayının saatini söylüyordu ama bir sonrakininkini
+                hiçbir yer söylemiyordu: okuyucu elindeki görüşün ne kadar
+                taze olduğunu görüyor, NE KADAR SÜRE geçerli olduğunu
+                görmüyordu. Cuma akşamı açılan bir sayfada "pazartesi
+                sabaha kadar böyle" bilgisi tek başına sayfanın yarısı
+                kadar iş görüyor. Tarih yalnızca BUGÜN değilse yazılıyor;
+                bugünse fazladan bir kelime olurdu (damganın kendi
+                kuralıyla aynı). */}
+            {next && (
+              <p className={styles.coverNext}>
+                {t.technical.nextEdition} · {slotLabel(next.slot, t)} ·{" "}
+                <span className="numeral">{editionClock(next.at, locale)}</span>
+                {todayEt(next.at) !== status.etDate && (
+                  <> · {formatEtDateCompact(todayEt(next.at), locale)}</>
+                )}
               </p>
-              {/* SIRADAKİ YAYIN — okuyucunun ikinci sorusu.
-                  Künye bu yayının saatini söylüyordu ama bir sonrakininkini
-                  hiçbir yer söylemiyordu: okuyucu elindeki görüşün ne kadar
-                  taze olduğunu görüyor, NE KADAR SÜRE geçerli olduğunu
-                  görmüyordu. Cuma akşamı açılan bir sayfada "pazartesi
-                  sabaha kadar böyle" bilgisi tek başına sayfanın yarısı
-                  kadar iş görüyor. Tarih yalnızca BUGÜN değilse yazılıyor;
-                  bugünse fazladan bir kelime olurdu (damganın kendi
-                  kuralıyla aynı). */}
-              {next && (
-                <p className={styles.coverNext}>
-                  {t.technical.nextEdition} · {slotLabel(next.slot, t)} ·{" "}
-                  <span className="numeral">{editionClock(next.at, locale)}</span>
-                  {todayEt(next.at) !== status.etDate && (
-                    <> · {formatEtDateCompact(todayEt(next.at), locale)}</>
-                  )}
-                </p>
-              )}
-            </div>
+            )}
           </div>
           <div className={styles.stanceRow}>
             {/* Etiket yalnızca ekran okuyucuya: gerekçe `.stancePill` yorumunda. */}

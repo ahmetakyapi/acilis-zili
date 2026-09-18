@@ -271,10 +271,22 @@
 .cover[data-verdict="buy"]::after { background:radial-gradient(circle, var(--up-wash), transparent 65%); }
 .cover[data-verdict="sell"]::after { background:radial-gradient(circle, var(--down-wash), transparent 65%); }
 .coverMain { display:flex; min-width:0; flex-direction:column; gap:16px; }
-.coverIdentity { display:flex; align-items:center; gap:14px; min-width:0; }
-.coverIdentity h1 { font-size:clamp(32px, 3.2vw, 44px); line-height:1.02; letter-spacing:-.05em; font-weight:650; color:var(--text-strong); }
-.coverCompany { margin-top:5px; font-size:15px; font-weight:600; line-height:1.3; color:var(--text-body); letter-spacing:-.01em; text-wrap:balance; }
-.coverMeta { margin-top:3px; font-size:12.5px; line-height:1.4; color:var(--text-muted); }
+/* KİMLİK BİR KOLON, KÜNYE ONUN ALTINDA.
+   Blok bir süre tek satırdı — logo solda, sağında dört satırlık bir yığın
+   (sembol, ad, bu yayın, sıradaki yayın) — ve logo o yığının ORTASINA
+   hizalanıyordu: 56 piksellik karo, adının değil künyenin yanında duruyordu.
+   Kimlik hisse sayfasına bağlanınca bölünme zaten gerekti (bağlantı logo +
+   sembol + addır, künye değil) ve logo artık anlattığı iki satırın
+   ortasında. Künye satırları bloğun sol kenarına iniyor: girinti taşıyan tek
+   şey kimlik. */
+.coverIdentity { display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
+.coverNameLink { display:flex; max-width:100%; min-width:0; align-items:center; gap:14px; color:inherit; }
+.coverIdentity h1 { display:flex; align-items:center; gap:.16em; font-size:clamp(32px, 3.2vw, 44px); line-height:1.02; letter-spacing:-.05em; font-weight:650; color:var(--text-strong); }
+.coverGo { flex:none; width:.4em; height:.4em; color:var(--text-muted); transition:color .18s ease, transform .18s ease; }
+.coverNameLink:is(:hover, :focus-visible) .coverGo { color:var(--primary); transform:translate(1.5px,-1.5px); }
+.coverNameLink:is(:hover, :focus-visible) .coverCompany { color:var(--primary-ink); }
+.coverCompany { margin-top:5px; font-size:15px; font-weight:600; line-height:1.3; color:var(--text-body); letter-spacing:-.01em; text-wrap:balance; transition:color .18s ease; }
+.coverMeta { margin-top:10px; font-size:12.5px; line-height:1.4; color:var(--text-muted); }
 /* GÖRÜŞ KAPAĞIN ODAĞI. Sayfanın tek sorusu "bu hissede ne görünüyor" ve
    cevabı bu tek kelime; oysa 14 piksellik bir çipti — sembolün (32px) ve
    fiyatın (34px) çok altında, gri bir etiketin yanında. Kapakta sekiz blok

@@ -616,7 +616,20 @@ export default async function AnalysisDetailPage(
               Çipler bu raporun künyesi — şirket adının altında, ait oldukları
               yerde. Kart artık iki bant: solda kimlik + künye, sağda "şu an". */}
           <div className="flex min-w-0 flex-1 flex-col gap-3.5">
-            <div className="flex min-w-0 items-start gap-3.5 sm:gap-4">
+            {/* KİMLİĞİN TAMAMI HİSSE SAYFASINA GİDİYOR.
+                Bağlantı yalnızca sembol ÇİPİNDEYDİ: logo ve şirket adı —
+                blokta gözün ilk gittiği iki öğe — tıklanınca hiçbir şey
+                yapmıyordu, hedef ise küçük bir çipti. Üçü aynı şirketi
+                söylüyor; tek bağlantı olup tek sekme durağı olmaları doğru
+                olanı. Çip artık bağlantı değil ama görüntüsü aynı kalıyor:
+                borsayı söyleyen bir künye ve bloğun tıklanabilir olduğunu
+                anlatan tek görünür işaret. Teknik analiz kapağı da aynı
+                kalıbı taşıyor (`components/technical/Technical.module.css`
+                → `.coverNameLink`). */}
+            <Link
+              href={`/hisse/${symbol}`}
+              className="group flex min-w-0 items-start gap-3.5 sm:gap-4"
+            >
               <LogoTile
                 symbol={symbol}
                 logoUrl={symbolMeta?.logoUrl}
@@ -627,19 +640,16 @@ export default async function AnalysisDetailPage(
                   <h1 className={cn(styles.companyTitle, "w-fit text-heading font-bold tracking-[-0.035em]")}>
                     {row.company}
                   </h1>
-                  <Link
-                    href={`/hisse/${symbol}`}
-                    className="tap-44 rounded-md border border-primary-faint bg-primary-wash px-2 py-[3px] text-tiny font-bold text-primary-ink hover:bg-primary-tint"
-                  >
+                  <span className="rounded-md border border-primary-faint bg-primary-wash px-2 py-[3px] text-tiny font-bold text-primary-ink transition-colors group-hover:bg-primary-tint">
                     {symbol}
                     {row.exchange ? ` · ${row.exchange}` : ""}
-                  </Link>
+                  </span>
                 </div>
                 {row.sector && (
                   <p className="text-xs font-medium text-muted">{row.sector}</p>
                 )}
               </div>
-            </div>
+            </Link>
 
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 sm:gap-1.5">
 
