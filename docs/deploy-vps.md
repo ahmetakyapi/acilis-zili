@@ -1,9 +1,15 @@
 # Kendi sunucusunda yayına alma (Oracle Cloud Always Free)
 
-Vercel'in yanında ikinci bir canlı kopya. Gerekçesi kota: barındırma
-ücretsiz katmanında sınırlar aylık ve ay ortasında bittiğinde site kapanıyor.
-Kendi sunucusunda ne fonksiyon süresi sınırı var ne çağrı kotası — günlük
-cron'un 100 saniyelik bütçesi de ilk kez olduğu gibi çalışabiliyor.
+**Sitenin yayınlandığı yer burası:** [aciliszili.com](https://aciliszili.com).
+Kurulum bir dönem Vercel'in yanındaki ikinci kopyaydı, sonra asıl kopya
+buraya taşındı. Gerekçesi kota: barındırmanın ücretsiz katmanında sınırlar
+aylık ve ay ortasında bittiğinde site kapanıyor. Kendi sunucusunda ne
+fonksiyon süresi sınırı var ne çağrı kotası — günlük cron'un 100 saniyelik
+bütçesi de ilk kez olduğu gibi çalışabiliyor.
+
+`main`'e her push GitHub Actions üzerinden buraya dağıtılıyor
+(`.github/workflows/deploy.yml`); aşağıdaki elle koşum yolu hem ilk kurulum
+hem de acil durum için duruyor.
 
 Kurulumun TAMAMI tek komutla yapılıyor: `deploy/remote.sh`, yerel makineden
 sunucuya `deploy/` dizinini ve ortam dosyasını yükleyip `deploy/bootstrap.sh`'ı
@@ -21,10 +27,15 @@ atıyor ve ücretsiz katman dakikada 60 kabul ediyor. Aynı dakikada iki koşum
 crontab'ı kendisi kuruyor; bunu doğruladıktan sonra `vercel.json` içindeki
 `crons` bloğu kaldırılmalı (ya da tersi). Hangisi kalacaksa kalsın, **tek**.
 
-**İkinci kopya indekslenmemeli.** Aynı içerik iki adreste durursa arama
-motoru bunu kopya içerik sayar. `bootstrap.sh` bunu kendisi ayarlıyor
-(`SITE_INDEXABLE=false`, yalnızca anahtar dosyada yoksa) — asıl kopya bu
-sunucuya taşınırsa `/etc/acilis-zili.env` içinde elle `true` yapılır.
+**İNDEKSLENEBİLİRLİK DERLEME ZAMANINDA PİŞİYOR.** `SITE_INDEXABLE`
+`robots.ts`'e statik olarak giriyor: `/etc/acilis-zili.env` içindeki değeri
+değiştirmek tek başına yetmez, `deploy/update.sh` bir kez daha koşmalı.
+`bootstrap.sh` anahtarı yalnızca DOSYADA YOKKEN yazıyor (varsayılan `true`)
+— elle verilmiş bir değere hiç dokunmuyor. Bu ikisi bir arada sessiz bir
+tuzak kurmuştu: sunucu ikinci kopyayken yazılan `false`, asıl kopya buraya
+taşındıktan sonra da dosyada kaldı ve canlı site `Disallow: /` yayınlamaya
+devam etti. İkinci bir kopya açılırsa `false` ORADA yazılır — aynı içerik
+iki adreste durursa arama motoru bunu kopya içerik sayar.
 
 **Neon bölgesi gecikmeyi belirler.** `@neondatabase/serverless` her sorgu
 için ayrı bir HTTPS turu atıyor. Sunucu ile veritabanı ayrı kıtadaysa bu tur

@@ -8,7 +8,7 @@ her gün yazılan bir bülten, olay bazlı uzun anlatımlar ve bilanço analizle
 
 İki dil (TR/EN), açık ve koyu tema, tam mobil uyum. Ücretsiz, reklamsız, açık kaynak.
 
-**Canlı:** [acilis-zili.vercel.app](https://acilis-zili.vercel.app)
+**Canlı:** [aciliszili.com](https://aciliszili.com)
 
 ---
 
@@ -172,7 +172,7 @@ sökülüyor ve dil bir başlıkla taşınıyor; tarayıcının adresi `/en/...`
 | Auth | next-auth v5 — Credentials + bcrypt, JWT |
 | İkon | Phosphor (duotone) |
 | Yazı tipi | Schibsted Grotesk — tek aile, değişken 400–900 |
-| Barındırma | Vercel · ikinci kopya: kendi sunucusu (`docs/deploy-vps.md`) — cron ORADA (§ Deploy) |
+| Barındırma | Kendi sunucusu (Oracle Cloud Always Free) — `next start` + systemd, TLS için Caddy; `main`'e her push GitHub Actions ile deploy olur, cron da orada (§ Deploy) |
 
 ---
 
@@ -425,9 +425,9 @@ npm run dev
 | `FRED_API_KEY` | makro için | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) — 32 karakter, küçük harf |
 | `CRON_SECRET` | üretimde | `openssl rand -hex 32` — cron ucunu `Bearer` ile çağıran taraf (bkz. § Deploy) gönderir |
 | `BRIEF_SECRET` | içerik için | `openssl rand -hex 32` — bülten, mercek ve analiz uçlarının kapısı |
-| `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri ve sitemap için) — Vercel dışında zorunlu |
-| `AUTH_TRUST_HOST` | Vercel dışında | ters vekil arkasında `true`; yoksa giriş yönlendirmesi şaşar |
-| `SITE_INDEXABLE` | ikinci kopyada | ikincil kopyada `false` — aynı içeriğin iki adresi kopya içerik sayılır |
+| `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri ve sitemap için) — canlıda `https://aciliszili.com` |
+| `AUTH_TRUST_HOST` | üretimde | ters vekilin (Caddy) arkasında `true`; yoksa giriş yönlendirmesi şaşar |
+| `SITE_INDEXABLE` | ikinci kopyada | canlı kopyada `true`, ikinci bir kopya açılırsa orada `false` — aynı içeriğin iki adresi kopya içerik sayılır |
 | `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisi (DeepL yoksa) |
 | `DEEPL_API_KEY` | opsiyonel | haber başlığı çevirisi (önce bu denenir) |
 | `ANALYTICS_SALT` | opsiyonel | ziyaretçi özetinin tuzu; verilmezse `AUTH_SECRET` kullanılır |
@@ -476,31 +476,39 @@ Otomatik test paketi yok; doğrulama üç ayaklı:
 
 ## Deploy
 
-### Vercel
+Site **kendi sunucusunda** yayında: [aciliszili.com](https://aciliszili.com).
+Vercel bir dönem asıl kopyaydı, sonra ikinci kopya oldu, şimdi hiç yayında
+değil (`acilis-zili.vercel.app` duraklatılmış bir dağıtım). Vercel'e özgü
+kod hâlâ duruyor ama hiçbiri koşulsuz değil: Analytics yalnızca `VERCEL=1`
+iken basılıyor, `vercel.json` bilerek boş ve adres/indeks/vekil ayarları üç
+ortam değişkenine çevrildi (`NEXT_PUBLIC_SITE_URL`, `SITE_INDEXABLE`,
+`AUTH_TRUST_HOST`).
 
-1. Repo'yu Vercel'e bağla.
-2. Environment Variables: `.env.example` içindeki değişkenler +
-   `NEXT_PUBLIC_SITE_URL`.
-3. `vercel.json` cron'u otomatik kaydeder; Vercel `CRON_SECRET`'ı
-   `Authorization: Bearer` başlığıyla gönderir.
-4. İlk deploy sonrası bir kez: `npm run db:migrate && npm run db:seed` (lokalden,
-   üretim `DATABASE_URL` ile).
-5. claude.ai görevlerini kur (`docs/claude-rutinler.md`) — yoksa bülten ve mercek
-   boş kalır.
-
-### Kendi sunucusu
+### Kendi sunucusu — canlı yol
 
 Tam yol `docs/deploy-vps.md`'de; sunucudaki dosyalar `deploy/` altında
 (systemd birimi, Caddy yapılandırması, cron ve güncelleme betikleri).
+Kısaca: Oracle Cloud Always Free üstünde `next start` + systemd, TLS için
+Caddy, cron için crontab.
 
-Kısaca: `next start` + systemd, TLS için Caddy, cron için crontab. Vercel'e
-özgü üç şey ortam değişkenine çevrildi — `NEXT_PUBLIC_SITE_URL` (orada
-`VERCEL_PROJECT_PRODUCTION_URL`'e düşüyordu), `AUTH_TRUST_HOST` ve
-`SITE_INDEXABLE`. Vercel Analytics yalnızca Vercel'de basılıyor.
+`main`'e her push **GitHub Actions**'ı tetikliyor
+(`.github/workflows/deploy.yml`): önce runner'da typecheck + lint + build,
+o geçerse sunucuda `deploy/update.sh`. Betik yeni sürümü
+`releases/<zaman>-<sha>` altına klonlayıp derliyor ve `current` bağını ancak
+sağlık kontrolü geçtikten sonra çeviriyor — derleme sürerken canlı sürüm
+ayakta kalıyor, sağlık geçmezse bağ öncekine dönüyor.
+
+İlk kurulumdan sonra bir kez: `npm run db:migrate && npm run db:seed`
+(lokalden, üretim `DATABASE_URL` ile) ve claude.ai görevleri
+(`docs/claude-rutinler.md`) — yoksa bülten, mercek ve teknik analizler boş
+kalır.
+
+### İkinci bir kopya açılırsa
 
 İki kopya birden canlıysa iki kural: **cron tek yerde çalışır** (iki koşum
 Finnhub'ın dakikalık kotasını aşar) ve **ikincil kopya indekslenmez**
-(`SITE_INDEXABLE=false`).
+(`SITE_INDEXABLE=false`) — aynı içerik iki adreste durursa arama motoru bunu
+kopya içerik sayar.
 
 Ana sayfanın gün akışı `GET /api/day-flow?locale=tr|en` ile görünürken 30 saniyede bir
 kontrol edilir. Uç kullanıcıya özel, `no-store` bir yanıt verir; bugünün Finnhub

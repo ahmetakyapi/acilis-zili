@@ -14,7 +14,7 @@
    ========================================================================== */
 
 /** Metnin son güncellendiği tarih — sayfa künyesinde görünür (ET/TR farkı önemsiz). */
-export const LEGAL_UPDATED = "2026-08-29";
+export const LEGAL_UPDATED = "2026-09-18";
 
 const PRIVACY_TR = `Açılış Zili kişisel bir projedir ve ABD borsalarını Türkçe takip etmek için yapılmıştır. Bu sayfa, 6698 sayılı **Kişisel Verilerin Korunması Kanunu** (KVKK) kapsamında hangi verinin neden işlendiğini, nereye gittiğini ve senin hangi haklara sahip olduğunu anlatır.
 
@@ -29,7 +29,7 @@ Hesap açmazsan yalnızca tema ve dil tercihin tarayıcında saklanır; sunucuda
 | | |
 |---|---|
 | Veri sorumlusu | Ahmet Akyapı (gerçek kişi, kişisel proje) |
-| Hizmet | Açılış Zili — acilis-zili.vercel.app |
+| Hizmet | Açılış Zili — aciliszili.com |
 | Başvuru kanalı | [GitHub üzerinden](https://github.com/ahmetakyapi/acilis-zili/issues) |
 
 Bu bir ticari işletme değildir; ürün ücretsizdir, ödeme alınmaz ve herhangi bir aracı kurumla bağı yoktur.
@@ -115,7 +115,7 @@ Sitede yalnızca üç çerez vardır ve üçü de işlevseldir:
 
 | Kim | Ne için | Sana ait ne gidiyor |
 |---|---|---|
-| Vercel (ABD) | Siteyi barındırır ve toplam ziyaret sayısını ölçer | İstek kayıtlarında IP adresi ve tarayıcı bilgisi. Ölçüm tarafı çerezsizdir ve kimlik üretmez |
+| Oracle Cloud (yurt dışı) | Siteyi barındıran sunucuyu sağlar | İstek kayıtlarında IP adresi ve tarayıcı bilgisi |
 | Neon (ABD/AB) | Veritabanı | Hesap ve takip listesi kayıtların |
 | Alpaca, Finnhub, FRED | Fiyat, şirket ve makro verisi | **Hiçbir şey** — bu istekleri sunucu kendi adına yapar |
 | DeepL | Haber başlıklarının çevirisi | **Hiçbir şey** — yalnızca haber metni gider |
@@ -218,7 +218,7 @@ Without an account, only your theme and language preferences are stored in your 
 | | |
 |---|---|
 | Data controller | Ahmet Akyapı (individual, personal project) |
-| Service | Opening Bell — acilis-zili.vercel.app |
+| Service | Opening Bell — aciliszili.com |
 | Contact channel | [via GitHub](https://github.com/ahmetakyapi/acilis-zili/issues) |
 
 This is not a commercial business; the product is free, no payment is taken and it has no affiliation with any brokerage.
@@ -304,7 +304,7 @@ The product runs on the following infrastructure and data providers. Some of the
 
 | Who | What for | What of yours goes there |
 |---|---|---|
-| Vercel (US) | Hosts the site and measures total visits | IP address and browser information in request logs. The measurement side is cookieless and produces no identity |
+| Oracle Cloud (outside Turkey) | Provides the server that hosts the site | IP address and browser information in request logs |
 | Neon (US/EU) | Database | Your account and watchlist records |
 | Alpaca, Finnhub, FRED | Price, company and macro data | **Nothing** — the server makes these requests on its own behalf |
 | DeepL | Translation of news headlines | **Nothing** — only the news text is sent |

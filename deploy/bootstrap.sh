@@ -267,11 +267,21 @@ else
 fi
 
 # Bu kopyaya özgü değerler: adres ve vekil güveni ZORLA, indekslenebilirlik
-# yalnızca yoksa (ikincil kopya varsayılanı false; asıl buraya taşınırsa
-# dosyada elle true yapılır ve bu betik ona dokunmaz).
+# yalnızca yoksa (dosyadaki elle verilmiş değere dokunulmaz).
+#
+# VARSAYILAN BİR DÖNEM `false` İDİ ve gerekçesi bu sunucunun Vercel'in
+# yanındaki İKİNCİ kopya olmasıydı: aynı içerik iki adreste durursa arama
+# motoru kopya içerik sayar. Asıl kopya buraya taşınınca o varsayılan
+# sessiz bir tuzağa döndü — canlı site aylarca `Disallow: /` yayınlar ve
+# hiçbir yerde hata görünmez (ölçüldü: aciliszili.com/robots.txt).
+# Varsayılan artık `true`; ikinci bir kopya açan onu ORADA false yapar.
+#
+# Değer DERLEME ZAMANINDA okunuyor (robots.ts statik üretiliyor), yani
+# dosyayı değiştirmek tek başına yetmez: `deploy/update.sh` bir kez daha
+# koşmalı.
 ensure_env NEXT_PUBLIC_SITE_URL "https://$DOMAIN" force
 ensure_env AUTH_TRUST_HOST true force
-ensure_env SITE_INDEXABLE false
+ensure_env SITE_INDEXABLE true
 for key in DATABASE_URL AUTH_SECRET CRON_SECRET BRIEF_SECRET; do
 	# \042/\047 (çift/tek tırnak) düz çift-tırnaklı bir bash dizesinde oktal
 	# kaçış OLARAK ÇÖZÜLMÜYOR — yalnızca $'...' (ANSI-C) içinde çalışır. Bu
