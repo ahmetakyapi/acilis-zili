@@ -616,6 +616,7 @@ const tr = {
       "On iki hissenin trendi, destek ve dirençleri, alım bölgesi ve stop seviyeleri.",
     slotPremarket: "Açılış Öncesi",
     slotMidsession: "Seans İçi",
+    slotLateday: "Kapanış Öncesi",
     latestEdition: "Son Yayın",
     scheduleLabel: "Yayın Saatleri",
     schedule: "Her işlem günü {pre} ve {mid}",

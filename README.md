@@ -309,11 +309,11 @@ endeks bileşimleri.
 
 | Görev | Ne zaman | Nereye |
 |---|---|---|
-| Günlük bülten | her gün 16:00 TR | `POST /api/brief` → ana sayfa · Günün Özeti |
+| Günlük bülten | her gün 16:10 TR | `POST /api/brief` → ana sayfa · Günün Özeti |
 | Haftalık bülten | pazartesi 09:30 TR | `POST /api/brief` (`period: weekly`) → `/bulten` |
 | Mercek yazısı | her gün 11:30 ve 23:30 TR | `POST /api/mercek` → `/mercek` |
 | Bilanço analizi | her gün 09:00 TR | `POST /api/analiz` → `/bilancolar/analizler` |
-| Teknik analiz | işlem günleri 15:45 ve 19:45 TR | `POST /api/teknik` → `/teknik` |
+| Teknik analiz | işlem günleri 15:45, 19:45 ve 21:45 TR | `POST /api/teknik` → `/teknik` |
 
 Beşi de `BRIEF_SECRET` ile korunuyor ve her uç `?slug=` / `?symbol=&period=` /
 `?symbol=` ile yazdığını geri okuyabiliyor — rutin güncelleme yaparken bu

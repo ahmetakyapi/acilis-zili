@@ -20,17 +20,20 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 
 | # | Görev | Zamanlama | Cron (UTC) | Nereye yazar |
 |---|---|---|---|---|
-| 1 | Günlük Bülten | her gün 16:00 TR | `0 13 * * *` | Ana sayfa · Günün Özeti |
+| 1 | Günlük Bülten | her gün 16:10 TR | `10 13 * * *` | Ana sayfa · Günün Özeti |
 | 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
 | 3 | Mercek Yazısı | her gün 11:30 ve 23:30 TR (ABD kış saatinde 00:30) | `30 8,20 * * *` · kışın `30 8,21 * * *` | /mercek |
 | 4 | Bilanço Analizi | her gün 08:45 ve 23:45 TR (ABD kış saatinde 00:45) | `45 5,20 * * *` · kışın `45 5,21 * * *` | /bilancolar/analizler |
-| 5 | Teknik Analiz | işlem günleri 15:45 ve 19:45 TR | `45 12,16 * * 1-5` | /teknik |
+| 5 | Teknik Analiz | işlem günleri 15:45, 19:45 ve 21:45 TR | `45 12,16,18 * * 1-5` | /teknik |
 | 6 | Yaz Saati Nöbetçisi | Mart ve Kasım'da her Pazar 15:00 TR | `0 12 * 3,11 0` | 3 ve 4'ün akşam cron'u |
 
 > **Bu saatler kodda da yazılı.** Ana sayfadaki özet kartı, günün kaydı henüz
-> yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün 16:00'da
+> yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün 16:10'da
 > yayımlanır" der. Sayı `lib/data.ts` → `BRIEF_PUBLISH_TR` sabitinden geliyor;
-> aşağıdaki zamanlamayı değiştirirsen orayı da değiştir.
+> aşağıdaki zamanlamayı değiştirirsen orayı da değiştir. Teknik analizin
+> nöbetleri de kodda yazılı: `lib/technical.ts` → `TECHNICAL_CRON`,
+> `SLOT_UTC` ve `currentSlot`. Yeni bir nöbet eklerken üçü birden değişir —
+> yoksa yeni koşu kendini var olan bir nöbet sanıp onun ÜSTÜNE yazar.
 
 > **Saatler neden böyle.** Günlük senkron (`/api/cron/daily`, 13:30 TR —
 > sunucu crontab'ından tetikleniyor) veriyi veritabanına yazan taraftır;
@@ -40,8 +43,12 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 >
 > 16:00 aynı zamanda ABD açılışının hemen öncesidir, ama pay yıl boyu sabit
 > değil: Türkiye yaz saati uygulamadığı, ABD uyguladığı için açılış yazın
-> 16:30 TR, kışın 17:30 TR olur. Yani bülten yazın 30, kışın 90 dakika önce
-> düşer. Yazın daha rahat bir pay istersen 15:30 TR (`30 12 * * *`).
+> 16:30 TR, kışın 17:30 TR olur.
+>
+> **16:00 → 16:10 (18 Eylül 2026).** On dakika iki şeyi birden çözüyor:
+> 15:30'da açıklanan ABD verisi (TÜFE, istihdam) fiyata yansımış oluyor ve
+> teknik analizin 15:45 nöbeti — bazen on beş dakika sürüyor — bülten
+> yazılmadan bitiyor. Açılışa kalan pay yazın 20, kışın 80 dakika.
 
 **Hepsinde ortak iki şart:**
 
@@ -59,7 +66,7 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 
 # 1 · Günlük Bülten
 
-**Zamanlama:** her gün 16:00 TR (`0 13 * * *` UTC) — açılış zilinden hemen
+**Zamanlama:** her gün 16:10 TR (`10 13 * * *` UTC) — açılış zilinden hemen
 önce ve günlük senkrondan (13:30 TR) sonra.
 
 ````
@@ -988,10 +995,10 @@ geri gönderebilirsin.
 
 # 5 · Teknik Analiz
 
-**Zamanlama:** işlem günleri 15:45 ve 19:45 TR — TEK görev, cron
-`45 12,16 * * 1-5` (UTC).
+**Zamanlama:** işlem günleri 15:45, 19:45 ve 21:45 TR — TEK görev, cron
+`45 12,16,18 * * 1-5` (UTC).
 
-İki koşu, iki yayın:
+Üç koşu, üç yayın:
 
 - **15:45 — Açılış Öncesi.** Günün planı. Okuyucu seviyeleri zil çalmadan
   görsün diye açılıştan önce; ABD açılışı yazın 16:30, kışın 17:30 TR,
@@ -1002,11 +1009,30 @@ geri gönderebilirsin.
 - **19:45 — Seans İçi.** Güncelleme: sabahki seviyeler tuttu mu, kırıldı
   mı. Açılış oynaklığı durulmuş, kapanışa hâlâ saatler var (NY yazın 12:45,
   kışın 11:45).
+- **21:45 — Kapanış Öncesi.** Günün SON okuması, öğlenkinin tekrarı değil:
+  sabahki planın günü nasıl bitirdiğine dair tek cümlelik bir karne, ve son
+  `watch` maddesi yarına bakar (kapanışta teyit aranan seviye, kapanış
+  sonrası bilanço, ertesi sabahki veri). Fiyat öğlenki alım bölgesini
+  geçtiyse seviyeler yukarı taşınır; GÖRÜŞ ise yine ancak somut bir tetikle
+  değişir — "gün iyi geçti" tetik değildir. (NY yazın 14:45, kışın 13:45;
+  kapanışa yazın 75, kışın 135 dakika.)
 
-Türkiye yaz saati uygulamadığı için iki saat de yıl boyu aynı UTC anına
+Türkiye yaz saati uygulamadığı için üç saat de yıl boyu aynı UTC anına
 denk geliyor; cron'u mevsime göre değiştirmek gerekmiyor. Tatil ve yarım
 gün `session.slot` ile geliyor: seans yoksa görev hiçbir şey yazmadan
-biter.
+biter — yarım günlerde (13:00 ET kapanış) üçüncü nöbet zaten kapanıştan
+sonraya düşer ve `session.slot` null döner.
+
+> **Nöbet eklemek koda da dokunur.** `session.slot`u site hesaplıyor
+> (`lib/technical.ts` → `currentSlot`) ve rutin onu olduğu gibi gönderiyor;
+> kayıt (sembol, gün, slot) üçlüsüyle benzersiz. Üçüncü nöbet 18 Eylül
+> 2026'da eklendiğinde kod hâlâ iki slot biliyordu: 18:45 UTC'de
+> `currentSlot` "seans açık" diye `midsession` döndürüyor, rutin o slotla
+> yazıyor ve ÖĞLENKİ yayının üstüne biniyordu. Üstelik künyedeki saat
+> kayıttan değil `SLOT_UTC` tablosundan türediği için üçüncü yayın "19:45
+> TR" diye görünüyordu. Yeni bir nöbet için `TECHNICAL_SLOTS`, `SLOT_RANK`,
+> `SLOT_UTC`, `currentSlot`, `TECHNICAL_CRON` ve sözlükteki `slot*` etiketi
+> birlikte güncellenir.
 
 Göstergeleri site hesaplıyor (`lib/technical.ts`), görev yalnızca okuyor.
 Gerekçe: aynı sayı sayfada iki kaynaktan gelmesin — rutinin "RSI 71" dediği

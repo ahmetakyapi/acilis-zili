@@ -539,13 +539,18 @@ export async function getNewsForSymbol(
  * Bültenlerin yazılma saatleri, Türkiye saatiyle.
  *
  * Metinleri claude.ai zamanlanmış görevleri yazıyor (docs/claude-rutinler.md):
- * günlük 16:00'da — Vercel senkronundan sonra, ABD açılışından hemen önce —
+ * günlük 16:10'da — Vercel senkronundan sonra, ABD açılışından hemen önce —
  * ve haftalık pazartesi 09:30'da. Sayı burada duruyor çünkü ekranda da
  * söyleniyor: bugünün özeti henüz yoksa kart okuyucuya ne zaman geleceğini
  * yazıyor. Rutinlerin saati değişirse burası da değişmeli.
+ *
+ * 16:00 → 16:10 (18 Eylül 2026). On dakika iki şey için: 15:30'da açıklanan
+ * ABD verisi fiyata yansımış oluyor ve teknik rutinin 15:45 nöbeti — bazen
+ * on beş dakika sürüyor — bülten yazılmadan bitiyor. Yazın açılışa 20 dakika
+ * kalıyor (16:30 TR), kışın 80 (17:30 TR).
  */
 export const BRIEF_PUBLISH_TR: Record<BriefPeriod, string> = {
-  daily: "16:00",
+  daily: "16:10",
   weekly: "09:30",
 };
 

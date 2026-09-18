@@ -206,7 +206,7 @@ const BatchSchema = z.object({
 /** 400 yanıtında dönen beklenen gövde — rutin hatasını buradan düzeltir. */
 export const TECHNICAL_INPUT_SHAPE = {
   session_date: "YYYY-MM-DD — bağlamdaki session.date_et",
-  slot: "premarket | midsession — bağlamdaki session.slot",
+  slot: "premarket | midsession | lateday — bağlamdaki session.slot",
   items: [
     {
       symbol: `${TECHNICAL_SYMBOLS.join(" | ")}`,

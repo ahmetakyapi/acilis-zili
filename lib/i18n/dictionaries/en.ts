@@ -465,6 +465,7 @@ const en: typeof tr = {
       "Trends, support and resistance, entry zones and stops for twelve stocks.",
     slotPremarket: "Pre-Market",
     slotMidsession: "Midday",
+    slotLateday: "Late Session",
     latestEdition: "Latest Edition",
     scheduleLabel: "Schedule",
     schedule: "Every trading day at {pre} and {mid}",

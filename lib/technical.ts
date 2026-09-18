@@ -67,12 +67,14 @@ export function isTechnicalSymbol(value: string): value is TechnicalSymbol {
  * dakika gecikmeli geliyor, yani 16:30'da koşan bir rutin açılış öncesinin
  * fiyatını görürdü.
  */
-export const TECHNICAL_SLOTS = ["premarket", "midsession"] as const;
+export const TECHNICAL_SLOTS = ["premarket", "midsession", "lateday"] as const;
 
 export type TechnicalSlot = (typeof TECHNICAL_SLOTS)[number];
 
 export function isTechnicalSlot(value: string | null | undefined): value is TechnicalSlot {
-  return value === "premarket" || value === "midsession";
+  return (
+    value === "premarket" || value === "midsession" || value === "lateday"
+  );
 }
 
 /**
@@ -83,28 +85,54 @@ export function isTechnicalSlot(value: string | null | undefined): value is Tech
 export const SLOT_RANK: Record<TechnicalSlot, number> = {
   premarket: 0,
   midsession: 1,
+  lateday: 2,
 };
 
 /**
  * Rutinin koştuğu an — UTC olarak.
  *
- * TÜRKİYE YAZ SAATİ UYGULAMIYOR, bu yüzden 15:45 ve 19:45 TR yıl boyu aynı
- * UTC anına denk geliyor ve cron sabit yazılabiliyor. Değişen New York
+ * TÜRKİYE YAZ SAATİ UYGULAMIYOR, bu yüzden üç saat de yıl boyu aynı UTC
+ * anına denk geliyor ve cron sabit yazılabiliyor. Değişen New York
  * karşılığı: 15:45 TR yazın 08:45, kışın 07:45 NY. Ekrana yazılan saat bu UTC
  * anından o günün tarihiyle türetiliyor (`slotInstant`), sabit bir "08:45"
  * hiçbir yerde yok.
  *
- * İKİ YAYIN AYNI DAKİKADA: ikisi de :45. Böylece claude.ai'de iki ayrı görev
- * değil tek görev kuruluyor (`45 12,16 * * 1-5`) — mercek görevinin günde iki
- * koşusu da böyle. Seans içi yayın bu yüzden 19:45'te; açılış oynaklığı çoktan
- * durulmuş, kapanışa hâlâ saatler var (NY yazın 12:45, kışın 11:45).
+ * ÜÇ YAYIN AYNI DAKİKADA: üçü de :45. Böylece claude.ai'de üç ayrı görev
+ * değil tek görev kuruluyor (`45 12,16,18 * * 1-5`) — mercek görevinin günde
+ * iki koşusu da böyle.
+ *
+ * ÜÇÜNCÜ NÖBET SONRADAN GELDİ VE KOD ONU BİLMİYORDU. Rutin 18 Eylül 2026'da
+ * günde üç koşuya çıktı ama `TECHNICAL_SLOTS` iki değer taşıyordu: 18:45
+ * UTC'de `currentSlot` "seans açık" diye `midsession` döndürüyor, rutin o
+ * slotla yazıyor ve ÖĞLENKİ yayının üstüne biniyordu. İki zarar birden —
+ * günün ikinci okuması kayboluyor, üçüncüsü de künyesinde "19:45 TR"
+ * yazıyordu, çünkü saat kayıttan değil `SLOT_UTC` tablosundan türüyor.
+ * Üçüncü yayının kendi slotu var; ikisi de artık doğru.
  */
-export const TECHNICAL_CRON = "45 12,16 * * 1-5";
+export const TECHNICAL_CRON = "45 12,16,18 * * 1-5";
 
 export const SLOT_UTC: Record<TechnicalSlot, { hour: number; minute: number }> = {
   premarket: { hour: 12, minute: 45 },
   midsession: { hour: 16, minute: 45 },
+  lateday: { hour: 18, minute: 45 },
 };
+
+/**
+ * Seans içindeki iki yayının sınırı — ET 13:00.
+ *
+ * İkisi de ana seansta koşuyor, yani `status.session` ikisini ayıramıyor;
+ * ayrım saatle yapılmak zorunda. Sınır ABD'nin İKİ saat diliminde de
+ * doğru olmalı, çünkü cron UTC'ye çakılı ve New York karşılığı mevsimle
+ * kayıyor:
+ *
+ *     öğlen yayını   16:45 UTC → yazın 12:45, kışın 11:45 ET
+ *     kapanış öncesi 18:45 UTC → yazın 14:45, kışın 13:45 ET
+ *
+ * 13:00 dört değerin de doğru tarafında kalıyor. Sınır 14:00 seçilseydi kış
+ * saatinde üçüncü koşu (13:45) öğlen sayılır ve aynı üstüne yazma sorunu
+ * kışın geri gelirdi.
+ */
+const LATEDAY_FROM_ET = 13 * 60;
 
 /** O işlem gününde rutinin koştuğu an. */
 export function slotInstant(sessionDate: string, slot: TechnicalSlot): Date {
@@ -122,7 +150,9 @@ export function slotInstant(sessionDate: string, slot: TechnicalSlot): Date {
  */
 export function currentSlot(status: MarketStatus): TechnicalSlot | null {
   if (!status.tradingToday) return null;
-  if (status.session === "regular") return "midsession";
+  if (status.session === "regular") {
+    return status.etMinutes >= LATEDAY_FROM_ET ? "lateday" : "midsession";
+  }
   if (status.session === "pre-market") return "premarket";
   // Gece yarısından ön seansa kadar durum "closed" ama gün henüz başlamadı.
   if (status.session === "closed" && status.etMinutes < SESSION_BOUNDS.preMarketOpen) {
@@ -512,7 +542,9 @@ export function technicalHref(symbol: string): string {
 }
 
 export function slotLabel(slot: string, t: Dictionary): string {
-  return slot === "midsession" ? t.technical.slotMidsession : t.technical.slotPremarket;
+  if (slot === "midsession") return t.technical.slotMidsession;
+  if (slot === "lateday") return t.technical.slotLateday;
+  return t.technical.slotPremarket;
 }
 
 /**

@@ -627,7 +627,7 @@ export async function GET(request: Request) {
      yazıyordu (madde listesi hâlinde takvim + bilanço + endeks) ve 13:30'da
      günün slotunu dolduruyordu; kart 16:00'ya kadar bu mekanik metni "BUGÜN"
      rozetiyle gösteriyor, elle yazılmış dünkü bülteni ve eskime notunu hiç
-     göstermiyordu. Bülteni yalnızca claude.ai rutini yazar (16:00 TR,
+     göstermiyordu. Bülteni yalnızca claude.ai rutini yazar (16:10 TR,
      POST /api/brief); o saate kadar kart en son bülteni "dünün yazısı" notuyla
      gösterir — o mekanizma BriefSwitch'te hazır ve doğru davranış bu. */
 
