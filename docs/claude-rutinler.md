@@ -1116,7 +1116,8 @@ bitti. "Bugün teknik analiz yok" diye bitir.
 
 Yanıtta:
   session       → date_et (işlem günü), slot (premarket = açılış öncesi,
-                  midsession = seans içi), now / open / close (TR ve NY)
+                  midsession = seans içi, lateday = kapanış öncesi),
+                  now / open / close (TR ve NY)
   events_today  → günün yüksek önemli ekonomik verileri, TR ve NY saatiyle
   symbols[]     → takip listesindeki hisseler — KAÇ TANE OLDUĞU BU LİSTEDEN
                   okunur, ezberlenmez (liste `lib/technical.ts` →
