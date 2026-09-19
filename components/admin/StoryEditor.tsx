@@ -68,6 +68,16 @@ const BLOKLAR = [
   { ad: "bar", ornek: "::: bar Karşılaştırma\n- Etiket | 58,4\n:::" },
   { ad: "pay", ornek: "::: pay Pazar Payı\n- Şirket | 42\n:::" },
   { ad: "akis", ornek: "::: akis Zincir\n- Adım\n:::" },
+  /* `oncesi` LİSTEDE YOKTU ve çizicide vardı. Sonuç sessizdi: blok
+     ArticleBody'de çiziliyor, rutin promptunda (§ 3) anlatılıyor ama
+     panelden EKLENEMİYORDU — çip basmadığı için editördeki kimse onun
+     varlığını bilmiyordu. CLAUDE.md'nin "üç yeri birden güncelle"
+     kuralının tam olarak uyardığı hâl; üçüncü yer buydu.
+     Sözdizimi TAM İKİ SATIR: önce ve sonra. */
+  {
+    ad: "oncesi",
+    ornek: "::: oncesi Piyasa Değeri\n52,5 Mr $ | 12 Haziran\n19 Mr $ | 29 Temmuz\n:::",
+  },
   { ad: "zaman", ornek: "::: zaman Kronoloji\n- 12 Ağustos | Olay\n:::" },
   { ad: "grafik", ornek: "::: grafik NVDA | 3M | Açıklama\n:::" },
   { ad: "ornek", ornek: "::: ornek Hesap\n**Adım:** açıklama\n:::" },
