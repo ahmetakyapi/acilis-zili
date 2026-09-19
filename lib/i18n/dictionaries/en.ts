@@ -614,7 +614,7 @@ const en: typeof tr = {
     volumeDetail: "{n}× the Average",
     rangeDetail: "Low {low} · High {high}",
     priceMap: "Price Map",
-    priceMapNote: "Levels are placed to scale; distances are measured from the current price.",
+    priceMapNote: "Levels are ordered by price and spread apart where they cluster; distances are measured from the current price.",
     sectionsLabel: "Analysis Sections",
   },
 

@@ -6,6 +6,8 @@ import styles from "./Technical.module.css";
 
 /** Etiket başına ayrılan dikey yer. Bütün satırlar aynı yükseklikte. */
 const ROW_GAP = 46;
+/** Stopun altındaki bölgeye ayrılan dip şeridi. */
+const VOID_STRIP = 28;
 const MIN_HEIGHT = 360;
 const MAX_HEIGHT = 720;
 
@@ -19,8 +21,9 @@ const MAX_HEIGHT = 720;
  * stopun altı soluk kırmızı bir alan (plan orada geçersiz), şu anki fiyat
  * eksendeki tek nokta. Sıra ve uzaklık ilk bakışta okunuyor.
  *
- * Çakışan etiketler `priceMapLayout` ile itiliyor; işaret gerçek yerinde
- * kalır, etiket kayar ve ince bir bağ ikisini birleştirir.
+ * Ölçek `priceMapLayout` içinde ESNİYOR: birbirine yapışık seviyeler
+ * ayrılıyor, uzak olanların arası korunuyor ve her etiket kendi çentiğinin
+ * hizasında kalıyor. Bağ çizgisi yok, çünkü bağlanacak iki ayrı nokta yok.
  *
  * NOTLAR HARİTANIN İÇİNDE DEĞİL ALTINDA. Bir dönem her not kendi seviyesinin
  * satırına giriyordu ve satırlar ÇAKIŞIYORDU: itme algoritması her satıra
@@ -70,8 +73,15 @@ export function PriceMap({
   if (levels.length + (price !== null ? 1 : 0) < 2) return null;
 
   const rows = levels.length + (price !== null ? 1 : 0);
-  const height = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, rows * ROW_GAP + 40));
-  const { rungs, scale } = priceMapLayout(levels, price, { height, gap: ROW_GAP });
+  /* STOP ALTI ŞERİDİ YERLEŞİMİN DIŞINDA. Yükseklik son satırdan hemen sonra
+     bitiyordu ve stopun altındaki kırmızı alan iki piksele sıkışıp yalnız
+     bir kesikli çizgi olarak kalıyordu (ölçüldü: 1769–1771). Haritayı
+     büyütmek tek başına çözmedi: yerleşim boyu ne verilirse satırları ona
+     yayıyor, yani şerit yine kapanıyordu. Satırlar KISA boya yerleşiyor,
+     kutu şerit kadar UZUN çiziliyor; aradaki fark stopun altına kalıyor. */
+  const layoutHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, rows * ROW_GAP + 40));
+  const height = layoutHeight + (stop !== null ? VOID_STRIP : 0);
+  const { rungs, scale } = priceMapLayout(levels, price, { height: layoutHeight, gap: ROW_GAP });
   const money = (value: number) => formatPrice(value, locale, { currency: true });
   const sellSide = verdict === "sell";
 
@@ -106,7 +116,12 @@ export function PriceMap({
 
   const entryTop = entryLow !== null && entryHigh !== null ? scale(entryHigh) : null;
   const entryBottom = entryLow !== null && entryHigh !== null ? scale(entryLow) : null;
-  const stopY = stop !== null ? scale(stop) : null;
+  /* STOP ALTI BÖLGESİ SATIRIN ALTINDAN BAŞLIYOR, ORTASINDAN DEĞİL.
+     Kesikli kenar `scale(stop)`tan çizilince stop satırının tam ortasından
+     geçiyor ve yazının üstünü çiziyordu (ölçüldü, 390). Bölgenin anlamı
+     "bu satırın ALTINDA kalan her şey"; sınırı da satırın alt kenarı. */
+  const stopRung = rungs.find((rung) => rung.kind === "stop");
+  const stopY = stopRung ? stopRung.markY + ROW_GAP / 2 : null;
   const priceY = price !== null ? scale(price) : null;
 
   const kindOf = (rung: MapRung) =>
@@ -173,46 +188,12 @@ export function PriceMap({
         {priceY !== null && <span className={styles.mapHere} style={{ top: priceY }} />}
       </div>
 
-      {/* ---- Kılavuz çizgileri ----
-          Etiketler eşit aralıklı (ROW_GAP), çentikler fiyata orantılı; ikisi
-          arasındaki bağ bir dönem iki parçaydı — dikey bir çubuk ve satırın
-          solundaki yatay bir tırnak. Parçalar birbirine değmediği için hangi
-          çentiğin hangi satıra ait olduğu okunmuyordu; üstelik yatay tırnak
-          satırın altını çizen bir ayraç gibi duruyordu. Tek bir eğri ikisini
-          uçtan uca birleştiriyor. `viewBox` genişliği 100 ve
-          `preserveAspectRatio="none"`: kutu kırılma noktasına göre daralıyor,
-          çizgi onunla birlikte yatayda eziliyor ama `non-scaling-stroke`
-          sayesinde kalınlık sabit kalıyor.
-
-          BAĞ ARTIK DÜZ. Eğri bir S'ti ve komşu iki bağ birbirinin içinden
-          geçiyormuş gibi okunuyordu: telefonda kılavuz katmanı 23 piksel
-          geniş ve eğrinin iki kontrol noktası (62 ile 38) o darlıkta
-          tepeleri birbirine değen iki kavis üretiyor. Düz çizgi bunu
-          yapısal olarak çözüyor — çentikler de etiketler de fiyat sırasında
-          olduğu için iki düz bağ KESİŞEMEZ. */}
-      <svg
-        className={styles.mapLeaders}
-        aria-hidden
-        viewBox={`0 0 100 ${height}`}
-        preserveAspectRatio="none"
-      >
-        {/* HİZALI SATIRIN BAĞI ÇİZİLMİYOR. Etiket kendi çentiğinin
-            hizasındaysa (fark 6 pikselden az) bağ bir bilgi taşımıyor,
-            yalnızca çentikten satıra uzanan kısa bir tırnak oluyor —
-            haritada dört-beş satır böyle ve hepsi birden çizilince ray
-            saçaklı görünüyor. Bağ yalnızca etiket İTİLMİŞSE var; orada da
-            zaten "bu satır aslında şurada" demek için var. */}
-        {rungs
-          .filter((rung) => Math.abs(rung.labelY - rung.markY) >= 6)
-          .map((rung) => (
-            <path
-              key={`lead-${rung.kind}-${rung.price}`}
-              data-kind={kindOf(rung)}
-              vectorEffect="non-scaling-stroke"
-              d={`M 0 ${rung.markY} L 100 ${rung.labelY}`}
-            />
-          ))}
-      </svg>
+      {/* KILAVUZ ÇİZGİSİ KALKTI. Etiket artık kendi çentiğinin tam
+          hizasında (ölçek esniyor, bkz. `priceMapLayout`), yani bağlanacak
+          iki ayrı nokta yok. Telefonda o katman 23 piksel genişti ve
+          dört-beş neredeyse dikey çizgi taşıyordu; haritanın en karmaşık
+          parçasıydı ve hiçbir bilgi taşımıyordu — hangi çentiğin hangi
+          satıra ait olduğunu artık ortak hiza söylüyor. */}
 
       {/* ---- Basamaklar ---- */}
       <ol className={styles.mapRungs}>

@@ -456,18 +456,7 @@
    için nokta eksenden kopmuyor, bir sürgü başlığı gibi okunuyor. */
 .mapHere { position:absolute; left:5px; width:45px; height:2px; border-radius:1px; background:color-mix(in srgb, var(--primary) 55%, transparent); translate:0 -50%; }
 .mapHere::after { content:""; position:absolute; left:6px; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 3px var(--panel-fixed), 0 0 0 5px var(--primary-wash); }
-/* Kılavuz katmanı eksenin ortasında başlar, basamak listesinde biter.
-   YÜKSEKLİK AÇIKÇA %100. `top:0; bottom:0` yetmiyor: `<svg>` yerini
-   doldurulan (replaced) bir öğe ve mutlak konumlu replaced öğede
-   `height:auto` iken tarayıcı `bottom`u yok sayıp İÇSEL yüksekliği
-   kullanıyor (CSS 2.1 §10.6.5). Sonuç, 408 piksellik haritanın eğrilerinin
-   150 piksellik bir kutuya sıkışıp haritanın tepesinde toplanmasıydı. */
-.mapLeaders { position:absolute; left:27px; width:29px; top:0; height:100%; z-index:1; overflow:visible; fill:none; pointer-events:none; }
-.mapLeaders path { stroke:var(--line-strong); stroke-width:1.25; opacity:.55; }
-.mapLeaders path[data-kind="price"] { stroke:var(--primary); opacity:.7; }
-.mapLeaders path[data-kind="target"] { stroke:color-mix(in srgb, var(--up) 55%, transparent); }
-.mapLeaders path[data-kind="stop"], .mapLeaders path[data-kind="sellLevel"] { stroke:color-mix(in srgb, var(--down) 55%, transparent); }
-.mapRungs { position:absolute; left:56px; right:0; top:0; bottom:0; margin:0; padding:0; list-style:none; }
+.mapRungs { position:absolute; left:52px; right:0; top:0; bottom:0; margin:0; padding:0; list-style:none; }
 .mapRung { position:absolute; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; column-gap:12px; padding:7px 14px 7px 14px; border-radius:12px; transform:translateY(-50%); }
 /* ÜÇ VURGULU SATIR: ŞU AN, ALIM BÖLGESİ, STOP.
    Zemin bir dönem sağa doğru saydamlaşan bir geçişti ve telefonda satırın
@@ -657,8 +646,7 @@
   .mapTick { left:9px; width:25px; }
   .mapHere { left:2px; width:39px; }
   .mapHere::after { left:9px; }
-  .mapLeaders { left:21px; width:23px; }
-  .mapRungs { left:44px; }
+  .mapRungs { left:40px; }
   /* DAR EKRANDA SATIR SIKIŞTIRILIR VE SARMA GÜVENLİ HÂLE GETİRİLİR.
      En uzun etiket ("Alım Bölgesi") tek satır için 112 piksel istiyor ama
      390'da etiket sütununa 72 piksel düşüyor (ölçüldü) — çünkü aynı satırda

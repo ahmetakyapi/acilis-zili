@@ -773,7 +773,7 @@ const tr = {
     rangeDetail: "Dip {low} · Tepe {high}",
     /* ---- Fiyat haritası ---- */
     priceMap: "Fiyat Haritası",
-    priceMapNote: "Seviyeler fiyata orantılı yerleşir; uzaklıklar şu anki fiyattan ölçülür.",
+    priceMapNote: "Seviyeler fiyat sırasına göre dizilir, birbirine yakın olanlar okunabilsin diye ayrılır; uzaklıklar şu anki fiyattan ölçülür.",
     sectionsLabel: "Analiz Bölümleri",
   },
 

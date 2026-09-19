@@ -929,20 +929,34 @@ export function indicatorSignals(snapshot: TechnicalSnapshot, price: number | nu
 }
 
 /* --------------------------------------------------------------------------
-   Fiyat haritası — seviyelerin dikey eksende ORANTILI yerleşimi.
+   Fiyat haritası — seviyelerin dikey eksende yerleşimi.
 
    Merdiven eşit aralıklı satırlardı ve 2 dolar ile 20 dolar uzaktaki iki
-   seviye aynı mesafede duruyordu; harita her seviyeyi fiyata orantılı
-   koyuyor, yani "hedef uzak, stop yakın" göze kendiliğinden görünüyor.
-   Üst üste binen etiketler birbirinden en az `gap` piksel itiliyor; işaret
-   gerçek yerinde kalıyor, etiket kayıyor ve ikisini ince bir bağ çizgisi
-   birleştiriyor.
+   seviye aynı mesafede duruyordu; harita her seviyeyi fiyata GÖRE koyuyor,
+   yani "hedef uzak, stop yakın" göze kendiliğinden görünüyor.
+
+   EKSEN ESNİYOR, ETİKET İTİLMİYOR. Ölçek bir dönem düz orantılıydı ve
+   çakışan etiketler aşağı itiliyordu: işaret gerçek yerinde kalıyor, etiket
+   kayıyor, ikisini bir bağ çizgisi birleştiriyordu. Telefonda sonuç bir
+   yumaktı — bağ katmanı 23 piksel geniş, dört-beş çizgi neredeyse dikey ve
+   hangi çentiğin hangi satıra ait olduğu okunmuyordu. Daha kötüsü,
+   BÖLGELER yalan söylüyordu: alım bandı gerçek fiyat yerinde çiziliyor ama
+   "Alım Bölgesi" satırı yukarı itilmiş oluyor, bant komşu satırın
+   ("Destek") çevresine oturuyordu (ekran görüntüsüyle geldi).
+
+   Artık ölçeğin kendisi esniyor: seviyeler ham orantılı yerlerine konuyor,
+   sonra sıra bozulmadan en az `gap` piksel aralık bırakacak şekilde
+   gevşetiliyor ve ölçek bu noktalardan geçen MONOTON parçalı doğru oluyor.
+   Uzak duran seviyeler arasındaki büyük boşluk korunuyor, yalnızca
+   birbirine yapışık olanlar açılıyor. Karşılığında işaret ile etiket AYNI
+   y'de: bağ çizgisine gerek kalmıyor, bant kendi satırını sarıyor, stopun
+   altı gerçekten stopun altındaki satırları kaplıyor.
    -------------------------------------------------------------------------- */
 
 export type MapRung = (Level | { kind: "price"; price: number }) & {
-  /** İşaretin gerçek yeri (piksel, üstten). */
+  /** İşaretin yeri (piksel, üstten). */
   markY: number;
-  /** Etiketin yeri — çakışma çözülünce işaretten kayabilir. */
+  /** Etiketin yeri — esneyen ölçekte işaretle aynı. */
   labelY: number;
 };
 
@@ -951,11 +965,20 @@ export type MapRung = (Level | { kind: "price"; price: number }) & {
  *
  * Eksen en düşük ile en yüksek seviye arasında, %6 pay ile (LevelTrack ile
  * aynı gerekçe). Alım bölgesi işaretini bölgenin ORTASINA koyuyor; bant
- * ayrıca çiziliyor. Çakışma iki geçişle çözülüyor: yukarıdan aşağı it, alt
- * sınırı aşarsa aşağıdan yukarı geri çek.
+ * ayrıca çiziliyor.
+ *
+ * Üç adım: ham orantılı yer, sıra bozulmadan gevşetme, gevşemiş noktalardan
+ * geçen ölçek. Gevşetme iki geçişli — yukarıdan aşağı en az `gap` bırak,
+ * taban aşılırsa aşağıdan yukarı geri çek. Dönen `scale` bu noktalardan
+ * geçtiği için bant ve stop altı bölgesi satırlarla AYNI eksende kalıyor.
  */
 const topOf = (rung: Level | { kind: "price"; price: number }) =>
   "high" in rung && rung.high !== undefined ? rung.high : rung.price;
+
+const anchorOf = (rung: Level | { kind: "price"; price: number }) =>
+  "high" in rung && rung.high !== undefined && rung.kind === "entry"
+    ? (rung.price + rung.high) / 2
+    : rung.price;
 
 export function priceMapLayout(
   levels: readonly Level[],
@@ -972,26 +995,55 @@ export function priceMapLayout(
   const lo = min - pad;
   const hi = max + pad;
   const usable = height - inset * 2;
-  const scale = (value: number) => inset + (1 - (value - lo) / (hi - lo)) * usable;
+  const raw = (value: number) => inset + (1 - (value - lo) / (hi - lo)) * usable;
 
   const base: (Level | { kind: "price"; price: number })[] = [...levels];
   if (price !== null) base.push({ kind: "price", price });
   const rungs: MapRung[] = base
     .map((rung) => {
-      const anchor = rung.kind === "entry" && rung.high !== undefined ? (rung.price + rung.high) / 2 : rung.price;
-      const y = scale(anchor);
+      const y = raw(anchorOf(rung));
       return { ...rung, markY: y, labelY: y };
     })
     .sort((a, b) => a.markY - b.markY || topOf(b) - topOf(a));
 
-  for (let i = 1; i < rungs.length; i++) {
-    rungs[i]!.labelY = Math.max(rungs[i]!.labelY, rungs[i - 1]!.labelY + gap);
-  }
   const floor = height - inset;
-  for (let i = rungs.length - 1; i >= 0; i--) {
-    const ceiling = i === rungs.length - 1 ? floor : rungs[i + 1]!.labelY - gap;
-    rungs[i]!.labelY = Math.max(inset, Math.min(rungs[i]!.labelY, ceiling));
+  for (let i = 1; i < rungs.length; i++) {
+    rungs[i]!.markY = Math.max(rungs[i]!.markY, rungs[i - 1]!.markY + gap);
   }
+  for (let i = rungs.length - 1; i >= 0; i--) {
+    const ceiling = i === rungs.length - 1 ? floor : rungs[i + 1]!.markY - gap;
+    rungs[i]!.markY = Math.max(inset, Math.min(rungs[i]!.markY, ceiling));
+  }
+  for (const rung of rungs) rung.labelY = rung.markY;
+
+  /* Ölçek: fiyattan piksele MONOTON parçalı doğru. Kontrol noktaları
+     eksenin iki ucu ve gevşemiş seviye yerleri; aynı fiyata iki nokta
+     düşerse ilki kalıyor ki eğri tersine dönmesin. */
+  const control: { price: number; y: number }[] = [{ price: hi, y: inset }];
+  for (const rung of rungs) {
+    const value = anchorOf(rung);
+    const last = control[control.length - 1]!;
+    if (value < last.price && rung.markY > last.y) control.push({ price: value, y: rung.markY });
+  }
+  const tail = control[control.length - 1]!;
+  if (lo < tail.price && floor > tail.y) control.push({ price: lo, y: floor });
+
+  const scale = (value: number) => {
+    if (!Number.isFinite(value)) return inset;
+    const first = control[0]!;
+    if (value >= first.price) return first.y;
+    for (let i = 1; i < control.length; i++) {
+      const a = control[i - 1]!;
+      const b = control[i]!;
+      if (value >= b.price) {
+        const span = a.price - b.price;
+        const t = span === 0 ? 0 : (a.price - value) / span;
+        return a.y + t * (b.y - a.y);
+      }
+    }
+    return control[control.length - 1]!.y;
+  };
+
   return { rungs, scale };
 }
 
