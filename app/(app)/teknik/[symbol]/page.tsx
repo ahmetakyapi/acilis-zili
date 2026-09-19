@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -49,6 +49,7 @@ import {
   formatEtDateLong,
   formatPercent,
   formatPrice,
+  proseParagraphs,
   tieFigures,
 } from "@/lib/utils";
 
@@ -382,19 +383,33 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         <div id="technical-reading" className="flex min-w-0 flex-col gap-4">
           <section className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.summary}</h2>
-            <p className={styles.prose} lang={copyLang}>
-              {tieFigures(copy.summary)}
-            </p>
+            {/* DEĞERLENDİRME TEK BLOK DEĞİL. Rutin metni tek paragraf olarak
+                yazıyor ve telefonda sonuç on üç satırlık kesintisiz bir
+                duvardı (ölçüldü, 390): okuyucu nerede kaldığını kaybediyor.
+                Metne dokunulmuyor, yalnızca cümle sınırlarından gruplanıp
+                ayrı paragraflar basılıyor (`proseParagraphs`). İlk paragraf
+                bir kademe büyük ve koyu — gazete girişi gibi: göz metne
+                oradan giriyor, gerisi gövde ritminde akıyor. */}
+            <div className={styles.proseStack} lang={copyLang}>
+              {proseParagraphs(copy.summary).map((paragraph, index) => (
+                <p key={paragraph.slice(0, 24)} className={index === 0 ? styles.proseLede : styles.prose}>
+                  {tieFigures(paragraph)}
+                </p>
+              ))}
+            </div>
           </section>
           <section className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.scenarios}</h2>
             <div className={styles.scenarios} data-motion-stagger>
+              {/* Başlığın yanındaki ok senaryonun yönünü RENKTEN BAĞIMSIZ
+                  söylüyor: renk körlüğünde iki kart yalnızca tonla
+                  ayrılıyordu ve ikisi de aynı gri-yeşile düşüyordu. */}
               <div className={styles.scenario} data-tone="up">
-                <h3>{t.technical.bullCase}</h3>
+                <h3><TrendUp size={15} weight="bold" aria-hidden />{t.technical.bullCase}</h3>
                 <p lang={copyLang}>{tieFigures(copy.bull)}</p>
               </div>
               <div className={styles.scenario} data-tone="down">
-                <h3>{t.technical.bearCase}</h3>
+                <h3><TrendDown size={15} weight="bold" aria-hidden />{t.technical.bearCase}</h3>
                 <p lang={copyLang}>{tieFigures(copy.bear)}</p>
               </div>
             </div>
@@ -421,9 +436,13 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       <div id="technical-watch" className={styles.twoCol}>
         <section className={styles.block}>
           <h2 className={styles.sectionTitle}>{t.technical.volumeRead}</h2>
-          <p className={styles.prose} lang={copyLang}>
-            {tieFigures(copy.volume)}
-          </p>
+          <div className={styles.proseStack} lang={copyLang}>
+            {proseParagraphs(copy.volume).map((paragraph) => (
+              <p key={paragraph.slice(0, 24)} className={styles.prose}>
+                {tieFigures(paragraph)}
+              </p>
+            ))}
+          </div>
         </section>
         <section className={styles.block}>
           <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>

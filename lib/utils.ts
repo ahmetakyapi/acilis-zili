@@ -126,6 +126,51 @@ export function tieCurrency(text: string): string {
   return text.replace(TIE_MONEY, "$1\u00A0$2");
 }
 
+/**
+ * UZUN BİR METNİ OKUNABİLİR PARAGRAFLARA BÖLER.
+ *
+ * Teknik analizin değerlendirme metnini rutin TEK blok olarak yazıyor ve
+ * telefonda sonuç on üç satırlık kesintisiz bir duvardı (ölçüldü, 390):
+ * okuyucu nerede kaldığını kaybediyor, sayı yoğun cümleler birbirine
+ * giriyordu. Metne dokunulmuyor — yalnızca CÜMLE SINIRLARINDAN gruplanıp
+ * ayrı paragraflar olarak basılıyor.
+ *
+ * Kırılma noktası: nokta/ünlem/soru işaretinden sonra BOŞLUK ve ardından
+ * büyük harf ya da rakam. Ondalık ayraç bu yüzden güvende — "1.581,86"da
+ * noktadan sonra boşluk yok. Kısa metin hiç bölünmüyor; sondaki tek
+ * cümlelik artık, öncekine katılıyor ki yetim bir satır kalmasın.
+ */
+export function proseParagraphs(
+  text: string,
+  { min = 200, max = 380 }: { min?: number; max?: number } = {},
+): string[] {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+  /* Yazar kendisi boş satırla bölmüşse ona dokunulmuyor. */
+  const written = trimmed.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
+  if (written.length > 1) return written;
+  if (trimmed.length <= max) return [trimmed];
+
+  const sentences = trimmed.split(/(?<=[.!?])\s+(?=[A-ZÇĞİÖŞÜ0-9"“(])/u);
+  const paragraphs: string[] = [];
+  let current = "";
+  for (const sentence of sentences) {
+    current = current ? `${current} ${sentence}` : sentence;
+    if (current.length >= min) {
+      paragraphs.push(current);
+      current = "";
+    }
+  }
+  if (current) {
+    if (paragraphs.length > 0 && current.length < min / 2) {
+      paragraphs[paragraphs.length - 1] = `${paragraphs[paragraphs.length - 1]} ${current}`;
+    } else {
+      paragraphs.push(current);
+    }
+  }
+  return paragraphs;
+}
+
 /** Piyasa yönü — renk ve işaret kararları hep bunun üzerinden verilir. */
 export type Direction = "up" | "down" | "flat";
 

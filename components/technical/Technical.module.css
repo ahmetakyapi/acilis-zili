@@ -379,7 +379,15 @@
 .block { display:flex; min-width:0; flex-direction:column; gap:14px; padding:22px 24px; border:1px solid var(--line); border-radius:20px; background:var(--premium-surface); box-shadow:var(--premium-shadow); }
 .blockHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 14px; }
 .blockNote { font-size:12px; color:var(--text-muted); }
+/* ---- Okuma metni ----
+   Paragraf yığını: rutin metni tek blok yazıyor, sayfa cümle
+   sınırlarından bölüp ayrı paragraflar basıyor (gerekçe `proseParagraphs`).
+   İlk paragraf bir kademe büyük ve koyu — okuyucu metne oradan giriyor;
+   gerisi gövde ritminde. Aralık 12 piksel: paragraflar ayrı okunuyor ama
+   blok dağılmıyor. */
+.proseStack { display:flex; flex-direction:column; gap:12px; }
 .prose { color:var(--text-body); font-size:15px; line-height:1.75; text-wrap:pretty; }
+.proseLede { color:var(--text-strong); font-size:16.5px; line-height:1.65; font-weight:450; letter-spacing:-.005em; text-wrap:pretty; }
 .footHint { font-size:12px; line-height:1.55; color:var(--text-muted); }
 
 /* ---- Fiyat haritası ----
@@ -524,10 +532,11 @@
 .scenario { display:flex; flex-direction:column; gap:8px; padding:14px 16px; border-left:2px solid var(--line); border-radius:12px; }
 .scenario[data-tone="up"] { border-left-color:var(--up); background:linear-gradient(120deg, var(--up-wash), transparent); }
 .scenario[data-tone="down"] { border-left-color:var(--down); background:linear-gradient(120deg, var(--down-wash), transparent); }
-.scenario h3 { font-size:13px; font-weight:700; letter-spacing:.01em; }
+.scenario h3 { display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:750; letter-spacing:.01em; }
+.scenario h3 svg { flex:none; }
 .scenario[data-tone="up"] h3 { color:var(--up); }
 .scenario[data-tone="down"] h3 { color:var(--down); }
-.scenario p { color:var(--text-body); font-size:14px; line-height:1.65; text-wrap:pretty; }
+.scenario p { color:var(--text-body); font-size:14.5px; line-height:1.7; text-wrap:pretty; }
 
 /* ---- Gösterge panelleri ---- */
 /* SÜTUN SAYISI SABİT, `auto-fill` DEĞİL. Altı panel 1440px'de 4+2
@@ -645,7 +654,12 @@
   .planCells { padding:12px; }
   .scenarios { grid-template-columns:minmax(0,1fr); }
   .block { padding:18px 16px; }
-  .prose { font-size:14px; line-height:1.7; }
+  /* TELEFONDA PUNTO DÜŞMÜYOR. Okuma metni 14'e iniyordu; aynı ekranda
+     gösterge açıklamaları 12,5, künyeler 12 punto ve hepsi birbirine
+     yaklaşınca sayfa tek tonda griye dönüyordu. Ana metin 15'te kalıyor,
+     giriş paragrafı 16 — hiyerarşi telefonda da duruyor. */
+  .prose { font-size:15px; line-height:1.7; }
+  .proseLede { font-size:16px; line-height:1.6; }
   .rsiReading { min-height:144px; }
   .rsiValue { font-size:27px; }
   /* Mobilde eksenin ortası 21,5 (ray 44). Dört öğe de ona göre. */
