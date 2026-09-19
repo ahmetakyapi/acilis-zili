@@ -560,7 +560,13 @@ export function formatCompact(
       unit = units[i - 1]!;
       scaled = value / unit.v;
     }
-    return `${nf(digitsFor(scaled)).format(scaled)} ${unit.s}`;
+    /* BİRİM SAYIDAN KOPMAZ. Aradaki boşluk düz bir boşluktu ve dar bir
+       hücrede satır tam oradan kırılıyordu: karşılaştırma tablosunda 58
+       piksellik sütunda "4,43" bir satırda, "T $" ötekinde duruyor ve satır
+       ötekilerden 19 piksel uzuyordu (ölçüldü). `MONEY_GAP` bu depoda zaten
+       para simgesi için kullanılıyor; birim kısaltması da aynı kuralın
+       içinde — ikisi tek bir okuma. */
+    return `${nf(digitsFor(scaled)).format(scaled)}${MONEY_GAP}${unit.s}`;
   }
   return nf(digitsFor(value)).format(value);
 }

@@ -918,6 +918,7 @@ const en: typeof tr = {
     chartMissingHint:
       "The provider returned no bars for these symbols, so the period return row is empty too.",
     tableRegion: "Comparison Table",
+    tableTitle: "Metrics Table",
     secondSymbolHint:
       "A single series is normalized to its own start, so it says nothing beyond one line leaving zero.",
     fullHint: "Four symbols is the limit; remove one to add another.",

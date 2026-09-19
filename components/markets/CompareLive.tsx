@@ -25,6 +25,7 @@ import {
   SegmentItem,
   Skeleton,
 } from "@/components/ui/primitives";
+import { ScaleBar } from "@/components/markets/CompareScale";
 import { seriesColorOf } from "@/lib/chart-series";
 import {
   COMPARE_RANGES,
@@ -33,6 +34,7 @@ import {
   coverageNote,
   isCompareRange,
   periodChangePct,
+  scaleRatios,
   type CompareRange,
   type CompareSeries,
 } from "@/lib/compare";
@@ -462,6 +464,17 @@ export function CompareStrip({
 }) {
   const { symbols, range, series, phase, locale } = useCompare();
 
+  /* ŞERİDİN KENDİ ÖLÇEĞİ. Ekranın en üstündeki soru "hangisi önde" ve
+     cevabı dört yüzdeyi okuyarak veriliyordu. Çubuk aynı sıralamayı
+     uzunluk olarak da söylüyor; sayılar yerinde duruyor, sıra okunmadan
+     çıkıyor. Tavan tabloyla AYNI hesaptan (`scaleRatios`) geliyor, yoksa
+     aynı sembolün çubuğu iki yerde iki boyda olurdu. */
+  const { signed, ratios } = scaleRatios(
+    symbols.map((entry) =>
+      periodChangePct(series.find((row) => row.symbol === entry)),
+    ),
+  );
+
   return (
     <Panel>
       <div className="flex items-center gap-3 border-b border-line-soft px-4 py-2 sm:px-5">
@@ -535,20 +548,30 @@ export function CompareStrip({
                 )}
               </span>
 
-              <span className="flex w-[86px] shrink-0 justify-end sm:w-[104px]">
+              <span className="flex w-[86px] shrink-0 flex-col items-end sm:w-[104px]">
                 {phase === "loading" ? (
                   <Skeleton className="h-4 w-14 rounded-full" />
                 ) : pct === null ? (
                   <span className="numeral text-base text-muted">—</span>
                 ) : (
-                  <span
-                    className={cn(
-                      "numeral text-base font-bold",
-                      directionText(directionOf(pct)),
+                  <>
+                    <span
+                      className={cn(
+                        "numeral text-base font-bold",
+                        directionText(directionOf(pct)),
+                      )}
+                    >
+                      {formatPercent(pct, locale)}
+                    </span>
+                    {ratios[symbols.indexOf(row.symbol)] != null && (
+                      <ScaleBar
+                        ratio={ratios[symbols.indexOf(row.symbol)]!}
+                        signed={signed}
+                        tone="signal"
+                        className="mt-1"
+                      />
                     )}
-                  >
-                    {formatPercent(pct, locale)}
-                  </span>
+                  </>
                 )}
               </span>
 
@@ -685,7 +708,7 @@ export function ComparePeriodLabel({ labels }: { labels: CompareLabels }) {
 }
 
 export function ComparePeriodValue({ symbol }: { symbol: string }) {
-  const { series, phase, locale } = useCompare();
+  const { symbols, series, phase, locale } = useCompare();
 
   if (phase === "loading") {
     return <Skeleton className="ml-auto h-3.5 w-16 rounded-full" />;
@@ -696,6 +719,18 @@ export function ComparePeriodValue({ symbol }: { symbol: string }) {
   );
   if (pct === null) return <>—</>;
 
+  /* ÖLÇEK BURADA KURULUYOR, TABLODA DEĞİL. Öteki satırların çubukları
+     sunucuda hesaplanıyor (`olcekler`, sayfa dosyasında) ama bu satırın
+     sayısı aralıkla birlikte istemcide değişiyor: sunucudan gelen bir oran
+     düğmeye basıldığı anda eskir. Sağlayıcı dört sembolün serisini de
+     tutuyor, yani hücre satırın tavanını kendisi görebiliyor. */
+  const { signed, ratios } = scaleRatios(
+    symbols.map((entry) =>
+      periodChangePct(series.find((row) => row.symbol === entry)),
+    ),
+  );
+  const oran = ratios[symbols.indexOf(symbol)];
+
   const kapsam = coverageNote(series, symbol, locale);
   return (
     <div className="flex flex-col items-end gap-0.5">
@@ -705,6 +740,9 @@ export function ComparePeriodValue({ symbol }: { symbol: string }) {
         {formatPercent(pct, locale)}
       </span>
       {kapsam && <span className="numeral text-nano text-muted">{kapsam}</span>}
+      {oran != null && (
+        <ScaleBar ratio={oran} signed={signed} tone="signal" />
+      )}
     </div>
   );
 }

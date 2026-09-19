@@ -80,6 +80,48 @@ Kenarlık yalnızca görsel OLMAYAN yer tutucularda kalır. Elimizdeki tek gerç
 görsel kaynağı şirket logoları (`symbols.logo_url`, Finnhub): mercek kapakları
 ve haber künyeleri ondan besleniyor.
 
+## Ekran düzeni: aynı sıra, her ekranda
+
+Ekranlar tek tek tasarlandı ve her biri kendi çözümünü buldu; sonuç, aynı
+ürünün içinde birbirine benzemeyen sayfalardı. Kural artık tek: **bir ekranı
+tanımak için okumak gerekmiyor, sırası hep aynı.**
+
+1. **Başlık** — `PageHeader`: üst künye, ad, tek cümlelik açıklama, sağda o
+   ekranın tek denetimi (varsa).
+2. **Künye/seçim şeridi** — ekranın neyi anlattığı: şirket kimliği, seçili
+   semboller, kapak.
+3. **Ana görsel** — grafik ya da harita. Tek tane; ikincisi varsa ölçü
+   ızgarasının altına iner.
+4. **Ölçü ızgarası** — sayılar. Yan yana duran ölçüler AYNI HATTA biter
+   (alt ızgara ya da `table-fixed`), birimler sayıdan kopmaz (`MONEY_GAP`,
+   `tieFigures`).
+5. **Metin** — yorum, değerlendirme, senaryo.
+6. **Künyeler ve uyarılar** — panelin İÇİNDE, hairline ile ayrılmış düz
+   paragraflar. Bir uyarı için yeni kutu açılmaz.
+7. **`DataStamp`**, sonra **`GuideHint`**.
+
+Buna bağlı üç kural:
+
+**Her panelin bir `h2`si var.** Karşılaştırma ekranında ölçü tablosu
+başlıksızdı: grafikten sonra doğrudan bir sütun başlığı satırına
+("METRİK NVDA AMD…") giriliyordu ve panelin nerede başladığı yalnızca
+çizgiden anlaşılıyordu. Başlık kalıbı `PanelHeader`; kutu değil, ton.
+
+**Karşılaştırılan her büyüklük bir de ÇİZGİ olarak okunur.** Dört sütunlu
+bir tabloda "hangisi büyük" sorusu basamak basamak okunarak cevaplanıyordu.
+Sayının altındaki ince çubuk aynı bilgiyi uzunluk olarak veriyor; sıralama
+okumadan çıkıyor (`components/markets/CompareScale.tsx`). Çubuk bir
+BÜYÜKLÜK, bir yargı değil: hangi F/K'nin iyi olduğunu ekran söylemez, renk
+yalnızca artı/eksi işaretinden gelir. Karşılaştırılamayan bir ölçüde
+(farklı şirketlerin hisse fiyatı) çubuk HİÇ basılmaz — olmayan bir sıralamayı
+varmış gibi gösterirdi.
+
+**Kaydırma saklanmaz.** Dar ekranda sığmayan tablo `table-fixed` ile kabına
+zorlanmaz: sabit yerleşimde tablo her zaman kap kadar geniştir ve bölünemez
+bir değer hücresinden taşıp komşu sayının üstüne biner — kaydırma yerine
+çakışma. Tabana bir genişlik verilir, kaydırma geri gelir ve sabit etiket
+sütunu ile "devamı var" işareti onu okunur tutar.
+
 ## Düzen: ölçmeden değiştirme
 
 Yerleşim kararları tahminle verilmiyor. Bir boşluk "fazla duruyorsa" önce

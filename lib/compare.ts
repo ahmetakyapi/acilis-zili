@@ -174,3 +174,36 @@ export function coverageNote(
     }).format(new Date(unix * 1000));
   return `${bicim(ts[0])} — ${bicim(ts[ts.length - 1])}`;
 }
+
+/* --------------------------------------------------------------------------
+   Ölçek oranları — sayının yanındaki çubuğun boyu
+
+   BURADA, ÇİZİCİDE DEĞİL: oran hem sunucu sayfasında (tablonun sekiz
+   satırı) hem istemcide (dönem getirisi satırı ve sembol şeridi)
+   kuruluyor. İki taraf ayrı hesaplasaydı aynı sembolün çubuğu iki yerde
+   iki boyda çıkabilirdi; dosyanın başındaki gerekçenin aynısı.
+   -------------------------------------------------------------------------- */
+
+/** Satırdaki değerlerden çubuk oranı — 0 ile 1 arası, işaretli modda ±1. */
+export function scaleRatios(values: (number | null)[]): {
+  signed: boolean;
+  ratios: (number | null)[];
+} {
+  const dolu = values.filter((value): value is number => value !== null);
+  /* Tek değer bir karşılaştırma değil: bir sembol kaldığında (ya da üçü
+     birden boşken) çubuk her zaman tam dolu çıkar ve "en büyük bu" diye
+     okunur. Karşılaştıracak ikinci sayı yoksa çubuk hiç basılmıyor. */
+  if (dolu.length < 2) return { signed: false, ratios: values.map(() => null) };
+
+  /* İŞARET VARSA SIFIR ORTADA. Getiri satırlarında dördü birden artıdayken
+     sıfırdan büyüyen bir çubuk daha çok çözünürlük veriyor; içlerinden biri
+     eksiye düştüğü anda aynı çubuk yalan söylerdi (kısa ama aynı yönde).
+     Eksi bir değer varsa ölçek ortadan açılıyor. */
+  const signed = dolu.some((value) => value < 0);
+  const tavan = Math.max(...dolu.map((value) => Math.abs(value)));
+  if (tavan <= 0) return { signed, ratios: values.map(() => null) };
+  return {
+    signed,
+    ratios: values.map((value) => (value === null ? null : value / tavan)),
+  };
+}

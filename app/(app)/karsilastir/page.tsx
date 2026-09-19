@@ -16,10 +16,12 @@ import {
   DataStamp,
   PageHeader,
   Panel,
+  PanelHeader,
 } from "@/components/ui/primitives";
 import { seriesColorOf } from "@/lib/chart-series";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { CompareAdd } from "@/components/markets/CompareAdd";
+import { RangeTrack, ScaleBar } from "@/components/markets/CompareScale";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { getI18n } from "@/lib/i18n";
@@ -30,6 +32,7 @@ import {
   MAX_COMPARE_SYMBOLS,
   isCompareRange,
   parseCompareSymbols,
+  scaleRatios,
   type CompareRange,
   type CompareSeries,
 } from "@/lib/compare";
@@ -244,6 +247,18 @@ async function CompareBoard({
   };
   const yabanciSembol = symbols.filter((_, i) => yabanciPara(i));
 
+  /* F/K TEK YERDE. Oran hem hücrede hem ölçek çubuğunda okunuyor ve ikisi
+     ayrı hesaplarsa aynı satırda birbirini tutmayan bir sayı ve bir uzunluk
+     çıkardı — bu depoda "aynı sayı iki yerde duruyorsa aynı kaynaktan
+     gelmeli" kuralının tam karşılığı. */
+  const peRatioFor = (i: number) => {
+    const metrics = metricResults[i];
+    if (!metrics?.ok) return null;
+    return yabanciPara(i)
+      ? metrics.data.peRatio
+      : peRatioOf(quotes[symbols[i]]?.price, metrics.data.eps);
+  };
+
   /* Satırlar tek yerde tanımlı: hem geniş ekrandaki tablo hem mobildeki
      kart yığını aynı diziden besleniyor, ikisi birbirinden kayamıyor. */
   const rows: {
@@ -260,6 +275,12 @@ async function CompareBoard({
     /** Ölçünün altındaki mikro künye — cümle düzeninde. */
     caption?: string;
     value: (index: number) => React.ReactNode;
+    /* ÇUBUĞUN HAM SAYISI. Sunum katmanı biçimlendirilmiş metni okuyup
+       ("%52,4") geri sayıya çeviremez; ölçek satırın kendi sayısından
+       kuruluyor. Gerekçesi `components/markets/CompareScale.tsx`te. */
+    scale?: (index: number) => number | null;
+    /** Çubuğun rengi yönü mü anlatıyor — gerekçesi `ScaleBar`ın `tone`u. */
+    signal?: boolean;
   }[] = [
     {
       group: "return",
@@ -290,6 +311,8 @@ async function CompareBoard({
       group: "return",
       key: "dayChange",
       label: t.compare.dayChange,
+      scale: (i) => quotes[symbols[i]]?.changePct ?? null,
+      signal: true,
       value: (i) => {
         const quote = quotes[symbols[i]];
         if (!quote) return "—";
@@ -322,6 +345,7 @@ async function CompareBoard({
       group: "valuation",
       key: "marketCap",
       label: t.market.marketCap,
+      scale: (i) => liveMarketCap(names[symbols[i]], quotes[symbols[i]]?.price),
       value: (i) => {
         /* CANLI hesap — sağlayıcının `marketCap` alanı profil çekildiği anın
            fotoğrafı ve profil ~29 günde bir tazeleniyor. Aynı şirket bu
@@ -349,21 +373,17 @@ async function CompareBoard({
          yedi kat ucuz görünüyordu. USD dışında sağlayıcının kendi oranı
          kullanılıyor — o oran ana borsanın içinde kurulduğu için birimsiz ve
          tutarlı (TSM'de 27,87). */
-      value: (i) => {
-        const metrics = metricResults[i];
-        if (!metrics?.ok) return "—";
-        return formatPrice(
-          yabanciPara(i)
-            ? metrics.data.peRatio
-            : peRatioOf(quotes[symbols[i]]?.price, metrics.data.eps),
-          locale,
-        );
-      },
+      scale: (i) => peRatioFor(i),
+      value: (i) => formatPrice(peRatioFor(i), locale),
     },
     {
       group: "valuation",
       key: "dividend",
       label: t.stock.dividend,
+      scale: (i) => {
+        const metrics = metricResults[i];
+        return metrics?.ok ? metrics.data.dividendYield : null;
+      },
       value: (i) => {
         const metrics = metricResults[i];
         /* Yüzde işareti elle BAŞA konuyordu: İngilizce tarafta "%0.46"
@@ -381,6 +401,10 @@ async function CompareBoard({
       group: "risk",
       key: "beta",
       label: t.stock.beta,
+      scale: (i) => {
+        const metrics = metricResults[i];
+        return metrics?.ok ? metrics.data.beta : null;
+      },
       value: (i) => {
         const metrics = metricResults[i];
         return metrics?.ok && metrics.data.beta !== null
@@ -402,20 +426,60 @@ async function CompareBoard({
            görünüyordu. Kod yazılınca ikisinin farklı ölçüler olduğu
            okunuyor. */
         const kod = names[symbols[i]]?.currency;
-        const opts = { currency: kod ?? true } as const;
-        /* PARA BİRİMİ BİR KEZ, TİRE ALT SINIRA YAPIŞIK.
-           Bant dar sütunda satır atlıyordu ve kırılma noktası tirenin iki
-           yanındaki boşluklardı: 360 pikselde hücre "164,07 $" / "—" /
-           "236,54 $" diye ÜÇ satıra bölünüyor, ortadaki satırda tek başına
-           bir tire kalıyordu. İki düzeltme birden: simge tek bir aralığın
-           iki ucunda iki kez yazılmasına gerek olmadığı için yalnızca üst
-           sınırda duruyor (yabancı borsa kodu da orada görünüyor), ve tire
-           alt sınıra bağlantısız boşlukla bağlı — artık tek başına satıra
-           düşemiyor. */
+        /* PARA BİRİMİ YALNIZCA DOLAR DIŞINDA. Tablonun geri kalanı
+           birimsiz okunuyor — "Son Fiyat" satırı da "181,44" diyor, "$"
+           demiyor — ve bandın tek başına simge taşıması tutarsızdı. Simgenin
+           iş gördüğü tek yer ADR satırı: orada bant ana borsanın parasında
+           ve KOD yazılmazsa dolar sanılıyor. Dipnot da o hâlde basılıyor. */
+        const yabanci = kod && kod !== "USD" ? kod : false;
+        /* BANT KURUŞ İSTEMEZ. İki uç 64 piksellik sütuna iki satır hâlinde
+           sığıyordu ("86,62" / "212,19 $" alt alta, satır 72px; öteki
+           satırlar 55px — ölçüldü) ve raggedlığın tek kaynağı buydu. Kuruş
+           bir ANLIK fiyatın hassasiyeti; 52 haftalık bir bandın iki ucunda
+           212,19 ile 212 arasındaki fark bandın binde biri kadar. Basamak
+           iki uçta da AYNI ve tavanın büyüklüğünden çıkıyor: üç haneli
+           bantta kuruş yok, tek haneli bir hissede iki hane duruyor. */
+        const basamak =
+          metrics.data.high52 >= 100 ? 0 : metrics.data.high52 >= 10 ? 1 : 2;
+        const opts = { currency: yabanci, digits: basamak } as const;
+        /* İŞARETÇİ YALNIZCA AYNI PARA BİRİMİNDE — gerekçesi
+           `RangeTrack`in başında: ADR'de fiyat dolar, bant ana borsanın
+           parası ve işaretçi bandın dışına düşer. */
+        const fiyat = yabanciPara(i) ? null : quotes[symbols[i]]?.price;
+        const bant = metrics.data.high52 - metrics.data.low52;
+        const yer =
+          typeof fiyat === "number" && bant > 0
+            ? (fiyat - metrics.data.low52) / bant
+            : null;
+        /* PARA BİRİMİ BİR KEZ: simge tek bir aralığın iki ucunda iki kez
+           yazılmasına gerek olmadığı için yalnızca üst sınırda duruyor
+           (yabancı borsa kodu da orada görünüyor).
+
+           Bir dönem iki sınır arasında bir tire vardı ve satır atlaması onun
+           iki yanındaki boşluklardan geliyordu: 360 pikselde hücre
+           "164,07 $" / "—" / "236,54 $" diye ÜÇ satıra bölünüyor, ortadaki
+           satırda tek başına bir tire kalıyordu. Tire bağlantısız boşlukla
+           alt sınıra yapıştırıldı ve hücre iki satıra indi — ölçüldü, hâlâ
+           iki satırdı (60px; öteki satırlar 41px). Tirenin işini artık ray
+           yapıyor ve iki sınır rayın iki UCUNDA duruyor: hücre tek satıra
+           indi ve "fiyat bandın neresinde" sorusu okunmadan cevaplanıyor. */
         return (
-          <span className="numeral text-small text-body">
-            {formatPrice(metrics.data.low52, locale)} —{" "}
-            {formatPrice(metrics.data.high52, locale, opts)}
+          /* İKİ SAYI DEĞİL, BİR KONUM. Uçlar rayın iki ucunda duruyor ve
+             aralarındaki tire kalktı: tirenin işini artık rayın kendisi
+             yapıyor. */
+          <span className="flex flex-col items-stretch">
+            <RangeTrack position={yer} />
+            {/* UÇLAR BİR TIK İÇERİDE. Ray hücrenin tamamına yayılıyor ama
+                uçtaki sayılar hücre kenarına yapışınca komşu sütunun sayısı
+                8 piksel öteye düşüyor ve ikisi tek bir sayı gibi okunuyordu
+                ("212 76"). Girinti rayı kısaltmıyor, yalnızca sayıları
+                ayırıyor. */}
+            <span className="numeral mt-1 ml-auto flex w-full max-w-[128px] items-baseline justify-between gap-1.5 px-0.5 text-nano text-muted">
+              <span>
+                {formatPrice(metrics.data.low52, locale, { digits: basamak })}
+              </span>
+              <span>{formatPrice(metrics.data.high52, locale, opts)}</span>
+            </span>
           </span>
         );
       },
@@ -428,6 +492,10 @@ async function CompareBoard({
       key: "netMargin",
       label: t.compare.netMargin,
       caption: t.analysis.trailing12m,
+      scale: (i) => {
+        const metrics = metricResults[i];
+        return metrics?.ok ? metrics.data.netMarginPct : null;
+      },
       value: (i) => {
         const metrics = metricResults[i];
         return metrics?.ok && metrics.data.netMarginPct !== null
@@ -471,6 +539,20 @@ async function CompareBoard({
       rows: rows.filter((row) => row.group === key),
     }))
     .filter((group) => group.rows.length > 0);
+
+  /* ÖLÇEKLER SATIR BAŞINA BİR KEZ. Oran satırdaki en büyük değere göre
+     kuruluyor, yani hücre kendi başına hesaplayamaz — dört sütunun da
+     sayısını görmesi gerekiyor. Anahtar satırın `key`i: dizinin sırası
+     değişse de ölçek satırıyla birlikte taşınıyor (grup anahtarında aynı
+     tuzak bir kez yaşandı). */
+  const olcekler = Object.fromEntries(
+    rows
+      .filter((row) => row.scale)
+      .map((row) => [
+        row.key,
+        scaleRatios(symbols.map((_, i) => row.scale!(i))),
+      ]),
+  ) as Record<string, ReturnType<typeof scaleRatios> | undefined>;
 
   /* Ölçü bloğu çöken semboller — beş satır birden sessizce tireye
      düşüyordu. */
@@ -577,18 +659,58 @@ async function CompareBoard({
            "devamı var" işaretini geri getiriyor — deponun dört yerdeki
            yerleşik kalıbı. */}
       <Panel>
+        {/* BAŞLIK HER PANELDE. Şerit ve grafik birer h2 taşıyor, tablo
+            taşımıyordu: ekran "Dönem Getirisi" grafiğinden sonra doğrudan
+            bir sütun başlığı satırına ("METRİK NVDA AMD…") giriyordu ve
+            tablonun nereden başladığı yalnızca çizgiden anlaşılıyordu.
+            Aynı ekranda üç panel, üç aynı başlık kalıbı. */}
+        <PanelHeader title={t.compare.tableTitle} />
         <ScrollEdges
           className="scroll-x-hint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
           tabIndex={0}
           role="region"
           aria-label={t.compare.tableRegion}
         >
-          <table className="w-full text-sm">
+          {/* SAĞ BOŞLUK SARMALAYICIDA, HÜCREDE DEĞİL. Son sütunun sayısı
+              panelin kenarına 4 piksel kala bitiyordu; panelin öteki
+              içerikleri (künyeler, şirket listesi) 16 piksel girintili ve
+              tablo tek başına kenardan taşıyor gibi duruyordu. Boşluğu son
+              hücreye dolgu olarak vermek o sütunu ÖTEKİLERDEN DAR yapıyor;
+              sarmalayıcıya verilince tablonun tamamı daralıyor ve dört
+              sütun eşit kalıyor.
+              `table-fixed`: eşit sütun İSTENİYOR. Otomatik yerleşim sütunu
+              içeriğine göre geriyordu ve dört sütun 390 pikselde
+              72/75/79/87 çıkıyordu (ölçüldü) — aynı satırdaki dört sayı
+              farklı hatlarda bitiyordu. */}
+          <div className="w-full pr-4 sm:pr-5">
+          <table
+            className="w-full table-fixed text-sm"
+            /* TABAN GENİŞLİK: `table-fixed` tek başına taşmayı ÇÖZMÜYOR,
+               saklıyor. Sabit yerleşimde tablo her zaman kabı kadar geniş
+               olduğu için 320 pikselde sütun 41 piksele iniyor ve
+               "4,43 T $" gibi bölünemez bir değer hücresinden taşıp komşu
+               sayının üstüne biniyordu — kaydırma yerine ÇAKIŞMA. Taban
+               genişlik verilince tablo kabından geniş kalabiliyor ve
+               kaydırma geri geliyor: sabit etiket sütunu ve "devamı var"
+               işareti zaten bunun için duruyor.
+               Sayılar ölçüldü: etiket sütunu 104, bir sayı sütununun
+               sığdığı en dar ölçü 58 (12 puntoda "+ %39,35" 46 piksel +
+               8 dolgu + 4 ayrım). 390 pikselde dört sembolde toplam tam
+               336 ve kaba tam oturuyor; 360'ta 30, 320'de 70 piksel
+               kayıyor. */
+            style={{ minWidth: `${104 + symbols.length * 58}px` }}
+          >
             <thead>
               <tr className="border-b border-line-soft text-left text-nano uppercase tracking-wider text-muted">
                 <th
                   scope="col"
-                  className="sticky left-0 z-10 w-[104px] bg-(--panel-fixed) px-2.5 py-2.5 font-medium sm:w-[168px] sm:px-4 md:px-5"
+                  /* SABİTLİK YALNIZCA KAYAN GENİŞLİKLERDE. Tablo artık
+                     390 pikselden itibaren kabına sığıyor; kaydırma
+                     yalnızca 360 ve altında kalıyor. Sabit sütunun kendi
+                     zemini (`--panel-fixed`) geniş ekranda panelin
+                     zemininden bir ton ayrı duruyor ve tablonun solunda
+                     sebepsiz bir şerit bırakıyordu. */
+                  className="sticky left-0 z-10 w-[104px] bg-(--panel-fixed) px-2.5 py-2.5 font-medium sm:static sm:z-auto sm:w-[168px] sm:bg-transparent sm:px-4 md:px-5"
                 >
                   {t.compare.metric}
                 </th>
@@ -651,7 +773,7 @@ async function CompareBoard({
                     >
                       <th
                         scope="row"
-                        className="sticky left-0 z-10 bg-(--panel-fixed) px-2.5 py-2.5 text-left text-small font-medium text-muted sm:px-4 md:px-5"
+                        className="sticky left-0 z-10 bg-(--panel-fixed) px-2.5 py-2.5 text-left text-small font-medium text-muted sm:static sm:z-auto sm:bg-transparent sm:px-4 md:px-5"
                       >
                         {row.label}
                         {row.caption && (
@@ -671,9 +793,24 @@ async function CompareBoard({
                              tam `sm`de (640px) şirket satırları da tabloya
                              döndüğü için eski dolguya bir anda çıkmak beş
                              piksellik bir kaydırma bırakıyordu. */
-                          className="px-1 py-2.5 text-right text-base text-body sm:px-2.5 md:px-4"
+                          /* PUNTO DAR EKRANDA 12. Sütun 390 pikselde 58
+                             piksel ve iş gören en geniş değer sekiz glif:
+                             "+ %39,35" 13 puntoda 50 piksel istiyor, hücre
+                             içi de tam 50 — dört sütunun sayıları
+                             birbirine değiyordu (ölçüldü). Bir punto aşağısı
+                             46 piksel: aradaki dört piksel sütunları ayıran
+                             boşluk. 640'tan sonra yer var, orada 13'e
+                             dönüyor. */
+                          className="px-1 py-2.5 text-right text-small text-body sm:px-2.5 sm:text-base md:px-4"
                         >
                           {row.value(index)}
+                          {olcekler[row.key]?.ratios[index] != null && (
+                            <ScaleBar
+                              ratio={olcekler[row.key]!.ratios[index]!}
+                              signed={olcekler[row.key]!.signed}
+                              tone={row.signal ? "signal" : "neutral"}
+                            />
+                          )}
                         </td>
                       ))}
                     </tr>
@@ -682,6 +819,7 @@ async function CompareBoard({
               ))}
             </tbody>
           </table>
+          </div>
         </ScrollEdges>
 
         {/* ---- Şirket künyesi — YALNIZCA DAR EKRANDA ----

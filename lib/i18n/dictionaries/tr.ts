@@ -1147,6 +1147,7 @@ const tr = {
     chartMissingHint:
       "Sağlayıcı bu semboller için bar döndürmedi; dönem getirisi satırı da bu yüzden boş.",
     tableRegion: "Karşılaştırma Tablosu",
+    tableTitle: "Ölçü Tablosu",
     secondSymbolHint:
       "Tek seri kendi başlangıcına göre yüzdeye çevrildiği için sıfırdan çıkan bir çizgiden başka bir şey söylemiyor.",
     fullHint: "Sınır dört sembol; birini çıkarınca yenisini ekleyebilirsin.",
