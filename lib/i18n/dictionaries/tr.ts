@@ -675,9 +675,33 @@ const tr = {
     range52High: "Tepe",
     range52Below: "Tepenin {n} Altında",
     range52AtHigh: "Tepede",
+    /* NE ANLATIYOR — HER KUTUNUN BAŞINDA.
+       Göstergeler sayfası RSI, MACD ve pivot gibi adları hiç açıklamadan
+       basıyordu: değeri okuyan ama ölçünün ne olduğunu bilmeyen okuyucu
+       için sayfa bir gösterge paneli değil bir bilmeceydi. Her kutu artık
+       başlığının altında bir-iki cümleyle kendini anlatıyor; cümleler
+       jargonsuz ve iddiasız — "şu sayı şu demek", "al" ya da "sat" değil. */
+    maLead:
+      "Son 20, 50, 100 ve 200 seansın ortalama kapanışı. Fiyat ortalamanın üstündeyse o dönemde alan taraf önde, altındaysa satan taraf.",
+    rsiLead:
+      "Yükselişin hızını 0 ile 100 arasında ölçer. 70'in üstü hızlı yükseliş, 30'un altı hızlı düşüş demek — tek başına al ya da sat sinyali değil.",
+    macdLead:
+      "İki hareketli ortalamanın arasındaki farkı izler. MACD sinyal çizgisinin üstündeyse hareket hızlanıyor, altındaysa yavaşlıyor demektir.",
+    volumeLead:
+      "O seansta kaç hisse el değiştirdi. Ortalamanın üstü hareketin arkasında gerçek ilgi olduğunu, altı hareketin cılız kaldığını gösterir.",
+    atrLead:
+      "Fiyatın bir günde ortalama ne kadar oynadığı. Stop bu salınımın içinde kalırsa sıradan bir gün bile onu tetikler.",
+    range52Lead:
+      "Son bir yılın en düşük ve en yüksek fiyatı; işaret bugünkü fiyatın bu bandın neresinde durduğunu gösterir.",
+    pivotsLead:
+      "Önceki seansın en yüksek, en düşük ve kapanışından hesaplanan referans fiyatlar. P denge noktası: üstü alıcının, altı satıcının bölgesi sayılır. R direnç, S destek adayıdır.",
+    pivotR2: "2. Direnç",
+    pivotR1: "1. Direnç",
+    pivotP: "Denge Noktası",
+    pivotS1: "1. Destek",
+    pivotS2: "2. Destek",
     maNote: "Yüzde, güncel fiyatın ortalamaya göre farkı; merdivendeki uzaklık ise fiyattan seviyeye.",
     pivots: "Pivot Seviyeleri",
-    pivotsNote: "Önceki seansın en yüksek, en düşük ve kapanış fiyatından hesaplanır.",
     scenarios: "Senaryolar",
     bullCase: "Yükseliş Senaryosu",
     bearCase: "Düşüş Senaryosu",
@@ -823,7 +847,7 @@ const tr = {
     averageDistance: "Ortalamaya Göre Fark",
     analystReading: "12 Aylık Tavsiye Dağılımı",
     movingAveragesNote:
-      "Son 50, 100 ve 200 işlem gününün kapanış ortalaması. Yanındaki yüzde, güncel fiyatın ortalamaya göre farkı.",
+      "Son 50, 100 ve 200 işlem gününün kapanış ortalaması. Fiyat ortalamanın üstündeyse o dönemde alan taraf önde, altındaysa satan taraf; yanındaki yüzde aradaki farkı gösterir.",
     movingAveragesShort:
       "Ortalama için yeterli geçmiş yok; elimizde {n} işlem günü var.",
     /* Sağlayıcı başka bir menkul kıymetin rakamlarını gönderdiğinde.

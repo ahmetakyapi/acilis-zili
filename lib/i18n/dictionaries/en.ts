@@ -524,9 +524,27 @@ const en: typeof tr = {
     range52High: "High",
     range52Below: "{n} Below the High",
     range52AtHigh: "At the High",
+    maLead:
+      "The average close of the last 20, 50, 100 and 200 sessions. Above the average, buyers led that stretch; below it, sellers did.",
+    rsiLead:
+      "Measures how fast price has risen on a 0–100 scale. Above 70 means a fast run up, below 30 a fast drop — on its own it is not a buy or sell signal.",
+    macdLead:
+      "Tracks the gap between two moving averages. When MACD sits above its signal line the move is speeding up; below it, slowing down.",
+    volumeLead:
+      "How many shares changed hands that session. Above average means real interest behind the move; below it, a thin move.",
+    atrLead:
+      "How much the price swings in an average day. A stop inside that swing gets hit on an ordinary day.",
+    range52Lead:
+      "The lowest and highest price of the past year; the marker shows where today's price sits in that band.",
+    pivotsLead:
+      "Reference prices from the previous session's high, low and close. P is the balance point: above it is the buyers' side, below it the sellers'. R levels are resistance candidates, S levels support.",
+    pivotR2: "Resistance 2",
+    pivotR1: "Resistance 1",
+    pivotP: "Pivot",
+    pivotS1: "Support 1",
+    pivotS2: "Support 2",
     maNote: "The percentage is the current price's distance from each average; the ladder measures from price to level.",
     pivots: "Pivot Levels",
-    pivotsNote: "Calculated from the previous session's high, low and close.",
     scenarios: "Scenarios",
     bullCase: "Bull Case",
     bearCase: "Bear Case",
@@ -663,7 +681,7 @@ const en: typeof tr = {
     averageDistance: "Distance From Average",
     analystReading: "12-Month Recommendation Mix",
     movingAveragesNote:
-      "Average close over the last 50, 100 and 200 trading days. The percentage next to it is how far the current price sits from that average.",
+      "Average close over the last 50, 100 and 200 trading days. Above the average, buyers led that stretch; below it, sellers did — the percentage next to it is the gap.",
     movingAveragesShort:
       "Not enough history for an average; we have {n} trading days.",
     metricsMismatch:

@@ -54,6 +54,21 @@ function Head({ title, tag, tagClass, icon: Mark }: { title: string; tag?: strin
   );
 }
 
+/**
+ * Kutunun ne anlattığı — başlığın hemen altında, bir-iki cümle.
+ *
+ * Panel RSI, MACD ve pivot gibi adları hiç açıklamadan basıyordu: sayıyı
+ * okuyan ama ölçüyü bilmeyen okuyucu için sayfa bir gösterge panosu değil
+ * bilmeceydi. Cümleler jargonsuz ve İDDİASIZ: "şu sayı şu demek" diyor,
+ * "al" ya da "sat" demiyor — görüşü yazan rutin, gösterge değil.
+ *
+ * Kutunun içindeki eski künyeler (yüzdenin neye göre olduğu, çubuğun ekseni)
+ * yerinde kalıyor; onlar ÇİZİMİ açıklıyor, bu satır ÖLÇÜYÜ.
+ */
+function Lead({ children }: { children: React.ReactNode }) {
+  return <p className={styles.indicatorLead}>{children}</p>;
+}
+
 function crossText(sessions: number, t: Dictionary): string {
   if (sessions === 0) return t.technical.lastSession;
   /* "1 Sessions Ago" — İngilizcede sayı 1 iken çoğul kalıyordu. */
@@ -95,6 +110,7 @@ function MovingAveragesPanel({
         tag={cross ? `${cross.kind === "golden" ? t.technical.goldenCross : t.technical.deathCross} · ${crossText(cross.sessions, t)}` : null}
         tagClass={cross?.kind === "golden" ? "text-up" : "text-down"}
       />
+      <Lead>{t.technical.maLead}</Lead>
       {/* İKİ YÖN, TEK SAYFA. Bu panel "fiyat ortalamanın ne kadar üstünde"
           diyor (hisse sayfasındaki ortalama paneliyle aynı okuma); merdiven
           ve pivotlar ise "seviyeye ne kadar var". Aynı 50 günlük burada yeşil
@@ -152,6 +168,7 @@ function RsiPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; locale
         tag={zoneLabel}
         tagClass={zone === "overbought" ? "text-down" : zone === "oversold" ? "text-up" : "text-muted"}
       />
+      <Lead>{t.technical.rsiLead}</Lead>
       {rsi !== null ? (
         <div className={styles.rsiReading}>
           {/* A bounded 0–100 reading, not an invented time series. Thresholds
@@ -198,6 +215,7 @@ function MacdPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; local
         tag={above === null ? null : above ? t.technical.macdAbove : t.technical.macdBelow}
         tagClass={above ? "text-up" : "text-down"}
       />
+      <Lead>{t.technical.macdLead}</Lead>
       {macd ? (
         <>
           <dl className={styles.rows}>
@@ -256,6 +274,7 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
         tag={ratio !== null ? `${formatPrice(ratio, locale, { digits: 1 })}×` : null}
         tagClass={ratio !== null && ratio >= 1 ? "text-primary-ink" : "text-muted"}
       />
+      <Lead>{t.technical.volumeLead}</Lead>
       <dl className={styles.rows}>
         <div className={styles.row}>
           <dt>{t.technical.volumeLast}</dt>
@@ -315,6 +334,7 @@ function RangePanel({
   return (
     <section className={styles.indicator}>
       <Head title={t.technical.atr} icon={Pulse} />
+      <Lead>{t.technical.atrLead}</Lead>
       <p className={styles.bigFigure}>
         {formatPrice(atr14, locale, { currency: true })}
         {atrShare !== null && (
@@ -336,6 +356,7 @@ function RangePanel({
             </span>
           )}
         </div>
+        <Lead>{t.technical.range52Lead}</Lead>
         {position !== null && (
           <div className={styles.band} aria-hidden>
             <span style={{ left: `${position}%` }} />
@@ -367,22 +388,29 @@ function PivotPanel({
 }) {
   const pivots = snapshot.pivots;
   if (!pivots) return null;
+  /* KISALTMANIN YANINDA ADI. "R2 · S1" satırları ölçüyü bilene bir şey
+     söylüyor, bilmeyene hiçbir şey; ad yazılınca satır kendi kendini
+     anlatıyor ve kısaltma da öğreniliyor. */
   const rows = [
-    ["R2", pivots.r2],
-    ["R1", pivots.r1],
-    ["P", pivots.p],
-    ["S1", pivots.s1],
-    ["S2", pivots.s2],
+    ["R2", t.technical.pivotR2, pivots.r2],
+    ["R1", t.technical.pivotR1, pivots.r1],
+    ["P", t.technical.pivotP, pivots.p],
+    ["S1", t.technical.pivotS1, pivots.s1],
+    ["S2", t.technical.pivotS2, pivots.s2],
   ] as const;
   return (
     <section className={styles.indicator}>
       <Head title={t.technical.pivots} icon={Crosshair} />
+      <Lead>{t.technical.pivotsLead}</Lead>
       <dl className={styles.rows}>
-        {rows.map(([label, value]) => {
+        {rows.map(([label, name, value]) => {
           const distance = distancePct(value, price);
           return (
             <div key={label} className={styles.row}>
-              <dt className="font-semibold">{label}</dt>
+              <dt className={styles.pivotLabel}>
+                <b>{label}</b>
+                <span>{name}</span>
+              </dt>
               <dd>
                 <span>{formatPrice(value, locale, { currency: true })}</span>
                 {distance !== null && (
@@ -395,7 +423,6 @@ function PivotPanel({
           );
         })}
       </dl>
-      <p className={styles.indicatorNote}>{t.technical.pivotsNote}</p>
     </section>
   );
 }

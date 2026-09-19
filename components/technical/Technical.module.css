@@ -563,6 +563,16 @@
 .volumeScale > span:last-child { right:0; }
 .band { position:relative; height:8px; border-radius:4px; background:linear-gradient(90deg, var(--down-wash), var(--surface-sunken), var(--up-wash)); }
 .band > span { position:absolute; top:-4px; width:4px; height:16px; border-radius:2px; background:var(--primary); transform:translateX(-2px); }
+/* KUTUNUN AÇIKLAMASI — başlığın altında, sayıların üstünde.
+   Künyeden (`.indicatorNote`) bir kademe daha okunur: o satır çizimi
+   anlatıyor ve kutunun dibinde duruyor, bu satır ÖLÇÜYÜ anlatıyor ve
+   okuyucunun sayıya bakmadan önce görmesi gerekiyor. `pretty` sarması son
+   satırda tek kelime bırakmıyor. */
+.indicatorLead { margin:-2px 0 2px; font-size:12.5px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
+/* Pivot satırında kısaltma ve adı: kalın kısaltma, yanında sessiz ad. */
+.pivotLabel { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 7px; }
+.pivotLabel b { font-weight:750; letter-spacing:.01em; color:var(--text-strong); }
+.pivotLabel span { font-size:var(--text-nano); font-weight:600; color:var(--text-muted); }
 .indicatorNote { font-size:12px; line-height:1.55; color:var(--text-muted); text-wrap:pretty; }
 /* RSI yarım daire: 0-100'lük sınırlı bir okuma, uydurma bir zaman serisi
    değil. Eşikler ve işaret aynı yayın üstünde. */
