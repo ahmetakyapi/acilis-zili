@@ -1,4 +1,4 @@
-import { cn, titleCaseLabel } from "@/lib/utils";
+import { cn, tieCurrency, tieFigures, titleCaseLabel } from "@/lib/utils";
 import { SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/earnings/EarningsReport.module.css";
 
@@ -55,11 +55,17 @@ export function MetricCards({
           <SpotlightCard className={styles.metricCard}>
           <div className={styles.metricTop}>
           <p className={styles.metricLabel}>
-            {metric.label}
+            {tieFigures(metric.label)}
           </p>
           </div>
+          {/* DEĞER BAĞLANMIYOR. "18,60 Mr $" dar kartta sığmıyor ve
+              bölünmez yapılırsa `overflow-wrap:anywhere` onu rastgele bir
+              yerden ("18,60 M" / "r $") kesiyor. Sarması gerekiyorsa
+              birimin başından sarsın; künyede ise bağ doğru, orada satır
+              zaten uzun ve tek başına kalan simge yazım hatası gibi
+              okunuyor. */}
           <p className={cn(styles.metricValue, "figure")}>
-            {metric.value}
+            {tieCurrency(metric.value)}
           </p>
           {metric.note && (
             /* Bağlam satırı KIRILMAZ: "▲ Yıllık %372 · Beklenti Üstü" iki
@@ -76,7 +82,7 @@ export function MetricCards({
                     : "text-primary",
               )}
             >
-              {titleCaseLabel(metric.note, locale)}
+              {tieFigures(titleCaseLabel(metric.note, locale))}
             </p>
           )}
           </SpotlightCard>

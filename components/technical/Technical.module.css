@@ -81,14 +81,26 @@
    14 puntoluk başlık üç satıra sığmıyor, plan satırlarında üç hedef
    fiyatın yanında kırılıyordu. 1440'ta üç sütun, 1024'te iki, telefonda
    bir; kart 470-520px boyunda (ölçüldü). */
-.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap:18px; }
-.cell { display:flex; min-width:0; }
+/* KART BÖLÜMLERİ KOMŞU KARTLARLA AYNI SATIRDA.
+   Kartın içinde altı bölüm var (kimlik, fiyat, plan, manşet, çipler, ayak)
+   ve her biri kendi boyundaydı: SAT görüşlü kartın plan kutusunda iki satır
+   varken (tepkide satış + en yakın destek) AL kartında üç satır oluyor ve o
+   kartın altındaki her şey 28 piksel yukarı kayıyordu (ölçüldü, 1440).
+   Sonuç, yan yana üç kartın manşetlerinin, çiplerinin ve ayak satırlarının
+   farklı hatlarda durmasıydı.
+   `subgrid` zinciri (ızgara → hücre → kart) altı satırı ortaklaştırıyor:
+   plan kutusu iki satırlıksa fazlası boşluk olarak kalıyor, bölümler
+   hizasını koruyor. Satır aralığı kart İÇİNDE de geçerli olduğu için
+   ızgaranın satır aralığı 14'e indi ve kartlar arasındaki 18 piksel
+   hücrenin alt kenarından tamamlanıyor. */
+.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 340px), 1fr)); column-gap:18px; row-gap:14px; }
+.cell { display:grid; grid-template-rows:subgrid; grid-row:span 6; min-width:0; margin-bottom:4px; }
 /* Kartın TAMAMI tek bağlantı değil. Öyleydi ve bağlantının erişilebilir adı
    kartın bütün metniydi (sembol, fiyat, 280 karaktere kadar başlık, lejant,
    çipler); ekran okuyucuda hisseler arasında başlıkla da gezinilemiyordu.
    Bağlantı artık sembol başlığının içinde; `::after` kartı kaplıyor, yani
    tıklama alanı aynı kalıyor. */
-.card { position:relative; display:flex; flex:1; flex-direction:column; gap:14px; min-width:0; padding:20px 20px 16px; border:1px solid var(--line); border-radius:22px; background:var(--premium-surface); box-shadow:var(--premium-shadow); transition:border-color .2s, box-shadow .25s, transform .25s; }
+.card { position:relative; display:grid; grid-template-rows:subgrid; grid-row:span 6; min-width:0; padding:20px 20px 16px; border:1px solid var(--line); border-radius:22px; background:var(--premium-surface); box-shadow:var(--premium-shadow); transition:border-color .2s, box-shadow .25s, transform .25s; }
 .card:hover { border-color:var(--primary-faint); box-shadow:var(--premium-shadow-hover); transform:translateY(-2px); }
 .card:has(.cardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
 .cardLink { color:inherit; }
@@ -139,7 +151,7 @@
 .chip::before { content:""; width:6px; height:6px; border-radius:50%; background:var(--text-muted); opacity:.6; }
 .chip[data-tone="up"]::before { background:var(--up); opacity:1; }
 .chip[data-tone="down"]::before { background:var(--down); opacity:1; }
-.cardFoot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
+.cardFoot { display:flex; align-items:center; align-self:end; justify-content:space-between; gap:10px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
 .cardRead { display:inline-flex; align-items:center; gap:4px; color:var(--primary-ink); font-weight:600; }
 .cardRead svg { transition:transform .2s; }
 .card:hover .cardRead svg { transform:translate(2px,-2px); }
@@ -324,15 +336,25 @@
 .coverSignals { grid-column:1 / -1; padding-top:20px; border-top:1px solid var(--line); }
 
 /* ---- Gösterge özeti: dört kelime ---- */
-.signals { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px 20px; margin:0; }
-.signal { display:flex; min-width:0; flex-direction:column; gap:5px; padding-left:14px; border-left:2px solid var(--line); }
+/* DÖRT KÜNYE AYNI ÜÇ SATIRI PAYLAŞIYOR.
+   Her künye kendi içinde etiket + kelime + ölçüydü ve satırlar bağımsızdı:
+   "52 Haftalık Yer"in kelimesi ("Tepenin %25,9 Altında") iki satıra sarınca
+   altındaki ölçü komşusundan 21 piksel aşağı düşüyordu (ölçüldü, 390).
+   `subgrid` üçünü de ana ızgaranın satırlarına bağlıyor.
+   Satır arası (`row-gap`) künyenin İÇİNDEKİ aralık; künyeler alt alta
+   düştüğünde araya giren boşluk `margin-bottom`dan geliyor. Kenar boşluğu
+   HER künyede aynı olduğu için alt ızgaranın hizası bozulmuyor; şeridin
+   kendi dibindeki fazlalık negatif kenarla geri alınıyor. */
+.signals { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); grid-template-rows:auto auto auto; column-gap:20px; row-gap:5px; margin:0 0 -8px; }
+.signal { display:grid; grid-template-rows:subgrid; grid-row:span 3; min-width:0; margin-bottom:8px; padding-left:14px; border-left:2px solid var(--line); }
 .signal[data-tone="up"] { border-left-color:var(--up); }
 .signal[data-tone="down"] { border-left-color:var(--down); }
 .signal[data-tone="primary"] { border-left-color:var(--primary); }
 .signal dt { font-size:11px; font-weight:700; letter-spacing:.05em; color:var(--text-muted); }
-.signal dd { display:flex; flex-direction:column; gap:2px; }
-.signal strong { font-size:19px; line-height:1.15; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); }
-.signal span { font-size:12px; line-height:1.45; color:var(--text-muted); }
+.signal dd { margin:0; }
+.signalValue { align-self:start; }
+.signalDetail { align-self:start; text-wrap:pretty; font-size:12px; line-height:1.45; color:var(--text-muted); }
+.signal strong { display:block; font-size:19px; line-height:1.15; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); }
 
 /* Bölüm gezinmesi — şirket sayfasındaki `chapterNav` ile aynı gölge.
 
@@ -768,9 +790,26 @@
    346 istiyor. 150'de ikisi de sığıyor; on bir kart 1.139 pikselden 570'e
    iniyor, yani dipnot bir ekran kaydırma uzağında kalmıyor. */
 .moreGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; margin:0; padding:0; list-style:none; }
-.moreCard { display:grid; gap:10px; height:100%; padding:12px 13px; border:1px solid var(--line); border-radius:16px; background:var(--surface-solid); transition:border-color .18s ease, background-color .18s ease; }
+/* GENİŞ EKRANDA KART DAHA GENİŞ. 150 piksellik taban 1440'ta sekiz sütun
+   üretiyordu ve kartın içine 114 piksel kalıyordu; ayak satırı ("Yayın
+   Bekliyor" 72 + değişim 50 + aralık 8 = 130) oraya sığmayıp ikiye
+   bölünüyor, o kartın rozeti komşularından 22 piksel yukarı kaçıyordu
+   (ölçüldü). 178 piksellik taban 1440'ta altı, 768'de üç sütun veriyor ve
+   ayak her kartta tek satır. Telefonda taban 150'de kalıyor — orada iki
+   sütun ancak öyle çıkıyor. */
+@media (min-width: 768px) {
+  .moreGrid { grid-template-columns:repeat(auto-fill, minmax(178px, 1fr)); }
+}
+/* KART İKİ SATIR: kimlik üstte, ayak dipte.
+   Kimlik bloğu ortalanıyordu (`align-items:center`) ve şirket adı iki
+   satıra sardığında logo ile sembol 4 piksel kayıyordu; ayak satırı da
+   kartın kendi boyuna göre yer alıyordu, yani yan yana iki kartın rozetleri
+   aynı hatta değildi (ölçüldü: 390'da 4, 1440'ta 14 piksel). Orta satır
+   `1fr` — ayak her kartta dibe yapışıyor, ızgara kartları zaten aynı boya
+   gerdiği için rozetler de aynı hatta oturuyor. */
+.moreCard { display:grid; grid-template-rows:auto 1fr auto; gap:10px 0; height:100%; padding:12px 13px; border:1px solid var(--line); border-radius:16px; background:var(--surface-solid); transition:border-color .18s ease, background-color .18s ease; }
 .moreCard:is(:hover, :focus-visible) { border-color:var(--primary-faint); background:var(--primary-tint); }
-.moreHead { display:flex; align-items:center; gap:9px; min-width:0; }
+.moreHead { display:flex; align-items:flex-start; gap:9px; min-width:0; }
 .moreIdentity { display:grid; min-width:0; }
 .moreIdentity strong { font-size:14px; font-weight:750; line-height:1.15; letter-spacing:-.02em; color:var(--text-strong); }
 /* Ad KIRPILMIYOR, SARIYOR. Tek satır + üç nokta 150 piksellik kartta
@@ -778,9 +817,9 @@
    ve satır ızgarayı bozmuyor — kartlar `height:100%` ile satır boyunca
    eşitleniyor. */
 .moreIdentity span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:var(--text-nano); font-weight:600; line-height:1.3; color:var(--text-muted); }
-.moreFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 8px; }
-.morePill { display:inline-flex; padding:2px 9px; border-radius:999px; font-size:var(--text-nano); font-weight:800; letter-spacing:.02em; }
-.moreSoon { font-size:var(--text-nano); font-weight:650; color:var(--text-muted); }
-.moreChange { font-size:12.5px; font-weight:700; }
+.moreFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 8px; grid-row:3; }
+.morePill { display:inline-flex; padding:2px 9px; border-radius:999px; font-size:var(--text-nano); font-weight:800; line-height:1.45; letter-spacing:.02em; }
+.moreSoon { padding:2px 0; font-size:var(--text-nano); font-weight:650; line-height:1.45; color:var(--text-muted); white-space:nowrap; }
+.moreChange { font-size:12.5px; font-weight:700; white-space:nowrap; }
 .moreAll { font-size:12px; font-weight:650; color:var(--primary); }
 .moreAll:hover { color:var(--primary-hover); }

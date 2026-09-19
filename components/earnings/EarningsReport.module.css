@@ -116,18 +116,30 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+/* YAN YANA İKİ ÖLÇÜ AYNI SATIRDA BAŞLAR VE BİTER.
+   Her ölçü kendi içinde üç satırdı (etiket, sayı, künye) ve satırlar
+   birbirinden BAĞIMSIZDI: "Gelir (3. Çeyrek)" tek satıra sığarken "Hisse
+   Başı Kâr (Düzeltilmiş)" ikiye sarıyor ve yanındaki sayı 18 piksel aşağı
+   kayıyordu (ölçüldü, 390 ve 768). İki dev rakam farklı yükseklikte durunca
+   kapak, hizalanmamış iki ayrı karta bölünüyordu.
+   `subgrid` üç satırı ANA IZGARADAN alıyor: etiketler bir satırı, sayılar
+   ötekini, künyeler üçüncüyü paylaşıyor. Etiket kaç satıra sararsa sarsın
+   sayı hep aynı hatta. Satır arası eski `margin-top` yerine `row-gap`. */
 .coverLeadFacts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.5rem;
+  grid-template-rows: auto auto auto;
+  column-gap: 1.5rem;
+  row-gap: 0.65rem;
   min-width: 0;
 }
 
 .coverLeadFacts > div {
-  display: flex;
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 3;
   min-width: 0;
-  flex-direction: column;
-  align-items: flex-start;
+  justify-items: start;
 }
 
 .coverLeadFacts dt {
@@ -137,7 +149,7 @@
 }
 
 .coverLeadFacts dd:not(.coverMetricNote) {
-  margin-top: 0.65rem;
+  margin-top: 0;
   font-size: clamp(2.1rem, 3.65vw, 3.55rem);
   font-weight: 550;
   letter-spacing: -0.065em;
@@ -151,7 +163,8 @@
 }
 
 .coverMetricNote {
-  margin-top: 0.65rem;
+  margin-top: 0;
+  text-wrap: pretty;
   font-size: 0.75rem;
   font-weight: 550;
   line-height: 1.55;
@@ -378,9 +391,18 @@
   margin-top: 0.5rem;
 }
 
+/* KARTLAR DA AYNI ÜÇ SATIRI PAYLAŞIYOR (kapaktaki gerekçenin aynısı).
+   Kart içinde etiket, sayı ve künye vardı; etiket iki satıra sardığında o
+   kartın sayısı komşularından 18-19 piksel aşağıda kalıyordu (ölçüldü).
+   Zincir iki kademeli: `li` ana ızgaranın üç satırını alıyor, kartın
+   kendisi de `li`den. Aradaki `SpotlightCard` parlaması mutlak konumlu,
+   yani ızgara satırı tutmuyor.
+   Satır aralığı kart İÇİNDE de geçerli olduğu için sayının eski dolgusu
+   (1,4rem/0,75rem) kalktı: boşluk artık tek yerden, `gap`ten geliyor. */
 .metricGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: auto;
   gap: 0.9rem;
 }
 
@@ -397,14 +419,17 @@
 }
 
 .metricItem {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 3;
   min-width: 0;
 }
 
 .metricCard {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 3;
   min-width: 0;
-  height: 100%;
   padding: 1.4rem 1.5rem;
   border: 1px solid var(--line);
   border-radius: 1.1rem;
@@ -433,12 +458,13 @@
   font-size: clamp(1.8rem, 3vw, 2.75rem);
   letter-spacing: -0.065em;
   line-height: 1.1;
-  padding: 1.4rem 0 0.75rem;
+  align-self: start;
   overflow-wrap: anywhere;
 }
 
 .metricNote {
-  margin-top: auto;
+  align-self: end;
+  text-wrap: pretty;
   line-height: 1.5;
   font-size: 0.75rem;
 }

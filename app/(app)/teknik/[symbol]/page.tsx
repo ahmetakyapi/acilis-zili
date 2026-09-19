@@ -49,6 +49,7 @@ import {
   formatEtDateLong,
   formatPercent,
   formatPrice,
+  tieFigures,
 } from "@/lib/utils";
 
 export async function generateMetadata(
@@ -300,7 +301,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
           </div>
           <p className={styles.coverHeadline} lang={copyLang}>
-            {copy.headline}
+            {tieFigures(copy.headline)}
           </p>
           {locale === "en" && !hasEnglish && (
             <p className="text-small text-muted">{t.technical.langNote}</p>
@@ -382,7 +383,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           <section className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.summary}</h2>
             <p className={styles.prose} lang={copyLang}>
-              {copy.summary}
+              {tieFigures(copy.summary)}
             </p>
           </section>
           <section className={styles.block}>
@@ -390,11 +391,11 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             <div className={styles.scenarios} data-motion-stagger>
               <div className={styles.scenario} data-tone="up">
                 <h3>{t.technical.bullCase}</h3>
-                <p lang={copyLang}>{copy.bull}</p>
+                <p lang={copyLang}>{tieFigures(copy.bull)}</p>
               </div>
               <div className={styles.scenario} data-tone="down">
                 <h3>{t.technical.bearCase}</h3>
-                <p lang={copyLang}>{copy.bear}</p>
+                <p lang={copyLang}>{tieFigures(copy.bear)}</p>
               </div>
             </div>
           </section>
@@ -421,14 +422,14 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         <section className={styles.block}>
           <h2 className={styles.sectionTitle}>{t.technical.volumeRead}</h2>
           <p className={styles.prose} lang={copyLang}>
-            {copy.volume}
+            {tieFigures(copy.volume)}
           </p>
         </section>
         <section className={styles.block}>
           <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>
           <ul className={styles.watch} lang={copyLang}>
             {copy.watch.map((item) => (
-              <li key={item}>{item}</li>
+              <li key={item}>{tieFigures(item)}</li>
             ))}
           </ul>
         </section>

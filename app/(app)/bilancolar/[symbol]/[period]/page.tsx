@@ -67,6 +67,8 @@ import {
   peRatioOf,
   safeExternalUrl,
   SIGN_GAP,
+  tieCurrency,
+  tieFigures,
   titleCaseLabel,
 } from "@/lib/utils";
 import type { EarningsAnalysisRow } from "@/lib/schema";
@@ -795,8 +797,8 @@ export default async function AnalysisDetailPage(
               <dl data-motion-stagger className={styles.coverLeadFacts}>
                 {coverMetrics.map((metric) => (
                   <div key={metric.label}>
-                    <dt>{metric.label}</dt>
-                    <dd className="figure">{metric.value}</dd>
+                    <dt>{tieFigures(metric.label)}</dt>
+                    <dd className="figure">{tieCurrency(metric.value)}</dd>
                     {metric.note && (
                       <dd
                         className={cn(
@@ -808,7 +810,7 @@ export default async function AnalysisDetailPage(
                               : "text-primary-ink",
                         )}
                       >
-                        {titleCaseLabel(metric.note, locale)}
+                        {tieFigures(titleCaseLabel(metric.note, locale))}
                       </dd>
                     )}
                   </div>

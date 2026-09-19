@@ -7,7 +7,12 @@
 .miniCard { padding:18px; gap:14px; }
 .miniCard > a:first-child,.heroCard > a:first-child { border-radius:inherit; }
 .miniIdentity { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
-.companyName { font-size:12px; line-height:1.5; color:var(--text-muted); overflow-wrap:anywhere; }
+/* AD TEK SATIR. Kart dar (390'da 152 piksel) ve uzun bir ad ikinci
+   satıra geçince o kartın altındaki her şey — ölçü bloğu, ayraç, künye —
+   18 piksel aşağı kayıyor, yanındaki kartla hizası bozuluyordu
+   (ölçüldü: /bilancolar, 390 ve 1440). Kartın kimliği zaten sembol;
+   ad bir bağlam ve kırpılması kartın düzeninden daha ucuz. */
+.companyName { overflow:hidden; font-size:12px; line-height:1.5; color:var(--text-muted); text-overflow:ellipsis; white-space:nowrap; }
 .miniCard :global(.plate) { font-size:11px; letter-spacing:.035em; }
 .miniCard :global(.text-lead) { font-size:22px; line-height:1.2; white-space:normal; overflow-wrap:anywhere; }
 .miniCard dl { font-size:12px; line-height:1.6; }

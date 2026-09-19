@@ -89,6 +89,43 @@ export function titleCaseLabel(text: string, locale: string): string {
     .join("");
 }
 
+/**
+ * SAYI İLE BİRİMİ AYNI SATIRDA TUTAR.
+ *
+ * Kart künyelerinin ve ölçü etiketlerinin metnini rutin yazıyor ve o metin
+ * düz boşluklarla geliyor: "▲ %13 Yıllık · Beklenti 6,69 Mr $". Dar bir
+ * kartta satır sonu tam oraya denk geldiğinde dolar işareti TEK BAŞINA alt
+ * satıra düşüyor (ölçüldü: bilanço kapağında 390 pikselde) — okuyan göz
+ * için bu bir yazım hatası gibi duruyor, üstelik kartın boyunu bir satır
+ * uzatıp yanındakiyle hizasını bozuyor.
+ *
+ * Sitenin kendi biçimlendiricileri bunu zaten çözmüştü (`MONEY_GAP`,
+ * `SIGN_GAP` — ikisi de bölünmez boşluk); bu yardımcı aynı kuralı DIŞARIDAN
+ * gelen metne uyguluyor. Yalnızca tanıdığı birimleri bağlıyor: sayı +
+ * kısaltma ve simge + para işareti. Tanımadığı hiçbir boşluğa dokunmuyor,
+ * yani cümlenin kırılma noktaları yerinde kalıyor.
+ */
+const TIE_UNIT = /(\d)\s+(T|Mr|Mn|Bin|B|M|K|TL|USD|EUR|mlr|mn|bin|puan|pts|bps|kat|adet|gün|ay|yıl|hafta|saat|sa|dk|sn|x)(?=$|[\s.,;:·)\]!?])/gi;
+const TIE_MONEY = /(\S)\s+([$€₺])(?=$|[\s.,;:·)\]!?])/g;
+
+export function tieFigures(text: string): string {
+  return text.replace(TIE_UNIT, "$1\u00A0$2").replace(TIE_MONEY, "$1\u00A0$2");
+}
+
+/**
+ * Yalnızca para simgesini bağlar, sayı ile birimi AYIRMAZ.
+ *
+ * Manşet sayılar için: "18,60 Mr $" dar bir kartta sığmıyor (ölçüldü,
+ * 768'de metrik kartı 160 piksel) ve tamamı bağlanırsa satır hiç
+ * kırılamıyor — `overflow-wrap:anywhere` devreye girip sayıyı rastgele bir
+ * yerden ("18,60 M" / "r $") kesiyor. Tek başına dolar işaretinin alt
+ * satıra düşmesi de kabul edilemez. Ortası doğru: kırılma NOKTASI sayı ile
+ * birimin arası olsun, birim ile simge birlikte insin — "18,60" / "Mr $".
+ */
+export function tieCurrency(text: string): string {
+  return text.replace(TIE_MONEY, "$1\u00A0$2");
+}
+
 /** Piyasa yönü — renk ve işaret kararları hep bunun üzerinden verilir. */
 export type Direction = "up" | "down" | "flat";
 

@@ -244,15 +244,18 @@ export function TechnicalCard({
         {copy.headline}
       </p>
 
-      {chips.length > 0 && (
-        <div className={styles.chips}>
-          {chips.map((chip) => (
-            <span key={chip.text} className={styles.chip} data-tone={chip.tone}>
-              {chip.text}
-            </span>
-          ))}
-        </div>
-      )}
+      {/* ÇİP ŞERİDİ ÇİP YOKKEN DE BASILIYOR. Kart bölümleri komşu kartlarla
+          aynı satırları paylaşıyor (bkz. CSS `.grid`/`.cell`/`.card`
+          alt ızgarası); bir kartta şerit hiç basılmazsa o kartın ayak satırı
+          bir satır yukarı kayar ve ızgara yine tırtıklanır. Boş şerit
+          yüksekliksiz, yalnızca satırı tutuyor. */}
+      <div className={styles.chips}>
+        {chips.map((chip) => (
+          <span key={chip.text} className={styles.chip} data-tone={chip.tone}>
+            {chip.text}
+          </span>
+        ))}
+      </div>
 
       <div className={styles.cardFoot}>
         <span>

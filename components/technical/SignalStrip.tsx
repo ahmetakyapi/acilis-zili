@@ -107,14 +107,21 @@ export function SignalStrip({
   return (
     <dl className={styles.signals} aria-label={t.technical.signalsLabel} data-motion-stagger>
       {tiles.map((tile) => (
+        /* ÜÇ PARÇA ÜÇ AYRI HÜCRE. Değer ile künye bir dönem tek bir
+           `<dd>`nin içindeydi ve şeridin alt ızgarası (bkz. CSS `.signals`)
+           onları tek satır sayıyordu: bir künyenin değeri iki satıra
+           sarınca yanındakinin ölçüsü 21 piksel aşağıda kalıyordu
+           (ölçüldü, 390). Tanım listesinde bir terimin birden çok
+           açıklaması olabilir; ikisi de `<dd>` ve artık ikisi de kendi
+           satırında. */
         <div key={tile.key} className={styles.signal} data-tone={tile.tone}>
           <dt>{tile.label}</dt>
-          <dd>
+          <dd className={styles.signalValue}>
             <strong className={cn(tile.tone === "up" && "text-up", tile.tone === "down" && "text-down", tile.tone === "primary" && "text-primary-ink")}>
               {tile.value}
             </strong>
-            {tile.detail && <span className="numeral">{tile.detail}</span>}
           </dd>
+          {tile.detail && <dd className={cn(styles.signalDetail, "numeral")}>{tile.detail}</dd>}
         </div>
       ))}
     </dl>
