@@ -132,7 +132,7 @@ async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
               const symbol = item.symbols?.[0];
               const company = symbol ? logos[symbol] : null;
               const hasVisual = Boolean((item.imageUrl && !genericImages.has(item.imageUrl)) || (company?.logoUrl && symbol && headlineMentions(item.headline, symbol, company.name)));
-              return <li key={item.id}>
+              return <li key={item.id} className={styles.cell}>
                 <Link
                   href={`/haberler/${item.id}`}
                   prefetch={false}
@@ -152,14 +152,18 @@ async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
                   >
                     {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
                   </h2>
-                  {(item.summaryTr || item.summary) && (
-                    <p
-                      lang={locale === "tr" && !item.summaryTr ? "en" : undefined}
-                      className={styles.summary}
-                    >
-                      {locale === "tr" && item.summaryTr ? item.summaryTr : item.summary}
-                    </p>
-                  )}
+                  {/* ÖZET SATIRI HER ZAMAN BASILIYOR — özeti olmayan
+                      haberde boş. Liste iki sütunlu bir ızgara ve satırlar
+                      kardeş haberle paylaşılıyor (bkz. CSS `.list`/`.cell`
+                      alt ızgarası); bir haberde özet hiç basılmazsa onun
+                      künye satırı bir satır yukarı çıkar ve yan yana duran
+                      iki haber aynı hattı paylaşmaz. */}
+                  <p
+                    lang={locale === "tr" && !item.summaryTr ? "en" : undefined}
+                    className={styles.summary}
+                  >
+                    {locale === "tr" && item.summaryTr ? item.summaryTr : item.summary}
+                  </p>
                   <p className={styles.meta}>
                     {item.source && <span>{item.source}</span>}
                     <span aria-hidden>·</span>

@@ -59,11 +59,24 @@ export function GuideHint({
             key={article.slug}
             href={`/rehber/${article.slug}`}
             prefetch={false}
-            className="panel panel-hover flex min-w-0 items-center gap-3 p-3.5 transition-colors"
+            /* YAN YANA İKİ KART AYNI HATTA. Kart bir süre `items-center`
+               taşıyan bir flex satırıydı ve iki kartın başlıkları farklı
+               uzunlukta olduğunda (biri tek satır, öteki iki) ikisi de
+               kendi içinde ortalanıyordu: ölçüldü, 1024 pikselde açıklama
+               satırları 26 piksel kayıyordu ve iki kart aynı ızgara
+               satırında oldukları hâlde hiçbir hattı paylaşmıyordu.
+               Alt ızgara başlığı ve açıklamayı KARDEŞ kartla aynı satıra
+               bağlıyor: başlık iki satıra çıkarsa öteki kartın açıklaması
+               da onunla birlikte iner. Simge ve ok iki satırı birden
+               kaplayıp kendi içinde ortalanıyor; dolgu iki kartta da aynı
+               olduğu için hizayı bozmuyor. */
+            className="panel panel-hover row-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-subgrid gap-x-3 gap-y-0.5 p-3.5 transition-colors"
           >
-            <GlyphTile glyph={article.glyph} size={36} />
-            <span className="min-w-0 flex-1">
-              <span className="block text-base font-bold text-strong">
+            <span className="row-span-2 grid place-items-center">
+              <GlyphTile glyph={article.glyph} size={36} />
+            </span>
+            <span className="row-span-2 grid grid-rows-subgrid gap-y-0.5">
+              <span className="block self-start text-base font-bold text-strong">
                 {article.title}
               </span>
               {/* İKİ SATIR — tek satır değil.
@@ -74,14 +87,14 @@ export function GuideHint({
                   değildir; sürpriz, kararın yanındaki cümlelerdedir" —
                   kartın var oluş sebebi noktalı virgülden SONRAKİ yarı ve
                   tam da o gidiyordu. */}
-              <span className="mt-0.5 block line-clamp-2 text-tiny leading-[1.35] text-muted">
+              <span className="block self-start line-clamp-2 text-tiny leading-[1.35] text-muted">
                 {article.dek}
               </span>
             </span>
             <ArrowRight
               weight="bold"
               size={13}
-              className="shrink-0 text-primary"
+              className="row-span-2 shrink-0 self-center text-primary"
               aria-hidden
             />
           </Link>

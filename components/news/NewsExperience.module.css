@@ -1,7 +1,19 @@
 .page { display:flex; flex-direction:column; gap:var(--page-section-gap); min-width:0; }
 .page > header { padding:8px 0 20px; border-bottom:1px solid var(--line); }
+/* YAN YANA İKİ HABER AYNI HATTA. Liste iki sütunlu bir ızgara ve her
+   haber üç bloktan oluşuyor: başlık, özet, künye. Başlık kimi haberde tek
+   kimi haberde iki satır ve sonuç, aynı satırda duran iki haberin
+   özetlerinin 24, künyelerinin 48 piksel kaymasıydı (1024'te ölçüldü).
+   Alt ızgara üç bloğu da kardeş haberle aynı satıra bağlıyor; zincir üç
+   katmanda birden bildiriliyor (li → satır → metin kolonu), çünkü aradaki
+   her katman kendi ızgarasını kurmadığı sürece bağ kopuyor. Küçük resim üç
+   satırı birden kaplayıp kendi içinde yukarı yaslanıyor. */
 .list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; }
 .list > li { min-width:0; border-bottom:1px solid var(--line); }
+.cell { grid-row:span 3; display:grid; grid-template-rows:subgrid; }
+.cell > .row { grid-row:span 3; display:grid; grid-template-rows:subgrid; grid-template-columns:minmax(0,1fr) auto; }
+.cell > .row > .copy { grid-row:span 3; display:grid; grid-template-rows:subgrid; }
+.cell > .row > :not(.copy) { grid-row:span 3; align-self:start; }
 .list > li:first-child { grid-column:1/-1; border:1px solid var(--primary-faint); border-radius:var(--radius-feature); background:radial-gradient(ellipse at 95% 0,var(--primary-wash),transparent 65%),var(--premium-surface); box-shadow:var(--premium-shadow); margin-bottom:8px; }
 .row { position:relative; display:flex; align-items:flex-start; gap:18px; padding:22px 4px; min-height:156px; transition:background .25s; border-radius:12px; }
 .copy { min-width:0; flex:1; }
@@ -10,6 +22,11 @@
 .meta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 7px; margin-top:12px; font-size:11px; color:var(--text-muted); }
 .thumb { width:64px; height:64px; border-radius:12px; margin-top:3px; }
 .list > li:first-child .row { padding:26px 28px; min-height:202px; align-items:center; }
+/* Öne çıkan haber tek başına bir bant: paylaşacağı kardeş yok, o yüzden
+   alt ızgaraya hiç girmiyor ve blokları kendi doğal boyunda kalıyor. */
+.list > li:first-child.cell { display:block; }
+.list > li:first-child.cell > .row { display:flex; }
+.list > li:first-child.cell > .row > .copy { display:block; }
 .list > li:first-child .title { font-size:clamp(24px,2.3vw,31px); line-height:1.18; max-width:40ch; }
 .list > li:first-child .summary { -webkit-line-clamp:3; max-width:86ch; font-size:14px; }
 .list > li:first-child .thumb { width:112px; height:112px; }

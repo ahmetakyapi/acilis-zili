@@ -1048,23 +1048,28 @@ async function UpcomingEarnings({
           : t.earnings.timeUnknown}
       </p>
       {(next.epsEstimate !== null || next.revenueEstimate !== null) && (
+        /* İKİ ÖLÇÜ AYNI HATTA. Etiketler 84 piksellik hücrede iki
+           satıra düşüyor (768'de ölçüldü) ve İkisi aynı anda düşmezse
+           değerler birbirinden kayıyor: İngilizce tarafta "EPS ESTIMATE"
+           tek satır, "REVENUE ESTIMATE" iki. Alt ızgara etiketi ve değeri
+           iki hücrede de aynı satıra bağlıyor. */
         <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-line-soft pt-3">
           {next.epsEstimate !== null && (
-            <div>
+            <div className="row-span-2 grid grid-rows-subgrid gap-y-0.5">
               <dt className="text-nano uppercase tracking-wider text-muted">
                 {t.earnings.epsEstimate}
               </dt>
-              <dd className="numeral mt-0.5 text-sm font-semibold text-strong">
+              <dd className="numeral self-start text-sm font-semibold text-strong">
                 {formatPrice(next.epsEstimate, locale, { currency: paraOpt })}
               </dd>
             </div>
           )}
           {next.revenueEstimate !== null && (
-            <div>
+            <div className="row-span-2 grid grid-rows-subgrid gap-y-0.5">
               <dt className="text-nano uppercase tracking-wider text-muted">
                 {t.earnings.revenueEstimate}
               </dt>
-              <dd className="numeral mt-0.5 text-sm font-semibold text-strong">
+              <dd className="numeral self-start text-sm font-semibold text-strong">
                 {formatMoneyCompact(
                   next.revenueEstimate,
                   locale,

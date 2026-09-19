@@ -6,8 +6,8 @@ import styles from "./Technical.module.css";
 
 /** Etiket başına ayrılan dikey yer. Bütün satırlar aynı yükseklikte. */
 const ROW_GAP = 46;
-/** Stopun altındaki bölgeye ayrılan dip şeridi. */
-const VOID_STRIP = 28;
+/** Stopun altındaki bölgeye ayrılan dip şeridi — künyesi de içinde. */
+const VOID_STRIP = 34;
 const MIN_HEIGHT = 360;
 const MAX_HEIGHT = 720;
 
@@ -152,10 +152,33 @@ export function PriceMap({
           (satır aralığı 46, satır yüksekliği 34, arada 12 piksel kalıyor).
           Bilgi zaten stop satırının kendisinde ve kırmızı kuşak onu
           tekrarlıyor. */}
-      <div className={styles.mapZones} aria-hidden>
-        {stopY !== null && <span className={styles.mapZoneVoid} style={{ top: stopY }} />}
+      {/* `aria-hidden` KUŞAKLARIN TAMAMINDA DEĞİL. Alım bandı bir çizim,
+          ekran okuyucuya söyleyecek bir şeyi yok; stop altı kuşağının
+          künyesi ise bir CÜMLE ve başka hiçbir yerde geçmiyor. Kapsayıcıyı
+          bütünüyle gizlemek o cümleyi de götürüyordu. */}
+      <div className={styles.mapZones}>
+        {stopY !== null && (
+          /* BÖLGE ADINI SÖYLÜYOR. Kuşak bir süre sessizdi: stop satırının
+             altında kesikli bir çizgi ve solan kırmızı bir alan vardı,
+             hiçbir yerinde ne olduğu yazmıyordu (ölçüldü, 390: 28 piksellik
+             boş bir şerit). Okuyucu kırmızıdan "kötü" çıkarıyor ama NE
+             olduğunu çıkaramıyor.
+
+             Bir dönem burada DİKEY bir "Plan Geçersiz" yazısı vardı ve
+             haritanın en karmaşık öğesi olduğu için kaldırılmıştı — o karar
+             25 piksellik RAY ŞERİDİ için verilmişti, kuşak o zaman eksenin
+             içindeydi. Kuşak artık haritanın tamamına yayılıyor ve yatay bir
+             künye rahat sığıyor: gerekçe ortadan kalktı, karar değişti.
+
+             Künye satır etiketleriyle aynı hatta (`left:52px` + satır
+             dolgusu), yani "Stop"un tam altında okunuyor. */
+          <span className={styles.mapZoneVoid} style={{ top: stopY }}>
+            <span className={styles.mapZoneVoidLabel}>{t.technical.zoneBelowStop}</span>
+          </span>
+        )}
         {entryTop !== null && entryBottom !== null && (
           <span
+            aria-hidden
             className={styles.mapZoneEntry}
             style={{ top: entryTop, height: Math.max(6, entryBottom - entryTop) }}
           />
@@ -217,7 +240,28 @@ export function PriceMap({
                   </b>
                 )}
                 {distance !== null && (
-                  <span className="numeral">{formatPercent(distance, locale, 1)}</span>
+                  /* YÜZDE YÖNÜNÜ RENKLE DE SÖYLÜYOR. Sütun tek tonda
+                     duruyordu ve haritanın kendi dili zaten renkliydi:
+                     fiyatın ÜSTÜNDEKİ çentikler yeşil, ALTINDAKİLER
+                     kırmızı. Aynı satırın yüzdesi nötr kalınca bir seviyenin
+                     hangi tarafta olduğu iki ayrı yerden (çentiğin rengi ve
+                     sayının işareti) okunuyordu. Artık ikisi aynı şeyi
+                     söylüyor: artı yukarısı, eksi aşağısı.
+
+                     Renk TEK TAŞIYICI DEĞİL — `formatPercent` işareti
+                     kendisi yazıyor, yani yön renk körlüğünde de okunuyor
+                     (deponun her yerindeki kural).
+
+                     Geçilmiş bir hedefte yeşil "Geçildi" rozetinin yanında
+                     kırmızı bir yüzde durabiliyor ve bu bir çelişki değil,
+                     iki ayrı soru: rozet "ulaşıldı mı", yüzde "şimdi ne
+                     tarafta". */
+                  <span
+                    className="numeral"
+                    data-dir={distance > 0 ? "up" : distance < 0 ? "down" : "flat"}
+                  >
+                    {formatPercent(distance, locale, 1)}
+                  </span>
                 )}
               </span>
             </li>

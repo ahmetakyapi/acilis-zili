@@ -509,7 +509,17 @@ function DaySection({
             return (
               <div
                 key={row.id}
-                className={cn("panel-hover relative flex h-full min-w-0 flex-col gap-[11px] rounded-lg border border-line bg-surface-solid p-3.5 transition-colors", styles.miniCard)}
+                /* KART BİR ALT IZGARA. Bloklar dikey bir yığındı ve
+                   ARADAKİ BİR BLOK KOŞULLUYDU: analiz rozeti yalnızca
+                   analizi yayımlanmış şirkette basılıyor. Rozetsiz kartta
+                   ölçü bloğu bir blok yukarı çıkıyor ve aynı satırdaki iki
+                   kartın ayraç çizgisi 29 piksel kayıyordu (1024'te
+                   ölçüldü) — yan yana duran iki kart hiçbir hattı
+                   paylaşmıyordu. Alt ızgara dört bloğu da KARDEŞ kartlarla
+                   aynı satıra bağlıyor; rozet satırı rozetsiz kartta da
+                   duruyor, boş. Dolgu bütün kartlarda aynı olduğu için
+                   hizayı bozmuyor. */
+                className={cn("panel-hover relative row-span-4 grid h-full min-w-0 grid-rows-subgrid gap-[11px] rounded-lg border border-line bg-surface-solid p-3.5 transition-colors", styles.miniCard)}
               >
                 <Link
                   href={`/hisse/${row.symbol}`}
@@ -556,13 +566,17 @@ function DaySection({
                     className="-mt-1 -mr-1 mb-0"
                   />
                 </div>
-                {badge && (
+                {/* Rozetsiz kartta da satır duruyor — gerekçesi kartın
+                    sınıf listesinde. */}
+                {badge ? (
                   <AnalysisBadge
                     badge={badge}
                     t={t}
                     size="sm"
                     className="self-start"
                   />
+                ) : (
+                  <span aria-hidden />
                 )}
                 {/* Her sayı kendi etiketiyle: dar kartta "1,84 Mr" tek
                     başına gelir mi kâr mı belli olmuyordu.

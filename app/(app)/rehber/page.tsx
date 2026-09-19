@@ -615,9 +615,19 @@ function ArticleGrid({
           key={article.slug}
           href={`/rehber/${article.slug}`}
           prefetch={false}
-          className={`${styles.guideCard} min-w-0`}
+          /* ÜÇ BLOK, ÜÇ PAYLAŞILAN SATIR. Kart dikey bir yığındı: başlık,
+             açıklama, okuma süresi. Başlık kimi kartta tek kimi kartta iki
+             satır ve yan yana duran kartların açıklamaları 26 piksel
+             kayıyordu (1024'te ölçüldü); okuma süresi `mt-auto` ile dibe
+             yapıştığı için yalnızca O hizalıydı. Alt ızgara üç bloğu da
+             kardeş kartlarla aynı satıra bağlıyor — iki satırlık bir başlık
+             satırdaki bütün açıklamaları birlikte aşağı indiriyor.
+             Bağlantı ile panel iki ayrı katman, o yüzden alt ızgara İKİSİNDE
+             de bildiriliyor: zincir kırılırsa satırlar yine kart içinde
+             kalır. */
+          className={`${styles.guideCard} row-span-3 grid min-w-0 grid-rows-subgrid`}
         >
-          <Panel className="panel-hover flex h-full flex-col gap-3 p-5">
+          <Panel className="panel-hover row-span-3 grid grid-rows-subgrid gap-3 p-5">
             {/* KARO BAŞLIĞIN YANINDA, kendi satırında değil. 52px'lik karo
                 her kartta tek başına bir satır tutuyordu ve otuz bir kart
                 yan yana gelince sayfada mavi kareden bir ızgara oluşuyordu —
@@ -637,14 +647,16 @@ function ArticleGrid({
               </span>
             </div>
 
-            <p className="flex-1 text-base leading-[21px] text-body">
+            <p className="text-base leading-[21px] text-body">
               {article.dek}
             </p>
 
             {/* "Oku →" satırı KALKTI: kartın tamamı zaten bağlantı ve o
                 satır otuz bir kartta otuz bir kez aynı şeyi söylüyordu.
                 Geriye okuma süresi kaldı — kartın taşıdığı tek künye. */}
-            <p className="numeral mt-auto pt-1 text-small text-muted">
+            {/* `mt-auto` KALKTI: süre satırı artık kendi alt ızgara
+                satırında ve satır zaten bütün kartlarda aynı yerde. */}
+            <p className="numeral self-end pt-1 text-small text-muted">
               {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
             </p>
           </Panel>

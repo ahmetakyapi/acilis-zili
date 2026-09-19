@@ -632,6 +632,10 @@ const tr = {
     levelPassed: "Geçildi",
     levelBroken: "Kırıldı",
     levelsNote: "Fiyata Uzaklık",
+    /* STOP ALTI KUŞAĞININ KÜNYESİ. Kuşak sessizdi ve kırmızı bir alan
+       tek başına "kötü" diyor, "ne" demiyor. Kısa tutuldu: 390 pikselde
+       tek satır kalmalı (ölçüldü). */
+    zoneBelowStop: "Bu Seviyenin Altı: Plan Geçersiz",
     target: "Hedef {n}",
     targetsLabel: "Hedefler",
     resistance: "Direnç",

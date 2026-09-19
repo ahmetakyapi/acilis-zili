@@ -448,7 +448,10 @@
    çizgilerden oluşuyordu ve haritadaki tek dokuydu — gözü seviyelerden
    alıp kendine çekiyor, üstelik altta sert bir kenarla bitiyordu. Soluk
    alan aynı şeyi söylüyor: aşağı indikçe plan biter. */
-.mapZoneVoid { position:absolute; left:14px; right:0; bottom:0; border-top:2px dashed color-mix(in srgb, var(--down) 45%, transparent); border-radius:0 0 6px 6px; background:linear-gradient(color-mix(in srgb, var(--down-wash) 60%, transparent), transparent 92%); }
+/* Kuşak artık bir künye taşıyor; hizası satır etiketleriyle aynı
+   (`.mapRungs` 52px + satır dolgusu 14px). */
+.mapZoneVoid { position:absolute; left:14px; right:0; bottom:0; display:flex; align-items:flex-start; padding:7px 14px 0 52px; border-top:2px dashed color-mix(in srgb, var(--down) 45%, transparent); border-radius:0 0 6px 6px; background:linear-gradient(color-mix(in srgb, var(--down-wash) 60%, transparent), transparent 92%); }
+.mapZoneVoidLabel { font-size:var(--text-nano); font-weight:700; letter-spacing:.04em; line-height:1.2; color:color-mix(in srgb, var(--down) 78%, var(--text-muted)); }
 /* Çentik: eksene dik, 3 piksel kalın. Gerekçe PriceMap.tsx içinde. */
 .mapTick { position:absolute; left:14px; width:27px; height:3px; border-radius:2px; background:var(--text-muted); opacity:.6; translate:0 -50%; }
 .mapTick[data-kind="target"] { background:var(--up); opacity:1; }
@@ -511,6 +514,8 @@
    satırının üstündeyse seviye yukarıda. Sütun mesafeyi söylüyor, yorumu
    değil. */
 .mapDistance { display:flex; align-items:baseline; justify-content:flex-end; gap:7px; min-width:62px; font-size:12.5px; font-weight:650; text-align:right; white-space:nowrap; color:var(--text-body); }
+.mapDistance > [data-dir="up"] { color:var(--up); }
+.mapDistance > [data-dir="down"] { color:var(--down); }
 /* Geçilmiş seviyenin tek kelimelik işareti — hedef gerçekleşti ya da stop
    kırıldı. İkisi de plana dair bir haber, o yüzden renk taşıyor; mesafe
    yanında nötr kalıyor. */
@@ -666,7 +671,11 @@
   .mapRail { width:44px; }
   .mapLine { left:20px; }
   .mapZoneEntry { left:9px; }
-  .mapZoneVoid { left:9px; }
+  /* KÜNYE SATIR ETİKETLERİYLE AYNI HATTA. Dar ekranda ray daralıyor
+     (`.mapRungs` 40px, satır dolgusu 10px) ve künyenin sol dolgusu da
+     onunla birlikte iniyor: 9 + 41 = 50 = 40 + 10. Ölçüldü, 390'da ikisi
+     de 85 pikselde başlıyor. */
+  .mapZoneVoid { left:9px; padding-left:41px; }
   .mapTick { left:9px; width:25px; }
   .mapHere { left:2px; width:39px; }
   .mapHere::after { left:9px; }

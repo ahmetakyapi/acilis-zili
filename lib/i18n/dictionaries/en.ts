@@ -481,6 +481,7 @@ const en: typeof tr = {
     levelPassed: "Passed",
     levelBroken: "Broken",
     levelsNote: "Distance From Price",
+    zoneBelowStop: "Below This Level: Plan Void",
     target: "Target {n}",
     targetsLabel: "Targets",
     resistance: "Resistance",
