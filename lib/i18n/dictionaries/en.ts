@@ -576,6 +576,9 @@ const en: typeof tr = {
     noAnalysisHint: "This stock's analysis is published every trading day before the open and during the session.",
     distribution: "Stance Breakdown",
     stockCount: "{n} Stocks",
+    pendingLabel: "Pending",
+    pendingNote:
+      "{symbols} were just added to the watchlist; their cards appear here after the first edition.",
     changesLabel: "Stance Changes",
     filterLabel: "Filter by Stance",
     filterAll: "All",

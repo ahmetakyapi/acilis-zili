@@ -19,6 +19,7 @@ import {
   editionTime,
   newestEdition,
   nextEdition,
+  pendingSymbols,
   slotInstant,
   slotLabel,
 } from "@/lib/technical";
@@ -71,6 +72,10 @@ export default async function TechnicalPage() {
 
   const holidays = await getHolidays();
   const latest = newestEdition(board);
+  /* TAKİP EDİLİP HENÜZ YAYINI OLMAYANLAR. Gerekçesi `pendingSymbols`
+     üzerinde: listeye yeni giren sembol ilk yayına kadar ekrandan tümüyle
+     kayboluyordu. */
+  const pending = pendingSymbols(board.map(({ row }) => row.symbol));
 
   const counts: Record<VerdictKey, number> = { buy: 0, hold: 0, sell: 0 };
   for (const { row } of board) counts[verdictOf(row.stance)] += 1;
@@ -97,7 +102,11 @@ export default async function TechnicalPage() {
         eyebrow={t.technical.eyebrow}
         title={t.technical.title}
         description={t.technical.description}
-        visual={latest ? <TechnicalPulse board={board} meta={meta} t={t} /> : undefined}
+        visual={
+          latest ? (
+            <TechnicalPulse board={board} pending={pending} meta={meta} t={t} />
+          ) : undefined
+        }
       >
         {latest && (
           <div className={styles.edition}>
@@ -178,6 +187,18 @@ export default async function TechnicalPage() {
               </div>
             ))}
           </div>
+
+          {pending.length > 0 && (
+            /* BEKLEYENLER IZGARANIN ALTINDA, İÇİNDE DEĞİL. Kartlar altı
+               satırlık bir alt ızgarayı paylaşıyor (bkz. `.grid`/`.cell`);
+               yayını olmayan bir sembolün kartı o satırların dördünü boş
+               bırakır ve bandın boyuna gerilip yarım kalmış bir kart gibi
+               durur. Künye tek satır: adları yazıyor, logoları da
+               başlıktaki dağılımda duruyor. */
+            <p className={styles.pendingNote}>
+              {t.technical.pendingNote.replace("{symbols}", pending.join(", "))}
+            </p>
+          )}
         </section>
       )}
 

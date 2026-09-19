@@ -737,6 +737,10 @@ const tr = {
     noAnalysisHint: "Bu hissenin analizi her işlem günü açılıştan önce ve seans içinde yayımlanır.",
     distribution: "Görüş Dağılımı",
     stockCount: "{n} Hisse",
+    /* BEKLEYEN SEMBOL — listeye yeni girmiş, ilk yayını henüz yok. */
+    pendingLabel: "Bekliyor",
+    pendingNote:
+      "{symbols} takip listesine yeni eklendi; ilk yayından sonra kartları burada görünecek.",
     changesLabel: "Görüşü Değişenler",
     filterLabel: "Görüşe Göre Süz",
     filterAll: "Tümü",

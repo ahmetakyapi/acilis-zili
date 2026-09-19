@@ -31,11 +31,23 @@ export function stanceFilterId(verdict: VerdictKey | "all"): string {
  */
 export function TechnicalPulse({
   board,
+  pending = [],
   meta,
   t,
   variant = "directory",
 }: {
   board: readonly TechnicalBoardEntry[];
+  /**
+   * Takip listesinde olup henüz yayını olmayan semboller.
+   *
+   * DAĞILIM TAKİP LİSTESİNİN TAMAMINI ANLATIR. Sayı bir süre yalnızca
+   * yayımlanmış satırları sayıyordu ve listeye yeni eklenen sembol ilk
+   * yayına kadar ekranda hiç görünmüyordu: on beş hisse takip edilirken
+   * başlık "12 Hisse" diyordu ve eksik üçü hiçbir yerde yazmıyordu
+   * (ölçüldü, 19 Eylül canlı). Bekleyenler kendi satırında duruyor;
+   * böylece dört satırın toplamı listenin kendisi kadar.
+   */
+  pending?: readonly string[];
   meta: Record<string, SymbolMeta>;
   t: Dictionary;
   /** `directory`: liste sayfasının başlık görseli — kendi başlığı var ve
@@ -48,6 +60,9 @@ export function TechnicalPulse({
     verdict,
     rows: board.filter(({ row }) => verdictOf(row.stance) === verdict),
   }));
+  /* Bekleyenler bir GÖRÜŞ değil, bir eksik: kendi satırında ve nötr
+     tonda duruyor, oran çubuğunda da renksiz bir dilim olarak. */
+  const total = board.length + pending.length;
   const changes = board.flatMap(({ row, previousStance }) => {
     const verdict = verdictOf(row.stance);
     const label = stanceChangeLabel(verdict, previousStance, t);
@@ -64,7 +79,7 @@ export function TechnicalPulse({
         <div className={visuals.visualHeader}>
           <h2 id="technical-distribution">{t.technical.distribution}</h2>
           <span className="flex items-center gap-2 text-tiny font-semibold text-muted">
-            {t.technical.stockCount.replace("{n}", String(board.length))}
+            {t.technical.stockCount.replace("{n}", String(total))}
             <ChartLineUp size={17} aria-hidden />
           </span>
         </div>
@@ -79,6 +94,9 @@ export function TechnicalPulse({
           .map((group) => (
             <span key={group.verdict} data-verdict={group.verdict} data-motion-draw="line" style={{ flexGrow: group.rows.length }} />
           ))}
+        {pending.length > 0 && (
+          <span data-verdict="pending" data-motion-draw="line" style={{ flexGrow: pending.length }} />
+        )}
       </div>
 
       <div className={styles.pulseRows} data-motion-stagger>
@@ -113,6 +131,28 @@ export function TechnicalPulse({
               </div>
             </div>
           ))}
+        {pending.length > 0 && (
+          <div className={styles.pulseRow}>
+            <span className={cn(styles.pulseStance, styles.pulseStanceStatic, styles.pulseStancePending)}>
+              {t.technical.pendingLabel}
+              <b>{pending.length}</b>
+            </span>
+            <div className={styles.pulseLogos} data-motion-stagger>
+              {pending.map((symbol) => (
+                <Link
+                  key={symbol}
+                  href={technicalHref(symbol)}
+                  prefetch={false}
+                  className={cn(styles.pulseLogo, styles.pulseLogoPending)}
+                  title={`${symbol} · ${t.technical.pendingLabel}`}
+                >
+                  <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl ?? null} size="sm" />
+                  <span className="sr-only">{symbol}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {changes.length > 0 && (

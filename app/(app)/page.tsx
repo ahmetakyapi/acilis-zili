@@ -65,7 +65,15 @@ import {
 } from "@/lib/session-clock";
 import { FillColumn } from "@/components/today/FillColumn";
 import { TechnicalPulse } from "@/components/technical/TechnicalPulse";
-import { editionClock, editionTime, newestEdition, nextEdition, slotLabel } from "@/lib/technical";
+import {
+  TECHNICAL_SYMBOLS,
+  editionClock,
+  editionTime,
+  newestEdition,
+  nextEdition,
+  pendingSymbols,
+  slotLabel,
+} from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
 import { getQuotes } from "@/lib/providers";
 import { INDEX_STRIP, WORLD_MARKETS } from "@/db/seed/symbols";
@@ -412,6 +420,31 @@ export default async function TodayPage() {
           </Suspense>
         </div>
 
+        {/* ---- Teknik görünüm ----
+             HAREKET PANELİNİN HEMEN ALTINDA. İkisi aynı sorunun iki yarısı:
+             hareket paneli "bugün hangi isim taşıdı" diyor, teknik panel
+             "o isimlerde plan ne" diyor. Arada faiz ve makro dururken
+             okuyucu ikisini bağlamıyordu — biri ölçü, öteki görüş ve
+             ölçüden hemen sonra gelmeli.
+
+             SİTENİN YAZDIĞI İÇERİĞİN ANA SAYFADA KENDİ YERİ VAR; teknik
+             analizin yoktu ve ona yalnızca alt bilgiden ulaşılıyordu. Panel
+             yan kolonda çünkü içeriği okunacak bir metin değil bir ölçü: on iki
+             hissenin görüş dağılımı ve kimin hangi görüşte olduğu. Ana kolonda
+             denendi ve ölçüldü: 292 piksel ana kolonu yan kolondan 1440'ta 345,
+             1024'te 543 piksel uzun bırakıyordu (panelsiz fark ~33 piksel).
+             Burada dengeyi iyileştiriyor. Aynı veriyle, aynı sayfada paneli
+             gizleyerek ölçüldü: ana kolon panelsiz 1024'te 443, 1280'de 328
+             piksel uzun kalıyor; panelle fark 158 ve 43 piksele iniyor
+             (1440/1600'de ~40). Kolon boyları o günün verisiyle oynuyor, bu
+             sayılar 11 Eylül akşamının verisi.
+             Pano boşsa panel hiç basılmıyor, yer tutucu yok. */}
+        <div data-home-section="technical">
+          <Suspense fallback={null}>
+            <TechnicalPanel locale={locale} t={t} />
+          </Suspense>
+        </div>
+
         <div data-home-section="yields">
           <Suspense fallback={<PanelSkeleton rows={3} footer />}>
             <YieldCard locale={locale} t={t} />
@@ -430,25 +463,6 @@ export default async function TodayPage() {
         <div data-home-section="macro">
           <Suspense fallback={<PanelSkeleton rows={3} footer />}>
             <MacroSummary locale={locale} t={t} />
-          </Suspense>
-        </div>
-
-        {/* ---- Teknik görünüm ----
-             SİTENİN YAZDIĞI İÇERİĞİN ANA SAYFADA KENDİ YERİ VAR; teknik
-             analizin yoktu ve ona yalnızca alt bilgiden ulaşılıyordu. Panel
-             yan kolonda çünkü içeriği okunacak bir metin değil bir ölçü: on iki
-             hissenin görüş dağılımı ve kimin hangi görüşte olduğu. Ana kolonda
-             denendi ve ölçüldü: 292 piksel ana kolonu yan kolondan 1440'ta 345,
-             1024'te 543 piksel uzun bırakıyordu (panelsiz fark ~33 piksel).
-             Burada dengeyi iyileştiriyor. Aynı veriyle, aynı sayfada paneli
-             gizleyerek ölçüldü: ana kolon panelsiz 1024'te 443, 1280'de 328
-             piksel uzun kalıyor; panelle fark 158 ve 43 piksele iniyor
-             (1440/1600'de ~40). Kolon boyları o günün verisiyle oynuyor, bu
-             sayılar 11 Eylül akşamının verisi.
-             Pano boşsa panel hiç basılmıyor, yer tutucu yok. */}
-        <div data-home-section="technical">
-          <Suspense fallback={null}>
-            <TechnicalPanel locale={locale} t={t} />
           </Suspense>
         </div>
 
@@ -2356,7 +2370,12 @@ async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) 
   if (board.length === 0) return null;
   const holidays = await getHolidays();
   const next = nextEdition(new Date(), holidays);
-  const meta = await getSymbolNames(board.map(({ row }) => row.symbol));
+  /* Bekleyenler panelde de sayılıyor: iki ekran aynı listeyi anlatıyor ve
+     biri on iki, öteki on beş deseydi okuyucu hangisine inanacağını
+     bilemezdi. Künye `TECHNICAL_SYMBOLS`in tamamı için isteniyor — logolar
+     bekleyen satırda da basılıyor. */
+  const pending = pendingSymbols(board.map(({ row }) => row.symbol));
+  const meta = await getSymbolNames([...TECHNICAL_SYMBOLS]);
   const latest = newestEdition(board);
   return (
     <Panel className="min-w-0">
@@ -2389,7 +2408,7 @@ async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) 
             </span>
           </p>
         )}
-        <TechnicalPulse board={board} meta={meta} t={t} variant="panel" />
+        <TechnicalPulse board={board} pending={pending} meta={meta} t={t} variant="panel" />
       </div>
     </Panel>
   );

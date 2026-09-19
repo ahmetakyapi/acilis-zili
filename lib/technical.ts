@@ -73,6 +73,26 @@ export type TechnicalSymbol = (typeof TECHNICAL_SYMBOLS)[number];
 
 const SYMBOL_SET: ReadonlySet<string> = new Set(TECHNICAL_SYMBOLS);
 
+/**
+ * Takip listesinde olup HENÜZ YAYINI OLMAYAN semboller.
+ *
+ * NEDEN VAR: pano yalnızca yayımlanmış satırları taşıyor ve listeye yeni
+ * bir sembol eklendiğinde o sembol, ilk yayına kadar ekrandan tümüyle
+ * kayboluyordu. Ölçüldü (19 Eylül, canlı): liste on beş sembol, panoda on
+ * iki kart ve başlıkta "12 Hisse" — 18 Eylül'de eklenen AMD, INTC ve PLTR
+ * hiçbir yerde yoktu. Sayı yanlış değildi ama ekranın kendi iddiasıyla
+ * ("takip edilen hisseler") çelişiyordu: takip edilen bir sembolün sessizce
+ * yok olması, bu depodaki "eksik veri sessiz kalmaz" kuralının aynısı.
+ *
+ * Sıra listenin sırası — okuyucu her gün aynı hisseyi aynı yerde bulsun.
+ */
+export function pendingSymbols(
+  published: readonly string[],
+): TechnicalSymbol[] {
+  const yayimlanan = new Set(published);
+  return TECHNICAL_SYMBOLS.filter((symbol) => !yayimlanan.has(symbol));
+}
+
 export function isTechnicalSymbol(value: string): value is TechnicalSymbol {
   return SYMBOL_SET.has(value);
 }

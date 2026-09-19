@@ -34,12 +34,28 @@
    ortak kural opaklığı !important ile 1'e eziyor, TUT tam doygun kalıyordu. */
 .pulseBar > span[data-verdict="hold"] { background:color-mix(in srgb, var(--primary) 55%, transparent); }
 .pulseBar > span[data-verdict="sell"] { background:var(--down); }
-.pulseRows { display:grid; gap:4px; }
-.pulseRow { display:grid; grid-template-columns:78px minmax(0,1fr); align-items:center; gap:12px; padding:8px 10px; border-radius:14px; transition:background-color .2s; }
+/* BEKLEYEN DİLİM RENKSİZ. Bir görüş değil, henüz olmayan bir görüş —
+   yeşil/mavi/kırmızının yanında dördüncü bir renk, olmayan bir kararı
+   varmış gibi gösterirdi. */
+.pulseBar > span[data-verdict="pending"] { background:var(--line-strong); }
+/* ETİKET SÜTUNU EN UZUN ETİKETE GÖRE, PİKSELLE DEĞİL. Sütun sabit 78
+   pikseldi; üç görüş etiketi ("AL", "TUT", "SAT") oraya rahat sığıyordu
+   ama dördüncü satır gelince ("Bekliyor" 76 piksel) sayının ardındaki
+   boşluk yenip logolara dayanıyordu. Sabit sayıyı büyütmek de bedava
+   değil: 390 pikselde on piksel, altı logoluk satırı ikiye bölüyordu
+   (ölçüldü). Alt ızgara sütunu içeriğin kendisine ölçtürüyor — etiket ne
+   kadar uzunsa o kadar, logolara kalan da tam kalan kadar. */
+.pulseRows { display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px; }
+.pulseRow { display:grid; grid-column:span 2; grid-template-columns:subgrid; align-items:center; column-gap:12px; padding:8px 10px; border-radius:14px; transition:background-color .2s; }
 .pulseRow:hover { background:var(--surface); }
 .pulseStance { display:flex; align-items:baseline; gap:8px; font-size:13px; font-weight:700; letter-spacing:.03em; cursor:pointer; }
 .pulseStance b { font-size:22px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
 .pulseStanceStatic { cursor:default; }
+.pulseStancePending { color:var(--text-muted); font-weight:650; }
+.pulseStancePending b { color:var(--text-muted); }
+/* Logosu soluk: sembol takipte ama henüz söyleyecek bir şeyi yok. */
+.pulseLogoPending { opacity:.5; filter:grayscale(1); }
+.pulseLogoPending:hover { opacity:1; filter:none; }
 .pulseLogos { display:flex; flex-wrap:wrap; gap:6px; min-width:0; }
 .pulseLogo { display:inline-flex; border-radius:10px; transition:transform .2s; }
 /* MOBİLDE DOKUNMA ALANI 40. Künye 26×26 çiziliyor ve parmakla ıskalanıyordu.
@@ -627,6 +643,9 @@
    biraz cömert ama metin 12 piksel ve yasal nitelikte: okunacak değil,
    bakılacak bir blok. */
 .footNote { display:flex; flex-direction:column; gap:6px; max-width:78ch; padding-top:14px; border-top:1px solid var(--line); font-size:12px; line-height:1.6; color:var(--text-muted); }
+/* Bekleyen semboller künyesi — ızgaranın altında, hairline ile ayrı.
+   Yeni kutu açmıyor: deponun eksik veri künyesi kalıbı. */
+.pendingNote { margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:var(--text-small); line-height:1.65; color:var(--text-muted); }
 
 /* ---- Kırılımlar ---- */
 @media (max-width: 1023px) {
@@ -650,7 +669,10 @@
 }
 
 @media (max-width: 767px) {
-  .pulseRow { grid-template-columns:68px minmax(0,1fr); padding:6px 4px; }
+  /* Dar ekranda etiket ile logolar arası 8 piksel: sütun artık içeriğine
+     göre ölçüldüğü için kazanılan dört piksel doğrudan logolara gidiyor
+     ve altı logoluk satır tek satırda kalıyor. */
+  .pulseRow { column-gap:8px; padding:6px 4px; }
   .card { padding:18px 16px 14px; border-radius:20px; }
   .cardPrice strong { font-size:25px; }
   .cover { padding:20px 18px; border-radius:20px; gap:18px; }
