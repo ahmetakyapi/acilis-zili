@@ -178,8 +178,9 @@
 .dashboard [data-home-section]:empty { display:none; }
 @media(max-width:1023px) {
  .dashboard > [data-col] { display:contents; }
- /* Telefonda okuma sırası: günün özeti, dünya, hareketler, mercek, teknik
-    görünüm, ölçüler, takvim, listeler, bilanço, haber akışı, künye.
+ /* Telefonda okuma sırası: günün özeti, hareketler, mercek, teknik
+    görünüm, ölçüler (dünya · tahvil · makro), takvim, listeler, bilanço,
+    haber akışı, künye.
 
     SIRA HER BÖLÜME AÇIKÇA YAZILIYOR. Değeri olmayan bir bölüm `order:0`
     alıyor ve düzleşmiş yığının EN BAŞINA, günün özetinin üstüne çıkıyor —
@@ -199,10 +200,17 @@
     Masaüstünde hiçbir şey değişmiyor: bu blok yalnızca 1024'ün altında
     çalışıyor, iki kolonlu düzende paneller kendi kolonlarında kalıyor. */
  .dashboard [data-home-section="brief"] { order:1; }
- .dashboard [data-home-section="world"] { order:2; }
- .dashboard [data-home-section="movers"] { order:3; }
- .dashboard [data-home-section="stories"] { order:4; }
- .dashboard [data-home-section="technical"] { order:5; }
+ .dashboard [data-home-section="movers"] { order:2; }
+ .dashboard [data-home-section="stories"] { order:3; }
+ .dashboard [data-home-section="technical"] { order:4; }
+ /* DÜNYA PİYASALARI TAHVİLİN HEMEN ÜSTÜNDE.
+    Şerit ikinci sıradaydı — günün özetinden hemen sonra — ve orada tek
+    başına duruyordu: okuyucu ABD seansının özetinden çıkıp Avrupa ile
+    Asya'ya geçiyor, sonra yine ABD'ye (hareketler, mercek, teknik) dönüp
+    en sonda tahvil ile makroya varıyordu. Oysa dünya şeridi, tahvil ve
+    makro AYNI SORUYA cevap veriyor: "piyasanın geri kalanı ne yapıyor".
+    Üçü art arda duruyor ve telefonda tek bir blok gibi okunuyor. */
+ .dashboard [data-home-section="world"] { order:5; }
  .dashboard [data-home-section="yields"] { order:6; }
  .dashboard [data-home-section="macro"] { order:7; }
  .dashboard [data-home-section="schedule"] { order:8; }

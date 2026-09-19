@@ -1478,6 +1478,7 @@ function EarningsTodaySkeleton({ t }: { t: Dictionary }) {
     <Panel>
       <PanelHeader
         title={t.today.earningsToday}
+        tone="plate"
         action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
       />
       <ListSkeleton rows={4} />
@@ -1501,6 +1502,7 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
       <Panel>
         <PanelHeader
           title={t.today.earningsToday}
+          tone="plate"
           action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
         />
         <EmptyState compact title={t.earnings.empty} />
@@ -1541,6 +1543,13 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
     <Panel>
       <PanelHeader
         title={t.today.earningsToday}
+        /* PLAKA BAŞLIK — PANOdaki öteki VERİ panelleriyle aynı aile.
+           Bu panel başlığın büyük (`title`) tonundaydı ve hemen üstündeki
+           "Bugünün Takvimi" ile "Haftaya Bakış" plakayken yan yana iki ayrı
+           başlık ailesi okunuyordu. Kural: sitenin KENDİ YAZDIĞI içerik
+           (mercek, bilanço analizi, bülten) büyük başlık alıyor, piyasa
+           verisi panelleri plaka. Bugün açıklayanlar bir takvim listesi. */
+        tone="plate"
         /* SAYAÇ YALNIZCA LİSTE KIRPILDIĞINDA. İki sayıyı da söylüyor
            ("47 şirketin 8 tanesi") çünkü önce yalnızca toplam yazıyordu ve
            altında sekiz satır duruyordu: okuyucu ya kırpıldığını fark
@@ -1936,28 +1945,41 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
           ? timePair(event.eventDate, event.eventTimeEt, locale)
           : null;
         return (
+          /* TELEFONDA TARİH SÜTUNU DEĞİL KÜNYE SATIRI.
+             Sütun 86 piksel genişti ve "24 Eylül Perşembe" oraya sığmıyor:
+             tarih üç satıra (gün, gün adı, saat) çıkarken olayın adı tek
+             satırda kalıyor, satır sağı boş bir L'ye dönüyordu (ölçüldü,
+             390). Dar ekranda sıra değişiyor — önce etki noktası ve olayın
+             adı, altında tarih ile saat tek satırda. Sütun düzeni yalnızca
+             1024'ten geniş ekranda geri geliyor — panel orada yan kolonda
+             (350 piksel) ve sütun o dar kap için tasarlanmıştı; 768'de pano
+             tek kolon ve panel tam genişlikte, orada da yığılmış hâli
+             doğru okunuyor. Sıra `order` ile çevriliyor, DOM
+             sırası telefondaki okuma sırası. */
           <li
             key={event.id}
             data-fill={index >= WEEK_AHEAD_BASE ? "" : undefined}
             hidden={index >= WEEK_AHEAD_BASE}
-            className="flex items-start gap-3 border-t border-line px-4 py-3 sm:px-5"
+            className="flex flex-wrap items-start gap-x-2.5 gap-y-1 border-t border-line px-4 py-3 sm:px-5 lg:flex-nowrap lg:gap-3"
           >
-            <span className="w-[86px] shrink-0">
-              <span className="block text-tiny font-semibold leading-tight text-strong">
+            <span className="lg:order-2">
+              <ImpactDot
+                importance={event.importance ?? "medium"}
+                label={t.calendar.impact}
+              />
+            </span>
+            <span className="min-w-0 flex-1 text-base leading-snug text-body lg:order-3">
+              {locale === "tr" ? event.titleTr : event.titleEn}
+            </span>
+            <span className="flex w-full flex-wrap items-baseline gap-x-2 pl-[18px] lg:order-1 lg:w-[86px] lg:shrink-0 lg:flex-col lg:items-start lg:gap-x-0 lg:pl-0">
+              <span className="text-tiny font-semibold leading-tight text-strong">
                 {formatEtDateLong(event.eventDate, locale)}
               </span>
               {times && (
-                <span className="numeral block text-nano leading-tight text-muted">
+                <span className="numeral text-nano leading-tight text-muted">
                   {times.primary} {tags.primary}
                 </span>
               )}
-            </span>
-            <ImpactDot
-              importance={event.importance ?? "medium"}
-              label={t.calendar.impact}
-            />
-            <span className="min-w-0 flex-1 text-base leading-snug text-body">
-              {locale === "tr" ? event.titleTr : event.titleEn}
             </span>
           </li>
         );
