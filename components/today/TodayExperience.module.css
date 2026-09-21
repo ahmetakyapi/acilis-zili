@@ -28,7 +28,12 @@
 .indexSkeleton { width: 100%; height: 164px; border-radius: 14px; }
 .indexValue { margin-top: 13px; font-size: 29px; font-weight: 650; line-height: 1.15; letter-spacing: -.045em; color: var(--text-strong); }
 .indexSpark { margin-top: 8px; height: 36px; width: 100%; }
-.flowPanel { padding: 24px 28px 4px; border: 1px solid var(--line); border-radius: 20px; background: var(--premium-surface); scroll-margin-top: 150px; }
+/* 21 Eylül: panelin eski ScrollStage dönüşümü dış aralığa ek düşey
+   mesafe getiriyordu (1440px: 39px, 390px: 44px). İlk iki panel
+   arasında artık masaüstünde 14px, mobilde 12px var;
+   başlık/kart hareketleri içeride kalır, panelin kendisi yerinden oynamaz. */
+.hero + .flowPanel { margin-top:-10px; }
+.flowPanel { padding: 20px 28px 4px; border: 1px solid var(--line); border-radius: 20px; background: var(--premium-surface); scroll-margin-top: 150px; }
 /* Eski ayrı gezinme şeridi 58px + iki 24px dış aralık kaplıyordu.
    Gün akışının başlığıyla aynı satıra yerleşir; kendi yüzeyini çoğaltmaz. */
 .flowHeader { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
@@ -332,3 +337,5 @@
  .analysisExcerpt { font-size:14px; }
 }
 @media(prefers-reduced-motion:reduce) { .indexCard { transition:none; } .indexLink:hover .indexCard { transform:none; } }
+
+@media(max-width:767px) { .hero + .flowPanel { margin-top:-6px; } }

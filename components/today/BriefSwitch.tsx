@@ -138,7 +138,7 @@ export function BriefSwitch({
             duruyor, satırın öteki ucundaki eylem gibi durmuyordu. Grup o
             satırın tamamını alıyor ve iki uç birbirinden ayrılıyor; tek
             satıra sığdığında (sm) eski davranış. */}
-        <div className="flex w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:justify-start">
+        <div className="flex w-full shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:w-auto sm:justify-start">
 
       {/* Sekmeler metnin hemen üstünde: hangi dönemi okuduğun, okumaya
           başlamadan önce görünür. Dokunma hedefi 34px — 12.5px'lik iki

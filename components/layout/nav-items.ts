@@ -18,7 +18,7 @@ import { stripLocale } from "@/lib/i18n/routing";
 import type { Dictionary } from "@/lib/i18n";
 
 /** Masthead şeridinde taşma önceliği — 1 en son taşar. */
-export type StripRank = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type StripRank = 1 | 2 | 3 | 4 | 5;
 
 /**
  * Phosphor, duotone ağırlık — `/dist/ssr` girişi context kullanmaz, o yüzden
@@ -104,6 +104,9 @@ export type NavItem = {
  * ve sayfa yatay taşmıyor. 20px'te Şirketler ve Takvim (1280'de Makro da),
  * 24px'te bunlara ek olarak Makro ve Teknik panele iniyor.
  */
+/* 21 Eylül: yeni sade headerda beş ana hedef var. Makro ve Takvim,
+   açıklamalı Daha Fazla paneline taşındı; Teknik Analiz doğrudan kalır.
+   Yukarıdaki yedi sekmeli ölçümler önceki düzenin karar kaydıdır. */
 export const NAV_ITEMS: NavItem[] = [
   {
     /* Alt çubukta YOK: mastheaddeki logo zaten buraya götürüyor ve o logo
@@ -128,7 +131,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.companies,
     icon: Buildings,
     inBottomBar: false,
-    strip: { rank: 6 },
+    strip: { rank: 5 },
     hint: (t) => t.menu.hintCompanies,
   },
   {
@@ -136,7 +139,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.macro,
     icon: Percent,
     inBottomBar: false,
-    strip: { rank: 5 },
+    more: true,
     hint: (t) => t.menu.hintMacro,
   },
   {
@@ -166,7 +169,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.calendar,
     icon: CalendarBlank,
     inBottomBar: false,
-    strip: { rank: 7 },
+    more: true,
     hint: (t) => t.menu.hintCalendar,
   },
   {

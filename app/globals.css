@@ -1625,3 +1625,62 @@ header.page-heading.page-masthead { flex-direction:row; align-items:flex-start; 
 [data-motion-action]:is(:hover,:focus-visible) svg { transform:translateX(3px); }
 [data-motion-action]:active { opacity:.72; }
 @media(prefers-reduced-motion:reduce) { [data-motion-action],[data-motion-action] svg { transition:none; } [data-motion-action] svg { transform:none!important; } }
+
+/* 21 September — one calm navigation group instead of seven equally bold
+   headings. The shell stays 69px tall, so page starts and sticky offsets do
+   not move. Five primary destinations; the rest have named, illustrated rows. */
+.premium-masthead { background:linear-gradient(110deg,var(--premium-surface),var(--chrome) 70%); }
+.premium-masthead::after { content:""; position:absolute; left:0; right:0; top:100%; height:12px; pointer-events:none; background:linear-gradient(var(--primary-tint),transparent); opacity:.35; }
+.masthead-brand { border-radius:10px; }
+.masthead-brand > span:first-child { transition:transform 260ms var(--ease-brand); }
+.masthead-brand svg { transform-origin:50% 15%; }
+.masthead-brand:focus-visible { outline:2px solid var(--line-focus); outline-offset:5px; }
+.masthead-nav { height:44px; align-self:center; }
+.masthead-nav > ul { height:44px; border-radius:12px 0 0 12px; background:var(--primary-tint); box-shadow:inset 1px 0 var(--line-soft),inset 0 1px var(--line-soft),inset 0 -1px var(--line-soft); }
+.masthead-nav > div { height:44px; border-radius:0 12px 12px 0; background:var(--primary-tint); box-shadow:inset -1px 0 var(--line-soft),inset 0 1px var(--line-soft),inset 0 -1px var(--line-soft); }
+.masthead-nav [data-strip-href] { height:44px; }
+.masthead-nav .masthead-link { isolation:isolate; height:36px; margin-block:4px; font-size:.8125rem; font-weight:600; transition:color 180ms; }
+.masthead-nav .masthead-link > span:first-child { position:relative; z-index:1; transform:none; }
+.masthead-nav .masthead-link > svg { position:relative; z-index:1; }
+.masthead-nav .masthead-mark { inset:0 3px; height:auto; border:1px solid var(--primary-faint); border-radius:8px; background:linear-gradient(140deg,var(--premium-highlight),var(--primary-wash)); box-shadow:0 2px 4px var(--primary-tint); animation:masthead-surface-in 200ms var(--ease-brand) both; z-index:0; }
+.masthead-nav .masthead-link::after { inset:0 3px; height:auto; border-radius:8px; background:var(--surface-elevated); z-index:0; transition:opacity 180ms; }
+.masthead-nav .masthead-link[aria-current]::after { display:none; }
+.masthead-nav .masthead-link:focus-visible > span:first-child { outline-offset:3px; }
+.masthead-dropdown { max-height:calc(100dvh - var(--app-bar-h) - 32px); overflow-y:auto; background:linear-gradient(145deg,var(--primary-tint),transparent 45%),var(--overlay-surface); }
+.masthead-row { transition:background 180ms; }
+.masthead-row-icon { display:grid; place-items:center; flex:none; width:34px; height:34px; border:1px solid var(--primary-faint); border-radius:10px; color:var(--primary-ink); background:var(--primary-tint); }
+.masthead-row-arrow { flex:none; color:var(--text-muted); opacity:.5; transition:transform 180ms,opacity 180ms; }
+.masthead-row[aria-current="page"] { background:var(--primary-wash); }
+.premium-masthead .masthead-search,.premium-masthead .masthead-account { border-radius:11px; border-color:var(--line); box-shadow:inset 0 1px var(--premium-highlight); }
+.premium-masthead .masthead-search { background:var(--premium-surface); }
+.premium-masthead .masthead-search > svg { color:var(--primary-ink); }
+.premium-masthead .masthead-search kbd { padding:2px 4px; border:1px solid var(--line-soft); border-radius:4px; font-weight:500; }
+@media(min-width:1024px) {
+ .premium-masthead .masthead-search,.premium-masthead .masthead-account { height:38px; min-width:38px; }
+}
+@media(min-width:1280px) {
+ .masthead-nav .masthead-link { font-size:.84375rem; }
+ .premium-masthead .masthead-search { width:220px; }
+}
+@media(hover:hover) and (pointer:fine) {
+ .masthead-brand:hover > span:first-child { transform:translateY(-1px); }
+ .masthead-brand:hover svg { animation:masthead-bell 600ms var(--ease-brand); }
+ .masthead-row:hover .masthead-row-arrow { transform:translate(2px,-2px); opacity:1; }
+ .premium-masthead .masthead-search:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+}
+@keyframes masthead-surface-in { from { opacity:0; transform:translateY(2px); } to { opacity:1; transform:none; } }
+@keyframes masthead-bell { 20% { transform:rotate(-9deg); } 50% { transform:rotate(7deg); } 80% { transform:rotate(-3deg); } to { transform:none; } }
+@supports(animation-timeline:scroll()) {
+ .premium-masthead::after { animation:masthead-depth linear both; animation-timeline:scroll(root); animation-range:0px 90px; }
+}
+@keyframes masthead-depth { from { opacity:0; } to { opacity:1; } }
+@media(prefers-reduced-motion:reduce) {
+ .premium-masthead::after,.masthead-nav .masthead-mark,.masthead-brand:hover svg { animation:none; }
+ .masthead-brand > span:first-child,.masthead-row-arrow,.masthead-nav .masthead-link,.masthead-nav .masthead-link::after { transition:none; }
+ .masthead-brand:hover > span:first-child,.masthead-row:hover .masthead-row-arrow { transform:none; }
+}
+@media(forced-colors:active) {
+ .masthead-nav .masthead-mark { border:1px solid Highlight; background:transparent; }
+ .masthead-row-icon { border-color:ButtonText; }
+ .premium-masthead::after { display:none; }
+}

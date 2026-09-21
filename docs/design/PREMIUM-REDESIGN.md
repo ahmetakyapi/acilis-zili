@@ -326,3 +326,10 @@ Kullanıcının yeni ekran görüntülerinden sonra detay ekranı ayrıca ele al
 Doğrulama: MU/NVDA/ONDS × TR/EN × açık/koyu × 320/390/768/1024/1440px = **60 üretim yerleşimi**. Yatay taşma, kesilen fiyat, harita satırı/künye çakışması veya gösterge gövdesi hiza farkı yok. Masaüstü/mobil ve normal/azaltılmış hareketle beş bölüm bağlantısında **20 kontrol** başarılı. Fiyat haritası ve paragraf sınırları için **7 mevcut test**, build, lint, typecheck ve diff kontrolü temiz. Fiziksel iOS/Safari doğrulaması yapılmadı.
 
 Kanıtlar: `/tmp/acilis-redesign/sep21-before-detail-detail.json`, `sep21-production-detail-detail.json`, `sep21-anchors.json`, `sep21-detail-tests.log` ve ilgili ekran görüntüleri.
+
+### Header ve Akış Boşluğu — 21 Eylül
+
+- Header 69px yüksekliğini koruyor. Beş ana hedef, ikon ve açıklamalı diğer ekranlar menüsü; aktif sayfa yüzeyi, odak işaretleri ve azaltılmış harekete duyarlı mikro animasyonlar.
+- Bugünün Akışı üst boşluğu 1440px'te 39 → 14px, 390px'te 44 → 12px. Bölümün ölçekli dış sarmalı kaldırıldı; iç animasyonları korundu.
+- Dar ekranda bülten dönem/ arşiv denetimleri gerektiğinde sarılıyor.
+- Üretim derlemesinde 44 yerleşim senaryosu: TR/EN, açık/koyu, 320–1920px ve masaüstünde %150 yazı. Header çakışması/kırpılan kontrol yok; belge genişliğinde en fazla 1px yuvarlama payı. Sekiz menü, arama, hesap ve hareket senaryosu geçti. Yedi navigasyon testi, build, typecheck, lint ve diff kontrolü temiz.

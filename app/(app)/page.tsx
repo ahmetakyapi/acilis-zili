@@ -1,5 +1,5 @@
 import { cache, Suspense } from "react";
-import { MotionExperience, ScrollStage, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
+import { MotionExperience, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CalendarBlank, Waveform } from "@phosphor-icons/react/dist/ssr";
@@ -245,7 +245,7 @@ export default async function TodayPage() {
 
       {/* Bölüm bağlantıları artık bağımsız bir şerit değil, gün akışının
           araçları. Çapalar ve klavye erişimi korunur; içerik gizlenmez. */}
-      <ScrollStage><section id="gunun-akisi" className={styles.flowPanel}>
+      <section id="gunun-akisi" className={styles.flowPanel}>
         <div className={styles.flowHeader}>
           <div className={styles.sectionHeading}>
             <h2>{t.today.todayFlow}</h2>
@@ -289,7 +289,7 @@ export default async function TodayPage() {
         >
           <RailSection t={t} locale={locale} />
         </Suspense>
-      </section></ScrollStage>
+      </section>
 
     <div className={styles.dashboard}>
       {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer
