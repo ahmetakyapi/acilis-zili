@@ -307,10 +307,6 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           {locale === "en" && !hasEnglish && (
             <p className="text-small text-muted">{t.technical.langNote}</p>
           )}
-          <div className={styles.reading} data-tone={planReadingTone(reading)}>
-            <span className={styles.readingLabel}>{t.technical.readingLabel}</span>
-            <p>{planReadingText(reading, locale, t)}</p>
-          </div>
         </div>
 
         <div className={styles.coverSide}>
@@ -351,11 +347,17 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
               uzaklıklarıyla zaten veriyor.
               Liste kartında DURUYOR: orada harita yok, çizgi planın tek
               geometrisi (`TechnicalCard`). */}
-          <PlanStrip verdict={verdict} {...levelProps} size="lg" locale={locale} t={t} />
+          <div className={styles.reading} data-tone={planReadingTone(reading)}>
+            <span className={styles.readingLabel}>{t.technical.readingLabel}</span>
+            <p>{planReadingText(reading, locale, t)}</p>
+          </div>
         </div>
 
-        <div className={styles.coverSignals}>
-          <SignalStrip snapshot={row.snapshot} price={price} locale={locale} t={t} />
+        {/* 21 Eylül: mobil kapak 1045px'ti. Plan tam genişlikte kendi
+            bandında; gösterge özeti artık ayrıntılarını anlattığı bölümde.
+            Böylece ilk ekran kimliği, görüşü ve planı birlikte okutur. */}
+        <div className={styles.coverPlan}>
+          <PlanStrip verdict={verdict} {...levelProps} size="lg" locale={locale} t={t} />
         </div>
       </header>
 
@@ -427,6 +429,9 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                 {t.technical.snapshotNote.replace("{date}", formatEtDateCompact(row.snapshot.lastSession, locale))}
               </span>
             )}
+          </div>
+          <div className={styles.indicatorSummary}>
+            <SignalStrip snapshot={row.snapshot} price={price} locale={locale} t={t} />
           </div>
           <IndicatorPanels snapshot={row.snapshot} price={price} locale={locale} t={t} />
         </section>

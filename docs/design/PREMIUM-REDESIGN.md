@@ -288,3 +288,27 @@ Kullanıcının izniyle kayıt formundan açılan test hesabıyla Favoriler, Aya
 - Güncel sade masthead'de Teknik Analiz doğrudan erişilebilir; daha az kullanılan hedefler Daha Fazla'da, tema/dil/oturum araçları hesap panelindedir. Bu düzenle teknik sayfaların bütünlüğü kontrol edildi. Mobil Menü'deki bağlantıların İngilizce öneki eksikti: `/en/menu` tercihi olmayan bir tarayıcıda Türkçe hedeflere gidiyordu. Menü ve giriş bağlantıları artık sunucunun çözdüğü dili taşır.
 - Doğrulama: teknik liste, MU ve ONDS detayları, şirketler ve piyasalar; TR/EN × açık/koyu × 320/768/1440px = **60 yerleşim**, taşma/kesilen okuma/tarayıcı hatası yok. **24 etkileşim**: 1024/1280/1440px header ve klavye menüsü, mobil Teknik Analiz erişimi, dört yerel görüş filtresi, on tekil şirket hedefi ve ilkine klavyeyle geçiş, iki piyasa açıklamasının açılması ve geciktirilmiş gezinmede marka zili. RSI eksik/0/30/53,3/70/100, sıfır/pozitif/negatif MACD ve AL/SAT seviye anlamları için **12 yalıtılmış render kontrolü** başarılı; test verisi veritabanına yazılmadı.
 - İki ekran genişliğinde **12 gösterge paneli** doğal görünürlük animasyonuyla kontrol edildi: görünür olunca çubuklar gerçek son oranlarına ulaşıyor; sayfa açıkken azaltılmış harekete geçişte de ölçek korunuyor. Üretim build, lint, build sonrası typecheck ve diff kontrolü temiz. Kanıtlar `/tmp/acilis-redesign/september-{matrix,interactions,motion}.json`, `technical-edges.json`, `{before,final}-september.json` ve aynı dizindeki ekran görüntüleri. Kontroller yerel Chrome'da yapıldı; fiziksel iOS/Safari doğrulaması yapılmadı.
+
+## Teknik Analiz ve Ana Sayfa — 21 Eylül
+
+İşe `94ecc63` ve önceki Claude commitlerini inceleyerek başlandı. Üçüncü günlük yayın, on beş sembollük takip listesi, bekleyen analizler, fiyat/seri tazeliği, açıklamalı göstergeler ve kartların ortak alt satır hizası korundu. 12 Eylül ölçümleri yerine bu güncel sürüm yeni başlangıç kabul edildi.
+
+- Teknik analiz kapağında gerçek takip listesini gösteren bölümlü dağılım kadranı; her dilim bir hisse, bekleyenler nötr. Sayılar ve hisse bağlantıları metin olarak da mevcut. Dar ekranlarda aynı dağılım doğrusal gösterime döner. Görünür olduğunda çizilen yaylar mevcut hareket katmanını kullanır.
+- Yayın künyesi daha sıkı iki sütunda; listeye görünür “Hisse Planları” başlığı ve ortak yüzey dilinde filtreler eklendi. Kartlarda şirket kimliği, fiyat, işlem planı ve yardımcı göstergeler ayrışır; altı satırlı subgrid hizası korunur. Yerel radyo filtreleri JavaScript olmadan da çalışır. Yeni istemci katmanı yalnızca kart konumları arasındaki geçişi canlandırır; URL'yi veya veri kaynağını değiştirmez. Uzun sıçramalar kısa girişe çevrilir; hızlı seçimler ve hareket tercihi değişiminde animasyonlar temizlenir.
+- Teknik detayda fiyat ve planın güncel okuması yan yana bağlandı; alım/satış/vazgeçme seviyeleri tam genişlikte kendi bandına alındı. Trend, momentum, hacim ve yıllık konum özeti, açıklamalarının bulunduğu Göstergeler bölümüne taşındı. Fiyat haritası satırları, gösterge başlıkları, geçmiş tablosu ve diğer hisse kartları aynı mavi yüzey/odak dilini kullanır. Hesaplar ve plan anlamları değiştirilmedi.
+- Ana sayfanın saat/geri sayım yüzeyi, endekslerde fiyat–değişim hizası ve grafik alanı düzenlendi. Tekrarlanan tanıtım cümlesi kaldırıldı; hedef tarih/saat, kaynak ve gecikme bilgisi duruyor. İskelet boyutları kartlarla birlikte güncellendi. Özet, hareketler, teknik analiz ve diğer bölümlerin son Claude sürümündeki mobil sırası korundu. Akışta olay yoksa kullanılmayan işaret bandı kısalır ve “olay seçin” açıklaması gösterilmez; canlı olay geldiğinde açıklama geri gelir.
+
+Aynı veriyle, yerel Chrome'da azaltılmış hareket ve 900px pencere yüksekliğiyle kapak ölçümleri:
+
+| Kapak | 1440px Önce → Sonra | 390px Önce → Sonra |
+| --- | --- | --- |
+| Teknik Analiz | 316 → 267px | 608 → 539px |
+| MU Teknik Detay | 503 → 489px | 1045 → 759px |
+| Ana Sayfa | 437 → 427px | 682 → 615px |
+
+- TR/EN × açık/koyu × 320/768/1440px: teknik liste, MU/ONDS detayları, bekleyen AMD analizi ve ana sayfada **60 yerleşim**. Taşma, kesilen başlık/değer, header çakışması veya tarayıcı hatası yok.
+- **31 etkileşim kontrolü:** gerçek 15 dilim, masaüstü/mobil dört görüş filtresi, dağılımdan seçim, klavye, hızlı seçim, canlı azaltılmış hareket, detay bölüm bağlantısı, boş akış ve JavaScript kapalı filtre. Filtrelerde belge gezinmesi yok; Next'in mevcut bağlantı ön yüklemesi korunur.
+- Geri sayımda iki dil, altı genişlik, iki tema ve dört süre sınırı: **96 yerleşim**; sıfır günün gizlenmesi, rakamların taşmaması, saniye güncellemesi, hareket tercihi ve mobil bölüm sırası doğrulandı. Boş akışa tarayıcıda yalıtılmış test yanıtıyla olay eklenerek açıklamanın geri gelmesi kontrol edildi; sunucuya test verisi yazılmadı.
+- Yayın saatleri, fiyat haritası, gün akışı/sağlayıcıları ve özet ön izlemesi için **33 mevcut test** başarılı. Üretim build, lint ve build sonrası typecheck temiz. Yeni bağımlılık yok. Fiziksel iOS/Safari testi yapılmadı.
+
+Yerel kanıtlar: `/tmp/acilis-redesign/sep21-{before,draft3,matrix,interactions,countdown,flow}.json` ve aynı dizindeki ekran görüntüleri.

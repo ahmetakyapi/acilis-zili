@@ -221,7 +221,7 @@ export function TechnicalCard({
         </div>
       </div>
 
-      <div className={styles.cardPlan}>
+      <div className={styles.cardPlan} data-verdict={verdict}>
         <PlanStrip verdict={verdict} {...levelProps} locale={locale} t={t} />
         <LevelTrack price={price} {...levelProps} verdict={verdict} />
       </div>

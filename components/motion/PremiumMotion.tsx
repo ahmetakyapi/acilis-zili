@@ -408,7 +408,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         const delay = Math.min(240, Math.max(0, siblings.indexOf(element)) * (intro ? 55 : 65));
         const bar = element.dataset.motionDraw === "bar";
         const line = element.dataset.motionDraw === "line";
-        const spark = element.classList.contains("spark-line");
+        const spark = element.classList.contains("spark-line") || element.dataset.motionDraw === "arc";
         const area = element.classList.contains("spark-area");
         const dot = element.classList.contains("spark-dot");
         const ring = element.classList.contains("ring-fill");

@@ -245,7 +245,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
         Önceki düzende olay rozetleri eksenin ÜSTÜNE oturuyordu; rayı
         kapatıyor, açılış/kapanış saatleriyle aynı banda giriyor ve
         birbirlerinin rakamını kesiyorlardı. */}
-    <div className={styles.rail} aria-label={railLabels.marketHours}>
+    <div className={styles.rail} data-empty={events.length === 0} aria-label={railLabels.marketHours}>
       <div className={styles.bounds}>
         {[{ minutes: 570, label: railLabels.openShort }, { minutes: snapshot.closeMinutes, label: railLabels.closeShort }].map(({ minutes, label }) => <div key={label} className={styles.bound} style={{ left: `${pct(minutes)}%` }}><span>{label}</span><strong className="numeral">{primary(minutes)} <small>{snapshot.tags.primary}</small></strong></div>)}
       </div>
@@ -286,7 +286,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
       </div>
 
       <div className={styles.axisFoot}><span className="numeral">{primary(240)}</span><span>{snapshot.tradingDay ? railLabels.marketHours : labels.closed}</span><span className="numeral">{primary(1200)} {snapshot.tags.primary}</span></div>
-      <div className={styles.railLegend}><span><TrendUp size={13} />{labels.economic}</span><span><Bell size={13} />{labels.earnings}</span><p>{labels.timelineHint}</p></div>
+      {events.length > 0 && <div className={styles.railLegend}><span><TrendUp size={13} />{labels.economic}</span><span><Bell size={13} />{labels.earnings}</span><p>{labels.timelineHint}</p></div>}
     </div>
 
     {events.length ? <>

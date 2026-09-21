@@ -233,9 +233,8 @@ export default async function TodayPage() {
                 <strong>{targetTime} <small>{zoneTag(locale).primary}</small></strong>
               </time>
             </div>
-            <div className={styles.heroFooter}>
-              <p className={styles.description}>{t.today.countdownDescription}</p>
-            </div>
+            {/* The target date/time is the useful next step. Repeating a
+                promotional sentence below it added 48px on a phone. */}
           </div>
           <section className={styles.indexDeck} aria-labelledby="hero-indices">
             <div className={styles.indexHeading}><h2 id="hero-indices">{t.today.indices}</h2><span>{t.today.experienceIndexNote}</span></div>
@@ -665,17 +664,19 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                     {symbol}
                   </span>
                 </div>
-                <p className={styles.indexValue}>
-                  {formatPrice(quote.price, locale)}
-                </p>
-                <p
-                  className={cn(
-                    "numeral text-tiny font-semibold sm:text-small",
-                    directionText(tone),
-                  )}
-                >
-                  {formatPercent(quote.changePct, locale)}
-                </p>
+                <div className={styles.indexQuote}>
+                  <p className={styles.indexValue}>
+                    {formatPrice(quote.price, locale)}
+                  </p>
+                  <p
+                    className={cn(
+                      "numeral text-tiny font-semibold sm:text-small",
+                      directionText(tone),
+                    )}
+                  >
+                    {formatPercent(quote.changePct, locale)}
+                  </p>
+                </div>
                 {sparkOk && points.length > 1 && (
                   <Sparkline
                     points={points}

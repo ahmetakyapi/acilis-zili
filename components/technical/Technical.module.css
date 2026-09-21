@@ -866,3 +866,104 @@
 .moreChange { font-size:12.5px; font-weight:700; white-space:nowrap; }
 .moreAll { font-size:12px; font-weight:650; color:var(--primary); }
 .moreAll:hover { color:var(--primary-hover); }
+
+/* 21 September, after the publication/alignment fixes: the directory cover
+   was 316/608px and MU's detail cover 503/1045px at 1440/390. Keep the
+   established subgrid and readable type; move the indicator summary to its
+   section and give the plan its own full-width band instead of shrinking text. */
+.edition { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 20px; }
+.editionItem:last-child { grid-column:1/-1; }
+.editionItem:last-child .editionLabel { display:none; }
+.editionValue { font-size:13px; line-height:1.55; font-weight:550; }
+.editionItem:nth-child(2) .editionLabel { color:var(--primary-ink); }
+.editionItem:nth-child(2) .editionLabel::before { content:""; display:inline-block; width:5px; height:5px; margin-right:6px; border-radius:50%; background:var(--primary); }
+.pulse[data-variant="directory"] { position:relative; grid-template-columns:128px minmax(0,1fr); column-gap:18px; row-gap:12px; align-items:center; }
+.pulse[data-variant="directory"] > div:first-child { grid-column:1/-1; }
+.pulseDial { position:relative; width:128px; grid-column:1; grid-row:2; }
+.pulseDial svg { width:100%; stroke-width:7; }
+.pulseDial path { stroke:var(--primary); stroke-dasharray:1; stroke-linecap:round; }
+.pulseDial path[data-verdict="buy"] { stroke:var(--up); }
+.pulseDial path[data-verdict="sell"] { stroke:var(--down); }
+.pulseDial path[data-verdict="pending"] { stroke:var(--line-strong); }
+.pulseDialGuide { stroke:var(--line-soft); stroke-width:1; }
+.pulseDialCore { fill:var(--primary-tint); stroke:var(--primary-faint); stroke-width:.5; }
+.pulseDial > span { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
+.pulseDial strong { font-size:32px; font-weight:550; line-height:1; letter-spacing:-.055em; color:var(--text-strong); }
+.pulseDial small { font-size:11px; color:var(--text-muted); }
+.pulse[data-variant="directory"] > .pulseBar { display:none; }
+.pulse[data-variant="directory"] > .pulseRows { grid-column:2; grid-row:2; }
+.pulse[data-variant="directory"] > .pulseChanges { grid-column:1/-1; }
+.pulse[data-variant="directory"] .pulseRow { padding:7px 0; border-radius:0; border-bottom:1px solid var(--line-soft); }
+.pulse[data-variant="directory"] .pulseRow:last-child { border-bottom:0; }
+.pulse[data-variant="directory"] .pulseStance b { font-size:19px; }
+.pulse[data-variant="directory"] .pulseLogo:hover { transform:translateY(-3px) rotate(-4deg); }
+/* The ring and the list encode the same counts. Below 1100 the linear
+   version leaves room for 40px touch areas, even with 15 identical views. */
+@media(max-width:1099px) {
+ .pulse[data-variant="directory"] { grid-template-columns:minmax(0,1fr); }
+ .pulse[data-variant="directory"] > .pulseDial { display:none; }
+ .pulse[data-variant="directory"] > .pulseBar { display:flex; }
+ .pulse[data-variant="directory"] > .pulseRows { grid-column:1; grid-row:auto; }
+}
+.boardToolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; padding-bottom:14px; border-bottom:1px solid var(--line); }
+.boardTitle { display:flex; align-items:center; gap:10px; }
+.boardTitle > span { display:grid; place-items:center; width:26px; height:26px; border:1px solid var(--primary-faint); border-radius:8px; color:var(--primary); font-size:11px; font-weight:600; }
+.boardTitle h2 { font-size:18px; font-weight:650; letter-spacing:-.025em; }
+.filter { gap:3px; padding:4px; border-radius:12px; background:var(--surface-sunken); }
+.filter label { min-height:36px; padding:7px 13px; border-radius:8px; border-color:transparent; background:transparent; }
+.filter input:checked + label { background:var(--premium-surface); color:var(--primary-ink); border-color:var(--primary-faint); box-shadow:0 2px 5px var(--primary-tint); }
+.card { border-radius:18px; box-shadow:0 3px 12px color-mix(in srgb,var(--primary-ink) 3%,transparent); background:linear-gradient(150deg,var(--primary-tint),transparent 28%),var(--premium-surface); }
+.cardHead { padding-bottom:12px; border-bottom:1px solid var(--line-soft); }
+.cardPlan .planCells { background:linear-gradient(115deg,var(--primary-tint),transparent); border:1px solid var(--line-soft); border-radius:10px; }
+.cardPlan[data-verdict="sell"] .planCells { background:linear-gradient(115deg,color-mix(in srgb,var(--down-wash) 50%,transparent),transparent); }
+.card .stance { border-radius:8px; padding:6px 10px; font-size:14px; }
+.card .chip { border-radius:5px; padding:4px 7px; font-size:12px; background:var(--primary-tint); }
+.cover { padding:24px; gap:20px 28px; border-radius:var(--radius-feature); }
+.cover::before { background:none; border-left:1px solid var(--primary-faint); transform:skewX(-12deg); opacity:.6; }
+.coverMain { gap:12px; }
+.coverHeadline { font-size:clamp(18px,1.45vw,21px); line-height:1.55; }
+.coverSide { justify-content:flex-start; padding-left:28px; gap:16px; }
+.cover .stancePill { border-radius:9px; font-size:18px; padding:7px 15px; }
+.coverPlan { grid-column:1/-1; border-top:1px solid var(--line); padding-top:18px; }
+.coverPlan .risk { margin-top:4px; }
+.coverPlan .riskBar { height:7px; border-radius:3px; }
+.coverPlan .planCells { background:transparent; }
+.indicatorSummary { border:1px solid var(--line); border-radius:16px; padding:18px; background:linear-gradient(110deg,var(--primary-tint),transparent),var(--premium-surface); }
+.sectionNav { border-radius:12px; background:color-mix(in srgb,var(--page-bg) 93%,transparent); backdrop-filter:blur(12px); }
+.block { border-radius:18px; box-shadow:0 3px 12px color-mix(in srgb,var(--primary-ink) 3%,transparent); }
+.block > .sectionTitle,.blockHead { padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
+.blockHead .sectionTitle { display:flex; align-items:center; gap:9px; }
+.blockHead .sectionTitle::before { content:""; width:5px; height:17px; border-radius:3px; background:linear-gradient(var(--primary),var(--primary-faint)); }
+.indicator { background:radial-gradient(ellipse at 100% 0,var(--primary-tint),transparent 60%),var(--premium-surface); }
+.indicatorTitle svg { width:22px; height:22px; padding:3px; border-radius:6px; background:var(--primary-wash); }
+.mapRung { transition:background 180ms,box-shadow 180ms; }
+.mapRung:hover { background:var(--primary-tint); box-shadow:inset 2px 0 var(--primary); }
+.moreCard { background:linear-gradient(145deg,var(--primary-tint),transparent 70%),var(--premium-surface); }
+.table tbody tr { transition:background 180ms; }
+.table tbody tr:hover { background:var(--primary-tint); }
+@media(min-width:768px) and (max-width:1023px) {
+ .coverSide { padding-left:0; padding-top:14px; }
+}
+@media(max-width:767px) {
+ .edition { gap:10px 16px; margin-top:14px; padding-top:12px; }
+ .editionValue { font-size:12px; }
+ .boardToolbar { gap:12px; }
+ .boardTitle h2 { font-size:17px; }
+ .filter { width:100%; justify-content:space-between; }
+ .filter label { min-height:40px; padding:8px 12px; }
+ .cover { padding:18px; gap:16px; }
+ .coverSide { padding:14px 0 0; gap:12px; }
+ .coverMain { gap:10px; }
+ .coverHeadline { font-size:17px; }
+ .coverCompany { font-size:14px; }
+ .coverMeta { font-size:12px; }
+ .coverPlan { padding-top:14px; }
+ .coverPlan .planCells { padding:0; border-radius:0; }
+ .coverPlan .planCell { padding-block:4px; border-bottom:1px solid var(--line-soft); }
+ .coverPlan .planStrip { gap:12px; }
+ .indicatorSummary { padding:14px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .pulse[data-variant="directory"] .pulseLogo:hover { transform:none; }
+ .mapRung,.table tbody tr { transition:none; }
+}

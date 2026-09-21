@@ -3,6 +3,7 @@ import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import styles from "@/components/technical/Technical.module.css";
+import { TechnicalBoard } from "@/components/technical/TechnicalBoard";
 import { TechnicalCard } from "@/components/technical/TechnicalCard";
 import { TechnicalPulse, stanceFilterId } from "@/components/technical/TechnicalPulse";
 import { EmptyState, Panel } from "@/components/ui/primitives";
@@ -142,34 +143,37 @@ export default async function TechnicalPage() {
           <EmptyState title={t.technical.empty} hint={t.technical.emptyHint} />
         </Panel>
       ) : (
-        <section className={styles.board} aria-labelledby="technical-board">
-          <h2 id="technical-board" className="sr-only">
-            {t.technical.stockCount.replace("{n}", String(board.length))}
-          </h2>
-          <fieldset className={styles.filter}>
-            <legend>{t.technical.filterLabel}</legend>
-            {(["all", "buy", "hold", "sell"] as const)
-              .filter((key) => key === "all" || counts[key] > 0)
-              .map((key) => (
-                <span key={key} className="contents">
-                  {/* Radyonun iki etiketi var (bu çip ve başlıktaki dağılım
-                      satırı); açık ad olmadan ekran okuyucu ikisini birleştirip
-                      "SAT 2 SAT 2" diyordu. */}
-                  <input
-                    type="radio"
-                    name="technical-stance"
-                    id={stanceFilterId(key)}
-                    value={key}
-                    defaultChecked={key === "all"}
-                    aria-label={`${key === "all" ? t.technical.filterAll : verdictLabel(key, t)} ${key === "all" ? board.length : counts[key]}`}
-                  />
-                  <label htmlFor={stanceFilterId(key)}>
-                    {key === "all" ? t.technical.filterAll : verdictLabel(key, t)}
-                    <b className="numeral">{key === "all" ? board.length : counts[key]}</b>
-                  </label>
-                </span>
-              ))}
-          </fieldset>
+        <TechnicalBoard className={styles.board}>
+          <div className={styles.boardToolbar}>
+            <div className={styles.boardTitle}>
+              <span aria-hidden="true">01</span>
+              <h2 id="technical-board">{t.technical.boardTitle}</h2>
+            </div>
+            <fieldset className={styles.filter}>
+              <legend>{t.technical.filterLabel}</legend>
+              {(["all", "buy", "hold", "sell"] as const)
+                .filter((key) => key === "all" || counts[key] > 0)
+                .map((key) => (
+                  <span key={key} className="contents">
+                    {/* Radyonun iki etiketi var (bu çip ve başlıktaki dağılım
+                        satırı); açık ad olmadan ekran okuyucu ikisini birleştirip
+                        "SAT 2 SAT 2" diyordu. */}
+                    <input
+                      type="radio"
+                      name="technical-stance"
+                      id={stanceFilterId(key)}
+                      value={key}
+                      defaultChecked={key === "all"}
+                      aria-label={`${key === "all" ? t.technical.filterAll : verdictLabel(key, t)} ${key === "all" ? board.length : counts[key]}`}
+                    />
+                    <label htmlFor={stanceFilterId(key)}>
+                      {key === "all" ? t.technical.filterAll : verdictLabel(key, t)}
+                      <b className="numeral">{key === "all" ? board.length : counts[key]}</b>
+                    </label>
+                  </span>
+                ))}
+            </fieldset>
+          </div>
 
           <div className={styles.grid} data-motion-stagger>
             {board.map(({ row, previousStance }) => (
@@ -199,7 +203,7 @@ export default async function TechnicalPage() {
               {t.technical.pendingNote.replace("{symbols}", pending.join(", "))}
             </p>
           )}
-        </section>
+        </TechnicalBoard>
       )}
 
       <div className={styles.footNote}>

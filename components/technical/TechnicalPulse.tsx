@@ -72,6 +72,7 @@ export function TechnicalPulse({
   return (
     <section
       className={styles.pulse}
+      data-variant={variant}
       aria-labelledby={filterable ? "technical-distribution" : undefined}
       aria-label={filterable ? undefined : t.technical.distribution}
     >
@@ -88,6 +89,21 @@ export function TechnicalPulse({
       {/* HAREKET VERİYİ ÇİZİYOR, SÜSLEMİYOR. Dilimler soldan kendi oranlarına
           uzuyor, satırlar ve logolar sırayla iniyor; ortak hareket sisteminin
           (`MotionExperience`) kancaları, azaltılmış harekette hepsi yerinde. */}
+      {filterable && total > 0 && <div className={styles.pulseDial} aria-hidden="true">
+        <svg viewBox="0 0 160 160" fill="none">
+          <circle cx="80" cy="80" r="53" className={styles.pulseDialGuide} />
+          {[...groups.map((group) => ({ verdict: group.verdict, count: group.rows.length })), { verdict: "pending", count: pending.length }]
+            .flatMap((group) => Array.from({ length: group.count }, () => group.verdict))
+            .map((verdict, index) => {
+              const angle = (index / total * 360 - 90) * Math.PI / 180;
+              const end = ((index + .72) / total * 360 - 90) * Math.PI / 180;
+              return <path key={index} data-verdict={verdict} data-motion-draw="arc" pathLength="1"
+                d={`M${80 + 66 * Math.cos(angle)},${80 + 66 * Math.sin(angle)} A66,66 0 0 1 ${80 + 66 * Math.cos(end)},${80 + 66 * Math.sin(end)}`} />;
+            })}
+          <circle cx="80" cy="80" r="42" className={styles.pulseDialCore} />
+        </svg>
+        <span><strong>{total}</strong><small>{t.technical.trackedLabel}</small></span>
+      </div>}
       <div className={styles.pulseBar} aria-hidden data-motion-stagger>
         {groups
           .filter((group) => group.rows.length > 0)

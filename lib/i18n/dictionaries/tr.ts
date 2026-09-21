@@ -737,6 +737,8 @@ const tr = {
     noAnalysisHint: "Bu hissenin analizi her işlem günü açılıştan önce ve seans içinde yayımlanır.",
     distribution: "Görüş Dağılımı",
     stockCount: "{n} Hisse",
+    trackedLabel: "Takipte",
+    boardTitle: "Hisse Planları",
     /* BEKLEYEN SEMBOL — listeye yeni girmiş, ilk yayını henüz yok. */
     pendingLabel: "Bekliyor",
     pendingNote:

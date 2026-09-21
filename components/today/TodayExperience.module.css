@@ -282,3 +282,53 @@
    genişlikte iptal. */
 @media(max-width:1023px) { .flowNav { flex-basis:auto; } }
 @media(max-width:767px) { .flowNav a { min-height:40px; } }
+
+/* 21 September: opening frame measured 437px desktop / 682px mobile.
+   A quote and its change share a baseline, leaving the actual series more
+   room. Compact spacing comes from structure, not smaller reading type. */
+.hero { padding:20px 24px; background:radial-gradient(ellipse at 0 0,var(--primary-tint),transparent 60%),var(--premium-surface); }
+.heroTopline { padding-bottom:14px; border-bottom:1px solid var(--line-soft); }
+.heroMain { padding-top:18px; grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr); }
+.heroCopy { align-self:center; padding-bottom:8px; }
+.heroSession { margin-bottom:8px; }
+.indexDeck { padding-left:24px; }
+.indexGrid { gap:10px; }
+.indexQuote { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 9px; margin-top:8px; }
+.indexQuote .indexValue { margin:0; }
+.indexCard { min-height:118px; border-radius:12px; padding:12px 14px 10px; box-shadow:0 2px 6px var(--primary-tint); }
+.indexSkeleton { height:118px; }
+.indexSpark { height:32px; margin-top:10px; }
+.indexLink { border-radius:12px; }
+.indexLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+.indexLink:hover .indexCard { transform:translateY(-2px); }
+.indexCard { transition:transform 240ms,border-color 240ms,box-shadow 240ms; }
+.flowPanel { box-shadow:0 3px 12px color-mix(in srgb,var(--primary-ink) 3%,transparent); }
+.flowHeader { padding-bottom:12px; border-bottom:1px solid var(--line-soft); }
+.flowNav { border-radius:10px; }
+.flowNav a { border-radius:7px; }
+.storyRow { border-left:2px solid transparent; }
+.storyRow:hover { border-left-color:var(--primary-faint); }
+.analysisLead { border-radius:12px; background:radial-gradient(ellipse at 100% 0,var(--primary-wash),transparent 80%),var(--premium-surface); }
+.analysisExcerpt { font-size:15px; }
+@media(max-width:1023px) {
+ .heroMain { grid-template-columns:minmax(0,1fr); }
+ .heroCopy { align-self:start; padding-bottom:0; }
+ .indexDeck { padding-left:0; }
+}
+@media(max-width:767px) {
+ .hero { padding:18px; }
+ .heroTopline { padding-bottom:12px; }
+ .heroMain { gap:16px; padding-top:14px; }
+ .indexDeck { padding-top:12px; }
+ .indexHeading { margin-bottom:8px; }
+ .indexQuote { gap:2px 5px; margin-top:6px; }
+ .indexCard { min-height:106px; padding:10px; }
+ .indexSkeleton { height:106px; }
+ .indexValue { font-size:22px; }
+ .indexSpark { height:27px; margin-top:8px; }
+ .indexQuote > p:last-child { font-size:11px; }
+ .flowPanel { padding-inline:14px; }
+ .flowHeader { gap:12px; }
+ .analysisExcerpt { font-size:14px; }
+}
+@media(prefers-reduced-motion:reduce) { .indexCard { transition:none; } .indexLink:hover .indexCard { transform:none; } }
