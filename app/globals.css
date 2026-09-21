@@ -1629,14 +1629,14 @@ header.page-heading.page-masthead { flex-direction:row; align-items:flex-start; 
 /* 21 September — one calm navigation group instead of seven equally bold
    headings. The shell stays 69px tall, so page starts and sticky offsets do
    not move. Five primary destinations; the rest have named, illustrated rows. */
-.premium-masthead { background:linear-gradient(110deg,var(--premium-surface),var(--chrome) 70%); }
+.premium-masthead { background:linear-gradient(110deg,color-mix(in srgb,var(--primary) 11%,var(--premium-surface)),var(--premium-surface) 42%,color-mix(in srgb,var(--primary) 14%,var(--premium-surface))); }
 .premium-masthead::after { content:""; position:absolute; left:0; right:0; top:100%; height:12px; pointer-events:none; background:linear-gradient(var(--primary-tint),transparent); opacity:.35; }
 .masthead-brand { border-radius:10px; }
 .masthead-brand > span:first-child { transition:transform 260ms var(--ease-brand); }
 .masthead-brand svg { transform-origin:50% 15%; }
 .masthead-brand:focus-visible { outline:2px solid var(--line-focus); outline-offset:5px; }
 .masthead-nav { height:44px; align-self:center; }
-.masthead-nav > ul { height:44px; border-radius:12px 0 0 12px; background:var(--primary-tint); box-shadow:inset 1px 0 var(--line-soft),inset 0 1px var(--line-soft),inset 0 -1px var(--line-soft); }
+.masthead-nav > ul { flex:1; justify-content:space-evenly; height:44px; border-radius:12px 0 0 12px; background:linear-gradient(100deg,var(--primary-wash),var(--primary-tint)); box-shadow:inset 1px 0 var(--line-soft),inset 0 1px var(--line-soft),inset 0 -1px var(--line-soft); }
 .masthead-nav > div { height:44px; border-radius:0 12px 12px 0; background:var(--primary-tint); box-shadow:inset -1px 0 var(--line-soft),inset 0 1px var(--line-soft),inset 0 -1px var(--line-soft); }
 .masthead-nav [data-strip-href] { height:44px; }
 .masthead-nav .masthead-link { isolation:isolate; height:36px; margin-block:4px; font-size:.8125rem; font-weight:600; transition:color 180ms; }
@@ -1659,8 +1659,8 @@ header.page-heading.page-masthead { flex-direction:row; align-items:flex-start; 
  .premium-masthead .masthead-search,.premium-masthead .masthead-account { height:38px; min-width:38px; }
 }
 @media(min-width:1280px) {
- .masthead-nav .masthead-link { font-size:.84375rem; }
- .premium-masthead .masthead-search { width:220px; }
+ .masthead-nav .masthead-link { font-size:.875rem; }
+ .premium-masthead .masthead-search { width:240px; }
 }
 @media(hover:hover) and (pointer:fine) {
  .masthead-brand:hover > span:first-child { transform:translateY(-1px); }
@@ -1684,3 +1684,8 @@ header.page-heading.page-masthead { flex-direction:row; align-items:flex-start; 
  .masthead-row-icon { border-color:ButtonText; }
  .premium-masthead::after { display:none; }
 }
+
+/* The former content-width strip left a 300px dead gap before search at
+   1440px. Space-evenly distributes only spare room; item widths stay
+   intrinsic so the priority overflow calculation remains stable. */
+.masthead-frame { column-gap:clamp(16px,1.6vw,24px); }

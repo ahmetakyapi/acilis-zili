@@ -346,3 +346,7 @@ Kanıtlar: `/tmp/acilis-redesign/sep21-before-detail-detail.json`, `sep21-produc
 - Şirketler kapağındaki on şirketin her birine mevcut dizin verisinden kısa piyasa değeri eklendi; ayrı büyük değer paneli geri gelmedi.
 
 Doğrulama: 140 tarayıcı yerleşimi (7 rota × 5 genişlik × 2 dil × 2 tema); fiyat sütunu farkı <1px, çakışan/kırpılan harita hücresi yok, değerleme satırlarında ve masaüstü şirket kolonlarında bitiş farkı <1px. 12 etkileşim senaryosu: grafik türleri ve aralıklar sayfa gezinmesi olmadan değişiyor, açıklama açılınca grafik hizası korunuyor, mobil/masaüstü Mercek bağlantıları doğru dilde açılıyor. 14 birim testi, üretim build, typecheck, lint ve diff kontrolü geçti. Ekran görüntüleri yerel `/tmp/acilis-redesign` altında; geçici betikler depoya alınmadı.
+
+### İstek Taraması ve Header Hizası — 21 Eylül, Dördüncü Geçiş
+
+Ayrıntılı kontrol listesi `REQUEST-AUDIT-2026-09-21.md` dosyasında. Teknik liste kapağındaki gerçek içerik bitiş farkı 41,3 → 0px; detay kapağındaki 46px fark da görüş/açıklama grubunun ve kısa göstergelerin ortak alt kenarıyla düzeltildi. Header'ın boş orta alanı bağlantılara dağıtıldı ve tema renklerinden mavi geçiş eklendi; 69px yükseklik korundu. Mobilde Dünya Piyasaları'nın geriye düşmesi düzeltilerek Özet → Dünya Piyasaları → Günün Hareketleri sırası geri getirildi. Yeni bağımlılık veya veri kaynağı değişikliği yok.

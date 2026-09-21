@@ -1063,3 +1063,29 @@
  .mapZoneVoid { inset:0!important; padding:8px 8px 0 30px; background:none; }
  .mapZoneVoidLabel { font-size:9px; }
 }
+
+/* Directory audit, 1440px: copy ended at 329px and distribution at 288px.
+   Both columns now share their natural row height; logos and the actual
+   distribution use the remaining area, without a fixed cover height. */
+@media(min-width:768px) {
+ .directoryHeader.directoryHeader:global(.page-frame) { align-items:stretch; }
+ .directoryHeader > :global(.page-heading-copy) { align-self:stretch; display:flex; flex-direction:column; }
+ .directoryHeader > :global(.page-heading-copy) > .edition { margin-top:auto; padding-top:14px; }
+ .directoryHeader > :global(.page-heading-copy) > p:last-of-type { margin-bottom:18px; }
+ .directoryHeader > :last-child { display:flex; }
+ .directoryHeader .pulse[data-variant="directory"] { flex:1; align-content:stretch; }
+ .directoryHeader .pulse[data-variant="directory"] > .pulseRows { align-self:stretch; }
+ .directoryHeader .pulse[data-variant="directory"] > .pulseChanges { align-self:end; }
+}
+@media(min-width:1100px) {
+ .directoryHeader .pulse[data-variant="directory"] { grid-template-columns:148px minmax(0,1fr); }
+ .directoryHeader .pulseDial { width:148px; }
+}
+
+/* 21 September audit: equal cover boxes still hid a 46px gap below MU's
+   actual headline. Keep the verdict attached to its explanation and anchor
+   both final readings to the row edge; long copy can still grow naturally. */
+@media(min-width:1024px), (orientation:landscape) and (max-height:560px) and (min-width:700px) {
+ .coverMain > .stanceRow { margin-top:auto; }
+ .coverSide > .signalsCompact { margin-top:auto; }
+}

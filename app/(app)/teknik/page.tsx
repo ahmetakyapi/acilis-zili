@@ -100,6 +100,7 @@ export default async function TechnicalPage() {
     <MotionExperience className={directory.page}>
       <ScrollProgress />
       <DirectoryHeader
+        className={styles.directoryHeader}
         eyebrow={t.technical.eyebrow}
         title={t.technical.title}
         description={t.technical.description}

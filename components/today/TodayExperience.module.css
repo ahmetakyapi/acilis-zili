@@ -205,15 +205,15 @@
     Masaüstünde hiçbir şey değişmiyor: bu blok yalnızca 1024'ün altında
     çalışıyor, iki kolonlu düzende paneller kendi kolonlarında kalıyor. */
  .dashboard [data-home-section="brief"] { order:1; }
- .dashboard [data-home-section="movers"] { order:2; }
+ .dashboard [data-home-section="movers"] { order:3; }
  /* TEKNİK GÖRÜNÜM HAREKET PANELİNİN HEMEN ALTINDA. Bir süre merceğin
     ardındaydı ve arada bir okuma metni duruyordu; oysa hareket paneli ile
     teknik panel aynı sorunun iki yarısı — biri "bugün hangi isim taşıdı",
     öteki "o isimlerde plan ne". Ölçü ile görüş arka arkaya okunuyor,
     mercek ikisinin ardına geçiyor. Masaüstünde de aynı sıra: panel yan
     kolonda hareket panelinin hemen altında duruyor. */
- .dashboard [data-home-section="technical"] { order:3; }
- .dashboard [data-home-section="stories"] { order:4; }
+ .dashboard [data-home-section="technical"] { order:4; }
+ .dashboard [data-home-section="stories"] { order:5; }
  /* DÜNYA PİYASALARI TAHVİLİN HEMEN ÜSTÜNDE.
     Şerit ikinci sıradaydı — günün özetinden hemen sonra — ve orada tek
     başına duruyordu: okuyucu ABD seansının özetinden çıkıp Avrupa ile
@@ -221,7 +221,9 @@
     en sonda tahvil ile makroya varıyordu. Oysa dünya şeridi, tahvil ve
     makro AYNI SORUYA cevap veriyor: "piyasanın geri kalanı ne yapıyor".
     Üçü art arda duruyor ve telefonda tek bir blok gibi okunuyor. */
- .dashboard [data-home-section="world"] { order:5; }
+ /* 21 Eylül denetimi: kullanıcının açık sırası Özet → Dünya →
+    Hareketler. Sonraki makro gruplaması bu isteği bozmuştu. */
+ .dashboard [data-home-section="world"] { order:2; }
  .dashboard [data-home-section="yields"] { order:6; }
  .dashboard [data-home-section="macro"] { order:7; }
  .dashboard [data-home-section="schedule"] { order:8; }
