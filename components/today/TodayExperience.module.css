@@ -158,7 +158,7 @@
 
 /* The three secondary stories were title-only ~40px rows. Each now includes
    its existing dek, with a small separate date/symbol column on desktop. */
-.storyRow { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:14px 24px; padding:17px 26px; transition:background .2s; }
+.storyRow { display:grid; grid-template-columns:22px minmax(0,1fr) auto; align-items:start; gap:14px 24px; padding:17px 26px; transition:background .2s; }
 .storyRow:hover { background:var(--primary-tint); }
 .storyRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
 .storyRowCopy { min-width:0; }
@@ -168,9 +168,9 @@
 .storyRowMeta svg { flex-shrink:0; color:var(--primary-ink); transition:transform .2s; }
 .storyRow:hover .storyRowMeta svg { transform:translate(2px,-2px); }
 @media(max-width:767px) {
- .storyRow { grid-template-columns:minmax(0,1fr); gap:10px; padding:16px 20px; }
- .storyRowCopy p { -webkit-line-clamp:3; }
- .storyRowMeta { flex-wrap:wrap; padding-top:0; }
+ .storyRow { grid-template-columns:22px minmax(0,1fr); gap:8px 12px; padding:16px 20px; }
+ .storyRowCopy p { -webkit-line-clamp:2; }
+ .storyRowMeta { grid-column:2; flex-wrap:wrap; padding-top:0; }
  .storyRowMeta svg { margin-left:auto; }
 }
 @media(prefers-reduced-motion:reduce) { .storyRow,.storyRowMeta svg { transition:none; } }
@@ -339,3 +339,21 @@
 @media(prefers-reduced-motion:reduce) { .indexCard { transition:none; } .indexLink:hover .indexCard { transform:none; } }
 
 @media(max-width:767px) { .hero + .flowPanel { margin-top:-6px; } }
+
+/* Mobile Mercek measured 1050px at 390px: treat the archive as a numbered
+   reading list and let the lead keep its full headline and actual figure. */
+.storyNumber { padding-top:3px; color:var(--primary); font-size:11px; font-weight:600; letter-spacing:.04em; }
+.storyLead { position:relative; }
+.storyFigure { background:linear-gradient(120deg,var(--premium-surface),var(--primary-tint)); }
+@media(max-width:767px) {
+ .storySpotlight { border-radius:18px; }
+ .storySpotlight > .storyLead { padding:18px; }
+ .storyLead > div { gap:18px; }
+ .storySpotlight h3 { font-size:25px; line-height:1.2; text-wrap:pretty; }
+ .storyLead h3 + p { margin-top:10px; font-size:14px; line-height:1.65; }
+ .storyLead .storyFigure { border-radius:12px; padding:14px; gap:10px; }
+ .storyRow { padding:16px 18px; }
+ .storyRowCopy h4 { font-size:15px; line-height:1.45; }
+ .storyRowCopy p { font-size:13px; line-height:1.55; }
+ .storyRowMeta { gap:9px; }
+}

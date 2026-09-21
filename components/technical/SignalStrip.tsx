@@ -18,11 +18,13 @@ export function SignalStrip({
   price,
   locale,
   t,
+  compact = false,
 }: {
   snapshot: TechnicalSnapshot;
   price: number | null;
   locale: Locale;
   t: Dictionary;
+  compact?: boolean;
 }) {
   const { trend, momentum, volume } = indicatorSignals(snapshot, price);
   const tiles: Tile[] = [];
@@ -102,11 +104,12 @@ export function SignalStrip({
     });
   }
 
-  if (tiles.length === 0) return null;
+  const shown = compact ? tiles.filter(tile => tile.key !== "range") : tiles;
+  if (shown.length === 0) return null;
 
   return (
-    <dl className={styles.signals} aria-label={t.technical.signalsLabel} data-motion-stagger>
-      {tiles.map((tile) => (
+    <dl className={cn(styles.signals, compact && styles.signalsCompact)} aria-label={t.technical.signalsLabel} data-motion-stagger>
+      {shown.map((tile) => (
         /* ÜÇ PARÇA ÜÇ AYRI HÜCRE. Değer ile künye bir dönem tek bir
            `<dd>`nin içindeydi ve şeridin alt ızgarası (bkz. CSS `.signals`)
            onları tek satır sayıyordu: bir künyenin değeri iki satıra

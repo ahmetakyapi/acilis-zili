@@ -529,7 +529,7 @@
    tamamı `PriceMap.tsx` → `crossedState`). Yön zaten haritada: satır fiyat
    satırının üstündeyse seviye yukarıda. Sütun mesafeyi söylüyor, yorumu
    değil. */
-.mapDistance { display:flex; align-items:baseline; justify-content:flex-end; gap:7px; min-width:62px; font-size:12.5px; font-weight:650; text-align:right; white-space:nowrap; color:var(--text-body); }
+.mapDistance { display:flex; align-items:baseline; justify-content:flex-end; gap:7px; width:62px; min-width:62px; font-size:12.5px; font-weight:650; text-align:right; white-space:nowrap; color:var(--text-body); }
 .mapDistance > [data-dir="up"] { color:var(--up); }
 .mapDistance > [data-dir="down"] { color:var(--down); }
 /* Geçilmiş seviyenin tek kelimelik işareti — hedef gerçekleşti ya da stop
@@ -719,7 +719,7 @@
      46). */
   .mapLabel { font-size:13.5px; }
   .mapPrice { font-size:14px; }
-  .mapDistance { min-width:52px; font-size:12px; }
+  .mapDistance { width:52px; min-width:52px; font-size:12px; }
 
   /* GÖRÜŞ GEÇMİŞİ MOBİLDE TABLO DEĞİL, SATIR YIĞINI.
      Beş sütun 390 pikselde sığmıyordu: kutu 176 piksel yatay kayıyordu
@@ -1023,4 +1023,43 @@
  .planNotes .mapNotes { grid-template-columns:minmax(0,1fr); gap:16px; }
  .mapZoneEntry { width:25px; }
  .mapZoneVoidLabel { left:41px; }
+}
+
+/* The passed badge previously widened the distance column and displaced
+   the price. Status now belongs to the level label; all prices end at one
+   fixed distance gutter, including the current quote and entry range. */
+.mapLabel { display:flex; flex-wrap:wrap; align-items:center; gap:3px 7px; min-width:0; }
+.mapLabel .mapCrossed { width:fit-content; line-height:1.35; }
+.signalsCompact { grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px 12px; margin:0; padding-top:12px; border-top:1px solid var(--line-soft); }
+.signalsCompact .signal { margin:0; padding-left:9px; }
+.signalsCompact .signal dt { font-size:10px; letter-spacing:.02em; }
+.signalsCompact .signal strong { font-size:15px; line-height:1.3; }
+.signalsCompact .signalDetail { font-size:11px; line-height:1.5; }
+@media(max-width:639px) {
+ .signalsCompact { gap:4px 9px; }
+ .signalsCompact .signal { padding-left:7px; }
+ .signalsCompact .signal strong { font-size:14px; }
+ .mapLabel .mapCrossed { font-size:9px; padding:1px 4px; }
+}
+
+/* At 320px an entry range left only 19px for its label. Mobile uses the
+   same ordered levels in natural two-line rows; desktop retains the scaled
+   axis. Prices keep a fixed distance gutter, including wrapped ranges. */
+@media(max-width:639px) {
+ .map { height:auto!important; padding-bottom:34px; }
+ .map::before { content:""; position:absolute; left:10px; top:0; bottom:34px; width:2px; background:linear-gradient(transparent,var(--line) 8%,var(--line) 92%,transparent); }
+ .mapRail { display:none; }
+ .mapRungs { position:relative; inset:auto; margin-left:22px; }
+ .mapRung { position:relative; inset:auto; top:auto!important; transform:none; grid-template-columns:minmax(0,1fr) 52px; align-items:baseline; gap:3px 6px; min-height:58px; padding:7px 8px; border-radius:9px; }
+ .mapLabel { grid-column:1/-1; font-size:12px; }
+ .mapPrice { grid-column:1; font-size:14px; white-space:normal; line-height:1.3; }
+ .mapDistance { grid-column:2; grid-row:2; }
+ .mapRung::after { content:""; position:absolute; left:-18px; top:50%; width:12px; height:2px; border-radius:2px; background:var(--text-muted); }
+ .mapRung[data-kind="target"]::after,.mapRung[data-kind="entry"]::after { background:var(--up); }
+ .mapRung[data-kind="stop"]::after { background:var(--down); }
+ .mapRung[data-kind="price"]::after { left:-16px; width:9px; height:9px; margin-top:-4px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 3px var(--primary-wash); }
+ .mapZones { top:auto; bottom:0; height:30px; }
+ .mapZoneEntry { display:none; }
+ .mapZoneVoid { inset:0!important; padding:8px 8px 0 30px; background:none; }
+ .mapZoneVoidLabel { font-size:9px; }
 }

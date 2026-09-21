@@ -1070,6 +1070,7 @@ const en: typeof tr = {
     bridge: "Daily headlines and concept explainers live in their own sections:",
     moreCompaniesOne: "+{count} More Company",
     moreCompaniesMany: "+{count} More Companies",
+    lastClose: "Last Close",
     sinceEvent: "Since The Event",
     symbolPanelTitle: "Close-Up Pieces",
     symbolPanelAll: "All Pieces →",

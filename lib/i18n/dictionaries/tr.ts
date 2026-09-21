@@ -1322,6 +1322,7 @@ const tr = {
     bridge: "Günlük haber akışı ve kavram anlatımları ayrı bölümlerde:",
     moreCompaniesOne: "+{count} Şirket Daha",
     moreCompaniesMany: "+{count} Şirket Daha",
+    lastClose: "Son Kapanış",
     sinceEvent: "Olaydan Bugüne",
     /* Hisse sayfasındaki blok. Kardeş panelle (analysis.symbolPanelTitle)
        aynı kural: şirketin içindesin, adını başlıkta tekrar etme. Ama tür

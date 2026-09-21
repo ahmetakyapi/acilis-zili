@@ -231,7 +231,7 @@
 .chapterNav { box-shadow:0 6px 24px var(--primary-tint); border-color:var(--line); }
 .chapterNav + .chapter { padding-top:10px; }
 @media(min-width:1100px) {
- .companyOverview { align-items:start; }
+ .companyOverview { align-items:stretch; }
  .companyOverview .chartPanel { --price-chart-height:clamp(180px,calc(100svh - 496px),280px); --price-chart-controls:45px; }
  .companyOverview .stockHeader { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; column-gap:20px; }
  .companyOverview .identity { gap:12px; }
@@ -275,7 +275,7 @@
 .fundamentalsChapter { gap:18px; }
 .fundamentalsChapter .sectionHeading h2 { font-size:clamp(24px,2.3vw,30px); }
 .fundamentalsChapter .sectionHeading p { margin-top:7px; }
-.fundamentalsGrid { align-items:start; gap:16px; grid-template-columns:minmax(0,1fr); }
+.fundamentalsGrid { align-items:stretch; gap:16px; grid-template-columns:minmax(0,1fr); }
 .fundamentalsGrid > section { min-width:0; border-radius:20px; transition:border-color .25s,box-shadow .25s; }
 .fundamentalsGrid > section:hover { border-color:var(--primary-faint); box-shadow:0 8px 26px var(--primary-tint); }
 .fundamentalsGrid > section > div:first-child { padding-block:12px 9px; }
@@ -379,3 +379,20 @@
  .averagesSkeleton { height:248px; }
  .analystSkeleton { height:253px; }
 }
+
+/* SNDK at 1440: plot 280px, left card 582px, right stack 666px.
+   Let the drawing absorb that 84px instead of leaving a blank card tail.
+   Its canvas already observes the plot, including period/legend changes. */
+@media(min-width:1100px) {
+ .companyOverview .chartPanel { display:flex; flex-direction:column; }
+ .companyOverview .chartPanel > :last-child { flex:1; min-height:0; }
+ .companyOverview .profilePanel { flex:1; }
+ .companyOverview .profileBody { flex:1; }
+ .companyOverview .profileBody > dl { flex:1; }
+}
+.fundamentalsGrid > section { display:flex; flex-direction:column; }
+.fundamentalsGrid .metricsBody { flex:1; display:flex; flex-direction:column; }
+.fundamentalsGrid .metricsList { flex:1; }
+.fundamentalsGrid .complianceBody { flex:1; display:flex; flex-direction:column; }
+.fundamentalsGrid .complianceRatios { flex:1; align-content:center; }
+.fundamentalsGrid .complianceBody > details { margin-top:14px; }

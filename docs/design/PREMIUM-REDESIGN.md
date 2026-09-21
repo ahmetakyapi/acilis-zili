@@ -333,3 +333,16 @@ Kanıtlar: `/tmp/acilis-redesign/sep21-before-detail-detail.json`, `sep21-produc
 - Bugünün Akışı üst boşluğu 1440px'te 39 → 14px, 390px'te 44 → 12px. Bölümün ölçekli dış sarmalı kaldırıldı; iç animasyonları korundu.
 - Dar ekranda bülten dönem/ arşiv denetimleri gerektiğinde sarılıyor.
 - Üretim derlemesinde 44 yerleşim senaryosu: TR/EN, açık/koyu, 320–1920px ve masaüstünde %150 yazı. Header çakışması/kırpılan kontrol yok; belge genişliğinde en fazla 1px yuvarlama payı. Sekiz menü, arama, hesap ve hareket senaryosu geçti. Yedi navigasyon testi, build, typecheck, lint ve diff kontrolü temiz.
+
+### Teknik Detay, Şirket Grafiği ve Mercek — 21 Eylül, Üçüncü Geçiş
+
+- Teknik detayda Planın Okuması altına aynı fotoğraftan hesaplanan üç kısa gösterge (trend, momentum, hacim) geldi. MU'da sağ kolon 274 → 288px: mevcut boşluk kullanılırken kapak yalnızca 14px büyüdü.
+- Fiyat haritasının durum rozeti seviye adına taşındı. Uzaklık sütunu sabit; tüm fiyatların sağ kenarı ortak. 320px'te alım aralığı etikete taşıyordu: mobilde doğal boydaki iki satırlı basamaklar, masaüstünde mevcut fiyat ekseni korunuyor. Uzun aralık yalnızca iki fiyatın arasında sarılabilir.
+- SNDK 1440×900: sol kart 582px / sağ kolon 666px idi. İkisi 666px; gerçek çizim alanı 280 → 365px. Tuvalin mevcut boyut gözlemcisi çalışıyor. Teknik kartı olmayan şirketlerde profil de ortak satırı tamamlıyor.
+- Değerleme kartları ikişerli satırlarda aynı hatta bitiyor; örnek satır yükseklikleri 288px ve 260px. İçerikler kırpılmadı; ölçü ızgarası ve oran görselleri kullanılabilir alanı paylaşıyor.
+- Ana sayfa mobil Mercek: numaralı önceki yazılar, daha belirgin başlık/özet/künye ayrımı, daha sıkı manşet ve gerçek makale görseli. Aynı içerikle 390px'te bölüm 1050 → 981px.
+- Mercek kadro paneli getiri hesaplanamadığında tamamlanmış son günlük kapanışı, tarihi ve “Son Kapanış” etiketiyle gösteriyor. Gün içindeki mum ve gecikmeli akışın henüz tamamlamadığı kapanış kullanılmıyor; yarım gün kapanışı da aynı kuralda. Veri yoksa sayı uydurulmuyor. Mevcut toplu bar isteği ve sağlayıcı önbellek korumaları korunuyor.
+- Arşiv kartında tek yüzdenin hangi şirkete ait olduğu doğrudan rakamın üstünde yazıyor. Ana sayfa ve kart bağlantıları İngilizce rotayı doğrudan koruyor.
+- Şirketler kapağındaki on şirketin her birine mevcut dizin verisinden kısa piyasa değeri eklendi; ayrı büyük değer paneli geri gelmedi.
+
+Doğrulama: 140 tarayıcı yerleşimi (7 rota × 5 genişlik × 2 dil × 2 tema); fiyat sütunu farkı <1px, çakışan/kırpılan harita hücresi yok, değerleme satırlarında ve masaüstü şirket kolonlarında bitiş farkı <1px. 12 etkileşim senaryosu: grafik türleri ve aralıklar sayfa gezinmesi olmadan değişiyor, açıklama açılınca grafik hizası korunuyor, mobil/masaüstü Mercek bağlantıları doğru dilde açılıyor. 14 birim testi, üretim build, typecheck, lint ve diff kontrolü geçti. Ekran görüntüleri yerel `/tmp/acilis-redesign` altında; geçici betikler depoya alınmadı.

@@ -1,3 +1,4 @@
+import { lastStoryClose } from "@/lib/story-market";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
 import { Suspense } from "react";
@@ -285,6 +286,7 @@ async function StoryBoard({
       name: meta[symbol]?.name ?? null,
       logoUrl: meta[symbol]?.logoUrl ?? null,
       sinceEvent: sinceEventOf(symbol, story.eventDate),
+      lastClose: lastStoryClose(barsBySymbol[symbol], status),
     }));
 
   return (
@@ -470,6 +472,7 @@ function LeadStory({
                 total={total}
                 title={t.stories.relatedSymbols}
                 sinceLabel={t.stories.sinceEvent}
+                closeLabel={t.stories.lastClose}
                 eventDate={formatEtDateShort(story.eventDate, locale)}
                 moreLabel={plural(
                   Math.max(0, total - cast.length),

@@ -1,3 +1,4 @@
+import { withLocale } from "@/lib/i18n/routing";
 import { cache, Suspense } from "react";
 import { MotionExperience, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
@@ -2256,9 +2257,9 @@ async function StoriesSpotlight({
       </div>
 
       <Link
-        href={`/mercek/${lead.slug}`}
+        href={withLocale(`/mercek/${lead.slug}`, locale)}
         prefetch={false}
-        className="group block border-t border-primary-faint px-4 py-5 transition-colors hover:bg-primary-tint sm:px-5"
+        className={`${styles.storyLead} group block border-t border-primary-faint px-4 py-5 transition-colors hover:bg-primary-tint sm:px-5`}
       >
         {/* MOBİLDE ÖNCE MANŞET, SONRA GÖRSEL.
             Bir süre tersiydi (`flex-col-reverse`): telefonda önce blok
@@ -2318,7 +2319,7 @@ async function StoriesSpotlight({
           {figure && (
             <StoryFigure
               block={figure}
-              className="lg:w-[292px] lg:shrink-0"
+              className={`${styles.storyFigure} lg:w-[292px] lg:shrink-0`}
             />
           )}
         </div>
@@ -2326,16 +2327,17 @@ async function StoriesSpotlight({
 
       {rest.length > 0 && (
         <ul className="border-t border-primary-faint bg-surface-solid">
-          {rest.map((story) => (
+          {rest.map((story, index) => (
             <li
               key={story.slug}
               className="border-t border-line-soft first:border-t-0"
             >
               <Link
-                href={`/mercek/${story.slug}`}
+                href={withLocale(`/mercek/${story.slug}`, locale)}
                 prefetch={false}
                 className={styles.storyRow}
               >
+                <span className={styles.storyNumber} aria-hidden>{String(index + 2).padStart(2, "0")}</span>
                 <div className={styles.storyRowCopy}>
                   <h4 lang={story.locale}>{story.title}</h4>
                   {story.dek && <p lang={story.locale}>{story.dek}</p>}

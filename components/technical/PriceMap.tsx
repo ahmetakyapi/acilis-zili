@@ -214,14 +214,19 @@ export function PriceMap({
           const crossed = crossedState(rung.kind, distance);
           return (
             <li key={`${rung.kind}-${rung.price}`} className={styles.mapRung} data-kind={kind} style={{ top: rung.labelY }}>
-              <span className={styles.mapLabel}>{labelOf(rung)}</span>
-              <span className={cn(styles.mapPrice, "numeral")}>{value}</span>
-              <span className={styles.mapDistance}>
+              <span className={styles.mapLabel}>{labelOf(rung)}
                 {crossed && (
                   <b className={styles.mapCrossed} data-state={crossed}>
                     {crossed === "passed" ? t.technical.levelPassed : t.technical.levelBroken}
                   </b>
                 )}
+              </span>
+              <span className={cn(styles.mapPrice, "numeral")}>
+                {rung.kind === "entry" && value.includes("–")
+                  ? <>{value.split("–")[0]}–<wbr />{value.split("–")[1]}</>
+                  : value}
+              </span>
+              <span className={styles.mapDistance}>
                 {distance !== null && (
                   /* YÜZDE YÖNÜNÜ RENKLE DE SÖYLÜYOR. Sütun tek tonda
                      duruyordu ve haritanın kendi dili zaten renkliydi:

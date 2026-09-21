@@ -351,6 +351,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             <span className={styles.readingLabel}>{t.technical.readingLabel}</span>
             <p>{planReadingText(reading, locale, t)}</p>
           </div>
+          <SignalStrip snapshot={row.snapshot} price={price} locale={locale} t={t} compact />
         </div>
 
         {/* 21 Eylül: mobil kapak 1045px'ti. Plan tam genişlikte kendi
