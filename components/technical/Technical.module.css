@@ -967,3 +967,60 @@
  .pulse[data-variant="directory"] .pulseLogo:hover { transform:none; }
  .mapRung,.table tbody tr { transition:none; }
 }
+
+/* 21 September, detail reading pass. The map's explanations used to live
+   only below its axis, making the left column ~200px taller than the right.
+   A shared notes row keeps every explanation, and aligns the two columns
+   without imposing a fixed height or clipping the analysis. */
+.analysisGrid { display:grid; grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-areas:"map reading" "notes notes"; gap:18px; align-items:stretch; }
+.mapPanel { grid-area:map; }
+.analysisReading { grid-area:reading; display:grid; grid-template-rows:auto 1fr; gap:18px; min-width:0; }
+.analysisReading .scenarios { flex:1; }
+.mapPanel .map,.mapPanel .mapHead { max-width:none; }
+.mapPanel .footHint { margin-top:auto; padding-top:8px; border-top:1px solid var(--line-soft); }
+.planNotes { grid-area:notes; display:flex; flex-direction:column; gap:16px; min-width:0; padding:20px 24px; border:1px solid var(--line); border-radius:16px; background:linear-gradient(100deg,var(--primary-tint),transparent),var(--premium-surface); }
+.planNotes > h2 { font-size:16px; }
+.planNotes .mapNotes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; margin:0; padding:0; border:0; }
+.planNotes .mapNotes > div { display:flex; flex-direction:column; gap:7px; padding-left:14px; border-left:2px solid var(--primary-faint); }
+.planNotes .mapNotes dt { font-size:12px; color:var(--primary-ink); }
+.planNotes .mapNotes dd { font-size:14px; line-height:1.65; color:var(--text-body); }
+/* A narrow entry band could be just 6px high and strike through its label
+   and prices. Preserve its true vertical extent on the axis; give the
+   associated label its own legible wash. The stop caption uses the reserved
+   bottom strip, never the gap occupied by the next support label. */
+.mapZoneEntry { right:auto; width:32px; border-radius:4px; }
+.mapRung[data-kind="entry"] { background:color-mix(in srgb,var(--up-wash) 75%,var(--premium-surface)); }
+.mapZoneVoid { padding:0; }
+.mapZoneVoidLabel { position:absolute; bottom:8px; left:52px; right:8px; line-height:1.4; }
+.indicatorBody { display:flex; flex-direction:column; gap:12px; min-width:0; }
+.indicatorLead { font-size:13px; line-height:1.6; }
+.indicatorHead { padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
+.indicatorBody .indicatorHead { padding-bottom:0; border:0; }
+.indicatorBody > .indicatorNote:last-child { margin-top:auto; }
+.indicatorBody .rsiReading { margin-block:auto; }
+/* Three semantic rows per card: title, explanation, reading. Subgrid aligns
+   the actual charts as well as the outside edges, including long EN labels. */
+@media(min-width:640px) {
+ .indicator { display:grid; grid-template-rows:subgrid; grid-row:span 3; gap:12px; }
+}
+.volumeContext { display:flex; flex-direction:column; gap:8px; margin-top:2px; padding:14px 0 0; border-top:1px solid var(--line-soft); }
+.volumeContext h3 { display:flex; align-items:center; gap:8px; color:var(--primary-ink); font-size:13px; font-weight:650; }
+.volumeContext .prose { font-size:14px; line-height:1.65; }
+.watchPanel { display:grid; grid-template-columns:180px minmax(0,1fr); align-items:start; gap:24px; background:linear-gradient(135deg,var(--primary-tint),transparent 65%),var(--premium-surface); }
+.watchPanel > .sectionTitle { padding:0; border:0; font-size:17px; }
+.watchPanel .watch { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); list-style:none; padding:0; gap:20px; counter-reset:watch; }
+.watchPanel .watch li { position:relative; padding-left:28px; counter-increment:watch; }
+.watchPanel .watch li::before { content:counter(watch,decimal-leading-zero); position:absolute; top:1px; left:0; color:var(--primary); font-size:11px; font-weight:650; }
+@media(max-width:1023px) {
+ .analysisGrid { grid-template-columns:minmax(0,1fr); grid-template-areas:"map" "notes" "reading"; }
+ .analysisReading { grid-template-rows:auto; }
+ .watchPanel { grid-template-columns:minmax(0,1fr); gap:16px; }
+ .watchPanel .watch { grid-template-columns:minmax(0,1fr); gap:12px; }
+}
+@media(max-width:767px) {
+ .analysisGrid,.analysisReading { gap:14px; }
+ .planNotes { padding:18px 16px; }
+ .planNotes .mapNotes { grid-template-columns:minmax(0,1fr); gap:16px; }
+ .mapZoneEntry { width:25px; }
+ .mapZoneVoidLabel { left:41px; }
+}

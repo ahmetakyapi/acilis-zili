@@ -806,6 +806,7 @@ const tr = {
     volumeDetail: "Ortalamanın {n} Katı",
     rangeDetail: "Dip {low} · Tepe {high}",
     /* ---- Fiyat haritası ---- */
+    levelRationale: "Seviyelerin Dayanağı",
     priceMap: "Fiyat Haritası",
     priceMapNote: "Seviyeler fiyat sırasına göre dizilir, birbirine yakın olanlar okunabilsin diye ayrılır; uzaklıklar şu anki fiyattan ölçülür.",
     sectionsLabel: "Analiz Bölümleri",

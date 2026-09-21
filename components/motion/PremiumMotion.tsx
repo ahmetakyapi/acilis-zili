@@ -203,10 +203,13 @@ export function SectionNav({
   items,
   label,
   className,
+  trackAtNav = false,
 }: {
   items: SectionItem[];
   label?: string;
   className?: string;
+  /** Compact sections can end before the usual 30%-of-viewport reading line. */
+  trackAtNav?: boolean;
 }) {
   const ref = useRef<HTMLElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
@@ -253,7 +256,7 @@ export function SectionNav({
       // invalid "--2px" root margin that threw on construction.
       const readingLine = Math.max(0, Math.min(window.innerHeight - 2, Math.max(
         top + nav.getBoundingClientRect().height + 24,
-        window.innerHeight * 0.3,
+        trackAtNav ? 0 : window.innerHeight * 0.3,
       )));
       const updateActive = () => {
         const passed = sections.filter((section) => section.getBoundingClientRect().top <= readingLine + 2);
@@ -262,7 +265,13 @@ export function SectionNav({
         const current = atBottom && last.getBoundingClientRect().top < window.innerHeight
           ? last
           : passed.at(-1) ?? sections[0];
-        setActiveId((previous) => previous === current.id ? previous : current.id);
+        setActiveId((previous) => {
+          // Side-by-side sections share a top edge. Keep the selected member
+          // of that row instead of immediately switching to its neighbour.
+          const peer = passed.find((section) => section.id === previous &&
+            Math.abs(section.getBoundingClientRect().top - current.getBoundingClientRect().top) < 2);
+          return peer?.id ?? current.id;
+        });
       };
       // Pixel margins keep the observation line aligned with the reading
       // threshold. Percentage root margins resolve against width, which
@@ -288,7 +297,7 @@ export function SectionNav({
         section.style.scrollMarginBlockStart = previousMargins[index];
       });
     };
-  }, [itemIds]);
+  }, [itemIds, trackAtNav]);
 
   /* AKTİF SEKME GÖRÜNÜRDE KALIR VE KENAR SOLAR.
      Beş sekme 390 pikselde 513 piksel istiyor (ölçüldü), yani şerit yatay

@@ -1,4 +1,4 @@
-import { ArrowUpRight, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, ChartBar, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -10,7 +10,7 @@ import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
 import { MoreSymbols, type MoreSymbolEntry } from "@/components/technical/MoreSymbols";
 import { PlanStrip } from "@/components/technical/PlanStrip";
-import { PriceMap } from "@/components/technical/PriceMap";
+import { PriceMap, PriceMapNotes } from "@/components/technical/PriceMap";
 import { SignalStrip } from "@/components/technical/SignalStrip";
 import {
   changeToneClass,
@@ -361,28 +361,28 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         </div>
       </header>
 
-      <SectionNav className={styles.sectionNav} label={t.technical.sectionsLabel} items={sectionItems} />
+      <SectionNav className={styles.sectionNav} label={t.technical.sectionsLabel} items={sectionItems} trackAtNav />
 
       {/* ---- Fiyat haritası ve değerlendirme ---- */}
-      <div className={styles.twoCol}>
-        <section id="technical-levels" className={styles.block}>
+      <div className={styles.analysisGrid}>
+        <section id="technical-levels" className={cn(styles.block, styles.mapPanel)}>
           <div className={styles.blockHead}>
             <h2 className={styles.sectionTitle}>{t.technical.priceMap}</h2>
           </div>
           <PriceMap
             price={price}
             {...levelProps}
-            copy={copy}
             verdict={verdict}
             priceLabel={priceLabel}
-            lang={copyLang}
             locale={locale}
             t={t}
           />
           <p className={styles.footHint}>{t.technical.priceMapNote}</p>
         </section>
 
-        <div id="technical-reading" className="flex min-w-0 flex-col gap-4">
+        <PriceMapNotes {...levelProps} copy={copy} verdict={verdict} lang={copyLang} t={t} />
+
+        <div id="technical-reading" className={styles.analysisReading}>
           <section className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.summary}</h2>
             {/* DEĞERLENDİRME TEK BLOK DEĞİL. Rutin metni tek paragraf olarak
@@ -398,6 +398,16 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                   {tieFigures(paragraph)}
                 </p>
               ))}
+            </div>
+            <div className={styles.volumeContext}>
+              <h3><ChartBar size={17} aria-hidden />{t.technical.volumeRead}</h3>
+              <div className={styles.proseStack} lang={copyLang}>
+                {proseParagraphs(copy.volume).map((paragraph) => (
+                  <p key={paragraph.slice(0, 24)} className={styles.prose}>
+                    {tieFigures(paragraph)}
+                  </p>
+                ))}
+              </div>
             </div>
           </section>
           <section className={styles.block}>
@@ -437,27 +447,16 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         </section>
       </Reveal>
 
-      {/* ---- Hacim ve dikkat edilecekler ---- */}
-      <div id="technical-watch" className={styles.twoCol}>
-        <section className={styles.block}>
-          <h2 className={styles.sectionTitle}>{t.technical.volumeRead}</h2>
-          <div className={styles.proseStack} lang={copyLang}>
-            {proseParagraphs(copy.volume).map((paragraph) => (
-              <p key={paragraph.slice(0, 24)} className={styles.prose}>
-                {tieFigures(paragraph)}
-              </p>
-            ))}
-          </div>
-        </section>
-        <section className={styles.block}>
-          <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>
-          <ul className={styles.watch} lang={copyLang}>
-            {copy.watch.map((item) => (
-              <li key={item}>{tieFigures(item)}</li>
-            ))}
-          </ul>
-        </section>
-      </div>
+      {/* Volume interpretation now accompanies the main assessment. Watch
+          items form one shared reading strip, rather than mismatched cards. */}
+      <section id="technical-watch" className={cn(styles.block, styles.watchPanel)}>
+        <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>
+        <ul className={styles.watch} lang={copyLang}>
+          {copy.watch.map((item) => (
+            <li key={item}>{tieFigures(item)}</li>
+          ))}
+        </ul>
+      </section>
 
       {/* ---- Görüş geçmişi ---- */}
       {history.length > 1 && (

@@ -312,3 +312,17 @@ Aynı veriyle, yerel Chrome'da azaltılmış hareket ve 900px pencere yüksekli�
 - Yayın saatleri, fiyat haritası, gün akışı/sağlayıcıları ve özet ön izlemesi için **33 mevcut test** başarılı. Üretim build, lint ve build sonrası typecheck temiz. Yeni bağımlılık yok. Fiziksel iOS/Safari testi yapılmadı.
 
 Yerel kanıtlar: `/tmp/acilis-redesign/sep21-{before,draft3,matrix,interactions,countdown,flow}.json` ve aynı dizindeki ekran görüntüleri.
+
+## Teknik Detayda Hizalama ve Okuma — 21 Eylül, İkinci Geçiş
+
+Kullanıcının yeni ekran görüntülerinden sonra detay ekranı ayrıca ele alındı. İlk geçişin üretim derlemesinde MU'nun harita kartı **808px**, sağındaki yorum/senaryo yığınının alt kenarı ise **266px daha yukarıdaydı**. Hacim ve dikkat kartlarının bitişleri 33px farklıydı. Stop kuşağı açıklamasının alttaki destek etiketiyle çakışması da tarayıcıda doğrulandı.
+
+- Fiyat haritası ile değerlendirme/senaryolar ortak iki sütunlu düzene alındı. Hacim yorumu değerlendirmeyi tamamlayan bir alt bölüm oldu. Seviye gerekçeleri iki sütunun altındaki ortak “Seviyelerin Dayanağı” satırında; mobilde haritanın hemen ardından. Hiçbir açıklama kesilmedi veya açılır alanın arkasına gizlenmedi. MU harita kartı **808→675px**; iki ana sütun artık aynı yerde biter. NVDA ve SAT görüşündeki ONDS'te de alt kenar farkı **0px**.
+- Alım bölgesinin gerçek dikey aralığı eksendeki bantta korunur; fiyat/etiket kendi okunabilir yeşil satırındadır. Çok dar bandın kenarları artık rakamların üstünü çizmez. Stop altı bölgenin açıklaması ayrılmış dip şeridine taşındı; destek satırlarının arasında yer aramaz. Fiyat sırası, esneyen eksen, yüzdeler ve geçildi/kırıldı anlamları korunur.
+- Altı gösterge kartı üç ortak satır kullanır: başlık, açıklama, okuma. Subgrid yalnız dış kenarları değil, grafiklerin başladığı noktaları da hizalar. Açıklamalar 13px ve daha açık satır aralığında; RSI, MACD, ortalama, hacim, ATR/yıllık bant ve pivotların kendilerine özgü görselleri korunur.
+- Alt kısımdaki farklı yükseklikte iki kart yerine tek “Dikkat Edilecekler” şeridi var. Metinler masaüstünde numaralı sütunlarda, mobilde alt alta okunur. Hacim metni artık üstteki değerlendirmede olduğu için tekrarlanmaz.
+- Kısa bölümün başına gelince menü bir sonraki bölümü etkin gösteriyordu: teknik detayın okuma çizgisi gezinme çubuğunun altına bağlandı. Yan yana bölümler aynı üst kenarı paylaştığında tıklanan bölümün seçimi korunur. Doğal bağlantılar ve JavaScript kapalı kullanım sürer.
+
+Doğrulama: MU/NVDA/ONDS × TR/EN × açık/koyu × 320/390/768/1024/1440px = **60 üretim yerleşimi**. Yatay taşma, kesilen fiyat, harita satırı/künye çakışması veya gösterge gövdesi hiza farkı yok. Masaüstü/mobil ve normal/azaltılmış hareketle beş bölüm bağlantısında **20 kontrol** başarılı. Fiyat haritası ve paragraf sınırları için **7 mevcut test**, build, lint, typecheck ve diff kontrolü temiz. Fiziksel iOS/Safari doğrulaması yapılmadı.
+
+Kanıtlar: `/tmp/acilis-redesign/sep21-before-detail-detail.json`, `sep21-production-detail-detail.json`, `sep21-anchors.json`, `sep21-detail-tests.log` ve ilgili ekran görüntüleri.

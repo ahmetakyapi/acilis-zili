@@ -111,46 +111,48 @@ function MovingAveragesPanel({
         tagClass={cross?.kind === "golden" ? "text-up" : "text-down"}
       />
       <Lead>{t.technical.maLead}</Lead>
-      {/* İKİ YÖN, TEK SAYFA. Bu panel "fiyat ortalamanın ne kadar üstünde"
-          diyor (hisse sayfasındaki ortalama paneliyle aynı okuma); merdiven
-          ve pivotlar ise "seviyeye ne kadar var". Aynı 50 günlük burada yeşil
-          +, merdivende destek olarak kırmızı − duruyordu ve açıklamasızdı. */}
-      <dl className={styles.rows}>
-        {rows.map(({ window, value, distance }) => (
-          <div key={window} className={styles.row}>
-            <dt>{t.stock.movingAverageRow.replace("{n}", String(window))}</dt>
-            <dd>
-              {value !== null ? (
-                <>
-                  <span>{formatPrice(value, locale, { currency: true })}</span>
-                  {distance !== null && (
-                    <span className={cn("text-tiny", directionText(directionOf(distance)))}>
-                      {formatPercent(distance, locale, 1)}
-                    </span>
-                  )}
-                </>
-              ) : (
-                <span className="text-tiny font-medium text-muted">{t.technical.notEnoughHistory}</span>
+      <div className={styles.indicatorBody}>
+        {/* İKİ YÖN, TEK SAYFA. Bu panel "fiyat ortalamanın ne kadar üstünde"
+            diyor (hisse sayfasındaki ortalama paneliyle aynı okuma); merdiven
+            ve pivotlar ise "seviyeye ne kadar var". Aynı 50 günlük burada yeşil
+            +, merdivende destek olarak kırmızı − duruyordu ve açıklamasızdı. */}
+        <dl className={styles.rows}>
+          {rows.map(({ window, value, distance }) => (
+            <div key={window} className={styles.row}>
+              <dt>{t.stock.movingAverageRow.replace("{n}", String(window))}</dt>
+              <dd>
+                {value !== null ? (
+                  <>
+                    <span>{formatPrice(value, locale, { currency: true })}</span>
+                    {distance !== null && (
+                      <span className={cn("text-tiny", directionText(directionOf(distance)))}>
+                        {formatPercent(distance, locale, 1)}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-tiny font-medium text-muted">{t.technical.notEnoughHistory}</span>
+                )}
+              </dd>
+              {distance !== null && (
+                <div className={styles.deviation} aria-hidden>
+                  <span
+                    data-motion-draw="line"
+                    style={{
+                      left: `${distance < 0 ? 50 - (Math.abs(distance) / extent) * 50 : 50}%`,
+                      width: `${(Math.abs(distance) / extent) * 50}%`,
+                      background: distance >= 0 ? "var(--up)" : "var(--down)",
+                      transformOrigin: distance < 0 ? "right" : "left",
+                    }}
+                  />
+                  <i />
+                </div>
               )}
-            </dd>
-            {distance !== null && (
-              <div className={styles.deviation} aria-hidden>
-                <span
-                  data-motion-draw="line"
-                  style={{
-                    left: `${distance < 0 ? 50 - (Math.abs(distance) / extent) * 50 : 50}%`,
-                    width: `${(Math.abs(distance) / extent) * 50}%`,
-                    background: distance >= 0 ? "var(--up)" : "var(--down)",
-                    transformOrigin: distance < 0 ? "right" : "left",
-                  }}
-                />
-                <i />
-              </div>
-            )}
-          </div>
-        ))}
-      </dl>
-      <p className={styles.indicatorNote}>{t.technical.maNote}</p>
+            </div>
+          ))}
+        </dl>
+        <p className={styles.indicatorNote}>{t.technical.maNote}</p>
+      </div>
     </section>
   );
 }
@@ -169,37 +171,39 @@ function RsiPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; locale
         tagClass={zone === "overbought" ? "text-down" : zone === "oversold" ? "text-up" : "text-muted"}
       />
       <Lead>{t.technical.rsiLead}</Lead>
-      {rsi !== null ? (
-        <div className={styles.rsiReading}>
-          {/* A bounded 0–100 reading, not an invented time series. Thresholds
-              and marker use the same semicircle; missing RSI draws no dial. */}
-          <div className={styles.rsiDial}>
-            <svg viewBox="0 0 200 112" aria-hidden="true">
-              <path className={styles.dialBase} d="M20 98 A80 80 0 0 1 180 98" pathLength="100" />
-              <path className={styles.dialLow} d="M20 98 A80 80 0 0 1 180 98" pathLength="100" strokeDasharray="30 70" />
-              <path className={styles.dialHigh} d="M20 98 A80 80 0 0 1 180 98" pathLength="100" strokeDasharray="30 70" strokeDashoffset="-70" />
-              {[0, 30, 70, 100].map((value) => {
-                const angle = Math.PI * (1 - value / 100);
-                return <line key={value} className={styles.dialTick}
-                  x1={100 + 72 * Math.cos(angle)} y1={98 - 72 * Math.sin(angle)}
-                  x2={100 + 88 * Math.cos(angle)} y2={98 - 88 * Math.sin(angle)} />;
-              })}
-              <circle className={styles.dialMarker} r="5"
-                cx={100 + 80 * Math.cos(Math.PI * (1 - Math.min(100, Math.max(0, rsi)) / 100))}
-                cy={98 - 80 * Math.sin(Math.PI * (1 - Math.min(100, Math.max(0, rsi)) / 100))} />
-              <text x="5" y="110">0</text><text x="35" y="24">30</text>
-              <text x="157" y="24">70</text><text x="180" y="110">100</text>
-            </svg>
-            <p className={styles.rsiValue}>{formatPrice(rsi, locale, { digits: 1 })}<span>/ 100</span></p>
+      <div className={styles.indicatorBody}>
+        {rsi !== null ? (
+          <div className={styles.rsiReading}>
+            {/* A bounded 0–100 reading, not an invented time series. Thresholds
+                and marker use the same semicircle; missing RSI draws no dial. */}
+            <div className={styles.rsiDial}>
+              <svg viewBox="0 0 200 112" aria-hidden="true">
+                <path className={styles.dialBase} d="M20 98 A80 80 0 0 1 180 98" pathLength="100" />
+                <path className={styles.dialLow} d="M20 98 A80 80 0 0 1 180 98" pathLength="100" strokeDasharray="30 70" />
+                <path className={styles.dialHigh} d="M20 98 A80 80 0 0 1 180 98" pathLength="100" strokeDasharray="30 70" strokeDashoffset="-70" />
+                {[0, 30, 70, 100].map((value) => {
+                  const angle = Math.PI * (1 - value / 100);
+                  return <line key={value} className={styles.dialTick}
+                    x1={100 + 72 * Math.cos(angle)} y1={98 - 72 * Math.sin(angle)}
+                    x2={100 + 88 * Math.cos(angle)} y2={98 - 88 * Math.sin(angle)} />;
+                })}
+                <circle className={styles.dialMarker} r="5"
+                  cx={100 + 80 * Math.cos(Math.PI * (1 - Math.min(100, Math.max(0, rsi)) / 100))}
+                  cy={98 - 80 * Math.sin(Math.PI * (1 - Math.min(100, Math.max(0, rsi)) / 100))} />
+                <text x="5" y="110">0</text><text x="35" y="24">30</text>
+                <text x="157" y="24">70</text><text x="180" y="110">100</text>
+              </svg>
+              <p className={styles.rsiValue}>{formatPrice(rsi, locale, { digits: 1 })}<span>/ 100</span></p>
+            </div>
+            <div className={styles.rsiZones}>
+              <span><i data-zone="low" />{t.technical.rsiOversold}<b>0–30</b></span>
+              <span><i data-zone="mid" />{t.technical.rsiNeutral}<b>30–70</b></span>
+              <span><i data-zone="high" />{t.technical.rsiOverbought}<b>70–100</b></span>
+            </div>
           </div>
-          <div className={styles.rsiZones}>
-            <span><i data-zone="low" />{t.technical.rsiOversold}<b>0–30</b></span>
-            <span><i data-zone="mid" />{t.technical.rsiNeutral}<b>30–70</b></span>
-            <span><i data-zone="high" />{t.technical.rsiOverbought}<b>70–100</b></span>
-          </div>
-        </div>
-      ) : <p className={styles.indicatorNote}>{t.technical.notEnoughHistory}</p>}
+        ) : <p className={styles.indicatorNote}>{t.technical.notEnoughHistory}</p>}
 
+      </div>
     </section>
   );
 }
@@ -216,46 +220,48 @@ function MacdPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; local
         tagClass={above ? "text-up" : "text-down"}
       />
       <Lead>{t.technical.macdLead}</Lead>
-      {macd ? (
-        <>
-          <dl className={styles.rows}>
-            {([
-              [t.technical.macdLine, macd.macd],
-              [t.technical.macdSignal, macd.signal],
-              [t.technical.macdHistogram, macd.histogram],
-            ] as const).map(([label, value]) => {
-              const extent = Math.max(Math.abs(macd.macd), Math.abs(macd.signal), Math.abs(macd.histogram), 0.01);
-              return <div className={styles.row} key={label}>
-                <dt>{label}</dt>
-                <dd>{formatPrice(value, locale, { digits: 2 })}</dd>
-                {/* All three readings share one symmetric zero axis. */}
-                <div className={styles.deviation} aria-hidden="true">
-                  <span data-motion-draw="line" style={{
-                    left: `${value < 0 ? 50 - Math.abs(value) / extent * 50 : 50}%`,
-                    width: `${Math.abs(value) / extent * 50}%`,
-                    background: label === t.technical.macdHistogram ? (value >= 0 ? "var(--up)" : "var(--down)") : "var(--primary)",
-                    transformOrigin: value < 0 ? "right" : "left",
-                  }} /><i />
-                </div>
-              </div>;
-            })}
-          </dl>
-          <p className={styles.indicatorNote}>{t.technical.macdNote}</p>
-          {/* Yirmi seanstan eski kesişme "yeni bir sinyal" değil. */}
-          {macd.crossSessions !== null && macd.crossSessions <= 20 && (
-            <p className={styles.indicatorNote}>
-              {macd.crossSessions === 0
-                ? t.technical.crossedLastSession
-                : plural(macd.crossSessions, t.technical.crossedSessionsAgoOne, t.technical.crossedSessionsAgo).replace(
-                    "{n}",
-                    String(macd.crossSessions),
-                  )}
-            </p>
-          )}
-        </>
-      ) : (
-        <p className="text-tiny text-muted">{t.technical.notEnoughHistory}</p>
-      )}
+      <div className={styles.indicatorBody}>
+        {macd ? (
+          <>
+            <dl className={styles.rows}>
+              {([
+                [t.technical.macdLine, macd.macd],
+                [t.technical.macdSignal, macd.signal],
+                [t.technical.macdHistogram, macd.histogram],
+              ] as const).map(([label, value]) => {
+                const extent = Math.max(Math.abs(macd.macd), Math.abs(macd.signal), Math.abs(macd.histogram), 0.01);
+                return <div className={styles.row} key={label}>
+                  <dt>{label}</dt>
+                  <dd>{formatPrice(value, locale, { digits: 2 })}</dd>
+                  {/* All three readings share one symmetric zero axis. */}
+                  <div className={styles.deviation} aria-hidden="true">
+                    <span data-motion-draw="line" style={{
+                      left: `${value < 0 ? 50 - Math.abs(value) / extent * 50 : 50}%`,
+                      width: `${Math.abs(value) / extent * 50}%`,
+                      background: label === t.technical.macdHistogram ? (value >= 0 ? "var(--up)" : "var(--down)") : "var(--primary)",
+                      transformOrigin: value < 0 ? "right" : "left",
+                    }} /><i />
+                  </div>
+                </div>;
+              })}
+            </dl>
+            <p className={styles.indicatorNote}>{t.technical.macdNote}</p>
+            {/* Yirmi seanstan eski kesişme "yeni bir sinyal" değil. */}
+            {macd.crossSessions !== null && macd.crossSessions <= 20 && (
+              <p className={styles.indicatorNote}>
+                {macd.crossSessions === 0
+                  ? t.technical.crossedLastSession
+                  : plural(macd.crossSessions, t.technical.crossedSessionsAgoOne, t.technical.crossedSessionsAgo).replace(
+                      "{n}",
+                      String(macd.crossSessions),
+                    )}
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-tiny text-muted">{t.technical.notEnoughHistory}</p>
+        )}
+      </div>
     </section>
   );
 }
@@ -275,41 +281,43 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
         tagClass={ratio !== null && ratio >= 1 ? "text-primary-ink" : "text-muted"}
       />
       <Lead>{t.technical.volumeLead}</Lead>
-      <dl className={styles.rows}>
-        <div className={styles.row}>
-          <dt>{t.technical.volumeLast}</dt>
-          <dd>{formatCompact(snapshot.lastVolume, locale)}</dd>
-        </div>
-        <div className={styles.row}>
-          <dt>{t.technical.volumeAverage}</dt>
-          <dd>{formatCompact(snapshot.avgVolume20, locale)}</dd>
-        </div>
-        {/* DONMUŞ SAYI, KENDİ SAATİYLE. Değer yazma anındaki kotasyonun hacmi
-            ve fotoğrafta sabit; "Bugün (Şu Ana Kadar)" diye basılınca Cuma
-            öğlen yazılmış bir sayı hafta sonu boyunca "şu ana kadar" diye
-            okunuyordu. Saat fotoğrafın kendi anı (`asOf`), takvim saati değil. */}
-        {snapshot.todayVolume !== null && (
+      <div className={styles.indicatorBody}>
+        <dl className={styles.rows}>
           <div className={styles.row}>
-            <dt>
-              {t.technical.volumeToday.replace(
-                "{time}",
-                `${formatInZone(new Date(snapshot.asOf), displayZone(locale))} ${zoneTag(locale).primary}`,
-              )}
-            </dt>
-            <dd>{formatCompact(snapshot.todayVolume, locale)}</dd>
+            <dt>{t.technical.volumeLast}</dt>
+            <dd>{formatCompact(snapshot.lastVolume, locale)}</dd>
           </div>
+          <div className={styles.row}>
+            <dt>{t.technical.volumeAverage}</dt>
+            <dd>{formatCompact(snapshot.avgVolume20, locale)}</dd>
+          </div>
+          {/* DONMUŞ SAYI, KENDİ SAATİYLE. Değer yazma anındaki kotasyonun hacmi
+              ve fotoğrafta sabit; "Bugün (Şu Ana Kadar)" diye basılınca Cuma
+              öğlen yazılmış bir sayı hafta sonu boyunca "şu ana kadar" diye
+              okunuyordu. Saat fotoğrafın kendi anı (`asOf`), takvim saati değil. */}
+          {snapshot.todayVolume !== null && (
+            <div className={styles.row}>
+              <dt>
+                {t.technical.volumeToday.replace(
+                  "{time}",
+                  `${formatInZone(new Date(snapshot.asOf), displayZone(locale))} ${zoneTag(locale).primary}`,
+                )}
+              </dt>
+              <dd>{formatCompact(snapshot.todayVolume, locale)}</dd>
+            </div>
+          )}
+        </dl>
+        {ratio !== null && (
+          <>
+            <div className={styles.ratioTrack} aria-hidden>
+              <span data-motion-draw="bar" style={{ width: `${Math.min(100, (ratio / scale) * 100)}%` }} />
+              <i style={{ left: `${100 / scale}%` }} />
+            </div>
+            <div className={styles.volumeScale} aria-hidden="true"><span>0</span><span>1×</span><span>3×+</span></div>
+            <p className={styles.indicatorNote}>{t.technical.volumeRatio}</p>
+          </>
         )}
-      </dl>
-      {ratio !== null && (
-        <>
-          <div className={styles.ratioTrack} aria-hidden>
-            <span data-motion-draw="bar" style={{ width: `${Math.min(100, (ratio / scale) * 100)}%` }} />
-            <i style={{ left: `${100 / scale}%` }} />
-          </div>
-          <div className={styles.volumeScale} aria-hidden="true"><span>0</span><span>1×</span><span>3×+</span></div>
-          <p className={styles.indicatorNote}>{t.technical.volumeRatio}</p>
-        </>
-      )}
+      </div>
     </section>
   );
 }
@@ -335,40 +343,42 @@ function RangePanel({
     <section className={styles.indicator}>
       <Head title={t.technical.atr} icon={Pulse} />
       <Lead>{t.technical.atrLead}</Lead>
-      <p className={styles.bigFigure}>
-        {formatPrice(atr14, locale, { currency: true })}
-        {atrShare !== null && (
-          <span className="ml-2 text-small font-semibold text-muted">
-            {t.technical.atrShare} {formatPercentPlain(atrShare, locale, 1)}
-          </span>
-        )}
-      </p>
-      <div className="flex flex-col gap-2 border-t border-line-soft pt-2.5">
-        <div className={styles.indicatorHead}>
-          <h3 className={styles.indicatorTitle}>{t.technical.range52}</h3>
-          {/* İşaretsiz ve sözle: "Tepeye Uzaklık −%12" okuyucuya yön mü mesafe
-              mi olduğunu söylemiyordu. */}
-          {fromHigh !== null && (
-            <span className={cn(styles.indicatorTag, "text-muted")}>
-              {fromHigh < -0.05
-                ? t.technical.range52Below.replace("{n}", formatPercentPlain(Math.abs(fromHigh), locale, 1))
-                : t.technical.range52AtHigh}
+      <div className={styles.indicatorBody}>
+        <p className={styles.bigFigure}>
+          {formatPrice(atr14, locale, { currency: true })}
+          {atrShare !== null && (
+            <span className="ml-2 text-small font-semibold text-muted">
+              {t.technical.atrShare} {formatPercentPlain(atrShare, locale, 1)}
             </span>
           )}
-        </div>
-        <Lead>{t.technical.range52Lead}</Lead>
-        {position !== null && (
-          <div className={styles.band} aria-hidden>
-            <span style={{ left: `${position}%` }} />
+        </p>
+        <div className="flex flex-col gap-2 border-t border-line-soft pt-2.5">
+          <div className={styles.indicatorHead}>
+            <h3 className={styles.indicatorTitle}>{t.technical.range52}</h3>
+            {/* İşaretsiz ve sözle: "Tepeye Uzaklık −%12" okuyucuya yön mü mesafe
+                mi olduğunu söylemiyordu. */}
+            {fromHigh !== null && (
+              <span className={cn(styles.indicatorTag, "text-muted")}>
+                {fromHigh < -0.05
+                  ? t.technical.range52Below.replace("{n}", formatPercentPlain(Math.abs(fromHigh), locale, 1))
+                  : t.technical.range52AtHigh}
+              </span>
+            )}
           </div>
-        )}
-        <div className="flex justify-between text-tiny text-muted">
-          <span>
-            {t.technical.range52Low} <b className="numeral text-body">{formatPrice(low52, locale, { currency: true })}</b>
-          </span>
-          <span>
-            {t.technical.range52High} <b className="numeral text-body">{formatPrice(high52, locale, { currency: true })}</b>
-          </span>
+          <Lead>{t.technical.range52Lead}</Lead>
+          {position !== null && (
+            <div className={styles.band} aria-hidden>
+              <span style={{ left: `${position}%` }} />
+            </div>
+          )}
+          <div className="flex justify-between text-tiny text-muted">
+            <span>
+              {t.technical.range52Low} <b className="numeral text-body">{formatPrice(low52, locale, { currency: true })}</b>
+            </span>
+            <span>
+              {t.technical.range52High} <b className="numeral text-body">{formatPrice(high52, locale, { currency: true })}</b>
+            </span>
+          </div>
         </div>
       </div>
     </section>
@@ -402,27 +412,29 @@ function PivotPanel({
     <section className={styles.indicator}>
       <Head title={t.technical.pivots} icon={Crosshair} />
       <Lead>{t.technical.pivotsLead}</Lead>
-      <dl className={styles.rows}>
-        {rows.map(([label, name, value]) => {
-          const distance = distancePct(value, price);
-          return (
-            <div key={label} className={styles.row}>
-              <dt className={styles.pivotLabel}>
-                <b>{label}</b>
-                <span>{name}</span>
-              </dt>
-              <dd>
-                <span>{formatPrice(value, locale, { currency: true })}</span>
-                {distance !== null && (
-                  <span className={cn("text-tiny", directionText(directionOf(distance)))}>
-                    {formatPercent(distance, locale, 1)}
-                  </span>
-                )}
-              </dd>
-            </div>
-          );
-        })}
-      </dl>
+      <div className={styles.indicatorBody}>
+        <dl className={styles.rows}>
+          {rows.map(([label, name, value]) => {
+            const distance = distancePct(value, price);
+            return (
+              <div key={label} className={styles.row}>
+                <dt className={styles.pivotLabel}>
+                  <b>{label}</b>
+                  <span>{name}</span>
+                </dt>
+                <dd>
+                  <span>{formatPrice(value, locale, { currency: true })}</span>
+                  {distance !== null && (
+                    <span className={cn("text-tiny", directionText(directionOf(distance)))}>
+                      {formatPercent(distance, locale, 1)}
+                    </span>
+                  )}
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+      </div>
     </section>
   );
 }

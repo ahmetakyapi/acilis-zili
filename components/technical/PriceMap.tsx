@@ -47,10 +47,8 @@ export function PriceMap({
   targets,
   supports,
   resistances,
-  copy,
   verdict,
   priceLabel,
-  lang,
   locale,
   t,
 }: {
@@ -61,11 +59,8 @@ export function PriceMap({
   targets: readonly number[];
   supports: readonly number[];
   resistances: readonly number[];
-  copy: TechnicalCopy;
   verdict: VerdictKey;
   priceLabel: string;
-  /** Notların dili — İngilizce sayfada çevrilmemiş metin Türkçe okunur. */
-  lang: string;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -101,18 +96,6 @@ export function PriceMap({
         return priceLabel;
     }
   };
-
-  /* Notlar seviye sırasına göre: hedefler, alım bölgesi, stop. Yalnızca
-     yazılmış olanlar listeye giriyor; hiçbiri yoksa liste hiç basılmıyor. */
-  const noteList = rungs
-    .map((rung) => ({
-      /* Hedef notu ÜÇ hedefi birden anlatıyor ("ilk iki hedef … üçüncüsü …")
-         ama ilk hedefin satırına bağlı; "Hedef 1" diye etiketlenince not
-         yalnız o seviyeyi tarif ediyormuş gibi okunuyordu. */
-      label: rung.kind === "target" ? (sellSide ? t.technical.planTargets : t.technical.targetsLabel) : labelOf(rung),
-      text: noteOf(rung, copy),
-    }))
-    .filter((item): item is { label: string; text: string } => item.text !== null);
 
   const entryTop = entryLow !== null && entryHigh !== null ? scale(entryHigh) : null;
   const entryBottom = entryLow !== null && entryHigh !== null ? scale(entryLow) : null;
@@ -269,21 +252,31 @@ export function PriceMap({
         })}
       </ol>
     </div>
-    {noteList.length > 0 && (
-      /* Tanım listesi: terim seviyenin adı, tanım nereden geldiği. Dar
-         ekranda alt alta, geniş ekranda iki sütun — makale kutularındaki
-         `**Etiket:**` kalıbıyla aynı okuma biçimi. */
-      <dl className={styles.mapNotes} lang={lang}>
-        {noteList.map((item) => (
-          <div key={item.label}>
-            <dt>{item.label}</dt>
-            <dd>{item.text}</dd>
-          </div>
-        ))}
-      </dl>
-    )}
+
     </>
   );
+}
+
+/** Notes share the same real levels as the map. They sit in a full-width
+ * editorial row so a long explanation no longer stretches only the map's
+ * column. Missing levels never acquire a note from a different plan. */
+export function PriceMapNotes({ copy, verdict, lang, t, ...levels }: {
+  copy: TechnicalCopy; verdict: VerdictKey; lang: string; t: Dictionary;
+  entryLow: number | null; entryHigh: number | null; stop: number | null;
+  targets: readonly number[]; supports: readonly number[]; resistances: readonly number[];
+}) {
+  const notes = ladderOf(levels).map((level) => ({
+    label: level.kind === "target" ? (verdict === "sell" ? t.technical.planTargets : t.technical.targetsLabel)
+      : level.kind === "entry" ? t.technical.entryZone : t.technical.stop,
+    text: noteOf(level, copy),
+  })).filter((note): note is { label: string; text: string } => Boolean(note.text));
+  if (!notes.length) return null;
+  return <section className={styles.planNotes} aria-labelledby="technical-plan-notes">
+    <h2 id="technical-plan-notes" className={styles.sectionTitle}>{t.technical.levelRationale}</h2>
+    <dl className={styles.mapNotes} lang={lang}>
+      {notes.map((note) => <div key={note.label}><dt>{note.label}</dt><dd>{note.text}</dd></div>)}
+    </dl>
+  </section>;
 }
 
 /**

@@ -637,6 +637,7 @@ const en: typeof tr = {
     volumeLight: "Light",
     volumeDetail: "{n}× the Average",
     rangeDetail: "Low {low} · High {high}",
+    levelRationale: "Behind the Levels",
     priceMap: "Price Map",
     priceMapNote: "Levels are ordered by price and spread apart where they cluster; distances are measured from the current price.",
     sectionsLabel: "Analysis Sections",
