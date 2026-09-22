@@ -250,6 +250,14 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
               damgası — ekran okuyucuya bağlantının adı olarak okunmaları da
               yanlış olurdu. */}
           <div className={styles.coverIdentity}>
+            {/* GÖRÜŞ ADIN SAĞINDA, AYNI SATIRDA. Rozet bir dönem künyenin
+                altında kendi satırındaydı; telefonda kapak logo, ad, iki
+                künye satırı, rozet, başlık cümlesi diye altı kat üst üste
+                biniyordu ve okuyucunun ilk sorusu ("bu hissede ne
+                görünüyor") dördüncü katta cevaplanıyordu. Ad ile görüş
+                artık aynı satırı paylaşıyor: sol uçta kimlik, sağ uçta
+                tek kelime. Künye satırları o satırın altında kalıyor. */}
+            <div className={styles.coverHead}>
             <Link href={`/hisse/${symbol}`} className={styles.coverNameLink}>
               <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="lg" />
               <div className="min-w-0">
@@ -272,6 +280,13 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                 {company && <p className={styles.coverCompany}>{company}</p>}
               </div>
             </Link>
+            <div className={styles.stanceRow}>
+              {/* Etiket yalnızca ekran okuyucuya: gerekçe `.stancePill` yorumunda. */}
+              <span className="sr-only">{t.technical.stanceLabel}</span>
+              <span className={cn(styles.stancePill, verdictPillClass(verdict))}>{verdictLabel(verdict, t)}</span>
+              {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
+            </div>
+            </div>
             <p className={styles.coverMeta}>
               {slotLabel(row.slot, t)} · {formatEtDateLong(row.sessionDate, locale)} ·{" "}
               <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
@@ -294,12 +309,6 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                 )}
               </p>
             )}
-          </div>
-          <div className={styles.stanceRow}>
-            {/* Etiket yalnızca ekran okuyucuya: gerekçe `.stancePill` yorumunda. */}
-            <span className="sr-only">{t.technical.stanceLabel}</span>
-            <span className={cn(styles.stancePill, verdictPillClass(verdict))}>{verdictLabel(verdict, t)}</span>
-            {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
           </div>
           <p className={styles.coverHeadline} lang={copyLang}>
             {tieFigures(copy.headline)}

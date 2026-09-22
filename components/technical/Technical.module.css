@@ -185,6 +185,15 @@
 .planCell dd > span { white-space:nowrap; }
 .planItem { white-space:nowrap; }
 .planSep { color:var(--text-muted); font-weight:500; }
+/* SATIŞ SEVİYELERİ RENKLİ VE KOYU. Üç hedef, öteki iki hücreyle aynı gri
+   ağırlıkta "265,10 · 274,35 · 287,30 $" diye duruyordu ve planın en çok
+   sayı taşıyan hücresi en az göze çarpanıydı. Sayılar artık hedefin kendi
+   rengini (lejant noktasıyla aynı `--up`) ve bir kademe koyu ağırlığı
+   taşıyor; ayraç nokta değil tire — "seviyeden seviyeye" diye okunuyor,
+   üç ayrı künye gibi değil. */
+.planCell[data-kind="target"] dd { color:var(--up); font-weight:700; }
+.planCell[data-kind="target"] .planSep { color:var(--up); opacity:.55; }
+.planStripLg .planCell dd { font-size:15px; font-weight:700; }
 .planEmpty { font-weight:500; color:var(--text-muted); }
 /* ---- Risk şeridi ----
    Üç satır: künye (oran + çapa), ölçekli çubuk, iki bacak. Gerekçe
@@ -242,7 +251,15 @@
      yüzeyine oturuyor; hücreleri ayıran şey dikey bir kıl çizgi — gazete
      künyelerinin ayrımı. Kart (sm) kutuyu koruyor: orada şeridin etrafında
      ayıracak bir yüzey yok. */
-  .planStripLg .planCells { display:grid; grid-template-columns:repeat(var(--cells, 3), minmax(0,1fr)); gap:0; padding:0; border-radius:0; background:none; }
+  /* SÜTUNLAR İÇERİĞİNE GÖRE, EŞİT DEĞİL. `minmax(0,1fr)` üç hücreye
+     aynı genişliği veriyordu ve 768'de (şerit 670) üç hedef "Nerede
+     Satılır"da ikiye sarıyordu; `auto` sütun içeriği kadar alıyor ve
+     orada üçü tek satırda (ölçüldü: hücre 241 piksel). Sınırı var:
+     büyüme tavanı hücrenin EN GENİŞ satırı, o da etiket ("NEREDE
+     VAZGEÇİLİR" 139 piksel) — üç etiket de pay kadar geniş olunca boş
+     yer yine eşit bölünüyor. 1440'ta bu yüzden tek başına yetmedi;
+     kapağın kolon oranı da değişti (bkz. `.cover`). */
+  .planStripLg .planCells { display:grid; grid-template-columns:repeat(var(--cells, 3), minmax(0,auto)); gap:0; padding:0; border-radius:0; background:none; }
   /* ÜSTTEN HİZA. Taban kural `justify-content:space-between` taşıyor ve
      ızgara hücreleri aynı yüksekliğe gerdiği için sayılar ALTA yapışıyordu:
      üç hedefi tek satıra sığmayan "Nerede Satılır" iki satıra çıkınca onun
@@ -293,7 +310,15 @@
    İki sütun: solda kimlik, görüş, başlık ve planın okuması; sağda fiyat,
    plan şeridi ve çizgi; altta tam genişlikte gösterge özeti. Zemin bilanço
    raporunun kapağıyla aynı dil — maskeli ızgara ve tek ışıma. */
-.cover { position:relative; isolation:isolate; overflow:hidden; display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:24px 32px; padding:30px 32px 26px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); box-shadow:var(--premium-shadow); }
+/* SAĞ KOLON SOLDAN GENİŞ. Oran 1,1:1 idi (metin kolonu geniş) ve 1440'ta
+   plan şeridine 550 piksel kalıyordu: "Nereden Alınır" 201, "Nerede
+   Vazgeçilir" etiketi 186 piksel istiyor, üç hedef 286 — üçü birden sığmaz
+   ve sütunlar içeriğe göre bölündüğünde bile hedefler her biri kendi
+   satırına düşüyordu (ölçüldü). 1:1,15 ile şerit 623 piksel: alım ve
+   vazgeçme tek satır, hedefler iki satır ("265,10 – 274,35 –" / "287,30 $").
+   Sol kolonun kaybettiği 72 piksel başlık cümlesini (54ch tavanlı) ve
+   okuma kutusunu etkilemiyor. */
+.cover { position:relative; isolation:isolate; overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:24px 32px; padding:30px 32px 26px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); box-shadow:var(--premium-shadow); }
 .cover::before { content:""; position:absolute; z-index:-1; inset:0 0 30% 45%; background-image:linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px); background-size:3.2rem 3.2rem; mask-image:linear-gradient(110deg, transparent, var(--text-strong)); opacity:.8; pointer-events:none; }
 .cover::after { content:""; position:absolute; z-index:-1; top:-14rem; right:-6rem; width:36rem; height:36rem; border-radius:50%; background:radial-gradient(circle, var(--primary-wash), transparent 65%); pointer-events:none; }
 .cover[data-verdict="buy"]::after { background:radial-gradient(circle, var(--up-wash), transparent 65%); }
@@ -308,6 +333,13 @@
    ortasında. Künye satırları bloğun sol kenarına iniyor: girinti taşıyan tek
    şey kimlik. */
 .coverIdentity { display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
+/* AD SOLDA, GÖRÜŞ SAĞDA — tek satır. Bağlantı daralabilir (`min-width:0`,
+   şirket adı kendi kutusunda sarar), rozet daralmaz: 390'da "MU" + logo
+   130, "AL" rozeti 74 piksel; en geniş kurulum ("AVGO" + "TUT" + değişim
+   çipi) 340 ile 352 piksellik iç genişliğe sığıyor. Rozet logonun
+   ortasına hizalı (`align-items:center`), künyenin değil — ikisi kimliğin
+   parçası, künye değil. */
+.coverHead { display:flex; width:100%; align-items:center; justify-content:space-between; gap:10px 16px; }
 .coverNameLink { display:flex; max-width:100%; min-width:0; align-items:center; gap:14px; color:inherit; }
 .coverIdentity h1 { display:flex; align-items:center; gap:.16em; font-size:clamp(32px, 3.2vw, 44px); line-height:1.02; letter-spacing:-.05em; font-weight:650; color:var(--text-strong); }
 .coverGo { flex:none; width:.4em; height:.4em; color:var(--text-muted); transition:color .18s ease, transform .18s ease; }
@@ -325,7 +357,7 @@
    için vardı ve rozetin kendi kelimesi (AL / TUT / SAT) sayfanın başlığıyla
    birlikte zaten söylüyor. Liste kartları da etiketsiz basıyor; kapak
    onlarla aynı dile geldi. Ekran okuyucu etiketi okumaya devam ediyor. */
-.stanceRow { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; }
+.stanceRow { display:flex; flex:none; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px 12px; }
 .stanceLabel { font-size:11px; font-weight:700; letter-spacing:.05em; color:var(--text-muted); }
 .stancePill { display:inline-flex; align-items:center; padding:9px 22px; border-radius:999px; font-size:clamp(19px,1.7vw,22px); font-weight:800; letter-spacing:.07em; line-height:1.1; }
 /* BAŞLIK CÜMLESİ KAPAĞIN İKİNCİ SESİ. 17 punto/1,6 ile gövde metniyle aynı
@@ -653,7 +685,14 @@
   .cover::before { inset:0 0 55% 40%; }
   .coverSide { padding-left:0; padding-top:20px; border-left:0; border-top:1px solid var(--line); }
   .twoCol { grid-template-columns:minmax(0,1fr); }
-  .signals { grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px 16px; }
+  /* SATIR ARASI TELEFONDA DA 5 PİKSEL. Kural `gap:14px 16px` idi ve alt
+     ızgara ana ızgaranın satır aralığını devraldığı için künyenin İÇİNDEKİ
+     üç satır (etiket, kelime, ölçü) da 14 piksel açılıyordu: masaüstünde
+     sıkı duran künye telefonda seyrek ve uzun bir sütuna dönüyor, sol
+     çizgi de onunla uzuyordu. Yalnızca sütun arası büyüyor; künyeler arası
+     boşluk `margin-bottom` ile (masaüstündeki 8 yerine 18) veriliyor. */
+  .signals { grid-template-columns:repeat(2, minmax(0,1fr)); column-gap:16px; margin-bottom:-18px; }
+  .signal { margin-bottom:18px; }
 }
 
 /* YATAY MODDA İKİ KOLON GERİ GELİYOR. Kırılma noktası yalnızca genişliğe
@@ -663,7 +702,7 @@
    Yatayda kıt olan yükseklik, bol olan genişlik — düzen de onu izliyor.
    Dolgular mobil değerlerinde kalıyor, yalnızca sütunlar değişiyor. */
 @media (orientation: landscape) and (max-height: 560px) and (min-width: 700px) {
-  .cover { grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); }
+  .cover { grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); }
   .coverSide { padding-left:20px; padding-top:0; border-left:1px solid var(--line); border-top:0; }
   .twoCol { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
 }

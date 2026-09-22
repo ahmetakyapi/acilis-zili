@@ -69,13 +69,18 @@ export function PlanStrip({
      piksellik sütundan taşıp "Nerede Vazgeçilir"in üstüne biniyordu —
      "989,96 $" ile "889,00 $" üst üste basılıyordu (1440'ta ölçüldü).
      Boşluk artık kutuların ARASINDA duran ayrı bir metin düğümü: kırılma
-     yeri var, nokta yine önceki sayıya yapışık. */
+     yeri var, nokta yine önceki sayıya yapışık.
+
+     AYRAÇ TİRE, NOKTA DEĞİL. Nokta bu sayfada künye ayracı ("Seans İçi ·
+     19:45 TR"); üç hedef aynı işaretle dizilince üç ayrı künye gibi
+     okunuyordu. Tire "seviyeden seviyeye" der — aralık yazımıyla
+     (`formatRange`) aynı işaret. */
   const list = (values: readonly number[]) =>
     values.length === 0 ? null : values.map((value, index) => (
       <Fragment key={value}>
         <span className={styles.planItem}>
           {index === values.length - 1 ? money(value) : formatPrice(value, locale)}
-          {index < values.length - 1 && <span className={styles.planSep} aria-hidden> ·</span>}
+          {index < values.length - 1 && <span className={styles.planSep} aria-hidden> –</span>}
         </span>
         {index < values.length - 1 && " "}
       </Fragment>
