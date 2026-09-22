@@ -97,9 +97,12 @@
   .hero { padding: 19px 19px 14px; border-radius: 20px; overflow: hidden; }
   .heroMain { padding-top: 22px; padding-bottom: 0; gap: 24px; }
   .heroSession { margin-bottom: 12px; font-size: 10px; }
-  .heroTopline { gap: 10px; align-items: center; }
+  /* KIRILABİLİR SATIR. 390'da künye ile saat tek satır (13 piksel pay);
+     360'ta 17 piksel eksik ve `nowrap` künye saatin altına giriyordu.
+     Sarınca saat kendi satırına, sağa iner — üst üste binmez. */
+  .heroTopline { flex-wrap: wrap; gap: 6px 10px; align-items: center; }
   .eyebrow { font-size: 10px; gap: 6px; min-width: 0; white-space: nowrap; }
-  .dateline { display: flex; }
+  .dateline { display: flex; margin-left: auto; }
   /* Simge telefonda gizli — gerekçe ve ölçüm LiveClock.module.css'te:
      iki saat tek satıra gelince künyeye 173 piksel kalıyor. */
   .eyebrow > svg { display: none; }

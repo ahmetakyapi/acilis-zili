@@ -33,5 +33,13 @@
    ve aralığıyla 155; üst künye ("ABD Piyasalarına Açılan Penceren") 194 ve
    satır 316 — 45 piksel eksik, künye iki satıra sarıyordu (390'da
    ölçüldü). Kadran süs, saatler bilgi: kadran gidiyor, künyenin simgesi de
-   (TodayExperience) ve satır 15 piksel payla tek satırda kalıyor. */
-@media(max-width:767px) { .dial { display:none; } }
+   (TodayExperience) ve satır tek satırda kalıyor.
+
+   PUNTO 20, 25 DEĞİL. 25 kadranla birlikte seçilmişti; kadransız satırda
+   25 punto okuma 135 piksel ediyor ve künye 173 + aralık 10 ile satır tam
+   316'ya geliyordu — sıfır pay; 22 punto 4 piksel bırakıyordu (ölçüldü).
+   Rakamlar tabular değil, "20:00" ile "11:11" farklı genişlikte; 20 punto
+   ve 6 piksellik okuma aralığıyla satır 390'da 13 piksel payla tek satır.
+   360'ta sığmıyor (286'ya 303) ve orada satır ikiye kırılıyor — saat
+   künyenin altına, sağa iner (TodayExperience `.heroTopline`). */
+@media(max-width:767px) { .dial { display:none; } .primary time { font-size:20px; } .readings { gap:6px; } }
