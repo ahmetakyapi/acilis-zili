@@ -494,7 +494,20 @@
 .mapHere { position:absolute; left:5px; width:45px; height:2px; border-radius:1px; background:color-mix(in srgb, var(--primary) 55%, transparent); translate:0 -50%; }
 .mapHere::after { content:""; position:absolute; left:6px; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 5px var(--primary-wash); }
 .mapRungs { position:absolute; left:52px; right:0; top:0; bottom:0; margin:0; padding:0; list-style:none; }
-.mapRung { position:absolute; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; column-gap:12px; padding:7px 14px 7px 14px; border-radius:12px; transform:translateY(-50%); }
+/* MESAFE SATIRIN İÇİNDEN DEĞİL, SATIRIN GENİŞLİĞİNDEN KISILIYOR. Detay
+   sayfasında harita panelin tamamına yayılınca satır 562 piksele çıkıyor ve
+   "Hedef 3" ile "236,54 $" arasında 400 pikselden fazla mesafe kalıyordu
+   (ölçüldü, 1440px): okuyucu çentiğin yanındaki adı okuyup sayıyı bulmak
+   için gözünü ekranın öbür ucuna götürüyordu.
+
+   İLK DENEME SÜTUN SIRASINI DEĞİŞTİRMEKTİ VE HİZAYI BOZDU. `.mapRungs` bir
+   `ol` ve üzerinde `display:grid` yok — her satır kendi ızgarası, yani iki
+   `auto` iz satır satır ayrı genişlikte oluyor. Ölçüldü: fiyat sütununun sağ
+   kenar sapması 0 pikselden 104-135 piksele çıktı ("Stop 214,60 $" 251'de
+   biterken "Alım Bölgesi 219,51 – 223,13 $" 355'te). Yan yana duran ölçüler
+   aynı hatta biter — sütun sırası yerinde kalıyor, dar olan satırın kendisi.
+   Genişlik sınırı `.mapPanel .map` üzerinde. */
+.mapRung { position:absolute; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; column-gap:12px; padding:5px 14px; border-radius:12px; transform:translateY(-50%); }
 /* ÜÇ VURGULU SATIR: ŞU AN, ALIM BÖLGESİ, STOP.
    Zemin bir dönem sağa doğru saydamlaşan bir geçişti ve telefonda satırın
    sağ yarısı — yani fiyatın ve uzaklığın durduğu yer — zeminsiz kalıyordu:
@@ -988,18 +1001,30 @@
    only below its axis, making the left column ~200px taller than the right.
    A shared notes row keeps every explanation, and aligns the two columns
    without imposing a fixed height or clipping the analysis. */
-.analysisGrid { display:grid; grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-areas:"map reading" "notes notes"; gap:18px; align-items:stretch; }
+.analysisGrid { display:grid; grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-areas:"map reading"; gap:18px; align-items:stretch; }
 .mapPanel { grid-area:map; }
 .analysisReading { grid-area:reading; display:grid; grid-template-rows:auto 1fr; gap:18px; min-width:0; }
 .analysisReading .scenarios { flex:1; }
-.mapPanel .map,.mapPanel .mapHead { max-width:none; }
-.mapPanel .footHint { margin-top:auto; padding-top:8px; border-top:1px solid var(--line-soft); }
-.planNotes { grid-area:notes; display:flex; flex-direction:column; gap:16px; min-width:0; padding:20px 24px; border:1px solid var(--line); border-radius:16px; background:linear-gradient(100deg,var(--primary-tint),transparent),var(--premium-surface); }
-.planNotes > h2 { font-size:16px; }
-.planNotes .mapNotes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; margin:0; padding:0; border:0; }
-.planNotes .mapNotes > div { display:flex; flex-direction:column; gap:7px; padding-left:14px; border-left:2px solid var(--primary-faint); }
-.planNotes .mapNotes dt { font-size:12px; color:var(--primary-ink); }
-.planNotes .mapNotes dd { font-size:14px; line-height:1.65; color:var(--text-body); }
+/* Harita panelin tamamına yayılmıyor: 560 piksellik tavan, satırı 508
+   piksele indiriyor ve ad ile fiyat arasındaki mesafeyi 400'den ~250
+   piksele çekiyor. Sağdaki pay panelin kendi nefesi olarak kalıyor. */
+.mapPanel .map,.mapPanel .mapHead { max-width:560px; }
+/* KÜNYE HARİTANIN ALTINA OTURUYOR. `margin-top:auto` gerilmiş bir flex
+   kolonda iki kolon arasındaki yükseklik farkının TAMAMINI haritanın dibi
+   ile künyesi arasına yığıyordu: ölçüldü (altı sembol × 1024/1280/1440 =
+   18 yerleşim), panelin boyu 18/18'inde değerlendirme kolonunun boyuna eşit
+   ve aradaki delik 1024'te 268 piksele kadar çıkıyor. Künye ile damgaladığı
+   görselin arası, ÖTEKİ kolonun boyuna bağlanmış oluyordu — deponun kendi
+   kuralının yasakladığı şey. Fark artık panelin dibinde kalıyor. */
+.mapPanel .footHint { padding-top:8px; border-top:1px solid var(--line-soft); }
+/* Notlar haritanın panelinin İÇİNDE: kendi kenarlığı ve zemini yok, kutu
+   içinde kutu olmasın. Üstünde ince bir ayraç, nerede başladığını söyler. */
+.mapPanel .planNotes { display:flex; flex-direction:column; gap:14px; min-width:0; margin-top:auto; padding-top:16px; border-top:1px solid var(--line); }
+.mapPanel .planNotes > h2 { font-size:15px; }
+.mapPanel .planNotes .mapNotes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin:0; padding:0; border:0; }
+.mapPanel .planNotes .mapNotes > div { display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid var(--primary-faint); }
+.mapPanel .planNotes .mapNotes dt { font-size:11px; color:var(--primary-ink); }
+.mapPanel .planNotes .mapNotes dd { font-size:13px; line-height:1.6; color:var(--text-body); }
 /* A narrow entry band could be just 6px high and strike through its label
    and prices. Preserve its true vertical extent on the axis; give the
    associated label its own legible wash. The stop caption uses the reserved
@@ -1035,8 +1060,8 @@
 }
 @media(max-width:767px) {
  .analysisGrid,.analysisReading { gap:14px; }
- .planNotes { padding:18px 16px; }
- .planNotes .mapNotes { grid-template-columns:minmax(0,1fr); gap:16px; }
+ .mapPanel .planNotes { padding-top:14px; }
+ .mapPanel .planNotes .mapNotes { grid-template-columns:minmax(0,1fr); gap:14px; }
  .mapZoneEntry { width:25px; }
  .mapZoneVoidLabel { left:41px; }
 }
@@ -1107,11 +1132,23 @@
  .directoryHeader .pulseDial { width:148px; }
 }
 
-/* 21 September audit: equal cover boxes still hid a 46px gap below MU's
-   actual headline. Keep the verdict attached to its explanation and anchor
-   both final readings to the row edge; long copy can still grow naturally. */
+/* 21 Eylül denetimi: eşit kapak kutuları MU'nun başlığının ALTINDA 46
+   piksellik bir boşluk saklıyordu. Çözüm iki kolonun son okumasını satırın
+   dibine çapalamaktı.
+
+   SOL KOLONUN ÇAPASI GERİ ALINDI. Otomatik üst boşluk (margin-top:auto)
+   boşluğu yok etmiyor, YERİNİ değiştiriyor: iki kolon arasındaki yükseklik
+   farkının tamamını görüş rozetinin ÜSTÜNE yığıyordu. Ölçüldü (1440px, on
+   beş sembol): künye ile rozet arası 47-96 piksel, TSLA ve RKLB de 96.
+   Okuyucunun gözü kimlikten görüşe inerken boş bir bant geçiyordu ve rozet
+   ait olduğu künyeden kopmuş görünüyordu. CLAUDE.md nin kendi kuralı da
+   bunu söylüyor: iki kolonun yükseklik farkı panel aralarına dağıtılmaz,
+   kısa kolon erken biter. Fark artık kolonun DİBİNDE kalıyor — orada zaten
+   kapağın kenarlığı var, göze boşluk olarak görünmüyor.
+
+   Sağ kolonun çapası duruyor: signalsCompact bir ÖLÇÜ şeridi ve yan yana
+   duran ölçülerin aynı hatta bitmesi ayrı bir kural. */
 @media(min-width:1024px), (orientation:landscape) and (max-height:560px) and (min-width:700px) {
- .coverMain > .stanceRow { margin-top:auto; }
  .coverSide > .signalsCompact { margin-top:auto; }
 }
 
@@ -1161,3 +1198,10 @@
    detaya götürüyor, aynı bilgiler orada tam hâliyle duruyor. */
 @media(hover:none) { .identityCard { display:none; } }
 @media(prefers-reduced-motion:reduce) { .identityCard { transition:none; transform:none; } }
+
+/* Eksenin iki ucu — kapsanan fiyat aralığı. Cetvel orantılı çiziliyor ama
+   hangi aralığı kapsadığını söylemiyordu; sayı `priceMapLayout`tan geliyor,
+   uydurma yok. Ray 56 piksel genişliğinde, künyeler onun soluna hizalı. */
+.mapBound { position:absolute; left:0; width:52px; text-align:center; font-size:var(--text-nano); font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
+.mapBound[data-edge="top"] { top:-4px; }
+.mapBound[data-edge="bottom"] { bottom:-4px; }

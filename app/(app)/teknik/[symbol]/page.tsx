@@ -40,7 +40,7 @@ import {
   technicalHref,
 } from "@/lib/technical";
 import { getTechnicalBoard, getTechnicalDetail } from "@/lib/technical-data";
-import { todayEt } from "@/lib/market-hours";
+import { isSessionTrade, todayEt } from "@/lib/market-hours";
 import {
   cn,
   directionOf,
@@ -185,9 +185,14 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   /* ETİKET TEK YERDE: kapak ve harita aynı adı kullanıyor. Kotasyon yoksa
      fiyat fotoğraftan geliyor ve adı "Analiz Anında"; seans dışında "Son
      Fiyat"; yalnızca açık seansta taze kotasyon "Şu An". */
+  /* "Şu An" burada da SEMBOL BAŞINA kanıtlanıyor; gerekçesi liste
+     sayfasında yazılı. */
   const priceLabel = !quote
     ? t.technical.atAnalysis
-    : status.session === "regular" && quotes.ok && !quotes.stale
+    : status.session === "regular" &&
+        quotes.ok &&
+        !quotes.stale &&
+        isSessionTrade(quote.tradedAt, status)
       ? t.technical.now
       : t.market.lastPrice;
   const next = nextEdition(new Date(), holidays);
@@ -385,10 +390,17 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             locale={locale}
             t={t}
           />
+          {/* SEVİYELERİN DAYANAĞI HARİTANIN İÇİNE GİRDİ. Notlar tam genişlikte
+              kendi kenarlıklı bandındaydı ve `dt` etiketleri ("Alım Bölgesi /
+              Hedefler / Stop") aynı üç adı sayfada ÜÇÜNCÜ kez basıyordu —
+              kapaktaki plan şeridi ve haritanın kendi satırları ilk ikisi.
+              Not, dayanağını anlattığı seviyenin yanında dururken bilgi
+              taşıyor; ayrı bir bantta dururken yalnızca yer kaplıyordu.
+              Harita paneli komşu kolonun boyuna gerildiği için altında zaten
+              boş yer vardı: bant kalkıyor, o boşluk doluyor. */}
+          <PriceMapNotes {...levelProps} copy={copy} verdict={verdict} lang={copyLang} t={t} />
           <p className={styles.footHint}>{t.technical.priceMapNote}</p>
         </section>
-
-        <PriceMapNotes {...levelProps} copy={copy} verdict={verdict} lang={copyLang} t={t} />
 
         <div id="technical-reading" className={styles.analysisReading}>
           <section className={styles.block}>

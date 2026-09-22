@@ -18,7 +18,9 @@ export function deltaOf(
   /* Yüzde bir puanın altındaki fark gürültüdür; okla göstermek yanlış bir
      hareket hissi verir. */
   if (Math.abs(change) < 1) {
-    return { text: "değişim yok", tone: "neutral", srLabel: "değişim yok" };
+    /* Künye Title Case: StatBox içinde Title Case bir `sub` künyesinin
+       yanında duruyor. `srLabel` cümle olduğu için küçük kalıyor. */
+    return { text: "Değişim Yok", tone: "neutral", srLabel: "değişim yok" };
   }
   const rounded = Math.round(change);
   /* İŞARET METİNDE. `Math.abs` eksiyi siliyordu ve düşüş de artış da

@@ -13,7 +13,7 @@ import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 import { industryLabel } from "@/lib/sectors";
 import { getQuotes } from "@/lib/providers";
-import { todayEt } from "@/lib/market-hours";
+import { isSessionTrade, todayEt } from "@/lib/market-hours";
 import { displayZone, formatInZone } from "@/lib/session-clock";
 import {
   TECHNICAL_SYMBOLS,
@@ -68,8 +68,17 @@ export default async function TechnicalPage() {
   /* "Şu An" yalnızca ana seans açık ve kotasyon tazeyken. Seans dışında
      son işlem ya dünkü kapanış ya uzatılmış seansın fiyatı; ikisine de
      "şu an" demek sayıyı olduğundan taze gösterir. */
-  const priceLabel =
-    status.session === "regular" && quotes.ok && !quotes.stale
+  const packLive = status.session === "regular" && quotes.ok && !quotes.stale;
+  /* "ŞU AN" SEMBOL BAŞINA KANITLANIYOR. Paketin tazeliği sembollerin EN
+     YENİSİYLE ölçülüyor (`packCurrent` → `newestTrade`, lib/providers):
+     on dört sembolü taze, biri dünden kalma bir paket `stale:false` dönüyor
+     ve o bir kartın fiyatı da "Şu An" diye basılıyordu. Veri dürüstlüğü
+     kuralı bunu adıyla yasaklıyor: bir yüzde hangi seansı anlattığını
+     KANITLAMALI. Paket canlı olsa bile kartın kendi işlemi seans gününe
+     ait değilse etiket "Son Fiyat"a düşüyor — ana sayfanın hareket paneli
+     aynı soruyu yıllardır sembol başına soruyor. */
+  const labelFor = (symbol: string) =>
+    packLive && isSessionTrade(quoteMap[symbol]?.tradedAt, status)
       ? t.technical.now
       : t.market.lastPrice;
 
@@ -207,7 +216,7 @@ export default async function TechnicalPage() {
                   marketCap={meta[row.symbol]?.marketCap ?? null}
                   currency={meta[row.symbol]?.currency ?? null}
                   sector={industryLabel(meta[row.symbol]?.industry, locale)}
-                  priceLabel={priceLabel}
+                  priceLabel={labelFor(row.symbol)}
                   locale={locale}
                   t={t}
                 />

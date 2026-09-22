@@ -530,3 +530,79 @@ kapağının `.metrics` kuralı (bilançolar kapağında canlandırıldı) ve ba
 artık çizilmeyen yüzeylerine ait `masthead-surface-in` / `masthead-depth`
 animasyonları. README'de de iki bayat sayı vardı: teknik liste "on iki hisse"
 ve "günde iki kez" diyordu; on beş ve üç yayın.
+
+### Fiyat Haritası, Kart Dürüstlüğü ve Yönetim Paneli — 22 Eylül, İkinci Faz İkinci Tur
+
+Bu tur bir kod denetiminden çıktı: dört bağımsız bakış (liste kartı, fiyat
+haritası, yönetim paneli, kalan ölü alan) bulgu üretti, her bulgu ayrı bir
+ajan tarafından çürütülmeye çalışıldı, yirmi bulgunun dokuzu ayakta kaldı.
+Denetim **bu oturumda yapılmış üç değişikliği de çürüttü** ve haklıydı.
+
+**Harita orantılı değildi — ve benim düzeltmem onu daha da bozmuştu.**
+Yükseklik bütçesi ile gevşetmenin taban ayrımı AYNI sabitten besleniyordu
+(`ROW_GAP`), yani ölçeğin dağıtabileceği pay `ROW_GAP - 4`: satır sayısından
+BAĞIMSIZ sabit. Ölçüldü (1440px): NVDA'da sekiz aralığın yedisi, MU ve
+TSLA'da yedinin altısı tam tabanda — %0,1 uzaktaki destek ile %5 uzaktaki
+stop aynı mesafede duruyordu. Harita, yerine geçtiğini söylediği eşit
+aralıklı merdivenin kendisi olmuştu ve `PriceMap.tsx`in kendi karar kaydı
+bunun tersini iddia ediyordu. Bu turda `ROW_GAP`i 46'dan 40'a çekmiştim: pay
+42'den 36'ya İNDİ, yani orantı daha da bozuldu. İki sayı ayrıldı —
+`ROW_MIN` (çakışma tabanı, 34) ve `ROW_BUDGET` (kutu bütçesi, 34 + 96 sabit
+pay). Kutu boyu aynı kaldı, ölçek payı **36 → 86 piksel**.
+
+**Haritayı kısaltmak sayfadan tek piksel kazandırmıyordu.** Ölçüldü (altı
+sembol × 1024/1280/1440 = 18 yerleşim): panelin boyu 18/18'inde
+değerlendirme kolonunun boyuna eşit; harita kutusu 368-436 piksel, aradaki
+fark haritanın dibi ile künyesi arasında bir delik olarak duruyordu —
+1024'te 268 piksele kadar. Sebep `.mapPanel .footHint { margin-top:auto }`:
+gerilmiş bir flex kolonda bu, iki kolon arasındaki farkın tamamını künyenin
+üstüne yığıyor, yani künye ile damgaladığı görselin arası ÖTEKİ kolonun
+boyuna bağlanıyordu. Kural kalktı; delik **268 → 14 piksel**.
+
+**Etiket–fiyat mesafesini sütun sırasıyla çözmek hizayı bozdu.** Satır ile
+fiyat arasında 400 pikselden fazla mesafe vardı ve sütun sırasını
+değiştirmiştim; ama `.mapRungs` bir `ol` ve üzerinde `display:grid` yok —
+her satır kendi ızgarası, iki `auto` iz satır satır ayrı genişlikte oluyor.
+Ölçüldü: fiyat sütununun sağ kenar sapması **0'dan 104-135 piksele** çıktı.
+Sıra geri alındı, mesafe satırın İÇİNDEN değil GENİŞLİĞİNDEN kısıldı
+(`.mapPanel .map` 560 piksel tavan). Sapma yine 0.
+
+**Eksenin iki ucu adlandırıldı** ve seviye notları ayrı tam genişlikli
+bandından haritanın panelinin içine girdi: `dt` etiketleri ("Alım Bölgesi /
+Hedefler / Stop") sayfada üçüncü kez basılıyordu ve panelin altındaki boş
+yer zaten oradaydı. Bir bant kalktı, bir boşluk doldu.
+
+**Görüş rozetinin üstündeki boşluk.** `.coverMain > .stanceRow
+{ margin-top:auto }` iki kolon arasındaki farkın tamamını rozetin ÜSTÜNE
+yığıyordu: ölçüldü, on beş sembolde künye ile rozet arası 47-96 piksel.
+Kural kalktı, fark kolonun dibine indi; her sembolde **32 piksel**.
+
+**"Şu An" sembol başına kanıtlanmıyordu.** Paketin tazeliği
+`isSessionTrade(newestTrade(pack.data), status)` ile, yani sembollerin EN
+YENİSİYLE ölçülüyor: on dört sembolü taze, biri dünden kalma bir paket
+`stale:false` dönüyor ve o kartın fiyatı da "Şu An" diye basılıyordu. Ana
+sayfanın hareket paneli aynı soruyu yıllardır sembol başına soruyor. Liste
+ve detay artık kartın KENDİ işlemini sınıyor.
+
+**Yönetim panelinde iki veri kaybı hatası.** (1) Mercek editöründe
+"İngilizcesine Geç" düğmesi koşulsuz çiziliyordu; `getStoryBySlug` istenen
+dili bulamazsa ÖTEKİ satırı döndürdüğü için çevirisi olmayan bir yazıda
+`?dil=en` TÜRKÇE kaydı açıyor, künyesine "İngilizce" yazıyor ve editörün
+gizli `locale` alanı satırın kendi dilini taşıdığı için kaydetmek Türkçe
+orijinalin üzerine yazıyordu. Düğme artık öteki dil gerçekten varken
+çiziliyor, künye satırın dilini söylüyor, adresteki dil kayıtta yoksa 404.
+(2) Sürüm geri yüklendikten sonra ekran "Sayfayı yenile — form hâlâ eski
+taslağı gösteriyor" diyordu; yenilemeden Kaydet'e basmak geri yüklemeyi
+siliyordu. Editörün kendi yolu artık tazeleniyor, `router.refresh()`
+çağrılıyor ve editör kaydın güncellenme damgasıyla yeniden kuruluyor.
+
+Ayrıca: trafik ekranının en büyük puntolu sayısı yanlış pencereyi
+künyeliyordu ("Önceki 30 Tam Gün" yazarken GÜNCEL pencerenin sayısını
+gösteriyordu), beş panel künyesi Title Case dışındaydı; /haberler kapağı
+künyesizdi ve sembol süzgeci kapağın altında ayrı bir şerit açıyordu;
+/bilancolar/takip kapağı `visual` yuvasını boş bırakıyordu (öteki iki sekme
+dolduruyor). Dördü de düzeltildi.
+
+Denetimin çürüttüğü bulgular da kayda değer: kartların telefonda katlamanın
+altında kaldığı, SAT kartında 96 piksel ölü alan olduğu, /rehber, /makro ve
+/favoriler kapaklarının boş durduğu iddiaları kodda karşılık bulmadı.

@@ -135,6 +135,8 @@ const tr = {
     distributionUnit: "Şirket Sayısı",
     reportingRhythm: "Önümüzdeki 7 Gün",
     scheduledReports: "Takvimdeki Bilanço",
+    followedCompanies: "Takip Edilen Şirket",
+    publishedAnalyses: "Yayımlanmış Analiz",
     reportingDays: "Açıklama Günü",
     analysisDescription: "Gerçekleşen sonuçlar, piyasanın beklentileri ve bir sonraki çeyreğe bakış.",
   },
@@ -1244,6 +1246,7 @@ const tr = {
   },
 
   news: {
+    eyebrow: "ABD Piyasalarından",
     title: "Haberler",
     subtitle: "Piyasa ve şirket haberleri",
     all: "Tümü",

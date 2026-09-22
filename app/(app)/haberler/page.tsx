@@ -53,18 +53,29 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <PageHeader title={t.news.title} subtitle={t.news.subtitle} />
-
-      {symbolFilter && (
-        <div className="flex items-center gap-2">
-          <span className="numeral rounded-full bg-primary-wash px-3 py-1 text-sm font-medium text-primary-ink">
-            {symbolFilter}
-          </span>
-          <Link href="/haberler" className="text-xs text-muted hover:text-soft">
-            {t.common.all}
-          </Link>
-        </div>
-      )}
+      {/* KÜNYE VE SÜZGEÇ KAPAĞIN İÇİNDE. Kapak künyesizdi ve künye için
+          ayrılan 18 piksellik satır boş basılıyordu (globals.css,
+          `.page-heading-copy[data-has-eyebrow="false"]::before`), sağ yarısı
+          da tümüyle boştu. Sembol süzgeci ise kapağın ALTINDA kendi şeridini
+          açıyordu. İkisi kapağa girince boş satır bedavaya doluyor ve bir
+          şerit kalkıyor; yükseklik artmıyor. */}
+      <PageHeader
+        eyebrow={t.news.eyebrow}
+        title={t.news.title}
+        subtitle={t.news.subtitle}
+        action={
+          symbolFilter ? (
+            <div className="flex items-center gap-2">
+              <span className="numeral rounded-full bg-primary-wash px-3 py-1 text-sm font-medium text-primary-ink">
+                {symbolFilter}
+              </span>
+              <Link href="/haberler" className="tap-44 text-xs text-muted hover:text-soft">
+                {t.common.all}
+              </Link>
+            </div>
+          ) : undefined
+        }
+      />
 
       <QueryTransition label={t.common.loading}>
       <Suspense key={symbolFilter ?? "all"} fallback={<LoadingFallback label={t.common.loading}><NewsSkeleton /></LoadingFallback>}>

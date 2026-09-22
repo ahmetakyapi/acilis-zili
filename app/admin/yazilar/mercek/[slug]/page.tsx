@@ -4,7 +4,7 @@ import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import { requireAdmin } from "@/lib/admin";
 import { AdminPanel, AdminPanelTitle } from "@/components/admin/AdminUI";
 import { StoryEditor } from "@/components/admin/StoryEditor";
-import { getStoryBySlug } from "@/lib/data";
+import { getStoryBySlug, getStoryLocales } from "@/lib/data";
 import { listStoryRevisions } from "@/app/actions/content";
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -38,10 +38,25 @@ export default async function StoryEditorPage(
 
   const row = await getStoryBySlug(slug, locale);
   if (!row) notFound();
+  /* ADRESTEKİ DİL KAYITTA YOKSA EKRAN YALAN SÖYLÜYORDU. `getStoryBySlug`
+     istenen dili bulamazsa ÖTEKİ satırı döndürüyor (lib/data.ts: `rows.find(...)
+     ?? rows[0]`) — çevirisi olmayan bir yazıda `?dil=en` açılınca ekran
+     TÜRKÇE kaydı gösterip künyesine "İngilizce" yazıyordu. Editörün gizli
+     `locale` alanı da satırın kendi dilini taşıdığı için kaydetmek Türkçe
+     orijinalin ÜZERİNE yazıyordu: bir veri kaybı, üstelik sessiz. Adres bir
+     iddia; kayıt onu karşılamıyorsa 404 doğru cevap. */
+  if (row.locale !== locale) notFound();
 
-  /* Sürümler kayıtla AYNI TURDA: ikisi birbirinden bağımsız ve ardışık
-     beklemenin sebebi yok. */
-  const revisions = await listStoryRevisions(slug, locale);
+  /* Sürümler ve öteki dilin varlığı KAYITLA AYNI TURDA: üçü birbirinden
+     bağımsız ve ardışık beklemenin sebebi yok. */
+  const [revisions, locales] = await Promise.all([
+    listStoryRevisions(slug, locale),
+    getStoryLocales(slug),
+  ]);
+  const oteki = locale === "en" ? "tr" : "en";
+  const otekiDil = locales.includes(oteki)
+    ? `/admin/yazilar/mercek/${slug}${oteki === "en" ? "?dil=en" : ""}`
+    : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -55,23 +70,34 @@ export default async function StoryEditorPage(
 
       <AdminPanel>
         <AdminPanelTitle
-          hint={`${row.slug} · ${locale === "en" ? "İngilizce" : "Türkçe"} · Son Güncelleme ${row.updatedAt ? new Date(row.updatedAt).toLocaleString("tr-TR") : "—"}`}
+          hint={`${row.slug} · ${row.locale === "en" ? "İngilizce" : "Türkçe"} · Son Güncelleme ${row.updatedAt ? new Date(row.updatedAt).toLocaleString("tr-TR") : "—"}`}
           action={
             /* İki dil arasında geçiş: aynı slug'ın öteki dili varsa oraya,
                yoksa bağlantı hiç çizilmiyor — var olmayan bir kayda giden
-               düğme 404'e götürürdü. */
+               düğme 404'e götürürdü. Koşul BU SATIRDA EKSİKTİ: yorum kuralı
+               yazıyordu ama bağlantı her zaman çiziliyordu. Bülten editörü
+               aynı kalıbı doğru uyguluyor (`otekiDil`). */
+            otekiDil && (
             <Link
-              href={`/admin/yazilar/mercek/${slug}${locale === "en" ? "" : "?dil=en"}`}
+              href={otekiDil}
               className="inline-flex min-h-11 items-center rounded-(--radius-md) border border-line bg-surface px-3.5 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-9"
             >
               {locale === "en" ? "Türkçesine Geç" : "İngilizcesine Geç"}
             </Link>
+            )
           }
         >
           {row.title}
         </AdminPanelTitle>
 
+        {/* SÜRÜM GERİ YÜKLENDİĞİNDE EDİTÖR YENİDEN KURULUYOR. Gövde denetimli
+            bir `useState` ve ilk değerini taslaktan alıyor: `router.refresh()`
+            yeni prop getirse de o state eski metinde kalırdı ve kaydetmek geri
+            yüklemeyi silerdi. Anahtar kaydın güncellenme damgası — damga
+            değişince React bileşeni yeniden kuruyor ve state yeni metinle
+            başlıyor. */}
         <StoryEditor
+          key={row.updatedAt ? String(row.updatedAt) : row.slug}
           revisions={revisions}
           draft={{
             slug: row.slug,

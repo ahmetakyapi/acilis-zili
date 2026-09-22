@@ -154,7 +154,13 @@ async function Totals({ days }: { days: WindowDays }) {
       <StatBox
         label="Görüntüleme"
         value={current.views.toLocaleString("tr-TR")}
-        sub={`Önceki ${days} Tam Gün`}
+        /* KÜNYE DEĞERİN PENCERESİNİ SÖYLER, KARŞILAŞTIRMANINKİNİ DEĞİL.
+           "Önceki" yazıyordu ama sayı `fullDayWindow(days)` yani GÜNCEL
+           pencereden geliyor; "önceki" yalnızca yanındaki değişim okunun
+           kıyas dönemi. Ekranın en büyük puntolu sayısı böylece geçmiş bir
+           dönemin sayısı gibi okunuyordu. Özet ekranı aynı kutuyu zaten
+           "Son 7 Tam Gün" diye künyeliyor. */
+        sub={`Son ${days} Tam Gün`}
         delta={deltaOf(current.views, previous.views)}
       />
       <StatBox
@@ -198,7 +204,7 @@ async function Chart({ days }: { days: WindowDays }) {
   ]);
   return (
     <AdminPanel>
-      <AdminPanelTitle hint={`Son ${days} gün · bugün dahil, ET takvim günü`}>
+      <AdminPanelTitle hint={`Son ${days} Gün · Bugün Dahil, ET Takvim Günü`}>
         Günlük Trafik
       </AdminPanelTitle>
       <TrafficChart points={series} locale={locale} />
@@ -211,7 +217,7 @@ async function Routes({ days }: { days: WindowDays }) {
   return (
     <AdminPanel>
       <AdminPanelTitle
-        hint={`Son ${days} tam gün · dinamik sayfalar şablonlarında toplanır`}
+        hint={`Son ${days} Tam Gün · Dinamik Sayfalar Şablonlarında Toplanır`}
       >
         Bölümler
       </AdminPanelTitle>
@@ -231,7 +237,7 @@ async function Paths({ days }: { days: WindowDays }) {
   const rows = await getTopPaths(days, 15);
   return (
     <AdminPanel>
-      <AdminPanelTitle hint={`Son ${days} tam gün · tek tek adresler`}>
+      <AdminPanelTitle hint={`Son ${days} Tam Gün · Tek Tek Adresler`}>
         Sayfalar
       </AdminPanelTitle>
       <RankList
@@ -254,7 +260,7 @@ async function Referrers({ days }: { days: WindowDays }) {
   return (
     <AdminPanel>
       <AdminPanelTitle
-        hint={`Son ${days} tam gün · yalnızca alan adı, arama terimi saklanmaz`}
+        hint={`Son ${days} Tam Gün · Yalnızca Alan Adı, Arama Terimi Saklanmaz`}
       >
         Nereden Geliniyor
       </AdminPanelTitle>
@@ -294,7 +300,7 @@ async function Splits({ days }: { days: WindowDays }) {
 
   return (
     <AdminPanel>
-      <AdminPanelTitle hint={`Son ${days} tam gün · cihaz, dil ve üyelik`}>
+      <AdminPanelTitle hint={`Son ${days} Tam Gün · Cihaz, Dil ve Üyelik`}>
         Okuyucu
       </AdminPanelTitle>
 

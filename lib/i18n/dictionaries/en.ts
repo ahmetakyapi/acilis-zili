@@ -114,6 +114,8 @@ const en: typeof tr = {
     distributionUnit: "Company Count",
     reportingRhythm: "The Next 7 Days",
     scheduledReports: "Scheduled Reports",
+    followedCompanies: "Companies Followed",
+    publishedAnalyses: "Published Analyses",
     reportingDays: "Reporting Days",
     analysisDescription: "Reported results, market expectations and a look at the next quarter.",
   },
@@ -1003,6 +1005,7 @@ const en: typeof tr = {
   },
 
   news: {
+    eyebrow: "From US Markets",
     title: "News",
     subtitle: "Market and company headlines",
     all: "All",

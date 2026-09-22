@@ -130,10 +130,31 @@ export default async function WatchedEarningsPage(
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
+      {/* KAPAĞIN SAĞI BOŞTU. Bilançolar ekranının öteki iki sekmesi
+          `visual` yuvasını dolduruyor (takvimde öne çıkanlar, analizlerde
+          görüş dağılımı); bu sekme boş bırakıyordu ve aynı ekranın üç
+          görünümünden biri yarım duruyordu. Üç sayı da sayfada zaten
+          hesaplı, yeni sorgu yok. */}
       <DirectoryHeader
         eyebrow={t.directory.earningsEyebrow}
         title={t.analysis.title}
         description={t.directory.analysisDescription}
+        visual={
+          <dl className={styles.metrics}>
+            <div>
+              <dt>{t.directory.followedCompanies}</dt>
+              <dd className="numeral">{userSymbols.length}</dd>
+            </div>
+            <div>
+              <dt>{t.directory.scheduledReports}</dt>
+              <dd className="numeral">{rows.length}</dd>
+            </div>
+            <div>
+              <dt>{t.directory.publishedAnalyses}</dt>
+              <dd className="numeral">{analyses.length}</dd>
+            </div>
+          </dl>
+        }
       >
         {
           /* Aralık künyesi takvim sekmesindekiyle aynı — iki ekran aynı

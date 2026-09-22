@@ -1004,7 +1004,13 @@ export function priceMapLayout(
   levels: readonly Level[],
   price: number | null,
   { height, gap = 44, inset = 22 }: { height: number; gap?: number; inset?: number },
-): { rungs: MapRung[]; scale: (value: number) => number } {
+): {
+  rungs: MapRung[];
+  scale: (value: number) => number;
+  /** Eksenin kapsadığı fiyat aralığı — haritanın iki ucu bunu yazıyor. */
+  lo: number;
+  hi: number;
+} {
   const points = [
     price,
     ...levels.flatMap((level) => [level.price, level.high ?? level.price]),
@@ -1064,7 +1070,7 @@ export function priceMapLayout(
     return control[control.length - 1]!.y;
   };
 
-  return { rungs, scale };
+  return { rungs, scale, lo, hi };
 }
 
 /**
