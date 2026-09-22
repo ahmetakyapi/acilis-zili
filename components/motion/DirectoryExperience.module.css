@@ -6,7 +6,11 @@
 .heroCopy,.heroVisual { min-width:0; }
 .heroVisual { padding-left:32px; border-left:1px solid var(--line); }
 .eyebrow { color:var(--primary-ink); font-size:12px; line-height:1.5; font-weight:600; letter-spacing:.04em; }
+/* Başlık satırı: solda h1, sağda ekranın tek denetimi (varsa). h1'in dış
+   boşluğu satıra taşınıyor; denetim onunla ortalanıyor. */
+.heroTitle { display:flex; align-items:center; justify-content:space-between; gap:10px 16px; margin:10px 0 13px; }
 .hero h1 { margin:10px 0 13px; font-size:var(--heading-page); line-height:1.04; letter-spacing:-.055em; font-weight:600; color:var(--text-strong); }
+.heroTitle h1 { margin:0; }
 .description { max-width:52ch; color:var(--text-body); font-size:15px; line-height:1.7; text-wrap:pretty; }
 .metrics { display:flex; flex-wrap:wrap; gap:20px 34px; margin-top:24px; }
 .metrics > div { display:flex; flex-direction:column; gap:5px; }
@@ -27,8 +31,8 @@
 .tablePanel tbody tr:hover,.tablePanel tbody tr:focus-within { background:var(--primary-tint); box-shadow:inset 3px 0 var(--primary); }
 .tablePanel tbody td { padding-block:16px; }
 .tablePanel tbody td:first-child { }
-.calendarControls { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; margin-top:24px; }
-.calendarControls p { font-size:12px; color:var(--text-muted); }
+/* Anahtarın kapsadığı aralık — anahtar `.heroTitle`da, tarih burada. */
+.calendarRange { margin-top:12px; font-size:12px; color:var(--text-muted); }
 .rhythm { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); align-items:end; gap:10px; height:164px; }
 .rhythm > :is(a,div) { min-width:0; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; color:var(--text-muted); font-size:11px; }
 .rhythm > a:hover { color:var(--primary-ink); }
@@ -54,7 +58,7 @@
  .metrics { gap:28px; margin-top:18px; } .metrics dd { font-size:24px; }
  .visualHeading { font-size:13px; margin-bottom:12px; }
  .distribution { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; } .distribution a { grid-template-columns:minmax(0,1fr); align-content:end; font-size:12px; gap:7px; }
- .distribution b { font-size:18px; } .calendarControls { margin-top:18px; }
+ .distribution b { font-size:18px; } .calendarRange { margin-top:10px; }
  .filters { padding:14px 12px; } .tablePanel tbody td { padding-block:12px; }
  .rhythm { gap:6px; height:106px; } .rhythmBar { height:76px; } .rhythm small { display:block; font-size:10px; }
  .featureHeadline { -webkit-line-clamp:4; }

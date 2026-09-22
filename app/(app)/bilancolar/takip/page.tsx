@@ -134,27 +134,28 @@ export default async function WatchedEarningsPage(
         eyebrow={t.directory.earningsEyebrow}
         title={t.analysis.title}
         description={t.directory.analysisDescription}
+        /* Anahtar takvim sekmesiyle aynı yerde: başlığın sağ üstünde. */
+        control={
+          <Segment>
+            {(["hafta", "ay"] as const).map((key) => (
+              <SegmentItem
+                key={key}
+                href={rangeHref(key)}
+                active={range === key}
+              >
+                {key === "hafta" ? t.earnings.rangeWeek : t.earnings.rangeMonth}
+              </SegmentItem>
+            ))}
+          </Segment>
+        }
       >
         {
           /* Aralık künyesi takvim sekmesindekiyle aynı — iki ekran aynı
              segmenti kullanıyor, biri söyleyip öteki susmamalı. */
-          <div className={styles.calendarControls}>
-            <Segment>
-              {(["hafta", "ay"] as const).map((key) => (
-                <SegmentItem
-                  key={key}
-                  href={rangeHref(key)}
-                  active={range === key}
-                >
-                  {key === "hafta" ? t.earnings.rangeWeek : t.earnings.rangeMonth}
-                </SegmentItem>
-              ))}
-            </Segment>
-            <p className="figure text-tiny text-muted">
-              {formatEtDateCompact(today, locale)} –{" "}
-              {formatEtDateCompact(rangeEnd, locale)}
-            </p>
-          </div>
+          <p className={`${styles.calendarRange} figure`}>
+            {formatEtDateCompact(today, locale)} –{" "}
+            {formatEtDateCompact(rangeEnd, locale)}
+          </p>
         }
       </DirectoryHeader>
 

@@ -11,7 +11,11 @@
 .hour { stroke:var(--text-strong); stroke-width:2; stroke-linecap:round; }
 .minute { stroke:var(--primary); stroke-width:1.5; stroke-linecap:round; }
 .pivot { fill:var(--primary); stroke:none; }
-.readings { display:flex; flex-direction:column; gap:2px; }
+/* İKİ SAAT AYNI TABAN ÇİZGİSİNDE. Okumalar alt alta duruyordu — 22 punto
+   İstanbul, altında 11 punto New York — ve iki saat iki ayrı satır gibi
+   okunuyordu; oysa aynı anın iki adı. Yan yana, taban çizgisi ortak:
+   "19:22 TR · 12:22 NY". Punto farkı duruyor, birincil olan büyük. */
+.readings { display:flex; align-items:baseline; gap:12px; }
 .primary,.secondary { display:flex; align-items:baseline; gap:7px; }
 .primary time { font-size:22px; line-height:1.1; letter-spacing:-.035em; color:var(--text-strong); font-weight:600; }
 .primary > span,.secondary { font-size:10px; color:var(--text-muted); font-weight:500; }
@@ -19,4 +23,10 @@
 /* Mobilde yalnızca boşluk ve kadran küçülüyor; PUNTO KÜÇÜLMÜYOR.
    İkincil satır (New York saati) 10/11'den 9'a iniyordu — sığma sorunu
    yoktu, sadece okunmuyordu. */
-@media(max-width:767px) { .clock { gap:7px; } .dial { width:30px; height:30px; } .primary time { font-size:20px; } .primary,.secondary { gap:5px; } }
+@media(max-width:767px) { .clock { gap:7px; } .dial { width:30px; height:30px; } .primary time { font-size:20px; } .primary,.secondary { gap:5px; } .readings { gap:9px; } }
+/* TELEFONDA KADRAN YOK. İki saat yan yana gelince okuma 118 piksel, kadran
+   ve aralığıyla 155; üst künye ("ABD Piyasalarına Açılan Penceren") 194 ve
+   satır 316 — 45 piksel eksik, künye iki satıra sarıyordu (390'da
+   ölçüldü). Kadran süs, saatler bilgi: kadran gidiyor, künyenin simgesi de
+   (TodayExperience) ve satır 15 piksel payla tek satırda kalıyor. */
+@media(max-width:767px) { .dial { display:none; } }

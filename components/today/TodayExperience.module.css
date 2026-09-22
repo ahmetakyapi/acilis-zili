@@ -89,10 +89,12 @@
   .hero { padding: 19px 19px 14px; border-radius: 20px; overflow: hidden; }
   .heroMain { padding-top: 22px; padding-bottom: 0; gap: 24px; }
   .heroSession { margin-bottom: 12px; font-size: 10px; }
-  .heroTopline { gap: 12px; align-items: center; }
-  .eyebrow { font-size: 10px; gap: 6px; min-width: 0; }
+  .heroTopline { gap: 10px; align-items: center; }
+  .eyebrow { font-size: 10px; gap: 6px; min-width: 0; white-space: nowrap; }
   .dateline { display: flex; }
-  .eyebrow > svg { flex-shrink: 0; }
+  /* Simge telefonda gizli — gerekçe ve ölçüm LiveClock.module.css'te:
+     iki saat tek satıra gelince künyeye 173 piksel kalıyor. */
+  .eyebrow > svg { display: none; }
   .headline { font-size: clamp(25px, 6.4vw, 34px); }
   .countdown { margin-top: 18px; }
   .description { max-width: 39ch; font-size: 11px; }

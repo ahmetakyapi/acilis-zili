@@ -228,40 +228,6 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
 
       </div>
 
-      <Suspense fallback={<div className={styles.macro}><Skeleton className={styles.yieldSkeleton} /><Skeleton className={styles.fearSkeleton} /></div>}>
-      {/* Treasury/VIX previously followed movers. Reader preference now
-          puts this compact, independent context before index selection. */}
-      <div className={styles.macro} data-motion-stagger>
-        <YieldStrip locale={locale} t={t} />
-        {/* AYRI, BOŞ YEDEK YOK — bilerek. İki gösterge artık yukarıdaki
-            ölçülü ortak sınırda. Burada `fallback={null}` ile ayrı bir
-            sınır vardı ve iki yönden de
-            zarardı. Kazancı sıfır: kardeşi `YieldStrip` de FRED'den besleniyor
-            ve o askıya alınmamış, yani sayfa FRED turunu ZATEN bekliyor.
-            Maliyeti gerçek: boş yedek sıfır yer kaplıyor, kart akışla gelince
-            mobilde 262 piksel açılıp altındaki her şeyi aşağı itiyordu —
-            ölçüldü, /piyasalar'ın mobil CLS'i 0,206 çıkıyordu (Google'ın
-            "kötü" eşiği 0,1). */}
-        <FearGauge
-            locale={locale}
-            labels={{
-              title: t.markets.fearTitle,
-              details: t.markets.fearDetails,
-              hint: t.markets.fearHint,
-              average: t.markets.fearAverage,
-              guideCta: t.markets.fearGuideCta,
-              bands: {
-                calm: t.markets.fearCalm,
-                normal: t.markets.fearNormal,
-                tense: t.markets.fearTense,
-                fear: t.markets.fearHigh,
-                panic: t.markets.fearPanic,
-              },
-            }}
-          />
-      </div>
-
-      </Suspense>
 
       <IndexTabs tab={tab} locale={locale} t={t} />
       <QueryTransition label={t.common.loading}>
@@ -293,6 +259,47 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         />
       </Suspense>
       </QueryTransition>
+
+      <Suspense fallback={<div className={styles.macro}><Skeleton className={styles.yieldSkeleton} /><Skeleton className={styles.fearSkeleton} /></div>}>
+      {/* TAHVİL VE KORKU ENDEKSİ EN ALTTA. İki gösterge bir dönem endeks
+          kartlarıyla sekme çubuğunun ARASINDA duruyordu: okuyucu dört
+          endeks kartını görüyor, sonra tahvil şeridiyle korku kadranı
+          araya giriyor, sekmelerle bileşen tablosu onların altında
+          kalıyordu — aynı ekranın konusu ("endeksler") ikiye bölünmüştü.
+          Şimdi ekranın sırası tek konu: kartlar, sekmeler, bileşenler;
+          tahvil ve VIX bağlam olarak en sonda, rehber ipucunun hemen
+          üstünde. */}
+      <div className={styles.macro} data-motion-stagger>
+        <YieldStrip locale={locale} t={t} />
+        {/* AYRI, BOŞ YEDEK YOK — bilerek. İki gösterge artık yukarıdaki
+            ölçülü ortak sınırda. Burada `fallback={null}` ile ayrı bir
+            sınır vardı ve iki yönden de
+            zarardı. Kazancı sıfır: kardeşi `YieldStrip` de FRED'den besleniyor
+            ve o askıya alınmamış, yani sayfa FRED turunu ZATEN bekliyor.
+            Maliyeti gerçek: boş yedek sıfır yer kaplıyor, kart akışla gelince
+            mobilde 262 piksel açılıp altındaki her şeyi aşağı itiyordu —
+            ölçüldü, /piyasalar'ın mobil CLS'i 0,206 çıkıyordu (Google'ın
+            "kötü" eşiği 0,1). */}
+        <FearGauge
+            locale={locale}
+            labels={{
+              title: t.markets.fearTitle,
+              details: t.markets.fearDetails,
+              hint: t.markets.fearHint,
+              average: t.markets.fearAverage,
+              guideCta: t.markets.fearGuideCta,
+              bands: {
+                calm: t.markets.fearCalm,
+                normal: t.markets.fearNormal,
+                tense: t.markets.fearTense,
+                fear: t.markets.fearHigh,
+                panic: t.markets.fearPanic,
+              },
+            }}
+          />
+      </div>
+
+      </Suspense>
 
       <GuideHint
         label={t.guide.contextLabel}

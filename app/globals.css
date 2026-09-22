@@ -526,10 +526,18 @@
 
      `clip` bilinçli, `hidden` değil: `hidden` bir kaydırma kabı yaratır ve
      içerideki `position: sticky` başlıkları bozar. Geniş içerik (tablolar,
-     şerit kartlar) kendi kabında kayar — .scroll-x / .scroll-x-hint. */
+     şerit kartlar) kendi kabında kayar — .scroll-x / .scroll-x-hint.
+
+     LASTİK BANT DA KİLİTLİ. `clip` taşmayı keser ama iOS Safari taşma
+     OLMASA da sayfayı parmakla yana çekip bırakıyor (overscroll): 390 ve
+     360 pikselde başsız Chrome'da `scrollWidth == clientWidth` ölçüldü,
+     yani taşan bir öğe yok, telefonda yine de ekran sağa sola "kayıyor"
+     gibi hissediliyordu. `overscroll-behavior-x: none` o hareketi
+     kapatıyor; dikey lastik bant (yenileme için aşağı çekme) duruyor. */
   html {
     -webkit-tap-highlight-color: transparent;
     overflow-x: clip;
+    overscroll-behavior-x: none;
 
     /* SABİT KATMANLAR ODAKLANAN ÖĞEYİ ÖRTMESİN (WCAG 2.2 · 2.4.11).
        Üstte 64px yapışkan başlık, altta mobilde sekme çubuğu, masaüstünde
@@ -571,6 +579,7 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow-x: clip;
+    overscroll-behavior-x: none;
     /* Kilit taşmayı gizler ama sebebini gizlememeli; bu yüzden taşma
        ölçümü .tmp-shot.mjs koşumunda ayrıca kontrol ediliyor. */
     max-width: 100%;

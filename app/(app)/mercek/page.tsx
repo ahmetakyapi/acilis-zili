@@ -56,9 +56,10 @@ export const generateMetadata = pageMetadata({
  * Mercek — arşivin vitrini.
  *
  * ÜÇ SORU. Buraya ilk kez giren biri üç şeyi bilmeden okumaya başlamıyor:
- * burada ne yazılıyor, nasıl yazılıyor, ne sıklıkla yazılıyor. Sayfa bu
- * yüzden bir açıklama bandıyla açılıyor — "Mercek" adı tek başına bunu
- * söylemiyordu ve liste, haber akışından ayırt edilemiyordu.
+ * burada ne yazılıyor, nasıl yazılıyor, ne sıklıkla yazılıyor. Cevap
+ * sayfanın DİBİNDEKİ künyede (`IntroLine`) — "Mercek" adı tek başına bunu
+ * söylemiyordu ve liste, haber akışından ayırt edilemiyordu; ama açıklama
+ * manşetin önüne ya da arasına da girmiyor.
  *
  * KAPAK GÖRSELLERİ. Yazıların fotoğrafı yok ve olmayacak: haber fotoğrafı
  * telifli ve finans metnine çoğu zaman bir şey katmıyor. Kapaklar telifi
@@ -136,8 +137,13 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
  * yüzey manşet değil bir açıklama kutusu oluyordu, dikkat de oraya
  * dağılıyordu. Oysa bu metnin işi yol göstermek, sahneyi almak değil.
  *
- * Artık kutu yok: başlığın hemen altında üç kısa madde, nokta ayraçlı tek
- * bir sessiz satır. Bilgi duruyor, ağırlığı kalkıyor — manşet ilk sırada.
+ * SONRA MANŞETİN ALTINDA, arşivin üstünde bir satırdı: masaüstünde tek
+ * satır, telefonda koyu etiketli üç satırlık bir blok — ve okuyucu
+ * manşetten kartlara inerken ona takılıyordu.
+ *
+ * Artık arşivin dibinde, hairline ile ayrılmış sessiz bir künye paragrafı.
+ * Bilgi duruyor, ağırlığı kalkıyor — manşet ilk sırada, kartlar hemen
+ * ardından; açıklama son söz.
  */
 function IntroLine({ t }: { t: Dictionary }) {
   const items = [
@@ -146,25 +152,28 @@ function IntroLine({ t }: { t: Dictionary }) {
     { title: t.stories.rhythmTitle, body: t.stories.rhythmShort },
   ];
 
+  /* TEK PARAGRAF, MADDE LİSTESİ DEĞİL. Üç madde `li` olarak diziliyordu
+     ve telefonda her biri kendi satırına düşüp koyu etiketli üç satırlık
+     bir blok kuruyordu — arşivin ortasında, manşetle kartların arasında,
+     bir "hakkında" kutusu. Cümleler artık akan tek bir paragraf: geniş
+     ekranda tek satır, dar ekranda kelime kelime sarıyor, ayraç hiç
+     yetim kalmıyor (satır sonuna gelen ayraç `nowrap` ile önceki cümleye
+     bağlı). */
   return (
-    <div className={`${styles.intro} -mt-1 flex flex-col gap-2`}>
-      <ul className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-small leading-[18px] text-muted">
+    <div className={`${styles.intro} flex flex-col gap-2 border-t border-line pt-4`}>
+      <p className="text-small leading-[18px] text-muted">
         {items.map((item, index) => (
-          <li key={item.title} className="flex items-center gap-2.5">
-            {/* Ayraç dar ekranda gizlenir: maddeler zaten alt alta düşüyor ve
-                nokta, satır başına kayıp yetim bir işaret olarak kalıyordu. */}
+          <span key={item.title}>
             {index > 0 && (
-              <span aria-hidden className="hidden text-line-strong sm:inline">
-                ·
+              <span aria-hidden className="whitespace-nowrap text-line-strong">
+                {" "}·{" "}
               </span>
             )}
-            <span>
-              <span className="font-semibold text-body">{item.title}:</span>{" "}
-              {item.body}
-            </span>
-          </li>
+            <span className="font-semibold text-body">{item.title}:</span>{" "}
+            {item.body}
+          </span>
         ))}
-      </ul>
+      </p>
       <p className="flex flex-wrap items-center gap-x-1.5 text-small text-muted">
         {t.stories.bridge}
         <Link
@@ -335,11 +344,6 @@ async function StoryBoard({
             />
           )}
 
-          {/* The editorial introduction follows the lead: at 390px it
-              previously pushed the story title down to 629px. The symbol
-              filter remains above the story and scrolls as one row. */}
-          <IntroLine t={t} />
-
           {rows.length > 1 && (
             <div className="flex flex-col gap-3">
               <h2 className={styles.archiveHeading}>
@@ -381,6 +385,15 @@ async function StoryBoard({
               </Link>
             </div>
           )}
+
+          {/* EDİTORYAL KÜNYE EN ALTTA. Bir dönem manşetin hemen altında,
+              arşivin üstündeydi ("ne yazılır, nasıl yazılır, ne sıklıkla")
+              ve telefonda okuyucunun yolunu kesiyordu: manşeti bitirip
+              öteki yazılara inmek isteyen göz üç satırlık bir açıklamaya
+              takılıyordu. Ekran düzeni kuralında künyeler ve uyarılar en
+              sonda; burası da öyle. Haberler/Rehber köprüsü onunla
+              birlikte iniyor. */}
+          <IntroLine t={t} />
         </>
       )}
     </div>

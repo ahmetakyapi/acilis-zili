@@ -306,7 +306,15 @@ export function GuidanceRanges({
                      · ORTA NOKTA şeridin içine kesilmiş açık bir yarık —
                        eksenin çapası, bandın kendi ortası.
                    Üst dolgu üçgeni barındırıyor. */
-                <div className="relative w-full pt-3.5">
+                <div className="w-full">
+                  {/* İŞARET YALNIZCA ÜÇGEN + ŞERİT KADAR UZUN. Konumlu kap bir
+                      dönem uç etiketlerinin satırını da sarıyordu ve
+                      `inset-y-0` ile gerilen çizgi o satırdan geçiyordu:
+                      beklenti bandın alt ucuna yakınsa ("6,3 $" ile aynı
+                      yüzde) çizgi sayının üstüne biniyor, sayı okunmuyordu
+                      (390'da ölçüldü). Kap artık şeritte bitiyor; etiketler
+                      onun dışında, ayrı bir satırda. */}
+                  <div className="relative pt-3.5">
                   {/* İŞARET ÜÇGEN + ŞERİDİ KESEN ÇİZGİ.
                       Önce yalnızca şeridin İÇİNDE duran siyah bir kapsüldü ve
                       orta nokta çizgisiyle karışıyordu; sonra şeridin üstünde
@@ -370,6 +378,7 @@ export function GuidanceRanges({
                         className="absolute inset-y-0 left-1/2 w-[2px] -translate-x-1/2 bg-surface-solid"
                       />
                     )}
+                  </div>
                   </div>
 
                   {/* UÇLARA GERÇEK SAYILAR. Eksen orta noktaya göre YÜZDE
