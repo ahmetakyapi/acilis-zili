@@ -346,6 +346,7 @@ const en: typeof tr = {
     reportInNumbers: "The Quarter in Numbers",
     reportOutlook: "Looking Ahead",
     listTitle: "Latest Earnings Analyses",
+    filteredReports: "Verdicts Across Listed Reports",
     ogEyebrow: "Earnings Analysis",
     symbolPanelTitle: "Earnings Analyses",
     recentStrip: "Recently Analyzed",
@@ -644,6 +645,13 @@ const en: typeof tr = {
   },
 
   companies: {
+    searchLabel: "Find a Company",
+    searchPlaceholder: "Symbol or company name",
+    searchSubmit: "Search",
+    searchResults: "{n} companies for “{query}”",
+    clearSearch: "Clear Search",
+    searchEmpty: "No Matching Companies",
+    searchEmptyHint: "Try another name or symbol; the selected sector narrows your search.",
     title: "Companies",
     subtitle: "Tracked companies: sector, market cap and volume",
     sector: "Sector",
@@ -664,6 +672,8 @@ const en: typeof tr = {
   },
 
   stock: {
+    latestAnalysis: "Latest Earnings Analysis",
+    earningsShortcut: "Go to Earnings",
     experienceOverview: "Overview",
     experienceNav: "Company page sections",
     experienceEyebrow: "Company Dossier",
@@ -971,6 +981,9 @@ const en: typeof tr = {
     curveHint:
       "When long-dated yields sit above short-dated ones the curve is normal and the economy is on its usual footing. If the spread turns negative (an inverted curve) the market expects rate cuts soon; historically it is the most closely watched recession signal.",
     breadth: "Market Breadth",
+    advancingShare: "Share of Advancers",
+    breadthCoverage: "Change data is available for {known} of {total} companies.",
+    movementScale: "Bars use the same percentage scale across both lists.",
     advancing: "Advancing",
     declining: "Declining",
     unchanged: "Unchanged",

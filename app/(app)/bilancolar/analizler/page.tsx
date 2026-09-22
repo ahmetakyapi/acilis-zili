@@ -3,6 +3,7 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/DirectoryExperience.module.css";
+import analysisStyles from "@/components/earnings/AnalysisExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { auth } from "@/auth";
 import {
@@ -62,7 +63,6 @@ import {
   formatEtDateCompact,
   formatEtDateLong,
   formatPercent,
-  formatPercentPlain,
   formatPrice,
 } from "@/lib/utils";
 
@@ -151,6 +151,10 @@ export default async function AnalysesPage(
      her koşulda kartla aynı satırı gösteriyor. */
   const featured = rows[0] ?? null;
   const thisWeek = all.filter((row) => row.reportDate >= weekAgo).slice(0, 5);
+  const distribution = (["buy", "hold", "sell"] as const).map((key) => ({
+    key,
+    count: rows.filter((row) => verdictOf(row.verdict) === key).length,
+  }));
 
   const tableRows = rows.map((analysis) =>
     toAnalysisRowView(analysis, meta[analysis.symbol], locale, t),
@@ -178,7 +182,30 @@ export default async function AnalysesPage(
           diyordu, yani okuyucuyu ZATEN ÜSTÜNDE DURDUĞU sekmeye yolluyordu.
           Hangi görünümde olunduğunu hemen altındaki sekme çubuğu söylüyor;
           başlık bölümün adı, sekme de görünümün adı. */}
-      <DirectoryHeader eyebrow={t.directory.earningsEyebrow} title={t.analysis.title} description={t.directory.analysisDescription} />
+      <DirectoryHeader
+        eyebrow={t.directory.earningsEyebrow}
+        title={t.analysis.symbolPanelTitle}
+        description={t.directory.analysisDescription}
+        visual={all.length > 0 && (
+          <div className={analysisStyles.overview}>
+            <div className={analysisStyles.overviewHeading}>
+              <span>{t.analysis.filteredReports}</span>
+              <a href="#analysis-archive">{rows.length} {t.analysis.colCard} <span aria-hidden>↘</span></a>
+            </div>
+            <div className={analysisStyles.distribution}>
+              {distribution.map(({ key, count }) => (
+                <div key={key}>
+                  <span className={verdictTextClass(key)}>{verdictLabel(key, t)}</span>
+                  <b className="numeral">{count}</b>
+                  <span className={analysisStyles.distributionTrack} aria-hidden>
+                    <i data-verdict={key} style={{ width: `${rows.length ? count / rows.length * 100 : 0}%` }} />
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      />
 
       <EarningsTabs active="analyses" t={t} className="-mt-1" />
 
@@ -187,8 +214,8 @@ export default async function AnalysesPage(
           <EmptyState title={t.analysis.empty} hint={t.analysis.emptyHint} />
         </Panel>
       ) : (
-        <>
-          <div data-motion-stagger className={cn("grid gap-4 lg:grid-cols-[1.7fr_minmax(0,1fr)_minmax(0,1fr)]", styles.analysisPanels)}>
+        <div className={analysisStyles.workspace} data-has-week={thisWeek.length > 0} data-has-feature={!!featured}>
+          <div data-motion-stagger className={analysisStyles.featureGrid} data-has-week={thisWeek.length > 0} data-has-feature={!!featured}>
             {featured && (
               <FeaturedAnalysis
                 row={featured}
@@ -209,7 +236,7 @@ export default async function AnalysesPage(
                 Yaklaşan Bilançolar paneli kalıyor: o, bu sayfada başka hiçbir
                 yerde olmayan veriyi (tarih, HBK beklentisi, takvime ekleme)
                 taşıyor — tekrar değil. */}
-            <Panel className="hidden min-w-0 flex-col gap-3 p-[18px] sm:p-5 lg:flex">
+            {thisWeek.length > 0 && <Panel className="hidden min-w-0 flex-col gap-3 p-[18px] sm:p-5 lg:flex">
               <h2 className="text-base font-bold text-strong">
                 {t.analysis.thisWeekAnalyzed}
               </h2>
@@ -256,13 +283,13 @@ export default async function AnalysesPage(
               >
                 {t.analysis.showAll}
               </Link>
-            </Panel>
+            </Panel>}
 
             <Panel className="flex min-w-0 flex-col gap-3 p-[18px] sm:p-5">
               <h2 className="text-base font-bold text-strong">
                 {t.analysis.upcomingEarnings}
               </h2>
-              <div className="flex flex-1 flex-col justify-between">
+              <div className={analysisStyles.upcomingRows}>
                 {upcomingTop.length === 0 ? (
                   <p className="text-xs text-muted">{t.earnings.empty}</p>
                 ) : (
@@ -371,7 +398,7 @@ export default async function AnalysesPage(
               sayfa başlığının içinde duruyordu ve on bir çip başlığı ikinci
               satıra itiyordu. Üçü de aynı listeyi daraltıyor, bir arada
               durmaları gerekiyordu. */}
-          <div className="flex flex-col gap-3">
+          <section id="analysis-archive" className={analysisStyles.archive}>
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
               <h2 className="display-ink display-ink-tight w-fit text-base font-bold">
                 {t.analysis.listTitle}
@@ -452,8 +479,8 @@ export default async function AnalysesPage(
               />
             )}
             </QueryTransition>
-          </div>
-        </>
+          </section>
+        </div>
       )}
 
       <p className="border-t border-line pt-3.5 text-tiny text-muted">
@@ -488,26 +515,29 @@ function FeaturedAnalysis({
   t: Dictionary;
 }) {
   const verdict = verdictOf(row.verdict);
-  const figures: { label: string; tone: "up" | "down" | "flat" }[] = [];
+  const figures: { label: string; value: string; tone: "up" | "down" | "flat" }[] = [];
 
   if (row.revenueYoyPct !== null) {
     const up = row.revenueYoyPct >= 0;
     figures.push({
-      label: `${up ? "▲" : "▼"} ${t.earnings.revenueShort} ${formatPercentPlain(row.revenueYoyPct, locale, 0)}`,
+      label: t.analysis.revenueGrowthYoy,
+      value: formatPercent(row.revenueYoyPct, locale, 0),
       tone: up ? "up" : "down",
     });
   }
   if (row.epsSurprisePct !== null) {
     const up = row.epsSurprisePct >= 0;
     figures.push({
-      label: `EPS ${formatPercent(row.epsSurprisePct, locale, 0)}`,
+      label: t.analysis.epsSurprise,
+      value: formatPercent(row.epsSurprisePct, locale, 0),
       tone: up ? "up" : "down",
     });
   }
   if (row.reactionPct !== null) {
     const up = row.reactionPct >= 0;
     figures.push({
-      label: `${up ? "▲" : "▼"} ${t.earnings.reactionShort} ${formatPercentPlain(row.reactionPct, locale, 1)}`,
+      label: t.analysis.stockReaction,
+      value: formatPercent(row.reactionPct, locale, 1),
       tone: up ? "up" : "down",
     });
   }
@@ -516,10 +546,10 @@ function FeaturedAnalysis({
     <Link
       href={analysisHref(row.symbol, row.period)}
       prefetch={false}
-      className={cn("flex min-w-0 flex-col gap-4 rounded-xl border border-primary-faint bg-gradient-to-br from-primary-wash to-primary-tint p-5 transition-colors hover:border-primary sm:flex-row sm:gap-5", styles.analysisFeature)}
+      className={analysisStyles.feature}
     >
-      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <span className="text-tiny font-semibold text-muted">
+      <div className={analysisStyles.featureCopy}>
+        <span className={analysisStyles.featureDate}>
           {formatEtDateLong(row.reportDate, locale)}
         </span>
         <div className="flex items-center gap-2.5">
@@ -532,42 +562,36 @@ function FeaturedAnalysis({
                 bilgisi — hangi çeyrek — kayboluyordu. İki satırda hem
                 şirket hem çeyrek tam okunuyor; sığdığı yerde (masaüstü)
                 görüntü hiç değişmiyor, ikinci satır hiç açılmıyor. */}
-            <p className="line-clamp-2 text-lead font-bold tracking-[-0.03em] text-strong">
-              {row.company} · {row.periodLabel}
-            </p>
-            <p className="truncate text-tiny font-medium text-muted">
-              {row.symbol}
-              {row.sector ? ` · ${row.sector}` : ""}
+            <h2 className={analysisStyles.featureCompany}>{row.company}</h2>
+            <p className={analysisStyles.featurePeriod}>{row.symbol} · {row.periodLabel}</p>
+            <p className={analysisStyles.featureSector}>
+              {row.sector}
             </p>
           </div>
         </div>
-        <p className={styles.featureHeadline}>
+        <p className={analysisStyles.featureHeadline}>
           {row.headline}
         </p>
-        <span className={styles.featureRead}>{t.dayFlow.readAnalysis} ↗</span>
-        <div className="mt-auto flex flex-wrap gap-x-3.5 gap-y-1 pt-1">
-          {figures.map((figure) => (
-            <span
-              key={figure.label}
-              className={cn(
-                "figure text-xs font-bold",
-                figure.tone === "up" ? "text-up" : "text-down",
-              )}
-            >
-              {figure.label}
-            </span>
-          ))}
-        </div>
+        <span className={analysisStyles.featureRead}>{t.dayFlow.readAnalysis} <span aria-hidden>↗</span></span>
       </div>
       {/* Dar ekranda halka metnin YANINA değil ALTINA geçer ve karar
           yazısıyla yan yana durur: 66px'lik halka + kenar dolgusu 390px
           genişlikte metin sütununu sıfıra indiriyordu. */}
-      <div className="flex shrink-0 items-center gap-3 border-t border-primary-faint pt-3 sm:flex-col sm:justify-center sm:gap-2 sm:border-0 sm:pt-0">
-        <ScoreRing score={row.score} verdict={verdict} size={80} />
+      <div className={analysisStyles.featureScore}>
+        <span>{t.analysis.verdictLabel}</span>
+        <ScoreRing score={row.score} verdict={verdict} size={96} showDenominator />
         <span className={cn("text-base font-bold", verdictTextClass(verdict))}>
           {verdictLabel(verdict, t)}
         </span>
       </div>
+      {figures.length > 0 && <dl className={analysisStyles.featureFigures}>
+        {figures.map((figure) => (
+          <div key={figure.label}>
+            <dt>{figure.label}</dt>
+            <dd className={cn("numeral", figure.tone === "up" ? "text-up" : "text-down")}>{figure.value}</dd>
+          </div>
+        ))}
+      </dl>}
     </Link>
   );
 }

@@ -55,28 +55,22 @@
 .fear > div:nth-child(3) > div { height:5px; }
 .fear .explainer { border-top:1px solid var(--line-soft); padding-top:2px; }
 .fear .explainer a { font-size:11px; }
-.breadth { border-radius:14px; background:var(--premium-surface); overflow:hidden; }
-.breadthReading { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:16px; border-top:1px solid var(--line); padding:14px 16px; }
-.breadthReading h2 { display:flex; align-items:baseline; gap:10px; font-size:12px; }
-.breadthReading h2 > span { font-size:24px; line-height:1; font-weight:600; letter-spacing:-.04em; }
-.breadthReading > div { min-width:0; height:7px; }
-.breadthReading > p { display:flex; flex-wrap:wrap; gap:4px; max-width:220px; font-size:11px; }
+.breadth { border-radius:20px; background:radial-gradient(ellipse at 100% 0,var(--primary-wash),transparent 65%),var(--premium-surface); overflow:hidden; }
 .movers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
-.mover { border-radius:14px; overflow:hidden; }
+.mover { border-radius:18px; overflow:hidden; background:var(--premium-surface); }
 .mover > div:first-child { padding-block:12px; }
 .mover h2 { font-size:15px; letter-spacing:-.025em; }
 .mover li a { padding-block:11px; }
-.mover li a > div:first-child > span:last-child { font-size:16px; }
-.mover li a > div:first-child > span:first-child > span:first-child { font-size:13px; }
-.mover li a > div:first-child > span:first-child > span:last-child { font-size:11px; }
-.members { border-radius:14px; overflow:hidden; }
+.mover li a > div:first-child > span:last-child { font-size:18px; letter-spacing:-.035em; }
+.members { border-radius:18px; overflow:hidden; scroll-margin-top:100px; }
+.members thead { background:var(--surface-sunken); }
 .members h2 { font-size:17px; letter-spacing:-.025em; }
 .members tbody tr { transition:background .2s,box-shadow .2s; }
 .members tbody tr:hover,.members tbody tr:focus-within { background:var(--primary-tint); box-shadow:inset 3px 0 var(--primary); }
 .members tbody td { padding-block:11px; }
 .page :is(a,button):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 @media(hover:hover) and (pointer:fine) { .indexLink:hover .indexCard { border-color:var(--primary); box-shadow:var(--premium-shadow); } }
-@media(max-width:1023px) { .marketHeader { grid-template-columns:minmax(0,1fr); gap:18px; } .masthead > header > p { max-width:60ch; } .macro { grid-template-columns:minmax(0,1fr) 240px; } .breadthReading { grid-template-columns:auto minmax(0,1fr); } .breadthReading > p { grid-column:1/-1; max-width:none; } }
+@media(max-width:1023px) { .marketHeader { grid-template-columns:minmax(0,1fr); gap:18px; } .masthead > header > p { max-width:60ch; } .macro { grid-template-columns:minmax(0,1fr) 240px; } }
 @media(max-width:767px) {
  .page { gap:16px; }
  .marketHeader { gap:16px; }
@@ -110,8 +104,6 @@
  .fear > div:nth-child(2) > span { font-size:10px; }
  .fear > div:nth-child(3),.fear > details { grid-column:1/-1; }
  .fear :global(.tote) { font-size:24px; }
- .breadthReading { grid-template-columns:minmax(0,1fr); padding:14px 16px; gap:12px; }
- .breadthReading h2 { justify-content:space-between; }
  .movers { grid-template-columns:minmax(0,1fr); }
  .mover h2 { font-size:15px; }
  .members tbody td { padding-block:10px; }
@@ -121,10 +113,8 @@
 .yieldSkeleton { min-height:206px; border-radius:14px; }
 .fearSkeleton { min-height:156px; border-radius:14px; }
 @media(max-width:767px) { .fearSkeleton { min-height:140px; } }
-.breadthSkeleton { display:flex; align-items:center; gap:12px; padding:14px 16px; min-height:56px; }
-@media(max-width:767px) { .breadthSkeleton { flex-direction:column; align-items:stretch; min-height:108px; } }
 
-/* Treasury context now precedes selection. A side label and four compact
+/* The earlier Treasury pass added a side label and four compact
    readings replace the previous 206px panel without dropping observation dates. */
 .yields { display:grid; grid-template-columns:155px minmax(0,1fr); border-radius:14px; background:var(--premium-surface); }
 .yieldHeader { flex-direction:column; align-items:flex-start; justify-content:center; gap:6px; padding:14px 16px; }
@@ -151,3 +141,59 @@
 .yieldSkeleton,.fearSkeleton { min-height:144px; }
 @media(max-width:1023px) { .yields { grid-template-rows:auto minmax(0,1fr) auto; } }
 @media(max-width:767px) { .yields { grid-template-rows:auto; } .fear .explainer { margin-top:0; } .yieldSkeleton { min-height:184px; } .fearSkeleton { min-height:140px; } }
+
+/* Nasdaq before this pass: selected breadth began at y562 / y988
+   (1440 / 390px). Selection and its reading now precede Treasury/VIX. */
+.breadthOverview { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); align-items:center; gap:32px; padding:22px 24px; }
+.breadthIdentity { min-width:0; }
+.breadthEyebrow { color:var(--primary-ink); font-size:12px; font-weight:600; }
+.breadthIdentity h2 { margin:7px 0 12px; font-size:30px; line-height:1.1; letter-spacing:-.05em; font-weight:600; color:var(--text-strong); }
+.breadthHeading { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 18px; }
+.breadthQuote { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; color:var(--text-body); font-size:13px; }
+.breadthLink { display:inline-flex; align-items:center; min-height:36px; gap:8px; color:var(--primary-ink); font-size:11px; font-weight:550; }
+.breadthVisual { min-width:0; padding-left:30px; border-left:1px solid var(--line); }
+.breadthRatio { display:flex; align-items:baseline; justify-content:space-between; gap:12px; color:var(--text-body); font-size:12px; }
+.breadthRatio strong { color:var(--text-strong); font-size:32px; font-weight:550; line-height:1; letter-spacing:-.045em; }
+.breadthRail { display:flex; height:9px; overflow:hidden; margin:14px 0; border-radius:6px; background:var(--rail-track); }
+.breadthRail > span { min-width:0; }
+.breadthCounts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+.breadthCounts > div { display:flex; align-items:baseline; gap:8px; }
+.breadthCounts dt { font-size:12px; color:var(--text-muted); }
+.breadthCounts dd { font-size:24px; font-weight:550; line-height:1.2; letter-spacing:-.035em; }
+.breadthCoverage { margin-top:10px; color:var(--text-muted); font-size:11px; line-height:1.6; }
+.breadthEmpty { padding-block:12px; color:var(--text-muted); font-size:13px; }
+.breadthStamp { padding:10px 24px; border-top:1px solid var(--line); background:var(--primary-tint); }
+.movementScale { margin-bottom:-10px; font-size:11px; line-height:1.6; color:var(--text-muted); }
+.moverLink { display:block; padding:12px 20px; transition:background 180ms; }
+.moverLink:hover { background:var(--primary-tint); }
+.moverIdentity { display:flex; align-items:center; gap:12px; min-width:0; }
+.moverRank { font-size:11px; color:var(--text-muted); }
+.moverCompany { display:flex; flex:1; flex-direction:column; gap:2px; min-width:0; }
+.moverCompany > span:first-child { font-size:13px; line-height:18px; }
+.moverCompany > span:last-child { font-size:11px; line-height:14px; }
+.mover li a { padding-block:9px; }
+.moverTrack { position:relative; display:flex; align-items:center; gap:8px; margin-top:8px; background:var(--rail-track); min-height:3px; border-radius:3px; }
+.moverTrack > span:first-child { flex-shrink:0; }
+.moverTrack:has(> span:nth-child(2)) { flex-wrap:wrap; }
+.moverTrack > span:nth-child(2) { flex-basis:100%; padding-top:3px; background:var(--surface-solid); }
+@media(max-width:1023px) {
+ .breadthOverview { gap:22px; }
+ .breadthVisual { padding-left:22px; }
+ .breadthCounts > div { flex-direction:column; gap:3px; }
+}
+@media(max-width:767px) {
+ .breadthOverview { grid-template-columns:minmax(0,1fr); gap:14px; padding:18px; }
+ .breadthIdentity h2 { font-size:26px; margin-block:6px 10px; }
+ .breadthHeading { gap:0 10px; }
+ .breadthLink { min-height:44px; }
+ .breadthVisual { padding:16px 0 0; border-left:0; border-top:1px solid var(--line); }
+ .breadthCounts > div { flex-direction:row; flex-wrap:wrap; gap:4px 8px; }
+ .breadthCounts { gap:8px; }
+ .breadthCounts dd { font-size:23px; }
+ .breadthRatio strong { font-size:28px; }
+ .breadthStamp { padding:10px 18px; }
+ .moverLink { padding-inline:16px; }
+ .moverIdentity { gap:9px; }
+ .mover li a > div:first-child > span:last-child { font-size:17px; }
+}
+@media(prefers-reduced-motion:reduce) { .moverLink { transition:none; } }

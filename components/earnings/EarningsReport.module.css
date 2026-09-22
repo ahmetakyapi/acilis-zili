@@ -318,13 +318,11 @@
 .verdictPanel {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 2rem;
-  padding: 1.8rem 2rem;
-  border: 1px solid var(--primary-faint);
-  border-radius: 1.25rem;
-  background: linear-gradient(110deg, var(--primary-wash), var(--primary-tint));
+  gap: 1rem 2rem;
+  padding: 1.25rem 0;
+  border-block: 1px solid var(--line);
 }
 
 .verdictPanel > span {
@@ -345,15 +343,16 @@
 }
 
 .verdictDecision > span:last-child {
-  font-size: 2.45rem;
+  font-size: 1.8rem;
   letter-spacing: -0.05em;
 }
 
 .verdictHeadline {
   min-width: 0;
-  max-width: 53ch;
-  font-size: clamp(1rem, 1.55vw, 1.3rem);
-  line-height: 1.55;
+  grid-column: 1;
+  max-width: 76ch;
+  font-size: 0.94rem;
+  line-height: 1.75;
   letter-spacing: -0.025em;
   color: var(--text-strong);
   font-weight: 550;
@@ -364,13 +363,26 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  grid-column: 2;
+  grid-row: 1 / 3;
+  max-width: 15rem;
   gap: 0.65rem;
   padding-left: 1.5rem;
   border-left: 1px solid var(--primary-faint);
 }
 
 .verdictTarget > span:nth-child(2) {
-  font-size: 2rem;
+  font-size: 1.7rem;
+}
+
+.verdictPanel[data-has-target="false"] { grid-template-columns: minmax(0, 1fr); }
+
+@media (min-width: 1101px) {
+  .verdictPanel { grid-template-columns: auto minmax(0, 1fr) minmax(0, 12rem); gap: 1.5rem; }
+  .verdictPanel[data-has-target="false"] { grid-template-columns: auto minmax(0, 1fr); }
+  .verdictScore { flex-direction: column; align-items: flex-start; }
+  .verdictHeadline { grid-column: 2; grid-row: 1; }
+  .verdictTarget { grid-column: 3; grid-row: 1; }
 }
 
 .chapterHeading {
@@ -766,12 +778,12 @@
   }
 
   .verdictScore {
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.65rem;
   }
 
   .verdictDecision {
-    align-items: center;
+    align-items: flex-start;
   }
 
   .verdictTarget {
@@ -832,13 +844,15 @@
   }
 
   .verdictPanel {
-    grid-template-columns: 1fr;
-    padding: 1.4rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 1rem 0;
+    gap: 1rem;
   }
 
   .verdictScore {
     flex-direction: row;
-    gap: 1.2rem;
+    gap: 0.6rem;
+    flex-wrap: wrap;
   }
 
   .verdictDecision {
@@ -846,14 +860,29 @@
   }
 
   .verdictHeadline {
-    font-size: 1.15rem;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: 0.875rem;
   }
 
   .verdictTarget {
+    grid-row: 1;
     max-width: none;
-    border-left: 0;
-    border-top: 1px solid var(--primary-faint);
-    padding: 1.1rem 0 0;
+    border-left: 1px solid var(--line);
+    padding: 0 0 0 0.85rem;
+    align-self: center;
+  }
+
+  /* At 320px the target's content column is 99px: the former 27px
+     price and unbroken upside badge exceeded it in Turkish. */
+  .verdictTarget > span:nth-child(2) {
+    font-size: clamp(1.15rem, 5.5vw, 1.7rem);
+  }
+
+  .verdictTarget > span:nth-child(3) {
+    display: block;
+    max-width: 100%;
+    line-height: 1.6;
   }
 
   .metricGrid,
@@ -931,7 +960,10 @@
 .reportNav a { counter-increment:report-section; }
 .reportNav a::before { content:counter(report-section,decimal-leading-zero); font-size:10px; color:var(--primary); z-index:1; }
 .reportNav a[aria-current="location"] { color:var(--primary-ink); }
-.verdictPanel { background:radial-gradient(ellipse at 0 0,var(--primary-wash),transparent 75%),var(--premium-surface); box-shadow:var(--premium-shadow); }
+/* ADBE's verdict previously began after the 595px cover and navigation;
+   it now belongs to the cover, before historical valuation figures. */
+.cover .verdictPanel { background: transparent; box-shadow: none; }
+.cover .verdictPanel + .coverFacts { border-top: 0; }
 .chapterHeading { padding-top:22px; border-top:1px solid var(--line); }
 .metricCard { box-shadow:none; background:linear-gradient(150deg,var(--premium-surface),var(--primary-tint)); }
 .metricValue { font-weight:550; }

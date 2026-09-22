@@ -350,3 +350,43 @@ Doğrulama: 140 tarayıcı yerleşimi (7 rota × 5 genişlik × 2 dil × 2 tema)
 ### İstek Taraması ve Header Hizası — 21 Eylül, Dördüncü Geçiş
 
 Ayrıntılı kontrol listesi `REQUEST-AUDIT-2026-09-21.md` dosyasında. Teknik liste kapağındaki gerçek içerik bitiş farkı 41,3 → 0px; detay kapağındaki 46px fark da görüş/açıklama grubunun ve kısa göstergelerin ortak alt kenarıyla düzeltildi. Header'ın boş orta alanı bağlantılara dağıtıldı ve tema renklerinden mavi geçiş eklendi; 69px yükseklik korundu. Mobilde Dünya Piyasaları'nın geriye düşmesi düzeltilerek Özet → Dünya Piyasaları → Günün Hareketleri sırası geri getirildi. Yeni bağımlılık veya veri kaynağı değişikliği yok.
+
+### Bilanço Analizleri ve Rapor Kapağı — 22 Eylül
+
+- Analiz listesi artık kendi adıyla açılıyor. Kapakta sunucudaki sektör/dönem filtresinin kapsadığı raporların AL/TUT/SAT adetleri ve toplam üzerinden oranlanan çubukları var; aynı şirketin farklı dönemleri ayrı raporlardır. Sayı bağlantısı arşive götürür. Tablo içindeki metin araması kendi sonuç sayısını göstermeye devam eder.
+- Haftalık rapor yokken boş bir özet sütunu ayrılmıyor. Öne çıkan raporda şirket, dönem, görüş/skor ve yıllık gelir büyümesi / HBK sapması / bilanço sonrası tepki ayrı okunuyor. Liste önizlemesi masaüstünde dört, mobilde üç satır; tam metin rapor bağlantısında. Şirket ve dönem kırpılmıyor.
+- Dar ekranlarda analiz arşivi yaklaşan bilançolardan önce geliyor. Arama, sektör/dönem filtresi, sıralama, yatay tablo kaydırması ve takvime ekleme işlevleri korunuyor. Yeni stiller `AnalysisExperience.module.css` içinde bilanço listesine özgü.
+- Raporda genel görüş, gerekçe ve analist hedefi sonuçlarla aynı kapağa alındı. Mobilde skor ve hedef yan yana, gerekçe altlarında tam metin. Bilanço günü kapanışı ve tarihsel değerleme rakamları bu okumanın ardından geliyor. Genel görüş artık adlandırılmış bir bölüm başlığı taşıyor.
+- Aynı ADBE raporunda 1440px genişlikte “Rakamlarla Bu Çeyrek” başlangıcı **1177 → 1049px**. Kapak 595 → 807px; büyüme önceden ayrı duran görüş bölümünün içeri alınmasından geliyor, toplam üst akış kısalıyor. Grafik hesapları ve veri kaynakları değiştirilmedi.
+- Yerel doğrulama ortamı: `.env.local` yalnız bağlantısız geliştirme ayarını içeriyordu. Mevcut üretim ortamından gereken bağlantılar geçici çalıştırıcıya alındı; dosyalara anahtar kopyalanmadı. Mevcut üretim dosyasındaki geçersiz genel site adresi için yerel derleme sürecine `http://localhost:3000` verildi. Ortam dosyaları değiştirilmedi.
+
+Doğrulama: analiz listesi ve ADBE/AVGO/ONDS raporları × TR/EN × açık/koyu × 320/390/768/1024/1440px = **80 üretim yerleşimi**. İlk taramada 320px Türkçe hedef fiyat bloğunda bulunan taşma, fiyat ölçeği ve potansiyel etiketinin satır kırılmasıyla giderildi. Son taramada yatay taşma, kesilen başlık/ölçü veya tarayıcı hatası yok. NVDA araması, temizleme, boş hafta filtresi, skor sıralamasında öne çıkan rapor–ilk satır eşleşmesi, rapor bölüm bağlantısı ve normal hareketle kaydırılan içerik görünürlüğü: **6 etkileşim kontrolü başarılı**. Lint, üretim build, typecheck ve diff kontrolü geçti.
+
+Tarayıcı kanıtları ve geçici betikler `.tmp-earnings/` ile `.tmp-earnings-*.mjs` altında; Git dışında tutulur. Son sonuçlar `qa.json` ve `layouts.json`. Fiziksel iOS/Safari testi yapılmadı.
+
+### Piyasalar ve Seçili Endeks — 22 Eylül
+
+- Sıra artık endeks kapağı → seçim → seçili endeksin genişliği → hareketler → tahvil/VIX → bileşen tablosu. Önceki kayıtta metni bulunmayan isteğin birebir geri kazanımı değil, devam planında önerilen ve bu turda uygulanan sıra.
+- Piyasa genişliği tek bir yüzde yerine endeks kimliği, fon kotasyonu, yükselenlerin payı ve artıda/yatay/ekside adetleriyle okunuyor. Değişimi bilinen şirket sayısı toplam üyeyle birlikte açıkça yazıyor; eksik kotasyon yatay kabul edilmiyor. Kaynak, güncellik ve seans dışı veri açıklaması sonuçların hemen altında da yer alıyor.
+- Hareket listelerinde sıra, şirket logosu, sembol/ad ve yüzde ayrıştı. İki liste ortak en büyük mutlak değişime göre çiziliyor: eski düzende +%17,92 ile −%2,01 ayrı ayrı tam genişlik alıyordu. Bileşen tablosunun küçük oran çubuklarındaki asgari %6 dolgu da kaldırıldı; sıfır değişim artık sıfır uzunluk. Yön, satırın gerçek işaretinden geliyor.
+- Seçili endeks özetinden tabloya klavyeyle erişilebilir doğrudan bağlantı var. Endeks seçimi yüklenen sonuçların dışında kalıyor; aktif seçeneğe `aria-current` eklendi. Yeni genişlik kartı ve taşınan tahvil/VIX için yükleme iskeleti güncellendi; mevcut geçiş ve kaydırma koruması devam ediyor.
+- 390px başlangıç ölçümü: endeks seçimi **905 → 563px**, genişlik kartı **988 → 646px**, ilk hareket listesi **1153 → 1025px**. Yeni kapsam bilgisi ve şirket kimlikleriyle tablo başlangıcı **1894 → 2184px**; özet bağlantısı uzun listeleri geçerek tabloya götürüyor. 1440px'te genişlik **562 → 398px**, ilk hareket listesi **680 → 654px**. Ölçümler canlı verili yerel Chrome'dan; önce/sonra fiyatlar aynı piyasa anını temsil etmiyor.
+
+Doğrulama: Nasdaq/Dow/S&P 500 × TR/EN × açık/koyu × 320/390/768/1024/1440px = **60 üretim yerleşimi**. Bölüm sırası, kesilen başlık/ölçü, belge taşması ve hareket çubuklarının yüzde oranları kontrol edildi; hata yok. Klavyeyle endeks seçimi, fiyat sıralaması, 60→102 bileşen yükleme, klavyeyle tabloya atlama, tahvil/VIX açıklamaları, tam belge yenilemeden seçim ve normal hareketle içerik görünürlüğü: **7 etkileşim kontrolü başarılı**. Tarayıcı hatası yok; build, lint, build sonrası typecheck ve diff kontrolü temiz.
+
+Yerel kanıtlar: `.tmp-markets/before.json`, `after.json`, `layouts.json`, `qa.json` ve ekran görüntüleri. Fiziksel iOS/Safari testi yapılmadı.
+
+### Şirket Dizini ve Rapor Geçişi — 22 Eylül
+
+- Şirketler kapağına ad/sembol araması eklendi. Arama ilk 60 satırda değil, seçili sektörün tüm şirketlerinde çalışır; ardından mevcut sıralama ve sayfalama uygulanır. Birden fazla sözcük birlikte eşleşir, Latin semboller Türkçe I/ı dönüşümünden etkilenmez. Arama URL'de tutulur; sektör, sıralama ve daha fazla yükleme sırasında korunur. Temizleme yalnızca aramayı kaldırır.
+- Kapaktaki şirket/sektör sayıları tek satırlık künye düzenine geçti. Mevcut ilk on şirket, kısa piyasa değerleri ve doğrudan detay bağlantıları korunuyor. Arama sonucunun sayısı, temizleme bağlantısı ve sonuçsuz arama açıklaması tablonun başında; form klavyeyle gönderilebilir, gezinme mevcut yükleme göstergesini kullanır.
+- Şirket açılışında son yayımlanmış bilanço analizine dönem etiketiyle doğrudan bağlantı var. Kaynak zaten sayfanın aldığı rapor listesi; yeni sağlayıcı isteği yok. Raporu olmayan şirketlerde aynı yer bilanço bölümüne götürür. Fonların ayrı görünümü, grafik/profil hizası ve değerleme kartları korunur.
+- Başlangıç NVDA ölçümünde mobil rapor listesi y3474'teydi; yeni bağlantı y118'de. Grafik başlangıcı 390px'te y131 → y180, 1440px'te y143 → y159; çizim alanı küçültülmedi. Dizin tablosu 1440px'te y511 → y522, 390px'te y697 → y770: ek alan tüm dizini aramak için kullanılıyor. Canlı verili ölçümler aynı fiyat anını temsil etmez.
+
+- Sonuç satırında yer tutucu sırası: önce sayı, sonra aranan metin basılıyor ve metin `replace`in kalıp diline girmiyor. Aranan şeyin kendisi `{n}` ya da `$&` olduğunda satır kendi kendini bozuyordu; ikisi de bir dizin aramasında yazılabilecek metinler.
+
+Doğrulama: `/sirketler`, sonuç vermeyen bir arama, NVDA ve BRK.B × TR/EN × açık/koyu × 320/390/768/1024/1440px = **80 üretim yerleşimi**. Yatay taşma, kesilen başlık/künye/ölçü, daralan arama alanı (en dar 129px) ve masaüstünde grafik–profil bitiş hizası kontrol edildi; hata yok. Tüm dizinde arama, klavyeyle gönderim, sektör/sıralama/daha fazla yüklemede aramanın korunması, temizlemenin yalnız aramayı kaldırması, sonuçsuz aramanın sektörü açıklaması, rapor bağlantısının gerçek rapora gitmesi, raporu olmayan şirkette bilanço bölümüne inmesi, EN'de dil önekinin korunması, fon dalının eski başlığını koruması ve normal hareketle aramanın görünür kalması: **14 etkileşim kontrolü başarılı**. Tarayıcı hatası yok; build, lint ve build sonrası typecheck temiz.
+
+Ölçüm notu — bulgu betikteydi, sayfada değil: ilk koşumda mobil sıralama başlığına yapılan tıklama `/mercek`e düşüyordu. Puppeteer'in `scrollIntoViewIfNeeded`i sayfanın `scroll-padding-bottom: 80px` değerini okumuyor, hedefi ekranın dibine bırakıyor ve sabit alt sekme çubuğu tıklamayı yutuyor. Sayfanın kendisinde örtme yok: 390px'te belge dibine inildiğinde alt bilgi y904'te bitiyor, çubuk y920'de başlıyor. Betik hedefi ekranın ortasına alacak şekilde düzeltildi; başka bir tarayıcı otomasyonu yazılırken aynı tuzak geçerli.
+
+Yerel ölçüm ve görüntüler `.tmp-companies/` altında; geçici betikler `.tmp-company-*.mjs`. Son sonuçlar `qa.json` ve `layouts.json`. Fiziksel iOS/Safari testi yapılmadı.

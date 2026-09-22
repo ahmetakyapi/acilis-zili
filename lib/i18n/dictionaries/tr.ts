@@ -456,6 +456,7 @@ const tr = {
     reportInNumbers: "Rakamlarla Bu Çeyrek",
     reportOutlook: "İleriye Bakış",
     listTitle: "Son Bilanço Analizleri",
+    filteredReports: "Listelenen Raporlarda Görüş Dağılımı",
     /* Paylaşım kartının üst künyesi — kart sabit Türkçe basıyordu. */
     ogEyebrow: "Bilanço Analizi",
     /* Hisse sayfasındaki panel — orada zaten şirketin içindesin, adı
@@ -813,6 +814,13 @@ const tr = {
   },
 
   companies: {
+    searchLabel: "Şirket Bul",
+    searchPlaceholder: "Sembol veya şirket adı",
+    searchSubmit: "Ara",
+    searchResults: "“{query}” için {n} şirket",
+    clearSearch: "Aramayı Temizle",
+    searchEmpty: "Eşleşen Şirket Yok",
+    searchEmptyHint: "Başka bir ad veya sembol dene; seçili sektör aramayı daraltır.",
     title: "Şirketler",
     subtitle: "Takip edilen şirketler: sektör, piyasa değeri ve hacim",
     sector: "Sektör",
@@ -834,6 +842,8 @@ const tr = {
   },
 
   stock: {
+    latestAnalysis: "Son Bilanço Analizi",
+    earningsShortcut: "Bilançolara Git",
     experienceOverview: "Genel Bakış",
     experienceNav: "Şirket sayfası bölümleri",
     experienceEyebrow: "Şirket Dosyası",
@@ -1202,6 +1212,9 @@ const tr = {
     curveHint:
       "Uzun vadeli tahvilin faizi kısa vadeliden yüksekse eğri normaldir; ekonomi olağan seyrinde demektir. Fark eksiye dönerse (ters eğri) piyasa yakın vadede faiz indirimi bekliyor; tarihsel olarak durgunluğun en çok izlenen habercisidir.",
     breadth: "Piyasa Genişliği",
+    advancingShare: "Yükselenlerin Payı",
+    breadthCoverage: "{total} şirketin {known} tanesinde değişim verisi mevcut.",
+    movementScale: "Çubuklar iki listede aynı yüzde ölçeğini kullanır.",
     advancing: "Artıda",
     declining: "Ekside",
     unchanged: "Yatay",

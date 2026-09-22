@@ -2,6 +2,8 @@ import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
 import { Suspense } from "react";
 import { CompanyLeaders } from "@/components/companies/CompanyLeaders";
+import { CompanySearch } from "@/components/companies/CompanySearch";
+import companyStyles from "@/components/companies/CompanyDirectory.module.css";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/DirectoryExperience.module.css";
@@ -25,6 +27,7 @@ import {
   type CompanyRow,
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { withLocale } from "@/lib/i18n/routing";
 import { getQuotes, getWeeklyChanges } from "@/lib/providers";
 import {
   SECTOR_GROUPS,
@@ -229,6 +232,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     : "cap";
   const dir: SortDir = search.yon === "asc" ? "asc" : "desc";
   const { locale, t } = await getI18n();
+  const query = typeof search.q === "string" ? search.q.trim().slice(0, 100) : "";
   const activeGroup = sectorGroupByKey(
     typeof search.sektor === "string" ? search.sektor : null,
   );
@@ -247,11 +251,19 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     (group) => (groupCounts.get(group.key) ?? 0) > 0,
   );
 
-  const rows = activeGroup
+  const sectorRows = activeGroup
     ? companies.filter(
         (c) => sectorGroupOf(c.industry).key === activeGroup.key,
       )
     : companies;
+  // Match names and ticker symbols before pagination; searching only the first
+  // 60 rows would incorrectly hide companies from a 1,010-company directory.
+  // Fold Latin casing consistently: Turkish lowercase turns NVIDIA's I into ı.
+  const terms = query.toLocaleLowerCase("en-US").split(/\s+/).filter(Boolean);
+  const rows = sectorRows.filter(company => {
+    const name = `${company.symbol} ${company.name}`.toLocaleLowerCase("en-US");
+    return terms.every(term => name.includes(term));
+  });
   const leaders = [...companies].filter(company => company.marketCap != null && company.marketCap > 0).sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, 10);
 
   /* Kaç satır basılacak. Sıralama ya da filtre değişince sayaç başa döner:
@@ -269,6 +281,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     const nextDir: SortDir = sort === key && dir === "desc" ? "asc" : "desc";
     const params = new URLSearchParams({ sirala: key, yon: nextDir });
     if (activeGroup) params.set("sektor", activeGroup.key);
+    if (query) params.set("q", query);
     // Sıralama değişince derinlik korunur: 180 satıra inmiş biri, sütun
     // başlığına basınca ilk 60'a geri fırlatılmamalı.
     if (limit > PAGE_STEP) params.set("adet", String(limit));
@@ -278,6 +291,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   const sectorHref = (value: string | null) => {
     const params = new URLSearchParams({ sirala: sort, yon: dir });
     if (value) params.set("sektor", value);
+    if (query) params.set("q", query);
     return `/sirketler?${params.toString()}`;
   };
 
@@ -288,16 +302,19 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
       adet: String(limit + PAGE_STEP),
     });
     if (activeGroup) params.set("sektor", activeGroup.key);
+    if (query) params.set("q", query);
     return `/sirketler?${params.toString()}`;
   };
 
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <DirectoryHeader eyebrow={t.directory.companiesEyebrow} title={t.companies.title} description={t.companies.subtitle}
+      <DirectoryHeader className={companyStyles.hero} eyebrow={t.directory.companiesEyebrow} title={t.companies.title} description={t.companies.subtitle}
         visual={<CompanyLeaders leaders={leaders} labels={t.directory} locale={locale} />}>
 
-        <dl className={styles.metrics}><div><dt>{t.directory.companyCount}</dt><dd>{companies.length.toLocaleString(locale)}</dd></div><div><dt>{t.directory.sectorCount}</dt><dd>{shownGroups.length}</dd></div></dl>
+        <dl className={companyStyles.coverage}><div><dt>{t.directory.companyCount}</dt><dd>{companies.length.toLocaleString(locale)}</dd></div><div><dt>{t.directory.sectorCount}</dt><dd>{shownGroups.length}</dd></div></dl>
+        <CompanySearch action={withLocale("/sirketler", locale)} query={query} sector={activeGroup?.key}
+          sort={sort} direction={dir} labels={t.companies} />
       </DirectoryHeader>
 
       {/* Kategori şeridi — geniş ekranda iki satıra sarar, mobilde kayar
@@ -354,11 +371,17 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
           hemen ekranda. */}
       <QueryTransition label={t.common.loading}>
       <Suspense
-        key={`${activeGroup?.key ?? "hepsi"}:${sort}:${dir}:${limit}`}
+        key={`${activeGroup?.key ?? "hepsi"}:${query}:${sort}:${dir}:${limit}`}
         fallback={<LoadingFallback label={t.common.loading}><TableSkeleton rows={Math.min(rows.length || 12, limit)} /></LoadingFallback>}
       >
         <CompaniesTable
           rows={rows}
+          query={query}
+          clearHref={(() => {
+            const params = new URLSearchParams({ sirala: sort, yon: dir });
+            if (activeGroup) params.set("sektor", activeGroup.key);
+            return `/sirketler?${params}`;
+          })()}
           limit={limit}
           moreHref={moreHref()}
           sort={sort}
@@ -395,6 +418,8 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
 
 async function CompaniesTable({
   rows: unsorted,
+  query,
+  clearHref,
   limit,
   moreHref,
   sort,
@@ -405,6 +430,8 @@ async function CompaniesTable({
   t,
 }: {
   rows: CompanyRow[];
+  query: string;
+  clearHref: string;
   /** Kaç satır basılacak — sıralama TAMAMI üzerinde, dilim sonra alınır. */
   limit: number;
   moreHref: string;
@@ -492,13 +519,22 @@ async function CompaniesTable({
   return (
     <>
       <Panel className={styles.tablePanel}>
+        {query && <div className={companyStyles.results} role="status">
+          {/* SIRA ÖNEMLİ: sayı önce basılır. Aranan metnin kendisi bir yer
+              tutucu olabilir — "{n}" yazıp arayan biri, önce {query} yazılsaydı
+              ikinci geçişte kendi aramasının sayıya dönüştüğünü görürdü.
+              İkinci değişim işlev alıyor: "$&" gibi bir arama `replace`in
+              kendi kalıp dili sayılmasın. */}
+          <p>{t.companies.searchResults.replace("{n}", String(sorted.length)).replace("{query}", () => query)}</p>
+          <Link href={clearHref} scroll={false}>{t.companies.clearSearch}</Link>
+        </div>}
         {/* TABLONUN BAŞLIĞI VARDI AMA GÖRÜNMÜYORDU. Panel doğrudan sütun
             satırıyla açılıyordu: hangi kümeye baktığın (bütün şirketler mi,
             seçili sektör mü) ve listenin ne kadarını gördüğün yalnızca
             tablonun DİBİNDEKİ sayaçtan okunuyordu. Sayfanın geri kalanı rol
             ayrımını taşıyor (ölçü panelleri plaka, listeler başlık +
             sayaç); bu tablo o dilin dışında kalmıştı. */}
-        {rows.length > 0 && (
+        {(rows.length > 0 || query) && (
           <PanelHeader
             title={groupLabel}
             /* Sıralı listenin ilk dördü karşılaştırmaya gidiyor: liste
@@ -547,7 +583,8 @@ async function CompaniesTable({
             sayfasındaki bilanço tablosunda zaten vardı, iki dizin tablosuna
             taşınmamıştı. */}
         {rows.length === 0 ? (
-          <EmptyState title={t.companies.empty} hint={t.companies.emptyHint} />
+          <EmptyState title={query ? t.companies.searchEmpty : t.companies.empty}
+            hint={query ? t.companies.searchEmptyHint : t.companies.emptyHint} />
         ) : (
           <ScrollEdges
             className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"

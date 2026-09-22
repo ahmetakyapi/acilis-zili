@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
+import { analysisHref } from "@/lib/analysis";
+import { withLocale } from "@/lib/i18n/routing";
 import { ArrowDownRight, ArrowLeft, ArrowUpRight, CalendarBlank, Heart, SquaresFour, ChartLineUp, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import { MotionExperience, ScrollStage, Reveal, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "./stock.module.css";
@@ -276,11 +278,24 @@ export default async function StockPage(
     getStoriesForSymbol(symbol, locale, 3),
     getAnalyses(locale, { symbols: [symbol], limit: 6 }),
   ]);
+  const latestAnalysis = analysisRows[0];
 
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <StockBreadcrumb symbol={symbol} t={t} />
+      <StockBreadcrumb symbol={symbol} t={t}>
+        {/* NVDA at 390px: report links began at y3474, after the entire
+            fundamentals chapter. Surface the existing latest report in the
+            opening navigation, while retaining the full chart and profile. */}
+        <nav className={styles.researchLinks} aria-label={t.stock.experienceNav}>
+          {latestAnalysis ? <Link prefetch={false}
+            href={withLocale(analysisHref(latestAnalysis.symbol, latestAnalysis.period), locale)}>
+            <span>{t.stock.latestAnalysis}</span>
+            <strong>{latestAnalysis.periodLabel}</strong>
+            <ArrowUpRight aria-hidden size={15} />
+          </Link> : <a href="#stock-earnings">{t.stock.earningsShortcut}<ArrowDownRight aria-hidden size={14} /></a>}
+        </nav>
+      </StockBreadcrumb>
       {/* Üst blok — kimlik ve grafik solda tek panelde, şirket künyesi sağda */}
       <div id="stock-overview" className={cn(styles.heroGrid, styles.companyOverview)}>
         <Panel className={styles.chartPanel}>
@@ -536,7 +551,7 @@ export default async function StockPage(
   );
 }
 
-function StockBreadcrumb({ symbol, t }: { symbol: string; t: Dictionary }) {
+function StockBreadcrumb({ symbol, t, children }: { symbol: string; t: Dictionary; children?: React.ReactNode }) {
   return (
     <div className={styles.breadcrumb}>
       {/* `tap-44`: bağlantı 18 piksel yüksekliğinde ve telefonda parmak ~44
@@ -552,7 +567,7 @@ function StockBreadcrumb({ symbol, t }: { symbol: string; t: Dictionary }) {
       </Link>
       <span aria-hidden className={styles.breadcrumbSlash}>/</span>
       <span className="numeral text-xs font-semibold text-strong">{symbol}</span>
-      <span className={styles.pageLabel}>{t.stock.experienceEyebrow}</span>
+      {children ?? <span className={styles.pageLabel}>{t.stock.experienceEyebrow}</span>}
     </div>
   );
 }
