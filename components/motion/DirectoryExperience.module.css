@@ -24,8 +24,28 @@
    zemini ve kenarlığı zaten var, ikinci bir çerçeve kutu içinde kutu
    yapıyordu. Üstünde ince bir ayraç, içeriğin nerede değiştiğini söylüyor. */
 .filters { min-width:0; margin-top:20px; padding-top:16px; border-top:1px solid var(--line); }
-.tablePanel { border-radius:20px; overflow:hidden; }
+/* SÜTUN BAŞLIKLARI KAYBOLMUYOR. Altmış satırlık dizinde başlık satırı
+   masthead'in altına girip bir daha görünmüyordu: okuyucu aşağıdaki bir
+   sayının fiyat mı piyasa değeri mi olduğunu anlamak için tablonun başına
+   dönmek zorundaydı. Satır artık masthead'in hemen altına park ediyor.
+
+   İKİ ENGEL VARDI, ikisi de kaydırma kabı yaratıyordu: panelin
+   `overflow:hidden`i ve tablonun kabındaki `overflow-x:auto`. `sticky`
+   viewport'a değil en yakın kaydırma kabına yapışır — yani hiç yapışmıyordu.
+   Panel `clip`e geçti (kırpma aynı, kaydırma kabı yok). Kap ise yalnızca
+   tablonun GERÇEKTEN taştığı yerde kaydırıyor: ölçüldü (kap/içerik),
+   1440-1024px sığıyor, 900-640px taşıyor, 560px ve altı yine sığıyor.
+   Yapışkan başlık 1024 ve üstünde açık — `--app-bar-h` orada masthead'in
+   tam boyu; dar ekranda başlık çubuğu başka yükseklikte ve tablo da üç
+   sütuna iniyor. */
+.tablePanel { border-radius:20px; overflow:clip; }
 .tablePanel table thead { background:var(--surface-sunken); }
+@media(min-width:1024px) {
+ .tableScroll { overflow:visible; }
+ .tablePanel table thead { position:sticky; top:var(--app-bar-h); z-index:2; }
+ /* Yapışkan satırda kenarlık boyanmıyor; çizgi hücrenin iç gölgesinden. */
+ .tablePanel table thead th { box-shadow:inset 0 -1px var(--line); }
+}
 .tablePanel tbody tr { transition:background .2s,box-shadow .2s; }
 .tablePanel tbody tr:hover,.tablePanel tbody tr:focus-within { background:var(--primary-tint); box-shadow:inset 3px 0 var(--primary); }
 .tablePanel tbody td { padding-block:16px; }
@@ -58,7 +78,7 @@
  .visualHeading { font-size:13px; margin-bottom:12px; }
  .distribution { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; } .distribution a { grid-template-columns:minmax(0,1fr); align-content:end; font-size:12px; gap:7px; }
  .distribution b { font-size:18px; } .calendarControls { margin-top:18px; }
- .filters { padding:14px 12px; } .tablePanel tbody td { padding-block:12px; }
+ .filters { margin-top:14px; padding-top:14px; } .tablePanel tbody td { padding-block:12px; }
  .rhythm { gap:6px; height:106px; } .rhythmBar { height:76px; } .rhythm small { display:block; font-size:10px; }
  .featureHeadline { -webkit-line-clamp:4; }
  .tabs { padding:4px; } .tabs a { padding-inline:12px; font-size:12px; }

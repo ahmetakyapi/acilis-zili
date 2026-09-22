@@ -11,7 +11,8 @@ import { verdictLabel, verdictOf, type VerdictKey } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
-import { industryLabel } from "@/lib/sectors";
+import { industryLabel, sectorLabel } from "@/lib/sectors";
+import { indexMemberOf } from "@/db/seed/indices";
 import { getQuotes } from "@/lib/providers";
 import { isSessionTrade, todayEt } from "@/lib/market-hours";
 import { displayZone, formatInZone } from "@/lib/session-clock";
@@ -215,7 +216,13 @@ export default async function TechnicalPage() {
                   logoUrl={meta[row.symbol]?.logoUrl ?? null}
                   marketCap={meta[row.symbol]?.marketCap ?? null}
                   currency={meta[row.symbol]?.currency ?? null}
-                  sector={industryLabel(meta[row.symbol]?.industry, locale)}
+                  /* Sektör tercih sırası /hisse ile AYNI: GICS varsa o, yoksa
+                     sağlayıcının serbest metinli alanı. İki ekranın aynı şirket
+                     için ayrı sektör adı yazması bir hata gibi okunurdu. */
+                  sector={
+                    sectorLabel(indexMemberOf(row.symbol)?.sector, locale) ??
+                    industryLabel(meta[row.symbol]?.industry, locale)
+                  }
                   priceLabel={labelFor(row.symbol)}
                   locale={locale}
                   t={t}

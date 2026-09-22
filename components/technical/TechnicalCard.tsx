@@ -200,52 +200,60 @@ export function TechnicalCard({
             odaklanınca). Dokunmatikte hover yok; orada kartın kendisi zaten
             detaya götürüyor ve aynı bilgiler orada tam hâliyle duruyor, yani
             balon bir zenginleştirme, tek yol değil. */}
-        <div className={styles.identity}>
-          <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
-          <div className={styles.cardName}>
-            {/* h3: kartlar sayfanın "15 Hisse" bölümünün (sr-only h2) altında. */}
-            <h3 id={headingId} className={styles.cardSymbol}>
-              <Link href={technicalHref(row.symbol)} prefetch={false} className={styles.cardLink}>
-                {row.symbol}
-              </Link>
-            </h3>
-            {company && <span className={styles.cardCompany}>{company}</span>}
-          </div>
-          <div className={styles.identityCard} aria-hidden>
-            <div className={styles.identityTop}>
+        {/* BALONUN ÇAPASI SIFIR BOYUTLU VE BAĞLANTININ ATASI DEĞİL.
+            Balonu konumlandırmak için kimlik satırına `position:relative`
+            vermiştim ve kartı kaplayan bağlantı (`.cardLink::after`,
+            `inset:0`) o kutuya göre çözülmeye başladı: ölçüldü, 428x553
+            piksellik kartın tıklanabilir alanı 333x42 ye düştü — kartın
+            ortası ve dibi ölü bölgeye dönmüştü. Çapa artık ayrı bir
+            kardeş: kendi başına konumlanıyor ama bağlantıyı kapsamıyor,
+            yani kaplama yine kartın kendisine göre çözülüyor. */}
+        <span className={styles.identityAnchor} aria-hidden>
+          <span className={styles.identityCard}>
+            <span className={styles.identityTop}>
               <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
-              <div>
+              <span className={styles.identityWho}>
                 <strong className="numeral">{row.symbol}</strong>
                 {company && <span>{company}</span>}
-              </div>
+              </span>
               <span className={cn(styles.stance, verdictPillClass(verdict))}>
                 {verdictLabel(verdict, t)}
               </span>
-            </div>
-            <dl className={styles.identityFacts}>
+            </span>
+            <span className={styles.identityFacts}>
               {sector && (
-                <div>
-                  <dt>{t.companies.sector}</dt>
-                  <dd>{sector}</dd>
-                </div>
+                <span>
+                  <i>{t.companies.sector}</i>
+                  <b>{sector}</b>
+                </span>
               )}
-              <div>
-                <dt>{t.market.marketCap}</dt>
-                <dd className="numeral">{formatMoneyCompact(marketCap, locale, currency)}</dd>
-              </div>
-              <div>
-                <dt>{quote ? priceLabel : t.technical.atAnalysis}</dt>
-                <dd className="numeral">
+              <span>
+                <i>{t.market.marketCap}</i>
+                <b className="numeral">{formatMoneyCompact(marketCap, locale, currency)}</b>
+              </span>
+              <span>
+                <i>{quote ? priceLabel : t.technical.atAnalysis}</i>
+                <b className="numeral">
                   {formatPrice(price, locale, { currency: true })}
                   {changePct !== null && (
-                    <span className={cn(directionText(directionOf(changePct)))}>
+                    <em className={cn(directionText(directionOf(changePct)))}>
                       {formatPercent(changePct, locale)}
-                    </span>
+                    </em>
                   )}
-                </dd>
-              </div>
-            </dl>
-          </div>
+                </b>
+              </span>
+            </span>
+          </span>
+        </span>
+        <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
+        <div className={styles.cardName}>
+          {/* h3: kartlar sayfanın "Hisse Planları" bölüm başlığının altında. */}
+          <h3 id={headingId} className={styles.cardSymbol}>
+            <Link href={technicalHref(row.symbol)} prefetch={false} className={styles.cardLink}>
+              {row.symbol}
+            </Link>
+          </h3>
+          {company && <span className={styles.cardCompany}>{company}</span>}
         </div>
         <span className={styles.badges}>
           <span className={cn(styles.stance, verdictPillClass(verdict))}>

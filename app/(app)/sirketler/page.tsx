@@ -345,8 +345,16 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
                  Görsel olarak bugünkü hâl de zaten tek satır: on bir sektör
                  1440'ta sığıyor. Sığmadığında sarmak yerine kayıyor ve
                  kaydığı kenar solmasından belli oluyor (`ScrollEdges`) —
-                 mobildeki davranışın aynısı. */
-              className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12 sm:gap-2 sm:pb-0 sm:pr-0"
+                 mobildeki davranışın aynısı.
+
+                 ÇUBUK GİZLİ (`scroll-x`), görünür değil. `scroll-x-hint`
+                 tablolar için yazılmıştı: orada içeriğin %70'i ekran dışında
+                 ve gizli çubuk "devamı var" işaretini de siliyor. Burada o
+                 işaret ZATEN VAR — şeridin kendi kenar solması. İkisi bir
+                 arada durunca kapağın içinde, çiplerin hemen altında asılı
+                 duran gri bir çubuk kalıyordu; kutunun kendi çizgisi gibi
+                 okunuyor ve hiçbir şey eklemiyordu. */
+              className="scroll-x flex items-center gap-1.5 pr-12 sm:gap-2 sm:pr-0"
             >
               <SectorChip
                 href={sectorHref(null)}
@@ -381,6 +389,20 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
           `key` filtreye ve sıralamaya bağlı: değiştiğinde Suspense sınırı
           sıfırlanıyor ve iskelet ANINDA görünüyor — tıklamanın karşılığı
           hemen ekranda. */}
+      {/* DUYURU BÖLGESİ SUSPENSE'İN DIŞINDA VE HER ZAMAN VAR. Sonuç künyesi
+          tablonun içindeydi ve tablo anahtarlı bir Suspense sınırının altında:
+          arama değişince bölge yeniden KURULUYOR, içeriğiyle birlikte doğuyor.
+          Ekran okuyucu var olmayan bir bölgenin doğuşunu duyurmaz; duyurduğu
+          şey var olan bir bölgenin DEĞİŞMESİDİR. Bölge artık sayfada sabit,
+          sorgu yokken boş; görünen künye tablonun başında sunum olarak kalıyor. */}
+      <p className="sr-only" role="status">
+        {query
+          ? t.companies.searchResults
+              .replace("{n}", String(rows.length))
+              .replace("{query}", () => query)
+          : ""}
+      </p>
+
       <QueryTransition label={t.common.loading}>
       <Suspense
         key={`${activeGroup?.key ?? "hepsi"}:${query}:${sort}:${dir}:${limit}`}
@@ -531,7 +553,7 @@ async function CompaniesTable({
   return (
     <>
       <Panel className={styles.tablePanel}>
-        {query && <div className={companyStyles.results} role="status">
+        {query && <div className={companyStyles.results}>
           {/* SIRA ÖNEMLİ: sayı önce basılır. Aranan metnin kendisi bir yer
               tutucu olabilir — "{n}" yazıp arayan biri, önce {query} yazılsaydı
               ikinci geçişte kendi aramasının sayıya dönüştüğünü görürdü.
@@ -599,7 +621,7 @@ async function CompaniesTable({
             hint={query ? t.companies.searchEmptyHint : t.companies.emptyHint} />
         ) : (
           <ScrollEdges
-            className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+            className={cn(styles.tableScroll, "scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)")}
             tabIndex={0}
             role="region"
             aria-label={t.companies.title}

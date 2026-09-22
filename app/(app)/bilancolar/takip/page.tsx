@@ -149,10 +149,11 @@ export default async function WatchedEarningsPage(
               <dt>{t.directory.scheduledReports}</dt>
               <dd className="numeral">{rows.length}</dd>
             </div>
-            <div>
-              <dt>{t.directory.publishedAnalyses}</dt>
-              <dd className="numeral">{analyses.length}</dd>
-            </div>
+            {/* ÜÇÜNCÜ ÖLÇÜ KALDIRILDI. `analyses` bir LİSTE ve tavanı yirmi:
+                yirmiden fazla analizi olan bir takip listesinde sayı yirmide
+                donup kalırdı ve kapakta bir TOPLAM gibi okunurdu. Gerçek
+                toplamı veren bir sayım yok; olmayan bir sayıyı göstermektense
+                iki ölçüyle kalmak doğru. */}
           </dl>
         }
       >

@@ -64,6 +64,7 @@ import {
   formatEtDateLong,
   formatPercent,
   formatPrice,
+  plural,
 } from "@/lib/utils";
 
 /**
@@ -190,7 +191,7 @@ export default async function AnalysesPage(
           <div className={analysisStyles.overview}>
             <div className={analysisStyles.overviewHeading}>
               <span>{t.analysis.filteredReports}</span>
-              <a href="#analysis-archive">{rows.length} {t.analysis.colCard} <span aria-hidden>↘</span></a>
+              <a href="#analysis-archive">{rows.length} {plural(rows.length, t.analysis.colCard, t.analysis.colCardMany)} <span aria-hidden>↘</span></a>
             </div>
             <div className={analysisStyles.distribution}>
               {distribution.map(({ key, count }) => (

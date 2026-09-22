@@ -606,3 +606,67 @@ dolduruyor). Dördü de düzeltildi.
 Denetimin çürüttüğü bulgular da kayda değer: kartların telefonda katlamanın
 altında kaldığı, SAT kartında 96 piksel ölü alan olduğu, /rehber, /makro ve
 /favoriler kapaklarının boş durduğu iddiaları kodda karşılık bulmadı.
+
+### Son Denetim ve Düzeltmeler — 22 Eylül, İkinci Faz Üçüncü Tur
+
+Oturumun tamamı (dört commit, 43 dosya) dört bağımsız bakışla yeniden
+incelendi ve her bulgu ayrıca çürütülmeye çalışıldı. Yirmi bulgunun dokuzu
+ayakta kaldı; **beşi bu oturumda girmiş regresyondu.**
+
+**Kimlik balonu kartın bağlantısını hapsetmişti.** Balonu konumlandırmak için
+kimlik satırına `position:relative` vermiştim ve kartı kaplayan bağlantı
+(`.cardLink::after`, `inset:0`) o kutuya göre çözülmeye başladı: ölçüldü,
+428×553 piksellik kartın tıklanabilir alanı **333×42 piksele** düştü — kartın
+ortası ve dibi ölü bölgeye dönmüştü. Balonun çapası artık sıfır boyutlu ve
+bağlantının atası değil; kaplama yine kartın kendisine göre çözülüyor.
+
+**Takip kapağındaki "Yayımlanmış Analiz" bir toplam değildi**, liste tavanıydı
+(`getAnalyses(..., { limit: 20 })`), yani yirmide donup kalacaktı. Gerçek
+toplamı veren bir sayım yok; olmayan bir sayıyı göstermektense ölçü
+kaldırıldı.
+
+**Eksen künyesinin mobil dalı yoktu.** 639 altında ray gizleniyor ve satırlar
+doğal akışta eşit aralıkla diziliyor — ortada sınırı yazılacak orantılı bir
+ölçek kalmıyor. Künye yine de basılıyor ve mutlak konumda satırların üstüne
+biniyordu.
+
+**"Son beş işlem günü" takvim gününü anlatıyordu.** Pano penceresi
+`addEtDays(today, -5)`, yani düz takvim aritmetiği: pazartesi bakıldığında
+önceki salı yayımlanmış bir sembol düşüyor ve ekran "son beş işlem gününde
+yayın yok" diyor — geçen işlem günü dörttür. İki dilde "son beş gün" oldu.
+
+**Yalnızca İngilizce kaydı olan yazı panelden açılamıyordu.** Editöre koyduğum
+`row.locale !== locale → notFound()` koruması doğru ama listenin bağlantısı
+dil taşımıyordu; bağlantı artık satırın dilini taşıyor.
+
+Ayrıca aynı denetimden: EN'de "24 Analysis" (sayıdan sonra tekil), teknik
+kartın sektörü `/hisse` ile farklı kaynaktan okuması, arama sonucunun ekran
+okuyucuya duyurulmaması (bölge anahtarlı Suspense'in altındaydı, her aramada
+yeniden doğuyordu — duyurulan şey var olan bir bölgenin DEĞİŞMESİDİR),
+CLAUDE.md'nin `cache()` listesi ve `docs/ROUTEMAP.md`nin bayat rutin künyesi.
+
+**Kullanıcıdan gelen dört istek:**
+
+- Görüşü değişenler çipi "Tuta Döndü" yerine yalnız AL/TUT/SAT yazıyor —
+  şeridin başlığı zaten "Görüşü Değişenler", "döndü" aynı şeyi ikinci kez
+  söylüyordu. Tam cümle imleç künyesinde ve ekran okuyucuda duruyor.
+- Sektör şeridinin görünür kaydırma çubuğu kalktı. `scroll-x-hint` tablolar
+  için yazılmıştı (orada içeriğin %70'i ekran dışında ve gizli çubuk "devamı
+  var" işaretini siliyor); şeritte o işaret zaten var — kendi kenar solması.
+- Teknik kapağın ortasındaki boşluk: `.edition { margin-top:auto }`, aynı
+  kalıbın bu dosyadaki üçüncü örneği. Fark artık kolonun dibinde.
+- **Dizin tablosunun sütun başlıkları artık kaybolmuyor.** Altmış satırda
+  başlık masthead'in altına girip bir daha görünmüyordu. İki engel vardı ve
+  ikisi de kaydırma kabı yaratıyordu: panelin `overflow:hidden`i ve tablonun
+  kabındaki `overflow-x:auto` — `sticky` viewport'a değil en yakın kaydırma
+  kabına yapışır. Panel `clip`e geçti; kap yalnızca tablonun GERÇEKTEN taştığı
+  yerde kaydırıyor (ölçüldü: 1440-1024 sığıyor, 900-640 taşıyor, 560 ve altı
+  yine sığıyor). Başlık satırı 1024 ve üstünde `--app-bar-h`e park ediyor:
+  kaydırma 600 pikselde satır y69'da ve örtülü değil.
+
+Doğrulama: 19 rota × TR/EN × açık/koyu × 320-1440px = **380 üretim yerleşimi**,
+sıfır yatay taşma, sıfır kırpılma, sıfır tarayıcı hatası. **16 etkileşim
+kontrolü** (dizin araması ve sıralamada korunması, mercek çipi, takvim
+görünümü, karşılaştırmada grafik sırası, teknik damga, kimlik balonu, kartın
+kaplayan bağlantısı, harita hizası ve eksen uçları, seviye notlarının yeri,
+masthead işareti) başarılı. Build, lint ve build sonrası typecheck temiz.

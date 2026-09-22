@@ -501,6 +501,8 @@ const tr = {
     colScore: "Skor",
     colVerdict: "Görüş",
     colCard: "Analiz",
+    /* Türkçede sayıdan sonra çoğul eki gelmiyor; çift İngilizce için. */
+    colCardMany: "Analiz",
 
     searchPlaceholder: "Sembol veya şirket ara",
     searchEmpty: "\"{query}\" ile eşleşen analiz yok.",
@@ -759,9 +761,9 @@ const tr = {
        cümleyle söyleniyor; ikisi de sessizce kaybolmuyor. */
     lapsedLabel: "Yayın Gecikti",
     lapsedNoteOne:
-      "{symbols} için son beş işlem gününde yeni yayın yok; kartı yeniden yayımlandığında görünecek.",
+      "{symbols} için son beş günde yeni yayın yok; kartı yeniden yayımlandığında görünecek.",
     lapsedNoteMany:
-      "{symbols} için son beş işlem gününde yeni yayın yok; kartları yeniden yayımlandıklarında görünecek.",
+      "{symbols} için son beş günde yeni yayın yok; kartları yeniden yayımlandıklarında görünecek.",
     changesLabel: "Görüşü Değişenler",
     filterLabel: "Görüşe Göre Süz",
     filterAll: "Tümü",

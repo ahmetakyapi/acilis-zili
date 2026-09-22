@@ -1099,6 +1099,11 @@
  .map { height:auto!important; padding-bottom:34px; }
  .map::before { content:""; position:absolute; left:10px; top:0; bottom:34px; width:2px; background:linear-gradient(transparent,var(--line) 8%,var(--line) 92%,transparent); }
  .mapRail { display:none; }
+ /* EKSEN KÜNYESİ DE YOK. 639 altında ray gizleniyor ve satırlar doğal
+    akışta eşit aralıkla diziliyor: ortada sınırı yazılacak ORANTILI bir
+    ölçek kalmıyor, künye de anlamsız bir sayı çiftine dönüyordu. Üstelik
+    mutlak konumda kalıp satır etiketlerinin üstüne biniyordu. */
+ .mapBound { display:none; }
  .mapRungs { position:relative; inset:auto; margin-left:22px; }
  .mapRung { position:relative; inset:auto; top:auto!important; transform:none; grid-template-columns:minmax(0,1fr) 52px; align-items:baseline; gap:3px 6px; min-height:58px; padding:7px 8px; border-radius:9px; }
  .mapLabel { grid-column:1/-1; font-size:12px; }
@@ -1120,7 +1125,15 @@
 @media(min-width:768px) {
  .directoryHeader.directoryHeader:global(.page-frame) { align-items:stretch; }
  .directoryHeader > :global(.page-heading-copy) { align-self:stretch; display:flex; flex-direction:column; }
- .directoryHeader > :global(.page-heading-copy) > .edition { margin-top:auto; padding-top:14px; }
+ /* KÜNYE AÇIKLAMANIN ALTINA OTURUYOR. `margin-top:auto` iki kolon
+    arasındaki yükseklik farkının tamamını açıklama ile yayın künyesi
+    ARASINA yığıyordu: sağdaki dağılım halkası ve "Görüşü Değişenler"
+    şeridi soldaki üç satırdan uzun, fark da kapağın ortasında boş bir
+    bant olarak duruyordu. Aynı kalıbı bu turda iki yerde daha söktük
+    (kapak görüş rozeti, harita künyesi) ve gerekçe hep aynı: fark yok
+    olmuyor, YER DEĞİŞTİRİYOR — okunacak iki şeyin arasına düştüğünde
+    zarar veriyor, kolonun dibinde kaldığında görünmüyor bile. */
+ .directoryHeader > :global(.page-heading-copy) > .edition { padding-top:14px; }
  .directoryHeader > :global(.page-heading-copy) > p:last-of-type { margin-bottom:18px; }
  .directoryHeader > :last-child { display:flex; }
  .directoryHeader .pulse[data-variant="directory"] { flex:1; align-content:stretch; }
@@ -1169,9 +1182,15 @@
    `pointer-events:none` bilinçli — balon bir hedef değil, bir okuma; imleç
    onun üstünden geçerken kartın kendi bağlantısı çalışmaya devam ediyor ve
    balon kapanıp açılarak titremiyor. */
-.identity { position:relative; display:flex; min-width:0; flex:1; align-items:center; gap:12px; }
+/* Çapa sıfır boyutlu ve bağlantının ATASI DEĞİL: kimlik satırına
+   `position:relative` vermek kartı kaplayan bağlantıyı (`.cardLink::after`,
+   `inset:0`) o kutuya hapsediyordu — ölçüldü, 428x553 piksellik kartın
+   tıklanabilir alanı 333x42 ye düşmüştü, yani kartın ortası ve dibi ölü
+   bölgeye dönmüştü. Çapa artık başlık satırının sıfır boyutlu ilk çocuğu;
+   negatif sağ boşluk, ızgaranın 12 piksellik aralığını geri alıyor. */
+.identityAnchor { position:relative; flex:none; width:0; height:0; margin-right:-12px; }
 .identityCard {
-  position:absolute; z-index:4; top:calc(100% + 10px); left:-6px;
+  position:absolute; z-index:4; top:34px; left:-6px;
   display:flex; flex-direction:column; gap:12px;
   width:max-content; max-width:min(300px, calc(100vw - 48px));
   padding:14px 16px;
@@ -1182,18 +1201,18 @@
   transition:opacity .16s ease, transform .16s ease, visibility .16s;
   pointer-events:none;
 }
-.identity:hover .identityCard,
-.identity:focus-within .identityCard { opacity:1; visibility:visible; transform:none; }
+.cardHead:hover .identityCard,
+.cardHead:focus-within .identityCard { opacity:1; visibility:visible; transform:none; }
 .identityTop { display:flex; align-items:center; gap:11px; }
-.identityTop > div { display:flex; min-width:0; flex-direction:column; gap:2px; }
+.identityWho { display:flex; min-width:0; flex-direction:column; gap:2px; }
 .identityTop strong { font-size:15px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
-.identityTop span { font-size:12px; line-height:1.35; color:var(--text-muted); }
+.identityWho > span { font-size:12px; line-height:1.35; color:var(--text-muted); }
 .identityTop > .stance { margin-left:auto; flex:none; padding:4px 10px; font-size:12px; }
-.identityFacts { display:grid; gap:7px; padding-top:11px; border-top:1px solid var(--line-soft); }
-.identityFacts > div { display:flex; align-items:baseline; justify-content:space-between; gap:14px; }
-.identityFacts dt { font-size:11px; color:var(--text-muted); }
-.identityFacts dd { display:flex; align-items:baseline; gap:7px; font-size:13px; font-weight:600; color:var(--text-strong); text-align:right; }
-.identityFacts dd span { font-size:12px; font-weight:550; }
+.identityFacts { display:flex; flex-direction:column; gap:7px; padding-top:11px; border-top:1px solid var(--line-soft); }
+.identityFacts > span { display:flex; align-items:baseline; justify-content:space-between; gap:14px; }
+.identityFacts i { font-style:normal; font-size:11px; color:var(--text-muted); }
+.identityFacts b { display:flex; align-items:baseline; gap:7px; font-size:13px; font-weight:600; color:var(--text-strong); text-align:right; }
+.identityFacts b em { font-style:normal; font-size:12px; font-weight:550; }
 /* Dokunmatikte hover yok ve balon hiç açılmıyor; orada kartın kendisi
    detaya götürüyor, aynı bilgiler orada tam hâliyle duruyor. */
 @media(hover:none) { .identityCard { display:none; } }

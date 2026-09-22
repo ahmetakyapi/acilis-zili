@@ -380,6 +380,7 @@ const en: typeof tr = {
     colScore: "Score",
     colVerdict: "Verdict",
     colCard: "Analysis",
+    colCardMany: "Analyses",
 
     searchPlaceholder: "Search symbol or company",
     searchEmpty: "No analysis matches \"{query}\".",
@@ -587,9 +588,9 @@ const en: typeof tr = {
       "{symbols} were just added to the watchlist; their cards appear here after the first edition.",
     lapsedLabel: "Publication Late",
     lapsedNoteOne:
-      "{symbols} has had no new edition in the last five trading days; its card returns when it is published again.",
+      "{symbols} has had no new edition in the last five days; its card returns when it is published again.",
     lapsedNoteMany:
-      "{symbols} have had no new edition in the last five trading days; their cards return when they are published again.",
+      "{symbols} have had no new edition in the last five days; their cards return when they are published again.",
     changesLabel: "Stance Changes",
     filterLabel: "Filter by Stance",
     filterAll: "All",
