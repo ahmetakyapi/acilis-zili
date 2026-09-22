@@ -83,10 +83,19 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
     epsActual: null, epsEstimate: null, revenueActual: null, revenueEstimate: null,
     quarter: null, year: null, updatedAt: now,
   });
+  /* GİZLENENLER SAYILIYOR. Eşiğin altındaki bilançolar akışa girmiyor ve
+     o gün yalnız onlar varsa akış "Bugün Planlanmış Açıklama Yok" diyordu;
+     aynı sayfanın "Bugün Bilanço Açıklayanlar" paneli hemen altında dokuz
+     şirket listeliyordu (22 Eylül, ölçüldü: en büyüğü AZO, 46,6 milyar $).
+     Sayı boş duruma taşınıyor ve cümle ona göre kuruluyor. */
+  let hiddenEarnings = 0;
   for (const row of combined.values()) {
     const analysis = analysisMap.get(row.symbol);
     const info = meta[row.symbol];
-    if (!analysis && !watchedSet.has(row.symbol) && !isSpotlight(row.symbol) && (info?.marketCap ?? 0) < 50e9) continue;
+    if (!analysis && !watchedSet.has(row.symbol) && !isSpotlight(row.symbol) && (info?.marketCap ?? 0) < 50e9) {
+      hiddenEarnings += 1;
+      continue;
+    }
     const providerRow = live.get(row.symbol);
     // A missing value never erases an already confirmed database result.
     const eps = providerRow?.epsActual ?? row.epsActual;
@@ -140,5 +149,6 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
     initialNowMinutes: status.etMinutes, tradingDay: status.tradingToday, closeMinutes: status.closeMinutes,
     offsets: displayOffsets(date, locale), tags: zoneTag(locale), pollAfterMs: 30_000,
     sourceDelayed: !!provider && !provider.ok,
+    hiddenEarnings,
   };
 }

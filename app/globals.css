@@ -1429,6 +1429,14 @@
    Dar olan YÜKSEKLİK, o yüzden kısalan da yalnızca dikey boşluk: etiketler,
    ikonlar ve dokunma hedefleri yerinde kalıyor (sekme yüksekliği 44'ün
    altına inmiyor). Kazanç ~33 piksel, yani içerik alanında %14. */
+/* Çubuk burada 59 piksele iniyor ama `--app-bar-h` 69'da kalıyordu:
+   takvimin yapışkan gün başlıkları çubuğun 10 piksel altına yapışıyor,
+   satırlar aradaki boşluktan akıyordu (852×393, ölçüldü: çubuk dibi 59,
+   başlık 69). Token çubuğun kendi yüksekliğini izliyor; masaüstü masthead'e
+   dokunmasın diye yalnızca 1023 altında. */
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 1023px) {
+  :root { --app-bar-h: calc(env(safe-area-inset-top) + 59px); }
+}
 @media (orientation: landscape) and (max-height: 520px) {
   .app-bar {
     padding-top: calc(env(safe-area-inset-top) + 7px);

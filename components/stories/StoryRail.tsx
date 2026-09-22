@@ -23,7 +23,8 @@ export type StoryTocItem = { id: string; label: string; number: number };
  * Künyede yalnızca yazının toplam okuma süresi duruyor.
  *
  * Etkin bölüm her kaydırma karesinde değil, başlık okuma çizgisini
- * GEÇTİĞİNDE hesaplanıyor (IntersectionObserver + `scrollend`); durum ancak
+ * GEÇTİĞİNDE hesaplanıyor (IntersectionObserver, kökü ekranın tepesinden
+ * okuma çizgisine; `scrollend`, yoksa rAF'li pasif kaydırma); durum ancak
  * bölüm değişince güncelleniyor.
  */
 export function StoryRail({
@@ -74,20 +75,42 @@ export function StoryRail({
     const observe = () => {
       observer?.disconnect();
       const line = Math.round(window.innerHeight * 0.3);
-      /* Piksel kenar payı: yüzde değerleri GENİŞLİĞE göre çözülüyor. */
+      /* KÖK, EKRANIN TEPESİNDEN OKUMA ÇİZGİSİNE KADAR. Kök yalnızca çizgideki
+         2 piksellik bir şeritti: çapa atlaması ya da hızlı kaydırma başlığı
+         iki örnek arasında şeridin altından üstüne taşıyor ve gözlemci hiç
+         ateşlenmiyordu; etkin bölüm tümüyle `scrollend`e kalıyordu (ölçüldü,
+         `scrollend` bastırılınca yedi içindekiler tıklamasının sıfırı
+         işaretlendi). Şimdi 76'ya inen başlık kökün içine düşüyor ve
+         `update` çalışıyor. Piksel kenar payı: yüzde değerleri GENİŞLİĞE
+         göre çözülüyor. */
       observer = new IntersectionObserver(update, {
-        rootMargin: `-${line}px 0px -${Math.max(0, window.innerHeight - line - 2)}px 0px`,
+        rootMargin: `0px 0px -${Math.max(0, window.innerHeight - line - 2)}px 0px`,
         threshold: 0,
       });
       sections.forEach((section) => observer?.observe(section));
       update();
     };
     observe();
-    window.addEventListener("scrollend", update);
+    /* `scrollend` yoksa (eski Safari) kare başına değil, kare BAŞINA EN ÇOK
+       BİR kez: pasif dinleyici + rAF. React durumu yalnızca bölüm değişince
+       güncelleniyor (`setActiveId` aynı değerde yeniden çizmiyor). */
+    const hasScrollEnd = "onscrollend" in window;
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        update();
+      });
+    };
+    if (hasScrollEnd) window.addEventListener("scrollend", update);
+    else window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", observe);
     return () => {
       observer?.disconnect();
-      window.removeEventListener("scrollend", update);
+      if (frame) window.cancelAnimationFrame(frame);
+      if (hasScrollEnd) window.removeEventListener("scrollend", update);
+      else window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", observe);
     };
   }, [itemIds]);

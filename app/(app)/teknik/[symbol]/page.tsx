@@ -184,7 +184,8 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   const changePct = quote ? quote.changePct : row.snapshot.changePct;
   /* ETİKET TEK YERDE: kapak ve harita aynı adı kullanıyor. Kotasyon yoksa
      fiyat fotoğraftan geliyor ve adı "Analiz Anında"; seans dışında "Son
-     Fiyat"; yalnızca açık seansta taze kotasyon "Şu An". */
+     Fiyat"; yalnızca açık seansta taze kotasyon "15 Dakika Gecikmeli"
+     (eski adıyla "Şu An"; gerekçe `livePriceLabel`de). */
   /* "Şu An" burada da SEMBOL BAŞINA kanıtlanıyor; gerekçesi liste
      sayfasında yazılı. */
   const priceLabel = !quote

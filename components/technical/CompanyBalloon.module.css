@@ -7,13 +7,23 @@
    süs ve bulanıklık yok — derinlik gölgeden değil, zeminden ayrışan
    yüzeyden geliyor.
 
-   z-index 35: yapışkan başlık ve alt çubuk 30 (`.chrome`), masthead açılır
-   menüsü 40, arama 50, ilerleme çubuğu 60. Balon başlığın üstüne taşarsa
-   onu örtmeli ama bir menüyü ya da aramayı asla. Eski ipucu 90'daydı ve
-   açık bir menünün üstüne çıkabiliyordu. Konum zaten başlığın ve alt
-   çubuğun ARASINDAKİ bantta hesaplanıyor; 35 yalnızca bir emniyet. */
+   z-index 25: sabit şerit (MarketTicker) ve yapışkan bölüm gezinmesi 20,
+   yapışkan başlık ve alt çubuk 30 (`.chrome`), arama 50, ilerleme çubuğu 60.
+   Bir dönem 35'teydi ve gerekçe "masthead açılır menüsü 40, onun altında
+   kalır" idi. YANLIŞTI: başlık `sticky` + `z-30`, yani kendi yığın
+   bağlamını kuruyor ve menünün 40'ı yalnızca başlığın İÇİNDE sayılıyor;
+   kök bağlamda menü 30'da. body'ye taşınan 35'lik balon açık bir Daha
+   Fazla menüsünün üstüne boyanıyordu (ölçüldü, /teknik koyu tema, menü
+   açıkken logoya gelince: 1440'ta menü 818-1122 x 81-447, SPCX balonu
+   1054-1350 x 239-447; 1280'de menü 736-1040, balon 894-1190; 1024'te
+   menü 688-992, MU balonu 516-812 x 262-470; üçünde de kesişimin
+   ortasında en üstteki eleman balondu). 25'te balon şeridin ve bölüm
+   gezinmesinin üstünde, başlığın ve içindeki her şeyin (Daha Fazla,
+   hesap menüsü) altında: aynı üç senaryoda kesişimin ortasında artık
+   menü duruyor. Başlığın üstüne çıkması hiç gerekmiyor; konum zaten
+   başlığın ve alt çubuğun ARASINDAKİ bantta hesaplanıyor (`safeBand`). */
 .balloon {
-  position:fixed; z-index:35; top:0; left:0;
+  position:fixed; z-index:25; top:0; left:0;
   width:min(296px, calc(100vw - 24px));
   padding:14px 16px;
   border:1px solid var(--line);

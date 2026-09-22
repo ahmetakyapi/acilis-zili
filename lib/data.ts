@@ -248,6 +248,11 @@ export type UpcomingRow = {
   name: string | null;
   logoUrl: string | null;
   marketCap: number | null;
+  /** SEÇİM sırası (takip listesi, sonra piyasa değeri): 0 en öncelikli.
+      Satırlar TARİHE göre dönüyor; kısa bir liste gösteren çağıran "ilk N"i
+      bu sırayla seçer, dizideki yerle değil — yoksa görünen beş, en büyük
+      beş değil en erken beş olurdu (22 Eylül: TSLA gizli, COST görünür). */
+  rank: number;
 };
 
 /* Aynı gün içindeki sıra: açılış öncesi, seans içi, kapanış sonrası; saati
@@ -396,8 +401,9 @@ export async function getUpcomingEarnings(
     const rows = await db.select().from(uniq).orderBy(...order).limit(limit);
 
     return rows
-      .map((row) => ({
+      .map((row, rank) => ({
         ...row,
+        rank,
         logoUrl: logoSrc(row.symbol, row.logoUrl),
       }))
       .sort(byReportTime);

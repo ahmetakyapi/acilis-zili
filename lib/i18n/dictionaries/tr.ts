@@ -173,6 +173,10 @@ const tr = {
     earnings: "Bilanço",
     emptyTitle: "Bugün Planlanmış Açıklama Yok",
     emptyHint: "Yeni veri ve bilanço kayıtları geldiğinde bu akış kendiliğinden güncellenir.",
+    // Akış 50 milyar doların altındaki bilançoları göstermiyor; o gün yalnız onlar varsa "açıklama yok" yanlış olurdu.
+    emptyMajorTitle: "Büyük Bir Açıklama Yok",
+    emptyMajorHint: "Bugün {count} şirket bilanço açıklıyor; akış yalnızca büyük ve takip edilen şirketleri gösterir.",
+    emptyMajorLink: "Bilanço Takvimi",
     selectEvent: "Olay ayrıntılarını göster",
     events: "Günün Olayları",
     next: "Sonraki Olaylar",
@@ -662,7 +666,9 @@ const tr = {
     stanceLabel: "Teknik Görünüm",
     readAnalysis: "Analizi Oku",
     shareTitle: "Bu Analizi Paylaş",
-    now: "Şu An",
+    /* "Şu An" DEĞİL: kotasyon Alpaca'nın 15 dakika gecikmeli SIP akışı ve aynı
+       ekranın veri damgası bunu söylüyor. Etiket tazeliği abartmasın. */
+    now: "15 Dakika Gecikmeli",
     atAnalysis: "Analiz Anında",
     levelPassed: "Geçildi",
     levelBroken: "Kırıldı",

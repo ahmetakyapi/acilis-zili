@@ -14,6 +14,14 @@ import {
   type StoryRevision,
 } from "@/app/actions/content";
 import { previewStoryBody } from "@/app/actions/content-preview";
+/* ÖNİZLEMENİN STİLİ BU ROTADA YÜKLENİYOR. Sunucu eylemi `ArticleBody`yi
+   editoryal sınıfla döndürüyor ama eylemden dönen JSX yanında stil
+   getirmiyor: Next CSS'i yalnızca layout/page ağacındaki içe aktarmalardan
+   bağlıyor. Modül burada içe aktarılmayınca sınıfın arkasında kural
+   yoktu ve önizleme rehber görünümüne düşüyordu (üretim manifestinde
+   editör sayfasının `entryCSSFiles`i editoryal parçayı içermiyordu).
+   Aşağıdaki `data-` başvurusu içe aktarmanın ağaçtan atılmasını önlüyor. */
+import editorial from "@/components/article/ArticleEditorial.module.css";
 import {
   Alan,
   DurumSeridi,
@@ -137,7 +145,7 @@ export function StoryEditor({
   };
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form data-preview-style={editorial.prose} action={formAction} className="flex flex-col gap-5">
       <input type="hidden" name="slug" value={draft.slug} />
       <input type="hidden" name="locale" value={draft.locale} />
 

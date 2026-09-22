@@ -74,8 +74,8 @@
 /* Odak halkası KARTIN çevresinde; bağlantının kendi halkası kapanıyor
    (dizin sayfasının `.page a:focus-visible` kuralını geçmesi için iki sınıf). */
 .feature .featureLink:focus-visible { outline: none; }
-.featureMetaLine { margin-top: 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: var(--text-muted); }
-.featurePeriod { font-size: 13px; font-weight: 550; color: var(--primary-ink); }
+.featureMetaLine { margin-top: 6px; overflow-wrap: anywhere; font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+.featurePeriod { font-size: 13px; font-weight: 550; color: var(--primary-ink); white-space: nowrap; }
 .featureSector { color: var(--text-muted); }
 
 .featureVerdict { grid-area: verdict; display: flex; align-items: center; gap: 12px; min-width: 0; }
@@ -131,7 +131,10 @@
    grup kırılmadığı için bağlantının oku panelin kırpılan kenarında
    kayboluyordu. Grup kırılıyor; bağlantı bir alt satıra bütün hâlde iniyor. */
 .rows { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-.rows > * + * { border-top: 1px solid var(--line-soft); }
+/* Ayraç GÖRÜNEN satırlar arasında: taban artık seçim sırasından geldiği
+   için gizli bir yedek listenin başında durabiliyor (bugün COST) ve `* + *`
+   ilk görünen satıra başıboş bir üst çizgi çiziyordu. */
+.rows > :not([hidden]) ~ :not([hidden]) { border-top: 1px solid var(--line-soft); }
 .upcomingEmpty { padding: 0 20px 16px; font-size: 12px; color: var(--text-muted); }
 
 /* Satır: tarih karosu · logo · ad · HBK · takvim; ikinci satırda zaman.
@@ -218,11 +221,28 @@
 .archive [role="row"]:focus-within { background: var(--primary-tint); box-shadow: inset 3px 0 var(--primary); }
 
 /* Tek kolon: kart, arşiv, sonra yaklaşanlar. Arşiv sayfanın asıl işi;
-   takvim bir dokunuş ötede. Burada `contain` yok, liste taban beş satırda. */
+   takvim bir dokunuş ötede. Burada `contain` yok, liste taban beş satırda.
+   SIRA DOM'DA, `order` İLE DEĞİL. Panel CSS `order` ile arşivin altına
+   iniyordu ama DOM'da kartın hemen ardındaydı: klavyeyle gelen okuyucu
+   karttan ~3300 piksel aşağıdaki panele atlıyor, on bir durağı gezip
+   filtre çiplerine geri çıkıyordu (390'da Tab sırası ölçüldü; WCAG
+   2.4.3). Panel artık DOM'da arşivin ardında; geniş ekranda aşağıdaki
+   açık yerleşim onu yine sağ üste koyuyor. */
 @media (max-width: 1023px) {
   .workspace, .workspace[data-has-week="true"] { display: flex; flex-direction: column; }
-  .archive { order: 1; }
-  .upcoming { order: 2; }
+}
+@media (min-width: 1024px) {
+  /* Açık yerleşimli öğe önce yerleşiyor: kart ve haftanın paneli ilk
+     satırın öteki kolonlarını otomatik dolduruyor, arşiv (1 / -1) ikinci
+     satıra iniyor. `-2 / -1` iki ve üç kolonlu ızgarada da son kolon. */
+  .workspace[data-has-feature="true"] .upcoming { grid-row: 1; grid-column: -2 / -1; }
+  /* Kart yokken (süzgeç boş döndü) panel tam genişliğe yayılıyordu: ad
+     solda, beklenti ve takvim düğmesi ~1100 piksel sağda (1440'ta panel
+     1320 piksel, ölçüldü). Aynı iki kolon: arşiv solda, panel sağda
+     kendi boyunda. */
+  .workspace[data-has-feature="false"] { grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); }
+  .workspace[data-has-feature="false"] .archive { grid-column: 1; grid-row: 1; }
+  .workspace[data-has-feature="false"] .upcoming { grid-column: 2; grid-row: 1; align-self: start; }
 }
 @media (max-width: 639px) {
   .upcomingRow, .weekRow { padding-inline: 16px; }

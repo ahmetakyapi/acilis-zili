@@ -316,6 +316,14 @@
    duruyor (18 ve künyenin 22'si), yani dar kolonda hiçbir şey sıkışmıyor. */
 .countdownBlock { align-self:stretch; display:flex; flex-direction:column; min-width:0; padding-top:18px; }
 .countdownBlock .countdown { margin-block:auto; }
+/* KISA YATAY EKRANDA ORTALAMA YOK. Kolon endeks destesinin boyuna
+   (181–490) gerildiği için ortalanan rakam alt çubuğun ALTINA iniyordu:
+   852×393'te rakam 299–361, alt çubuk 337 — rakamın 24 pikseli gizli;
+   932×430'da rakamın üstünde 47 piksel hava (ölçüldü, 22 Eylül denetimi).
+   Burada rakam başlığın hemen altına oturuyor, artık alta. */
+@media (orientation: landscape) and (max-height: 560px) and (min-width: 700px) {
+  .countdownBlock .countdown { margin-block: 0 auto; }
+}
 /* BAŞLIK DA KOLONA ÖLÇEKLENİYOR (rakam gibi `cqi`). Kolon iki ucundan
    sabitlenince başlık ile rakam arasında hava kalıyor: 1440'ta 61, 1024'te
    84 piksel (başlık 32 ve 26 puntoyken). Görünüm genişliğine bağlı punto

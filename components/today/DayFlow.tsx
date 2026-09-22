@@ -9,6 +9,7 @@ import { LogoTile } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { displayFlowStatus, flowResultSignature, preserveConfirmedResults, type DayFlowSnapshot, type FlowEvent } from "@/lib/day-flow";
 import { clockOf, displayZone } from "@/lib/session-clock";
+import { withLocale } from "@/lib/i18n/routing";
 import styles from "./DayFlow.module.css";
 
 type Props = { initial: DayFlowSnapshot; locale: Locale; labels: Dictionary["dayFlow"]; railLabels: Dictionary["dayRail"] };
@@ -365,7 +366,11 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
       </AnimatePresence>
       </div>
       </div>
-    </> : <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{labels.emptyTitle}</h3><p>{labels.emptyHint}</p></div></div>}
+    </> : snapshot.hiddenEarnings > 0 ? (
+      /* Akış boş ama gün boş DEĞİL: eşiğin altındaki bilançolar var. "Açıklama
+         yok" demek aynı sayfadaki bilanço paneliyle çelişirdi. */
+      <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{labels.emptyMajorTitle}</h3><p>{labels.emptyMajorHint.replace("{count}", String(snapshot.hiddenEarnings))}{" "}<Link href={withLocale("/bilancolar", locale)} prefetch={false} className={styles.emptyLink}>{labels.emptyMajorLink}<ArrowUpRight size={12} weight="bold" aria-hidden /></Link></p></div></div>
+    ) : <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{labels.emptyTitle}</h3><p>{labels.emptyHint}</p></div></div>}
     {snapshot.sourceDelayed && <p className={styles.sourceDelay}>{labels.sourceDelayed}</p>}
     <span className="sr-only" role="status" aria-live="polite">{announcement}</span>
   </div>;

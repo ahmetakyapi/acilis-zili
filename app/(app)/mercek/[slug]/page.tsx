@@ -398,6 +398,29 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
             />
           </div>
 
+          {/* DAR EKRANDA ŞİRKETLER GÖVDENİN SONUNDA. Olaydan bugüne getiriler
+              yalnızca ≥1024'teki rayda vardı; telefon ve dikey tablet onları
+              hiç görmüyordu, sunucu ise barları çekip `display:none` bir
+              bloğa basıyordu (375'te ray 0 piksel, metni DOM'da). Aynı blok
+              burada, kaynaklardan önce; ray göründüğünde CSS bunu gizliyor.
+              Bar çekimi istek içinde tek (StoryCompanies `railBars`). */}
+          {hasCompanies && (
+            <div className={detail.companiesInline}>
+              <Suspense
+                fallback={
+                  <StoryCompaniesFallback symbols={symbols} locale={locale} labels={companyLabels} />
+                }
+              >
+                <StoryCompanies
+                  symbols={symbols}
+                  eventDate={story.eventDate}
+                  locale={locale}
+                  labels={companyLabels}
+                />
+              </Suspense>
+            </div>
+          )}
+
           {/* ---- Künye ---- */}
           <footer id="story-sources" className={detail.sources}>
             {sources.length > 0 && (

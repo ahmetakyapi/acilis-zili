@@ -151,14 +151,31 @@ const LINK_PATTERN = /^\[([^\]]+)\]\(([^)\s]+)\)$/;
  * adres çubuğunda okunmaz bir dizeye dönüşüyor. Eşleme elle yazılı, çünkü
  * `normalize("NFD")` ile aksan atmak "ı" ve "ş" gibi harfleri de öğütüyor.
  */
-const HARF_ESLEME: Record<string, string> = {
+const ESKI_HARF_ESLEME: Record<string, string> = {
   ç: "c", ğ: "g", ı: "i", i: "i", ö: "o", ş: "s", ü: "u",
   Ç: "c", Ğ: "g", I: "i", İ: "i", Ö: "o", Ş: "s", Ü: "u",
 };
 
-function basligaKimlik(text: string): string {
+/* ŞAPKALI HARFLER EKLENDİ. Eşlemede â/î/û yoktu ve "Hikâyeye Uymayan
+   Taraf" başlığı `#b-hik-yeye-uymayan-taraf` kimliğini alıyordu (ölçüldü,
+   fed-ilk-artirim-uzun-uc-dustu rayında); harf düşüyor, yerine boşluk
+   tirelenmiş bir kopukluk geliyordu. "Hikâye" ve "Kâr" sekizden fazla
+   mercek başlığında geçiyor ve bu kimlikler artık ray ile dar ekran
+   içindekiler üzerinden adres çubuğuna ve paylaşılan bağlantılara çıkıyor.
+   Eski eşleme `ESKI_HARF_ESLEME` olarak duruyor: `legacyHeadingIds` onunla
+   ESKİ kimliği hesaplıyor ve başlığın içine görünmez bir çapa basılıyor,
+   yani dışarıda paylaşılmış `#b-hik-yeye-…` bağlantıları da iniyor. */
+const HARF_ESLEME: Record<string, string> = {
+  ...ESKI_HARF_ESLEME,
+  â: "a", î: "i", û: "u", Â: "a", Î: "i", Û: "u",
+};
+
+function basligaKimlik(
+  text: string,
+  esleme: Record<string, string> = HARF_ESLEME,
+): string {
   const gövde = [...text]
-    .map((ch) => HARF_ESLEME[ch] ?? ch)
+    .map((ch) => esleme[ch] ?? ch)
     .join("")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -181,16 +198,39 @@ function basligaKimlik(text: string): string {
  * liste ile başlığın kimliği aynı fonksiyondan gelmezse bağlantı boşa düşer.
  */
 export function headingIds(blocks: readonly Block[]): (string | null)[] {
+  return tekilKimlikler(blocks, HARF_ESLEME);
+}
+
+function tekilKimlikler(
+  blocks: readonly Block[],
+  esleme: Record<string, string>,
+): (string | null)[] {
   const used = new Set<string>();
   return blocks.map((block) => {
     if (block.kind !== "heading") return null;
-    const base = basligaKimlik(block.text);
+    const base = basligaKimlik(block.text, esleme);
     if (!base) return null;
     let id = base;
     for (let copy = 2; used.has(id); copy += 1) id = `${base}-${copy}`;
     used.add(id);
     return id;
   });
+}
+
+/**
+ * Şapkalı harf eşlemesinden ÖNCEKİ kimlik — yalnızca yenisinden farklıysa.
+ *
+ * Başlık bu kimliği içindeki boş bir `span`e basıyor; içindekiler ve ray
+ * yalnızca yeni kimliği kullanıyor. Eski kimlik yeni kimliklerden biriyle
+ * çakışırsa (başka bir başlık tam o metni taşıyorsa) basılmıyor: aynı
+ * `id` iki kez geçersiz HTML olurdu ve çapa hep ilkine atlardı.
+ */
+export function legacyHeadingIds(blocks: readonly Block[]): (string | null)[] {
+  const current = headingIds(blocks);
+  const taken = new Set(current.filter((id): id is string => id !== null));
+  return tekilKimlikler(blocks, ESKI_HARF_ESLEME).map((legacy, index) =>
+    legacy && legacy !== current[index] && !taken.has(legacy) ? legacy : null,
+  );
 }
 
 /**
@@ -205,7 +245,8 @@ export function headingIds(blocks: readonly Block[]): (string | null)[] {
  *   summary  — yazı bir `:::` kutusuyla AÇILIYORSA o kutu (Genel Özet)
  *   lede     — ilk paragraf (özet kutusundan hemen sonra ya da en başta)
  *   takeaway — ilk sırada olmayan `ozet` kutusu: yazının dersi
- *   note     — son blok tamamen eğik bir paragrafsa: yöntem notu
+ *   note     — sondaki tamamen eğik paragrafların hepsi: kaynak notu ve
+ *              varsa ardından gelen düzeltme satırı
  */
 export type BlockRole = "summary" | "lede" | "takeaway" | "note";
 
@@ -221,10 +262,18 @@ export function blockRoles(blocks: readonly Block[]): (BlockRole | null)[] {
       roles[index] = "takeaway";
     }
   });
-  const last = blocks.length - 1;
-  const tail = blocks[last];
-  if (last > 0 && tail?.kind === "paragraph" && ALL_ITALIC.test(tail.text.trim())) {
-    roles[last] = "note";
+  /* SONDAKİ EĞİK PARAGRAFLARIN TAMAMI. Yalnızca son blok bakılıyordu ve
+     altı yazıda (iki dil, 12 sayfa) gövde iki eğik paragrafla bitiyor:
+     kaynak notu ("Bu yazı … dayanıyor") ve ardından bir düzeltme satırı.
+     Not görevini yalnızca kısa düzeltme alıyor, uzun kaynak notu okuma
+     puntosunda kalıyordu: astra-bellek-talebi-kospi-4-61'de 390'da 17
+     piksel eğik, 224 piksel boy; 1440'ta 18 piksel, 153 piksel. Yürüyüş
+     sondan geriye gidiyor ve görevi olan ilk blokta duruyor, yani bir
+     lede ya da ders kutusu hiçbir zaman nota çevrilmiyor. */
+  for (let i = blocks.length - 1; i > 0 && roles[i] === null; i -= 1) {
+    const block = blocks[i];
+    if (block.kind !== "paragraph" || !ALL_ITALIC.test(block.text.trim())) break;
+    roles[i] = "note";
   }
   return roles;
 }
@@ -416,6 +465,19 @@ function Side({
       )}
     </span>
   );
+}
+
+/**
+ * Şapkalı harf eşlemesinden önce paylaşılmış bağlantının indiği çapa.
+ *
+ * Başlığın İÇİNDE, boş ve satır içi: çapa atlaması başlığın ilk satırına
+ * iniyor ve `html`in `scroll-padding-block`u burada da geçerli, yani eski
+ * `#b-hik-yeye-…` bağlantısı yenisiyle aynı yere düşüyor. Metni olmadığı
+ * için ne görünüyor ne okunuyor; rehber ve KVKK çizimi piksel piksel aynı.
+ */
+function LegacyAnchor({ id }: { id: string | null | undefined }) {
+  if (!id) return null;
+  return <span id={id} aria-hidden="true" />;
 }
 
 /** "52,5 Mr $" → { value: 52.5, unit: "Mr $", display: "52,5 Mr $" } */
@@ -775,6 +837,7 @@ export function ArticleBody({
 }) {
   const blocks = blocksProp ?? parseBlocks(markdown, locale);
   const ids = headingIds(blocks);
+  const legacyIds = legacyHeadingIds(blocks);
   const editorial = variant === "editorial";
   const roles = editorial ? blockRoles(blocks) : null;
   const leadAfterFirst = blocks[0]?.kind === "callout";
@@ -798,6 +861,7 @@ export function ArticleBody({
                 data-block="heading"
                 className="display-ink display-ink-tight mt-3 w-fit text-title font-bold tracking-[-0.03em] sm:text-heading"
               >
+                <LegacyAnchor id={legacyIds[index]} />
                 {block.text}
               </h2>
             ) : (
@@ -807,6 +871,7 @@ export function ArticleBody({
                 data-block="heading"
                 className="mt-1 text-lead font-bold tracking-[-0.02em] text-strong"
               >
+                <LegacyAnchor id={legacyIds[index]} />
                 {block.text}
               </h3>
             );

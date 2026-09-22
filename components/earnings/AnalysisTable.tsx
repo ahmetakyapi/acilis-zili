@@ -174,7 +174,11 @@ export function AnalysisTable({
           </span>
         )}
 
-        {toolbar && <div className="ml-auto shrink-0">{toolbar}</div>}
+        {/* 320'de TR üç düğme (Tarihe/Skora/Tepkiye Göre) 305 piksel tutuyordu
+            ve 284'lük kaba sığmıyordu; son düğme ekran kenarında 3 piksel
+            kesiliyordu. 360 altında düğme dolgusu 16'dan 12'ye: 281 piksel,
+            tek satır, 44 piksel yükseklik korunuyor (ölçüldü). */}
+        {toolbar && <div className="ml-auto min-w-0 max-w-full max-[359px]:[&_a]:px-3">{toolbar}</div>}
       </div>
 
       <div className="panel overflow-hidden">

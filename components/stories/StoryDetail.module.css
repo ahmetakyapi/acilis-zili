@@ -48,6 +48,8 @@
 .layout { display:grid; grid-template-columns:minmax(0,1fr); min-width:0; padding-inline:0; }
 .mainCol { display:flex; flex-direction:column; gap:56px; min-width:0; }
 .rail { display:none; }
+/* Dar ekranın şirket bloğu; rayın göründüğü genişlikte gizli (aşağıda). */
+.companiesInline { min-width:0; }
 .layout[data-rail="false"] { max-width:760px; }
 @media(min-width:1024px) {
  .layout { padding-inline:36px; }
@@ -58,6 +60,7 @@
     kaydırılabilir yapıyordu: ray 8 piksel yana kayıyor ve zeminin sağ
     köşeleri kesiliyordu (ölçüldü, 1440'ta 385 / 377). */
  .tocMobile { display:none; }
+ .layout[data-rail="true"] .companiesInline { display:none; }
 }
 @media(max-width:767px) { .mainCol { gap:44px; } }
 

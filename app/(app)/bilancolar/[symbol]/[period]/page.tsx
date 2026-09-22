@@ -303,11 +303,22 @@ export default async function AnalysisDetailPage(
   const today = todayEt();
   const status = await getStatus();
 
-  const [meta, userSymbols, quotes, keyMetrics] = await Promise.all([
-    getSymbolNames([symbol]),
+  /* Rakip listesi yalnızca künyeye (sektör) bağlı; kotasyon ve ölçüler
+     dış sağlayıcı turları ve onları beklemesi gerekmiyor. Künye aynı
+     `cache()`li anahtarla soruluyor, ek sorgu yok (detay TTFB'si 199–727 ms
+     ölçüldü, iki ardışık tur bunun içindeydi). */
+  const metaP = getSymbolNames([symbol]);
+  const [meta, userSymbols, quotes, keyMetrics, peers] = await Promise.all([
+    metaP,
     session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
     getQuotes([symbol], status),
     getKeyMetrics(symbol),
+    metaP.then((names) =>
+      getUpcomingEarnings(today, addEtDays(today, 30), 3, {
+        exclude: symbol,
+        industries: industryFilterFor(sectorGroupOf(names[symbol]?.industry)),
+      }),
+    ),
   ]);
 
   /* ---- Canlı kotasyon ----
@@ -447,10 +458,6 @@ export default async function AnalysisDetailPage(
      geriye akan bir sütun üretiyordu). Sıra artık `getUpcomingEarnings`in
      kendisinden geliyor (`byReportTime`, seans kırılımıyla); burada ayrı
      bir sıralama yok. */
-  const peers = await getUpcomingEarnings(today, addEtDays(today, 30), 3, {
-    exclude: symbol,
-    industries: industryFilterFor(group),
-  });
 
   const langNote = row.locale === locale ? null : t.analysis.fallbackNote;
   const sources = row.sources ?? [];

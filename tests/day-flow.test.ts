@@ -34,7 +34,7 @@ test("check timestamps do not create false result notifications", () => {
 });
 
 test("provider gaps retain numeric results, but cannot retain withdrawn analysis links", () => {
-  const base: DayFlowSnapshot = { dateEt: "2026-09-08", asOf: "2026-09-08T17:00:00Z", events: [], initialNowMinutes: 780, tradingDay: true, closeMinutes: 960, offsets: { primary: 420, secondary: 0 }, tags: { primary: "TR", secondary: "NY" }, pollAfterMs: 30000, sourceDelayed: false };
+  const base: DayFlowSnapshot = { dateEt: "2026-09-08", asOf: "2026-09-08T17:00:00Z", events: [], initialNowMinutes: 780, tradingDay: true, closeMinutes: 960, offsets: { primary: 420, secondary: 0 }, tags: { primary: "TR", secondary: "NY" }, pollAfterMs: 30000, sourceDelayed: false, hiddenEarnings: 0 };
   const event: FlowEvent = { id: "earnings", timeEt: "08:00", scheduledAt: null, title: "AAPL", kind: "earnings", importance: "medium", status: "analyzed", href: "/bilancolar", source: "Finnhub", updatedAt: "a", members: [{ symbol: "AAPL", logoUrl: null, watched: false, status: "analyzed", eps: "0.00", href: "/bilancolar/aapl/report" }] };
   const fresh: FlowEvent = { ...event, status: "scheduled", members: [{ ...event.members![0], eps: undefined, status: "scheduled", href: "/hisse/AAPL" }] };
   const result = preserveConfirmedResults({ ...base, events: [event] }, { ...base, events: [fresh] });
@@ -55,7 +55,7 @@ function earningsSnapshot(member: Partial<FlowMember>, groupId = "earnings-amc")
     dateEt: "2026-09-08", asOf: "2026-09-08T20:05:00Z",
     initialNowMinutes: 965, tradingDay: true, closeMinutes: 960,
     offsets: { primary: 420, secondary: 0 }, tags: { primary: "TR", secondary: "NY" },
-    pollAfterMs: 30000, sourceDelayed: false,
+    pollAfterMs: 30000, sourceDelayed: false, hiddenEarnings: 0,
     events: [{
       id: groupId, timeEt: groupId === "earnings-unknown" ? null : "16:00",
       scheduledAt: null, title: fullMember.symbol, kind: "earnings", importance: "medium",

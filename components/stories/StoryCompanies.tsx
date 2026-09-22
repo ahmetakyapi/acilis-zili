@@ -1,4 +1,7 @@
-import Link from "next/link";
+import { cache } from "react";
+/* `LocaleLink`: çıplak `next/link` /en/mercek'te şirket adreslerini öneksiz
+   basıyordu — halka arz takvimindeki hatanın aynısı. */
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import styles from "./StoryDetail.module.css";
 import { sinceEventReturn } from "./StoryVisual";
 import { LogoTile } from "@/components/ui/primitives";
@@ -59,6 +62,17 @@ type Labels = Pick<
   "relatedSymbols" | "sinceEvent" | "lastClose" | "closeOn" | "moreCompaniesMany"
 >;
 
+/* İSTEK İÇİNDE TEK ÇEKİM. Blok iki yerde çiziliyor — geniş ekranda rayda,
+   dar ekranda gövdenin sonunda (CSS hangisinin görüneceğine karar veriyor)
+   — ve `getChartBarsMulti` `cache()`li değil: iki örnek sağlayıcıya iki kez
+   giderdi. Anahtar sıralı sembol dizesi; `status` `cache()`li `getStatus`in
+   aynı nesnesi. */
+const railBars = cache((key: string, status: Awaited<ReturnType<typeof getStatus>>) =>
+  getChartBarsMulti(key.split(","), "1Y", status).catch(
+    () => ({}) as Awaited<ReturnType<typeof getChartBarsMulti>>,
+  ),
+);
+
 function isoDay(seconds: number): string {
   return new Date(seconds * 1000).toISOString().slice(0, 10);
 }
@@ -86,9 +100,7 @@ export async function StoryCompanies({
 }) {
   const shown = symbols.slice(0, RAIL_MAX);
   const [status, rows] = await Promise.all([getStatus(), namedRows(symbols)]);
-  const bars = await getChartBarsMulti(shown, "1Y", status).catch(
-    () => ({}) as Awaited<ReturnType<typeof getChartBarsMulti>>,
-  );
+  const bars = await railBars([...shown].sort().join(","), status);
 
   const withValues: CompanyRow[] = rows.map((row) => {
     const series = bars[row.symbol];
@@ -101,9 +113,12 @@ export async function StoryCompanies({
        kaynağıyla basıyor: ölçüldü, muse yazısının ilk gününde rayda Arm
        +%17,16, INTC +%12,14; gövdede aynı gün Arm +%10,00, Intel +%12,53.
        Aynı şirketin iki farklı yüzdesi aynı ekranda (veri dürüstlüğü 3).
-       Ray saymaya olaydan SONRAKİ ilk tamamlanmış seansla başlıyor; o gelene
-       kadar son kapanış fiyatını tarihiyle yazıyor. */
-    if (close.date <= eventDate) return { ...row, value: { kind: "close", close } };
+       Ray saymaya olaydan SONRAKİ ilk tamamlanmış seansla başlıyor. O
+       gelene kadar SAYI YOK: kapanış fiyatı da çelişiyordu (aynı yazının
+       ilk gününde rayda "AMD 615,52 $", yanındaki paragrafta "614,91
+       dolardan kapandı"; sağlayıcının günlük barı ile yazının kaynağı).
+       Ad ve logo kalıyor, değer ilk olay sonrası kapanışla geliyor. */
+    if (close.date <= eventDate) return { ...row, value: null };
     const settled = series.filter((bar) => isoDay(bar.time) <= close.date);
     const pct = sinceEventReturn(settled, eventDate);
     return {
@@ -168,13 +183,17 @@ function CompaniesView({
     null,
   );
   const rest = total - rows.length;
+  /* Hiç değer yoksa künye bir ölçü ADI da yazmıyor ("Olaydan Bugüne"
+     boş bir sütunun başlığı olurdu); yer tutucu iki satır yüksekliği
+     koruyor, akış gelince başlık uzamıyor. */
+  const blankStamp = !pending && valued.length === 0;
 
   return (
     <section className={styles.companies} aria-busy={pending || undefined}>
       <div className={styles.companiesHead}>
         <p className={styles.railTitle}>{labels.relatedSymbols}</p>
         <p className={styles.companiesStamp}>
-          <span>{allClose ? labels.lastClose : labels.sinceEvent}</span>
+          <span>{blankStamp ? "\u00a0" : allClose ? labels.lastClose : labels.sinceEvent}</span>
           {/* Yedekte boş ama yer tutan satır: değer gelince başlık uzamıyor. */}
           <span>
             {!stampDate

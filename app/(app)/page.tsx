@@ -149,7 +149,12 @@ export default async function TodayPage() {
     regular: t.market.open,
     "pre-market": t.market.preMarket,
     "after-hours": t.market.afterHours,
-    closed: status.holiday
+    /* `holiday` YARIM GÜNDE de dolu (erken kapanış kaydı), tek başına
+       "tatil" demiyor. 27 Kasım 2026 01:00 ET'de durum closed + holiday
+       13:00 + tradingToday=true ve geri sayım aynı günün 17:30 TR açılışına
+       sayarken rozet "Resmî Tatil" yazıyordu; 18:30 ET'de ve 24 Aralık
+       17:00 ET sonrasında da aynısı. Tatil yalnızca işlem günü DEĞİLSE. */
+    closed: status.holiday && !status.tradingToday
       ? t.market.holiday
       : status.isWeekend
         ? t.market.weekend
@@ -1769,6 +1774,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
                      işaretlemeye gerek yok. */
                   data-fill={index >= WATCHLIST_BASE ? "" : undefined}
                   hidden={index >= WATCHLIST_BASE}
+                  suppressHydrationWarning
                   className="border-t border-line first:border-t-0"
                 >
                   <Link
@@ -2005,6 +2011,7 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
             key={event.id}
             data-fill={index >= WEEK_AHEAD_BASE ? "" : undefined}
             hidden={index >= WEEK_AHEAD_BASE}
+            suppressHydrationWarning
             className="flex flex-wrap items-start gap-x-2.5 gap-y-1 border-t border-line px-4 py-3 sm:px-5 lg:flex-nowrap lg:gap-3"
           >
             <span className="lg:order-2">
@@ -2398,9 +2405,18 @@ async function StoriesSpotlight({
  * dağılımının iç başlığı ve süzgeç bağlantısı burada yok (`variant="panel"`).
  */
 async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const board = await getTechnicalBoard();
+  /* OKUMALAR BİRLİKTE BAŞLIYOR. Pano, tatiller, künye ve kotasyon paketi
+     sırayla bekleniyordu ve hiçbiri panoya bağlı değil: panel sayfanın en
+     son çözülen sınırıydı ve akışın sonunu tutuyordu (üretimde on sıcak
+     koşunun onunda en son, 288–381 ms; soğuk önbellekte 809 ms, akış sonu
+     841). Pano boşsa kaybolan tek şey önbellekli bir künye sorgusu. */
+  const [board, holidays, meta, snapshot] = await Promise.all([
+    getTechnicalBoard(),
+    getHolidays(),
+    getSymbolNames([...TECHNICAL_SYMBOLS]),
+    getStatus().then(async (status) => ({ status, pack: (await indexSnapshot(status)).result })),
+  ]);
   if (board.length === 0) return null;
-  const holidays = await getHolidays();
   const next = nextEdition(new Date(), holidays);
   /* Bekleyenler panelde de sayılıyor: iki ekran aynı listeyi anlatıyor ve
      biri on iki, öteki on beş deseydi okuyucu hangisine inanacağını
@@ -2419,11 +2435,8 @@ async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) 
      BEDELİ BİR GECİKME BAĞI: panel artık büyük evren paketini bekliyor.
      Ücretsiz olması `DayMovers`ın aynı istekte, aynı `status` nesnesiyle
      çizilmesine bağlı; o panel kalkar ya da başka bir durum nesnesiyle
-     çağrılırsa bu satır büyük çekimi TEK BAŞINA başlatır. */
-  const [meta, snapshot] = await Promise.all([
-    getSymbolNames([...TECHNICAL_SYMBOLS]),
-    getStatus().then(async (status) => ({ status, pack: (await indexSnapshot(status)).result })),
-  ]);
+     çağrılırsa bu satır büyük çekimi TEK BAŞINA başlatır (okuma yukarıda,
+     öteki okumalarla birlikte). */
   const latest = newestEdition(board);
   return (
     <Panel className="min-w-0">
@@ -2543,8 +2556,14 @@ async function LatestAnalyses({
           return (
             <li
               key={`${row.symbol}-${row.period}`}
+              /* `hidden` bu satırda React'in değil FillColumn'un: akışla gelen bölüm
+                 henüz hydrate olmadan ölçüp açabiliyor ve React sunucudaki
+                 `hidden`ı istemcidekiyle karşılaştırıp uyumsuzluk yazıyordu
+                 (ana sayfa, 1440, aralıklı; ölçüldü). Nitelik bilerek React
+                 dışında değişiyor; uyarı bastırılıyor, yama yapılmıyor. */
               data-fill={index >= ANALYSES_BASE ? "" : undefined}
               hidden={index >= ANALYSES_BASE}
+              suppressHydrationWarning
             >
               <Link
                 href={analysisHref(row.symbol, row.period)}

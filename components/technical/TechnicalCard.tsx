@@ -125,7 +125,7 @@ export function TechnicalCard({
   quote: Quote | null;
   company: string | null;
   logoUrl: string | null;
-  /** Kotasyon varken kullanılacak etiket ("Şu An" ya da "Son Fiyat"). */
+  /** Kotasyon varken kullanılacak etiket (seans içi "15 Dakika Gecikmeli" ya da "Son Fiyat"). */
   priceLabel: string;
   locale: Locale;
   t: Dictionary;

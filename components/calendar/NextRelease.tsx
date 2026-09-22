@@ -1,6 +1,5 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import styles from "@/components/calendar/CalendarExperience.module.css";
-import { daysBetweenEt } from "@/lib/market-hours";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { timePair, zoneTag } from "@/lib/session-clock";
 import { etDateParts, relativeDayLabel } from "@/lib/utils";
@@ -21,7 +20,7 @@ import type { EconomicEventRow } from "@/lib/schema";
 export function NextRelease({
   event,
   label,
-  today,
+  away,
   href,
   inPage,
   locale,
@@ -30,7 +29,9 @@ export function NextRelease({
   event: EconomicEventRow;
   /** "Sıradaki Yüksek Etkili Açıklama" ya da yedek "Sıradaki Açıklama". */
   label: string;
-  today: string;
+  /** Okuyucunun gününe göre uzaklık (`readerDayOffset`, saatli): ana
+      sayfanın zil künyesiyle aynı tanım. */
+  away: number;
   href: string | null;
   /** Hedef satır bu sayfada mı — değilse görünüm değiştiren bağlantı. */
   inPage: boolean;
@@ -47,7 +48,6 @@ export function NextRelease({
   const times = event.eventTimeEt
     ? timePair(event.eventDate, event.eventTimeEt, locale)
     : null;
-  const away = daysBetweenEt(today, event.eventDate);
   const title = locale === "tr" ? event.titleTr : event.titleEn;
 
   const body = (

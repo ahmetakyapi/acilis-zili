@@ -71,7 +71,8 @@ async function Pulse() {
     regular: "Ana Seans Açık",
     "pre-market": "Ön Seans",
     "after-hours": "Akşam Seansı",
-    closed: status.holiday
+    // Yarım günde `holiday` erken kapanış kaydı taşır; tatil değil.
+    closed: status.holiday && !status.tradingToday
       ? `Tatil · ${status.holiday.nameTr}`
       : status.isWeekend
         ? "Hafta Sonu"

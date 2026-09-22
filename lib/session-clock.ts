@@ -99,6 +99,36 @@ export function zoneDateKey(date: Date, zone: string): string {
   return parts.format(date);
 }
 
+/**
+ * Bir ET kaydının okuyucu gününe göre uzaklığı: 0 "Bugün", 1 "Yarın", eksi
+ * geçmiş.
+ *
+ * TEK TANIM. Ana sayfanın zil künyesi uzaklığı okuyucunun takvim gününden
+ * sayıyordu; takvim, sıradaki açıklama kartı ve yaklaşan bilançolar ise ET
+ * gününden (`daysBetweenEt(todayEt(), …)`). Her gece TR'de 00:00–07:00
+ * arası aynı okuyucu çelişen etiketler görüyordu: zil "Bugün 16:30"
+ * derken takvim aynı günün 15:30 açıklamasına "Yarın" diyordu (ölçüldü,
+ * 24 Eylül 00:30 TR). Artık hepsi buradan sayıyor.
+ *
+ * Saatli kayıtta hedef gün, ET anının okuyucu dilimindeki günü (20:00 ET
+ * açıklaması TR'de ertesi güne düşer). Saatsiz kayıtta (gün grubu, saati
+ * belirsiz bilanço) ET tarihinin kendisi. Gruplama, çapa ve veri anahtarı
+ * ET tarihinde kalır; yalnızca göreli etiket okuyucuya göre.
+ */
+export function readerDayOffset(
+  dateEt: string,
+  timeEt: string | null,
+  locale: Locale,
+  now: Date = new Date(),
+): number {
+  const zone = displayZone(locale);
+  const target = timeEt ? zoneDateKey(etDateTimeToUtc(dateEt, timeEt), zone) : dateEt;
+  return Math.round(
+    (Date.parse(`${target}T00:00:00Z`) - Date.parse(`${zoneDateKey(now, zone)}T00:00:00Z`)) /
+      86_400_000,
+  );
+}
+
 const CLOCKS = new Map<string, Intl.DateTimeFormat>();
 
 /** "HH:mm" — 24 saat, gece yarısı 00:00 (bazı ICU sürümleri 24:00 basıyor). */

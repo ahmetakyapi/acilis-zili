@@ -199,6 +199,8 @@
 .empty > span { display:grid; place-items:center; width:38px; height:38px; flex-shrink:0; color:var(--primary); }
 .empty h3 { color:var(--text-strong); font-size:16px; line-height:1.4; font-weight:650; }
 .empty p { margin-top:5px; max-width:65ch; color:var(--text-body); font-size:13px; line-height:1.65; }
+.emptyLink { display:inline-flex; align-items:center; gap:3px; color:var(--primary-ink); font-weight:600; white-space:nowrap; }
+.emptyLink:hover { text-decoration:underline; text-underline-offset:3px; }
 .sourceDelay { margin-top:16px; color:var(--text-muted); font-size:12px; }
 .unavailable { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:15px; padding:36px 16px; color:var(--text-muted); font-size:13px; }
 .unavailable button { display:flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid var(--line); border-radius:10px; color:var(--primary-ink); font-size:13px; cursor:pointer; }

@@ -583,8 +583,16 @@ export function technicalHref(symbol: string): string {
 }
 
 /**
- * Canlı fiyatın etiketi — "Şu An" mı, "Son Fiyat" mı. Kotasyon yoksa null:
- * çağıran fotoğraftaki fiyata ve "Analiz Anında" etiketine düşer.
+ * Canlı fiyatın etiketi — seans içi mi ("Şu An" kuralı), "Son Fiyat" mı.
+ * Kotasyon yoksa null: çağıran fotoğraftaki fiyata ve "Analiz Anında"
+ * etiketine düşer.
+ *
+ * KURAL "ŞU AN", METNİ DEĞİL. Aşağıdaki kanıt zinciri seans içi kotasyonu
+ * ayırıyor; o etiketin görünen metni 22 Eylül'den beri "15 Dakika
+ * Gecikmeli" (`technical.now`). Akış Alpaca'nın gecikmeli SIP'i ve aynı
+ * ekranın veri damgası bunu söylüyor; "Şu An" tazeliği 15 dakika abartıyordu
+ * (denetimde ölçüldü: Günün Hareketleri "15 Dakika Gecikmeli" derken aynı
+ * paketten gelen SNDK balonda "Şu An" yazıyordu).
  *
  * TEK YERDE, ÇÜNKÜ AYNI FİYAT İKİ YERDE DURUYOR. /teknik kartı ve dağılım
  * logolarının balonu aynı kotasyonu yazıyor; kural iki kopyada ayrı

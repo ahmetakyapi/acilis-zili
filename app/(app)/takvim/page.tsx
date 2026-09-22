@@ -27,7 +27,15 @@ import {
   type MarketHoliday,
 } from "@/lib/market-hours";
 import { getI18n, type Locale } from "@/lib/i18n";
-import { timePair, zoneTag } from "@/lib/session-clock";
+import { hasActual } from "@/lib/day-flow";
+import { getReleasedObservation } from "@/lib/providers/fred";
+import {
+  displayZone,
+  readerDayOffset,
+  timePair,
+  zoneDateKey,
+  zoneTag,
+} from "@/lib/session-clock";
 import {
   cn,
   formatEtDateLong,
@@ -194,17 +202,58 @@ export default async function CalendarPage(
   const { locale, t } = await getI18n();
   const intlLocale = locale === "tr" ? "tr-TR" : "en-US";
   const today = todayEt();
-  const to = addEtDays(today, VIEW_SPAN[view]);
+  const now = new Date();
+  /* OKUYUCUNUN BUGÜNÜ. Sayfanın bütün "bugün" işaretleri New York
+     tarihindendi: TR'de 00:00–07:00 arası (kışın 06:00) ET hâlâ önceki
+     gün, yani okuyucu için DÜN olan grup "Bugün" rozeti taşıyor, bugünün
+     15:30 açıklaması "Yarın" diye yazılıyordu — ana sayfanın zil künyesi
+     aynı anda aynı günü "Bugün" diyordu (24 Eylül 00:30 TR, ölçüldü).
+     Sorgu penceresi, gruplama, çapa (`#gun-`) ve `isAhead` ET'de kalıyor;
+     okuyucuya GÖRÜNEN aralık ve Gün görünümü ikisinin geç olanından
+     başlıyor. Düşen ET grubunda ileride hiçbir şey yok: tohumlanan en geç
+     olay 14:30 ET (21:30 TR, ölçüldü: 105 olayın saatleri 08:30 / 14:00 /
+     14:30), yani TR gece yarısından önce olmuş. EN'de dilim ET, ikisi eşit;
+     hiçbir şey değişmiyor. */
+  const readerToday = zoneDateKey(now, displayZone(locale));
+  const start = readerToday > today ? readerToday : today;
+  const to = addEtDays(start, VIEW_SPAN[view]);
 
   const [result, holidayRows] = await Promise.all([
     getEventsBetweenResult(today, addEtDays(today, LOOKAHEAD_DAYS)),
     getHolidays(),
   ]);
-  const all = result.ok ? result.rows : [];
+  const nowMinutes = etParts(now).minutes;
+  /* SAATİ GEÇMİŞ SATIR "PLANLANDI" DEMEZ. Veri tabanındaki `actual` çoğu
+     olayda geri doldurulmuyor (ölçüldü: 17 Eylül işsizlik başvuruları ve
+     16 Eylül FOMC satırları hâlâ boş) ve satır günün geri kalanında
+     "Planlandı" yazıyordu; ana sayfanın Bugünün Akışı aynı satıra
+     "Sonuç Bekleniyor" ya da değeriyle "Açıklandı" diyordu. İki ekran aynı
+     satır için anlaşmıyordu. Artık Gün Akışı'nın yolu: bugünün (ET) saati
+     geçmiş FRED satırı için `getReleasedObservation`, aynı anahtar, aynı
+     önbellek (60 sn), yani ana sayfayla aynı sayı. Yalnızca BUGÜNÜN
+     satırları sorulur: altı haftalık liste sağlayıcıya yelpazelenmez
+     (bugün en çok birkaç satır). Saatin geçmesi yine yayın KANITI değil:
+     değer gelmediyse "Sonuç Bekleniyor", bir yayın iddiası taşımaz. */
+  const passed = (event: EconomicEventRow) =>
+    event.eventDate < today ||
+    (event.eventDate === today && event.eventTimeEt !== null && minutesOf(event.eventTimeEt) <= nowMinutes);
+  const all = result.ok
+    ? await Promise.all(
+        result.rows.map(async (event) => {
+          if (event.eventDate !== today || !event.fredSeriesId || hasActual(event.actual) || !passed(event)) {
+            return event;
+          }
+          const fresh = await getReleasedObservation(event.fredSeriesId, today);
+          return fresh
+            ? { ...event, actual: fresh.actual, previous: fresh.previous ?? event.previous }
+            : event;
+        }),
+      )
+    : [];
   const holidays = new Map(holidayRows.map((holiday) => [holiday.date, holiday]));
 
   const matches = (event: EconomicEventRow) => !impact || event.importance === impact;
-  const inRange = all.filter((event) => event.eventDate <= to);
+  const inRange = all.filter((event) => event.eventDate >= start && event.eventDate <= to);
   /* Çip sayıları SÜZGEÇTEN ÖNCE: okuyucu "Yüksek 0"ı tıklamadan görsün. */
   const counts: Record<Impact, number> = { high: 0, medium: 0, low: 0 };
   for (const event of inRange) {
@@ -219,7 +268,7 @@ export default async function CalendarPage(
     byDay.set(event.eventDate, list);
   }
 
-  const dates = Array.from({ length: VIEW_SPAN[view] + 1 }, (_, index) => addEtDays(today, index));
+  const dates = Array.from({ length: VIEW_SPAN[view] + 1 }, (_, index) => addEtDays(start, index));
 
   /* Aralık boşsa tek bir cümle, ardından SIRADAKİ açıklama günü. Gün
      görünümü bugün boşken iki boş kutu basıyordu (1316×97 tek hücrelik şerit
@@ -227,13 +276,13 @@ export default async function CalendarPage(
      zaman?" ve cevabı altı haftalık pencerede zaten var. */
   let agenda: AgendaItem[] = [];
   if (listed.length > 0) {
-    agenda = view === "day" ? [{ kind: "day", date: today, events: listed }] : buildAgenda(dates, byDay, holidays, impact !== null);
+    agenda = view === "day" ? [{ kind: "day", date: start, events: listed }] : buildAgenda(dates, byDay, holidays, impact !== null);
   } else if (result.ok) {
-    const todayHoliday = holidays.get(today);
+    const todayHoliday = holidays.get(start);
     agenda =
       view === "day" && todayHoliday
-        ? [{ kind: "holiday", date: today, holiday: todayHoliday }]
-        : [{ kind: "quiet", from: today, to, sentence: impact ? t.calendar.emptyFiltered : view === "day" ? t.calendar.todayEmpty : t.calendar.empty }];
+        ? [{ kind: "holiday", date: start, holiday: todayHoliday }]
+        : [{ kind: "quiet", from: start, to, sentence: impact ? t.calendar.emptyFiltered : view === "day" ? t.calendar.todayEmpty : t.calendar.empty }];
     const nextDate = all.find((event) => event.eventDate > to && matches(event))?.eventDate;
     if (nextDate) {
       agenda.push({
@@ -258,8 +307,8 @@ export default async function CalendarPage(
 
   /* Sıradaki açıklama: henüz açıklanmamış (`actual` boş) ve saati geçmemiş.
      Saati geçmiş ama değeri gelmemiş olay (FRED gecikmesi) "sıradaki"
-     sayılmaz; saatsiz bir olay bugünse geçtiği kanıtlanamadığı için sayılır. */
-  const nowMinutes = etParts(new Date()).minutes;
+     sayılmaz; saatsiz bir olay bugünse geçtiği kanıtlanamadığı için sayılır.
+     `nowMinutes` yukarıda, sayfanın tek `now`undan. */
   const isAhead = (event: EconomicEventRow) =>
     event.actual === null &&
     (event.eventDate > today ||
@@ -295,7 +344,9 @@ export default async function CalendarPage(
   const noon = (date: string) => new Date(`${date}T12:00:00Z`);
   const spanLabel = (from: string, until: string) =>
     from === until ? formatEtDateLong(from, locale) : dayMonth.formatRange(noon(from), noon(until));
-  const rangeTitle = spanLabel(today, to);
+  /* Başlık okuyucuya GÖRÜNEN aralık: `start`tan (TR gece yarısından sonra
+     "22 – 29 Eylül" yazıp listeyi 23’ten başlatıyordu). */
+  const rangeTitle = spanLabel(start, to);
 
   const renderEvent = (event: EconomicEventRow) => {
     const times = event.eventTimeEt ? timePair(event.eventDate, event.eventTimeEt, locale) : null;
@@ -348,8 +399,12 @@ export default async function CalendarPage(
           <span className={styles.statusLine}>
             {/* Yayın ancak sağlayıcı `actual` verince kanıtlanmış olur;
                 saatin geçmesi açıklandı demek değil. */}
-            <span className={styles.status} data-published={event.actual !== null || undefined}>
-              {event.actual !== null ? t.calendar.released : t.calendar.scheduled}
+            <span className={styles.status} data-published={hasActual(event.actual) || undefined}>
+              {hasActual(event.actual)
+                ? t.calendar.released
+                : passed(event)
+                  ? t.dayFlow.awaiting
+                  : t.calendar.scheduled}
             </span>
             {high && (
               <a
@@ -411,7 +466,10 @@ export default async function CalendarPage(
       );
     }
 
-    const away = daysBetweenEt(today, item.date);
+    /* Göreli gün OKUYUCUNUN gününden (`readerDayOffset`); grup ET tarihi
+       ve saatsiz sayılıyor. Geçmiş bir gün (eksi) rozetsiz kalıyor —
+       "Bugün" yalnızca okuyucunun bugünü. */
+    const away = readerDayOffset(item.date, null, locale, now);
     const highCount = item.events.filter((event) => event.importance === "high").length;
     const holiday = holidays.get(item.date);
     return (
@@ -430,9 +488,11 @@ export default async function CalendarPage(
           <h3 id={`gun-${item.date}-baslik`}>{formatEtDateLong(item.date, locale)}</h3>
           {/* Uzaklık rozeti: takvimde asıl soru "ne zaman"; "30 Eylül"ün kaç
               gün sonra olduğu ancak kafadan hesaplanıyordu. */}
-          <span className={styles.rel} data-today={away === 0 || undefined}>
-            {relativeDayLabel(away, t.calendar)}
-          </span>
+          {away >= 0 && (
+            <span className={styles.rel} data-today={away === 0 || undefined}>
+              {relativeDayLabel(away, t.calendar)}
+            </span>
+          )}
           {item.next && <span className={styles.groupTag}>{t.calendar.nextDay}</span>}
           {holiday && (
             <span className={styles.groupTag} data-holiday="true">
@@ -528,7 +588,7 @@ export default async function CalendarPage(
             <NextRelease
               event={next}
               label={nextHigh ? t.calendar.nextHigh : t.calendar.nextRelease}
-              today={today}
+              away={readerDayOffset(next.eventDate, next.eventTimeEt, locale, now)}
               href={nextHref}
               inPage={nextHref?.startsWith("#") ?? false}
               locale={locale}
@@ -579,7 +639,7 @@ export default async function CalendarPage(
                     dates={dates}
                     byDay={byDay}
                     holidays={holidays}
-                    today={today}
+                    today={readerToday}
                     locale={locale}
                     t={t}
                   />

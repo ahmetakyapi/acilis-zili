@@ -40,6 +40,9 @@ export type DayFlowSnapshot = {
   tags: { primary: string; secondary: string };
   pollAfterMs: number;
   sourceDelayed: boolean;
+  /** Akışın 50 milyar dolar eşiğiyle göstermediği bugünkü bilanço sayısı.
+      Boş akış bunu bilmeden "açıklama yok" diyemez (bkz. day-flow-data). */
+  hiddenEarnings: number;
 };
 
 export function hasActual(value: string | number | null | undefined): boolean {

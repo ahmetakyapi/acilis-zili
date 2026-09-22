@@ -469,6 +469,13 @@
    payıyla çöküyor ve ölçülen aralık 36 kalıyordu. Payı dersin kendisi
    veriyor. */
 .prose > [data-role="takeaway"]:has(+ [data-role="note"]) { margin-bottom: 20px; }
+/* Kaynak notu ve düzeltme satırı iki ayrı not; ikisi aynı cetvelin
+   altında, ayrı bir çizgi açmadan art arda duruyor. */
+.prose > [data-role="note"] + [data-role="note"] {
+  margin-top: 8px;
+  padding-top: 0;
+  border-top: 0;
+}
 
 /* --------------------------------------------------------------------------
    Dar ekran

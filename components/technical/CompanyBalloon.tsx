@@ -17,7 +17,12 @@ import styles from "./CompanyBalloon.module.css";
  * tohumundan geliyor (`companySector`, server-only); bileşen istemcide
  * çizilseydi ya tohum tarayıcıya inerdi ya da sektör ayrı bir prop
  * yolculuğu isterdi. `PulseCompanyLink` bunu hazır bir `ReactNode` olarak
- * alıp yalnızca konumlandırıyor.
+ * alıp yalnızca konumlandırıyor. Bedeli ölçüldü ve kabul edildi: on beş
+ * balonun hazır işaretlemesi RSC yüküyle dokunmatik ekranlara da iniyor ve
+ * sayfa başına ~1,6-2,0 KB gzip tutuyor (/ 1.981 B, /teknik 1.602 B, 22
+ * Eylül); düz bir veri prop'u + istemci görünümü sektör ve biçim
+ * mantığını sunucuda tutardı ama iki dosyaya bölünmüş bir sözleşme
+ * getirirdi, bu kadar küçük bir kazanç için tek sunucu bileşeni daha sade.
  *
  * EYLEM DÜĞMESİ YOK. Balon `pointer-events:none` — bir hedef değil, bir
  * okuma; içinde "Analizi Oku" gibi bir bağlantı tıklanamaz ama tıklanır

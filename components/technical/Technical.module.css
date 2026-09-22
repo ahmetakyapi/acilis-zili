@@ -67,7 +67,9 @@
    logolar aynı yerde duruyor. Aralık 6'dan 14'e çıkıyor ki iki komşunun
    alanı tam bitişik olsun, üst üste binmesin (adım 26+14=40). Sekiz logo
    bir satırda 306 piksel — 390'da sığıyor. */
-@media (max-width:767px) {
+/* Genişliğe DEĞİL işaretçiye de bağlı: yatay telefonda ve dokunmatik
+   tablette (852×393, ölçüldü) logolar 32×32 ve 38 piksel adımla kalıyordu. */
+@media (max-width:767px), (pointer:coarse) {
   .pulseLogos { gap:14px; }
   .pulseLogo { padding:7px; margin:-7px; }
 }
@@ -1271,7 +1273,8 @@
 .pulse[data-variant="directory"] .pulseLogo > :first-child { width:32px; height:32px; border-radius:9px; }
 @media(max-width:1199px) { .planOverview { grid-template-columns:minmax(0,1fr) 210px; gap:16px; } .overviewCell { padding:12px; } }
 @media(max-width:1023px) { .planOverview { grid-template-columns:minmax(0,1fr); } .riskComparison { padding:12px 0 0; border-left:0; border-top:1px solid var(--line-soft); } .riskComparison dl { grid-template-columns:1fr 1fr; gap:16px; } }
-@media(max-width:767px) { .pulse[data-variant="directory"] .pulseLogo { padding:6px; margin:-6px; } .coverThesis { padding:12px; } .coverThesis .coverHeadline { font-size:15px; } }
+@media(max-width:767px) { .coverThesis { padding:12px; } .coverThesis .coverHeadline { font-size:15px; } }
+@media(max-width:767px), (pointer:coarse) { .pulse[data-variant="directory"] .pulseLogo { padding:6px; margin:-6px; } }
 @media(max-width:639px) {
  .overviewCells { grid-template-columns:minmax(0,1fr); gap:6px; }
  .overviewCell { flex-direction:row; align-items:baseline; justify-content:space-between; gap:10px; padding:10px 12px; }

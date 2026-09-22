@@ -1,9 +1,13 @@
 import { Suspense } from "react";
-import Link from "next/link";
+/* `LocaleLink`, `next/link` DEĞİL: çıplak bağlantı /en/takvim'de sembol
+   adreslerini öneksiz basıyordu ("/hisse/AMRO") ve sayfa yalnızca dil
+   çerezi sayesinde İngilizce kalıyordu; adres dili taşımıyordu. */
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState, Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
 import { getIpoCalendar } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import { formatRange } from "@/lib/technical";
 import {
   cn,
   formatCompact,
@@ -30,9 +34,31 @@ const MAX_ROWS = 12;
 /* Takvim ekranının yan kolonunda (360 piksel) en çok altı satır: kolon,
    yanındaki takvim panelinden uzun düşüp sayfanın dibinde tek başına
    sarkmasın. 1100 altında aynı liste tam genişliğe iniyor ve orada on iki
-   satırın hepsi görünüyor — karar kabın genişliğinde (`@container`,
-   CalendarExperience `.aside`), görünümde değil. */
+   satırın hepsi görünüyor.
+   Karar İKİ KOŞULLU: kap dar (`@max-[479px]`) VE ekran ≥1100. Yalnızca kap
+   koşulu vardı ve telefonda tam genişlikteki kap da 480'in altında (ölçüldü:
+   390'da 354, 320'de 284 piksel) — 7-12. satırlar hiçbir "devamı var"
+   işareti olmadan gizleniyordu. 360 piksellik yan kolon yalnızca ≥1100'de
+   var (CalendarExperience `.board`); tavan da yalnızca orada. */
 const COMPACT_ROWS = 6;
+
+/**
+ * Fiyat aralığı sağlayıcıdan METİN geliyor ("7.06", "18.00-20.00") ve
+ * olduğu gibi basılıyordu: TR'de "18.00-20.00 $" hemen altındaki
+ * "805 Mn $" ile aynı satırda iki ayrı ondalık dili konuşuyordu (390,
+ * ölçüldü). Yalnızca metin bir ya da iki SAYIDAN ibaretse yerelleşiyor ve
+ * sitenin öteki fiyat aralıklarıyla aynı biçime giriyor (`formatRange`:
+ * "18,00 – 20,00 $", simge bir kez). Sayı olmayan her şey olduğu gibi
+ * kalır; tahmin edilmez.
+ */
+function priceRangeLabel(raw: string, locale: Locale): string {
+  const parts = raw.split("-").map((part) => part.trim());
+  const numbers = parts.map(Number);
+  if (parts.length > 2 || parts.some((part) => part === "") || numbers.some((n) => !Number.isFinite(n))) {
+    return withCurrency(raw, locale);
+  }
+  return formatRange(numbers[0], numbers[numbers.length - 1], locale);
+}
 
 /**
  * Borsa adını kısaltır.
@@ -130,7 +156,7 @@ async function IpoList({
             className={cn(
               "flex items-start gap-3 border-t border-line px-4 py-3 sm:px-5",
               compact ? "@min-[480px]:gap-4" : "sm:gap-4",
-              compact && index >= COMPACT_ROWS && "@max-[479px]:hidden",
+              compact && index >= COMPACT_ROWS && "min-[1100px]:@max-[479px]:hidden",
             )}
           >
             <span className={cn("w-[74px] shrink-0", compact ? "@min-[480px]:w-[92px]" : "sm:w-[92px]")}>
@@ -170,7 +196,7 @@ async function IpoList({
               {row.priceRange && (
                 <span className="numeral block text-small font-semibold text-strong">
                   {/* Aralık bir metin ama para: simgenin yeri yine dile bağlı. */}
-                  {withCurrency(row.priceRange, locale)}
+                  {priceRangeLabel(row.priceRange, locale)}
                 </span>
               )}
               {row.totalValue || row.shares ? (

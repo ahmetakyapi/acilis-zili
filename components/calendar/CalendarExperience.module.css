@@ -38,7 +38,7 @@
 .nextLabel { font-size:11px; font-weight:600; line-height:16px; color:var(--text-muted); }
 .nextTitle { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:16px; font-weight:600; line-height:1.3; letter-spacing:-.015em; color:var(--text-strong); }
 .nextMeta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin-top:2px; font-size:12px; line-height:18px; color:var(--text-soft); }
-.nextPill { padding:1px 8px; border-radius:999px; background:var(--surface-sunken); font-size:10px; font-weight:700; line-height:16px; color:var(--text-soft); white-space:nowrap; }
+.nextPill { padding:1px 8px; border-radius:999px; background:var(--surface-sunken); font-size:11px; font-weight:700; line-height:16px; color:var(--text-soft); white-space:nowrap; }
 /* Kartın zemini zaten `--primary-tint`; "Bugün" hapı aynı tonda kaybolurdu. */
 .nextPill[data-today] { background:var(--primary-wash); color:var(--primary-ink); }
 
@@ -76,6 +76,10 @@
    zeminde üçü de kayboluyordu. */
 .chips { display:flex; flex-wrap:wrap; gap:4px; }
 .chip { display:inline-flex; min-height:32px; align-items:center; gap:6px; padding:0 11px; border-radius:999px; background:var(--surface-elevated); font-size:12px; color:var(--text-body); text-decoration:none; white-space:nowrap; transition-property:background-color,color,box-shadow; }
+/* DOKUNMA HEDEFİ İŞARETÇİYE BAĞLI, GENİŞLİĞE DEĞİL. 44 piksel yalnızca
+   ≤767 bloğundaydı; yatay telefonda ve dokunmatik tablette (852×393,
+   ölçüldü) çipler 32 piksel kalıyordu. */
+@media (pointer:coarse) { .chip { min-height:44px; } }
 .chip[aria-current="true"] { background:var(--primary-wash); box-shadow:inset 0 0 0 1px var(--primary-faint); color:var(--primary-ink); font-weight:600; }
 .chipCount { min-width:1ch; font-size:11px; font-weight:600; color:var(--text-soft); text-align:right; }
 .chip[aria-current="true"] .chipCount { color:var(--primary-ink); }
@@ -91,7 +95,7 @@ a.cell { border-color:var(--line); background:var(--surface); }
 .cell[data-holiday] { border-color:transparent; background:var(--surface-sunken); }
 .cell[data-today] { border-color:var(--primary-faint); }
 .cellTop { display:flex; align-items:baseline; justify-content:space-between; gap:4px; font-size:11px; font-weight:600; line-height:14px; color:var(--text-muted); }
-.cellToday { font-size:10px; font-weight:700; color:var(--primary-ink); }
+.cellToday { font-size:11px; font-weight:700; color:var(--primary-ink); }
 .cellNum { display:flex; align-items:baseline; gap:4px; }
 .cellNum strong { font-size:24px; font-weight:500; letter-spacing:-.04em; line-height:1; color:var(--text-strong); }
 .cellNum span { font-size:11px; font-weight:600; color:var(--text-muted); }
@@ -100,7 +104,7 @@ a.cell { border-color:var(--line); background:var(--surface); }
 .cell[data-today] .cellNum strong { color:var(--primary-ink); }
 .cellFoot { display:flex; min-height:14px; flex-wrap:wrap; align-items:center; gap:4px 6px; margin-top:auto; }
 .cellCount { font-size:11px; line-height:14px; color:var(--text-soft); white-space:nowrap; }
-.cellNote { font-size:10px; line-height:14px; color:var(--text-muted); white-space:nowrap; }
+.cellNote { font-size:11px; line-height:14px; color:var(--text-muted); white-space:nowrap; }
 .cell[data-holiday] .cellNote { font-weight:600; color:var(--text-soft); }
 
 /* Önem noktaları: renk tek taşıyıcı değil, biçim de söylüyor — dolu
@@ -110,7 +114,7 @@ a.cell { border-color:var(--line); background:var(--surface); }
 .dot[data-impact="high"] { background:var(--impact-high); }
 .dot[data-impact="medium"] { background:var(--impact-med); }
 .dot[data-impact="low"] { background:var(--impact-low); }
-.dotsMore { font-size:10px; font-weight:600; line-height:1; color:var(--text-muted); }
+.dotsMore { font-size:11px; font-weight:600; line-height:1; color:var(--text-muted); }
 
 /* --- Şerit (ay) ------------------------------------------------------------ */
 /* Pazartesi başlayan yedi sütun, hafta sonu dar. Başlık satırı ızgaranın
@@ -138,7 +142,7 @@ a.cell { border-color:var(--line); background:var(--surface); }
 .group[data-today] .groupHead { background:linear-gradient(var(--primary-tint),var(--primary-tint)),var(--premium-surface); }
 .group:target .groupHead { box-shadow:inset 3px 0 var(--primary); }
 .groupHead h3 { font-size:15px; font-weight:700; line-height:1.3; letter-spacing:-.02em; color:var(--text-strong); }
-.rel { padding:1px 8px; border-radius:999px; background:var(--surface-sunken); font-size:10px; font-weight:700; line-height:16px; color:var(--text-soft); white-space:nowrap; }
+.rel { padding:1px 8px; border-radius:999px; background:var(--surface-sunken); font-size:11px; font-weight:700; line-height:16px; color:var(--text-soft); white-space:nowrap; }
 .rel[data-today] { background:var(--primary-wash); color:var(--primary-ink); }
 .groupTag { font-size:11px; font-weight:600; color:var(--primary-ink); }
 .groupTag[data-holiday] { color:var(--text-soft); }
@@ -152,7 +156,7 @@ a.cell { border-color:var(--line); background:var(--surface); }
 .time[data-high] { background:var(--primary-wash); }
 .time > span:first-child { font-size:18px; font-weight:700; line-height:1.1; color:var(--text-strong); }
 .time[data-high] > span:first-child { color:var(--primary-ink); }
-.time > span:nth-child(2) { font-size:10px; line-height:1.2; color:var(--text-body); white-space:nowrap; }
+.time > span:nth-child(2) { font-size:11px; line-height:1.2; color:var(--text-body); white-space:nowrap; }
 .time > .timeUnknown { font-size:11px; font-weight:600; line-height:1.25; color:var(--text-body); }
 .impact { display:flex; height:20px; align-items:center; }
 .body { display:flex; min-width:0; flex-direction:column; }
@@ -237,11 +241,11 @@ a.cell { border-color:var(--line); background:var(--surface); }
   .cellFoot { justify-content:center; }
   .cellCount, .cellNote { display:none; }
 
-  .monthHead, .monthHead[data-weekend] { padding:0 0 4px; font-size:10px; text-align:center; }
+  .monthHead, .monthHead[data-weekend] { padding:0 0 4px; font-size:11px; text-align:center; }
   .month .cell, .month .cell[data-weekend] { min-height:46px; padding:6px 2px; }
   .month .cellNum { flex-direction:column; align-items:center; gap:0; }
   .month .cellNum strong { font-size:15px; }
-  .month .cellNum span { font-size:9px; line-height:1.1; }
+  .month .cellNum span { font-size:11px; line-height:1.1; }
   .month .cell[data-weekend] .cellNum strong { font-size:13px; }
 
   .groupHead { min-height:44px; padding:10px 16px; }
@@ -263,6 +267,28 @@ a.cell { border-color:var(--line); background:var(--surface); }
   .headSeg { margin-left:0; }
   .chips { gap:3px; }
   .chip { gap:3px; padding:0 6px; font-size:11px; }
+}
+
+/* KÜÇÜK ETİKETLER 11 PUNTODAN AŞAĞI İNMİYOR (22 Eylül denetimi):
+   "Bugün", uzaklık rozetleri, NY saati, ay başlıkları 10, ay hücresindeki
+   ay adı 9 puntoydu. 11'de "Eyl" ~19 piksel ve 320'deki ~38 piksellik ay
+   hücresine sığıyor. */
+
+/* YATAY TELEFON: kapak kısa tutuluyor ki takvim panelinin başlığı ilk
+   ekranda kalsın. 852×393'te kapak 75–313 ve panel başlığı 356'daydı —
+   alt çubuğun (336) altında; sol kolonda açıklamanın altı ~180 piksel
+   boştu. Kart telefon ölçüsüne iniyor, kapak dolgusu daralıyor: kapak
+   75–256, panel başlığı 306 (ölçüldü). */
+@media (orientation:landscape) and (max-height:560px) and (min-width:700px) {
+  /* Kapağın boyunu sağ kolon belirliyordu: seçici (38) + kart (~130)
+     üst üste. Seçici telefondaki gibi panel başlığına iniyor, kapakta
+     yalnızca kart kalıyor. */
+  .heroSeg { display:none; }
+  .headSeg { display:inline-flex; margin-left:auto; }
+  .hero:global(.page-frame) { align-items:start; padding-block:16px; }
+  .next { grid-template-columns:52px minmax(0,1fr); gap:14px; padding:12px 14px; }
+  .nextBadge strong { font-size:30px; }
+  .nextTitle { font-size:15px; }
 }
 
 @media (prefers-reduced-motion:reduce) {
