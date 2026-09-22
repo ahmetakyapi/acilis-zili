@@ -5,6 +5,7 @@ import { getIpoCalendar } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import {
+  cn,
   formatCompact,
   formatEtDateLong,
   formatMoneyCompact,
@@ -26,6 +27,12 @@ import {
 
 const WEEKS_AHEAD = 6;
 const MAX_ROWS = 12;
+/* Takvim ekranının yan kolonunda (360 piksel) en çok altı satır: kolon,
+   yanındaki takvim panelinden uzun düşüp sayfanın dibinde tek başına
+   sarkmasın. 1100 altında aynı liste tam genişliğe iniyor ve orada on iki
+   satırın hepsi görünüyor — karar kabın genişliğinde (`@container`,
+   CalendarExperience `.aside`), görünümde değil. */
+const COMPACT_ROWS = 6;
 
 /**
  * Borsa adını kısaltır.
@@ -42,7 +49,26 @@ function shortExchange(value: string | null): string | null {
   return value.split(/[ ,]/)[0];
 }
 
-export function IpoCalendar({ locale, t }: { locale: Locale; t: Dictionary }) {
+export function IpoCalendar({
+  locale,
+  t,
+  compact = false,
+}: {
+  locale: Locale;
+  t: Dictionary;
+  /**
+   * Dar kolon düzeni. `sm:` kırılımları VİEWPORT'u okuyor, kabı değil:
+   * 1440 pikselde 360 piksellik yan kolona konan liste 92 piksellik tarih
+   * sütununu ve geniş aralığı alıyor, şirket adına ~150 piksel kalıyordu.
+   * `compact` bu kararları KABA bağlıyor: yan kolonda dar tarih sütunu ve
+   * altı satır, 1100 altında tam genişliğe inince geniş sütun ve tam liste
+   * (ölçüldü: 1024'te 976 piksellik panelde tarih iki satıra kırılıyor,
+   * sağında ~600 piksel boş kalıyordu). Yatay dolgu DEĞİŞMİYOR:
+   * başlık (`PanelHeader`) 20 pikselde kalıyor ve satırlar ondan ayrı
+   * düşerse sol kenar iki hatta biterdi.
+   */
+  compact?: boolean;
+}) {
   return (
     <Panel>
       <PanelHeader title={t.ipo.title} meta={t.ipo.window} />
@@ -55,13 +81,21 @@ export function IpoCalendar({ locale, t }: { locale: Locale; t: Dictionary }) {
           </div>
         }
       >
-        <IpoList locale={locale} t={t} />
+        <IpoList locale={locale} t={t} compact={compact} />
       </Suspense>
     </Panel>
   );
 }
 
-async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
+async function IpoList({
+  locale,
+  t,
+  compact,
+}: {
+  locale: Locale;
+  t: Dictionary;
+  compact: boolean;
+}) {
   const today = todayEt();
   const result = await getIpoCalendar(today, addEtDays(today, WEEKS_AHEAD * 7));
 
@@ -90,12 +124,16 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <>
       <ul>
-        {rows.map((row) => (
+        {rows.map((row, index) => (
           <li
             key={`${row.symbol}-${row.date}`}
-            className="flex items-start gap-3 border-t border-line px-4 py-3 sm:gap-4 sm:px-5"
+            className={cn(
+              "flex items-start gap-3 border-t border-line px-4 py-3 sm:px-5",
+              compact ? "@min-[480px]:gap-4" : "sm:gap-4",
+              compact && index >= COMPACT_ROWS && "@max-[479px]:hidden",
+            )}
           >
-            <span className="w-[74px] shrink-0 sm:w-[92px]">
+            <span className={cn("w-[74px] shrink-0", compact ? "@min-[480px]:w-[92px]" : "sm:w-[92px]")}>
               <span className="block text-tiny font-semibold leading-tight text-strong">
                 {formatEtDateLong(row.date, locale)}
               </span>
@@ -125,18 +163,23 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
               </span>
             </span>
 
+            {/* BİLİNMEYEN ALAN BOŞ KALIR, TİRE BASILMAZ. Fiyat aralığı
+                belirlenmemiş kayıtta sağ sütunun üstünde tek başına bir tire
+                duruyordu; alan yoksa satır yalnızca bildiğini yazıyor. */}
             <span className="shrink-0 text-right">
-              <span className="numeral block text-small font-semibold text-strong">
-                {/* Aralık bir metin ama para: simgenin yeri yine dile bağlı. */}
-                {row.priceRange ? withCurrency(row.priceRange, locale) : "—"}
-              </span>
-              <span className="numeral mt-0.5 block text-nano leading-tight text-muted">
-                {row.totalValue
-                  ? formatMoneyCompact(row.totalValue, locale)
-                  : row.shares
-                    ? `${formatCompact(row.shares, locale)} ${t.ipo.shares}`
-                    : "—"}
-              </span>
+              {row.priceRange && (
+                <span className="numeral block text-small font-semibold text-strong">
+                  {/* Aralık bir metin ama para: simgenin yeri yine dile bağlı. */}
+                  {withCurrency(row.priceRange, locale)}
+                </span>
+              )}
+              {row.totalValue || row.shares ? (
+                <span className="numeral mt-0.5 block text-nano leading-tight text-muted">
+                  {row.totalValue
+                    ? formatMoneyCompact(row.totalValue, locale)
+                    : `${formatCompact(row.shares ?? 0, locale)} ${t.ipo.shares}`}
+                </span>
+              ) : null}
             </span>
           </li>
         ))}

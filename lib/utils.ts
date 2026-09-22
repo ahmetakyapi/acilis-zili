@@ -767,6 +767,41 @@ export function formatEtDateCompact(dateStr: string, locale: string): string {
 }
 
 /**
+ * Tarih karosunun iki parçası — büyük gün numarası ve altında kısa ay
+ * ("24" · "Eyl"). Takvim şeridi, sıradaki açıklama kartı ve yaklaşan
+ * bilançolar aynı karoyu çiziyor; üç ayrı Intl kurulumu yerine tek yer.
+ * `formatEtDateCompact` ile aynı çapa: öğlen UTC, saat dilimi kayması yok.
+ */
+export function etDateParts(dateStr: string, locale: string): { day: string; month: string } {
+  const parts = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).formatToParts(new Date(`${dateStr}T12:00:00Z`));
+  return {
+    day: parts.find((part) => part.type === "day")?.value ?? "",
+    month: parts.find((part) => part.type === "month")?.value.replace(/\.$/, "") ?? "",
+  };
+}
+
+/**
+ * Göreli gün: "Bugün" · "Yarın" · "3 Gün Sonra".
+ *
+ * Takvim sayfasının kendi içinde duruyordu; yaklaşan bilançolar ve ana
+ * sayfanın zil künyesi de aynı rozeti basmaya başlayınca buraya taşındı —
+ * üç ekranda üç ayrı yazım olmasın. Negatif uzaklık için çağıran karar
+ * verir; burada geçmiş gün yazılmaz.
+ */
+export function relativeDayLabel(
+  away: number,
+  labels: { today: string; tomorrow: string; daysAway: string },
+): string {
+  if (away <= 0) return labels.today;
+  if (away === 1) return labels.tomorrow;
+  return `${away} ${labels.daysAway}`;
+}
+
+/**
  * Haber gerçekten bu şirketle mi ilgili?
  *
  * `news.symbols` alanı her zaman haberin KONUSUNU söylemiyor: günlük senkron,

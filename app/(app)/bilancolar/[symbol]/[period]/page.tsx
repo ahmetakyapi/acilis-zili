@@ -442,18 +442,15 @@ export default async function AnalysisDetailPage(
      sembolleriyle `getSymbolNames` çağrılıyordu — binlerce elemanlı bir
      `inArray`, üç satır uğruna. Sektör eşlemesi kodda olduğu için grubun
      alt sektör adları sorguya açılıyor (industryFilterFor). */
-  const peerRows = await getUpcomingEarnings(today, addEtDays(today, 30), 3, {
+  /* Seçim piyasa değerine göre (hangi rakipler önemli), SIRA zamana göre —
+     tarih taşıyan liste en yakından başlar ("3 Eyl, 1 Eyl, 26 Ağu" gibi
+     geriye akan bir sütun üretiyordu). Sıra artık `getUpcomingEarnings`in
+     kendisinden geliyor (`byReportTime`, seans kırılımıyla); burada ayrı
+     bir sıralama yok. */
+  const peers = await getUpcomingEarnings(today, addEtDays(today, 30), 3, {
     exclude: symbol,
     industries: industryFilterFor(group),
   });
-  /* Seçim piyasa değerine göre (hangi rakipler önemli), ama SIRALAMA
-     tarihe göre: kartın başlığı "Yaklaşan Bilançolar" ve satırların
-     sağında tarih var — tarih taşıyan bir listenin en yakından
-     başlaması bekleniyor. Piyasa değeri sırası ekranda "3 Eyl, 1 Eyl,
-     26 Ağu" gibi geriye akan bir tarih sütunu üretiyordu. */
-  const peers = [...peerRows].sort((a, b) =>
-    a.reportDate.localeCompare(b.reportDate),
-  );
 
   const langNote = row.locale === locale ? null : t.analysis.fallbackNote;
   const sources = row.sources ?? [];

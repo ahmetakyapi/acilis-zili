@@ -96,6 +96,7 @@ const en: typeof tr = {
     prevClose: "Previous Close",
     volume: "Volume",
     marketCap: "Market Cap",
+    earlyClose: "Early Close",
   },
 
   directory: {
@@ -268,6 +269,10 @@ const en: typeof tr = {
     sourceLine:
       "Prices: Alpaca consolidated tape · Profiles and earnings: Finnhub · Macro: FRED",
     sourceNote: "Indices tracked via ETFs · prices delayed 15 min",
+    bellOpen: "Opening Bell",
+    bellClose: "Closing Bell",
+    nextOpen: "Next Open",
+    bellsLabel: "Bell Times",
   },
 
   calendar: {
@@ -293,6 +298,17 @@ const en: typeof tr = {
     eventOne: "Event",
     eventMany: "Events",
     highImpactShort: "High Impact",
+    eyebrow: "The Economic Agenda",
+    nextHigh: "Next High-Impact Release",
+    nextRelease: "Next Release",
+    noRelease: "No Releases",
+    todayEmpty: "No releases are scheduled for today.",
+    nextDay: "Next Release Day",
+    released: "Released",
+    scheduled: "Scheduled",
+    datesNav: "Release Dates",
+    viewLabel: "Calendar View",
+    emptyFiltered: "No releases at the selected impact in this range.",
   },
 
   earnings: {
@@ -359,8 +375,7 @@ const en: typeof tr = {
     symbolPanelAll: "All Analyses →",
     thisWeekAnalyzed: "Analyzed This Week",
     upcomingEarnings: "Upcoming Earnings",
-    goToCalendar: "Go to Calendar →",
-    showAll: "See All →",
+    goToCalendar: "Go to Calendar",
     analysisLink: "Analysis →",
 
     verdictBuy: "BUY",
@@ -464,6 +479,9 @@ const en: typeof tr = {
     disclaimer:
       "This analysis is based on the company's official earnings release and call. Not Investment Advice.",
     sourcesLabel: "Sources",
+    upcomingOrderNote: "Largest Companies · By Date",
+    upcomingOrderNoteWatch: "Your Watchlist and Largest · By Date",
+    openAnalysisAria: "Open the {company} analysis",
   },
 
   technical: {
@@ -658,6 +676,7 @@ const en: typeof tr = {
     priceLevelsNote: "Levels run from highest to lowest price. Bars show distance from the current price on a shared scale; row spacing does not represent price distance.",
     priceMapNote: "Levels are ordered by price and spread apart where they cluster; distances are measured from the current price.",
     sectionsLabel: "Analysis Sections",
+    pulseAwaiting: "No current analysis has been published yet.",
   },
 
   companies: {
@@ -880,7 +899,7 @@ const en: typeof tr = {
 
   ipo: {
     title: "IPO Calendar",
-    window: "Next 6 weeks",
+    window: "Next 6 Weeks",
     empty: "No IPOs scheduled in this range",
     emptyHint: "The provider has not published new entries yet.",
     statusExpected: "Expected",
@@ -1123,6 +1142,16 @@ const en: typeof tr = {
       "This piece hasn't been translated to English yet. You're reading the Turkish original.",
     disclaimer:
       "This piece is based on public reporting available at the time of publication. Not Investment Advice.",
+    inThisArticle: "In This Piece",
+    sectionCountOne: "{count} Section",
+    sectionCountMany: "{count} Sections",
+    railLabel: "Piece guide",
+    tocLabel: "Contents",
+    sourceCountOne: "{count} Source",
+    sourceCountMany: "{count} Sources",
+    opensInNewTab: "opens in a new tab",
+    /* Rayın şirket künyesi: "olaydan bugüne" hangi kapanışa kadar. */
+    closeOn: "{date} Close",
   },
 
   macro: {

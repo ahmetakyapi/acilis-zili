@@ -10,13 +10,17 @@ import {
   EmptyState,
   FilterChip,
   Panel,
+  PanelHeader,
+  PanelLink,
   Segment,
   SegmentItem,
   LogoTile,
 } from "@/components/ui/primitives";
+import { ArrowDown, ArrowUpRight, Star } from "@phosphor-icons/react/dist/ssr";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { AnalysisTable } from "@/components/earnings/AnalysisTable";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
+import { FillList } from "@/components/earnings/FillList";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import {
   getAnalyses,
@@ -26,7 +30,7 @@ import {
   type AnalysisIndexRow,
   type AnalysisSort,
 } from "@/lib/data";
-import { addEtDays, todayEt } from "@/lib/market-hours";
+import { addEtDays, daysBetweenEt, todayEt } from "@/lib/market-hours";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -47,6 +51,7 @@ export const generateMetadata = pageMetadata({
 import {
   analysisHref,
   analysisTableLabels,
+  timingLabel,
   toAnalysisRowView,
   verdictLabel,
   verdictOf,
@@ -60,11 +65,12 @@ import {
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import {
   cn,
-  formatEtDateCompact,
+  etDateParts,
   formatEtDateLong,
   formatPercent,
   formatPrice,
   plural,
+  relativeDayLabel,
 } from "@/lib/utils";
 
 /**
@@ -80,6 +86,26 @@ import {
  */
 
 const SORTS: readonly AnalysisSort[] = ["tarih", "skor", "tepki"];
+
+/* YAKLAŞAN HAVUZU ON, TABAN BEŞ. Sunucu on satır basıyor, ilk beşi açık;
+   geniş ekranda FillList kartın boyuna kaç satır sığıyorsa o kadarını
+   açıyor. Beş, JavaScript kapalıyken bile kartın yanına sığan sayı:
+   5 × 52 + başlık 74 + kenarlık 2 = 336 piksel. Kartın en kısa hâli
+   ARTIK başlık uzunluğuna bağlı değil: öne çıkan analizin özeti iki
+   satırda kaldığında (Enerji süzgeci, Chevron) kart 318'e iniyor, bir satır
+   kapanıyor ve yan panelde 31–35 piksellik bant geri geliyordu; JS
+   kapalıyken beşinci satır yarıdan kesiliyordu. Özet kutusu geniş ekranda
+   üç satırlık yeri her zaman ayırıyor (CSS `.featureHeadline`). On, en uzun kartın (1280'de 357) yanına sığabilecek
+   satırın üstünde bir tavan — sorgu aynı, yalnızca LIMIT büyüdü; ek tur
+   yok. */
+const UPCOMING_POOL = 10;
+const UPCOMING_BASE = 5;
+/* Haftanın analizleri aynı kalıpla: taban beş, sekize kadar doldurma. */
+const WEEK_POOL = 8;
+const WEEK_BASE = 5;
+/* Bir haftanın içindeki gün "yakın": dar panelde göreli gün yalnızca bu
+   eşiğin içinde kalıyor. */
+const NEAR_DAYS = 7;
 
 function isSort(value: string | undefined): value is AnalysisSort {
   return SORTS.includes(value as AnalysisSort);
@@ -115,8 +141,8 @@ export default async function AnalysesPage(
      İkisi birbirinden bağımsız — biri takvime ve takip listesine, öteki
      yalnızca analiz listesine bakıyor — yani sayfanın kritik yolunda
      gereksiz bir Neon turu duruyordu. Zincir üç kademeden ikiye indi. */
-  const [upcomingTop, meta] = await Promise.all([
-    getUpcomingEarnings(today, addEtDays(today, 30), 5, {
+  const [upcoming, meta] = await Promise.all([
+    getUpcomingEarnings(today, addEtDays(today, 30), UPCOMING_POOL, {
       preferred: userSymbols,
     }),
     getSymbolNames([...new Set(all.map((row) => row.symbol))]),
@@ -151,7 +177,8 @@ export default async function AnalysesPage(
      kartın ne olduğunu zaten söylüyor ve tablodaki ilk satır vurgusu artık
      her koşulda kartla aynı satırı gösteriyor. */
   const featured = rows[0] ?? null;
-  const thisWeek = all.filter((row) => row.reportDate >= weekAgo).slice(0, 5);
+  const weekAll = all.filter((row) => row.reportDate >= weekAgo);
+  const thisWeek = weekAll.slice(0, WEEK_POOL);
   const distribution = (["buy", "hold", "sell"] as const).map((key) => ({
     key,
     count: rows.filter((row) => verdictOf(row.verdict) === key).length,
@@ -191,7 +218,7 @@ export default async function AnalysesPage(
           <div className={analysisStyles.overview}>
             <div className={analysisStyles.overviewHeading}>
               <span>{t.analysis.filteredReports}</span>
-              <a href="#analysis-archive">{rows.length} {plural(rows.length, t.analysis.colCard, t.analysis.colCardMany)} <span aria-hidden>↘</span></a>
+              <a href="#analysis-archive" className="inline-flex items-center gap-1">{rows.length} {plural(rows.length, t.analysis.colCard, t.analysis.colCardMany)} <ArrowDown size={12} weight="bold" aria-hidden /></a>
             </div>
             <div className={analysisStyles.distribution}>
               {distribution.map(({ key, count }) => (
@@ -226,33 +253,47 @@ export default async function AnalysesPage(
               />
             )}
 
-            {/* TELEFONDA KAPALI — aynı satırlar 250 piksel aşağıda tekrar
-                geliyor. Bu panel haftanın beş analizini gösteriyor; sayfanın
-                asıl tablosu ise varsayılan hâlinde (filtresiz, tarihe göre)
-                tam olarak o beş satırla BAŞLIYOR. Geniş ekranda ikisi yan
-                yana duran iki sütun, biri öteki için özet; dar ekranda alt
-                alta düşünce okuyucu aynı listeyi iki kez geçiyor ve tabloya
-                varmadan önce boşuna 253 piksel kaydırıyor.
+            {/* YALNIZCA 1280 PİKSEL ÜSTÜNDE. Telefonda aynı satırlar 250
+                piksel aşağıda tekrar geliyordu: bu panel haftanın analizlerini
+                gösteriyor, sayfanın asıl tablosu ise varsayılan hâlinde
+                (filtresiz, tarihe göre) tam olarak o satırlarla BAŞLIYOR.
+                1024-1279 arasında da kapalı: üç kolon öne çıkan kartı ~480
+                piksele sıkıştırıyordu (1101'de ölçüldü).
 
-                Yaklaşan Bilançolar paneli kalıyor: o, bu sayfada başka hiçbir
-                yerde olmayan veriyi (tarih, HBK beklentisi, takvime ekleme)
-                taşıyor — tekrar değil. */}
-            {thisWeek.length > 0 && <Panel className="hidden min-w-0 flex-col gap-3 p-[18px] sm:p-5 lg:flex">
-              <h2 className="text-base font-bold text-strong">
-                {t.analysis.thisWeekAnalyzed}
-              </h2>
-              <div className="flex flex-1 flex-col justify-between">
-                {thisWeek.length === 0 ? (
-                  <p className="text-xs text-muted">{t.analysis.emptyFilter}</p>
-                ) : (
-                  thisWeek.map((row) => {
+                `justify-between` KALKTI. Satırlar artan boşluğu aralarına
+                paylaşıyordu — CLAUDE.md'nin yasakladığı esnetme. Artık taban
+                beş satır basılıyor, sığan yedekleri FillList açıyor.
+
+                Yaklaşan Bilançolar paneli her genişlikte kalıyor: o, bu
+                sayfada başka hiçbir yerde olmayan veriyi (tarih, HBK
+                beklentisi, takvime ekleme) taşıyor — tekrar değil. */}
+            {thisWeek.length > 0 && (
+              <Panel className={analysisStyles.weekPanel}>
+                {/* Künye (haftanın analiz sayısı) başlığı yandaki panelle
+                    aynı iki satıra getiriyor: iki başlık da 74 piksel, yani
+                    iki listenin 52 piksellik satır çizgileri aynı hatta. */}
+                <PanelHeader
+                  title={t.analysis.thisWeekAnalyzed}
+                  meta={`${weekAll.length} ${plural(weekAll.length, t.analysis.colCard, t.analysis.colCardMany)}`}
+                  action={
+                    <PanelLink href={filterHref("hafta")}>
+                      {t.common.showAll}
+                    </PanelLink>
+                  }
+                  className={analysisStyles.sideHeader}
+                />
+                <div className={analysisStyles.rows} data-fill-list>
+                  {thisWeek.map((row, index) => {
                     const verdict = verdictOf(row.verdict);
+                    const spare = index >= WEEK_BASE;
                     return (
                       <Link
                         key={`${row.symbol}-${row.period}`}
                         href={analysisHref(row.symbol, row.period)}
                         prefetch={false}
-                        className="flex items-center gap-2.5 border-b border-line-soft py-[7px] last:border-b-0 hover:opacity-75"
+                        className={analysisStyles.weekRow}
+                        hidden={spare || undefined}
+                        data-fill={spare || undefined}
                       >
                         <LogoTile
                           symbol={row.symbol}
@@ -275,125 +316,162 @@ export default async function AnalysesPage(
                         </span>
                       </Link>
                     );
-                  })
-                )}
-              </div>
-              <Link
-                href={filterHref("hafta")}
-                className="-my-2 inline-flex min-h-10 items-center py-2 text-tiny font-semibold text-primary hover:text-primary-hover sm:-my-1 sm:min-h-0 sm:py-1"
-              >
-                {t.analysis.showAll}
-              </Link>
-            </Panel>}
+                  })}
+                </div>
+              </Panel>
+            )}
 
-            <Panel className="flex min-w-0 flex-col gap-3 p-[18px] sm:p-5">
-              <h2 className="text-base font-bold text-strong">
-                {t.analysis.upcomingEarnings}
-              </h2>
-              <div className={analysisStyles.upcomingRows}>
-                {upcomingTop.length === 0 ? (
-                  <p className="text-xs text-muted">{t.earnings.empty}</p>
+            {/* YAKLAŞAN BİLANÇOLAR — kartın boyuna gerilen, SIĞDIĞI KADAR
+                satır açan bir zaman çizelgesi.
+
+                Eski hâlinde "Takvime Git" panelin dibine itilmişti ve son
+                satırla arasında ölçülmüş bir ölü bant kalıyordu: 1440'ta 75,
+                1280'de 67, 1101'de 58 piksel. Bağlantı başlığa çıktı; boşluk
+                esnetilmiyor, dolduruluyor: sunucu on satırlık havuzun ilk
+                beşini açık, kalanını `hidden` basıyor, FillList kaçının
+                sığdığını ölçüp o kadarını açıyor. Panel `contain: size` ile
+                ızgara satırının boyuna katkı vermiyor (CSS'te gerekçesi), yani
+                iki kolon her zaman aynı hatta bitiyor.
+
+                Liste artık TARİH SIRASINDA. Piyasa değeri sırasıyla geliyordu
+                ve tarih sütunu ileri geri akıyordu (20 Eki, 30 Eyl, 13 Eki…);
+                seçim hâlâ en büyük şirketler, sıra zamana göre — künye ikisini
+                birden söylüyor. */}
+            <Panel className={analysisStyles.upcoming}>
+              <PanelHeader
+                title={t.analysis.upcomingEarnings}
+                /* Künye SEÇİM KURALINI söylüyor ve kural veriden okunuyor:
+                   oturum açık okuyucuda takip listesi piyasa değerinin
+                   önüne geçiyor (getUpcomingEarnings `preferred`). On
+                   takipli sembol aynı ay açıklıyorsa liste tamamen
+                   takiptekilerden oluşuyor; "En Büyük Şirketler" o
+                   okuyucuya yanlış bir kural söylerdi. */
+                meta={
+                  upcoming.some((row) => watchSet.has(row.symbol))
+                    ? t.analysis.upcomingOrderNoteWatch
+                    : t.analysis.upcomingOrderNote
+                }
+                action={
+                  <PanelLink href="/bilancolar" className="gap-1">
+                    {t.analysis.goToCalendar}
+                    <ArrowUpRight size={12} weight="bold" aria-hidden />
+                  </PanelLink>
+                }
+                className={analysisStyles.sideHeader}
+              />
+              <div className={analysisStyles.rows} data-fill-list>
+                {upcoming.length === 0 ? (
+                  <p className={analysisStyles.upcomingEmpty}>
+                    {t.earnings.empty}
+                  </p>
                 ) : (
-                  upcomingTop.map((row) => (
-                    /* Satır kutu, içindeki mutlak bağlantı yüzeyi kaplıyor —
-                       takvim düğmesi kendi bağlantısını taşıdığı için iç içe
-                       <a> olamaz. */
-                    <div
-                      key={row.id}
-                      className="relative flex items-center gap-2.5 border-b border-line-soft py-[7px] last:border-b-0 hover:opacity-75"
-                    >
-                      <Link
-                        href={`/hisse/${row.symbol}`}
-                        prefetch={false}
-                        aria-label={row.symbol}
-                        className="absolute inset-0"
-                      />
-                      <LogoTile
-                        symbol={row.symbol}
-                        logoUrl={row.logoUrl}
-                        size="xs"
-                      />
-                      {/* SEMBOL VE TARİH ALT ALTA.
-                          İkisi yan yanaydı ve satırdaki sabit genişlikler
-                          (logo 22, sembol 46, rozet, takvim düğmesi 32, artı
-                          dört boşluk) dar kolonda tarihe 53 piksel
-                          bırakıyordu. Alt alta dizilince tarih sembolün
-                          genişliğini de devralıyor ve seans penceresi
-                          okunuyor — sitenin öteki liste satırları (haberler,
-                          hareketliler, iskeletler) zaten bu düzende. */}
-                      <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-small font-bold text-strong">
-                          {row.symbol}
+                  upcoming.map((row, index) => {
+                    const spare = index >= UPCOMING_BASE;
+                    const repeat =
+                      index > 0 &&
+                      upcoming[index - 1].reportDate === row.reportDate;
+                    const date = etDateParts(row.reportDate, locale);
+                    const away = daysBetweenEt(today, row.reportDate);
+                    const session = timingLabel(row.hour, t);
+                    const optional = session !== null && away > NEAR_DAYS;
+                    return (
+                      /* Satır kutu, içindeki mutlak bağlantı yüzeyi kaplıyor —
+                         takvim düğmesi kendi bağlantısını taşıdığı için iç içe
+                         <a> olamaz. */
+                      <div
+                        key={row.id}
+                        className={analysisStyles.upcomingRow}
+                        hidden={spare || undefined}
+                        data-fill={spare || undefined}
+                        data-repeat={repeat || undefined}
+                      >
+                        <Link
+                          href={`/hisse/${row.symbol}`}
+                          prefetch={false}
+                          aria-label={row.symbol}
+                          className="absolute inset-0"
+                        />
+                        {/* TARİH KAROSU. Tarih satırın metnine gömülüydü
+                            ("20 Eki · Kap. Sonrası") ve liste tarihe göre
+                            sıralanınca asıl okunan sütun o oldu: gün sayısı
+                            büyük, ay altında. Aynı gün arka arkaya gelirse
+                            ikinci karo soluyor — tekrar değil, devam. */}
+                        <span className={analysisStyles.dateTile} aria-hidden={repeat || undefined}>
+                          <b className="numeral">{date.day}</b>
+                          <span>{date.month}</span>
                         </span>
-                        {/* KIRPMA YOK, SARMA VAR.
-                          `truncate` ile tek satıra sıkıştırılıyordu ve dar
-                          kolonda seans penceresini tamamen yutuyordu:
-                          ölçüldü, 1024 pikselde "26 Ağu · Kap. Sonrası"
-                          106 piksel istiyor, 53 piksel alıyordu — yani
-                          bilançonun açılıştan önce mi kapanıştan sonra mı
-                          geleceği, satırın taşıdığı asıl bilgi, hiçbir
-                          şekilde okunamıyordu.
-                          Seans etiketi kendi `span`ında ve bölünmez: alt
-                          satıra bütün hâlde iniyor, ortadan kırılmıyor. */}
-                        <span className="text-tiny leading-[1.35] text-body">
-                          {formatEtDateCompact(row.reportDate, locale)}
-                          {(row.hour === "bmo" || row.hour === "amc") && (
+                        <LogoTile
+                          symbol={row.symbol}
+                          logoUrl={row.logoUrl}
+                          size="xs"
+                          className={analysisStyles.upcomingLogo}
+                        />
+                        <span className={analysisStyles.upcomingName}>
+                          <b>{row.symbol}</b>
+                          {row.name && <span>{row.name}</span>}
+                          {watchSet.has(row.symbol) && (
                             <>
-                              {" · "}
-                              <span className="whitespace-nowrap">
-                                {row.hour === "bmo"
-                                  ? t.earnings.beforeOpenShort
-                                  : t.earnings.afterCloseShort}
+                              <Star size={11} weight="fill" aria-hidden />
+                              <span className="sr-only">
+                                {t.technical.trackedLabel}
                               </span>
                             </>
                           )}
                         </span>
-                      </span>
-                      {watchSet.has(row.symbol) ? (
-                        <span className="shrink-0 rounded-full bg-primary-wash px-2 py-[2px] text-nano font-bold text-primary-ink">
-                          ★
-                        </span>
-                      ) : (
-                        /* ÇIPLAK SAYI YOK. Yuva "32,21 $" basıyordu ve ne
-                           olduğu hiçbir yerde yazmıyordu: fiyat mı, HBK
-                           beklentisi mi, hedef mi? Aynı yuva favorideyse ★
-                           basıyor, yani iki farklı şey aynı yerde ve ikisi
-                           de etiketsizdi. Sayının önüne tek kelimelik önek
-                           geldi; tablonun başlığındaki kısaltmayla aynı. */
-                        <span className="figure shrink-0 text-nano text-muted">
-                          {row.epsEstimate !== null ? (
+                        {/* ÇIPLAK SAYI YOK. Yuvanın önünde tablonun
+                            başlığındaki kısaltma duruyor ("HBK 0,45 $").
+                            Beklenti yoksa yuva HİÇ basılmıyor; eskiden "—"
+                            yazıyordu. Takip edilen satırda da sayı artık
+                            kalıyor — yıldız ada taşındı. */}
+                        {row.epsEstimate !== null && (
+                          <span className={cn("figure", analysisStyles.upcomingEps)}>
+                            <span>{t.earnings.epsEstimateShort}</span>{" "}
+                            {formatPrice(row.epsEstimate, locale, {
+                              currency: true,
+                            })}
+                          </span>
+                        )}
+                        {/* KIRPMA YOK, SARMA VAR. Seans penceresi satırın
+                            asıl bilgisi (açılıştan önce mi, kapanıştan
+                            sonra mı); kendi `span`ında ve bölünmez. Saati
+                            bilinmeyen satırda (22 Eylül'de dörtte üç)
+                            pencere hiç yazılmıyor — "Saat Belirsiz" her
+                            satırı aynı gürültüyle doldururdu. Göreli gün
+                            ise HER satırda: ikinci satırı olan ve olmayan
+                            satırlar yan yana düzensiz duruyordu. */}
+                        <span className={analysisStyles.upcomingWhen}>
+                          {/* Uzak gün + bilinen seans: dar panelde göreli gün
+                              düşüyor, seans kalıyor (CSS'te ölçüsü). */}
+                          <span
+                            data-today={away <= 0 || undefined}
+                            data-optional={optional || undefined}
+                          >
+                            {relativeDayLabel(away, t.calendar)}
+                          </span>
+                          {session && (
                             <>
-                              <span className="font-semibold">
-                                {t.earnings.epsEstimateShort}
-                              </span>{" "}
-                              {formatPrice(row.epsEstimate, locale, {
-                                currency: true,
-                              })}
+                              <span aria-hidden data-optional={optional || undefined}>
+                                {" · "}
+                              </span>
+                              <span className="whitespace-nowrap">{session}</span>
                             </>
-                          ) : (
-                            "—"
                           )}
                         </span>
-                      )}
-                      <AddToCalendar
-                        symbol={row.symbol}
-                        date={row.reportDate}
-                        label={t.earnings.addToCalendar}
-                        compact
-                        className="-mr-1"
-                      />
-                    </div>
-                  ))
+                        <AddToCalendar
+                          symbol={row.symbol}
+                          date={row.reportDate}
+                          label={t.earnings.addToCalendar}
+                          compact
+                          className={analysisStyles.upcomingCal}
+                        />
+                      </div>
+                    );
+                  })
                 )}
               </div>
-              <Link
-                href="/bilancolar"
-                className="-my-2 inline-flex min-h-10 items-center py-2 text-tiny font-semibold text-primary hover:text-primary-hover sm:-my-1 sm:min-h-0 sm:py-1"
-              >
-                {t.analysis.goToCalendar}
-              </Link>
             </Panel>
           </div>
+          <FillList />
 
           {/* Bütün denetimler tablonun üstünde tek bir yerde: filtre çipleri
               sayfa başlığının içinde duruyordu ve on bir çip başlığı ikinci
@@ -503,6 +581,25 @@ export default async function AnalysesPage(
  * Üç mini ölçü tek satırda: gelir büyümesi, beklentiye göre HBK ve hisse
  * tepkisi. Üçü birlikte "iyi çeyrek ama hisse düştü" gibi kartın tek
  * cümlesinin anlattığı gerilimi sayıyla gösteriyor.
+ *
+ * KART BİR <a> DEĞİL, BİR <article>. Kartın tamamı tek bağlantıydı ve
+ * erişilebilir adı kartın bütün metniydi: tarih, şirket, dört satırlık
+ * manşet ve üç ölçü — yaklaşık dört yüz karakter tek bağlantı adı olarak
+ * okunuyordu. Bağlantı artık şirket adında; `::after` ile kartın yüzeyini
+ * kaplıyor, yani kartın her yeri hâlâ tıklanıyor ama adı kısa.
+ *
+ * "ANALİZİ OKU" ÜSTE ÇIKTI. Metnin altında kendi satırını tutuyordu ve tek
+ * bir bağlantı için 16 + 32 + 24 = 72 piksel yükseklik harcıyordu
+ * (1440'ta ölçüldü). Şimdi tarih satırının sağında bir hap; kartın
+ * tamamı zaten bağlantı olduğu için hap bir DAVET, ayrı bir hedef değil
+ * (`aria-hidden`, erişilebilir adı bağlantı taşıyor).
+ *
+ * SKOR SÜTUNU KALKTI. 119 × 283 piksellik bir sütun ve tam boy bir ayraç
+ * vardı; halka o sütunun ortasında boş bir tonun içinde duruyordu. Karar
+ * artık kimlik satırının sağında: şirket solda, puanı sağda — bir skor
+ * tabelası gibi. Telefonda aynı düğüm ölçü ızgarasının ilk gözüne iniyor;
+ * yer ızgara alanlarıyla değişiyor, halka DOM'da tek (çift halka ekran
+ * okuyucuya kararı iki kez okuturdu).
  */
 function FeaturedAnalysis({
   row,
@@ -516,6 +613,7 @@ function FeaturedAnalysis({
   t: Dictionary;
 }) {
   const verdict = verdictOf(row.verdict);
+  const session = timingLabel(row.timing, t);
   const figures: { label: string; value: string; tone: "up" | "down" | "flat" }[] = [];
 
   if (row.revenueYoyPct !== null) {
@@ -544,55 +642,81 @@ function FeaturedAnalysis({
   }
 
   return (
-    <Link
-      href={analysisHref(row.symbol, row.period)}
-      prefetch={false}
-      className={analysisStyles.feature}
-    >
-      <div className={analysisStyles.featureCopy}>
+    <article className={analysisStyles.feature}>
+      <div className={analysisStyles.featureMeta}>
         <span className={analysisStyles.featureDate}>
           {formatEtDateLong(row.reportDate, locale)}
+          {session && (
+            <>
+              <span aria-hidden> · </span>
+              <span className="whitespace-nowrap">{session}</span>
+            </>
+          )}
         </span>
-        <div className="flex items-center gap-2.5">
-          <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="lg" />
-          <div className="min-w-0">
-            {/* TEK SATIRA SIKIŞTIRMAK YERİNE İKİ SATIR. `truncate` idi ve
-                390 pikselde 258 piksellik yere 262 piksellik metin
-                giriyordu: dört piksel yüzünden "2. Çeyrek 2026" ekranda
-                "2. Çeyrek 20…" oluyor, yani kartın en önemli ikinci
-                bilgisi — hangi çeyrek — kayboluyordu. İki satırda hem
-                şirket hem çeyrek tam okunuyor; sığdığı yerde (masaüstü)
-                görüntü hiç değişmiyor, ikinci satır hiç açılmıyor. */}
-            <h2 className={analysisStyles.featureCompany}>{row.company}</h2>
-            <p className={analysisStyles.featurePeriod}>{row.symbol} · {row.periodLabel}</p>
-            <p className={analysisStyles.featureSector}>
-              {row.sector}
-            </p>
-          </div>
+        <span className={analysisStyles.featureRead} aria-hidden>
+          {t.dayFlow.readAnalysis}
+          <ArrowUpRight size={14} weight="bold" />
+        </span>
+      </div>
+
+      <div className={analysisStyles.featureIdentity}>
+        <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="lg" />
+        <div className="min-w-0">
+          {/* TEK SATIRA SIKIŞTIRMAK YERİNE İKİ SATIR. `truncate` idi ve
+              390 pikselde 258 piksellik yere 262 piksellik metin
+              giriyordu: dört piksel yüzünden "2. Çeyrek 2026" ekranda
+              "2. Çeyrek 20…" oluyor, yani kartın en önemli ikinci
+              bilgisi — hangi çeyrek — kayboluyordu. Ad sarıyor; künye
+              satırında kırpılan dönem değil SEKTÖR (tam hâli `title`da). */}
+          <h2 className={analysisStyles.featureCompany}>
+            <Link
+              href={analysisHref(row.symbol, row.period)}
+              prefetch={false}
+              className={analysisStyles.featureLink}
+              aria-label={t.analysis.openAnalysisAria.replace(
+                "{company}",
+                row.company,
+              )}
+            >
+              {row.company}
+            </Link>
+          </h2>
+          <p className={analysisStyles.featureMetaLine}>
+            <span className={analysisStyles.featurePeriod}>
+              {row.symbol} · {row.periodLabel}
+            </span>
+            {row.sector && (
+              <span className={analysisStyles.featureSector} title={row.sector}>
+                <span aria-hidden> · </span>
+                {row.sector}
+              </span>
+            )}
+          </p>
         </div>
-        <p className={analysisStyles.featureHeadline}>
-          {row.headline}
-        </p>
-        <span className={analysisStyles.featureRead}>{t.dayFlow.readAnalysis} <span aria-hidden>↗</span></span>
       </div>
-      {/* Dar ekranda halka metnin YANINA değil ALTINA geçer ve karar
-          yazısıyla yan yana durur: 66px'lik halka + kenar dolgusu 390px
-          genişlikte metin sütununu sıfıra indiriyordu. */}
-      <div className={analysisStyles.featureScore}>
-        <span>{t.analysis.verdictLabel}</span>
-        <ScoreRing score={row.score} verdict={verdict} size={96} showDenominator />
-        <span className={cn("text-base font-bold", verdictTextClass(verdict))}>
-          {verdictLabel(verdict, t)}
+
+      <div className={analysisStyles.featureVerdict}>
+        <ScoreRing score={row.score} verdict={verdict} size={64} showDenominator />
+        <span className={analysisStyles.featureVerdictText}>
+          <span>{t.analysis.verdictLabel}</span>
+          <b className={verdictTextClass(verdict)}>{verdictLabel(verdict, t)}</b>
         </span>
       </div>
-      {figures.length > 0 && <dl className={analysisStyles.featureFigures}>
-        {figures.map((figure) => (
-          <div key={figure.label}>
-            <dt>{figure.label}</dt>
-            <dd className={cn("numeral", figure.tone === "up" ? "text-up" : "text-down")}>{figure.value}</dd>
-          </div>
-        ))}
-      </dl>}
-    </Link>
+
+      <p className={analysisStyles.featureHeadline}>{row.headline}</p>
+
+      {figures.length > 0 && (
+        <dl className={analysisStyles.featureFigures}>
+          {figures.map((figure) => (
+            <div key={figure.label}>
+              <dt>{figure.label}</dt>
+              <dd className={cn("numeral", figure.tone === "up" ? "text-up" : "text-down")}>
+                {figure.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </article>
   );
 }

@@ -2,24 +2,37 @@ import { HeroAccent } from "@/components/motion/HeroAccent";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/calendar/CalendarExperience.module.css";
+import { CalendarStrip } from "@/components/calendar/CalendarStrip";
+import { NextRelease } from "@/components/calendar/NextRelease";
 import { GuideHint } from "@/components/article/GuideHint";
 import { IpoCalendar } from "@/components/markets/IpoCalendar";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import {
+  DataError,
   EmptyState,
   ImpactDots,
   Panel,
+  PanelHeader,
+  Segment,
+  SegmentItem,
 } from "@/components/ui/primitives";
 import { CalendarPlus } from "@phosphor-icons/react/dist/ssr";
 import { eventExplainer } from "@/lib/event-explainers";
-import { getEventsBetween } from "@/lib/data";
-import { addEtDays, daysBetweenEt, todayEt } from "@/lib/market-hours";
-import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { getEventsBetweenResult, getHolidays } from "@/lib/data";
+import {
+  addEtDays,
+  daysBetweenEt,
+  etParts,
+  todayEt,
+  type MarketHoliday,
+} from "@/lib/market-hours";
+import { getI18n, type Locale } from "@/lib/i18n";
 import { timePair, zoneTag } from "@/lib/session-clock";
 import {
   cn,
   formatEtDateLong,
   formatEventValue,
+  relativeDayLabel,
 } from "@/lib/utils";
 import type { EconomicEventRow } from "@/lib/schema";
 
@@ -33,23 +46,98 @@ export const generateMetadata = pageMetadata({
   tr: {
     title: "Ekonomik Takvim",
     description:
-      "ABD makro veri açıklamaları ve Fed toplantıları — saatleriyle.",
+      "ABD makro veri açıklamaları ve Fed toplantıları, saatleriyle.",
   },
   en: {
     title: "Economic Calendar",
     description:
-      "US macro releases and Fed meetings — with the times.",
+      "US macro releases and Fed meetings, with the times.",
   },
 });
 
 const VIEWS = ["day", "week", "month"] as const;
 type View = (typeof VIEWS)[number];
 
-/** "Bugün" · "Yarın" · "3 gün sonra" */
-function relativeDayLabel(away: number, t: Dictionary) {
-  if (away === 0) return t.calendar.today;
-  if (away === 1) return t.calendar.tomorrow;
-  return `${away} ${t.calendar.daysAway}`;
+/* ÖNEM DEĞERİ DOĞRULANIYOR. `?onem=` süzgeci doğrulanmıyordu: tanınmayan
+   bir değer (`?onem=kritik`) listeyi tümüyle boşaltıyor ve sayfa "bu
+   aralıkta planlanmış veri açıklaması yok" diye YANLIŞ bir olgu yazıyordu.
+   Tanınmayan değer artık yok sayılıyor. */
+const IMPACTS = ["high", "medium", "low"] as const;
+type Impact = (typeof IMPACTS)[number];
+
+/** Görünümün bugünden sonraki gün sayısı: Gün 0, Hafta 6, Ay 29. */
+const VIEW_SPAN: Record<View, number> = { day: 0, week: 6, month: 29 };
+
+/* TEK SORGU, ALTI HAFTA. Görünüm başına ayrı aralık sorgulanıyordu ve kapak
+   kartı o aralığın içinden seçiliyordu — haftada yüksek etkili açıklama
+   yoksa kart kayboluyordu. 41 gün (bugün + 6 hafta) halka arz takviminin
+   penceresiyle aynı (`IpoCalendar` → WEEKS_AHEAD); üç görünüm de bu diziden
+   bellekte türüyor, Gün/Hafta/Ay geçişi hâlâ tek sorgu. */
+const LOOKAHEAD_DAYS = 41;
+
+type AgendaItem =
+  | { kind: "day"; date: string; events: EconomicEventRow[]; next?: boolean }
+  | { kind: "quiet"; from: string; to: string; sentence?: string }
+  | { kind: "holiday"; date: string; holiday: MarketHoliday };
+
+function isWeekend(date: string) {
+  const day = new Date(`${date}T12:00:00Z`).getUTCDay();
+  return day === 0 || day === 6;
+}
+
+function minutesOf(clock: string) {
+  const [hour, minute] = clock.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+/**
+ * Gündem: gün grupları, sessiz satırlar, tatil satırları.
+ *
+ * Eskiden her olaylı gün kendi panelini açıyordu ve panelin solunda 190
+ * piksellik bir başlık sütunu duruyordu. Ölçüldü (1440, ay): iki olaylı bir
+ * panel 261 piksel, başlık sütununun içeriği 105'te bitiyor — sütunun
+ * %60'ı boş. Boş günler ise hiç yazılmıyordu; okuyucu "Çarşamba boş mu,
+ * yoksa veri mi yok" diye soruyordu.
+ *
+ * Şimdi tek liste: olaylı gün bir GRUP, ardışık boş iş günleri TEK bir
+ * sessiz satır ("25–28 Eylül · Açıklama Yok"; aradaki hafta sonu satırı
+ * kesmez), tatil kendi adıyla. Hafta sonu yazılmaz — orada açıklama
+ * olmaması bir bilgi değil.
+ */
+function buildAgenda(
+  dates: string[],
+  byDay: Map<string, EconomicEventRow[]>,
+  holidays: Map<string, MarketHoliday>,
+  filtered: boolean,
+): AgendaItem[] {
+  const items: AgendaItem[] = [];
+  let run: { from: string; to: string } | null = null;
+  /* Süzgeç açıkken sessiz satır YOK: "24 Eylül · Açıklama Yok" orta
+     etkili bir açıklamanın olduğu günde yanlış olurdu. Liste yalnızca
+     eşleşen günleri gösterir; süzgeç çipte görünüyor. */
+  const flush = () => {
+    if (run && !filtered) items.push({ kind: "quiet", ...run });
+    run = null;
+  };
+
+  for (const date of dates) {
+    const events = byDay.get(date);
+    if (events?.length) {
+      flush();
+      items.push({ kind: "day", date, events });
+      continue;
+    }
+    if (isWeekend(date)) continue;
+    const holiday = holidays.get(date);
+    if (holiday) {
+      flush();
+      items.push({ kind: "holiday", date, holiday });
+      continue;
+    }
+    run = run ? { from: run.from, to: date } : { from: date, to: date };
+  }
+  flush();
+  return items;
 }
 
 /**
@@ -61,42 +149,35 @@ function relativeDayLabel(away: number, t: Dictionary) {
  * sona sayıysa ondalık ayracı yerelleştiriliyor — sitenin geri kalanı
  * "4,25" yazarken bu sütunun "4.2" yazması tutarsızdı. Sayı olmayan
  * her şey olduğu gibi basılır.
+ *
+ * Biçimlendirme `lib/utils.ts` içindeki paylaşılan yardımcıda: ana
+ * sayfadaki Gün Şeridi de aynı değeri basıyor ve iki kopya birbirinden
+ * ayrı düşmüştü. BİRİM GEÇİLİYOR: `null` yazılıydı ve yüzde işareti hiç
+ * basılmıyordu — aynı TÜFE rakamı ana sayfada "%3,46", takvimde çıplak
+ * "3,46" olarak duruyordu.
  */
-function ValueChip({
+function ValueSlot({
   label,
   value,
   unit,
   locale,
-  tone = "muted",
+  strong = false,
 }: {
   label: string;
-  value: string;
-  /** "%" ise işaret dile göre yerleşir; yoksa çıplak sayı basılır. */
+  value: string | null;
   unit: string | null;
   locale: Locale;
-  tone?: "strong" | "muted";
+  strong?: boolean;
 }) {
-  /* Biçimlendirme `lib/utils.ts` içindeki paylaşılan yardımcıda: ana
-     sayfadaki Gün Şeridi de aynı değeri basıyor ve iki kopya birbirinden
-     ayrı düşmüştü. */
-  /* BİRİM GEÇİLİYOR. `null` yazılıydı ve yüzde işareti hiç basılmıyordu:
-     aynı TÜFE rakamı ana sayfada "%3,46", takvimde çıplak "3,46" olarak
-     duruyordu — okuyucu için iki farklı büyüklük. */
+  /* BOŞ YUVA BOŞ KALIR, TİRE BASILMAZ. Yuva yine de yerinde duruyor:
+     üç sütun sabit sırada (Gerçekleşen · Beklenti · Önceki) ve bir satırda
+     beklenti yoksa öteki satırların "Önceki" değeri sola kaymıyor. */
+  if (value === null) return <span className={styles.value} data-empty="true" aria-hidden />;
   const shown = formatEventValue(value, unit, locale) ?? value.trim();
-
   return (
-    <span className="flex flex-col items-end leading-tight">
-      <span className="text-micro font-semibold uppercase tracking-[0.07em] text-muted">
-        {label}
-      </span>
-      <span
-        className={cn(
-          "numeral text-base",
-          tone === "strong" ? "font-bold text-strong" : "text-soft",
-        )}
-      >
-        {shown}
-      </span>
+    <span className={styles.value} data-strong={strong || undefined}>
+      <span>{label}</span>
+      <span className="numeral">{shown}</span>
     </span>
   );
 }
@@ -106,46 +187,320 @@ export default async function CalendarPage(
 ) {
   const search = await props.searchParams;
   const view: View = VIEWS.includes(search.g as View) ? (search.g as View) : "week";
-  const impactFilter = typeof search.onem === "string" ? search.onem : null;
+  const impact: Impact | null = IMPACTS.includes(search.onem as Impact)
+    ? (search.onem as Impact)
+    : null;
 
   const { locale, t } = await getI18n();
+  const intlLocale = locale === "tr" ? "tr-TR" : "en-US";
   const today = todayEt();
+  const to = addEtDays(today, VIEW_SPAN[view]);
 
-  const to =
-    view === "day" ? today : view === "week" ? addEtDays(today, 6) : addEtDays(today, 29);
-  let events = await getEventsBetween(today, to);
+  const [result, holidayRows] = await Promise.all([
+    getEventsBetweenResult(today, addEtDays(today, LOOKAHEAD_DAYS)),
+    getHolidays(),
+  ]);
+  const all = result.ok ? result.rows : [];
+  const holidays = new Map(holidayRows.map((holiday) => [holiday.date, holiday]));
 
-  if (impactFilter) {
-    events = events.filter((event) => event.importance === impactFilter);
+  const matches = (event: EconomicEventRow) => !impact || event.importance === impact;
+  const inRange = all.filter((event) => event.eventDate <= to);
+  /* Çip sayıları SÜZGEÇTEN ÖNCE: okuyucu "Yüksek 0"ı tıklamadan görsün. */
+  const counts: Record<Impact, number> = { high: 0, medium: 0, low: 0 };
+  for (const event of inRange) {
+    if (event.importance in counts) counts[event.importance as Impact] += 1;
   }
+  const listed = inRange.filter(matches);
 
-  // Güne göre grupla
   const byDay = new Map<string, EconomicEventRow[]>();
-  for (const event of events) {
+  for (const event of listed) {
     const list = byDay.get(event.eventDate) ?? [];
     list.push(event);
     byDay.set(event.eventDate, list);
   }
+
+  const dates = Array.from({ length: VIEW_SPAN[view] + 1 }, (_, index) => addEtDays(today, index));
+
+  /* Aralık boşsa tek bir cümle, ardından SIRADAKİ açıklama günü. Gün
+     görünümü bugün boşken iki boş kutu basıyordu (1316×97 tek hücrelik şerit
+     + 102 piksellik boş durum paneli); okuyucunun asıl sorusu "peki ne
+     zaman?" ve cevabı altı haftalık pencerede zaten var. */
+  let agenda: AgendaItem[] = [];
+  if (listed.length > 0) {
+    agenda = view === "day" ? [{ kind: "day", date: today, events: listed }] : buildAgenda(dates, byDay, holidays, impact !== null);
+  } else if (result.ok) {
+    const todayHoliday = holidays.get(today);
+    agenda =
+      view === "day" && todayHoliday
+        ? [{ kind: "holiday", date: today, holiday: todayHoliday }]
+        : [{ kind: "quiet", from: today, to, sentence: impact ? t.calendar.emptyFiltered : view === "day" ? t.calendar.todayEmpty : t.calendar.empty }];
+    const nextDate = all.find((event) => event.eventDate > to && matches(event))?.eventDate;
+    if (nextDate) {
+      agenda.push({
+        kind: "day",
+        date: nextDate,
+        events: all.filter((event) => event.eventDate === nextDate && matches(event)),
+        next: true,
+      });
+    }
+  }
+  const renderedDays = new Set(agenda.flatMap((item) => (item.kind === "day" ? [item.date] : [])));
+  const shownEvents = agenda.flatMap((item) => (item.kind === "day" ? item.events : []));
+  /* DEĞER SÜTUNU YALNIZCA DEĞER VARSA. Sabit 264 piksellik üç yuvalı sütun
+     sayıları günler boyunca hizalıyor — ama tohumlanan takvimde beklenti
+     ve önceki değer çoğu zaman henüz yok ve ölçüldüğünde (22 Eylül, altı
+     haftalık pencere) 19 olayın hiçbiri değer taşımıyordu. Sütun o zaman
+     her satırın sağında 264 piksellik boş bir şerit olurdu. Listede tek bir
+     değer bile varsa sütun hepsinde açılır ve hizayı korur. */
+  const hasValues = shownEvents.some(
+    (event) => event.actual !== null || event.forecast !== null || event.previous !== null,
+  );
+
+  /* Sıradaki açıklama: henüz açıklanmamış (`actual` boş) ve saati geçmemiş.
+     Saati geçmiş ama değeri gelmemiş olay (FRED gecikmesi) "sıradaki"
+     sayılmaz; saatsiz bir olay bugünse geçtiği kanıtlanamadığı için sayılır. */
+  const nowMinutes = etParts(new Date()).minutes;
+  const isAhead = (event: EconomicEventRow) =>
+    event.actual === null &&
+    (event.eventDate > today ||
+      event.eventTimeEt === null ||
+      minutesOf(event.eventTimeEt) > nowMinutes);
+  const nextHigh = all.find((event) => event.importance === "high" && isAhead(event));
+  const next = nextHigh ?? all.find(isAhead);
+  const nextHref = !next
+    ? null
+    : renderedDays.has(next.eventDate)
+      ? `#gun-${next.eventDate}`
+      : daysBetweenEt(today, next.eventDate) <= VIEW_SPAN.month
+        ? `/takvim?g=month#gun-${next.eventDate}`
+        : null;
 
   const impactLabel: Record<string, string> = {
     high: t.calendar.impactHigh,
     medium: t.calendar.impactMedium,
     low: t.calendar.impactLow,
   };
-
   const viewLabel: Record<View, string> = {
     day: t.calendar.day,
     week: t.calendar.week,
     month: t.calendar.month,
   };
+  const countLabel = (count: number) =>
+    `${count} ${count === 1 ? t.calendar.eventOne : t.calendar.eventMany}`;
 
   // Saat sütunu: üstte okuyucunun saati, altında kaynağın saati.
   const tags = zoneTag(locale);
 
-  const featured = events.find((event) => event.importance === "high" && event.actual === null) ?? events.find((event) => event.importance === "high");
-  const featureTimes = featured?.eventTimeEt ? timePair(featured.eventDate, featured.eventTimeEt, locale) : null;
-  const datePart = (date: string, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", { ...options, timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`));
-  const dates = Array.from({ length: daysBetweenEt(today, to) + 1 }, (_, index) => addEtDays(today, index));
+  const dayMonth = new Intl.DateTimeFormat(intlLocale, { day: "numeric", month: "long", timeZone: "UTC" });
+  const noon = (date: string) => new Date(`${date}T12:00:00Z`);
+  const spanLabel = (from: string, until: string) =>
+    from === until ? formatEtDateLong(from, locale) : dayMonth.formatRange(noon(from), noon(until));
+  const rangeTitle = spanLabel(today, to);
+
+  const renderEvent = (event: EconomicEventRow) => {
+    const times = event.eventTimeEt ? timePair(event.eventDate, event.eventTimeEt, locale) : null;
+    const explainer = eventExplainer(event.slug, locale);
+    const high = event.importance === "high";
+    return (
+      <li key={event.id} className={styles.event} data-impact={event.importance}>
+        {/* SAAT BİR KARO. Satırın solunda çıplak iki satır metin duruyordu
+            ve satırların hiçbir görsel çapası yoktu. Bu ekranın anlattığı
+            şey bir PROGRAM ve programın çapası saattir — bilanço takviminde
+            o çapa şirket logosu, burada saat. */}
+        <span className={styles.time} data-high={high || undefined}>
+          {times ? (
+            <>
+              <span className="numeral">{times.primary}</span>
+              {/* KARONUN İÇİNDE KÜNYE TONU YETMİYOR. Karo koyu temada %12
+                  beyaz zemin taşıyor: `--text-muted` orada 10 pikselde
+                  4,09'a iniyor (ölçüldü, gereken 4,5). Gövde tonu karoyu
+                  bozmuyor; punto ve ağırlık farkı ikincil olduğunu zaten
+                  söylüyor. */}
+              <span className="numeral">
+                {times.secondary} {tags.secondary}
+              </span>
+            </>
+          ) : (
+            /* Saatsiz olayda tire değil, adı: "Saat Belirsiz". */
+            <span className={styles.timeUnknown}>{t.earnings.timeUnknown}</span>
+          )}
+        </span>
+
+        {/* Noktalar başlığın İLK SATIRIYLA hizalı: kendi yükseklikleri 6
+            piksel, satır `items-start` olduğu için hizalanmadan bırakılırsa
+            metnin üstünde asılı kalıyorlar. */}
+        <span className={styles.impact}>
+          <ImpactDots importance={event.importance} label={impactLabel[event.importance] ?? event.importance} />
+        </span>
+
+        {/* Başlık + açıklama. Açıklama olayın TÜRÜNE bağlı (bkz.
+            `lib/event-explainers.ts`); tanınmayan türde satır tek satır kalır. */}
+        <span className={styles.body}>
+          <span className={styles.title} data-high={high || undefined}>
+            {locale === "tr" ? event.titleTr : event.titleEn}
+          </span>
+          {explainer && <span className={styles.explainer}>{explainer}</span>}
+          {/* DURUM VE EYLEM AYNI SATIRDA. "Takvime Ekle" sağ uçta ayrı bir
+              hap olarak duruyordu ve değeri olmayan satırlarda satırın sağ
+              yarısı yalnızca o hapı taşıyordu. Şimdi durumun yanında, aynı
+              taban çizgisinde; yalnızca yüksek etkili olaylarda — her
+              satıra düğme koymak takvimi bir düğme listesine çeviriyordu. */}
+          <span className={styles.statusLine}>
+            {/* Yayın ancak sağlayıcı `actual` verince kanıtlanmış olur;
+                saatin geçmesi açıklandı demek değil. */}
+            <span className={styles.status} data-published={event.actual !== null || undefined}>
+              {event.actual !== null ? t.calendar.released : t.calendar.scheduled}
+            </span>
+            {high && (
+              <a
+                href={`/api/takvim?tip=olay&slug=${event.slug}`}
+                /* `download` ŞART — gerekçe components/earnings/AddToCalendar.tsx
+                   künyesinde: bu uç dosya indiriyor, gezinme olmuyor ve
+                   `RouteProgress` şeridi kendiliğinden durmuyordu. */
+                download
+                className={cn(styles.addCal, "tap-44")}
+              >
+                <CalendarPlus weight="duotone" size={14} aria-hidden />
+                {t.earnings.addToCalendar}
+              </a>
+            )}
+          </span>
+        </span>
+
+        {hasValues && (
+          <span className={styles.values}>
+            <ValueSlot label={t.calendar.actual} value={event.actual} unit={event.unit} locale={locale} strong />
+            <ValueSlot label={t.calendar.forecast} value={event.forecast} unit={event.unit} locale={locale} />
+            <ValueSlot label={t.calendar.previous} value={event.previous} unit={event.unit} locale={locale} />
+          </span>
+        )}
+      </li>
+    );
+  };
+
+  const renderItem = (item: AgendaItem) => {
+    if (item.kind === "quiet") {
+      return (
+        <p key={`quiet-${item.from}`} className={styles.quiet}>
+          {item.sentence ?? (
+            <>
+              <span className="numeral">{spanLabel(item.from, item.to)}</span>
+              <span aria-hidden> · </span>
+              {t.calendar.noRelease}
+            </>
+          )}
+          {item.sentence && impact && (
+            <Link href={`/takvim?g=${view}`} scroll={false} className={cn(styles.quietAction, "tap-44")}>
+              {t.earnings.clearFilter}
+            </Link>
+          )}
+        </p>
+      );
+    }
+    if (item.kind === "holiday") {
+      return (
+        <p key={`holiday-${item.date}`} className={styles.quiet} data-holiday="true">
+          <span className="numeral">{formatEtDateLong(item.date, locale)}</span>
+          <span aria-hidden> · </span>
+          <span className={styles.holidayTag}>
+            {item.holiday.earlyCloseEt ? t.market.earlyClose : t.market.closed}
+          </span>
+          <span aria-hidden> · </span>
+          {locale === "tr" ? item.holiday.nameTr : item.holiday.nameEn}
+        </p>
+      );
+    }
+
+    const away = daysBetweenEt(today, item.date);
+    const highCount = item.events.filter((event) => event.importance === "high").length;
+    const holiday = holidays.get(item.date);
+    return (
+      <section
+        key={item.date}
+        id={`gun-${item.date}`}
+        className={styles.group}
+        data-today={away === 0 || undefined}
+        aria-labelledby={`gun-${item.date}-baslik`}
+      >
+        {/* YAPIŞKAN GÜN BAŞLIĞI. 190 piksellik sol sütunun yerine satır
+            başlığı: uzun bir günde tarih kaydırırken ekranda kalıyor.
+            Panel `overflow: clip` taşıyor — `hidden` onu kaydırma kabı yapıp
+            yapışkanlığı öldürürdü (bkz. modül). */}
+        <div className={styles.groupHead}>
+          <h3 id={`gun-${item.date}-baslik`}>{formatEtDateLong(item.date, locale)}</h3>
+          {/* Uzaklık rozeti: takvimde asıl soru "ne zaman"; "30 Eylül"ün kaç
+              gün sonra olduğu ancak kafadan hesaplanıyordu. */}
+          <span className={styles.rel} data-today={away === 0 || undefined}>
+            {relativeDayLabel(away, t.calendar)}
+          </span>
+          {item.next && <span className={styles.groupTag}>{t.calendar.nextDay}</span>}
+          {holiday && (
+            <span className={styles.groupTag} data-holiday="true">
+              {holiday.earlyCloseEt ? t.market.earlyClose : t.market.closed}
+              {" · "}
+              {locale === "tr" ? holiday.nameTr : holiday.nameEn}
+            </span>
+          )}
+          <span className={styles.groupCount}>
+            {countLabel(item.events.length)}
+            {highCount > 0 && (
+              <>
+                <span aria-hidden> · </span>
+                <strong>{highCount}</strong> {t.calendar.highImpactShort}
+              </>
+            )}
+          </span>
+        </div>
+        <ul className={styles.events}>{item.events.map(renderEvent)}</ul>
+      </section>
+    );
+  };
+
+  /* Önem çipleri takvim panelinin başlığında: pencere seçimi (Gün/Hafta/Ay)
+     kapağın sağında kalıyor — Ahmet'in açık isteği, c9b4e8f — ama süzgeç
+     LİSTEYİ süzüyor, pencereyi değil; yeri listenin başı. Sayı taşıyorlar:
+     "Yüksek 0" tıklamadan önce görünüyor. Okuma başarısızsa sayı yok —
+     sıfır, bilinmeyen bir şeyi "yok" diye yazmak olurdu. */
+  /* GÜN GÖRÜNÜMÜNDE SAYI YOK. Sayılar bugünü sayıyor; bugün boşsa liste
+     sıradaki açıklama gününe geçiyor ve okuyucu "Orta 0" çipinin hemen
+     altında orta etkili bir satır görüyordu (390 ve 1440'ta ölçüldü) —
+     çip kendi listesiyle çelişiyordu. Tek günlük listede sayı zaten bir şey
+     katmıyor; hafta ve ayda kalıyor. */
+  const showCounts = result.ok && view !== "day";
+  const chips = (
+    <nav className={styles.chips} aria-label={t.calendar.impact}>
+      {IMPACTS.map((level) => (
+        <Link
+          key={level}
+          href={impact === level ? `/takvim?g=${view}` : `/takvim?g=${view}&onem=${level}`}
+          scroll={false}
+          aria-current={impact === level ? "true" : undefined}
+          className={styles.chip}
+          data-zero={showCounts && counts[level] === 0 ? "true" : undefined}
+        >
+          <ImpactDots importance={level} label={impactLabel[level]} />
+          <span aria-hidden>{impactLabel[level]}</span>
+          {showCounts && <span className={cn(styles.chipCount, "numeral")}>{counts[level]}</span>}
+        </Link>
+      ))}
+    </nav>
+  );
+
+  const viewSwitch = (className: string) => (
+    <span className={className}>
+      <Segment label={t.calendar.viewLabel}>
+        {VIEWS.map((option) => (
+          <SegmentItem
+            key={option}
+            href={`/takvim?g=${option}${impact ? `&onem=${impact}` : ""}`}
+            active={view === option}
+          >
+            {viewLabel[option]}
+          </SegmentItem>
+        ))}
+      </Segment>
+    </span>
+  );
 
   return (
     <MotionExperience className={styles.page}>
@@ -153,354 +508,119 @@ export default async function CalendarPage(
       <header className={`${styles.hero} page-frame`}>
         <HeroAccent />
         <div className="page-heading-copy">
-          <p className={`${styles.eyebrow} page-eyebrow`}>{locale === "tr" ? "Ekonominin Ajandası" : "The Economic Agenda"}</p>
+          <p className="page-eyebrow">{t.calendar.eyebrow}</p>
           <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
             {t.calendar.title}
           </h1>
-          <p className="mt-2 text-sm text-soft">{t.calendar.subtitle}</p>
-          <p className="mt-3 text-tiny text-muted">{t.calendar.timesNote}</p>
+          <p>{t.calendar.subtitle}</p>
         </div>
-        {/* GÖRÜNÜM SEÇİMİ KAPAĞIN SAĞINDA. Gün/hafta/ay kapağın ALTINDA
-            ayrı bir şeritteydi ve o şeridin sağ yarısı boştu; kapağın sağ
-            kolonu ise yalnızca öne çıkan kartı taşıyordu. İkisi aynı kolona
-            girince bir şerit kadar dikey yer geri kazanılıyor ve pencereyi
-            değiştiren denetim, pencerenin kendi künyesiyle (tarih aralığı)
-            aynı hizaya geliyor. Önem filtresi aşağıda kalıyor: o listeyi
-            SÜZÜYOR, pencereyi değiştirmiyor. */}
+        {/* KAPAĞIN SAĞI: görünüm seçimi üstte, sıradaki açıklama altında.
+            Seçim burada kalıyor (Ahmet'in açık isteği: "Gün/hafta/ay seçimi
+            üst kartın sağına"). Önceki hâlde bu kolon yalnızca denetimleri
+            taşıyordu ve ölçüldü: 1440'ta 554 piksel genişliğindeki kolonda
+            46 piksel içerik, altı boş — kart yalnızca haftada yüksek etkili
+            açıklama varsa çıkıyordu. Kart artık altı haftalık pencereden
+            geliyor; kolon her zaman dolu. Okuma başarısızsa kart yok, kolon
+            yalnızca seçimi taşır. */}
         <div className={styles.heroSide}>
-          <div className={styles.heroControls}>
-          <nav className={styles.viewSwitch} aria-label={t.calendar.title}>
-            {VIEWS.map((v) => (
-              <Link
-                key={v}
-                href={`/takvim?g=${v}${impactFilter ? `&onem=${impactFilter}` : ""}`}
-                scroll={false}
-                /* SEÇİLİ OLMAK RENKTEN İBARET DEĞİL. Bu iki navda seçili
-                   durumu anlatan tek şey arka plan rengiydi; ekran okuyucu
-                   "Gün, bağlantı · Hafta, bağlantı · Ay, bağlantı" duyuruyor
-                   ve hangisinin açık olduğunu söyleyen hiçbir şey yoktu.
-                   Projedeki öteki bütün filtreler (`FilterChip`, sektör
-                   çipleri, sekme çubuğu) `aria-current` taşıyor; burası
-                   atlanmıştı. */
-                aria-current={view === v ? "true" : undefined}
-                className={cn(
-                  "min-h-11 rounded-(--radius-sm) px-3 py-1.5 sm:min-h-[36px] text-sm font-medium transition-colors",
-                  view === v
-                    ? "bg-primary-wash text-primary-ink"
-                    : "text-muted hover:bg-surface-elevated hover:text-soft",
-                )}
-              >
-                {viewLabel[v]}
-              </Link>
-            ))}
-          </nav>
-          {/* ÖNEM FİLTRESİ DE KAPAĞA. Tek başına kalan şerit bir satır
-              yüksekliğinde boş bant demekti; iki denetim aynı kolonda
-              durunca o bant tümüyle kalkıyor ve kapağın sağı doluyor.
-              Pencere seçimi ile önem süzgeci ayrı işler ama okuyucu ikisini
-              de listeye BAKMADAN ÖNCE kuruyor — aynı yerde olmaları doğru. */}
-          <nav className={styles.impactFilter} aria-label={t.calendar.impact}>
-            {(["high", "medium", "low"] as const).map((level) => (
-              <Link
-                key={level}
-                href={
-                  impactFilter === level
-                    ? `/takvim?g=${view}`
-                    : `/takvim?g=${view}&onem=${level}`
-                }
-                scroll={false}
-                aria-current={impactFilter === level ? "true" : undefined}
-                className={cn(
-                  "flex min-h-11 items-center gap-1.5 rounded-(--radius-sm) px-2.5 py-1.5 sm:min-h-[36px] text-xs transition-colors",
-                  impactFilter === level
-                    ? "bg-primary-wash text-primary-ink"
-                    : "text-muted hover:bg-surface-elevated hover:text-soft",
-                )}
-              >
-                <ImpactDots importance={level} label={impactLabel[level]} />
-                {impactLabel[level]}
-              </Link>
-            ))}
-          </nav>
-          </div>
-          {featured && <a className={styles.feature} href={`#gun-${featured.eventDate}`}>
-            <span className={styles.dateBadge}><strong>{datePart(featured.eventDate, { day: "numeric" })}</strong><span>{datePart(featured.eventDate, { month: "short" })}</span></span>
-            <span className={styles.featureBody}>
-              <span>{locale === "tr" ? "Öne Çıkan Açıklama ↗" : "Release in Focus ↗"}</span>
-              <strong>{locale === "tr" ? featured.titleTr : featured.titleEn}</strong>
-              <span>{datePart(featured.eventDate, { weekday: "long" })}{featureTimes && ` · ${featureTimes.primary} ${tags.primary}`}</span>
-            </span>
-          </a>}
+          {viewSwitch(styles.heroSeg)}
+          {next && (
+            <NextRelease
+              event={next}
+              label={nextHigh ? t.calendar.nextHigh : t.calendar.nextRelease}
+              today={today}
+              href={nextHref}
+              inPage={nextHref?.startsWith("#") ?? false}
+              locale={locale}
+              t={t}
+            />
+          )}
         </div>
       </header>
 
-      <nav className={styles.dayRail} data-view={view} aria-label={locale === "tr" ? "Açıklama günleri" : "Release dates"}>
-        {dates.map((date) => {
-          const count = byDay.get(date)?.length ?? 0;
-          const contents = <><span>{datePart(date, { weekday: "short" })}</span><strong>{datePart(date, { day: "numeric" })}</strong><span>{count ? `${count} ${count === 1 ? t.calendar.eventOne : t.calendar.eventMany}` : "—"}</span></>;
-          const label = `${formatEtDateLong(date, locale)} · ${count} ${t.calendar.eventMany}`;
-          return count ? <a key={date} className={styles.day} href={`#gun-${date}`} data-active="true" data-today={date === today} aria-label={label}>{contents}</a> : <span key={date} className={styles.day} data-empty="true" data-today={date === today} aria-label={label}>{contents}</span>;
-        })}
-      </nav>
-
-      <QueryTransition label={t.common.loading}>
-      {byDay.size === 0 ? (
-        <Panel>
-          <EmptyState title={t.calendar.empty} />
-        </Panel>
-      ) : (
-        [...byDay.entries()].map(([date, dayEvents]) => {
-          const away = daysBetweenEt(today, date);
-          const isToday = away === 0;
-          const highCount = dayEvents.filter(
-            (event) => event.importance === "high",
-          ).length;
-
-          return (
-            <Panel
-              key={date}
-              id={`gun-${date}`}
-              data-motion-reveal
-              className={cn(
-                styles.dayPanel,
-                isToday && "border-primary-faint",
-              )}
-            >
-              <div
-                className={cn(
-                  styles.dayHeader,
-                  isToday && "bg-primary-tint",
+      {/* PANO: takvim solda, halka arz sağda (≥1100). Seyrek bir hafta
+          halka arzın ÜSTÜNDE bir boşluk olarak değil, yanında duruyor.
+          Aralık sabit `gap`, kolonlar eşitlenmiyor — kısa olan erken biter
+          (CLAUDE.md, `justify-between` kuralı). */}
+      <div className={styles.board}>
+        <QueryTransition label={t.common.loading}>
+          <Panel className={styles.calendar} data-motion-reveal>
+            {/* GÖRÜNÜM SEÇİMİ TELEFONDA PANELİN BAŞINDA. Kapağın "sağı"
+                telefonda yok; seçim orada kartın üstüne ayrı bir satır
+                olarak iniyor ve kapağı 340 piksele çıkarıyordu (390,
+                ölçüldü; önceki hâl 288). Aynı denetim burada aralık
+                başlığının yanına oturuyor ve kapak yalnızca başlık ile
+                sıradaki açıklamayı taşıyor. İki kopyadan biri her
+                genişlikte `display: none` — erişilebilirlik ağacında
+                tek denetim var. */}
+            <PanelHeader
+              title={rangeTitle}
+              action={
+                <>
+                  {chips}
+                  {viewSwitch(styles.headSeg)}
+                </>
+              }
+              className={styles.panelHead}
+            />
+            {!result.ok ? (
+              /* Okunamadı: hiçbir boşluk iddiası yok — ne şerit, ne sessiz
+                 satır, ne kapak kartı. */
+              <DataError message={t.common.noData} hint={t.common.noDataHint} />
+            ) : (
+              <>
+                {/* Süzgeç aralıkta hiçbir şey bırakmadıysa şerit çizilmiyor:
+                    yedi boş karo (1440'ta ~170 piksel) cümlenin ve sıradaki
+                    günün söylediğini tekrarlıyor, üstelik başka önemde
+                    açıklaması olan günü boş gibi gösteriyordu. */}
+                {view !== "day" && !(impact !== null && listed.length === 0) && (
+                  <CalendarStrip
+                    view={view}
+                    dates={dates}
+                    byDay={byDay}
+                    holidays={holidays}
+                    today={today}
+                    locale={locale}
+                    t={t}
+                  />
                 )}
-              >
-                <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                  {/* GÜN BAŞLIĞI KARDEŞ EKRANLA AYNI ÖLÇÜDE. 13 puntoydu ve
-                      altındaki olay başlığından (13) ayrılmıyordu: panel
-                      başlığı ile içeriği aynı ağırlıkta durunca sayfa
-                      "kutu, kutu, kutu" diye okunuyordu. Bilanço takvimi
-                      aynı soruyu (önümüzdeki günlerde ne var) aynı ölçüyle
-                      açıyor; iki takvim ekranı aynı dili konuşmalı. */}
-                  <h2 className="text-title font-bold tracking-[-0.03em] text-strong">
-                    {formatEtDateLong(date, locale)}
-                  </h2>
-                  {/* Uzaklık rozeti: takvimde asıl soru "ne zaman", ve
-                      "12 Ağustos"un kaç gün sonrası olduğu ancak sağdaki
-                      kısa tarihe bakıp kafadan çıkarılıyordu. */}
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-nano font-bold",
-                      isToday
-                        ? "bg-primary text-on-primary"
-                        : "bg-surface-elevated text-soft",
-                    )}
-                  >
-                    {relativeDayLabel(away, t)}
-                  </span>
-                </div>
+                {agenda.length > 0 ? (
+                  <div className={styles.agenda} data-values={hasValues || undefined}>
+                    {agenda.map(renderItem)}
+                  </div>
+                ) : (
+                  <EmptyState
+                    compact
+                    title={impact ? t.calendar.emptyFiltered : view === "day" ? t.calendar.todayEmpty : t.calendar.empty}
+                    action={
+                      impact ? (
+                        <Link href={`/takvim?g=${view}`} scroll={false} className={cn(styles.quietAction, "tap-44")}>
+                          {t.earnings.clearFilter}
+                        </Link>
+                      ) : undefined
+                    }
+                  />
+                )}
+                <p className={styles.foot}>{t.calendar.timesNote}</p>
+              </>
+            )}
+          </Panel>
+        </QueryTransition>
 
-                <span className="numeral text-tiny text-muted">
-                  {dayEvents.length}{" "}
-                  {dayEvents.length === 1
-                    ? t.calendar.eventOne
-                    : t.calendar.eventMany}
-                  {highCount > 0 && (
-                    <>
-                      <span aria-hidden className="mx-1.5">
-                        ·
-                      </span>
-                      <span className="font-semibold text-strong">
-                        {highCount}
-                      </span>{" "}
-                      {t.calendar.highImpactShort}
-                    </>
-                  )}
-                </span>
-              </div>
-
-              <ul className={`${styles.eventList} divide-y divide-line-soft`}>
-                {dayEvents.map((event) => {
-                  const times = event.eventTimeEt
-                    ? timePair(event.eventDate, event.eventTimeEt, locale)
-                    : null;
-
-                  return (
-                    <li
-                      key={event.id}
-                      className={styles.event}
-                      data-impact={event.importance}
-                    >
-                      {/* SAAT ARTIK BİR KARO. Satırın solunda çıplak iki
-                          satır metin duruyordu ve satırların hiçbir görsel
-                          çapası yoktu: sayfa gri metin şeritlerinden bir
-                          duvara dönüşüyordu. Bu ekranın anlattığı şey bir
-                          PROGRAM ve programın çapası saattir — bilanço
-                          takviminde o çapa şirket logosu, burada saat.
-                          Fotoğraf ya da uydurma bir ikon eklenmiyor; var
-                          olan bilgi kendi kutusuna oturuyor. */}
-                      <span
-                        className={cn(
-                          `${styles.eventTime} shrink-0 text-center`,
-                          event.importance === "high"
-                            ? "bg-primary-wash"
-                            : "bg-surface-elevated",
-                        )}
-                      >
-                        {times ? (
-                          <>
-                            <span
-                              className={cn(
-                                "numeral block text-base font-bold leading-tight",
-                                event.importance === "high"
-                                  ? "text-primary-ink"
-                                  : "text-strong",
-                              )}
-                            >
-                              {times.primary}
-                            </span>
-                            {/* KARONUN İÇİNDE KÜNYE TONU YETMİYOR. Karo koyu
-                                temada %12 beyaz zemin taşıyor, yani metnin
-                                altındaki yüzey açılıyor: `--text-muted` orada
-                                10 pikselde 4,09'a iniyor (ölçüldü, gereken
-                                4,5). Gövde tonu karoyu bozmuyor, ikincil
-                                satır hâlâ birincilden geride duruyor —
-                                punto ve ağırlık farkı onu zaten söylüyor. */}
-                            <span className="numeral block whitespace-nowrap text-nano leading-tight text-body">
-                              {times.secondary} {tags.secondary}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="numeral block text-base font-bold leading-tight text-muted">
-                            —
-                          </span>
-                        )}
-                      </span>
-
-                      {/* Noktalar başlığın İLK SATIRIYLA hizalı: kendi
-                          yükseklikleri 6 piksel, satır `items-start`
-                          olduğu için hizalanmadan bırakılırsa metnin
-                          üstünde asılı kalıyorlar. */}
-                      <span className="flex h-[19px] shrink-0 items-center">
-                        <ImpactDots
-                          importance={event.importance}
-                          label={impactLabel[event.importance] ?? event.importance}
-                        />
-                      </span>
-
-                      {/* Başlık + açıklama. Satır eskiden yalnızca başlıktı
-                          ve "TÜFE — Temmuz Verisi", TÜFE'nin ne olduğunu
-                          bilmeyene hiçbir şey söylemiyordu; sitenin geri
-                          kalanındaki öğretici ton takvimde kesiliyordu.
-                          Açıklama olayın TÜRÜNE bağlı (bkz.
-                          `lib/event-explainers.ts`), tanınmayan türde satır
-                          eskisi gibi tek satır kalır. */}
-                      <span className={`${styles.eventBody} flex min-w-0 flex-1 flex-col gap-0.5`}>
-                        <span
-                          className={cn(
-                            "text-sm",
-                            event.importance === "high"
-                              ? "font-semibold text-strong"
-                              : "text-body",
-                          )}
-                        >
-                          {locale === "tr" ? event.titleTr : event.titleEn}
-                        </span>
-                        {eventExplainer(event.slug, locale) && (
-                          <span className="max-w-[68ch] text-tiny leading-[17px] text-muted">
-                            {eventExplainer(event.slug, locale)}
-                          </span>
-                        )}
-                        {/* Publication is authoritative only when the provider supplies an actual value. Passing the scheduled time is not a release confirmation. */}
-                        <span className={styles.status} data-published={event.actual !== null}>{event.actual !== null ? (locale === "tr" ? "Açıklandı" : "Released") : (locale === "tr" ? "Planlandı" : "Scheduled")}</span>
-                      </span>
-
-                      {/* Değerler künye olarak, etiketi yanında. Eski hâlde
-                          üç sabit sütun vardı ve açıklanmamış olaylarda
-                          üçü de tire basıyordu: satırın yarısı boş tireydi.
-                          Şimdi yalnızca DOLU olan yazılıyor. */}
-                      {/* Sağ uç: ölçüler ve takvim düğmesi. Düğme metin
-                          sütununun İÇİNDE, açıklamanın altında duruyordu ve
-                          satırın altına tek başına asılı kalan bir hap gibi
-                          görünüyordu — üstelik açıklanmamış olaylarda satırın
-                          sağ yarısı bomboştu. İkisi aynı yerde: ölçü varsa
-                          ölçüler, yoksa düğme sağ ucu tutuyor.
-
-                          Takvime ekleme YALNIZCA yüksek etkili olaylarda.
-                          Her satıra düğme koymak takvimi bir düğme listesine
-                          çeviriyordu; okuyucunun kendi takvimine geçirmek
-                          isteyeceği şey zaten bu üç beş olay. */}
-                      {/* Dar ekranda KENDİ SATIRINDA (`basis-full`). Aynı
-                          satırda kalınca metin sütununa ~190 piksel kalıyor
-                          ve olay başlığı iki-üç satıra kırılıyordu: satırın
-                          taşıdığı asıl bilgi sıkışıp yanındaki düğmeye yer
-                          açıyordu. Geniş ekranda eskisi gibi sağ uçta.
-                          SAĞ UÇ HER GENİŞLİKTE. Grup dar ekranda metin
-                          sütununun altına, 76 piksel içeriden başlıyordu ve
-                          ölçüsü olmayan olaylarda satırın altında tek başına
-                          asılı duran bir "Takvime Ekle" hapı kalıyordu —
-                          açıklamanın devamı gibi okunuyor, eylem gibi
-                          okunmuyordu. Okuma da eylem de artık satırın
-                          bittiği yerde. */}
-                      <span className={`${styles.eventValues} flex flex-wrap items-center justify-end gap-x-3 gap-y-1`}>
-                        {event.importance === "high" && (
-                          <a
-                            href={`/api/takvim?tip=olay&slug=${event.slug}`}
-                            /* `download` ŞART — gerekçe
-                               components/earnings/AddToCalendar.tsx künyesinde:
-                               bu uç dosya indiriyor, gezinme olmuyor ve
-                               `RouteProgress` şeridi kendiliğinden durmuyordu. */
-                            download
-                            className="tap-44 -my-1 inline-flex min-h-8 w-fit items-center gap-1 rounded-full border border-line px-2.5 py-1 text-nano font-semibold text-muted transition-colors hover:border-line-strong hover:text-primary"
-                          >
-                            <CalendarPlus weight="duotone" size={13} aria-hidden />
-                            {t.earnings.addToCalendar}
-                          </a>
-                        )}
-                        {event.actual !== null && (
-                          <ValueChip
-                            label={t.calendar.actual}
-                            value={event.actual}
-                            unit={event.unit}
-                            locale={locale}
-                            tone="strong"
-                          />
-                        )}
-                        {event.forecast !== null && (
-                          <ValueChip
-                            label={t.calendar.forecast}
-                            value={event.forecast}
-                            unit={event.unit}
-                            locale={locale}
-                          />
-                        )}
-                        {event.previous !== null && (
-                          <ValueChip
-                            label={t.calendar.previous}
-                            value={event.previous}
-                            unit={event.unit}
-                            locale={locale}
-                          />
-                        )}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </Panel>
-          );
-        })
-      )}
-
-      </QueryTransition>
-
-      {/* Makro takvimin altında halka arz takvimi: ikisi de "önümüzdeki
-          günlerde ne olacak" sorusuna cevap veriyor. */}
-      <IpoCalendar locale={locale} t={t} />
+        {/* Halka arz takvimi: ikisi de "önümüzdeki günlerde ne olacak"
+            sorusuna cevap veriyor. Geçiş maskesinin DIŞINDA — kendi akışı
+            görünüm değişirken örtülmesin. */}
+        <aside className={styles.aside}>
+          <IpoCalendar locale={locale} t={t} compact />
+        </aside>
+      </div>
 
       {/* DÖRT SLUG, İKİ DEĞİL — sayfa iki yarım taşıyor. Üstteki ekonomik
-          takvim Fed ve enflasyona bakıyor, alttaki halka arz takvimi bambaşka
-          bir konuya; rehber satırı yalnızca ilk yarıyı karşılıyordu. Halka
-          arz künyesindeki "Hisse Senedi ve Likidite rehberlerine bakabilirsin"
-          cümlesi de düz metindi, yani tıklanmıyordu — o yönlendirme buraya
-          taşındı ve gerçek bağlantı oldu.
+          takvim Fed ve enflasyona bakıyor, halka arz takvimi bambaşka bir
+          konuya; rehber satırı yalnızca ilk yarıyı karşılıyordu. Halka
+          arz künyesindeki "Hisse Senedi ve Likidite rehberlerine
+          bakabilirsin" cümlesi de düz metindi, yani tıklanmıyordu — o
+          yönlendirme buraya taşındı ve gerçek bağlantı oldu.
           Sayı ÇİFT olmalı: GuideHint birden çok yazıda `sm:grid-cols-2`
           veriyor, üçüncü slug ikinci satırda yarım kart bırakırdı. */}
       <GuideHint
@@ -512,3 +632,4 @@ export default async function CalendarPage(
     </MotionExperience>
   );
 }
+

@@ -117,6 +117,8 @@ const tr = {
     prevClose: "Önceki Kapanış",
     volume: "Hacim",
     marketCap: "Piyasa Değeri",
+    // Yarım gün: kapanış zili 13:00 ET. Takvim şeridi ve ana sayfanın zil künyesi aynı kelimeyi kullanıyor.
+    earlyClose: "Erken Kapanış",
   },
 
   directory: {
@@ -352,6 +354,11 @@ const tr = {
     sourceLine:
       "Fiyat: Alpaca konsolide veri akışı · Profil ve bilanço: Finnhub · Makro: FRED",
     sourceNote: "Endeksler ETF üzerinden izlenir · fiyatlar 15 dk gecikmeli",
+    // Kahramanın zil künyesi: hangi zile sayıldığı ve bir sonraki zil.
+    bellOpen: "Açılış Zili",
+    bellClose: "Kapanış Zili",
+    nextOpen: "Sonraki Açılış",
+    bellsLabel: "Zil Saatleri",
   },
 
   calendar: {
@@ -379,6 +386,20 @@ const tr = {
     eventOne: "Olay",
     eventMany: "Olay",
     highImpactShort: "Yüksek Etkili",
+    // Kapağın üst künyesi sözlükte; sayfada dile göre ikili ifade vardı.
+    eyebrow: "Ekonominin Ajandası",
+    nextHigh: "Sıradaki Yüksek Etkili Açıklama",
+    nextRelease: "Sıradaki Açıklama",
+    noRelease: "Açıklama Yok",
+    todayEmpty: "Bugün planlanmış veri açıklaması yok.",
+    nextDay: "Sıradaki Açıklama Günü",
+    released: "Açıklandı",
+    scheduled: "Planlandı",
+    datesNav: "Açıklama Günleri",
+    viewLabel: "Takvim Görünümü",
+    /* Önem süzgeci açıkken "açıklama yok" demek YANLIŞ olurdu: o gün başka
+       önemde bir açıklama olabilir. Cümle süzgeci söylüyor. */
+    emptyFiltered: "Seçili önemde bu aralıkta açıklama yok.",
   },
 
   earnings: {
@@ -475,8 +496,7 @@ const tr = {
     symbolPanelAll: "Tüm Analizler →",
     thisWeekAnalyzed: "Bu Hafta Analiz Edilenler",
     upcomingEarnings: "Yaklaşan Bilançolar",
-    goToCalendar: "Takvime Git →",
-    showAll: "Tümünü Gör →",
+    goToCalendar: "Takvime Git",
     /* Rozetin kuyruğundaki bağlantı. Bir süre "Karne →" yazıyordu ve o
        kelime artık var olmayan bir PNG'yi işaret ediyordu — bağlantının
        gittiği yer baştan beri analiz sayfasıydı. */
@@ -614,6 +634,10 @@ const tr = {
     disclaimer:
       "Bu analiz şirketin resmi bilanço bülteni ve kazanç çağrısına dayanır. Yatırım Tavsiyesi Değildir.",
     sourcesLabel: "Kaynaklar",
+    // Seçim piyasa değerine, sıra tarihe göre: künye ikisini birden söylüyor.
+    upcomingOrderNote: "En Büyük Şirketler · Tarih Sırasıyla",
+    upcomingOrderNoteWatch: "Takip Ettiklerin ve En Büyükler · Tarih Sırasıyla",
+    openAnalysisAria: "{company} analizini aç",
   },
 
   /* Teknik analiz — /teknik ve /teknik/[sembol].
@@ -838,6 +862,8 @@ const tr = {
     priceLevelsNote: "Seviyeler yüksek fiyattan düşüğe sıralıdır. Çubuklar şu anki fiyata uzaklığı ortak ölçekte gösterir; satır aralıkları fiyat mesafesi değildir.",
     priceMapNote: "Seviyeler fiyat sırasına göre dizilir, birbirine yakın olanlar okunabilsin diye ayrılır; uzaklıklar şu anki fiyattan ölçülür.",
     sectionsLabel: "Analiz Bölümleri",
+    // Dağılım logosunun bilgi kartı, yayını bekleyen sembolde.
+    pulseAwaiting: "Güncel analiz henüz yayımlanmadı.",
   },
 
   companies: {
@@ -1098,7 +1124,7 @@ const tr = {
 
   ipo: {
     title: "Halka Arz Takvimi",
-    window: "Önümüzdeki 6 hafta",
+    window: "Önümüzdeki 6 Hafta",
     empty: "Bu aralıkta planlanmış halka arz yok",
     emptyHint: "Sağlayıcı takvimi henüz yeni kayıt yayımlamadı.",
     statusExpected: "Beklenen",
@@ -1395,6 +1421,17 @@ const tr = {
       "Bu yazı henüz Türkçeye çevrilmedi; orijinal diliyle gösteriliyor.",
     disclaimer:
       "Bu yazı yayımlandığı tarihteki kamuya açık haber kaynaklarına dayanır. Yatırım Tavsiyesi Değildir.",
+    // Okuma rayı ve mobil içindekiler.
+    inThisArticle: "Bu Yazıda",
+    sectionCountOne: "{count} Bölüm",
+    sectionCountMany: "{count} Bölüm",
+    railLabel: "Yazı rehberi",
+    tocLabel: "İçindekiler",
+    sourceCountOne: "{count} Kaynak",
+    sourceCountMany: "{count} Kaynak",
+    opensInNewTab: "yeni sekmede açılır",
+    /* Rayın şirket künyesi: "olaydan bugüne" hangi kapanışa kadar. */
+    closeOn: "{date} Kapanışı",
   },
 
   macro: {

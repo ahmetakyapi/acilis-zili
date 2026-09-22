@@ -144,6 +144,25 @@ export function foldForSearch(text: string): string {
 }
 
 /**
+ * Açıklama penceresinin kısa adı: "Açılış Öncesi" · "Seans İçi" · "Kap.
+ * Sonrası". Saat bilinmiyorsa `null` — ne yazılacağına çağıran karar verir:
+ * tablo "Saat Belirsiz" diyor, öne çıkan kart ve yaklaşan satırları hiçbir
+ * şey demiyor (uydurma kesinlik yok, boş etiket de yok).
+ *
+ * Analiz kaydının `timing` alanı ile takvimin `hour` alanı aynı sağlayıcı
+ * kodlarını taşıyor; iki ekran aynı eşlemeyi ayrı ayrı yazıyordu.
+ */
+export function timingLabel(
+  timing: string | null | undefined,
+  t: Dictionary,
+): string | null {
+  if (timing === "bmo") return t.earnings.beforeOpenShort;
+  if (timing === "amc") return t.earnings.afterCloseShort;
+  if (timing === "dmh") return t.earnings.duringMarket;
+  return null;
+}
+
+/**
  * Kayıt satırını tablo satırına çevirir.
  *
  * Sunucuda koşar (sözlük ve biçimlendirme orada kalsın diye) ve çıktısı
@@ -155,14 +174,7 @@ export function toAnalysisRowView(
   locale: Locale,
   t: Dictionary,
 ): AnalysisRowView {
-  const timing =
-    row.timing === "bmo"
-      ? t.earnings.beforeOpenShort
-      : row.timing === "amc"
-        ? t.earnings.afterCloseShort
-        : row.timing === "dmh"
-          ? t.earnings.duringMarket
-          : t.earnings.timeUnknown;
+  const timing = timingLabel(row.timing, t) ?? t.earnings.timeUnknown;
 
   const revenueTone = toneOf(row.revenueYoyPct);
   const revenue =

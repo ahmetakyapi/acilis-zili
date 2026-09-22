@@ -122,20 +122,49 @@ function yutuldu(kaynak: string, error: unknown): void {
 /* Aynı aralık bir sayfada birden fazla bileşen tarafından isteniyor
    (ana sayfada gün şeridi ve bugünün takvimi). cache() argümanlara göre
    ayırır, yani farklı aralıklar hâlâ ayrı sorgu. */
-export const getEventsBetween = cache(async function getEventsBetween(
+/**
+ * Aynı okuma, ama "boş" ile "okunamadı" AYRI.
+ *
+ * `getEventsBetween` hatayı yutup `[]` dönüyor ve ana sayfanın küçük
+ * panelleri için bu yeterli. Takvim ekranı ise boş listeden OLGU çıkarıyor:
+ * gün gün "Açıklama Yok" satırları, şeritte boş gün etiketleri, kapakta
+ * "sıradaki açıklama". Neon düştüğünde bunların hepsi yedi ayrı yanlış iddia
+ * olurdu — halka arz takviminin `result.ok` ile çözdüğü sorunun aynısı.
+ * Çağıran `ok: false`ta hiçbir boşluk iddiası basmaz, yalnızca hata der.
+ */
+export type EventsResult =
+  | { ok: true; rows: EconomicEventRow[] }
+  | { ok: false };
+
+export const getEventsBetweenResult = cache(async function getEventsBetweenResult(
   from: string,
   to: string,
-): Promise<EconomicEventRow[]> {
+): Promise<EventsResult> {
   try {
-    return await db
+    const rows = await db
       .select()
       .from(economicEvents)
       .where(and(gte(economicEvents.eventDate, from), lte(economicEvents.eventDate, to)))
       .orderBy(asc(economicEvents.eventDate), asc(economicEvents.eventTimeEt));
+    return { ok: true, rows };
   } catch (error) {
-    yutuldu("getEventsBetween", error);
-    return [];
+    yutuldu("getEventsBetweenResult", error);
+    return { ok: false };
   }
+});
+
+/**
+ * Eski imza — hatayı `[]` olarak yutuyor; ana sayfanın küçük panelleri için
+ * yeterli. Sorgu TEK YERDE, yukarıdaki sonuç tipli okumada: iki kopya
+ * zamanla sıralama ya da sütun bakımından ayrışırdı (CLAUDE.md'nin "iki
+ * kod yolu" uyarısı).
+ */
+export const getEventsBetween = cache(async function getEventsBetween(
+  from: string,
+  to: string,
+): Promise<EconomicEventRow[]> {
+  const result = await getEventsBetweenResult(from, to);
+  return result.ok ? result.rows : [];
 });
 
 export async function getTodayEvents(): Promise<EconomicEventRow[]> {
@@ -221,6 +250,44 @@ export type UpcomingRow = {
   marketCap: number | null;
 };
 
+/* Aynı gün içindeki sıra: açılış öncesi, seans içi, kapanış sonrası; saati
+   bilinmeyen en sona. 22 Eylül'de 30 günlük pencerede satırların dörtte
+   üçünün (667) saati boştu — bilinmeyen, bilinenin önüne geçip "bu önce
+   geliyor" gibi okunmasın. */
+const SESSION_RANK: Readonly<Record<string, number>> = {
+  bmo: 0,
+  dmh: 1,
+  amc: 2,
+};
+const SESSION_UNKNOWN = 3;
+
+/**
+ * Yaklaşan bilanço satırlarının zaman sırası: tarih → seans → piyasa
+ * değeri (büyük önce, bilinmeyen sonda) → sembol. Son iki kademe aynı gün
+ * ve aynı pencerede açıklayan iki şirketin (13 Eki · JPM ve JNJ, ikisinin de
+ * saati boş) her çizimde aynı sırada durması için.
+ */
+export function byReportTime(
+  a: Pick<UpcomingRow, "reportDate" | "hour" | "marketCap" | "symbol">,
+  b: Pick<UpcomingRow, "reportDate" | "hour" | "marketCap" | "symbol">,
+): number {
+  if (a.reportDate !== b.reportDate) {
+    return a.reportDate < b.reportDate ? -1 : 1;
+  }
+  const session = (hour: string | null) =>
+    hour !== null && Object.hasOwn(SESSION_RANK, hour)
+      ? SESSION_RANK[hour]
+      : SESSION_UNKNOWN;
+  const bySession = session(a.hour) - session(b.hour);
+  if (bySession !== 0) return bySession;
+  if (a.marketCap !== b.marketCap) {
+    if (a.marketCap === null) return 1;
+    if (b.marketCap === null) return -1;
+    return b.marketCap - a.marketCap;
+  }
+  return a.symbol.localeCompare(b.symbol, "en");
+}
+
 /**
  * Yaklaşan bilançolar — EN BÜYÜKLERİ, veritabanında süzülmüş.
  *
@@ -230,11 +297,20 @@ export type UpcomingRow = {
  * `getSymbolNames` çağrılıyordu (binlerce elemanlı `inArray`), ve bütün bu
  * işin çıktısı ekrandaki BEŞ satırdı.
  *
- * Sıralama iki kademeli ve ikisi de sorguda: aynı sembolün birden çok tarihi
- * varsa (sağlayıcı tahmini güncellerken eski satırı bırakıyor) en yakın
- * tarih alınır, sonra piyasa değerine göre sıralanır. Piyasa değeri
- * bilinmeyen sembol en sona düşer — `symbols` tablosunda karşılığı olmayan
- * satırlar da listeden çıkmaz, sadece geriye gider.
+ * SEÇİM PİYASA DEĞERİNE GÖRE, SIRA ZAMANA GÖRE. Seçim sorguda ve iki
+ * kademeli: aynı sembolün birden çok tarihi varsa (sağlayıcı tahmini
+ * güncellerken eski satırı bırakıyor) en yakın tarih alınır, sonra piyasa
+ * değerine göre tavan uygulanır. Piyasa değeri bilinmeyen sembol en sona
+ * düşer — `symbols` tablosunda karşılığı olmayan satırlar da listeden
+ * çıkmaz, sadece geriye gider.
+ *
+ * Dönen DİZİ ise tarih sırasında (`byReportTime`). Bir dönem piyasa değeri
+ * sırasıyla dönüyordu ve iki çağıranın ikisi de tarih taşıyan bir liste
+ * çiziyor: ölçüldü (22 Eylül), analizler ekranının beş satırı "20 Eki, 30
+ * Eyl, 13 Eki, 13 Eki, 22 Eki" diye ileri geri akıyordu — TSLA, MU'nun
+ * üstündeydi. Detay sayfası bunu kendi içinde yamamıştı (seans kırılımı
+ * olmadan), analizler ekranı hiç yamamamıştı. Sıralama artık tek yerde ve
+ * bellekte: en fazla on satır, ek Neon turu yok.
  */
 export async function getUpcomingEarnings(
   from: string,
@@ -319,10 +395,12 @@ export async function getUpcomingEarnings(
 
     const rows = await db.select().from(uniq).orderBy(...order).limit(limit);
 
-    return rows.map((row) => ({
-      ...row,
-      logoUrl: logoSrc(row.symbol, row.logoUrl),
-    }));
+    return rows
+      .map((row) => ({
+        ...row,
+        logoUrl: logoSrc(row.symbol, row.logoUrl),
+      }))
+      .sort(byReportTime);
   } catch (error) {
     yutuldu("getUpcomingEarnings", error);
     return [];
