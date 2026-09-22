@@ -462,8 +462,7 @@ const en: typeof tr = {
   technical: {
     eyebrow: "Daily Technical Outlook",
     title: "Technical Analysis",
-    description:
-      "Trends, support and resistance, entry zones and stops for the stocks we follow.",
+    description: "Trend, support and resistance, entry zones and stops.",
     slotPremarket: "Pre-Market",
     slotMidsession: "Midday",
     slotLateday: "Late Session",
@@ -974,7 +973,7 @@ const en: typeof tr = {
     fearHigh: "Tense",
     fearPanic: "Panic",
     title: "Markets",
-    subtitle: "Indices, treasury yields and intraday moves: the market's pulse",
+    subtitle: "Indices, treasury yields and intraday moves.",
     yields: "US Treasury Yields",
     yieldY2: "2-Year",
     yieldY5: "5-Year",
@@ -1075,8 +1074,7 @@ const en: typeof tr = {
   stories: {
     title: "Close-Up",
     eyebrow: "Close-Up",
-    subtitle:
-      "Long reads on what happened in the market: what took place, why, and what it taught.",
+    subtitle: "Long reads on the mechanism behind the event.",
     latest: "Latest Piece",
     archive: "Earlier Pieces",
     showing: "{n} of {total} pieces",

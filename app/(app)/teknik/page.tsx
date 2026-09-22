@@ -11,6 +11,7 @@ import { verdictLabel, verdictOf, type VerdictKey } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
+import { industryLabel } from "@/lib/sectors";
 import { getQuotes } from "@/lib/providers";
 import { todayEt } from "@/lib/market-hours";
 import { displayZone, formatInZone } from "@/lib/session-clock";
@@ -203,6 +204,9 @@ export default async function TechnicalPage() {
                   quote={quoteMap[row.symbol] ?? null}
                   company={meta[row.symbol]?.name ?? null}
                   logoUrl={meta[row.symbol]?.logoUrl ?? null}
+                  marketCap={meta[row.symbol]?.marketCap ?? null}
+                  currency={meta[row.symbol]?.currency ?? null}
+                  sector={industryLabel(meta[row.symbol]?.industry, locale)}
                   priceLabel={priceLabel}
                   locale={locale}
                   t={t}

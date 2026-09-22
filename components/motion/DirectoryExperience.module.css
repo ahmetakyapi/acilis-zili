@@ -20,7 +20,10 @@
 .distribution b { color:var(--text-strong); font-weight:600; }
 .distributionTrack { grid-column:1/-1; display:block; height:7px; overflow:hidden; border-radius:3px; background:var(--rail-track); }
 .distributionFill { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--primary-ink),var(--primary)); transform-origin:left center; }
-.filters { min-width:0; padding:18px 20px; border:1px solid var(--line); border-radius:18px; background:var(--premium-surface); }
+/* Şerit artık kapağın İÇİNDE (bkz. /sirketler). Kendi kutusu yok: kapağın
+   zemini ve kenarlığı zaten var, ikinci bir çerçeve kutu içinde kutu
+   yapıyordu. Üstünde ince bir ayraç, içeriğin nerede değiştiğini söylüyor. */
+.filters { min-width:0; margin-top:20px; padding-top:16px; border-top:1px solid var(--line); }
 .tablePanel { border-radius:20px; overflow:hidden; }
 .tablePanel table thead { background:var(--surface-sunken); }
 .tablePanel tbody tr { transition:background .2s,box-shadow .2s; }

@@ -116,18 +116,37 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
         visual={<EarningsRadar rows={rows} meta={meta} locale={locale} t={t} />}
       >
         {
-          /* Anahtarın ALTINDA kapsadığı gerçek aralık. "Hafta" ve "Ay" birer
-             söz; sayfanın gösterdiği pencere `bugün → bugün + 6|29`.
-             Üçüncü günün başlığına inen okuyucu listenin nerede biteceğini
-             sona kadar kaydırarak öğreniyordu. İki tarih de hesaplanmış
-             değişkenlerde duruyor, uydurma yok. */
-          <div className={styles.calendarControls}>
-            {anahtar}
-            <p className="figure text-tiny text-muted">
-              {formatEtDateCompact(today, locale)} –{" "}
-              {formatEtDateCompact(rangeEnd, locale)}
-            </p>
-          </div>
+          <>
+            {/* SOL KOLON BOŞ DURUYORDU. Sağ kolon öne çıkan bilançoyu,
+                beklentileri ve iki ek şirketi taşırken sol kolonda başlıkla
+                anahtar arasında 150 pikselden fazla ölü alan vardı (ölçüldü,
+                1440px). Pencerenin KAPSAMI o boşluğun doğal içeriği: kaç
+                şirket ve kaç gün — ikisi de zaten elde olan sayılar, yeni
+                sorgu yok. Etiketler sözlükte hazırdı ama hiçbir yerde
+                kullanılmıyordu. */}
+            <dl className={styles.metrics}>
+              <div>
+                <dt>{t.directory.scheduledReports}</dt>
+                <dd className="numeral">{rows.length.toLocaleString(locale)}</dd>
+              </div>
+              <div>
+                <dt>{t.directory.reportingDays}</dt>
+                <dd className="numeral">{new Set(rows.map((row) => row.reportDate)).size}</dd>
+              </div>
+            </dl>
+            {/* Anahtarın ALTINDA kapsadığı gerçek aralık. "Hafta" ve "Ay" birer
+                söz; sayfanın gösterdiği pencere `bugün → bugün + 6|29`.
+                Üçüncü günün başlığına inen okuyucu listenin nerede biteceğini
+                sona kadar kaydırarak öğreniyordu. İki tarih de hesaplanmış
+                değişkenlerde duruyor, uydurma yok. */}
+            <div className={styles.calendarControls}>
+              {anahtar}
+              <p className="figure text-tiny text-muted">
+                {formatEtDateCompact(today, locale)} –{" "}
+                {formatEtDateCompact(rangeEnd, locale)}
+              </p>
+            </div>
+          </>
         }
       </DirectoryHeader>
 

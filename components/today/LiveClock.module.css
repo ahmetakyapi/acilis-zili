@@ -5,18 +5,23 @@
    Geri sayım (`Countdown.module.css`) istisna olarak kalıyor: oradaki metin
    saf rakam, ayraç ayrı bir elemanda ve saniye tikledikçe zıplamayı
    önlemek gerçek bir kazanç. */
-.clock { display:flex; align-items:center; gap:10px; flex-shrink:0; }
-.dial { width:38px; height:38px; fill:none; stroke:var(--primary-faint); stroke-width:1; }
+/* SAAT BÜYÜDÜ. Ana sayfanın üst şeridinde kadran 38, birincil saat 22
+   puntoydu ve hemen altındaki geri sayım 64 puntoyla duruyordu: seansın
+   KENDİ saati, ona kalan süreden üç kat küçük okunuyordu. Okuyucu bu
+   ekrana "şu an saat kaç, açılışa ne kaldı" diye geliyor — iki sayı da
+   aynı ağırlıkta olmalı. Kadran 52, birincil saat 30, ikincil 13. */
+.clock { display:flex; align-items:center; gap:13px; flex-shrink:0; }
+.dial { width:52px; height:52px; fill:none; stroke:var(--primary-faint); stroke-width:1; }
 .ticks { stroke:var(--text-muted); opacity:.6; }
-.hour { stroke:var(--text-strong); stroke-width:2; stroke-linecap:round; }
-.minute { stroke:var(--primary); stroke-width:1.5; stroke-linecap:round; }
+.hour { stroke:var(--text-strong); stroke-width:2.2; stroke-linecap:round; }
+.minute { stroke:var(--primary); stroke-width:1.7; stroke-linecap:round; }
 .pivot { fill:var(--primary); stroke:none; }
 .readings { display:flex; flex-direction:column; gap:2px; }
 .primary,.secondary { display:flex; align-items:baseline; gap:7px; }
-.primary time { font-size:22px; line-height:1.1; letter-spacing:-.035em; color:var(--text-strong); font-weight:600; }
-.primary > span,.secondary { font-size:10px; color:var(--text-muted); font-weight:500; }
-.secondary time { font-size:11px; }
+.primary time { font-size:30px; line-height:1.08; letter-spacing:-.04em; color:var(--text-strong); font-weight:600; }
+.primary > span,.secondary { font-size:11px; color:var(--text-muted); font-weight:500; }
+.secondary time { font-size:13px; }
 /* Mobilde yalnızca boşluk ve kadran küçülüyor; PUNTO KÜÇÜLMÜYOR.
    İkincil satır (New York saati) 10/11'den 9'a iniyordu — sığma sorunu
    yoktu, sadece okunmuyordu. */
-@media(max-width:767px) { .clock { gap:7px; } .dial { width:30px; height:30px; } .primary time { font-size:20px; } .primary,.secondary { gap:5px; } }
+@media(max-width:767px) { .clock { gap:9px; } .dial { width:40px; height:40px; } .primary time { font-size:25px; } .primary,.secondary { gap:5px; } }

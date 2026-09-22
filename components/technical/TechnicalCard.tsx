@@ -21,6 +21,7 @@ import {
   directionText,
   formatEtDateCompact,
   formatPercent,
+  formatMoneyCompact,
   formatPercentPlain,
   formatPrice,
 } from "@/lib/utils";
@@ -117,6 +118,9 @@ export function TechnicalCard({
   quote,
   company,
   logoUrl,
+  marketCap,
+  currency,
+  sector,
   priceLabel,
   locale,
   t,
@@ -126,6 +130,10 @@ export function TechnicalCard({
   quote: Quote | null;
   company: string | null;
   logoUrl: string | null;
+  /** Kimlik balonu için — `getSymbolNames` bunları zaten döndürüyor. */
+  marketCap: number | null;
+  currency: string | null;
+  sector: string | null;
   /** Kotasyon varken kullanılacak etiket ("Şu An" ya da "Son Fiyat"). */
   priceLabel: string;
   locale: Locale;
@@ -182,15 +190,62 @@ export function TechnicalCard({
   return (
     <SpotlightCard className={styles.card}>
       <div className={styles.cardHead}>
-        <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
-        <div className={styles.cardName}>
-          {/* h3: kartlar sayfanın "12 Hisse" bölümünün (sr-only h2) altında. */}
-          <h3 id={headingId} className={styles.cardSymbol}>
-            <Link href={technicalHref(row.symbol)} prefetch={false} className={styles.cardLink}>
-              {row.symbol}
-            </Link>
-          </h3>
-          {company && <span className={styles.cardCompany}>{company}</span>}
+        {/* KİMLİK BALONU. Kartta şirketin yalnızca sembolü ve kısaltılmış adı
+            var; sektörü ve büyüklüğü öğrenmek için detaya gitmek gerekiyordu.
+            Balon hepsini aynı yerde veriyor ve VERİSİ ZATEN ELDE: sayfa
+            `getSymbolNames` çağırıyor, o sorgu piyasa değerini ve sektörü de
+            döndürüyor — yeni bir tur yok.
+
+            İmleç YA DA klavye açıyor (`:focus-within`, sembol bağlantısı
+            odaklanınca). Dokunmatikte hover yok; orada kartın kendisi zaten
+            detaya götürüyor ve aynı bilgiler orada tam hâliyle duruyor, yani
+            balon bir zenginleştirme, tek yol değil. */}
+        <div className={styles.identity}>
+          <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
+          <div className={styles.cardName}>
+            {/* h3: kartlar sayfanın "15 Hisse" bölümünün (sr-only h2) altında. */}
+            <h3 id={headingId} className={styles.cardSymbol}>
+              <Link href={technicalHref(row.symbol)} prefetch={false} className={styles.cardLink}>
+                {row.symbol}
+              </Link>
+            </h3>
+            {company && <span className={styles.cardCompany}>{company}</span>}
+          </div>
+          <div className={styles.identityCard} aria-hidden>
+            <div className={styles.identityTop}>
+              <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
+              <div>
+                <strong className="numeral">{row.symbol}</strong>
+                {company && <span>{company}</span>}
+              </div>
+              <span className={cn(styles.stance, verdictPillClass(verdict))}>
+                {verdictLabel(verdict, t)}
+              </span>
+            </div>
+            <dl className={styles.identityFacts}>
+              {sector && (
+                <div>
+                  <dt>{t.companies.sector}</dt>
+                  <dd>{sector}</dd>
+                </div>
+              )}
+              <div>
+                <dt>{t.market.marketCap}</dt>
+                <dd className="numeral">{formatMoneyCompact(marketCap, locale, currency)}</dd>
+              </div>
+              <div>
+                <dt>{quote ? priceLabel : t.technical.atAnalysis}</dt>
+                <dd className="numeral">
+                  {formatPrice(price, locale, { currency: true })}
+                  {changePct !== null && (
+                    <span className={cn(directionText(directionOf(changePct)))}>
+                      {formatPercent(changePct, locale)}
+                    </span>
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </div>
         </div>
         <span className={styles.badges}>
           <span className={cn(styles.stance, verdictPillClass(verdict))}>

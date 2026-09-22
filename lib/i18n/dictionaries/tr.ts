@@ -432,8 +432,9 @@ const tr = {
        değil — Title Case kapsamı dışında. */
     endOfWeekList: "Haftanın sonu. Bir ay ilerisini görmek için aralığı değiştir.",
     endOfMonthList: "Ayın sonu. Daha yakın bir pencere için haftaya dön.",
-    subtitleLong:
-      "Şirketlerin finansal sonuç açıklama tarihleri · gün içinde piyasa değerine göre sıralı",
+    /* Tek satır: uzun hâli 1024px kapağın ikinci satırına tek kelime
+       bırakıyordu. Sıralama ölçütü zaten sütun başlığında yazılı. */
+    subtitleLong: "Şirketlerin finansal sonuç açıklama tarihleri · piyasa değerine göre sıralı",
     /* Bilançolar ekranının üç sekmesi — takvim, analizler ve takip listesi
        aynı konunun üç görünümü, ayrı sayfalar değil. */
     tabCalendar: "Takvim",
@@ -613,8 +614,9 @@ const tr = {
   technical: {
     eyebrow: "Günlük Teknik Görünüm",
     title: "Teknik Analiz",
-    description:
-      "Takip edilen hisselerin trendi, destek ve dirençleri, alım bölgesi ve stop seviyeleri.",
+    /* Tek satır: uzun hâli 1024px kapağın ikinci satırına iki kelime
+       bırakıyordu. */
+    description: "Takip edilen hisselerde trend, destek–direnç, alım bölgesi ve stop.",
     slotPremarket: "Açılış Öncesi",
     slotMidsession: "Seans İçi",
     slotLateday: "Kapanış Öncesi",
@@ -1330,8 +1332,11 @@ const tr = {
   stories: {
     title: "Mercek",
     eyebrow: "Mercek Altında",
-    subtitle:
-      "Piyasada yaşanan olayları yakından anlatan uzun yazılar: ne oldu, neden oldu, ne öğretti.",
+    /* TEK SATIR. Uzun hâli ("...uzun yazılar: ne oldu, neden oldu, ne
+       öğretti.") kapağın dar kolonunda ikinci satıra yalnızca iki kelime
+       bırakıyordu — öksüz satır, boşluk gibi okunuyor. Cümle üç soruyu iki
+       kelimeye indirip aynı şeyi söylüyor. */
+    subtitle: "Olayın arkasındaki mekanizmayı anlatan uzun yazılar.",
     latest: "Son Yazı",
     archive: "Önceki Yazılar",
     /* Sayaç `companies.showing`den ödünç alınıyordu ve "25 şirketin 24

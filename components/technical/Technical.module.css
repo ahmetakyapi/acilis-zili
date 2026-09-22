@@ -123,8 +123,20 @@
 .cardLink::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; }
 .cardLink:focus-visible { outline:none; }
 .cardHead { display:flex; align-items:center; gap:12px; min-width:0; }
-.cardName { display:flex; min-width:0; flex:1; flex-direction:column; gap:1px; }
-.cardSymbol { font-size:19px; line-height:1.2; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
+/* AD SÜTUNUNUN TABANI VAR. 320 pikselde görüş rozetinin yanına değişim
+   etiketi de gelince ("HOLD" + "Turned Hold") rozet grubu 153 piksele
+   çıkıyor ve `min-width:0` olan ad sütunu 41 piksele eziliyordu: dört
+   harfli semboller (INTC 47, RKLB 49 piksel) son harfini kaybediyordu.
+   Sembol kartın KİMLİĞİ, kısalacak olan şirket adıdır — o da zaten üç
+   noktayla kısalıyor. Taban beş harfli sembole (GOOGL) yetiyor; rozet
+   grubu karşılığında kendi içinde sarıyor. */
+.cardName { display:flex; min-width:60px; flex:1; flex-direction:column; gap:1px; }
+/* SEMBOL KIRPILMAZ. 320 pikselde İngilizce görüş rozeti ("HOLD"/"SELL")
+   Türkçesinden geniş ve ad sütununu sıkıştırıyordu: dört harfli semboller
+   (INTC, RKLB) 41 piksellik kutuda 47-49 piksel istiyor, yani son harf
+   kesiliyordu. Sembol kartın KİMLİĞİ — kısalacak olan şirket adıdır, o da
+   zaten üç nokta ile kısalıyor. */
+.cardSymbol { white-space:nowrap; font-size:19px; line-height:1.2; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
 .cardCompany { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
 /* ROZETLER YAN YANA — başlıklar eşit yükseklikte kalsın diye.
    Sütundu ve değişim rozeti olan kartın başlığı 54, olmayanınki 32 piksel
@@ -134,7 +146,7 @@
    şey hizalanmıyordu; on iki kartlık bir ızgarada göz satırı tarayamıyor.
    `wrap` duruyor: sembolü uzun bir kartta rozet yine alta iner, ama o zaman
    hizasızlık kuralın kendisi değil istisnası olur. */
-.badges { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px; }
+.badges { display:flex; min-width:0; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px; }
 /* Kartın cevabı da görüş. 12 pikseldi: sembolün (19) ve fiyatın (25-27)
    altında, kartın EN KÜÇÜK öğesi — oysa on iki kart taranırken gözün
    aradığı şey o. 15 piksel kapaktaki sıralamanın aynısını kuruyor (sembol,
@@ -1110,3 +1122,42 @@
  .analysisGrid { grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-areas:"map reading" "notes notes"; }
  .analysisReading { grid-template-rows:auto 1fr; }
 }
+
+/* ---- Kimlik balonu ----
+   Kart yalnızca sembolü ve kısaltılmış adı gösteriyor; sektör ve büyüklük
+   için detaya gitmek gerekiyordu. Balon ikisini de kartın üstünde veriyor.
+
+   Katman sırası kartın kendi katmanlarından geliyor: bağlantı kaplaması
+   z-1, ışık z-2 (bkz. `.cardLink::after` ve SpotlightCard), balon 4'te.
+   `pointer-events:none` bilinçli — balon bir hedef değil, bir okuma; imleç
+   onun üstünden geçerken kartın kendi bağlantısı çalışmaya devam ediyor ve
+   balon kapanıp açılarak titremiyor. */
+.identity { position:relative; display:flex; min-width:0; flex:1; align-items:center; gap:12px; }
+.identityCard {
+  position:absolute; z-index:4; top:calc(100% + 10px); left:-6px;
+  display:flex; flex-direction:column; gap:12px;
+  width:max-content; max-width:min(300px, calc(100vw - 48px));
+  padding:14px 16px;
+  border:1px solid var(--primary-faint); border-radius:16px;
+  background:radial-gradient(ellipse at 100% 0,var(--primary-tint),transparent 70%),var(--premium-surface);
+  box-shadow:var(--premium-shadow-hover);
+  opacity:0; visibility:hidden; transform:translateY(-4px);
+  transition:opacity .16s ease, transform .16s ease, visibility .16s;
+  pointer-events:none;
+}
+.identity:hover .identityCard,
+.identity:focus-within .identityCard { opacity:1; visibility:visible; transform:none; }
+.identityTop { display:flex; align-items:center; gap:11px; }
+.identityTop > div { display:flex; min-width:0; flex-direction:column; gap:2px; }
+.identityTop strong { font-size:15px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+.identityTop span { font-size:12px; line-height:1.35; color:var(--text-muted); }
+.identityTop > .stance { margin-left:auto; flex:none; padding:4px 10px; font-size:12px; }
+.identityFacts { display:grid; gap:7px; padding-top:11px; border-top:1px solid var(--line-soft); }
+.identityFacts > div { display:flex; align-items:baseline; justify-content:space-between; gap:14px; }
+.identityFacts dt { font-size:11px; color:var(--text-muted); }
+.identityFacts dd { display:flex; align-items:baseline; gap:7px; font-size:13px; font-weight:600; color:var(--text-strong); text-align:right; }
+.identityFacts dd span { font-size:12px; font-weight:550; }
+/* Dokunmatikte hover yok ve balon hiç açılmıyor; orada kartın kendisi
+   detaya götürüyor, aynı bilgiler orada tam hâliyle duruyor. */
+@media(hover:none) { .identityCard { display:none; } }
+@media(prefers-reduced-motion:reduce) { .identityCard { transition:none; transform:none; } }

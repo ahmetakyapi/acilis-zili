@@ -312,53 +312,65 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
       <DirectoryHeader className={companyStyles.hero} eyebrow={t.directory.companiesEyebrow} title={t.companies.title} description={t.companies.subtitle}
         visual={<CompanyLeaders leaders={leaders} labels={t.directory} locale={locale} />}>
 
-        <dl className={companyStyles.coverage}><div><dt>{t.directory.companyCount}</dt><dd>{companies.length.toLocaleString(locale)}</dd></div><div><dt>{t.directory.sectorCount}</dt><dd>{shownGroups.length}</dd></div></dl>
-        <CompanySearch action={withLocale("/sirketler", locale)} query={query} sector={activeGroup?.key}
-          sort={sort} direction={dir} labels={t.companies} />
+        {/* KAPSAM VE ARAMA AYNI SATIRDA. İkisi alt alta iki bant halindeydi
+            ve arama kendi etiket satırıyla birlikte 90 pikselden fazla yer
+            kaplıyordu. Aynı satırda okunması da doğru: solda dizinin NE
+            KADAR olduğu, sağda o dizinin içinde tek bir şirketi bulma yolu. */}
+        <div className={companyStyles.coverRow}>
+          <dl className={companyStyles.coverage}><div><dt>{t.directory.companyCount}</dt><dd>{companies.length.toLocaleString(locale)}</dd></div><div><dt>{t.directory.sectorCount}</dt><dd>{shownGroups.length}</dd></div></dl>
+          <CompanySearch action={withLocale("/sirketler", locale)} query={query} sector={activeGroup?.key}
+            sort={sort} direction={dir} labels={t.companies} />
+        </div>
+        {/* SEKTÖR ŞERİDİ DE KAPAĞIN İÇİNE. Kendi bandında duruyordu ve o
+            bant, kapağın sol sütununun altındaki boşlukla birlikte iki ayrı
+            ölü alan yapıyordu. Şerit kapağın içine girince hem o boşluk
+            doluyor hem bir bant tümüyle kalkıyor; okuma sırası da doğru
+            kalıyor: ne kadar var, tek şirketi nasıl bulurum, kümeyi nasıl
+            daraltırım. */}
+        {/* Kategori şeridi — geniş ekranda iki satıra sarar, mobilde kayar
+            (kaydırılabilir olduğu sağ kenar solmasından belli olur). */}
+        {shownGroups.length > 0 && (
+          <div className={cn("relative", styles.filters)}>
+            <ChipStrip
+              activeKey={activeGroup?.key ?? null}
+              /* ŞERİT HER GENİŞLİKTE TEK SATIR — `sm:flex-wrap` kalktı.
+                 Sarma, yüksekliği METNİN GENİŞLİĞİNE bağlıyordu ve o genişlik
+                 yazı tipi yüklenirken değişiyor: ölçüldü, 1440'ta kap yedek
+                 yazı tipiyle 114 piksel (çipler iki satır), gerçek yazı
+                 tipiyle 72 (tek satır). Font takası satırı bir anda 42 piksel
+                 kısaltıyor ve altındaki 1320×369'luk tablo yukarı zıplıyordu —
+                 yavaş bağlantıda masaüstünde CLS 0,379 ölçüldü, sitenin en
+                 kötü değeri. Tek satırda yükseklik metne bağlı değil, yani
+                 takas hiçbir şeyi oynatmıyor.
+                 Görsel olarak bugünkü hâl de zaten tek satır: on bir sektör
+                 1440'ta sığıyor. Sığmadığında sarmak yerine kayıyor ve
+                 kaydığı kenar solmasından belli oluyor (`ScrollEdges`) —
+                 mobildeki davranışın aynısı. */
+              className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12 sm:gap-2 sm:pb-0 sm:pr-0"
+            >
+              <SectorChip
+                href={sectorHref(null)}
+                active={!activeGroup}
+                label={t.companies.allSectors}
+                count={companies.length}
+              />
+              {shownGroups.map((group) => {
+                const active = group.key === activeGroup?.key;
+                return (
+                  <SectorChip
+                    key={group.key}
+                    href={sectorHref(active ? null : group.key)}
+                    active={active}
+                    label={sectorGroupLabel(group, locale)}
+                    count={groupCounts.get(group.key) ?? 0}
+                  />
+                );
+              })}
+            </ChipStrip>
+          </div>
+        )}
       </DirectoryHeader>
 
-      {/* Kategori şeridi — geniş ekranda iki satıra sarar, mobilde kayar
-          (kaydırılabilir olduğu sağ kenar solmasından belli olur). */}
-      {shownGroups.length > 0 && (
-        <div className={cn("relative", styles.filters)}>
-          <ChipStrip
-            activeKey={activeGroup?.key ?? null}
-            /* ŞERİT HER GENİŞLİKTE TEK SATIR — `sm:flex-wrap` kalktı.
-               Sarma, yüksekliği METNİN GENİŞLİĞİNE bağlıyordu ve o genişlik
-               yazı tipi yüklenirken değişiyor: ölçüldü, 1440'ta kap yedek
-               yazı tipiyle 114 piksel (çipler iki satır), gerçek yazı
-               tipiyle 72 (tek satır). Font takası satırı bir anda 42 piksel
-               kısaltıyor ve altındaki 1320×369'luk tablo yukarı zıplıyordu —
-               yavaş bağlantıda masaüstünde CLS 0,379 ölçüldü, sitenin en
-               kötü değeri. Tek satırda yükseklik metne bağlı değil, yani
-               takas hiçbir şeyi oynatmıyor.
-               Görsel olarak bugünkü hâl de zaten tek satır: on bir sektör
-               1440'ta sığıyor. Sığmadığında sarmak yerine kayıyor ve
-               kaydığı kenar solmasından belli oluyor (`ScrollEdges`) —
-               mobildeki davranışın aynısı. */
-            className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12 sm:gap-2 sm:pb-0 sm:pr-0"
-          >
-            <SectorChip
-              href={sectorHref(null)}
-              active={!activeGroup}
-              label={t.companies.allSectors}
-              count={companies.length}
-            />
-            {shownGroups.map((group) => {
-              const active = group.key === activeGroup?.key;
-              return (
-                <SectorChip
-                  key={group.key}
-                  href={sectorHref(active ? null : group.key)}
-                  active={active}
-                  label={sectorGroupLabel(group, locale)}
-                  count={groupCounts.get(group.key) ?? 0}
-                />
-              );
-            })}
-          </ChipStrip>
-        </div>
-      )}
 
       {/* Tablo AYRI AKIYOR. Eskiden kotasyonlar ve haftalık değişim sayfanın
           gövdesinde arka arkaya bekleniyordu: 514 sembol için altı ardışık

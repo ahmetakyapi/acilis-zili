@@ -104,6 +104,20 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
       ? Math.min(Math.ceil(requested / PAGE_STEP) * PAGE_STEP, 600)
       : PAGE_STEP;
 
+  /* ÇİPLER KAPAĞIN SAĞINA, LİSTENİN ÜSTÜNE DEĞİL. Şerit kapağın hemen
+     altında ayrı bir satırdı ve kapağın sağ yarısı boş duruyordu; ikisi
+     birleşince ilk ekrana bir şerit kadar daha yazı giriyor.
+
+     Sayım artık SAYFADA yapılıyor ve iki yere değil tek yere gidiyor:
+     `countStoriesBySymbol` `cache()` sarmalı olmayan düz bir sorgu (bkz.
+     lib/data.ts), yani çipleri ayrı bir bileşende hesaplamak tabloyu iki
+     kez okurdu. Filtreye BAĞLI olmayan bir sayım olduğu için Suspense
+     sınırının dışında beklenmesi listeyi geciktirmiyor. */
+  const tally = await countStoriesBySymbol();
+  const chips = [...tally.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 8);
+
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
@@ -111,6 +125,11 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
         eyebrow={t.stories.eyebrow}
         title={t.stories.title}
         description={t.stories.subtitle}
+        aside={
+          chips.length > 1 ? (
+            <StoryFilters chips={chips} active={symbolFilter} t={t} />
+          ) : undefined
+        }
       />
 
       <QueryTransition label={t.common.loading}>
@@ -186,6 +205,49 @@ function IntroLine({ t }: { t: Dictionary }) {
   );
 }
 
+/**
+ * Şirkete göre süzme — kapağın sağ sütununda.
+ *
+ * Çipler arşivin TAMAMINDAN türer, ekrandaki listeden değil: bir sembole
+ * süzdükten sonra diğerlerine geçebilmek gerekiyor ve sayının da gerçek
+ * toplamı söylemesi lazım.
+ *
+ * Şerit kapağın altındayken tek satırda yatay kayıyordu. Kapağın sağında
+ * yeri dar ama YÜKSEK: sekiz çip iki-üç satıra sarıyor ve kaydırmaya gerek
+ * kalmıyor. Dar ekranda ızgara tek kolona indiğinde eski davranış geri
+ * geliyor — orada sarmak yerine kaymak doğru, çünkü genişlik yok.
+ */
+function StoryFilters({
+  chips,
+  active,
+  t,
+}: {
+  chips: [string, number][];
+  active: string | null;
+  t: Dictionary;
+}) {
+  return (
+    <div className={styles.filterAside}>
+      <span className={styles.filterAsideLabel}>{t.stories.filterLabel}</span>
+      <ScrollEdges className={`${styles.storyFilters} flex items-center gap-2`}>
+        <FilterChip href="/mercek" active={!active}>
+          {t.stories.filterAll}
+        </FilterChip>
+        {chips.map(([symbol, count]) => (
+          <FilterChip
+            key={symbol}
+            href={symbol === active ? "/mercek" : `/mercek?sembol=${symbol}`}
+            active={symbol === active}
+          >
+            <span className="numeral">{symbol}</span>
+            <span className="ml-1.5 opacity-70">{count}</span>
+          </FilterChip>
+        ))}
+      </ScrollEdges>
+    </div>
+  );
+}
+
 async function StoryBoard({
   locale,
   t,
@@ -202,12 +264,11 @@ async function StoryBoard({
      17'de geçen bir şirkete süzülmek BOŞ sayfa veriyordu — yazı vardı, sorgu
      onu hiç görmüyordu. `getStoriesForSymbol` aynı aramayı Postgres'in
      `jsonb` içi aramasıyla, arşivin tamamında yapıyor. */
-  const [rows, total, tally] = await Promise.all([
+  const [rows, total] = await Promise.all([
     symbolFilter
       ? getStoriesForSymbol(symbolFilter, locale, limit)
       : getStories(locale, limit),
     countStories(),
-    countStoriesBySymbol(),
   ]);
 
   if (rows.length === 0 && !symbolFilter) {
@@ -217,13 +278,6 @@ async function StoryBoard({
       </Panel>
     );
   }
-
-  /* Filtre çipleri arşivin TAMAMINDAN türer, ekrandaki listeden değil: bir
-     sembole süzdükten sonra diğerlerine geçebilmek gerekiyor ve sayının da
-     gerçek toplamı söylemesi lazım. */
-  const chips = [...tally.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, 8);
 
   /* LİSTE ÇİZİLENDEN TÜRÜYOR, TAVANDAN DEĞİL.
      Burada bir dönem yazıların BÜTÜN sembolleri toplanıp 40'ta kesiliyordu.
@@ -291,27 +345,6 @@ async function StoryBoard({
 
   return (
     <div className="flex flex-col gap-6">
-      {chips.length > 1 && (
-        <ScrollEdges className={`${styles.storyFilters} flex flex-wrap items-center gap-2`}>
-          <span className="plate mr-0.5 text-nano tracking-[0.09em]">
-            {t.stories.filterLabel}
-          </span>
-          <FilterChip href="/mercek" active={!symbolFilter}>
-            {t.stories.filterAll}
-          </FilterChip>
-          {chips.map(([symbol, count]) => (
-            <FilterChip
-              key={symbol}
-              href={symbol === symbolFilter ? "/mercek" : `/mercek?sembol=${symbol}`}
-              active={symbol === symbolFilter}
-            >
-              <span className="numeral">{symbol}</span>
-              <span className="ml-1.5 opacity-70">{count}</span>
-            </FilterChip>
-          ))}
-        </ScrollEdges>
-      )}
-
       {rows.length === 0 ? (
         <Panel>
           <EmptyState

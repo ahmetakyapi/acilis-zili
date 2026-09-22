@@ -1,8 +1,11 @@
 .page { display: flex; flex-direction: column; gap: 24px; }
 .hero { position: relative; isolation: isolate; padding: 24px 32px 20px; border: 1px solid var(--line); border-radius: 24px; background: radial-gradient(ellipse at 88% 16%, var(--primary-wash), transparent 45%), var(--premium-surface); box-shadow: var(--premium-shadow); scroll-margin-top: 160px; }
 .heroTopline { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 650; letter-spacing: .025em; color: var(--primary-ink); }
-.dateline { display: flex; align-items: center; gap: 16px; font-size: 11px; font-weight: 550; color: var(--text-body); }
+/* Üst şerit saatle birlikte büyüdü: künye 11'den 12'ye, tarih 11'den
+   13'e. Saat 30 puntoya çıkınca yanındaki 11 punto onu bir künyenin
+   dipnotu gibi gösteriyordu. */
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 650; letter-spacing: .025em; color: var(--primary-ink); }
+.dateline { display: flex; align-items: center; gap: 18px; font-size: 13px; font-weight: 550; color: var(--text-body); }
 .dateline small { font-size: var(--text-nano); color: var(--text-muted); }
 .heroMain { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); align-items: center; gap: 36px; padding-top: 28px; padding-bottom: 10px; }
 .heroCopy { min-width: 0; }

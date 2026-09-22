@@ -469,3 +469,64 @@ geri alındı, kaynak doğrulanmış hâline döndü.
 
 Yerel ölçüm ve görüntüler `.tmp-technical/` altında; geçici betikler
 `.tmp-technical-*.mjs`. Fiziksel iOS/Safari testi yapılmadı.
+
+### İlk Ekran Yoğunluğu — 22 Eylül, İkinci Faz Birinci Tur
+
+Kullanıcının tek ölçütü: **ekrana ilk girişte scroll yapmadan doğru veriyle
+karşılaşmak.** Bu tur kapakları ve başlığı o ölçüte göre elden geçirdi.
+
+**Başlık dört yüzey taşıyordu, şimdi bir çizgi taşıyor.** 21 Eylül geçişi
+başlığı sakinleştirmek için yapılmıştı ama üst üste dört katman bırakmıştı:
+barın kendi 110° mavi degradesi, altına düşen 12 piksellik mavi solma,
+sekmelerin oturduğu ikinci bir mavi hap (kendi iç dikişleriyle) ve seçili
+sekmenin degrade + gölgeli beyaz hapı. Her biri tek başına savunulabilir;
+dördü aynı 69 pikselde üst üste gelince başlık ekranın en gürültülü yeri
+oluyordu. Zemin düz, seçili sekme 2 piksellik `--primary` çizgisiyle
+hairline'ın üstünde — bu kurallar zaten yazılıydı, dört satır onları
+eziyordu. `space-evenly` de kalktı: boşluğu sekme ARALARINA dağıtmak onu yok
+etmiyor, altı parçaya bölüp grubu koparıyordu; artı pay artık grubun iki
+yanında. Yükseklik 69 piksel, değişmedi.
+
+**Taban yükseklik ölü alan üretiyordu.** `min-height:176px` her kapağı en az
+176 piksele zorluyordu ama kendi karar kaydı "kısa sayfalara boş alan
+EKLEMEDEN ortak çerçeve" diyordu. Başlık hizasını sağlayan şey çerçevenin
+dolgusu ve `align-items:start`; taban yükseklik yalnızca kutunun ALTINA
+boşluk ekliyordu. Kalktı, başlık üstleri değişmedi.
+
+**Kapakların sağ yarısı iş görmeye başladı.** `SectionMasthead` bir sütun
+akışıydı ve geniş ekranda sağı tümüyle boştu (ölçüldü: /mercek 1440px'te
+1320 piksellik kutunun 690 pikseli). Yeni `aside` yuvası ekranın kendi
+denetimini oraya alıyor:
+
+- **Mercek**: "Şirkete Göre" şeridi kapağın altındaki ayrı banttan kapağın
+  sağına geçti; sayım sayfada bir kez yapılıyor (`countStoriesBySymbol`
+  `cache()` sarmalı olmayan düz bir sorgu, iki bileşende çağrılsa tablo iki
+  kez okunurdu). Açıklama da tek satıra indi.
+- **Takvim**: gün/hafta/ay seçimi ve önem filtresi kapağın sağına; aralarındaki
+  bant tümüyle kalktı. İlk gerçek içerik 1440px'te **y510 → y445**.
+- **Şirketler**: kapsam ve arama tek satırda; arama etiket satırını ve dolu
+  mavi düğmesini bıraktı, simge düğmeli bir hap oldu. Sektör şeridi de kendi
+  kutusundan çıkıp kapağın içine girdi — kutu içinde kutu kalktı. Tablo
+  **y580 → y513**.
+- **Bilançolar**: sol sütunda başlıkla anahtar arasında 150 pikselden fazla
+  ölü alan vardı; pencerenin kapsamı (kaç bilanço, kaç açıklama günü) oraya
+  girdi. Etiketler sözlükte hazırdı ama hiçbir yerde kullanılmıyordu.
+
+**Karşılaştırmada grafik üste çıktı.** Sembol şeridi önce geliyordu ve ekranın
+ana görseli ilk ekranın dışına düşüyordu. Şerit aynı zamanda grafiğin renk
+anahtarı, yani altında durması okumayı da doğruluyor.
+
+**Ana sayfada saat büyüdü.** Kadran 38→52, birincil saat 22→30, ikincil
+11→13, üst şerit künyesi 11→12/13. Seansın kendi saati, hemen altındaki 64
+puntoluk geri sayımdan üç kat küçük okunuyordu.
+
+**Öksüz satır taraması.** Başlık altı açıklamalarda son satırda bir-iki kelime
+kalan altı kapak bulundu (mercek TR iki genişlikte, bilançolar TR 1024,
+teknik TR/EN 1024, piyasalar EN 1440). Dördü kısaltıldı; ölçüt, son satırın
+genişliğinin ortalama satır genişliğinin üçte birinin altında kalması.
+
+Yol boyunca üç ölü kod: hiç kullanılmayan `EarningsRhythm` bileşeni, dizin
+kapağının `.metrics` kuralı (bilançolar kapağında canlandırıldı) ve başlığın
+artık çizilmeyen yüzeylerine ait `masthead-surface-in` / `masthead-depth`
+animasyonları. README'de de iki bayat sayı vardı: teknik liste "on iki hisse"
+ve "günde iki kez" diyordu; on beş ve üç yayın.

@@ -3,6 +3,14 @@
 .eyebrow { color:var(--primary); font-size:11px; font-weight:600; letter-spacing:.08em; margin-bottom:10px; }
 .hero h1 { font-size:var(--heading-page); line-height:1.12; max-width:15ch; }
 .hero p { line-height:1.65; }
+/* Kapağın sağ kolonu: pencere seçimi üstte, öne çıkan açıklama altında.
+   Seçim kapağın altındaki şeritten buraya taşındı (gerekçesi sayfada). */
+.heroSide { display:flex; min-width:0; flex-direction:column; align-items:stretch; gap:14px; }
+.heroControls { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:10px 14px; }
+.viewSwitch { display:flex; gap:4px; padding:4px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+.viewSwitch a { display:flex; align-items:center; justify-content:center; }
+.impactFilter { display:flex; gap:2px; }
+@media(max-width:1023px) { .heroControls { justify-content:flex-start; } }
 .feature { position:relative; display:grid; grid-template-columns:70px minmax(0,1fr); align-items:center; gap:22px; padding:22px 24px; overflow:hidden; border:1px solid var(--primary-faint); border-radius:18px; background:radial-gradient(ellipse at 95% 0,var(--primary-wash),transparent 75%),var(--premium-surface); box-shadow:var(--premium-shadow); transition:border-color .25s,transform .25s; }
 .feature::after { content:""; position:absolute; right:-40px; bottom:-95px; width:220px; height:220px; border:1px solid var(--primary-faint); border-radius:50%; pointer-events:none; }
 .dateBadge { display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--primary); border-right:1px solid var(--primary-faint); padding-right:20px; }

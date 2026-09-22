@@ -1,7 +1,7 @@
 "use client";
 
 import Form from "next/form";
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import { ArrowRight, MagnifyingGlass } from "@phosphor-icons/react";
 import { startRouteProgress } from "@/components/layout/RouteProgress";
 import type { Dictionary } from "@/lib/i18n";
 import styles from "./CompanyDirectory.module.css";
@@ -21,12 +21,19 @@ export function CompanySearch({ action, query, sector, sort, direction, labels }
       const target = `${action}?${params}`;
       if (target !== `${window.location.pathname}${window.location.search}`) startRouteProgress(target);
     }}>
-    <label htmlFor="company-query">{labels.searchLabel}</label>
+    {/* AYRI ETİKET SATIRI YOK. "Şirket Bul" kendi satırını kaplıyor ve altında
+        dolgulu, mavi düğmeli bir form kutusu duruyordu: dizinin kapağında bu
+        bir ARAÇ olmalı, doldurulacak bir form değil. Etiket görünmez ama
+        ekran okuyucuya duruyor; gönderme düğmesi alanın içinde, yalnızca
+        simge — klavyede zaten Enter gönderiyor. */}
+    <label className="sr-only" htmlFor="company-query">{labels.searchLabel}</label>
     <div className={styles.searchField}>
-      <MagnifyingGlass aria-hidden size={18} />
+      <MagnifyingGlass aria-hidden size={17} />
       <input key={query} id="company-query" name="q" type="search" defaultValue={query}
         placeholder={labels.searchPlaceholder} maxLength={100} autoComplete="off" />
-      <button type="submit">{labels.searchSubmit}</button>
+      <button type="submit" aria-label={labels.searchSubmit}>
+        <ArrowRight aria-hidden size={15} weight="bold" />
+      </button>
     </div>
     <input type="hidden" name="sirala" value={sort} />
     <input type="hidden" name="yon" value={direction} />

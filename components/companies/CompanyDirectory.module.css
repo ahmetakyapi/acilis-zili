@@ -1,28 +1,37 @@
 /* 390px baseline: the table began at y697, with no directory search.
    Inline coverage leaves room for a full-universe search in the existing cover. */
 .hero { gap:28px; }
-.coverage { display:flex; flex-wrap:wrap; gap:8px 24px; margin-top:18px; }
+/* Kapsam solda, arama sağda — tek satır. İkisi ayrı bant olduğunda arama
+   kendi etiket satırıyla birlikte 90 pikselden fazla yer kaplıyordu. */
+.coverRow { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px 28px; margin-top:20px; }
+.coverage { display:flex; flex-wrap:wrap; gap:8px 24px; }
 .coverage > div { display:flex; align-items:baseline; gap:7px; }
 .coverage dt { order:2; color:var(--text-muted); font-size:11px; }
 .coverage dd { color:var(--text-strong); font-size:22px; font-weight:600; letter-spacing:-.04em; }
-.search { margin-top:20px; }
-.search label { display:block; margin-bottom:8px; color:var(--text-strong); font-size:12px; font-weight:600; }
-.searchField { display:flex; min-width:0; align-items:center; gap:10px; padding:5px 5px 5px 13px; border:1px solid var(--line-strong); border-radius:12px; background:var(--surface-solid); transition:border-color .2s,box-shadow .2s; }
+.search { min-width:0; flex:1 1 250px; max-width:330px; }
+.searchField { display:flex; min-width:0; align-items:center; gap:9px; padding:4px 4px 4px 13px; border:1px solid var(--line); border-radius:999px; background:var(--surface-sunken); transition:border-color .2s,background .2s,box-shadow .2s; }
+.searchField:hover { border-color:var(--line-strong); background:var(--surface-solid); }
 .searchField:focus-within { border-color:var(--line-focus); box-shadow:0 0 0 3px var(--primary-tint); }
 .searchField > svg { flex-shrink:0; color:var(--text-muted); }
-.searchField input { min-width:0; width:100%; height:44px; color:var(--text-strong); background:transparent; font-size:13px; outline:none; }
+.searchField input { min-width:0; width:100%; height:36px; color:var(--text-strong); background:transparent; font-size:13px; outline:none; }
 .searchField input::placeholder { color:var(--text-muted); }
-.searchField button { min-height:44px; flex-shrink:0; padding:0 17px; border-radius:8px; background:var(--primary); color:var(--on-primary); font-size:12px; font-weight:600; cursor:pointer; }
-.searchField button:hover { background:var(--primary-ink); }
+/* Simge düğme: dolu mavi kutu kapakta ikinci bir çağrı gibi duruyordu.
+   Dokunma hedefi görsel kutudan büyük — ::after ile 44 piksele taşınıyor. */
+.searchField button { position:relative; display:grid; place-items:center; flex-shrink:0; width:34px; height:34px; border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); cursor:pointer; transition:background .2s,color .2s; }
+.searchField button::after { content:""; position:absolute; inset:-5px; }
+.searchField button:hover { background:var(--primary); color:var(--on-primary); }
+.searchField button:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 .results { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:14px 20px; border-bottom:1px solid var(--line); font-size:12px; color:var(--text-body); }
 .results p { overflow-wrap:anywhere; }
 .results a { display:inline-flex; min-height:44px; align-items:center; color:var(--primary-ink); font-weight:600; }
 @media(max-width:767px) {
  .hero { padding:20px 18px; gap:18px; }
- .coverage { margin-top:14px; gap:6px 20px; }
+ .coverRow { margin-top:14px; gap:12px 20px; }
+ .coverage { gap:6px 20px; }
  .coverage dd { font-size:20px; }
- .search { margin-top:16px; }
- .searchField { gap:8px; padding-left:10px; }
- .searchField button { padding-inline:13px; }
+ /* Dar ekranda arama tam genişliğe geçiyor: kapsam satırının yanında
+    kalsaydı iki rakamla aynı satırı paylaşıp 120 piksele düşerdi. */
+ .search { flex-basis:100%; max-width:none; }
+ .searchField { gap:8px; padding-left:11px; }
 }
 @media(prefers-reduced-motion:reduce) { .searchField { transition:none; } }
