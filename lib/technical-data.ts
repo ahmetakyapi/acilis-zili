@@ -615,6 +615,37 @@ export const getTechnicalBoard = cache(async function getTechnicalBoard(): Promi
   }
 });
 
+/**
+ * Daha önce EN AZ BİR KEZ yayımlanmış semboller.
+ *
+ * `pendingSymbols` sözleşmesi "henüz yayını olmayan" diyor ama çağıran ona
+ * PANOYU veriyordu ve pano yalnızca beş günden taze yayını taşıyor
+ * (`BOARD_WINDOW_DAYS`). Yayını aksayan bir sembol panodan düşüyor, oradan
+ * da "takip listesine yeni eklendi; ilk yayından sonra kartı görünecek"
+ * künyesine dönüşüyordu — onlarca kez yayımlanmış bir hisse için yanlış bir
+ * cümle, yani ekranın kendi uydurduğu bir kesinlik.
+ *
+ * Soru pencereli değil: "bu sembolü daha önce yayımladık mı". Sorgu tek
+ * sütun ve ayrık — tablo on beş sembol taşıyor, dönen küme de o kadar.
+ */
+export const getPublishedSymbols = cache(async function getPublishedSymbols(): Promise<
+  string[]
+> {
+  try {
+    const rows = await db
+      .selectDistinct({ symbol: technicalAnalyses.symbol })
+      .from(technicalAnalyses);
+    return rows.map((row) => row.symbol);
+  } catch (error) {
+    yutuldu("getPublishedSymbols", error);
+    /* Boş küme tek başına "hiç yayımlanmamış" demek olurdu ve sorgu
+       düştüğünde on beş sembolün hepsi yeni ilan edilirdi. Çağıran kümeye
+       panoyu da katıyor: panoda duran sembol zaten yayımlanmıştır, yani
+       sorgu düşse bile eski davranışa dönülüyor, yanlış cümleye değil. */
+    return [];
+  }
+});
+
 export type TechnicalHistoryRow = {
   sessionDate: string;
   slot: string;

@@ -255,7 +255,7 @@ export function AccountMenu({
            durumu anlatıyor. Masaüstünde 36 piksel ve 9'luk köşe: başlığın
            yarıçapları yalnızca 9 (kontroller) ve 16 (katmanlar). */
         className={cn(
-          "inline-flex size-11 items-center justify-center rounded-lg border text-small font-bold uppercase tracking-[0.02em] transition-colors lg:size-9 lg:rounded-md",
+          "masthead-account inline-flex size-11 items-center justify-center rounded-lg border text-small font-bold uppercase tracking-[0.02em] transition-colors lg:size-9 lg:rounded-md",
           signedIn
             ? "border-transparent bg-primary text-on-primary hover:bg-primary-hover"
             : "border-line bg-surface-elevated text-body hover:border-line-strong hover:text-strong",

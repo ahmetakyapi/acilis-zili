@@ -8,10 +8,10 @@ import styles from "./DirectoryExperience.module.css";
  * takviminin Hafta/Ay anahtarı bir dönem açıklamanın altında kendi
  * satırındaydı ve telefonda başlık kartını 24 + 44 piksel uzatıyordu;
  * ekran düzeni kuralı (CLAUDE.md) denetimi başlığın sağına koyuyor. */
-export function DirectoryHeader({ eyebrow, title, description, children, visual, control }: {
-  eyebrow: string; title: string; description?: string; children?: ReactNode; visual?: ReactNode; control?: ReactNode;
+export function DirectoryHeader({ eyebrow, title, description, children, visual, control, className = "" }: {
+  eyebrow: string; title: string; description?: string; children?: ReactNode; visual?: ReactNode; control?: ReactNode; className?: string;
 }) {
-  return <header className={`${styles.hero} page-frame`} data-has-visual={!!visual}>
+  return <header className={`${styles.hero} page-frame ${className}`} data-has-visual={!!visual}>
     <HeroAccent />
     <div className={`${styles.heroCopy} page-heading-copy`}>
       <p className={`${styles.eyebrow} page-eyebrow`}>{eyebrow}</p>

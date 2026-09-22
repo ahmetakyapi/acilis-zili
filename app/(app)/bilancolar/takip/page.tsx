@@ -130,6 +130,11 @@ export default async function WatchedEarningsPage(
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
+      {/* KAPAĞIN SAĞI BOŞTU. Bilançolar ekranının öteki iki sekmesi
+          `visual` yuvasını dolduruyor (takvimde öne çıkanlar, analizlerde
+          görüş dağılımı); bu sekme boş bırakıyordu ve aynı ekranın üç
+          görünümünden biri yarım duruyordu. Üç sayı da sayfada zaten
+          hesaplı, yeni sorgu yok. */}
       <DirectoryHeader
         eyebrow={t.directory.earningsEyebrow}
         title={t.analysis.title}
@@ -147,6 +152,23 @@ export default async function WatchedEarningsPage(
               </SegmentItem>
             ))}
           </Segment>
+        }
+        visual={
+          <dl className={styles.metrics}>
+            <div>
+              <dt>{t.directory.followedCompanies}</dt>
+              <dd className="numeral">{userSymbols.length}</dd>
+            </div>
+            <div>
+              <dt>{t.directory.scheduledReports}</dt>
+              <dd className="numeral">{rows.length}</dd>
+            </div>
+            {/* ÜÇÜNCÜ ÖLÇÜ KALDIRILDI. `analyses` bir LİSTE ve tavanı yirmi:
+                yirmiden fazla analizi olan bir takip listesinde sayı yirmide
+                donup kalırdı ve kapakta bir TOPLAM gibi okunurdu. Gerçek
+                toplamı veren bir sayım yok; olmayan bir sayıyı göstermektense
+                iki ölçüyle kalmak doğru. */}
+          </dl>
         }
       >
         {

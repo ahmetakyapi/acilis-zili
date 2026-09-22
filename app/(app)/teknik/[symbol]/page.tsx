@@ -1,4 +1,4 @@
-import { ArrowUpRight, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, ChartBar, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -10,7 +10,7 @@ import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
 import { MoreSymbols, type MoreSymbolEntry } from "@/components/technical/MoreSymbols";
 import { PlanStrip } from "@/components/technical/PlanStrip";
-import { PriceMap } from "@/components/technical/PriceMap";
+import { PriceMap, PriceMapNotes } from "@/components/technical/PriceMap";
 import { SignalStrip } from "@/components/technical/SignalStrip";
 import {
   changeToneClass,
@@ -19,7 +19,7 @@ import {
   planReadingTone,
 } from "@/components/technical/TechnicalCard";
 import styles from "@/components/technical/Technical.module.css";
-import { EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
+import { DataStamp, EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getDictionary, getI18n } from "@/lib/i18n";
@@ -40,7 +40,7 @@ import {
   technicalHref,
 } from "@/lib/technical";
 import { getTechnicalBoard, getTechnicalDetail } from "@/lib/technical-data";
-import { todayEt } from "@/lib/market-hours";
+import { isSessionTrade, todayEt } from "@/lib/market-hours";
 import {
   cn,
   directionOf,
@@ -185,9 +185,14 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   /* ETİKET TEK YERDE: kapak ve harita aynı adı kullanıyor. Kotasyon yoksa
      fiyat fotoğraftan geliyor ve adı "Analiz Anında"; seans dışında "Son
      Fiyat"; yalnızca açık seansta taze kotasyon "Şu An". */
+  /* "Şu An" burada da SEMBOL BAŞINA kanıtlanıyor; gerekçesi liste
+     sayfasında yazılı. */
   const priceLabel = !quote
     ? t.technical.atAnalysis
-    : status.session === "regular" && quotes.ok && !quotes.stale
+    : status.session === "regular" &&
+        quotes.ok &&
+        !quotes.stale &&
+        isSessionTrade(quote.tradedAt, status)
       ? t.technical.now
       : t.market.lastPrice;
   const next = nextEdition(new Date(), holidays);
@@ -316,10 +321,6 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           {locale === "en" && !hasEnglish && (
             <p className="text-small text-muted">{t.technical.langNote}</p>
           )}
-          <div className={styles.reading} data-tone={planReadingTone(reading)}>
-            <span className={styles.readingLabel}>{t.technical.readingLabel}</span>
-            <p>{planReadingText(reading, locale, t)}</p>
-          </div>
         </div>
 
         <div className={styles.coverSide}>
@@ -360,36 +361,57 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
               uzaklıklarıyla zaten veriyor.
               Liste kartında DURUYOR: orada harita yok, çizgi planın tek
               geometrisi (`TechnicalCard`). */}
-          <PlanStrip verdict={verdict} {...levelProps} size="lg" locale={locale} t={t} />
+          <div className={styles.reading} data-tone={planReadingTone(reading)}>
+            <span className={styles.readingLabel}>{t.technical.readingLabel}</span>
+            <p>{planReadingText(reading, locale, t)}</p>
+          </div>
+          <SignalStrip snapshot={row.snapshot} price={price} locale={locale} t={t} compact />
         </div>
 
-        <div className={styles.coverSignals}>
-          <SignalStrip snapshot={row.snapshot} price={price} locale={locale} t={t} />
+        {/* 21 Eylül: mobil kapak 1045px'ti. Plan tam genişlikte kendi
+            bandında; gösterge özeti ayrıntılarını anlattığı bölüme indi.
+            Böylece ilk ekran kimliği, görüşü ve planı birlikte okutur.
+
+            ÖZET SONRA KAPAĞA GERİ GELDİ — ama aynı biçimde değil. 9e1c3b6
+            kapağa `compact` dalı ekledi: üç sütun, tek satırlık okuma,
+            kapak sütununun dibine hizalı (`.signalsCompact`). Bölümdeki
+            geniş şerit yerinde duruyor; kapaktaki bir BAKIŞ, oradaki bir
+            ÖLÇÜ. Bu not bir süre yalnızca inişi anlatıyordu ve kodla
+            çelişiyordu; iki hâl de burada yazılı olsun. */}
+        <div className={styles.coverPlan}>
+          <PlanStrip verdict={verdict} {...levelProps} size="lg" locale={locale} t={t} />
         </div>
       </header>
 
-      <SectionNav className={styles.sectionNav} label={t.technical.sectionsLabel} items={sectionItems} />
+      <SectionNav className={styles.sectionNav} label={t.technical.sectionsLabel} items={sectionItems} trackAtNav />
 
       {/* ---- Fiyat haritası ve değerlendirme ---- */}
-      <div className={styles.twoCol}>
-        <section id="technical-levels" className={styles.block}>
+      <div className={styles.analysisGrid}>
+        <section id="technical-levels" className={cn(styles.block, styles.mapPanel)}>
           <div className={styles.blockHead}>
             <h2 className={styles.sectionTitle}>{t.technical.priceMap}</h2>
           </div>
           <PriceMap
             price={price}
             {...levelProps}
-            copy={copy}
             verdict={verdict}
             priceLabel={priceLabel}
-            lang={copyLang}
             locale={locale}
             t={t}
           />
+          {/* SEVİYELERİN DAYANAĞI HARİTANIN İÇİNE GİRDİ. Notlar tam genişlikte
+              kendi kenarlıklı bandındaydı ve `dt` etiketleri ("Alım Bölgesi /
+              Hedefler / Stop") aynı üç adı sayfada ÜÇÜNCÜ kez basıyordu —
+              kapaktaki plan şeridi ve haritanın kendi satırları ilk ikisi.
+              Not, dayanağını anlattığı seviyenin yanında dururken bilgi
+              taşıyor; ayrı bir bantta dururken yalnızca yer kaplıyordu.
+              Harita paneli komşu kolonun boyuna gerildiği için altında zaten
+              boş yer vardı: bant kalkıyor, o boşluk doluyor. */}
+          <PriceMapNotes {...levelProps} copy={copy} verdict={verdict} lang={copyLang} t={t} />
           <p className={styles.footHint}>{t.technical.priceMapNote}</p>
         </section>
 
-        <div id="technical-reading" className="flex min-w-0 flex-col gap-4">
+        <div id="technical-reading" className={styles.analysisReading}>
           <section className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.summary}</h2>
             {/* DEĞERLENDİRME TEK BLOK DEĞİL. Rutin metni tek paragraf olarak
@@ -405,6 +427,16 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                   {tieFigures(paragraph)}
                 </p>
               ))}
+            </div>
+            <div className={styles.volumeContext}>
+              <h3><ChartBar size={17} aria-hidden />{t.technical.volumeRead}</h3>
+              <div className={styles.proseStack} lang={copyLang}>
+                {proseParagraphs(copy.volume).map((paragraph) => (
+                  <p key={paragraph.slice(0, 24)} className={styles.prose}>
+                    {tieFigures(paragraph)}
+                  </p>
+                ))}
+              </div>
             </div>
           </section>
           <section className={styles.block}>
@@ -437,31 +469,23 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
               </span>
             )}
           </div>
+          <div className={styles.indicatorSummary}>
+            <SignalStrip snapshot={row.snapshot} price={price} locale={locale} t={t} />
+          </div>
           <IndicatorPanels snapshot={row.snapshot} price={price} locale={locale} t={t} />
         </section>
       </Reveal>
 
-      {/* ---- Hacim ve dikkat edilecekler ---- */}
-      <div id="technical-watch" className={styles.twoCol}>
-        <section className={styles.block}>
-          <h2 className={styles.sectionTitle}>{t.technical.volumeRead}</h2>
-          <div className={styles.proseStack} lang={copyLang}>
-            {proseParagraphs(copy.volume).map((paragraph) => (
-              <p key={paragraph.slice(0, 24)} className={styles.prose}>
-                {tieFigures(paragraph)}
-              </p>
-            ))}
-          </div>
-        </section>
-        <section className={styles.block}>
-          <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>
-          <ul className={styles.watch} lang={copyLang}>
-            {copy.watch.map((item) => (
-              <li key={item}>{tieFigures(item)}</li>
-            ))}
-          </ul>
-        </section>
-      </div>
+      {/* Volume interpretation now accompanies the main assessment. Watch
+          items form one shared reading strip, rather than mismatched cards. */}
+      <section id="technical-watch" className={cn(styles.block, styles.watchPanel)}>
+        <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>
+        <ul className={styles.watch} lang={copyLang}>
+          {copy.watch.map((item) => (
+            <li key={item}>{tieFigures(item)}</li>
+          ))}
+        </ul>
+      </section>
 
       {/* ---- Görüş geçmişi ---- */}
       {history.length > 1 && (
@@ -528,6 +552,27 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           </Link>
         </p>
       </div>
+
+      {/* Damganın gerekçesi liste sayfasında yazılı. Burada ayrıca gerekli:
+          kapaktaki fiyat ekranın en büyük sayısı ve "Diğer Şirketler"
+          kartlarının yüzdeleri de aynı pakete bağlı — o yüzdeler kendi
+          künyesini taşımıyor, bayatlığı bu damga söylüyor. Göstergelerin
+          kapanış tarihi ayrı bir künye (`snapshotNote`) ve o bölümün
+          içinde kalıyor; kotasyonun yaşını anlatmıyor. */}
+      {quotes.ok && (
+        <DataStamp
+          labels={t.data}
+          source={quotes.source}
+          at={quotes.fetchedAt}
+          stale={quotes.stale}
+          locale={locale}
+          note={
+            status.session === "pre-market" || status.session === "after-hours"
+              ? t.data.extendedNote
+              : undefined
+          }
+        />
+      )}
 
       <GuideHint
         label={t.guide.contextLabel}

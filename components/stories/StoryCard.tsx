@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { StoryBrands, type CastMember } from "@/components/stories/StoryVisual";
 import { Panel } from "@/components/ui/primitives";
 import type { StoryIndexRow } from "@/lib/data";
@@ -49,6 +49,7 @@ export function StoryCard({
         {cast.length > 0 ? (
           <StoryBrands
             cast={cast}
+            labels={t.stories}
             total={total}
             locale={locale}
           />

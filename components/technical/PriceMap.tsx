@@ -4,11 +4,27 @@ import { distancePct, formatRange, ladderOf, priceMapLayout, type MapRung, type 
 import { cn, formatPercent, formatPrice } from "@/lib/utils";
 import styles from "./Technical.module.css";
 
-/** Etiket başına ayrılan dikey yer. Bütün satırlar aynı yükseklikte. */
-const ROW_GAP = 46;
+/**
+ * Satır başına ayrılan dikey BÜTÇE — haritanın boyunu bu belirler.
+ *
+ * BÜTÇE İLE ASGARİ AYRIM AYNI SABİTTEN BESLENİYORDU VE HARİTA ORANTISINI
+ * KAYBEDİYORDU. Yükseklik `rows * ROW_GAP + 40`, gevşetmenin tabanı da aynı
+ * `ROW_GAP`; aradaki ölçek payı `ROW_GAP - 4`, yani SATIR SAYISINDAN
+ * BAĞIMSIZ sabit 42 piksel. Ölçüldü (1440px): NVDA'da sekiz aralığın yedisi,
+ * MU ve TSLA'da yedinin altısı tam tabanda — yani %0,1 uzaktaki destek ile
+ * %5 uzaktaki stop aynı mesafede duruyordu. Harita, yerine geçtiğini
+ * söylediği eşit aralıklı merdivenin ta kendisi olmuştu.
+ *
+ * İki sayı ayrıldı: `ROW_MIN` iki satırın ÇAKIŞMAMASI için gereken taban
+ * (satırın kendisi 33 piksel), `ROW_BUDGET` ise kutuya ayrılan yer. Dokuz
+ * basamakta kutu boyu aynı kalıyor ama ölçeğin dağıtabileceği pay 36'dan
+ * 86 piksele çıkıyor: uzak seviyeler gerçekten uzak duruyor.
+ */
+const ROW_MIN = 34;
+const ROW_BUDGET = 34;
 /** Stopun altındaki bölgeye ayrılan dip şeridi — künyesi de içinde. */
 const VOID_STRIP = 34;
-const MIN_HEIGHT = 360;
+const MIN_HEIGHT = 320;
 const MAX_HEIGHT = 720;
 
 /**
@@ -33,10 +49,10 @@ const MAX_HEIGHT = 720;
  * yüksekliği sarmaya, sarma genişliğe bağlı — sunucu bunu bilemez, yani
  * sabit bir pay vermek tahmin olurdu. Haritanın işi sıralama ve uzaklık;
  * "bu seviye nereden geldi" bir cümle ve cümlenin yeri listedir. Artık her
- * satır aynı yükseklikte (33 piksel) ve 46 piksellik ayrım her zaman yeter.
+ * satır aynı yükseklikte (33 piksel) ve 34 piksellik taban ayrım yeter.
  *
  * Yükseklik satır sayısından hesaplanıyor (ölçmeye gerek yok): her satıra
- * `ROW_GAP` piksel, alt sınır 360, üst 720. Uzaklık fiyattan seviyeye
+ * `ROW_BUDGET` piksel artı sabit pay, alt sınır 320, üst 720. Uzaklık fiyattan seviyeye
  * (LevelLadder'daki gerekçe): hedef için artı, stop için eksi.
  */
 export function PriceMap({
@@ -47,10 +63,8 @@ export function PriceMap({
   targets,
   supports,
   resistances,
-  copy,
   verdict,
   priceLabel,
-  lang,
   locale,
   t,
 }: {
@@ -61,11 +75,8 @@ export function PriceMap({
   targets: readonly number[];
   supports: readonly number[];
   resistances: readonly number[];
-  copy: TechnicalCopy;
   verdict: VerdictKey;
   priceLabel: string;
-  /** Notların dili — İngilizce sayfada çevrilmemiş metin Türkçe okunur. */
-  lang: string;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -79,9 +90,9 @@ export function PriceMap({
      büyütmek tek başına çözmedi: yerleşim boyu ne verilirse satırları ona
      yayıyor, yani şerit yine kapanıyordu. Satırlar KISA boya yerleşiyor,
      kutu şerit kadar UZUN çiziliyor; aradaki fark stopun altına kalıyor. */
-  const layoutHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, rows * ROW_GAP + 40));
+  const layoutHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, rows * ROW_BUDGET + 96));
   const height = layoutHeight + (stop !== null ? VOID_STRIP : 0);
-  const { rungs, scale } = priceMapLayout(levels, price, { height: layoutHeight, gap: ROW_GAP });
+  const { rungs, scale, lo, hi } = priceMapLayout(levels, price, { height: layoutHeight, gap: ROW_MIN });
   const money = (value: number) => formatPrice(value, locale, { currency: true });
   const sellSide = verdict === "sell";
 
@@ -102,18 +113,6 @@ export function PriceMap({
     }
   };
 
-  /* Notlar seviye sırasına göre: hedefler, alım bölgesi, stop. Yalnızca
-     yazılmış olanlar listeye giriyor; hiçbiri yoksa liste hiç basılmıyor. */
-  const noteList = rungs
-    .map((rung) => ({
-      /* Hedef notu ÜÇ hedefi birden anlatıyor ("ilk iki hedef … üçüncüsü …")
-         ama ilk hedefin satırına bağlı; "Hedef 1" diye etiketlenince not
-         yalnız o seviyeyi tarif ediyormuş gibi okunuyordu. */
-      label: rung.kind === "target" ? (sellSide ? t.technical.planTargets : t.technical.targetsLabel) : labelOf(rung),
-      text: noteOf(rung, copy),
-    }))
-    .filter((item): item is { label: string; text: string } => item.text !== null);
-
   const entryTop = entryLow !== null && entryHigh !== null ? scale(entryHigh) : null;
   const entryBottom = entryLow !== null && entryHigh !== null ? scale(entryLow) : null;
   /* STOP ALTI BÖLGESİ SATIRIN ALTINDAN BAŞLIYOR, ORTASINDAN DEĞİL.
@@ -121,7 +120,7 @@ export function PriceMap({
      geçiyor ve yazının üstünü çiziyordu (ölçüldü, 390). Bölgenin anlamı
      "bu satırın ALTINDA kalan her şey"; sınırı da satırın alt kenarı. */
   const stopRung = rungs.find((rung) => rung.kind === "stop");
-  const stopY = stopRung ? stopRung.markY + ROW_GAP / 2 : null;
+  const stopY = stopRung ? stopRung.markY + ROW_MIN / 2 : null;
   const priceY = price !== null ? scale(price) : null;
 
   const kindOf = (rung: MapRung) =>
@@ -186,6 +185,17 @@ export function PriceMap({
       </div>
 
       {/* ---- Eksen: çizgi, çentikler ---- */}
+      {/* EKSENİN İKİ UCU ARTIK ADLANDIRILMIŞ. Cetvel fiyata orantılı ama
+          hangi aralığı kapsadığını hiçbir yerde söylemiyordu: haritanın tek
+          künyesi üçüncü sütunu adlandırıyor ("Fiyata Uzaklık"), eksenin
+          kendisi sessizdi. İki sayı zaten `priceMapLayout` içinde hesaplı.
+          `aria-hidden` DEĞİL — eksenin sınırları bir okuma, süs değil. */}
+      <span className={styles.mapBound} data-edge="top">
+        {money(hi)}
+      </span>
+      <span className={styles.mapBound} data-edge="bottom">
+        {money(lo)}
+      </span>
       <div className={styles.mapRail} aria-hidden>
         <span className={styles.mapLine} />
         {/* ÇENTİK, NOKTA DEĞİL. Noktalar 14 piksel çapındaydı ve eksen fiyata
@@ -231,14 +241,19 @@ export function PriceMap({
           const crossed = crossedState(rung.kind, distance);
           return (
             <li key={`${rung.kind}-${rung.price}`} className={styles.mapRung} data-kind={kind} style={{ top: rung.labelY }}>
-              <span className={styles.mapLabel}>{labelOf(rung)}</span>
-              <span className={cn(styles.mapPrice, "numeral")}>{value}</span>
-              <span className={styles.mapDistance}>
+              <span className={styles.mapLabel}>{labelOf(rung)}
                 {crossed && (
                   <b className={styles.mapCrossed} data-state={crossed}>
                     {crossed === "passed" ? t.technical.levelPassed : t.technical.levelBroken}
                   </b>
                 )}
+              </span>
+              <span className={cn(styles.mapPrice, "numeral")}>
+                {rung.kind === "entry" && value.includes("–")
+                  ? <>{value.split("–")[0]}–<wbr />{value.split("–")[1]}</>
+                  : value}
+              </span>
+              <span className={styles.mapDistance}>
                 {distance !== null && (
                   /* YÜZDE YÖNÜNÜ RENKLE DE SÖYLÜYOR. Sütun tek tonda
                      duruyordu ve haritanın kendi dili zaten renkliydi:
@@ -269,21 +284,31 @@ export function PriceMap({
         })}
       </ol>
     </div>
-    {noteList.length > 0 && (
-      /* Tanım listesi: terim seviyenin adı, tanım nereden geldiği. Dar
-         ekranda alt alta, geniş ekranda iki sütun — makale kutularındaki
-         `**Etiket:**` kalıbıyla aynı okuma biçimi. */
-      <dl className={styles.mapNotes} lang={lang}>
-        {noteList.map((item) => (
-          <div key={item.label}>
-            <dt>{item.label}</dt>
-            <dd>{item.text}</dd>
-          </div>
-        ))}
-      </dl>
-    )}
+
     </>
   );
+}
+
+/** Notes share the same real levels as the map. They sit in a full-width
+ * editorial row so a long explanation no longer stretches only the map's
+ * column. Missing levels never acquire a note from a different plan. */
+export function PriceMapNotes({ copy, verdict, lang, t, ...levels }: {
+  copy: TechnicalCopy; verdict: VerdictKey; lang: string; t: Dictionary;
+  entryLow: number | null; entryHigh: number | null; stop: number | null;
+  targets: readonly number[]; supports: readonly number[]; resistances: readonly number[];
+}) {
+  const notes = ladderOf(levels).map((level) => ({
+    label: level.kind === "target" ? (verdict === "sell" ? t.technical.planTargets : t.technical.targetsLabel)
+      : level.kind === "entry" ? t.technical.entryZone : t.technical.stop,
+    text: noteOf(level, copy),
+  })).filter((note): note is { label: string; text: string } => Boolean(note.text));
+  if (!notes.length) return null;
+  return <section className={styles.planNotes} aria-labelledby="technical-plan-notes">
+    <h2 id="technical-plan-notes" className={styles.sectionTitle}>{t.technical.levelRationale}</h2>
+    <dl className={styles.mapNotes} lang={lang}>
+      {notes.map((note) => <div key={note.label}><dt>{note.label}</dt><dd>{note.text}</dd></div>)}
+    </dl>
+  </section>;
 }
 
 /**

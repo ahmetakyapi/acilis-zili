@@ -25,7 +25,7 @@
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB |
 | Ortam değişkeni | 12 (`.env.example`) |
 | Cron | `/api/cron/daily` — hafta içi 10:30 UTC (13:30 TR) |
-| İçerik rutini | 5 adet, claude.ai üzerinde elle kurulu (teknik analiz günde iki koşu) |
+| İçerik rutini | 5 adet, claude.ai üzerinde elle kurulu (teknik analiz günde üç koşu) |
 
 **Tohumlanan veri:** 23 NYSE tatili (üçü yarım gün) · CPI/FOMC/istihdam yayın
 takvimi · 81 temel sembol · 635 endeks üyesi (S&P 500 + Nasdaq 100 + Dow,
@@ -45,9 +45,8 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       çok değeri olan ilk adım muhtemelen `lib/market-hours.ts` ve
       `lib/compare.ts` gibi saf yardımcıların birim testi olurdu.
 - [ ] **Kayıt → giriş → favori akışının canlıda kullanıcı testi.**
-- [ ] **Teknik analiz rutininin claude.ai'de kurulması** — tek görev, günde
-      iki koşu (`docs/claude-rutinler.md` § 5). Kurulana kadar `/teknik` boş
-      durumu gösterir.
+- [x] **Teknik analiz rutini claude.ai'de kurulu** — tek görev, günde üç
+      koşu (`docs/claude-rutinler.md` § 5). `/teknik` canlıda dolu.
 - [ ] (İsteğe bağlı) Neon şifresi + Finnhub anahtarı rotasyonu.
 
 ---

@@ -12,6 +12,15 @@
 .storyFilters { display:flex; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent; padding-block:2px 7px; }
 .storyFilters > * { flex-shrink:0; }
 .storyFilters a { min-height:40px; font-size:12px; }
+/* Kapağın sağ sütununda: genişlik dar, yükseklik bol. Çipler kaymak yerine
+   sarıyor — sekiz çip iki-üç satır, hepsi tek bakışta. Dar ekranda ızgara
+   tek kolona indiğinde kaydırma geri geliyor (bkz. 1023px kırılımı). */
+.filterAside { display:flex; min-width:0; flex-direction:column; gap:8px; max-width:420px; }
+.filterAsideLabel { font-size:11px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--text-muted); }
+@media(min-width:1024px) {
+ .filterAside .storyFilters { flex-wrap:wrap; overflow:visible; justify-content:flex-end; gap:8px; padding-block:0; }
+ .filterAside { align-items:flex-end; }
+}
 .lead { display:block; min-width:0; border-radius:24px; }
 .lead > section { padding:30px; border-radius:24px; background:radial-gradient(ellipse at 10% 0,var(--primary-wash),transparent 65%),var(--premium-surface); box-shadow:var(--premium-shadow); transition:border-color .3s,box-shadow .3s; }
 .leadLayout { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:32px; align-items:center; }

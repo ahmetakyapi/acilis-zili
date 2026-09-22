@@ -1,6 +1,8 @@
 import Image from "next/image";
 import styles from "./StoryVisual.module.css";
-import { cn, directionOf, directionText, formatPercent } from "@/lib/utils";
+import { cn, directionOf, directionText, formatPercent, formatPrice, formatEtDateCompact } from "@/lib/utils";
+import type { StoryClose } from "@/lib/story-market";
+import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 
 /**
@@ -30,6 +32,7 @@ export type CastMember = {
   logoUrl?: string | null;
   /** Olayın gününden bugüne getiri; hesaplanamıyorsa null. */
   sinceEvent: number | null;
+  lastClose?: StoryClose | null;
 };
 
 /**
@@ -93,12 +96,14 @@ export function StoryBrands({
   total,
   locale,
   max = 4,
+  labels,
 }: {
   cast: CastMember[];
   /** Yazıda geçen toplam sembol sayısı — şeride sığmayanlar sayıyla söylenir. */
   total: number;
   locale: Locale;
   max?: number;
+  labels: Dictionary["stories"];
 }) {
   const shown = cast.slice(0, max);
   if (shown.length === 0) return null;
@@ -130,16 +135,20 @@ export function StoryBrands({
         </span>
       </span>
 
-      {lead.sinceEvent !== null && (
-        <span className="shrink-0 pl-2 text-right">
+      {(lead.sinceEvent !== null || lead.lastClose) && (
+        /* 21 September: a group of logos does not identify the first
+           company's return. Restore attribution at readable type size. */
+        <span className={styles.brandReading}>
+          <span className={styles.readingCaption}>{lead.symbol} · {lead.sinceEvent !== null ? labels.sinceEvent : labels.lastClose}</span>
           <span
             className={cn(
               "numeral block text-read font-bold leading-none",
               directionText(tone),
             )}
           >
-            {formatPercent(lead.sinceEvent, locale)}
+            {lead.sinceEvent !== null ? formatPercent(lead.sinceEvent, locale) : formatPrice(lead.lastClose?.price, locale, { currency: true })}
           </span>
+          {lead.sinceEvent === null && lead.lastClose && <span className={styles.readingDate}>{formatEtDateCompact(lead.lastClose.date, locale)}</span>}
           {/* İKİ KÜNYE SATIRI KALKTI. İkisi de 8 punto — mobil okunabilirlik
               tabanının altında — ve ikisi de tekrar: sembol hemen soldaki
               şeritte ve logo karosunda zaten yazılı (üstelik hisse sayfasında
@@ -166,6 +175,7 @@ export function StoryCast({
   total,
   title,
   sinceLabel,
+  closeLabel,
   eventDate,
   moreLabel,
   locale,
@@ -174,6 +184,7 @@ export function StoryCast({
   total: number;
   title: string;
   sinceLabel: string;
+  closeLabel: string;
   /** Ölçünün başladığı gün — künyenin altında yazılır. */
   eventDate: string;
   /** "+{count} şirket daha" — şablon. */
@@ -183,6 +194,8 @@ export function StoryCast({
   const shown = cast.slice(0, 3);
   if (shown.length === 0) return null;
   const rest = total - shown.length;
+  const sharedCloseDate = shown.every(member => member.sinceEvent === null && member.lastClose?.date === shown[0].lastClose?.date)
+    ? shown[0].lastClose?.date ?? null : null;
 
   return (
     <div className={`${styles.cast} overflow-hidden rounded-(--radius-lg) border border-primary-faint bg-surface-solid/70`}>
@@ -197,10 +210,10 @@ export function StoryCast({
             başına hangi günden beri olduğunu söylemiyordu. */}
         <span className="shrink-0 whitespace-nowrap text-right">
           <span className="block text-micro uppercase tracking-[0.07em] text-muted">
-            {sinceLabel}
+            {shown.every(member => member.sinceEvent === null) ? closeLabel : sinceLabel}
           </span>
           <span className="numeral block text-nano leading-tight text-body">
-            {eventDate}
+            {sharedCloseDate ? formatEtDateCompact(sharedCloseDate, locale) : shown.some(member => member.sinceEvent !== null) ? eventDate : null}
           </span>
         </span>
       </div>
@@ -231,12 +244,15 @@ export function StoryCast({
               <span
                 className={cn(
                   "numeral shrink-0 text-base font-bold",
-                  member.sinceEvent === null ? "text-muted" : directionText(tone),
+                  member.sinceEvent === null ? "text-strong" : directionText(tone),
                 )}
               >
-                {member.sinceEvent === null
-                  ? "—"
-                  : formatPercent(member.sinceEvent, locale)}
+                {member.sinceEvent === null && member.lastClose ? (
+                  <>{!sharedCloseDate && <small className={styles.readingCaption}>{closeLabel}</small>}
+                    {formatPrice(member.lastClose.price, locale, { currency: true })}
+                    {!sharedCloseDate && <small className={styles.readingDate}>{formatEtDateCompact(member.lastClose.date, locale)}</small>}
+                  </>
+                ) : member.sinceEvent === null ? "—" : formatPercent(member.sinceEvent, locale)}
               </span>
             </li>
           );

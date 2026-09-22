@@ -1,5 +1,6 @@
+import { withLocale } from "@/lib/i18n/routing";
 import { cache, Suspense } from "react";
-import { MotionExperience, ScrollStage, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
+import { MotionExperience, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CalendarBlank, Waveform } from "@phosphor-icons/react/dist/ssr";
@@ -233,9 +234,8 @@ export default async function TodayPage() {
                 <strong>{targetTime} <small>{zoneTag(locale).primary}</small></strong>
               </time>
             </div>
-            <div className={styles.heroFooter}>
-              <p className={styles.description}>{t.today.countdownDescription}</p>
-            </div>
+            {/* The target date/time is the useful next step. Repeating a
+                promotional sentence below it added 48px on a phone. */}
           </div>
           <section className={styles.indexDeck} aria-labelledby="hero-indices">
             <div className={styles.indexHeading}><h2 id="hero-indices">{t.today.indices}</h2><span>{t.today.experienceIndexNote}</span></div>
@@ -246,7 +246,7 @@ export default async function TodayPage() {
 
       {/* Bölüm bağlantıları artık bağımsız bir şerit değil, gün akışının
           araçları. Çapalar ve klavye erişimi korunur; içerik gizlenmez. */}
-      <ScrollStage><section id="gunun-akisi" className={styles.flowPanel}>
+      <section id="gunun-akisi" className={styles.flowPanel}>
         <div className={styles.flowHeader}>
           <div className={styles.sectionHeading}>
             <h2>{t.today.todayFlow}</h2>
@@ -290,7 +290,7 @@ export default async function TodayPage() {
         >
           <RailSection t={t} locale={locale} />
         </Suspense>
-      </section></ScrollStage>
+      </section>
 
     <div className={styles.dashboard}>
       {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer
@@ -665,17 +665,19 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                     {symbol}
                   </span>
                 </div>
-                <p className={styles.indexValue}>
-                  {formatPrice(quote.price, locale)}
-                </p>
-                <p
-                  className={cn(
-                    "numeral text-tiny font-semibold sm:text-small",
-                    directionText(tone),
-                  )}
-                >
-                  {formatPercent(quote.changePct, locale)}
-                </p>
+                <div className={styles.indexQuote}>
+                  <p className={styles.indexValue}>
+                    {formatPrice(quote.price, locale)}
+                  </p>
+                  <p
+                    className={cn(
+                      "numeral text-tiny font-semibold sm:text-small",
+                      directionText(tone),
+                    )}
+                  >
+                    {formatPercent(quote.changePct, locale)}
+                  </p>
+                </div>
                 {sparkOk && points.length > 1 && (
                   <Sparkline
                     points={points}
@@ -2255,9 +2257,9 @@ async function StoriesSpotlight({
       </div>
 
       <Link
-        href={`/mercek/${lead.slug}`}
+        href={withLocale(`/mercek/${lead.slug}`, locale)}
         prefetch={false}
-        className="group block border-t border-primary-faint px-4 py-5 transition-colors hover:bg-primary-tint sm:px-5"
+        className={`${styles.storyLead} group block border-t border-primary-faint px-4 py-5 transition-colors hover:bg-primary-tint sm:px-5`}
       >
         {/* MOBİLDE ÖNCE MANŞET, SONRA GÖRSEL.
             Bir süre tersiydi (`flex-col-reverse`): telefonda önce blok
@@ -2317,7 +2319,7 @@ async function StoriesSpotlight({
           {figure && (
             <StoryFigure
               block={figure}
-              className="lg:w-[292px] lg:shrink-0"
+              className={`${styles.storyFigure} lg:w-[292px] lg:shrink-0`}
             />
           )}
         </div>
@@ -2325,16 +2327,17 @@ async function StoriesSpotlight({
 
       {rest.length > 0 && (
         <ul className="border-t border-primary-faint bg-surface-solid">
-          {rest.map((story) => (
+          {rest.map((story, index) => (
             <li
               key={story.slug}
               className="border-t border-line-soft first:border-t-0"
             >
               <Link
-                href={`/mercek/${story.slug}`}
+                href={withLocale(`/mercek/${story.slug}`, locale)}
                 prefetch={false}
                 className={styles.storyRow}
               >
+                <span className={styles.storyNumber} aria-hidden>{String(index + 2).padStart(2, "0")}</span>
                 <div className={styles.storyRowCopy}>
                   <h4 lang={story.locale}>{story.title}</h4>
                   {story.dek && <p lang={story.locale}>{story.dek}</p>}

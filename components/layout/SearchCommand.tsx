@@ -441,7 +441,7 @@ export function SearchCommand({
            (`text-muted`) taşıyordu: telefonda düğme bir leke gibi
            duruyor, ikon da bulanık okunuyordu. Yüzey bir kademe yukarı,
            ikon gövde mürekkebine çıktı. */
-        className="inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface-elevated text-base text-body transition-colors hover:border-line-strong hover:text-strong lg:size-9 lg:rounded-md xl:w-60 xl:justify-start xl:px-3"
+        className="masthead-search inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface-elevated text-base text-body transition-colors hover:border-line-strong hover:text-strong lg:size-9 lg:rounded-md xl:w-60 xl:justify-start xl:px-3"
       >
         <MagnifyingGlass weight="duotone" size={16} className="shrink-0" />
         <span className="hidden truncate xl:inline">{placeholderShort}</span>

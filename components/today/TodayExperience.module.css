@@ -1,8 +1,11 @@
 .page { display: flex; flex-direction: column; gap: 24px; }
 .hero { position: relative; isolation: isolate; padding: 24px 32px 20px; border: 1px solid var(--line); border-radius: 24px; background: radial-gradient(ellipse at 88% 16%, var(--primary-wash), transparent 45%), var(--premium-surface); box-shadow: var(--premium-shadow); scroll-margin-top: 160px; }
 .heroTopline { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 650; letter-spacing: .025em; color: var(--primary-ink); }
-.dateline { display: flex; align-items: center; gap: 16px; font-size: 11px; font-weight: 550; color: var(--text-body); }
+/* Üst şerit saatle birlikte büyüdü: künye 11'den 12'ye, tarih 11'den
+   13'e. Saat 30 puntoya çıkınca yanındaki 11 punto onu bir künyenin
+   dipnotu gibi gösteriyordu. */
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 650; letter-spacing: .025em; color: var(--primary-ink); }
+.dateline { display: flex; align-items: center; gap: 18px; font-size: 13px; font-weight: 550; color: var(--text-body); }
 .dateline small { font-size: var(--text-nano); color: var(--text-muted); }
 .heroMain { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); align-items: center; gap: 36px; padding-top: 28px; padding-bottom: 10px; }
 .heroCopy { min-width: 0; }
@@ -28,7 +31,12 @@
 .indexSkeleton { width: 100%; height: 164px; border-radius: 14px; }
 .indexValue { margin-top: 13px; font-size: 29px; font-weight: 650; line-height: 1.15; letter-spacing: -.045em; color: var(--text-strong); }
 .indexSpark { margin-top: 8px; height: 36px; width: 100%; }
-.flowPanel { padding: 24px 28px 4px; border: 1px solid var(--line); border-radius: 20px; background: var(--premium-surface); scroll-margin-top: 150px; }
+/* 21 Eylül: panelin eski ScrollStage dönüşümü dış aralığa ek düşey
+   mesafe getiriyordu (1440px: 39px, 390px: 44px). İlk iki panel
+   arasında artık masaüstünde 14px, mobilde 12px var;
+   başlık/kart hareketleri içeride kalır, panelin kendisi yerinden oynamaz. */
+.hero + .flowPanel { margin-top:-10px; }
+.flowPanel { padding: 20px 28px 4px; border: 1px solid var(--line); border-radius: 20px; background: var(--premium-surface); scroll-margin-top: 150px; }
 /* Eski ayrı gezinme şeridi 58px + iki 24px dış aralık kaplıyordu.
    Gün akışının başlığıyla aynı satıra yerleşir; kendi yüzeyini çoğaltmaz. */
 .flowHeader { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
@@ -155,7 +163,7 @@
 
 /* The three secondary stories were title-only ~40px rows. Each now includes
    its existing dek, with a small separate date/symbol column on desktop. */
-.storyRow { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:14px 24px; padding:17px 26px; transition:background .2s; }
+.storyRow { display:grid; grid-template-columns:22px minmax(0,1fr) auto; align-items:start; gap:14px 24px; padding:17px 26px; transition:background .2s; }
 .storyRow:hover { background:var(--primary-tint); }
 .storyRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
 .storyRowCopy { min-width:0; }
@@ -165,9 +173,9 @@
 .storyRowMeta svg { flex-shrink:0; color:var(--primary-ink); transition:transform .2s; }
 .storyRow:hover .storyRowMeta svg { transform:translate(2px,-2px); }
 @media(max-width:767px) {
- .storyRow { grid-template-columns:minmax(0,1fr); gap:10px; padding:16px 20px; }
- .storyRowCopy p { -webkit-line-clamp:3; }
- .storyRowMeta { flex-wrap:wrap; padding-top:0; }
+ .storyRow { grid-template-columns:22px minmax(0,1fr); gap:8px 12px; padding:16px 20px; }
+ .storyRowCopy p { -webkit-line-clamp:2; }
+ .storyRowMeta { grid-column:2; flex-wrap:wrap; padding-top:0; }
  .storyRowMeta svg { margin-left:auto; }
 }
 @media(prefers-reduced-motion:reduce) { .storyRow,.storyRowMeta svg { transition:none; } }
@@ -202,15 +210,15 @@
     Masaüstünde hiçbir şey değişmiyor: bu blok yalnızca 1024'ün altında
     çalışıyor, iki kolonlu düzende paneller kendi kolonlarında kalıyor. */
  .dashboard [data-home-section="brief"] { order:1; }
- .dashboard [data-home-section="movers"] { order:2; }
+ .dashboard [data-home-section="movers"] { order:3; }
  /* TEKNİK GÖRÜNÜM HAREKET PANELİNİN HEMEN ALTINDA. Bir süre merceğin
     ardındaydı ve arada bir okuma metni duruyordu; oysa hareket paneli ile
     teknik panel aynı sorunun iki yarısı — biri "bugün hangi isim taşıdı",
     öteki "o isimlerde plan ne". Ölçü ile görüş arka arkaya okunuyor,
     mercek ikisinin ardına geçiyor. Masaüstünde de aynı sıra: panel yan
     kolonda hareket panelinin hemen altında duruyor. */
- .dashboard [data-home-section="technical"] { order:3; }
- .dashboard [data-home-section="stories"] { order:4; }
+ .dashboard [data-home-section="technical"] { order:4; }
+ .dashboard [data-home-section="stories"] { order:5; }
  /* DÜNYA PİYASALARI TAHVİLİN HEMEN ÜSTÜNDE.
     Şerit ikinci sıradaydı — günün özetinden hemen sonra — ve orada tek
     başına duruyordu: okuyucu ABD seansının özetinden çıkıp Avrupa ile
@@ -218,7 +226,9 @@
     en sonda tahvil ile makroya varıyordu. Oysa dünya şeridi, tahvil ve
     makro AYNI SORUYA cevap veriyor: "piyasanın geri kalanı ne yapıyor".
     Üçü art arda duruyor ve telefonda tek bir blok gibi okunuyor. */
- .dashboard [data-home-section="world"] { order:5; }
+ /* 21 Eylül denetimi: kullanıcının açık sırası Özet → Dünya →
+    Hareketler. Sonraki makro gruplaması bu isteği bozmuştu. */
+ .dashboard [data-home-section="world"] { order:2; }
  .dashboard [data-home-section="yields"] { order:6; }
  .dashboard [data-home-section="macro"] { order:7; }
  .dashboard [data-home-section="schedule"] { order:8; }
@@ -284,3 +294,73 @@
    genişlikte iptal. */
 @media(max-width:1023px) { .flowNav { flex-basis:auto; } }
 @media(max-width:767px) { .flowNav a { min-height:40px; } }
+
+/* 21 September: opening frame measured 437px desktop / 682px mobile.
+   A quote and its change share a baseline, leaving the actual series more
+   room. Compact spacing comes from structure, not smaller reading type. */
+.hero { padding:20px 24px; background:radial-gradient(ellipse at 0 0,var(--primary-tint),transparent 60%),var(--premium-surface); }
+.heroTopline { padding-bottom:14px; border-bottom:1px solid var(--line-soft); }
+.heroMain { padding-top:18px; grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr); }
+.heroCopy { align-self:center; padding-bottom:8px; }
+.heroSession { margin-bottom:8px; }
+.indexDeck { padding-left:24px; }
+.indexGrid { gap:10px; }
+.indexQuote { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 9px; margin-top:8px; }
+.indexQuote .indexValue { margin:0; }
+.indexCard { min-height:118px; border-radius:12px; padding:12px 14px 10px; box-shadow:0 2px 6px var(--primary-tint); }
+.indexSkeleton { height:118px; }
+.indexSpark { height:32px; margin-top:10px; }
+.indexLink { border-radius:12px; }
+.indexLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+.indexLink:hover .indexCard { transform:translateY(-2px); }
+.indexCard { transition:transform 240ms,border-color 240ms,box-shadow 240ms; }
+.flowPanel { box-shadow:0 3px 12px color-mix(in srgb,var(--primary-ink) 3%,transparent); }
+.flowHeader { padding-bottom:12px; border-bottom:1px solid var(--line-soft); }
+.flowNav { border-radius:10px; }
+.flowNav a { border-radius:7px; }
+.storyRow { border-left:2px solid transparent; }
+.storyRow:hover { border-left-color:var(--primary-faint); }
+.analysisLead { border-radius:12px; background:radial-gradient(ellipse at 100% 0,var(--primary-wash),transparent 80%),var(--premium-surface); }
+.analysisExcerpt { font-size:15px; }
+@media(max-width:1023px) {
+ .heroMain { grid-template-columns:minmax(0,1fr); }
+ .heroCopy { align-self:start; padding-bottom:0; }
+ .indexDeck { padding-left:0; }
+}
+@media(max-width:767px) {
+ .hero { padding:18px; }
+ .heroTopline { padding-bottom:12px; }
+ .heroMain { gap:16px; padding-top:14px; }
+ .indexDeck { padding-top:12px; }
+ .indexHeading { margin-bottom:8px; }
+ .indexQuote { gap:2px 5px; margin-top:6px; }
+ .indexCard { min-height:106px; padding:10px; }
+ .indexSkeleton { height:106px; }
+ .indexValue { font-size:22px; }
+ .indexSpark { height:27px; margin-top:8px; }
+ .indexQuote > p:last-child { font-size:11px; }
+ .flowPanel { padding-inline:14px; }
+ .flowHeader { gap:12px; }
+ .analysisExcerpt { font-size:14px; }
+}
+@media(prefers-reduced-motion:reduce) { .indexCard { transition:none; } .indexLink:hover .indexCard { transform:none; } }
+
+@media(max-width:767px) { .hero + .flowPanel { margin-top:-6px; } }
+
+/* Mobile Mercek measured 1050px at 390px: treat the archive as a numbered
+   reading list and let the lead keep its full headline and actual figure. */
+.storyNumber { padding-top:3px; color:var(--primary); font-size:11px; font-weight:600; letter-spacing:.04em; }
+.storyLead { position:relative; }
+.storyFigure { background:linear-gradient(120deg,var(--premium-surface),var(--primary-tint)); }
+@media(max-width:767px) {
+ .storySpotlight { border-radius:18px; }
+ .storySpotlight > .storyLead { padding:18px; }
+ .storyLead > div { gap:18px; }
+ .storySpotlight h3 { font-size:25px; line-height:1.2; text-wrap:pretty; }
+ .storyLead h3 + p { margin-top:10px; font-size:14px; line-height:1.65; }
+ .storyLead .storyFigure { border-radius:12px; padding:14px; gap:10px; }
+ .storyRow { padding:16px 18px; }
+ .storyRowCopy h4 { font-size:15px; line-height:1.45; }
+ .storyRowCopy p { font-size:13px; line-height:1.55; }
+ .storyRowMeta { gap:9px; }
+}

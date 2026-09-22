@@ -3,9 +3,10 @@ import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LogoTile } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
+import { formatMoneyCompact } from "@/lib/utils";
 import styles from "./CompanyLeaders.module.css";
 
-type Leader = { symbol: string; name: string; logoUrl: string | null };
+type Leader = { symbol: string; name: string; logoUrl: string | null; marketCap: number | null };
 
 /** The former orbital selector showed a second company/market-cap reading
  * below ten logos. That added 90px to the cover (355.8px at 1440px) and
@@ -33,6 +34,7 @@ export function CompanyLeaders({ leaders, labels, locale }: {
           <ArrowUpRight className={styles.open} size={12} aria-hidden="true" />
           <span className={styles.logo}><LogoTile symbol={item.symbol} logoUrl={item.logoUrl} className="size-10" /></span>
           <span className={styles.symbol}>{item.symbol}</span>
+          <span className={styles.cap}>{formatMoneyCompact(item.marketCap, locale)}</span>
         </Link>
       </li>)}
     </ol>

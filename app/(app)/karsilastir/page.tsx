@@ -599,6 +599,16 @@ async function CompareBoard({
         <p className="text-small text-muted">{t.compare.trimmedNote}</p>
       )}
 
+      {/* ---- Normalize grafik ----
+           GRAFİK ÜSTTE, ŞERİT ALTINDA. Şerit önce geliyordu ve ekranın ana
+           görseli (aynı ölçeğe normalize edilmiş eğri) ilk ekranın dışına
+           düşüyordu — ölçüldü: 1440px'te ilk sayı y629, 390px'te y754.
+           Ekran düzeni kuralı da bunu söylüyor: künye/seçim şeridi ana
+           görselin ÖNÜNDE değil, ana görsel ikinci sırada olmalı — burada
+           şerit aynı zamanda grafiğin renk anahtarı, yani altında durması
+           okumayı da doğruluyor. */}
+      <CompareChartPanel labels={labels} />
+
       {/* ---- Sembol şeridi ----
            Gerekçesi `components/markets/CompareLive.tsx`te: renk anahtarı,
            şirket adı ve ARALIĞIN SÜRDÜĞÜ yüzde burada. */}
@@ -645,8 +655,6 @@ async function CompareBoard({
         )}
       </CompareStrip>
 
-      {/* ---- Normalize grafik ---- */}
-      <CompareChartPanel labels={labels} />
 
       {/* ---- Metrik tablosu ----
            ETİKET SÜTUNU SABİT. 390 pikselde panel ~352 piksel, etiket 104,

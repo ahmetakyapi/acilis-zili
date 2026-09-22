@@ -40,7 +40,10 @@
    ALTINDA. Önceki düzende olay rozetleri eksenin ÜSTÜNE, açılış saatleriyle
    aynı banda oturuyordu: rayı kapatıyor ve birbirlerinin rakamını kesiyorlardı
    (390px'te 05 ile 06 ölçüldü, 14 piksel arayla). Her bant artık kendine ait. */
-.rail { position:relative; margin-top:14px; padding:16px 22px 14px; border-radius:18px; border:1px solid var(--line); background:linear-gradient(180deg,var(--primary-tint),transparent 70%),var(--premium-surface); }
+/* 21 September: an empty day's rail was 225px and still asked the reader
+   to select an event. Keep session context, collapse its unused marker lane. */
+.rail { position:relative; margin-top:14px; padding:16px 22px 14px; border-radius:14px; border:1px solid var(--line-soft); background:linear-gradient(180deg,var(--primary-tint),transparent 70%),var(--premium-surface); }
+.rail[data-empty="true"] .markers { height:12px; }
 .bounds { position:relative; height:46px; }
 .bound { position:absolute; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:3px; white-space:nowrap; }
 .bound > span { color:var(--text-muted); font-size:12px; font-weight:600; letter-spacing:.02em; }

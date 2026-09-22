@@ -63,15 +63,27 @@ export function TechnicalPulse({
   /* Bekleyenler bir GÖRÜŞ değil, bir eksik: kendi satırında ve nötr
      tonda duruyor, oran çubuğunda da renksiz bir dilim olarak. */
   const total = board.length + pending.length;
+  /* ÇİP YALNIZCA YENİ GÖRÜŞÜ YAZIYOR. Etiket "Tuta Döndü" / "Ala Döndü"
+     idi ve şeridin kendi başlığı zaten "Görüşü Değişenler": "döndü" sözcüğü
+     aynı şeyi ikinci kez söylüyor, üstelik çipi iki kat uzatıyordu. Sembolün
+     yanında tek başına AL/TUT/SAT hem daha kısa hem panonun geri kalanıyla
+     aynı dil — dağılım satırları da aynı üç kelimeyi kullanıyor. Değiştiği
+     bilgisi şeridin başlığından, yeni görüş çipten okunuyor.
+
+     `stanceChangeLabel` HÂLÂ ÇAĞRILIYOR: bir sembolün burada görünüp
+     görünmeyeceğine o karar veriyor (önceki görüş yoksa ya da aynıysa null). */
   const changes = board.flatMap(({ row, previousStance }) => {
     const verdict = verdictOf(row.stance);
-    const label = stanceChangeLabel(verdict, previousStance, t);
-    return label ? [{ symbol: row.symbol, verdict, label }] : [];
+    const changed = stanceChangeLabel(verdict, previousStance, t);
+    return changed
+      ? [{ symbol: row.symbol, verdict, label: verdictLabel(verdict, t), full: changed }]
+      : [];
   });
 
   return (
     <section
       className={styles.pulse}
+      data-variant={variant}
       aria-labelledby={filterable ? "technical-distribution" : undefined}
       aria-label={filterable ? undefined : t.technical.distribution}
     >
@@ -88,6 +100,21 @@ export function TechnicalPulse({
       {/* HAREKET VERİYİ ÇİZİYOR, SÜSLEMİYOR. Dilimler soldan kendi oranlarına
           uzuyor, satırlar ve logolar sırayla iniyor; ortak hareket sisteminin
           (`MotionExperience`) kancaları, azaltılmış harekette hepsi yerinde. */}
+      {filterable && total > 0 && <div className={styles.pulseDial} aria-hidden="true">
+        <svg viewBox="0 0 160 160" fill="none">
+          <circle cx="80" cy="80" r="53" className={styles.pulseDialGuide} />
+          {[...groups.map((group) => ({ verdict: group.verdict, count: group.rows.length })), { verdict: "pending", count: pending.length }]
+            .flatMap((group) => Array.from({ length: group.count }, () => group.verdict))
+            .map((verdict, index) => {
+              const angle = (index / total * 360 - 90) * Math.PI / 180;
+              const end = ((index + .72) / total * 360 - 90) * Math.PI / 180;
+              return <path key={index} data-verdict={verdict} data-motion-draw="arc" pathLength="1"
+                d={`M${80 + 66 * Math.cos(angle)},${80 + 66 * Math.sin(angle)} A66,66 0 0 1 ${80 + 66 * Math.cos(end)},${80 + 66 * Math.sin(end)}`} />;
+            })}
+          <circle cx="80" cy="80" r="42" className={styles.pulseDialCore} />
+        </svg>
+        <span><strong>{total}</strong><small>{t.technical.trackedLabel}</small></span>
+      </div>}
       <div className={styles.pulseBar} aria-hidden data-motion-stagger>
         {groups
           .filter((group) => group.rows.length > 0)
@@ -159,10 +186,19 @@ export function TechnicalPulse({
         <div className={styles.pulseChanges}>
           <span>{t.technical.changesLabel}</span>
           {changes.map((change) => (
-            <Link key={change.symbol} href={technicalHref(change.symbol)} prefetch={false} className={styles.pulseChange}>
+            <Link
+              key={change.symbol}
+              href={technicalHref(change.symbol)}
+              prefetch={false}
+              className={styles.pulseChange}
+              /* Tam cümle ("Tuta Döndü") çipten kalktı ama kaybolmadı:
+                 imleç künyesinde ve ekran okuyucuya duruyor. */
+              title={`${change.symbol} · ${change.full}`}
+            >
               <LogoTile symbol={change.symbol} logoUrl={meta[change.symbol]?.logoUrl ?? null} size="xs" />
               {change.symbol}
               <span className={changeToneClass(change.verdict)}>{change.label}</span>
+              <span className="sr-only">{change.full}</span>
             </Link>
           ))}
         </div>

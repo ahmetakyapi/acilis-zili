@@ -23,3 +23,5 @@
 @media(max-width:767px) { .choices { gap:6px; margin-top:12px; } .company { min-height:84px; padding-inline:2px; } .rank { left:5px; top:5px; } .logo > span { width:34px; height:34px; } .open { display:none; } }
 @media(max-width:359px) { .choices { gap:4px; } .company { min-height:78px; } .logo > span { width:29px; height:29px; } .symbol { font-size:var(--text-nano); } }
 @media(prefers-reduced-motion:reduce) { .company,.logo,.open { transition:none; } .company:hover .logo { transform:none; } }
+
+.cap { color:var(--text-muted); font-size:10px; line-height:1.2; white-space:nowrap; letter-spacing:-.015em; margin-top:-4px; }

@@ -123,8 +123,20 @@
 .cardLink::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; }
 .cardLink:focus-visible { outline:none; }
 .cardHead { display:flex; align-items:center; gap:12px; min-width:0; }
-.cardName { display:flex; min-width:0; flex:1; flex-direction:column; gap:1px; }
-.cardSymbol { font-size:19px; line-height:1.2; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
+/* AD SÜTUNUNUN TABANI VAR. 320 pikselde görüş rozetinin yanına değişim
+   etiketi de gelince ("HOLD" + "Turned Hold") rozet grubu 153 piksele
+   çıkıyor ve `min-width:0` olan ad sütunu 41 piksele eziliyordu: dört
+   harfli semboller (INTC 47, RKLB 49 piksel) son harfini kaybediyordu.
+   Sembol kartın KİMLİĞİ, kısalacak olan şirket adıdır — o da zaten üç
+   noktayla kısalıyor. Taban beş harfli sembole (GOOGL) yetiyor; rozet
+   grubu karşılığında kendi içinde sarıyor. */
+.cardName { display:flex; min-width:60px; flex:1; flex-direction:column; gap:1px; }
+/* SEMBOL KIRPILMAZ. 320 pikselde İngilizce görüş rozeti ("HOLD"/"SELL")
+   Türkçesinden geniş ve ad sütununu sıkıştırıyordu: dört harfli semboller
+   (INTC, RKLB) 41 piksellik kutuda 47-49 piksel istiyor, yani son harf
+   kesiliyordu. Sembol kartın KİMLİĞİ — kısalacak olan şirket adıdır, o da
+   zaten üç nokta ile kısalıyor. */
+.cardSymbol { white-space:nowrap; font-size:19px; line-height:1.2; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
 .cardCompany { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
 /* ROZETLER YAN YANA — başlıklar eşit yükseklikte kalsın diye.
    Sütundu ve değişim rozeti olan kartın başlığı 54, olmayanınki 32 piksel
@@ -134,7 +146,7 @@
    şey hizalanmıyordu; on iki kartlık bir ızgarada göz satırı tarayamıyor.
    `wrap` duruyor: sembolü uzun bir kartta rozet yine alta iner, ama o zaman
    hizasızlık kuralın kendisi değil istisnası olur. */
-.badges { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px; }
+.badges { display:flex; min-width:0; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px; }
 /* Kartın cevabı da görüş. 12 pikseldi: sembolün (19) ve fiyatın (25-27)
    altında, kartın EN KÜÇÜK öğesi — oysa on iki kart taranırken gözün
    aradığı şey o. 15 piksel kapaktaki sıralamanın aynısını kuruyor (sembol,
@@ -381,7 +393,6 @@
 .priceNow { font-size:40px; line-height:1.05; font-weight:600; letter-spacing:-.045em; color:var(--text-strong); }
 .priceContext { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-top:4px; }
 .priceNote { font-size:12px; color:var(--text-muted); }
-.coverSignals { grid-column:1 / -1; padding-top:20px; border-top:1px solid var(--line); }
 
 /* ---- Gösterge özeti: dört kelime ---- */
 /* DÖRT KÜNYE AYNI ÜÇ SATIRI PAYLAŞIYOR.
@@ -421,9 +432,8 @@
   .sectionNav { width:fit-content; max-width:100%; }
 }
 
-/* ---- Bölüm başlığı ve iki kolon ---- */
+/* ---- Bölüm başlığı ---- */
 .sectionTitle { font-size:19px; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
-.twoCol { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start; }
 .block { display:flex; min-width:0; flex-direction:column; gap:14px; padding:22px 24px; border:1px solid var(--line); border-radius:20px; background:var(--premium-surface); box-shadow:var(--premium-shadow); }
 .blockHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 14px; }
 .blockNote { font-size:12px; color:var(--text-muted); }
@@ -514,9 +524,22 @@
    kenara çekilince eksen çentiklere kalıyor; çizgi ikisini birleştirdiği
    için nokta eksenden kopmuyor, bir sürgü başlığı gibi okunuyor. */
 .mapHere { position:absolute; left:5px; width:45px; height:2px; border-radius:1px; background:color-mix(in srgb, var(--primary) 55%, transparent); translate:0 -50%; }
-.mapHere::after { content:""; position:absolute; left:6px; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 3px var(--panel-fixed), 0 0 0 5px var(--primary-wash); }
+.mapHere::after { content:""; position:absolute; left:6px; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 5px var(--primary-wash); }
 .mapRungs { position:absolute; left:52px; right:0; top:0; bottom:0; margin:0; padding:0; list-style:none; }
-.mapRung { position:absolute; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; column-gap:12px; padding:7px 14px 7px 14px; border-radius:12px; transform:translateY(-50%); }
+/* MESAFE SATIRIN İÇİNDEN DEĞİL, SATIRIN GENİŞLİĞİNDEN KISILIYOR. Detay
+   sayfasında harita panelin tamamına yayılınca satır 562 piksele çıkıyor ve
+   "Hedef 3" ile "236,54 $" arasında 400 pikselden fazla mesafe kalıyordu
+   (ölçüldü, 1440px): okuyucu çentiğin yanındaki adı okuyup sayıyı bulmak
+   için gözünü ekranın öbür ucuna götürüyordu.
+
+   İLK DENEME SÜTUN SIRASINI DEĞİŞTİRMEKTİ VE HİZAYI BOZDU. `.mapRungs` bir
+   `ol` ve üzerinde `display:grid` yok — her satır kendi ızgarası, yani iki
+   `auto` iz satır satır ayrı genişlikte oluyor. Ölçüldü: fiyat sütununun sağ
+   kenar sapması 0 pikselden 104-135 piksele çıktı ("Stop 214,60 $" 251'de
+   biterken "Alım Bölgesi 219,51 – 223,13 $" 355'te). Yan yana duran ölçüler
+   aynı hatta biter — sütun sırası yerinde kalıyor, dar olan satırın kendisi.
+   Genişlik sınırı `.mapPanel .map` üzerinde. */
+.mapRung { position:absolute; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; column-gap:12px; padding:5px 14px; border-radius:12px; transform:translateY(-50%); }
 /* ÜÇ VURGULU SATIR: ŞU AN, ALIM BÖLGESİ, STOP.
    Zemin bir dönem sağa doğru saydamlaşan bir geçişti ve telefonda satırın
    sağ yarısı — yani fiyatın ve uzaklığın durduğu yer — zeminsiz kalıyordu:
@@ -561,7 +584,7 @@
    tamamı `PriceMap.tsx` → `crossedState`). Yön zaten haritada: satır fiyat
    satırının üstündeyse seviye yukarıda. Sütun mesafeyi söylüyor, yorumu
    değil. */
-.mapDistance { display:flex; align-items:baseline; justify-content:flex-end; gap:7px; min-width:62px; font-size:12.5px; font-weight:650; text-align:right; white-space:nowrap; color:var(--text-body); }
+.mapDistance { display:flex; align-items:baseline; justify-content:flex-end; gap:7px; width:62px; min-width:62px; font-size:12.5px; font-weight:650; text-align:right; white-space:nowrap; color:var(--text-body); }
 .mapDistance > [data-dir="up"] { color:var(--up); }
 .mapDistance > [data-dir="down"] { color:var(--down); }
 /* Geçilmiş seviyenin tek kelimelik işareti — hedef gerçekleşti ya da stop
@@ -700,11 +723,18 @@
    yan çevrilmiş telefonda (844×390) sonuç, sayfanın masaüstündekinin bir
    buçuk katına uzaması oluyordu (ölçüldü: 4363'e karşı 2973 piksel).
    Yatayda kıt olan yükseklik, bol olan genişlik — düzen de onu izliyor.
-   Dolgular mobil değerlerinde kalıyor, yalnızca sütunlar değişiyor. */
+   Dolgular mobil değerlerinde kalıyor, yalnızca sütunlar değişiyor.
+
+   KARAR YARIM KALMIŞTI. Gövdenin ızgarası bir dönem `.twoCol` idi; 40a7fe0
+   onu `.analysisGrid`e çevirdi ama BU blok eski adı tutmaya devam etti.
+   Sonuç: yan çevrilmiş telefonda kapak iki kolona dönüyor, hemen altındaki
+   harita/değerlendirme tek kolonda kalıyordu — yani kararın ölçtüğü kazanç
+   kapakla sınırlı kalmıştı. Gövdenin karşılığı dosyanın sonunda, tek
+   kolona indiren kuraldan SONRA duruyor: burada yazılsa 1023px bloğu onu
+   ezerdi. */
 @media (orientation: landscape) and (max-height: 560px) and (min-width: 700px) {
   .cover { grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); }
   .coverSide { padding-left:20px; padding-top:0; border-left:1px solid var(--line); border-top:0; }
-  .twoCol { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
 }
 
 @media (max-width: 767px) {
@@ -758,7 +788,7 @@
      46). */
   .mapLabel { font-size:13.5px; }
   .mapPrice { font-size:14px; }
-  .mapDistance { min-width:52px; font-size:12px; }
+  .mapDistance { width:52px; min-width:52px; font-size:12px; }
 
   /* GÖRÜŞ GEÇMİŞİ MOBİLDE TABLO DEĞİL, SATIR YIĞINI.
      Beş sütun 390 pikselde sığmıyordu: kutu 176 piksel yatay kayıyordu
@@ -905,3 +935,332 @@
 .moreChange { font-size:12.5px; font-weight:700; white-space:nowrap; }
 .moreAll { font-size:12px; font-weight:650; color:var(--primary); }
 .moreAll:hover { color:var(--primary-hover); }
+
+/* 21 September, after the publication/alignment fixes: the directory cover
+   was 316/608px and MU's detail cover 503/1045px at 1440/390. Keep the
+   established subgrid and readable type; move the indicator summary to its
+   section and give the plan its own full-width band instead of shrinking text. */
+.edition { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 20px; }
+.editionItem:last-child { grid-column:1/-1; }
+.editionItem:last-child .editionLabel { display:none; }
+.editionValue { font-size:13px; line-height:1.55; font-weight:550; }
+.editionItem:nth-child(2) .editionLabel { color:var(--primary-ink); }
+.editionItem:nth-child(2) .editionLabel::before { content:""; display:inline-block; width:5px; height:5px; margin-right:6px; border-radius:50%; background:var(--primary); }
+.pulse[data-variant="directory"] { position:relative; grid-template-columns:128px minmax(0,1fr); column-gap:18px; row-gap:12px; align-items:center; }
+.pulse[data-variant="directory"] > div:first-child { grid-column:1/-1; }
+.pulseDial { position:relative; width:128px; grid-column:1; grid-row:2; }
+.pulseDial svg { width:100%; stroke-width:7; }
+.pulseDial path { stroke:var(--primary); stroke-dasharray:1; stroke-linecap:round; }
+.pulseDial path[data-verdict="buy"] { stroke:var(--up); }
+.pulseDial path[data-verdict="sell"] { stroke:var(--down); }
+.pulseDial path[data-verdict="pending"] { stroke:var(--line-strong); }
+.pulseDialGuide { stroke:var(--line-soft); stroke-width:1; }
+.pulseDialCore { fill:var(--primary-tint); stroke:var(--primary-faint); stroke-width:.5; }
+.pulseDial > span { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
+.pulseDial strong { font-size:32px; font-weight:550; line-height:1; letter-spacing:-.055em; color:var(--text-strong); }
+.pulseDial small { font-size:11px; color:var(--text-muted); }
+.pulse[data-variant="directory"] > .pulseBar { display:none; }
+.pulse[data-variant="directory"] > .pulseRows { grid-column:2; grid-row:2; }
+.pulse[data-variant="directory"] > .pulseChanges { grid-column:1/-1; }
+.pulse[data-variant="directory"] .pulseRow { padding:7px 0; border-radius:0; border-bottom:1px solid var(--line-soft); }
+.pulse[data-variant="directory"] .pulseRow:last-child { border-bottom:0; }
+.pulse[data-variant="directory"] .pulseStance b { font-size:19px; }
+.pulse[data-variant="directory"] .pulseLogo:hover { transform:translateY(-3px) rotate(-4deg); }
+/* The ring and the list encode the same counts. Below 1100 the linear
+   version leaves room for 40px touch areas, even with 15 identical views. */
+@media(max-width:1099px) {
+ .pulse[data-variant="directory"] { grid-template-columns:minmax(0,1fr); }
+ .pulse[data-variant="directory"] > .pulseDial { display:none; }
+ .pulse[data-variant="directory"] > .pulseBar { display:flex; }
+ .pulse[data-variant="directory"] > .pulseRows { grid-column:1; grid-row:auto; }
+}
+.boardToolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; padding-bottom:14px; border-bottom:1px solid var(--line); }
+.boardTitle { display:flex; align-items:center; gap:10px; }
+.boardTitle > span { display:grid; place-items:center; width:26px; height:26px; border:1px solid var(--primary-faint); border-radius:8px; color:var(--primary); font-size:11px; font-weight:600; }
+.boardTitle h2 { font-size:18px; font-weight:650; letter-spacing:-.025em; }
+.filter { gap:3px; padding:4px; border-radius:12px; background:var(--surface-sunken); }
+.filter label { min-height:36px; padding:7px 13px; border-radius:8px; border-color:transparent; background:transparent; }
+.filter input:checked + label { background:var(--premium-surface); color:var(--primary-ink); border-color:var(--primary-faint); box-shadow:0 2px 5px var(--primary-tint); }
+.card { border-radius:18px; box-shadow:0 3px 12px color-mix(in srgb,var(--primary-ink) 3%,transparent); background:linear-gradient(150deg,var(--primary-tint),transparent 28%),var(--premium-surface); }
+.cardHead { padding-bottom:12px; border-bottom:1px solid var(--line-soft); }
+.cardPlan .planCells { background:linear-gradient(115deg,var(--primary-tint),transparent); border:1px solid var(--line-soft); border-radius:10px; }
+.cardPlan[data-verdict="sell"] .planCells { background:linear-gradient(115deg,color-mix(in srgb,var(--down-wash) 50%,transparent),transparent); }
+.card .stance { border-radius:8px; padding:6px 10px; font-size:14px; }
+.card .chip { border-radius:5px; padding:4px 7px; font-size:12px; background:var(--primary-tint); }
+.cover { padding:24px; gap:20px 28px; border-radius:var(--radius-feature); }
+.cover::before { background:none; border-left:1px solid var(--primary-faint); transform:skewX(-12deg); opacity:.6; }
+.coverMain { gap:12px; }
+.coverHeadline { font-size:clamp(18px,1.45vw,21px); line-height:1.55; }
+.coverSide { justify-content:flex-start; padding-left:28px; gap:16px; }
+.cover .stancePill { border-radius:9px; font-size:18px; padding:7px 15px; }
+.coverPlan { grid-column:1/-1; border-top:1px solid var(--line); padding-top:18px; }
+.coverPlan .risk { margin-top:4px; }
+.coverPlan .riskBar { height:7px; border-radius:3px; }
+.coverPlan .planCells { background:transparent; }
+.indicatorSummary { border:1px solid var(--line); border-radius:16px; padding:18px; background:linear-gradient(110deg,var(--primary-tint),transparent),var(--premium-surface); }
+.sectionNav { border-radius:12px; background:color-mix(in srgb,var(--page-bg) 93%,transparent); backdrop-filter:blur(12px); }
+.block { border-radius:18px; box-shadow:0 3px 12px color-mix(in srgb,var(--primary-ink) 3%,transparent); }
+.block > .sectionTitle,.blockHead { padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
+.blockHead .sectionTitle { display:flex; align-items:center; gap:9px; }
+.blockHead .sectionTitle::before { content:""; width:5px; height:17px; border-radius:3px; background:linear-gradient(var(--primary),var(--primary-faint)); }
+.indicator { background:radial-gradient(ellipse at 100% 0,var(--primary-tint),transparent 60%),var(--premium-surface); }
+.indicatorTitle svg { width:22px; height:22px; padding:3px; border-radius:6px; background:var(--primary-wash); }
+.mapRung { transition:background 180ms,box-shadow 180ms; }
+.mapRung:hover { background:var(--primary-tint); box-shadow:inset 2px 0 var(--primary); }
+.moreCard { background:linear-gradient(145deg,var(--primary-tint),transparent 70%),var(--premium-surface); }
+.table tbody tr { transition:background 180ms; }
+.table tbody tr:hover { background:var(--primary-tint); }
+@media(min-width:768px) and (max-width:1023px) {
+ .coverSide { padding-left:0; padding-top:14px; }
+}
+@media(max-width:767px) {
+ .edition { gap:10px 16px; margin-top:14px; padding-top:12px; }
+ .editionValue { font-size:12px; }
+ .boardToolbar { gap:12px; }
+ .boardTitle h2 { font-size:17px; }
+ .filter { width:100%; justify-content:space-between; }
+ .filter label { min-height:40px; padding:8px 12px; }
+ .cover { padding:18px; gap:16px; }
+ .coverSide { padding:14px 0 0; gap:12px; }
+ .coverMain { gap:10px; }
+ .coverHeadline { font-size:17px; }
+ .coverCompany { font-size:14px; }
+ .coverMeta { font-size:12px; }
+ .coverPlan { padding-top:14px; }
+ .coverPlan .planCells { padding:0; border-radius:0; }
+ .coverPlan .planCell { padding-block:4px; border-bottom:1px solid var(--line-soft); }
+ .coverPlan .planStrip { gap:12px; }
+ .indicatorSummary { padding:14px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .pulse[data-variant="directory"] .pulseLogo:hover { transform:none; }
+ .mapRung,.table tbody tr { transition:none; }
+}
+
+/* 21 September, detail reading pass. The map's explanations used to live
+   only below its axis, making the left column ~200px taller than the right.
+   A shared notes row keeps every explanation, and aligns the two columns
+   without imposing a fixed height or clipping the analysis. */
+.analysisGrid { display:grid; grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-areas:"map reading"; gap:18px; align-items:stretch; }
+.mapPanel { grid-area:map; }
+.analysisReading { grid-area:reading; display:grid; grid-template-rows:auto 1fr; gap:18px; min-width:0; }
+.analysisReading .scenarios { flex:1; }
+/* Harita panelin tamamına yayılmıyor: 560 piksellik tavan, satırı 508
+   piksele indiriyor ve ad ile fiyat arasındaki mesafeyi 400'den ~250
+   piksele çekiyor. Sağdaki pay panelin kendi nefesi olarak kalıyor. */
+.mapPanel .map,.mapPanel .mapHead { max-width:560px; }
+/* KÜNYE HARİTANIN ALTINA OTURUYOR. `margin-top:auto` gerilmiş bir flex
+   kolonda iki kolon arasındaki yükseklik farkının TAMAMINI haritanın dibi
+   ile künyesi arasına yığıyordu: ölçüldü (altı sembol × 1024/1280/1440 =
+   18 yerleşim), panelin boyu 18/18'inde değerlendirme kolonunun boyuna eşit
+   ve aradaki delik 1024'te 268 piksele kadar çıkıyor. Künye ile damgaladığı
+   görselin arası, ÖTEKİ kolonun boyuna bağlanmış oluyordu — deponun kendi
+   kuralının yasakladığı şey. Fark artık panelin dibinde kalıyor. */
+.mapPanel .footHint { padding-top:8px; border-top:1px solid var(--line-soft); }
+/* Notlar haritanın panelinin İÇİNDE: kendi kenarlığı ve zemini yok, kutu
+   içinde kutu olmasın. Üstünde ince bir ayraç, nerede başladığını söyler. */
+.mapPanel .planNotes { display:flex; flex-direction:column; gap:14px; min-width:0; margin-top:auto; padding-top:16px; border-top:1px solid var(--line); }
+.mapPanel .planNotes > h2 { font-size:15px; }
+.mapPanel .planNotes .mapNotes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin:0; padding:0; border:0; }
+.mapPanel .planNotes .mapNotes > div { display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid var(--primary-faint); }
+.mapPanel .planNotes .mapNotes dt { font-size:11px; color:var(--primary-ink); }
+.mapPanel .planNotes .mapNotes dd { font-size:13px; line-height:1.6; color:var(--text-body); }
+/* A narrow entry band could be just 6px high and strike through its label
+   and prices. Preserve its true vertical extent on the axis; give the
+   associated label its own legible wash. The stop caption uses the reserved
+   bottom strip, never the gap occupied by the next support label. */
+.mapZoneEntry { right:auto; width:32px; border-radius:4px; }
+.mapRung[data-kind="entry"] { background:color-mix(in srgb,var(--up-wash) 75%,var(--premium-surface)); }
+.mapZoneVoid { padding:0; }
+.mapZoneVoidLabel { position:absolute; bottom:8px; left:52px; right:8px; line-height:1.4; }
+.indicatorBody { display:flex; flex-direction:column; gap:12px; min-width:0; }
+.indicatorLead { font-size:13px; line-height:1.6; }
+.indicatorHead { padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
+.indicatorBody .indicatorHead { padding-bottom:0; border:0; }
+.indicatorBody > .indicatorNote:last-child { margin-top:auto; }
+.indicatorBody .rsiReading { margin-block:auto; }
+/* Three semantic rows per card: title, explanation, reading. Subgrid aligns
+   the actual charts as well as the outside edges, including long EN labels. */
+@media(min-width:640px) {
+ .indicator { display:grid; grid-template-rows:subgrid; grid-row:span 3; gap:12px; }
+}
+.volumeContext { display:flex; flex-direction:column; gap:8px; margin-top:2px; padding:14px 0 0; border-top:1px solid var(--line-soft); }
+.volumeContext h3 { display:flex; align-items:center; gap:8px; color:var(--primary-ink); font-size:13px; font-weight:650; }
+.volumeContext .prose { font-size:14px; line-height:1.65; }
+.watchPanel { display:grid; grid-template-columns:180px minmax(0,1fr); align-items:start; gap:24px; background:linear-gradient(135deg,var(--primary-tint),transparent 65%),var(--premium-surface); }
+.watchPanel > .sectionTitle { padding:0; border:0; font-size:17px; }
+.watchPanel .watch { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); list-style:none; padding:0; gap:20px; counter-reset:watch; }
+.watchPanel .watch li { position:relative; padding-left:28px; counter-increment:watch; }
+.watchPanel .watch li::before { content:counter(watch,decimal-leading-zero); position:absolute; top:1px; left:0; color:var(--primary); font-size:11px; font-weight:650; }
+@media(max-width:1023px) {
+ .analysisGrid { grid-template-columns:minmax(0,1fr); grid-template-areas:"map" "notes" "reading"; }
+ .analysisReading { grid-template-rows:auto; }
+ .watchPanel { grid-template-columns:minmax(0,1fr); gap:16px; }
+ .watchPanel .watch { grid-template-columns:minmax(0,1fr); gap:12px; }
+}
+@media(max-width:767px) {
+ .analysisGrid,.analysisReading { gap:14px; }
+ .mapPanel .planNotes { padding-top:14px; }
+ .mapPanel .planNotes .mapNotes { grid-template-columns:minmax(0,1fr); gap:14px; }
+ .mapZoneEntry { width:25px; }
+ .mapZoneVoidLabel { left:41px; }
+}
+
+/* The passed badge previously widened the distance column and displaced
+   the price. Status now belongs to the level label; all prices end at one
+   fixed distance gutter, including the current quote and entry range. */
+.mapLabel { display:flex; flex-wrap:wrap; align-items:center; gap:3px 7px; min-width:0; }
+.mapLabel .mapCrossed { width:fit-content; line-height:1.35; }
+.signalsCompact { grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px 12px; margin:0; padding-top:12px; border-top:1px solid var(--line-soft); }
+.signalsCompact .signal { margin:0; padding-left:9px; }
+/* PUNTO TABANA BIRAKILIYOR. Üstteki plan şeridi kararı (bkz. "ETİKET 11
+   PİKSEL, 10 DEĞİL") etiket dilini `.signal dt`in 11 puntosuna bağlamıştı
+   ve gerekçesini "kapakta iki etiket ailesi değil tek bir etiket dili var"
+   diye yazmıştı. Bu satır 10'a indirerek tam o iki aileyi geri getiriyordu:
+   ikisi de KAPAKTA, yan yana. Yalnızca harf aralığı sıkışıyor — üç sütunun
+   dar olduğu yer burası. */
+.signalsCompact .signal dt { letter-spacing:.02em; }
+.signalsCompact .signal strong { font-size:15px; line-height:1.3; }
+.signalsCompact .signalDetail { font-size:11px; line-height:1.5; }
+@media(max-width:639px) {
+ .signalsCompact { gap:4px 9px; }
+ .signalsCompact .signal { padding-left:7px; }
+ .signalsCompact .signal strong { font-size:14px; }
+ /* Rozet kelime taşıyor ("Geçildi"/"Kırıldı", PriceMap.tsx), yani ölçeğin
+    metin tabanı `--text-nano`da kalır; `--text-micro` (8) yalnızca metin
+    OLMAYAN yer için ayrıldı. Dar ekranda yeri dolgu veriyor, punto değil. */
+ .mapLabel .mapCrossed { padding:1px 4px; }
+}
+
+/* At 320px an entry range left only 19px for its label. Mobile uses the
+   same ordered levels in natural two-line rows; desktop retains the scaled
+   axis. Prices keep a fixed distance gutter, including wrapped ranges. */
+@media(max-width:639px) {
+ .map { height:auto!important; padding-bottom:34px; }
+ .map::before { content:""; position:absolute; left:10px; top:0; bottom:34px; width:2px; background:linear-gradient(transparent,var(--line) 8%,var(--line) 92%,transparent); }
+ .mapRail { display:none; }
+ /* EKSEN KÜNYESİ DE YOK. 639 altında ray gizleniyor ve satırlar doğal
+    akışta eşit aralıkla diziliyor: ortada sınırı yazılacak ORANTILI bir
+    ölçek kalmıyor, künye de anlamsız bir sayı çiftine dönüyordu. Üstelik
+    mutlak konumda kalıp satır etiketlerinin üstüne biniyordu. */
+ .mapBound { display:none; }
+ .mapRungs { position:relative; inset:auto; margin-left:22px; }
+ .mapRung { position:relative; inset:auto; top:auto!important; transform:none; grid-template-columns:minmax(0,1fr) 52px; align-items:baseline; gap:3px 6px; min-height:58px; padding:7px 8px; border-radius:9px; }
+ .mapLabel { grid-column:1/-1; font-size:12px; }
+ .mapPrice { grid-column:1; font-size:14px; white-space:normal; line-height:1.3; }
+ .mapDistance { grid-column:2; grid-row:2; }
+ .mapRung::after { content:""; position:absolute; left:-18px; top:50%; width:12px; height:2px; border-radius:2px; background:var(--text-muted); }
+ .mapRung[data-kind="target"]::after,.mapRung[data-kind="entry"]::after { background:var(--up); }
+ .mapRung[data-kind="stop"]::after { background:var(--down); }
+ .mapRung[data-kind="price"]::after { left:-16px; width:9px; height:9px; margin-top:-4px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 3px var(--primary-wash); }
+ .mapZones { top:auto; bottom:0; height:30px; }
+ .mapZoneEntry { display:none; }
+ .mapZoneVoid { inset:0!important; padding:8px 8px 0 30px; background:none; }
+ .mapZoneVoidLabel { font-size:9px; }
+}
+
+/* Directory audit, 1440px: copy ended at 329px and distribution at 288px.
+   Both columns now share their natural row height; logos and the actual
+   distribution use the remaining area, without a fixed cover height. */
+@media(min-width:768px) {
+ .directoryHeader.directoryHeader:global(.page-frame) { align-items:stretch; }
+ .directoryHeader > :global(.page-heading-copy) { align-self:stretch; display:flex; flex-direction:column; }
+ /* KÜNYE AÇIKLAMANIN ALTINA OTURUYOR. `margin-top:auto` iki kolon
+    arasındaki yükseklik farkının tamamını açıklama ile yayın künyesi
+    ARASINA yığıyordu: sağdaki dağılım halkası ve "Görüşü Değişenler"
+    şeridi soldaki üç satırdan uzun, fark da kapağın ortasında boş bir
+    bant olarak duruyordu. Aynı kalıbı bu turda iki yerde daha söktük
+    (kapak görüş rozeti, harita künyesi) ve gerekçe hep aynı: fark yok
+    olmuyor, YER DEĞİŞTİRİYOR — okunacak iki şeyin arasına düştüğünde
+    zarar veriyor, kolonun dibinde kaldığında görünmüyor bile. */
+ .directoryHeader > :global(.page-heading-copy) > .edition { padding-top:14px; }
+ .directoryHeader > :global(.page-heading-copy) > p:last-of-type { margin-bottom:18px; }
+ .directoryHeader > :last-child { display:flex; }
+ .directoryHeader .pulse[data-variant="directory"] { flex:1; align-content:stretch; }
+ .directoryHeader .pulse[data-variant="directory"] > .pulseRows { align-self:stretch; }
+ .directoryHeader .pulse[data-variant="directory"] > .pulseChanges { align-self:end; }
+}
+@media(min-width:1100px) {
+ .directoryHeader .pulse[data-variant="directory"] { grid-template-columns:148px minmax(0,1fr); }
+ .directoryHeader .pulseDial { width:148px; }
+}
+
+/* 21 Eylül denetimi: eşit kapak kutuları MU'nun başlığının ALTINDA 46
+   piksellik bir boşluk saklıyordu. Çözüm iki kolonun son okumasını satırın
+   dibine çapalamaktı.
+
+   SOL KOLONUN ÇAPASI GERİ ALINDI. Otomatik üst boşluk (margin-top:auto)
+   boşluğu yok etmiyor, YERİNİ değiştiriyor: iki kolon arasındaki yükseklik
+   farkının tamamını görüş rozetinin ÜSTÜNE yığıyordu. Ölçüldü (1440px, on
+   beş sembol): künye ile rozet arası 47-96 piksel, TSLA ve RKLB de 96.
+   Okuyucunun gözü kimlikten görüşe inerken boş bir bant geçiyordu ve rozet
+   ait olduğu künyeden kopmuş görünüyordu. CLAUDE.md nin kendi kuralı da
+   bunu söylüyor: iki kolonun yükseklik farkı panel aralarına dağıtılmaz,
+   kısa kolon erken biter. Fark artık kolonun DİBİNDE kalıyor — orada zaten
+   kapağın kenarlığı var, göze boşluk olarak görünmüyor.
+
+   Sağ kolonun çapası duruyor: signalsCompact bir ÖLÇÜ şeridi ve yan yana
+   duran ölçülerin aynı hatta bitmesi ayrı bir kural. */
+@media(min-width:1024px), (orientation:landscape) and (max-height:560px) and (min-width:700px) {
+ .coverSide > .signalsCompact { margin-top:auto; }
+}
+
+/* Yatay modun gövde karşılığı — gerekçesi kapak kuralının üzerinde. Burada,
+   tek kolona indiren `max-width:1023px` bloğundan SONRA duruyor: aynı
+   özgüllükte sonra gelen kural kazanıyor. */
+@media (orientation:landscape) and (max-height:560px) and (min-width:700px) {
+ .analysisGrid { grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-areas:"map reading" "notes notes"; }
+ .analysisReading { grid-template-rows:auto 1fr; }
+}
+
+/* ---- Kimlik balonu ----
+   Kart yalnızca sembolü ve kısaltılmış adı gösteriyor; sektör ve büyüklük
+   için detaya gitmek gerekiyordu. Balon ikisini de kartın üstünde veriyor.
+
+   Katman sırası kartın kendi katmanlarından geliyor: bağlantı kaplaması
+   z-1, ışık z-2 (bkz. `.cardLink::after` ve SpotlightCard), balon 4'te.
+   `pointer-events:none` bilinçli — balon bir hedef değil, bir okuma; imleç
+   onun üstünden geçerken kartın kendi bağlantısı çalışmaya devam ediyor ve
+   balon kapanıp açılarak titremiyor. */
+/* Çapa sıfır boyutlu ve bağlantının ATASI DEĞİL: kimlik satırına
+   `position:relative` vermek kartı kaplayan bağlantıyı (`.cardLink::after`,
+   `inset:0`) o kutuya hapsediyordu — ölçüldü, 428x553 piksellik kartın
+   tıklanabilir alanı 333x42 ye düşmüştü, yani kartın ortası ve dibi ölü
+   bölgeye dönmüştü. Çapa artık başlık satırının sıfır boyutlu ilk çocuğu;
+   negatif sağ boşluk, ızgaranın 12 piksellik aralığını geri alıyor. */
+.identityAnchor { position:relative; flex:none; width:0; height:0; margin-right:-12px; }
+.identityCard {
+  position:absolute; z-index:4; top:34px; left:-6px;
+  display:flex; flex-direction:column; gap:12px;
+  width:max-content; max-width:min(300px, calc(100vw - 48px));
+  padding:14px 16px;
+  border:1px solid var(--primary-faint); border-radius:16px;
+  background:radial-gradient(ellipse at 100% 0,var(--primary-tint),transparent 70%),var(--premium-surface);
+  box-shadow:var(--premium-shadow-hover);
+  opacity:0; visibility:hidden; transform:translateY(-4px);
+  transition:opacity .16s ease, transform .16s ease, visibility .16s;
+  pointer-events:none;
+}
+.cardHead:hover .identityCard,
+.cardHead:focus-within .identityCard { opacity:1; visibility:visible; transform:none; }
+.identityTop { display:flex; align-items:center; gap:11px; }
+.identityWho { display:flex; min-width:0; flex-direction:column; gap:2px; }
+.identityTop strong { font-size:15px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+.identityWho > span { font-size:12px; line-height:1.35; color:var(--text-muted); }
+.identityTop > .stance { margin-left:auto; flex:none; padding:4px 10px; font-size:12px; }
+.identityFacts { display:flex; flex-direction:column; gap:7px; padding-top:11px; border-top:1px solid var(--line-soft); }
+.identityFacts > span { display:flex; align-items:baseline; justify-content:space-between; gap:14px; }
+.identityFacts i { font-style:normal; font-size:11px; color:var(--text-muted); }
+.identityFacts b { display:flex; align-items:baseline; gap:7px; font-size:13px; font-weight:600; color:var(--text-strong); text-align:right; }
+.identityFacts b em { font-style:normal; font-size:12px; font-weight:550; }
+/* Dokunmatikte hover yok ve balon hiç açılmıyor; orada kartın kendisi
+   detaya götürüyor, aynı bilgiler orada tam hâliyle duruyor. */
+@media(hover:none) { .identityCard { display:none; } }
+@media(prefers-reduced-motion:reduce) { .identityCard { transition:none; transform:none; } }
+
+/* Eksenin iki ucu — kapsanan fiyat aralığı. Cetvel orantılı çiziliyor ama
+   hangi aralığı kapsadığını söylemiyordu; sayı `priceMapLayout`tan geliyor,
+   uydurma yok. Ray 56 piksel genişliğinde, künyeler onun soluna hizalı. */
+.mapBound { position:absolute; left:0; width:52px; text-align:center; font-size:var(--text-nano); font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
+.mapBound[data-edge="top"] { top:-4px; }
+.mapBound[data-edge="bottom"] { bottom:-4px; }

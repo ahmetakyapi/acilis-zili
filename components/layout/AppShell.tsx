@@ -203,12 +203,12 @@ export function AppShell({
            Sekmeler başlığın tam boyunu kaplıyor ki konum işareti
            hairline'ın üstüne otursun. Üst güvenli alan masaüstünde 0 döner,
            tablette tam ekran (standalone) açıldığında değil. */}
-      <header className="chrome sticky top-0 z-30 hidden min-h-[var(--app-bar-h)] border-b pt-[env(safe-area-inset-top)] lg:flex">
+      <header className="premium-masthead chrome sticky top-0 z-30 hidden min-h-[var(--app-bar-h)] border-b pt-[env(safe-area-inset-top)] lg:flex">
         <div
           className={cn(
             CONTENT_FRAME,
             CONTENT_GUTTER,
-            "grid grid-cols-[auto_minmax(0,1fr)_auto] items-stretch gap-x-4 xl:gap-x-6",
+            "masthead-frame grid grid-cols-[auto_minmax(0,1fr)_auto] items-stretch gap-x-4 xl:gap-x-6",
           )}
         >
           {/* KÜNYE SATIRI YOK. "ABD Piyasa Takibi" 9,5 piksellik bir alt
@@ -219,7 +219,7 @@ export function AppShell({
             href={L("/")}
             aria-label={labels.brandName}
             aria-current={barePath === "/" ? "page" : undefined}
-            className="flex items-center gap-2.5 self-center"
+            className="masthead-brand flex items-center gap-2.5 self-center"
           >
             <BellMark size={38} />
             <BrandWord name={labels.brandName} className="text-title leading-none" />
@@ -249,13 +249,13 @@ export function AppShell({
              üstten biraz boşluk bırak" dedi; sistem çubuğunun altına
              girmeyi bıraktıktan sonra da yazının tepeye yapışmaması için
              dört piksel daha ferahlık. */
-          "app-bar chrome sticky top-0 z-30 flex items-center gap-2.5 border-b pb-2.5 pt-[calc(env(safe-area-inset-top)+14px)] lg:hidden",
+          "premium-masthead app-bar chrome sticky top-0 z-30 flex items-center gap-2.5 border-b pb-2.5 pt-[calc(env(safe-area-inset-top)+14px)] lg:hidden",
           SAFE_X_18,
         )}
       >
         <Link
           href={L("/")}
-          className="-my-1 flex items-center gap-2.5 py-1"
+          className="masthead-brand -my-1 flex items-center gap-2.5 py-1"
           aria-label={labels.brandName}
         >
           <BellMark size={32} />

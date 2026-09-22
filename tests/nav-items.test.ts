@@ -10,9 +10,9 @@ import { NAV_ITEMS, isActive } from "../components/layout/nav-items";
 const strip = NAV_ITEMS.filter((item) => item.strip);
 const more = NAV_ITEMS.filter((item) => item.more);
 
-test("strip ranks are exactly 1..7, each used once", () => {
+test("strip ranks are exactly 1..5, each used once", () => {
   const ranks = strip.map((item) => item.strip!.rank).sort((a, b) => a - b);
-  assert.deepEqual(ranks, [1, 2, 3, 4, 5, 6, 7]);
+  assert.deepEqual(ranks, [1, 2, 3, 4, 5]);
 });
 
 test("strip and more never share a destination", () => {

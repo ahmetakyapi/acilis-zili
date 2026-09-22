@@ -288,3 +288,385 @@ Kullanıcının izniyle kayıt formundan açılan test hesabıyla Favoriler, Aya
 - Güncel sade masthead'de Teknik Analiz doğrudan erişilebilir; daha az kullanılan hedefler Daha Fazla'da, tema/dil/oturum araçları hesap panelindedir. Bu düzenle teknik sayfaların bütünlüğü kontrol edildi. Mobil Menü'deki bağlantıların İngilizce öneki eksikti: `/en/menu` tercihi olmayan bir tarayıcıda Türkçe hedeflere gidiyordu. Menü ve giriş bağlantıları artık sunucunun çözdüğü dili taşır.
 - Doğrulama: teknik liste, MU ve ONDS detayları, şirketler ve piyasalar; TR/EN × açık/koyu × 320/768/1440px = **60 yerleşim**, taşma/kesilen okuma/tarayıcı hatası yok. **24 etkileşim**: 1024/1280/1440px header ve klavye menüsü, mobil Teknik Analiz erişimi, dört yerel görüş filtresi, on tekil şirket hedefi ve ilkine klavyeyle geçiş, iki piyasa açıklamasının açılması ve geciktirilmiş gezinmede marka zili. RSI eksik/0/30/53,3/70/100, sıfır/pozitif/negatif MACD ve AL/SAT seviye anlamları için **12 yalıtılmış render kontrolü** başarılı; test verisi veritabanına yazılmadı.
 - İki ekran genişliğinde **12 gösterge paneli** doğal görünürlük animasyonuyla kontrol edildi: görünür olunca çubuklar gerçek son oranlarına ulaşıyor; sayfa açıkken azaltılmış harekete geçişte de ölçek korunuyor. Üretim build, lint, build sonrası typecheck ve diff kontrolü temiz. Kanıtlar `/tmp/acilis-redesign/september-{matrix,interactions,motion}.json`, `technical-edges.json`, `{before,final}-september.json` ve aynı dizindeki ekran görüntüleri. Kontroller yerel Chrome'da yapıldı; fiziksel iOS/Safari doğrulaması yapılmadı.
+
+## Teknik Analiz ve Ana Sayfa — 21 Eylül
+
+İşe `94ecc63` ve önceki Claude commitlerini inceleyerek başlandı. Üçüncü günlük yayın, on beş sembollük takip listesi, bekleyen analizler, fiyat/seri tazeliği, açıklamalı göstergeler ve kartların ortak alt satır hizası korundu. 12 Eylül ölçümleri yerine bu güncel sürüm yeni başlangıç kabul edildi.
+
+- Teknik analiz kapağında gerçek takip listesini gösteren bölümlü dağılım kadranı; her dilim bir hisse, bekleyenler nötr. Sayılar ve hisse bağlantıları metin olarak da mevcut. Dar ekranlarda aynı dağılım doğrusal gösterime döner. Görünür olduğunda çizilen yaylar mevcut hareket katmanını kullanır.
+- Yayın künyesi daha sıkı iki sütunda; listeye görünür “Hisse Planları” başlığı ve ortak yüzey dilinde filtreler eklendi. Kartlarda şirket kimliği, fiyat, işlem planı ve yardımcı göstergeler ayrışır; altı satırlı subgrid hizası korunur. Yerel radyo filtreleri JavaScript olmadan da çalışır. Yeni istemci katmanı yalnızca kart konumları arasındaki geçişi canlandırır; URL'yi veya veri kaynağını değiştirmez. Uzun sıçramalar kısa girişe çevrilir; hızlı seçimler ve hareket tercihi değişiminde animasyonlar temizlenir.
+- Teknik detayda fiyat ve planın güncel okuması yan yana bağlandı; alım/satış/vazgeçme seviyeleri tam genişlikte kendi bandına alındı. Trend, momentum, hacim ve yıllık konum özeti, açıklamalarının bulunduğu Göstergeler bölümüne taşındı. Fiyat haritası satırları, gösterge başlıkları, geçmiş tablosu ve diğer hisse kartları aynı mavi yüzey/odak dilini kullanır. Hesaplar ve plan anlamları değiştirilmedi.
+- Ana sayfanın saat/geri sayım yüzeyi, endekslerde fiyat–değişim hizası ve grafik alanı düzenlendi. Tekrarlanan tanıtım cümlesi kaldırıldı; hedef tarih/saat, kaynak ve gecikme bilgisi duruyor. İskelet boyutları kartlarla birlikte güncellendi. Özet, hareketler, teknik analiz ve diğer bölümlerin son Claude sürümündeki mobil sırası korundu. Akışta olay yoksa kullanılmayan işaret bandı kısalır ve “olay seçin” açıklaması gösterilmez; canlı olay geldiğinde açıklama geri gelir.
+
+Aynı veriyle, yerel Chrome'da azaltılmış hareket ve 900px pencere yüksekliğiyle kapak ölçümleri:
+
+| Kapak | 1440px Önce → Sonra | 390px Önce → Sonra |
+| --- | --- | --- |
+| Teknik Analiz | 316 → 267px | 608 → 539px |
+| MU Teknik Detay | 503 → 489px | 1045 → 759px |
+| Ana Sayfa | 437 → 427px | 682 → 615px |
+
+- TR/EN × açık/koyu × 320/768/1440px: teknik liste, MU/ONDS detayları, bekleyen AMD analizi ve ana sayfada **60 yerleşim**. Taşma, kesilen başlık/değer, header çakışması veya tarayıcı hatası yok.
+- **31 etkileşim kontrolü:** gerçek 15 dilim, masaüstü/mobil dört görüş filtresi, dağılımdan seçim, klavye, hızlı seçim, canlı azaltılmış hareket, detay bölüm bağlantısı, boş akış ve JavaScript kapalı filtre. Filtrelerde belge gezinmesi yok; Next'in mevcut bağlantı ön yüklemesi korunur.
+- Geri sayımda iki dil, altı genişlik, iki tema ve dört süre sınırı: **96 yerleşim**; sıfır günün gizlenmesi, rakamların taşmaması, saniye güncellemesi, hareket tercihi ve mobil bölüm sırası doğrulandı. Boş akışa tarayıcıda yalıtılmış test yanıtıyla olay eklenerek açıklamanın geri gelmesi kontrol edildi; sunucuya test verisi yazılmadı.
+- Yayın saatleri, fiyat haritası, gün akışı/sağlayıcıları ve özet ön izlemesi için **33 mevcut test** başarılı. Üretim build, lint ve build sonrası typecheck temiz. Yeni bağımlılık yok. Fiziksel iOS/Safari testi yapılmadı.
+
+Yerel kanıtlar: `/tmp/acilis-redesign/sep21-{before,draft3,matrix,interactions,countdown,flow}.json` ve aynı dizindeki ekran görüntüleri.
+
+## Teknik Detayda Hizalama ve Okuma — 21 Eylül, İkinci Geçiş
+
+Kullanıcının yeni ekran görüntülerinden sonra detay ekranı ayrıca ele alındı. İlk geçişin üretim derlemesinde MU'nun harita kartı **808px**, sağındaki yorum/senaryo yığınının alt kenarı ise **266px daha yukarıdaydı**. Hacim ve dikkat kartlarının bitişleri 33px farklıydı. Stop kuşağı açıklamasının alttaki destek etiketiyle çakışması da tarayıcıda doğrulandı.
+
+- Fiyat haritası ile değerlendirme/senaryolar ortak iki sütunlu düzene alındı. Hacim yorumu değerlendirmeyi tamamlayan bir alt bölüm oldu. Seviye gerekçeleri iki sütunun altındaki ortak “Seviyelerin Dayanağı” satırında; mobilde haritanın hemen ardından. Hiçbir açıklama kesilmedi veya açılır alanın arkasına gizlenmedi. MU harita kartı **808→675px**; iki ana sütun artık aynı yerde biter. NVDA ve SAT görüşündeki ONDS'te de alt kenar farkı **0px**.
+- Alım bölgesinin gerçek dikey aralığı eksendeki bantta korunur; fiyat/etiket kendi okunabilir yeşil satırındadır. Çok dar bandın kenarları artık rakamların üstünü çizmez. Stop altı bölgenin açıklaması ayrılmış dip şeridine taşındı; destek satırlarının arasında yer aramaz. Fiyat sırası, esneyen eksen, yüzdeler ve geçildi/kırıldı anlamları korunur.
+- Altı gösterge kartı üç ortak satır kullanır: başlık, açıklama, okuma. Subgrid yalnız dış kenarları değil, grafiklerin başladığı noktaları da hizalar. Açıklamalar 13px ve daha açık satır aralığında; RSI, MACD, ortalama, hacim, ATR/yıllık bant ve pivotların kendilerine özgü görselleri korunur.
+- Alt kısımdaki farklı yükseklikte iki kart yerine tek “Dikkat Edilecekler” şeridi var. Metinler masaüstünde numaralı sütunlarda, mobilde alt alta okunur. Hacim metni artık üstteki değerlendirmede olduğu için tekrarlanmaz.
+- Kısa bölümün başına gelince menü bir sonraki bölümü etkin gösteriyordu: teknik detayın okuma çizgisi gezinme çubuğunun altına bağlandı. Yan yana bölümler aynı üst kenarı paylaştığında tıklanan bölümün seçimi korunur. Doğal bağlantılar ve JavaScript kapalı kullanım sürer.
+
+Doğrulama: MU/NVDA/ONDS × TR/EN × açık/koyu × 320/390/768/1024/1440px = **60 üretim yerleşimi**. Yatay taşma, kesilen fiyat, harita satırı/künye çakışması veya gösterge gövdesi hiza farkı yok. Masaüstü/mobil ve normal/azaltılmış hareketle beş bölüm bağlantısında **20 kontrol** başarılı. Fiyat haritası ve paragraf sınırları için **7 mevcut test**, build, lint, typecheck ve diff kontrolü temiz. Fiziksel iOS/Safari doğrulaması yapılmadı.
+
+Kanıtlar: `/tmp/acilis-redesign/sep21-before-detail-detail.json`, `sep21-production-detail-detail.json`, `sep21-anchors.json`, `sep21-detail-tests.log` ve ilgili ekran görüntüleri.
+
+### Header ve Akış Boşluğu — 21 Eylül
+
+- Header 69px yüksekliğini koruyor. Beş ana hedef, ikon ve açıklamalı diğer ekranlar menüsü; aktif sayfa yüzeyi, odak işaretleri ve azaltılmış harekete duyarlı mikro animasyonlar.
+- Bugünün Akışı üst boşluğu 1440px'te 39 → 14px, 390px'te 44 → 12px. Bölümün ölçekli dış sarmalı kaldırıldı; iç animasyonları korundu.
+- Dar ekranda bülten dönem/ arşiv denetimleri gerektiğinde sarılıyor.
+- Üretim derlemesinde 44 yerleşim senaryosu: TR/EN, açık/koyu, 320–1920px ve masaüstünde %150 yazı. Header çakışması/kırpılan kontrol yok; belge genişliğinde en fazla 1px yuvarlama payı. Sekiz menü, arama, hesap ve hareket senaryosu geçti. Yedi navigasyon testi, build, typecheck, lint ve diff kontrolü temiz.
+
+### Teknik Detay, Şirket Grafiği ve Mercek — 21 Eylül, Üçüncü Geçiş
+
+- Teknik detayda Planın Okuması altına aynı fotoğraftan hesaplanan üç kısa gösterge (trend, momentum, hacim) geldi. MU'da sağ kolon 274 → 288px: mevcut boşluk kullanılırken kapak yalnızca 14px büyüdü.
+- Fiyat haritasının durum rozeti seviye adına taşındı. Uzaklık sütunu sabit; tüm fiyatların sağ kenarı ortak. 320px'te alım aralığı etikete taşıyordu: mobilde doğal boydaki iki satırlı basamaklar, masaüstünde mevcut fiyat ekseni korunuyor. Uzun aralık yalnızca iki fiyatın arasında sarılabilir.
+- SNDK 1440×900: sol kart 582px / sağ kolon 666px idi. İkisi 666px; gerçek çizim alanı 280 → 365px. Tuvalin mevcut boyut gözlemcisi çalışıyor. Teknik kartı olmayan şirketlerde profil de ortak satırı tamamlıyor.
+- Değerleme kartları ikişerli satırlarda aynı hatta bitiyor; örnek satır yükseklikleri 288px ve 260px. İçerikler kırpılmadı; ölçü ızgarası ve oran görselleri kullanılabilir alanı paylaşıyor.
+- Ana sayfa mobil Mercek: numaralı önceki yazılar, daha belirgin başlık/özet/künye ayrımı, daha sıkı manşet ve gerçek makale görseli. Aynı içerikle 390px'te bölüm 1050 → 981px.
+- Mercek kadro paneli getiri hesaplanamadığında tamamlanmış son günlük kapanışı, tarihi ve “Son Kapanış” etiketiyle gösteriyor. Gün içindeki mum ve gecikmeli akışın henüz tamamlamadığı kapanış kullanılmıyor; yarım gün kapanışı da aynı kuralda. Veri yoksa sayı uydurulmuyor. Mevcut toplu bar isteği ve sağlayıcı önbellek korumaları korunuyor.
+- Arşiv kartında tek yüzdenin hangi şirkete ait olduğu doğrudan rakamın üstünde yazıyor. Ana sayfa ve kart bağlantıları İngilizce rotayı doğrudan koruyor.
+- Şirketler kapağındaki on şirketin her birine mevcut dizin verisinden kısa piyasa değeri eklendi; ayrı büyük değer paneli geri gelmedi.
+
+Doğrulama: 140 tarayıcı yerleşimi (7 rota × 5 genişlik × 2 dil × 2 tema); fiyat sütunu farkı <1px, çakışan/kırpılan harita hücresi yok, değerleme satırlarında ve masaüstü şirket kolonlarında bitiş farkı <1px. 12 etkileşim senaryosu: grafik türleri ve aralıklar sayfa gezinmesi olmadan değişiyor, açıklama açılınca grafik hizası korunuyor, mobil/masaüstü Mercek bağlantıları doğru dilde açılıyor. 14 birim testi, üretim build, typecheck, lint ve diff kontrolü geçti. Ekran görüntüleri yerel `/tmp/acilis-redesign` altında; geçici betikler depoya alınmadı.
+
+### İstek Taraması ve Header Hizası — 21 Eylül, Dördüncü Geçiş
+
+Ayrıntılı kontrol listesi `REQUEST-AUDIT-2026-09-21.md` dosyasında. Teknik liste kapağındaki gerçek içerik bitiş farkı 41,3 → 0px; detay kapağındaki 46px fark da görüş/açıklama grubunun ve kısa göstergelerin ortak alt kenarıyla düzeltildi. Header'ın boş orta alanı bağlantılara dağıtıldı ve tema renklerinden mavi geçiş eklendi; 69px yükseklik korundu. Mobilde Dünya Piyasaları'nın geriye düşmesi düzeltilerek Özet → Dünya Piyasaları → Günün Hareketleri sırası geri getirildi. Yeni bağımlılık veya veri kaynağı değişikliği yok.
+
+### Bilanço Analizleri ve Rapor Kapağı — 22 Eylül
+
+- Analiz listesi artık kendi adıyla açılıyor. Kapakta sunucudaki sektör/dönem filtresinin kapsadığı raporların AL/TUT/SAT adetleri ve toplam üzerinden oranlanan çubukları var; aynı şirketin farklı dönemleri ayrı raporlardır. Sayı bağlantısı arşive götürür. Tablo içindeki metin araması kendi sonuç sayısını göstermeye devam eder.
+- Haftalık rapor yokken boş bir özet sütunu ayrılmıyor. Öne çıkan raporda şirket, dönem, görüş/skor ve yıllık gelir büyümesi / HBK sapması / bilanço sonrası tepki ayrı okunuyor. Liste önizlemesi masaüstünde dört, mobilde üç satır; tam metin rapor bağlantısında. Şirket ve dönem kırpılmıyor.
+- Dar ekranlarda analiz arşivi yaklaşan bilançolardan önce geliyor. Arama, sektör/dönem filtresi, sıralama, yatay tablo kaydırması ve takvime ekleme işlevleri korunuyor. Yeni stiller `AnalysisExperience.module.css` içinde bilanço listesine özgü.
+- Raporda genel görüş, gerekçe ve analist hedefi sonuçlarla aynı kapağa alındı. Mobilde skor ve hedef yan yana, gerekçe altlarında tam metin. Bilanço günü kapanışı ve tarihsel değerleme rakamları bu okumanın ardından geliyor. Genel görüş artık adlandırılmış bir bölüm başlığı taşıyor.
+- Aynı ADBE raporunda 1440px genişlikte “Rakamlarla Bu Çeyrek” başlangıcı **1177 → 1049px**. Kapak 595 → 807px; büyüme önceden ayrı duran görüş bölümünün içeri alınmasından geliyor, toplam üst akış kısalıyor. Grafik hesapları ve veri kaynakları değiştirilmedi.
+- Yerel doğrulama ortamı: `.env.local` yalnız bağlantısız geliştirme ayarını içeriyordu. Mevcut üretim ortamından gereken bağlantılar geçici çalıştırıcıya alındı; dosyalara anahtar kopyalanmadı. Mevcut üretim dosyasındaki geçersiz genel site adresi için yerel derleme sürecine `http://localhost:3000` verildi. Ortam dosyaları değiştirilmedi.
+
+Doğrulama: analiz listesi ve ADBE/AVGO/ONDS raporları × TR/EN × açık/koyu × 320/390/768/1024/1440px = **80 üretim yerleşimi**. İlk taramada 320px Türkçe hedef fiyat bloğunda bulunan taşma, fiyat ölçeği ve potansiyel etiketinin satır kırılmasıyla giderildi. Son taramada yatay taşma, kesilen başlık/ölçü veya tarayıcı hatası yok. NVDA araması, temizleme, boş hafta filtresi, skor sıralamasında öne çıkan rapor–ilk satır eşleşmesi, rapor bölüm bağlantısı ve normal hareketle kaydırılan içerik görünürlüğü: **6 etkileşim kontrolü başarılı**. Lint, üretim build, typecheck ve diff kontrolü geçti.
+
+Tarayıcı kanıtları ve geçici betikler `.tmp-earnings/` ile `.tmp-earnings-*.mjs` altında; Git dışında tutulur. Son sonuçlar `qa.json` ve `layouts.json`. Fiziksel iOS/Safari testi yapılmadı.
+
+### Piyasalar ve Seçili Endeks — 22 Eylül
+
+- Sıra artık endeks kapağı → seçim → seçili endeksin genişliği → hareketler → tahvil/VIX → bileşen tablosu. Önceki kayıtta metni bulunmayan isteğin birebir geri kazanımı değil, devam planında önerilen ve bu turda uygulanan sıra.
+- Piyasa genişliği tek bir yüzde yerine endeks kimliği, fon kotasyonu, yükselenlerin payı ve artıda/yatay/ekside adetleriyle okunuyor. Değişimi bilinen şirket sayısı toplam üyeyle birlikte açıkça yazıyor; eksik kotasyon yatay kabul edilmiyor. Kaynak, güncellik ve seans dışı veri açıklaması sonuçların hemen altında da yer alıyor.
+- Hareket listelerinde sıra, şirket logosu, sembol/ad ve yüzde ayrıştı. İki liste ortak en büyük mutlak değişime göre çiziliyor: eski düzende +%17,92 ile −%2,01 ayrı ayrı tam genişlik alıyordu. Bileşen tablosunun küçük oran çubuklarındaki asgari %6 dolgu da kaldırıldı; sıfır değişim artık sıfır uzunluk. Yön, satırın gerçek işaretinden geliyor.
+- Seçili endeks özetinden tabloya klavyeyle erişilebilir doğrudan bağlantı var. Endeks seçimi yüklenen sonuçların dışında kalıyor; aktif seçeneğe `aria-current` eklendi. Yeni genişlik kartı ve taşınan tahvil/VIX için yükleme iskeleti güncellendi; mevcut geçiş ve kaydırma koruması devam ediyor.
+- 390px başlangıç ölçümü: endeks seçimi **905 → 563px**, genişlik kartı **988 → 646px**, ilk hareket listesi **1153 → 1025px**. Yeni kapsam bilgisi ve şirket kimlikleriyle tablo başlangıcı **1894 → 2184px**; özet bağlantısı uzun listeleri geçerek tabloya götürüyor. 1440px'te genişlik **562 → 398px**, ilk hareket listesi **680 → 654px**. Ölçümler canlı verili yerel Chrome'dan; önce/sonra fiyatlar aynı piyasa anını temsil etmiyor.
+
+Doğrulama: Nasdaq/Dow/S&P 500 × TR/EN × açık/koyu × 320/390/768/1024/1440px = **60 üretim yerleşimi**. Bölüm sırası, kesilen başlık/ölçü, belge taşması ve hareket çubuklarının yüzde oranları kontrol edildi; hata yok. Klavyeyle endeks seçimi, fiyat sıralaması, 60→102 bileşen yükleme, klavyeyle tabloya atlama, tahvil/VIX açıklamaları, tam belge yenilemeden seçim ve normal hareketle içerik görünürlüğü: **7 etkileşim kontrolü başarılı**. Tarayıcı hatası yok; build, lint, build sonrası typecheck ve diff kontrolü temiz.
+
+Yerel kanıtlar: `.tmp-markets/before.json`, `after.json`, `layouts.json`, `qa.json` ve ekran görüntüleri. Fiziksel iOS/Safari testi yapılmadı.
+
+### Şirket Dizini ve Rapor Geçişi — 22 Eylül
+
+- Şirketler kapağına ad/sembol araması eklendi. Arama ilk 60 satırda değil, seçili sektörün tüm şirketlerinde çalışır; ardından mevcut sıralama ve sayfalama uygulanır. Birden fazla sözcük birlikte eşleşir, Latin semboller Türkçe I/ı dönüşümünden etkilenmez. Arama URL'de tutulur; sektör, sıralama ve daha fazla yükleme sırasında korunur. Temizleme yalnızca aramayı kaldırır.
+- Kapaktaki şirket/sektör sayıları tek satırlık künye düzenine geçti. Mevcut ilk on şirket, kısa piyasa değerleri ve doğrudan detay bağlantıları korunuyor. Arama sonucunun sayısı, temizleme bağlantısı ve sonuçsuz arama açıklaması tablonun başında; form klavyeyle gönderilebilir, gezinme mevcut yükleme göstergesini kullanır.
+- Şirket açılışında son yayımlanmış bilanço analizine dönem etiketiyle doğrudan bağlantı var. Kaynak zaten sayfanın aldığı rapor listesi; yeni sağlayıcı isteği yok. Raporu olmayan şirketlerde aynı yer bilanço bölümüne götürür. Fonların ayrı görünümü, grafik/profil hizası ve değerleme kartları korunur.
+- Başlangıç NVDA ölçümünde mobil rapor listesi y3474'teydi; yeni bağlantı y118'de. Grafik başlangıcı 390px'te y131 → y180, 1440px'te y143 → y159; çizim alanı küçültülmedi. Dizin tablosu 1440px'te y511 → y522, 390px'te y697 → y770: ek alan tüm dizini aramak için kullanılıyor. Canlı verili ölçümler aynı fiyat anını temsil etmez.
+
+- Sonuç satırında yer tutucu sırası: önce sayı, sonra aranan metin basılıyor ve metin `replace`in kalıp diline girmiyor. Aranan şeyin kendisi `{n}` ya da `$&` olduğunda satır kendi kendini bozuyordu; ikisi de bir dizin aramasında yazılabilecek metinler.
+
+Doğrulama: `/sirketler`, sonuç vermeyen bir arama, NVDA ve BRK.B × TR/EN × açık/koyu × 320/390/768/1024/1440px = **80 üretim yerleşimi**. Yatay taşma, kesilen başlık/künye/ölçü, daralan arama alanı (en dar 129px) ve masaüstünde grafik–profil bitiş hizası kontrol edildi; hata yok. Tüm dizinde arama, klavyeyle gönderim, sektör/sıralama/daha fazla yüklemede aramanın korunması, temizlemenin yalnız aramayı kaldırması, sonuçsuz aramanın sektörü açıklaması, rapor bağlantısının gerçek rapora gitmesi, raporu olmayan şirkette bilanço bölümüne inmesi, EN'de dil önekinin korunması, fon dalının eski başlığını koruması ve normal hareketle aramanın görünür kalması: **14 etkileşim kontrolü başarılı**. Tarayıcı hatası yok; build, lint ve build sonrası typecheck temiz.
+
+Ölçüm notu — bulgu betikteydi, sayfada değil: ilk koşumda mobil sıralama başlığına yapılan tıklama `/mercek`e düşüyordu. Puppeteer'in `scrollIntoViewIfNeeded`i sayfanın `scroll-padding-bottom: 80px` değerini okumuyor, hedefi ekranın dibine bırakıyor ve sabit alt sekme çubuğu tıklamayı yutuyor. Sayfanın kendisinde örtme yok: 390px'te belge dibine inildiğinde alt bilgi y904'te bitiyor, çubuk y920'de başlıyor. Betik hedefi ekranın ortasına alacak şekilde düzeltildi; başka bir tarayıcı otomasyonu yazılırken aynı tuzak geçerli.
+
+Yerel ölçüm ve görüntüler `.tmp-companies/` altında; geçici betikler `.tmp-company-*.mjs`. Son sonuçlar `qa.json` ve `layouts.json`. Fiziksel iOS/Safari testi yapılmadı.
+
+### Teknik Analizde Son İnce İşçilik — 22 Eylül
+
+Devam planındaki dördüncü aşama. Ekran yeniden kurulmadı: tarayıcı taraması
+önce kusur ARAMADI, kusur olmadığını ölçtü — `/teknik` ve on beş sembolün
+detayı × TR/EN × 320/390/768/1024/1440px = 160 yerleşimde yatay taşma,
+kırpılan başlık/ölçü ve tarayıcı hatası yok; açık/koyu × TR/EN × üç genişlik
+= 84 yerleşimde de aynı sonuç. Bölüm çapaları yapışkan başlığın altına
+iniyor (~157px). Gösterge kartlarındaki alt ızgara hizası ve RSI ölçeğinin
+dikey ortalanması bilinçli kararlar; dokunulmadı.
+
+Kusurlar kod denetiminden çıktı ve her biri ayrıca çürütmeye çalışıldı:
+
+- **Yatay modda karar yarım kalmıştı.** Yan çevrilmiş telefonda iki kolona
+  dönüşü anlatan kural `.twoCol`a yazılıydı; `40a7fe0` gövdenin ızgarasını
+  `.analysisGrid`e çevirirken bu kuralı geride bıraktı. Sonuç: kapak iki
+  kolona dönüyor, hemen altındaki harita/değerlendirme tek kolonda kalıyordu
+  — yani kararın ölçtüğü kazanç (4363'e karşı 2973 piksel) kapakla sınırlı
+  kalmıştı. Karşılık `.analysisGrid`e taşındı ve dosyanın SONUNA konuldu:
+  aynı özgüllükte `max-width:1023px` bloğundan önce yazılsaydı ezilirdi.
+  Ölü kalan `.twoCol` ve `.coverSignals` silindi, karar kaydı korundu.
+- **Koyu temada harita noktasının halkası panelden açıktı.** `.mapHere`
+  halkayı `--panel-fixed` ile çiziyordu; o token yapışkan tablo sütunu için
+  ayrılmış ve koyu temada `#1c222a`, panelin zemini ise `--premium-surface`
+  `#101a28`. Açık temada ikisi aynı olduğu için fark görünmüyordu. Kardeşi
+  `.trackPrice` zaten doğru tokenı kullanıyor ve gerekçesini yazmış.
+- **Kapakta iki etiket ailesi oluşmuştu.** Plan şeridinin karar kaydı
+  ("ETİKET 11 PİKSEL, 10 DEĞİL") etiket dilini `.signal dt`in 11 puntosuna
+  bağlamıştı; `.signalsCompact .signal dt` son commit'te 10'a inerek tam o
+  ikiliği geri getirdi — ikisi de kapakta, yan yana. Punto tabana bırakıldı,
+  harf aralığı sıkışık kaldı. Harita rozeti de ölçek dışı 9px yerine
+  `--text-nano`ya döndü; rozet kelime taşıyor, `--text-micro` metin olmayan
+  yere ayrılmış.
+- **Paylaşım kartı "On iki hisse" diyordu, liste on beş taşıyor.** Sayı artık
+  `TECHNICAL_SYMBOLS`ten okunuyor; listeye sembol eklendiğinde kart
+  kendiliğinden düzeliyor.
+- **Yedinci adım eksikti.** `getQuotes` çağıran on bir sayfadan yalnızca bu
+  ikisi damgasızdı: kaynak, çekilme saati ve 15 dakikalık gecikme hiçbir
+  yerde yazmıyordu. Bayatlık da yalnızca "Şu An" etiketini düşürüyordu ve o
+  etiket seans dışında zaten düşüyor — yani bayatlığın kendi işareti yoktu.
+  `DataStamp` iki rotada da künyeden sonra, `GuideHint`ten önce. Detayda
+  "Diğer Şirketler" kartlarının yüzdeleri de aynı pakete bağlı ve kendi
+  künyesini taşımıyordu; bayatlığı artık bu damga söylüyor.
+- **"Yeni eklendi" ile "yayını gecikti" aynı cümleye düşüyordu.**
+  `pendingSymbols` sözleşmesi "henüz yayını olmayan" diyor ama çağıran ona
+  PANOYU veriyordu ve pano beş günden taze yayını taşıyor. Yayını aksayan
+  bir sembol panodan düşünce "takip listesine yeni eklendi; ilk yayından
+  sonra kartı görünecek" künyesiyle basılıyordu — onlarca kez yayımlanmış
+  bir hisse için yanlış. Soru artık doğru yere soruluyor: "daha önce
+  yayımlandı mı" veritabanına (`getPublishedSymbols`, penceresiz ayrık
+  sorgu), "panoda mı" panoya. Sorgu düşerse küme panoyla dolduruluyor, yani
+  eski davranışa dönülüyor, yanlış cümleye değil. İngilizce künye de tek
+  sembolde çoğul kalıyordu ("BE were just added… their cards"); `plural`
+  kalıbına bağlandı.
+- **Kapaktaki gösterge özetinin karar kaydı kodla çelişiyordu.** Not
+  "gösterge özeti artık ayrıntılarını anlattığı bölümde" diyordu ama
+  `9e1c3b6` kapağa `compact` dalını geri koymuştu. İki hâl de yazıldı:
+  kapaktaki bir BAKIŞ, bölümdeki bir ÖLÇÜ.
+
+Doğrulama: düzeltme başına on bir hedefli kontrol — damga iki rotada basılıyor,
+gecikmeyi söylüyor ve `GuideHint`ten önce duruyor; 844×390 yatayda kapak ve
+gövde ızgarası iki kolon (`396,6px 381,4px`); koyu temada halka panel zemininin
+tam rengi (`rgb(16,26,40)`); kapakta plan etiketi ile gösterge etiketi aynı
+punto (11px); harita rozeti 10px (TSLA'da ölçüldü). **11/11 başarılı.**
+Düzeltmelerden sonra 160 yerleşimlik tarama yeniden koşuldu: 0 sorun, 0
+tarayıcı hatası. Build, lint ve build sonrası typecheck temiz.
+
+Yeni iki dal canlı veride boştu (on beş sembolün hepsi panoda ve taze;
+veritabanında ayrık sembol sayısı da on beş). Geçici bir yerel deneyle ikisi
+de tetiklendi ve iki dilde okundu: "ONDS takip listesine yeni eklendi…" /
+"ONDS was just added… its card appears" ve "RKLB için son beş işlem gününde
+yeni yayın yok…" / "RKLB has had no new edition…". Deneyin kendi yan etkisi
+olarak dial "17 Hisse" yazdı — deneyde sembol hem panoda hem bekleyenlerde
+duruyordu; gerçek kodda iki küme kesişemez (`lapsed` panoda olmayanlardan,
+`pending` yayımlanmamışlardan türüyor ve pano kümenin içine katılıyor). Deney
+geri alındı, kaynak doğrulanmış hâline döndü.
+
+Yerel ölçüm ve görüntüler `.tmp-technical/` altında; geçici betikler
+`.tmp-technical-*.mjs`. Fiziksel iOS/Safari testi yapılmadı.
+
+### İlk Ekran Yoğunluğu — 22 Eylül, İkinci Faz Birinci Tur
+
+Kullanıcının tek ölçütü: **ekrana ilk girişte scroll yapmadan doğru veriyle
+karşılaşmak.** Bu tur kapakları ve başlığı o ölçüte göre elden geçirdi.
+
+**Başlık dört yüzey taşıyordu, şimdi bir çizgi taşıyor.** 21 Eylül geçişi
+başlığı sakinleştirmek için yapılmıştı ama üst üste dört katman bırakmıştı:
+barın kendi 110° mavi degradesi, altına düşen 12 piksellik mavi solma,
+sekmelerin oturduğu ikinci bir mavi hap (kendi iç dikişleriyle) ve seçili
+sekmenin degrade + gölgeli beyaz hapı. Her biri tek başına savunulabilir;
+dördü aynı 69 pikselde üst üste gelince başlık ekranın en gürültülü yeri
+oluyordu. Zemin düz, seçili sekme 2 piksellik `--primary` çizgisiyle
+hairline'ın üstünde — bu kurallar zaten yazılıydı, dört satır onları
+eziyordu. `space-evenly` de kalktı: boşluğu sekme ARALARINA dağıtmak onu yok
+etmiyor, altı parçaya bölüp grubu koparıyordu; artı pay artık grubun iki
+yanında. Yükseklik 69 piksel, değişmedi.
+
+**Taban yükseklik ölü alan üretiyordu.** `min-height:176px` her kapağı en az
+176 piksele zorluyordu ama kendi karar kaydı "kısa sayfalara boş alan
+EKLEMEDEN ortak çerçeve" diyordu. Başlık hizasını sağlayan şey çerçevenin
+dolgusu ve `align-items:start`; taban yükseklik yalnızca kutunun ALTINA
+boşluk ekliyordu. Kalktı, başlık üstleri değişmedi.
+
+**Kapakların sağ yarısı iş görmeye başladı.** `SectionMasthead` bir sütun
+akışıydı ve geniş ekranda sağı tümüyle boştu (ölçüldü: /mercek 1440px'te
+1320 piksellik kutunun 690 pikseli). Yeni `aside` yuvası ekranın kendi
+denetimini oraya alıyor:
+
+- **Mercek**: "Şirkete Göre" şeridi kapağın altındaki ayrı banttan kapağın
+  sağına geçti; sayım sayfada bir kez yapılıyor (`countStoriesBySymbol`
+  `cache()` sarmalı olmayan düz bir sorgu, iki bileşende çağrılsa tablo iki
+  kez okunurdu). Açıklama da tek satıra indi.
+- **Takvim**: gün/hafta/ay seçimi ve önem filtresi kapağın sağına; aralarındaki
+  bant tümüyle kalktı. İlk gerçek içerik 1440px'te **y510 → y445**.
+- **Şirketler**: kapsam ve arama tek satırda; arama etiket satırını ve dolu
+  mavi düğmesini bıraktı, simge düğmeli bir hap oldu. Sektör şeridi de kendi
+  kutusundan çıkıp kapağın içine girdi — kutu içinde kutu kalktı. Tablo
+  **y580 → y513**.
+- **Bilançolar**: sol sütunda başlıkla anahtar arasında 150 pikselden fazla
+  ölü alan vardı; pencerenin kapsamı (kaç bilanço, kaç açıklama günü) oraya
+  girdi. Etiketler sözlükte hazırdı ama hiçbir yerde kullanılmıyordu.
+
+**Karşılaştırmada grafik üste çıktı.** Sembol şeridi önce geliyordu ve ekranın
+ana görseli ilk ekranın dışına düşüyordu. Şerit aynı zamanda grafiğin renk
+anahtarı, yani altında durması okumayı da doğruluyor.
+
+**Ana sayfada saat büyüdü.** Kadran 38→52, birincil saat 22→30, ikincil
+11→13, üst şerit künyesi 11→12/13. Seansın kendi saati, hemen altındaki 64
+puntoluk geri sayımdan üç kat küçük okunuyordu.
+
+**Öksüz satır taraması.** Başlık altı açıklamalarda son satırda bir-iki kelime
+kalan altı kapak bulundu (mercek TR iki genişlikte, bilançolar TR 1024,
+teknik TR/EN 1024, piyasalar EN 1440). Dördü kısaltıldı; ölçüt, son satırın
+genişliğinin ortalama satır genişliğinin üçte birinin altında kalması.
+
+Yol boyunca üç ölü kod: hiç kullanılmayan `EarningsRhythm` bileşeni, dizin
+kapağının `.metrics` kuralı (bilançolar kapağında canlandırıldı) ve başlığın
+artık çizilmeyen yüzeylerine ait `masthead-surface-in` / `masthead-depth`
+animasyonları. README'de de iki bayat sayı vardı: teknik liste "on iki hisse"
+ve "günde iki kez" diyordu; on beş ve üç yayın.
+
+### Fiyat Haritası, Kart Dürüstlüğü ve Yönetim Paneli — 22 Eylül, İkinci Faz İkinci Tur
+
+Bu tur bir kod denetiminden çıktı: dört bağımsız bakış (liste kartı, fiyat
+haritası, yönetim paneli, kalan ölü alan) bulgu üretti, her bulgu ayrı bir
+ajan tarafından çürütülmeye çalışıldı, yirmi bulgunun dokuzu ayakta kaldı.
+Denetim **bu oturumda yapılmış üç değişikliği de çürüttü** ve haklıydı.
+
+**Harita orantılı değildi — ve benim düzeltmem onu daha da bozmuştu.**
+Yükseklik bütçesi ile gevşetmenin taban ayrımı AYNI sabitten besleniyordu
+(`ROW_GAP`), yani ölçeğin dağıtabileceği pay `ROW_GAP - 4`: satır sayısından
+BAĞIMSIZ sabit. Ölçüldü (1440px): NVDA'da sekiz aralığın yedisi, MU ve
+TSLA'da yedinin altısı tam tabanda — %0,1 uzaktaki destek ile %5 uzaktaki
+stop aynı mesafede duruyordu. Harita, yerine geçtiğini söylediği eşit
+aralıklı merdivenin kendisi olmuştu ve `PriceMap.tsx`in kendi karar kaydı
+bunun tersini iddia ediyordu. Bu turda `ROW_GAP`i 46'dan 40'a çekmiştim: pay
+42'den 36'ya İNDİ, yani orantı daha da bozuldu. İki sayı ayrıldı —
+`ROW_MIN` (çakışma tabanı, 34) ve `ROW_BUDGET` (kutu bütçesi, 34 + 96 sabit
+pay). Kutu boyu aynı kaldı, ölçek payı **36 → 86 piksel**.
+
+**Haritayı kısaltmak sayfadan tek piksel kazandırmıyordu.** Ölçüldü (altı
+sembol × 1024/1280/1440 = 18 yerleşim): panelin boyu 18/18'inde
+değerlendirme kolonunun boyuna eşit; harita kutusu 368-436 piksel, aradaki
+fark haritanın dibi ile künyesi arasında bir delik olarak duruyordu —
+1024'te 268 piksele kadar. Sebep `.mapPanel .footHint { margin-top:auto }`:
+gerilmiş bir flex kolonda bu, iki kolon arasındaki farkın tamamını künyenin
+üstüne yığıyor, yani künye ile damgaladığı görselin arası ÖTEKİ kolonun
+boyuna bağlanıyordu. Kural kalktı; delik **268 → 14 piksel**.
+
+**Etiket–fiyat mesafesini sütun sırasıyla çözmek hizayı bozdu.** Satır ile
+fiyat arasında 400 pikselden fazla mesafe vardı ve sütun sırasını
+değiştirmiştim; ama `.mapRungs` bir `ol` ve üzerinde `display:grid` yok —
+her satır kendi ızgarası, iki `auto` iz satır satır ayrı genişlikte oluyor.
+Ölçüldü: fiyat sütununun sağ kenar sapması **0'dan 104-135 piksele** çıktı.
+Sıra geri alındı, mesafe satırın İÇİNDEN değil GENİŞLİĞİNDEN kısıldı
+(`.mapPanel .map` 560 piksel tavan). Sapma yine 0.
+
+**Eksenin iki ucu adlandırıldı** ve seviye notları ayrı tam genişlikli
+bandından haritanın panelinin içine girdi: `dt` etiketleri ("Alım Bölgesi /
+Hedefler / Stop") sayfada üçüncü kez basılıyordu ve panelin altındaki boş
+yer zaten oradaydı. Bir bant kalktı, bir boşluk doldu.
+
+**Görüş rozetinin üstündeki boşluk.** `.coverMain > .stanceRow
+{ margin-top:auto }` iki kolon arasındaki farkın tamamını rozetin ÜSTÜNE
+yığıyordu: ölçüldü, on beş sembolde künye ile rozet arası 47-96 piksel.
+Kural kalktı, fark kolonun dibine indi; her sembolde **32 piksel**.
+
+**"Şu An" sembol başına kanıtlanmıyordu.** Paketin tazeliği
+`isSessionTrade(newestTrade(pack.data), status)` ile, yani sembollerin EN
+YENİSİYLE ölçülüyor: on dört sembolü taze, biri dünden kalma bir paket
+`stale:false` dönüyor ve o kartın fiyatı da "Şu An" diye basılıyordu. Ana
+sayfanın hareket paneli aynı soruyu yıllardır sembol başına soruyor. Liste
+ve detay artık kartın KENDİ işlemini sınıyor.
+
+**Yönetim panelinde iki veri kaybı hatası.** (1) Mercek editöründe
+"İngilizcesine Geç" düğmesi koşulsuz çiziliyordu; `getStoryBySlug` istenen
+dili bulamazsa ÖTEKİ satırı döndürdüğü için çevirisi olmayan bir yazıda
+`?dil=en` TÜRKÇE kaydı açıyor, künyesine "İngilizce" yazıyor ve editörün
+gizli `locale` alanı satırın kendi dilini taşıdığı için kaydetmek Türkçe
+orijinalin üzerine yazıyordu. Düğme artık öteki dil gerçekten varken
+çiziliyor, künye satırın dilini söylüyor, adresteki dil kayıtta yoksa 404.
+(2) Sürüm geri yüklendikten sonra ekran "Sayfayı yenile — form hâlâ eski
+taslağı gösteriyor" diyordu; yenilemeden Kaydet'e basmak geri yüklemeyi
+siliyordu. Editörün kendi yolu artık tazeleniyor, `router.refresh()`
+çağrılıyor ve editör kaydın güncellenme damgasıyla yeniden kuruluyor.
+
+Ayrıca: trafik ekranının en büyük puntolu sayısı yanlış pencereyi
+künyeliyordu ("Önceki 30 Tam Gün" yazarken GÜNCEL pencerenin sayısını
+gösteriyordu), beş panel künyesi Title Case dışındaydı; /haberler kapağı
+künyesizdi ve sembol süzgeci kapağın altında ayrı bir şerit açıyordu;
+/bilancolar/takip kapağı `visual` yuvasını boş bırakıyordu (öteki iki sekme
+dolduruyor). Dördü de düzeltildi.
+
+Denetimin çürüttüğü bulgular da kayda değer: kartların telefonda katlamanın
+altında kaldığı, SAT kartında 96 piksel ölü alan olduğu, /rehber, /makro ve
+/favoriler kapaklarının boş durduğu iddiaları kodda karşılık bulmadı.
+
+### Son Denetim ve Düzeltmeler — 22 Eylül, İkinci Faz Üçüncü Tur
+
+Oturumun tamamı (dört commit, 43 dosya) dört bağımsız bakışla yeniden
+incelendi ve her bulgu ayrıca çürütülmeye çalışıldı. Yirmi bulgunun dokuzu
+ayakta kaldı; **beşi bu oturumda girmiş regresyondu.**
+
+**Kimlik balonu kartın bağlantısını hapsetmişti.** Balonu konumlandırmak için
+kimlik satırına `position:relative` vermiştim ve kartı kaplayan bağlantı
+(`.cardLink::after`, `inset:0`) o kutuya göre çözülmeye başladı: ölçüldü,
+428×553 piksellik kartın tıklanabilir alanı **333×42 piksele** düştü — kartın
+ortası ve dibi ölü bölgeye dönmüştü. Balonun çapası artık sıfır boyutlu ve
+bağlantının atası değil; kaplama yine kartın kendisine göre çözülüyor.
+
+**Takip kapağındaki "Yayımlanmış Analiz" bir toplam değildi**, liste tavanıydı
+(`getAnalyses(..., { limit: 20 })`), yani yirmide donup kalacaktı. Gerçek
+toplamı veren bir sayım yok; olmayan bir sayıyı göstermektense ölçü
+kaldırıldı.
+
+**Eksen künyesinin mobil dalı yoktu.** 639 altında ray gizleniyor ve satırlar
+doğal akışta eşit aralıkla diziliyor — ortada sınırı yazılacak orantılı bir
+ölçek kalmıyor. Künye yine de basılıyor ve mutlak konumda satırların üstüne
+biniyordu.
+
+**"Son beş işlem günü" takvim gününü anlatıyordu.** Pano penceresi
+`addEtDays(today, -5)`, yani düz takvim aritmetiği: pazartesi bakıldığında
+önceki salı yayımlanmış bir sembol düşüyor ve ekran "son beş işlem gününde
+yayın yok" diyor — geçen işlem günü dörttür. İki dilde "son beş gün" oldu.
+
+**Yalnızca İngilizce kaydı olan yazı panelden açılamıyordu.** Editöre koyduğum
+`row.locale !== locale → notFound()` koruması doğru ama listenin bağlantısı
+dil taşımıyordu; bağlantı artık satırın dilini taşıyor.
+
+Ayrıca aynı denetimden: EN'de "24 Analysis" (sayıdan sonra tekil), teknik
+kartın sektörü `/hisse` ile farklı kaynaktan okuması, arama sonucunun ekran
+okuyucuya duyurulmaması (bölge anahtarlı Suspense'in altındaydı, her aramada
+yeniden doğuyordu — duyurulan şey var olan bir bölgenin DEĞİŞMESİDİR),
+CLAUDE.md'nin `cache()` listesi ve `docs/ROUTEMAP.md`nin bayat rutin künyesi.
+
+**Kullanıcıdan gelen dört istek:**
+
+- Görüşü değişenler çipi "Tuta Döndü" yerine yalnız AL/TUT/SAT yazıyor —
+  şeridin başlığı zaten "Görüşü Değişenler", "döndü" aynı şeyi ikinci kez
+  söylüyordu. Tam cümle imleç künyesinde ve ekran okuyucuda duruyor.
+- Sektör şeridinin görünür kaydırma çubuğu kalktı. `scroll-x-hint` tablolar
+  için yazılmıştı (orada içeriğin %70'i ekran dışında ve gizli çubuk "devamı
+  var" işaretini siliyor); şeritte o işaret zaten var — kendi kenar solması.
+- Teknik kapağın ortasındaki boşluk: `.edition { margin-top:auto }`, aynı
+  kalıbın bu dosyadaki üçüncü örneği. Fark artık kolonun dibinde.
+- **Dizin tablosunun sütun başlıkları artık kaybolmuyor.** Altmış satırda
+  başlık masthead'in altına girip bir daha görünmüyordu. İki engel vardı ve
+  ikisi de kaydırma kabı yaratıyordu: panelin `overflow:hidden`i ve tablonun
+  kabındaki `overflow-x:auto` — `sticky` viewport'a değil en yakın kaydırma
+  kabına yapışır. Panel `clip`e geçti; kap yalnızca tablonun GERÇEKTEN taştığı
+  yerde kaydırıyor (ölçüldü: 1440-1024 sığıyor, 900-640 taşıyor, 560 ve altı
+  yine sığıyor). Başlık satırı 1024 ve üstünde `--app-bar-h`e park ediyor:
+  kaydırma 600 pikselde satır y69'da ve örtülü değil.
+
+Doğrulama: 19 rota × TR/EN × açık/koyu × 320-1440px = **380 üretim yerleşimi**,
+sıfır yatay taşma, sıfır kırpılma, sıfır tarayıcı hatası. **16 etkileşim
+kontrolü** (dizin araması ve sıralamada korunması, mercek çipi, takvim
+görünümü, karşılaştırmada grafik sırası, teknik damga, kimlik balonu, kartın
+kaplayan bağlantısı, harita hizası ve eksen uçları, seviye notlarının yeri,
+masthead işareti) başarılı. Build, lint ve build sonrası typecheck temiz.

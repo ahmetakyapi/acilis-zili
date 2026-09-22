@@ -160,67 +160,79 @@ export default async function CalendarPage(
           <p className="mt-2 text-sm text-soft">{t.calendar.subtitle}</p>
           <p className="mt-3 text-tiny text-muted">{t.calendar.timesNote}</p>
         </div>
-        {featured && <a className={styles.feature} href={`#gun-${featured.eventDate}`}>
-          <span className={styles.dateBadge}><strong>{datePart(featured.eventDate, { day: "numeric" })}</strong><span>{datePart(featured.eventDate, { month: "short" })}</span></span>
-          <span className={styles.featureBody}>
-            <span>{locale === "tr" ? "Öne Çıkan Açıklama ↗" : "Release in Focus ↗"}</span>
-            <strong>{locale === "tr" ? featured.titleTr : featured.titleEn}</strong>
-            <span>{datePart(featured.eventDate, { weekday: "long" })}{featureTimes && ` · ${featureTimes.primary} ${tags.primary}`}</span>
-          </span>
-        </a>}
+        {/* GÖRÜNÜM SEÇİMİ KAPAĞIN SAĞINDA. Gün/hafta/ay kapağın ALTINDA
+            ayrı bir şeritteydi ve o şeridin sağ yarısı boştu; kapağın sağ
+            kolonu ise yalnızca öne çıkan kartı taşıyordu. İkisi aynı kolona
+            girince bir şerit kadar dikey yer geri kazanılıyor ve pencereyi
+            değiştiren denetim, pencerenin kendi künyesiyle (tarih aralığı)
+            aynı hizaya geliyor. Önem filtresi aşağıda kalıyor: o listeyi
+            SÜZÜYOR, pencereyi değiştirmiyor. */}
+        <div className={styles.heroSide}>
+          <div className={styles.heroControls}>
+          <nav className={styles.viewSwitch} aria-label={t.calendar.title}>
+            {VIEWS.map((v) => (
+              <Link
+                key={v}
+                href={`/takvim?g=${v}${impactFilter ? `&onem=${impactFilter}` : ""}`}
+                scroll={false}
+                /* SEÇİLİ OLMAK RENKTEN İBARET DEĞİL. Bu iki navda seçili
+                   durumu anlatan tek şey arka plan rengiydi; ekran okuyucu
+                   "Gün, bağlantı · Hafta, bağlantı · Ay, bağlantı" duyuruyor
+                   ve hangisinin açık olduğunu söyleyen hiçbir şey yoktu.
+                   Projedeki öteki bütün filtreler (`FilterChip`, sektör
+                   çipleri, sekme çubuğu) `aria-current` taşıyor; burası
+                   atlanmıştı. */
+                aria-current={view === v ? "true" : undefined}
+                className={cn(
+                  "min-h-11 rounded-(--radius-sm) px-3 py-1.5 sm:min-h-[36px] text-sm font-medium transition-colors",
+                  view === v
+                    ? "bg-primary-wash text-primary-ink"
+                    : "text-muted hover:bg-surface-elevated hover:text-soft",
+                )}
+              >
+                {viewLabel[v]}
+              </Link>
+            ))}
+          </nav>
+          {/* ÖNEM FİLTRESİ DE KAPAĞA. Tek başına kalan şerit bir satır
+              yüksekliğinde boş bant demekti; iki denetim aynı kolonda
+              durunca o bant tümüyle kalkıyor ve kapağın sağı doluyor.
+              Pencere seçimi ile önem süzgeci ayrı işler ama okuyucu ikisini
+              de listeye BAKMADAN ÖNCE kuruyor — aynı yerde olmaları doğru. */}
+          <nav className={styles.impactFilter} aria-label={t.calendar.impact}>
+            {(["high", "medium", "low"] as const).map((level) => (
+              <Link
+                key={level}
+                href={
+                  impactFilter === level
+                    ? `/takvim?g=${view}`
+                    : `/takvim?g=${view}&onem=${level}`
+                }
+                scroll={false}
+                aria-current={impactFilter === level ? "true" : undefined}
+                className={cn(
+                  "flex min-h-11 items-center gap-1.5 rounded-(--radius-sm) px-2.5 py-1.5 sm:min-h-[36px] text-xs transition-colors",
+                  impactFilter === level
+                    ? "bg-primary-wash text-primary-ink"
+                    : "text-muted hover:bg-surface-elevated hover:text-soft",
+                )}
+              >
+                <ImpactDots importance={level} label={impactLabel[level]} />
+                {impactLabel[level]}
+              </Link>
+            ))}
+          </nav>
+          </div>
+          {featured && <a className={styles.feature} href={`#gun-${featured.eventDate}`}>
+            <span className={styles.dateBadge}><strong>{datePart(featured.eventDate, { day: "numeric" })}</strong><span>{datePart(featured.eventDate, { month: "short" })}</span></span>
+            <span className={styles.featureBody}>
+              <span>{locale === "tr" ? "Öne Çıkan Açıklama ↗" : "Release in Focus ↗"}</span>
+              <strong>{locale === "tr" ? featured.titleTr : featured.titleEn}</strong>
+              <span>{datePart(featured.eventDate, { weekday: "long" })}{featureTimes && ` · ${featureTimes.primary} ${tags.primary}`}</span>
+            </span>
+          </a>}
+        </div>
       </header>
-
-      {/* Görünüm + önem filtresi */}
-      <div className={styles.filters}>
-        <nav className="flex gap-1" aria-label={t.calendar.title}>
-          {VIEWS.map((v) => (
-            <Link
-              key={v}
-              href={`/takvim?g=${v}${impactFilter ? `&onem=${impactFilter}` : ""}`}
-              scroll={false}
-              /* SEÇİLİ OLMAK RENKTEN İBARET DEĞİL. Bu iki navda seçili
-                 durumu anlatan tek şey arka plan rengiydi; ekran okuyucu
-                 "Gün, bağlantı · Hafta, bağlantı · Ay, bağlantı" duyuruyor
-                 ve hangisinin açık olduğunu söyleyen hiçbir şey yoktu.
-                 Projedeki öteki bütün filtreler (`FilterChip`, sektör
-                 çipleri, sekme çubuğu) `aria-current` taşıyor; burası
-                 atlanmıştı. */
-              aria-current={view === v ? "true" : undefined}
-              className={cn(
-                "min-h-11 rounded-(--radius-sm) px-3 py-1.5 sm:min-h-[36px] text-sm font-medium transition-colors",
-                view === v
-                  ? "bg-primary-wash text-primary-ink"
-                  : "text-muted hover:bg-surface-elevated hover:text-soft",
-              )}
-            >
-              {viewLabel[v]}
-            </Link>
-          ))}
-        </nav>
-        <nav className="flex gap-1" aria-label={t.calendar.impact}>
-          {(["high", "medium", "low"] as const).map((level) => (
-            <Link
-              key={level}
-              href={
-                impactFilter === level
-                  ? `/takvim?g=${view}`
-                  : `/takvim?g=${view}&onem=${level}`
-              }
-              scroll={false}
-              aria-current={impactFilter === level ? "true" : undefined}
-              className={cn(
-                "flex min-h-11 items-center gap-1.5 rounded-(--radius-sm) px-2.5 py-1.5 sm:min-h-[36px] text-xs transition-colors",
-                impactFilter === level
-                  ? "bg-primary-wash text-primary-ink"
-                  : "text-muted hover:bg-surface-elevated hover:text-soft",
-              )}
-            >
-              <ImpactDots importance={level} label={impactLabel[level]} />
-              {impactLabel[level]}
-            </Link>
-          ))}
-        </nav>
-      </div>
 
       <nav className={styles.dayRail} data-view={view} aria-label={locale === "tr" ? "Açıklama günleri" : "Release dates"}>
         {dates.map((date) => {

@@ -851,6 +851,8 @@ export default async function AnalysisDetailPage(
           </div>
         )}
 
+        <VerdictStrip row={row} verdict={verdict} locale={locale} t={t} />
+
         {/* ---- Ölçü katmanı ----
             İKİ KATMAN, tek ızgara değil.
 
@@ -979,10 +981,6 @@ export default async function AnalysisDetailPage(
           üç kart sayfanın altına indi. Metin panellerinde satır uzunluğu
           `max-w` ile sınırlı — 1300px'lik bir paragraf okunmuyor. */}
       <div className={styles.reportBody}>
-          <Reveal>
-            <VerdictStrip row={row} verdict={verdict} locale={locale} t={t} />
-          </Reveal>
-
           {/* ---- Görsel katman ----
               Sayfa uzun metinle açılıyordu ve çeyreğin rakamları dokuz
               paragrafın gölgesinde kalıyordu. Sıra artık karnedekiyle aynı:
@@ -1517,13 +1515,13 @@ function VerdictStrip({
       : null);
 
   return (
-    <section className={styles.verdictPanel}>
+    <section className={styles.verdictPanel} aria-labelledby="report-verdict" data-has-target={row.targetPrice !== null}>
       <div className={styles.verdictScore}>
-      <ScoreRing score={row.score} verdict={verdict} size={108} showDenominator />
+      <ScoreRing score={row.score} verdict={verdict} size={80} showDenominator />
       <div className={styles.verdictDecision}>
-        <span className="text-tiny font-bold tracking-[0.04em] text-body">
+        <h2 id="report-verdict" className="text-tiny font-bold tracking-[0.04em] text-body">
           {t.analysis.verdictLabel}
-        </span>
+        </h2>
         <span
           className={cn(
             "text-subdisplay font-bold leading-none tracking-[-0.03em]",

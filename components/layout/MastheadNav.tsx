@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "re
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { CaretDown } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, CaretDown } from "@phosphor-icons/react/dist/ssr";
 import type { Locale } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
-import { isActive } from "./nav-items";
+import { isActive, NAV_ITEMS } from "./nav-items";
 import { usePriorityStrip } from "./usePriorityStrip";
 
 export type MastheadStripItem = {
@@ -24,8 +24,8 @@ export type MastheadStripItem = {
 
 export type MastheadMoreItem = { href: string; label: string; hint: string };
 
-/** Panelin genişliği rem cinsinden — sınıftaki `w-60` ile aynı sayı. */
-const PANEL_REM = 15;
+/** Panelin genişliği rem cinsinden — sınıftaki `w-[19rem]` ile aynı sayı. */
+const PANEL_REM = 19;
 
 /**
  * Masaüstü şeridi — yedi sekme ve "Daha Fazla".
@@ -140,7 +140,7 @@ export function MastheadNav({
   }
 
   return (
-    <nav ref={navRef} aria-label={label} className="relative flex h-full min-w-0">
+    <nav ref={navRef} aria-label={label} className="masthead-nav relative flex h-full min-w-0">
       {/* `content-start` + `h-full` ŞART: JS kapalıyken ya da yazı büyükken
           sığmayan sekme bütün olarak kırpılan ikinci satıra düşüyor; satırlar
           ortak yüksekliğe gerilmiyor. +1px, işaretin hairline'ın üstüne
@@ -162,7 +162,7 @@ export function MastheadNav({
                 prefetch
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "masthead-link relative flex h-full items-center px-(--masthead-tab-px) text-base font-bold xl:text-read",
+                  "masthead-link relative flex h-full items-center px-(--masthead-tab-px) text-base font-semibold xl:text-read",
                   active ? "text-primary-ink" : "text-body hover:text-strong",
                 )}
               >
@@ -194,7 +194,7 @@ export function MastheadNav({
           onKeyDown={onButtonKeyDown}
           data-open={open || undefined}
           className={cn(
-            "masthead-link relative flex h-full items-center gap-1 px-(--masthead-tab-px) text-base font-bold xl:text-read",
+            "masthead-link relative flex h-full items-center gap-1 px-(--masthead-tab-px) text-base font-semibold xl:text-read",
             activeRow ? "text-primary-ink" : open ? "text-strong" : "text-body hover:text-strong",
           )}
         >
@@ -223,7 +223,7 @@ export function MastheadNav({
               style={{ transformOrigin: alignEnd ? "top right" : "top left" }}
               onKeyDown={onPanelKeyDown}
               className={cn(
-                "absolute top-[calc(100%+0.5rem)] z-40 w-60 rounded-xl border border-line bg-overlay-surface p-1.5 shadow-(--shadow-overlay)",
+                "masthead-dropdown absolute top-[calc(100%+0.75rem)] z-40 w-[19rem] rounded-2xl border border-line bg-overlay-surface p-2 shadow-(--shadow-overlay)",
                 alignEnd
                   ? "right-[calc(var(--masthead-tab-px)-1rem)]"
                   : "left-[calc(var(--masthead-tab-px)-1rem)]",
@@ -232,6 +232,7 @@ export function MastheadNav({
               <ul className="flex flex-col">
                 {rows.map((row, index) => {
                   const current = activeRow?.href === row.href;
+                  const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
                   return (
                     <li key={row.href}>
                       {index === overflow.length && overflow.length > 0 && (
@@ -242,12 +243,16 @@ export function MastheadNav({
                         prefetch={false}
                         aria-current={current ? "page" : undefined}
                         onClick={() => setOpenedAt(null)}
-                        className="masthead-row relative flex min-h-13 flex-col justify-center gap-0.5 rounded-md px-2.5 py-2 hover:bg-surface focus-visible:bg-surface"
+                        className="masthead-row relative flex min-h-13 items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-surface focus-visible:bg-surface"
                       >
-                        <span className={cn("text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
-                          {row.label}
+                        {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={19} weight="duotone" /></span>}
+                        <span className="min-w-0 flex-1">
+                          <span className={cn("block text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
+                            {row.label}
+                          </span>
+                          <span className="mt-0.5 block text-tiny text-muted">{row.hint}</span>
                         </span>
-                        <span className="truncate text-tiny text-muted">{row.hint}</span>
+                        <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
                       </Link>
                     </li>
                   );

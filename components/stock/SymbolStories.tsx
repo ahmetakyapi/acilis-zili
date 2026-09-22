@@ -1,3 +1,4 @@
+import { lastStoryClose } from "@/lib/story-market";
 import { StoryCard } from "@/components/stories/StoryCard";
 import {
   sinceEventReturn,
@@ -80,6 +81,7 @@ export async function SymbolStories({
         symbol: item,
         name: meta[item]?.name ?? null,
         logoUrl: meta[item]?.logoUrl ?? null,
+        lastClose: item === symbol ? lastStoryClose(bars[symbol], status) : null,
         sinceEvent:
           item === symbol
             ? sinceEventReturn(bars[symbol], story.eventDate)

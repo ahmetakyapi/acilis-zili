@@ -2,6 +2,8 @@ import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
 import { Suspense } from "react";
 import { CompanyLeaders } from "@/components/companies/CompanyLeaders";
+import { CompanySearch } from "@/components/companies/CompanySearch";
+import companyStyles from "@/components/companies/CompanyDirectory.module.css";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/DirectoryExperience.module.css";
@@ -25,6 +27,7 @@ import {
   type CompanyRow,
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { withLocale } from "@/lib/i18n/routing";
 import { getQuotes, getWeeklyChanges } from "@/lib/providers";
 import {
   SECTOR_GROUPS,
@@ -229,6 +232,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     : "cap";
   const dir: SortDir = search.yon === "asc" ? "asc" : "desc";
   const { locale, t } = await getI18n();
+  const query = typeof search.q === "string" ? search.q.trim().slice(0, 100) : "";
   const activeGroup = sectorGroupByKey(
     typeof search.sektor === "string" ? search.sektor : null,
   );
@@ -247,11 +251,19 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     (group) => (groupCounts.get(group.key) ?? 0) > 0,
   );
 
-  const rows = activeGroup
+  const sectorRows = activeGroup
     ? companies.filter(
         (c) => sectorGroupOf(c.industry).key === activeGroup.key,
       )
     : companies;
+  // Match names and ticker symbols before pagination; searching only the first
+  // 60 rows would incorrectly hide companies from a 1,010-company directory.
+  // Fold Latin casing consistently: Turkish lowercase turns NVIDIA's I into ı.
+  const terms = query.toLocaleLowerCase("en-US").split(/\s+/).filter(Boolean);
+  const rows = sectorRows.filter(company => {
+    const name = `${company.symbol} ${company.name}`.toLocaleLowerCase("en-US");
+    return terms.every(term => name.includes(term));
+  });
   const leaders = [...companies].filter(company => company.marketCap != null && company.marketCap > 0).sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, 10);
 
   /* Kaç satır basılacak. Sıralama ya da filtre değişince sayaç başa döner:
@@ -269,6 +281,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     const nextDir: SortDir = sort === key && dir === "desc" ? "asc" : "desc";
     const params = new URLSearchParams({ sirala: key, yon: nextDir });
     if (activeGroup) params.set("sektor", activeGroup.key);
+    if (query) params.set("q", query);
     // Sıralama değişince derinlik korunur: 180 satıra inmiş biri, sütun
     // başlığına basınca ilk 60'a geri fırlatılmamalı.
     if (limit > PAGE_STEP) params.set("adet", String(limit));
@@ -278,6 +291,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   const sectorHref = (value: string | null) => {
     const params = new URLSearchParams({ sirala: sort, yon: dir });
     if (value) params.set("sektor", value);
+    if (query) params.set("q", query);
     return `/sirketler?${params.toString()}`;
   };
 
@@ -288,60 +302,83 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
       adet: String(limit + PAGE_STEP),
     });
     if (activeGroup) params.set("sektor", activeGroup.key);
+    if (query) params.set("q", query);
     return `/sirketler?${params.toString()}`;
   };
 
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <DirectoryHeader eyebrow={t.directory.companiesEyebrow} title={t.companies.title} description={t.companies.subtitle}
+      <DirectoryHeader className={companyStyles.hero} eyebrow={t.directory.companiesEyebrow} title={t.companies.title} description={t.companies.subtitle}
         visual={<CompanyLeaders leaders={leaders} labels={t.directory} locale={locale} />}>
 
-        <dl className={styles.metrics}><div><dt>{t.directory.companyCount}</dt><dd>{companies.length.toLocaleString(locale)}</dd></div><div><dt>{t.directory.sectorCount}</dt><dd>{shownGroups.length}</dd></div></dl>
+        {/* KAPSAM VE ARAMA AYNI SATIRDA. İkisi alt alta iki bant halindeydi
+            ve arama kendi etiket satırıyla birlikte 90 pikselden fazla yer
+            kaplıyordu. Aynı satırda okunması da doğru: solda dizinin NE
+            KADAR olduğu, sağda o dizinin içinde tek bir şirketi bulma yolu. */}
+        <div className={companyStyles.coverRow}>
+          <dl className={companyStyles.coverage}><div><dt>{t.directory.companyCount}</dt><dd>{companies.length.toLocaleString(locale)}</dd></div><div><dt>{t.directory.sectorCount}</dt><dd>{shownGroups.length}</dd></div></dl>
+          <CompanySearch action={withLocale("/sirketler", locale)} query={query} sector={activeGroup?.key}
+            sort={sort} direction={dir} labels={t.companies} />
+        </div>
+        {/* SEKTÖR ŞERİDİ DE KAPAĞIN İÇİNE. Kendi bandında duruyordu ve o
+            bant, kapağın sol sütununun altındaki boşlukla birlikte iki ayrı
+            ölü alan yapıyordu. Şerit kapağın içine girince hem o boşluk
+            doluyor hem bir bant tümüyle kalkıyor; okuma sırası da doğru
+            kalıyor: ne kadar var, tek şirketi nasıl bulurum, kümeyi nasıl
+            daraltırım. */}
+        {/* Kategori şeridi — geniş ekranda iki satıra sarar, mobilde kayar
+            (kaydırılabilir olduğu sağ kenar solmasından belli olur). */}
+        {shownGroups.length > 0 && (
+          <div className={cn("relative", styles.filters)}>
+            <ChipStrip
+              activeKey={activeGroup?.key ?? null}
+              /* ŞERİT HER GENİŞLİKTE TEK SATIR — `sm:flex-wrap` kalktı.
+                 Sarma, yüksekliği METNİN GENİŞLİĞİNE bağlıyordu ve o genişlik
+                 yazı tipi yüklenirken değişiyor: ölçüldü, 1440'ta kap yedek
+                 yazı tipiyle 114 piksel (çipler iki satır), gerçek yazı
+                 tipiyle 72 (tek satır). Font takası satırı bir anda 42 piksel
+                 kısaltıyor ve altındaki 1320×369'luk tablo yukarı zıplıyordu —
+                 yavaş bağlantıda masaüstünde CLS 0,379 ölçüldü, sitenin en
+                 kötü değeri. Tek satırda yükseklik metne bağlı değil, yani
+                 takas hiçbir şeyi oynatmıyor.
+                 Görsel olarak bugünkü hâl de zaten tek satır: on bir sektör
+                 1440'ta sığıyor. Sığmadığında sarmak yerine kayıyor ve
+                 kaydığı kenar solmasından belli oluyor (`ScrollEdges`) —
+                 mobildeki davranışın aynısı.
+
+                 ÇUBUK GİZLİ (`scroll-x`), görünür değil. `scroll-x-hint`
+                 tablolar için yazılmıştı: orada içeriğin %70'i ekran dışında
+                 ve gizli çubuk "devamı var" işaretini de siliyor. Burada o
+                 işaret ZATEN VAR — şeridin kendi kenar solması. İkisi bir
+                 arada durunca kapağın içinde, çiplerin hemen altında asılı
+                 duran gri bir çubuk kalıyordu; kutunun kendi çizgisi gibi
+                 okunuyor ve hiçbir şey eklemiyordu. */
+              className="scroll-x flex items-center gap-1.5 pr-12 sm:gap-2 sm:pr-0"
+            >
+              <SectorChip
+                href={sectorHref(null)}
+                active={!activeGroup}
+                label={t.companies.allSectors}
+                count={companies.length}
+              />
+              {shownGroups.map((group) => {
+                const active = group.key === activeGroup?.key;
+                return (
+                  <SectorChip
+                    key={group.key}
+                    href={sectorHref(active ? null : group.key)}
+                    active={active}
+                    label={sectorGroupLabel(group, locale)}
+                    count={groupCounts.get(group.key) ?? 0}
+                  />
+                );
+              })}
+            </ChipStrip>
+          </div>
+        )}
       </DirectoryHeader>
 
-      {/* Kategori şeridi — geniş ekranda iki satıra sarar, mobilde kayar
-          (kaydırılabilir olduğu sağ kenar solmasından belli olur). */}
-      {shownGroups.length > 0 && (
-        <div className={cn("relative", styles.filters)}>
-          <ChipStrip
-            activeKey={activeGroup?.key ?? null}
-            /* ŞERİT HER GENİŞLİKTE TEK SATIR — `sm:flex-wrap` kalktı.
-               Sarma, yüksekliği METNİN GENİŞLİĞİNE bağlıyordu ve o genişlik
-               yazı tipi yüklenirken değişiyor: ölçüldü, 1440'ta kap yedek
-               yazı tipiyle 114 piksel (çipler iki satır), gerçek yazı
-               tipiyle 72 (tek satır). Font takası satırı bir anda 42 piksel
-               kısaltıyor ve altındaki 1320×369'luk tablo yukarı zıplıyordu —
-               yavaş bağlantıda masaüstünde CLS 0,379 ölçüldü, sitenin en
-               kötü değeri. Tek satırda yükseklik metne bağlı değil, yani
-               takas hiçbir şeyi oynatmıyor.
-               Görsel olarak bugünkü hâl de zaten tek satır: on bir sektör
-               1440'ta sığıyor. Sığmadığında sarmak yerine kayıyor ve
-               kaydığı kenar solmasından belli oluyor (`ScrollEdges`) —
-               mobildeki davranışın aynısı. */
-            className="scroll-x-hint flex items-center gap-1.5 pb-1 pr-12 sm:gap-2 sm:pb-0 sm:pr-0"
-          >
-            <SectorChip
-              href={sectorHref(null)}
-              active={!activeGroup}
-              label={t.companies.allSectors}
-              count={companies.length}
-            />
-            {shownGroups.map((group) => {
-              const active = group.key === activeGroup?.key;
-              return (
-                <SectorChip
-                  key={group.key}
-                  href={sectorHref(active ? null : group.key)}
-                  active={active}
-                  label={sectorGroupLabel(group, locale)}
-                  count={groupCounts.get(group.key) ?? 0}
-                />
-              );
-            })}
-          </ChipStrip>
-        </div>
-      )}
 
       {/* Tablo AYRI AKIYOR. Eskiden kotasyonlar ve haftalık değişim sayfanın
           gövdesinde arka arkaya bekleniyordu: 514 sembol için altı ardışık
@@ -352,13 +389,33 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
           `key` filtreye ve sıralamaya bağlı: değiştiğinde Suspense sınırı
           sıfırlanıyor ve iskelet ANINDA görünüyor — tıklamanın karşılığı
           hemen ekranda. */}
+      {/* DUYURU BÖLGESİ SUSPENSE'İN DIŞINDA VE HER ZAMAN VAR. Sonuç künyesi
+          tablonun içindeydi ve tablo anahtarlı bir Suspense sınırının altında:
+          arama değişince bölge yeniden KURULUYOR, içeriğiyle birlikte doğuyor.
+          Ekran okuyucu var olmayan bir bölgenin doğuşunu duyurmaz; duyurduğu
+          şey var olan bir bölgenin DEĞİŞMESİDİR. Bölge artık sayfada sabit,
+          sorgu yokken boş; görünen künye tablonun başında sunum olarak kalıyor. */}
+      <p className="sr-only" role="status">
+        {query
+          ? t.companies.searchResults
+              .replace("{n}", String(rows.length))
+              .replace("{query}", () => query)
+          : ""}
+      </p>
+
       <QueryTransition label={t.common.loading}>
       <Suspense
-        key={`${activeGroup?.key ?? "hepsi"}:${sort}:${dir}:${limit}`}
+        key={`${activeGroup?.key ?? "hepsi"}:${query}:${sort}:${dir}:${limit}`}
         fallback={<LoadingFallback label={t.common.loading}><TableSkeleton rows={Math.min(rows.length || 12, limit)} /></LoadingFallback>}
       >
         <CompaniesTable
           rows={rows}
+          query={query}
+          clearHref={(() => {
+            const params = new URLSearchParams({ sirala: sort, yon: dir });
+            if (activeGroup) params.set("sektor", activeGroup.key);
+            return `/sirketler?${params}`;
+          })()}
           limit={limit}
           moreHref={moreHref()}
           sort={sort}
@@ -395,6 +452,8 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
 
 async function CompaniesTable({
   rows: unsorted,
+  query,
+  clearHref,
   limit,
   moreHref,
   sort,
@@ -405,6 +464,8 @@ async function CompaniesTable({
   t,
 }: {
   rows: CompanyRow[];
+  query: string;
+  clearHref: string;
   /** Kaç satır basılacak — sıralama TAMAMI üzerinde, dilim sonra alınır. */
   limit: number;
   moreHref: string;
@@ -492,13 +553,22 @@ async function CompaniesTable({
   return (
     <>
       <Panel className={styles.tablePanel}>
+        {query && <div className={companyStyles.results}>
+          {/* SIRA ÖNEMLİ: sayı önce basılır. Aranan metnin kendisi bir yer
+              tutucu olabilir — "{n}" yazıp arayan biri, önce {query} yazılsaydı
+              ikinci geçişte kendi aramasının sayıya dönüştüğünü görürdü.
+              İkinci değişim işlev alıyor: "$&" gibi bir arama `replace`in
+              kendi kalıp dili sayılmasın. */}
+          <p>{t.companies.searchResults.replace("{n}", String(sorted.length)).replace("{query}", () => query)}</p>
+          <Link href={clearHref} scroll={false}>{t.companies.clearSearch}</Link>
+        </div>}
         {/* TABLONUN BAŞLIĞI VARDI AMA GÖRÜNMÜYORDU. Panel doğrudan sütun
             satırıyla açılıyordu: hangi kümeye baktığın (bütün şirketler mi,
             seçili sektör mü) ve listenin ne kadarını gördüğün yalnızca
             tablonun DİBİNDEKİ sayaçtan okunuyordu. Sayfanın geri kalanı rol
             ayrımını taşıyor (ölçü panelleri plaka, listeler başlık +
             sayaç); bu tablo o dilin dışında kalmıştı. */}
-        {rows.length > 0 && (
+        {(rows.length > 0 || query) && (
           <PanelHeader
             title={groupLabel}
             /* Sıralı listenin ilk dördü karşılaştırmaya gidiyor: liste
@@ -547,10 +617,11 @@ async function CompaniesTable({
             sayfasındaki bilanço tablosunda zaten vardı, iki dizin tablosuna
             taşınmamıştı. */}
         {rows.length === 0 ? (
-          <EmptyState title={t.companies.empty} hint={t.companies.emptyHint} />
+          <EmptyState title={query ? t.companies.searchEmpty : t.companies.empty}
+            hint={query ? t.companies.searchEmptyHint : t.companies.emptyHint} />
         ) : (
           <ScrollEdges
-            className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+            className={cn(styles.tableScroll, "scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)")}
             tabIndex={0}
             role="region"
             aria-label={t.companies.title}
