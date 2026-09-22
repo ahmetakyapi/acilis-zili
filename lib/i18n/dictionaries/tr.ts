@@ -742,8 +742,22 @@ const tr = {
     boardTitle: "Hisse Planları",
     /* BEKLEYEN SEMBOL — listeye yeni girmiş, ilk yayını henüz yok. */
     pendingLabel: "Bekliyor",
-    pendingNote:
+    /* Türkçede sayıdan sonra çoğul eki gelmiyor, iki değer de aynı; çift
+       İngilizce için var (bkz. `plural`, lib/utils.ts). */
+    pendingNoteOne:
+      "{symbols} takip listesine yeni eklendi; ilk yayından sonra kartı burada görünecek.",
+    pendingNoteMany:
       "{symbols} takip listesine yeni eklendi; ilk yayından sonra kartları burada görünecek.",
+    /* GECİKEN YAYIN, YENİ SEMBOL DEĞİL. Pano yalnızca beş günden taze
+       yayını taşıyor; bir sembolün yayını aksarsa panodan düşüyordu ve
+       "listeye yeni eklendi" künyesiyle basılıyordu — daha önce onlarca kez
+       yayımlanmış bir hisse için bu doğru değil. İki hâl artık ayrı
+       cümleyle söyleniyor; ikisi de sessizce kaybolmuyor. */
+    lapsedLabel: "Yayın Gecikti",
+    lapsedNoteOne:
+      "{symbols} için son beş işlem gününde yeni yayın yok; kartı yeniden yayımlandığında görünecek.",
+    lapsedNoteMany:
+      "{symbols} için son beş işlem gününde yeni yayın yok; kartları yeniden yayımlandıklarında görünecek.",
     changesLabel: "Görüşü Değişenler",
     filterLabel: "Görüşe Göre Süz",
     filterAll: "Tümü",

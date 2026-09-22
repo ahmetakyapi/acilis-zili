@@ -96,4 +96,31 @@ Sıra: ana sayfa → makro/takvim → Mercek ve yazı detayı → haberler/bült
 
 **Üçüncü tur tamamlandı:** Şirketler dizini ve şirket detayı. Kapağa tüm dizinde çalışan ad/sembol araması eklendi; arama sektör, sıralama ve daha fazla yükleme boyunca adreste korunuyor. Şirket açılışında son bilanço analizine dönem etiketli doğrudan bağlantı var, raporu olmayan şirkette aynı yer bilanço bölümüne iniyor. 80 üretim yerleşimi ve 14 etkileşim kontrolü başarılı; ayrıntılar `PREMIUM-REDESIGN.md` son bölümünde.
 
-Sonraki sayfa ailesi bu plandaki **dördüncü aşama: Teknik analizde son ince işçilik** (`/teknik`, `/teknik/[symbol]`). Son tamamlanan tasarımı yeniden kurma; bilanço, piyasa ve şirket turlarında oturan tipografi, yüzey ve etkileşim kararlarıyla eşleştir. Her turda bir sayfa ailesini görsel ve işlevsel olarak tamamla, sonucu kayda geçir, sonra sıradakine geç.
+**Dördüncü tur tamamlandı:** Teknik analizde son ince işçilik. Tarayıcı taraması kusur bulmadı (160 + 84 yerleşim temiz); kusurlar kod denetiminden çıktı ve yedisi düzeltildi — yatay modun yarım kalan kararı, koyu temada panelden açık kalan harita halkası, kapakta ikiye ayrılan etiket dili, "On iki hisse" diyen paylaşım kartı, iki teknik rotada eksik `DataStamp`, "yeni eklendi" ile "yayını gecikti"yi aynı cümleye düşüren bekleyen-sembol mantığı ve kodla çelişen bir karar kaydı. 11/11 hedefli kontrol başarılı; ayrıntılar `PREMIUM-REDESIGN.md` son bölümünde.
+
+## İkinci Faz — 22 Eylül İstek Listesi
+
+Kullanıcının tek cümlelik ölçütü: **ekrana ilk girişte scroll yapmadan doğru
+veriyle karşılaşmak.** Gereksiz boşluk düşman, ilk ekran yoğunluğu hedef.
+Aşağıdaki sıra o ölçüte göre kuruldu; her madde ölçülerek açılır, ölçülerek
+kapanır.
+
+1. **Teknik analiz üçlüsü** (`/teknik` liste kartları, `/teknik/[symbol]`
+   detay). Kartlar daha okunaklı ve görsel olarak daha güçlü; her kartta
+   boşluk yerine doğru veri. Detayda "Nereden Alınır" çizgi grafiği ne
+   anlattığını söylemiyor: dikeyde çok uzun, sağ–sol mesafesi çok açık.
+   Görüş rozetinin üstündeki büyük boşluk kalkacak. Kart üzerinde şirkete
+   gelindiğinde küçük, görsel olarak zengin bir bilgi kartı (logo, ad,
+   görüş, piyasa değeri).
+2. **Masthead.** Kompakt, gereksiz boşluk ve renk geçişi olmadan; seçili
+   sekmenin arka planı göz yormayacak.
+3. **Şirketler araması.** Daha minimal ama görsel olarak çok daha güçlü;
+   gerekirse o alana ikinci bir işlev.
+4. **Bilançolar kapağı.** Sol kolon sağa göre boş duruyor.
+5. **Takvim.** Gün/hafta/ay seçimi üst kartın sağına.
+6. **Karşılaştırma.** Grafik üstte, seçili semboller altında; boşluk azalt.
+7. **Rehber.** Gereksiz boşluklar.
+8. **Ana sayfa.** Başlık ve seans saati görseli büyüyecek.
+9. **Mercek.** Şirkete göre süzme üst kapağın sağına; boşluk azalt.
+10. **Boşluk taraması.** Rota × genişlik matrisinde ölçülen ölü alanlar.
+11. **Yönetim paneli.** Her detayıyla yükseltme.

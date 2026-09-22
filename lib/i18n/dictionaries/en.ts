@@ -580,8 +580,15 @@ const en: typeof tr = {
     trackedLabel: "Following",
     boardTitle: "Stock Plans",
     pendingLabel: "Pending",
-    pendingNote:
+    pendingNoteOne:
+      "{symbols} was just added to the watchlist; its card appears here after the first edition.",
+    pendingNoteMany:
       "{symbols} were just added to the watchlist; their cards appear here after the first edition.",
+    lapsedLabel: "Publication Late",
+    lapsedNoteOne:
+      "{symbols} has had no new edition in the last five trading days; its card returns when it is published again.",
+    lapsedNoteMany:
+      "{symbols} have had no new edition in the last five trading days; their cards return when they are published again.",
     changesLabel: "Stance Changes",
     filterLabel: "Filter by Stance",
     filterAll: "All",

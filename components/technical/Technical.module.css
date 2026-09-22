@@ -349,7 +349,6 @@
 .priceNow { font-size:40px; line-height:1.05; font-weight:600; letter-spacing:-.045em; color:var(--text-strong); }
 .priceContext { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-top:4px; }
 .priceNote { font-size:12px; color:var(--text-muted); }
-.coverSignals { grid-column:1 / -1; padding-top:20px; border-top:1px solid var(--line); }
 
 /* ---- Gösterge özeti: dört kelime ---- */
 /* DÖRT KÜNYE AYNI ÜÇ SATIRI PAYLAŞIYOR.
@@ -389,9 +388,8 @@
   .sectionNav { width:fit-content; max-width:100%; }
 }
 
-/* ---- Bölüm başlığı ve iki kolon ---- */
+/* ---- Bölüm başlığı ---- */
 .sectionTitle { font-size:19px; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
-.twoCol { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start; }
 .block { display:flex; min-width:0; flex-direction:column; gap:14px; padding:22px 24px; border:1px solid var(--line); border-radius:20px; background:var(--premium-surface); box-shadow:var(--premium-shadow); }
 .blockHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 14px; }
 .blockNote { font-size:12px; color:var(--text-muted); }
@@ -482,7 +480,7 @@
    kenara çekilince eksen çentiklere kalıyor; çizgi ikisini birleştirdiği
    için nokta eksenden kopmuyor, bir sürgü başlığı gibi okunuyor. */
 .mapHere { position:absolute; left:5px; width:45px; height:2px; border-radius:1px; background:color-mix(in srgb, var(--primary) 55%, transparent); translate:0 -50%; }
-.mapHere::after { content:""; position:absolute; left:6px; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 3px var(--panel-fixed), 0 0 0 5px var(--primary-wash); }
+.mapHere::after { content:""; position:absolute; left:6px; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 5px var(--primary-wash); }
 .mapRungs { position:absolute; left:52px; right:0; top:0; bottom:0; margin:0; padding:0; list-style:none; }
 .mapRung { position:absolute; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; column-gap:12px; padding:7px 14px 7px 14px; border-radius:12px; transform:translateY(-50%); }
 /* ÜÇ VURGULU SATIR: ŞU AN, ALIM BÖLGESİ, STOP.
@@ -652,7 +650,6 @@
   .cover { grid-template-columns:minmax(0,1fr); padding:24px; gap:20px; }
   .cover::before { inset:0 0 55% 40%; }
   .coverSide { padding-left:0; padding-top:20px; border-left:0; border-top:1px solid var(--line); }
-  .twoCol { grid-template-columns:minmax(0,1fr); }
   .signals { grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px 16px; }
 }
 
@@ -661,11 +658,18 @@
    yan çevrilmiş telefonda (844×390) sonuç, sayfanın masaüstündekinin bir
    buçuk katına uzaması oluyordu (ölçüldü: 4363'e karşı 2973 piksel).
    Yatayda kıt olan yükseklik, bol olan genişlik — düzen de onu izliyor.
-   Dolgular mobil değerlerinde kalıyor, yalnızca sütunlar değişiyor. */
+   Dolgular mobil değerlerinde kalıyor, yalnızca sütunlar değişiyor.
+
+   KARAR YARIM KALMIŞTI. Gövdenin ızgarası bir dönem `.twoCol` idi; 40a7fe0
+   onu `.analysisGrid`e çevirdi ama BU blok eski adı tutmaya devam etti.
+   Sonuç: yan çevrilmiş telefonda kapak iki kolona dönüyor, hemen altındaki
+   harita/değerlendirme tek kolonda kalıyordu — yani kararın ölçtüğü kazanç
+   kapakla sınırlı kalmıştı. Gövdenin karşılığı dosyanın sonunda, tek
+   kolona indiren kuraldan SONRA duruyor: burada yazılsa 1023px bloğu onu
+   ezerdi. */
 @media (orientation: landscape) and (max-height: 560px) and (min-width: 700px) {
   .cover { grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); }
   .coverSide { padding-left:20px; padding-top:0; border-left:1px solid var(--line); border-top:0; }
-  .twoCol { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
 }
 
 @media (max-width: 767px) {
@@ -1032,14 +1036,23 @@
 .mapLabel .mapCrossed { width:fit-content; line-height:1.35; }
 .signalsCompact { grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px 12px; margin:0; padding-top:12px; border-top:1px solid var(--line-soft); }
 .signalsCompact .signal { margin:0; padding-left:9px; }
-.signalsCompact .signal dt { font-size:10px; letter-spacing:.02em; }
+/* PUNTO TABANA BIRAKILIYOR. Üstteki plan şeridi kararı (bkz. "ETİKET 11
+   PİKSEL, 10 DEĞİL") etiket dilini `.signal dt`in 11 puntosuna bağlamıştı
+   ve gerekçesini "kapakta iki etiket ailesi değil tek bir etiket dili var"
+   diye yazmıştı. Bu satır 10'a indirerek tam o iki aileyi geri getiriyordu:
+   ikisi de KAPAKTA, yan yana. Yalnızca harf aralığı sıkışıyor — üç sütunun
+   dar olduğu yer burası. */
+.signalsCompact .signal dt { letter-spacing:.02em; }
 .signalsCompact .signal strong { font-size:15px; line-height:1.3; }
 .signalsCompact .signalDetail { font-size:11px; line-height:1.5; }
 @media(max-width:639px) {
  .signalsCompact { gap:4px 9px; }
  .signalsCompact .signal { padding-left:7px; }
  .signalsCompact .signal strong { font-size:14px; }
- .mapLabel .mapCrossed { font-size:9px; padding:1px 4px; }
+ /* Rozet kelime taşıyor ("Geçildi"/"Kırıldı", PriceMap.tsx), yani ölçeğin
+    metin tabanı `--text-nano`da kalır; `--text-micro` (8) yalnızca metin
+    OLMAYAN yer için ayrıldı. Dar ekranda yeri dolgu veriyor, punto değil. */
+ .mapLabel .mapCrossed { padding:1px 4px; }
 }
 
 /* At 320px an entry range left only 19px for its label. Mobile uses the
@@ -1088,4 +1101,12 @@
 @media(min-width:1024px), (orientation:landscape) and (max-height:560px) and (min-width:700px) {
  .coverMain > .stanceRow { margin-top:auto; }
  .coverSide > .signalsCompact { margin-top:auto; }
+}
+
+/* Yatay modun gövde karşılığı — gerekçesi kapak kuralının üzerinde. Burada,
+   tek kolona indiren `max-width:1023px` bloğundan SONRA duruyor: aynı
+   özgüllükte sonra gelen kural kazanıyor. */
+@media (orientation:landscape) and (max-height:560px) and (min-width:700px) {
+ .analysisGrid { grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-areas:"map reading" "notes notes"; }
+ .analysisReading { grid-template-rows:auto 1fr; }
 }

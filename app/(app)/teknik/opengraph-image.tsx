@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { OG_CONTENT_TYPE, OG_SIZE, ogFonts, sectionOg } from "@/lib/og";
+import { TECHNICAL_SYMBOLS } from "@/lib/technical";
 
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
@@ -12,7 +13,12 @@ export default async function SectionOgImage() {
     sectionOg({
       eyebrow: "Günlük Teknik Görünüm",
       title: "Teknik Analiz",
-      dek: "On iki hissenin ortalamaları, destek ve dirençleri, alım bölgesi ve stop seviyesi.",
+      /* SAYI LİSTEDEN OKUNUYOR, ELLE YAZILMIYOR. Kart "On iki hisse" diyordu
+         ve liste on beşe çıkmıştı: paylaşılan görsel, sitenin kendi
+         ekranıyla çelişen bir sayı taşıyordu. Kaynak tek — TECHNICAL_SYMBOLS
+         (lib/technical.ts); listeye sembol eklendiğinde kart kendiliğinden
+         düzeliyor. */
+      dek: `${TECHNICAL_SYMBOLS.length} hissenin ortalamaları, destek ve dirençleri, alım bölgesi ve stop seviyesi.`,
       chips: ["AL · TUT · SAT", "Alım Bölgesi", "Stop"],
     }),
     { ...size, fonts: await ogFonts() },

@@ -19,7 +19,7 @@ import {
   planReadingTone,
 } from "@/components/technical/TechnicalCard";
 import styles from "@/components/technical/Technical.module.css";
-import { EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
+import { DataStamp, EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getDictionary, getI18n } from "@/lib/i18n";
@@ -355,8 +355,15 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         </div>
 
         {/* 21 Eylül: mobil kapak 1045px'ti. Plan tam genişlikte kendi
-            bandında; gösterge özeti artık ayrıntılarını anlattığı bölümde.
-            Böylece ilk ekran kimliği, görüşü ve planı birlikte okutur. */}
+            bandında; gösterge özeti ayrıntılarını anlattığı bölüme indi.
+            Böylece ilk ekran kimliği, görüşü ve planı birlikte okutur.
+
+            ÖZET SONRA KAPAĞA GERİ GELDİ — ama aynı biçimde değil. 9e1c3b6
+            kapağa `compact` dalı ekledi: üç sütun, tek satırlık okuma,
+            kapak sütununun dibine hizalı (`.signalsCompact`). Bölümdeki
+            geniş şerit yerinde duruyor; kapaktaki bir BAKIŞ, oradaki bir
+            ÖLÇÜ. Bu not bir süre yalnızca inişi anlatıyordu ve kodla
+            çelişiyordu; iki hâl de burada yazılı olsun. */}
         <div className={styles.coverPlan}>
           <PlanStrip verdict={verdict} {...levelProps} size="lg" locale={locale} t={t} />
         </div>
@@ -524,6 +531,27 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           </Link>
         </p>
       </div>
+
+      {/* Damganın gerekçesi liste sayfasında yazılı. Burada ayrıca gerekli:
+          kapaktaki fiyat ekranın en büyük sayısı ve "Diğer Şirketler"
+          kartlarının yüzdeleri de aynı pakete bağlı — o yüzdeler kendi
+          künyesini taşımıyor, bayatlığı bu damga söylüyor. Göstergelerin
+          kapanış tarihi ayrı bir künye (`snapshotNote`) ve o bölümün
+          içinde kalıyor; kotasyonun yaşını anlatmıyor. */}
+      {quotes.ok && (
+        <DataStamp
+          labels={t.data}
+          source={quotes.source}
+          at={quotes.fetchedAt}
+          stale={quotes.stale}
+          locale={locale}
+          note={
+            status.session === "pre-market" || status.session === "after-hours"
+              ? t.data.extendedNote
+              : undefined
+          }
+        />
+      )}
 
       <GuideHint
         label={t.guide.contextLabel}

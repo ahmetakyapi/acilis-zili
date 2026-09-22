@@ -390,3 +390,82 @@ Doğrulama: `/sirketler`, sonuç vermeyen bir arama, NVDA ve BRK.B × TR/EN × a
 Ölçüm notu — bulgu betikteydi, sayfada değil: ilk koşumda mobil sıralama başlığına yapılan tıklama `/mercek`e düşüyordu. Puppeteer'in `scrollIntoViewIfNeeded`i sayfanın `scroll-padding-bottom: 80px` değerini okumuyor, hedefi ekranın dibine bırakıyor ve sabit alt sekme çubuğu tıklamayı yutuyor. Sayfanın kendisinde örtme yok: 390px'te belge dibine inildiğinde alt bilgi y904'te bitiyor, çubuk y920'de başlıyor. Betik hedefi ekranın ortasına alacak şekilde düzeltildi; başka bir tarayıcı otomasyonu yazılırken aynı tuzak geçerli.
 
 Yerel ölçüm ve görüntüler `.tmp-companies/` altında; geçici betikler `.tmp-company-*.mjs`. Son sonuçlar `qa.json` ve `layouts.json`. Fiziksel iOS/Safari testi yapılmadı.
+
+### Teknik Analizde Son İnce İşçilik — 22 Eylül
+
+Devam planındaki dördüncü aşama. Ekran yeniden kurulmadı: tarayıcı taraması
+önce kusur ARAMADI, kusur olmadığını ölçtü — `/teknik` ve on beş sembolün
+detayı × TR/EN × 320/390/768/1024/1440px = 160 yerleşimde yatay taşma,
+kırpılan başlık/ölçü ve tarayıcı hatası yok; açık/koyu × TR/EN × üç genişlik
+= 84 yerleşimde de aynı sonuç. Bölüm çapaları yapışkan başlığın altına
+iniyor (~157px). Gösterge kartlarındaki alt ızgara hizası ve RSI ölçeğinin
+dikey ortalanması bilinçli kararlar; dokunulmadı.
+
+Kusurlar kod denetiminden çıktı ve her biri ayrıca çürütmeye çalışıldı:
+
+- **Yatay modda karar yarım kalmıştı.** Yan çevrilmiş telefonda iki kolona
+  dönüşü anlatan kural `.twoCol`a yazılıydı; `40a7fe0` gövdenin ızgarasını
+  `.analysisGrid`e çevirirken bu kuralı geride bıraktı. Sonuç: kapak iki
+  kolona dönüyor, hemen altındaki harita/değerlendirme tek kolonda kalıyordu
+  — yani kararın ölçtüğü kazanç (4363'e karşı 2973 piksel) kapakla sınırlı
+  kalmıştı. Karşılık `.analysisGrid`e taşındı ve dosyanın SONUNA konuldu:
+  aynı özgüllükte `max-width:1023px` bloğundan önce yazılsaydı ezilirdi.
+  Ölü kalan `.twoCol` ve `.coverSignals` silindi, karar kaydı korundu.
+- **Koyu temada harita noktasının halkası panelden açıktı.** `.mapHere`
+  halkayı `--panel-fixed` ile çiziyordu; o token yapışkan tablo sütunu için
+  ayrılmış ve koyu temada `#1c222a`, panelin zemini ise `--premium-surface`
+  `#101a28`. Açık temada ikisi aynı olduğu için fark görünmüyordu. Kardeşi
+  `.trackPrice` zaten doğru tokenı kullanıyor ve gerekçesini yazmış.
+- **Kapakta iki etiket ailesi oluşmuştu.** Plan şeridinin karar kaydı
+  ("ETİKET 11 PİKSEL, 10 DEĞİL") etiket dilini `.signal dt`in 11 puntosuna
+  bağlamıştı; `.signalsCompact .signal dt` son commit'te 10'a inerek tam o
+  ikiliği geri getirdi — ikisi de kapakta, yan yana. Punto tabana bırakıldı,
+  harf aralığı sıkışık kaldı. Harita rozeti de ölçek dışı 9px yerine
+  `--text-nano`ya döndü; rozet kelime taşıyor, `--text-micro` metin olmayan
+  yere ayrılmış.
+- **Paylaşım kartı "On iki hisse" diyordu, liste on beş taşıyor.** Sayı artık
+  `TECHNICAL_SYMBOLS`ten okunuyor; listeye sembol eklendiğinde kart
+  kendiliğinden düzeliyor.
+- **Yedinci adım eksikti.** `getQuotes` çağıran on bir sayfadan yalnızca bu
+  ikisi damgasızdı: kaynak, çekilme saati ve 15 dakikalık gecikme hiçbir
+  yerde yazmıyordu. Bayatlık da yalnızca "Şu An" etiketini düşürüyordu ve o
+  etiket seans dışında zaten düşüyor — yani bayatlığın kendi işareti yoktu.
+  `DataStamp` iki rotada da künyeden sonra, `GuideHint`ten önce. Detayda
+  "Diğer Şirketler" kartlarının yüzdeleri de aynı pakete bağlı ve kendi
+  künyesini taşımıyordu; bayatlığı artık bu damga söylüyor.
+- **"Yeni eklendi" ile "yayını gecikti" aynı cümleye düşüyordu.**
+  `pendingSymbols` sözleşmesi "henüz yayını olmayan" diyor ama çağıran ona
+  PANOYU veriyordu ve pano beş günden taze yayını taşıyor. Yayını aksayan
+  bir sembol panodan düşünce "takip listesine yeni eklendi; ilk yayından
+  sonra kartı görünecek" künyesiyle basılıyordu — onlarca kez yayımlanmış
+  bir hisse için yanlış. Soru artık doğru yere soruluyor: "daha önce
+  yayımlandı mı" veritabanına (`getPublishedSymbols`, penceresiz ayrık
+  sorgu), "panoda mı" panoya. Sorgu düşerse küme panoyla dolduruluyor, yani
+  eski davranışa dönülüyor, yanlış cümleye değil. İngilizce künye de tek
+  sembolde çoğul kalıyordu ("BE were just added… their cards"); `plural`
+  kalıbına bağlandı.
+- **Kapaktaki gösterge özetinin karar kaydı kodla çelişiyordu.** Not
+  "gösterge özeti artık ayrıntılarını anlattığı bölümde" diyordu ama
+  `9e1c3b6` kapağa `compact` dalını geri koymuştu. İki hâl de yazıldı:
+  kapaktaki bir BAKIŞ, bölümdeki bir ÖLÇÜ.
+
+Doğrulama: düzeltme başına on bir hedefli kontrol — damga iki rotada basılıyor,
+gecikmeyi söylüyor ve `GuideHint`ten önce duruyor; 844×390 yatayda kapak ve
+gövde ızgarası iki kolon (`396,6px 381,4px`); koyu temada halka panel zemininin
+tam rengi (`rgb(16,26,40)`); kapakta plan etiketi ile gösterge etiketi aynı
+punto (11px); harita rozeti 10px (TSLA'da ölçüldü). **11/11 başarılı.**
+Düzeltmelerden sonra 160 yerleşimlik tarama yeniden koşuldu: 0 sorun, 0
+tarayıcı hatası. Build, lint ve build sonrası typecheck temiz.
+
+Yeni iki dal canlı veride boştu (on beş sembolün hepsi panoda ve taze;
+veritabanında ayrık sembol sayısı da on beş). Geçici bir yerel deneyle ikisi
+de tetiklendi ve iki dilde okundu: "ONDS takip listesine yeni eklendi…" /
+"ONDS was just added… its card appears" ve "RKLB için son beş işlem gününde
+yeni yayın yok…" / "RKLB has had no new edition…". Deneyin kendi yan etkisi
+olarak dial "17 Hisse" yazdı — deneyde sembol hem panoda hem bekleyenlerde
+duruyordu; gerçek kodda iki küme kesişemez (`lapsed` panoda olmayanlardan,
+`pending` yayımlanmamışlardan türüyor ve pano kümenin içine katılıyor). Deney
+geri alındı, kaynak doğrulanmış hâline döndü.
+
+Yerel ölçüm ve görüntüler `.tmp-technical/` altında; geçici betikler
+`.tmp-technical-*.mjs`. Fiziksel iOS/Safari testi yapılmadı.
