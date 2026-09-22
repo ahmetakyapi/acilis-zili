@@ -1,7 +1,8 @@
 import polish from "@/components/motion/UtilityExperience.module.css";
-import Link from "next/link";
+/* `LocaleLink`: çıplak `next/link` /en/karsilastir'da hazır set adreslerini
+   öneksiz basıyordu (halka arz takvimindeki hatanın aynısı). */
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
-import { CompareAdd } from "@/components/markets/CompareAdd";
 import { LogoTile, Panel } from "@/components/ui/primitives";
 import { seriesColorOf } from "@/lib/chart-series";
 import { compareHref } from "@/lib/compare";
@@ -56,48 +57,8 @@ export async function CompareEmpty({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* ---- Kendi setini kur ----
-          Arama kutusu ekranın ORTASINDA ve açık başlıyor: boş ekranda
-          yapılacak başka bir şey yok. Eski metin okuyucuyu bir hisse
-          sayfasına yolluyordu, oysa ekleme yolu bu ekranın içinde.
-
-          GENİŞ EKRANDA BANT, DAR EKRANDA KAHRAMAN. Ortalanmış hâli 1280
-          pikselde 350 piksellik boş bir kutuydu: içinde bir başlık, bir
-          cümle ve 384 piksellik bir kutu, geri kalanı hava. Yatay düzende
-          başlık solda, kutu sağda — aynı içerik, ölü alan yok. Telefonda
-          yan yana koyacak yer olmadığı için dikey ve ortalı kalıyor. */}
-      <Panel className={polish.compareIntro}>
-        <div className="flex flex-col items-center gap-3 px-5 py-8 text-center sm:px-8 lg:flex-row lg:justify-between lg:gap-10 lg:py-7 lg:text-left">
-          <div className="flex flex-col items-center gap-2 lg:items-start">
-            {/* Sayfa başlığı ürünün ADINI veriyor ("Karşılaştır"); buradaki
-                başlık okuyucudan ne beklendiğini söylüyor. İkisi tekrar
-                değil, biri ad biri yönerge. */}
-            <h2 className="display-ink w-fit text-heading font-bold tracking-[-0.02em]">
-              {t.compare.empty}
-            </h2>
-            <p className="max-w-md text-read leading-relaxed text-body">
-              {t.compare.emptyHint}
-            </p>
-          </div>
-          <div className="mt-1 w-full max-w-sm shrink-0 lg:mt-0 lg:w-80">
-            <CompareAdd
-              symbols={[]}
-              rangeParam={null}
-              defaultOpen
-              wide
-              labels={{
-                add: t.compare.addSymbol,
-                placeholder: t.compare.addPlaceholder,
-                cancel: t.common.cancel,
-                noResults: t.stock.notFound,
-                searching: t.common.loading,
-                searchFailed: t.common.error,
-              }}
-            />
-          </div>
-        </div>
-      </Panel>
-
+      {/* Kendi setini kurma kutusu sayfa kapağının sağında (karsilastir/
+          page.tsx); burada yalnızca hazır setler ve okuma notu. */}
       {/* ---- Hazır setler ---- */}
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">

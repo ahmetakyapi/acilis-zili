@@ -17,17 +17,19 @@
    eziyor.
    ========================================================================== */
 
-/* ÖLÇÜ 40rem, PUNTO 18. Gövde 1440'ta 1040 piksel genişlikte ve 16
-   puntoydu: satır başına 126-144 harf (ölçüldü, en uzun paragraf 144).
-   Rahat okuma aralığı 60-75. 18/1.7 ile 640 piksel 69-72 harf veriyor
-   (1440'ta ölçüldü). Görseller, kutular ve tablolar sütunun tamamını
-   (1440'ta 718) kullanıyor; yalnızca METİN 40rem'de kırılıyor. */
+/* ÖLÇÜ, PUNTO 18. Gövde 1440'ta 1040 piksel genişlikte ve 16 puntoydu:
+   satır başına 126-144 harf (ölçüldü, en uzun paragraf 144). Rahat okuma
+   aralığı 60-75. Tek kolon ve ORTALI (23 Eylül, sahibinin isteği: yan ray
+   yok): metin 42rem'lik sütunda (~70 harf), görsel bloklar ve kutular
+   52rem ile metinden taşarak ayrışıyor. Dar ekranda ikisi de kap kadar. */
 .prose {
   --prose-size: 18px;
   --prose-lh: 1.7;
   --prose-step: 1.1em;
-  --prose-figure: 44px;
+  --prose-figure: 40px;
   --prose-bleed: 0px;
+  --prose-measure: 42rem;
+  --prose-wide: 52rem;
   display: block;
   font-size: var(--prose-size);
   line-height: var(--prose-lh);
@@ -35,8 +37,9 @@
   counter-reset: sec;
 }
 .prose > * { margin: 0; }
+.prose > * { max-width: var(--prose-wide); margin-inline: auto; }
 .prose > * + * { margin-top: var(--prose-step); }
-.prose > :is(p, ul, ol, blockquote, h2, h3) { max-width: 40rem; }
+.prose > :is(p, ul, ol, blockquote, h2, h3) { max-width: var(--prose-measure); }
 .prose > p,
 .prose > [data-block="list"] > li,
 .prose > blockquote {
@@ -66,9 +69,17 @@
    değil (1440'ta 1040'ın 592'si) ve kırık bir cetvel gibi okunuyordu.
    Çizgi yerine hava (64) ve rayla aynı sırayı taşıyan numara: okuyucu
    raydaki "03"ü metinde de görüyor. */
+/* Bölümler BELİRGİN: başlığın üstünde metin ölçüsü kadar tam bir cetvel
+   (eski kırık, başlık genişliğindeki çizginin yerine) ve numara. Çizimin
+   `w-fit`i burada eziliyor: sütun ortalanınca başlık kendi genişliğinde
+   ortaya kayıyor ve metinle hizasını kaybediyordu (1440'ta metin 384,
+   başlık 490'dan başlıyordu). */
+.prose > :is(h2, h3) { width: auto; }
 .prose > h2 {
   counter-increment: sec;
-  margin-top: 64px;
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
   font-size: 30px;
   line-height: 1.18;
   font-weight: 650;
@@ -144,19 +155,22 @@
 .prose > h3 + :global(.oku-blok)[data-block] {
   margin-top: 24px;
 }
+/* BELİRGİN YÜZEY (23 Eylül). Cetvel arasındaki çizim metnin akışında
+   fazla silik kalıyordu; bloklar sayfa zemininden bir kademe açık yüzeyde,
+   saç teli kenarlıkla ayrışıyor. Gölge ve degrade yok — derinlik tonla. */
 .prose > :global(.oku-blok)[data-block] {
   gap: 0;
-  padding: 12px 0 20px;
-  border: 0;
-  border-top: 1px solid var(--line-strong);
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
-  background: none;
+  padding: 20px 24px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--premium-surface);
   box-shadow: none;
 }
 .prose [data-block] > [data-part="label"] {
-  margin: 0 0 18px;
-  font-size: 13px;
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 14px;
   line-height: 1.35;
   font-weight: 650;
   letter-spacing: -0.005em;
@@ -321,16 +335,20 @@
   }
 }
 
-/* Grafik ve tablo: çerçeve yerine yatay cetveller. */
-.prose > [data-block="chart"] {
-  border-inline: 0;
-  border-top-color: var(--line-strong);
-  border-radius: 0;
-  background: none;
+/* Grafik de aynı yüzeyde: kenarlıklı, `--radius-xl`, taşan köşe
+   kırpılıyor. Dar ekranda kenardan kenara (aşağıda). Gövdenin iç payı
+   künyeyle aynı hatta (16 / 20): varsayılan 4 piksellik payda okuma
+   satırı, çizgi ve aralık düğmeleri ekranın kenarına yapışıyor, künye ise
+   18 pikselde başlıyordu (390'da ölçüldü). */
+.prose > [data-block="chart"] > [data-part="body"] { padding: 8px 16px 12px; }
+@media (min-width: 640px) {
+  .prose > [data-block="chart"] > [data-part="body"] { padding: 10px 20px 16px; }
 }
-.prose > [data-block="chart"] > [data-part="head"],
-.prose > [data-block="chart"] > [data-part="caption"] {
-  padding-inline: 0;
+.prose > [data-block="chart"] {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--premium-surface);
 }
 .prose > [data-block="chart"] > [data-part="caption"] { font-size: 13px; }
 .prose > [data-block="table"] { margin-block: 36px; }
@@ -425,14 +443,12 @@
 }
 .prose > [data-role="summary"] > [data-part="label"] > svg { color: var(--primary-ink); }
 
-/* Ders — kutu değil, iki cetvel arasında bir sonuç cümlesi. */
+/* Ders — yazının sonucu; mavi tonlu bir yüzeyde, gövdeden belirgin. */
 .prose > [data-role="takeaway"] {
-  padding: 18px 0 20px;
-  border: 0;
-  border-top: 2px solid var(--primary);
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
-  background: none;
+  padding: 20px 24px 22px;
+  border: 1px solid var(--primary-faint);
+  border-radius: var(--radius-xl);
+  background: var(--primary-tint);
 }
 .prose > [data-role="takeaway"] > [data-part="label"] { color: var(--primary-ink); }
 .prose > [data-role="takeaway"] [data-part="lead"] {
@@ -448,7 +464,7 @@
    (390'da 250 piksel eğik metin). Künye puntosunda, düz, bir cetvelin
    altında. */
 .prose > [data-role="note"] {
-  max-width: 40rem;
+  max-width: var(--prose-measure);
   margin-top: 40px;
   padding-top: 18px;
   border-top: 1px solid var(--line);
@@ -461,14 +477,12 @@
    çiziyordu (aralarında 40 piksel boşluk); ders zaten bir çizgiyle
    kapanıyor. */
 .prose > [data-role="takeaway"] + [data-role="note"] {
-  margin-top: 20px;
-  padding-top: 0;
-  border-top: 0;
+  margin-top: 28px;
 }
 /* Kök blok akışında: notun 20 piksellik üst payı dersin 36 piksellik alt
    payıyla çöküyor ve ölçülen aralık 36 kalıyordu. Payı dersin kendisi
    veriyor. */
-.prose > [data-role="takeaway"]:has(+ [data-role="note"]) { margin-bottom: 20px; }
+.prose > [data-role="takeaway"]:has(+ [data-role="note"]) { margin-bottom: 28px; }
 /* Kaynak notu ve düzeltme satırı iki ayrı not; ikisi aynı cetvelin
    altında, ayrı bir çizgi açmadan art arda duruyor. */
 .prose > [data-role="note"] + [data-role="note"] {
@@ -480,15 +494,6 @@
 /* --------------------------------------------------------------------------
    Dar ekran
    -------------------------------------------------------------------------- */
-/* 1024-1199: metin sütunu 571 piksel, punto 17 (65 harf). Özet kutusu
-   16 puntoda 1024x900 ekranda alt şeridin altına 20 piksel giriyordu
-   (dibi 883, şerit 863'te); 15 puntoda ekranda bitiyor. */
-@media (max-width: 1199px) and (min-width: 1024px) {
-  .prose { --prose-size: 17px; }
-  .prose > [data-role="summary"] [data-part="def"] { font-size: 15px; line-height: 1.55; }
-  .prose > [data-role="summary"] [data-part="term"] { line-height: 23.25px; }
-  .prose > [data-role="summary"] [data-part="row"] { padding-block: 9px; }
-}
 @media (max-width: 639px) {
   .prose {
     --prose-size: 17px;
@@ -498,7 +503,9 @@
     --prose-bleed: 18px;
   }
   .prose > [data-role="lede"] { font-size: 19px; }
-  .prose > h2 { margin-top: 44px; font-size: 24px; line-height: 1.22; }
+  .prose > h2 { margin-top: 40px; padding-top: 22px; font-size: 24px; line-height: 1.22; }
+  .prose > :global(.oku-blok)[data-block] { padding: 16px 16px 18px; }
+  .prose > [data-role="takeaway"] { padding: 16px 16px 18px; }
   .prose > h2::before { margin-bottom: 10px; font-size: 12px; }
   .prose > [data-block="quote"] { font-size: 19px; padding-left: 16px; }
   .prose [data-block="stats"] [data-part="value"] { font-size: 28px; }
@@ -519,11 +526,11 @@
   .prose > [data-role="summary"] { padding: 16px 18px 12px; }
   .prose > [data-role="summary"] [data-part="row"] { padding: 10px 0; font-size: 15px; line-height: 1.55; }
   .prose > [data-role="summary"] :is([data-part="term"], [data-part="def"]) { font-size: 15px; line-height: 1.55; }
-  .prose > [data-role="takeaway"] { padding: 16px 0 18px; }
 
   /* Grafik ve tablo kenardan kenara: 18 piksellik kanal bu iki blokta
      okumaya değil çizime gidiyor. */
   .prose > :is([data-block="chart"], [data-block="table"]) {
+    max-width: none;
     margin-inline: calc(var(--prose-bleed) * -1);
     border-inline: 0;
     border-radius: 0;

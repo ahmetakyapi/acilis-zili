@@ -3,12 +3,11 @@ import { cache } from "react";
    basıyordu — halka arz takvimindeki hatanın aynısı. */
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import styles from "./StoryDetail.module.css";
-import { sinceEventReturn } from "./StoryVisual";
 import { LogoTile } from "@/components/ui/primitives";
 import { getStatus, getSymbolNames } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getChartBarsMulti } from "@/lib/providers";
-import { lastStoryClose, type StoryClose } from "@/lib/story-market";
+import { storySinceEvent, type StoryClose } from "@/lib/story-market";
 import {
   cn,
   directionOf,
@@ -19,16 +18,14 @@ import {
 } from "@/lib/utils";
 
 /* --------------------------------------------------------------------------
-   Rayın şirketleri — yazıda geçen şirketler, olaydan bugüne getirileriyle.
+   Yazıda geçen şirketler — gövdenin sonunda, olaydan bugüne getirileriyle.
 
    İKİ AŞAMA. Adlar ve logolar kapağın zaten sorduğu `getSymbolNames`
    anahtarından geliyor (istek içi önbellek, ek tur yok) ve HEMEN basılıyor;
    getiriler bir yıllık günlük barlardan hesaplanıyor ve `Suspense` ile akıyor.
    Yedek aynı satırları değersiz basıyor: satır yüksekliği sabit (44), değer
    geldiğinde hiçbir şey kaymıyor ve sağlayıcı yavaşsa bile şirket
-   bağlantıları ekranda. Geniş ekranda kapak çiplerinin yerini bu blok
-   aldığı için bu şart: künye adımı (CLAUDE.md, ekran düzeni 2) hiçbir anda
-   kaybolmuyor.
+   bağlantıları ekranda.
 
    NEDEN GÜNCEL YÜZDE DEĞİL. Yazı olay gününün rakamlarını basıyor (Intel
    +%12,53). Yanına bugünün yüzdesini koymak aynı şirketin iki farklı
@@ -43,8 +40,8 @@ import {
    rakamdan farklı olabilir — o fark künyede yazılı.
    -------------------------------------------------------------------------- */
 
-/** Rayın en çok gösterdiği şirket; artanı sayıyla söylenir. */
-const RAIL_MAX = 6;
+/** Bloğun en çok gösterdiği şirket; artanı sayıyla söylenir. */
+const COMPANIES_MAX = 6;
 
 type CompanyValue =
   | { kind: "since"; pct: number; close: StoryClose }
@@ -62,25 +59,20 @@ type Labels = Pick<
   "relatedSymbols" | "sinceEvent" | "lastClose" | "closeOn" | "moreCompaniesMany"
 >;
 
-/* İSTEK İÇİNDE TEK ÇEKİM. Blok iki yerde çiziliyor — geniş ekranda rayda,
-   dar ekranda gövdenin sonunda (CSS hangisinin görüneceğine karar veriyor)
-   — ve `getChartBarsMulti` `cache()`li değil: iki örnek sağlayıcıya iki kez
-   giderdi. Anahtar sıralı sembol dizesi; `status` `cache()`li `getStatus`in
-   aynı nesnesi. */
-const railBars = cache((key: string, status: Awaited<ReturnType<typeof getStatus>>) =>
+/* İSTEK İÇİNDE TEK ÇEKİM. `getChartBarsMulti` `cache()`li değil; blok
+   akış yedeğiyle birlikte ya da ileride ikinci bir yerde çizilirse
+   sağlayıcıya ikinci kez gitmesin. Anahtar sıralı sembol dizesi; `status`
+   `cache()`li `getStatus`in aynı nesnesi. */
+const companyBars = cache((key: string, status: Awaited<ReturnType<typeof getStatus>>) =>
   getChartBarsMulti(key.split(","), "1Y", status).catch(
     () => ({}) as Awaited<ReturnType<typeof getChartBarsMulti>>,
   ),
 );
 
-function isoDay(seconds: number): string {
-  return new Date(seconds * 1000).toISOString().slice(0, 10);
-}
-
 /** Adlar ve logolar — akış beklenirken de, akıştan sonra da aynı kaynak. */
 async function namedRows(symbols: string[]): Promise<Omit<CompanyRow, "value">[]> {
   const meta = await getSymbolNames(symbols);
-  return symbols.slice(0, RAIL_MAX).map((symbol) => ({
+  return symbols.slice(0, COMPANIES_MAX).map((symbol) => ({
     symbol,
     name: meta[symbol]?.name ?? null,
     logoUrl: meta[symbol]?.logoUrl ?? null,
@@ -98,33 +90,17 @@ export async function StoryCompanies({
   locale: Locale;
   labels: Labels;
 }) {
-  const shown = symbols.slice(0, RAIL_MAX);
+  const shown = symbols.slice(0, COMPANIES_MAX);
   const [status, rows] = await Promise.all([getStatus(), namedRows(symbols)]);
-  const bars = await railBars([...shown].sort().join(","), status);
+  const bars = await companyBars([...shown].sort().join(","), status);
 
+  /* Kural `storySinceEvent`te (lib/story-market): tamamlanmış son
+     kapanışa kadar, ilk olay sonrası kapanıştan önce sayı yok — liste ve
+     şirket sayfası da aynı fonksiyonu okuyor. Ölçülen çelişkiler orada. */
   const withValues: CompanyRow[] = rows.map((row) => {
-    const series = bars[row.symbol];
-    const close = lastStoryClose(series, status);
-    if (!series || !close) return { ...row, value: null };
-    /* OLAY GÜNÜNÜN HAREKETİ YAZININ KENDİ RAKAMI. `sinceEventReturn` tabanı
-       olaydan önceki kapanış; son tamamlanmış kapanış olay gününün
-       kendisiyse "olaydan bugüne" değeri olay gününün yüzdesi oluyor ve
-       sağlayıcının barlarından hesaplanıyor. Yazı ise aynı günü kendi
-       kaynağıyla basıyor: ölçüldü, muse yazısının ilk gününde rayda Arm
-       +%17,16, INTC +%12,14; gövdede aynı gün Arm +%10,00, Intel +%12,53.
-       Aynı şirketin iki farklı yüzdesi aynı ekranda (veri dürüstlüğü 3).
-       Ray saymaya olaydan SONRAKİ ilk tamamlanmış seansla başlıyor. O
-       gelene kadar SAYI YOK: kapanış fiyatı da çelişiyordu (aynı yazının
-       ilk gününde rayda "AMD 615,52 $", yanındaki paragrafta "614,91
-       dolardan kapandı"; sağlayıcının günlük barı ile yazının kaynağı).
-       Ad ve logo kalıyor, değer ilk olay sonrası kapanışla geliyor. */
-    if (close.date <= eventDate) return { ...row, value: null };
-    const settled = series.filter((bar) => isoDay(bar.time) <= close.date);
-    const pct = sinceEventReturn(settled, eventDate);
-    return {
-      ...row,
-      value: pct === null ? { kind: "close", close } : { kind: "since", pct, close },
-    };
+    const { pct, close } = storySinceEvent(bars[row.symbol], eventDate, status);
+    if (!close || pct === null) return { ...row, value: null };
+    return { ...row, value: { kind: "since", pct, close } };
   });
 
   return (
@@ -191,7 +167,7 @@ function CompaniesView({
   return (
     <section className={styles.companies} aria-busy={pending || undefined}>
       <div className={styles.companiesHead}>
-        <p className={styles.railTitle}>{labels.relatedSymbols}</p>
+        <p className={styles.companiesTitle}>{labels.relatedSymbols}</p>
         <p className={styles.companiesStamp}>
           <span>{blankStamp ? "\u00a0" : allClose ? labels.lastClose : labels.sinceEvent}</span>
           {/* Yedekte boş ama yer tutan satır: değer gelince başlık uzamıyor. */}

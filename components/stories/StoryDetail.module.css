@@ -22,64 +22,41 @@
 .figure :global(.tote) { overflow-wrap:anywhere; font-size:26px; line-height:1.15; font-weight:550; letter-spacing:-.04em; }
 .figure :global(.line-clamp-2) { overflow-wrap:anywhere; display:block; -webkit-line-clamp:unset; overflow:visible; font-size:11px; line-height:1.65; margin-top:7px; }
 
-/* KAPAĞIN ŞİRKET ÇİPLERİ. Geniş ekranda aynı şirketler rayda, olaydan
-   bugüne getirileriyle duruyor; kapakta ikinci kez basılmıyor ve kapak bir
-   satır kısalıyor (1440'ta 60 piksel). Dar ekranda ray yok, çipler kapakta
-   kalıyor ama SARMIYOR: 390'da beş çip üç satır, 141 piksel tutuyordu. Tek
-   satır ve yatay kaydırma, sağ kenarda solan maske "devamı var" diyor. */
+/* KAPAĞIN ŞİRKET ÇİPLERİ. Dar ekranda SARMIYOR: 390'da beş çip üç satır,
+   141 piksel tutuyordu. Tek satır ve yatay kaydırma, sağ kenarda solan
+   maske "devamı var" diyor. */
 .symbols { display:flex; flex-wrap:wrap; gap:8px; min-width:0; }
 @media(max-width:767px) {
  .symbols { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; margin-inline:-20px; padding-inline:20px; scroll-padding-inline:20px; mask-image:linear-gradient(90deg,transparent,var(--text-strong) 20px,var(--text-strong) calc(100% - 28px),transparent); }
  .symbols::-webkit-scrollbar { display:none; }
  .symbols > a { flex-shrink:0; }
 }
-@media(min-width:1024px) { .article[data-rail-companies="true"] .symbols { display:none; } }
 
 /* --------------------------------------------------------------------------
-   Gövde + ray
+   Gövde — kapağın altında TEK KOLON, ortalı
 
-   GÖVDE KAPAĞIN IZGARASINI KULLANIYOR. Tek sütunluk 1040 piksellik gövde
-   kapağın altında ortalanmış ayrı bir blok gibi duruyordu ve satır başına
-   126-144 harf veriyordu. Artık kapakla AYNI iz: 1.9fr | 1fr, 32 aralık,
-   36 iç kenar. 1440'ta metin sütunu 718, ray 378 ve rayın başladığı x
-   kapaktaki rakam sütunuyla aynı (906) — sol çizgi motifi de aynı. Ray
-   yapışkan: okurken içindekiler ve şirketler ekranda kalıyor.
+   23 Eylül: iki kolonlu düzen (metin solda, yapışkan içindekiler ve şirket
+   kartları sağda) sahibinin isteğiyle geri alındı; yazı eski yerinde,
+   kapağın altında tek kolon. Eski düzenden farkı ÖLÇÜ: gövde 1040 piksellik
+   kapta 126–144 harflik satırlar basıyordu. Şimdi kap aynı (1040, ortalı),
+   metin 42rem'lik bir sütunda ortalı (~70 harf), görsel bloklar ve
+   kutular 52rem ile metinden taşarak ayrışıyor; künye ve arşiv de o
+   genişlikte. Ortalı çünkü sola yaslı dar bir sütun sağda boş bir oluk
+   bırakırdı.
    -------------------------------------------------------------------------- */
-.layout { display:grid; grid-template-columns:minmax(0,1fr); min-width:0; padding-inline:0; }
+.layout { width:100%; max-width:1040px; margin-inline:auto; min-width:0; }
 .mainCol { display:flex; flex-direction:column; gap:56px; min-width:0; }
-.rail { display:none; }
-/* Dar ekranın şirket bloğu; rayın göründüğü genişlikte gizli (aşağıda). */
-.companiesInline { min-width:0; }
-.layout[data-rail="false"] { max-width:760px; }
-@media(min-width:1024px) {
- .layout { padding-inline:36px; }
- .layout[data-rail="true"] { grid-template-columns:minmax(0,1.9fr) minmax(0,1fr); column-gap:32px; }
- .rail { display:flex; flex-direction:column; gap:28px; grid-column:2; align-self:start; position:sticky; top:calc(var(--app-bar-h) + 24px); max-height:calc(100dvh - var(--app-bar-h) - 76px); overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; padding-left:24px; padding-right:8px; margin-right:-8px; border-left:1px solid var(--primary-faint); }
- /* Şirket satırının hover zemini iki yana 8 piksel taşıyor; ray o payı
-    kendi içinde ayırıyor. Ayırmadığında `overflow-y:auto` yatayı da
-    kaydırılabilir yapıyordu: ray 8 piksel yana kayıyor ve zeminin sağ
-    köşeleri kesiliyordu (ölçüldü, 1440'ta 385 / 377). */
- .tocMobile { display:none; }
- .layout[data-rail="true"] .companiesInline { display:none; }
-}
+.mainCol > :not(#story-reading) { width:100%; max-width:52rem; margin-inline:auto; }
 @media(max-width:767px) { .mainCol { gap:44px; } }
 
-.railHead { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:10px; }
-.railTitle { font-size:13px; line-height:1.35; font-weight:650; letter-spacing:-.005em; color:var(--text-strong); }
-.railMeta { flex-shrink:0; font-size:11px; line-height:1.35; font-weight:600; color:var(--text-muted); }
+/* Şirket kartı: tonla ayrışan yüzey, gölge yok. */
+.companiesInline { padding:18px 20px 12px; border:1px solid var(--line); border-radius:var(--radius-xl); background:var(--premium-surface); }
+@media(max-width:639px) { .companiesInline { padding:16px 16px 10px; } }
 
-.toc { display:flex; flex-direction:column; }
-.tocLink { display:grid; grid-template-columns:26px minmax(0,1fr); align-items:baseline; min-height:36px; padding:7px 0; border-radius:var(--radius-sm); color:var(--text-body); font-size:14px; line-height:1.35; }
-.tocLink > span:first-child { font-size:12px; font-weight:650; color:var(--text-muted); }
-.tocLink > span:last-child { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-wrap:pretty; }
-.tocLink[aria-current="location"] { color:var(--text-strong); font-weight:600; }
-.tocLink[aria-current="location"] > span:first-child { color:var(--primary-ink); }
-.tocLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
-@media(hover:hover) { .tocLink:hover { color:var(--text-strong); } .tocLink:hover > span:first-child { color:var(--primary-ink); } }
-
-/* Rayın şirketleri — adlar sunucuda hemen, getiriler akışla. */
+/* Şirketler — adlar sunucuda hemen, getiriler akışla. */
 .companies { display:flex; flex-direction:column; padding-top:18px; border-top:1px solid var(--line); }
 .companies:first-child { padding-top:0; border-top:0; }
+.companiesTitle { font-size:15px; line-height:1.35; font-weight:650; letter-spacing:-.01em; color:var(--text-strong); }
 .companiesHead { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:6px; }
 .companiesStamp { flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; font-size:11px; line-height:1.35; font-weight:600; color:var(--text-muted); text-align:right; }
 .companiesStamp > span + span { font-weight:500; }
@@ -93,20 +70,20 @@
 .companyValue > small { font-size:10px; font-weight:500; color:var(--text-muted); }
 .companiesMore { padding-top:8px; font-size:12px; color:var(--text-muted); }
 
-/* Dar ekranın içindekileri — özetin altında, kapalı bir kutu. JavaScript
-   olmadan da açılıyor (yerel <details>). */
-.tocMobile { border:1px solid var(--line); border-radius:var(--radius-xl); background:var(--premium-surface); }
-.tocMobile > summary { display:flex; align-items:center; gap:10px; min-height:52px; padding:0 16px; cursor:pointer; list-style:none; }
-.tocMobile > summary::-webkit-details-marker { display:none; }
-.tocMobile > summary > span:first-child { font-size:15px; line-height:1.3; font-weight:650; color:var(--text-strong); }
-.tocMobile > summary > span:nth-child(2) { font-size:12px; line-height:1.3; color:var(--text-muted); }
-.tocMobile > summary > svg { margin-left:auto; flex-shrink:0; color:var(--text-muted); transition:transform var(--default-transition-duration,180ms) var(--ease-brand,ease); }
-.tocMobile[open] > summary > svg { transform:rotate(180deg); }
-.tocMobile > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:var(--radius-xl); }
-.tocMobile ol { display:flex; flex-direction:column; padding:0 16px 10px; border-top:1px solid var(--line-soft); }
-.tocMobile a { display:grid; grid-template-columns:28px minmax(0,1fr); align-items:baseline; min-height:44px; padding:11px 0; font-size:15px; line-height:1.4; color:var(--text-body); }
-.tocMobile a > span:first-child { font-size:12px; font-weight:650; color:var(--primary-ink); }
-.tocMobile li + li a { border-top:1px solid var(--line-soft); }
+/* İçindekiler — özetin altında, kapalı bir kutu, her genişlikte.
+   JavaScript olmadan da açılıyor (yerel <details>). */
+.tocBox { border:1px solid var(--line); border-radius:var(--radius-xl); background:var(--premium-surface); }
+.tocBox > summary { display:flex; align-items:center; gap:10px; min-height:52px; padding:0 16px; cursor:pointer; list-style:none; }
+.tocBox > summary::-webkit-details-marker { display:none; }
+.tocBox > summary > span:first-child { font-size:15px; line-height:1.3; font-weight:650; color:var(--text-strong); }
+.tocBox > summary > span:nth-child(2) { font-size:12px; line-height:1.3; color:var(--text-muted); }
+.tocBox > summary > svg { margin-left:auto; flex-shrink:0; color:var(--text-muted); transition:transform var(--default-transition-duration,180ms) var(--ease-brand,ease); }
+.tocBox[open] > summary > svg { transform:rotate(180deg); }
+.tocBox > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:var(--radius-xl); }
+.tocBox ol { display:flex; flex-direction:column; padding:0 16px 10px; border-top:1px solid var(--line-soft); }
+.tocBox a { display:grid; grid-template-columns:28px minmax(0,1fr); align-items:baseline; min-height:44px; padding:11px 0; font-size:15px; line-height:1.4; color:var(--text-body); }
+.tocBox a > span:first-child { font-size:12px; font-weight:650; color:var(--primary-ink); }
+.tocBox li + li a { border-top:1px solid var(--line-soft); }
 
 /* --------------------------------------------------------------------------
    Künye ve arşiv
@@ -156,4 +133,4 @@ a.sourceLink:focus-visible { outline:2px solid var(--line-focus); outline-offset
 
 @media(max-width:1023px) { .cover { grid-template-columns:minmax(0,1fr); } .title { max-width:32ch; } .figure { padding:20px 0 0; border-left:0; border-top:1px solid var(--primary-faint); } .figure > div { grid-template-columns:repeat(2,minmax(0,1fr)); } .coverFigure { max-width:none; } }
 @media(max-width:767px) { .article { gap:22px; } .cover { padding:22px 20px; border-radius:20px; gap:22px; } .coverCopy { gap:18px; } .title { font-size:32px; line-height:1.12; } .dek { font-size:14px; line-height:1.75; } .figure { gap:16px; } .figure :global(.tote) { font-size:23px; } .moreStories li a { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 10px; padding-block:16px; } .moreStories li a > span:first-child, .moreStories:lang(en) li a > span:first-child { grid-column:1/-1; width:auto; } .moreCopy strong { font-size:17px; } .moreCopy > span { font-size:13px; } }
-@media(prefers-reduced-motion:reduce) { .moreStories li a > svg, .sourceLink > svg, .tocMobile > summary > svg { transition:none; transform:none!important; } }
+@media(prefers-reduced-motion:reduce) { .moreStories li a > svg, .sourceLink > svg, .tocBox > summary > svg { transition:none; transform:none!important; } }

@@ -1,9 +1,6 @@
-import { lastStoryClose } from "@/lib/story-market";
+import { storySinceEvent } from "@/lib/story-market";
 import { StoryCard } from "@/components/stories/StoryCard";
-import {
-  sinceEventReturn,
-  type CastMember,
-} from "@/components/stories/StoryVisual";
+import type { CastMember } from "@/components/stories/StoryVisual";
 import { PanelLink, Skeleton } from "@/components/ui/primitives";
 import {
   countStoriesForSymbol,
@@ -81,11 +78,11 @@ export async function SymbolStories({
         symbol: item,
         name: meta[item]?.name ?? null,
         logoUrl: meta[item]?.logoUrl ?? null,
-        lastClose: item === symbol ? lastStoryClose(bars[symbol], status) : null,
-        sinceEvent:
-          item === symbol
-            ? sinceEventReturn(bars[symbol], story.eventDate)
-            : null,
+        ...(item === symbol
+          ? (({ pct, close }) => ({ sinceEvent: pct, lastClose: close }))(
+              storySinceEvent(bars[symbol], story.eventDate, status),
+            )
+          : { sinceEvent: null, lastClose: null }),
       }));
 
   return (

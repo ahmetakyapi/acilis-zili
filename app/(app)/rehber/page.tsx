@@ -117,10 +117,31 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
        ayrı düzey. */
     <MotionExperience className={`${styles.guidePage} ${guideStyles.guide}`}>
       <ScrollProgress />
+      {/* KAPAĞIN SAĞI BOŞ DEĞİL. Kapağın sağ yarısı yalnızca süs çizgisi
+          taşıyordu; "Baştan Başla" bağlantısı ve müfredatın toplamı ise
+          hemen altındaki panelin dibinde ayrı bir satırdaydı. İkisi kapağın
+          sağında tek bir kart: ilk yazı, kısa açıklaması ve müfredatın
+          ölçüsü (23 Eylül). */}
       <SectionMasthead
         eyebrow={t.guide.eyebrow}
         title={t.guide.title}
         description={t.guide.subtitle}
+        aside={
+          all[0] ? (
+            <Link href={`/rehber/${all[0].slug}`} className={guideStyles.startCard}>
+              <span className={guideStyles.startKicker}>{t.guide.startFirst}</span>
+              <span className={guideStyles.startTitle}>{all[0].title}</span>
+              <span className={guideStyles.startDek}>{all[0].dek}</span>
+              <span className={guideStyles.startMeta}>
+                <span className="numeral">
+                  {all.length} {plural(all.length, t.guide.articleOne, t.guide.articleMany)} · ~{minutesOf(all)}{" "}
+                  {t.guide.readMinutes}
+                </span>
+                <ArrowRight weight="bold" size={14} aria-hidden />
+              </span>
+            </Link>
+          ) : undefined
+        }
       />
 
       <QueryTransition label={t.common.loading}>
@@ -133,13 +154,7 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
         />
       ) : (
         <>
-          <CurriculumStrip
-            all={all}
-            groupOf={groupOf}
-            minutesOf={minutesOf}
-            locale={locale}
-            t={t}
-          />
+          <CurriculumStrip groupOf={groupOf} locale={locale} t={t} />
 
           {GUIDE_TOPICS.map((topic, index) => {
             const group = groupOf(topic.key);
@@ -196,33 +211,21 @@ function levelsIn(articles: GuideArticle[]): GuideLevel[] {
  * kapsam (kaç yazı, ne kadar okuma). Kapsamın toplamı şeridin künyesinde.
  */
 function CurriculumStrip({
-  all,
   groupOf,
-  minutesOf,
   locale,
   t,
 }: {
-  all: GuideArticle[];
   groupOf: (key: GuideTopicKey) => GuideArticle[];
-  minutesOf: (articles: GuideArticle[]) => number;
   locale: Locale;
   t: Dictionary;
 }) {
-  const first = all[0];
-
   return (
     <section className={`${styles.curriculum} ${guideStyles.curriculum} flex flex-col gap-3`}>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
           {t.guide.curriculum}
         </h2>
-        <span className="numeral text-tiny text-muted">
-          {all.length} {plural(all.length, t.guide.articleOne, t.guide.articleMany)} · ~{minutesOf(all)}{" "}
-          {t.guide.readMinutes}
-        </span>
-        {/* Müfredatın ilk durağına doğrudan giden tek bağlantı. Şeridin
-            başlığı "Nereden Başlamalı" diyor ama başlamak, doğru karoyu
-            bulup içindeki ilk kartı seçmeyi gerektiriyordu. */}
+        {/* Müfredatın toplamı ve ilk durağı kapağın sağındaki kartta. */}
       </div>
       <p className="-mt-1.5 max-w-[72ch] text-small leading-[19px] text-muted">
         {t.guide.curriculumHint}
@@ -267,34 +270,6 @@ function CurriculumStrip({
             </a>
           );
         })}
-        {/* PANELİN SON SATIRI — sayfanın TEK degrade yüzeyi.
-            "Baştan Başla" bağlantısı başlık satırının sağ ucundaydı ve orada
-            hem sarmayı tetikliyor hem de 32 piksellik bir dokunma hedefi
-            olarak kalıyordu. Burada tam genişlikte, adıyla ve ilk yazının
-            başlığıyla duruyor. Gliflerin kendi degradesi var, o yüzden bu
-            satırda glif YOK — iki degrade üst üste binmiyor. */}
-        {first && (
-          <Link
-            href={`/rehber/${first.slug}`}
-            className="flex min-h-14 items-center gap-3 bg-gradient-to-b from-(--primary-wash) to-(--primary-tint) px-4 transition-colors hover:to-(--primary-wash) sm:col-span-4"
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block text-read font-bold text-primary-ink">
-                {t.guide.startFirst}
-              </span>
-              <span className="block truncate text-tiny text-muted">
-                {first.title}
-              </span>
-              <span className={guideStyles.startDescription}>{first.dek}</span>
-            </span>
-            <ArrowRight
-              weight="bold"
-              size={14}
-              aria-hidden
-              className="shrink-0 text-primary-ink"
-            />
-          </Link>
-        )}
       </Panel>
     </section>
   );
@@ -594,14 +569,17 @@ function ArticleGrid({
               </span>
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-read font-bold leading-[19px] text-strong">
-                {article.title}
+              {/* Süre başlığın sağında: dipte ayrı bir satır tutuyordu. */}
+              <span className="flex items-baseline justify-between gap-3">
+                <span className="block min-w-0 text-read font-bold leading-[19px] text-strong">
+                  {article.title}
+                </span>
+                <span className="numeral shrink-0 text-tiny text-muted">
+                  {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
+                </span>
               </span>
               <span className="mt-1 line-clamp-2 block text-tiny leading-[15px] text-muted">
                 {article.dek}
-              </span>
-              <span className="numeral mt-1 block text-tiny text-muted">
-                {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
               </span>
             </span>
           </Link>
@@ -625,9 +603,9 @@ function ArticleGrid({
              Bağlantı ile panel iki ayrı katman, o yüzden alt ızgara İKİSİNDE
              de bildiriliyor: zincir kırılırsa satırlar yine kart içinde
              kalır. */
-          className={`${styles.guideCard} row-span-3 grid min-w-0 grid-rows-subgrid`}
+          className={`${styles.guideCard} row-span-2 grid min-w-0 grid-rows-subgrid`}
         >
-          <Panel className="panel-hover row-span-3 grid grid-rows-subgrid gap-3 p-5">
+          <Panel className="panel-hover row-span-2 grid grid-rows-subgrid gap-3 p-5">
             {/* KARO BAŞLIĞIN YANINDA, kendi satırında değil. 52px'lik karo
                 her kartta tek başına bir satır tutuyordu ve otuz bir kart
                 yan yana gelince sayfada mavi kareden bir ızgara oluşuyordu —
@@ -642,22 +620,27 @@ function ArticleGrid({
               <h3 className="display-ink display-ink-tight min-w-0 flex-1 text-lead font-bold leading-[22px] tracking-[-0.025em] [text-wrap:balance]">
                 {article.title}
               </h3>
-              <span className="numeral shrink-0 text-tiny font-bold text-muted">
-                {String(startIndex + index + 1).padStart(2, "0")}
+              {/* Sıra numarası ve okuma süresi aynı köşede, alt alta: 40
+                  piksellik karo bu satırı zaten iki satır yüksekliğinde
+                  tutuyor, süre buraya hiç yer harcamadan sığıyor. */}
+              <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
+                <span className="numeral text-tiny font-bold text-muted">
+                  {String(startIndex + index + 1).padStart(2, "0")}
+                </span>
+                <span className={`numeral ${styles.guideMinutes}`}>
+                  {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
+                </span>
               </span>
             </div>
 
+            {/* OKUMA SÜRESİ KENDİ SATIRINDA DEĞİL. "3 Dk Okuma" otuz bir
+                kartın her birinde dipte tek başına bir satır tutuyordu (23
+                Eylül, sahibinin isteği). Açıklamanın sonuna eklemek dolu
+                satırda yine alta düşürüyordu; süre başlık satırının sağında,
+                sıra numarasının altında. Kart bir satır kısa, alt ızgara üç
+                yerine iki satır. */}
             <p className="text-base leading-[21px] text-body">
               {article.dek}
-            </p>
-
-            {/* "Oku →" satırı KALKTI: kartın tamamı zaten bağlantı ve o
-                satır otuz bir kartta otuz bir kez aynı şeyi söylüyordu.
-                Geriye okuma süresi kaldı — kartın taşıdığı tek künye. */}
-            {/* `mt-auto` KALKTI: süre satırı artık kendi alt ızgara
-                satırında ve satır zaten bütün kartlarda aynı yerde. */}
-            <p className="numeral self-end pt-1 text-small text-muted">
-              {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
             </p>
           </Panel>
         </Link>

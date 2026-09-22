@@ -1,4 +1,4 @@
-import { lastStoryClose } from "@/lib/story-market";
+import { storySinceEvent } from "@/lib/story-market";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
 import { Suspense } from "react";
@@ -8,11 +8,7 @@ import styles from "@/components/motion/EditorialExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { StoryCard } from "@/components/stories/StoryCard";
-import {
-  StoryCast,
-  sinceEventReturn,
-  type CastMember,
-} from "@/components/stories/StoryVisual";
+import { StoryCast, type CastMember } from "@/components/stories/StoryVisual";
 import {
   EmptyState,
   FilterChip,
@@ -31,7 +27,7 @@ import {
 } from "@/lib/data";
 import { getChartBarsMulti } from "@/lib/providers";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { formatEtDateLong, formatEtDateShort, plural } from "@/lib/utils";
+import { formatEtDateLong, plural } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
@@ -331,16 +327,6 @@ async function StoryBoard({
     getChartBarsMulti(curveSymbols, "1Y", status),
   ]);
 
-  /* Kural StoryVisual'da: olay çekilen barlardan eskiyse taban bulunamıyor
-     ve hiçbir şey dönmüyor. Bu sürüm bir dönem serinin EN ESKİ barını taban
-     alıp sonucu yine "olaydan bugüne" diye yazıyordu. */
-  const sinceEventOf = (
-    symbol: string | null | undefined,
-    eventDate: string,
-  ): number | null => {
-    if (!symbol) return null;
-    return sinceEventReturn(barsBySymbol[symbol], eventDate);
-  };
 
   /** Yazının kadrosu — logo, ad ve olaydan bugüne getiri. */
   const castOf = (story: StoryIndexRow, limit: number): CastMember[] =>
@@ -348,8 +334,9 @@ async function StoryBoard({
       symbol,
       name: meta[symbol]?.name ?? null,
       logoUrl: meta[symbol]?.logoUrl ?? null,
-      sinceEvent: sinceEventOf(symbol, story.eventDate),
-      lastClose: lastStoryClose(barsBySymbol[symbol], status),
+      ...(({ pct, close }) => ({ sinceEvent: pct, lastClose: close }))(
+        storySinceEvent(barsBySymbol[symbol], story.eventDate, status),
+      ),
     }));
 
   return (
@@ -519,7 +506,7 @@ function LeadStory({
                 title={t.stories.relatedSymbols}
                 sinceLabel={t.stories.sinceEvent}
                 closeLabel={t.stories.lastClose}
-                eventDate={formatEtDateShort(story.eventDate, locale)}
+                closeOnLabel={t.stories.closeOn}
                 moreLabel={plural(
                   Math.max(0, total - cast.length),
                   t.stories.moreCompaniesOne,

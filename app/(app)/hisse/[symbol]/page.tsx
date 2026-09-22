@@ -340,24 +340,33 @@ export default async function StockPage(
         {/* İlk ekran artık doğal boydaki özeti gösterir; satırlar grafiğin
             yüksekliğine göre esnetilmez. Yaklaşan bilanço kendi bölümündedir. */}
         <div className={styles.profileColumn}>
-          {/* TEKNİK ANALİZ KARTI PROFİLİN ÜSTÜNDE. Kapsamdaki on iki
-              sembolde şirket sayfasının sağ kolonu buradan başlıyor; öteki
-              sembollerde bileşen hiç basılmıyor ve kolon eskisi gibi
-              profille açılıyor. Yer seçimi bilinçli: analiz günlük
-              yenilenen bir GÖRÜŞ, profil ise aylarca değişmeyen künye —
-              taze olan üstte. Telefonda ızgara tek kolona indiği için kart
-              grafiğin hemen altına, katlamanın bir ekran altına düşüyor. */}
-          <Suspense fallback={null}>
-            <StockTechnicalCard symbol={symbol} locale={locale} t={t} />
-          </Suspense>
+          {/* PROFİL ÜSTTE, TEKNİK ANALİZ ALTINDA (23 Eylül, sahibinin
+              isteği). Bir dönem tersiydi — "analiz günlük yenilenen bir
+              görüş, taze olan üstte" gerekçesiyle; ama sağ kolonu şirketin
+              kimliğiyle açmak okuyucunun sırasına daha uygun: önce ne iş
+              yaptığı ve büyüklüğü, sonra hissenin teknik görünümü. Kapsam
+              dışındaki sembollerde teknik kart hiç basılmıyor ve kolon
+              yalnızca profilden oluşuyor. */}
           <Panel className={styles.profilePanel}>
-            <PanelHeader title={t.stock.profile} />
-            {/* Altı künye satırı + iki paragraf: gövde 369 (mobil) / 437
+            {/* Başlık kartın İÇİNDE çiziliyor: künye (kaynak · saat) ayrı bir
+                dip satırı değil, başlığın sağındaki boş yerde duruyor. Yedek
+                aynı başlığı basıyor, akış gelince hiçbir şey kaymıyor.
+                Altı künye satırı + iki paragraf: gövde 369 (mobil) / 437
                 piksel. Beş satırlık yedek 216 piksel ayırıyordu. */}
-            <Suspense fallback={<ListSkeleton rows={9} />}>
+            <Suspense
+              fallback={
+                <>
+                  <PanelHeader title={t.stock.profile} />
+                  <ListSkeleton rows={9} />
+                </>
+              }
+            >
               <ProfileCard symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
+          <Suspense fallback={null}>
+            <StockTechnicalCard symbol={symbol} locale={locale} t={t} />
+          </Suspense>
         </div>
       </div>
 
@@ -1361,7 +1370,12 @@ async function ProfileCard({
     getQuote(symbol, status),
   ]);
   if (!result.ok) {
-    return <DataError message={t.data.failed} hint={t.data.failedHint} />;
+    return (
+      <>
+        <PanelHeader title={t.stock.profile} />
+        <DataError message={t.data.failed} hint={t.data.failedHint} />
+      </>
+    );
   }
   const profile = result.data;
   /* YEDEK YALNIZCA DOLAR CİNSİNDEYSE. Buradaki `?? profile.marketCap`
@@ -1439,7 +1453,24 @@ async function ProfileCard({
     ],
   ];
 
+  /* KÜNYE BAŞLIĞIN SAĞINDA. "Finnhub · 22 Eylül 21:52 Güncellendi" kartın
+     dibinde tek başına bir satır tutuyordu; başlık satırının sağı ise
+     boştu. Aynı damga orada, satır harcamadan. */
   return (
+    <>
+    <PanelHeader
+      title={t.stock.profile}
+      action={
+        <DataStamp
+          labels={t.data}
+          source={result.source}
+          at={result.fetchedAt}
+          stale={result.stale}
+          locale={locale}
+          className={styles.headerStamp}
+        />
+      }
+    />
     <div className={styles.profileBody}>
       <div className={styles.profileVisual}>
         <span className={styles.profileTicker} aria-hidden>{symbol}</span>
@@ -1523,15 +1554,8 @@ async function ProfileCard({
           </div>
         )}
       </dl>
-      <DataStamp
-        labels={t.data}
-        source={result.source}
-        at={result.fetchedAt}
-        stale={result.stale}
-        locale={locale}
-        className="mt-2"
-      />
     </div>
+    </>
   );
 }
 
@@ -1946,8 +1970,22 @@ async function AnalystCard({
       {/* Listenin kapanış çizgisi VE paragrafın ayıracı aynı kural; ikinci
           bir çizgi çekilmiyor. Künye kendi çizgisini koruyor, çünkü o
           açıklamanın devamı değil ayrı bir kayıt (kapsam ve dönem). */}
+      {/* KÜNYE AÇIKLAMA SATIRINDA. "55 Analist · Eylül 2026" kartın dibinde
+          tek başına bir satır tutuyordu; hemen üstündeki "12 Aylık Tavsiye
+          Dağılımı" satırının ortası boştu (23 Eylül, sahibinin isteği). */}
       <details className={styles.analystExplanation}>
-        <summary>{t.stock.analystReading}<span aria-hidden>+</span></summary>
+        <summary>
+          <span className={styles.analystSummaryLabel}>{t.stock.analystReading}</span>
+          <span className={cn("numeral", styles.analystStamp)}>
+            {total} {plural(total, t.stock.analystOne, t.stock.analystMany)} ·{" "}
+            {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+              month: "long",
+              year: "numeric",
+              timeZone: "UTC",
+            }).format(new Date(`${latest.period}T12:00:00Z`))}
+          </span>
+          <span aria-hidden className={styles.analystToggle}>+</span>
+        </summary>
         <p className={styles.cardNote}>{t.stock.analystsNote}</p>
       </details>
       {/* KÜNYE ÜÇ ŞEYİ SÖYLÜYOR: özet, kapsam, dönem.
@@ -1963,14 +2001,6 @@ async function AnalystCard({
           uydurduğumuz bir ağırlıklandırma taşır ve 0-100 olanı sitenin
           KENDİ bilanço analizi puanıyla (AL · 75 rozetleri) karışırdı —
           okuyucu analist konsensüsünü bizim hükmümüz sanardı. */}
-      <p className={cn("numeral", styles.analystStamp)}>
-        {total} {plural(total, t.stock.analystOne, t.stock.analystMany)} ·{" "}
-        {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
-          month: "long",
-          year: "numeric",
-          timeZone: "UTC",
-        }).format(new Date(`${latest.period}T12:00:00Z`))}
-      </p>
       {/* TAVSİYELER BAŞKA BİR KOTASYONA AİT OLABİLİR. Finnhub sorulan
           sembolü değil, karşılık getirdiği kotasyonu yanıtlıyor: TSM
           sorulunca dönen kayıtların sembolü "2330.TW", yani dağılım

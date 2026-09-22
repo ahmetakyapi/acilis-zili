@@ -176,7 +176,7 @@ export function StoryCast({
   title,
   sinceLabel,
   closeLabel,
-  eventDate,
+  closeOnLabel,
   moreLabel,
   locale,
 }: {
@@ -185,8 +185,8 @@ export function StoryCast({
   title: string;
   sinceLabel: string;
   closeLabel: string;
-  /** Ölçünün başladığı gün — künyenin altında yazılır. */
-  eventDate: string;
+  /** "{date} Kapanışı" — ölçünün hangi kapanışa kadar sayıldığı. */
+  closeOnLabel: string;
   /** "+{count} şirket daha" — şablon. */
   moreLabel: string;
   locale: Locale;
@@ -196,6 +196,16 @@ export function StoryCast({
   const rest = total - shown.length;
   const sharedCloseDate = shown.every(member => member.sinceEvent === null && member.lastClose?.date === shown[0].lastClose?.date)
     ? shown[0].lastClose?.date ?? null : null;
+  /* Künyenin ikinci satırı ölçünün BİTTİĞİ gün ("22 Eyl Kapanışı"). Olay
+     tarihi burada "21.09.2026" diye, sayının hangi güne kadar olduğunu
+     söylemeden duruyordu; yazı sayfasının künyesi zaten kapanışı yazıyor. */
+  const sinceClose = shown.reduce<string | null>(
+    (latest, member) =>
+      member.sinceEvent !== null && member.lastClose && (!latest || member.lastClose.date > latest)
+        ? member.lastClose.date
+        : latest,
+    null,
+  );
 
   return (
     <div className={`${styles.cast} overflow-hidden rounded-(--radius-lg) border border-primary-faint bg-surface-solid/70`}>
@@ -213,7 +223,11 @@ export function StoryCast({
             {shown.every(member => member.sinceEvent === null) ? closeLabel : sinceLabel}
           </span>
           <span className="numeral block text-nano leading-tight text-body">
-            {sharedCloseDate ? formatEtDateCompact(sharedCloseDate, locale) : shown.some(member => member.sinceEvent !== null) ? eventDate : null}
+            {sharedCloseDate
+              ? formatEtDateCompact(sharedCloseDate, locale)
+              : sinceClose
+                ? closeOnLabel.replace("{date}", formatEtDateCompact(sinceClose, locale))
+                : null}
           </span>
         </span>
       </div>
@@ -252,7 +266,7 @@ export function StoryCast({
                     {formatPrice(member.lastClose.price, locale, { currency: true })}
                     {!sharedCloseDate && <small className={styles.readingDate}>{formatEtDateCompact(member.lastClose.date, locale)}</small>}
                   </>
-                ) : member.sinceEvent === null ? "—" : formatPercent(member.sinceEvent, locale)}
+                ) : member.sinceEvent === null ? null : formatPercent(member.sinceEvent, locale)}
               </span>
             </li>
           );
@@ -267,63 +281,7 @@ export function StoryCast({
   );
 }
 
-/* --------------------------------------------------------------------------
-   Olaydan bugüne getiri
-
-   Arşiv kartlarındaki ve manşetteki tek rakam: yazının anlattığı olayın
-   gününden bugüne, o sembolün ne yaptığı. Kart "bu ay fiyat nasıl seyretti"
-   diye sormuyor — "bu olaydan sonra ne oldu" diye soruyor.
-   -------------------------------------------------------------------------- */
-
-/**
- * Olayın barlarla eşleşmesi için tanınan boşluk.
- *
- * Olay gününden sonraki İLK işlem günü taban sayılıyor; hafta sonu ve tatil
- * payı buradan geliyor.
- */
-const MAX_EVENT_GAP_SECONDS = 10 * 86400;
-
-/**
- * Olaydan son kapanışa yüzde değişim.
- *
- * TABAN OLAYDAN ÖNCEKİ KAPANIŞ — olay gününün kapanışı DEĞİL.
- *
- * Taban olay gününün kendi kapanışıydı ve bu iki şeyi birden bozuyordu:
- *
- *   1. Olayın kendi etkisi ölçünün DIŞINDA kalıyordu. Sitedeki "Moderna
- *      %177 Yükseldi" yazısı bunun en açık örneği: hisse olay günü %177
- *      yükselmiş, ama olay gününün kapanışından ölçülünce kartta − %16,77
- *      yazıyordu. Okuyucu başlıkta "yükseldi" okuyup rakamda düşüş
- *      görüyordu. Aynı sayı doğru tabandan + %130,51.
- *   2. Olay SON işlem gününe denk geldiğinde taban ile son bar aynı bar
- *      oluyor ve fonksiyon hiçbir şey döndüremiyordu. Yani rakam tam da en
- *      yeni — ve sayfada en üstte duran — yazılarda kayboluyordu: manşetin
- *      kadro tablosundaki üç şirket de tire gösteriyordu.
- *
- * Olaydan önceki kapanış yoksa (olay serinin başında ya da öncesinde) taban
- * olay barının kendisi kalır; o da son barsa hiçbir şey dönmez.
- *
- * TABAN UYDURULMAZ. Bir yıllık bar çekiliyor; olay üç yıl önceyse serinin en
- * eski barı olayın günü değil. Bu fonksiyon bir dönem o tabandan yüzde
- * hesaplayıp sonucu yine "olaydan bugüne" diye yazıyordu, yani künye sayının
- * ne olduğu konusunda yanılıyordu. `MAX_EVENT_GAP_SECONDS` bunu engelliyor.
- */
-export function sinceEventReturn(
-  bars: readonly { time: number; close: number }[] | undefined,
-  eventDate: string,
-): number | null {
-  if (!bars || bars.length < 2) return null;
-
-  const eventTs = Date.parse(`${eventDate}T00:00:00Z`) / 1000;
-  if (!Number.isFinite(eventTs)) return null;
-
-  const at = bars.findIndex((bar) => bar.time >= eventTs);
-  if (at < 0) return null;
-  if (bars[at].time - eventTs > MAX_EVENT_GAP_SECONDS) return null;
-
-  const base = at > 0 ? bars[at - 1] : bars[at];
-  const last = bars[bars.length - 1];
-  if (base.close <= 0 || base.time === last.time) return null;
-
-  return ((last.close - base.close) / base.close) * 100;
-}
+/* Olaydan bugüne getirinin hesabı `lib/story-market.ts`te (liste, yazı
+   sayfası ve şirket sayfası aynı kuralı okusun diye); eski içe aktarmalar
+   buradan çalışmaya devam ediyor. */
+export { sinceEventReturn } from "@/lib/story-market";

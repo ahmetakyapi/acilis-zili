@@ -9,7 +9,6 @@ import {
   storyFigureIndex,
   type StoryFigureBlock,
 } from "@/components/stories/StoryFigure";
-import { StoryRail, type StoryTocItem } from "@/components/stories/StoryRail";
 import { StoryCompanies, StoryCompaniesFallback } from "@/components/stories/StoryCompanies";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -221,13 +220,17 @@ function splitSource(label: string, href: string | null): { publisher: string | 
 }
 
 /**
- * Dar ekranın içindekileri — özet kutusunun altında, kapalı.
+ * İçindekiler — özet kutusunun altında, kapalı bir kutu; her genişlikte.
  *
- * Mobilde yapışkan bir liste yok: üstte uygulama çubuğu, altta sekme
- * çubuğu ve şerit zaten ekranın bir dilimini tutuyor. Kapalı bir kutu tek
- * satır yer kaplıyor ve yazının şeklini isteyene veriyor.
+ * Bir dönem geniş ekranda metnin SAĞINDA yapışkan bir ray vardı (metin
+ * solda, içindekiler ve şirket kartları sağda). Sahibi istemedi: yazı eski
+ * düzeninde, kapağın altında tek kolon kalsın (23 Eylül). Kapalı kutu tek
+ * satır yer kaplıyor ve yazının şeklini isteyene veriyor; JavaScript
+ * olmadan da açılıyor (yerel <details>).
  */
-function MobileToc({
+type StoryTocItem = { id: string; label: string; number: number };
+
+function StoryToc({
   items,
   lang,
   t,
@@ -241,7 +244,7 @@ function MobileToc({
     String(items.length),
   );
   return (
-    <details className={detail.tocMobile}>
+    <details className={detail.tocBox}>
       <summary>
         <span>{t.stories.inThisArticle}</span>
         <span>{count}</span>
@@ -287,7 +290,6 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
   const toc = tocOf(blocks);
   const hasToc = toc.length >= TOC_MIN;
   const hasCompanies = symbols.length > 0;
-  const hasRail = hasToc || hasCompanies;
   const companyLabels = {
     relatedSymbols: t.stories.relatedSymbols,
     sinceEvent: t.stories.sinceEvent,
@@ -299,7 +301,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
   return (
     <MotionExperience className={experience.article}>
     <ScrollProgress />
-    <article className={detail.article} data-rail-companies={hasCompanies}>
+    <article className={detail.article}>
       {/* Yazının iki denetimi aynı satırda: solda arşive çıkış, sağda
           paylaşım. Paylaş düğmesi metnin İÇİNE değil kenarına konuyor —
           okumayı kesen bir çağrı değil, elinin altında duran bir araç. İkisi
@@ -376,7 +378,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
         ]}
       />
 
-      <div className={detail.layout} data-rail={hasRail}>
+      <div className={detail.layout}>
         <div className={detail.mainCol}>
           {/* GÖVDE KENDİ DİLİNİ SÖYLÜYOR. Çevirisi olmayan yazı orijinal
               diliyle gösteriliyor (üstteki not bunu yazıyor) ama `lang`
@@ -393,17 +395,15 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
               className={editorial.prose}
               skipIndex={skipIndex}
               afterLead={
-                hasToc ? <MobileToc items={toc} lang={story.locale} t={t} /> : undefined
+                hasToc ? <StoryToc items={toc} lang={story.locale} t={t} /> : undefined
               }
             />
           </div>
 
-          {/* DAR EKRANDA ŞİRKETLER GÖVDENİN SONUNDA. Olaydan bugüne getiriler
-              yalnızca ≥1024'teki rayda vardı; telefon ve dikey tablet onları
-              hiç görmüyordu, sunucu ise barları çekip `display:none` bir
-              bloğa basıyordu (375'te ray 0 piksel, metni DOM'da). Aynı blok
-              burada, kaynaklardan önce; ray göründüğünde CSS bunu gizliyor.
-              Bar çekimi istek içinde tek (StoryCompanies `railBars`). */}
+          {/* ŞİRKETLER GÖVDENİN SONUNDA, KAYNAKLARDAN ÖNCE — her genişlikte
+              aynı yerde, kendi kartında: olaydan bugüne getiriler yazıyı
+              bitiren okuyucunun "peki sonra ne oldu" sorusu. Kapaktaki
+              şirket çipleri gezinme için yerinde duruyor. */}
           {hasCompanies && (
             <div className={detail.companiesInline}>
               <Suspense
@@ -486,37 +486,6 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
           <MoreStories slug={slug} locale={locale} t={t} />
         </div>
 
-        {hasRail && (
-          <StoryRail
-            items={hasToc ? toc : []}
-            lang={story.locale}
-            minutesLabel={minutesLabel}
-            labels={{
-              inThisArticle: t.stories.inThisArticle,
-              tocLabel: t.stories.tocLabel,
-              railLabel: t.stories.railLabel,
-            }}
-          >
-            {hasCompanies && (
-              <Suspense
-                fallback={
-                  <StoryCompaniesFallback
-                    symbols={symbols}
-                    locale={locale}
-                    labels={companyLabels}
-                  />
-                }
-              >
-                <StoryCompanies
-                  symbols={symbols}
-                  eventDate={story.eventDate}
-                  locale={locale}
-                  labels={companyLabels}
-                />
-              </Suspense>
-            )}
-          </StoryRail>
-        )}
       </div>
     </article>
     </MotionExperience>

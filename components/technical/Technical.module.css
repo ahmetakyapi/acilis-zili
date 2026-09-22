@@ -1057,10 +1057,36 @@
    only below its axis, making the left column ~200px taller than the right.
    A shared notes row keeps every explanation, and aligns the two columns
    without imposing a fixed height or clipping the analysis. */
-.analysisGrid { display:grid; grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-areas:"map reading"; gap:18px; align-items:stretch; }
+/* KOLONLAR GERİLMİYOR (23 Eylül). `align-items:stretch` + sağ kolonun
+   `auto 1fr` satırları iki kolonun boy farkını senaryo kartlarının İÇİNE
+   yığıyordu: NVDA'da kart 495 piksel, metni 279; ONDS'ta 552 / 279
+   (ölçüldü, 1440). Sahibi: "gereksiz boşluk gözü çok yoruyor". Artık her
+   kolon kendi içeriği kadar (`start`), kartlar metin kadar; notlar iki
+   kolonun altında tam genişlikte kendi satırında (`notes`). Kısa kolon
+   erken bitiyor — CLAUDE.md'nin iki kolon kuralı. */
+.analysisGrid { display:grid; grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-areas:"map reading" "notes notes"; gap:18px; align-items:start; }
 .mapPanel { grid-area:map; }
-.analysisReading { grid-area:reading; display:grid; grid-template-rows:auto 1fr; gap:18px; min-width:0; }
-.analysisReading .scenarios { flex:1; }
+.analysisReading { grid-area:reading; display:flex; flex-direction:column; gap:18px; min-width:0; }
+.notesPanel { grid-area:notes; min-width:0; container:notes / inline-size; }
+/* Notların yeri veriye göre (`BalanceNotes`): haritanın ya da
+   değerlendirmenin altına indiğinde öteki kolon iki satırı kaplıyor ve
+   fazlalık İKİNCİ satıra (`1fr`) gidiyor — notlar üstündeki panele 18
+   piksel aralıkla yapışık kalıyor, aralarına boşluk dağılmıyor. */
+@media (min-width:1024px), (orientation:landscape) and (max-height:560px) and (min-width:700px) {
+  .analysisGrid[data-notes="map"] { grid-template-areas:"map reading" "notes reading"; grid-template-rows:auto 1fr; }
+  .analysisGrid[data-notes="reading"] { grid-template-areas:"map reading" "map notes"; grid-template-rows:auto 1fr; }
+}
+/* Dar kolonda (haritanın ya da değerlendirmenin altında) üç sütun
+   sıkışıyor; notlar alt alta. */
+@container notes (max-width:620px) {
+  .notesPanel .planNotes .mapNotes { grid-template-columns:minmax(0,1fr); gap:14px; }
+}
+.notesPanel .planNotes { display:flex; flex-direction:column; gap:14px; min-width:0; }
+.notesPanel .planNotes > h2 { font-size:15px; }
+.notesPanel .planNotes .mapNotes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px 28px; margin:0; padding:0; border:0; }
+.notesPanel .planNotes .mapNotes > div { display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid var(--primary-faint); }
+.notesPanel .planNotes .mapNotes dt { font-size:11px; color:var(--primary-ink); }
+.notesPanel .planNotes .mapNotes dd { font-size:13.5px; line-height:1.6; color:var(--text-body); }
 /* Harita panelin tamamına yayılmıyor: 560 piksellik tavan, satırı 508
    piksele indiriyor ve ad ile fiyat arasındaki mesafeyi 400'den ~250
    piksele çekiyor. Sağdaki pay panelin kendi nefesi olarak kalıyor. */
@@ -1073,14 +1099,6 @@
    görselin arası, ÖTEKİ kolonun boyuna bağlanmış oluyordu — deponun kendi
    kuralının yasakladığı şey. Fark artık panelin dibinde kalıyor. */
 .mapPanel .footHint { padding-top:8px; border-top:1px solid var(--line-soft); }
-/* Notlar haritanın panelinin İÇİNDE: kendi kenarlığı ve zemini yok, kutu
-   içinde kutu olmasın. Üstünde ince bir ayraç, nerede başladığını söyler. */
-.mapPanel .planNotes { display:flex; flex-direction:column; gap:14px; min-width:0; margin-top:auto; padding-top:16px; border-top:1px solid var(--line); }
-.mapPanel .planNotes > h2 { font-size:15px; }
-.mapPanel .planNotes .mapNotes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin:0; padding:0; border:0; }
-.mapPanel .planNotes .mapNotes > div { display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid var(--primary-faint); }
-.mapPanel .planNotes .mapNotes dt { font-size:11px; color:var(--primary-ink); }
-.mapPanel .planNotes .mapNotes dd { font-size:13px; line-height:1.6; color:var(--text-body); }
 /* A narrow entry band could be just 6px high and strike through its label
    and prices. Preserve its true vertical extent on the axis; give the
    associated label its own legible wash. The stop caption uses the reserved
@@ -1110,14 +1128,12 @@
 .watchPanel .watch li::before { content:counter(watch,decimal-leading-zero); position:absolute; top:1px; left:0; color:var(--primary); font-size:11px; font-weight:650; }
 @media(max-width:1023px) {
  .analysisGrid { grid-template-columns:minmax(0,1fr); grid-template-areas:"map" "notes" "reading"; }
- .analysisReading { grid-template-rows:auto; }
  .watchPanel { grid-template-columns:minmax(0,1fr); gap:16px; }
  .watchPanel .watch { grid-template-columns:minmax(0,1fr); gap:12px; }
 }
 @media(max-width:767px) {
  .analysisGrid,.analysisReading { gap:14px; }
- .mapPanel .planNotes { padding-top:14px; }
- .mapPanel .planNotes .mapNotes { grid-template-columns:minmax(0,1fr); gap:14px; }
+ .notesPanel .planNotes .mapNotes { grid-template-columns:minmax(0,1fr); gap:14px; }
  .mapZoneEntry { width:25px; }
  .mapZoneVoidLabel { left:41px; }
 }
@@ -1295,7 +1311,6 @@
    özgüllükte sonra gelen kural kazanıyor. */
 @media (orientation:landscape) and (max-height:560px) and (min-width:700px) {
  .analysisGrid { grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-areas:"map reading" "notes notes"; }
- .analysisReading { grid-template-rows:auto 1fr; }
 }
 
 /* Kimlik balonu kartlardan dağılım logolarına taşındı (22 Eylül);

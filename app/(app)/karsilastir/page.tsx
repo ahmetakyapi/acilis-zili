@@ -130,10 +130,33 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
       <ScrollProgress />
       {symbols.length === 0 ? (
         <>
+          {/* ARAMA KAPAĞIN SAĞINDA (23 Eylül). Kapağın sağ yarısı boştu,
+              arama kutusu ise hemen altında kendi panelinde duruyordu: bir
+              başlık, bir yönerge cümlesi ve kutu — 1440'ta 148 piksel.
+              Seçili hâlde aralık denetimi aynı köşede; iki hâl aynı yerde
+              "burada ayarla" diyor. Hazır setler bir panel yukarı çıkıyor. */}
           <PageHeader
             eyebrow={t.compare.eyebrow}
             title={t.compare.title}
             subtitle={t.compare.subtitle}
+            action={
+              <div className="w-full sm:w-80">
+                <CompareAdd
+                  symbols={[]}
+                  rangeParam={null}
+                  defaultOpen
+                  wide
+                  labels={{
+                    add: t.compare.addSymbol,
+                    placeholder: t.compare.addPlaceholder,
+                    cancel: t.common.cancel,
+                    noResults: t.stock.notFound,
+                    searching: t.common.loading,
+                    searchFailed: t.common.error,
+                  }}
+                />
+              </div>
+            }
           />
           {/* Adresten düşen semboller SÖYLENİYOR: paylaşılan bir bağlantıda
               beşinci sembol sessizce yok oluyordu. */}

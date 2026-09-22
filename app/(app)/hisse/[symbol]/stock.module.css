@@ -331,10 +331,16 @@
 .analystExplanation { margin-top:10px; border-top:1px solid var(--line-soft); }
 .analystExplanation summary { display:flex; justify-content:space-between; align-items:center; gap:10px; min-height:32px; list-style:none; cursor:pointer; font-size:11px; color:var(--text-muted); }
 .analystExplanation summary::-webkit-details-marker { display:none; }
-.analystExplanation summary > span { color:var(--primary); font-size:17px; transition:transform .2s; }
-.analystExplanation[open] summary > span { transform:rotate(45deg); }
+.analystExplanation summary > .analystSummaryLabel { margin-right:auto; }
+.analystExplanation summary > .analystToggle { color:var(--primary); font-size:17px; transition:transform .2s; }
+.analystExplanation[open] summary > .analystToggle { transform:rotate(45deg); }
 .fundamentalsGrid .analystPanel .cardNote { margin:0 0 12px; padding:0; border:0; }
-.fundamentalsGrid .analystPanel .analystStamp { margin:0; padding-top:7px; border-top:1px solid var(--line-soft); font-size:11px; color:var(--text-muted); }
+/* Künye açıklama satırının içinde, "+"nın solunda: ayrı bir dip satırı ve
+   ikinci bir ayraç yok. */
+.analystExplanation summary > .analystStamp { font-size:11px; font-weight:500; color:var(--text-muted); white-space:nowrap; }
+/* Profil künyesi başlığın sağında: satır sıkışırsa başlıkla alt satıra
+   iner (PanelHeader öğe arasından kırıyor), kendi içinde bölünmez. */
+.headerStamp { margin:0; white-space:nowrap; }
 .compliancePanel { background:linear-gradient(125deg,var(--surface-solid) 35%,var(--primary-tint)); }
 .complianceBody { padding:0 18px 12px; }
 .complianceRatios { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:6px; }
@@ -376,7 +382,7 @@
  .complianceRatio + .complianceRatio { padding-left:12px; }
 }
 @media(prefers-reduced-motion:reduce) {
- .fundamentalsGrid > section,.analystExplanation summary > span { transition:none; }
+ .fundamentalsGrid > section,.analystExplanation summary > .analystToggle { transition:none; }
 }
 
 @media(max-width:359px) {

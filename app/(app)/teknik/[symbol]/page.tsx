@@ -10,6 +10,7 @@ import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
 import { MoreSymbols, type MoreSymbolEntry } from "@/components/technical/MoreSymbols";
 import { PlanStrip } from "@/components/technical/PlanStrip";
+import { BalanceNotes } from "@/components/technical/BalanceNotes";
 import { PriceMap, PriceMapNotes } from "@/components/technical/PriceMap";
 import { SignalStrip } from "@/components/technical/SignalStrip";
 import {
@@ -389,8 +390,8 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       <SectionNav className={styles.sectionNav} label={t.technical.sectionsLabel} items={sectionItems} trackAtNav />
 
       {/* ---- Fiyat haritası ve değerlendirme ---- */}
-      <div className={styles.analysisGrid}>
-        <section id="technical-levels" className={cn(styles.block, styles.mapPanel)}>
+      <div className={styles.analysisGrid} data-balance-grid data-notes="full">
+        <section id="technical-levels" className={cn(styles.block, styles.mapPanel)} data-balance="map">
           <div className={styles.blockHead}>
             <h2 className={styles.sectionTitle}>{t.technical.priceMap}</h2>
           </div>
@@ -403,20 +404,11 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             locale={locale}
             t={t}
           />
-          {/* SEVİYELERİN DAYANAĞI HARİTANIN İÇİNE GİRDİ. Notlar tam genişlikte
-              kendi kenarlıklı bandındaydı ve `dt` etiketleri ("Alım Bölgesi /
-              Hedefler / Stop") aynı üç adı sayfada ÜÇÜNCÜ kez basıyordu —
-              kapaktaki plan şeridi ve haritanın kendi satırları ilk ikisi.
-              Not, dayanağını anlattığı seviyenin yanında dururken bilgi
-              taşıyor; ayrı bir bantta dururken yalnızca yer kaplıyordu.
-              Harita paneli komşu kolonun boyuna gerildiği için altında zaten
-              boş yer vardı: bant kalkıyor, o boşluk doluyor. */}
-          <PriceMapNotes {...levelProps} copy={copy} verdict={verdict} lang={copyLang} t={t} />
           <p className={styles.footHint}>{t.technical.priceLevelsNote}</p>
 
         </section>
 
-        <div id="technical-reading" className={styles.analysisReading}>
+        <div id="technical-reading" className={styles.analysisReading} data-balance="reading">
           <section className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.summary}</h2>
             {/* DEĞERLENDİRME TEK BLOK DEĞİL. Rutin metni tek paragraf olarak
@@ -461,6 +453,19 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             </div>
           </section>
         </div>
+
+        {/* SEVİYELERİN DAYANAĞI KENDİ SATIRINDA, İKİ KOLONUN ALTINDA.
+            Notlar haritanın panelindeydi ve sol kolonu sağdan 100–270
+            piksel uzun yapıyordu; sağ kolon o farkı senaryo kartlarının
+            İÇİNE yayıyordu (NVDA'da kart 495 piksel, metni 279 — ölçüldü,
+            23 Eylül). Artık hiçbir kart gerilmiyor: iki kolon kendi
+            içeriği kadar. Notların yeri VERİYE göre: sunucu tam genişlik
+            basıyor, `BalanceNotes` üç yerleşimi ölçüp iki kolonun dibini
+            en yakın hizaya getireni seçiyor. */}
+        <div className={cn(styles.block, styles.notesPanel)} data-balance="notes">
+          <PriceMapNotes {...levelProps} copy={copy} verdict={verdict} lang={copyLang} t={t} />
+        </div>
+        <BalanceNotes />
       </div>
 
       {/* ---- Göstergeler ---- */}

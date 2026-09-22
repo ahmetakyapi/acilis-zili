@@ -69,7 +69,7 @@ export async function ArticleChart({
         {name && <span className="text-small text-muted">{name}</span>}
       </div>
 
-      <div className="px-1 py-1 sm:px-2 sm:py-2">
+      <div data-part="body" className="px-1 py-1 sm:px-2 sm:py-2">
         <PriceChartLazy
           symbol={symbol}
           initialRange={range}

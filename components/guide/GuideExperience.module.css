@@ -15,7 +15,17 @@
 .sheet,.balance,.column,.transmission { transform-box:fill-box; transform-origin:center; transition:translate .6s,rotate .6s,scale .6s; }
 .column { transform-origin:center bottom; }
 .guide .chapters > a[href^="/rehber/"] { border:1px solid var(--primary-faint); border-radius:12px; margin-top:2px; padding:14px 18px; background:var(--primary-tint); }
-.startDescription { display:block; max-width:70ch; margin-top:5px; font-size:12px; line-height:1.65; color:var(--text-soft); }
+/* Kapağın sağındaki başlangıç kartı — takvimin "sıradaki açıklama" kartıyla
+   aynı dil: tonla ayrışan yüzey, gölge yok. */
+.startCard { display:flex; flex-direction:column; gap:4px; width:400px; max-width:100%; margin-left:auto; padding:16px 18px; border:1px solid var(--primary-faint); border-radius:var(--radius-xl); background:var(--primary-tint); color:inherit; text-decoration:none; transition-property:background-color,border-color; }
+.startKicker { font-size:11px; font-weight:600; color:var(--primary-ink); }
+.startTitle { font-size:17px; font-weight:650; line-height:1.3; letter-spacing:-.015em; color:var(--text-strong); }
+.startDek { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; line-height:1.55; color:var(--text-body); }
+.startMeta { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:6px; padding-top:8px; border-top:1px solid var(--primary-faint); font-size:12px; font-weight:600; color:var(--text-muted); }
+.startMeta > svg { color:var(--primary-ink); flex-shrink:0; }
+@media (hover:hover) { .startCard:hover { background:var(--primary-wash); border-color:var(--primary-soft); } .startCard:hover .startMeta > svg { transform:translateX(2px); } }
+.startCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+@media (max-width:1023px) { .startCard { width:100%; margin-left:0; } }
 .guide [data-guide-topic] > div:first-child h2 { font-size:25px; }
 .guide [data-guide-topic] > div:first-child > div { padding-block:12px; }
 .guide [data-guide-topic] { min-width:0; }
@@ -45,7 +55,6 @@
  .diagram { display:none; }
  .guide .chapters > a[href^="/rehber/"] { padding:12px; }
  .guide .chapters > a[href^="/rehber/"] > span > span:first-child { font-size:15px; }
- .startDescription { display:none; }
  .guide [data-guide-topic] > div:first-child h2 { font-size:22px; }
 }
 @media(prefers-reduced-motion:reduce) { .guide .chapters > a[href^="#"],.sheet,.balance,.column,.transmission { transition:none; } .guide .chapters > a:hover,.guide .chapters > a:hover .sheet,.guide .chapters > a:hover .balance,.guide .chapters > a:hover .column,.guide .chapters > a:hover .transmission { transform:none; translate:none; rotate:none; scale:none; } }
