@@ -19,7 +19,7 @@ import {
   planReadingTone,
 } from "@/components/technical/TechnicalCard";
 import styles from "@/components/technical/Technical.module.css";
-import { EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
+import { DataStamp, EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getDictionary, getI18n } from "@/lib/i18n";
@@ -40,7 +40,7 @@ import {
   technicalHref,
 } from "@/lib/technical";
 import { getTechnicalBoard, getTechnicalDetail } from "@/lib/technical-data";
-import { todayEt } from "@/lib/market-hours";
+import { isSessionTrade, todayEt } from "@/lib/market-hours";
 import {
   cn,
   directionOf,
@@ -185,9 +185,14 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   /* ETİKET TEK YERDE: kapak ve harita aynı adı kullanıyor. Kotasyon yoksa
      fiyat fotoğraftan geliyor ve adı "Analiz Anında"; seans dışında "Son
      Fiyat"; yalnızca açık seansta taze kotasyon "Şu An". */
+  /* "Şu An" burada da SEMBOL BAŞINA kanıtlanıyor; gerekçesi liste
+     sayfasında yazılı. */
   const priceLabel = !quote
     ? t.technical.atAnalysis
-    : status.session === "regular" && quotes.ok && !quotes.stale
+    : status.session === "regular" &&
+        quotes.ok &&
+        !quotes.stale &&
+        isSessionTrade(quote.tradedAt, status)
       ? t.technical.now
       : t.market.lastPrice;
   const next = nextEdition(new Date(), holidays);
@@ -250,6 +255,14 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
               damgası — ekran okuyucuya bağlantının adı olarak okunmaları da
               yanlış olurdu. */}
           <div className={styles.coverIdentity}>
+            {/* GÖRÜŞ ADIN SAĞINDA, AYNI SATIRDA. Rozet bir dönem künyenin
+                altında kendi satırındaydı; telefonda kapak logo, ad, iki
+                künye satırı, rozet, başlık cümlesi diye altı kat üst üste
+                biniyordu ve okuyucunun ilk sorusu ("bu hissede ne
+                görünüyor") dördüncü katta cevaplanıyordu. Ad ile görüş
+                artık aynı satırı paylaşıyor: sol uçta kimlik, sağ uçta
+                tek kelime. Künye satırları o satırın altında kalıyor. */}
+            <div className={styles.coverHead}>
             <Link href={`/hisse/${symbol}`} className={styles.coverNameLink}>
               <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="lg" />
               <div className="min-w-0">
@@ -272,6 +285,13 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                 {company && <p className={styles.coverCompany}>{company}</p>}
               </div>
             </Link>
+            <div className={styles.stanceRow}>
+              {/* Etiket yalnızca ekran okuyucuya: gerekçe `.stancePill` yorumunda. */}
+              <span className="sr-only">{t.technical.stanceLabel}</span>
+              <span className={cn(styles.stancePill, verdictPillClass(verdict))}>{verdictLabel(verdict, t)}</span>
+              {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
+            </div>
+            </div>
             <p className={styles.coverMeta}>
               {slotLabel(row.slot, t)} · {formatEtDateLong(row.sessionDate, locale)} ·{" "}
               <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
@@ -296,18 +316,10 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             )}
           </div>
           <div className={styles.coverThesis}>
-            <div className={styles.stanceRow}>
-              {/* Etiket yalnızca ekran okuyucuya: gerekçe `.stancePill` yorumunda.
-                 22 September: the replacement label names the visible thesis,
-                 while the compact verdict stays attached to that reading. */}
-              <span className={styles.thesisLabel}>{t.technical.thesisLabel}</span>
-              <span className={cn(styles.stancePill, verdictPillClass(verdict))}>{verdictLabel(verdict, t)}</span>
-              {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
-            </div>
-            <p className={styles.coverHeadline} lang={copyLang}>
-              {tieFigures(copy.headline)}
-            </p>
+            <span className={styles.thesisLabel}>{t.technical.thesisLabel}</span>
+            <p className={styles.coverHeadline} lang={copyLang}>{tieFigures(copy.headline)}</p>
           </div>
+
           {locale === "en" && !hasEnglish && (
             <p className="text-small text-muted">{t.technical.langNote}</p>
           )}
@@ -359,8 +371,15 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         </div>
 
         {/* 21 Eylül: mobil kapak 1045px'ti. Plan tam genişlikte kendi
-            bandında; gösterge özeti artık ayrıntılarını anlattığı bölümde.
-            Böylece ilk ekran kimliği, görüşü ve planı birlikte okutur. */}
+            bandında; gösterge özeti ayrıntılarını anlattığı bölüme indi.
+            Böylece ilk ekran kimliği, görüşü ve planı birlikte okutur.
+
+            ÖZET SONRA KAPAĞA GERİ GELDİ — ama aynı biçimde değil. 9e1c3b6
+            kapağa `compact` dalı ekledi: üç sütun, tek satırlık okuma,
+            kapak sütununun dibine hizalı (`.signalsCompact`). Bölümdeki
+            geniş şerit yerinde duruyor; kapaktaki bir BAKIŞ, oradaki bir
+            ÖLÇÜ. Bu not bir süre yalnızca inişi anlatıyordu ve kodla
+            çelişiyordu; iki hâl de burada yazılı olsun. */}
         <div className={styles.coverPlan}>
           <PlanStrip verdict={verdict} {...levelProps} size="lg" locale={locale} t={t} />
         </div>
@@ -383,10 +402,18 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             locale={locale}
             t={t}
           />
+          {/* SEVİYELERİN DAYANAĞI HARİTANIN İÇİNE GİRDİ. Notlar tam genişlikte
+              kendi kenarlıklı bandındaydı ve `dt` etiketleri ("Alım Bölgesi /
+              Hedefler / Stop") aynı üç adı sayfada ÜÇÜNCÜ kez basıyordu —
+              kapaktaki plan şeridi ve haritanın kendi satırları ilk ikisi.
+              Not, dayanağını anlattığı seviyenin yanında dururken bilgi
+              taşıyor; ayrı bir bantta dururken yalnızca yer kaplıyordu.
+              Harita paneli komşu kolonun boyuna gerildiği için altında zaten
+              boş yer vardı: bant kalkıyor, o boşluk doluyor. */}
+          <PriceMapNotes {...levelProps} copy={copy} verdict={verdict} lang={copyLang} t={t} />
           <p className={styles.footHint}>{t.technical.priceLevelsNote}</p>
-        </section>
 
-        <PriceMapNotes {...levelProps} copy={copy} verdict={verdict} lang={copyLang} t={t} />
+        </section>
 
         <div id="technical-reading" className={styles.analysisReading}>
           <section className={styles.block}>
@@ -529,6 +556,27 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           </Link>
         </p>
       </div>
+
+      {/* Damganın gerekçesi liste sayfasında yazılı. Burada ayrıca gerekli:
+          kapaktaki fiyat ekranın en büyük sayısı ve "Diğer Şirketler"
+          kartlarının yüzdeleri de aynı pakete bağlı — o yüzdeler kendi
+          künyesini taşımıyor, bayatlığı bu damga söylüyor. Göstergelerin
+          kapanış tarihi ayrı bir künye (`snapshotNote`) ve o bölümün
+          içinde kalıyor; kotasyonun yaşını anlatmıyor. */}
+      {quotes.ok && (
+        <DataStamp
+          labels={t.data}
+          source={quotes.source}
+          at={quotes.fetchedAt}
+          stale={quotes.stale}
+          locale={locale}
+          note={
+            status.session === "pre-market" || status.session === "after-hours"
+              ? t.data.extendedNote
+              : undefined
+          }
+        />
+      )}
 
       <GuideHint
         label={t.guide.contextLabel}

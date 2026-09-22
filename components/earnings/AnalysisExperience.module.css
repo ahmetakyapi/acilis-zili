@@ -1,0 +1,66 @@
+.overview { display: grid; gap: 20px; }
+.overviewHeading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 18px; color: var(--text-muted); font-size: 12px; }
+.overviewHeading a { color: var(--primary-ink); font-weight: 600; padding-block: 8px; }
+.distribution { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.distribution > div { display: grid; gap: 8px; font-size: 12px; font-weight: 600; }
+.distribution b { color: var(--text-strong); font-size: 32px; line-height: 1; letter-spacing: -.05em; font-weight: 550; }
+.distributionTrack { height: 4px; overflow: hidden; border-radius: 4px; background: var(--rail-track); }
+.distributionTrack i { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+.distributionTrack i[data-verdict="buy"] { background: var(--up); }
+.distributionTrack i[data-verdict="sell"] { background: var(--down); }
+
+/* ADBE, 1440px: the old three-column feature was 592px wide while the
+   empty weekly panel occupied 347px. Only allocate that column for reports. */
+.workspace { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); gap: 24px 18px; align-items: stretch; }
+.workspace[data-has-week="true"] { grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1fr); }
+.workspace[data-has-feature="false"] { grid-template-columns: minmax(0, 1fr); }
+.featureGrid { display: contents; }
+.feature { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; min-width: 0; padding: 26px; border: 1px solid var(--primary-faint); border-radius: 22px; background: radial-gradient(ellipse at 100% 0, var(--primary-wash), transparent 65%), var(--premium-surface); box-shadow: var(--premium-shadow); transition: border-color 180ms, box-shadow 180ms; }
+.feature:hover { border-color: var(--primary); box-shadow: var(--premium-shadow-hover); }
+.featureCopy { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; min-width: 0; }
+.featureDate { font-size: 12px; color: var(--text-muted); }
+.featureCompany { color: var(--text-strong); font-size: clamp(24px, 2.4vw, 34px); font-weight: 600; line-height: 1.12; letter-spacing: -.045em; overflow-wrap: anywhere; }
+.featurePeriod { margin-top: 5px; font-size: 13px; color: var(--primary-ink); font-weight: 550; }
+.featureSector { margin-top: 4px; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.featureHeadline { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; max-width: 65ch; font-size: 14px; line-height: 1.75; color: var(--text-body); text-wrap: pretty; }
+.featureRead { display: inline-flex; align-items: center; gap: 12px; min-height: 32px; margin-top: auto; color: var(--primary-ink); font-size: 13px; font-weight: 600; }
+.featureRead > span { transition: transform 180ms; }
+.feature:hover .featureRead > span { transform: translate(2px, -2px); }
+.featureScore { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding-left: 22px; border-left: 1px solid var(--line); }
+.featureScore > span:first-child { font-size: 11px; color: var(--text-muted); font-weight: 550; }
+.featureFigures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-column: 1 / -1; border-top: 1px solid var(--line); padding-top: 20px; gap: 18px; }
+.featureFigures > div { min-width: 0; display: grid; grid-template-rows: subgrid; grid-row: span 2; gap: 8px; }
+.featureFigures dt { font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+.featureFigures dd { font-size: clamp(22px, 2vw, 30px); line-height: 1.1; font-weight: 550; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.upcomingRows { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.archive { display: flex; grid-column: 1 / -1; flex-direction: column; min-width: 0; gap: 16px; padding-top: 12px; scroll-margin-top: 100px; }
+.archive > div:first-child { padding-block: 8px; }
+.archive h2 { font-size: 21px; line-height: 1.25; letter-spacing: -.035em; }
+.archive :global(.panel) { border-radius: 18px; }
+.archive [role="row"]:has([role="columnheader"]) { background: var(--surface-sunken); }
+.archive [role="row"]:focus-within { background: var(--primary-tint); box-shadow: inset 3px 0 var(--primary); }
+@media (max-width: 1100px) {
+  .workspace, .workspace[data-has-week="true"] { display: flex; flex-direction: column; }
+  .archive { order: 1; }
+  .featureGrid > :last-child { order: 2; }
+  .featureGrid > :nth-child(2):not(:last-child) { display: none; }
+}
+@media (max-width: 767px) {
+  .overview { gap: 10px; }
+  .distribution { gap: 18px; }
+  .distribution b { font-size: 26px; }
+  .feature { padding: 20px; gap: 18px; grid-template-columns: minmax(0, 1fr); border-radius: 18px; }
+  .featureCopy { gap: 12px; }
+  .featureHeadline { -webkit-line-clamp: 3; }
+  .featureScore { flex-direction: row; justify-content: flex-start; flex-wrap: wrap; border-left: 0; border-top: 1px solid var(--line); padding: 14px 0 0; gap: 14px; }
+  .featureScore > div { width: 64px !important; height: 64px !important; }
+  .featureScore svg { width: 64px; height: 64px; }
+  .featureScore > span:first-child { margin-right: auto; }
+  .featureFigures { gap: 12px; padding-top: 16px; }
+  .featureFigures dt { font-size: 11px; }
+  .featureFigures dd { font-size: clamp(20px, 5.6vw, 26px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feature, .featureRead > span { transition: none; }
+  .feature:hover .featureRead > span { transform: none; }
+}

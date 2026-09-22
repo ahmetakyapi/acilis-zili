@@ -139,6 +139,8 @@ const tr = {
     distributionUnit: "Şirket Sayısı",
     reportingRhythm: "Önümüzdeki 7 Gün",
     scheduledReports: "Takvimdeki Bilanço",
+    followedCompanies: "Takip Edilen Şirket",
+    publishedAnalyses: "Yayımlanmış Analiz",
     reportingDays: "Açıklama Günü",
     analysisDescription: "Gerçekleşen sonuçlar, piyasanın beklentileri ve bir sonraki çeyreğe bakış.",
   },
@@ -436,8 +438,9 @@ const tr = {
        değil — Title Case kapsamı dışında. */
     endOfWeekList: "Haftanın sonu. Bir ay ilerisini görmek için aralığı değiştir.",
     endOfMonthList: "Ayın sonu. Daha yakın bir pencere için haftaya dön.",
-    subtitleLong:
-      "Şirketlerin finansal sonuç açıklama tarihleri · gün içinde piyasa değerine göre sıralı",
+    /* Tek satır: uzun hâli 1024px kapağın ikinci satırına tek kelime
+       bırakıyordu. Sıralama ölçütü zaten sütun başlığında yazılı. */
+    subtitleLong: "Şirketlerin finansal sonuç açıklama tarihleri · piyasa değerine göre sıralı",
     /* Bilançolar ekranının üç sekmesi — takvim, analizler ve takip listesi
        aynı konunun üç görünümü, ayrı sayfalar değil. */
     tabCalendar: "Takvim",
@@ -460,6 +463,7 @@ const tr = {
     reportInNumbers: "Rakamlarla Bu Çeyrek",
     reportOutlook: "İleriye Bakış",
     listTitle: "Son Bilanço Analizleri",
+    filteredReports: "Listelenen Raporlarda Görüş Dağılımı",
     /* Paylaşım kartının üst künyesi — kart sabit Türkçe basıyordu. */
     ogEyebrow: "Bilanço Analizi",
     /* Hisse sayfasındaki panel — orada zaten şirketin içindesin, adı
@@ -501,6 +505,8 @@ const tr = {
     colScore: "Skor",
     colVerdict: "Görüş",
     colCard: "Analiz",
+    /* Türkçede sayıdan sonra çoğul eki gelmiyor; çift İngilizce için. */
+    colCardMany: "Analiz",
 
     searchPlaceholder: "Sembol veya şirket ara",
     searchEmpty: "\"{query}\" ile eşleşen analiz yok.",
@@ -616,8 +622,9 @@ const tr = {
   technical: {
     eyebrow: "Günlük Teknik Görünüm",
     title: "Teknik Analiz",
-    description:
-      "Takip edilen hisselerin trendi, destek ve dirençleri, alım bölgesi ve stop seviyeleri.",
+    /* Tek satır: uzun hâli 1024px kapağın ikinci satırına iki kelime
+       bırakıyordu. */
+    description: "Takip edilen hisselerde trend, destek–direnç, alım bölgesi ve stop.",
     slotPremarket: "Açılış Öncesi",
     slotMidsession: "Seans İçi",
     slotLateday: "Kapanış Öncesi",
@@ -745,8 +752,22 @@ const tr = {
     boardTitle: "Hisse Planları",
     /* BEKLEYEN SEMBOL — listeye yeni girmiş, ilk yayını henüz yok. */
     pendingLabel: "Bekliyor",
-    pendingNote:
+    /* Türkçede sayıdan sonra çoğul eki gelmiyor, iki değer de aynı; çift
+       İngilizce için var (bkz. `plural`, lib/utils.ts). */
+    pendingNoteOne:
+      "{symbols} takip listesine yeni eklendi; ilk yayından sonra kartı burada görünecek.",
+    pendingNoteMany:
       "{symbols} takip listesine yeni eklendi; ilk yayından sonra kartları burada görünecek.",
+    /* GECİKEN YAYIN, YENİ SEMBOL DEĞİL. Pano yalnızca beş günden taze
+       yayını taşıyor; bir sembolün yayını aksarsa panodan düşüyordu ve
+       "listeye yeni eklendi" künyesiyle basılıyordu — daha önce onlarca kez
+       yayımlanmış bir hisse için bu doğru değil. İki hâl artık ayrı
+       cümleyle söyleniyor; ikisi de sessizce kaybolmuyor. */
+    lapsedLabel: "Yayın Gecikti",
+    lapsedNoteOne:
+      "{symbols} için son beş günde yeni yayın yok; kartı yeniden yayımlandığında görünecek.",
+    lapsedNoteMany:
+      "{symbols} için son beş günde yeni yayın yok; kartları yeniden yayımlandıklarında görünecek.",
     changesLabel: "Görüşü Değişenler",
     filterLabel: "Görüşe Göre Süz",
     filterAll: "Tümü",
@@ -820,6 +841,13 @@ const tr = {
   },
 
   companies: {
+    searchLabel: "Şirket Bul",
+    searchPlaceholder: "Sembol veya şirket adı",
+    searchSubmit: "Ara",
+    searchResults: "“{query}” için {n} şirket",
+    clearSearch: "Aramayı Temizle",
+    searchEmpty: "Eşleşen Şirket Yok",
+    searchEmptyHint: "Başka bir ad veya sembol dene; seçili sektör aramayı daraltır.",
     title: "Şirketler",
     subtitle: "Takip edilen şirketler: sektör, piyasa değeri ve hacim",
     sector: "Sektör",
@@ -841,6 +869,8 @@ const tr = {
   },
 
   stock: {
+    latestAnalysis: "Son Bilanço Analizi",
+    earningsShortcut: "Bilançolara Git",
     experienceOverview: "Genel Bakış",
     experienceNav: "Şirket sayfası bölümleri",
     experienceEyebrow: "Şirket Dosyası",
@@ -1209,6 +1239,9 @@ const tr = {
     curveHint:
       "Uzun vadeli tahvilin faizi kısa vadeliden yüksekse eğri normaldir; ekonomi olağan seyrinde demektir. Fark eksiye dönerse (ters eğri) piyasa yakın vadede faiz indirimi bekliyor; tarihsel olarak durgunluğun en çok izlenen habercisidir.",
     breadth: "Piyasa Genişliği",
+    advancingShare: "Yükselenlerin Payı",
+    breadthCoverage: "{total} şirketin {known} tanesinde değişim verisi mevcut.",
+    movementScale: "Çubuklar iki listede aynı yüzde ölçeğini kullanır.",
     advancing: "Artıda",
     declining: "Ekside",
     unchanged: "Yatay",
@@ -1222,6 +1255,7 @@ const tr = {
   },
 
   news: {
+    eyebrow: "ABD Piyasalarından",
     title: "Haberler",
     subtitle: "Piyasa ve şirket haberleri",
     all: "Tümü",
@@ -1310,8 +1344,11 @@ const tr = {
   stories: {
     title: "Mercek",
     eyebrow: "Mercek Altında",
-    subtitle:
-      "Piyasada yaşanan olayları yakından anlatan uzun yazılar: ne oldu, neden oldu, ne öğretti.",
+    /* TEK SATIR. Uzun hâli ("...uzun yazılar: ne oldu, neden oldu, ne
+       öğretti.") kapağın dar kolonunda ikinci satıra yalnızca iki kelime
+       bırakıyordu — öksüz satır, boşluk gibi okunuyor. Cümle üç soruyu iki
+       kelimeye indirip aynı şeyi söylüyor. */
+    subtitle: "Olayın arkasındaki mekanizmayı anlatan uzun yazılar.",
     latest: "Son Yazı",
     archive: "Önceki Yazılar",
     /* Sayaç `companies.showing`den ödünç alınıyordu ve "25 şirketin 24

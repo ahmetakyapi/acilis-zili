@@ -80,7 +80,9 @@ export default async function BriefEditorPage(
           {formatEtDateShort(row.briefDate, "tr")} Bülteni
         </AdminPanelTitle>
 
+        {/* Anahtarın gerekçesi mercek editöründe yazılı. */}
         <BriefEditor
+          key={row.generatedAt ? String(row.generatedAt) : tarih}
           revisions={revisions}
           otekiDil={otekiDil}
           draft={{

@@ -57,9 +57,10 @@ export const generateMetadata = pageMetadata({
  * Mercek — arşivin vitrini.
  *
  * ÜÇ SORU. Buraya ilk kez giren biri üç şeyi bilmeden okumaya başlamıyor:
- * burada ne yazılıyor, nasıl yazılıyor, ne sıklıkla yazılıyor. Sayfa bu
- * yüzden bir açıklama bandıyla açılıyor — "Mercek" adı tek başına bunu
- * söylemiyordu ve liste, haber akışından ayırt edilemiyordu.
+ * burada ne yazılıyor, nasıl yazılıyor, ne sıklıkla yazılıyor. Cevap
+ * sayfanın DİBİNDEKİ künyede (`IntroLine`) — "Mercek" adı tek başına bunu
+ * söylemiyordu ve liste, haber akışından ayırt edilemiyordu; ama açıklama
+ * manşetin önüne ya da arasına da girmiyor.
  *
  * KAPAK GÖRSELLERİ. Yazıların fotoğrafı yok ve olmayacak: haber fotoğrafı
  * telifli ve finans metnine çoğu zaman bir şey katmıyor. Kapaklar telifi
@@ -104,6 +105,20 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
       ? Math.min(Math.ceil(requested / PAGE_STEP) * PAGE_STEP, 600)
       : PAGE_STEP;
 
+  /* ÇİPLER KAPAĞIN SAĞINA, LİSTENİN ÜSTÜNE DEĞİL. Şerit kapağın hemen
+     altında ayrı bir satırdı ve kapağın sağ yarısı boş duruyordu; ikisi
+     birleşince ilk ekrana bir şerit kadar daha yazı giriyor.
+
+     Sayım artık SAYFADA yapılıyor ve iki yere değil tek yere gidiyor:
+     `countStoriesBySymbol` `cache()` sarmalı olmayan düz bir sorgu (bkz.
+     lib/data.ts), yani çipleri ayrı bir bileşende hesaplamak tabloyu iki
+     kez okurdu. Filtreye BAĞLI olmayan bir sayım olduğu için Suspense
+     sınırının dışında beklenmesi listeyi geciktirmiyor. */
+  const tally = await countStoriesBySymbol();
+  const chips = [...tally.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 8);
+
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
@@ -111,6 +126,11 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
         eyebrow={t.stories.eyebrow}
         title={t.stories.title}
         description={t.stories.subtitle}
+        aside={
+          chips.length > 1 ? (
+            <StoryFilters chips={chips} active={symbolFilter} t={t} />
+          ) : undefined
+        }
       />
 
       <QueryTransition label={t.common.loading}>
@@ -137,8 +157,13 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
  * yüzey manşet değil bir açıklama kutusu oluyordu, dikkat de oraya
  * dağılıyordu. Oysa bu metnin işi yol göstermek, sahneyi almak değil.
  *
- * Artık kutu yok: başlığın hemen altında üç kısa madde, nokta ayraçlı tek
- * bir sessiz satır. Bilgi duruyor, ağırlığı kalkıyor — manşet ilk sırada.
+ * SONRA MANŞETİN ALTINDA, arşivin üstünde bir satırdı: masaüstünde tek
+ * satır, telefonda koyu etiketli üç satırlık bir blok — ve okuyucu
+ * manşetten kartlara inerken ona takılıyordu.
+ *
+ * Artık arşivin dibinde, hairline ile ayrılmış sessiz bir künye paragrafı.
+ * Bilgi duruyor, ağırlığı kalkıyor — manşet ilk sırada, kartlar hemen
+ * ardından; açıklama son söz.
  */
 function IntroLine({ t }: { t: Dictionary }) {
   const items = [
@@ -147,25 +172,28 @@ function IntroLine({ t }: { t: Dictionary }) {
     { title: t.stories.rhythmTitle, body: t.stories.rhythmShort },
   ];
 
+  /* TEK PARAGRAF, MADDE LİSTESİ DEĞİL. Üç madde `li` olarak diziliyordu
+     ve telefonda her biri kendi satırına düşüp koyu etiketli üç satırlık
+     bir blok kuruyordu — arşivin ortasında, manşetle kartların arasında,
+     bir "hakkında" kutusu. Cümleler artık akan tek bir paragraf: geniş
+     ekranda tek satır, dar ekranda kelime kelime sarıyor, ayraç hiç
+     yetim kalmıyor (satır sonuna gelen ayraç `nowrap` ile önceki cümleye
+     bağlı). */
   return (
-    <div className={`${styles.intro} -mt-1 flex flex-col gap-2`}>
-      <ul className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-small leading-[18px] text-muted">
+    <div className={`${styles.intro} flex flex-col gap-2 border-t border-line pt-4`}>
+      <p className="text-small leading-[18px] text-muted">
         {items.map((item, index) => (
-          <li key={item.title} className="flex items-center gap-2.5">
-            {/* Ayraç dar ekranda gizlenir: maddeler zaten alt alta düşüyor ve
-                nokta, satır başına kayıp yetim bir işaret olarak kalıyordu. */}
+          <span key={item.title}>
             {index > 0 && (
-              <span aria-hidden className="hidden text-line-strong sm:inline">
-                ·
+              <span aria-hidden className="whitespace-nowrap text-line-strong">
+                {" "}·{" "}
               </span>
             )}
-            <span>
-              <span className="font-semibold text-body">{item.title}:</span>{" "}
-              {item.body}
-            </span>
-          </li>
+            <span className="font-semibold text-body">{item.title}:</span>{" "}
+            {item.body}
+          </span>
         ))}
-      </ul>
+      </p>
       <p className="flex flex-wrap items-center gap-x-1.5 text-small text-muted">
         {t.stories.bridge}
         <Link
@@ -186,6 +214,49 @@ function IntroLine({ t }: { t: Dictionary }) {
   );
 }
 
+/**
+ * Şirkete göre süzme — kapağın sağ sütununda.
+ *
+ * Çipler arşivin TAMAMINDAN türer, ekrandaki listeden değil: bir sembole
+ * süzdükten sonra diğerlerine geçebilmek gerekiyor ve sayının da gerçek
+ * toplamı söylemesi lazım.
+ *
+ * Şerit kapağın altındayken tek satırda yatay kayıyordu. Kapağın sağında
+ * yeri dar ama YÜKSEK: sekiz çip iki-üç satıra sarıyor ve kaydırmaya gerek
+ * kalmıyor. Dar ekranda ızgara tek kolona indiğinde eski davranış geri
+ * geliyor — orada sarmak yerine kaymak doğru, çünkü genişlik yok.
+ */
+function StoryFilters({
+  chips,
+  active,
+  t,
+}: {
+  chips: [string, number][];
+  active: string | null;
+  t: Dictionary;
+}) {
+  return (
+    <div className={styles.filterAside}>
+      <span className={styles.filterAsideLabel}>{t.stories.filterLabel}</span>
+      <ScrollEdges className={`${styles.storyFilters} flex items-center gap-2`}>
+        <FilterChip href="/mercek" active={!active}>
+          {t.stories.filterAll}
+        </FilterChip>
+        {chips.map(([symbol, count]) => (
+          <FilterChip
+            key={symbol}
+            href={symbol === active ? "/mercek" : `/mercek?sembol=${symbol}`}
+            active={symbol === active}
+          >
+            <span className="numeral">{symbol}</span>
+            <span className="ml-1.5 opacity-70">{count}</span>
+          </FilterChip>
+        ))}
+      </ScrollEdges>
+    </div>
+  );
+}
+
 async function StoryBoard({
   locale,
   t,
@@ -202,12 +273,11 @@ async function StoryBoard({
      17'de geçen bir şirkete süzülmek BOŞ sayfa veriyordu — yazı vardı, sorgu
      onu hiç görmüyordu. `getStoriesForSymbol` aynı aramayı Postgres'in
      `jsonb` içi aramasıyla, arşivin tamamında yapıyor. */
-  const [rows, total, tally] = await Promise.all([
+  const [rows, total] = await Promise.all([
     symbolFilter
       ? getStoriesForSymbol(symbolFilter, locale, limit)
       : getStories(locale, limit),
     countStories(),
-    countStoriesBySymbol(),
   ]);
 
   if (rows.length === 0 && !symbolFilter) {
@@ -217,13 +287,6 @@ async function StoryBoard({
       </Panel>
     );
   }
-
-  /* Filtre çipleri arşivin TAMAMINDAN türer, ekrandaki listeden değil: bir
-     sembole süzdükten sonra diğerlerine geçebilmek gerekiyor ve sayının da
-     gerçek toplamı söylemesi lazım. */
-  const chips = [...tally.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, 8);
 
   /* LİSTE ÇİZİLENDEN TÜRÜYOR, TAVANDAN DEĞİL.
      Burada bir dönem yazıların BÜTÜN sembolleri toplanıp 40'ta kesiliyordu.
@@ -291,27 +354,6 @@ async function StoryBoard({
 
   return (
     <div className="flex flex-col gap-6">
-      {chips.length > 1 && (
-        <ScrollEdges className={`${styles.storyFilters} flex flex-wrap items-center gap-2`}>
-          <span className="plate mr-0.5 text-nano tracking-[0.09em]">
-            {t.stories.filterLabel}
-          </span>
-          <FilterChip href="/mercek" active={!symbolFilter}>
-            {t.stories.filterAll}
-          </FilterChip>
-          {chips.map(([symbol, count]) => (
-            <FilterChip
-              key={symbol}
-              href={symbol === symbolFilter ? "/mercek" : `/mercek?sembol=${symbol}`}
-              active={symbol === symbolFilter}
-            >
-              <span className="numeral">{symbol}</span>
-              <span className="ml-1.5 opacity-70">{count}</span>
-            </FilterChip>
-          ))}
-        </ScrollEdges>
-      )}
-
       {rows.length === 0 ? (
         <Panel>
           <EmptyState
@@ -336,11 +378,6 @@ async function StoryBoard({
               t={t}
             />
           )}
-
-          {/* The editorial introduction follows the lead: at 390px it
-              previously pushed the story title down to 629px. The symbol
-              filter remains above the story and scrolls as one row. */}
-          <IntroLine t={t} />
 
           {rows.length > 1 && (
             <div className="flex flex-col gap-3">
@@ -383,6 +420,15 @@ async function StoryBoard({
               </Link>
             </div>
           )}
+
+          {/* EDİTORYAL KÜNYE EN ALTTA. Bir dönem manşetin hemen altında,
+              arşivin üstündeydi ("ne yazılır, nasıl yazılır, ne sıklıkla")
+              ve telefonda okuyucunun yolunu kesiyordu: manşeti bitirip
+              öteki yazılara inmek isteyen göz üç satırlık bir açıklamaya
+              takılıyordu. Ekran düzeni kuralında künyeler ve uyarılar en
+              sonda; burası da öyle. Haberler/Rehber köprüsü onunla
+              birlikte iniyor. */}
+          <IntroLine t={t} />
         </>
       )}
     </div>

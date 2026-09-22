@@ -89,6 +89,11 @@ function mercegiTazele(slug: string) {
   revalidatePath("/feed.xml");
   revalidatePath("/admin/yazilar");
   revalidatePath("/admin/icerik");
+  /* EDİTÖRÜN KENDİ YOLU DA TAZELENİYOR. Sürüm geri yüklendiğinde bu yol
+     listede değildi: sunucu kaydı eski hâline çeviriyor ama editör sayfası
+     önbellekten eski taslakla geliyordu ve `router.refresh()` de aynı bayat
+     ağacı alıyordu. Yenilemeden kaydetmek geri yüklemeyi siliyordu. */
+  revalidatePath(`/admin/yazilar/mercek/${slug}`);
 }
 
 /**
@@ -302,7 +307,7 @@ export async function saveBriefFromAdmin(
     return { error: "Kaydedilemedi — veritabanı yazmayı reddetti." };
   }
 
-  bulteniTazele();
+  bulteniTazele(parsed.data.date);
   return { ok: true, savedAt: new Date().toISOString() };
 }
 
@@ -313,12 +318,17 @@ export async function saveBriefFromAdmin(
  * yalnızca `/bulten`i tazelemek, düzeltilen metnin ana sayfada eski hâliyle
  * kalması demekti — sitenin en çok görülen yüzeyinde.
  */
-function bulteniTazele() {
+function bulteniTazele(date?: string) {
   revalidatePath("/");
   revalidatePath("/bulten");
   revalidatePath("/feed.xml");
   revalidatePath("/admin/yazilar/bulten");
   revalidatePath("/admin/icerik");
+  /* Aynı gerekçe mercek tarafında yazılı: editörün kendi yolu tazelenmezse
+     geri yükleme ekrana yansımıyor. Tarih formda boş bırakılabiliyor
+     (şema onu isteğe bağlı tutuyor, gün `saveBrief` içinde karara
+     bağlanıyor); o durumda tazelenecek datalı bir yol da yok. */
+  if (date) revalidatePath(`/admin/yazilar/bulten/${date}`);
 }
 
 export async function listBriefRevisions(
@@ -361,6 +371,6 @@ export async function restoreBriefRevision(
     return { error: "Geri yüklenemedi — veritabanı yazmayı reddetti." };
   }
 
-  bulteniTazele();
+  bulteniTazele(parsed.data.date);
   return { ok: true, savedAt: new Date().toISOString() };
 }

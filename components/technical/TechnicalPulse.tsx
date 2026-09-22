@@ -63,10 +63,21 @@ export function TechnicalPulse({
   /* Bekleyenler bir GÖRÜŞ değil, bir eksik: kendi satırında ve nötr
      tonda duruyor, oran çubuğunda da renksiz bir dilim olarak. */
   const total = board.length + pending.length;
+  /* ÇİP YALNIZCA YENİ GÖRÜŞÜ YAZIYOR. Etiket "Tuta Döndü" / "Ala Döndü"
+     idi ve şeridin kendi başlığı zaten "Görüşü Değişenler": "döndü" sözcüğü
+     aynı şeyi ikinci kez söylüyor, üstelik çipi iki kat uzatıyordu. Sembolün
+     yanında tek başına AL/TUT/SAT hem daha kısa hem panonun geri kalanıyla
+     aynı dil — dağılım satırları da aynı üç kelimeyi kullanıyor. Değiştiği
+     bilgisi şeridin başlığından, yeni görüş çipten okunuyor.
+
+     `stanceChangeLabel` HÂLÂ ÇAĞRILIYOR: bir sembolün burada görünüp
+     görünmeyeceğine o karar veriyor (önceki görüş yoksa ya da aynıysa null). */
   const changes = board.flatMap(({ row, previousStance }) => {
     const verdict = verdictOf(row.stance);
-    const label = stanceChangeLabel(verdict, previousStance, t);
-    return label ? [{ symbol: row.symbol, verdict, label }] : [];
+    const changed = stanceChangeLabel(verdict, previousStance, t);
+    return changed
+      ? [{ symbol: row.symbol, verdict, label: verdictLabel(verdict, t), full: changed }]
+      : [];
   });
 
   return (
@@ -175,10 +186,19 @@ export function TechnicalPulse({
         <div className={styles.pulseChanges}>
           <span>{t.technical.changesLabel}</span>
           {changes.map((change) => (
-            <Link key={change.symbol} href={technicalHref(change.symbol)} prefetch={false} className={styles.pulseChange}>
+            <Link
+              key={change.symbol}
+              href={technicalHref(change.symbol)}
+              prefetch={false}
+              className={styles.pulseChange}
+              /* Tam cümle ("Tuta Döndü") çipten kalktı ama kaybolmadı:
+                 imleç künyesinde ve ekran okuyucuya duruyor. */
+              title={`${change.symbol} · ${change.full}`}
+            >
               <LogoTile symbol={change.symbol} logoUrl={meta[change.symbol]?.logoUrl ?? null} size="xs" />
               {change.symbol}
               <span className={changeToneClass(change.verdict)}>{change.label}</span>
+              <span className="sr-only">{change.full}</span>
             </Link>
           ))}
         </div>

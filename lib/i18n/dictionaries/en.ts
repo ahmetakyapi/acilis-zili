@@ -118,6 +118,8 @@ const en: typeof tr = {
     distributionUnit: "Company Count",
     reportingRhythm: "The Next 7 Days",
     scheduledReports: "Scheduled Reports",
+    followedCompanies: "Companies Followed",
+    publishedAnalyses: "Published Analyses",
     reportingDays: "Reporting Days",
     analysisDescription: "Reported results, market expectations and a look at the next quarter.",
   },
@@ -350,6 +352,7 @@ const en: typeof tr = {
     reportInNumbers: "The Quarter in Numbers",
     reportOutlook: "Looking Ahead",
     listTitle: "Latest Earnings Analyses",
+    filteredReports: "Verdicts Across Listed Reports",
     ogEyebrow: "Earnings Analysis",
     symbolPanelTitle: "Earnings Analyses",
     recentStrip: "Recently Analyzed",
@@ -381,6 +384,7 @@ const en: typeof tr = {
     colScore: "Score",
     colVerdict: "Verdict",
     colCard: "Analysis",
+    colCardMany: "Analyses",
 
     searchPlaceholder: "Search symbol or company",
     searchEmpty: "No analysis matches \"{query}\".",
@@ -465,8 +469,7 @@ const en: typeof tr = {
   technical: {
     eyebrow: "Daily Technical Outlook",
     title: "Technical Analysis",
-    description:
-      "Trends, support and resistance, entry zones and stops for the stocks we follow.",
+    description: "Trend, support and resistance, entry zones and stops.",
     slotPremarket: "Pre-Market",
     slotMidsession: "Midday",
     slotLateday: "Late Session",
@@ -583,8 +586,15 @@ const en: typeof tr = {
     trackedLabel: "Following",
     boardTitle: "Stock Plans",
     pendingLabel: "Pending",
-    pendingNote:
+    pendingNoteOne:
+      "{symbols} was just added to the watchlist; its card appears here after the first edition.",
+    pendingNoteMany:
       "{symbols} were just added to the watchlist; their cards appear here after the first edition.",
+    lapsedLabel: "Publication Late",
+    lapsedNoteOne:
+      "{symbols} has had no new edition in the last five days; its card returns when it is published again.",
+    lapsedNoteMany:
+      "{symbols} have had no new edition in the last five days; their cards return when they are published again.",
     changesLabel: "Stance Changes",
     filterLabel: "Filter by Stance",
     filterAll: "All",
@@ -651,6 +661,13 @@ const en: typeof tr = {
   },
 
   companies: {
+    searchLabel: "Find a Company",
+    searchPlaceholder: "Symbol or company name",
+    searchSubmit: "Search",
+    searchResults: "{n} companies for “{query}”",
+    clearSearch: "Clear Search",
+    searchEmpty: "No Matching Companies",
+    searchEmptyHint: "Try another name or symbol; the selected sector narrows your search.",
     title: "Companies",
     subtitle: "Tracked companies: sector, market cap and volume",
     sector: "Sector",
@@ -671,6 +688,8 @@ const en: typeof tr = {
   },
 
   stock: {
+    latestAnalysis: "Latest Earnings Analysis",
+    earningsShortcut: "Go to Earnings",
     experienceOverview: "Overview",
     experienceNav: "Company page sections",
     experienceEyebrow: "Company Dossier",
@@ -964,7 +983,7 @@ const en: typeof tr = {
     fearHigh: "Tense",
     fearPanic: "Panic",
     title: "Markets",
-    subtitle: "Indices, treasury yields and intraday moves: the market's pulse",
+    subtitle: "Indices, treasury yields and intraday moves.",
     yields: "US Treasury Yields",
     yieldY2: "2-Year",
     yieldY5: "5-Year",
@@ -978,6 +997,9 @@ const en: typeof tr = {
     curveHint:
       "When long-dated yields sit above short-dated ones the curve is normal and the economy is on its usual footing. If the spread turns negative (an inverted curve) the market expects rate cuts soon; historically it is the most closely watched recession signal.",
     breadth: "Market Breadth",
+    advancingShare: "Share of Advancers",
+    breadthCoverage: "Change data is available for {known} of {total} companies.",
+    movementScale: "Bars use the same percentage scale across both lists.",
     advancing: "Advancing",
     declining: "Declining",
     unchanged: "Unchanged",
@@ -991,6 +1013,7 @@ const en: typeof tr = {
   },
 
   news: {
+    eyebrow: "From US Markets",
     title: "News",
     subtitle: "Market and company headlines",
     all: "All",
@@ -1062,8 +1085,7 @@ const en: typeof tr = {
   stories: {
     title: "Close-Up",
     eyebrow: "Close-Up",
-    subtitle:
-      "Long reads on what happened in the market: what took place, why, and what it taught.",
+    subtitle: "Long reads on the mechanism behind the event.",
     latest: "Latest Piece",
     archive: "Earlier Pieces",
     showing: "{n} of {total} pieces",

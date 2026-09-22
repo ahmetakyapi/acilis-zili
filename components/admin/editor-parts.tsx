@@ -7,6 +7,7 @@ import {
   useTransition,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowCounterClockwise,
   ClockCounterClockwise,
@@ -238,6 +239,18 @@ export function SurumGecmisi({
   restoreState: EditorState;
 }) {
   const [acik, setAcik] = useState(false);
+  const router = useRouter();
+
+  /* GERİ YÜKLEME FORMU TAZELEMİYORDU. Sunucu eylemi kaydı eski hâline
+     çeviriyor ama editör hâlâ ekrandaki ESKİ taslağı tutuyordu ve ekran bunu
+     kullanıcıya "Sayfayı yenile" diye yazıyordu. Yenilemeden Kaydet'e basan
+     biri geri yüklemeyi sessizce geri alıyordu — iki tıkla veri kaybı.
+     `router.refresh()` sunucu ağacını yeniden çekiyor; editörün denetimli
+     durumu yeni veriyle kurulsun diye sayfa `key`i de sürüm damgasından
+     türüyor (bkz. çağıran editör). */
+  useEffect(() => {
+    if (restoreState.ok) router.refresh();
+  }, [restoreState.ok, router]);
 
   return (
     <div className="flex flex-col gap-3 border-t border-line pt-4">
@@ -302,7 +315,7 @@ export function SurumGecmisi({
       )}
       {restoreState.ok && (
         <p role="status" className="text-small font-semibold text-up">
-          Geri yüklendi. Sayfayı yenile — form hâlâ eski taslağı gösteriyor.
+          Geri yüklendi.
         </p>
       )}
     </div>

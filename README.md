@@ -43,9 +43,9 @@ skor, görüş, hedef fiyat, güçlü yönler ve riskler, beklenen gelişmeler.
 
 ### Teknik görünümü oku
 
-On iki hissenin (MU, SNDK, NVDA, SPCX, TSLA, GOOGL, META, NBIS, BE, RKLB, MRVL,
-ONDS) her işlem günü iki kez yenilenen teknik analizi: açılıştan önce ve seans
-içinde. Al/Tut/Sat görüşü, alım bölgesi, hedefler ve stop, destek ve dirençler,
+On beş hissenin (MU, SNDK, NVDA, AMD, INTC, SPCX, TSLA, GOOGL, META, PLTR,
+NBIS, BE, RKLB, MRVL, ONDS) her işlem günü üç kez yenilenen teknik analizi:
+açılıştan önce, seans içinde ve kapanışa doğru. Al/Tut/Sat görüşü, alım bölgesi, hedefler ve stop, destek ve dirençler,
 yükseliş ve düşüş senaryosu. Ortalamaları, RSI'ı, MACD'yi, hacmi ve pivotları
 site kendi fiyat verisinden hesaplıyor; görüşü ve seviyeleri claude.ai rutini
 yazıyor. Görüş bir önceki analizden farklıysa kartta "Ala Döndü" rozeti çıkıyor.
@@ -131,7 +131,7 @@ Menü'den, her yerde aramadan ve alt bilgiden açılıyor.
 
 | Rota | Soru |
 |---|---|
-| `/teknik` | On iki hisse bugün teknik olarak nerede — görüş, plan şeridi (alım · satış · vazgeçme), seviye çizgisi, üç kelimelik gösterge okuması |
+| `/teknik` | On beş hisse bugün teknik olarak nerede — görüş, plan şeridi (alım · satış · vazgeçme), seviye çizgisi, üç kelimelik gösterge okuması |
 | `/teknik/[symbol]` | Nereden alınır, nerede satılır, nerede vazgeçilir — plan şeridi ve planın okuması, gösterge özeti, fiyata orantılı fiyat haritası, gösterge panelleri, senaryolar, görüş geçmişi |
 
 ### Okuma

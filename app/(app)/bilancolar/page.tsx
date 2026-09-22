@@ -19,7 +19,6 @@ import {
 } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n } from "@/lib/i18n";
-import { formatEtDateCompact } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -116,21 +115,12 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
         title={t.analysis.title}
         description={t.earnings.subtitleLong}
         visual={<EarningsRadar rows={rows} meta={meta} locale={locale} t={t} />}
+        /* ANAHTAR BAŞLIĞIN SAĞ ÜSTÜNDE. Açıklamanın altında kendi satırında
+           duruyordu; ekranın tek denetimi ve ekran düzeni kuralı onu üst
+           künyenin sağına koyuyor. Telefonda başlık kartı 68 piksel
+           kısalıyor. */
+        control={anahtar}
       >
-        {
-          /* Anahtarın ALTINDA kapsadığı gerçek aralık. "Hafta" ve "Ay" birer
-             söz; sayfanın gösterdiği pencere `bugün → bugün + 6|29`.
-             Üçüncü günün başlığına inen okuyucu listenin nerede biteceğini
-             sona kadar kaydırarak öğreniyordu. İki tarih de hesaplanmış
-             değişkenlerde duruyor, uydurma yok. */
-          <div className={styles.calendarControls}>
-            {anahtar}
-            <p className="figure text-tiny text-muted">
-              {formatEtDateCompact(today, locale)} –{" "}
-              {formatEtDateCompact(rangeEnd, locale)}
-            </p>
-          </div>
-        }
         <EarningsActivity rows={rows} from={today} to={rangeEnd} locale={locale} t={t} />
       </DirectoryHeader>
 

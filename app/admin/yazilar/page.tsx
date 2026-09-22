@@ -134,7 +134,11 @@ async function Stories({ ara }: { ara: string }) {
           {rows.map((row) => (
             <li key={row.slug}>
               <Link
-                href={`/admin/yazilar/mercek/${row.slug}`}
+                /* BAĞLANTI SATIRIN DİLİNİ TAŞIYOR. Editör artık adresteki
+                   dil kayıtta yoksa 404 veriyor (yanlış dilin üstüne yazma
+                   yolu kapandı); bağlantı dilsiz kalırsa yalnızca İngilizce
+                   kaydı olan bir slug listede görünüp tıklanınca 404 verirdi. */
+                href={`/admin/yazilar/mercek/${row.slug}${row.locales.includes("TR") ? "" : "?dil=en"}`}
                 className="flex min-h-11 flex-col gap-1.5 rounded-(--radius-sm) px-2 py-3 transition-colors hover:bg-surface-elevated sm:flex-row sm:items-center sm:gap-4"
               >
                 <span className="min-w-0 flex-1">

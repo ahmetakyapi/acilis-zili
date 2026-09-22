@@ -1,7 +1,7 @@
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/markets/MarketExperience.module.css";
@@ -228,6 +228,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
 
       </div>
 
+
       <IndexTabs tab={tab} locale={locale} t={t} />
       <QueryTransition label={t.common.loading}>
       <Suspense
@@ -259,23 +260,15 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
       </Suspense>
       </QueryTransition>
 
-      <GuideHint
-        label={t.guide.contextLabel}
-        locale={locale}
-        slugs={["endeks", "faiz-tahvil"]}
-        className="pt-1"
-      />
-    </MotionExperience>
-  );
-}
-
-function MarketContext({ locale, t }: { locale: Locale; t: Dictionary }) {
-  return <>
-      {/* 22 September: market breadth and movers now lead the page;
-          rates and volatility remain available after the equity overview. */}
       <Suspense fallback={<div className={styles.macro}><Skeleton className={styles.yieldSkeleton} /><Skeleton className={styles.fearSkeleton} /></div>}>
-      {/* Treasury/VIX previously followed movers. Reader preference now
-          puts this compact, independent context before index selection. */}
+      {/* TAHVİL VE KORKU ENDEKSİ EN ALTTA. İki gösterge bir dönem endeks
+          kartlarıyla sekme çubuğunun ARASINDA duruyordu: okuyucu dört
+          endeks kartını görüyor, sonra tahvil şeridiyle korku kadranı
+          araya giriyor, sekmelerle bileşen tablosu onların altında
+          kalıyordu — aynı ekranın konusu ("endeksler") ikiye bölünmüştü.
+          Şimdi ekranın sırası tek konu: kartlar, sekmeler, bileşenler;
+          tahvil ve VIX bağlam olarak en sonda, rehber ipucunun hemen
+          üstünde. */}
       <div className={styles.macro} data-motion-stagger>
         <YieldStrip locale={locale} t={t} />
         {/* AYRI, BOŞ YEDEK YOK — bilerek. İki gösterge artık yukarıdaki
@@ -308,7 +301,52 @@ function MarketContext({ locale, t }: { locale: Locale; t: Dictionary }) {
 
       </Suspense>
 
-  </>;
+      <GuideHint
+        label={t.guide.contextLabel}
+        locale={locale}
+        slugs={["endeks", "faiz-tahvil"]}
+        className="pt-1"
+      />
+    </MotionExperience>
+  );
+}
+
+/** Independent context streams after the selected index reading. */
+function MarketContext({ locale, t }: { locale: Locale; t: Dictionary }) {
+  return (
+<Suspense fallback={<div className={styles.macro}><Skeleton className={styles.yieldSkeleton} /><Skeleton className={styles.fearSkeleton} /></div>}>
+      <div id="market-context" className={styles.macro} data-motion-stagger>
+        <YieldStrip locale={locale} t={t} />
+        {/* AYRI, BOŞ YEDEK YOK — bilerek. İki gösterge artık yukarıdaki
+            ölçülü ortak sınırda. Burada `fallback={null}` ile ayrı bir
+            sınır vardı ve iki yönden de
+            zarardı. Kazancı sıfır: kardeşi `YieldStrip` de FRED'den besleniyor
+            ve o askıya alınmamış, yani sayfa FRED turunu ZATEN bekliyor.
+            Maliyeti gerçek: boş yedek sıfır yer kaplıyor, kart akışla gelince
+            mobilde 262 piksel açılıp altındaki her şeyi aşağı itiyordu —
+            ölçüldü, /piyasalar'ın mobil CLS'i 0,206 çıkıyordu (Google'ın
+            "kötü" eşiği 0,1). */}
+        <FearGauge
+            locale={locale}
+            labels={{
+              title: t.markets.fearTitle,
+              details: t.markets.fearDetails,
+              hint: t.markets.fearHint,
+              average: t.markets.fearAverage,
+              guideCta: t.markets.fearGuideCta,
+              bands: {
+                calm: t.markets.fearCalm,
+                normal: t.markets.fearNormal,
+                tense: t.markets.fearTense,
+                fear: t.markets.fearHigh,
+                panic: t.markets.fearPanic,
+              },
+            }}
+          />
+      </div>
+
+      </Suspense>
+  );
 }
 
 /* ==========================================================================
@@ -671,6 +709,7 @@ async function IndexDetail({
   );
   const gainers = byChange.slice(0, 5);
   const losers = [...byChange].reverse().slice(0, 5);
+  const movementScale = Math.max(...byChange.map((row) => Math.abs(row.quote!.changePct!)), 0.01);
 
   /* "GÜNÜN EN ÇOK ARTANLARI" — HANGİ GÜNÜN?
      İki panelin başlığı bir gün iddiası taşıyor ve o iddia yalnızca paket bu
@@ -697,13 +736,18 @@ async function IndexDetail({
         declining={declining}
         flat={flat}
         total={withChange.length}
+        memberCount={members.length}
         locale={locale}
         t={t}
-      />
+      >
+        {source && <DataStamp labels={t.data} source={source} at={stampAt} stale={stale} locale={locale}
+          note={status.session === "pre-market" || status.session === "after-hours" ? t.data.extendedNote : undefined} />}
+      </IndexToolbar>
 
       {withQuote.length > 0 && (
         <>
-          <div className={styles.movers} data-motion-stagger>
+          <p className={styles.movementScale}>{t.markets.movementScale}</p>
+          <div id="market-movers" className={styles.movers} data-motion-stagger>
             {/* Künye SEÇKİNİN PAYDASINI söylüyor: "Günün En Çok Artanları"
                 beş satır basıyor ama hangi kümenin beşi olduğunu yazmıyordu.
                 Endeks 102 şirketse "102 şirketin 5 tanesi" — aynı kalıp
@@ -711,6 +755,7 @@ async function IndexDetail({
             <MoverPanel
               title={t.markets.topGainers}
               rows={gainers}
+              scaleMax={movementScale}
               showContribution={divisor !== null}
               contributionLabel={t.markets.contribution}
               locale={locale}
@@ -724,6 +769,7 @@ async function IndexDetail({
             <MoverPanel
               title={t.markets.topLosers}
               rows={losers}
+              scaleMax={movementScale}
               showContribution={divisor !== null}
               contributionLabel={t.markets.contribution}
               locale={locale}
@@ -799,6 +845,7 @@ function IndexTabs({ tab, locale, t }: { tab: TabKey; locale: Locale; t: Diction
               <Link
                 key={entry.key}
                 href={`/piyasalar?endeks=${entry.key}`}
+                aria-current={activeTab ? "page" : undefined}
                 scroll={false}
                 className={cn(
                   "flex min-h-11 items-center justify-center gap-2 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-colors sm:min-h-[38px] sm:px-4 sm:text-sm",
@@ -829,95 +876,57 @@ function IndexTabs({ tab, locale, t }: { tab: TabKey; locale: Locale; t: Diction
   </Panel>;
 }
 
+/* Seçili endeksin kendi değişimi, yükselen şirketlerin payından farklıdır:
+   birkaç ağır şirket, üyelerin çoğu düşerken endeksi yukarı taşıyabilir.
+   Gösterilen fiyat endeks seviyesi değil onu izleyen fonun kotasyonudur;
+   fon sembolü bu yüzden fiyatın yanında kalır. Eksik değişimler sayaca
+   katılmaz; gerçek kapsam toplam üye sayısıyla ayrıca gösterilir. */
 function IndexToolbar({
-  tab,
-  proxy,
-  proxyQuote,
-  advancing,
-  declining,
-  flat,
-  total,
-  locale,
-  t,
+  tab, proxy, proxyQuote, advancing, declining, flat, total, memberCount, locale, t, children,
 }: {
-  tab: TabKey;
-  proxy: string;
-  proxyQuote: Quote | null;
-  advancing: number;
-  declining: number;
-  flat: number;
-  total: number;
-  locale: Locale;
-  t: Dictionary;
+  tab: TabKey; proxy: string; proxyQuote: Quote | null;
+  advancing: number; declining: number; flat: number; total: number; memberCount: number;
+  locale: Locale; t: Dictionary; children?: ReactNode;
 }) {
-  const pct = (value: number) => (total > 0 ? (value / total) * 100 : 0);
-
+  const pct = (value: number) => total > 0 ? value / total * 100 : 0;
+  const groups = [
+    { key: "up", label: t.markets.advancing, value: advancing, tone: "text-up", fill: "bg-up" },
+    { key: "flat", label: t.markets.unchanged, value: flat, tone: "text-muted", fill: "bg-flat/50" },
+    { key: "down", label: t.markets.declining, value: declining, tone: "text-down", fill: "bg-down" },
+  ];
   return (
-    <Panel className={styles.breadth}>
-      {/* SEÇİLİ ENDEKSİN KENDİ GÜNÜ. Çubuk "kaç şirket artıda" diyor ama
-          endeksin kendisinin ne yaptığını söylemiyordu: bir endeks üyelerinin
-          çoğu düşerken de yükselebiliyor (birkaç ağır şirket taşırsa) ve
-          okuyucu o farkı ancak sayfanın en üstündeki karta geri dönüp
-          görebiliyordu. Sayı seçimin hemen altında, genişliğin hemen üstünde.
-          Kaynak: endeksi izleyen fonun kotasyonu — hangi fon olduğu yazılı,
-          çünkü gösterilen endeksin kendisi değil onu izleyen fon. */}
-      {proxyQuote && proxyQuote.changePct !== null && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line-soft px-4 py-2.5 sm:px-5">
-          <span className="text-small font-semibold text-strong">
-            {INDEX_TABS.find((entry) => entry.key === tab)?.label}
-          </span>
-          <ChangePill changePct={proxyQuote.changePct} locale={locale} />
-          <span className="numeral text-tiny text-muted">
-            {proxy} · {formatPrice(proxyQuote.price, locale, { currency: true })}
-          </span>
-        </div>
-      )}
-
-      {total > 0 && (
-        <div className={styles.breadthReading}>
-          <h2 className="flex items-baseline gap-2 text-base font-bold tracking-tight text-strong">
-            {t.markets.breadth}
-            {/* Oran etiketin yanında: çubuğun kesin karşılığı burada okunur,
-                eskiden altta ayrı bir cümleydi. */}
-            <span className="numeral text-base font-bold text-up">
-              {formatPercentPlain(pct(advancing), locale, 0)}
-            </span>
-          </h2>
-
-          {/* Çubuk satırın esneyen parçası: dar ekranda kırılıp tam genişliğe
-              geçsin diye taban genişliği var. */}
-          <div className="flex h-2.5 min-w-[180px] flex-1 gap-px overflow-hidden rounded-full bg-surface-sunken">
-            {advancing > 0 && (
-              <span data-motion-draw="line" className="bar-fill bg-up" style={{ width: `${pct(advancing)}%` }} />
-            )}
-            {flat > 0 && (
-              <span data-motion-draw="line" className="bar-fill bg-flat/50" style={{ width: `${pct(flat)}%` }} />
-            )}
-            {declining > 0 && (
-              <span data-motion-draw="line" className="bar-fill bg-down" style={{ width: `${pct(declining)}%` }} />
-            )}
+    <Panel id="market-reading" className={styles.breadth}>
+      <div className={styles.breadthOverview}>
+        <div className={styles.breadthIdentity}>
+          <p className={styles.breadthEyebrow}>{t.markets.breadth}</p>
+          <div className={styles.breadthHeading}>
+            <h2>{INDEX_TABS.find((entry) => entry.key === tab)?.label}</h2>
+            <a href="#market-members" className={styles.breadthLink}>{t.markets.constituents} <span aria-hidden>↘</span></a>
           </div>
-
-          <p className="numeral text-small text-muted">
-            <span className="font-semibold text-up">{advancing}</span>{" "}
-            {t.markets.advancing}
-            <span aria-hidden className="mx-1.5">
-              ·
-            </span>
-            <span className="font-semibold text-down">{declining}</span>{" "}
-            {t.markets.declining}
-            {flat > 0 && (
-              <>
-                <span aria-hidden className="mx-1.5">
-                  ·
-                </span>
-                <span className="font-semibold text-soft">{flat}</span>{" "}
-                {t.markets.unchanged}
-              </>
-            )}
-          </p>
+          {proxyQuote && <div className={styles.breadthQuote}>
+            <span className="numeral">{proxy} · {formatPrice(proxyQuote.price, locale, { currency: true })}</span>
+            {proxyQuote.changePct !== null && <ChangePill changePct={proxyQuote.changePct} locale={locale} />}
+          </div>}
         </div>
-      )}
+        <div className={styles.breadthVisual}>
+          {total > 0 ? <>
+            <div className={styles.breadthRatio}>
+              <span>{t.markets.advancingShare}</span>
+              <strong className="numeral">{formatPercentPlain(pct(advancing), locale, 0)}</strong>
+            </div>
+            <div className={styles.breadthRail} aria-hidden>
+              {groups.map((group) => group.value > 0 && <span key={group.key} data-motion-draw="line" className={cn("bar-fill", group.fill)} style={{ flex: group.value }} />)}
+            </div>
+            <dl className={styles.breadthCounts}>
+              {groups.map((group) => <div key={group.key}>
+                <dt>{group.label}</dt><dd className={cn("numeral", group.tone)}>{group.value}</dd>
+              </div>)}
+            </dl>
+          </> : <p className={styles.breadthEmpty}>{t.common.noData}</p>}
+          <p className={styles.breadthCoverage}>{t.markets.breadthCoverage.replace("{known}", String(total)).replace("{total}", String(memberCount))}</p>
+        </div>
+      </div>
+      {children && <div className={styles.breadthStamp}>{children}</div>}
     </Panel>
   );
 }
@@ -932,6 +941,7 @@ function MoverPanel({
   locale,
   t,
   meta,
+  scaleMax,
 }: {
   title: string;
   rows: Row[];
@@ -941,13 +951,9 @@ function MoverPanel({
   t: Dictionary;
   /** Başlığın yanındaki künye — kaç şirketten seçildiği. */
   meta?: string;
+  scaleMax: number;
 }) {
   if (rows.length === 0) return null;
-
-  const peak = Math.max(
-    ...rows.map((row) => Math.abs(row.quote?.changePct ?? 0)),
-    0.01,
-  );
 
   return (
     <Panel className={styles.mover}>
@@ -972,9 +978,9 @@ function MoverPanel({
         }
       />
       <ul className="divide-y divide-line-soft" data-motion-stagger>
-        {rows.map((row) => {
+        {rows.map((row, index) => {
           const changePct = row.quote?.changePct ?? 0;
-          const width = Math.max((Math.abs(changePct) / peak) * 100, 4);
+          const width = (Math.abs(changePct) / scaleMax) * 100;
           /* RENK SATIRIN KENDİ DEĞERİNDEN, PANELİN ADINDAN DEĞİL.
              `tone` propu panelin tamamını boyuyordu: düşüşle geçen bir günde
              "Günün En Çok Artanları" listesindeki beş satırın hepsi eksi
@@ -992,10 +998,12 @@ function MoverPanel({
               <Link
                 href={`/hisse/${row.member.symbol}`}
                 prefetch={false}
-                className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+                className={styles.moverLink}
               >
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="flex min-w-0 items-baseline gap-2.5">
+                <div className={styles.moverIdentity}>
+                  <span className={styles.moverRank} aria-hidden>{String(index + 1).padStart(2, "0")}</span>
+                  <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" />
+                  <span className={styles.moverCompany}>
                     <span className="shrink-0 text-base font-bold text-strong">
                       {row.member.symbol}
                     </span>
@@ -1013,13 +1021,13 @@ function MoverPanel({
                   </span>
                 </div>
 
-                {/* Görsel oran çubuğu — grubun en büyüğüne göre ölçekli */}
-                <div className="mt-1.5 flex items-center gap-2">
+                {/* Both panels use the same maximum absolute percentage. */}
+                <div className={styles.moverTrack}>
                   <span
                     aria-hidden
                     data-motion-draw="line"
                     className={cn(
-                      "bar-fill h-[5px] rounded-full",
+                      "bar-fill h-[3px] rounded-full",
                       satirTon === "up"
                         ? "bg-up/70"
                         : satirTon === "down"
@@ -1182,7 +1190,7 @@ function MembersTable({
   const moreHref = `/piyasalar?endeks=${tab}&sirala=${sort}&yon=${dir}&adet=${limit + PAGE_STEP}`;
 
   return (
-    <Panel className={styles.members}>
+    <Panel id="market-members" className={styles.members}>
       {/* Sayaç başlıkta: tablo kırpılıyor ve okuyucu tıklamadan önce
           listenin ne kadarını gördüğünü bilmeli. Aynı kalıp ana sayfadaki
           bilanço panelinde ve /mercek arşivinde de var. */}
@@ -1339,10 +1347,7 @@ function MembersTable({
                               width:
                                 quote.changePct === null
                                   ? 0
-                                  : `${Math.max(
-                                      (Math.abs(quote.changePct) / peakChange) * 100,
-                                      6,
-                                    )}%`,
+                                  : `${(Math.abs(quote.changePct) / peakChange) * 100}%`,
                             }}
                           />
                         </span>
@@ -1422,8 +1427,8 @@ function MembersTable({
 /**
  * Endeks bileşenleri bölümünün yer tutucusu.
  *
- * Suspense sınırı ÜÇ kardeşi birden kapsıyor — genişlik şeridi, artan/azalan
- * panelleri ve bileşen tablosu — ama yedeği yalnızca tabloyu taklit ediyordu.
+ * Suspense sınırı genişlik, hareketler, tahvil/VIX ve bileşen tablosunu kapsar.
+ * Önceki yedek yalnızca tabloyu taklit ediyordu.
  * Ölçüldü: sekme değiştiren okuyucunun altında sayfa 7301 pikselden 3183'e
  * çöküyor, yarım saniye sonra geri açılıyordu. Yalnızca tablo taklit
  * edilince çöküş 1237 piksele indi; eksik kalan 890 piksel tam olarak o iki
@@ -1438,13 +1443,21 @@ function DetailSkeleton({ rows }: { rows: number }) {
     <>
       {/* Genişlik şeridi */}
       <Panel className={styles.breadth}>
-        <div className="flex h-10 items-center gap-3 border-b border-line px-4">
-          <Skeleton className="h-3 w-24" /><Skeleton className="h-5 w-16" />
+        <div className={styles.breadthOverview}>
+          <div className={styles.breadthIdentity}>
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="my-3 h-8 w-40" />
+            <Skeleton className="h-5 w-44" />
+            <Skeleton className="mt-3 h-6 w-32" />
+          </div>
+          <div className={styles.breadthVisual}>
+            <div className={styles.breadthRatio}><Skeleton className="h-3 w-28" /><Skeleton className="h-8 w-16" /></div>
+            <Skeleton className="my-3.5 h-[9px] w-full" />
+            <div className={styles.breadthCounts}>{[0, 1, 2].map((key) => <Skeleton key={key} className="h-7 w-full" />)}</div>
+            <Skeleton className="mt-3 h-3 w-3/4" />
+          </div>
         </div>
-        <div className={styles.breadthSkeleton}>
-          <Skeleton className="h-3 w-24 shrink-0" />
-          <Skeleton className="h-2.5 flex-1" />
-        </div>
+        <div className={styles.breadthStamp}><Skeleton className="h-4 w-3/4" /></div>
       </Panel>
 
       {/* Artanlar / azalanlar — beşer satır */}
@@ -1464,7 +1477,6 @@ function DetailSkeleton({ rows }: { rows: number }) {
         ))}
       </div>
 
-      {/* Context indicators now follow the movers in the loaded layout. */}
       <div className={styles.macro}><Skeleton className={styles.yieldSkeleton} /><Skeleton className={styles.fearSkeleton} /></div>
 
       {/* Bileşen tablosu */}
