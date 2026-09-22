@@ -1,6 +1,5 @@
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { SpotlightCard } from "@/components/motion/PremiumMotion";
 import { LogoTile } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, verdictPillClass, type VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -21,7 +20,6 @@ import {
   directionText,
   formatEtDateCompact,
   formatPercent,
-  formatMoneyCompact,
   formatPercentPlain,
   formatPrice,
 } from "@/lib/utils";
@@ -118,9 +116,6 @@ export function TechnicalCard({
   quote,
   company,
   logoUrl,
-  marketCap,
-  currency,
-  sector,
   priceLabel,
   locale,
   t,
@@ -130,10 +125,6 @@ export function TechnicalCard({
   quote: Quote | null;
   company: string | null;
   logoUrl: string | null;
-  /** Kimlik balonu için — `getSymbolNames` bunları zaten döndürüyor. */
-  marketCap: number | null;
-  currency: string | null;
-  sector: string | null;
   /** Kotasyon varken kullanılacak etiket ("Şu An" ya da "Son Fiyat"). */
   priceLabel: string;
   locale: Locale;
@@ -188,63 +179,19 @@ export function TechnicalCard({
   }
 
   return (
-    <SpotlightCard className={styles.card}>
+    /* DÜZ KAP, `SpotlightCard` DEĞİL. Ortak spot kartı imleci izleyen bir
+       mavi ışıma boyuyordu (520 piksellik radyal degrade, hover'da opaklık
+       0,7; koyu temada belirgin, ölçüldü). Sahibinin "büyük kartlardaki
+       hover'ı kaldıralım" isteğinin yarısı buydu: kalkma ve gölge gitmişti
+       ama ışıma duruyordu. Hover artık yalnızca kenarlık tonu. Spot kartın
+       verdiği `isolation` CSS'te `.card` üzerinde; kaplama bağlantısının
+       (`.cardLink::after`, z-1) yerel yığını ona bağlı. */
+    <div className={styles.card}>
       <div className={styles.cardHead}>
-        {/* KİMLİK BALONU. Kartta şirketin yalnızca sembolü ve kısaltılmış adı
-            var; sektörü ve büyüklüğü öğrenmek için detaya gitmek gerekiyordu.
-            Balon hepsini aynı yerde veriyor ve VERİSİ ZATEN ELDE: sayfa
-            `getSymbolNames` çağırıyor, o sorgu piyasa değerini ve sektörü de
-            döndürüyor — yeni bir tur yok.
-
-            İmleç YA DA klavye açıyor (`:focus-within`, sembol bağlantısı
-            odaklanınca). Dokunmatikte hover yok; orada kartın kendisi zaten
-            detaya götürüyor ve aynı bilgiler orada tam hâliyle duruyor, yani
-            balon bir zenginleştirme, tek yol değil. */}
-        {/* BALONUN ÇAPASI SIFIR BOYUTLU VE BAĞLANTININ ATASI DEĞİL.
-            Balonu konumlandırmak için kimlik satırına `position:relative`
-            vermiştim ve kartı kaplayan bağlantı (`.cardLink::after`,
-            `inset:0`) o kutuya göre çözülmeye başladı: ölçüldü, 428x553
-            piksellik kartın tıklanabilir alanı 333x42 ye düştü — kartın
-            ortası ve dibi ölü bölgeye dönmüştü. Çapa artık ayrı bir
-            kardeş: kendi başına konumlanıyor ama bağlantıyı kapsamıyor,
-            yani kaplama yine kartın kendisine göre çözülüyor. */}
-        <span className={styles.identityAnchor} aria-hidden>
-          <span className={styles.identityCard}>
-            <span className={styles.identityTop}>
-              <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
-              <span className={styles.identityWho}>
-                <strong className="numeral">{row.symbol}</strong>
-                {company && <span>{company}</span>}
-              </span>
-              <span className={cn(styles.stance, verdictPillClass(verdict))}>
-                {verdictLabel(verdict, t)}
-              </span>
-            </span>
-            <span className={styles.identityFacts}>
-              {sector && (
-                <span>
-                  <i>{t.companies.sector}</i>
-                  <b>{sector}</b>
-                </span>
-              )}
-              <span>
-                <i>{t.market.marketCap}</i>
-                <b className="numeral">{formatMoneyCompact(marketCap, locale, currency)}</b>
-              </span>
-              <span>
-                <i>{quote ? priceLabel : t.technical.atAnalysis}</i>
-                <b className="numeral">
-                  {formatPrice(price, locale, { currency: true })}
-                  {changePct !== null && (
-                    <em className={cn(directionText(directionOf(changePct)))}>
-                      {formatPercent(changePct, locale)}
-                    </em>
-                  )}
-                </b>
-              </span>
-            </span>
-          </span>
-        </span>
+        {/* Kimlik balonu 22 Eylül'de dağılım logolarına taşındı: kart
+            kimliği zaten gösteriyor, balon aynı bilgiyi ikinci kez veriyordu
+            ve kaplama bağlantısıyla çakışma riski taşıyordu. Bkz.
+            `CompanyBalloon`. */}
         <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
         <div className={styles.cardName}>
           {/* h3: kartlar sayfanın "Hisse Planları" bölüm başlığının altında. */}
@@ -331,6 +278,6 @@ export function TechnicalCard({
           <ArrowUpRight size={13} weight="bold" />
         </span>
       </div>
-    </SpotlightCard>
+    </div>
   );
 }

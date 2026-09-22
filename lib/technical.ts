@@ -5,6 +5,7 @@ import {
   addEtDays,
   etParts,
   getMarketStatus,
+  isSessionTrade,
   todayEt,
   type MarketHoliday,
   type MarketStatus,
@@ -579,6 +580,40 @@ export function newestEdition(
 /** Detay sayfasının adresi — küçük harf, `analysisHref` ile aynı gerekçe. */
 export function technicalHref(symbol: string): string {
   return `/teknik/${symbol.toLowerCase()}`;
+}
+
+/**
+ * Canlı fiyatın etiketi — "Şu An" mı, "Son Fiyat" mı. Kotasyon yoksa null:
+ * çağıran fotoğraftaki fiyata ve "Analiz Anında" etiketine düşer.
+ *
+ * TEK YERDE, ÇÜNKÜ AYNI FİYAT İKİ YERDE DURUYOR. /teknik kartı ve dağılım
+ * logolarının balonu aynı kotasyonu yazıyor; kural iki kopyada ayrı
+ * yaşasaydı bir gün aynı sayının birinde "Şu An", ötekinde "Son Fiyat"
+ * yazardı. Ana sayfa paneli de aynı fonksiyonu soruyor.
+ *
+ * "Şu An" yalnızca ana seans açık ve kotasyon tazeyken. Seans dışında
+ * son işlem ya dünkü kapanış ya uzatılmış seansın fiyatı; ikisine de
+ * "şu an" demek sayıyı olduğundan taze gösterir.
+ *
+ * "ŞU AN" SEMBOL BAŞINA KANITLANIYOR. Paketin tazeliği sembollerin EN
+ * YENİSİYLE ölçülüyor (`packCurrent` → `newestTrade`, lib/providers):
+ * on dört sembolü taze, biri dünden kalma bir paket `stale:false` dönüyor
+ * ve o bir kartın fiyatı da "Şu An" diye basılıyordu. Veri dürüstlüğü
+ * kuralı bunu adıyla yasaklıyor: bir yüzde hangi seansı anlattığını
+ * KANITLAMALI. Paket canlı olsa bile sembolün kendi işlemi seans gününe
+ * ait değilse etiket "Son Fiyat"a düşüyor — ana sayfanın hareket paneli
+ * aynı soruyu yıllardır sembol başına soruyor.
+ */
+export function livePriceLabel(
+  quote: Quote | null | undefined,
+  pack: { ok: boolean; stale?: boolean },
+  status: MarketStatus,
+  t: Dictionary,
+): string | null {
+  if (!quote) return null;
+  const live =
+    status.session === "regular" && pack.ok && !pack.stale && isSessionTrade(quote.tradedAt, status);
+  return live ? t.technical.now : t.market.lastPrice;
 }
 
 export function slotLabel(slot: string, t: Dictionary): string {

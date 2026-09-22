@@ -17,23 +17,33 @@ function split(targetMs: number, nowMs: number) {
 
 /**
  * Geri sayım kahramanın ana okuması; saniye her zaman görünür.
- * Başlangıçta dört sabit sütundu. Artık tam gün kalmadığında gün sütunu
- * ve kendi ayıracı hiç basılmaz; kalan üç birim alanı birlikte kullanır.
+ * Başlangıçta dört sabit sütundu. Artık tam gün kalmadığında gün grubu hiç
+ * basılmaz; kalan üç birim satırı birlikte kullanır.
  * Önceki üç birimli görünüm gün varken saniyeyi gizlediği için dakikada bir
  * yenileniyordu. Saniye artık görünür; tek saniyelik zamanlayıcı yalnızca
  * bu küçük yaprağı yeniler ve gizli sekmede durur. Seansın hedefini yine
  * market-hours belirler, sınırı geçince SessionRefresh yeni hedefi alır.
+ *
+ * KUTU YOK, İKİ NOKTA YOK (22 Eylül). Üç kutulu görünüm bir form alanı gibi
+ * okunuyordu ve rakamı 59 punto ile sınırlıyordu. Şimdi tek bir rakam
+ * satırı: dev rakamın yanında küçük harfli birim ("02 sa 11 dk 29 sn") —
+ * CLAUDE.md'deki bilinçli tipografik karar. Birim `aria-hidden`; ekran
+ * okuyucu için tam ad (`units`) görünmez bir metin olarak grubun içinde.
  */
 export function Countdown({
   targetIso,
   initialNowMs,
   units,
+  unitsShort,
   label,
   className,
 }: {
   targetIso: string;
   initialNowMs: number;
+  /** Ekran okuyucunun duyduğu tam ad: "Saat". */
   units: Units;
+  /** Rakamın yanında görünen kısa birim: "sa". */
+  unitsShort: Units;
   label: string;
   className?: string;
 }) {
@@ -63,6 +73,7 @@ export function Countdown({
 
   const values = split(targetMs, nowMs);
   const names = [units.d, units.h, units.m, units.s];
+  const shorts = [unitsShort.d, unitsShort.h, unitsShort.m, unitsShort.s];
 
   return (
     <div
@@ -73,14 +84,15 @@ export function Countdown({
       className={[styles.countdown, className].filter(Boolean).join(" ")}
     >
       {values.map((value, index) => index === 0 && value === 0 ? null : (
-        <div className={styles.unit} key={names[index]}>
+        <span className={styles.group} key={names[index]}>
           <span className={styles.numberWindow}>
             <span key={value} className={styles.number}>
               {String(value).padStart(2, "0")}
             </span>
           </span>
-          <span className={styles.label}>{names[index]}</span>
-        </div>
+          <span className={styles.suffix} aria-hidden="true">{shorts[index]}</span>
+          <span className="sr-only">{names[index]}</span>
+        </span>
       ))}
     </div>
   );

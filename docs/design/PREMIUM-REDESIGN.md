@@ -627,6 +627,9 @@ kimlik satırına `position:relative` vermiştim ve kartı kaplayan bağlantı
 428×553 piksellik kartın tıklanabilir alanı **333×42 piksele** düştü — kartın
 ortası ve dibi ölü bölgeye dönmüştü. Balonun çapası artık sıfır boyutlu ve
 bağlantının atası değil; kaplama yine kartın kendisine göre çözülüyor.
+22 Eylül'de kart balonu tümüyle kaldırıldı ve dağılım logolarına taşındı
+(`CompanyBalloon`): kart kimliği zaten gösteriyordu, balon aynı bilgiyi
+ikinci kez veriyordu.
 
 **Takip kapağındaki "Yayımlanmış Analiz" bir toplam değildi**, liste tavanıydı
 (`getAnalyses(..., { limit: 20 })`), yani yirmide donup kalacaktı. Gerçek
@@ -675,6 +678,6 @@ CLAUDE.md'nin `cache()` listesi ve `docs/ROUTEMAP.md`nin bayat rutin künyesi.
 Doğrulama: 19 rota × TR/EN × açık/koyu × 320-1440px = **380 üretim yerleşimi**,
 sıfır yatay taşma, sıfır kırpılma, sıfır tarayıcı hatası. **16 etkileşim
 kontrolü** (dizin araması ve sıralamada korunması, mercek çipi, takvim
-görünümü, karşılaştırmada grafik sırası, teknik damga, kimlik balonu, kartın
+görünümü, karşılaştırmada grafik sırası, teknik damga, kimlik balonu (22 Eylül'den beri dağılım logolarında), kartın
 kaplayan bağlantısı, harita hizası ve eksen uçları, seviye notlarının yeri,
 masthead işareti) başarılı. Build, lint ve build sonrası typecheck temiz.

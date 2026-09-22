@@ -3,12 +3,17 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import visuals from "@/components/motion/DirectoryVisuals.module.css";
 import { LogoTile } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, verdictTextClass, type VerdictKey } from "@/lib/analysis";
+import { companySector } from "@/lib/company-sector";
 import type { SymbolMeta } from "@/lib/data";
-import type { Dictionary } from "@/lib/i18n";
-import { stanceChangeLabel, technicalHref } from "@/lib/technical";
+import type { Dictionary, Locale } from "@/lib/i18n";
+import type { MarketStatus } from "@/lib/market-hours";
+import type { ProviderResult, Quote } from "@/lib/providers/types";
+import { editionTime, livePriceLabel, slotLabel, stanceChangeLabel, technicalHref } from "@/lib/technical";
 import type { TechnicalBoardEntry } from "@/lib/technical-data";
-import { cn } from "@/lib/utils";
+import { cn, formatEtDateCompact } from "@/lib/utils";
+import { CompanyBalloon } from "./CompanyBalloon";
 import { changeToneClass } from "./TechnicalCard";
+import { PulseCompanyLink } from "./PulseCompanyLink";
 import styles from "./Technical.module.css";
 
 const VERDICTS: readonly VerdictKey[] = ["buy", "hold", "sell"];
@@ -34,6 +39,8 @@ export function TechnicalPulse({
   pending = [],
   meta,
   t,
+  locale,
+  quotes,
   variant = "directory",
 }: {
   board: readonly TechnicalBoardEntry[];
@@ -50,6 +57,16 @@ export function TechnicalPulse({
   pending?: readonly string[];
   meta: Record<string, SymbolMeta>;
   t: Dictionary;
+  locale: Locale;
+  /**
+   * Balonun canlı fiyatı — SAYFANIN KENDİ kotasyon paketi. Yeni bir tur
+   * açılmıyor: /teknik kartların paketini, ana sayfa hareket panelinin
+   * paketini veriyor. Pakette olmayan sembol (ya da paket düşmüşse hepsi)
+   * fotoğraftaki fiyata ve "Analiz Anında" etiketine düşüyor. Etiket
+   * kartla aynı fonksiyondan (`livePriceLabel`): paket bayatsa ya da
+   * sembolün işlemi seans gününe ait değilse "Şu An" asla yazılmıyor.
+   */
+  quotes?: { pack: ProviderResult<Record<string, Quote>>; status: MarketStatus };
   /** `directory`: liste sayfasının başlık görseli — kendi başlığı var ve
       görüş etiketi süzgecin radyosuna bağlı. `panel`: ana sayfa paneli —
       başlığı panelin kendisi taşıyor, süzgeç yok, etiket düz metin. */
@@ -79,6 +96,38 @@ export function TechnicalPulse({
       ? [{ symbol: row.symbol, verdict, label: verdictLabel(verdict, t), full: changed }]
       : [];
   });
+
+  /* Balonun ortak kurgusu — yayımlanmış ve bekleyen logolar aynı balonu
+     açıyor, yalnızca hap, yedek fiyat ve alt künye ayrı. Canlı fiyat
+     varsa o (etiketi `livePriceLabel`dan: "Şu An" / "Son Fiyat"), yoksa
+     fotoğraftaki fiyat "Analiz Anında" etiketiyle. */
+  const balloon = (
+    symbol: string,
+    verdict: VerdictKey | "pending",
+    fallback: { price: number | null; changePct: number | null; foot: string },
+  ) => {
+    const company = meta[symbol];
+    const pack = quotes?.pack;
+    const quote = pack?.ok ? pack.data[symbol] : undefined;
+    const liveLabel = quotes && quote ? livePriceLabel(quote, quotes.pack, quotes.status, t) : null;
+    return (
+      <CompanyBalloon
+        symbol={symbol}
+        name={company?.name ?? null}
+        logoUrl={company?.logoUrl ?? null}
+        verdict={verdict}
+        sector={companySector(symbol, company?.industry, locale)}
+        marketCap={company?.marketCap ?? null}
+        currency={company?.currency ?? null}
+        price={quote && liveLabel ? quote.price : fallback.price}
+        changePct={quote && liveLabel ? quote.changePct : fallback.changePct}
+        priceLabel={liveLabel ?? t.technical.atAnalysis}
+        foot={fallback.foot}
+        locale={locale}
+        t={t}
+      />
+    );
+  };
 
   return (
     <section
@@ -142,19 +191,36 @@ export function TechnicalPulse({
                   <b>{group.rows.length}</b>
                 </span>
               )}
+              {/* BALON BURADA, KARTTA DEĞİL. Kimlik balonu 22 Eylül'e kadar
+                  /teknik kartlarının başlığında açılıyordu; kart kimliği zaten
+                  gösteriyor ve balon aynı bilgiyi ikinci kez veriyordu. Logo
+                  ise yalnızca bir resim — okuyucu dağılımda bir hisseyi
+                  ararken adı, sektörü ve fiyatı burada istiyor.
+
+                  FİYAT SAYFANIN PAKETİNDEN (`quotes`). Balon bir süre
+                  fotoğraftaki fiyatı yazıyordu: /teknik 1440'ta balon
+                  "Analiz Anında 1.081,31 $", hemen altındaki MU kartı
+                  "Şu An 1.081,58 $" diyordu — aynı ekranda aynı hissenin iki
+                  fiyatı, iki kaynaktan. */}
               <div className={styles.pulseLogos} data-motion-stagger>
-                {group.rows.map(({ row }) => (
-                  <Link
-                    key={row.symbol}
-                    href={technicalHref(row.symbol)}
-                    prefetch={false}
-                    className={styles.pulseLogo}
-                    title={`${row.symbol} · ${meta[row.symbol]?.name ?? row.symbol}`}
-                  >
-                    <LogoTile symbol={row.symbol} logoUrl={meta[row.symbol]?.logoUrl ?? null} size="sm" />
-                    <span className="sr-only">{row.symbol}</span>
-                  </Link>
-                ))}
+                {group.rows.map(({ row }) => {
+                  const company = meta[row.symbol];
+                  return (
+                    <PulseCompanyLink
+                      key={row.symbol}
+                      href={technicalHref(row.symbol)}
+                      className={styles.pulseLogo}
+                      label={`${row.symbol} · ${company?.name ?? row.symbol} · ${verdictLabel(group.verdict, t)}`}
+                      summary={balloon(row.symbol, group.verdict, {
+                        price: row.snapshot.price,
+                        changePct: row.snapshot.changePct,
+                        foot: `${formatEtDateCompact(row.sessionDate, locale)} · ${slotLabel(row.slot, t)} · ${editionTime(row.sessionDate, row.slot, locale)}`,
+                      })}
+                    >
+                      <LogoTile symbol={row.symbol} logoUrl={company?.logoUrl ?? null} size="sm" />
+                    </PulseCompanyLink>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -165,17 +231,25 @@ export function TechnicalPulse({
               <b>{pending.length}</b>
             </span>
             <div className={styles.pulseLogos} data-motion-stagger>
+              {/* Bekleyenin balonu da aynı: kimlik, sektör, varsa canlı fiyat.
+                  Görüş hapı nötr ("Bekliyor"), damga yerine bir cümle —
+                  yayını olmayan bir hisse için tarih uydurulmuyor. Yerel
+                  `title=` kalktı: özel balonun yanında tarayıcının kendi
+                  ipucu da açılıp ikisi üst üste biniyordu. */}
               {pending.map((symbol) => (
-                <Link
+                <PulseCompanyLink
                   key={symbol}
                   href={technicalHref(symbol)}
-                  prefetch={false}
                   className={cn(styles.pulseLogo, styles.pulseLogoPending)}
-                  title={`${symbol} · ${t.technical.pendingLabel}`}
+                  label={`${symbol} · ${meta[symbol]?.name ?? symbol} · ${t.technical.pendingLabel}`}
+                  summary={balloon(symbol, "pending", {
+                    price: null,
+                    changePct: null,
+                    foot: t.technical.pulseAwaiting,
+                  })}
                 >
                   <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl ?? null} size="sm" />
-                  <span className="sr-only">{symbol}</span>
-                </Link>
+                </PulseCompanyLink>
               ))}
             </div>
           </div>
@@ -191,10 +265,11 @@ export function TechnicalPulse({
               href={technicalHref(change.symbol)}
               prefetch={false}
               className={styles.pulseChange}
-              /* Tam cümle ("Tuta Döndü") çipten kalktı ama kaybolmadı:
-                 imleç künyesinde ve ekran okuyucuya duruyor. */
-              title={`${change.symbol} · ${change.full}`}
             >
+              {/* Tam cümle ("Tuta Döndü") çipten kalktı ama kaybolmadı:
+                  ekran okuyucuya duruyor. Yerel `title=` ipucu 22 Eylül'de
+                  kalktı — dağılımın özel balonuyla aynı ekranda ikinci,
+                  biçimsiz bir ipucu dili açıyordu. */}
               <LogoTile symbol={change.symbol} logoUrl={meta[change.symbol]?.logoUrl ?? null} size="xs" />
               {change.symbol}
               <span className={changeToneClass(change.verdict)}>{change.label}</span>

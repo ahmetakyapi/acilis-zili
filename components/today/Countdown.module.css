@@ -1,47 +1,40 @@
-.countdown {
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  width:100%;
-  max-width:480px;
-  gap:clamp(12px,1.8vw,24px);
-}
-.countdown[data-days="false"] { grid-template-columns:repeat(3,minmax(0,1fr)); max-width:400px; }
-.unit { position:relative; min-width:0; padding:8px 0 10px; border-bottom:1px solid var(--line-strong); }
-.unit:last-child { border-color:var(--primary-faint); background:linear-gradient(0deg,var(--primary-tint),transparent 70%); }
-.unit:not(:last-child)::after { position:absolute; top:24%; right:clamp(-16px,-1vw,-9px); content:":"; font-size:clamp(22px,2.5vw,34px); font-weight:400; line-height:1; color:var(--line-strong); }
-.numberWindow { display:block; overflow:hidden; }
-.number { display:block; color:var(--text-strong); font-size:clamp(42px,4.7vw,64px); font-weight:550; font-variant-numeric:tabular-nums; line-height:1.08; letter-spacing:-.055em; animation:digit-arrive 360ms cubic-bezier(.22,1,.36,1) both; }
-.unit:last-child .number { color:var(--primary); }
-.label { display:block; margin-top:9px; color:var(--text-muted); font-size:11px; font-weight:550; }
+/* GERİ SAYIM TEK BİR RAKAM SATIRI (22 Eylül).
+
+   Dosya üst üste binmiş üç katman taşıyordu (alt çizgi, mobil, kutu) ve
+   kazanan kutulu katmandı: üç kart, aralarında iki nokta, gradyan dolgu.
+   Ölçülen sonuç: 1440'ta rakam 59 punto, sayaç 400 piksellik `max-width`
+   ile 584 piksellik kolonun yalnızca 400'ünü kullanıyordu; 768'de 670'in
+   400'ünü. Kutular sayıyı bir form alanına çeviriyor, boşluk da sayıya
+   değil kutunun kendisine gidiyordu.
+
+   Şimdi: kutu yok, iki nokta yok. Punto KOLONA bağlı (`cqi`, kap adı
+   `hero-copy`, TodayExperience) — tavanın altında kolonun ~%85'ini
+   dolduruyor (1024: 358 / 422); 1440'ta tavan devrede ve oran %74
+   (434 / 584). Tavan 92, gün varken 80: sahibinin isteği
+   "biraz büyütelim"di ve 104'lük prototip (+%76) fazlaydı. Ölçüm (TR):
+   1440 → 92 (üst sınır), 1024 → 76, 390 → 57, 320 → 48 (taban).
+
+   Rakamlar tabular: sayı saniyede bir değişiyor ve orantılı rakamla "11"
+   0,66em, "00" 1,18em — satır her tikte zıplardı. İki nokta tabular
+   dizide 0,58em'lik bir sütun yiyordu; birimler ve ekran okuyucu adları
+   zaten tabular dizinin DIŞINDA (globals.css "Sayısal okumalar"). */
+.countdown { display:flex; flex-wrap:nowrap; align-items:baseline; gap:0 .2em; font-size:clamp(48px,18cqi,92px); font-weight:600; line-height:.86; letter-spacing:-.055em; color:var(--text-strong); }
+.countdown[data-days="true"] { font-size:clamp(38px,14cqi,80px); }
+.group { display:inline-flex; align-items:baseline; gap:.06em; min-width:0; }
+/* Satır yüksekliği .86 yazı kutusunun altında; pencere dikeyde KIRPMIYOR
+   (`overflow-clip-margin`), yalnızca varış hareketinin %12'lik kaymasını
+   maskeliyor. 0/2/3/8 mürekkebi ekran görüntüsünde tam (ölçüldü). */
+.numberWindow { display:block; overflow:clip; overflow-clip-margin:.08em; padding-block:.04em; font-variant-numeric:tabular-nums; }
+.number { display:block; animation:digit-arrive 360ms var(--ease-brand) both; }
+/* Tek canlı vurgu saniye: değişen tek grup o. */
+.group:last-child .number { color:var(--primary); }
+.suffix { font-size:max(12px,.19em); font-weight:600; letter-spacing:0; color:var(--text-muted); }
+.group:last-child .suffix { color:var(--primary-ink); }
 @keyframes digit-arrive { from { opacity:.35; transform:translateY(12%); } to { opacity:1; transform:translateY(0); } }
-@media(max-width:767px) {
- .countdown { gap:14px; max-width:540px; }
- .number { font-size:clamp(39px,10vw,65px); }
- .countdown[data-days="false"] .number { font-size:clamp(48px,13vw,74px); }
- .unit { padding:10px 0 12px; }
- .unit:not(:last-child)::after { right:-10px; font-size:24px; }
- .label { margin-top:6px; font-size:10px; }
-}
-@media(prefers-reduced-motion:reduce) { .number { animation:none; } }
-
-@media(max-width:767px) {
- .unit { padding:7px 0 9px; }
- .number { font-size:clamp(34px,9vw,52px); }
- .countdown[data-days="false"] .number { font-size:clamp(42px,11vw,58px); }
-}
-
-/* The clock face is the product's signature: fine separators, quiet blue
-   depth, and the existing keyed digit transition. No extra moving ornament. */
-.unit { padding:10px 12px 12px; border:1px solid var(--line-soft); border-radius:10px; background:linear-gradient(145deg,var(--premium-highlight),var(--primary-tint)); }
-.unit:last-child { border-color:var(--primary-faint); background:linear-gradient(150deg,var(--primary-wash),var(--primary-tint)); }
-.unit:not(:last-child)::after { right:clamp(-17px,-1vw,-10px); top:26%; color:var(--text-muted); opacity:.45; }
-.number { font-size:clamp(40px,4.3vw,59px); }
-.label { font-size:11px; margin-top:8px; }
-@media(max-width:767px) {
- .unit { padding:8px 7px 10px; border-radius:8px; }
- .countdown { gap:12px; }
- .number { font-size:clamp(30px,8vw,43px); }
- .countdown[data-days="false"] .number { font-size:clamp(38px,10vw,52px); }
- .unit:not(:last-child)::after { right:-9px; font-size:20px; }
- .label { margin-top:5px; font-size:11px; }
+@media (prefers-reduced-motion:reduce) { .number { animation:none; } }
+/* Kap sorgusu desteklemeyen tarayıcıda `cqi` küçük görünüme çözülür ve
+   rakam şişer; orada görünüm genişliğine bağlı bir yedek. */
+@supports not (font-size:1cqi) {
+  .countdown { font-size:clamp(48px,6vw,88px); }
+  .countdown[data-days="true"] { font-size:clamp(38px,4.8vw,76px); }
 }

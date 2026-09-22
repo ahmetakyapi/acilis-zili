@@ -54,7 +54,8 @@ import {
   getQuotes,
 } from "@/lib/providers";
 import { COMPLIANCE_THRESHOLD, screenCompliance } from "@/lib/compliance";
-import { industryLabel, sectorLabel } from "@/lib/sectors";
+import { industryLabel } from "@/lib/sectors";
+import { companySector } from "@/lib/company-sector";
 import { indexMemberOf, peersOf } from "@/db/seed/indices";
 import { fundMetaOf, INDEX_STRIP } from "@/db/seed/symbols";
 import { subIndustryName } from "@/db/seed/sub-industries";
@@ -605,11 +606,10 @@ async function StockHeader({
   ]);
 
   const profile = profileResult.ok ? profileResult.data : null;
-  /* Künyedeki sektör, profil panelindekiyle AYNI tercih sırasından geliyor:
-     GICS varsa o, yoksa sağlayıcının serbest metinli alanı. */
-  const kunyeSektor =
-    sectorLabel(indexMemberOf(symbol)?.sector, locale) ??
-    industryLabel(profile?.industry, locale);
+  /* Künyedeki sektör, profil panelindekiyle ve /teknik dağılım balonuyla
+     AYNI tercih sırasından geliyor (`companySector`): GICS varsa o, yoksa
+     sağlayıcının serbest metinli alanı. */
+  const kunyeSektor = companySector(symbol, profile?.industry, locale);
   // Fonlarda sağlayıcı profili boş döner — ad ve künye yerel kayıttan gelir.
   const fund = fundMetaOf(symbol);
 

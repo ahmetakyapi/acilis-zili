@@ -130,3 +130,11 @@
  .earningsHeader > .heroVisual > * { flex:1; }
 }
 .activityAxis { display:flex; justify-content:space-between; gap:12px; margin-top:4px; font-size:10px; color:var(--text-muted); }
+
+/* 22 September: the sticky heading's translucent sunken fill let scrolling
+   company names show THROUGH it (confirmed at scrollY 450/600/800). Paint
+   an opaque base beneath the tint; raising z-index alone cannot fix this. */
+.tablePanel table thead,
+.tablePanel table thead th {
+ background:linear-gradient(var(--surface-sunken),var(--surface-sunken)),var(--panel-fixed);
+}

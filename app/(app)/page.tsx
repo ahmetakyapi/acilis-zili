@@ -3,13 +3,14 @@ import { cache, Suspense } from "react";
 import { MotionExperience, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, CalendarBlank, Waveform } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, ArrowUpRight, Waveform } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { NewsImage } from "@/components/news/NewsImage";
 import { BriefBody } from "@/components/today/BriefBody";
 import { BriefSwitch, type BriefView } from "@/components/today/BriefSwitch";
 import { Countdown } from "@/components/today/Countdown";
+import { BellLedger } from "@/components/today/BellLedger";
 import { DayFlowLoader } from "@/components/today/DayFlow";
 import { loadDayFlow } from "@/lib/day-flow-data";
 import { SessionRefresh } from "@/components/today/SessionRefresh";
@@ -60,7 +61,7 @@ import {
 } from "@/lib/market-hours";
 import {
   displayZone,
-  formatInZone,
+  nextZoneMidnight,
   timePair,
   zoneTag,
 } from "@/lib/session-clock";
@@ -163,8 +164,13 @@ export default async function TodayPage() {
   const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
     timeZone: readerZone, day: "numeric", month: "long", weekday: "long",
   });
-  const targetDate = dateFormat.format(countdownTarget);
-  const targetTime = formatInZone(countdownTarget, readerZone);
+  /* Tazeleme anı: seansın bir sonraki sınırı ile OKUYUCUNUN gece yarısının
+     erkeni. Üst şeritteki tarih ve zil künyesinin "Bugün / Yarın"ı okuyucunun
+     gününe bağlı; yalnızca ET sınırında tazelenince TR okuyucu 00:00 ile
+     03:00 (ya da 11:00) arasında dünün tarihini görüyordu. */
+  const readerMidnight = nextZoneMidnight(nowMs, readerZone);
+  const refreshAt =
+    readerMidnight < status.nextTransition ? readerMidnight : status.nextTransition;
 
   return (
     /* IZGARA ÜÇ PARÇALI: ana kolon, yan kolon ve altlarında tam genişlik
@@ -195,8 +201,17 @@ export default async function TodayPage() {
           doldurulur"). Ölçüldü. */}
       {/* 1440px ölçümünde eski ana okuma 66px pazarlama başlığıydı;
           geri sayım 45px, NY kadranı 288px'ti. Kullanıcının önceliği zil:
-          saat kadranı kaldırıldı, süre ana okuma oldu. Tarih ve hedef saat
-          displayZone üzerinden TR'de İstanbul'a çevrilir, sabit fark yok. */}
+          saat kadranı kaldırıldı, süre ana okuma oldu.
+
+          22 EYLÜL: KUTULAR VE TARİH SATIRI GİTTİ. Geri sayım üç kutuda 59
+          punto duruyordu, kopya kolonu ortalandığı için rozetin üstünde 45,
+          tarih satırının altında 46 piksellik iki ölü bant vardı (1440).
+          Şimdi tek bir rakam satırı (92 punto, kolona ölçekli) ve altında
+          iki zilli künye (`BellLedger`): hangi zile sayıldığı, TR ve NY
+          saati, sayaç sıfırlanınca sıradaki zil. Rozet sağdaki başlıkla,
+          künyenin son satırı veri damgasıyla aynı hatta — ölçümler
+          TodayExperience.module.css → `.heroCopy`. Saatler displayZone
+          üzerinden yazılır, sabit fark yok. */}
       {/* 7 Eylül tercihi: dekoratif zilin yerine endeksler taşındı.
           Önceki kahraman 1440px'te 679px, 390px'te 848px yüksekliğindeydi.
           Geri sayım ve 2×2 piyasa paneli masaüstünde yan yana; mobilde
@@ -220,22 +235,20 @@ export default async function TodayPage() {
           <div className={styles.heroCopy} data-motion-intro>
             <div className={styles.heroSession} data-trading={trading}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
             <h1 className={styles.headline}>{countdownLabel}</h1>
-            <Countdown
-              targetIso={countdownTarget.toISOString()}
-              initialNowMs={nowMs}
-              units={{ d: t.today.countdownDays, h: t.today.countdownHours, m: t.today.countdownMinutes, s: t.today.countdownSeconds }}
-              label={countdownLabel}
-              className={styles.countdown}
-            />
-            <div className={styles.targetDate}>
-              <CalendarBlank size={16} aria-hidden="true" />
-              <time dateTime={countdownTarget.toISOString()}>
-                <span>{targetDate}</span>
-                <strong>{targetTime} <small>{zoneTag(locale).primary}</small></strong>
-              </time>
+            {/* Rakam satırı ile zil künyesi TEK blok ve kolonun DİBİNE
+                oturuyor (`align-self:end`); rozet ve başlık tepede. Ölçüm ve
+                gerekçe TodayExperience.module.css → `.heroCopy`. */}
+            <div className={styles.countdownBlock}>
+              <Countdown
+                targetIso={countdownTarget.toISOString()}
+                initialNowMs={nowMs}
+                units={{ d: t.today.countdownDays, h: t.today.countdownHours, m: t.today.countdownMinutes, s: t.today.countdownSeconds }}
+                unitsShort={{ d: t.today.unitD, h: t.today.unitH, m: t.today.unitM, s: t.today.unitS }}
+                label={countdownLabel}
+                className={styles.countdown}
+              />
+              <BellLedger locale={locale} t={t} status={status} nowMs={nowMs} />
             </div>
-            {/* The target date/time is the useful next step. Repeating a
-                promotional sentence below it added 48px on a phone. */}
           </div>
           <section className={styles.indexDeck} aria-labelledby="hero-indices">
             <div className={styles.indexHeading}><h2 id="hero-indices">{t.today.indices}</h2><span>{t.today.experienceIndexNote}</span></div>
@@ -295,8 +308,10 @@ export default async function TodayPage() {
     <div className={styles.dashboard}>
       {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer
           kaplamaz. Geri sayım sıfıra inince orada kilitleniyor ve yeni güne
-          ancak elle yenilemeyle geçiliyordu; gerekçenin tamamı bileşende. */}
-      <SessionRefresh atIso={status.nextTransition.toISOString()} />
+          ancak elle yenilemeyle geçiliyordu; gerekçenin tamamı bileşende.
+          Hedef `refreshAt`: seans sınırı ile okuyucunun gece yarısının
+          erkeni (yukarıda, `nextZoneMidnight`). */}
+      <SessionRefresh atIso={refreshAt.toISOString()} />
 
       {/* ================= Ana kolon =================
           `justify-between` KALKTI ve bu bir hata düzeltmesi. İki kolon da
@@ -846,52 +861,66 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
            okuyan, tek sayıdan ibaret ölçüler ve ikisi de aynı FRED
            beslemesinden günlük geliyor. Bantlı tam göstergesi
            /piyasalar'da — eşikler oradan, tek yerden okunuyor. */}
+      {/* İKİ KAT, TEK SATIR DEĞİL. Etiket, değer, bant, tarih ve değişim
+          aynı esnek satırda ve beşi de `shrink-0` idi: 348 piksellik yan
+          kolonda içerik 349 piksel tutuyor, iç dolguyu tüketip kartın
+          kenarından kesiliyordu ("Puan" yarım okunuyordu); 320'de taşma 67
+          piksele çıkıyordu (ölçüldü, 22 Eylül). Artık faiz hücreleriyle
+          aynı kalıp: solda ad ve bant, sağda sayı ve altında değişimi. */}
       {vixLevel !== null && vixTone && (
-        <div className="flex items-center gap-3 border-t border-line px-4 py-3">
-          <span className="plate shrink-0 text-nano tracking-[0.08em]">
-            {t.markets.fearTitle}
-          </span>
-          <span className="tote ml-auto text-lead leading-none">
-            {formatPrice(vixLevel, locale, { digits: 2 })}
-          </span>
-          <span
-            className={cn(
-              "shrink-0 rounded-full px-2 py-0.5 text-nano font-semibold",
-              vixTone.band.tone === "up" && "bg-up-wash text-up",
-              vixTone.band.tone === "flat" && "bg-surface-elevated text-body",
-              vixTone.band.tone === "warn" && "bg-brass-wash text-brass-ink",
-              vixTone.band.tone === "down" && "bg-down-wash text-down",
-            )}
-          >
-            {vixTone.label}
-          </span>
-          {/* Tarih yalnızca faiz künyesinden FARKLIYSA yazılıyor: aynı
-              günse üstteki künye zaten söylüyor ve tekrar etmek satırı
-              gereksiz kalabalıklaştırır. */}
-          {vixDate && vixDate !== observedAt && (
-            <span className="numeral shrink-0 text-nano text-muted">
-              {formatEtDateShort(vixDate, locale)}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-t border-line px-4 py-3">
+          <div className="flex min-w-0 flex-col items-start gap-1.5">
+            <span className="plate text-nano tracking-[0.08em]">
+              {t.markets.fearTitle}
             </span>
-          )}
-          {vixDelta !== null && vixDelta !== 0 && (
             <span
               className={cn(
-                "numeral shrink-0 text-tiny font-semibold",
-                // Yükselen VIX gerginlik demek — yön rengi hisse
-                // sözlüğünün tersine kurulu.
-                vixDelta > 0 ? "text-down" : "text-up",
+                "rounded-full px-2 py-0.5 text-nano font-semibold",
+                vixTone.band.tone === "up" && "bg-up-wash text-up",
+                vixTone.band.tone === "flat" && "bg-surface-elevated text-body",
+                vixTone.band.tone === "warn" && "bg-brass-wash text-brass-ink",
+                vixTone.band.tone === "down" && "bg-down-wash text-down",
               )}
             >
-              <span aria-hidden>{vixDelta > 0 ? "▲" : "▼"}</span>{" "}
-              {formatPrice(Math.abs(vixDelta), locale, { digits: 2 })}{" "}
-              {/* Birim ŞART: hemen üstteki faiz satırları değişimi "0,04 puan"
-                  diye yazıyor, VIX ise çıplak "1,12" yazıyordu. Yan yana
-                  duran iki ölçüden biri birimli biri birimsiz olunca okuyucu
-                  ikincisini yüzde sanıyor — VIX'te 1,12 puan ile %1,12 çok
-                  farklı iki haber. */}
-              {t.markets.point}
+              {vixTone.label}
             </span>
-          )}
+          </div>
+          <div className="flex flex-col items-end gap-1 text-right">
+            <span className="tote text-lead leading-none">
+              {formatPrice(vixLevel, locale, { digits: 2 })}
+            </span>
+            {((vixDate && vixDate !== observedAt) || (vixDelta !== null && vixDelta !== 0)) && (
+              <span className="flex flex-wrap items-baseline justify-end gap-x-2">
+                {/* Tarih yalnızca faiz künyesinden FARKLIYSA yazılıyor: aynı
+                    günse üstteki künye zaten söylüyor ve tekrar etmek satırı
+                    gereksiz kalabalıklaştırır. */}
+                {vixDate && vixDate !== observedAt && (
+                  <span className="numeral text-nano text-muted">
+                    {formatEtDateShort(vixDate, locale)}
+                  </span>
+                )}
+                {vixDelta !== null && vixDelta !== 0 && (
+                  <span
+                    className={cn(
+                      "numeral text-tiny font-semibold",
+                      // Yükselen VIX gerginlik demek — yön rengi hisse
+                      // sözlüğünün tersine kurulu.
+                      vixDelta > 0 ? "text-down" : "text-up",
+                    )}
+                  >
+                    <span aria-hidden>{vixDelta > 0 ? "▲" : "▼"}</span>{" "}
+                    {formatPrice(Math.abs(vixDelta), locale, { digits: 2 })}{" "}
+                    {/* Birim ŞART: hemen üstteki faiz satırları değişimi "0,04 puan"
+                        diye yazıyor, VIX ise çıplak "1,12" yazıyordu. Yan yana
+                        duran iki ölçüden biri birimli biri birimsiz olunca okuyucu
+                        ikincisini yüzde sanıyor — VIX'te 1,12 puan ile %1,12 çok
+                        farklı iki haber. */}
+                    {t.markets.point}
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
         </div>
       )}
     </Panel>
@@ -2378,7 +2407,23 @@ async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) 
      bilemezdi. Künye `TECHNICAL_SYMBOLS`in tamamı için isteniyor — logolar
      bekleyen satırda da basılıyor. */
   const pending = pendingSymbols(board.map(({ row }) => row.symbol));
-  const meta = await getSymbolNames([...TECHNICAL_SYMBOLS]);
+  /* BALONUN CANLI FİYATI HAREKET PANELİNİN PAKETİNDEN. `indexSnapshot`
+     aynı istekte `DayMovers` tarafından zaten bekleniyor; `getQuotes`
+     istek içinde `cache()`li, anahtarı sıralı sembol dizesi ve `status`
+     de `cache()`li `getStatus`in aynı nesnesi — yani burada sağlayıcıya
+     yeni bir tur gitmiyor ve MU'nun yüzdesi iki panelde aynı sayı.
+     `getQuotes(TECHNICAL_SYMBOLS)` BİLEREK ÇAĞRILMIYOR: yeni bir anahtar,
+     yeni bir tur ve hareket paneliyle çelişebilecek ikinci bir kaynak
+     olurdu. Endekste olmayan semboller (BE, ONDS gibi) fotoğraftaki
+     fiyata ve "Analiz Anında" etiketine düşüyor.
+     BEDELİ BİR GECİKME BAĞI: panel artık büyük evren paketini bekliyor.
+     Ücretsiz olması `DayMovers`ın aynı istekte, aynı `status` nesnesiyle
+     çizilmesine bağlı; o panel kalkar ya da başka bir durum nesnesiyle
+     çağrılırsa bu satır büyük çekimi TEK BAŞINA başlatır. */
+  const [meta, snapshot] = await Promise.all([
+    getSymbolNames([...TECHNICAL_SYMBOLS]),
+    getStatus().then(async (status) => ({ status, pack: (await indexSnapshot(status)).result })),
+  ]);
   const latest = newestEdition(board);
   return (
     <Panel className="min-w-0">
@@ -2411,7 +2456,15 @@ async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) 
             </span>
           </p>
         )}
-        <TechnicalPulse board={board} pending={pending} meta={meta} t={t} variant="panel" />
+        <TechnicalPulse
+          locale={locale}
+          board={board}
+          pending={pending}
+          meta={meta}
+          quotes={snapshot}
+          t={t}
+          variant="panel"
+        />
       </div>
     </Panel>
   );

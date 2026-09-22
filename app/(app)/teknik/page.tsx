@@ -11,15 +11,14 @@ import { verdictLabel, verdictOf, type VerdictKey } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
-import { industryLabel, sectorLabel } from "@/lib/sectors";
-import { indexMemberOf } from "@/db/seed/indices";
 import { getQuotes } from "@/lib/providers";
-import { isSessionTrade, todayEt } from "@/lib/market-hours";
+import { todayEt } from "@/lib/market-hours";
 import { displayZone, formatInZone } from "@/lib/session-clock";
 import {
   TECHNICAL_SYMBOLS,
   editionClock,
   editionTime,
+  livePriceLabel,
   newestEdition,
   nextEdition,
   pendingSymbols,
@@ -66,23 +65,11 @@ export default async function TechnicalPage() {
     getPublishedSymbols(),
   ]);
   const quoteMap = quotes.ok ? quotes.data : {};
-  /* "Şu An" yalnızca ana seans açık ve kotasyon tazeyken. Seans dışında
-     son işlem ya dünkü kapanış ya uzatılmış seansın fiyatı; ikisine de
-     "şu an" demek sayıyı olduğundan taze gösterir. */
-  const packLive = status.session === "regular" && quotes.ok && !quotes.stale;
-  /* "ŞU AN" SEMBOL BAŞINA KANITLANIYOR. Paketin tazeliği sembollerin EN
-     YENİSİYLE ölçülüyor (`packCurrent` → `newestTrade`, lib/providers):
-     on dört sembolü taze, biri dünden kalma bir paket `stale:false` dönüyor
-     ve o bir kartın fiyatı da "Şu An" diye basılıyordu. Veri dürüstlüğü
-     kuralı bunu adıyla yasaklıyor: bir yüzde hangi seansı anlattığını
-     KANITLAMALI. Paket canlı olsa bile kartın kendi işlemi seans gününe
-     ait değilse etiket "Son Fiyat"a düşüyor — ana sayfanın hareket paneli
-     aynı soruyu yıllardır sembol başına soruyor. */
+  /* "Şu An" mı "Son Fiyat" mı — kural `livePriceLabel` üzerinde ve kartla
+     dağılım balonu AYNI fonksiyonu soruyor. Kotasyonu olmayan kart
+     fotoğraftaki fiyata ve "Analiz Anında" etiketine düşüyor (kartın içinde). */
   const labelFor = (symbol: string) =>
-    packLive && isSessionTrade(quoteMap[symbol]?.tradedAt, status)
-      ? t.technical.now
-      : t.market.lastPrice;
-
+    livePriceLabel(quoteMap[symbol], quotes, status, t) ?? t.market.lastPrice;
   const holidays = await getHolidays();
   const latest = newestEdition(board);
   /* TAKİP EDİLİP PANODA OLMAYANLAR — AMA İKİ AYRI SEBEPLE. Gerekçesi
@@ -135,7 +122,16 @@ export default async function TechnicalPage() {
         description={t.technical.description}
         visual={
           latest ? (
-            <TechnicalPulse board={board} pending={awaiting} meta={meta} t={t} />
+            <TechnicalPulse
+              locale={locale}
+              board={board}
+              pending={awaiting}
+              meta={meta}
+              /* BALONUN FİYATI KARTIN FİYATI: aynı paket, aynı etiket
+                 kuralı, yeni kotasyon turu yok. */
+              quotes={{ pack: quotes, status }}
+              t={t}
+            />
           ) : undefined
         }
       >
@@ -214,15 +210,6 @@ export default async function TechnicalPage() {
                   quote={quoteMap[row.symbol] ?? null}
                   company={meta[row.symbol]?.name ?? null}
                   logoUrl={meta[row.symbol]?.logoUrl ?? null}
-                  marketCap={meta[row.symbol]?.marketCap ?? null}
-                  currency={meta[row.symbol]?.currency ?? null}
-                  /* Sektör tercih sırası /hisse ile AYNI: GICS varsa o, yoksa
-                     sağlayıcının serbest metinli alanı. İki ekranın aynı şirket
-                     için ayrı sektör adı yazması bir hata gibi okunurdu. */
-                  sector={
-                    sectorLabel(indexMemberOf(row.symbol)?.sector, locale) ??
-                    industryLabel(meta[row.symbol]?.industry, locale)
-                  }
                   priceLabel={labelFor(row.symbol)}
                   locale={locale}
                   t={t}

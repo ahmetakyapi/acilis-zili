@@ -46,8 +46,12 @@
    (ölçüldü). Alt ızgara sütunu içeriğin kendisine ölçtürüyor — etiket ne
    kadar uzunsa o kadar, logolara kalan da tam kalan kadar. */
 .pulseRows { display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px; }
-.pulseRow { display:grid; grid-column:span 2; grid-template-columns:subgrid; align-items:center; column-gap:12px; padding:8px 10px; border-radius:14px; transition:background-color .2s; }
-.pulseRow:hover { background:var(--surface); }
+/* SATIR BİR BAĞLANTI DEĞİL, HOVER'I YOK. Satırın üstüne gelince zemin
+   `--surface`e dönüyordu; panelde köşe yarıçapı sıfır olduğu için bu kenardan
+   kenara gri bir bant olarak basılıyor ve açık balonun altında başıboş bir
+   çubuk gibi duruyordu (ölçüldü, ana sayfa 1440). Tıklanan şey logo ve
+   görüş etiketi; tepkiyi de onlar veriyor. */
+.pulseRow { display:grid; grid-column:span 2; grid-template-columns:subgrid; align-items:center; column-gap:12px; padding:8px 10px; border-radius:14px; }
 .pulseStance { display:flex; align-items:baseline; gap:8px; font-size:13px; font-weight:700; letter-spacing:.03em; cursor:pointer; }
 .pulseStance b { font-size:22px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
 .pulseStanceStatic { cursor:default; }
@@ -55,9 +59,9 @@
 .pulseStancePending b { color:var(--text-muted); }
 /* Logosu soluk: sembol takipte ama henüz söyleyecek bir şeyi yok. */
 .pulseLogoPending { opacity:.5; filter:grayscale(1); }
-.pulseLogoPending:hover { opacity:1; filter:none; }
+.pulseLogoPending:is(:hover, [data-open]) { opacity:1; filter:none; }
 .pulseLogos { display:flex; flex-wrap:wrap; gap:6px; min-width:0; }
-.pulseLogo { display:inline-flex; border-radius:10px; transition:transform .2s; }
+.pulseLogo { display:inline-flex; border-radius:10px; transition-property:transform, background-color, box-shadow, opacity, filter; transition-duration:var(--default-transition-duration); transition-timing-function:var(--ease-brand); }
 /* MOBİLDE DOKUNMA ALANI 40. Künye 26×26 çiziliyor ve parmakla ıskalanıyordu.
    Kutu büyümüyor: bağlantı 7 piksel dolgu alıp aynı kadar dışa taşıyor, yani
    logolar aynı yerde duruyor. Aralık 6'dan 14'e çıkıyor ki iki komşunun
@@ -69,6 +73,10 @@
 }
 .pulseLogo:hover { transform:translateY(-2px); }
 .pulseLogo:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+/* BALONUN SAHİBİ İŞARETLİ. Balon ekran kenarına kırpıldığında logonun tam
+   üstünde durmayabiliyor; açık balonun logosu yıkanmış bir zemin ve iki
+   piksellik soluk bir halka alıyor, hangi logoya ait olduğu okunuyor. */
+.pulseLogo[data-open] { background:var(--primary-wash); box-shadow:0 0 0 2px var(--primary-faint); }
 .pulseChanges { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
 .pulseChange { display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 4px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:600; color:var(--text-strong); }
 .pulseChange:hover { border-color:var(--primary-faint); }
@@ -116,8 +124,14 @@
    çipler); ekran okuyucuda hisseler arasında başlıkla da gezinilemiyordu.
    Bağlantı artık sembol başlığının içinde; `::after` kartı kaplıyor, yani
    tıklama alanı aynı kalıyor. */
-.card { position:relative; display:grid; grid-template-rows:subgrid; grid-row:span 6; min-width:0; padding:20px 20px 16px; border:1px solid var(--line); border-radius:22px; background:var(--premium-surface); box-shadow:var(--premium-shadow); transition:border-color .2s, box-shadow .25s, transform .25s; }
-.card:hover { border-color:var(--primary-faint); box-shadow:var(--premium-shadow-hover); transform:translateY(-2px); }
+/* BÜYÜK KARTIN HOVER'I YALNIZCA TON (22 Eylül, ortak kural — analizler
+   ekranının öne çıkan kartıyla aynı). Kart 2 piksel kalkıp gölgesini
+   büyütüyordu; ızgarada on beş kart yan yana dururken imlecin geçtiği her
+   kart zıplıyor, sayfa kıpırdıyordu. Artık yalnızca kenarlık birincil
+   tonun soluğuna dönüyor ve "Analizi Oku" oku dürtülüyor: kartın
+   tıklanabilir olduğu hâlâ söyleniyor, yerinden oynamadan. */
+.card { position:relative; isolation:isolate; display:grid; grid-template-rows:subgrid; grid-row:span 6; min-width:0; padding:20px 20px 16px; border:1px solid var(--line); border-radius:22px; background:var(--premium-surface); box-shadow:var(--premium-shadow); transition:border-color var(--default-transition-duration) var(--ease-brand); }
+.card:hover { border-color:var(--primary-faint); }
 .card:has(.cardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
 .cardLink { color:inherit; }
 .cardLink::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; }
@@ -181,7 +195,7 @@
 .chip[data-tone="down"]::before { background:var(--down); opacity:1; }
 .cardFoot { display:flex; align-items:center; align-self:end; justify-content:space-between; gap:10px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
 .cardRead { display:inline-flex; align-items:center; gap:4px; color:var(--primary-ink); font-weight:600; }
-.cardRead svg { transition:transform .2s; }
+.cardRead svg { transition:transform var(--default-transition-duration) var(--ease-brand); }
 .card:hover .cardRead svg { transform:translate(2px,-2px); }
 
 /* ---- Plan şeridi: NEREDEN ALINIR · NEREDE SATILIR · NEREDE VAZGEÇİLİR ----
@@ -813,8 +827,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card, .cardRead svg, .pulseLogo, .pulseRow { transition:none; }
-  .card:hover, .card:hover .cardRead svg, .pulseLogo:hover { transform:none; }
+  .card, .cardRead svg, .pulseLogo { transition:none; }
+  .card:hover .cardRead svg, .pulseLogo:hover { transform:none; }
 }
 
 /* ---- Şirket sayfasının teknik analiz kartı ----
@@ -981,7 +995,7 @@
 .filter { gap:3px; padding:4px; border-radius:12px; background:var(--surface-sunken); }
 .filter label { min-height:36px; padding:7px 13px; border-radius:8px; border-color:transparent; background:transparent; }
 .filter input:checked + label { background:var(--premium-surface); color:var(--primary-ink); border-color:var(--primary-faint); box-shadow:0 2px 5px var(--primary-tint); }
-.card { border-radius:18px; box-shadow:0 3px 12px color-mix(in srgb,var(--primary-ink) 3%,transparent); background:linear-gradient(150deg,var(--primary-tint),transparent 28%),var(--premium-surface); }
+.card { --card-shadow:0 3px 12px color-mix(in srgb,var(--primary-ink) 3%,transparent); border-radius:18px; box-shadow:var(--card-shadow); background:linear-gradient(150deg,var(--primary-tint),transparent 28%),var(--premium-surface); }
 .cardHead { padding-bottom:12px; border-bottom:1px solid var(--line-soft); }
 .cardPlan .planCells { background:linear-gradient(115deg,var(--primary-tint),transparent); border:1px solid var(--line-soft); border-radius:10px; }
 .cardPlan[data-verdict="sell"] .planCells { background:linear-gradient(115deg,color-mix(in srgb,var(--down-wash) 50%,transparent),transparent); }
@@ -1281,50 +1295,8 @@
  .analysisReading { grid-template-rows:auto 1fr; }
 }
 
-/* ---- Kimlik balonu ----
-   Kart yalnızca sembolü ve kısaltılmış adı gösteriyor; sektör ve büyüklük
-   için detaya gitmek gerekiyordu. Balon ikisini de kartın üstünde veriyor.
-
-   Katman sırası kartın kendi katmanlarından geliyor: bağlantı kaplaması
-   z-1, ışık z-2 (bkz. `.cardLink::after` ve SpotlightCard), balon 4'te.
-   `pointer-events:none` bilinçli — balon bir hedef değil, bir okuma; imleç
-   onun üstünden geçerken kartın kendi bağlantısı çalışmaya devam ediyor ve
-   balon kapanıp açılarak titremiyor. */
-/* Çapa sıfır boyutlu ve bağlantının ATASI DEĞİL: kimlik satırına
-   `position:relative` vermek kartı kaplayan bağlantıyı (`.cardLink::after`,
-   `inset:0`) o kutuya hapsediyordu — ölçüldü, 428x553 piksellik kartın
-   tıklanabilir alanı 333x42 ye düşmüştü, yani kartın ortası ve dibi ölü
-   bölgeye dönmüştü. Çapa artık başlık satırının sıfır boyutlu ilk çocuğu;
-   negatif sağ boşluk, ızgaranın 12 piksellik aralığını geri alıyor. */
-.identityAnchor { position:relative; flex:none; width:0; height:0; margin-right:-12px; }
-.identityCard {
-  position:absolute; z-index:4; top:34px; left:-6px;
-  display:flex; flex-direction:column; gap:12px;
-  width:max-content; max-width:min(300px, calc(100vw - 48px));
-  padding:14px 16px;
-  border:1px solid var(--primary-faint); border-radius:16px;
-  background:radial-gradient(ellipse at 100% 0,var(--primary-tint),transparent 70%),var(--premium-surface);
-  box-shadow:var(--premium-shadow-hover);
-  opacity:0; visibility:hidden; transform:translateY(-4px);
-  transition:opacity .16s ease, transform .16s ease, visibility .16s;
-  pointer-events:none;
-}
-.cardHead:hover .identityCard,
-.cardHead:focus-within .identityCard { opacity:1; visibility:visible; transform:none; }
-.identityTop { display:flex; align-items:center; gap:11px; }
-.identityWho { display:flex; min-width:0; flex-direction:column; gap:2px; }
-.identityTop strong { font-size:15px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
-.identityWho > span { font-size:12px; line-height:1.35; color:var(--text-muted); }
-.identityTop > .stance { margin-left:auto; flex:none; padding:4px 10px; font-size:12px; }
-.identityFacts { display:flex; flex-direction:column; gap:7px; padding-top:11px; border-top:1px solid var(--line-soft); }
-.identityFacts > span { display:flex; align-items:baseline; justify-content:space-between; gap:14px; }
-.identityFacts i { font-style:normal; font-size:11px; color:var(--text-muted); }
-.identityFacts b { display:flex; align-items:baseline; gap:7px; font-size:13px; font-weight:600; color:var(--text-strong); text-align:right; }
-.identityFacts b em { font-style:normal; font-size:12px; font-weight:550; }
-/* Dokunmatikte hover yok ve balon hiç açılmıyor; orada kartın kendisi
-   detaya götürüyor, aynı bilgiler orada tam hâliyle duruyor. */
-@media(hover:none) { .identityCard { display:none; } }
-@media(prefers-reduced-motion:reduce) { .identityCard { transition:none; transform:none; } }
+/* Kimlik balonu kartlardan dağılım logolarına taşındı (22 Eylül);
+   kuralları `CompanyBalloon.module.css`te. */
 
 /* Eksenin iki ucu — kapsanan fiyat aralığı. Cetvel orantılı çiziliyor ama
    hangi aralığı kapsadığını söylemiyordu; sayı `priceMapLayout`tan geliyor,
@@ -1332,3 +1304,48 @@
 .mapBound { position:absolute; left:0; width:52px; text-align:center; font-size:var(--text-nano); font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
 .mapBound[data-edge="top"] { top:-4px; }
 .mapBound[data-edge="bottom"] { bottom:-4px; }
+
+/* ---- Ana sayfa paneli: dağılım ----
+   Panelde logolar birer karo: 28 piksellik logo, 4 piksellik dolgu ve
+   birincil tonun soluğu — 36 piksellik bir hedef. Satırlar kenardan kenara
+   bir çizgiyle ayrılıyor; köşe yarıçapı sıfır, çünkü panel zaten kutu. */
+.pulse[data-variant="panel"] { gap:10px; }
+.pulse[data-variant="panel"] .pulseBar { height:5px; gap:3px; }
+.pulse[data-variant="panel"] .pulseRows { row-gap:0; }
+.pulse[data-variant="panel"] .pulseRow { padding:11px 0; border-radius:0; border-bottom:1px solid var(--line-soft); align-items:start; }
+.pulse[data-variant="panel"] .pulseRow:last-child { border-bottom:0; padding-bottom:0; }
+.pulse[data-variant="panel"] .pulseStance { min-height:36px; align-items:center; gap:8px; }
+.pulse[data-variant="panel"] .pulseLogos { gap:6px; }
+/* DIŞ BOŞLUK SIFIR, AÇIKÇA. Dar ekranın genel kuralı (`padding:7px;
+   margin:-7px`, logo ayrı karo değilken dokunma alanını büyütmek için)
+   buraya da iniyordu: panelde dolgu ezilip eksi yedi piksel kalınca
+   44 piksellik karolar 36 piksel adımla diziliyor, komşu karolar sekiz
+   piksel üst üste biniyor ve tonları tek bir şerit gibi birleşiyordu
+   (ölçüldü, 390 ve 320, dokunmatik). */
+.pulse[data-variant="panel"] .pulseLogo { position:relative; margin:0; padding:4px; border-radius:var(--radius-sm); background:var(--primary-tint); }
+.pulse[data-variant="panel"] .pulseLogo > :first-child { width:28px; height:28px; border-radius:calc(var(--radius-sm) - 2px); }
+.pulse[data-variant="panel"] .pulseLogo:hover { background:var(--primary-wash); transform:translateY(-2px); }
+.pulse[data-variant="panel"] .pulseLogo[data-open] { background:var(--primary-wash); box-shadow:0 0 0 2px var(--primary-faint); }
+/* DOKUNMA ALANI KARODAN BÜYÜK, KARO BÜYÜMEDEN. Görünen karo 36 piksel
+   kalıyor; dokunmatikte görünmez bir kat üç piksel dışa taşıyor ve hedef
+   42 piksele çıkıyor. Aralık 6 olduğu için iki komşunun alanı tam
+   bitişik, üst üste binmiyor (36 + 2×3 = 42 = 36 + 6). 390'da bir satıra
+   altı karo (6×42−6 = 246 ≤ 263), 320'de dört karo sığıyor. */
+@media(pointer:coarse) { .pulse[data-variant="panel"] .pulseLogo::after { content:""; position:absolute; inset:-3px; border-radius:var(--radius-sm); } }
+@media(prefers-reduced-motion:reduce) { .pulse .pulseLogo { transition:none; } .pulse[data-variant] .pulseLogo:hover { transform:none; } }
+/* 22 Eylül birleştirme kontrolü: ONDS + görüş hapı 320 piksellik kimlik
+   satırını 2 piksel aşıyordu. Hap yalnızca kimlik gerçekten sığmadığında
+   alt satıra iniyor. */
+@media(max-width:639px) {
+ .coverHead { flex-wrap:wrap; gap:10px; }
+ .coverNameLink { min-width:min-content; flex:1; gap:10px; }
+ .coverIdentity h1 { white-space:nowrap; }
+ .coverCompany { overflow-wrap:anywhere; }
+ .coverHead > .stanceRow { margin-left:auto; }
+}
+/* 22 Eylül birleştirmesi: açıklamanın ALTINDAKİ sıkı aralık korunuyor,
+   artan yükseklik yayın satırları arasına dağıtılıyor. EN 768'de son yayın
+   satırı dağılımın dibinden 20 piksel yukarıda kalıyordu. */
+@media(min-width:768px) {
+ .directoryHeader > :global(.page-heading-copy) > .edition { flex:1; align-content:space-between; }
+}

@@ -1,0 +1,73 @@
+/* ---- Şirket balonu (dağılım logoları) ----
+   Gerekçesi `CompanyBalloon.tsx` ve `PulseCompanyLink.tsx` üzerinde.
+
+   BİR KATMAN, KART DEĞİL. Yüzey masthead açılır menüsüyle aynı katman
+   tokenlarını kullanıyor (`--overlay-surface` + `--shadow-overlay`):
+   sitede gölge taşımasına izin verilen tek yer katmanlar. Köşe tonu, radyal
+   süs ve bulanıklık yok — derinlik gölgeden değil, zeminden ayrışan
+   yüzeyden geliyor.
+
+   z-index 35: yapışkan başlık ve alt çubuk 30 (`.chrome`), masthead açılır
+   menüsü 40, arama 50, ilerleme çubuğu 60. Balon başlığın üstüne taşarsa
+   onu örtmeli ama bir menüyü ya da aramayı asla. Eski ipucu 90'daydı ve
+   açık bir menünün üstüne çıkabiliyordu. Konum zaten başlığın ve alt
+   çubuğun ARASINDAKİ bantta hesaplanıyor; 35 yalnızca bir emniyet. */
+.balloon {
+  position:fixed; z-index:35; top:0; left:0;
+  width:min(296px, calc(100vw - 24px));
+  padding:14px 16px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-xl);
+  background:var(--overlay-surface);
+  box-shadow:var(--shadow-overlay);
+  color:var(--text-body);
+  /* Bir okuma, hedef değil: imleç balonun üstünden geçerken altındaki
+     komşu logo çalışmaya devam ediyor. Eski ipucu imleci tutuyordu ve
+     aşağı açıldığında beş-yedi komşu logoyu örtüyordu (ölçüldü, MU açıkken
+     /teknik 1440'ta NVDA, AMD, INTC, TSLA, ONDS elementFromPoint'te
+     ipucunun altında kalıyordu). */
+  pointer-events:none;
+}
+/* YERİ YAZILMADAN GÖRÜNMÜYOR. Konum ve `data-side` boyamadan önce
+   `useLayoutEffect`te yazılıyor; o efekt erken dönerse (bağlantı ya da
+   düğüm yok) balon sol üst köşede, başlığın üstünde kalırdı. Yan yazılana
+   kadar gizli: yanıp sönme de yok. */
+.balloon:not([data-side]) { visibility:hidden; }
+/* GİRİŞ, AYRILDIĞI YERDEN. Alta açılan balon logodan aşağı, üste açılan
+   yukarı dört piksel kayarak geliyor. Süre ve eğri sitenin ortak geçiş
+   ritmi (`--default-transition-duration`, `--ease-brand`); ayrı bir süre
+   yazılmıyor. Logodan logoya geçişte (`data-swap`) giriş hiç oynamıyor:
+   okuma yerinde değişiyor, her logoda yeniden solup gelmiyor. */
+.balloon[data-side="below"] { animation:balloon-below var(--default-transition-duration) var(--ease-brand); }
+.balloon[data-side="above"] { animation:balloon-above var(--default-transition-duration) var(--ease-brand); }
+.balloon[data-swap] { animation:none; }
+@keyframes balloon-below { from { opacity:0; translate:0 -4px; } }
+@keyframes balloon-above { from { opacity:0; translate:0 4px; } }
+@media (prefers-reduced-motion:reduce) { .balloon[data-side] { animation:none; } }
+
+.body { display:flex; flex-direction:column; gap:12px; }
+.head { display:flex; align-items:center; gap:11px; }
+.who { display:flex; flex:1; min-width:0; flex-direction:column; gap:2px; }
+.who strong { font-size:15px; font-weight:700; line-height:1.2; letter-spacing:-.02em; color:var(--text-strong); }
+/* Uzun ad iki satırda kesiliyor ("Taiwan Semiconductor Manufacturing Co
+   Ltd"); hap `flex:none` ve adın yanında hep tam boyda kalıyor. */
+.who span {
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
+  font-size:12px; line-height:1.35; color:var(--text-muted);
+}
+.pill { flex:none; padding:4px 10px; border-radius:var(--radius-sm); font-size:12px; font-weight:650; }
+
+/* Künye sütunu en uzun künyeye göre ("Piyasa Değeri"), değerler sağa
+   yaslı: üç satırın sayıları aynı dikey hatta biter. */
+.facts {
+  display:grid; grid-template-columns:auto minmax(0,1fr); align-items:baseline; gap:7px 14px;
+  padding-top:11px; border-top:1px solid var(--line-soft);
+}
+.facts > div { display:contents; }
+.facts dt { font-size:11px; font-weight:600; color:var(--text-muted); }
+.facts dd { min-width:0; text-align:right; font-size:13px; font-weight:600; color:var(--text-strong); overflow-wrap:anywhere; }
+.price { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:flex-end; gap:2px 7px; }
+.price b { font-size:17px; font-weight:650; letter-spacing:-.025em; }
+.price em { font-style:normal; font-size:12px; font-weight:550; }
+
+.foot { padding-top:10px; border-top:1px solid var(--line-soft); font-size:11px; font-weight:600; line-height:1.45; color:var(--text-muted); }

@@ -38,6 +38,67 @@ export function zoneTag(locale: Locale): { primary: "TR" | "NY"; secondary: "TR"
     : { primary: "NY", secondary: "TR" };
 }
 
+/**
+ * Birincil saatin yanında küçük puntoyla duran ÖTEKİ saat dilimi.
+ * `displayZone`un tersi: TR okuyucu için New York, EN okuyucu için İstanbul.
+ * Ana sayfanın zil künyesi her zili iki saatle yazıyor; sıra `zoneTag` ile
+ * aynı kaynaktan geliyor ki künye ile saat etiketi hiçbir zaman çelişmesin.
+ */
+export function secondaryZone(locale: Locale): string {
+  return locale === "tr" ? ET_ZONE : TR_ZONE;
+}
+
+/**
+ * Verilen dilimde, `nowMs`ten sonraki İLK 00:00 anı.
+ *
+ * NEDEN VAR: ana sayfa "Bugün / Yarın" ve üst şeritteki tarihi OKUYUCUNUN
+ * günüyle yazıyor, ama `SessionRefresh` yalnızca New York'un seans
+ * sınırlarında (ve ET gece yarısında) tazeliyordu. TR okuyucu için gün
+ * 00:00 TR'de değişiyor; bir sonraki ET sınırı ise akşam seansının bitişi
+ * (03:00 TR) ya da ön seans açılışı (11:00 TR). Arada üç ila on bir saat
+ * boyunca ekran dünün tarihini ve "Yarın 16:30" gibi artık yanlış olan bir
+ * etiketi taşıyordu. Tazeleme artık iki anın erkenine kuruluyor.
+ *
+ * SABİT FARK YOK: dilimin kayması o günün tarihiyle `zoneOffsetSeconds`ten
+ * okunuyor ve bir kez düzeltiliyor — yaz saati sınırında gece yarısı
+ * kaymanın değiştiği güne denk gelirse ilk tahmin bir saat şaşabilir.
+ */
+export function nextZoneMidnight(nowMs: number, zone: string): Date {
+  /* `zoneOffsetSeconds` dakikaya kadar okuyor ve anın saniyesini kaymaya
+     katıyor; dilim kaymaları tam dakika olduğu için dakikaya yuvarlanıyor. */
+  const offsetMs = (at: number) =>
+    Math.round(zoneOffsetSeconds(Math.floor(at / 1000), zone) / 60) * 60_000;
+  const offsetNow = offsetMs(nowMs);
+  const local = new Date(nowMs + offsetNow);
+  const midnightLocal = Date.UTC(
+    local.getUTCFullYear(),
+    local.getUTCMonth(),
+    local.getUTCDate() + 1,
+  );
+  return new Date(midnightLocal - offsetMs(midnightLocal - offsetNow));
+}
+
+const KEYS = new Map<string, Intl.DateTimeFormat>();
+
+/**
+ * O anın okuyucu dilimindeki takvim günü, "YYYY-MM-DD".
+ * Göreli gün ("Bugün", "Yarın") iki anın BU anahtarlarının farkından çıkar;
+ * 24 saatlik fark değil — kışın 16:00 ET kapanışı 00:00 TR, yani ertesi gün.
+ */
+export function zoneDateKey(date: Date, zone: string): string {
+  let parts = KEYS.get(zone);
+  if (!parts) {
+    parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: zone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    KEYS.set(zone, parts);
+  }
+  return parts.format(date);
+}
+
 const CLOCKS = new Map<string, Intl.DateTimeFormat>();
 
 /** "HH:mm" — 24 saat, gece yarısı 00:00 (bazı ICU sürümleri 24:00 basıyor). */

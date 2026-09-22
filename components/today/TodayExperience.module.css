@@ -13,14 +13,7 @@
 .heroSession > span { width: 5px; height: 5px; border-radius: 50%; background: var(--text-muted); }
 .heroSession[data-trading="true"] > span { background: var(--up); box-shadow: 0 0 0 3px var(--up-wash); }
 .headline { max-width: 25ch; font-size: clamp(25px, 2.55vw, 36px); font-weight: 550; line-height: 1.12; letter-spacing: -.045em; color: var(--text-strong); text-wrap: balance; }
-.countdown { margin-top: 16px; }
-.targetDate { display: flex; align-items: center; gap: 9px; margin-top: 22px; color: var(--text-muted); font-size: 12px; }
-.targetDate > svg { flex-shrink: 0; color: var(--primary); }
-.targetDate time { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 12px; }
-.targetDate strong { font-weight: 650; color: var(--text-strong); }
-.targetDate small { font-size: var(--text-nano); font-weight: 550; color: var(--text-muted); }
-.heroFooter { margin-top: 18px; }
-.description { max-width: 52ch; font-size: 12px; line-height: 1.7; color: var(--text-body); text-wrap: pretty; }
+.countdown { min-width: 0; }
 .indexDeck { min-width: 0; padding-left: 28px; border-left: 1px solid var(--line); }
 .indexHeading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 5px 15px; margin-bottom: 14px; font-size: 10px; font-weight: 550; color: var(--text-muted); }
 .indexHeading h2 { color: var(--text-strong); font-size: 14px; font-weight: 650; }
@@ -106,11 +99,6 @@
   /* Simge telefonda gizli — gerekçe ve ölçüm LiveClock.module.css'te:
      iki saat tek satıra gelince künyeye 173 piksel kalıyor. */
   .eyebrow > svg { display: none; }
-  .headline { font-size: clamp(25px, 6.4vw, 34px); }
-  .countdown { margin-top: 18px; }
-  .description { max-width: 39ch; font-size: 11px; }
-  .targetDate { margin-top: 18px; font-size: 11px; }
-  .heroFooter { margin-top: 18px; }
   .indexGrid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
   .indexCard { min-height: 138px; padding: 12px 13px; border-radius: 12px; }
   .indexSkeleton { height: 138px; border-radius: 12px; }
@@ -248,10 +236,6 @@
 .hero { padding:20px 24px; border-radius:var(--radius-feature); }
 .heroMain { align-items:start; gap:28px; padding-top:18px; padding-bottom:0; }
 .heroSession { margin-bottom:9px; }
-.headline { font-size:clamp(26px,2.3vw,32px); }
-.countdown { margin-top:10px; }
-.targetDate { margin-top:16px; }
-.heroFooter { margin-top:12px; }
 .indexDeck { padding-left:24px; }
 .indexHeading { margin-bottom:10px; }
 .indexCard { min-height:132px; padding:12px 14px 10px; }
@@ -279,8 +263,6 @@
  .indexSkeleton { height:117px; }
  .indexValue { font-size:23px; margin-top:6px; }
  .indexSpark { height:24px; }
- .targetDate { margin-top:12px; }
- .heroFooter { margin-top:10px; }
  .flowPanel { padding:16px 14px 0; }
 }
 .flowNav { flex-basis:520px; padding:3px; border:1px solid var(--line-soft); background:var(--surface-sunken); }
@@ -303,9 +285,56 @@
    room. Compact spacing comes from structure, not smaller reading type. */
 .hero { padding:20px 24px; background:radial-gradient(ellipse at 0 0,var(--primary-tint),transparent 60%),var(--premium-surface); }
 .heroTopline { padding-bottom:14px; border-bottom:1px solid var(--line-soft); }
-.heroMain { padding-top:18px; grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr); }
-.heroCopy { align-self:center; padding-bottom:8px; }
-.heroSession { margin-bottom:8px; }
+.heroMain { padding-top:18px; grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr); align-items:stretch; }
+/* KOPYA KOLONU İKİ UCUNDAN SABİTLENİYOR (22 Eylül).
+   `align-self:center` kolonu ortalıyordu ve boşluk iki banda bölünüyordu:
+   1440'ta rozetin üstünde 45, tarih satırının altında 46 piksel (1280'de
+   67/49, 1024'te 75/57) — rozet 244'te, sağdaki "Endeksler" başlığı 199'da
+   duruyordu. Eylül denetimi aynı hatayı bir kez `align-items:start` ile
+   düzeltmişti; bu katman ortalamayı geri getirmişti.
+
+   Şimdi kolon satır boyunca geriliyor ve üç satırlı bir ızgara oluyor:
+   rozet ile başlık tepede (sağdaki başlıkla aynı hizada), rakam satırı ile
+   zil künyesi DİPTE — künyenin son satırı sağdaki veri damgasının
+   hizasına iniyor. Kalan hava rakam satırının iki yanına bölünüyor
+   (aşağıdaki `.countdownBlock` notu). Ölçüm ve sayılar
+   aşağıdaki "Ölçüm" notunda.
+
+   `container` rakam puntosu için şart: Countdown `cqi` ile bu kolona
+   ölçekleniyor. Kap adı düşerse `cqi` küçük görünüme çözülür ve rakam
+   şişer — adı silmeyin. */
+.heroCopy { align-self:stretch; display:grid; grid-template-rows:auto auto 1fr; container:hero-copy / inline-size; padding-bottom:0; }
+.heroSession { margin-bottom:10px; justify-self:start; }
+/* ARTIK RAKAMIN İKİ YANINA BÖLÜNÜYOR (22 Eylül, ikinci ölçüm).
+   Blok dipte dururken kolonun artığı tek bir banda, başlık ile rakamın
+   arasına toplanıyordu: mürekkep olarak 1440'ta 73, 1024'te 88, 900'de 99
+   piksel; rakamın altı ise yalnızca 31–33. Sahibinin "yukarıdaki boşluk
+   saçma" şikâyeti başka bir yere taşınmış oluyordu. Blok artık satırın
+   tamamını kaplıyor, künye dipte (son satırı yine veri damgası hizasında)
+   ve rakam satırı `margin-block:auto` ile artığın ORTASINDA: hava başlığın
+   altına ve künyenin üstüne eşit bölünüyor. Alt sınırlar dolgu olarak
+   duruyor (18 ve künyenin 22'si), yani dar kolonda hiçbir şey sıkışmıyor. */
+.countdownBlock { align-self:stretch; display:flex; flex-direction:column; min-width:0; padding-top:18px; }
+.countdownBlock .countdown { margin-block:auto; }
+/* BAŞLIK DA KOLONA ÖLÇEKLENİYOR (rakam gibi `cqi`). Kolon iki ucundan
+   sabitlenince başlık ile rakam arasında hava kalıyor: 1440'ta 61, 1024'te
+   84 piksel (başlık 32 ve 26 puntoyken). Görünüm genişliğine bağlı punto
+   1024'te tabana (26) iniyordu, oysa kolon orada 422 piksel ve başlık tek
+   satırın yarısını kullanıyordu. Punto: 1440 → 36 (tavan), 1024 → 34,
+   768 → 26, telefon → 26 (taban). */
+.headline { font-size:clamp(26px,8cqi,36px); }
+/* Ölçüm (22 Eylül, TR, başsız Chrome, `.tmp-sep22b-home-hero-after.mjs`):
+   - 1440 / 1280: kahraman 436 (değişmedi). Rozet 199 = "Endeksler" 199
+     (önce 244); künyenin son satırı 508 = veri damgası 508 (önce 462).
+     Ölü bant üstte 45 → 0, altta 46 → 0. Rakam 59 → 92; başlık ile rakam
+     arası hava 53.
+   - 1024: rakam 44 → 76, üst/alt 0 / 0, hava 71.
+   - 900–1023 (iki kolon, künye yan yana): üst/alt 0 / 0, hava 67–83 —
+     rakam burada genişlikle sınırlı, havayı dolduracak punto yok.
+   - 768: kahraman 683 → 476, künye alt alta, üst/alt 0 / 0.
+   - 390: kahraman 580 → 607, rakam 39 → 57; 320: 671 → 709, rakam 38 → 48.
+   - Gün varken (dört grup): 1440 → 80, 390 → 44, 320 → 38 ve satır
+     320'de kolonu tam dolduruyor (246 / 246), taşma yok. */
 .indexDeck { padding-left:24px; }
 .indexGrid { gap:10px; }
 .indexQuote { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 9px; margin-top:8px; }
@@ -330,8 +359,22 @@
  .heroCopy { align-self:start; padding-bottom:0; }
  .indexDeck { padding-left:0; }
 }
+/* TABLETTE İKİ KOLON (768–1023). Tek kolonda kahraman 768'de 683 piksel
+   boyundaydı: sol blok 389'da bitiyor, endeks destesi 417–747 arasında
+   ayrı bir kat olarak alta iniyordu ve rakam satırının sağında 270 piksel
+   boş kalıyordu. Yatay telefon kuralının (yukarıda) aynısı: iki kolon,
+   deste solda bir kıl çizgiyle ayrılıyor, 2×2 kartlar telefondaki kart
+   genişliğine (~150 piksel) iniyor — o düzen 390'da zaten kanıtlı.
+   Bu blok 1023 kuralının ARDINDA durmak zorunda; öncesinde kalırsa
+   `.indexDeck { padding-left:0 }` kazanıyor. */
+@media(min-width:768px) and (max-width:1023px) {
+ .heroMain { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; }
+ .heroCopy { align-self:stretch; }
+ .indexDeck { padding:0 0 0 24px; border-top:0; border-left:1px solid var(--line); }
+}
 @media(max-width:767px) {
  .hero { padding:18px; }
+ .countdownBlock { padding-top:14px; }
  .heroTopline { padding-bottom:12px; }
  .heroMain { gap:16px; padding-top:14px; }
  .indexDeck { padding-top:12px; }
