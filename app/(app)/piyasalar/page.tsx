@@ -228,41 +228,6 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
 
       </div>
 
-      <Suspense fallback={<div className={styles.macro}><Skeleton className={styles.yieldSkeleton} /><Skeleton className={styles.fearSkeleton} /></div>}>
-      {/* Treasury/VIX previously followed movers. Reader preference now
-          puts this compact, independent context before index selection. */}
-      <div className={styles.macro} data-motion-stagger>
-        <YieldStrip locale={locale} t={t} />
-        {/* AYRI, BOŞ YEDEK YOK — bilerek. İki gösterge artık yukarıdaki
-            ölçülü ortak sınırda. Burada `fallback={null}` ile ayrı bir
-            sınır vardı ve iki yönden de
-            zarardı. Kazancı sıfır: kardeşi `YieldStrip` de FRED'den besleniyor
-            ve o askıya alınmamış, yani sayfa FRED turunu ZATEN bekliyor.
-            Maliyeti gerçek: boş yedek sıfır yer kaplıyor, kart akışla gelince
-            mobilde 262 piksel açılıp altındaki her şeyi aşağı itiyordu —
-            ölçüldü, /piyasalar'ın mobil CLS'i 0,206 çıkıyordu (Google'ın
-            "kötü" eşiği 0,1). */}
-        <FearGauge
-            locale={locale}
-            labels={{
-              title: t.markets.fearTitle,
-              details: t.markets.fearDetails,
-              hint: t.markets.fearHint,
-              average: t.markets.fearAverage,
-              guideCta: t.markets.fearGuideCta,
-              bands: {
-                calm: t.markets.fearCalm,
-                normal: t.markets.fearNormal,
-                tense: t.markets.fearTense,
-                fear: t.markets.fearHigh,
-                panic: t.markets.fearPanic,
-              },
-            }}
-          />
-      </div>
-
-      </Suspense>
-
       <IndexTabs tab={tab} locale={locale} t={t} />
       <QueryTransition label={t.common.loading}>
       <Suspense
@@ -302,6 +267,48 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
       />
     </MotionExperience>
   );
+}
+
+function MarketContext({ locale, t }: { locale: Locale; t: Dictionary }) {
+  return <>
+      {/* 22 September: market breadth and movers now lead the page;
+          rates and volatility remain available after the equity overview. */}
+      <Suspense fallback={<div className={styles.macro}><Skeleton className={styles.yieldSkeleton} /><Skeleton className={styles.fearSkeleton} /></div>}>
+      {/* Treasury/VIX previously followed movers. Reader preference now
+          puts this compact, independent context before index selection. */}
+      <div className={styles.macro} data-motion-stagger>
+        <YieldStrip locale={locale} t={t} />
+        {/* AYRI, BOŞ YEDEK YOK — bilerek. İki gösterge artık yukarıdaki
+            ölçülü ortak sınırda. Burada `fallback={null}` ile ayrı bir
+            sınır vardı ve iki yönden de
+            zarardı. Kazancı sıfır: kardeşi `YieldStrip` de FRED'den besleniyor
+            ve o askıya alınmamış, yani sayfa FRED turunu ZATEN bekliyor.
+            Maliyeti gerçek: boş yedek sıfır yer kaplıyor, kart akışla gelince
+            mobilde 262 piksel açılıp altındaki her şeyi aşağı itiyordu —
+            ölçüldü, /piyasalar'ın mobil CLS'i 0,206 çıkıyordu (Google'ın
+            "kötü" eşiği 0,1). */}
+        <FearGauge
+            locale={locale}
+            labels={{
+              title: t.markets.fearTitle,
+              details: t.markets.fearDetails,
+              hint: t.markets.fearHint,
+              average: t.markets.fearAverage,
+              guideCta: t.markets.fearGuideCta,
+              bands: {
+                calm: t.markets.fearCalm,
+                normal: t.markets.fearNormal,
+                tense: t.markets.fearTense,
+                fear: t.markets.fearHigh,
+                panic: t.markets.fearPanic,
+              },
+            }}
+          />
+      </div>
+
+      </Suspense>
+
+  </>;
 }
 
 /* ==========================================================================
@@ -731,6 +738,8 @@ async function IndexDetail({
         </>
       )}
 
+
+      <MarketContext locale={locale} t={t} />
 
       <MembersTable
         tab={tab}
@@ -1454,6 +1463,9 @@ function DetailSkeleton({ rows }: { rows: number }) {
           </Panel>
         ))}
       </div>
+
+      {/* Context indicators now follow the movers in the loaded layout. */}
+      <div className={styles.macro}><Skeleton className={styles.yieldSkeleton} /><Skeleton className={styles.fearSkeleton} /></div>
 
       {/* Bileşen tablosu */}
       <Panel>

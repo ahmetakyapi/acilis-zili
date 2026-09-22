@@ -45,7 +45,7 @@ export function PlanStrip({
   targets: readonly number[];
   supports: readonly number[];
   resistances: readonly number[];
-  /** `lg` detay kapağında: daha büyük sayı, üç sütun her genişlikte. */
+  /** `lg`: detail level board and risk comparison; rows stack on phones. */
   size?: "sm" | "lg";
   locale: Locale;
   t: Dictionary;
@@ -104,8 +104,38 @@ export function PlanStrip({
 
   const rr = hasEntry ? riskReward(entryHigh, stop, targets) : null;
 
+  // 22 September: the detail cover gets a compact level board and two
+  // common-zero risk bars; small list cards retain their existing strip.
+  if (size === "lg") {
+    const labels: Partial<Record<Cell["kind"], string>> = {
+      entry: t.technical.entryZone, target: t.technical.targetsLabel, stop: t.technical.stop,
+    };
+    const maxLeg = rr ? Math.max(rr.riskAbs, rr.rewardAbs) : 1;
+    return <div className={styles.planOverview} data-has-risk={!!rr}>
+      <dl className={styles.overviewCells} style={{ "--cells": cells.length } as React.CSSProperties}>
+        {cells.map(cell => <div key={cell.kind} className={styles.overviewCell} data-kind={cell.kind}>
+          <dt><i className={styles.legendDot} data-kind={cell.kind} aria-hidden />{labels[cell.kind] ?? cell.label}</dt>
+          <dd className={cn("numeral", cell.value === null && styles.planEmpty)}>{cell.value ?? t.technical.planNone}</dd>
+        </div>)}
+      </dl>
+      {rr && <div className={styles.riskComparison}>
+        <p><span>{t.technical.riskReward}</span><strong className="numeral">{t.technical.riskRewardValue.replace("{n}", formatPrice(rr.ratio, locale, { digits: 1 }))}</strong></p>
+        <dl>{(["risk", "reward"] as const).map(leg => {
+          const abs = leg === "risk" ? rr.riskAbs : rr.rewardAbs;
+          const pct = leg === "risk" ? rr.riskPct : rr.rewardPct;
+          return <div key={leg} data-leg={leg}>
+            <dt>{leg === "risk" ? t.technical.riskLeg : t.technical.rewardLeg}</dt>
+            <dd><b className="numeral">{money(abs)}</b><span className="numeral">{formatPercentPlain(pct, locale, 1)}</span></dd>
+            <span className={styles.riskComparisonTrack} aria-hidden><i style={{ width: `${abs / maxLeg * 100}%` }} /></span>
+          </div>;
+        })}</dl>
+        <small>{t.technical.riskAnchor.replace("{n}", money(rr.anchor))}</small>
+      </div>}
+    </div>;
+  }
+
   return (
-    <div className={cn(styles.planStrip, size === "lg" && styles.planStripLg)}>
+    <div className={styles.planStrip}>
       <dl className={styles.planCells} style={{ "--cells": cells.length } as React.CSSProperties}>
         {cells.map((cell) => (
           <div key={cell.kind} className={styles.planCell} data-kind={cell.kind}>

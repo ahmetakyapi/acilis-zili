@@ -247,6 +247,8 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     (group) => (groupCounts.get(group.key) ?? 0) > 0,
   );
 
+  const largestGroups = [...shownGroups].sort((a, b) => (groupCounts.get(b.key) ?? 0) - (groupCounts.get(a.key) ?? 0)).slice(0, 3);
+
   const rows = activeGroup
     ? companies.filter(
         (c) => sectorGroupOf(c.industry).key === activeGroup.key,
@@ -295,9 +297,19 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       <DirectoryHeader eyebrow={t.directory.companiesEyebrow} title={t.companies.title} description={t.companies.subtitle}
+        className={styles.companyHeader}
         visual={<CompanyLeaders leaders={leaders} labels={t.directory} locale={locale} />}>
 
         <dl className={styles.metrics}><div><dt>{t.directory.companyCount}</dt><dd>{companies.length.toLocaleString(locale)}</dd></div><div><dt>{t.directory.sectorCount}</dt><dd>{shownGroups.length}</dd></div></dl>
+        <div className={styles.sectorPreview}>
+          <p>{t.directory.sectorPreview}</p>
+          <div className={styles.sectorPreviewLinks}>
+            {largestGroups.map(group => <Link key={group.key} href={sectorHref(group.key)} scroll={false}>
+              <span>{sectorGroupLabel(group, locale)}</span><b className="numeral">{groupCounts.get(group.key)}</b>
+              <i aria-hidden style={{ width: `${(groupCounts.get(group.key) ?? 0) / companies.length * 100}%` }} />
+            </Link>)}
+          </div>
+        </div>
       </DirectoryHeader>
 
       {/* Kategori şeridi — geniş ekranda iki satıra sarar, mobilde kayar

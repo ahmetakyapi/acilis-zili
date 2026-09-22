@@ -770,11 +770,11 @@ export function PriceChart({
       <div className={cn(styles.reading, "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2")}>
         {hover ? (
           <>
-            <div className="flex items-baseline gap-3">
-              <span className="tote text-heading sm:text-subdisplay">
+            <div className={styles.hoverValues}>
+              <span className={cn(styles.hoverPrice, "tote")}>
                 {formatPrice(hover.price, locale, { currency: true })}
               </span>
-              <span className={cn("numeral text-sm font-semibold", hoverTone)}>
+              <span className={cn(styles.hoverChange, "numeral", hoverTone)}>
                 {formatPercent(hover.changePct, locale)}
               </span>
             </div>

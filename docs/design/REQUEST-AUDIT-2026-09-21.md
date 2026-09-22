@@ -40,3 +40,21 @@ Başlangıç: `9e1c3b6`. Son Claude değişiklikleri ve bunların üzerine gelen
 - Yerel kanıtlar: `/tmp/acilis-redesign/*-current.log`, `all-{before,after}.json`, `new-matrix.json`, `header-final2.log`, `cover-draft.log`, ekran görüntüleri. Geçici betikler ve hesap bilgileri depoya alınmadı.
 
 Kontroller yerel üretim sunucusu ve Chrome ile yapıldı. Fiziksel iOS/Safari doğrulaması yapılmadı. Ana sayfanın bazı anlık ölçümlerinde belge genişliğinde 1px yuvarlama farkı var; görünür içerik taşması yok. Sağlayıcı verileri canlı olduğundan fiyatlar ve günlük içerik zamanla değişir. Görsel beğeni otomatik testin kanıtlayabileceği bir sonuç değildir; ölçümler ekran görüntülerinin incelenmesiyle birlikte değerlendirildi.
+
+## 22 Eylül Ek İstekleri — Tamamlandı
+
+Önce yukarıdaki tarama `3105097` ile kaydedildi; ardından yeni yedi istek uygulandı. Bu bölüm, önceki tahvil/VIX sırası tercihini günceller.
+
+| Yeni İstek | Uygulama ve Doğrulama |
+| --- | --- |
+| AL altındaki metin ve işlem planı | Büyük ikinci manşet yerine etiketli, 16px bir görüş okuması ve ona bağlı kompakt görüş rozeti. Alım bölgesi/hedef/stop ayrı alanlarda; tam genişlikteki kırmızı-yeşil şerit yerine iki ortak başlangıçlı risk/getiri çubuğu. Oran, tutarlar, yüzdeler ve hesap başlangıcı korunuyor. SAT/bölgesiz TUT kendine ait seviye anlamlarını korur. |
+| Soldaki fiyat haritası | Fiyat sıralı, doğal yüksekliğe sahip satırlar; aynı sağ kenarda fiyatlar; aynı ölçekte iki yönlü uzaklık çubukları. Seçili fiyat, alım bölgesi ve stop farklı yüzeylerle ayrılır. Alt boşluk kaldırıldı; satır aralığının fiyat mesafesi olmadığı açıkça belirtilir. Geçildi/kırıldı etiketleri ve seviye gerekçeleri korunur. |
+| Şirketler kapağının boş solu | Gerçek dizin sayılarından en geniş üç sektör ve şirket sayısı/pay çubukları. Bağlantılar ilgili sektör filtresini açar. İlk on şirketin sağdaki düzeni ve küçük piyasa değerleri korunur; iki tarafın görünen son içeriği hizalı. |
+| Piyasalar önce piyasanın durumunu göstersin | Sıra: başlık/endeks kartları → endeks seçimi → piyasa genişliği → günün artanları/düşenleri → tahvil/VIX → şirket tablosu. Bağlam göstergeleri Makro'ya taşınmadı; hisse hareketlerinin hemen altında erişilebilir. Yükleme iskeleti yeni sıraya uyarlandı. |
+| Bilanço kapağının boş solu | Seçili hafta/ay için mevcut kayıtlardan günlük yoğunluk grafiği, toplam bilanço ve en yoğun gün. Tarih aralığı belirtilir; en yoğun gün bağlantısı takvimdeki gerçek güne gider. Piyasa beklentisi veya önem puanı uydurulmadı. |
+| Teknik liste kapağı/logolar | Önceki sütun hizası korunuyor; dağılımdaki logolar 26 → 32px. Mobil dokunma alanı 44px. |
+| Şirket grafiğindeki imleç okuması | Fiyat masaüstü 24 → 32px, mobil 28px; yüzde 16/15px. Tarih görünür kalır. Okuma satırına yer ayrıldığı için imleç gezdirirken grafiğin yeri ve yüksekliği değişmez. |
+
+Son doğrulama: 10 görünüm × 5 genişlik × TR/EN × açık/koyu = **200 yerleşim**. Kesilen fiyat, yatay taşma, çakışan satır veya tarayıcı hatası yok; teknik kapak ve fiyat sütunu farkları **0px**. Şirket/bilanço/teknik liste kapaklarında görünen son içerikler aynı hatta; hisse grafik ve profil kolonları hizalı.
+
+Ek olarak **6 grafik imleci kontrolü**, **12 grafik/Mercek etkileşimi**, **12 geciktirilmiş filtre geçişi** ve en yoğun bilanço gününe bağlantı kontrolü başarılı. 75 mevcut test, üretim build, build sonrası typecheck ve lint geçti. Yeni veri isteği, bağımlılık veya finansal hesap değişikliği yok. Yerel kanıtlar `/tmp/acilis-redesign/sep22-{matrix,hover,query,peak}.json` ve `sep22-final-*` ekran görüntülerinde. Fiziksel iOS/Safari testi bu kapsamda değil.

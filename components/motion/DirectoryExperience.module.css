@@ -61,3 +61,45 @@
  .tabs { padding:4px; } .tabs a { padding-inline:12px; font-size:12px; }
 }
 @media(prefers-reduced-motion:reduce) { :global(html):has(.page) { scroll-behavior:auto; } .page * { scroll-behavior:auto; } .tablePanel tbody tr,.distribution a { transition:none; } }
+
+/* 22 September: the left covers carried 65–120px of unused space. These
+   summaries use existing directory/calendar data, without another request. */
+.sectorPreview { margin-top:20px; padding-top:12px; border-top:1px solid var(--line-soft); }
+.sectorPreview > p { font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:9px; }
+.sectorPreviewLinks { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.sectorPreviewLinks > a { display:flex; position:relative; min-width:0; align-items:baseline; justify-content:space-between; gap:6px; padding-bottom:10px; font-size:12px; color:var(--text-body); border-bottom:3px solid var(--rail-track); }
+.sectorPreviewLinks > a > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sectorPreviewLinks b { color:var(--primary-ink); font-weight:600; }
+.sectorPreviewLinks i { position:absolute; left:0; bottom:-3px; height:3px; background:var(--primary); }
+.sectorPreviewLinks > a:is(:hover,:focus-visible) { color:var(--primary-ink); }
+.earningsActivity { margin-top:22px; padding-top:12px; border-top:1px solid var(--line-soft); }
+.earningsActivity figcaption { display:flex; justify-content:space-between; gap:12px; font-size:11px; color:var(--text-muted); }
+.earningsActivity figcaption strong { font-weight:600; color:var(--text-strong); }
+.activityBars { display:flex; align-items:end; gap:5px; height:42px; margin-top:10px; }
+.activityBars > span { display:flex; align-items:end; height:100%; flex:1; min-width:0; border-bottom:1px solid var(--line); }
+.activityBars i { width:100%; background:var(--primary-faint); border-radius:3px 3px 0 0; }
+.activityBars [data-peak="true"] i { background:linear-gradient(0deg,var(--primary),var(--primary-soft)); }
+.activityPeak { display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px; padding-top:8px; font-size:11px; color:var(--text-muted); }
+.activityPeak strong { font-weight:600; color:var(--primary-ink); }
+.activityPeak > :last-child { margin-left:auto; color:var(--primary-ink); }
+@media(min-width:768px) {
+ .companyHeader.companyHeader:global(.page-frame),.earningsHeader.earningsHeader:global(.page-frame) { align-items:stretch; }
+ .companyHeader > :global(.page-heading-copy),.earningsHeader > :global(.page-heading-copy) { display:flex; flex-direction:column; align-self:stretch; }
+ .companyHeader .sectorPreview,.earningsHeader .earningsActivity { margin-top:auto; padding-top:14px; }
+ .companyHeader .metrics { margin-bottom:20px; }
+ .earningsHeader .calendarControls { margin-bottom:20px; }
+}
+@media(min-width:768px) {
+ .companyHeader .metrics { margin-top:18px; margin-bottom:10px; }
+ .companyHeader .sectorPreview { padding-top:10px; }
+ .companyHeader .sectorPreview > p { margin-bottom:7px; }
+ .companyHeader .sectorPreviewLinks > a { padding-bottom:6px; }
+ .earningsHeader .calendarControls { margin-bottom:10px; }
+ .earningsHeader .earningsActivity { padding-top:12px; }
+ .companyHeader > .heroVisual,.earningsHeader > .heroVisual { display:flex; }
+ .companyHeader > .heroVisual > * { flex:1; display:flex; flex-direction:column; }
+ .companyHeader .heroVisual ul { flex:1; }
+ .companyHeader .heroVisual li > a { height:100%; }
+ .earningsHeader > .heroVisual > * { flex:1; }
+}
+.activityAxis { display:flex; justify-content:space-between; gap:12px; margin-top:4px; font-size:10px; color:var(--text-muted); }

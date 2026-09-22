@@ -99,6 +99,10 @@ const en: typeof tr = {
   },
 
   directory: {
+    sectorPreview: "Largest Sectors in the Directory",
+    earningsActivity: "Reporting Activity",
+    earningsBusiest: "Busiest Day",
+    reportsCount: "{n} Reports",
     marketLeaders: "Market Leaders",
     leadersByCap: "By Market Cap",
     selectCompany: "Select a Company",
@@ -639,6 +643,9 @@ const en: typeof tr = {
     rangeDetail: "Low {low} · High {high}",
     levelRationale: "Behind the Levels",
     priceMap: "Price Map",
+    levelColumn: "Level",
+    thesisLabel: "The View in Brief",
+    priceLevelsNote: "Levels run from highest to lowest price. Bars show distance from the current price on a shared scale; row spacing does not represent price distance.",
     priceMapNote: "Levels are ordered by price and spread apart where they cluster; distances are measured from the current price.",
     sectionsLabel: "Analysis Sections",
   },

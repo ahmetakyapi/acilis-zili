@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { EmptyState, Panel, Segment, SegmentItem } from "@/components/ui/primitives";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import { EarningsActivity } from "@/components/earnings/EarningsActivity";
 import { EarningsRadar } from "@/components/earnings/EarningsRadar";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { EarningsCalendar } from "@/components/earnings/EarningsCalendar";
@@ -110,6 +111,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           taşıyor; alt başlık bu sekmenin ne gösterdiğini anlatmaya devam
           ediyor. */}
       <DirectoryHeader
+        className={styles.earningsHeader}
         eyebrow={t.directory.earningsEyebrow}
         title={t.analysis.title}
         description={t.earnings.subtitleLong}
@@ -129,6 +131,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
             </p>
           </div>
         }
+        <EarningsActivity rows={rows} from={today} to={rangeEnd} locale={locale} t={t} />
       </DirectoryHeader>
 
       <EarningsTabs active="calendar" t={t} className="-mt-2" />

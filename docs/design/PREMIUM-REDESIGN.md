@@ -350,3 +350,11 @@ Doğrulama: 140 tarayıcı yerleşimi (7 rota × 5 genişlik × 2 dil × 2 tema)
 ### İstek Taraması ve Header Hizası — 21 Eylül, Dördüncü Geçiş
 
 Ayrıntılı kontrol listesi `REQUEST-AUDIT-2026-09-21.md` dosyasında. Teknik liste kapağındaki gerçek içerik bitiş farkı 41,3 → 0px; detay kapağındaki 46px fark da görüş/açıklama grubunun ve kısa göstergelerin ortak alt kenarıyla düzeltildi. Header'ın boş orta alanı bağlantılara dağıtıldı ve tema renklerinden mavi geçiş eklendi; 69px yükseklik korundu. Mobilde Dünya Piyasaları'nın geriye düşmesi düzeltilerek Özet → Dünya Piyasaları → Günün Hareketleri sırası geri getirildi. Yeni bağımlılık veya veri kaynağı değişikliği yok.
+
+### Görüş, Fiyat Seviyeleri ve Bilgi Önceliği — 22 Eylül
+
+Önceki tarama tamamlandıktan sonra kullanıcının yedi yeni ekran notu uygulandı. Teknik detayın görüşü etiketli kısa bir okuma; işlem planı üç seviye alanı ve ayrı risk/getiri karşılaştırması olarak düzenlendi. Fiyat haritası fiyat sırasını koruyan bir seviye listesi ve ortak ölçekli uzaklık çubuklarıyla okunuyor. Eski esneyen eksen sunumu bileşende ayrıca kullanılabilir; yeni detayda satır boşlukları fiyat mesafesi iddiası taşımıyor. Mevcut seviye, oran, geçildi/kırıldı ve açıklama hesapları korundu.
+
+Şirket kapağındaki boş alana gerçek sektör sayıları, bilanço kapağına seçili aralığın günlük bilanço yoğunluğu eklendi. İki kapakta da son görünen içeriklerin alt kenarları eşleşiyor. Piyasalar'da yeni tercihe göre tahvil/VIX günün hareketlerinin altına, şirket tablosunun önüne geçti; ilk ekran endeksler ve piyasa genişliğine ayrılıyor. Teknik dağılım logoları 32px; şirket grafiğinde imleç fiyatı 32/28px, yüzde 16/15px. Okuma alanı ve iskeleti birlikte büyütüldüğü için imleçte çizim alanı kaymıyor.
+
+200 üretim yerleşimi: TR/EN, açık/koyu, 320/390/768/1024/1440px, AL/SAT ve uzun seviye değerleri, hafta/ay bilanço görünümleri. Fiyat sütunu ve teknik kapak bitiş farkı 0px; taşma, kesilme veya tarayıcı hatası yok. 6 imleç, 12 grafik/Mercek ve 12 filtre senaryosu başarılı. 75 mevcut test ve build/typecheck/lint temiz. Ayrıntılı istek eşleştirmesi `REQUEST-AUDIT-2026-09-21.md` içindeki 22 Eylül bölümünde.

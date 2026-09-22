@@ -48,3 +48,13 @@
  .root[data-compact="true"] { display:flex; flex-direction:column; }
  .root[data-compact="true"] .plot { flex:1 0 var(--price-chart-height,280px); min-height:var(--price-chart-height,280px); }
 }
+
+/* The compact chart's cursor value was only 24px beside a 14px return.
+   Reserve the same reading row; enlarge the value without moving the plot. */
+.hoverValues { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; min-width:0; }
+.root[data-compact] .reading .hoverPrice { font-size:32px; line-height:1.1; letter-spacing:-.035em; }
+.hoverChange { font-size:16px; font-weight:650; }
+@media(max-width:639px) {
+ .root[data-compact] .reading .hoverPrice { font-size:28px; }
+ .hoverChange { font-size:15px; }
+}

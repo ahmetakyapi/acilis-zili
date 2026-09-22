@@ -1089,3 +1089,71 @@
  .coverMain > .stanceRow { margin-top:auto; }
  .coverSide > .signalsCompact { margin-top:auto; }
 }
+
+/* 22 September: headline and verdict become one editorial reading, rather
+   than a large isolated verdict followed by another display headline. */
+.coverThesis { display:flex; flex-direction:column; gap:10px; margin-top:auto; padding:14px 16px; border-radius:12px; background:linear-gradient(105deg,var(--primary-tint),transparent); border:1px solid var(--line-soft); }
+.coverThesis .stanceRow { justify-content:space-between; gap:8px; }
+.thesisLabel { font-size:11px; font-weight:650; letter-spacing:.02em; color:var(--text-muted); }
+.coverThesis .stancePill { padding:4px 10px; font-size:14px; border-radius:6px; }
+.coverThesis .coverHeadline { max-width:none; font-size:16px; line-height:1.65; font-weight:500; letter-spacing:-.01em; }
+.planOverview { display:grid; grid-template-columns:minmax(0,1fr) 240px; gap:24px; align-items:stretch; }
+.planOverview[data-has-risk="false"] { grid-template-columns:minmax(0,1fr); }
+.overviewCells { display:grid; grid-template-columns:repeat(var(--cells,3),minmax(0,1fr)); gap:12px; min-width:0; }
+.overviewCell { display:flex; min-width:0; flex-direction:column; justify-content:center; gap:12px; padding:16px; border-radius:12px; background:var(--primary-tint); border:1px solid var(--line-soft); }
+.overviewCell[data-kind="stop"] { background:linear-gradient(130deg,var(--down-wash),transparent); }
+.overviewCell[data-kind="target"],.overviewCell[data-kind="entry"] { background:linear-gradient(130deg,var(--up-wash),transparent); }
+.overviewCell dt { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-muted); font-weight:600; }
+.overviewCell dd { font-size:clamp(17px,1.4vw,21px); font-weight:600; line-height:1.55; color:var(--text-strong); letter-spacing:-.025em; }
+.riskComparison { min-width:0; padding-left:20px; border-left:1px solid var(--line-soft); }
+.riskComparison > p { display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:11px; color:var(--text-muted); }
+.riskComparison > p strong { font-size:21px; color:var(--text-strong); font-weight:600; }
+.riskComparison dl { display:grid; gap:9px; margin-top:9px; }
+.riskComparison dl > div { display:grid; grid-template-columns:1fr auto; gap:4px 10px; font-size:11px; color:var(--text-muted); }
+.riskComparison dd { display:flex; gap:7px; align-items:baseline; }
+.riskComparison dd b { font-size:12px; font-weight:600; color:var(--text-strong); }
+.riskComparisonTrack { grid-column:1/-1; height:4px; border-radius:2px; background:var(--rail-track); overflow:hidden; }
+.riskComparisonTrack i { display:block; height:100%; border-radius:inherit; background:var(--up); }
+.riskComparison [data-leg="risk"] .riskComparisonTrack i { background:var(--down); }
+.riskComparison small { display:block; margin-top:9px; font-size:10px; line-height:1.4; color:var(--text-muted); }
+.levelBoard { display:flex; flex:1; flex-direction:column; min-width:0; }
+.levelBoardHead { display:flex; justify-content:space-between; gap:12px; padding:0 12px 10px; color:var(--text-muted); font-size:11px; }
+.levelRows { display:flex; flex:1; flex-direction:column; min-width:0; gap:5px; }
+.levelRow { display:grid; flex:1; grid-template-columns:minmax(0,1fr) minmax(128px,auto) 86px; gap:8px 14px; align-items:center; min-height:58px; padding:12px; border-bottom:1px solid var(--line-soft); }
+.levelLabel { display:flex; flex-wrap:wrap; align-items:center; gap:5px 7px; font-size:13px; color:var(--text-muted); }
+.levelLabel::before { content:""; flex:none; width:5px; height:18px; border-radius:3px; background:var(--line-strong); }
+.levelPrice { text-align:right; font-size:15px; font-weight:600; color:var(--text-strong); }
+.levelDistance { display:flex; flex-direction:column; gap:7px; text-align:right; font-size:12px; color:var(--text-muted); }
+.levelDistance[data-dir="up"] { color:var(--up); }
+.levelDistance[data-dir="down"] { color:var(--down); }
+.levelDistanceTrack { position:relative; display:block; height:4px; background:var(--rail-track); border-radius:2px; }
+.levelDistanceTrack::after { content:""; position:absolute; left:50%; top:-2px; width:1px; height:8px; background:var(--line-strong); }
+.levelDistanceTrack b { position:absolute; top:0; height:100%; background:currentColor; border-radius:2px; }
+.levelRow:is([data-kind="price"],[data-kind="entry"],[data-kind="stop"]) { border-bottom-color:transparent; border-radius:10px; }
+.levelRow[data-kind="price"] { background:var(--primary-wash); }
+.levelRow[data-kind="price"] :is(.levelLabel,.levelPrice) { color:var(--primary-ink); font-weight:650; }
+.levelRow[data-kind="entry"] { background:var(--up-wash); }
+.levelRow[data-kind="stop"] { background:var(--down-wash); }
+.levelRow[data-kind="price"] .levelLabel::before { background:var(--primary); }
+.levelRow:is([data-kind="target"],[data-kind="entry"]) .levelLabel::before { background:var(--up); }
+.levelRow:is([data-kind="stop"],[data-kind="sellLevel"]) .levelLabel::before { background:var(--down); }
+.levelStopNote { display:flex; gap:7px; align-items:baseline; flex-wrap:wrap; margin-top:14px; padding:12px; border-radius:8px; background:var(--down-wash); font-size:11px; color:var(--down); }
+.levelStopNote i { display:inline-block; width:5px; height:5px; border-radius:50%; background:currentColor; }
+.pulse[data-variant="directory"] .pulseLogo > :first-child { width:32px; height:32px; border-radius:9px; }
+@media(max-width:1199px) { .planOverview { grid-template-columns:minmax(0,1fr) 210px; gap:16px; } .overviewCell { padding:12px; } }
+@media(max-width:1023px) { .planOverview { grid-template-columns:minmax(0,1fr); } .riskComparison { padding:12px 0 0; border-left:0; border-top:1px solid var(--line-soft); } .riskComparison dl { grid-template-columns:1fr 1fr; gap:16px; } }
+@media(max-width:767px) { .pulse[data-variant="directory"] .pulseLogo { padding:6px; margin:-6px; } .coverThesis { padding:12px; } .coverThesis .coverHeadline { font-size:15px; } }
+@media(max-width:639px) {
+ .overviewCells { grid-template-columns:minmax(0,1fr); gap:6px; }
+ .overviewCell { flex-direction:row; align-items:baseline; justify-content:space-between; gap:10px; padding:10px 12px; }
+ .overviewCell dt { flex:0 0 90px; font-size:11px; }
+ .overviewCell dd { text-align:right; font-size:15px; }
+ .levelRow { grid-template-columns:minmax(0,1fr) 70px; gap:5px 10px; padding:11px 10px; min-height:72px; }
+ .levelLabel { grid-column:1/-1; font-size:12px; }
+ .levelLabel::before { height:12px; width:4px; }
+ .levelPrice { grid-column:1; font-size:14px; }
+ .levelDistance { grid-column:2; font-size:11px; }
+}
+.levelBoardHead { display:grid; grid-template-columns:minmax(0,1fr) minmax(128px,auto) 86px; gap:14px; }
+.levelBoardHead > :not(:first-child) { text-align:right; }
+@media(max-width:639px) { .levelBoardHead { grid-template-columns:minmax(0,1fr) 70px; gap:10px; } .levelBoardHead > :nth-child(2) { display:none; } }

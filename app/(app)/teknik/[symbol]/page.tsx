@@ -295,15 +295,19 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
               </p>
             )}
           </div>
-          <div className={styles.stanceRow}>
-            {/* Etiket yalnızca ekran okuyucuya: gerekçe `.stancePill` yorumunda. */}
-            <span className="sr-only">{t.technical.stanceLabel}</span>
-            <span className={cn(styles.stancePill, verdictPillClass(verdict))}>{verdictLabel(verdict, t)}</span>
-            {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
+          <div className={styles.coverThesis}>
+            <div className={styles.stanceRow}>
+              {/* Etiket yalnızca ekran okuyucuya: gerekçe `.stancePill` yorumunda.
+                 22 September: the replacement label names the visible thesis,
+                 while the compact verdict stays attached to that reading. */}
+              <span className={styles.thesisLabel}>{t.technical.thesisLabel}</span>
+              <span className={cn(styles.stancePill, verdictPillClass(verdict))}>{verdictLabel(verdict, t)}</span>
+              {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
+            </div>
+            <p className={styles.coverHeadline} lang={copyLang}>
+              {tieFigures(copy.headline)}
+            </p>
           </div>
-          <p className={styles.coverHeadline} lang={copyLang}>
-            {tieFigures(copy.headline)}
-          </p>
           {locale === "en" && !hasEnglish && (
             <p className="text-small text-muted">{t.technical.langNote}</p>
           )}
@@ -371,6 +375,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             <h2 className={styles.sectionTitle}>{t.technical.priceMap}</h2>
           </div>
           <PriceMap
+            presentation="levels"
             price={price}
             {...levelProps}
             verdict={verdict}
@@ -378,7 +383,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             locale={locale}
             t={t}
           />
-          <p className={styles.footHint}>{t.technical.priceMapNote}</p>
+          <p className={styles.footHint}>{t.technical.priceLevelsNote}</p>
         </section>
 
         <PriceMapNotes {...levelProps} copy={copy} verdict={verdict} lang={copyLang} t={t} />

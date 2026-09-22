@@ -120,6 +120,10 @@ const tr = {
   },
 
   directory: {
+    sectorPreview: "Dizinin En Geniş Sektörleri",
+    earningsActivity: "Takvim Yoğunluğu",
+    earningsBusiest: "En Yoğun Gün",
+    reportsCount: "{n} Bilanço",
     marketLeaders: "Piyasanın Devleri",
     leadersByCap: "Piyasa Değerine Göre",
     selectCompany: "Bir Şirket Seç",
@@ -808,6 +812,9 @@ const tr = {
     /* ---- Fiyat haritası ---- */
     levelRationale: "Seviyelerin Dayanağı",
     priceMap: "Fiyat Haritası",
+    levelColumn: "Seviye",
+    thesisLabel: "Görüşün Gerekçesi",
+    priceLevelsNote: "Seviyeler yüksek fiyattan düşüğe sıralıdır. Çubuklar şu anki fiyata uzaklığı ortak ölçekte gösterir; satır aralıkları fiyat mesafesi değildir.",
     priceMapNote: "Seviyeler fiyat sırasına göre dizilir, birbirine yakın olanlar okunabilsin diye ayrılır; uzaklıklar şu anki fiyattan ölçülür.",
     sectionsLabel: "Analiz Bölümleri",
   },

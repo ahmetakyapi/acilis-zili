@@ -49,6 +49,7 @@ export function PriceMap({
   resistances,
   verdict,
   priceLabel,
+  presentation = "axis",
   locale,
   t,
 }: {
@@ -61,6 +62,7 @@ export function PriceMap({
   resistances: readonly number[];
   verdict: VerdictKey;
   priceLabel: string;
+  presentation?: "axis" | "levels";
   locale: Locale;
   t: Dictionary;
 }) {
@@ -109,6 +111,33 @@ export function PriceMap({
 
   const kindOf = (rung: MapRung) =>
     rung.kind === "target" && sellSide ? "sellLevel" : rung.kind;
+
+  // 22 September: the cover already locates the current plan. In the
+  // detail board, price-ordered rows and a shared distance scale replace
+  // the expanded vertical axis. The axis presentation remains reusable.
+  if (presentation === "levels") {
+    const distances = rungs.map(rung => distancePct(rung.kind === "entry" ? rung.high ?? rung.price : rung.price, price));
+    const extent = Math.max(1, ...distances.map(value => Math.abs(value ?? 0)));
+    return <div className={styles.levelBoard}>
+      <div className={styles.levelBoardHead}><span>{t.technical.levelColumn}</span><span>{t.companies.price}</span><span>{t.technical.levelsNote}</span></div>
+      <ol className={styles.levelRows}>
+        {rungs.map((rung, index) => {
+          const distance = rung.kind === "price" ? null : distances[index];
+          const crossed = crossedState(rung.kind, distance);
+          const value = rung.kind === "entry" && rung.high !== undefined ? formatRange(rung.price, rung.high, locale) : money(rung.price);
+          return <li key={`${rung.kind}-${rung.price}`} className={styles.levelRow} data-kind={kindOf(rung)}>
+            <span className={styles.levelLabel}>{labelOf(rung)}{crossed && <b className={styles.mapCrossed} data-state={crossed}>{crossed === "passed" ? t.technical.levelPassed : t.technical.levelBroken}</b>}</span>
+            <strong className={cn(styles.levelPrice, "numeral")}>{rung.kind === "entry" && value.includes("–") ? <>{value.split("–")[0]}–<wbr />{value.split("–")[1]}</> : value}</strong>
+            <span className={styles.levelDistance} data-dir={distance != null && distance > 0 ? "up" : distance != null && distance < 0 ? "down" : "flat"}>
+              <span className="numeral">{distance !== null ? formatPercent(distance, locale, 1) : "—"}</span>
+              {distance !== null && <i aria-hidden className={styles.levelDistanceTrack}><b style={{ width: `${Math.abs(distance) / extent * 50}%`, left: distance < 0 ? `${50 - Math.abs(distance) / extent * 50}%` : "50%" }} /></i>}
+            </span>
+          </li>;
+        })}
+      </ol>
+      {stop !== null && <p className={styles.levelStopNote}><i aria-hidden />{money(stop)} · {t.technical.zoneBelowStop}</p>}
+    </div>;
+  }
 
   return (
     <>

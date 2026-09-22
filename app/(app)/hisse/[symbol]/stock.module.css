@@ -192,7 +192,7 @@
    chart sizing variables; embedded article and fund charts keep theirs. */
 .companyOverview .chartPanel {
   --price-chart-height:clamp(140px,calc(100svh - 620px),300px);
-  --price-chart-reading:48px;
+  --price-chart-reading:60px;
   --price-chart-legend:30px;
   --price-chart-legend-margin:8px;
   --price-chart-legend-padding:6px;
@@ -396,3 +396,7 @@
 .fundamentalsGrid .complianceBody { flex:1; display:flex; flex-direction:column; }
 .fundamentalsGrid .complianceRatios { flex:1; align-content:center; }
 .fundamentalsGrid .complianceBody > details { margin-top:14px; }
+
+/* Cursor prices now use 32/28px. Reserve a two-line reading on phones,
+   including its date, so hovering never pushes the plot down. */
+@media(max-width:639px) { .companyOverview .chartPanel { --price-chart-reading:72px; } }
