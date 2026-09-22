@@ -67,11 +67,18 @@ Blok ailesi `components/article/ArticleBody.tsx` içinde:
 metin kutusu `ornek` · `dikkat` · `ozet` · `tanim`. Sözdizimi ve yazım
 kuralları `docs/claude-rutinler.md` § 3'te; rutin prompt'u oradan kopyalanıyor.
 
-**Yeni blok eklersen ÜÇ yeri birden güncelle:** çizici (`ArticleBody.tsx`),
+**Yeni blok eklersen DÖRT yeri birden güncelle:** çizici (`ArticleBody.tsx`),
+Mercek'in editoryal görünümü (`components/article/ArticleEditorial.module.css`),
 rutin prompt'u (`docs/claude-rutinler.md` § 3) ve panel editörünün çip
 listesi (`components/admin/StoryEditor.tsx` → `BLOKLAR`). Çipler yazıya
 örnek blok basıyor; listede olmayan blok editörden hiç eklenemez, listede
 olup çizicide olmayan blok da sayfada düz metne döner.
+
+**Mercek yazısı `variant="editorial"` ile çiziliyor, rehber/KVKK varsayılanla.**
+Editoryal stil yalnızca `data-block` / `data-part` / `data-role` kancalarını
+okuyan ayrı bir modülde; rehber ve KVKK piksel piksel aynı kalıyor. Blok
+rolleri (özet, giriş, ders, yöntem notu) CSS'te `:has()` ile tahmin
+edilmiyor, `blockRoles` ile TS'te hesaplanıyor.
 
 **Görselin etrafında çerçeve yok.** Kenarlık ve iç dolgu, resmi kutunun
 ortasında duran ayrı bir nesne gibi gösteriyor; görsel kutunun kendisi olmalı
@@ -206,7 +213,8 @@ function`, `cache()` sarmalı yok ve argümanı sembol listesi değil bir
 `SeriesRequest`. Makro serilerde istek-içi tekilleştirme YOK; oradaki tek
 koruma `fetch`in kendi veri önbelleği (`revalidate`), yani farklı bir
 mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
-(`getHolidays`, `getStatus`, `getEventsBetween`, `getEarningsBetween`,
+(`getHolidays`, `getStatus`, `getEventsBetween`, `getEventsBetweenResult`,
+`getEarningsBetween`,
 `getNewsById`, `getStoryBySlug`, `getStoryLocales`, `getAnalysis`,
 `symbolNamesForKey`, `isKnownSymbol`), `lib/technical-data.ts`
 (`getTechnicalBoard`, `getTechnicalDetail`, `getPublishedSymbols`),

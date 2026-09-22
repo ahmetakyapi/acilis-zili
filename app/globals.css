@@ -36,6 +36,14 @@
      Yeni değer iki zeminde de geçiyor: 5,28 ve 4,62. Koyu tema zaten 5,94'tü,
      dokunulmadı. */
   --text-muted: #586a7c;
+  /* UZUN OKUMA MÜREKKEBİ — yalnızca Mercek yazı gövdesi (ArticleEditorial).
+     Gövde `--text-body` ile basılıyordu: #54677c sayfa zemininde 5,51:1.
+     AA'yı geçiyor ama 18 piksellik, sayfalarca süren bir metinde gri ve
+     yorucu okunuyordu; panel metinleri için doğru olan ton uzun okuma için
+     fazla soluk. #2a3a4d aynı mavi-gri ailede ve 10,99:1. Başlık tonu
+     (`--text-strong`, #101c2b) değil: gövde başlıkla aynı siyahlıkta
+     basılınca ara başlıklar sayfadan kopmuyordu. */
+  --text-prose: #2a3a4d;
 
   /* Etkileşim / seçili / link. Açık zeminde bir basamak koyu. */
   --primary: #0d74c4;
@@ -204,6 +212,9 @@
   --text-soft: #94a7ba;
   /* 11px'de AA — daha soluk yapma. */
   --text-muted: #8497a9;
+  /* Uzun okuma mürekkebi: gövde tonu (#94a7ba) #070d16 zeminde 7,88:1,
+     bu ton 11,19:1 — açık temadaki #2a3a4d'nin (10,99:1) karşılığı. */
+  --text-prose: #b8c6d4;
 
   --primary: #35b8ff;
   --primary-hover: #7fd2ff;

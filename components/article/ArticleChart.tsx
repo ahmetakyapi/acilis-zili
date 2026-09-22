@@ -54,12 +54,12 @@ export async function ArticleChart({
   const name = meta[symbol]?.name;
 
   return (
-    <figure className="flex flex-col gap-0 overflow-hidden rounded-(--radius-lg) border border-line bg-surface">
+    <figure data-block="chart" className="flex flex-col gap-0 overflow-hidden rounded-(--radius-lg) border border-line bg-surface">
       {/* Künye grafiğin ÜSTÜNDE: PriceChart kendi okuma satırını en üste
           koyuyor, hangi hisseye baktığını söyleyen satır ondan da önce
           gelmeli. Sembol hisse sayfasına açılır — yazıdan çıkış kapısı
           kapanmıyor, sadece artık zorunlu değil. */}
-      <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 border-b border-line px-4 pb-3 pt-4 sm:px-5">
+      <div data-part="head" className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 border-b border-line px-4 pb-3 pt-4 sm:px-5">
         <Link
           href={`/hisse/${symbol}`}
           className="tap-44 numeral -my-1.5 inline-flex min-h-8 items-center py-1.5 text-read font-bold tracking-[-0.02em] text-strong transition-colors hover:text-primary"
@@ -79,7 +79,7 @@ export async function ArticleChart({
       </div>
 
       {caption && (
-        <figcaption className="border-t border-line px-4 py-2.5 text-tiny leading-relaxed text-muted sm:px-5">
+        <figcaption data-part="caption" className="border-t border-line px-4 py-2.5 text-tiny leading-relaxed text-muted sm:px-5">
           {caption}
         </figcaption>
       )}

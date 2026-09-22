@@ -1,5 +1,14 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import Link from "next/link";
+import {
+  ArrowDown,
+  ArrowRight,
+  BookOpenText,
+  Lightbulb,
+  ListChecks,
+  WarningCircle,
+} from "@phosphor-icons/react/dist/ssr";
+import type { Icon } from "@phosphor-icons/react";
 import { ArticleChart } from "./ArticleChart";
 import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
 import { cn, safeExternalUrl } from "@/lib/utils";
@@ -60,10 +69,17 @@ type CalloutKind = "ornek" | "dikkat" | "ozet" | "tanim";
    meselesi. */
 const CALLOUT: Record<
   CalloutKind,
-  { defaultLabel: { tr: string; en: string }; box: string; kicker: string }
+  {
+    defaultLabel: { tr: string; en: string };
+    box: string;
+    kicker: string;
+    /** Yalnızca editoryal çizimde (Mercek) etiketin önünde duruyor. */
+    icon: Icon;
+  }
 > = {
   ornek: {
     defaultLabel: { tr: "Örnek", en: "Example" },
+    icon: Lightbulb,
     box: "border-primary-faint bg-primary-tint",
     /* Künye kendi kutusunun tintli zemininde duruyor: `--primary` orada 10
        pikselde 4,36'ya iniyor (gereken 4,5). Kardeş kutu `dikkat` aynı
@@ -72,16 +88,19 @@ const CALLOUT: Record<
   },
   dikkat: {
     defaultLabel: { tr: "Dikkat", en: "Heads-Up" },
+    icon: WarningCircle,
     box: "border-brass/35 bg-brass-wash",
     kicker: "text-brass-ink",
   },
   ozet: {
     defaultLabel: { tr: "Özet", en: "Summary" },
+    icon: ListChecks,
     box: "border-line-strong bg-surface-elevated",
     kicker: "text-body",
   },
   tanim: {
     defaultLabel: { tr: "Tanım", en: "Definition" },
+    icon: BookOpenText,
     box: "border-line bg-surface",
     kicker: "text-muted",
   },
@@ -147,6 +166,71 @@ function basligaKimlik(text: string): string {
     .slice(0, 60);
   return gövde ? `b-${gövde}` : "";
 }
+
+/**
+ * Gövdedeki her bloğun çapa kimliği — başlık değilse `null`.
+ *
+ * TEKİLLEŞTİRİLMİŞ. `basligaKimlik` tek başına iki aynı `##` başlığa aynı
+ * `id`yi veriyordu (geçersiz HTML; çapa hep ilkine atlıyordu) ve yalnızca
+ * sembolden oluşan bir başlığa `id=""` basıyordu. İkinci ve sonraki kopyalar
+ * artık `-2`, `-3` ekini alıyor, boş kimlikli başlık hiç `id` almıyor.
+ * İLK KOPYANIN KİMLİĞİ DEĞİŞMEDİ: dışarıda paylaşılmış bağlantılar çalışmaya
+ * devam ediyor.
+ *
+ * Dışa açık, çünkü Mercek sayfası içindekiler listesini de buradan kuruyor:
+ * liste ile başlığın kimliği aynı fonksiyondan gelmezse bağlantı boşa düşer.
+ */
+export function headingIds(blocks: readonly Block[]): (string | null)[] {
+  const used = new Set<string>();
+  return blocks.map((block) => {
+    if (block.kind !== "heading") return null;
+    const base = basligaKimlik(block.text);
+    if (!base) return null;
+    let id = base;
+    for (let copy = 2; used.has(id); copy += 1) id = `${base}-${copy}`;
+    used.add(id);
+    return id;
+  });
+}
+
+/**
+ * Editoryal çizimde bloğun yazıdaki GÖREVİ.
+ *
+ * Bu görevler bir dönem CSS'te `:has()` ile metnin biçiminden tahmin
+ * ediliyordu ("son paragraf tamamen eğikse not"). Kırılgandı: seçici
+ * desteğine ve işaretlemenin o anki şekline bağlıydı, test edilemiyordu.
+ * Karar artık ayrıştırılmış bloklardan TS'te veriliyor ve `data-role`
+ * olarak basılıyor; CSS yalnızca bu özniteliğe bakıyor.
+ *
+ *   summary  — yazı bir `:::` kutusuyla AÇILIYORSA o kutu (Genel Özet)
+ *   lede     — ilk paragraf (özet kutusundan hemen sonra ya da en başta)
+ *   takeaway — ilk sırada olmayan `ozet` kutusu: yazının dersi
+ *   note     — son blok tamamen eğik bir paragrafsa: yöntem notu
+ */
+export type BlockRole = "summary" | "lede" | "takeaway" | "note";
+
+const ALL_ITALIC = /^\*(?!\*)[^*]+\*$/;
+
+export function blockRoles(blocks: readonly Block[]): (BlockRole | null)[] {
+  const roles: (BlockRole | null)[] = blocks.map(() => null);
+  if (blocks[0]?.kind === "callout") roles[0] = "summary";
+  const ledeAt = roles[0] === "summary" ? 1 : 0;
+  if (blocks[ledeAt]?.kind === "paragraph") roles[ledeAt] = "lede";
+  blocks.forEach((block, index) => {
+    if (index > 0 && block.kind === "callout" && block.tone === "ozet") {
+      roles[index] = "takeaway";
+    }
+  });
+  const last = blocks.length - 1;
+  const tail = blocks[last];
+  if (last > 0 && tail?.kind === "paragraph" && ALL_ITALIC.test(tail.text.trim())) {
+    roles[last] = "note";
+  }
+  return roles;
+}
+
+/** Satırın tamamı kalınsa kutunun manşeti — `**Bir cümle.**`. */
+const ALL_BOLD = /^\*\*[^*]+\*\*$/;
 
 /**
  * İÇ İÇE BİÇİM ÇALIŞIR — kalının içindeki bağlantı ham metin kalmıyordu.
@@ -316,6 +400,7 @@ function Side({
   return (
     <span className="flex min-w-0 flex-1 flex-col">
       <span
+        data-part="value"
         className={cn(
           "tote text-heading leading-none sm:text-subdisplay",
           tone === "down" && "text-down",
@@ -639,6 +724,10 @@ export function ArticleBody({
   locale = "tr",
   className,
   chartPlaceholder = false,
+  blocks: blocksProp,
+  variant = "default",
+  skipIndex,
+  afterLead,
 }: {
   markdown: string;
   /** Etiketi yazılmamış `:::` kutularının varsayılan başlığı bundan gelir. */
@@ -660,13 +749,40 @@ export function ArticleBody({
    * kutunun üstünde yazıyor. Yayındaki sayfada gerçek grafik çiziliyor.
    */
   chartPlaceholder?: boolean;
+  /**
+   * Önceden ayrıştırılmış gövde. Mercek sayfası içindekiler listesini ve
+   * kapaktaki rakam bloğunu AYNI ayrıştırmadan kuruyor; bloklar buradan
+   * verilince `skipIndex` ile `headingIds` aynı diziye bakıyor ve ikinci
+   * bir ayrıştırmanın farklı bir `locale` ile kayması ihtimali kalmıyor.
+   */
+  blocks?: Block[];
+  /**
+   * `editorial`: Mercek'in okuma çizimi. Yalnızca `data-variant`,
+   * `data-role` ve etiket ikonlarını ekliyor; görünüşün tamamı
+   * `ArticleEditorial.module.css` içinde ve yalnızca oradan gelen sınıfla
+   * açılıyor. Rehber, KVKK ve panel önizlemesi `default` kalıyor ve
+   * piksel piksel aynı çiziliyor.
+   */
+  variant?: "default" | "editorial";
+  /** Bu sıradaki blok çizilmez — kapakta zaten eksiksiz duran rakam bloğu. */
+  skipIndex?: number;
+  /**
+   * İlk bloktan sonra (ilk blok bir `:::` kutusuysa) ya da ilk bloktan önce
+   * basılan düğüm. Mercek'te dar ekranın içindekiler kutusu buraya iniyor:
+   * özetin altında, ilk paragrafın üstünde.
+   */
+  afterLead?: ReactNode;
 }) {
-  const blocks = parseBlocks(markdown, locale);
+  const blocks = blocksProp ?? parseBlocks(markdown, locale);
+  const ids = headingIds(blocks);
+  const editorial = variant === "editorial";
+  const roles = editorial ? blockRoles(blocks) : null;
+  const leadAfterFirst = blocks[0]?.kind === "callout";
 
-  return (
-    <div className={cn("flex flex-col gap-[18px]", className)}>
-      {blocks.map((block, index) => {
+  const rendered = blocks.map((block, index) => {
         const key = `b${index}`;
+        if (index === skipIndex) return null;
+        const role = roles?.[index] ?? undefined;
 
         switch (block.kind) {
           case "heading":
@@ -674,11 +790,12 @@ export function ArticleBody({
               /* BAŞLIKLARIN `id`si VAR. Yazılar ortalama beş `##` başlık
                  taşıyor ve hiçbirine bağlantı verilemiyordu; `globals.css`
                  içindeki `scroll-padding-block` da hedefsiz kaldığı için
-                 boşa yazılmıştı. Kimlik metinden türüyor (`basligaKimlik`),
+                 boşa yazılmıştı. Kimlik metinden türüyor (`headingIds`),
                  yani içerik değişmedikçe bağlantı da değişmiyor. */
               <h2
                 key={key}
-                id={basligaKimlik(block.text)}
+                id={ids[index] ?? undefined}
+                data-block="heading"
                 className="display-ink display-ink-tight mt-3 w-fit text-title font-bold tracking-[-0.03em] sm:text-heading"
               >
                 {block.text}
@@ -686,7 +803,8 @@ export function ArticleBody({
             ) : (
               <h3
                 key={key}
-                id={basligaKimlik(block.text)}
+                id={ids[index] ?? undefined}
+                data-block="heading"
                 className="mt-1 text-lead font-bold tracking-[-0.02em] text-strong"
               >
                 {block.text}
@@ -706,14 +824,24 @@ export function ArticleBody({
                  gelen liste büyüyor gibi görünüyordu — tek sütunda dört
                  farklı boy. Satır arası da 13 puntoda 2,15 orana çıkıyordu.
                  Bu, sitenin asıl okuma yüzeyi; ölçek tek basamakta. */
-              <p key={key} className="text-read leading-[28px] text-body">
+              <p
+                key={key}
+                data-block="paragraph"
+                data-role={role}
+                className="text-read leading-[28px] text-body"
+              >
                 {renderInline(block.text, key)}
               </p>
             );
 
           case "list":
             return (
-              <ul key={key} className="flex flex-col gap-2.5">
+              <ul
+                key={key}
+                data-block="list"
+                data-ordered={block.ordered || undefined}
+                className="flex flex-col gap-2.5"
+              >
                 {block.items.map((item, itemIndex) => (
                   <li
                     key={itemIndex}
@@ -744,6 +872,7 @@ export function ArticleBody({
             return (
               <blockquote
                 key={key}
+                data-block="quote"
                 className="border-l-2 border-primary-faint pl-4 text-read italic leading-[28px] text-soft"
               >
                 {block.lines.map((line, lineIndex) => (
@@ -770,6 +899,7 @@ export function ArticleBody({
                  "kaydırılabilir bölge, Tablo" diye duyuruyor. */
               <div
                 key={key}
+                data-block="table"
                 className="scroll-x rounded-(--radius-lg) border border-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
                 tabIndex={0}
                 role="region"
@@ -822,9 +952,9 @@ export function ArticleBody({
              kaybolan bir sayı, kutuda bir bakışta okunuyor. */
           case "stats":
             return (
-              <div key={key} className="oku-blok flex flex-col gap-2.5">
+              <div key={key} data-block="stats" className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
-                  <p className="plate text-nano tracking-[0.09em]">
+                  <p data-part="label" className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
@@ -839,12 +969,13 @@ export function ArticleBody({
                   {block.items.map((item, itemIndex) => (
                     <div
                       key={itemIndex}
+                      data-part="cell"
                       className="rounded-(--radius-lg) border border-line bg-surface px-3.5 py-3"
                     >
-                      <p className="tote text-title leading-none sm:text-heading">
+                      <p data-part="value" className="tote text-title leading-none sm:text-heading">
                         {item.value}
                       </p>
-                      <p className="mt-1.5 text-tiny leading-[16px] text-muted">
+                      <p data-part="note" className="mt-1.5 text-tiny leading-[16px] text-muted">
                         {item.note}
                       </p>
                     </div>
@@ -856,9 +987,9 @@ export function ArticleBody({
           /* Zaman çizelgesi — kronolojiyi paragrafa gömmek yerine gösterir. */
           case "timeline":
             return (
-              <div key={key} className="oku-blok flex flex-col gap-2.5">
+              <div key={key} data-block="timeline" className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
-                  <p className="plate text-nano tracking-[0.09em]">
+                  <p data-part="label" className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
@@ -866,9 +997,10 @@ export function ArticleBody({
                   {block.items.map((item, itemIndex) => {
                     const last = itemIndex === block.items.length - 1;
                     return (
-                      <li key={itemIndex} className="flex gap-3.5">
+                      <li key={itemIndex} data-part="event" className="flex gap-3.5">
                         <span
                           aria-hidden
+                          data-part="axis"
                           className="relative w-3 shrink-0"
                         >
                           <span className="absolute left-0 top-[7px] size-3 rounded-full border-2 border-primary bg-page" />
@@ -876,11 +1008,11 @@ export function ArticleBody({
                             <span className="absolute bottom-0 left-[5px] top-5 w-0.5 rounded-full bg-primary-faint" />
                           )}
                         </span>
-                        <span className={cn("min-w-0", !last && "pb-4")}>
-                          <span className="numeral block text-small font-bold uppercase tracking-[0.06em] text-primary">
+                        <span data-part="body" className={cn("min-w-0", !last && "pb-4")}>
+                          <span data-part="when" className="numeral block text-small font-bold uppercase tracking-[0.06em] text-primary">
                             {item.when}
                           </span>
-                          <span className="mt-1 block text-read leading-[24px] text-body">
+                          <span data-part="text" className="mt-1 block text-read leading-[24px] text-body">
                             {renderInline(item.text, `${key}-${itemIndex}`)}
                           </span>
                         </span>
@@ -899,9 +1031,9 @@ export function ArticleBody({
               0.01,
             );
             return (
-              <figure key={key} className="oku-blok flex flex-col gap-2.5" data-article-visual="bars">
+              <figure key={key} data-block="bars" className="oku-blok flex flex-col gap-2.5" data-article-visual="bars">
                 {block.label && (
-                  <figcaption className="plate text-nano tracking-[0.09em]">
+                  <figcaption data-part="label" className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </figcaption>
                 )}
@@ -920,12 +1052,13 @@ export function ArticleBody({
                       kullanıyor. Kalıp bu dosyadaki `pay` bloğuyla aynı —
                       iki çizim bloğu artık aynı düzeni kuruyor. */}
                   {block.items.map((item, itemIndex) => (
-                    <div key={itemIndex} className="flex flex-col gap-1.5">
+                    <div key={itemIndex} data-part="row" className="flex flex-col gap-1.5">
                       <div className="flex items-baseline gap-3 text-base">
-                        <span className="min-w-0 flex-1 text-body">
+                        <span data-part="name" className="min-w-0 flex-1 text-body">
                           {item.name}
                         </span>
                         <span
+                          data-part="value"
                           className={cn(
                             "numeral shrink-0 font-semibold",
                             item.value < 0 ? "text-down" : "text-up",
@@ -934,7 +1067,7 @@ export function ArticleBody({
                           {item.display}
                         </span>
                       </div>
-                      <span className="h-2.5 overflow-hidden rounded-full bg-surface-sunken">
+                      <span data-part="track" className="h-2.5 overflow-hidden rounded-full bg-surface-sunken">
                         <span
                           data-motion-draw="line"
                           className={cn(
@@ -965,18 +1098,18 @@ export function ArticleBody({
             const swatch = (index: number) =>
               index < 4 ? `var(--share-${index + 1})` : "var(--share-rest)";
             return (
-              <div key={key} className="oku-blok flex flex-col gap-2.5">
+              <div key={key} data-block="share" className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
-                  <p className="plate text-nano tracking-[0.09em]">
+                  <p data-part="label" className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
-                <div className="rounded-(--radius-lg) border border-line bg-surface px-4 py-4">
+                <div data-part="panel" className="rounded-(--radius-lg) border border-line bg-surface px-4 py-4">
                   {/* ÖLÇEK KABA VERİLİYOR, SEGMENTLERE DEĞİL: her segment
                       kendi içinde büyüseydi aralarındaki 2 piksellik boşluklar
                       da ölçeklenir ve şerit büyürken kayardı. Kap soldan
                       büyüyor, paylar baştan doğru oranda. */}
-                  <div className="oku-bar flex h-3.5 w-full gap-[2px] overflow-hidden rounded-full" data-motion-draw="line">
+                  <div data-part="track" className="oku-bar flex h-3.5 w-full gap-[2px] overflow-hidden rounded-full" data-motion-draw="line">
                     {block.items.map((item, itemIndex) => (
                       <span
                         key={itemIndex}
@@ -988,7 +1121,7 @@ export function ArticleBody({
                       />
                     ))}
                   </div>
-                  <ul className="mt-3.5 flex flex-col gap-2">
+                  <ul data-part="legend" className="mt-3.5 flex flex-col gap-2">
                     {block.items.map((item, itemIndex) => (
                       <li
                         key={itemIndex}
@@ -1018,9 +1151,9 @@ export function ArticleBody({
              yön işareti, süs değil: sıra bilgiyi taşıyor. */
           case "flow":
             return (
-              <div key={key} className="oku-blok flex flex-col gap-2.5">
+              <div key={key} data-block="flow" className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
-                  <p className="plate text-nano tracking-[0.09em]">
+                  <p data-part="label" className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
@@ -1032,15 +1165,18 @@ export function ArticleBody({
                           aria-hidden
                           className="flex shrink-0 select-none items-center justify-center text-read leading-none text-primary-soft sm:px-1.5"
                         >
-                          <span className="sm:hidden">↓</span>
-                          <span className="hidden sm:inline">→</span>
+                          {/* Metin oku (↓ →) yerine ikon: glif her yazı
+                              tipinde ayrı boyda ve ayrı taban çizgisinde
+                              duruyordu. */}
+                          <ArrowDown size={18} weight="bold" aria-hidden className="sm:hidden" />
+                          <ArrowRight size={18} weight="bold" aria-hidden className="hidden sm:block" />
                         </li>
                       )}
-                      <li className="flex min-w-0 flex-col rounded-(--radius-lg) border border-line bg-surface px-3.5 py-3 sm:flex-1">
+                      <li data-part="step" className="flex min-w-0 flex-col rounded-(--radius-lg) border border-line bg-surface px-3.5 py-3 sm:flex-1">
                         <span className="numeral text-nano font-bold tracking-[0.09em] text-primary">
                           {String(itemIndex + 1).padStart(2, "0")}
                         </span>
-                        <span className="mt-1 text-base font-bold leading-tight text-strong">
+                        <span data-part="name" className="mt-1 text-base font-bold leading-tight text-strong">
                           {item.name}
                         </span>
                         {item.note && (
@@ -1068,27 +1204,28 @@ export function ArticleBody({
                     ? "down"
                     : "flat";
             return (
-              <div key={key} className="oku-blok flex flex-col gap-2.5">
+              <div key={key} data-block="shift" className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
-                  <p className="plate text-nano tracking-[0.09em]">
+                  <p data-part="label" className="plate text-nano tracking-[0.09em]">
                     {block.label}
                   </p>
                 )}
-                <div className="flex flex-col gap-3 rounded-(--radius-lg) border border-line bg-surface px-4 py-4 sm:flex-row sm:items-center sm:gap-4">
+                <div data-part="panel" className="flex flex-col gap-3 rounded-(--radius-lg) border border-line bg-surface px-4 py-4 sm:flex-row sm:items-center sm:gap-4">
                   <Side value={block.from} />
 
                   <span
                     aria-hidden
                     className="select-none text-read leading-none text-primary-soft sm:shrink-0 sm:text-lead"
                   >
-                    <span className="sm:hidden">↓</span>
-                    <span className="hidden sm:inline">→</span>
+                    <ArrowDown size={18} weight="bold" aria-hidden className="sm:hidden" />
+                    <ArrowRight size={22} weight="bold" aria-hidden className="hidden sm:block" />
                   </span>
 
                   <Side value={block.to} tone={tone} />
 
                   {block.deltaPct !== null && (
                     <span
+                      data-part="delta"
                       className={cn(
                         "numeral w-fit shrink-0 rounded-full px-2.5 py-1 text-small font-bold sm:ml-auto",
                         tone === "down"
@@ -1112,6 +1249,7 @@ export function ArticleBody({
               return (
                 <figure
                   key={key}
+                  data-block="chart-placeholder"
                   className="m-0 flex flex-col gap-2 rounded-(--radius-lg) border border-dashed border-line-strong bg-surface-sunken px-4 py-6 text-center"
                 >
                   <span className="numeral text-base font-bold text-strong">
@@ -1156,20 +1294,28 @@ export function ArticleBody({
                örnekler serbest paragraf; onlar için liste açılmıyor, sıradan
                paragraf olarak basılıyorlar. */
             const terimli = block.lines.some((line) => line.term !== null);
+            const ToneIcon = tone.icon;
             return (
               <aside
                 key={key}
+                data-block="callout"
+                data-tone={block.tone}
+                data-role={role}
                 className={cn(
                   "rounded-(--radius-lg) border px-4 py-3.5 sm:px-5 sm:py-4",
                   tone.box,
                 )}
               >
                 <p
+                  data-part="label"
                   className={cn(
                     "text-nano font-bold uppercase tracking-[0.1em]",
                     tone.kicker,
                   )}
                 >
+                  {editorial && (
+                    <ToneIcon size={16} weight="bold" aria-hidden />
+                  )}
                   {block.label}
                 </p>
                 {terimli ? (
@@ -1177,6 +1323,7 @@ export function ArticleBody({
                     {block.lines.map((line, lineIndex) => (
                       <div
                         key={lineIndex}
+                        data-part="row"
                         className={cn(
                           "flex flex-col gap-0.5 py-2.5 first:pt-0 last:pb-0",
                           "sm:flex-row sm:gap-4",
@@ -1184,11 +1331,12 @@ export function ArticleBody({
                         )}
                       >
                         {line.term && (
-                          <dt className="shrink-0 text-nano font-bold uppercase leading-[18px] tracking-[0.09em] text-muted sm:w-[136px] sm:pt-[3px]">
+                          <dt data-part="term" className="shrink-0 text-nano font-bold uppercase leading-[18px] tracking-[0.09em] text-muted sm:w-[136px] sm:pt-[3px]">
                             {line.term}
                           </dt>
                         )}
                         <dd
+                          data-part="def"
                           className={cn(
                             "min-w-0 text-read leading-[25px] text-body",
                             /* Etiketsiz satır iki sütunu birden alıyor:
@@ -1206,6 +1354,14 @@ export function ArticleBody({
                     {block.lines.map((line, lineIndex) => (
                       <p
                         key={lineIndex}
+                        /* Kutunun ilk satırı baştan sona kalınsa o satır
+                           kutunun MANŞETİ: editoryal çizim onu büyük
+                           basıyor (bkz. ArticleEditorial `lead`). */
+                        data-part={
+                          editorial && lineIndex === 0 && ALL_BOLD.test(line.text.trim())
+                            ? "lead"
+                            : undefined
+                        }
                         className="text-read leading-[25px] text-body"
                       >
                         {renderInline(line.text, `${key}-${lineIndex}`)}
@@ -1217,7 +1373,24 @@ export function ArticleBody({
             );
           }
         }
-      })}
+      });
+
+  return (
+    <div
+      className={cn("flex flex-col gap-[18px]", className)}
+      data-variant={editorial ? "editorial" : undefined}
+    >
+      {afterLead && !leadAfterFirst && afterLead}
+      {rendered.map((node, index) =>
+        index === 0 && afterLead && leadAfterFirst ? (
+          <Fragment key="lead">
+            {node}
+            {afterLead}
+          </Fragment>
+        ) : (
+          node
+        ),
+      )}
     </div>
   );
 }

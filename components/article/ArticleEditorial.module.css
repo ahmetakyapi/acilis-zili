@@ -1,0 +1,537 @@
+/* ==========================================================================
+   Mercek okuma çizimi — ArticleBody `variant="editorial"`
+
+   YALNIZCA BU SINIFLA AÇILIYOR. ArticleBody rehberde, KVKK'da ve panel
+   önizlemesinde de çiziliyor; o yüzeyler varsayılan Tailwind sınıflarıyla
+   kalıyor ve bu dosyadaki hiçbir kural onlara ulaşmıyor. Önceki çözüm
+   gövdeyi sayfanın modülünden `.readingBody > div > p` gibi kırılgan
+   seçicilerle eziyordu ve tek sütunda dört ayrı punto bırakmıştı (paragraf
+   16, kutu metni 14, kronoloji 14, liste 14 — ölçüldü).
+
+   Kancalar: `data-block` (bloğun türü), `data-role` (TS'te hesaplanan görev:
+   summary · lede · takeaway · note, bkz. `blockRoles`) ve yalnızca burada
+   kullanılan `data-part` adları.
+
+   Modül kuralları katmansız, Tailwind yardımcıları `@layer utilities`
+   içinde: burada yazılan her değer bileşendeki sınıfı özgüllükten bağımsız
+   eziyor.
+   ========================================================================== */
+
+/* ÖLÇÜ 40rem, PUNTO 18. Gövde 1440'ta 1040 piksel genişlikte ve 16
+   puntoydu: satır başına 126-144 harf (ölçüldü, en uzun paragraf 144).
+   Rahat okuma aralığı 60-75. 18/1.7 ile 640 piksel 69-72 harf veriyor
+   (1440'ta ölçüldü). Görseller, kutular ve tablolar sütunun tamamını
+   (1440'ta 718) kullanıyor; yalnızca METİN 40rem'de kırılıyor. */
+.prose {
+  --prose-size: 18px;
+  --prose-lh: 1.7;
+  --prose-step: 1.1em;
+  --prose-figure: 44px;
+  --prose-bleed: 0px;
+  display: block;
+  font-size: var(--prose-size);
+  line-height: var(--prose-lh);
+  color: var(--text-prose);
+  counter-reset: sec;
+}
+.prose > * { margin: 0; }
+.prose > * + * { margin-top: var(--prose-step); }
+.prose > :is(p, ul, ol, blockquote, h2, h3) { max-width: 40rem; }
+.prose > p,
+.prose > [data-block="list"] > li,
+.prose > blockquote {
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+.prose :is(p, li, dd, blockquote) a {
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+@media (hover: hover) {
+  .prose :is(p, li, dd, blockquote) a:hover { text-decoration-color: var(--primary); }
+}
+
+/* Giriş paragrafı — özetten sonraki ilk cümle yazının kapısı. */
+.prose > [data-role="lede"] {
+  font-size: 21px;
+  line-height: 1.5;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  color: var(--text-strong);
+}
+
+/* ARA BAŞLIK. Önceki çizimde `border-top` genişliği metne göre olan
+   (`w-fit`) başlığın üstündeydi: çizgi başlık kadar uzundu, sütun kadar
+   değil (1440'ta 1040'ın 592'si) ve kırık bir cetvel gibi okunuyordu.
+   Çizgi yerine hava (64) ve rayla aynı sırayı taşıyan numara: okuyucu
+   raydaki "03"ü metinde de görüyor. */
+.prose > h2 {
+  counter-increment: sec;
+  margin-top: 64px;
+  font-size: 30px;
+  line-height: 1.18;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+/* Küresel `main h2` degradeyi metne kırpıyor; numara kendi rengini
+   `-webkit-text-fill-color` ile basmazsa degradenin içinde kayboluyor. */
+.prose > h2::before {
+  content: counter(sec, decimal-leading-zero);
+  display: block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 650;
+  letter-spacing: 0;
+  color: var(--primary-ink);
+  -webkit-text-fill-color: var(--primary-ink);
+}
+.prose > h3 {
+  margin-top: 36px;
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.prose > h2 + * { margin-top: 16px; }
+.prose > h3 + * { margin-top: 10px; }
+
+/* Listeler gövde puntosunda; madde işareti ilk satırın ortasında. */
+.prose > [data-block="list"] { gap: 10px; }
+.prose > [data-block="list"] > li { gap: 14px; }
+.prose > [data-block="list"] > li > [aria-hidden] {
+  padding-top: calc((var(--prose-size) * var(--prose-lh) - 6px) / 2);
+}
+.prose > [data-block="list"] > li > [aria-hidden] > span { background: var(--primary-soft); }
+.prose > [data-block="list"][data-ordered] > li > [aria-hidden] {
+  padding-top: 0;
+  min-width: 1.5em;
+  font-size: 14px;
+  line-height: calc(var(--prose-size) * var(--prose-lh));
+  color: var(--primary-ink);
+}
+
+.prose > [data-block="quote"] {
+  margin-block: 36px;
+  padding-left: 22px;
+  border-left: 2px solid var(--primary);
+  font-size: 22px;
+  line-height: 1.5;
+  font-weight: 500;
+  font-style: normal;
+  color: var(--text-strong);
+}
+
+/* --------------------------------------------------------------------------
+   Görsel bloklar — kart değil, çizim
+
+   Her blok degrade zeminli, gölgeli ayrı bir karttı (18 piksel köşe) ve
+   metnin arasında vitrin gibi duruyordu. Şimdi bir gazete çizimi: üstte
+   güçlü bir cetvel, altında Title Case künye, çizim ve kapanış çizgisi.
+   Derinlik tonla (CLAUDE.md), gölge yok. Seçici `[data-block]` taşıyor:
+   motion katmanının `.article .oku-blok` köşe kuralını özgüllükte geçmesi
+   gerekiyor.
+   -------------------------------------------------------------------------- */
+.prose > :global(.oku-blok)[data-block],
+.prose > [data-block="chart"],
+.prose > [data-block="chart-placeholder"] {
+  margin-block: var(--prose-figure);
+}
+.prose > h2 + :global(.oku-blok)[data-block],
+.prose > h2 + [data-block="chart"],
+.prose > h3 + :global(.oku-blok)[data-block] {
+  margin-top: 24px;
+}
+.prose > :global(.oku-blok)[data-block] {
+  gap: 0;
+  padding: 12px 0 20px;
+  border: 0;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.prose [data-block] > [data-part="label"] {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  text-transform: none;
+  color: var(--text-strong);
+}
+.prose [data-part="cell"],
+.prose [data-part="panel"] {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+/* Rakamlar */
+.prose > [data-block="stats"] > div { gap: 22px 28px; }
+.prose [data-block="stats"] [data-part="value"] {
+  font-size: 34px;
+  line-height: 1.05;
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  color: var(--text-strong);
+}
+.prose [data-block="stats"] [data-part="note"] {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* Çubuklar — dar ekranda iki satır (ad | değer, altında çubuk; gerekçesi
+   ArticleBody'de), 640'tan sonra tek satır: ad · çubuk · değer. */
+.prose > [data-block="bars"] > div { gap: 14px; }
+.prose [data-block="bars"] [data-part="row"] > div { font-size: 15px; line-height: 1.4; }
+.prose [data-block="bars"] [data-part="name"] { color: var(--text-prose); }
+.prose [data-block="bars"] [data-part="value"] { font-size: 15px; font-weight: 650; }
+.prose [data-block="bars"] [data-part="track"] { height: 12px; border-radius: 3px; }
+.prose [data-block="bars"] [data-part="track"] > span { border-radius: 3px; }
+@media (min-width: 640px) {
+  .prose > [data-block="bars"] > div { gap: 6px; }
+  .prose [data-block="bars"] [data-part="row"] {
+    display: grid;
+    grid-template-columns: minmax(0, 26%) minmax(0, 1fr) 5.5rem;
+    align-items: center;
+    gap: 0 16px;
+    min-height: 36px;
+  }
+  .prose [data-block="bars"] [data-part="row"] > div { display: contents; }
+  .prose [data-block="bars"] [data-part="name"] { grid-column: 1; grid-row: 1; }
+  .prose [data-block="bars"] [data-part="track"] { grid-column: 2; grid-row: 1; }
+  .prose [data-block="bars"] [data-part="value"] { grid-column: 3; grid-row: 1; text-align: right; }
+}
+
+/* Pay dağılımı */
+.prose [data-block="share"] [data-part="track"] { height: 16px; border-radius: 4px; }
+.prose [data-block="share"] [data-part="track"] > span { border-radius: 0; }
+.prose [data-block="share"] [data-part="legend"] { margin-top: 16px; gap: 10px; }
+.prose [data-block="share"] [data-part="legend"] > li { font-size: 15px; }
+@media (min-width: 640px) {
+  .prose [data-block="share"] [data-part="legend"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 32px;
+  }
+}
+
+/* Öncesi–sonrası. Geniş ekranda iki yan `flex-1` idi: 718 piksellik
+   sütunda "%13" ile "%28" arasına 300 piksel boşluk düşüyor, ok ikisinin
+   ortasında sahipsiz kalıyordu. İki değer ve ok bir grup; değişim rozeti
+   sağda. */
+@media (min-width: 640px) {
+  .prose [data-block="shift"] [data-part="panel"] { gap: 28px; }
+  .prose [data-block="shift"] [data-part="panel"] > span:not([data-part]) { flex: 0 1 auto; }
+}
+.prose [data-block="shift"] [data-part="value"] {
+  font-size: 40px;
+  line-height: 1.05;
+  font-weight: 650;
+  letter-spacing: -0.04em;
+}
+.prose [data-block="shift"] [data-part="delta"] {
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Akış — halkalar kart kalıyor: sıra bilgisini kutu-ok ilişkisi taşıyor. */
+.prose [data-block="flow"] [data-part="step"] {
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--premium-surface);
+}
+.prose [data-block="flow"] [data-part="name"] { font-size: 16px; font-weight: 650; }
+
+/* Kronoloji — dar ekranda üst üste; 640'tan sonra tarih solda sağa yaslı,
+   eksen ortada, olay sağda: tarih sütunu taranabiliyor. */
+.prose [data-block="timeline"] [data-part="when"] {
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--primary-ink);
+}
+.prose [data-block="timeline"] [data-part="text"] {
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--text-prose);
+}
+/* SÜTUN LİSTEDE, SATIRDA DEĞİL. Her satır kendi 104 piksellik tarih
+   sütununu taşıyordu ve sıradan tam tarihler ("18 Ağustos 2026",
+   "September 14, 2026") iki satıra kırılıp sütunun kenarını basamak
+   basamak yapıyordu (altı yazıda sayıldı). Sütun artık listenin
+   ızgarasında ve en uzun tarihe göre ölçüleniyor (tavan 10rem); satırlar
+   `subgrid` ile aynı hatta. Özet kartının terim sütunuyla aynı kalıp. */
+@media (min-width: 640px) {
+  .prose [data-block="timeline"] ol {
+    display: grid;
+    grid-template-columns: fit-content(10rem) 22px minmax(0, 1fr);
+    column-gap: 14px;
+  }
+  .prose [data-block="timeline"] [data-part="event"] {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: 9rem 22px minmax(0, 1fr);
+    grid-template-columns: subgrid;
+    column-gap: 14px;
+    padding-bottom: 20px;
+  }
+  .prose [data-block="timeline"] [data-part="event"]:last-child { padding-bottom: 0; }
+  .prose [data-block="timeline"] [data-part="body"] { display: contents; }
+  .prose [data-block="timeline"] [data-part="when"] {
+    grid-column: 1;
+    grid-row: 1;
+    padding-top: 3px;
+    font-size: 14px;
+    line-height: 1.55;
+    text-align: right;
+  }
+  .prose [data-block="timeline"] [data-part="axis"] { grid-column: 2; grid-row: 1; width: auto; }
+  .prose [data-block="timeline"] [data-part="axis"] > span:first-child {
+    left: 50%;
+    top: 9px;
+    width: 9px;
+    height: 9px;
+    border-width: 2px;
+    transform: translateX(-50%);
+  }
+  .prose [data-block="timeline"] [data-part="axis"] > span + span {
+    left: 50%;
+    top: 22px;
+    bottom: -9px;
+    width: 1px;
+    border-radius: 0;
+    background: var(--line-strong);
+  }
+  .prose [data-block="timeline"] [data-part="text"] {
+    grid-column: 3;
+    grid-row: 1;
+    margin-top: 0;
+    font-size: 16px;
+  }
+}
+
+/* Grafik ve tablo: çerçeve yerine yatay cetveller. */
+.prose > [data-block="chart"] {
+  border-inline: 0;
+  border-top-color: var(--line-strong);
+  border-radius: 0;
+  background: none;
+}
+.prose > [data-block="chart"] > [data-part="head"],
+.prose > [data-block="chart"] > [data-part="caption"] {
+  padding-inline: 0;
+}
+.prose > [data-block="chart"] > [data-part="caption"] { font-size: 13px; }
+.prose > [data-block="table"] { margin-block: 36px; }
+.prose > [data-block="table"] th {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.prose > [data-block="table"] td { font-size: 15px; line-height: 1.5; }
+
+/* --------------------------------------------------------------------------
+   Metin kutuları
+   -------------------------------------------------------------------------- */
+.prose > [data-block="callout"] {
+  margin-block: 36px;
+  padding: 20px 24px 22px;
+  border-radius: var(--radius-xl);
+}
+.prose > [data-block="callout"] > [data-part="label"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  text-transform: none;
+}
+.prose > [data-block="callout"] > [data-part="label"] > svg { flex-shrink: 0; }
+.prose > [data-block="callout"][data-tone="tanim"] > [data-part="label"] { color: var(--text-strong); }
+.prose > [data-block="callout"][data-tone="tanim"] > [data-part="label"] > svg { color: var(--primary-ink); }
+.prose > [data-block="callout"] :is(p, dd) {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-prose);
+}
+.prose > [data-block="callout"] > div { gap: 10px; }
+
+/* Terimli satırlar: künye sütunu + metin. Büyük harfli 10 piksellik künye
+   (0,9px aralıklı) Title Case 14 piksele döndü — terimler yazarın Title
+   Case yazdığı kısa adlar ("Ne Oldu", "Rakam"); büyük harf onları
+   okunmaz bir plakaya çeviriyordu. */
+/* TERİM SÜTUNU EN UZUN TERİM KADAR. Sabit 104 piksel "Bundan Sonrası"nı
+   (14 puntoda ~108) iki satıra bölüyordu; 120 ise kısa terimli kutularda
+   metne 16 piksel az yer bırakıyordu. Satırlar `subgrid` ile dl'nin iki
+   sütununu paylaşıyor: sütun en uzun terime oturuyor (tavan 9.5rem) ve
+   bütün satırlarda aynı hizada başlıyor. `subgrid`i tanımayan tarayıcı
+   bir önceki 120 piksellik bildirimde kalıyor. */
+.prose > [data-block="callout"] dl {
+  display: grid;
+  grid-template-columns: fit-content(9.5rem) minmax(0, 1fr);
+  column-gap: 20px;
+  margin-top: 4px;
+}
+.prose > [data-block="callout"] [data-part="row"] {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 120px minmax(0, 1fr);
+  grid-template-columns: subgrid;
+  column-gap: 20px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line-soft);
+}
+.prose > [data-block="callout"] [data-part="row"]:first-child { padding-top: 4px; border-top: 0; }
+.prose > [data-block="callout"] [data-part="row"]:last-child { padding-bottom: 2px; }
+.prose > [data-block="callout"] [data-part="row"] > dd:only-child { grid-column: 1 / -1; }
+.prose > [data-block="callout"] [data-part="term"] {
+  width: auto;
+  padding-top: 0;
+  font-size: 14px;
+  line-height: 25.6px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-strong);
+}
+
+/* Özet — yazı bir kutuyla açılıyorsa o kutu. Sayfa zemininden bir kademe
+   açık yüzey ve saç teli; gölge yok. */
+.prose > [data-role="summary"] {
+  margin-top: 0;
+  padding: 18px 28px 16px;
+  border: 1px solid var(--line);
+  background: var(--premium-surface);
+}
+.prose > [data-role="summary"] > [data-part="label"] {
+  margin-bottom: 6px;
+  font-size: 15px;
+  color: var(--text-strong);
+}
+.prose > [data-role="summary"] > [data-part="label"] > svg { color: var(--primary-ink); }
+
+/* Ders — kutu değil, iki cetvel arasında bir sonuç cümlesi. */
+.prose > [data-role="takeaway"] {
+  padding: 18px 0 20px;
+  border: 0;
+  border-top: 2px solid var(--primary);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+}
+.prose > [data-role="takeaway"] > [data-part="label"] { color: var(--primary-ink); }
+.prose > [data-role="takeaway"] [data-part="lead"] {
+  font-size: 21px;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text-strong);
+}
+.prose > [data-role="takeaway"] [data-part="lead"] strong { font-weight: inherit; }
+
+/* Yöntem notu — tamamen eğik son paragraf okuma puntosunda basılıyordu
+   (390'da 250 piksel eğik metin). Künye puntosunda, düz, bir cetvelin
+   altında. */
+.prose > [data-role="note"] {
+  max-width: 40rem;
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+.prose > [data-role="note"] em { font-style: normal; }
+/* Dersin kapanış çizgisi notun üst çizgisiyle üst üste iki cetvel
+   çiziyordu (aralarında 40 piksel boşluk); ders zaten bir çizgiyle
+   kapanıyor. */
+.prose > [data-role="takeaway"] + [data-role="note"] {
+  margin-top: 20px;
+  padding-top: 0;
+  border-top: 0;
+}
+/* Kök blok akışında: notun 20 piksellik üst payı dersin 36 piksellik alt
+   payıyla çöküyor ve ölçülen aralık 36 kalıyordu. Payı dersin kendisi
+   veriyor. */
+.prose > [data-role="takeaway"]:has(+ [data-role="note"]) { margin-bottom: 20px; }
+
+/* --------------------------------------------------------------------------
+   Dar ekran
+   -------------------------------------------------------------------------- */
+/* 1024-1199: metin sütunu 571 piksel, punto 17 (65 harf). Özet kutusu
+   16 puntoda 1024x900 ekranda alt şeridin altına 20 piksel giriyordu
+   (dibi 883, şerit 863'te); 15 puntoda ekranda bitiyor. */
+@media (max-width: 1199px) and (min-width: 1024px) {
+  .prose { --prose-size: 17px; }
+  .prose > [data-role="summary"] [data-part="def"] { font-size: 15px; line-height: 1.55; }
+  .prose > [data-role="summary"] [data-part="term"] { line-height: 23.25px; }
+  .prose > [data-role="summary"] [data-part="row"] { padding-block: 9px; }
+}
+@media (max-width: 639px) {
+  .prose {
+    --prose-size: 17px;
+    --prose-lh: 1.65;
+    --prose-step: 16px;
+    --prose-figure: 32px;
+    --prose-bleed: 18px;
+  }
+  .prose > [data-role="lede"] { font-size: 19px; }
+  .prose > h2 { margin-top: 44px; font-size: 24px; line-height: 1.22; }
+  .prose > h2::before { margin-bottom: 10px; font-size: 12px; }
+  .prose > [data-block="quote"] { font-size: 19px; padding-left: 16px; }
+  .prose [data-block="stats"] [data-part="value"] { font-size: 28px; }
+  .prose [data-block="shift"] [data-part="value"] { font-size: 30px; }
+  .prose > [data-block="callout"] { margin-block: 28px; padding: 18px 18px 20px; }
+  .prose > [data-block="callout"] :is(p, dd) { font-size: 15.5px; }
+
+  /* Özet satırları dar ekranda İÇ İÇE: terim satırın başında kalın, metin
+     aynı satırdan devam ediyor. Alt alta düzen dört olguya dört ek satır
+     harcıyordu (390'da kutu 525 piksel). */
+  /* Satır bloğun kendi puntosunu taşıyor: iç içe öğeler satır kutusunu
+     kendi satır arasının altına indiremiyor, gövdenin 17/1.65 (28 piksel)
+     dikmesi 15 puntoluk metne boşluk ekliyordu. */
+  .prose > [data-block="callout"] [data-part="row"] { display: block; padding: 12px 0; font-size: 15.5px; line-height: 1.6; }
+  .prose > [data-block="callout"] [data-part="row"]:first-child { padding-top: 4px; }
+  .prose > [data-block="callout"] :is([data-part="term"], [data-part="def"]) { display: inline; }
+  .prose > [data-block="callout"] [data-part="term"] { margin-right: 0.35em; font-size: 15px; font-weight: 650; }
+  .prose > [data-role="summary"] { padding: 16px 18px 12px; }
+  .prose > [data-role="summary"] [data-part="row"] { padding: 10px 0; font-size: 15px; line-height: 1.55; }
+  .prose > [data-role="summary"] :is([data-part="term"], [data-part="def"]) { font-size: 15px; line-height: 1.55; }
+  .prose > [data-role="takeaway"] { padding: 16px 0 18px; }
+
+  /* Grafik ve tablo kenardan kenara: 18 piksellik kanal bu iki blokta
+     okumaya değil çizime gidiyor. */
+  .prose > :is([data-block="chart"], [data-block="table"]) {
+    margin-inline: calc(var(--prose-bleed) * -1);
+    border-inline: 0;
+    border-radius: 0;
+  }
+  .prose > [data-block="chart"] > :is([data-part="head"], [data-part="caption"]) {
+    padding-inline: var(--prose-bleed);
+  }
+}
+@media (max-width: 359px) {
+  .prose { --prose-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prose * { transition: none; }
+}
+@media (forced-colors: active) {
+  .prose > h2::before { color: CanvasText; -webkit-text-fill-color: CanvasText; }
+}

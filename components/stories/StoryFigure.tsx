@@ -30,17 +30,42 @@ export type StoryFigureBlock = Extract<Block, { kind: CardKind }>;
 /** Karta sığan en fazla öğe; fazlası kutuyu bir tabloya çeviriyor. */
 const MAX_ITEMS = 4;
 
+function isCardBlock(block: Block): block is StoryFigureBlock {
+  return (CARD_KINDS as readonly string[]).includes(block.kind);
+}
+
+/** Kartın çizeceği bloğun gövdedeki sırası; yoksa -1. */
+export function storyFigureIndex(blocks: readonly Block[]): number {
+  return blocks.findIndex(isCardBlock);
+}
+
 export function storyFigureOf(
   markdown: string | null | undefined,
   locale: string,
 ): StoryFigureBlock | null {
   if (!markdown) return null;
-  for (const block of parseBlocks(markdown, locale)) {
-    if ((CARD_KINDS as readonly string[]).includes(block.kind)) {
-      return block as StoryFigureBlock;
-    }
-  }
-  return null;
+  const blocks = parseBlocks(markdown, locale);
+  const index = storyFigureIndex(blocks);
+  return index < 0 ? null : (blocks[index] as StoryFigureBlock);
+}
+
+/**
+ * Kapaktaki blok gövdedekinin EKSİKSİZ kopyası mı?
+ *
+ * Yazı sayfası kapağında bu bloğu çiziyor ve gövde aynı dört rakamı hemen
+ * aşağıda bir kez daha basıyordu (ölçüldü: 1440'ta kapakta 171, gövdede
+ * 159 piksel; 390'da 207 + 233 — aynı 27.122,09 · +%12,53 · +%2,30 ·
+ * 730 bin iki kez). Gövdedeki kopya ancak kapak bloğun TAMAMINI
+ * gösteriyorsa düşürülüyor: `MAX_ITEMS`tan fazla öğesi olan rakam bloğunun
+ * artanı yalnızca gövdede duruyor.
+ *
+ * Yalnızca `sayilar`. `oncesi` düşürülmüyor — kapak değişim yüzdesini
+ * (`deltaPct`) basmıyor, gövde basıyor. `pay` da düşürülmüyor: kapak yazarın
+ * ham değerini (`display`) yazıyor, gövde bütüne göre YÜZDEYİ; yazar mutlak
+ * değer verdiyse iki çizim aynı bilgiyi taşımıyor.
+ */
+export function figureRepeatsBlock(block: Block): boolean {
+  return block.kind === "stats" && block.items.length <= MAX_ITEMS;
 }
 
 export function StoryFigure({

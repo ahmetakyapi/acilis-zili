@@ -2,6 +2,7 @@
 
 import { requireAdmin } from "@/lib/admin";
 import { ArticleBody } from "@/components/article/ArticleBody";
+import editorial from "@/components/article/ArticleEditorial.module.css";
 import { BriefBody } from "@/components/today/BriefBody";
 import { isLocale } from "@/lib/i18n/config";
 
@@ -26,7 +27,19 @@ import { isLocale } from "@/lib/i18n/config";
 export async function previewStoryBody(markdown: string, locale: string) {
   await requireAdmin();
   const dil = isLocale(locale) ? locale : "tr";
-  return <ArticleBody markdown={markdown} locale={dil} chartPlaceholder />;
+  /* Mercek yayında editoryal çizimle basılıyor (ArticleEditorial); önizleme
+     de onu kullanmazsa editör sitede görünmeyen bir çizimi denetlerdi.
+     Kapakla çakışan rakam bloğu burada DÜŞÜRÜLMÜYOR: editör gövdenin
+     tamamını görmeli. */
+  return (
+    <ArticleBody
+      markdown={markdown}
+      locale={dil}
+      chartPlaceholder
+      variant="editorial"
+      className={editorial.prose}
+    />
+  );
 }
 
 /**

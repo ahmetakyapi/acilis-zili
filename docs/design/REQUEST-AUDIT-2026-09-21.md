@@ -58,3 +58,66 @@ Kontroller yerel üretim sunucusu ve Chrome ile yapıldı. Fiziksel iOS/Safari d
 Son doğrulama: 10 görünüm × 5 genişlik × TR/EN × açık/koyu = **200 yerleşim**. Kesilen fiyat, yatay taşma, çakışan satır veya tarayıcı hatası yok; teknik kapak ve fiyat sütunu farkları **0px**. Şirket/bilanço/teknik liste kapaklarında görünen son içerikler aynı hatta; hisse grafik ve profil kolonları hizalı.
 
 Ek olarak **6 grafik imleci kontrolü**, **12 grafik/Mercek etkileşimi**, **12 geciktirilmiş filtre geçişi** ve en yoğun bilanço gününe bağlantı kontrolü başarılı. 75 mevcut test, üretim build, build sonrası typecheck ve lint geçti. Yeni veri isteği, bağımlılık veya finansal hesap değişikliği yok. Yerel kanıtlar `/tmp/acilis-redesign/sep22-{matrix,hover,query,peak}.json` ve `sep22-final-*` ekran görüntülerinde. Fiziksel iOS/Safari testi bu kapsamda değil.
+
+## 22 Eylül — Yeni Dalın Birleştirilmesi ve Kaydırma/Bilgi Kartı Düzeltmeleri
+
+`798eb33` ile biten dokuz yeni commit, yerel `c9b4e8f` ile `26447e6` üzerinden
+birleştirildi. `dev` dalının ek birleştirilmemiş commit'i yoktu. Tüm dizinde
+şirket araması, sembol bazında fiyat tazeliği, bilanço raporu bağlantıları ve
+editörde çeviri/sürüm korumaları korundu.
+
+Bu bölüm önceki yerleşim kayıtlarını günceller:
+
+- Şirketler kapağındaki üç sektör özeti, yeni dalın tüm dizinde çalışan
+  araması ve kapak içindeki sektör süzgeciyle değiştirildi; aynı bilgiyi
+  tekrarlayan üçüncü bir alan eklenmedi.
+- Piyasalar: genişlik/hareketler → şirket tablosu → tahvil/VIX. Yeni dalda
+  kalan ikinci tahvil/VIX çağrısı ve ona ait yükleme iskeleti kaldırıldı.
+- Teknik detayın görüş rozeti kimlik satırında bir kez; kompakt gerekçe ve
+  yeni seviye/risk okuması korunuyor. Seviye gerekçeleri harita panelinde.
+- Bilançolarda hafta/ay başlık yanında, günlük yoğunluk ve en yoğun gün
+  kapağın solunda; aynı toplamı ikinci kez basan özet kaldırıldı.
+- Son dalın sade masthead tercihi korundu; önceki kayıttaki çok katmanlı
+  mavi masthead artık güncel görünüm değildir.
+
+Son istekler:
+
+- Şirketler tablosunun sabit başlığı şeffaftı (`rgba(..., .043)`): 450/600/800
+  piksel kaydırmada satır metni sütun adlarının arkasından görünüyordu.
+  Başlık ve hücreler artık opak temel üzerinde hafif ton taşıyor. 69px üst
+  menü hizası korunuyor. Diğer tablolar da kaydırılarak tarandı.
+- Ana sayfanın teknik dağılımı daha belirgin satır ayraçları, ince oran
+  çizgisi ve büyüyen logo hedefleri taşıyor. Logo üzerine gelince veya
+  klavyeyle odaklanınca şirket adı, görüş, **Analiz Anında** fiyat, trend,
+  RSI ve yayın tarih/saatini taşıyan küçük bilgi kartı açılıyor. Aynı
+  etkileşim teknik liste kapağında da var. Yeni fiyat isteği yapılmıyor;
+  tarihli analiz fotoğrafı canlı fiyat diye sunulmuyor. Escape kapatır,
+  kaydırma/yeniden boyutlandırma balonu temizler; dokunma doğrudan analize
+  gider. Balonun üzerine geçince içerik kaybolmaz.
+- Birleşim taramasıyla bulunan 320px ONDS kimlik sıkışması ve 768px EN
+  teknik kapak alt hizası düzeltildi. Sabit yükseklik veya metin kesme yok.
+
+## 22 Eylül (Akşam) — Altı Ekran İsteği
+
+Önce yarım kalan iş (dağılım logosunun bilgi kartı, şirketler tablosunun
+opak başlığı, piyasalardaki çift tahvil/VIX) doğrulanıp aşağıdaki ilk
+maddeyle birleştirildi. Her ekran önce ölçüldü, sonra bağımsız bir
+gözden geçirmeden geçti; bulgular uygulandı.
+
+| İstek | Uygulama ve Ölçüm |
+| --- | --- |
+| Dağılım logolarına büyük kartın bilgi balonu; büyük karttan hover kalksın | Balon (logo, ad, görüş, Sektör, Piyasa Değeri, fiyat, yayın künyesi) artık ana sayfa paneli ile /teknik kapağındaki logolarda. Aynı anda tek balon, ölçülen yükseklikle başlık ile alt şerit arasına yerleşiyor, imleci tutmuyor (eski ipucu 5–7 komşu logoyu örtüyordu). Fiyat sayfanın kendi kotasyon paketinden: MU balonda ve kartta aynı sayı (önce 1.081,31 / 1.081,58). Ana sayfada ek istek yok (`indexSnapshot` anahtarı). Büyük kartta balon, kalkma, gölge büyümesi ve imleci izleyen ışıma kalktı; hover yalnız kenarlık tonu. |
+| Takvim: gereksiz boşluk ve tuhaf durumlar | Kapağın boş sağ yarısında Gün/Hafta/Ay ve altında "Sıradaki Yüksek Etkili Açıklama". Şerit: iş günü iki, hafta sonu bir birim; tire ve sahte seçili gün yok. Ay görünümü gizli kaydırma (1320'de 2876 piksel) yerine yedi sütunlu ızgara. Ajanda tek panel, boş günler tek sessiz satır, halka arzlar yan kolonda. Okuma hatası "açıklama yok" diye gösterilmiyor. |
+| Mercek yazı gövdesi | Satır ölçüsü 126–144 karakterden ~69'a; 18 punto, koyu okuma mürekkebi (kontrast 5,51 → 10,99). Kapaktaki rakamlar gövdede ikinci kez basılmıyor. Masaüstünde yapışkan ray: numaralı içindekiler ve şirketler (olay günü yazıda son kapanış, sonrasında "Olaydan Bugüne"). Şekiller kartsız, kaynaklar numaralı. Rehber ve KVKK piksel olarak aynı. |
+| Geri sayım kartları ve üstteki boşluk | Kutular ve iki nokta kalktı; rakam 59 → 92 punto (1024'te 44 → 76). Rozetin üstündeki 45–75 piksellik ve tarih satırının altındaki 46–57 piksellik ölü bant kapandı; kalan hava rakamın iki yanına bölünüyor (1440: 35 / 39). Tarih satırı yerine iki zilli künye (TR ve NY saati, sıradaki zil). 768'de kahraman 683 → 476. |
+| Öne çıkan analiz: Analizi Oku yukarı, ad tıklanır | "Analizi Oku" tarih satırında; şirket adı bağlantı ve kartın tamamı hâlâ tıklanır. Skor sütunu kimlik satırına indi; kart 439 → 343 piksel. |
+| Yaklaşan bilançolar tarihe göre; alttaki boşluk | Seçim piyasa değerine, sıra tarihe göre (24 Eyl, 30 Eyl, 13 Eki, 13 Eki, 14 Eki). Son satır ile bağlantı arasındaki 75 piksel boşluk gerçek satırlarla doluyor; iki kolon aynı hatta, kısa özetli analizde ve JavaScript kapalıyken de. |
+
+Ek düzeltme: ana sayfadaki Korku Endeksi satırı 348 piksellik yan kolonda
+kartın kenarından kesiliyordu (320'de 67 piksel taşma); iki katlı düzende
+her genişlikte iç dolgunun sınırında bitiyor.
+
+Doğrulama: 13 rota × 5 genişlik × TR/EN × açık/koyu seçkisinde **195
+yerleşim**; hepsi 200, yatay taşma, dışarı taşan öge ve konsol hatası yok.
+Typecheck, lint (kaynakta uyarı yok) ve üretim derlemesi temiz. Fiziksel
+iOS/Safari testi bu kapsamda değil.

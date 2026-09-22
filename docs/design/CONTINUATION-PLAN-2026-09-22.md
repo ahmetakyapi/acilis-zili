@@ -124,3 +124,12 @@ kapanır.
 9. **Mercek.** Şirkete göre süzme üst kapağın sağına; boşluk azalt.
 10. **Boşluk taraması.** Rota × genişlik matrisinde ölçülen ölü alanlar.
 11. **Yönetim paneli.** Her detayıyla yükseltme.
+
+## Birleşim Sonrası Güncel Kayıt
+
+22 Eylül'de `26447e6`, bu dalın dokuz commit'ini `c9b4e8f` ile birleştirdi.
+Başlangıçta tam metni eksik olan yedi kullanıcı isteği `c9b4e8f` içinde
+uygulanmıştı. Bu planın önceki ölçüm ve sıralama notları tarihsel kayıttır;
+güncel birleşim tercihleri ve son tablo/bilgi kartı isteği
+[`REQUEST-AUDIT-2026-09-21.md`](REQUEST-AUDIT-2026-09-21.md) son bölümündedir.
+Özellikle tahvil/VIX tek kez ve şirket tablosundan sonra gösterilir.
