@@ -1306,6 +1306,7 @@ const tr = {
   },
 
   brief: {
+    eyebrow: "Piyasa Özeti",
     title: "Günlük Bülten",
     subtitle: "Her sabah hazırlanan piyasa özeti · geçmiş günler arşivde",
     archiveLink: "Geçmiş Bültenler",

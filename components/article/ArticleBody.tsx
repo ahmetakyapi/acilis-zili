@@ -73,7 +73,7 @@ const CALLOUT: Record<
     defaultLabel: { tr: string; en: string };
     box: string;
     kicker: string;
-    /** Yalnızca editoryal çizimde (Mercek) etiketin önünde duruyor. */
+    /** Yalnızca editoryal çizimde (mercek, rehber) etiketin önünde duruyor. */
     icon: Icon;
   }
 > = {
@@ -215,6 +215,30 @@ function tekilKimlikler(
     used.add(id);
     return id;
   });
+}
+
+export type SectionItem = { id: string; label: string; number: number };
+
+/**
+ * İçindekiler — gövdenin `##` başlıkları, yazıdaki sırasıyla. Mercek ve
+ * rehber aynı listeyi kuruyor; ikisi de buradan okuyor.
+ *
+ * Numara bütün `##` başlıkları sayıyor, yalnızca listelenenleri değil:
+ * gövdedeki başlık numarası (CSS sayacı) ile listedeki numara aynı olmalı.
+ * Kimliği olmayan başlık (yalnızca sembolden oluşan) sayıda yer tutuyor ama
+ * listede yok — bağlantısı olmayan bir satır basılmaz.
+ */
+export function sectionIndex(blocks: readonly Block[]): SectionItem[] {
+  const ids = headingIds(blocks);
+  const items: SectionItem[] = [];
+  let number = 0;
+  blocks.forEach((block, index) => {
+    if (block.kind !== "heading" || block.level !== 2) return;
+    number += 1;
+    const id = ids[index];
+    if (id) items.push({ id, label: block.text, number });
+  });
+  return items;
 }
 
 /**
@@ -819,11 +843,11 @@ export function ArticleBody({
    */
   blocks?: Block[];
   /**
-   * `editorial`: Mercek'in okuma çizimi. Yalnızca `data-variant`,
+   * `editorial`: Mercek ve rehberin okuma çizimi. Yalnızca `data-variant`,
    * `data-role` ve etiket ikonlarını ekliyor; görünüşün tamamı
    * `ArticleEditorial.module.css` içinde ve yalnızca oradan gelen sınıfla
-   * açılıyor. Rehber, KVKK ve panel önizlemesi `default` kalıyor ve
-   * piksel piksel aynı çiziliyor.
+   * açılıyor. KVKK ve panel önizlemesi `default` kalıyor ve piksel piksel
+   * aynı çiziliyor.
    */
   variant?: "default" | "editorial";
   /** Bu sıradaki blok çizilmez — kapakta zaten eksiksiz duran rakam bloğu. */
@@ -1037,7 +1061,16 @@ export function ArticleBody({
                       data-part="cell"
                       className="rounded-(--radius-lg) border border-line bg-surface px-3.5 py-3"
                     >
-                      <p data-part="value" className="tote text-title leading-none sm:text-heading">
+                      {/* Değer bazen SAYI DEĞİL KELİME ("Participation",
+                          "Hourly earnings" — rehber, istihdam). Rakam
+                          puntosunda 167 piksellik hücreden 27 piksel
+                          taşıyordu (1440, EN, ölçüldü); kelime değer
+                          editoryal çizimde bir kademe küçük basılıyor. */}
+                      <p
+                        data-part="value"
+                        data-word={/\d/.test(item.value) ? undefined : ""}
+                        className="tote text-title leading-none sm:text-heading"
+                      >
                         {item.value}
                       </p>
                       <p data-part="note" className="mt-1.5 text-tiny leading-[16px] text-muted">

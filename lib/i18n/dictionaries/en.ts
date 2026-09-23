@@ -1054,6 +1054,7 @@ const en: typeof tr = {
   },
 
   brief: {
+    eyebrow: "Market Brief",
     title: "Daily Brief",
     subtitle: "The morning market summary · earlier days are archived",
     archiveLink: "Past Briefs",

@@ -671,6 +671,8 @@ export type BriefIndexRow = {
   generatedBy: string;
   period: string;
   locale: string;
+  /** Gövdenin başı (ham markdown, 280 harf) — arşiv satırının ilk cümlesi. */
+  lead: string;
 };
 
 /**
@@ -726,6 +728,9 @@ export async function getBriefArchive(
         generatedBy: dailyBriefs.generatedBy,
         period: dailyBriefs.period,
         locale: dailyBriefs.locale,
+        /* Gövdenin yalnızca başı: arşiv kolonu geniş ekranda her bültenin
+           ilk cümlesini de gösteriyor. Metnin tamamı 60 satırda gereksiz. */
+        lead: sql<string>`left(${dailyBriefs.bodyMd}, 280)`,
       })
       .from(dailyBriefs)
       .where(eq(dailyBriefs.period, period))

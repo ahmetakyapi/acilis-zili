@@ -68,17 +68,22 @@ metin kutusu `ornek` · `dikkat` · `ozet` · `tanim`. Sözdizimi ve yazım
 kuralları `docs/claude-rutinler.md` § 3'te; rutin prompt'u oradan kopyalanıyor.
 
 **Yeni blok eklersen DÖRT yeri birden güncelle:** çizici (`ArticleBody.tsx`),
-Mercek'in editoryal görünümü (`components/article/ArticleEditorial.module.css`),
+Mercek ve rehberin editoryal görünümü (`components/article/ArticleEditorial.module.css`),
 rutin prompt'u (`docs/claude-rutinler.md` § 3) ve panel editörünün çip
 listesi (`components/admin/StoryEditor.tsx` → `BLOKLAR`). Çipler yazıya
 örnek blok basıyor; listede olmayan blok editörden hiç eklenemez, listede
 olup çizicide olmayan blok da sayfada düz metne döner.
 
-**Mercek yazısı `variant="editorial"` ile çiziliyor, rehber/KVKK varsayılanla.**
-Editoryal stil yalnızca `data-block` / `data-part` / `data-role` kancalarını
-okuyan ayrı bir modülde; rehber ve KVKK piksel piksel aynı kalıyor. Blok
-rolleri (özet, giriş, ders, yöntem notu) CSS'te `:has()` ile tahmin
-edilmiyor, `blockRoles` ile TS'te hesaplanıyor.
+**Mercek ve rehber yazıları `variant="editorial"` ile çiziliyor, KVKK ve panel
+önizlemesi varsayılanla.** Editoryal stil yalnızca `data-block` / `data-part` /
+`data-role` kancalarını okuyan ayrı bir modülde; KVKK ve panel önizlemesi
+piksel piksel aynı kalıyor. Blok rolleri (özet, giriş, ders, yöntem notu)
+CSS'te `:has()` ile tahmin edilmiyor, `blockRoles` ile TS'te hesaplanıyor.
+İki okuma sayfası aynı iki ölçüyü paylaşıyor: kapak 1040 piksel, altındaki
+HER ŞEY (metin, kutular, grafik, şirketler, kaynaklar) tek bir 50rem sütunda.
+Metni kutulardan dar tutmak iki kez denendi, iki kez geri alındı: kenarlar
+her blokta içeri dışarı sıçrıyor, sayfa merdiven gibi okunuyor. Satır
+ölçüsünü genişlik değil punto taşıyor (20 punto, ~88 harf).
 
 **Görselin etrafında çerçeve yok.** Kenarlık ve iç dolgu, resmi kutunun
 ortasında duran ayrı bir nesne gibi gösteriyor; görsel kutunun kendisi olmalı

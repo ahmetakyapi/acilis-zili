@@ -1,9 +1,16 @@
-import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import { MotionExperience, ScrollProgress, SpotlightCard } from "@/components/motion/PremiumMotion";
 import experience from "@/components/motion/EditorialExperience.module.css";
+import editorial from "@/components/article/ArticleEditorial.module.css";
+import detail from "@/components/stories/StoryDetail.module.css";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
-import { ArticleBody, readingMinutes } from "@/components/article/ArticleBody";
+import {
+  ArticleBody,
+  parseBlocks,
+  readingMinutes,
+  sectionIndex,
+} from "@/components/article/ArticleBody";
 import { ShareButton } from "@/components/article/ShareButton";
 import { LevelBadge } from "@/components/article/LevelBadge";
 import { GlyphTile } from "@/components/article/GlyphTile";
@@ -23,35 +30,45 @@ import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 /**
  * Rehber yazısı.
  *
- * Metin sütunu kasten dar: uzun satır okumayı yorar ve bu sayfanın tek işi
- * okutmak. Yan kolon yok — dikkat dağıtacak bir ölçüm kartı burada bilinçli
- * olarak bulunmuyor.
+ * Yan kolon yok — dikkat dağıtacak bir ölçüm kartı burada bilinçli olarak
+ * bulunmuyor. Yazının iki ölçüsü mercekle aynı (StoryDetail.module.css):
+ * kapak 1040, altındaki her şey tek bir 50rem'lik sütunda.
  *
  * KÜNYE BİR DÖNEM "(68ch)" DİYORDU, O SAYI YANLIŞTI. `<article>` 720
  * pikselken Chrome'da ölçülen değer satır başına 97 KARAKTER (rehber 97,3 ·
  * mercek 98,3). Fark `ch` biriminden geliyor: `ch` "0" glifinin genişliği,
  * ortalama harfin değil, ve Schibsted Grotesk'te "0" ortalama harften
  * belirgin geniş. Yani 720px "85ch" görünüyor ama 97 karakter taşıyor.
- * Sayı künyeden kaldırıldı; niyet ("dar tut") yerinde duruyor.
  *
  * DARALTMA DENENDİ VE GERİ ALINDI — dördüncü bir deneme yapılmasın.
  * Düz metin 520 piksele çekilip veri blokları 720'de bırakıldı; ölçüm
  * hedefi tutturuyordu (97 → 75,3 / 73,4) ama görsel sonuç beğenilmedi:
  * metin 520'de bitip kutular 720'ye kadar gidince sağ kenar tırtıklı
  * kalıyor ve kasıtlı bir editoryal düzenden çok hizasızlık gibi okunuyor.
- * Ortalamak daha kötü: manşet 720'nin solunda, gövde 520'nin ortasında
- * başlıyor ve sol kenar üç ayrı yerden iniyor.
- * Bir daha denenecekse mesele ÖLÇÜ DEĞİL, iki kenarın da hizalı kalması:
- * kapsayıcının kendisi daraltılmalı. O da bedava değil — `:::` bloklarının
- * çok sütunlu düzenleri `sm:` (640px GÖRÜNÜM ALANI) sorgusuna bağlı, yani
- * kap daralsa da o düzenler devrede kalıp sıkışıyor. Kap 600'de ölçüldü:
- * bloklar 447/525/314 piksele düşüyor ve `akis` taşıyor.
+ * Mercekte aynı hata 23 Eylül'de bir kez daha yapıldı (metin 42rem, kutular
+ * 52rem) ve aynı gerekçeyle geri alındı.
+ *
+ * ÇÖZÜM ÖLÇÜYÜ PUNTOYLA KURMAK (23 Eylül). 720 piksellik sütun 1440'ta iki
+ * yanda 360'ar piksel boş zemin bırakıyordu (sahibi: "sağdan soldan çok
+ * boşluk var") ve 16 puntoda 97 harf taşıyordu — hem dar hem uzun satırlı.
+ * Sütun 50rem'e çıktı, punto 20'ye: satır ~88 harf, kutular ve metin aynı
+ * iki kenarda. Gövde mercekle aynı editoryal çizimi kullanıyor (numaralı
+ * ara başlıklar, bloklar tonla ayrışan yüzeyde); `:::` bloklarının `sm:`
+ * düzenleri 800 pikselde rahat.
+ *
+ * Kapağın sağında "Bu Yazıda": yazının bölümleri numaralı, bağlantılı. Kısa
+ * bir kavram yazısında okuyucunun ilk sorusu "neyi anlatıyor"; bölüm adları
+ * bunu dek cümlesinden daha somut söylüyor ve kapaktaki boş sağ yarıyı
+ * işe yarar bir şeyle dolduruyor.
  *
  * Sayfa sonunda müfredat gezinmesi var: rehber sıralı bir okuma listesi ve
  * bir yazıyı bitiren okuyucunun en olası sorusu "sırada ne var". İlişkili
  * yazılar (konusal komşuluk) ile önceki/sıradaki (müfredat komşuluğu) ayrı
  * şeyler söylüyor, ikisi de duruyor.
  */
+
+/** Üçten az bölümlü yazıda içindekiler gürültü; kapak tek sütun kalır. */
+const TOC_MIN = 3;
 
 export async function generateStaticParams() {
   return GUIDE_SLUGS.map((slug) => ({ slug }));
@@ -101,10 +118,14 @@ export default async function GuideArticlePage(
   const prev = position > 0 ? all[position - 1] : null;
   const next = position < all.length - 1 ? all[position + 1] : null;
 
+  const blocks = parseBlocks(article.bodyMd, locale);
+  const sections = sectionIndex(blocks);
+  const hasToc = sections.length >= TOC_MIN;
+
   return (
     <MotionExperience className={experience.article}>
     <ScrollProgress />
-    <article className="mx-auto flex w-full max-w-[720px] flex-col gap-7">
+    <article className={detail.article}>
       <ArticleJsonLd
         headline={article.title}
         description={article.dek}
@@ -122,7 +143,7 @@ export default async function GuideArticlePage(
           paylaşım. Rehber yazıları sitenin en çok paylaşılabilir metinleri —
           bir kavramı anlatıyorlar ve bağlantısı bir cevap olarak
           gönderiliyor. */}
-      <div className="flex items-center justify-between gap-3">
+      <div className={detail.utility}>
         <Link
           href="/rehber"
           className="tap-44 -my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
@@ -137,37 +158,61 @@ export default async function GuideArticlePage(
         />
       </div>
 
-      <header className={`${experience.articleHeader} flex flex-col gap-4`} data-motion-intro>
-        <div className="flex items-center gap-3.5">
-          <GlyphTile glyph={article.glyph} size={56} />
-          <div className="min-w-0">
-            <p className="plate text-nano tracking-[0.09em] text-primary">
-              {guideTopicLabel(article.topic, locale)}
-            </p>
-            {/* Zorluk ile okuma süresi aynı satırda: ikisi de "bu yazıya
-                girmeye hazır mıyım" sorusunun parçası — biri hazırlığı,
-                öteki zamanı ölçüyor. */}
-            <p className="mt-1.5 flex flex-wrap items-center gap-2">
-              <LevelBadge level={article.level} locale={locale} />
-              <span className="numeral text-small text-muted">
-                {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
-              </span>
-            </p>
+      <SpotlightCard className={detail.coverSurface}>
+        <header className={detail.cover} data-has-aside={hasToc}>
+          <div className={detail.coverCopy} data-motion-intro>
+            <div className="flex items-center gap-3.5">
+              <GlyphTile glyph={article.glyph} size={48} />
+              <div className="min-w-0">
+                <p className="text-tiny font-semibold text-primary">
+                  {guideTopicLabel(article.topic, locale)}
+                </p>
+                {/* Zorluk ile okuma süresi aynı satırda: ikisi de "bu yazıya
+                    girmeye hazır mıyım" sorusunun parçası — biri hazırlığı,
+                    öteki zamanı ölçüyor. */}
+                <p className="mt-1.5 flex flex-wrap items-center gap-2">
+                  <LevelBadge level={article.level} locale={locale} />
+                  <span className="numeral text-small text-muted">
+                    {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
+                  </span>
+                </p>
+              </div>
+            </div>
+            <h1 className={detail.title}>{article.title}</h1>
+            <p className={detail.dek}>{article.dek}</p>
           </div>
-        </div>
+          {hasToc && (
+            <nav className={detail.coverToc} aria-label={t.stories.tocLabel}>
+              <p>{t.stories.inThisArticle}</p>
+              <ol lang={locale}>
+                {sections.map((item) => (
+                  <li key={item.id}>
+                    <a href={`#${item.id}`}>
+                      <span aria-hidden>{String(item.number).padStart(2, "0")}</span>
+                      <span>{item.label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )}
+        </header>
+      </SpotlightCard>
 
-        <h1 className="display-ink w-fit text-subdisplay font-bold leading-[1.12] tracking-[-0.035em] sm:text-display">
-          {article.title}
-        </h1>
-        <p className="text-lead leading-[27px] text-soft">{article.dek}</p>
-      </header>
-
-      <hr className="border-t border-line" aria-hidden />
-
-      <ArticleBody markdown={article.bodyMd} locale={locale} />
+      <div className={detail.layout}>
+      <div className={detail.mainCol}>
+      <div data-motion-article>
+        <ArticleBody
+          markdown={article.bodyMd}
+          blocks={blocks}
+          locale={locale}
+          variant="editorial"
+          className={editorial.prose}
+        />
+      </div>
 
       {related.length > 0 && (
-        <section className="mt-2 flex flex-col gap-3">
+        <section className="flex flex-col gap-3">
           <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
             {t.guide.related}
           </h2>
@@ -224,6 +269,8 @@ export default async function GuideArticlePage(
           )}
         </nav>
       )}
+      </div>
+      </div>
     </article>
     </MotionExperience>
   );

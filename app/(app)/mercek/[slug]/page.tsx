@@ -15,10 +15,10 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, CaretDown } from "@phosphor-icons/react/dist/ssr";
 import {
   ArticleBody,
-  headingIds,
   parseBlocks,
   readingMinutes,
-  type Block,
+  sectionIndex,
+  type SectionItem,
 } from "@/components/article/ArticleBody";
 import { ShareButton } from "@/components/article/ShareButton";
 import { LogoTile } from "@/components/ui/primitives";
@@ -172,27 +172,6 @@ async function MoreStories({
   );
 }
 
-/**
- * İçindekiler — gövdenin `##` başlıkları, yazıdaki sırasıyla.
- *
- * Numara bütün `##` başlıkları sayıyor, yalnızca listelenenleri değil:
- * gövdedeki başlık numarası (CSS sayacı) ile raydaki numara aynı olmalı.
- * Kimliği olmayan başlık (yalnızca sembolden oluşan) sayıda yer tutuyor ama
- * listede yok — bağlantısı olmayan bir satır basılmaz.
- */
-function tocOf(blocks: Block[]): StoryTocItem[] {
-  const ids = headingIds(blocks);
-  const items: StoryTocItem[] = [];
-  let number = 0;
-  blocks.forEach((block, index) => {
-    if (block.kind !== "heading" || block.level !== 2) return;
-    number += 1;
-    const id = ids[index];
-    if (id) items.push({ id, label: block.text, number });
-  });
-  return items;
-}
-
 /** Üçten az bölümlü yazıda içindekiler gürültü; liste hiç basılmıyor. */
 const TOC_MIN = 3;
 
@@ -228,14 +207,12 @@ function splitSource(label: string, href: string | null): { publisher: string | 
  * satır yer kaplıyor ve yazının şeklini isteyene veriyor; JavaScript
  * olmadan da açılıyor (yerel <details>).
  */
-type StoryTocItem = { id: string; label: string; number: number };
-
 function StoryToc({
   items,
   lang,
   t,
 }: {
-  items: StoryTocItem[];
+  items: SectionItem[];
   lang: string;
   t: Dictionary;
 }) {
@@ -287,7 +264,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
   const figureIndex = storyFigureIndex(blocks);
   const figure = figureIndex < 0 ? null : (blocks[figureIndex] as StoryFigureBlock);
   const skipIndex = figure && figureRepeatsBlock(figure) ? figureIndex : undefined;
-  const toc = tocOf(blocks);
+  const toc = sectionIndex(blocks);
   const hasToc = toc.length >= TOC_MIN;
   const hasCompanies = symbols.length > 0;
   const companyLabels = {
@@ -327,7 +304,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
           ekranda rayda (getirileriyle) olduğu için burada gizli; kapak
           1440'ta bir satır kısalıyor. */}
       <SpotlightCard className={detail.coverSurface}>
-      <header className={detail.cover} data-has-figure={Boolean(figure)}>
+      <header className={detail.cover} data-has-aside={Boolean(figure)}>
       <div className={detail.coverCopy} data-motion-intro>
         <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-tiny">
           <span className="text-tiny font-semibold text-primary">

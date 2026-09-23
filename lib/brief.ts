@@ -40,8 +40,13 @@ export function briefSummary(bodyMd: string): string {
   for (const line of bodyMd.split("\n")) {
     const trimmed = line.trim();
     if (!trimmed || headingOf(trimmed)) continue;
-    // Liste işareti ve kalın vurgu okunur metne dönüşmüyor, kaldırılıyor.
-    return trimmed.replace(/^[-*]\s+/, "").replace(/\*\*/g, "");
+    // Liste işareti ve kalın vurgu okunur metne dönüşmüyor, kaldırılıyor;
+    // bağlantı yalnızca etiketiyle kalıyor (bülten arşivi ve RSS ham
+    // "[AutoZone](/hisse/AZO)" basıyordu).
+    return trimmed
+      .replace(/^[-*]\s+/, "")
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/\*\*/g, "");
   }
   return "";
 }

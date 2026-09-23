@@ -114,16 +114,25 @@ function BriefLines({
      Kazanç puntoda alındı: 13/20 denetim ve tablo basamağıydı, 14/22 (kart)
      ve 14/25 (sayfa) okuma basamağı. Gerekçesi bülten sayfasında da
      yazılı. */
+  /* SAYFADA 18 PUNTO (23 Eylül). 14/25 bülten sayfasında tam genişlikte
+     satır başına ~130 harf demekti. Panel artık 50rem'de tavan yapıyor
+     (gerekçe bülten sayfasında) ve punto okuma sayfalarının basamağına
+     çıktı: 18/30'da satır ~90 harf. Kart (ana sayfa) 14/22'de kalıyor.
+     İlk paragraf sayfada GİRİŞ: bülten "dün ne oldu" ile açılıyor ve o
+     cümle metnin kapısı (mercekteki lede ile aynı rol). */
   const text =
     size === "page"
-      ? "text-read leading-[25px]"
+      ? "text-[1.125rem] leading-[1.68]"
       : "text-read leading-[22px]";
+  const ledeAt = size === "page"
+    ? lines.findIndex((line) => !headingOf(line) && !line.trim().startsWith("- "))
+    : -1;
 
   return (
     <div
       className={cn(
         "flex flex-col",
-        size === "page" ? "mt-5 gap-3.5" : "mt-3.5 gap-2.5",
+        size === "page" ? "mt-5 gap-4" : "mt-3.5 gap-2.5",
       )}
     >
       {lines.map((line, index) => {
@@ -155,6 +164,16 @@ function BriefLines({
                 {String(bulletNumberOf.get(index) ?? startNumber).padStart(2, "0")}
               </span>
               <span>{renderInline(trimmed.slice(2), String(index))}</span>
+            </p>
+          );
+        }
+        if (index === ledeAt) {
+          return (
+            <p
+              key={index}
+              className="text-[1.3125rem] font-medium leading-[1.5] tracking-[-0.01em] text-strong max-sm:text-[1.1875rem]"
+            >
+              {renderInline(trimmed, String(index))}
             </p>
           );
         }
