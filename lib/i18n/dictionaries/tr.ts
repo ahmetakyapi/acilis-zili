@@ -489,6 +489,10 @@ const tr = {
     reportOverview: "Genel Bakış",
     reportInNumbers: "Rakamlarla Bu Çeyrek",
     reportOutlook: "İleriye Bakış",
+    /* Bölüm adı = sekme adı (gerekçe `stock.chapterValuation` üstünde).
+       "Detaylı Değerlendirme" sekmesi "Özet" panelinde açılıyordu. */
+    chapterFigures: "Rakamlar",
+    chapterReading: "Özet ve Değerlendirme",
     listTitle: "Son Bilanço Analizleri",
     filteredReports: "Listelenen Raporlarda Görüş Dağılımı",
     /* Paylaşım kartının üst künyesi — kart sabit Türkçe basıyordu. */
@@ -654,7 +658,7 @@ const tr = {
     title: "Teknik Analiz",
     /* Tek satır: uzun hâli 1024px kapağın ikinci satırına iki kelime
        bırakıyordu. */
-    description: "Takip edilen hisselerde trend, destek–direnç, alım bölgesi ve stop.",
+    description: "Takip edilen hisselerde trend, destek-direnç, alım bölgesi ve stop.",
     slotPremarket: "Açılış Öncesi",
     slotMidsession: "Seans İçi",
     slotLateday: "Kapanış Öncesi",
@@ -731,7 +735,7 @@ const tr = {
     maLead:
       "Son 20, 50, 100 ve 200 seansın ortalama kapanışı. Fiyat ortalamanın üstündeyse o dönemde alan taraf önde, altındaysa satan taraf.",
     rsiLead:
-      "Yükselişin hızını 0 ile 100 arasında ölçer. 70'in üstü hızlı yükseliş, 30'un altı hızlı düşüş demek — tek başına al ya da sat sinyali değil.",
+      "Yükselişin hızını 0 ile 100 arasında ölçer. 70'in üstü hızlı yükseliş, 30'un altı hızlı düşüş demek, tek başına al ya da sat sinyali değil.",
     macdLead:
       "İki hareketli ortalamanın arasındaki farkı izler. MACD sinyal çizgisinin üstündeyse hareket hızlanıyor, altındaysa yavaşlıyor demektir.",
     volumeLead:
@@ -815,6 +819,8 @@ const tr = {
     planSellLevels: "Tepkide Satış",
     planNearestSupport: "En Yakın Destek",
     planNearestResistance: "En Yakın Direnç",
+    /* SAT kartının üçüncü satırı: destek kırılırsa sıradaki seviye. */
+    planNextSupport: "Sonraki Destek",
     planNone: "Bu Yayında Yok",
     riskReward: "Risk / Getiri",
     /* "1 : 2,4" — bir birim riske karşı kaç birim getiri. */
@@ -824,6 +830,9 @@ const tr = {
     rewardLeg: "Getiri",
     /* Yüzdenin çapası — hangi fiyattan ölçüldüğü söylenmeden eksik. */
     riskAnchor: "Bölgenin Tepesinden · {n}",
+    /* Liste kartının dar rayında çapanın yalnızca adı: sayı bir satır
+       yukarıda, alım aralığının üst ucu olarak zaten yazılı. */
+    riskAnchorLabel: "Bölgenin Tepesinden",
     readingLabel: "Planın Okuması",
     /* Cümleler: görüş ve fiyatın plana göre yeri birleşince altı durum. */
     readingInZone: "Fiyat alım bölgesinin içinde; plan alımı burada, vazgeçme noktasını {stop} altında görüyor.",
@@ -872,6 +881,24 @@ const tr = {
     sectionsLabel: "Analiz Bölümleri",
     // Dağılım logosunun bilgi kartı, yayını bekleyen sembolde.
     pulseAwaiting: "Güncel analiz henüz yayımlanmadı.",
+    /* ---- Hisse Planları, 23 Eylül ----
+       Telefonda dağılımın logo satırları gizli; bekleyen sayısı başlık
+       künyesine iniyor ki hiçbir yerde kaybolmasın. */
+    pendingCount: "{n} Bekliyor",
+    /* Panoda son yayından eski bir kart — ayağında adıyla söyleniyor. */
+    earlierEdition: "Önceki Yayın",
+    /* SAT ve bölgesiz TUT kartının bacakları: fiyattan seviyeye uzaklık. */
+    planToSellLevel: "Tepkiye",
+    planToSupport: "Desteğe",
+    planToResistance: "Dirence",
+    /* Pano künyesi: kaç kart bölgede, bölgeye %1'den yakın, stopun altında. */
+    proximityLabel: "Plana Göre Fiyat",
+    proximityInZone: "Bölgede",
+    proximityNear: "%1'den Yakın",
+    proximityBelowStop: "Stop Altında",
+    /* Trend göstergesinin iki etiketi: 50 ve 200 günlük ortalama. */
+    ma50Short: "50G",
+    ma200Short: "200G",
   },
 
   companies: {
@@ -914,6 +941,14 @@ const tr = {
     experienceEarningsHint: "Beklentiler, gerçekleşen sonuçlar ve rakamların anlattıkları.",
     experienceContext: "Şirketin Gündemi",
     experienceContextHint: "Sektördeki yeri, son gelişmeler ve büyük resmi tamamlayan analizler.",
+    /* BÖLÜM ADI = SEKME ADI (23 Eylül). Sekmeler "Anahtar Metrikler" ve
+       "Geçmiş Bilançolar" diyordu, tıklanınca açılan bölümler ise
+       "Değerleme ve Beklentiler" ve "Çeyrek Çeyrek Performans": okuyucu
+       tıkladığı yeri başka bir adla buluyordu. İkisi artık aynı anahtardan
+       okunuyor; kısa, çünkü 390 pikselde dört sekme tek şeritte kayıyor. */
+    chapterValuation: "Değerleme",
+    chapterEarnings: "Bilançolar",
+    chapterContext: "Gündem",
     profile: "Şirket Profili",
     sector: "Sektör",
     industry: "Alt Sektör",

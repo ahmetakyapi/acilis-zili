@@ -22,6 +22,7 @@
 .editionItem { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .editionLabel { font-size:11px; font-weight:600; letter-spacing:.04em; color:var(--text-muted); }
 .editionValue { font-size:14px; font-weight:600; color:var(--text-strong); }
+.editionDateShort { display:none; }
 
 /* ---- Görüş dağılımı (başlığın görseli) ----
    Oran çubuğu bütünü, satırlar kimin nerede olduğunu gösteriyor. Çubukta
@@ -89,15 +90,109 @@
    "İstemci ile sunucu sınırı") hiç girilmiyor. Başlıktaki görüş satırları
    da aynı radyolara `for` ile bağlı etiketler: satıra basmak süzüyor. */
 .board { display:flex; flex-direction:column; gap:18px; min-width:0; }
-.filter { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0; padding:0; border:0; }
+/* ---- Araç çubuğu: başlık, pano künyesi, süzgeç ----
+   YAPIŞKAN (23 Eylül). Süzgeç yalnızca panonun başındaydı ve sayfa 1440'ta
+   4.071, 390'da 10.855 piksel (ölçüldü): görüş değiştirmek için on iki
+   ekran yukarı dönmek gerekiyordu. Masaüstünde çubuğun tamamı uygulama
+   çubuğunun altına yapışıyor; telefonda yalnızca süzgeç (aşağıda, 767).
+   Zemin opak sayfa zemini — cam yok, kartlar altından geçerken görünmüyor.
+
+   YAPIŞINCA TAM GENİŞLİK BANT, TAŞMASIZ. Detay sayfasının bölüm çubuğu
+   (`PremiumMotion` → `.sectionNav::before`) bandı 100vw genişliğinde mutlak
+   bir kutuyla çiziyor ve sol ofseti betikle ölçüyor. Burada iki "mürekkep
+   taşması" kullanılıyor: `border-image` dolgusu kutunun yüksekliğinde
+   ekranın iki ucuna uzanıyor, `box-shadow` altına tek piksellik kenar
+   çiziyor. İkisi de kaydırılabilir taşma SAYILMIYOR (yatay kaydırma
+   açmıyor) ve ölçülecek bir ofset yok. `--chrome` iki temada da sayfa
+   zeminiyle aynı renk; dinlenme hâlinde bant görünmez, fark yalnızca
+   çizgide: içerik genişliğinde kıl çizgi → ekran genişliğinde kenar. */
+.boardToolbar { position:sticky; top:var(--app-bar-h); z-index:15; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 20px; padding-block:12px; border-bottom:1px solid var(--line); background:var(--page-bg); }
+.boardToolbar[data-stuck], .filterBar[data-stuck] { border-bottom-color:transparent; border-image:linear-gradient(var(--chrome) 0 0) fill 0 // 0 100vmax; box-shadow:0 1px 0 100vmax var(--chrome-border); clip-path:inset(0 -100vmax -1px); }
+.boardHeading { display:flex; min-width:0; flex-direction:column; gap:4px; }
+/* BAŞLIK KARTLARIN BAŞLIĞINDAN BÜYÜK. 18 pikseldi (telefonda 17), yani
+   tanıttığı kartların sembolünden (h3, 19 piksel) küçüktü: bölümün en zayıf
+   başlığı oydu ve göz onu atlayıp "MU"ya iniyordu. Merdiven artık h1 (~40) >
+   h2 (22-28) > h3 (19) > gövde (14). Ton `main h2`nin marka mürekkebi
+   (globals.css) — kısa başlık, belgeli istisna. */
+.boardTitle { font-size:clamp(22px, 1.1vw + 12px, 28px); line-height:1.15; font-weight:650; letter-spacing:-.03em; }
+/* PANO KÜNYESİ — üç sayı, kıl çizgiyle ayrık (hesabı ve gerekçesi
+   page.tsx'te). Nokta ayracı değil çizgi: bu sayfada nokta künye
+   ayracı ve bir satırda birden fazlası yasak (tasarım kuralı). Renk yalnızca
+   sayı sıfırdan büyükken — "0 bölgede" yeşil yazılırsa olmayan bir fırsatı
+   varmış gibi gösterir. */
+.proximity { display:flex; flex-wrap:wrap; align-items:baseline; row-gap:4px; margin:0; }
+.proximity > div { display:flex; align-items:baseline; gap:6px; padding-inline:12px; border-left:1px solid var(--line); }
+.proximity > div:first-child { padding-left:0; border-left:0; }
+.proximity dt { font-size:12.5px; font-weight:600; color:var(--text-muted); }
+.proximity dd { margin:0; font-size:15px; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); }
+.proximity [data-tone="up"] dd { color:var(--up); }
+.proximity [data-tone="down"] dd { color:var(--down); }
+@media (min-width:1100px) {
+  .boardHeading { flex-direction:row; align-items:center; gap:24px; }
+}
+.filterBar { min-width:0; }
+/* EŞİT BÖLMELİ SÜZGEÇ, KAYAN BAŞPARMAK (23 Eylül). Bölmeler içerik
+   genişliğinde yüzüyordu: 390'da `space-between` aralarına 26 piksellik
+   delikler açıyordu, 320'de dört etiket 284 piksellik kaba sığmayıp "SAT"
+   tek başına ikinci satıra düşüyordu (fieldset 91 piksel, ölçüldü). Artık
+   eşit sütunlu bir ızgara; seçimi gösteren kutu tek bir `::before` ve
+   radyonun sırasını (`data-i`) `:has()` ile okuyup kayıyor. JavaScript
+   yok, hidrasyondan önce de çalışıyor.
+   Köşe yarıçapları iç içe: dış `--radius-lg`, iç ondan dolgu (4) kadar
+   küçük — aynı merkezli iki eğri. */
+.filter { --i:0; position:relative; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:3px; margin:0; padding:4px; border:0; border-radius:var(--radius-lg); background:var(--surface-sunken); }
+.filter::before { content:""; position:absolute; top:4px; bottom:4px; left:4px; width:calc((100% - 8px - (var(--n, 4) - 1) * 3px) / var(--n, 4)); border:1px solid var(--primary-faint); border-radius:calc(var(--radius-lg) - 4px); background:var(--premium-surface); transform:translateX(calc(var(--i) * (100% + 3px))); transition:transform 240ms var(--ease-brand); }
+.filter:has(input[data-i="1"]:checked) { --i:1; }
+.filter:has(input[data-i="2"]:checked) { --i:2; }
+.filter:has(input[data-i="3"]:checked) { --i:3; }
 .filter legend { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .filter input { position:absolute; opacity:0; pointer-events:none; }
-.filter label { display:inline-flex; align-items:baseline; gap:7px; min-height:38px; padding:8px 15px; border:1px solid var(--line); border-radius:999px; background:var(--surface-solid); font-size:13px; font-weight:600; color:var(--text-body); cursor:pointer; transition:border-color .2s, background-color .2s, color .2s; }
+.filter label { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; gap:6px; min-height:36px; padding:7px 12px; border-radius:calc(var(--radius-lg) - 4px); font-size:13px; font-weight:600; white-space:nowrap; color:var(--text-body); cursor:pointer; transition:color .2s; }
 .filter label b { font-weight:600; letter-spacing:-.02em; color:var(--text-muted); }
-.filter label:hover { border-color:var(--line-strong); color:var(--text-strong); }
-.filter input:checked + label { border-color:transparent; background:var(--text-strong); color:var(--page-bg); }
-.filter input:checked + label b { color:inherit; opacity:.7; }
+.filter label:hover { color:var(--text-strong); }
+.filter input:checked + label { color:var(--primary-ink); }
+/* SEÇİLİ SAYI AĞIRLIKLA AYRILIYOR, SAYDAMLIKLA DEĞİL. `opacity:.7` ile
+   `--primary-ink` beyaz başparmak üstünde #5596c8'e iniyordu: 13 piksellik
+   metinde 3,19:1, AA'nın altı (koyu temada 4,50, sınırda; ölçüldü). Tam
+   ton ve bir kademe ince ağırlık: etiketten ayrışıyor, kontrast düşmüyor. */
+.filter input:checked + label b { color:var(--primary-ink); font-weight:500; }
 .filter input:focus-visible + label { outline:2px solid var(--line-focus); outline-offset:2px; }
+@media (prefers-reduced-motion: reduce) {
+  .filter::before { transition:none; }
+}
+/* TELEFONDA YALNIZCA SÜZGEÇ YAPIŞIYOR. Başlık, künye ve süzgeç birlikte
+   yapışsa 390'da ekranın 150 pikseli giderdi; çubuk `display:contents` ile
+   çözülüyor, üç çocuk panonun akışına iniyor ve yapışan yalnızca 48
+   piksellik süzgeç bandı. `position:static` ayrıca yazılı: kutusu olmayan
+   bir öğe hesaplanmış konumunu yine `sticky` söyler ve `TechnicalBoard`
+   onu yapışmış sanardı. Negatif pay + dolgu bandın yerleşimi oynatmadan
+   süzgecin üstünde ve altında sekiz piksel örtmesi için.
+   KÜNYE TELEFONDA DA TEK SATIR (23 Eylül). Üç sütundu (sayı üstte, ad
+   altta) çünkü satır hâlinde 320'de 293 piksel istiyordu, kap 284. Sütun
+   düzeni 39 piksel tutuyordu ve başlıkla birlikte panoya 45 piksel
+   ekliyordu — ilk kartı telefonun ilk ekranından iten bloklardan biri.
+   Ayrım dolgusu 12'den 10'a, etiket 12,5'ten 12'ye inince satır TR'de 277,
+   EN'de 249 piksel: tek satır, 18 piksel. Sığmazsa üçüncü öğe kıl çizgisiyle
+   alt satıra sarıyor, hiçbir şey kesilmiyor.
+   Pano aralığı 18'den 14'e: süzgeç bandının dolgusu (8) her iki yanda
+   aralığa ekleniyor, görünen boşluk yine 14 + 8. Başlık 21 piksel —
+   kartın sembolünden (19) büyük kalıyor. */
+@media (max-width: 767px) {
+  .board { gap:14px; }
+  .boardTitle { font-size:21px; }
+  .boardToolbar { position:static; display:contents; }
+  .filterBar { position:sticky; top:var(--app-bar-h); z-index:15; margin-block:-8px; padding-block:8px; background:var(--page-bg); }
+  .filter label { min-height:40px; padding:8px; gap:5px; }
+  .proximity > div { padding-inline:10px; }
+  .proximity dt { font-size:12px; }
+  .proximity dd { line-height:1.2; }
+}
+/* DOKUNMATİKTE BÖLME 44 PİKSEL — parmak hedefinin alt sınırı. 40'ta
+   seçim şeridin üstünde bir kademe kalıyordu; bant (dolgusuyla) 60
+   piksel, masaüstündeki bütün çubuktan yine kısa. */
+@media (pointer: coarse) {
+  .filter label { min-height:44px; }
+}
 .board:has(input[value="buy"]:checked) .cell:not([data-verdict="buy"]),
 .board:has(input[value="hold"]:checked) .cell:not([data-verdict="hold"]),
 .board:has(input[value="sell"]:checked) .cell:not([data-verdict="sell"]) { display:none; }
@@ -132,13 +227,28 @@
    kart zıplıyor, sayfa kıpırdıyordu. Artık yalnızca kenarlık birincil
    tonun soluğuna dönüyor ve "Analizi Oku" oku dürtülüyor: kartın
    tıklanabilir olduğu hâlâ söyleniyor, yerinden oynamadan. */
-.card { position:relative; isolation:isolate; display:grid; grid-template-rows:subgrid; grid-row:span 6; min-width:0; padding:20px 20px 16px; border:1px solid var(--line); border-radius:22px; background:var(--premium-surface); box-shadow:var(--premium-shadow); transition:border-color var(--default-transition-duration) var(--ease-brand); }
+/* DÜZ YÜZEY (23 Eylül). 22 Eylül'de karta köşeden inen mavi bir parıltı
+   (150°, `--primary-tint` → saydam %28) ve yumuşak bir gölge eklenmişti;
+   koyu temada on beş kartın hepsinin sol üstünde aynı mavi ışık duruyordu
+   ve tema dosyası "ışıma yok, derinlik tonla" diyor. Kart artık düz:
+   sayfadan ayrılması yüzey tonuyla ve kıl kenarlıkla, gölgesiz.
+
+   GÖRÜŞ RENGİNDE ÜST KENAR DENENDİ VE REDDEDİLDİ (23 Eylül). Üç piksellik
+   bir iç kenar AL'da yükseliş, TUT'ta birincil, SAT'ta düşüş tonundaydı.
+   Aynı bilgiyi üçüncü kez söylüyordu — kartın görüş hapı ve başlıktaki
+   dağılım (8/6/1) zaten veriyor, süzgeç de istenen alt kümeyi ayırıyor —
+   her kartın tepesinde renkli şerit kalıplaşmış bir kart süsü ve TUT'u
+   maviye bağlayınca "mavi etkileşimdir" kuralını (tema dosyası) bozuyordu.
+   Yarıçap panel tokenı. */
+.card { position:relative; isolation:isolate; display:grid; grid-template-rows:subgrid; grid-row:span 6; min-width:0; padding:20px 20px 16px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); box-shadow:none; transition:border-color var(--default-transition-duration) var(--ease-brand); }
+/* Kart bir bağlantı (başlıktaki `::after` kaplaması), hover'ı bu yüzden
+   var — ve yalnızca kenarlık tonu. */
 .card:hover { border-color:var(--primary-faint); }
 .card:has(.cardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
 .cardLink { color:inherit; }
 .cardLink::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; }
 .cardLink:focus-visible { outline:none; }
-.cardHead { display:flex; align-items:center; gap:12px; min-width:0; }
+.cardHead { display:flex; align-items:center; gap:12px; min-width:0; padding-bottom:12px; border-bottom:1px solid var(--line-soft); }
 /* AD SÜTUNUNUN TABANI VAR. 320 pikselde görüş rozetinin yanına değişim
    etiketi de gelince ("HOLD" + "Turned Hold") rozet grubu 153 piksele
    çıkıyor ve `min-width:0` olan ad sütunu 41 piksele eziliyordu: dört
@@ -168,9 +278,16 @@
    aradığı şey o. 15 piksel kapaktaki sıralamanın aynısını kuruyor (sembol,
    fiyat, sonra görüş) ve kart yoğunluğunu bozmuyor; kapaktaki 19-22 burada
    satırı şişirirdi. Yalnızca `TechnicalCard` kullanıyor, nabız şeridinin
-   kendi sınıfı var. */
-.stance { display:inline-flex; align-items:center; padding:5px 14px; border-radius:999px; font-size:15px; font-weight:800; letter-spacing:.06em; line-height:1.15; }
-.change { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border:1px solid currentColor; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; }
+   kendi sınıfı var.
+   22 EYLÜL: 14 PİKSEL, KÖŞELİ. Hap 15 piksel ve tam yuvarlaktı; kartın
+   başlığına bir alt çizgi gelince hap satırın en yüksek öğesi oldu ve
+   kart içindeki öteki etiketlerin (plan rozeti, künyeler) köşeli diliyle
+   ayrı düşüyordu. Bu kural dosyanın sonunda ikinci bir blokta kayıtsız
+   eziliyordu; 23 Eylül'de buraya katlandı. Yarıçap tokenlı: `--radius-sm`
+   (hap, değişim rozeti, plan rozeti aynı ölçekte). Görüşü kartta taşıyan
+   tek işaret yine bu hap — renkli üst kenar reddedildi (bkz. `.card`). */
+.stance { display:inline-flex; align-items:center; padding:6px 10px; border-radius:var(--radius-sm); font-size:14px; font-weight:800; letter-spacing:.06em; line-height:1.15; }
+.change { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border:1px solid currentColor; border-radius:var(--radius-sm); font-size:11px; font-weight:700; white-space:nowrap; }
 /* Fiyat satırı: etiket ve plana göre yer aynı satırda, sayı altında büyük. */
 .cardQuote { display:grid; gap:4px; }
 .cardQuoteLabel { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:3px 10px; color:var(--text-muted); font-size:12px; }
@@ -178,7 +295,7 @@
 .cardPrice strong { font-size:27px; line-height:1.1; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
 /* Plan konumu: fiyatın alım planına göre yeri, tek kısa etiket. Ton
    anlamdan: bölgede yükseliş, stop altında düşüş, dışında nötr. */
-.plan { display:inline-flex; align-self:flex-start; align-items:center; gap:6px; padding:3px 10px; border-radius:8px; font-size:12px; font-weight:700; letter-spacing:.01em; }
+.plan { display:inline-flex; align-self:flex-start; align-items:center; gap:6px; padding:3px 10px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; letter-spacing:.01em; }
 .plan[data-kind="inZone"] { background:var(--up-wash); color:var(--up); }
 .plan[data-kind="above"], .plan[data-kind="below"] { background:var(--primary-tint); color:var(--primary-ink); }
 .plan[data-kind="belowStop"] { background:var(--down-wash); color:var(--down); }
@@ -187,16 +304,90 @@
    oluşuyor — risk şeridinin oranı ve seviye çizgisinin fiyat ekseni. İkisi de
    tam genişlikte ve aynı x'ten başlıyor; 10 pikselde tek bir bileşik çizim
    gibi okunuyordu. Aradaki bacak satırı zaten ayırıyor, boşluk onu
-   tamamlıyor. */
-.cardPlan { display:grid; gap:16px; }
+   tamamlıyor.
+   16 → 14 (23 Eylül): iki çizim tek raya indi (`PlanRail`), ayrılacak ikinci
+   bir çizim kalmadı; aralık ızgaranın satır ritmine döndü.
+
+   ÜSTTEN DİZİLİ (`align-content:start`). Satır komşu kartlarla paylaşılıyor
+   ve boyunu en uzun plan belirliyor; ızgara örtük satırlarını GERİYORDU:
+   SAT kartında (iki hücre, risk şeridi yok) plan kutusu 74 pikselden 120'ye
+   uzuyor, altında 46 piksellik boş gri bir alan, rayın altında 47 piksel
+   daha kalıyordu (1440, ONDS, ölçüldü). Kutu artık doğal boyunda; fark
+   varsa tek parça olarak satırın dibinde, bir sonraki bölümün üstünde. */
+.cardPlan { display:grid; gap:12px; align-content:start; }
+/* CÜMLE VE ANI. Künye cümlenin başında (gerekçe TechnicalCard'da). */
+.cardThesis { display:flex; min-width:0; flex-direction:column; gap:5px; }
+.thesisStamp { display:flex; flex-wrap:wrap; justify-content:space-between; gap:2px 12px; font-size:11px; line-height:1.35; font-weight:650; letter-spacing:.02em; color:var(--text-muted); }
+.thesisStamp b { font-weight:700; color:var(--text-body); }
 .cardHeadline { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; color:var(--text-body); font-size:14px; line-height:1.6; text-wrap:pretty; }
-.chips { display:flex; flex-wrap:wrap; gap:6px; }
-.chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:8px; background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
-.chip::before { content:""; width:6px; height:6px; border-radius:50%; background:var(--text-muted); opacity:.6; }
-.chip[data-tone="up"]::before { background:var(--up); opacity:1; }
-.chip[data-tone="down"]::before { background:var(--down); opacity:1; }
+/* KIRPMA GENİŞLİĞE GÖRE (23 Eylül). Üç satır her genişlikte geçerliydi ve
+   kartın tek "neden" cümlesi dar düzende sonundan kesiliyordu — MU 390'da
+   "bekleme bölgesi 1.062,07–1.080,19'a…" diye, yani sonucu kesilerek.
+   Ölçülen: TR 390'da 9/15, EN 390'da 15/15, TR 320'de 15/15, 768'de 10/15
+   kart kırpılıyordu. Tek sütunda alt ızgara kartları hizalamıyor, kırpma
+   kart başına ancak ~23 piksel kazandırıyordu. Telefonda beş satır (320'de
+   ölçülen en uzun cümle), iki sütunda dört (satırı iki kart birlikte bir
+   kez büyütüyor), 1100 ve üstünde üç (orada TR'de hiçbiri kırpılmıyor). */
+@media (max-width: 767px) { .cardHeadline { -webkit-line-clamp:5; } }
+@media (min-width: 768px) and (max-width: 1099px) { .cardHeadline { -webkit-line-clamp:4; } }
+/* ---- Gösterge ölçüleri: trend, RSI, hacim ----
+   Üç çip vardı; gerekçe TechnicalCard'da. İki satır ortak (`subgrid`): ad
+   ve değer üstte, ölçü altta — bir sütunun adı dar ekranda sarsa da üç
+   ölçü aynı hatta kalıyor. Ölçü KIL ÇİZGİ, dolu iz değil: dolu bir izin
+   üstüne kısmi dolgu bir ilerleme çubuğu gibi okunuyor, oysa RSI bir
+   ilerleme değil bir konum. Renk yalnızca bir eşik aşıldığında (RSI 30/70)
+   ya da yön söylendiğinde (ortalamanın üstü/altı). */
+.gauges { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); grid-template-rows:auto auto; column-gap:12px; row-gap:5px; margin:0; padding:0; list-style:none; }
+.gauges:empty { row-gap:0; }
+.gauges > li { display:grid; grid-template-rows:subgrid; grid-row:span 2; min-width:0; }
+.gaugeHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 5px; min-width:0; line-height:1.3; }
+.gaugeName { font-size:11.5px; font-weight:650; letter-spacing:.01em; color:var(--text-muted); }
+.gaugeValue { font-size:13.5px; font-weight:650; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
+.gaugeValue[data-tone="up"] { color:var(--up); }
+.gaugeValue[data-tone="down"] { color:var(--down); }
+.gaugeTags { display:flex; align-self:center; gap:4px; }
+/* Etiket nötr, YÖN oku renkli: değer ("Yukarı") zaten yön renginde; iki
+   etiket de yeşil zeminle basılınca trend sütunu öteki iki ölçünün iki
+   katı ağırlığa çıkıyordu (1440 ekran görüntüsü). */
+.gaugeTags i { display:inline-flex; align-items:center; gap:1px; padding:1px 5px 1px 3px; border-radius:var(--radius-xs); background:var(--surface-sunken); color:var(--text-body); font-size:10.5px; font-style:normal; font-weight:700; line-height:1.3; }
+.gaugeTags i[data-dir="up"] svg { color:var(--up); }
+.gaugeTags i[data-dir="down"] svg { color:var(--down); }
+.gaugeMeter { position:relative; align-self:center; height:9px; background:linear-gradient(var(--line-strong) 0 0) 0 50% / 100% 1px no-repeat; }
+.gaugeMeter::before, .gaugeMeter::after { content:""; position:absolute; top:1.5px; width:1px; height:6px; background:var(--text-muted); opacity:.6; }
+.gaugeMeter[data-kind="rsi"]::before { left:30%; }
+.gaugeMeter[data-kind="rsi"]::after { left:70%; }
+/* Hacim ölçeği 0-3×; çentik 1×'te (ortalama), ikincisi yok. */
+.gaugeMeter[data-kind="volume"]::before { left:33.333%; }
+.gaugeMeter[data-kind="volume"]::after { display:none; }
+.gaugeMeter[data-kind="rsi"] i { position:absolute; top:1px; width:7px; height:7px; margin-left:-3.5px; border-radius:50%; background:var(--text-strong); box-shadow:0 0 0 2px var(--premium-surface); }
+.gaugeMeter[data-kind="rsi"][data-tone="down"] i { background:var(--down); }
+.gaugeMeter[data-kind="rsi"][data-tone="up"] i { background:var(--up); }
+.gaugeMeter[data-kind="volume"] i { position:absolute; left:0; top:3px; height:3px; border-radius:2px; background:var(--primary); transform-origin:left center; }
+.gaugeMeter[data-kind="volume"][data-tone="light"] i { background:var(--text-muted); }
+/* DAR ŞERİTTE TREND SÜTUNU GENİŞ. 320'de sütun 76 piksel ve "Trend
+   Yukarı" (78) taşıp RSI sütununun üstüne biniyordu, iki etiket (88) de
+   sütundan çıkıyordu (ekran görüntüsü). Şeridin kabı (`.gaugeBox`; kap
+   kendini sorgulayamadığı için ayrı bir sarmalayıcı): 300 pikselin
+   altında trend sütunu 1,2 kat pay alıyor (86 piksel) ve etiketler bir
+   kademe küçülüyor. 390'da (326) her şey tek satır.
+   AD VE DEĞER ARTIK ZORLA İKİ SATIR DEĞİL (23 Eylül). Başlık her dar
+   şeritte alt alta diziliyordu ve şerit 320'de 52 piksel tutuyordu —
+   oysa 1,2 kat pay ile "Trend Yukarı" ve "RSI 61" tek satıra sığıyor.
+   Satır `flex-wrap` ile yalnızca sığmadığında kırılıyor ("Trend Karışık",
+   İngilizce "Volume"); alt ızgara ölçüleri yine aynı hatta tutuyor. */
+.gaugeBox { container-type:inline-size; min-width:0; }
+@container (max-width: 299px) {
+  .gauges { grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr); column-gap:10px; }
+  .gaugeTags { gap:3px; }
+  .gaugeTags i { padding:1px 4px 1px 2px; font-size:10px; }
+}
 .cardFoot { display:flex; align-items:center; align-self:end; justify-content:space-between; gap:10px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
-.cardRead { display:inline-flex; align-items:center; gap:4px; color:var(--primary-ink); font-weight:600; }
+/* Eski yayından gelen kart: ayak adını ve tarihini taşıyan bir etiket
+   alıyor. Yön rengi değil ton — bayatlık bir yön değil (gerekçe
+   TechnicalCard'da). Güncel kartın ayağında yalnızca "Analizi Oku" var ve
+   sağda duruyor (`margin-left:auto`), etiket geldiğinde de yeri değişmiyor. */
+.staleTag { display:inline-flex; padding:2px 8px; border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-strong); font-weight:650; }
+.cardRead { display:inline-flex; align-items:center; gap:4px; margin-left:auto; color:var(--primary-ink); font-weight:600; }
 .cardRead svg { transition:transform var(--default-transition-duration) var(--ease-brand); }
 .card:hover .cardRead svg { transform:translate(2px,-2px); }
 
@@ -206,10 +397,26 @@
    Satırda fiyat hiç kırılmıyor, hedef listesi ayırıcıdan kırılıyor. Kapakta
    (lg, ≥640px) üç sütun: orada yer var ve sayı 19 punto. */
 .planStrip { display:grid; gap:8px; }
-.planCells { display:flex; flex-direction:column; gap:8px; margin:0; padding:12px 14px; border-radius:14px; background:var(--surface-sunken); }
-.planCell { display:flex; min-width:0; align-items:baseline; justify-content:space-between; gap:6px 14px; }
-.planCell dt { display:flex; flex:none; align-items:center; gap:7px; font-size:12px; font-weight:700; letter-spacing:.02em; color:var(--text-muted); }
-.planCell dd { min-width:0; font-size:14px; line-height:1.35; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); text-align:right; }
+/* DÜZ GÖMÜLÜ KUTU (23 Eylül). 22 Eylül bloğu kutuya 115°'lik bir mavi
+   degrade, SAT'ta kırmızı bir degrade ve bir kenarlık vermişti — tema
+   dosyasının "ton, ışıma değil" kuralının dışında ve yarıçapı ölçekte
+   olmayan 10 piksel. Kutu düz `--surface-sunken`, SAT'ta düşüş yıkamasıyla
+   karışık ama yine düz; yarıçap `--radius-lg`. */
+.planCells { display:flex; flex-direction:column; gap:8px; margin:0; padding:10px 14px; border-radius:var(--radius-lg); background:var(--surface-sunken); }
+.cardPlan[data-verdict="sell"] .planCells { background:color-mix(in srgb, var(--down-wash) 45%, var(--surface-sunken)); }
+/* SAYI SATIRIN EN YÜKSEK SESİ, ARADA KILAVUZ ÇİZGİ (23 Eylül). Etiket
+   12/700, sayı 14/600 idi — neredeyse eşit ağırlık, üç satır bir form gibi
+   okunuyordu. 1024'te "Nerede Vazgeçilir" ile "1.012,57 $" arasında ~200,
+   1440'ta ~150 piksel boş ton vardı ve göz satırı tahminle atlıyordu (fiyat
+   haritası aynı sorunu genişliği sınırlayarak çözmüştü). Artık etiket
+   12,5/600, sayı 15/650 ve aradaki boşluğu noktalı bir kılavuz dolduruyor:
+   etiketten sayıya giden yol çizili. Satır araları çizgisiz — kılavuz
+   zaten satırı taşıyor, her satıra bir de kıl çizgi eklemek aynı şeyi
+   ikinci kez söylerdi. */
+.planCell { display:flex; min-width:0; flex-wrap:wrap; align-items:baseline; gap:2px 0; }
+.planCell dt { display:flex; flex:none; align-items:center; gap:7px; font-size:12.5px; font-weight:600; letter-spacing:.01em; color:var(--text-muted); }
+.planCell::after { content:""; order:1; flex:1 1 12px; min-width:12px; margin-inline:8px; border-bottom:1px dotted var(--line-strong); position:relative; top:-4px; }
+.planCell dd { order:2; min-width:0; margin-left:auto; font-size:15px; line-height:1.25; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); text-align:right; }
 .planCell dd > span { white-space:nowrap; }
 .planItem { white-space:nowrap; }
 .planSep { color:var(--text-muted); font-weight:500; }
@@ -221,15 +428,28 @@
    üç ayrı künye gibi değil. */
 .planCell[data-kind="target"] dd { color:var(--up); font-weight:700; }
 .planCell[data-kind="target"] .planSep { color:var(--up); opacity:.55; }
+/* SIĞMAYAN SAYI BÜTÜN OLARAK ALT SATIRA (23 Eylül). "Satırda fiyat hiç
+   kırılmıyor" kaydı 320'de tutmuyordu: on beş kartın on ikisinde bir plan
+   satırı sarıyordu ve alım aralığı tirenin ARKASINDAN kırılıp "1.062,07 –"
+   / "1.080,19 $" diye asılı bir tire bırakıyordu (ölçüldü). Aralık artık
+   bölünmüyor (`nowrap`) ve satır `flex-wrap`: sayı etiketin yanına
+   sığmazsa bütün olarak alt satıra iniyor, sağa yaslı kalıyor; kılavuz
+   üst satırda etiketin ardını doldurup gözü ona indiriyor. Yalnızca
+   sığmayan satır sarıyor (320'de genellikle alım aralığı).
+   Etiketi üstte, sayıyı altta dizen dikine düzen de denendi ve geri
+   alındı: 320'de her kartı 60 piksel uzatıyordu (üç satırın üçü de iki
+   satıra çıkıyor, ölçüldü) ve sayılar sağ kenardaki hizasını kaybediyordu. */
+.planCell[data-kind="entry"] dd { white-space:nowrap; }
 .planStripLg .planCell dd { font-size:15px; font-weight:700; }
 .planEmpty { font-weight:500; color:var(--text-muted); }
-/* ---- Risk şeridi ----
-   Üç satır: künye (oran + çapa), ölçekli çubuk, iki bacak. Gerekçe
-   PlanStrip.tsx içinde. Bacak adları ton rengini, ham tutar `--text-strong`u
-   taşıyor: renk bacağı çubuğa bağlar, ağırlık okumayı sayıya çeker. */
-.risk { display:grid; gap:6px; padding:0 4px; font-size:12px; color:var(--text-muted); }
+/* ---- Plan rayı: künye, ray, bacaklar ----
+   Üç satır, tek çizim (gerekçe PlanRail.tsx içinde). Bacak adları ton
+   rengini, ham tutar `--text-strong`u taşıyor: renk bacağı raydaki parçaya
+   bağlar, ağırlık okumayı sayıya çeker. Ray kendi kabı: çapa künyesinin
+   sağa yapışma kararı rayın genişliğine bakıyor. */
+.rail { container-type:inline-size; display:grid; gap:4px; padding:0 2px; font-size:12px; line-height:1.35; color:var(--text-muted); }
 .riskHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; }
-.riskHead b { font-size:14px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
+.riskHead b { font-size:14px; line-height:1.25; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
 /* Çapa künyesi sağa yapışır; sığmadığında alt satıra düşer (360'ta düşüyor).
    TABULAR-NUMS DENENDİ VE GERİ ALINDI: bu ailede virgül de tabular genişliğe
    çekiliyor ve "916,84" ekranda "916 , 84" diye okunuyordu. Künye bir sütunda
@@ -245,22 +465,33 @@
 @container (min-width: 480px) {
   .riskAnchor { margin-left:auto; }
 }
-.riskBar { display:flex; gap:2px; height:5px; }
-.riskBar i { flex:0 1 0; min-width:6px; border-radius:2px; }
-.riskBar i[data-leg="risk"] { background:var(--down); }
-.riskBar i[data-leg="reward"] { background:var(--up); }
+/* DAR RAYDA ÇAPANIN SAYISI DÜŞÜYOR (23 Eylül). 320'de künye oran +
+   çapa = 289 piksel istiyordu, rayın içi 246: her kartta ikinci bir satır
+   (ölçüldü, on beş kartın on beşi). Sayı bir satır yukarıda alım
+   aralığının üst ucu; ad kalınca künye tek satıra iniyor (TR 225, EN 222
+   piksel). Kapsayıcı sorusu, pencere değil — gerekçesi aşağıdaki bacak
+   kuralında. */
+@container (max-width: 299px) {
+  .riskAnchorValue { display:none; }
+}
+/* Bacak çubuğu (`.riskBar`) KALKTI: bacaklar artık rayın ekseninde
+   (`.trackSeg`, gerekçe LevelTrack.tsx'te). Çubuğun kapak ve `lg`
+   ölçüleri (`.planStripLg .riskBar`, `.coverPlan .riskBar`) de onunla
+   gitti; ikisi de artık var olmayan bir öğeyi boyuyordu. */
 .riskLegs { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 14px; }
 .riskLegs > span { display:flex; align-items:baseline; gap:4px; white-space:nowrap; }
-/* Getiri bacağı sağ uca yapışıyor — çubuğun sağ ucu da o renkte. */
-.riskLegs > span[data-leg="reward"] { margin-left:auto; }
-.riskName { font-weight:700; letter-spacing:.02em; }
-.riskLegs [data-leg="risk"] .riskName { color:var(--down); }
-.riskLegs [data-leg="reward"] .riskName { color:var(--up); }
-.riskLegs b { font-size:13px; font-weight:700; color:var(--text-strong); }
-.planStripLg .risk { gap:7px; font-size:13px; }
-.planStripLg .riskHead b { font-size:16px; }
-.planStripLg .riskBar { height:6px; }
-.planStripLg .riskLegs b { font-size:14px; }
+/* Bitiş bacağı sağ uca yapışıyor — raydaki parçası da o uçta. */
+.riskLegs > span[data-side="end"] { margin-left:auto; }
+/* Dar rayda iki bacak tek satıra sığmıyor ve ikincisi alt satırda TEK
+   BAŞINA sağa yapışıyordu (320, ölçüldü: blok 99 piksel). İki satır da
+   sola, aynı hizada — çapa künyesiyle aynı karar. */
+@container (max-width: 299px) {
+  .riskLegs > span[data-side="end"] { margin-left:0; }
+}
+.riskName { font-weight:700; letter-spacing:.02em; color:var(--text-body); }
+.riskLegs [data-tone="down"] .riskName { color:var(--down); }
+.riskLegs [data-tone="up"] .riskName { color:var(--up); }
+.riskLegs b { font-size:13px; line-height:1.25; font-weight:700; color:var(--text-strong); }
 /* ÜÇ SÜTUN KARARI KAPSAYICIYA BAKIYOR, PENCEREYE DEĞİL.
    Kural `@media (min-width: 640px)` idi ve bu, "kapak geniştir" demenin
    dolaylı yoluydu — pencere genişse kapak da geniştir varsayımı. Yan
@@ -320,16 +551,34 @@
    kendi renginin açık bir tonuna dönüşüyor, noktayı raydan ayıran boşluk
    kayboluyordu. Kart ve kapak `--premium-surface` üzerinde, halka onun
    rengiyle çiziliyor. */
-.track { position:relative; height:30px; }
-.trackLine { position:absolute; left:0; right:0; top:13px; height:4px; border-radius:2px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft); }
-.trackVoid { position:absolute; left:0; top:13px; height:4px; border-radius:2px 0 0 2px; background:repeating-linear-gradient(90deg, var(--down) 0 3px, transparent 3px 7px); opacity:.35; }
-.trackBand { position:absolute; top:8px; height:14px; border-radius:5px; background:var(--up-wash); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 45%, transparent); }
-.trackTick { position:absolute; top:6px; width:2px; height:18px; border-radius:1px; transform:translateX(-1px); }
+/* EKSEN İNCE, BACAKLAR KALIN (23 Eylül). Eksen 2 piksel `--rail-track`
+   (Gün Şeridi'nin oluğu, tema dosyası §5); risk ve getiri bacakları aynı
+   hatta 4 piksel ve yön renginde. Her öğe 12. pikselde ortalanıyor: eksen
+   11+2, bacak 10+4, bant 5+14, çentik 4+16, nokta 5+14, halka 8+8.
+   Ray 28 pikseldi, 24'e indi: en büyük öğe halkalı fiyat noktası (14 +
+   2×4 = 22) ve üstte, altta birer piksel payla sığıyor; fazlası kartın
+   plan satırında boşluktu. */
+.track { position:relative; height:24px; }
+.trackLine { position:absolute; left:0; right:0; top:11px; height:2px; border-radius:1px; background:var(--rail-track); }
+.trackVoid { position:absolute; left:0; top:10px; height:4px; border-radius:2px 0 0 2px; background:repeating-linear-gradient(90deg, var(--down) 0 3px, transparent 3px 7px); opacity:.35; }
+.trackSeg { position:absolute; top:10px; height:4px; border-radius:2px; }
+.trackSeg[data-tone="down"] { background:var(--down); }
+.trackSeg[data-tone="up"] { background:var(--up); }
+/* Opaklık değil karışım: çizgi bir hareket kancası ve azaltılmış harekette
+   ortak kural opaklığı 1'e eziyor (`.pulseBar` ile aynı tuzak). */
+.trackSeg[data-tone="flat"] { background:color-mix(in srgb, var(--text-muted) 55%, transparent); }
+/* Bant bacakların ALTINDA ve opak: yıkama tonu kartın yüzeyinin üstüne
+   seriliyor, eksen çizgisi bandın içinde görünmüyor (gerekçe LevelTrack). */
+.trackBand { position:absolute; top:5px; height:14px; border-radius:5px; background:linear-gradient(var(--up-wash), var(--up-wash)), var(--premium-surface); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 45%, transparent); }
+.trackTick { position:absolute; top:4px; width:2px; height:16px; border-radius:1px; transform:translateX(-1px); }
 .trackTick[data-kind="stop"] { background:var(--down); }
 .trackTick[data-kind="target"] { background:var(--up); }
 .trackTick[data-kind="sellLevel"] { background:var(--down); opacity:.55; }
-.trackTick[data-kind="support"], .trackTick[data-kind="resistance"] { top:10px; height:10px; background:var(--text-muted); opacity:.55; }
-.trackPrice { position:absolute; top:8px; width:14px; height:14px; border-radius:50%; background:var(--primary); margin-left:-7px; box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 4px var(--primary); }
+.trackTick[data-kind="support"], .trackTick[data-kind="resistance"] { top:7px; height:10px; background:var(--text-muted); opacity:.55; }
+/* Analiz anındaki fiyat: içi boş halka. Zemini kartın yüzeyi, altından
+   geçen bacak halkanın içinde görünmesin. */
+.trackThen { position:absolute; top:8px; width:8px; height:8px; margin-left:-4px; border-radius:50%; background:var(--premium-surface); box-shadow:inset 0 0 0 1.5px var(--text-muted); }
+.trackPrice { position:absolute; top:5px; width:14px; height:14px; border-radius:50%; background:var(--primary); margin-left:-7px; box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 4px var(--primary); }
 /* `lg` ÖLÇÜSÜ KALKTI. Çizgi yalnızca liste kartında kullanılıyor; detay
    kapağındaki büyük hâli fiyat haritasıyla aynı planı üçüncü kez çiziyordu
    (gerekçe `teknik/[symbol]/page.tsx` içinde, çağrının yerinde). */
@@ -346,11 +595,14 @@
    vazgeçme tek satır, hedefler iki satır ("265,10 – 274,35 –" / "287,30 $").
    Sol kolonun kaybettiği 72 piksel başlık cümlesini (54ch tavanlı) ve
    okuma kutusunu etkilemiyor. */
-.cover { position:relative; isolation:isolate; overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:24px 32px; padding:30px 32px 26px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); box-shadow:var(--premium-shadow); }
-.cover::before { content:""; position:absolute; z-index:-1; inset:0 0 30% 45%; background-image:linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px); background-size:3.2rem 3.2rem; mask-image:linear-gradient(110deg, transparent, var(--text-strong)); opacity:.8; pointer-events:none; }
-.cover::after { content:""; position:absolute; z-index:-1; top:-14rem; right:-6rem; width:36rem; height:36rem; border-radius:50%; background:radial-gradient(circle, var(--primary-wash), transparent 65%); pointer-events:none; }
-.cover[data-verdict="buy"]::after { background:radial-gradient(circle, var(--up-wash), transparent 65%); }
-.cover[data-verdict="sell"]::after { background:radial-gradient(circle, var(--down-wash), transparent 65%); }
+/* KAPAKTA IŞIMA VE SÜS ÇİZGİSİ YOK (23 Eylül). Kapağın sağ üstünde
+   görüş renginde 36rem'lik radyal bir ışıma (`::after`) ve bir ızgara
+   maskesinin yerini alan eğik bir kıl çizgi (`::before`, skewX -12°)
+   duruyordu; çizgi 390'da "Görüşün Gerekçesi" ve "Planın Okuması"
+   kutularının içinden geçiyordu (ekran görüntüsü). Sahibinin kuralı
+   "ışıma yok, derinlik tonla" ve görüş rengi kapakta zaten hapta ve
+   okuma kutusunun sol şeridinde. Kapak düz yüzey + kıl kenarlık. */
+.cover { position:relative; isolation:isolate; overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:24px 32px; padding:30px 32px 26px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); }
 .coverMain { display:flex; min-width:0; flex-direction:column; gap:16px; }
 /* KİMLİK BİR KOLON, KÜNYE ONUN ALTINDA.
    Blok bir süre tek satırdı — logo solda, sağında dört satırlık bir yığın
@@ -431,7 +683,8 @@
 .signalDetail { align-self:start; text-wrap:pretty; font-size:12px; line-height:1.45; color:var(--text-muted); }
 .signal strong { display:block; font-size:19px; line-height:1.15; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); }
 
-/* Bölüm gezinmesi — şirket sayfasındaki `chapterNav` ile aynı gölge.
+/* Bölüm gezinmesi — şirket sayfasındaki `chapterNav` ile aynı dil (gölge
+   23 Eylül'de kalktı, aşağıda).
 
    GENİŞ EKRANDA İÇERİĞİ KADAR GENİŞ. Paylaşılan bileşende sekmeler
    `flex:1` taşıyor: çubuk sayfanın tamamını kaplayınca dört sekme 1320
@@ -443,7 +696,9 @@
    genişliklerini alıyor ve çubuk sola yaslı yüzen bir denetim gibi
    okunuyor. Telefonda kural yok: orada çubuk zaten tam genişlik ve
    sekmeler yatay kayıyor. */
-.sectionNav { box-shadow:0 6px 24px var(--primary-tint); border-color:var(--line); }
+/* Mavi tonlu gölge (`0 6px 24px --primary-tint`) kalktı — derinlik tonla
+   (bkz. "DETAY SAYFASINDA DA DERİNLİK TONLA"). */
+.sectionNav { box-shadow:none; border-color:var(--line); }
 @media (min-width: 768px) {
   .sectionNav { width:fit-content; max-width:100%; }
 }
@@ -637,7 +892,7 @@
 .indicators { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; }
 @media (min-width: 640px) { .indicators { grid-template-columns:repeat(2, minmax(0,1fr)); } }
 @media (min-width: 1100px) { .indicators { grid-template-columns:repeat(3, minmax(0,1fr)); } }
-.indicator { display:flex; min-width:0; flex-direction:column; gap:12px; padding:18px; border:1px solid var(--line); border-radius:18px; background:linear-gradient(145deg, var(--primary-tint), transparent 48%), var(--premium-surface); }
+.indicator { display:flex; min-width:0; flex-direction:column; gap:12px; padding:18px; border:1px solid var(--line); border-radius:18px; background:var(--premium-surface); }
 .indicatorHead { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:6px 12px; }
 .indicatorTitle { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:700; letter-spacing:.01em; color:var(--primary-ink); }
 .indicatorTitle svg { flex:none; opacity:.8; }
@@ -713,6 +968,9 @@
    yaklaşım kapak manşetinde de var (`.coverHeadline`, 58ch). 78 burada
    biraz cömert ama metin 12 piksel ve yasal nitelikte: okunacak değil,
    bakılacak bir blok. */
+/* Program cümlesinin telefondaki yeri; geniş ekranda başlıktaki künyede. */
+.footSchedule { display:none; }
+@media (max-width: 767px) { .footSchedule { display:block; } }
 .footNote { display:flex; flex-direction:column; gap:6px; max-width:78ch; padding-top:14px; border-top:1px solid var(--line); font-size:12px; line-height:1.6; color:var(--text-muted); }
 /* Bekleyen semboller künyesi — ızgaranın altında, hairline ile ayrı.
    Yeni kutu açmıyor: deponun eksik veri künyesi kalıbı. */
@@ -721,7 +979,6 @@
 /* ---- Kırılımlar ---- */
 @media (max-width: 1023px) {
   .cover { grid-template-columns:minmax(0,1fr); padding:24px; gap:20px; }
-  .cover::before { inset:0 0 55% 40%; }
   .coverSide { padding-left:0; padding-top:20px; border-left:0; border-top:1px solid var(--line); }
   .twoCol { grid-template-columns:minmax(0,1fr); }
   /* SATIR ARASI TELEFONDA DA 5 PİKSEL. Kural `gap:14px 16px` idi ve alt
@@ -758,7 +1015,7 @@
      göre ölçüldüğü için kazanılan dört piksel doğrudan logolara gidiyor
      ve altı logoluk satır tek satırda kalıyor. */
   .pulseRow { column-gap:8px; padding:6px 4px; }
-  .card { padding:18px 16px 14px; border-radius:20px; }
+  .card { padding:18px 16px 14px; }
   .cardPrice strong { font-size:25px; }
   .cover { padding:20px 18px; border-radius:20px; gap:18px; }
   .coverHeadline { font-size:16px; }
@@ -836,8 +1093,9 @@
 /* ---- Şirket sayfasının teknik analiz kartı ----
    Kısa hâl: görüş, konum, bir cümle ve künye. Gerekçesi bileşende
    (`StockTechnicalCard`). Ölçüler profil kartıyla aynı aileden — aynı
-   yüzey, aynı yarıçap, aynı gölge — çünkü sağ kolonda yan yana duruyorlar
-   ve iki ayrı tasarım dili gibi okunmamalılar. */
+   yüzey, aynı yarıçap, gölgesiz (`--premium-shadow` 23 Eylül'de sıfırlandı) — çünkü
+   sağ kolonda yan yana duruyorlar ve iki ayrı tasarım dili gibi
+   okunmamalılar. */
 .stockCard {
   position: relative;
   isolation: isolate;
@@ -850,28 +1108,16 @@
   border: 1px solid var(--line);
   border-radius: 22px;
   background: var(--premium-surface);
-  box-shadow: var(--premium-shadow);
-  transition: border-color .2s, box-shadow .25s, transform .25s;
+  transition: border-color .2s;
 }
-.stockCard:hover { border-color:var(--primary-faint); box-shadow:var(--premium-shadow-hover); transform:translateY(-2px); }
+/* HOVER YALNIZCA KENARLIK TONU (23 Eylül) — liste kartıyla aynı karar
+   (`.card`): kart iki piksel kalkıp gölgesini büyütüyordu. */
+.stockCard:hover { border-color:var(--primary-faint); }
 .stockCard:has(.stockCardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
-/* Görüşün rengi kartın zemininde çok soluk bir ışıma olarak duruyor —
-   kapaktaki (`.cover::after`) kalıbın küçültülmüşü. Renk YALNIZCA burada;
-   metin ve çip kendi tokenlarını taşımaya devam ediyor. */
-.stockCard::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: -7rem;
-  right: -4rem;
-  width: 18rem;
-  height: 18rem;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--primary-wash), transparent 65%);
-  pointer-events: none;
-}
-.stockCard[data-verdict="buy"]::after { background:radial-gradient(circle, var(--up-wash), transparent 65%); }
-.stockCard[data-verdict="sell"]::after { background:radial-gradient(circle, var(--down-wash), transparent 65%); }
+/* GÖRÜŞ IŞIMASI KALKTI (23 Eylül). Kartın zemininde görüş renginde
+   18rem'lik radyal bir ışıma duruyordu — kapaktaki (`.cover::after`)
+   kalıbın küçültülmüşü; ikisi de sahibinin "ışıma yok, derinlik tonla"
+   kuralına aykırıydı ve kapaktaki kalktı. Görüşün rengi hapta. */
 
 .stockCardHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
 .stockCardMeta { font-size:var(--text-nano); font-weight:650; letter-spacing:.03em; color:var(--text-muted); white-space:nowrap; }
@@ -900,7 +1146,6 @@
 .stockCard:hover .stockCardFoot svg { transform:translate(2px,-2px); }
 @media (prefers-reduced-motion: reduce) {
   .stockCard, .stockCardFoot svg { transition:none; }
-  .stockCard:hover { transform:none; }
 }
 
 /* Sıradaki yayın künyesi — bu yayının künyesinin hemen altında, bir kademe
@@ -981,7 +1226,12 @@
 .pulse[data-variant="directory"] .pulseRow { padding:7px 0; border-radius:0; border-bottom:1px solid var(--line-soft); }
 .pulse[data-variant="directory"] .pulseRow:last-child { border-bottom:0; }
 .pulse[data-variant="directory"] .pulseStance b { font-size:19px; }
-.pulse[data-variant="directory"] .pulseLogo:hover { transform:translateY(-3px) rotate(-4deg); }
+/* LOGO HOVER'I TON, DÖNÜŞ DEĞİL (23 Eylül). Logo üç piksel kalkıp dört
+   derece dönüyordu: on beş logoluk bir satırda imlecin geçtiği her karo
+   sallanıyor ve dağılımın kendisinden çok süs okunuyordu. Logo balonu
+   açan bir düğme; tepkisi açık hâlinin (`[data-open]`) bir kademe
+   soluğu — yerinden oynamadan. */
+.pulse[data-variant="directory"] .pulseLogo:hover { transform:none; background:var(--primary-tint); }
 /* The ring and the list encode the same counts. Below 1100 the linear
    version leaves room for 40px touch areas, even with 15 identical views. */
 @media(max-width:1099px) {
@@ -990,43 +1240,37 @@
  .pulse[data-variant="directory"] > .pulseBar { display:flex; }
  .pulse[data-variant="directory"] > .pulseRows { grid-column:1; grid-row:auto; }
 }
-.boardToolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; padding-bottom:14px; border-bottom:1px solid var(--line); }
-.boardTitle { display:flex; align-items:center; gap:10px; }
-.boardTitle > span { display:grid; place-items:center; width:26px; height:26px; border:1px solid var(--primary-faint); border-radius:8px; color:var(--primary); font-size:11px; font-weight:600; }
-.boardTitle h2 { font-size:18px; font-weight:650; letter-spacing:-.025em; }
-.filter { gap:3px; padding:4px; border-radius:12px; background:var(--surface-sunken); }
-.filter label { min-height:36px; padding:7px 13px; border-radius:8px; border-color:transparent; background:transparent; }
-.filter input:checked + label { background:var(--premium-surface); color:var(--primary-ink); border-color:var(--primary-faint); box-shadow:0 2px 5px var(--primary-tint); }
-.card { --card-shadow:0 3px 12px color-mix(in srgb,var(--primary-ink) 3%,transparent); border-radius:18px; box-shadow:var(--card-shadow); background:linear-gradient(150deg,var(--primary-tint),transparent 28%),var(--premium-surface); }
-.cardHead { padding-bottom:12px; border-bottom:1px solid var(--line-soft); }
-.cardPlan .planCells { background:linear-gradient(115deg,var(--primary-tint),transparent); border:1px solid var(--line-soft); border-radius:10px; }
-.cardPlan[data-verdict="sell"] .planCells { background:linear-gradient(115deg,color-mix(in srgb,var(--down-wash) 50%,transparent),transparent); }
-.card .stance { border-radius:8px; padding:6px 10px; font-size:14px; }
-.card .chip { border-radius:5px; padding:4px 7px; font-size:12px; background:var(--primary-tint); }
+/* Hisse Planları araç çubuğu, süzgeç, kart, plan kutusu, görüş hapı ve
+   çip kuralları 22 Eylül'de burada ikinci bir blokta kayıtsız eziliyordu
+   (ilk tanımlarından ~850 satır sonra). 23 Eylül'de hepsi asıl kurallarına
+   katlandı ve kayıtları orada güncellendi; bu blok boşaldı. */
 .cover { padding:24px; gap:20px 28px; border-radius:var(--radius-feature); }
-.cover::before { background:none; border-left:1px solid var(--primary-faint); transform:skewX(-12deg); opacity:.6; }
 .coverMain { gap:12px; }
 .coverHeadline { font-size:clamp(18px,1.45vw,21px); line-height:1.55; }
 .coverSide { justify-content:flex-start; padding-left:28px; gap:16px; }
 .cover .stancePill { border-radius:9px; font-size:18px; padding:7px 15px; }
 .coverPlan { grid-column:1/-1; border-top:1px solid var(--line); padding-top:18px; }
-.coverPlan .risk { margin-top:4px; }
-.coverPlan .riskBar { height:7px; border-radius:3px; }
 .coverPlan .planCells { background:transparent; }
-.indicatorSummary { border:1px solid var(--line); border-radius:16px; padding:18px; background:linear-gradient(110deg,var(--primary-tint),transparent),var(--premium-surface); }
+/* DETAY SAYFASINDA DA DERİNLİK TONLA (23 Eylül). Liste kartındaki mavi
+   parıltının (bkz. `.card`) aynıları burada da vardı: gösterge özeti,
+   gösterge kutuları, izleme paneli ve öteki şirketler kartları köşeden
+   inen `--primary-tint` degradeleri; bloklar ve bölüm çubuğu mavi tonlu
+   gölge taşıyordu. Hepsi düz yüzeye döndü, bloklar gölgesiz. Kalan
+   degradeler yön taşıyanlar: senaryo ve seviye kutularındaki
+   yükseliş/düşüş yıkamaları. Bölüm başlığının çubuğu düz birincil. */
+.indicatorSummary { border:1px solid var(--line); border-radius:16px; padding:18px; background:var(--premium-surface); }
 /* Cam (yarı saydam zemin + bulanıklık) kalktı: proje cam kullanmıyor ve
    yapışan çubuğun arkasında artık opak bir bant var (PremiumMotion →
    `.sectionNav::before`). Dinlenme hâlinde zemin sayfanın kendisi. */
 .sectionNav { border-radius:12px; background:var(--page-bg); }
-.block { border-radius:18px; box-shadow:0 3px 12px color-mix(in srgb,var(--primary-ink) 3%,transparent); }
+.block { border-radius:18px; box-shadow:none; }
 .block > .sectionTitle,.blockHead { padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
 .blockHead .sectionTitle { display:flex; align-items:center; gap:9px; }
-.blockHead .sectionTitle::before { content:""; width:5px; height:17px; border-radius:3px; background:linear-gradient(var(--primary),var(--primary-faint)); }
-.indicator { background:radial-gradient(ellipse at 100% 0,var(--primary-tint),transparent 60%),var(--premium-surface); }
+.blockHead .sectionTitle::before { content:""; width:5px; height:17px; border-radius:3px; background:var(--primary); }
 .indicatorTitle svg { width:22px; height:22px; padding:3px; border-radius:6px; background:var(--primary-wash); }
 .mapRung { transition:background 180ms,box-shadow 180ms; }
 .mapRung:hover { background:var(--primary-tint); box-shadow:inset 2px 0 var(--primary); }
-.moreCard { background:linear-gradient(145deg,var(--primary-tint),transparent 70%),var(--premium-surface); }
+.moreCard { background:var(--premium-surface); }
 .table tbody tr { transition:background 180ms; }
 .table tbody tr:hover { background:var(--primary-tint); }
 @media(min-width:768px) and (max-width:1023px) {
@@ -1035,10 +1279,10 @@
 @media(max-width:767px) {
  .edition { gap:10px 16px; margin-top:14px; padding-top:12px; }
  .editionValue { font-size:12px; }
- .boardToolbar { gap:12px; }
- .boardTitle h2 { font-size:17px; }
- .filter { width:100%; justify-content:space-between; }
- .filter label { min-height:40px; padding:8px 12px; }
+ /* Program cümlesi telefonda dipnotta, tarih kısa (gerekçeler page.tsx'te). */
+ .editionItem[data-item="schedule"] { display:none; }
+ .editionDateLong { display:none; }
+ .editionDateShort { display:inline; }
  .cover { padding:18px; gap:16px; }
  .coverSide { padding:14px 0 0; gap:12px; }
  .coverMain { gap:10px; }
@@ -1052,7 +1296,6 @@
  .indicatorSummary { padding:14px; }
 }
 @media(prefers-reduced-motion:reduce) {
- .pulse[data-variant="directory"] .pulseLogo:hover { transform:none; }
  .mapRung,.table tbody tr { transition:none; }
 }
 
@@ -1124,7 +1367,7 @@
 .volumeContext { display:flex; flex-direction:column; gap:8px; margin-top:2px; padding:14px 0 0; border-top:1px solid var(--line-soft); }
 .volumeContext h3 { display:flex; align-items:center; gap:8px; color:var(--primary-ink); font-size:13px; font-weight:650; }
 .volumeContext .prose { font-size:14px; line-height:1.65; }
-.watchPanel { display:grid; grid-template-columns:180px minmax(0,1fr); align-items:start; gap:24px; background:linear-gradient(135deg,var(--primary-tint),transparent 65%),var(--premium-surface); }
+.watchPanel { display:grid; grid-template-columns:180px minmax(0,1fr); align-items:start; gap:24px; background:var(--premium-surface); }
 .watchPanel > .sectionTitle { padding:0; border:0; font-size:17px; }
 .watchPanel .watch { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); list-style:none; padding:0; gap:20px; counter-reset:watch; }
 .watchPanel .watch li { position:relative; padding-left:28px; counter-increment:watch; }
@@ -1191,7 +1434,9 @@
  .mapZones { top:auto; bottom:0; height:30px; }
  .mapZoneEntry { display:none; }
  .mapZoneVoid { inset:0!important; padding:8px 8px 0 30px; background:none; }
- .mapZoneVoidLabel { font-size:9px; }
+ /* 9 değil `--text-nano` (10): künye bir cümle, sekiz-dokuz punto yalnızca
+    metin olmayan işaretlere ayrıldı (globals.css, `--text-micro`). */
+ .mapZoneVoidLabel { font-size:var(--text-nano); }
 }
 
 /* Directory audit, 1440px: copy ended at 329px and distribution at 288px.
@@ -1219,6 +1464,31 @@
  .directoryHeader .pulse[data-variant="directory"] { grid-template-columns:148px minmax(0,1fr); }
  .directoryHeader .pulseDial { width:148px; }
 }
+/* TELEFONDA LOGO SATIRLARI YOK (23 Eylül). 390×844'te başlık ve dağılım
+   607 piksel tutuyordu (dağılımın kendisi 294, logo satırları 188) ve
+   ilk kartın ilk fiyatı 968. pikselde, 764'teki sekme çubuğunun ARKASINDA
+   kalıyordu: ilk ekranda tek bir fiyat, plan ya da görüş yoktu (ölçüldü).
+   Logolar hemen aşağıda her kartın başında yeniden duruyor — `TechnicalPulse`
+   balonu karttan tam bu gerekçeyle almıştı. Renkli oran çubuğu ve "15
+   Hisse" künyesi kalıyor, sayılar da hemen altındaki süzgeçte AYNI
+   `counts` nesnesinden. Bekleyen sayısı başlık künyesine iniyor
+   (`.pulsePendingCount`), "Görüşü Değişenler" haber olduğu için kalıyor.
+   Balonlu logolar 768 ve üstünde.
+   İLK EKRANIN SON PİKSELLERİ (23 Eylül). Logolar gittikten sonra 390'da
+   ilk fiyat 759'da, sekme çubuğunun beş piksel üstündeydi; 320×640'ta ilk
+   kart 619'da, çubuk 560'ta — telefonun küçüğünde ilk ekranda yine plan
+   yoktu. Program cümlesi dipnota indi (page.tsx), künye tek satır oldu
+   (`.proximity`) ve başlık kartının iç aralıkları telefonda bir kademe
+   sıkı: kart aralığı 20 → 16, dağılımın üst dolgusu 16 → 14, oran
+   çubuğuyla başlığı arası 12 → 10. */
+.pulsePendingCount { display:none; }
+@media (max-width: 767px) {
+  .directoryHeader .pulse[data-variant="directory"] > .pulseRows { display:none; }
+  .pulsePendingCount { display:inline; }
+  .directoryHeader.directoryHeader:global(.page-frame) { gap:16px; }
+  .directoryHeader > :last-child { padding-top:14px; }
+  .directoryHeader .pulse[data-variant="directory"] { row-gap:10px; }
+}
 
 /* 21 Eylül denetimi: eşit kapak kutuları MU'nun başlığının ALTINDA 46
    piksellik bir boşluk saklıyordu. Çözüm iki kolonun son okumasını satırın
@@ -1242,7 +1512,7 @@
 
 /* 22 September: headline and verdict become one editorial reading, rather
    than a large isolated verdict followed by another display headline. */
-.coverThesis { display:flex; flex-direction:column; gap:10px; margin-top:auto; padding:14px 16px; border-radius:12px; background:linear-gradient(105deg,var(--primary-tint),transparent); border:1px solid var(--line-soft); }
+.coverThesis { display:flex; flex-direction:column; gap:10px; margin-top:auto; padding:14px 16px; border-radius:12px; background:var(--surface-sunken); }
 .coverThesis .stanceRow { justify-content:space-between; gap:8px; }
 .thesisLabel { font-size:11px; font-weight:650; letter-spacing:.02em; color:var(--text-muted); }
 .coverThesis .stancePill { padding:4px 10px; font-size:14px; border-radius:6px; }

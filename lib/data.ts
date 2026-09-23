@@ -436,6 +436,29 @@ export async function getNextEarnings(
   }
 }
 
+/**
+ * Sıradaki bilanço GÜNÜ — yalnızca takvimin yazdığı ve bugünden ileri.
+ *
+ * NEDEN AYRI: bilanço sayfası "Sonraki Bilanço"yu kaydın serbest metninden
+ * (`nextReportEstimate`) basıyordu ve kayıt yazıldığı günün tahminini
+ * taşıyor: 23 Eylül'de /bilancolar/nvda/1c-fy2027 "2Ç FY27 · 26 Ağustos
+ * 2026" diyordu — geçmiş bir tarih, üstelik o çeyreğin analizi çoktan
+ * yayımlanmıştı. Takvim satırı ise her gün senkronla tazeleniyor.
+ *
+ * Tarih bugünden (ET) önceyse ya da takvimde yoksa `null`: ekran tahmini
+ * tarihi "sonraki" diye basmaz. `hour` takvimin sözlüğü (bmo/amc/dmh);
+ * boş dize de `null` sayılır — saat bilinmiyor, "~" ile yazılır
+ * (CLAUDE.md "Veri dürüstlüğü" 1).
+ */
+export async function getNextReport(
+  symbol: string,
+): Promise<{ date: string; hour: string | null } | null> {
+  // Adres küçük harf taşıyor (/bilancolar/nvda/…), takvim büyük harf.
+  const row = await getNextEarnings(symbol.toUpperCase());
+  if (!row || row.reportDate < todayEt()) return null;
+  return { date: row.reportDate, hour: row.hour?.trim() || null };
+}
+
 export async function getEarningsForSymbol(
   symbol: string,
   limit = 8,

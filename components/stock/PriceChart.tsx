@@ -907,7 +907,7 @@ export function PriceChart({
                    zaten görünür ve hemen altındaki seans cetveli dördünü de
                    aynı gölge kareleriyle adlandırıyor — telefonda etiket
                    bilgi eklemiyor, çakışma ekliyordu. */
-                className="chart-in plate pointer-events-none absolute top-1.5 hidden text-micro sm:block"
+                className="chart-in plate pointer-events-none absolute top-1.5 hidden text-nano sm:block"
                 style={{ left: zone.left + 6 }}
               >
                 {zone.label}

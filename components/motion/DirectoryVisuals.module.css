@@ -5,7 +5,10 @@
 .visualHeader { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--primary-ink); }
 .visualHeader h2 { font-size:13px; font-weight:600; }
 .visualHeader > svg { opacity:.7; flex-shrink:0; }
-.radarSpotlight { border-radius:16px; background:linear-gradient(115deg,var(--primary-wash),var(--primary-tint) 70%,transparent); }
+/* Radarın öne çıkan kartı bir bağlantı; zemini yan kartlarla aynı düz
+   `--primary-tint` (23 Eylül). Soldan sağa solan degrade kartın sağ
+   kenarını kaybettiriyordu. */
+.radarSpotlight { border-radius:16px; background:var(--primary-tint); }
 .radarLead { position:relative; display:block; padding:16px 18px; border-radius:inherit; }
 .radarTop { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .radarIdentity { display:flex; align-items:center; gap:11px; min-width:0; }
@@ -35,7 +38,8 @@
 .radar a:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 @media(hover:hover) and (pointer:fine) {
  .radarLead:hover .radarSession > svg,.radarFollowing a:hover svg { transform:translate(2px,-2px); }
- .radarFollowing a:hover { background:var(--primary-wash); transform:translateY(-2px); }
+ /* Kaldırma yok: hover dili tonla (globals.css → `.panel-hover`). */
+ .radarFollowing a:hover { background:var(--primary-wash); }
 }
 @media(max-width:1023px) and (min-width:768px), (max-width:359px) {
  .radarLead { padding:14px 12px; }

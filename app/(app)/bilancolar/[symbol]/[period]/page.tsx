@@ -14,6 +14,7 @@ import {
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { GuideHint } from "@/components/article/GuideHint";
 import { Panel, LogoTile } from "@/components/ui/primitives";
+import { ChapterHeading } from "@/components/ui/ChapterHeading";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { MetricCards } from "@/components/earnings/MetricCards";
 import { RevenueColumns } from "@/components/earnings/RevenueColumns";
@@ -971,8 +972,8 @@ export default async function AnalysisDetailPage(
         label={t.analysis.reportNavigation}
         items={[
           { id: "report-overview", label: t.analysis.reportOverview },
-          { id: "report-figures", label: t.stock.metrics },
-          { id: "report-reading", label: t.analysis.detailed },
+          { id: "report-figures", label: t.analysis.chapterFigures },
+          { id: "report-reading", label: t.analysis.chapterReading },
           { id: "report-outlook", label: t.analysis.reportOutlook },
           ...(sources.length > 0 ? [{ id: "report-sources", label: t.analysis.sourcesLabel }] : []),
         ]}
@@ -993,13 +994,12 @@ export default async function AnalysisDetailPage(
               için metin zaten altında duruyor. */}
           <section id="report-figures" className={styles.figuresSection}>
             <Reveal>
-              <div className={styles.chapterHeading}>
-                <div>
-                  <span className={styles.chapterLabel}>{row.periodLabel}</span>
-                  <h2>{t.analysis.reportInNumbers}</h2>
-                </div>
-                <ArrowDownRight aria-hidden size={30} weight="light" />
-              </div>
+              {/* BÖLÜM BAŞLIĞI PAYLAŞILAN KALIPTA (23 Eylül): üstünde dönem
+                  künyesi ("3Ç FY2026"), sağında hiçbir yere götürmeyen 30
+                  piksellik bir ok vardı. Dönem kapakta ve yapışkan çubukta
+                  zaten yazılı; ok bir süstü. Başlık, sekme etiketiyle aynı
+                  anahtar (gerekçe components/ui/ChapterHeading). */}
+              <ChapterHeading title={t.analysis.chapterFigures} className={styles.reportChapter} />
               <MetricCards metrics={detailMetrics} locale={locale} />
             </Reveal>
 
@@ -1145,7 +1145,10 @@ export default async function AnalysisDetailPage(
               Bloklar `break-inside-avoid`: bir paragrafın ortasından
               bölünüp iki sütuna yayılması, sayfayı gazete değil bozuk bir
               düzen gibi gösteriyordu. */}
-          <ScrollStage><section id="report-reading" className={styles.readingSection}>
+          {/* Çapa kimliği dönüşümsüz dış kapta — gerekçe `ScrollStage`
+              başında (sekmeden atlanınca bölüm çubuğun arkasına iniyordu). */}
+          <ScrollStage id="report-reading"><section className={styles.readingSection}>
+          <ChapterHeading title={t.analysis.chapterReading} />
           <Reveal>
           <Panel className={cn(styles.summaryPanel, "p-5 sm:p-6")}>
             {/* Okuma süresi künyesi kaldırıldı: metin zaten ekranda ve ne
@@ -1251,8 +1254,9 @@ export default async function AnalysisDetailPage(
 
           {/* Maddeler de analizin dilinde; başlıklar arayüz dilinde ama
               kart içindeki metin kayıttan geliyor. */}
+          <section id="report-outlook" className="flex min-w-0 flex-col gap-5">
+          <ChapterHeading title={t.analysis.reportOutlook} />
           <div
-            id="report-outlook"
             className={cn(styles.pointsGrid, "grid gap-3 sm:grid-cols-[repeat(3,minmax(0,1fr))]")}
             lang={row.locale}
           >
@@ -1272,6 +1276,7 @@ export default async function AnalysisDetailPage(
               tone="primary"
             />
           </div>
+          </section>
       </div>
 
       {/* ---- Kapanış şeridi ----
@@ -1523,7 +1528,9 @@ function VerdictStrip({
       <div className={styles.verdictScore}>
       <ScoreRing score={row.score} verdict={verdict} size={80} showDenominator />
       <div className={styles.verdictDecision}>
-        <h2 id="report-verdict" className="text-tiny font-bold tracking-[0.04em] text-body">
+        {/* Etiket, manşet değil: 11 piksellik başlık genel `main h2`
+            degradesini alıyordu (globals.css, `data-ink` notu). */}
+        <h2 id="report-verdict" data-ink="plain" className="text-tiny font-bold tracking-[0.04em] text-body">
           {t.analysis.verdictLabel}
         </h2>
         <span
@@ -1667,8 +1674,11 @@ function PointsCard({
             sayfada "Özet" ve "Detaylı Değerlendirme" ile aynı düzeyde duran
             üç panel; h3 yazılınca başlıklarda gezinen okuyucuya bir üsttekinin
             ALT BÖLÜMÜ gibi görünüyorlardı. Punto küçük ama düzey öyle değil —
-            ikisi ayrı şeyler. */}
-        <h2 className={cn("text-base font-bold tracking-[-0.01em]", accent)}>
+            ikisi ayrı şeyler.
+            DÜZ MÜREKKEP: başlığın rengi yönü söylüyor (`text-up`,
+            `text-down`) ve genel `main h2` degradesi dolguyu saydam yapıp
+            onu siliyordu (ölçüldü: rgba(0,0,0,0)). */}
+        <h2 data-ink="plain" className={cn("text-base font-bold tracking-[-0.01em]", accent)}>
           {title}
         </h2>
         <span className="figure ml-auto text-tiny font-bold text-muted">
@@ -1685,7 +1695,7 @@ function PointsCard({
             <span
               aria-hidden
               className={cn(
-                "figure mt-px flex size-[18px] shrink-0 items-center justify-center rounded-xs text-micro font-bold",
+                "figure mt-px flex size-5 shrink-0 items-center justify-center rounded-xs text-nano font-bold leading-none",
                 tone === "up" && "bg-up-wash",
                 tone === "down" && "bg-down-wash",
                 tone === "primary" && "bg-primary-wash",

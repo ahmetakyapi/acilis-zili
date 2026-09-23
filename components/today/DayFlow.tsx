@@ -9,6 +9,7 @@ import { LogoTile } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { displayFlowStatus, flowResultSignature, preserveConfirmedResults, type DayFlowSnapshot, type FlowEvent } from "@/lib/day-flow";
 import { clockOf, displayZone } from "@/lib/session-clock";
+import { NO_VALUE } from "@/lib/utils";
 import { withLocale } from "@/lib/i18n/routing";
 import styles from "./DayFlow.module.css";
 
@@ -312,7 +313,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
               62 piksellik sütuna sığmıyor ve "Saat / Belirtilme / di" diye üç
               satıra bölünüyordu; üstelik aynı cümle satırın künyesinde İKİNCİ
               kez duruyordu. Sebep künyeye ait, sütun yalnızca saati taşır. */}
-          <span className={styles.cardTime} data-unknown={!event.timeEt}><span className={styles.eventNumber}>{String(index + 1).padStart(2, "0")}</span><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : "—"}</b>{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
+          <span className={styles.cardTime} data-unknown={!event.timeEt}><span className={styles.eventNumber}>{String(index + 1).padStart(2, "0")}</span><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : NO_VALUE}</b>{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
           <span className={styles.cardSummary}>
             <strong>{event.title}</strong>
             {/* Tür ADI değil İŞARETİ: altı satırın altısında da "Ekonomik
@@ -367,7 +368,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
             {(member.revenue || member.eps) && <dl className={styles.memberNumbers}>{member.revenue && <div><dt>{labels.revenue}</dt><dd className="numeral">{member.revenue}</dd></div>}{member.eps && <div><dt>{labels.eps}</dt><dd className="numeral">{member.eps}</dd></div>}</dl>}
             <Link href={member.href} className={styles.detailLink} data-analysis={member.status === "analyzed"}>{member.status === "analyzed" ? labels.readAnalysis : labels.viewCompany}<ArrowUpRight size={16} /></Link>
           </div>)}</div> : <>
-            {(selected.actual || selected.forecast || selected.previous) && <dl className={styles.results}>{[[labels.actual, selected.actual], [labels.forecast, selected.forecast], [labels.previous, selected.previous]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd className="numeral">{value ?? "—"}</dd></div>)}</dl>}
+            {(selected.actual || selected.forecast || selected.previous) && <dl className={styles.results}>{[[labels.actual, selected.actual], [labels.forecast, selected.forecast], [labels.previous, selected.previous]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd className="numeral">{value ?? NO_VALUE}</dd></div>)}</dl>}
             {!selected.actual && <p className={styles.waiting}>{displayFlowStatus(selected, nowMs) === "scheduled" ? labels.scheduledHint : labels.pendingHint}</p>}
           </>}
           <div className={styles.detailFooter}><span>{labels.source}: {selected.source}</span><Link href={selected.href}>{labels.calendar}<ArrowUpRight size={14} /></Link></div>

@@ -99,6 +99,7 @@ import {
   formatPeriodLabel,
   formatPrice,
   headlineMentions,
+  NO_VALUE,
   timeAgo,
   unitLabel,
 } from "@/lib/utils";
@@ -128,12 +129,12 @@ export const generateMetadata = pageMetadata({
   tr: {
     title: "Açılış Zili · ABD Piyasa Takibi",
     description:
-      "ABD borsalarında bugün ne var: ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin tek ekranda — saatleriyle birlikte.",
+      "ABD borsalarında bugün ne var: ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin, saatleriyle birlikte tek ekranda.",
   },
   en: {
     title: "Opening Bell · US Market Tracker",
     description:
-      "What's happening in US markets today: economic calendar, earnings dates, news and your watchlist on one screen — with the times.",
+      "What's happening in US markets today: economic calendar, earnings dates, news and your watchlist on one screen, with the times.",
   },
 });
 
@@ -255,7 +256,10 @@ export default async function TodayPage() {
             </div>
           </div>
           <section className={styles.indexDeck} aria-labelledby="hero-indices">
-            <div className={styles.indexHeading}><h2 id="hero-indices">{t.today.indices}</h2><span>{t.today.experienceIndexNote}</span></div>
+            {/* `text-read`: punto modülde (14px) ama genel `main h2` mürekkebi
+                boyu sınıftan okuyor; sınıfsız başlık geniş degradeyi alıyordu
+                ve açık ucu 14 pikselde AA'nın altında (globals.css notu). */}
+            <div className={styles.indexHeading}><h2 id="hero-indices" className="text-read">{t.today.indices}</h2><span>{t.today.experienceIndexNote}</span></div>
             <Suspense fallback={<IndexSkeleton />}><IndexStrip locale={locale} t={t} /></Suspense>
           </section>
         </div>
@@ -263,6 +267,7 @@ export default async function TodayPage() {
 
       {/* Bölüm bağlantıları artık bağımsız bir şerit değil, gün akışının
           araçları. Çapalar ve klavye erişimi korunur; içerik gizlenmez. */}
+      <SectionNav variant="floating" revealAfter="piyasa-ozeti" hideOnScrollDown label="TMPTEST" trail={<span>TMPTRAIL</span>} items={[{ id: "gunun-akisi", label: "Akış" }, { id: "gundem", label: "Özet" }, { id: "bilanco-analizleri", label: "Bilanço" }, { id: "haber-akisi", label: "Haberler" }]} />
       <section id="gunun-akisi" className={styles.flowPanel}>
         <div className={styles.flowHeader}>
           <div className={styles.sectionHeading}>
@@ -836,7 +841,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
                     "değişmedi" diye yazmak, olmayan bir ölçümü ölçülmüş gibi
                     göstermek oluyordu. Bilinmeyende tire basılıyor. */}
                 {delta === null ? (
-                  "—"
+                  NO_VALUE
                 ) : delta === 0 ? (
                   t.macro.unchanged
                 ) : (
@@ -1233,7 +1238,7 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
                   high ? "font-bold text-strong" : "font-semibold text-body",
                 )}
               >
-                {times ? times.primary : "—"}
+                {times ? times.primary : NO_VALUE}
               </span>
               {times && (
                 <span className="numeral block text-nano leading-tight text-muted">
@@ -1452,7 +1457,7 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
       </p>
       <ul>
         {rows.length === 0 ? (
-          <li className="px-4 pb-3.5 text-small text-muted sm:px-5">—</li>
+          <li className="px-4 pb-3.5 text-small text-muted sm:px-5">{t.common.noData}</li>
         ) : (
           rows.map((row) => (
             <li key={row.symbol}>
@@ -1937,7 +1942,7 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
                 {locale === "tr" ? row.titleTr : row.titleEn}
               </p>
               <p className="tote mt-0.5 text-title">
-                {latest !== null ? show(latest) : "—"}
+                {latest !== null ? show(latest) : NO_VALUE}
               </p>
               {/* DÖNEM KÜNYESİ. Sayı 23 puntoyla basılıyor ama hangi aya ait
                   olduğu yazmıyordu; TÜFE ve istihdam haftalar geriden
@@ -2331,7 +2336,7 @@ async function StoriesSpotlight({
               {/* Çevirisi olmayan yazı orijinal diliyle listeleniyor; rozet
                   bunu tıklamadan önce söylüyor — /mercek ile aynı kural. */}
               {lead.locale !== locale && (
-                <span className="plate ml-1 text-micro tracking-[0.09em]">
+                <span className="plate ml-1 text-nano tracking-[0.09em]">
                   {lead.locale.toUpperCase()}
                 </span>
               )}
@@ -2341,8 +2346,11 @@ async function StoriesSpotlight({
                 puntoyla yazıldı ve çevresindeki panel başlıklarından
                 ayrışmıyordu: aynı ağırlıkta bir kutu daha gibi duruyordu.
                 Ölçü farkı, bloğun "burada okunacak bir şey var" demesinin en
-                ucuz ve en sessiz yolu. */}
-            <h3 className="display-ink mt-2.5 w-fit text-heading font-bold leading-[1.14] tracking-[-0.03em] sm:text-subdisplay">
+                ucuz ve en sessiz yolu.
+                DÜZ MÜREKKEP (23 Eylül): iki-üç satırlık manşette degrade
+                satır satır değil kutu boyunca yayılıyordu; bültenin
+                manşetiyle aynı gerekçe (BriefSwitch). Ayrımı punto taşıyor. */}
+            <h3 className="mt-2.5 text-heading font-bold leading-[1.14] tracking-[-0.03em] text-strong sm:text-subdisplay">
               {lead.title}
             </h3>
             <p className="mt-3 line-clamp-3 max-w-[62ch] text-base leading-[21px] text-body sm:text-read sm:leading-[24px]">

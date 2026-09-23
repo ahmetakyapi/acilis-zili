@@ -1,0 +1,187 @@
+/* FİYAT RAYI — gerekçe PriceRail.tsx başında.
+   Ölçüler teknik kartın seviye çizgisiyle AYNI (Technical.module.css →
+   "EKSEN İNCE, BACAKLAR KALIN"): ray 24 piksel ve her öğe 12. pikselde
+   ortalanıyor — eksen 11+2, bacak 10+4, bant 5+14, çentik 4+16, nokta
+   5+14, hayalet 8+8. Aynı fiyat iki ekranda iki farklı çizimle durmasın.
+
+   Halka ve noktanın aralığı `--rail-ground` ile boyanıyor: kartın yüzeyi.
+   `--surface-solid` koyu temada saydam (beyaz %8,5) ve halka noktanın
+   açık bir tonuna dönüşüyordu (LevelTrack'in kaydı); taban
+   `--premium-surface`, başka bir yüzeyde duran çağıran değiştirir. */
+.rail {
+  --rail-ground: var(--premium-surface);
+  container-type: inline-size;
+  min-width: min(240px, 100%);
+}
+
+.frame {
+  padding-block: var(--rail-pad-top-n) var(--rail-pad-bottom-n);
+}
+
+.track {
+  position: relative;
+  height: 24px;
+}
+
+.axis {
+  position: absolute;
+  inset-inline: 0;
+  top: 11px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--rail-track);
+}
+
+/* Bant ve bacak kabı: hareket sistemi çocuklarını sırayla çiziyor. Kap
+   rayın kendisi kadar; içindekiler kendi `left`/`width` değerleriyle. */
+.legs {
+  position: absolute;
+  inset: 0;
+}
+
+.band {
+  position: absolute;
+  top: 5px;
+  height: 14px;
+  border-radius: 5px;
+}
+/* Alım bölgesi: yıkama tonu kartın yüzeyinin ÜSTÜNE opak seriliyor,
+   eksen bandın içinden görünmüyor (LevelTrack'in "BANT BACAKLARIN ALTINDA,
+   OPAK" kaydı). */
+.band[data-tone="entry"] {
+  background: linear-gradient(var(--up-wash), var(--up-wash)), var(--rail-ground);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--up) 45%, transparent);
+}
+/* 52 hafta gibi bir ARALIK: gömülü ton, çerçevesiz. Yön bildirmiyor. */
+.band[data-tone="range"] {
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+.band[data-tone="up"] { background: linear-gradient(var(--up-wash), var(--up-wash)), var(--rail-ground); }
+.band[data-tone="down"] { background: linear-gradient(var(--down-wash), var(--down-wash)), var(--rail-ground); }
+
+.segment {
+  position: absolute;
+  top: 10px;
+  height: 4px;
+  border-radius: 2px;
+}
+.segment[data-tone="up"] { background: var(--up); }
+.segment[data-tone="down"] { background: var(--down); }
+.segment[data-tone="primary"] { background: var(--primary); }
+/* Opaklık değil karışım: azaltılmış harekette ortak kural opaklığı 1'e
+   eziyor (Technical.module.css `.trackSeg` notu). */
+.segment[data-tone="flat"] { background: color-mix(in srgb, var(--text-muted) 55%, transparent); }
+
+.void {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  height: 4px;
+  border-radius: 2px 0 0 2px;
+  background: repeating-linear-gradient(90deg, var(--down) 0 3px, transparent 3px 7px);
+  opacity: 0.35;
+}
+
+/* Alınan yol: eksen üstünde noktalı ince çizgi. Veri değil bir iz; bacak
+   kalınlığında çizilmiyor ki bir ölçüyle karışmasın. */
+.travel {
+  position: absolute;
+  top: 11px;
+  height: 0;
+  border-top: 1.5px dotted var(--primary-faint);
+}
+
+.tick {
+  position: absolute;
+  top: 4px;
+  width: 2px;
+  height: 16px;
+  border-radius: 1px;
+  translate: -1px 0;
+}
+.tick[data-tone="up"] { background: var(--up); }
+.tick[data-tone="down"] { background: var(--down); }
+.tick[data-tone="primary"] { background: var(--primary); }
+.tick[data-tone="flat"] { background: var(--text-muted); }
+/* İkincil seviye (destek, direnç, ortalama): kısa ve soluk. */
+.tick[data-minor] { top: 7px; height: 10px; opacity: 0.55; }
+
+.ghost {
+  position: absolute;
+  top: 8px;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: var(--rail-ground);
+  box-shadow: inset 0 0 0 1.5px var(--text-muted);
+}
+
+/* Ortalama `margin` ile, `transform` ile değil: giriş hareketi dönüşümü
+   (ve yolculukta `translate`i) yönetiyor; ikisi çakışınca nokta bitişte
+   yarım genişlik sıçrıyordu (LevelTrack'in kaydı). */
+.live {
+  position: absolute;
+  top: 5px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px var(--rail-ground), 0 0 0 4px var(--primary);
+}
+
+/* ---- Etiketler ----
+   Yerleşim sunucuda üç genişlik için hesaplanıyor (gerekçe bileşende):
+   `-n` öznitelikleri 240, `-m` 340, `-w` 480 piksel varsayımı. Kap ilgili
+   eşiği geçince o düzen geçerli. Satır `none` ise etiket yok; ad (`n*`)
+   yoksa yalnızca sayı. */
+.label {
+  position: absolute;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: var(--text-tiny);
+  line-height: 14px;
+  color: var(--text-muted);
+}
+.rail[data-size="md"] .label { font-size: var(--text-small); line-height: 16px; }
+.labelValue { font-weight: 650; color: var(--text-strong); }
+
+.label[data-rn="above"] { bottom: calc(100% + 4px); }
+.label[data-rn="below"] { top: calc(100% + 4px); }
+.label[data-rn="none"] { display: none; }
+.label[data-an="center"] { translate: -50% 0; }
+.label[data-an="end"] { translate: -100% 0; }
+.label:not([data-nn]) .labelName { display: none; }
+
+@container (min-width: 340px) {
+  .frame { padding-block: var(--rail-pad-top-m) var(--rail-pad-bottom-m); }
+  .label[data-rm] { display: flex; top: auto; bottom: auto; translate: none; }
+  .label[data-rm="above"] { bottom: calc(100% + 4px); }
+  .label[data-rm="below"] { top: calc(100% + 4px); }
+  .label[data-rm="none"] { display: none; }
+  .label[data-am="center"] { translate: -50% 0; }
+  .label[data-am="end"] { translate: -100% 0; }
+  .label[data-rm] .labelName { display: inline; }
+  .label[data-rm]:not([data-nm]) .labelName { display: none; }
+}
+
+@container (min-width: 480px) {
+  .frame { padding-block: var(--rail-pad-top-w) var(--rail-pad-bottom-w); }
+  .label[data-rw][data-rw] { display: flex; top: auto; bottom: auto; translate: none; }
+  .label[data-rw="above"][data-rw] { bottom: calc(100% + 4px); }
+  .label[data-rw="below"][data-rw] { top: calc(100% + 4px); }
+  .label[data-rw="none"][data-rw] { display: none; }
+  .label[data-aw="center"][data-aw] { translate: -50% 0; }
+  .label[data-aw="end"][data-aw] { translate: -100% 0; }
+  .label[data-rw][data-rw] .labelName { display: inline; }
+  .label[data-rw][data-rw]:not([data-nw]) .labelName { display: none; }
+}
+
+@media (forced-colors: active) {
+  .axis, .segment, .tick, .live { forced-color-adjust: none; background: CanvasText; }
+  .band { forced-color-adjust: none; box-shadow: inset 0 0 0 1px CanvasText; }
+}

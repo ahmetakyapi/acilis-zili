@@ -451,6 +451,46 @@ export function isSessionTrade(
 }
 
 /**
+ * Bir kotasyonun yüzdesi NEYE GÖRE — ekranın künyesini seçen tek cevap.
+ *
+ *   `session`     bu seansın ana işlem saatlerinde oluşmuş fiyat
+ *   `pre-market`  bu seansın açılış öncesi işlemi (yüzde dünkü kapanışa göre)
+ *   `after-hours` bu seansın kapanış sonrası işlemi
+ *   `lastClose`   bu seansa ait işlem YOK: yüzde bir önceki seansı anlatıyor
+ *
+ * NEDEN VAR (CLAUDE.md "Veri dürüstlüğü" 4): `isSessionTrade` yalnızca
+ * "bu seansa ait mi" diye soruyor ve onu da her panel ayrı ayrı sormayı
+ * unutuyordu. Ana sayfanın Günün Hareketleri paneli soruyor
+ * (app/(app)/page.tsx, DayMovers); aynı sayfanın dünya ve endeks şeritleri
+ * sormuyordu ve açılış öncesinde TUR'un dünkü tam gün hareketi (−%0,77)
+ * çekim saatiyle damgalanıp bugünün hareketi gibi duruyordu.
+ *
+ * Pencere ŞU ANKİ seanstan değil İŞLEMİN KENDİ DAKİKASINDAN okunuyor:
+ * besleme 15 dakika gecikmeli (`FEED_DELAY_MINUTES`) ve 09:35'te ekrandaki
+ * son işlem hâlâ 09:20'deki bir açılış öncesi işlem olabilir. Kapanış
+ * dakikası o günün kendi kapanışı (`closeMinutes`, yarım gün dahil); seans
+ * günü takvim gününden geride kaldıysa (gece yarısından sonra dünkü seans)
+ * `closeMinutes` bugünü anlatır ve orada olağan 16:00 kullanılır — yarım
+ * günün ertesi gecesi 13:00-16:00 arası bir işlem "seans" sayılır, yılda
+ * üç gecelik bilinen bir sapma.
+ * İşlem anı YOKSA cevap `lastClose`: iddiasız kayıt bu seansı kanıtlamıyor.
+ */
+export type QuoteBasis = "session" | "pre-market" | "after-hours" | "lastClose";
+
+export function quoteBasis(
+  quote: { tradedAt: Date | null } | null | undefined,
+  status: MarketStatus,
+): QuoteBasis {
+  const tradedAt = quote?.tradedAt;
+  if (!tradedAt || !isSessionTrade(tradedAt, status)) return "lastClose";
+  const minutes = etParts(tradedAt).minutes;
+  const close = status.sessionDate === status.etDate ? status.closeMinutes : SESSION_BOUNDS.regularClose;
+  if (minutes < SESSION_BOUNDS.regularOpen) return "pre-market";
+  if (minutes >= close) return "after-hours";
+  return "session";
+}
+
+/**
  * Şu anda beslemeden SEANSA AİT veri beklenir mi?
  *
  * Gecikme düşülmüş an hâlâ seans gününün ön seans açılışından önceyse cevap

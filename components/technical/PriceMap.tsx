@@ -1,7 +1,7 @@
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { distancePct, formatRange, ladderOf, priceMapLayout, type MapRung, type TechnicalCopy } from "@/lib/technical";
-import { cn, formatPercent, formatPrice } from "@/lib/utils";
+import { cn, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./Technical.module.css";
 
 /**
@@ -145,7 +145,7 @@ export function PriceMap({
             <span className={styles.levelLabel}>{labelOf(rung)}{crossed && <b className={styles.mapCrossed} data-state={crossed}>{crossed === "passed" ? t.technical.levelPassed : t.technical.levelBroken}</b>}</span>
             <strong className={cn(styles.levelPrice, "numeral")}>{rung.kind === "entry" && value.includes("–") ? <>{value.split("–")[0]}–<wbr />{value.split("–")[1]}</> : value}</strong>
             <span className={styles.levelDistance} data-dir={distance != null && distance > 0 ? "up" : distance != null && distance < 0 ? "down" : "flat"}>
-              <span className="numeral">{distance !== null ? formatPercent(distance, locale, 1) : "—"}</span>
+              <span className="numeral">{distance !== null ? formatPercent(distance, locale, 1) : NO_VALUE}</span>
               {distance !== null && <i aria-hidden className={styles.levelDistanceTrack}><b style={{ width: `${Math.abs(distance) / extent * 50}%`, left: distance < 0 ? `${50 - Math.abs(distance) / extent * 50}%` : "50%" }} /></i>}
             </span>
           </li>;

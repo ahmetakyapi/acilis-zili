@@ -22,6 +22,7 @@ import {
   newestEdition,
   nextEdition,
   pendingSymbols,
+  planPosition,
   slotInstant,
   slotLabel,
 } from "@/lib/technical";
@@ -96,6 +97,30 @@ export default async function TechnicalPage() {
 
   const counts: Record<VerdictKey, number> = { buy: 0, hold: 0, sell: 0 };
   for (const { row } of board) counts[verdictOf(row.stance)] += 1;
+  const segments = (["all", "buy", "hold", "sell"] as const).filter((key) => key === "all" || counts[key] > 0);
+
+  /* PANO KÜNYESİ: FİYAT PLANA GÖRE NEREDE (23 Eylül). Plan panosunda
+     okuyucunun ilk sorusu "hangisi şimdi alınabilir" ve cevabı on beş
+     rozetin tek tek okunmasıydı (ölçüldü, 22 Eylül: bölgede 0, bölgeye
+     %1'den yakın 5, hepsi bölgenin üstünde). Sıralama seçenek değil —
+     kartların sırası bilinçli olarak sabit (yukarıdaki kayıt). Sayı
+     KARTIN ROZETİYLE AYNI KAYNAKTAN: aynı fiyat (canlı, yoksa fotoğraf),
+     aynı `planPosition`, "yakın" da rozetin YAZDIĞI yuvarlanmış yüzdeyle
+     karar veriyor — rozet "%1,0" derken künye onu "%1'den yakın" saymasın. */
+  const NEAR_ZONE_PCT = 1;
+  const proximity = { inZone: 0, near: 0, belowStop: 0 };
+  for (const { row } of board) {
+    const position = planPosition(
+      quoteMap[row.symbol]?.price ?? row.snapshot.price,
+      row.entryLow,
+      row.entryHigh,
+      row.stop,
+    );
+    if (!position) continue;
+    if (position.kind === "inZone") proximity.inZone += 1;
+    else if (position.kind === "belowStop") proximity.belowStop += 1;
+    else if (Math.round(position.pct * 10) / 10 < NEAR_ZONE_PCT) proximity.near += 1;
+  }
 
   /* Program cümlesi o günün tarihiyle: New York karşılığı yaz saatiyle
      kayıyor, künye yalnızca sonda bir kez yazılıyor.
@@ -139,8 +164,17 @@ export default async function TechnicalPage() {
           <div className={styles.edition}>
             <div className={styles.editionItem}>
               <span className={styles.editionLabel}>{t.technical.latestEdition}</span>
+              {/* TELEFONDA KISA TARİH. İngilizce uzun tarih ("Tuesday,
+                  September 22") 320'de yarım sütunda dört satıra sarıyor ve
+                  ilk kartı 37 piksel aşağı itiyordu (ölçüldü: ilk kart 597,
+                  sekme çubuğu 560). Kısa tarih ("Sep 22") iki satır; geniş
+                  ekranda gün adıyla uzun hâl kalıyor. İkisi de DOM'da, biri
+                  `display:none` — ekran okuyucu yalnızca görüneni okuyor. */}
               <span className={styles.editionValue}>
-                {slotLabel(latest.slot, t)} · {formatEtDateLong(latest.sessionDate, locale)} ·{" "}
+                {slotLabel(latest.slot, t)} ·{" "}
+                <span className={styles.editionDateLong}>{formatEtDateLong(latest.sessionDate, locale)}</span>
+                <span className={styles.editionDateShort}>{formatEtDateCompact(latest.sessionDate, locale)}</span>
+                {" · "}
                 <span className="numeral">{editionTime(latest.sessionDate, latest.slot, locale)}</span>
               </span>
             </div>
@@ -156,7 +190,12 @@ export default async function TechnicalPage() {
                 </span>
               </div>
             )}
-            <div className={styles.editionItem}>
+            {/* TELEFONDA PROGRAM BURADA DEĞİL, DİPNOTTA (23 Eylül). 320×640'ta
+                başlık kartı ilk kartı ekranın dışına itiyordu ve bu satır
+                (29 piksel) ilk ekranda hiçbir karara yaramıyor: okuyucunun
+                o an sorduğu "sıradaki ne zaman" hemen solunda. Cümle
+                dipnota iniyor (`.footSchedule`), kaybolmuyor. */}
+            <div className={styles.editionItem} data-item="schedule">
               <span className={styles.editionLabel}>{t.technical.scheduleLabel}</span>
               <span className={styles.editionValue}>{scheduleText}</span>
             </div>
@@ -170,16 +209,46 @@ export default async function TechnicalPage() {
         </Panel>
       ) : (
         <TechnicalBoard className={styles.board}>
-          <div className={styles.boardToolbar}>
-            <div className={styles.boardTitle}>
-              <span aria-hidden="true">01</span>
-              <h2 id="technical-board">{t.technical.boardTitle}</h2>
+          {/* ARAÇ ÇUBUĞU YAPIŞKAN (23 Eylül). Süzgeç yalnızca panonun
+              başındaydı: 1440'ta 4.071, 390'da 10.855 piksellik sayfada
+              görüş değiştirmek için en üste dönmek gerekiyordu. Masaüstünde
+              bütün çubuk (başlık, künye, süzgeç) uygulama çubuğunun altına
+              yapışıyor; telefonda yalnızca süzgeç (`.filterBar`), başlık ve
+              künye akışta kalıyor. Yapıştığında tam genişlikte bir bant
+              açılıyor (`data-stuck`, `TechnicalBoard`) — detay sayfasının
+              bölüm çubuğuyla aynı dil. */}
+          <div className={styles.boardToolbar} data-sticky-bar>
+            <div className={styles.boardHeading}>
+              {/* Başlığın önünde "01" rozeti vardı; sayfada ikinci bir
+                  bölüm numarası yok, yani sıra bildirmeyen bir süstü (sahibi:
+                  "anlamsız", 23 Eylül). Kaldırılınca başlığın tek çocuklu
+                  sarmalayıcısı da kalktı. */}
+              <h2 id="technical-board" className={styles.boardTitle}>{t.technical.boardTitle}</h2>
+              <dl className={styles.proximity} aria-label={t.technical.proximityLabel}>
+                <div data-tone={proximity.inZone > 0 ? "up" : undefined}>
+                  <dt>{t.technical.proximityInZone}</dt>
+                  <dd className="numeral">{proximity.inZone}</dd>
+                </div>
+                <div>
+                  <dt>{t.technical.proximityNear}</dt>
+                  <dd className="numeral">{proximity.near}</dd>
+                </div>
+                <div data-tone={proximity.belowStop > 0 ? "down" : undefined}>
+                  <dt>{t.technical.proximityBelowStop}</dt>
+                  <dd className="numeral">{proximity.belowStop}</dd>
+                </div>
+              </dl>
             </div>
-            <fieldset className={styles.filter}>
-              <legend>{t.technical.filterLabel}</legend>
-              {(["all", "buy", "hold", "sell"] as const)
-                .filter((key) => key === "all" || counts[key] > 0)
-                .map((key) => (
+            <div className={styles.filterBar} data-sticky-bar>
+              {/* EŞİT BÖLMELİ, KAYAN BAŞPARMAKLI. Dört kelime gri bir izin
+                  üstünde dağınık duruyordu (390'da aralarında 26 piksellik
+                  delikler) ve 320'de "SAT" tek başına ikinci satıra
+                  düşüyordu. Bölmeler artık eşit sütunlar; seçimi gösteren
+                  beyaz kutu radyonun sırasını (`data-i`) CSS'ten okuyup
+                  kayıyor, JavaScript gerekmiyor. */}
+              <fieldset className={styles.filter} style={{ "--n": segments.length } as React.CSSProperties}>
+                <legend>{t.technical.filterLabel}</legend>
+                {segments.map((key, index) => (
                   <span key={key} className="contents">
                     {/* Radyonun iki etiketi var (bu çip ve başlıktaki dağılım
                         satırı); açık ad olmadan ekran okuyucu ikisini birleştirip
@@ -189,6 +258,7 @@ export default async function TechnicalPage() {
                       name="technical-stance"
                       id={stanceFilterId(key)}
                       value={key}
+                      data-i={index}
                       defaultChecked={key === "all"}
                       aria-label={`${key === "all" ? t.technical.filterAll : verdictLabel(key, t)} ${key === "all" ? board.length : counts[key]}`}
                     />
@@ -198,7 +268,8 @@ export default async function TechnicalPage() {
                     </label>
                   </span>
                 ))}
-            </fieldset>
+              </fieldset>
+            </div>
           </div>
 
           <div className={styles.grid} data-motion-stagger>
@@ -211,6 +282,9 @@ export default async function TechnicalPage() {
                   company={meta[row.symbol]?.name ?? null}
                   logoUrl={meta[row.symbol]?.logoUrl ?? null}
                   priceLabel={labelFor(row.symbol)}
+                  /* Pano beş güne kadar eski yayınları da taşıyor; en yeni
+                     yayından olmayan kart ayağında bunu söylüyor. */
+                  stale={row.sessionDate !== latest.sessionDate || row.slot !== latest.slot}
                   locale={locale}
                   t={t}
                 />
@@ -241,6 +315,11 @@ export default async function TechnicalPage() {
       )}
 
       <div className={styles.footNote}>
+        {latest && (
+          <p className={styles.footSchedule}>
+            {t.technical.scheduleLabel}: {scheduleText}
+          </p>
+        )}
         <p>{t.technical.method}</p>
         <p>{t.technical.disclaimer}</p>
       </div>

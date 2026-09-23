@@ -2,7 +2,8 @@ import { logoSrc } from "@/lib/logos";
 import { LogoImage } from "./LogoImage";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { TabUnderline } from "./TabUnderline";
-import { cn, directionOf, directionWash, formatPercent } from "@/lib/utils";
+import { cn, directionOf, directionWash, formatPercent, NO_VALUE } from "@/lib/utils";
+import { displayZone, zoneDateKey, zoneTag } from "@/lib/session-clock";
 import type { Locale } from "@/lib/i18n/config";
 
 /* --------------------------------------------------------------------------
@@ -227,7 +228,7 @@ export function PercentReading({
   signClassName?: string;
 }) {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return <span className={className}>—</span>;
+    return <span className={className}>{NO_VALUE}</span>;
   }
   const number = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
     minimumFractionDigits: 2,
@@ -593,22 +594,34 @@ export function DataStamp({
   note?: string;
   className?: string;
 }) {
-  /* Damga saati her zaman Türkiye saatiyle basılır — sunucu UTC'de koşsa da
-     okuyucunun duvar saatiyle örtüşür.
+  /* Damga saati OKUYUCUNUN BİRİNCİL SAATİYLE basılır — sunucu UTC'de koşsa
+     da okuyucunun duvar saatiyle örtüşür. Türkçede İstanbul, İngilizcede
+     New York (`displayZone`, CLAUDE.md "Saat kuralı: TR önce").
+
+     EN BİR DÖNEM İSTANBUL YAZIYORDU (23 Eylül). Damga dilden bağımsız
+     "Europe/Istanbul" basıyordu; /en/hisse/NVDA'da başlık damgası "Updated
+     11:40" derken hemen altındaki 1G ekseni 04:40'ta (New York) bitiyor,
+     teknik kart "08:45 NY" yazıyordu — aynı ekranda iki saat dilimi,
+     hangisinin hangisi olduğunu söyleyen yok. İngilizcede saat artık New
+     York ve sonuna eksenle aynı künye ekleniyor ("Updated 04:40 NY").
+     Türkçe çıktı bayt bayt aynı: dilim zaten İstanbul'du, künye eklenmiyor
+     (TR okuyucunun duvar saati künyesiz yazılıyor, sitenin geri kalanı gibi).
 
      24 SAAT, İKİ DİLDE DE. `en-US` varsayılanı 12 saatlik biçim veriyor ve
      aynı ekranda sitenin geri kalanıyla (lib/session-clock.ts, iki dilde de
      24 saat) iki farklı saat biçimi yan yana duruyordu. */
+  const zone = displayZone(locale);
   const stamp = at ? (typeof at === "string" ? new Date(at) : at) : null;
   const valid = stamp !== null && Number.isFinite(stamp.getTime());
-  const time = valid
+  const clock = valid
     ? new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
-        timeZone: "Europe/Istanbul",
+        timeZone: zone,
         hour: "2-digit",
         minute: "2-digit",
         hourCycle: "h23",
       }).format(stamp)
     : null;
+  const time = clock && locale !== "tr" ? `${clock} ${zoneTag(locale).primary}` : clock;
 
   /* GÜN DEĞİŞTİYSE TARİH DE YAZILIR.
      Damga yalnızca saat basıyordu ve dünden kalmış bir kayıt ekranda
@@ -618,22 +631,16 @@ export function DataStamp({
      (gerekçesi `quotesFromCache` başında) ama biçim onu geri gizliyordu:
      doğru sayı yanlış okunuyordu.
 
-     Karşılaştırma İSTANBUL TAKVİM GÜNÜYLE yapılıyor, sunucunun yerel
-     günüyle değil: damga da o saat dilimiyle basılıyor ve sunucu UTC'de
-     koşuyor — UTC ile karşılaştırmak, gece yarısı ile 03:00 arasındaki her
-     damgayı "dün" ilan ederdi. `en-CA` sıralanabilir "YYYY-MM-DD" veriyor,
-     yani dize karşılaştırması gün karşılaştırmasıdır. */
-  const istanbulDay = (value: Date) =>
-    new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Europe/Istanbul",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(value);
+     Karşılaştırma DAMGANIN BASILDIĞI DİLİMİN TAKVİM GÜNÜYLE yapılıyor
+     (Türkçede İstanbul, İngilizcede New York), sunucunun yerel günüyle
+     değil: sunucu UTC'de koşuyor ve UTC ile karşılaştırmak, gece yarısı ile
+     03:00 arasındaki her damgayı "dün" ilan ederdi. Gün anahtarı
+     `zoneDateKey` ("YYYY-MM-DD"), yani dize karşılaştırması gün
+     karşılaştırmasıdır. */
   const stampDate =
-    valid && istanbulDay(stamp) !== istanbulDay(new Date())
+    valid && zoneDateKey(stamp, zone) !== zoneDateKey(new Date(), zone)
       ? new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
-          timeZone: "Europe/Istanbul",
+          timeZone: zone,
           day: "numeric",
           month: "long",
         }).format(stamp)

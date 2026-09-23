@@ -244,7 +244,7 @@ export function peRatioOf(
  * PENCERE DOLMADIYSA NULL. Yarım pencereyle hesaplanmış bir "200 günlük
  * ortalama" 200 günlük ortalama değildir; kısa geçmişli bir sembolde
  * (yeni halka arz, yeni eklenen sembol) sayı üretmek uydurma kesinlik olurdu.
- * Çağıran null'ı "—" olarak yazıyor.
+ * Çağıran null'ı `NO_VALUE` olarak yazıyor.
  *
  * BARLAR GÜNLÜK OLMALI. `getChartBars(symbol, "1Y")` 254 bar döndürüyor
  * (ölçüldü) ve hepsi günlük; 200 günlük pencere oradan doluyor. "5Y" aralığı
@@ -320,6 +320,27 @@ export function bandFiyatiKapsiyorMu(
 const MONEY_GAP = "\u00A0";
 
 /**
+ * DEĞER YOK İŞARETİ — tek bir yarım çizgi (en dash, U+2013).
+ *
+ * Sitenin boş hücresi uzun çizgiydi (em dash, "—") ve dokuz biçimlendirici
+ * ile doksana yakın elden yazılmış dize onu basıyordu: /hisse/NVDA'da yedi,
+ * /bilancolar/adbe'de yedi hücre (23 Eylül taraması). Sahibin ekosistem
+ * kuralı ve tasarım becerisinin §9.G maddesi uzun çizgiyi görünür metinde
+ * tümüyle yasaklıyor.
+ *
+ * Tire (-) KULLANILAMAZ: sayı sütununda tek başına duran bir tire "eksi"
+ * gibi okunuyor ve sitenin eksi işareti zaten ayrı bir karakter (U+2212,
+ * `SIGN_GAP` notu). Yarım çizgi burada bir AYRAÇ değil, tablo geleneğindeki
+ * "değer yok" işareti; tek başına, hiçbir şeyi birbirine bağlamadan durur.
+ * İki şeyi ayırmak için kullanılmaz: ayraç virgül, iki nokta ya da `·`.
+ *
+ * Ekran okuyucu için anlam çağıranda: boş hücre `aria-label` ile "Veri
+ * Yok" diyorsa o etiket korunur; işaret yalnızca görsel. Bir grubun
+ * TAMAMI boşsa işaret değil cümle basılır (`t.common.noData`).
+ */
+export const NO_VALUE = "\u2013";
+
+/**
  * DOLAR İŞARETİNİN YERİ DİLE BAĞLI — Türkçede sayıdan SONRA (507,12 $),
  * İngilizcede ÖNCE ($507.12).
  *
@@ -370,7 +391,7 @@ export function formatPrice(
   /** `currency: true` dolar demek; ISO kodu verilirse o para birimi yazılır. */
   opts: { currency?: boolean | string; digits?: number } = {},
 ) {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
   const { currency = false, digits = 2 } = opts;
   const nf = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
     minimumFractionDigits: digits,
@@ -423,7 +444,7 @@ export function formatPercent(
   locale: string,
   digits = 2,
 ) {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
   const formatted = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
@@ -444,7 +465,7 @@ export function formatPercentPlain(
   locale: string,
   digits = 1,
 ) {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
   const formatted = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
@@ -454,7 +475,7 @@ export function formatPercentPlain(
 
 /** Mutlak değişim — 2.41 → "+2,41" */
 export function formatChange(value: number | null | undefined, locale: string) {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
   const formatted = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -502,7 +523,7 @@ export function formatMoneyCompact(
    */
   code?: string | null,
 ): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
   const body = withCurrency(
     formatCompact(Math.abs(value), locale),
     locale,
@@ -515,7 +536,7 @@ export function formatCompact(
   value: number | null | undefined,
   locale: string,
 ): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
   const abs = Math.abs(value);
   const units =
     locale === "tr"
@@ -573,7 +594,7 @@ export function formatCompact(
 
 /** Hacim — tam sayı, binlik ayraçlı */
 export function formatVolume(value: number | null | undefined, locale: string) {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
   return new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
     maximumFractionDigits: 0,
   }).format(value);
@@ -864,7 +885,7 @@ export function formatPeriodLabel(
   period: string | null,
   locale: string,
 ): string {
-  if (!period) return "—";
+  if (!period) return NO_VALUE;
   const match = /^(\d{4})-(\d{2})$/.exec(period);
   if (!match) return period;
   return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {

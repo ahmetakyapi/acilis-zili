@@ -29,6 +29,7 @@ import {
   PanelLink,
   Skeleton,
 } from "@/components/ui/primitives";
+import { ChapterHeading } from "@/components/ui/ChapterHeading";
 import { db } from "@/lib/db";
 import { news, watchlistItems, watchlists } from "@/lib/schema";
 import {
@@ -88,6 +89,7 @@ import {
   formatVolume,
   headlineMentions,
   isValidSymbol,
+  NO_VALUE,
   bandFiyatiKapsiyorMu,
   hareketliOrtalama,
   peRatioOf,
@@ -376,11 +378,13 @@ export default async function StockPage(
       <SectionNav
         className={styles.chapterNav}
         label={t.stock.experienceNav}
+        hideOnScrollDown
+        lead={<span className="numeral text-small font-bold text-strong">TMPLEAD {symbol}</span>}
         items={[
           { id: "stock-overview", label: t.stock.experienceOverview },
-          { id: "stock-fundamentals", label: t.stock.metrics },
-          { id: "stock-earnings", label: t.stock.pastEarnings },
-          { id: "stock-context", label: t.stock.experienceContext },
+          { id: "stock-fundamentals", label: t.stock.chapterValuation },
+          { id: "stock-earnings", label: t.stock.chapterEarnings },
+          { id: "stock-context", label: t.stock.chapterContext },
         ]}
       />
 
@@ -388,7 +392,7 @@ export default async function StockPage(
           Eskiden bunlar tek sütuna dizildiği için sağ kolon uzayıp sol taraf
           boş kalıyordu; artık sayfanın tam genişliğini kullanıyorlar. */}
       <section id="stock-fundamentals" className={cn(styles.chapter, styles.fundamentalsChapter)}>
-        <SectionHeading title={t.stock.experienceFundamentals} hint={t.stock.experienceFundamentalsHint} />
+        <ChapterHeading title={t.stock.chapterValuation} />
         <ScrollStage>
         <div className={styles.fundamentalsGrid}>
         {/* `flex flex-col` — içerideki liste kutuyu doldurabilsin diye;
@@ -470,7 +474,7 @@ export default async function StockPage(
       </section>
 
       <section id="stock-earnings" className={styles.chapter}>
-        <SectionHeading title={t.stock.experienceEarnings} hint={t.stock.experienceEarningsHint} />
+        <ChapterHeading title={t.stock.chapterEarnings} />
         {/* Yaklaşan bilanço, geçmiş sonuçlarla aynı bölümde; ilk fiyat ekranının boyunu uzatmaz. */}
         <Suspense
           fallback={
@@ -497,7 +501,7 @@ export default async function StockPage(
       </section>
 
       <section id="stock-context" className={styles.chapter}>
-        <SectionHeading title={t.stock.experienceContext} hint={t.stock.experienceContextHint} />
+        <ChapterHeading title={t.stock.chapterContext} />
       {/* MERCEK EN SONDA, GEÇMİŞ BİLANÇOLARIN DA ALTINDA. Sıralama kodun
           kendi gerekçesini takip ediyor: analiz bir çeyreğin okunmuş hâli,
           geçmiş bilançolar o çeyreklerin tablosu — ikisi aynı malzeme ve
@@ -582,17 +586,11 @@ function StockBreadcrumb({ symbol, t, children }: { symbol: string; t: Dictionar
   );
 }
 
-function SectionHeading({ title, hint }: { title: string; hint: string }) {
-  return (
-    <Reveal className={styles.sectionHeading}>
-      <div>
-        <h2>{title}</h2>
-        <p>{hint}</p>
-      </div>
-      <ArrowDownRight aria-hidden size={30} weight="light" />
-    </Reveal>
-  );
-}
+/* Bölüm başlığı burada `SectionHeading` adıyla yerel bir bileşendi: başlık,
+   yaklaşık sekiz yüz sayfada birebir aynı olan genel bir alt cümle ve
+   sağında hiçbir yere götürmeyen 30 piksellik bir ok. Artık paylaşılan
+   `ChapterHeading` (components/ui) — gerekçe orada; sekme etiketi ile
+   bölüm başlığı aynı sözlük anahtarını okuyor. */
 
 /* ==========================================================================
    Başlık: fiyat + favori yıldızı
@@ -1062,7 +1060,7 @@ async function UpcomingEarnings({
 
   return (
     <Panel className={styles.upcomingPanel}>
-      <div className={styles.eventKicker}><p className="plate text-micro">{t.stock.nextEarnings}</p><CalendarBlank aria-hidden size={21} weight="duotone" /></div>
+      <div className={styles.eventKicker}><p className="plate text-nano">{t.stock.nextEarnings}</p><CalendarBlank aria-hidden size={21} weight="duotone" /></div>
       <p className={cn("numeral", styles.earningsDate)}>
         {formatEtDateLong(next.reportDate, locale)}
       </p>
@@ -1244,7 +1242,7 @@ async function MovingAverages({
                 <span className="numeral text-sm text-body">
                   {deger !== null
                     ? formatPrice(deger, locale, { currency: true })
-                    : "—"}
+                    : NO_VALUE}
                 </span>
                 {fark !== null && (
                   <span
@@ -1433,7 +1431,7 @@ async function ProfileCard({
        Kod tanınmazsa `of()` girdiyi aynen döndürüyor; o zaman ham kod
        basmak yerine satır hiç yazılmıyor. */
     ...(ulkeAdi ? ([[t.stock.country, ulkeAdi]] as [string, React.ReactNode][]) : []),
-    [t.stock.exchange, profile.exchange ?? "—"],
+    [t.stock.exchange, profile.exchange ?? NO_VALUE],
     /* DEĞER YOKSA SATIR DA YOK. Koruma bilinçli (dolar dışı para biriminde
        null döner, gerekçe yukarıda) ama sonucu hep "—" olan bir satır yer
        kaplayıp hiçbir şey söylemiyordu — üstelik tam da ADR'lerde, kartın
@@ -1448,7 +1446,7 @@ async function ProfileCard({
           {formatEtDateMedium(profile.ipoDate, locale)}
         </span>
       ) : (
-        "—"
+        NO_VALUE
       ),
     ],
   ];
@@ -1483,7 +1481,7 @@ async function ProfileCard({
             <dd className={cn("numeral", styles.profilePrice)}>
               {quoteForCap.ok
                 ? formatPrice(quoteForCap.data.price, locale, { currency: true })
-                : "—"}
+                : NO_VALUE}
             </dd>
             {quoteForCap.ok ? (
               <dd className={styles.profileChange}>
@@ -1639,7 +1637,7 @@ async function MetricsCard({
       t.stock.eps,
       hisseBasi(m.eps)
         ? formatPrice(m.eps, locale, { currency: currency ?? true })
-        : "—",
+        : NO_VALUE,
     ],
     [
       t.stock.dividend,
@@ -1650,9 +1648,9 @@ async function MetricsCard({
          değil. */
       m.dividendYield !== null && m.dividendYield !== undefined
         ? formatPercentPlain(m.dividendYield, locale, 2)
-        : "—",
+        : NO_VALUE,
     ],
-    [t.stock.beta, m.beta ? formatPrice(m.beta, locale) : "—"],
+    [t.stock.beta, m.beta ? formatPrice(m.beta, locale) : NO_VALUE],
     /* NET KÂR MARJI — kartın tek KÂRLILIK ölçüsü. Sekiz satırın hepsi
        değerleme (F/K, ileri F/K), dağıtım (temettü), oynaklık (beta) ya da
        fiyatın kendi geçmişindeki yeri (52 hafta bandı, hacim) hakkındaydı;
@@ -1695,7 +1693,7 @@ async function MetricsCard({
           [t.stock.debtToEquity, formatPrice(m.debtToEquity, locale)],
         ] as [string, string][])
       : []),
-    [t.market.volume, quote?.volume ? formatVolume(quote.volume, locale) : "—"],
+    [t.market.volume, quote?.volume ? formatVolume(quote.volume, locale) : NO_VALUE],
   ];
 
   /* 52 HAFTA BANDI İKİ SATIRDAN BİR BLOĞA DÖNDÜ.
@@ -2207,7 +2205,7 @@ async function PastEarnings({
                   {surprise !== null ? (
                     <ChangePill changePct={surprise} locale={locale} size="sm" />
                   ) : (
-                    <span className="text-xs text-muted">—</span>
+                    <span className="text-xs text-muted">{NO_VALUE}</span>
                   )}
                 </td>
                 <td className="numeral px-2 py-2.5 text-center text-muted sm:px-3">
@@ -2215,12 +2213,12 @@ async function PastEarnings({
                     ? formatPrice(row.epsEstimate, locale, {
                         currency: paraOpt,
                       })
-                    : "—"}
+                    : NO_VALUE}
                 </td>
                 <td className="numeral px-2 py-2.5 text-center font-semibold text-strong sm:px-3">
                   {row.epsActual !== null
                     ? formatPrice(row.epsActual, locale, { currency: paraOpt })
-                    : "—"}
+                    : NO_VALUE}
                 </td>
                 {hasRevenue && (
                   <>
@@ -2231,7 +2229,7 @@ async function PastEarnings({
                             locale,
                             paraKoduOf(paraOpt),
                           )
-                        : "—"}
+                        : NO_VALUE}
                     </td>
                     <td className="numeral hidden px-4 py-2.5 text-center text-body sm:table-cell sm:px-5">
                       {row.revenueActual !== null ? (
@@ -2243,7 +2241,7 @@ async function PastEarnings({
                           )}
                         </span>
                       ) : (
-                        "—"
+                        NO_VALUE
                       )}
                     </td>
                   </>
@@ -2400,7 +2398,7 @@ async function ComplianceCard({
                           ("12,3%"), oysa Türkçede önde yazılır. */}
                       {value !== null
                         ? formatPercentPlain(value, locale, 1)
-                        : "—"}
+                        : NO_VALUE}
                     </dd>
                   </div>
                   {/* Eşiğe ne kadar yakın — çubuk %33'te dolar */}
@@ -2568,7 +2566,7 @@ async function PeersCard({
                     />
                   </span>
                 ) : (
-                  <span className="text-xs text-muted">—</span>
+                  <span className="text-xs text-muted">{NO_VALUE}</span>
                 )}
               </Link>
               </SpotlightCard>

@@ -76,7 +76,7 @@ export function StoryCard({
               </>
             )}
             {story.locale !== locale && (
-              <span className="plate ml-auto text-micro tracking-[0.09em]">
+              <span className="plate ml-auto text-nano tracking-[0.09em]">
                 {story.locale.toUpperCase()}
               </span>
             )}
@@ -85,9 +85,14 @@ export function StoryCard({
           {/* `lang` ŞART: çevirisi olmayan yazı orijinal diliyle gösteriliyor
               ve rozet bunu göze söylüyor. Ekran okuyucu rozeti okumuyor —
               işaretleme olmadan Türkçe manşeti İngilizce sesletiyordu. */}
+          {/* DÜZ MÜREKKEP (23 Eylül). Manşet iki-üç satır ve degrade satır
+              satır değil kutu boyunca yayılıyor: ikinci satır başka bir
+              tonda başlıyordu. Tema istisnası yalnızca kısa display metni
+              için (globals.css, `data-ink` notu); kartın başlığı bir
+              manşet, ayrımı ağırlık ve punto taşıyor. */}
           <h3
             lang={story.locale}
-            className="display-ink display-ink-tight mt-1.5 w-fit text-lead font-bold leading-[1.2] tracking-[-0.025em]"
+            className="mt-1.5 text-lead font-bold leading-[1.2] tracking-[-0.025em] text-strong"
           >
             {story.title}
           </h3>

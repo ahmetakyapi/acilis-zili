@@ -17,8 +17,9 @@ type Cell = { kind: "entry" | "target" | "stop" | "sellLevel" | "support" | "res
  * (NEREDEN ALINIR / NEREDE SATILIR / NEREDE VAZGEÇİLİR) ve sayı büyük.
  *
  * Görüşe göre hücreler değişiyor:
- *   · alım planı varsa (AL, bölgeli TUT): alım · satış · vazgeçme, altında
- *     risk/getiri oranı — bölgenin üst ucundan ölçülür (bkz. `riskReward`).
+ *   · alım planı varsa (AL, bölgeli TUT): alım · satış · vazgeçme. Risk /
+ *     getiri oranı liste kartında altındaki rayda (`PlanRail`), detay
+ *     kapağında bu bileşenin `lg` dalında.
  *   · SAT: tepkide satış seviyeleri ve en yakın destek — alım hücresi yok,
  *     çünkü plan alım planı değil.
  *   · bölgesiz TUT: en yakın destek ve direnç — izlenecek iki seviye.
@@ -74,13 +75,26 @@ export function PlanStrip({
      AYRAÇ TİRE, NOKTA DEĞİL. Nokta bu sayfada künye ayracı ("Seans İçi ·
      19:45 TR"); üç hedef aynı işaretle dizilince üç ayrı künye gibi
      okunuyordu. Tire "seviyeden seviyeye" der — aralık yazımıyla
-     (`formatRange`) aynı işaret. */
+     (`formatRange`) aynı işaret.
+
+     TİRE DE GERİ ALINDI: OK (→), 23 Eylül. "Aralıkla aynı işaret" tam da
+     kusurdu. Hemen üstteki satır bir ARALIK ("Nereden Alınır 1.821,75 –
+     1.876,86 $"), bu satır iki AYRI hedef ("Nerede Satılır 1.952,59 –
+     2.354,39 $", SNDK) ve ikisi yan yana aynı görünüyordu: iki hedef bir
+     satış bölgesi gibi okunuyordu. Ok ne künye noktası ne aralık tiresi;
+     "sonra bir sonraki seviye" diyor. Ekran okuyucu oku okumuyor, araya
+     virgül koyuyor. Kırılma düzeni yukarıdaki iki kayıtla aynı. */
   const list = (values: readonly number[]) =>
     values.length === 0 ? null : values.map((value, index) => (
       <Fragment key={value}>
         <span className={styles.planItem}>
           {index === values.length - 1 ? money(value) : formatPrice(value, locale)}
-          {index < values.length - 1 && <span className={styles.planSep} aria-hidden> –</span>}
+          {index < values.length - 1 && (
+            <>
+              <span className={styles.planSep} aria-hidden> →</span>
+              <span className="sr-only">, </span>
+            </>
+          )}
         </span>
         {index < values.length - 1 && " "}
       </Fragment>
@@ -92,6 +106,16 @@ export function PlanStrip({
     cells = [
       { kind: "sellLevel", label: t.technical.planSellLevels, value: list(targets.length ? targets : resistances) },
       { kind: "support", label: t.technical.planNearestSupport, value: supports[0] !== undefined ? money(supports[0]) : null },
+      /* SONRAKİ DESTEK — YALNIZCA LİSTE KARTINDA (23 Eylül). SAT kartının
+         iki satırı, komşu AL/TUT kartlarının üç satırlık plan satırında 32
+         piksellik bir cep bırakıyordu (1440, ONDS, ölçüldü). Boşluk
+         esnetilmez, doldurulur: rutinin yazdığı ikinci destek, "destek
+         kırılırsa düşüş nereye" sorusunun cevabı. Yoksa satır hiç basılmaz
+         ("Bu Yayında Yok" demek burada eksik bir plan gibi okunurdu). Detay
+         kapağında fiyat haritası bütün destekleri zaten sıralıyor. */
+      ...(size === "sm" && supports[1] !== undefined
+        ? [{ kind: "support" as const, label: t.technical.planNextSupport, value: money(supports[1]) }]
+        : []),
     ];
   } else if (hasEntry) {
     cells = [
@@ -107,11 +131,11 @@ export function PlanStrip({
     ];
   }
 
-  const rr = hasEntry ? riskReward(entryHigh, stop, targets) : null;
-
   // 22 September: the detail cover gets a compact level board and two
-  // common-zero risk bars; small list cards retain their existing strip.
+  // common-zero risk bars. 23 September: the list card's risk strip moved
+  // onto its level rail (`PlanRail`), so the ratio is computed here only.
   if (size === "lg") {
+    const rr = hasEntry ? riskReward(entryHigh, stop, targets) : null;
     const labels: Partial<Record<Cell["kind"], string>> = {
       entry: t.technical.entryZone, target: t.technical.targetsLabel, stop: t.technical.stop,
     };
@@ -139,11 +163,15 @@ export function PlanStrip({
     </div>;
   }
 
+  /* RİSK ŞERİDİ BURADAN ÇIKTI (23 Eylül) — liste kartında artık seviye
+     çizgisiyle tek bir çizim: `PlanRail`. Kaydı da onunla gitti; oran,
+     çapa, ham tutar ve ölçek kararlarının dördü de orada yaşıyor. Burada
+     yalnızca üç soru ve üç sayı kalıyor. */
   return (
     <div className={styles.planStrip}>
       <dl className={styles.planCells} style={{ "--cells": cells.length } as React.CSSProperties}>
         {cells.map((cell) => (
-          <div key={cell.kind} className={styles.planCell} data-kind={cell.kind}>
+          <div key={cell.label} className={styles.planCell} data-kind={cell.kind}>
             <dt>
               <i aria-hidden className={styles.legendDot} data-kind={cell.kind} />
               {cell.label}
@@ -154,48 +182,6 @@ export function PlanStrip({
           </div>
         ))}
       </dl>
-      {rr && (
-        /* RİSK ŞERİDİ: ORAN, ÇAPA, İKİ BACAK VE ÖLÇEKLİ ÇUBUK.
-           Şerit bir dönem tek satırdı: "Risk / Getiri · 1 : 0,3 · Risk %3,0 ·
-           Getiri %1,0". Üç şey eksikti. (1) ÇAPA: yüzdeler bölgenin
-           tepesinden ölçülüyor ama ekranda onun hemen üstünde "Son Fiyat
-           928,88 $" duruyor ve okuyucu yüzdeyi ondan sanıyor — aradaki fark
-           MU'da on iki dolar. Çapa artık adıyla yazılı. (2) HAM TUTAR: "%3,0"
-           soyut, "27,84 $" değil; hisse fiyatını bilmeyen okuyucu yüzdeyi
-           paraya çeviremiyor. İkisi yan yana. (3) ÖLÇEK: oran bir sayı olarak
-           "1 : 0,3" okunmuyordu — iki bacağın GENİŞLİĞİ okunuyor. Çubuk
-           tutarlarla orantılı (`flex-grow`), yani riskin getiriden üç kat
-           geniş durduğu bir kurulum tek bakışta belli oluyor. Çubuk yalnızca
-           görsel; sayıların tamamı altındaki satırda. */
-        <div className={styles.risk}>
-          <p className={styles.riskHead}>
-            <span>{t.technical.riskReward}</span>
-            <b className="numeral">{t.technical.riskRewardValue.replace("{n}", formatPrice(rr.ratio, locale, { digits: 1 }))}</b>
-            <span className={styles.riskAnchor}>{t.technical.riskAnchor.replace("{n}", money(rr.anchor))}</span>
-          </p>
-          {/* Bacak genişlikleri tutarların kendisi: flex-grow oranı çiziyor,
-              yüzde hesabı yok. `flex-basis:0` + `min-width` CSS'te — uçta
-              kalan bacak (1 : 8 gibi) tamamen kaybolmasın. */}
-          <span aria-hidden className={styles.riskBar}>
-            <i data-leg="risk" style={{ flexGrow: rr.riskAbs }} />
-            <i data-leg="reward" style={{ flexGrow: rr.rewardAbs }} />
-          </span>
-          <p className={styles.riskLegs}>
-            <span data-leg="risk">
-              <span className={styles.riskName}>{t.technical.riskLeg}</span>
-              <b className="numeral">{money(rr.riskAbs)}</b>
-              <span className={styles.planSep} aria-hidden>·</span>
-              <span className="numeral">{formatPercentPlain(rr.riskPct, locale, 1)}</span>
-            </span>
-            <span data-leg="reward">
-              <span className={styles.riskName}>{t.technical.rewardLeg}</span>
-              <b className="numeral">{money(rr.rewardAbs)}</b>
-              <span className={styles.planSep} aria-hidden>·</span>
-              <span className="numeral">{formatPercentPlain(rr.rewardPct, locale, 1)}</span>
-            </span>
-          </p>
-        </div>
-      )}
     </div>
   );
 }

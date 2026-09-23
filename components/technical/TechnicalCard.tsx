@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, CaretDown, CaretUp } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, verdictPillClass, type VerdictKey } from "@/lib/analysis";
@@ -6,6 +6,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import type { Quote } from "@/lib/providers/types";
 import type { TechnicalAnalysisRow } from "@/lib/schema";
 import {
+  editionTime,
   indicatorSignals,
   planPosition,
   slotLabel,
@@ -23,7 +24,7 @@ import {
   formatPercentPlain,
   formatPrice,
 } from "@/lib/utils";
-import { LevelTrack } from "./LevelTrack";
+import { PlanRail } from "./PlanRail";
 import { PlanStrip } from "./PlanStrip";
 import styles from "./Technical.module.css";
 
@@ -96,15 +97,23 @@ export function planReadingTone(reading: PlanReading): "up" | "down" | "flat" {
   return "flat";
 }
 
+/* Analiz anındaki fiyat ile canlı fiyat arasındaki fark bu eşiğin altında
+   kalırsa ne halka ne künye basılıyor: 0,1'in altında halka noktanın
+   altında kalıyor, künye de aynı sayıyı ikinci kez yazıyordu. */
+const SNAPSHOT_MOVE_PCT = 0.1;
+/* Hacim göstergesinin ölçeği: 0 ile ortalamanın üç katı arası. Üç kat
+   "olağandışı yoğun"un üstü; daha uzun bir ölçek 1×'i sol kenara ezerdi. */
+const VOLUME_SCALE_MAX = 3;
+
 /**
  * Liste kartı — bir hissenin son analizi tek bakışta.
  *
  * Sıra okuyucunun sorusunun sırası: ne diyor (görüş), değişti mi (rozet),
  * şimdi nerede (fiyat ve plana göre yeri), NEREDEN ALINIR / NEREDE SATILIR /
- * NEREDE VAZGEÇİLİR (plan şeridi), o seviyeler fiyata göre nerede (çizgi),
- * neden (tek cümle), göstergeler ne diyor (üç kelime).
+ * NEREDE VAZGEÇİLİR (plan şeridi), o seviyeler fiyata göre nerede (ray),
+ * neden (tek cümle ve ne zaman yazıldığı), göstergeler ne diyor (üç ölçü).
  *
- * FİYAT CANLI, SEVİYELER KAYITTAN. Çizgideki nokta şu anki fiyat: okuyucu
+ * FİYAT CANLI, SEVİYELER KAYITTAN. Raydaki nokta şu anki fiyat: okuyucu
  * sabah yazılmış alım bölgesine fiyatın şimdi ne kadar yaklaştığını görsün.
  * Kotasyon gelmezse fotoğraftaki fiyata düşülür ve etiket de ona göre
  * "Analiz Anında" olur: eski bir fiyata "Şu An" demek sayıyı olduğundan
@@ -117,6 +126,7 @@ export function TechnicalCard({
   company,
   logoUrl,
   priceLabel,
+  stale = false,
   locale,
   t,
 }: {
@@ -127,6 +137,8 @@ export function TechnicalCard({
   logoUrl: string | null;
   /** Kotasyon varken kullanılacak etiket (seans içi "15 Dakika Gecikmeli" ya da "Son Fiyat"). */
   priceLabel: string;
+  /** Kart panonun en yeni yayınından değil (daha eski bir yayından kalan satır). */
+  stale?: boolean;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -150,33 +162,48 @@ export function TechnicalCard({
     supports: row.supports,
     resistances: row.resistances,
   };
+  /* Cümle analiz anında yazıldı, fiyat canlı. Fark anlamlıysa raya bir
+     halka ve cümlenin künyesine o anın fiyatı giriyor (bkz. `LevelTrack`). */
+  const snapshotPrice =
+    quote && snapshot.price !== null && price !== null && snapshot.price > 0 &&
+    (Math.abs(price - snapshot.price) / snapshot.price) * 100 >= SNAPSHOT_MOVE_PCT
+      ? snapshot.price
+      : null;
 
-  /* Üç kelime: trend, RSI, hacim. Ayrıntı detay sayfasında (`SignalStrip`). */
+  /* ÜÇ ÖLÇÜ, ÜÇ KELİME DEĞİL (23 Eylül). Göstergeler "Trend Yukarı · RSI 61
+     · Hacim 1,1×" diye üç çipti ve iki çipin önündeki gri nokta hiçbir hâl
+     taşımıyordu (süs). RSI ve hacim oranı ancak eşiklerine göre anlamlı
+     (30/70, 1×) ve eşikler ekranda yoktu. Her ölçü artık kendi çizgisini
+     taşıyor: trendde iki ortalamanın yönü, RSI'da 30 ve 70 çentikli bir kıl
+     çizgi üstünde nokta, hacimde 1× çentikli ölçek. Ayrıntı detay
+     sayfasında (`SignalStrip`). 320'de çip şeridi iki satıra sarıp 58
+     piksel oluyordu; üç sütun her genişlikte tek satır. */
   const signals = indicatorSignals(snapshot, price);
-  const chips: { text: string; tone?: "up" | "down" }[] = [];
-  if (signals.trend) {
-    chips.push({
-      text: `${t.technical.signalTrend} ${
-        signals.trend.tone === "up" ? t.technical.trendUp : signals.trend.tone === "down" ? t.technical.trendDown : t.technical.trendMixed
-      }`,
-      tone: signals.trend.tone === "up" ? "up" : signals.trend.tone === "down" ? "down" : undefined,
-    });
-  }
-  if (signals.momentum) {
-    const zone =
-      signals.momentum.tone === "overbought"
-        ? ` · ${t.technical.rsiOverbought}`
-        : signals.momentum.tone === "oversold"
-          ? ` · ${t.technical.rsiOversold}`
-          : "";
-    chips.push({
-      text: `RSI ${formatPrice(signals.momentum.rsi, locale, { digits: 0 })}${zone}`,
-      tone: signals.momentum.tone === "overbought" ? "down" : signals.momentum.tone === "oversold" ? "up" : undefined,
-    });
-  }
-  if (signals.volume) {
-    chips.push({ text: `${t.technical.volume} ${formatPrice(signals.volume.ratio, locale, { digits: 1 })}×` });
-  }
+  const trend = signals.trend;
+  const trendDetail = trend
+    ? trend.above50 === null || trend.above200 === null
+      ? null
+      : trend.above50 && trend.above200
+        ? t.technical.trendAboveBoth
+        : !trend.above50 && !trend.above200
+          ? t.technical.trendBelowBoth
+          : trend.above50
+            ? t.technical.trendAbove50Below200
+            : t.technical.trendBelow50Above200
+    : null;
+  const rsi = signals.momentum;
+  const rsiZoneText =
+    rsi?.tone === "overbought" ? t.technical.rsiOverbought : rsi?.tone === "oversold" ? t.technical.rsiOversold : null;
+  /* Aşırı alım düşüş, aşırı satım yükseliş tonunda — çiplerdeki eşleme. */
+  const rsiTone = rsi?.tone === "overbought" ? "down" : rsi?.tone === "oversold" ? "up" : undefined;
+  const volume = signals.volume;
+  const maTag = (above: boolean | null, label: string) =>
+    above === null ? null : (
+      <i data-dir={above ? "up" : "down"}>
+        {above ? <CaretUp size={8} weight="fill" /> : <CaretDown size={8} weight="fill" />}
+        {label}
+      </i>
+    );
 
   return (
     /* DÜZ KAP, `SpotlightCard` DEĞİL. Ortak spot kartı imleci izleyen bir
@@ -233,44 +260,114 @@ export function TechnicalCard({
 
       <div className={styles.cardPlan} data-verdict={verdict}>
         <PlanStrip verdict={verdict} {...levelProps} locale={locale} t={t} />
-        <LevelTrack price={price} {...levelProps} verdict={verdict} />
+        <PlanRail verdict={verdict} price={price} snapshotPrice={snapshotPrice} {...levelProps} locale={locale} t={t} />
       </div>
 
-      <p className={styles.cardHeadline} lang={untranslated ? "tr" : locale}>
-        {untranslated && (
-          /* `relative z-[3]`: kartı kaplayan bağlantı katmanının (z-1) ve
-             ışığın (z-2) üstünde, yoksa fare ipucu hiç açılmıyordu. Not kendi
-             dilinde: paragraf `lang="tr"`, not arayüzün dilinde. */
-          <span
-            title={t.technical.langNote}
-            className="relative z-[3] mr-1.5 inline-flex rounded bg-surface-sunken px-1.5 align-[1px] text-nano font-bold text-muted"
-          >
-            {t.technical.originalBadge}
-            <span className="sr-only" lang={locale}>
-              {t.technical.langNote}
-            </span>
+      {/* CÜMLENİN ANI CÜMLENİN ÜSTÜNDE (23 Eylül). Gerekçe analiz anını
+          anlatıyor ama yanında canlı fiyat duruyor: ONDS "7,61'deki
+          ortalamanın hemen altında" derken üstte 7,73 yazıyordu. Cümlenin ne
+          zaman yazıldığı yalnızca dört blok aşağıdaki ayak künyesindeydi ve
+          saat hiç yoktu. Künye artık cümlenin başında; fiyat o andan beri
+          anlamlı ölçüde yol aldıysa o anın fiyatı da yanında (rayın boş
+          halkasının metin karşılığı — ray `aria-hidden`). */}
+      <div className={styles.cardThesis}>
+        <p className={styles.thesisStamp}>
+          <span>
+            {slotLabel(row.slot, t)} · <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
           </span>
-        )}
-        {copy.headline}
-      </p>
+          {snapshotPrice !== null && (
+            <span>
+              {t.technical.atAnalysis}{" "}
+              <b className="numeral">{formatPrice(snapshotPrice, locale, { currency: true })}</b>
+            </span>
+          )}
+        </p>
+        <p className={styles.cardHeadline} lang={untranslated ? "tr" : locale}>
+          {untranslated && (
+            /* `relative z-[3]`: kartı kaplayan bağlantı katmanının (z-1)
+               üstünde, yoksa fare ipucu hiç açılmıyordu. Aradaki z-2 bir
+               dönem `SpotlightCard`ın ışığıydı; kart düz kaba dönünce ışık
+               gitti, sıra yine doğru. Not kendi dilinde: paragraf
+               `lang="tr"`, not arayüzün dilinde. */
+            <span
+              title={t.technical.langNote}
+              className="relative z-[3] mr-1.5 inline-flex rounded bg-surface-sunken px-1.5 align-[1px] text-nano font-bold text-muted"
+            >
+              {t.technical.originalBadge}
+              <span className="sr-only" lang={locale}>
+                {t.technical.langNote}
+              </span>
+            </span>
+          )}
+          {copy.headline}
+        </p>
+      </div>
 
-      {/* ÇİP ŞERİDİ ÇİP YOKKEN DE BASILIYOR. Kart bölümleri komşu kartlarla
+      {/* ÖLÇÜ ŞERİDİ ÖLÇÜ YOKKEN DE BASILIYOR. Kart bölümleri komşu kartlarla
           aynı satırları paylaşıyor (bkz. CSS `.grid`/`.cell`/`.card`
           alt ızgarası); bir kartta şerit hiç basılmazsa o kartın ayak satırı
           bir satır yukarı kayar ve ızgara yine tırtıklanır. Boş şerit
           yüksekliksiz, yalnızca satırı tutuyor. */}
-      <div className={styles.chips}>
-        {chips.map((chip) => (
-          <span key={chip.text} className={styles.chip} data-tone={chip.tone}>
-            {chip.text}
-          </span>
-        ))}
+      <div className={styles.gaugeBox}>
+        <ul className={styles.gauges}>
+          {trend && (
+            <li>
+              <span className={styles.gaugeHead}>
+                <span className={styles.gaugeName}>{t.technical.signalTrend}</span>
+                <span className={styles.gaugeValue} data-tone={trend.tone === "mixed" ? undefined : trend.tone}>
+                  {trend.tone === "up" ? t.technical.trendUp : trend.tone === "down" ? t.technical.trendDown : t.technical.trendMixed}
+                </span>
+                {trendDetail && <span className="sr-only">, {trendDetail}</span>}
+              </span>
+              <span className={styles.gaugeTags} aria-hidden>
+                {maTag(trend.above50, t.technical.ma50Short)}
+                {maTag(trend.above200, t.technical.ma200Short)}
+              </span>
+            </li>
+          )}
+          {rsi && (
+            <li>
+              <span className={styles.gaugeHead}>
+                <span className={styles.gaugeName}>RSI</span>
+                <span className={cn(styles.gaugeValue, "numeral")} data-tone={rsiTone}>
+                  {formatPrice(rsi.rsi, locale, { digits: 0 })}
+                </span>
+                {rsiZoneText && <span className="sr-only">, {rsiZoneText}</span>}
+              </span>
+              <span className={styles.gaugeMeter} data-kind="rsi" data-tone={rsiTone} aria-hidden>
+                <i style={{ left: `${Math.min(100, Math.max(0, rsi.rsi))}%` }} />
+              </span>
+            </li>
+          )}
+          {volume && (
+            <li>
+              <span className={styles.gaugeHead}>
+                <span className={styles.gaugeName}>{t.technical.volume}</span>
+                <span className={cn(styles.gaugeValue, "numeral")}>{formatPrice(volume.ratio, locale, { digits: 1 })}×</span>
+              </span>
+              <span className={styles.gaugeMeter} data-kind="volume" data-tone={volume.tone} aria-hidden>
+                <i data-motion-draw="line" style={{ width: `${Math.min(volume.ratio / VOLUME_SCALE_MAX, 1) * 100}%` }} />
+              </span>
+            </li>
+          )}
+        </ul>
       </div>
 
-      <div className={styles.cardFoot}>
-        <span>
-          {slotLabel(row.slot, t)} · {formatEtDateCompact(row.sessionDate, locale)}
-        </span>
+      {/* ESKİ YAYIN AYAKTA ADIYLA (23 Eylül). On beş kartın on beşi aynı
+          soluk künyeyi taşıyordu ("Kapanış Öncesi · 22 Eyl") ve pano beş
+          güne kadar eski satırları da gösteriyor: yayını aksamış bir kart
+          bugünkülerin yanında aynı künyeyle duracaktı. Yayın anı cümlenin
+          üstüne çıktı; güncel kartın tarihi başlıktaki "Son Yayın"
+          künyesinde bir kez yazılı, ayakta tekrar etmiyor — ayakta yalnızca
+          "Analizi Oku" kalıyor. Eski yayından gelen kart "Önceki Yayın" ve
+          kendi tarihini taşıyan bir etiket alıyor, renkle değil tonla: on
+          dört boş ayağın yanında tek dolu ayak kendiliğinden seçiliyor. */}
+      <div className={styles.cardFoot} data-stale={stale || undefined}>
+        {stale && (
+          <span className={styles.staleTag}>
+            {t.technical.earlierEdition} · {formatEtDateCompact(row.sessionDate, locale)}
+          </span>
+        )}
         {/* Bağlantı zaten başlıkta ve kartı kaplıyor; bu yazı yalnızca bir
             işaret, ekran okuyucuya ikinci bir bağlantı gibi okunmasın. */}
         <span className={styles.cardRead} aria-hidden>

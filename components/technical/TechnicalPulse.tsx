@@ -141,6 +141,14 @@ export function TechnicalPulse({
           <h2 id="technical-distribution">{t.technical.distribution}</h2>
           <span className="flex items-center gap-2 text-tiny font-semibold text-muted">
             {t.technical.stockCount.replace("{n}", String(total))}
+            {/* Telefonda logo satırları gizli (CSS, `.pulseRows`); bekleyen
+                sayısı o satırda yazıyordu ve kaybolmasın diye buraya iniyor.
+                Masaüstünde satır duruyor, künye tekrar etmiyor. */}
+            {pending.length > 0 && (
+              <span className={styles.pulsePendingCount}>
+                · {t.technical.pendingCount.replace("{n}", String(pending.length))}
+              </span>
+            )}
             <ChartLineUp size={17} aria-hidden />
           </span>
         </div>

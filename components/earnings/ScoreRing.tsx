@@ -86,8 +86,10 @@ export function ScoreRing({
         >
           {score}
         </span>
+        {/* 10 piksel, 8 değil: "/ 100" bir sözcük gibi okunuyor ve
+            `--text-micro` yalnızca metin OLMAYAN yerde (globals.css). */}
         {showDenominator && (
-          <span className="mt-px text-micro font-semibold text-muted">
+          <span className="mt-px text-nano font-semibold text-muted">
             / 100
           </span>
         )}

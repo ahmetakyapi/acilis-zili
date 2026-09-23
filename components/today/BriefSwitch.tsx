@@ -241,14 +241,22 @@ export function BriefSwitch({
                 mercek manşetiyle (`LeadStory`) aynı basamak ve aynı üç kural:
                 `max-w-[34ch]` satırı iki-üç satıra indiriyor (manşetler
                 ortalama 55 karakter ve tek satırda 900 piksele uzuyordu),
-                `text-balance` o satırları eşitleyip yetim kelime bırakmıyor,
-                `w-fit` de `.display-ink` maskesi için ŞART — blok genişliğinde
-                bırakılırsa degrade harflerin bittiği yerde değil kabın
-                bittiği yerde biter.
+                `text-balance` o satırları eşitleyip yetim kelime bırakmıyor.
+
+                DÜZ MÜREKKEP (23 Eylül). Manşet `.display-ink` degradesiyle
+                basılıyordu ve iki-üç satırlık bir metinde degrade satır
+                satır değil kutu boyunca yayılıyor: ikinci satır başka bir
+                tonda başlıyordu. Tema dosyasının istisnası yalnızca KISA
+                display metni için; bu bir paragraf başı. `data-ink="plain"`
+                genel `main h2` maskesini de kapatıyor (globals.css). Maske
+                gidince `w-fit` de gitti: o yalnızca degradenin harflerin
+                bittiği yerde bitmesi içindi ve `text-balance`ın gerçek
+                sütun yerine kendi daralttığı kutuyu dengelemesine yol
+                açıyordu.
 
                 Okunur bant gövdede kalıyor: gövde ölçü sınırını kendi
                 taşıyor, manşetin sınırı ondan dar. */}
-            <h2 className="display-ink mt-3.5 w-fit max-w-[34ch] text-balance text-heading font-bold leading-[1.16] tracking-[-0.03em] sm:text-subdisplay">
+            <h2 data-ink="plain" className="mt-3.5 max-w-[34ch] text-balance text-heading font-bold leading-[1.16] tracking-[-0.03em] text-strong sm:text-subdisplay">
               {brief.headline}
             </h2>
             {body}

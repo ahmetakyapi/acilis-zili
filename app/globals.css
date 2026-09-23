@@ -329,19 +329,35 @@
    Tailwind token köprüsü — @theme inline, var() referanslarını korur.
    Kullanım: bg-page, text-strong, border-line ... veya bg-(--surface)
    -------------------------------------------------------------------------- */
-/* Premium data surfaces: brand tokens stay stable across the redesigned
-   pages. Specular highlights and tinted shadows add depth without blur on text. */
+/* VERİ YÜZEYİ: DERİNLİK TONLA, GÖLGEYLE DEĞİL (23 Eylül).
+   9 Eylül'de bu blok "renkli gölgeler ve üst kenarda parlak bir çizgi
+   derinlik katar" notuyla yazılmıştı: her panel 18/45 piksellik yumuşak
+   bir gölge ve beyaz bir iç parıltı taşıyordu. Sahibin ekosistem kuralı
+   ("Açılış Zili glass/glow kullanmaz, derinlik ton farkıyla") ve tema
+   dosyası §6 ("tek gerçek gölge marka karosunda") bunun tersini söylüyor;
+   kural kazanıyor. Tek gerçek gölge `--mark-shadow`.
+
+   Token SİLİNMEDİ, sıfırlandı: iki gölge tokenı ~40 yerde kullanılıyor ve
+   bazıları onu bir gölge LİSTESİNİN içinde birleştiriyor
+   (`0 0 0 1px …, var(--premium-shadow)`). `none` o listede geçersiz
+   olur ve bütün bildirimi düşürürdü; saydam sıfır gölge geçerli bir öğe.
+
+   Ayrım ölçüldü (1440, beş rota, panel içi ile hemen yanındaki sayfa
+   pikseli): açık temada panel/sayfa 1,03-1,09, kenar çizgisi/panel
+   1,15-1,23; koyu temada 1,11-1,25 ve 1,22-1,37. Gölge yalnızca panelin
+   ALTINDA 1,04'lük bir hale ekliyordu; ayrımı ton ve saç teli taşıyor.
+   `--premium-surface` ve `--premium-highlight` tondur, yerinde kalıyor. */
 :root {
   --premium-surface: #ffffff;
   --premium-highlight: rgb(255 255 255 / .85);
-  --premium-shadow: 0 3px 8px rgb(16 32 52 / .025), 0 18px 45px rgb(16 32 52 / .055), inset 0 1px 0 rgb(255 255 255 / .8);
-  --premium-shadow-hover: 0 6px 14px rgb(16 32 52 / .05), 0 24px 55px rgb(16 32 52 / .08);
+  --premium-shadow: 0 0 #0000;
+  --premium-shadow-hover: 0 0 #0000;
 }
 :root[data-theme="dark"] {
   --premium-surface: #101a28;
   --premium-highlight: rgb(183 213 245 / .07);
-  --premium-shadow: 0 3px 8px rgb(2 8 17 / .16), 0 18px 45px rgb(2 8 17 / .2), inset 0 1px 0 rgb(183 213 245 / .08);
-  --premium-shadow-hover: 0 6px 14px rgb(2 8 17 / .2), 0 24px 55px rgb(2 8 17 / .3);
+  --premium-shadow: 0 0 #0000;
+  --premium-shadow-hover: 0 0 #0000;
 }
 
 @theme inline {
@@ -737,6 +753,31 @@
     transform: translateY(-50%);
   }
 
+  /* BÖLÜM BAŞLIĞI — `components/ui/ChapterHeading.tsx`. Hisse sayfasında
+     clamp(25px, 2,8vw, 36px), bilanço sayfasında clamp(25,6px, 3vw, 40,8px)
+     idi: aynı rol iki ölçüde. Tek ölçü ölçeğin iki basamağı arasında akıyor
+     (`--text-heading` 24 → `--text-display` 32); 2,3vw 1391 pikselde
+     tavana değiyor. Açıklama satırı okuma puntosunda ve soluk: başlığın
+     altında bir künye, ikinci bir başlık değil. */
+  .chapter-heading {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .chapter-heading > h2 {
+    font-size: clamp(var(--text-heading), 2.3vw, var(--text-display));
+    font-weight: 650;
+    line-height: 1.14;
+    letter-spacing: -0.04em;
+  }
+  .chapter-heading > p {
+    max-width: 64ch;
+    font-size: var(--text-read);
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+
   .display-ink {
     color: var(--text-strong);
   }
@@ -853,10 +894,18 @@
      gelindiğinde de vurgulu duruyor ve okuyucu onu "seçili" sanıyor.
      Tailwind'in kendi `hover:` yardımcıları bu kapıyı zaten koyuyor
      (üretilen CSS'te `@media (hover:hover)` sarmalı var); elden yazılan bu
-     kural atlanmıştı. */
+     kural atlanmıştı.
+
+     SİTENİN TEK HOVER DİLİ (23 Eylül). Kenar `--line-strong`dan
+     `--primary-faint`e döndü: tıklanabilir kutu artık etkileşim rengiyle
+     karşılık veriyor, yani "burası bir bağlantı" diyor. Bağlantı OLMAYAN
+     panelin hover'ı yok — imleç altında kıpırdayan ama hiçbir yere
+     götürmeyen bir kutu, tıklanabilir olduğunu yalan yere söylüyordu
+     (imleci izleyen spot ışığı ve modüllerdeki kaldırma efektleri bu
+     yüzden kalktı). Kaldırma ve gölge yok; basma geri bildirimi aşağıda. */
   @media (hover: hover) {
     .panel-hover:hover {
-      border-color: var(--line-strong);
+      border-color: var(--primary-faint);
       background: var(--primary-tint);
     }
   }
@@ -1550,14 +1599,36 @@
 /* All public page/section headings share the existing brand ink. Numeric
    readings and semantic up/down values retain their own colors. Kept outside
    utility layers so a page's ordinary text color cannot remove the text mask. */
+/* MÜREKKEP YALNIZCA KISA MANŞETTE (23 Eylül). Kural her `main h2`ye
+   uygulanıyordu ve tema dosyasının istisnası ("yalnızca kısa display
+   metni; 13-16 pikselde `--display-gradient-tight`") üç yerden
+   deliniyordu:
+   1. Yön taşıyan başlık rengini kaybediyordu. Bilanço sayfasının "Güçlü
+      Yönler"/"Riskler" başlıkları `text-up`/`text-down` yazıyor ama dolgu
+      saydam ölçüldü (rgba(0,0,0,0)); yeşil ile kırmızı hiç görünmüyordu.
+   2. Çok satırlı manşetler (günlük bülten başlığı, Mercek girişi)
+      degradeyi satır satır değil kutu boyunca yayıyor; ikinci satır
+      başka bir renkte başlıyordu.
+   3. 11-13 piksellik h2'ler geniş degradeyle basılıyordu; açık ucu
+      (#2493dd) beyazda 3,34:1 — AA'nın altında. `display-ink-tight`
+      yazan panel başlıkları da bu kural katmansız olduğu için geniş
+      degradeye eziliyordu.
+   Çıkış yolu `data-ink="plain"`: yön rengi taşıyan ya da birden çok
+   satıra yayılan başlık bunu yazar ve kendi rengiyle basılır. Punto
+   sınıfı 16 pikselin altını söyleyen başlık (ve açıkça `display-ink-tight`
+   isteyen) sıkı degradeyi alır; onun açık ucu #1e6fbe, 14 piksel yarı
+   kalın metinde AA'yı geçen en açık ton. */
 @supports (background-clip: text) or (-webkit-background-clip: text) {
-  main h1,
-  main h2:not(.plate) {
+  main h1:not([data-ink="plain"]),
+  main h2:not(.plate):not([data-ink="plain"]) {
     background-image: var(--display-gradient);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     padding-bottom: .06em;
+  }
+  main h2:is(.text-nano, .text-tiny, .text-xs, .text-small, .text-sm, .text-base, .text-read, .text-lead, .display-ink-tight):not(.plate):not([data-ink="plain"]) {
+    background-image: var(--display-gradient-tight);
   }
   main h1 { width: fit-content; max-width: 100%; }
   /* Badges and controls inside a heading own a separate painted surface. */
@@ -1597,7 +1668,9 @@
 
 /* Route-level empty states use the same composed recovery surface. Inline
    no-data messages retain their compact footprint inside data panels. */
-.empty-page { max-width:620px; margin:32px auto; padding:34px 24px; border:1px solid var(--primary-faint); border-radius:var(--radius-feature); background:radial-gradient(ellipse at 100% 0,var(--primary-wash),transparent 65%),var(--premium-surface); box-shadow:var(--premium-shadow); gap:14px; }
+/* Köşedeki mavi ışıma kalktı (23 Eylül): tonla derinlik kuralı, bkz.
+   `--premium-shadow` notu. Kurtarma yüzeyi düz panel tonunda. */
+.empty-page { max-width:620px; margin:32px auto; padding:34px 24px; border:1px solid var(--primary-faint); border-radius:var(--radius-feature); background:var(--premium-surface); gap:14px; }
 .empty-page > h1 { font-size:28px; font-weight:600; line-height:1.15; }
 .empty-page > p { font-size:14px; line-height:1.8; }
 .empty-page a { display:inline-flex; min-height:44px; align-items:center; gap:8px; }
@@ -1633,8 +1706,10 @@
   padding:var(--page-frame-inset);
   border:1px solid var(--line);
   border-radius:var(--radius-feature);
-  background:radial-gradient(ellipse at 95% 0,var(--primary-wash),transparent 65%),var(--premium-surface);
-  box-shadow:var(--premium-shadow);
+  /* Sağ üst köşedeki `--primary-wash` ışıması ve gölge kalktı (23 Eylül):
+     mavi etkileşim demek, bir kapağın köşesi etkileşim değil. Kapak
+     sayfadan tonla ve saç teliyle ayrılıyor (bkz. `--premium-shadow`). */
+  background:var(--premium-surface);
   align-items:start;
 }
 .page-frame.page-frame.page-frame { gap:24px; }

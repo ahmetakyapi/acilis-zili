@@ -171,10 +171,10 @@ const en: typeof tr = {
 
     notes: {
       "fomc-rate": "The outcome of the meeting where the Fed, the US central bank, sets its policy rate. It lands eight times a year and moves borrowing costs directly, which is why markets watch nothing more closely.",
-      "fomc-sep": "Fed officials\u2019 projections for rates, growth, inflation and unemployment over the coming years. Each official\u2019s rate view is one dot on the chart \u2014 hence \u201cdot plot\u201d \u2014 and where the dots cluster hints at the Fed\u2019s direction. Published four times a year.",
+      "fomc-sep": "Fed officials\u2019 projections for rates, growth, inflation and unemployment over the coming years. Each official\u2019s rate view is one dot on the chart (hence \u201cdot plot\u201d), and where the dots cluster hints at the Fed\u2019s direction. Published four times a year.",
       "fomc-presser": "The Fed Chair takes questions right after the rate decision. Reasoning that never makes the written statement comes out here, so markets often react to the press conference rather than the decision.",
       nfp: "The net difference between people hired and let go across US non-farm sectors in a month. It measures the strength of hiring and is one of the two readings the Fed weighs on rates.",
-      cpi: "The Consumer Price Index: how prices of the goods and services households buy have changed \u2014 inflation. This is the other reading the Fed weighs on rates.",
+      cpi: "The Consumer Price Index: how prices of the goods and services households buy have changed, in other words inflation. This is the other reading the Fed weighs on rates.",
       "core-cpi": "CPI excluding food and energy. Those two swing hard on weather and oil prices, so stripping them out leaves a cleaner read on where inflation is settling.",
       unemployment: "The share of the labour force looking for work and unable to find it. It lands in the same report as non-farm payrolls and shows whether the jobs market is cooling.",
       "jobless-claims": "How many people filed for unemployment benefits for the first time that week. Because it is weekly, it flags a deteriorating jobs market before the monthly readings do.",
@@ -372,6 +372,8 @@ const en: typeof tr = {
     reportOverview: "Overview",
     reportInNumbers: "The Quarter in Numbers",
     reportOutlook: "Looking Ahead",
+    chapterFigures: "The Numbers",
+    chapterReading: "Summary and Review",
     listTitle: "Latest Earnings Analyses",
     filteredReports: "Verdicts Across Listed Reports",
     ogEyebrow: "Earnings Analysis",
@@ -558,7 +560,7 @@ const en: typeof tr = {
     maLead:
       "The average close of the last 20, 50, 100 and 200 sessions. Above the average, buyers led that stretch; below it, sellers did.",
     rsiLead:
-      "Measures how fast price has risen on a 0–100 scale. Above 70 means a fast run up, below 30 a fast drop — on its own it is not a buy or sell signal.",
+      "Measures how fast price has risen on a scale of 0 to 100. Above 70 means a fast run up, below 30 a fast drop; on its own it is not a buy or sell signal.",
     macdLead:
       "Tracks the gap between two moving averages. When MACD sits above its signal line the move is speeding up; below it, slowing down.",
     volumeLead:
@@ -632,12 +634,14 @@ const en: typeof tr = {
     planSellLevels: "Sell on Bounce",
     planNearestSupport: "Nearest Support",
     planNearestResistance: "Nearest Resistance",
+    planNextSupport: "Next Support",
     planNone: "Not in This Edition",
     riskReward: "Risk / Reward",
     riskRewardValue: "1 : {n}",
     riskLeg: "Risk",
     rewardLeg: "Reward",
     riskAnchor: "From the Zone Top · {n}",
+    riskAnchorLabel: "From the Zone Top",
     readingLabel: "Plan Reading",
     readingInZone: "Price is inside the entry zone; the plan buys here and gives up below {stop}.",
     readingInZoneNoStop: "Price is inside the entry zone; the plan buys here.",
@@ -682,6 +686,17 @@ const en: typeof tr = {
     priceMapNote: "Levels are ordered by price and spread apart where they cluster; distances are measured from the current price.",
     sectionsLabel: "Analysis Sections",
     pulseAwaiting: "No current analysis has been published yet.",
+    pendingCount: "{n} Pending",
+    earlierEdition: "Earlier Edition",
+    planToSellLevel: "To Bounce",
+    planToSupport: "To Support",
+    planToResistance: "To Resistance",
+    proximityLabel: "Price Against the Plan",
+    proximityInZone: "In Zone",
+    proximityNear: "Within 1%",
+    proximityBelowStop: "Below Stop",
+    ma50Short: "50D",
+    ma200Short: "200D",
   },
 
   companies: {
@@ -723,6 +738,9 @@ const en: typeof tr = {
     experienceEarningsHint: "Expectations, reported results and the stories behind the numbers.",
     experienceContext: "The Company in Context",
     experienceContextHint: "Its industry peers, latest developments and analysis of the bigger picture.",
+    chapterValuation: "Valuation",
+    chapterEarnings: "Earnings",
+    chapterContext: "In Context",
     profile: "Company Profile",
     sector: "Sector",
     industry: "Industry",
@@ -738,7 +756,7 @@ const en: typeof tr = {
     averageDistance: "Distance From Average",
     analystReading: "12-Month Recommendation Mix",
     movingAveragesNote:
-      "Average close over the last 50, 100 and 200 trading days. Above the average, buyers led that stretch; below it, sellers did — the percentage next to it is the gap.",
+      "Average close over the last 50, 100 and 200 trading days. Above the average, buyers led that stretch; below it, sellers did. The percentage next to it is the gap.",
     movingAveragesShort:
       "Not enough history for an average; we have {n} trading days.",
     metricsMismatch:

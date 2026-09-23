@@ -8,29 +8,18 @@
   border-radius: 1.5rem;
 }
 
-.spotlightGlow {
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-}
+/* `.spotlightGlow` (imleci izleyen ışık ve onun iç çerçevesi) kalktı —
+   gerekçesi `SpotlightCard` başında. */
 
-.spotlightGlow::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  border: 1px solid var(--primary-faint);
-  border-radius: inherit;
-}
-
+/* Okuma ilerlemesi düz marka mavisi: degrade bir bilgi taşımıyordu,
+   çubuğun ucunu soluk gösteriyordu. */
 .scrollProgress {
   position: fixed;
   z-index: 35;
   inset: env(safe-area-inset-top) 0 auto;
   height: 2px;
   transform-origin: left center;
-  background: linear-gradient(90deg, var(--primary), var(--primary-soft));
+  background: var(--primary);
   pointer-events: none;
 }
 
@@ -46,7 +35,6 @@
   border: 1px solid var(--line-strong);
   border-radius: 1rem;
   background: var(--page-bg);
-  box-shadow: var(--premium-shadow);
 }
 
 /* YAPIŞINCA TAM GENİŞLİK BANT. Çubuğun altında 16 piksellik bir
@@ -82,6 +70,76 @@
   box-shadow: none;
 }
 .sectionNav[data-stuck]::before { visibility: visible; }
+
+/* YAPIŞINCA KİMLİK — gerekçe `SectionNav` başında. Akışta yok; yapışınca
+   sekmelerin solunda, saç teli bir ayraçla açılıyor. Bütçe geniş ekranda
+   240, telefonda 112 piksel: sekmeler kendi kenar solmasıyla kaymaya
+   devam ediyor, kimlik onları itip sığmaz hâle getirmiyor. */
+.navLead,
+.navTrail {
+  display: none;
+  flex: none;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.sectionNav:is([data-stuck], [data-variant="floating"]) .navLead {
+  display: flex;
+  max-width: 240px;
+  padding-right: 12px;
+  border-right: 1px solid var(--line-soft);
+  animation: nav-lead-in 200ms var(--ease-brand) both;
+}
+.sectionNav:is([data-stuck], [data-variant="floating"]) .navTrail {
+  display: flex;
+  padding-left: 12px;
+  border-left: 1px solid var(--line-soft);
+  animation: nav-lead-in 200ms var(--ease-brand) both;
+}
+@keyframes nav-lead-in {
+  from { opacity: 0; translate: -6px 0; }
+}
+@media (max-width: 639px) {
+  .sectionNav:is([data-stuck], [data-variant="floating"]) .navLead { max-width: 112px; }
+}
+
+/* ÇEKİLME (yalnızca `hideOnScrollDown`, ≤767, yapışıkken). Kaydırma payı
+   çubuğun kendi boyu + başlıkla arasındaki 12 piksel + bandın altındaki
+   10 piksel + bandın başlığa girdiği 2 piksel: bandın tamamı başlığın
+   arkasına geçiyor, altında şerit kalmıyor. */
+.sectionNav { transition: translate 220ms var(--ease-brand); }
+.sectionNav[data-tucked] { translate: 0 calc(-100% - 24px); }
+
+/* YÜZEN DİZİN (ana sayfa). Başlığın hemen altında, başlıkla aynı zemin ve
+   kenar çizgisi, 44 piksel; bulanıklık yok (`.chrome` notu, globals.css).
+   İç hizası sayfanın içerik çerçevesi: 1400 piksel ve AppShell'in yan
+   boşluğu (18 / 24 / 40). Açılana kadar görünmez ve odaklanılamaz. */
+.sectionNav[data-variant="floating"] {
+  --nav-gutter: 18px;
+  position: fixed;
+  top: var(--app-bar-h);
+  inset-inline: 0;
+  height: 44px;
+  padding-block: 0;
+  padding-inline: calc(max(0px, (100vw - 1400px) / 2) + var(--nav-gutter));
+  border: 0;
+  border-bottom: 1px solid var(--chrome-border);
+  border-radius: 0;
+  background: var(--chrome);
+  translate: 0 -100%;
+  visibility: hidden;
+  transition: translate 220ms var(--ease-brand), visibility 0s 220ms;
+}
+.sectionNav[data-variant="floating"]::before { content: none; }
+.sectionNav[data-variant="floating"][data-shown] {
+  translate: none;
+  visibility: visible;
+  transition: translate 220ms var(--ease-brand), visibility 0s;
+}
+.sectionNav[data-variant="floating"][data-shown][data-tucked] { translate: 0 -100%; }
+.sectionNav[data-variant="floating"] .navLink { flex: 0 0 auto; min-height: 36px; padding-block: 0.4rem; }
+@media (min-width: 640px) { .sectionNav[data-variant="floating"] { --nav-gutter: 24px; } }
+@media (min-width: 1280px) { .sectionNav[data-variant="floating"] { --nav-gutter: 40px; } }
 
 :global(html):has(.sectionNav) {
   scroll-behavior: smooth;
@@ -180,29 +238,27 @@
   }
 }
 
-@media (hover: none), (pointer: coarse) {
-  .spotlightGlow {
-    display: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     opacity: 1 !important;
     transform: none !important;
   }
 
-  .spotlightGlow {
-    display: none;
-  }
-
   :global(html):has(.sectionNav) {
     scroll-behavior: auto;
   }
+
+  .sectionNav,
+  .sectionNav[data-variant="floating"],
+  .sectionNav[data-variant="floating"][data-shown] { transition: none; }
+  .navLead,
+  .navTrail,
+  .sectionNav:is([data-stuck], [data-variant="floating"]) :is(.navLead, .navTrail) { animation: none; }
 }
 
+/* Sahne yalnızca kayıyor, ölçeklenmiyor — gerekçe `ScrollStage` başında. */
 .stage { position:relative; min-width:0; }
-.stageContent { min-width:0; transform-origin:center top; }
+.stageContent { min-width:0; }
 @media (prefers-reduced-motion:reduce) { .stageContent { transform:none!important; } }
 
 /* Release the entrance transform so fixed progress and sticky navigation
@@ -239,11 +295,18 @@
  @keyframes contour-scroll { from { transform:translateY(0) rotate(0deg); } to { transform:translateY(18px) rotate(6deg); } }
 }
 
+/* HOVER YALNIZCA BAĞLANTIDA (23 Eylül). Kenar her kartta
+   `--primary-faint`e dönüyor ve altına renkli bir gölge iniyordu —
+   bilanço ölçü kartları ve kapak gibi hiçbir yere götürmeyen kutularda da.
+   Artık yalnızca kart bir bağlantının içindeyse (ana sayfanın endeks
+   kartları, öne çıkan analiz) ya da bir bağlantı taşıyorsa (benzer
+   şirketler, bilanço radarı) karşılık veriyor; dil `.panel-hover`ınki:
+   kenar `--primary-faint`, gölge yok. */
 .spotlight { transition:border-color 240ms,box-shadow 300ms; }
-.spotlightGlow { mix-blend-mode:normal; }
 .spotlight:focus-within { box-shadow:0 0 0 1px var(--primary-faint),var(--premium-shadow); }
 @media(hover:hover) and (pointer:fine) {
- .spotlight:hover { border-color:var(--primary-faint); box-shadow:0 8px 26px color-mix(in srgb,var(--primary) 9%,transparent),inset 0 1px var(--premium-highlight); }
+ :global(a):hover > .spotlight,
+ .spotlight:has(> :global(a):hover) { border-color:var(--primary-faint); }
 }
 /* Telefonda motif ÇOK DAHA KÜÇÜK: başlık orada kartın neredeyse tamamını
    kaplıyor ve motife kalan tek boş yer künyenin sağındaki köşe. 104 piksel
