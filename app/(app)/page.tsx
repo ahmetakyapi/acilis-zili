@@ -109,7 +109,7 @@ import {
 } from "@/components/stories/StoryFigure";
 import { getChartBarsMulti } from "@/lib/providers";
 import { getSeries } from "@/lib/providers/fred";
-import { VIX_SERIES, vixBand } from "@/components/markets/FearGauge";
+import { VIX_SERIES, vixBand } from "@/lib/vix";
 
 import { pageMetadata } from "@/lib/page-meta";
 

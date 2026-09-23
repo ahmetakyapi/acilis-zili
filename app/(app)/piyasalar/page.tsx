@@ -5,7 +5,7 @@ import { Suspense, type ReactNode } from "react";
 import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/markets/MarketExperience.module.css";
-import { FearGauge } from "@/components/markets/FearGauge";
+import { MarketPulse } from "@/components/markets/MarketPulse";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import {
@@ -15,7 +15,6 @@ import {
   Panel,
   PanelHeader,
   PanelLink,
-  PercentReading,
   Skeleton,
   LogoTile,
   SkeletonRow,
@@ -32,7 +31,6 @@ import {
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
-import { getSeries } from "@/lib/providers/fred";
 import type { MarketStatus } from "@/lib/market-hours";
 import type { Quote } from "@/lib/providers/types";
 import {
@@ -40,7 +38,6 @@ import {
   directionOf,
   directionText,
   SIGN_GAP,
-  formatEtDateCompact,
   formatEtDateMedium,
   formatMoneyCompact,
   formatPercent,
@@ -111,13 +108,6 @@ type SortDir = "asc" | "desc";
 const PAGE_STEP = 60;
 
 /** ABD Hazine tahvili serileri — FRED sabit vadeli getiriler. */
-const YIELD_SERIES = [
-  { seriesId: "DGS2", slug: "yield-2y", units: "lin", labelKey: "yieldY2" },
-  { seriesId: "DGS5", slug: "yield-5y", units: "lin", labelKey: "yieldY5" },
-  { seriesId: "DGS10", slug: "yield-10y", units: "lin", labelKey: "yieldY10" },
-  { seriesId: "DGS30", slug: "yield-30y", units: "lin", labelKey: "yieldY30" },
-] as const;
-
 /**
  * Endeks üyelerinin kotasyonu.
  *
@@ -214,18 +204,29 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
           İlk düzende hem kartlar hem detay seçimle sıfırlanıyordu.
           Artık kartların konumu ve sınırı sabit: yalnız seçimin sonuç alanı
           yenilenir; QueryTransition beklerken mevcut yüksekliği korur. */}
-      <Suspense
-        key={`cards:${locale}`}
-        /* Ölçülmüş yükseklikler, tahmin değil: kartlar mobilde alt alta
-            (3 × 152 + 2 × 12 boşluk = 480), `sm`den itibaren tek sıra (152).
-            Yedek 132px'ti; mobilde 348 piksellik bir sıçrama demekti ve
-            sıçrama ekranın TA TEPESİNDE oluyordu. */
-        fallback={
-          <Skeleton className={styles.indexSkeleton} />
-        }
-      >
-        <IndexCards activeTab={tab} sort={sort} dir={dir} locale={locale} t={t} />
-      </Suspense>
+      <div className={styles.cardsArea}>
+        <Suspense
+          key={`cards:${locale}`}
+          /* Ölçülmüş yükseklikler, tahmin değil: kartlar mobilde alt alta
+              (3 × 152 + 2 × 12 boşluk = 480), `sm`den itibaren tek sıra (152).
+              Yedek 132px'ti; mobilde 348 piksellik bir sıçrama demekti ve
+              sıçrama ekranın TA TEPESİNDE oluyordu. */
+          fallback={
+            <Skeleton className={styles.indexSkeleton} />
+          }
+        >
+          <IndexCards activeTab={tab} sort={sort} dir={dir} locale={locale} t={t} />
+        </Suspense>
+      </div>
+
+      {/* FAİZ VE OYNAKLIK KAPAĞIN İÇİNDE — gerekçesi MarketPulse'ta. Kendi
+          sınırı var: FRED turu endeks kartlarını beklemiyor. Yedek, ölçülen
+          yüksekliği tutuyor; kart akışla gelince kapak zıplamıyor. */}
+      <div className={styles.pulseArea}>
+        <Suspense fallback={<Skeleton className={styles.pulseSkeleton} />}>
+          <MarketPulse locale={locale} t={t} />
+        </Suspense>
+      </div>
 
       </div>
 
@@ -261,51 +262,13 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
       </Suspense>
       </QueryTransition>
 
-      <Suspense fallback={<div className={styles.macro}><Skeleton className={styles.yieldSkeleton} /><Skeleton className={styles.fearSkeleton} /></div>}>
-      {/* TAHVİL VE KORKU ENDEKSİ EN ALTTA. İki gösterge bir dönem endeks
-          kartlarıyla sekme çubuğunun ARASINDA duruyordu: okuyucu dört
-          endeks kartını görüyor, sonra tahvil şeridiyle korku kadranı
-          araya giriyor, sekmelerle bileşen tablosu onların altında
-          kalıyordu — aynı ekranın konusu ("endeksler") ikiye bölünmüştü.
-          Şimdi ekranın sırası tek konu: kartlar, sekmeler, bileşenler;
-          tahvil ve VIX bağlam olarak en sonda, rehber ipucunun hemen
-          üstünde. */}
-      <div id="market-context" className={styles.macro} data-motion-stagger>
-        <YieldStrip locale={locale} t={t} />
-        {/* AYRI, BOŞ YEDEK YOK — bilerek. İki gösterge artık yukarıdaki
-            ölçülü ortak sınırda. Burada `fallback={null}` ile ayrı bir
-            sınır vardı ve iki yönden de
-            zarardı. Kazancı sıfır: kardeşi `YieldStrip` de FRED'den besleniyor
-            ve o askıya alınmamış, yani sayfa FRED turunu ZATEN bekliyor.
-            Maliyeti gerçek: boş yedek sıfır yer kaplıyor, kart akışla gelince
-            mobilde 262 piksel açılıp altındaki her şeyi aşağı itiyordu —
-            ölçüldü, /piyasalar'ın mobil CLS'i 0,206 çıkıyordu (Google'ın
-            "kötü" eşiği 0,1). */}
-        <FearGauge
-            locale={locale}
-            labels={{
-              title: t.markets.fearTitle,
-              details: t.markets.fearDetails,
-              hint: t.markets.fearHint,
-              average: t.markets.fearAverage,
-              guideCta: t.markets.fearGuideCta,
-              bands: {
-                calm: t.markets.fearCalm,
-                normal: t.markets.fearNormal,
-                tense: t.markets.fearTense,
-                fear: t.markets.fearHigh,
-                panic: t.markets.fearPanic,
-              },
-            }}
-          />
-      </div>
-
-      </Suspense>
-
       <GuideHint
         label={t.guide.contextLabel}
         locale={locale}
-        slugs={["endeks", "faiz-tahvil"]}
+        /* Faiz ve oynaklık ızgarası açıklama kutusu taşımıyor (MarketPulse);
+           eğri ve VIX'in okunuşu bu iki yazıda. Sayı ÇİFT kalmalı —
+           GuideHint iki sütunlu. */
+        slugs={["endeks", "faiz-tahvil", "getiri-egrisi", "volatilite"]}
         className="pt-1"
       />
     </MotionExperience>
@@ -416,126 +379,6 @@ async function IndexCards({
     </div>
     <div className={styles.indexStamp}><span>{t.today.experienceIndexNote}</span><DataStamp labels={t.data} source={quotesResult.source} at={quotesResult.fetchedAt} stale={Boolean(quotesResult.stale)} locale={locale} /></div>
     </div>
-  );
-}
-
-/* ==========================================================================
-   Tahvil faizleri ve getiri eğrisi
-   ========================================================================== */
-
-async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const results = await Promise.all(
-    YIELD_SERIES.map((series) => getSeries(series, 10)),
-  );
-
-  const values = YIELD_SERIES.map((series, index) => {
-    const result = results[index];
-    return {
-      key: series.slug,
-      label: t.markets[series.labelKey],
-      latest: result.ok ? result.data.latestValue : null,
-      prev: result.ok ? result.data.prevValue : null,
-      date: result.ok ? (result.data.observations.at(-1)?.date ?? null) : null,
-    };
-  });
-
-  if (values.every((v) => v.latest === null)) return null;
-
-  const y2 = values[0].latest;
-  const y10 = values[2].latest;
-  const spread = y2 !== null && y10 !== null ? y10 - y2 : null;
-  const inverted = spread !== null && spread < 0;
-
-  return (
-    <Panel className={styles.yields}>
-      {/* Plaka başlık — ölçü paneli. Rol ayrımının gerekçesi
-          components/ui/primitives.tsx → PanelHeader içinde; ana sayfadaki
-          tahvil kartı da aynı tonu taşıyor, aynı sayılar aynı görünsün. */}
-      <PanelHeader title={t.markets.yields} tone="plate" className={styles.yieldHeader} meta={values[0].date ? `FRED · ${formatEtDateCompact(values[0].date, locale)}` : undefined} />
-
-      <div className={cn("grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-line-soft sm:p-0", styles.yieldsGrid)} data-motion-stagger>
-        {values.map((value) => {
-          const delta =
-            value.latest !== null && value.prev !== null
-              ? value.latest - value.prev
-              : null;
-          return (
-            /* Dikey dolgu bir kademe dar (sm:py-3). Bu iki kart yan yana
-               duruyor ve ikisi birden sayfanın ilk ekranını yiyordu; altında
-               piyasa genişliği ve gün içi hareket var, onlar daha yukarıdan
-               başlamalı. Bilgi kaybı yok, yalnızca boşluk. */
-            <div key={value.key} className="rounded-lg border border-line bg-surface px-3.5 py-3 text-center sm:rounded-none sm:border-0 sm:bg-transparent sm:px-5 sm:py-3">
-              {/* SÜTUN ORTALANMIŞ. Etiket, sayı ve değişim sola dayalıydı ve
-                  üçü de farklı genişlikte olduğu için sağ kenarları tırtıklı
-                  bir merdiven çiziyordu: dört sütun yan yana durunca kart
-                  hizasız görünüyordu. Ortalanınca üçü tek bir eksende
-                  yığılıyor. */}
-              <p className="text-nano font-semibold uppercase tracking-[0.08em] text-muted">
-                {value.label}
-              </p>
-              {/* İşaretin yeri dile bağlı; kural tek yerde (primitives →
-                  PercentReading). Burada koşulsuz SONA konuyordu ve Türkçe
-                  ekranda "4,19 %" çıkıyordu — aynı sayı ana sayfada "%4,19"
-                  diyordu. */}
-              <PercentReading
-                value={value.latest}
-                locale={locale}
-                className="tote mt-0.5 block text-xl sm:text-2xl"
-                signClassName="mx-1 text-sm text-soft"
-              />
-              {delta !== null && Math.abs(delta) > 0.001 ? (
-                <p
-                  className={cn(
-                    /* Değişim bir kademe büyük (11 → 12): sütunun taşıdığı
-                       ikinci bilgi bu ve künye puntosunda kalınca seviyenin
-                       altında kayboluyordu. */
-                    "numeral mt-0.5 text-small font-semibold",
-                    delta > 0 ? "text-up" : "text-down",
-                  )}
-                >
-                  {delta > 0 ? "▲" : "▼"} {formatPrice(Math.abs(delta), locale)}{" "}
-                  {t.markets.point}
-                </p>
-              ) : (
-                /* DEĞİŞİM SATIRI YERİNİ TUTUYOR. Değişmeyen vadede satır hiç
-                   basılmıyordu ve dört sütunun ortalanmış içeriği o sütunda
-                   8 piksel aşağıda başlıyordu (2 Yıllık, 1440'ta ölçüldü).
-                   Önceki gözlem varsa "Değişmedi" diyor; yoksa boş satır. */
-                <p className="numeral mt-0.5 text-small text-muted">
-                  {delta !== null ? t.macro.unchanged : "\u00a0"}
-                </p>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Getiri eğrisi — sayının ne anlama geldiği burada yazar */}
-      {spread !== null && (
-        <div className={styles.curve}>
-          <span className="text-xs font-semibold text-strong">
-            {t.markets.curveTitle}
-          </span>
-          <span
-            className={cn(
-              "numeral rounded-full px-2.5 py-1 text-xs font-bold",
-              inverted ? "bg-down-wash text-down" : "bg-up-wash text-up",
-            )}
-          >
-            {spread >= 0 ? "+" : "−"}
-            {formatPrice(Math.abs(spread), locale)} {t.markets.point}
-          </span>
-          <span className="text-xs text-soft">
-            {inverted ? t.markets.curveInverted : t.markets.curveNormal}
-          </span>
-          <details className={styles.explainer}>
-            <summary>{t.markets.curveExplain}</summary>
-            <p>{t.markets.curveHint}</p>
-          </details>
-        </div>
-      )}
-
-    </Panel>
   );
 }
 
@@ -1402,7 +1245,7 @@ function MembersTable({
 /**
  * Endeks bileşenleri bölümünün yer tutucusu.
  *
- * Suspense sınırı genişlik, hareketler, tahvil/VIX ve bileşen tablosunu kapsar.
+ * Suspense sınırı genişlik, hareketler ve bileşen tablosunu kapsar.
  * Önceki yedek yalnızca tabloyu taklit ediyordu.
  * Ölçüldü: sekme değiştiren okuyucunun altında sayfa 7301 pikselden 3183'e
  * çöküyor, yarım saniye sonra geri açılıyordu. Yalnızca tablo taklit
