@@ -3,8 +3,10 @@ import { ADMIN_SECTIONS, adminDocTitle } from "@/lib/admin-sections";
 import { Suspense } from "react";
 import {
   AdminPanel,
+  AdminPanelError,
   AdminPanelSkeleton,
   AdminPanelTitle,
+  AdminReadStamp,
   HealthList,
   HealthRow,
   RankList,
@@ -13,7 +15,7 @@ import {
   StatGridSkeleton,
   type HealthTone,
 } from "@/components/admin/AdminUI";
-import { TrafficChart } from "@/components/admin/TrafficChart";
+import { TrafficChart, TrafficChartSkeleton } from "@/components/admin/TrafficChart";
 import {
   fullDayWindow,
   getContentSummary,
@@ -28,7 +30,6 @@ import {
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { PageHeader, PanelLink, Skeleton } from "@/components/ui/primitives";
 import {
-  ADMIN_READ_ERROR,
   METRIC,
   adminDayIn,
   adminWeekRange,
@@ -128,6 +129,10 @@ export default async function AdminOverviewPage() {
           <TopRoutesCard />
         </Suspense>
       </div>
+
+      {/* Ekran sırasının son satırı (CLAUDE.md, "Ekran düzeni" 7): kutuların
+          "Son 7 Tam Gün"ü ve Dikkat satırlarının yaşı çizim anına göre. */}
+      <AdminReadStamp />
     </div>
   );
 }
@@ -449,7 +454,7 @@ async function TopRoutesCard() {
           emptyLabel="Henüz ölçüm kaydı yok."
         />
       ) : (
-        <p className="py-6 text-center text-base text-brass-ink">{ADMIN_READ_ERROR}</p>
+        <AdminPanelError />
       )}
     </AdminPanel>
   );
@@ -488,11 +493,14 @@ function TopRoutesSkeleton() {
 }
 
 /**
- * Grafik panelinin yer tutucusu — satır listesi değil grafik şeklinde:
- * okuma satırı, iki çizim alanı (görüntüleme ve ziyaretçi şeridi), eksen,
- * işaret açıklaması ve tablo düğmesi. Boylar grafiğin kendi dizeleri
- * (`h-36 sm:h-48`, `mt-6 h-14`; components/admin/TrafficChart.tsx) —
- * grafik değişirse bu da değişmeli.
+ * Grafik panelinin yer tutucusu: başlık bloğu burada, gövde grafiğin kendi
+ * yer tutucusu (components/admin/TrafficChart.tsx → `TrafficChartSkeleton`).
+ *
+ * GÖVDE BİR DÖNEM BURADA ELLE ÇİZİLİYORDU ve grafikten ayrı düştü: kopya
+ * `h-36 sm:h-48` ve `mt-6 h-14` yazıyordu, grafik `h-32` ve `mt-5` — 390'da
+ * akış inince panel 20 piksel kısalıyordu (ölçüldü). Boylar artık grafiğin
+ * kendi dizelerinden geliyor. Başlık bloğu sayfanın: buradaki başlığın
+ * yanında "Tümünü Gör" var, Trafik'inkinde yok.
  */
 function TrafficSkeleton() {
   return (
@@ -512,34 +520,7 @@ function TrafficSkeleton() {
           </div>
         </div>
       </div>
-      {/* Okuma satırı gerçeğiyle aynı sarma kuralında: üç öğe (gerçek
-          genişlikleri 121 / 87 / 102 piksel, ölçüldü) ve bugünün hapı. Hap gerçek hapın dolgusu, puntosu ve metniyle (görünmez) —
-          dar kapta gerçeği nerede sarıyorsa orada sarıyor. */}
-      <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-small">
-        <span className="flex h-[1lh] items-center">
-          <Skeleton className="h-2.5 w-30" />
-        </span>
-        <span className="flex h-[1lh] items-center">
-          <Skeleton className="h-2.5 w-22" />
-        </span>
-        <span className="flex h-[1lh] items-center">
-          <Skeleton className="h-2.5 w-25" />
-        </span>
-        <span className="skeleton inline-flex rounded-full px-2.5 py-1 text-tiny text-transparent sm:ml-auto">
-          Bugün Şimdiye Kadar 00
-        </span>
-      </div>
-      <Skeleton className="h-36 w-full sm:h-48" />
-      <Skeleton className="mt-6 h-14 w-full" />
-      <div className="mt-1.5 flex h-[1lh] items-center text-tiny">
-        <Skeleton className="h-2 w-full" />
-      </div>
-      <div className="mt-3 flex h-[1lh] items-center text-tiny">
-        <Skeleton className="h-2 w-48" />
-      </div>
-      <div className="mt-2 flex min-h-11 items-center sm:min-h-9">
-        <Skeleton className="h-2.5 w-40" />
-      </div>
+      <TrafficChartSkeleton />
     </div>
   );
 }

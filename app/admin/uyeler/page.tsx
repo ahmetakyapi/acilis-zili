@@ -8,8 +8,10 @@ import {
   AdminCell,
   AdminEmpty,
   AdminPanel,
+  AdminPanelError,
   AdminPanelSkeleton,
   AdminPanelTitle,
+  AdminReadStamp,
   AdminRow,
   AdminTable,
   RankList,
@@ -25,8 +27,7 @@ import {
   type WatchedSymbol,
 } from "@/lib/admin-data";
 import { todayEt } from "@/lib/market-hours";
-import { formatInZone, TR_ZONE } from "@/lib/session-clock";
-import { ADMIN_READ_ERROR, adminDay, adminDayIn, agoLabel } from "@/lib/admin-format";
+import { adminDay, adminDayIn, agoLabel } from "@/lib/admin-format";
 
 /**
  * Üyeler.
@@ -76,20 +77,43 @@ export default async function MembersPage() {
         title={ADMIN_SECTIONS.members.title}
         subtitle={ADMIN_SECTIONS.members.subtitle}
       />
-      <Suspense fallback={<StatGridSkeleton boxes={4} cols={4} />}>
+      {/* "Aktif Okur"un künyesi ("Son 30 Gün · 3 Hesapta Kayıt Yok", 181
+          piksel) telefonda iki satır; yer tutucu da (AdminUI →
+          `StatGridSkeleton`). Damgasız hesap kalmadığında künye tek satıra
+          iner; o gün bu dizi boşalır. */}
+      <Suspense fallback={<StatGridSkeleton boxes={4} cols={4} wrapOnPhone={[2]} />}>
         <Summary />
       </Suspense>
 
       {/* Yer tutucu ölçüleri 1440'taki gerçek panellerden (başlık bloğu ve
           dolgu 118,5 piksel): tablo, başlık satırı ve künyeleriyle 462 =
           118,5 + 8 × 43; takip listesi 397 ≈ 118,5 + 5 × 55; kayıt günleri
-          171 ≈ 118,5 + 2 × 26. */}
-      <Suspense fallback={<AdminPanelSkeleton rows={8} rowHeight={43} />}>
+          171 ≈ 118,5 + 2 × 26.
+          Telefonda iki panel ayrı boyda (390, ölçüldü; başlık bloğu ve
+          dolgu orada 112,5): tablo 478 = 112,5 + 8 × 45,7; takip listesi
+          463,5 = 112,5 + 5 × 70,2 — tek üyeli semboller 44 piksellik
+          çiplerle üç sıra. Tek boylu yer tutucu akış inince 97 piksel kısa
+          kalıyordu. */}
+      <Suspense
+        fallback={
+          <>
+            <AdminPanelSkeleton rows={8} rowHeight={45.7} className="sm:hidden" />
+            <AdminPanelSkeleton rows={8} rowHeight={43} className="hidden sm:block" />
+          </>
+        }
+      >
         <RecentMembers />
       </Suspense>
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2 lg:items-start">
-        <Suspense fallback={<AdminPanelSkeleton rows={5} rowHeight={55} />}>
+        <Suspense
+          fallback={
+            <>
+              <AdminPanelSkeleton rows={5} rowHeight={70.2} className="sm:hidden" />
+              <AdminPanelSkeleton rows={5} rowHeight={55} className="hidden sm:block" />
+            </>
+          }
+        >
           <WatchedSymbols />
         </Suspense>
         <Suspense fallback={<AdminPanelSkeleton rows={2} rowHeight={26} />}>
@@ -97,28 +121,11 @@ export default async function MembersPage() {
         </Suspense>
       </div>
 
-      <ReadStamp />
+      {/* Kaynak adı yok: sayfadaki her sayı aynı veritabanından. Açık kalan
+          bir sekmede "24 Gün Önce" gibi göreli künyelerin hangi ana göre
+          yazıldığını bu satır söylüyor. */}
+      <AdminReadStamp />
     </div>
-  );
-}
-
-/** Okunamayan panelin cümlesi — boş durumdan ayrı (lib/admin-format.ts). */
-function ReadError() {
-  return <p className="py-6 text-center text-base text-brass-ink">{ADMIN_READ_ERROR}</p>;
-}
-
-/**
- * Sayfanın okunduğu an, İstanbul saatiyle — ekran sırasının son satırı
- * (CLAUDE.md, "Ekran düzeni" 7). `DataStamp`in puntosu ve rengi; kaynak
- * adı yok, çünkü sayfadaki her sayı aynı veritabanından. Açık kalan bir
- * sekmede "24 Gün Önce" gibi göreli künyelerin hangi ana göre yazıldığını
- * bu satır söylüyor.
- */
-function ReadStamp() {
-  return (
-    <p className="text-tiny text-muted">
-      <span className="numeral">{formatInZone(new Date(), TR_ZONE)} TR Okundu</span>
-    </p>
   );
 }
 
@@ -220,7 +227,7 @@ async function RecentMembers() {
       </AdminPanelTitle>
 
       {!result.ok ? (
-        <ReadError />
+        <AdminPanelError />
       ) : rows.length === 0 ? (
         <AdminEmpty title="Henüz kayıtlı üye yok." />
       ) : (
@@ -354,7 +361,7 @@ async function WatchedSymbols() {
     return (
       <AdminPanel>
         <AdminPanelTitle hint="Kaç Ayrı Üyenin Listesinde">En Çok Takip Edilenler</AdminPanelTitle>
-        <ReadError />
+        <AdminPanelError />
       </AdminPanel>
     );
   }
@@ -449,7 +456,7 @@ async function SignupCurve() {
     <AdminPanel>
       <AdminPanelTitle hint={range}>Kayıt Günleri</AdminPanelTitle>
       {!result.ok ? (
-        <ReadError />
+        <AdminPanelError />
       ) : withSignups.length === 0 ? (
         <AdminEmpty title="Son 30 günde yeni kayıt yok." />
       ) : (

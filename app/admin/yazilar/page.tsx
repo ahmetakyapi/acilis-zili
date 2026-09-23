@@ -5,6 +5,7 @@ import { PageHeader, buttonClass } from "@/components/ui/primitives";
 import {
   AdminEmpty,
   AdminPanel,
+  AdminPanelError,
   AdminPanelSkeleton,
   AdminPanelTitle,
   adminInput,
@@ -17,7 +18,7 @@ import {
   getWritingCounts,
 } from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/admin";
-import { ADMIN_READ_ERROR, adminStamp, agoLabel } from "@/lib/admin-format";
+import { adminStamp, agoLabel } from "@/lib/admin-format";
 import { cn } from "@/lib/utils";
 
 /**
@@ -200,7 +201,7 @@ async function Stories({ ara }: { ara: string }) {
 
       {!result.ok ? (
         /* Okunamadı "henüz yazı yok" değil (lib/admin-data.ts → `AdminResult`). */
-        <p className="py-6 text-center text-base text-brass-ink">{ADMIN_READ_ERROR}</p>
+        <AdminPanelError />
       ) : rows.length === 0 ? (
         <AdminEmpty
           title={ara ? `“${ara}” ile eşleşen yazı yok.` : "Henüz mercek yazısı yok."}

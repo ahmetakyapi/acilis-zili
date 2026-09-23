@@ -32,6 +32,7 @@ import {
   kayitDurumu,
   useCikisKorumasi,
   useGenisEkran,
+  useGeriYuklemeTazele,
   useImlec,
   useKendiligindenBuyu,
   useOnizleme,
@@ -136,6 +137,7 @@ export function BriefEditor({
   const kirli =
     headline.trim() !== draft.headline.trim() || body.trim() !== draft.bodyMd.trim();
   useCikisKorumasi(kirli);
+  useGeriYuklemeTazele(geri);
 
   const govdeRef = useRef<HTMLTextAreaElement>(null);
   const bolgeRef = useRef<HTMLElement>(null);
@@ -310,7 +312,12 @@ export function BriefEditor({
               id={`${govdeId}-not`}
               className={cn("text-tiny", hata?.body_md ? "font-semibold text-down" : "text-muted")}
             >
-              {hata?.body_md ?? "Boş satır paragrafları ayırır; maddeler 01, 02 diye numaralanır."}
+              {/* İPUCU TEK SATIRA SIĞMALI: iki satıra kırılınca gövde kutusu
+                  önizlemenin kutusundan 20 piksel önce bitiyordu (1024'te
+                  sütun 451 piksel; eski cümle 304 + sayaç 162 + ara 12).
+                  Kısa cümle 234 piksel; kutular 1024–1440 arası aynı
+                  hatta bitiyor. */}
+              {hata?.body_md ?? "Boş satır paragraf ayırır; maddeler numaralanır."}
             </span>
             <Sayac
               n={body.trim().length}

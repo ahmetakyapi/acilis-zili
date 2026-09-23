@@ -41,6 +41,7 @@ import {
   kayitDurumu,
   useCikisKorumasi,
   useGenisEkran,
+  useGeriYuklemeTazele,
   useImlec,
   useKendiligindenBuyu,
   useOnizleme,
@@ -277,6 +278,7 @@ export function StoryEditor({
 
   const kirli = kayitHali(alanlar) !== kayitHali(alanlarOf(draft));
   useCikisKorumasi(kirli);
+  useGeriYuklemeTazele(geri);
 
   const govdeRef = useRef<HTMLTextAreaElement>(null);
   const bolgeRef = useRef<HTMLElement>(null);
@@ -487,9 +489,13 @@ export function StoryEditor({
               id={`${govdeId}-not`}
               className={cn("text-tiny", hata?.body_md ? "font-semibold text-down" : "text-muted")}
             >
+              {/* `leading-none`: mono yazının satır kutusu bir piksel uzun
+                  ve bu satırı 18 piksele çıkarıyordu — önizlemenin 17
+                  piksellik künyesiyle aynı hatta bitmesi gereken gövde
+                  kutusu bir piksel yukarıda kalıyordu (ölçüldü, 1024–1440). */}
               {hata?.body_md ?? (
                 <>
-                  Markdown; çipler <code className="font-mono">:::</code> bloğu ekler
+                  Markdown; çipler <code className="font-mono leading-none">:::</code> bloğu ekler
                 </>
               )}
             </span>

@@ -2,8 +2,11 @@ import { Children, isValidElement } from "react";
 import Link from "next/link";
 import { CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/lib/utils";
+import { ADMIN_READ_ERROR } from "@/lib/admin-format";
+import { TR_ZONE, formatInZone } from "@/lib/session-clock";
 import { EmptyState, Skeleton } from "@/components/ui/primitives";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
+import { AnchorLanding } from "@/components/admin/AnchorLanding";
 
 /**
  * Yönetim panelinin kendi parçaları.
@@ -61,6 +64,12 @@ export function AdminPanel({
       )}
     >
       {children}
+      {/* ÇAPALI PANEL KENDİ İNİŞİNİ YAPIYOR. Paneller akışla geliyor ve
+          çapa, adres değiştiği anda sayfada yok: Özet'ten `/admin/sistem#veri`
+          satırına basınca sayfa başta kalıyordu (390'da Veri Sağlığı 1.011,
+          Anahtarlar 1.567 piksel aşağıda), doğrudan açılışta da (tarayıcı
+          çapayı gizli akış kabında arıyor). Gerekçe AnchorLanding'de. */}
+      {id && <AnchorLanding id={id} />}
     </section>
   );
 }
@@ -130,6 +139,43 @@ export function AdminEmpty({
   return <EmptyState compact title={title} hint={hint} className={className} />;
 }
 
+/**
+ * Okunamayan panelin cümlesi — boş durumdan AYRI bir kılık.
+ *
+ * ALTI EKRANDA ALTI KOPYA VARDI. Okuyucular `AdminResult` döndürmeye
+ * geçince (lib/admin-data.ts) her sayfa bu satırı kendisi yazdı: üç yerel
+ * `ReadError`, üç satır içi `<p>`, Sistem'de ayrı bir cümle. Pirinç ton
+ * bilinçli — kırmızı bir arıza değil, bir okuma hatası; boş durumun gri
+ * sakinliği de değil. Cümle `ADMIN_READ_ERROR`; bir grup ya da liste kendi
+ * cümlesini `children` ile verebiliyor.
+ */
+export function AdminPanelError({ children = ADMIN_READ_ERROR }: { children?: React.ReactNode }) {
+  return <p className="py-6 text-center text-base text-brass-ink">{children}</p>;
+}
+
+/**
+ * Sayfanın okunduğu an, İstanbul saatiyle — ekran sırasının son satırı
+ * (CLAUDE.md, "Ekran düzeni" 7).
+ *
+ * Değerler çizim anında hesaplanıyor ("4 Dakika Önce", "Bekleniyor",
+ * "Son 7 Tam Gün"); açık bırakılan sekmede hangi ana göre yazıldıklarını
+ * söyleyen tek yer bu satır. Sistem ve Üyeler birebir aynı yerel kopyayı
+ * taşıyordu, Trafik "TR"siz ayrı bir biçimi. `children` damganın önüne
+ * eklenen künyeler (Trafik: ölçüm başlangıcı ve kayıt sayısı).
+ */
+export function AdminReadStamp({ children }: { children?: React.ReactNode }) {
+  return (
+    <p
+      data-stamp
+      className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-tiny text-muted"
+    >
+      {children}
+      {children && <span aria-hidden>·</span>}
+      <span className="numeral">{formatInZone(new Date(), TR_ZONE)} TR Okundu</span>
+    </p>
+  );
+}
+
 /* --------------------------------------------------------------------------
    Girdi
    -------------------------------------------------------------------------- */
@@ -142,14 +188,20 @@ export function AdminEmpty({
  * üstünde `border-line` taşıyordu ve panel `bg-surface` idi: dolgu panele
  * karşı 1,05:1 (koyu 1,14), kenarlık 1,22:1 (koyu 1,37) ölçüldü — kutunun
  * nerede başladığı zor seçiliyordu. Odak yalnızca bir piksellik kenarlığın
- * renk değişimiydi (`outline-none`). Şimdi zemin katı yüzey, kenarlık bir
- * ton koyu ve odak sitenin 2 piksellik halkası.
+ * renk değişimiydi (`outline-none`). Şimdi zemin katı yüzey ve odak sitenin
+ * 2 piksellik halkası.
+ *
+ * KENARLIK 3:1 (WCAG 1.4.11). Bir ton koyu çizgi (`border-line-strong`) de
+ * yetmedi: panele karşı 1,41:1 (koyu 1,89) ölçüldü. Kenarlık artık soluk
+ * metin tonunun %75'i — açıkta panele ve dolguya karşı 3,29, koyuda panele
+ * 4,11, dolguya 3,25. Editörler bu değeri kendi dizelerinde ayrıca
+ * yazıyordu; tek yer burası. Üzerine gelince tonun tamamı.
  *
  * ÖLÇÜ ÇAĞIRANDA: editör alanı `w-full py-2.5`, tarih seçici `h-11
  * sm:h-9`. Bu dize yalnızca malzemeyi taşıyor.
  */
 export const adminInput =
-  "rounded-(--radius-md) border border-line-strong bg-surface-solid px-3 text-base text-strong transition-colors placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--line-focus)";
+  "rounded-(--radius-md) border border-muted/75 bg-surface-solid px-3 text-base text-strong transition-colors placeholder:text-muted hover:border-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--line-focus)";
 
 /* --------------------------------------------------------------------------
    Durum noktası
@@ -209,8 +261,12 @@ export const HEALTH_LABEL: Record<HealthTone, string> = {
  * Durum sözcüğünün mürekkebi. Yalnızca İLGİ İSTEYEN iki ton renk alıyor;
  * sağlıklı, beklemede ve koşullu satırın sözcüğü gri kalıyor — liste
  * tarandığında göz yalnızca sorunlara takılsın.
+ *
+ * Dışa açık: İçerik'in açılır eksik satırları (`GapCell`) `HealthRow`un
+ * düzenini değil ama sözcüğünü paylaşıyor; tablo kopyalanınca iki ekranın
+ * renkleri ayrı düşebiliyordu.
  */
-const HEALTH_INK: Record<HealthTone, string> = {
+export const HEALTH_INK: Record<HealthTone, string> = {
   ok: "text-muted",
   warn: "text-brass-ink",
   down: "text-down",
@@ -444,16 +500,29 @@ export function StatGrid({
  * 114, gerçek kutu 111,2 piksel ölçüldü. Şimdi her satır kutunun KENDİ
  * dizeleriyle ve `h-[1lh]` ile çiziliyor — punto değişirse ikisi birlikte
  * değişiyor. Zemin sitenin `.skeleton`ı.
+ *
+ * TELEFONDA İKİ SATIRLIK KÜNYE (`wrapOnPhone`). Telefonda kutunun künye
+ * alanı 136 piksel ve değişimle künye yan yana oraya sığmıyor: Trafik'in
+ * "Dünkü Görüntüleme" kutusunda "+%1985" ile "Bir Hafta Önce 13" iki satır
+ * (145 piksel), Sistem'de durum sözcüğü ile saat künyesi de öyle. Izgara
+ * satırı o kutunun boyuna geriliyor ve tek satırlık yer tutucu akış inince
+ * 20 piksel sıçrıyordu (Trafik 390'da 38 — iki satırda birden, ölçüldü).
+ * Hangi kutunun sardığını çağıran biliyor; yer tutucu o kutunun künyesini
+ * telefonda iki satır ve aradaki `gap-y-0.5` kadar çiziyor. Tek bir
+ * künyenin kendi içinde sarması 2 piksel kısa kalır (satır arası yok).
  */
 export function StatGridSkeleton({
   boxes = 4,
   cols = 4,
   compact = false,
+  wrapOnPhone = [],
 }: {
   boxes?: number;
   cols?: 3 | 4 | 5;
   /** Gerçek ızgara küçük puntoya geçecekse (metin değerli ızgara). */
   compact?: boolean;
+  /** Künyesi telefonda iki satıra saran kutuların sırası, sıfırdan. */
+  wrapOnPhone?: readonly number[];
 }) {
   return (
     <StatGrid cols={cols} compact={compact}>
@@ -469,8 +538,15 @@ export function StatGridSkeleton({
           <div data-stat-value className={cn(STAT_VALUE, "flex h-[1lh] items-center")}>
             <Skeleton className="h-[0.8em] w-24" />
           </div>
-          <div className="mt-2 flex h-[1lh] items-center text-small">
-            <Skeleton className="h-2.5 w-28" />
+          <div
+            className={cn(
+              "mt-2 flex items-start text-small",
+              wrapOnPhone.includes(i) ? "h-[calc(2lh+0.125rem)] sm:h-[1lh]" : "h-[1lh]",
+            )}
+          >
+            <div className="flex h-[1lh] items-center">
+              <Skeleton className="h-2.5 w-28" />
+            </div>
           </div>
         </div>
       ))}
@@ -807,6 +883,7 @@ export function AdminTable({
   children,
   minWidth = 520,
   stickyFirst = false,
+  align = "middle",
 }: {
   head: string[];
   /** Kaydırılabilir bölgenin adı — ekran okuyucu bunu duyurur. */
@@ -824,6 +901,14 @@ export function AdminTable({
    * sağa kaydıran okur satırın kime ait olduğunu kaybetmesin.
    */
   stickyFirst?: boolean;
+  /**
+   * Gövde hücrelerinin dikey hizası. `top`: satırı çok satırlı olan tablo —
+   * Bülten listesinde telefonda iki satır manşet ve bir rozet satırı var;
+   * ortalanmış tarih manşetin ikinci satırının yanına düşüyor, satırın
+   * neyle başladığı okunmuyordu. Liste bunu bir sarmalayıcının
+   * `[&_tbody_td]:align-top` seçicisiyle yapıyordu; ayar tablonun kendisinde.
+   */
+  align?: "middle" | "top";
 }) {
   return (
     /* Dar ekranda tablo KENDİ kabında kayar. Sayfa gövdesinin yatay
@@ -861,6 +946,7 @@ export function AdminTable({
              dolgu, kayan sütunun rakamları etiketin dibine yapışmasın diye. */
           stickyFirst &&
             "[&_tr>*:first-child]:sticky [&_tr>*:first-child]:left-0 [&_tr>*:first-child]:z-[1] [&_tr>*:first-child]:bg-(--premium-surface) [&_tr>*:first-child]:pr-3",
+          align === "top" && "[&_tbody_td]:align-top [&_tbody_th]:align-top",
         )}
         style={{ minWidth }}
       >

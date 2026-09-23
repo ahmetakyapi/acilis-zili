@@ -3,8 +3,10 @@ import { PageHeader } from "@/components/ui/primitives";
 import { ADMIN_SECTIONS, adminDocTitle } from "@/lib/admin-sections";
 import {
   AdminPanel,
+  AdminPanelError,
   AdminPanelSkeleton,
   AdminPanelTitle,
+  AdminReadStamp,
   HEALTH_LABEL,
   HealthList,
   HealthMark,
@@ -60,7 +62,11 @@ export default async function SystemPage() {
         title={ADMIN_SECTIONS.system.title}
         subtitle={ADMIN_SECTIONS.system.subtitle}
       />
-      <Suspense fallback={<StatGridSkeleton boxes={3} cols={3} compact />}>
+      {/* Telefonda Cron ile Seans kutularının künyesi iki satır: durum
+          sözcüğü ile saat yan yana, sıradaki zil ("Açılış 16:30 TR · 09:30
+          NY", 139 piksel) 136 piksellik alana sığmıyor. Tek satırlık yer
+          tutucu akış inince 20 piksel sıçrıyordu (390, ölçüldü). */}
+      <Suspense fallback={<StatGridSkeleton boxes={3} cols={3} compact wrapOnPhone={[1, 2]} />}>
         <Pulse />
       </Suspense>
 
@@ -68,24 +74,11 @@ export default async function SystemPage() {
         <Checks />
       </Suspense>
 
-      <ReadStamp />
+      {/* Okunduğu an, İstanbul saatiyle (AdminUI → `AdminReadStamp`). Saat
+          bir dönem Seans kutusunun künyesinde "Sunucu" adıyla duruyordu —
+          oysa o İstanbul saatiydi, sunucu UTC'de koşuyor. */}
+      <AdminReadStamp />
     </div>
-  );
-}
-
-/**
- * Sayfanın okunduğu an, İstanbul saatiyle — ekran sırasının son satırı
- * (CLAUDE.md, "Ekran düzeni" 7). Bu ekranın değerleri çizim anında
- * hesaplanıyor ("4 Dakika Önce", "Bekleniyor"); açık bırakılan sekmede
- * hangi ana göre yazıldıklarını söyleyen tek yer bu satır. Saat bir dönem
- * Seans kutusunun künyesinde "Sunucu" adıyla duruyordu — oysa o İstanbul
- * saatiydi, sunucu UTC'de koşuyor.
- */
-function ReadStamp() {
-  return (
-    <p className="text-tiny text-muted">
-      <span className="numeral">{formatInZone(new Date(), TR_ZONE)} TR Okundu</span>
-    </p>
   );
 }
 
@@ -190,13 +183,22 @@ async function Pulse() {
      koşum 13:30 TR'de; damgayı hisse sayfası yazmıştı. Durum sözcüğü
      `status`ta, `delta` yalnızca değişim için (AdminUI → `StatBox`).
      Koştuysa künye koşumun kendi saati ve yaşı ("13:30 TR · 4 Dakika
-     Önce"); koşmadıysa beklenen saat ve son iz. */
+     Önce"); koşmadıysa beklenen saat ve son iz.
+
+     "BUGÜN" TR TAKVİMİNDEN (24 Eylül, 00:18 TR'de görüldü). Durum UTC
+     gününe bakıyor — koşum 10:30 UTC'de ve bir sonrakine kadar "koştu"
+     doğru. Ama 00:00–03:00 TR arasında UTC günü hâlâ dün: kutu dünkü
+     13:30 koşumuna "Bugün Koştu" diyordu, hemen altındaki Günlük Bülten
+     satırı aynı anda "Dün Yazıldı". Sözcük koşumun TR tarihinden. */
   const iz = pulse.ok && pulse.data.lastRun ? `Son İz ${adminStamp(pulse.data.lastRun, now)}` : "İz Yok";
   const cron = !pulse.ok
     ? null
     : pulse.data.state === "ran" && pulse.data.lastRun
       ? {
-          value: "Bugün Koştu",
+          value:
+            zoneDateKey(pulse.data.lastRun, TR_ZONE) === zoneDateKey(now, TR_ZONE)
+              ? "Bugün Koştu"
+              : "Dün Koştu",
           sub: `${zoned(pulse.data.lastRun, TR_ZONE, "TR")} · ${agoLabel(pulse.data.lastRun, now)}`,
           status: { tone: "ok" as const, label: "Sağlıklı" },
         }
@@ -279,7 +281,7 @@ async function Pulse() {
  */
 function CheckList({ items }: { items: HealthCheck[] }) {
   if (items.length === 0) {
-    return <p className="py-6 text-center text-base text-brass-ink">Bu grup okunamadı.</p>;
+    return <AdminPanelError>Bu grup okunamadı.</AdminPanelError>;
   }
   return (
     <HealthList>
@@ -346,7 +348,7 @@ async function Checks() {
           Anahtarlar
         </AdminPanelTitle>
         {keys.length === 0 ? (
-          <p className="py-6 text-center text-base text-brass-ink">Bu grup okunamadı.</p>
+          <AdminPanelError>Bu grup okunamadı.</AdminPanelError>
         ) : (
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
             {keys.map((check) => (
@@ -402,15 +404,26 @@ async function Checks() {
  * altında şerit. Ölçüler 1440'taki gerçek panellerden: notlu sağlık
  * satırı ortalama 61 piksel (Rutinler 424 = başlık bloğu ve dolgu 118,5 +
  * 5 × 61; Veri Sağlığı 486), şerit ve notları 130 piksel (Anahtarlar 249).
+ *
+ * TELEFONDA AYRI BOYLAR (23 Eylül, 390'da ölçüldü). Tek boylu yer tutucu
+ * akış inince 273,5 piksel kısa kalıyordu: notlar iki satıra sarıyor
+ * (Rutinler 452 = 112,5 + 5 × 68, Veri Sağlığı 532,5 = 112,5 + 6 × 70) ve
+ * altı anahtar iki sütunda üç sıra (Anahtarlar 427,5 — sıra ve notlarla
+ * 3 × 105). `sm`–`lg` arasında anahtarlar üç sütunda iki sıra (314,5 =
+ * 120,5 + 2 × 97); listeler orada 1440'takiyle aynı boyda.
  */
 function ChecksSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2 lg:items-start">
-        <AdminPanelSkeleton rows={5} rowHeight={61} />
-        <AdminPanelSkeleton rows={6} rowHeight={61} />
+        <AdminPanelSkeleton rows={5} rowHeight={68} className="sm:hidden" />
+        <AdminPanelSkeleton rows={5} rowHeight={61} className="hidden sm:block" />
+        <AdminPanelSkeleton rows={6} rowHeight={70} className="sm:hidden" />
+        <AdminPanelSkeleton rows={6} rowHeight={61} className="hidden sm:block" />
       </div>
-      <AdminPanelSkeleton rows={2} rowHeight={65} />
+      <AdminPanelSkeleton rows={3} rowHeight={105} className="sm:hidden" />
+      <AdminPanelSkeleton rows={2} rowHeight={97} className="hidden sm:block lg:hidden" />
+      <AdminPanelSkeleton rows={2} rowHeight={65} className="hidden lg:block" />
     </div>
   );
 }

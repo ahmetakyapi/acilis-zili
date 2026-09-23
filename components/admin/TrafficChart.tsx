@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TrafficPoint } from "@/lib/admin-data";
 import { METRIC, adminDay } from "@/lib/admin-format";
-import { formatEtDateShort } from "@/lib/utils";
+import { cn, formatEtDateShort } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/primitives";
 
 /**
  * Günlük trafik — SVG çizim, üstünde imleçle okunan bir satır.
@@ -63,7 +64,34 @@ import { formatEtDateShort } from "@/lib/utils";
  *
  * Altındaki `<details>` tablo görünümü duruyor: grafiği hiç okuyamayan da
  * aynı sayılara metin olarak ulaşıyor.
+ *
+ * DİL SABİT, TÜRKÇE. Tarihler bir dönem sitenin dil çerezine bağlıydı ve
+ * İngilizce çerezle pano "08/25/2026" yazıyordu, kalan her etiket Türkçeyken
+ * (23 Eylül denetimi). Panel yalnızca Türkçe (components/admin/AdminUI.tsx
+ * başı); `locale` alanı bu yüzden kaldırıldı, hiçbir çağıran onu geçmiyordu.
  */
+
+/* ---- ORTAK DİZELER — grafik ve yer tutucusu (`TrafficChartSkeleton`) ----
+   Yer tutucu grafiğin boylarını elle kopyalıyordu ve iki kopya ayrı düştü:
+   Özet'in yer tutucusu `h-36` ve `mt-6` yazıyordu, grafik `h-32` ve `mt-5`
+   — 390'da akış inince panel 20 piksel sıçrıyordu. Boy veren her dize
+   artık tek yerde; grafik değişirse yer tutucusu da onunla değişiyor. */
+
+/** Okuma satırı: lejant, okunan gün ve bugünün çipi. Telefonda iki satıra sarıyor. */
+const READING_ROW = "mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-small";
+const READING_ITEM = "inline-flex items-baseline gap-2";
+const TODAY_CHIP =
+  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-tiny sm:ml-auto";
+/** Görüntüleme şeridinin ekrandaki boyu. */
+const VIEWS_LANE = "block h-32 w-full sm:h-48";
+/** Ziyaretçi şeridi ve üstündeki aralık (`LANE_H` ile birebir). */
+const VISITORS_GAP = "mt-5";
+const VISITORS_LANE = "block h-14 w-full";
+const AXIS_ROW = "numeral mt-1.5 flex justify-between text-tiny";
+const KEY_ROW = "mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-tiny";
+const TABLE_DETAILS = "mt-2";
+/** 44 piksel telefonda — gerekçesi `<summary>`nin yanında. */
+const TABLE_SUMMARY = "inline-flex min-h-11 w-fit items-center text-small sm:min-h-9";
 
 /** Görüntüleme şeridinin viewBox'ı. */
 const W = 720;
@@ -114,13 +142,6 @@ export function TrafficChart({
    * `AdminResult`).
    */
   points: TrafficPoint[] | null;
-  /**
-   * OKUNMUYOR — panel yalnızca Türkçe (components/admin/AdminUI.tsx başı).
-   * Tarihler sitenin dil çerezine bağlıydı ve İngilizce çerezle pano
-   * "08/25/2026" yazıyordu, kalan her etiket Türkçeyken (23 Eylül
-   * denetimi). Alan, çağıranlar kaldırana kadar tip uyumu için duruyor.
-   */
-  locale?: "tr" | "en";
 }) {
   const [okunan, setOkunan] = useState<number | null>(null);
   const kap = useRef<HTMLDivElement>(null);
@@ -281,15 +302,15 @@ export function TrafficChart({
           metin mürekkep renginde — etiketin kendisi seri rengini giymiyor.
           Sayılar `.numeral`: imleç gezerken rakam genişliği değişirse
           satır titriyor. Adlar `METRIC`ten: aynı ölçü dört adla basılıyordu. */}
-      <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-small">
-        <span className="inline-flex items-baseline gap-2 text-body">
+      <div className={READING_ROW}>
+        <span className={cn(READING_ITEM, "text-body")}>
           <span aria-hidden className="h-[3px] w-4 self-center rounded-full bg-chart-a" />
           {METRIC.views}
           <span className="numeral font-semibold text-strong">
             {olculmedi ? "—" : gosterilen.views.toLocaleString("tr-TR")}
           </span>
         </span>
-        <span className="inline-flex items-baseline gap-2 text-body">
+        <span className={cn(READING_ITEM, "text-body")}>
           <span aria-hidden className="h-[3px] w-4 self-center rounded-full bg-chart-b" />
           {METRIC.dailyVisitors}
           <span className="numeral font-semibold text-strong">
@@ -339,7 +360,7 @@ export function TrafficChart({
              büyüklüğü tam günlerle aynı puntoda yarışmıyor. Birim görünür
              metinde yok — satırın ilk ölçüsü görüntüleme ve çip onun bugünkü
              hâli; "Görüntüleme" eki çipi 390'da üçüncü satıra itiyordu. */
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-elevated px-2.5 py-1 text-tiny text-muted sm:ml-auto">
+          <span className={cn(TODAY_CHIP, "bg-surface-elevated text-muted")}>
             Bugün Şimdiye Kadar
             <span className="numeral font-semibold text-body">
               {last.views.toLocaleString("tr-TR")}
@@ -393,7 +414,7 @@ export function TrafficChart({
             data-lane="views"
             viewBox={`0 0 ${W} ${H}`}
             preserveAspectRatio="none"
-            className="block h-32 w-full sm:h-48"
+            className={VIEWS_LANE}
             aria-hidden
           >
             {/* Izgara geride: iki yatay çizgi yeter — tavan ve taban. */}
@@ -435,7 +456,7 @@ export function TrafficChart({
         {/* ZİYARETÇİ ŞERİDİ — kendi tavanıyla. Ölçüldü (30 gün, 1440):
             tepe 25 ziyaretçi eski ortak ölçekte 5,5 piksel yüksekti, burada
             46 piksel (tavan 26). */}
-        <div className="relative mt-5">
+        <div className={cn("relative", VISITORS_GAP)}>
           <span
             className={CEILING_LABEL}
             style={{ top: `${(LANE_PAD_T / LANE_H) * 100}%` }}
@@ -446,7 +467,7 @@ export function TrafficChart({
             data-lane="visitors"
             viewBox={`0 0 ${W} ${LANE_H}`}
             preserveAspectRatio="none"
-            className="block h-14 w-full"
+            className={VISITORS_LANE}
             aria-hidden
           >
             <line
@@ -496,7 +517,7 @@ export function TrafficChart({
           okunmayan bir duvar üretiyor. Okunur tarih ("25 Ağu"), rakamsal
           değil: yıl her etikette tekrar ediyor ve hiçbir şey eklemiyordu
           (lib/admin-format.ts → `adminDay`). */}
-      <div data-axis className="numeral mt-1.5 flex justify-between text-tiny text-muted">
+      <div data-axis className={cn(AXIS_ROW, "text-muted")}>
         <span>{adminDay(points[0].day)}</span>
         <span>{adminDay(points[midIndex].day)}</span>
         <span>{adminDay(last.day)}</span>
@@ -506,7 +527,7 @@ export function TrafficChart({
           açıklaması olmadan yalnızca bir görsel fark; ne anlama geldikleri
           burada. */}
       {(bugunVar || ilk > 0 || points.some((p) => p.offDay)) && (
-        <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-tiny text-muted">
+        <p className={cn(KEY_ROW, "text-muted")}>
           {bugunVar && (
             <span className="inline-flex items-center gap-1.5">
               <span
@@ -535,20 +556,24 @@ export function TrafficChart({
       )}
 
       {/* Tablo görünümü — grafiğin okunamadığı her durumda aynı sayılar. */}
-      <details className="mt-2">
+      <details className={TABLE_DETAILS}>
         {/* 44 PİKSEL: `<summary>` çıplak bir metin satırıydı ve yüksekliği
             18 piksele iniyordu. Altında ve üstünde başka hedef yok, yani
             `min-h-11` komşusunu ezmiyor. */}
-        <summary className="inline-flex min-h-11 w-fit cursor-pointer items-center text-small text-muted hover:text-body sm:min-h-9">
+        <summary className={cn(TABLE_SUMMARY, "cursor-pointer text-muted hover:text-body")}>
           Sayıları Tablo Olarak Gör
         </summary>
         {/* KAYDIRMA KABI KLAVYEYLE ODAKLANABİLİR — `AdminTable`daki kuralın
             aynısı: 30 günlük pencerede ~780 piksellik tablo 256 piksele
             sıkışıyor ve içinde odaklanabilir hiçbir şey olmadığı için
             klavyeyle gezen okuyucu ilk on günün ötesine hiç ulaşamıyordu
-            (WCAG 2.1.1). */}
+            (WCAG 2.1.1).
+
+            `max-w-xl`: dört sütunluk tablo 1440'ta panelin tamamına
+            yayılıyordu ve tarih ile sayısı arasında 1.500 piksel vardı;
+            göz satırı izlerken kayboluyor. */}
         <div
-          className="scroll-x mt-2 max-h-64 overflow-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+          className="scroll-x mt-2 max-h-64 max-w-xl overflow-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
           tabIndex={0}
           role="region"
           aria-label="Gün gün trafik tablosu"
@@ -624,6 +649,89 @@ export function TrafficChart({
         </div>
       </details>
     </figure>
+  );
+}
+
+/**
+ * Grafiğin yer tutucusu — panelin başlığı HARİÇ, grafiğin gövdesi.
+ *
+ * GRAFİĞİN YANINDA DURUYOR, SAYFALARDA DEĞİL. Özet ve Trafik ekranı aynı
+ * grafiği çiziyor ve ikisi de yer tutucusunu kendi yazıyordu; iki kopya
+ * grafikten ayrı düştü (Özet `h-36` ve `mt-6`, grafik `h-32` ve `mt-5`).
+ * Boylar artık grafiğin kendi dizelerinden geliyor (dosyanın başındaki
+ * ortak dizeler). Başlık bloğu sayfanın: Özet'in başlığında bir bağlantı
+ * var, Trafik'inkinde yok.
+ *
+ * OKUMA SATIRI GERÇEK METİNLE, GÖRÜNMEZ. Satır dar kapta sarıyor (390'da
+ * iki satır, genişte bir) ve nerede saracağı öğelerin genişliğine bağlı.
+ * Sabit genişlikli çubuklar başka bir noktada sarabilirdi; aynı sözcükleri
+ * saydam basmak aynı genişliği, dolayısıyla aynı sarmayı veriyor. Çubuk o
+ * metnin üstünde.
+ *
+ * Ölçüm Yok işaretinin açıklaması burada YOK: yalnızca ölçüm öncesine uzanan
+ * pencerede (90 gün) basılıyor ve yer tutucu veriyi bilmiyor. Telefonda o
+ * pencerede panel akış inince bir satır (16 piksel) uzuyor.
+ */
+export function TrafficChartSkeleton() {
+  return (
+    <div aria-hidden>
+      <div className={READING_ROW}>
+        <SkeletonText className={READING_ITEM}>
+          <span className="h-[3px] w-4 self-center" />
+          {METRIC.views}
+          <span className="numeral font-semibold">000</span>
+        </SkeletonText>
+        <SkeletonText className={READING_ITEM}>
+          <span className="h-[3px] w-4 self-center" />
+          {METRIC.dailyVisitors}
+          <span className="numeral font-semibold">00</span>
+        </SkeletonText>
+        <SkeletonText className="numeral text-tiny">00 Eyl · Son Tam Gün</SkeletonText>
+        {/* Çip kendi dolgusuyla: hap biçimini kırpma veriyor (`.skeleton`
+            kendi köşe yarıçapını taşıyor ve `rounded-full`u eziyor). */}
+        <span className={cn(TODAY_CHIP, "relative overflow-hidden text-transparent select-none")}>
+          Bugün Şimdiye Kadar
+          <span className="numeral font-semibold">00</span>
+          <span className="skeleton absolute inset-0" />
+        </span>
+      </div>
+      <Skeleton className={VIEWS_LANE} />
+      <Skeleton className={cn(VISITORS_GAP, VISITORS_LANE)} />
+      <div className={AXIS_ROW}>
+        <SkeletonText>00 Ağu</SkeletonText>
+        <SkeletonText>00 Eyl</SkeletonText>
+        <SkeletonText>00 Eyl</SkeletonText>
+      </div>
+      <div className={KEY_ROW}>
+        <SkeletonText>Bugün · Gün Sürüyor</SkeletonText>
+        <SkeletonText>Hafta Sonu ve Tatil</SkeletonText>
+      </div>
+      <div className={TABLE_DETAILS}>
+        <div className={TABLE_SUMMARY}>
+          <SkeletonText>Sayıları Tablo Olarak Gör</SkeletonText>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Saydam metin + üstünde ince bir çubuk: genişlik metnin, görünüm yer
+ * tutucunun. Çubuk `span` — `Skeleton` bir `div` ve satır içi öğenin içinde
+ * geçersiz.
+ */
+function SkeletonText({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <span className={cn("relative inline-flex items-center text-transparent select-none", className)}>
+      {children}
+      <span className="skeleton absolute inset-x-0 top-1/2 h-2.5 -translate-y-1/2" />
+    </span>
   );
 }
 

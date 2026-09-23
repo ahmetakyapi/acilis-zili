@@ -308,7 +308,12 @@ async function breakdownBy(
       .from(pageViews)
       .where(where)
       .groupBy(column)
-      .orderBy(desc(count()))
+      /* EŞİTLİKTE ANAHTAR SIRASI. Yalnızca sayıya göre sıralanıyordu ve
+         eşit sayılı satırlar (7 günde `/teknik` ile `/teknik/[symbol]`,
+         ikisi de 63) her yüklemede yer değiştiriyordu — Postgres eşitlikte
+         bir sıra vaat etmiyor. Liste kesildiğinde (`limit`) hangi satırın
+         dışarıda kalacağı da buna bağlıydı. */
+      .orderBy(desc(count()), asc(column))
       .limit(limit);
 
     return rows.map((r) => ({
@@ -906,8 +911,15 @@ export type BriefItem = {
  *
  * SÜZGEÇ ŞART, SÜS DEĞİL: liste iki dönemi birlikte taşıyor ve haftalık
  * bülten haftada bir yazıldığı için süzgeçsiz bir pencerede kaybolabiliyor.
- * Dil süzgeci satırları gruplamadan ÖNCE eliyor: `dil=en` İngilizce satırı
- * olan bültenleri verir.
+ *
+ * DİL SÜZGECİ GRUBU SEÇER, SATIRI ELEMEZ: `dil=en` İngilizce satırı OLAN
+ * bültenleri verir, iki diliyle. Süzgeç bir dönem `where` ile satırları
+ * gruplamadan önce eliyordu ve `dil=en` görünümünde her bültenin dil
+ * listesi yalnızca "en", manşeti İngilizceydi — TR kaydı olsa da; liste
+ * "TR Eksik" rozetini o görünümde gizlemek zorunda kalıyordu. Şimdi
+ * `having bool_or(...)`: grup bütün satırlarıyla kuruluyor, süzgeç grubun
+ * o dili taşıyıp taşımadığına bakıyor. Sayım aynı soruyu soruyor — o dilde
+ * satırı olan farklı bülten sayısı — ve orada `where` doğru cevap.
  *
  * TOPLAM DA DÖNÜYOR. Kırpılmış bir liste, kaç kaydın dışarıda kaldığını
  * söylemediği sürece "hepsi bu" diye okunuyor; toplam FARKLI bülten
@@ -920,10 +932,10 @@ export async function getRecentBriefs(
   return oku("getRecentBriefs", async () => {
     const kosullar = [
       filters.period ? eq(dailyBriefs.period, filters.period) : undefined,
-      filters.locale ? eq(dailyBriefs.locale, filters.locale) : undefined,
       filters.date ? eq(dailyBriefs.briefDate, filters.date) : undefined,
     ].filter(Boolean);
     const where = kosullar.length > 0 ? and(...kosullar) : undefined;
+    const dilli = filters.locale ? eq(dailyBriefs.locale, filters.locale) : undefined;
 
     /* TR ÖNCE — Mercek listesinin "SIRA SABİT" kuralı. */
     const trOnce = sql`case when ${dailyBriefs.locale} = 'tr' then 0 else 1 end`;
@@ -942,6 +954,7 @@ export async function getRecentBriefs(
         .from(dailyBriefs)
         .where(where)
         .groupBy(dailyBriefs.briefDate, dailyBriefs.period)
+        .having(dilli ? sql`bool_or(${dilli})` : undefined)
         /* Aynı yayın gününde (pazartesi) günlük 16:10'da, haftalık 09:30'da
            yazılıyor: son yazılan üstte. */
         .orderBy(desc(yayinGunu), desc(sql`max(${dailyBriefs.generatedAt})`))
@@ -951,7 +964,7 @@ export async function getRecentBriefs(
           n: sql<number>`count(distinct (${dailyBriefs.briefDate}, ${dailyBriefs.period}))`,
         })
         .from(dailyBriefs)
-        .where(where),
+        .where(dilli ? and(where, dilli) : where),
       getAdminEditedKeys(),
     ]);
 
@@ -1340,7 +1353,12 @@ export type PublishRhythm = {
   firstBriefDay: string | null;
 };
 
-export async function getPublishRhythm(
+/* `cache()`: İçerik ekranı ritmi iki ayrı Suspense sınırından okuyor
+   ("Yazılmamış Bülten" satırı ve ızgara aynı günleri sayıyor). Sarmal bir
+   dönem sayfanın kendisindeydi (`app/admin/icerik/page.tsx`); okuyucunun
+   yanında olunca ritmi soran her yeni sınır beş sorguyu ikinci kez
+   göndermiyor. */
+export const getPublishRhythm = cache(async function getPublishRhythm(
   weeks = 8,
 ): Promise<AdminResult<PublishRhythm>> {
   const now = new Date();
@@ -1441,7 +1459,7 @@ export async function getPublishRhythm(
       firstBriefDay: firstRow[0]?.first ?? null,
     };
   });
-}
+});
 
 /* --------------------------------------------------------------------------
    Veri sağlığı

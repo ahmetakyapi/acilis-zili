@@ -496,6 +496,16 @@ her temada tutarlı ve her açılışta güncel.
 
   → Yazının dersini taşıyan kapanış kutusu. Her yazıda bir tane olsun.
 
+  ::: tanim Bu Yazıdaki Terimler
+  **Teminat Tamamlama Çağrısı:** Pozisyonun değeri düştüğünde aracı kurumun ek teminat istemesi; yatırılmazsa pozisyon kapatılır.
+  **Brüt Maruziyet:** Long ve short bacakların toplam büyüklüğü, öz sermayeye oranı kaldıracı verir.
+  :::
+
+  → Sade tanım kutusu. `**Terim:**` ile başlayan her satır terim ve
+    açıklama olarak bölünür (dar ekranda iki satır, geniş ekranda iki
+    sütun); kalıba uymayan satır düz paragraf kalır. Okuyucunun takılacağı
+    iki-dört terim için, yazının başında ya da terimin ilk geçtiği bölümde.
+
 BAĞLANTI KURALLARI
   - Sitede sayfası olan her şirkete bağlantı ver: [Micron](/hisse/MU)
   - En az bir rehber yazısına bağlantı ver. Mevcut slug'lar:

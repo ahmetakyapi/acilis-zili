@@ -13,6 +13,7 @@ import {
   type RefObject,
 } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowCounterClockwise,
   ArrowSquareOut,
@@ -51,17 +52,14 @@ const sayi = (n: number) => n.toLocaleString("tr-TR");
  * (`adminInput`), editörün ölçüsüyle.
  *
  * KENARLIK 3:1 (23 Eylül denetimi). Kutular panelle aynı zemindeydi ve
- * saç teli kenarlık panele karşı 1,22:1 (koyu 1,37) ölçüldü; `adminInput`in
- * bir ton koyu kenarlığı da 1,4:1'de kalıyor. Editörde kutunun sınırı
- * bilginin kendisi — başlık ile giriş cümlesi alt alta iki büyük metin ve
- * nerede birinin bitip ötekinin başladığı yalnızca kenardan okunuyor.
- * Kenarlık soluk metin tonunun %75'i: iki temada da 3:1'in üstünde
- * (ölçüm `.tmp-impl-S14-measure.mjs`), renk yine bir token.
+ * saç teli kenarlık panele karşı 1,22:1 (koyu 1,37) ölçüldü. Editörde
+ * kutunun sınırı bilginin kendisi — başlık ile giriş cümlesi alt alta iki
+ * büyük metin ve nerede birinin bitip ötekinin başladığı yalnızca kenardan
+ * okunuyor. 3:1 kenarlık bir dönem yalnızca burada, `adminInput`in üstüne
+ * yazılıydı ve paneldeki öteki kutular (arama, tarih seçicileri) 1,4:1'de
+ * kalıyordu; değer artık `adminInput`in kendisinde, ölçümüyle birlikte.
  */
-export const girdi = cn(
-  adminInput,
-  "w-full py-2.5 border-muted/75 hover:border-muted",
-);
+export const girdi = cn(adminInput, "w-full py-2.5");
 
 /**
  * Alan: etiket, kutu, altında ipucu ya da hata ve sağda sayaç.
@@ -455,6 +453,33 @@ const DURUM_ADI: Record<OnizlemeDurumu, string> = {
   hata: "Çizilemedi",
 };
 
+/** Önizlemedeki en üst başlığın anahatta indiği kademe — "Önizleme" h3'ünün bir altı. */
+const ONIZLEME_BASLIK_KADEMESI = 4;
+
+/**
+ * Önizlemenin başlıklarını sayfanın ANAHATINDA bir kademe altına indirir.
+ *
+ * ÇİZİM KENDİ ANAHATINI TAŞIYORDU (23 Eylül denetimi). Önizleme yayındaki
+ * sayfanın kendisi ve orada bölümler `h2`: editörde "Önizleme" `h3`ünün
+ * ALTINDA dört `h2` duruyordu, başlıklarla gezen ekran okuyucu için yazının
+ * ara başlıkları editörün "Türkçe Metin" bölümüyle aynı kademedeydi
+ * (ölçüldü: H1 kayıt, H2 Türkçe Metin, H3 Gövde, H3 Önizleme, H2 ×4).
+ * Çizimin etiketleri DEĞİŞMİYOR — görünüş etikete bağlı ve önizleme
+ * yayındaki çizimin aynısı kalmalı; yalnızca `aria-level` yazılıyor. En üst
+ * başlık 4'e iniyor, altındakiler aradaki farkı koruyor: mercekte h2 → 4,
+ * h3 → 5; bültende h3 → 4.
+ */
+function basliklariIndir(kap: HTMLElement) {
+  const basliklar = [...kap.querySelectorAll<HTMLElement>("h1, h2, h3, h4, h5, h6")];
+  if (basliklar.length === 0) return;
+  const kademe = (el: HTMLElement) => Number(el.tagName.slice(1));
+  const enUst = Math.min(...basliklar.map(kademe));
+  for (const el of basliklar) {
+    const yeni = String(Math.min(6, kademe(el) - enUst + ONIZLEME_BASLIK_KADEMESI));
+    if (el.getAttribute("aria-level") !== yeni) el.setAttribute("aria-level", yeni);
+  }
+}
+
 /**
  * Önizleme paneli.
  *
@@ -511,12 +536,18 @@ export function OnizlemePaneli({
     if (!el) return;
     const olc = () => setDipteMi(el.scrollHeight - el.clientHeight - el.scrollTop <= 1);
     olc();
+    basliklariIndir(el);
     el.addEventListener("scroll", olc, { passive: true });
     const boy = new ResizeObserver(olc);
     boy.observe(el);
     /* Çizim değişince kutu aynı boyda kalıp içi uzuyor — ResizeObserver
-       ateşlenmiyor (ScrollEdges'teki gerekçe). */
-    const icerik = new MutationObserver(olc);
+       ateşlenmiyor (ScrollEdges'teki gerekçe). Yeni çizimin başlıkları da
+       burada indiriliyor; gözlemci yalnızca düğüm ekleniş ve çıkışını
+       dinliyor, yani eklenen öznitelik onu yeniden tetiklemiyor. */
+    const icerik = new MutationObserver(() => {
+      olc();
+      basliklariIndir(el);
+    });
     icerik.observe(el, { childList: true, subtree: true });
     return () => {
       el.removeEventListener("scroll", olc);
@@ -610,7 +641,12 @@ function arin(satir: string): string {
     .replace(/^[-*+]\s+/, "")
     .replace(/^\d+[.)]\s+/, "")
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/\*\*|__|`/g, "");
+    /* Vurgu işaretleri: yıldızın hepsi, alt çizginin yalnızca sözcük
+       sınırındakisi (adreslerin içindeki alt çizgi metnin kendisi). Yazının
+       künyesi tek yıldızla italik ("*Künye: …*") ve yıldız kalınca iğne
+       çizimde hiç bulunmuyordu. */
+    .replace(/\*+|`/g, "")
+    .replace(/(^|\s)_+|_+(?=\s|$)/g, "$1");
 }
 
 /** İğne olacak kadar uzun parça: baştan en çok ~40 karakter, sözcük sınırında. */
@@ -945,6 +981,22 @@ const CIKIS_SORUSU =
  *
  * ÖNİZLEMEDEKİ BAĞLANTILAR ÖLÜ: önizleme bir çizim, gezinme yüzeyi değil.
  * Kirli olsun olmasın tıklama orada bitiyor.
+ *
+ * GERİ TUŞU ÜÇÜNCÜ KAPI — Navigation API ile. Listeden editöre yumuşak
+ * gezinmeyle gelindiği için geri tuşu aynı belgede bir geçiş: ne tıklama
+ * ne `beforeunload` onu görüyor ve düzenlenmiş metin sessizce gidiyordu.
+ * App Router'ın bir engelleme kancası yok; `popstate`e yetişip adresi
+ * `pushState` ile geri koymak Next'in kendi geçmiş kaydıyla yarışıyor
+ * (onun dinleyicisi de koşuyor, ağacı geri yüklüyor) ve kullanıcı
+ * etkinliği olmadan eklenen kaydı Chrome geri tuşunda zaten atlıyor. Yerine
+ * `navigation`ın `navigate` olayı: geçiş BAŞLAMADAN soruluyor, iptal
+ * edilince ne adres ne Next'in ağacı değişiyor (önizlemede ölçüldü, Chrome
+ * 153: `traverse`, `cancelable: true`, adres editörde kaldı, metin kirli).
+ * İki sınırı bilerek kabul ediliyor: (1) tarayıcı bir iptalden sonra
+ * yeniden etkileşim bekliyor — ardı ardına ikinci geri basış iptal
+ * edilemez; (2) Navigation API'si olmayan tarayıcıda geri tuşu korumasız
+ * kalıyor, öteki iki kapı yerinde. Belgeler arası geri gidişte
+ * (`cancelable: false`) soru `beforeunload`un.
  */
 export function useCikisKorumasi(kirli: boolean) {
   useEffect(() => {
@@ -972,13 +1024,49 @@ export function useCikisKorumasi(kirli: boolean) {
       event.preventDefault();
       event.returnValue = "";
     };
+    const gecis = (event: Event) => {
+      if (!kirli || !event.cancelable) return;
+      if ((event as GecisOlayi).navigationType !== "traverse") return;
+      if (window.confirm(CIKIS_SORUSU)) return;
+      event.preventDefault();
+    };
+    const gezinme = (window as Window & { navigation?: EventTarget }).navigation;
     window.addEventListener("click", tikla, { capture: true });
     window.addEventListener("beforeunload", ayrilma);
+    gezinme?.addEventListener("navigate", gecis);
     return () => {
       window.removeEventListener("click", tikla, { capture: true });
       window.removeEventListener("beforeunload", ayrilma);
+      gezinme?.removeEventListener("navigate", gecis);
     };
   }, [kirli]);
+}
+
+/**
+ * Navigation API'nin `navigate` olayından kullanılan tek alan — TypeScript'in
+ * DOM kitaplığında (5.9) `NavigateEvent` henüz yok. Bağlantı ve form
+ * gezinmeleri (`push`, `replace`) tıklama kapısından geçiyor; burada
+ * yalnızca geri/ileri (`traverse`) soruluyor.
+ */
+type GecisOlayi = Event & { navigationType?: "push" | "replace" | "reload" | "traverse" };
+
+/**
+ * Geri yüklemeden sonra sayfayı tazeler.
+ *
+ * GERİ YÜKLEME FORMU TAZELEMİYORDU. Sunucu eylemi kaydı eski hâline
+ * çeviriyor ama editör hâlâ ekrandaki ESKİ taslağı tutuyordu; yenilemeden
+ * Kaydet'e basan biri geri yüklemeyi sessizce geri alıyordu — iki tıkla veri
+ * kaybı. Eylem artık editörün kendi yolunu da tazeliyor ve cevap yeni ağacı
+ * taşıyor (app/actions/content.ts → `mercegiTazele`); bu kanca onun
+ * emniyeti: bedeli nadir bir işte bir tur, kaçırmanın bedeli veri. Yeni
+ * taslağı editör karşılıyor — sayfa `key`i bir dönem bu işi yapıyordu ve
+ * "Geri yüklendi"yi de siliyordu (gerekçe StoryEditor'da).
+ */
+export function useGeriYuklemeTazele(geri: EditorState) {
+  const router = useRouter();
+  useEffect(() => {
+    if (geri.ok && geri.savedAt) router.refresh();
+  }, [geri.ok, geri.savedAt, router]);
 }
 
 /* --------------------------------------------------------------------------

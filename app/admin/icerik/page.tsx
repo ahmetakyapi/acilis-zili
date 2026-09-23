@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { Suspense, cache } from "react";
+import { Suspense } from "react";
 import { CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { Button, PageHeader, PanelLink, Skeleton } from "@/components/ui/primitives";
 import { ADMIN_SECTIONS, adminDocTitle } from "@/lib/admin-sections";
 import {
   AdminPanel,
+  AdminPanelError,
   AdminPanelTitle,
+  AdminReadStamp,
+  HEALTH_INK,
   HealthMark,
   HealthRow,
   StatBox,
@@ -19,7 +22,6 @@ import { requireAdmin } from "@/lib/admin";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { BRIEF_PUBLISH_TR } from "@/lib/data";
 import {
-  ADMIN_READ_ERROR,
   adminDay,
   adminDayIn,
   adminDayYear,
@@ -65,11 +67,12 @@ export const metadata = { title: adminDocTitle(ADMIN_SECTIONS.content.title) };
 const RITIM_HAFTA = 8;
 
 /* RİTİM İKİ YERDEN OKUNUYOR, BİR KEZ KOŞUYOR. "Yazılmamış Bülten" satırı
-   ile ızgara aynı günleri sayıyor; `getPublishRhythm` `cache()` ile sarılı
-   değil ve iki sınır onu iki kez çağırırsa beş sorgu iki kez giderdi. Özet
-   (`getContentSummary`) zaten sarılı: Eksikler ve Toplamlar aynı sözü
+   ile ızgara aynı günleri sayıyor; iki sınır da `getPublishRhythm`i AYNI
+   argümanla soruyor ve okuyucu `cache()`li (lib/admin-data.ts) — beş sorgu
+   bir kez gidiyor. Sarmal bir dönem burada, sayfaya özel bir kopyaydı.
+   Özet (`getContentSummary`) de sarılı: Eksikler ve Toplamlar aynı sözü
    bekliyor, aynı anda açılıyor. */
-const ritim = cache(() => getPublishRhythm(RITIM_HAFTA));
+const ritim = () => getPublishRhythm(RITIM_HAFTA);
 
 export default async function ContentPage() {
   /* Yetki kapısı SAYFADA da: layout yumuşak gezinmede yeniden koşmuyor. */
@@ -98,13 +101,12 @@ export default async function ContentPage() {
       <Suspense fallback={<StatGridSkeleton boxes={3} cols={3} />}>
         <Summary />
       </Suspense>
+
+      {/* Ekran sırasının son satırı (CLAUDE.md, "Ekran düzeni" 7): ızgaranın
+          "Bugün" hücresi ve gecikme sayısı çizim anına göre. */}
+      <AdminReadStamp />
     </div>
   );
-}
-
-/** Okunamayan panelin cümlesi — boş durumdan ayrı (lib/admin-format.ts). */
-function ReadError() {
-  return <p className="py-6 text-center text-base text-brass-ink">{ADMIN_READ_ERROR}</p>;
 }
 
 /* --------------------------------------------------------------------------
@@ -161,7 +163,7 @@ async function Gaps() {
     return (
       <AdminPanel id="eksikler">
         <AdminPanelTitle>Eksikler</AdminPanelTitle>
-        <ReadError />
+        <AdminPanelError />
       </AdminPanel>
     );
   }
@@ -330,15 +332,6 @@ const GAP_CELL = "min-w-0 lg:px-4 lg:first:pl-0 lg:last:pr-0";
    tutuyor; 1440'ta adlar tek satıra sığıyor ve yer ayrılmıyor. */
 const GAP_LABEL = "block min-w-0 font-semibold text-strong lg:max-xl:min-h-[2lh]";
 
-/** Durum sözcüğünün mürekkebi — yalnızca ilgi isteyen satır renk alıyor. */
-const GAP_INK: Record<HealthTone, string> = {
-  ok: "text-muted",
-  warn: "text-brass-ink",
-  down: "text-down",
-  idle: "text-muted",
-  info: "text-muted",
-};
-
 function GapCell({ gap }: { gap: Gap }) {
   const count = gap.items.length;
   const tone: HealthTone = gap.unavailable ? "idle" : count > 0 ? "warn" : "ok";
@@ -362,7 +355,7 @@ function GapCell({ gap }: { gap: Gap }) {
         <span
           className={cn(
             "w-[3.75rem] text-small font-semibold lg:w-auto",
-            gap.unavailable ? "text-brass-ink" : GAP_INK[tone],
+            gap.unavailable ? "text-brass-ink" : HEALTH_INK[tone],
           )}
         >
           {word}
@@ -489,7 +482,7 @@ async function Rhythm() {
     return (
       <AdminPanel id="ritim">
         <AdminPanelTitle hint={`Son ${RITIM_HAFTA} Hafta`}>Yayın Ritmi</AdminPanelTitle>
-        <ReadError />
+        <AdminPanelError />
       </AdminPanel>
     );
   }

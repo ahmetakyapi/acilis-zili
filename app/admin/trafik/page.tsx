@@ -4,14 +4,16 @@ import { ADMIN_SECTIONS, adminDocTitle } from "@/lib/admin-sections";
 import { requireAdmin } from "@/lib/admin";
 import {
   AdminPanel,
+  AdminPanelError,
   AdminPanelSkeleton,
   AdminPanelTitle,
+  AdminReadStamp,
   RankList,
   StatBox,
   StatGrid,
   StatGridSkeleton,
 } from "@/components/admin/AdminUI";
-import { TrafficChart } from "@/components/admin/TrafficChart";
+import { TrafficChart, TrafficChartSkeleton } from "@/components/admin/TrafficChart";
 import {
   getDeviceSplit,
   getLocaleSplit,
@@ -25,8 +27,8 @@ import {
   fullDayWindow,
 } from "@/lib/admin-data";
 import { addEtDays } from "@/lib/market-hours";
-import { ADMIN_READ_ERROR, METRIC, adminDayYear, deltaOf } from "@/lib/admin-format";
-import { TR_ZONE, dayBoundaryNote, formatInZone } from "@/lib/session-clock";
+import { METRIC, adminDayYear, deltaOf } from "@/lib/admin-format";
+import { dayBoundaryNote } from "@/lib/session-clock";
 import { cn } from "@/lib/utils";
 
 /**
@@ -124,7 +126,11 @@ export default async function TrafficPage(props: PageProps<"/admin/trafik">) {
         }
       />
 
-      <Suspense key={`sum-${days}`} fallback={<StatGridSkeleton />}>
+      {/* "Dünkü Görüntüleme"nin künyesi telefonda iki satır: değişim ile
+          taban ("+%1985", "Bir Hafta Önce 13") 145 piksel, künye alanı 136.
+          Tek satırlık yer tutucu akış inince 20 piksel sıçrıyordu (390, üç
+          pencerede de ölçüldü). */}
+      <Suspense key={`sum-${days}`} fallback={<StatGridSkeleton wrapOnPhone={[3]} />}>
         <Totals days={days} />
       </Suspense>
 
@@ -168,7 +174,8 @@ export default async function TrafficPage(props: PageProps<"/admin/trafik">) {
         </Suspense>
       </div>
 
-      <Suspense fallback={null}>
+      {/* Yer tutucu damganın kendi satırı — sayfanın dibi akışla oynamasın. */}
+      <Suspense fallback={<p aria-hidden className="h-[1lh] text-tiny" />}>
         <Stamp />
       </Suspense>
     </div>
@@ -220,7 +227,10 @@ async function Totals({ days }: { days: WindowDays }) {
      PENCERE EKSİK ÖLÇÜLDÜYSE KÜNYE BUNU SÖYLER (23 Eylül denetimi): 90
      günlük kutu "Son 90 Tam Gün" diyordu, verinin kapsadığı 41 gündü.
      Önceki pencere eksikse değişim yazılmıyor ve boş kalan yerde NEDENİ
-     duruyor — değişimi kaybolmuş bir kutu yoksa bozuk gibi okunur. */
+     duruyor — değişimi kaybolmuş bir kutu yoksa bozuk gibi okunur.
+     "Önceki Dönem Eksik Ölçüldü" yazıyordu: 158 piksel, telefondaki 136
+     piksellik künye alanında iki satır ve ızgaranın ilk satırını iki kutu
+     için birden geriyordu (390, ölçüldü). "Önceki Dönem Eksik" 113. */
   const measuredDays =
     firstDay && firstDay > now.from
       ? firstDay > now.to
@@ -237,7 +247,7 @@ async function Totals({ days }: { days: WindowDays }) {
           : `Son ${days} Tam Gün`;
   const compareSub =
     measuredDays === days && firstDay && firstDay > before.from
-      ? "Önceki Dönem Eksik Ölçüldü"
+      ? "Önceki Dönem Eksik"
       : windowSub;
   const okunamadi = current.ok ? undefined : ("unavailable" as const);
 
@@ -254,13 +264,17 @@ async function Totals({ days }: { days: WindowDays }) {
           previousFrom: birHaftaOnce,
         })
       : null;
+  /* KÜNYE KIYASIN TABANINI YAZIYOR. "+%1985 · Bir Hafta Önceye Göre"
+     yazıyordu ve ekranın en göz alıcı yeşili, tabanının 13 görüntüleme
+     olduğunu saklıyordu (22 Eyl'de 271, 15 Eyl'de 13 — ölçüldü). Tek günün
+     sayısı küçük ve yüzde küçük tabanda patlar; tabanı yanında yazmak onu
+     okunur kılıyor. Taban sıfırsa yüzde yok ama taban yine yazılı — kıyasın
+     neden olmadığını söylüyor. */
   const dunSub = !weekAgo.ok
     ? "Kıyas Okunamadı"
-    : dunDelta
-      ? "Bir Hafta Önceye Göre"
-      : firstDay && firstDay > birHaftaOnce
-        ? "Bir Hafta Önce Ölçülmedi"
-        : "Bir Hafta Önce Kayıt Yok";
+    : firstDay && firstDay > birHaftaOnce
+      ? "Bir Hafta Önce Ölçülmedi"
+      : `Bir Hafta Önce ${weekAgo.data.views.toLocaleString("tr-TR")}`;
 
   return (
     <StatGrid>
@@ -307,27 +321,27 @@ async function Totals({ days }: { days: WindowDays }) {
   );
 }
 
+/** Grafiğin altındaki tanım notu — panel ve yer tutucusu aynı dizeyle. */
+const CHART_NOTE = "mt-4 border-t border-line pt-3 text-small leading-relaxed";
+
 /**
- * Grafik panelinin yer tutucusu — gerçek panelin ölçüleriyle: başlık bloğu,
- * okuma satırı, iki şerit, eksen, gösterge, tablo bağlantısı ve not.
- * Yükseklikler grafiğin kendi sınıflarından (`h-36 sm:h-48`, `h-14`).
+ * Grafik panelinin yer tutucusu: başlık bloğu, grafiğin gövdesi ve not.
+ * Gövde grafiğin kendi yer tutucusu (components/admin/TrafficChart.tsx →
+ * `TrafficChartSkeleton`), grafiğin dizeleriyle çiziliyor. Bir dönem burada
+ * elle yazılmış boylardı (`h-32`, `mt-5 h-14`, sabit okuma satırı) ve Özet
+ * aynı şeyi ayrı yazıyordu; iki kopya grafikten ayrı düştü.
  */
 function ChartSkeleton() {
   return (
     <div className="panel min-w-0 p-5 sm:p-6" aria-hidden>
       <AdminPanelSkeletonTitle hintLines={2} />
-      {/* Okuma satırı telefonda iki satır (lejant, sonra tarih ve bugünün
-          çipi): 390'da 50,5 piksel, genişte 26 — ölçüldü. */}
-      <div className="mb-4 flex h-[50.5px] items-start gap-5 pt-1 sm:h-[26px] sm:items-center sm:pt-0">
-        <Skeleton className="h-3 w-28" />
-        <Skeleton className="h-3 w-24" />
+      <TrafficChartSkeleton />
+      {/* Grafiğin altındaki tanım notu — `Chart`la aynı dize. */}
+      <div className={CHART_NOTE}>
+        <div className="flex h-[1lh] items-center">
+          <Skeleton className="h-2.5 w-56 max-w-full" />
+        </div>
       </div>
-      <Skeleton className="h-32 w-full sm:h-48" />
-      <Skeleton className="mt-5 h-14 w-full" />
-      <div className="mt-1.5 h-4" />
-      <div className="mt-3 h-4" />
-      <div className="mt-2 h-11 sm:h-9" />
-      <div className="mt-4 h-8" />
     </div>
   );
 }
@@ -387,16 +401,11 @@ async function Chart({ days }: { days: WindowDays }) {
       {/* TANIM BİR KEZ, BURADA. Ziyaretçi-günü kutunun künyesindeydi ve onu
           üç satıra sarıyordu; grafiğin ziyaretçi şeridi tam da o toplamın
           günlere bölünmüş hâli, tanım en çok burada anlam taşıyor. */}
-      <p className="mt-4 border-t border-line pt-3 text-small leading-relaxed text-muted">
+      <p className={cn(CHART_NOTE, "text-muted")}>
         {METRIC.visitorDays} aynı kişiyi her gün yeniden sayar.
       </p>
     </AdminPanel>
   );
-}
-
-/** Okunamayan panelin cümlesi — boş durumdan ayrı (lib/admin-format.ts). */
-function ReadError() {
-  return <p className="py-6 text-center text-base text-brass-ink">{ADMIN_READ_ERROR}</p>;
 }
 
 /* İKİ LİSTE AYNI BOYDA (on iki satır) ve telefonda üçte katlanıyor.
@@ -433,7 +442,7 @@ async function Routes({ days }: { days: WindowDays }) {
           }))}
         />
       ) : (
-        <ReadError />
+        <AdminPanelError />
       )}
     </AdminPanel>
   );
@@ -472,7 +481,7 @@ async function DetailPaths({ days }: { days: WindowDays }) {
           }))}
         />
       ) : (
-        <ReadError />
+        <AdminPanelError />
       )}
     </AdminPanel>
   );
@@ -509,7 +518,7 @@ async function Referrers({ days }: { days: WindowDays }) {
           emptyLabel="Bu aralıkta dış kaynaklı giriş kaydı yok."
         />
       ) : (
-        <ReadError />
+        <AdminPanelError />
       )}
     </AdminPanel>
   );
@@ -600,7 +609,7 @@ async function Readers({ days }: { days: WindowDays }) {
               }))}
             />
           ) : (
-            <ReadError />
+            <AdminPanelError />
           )}
         </div>
         <div className="min-w-0">
@@ -615,7 +624,7 @@ async function Readers({ days }: { days: WindowDays }) {
               }))}
             />
           ) : (
-            <ReadError />
+            <AdminPanelError />
           )}
         </div>
         <div className="min-w-0 sm:col-span-2 xl:col-span-1">
@@ -641,7 +650,7 @@ async function Readers({ days }: { days: WindowDays }) {
               )}
             </>
           ) : (
-            <ReadError />
+            <AdminPanelError />
           )}
         </div>
       </div>
@@ -664,12 +673,10 @@ async function Readers({ days }: { days: WindowDays }) {
  */
 async function Stamp() {
   const range = await getTrackingRange();
-  const okundu = `${formatInZone(new Date(), TR_ZONE)} Okundu`;
+  /* Okunduğu an ortak damgada (AdminUI → `AdminReadStamp`): burada "TR"siz
+     yazılıyordu, Sistem ve Üyeler "15:03 TR Okundu" derken. */
   return (
-    <p
-      data-stamp
-      className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-tiny text-muted"
-    >
+    <AdminReadStamp>
       {range.ok ? (
         range.data.firstDay ? (
           <>
@@ -685,8 +692,6 @@ async function Stamp() {
       ) : (
         <span className="font-semibold text-brass-ink">Ölçüm Kaydı Okunamadı</span>
       )}
-      <span aria-hidden>·</span>
-      <span className="numeral">{okundu}</span>
-    </p>
+    </AdminReadStamp>
   );
 }

@@ -10,6 +10,7 @@ import {
   AdminCell,
   AdminEmpty,
   AdminPanel,
+  AdminPanelError,
   AdminPanelSkeleton,
   AdminPanelTitle,
   AdminRow,
@@ -26,7 +27,6 @@ import {
 } from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/admin";
 import {
-  ADMIN_READ_ERROR,
   adminDayIn,
   adminStamp,
   adminWeekRange,
@@ -308,7 +308,7 @@ async function Briefs({
       {!result.ok ? (
         /* Okunamadı "henüz bülten yazılmamış" değil (lib/admin-data.ts →
            `AdminResult`). */
-        <p className="py-6 text-center text-base text-brass-ink">{ADMIN_READ_ERROR}</p>
+        <AdminPanelError />
       ) : items.length === 0 ? (
         <AdminEmpty
           title={
@@ -322,27 +322,24 @@ async function Briefs({
            rozet satırı taşıyor; ortalanmış tarih manşetin ikinci satırının
            yanına düşüyor ve satırın neyle başladığı okunmuyordu. Tek
            satırlık geniş görünümde fark yok. */
-        <div className="[&_tbody_td]:align-top [&_tbody_th]:align-top">
-          <AdminTable
-            label="Bülten arşivi"
-            head={["Tarih", "Manşet", "Son Yazma"]}
-            minWidth={TABLO_TABAN}
-            stickyFirst
-          >
-            {items.map((row) => (
-              <BriefRow
-                key={`${row.briefDate}-${row.period}`}
-                row={row}
-                bugun={bugun}
-                /* DİL SÜZGECİ SATIRLARI GRUPLAMADAN ÖNCE ELİYOR, yani `dil=en`
-                   ile gelen satırın dil listesinde yalnızca "en" var — TR
-                   kaydı olsa da. O görünümde "TR Eksik" yazmak yanlış bir
-                   alarm olurdu; eksik rozeti yalnızca süzgeçsiz listede. */
-                eksikBilinir={dil === null}
-              />
-            ))}
-          </AdminTable>
-        </div>
+        <AdminTable
+          label="Bülten arşivi"
+          head={["Tarih", "Manşet", "Son Yazma"]}
+          minWidth={TABLO_TABAN}
+          stickyFirst
+          align="top"
+        >
+          {/* DİL SÜZGECİ BÜLTENİ SEÇİYOR, SATIRINI DEĞİL. Süzgeç bir dönem
+              dil satırlarını gruplamadan ÖNCE eliyordu: `dil=en` ile gelen
+              bültenin dil listesinde yalnızca "en" vardı ve manşeti
+              İngilizceydi — TR kaydı olsa da. Eksik rozeti o yüzden süzgeçli
+              görünümde gizleniyordu. Veri katmanı artık grubu süzüyor
+              (lib/admin-data.ts → `getRecentBriefs`), rozet her görünümde
+              doğru. */}
+          {items.map((row) => (
+            <BriefRow key={`${row.briefDate}-${row.period}`} row={row} bugun={bugun} />
+          ))}
+        </AdminTable>
       )}
 
       <p className="mt-4 border-t border-line pt-3 text-small text-muted">
@@ -366,12 +363,10 @@ async function Briefs({
 function BriefRow({
   row,
   bugun,
-  eksikBilinir,
 }: {
   row: BriefItem;
   /** İstanbul takvim günü — yıl yalnızca başka bir yılsa yazılsın diye. */
   bugun: string;
-  eksikBilinir: boolean;
 }) {
   const haftalik = row.period === "weekly";
   const editor = (locale: string) =>
@@ -436,7 +431,7 @@ function BriefRow({
               ÖNÜNE geçiyor: TR ve EN her satırda aynı sağ kenarda durur,
               göz sütun gibi tarar. */}
           <span className="-mb-3 -mt-1.5 flex flex-wrap items-center gap-x-1.5 sm:m-0 sm:shrink-0 sm:flex-nowrap">
-            <DilRozetleri row={row} editor={editor} eksikBilinir={eksikBilinir} />
+            <DilRozetleri row={row} editor={editor} />
             {haftalik && <Rozet className="sm:-order-1">Haftalık</Rozet>}
             {row.elden && <Rozet className="sm:-order-1">Elden Geçti</Rozet>}
             {/* "Rutin" artık yazılmıyor: 24/24 satırda aynıydı. İstisna
@@ -480,11 +475,9 @@ function BriefRow({
 function DilRozetleri({
   row,
   editor,
-  eksikBilinir,
 }: {
   row: BriefItem;
   editor: (locale: string) => string;
-  eksikBilinir: boolean;
 }) {
   return (
     <>
@@ -507,7 +500,6 @@ function DilRozetleri({
             </Link>
           );
         }
-        if (!eksikBilinir) return null;
         return (
           <span
             key={locale}
