@@ -145,8 +145,14 @@
     rgb(255 255 255 / 0) 62%
   );
 
-  /* Marka karesinin gradienti — logonun tek gradient kullanımı. */
-  --mark-gradient: linear-gradient(145deg, #4fb3f5 0%, #1f7fd4 48%, #0a4d9e 100%);
+  /* MARKA İŞARETİ — lacivert karo, beyaz zil, marka mavisi ağız çubuğu.
+     İki temada AYNI karo: sekme ve ana ekran ikonu temayı bilemiyor, iki
+     işaret bir yerde mutlaka yan yana düşerdi (components/brand/BellMark).
+     Yalnızca kenar ve gölge temaya uyuyor. */
+  --mark-gradient: linear-gradient(135deg, #17345c 0%, #0a1a31 100%);
+  --mark-edge: rgb(159 212 255 / 0.2);
+  --mark-ink: #ffffff;
+  --mark-lip: #35b8ff;
 
   /* Manşet mürekkebi — sayfa başlıkları ve geri sayım bu degradeyle yazılır.
      Lacivertten accent maviye; koyu tema karşılığı ters yönde açılır, yoksa
@@ -166,7 +172,7 @@
   --display-gradient-tight: linear-gradient(100deg, #0a2547 0%, #1e6fbe 100%);
 
   /* Marka karosunun oturma gölgesi — rozet hissi buradan geliyor. */
-  --mark-shadow: 0 1px 2px rgb(13 92 182 / 0.28), 0 4px 10px rgb(13 92 182 / 0.22);
+  --mark-shadow: 0 1px 2px rgb(10 26 49 / 0.3), 0 4px 10px rgb(10 26 49 / 0.18);
 
   --chart-grid: rgb(16 32 52 / 0.07);
   --skeleton-lo: rgb(16 32 52 / 0.045);
@@ -287,7 +293,9 @@
     rgb(18 38 60 / 0) 60%
   );
 
-  --mark-gradient: linear-gradient(145deg, #6fd0ff 0%, #2f95e8 46%, #124f9e 100%);
+  /* Karo aynı; zemine yaklaştığı için (#0a1a31 köşe, #070d16 zemin) iç
+     kenar bir kademe açık. */
+  --mark-edge: rgb(159 212 255 / 0.3);
 
   --display-gradient: linear-gradient(
     112deg,
@@ -299,7 +307,7 @@
 
   --display-gradient-tight: linear-gradient(100deg, #eef5fc 0%, #58c4ff 100%);
 
-  --mark-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 4px 12px rgb(26 99 196 / 0.4);
+  --mark-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 4px 12px rgb(0 0 0 / 0.35);
 
   --chart-grid: rgb(255 255 255 / 0.07);
   --skeleton-lo: rgb(255 255 255 / 0.045);
@@ -1725,22 +1733,33 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
 .masthead-row-icon { display:grid; place-items:center; flex:none; width:34px; height:34px; border:1px solid var(--primary-faint); border-radius:10px; color:var(--primary-ink); background:var(--primary-tint); }
 .masthead-row-arrow { flex:none; color:var(--text-muted); opacity:.5; transition:transform 180ms,opacity 180ms; }
 .masthead-row[aria-current="page"] { background:var(--primary-wash); }
-.premium-masthead .masthead-search,.premium-masthead .masthead-account { border-radius:11px; border-color:var(--line); box-shadow:inset 0 1px var(--premium-highlight); }
-.premium-masthead .masthead-search { background:var(--premium-surface); }
-.premium-masthead .masthead-search > svg { color:var(--primary-ink); }
-.premium-masthead .masthead-search kbd { padding:2px 4px; border:1px solid var(--line-soft); border-radius:4px; font-weight:500; }
+/* ARAMA VE HESAP: EŞLEŞEN BİR ÇİFT (23 Eylül). İkisi aynı yüzeyde
+   (`--premium-surface`, saç teli kenarlık, üst kenarda iç parıltı yerine
+   `--premium-highlight` ince çizgisi), aynı yükseklikte ve tam yuvarlak.
+   Derinlik tonla: gölge yok, cam yok. Masaüstünde 40 piksel, dokunmatikte
+   44. Aramanın büyüteci geniş alanda kendi tonlu dairesinde duruyor,
+   kısayol küçük bir tuş kapağında. */
+.premium-masthead .masthead-search,.premium-masthead .masthead-account { border-color:var(--line); background:var(--premium-surface); color:var(--text-body); box-shadow:inset 0 1px var(--premium-highlight); transition:border-color 180ms,background-color 180ms,color 180ms,box-shadow 180ms; }
+.premium-masthead .masthead-search-icon { display:inline-grid; place-items:center; flex:none; color:var(--primary-ink); }
+.premium-masthead .masthead-kbd { align-items:center; height:22px; padding:0 7px; border:1px solid var(--line-soft); border-radius:999px; background:var(--surface-sunken); font-size:.6875rem; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
+.premium-masthead .masthead-account[data-signed-in] { border-color:transparent; background:var(--primary); color:var(--on-primary); box-shadow:0 0 0 2px var(--premium-surface),0 0 0 3px var(--primary-faint); }
+.premium-masthead .masthead-account:not([data-signed-in]) > svg { color:var(--primary-ink); }
+.premium-masthead .masthead-search:focus-visible,.premium-masthead .masthead-account:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 @media(min-width:1024px) {
- .premium-masthead .masthead-search,.premium-masthead .masthead-account { height:38px; min-width:38px; }
+ .premium-masthead .masthead-search,.premium-masthead .masthead-account { width:40px; height:40px; min-width:40px; }
 }
 @media(min-width:1280px) {
  .masthead-nav .masthead-link { font-size:.875rem; }
- .premium-masthead .masthead-search { width:240px; }
+ .premium-masthead .masthead-search { width:256px; padding:0 6px 0 5px; }
+ .premium-masthead .masthead-search-icon { width:30px; height:30px; border-radius:999px; background:var(--primary-tint); }
 }
 @media(hover:hover) and (pointer:fine) {
  .masthead-brand:hover > span:first-child { transform:translateY(-1px); }
  .masthead-brand:hover svg { animation:masthead-bell 600ms var(--ease-brand); }
  .masthead-row:hover .masthead-row-arrow { transform:translate(2px,-2px); opacity:1; }
- .premium-masthead .masthead-search:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+ .premium-masthead .masthead-search:hover,.premium-masthead .masthead-account:not([data-signed-in]):hover { border-color:var(--primary-faint); background:var(--primary-tint); color:var(--text-strong); }
+ .premium-masthead .masthead-search:hover .masthead-search-icon { background:var(--primary-wash); }
+ .premium-masthead .masthead-account[data-signed-in]:hover { background:var(--primary-hover); }
 }
 @keyframes masthead-bell { 20% { transform:rotate(-9deg); } 50% { transform:rotate(7deg); } 80% { transform:rotate(-3deg); } to { transform:none; } }
 @media(prefers-reduced-motion:reduce) {

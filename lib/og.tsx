@@ -1,6 +1,13 @@
 import type { Locale } from "@/lib/i18n";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import {
+  BELL_BODY_PATH,
+  BELL_CLAPPER,
+  BELL_HANGER,
+  BELL_LIP,
+  BELL_VIEWBOX,
+} from "@/components/brand/BellMark";
 
 /**
  * Paylaşım görsellerinin ortak dili.
@@ -87,9 +94,21 @@ export const C = {
   lineSoft: "#eef2f6",
 } as const;
 
-/** Marka degradesi — kare karo ve vurgu şeridi bundan besleniyor. */
+/** Accent degradesi — kartın altındaki gün şeridinin seans bandı. */
 export const BRAND_GRADIENT =
   "linear-gradient(145deg, #6fd0ff 0%, #2f95e8 46%, #124f9e 100%)";
+
+/**
+ * Marka işareti — lacivert karo, beyaz zil, marka mavisi ağız çubuğu.
+ * Sitedeki `--mark-*` token'larının açık tema değerleri; Satori CSS
+ * değişkeni okumuyor. Kaynak ve gerekçe: components/brand/BellMark.tsx
+ */
+export const MARK = {
+  tile: "linear-gradient(135deg, #17345c 0%, #0a1a31 100%)",
+  edge: "rgba(159, 212, 255, 0.2)",
+  ink: "#ffffff",
+  lip: "#35b8ff",
+} as const;
 
 /* ==========================================================================
    Font
@@ -124,17 +143,18 @@ export async function ogFonts() {
    Parçalar
    ========================================================================== */
 
-/** Zil işareti — icon.svg ile aynı çizim, Satori'nin anladığı sadelikte. */
-export function BellGlyph({ size = 40, fill = "#ffffff" }) {
+/**
+ * Zil işareti — icon.svg ile aynı çizim, Satori'nin anladığı sadelikte.
+ * `size` KARONUN boyu: görüş kutusu zili karonun içine kendisi yerleştiriyor
+ * (BELL_VIEWBOX), çağıran ayrıca oran hesaplamıyor.
+ */
+export function BellGlyph({ size = 56 }: { size?: number }) {
   return (
-    /* Dar görüş kutusu: zil `0 0 256 256` içinde alanın yalnızca %66'sını
-       kaplıyor ve paylaşım kartlarında karonun ortasında küçük duruyordu.
-       Kaynak ve gerekçe: components/brand/BellMark.tsx */
-    <svg width={size} height={size} viewBox="35 31 186 186" fill={fill}>
-      <circle cx="128" cy="50" r="11" />
-      <path d="M128 68c-30 0-53 24-53 54v33h106v-33c0-30-23-54-53-54z" />
-      <rect x="56" y="159" width="144" height="16" rx="8" />
-      <circle cx="128" cy="196" r="12" />
+    <svg width={size} height={size} viewBox={BELL_VIEWBOX} fill={MARK.ink}>
+      <rect {...BELL_HANGER} />
+      <path d={BELL_BODY_PATH} />
+      <rect {...BELL_LIP} fill={MARK.lip} />
+      <circle {...BELL_CLAPPER} />
     </svg>
   );
 }
@@ -167,14 +187,13 @@ export function BrandLock({
         style={{
           width: 56,
           height: 56,
-          borderRadius: 18,
+          borderRadius: 18.67,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundImage: BRAND_GRADIENT,
+          backgroundImage: MARK.tile,
+          boxShadow: `inset 0 0 0 1px ${MARK.edge}`,
         }}
       >
-        <BellGlyph size={38} />
+        <BellGlyph size={56} />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <span

@@ -1,17 +1,17 @@
 /* OKUMA SAYFASININ İKİ ÖLÇÜSÜ VAR, ÜÇ DEĞİL (23 Eylül). Kapak 1200, özet
    ve kutular 832, metin 672 pikseldi: sol ve sağ kenar her blokta 80
    piksel içeri dışarı sıçrıyor, sayfa merdiven gibi okunuyordu (sahibi:
-   "sağdan soldan boşluklar tuhaf"). Şimdi kapak 1040, altındaki HER ŞEY —
-   özet, içindekiler, metin, kutular, grafik, şirketler, kaynaklar — tek
-   bir 50rem'lik sütunda ve iki kenarı aynı hatta. Rehber yazısı da aynı
-   iki ölçüyü kullanıyor. */
-.article { display:flex; flex-direction:column; min-width:0; gap:24px; max-width:1040px; margin-inline:auto; }
+   "sağdan soldan boşluklar tuhaf"). Şimdi her şey kapak kartının
+   genişliğinde (1040) ve iki hatta: yüzeyler kartın kenarında, metin
+   kartın iç payı kadar (`--read-inset`) içeride — ayrıntısı aşağıda,
+   "Gövde". Rehber yazısı da aynı iki hattı kullanıyor. */
+.article { --read-inset:36px; display:flex; flex-direction:column; min-width:0; gap:24px; max-width:1040px; margin-inline:auto; }
 .utility { display:flex; justify-content:space-between; align-items:center; gap:16px; }
 .coverSurface { background:var(--premium-surface); box-shadow:var(--premium-shadow); }
 /* Kapak dolgusu 32 → 28: 1440x900'de Genel Özet kutusunun dibi alt
    şeridin (863) altında kalıyordu (869); dolgu ve makale aralığı (28 → 24)
    birlikte kutuyu 859'da bitiriyor — ilk ekranda eksiksiz. */
-.cover { position:relative; isolation:isolate; display:grid; grid-template-columns:minmax(0,1.9fr) minmax(0,1fr); gap:32px; align-items:center; overflow:hidden; padding:28px 36px; border-radius:24px; }
+.cover { position:relative; isolation:isolate; display:grid; grid-template-columns:minmax(0,1.9fr) minmax(0,1fr); gap:32px; align-items:center; overflow:hidden; padding:28px var(--read-inset); border-radius:24px; }
 .cover::before { content:""; position:absolute; inset:-160px -200px auto auto; width:650px; height:650px; border-radius:50%; background:radial-gradient(ellipse,var(--primary-wash),transparent 66%); z-index:-1; pointer-events:none; }
 .cover[data-has-aside="false"] { grid-template-columns:minmax(0,1fr); }
 .cover[data-has-aside="false"] .coverCopy { max-width:900px; }
@@ -52,23 +52,28 @@
 }
 
 /* --------------------------------------------------------------------------
-   Gövde — kapağın altında TEK KOLON, ortalı
+   Gövde — kapağın altında, KAPAKLA AYNI GENİŞLİKTE
 
    23 Eylül: iki kolonlu düzen (metin solda, yapışkan içindekiler ve şirket
    kartları sağda) sahibinin isteğiyle geri alındı; yazı kapağın altında
    tek kolon. İlk denemede metin 42rem, kutular 52rem'di ve bu merdiveni
-   kurdu (yukarıda). Sütun artık tek genişlik: 50rem, punto 20 — satır
-   başına ~88 harf (ölçüm ArticleEditorial.module.css'te); eski 1040
-   piksellik gövdenin 126-144 harfinden kısa, kapakla arasındaki basamak
-   iki yanda 120 piksel.
+   kurdu (yukarıda). İkincisinde her şey 50rem'de ortalandı: bu kez gövde
+   kapaktan bağımsız, iki yanda 120'şer piksel içeride duruyordu (sahibi:
+   "yazı da yukarıdaki kartla aynı hizada olsun").
+
+   Şimdi TEK IZGARA, iki hat. Yüzeyler (kutular, grafik, şirket kartı,
+   içindekiler) kapak kartının iki kenarında biter. Metin — kapaktaki
+   başlık, gövde paragrafları, kutuların içi, künyeler — kartın iç payı
+   kadar içeride (`--read-inset`: masaüstü 36, telefon 20) aynı sol hattan
+   başlar. Satır ölçüsü 1440'ta ~100 harf; ölçüm ArticleEditorial'da.
    -------------------------------------------------------------------------- */
-.layout { width:100%; max-width:50rem; margin-inline:auto; min-width:0; }
+.layout { width:100%; min-width:0; }
 .mainCol { display:flex; flex-direction:column; gap:56px; min-width:0; }
 @media(max-width:767px) { .mainCol { gap:44px; } }
 
 /* Şirket kartı: tonla ayrışan yüzey, gölge yok. */
-.companiesInline { padding:18px 20px 12px; border:1px solid var(--line); border-radius:var(--radius-xl); background:var(--premium-surface); }
-@media(max-width:639px) { .companiesInline { padding:16px 16px 10px; } }
+.companiesInline { padding:18px var(--read-inset) 12px; border:1px solid var(--line); border-radius:var(--radius-xl); background:var(--premium-surface); }
+@media(max-width:639px) { .companiesInline { padding:16px var(--read-inset) 10px; } }
 
 /* Şirketler — adlar sunucuda hemen, getiriler akışla. */
 .companies { display:flex; flex-direction:column; padding-top:18px; border-top:1px solid var(--line); }
@@ -90,14 +95,14 @@
 /* İçindekiler — özetin altında, kapalı bir kutu, her genişlikte.
    JavaScript olmadan da açılıyor (yerel <details>). */
 .tocBox { border:1px solid var(--line); border-radius:var(--radius-xl); background:var(--premium-surface); }
-.tocBox > summary { display:flex; align-items:center; gap:10px; min-height:52px; padding:0 16px; cursor:pointer; list-style:none; }
+.tocBox > summary { display:flex; align-items:center; gap:10px; min-height:52px; padding:0 var(--read-inset); cursor:pointer; list-style:none; }
 .tocBox > summary::-webkit-details-marker { display:none; }
 .tocBox > summary > span:first-child { font-size:15px; line-height:1.3; font-weight:650; color:var(--text-strong); }
 .tocBox > summary > span:nth-child(2) { font-size:12px; line-height:1.3; color:var(--text-muted); }
 .tocBox > summary > svg { margin-left:auto; flex-shrink:0; color:var(--text-muted); transition:transform var(--default-transition-duration,180ms) var(--ease-brand,ease); }
 .tocBox[open] > summary > svg { transform:rotate(180deg); }
 .tocBox > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:var(--radius-xl); }
-.tocBox ol { display:flex; flex-direction:column; padding:0 16px 10px; border-top:1px solid var(--line-soft); }
+.tocBox ol { display:flex; flex-direction:column; padding:0 var(--read-inset) 10px; border-top:1px solid var(--line-soft); }
 .tocBox a { display:grid; grid-template-columns:28px minmax(0,1fr); align-items:baseline; min-height:44px; padding:11px 0; font-size:15px; line-height:1.4; color:var(--text-body); }
 .tocBox a > span:first-child { font-size:12px; font-weight:650; color:var(--primary-ink); }
 .tocBox li + li a { border-top:1px solid var(--line-soft); }
@@ -113,7 +118,7 @@
    etiketiyle yan yana sarıyordu (1440'ta 178, 390'da 408 piksel) ve
    arayüzde çıplak bir uzun tire duruyordu. Yayıncı künye, başlık bağlantı:
    göz önce kaynağın kim olduğunu tarıyor. 768'den sonra iki sütun. */
-.sources { display:flex; flex-direction:column; gap:14px; padding-top:22px; border-top:1px solid var(--line-strong); }
+.sources { display:flex; flex-direction:column; gap:14px; padding:22px var(--read-inset) 0; border-top:1px solid var(--line-strong); }
 .sourceList { display:grid; grid-template-columns:minmax(0,1fr); counter-reset:src; }
 .sourceList > li { border-top:1px solid var(--line-soft); }
 .sourceList > li:first-child { border-top:0; }
@@ -131,7 +136,7 @@ span.sourceLink .sourceTitle { color:var(--text-body); }
 a.sourceLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:var(--radius-sm); }
 .disclaimer { font-size:12px; line-height:1.6; color:var(--text-muted); }
 
-.moreStories { display:flex; flex-direction:column; gap:10px; padding-top:22px; border-top:1px solid var(--line); }
+.moreStories { display:flex; flex-direction:column; gap:10px; padding:22px var(--read-inset) 0; border-top:1px solid var(--line); }
 .moreStories ul { margin-top:4px; }
 .moreStories li { border-bottom:1px solid var(--line); }
 .moreStories li a { padding-block:16px; gap:16px; }
@@ -149,5 +154,5 @@ a.sourceLink:focus-visible { outline:2px solid var(--line-focus); outline-offset
 @media(hover:hover) { .moreStories li a:hover > svg { transform:translate(3px,-3px); } }
 
 @media(max-width:1023px) { .cover { grid-template-columns:minmax(0,1fr); } .title { max-width:32ch; } .figure { padding:20px 0 0; border-left:0; border-top:1px solid var(--primary-faint); } .figure > div { grid-template-columns:repeat(2,minmax(0,1fr)); } .coverFigure { max-width:none; } .coverToc { padding:18px 0 0; border-left:0; border-top:1px solid var(--primary-faint); } }
-@media(max-width:767px) { .coverToc { display:none; } .article { gap:22px; } .cover { padding:22px 20px; border-radius:20px; gap:22px; } .coverCopy { gap:18px; } .title { font-size:32px; line-height:1.12; } .dek { font-size:14px; line-height:1.75; } .figure { gap:16px; } .figure :global(.tote) { font-size:23px; } .moreStories li a { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 10px; padding-block:16px; } .moreStories li a > span:first-child, .moreStories:lang(en) li a > span:first-child { grid-column:1/-1; width:auto; } .moreCopy strong { font-size:17px; } .moreCopy > span { font-size:13px; } }
+@media(max-width:767px) { .coverToc { display:none; } .article { --read-inset:20px; gap:22px; } .cover { padding:22px var(--read-inset); border-radius:20px; gap:22px; } .coverCopy { gap:18px; } .title { font-size:32px; line-height:1.12; } .dek { font-size:14px; line-height:1.75; } .figure { gap:16px; } .figure :global(.tote) { font-size:23px; } .moreStories li a { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 10px; padding-block:16px; } .moreStories li a > span:first-child, .moreStories:lang(en) li a > span:first-child { grid-column:1/-1; width:auto; } .moreCopy strong { font-size:17px; } .moreCopy > span { font-size:13px; } }
 @media(prefers-reduced-motion:reduce) { .moreStories li a > svg, .sourceLink > svg, .tocBox > summary > svg { transition:none; transform:none!important; } }

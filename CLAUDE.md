@@ -79,11 +79,15 @@ olup çizicide olmayan blok da sayfada düz metne döner.
 `data-role` kancalarını okuyan ayrı bir modülde; KVKK ve panel önizlemesi
 piksel piksel aynı kalıyor. Blok rolleri (özet, giriş, ders, yöntem notu)
 CSS'te `:has()` ile tahmin edilmiyor, `blockRoles` ile TS'te hesaplanıyor.
-İki okuma sayfası aynı iki ölçüyü paylaşıyor: kapak 1040 piksel, altındaki
-HER ŞEY (metin, kutular, grafik, şirketler, kaynaklar) tek bir 50rem sütunda.
-Metni kutulardan dar tutmak iki kez denendi, iki kez geri alındı: kenarlar
-her blokta içeri dışarı sıçrıyor, sayfa merdiven gibi okunuyor. Satır
-ölçüsünü genişlik değil punto taşıyor (20 punto, ~88 harf).
+İki okuma sayfası aynı ızgarayı paylaşıyor: her şey kapak kartının
+genişliğinde (1040) ve İKİ HATTA. Yüzeyler (kutular, grafik, şirket kartı,
+içindekiler) kartın kenarında biter; metin (gövde, kutuların içi, künyeler)
+kartın iç payı kadar içeride, kapaktaki başlıkla aynı sol hattan başlar —
+`--read-inset`, masaüstü 36, telefon 20. Metni kutulardan AYRI bir sütunda
+dar tutmak iki kez denendi, iki kez geri alındı (kenarlar her blokta
+sıçrıyordu); 50rem'lik ortalı sütun da geri alındı (gövde kapaktan
+bağımsız, iki yanda 120 piksel boşlukta duruyordu). Satır ölçüsünü punto
+taşıyor (20 punto).
 
 **Görselin etrafında çerçeve yok.** Kenarlık ve iç dolgu, resmi kutunun
 ortasında duran ayrı bir nesne gibi gösteriyor; görsel kutunun kendisi olmalı
@@ -303,6 +307,11 @@ eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye ba
 - **Tailwind v4** — `tailwind.config.ts` yok, tokenlar `app/globals.css`
   içindeki `@theme inline` bloğunda. Hardcoded renk yasak.
 - **Tema** next-themes değil, `data-theme` + `az-theme` çerezi.
+- **Marka işareti tek kaynak:** `components/brand/BellMark.tsx` (zil
+  geometrisi, görüş kutusu, `--mark-*` token'ları). Lacivert karo iki
+  temada da aynı — sekme ve ana ekran ikonu temayı bilemiyor. `app/icon.svg`,
+  `app/apple-icon.tsx` ve `lib/og.tsx` aynı sabitleri okur; `.ico` ve PWA
+  PNG'leri elle değil `npm run build:favicon` ile üretilir.
 - **Arayüz metni** sözlükte: `lib/i18n/dictionaries/{tr,en}.ts`. `en`, `tr`
   tipinden türüyor — `tr`'ye anahtar eklersen `en` derlenmez, ikisini birlikte
   güncelle.

@@ -26,11 +26,12 @@
    dışarı taşıyor, metne dönünce geri çekiliyordu. Rehberde aynı deneme
    daha önce de reddedilmişti ("sağ kenar tırtıklı", bkz. rehber sayfası).
    Artık metin, kutular ve bloklar aynı iki kenarda biter; genişliği
-   çevreleyen kap verir (50rem) ve ölçüyü punto taşır. Ölçüldü: 832
-   pikselde 19 punto satır başına 93 harf (tahmin 80'di — Schibsted
-   Grotesk'te Türkçe metnin ortalama harfi 0,45em); 800 pikselde 20 punto
-   ~88. Rehberin eski hâli 720'de 16 punto, 97 harfti: punto büyüdü, satır
-   kısaldı, yandaki boş zemin daraldı. */
+   çevreleyen kap verir ve ölçüyü punto taşır. Ölçüldü: 832 pikselde 19
+   punto satır başına 93 harf (tahmin 80'di — Schibsted Grotesk'te Türkçe
+   metnin ortalama harfi 0,45em). 50rem'lik ortalı sütun da geri alındı
+   (23 Eylül, sahibi: gövde kapaktan bağımsız, iki yanda fazla boşluk);
+   gövde artık kapak kartı kadar geniş ve metin kartın iç payı kadar
+   içeride. */
 .prose {
   --prose-size: 20px;
   --prose-lh: 1.65;
@@ -45,6 +46,11 @@
 }
 .prose > * { margin: 0; }
 .prose > * + * { margin-top: var(--prose-step); }
+/* METİN KAPAĞIN METNİYLE AYNI HATTA. Gövde kapak kartıyla aynı genişlikte
+   (StoryDetail → `.layout`); yüzeyler kartın kenarında biter, metin kartın
+   iç payı kadar (`--read-inset`) içeride başlar. Ara başlığın cetveli ve
+   notun çizgisi kenardan kenara uzanıyor, yazıları içeride. */
+.prose > :is(p, ul, ol, h2, h3, [data-role="note"]) { padding-inline: var(--read-inset, 0px); }
 .prose > p,
 .prose > [data-block="list"] > li,
 .prose > blockquote {
@@ -131,6 +137,7 @@
 
 .prose > [data-block="quote"] {
   margin-block: 36px;
+  margin-inline: var(--read-inset, 0px);
   padding-left: 22px;
   border-left: 2px solid var(--primary);
   font-size: 22px;
@@ -165,7 +172,7 @@
    saç teli kenarlıkla ayrışıyor. Gölge ve degrade yok — derinlik tonla. */
 .prose > :global(.oku-blok)[data-block] {
   gap: 0;
-  padding: 20px 24px 22px;
+  padding: 20px var(--read-inset, 24px) 22px;
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
   background: var(--premium-surface);
@@ -351,10 +358,11 @@
    künyeyle aynı hatta (16 / 20): varsayılan 4 piksellik payda okuma
    satırı, çizgi ve aralık düğmeleri ekranın kenarına yapışıyor, künye ise
    18 pikselde başlıyordu (390'da ölçüldü). */
-.prose > [data-block="chart"] > [data-part="body"] { padding: 8px 16px 12px; }
+.prose > [data-block="chart"] > [data-part="body"] { padding: 8px var(--read-inset, 16px) 12px; }
 @media (min-width: 640px) {
-  .prose > [data-block="chart"] > [data-part="body"] { padding: 10px 20px 16px; }
+  .prose > [data-block="chart"] > [data-part="body"] { padding: 10px var(--read-inset, 20px) 16px; }
 }
+.prose > [data-block="chart"] > :is([data-part="head"], [data-part="caption"]) { padding-inline: var(--read-inset, 20px); }
 .prose > [data-block="chart"] {
   overflow: hidden;
   border: 1px solid var(--line);
@@ -370,13 +378,15 @@
   text-transform: none;
 }
 .prose > [data-block="table"] td { font-size: 15px; line-height: 1.5; }
+.prose > [data-block="table"] :is(th, td):first-child { padding-left: var(--read-inset, 16px); }
+.prose > [data-block="table"] :is(th, td):last-child { padding-right: var(--read-inset, 16px); }
 
 /* --------------------------------------------------------------------------
    Metin kutuları
    -------------------------------------------------------------------------- */
 .prose > [data-block="callout"] {
   margin-block: 36px;
-  padding: 20px 24px 22px;
+  padding: 20px var(--read-inset, 24px) 22px;
   border-radius: var(--radius-xl);
 }
 .prose > [data-block="callout"] > [data-part="label"] {
@@ -445,7 +455,7 @@
    açık yüzey ve saç teli; gölge yok. */
 .prose > [data-role="summary"] {
   margin-top: 0;
-  padding: 18px 28px 16px;
+  padding: 18px var(--read-inset, 28px) 16px;
   border: 1px solid var(--line);
   background: var(--premium-surface);
 }
@@ -458,7 +468,7 @@
 
 /* Ders — yazının sonucu; mavi tonlu bir yüzeyde, gövdeden belirgin. */
 .prose > [data-role="takeaway"] {
-  padding: 20px 24px 22px;
+  padding: 20px var(--read-inset, 24px) 22px;
   border: 1px solid var(--primary-faint);
   border-radius: var(--radius-xl);
   background: var(--primary-tint);
@@ -516,14 +526,14 @@
   }
   .prose > [data-role="lede"] { font-size: 19px; }
   .prose > h2 { margin-top: 40px; padding-top: 22px; font-size: 24px; line-height: 1.22; }
-  .prose > :global(.oku-blok)[data-block] { padding: 16px 16px 18px; }
-  .prose > [data-role="takeaway"] { padding: 16px 16px 18px; }
+  .prose > :global(.oku-blok)[data-block] { padding: 16px var(--read-inset, 16px) 18px; }
+  .prose > [data-role="takeaway"] { padding: 16px var(--read-inset, 16px) 18px; }
   .prose > h2::before { margin-bottom: 10px; font-size: 12px; }
   .prose > [data-block="quote"] { font-size: 19px; padding-left: 16px; }
   .prose [data-block="stats"] [data-part="value"] { font-size: 28px; }
   .prose [data-block="stats"] [data-part="value"][data-word] { font-size: 20px; }
   .prose [data-block="shift"] [data-part="value"] { font-size: 30px; }
-  .prose > [data-block="callout"] { margin-block: 28px; padding: 18px 18px 20px; }
+  .prose > [data-block="callout"] { margin-block: 28px; padding: 18px var(--read-inset, 18px) 20px; }
   .prose > [data-block="callout"] :is(p, dd) { font-size: 15.5px; }
 
   /* Özet satırları dar ekranda İÇ İÇE: terim satırın başında kalın, metin
@@ -536,7 +546,7 @@
   .prose > [data-block="callout"] [data-part="row"]:first-child { padding-top: 4px; }
   .prose > [data-block="callout"] :is([data-part="term"], [data-part="def"]) { display: inline; }
   .prose > [data-block="callout"] [data-part="term"] { margin-right: 0.35em; font-size: 15px; font-weight: 650; }
-  .prose > [data-role="summary"] { padding: 16px 18px 12px; }
+  .prose > [data-role="summary"] { padding: 16px var(--read-inset, 18px) 12px; }
   .prose > [data-role="summary"] [data-part="row"] { padding: 10px 0; font-size: 15px; line-height: 1.55; }
   .prose > [data-role="summary"] :is([data-part="term"], [data-part="def"]) { font-size: 15px; line-height: 1.55; }
 
@@ -548,9 +558,14 @@
     border-inline: 0;
     border-radius: 0;
   }
+  /* Kenardan kenara taşan grafikte künye ve alt yazı yine metnin
+     hattında: taşma payı + kartın iç payı. */
   .prose > [data-block="chart"] > :is([data-part="head"], [data-part="caption"]) {
-    padding-inline: var(--prose-bleed);
+    padding-inline: calc(var(--prose-bleed) + var(--read-inset, 0px));
   }
+  .prose > [data-block="chart"] > [data-part="body"] { padding-inline: calc(var(--prose-bleed) + var(--read-inset, 0px) - 8px); }
+  .prose > [data-block="table"] :is(th, td):first-child { padding-left: calc(var(--prose-bleed) + var(--read-inset, 0px)); }
+  .prose > [data-block="table"] :is(th, td):last-child { padding-right: calc(var(--prose-bleed) + var(--read-inset, 0px)); }
 }
 @media (max-width: 359px) {
   .prose { --prose-size: 16px; }

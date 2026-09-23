@@ -213,7 +213,9 @@ export default async function GuideArticlePage(
 
       {related.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+          {/* Başlık metnin hattında (kartın iç payı kadar içeride); kartlar
+              kapakla aynı kenarda. */}
+          <h2 className="display-ink display-ink-tight ml-(--read-inset) w-fit text-read font-bold">
             {t.guide.related}
           </h2>
           {/* Bağlantılardaki min-w-0: içerideki `truncate` nowrap demek, o da

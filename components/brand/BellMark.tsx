@@ -1,53 +1,69 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Marka işareti — gradient karo içinde tören zili.
+ * Marka işareti — lacivert karo içinde tören zili.
  *
- * İnce çizgili zil 24px'te kırılıyordu; dolu siluet küçük boyutta çok daha
- * net okunuyor. Karoya iki ayrıntı eklendi: üstten inen ince bir iç ışık
- * çizgisi ve alttan gelen hafif bir gölge — karo düz bir kare yerine
- * basılmış bir rozet gibi duruyor. Sayfadaki tek gradient budur.
+ * GECE MAVİSİ (23 Eylül). Karo bir dönem açık maviden koyu maviye inen bir
+ * degradeydi (#6fd0ff → #124f9e) ve sitenin accent mavisiyle aynı aileden
+ * geliyordu: başlıktaki işaret, hemen yanındaki seçili sekmeyle ve
+ * birincil düğmelerle aynı renkte olduğu için bir marka değil bir düğme
+ * gibi okunuyordu. Dört seçenek yan yana çizildi (scratchpad
+ * `zil-isareti.html`); lacivert karo seçildi. Sitede başka hiçbir yüzey bu
+ * tonu taşımıyor, yani işaret artık kendi başına tanınıyor.
+ *
+ * İki tema, TEK işaret. "Açıkta lacivert, koyuda mavi degrade" de
+ * konuşuldu ve bırakıldı: sekme ikonu, ana ekran ikonu ve paylaşım kartı
+ * temayı bilemiyor, yani iki işaret bir yerde mutlaka yan yana düşerdi.
+ * Koyu temada karo zemine yaklaşıyor (#0a1a31 köşe, #070d16 zemin);
+ * onu ayıran açık mavi iç kenar (`--mark-edge`), koyu temada bir kademe
+ * daha belirgin.
+ *
+ * Renkler token: `--mark-gradient` (karo), `--mark-edge` (iç kenar),
+ * `--mark-ink` (zil) ve `--mark-lip` (ağız çubuğu). `--on-primary` KULLANILMAZ:
+ * o accent üzerine basılan metnin rengi ve koyu temada koyu lacivert —
+ * işaret bir dönem koyu temada siyah zille çiziliyordu.
  */
 
 /**
  * Zil geometrisi — TÖREN ZİLİ, bildirim zili değil.
  *
- * Önceki çizim her uygulamanın notification ikonuydu: geniş, basık bir
- * silüet ve gövdeye yapışık yarım daire bir tokmak. Ürünün adı "Açılış
- * Zili" ve işaret ettiği nesne borsanın tören zili — ayrı bir şey.
+ * Dört parça: tepede askı, omuzlu ve eteği açılan kubbe, altında ağız
+ * çubuğu ve ondan kopuk yuvarlak tokmak. Önceki çizim düz kenarlı bir
+ * kubbeydi; 16 pikselde bir kutuya dönüşüyordu. Omuz ve açılan etek o boyda
+ * da zil diye okunuyor.
  *
- * Yeni çizim dört parça: tepede AYRIK topuz, daha dar ve uzun kubbe,
- * altında keskin bir AĞIZ ÇUBUĞU ve ondan kopuk yuvarlak tokmak. Ağız
- * çubuğu aynı zamanda sitenin imzası olan gün şeridinin yankısı.
- * Parçaların arasındaki boşluklar 16px'te kapanmıyor; eski çizimde tokmak
- * gövdeye karışıp tek bir lekeye dönüşüyordu.
+ * Ağız çubuğu marka mavisinde (`--mark-lip`): sitenin imzası olan gün
+ * şeridinin yankısı ve lacivert karoda gözün ilk tuttuğu yer.
  */
+export const BELL_HANGER = { x: 118, y: 40, width: 20, height: 16, rx: 8 };
 export const BELL_BODY_PATH =
-  "M128 68c-30 0-53 24-53 54v33h106v-33c0-30-23-54-53-54z";
-/** Ağız çubuğu — zilin ağzı ve gün şeridinin yankısı. */
-export const BELL_MOUTH = { x: 56, y: 159, width: 144, height: 16, rx: 8 };
-export const BELL_CLAPPER = { cx: 128, cy: 196, r: 12 };
-export const BELL_KNOB = { cx: 128, cy: 50, r: 11 };
+  "M128 58c-27 0-44 20-46 47l-3 37c-1 11-7 18-18 22h134c-11-4-17-11-18-22l-3-37c-2-27-19-47-46-47z";
+export const BELL_LIP = { x: 52, y: 170, width: 152, height: 15, rx: 7.5 };
+export const BELL_CLAPPER = { cx: 128, cy: 206, r: 13 };
 
 /**
- * DAR görüş kutusu — işaretin her yerde küçük görünmesinin sebebi buydu.
+ * Karonun görüş kutusu — zil KARONUN TAMAMINA göre yerleşir.
  *
- * Geometri `0 0 256 256` içinde çizildi ama zilin kendisi o alanın tamamını
- * doldurmuyor: dikeyde 39→208 (169 birim, %66), yatayda 56→200 (144 birim,
- * %56). Karonun içine `size × 0.66` ölçüsünde basılınca zilin karodaki
- * gerçek yüksekliği %43'e, genişliği %37'ye düşüyordu — geri kalanı çizimin
- * kendi içindeki boşluktu. Karo büyütülse bile zil küçük kalıyordu, çünkü
- * sorun karonun boyu değil çizimin içindeki payıydı.
- *
- * Görüş kutusu zilin sınırlarına çekildi: kare kalması için (aksi hâlde
- * ölçekleme zili ezerdi) dikeyde dar kenar belirleyici, yatayda fazlalık
- * simetrik bırakıldı. Zil artık kutunun %91'i. Koordinatlar DEĞİŞMEDİ —
- * `icon.svg`, apple ikonu ve paylaşım kartları aynı sayıları kullanmaya
- * devam ediyor, yalnızca çerçeve daraldı.
+ * Zil `0 0 256 256` içinde çizildi ve karoya `scale(.92)` ile, merkezi
+ * (128, 124) noktasına oturtularak basılıyor. Aynı yerleşim bir dönüşüm
+ * yerine görüş kutusuyla veriliyor: kenar 256 / 0,92 = 278,26 birim,
+ * merkez (128, 124). Böylece svg karonun kendi boyunda çiziliyor ve
+ * `icon.svg`, apple ikonu, PWA ikonları ve paylaşım kartları aynı sayıyı
+ * okuyor. Zil karonun dikeyde %64'ünü, yatayda %55'ini kaplıyor.
  */
-export const BELL_VIEWBOX = "35 31 186 186";
-/** Zil karonun ne kadarını kaplasın — kutu daraldığı için oran da düştü. */
-export const BELL_INSET = 0.64;
+export const BELL_VIEWBOX = "-11.13 -15.13 278.26 278.26";
+
+/** Zilin dört parçası — dolgu renkleri çağırandan. */
+export function BellShape({ ink, lip }: { ink: string; lip: string }) {
+  return (
+    <g fill={ink}>
+      <rect {...BELL_HANGER} />
+      <path d={BELL_BODY_PATH} />
+      <rect {...BELL_LIP} fill={lip} />
+      <circle {...BELL_CLAPPER} />
+    </g>
+  );
+}
 
 export function BellMark({
   size = 27,
@@ -59,38 +75,20 @@ export function BellMark({
   return (
     <span
       aria-hidden="true"
-      className={cn(
-        "relative flex shrink-0 items-center justify-center",
-        className,
-      )}
+      className={cn("flex shrink-0", className)}
       style={{
         width: size,
         height: size,
         // Köşe yarıçapı boyutla ölçekleniyor — 27px'te 9px.
         borderRadius: size / 3,
         background: "var(--mark-gradient)",
-        boxShadow: "var(--mark-shadow)",
+        /* İç kenar, oturma gölgesiyle aynı listede: ayrı bir katman
+           span'ine gerek yok. */
+        boxShadow: "var(--mark-shadow), inset 0 0 0 1px var(--mark-edge)",
       }}
     >
-      {/* İç kenar ışığı — karoya kalınlık veren tek çizgi. */}
-      <span
-        className="pointer-events-none absolute inset-0"
-        style={{
-          borderRadius: "inherit",
-          boxShadow:
-            "inset 0 1px 0 rgb(255 255 255 / 0.32), inset 0 0 0 1px rgb(255 255 255 / 0.1)",
-        }}
-      />
-      <svg
-        width={size * BELL_INSET}
-        height={size * BELL_INSET}
-        viewBox={BELL_VIEWBOX}
-        fill="var(--on-primary)"
-      >
-        <circle {...BELL_KNOB} />
-        <path d={BELL_BODY_PATH} />
-        <rect {...BELL_MOUTH} />
-        <circle {...BELL_CLAPPER} />
+      <svg width={size} height={size} viewBox={BELL_VIEWBOX}>
+        <BellShape ink="var(--mark-ink)" lip="var(--mark-lip)" />
       </svg>
     </span>
   );
@@ -108,6 +106,13 @@ export function BellMark({
  *
  * Bölme SON BOŞLUKTAN: "Açılış Zili" ve "Opening Bell" ikisi de doğru
  * ayrılıyor, ad sözlükten geldiği için sabit yazılamaz.
+ *
+ * KELİME ARALIĞI DAR (23 Eylül). Boşluk yazının fontundaki sıradan boşluktu:
+ * 19 puntoda 3,4 piksel (0,18 em). Harf aralığı -0,03 em'e sıkıldığı için
+ * harfler birbirine yaklaşmış, boşluk yerinde kalmıştı; üstüne ş'nin sağ
+ * payı ve Z'nin sol payı eklenince iki kelime ayrı ayrı duruyordu. Aralık
+ * 0,07 em daraltıldı. Boşluk karakteri YERİNDE — seçip kopyalayan
+ * "AçılışZili" almasın, ekran okuyucu iki kelime okusun.
  */
 export function BrandWord({
   name,
@@ -123,7 +128,10 @@ export function BrandWord({
   const tail = cut > 0 ? name.slice(cut + 1) : "";
   return (
     <span
-      className={cn("w-fit font-bold tracking-[-0.03em] text-strong", className)}
+      className={cn(
+        "w-fit font-bold tracking-[-0.03em] [word-spacing:-0.07em] text-strong",
+        className,
+      )}
       style={style}
     >
       {head}

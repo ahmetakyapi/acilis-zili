@@ -254,18 +254,21 @@ export function AccountMenu({
            dolu accent kutu ve baş harfler — fark artık rastgele değil,
            durumu anlatıyor. Masaüstünde 36 piksel ve 9'luk köşe: başlığın
            yarıçapları yalnızca 9 (kontroller) ve 16 (katmanlar). */
+        /* DAİRE, ARAMAYLA EŞ (23 Eylül). Giriş yapılmamışken düğme gri
+           dolgulu bir kareydi ve devre dışı bir kontrol gibi okunuyordu;
+           şimdi aramanın haplı yüzeyinde bir daire. Giriş yapılmışken dolu
+           accent ve baş harfler, çevresinde tonla kurulmuş bir halka
+           (globals.css → `.masthead-account`) — durum farkı korunuyor. */
+        data-signed-in={signedIn || undefined}
         className={cn(
-          "masthead-account inline-flex size-11 items-center justify-center rounded-lg border text-small font-bold uppercase tracking-[0.02em] transition-colors lg:size-9 lg:rounded-md",
-          signedIn
-            ? "border-transparent bg-primary text-on-primary hover:bg-primary-hover"
-            : "border-line bg-surface-elevated text-body hover:border-line-strong hover:text-strong",
+          "masthead-account inline-flex size-11 items-center justify-center rounded-full border text-small font-bold uppercase tracking-[0.02em] transition-colors",
           open && "ring-2 ring-primary/35",
         )}
       >
         {signedIn ? (
           <span aria-hidden>{initials || "?"}</span>
         ) : (
-          <UserCircle weight="duotone" size={20} aria-hidden />
+          <UserCircle weight="duotone" size={21} aria-hidden />
         )}
       </button>
 

@@ -43,22 +43,26 @@ const PWA_SIZES = [192, 512];
 
 /** Zil geometrisi — components/brand/BellMark.tsx ile birebir aynı. */
 const BELL = `
-  <circle cx="128" cy="50" r="11"/>
-  <path d="M128 68c-30 0-53 24-53 54v33h106v-33c0-30-23-54-53-54z"/>
-  <rect x="56" y="159" width="144" height="16" rx="8"/>
-  <circle cx="128" cy="196" r="12"/>`;
+    <rect x="118" y="40" width="20" height="16" rx="8"/>
+    <path d="M128 58c-27 0-44 20-46 47l-3 37c-1 11-7 18-18 22h134c-11-4-17-11-18-22l-3-37c-2-27-19-47-46-47z"/>
+    <rect x="52" y="170" width="152" height="15" rx="7.5" fill="#35b8ff"/>
+    <circle cx="128" cy="206" r="13"/>`;
 
-/** Maskeli ikon: köşe yuvarlama YOK, zil güvenli dairenin içinde (%50). */
+/**
+ * Maskeli ikon: köşe yuvarlama ve iç kenar YOK, zil güvenli dairenin içinde.
+ * Görüş kutusu (128, 124) merkezli, kenar 340 birim: zil karonun %53'ü ve
+ * en uzak noktası (ağız çubuğunun köşesi) merkezden 147 piksel — güvenli
+ * dairenin yarıçapı 205.
+ */
 const MASKABLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="tile" x1="12%" y1="0%" x2="88%" y2="100%">
-      <stop offset="0" stop-color="#6fd0ff"/>
-      <stop offset="0.46" stop-color="#2f95e8"/>
-      <stop offset="1" stop-color="#124f9e"/>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#17345c"/>
+      <stop offset="1" stop-color="#0a1a31"/>
     </linearGradient>
   </defs>
   <rect width="512" height="512" fill="url(#tile)"/>
-  <svg x="128" y="128" width="256" height="256" viewBox="35 31 186 186" fill="#ffffff">${BELL}
+  <svg width="512" height="512" viewBox="-42 -46 340 340" fill="#ffffff">${BELL}
   </svg>
 </svg>`;
 

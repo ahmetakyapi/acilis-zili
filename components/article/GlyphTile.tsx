@@ -3,8 +3,10 @@ import { cn } from "@/lib/utils";
 /**
  * Kavramın kendi notasyonunu taşıyan karo — σ, ETF, 4×, EPS.
  *
- * Marka karosuyla aynı gradient ve gölgeyi kullanır: rehber sayfası
- * ürünün geri kalanından kopuk bir "blog" gibi durmasın diye. İkon
+ * Marka karosuyla aynı zemin, kenar ve gölgeyi kullanır: rehber sayfası
+ * ürünün geri kalanından kopuk bir "blog" gibi durmasın diye. Mürekkep
+ * `--mark-ink`, `--on-primary` değil — o koyu temada koyu lacivert ve
+ * lacivert karoda işaret kayboluyordu. İkon
  * kütüphanesi kasten kullanılmadı; bir kavramı en iyi kendi işareti anlatır
  * ve genel amaçlı bir ikon seti burada hep yaklaşık kalıyor.
  */
@@ -25,7 +27,7 @@ export function GlyphTile({
     <span
       aria-hidden
       className={cn(
-        "relative flex shrink-0 items-center justify-center font-bold tracking-[-0.02em]",
+        "flex shrink-0 items-center justify-center font-bold tracking-[-0.02em]",
         className,
       )}
       style={{
@@ -33,20 +35,12 @@ export function GlyphTile({
         height: size,
         borderRadius: size / 3,
         background: "var(--mark-gradient)",
-        boxShadow: "var(--mark-shadow)",
-        color: "var(--on-primary)",
+        boxShadow: "var(--mark-shadow), inset 0 0 0 1px var(--mark-edge)",
+        color: "var(--mark-ink)",
         fontSize,
       }}
     >
-      <span
-        className="pointer-events-none absolute inset-0"
-        style={{
-          borderRadius: "inherit",
-          boxShadow:
-            "inset 0 1px 0 rgb(255 255 255 / 0.32), inset 0 0 0 1px rgb(255 255 255 / 0.1)",
-        }}
-      />
-      <span className="relative">{glyph}</span>
+      {glyph}
     </span>
   );
 }

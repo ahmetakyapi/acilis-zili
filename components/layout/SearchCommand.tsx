@@ -441,12 +441,18 @@ export function SearchCommand({
            (`text-muted`) taşıyordu: telefonda düğme bir leke gibi
            duruyor, ikon da bulanık okunuyordu. Yüzey bir kademe yukarı,
            ikon gövde mürekkebine çıktı. */
-        className="masthead-search inline-flex size-11 items-center justify-center gap-2.5 rounded-lg border border-line bg-surface-elevated text-base text-body transition-colors hover:border-line-strong hover:text-strong lg:size-9 lg:rounded-md xl:w-60 xl:justify-start xl:px-3"
+        /* HAP, KUTU DEĞİL (23 Eylül, sahibinin isteği: "daha premium").
+           Arama 11 piksel köşeli bir kutuydu, yanındaki hesap düğmesi gri
+           dolgulu bir kare: iki kontrol iki ayrı aileden. İkisi artık aynı
+           yükseklikte (masaüstünde 40), tam yuvarlak ve aynı yüzeyde; stil
+           globals.css → `.masthead-search`. */
+        className="masthead-search inline-flex size-11 items-center justify-center gap-2.5 rounded-full border text-base transition-colors xl:w-64 xl:justify-start"
       >
-        <MagnifyingGlass weight="duotone" size={16} className="shrink-0" />
-        <span className="hidden truncate xl:inline">{placeholderShort}</span>
-        {/* Kutusuz: başlığın yarıçapları yalnızca 9 ve 16. */}
-        <kbd aria-hidden className="ml-auto hidden font-sans text-nano font-semibold text-muted xl:inline">
+        <span className="masthead-search-icon" aria-hidden>
+          <MagnifyingGlass weight="bold" size={15} className="shrink-0" />
+        </span>
+        <span className="hidden truncate text-muted xl:inline">{placeholderShort}</span>
+        <kbd aria-hidden className="masthead-kbd ml-auto hidden font-sans xl:inline-flex">
           ⌘K
         </kbd>
       </button>
