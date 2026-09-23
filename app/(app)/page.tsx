@@ -267,7 +267,6 @@ export default async function TodayPage() {
 
       {/* Bölüm bağlantıları artık bağımsız bir şerit değil, gün akışının
           araçları. Çapalar ve klavye erişimi korunur; içerik gizlenmez. */}
-      <SectionNav variant="floating" revealAfter="piyasa-ozeti" hideOnScrollDown label="TMPTEST" trail={<span>TMPTRAIL</span>} items={[{ id: "gunun-akisi", label: "Akış" }, { id: "gundem", label: "Özet" }, { id: "bilanco-analizleri", label: "Bilanço" }, { id: "haber-akisi", label: "Haberler" }]} />
       <section id="gunun-akisi" className={styles.flowPanel}>
         <div className={styles.flowHeader}>
           <div className={styles.sectionHeading}>

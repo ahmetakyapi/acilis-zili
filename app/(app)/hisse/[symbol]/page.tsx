@@ -379,7 +379,6 @@ export default async function StockPage(
         className={styles.chapterNav}
         label={t.stock.experienceNav}
         hideOnScrollDown
-        lead={<span className="numeral text-small font-bold text-strong">TMPLEAD {symbol}</span>}
         items={[
           { id: "stock-overview", label: t.stock.experienceOverview },
           { id: "stock-fundamentals", label: t.stock.chapterValuation },
