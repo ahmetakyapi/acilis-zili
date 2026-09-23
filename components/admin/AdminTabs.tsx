@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { TabBar, TabItem } from "@/components/ui/primitives";
+import { ADMIN_SECTIONS, ADMIN_TAB_ORDER } from "@/lib/admin-sections";
 
 /**
  * Panelin sekme çubuğu.
@@ -30,14 +31,10 @@ import { TabBar, TabItem } from "@/components/ui/primitives";
  * zıplamasını engelliyor.
  */
 
-const TABS = [
-  { href: "/admin", label: "Özet" },
-  { href: "/admin/trafik", label: "Trafik" },
-  { href: "/admin/uyeler", label: "Üyeler" },
-  { href: "/admin/icerik", label: "İçerik" },
-  { href: "/admin/yazilar", label: "Yazılar" },
-  { href: "/admin/sistem", label: "Sistem" },
-] as const;
+const TABS = ADMIN_TAB_ORDER.map((key) => ({
+  href: ADMIN_SECTIONS[key].href,
+  label: ADMIN_SECTIONS[key].tab,
+}));
 
 export function AdminTabs() {
   const pathname = usePathname();
@@ -49,8 +46,16 @@ export function AdminTabs() {
   }, [pathname]);
 
   return (
+    /* ÇİZGİ BANDIN, ÇUBUĞUN DEĞİL: sekme bandı (layout) kendi alt
+       çizgisini pencerenin bir ucundan öbür ucuna taşıyor.
+       DAR EKRANDA KENAR SOLUYOR. Altı sekme 390'da sığmıyor (428 > 386)
+       ve "Sistem" kenardan kesiliyordu, kaydırılabileceğine dair hiçbir
+       işaret yoktu. Maske kesilen ucu soldurup "devamı var" diyor. */
     <div ref={kap}>
-      <TabBar label="Yönetim bölümleri">
+      <TabBar
+        label="Yönetim bölümleri"
+        className="border-b-0 max-sm:[mask-image:linear-gradient(90deg,transparent,var(--text-strong)_16px,var(--text-strong)_calc(100%-28px),transparent)]"
+      >
         {TABS.map((tab) => {
           const active =
             tab.href === "/admin"

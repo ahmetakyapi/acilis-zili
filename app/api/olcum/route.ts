@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
-import { recordPageView } from "@/lib/analytics";
+import { recordPageView, shouldRecord } from "@/lib/analytics";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 /**
@@ -77,6 +77,12 @@ export async function POST(request: Request) {
   const headers = request.headers;
   const session = await auth();
 
+  /* YÖNETİCİ VE YEREL GELİŞTİRME SAYILMAZ (23 Eylül denetimi) — gerekçe
+     ve ölçüm `shouldRecord` üzerinde; kural orada ki test edilebilsin. */
+  if (!shouldRecord(session, process.env.NODE_ENV)) {
+    return new NextResponse(null, { status: 204 });
+  }
+
   await recordPageView({
     path: payload.path,
     referrer: payload.referrer ?? null,
@@ -87,7 +93,12 @@ export async function POST(request: Request) {
        dönen özetin girdisi. */
     ip: headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "bilinmeyen",
     userAgent: headers.get("user-agent") ?? "",
+    /* Ters vekil arkasında `request.url` iç adresi taşıyor; tarayıcının
+       gördüğü ad `x-forwarded-host`ta. Kanonik alan adı ayrıca
+       `referrerHostOf` içinde her zaman "kendimiz" sayılıyor. */
     selfHost: (() => {
+      const forwarded = headers.get("x-forwarded-host") ?? headers.get("host");
+      if (forwarded) return forwarded.split(",")[0].trim().split(":")[0];
       try {
         return new URL(request.url).hostname;
       } catch {

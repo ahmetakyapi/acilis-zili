@@ -1050,10 +1050,22 @@ export function SegmentItem({
   onClick,
   onPointerEnter,
   onFocus,
+  current = "true",
 }: {
   href: string;
   active: boolean;
   children: React.ReactNode;
+  /**
+   * Seçili öğenin `aria-current` değeri.
+   *
+   * Varsayılan `"true"`: segment çoğunlukla AYNI SAYFANIN bir süzgeci
+   * (aralık, dönem, dil) ve orada "page" demek yanlış olurdu — okuyucu
+   * başka bir sayfaya geçmiyor. Ama segment AYRI SAYFALAR arasında
+   * geziniyorsa (yönetimde Mercek | Bülten iki ayrı adres) doğru değer
+   * `"page"`: ekran okuyucu seçili öğeyi "geçerli sayfa" diye duyurur,
+   * sekme çubuğundaki `TabItem` ile aynı.
+   */
+  current?: "page" | "true";
   /**
    * Görünen kısaltmanın UZUN karşılığı — ekran okuyucu için.
    *
@@ -1093,7 +1105,7 @@ export function SegmentItem({
       href={href}
       scroll={false}
       prefetch={prefetch}
-      aria-current={active ? "true" : undefined}
+      aria-current={active ? current : undefined}
       aria-disabled={disabled || undefined}
       tabIndex={disabled ? -1 : undefined}
       data-shallow={shallow ? "" : undefined}

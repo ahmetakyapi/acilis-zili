@@ -33,6 +33,12 @@ export type EditorState = {
   /** Alan bazlı hata: hangi kutunun kırmızı olacağını söyler. */
   fieldErrors?: Record<string, string>;
   savedAt?: string;
+  /**
+   * Eylemin BİTTİĞİ an — başarı da hata da taşıyor. Editörde iki eylem
+   * (kaydet, geri yükle) aynı durum yuvasına yazıyor; hangisinin sonucunun
+   * gösterileceğine en son biteni karar veriyor.
+   */
+  at?: string;
 };
 
 /** Formdan gelen ham metinleri şemanın beklediği şekle getirir. */
@@ -45,35 +51,122 @@ function toInput(formData: FormData) {
 
   /* Kaynaklar satır satır: "Etiket | https://adres". Panelde JSON yazdırmak
      bir editör değil, bir tuzak olurdu — tek bir eksik virgül bütün formu
-     reddediyor ve hata mesajı satır numarası veriyor, alan adı değil. */
-  const kaynaklar = metin("sources")
+     reddediyor ve hata mesajı satır numarası veriyor, alan adı değil.
+
+     SATIR NUMARASI KORUNUYOR. Boş satırlar süzülüyor ve şemanın hata yolu
+     (`sources.2.url`) süzülmüş dizinin sırasını veriyor; kutudaki satırı
+     değil. Hata "3. satır" diyorsa yazarın saydığı üçüncü satır olmalı. */
+  const kaynakSatirlari: number[] = [];
+  const kaynaklar = String(formData.get("sources") ?? "")
     .split("\n")
-    .map((satir) => satir.trim())
-    .filter(Boolean)
-    .map((satir) => {
+    .flatMap((ham, i) => {
+      const satir = ham.trim();
+      if (!satir) return [];
+      kaynakSatirlari.push(i + 1);
       const [label, url] = satir.split("|").map((p) => p.trim());
-      return url ? { label, url } : { label };
+      return [url ? { label, url } : { label }];
     });
 
   return {
-    slug: metin("slug"),
-    title: metin("title"),
-    dek: metin("dek"),
-    body_md: String(formData.get("body_md") ?? ""),
-    event_date: metin("event_date") || undefined,
-    locale: metin("locale") || "tr",
-    symbols: semboller.length > 0 ? semboller : undefined,
-    sources: kaynaklar.length > 0 ? kaynaklar : undefined,
+    input: {
+      slug: metin("slug"),
+      title: metin("title"),
+      dek: metin("dek"),
+      body_md: String(formData.get("body_md") ?? ""),
+      event_date: metin("event_date") || undefined,
+      locale: metin("locale") || "tr",
+      symbols: semboller.length > 0 ? semboller : undefined,
+      sources: kaynaklar.length > 0 ? kaynaklar : undefined,
+    },
+    kaynakSatirlari,
   };
 }
 
-function alanHatalari(error: z.ZodError): Record<string, string> {
+/** Alanların ekrandaki adı — hata cümlesinin öznesi. */
+const ALAN_ADI: Record<string, string> = {
+  slug: "Adres",
+  title: "Başlık",
+  dek: "Giriş cümlesi",
+  body_md: "Gövde",
+  event_date: "Olay tarihi",
+  symbols: "Semboller",
+  sources: "Kaynaklar",
+  headline: "Manşet",
+};
+
+const sayi = (n: number) => n.toLocaleString("tr-TR");
+
+/**
+ * Şema hatasını TÜRKÇE BİR CÜMLEYE çevirir.
+ *
+ * Zod'un kendi iletisi olduğu gibi basılıyordu (23 Eylül denetimi): boş
+ * başlık "Too small: expected string to have >=1 characters", bozuk kaynak
+ * adresi yalnızca "Invalid URL" — üstelik hangi satırda olduğunu söylemeden,
+ * çünkü yolun yalnızca ilk parçası (`sources`) okunuyordu. Kural kodu ve
+ * yolun tamamı artık okunuyor: "Kaynaklar, 3. satır: adres geçersiz."
+ */
+function hataCumlesi(issue: z.core.$ZodIssue, kaynakSatirlari: number[]): string {
+  const [alan, sira, parca] = issue.path;
+  const ad = ALAN_ADI[String(alan)] ?? "Bu alan";
+
+  if (alan === "sources" && typeof sira === "number") {
+    const satir = kaynakSatirlari[sira] ?? sira + 1;
+    const ne =
+      parca === "url"
+        ? issue.code === "too_big"
+          ? `adres en fazla ${sayi(issue.maximum as number)} karakter olabilir`
+          : "adres geçersiz"
+        : issue.code === "too_big"
+          ? `etiket en fazla ${sayi(issue.maximum as number)} karakter olabilir`
+          : "etiket boş";
+    return `Kaynaklar, ${satir}. satır: ${ne}.`;
+  }
+  if (alan === "symbols" && typeof sira === "number") {
+    return issue.code === "too_big"
+      ? `Semboller, ${sira + 1}. sembol en fazla ${sayi(issue.maximum as number)} karakter olabilir.`
+      : `Semboller, ${sira + 1}. sembol boş.`;
+  }
+
+  switch (issue.code) {
+    case "too_small":
+      return issue.origin === "array" || Number(issue.minimum) <= 1
+        ? `${ad} boş bırakılamaz.`
+        : `${ad} en az ${sayi(Number(issue.minimum))} karakter olmalı.`;
+    case "too_big":
+      return issue.origin === "array"
+        ? `${ad} en fazla ${sayi(Number(issue.maximum))} satır olabilir.`
+        : `${ad} en fazla ${sayi(Number(issue.maximum))} karakter olabilir.`;
+    case "invalid_format":
+      return alan === "event_date"
+        ? "Olay tarihi geçerli bir gün değil."
+        : alan === "slug"
+          ? "Adres yalnızca küçük harf, rakam ve tire taşıyabilir."
+          : `${ad} kurala uymuyor.`;
+    default:
+      return `${ad} kurala uymuyor.`;
+  }
+}
+
+function alanHatalari(
+  error: z.ZodError,
+  kaynakSatirlari: number[] = [],
+): Record<string, string> {
   const out: Record<string, string> = {};
   for (const issue of error.issues) {
     const alan = String(issue.path[0] ?? "form");
-    if (!out[alan]) out[alan] = issue.message;
+    if (!out[alan]) out[alan] = hataCumlesi(issue, kaynakSatirlari);
   }
   return out;
+}
+
+/** Durum yuvasının hata cümlesi — kaç alanın kurala uymadığını söyler. */
+function kuralHatasi(alanlar: Record<string, string>): EditorState {
+  const n = Object.keys(alanlar).length;
+  return {
+    error: `Kaydedilmedi: ${n === 1 ? "bir alan" : `${n} alan`} kurala uymuyor.`,
+    fieldErrors: alanlar,
+    at: new Date().toISOString(),
+  };
 }
 
 /**
@@ -109,27 +202,42 @@ export async function saveStoryFromAdmin(
 ): Promise<EditorState> {
   await requireAdmin();
 
-  const parsed = storyInputSchema.safeParse(toInput(formData));
-  if (!parsed.success) {
-    return {
-      error: "Kaydedilmedi — alanlardan biri kurala uymuyor.",
-      fieldErrors: alanHatalari(parsed.error),
-    };
+  const { input, kaynakSatirlari } = toInput(formData);
+  const parsed = storyInputSchema.safeParse(input);
+
+  /* OLAY TARİHİ PANELDE ZORUNLU. Şema onu isteğe bağlı tutuyor — rutin
+     tarih göndermezse gün bugün sayılıyor (`saveStory`) ve o kural rutin
+     için doğru. Panelde ise alanı temizleyen yazar yazıyı SESSİZCE bugüne
+     taşıyordu: hata yok, uyarı yok, arşivde yeri değişmiş bir yazı. Kural
+     yalnızca bu girişte; şemaya koymak rutinin sözleşmesini değiştirirdi. */
+  const alanlar = parsed.success ? {} : alanHatalari(parsed.error, kaynakSatirlari);
+  if (!input.event_date && !alanlar.event_date) {
+    alanlar.event_date = "Olay tarihi boş bırakılamaz.";
+  }
+  if (!parsed.success || Object.keys(alanlar).length > 0) {
+    return kuralHatasi(alanlar);
   }
 
   try {
     await saveStory(parsed.data, "admin");
   } catch {
-    return { error: "Kaydedilemedi — veritabanı yazmayı reddetti." };
+    return {
+      error: "Kaydedilemedi: veritabanı yazmayı reddetti.",
+      at: new Date().toISOString(),
+    };
   }
 
   mercegiTazele(parsed.data.slug);
 
+  const now = new Date().toISOString();
   return {
     ok: true,
-    /* Saat İSTEMCİDE biçimleniyor olsaydı sunucu ile arasında bir kare fark
-       olurdu; ISO dize gidiyor, ekran onu okuyucunun saatinde yazıyor. */
-    savedAt: new Date().toISOString(),
+    /* Saat İSTEMCİDE biçimleniyor ama İSTANBUL diliminde, okuyucunun
+       tarayıcısının değil: aynı ekrandaki bütün damgalar TR saatiyle
+       (lib/admin-format.ts → `adminStamp`). ISO dize gidiyor ki sunucu ile
+       istemci arasında bir kare fark olmasın. */
+    savedAt: now,
+    at: now,
   };
 }
 
@@ -139,8 +247,16 @@ export async function saveStoryFromAdmin(
 
 export type StoryRevision = {
   id: string;
+  /** Sürümün ÜZERİNE YAZILDIĞI an — satırın olayı. */
   replacedAt: string;
+  /** Üzerine kimin yazdığı: "admin" (panel) ya da "claude" (rutin). */
   replacedBy: string;
+  /**
+   * Sürümün KENDİ anı — o metnin yazıldığı zaman. Satırın asıl damgası bu:
+   * `replacedAt` ile gösterilen sürüm, üzerine yazıldığı saatle tarihlenmiş
+   * ve yanlış kişiye yazılmış görünüyordu (23 Eylül denetimi).
+   */
+  versionAt: string | null;
   title: string;
   /** Karakter sayısı — hangi sürümün daha dolu olduğu bir bakışta görünsün. */
   length: number;
@@ -156,6 +272,14 @@ export type StoryRevision = {
  * listede yalnızca hangi sürüm olduğunu seçmeye yetecek kadarı gerekiyor.
  * Gövde geri yüklenirken, tek kayıt için okunuyor. Başlık iki şemada iki ayrı
  * alan (`title` / `headline`) — hangisi doluysa o okunuyor.
+ *
+ * SÜRÜMÜN KENDİ ANI FOTOĞRAFTAN. Fotoğraf satırın o anki hâli, damgası da
+ * içinde: mercekte `updatedAt` (her yazmada tazeleniyor), bültende
+ * `generatedAt`. Bülten damgası panel düzeltmesinde ARTIK İLERLEMİYOR
+ * (lib/content-write.ts → `saveBrief`), yani panelde düzeltilmiş bir
+ * bülten sürümünün fotoğrafında hâlâ rutinin saati duruyor. O sürümü
+ * doğuran yazma bir alttaki satırın olayı: üzerine panel yazdıysa sürümün
+ * anı o yazmanın anıdır.
  */
 async function surumleriOku(
   key: string,
@@ -176,16 +300,24 @@ async function surumleriOku(
       .orderBy(desc(storyRevisions.replacedAt))
       .limit(10);
 
-    return rows.map((row) => {
+    return rows.map((row, i) => {
       const snap = row.snapshot as {
         title?: string;
         headline?: string;
         bodyMd?: string;
+        updatedAt?: string;
+        generatedAt?: string;
       };
+      const kendi = snap.updatedAt ?? snap.generatedAt ?? null;
+      const doguran = rows[i + 1];
+      const panelde =
+        doguran?.replacedBy === "admin" &&
+        (!kendi || doguran.replacedAt.getTime() > new Date(kendi).getTime());
       return {
         id: row.id,
         replacedAt: row.replacedAt.toISOString(),
         replacedBy: row.replacedBy,
+        versionAt: panelde ? doguran.replacedAt.toISOString() : kendi,
         title: snap.title ?? snap.headline ?? "—",
         length: (snap.bodyMd ?? "").length,
       };
@@ -241,7 +373,7 @@ export async function restoreStoryRevision(
   await requireAdmin();
 
   const fotograf = await fotografOku(formData);
-  if (!fotograf.ok) return { error: fotograf.hata };
+  if (!fotograf.ok) return { error: fotograf.hata, at: new Date().toISOString() };
   const snapshot = fotograf.snapshot;
 
   const parsed = storyInputSchema.safeParse({
@@ -255,17 +387,24 @@ export async function restoreStoryRevision(
     sources: snapshot.sources ?? undefined,
   });
   if (!parsed.success) {
-    return { error: "Bu sürüm bugünkü kurallara uymuyor, geri yüklenemedi." };
+    return {
+      error: "Bu sürüm bugünkü kurallara uymuyor, geri yüklenemedi.",
+      at: new Date().toISOString(),
+    };
   }
 
   try {
     await saveStory(parsed.data, "admin");
   } catch {
-    return { error: "Geri yüklenemedi — veritabanı yazmayı reddetti." };
+    return {
+      error: "Geri yüklenemedi: veritabanı yazmayı reddetti.",
+      at: new Date().toISOString(),
+    };
   }
 
   mercegiTazele(parsed.data.slug);
-  return { ok: true, savedAt: new Date().toISOString() };
+  const now = new Date().toISOString();
+  return { ok: true, savedAt: now, at: now };
 }
 
 /* --------------------------------------------------------------------------
@@ -294,21 +433,20 @@ export async function saveBriefFromAdmin(
     date: metin("date") || undefined,
     period: metin("period") === "weekly" ? "weekly" : "daily",
   });
-  if (!parsed.success) {
-    return {
-      error: "Kaydedilmedi — alanlardan biri kurala uymuyor.",
-      fieldErrors: alanHatalari(parsed.error),
-    };
-  }
+  if (!parsed.success) return kuralHatasi(alanHatalari(parsed.error));
 
   try {
     await saveBrief(parsed.data, "admin");
   } catch {
-    return { error: "Kaydedilemedi — veritabanı yazmayı reddetti." };
+    return {
+      error: "Kaydedilemedi: veritabanı yazmayı reddetti.",
+      at: new Date().toISOString(),
+    };
   }
 
   bulteniTazele(parsed.data.date);
-  return { ok: true, savedAt: new Date().toISOString() };
+  const now = new Date().toISOString();
+  return { ok: true, savedAt: now, at: now };
 }
 
 /**
@@ -351,7 +489,7 @@ export async function restoreBriefRevision(
   await requireAdmin();
 
   const fotograf = await fotografOku(formData);
-  if (!fotograf.ok) return { error: fotograf.hata };
+  if (!fotograf.ok) return { error: fotograf.hata, at: new Date().toISOString() };
   const snapshot = fotograf.snapshot;
 
   const parsed = briefInputSchema.safeParse({
@@ -362,15 +500,22 @@ export async function restoreBriefRevision(
     period: snapshot.period,
   });
   if (!parsed.success) {
-    return { error: "Bu sürüm bugünkü kurallara uymuyor, geri yüklenemedi." };
+    return {
+      error: "Bu sürüm bugünkü kurallara uymuyor, geri yüklenemedi.",
+      at: new Date().toISOString(),
+    };
   }
 
   try {
     await saveBrief(parsed.data, "admin");
   } catch {
-    return { error: "Geri yüklenemedi — veritabanı yazmayı reddetti." };
+    return {
+      error: "Geri yüklenemedi: veritabanı yazmayı reddetti.",
+      at: new Date().toISOString(),
+    };
   }
 
   bulteniTazele(parsed.data.date);
-  return { ok: true, savedAt: new Date().toISOString() };
+  const now = new Date().toISOString();
+  return { ok: true, savedAt: now, at: now };
 }

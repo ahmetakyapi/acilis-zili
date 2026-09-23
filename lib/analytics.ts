@@ -2,6 +2,9 @@ import { createHash } from "node:crypto";
 import { db } from "./db";
 import { pageViews } from "./schema";
 import { todayEt } from "./market-hours";
+import { SITE_URL } from "./site";
+import { analysisHref } from "./analysis";
+import { technicalHref } from "./technical";
 
 /**
  * Birinci taraf sayfa ölçümü.
@@ -32,6 +35,12 @@ const ROUTE_PATTERNS: [RegExp, string][] = [
   [/^\/bilancolar\/(analizler|takip)$/, "/bilancolar/$1"],
   [/^\/bilancolar\/[^/]+\/[^/]+$/, "/bilancolar/[symbol]/[period]"],
   [/^\/hisse\/[^/]+$/, "/hisse/[symbol]"],
+  /* TEKNİK DETAY EKSİKTİ. `/teknik/[symbol]` rotası sonradan geldi ve
+     buraya eklenmedi: panelin "Bölümler" listesi (açıklaması "Dinamik
+     Sayfalar Şablonlarında Toplanır") `/teknik/mu`, `/teknik/sndk` diye
+     sembol sembol satır basıyordu (23 Eylül denetimi). Eski satırlar
+     okumada toplanıyor (lib/admin-data.ts → ROUTE_READ). */
+  [/^\/teknik\/[^/]+$/, "/teknik/[symbol]"],
   [/^\/mercek\/[^/]+$/, "/mercek/[slug]"],
   [/^\/rehber\/[^/]+$/, "/rehber/[slug]"],
   [/^\/haberler\/[^/]+$/, "/haberler/[id]"],
@@ -132,7 +141,25 @@ export function referrerHostOf(
     const host = new URL(referrer).hostname.replace(/^www\./, "");
     if (!host) return null;
     if (selfHost && host === selfHost.replace(/^www\./, "")) return null;
+    if (host === siteHost()) return null;
     return host.slice(0, 120);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Sitenin kendi alan adı — `www.` olmadan.
+ *
+ * ÖZ YÖNLENDİRME PANELİN BİRİNCİSİYDİ. Karşılaştırma yalnızca isteğin
+ * kendi adresiyle yapılıyordu ve ters vekil arkasında o adres sitenin
+ * alan adı değil (iç adres); panelde "Nereden Geliniyor" listesinin başında
+ * 30 günde 64 girişin 60'ıyla aciliszili.com duruyordu (23 Eylül denetimi).
+ * Kanonik adres (`SITE_URL`) her zaman "kendimiz" sayılıyor.
+ */
+export function siteHost(): string | null {
+  try {
+    return new URL(SITE_URL).hostname.replace(/^www\./, "") || null;
   } catch {
     return null;
   }
@@ -167,6 +194,28 @@ export type ViewInput = {
   userAgent: string;
   selfHost: string | null;
 };
+
+/**
+ * Bu görüntüleme sayılsın mı — oturum ve ortam kararı TEK YERDE.
+ *
+ * YÖNETİCİ VE YEREL GELİŞTİRME SAYILMAZ (23 Eylül denetimi). Panel
+ * sahibinin kendi gezintisi okur trafiği gibi yazılıyordu: 29 Ağustos'ta
+ * iki ziyaretçiden 706 görüntüleme, 30 günlük toplamın %29'u; grafiğin
+ * tavanını da o gün belirliyordu. Yerel geliştirme sunucusu da üretim
+ * veritabanına bağlı ve oradaki her tarayıcı gezintisi üretim trafiğine
+ * düşüyordu. Başsız tarayıcı zaten `isBot`ta eleniyor.
+ *
+ * Uçtan (`app/api/olcum/route.ts`) buraya alındı ki kural test edilebilsin
+ * (`tests/analytics-routes.test.ts`): uç oturumu ve ortamı okuyor, karar
+ * burada.
+ */
+export function shouldRecord(
+  session: { user?: { role?: string | null } | null } | null | undefined,
+  env: string | undefined,
+): boolean {
+  if (env !== "production") return false;
+  return session?.user?.role !== "admin";
+}
 
 /**
  * Bir görüntülemeyi yazar. Hata YUTULUR ve `false` döner: ölçümün
@@ -209,5 +258,30 @@ export function normalizePath(raw: string): string | null {
   /* Yol yalnızca URL'de geçerli karakterlerden oluşsun; panelde ham metin
      olarak basılıyor ve garip girdi oraya kadar gitmesin. */
   if (!/^\/[\w\-./%[\]]*$/.test(clean)) return null;
-  return clean;
+  return canonicalCase(clean);
+}
+
+/**
+ * Sembollü yol SİTENİN KENDİ YAZIMINA iner.
+ *
+ * AYNI SAYFA İKİ SATIRDI (23 Eylül denetimi): yol olduğu gibi saklanıyordu
+ * ve sayfalar parametreyi kendileri büyütüp küçülttüğü için `/teknik/mu`
+ * ile `/teknik/MU` aynı sayfayı açıp panelin "Sayfalar" listesinde iki ayrı
+ * satır oluyordu. Yazım her rotanın KENDİ bağlantı kurucusundan: hisse
+ * büyük harf (bütün `/hisse/${symbol}` bağlantıları), teknik ve bilanço
+ * analizi küçük harf (`technicalHref`, `analysisHref`) — denetimin önerdiği
+ * "hepsini büyüt" kuralı teknik ve analiz adreslerini kanonik hâllerinden
+ * koparırdı. Eski satırlar okumada aynı yazıma iniyor
+ * (lib/admin-data.ts → `PATH_READ`).
+ */
+function canonicalCase(path: string): string {
+  const prefix = path === "/en" || path.startsWith("/en/") ? "/en" : "";
+  const bare = prefix ? path.slice(3) : path;
+  const hisse = bare.match(/^\/hisse\/([^/]+)$/);
+  if (hisse) return `${prefix}/hisse/${hisse[1].toUpperCase()}`;
+  const teknik = bare.match(/^\/teknik\/([^/]+)$/);
+  if (teknik) return `${prefix}${technicalHref(teknik[1])}`;
+  const analiz = bare.match(/^\/bilancolar\/([^/]+)\/([^/]+)$/);
+  if (analiz) return `${prefix}${analysisHref(analiz[1], analiz[2])}`;
+  return path;
 }

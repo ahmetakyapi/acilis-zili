@@ -258,6 +258,16 @@ export const BRIEF_INPUT_SHAPE = {
  * düzeltme "kural tabanlı" bir bülteni "rutin yazdı" diye etiketleyemez:
  * `generatedBy` sütunu ekranda okunuyor ve rutin durduğunda ilk bakılan yer
  * orası. Panel yalnızca metni değiştirir, kimin yazdığını değil.
+ *
+ * DAMGA DA ÖYLE (23 Eylül denetimi). `generatedAt` her yazmada ilerliyordu,
+ * panelden de: saat 11:42'de düzeltilen bülten "Rutin Yazdı · 11:42"
+ * diye okunuyor, künyenin yarısı yalan oluyordu — ve Sistem ekranının
+ * "rutin bugün yazdı mı" sorusu (`max(generatedAt)`) bir panel düzeltmesini
+ * rutinin koşusu sanabiliyordu. Damga artık yalnızca rutin yazınca
+ * ilerliyor; panel düzeltmesinin anı `story_revisions`ta, üzerine yazılan
+ * sürümün `replacedAt`inde duruyor ve editör başlığı onu ayrıca yazıyor
+ * ("Panelde Düzeltildi"). Ayrı bir `updated_at` sütunu yeni bir migration
+ * isterdi; aynı bilgi zaten o tabloda.
  */
 export async function saveBrief(input: BriefInput, source: WriteSource) {
   const locale = isLocale(input.locale) ? input.locale : "tr";
@@ -309,8 +319,9 @@ export async function saveBrief(input: BriefInput, source: WriteSource) {
       set: {
         headline: input.headline,
         bodyMd: input.body_md,
-        generatedAt: new Date(),
-        ...(source === "claude" ? { generatedBy: "claude" as const } : {}),
+        ...(source === "claude"
+          ? { generatedBy: "claude" as const, generatedAt: new Date() }
+          : {}),
       },
     });
 

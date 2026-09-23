@@ -1782,3 +1782,12 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
    araçlar arasındaki denge korunuyor. Öğe genişlikleri her iki durumda da
    kendi içeriğinden geliyor, yani taşma önceliği hesabı değişmiyor. */
 .masthead-frame { column-gap:clamp(16px,1.6vw,24px); }
+
+/* YÖNETİMİN KAYDIRMA PAYI KENDİ BANDINA GÖRE (23 Eylül). Sitenin üst payı
+   76 piksel: 64 piksellik uygulama çubuğu + nefes. Yönetimde o çubuk yok;
+   yapışkan olan yalnızca sekme bandı ve o 44 piksel (ölçüldü, 1440 ve 390).
+   Site payıyla klavyeyle odaklanan öğe ve `#çapa` hedefi (Özet'ten Sistem
+   panellerine inen bağlantılar) bandın 32 piksel altında, boşlukta
+   duruyordu. Pay bant + 12 piksel; bant güvenli alanı kendi taşıdığı için
+   pay da taşıyor. `data-admin-shell` yönetim layout'unun kökünde. */
+html:has([data-admin-shell]) { scroll-padding-top: calc(env(safe-area-inset-top) + 56px); }

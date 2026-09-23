@@ -289,6 +289,55 @@ export function sessionWindows(
   });
 }
 
+/**
+ * Bir dilimin DUVAR SAATİNİ gerçek bir ana çevirir: "2026-09-23" + "16:10"
+ * İstanbul'da → UTC `Date`.
+ *
+ * NEDEN VAR: yönetim panelinin rutin beklentileri Türkiye saatiyle
+ * yazılı (`BRIEF_PUBLISH_TR`: günlük 16:10, haftalık 09:30) ve "gecikti mi"
+ * sorusu bir ANLA cevaplanıyor: şimdi, o gün 16:10 TR'nin otuz dakika
+ * ötesinde mi. Karşılaştırma bir dönem saat dizesiyle yapılıyordu
+ * (`"01:00" >= "16:10"`) ve gün sınırını hiç görmüyordu — gece yarısını
+ * geçince kaçırılan bülten yeniden "bekleniyor"a dönüyordu.
+ *
+ * SABİT FARK YOK: kayma o anın tarihiyle `zoneOffsetSeconds`ten okunuyor ve
+ * `etToUtc` gibi bir kez düzeltiliyor — dilim yaz saati uygularsa da doğru.
+ */
+export function zoneWallTime(dateStr: string, time: string, zone: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  const wall = Date.UTC(year, month - 1, day, hour, minute);
+  const offsetMs = (at: number) =>
+    Math.round(zoneOffsetSeconds(Math.floor(at / 1000), zone) / 60) * 60_000;
+  const firstGuess = wall - offsetMs(wall);
+  return new Date(wall - offsetMs(firstGuess));
+}
+
+/**
+ * ET gününün Türkiye saatiyle döndüğü an — "07:00" (yaz), "08:00" (kış).
+ *
+ * Panelin günü ET takvim günü (`viewedOn`, lib/admin-data.ts dosya başı) ve
+ * künye bunu yalnızca "ET Takvim Günü" diye söylüyordu: Türkiye'den bakan
+ * yönetici için "Bugün · Sürüyor" sütununun sabah 07:00'ye kadar DÜNÜ
+ * anlattığı hiçbir yerde yazmıyordu. Saat sabit yazılamaz — ABD yaz saatiyle
+ * bir saat kayıyor — o yüzden bir sonraki New York gece yarısından
+ * hesaplanıyor.
+ */
+export function etDayRolloverTr(now: Date = new Date()): string {
+  return formatInZone(nextZoneMidnight(now.getTime(), ET_ZONE), TR_ZONE);
+}
+
+/**
+ * Gün sınırının künyesi: "Gün 07:00 TR'de Döner (New York Gece Yarısı)".
+ *
+ * EK SAATE DEĞİL "TR"YE BİTİŞİYOR. "07:00'de" yazılsaydı ünlü uyumu saatin
+ * okunuşuna bağlı olurdu (yedide, altıda); ek sabit yazılamaz — Trafik
+ * sayfasının Üyelik notundaki kuralın aynısı. "TR" her zaman "TR'de".
+ */
+export function dayBoundaryNote(now: Date = new Date()): string {
+  return `Gün ${etDayRolloverTr(now)} TR'de Döner (New York Gece Yarısı)`;
+}
+
 /* `railSpan` burada dururdu: şerit başlığının sağına "11:00 — 03:00 TR"
    yazan tek satırlık pencere. Aynı iki saat artık eksenin uçlarında
    basıldığı için (`components/today/DayFlow.tsx` → `.axisFoot`) kaldırıldı. */

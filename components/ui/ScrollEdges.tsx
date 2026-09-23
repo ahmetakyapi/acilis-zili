@@ -30,17 +30,27 @@ import { cn } from "@/lib/utils";
  * `data-edge` yalnızca istemcide yazılıyor: JavaScript kapalıyken maske hiç
  * olmuyor ve kap her zamanki gibi kayıyor — bir gerileme değil, bugünkü
  * durumun aynısı.
+ *
+ * SABİT ETİKET SÜTUNU VARSA SOL KENAR SOLMAZ (`fixedStart`). Maske kabın
+ * tamamına uygulanıyor, yapışkan hücreler dahil: sağa kaydırılmış bir
+ * tabloda sol 34 piksel, yani tam da yerinde kalan etiket sütununun başı
+ * soluyordu — "Kaydırma saklanmaz" kuralının okunur tutmak istediği sütun
+ * (CLAUDE.md). Oradaki kaydırma zaten görünür: kayan hücreler sabit sütunun
+ * opak zemininin ALTINA giriyor. Yalnızca sağ uç "devamı var" der.
  */
 export function ScrollEdges({
   as: Tag = "div",
   className,
   children,
+  fixedStart = false,
   ...rest
 }: {
   /** Kabın etiketi — liste kaplarında `ul` gerekiyor. */
   as?: "div" | "ul" | "ol";
   className?: string;
   children: ReactNode;
+  /** Solda yapışkan bir sütun var — yalnızca sağ kenar solar. */
+  fixedStart?: boolean;
 } & React.HTMLAttributes<HTMLElement>) {
   const ref = useRef<HTMLElement>(null);
 
@@ -49,7 +59,7 @@ export function ScrollEdges({
     if (!el) return;
     const mark = () => {
       const max = el.scrollWidth - el.clientWidth;
-      el.dataset.edge =
+      const edge =
         max <= 1
           ? "none"
           : el.scrollLeft <= 1
@@ -57,6 +67,13 @@ export function ScrollEdges({
             : el.scrollLeft >= max - 1
               ? "start"
               : "both";
+      el.dataset.edge = fixedStart
+        ? edge === "start"
+          ? "none"
+          : edge === "both"
+            ? "end"
+            : edge
+        : edge;
     };
     mark();
     el.addEventListener("scroll", mark, { passive: true });
@@ -71,7 +88,7 @@ export function ScrollEdges({
       resize.disconnect();
       mutate.disconnect();
     };
-  }, []);
+  }, [fixedStart]);
 
   return (
     <Tag ref={ref as never} className={cn("edge-fade", className)} {...rest}>

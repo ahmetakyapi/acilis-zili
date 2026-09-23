@@ -1,9 +1,14 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Kicker } from "@/components/ui/primitives";
 import type { Metadata } from "next";
-import { getAdmin } from "@/lib/admin";
+import { auth } from "@/auth";
+import { getAdmin, type AdminSession } from "@/lib/admin";
+import { cn } from "@/lib/utils";
 import { AdminTabs } from "@/components/admin/AdminTabs";
+import { BellMark } from "@/components/brand/BellMark";
+import { RouteProgress } from "@/components/layout/RouteProgress";
+import { Panel } from "@/components/ui/primitives";
 
 /**
  * Yönetim paneli.
@@ -17,84 +22,135 @@ import { AdminTabs } from "@/components/admin/AdminTabs";
  * VAR OLDUĞUNU söyler. Panel giriş yapmış sıradan bir kullanıcı için de
  * mevcut olmayan bir adres; ayrı bir cevap vermenin tek işlevi keşfi
  * kolaylaştırmak olurdu.
+ *
+ * KABUK SİTENİN DİLİNDE (23 Eylül denetimi). Panel sitenin yeniden
+ * tasarımına hiç girmemişti: 1180 piksellik kendi çerçevesi, her sekmede
+ * aynı "Yönetim" h1'i taşıyan mavi geçişli bir bant ve kaydırınca kaybolan
+ * sekmeler. Şimdi:
+ *   - çerçeve sitenin çerçevesi (1400, 18/24/40 kanal) — yoğun tablolar
+ *     1440'ta 188 piksel genişliyor;
+ *   - üstte ince bir kimlik satırı (marka, kullanıcı, siteye dönüş);
+ *   - sekmeler yapışkan ve opak bir bantta: uzun sayfalarda (Trafik 2.354,
+ *     Yazılar 2.950 piksel) bölüm değiştirmek için başa dönmek gerekmiyor;
+ *   - her bölüm kendi `PageHeader`ını ve `h1`ini basıyor (sayfalarda).
  */
 
 export const metadata: Metadata = {
-  title: "Yönetim",
+  /* Mutlak başlık: kökün şablonu dile göre marka ekliyor ve İngilizce
+     çerezle "Yönetim · Opening Bell" çıkıyordu. Bölümler kendi başlığını
+     aynı kalıpla veriyor. */
+  title: { absolute: "Yönetim · Açılış Zili" },
   /* Panel arama motorlarına kapalı. Zaten 404 dönüyor ama başlık ve adres
      bir yerde sızarsa dizine girmesin. */
   robots: { index: false, follow: false },
 };
+
+/** Sitenin içerik çerçevesi ve kanalı — AppShell'deki sabitlerle aynı ölçü. */
+const FRAME = "mx-auto w-full max-w-[1400px]";
+const GUTTER = [
+  "pl-[max(env(safe-area-inset-left),18px)] pr-[max(env(safe-area-inset-right),18px)]",
+  "sm:pl-[max(env(safe-area-inset-left),24px)] sm:pr-[max(env(safe-area-inset-right),24px)]",
+  "xl:pl-[max(env(safe-area-inset-left),40px)] xl:pr-[max(env(safe-area-inset-right),40px)]",
+].join(" ");
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const admin = await getAdmin();
-  if (!admin) notFound();
+  /* VERİTABANI HATASI PANELİN İÇİNDE KALIR. Yönetici kontrolü bir sorgu ve
+     layout'un kendi hatası `error.tsx`e ulaşmıyor: Neon'daki bir kesinti
+     yöneticiyi kabuksuz, çıkışsız küresel hata ekranına düşürüyordu. Sorgu
+     yalnızca token'ı zaten "admin" diyen istekte koşuyor (lib/admin.ts);
+     hata ekranını da yalnızca o istek görüyor, yani panelin varlığı
+     başkasına sızmıyor. */
+  let admin: AdminSession | null = null;
+  let failed = false;
+  try {
+    admin = await getAdmin();
+  } catch {
+    const session = await auth().catch(() => null);
+    if (session?.user?.role !== "admin") notFound();
+    failed = true;
+  }
+  if (!admin && !failed) notFound();
 
   return (
-    /* Güvenli alan kendi dolgusunda: sayfa `viewport-fit=cover` ile açılıyor
-       ve çentik yan çevrildiğinde kenardan içeri giriyor. `px-` ile `pr-`
-       birlikte yazılmıştı; ikisi aynı özgüllükte olduğu için hangisinin
-       kazandığı üretilen CSS'in sırasına kalıyordu.
-
-       PANEL TÜRKÇE — `lang` bunu söylüyor. Sayfanın dili çereze bağlı ve
+    /* PANEL TÜRKÇE — `lang` bunu söylüyor. Sayfanın dili çereze bağlı ve
        İngilizce çerezle gezen bir yönetici `<html lang="en">` altında Türkçe
        metin okuyordu: ekran okuyucu yanlış sesletiyor, `uppercase` etiketler
-       İngilizce kuralıyla büyüyüp "İÇERİK" yerine "ICERIK" üretiyordu.
+       İngilizce kuralıyla büyüyüp "İÇERİK" yerine "ICERIK" üretiyordu. */
+    /* `data-admin-shell`: globals.css kaydırma payını buna bağlıyor —
+       klavyeyle odaklanan öğe yapışkan sekme bandının altında kalmasın. */
+    <div lang="tr" data-admin-shell className="flex min-h-dvh flex-col">
+      <Suspense fallback={null}>
+        <RouteProgress label="Yükleniyor" />
+      </Suspense>
 
-       Güvenli alan `sm:` kırılımında DÜŞMÜYOR: `sm:pl-6` yatay çentiği
-       eziyordu ve telefon yan çevrildiğinde panel kenardan içeri giriyordu;
-       `max()` her iki kırılımda da duruyor. */
-    <div
-      lang="tr"
-      className="mx-auto flex w-full max-w-[1180px] flex-col gap-6 py-6 pl-[max(env(safe-area-inset-left),18px)] pr-[max(env(safe-area-inset-right),18px)] pb-[max(env(safe-area-inset-bottom),24px)] sm:py-8 sm:pl-[max(env(safe-area-inset-left),24px)] sm:pr-[max(env(safe-area-inset-right),24px)]"
-    >
-      {/* BAŞLIK ALANI ACCENT ZEMİNDE. Panel bir araç ve sayfa başlığı düz
-          zeminde yüzüyordu; ince bir mavi geçiş bandı ona bir "burası
-          yönetim" kimliği veriyor. Yüzey sitenin kendi kalıbı (mercek
-          şeridiyle aynı geçiş), yani panel siteden kopmuyor.
-          CESARET BİR KEZ HARCANIYOR: sayfada bununla yarışan ikinci bir
-          accent yüzey yok — sayı kutuları aynı ailenin daha soluk tonunda,
-          gerisi nötr. */}
-      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 rounded-(--radius-xl) border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] px-5 py-5 sm:px-7 sm:py-6">
-        <div>
-          {/* Üst etiket ve başlık artık sitenin kendi ilkelleriyle: panel de
-              bir sayfa başlığı gibi görünsün. Etiket elle yazılmış
-              10px/600/0,09em idi, `Kicker` 11px/700/0,1em veriyor — yani bir
-              tık büyüyüp koyulaşıyor; bilinçli. Başlıktaki degrade mürekkep
-              tokenlanmış, `@supports` korumalı ve solid fallback'li
-              (globals.css), "Yönetim" de tek kelimelik display metni. */}
-          <Kicker tone="primary">Açılış Zili</Kicker>
-          <h1 className="display-ink mt-1 w-fit text-heading font-bold leading-none tracking-[-0.035em] sm:text-display">
+      {/* KİMLİK SATIRI. Panelden çıkışın tek yolu burada ve 44 piksel:
+          bağlantı bir dönem 59 × 15 piksellik bir hedefti. */}
+      <div
+        className={cn(
+          FRAME,
+          GUTTER,
+          "flex items-center justify-between gap-4 pt-[max(env(safe-area-inset-top),14px)] pb-2",
+        )}
+      >
+        <Link href="/admin" className="flex min-h-11 items-center gap-2.5">
+          <BellMark size={26} />
+          <span className="text-lead font-bold tracking-[-0.02em] text-strong">
             Yönetim
-          </h1>
-        </div>
-        {/* PANELDEN ÇIKIŞIN TEK YOLU 44 PİKSEL. Bağlantı çıplak bir
-            `<Link>`ti ve telefonda 59 × 15 piksellik bir hedefti; sardığı
-            satır bir cümle değil, "kullanıcı adı · bağlantı" künyesi, yani
-            metin içi bağlantı muafiyeti geçerli değil. `.tap-44` yerine
-            gerçek yükseklik: görünmez genişletme başlık bandındaki
-            komşusunun hedefini kapardı. */}
-        <p className="flex flex-wrap items-center gap-x-1.5 text-small text-muted">
-          <span className="font-semibold text-body">{admin.username}</span>
-          <span aria-hidden>·</span>
+          </span>
+        </Link>
+        <p className="flex min-w-0 items-center gap-x-1.5 text-small text-muted">
+          {admin && (
+            <>
+              <span className="truncate font-semibold text-body">{admin.username}</span>
+              <span aria-hidden>·</span>
+            </>
+          )}
           <Link
             href="/"
-            className="inline-flex min-h-11 items-center text-primary hover:text-primary-hover sm:min-h-8"
+            className="inline-flex min-h-11 shrink-0 items-center text-primary hover:text-primary-hover"
           >
             Siteye Dön
           </Link>
         </p>
-      </header>
+      </div>
 
-      <AdminTabs />
+      {/* YAPIŞKAN, OPAK SEKME BANDI. Bant sayfanın zemininde ve pencerenin
+          bir ucundan öbür ucuna; kayan içerik altından geçerken görünmüyor.
+          Yönetimde uygulama çubuğu yok, üst pay yalnızca güvenli alan. */}
+      <div className="sticky top-0 z-30 border-b border-line bg-(--page-bg) pt-[env(safe-area-inset-top)]">
+        <div className={cn(FRAME, GUTTER)}>
+          <AdminTabs />
+        </div>
+      </div>
 
       {/* İçerik bir YER İŞARETİ içinde: panelde `<main>` yoktu, yani ekran
           okuyucu "ana içerik" diye bir bölgeye atlayamıyordu. */}
-      <main>{children}</main>
+      <main
+        className={cn(
+          FRAME,
+          GUTTER,
+          "flex flex-1 flex-col gap-6 pt-6 pb-[max(env(safe-area-inset-bottom),32px)] sm:pt-8",
+        )}
+      >
+        {failed ? (
+          <Panel className="flex flex-col items-start gap-3 p-6">
+            <h1 className="text-title font-bold text-strong">Panel Açılamadı</h1>
+            <p className="text-base leading-relaxed text-body">
+              Yönetici kaydı veritabanından okunamadı. Bağlantı çoğu zaman
+              geçici olarak düşmüştür; sayfayı yenilemek genellikle yeter.
+            </p>
+            <Link href="/admin" className="inline-flex min-h-11 items-center text-base font-semibold text-primary hover:text-primary-hover">
+              Yeniden Dene
+            </Link>
+          </Panel>
+        ) : (
+          children
+        )}
+      </main>
     </div>
   );
 }

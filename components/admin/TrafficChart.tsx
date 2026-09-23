@@ -2,26 +2,33 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TrafficPoint } from "@/lib/admin-data";
+import { METRIC, adminDay } from "@/lib/admin-format";
 import { formatEtDateShort } from "@/lib/utils";
 
 /**
  * Günlük trafik — SVG çizim, üstünde imleçle okunan bir satır.
  *
- * FORM SEÇİMİ: iki seri, aynı birim (adet), aynı eksen. Görüntüleme her
- * zaman tekil ziyaretçiden BÜYÜK ya da eşit — biri diğerinin alt kümesi.
- * Bu yüzden yığılmış bar YANLIŞ olurdu (toplamları anlamsız); iki çizgi,
- * altında yalnızca görüntülemenin alan dolgusu var. Alanın kendisi de bir
- * ikincil kodlama: iki seriyi renk körlüğünde bile ayırıyor.
+ * FORM SEÇİMİ: iki seri, aynı birim (adet). Görüntüleme her zaman tekil
+ * ziyaretçiden BÜYÜK ya da eşit — biri diğerinin alt kümesi. Bu yüzden
+ * yığılmış bar YANLIŞ olurdu (toplamları anlamsız).
  *
- * TEK EKSEN. İki ölçüyü ayrı ölçeklerde çizmek (çift eksen) grafiklerin en
- * yaygın hatası: iki eğrinin kesişme noktası eksen seçimine bağlı olur ve
- * hiçbir şey anlatmaz. İkisi de adet olduğu için buna gerek de yok.
+ * İKİ ŞERİT, İKİ TAVAN — ÇİFT EKSEN DEĞİL (23 Eylül denetimi). İki seri bir
+ * dönem aynı eksendeydi ("ikisi de adet, ayrı ölçeğe gerek yok") ve bedeli
+ * ölçüldü: 30 günlük pencerede görüntüleme tepesi 706, ziyaretçi tepesi 25;
+ * 750'lik ölçekte ziyaretçi çizgisi tabandan 5,5 piksel yükseliyordu (390'da
+ * 4,5) — sarı çizgi x ekseni gibi okunuyordu. Çift eksen de çözüm değil:
+ * iki eğrinin kesişme noktası eksen seçimine bağlı olur ve hiçbir şey
+ * anlatmaz. Şimdi iki KÜÇÜK ÇOKLU: görüntüleme kendi tavanıyla üstte,
+ * ziyaretçi altında 56 piksellik ayrı bir şeritte, kendi tavan etiketiyle.
+ * Her şeritte tek birim, tek ölçek; aynı x ekseni, aynı imleç.
  *
  * BÜTÜN METİN SVG'NİN DIŞINDA. Bir süre eksen etiketleri `<text>` olarak
  * çizildi ve telefonda okunmuyordu: 720 birimlik viewBox 350 piksellik bir
  * ekrana sığarken 11 puntoluk yazı da yarı yarıya küçülüyor, beş piksellik
  * bir lekeye dönüyordu. Yazının SVG içinde olmasının hiçbir faydası yoktu —
- * HTML'de her genişlikte aynı boyda duruyor.
+ * HTML'de her genişlikte aynı boyda duruyor. "Ölçüm Yok" bandı da aynı
+ * sebeple HTML: `preserveAspectRatio="none"` altında bir SVG deseni iki
+ * eksende farklı gerilir, taramanın açısı ekran genişliğiyle değişirdi.
  *
  * `preserveAspectRatio="none"` + sabit yükseklik: grafik dar ekranda da
  * okunur bir yükseklikte kalıyor. Çizgi kalınlıkları `non-scaling-stroke`
@@ -40,38 +47,85 @@ import { formatEtDateShort } from "@/lib/utils";
  * Artık sitenin hisse grafiğiyle aynı kalıp: imleç grafikte gezerken ÜSTTE
  * SABİT bir okuma satırı o günün tarihini ve iki sayısını gösteriyor. Satır
  * grafiğin üstünde ve sabit — üstte yüzen bir kutu imlecin altındaki veriyi
- * örterdi. İmleç yokken aynı satır SON GÜNÜ gösteriyor, yani boş kalmıyor
- * ve okuyucu satırın ne olduğunu etkileşime girmeden öğreniyor.
+ * örterdi. İmleç yokken aynı satır SON TAM GÜNÜ gösteriyor, yani boş
+ * kalmıyor ve okuyucu satırın ne olduğunu etkileşime girmeden öğreniyor.
  *
  * Bedeli dürüstçe: yönetim paneline küçük bir istemci bileşeni iniyor.
  * Panel oturum arkasında, tek dilde ve bir araç — genel sayfaların yük
  * bütçesi buraya uygulanmıyor.
  *
- * DOKUNMATİK VE KLAVYE DE OKUYOR. Parmakla dokunmak okumayı açıyor, grafiğin
- * dışına dokunmak temizliyor (hisse grafiğinin dersi: temizlenmezse okuma
- * artık bakılmayan bir günü göstermeye devam ediyor). Klavyede grafik bir
- * durak ve ok tuşları günler arasında geziyor — yerel ipucunun hiç
- * veremediği şey buydu.
+ * DOKUNMATİK VE KLAVYE DE OKUYOR. Parmakla dokunmak okumayı açıyor ve okuma
+ * parmak kalkınca YERİNDE KALIYOR; grafiğin dışına dokunmak temizliyor
+ * (hisse grafiğinin dersi: temizlenmezse okuma artık bakılmayan bir günü
+ * göstermeye devam ediyor). Klavyede grafik bir durak: ok tuşları gün gün,
+ * Page Up/Down haftalık, Home ve End uçlara — yerel ipucunun hiç veremediği
+ * şey buydu.
  *
  * Altındaki `<details>` tablo görünümü duruyor: grafiği hiç okuyamayan da
  * aynı sayılara metin olarak ulaşıyor.
  */
 
+/** Görüntüleme şeridinin viewBox'ı. */
 const W = 720;
 const H = 200;
 const PAD_T = 10;
 const PAD_B = 4;
 
+/**
+ * Ziyaretçi şeridi — viewBox ekrandaki boyuyla BİREBİR (`h-14`, 56 piksel),
+ * yani şeridin içindeki her birim bir piksel. Tavan tabandan 48 piksel
+ * yukarıda.
+ */
+const LANE_H = 56;
+const LANE_PAD_T = 6;
+const LANE_PAD_B = 2;
+
+/**
+ * Şeridin tavan etiketi. Zemini panelin kendi yüzeyi ve "Ölçüm Yok"
+ * taramasının ÜSTÜNDE (`z-[1]`): 90 günlük pencerede iki etiket de taralı
+ * bandın içine düşüyor ve tarama çizgileri harflerin arasından geçiyordu.
+ */
+const CEILING_LABEL =
+  "numeral pointer-events-none absolute left-0 z-[1] -translate-y-full rounded-xs bg-(--premium-surface) pr-1.5 text-tiny text-muted";
+
+/** Klavyede Page Up/Down bir hafta atlıyor. */
+const WEEK = 7;
+
+/** Tablonun hafta günü sütunu: "Cmt", "Paz". Tarih ET takvim günü, saat dilimi yok. */
+const WEEKDAY = new Intl.DateTimeFormat("tr-TR", { weekday: "short", timeZone: "UTC" });
+
+/** Hafta günü ve tatil notu: "Cmt", "Pzt · Tatil", "Çar · Sürüyor". */
+function dayNote(p: TrafficPoint): string {
+  const date = new Date(`${p.day}T12:00:00Z`);
+  const name = WEEKDAY.format(date);
+  if (p.isToday) return `${name} · Sürüyor`;
+  /* Hafta sonu adından belli; hafta içi sessiz gün yalnızca tatil olabilir. */
+  const weekend = date.getUTCDay() === 0 || date.getUTCDay() === 6;
+  return p.offDay && !weekend ? `${name} · Tatil` : name;
+}
+
 export function TrafficChart({
-  points,
-  locale,
+  points: okunanSeri,
 }: {
-  points: TrafficPoint[];
-  locale: "tr" | "en";
+  /**
+   * `null`: seri OKUNAMADI — boş seriden ayrı. Okunamayan seri "ölçüm ilk
+   * ziyaretle başlar" cümlesine düşüyordu ve yöneticiye ölçümün hiç
+   * başlamadığını söylüyordu (23 Eylül denetimi, lib/admin-data.ts →
+   * `AdminResult`).
+   */
+  points: TrafficPoint[] | null;
+  /**
+   * OKUNMUYOR — panel yalnızca Türkçe (components/admin/AdminUI.tsx başı).
+   * Tarihler sitenin dil çerezine bağlıydı ve İngilizce çerezle pano
+   * "08/25/2026" yazıyordu, kalan her etiket Türkçeyken (23 Eylül
+   * denetimi). Alan, çağıranlar kaldırana kadar tip uyumu için duruyor.
+   */
+  locale?: "tr" | "en";
 }) {
   const [okunan, setOkunan] = useState<number | null>(null);
   const kap = useRef<HTMLDivElement>(null);
 
+  const points = okunanSeri ?? [];
   const noktaSayisi = points.length;
 
   const konumdanIndeks = useCallback(
@@ -88,8 +142,9 @@ export function TrafficChart({
   );
 
   /* GRAFİĞİN DIŞINA DOKUNUNCA OKUMA TEMİZLENİR. Dokunmatikte `pointerleave`
-     gelmiyor: parmak kalkınca okuma ekranda kalıyor ve okuyucu artık
-     bakmadığı bir günün sayısını görmeye devam ediyor. Aynı ders hisse
+     gelmiyor: parmak kalkınca okuma ekranda kalıyor — bu İSTENEN davranış,
+     dokunmak okumayı iğnelemek demek — ve okuyucu başka bir yere dokunana
+     kadar o günü görüyor. Dışarıya dokunmak onu kaldırıyor. Aynı ders hisse
      grafiğinde de yazılı. */
   useEffect(() => {
     if (okunan === null) return;
@@ -103,70 +158,121 @@ export function TrafficChart({
     return () => document.removeEventListener("pointerdown", disaridaBasildi);
   }, [okunan]);
 
-  if (noktaSayisi < 2) {
+  if (okunanSeri === null) {
+    return (
+      <p className="py-10 text-center text-base text-brass-ink">
+        Trafik verisi okunamadı.
+      </p>
+    );
+  }
+
+  /* İlk ÖLÇÜLEN gün. Ondan önceki günler sıfır değil, bilinmiyor
+     (lib/admin-data.ts → `TrafficPoint.measured`). */
+  const ilk = points.findIndex((p) => p.measured);
+
+  if (noktaSayisi < 2 || ilk === -1) {
     return (
       <p className="py-10 text-center text-base text-muted">
-        Grafik için henüz yeterli gün yok. Ölçüm ilk ziyaretle başlar.
+        Bu aralıkta ölçülmüş gün yok. Ölçüm ilk ziyaretle başlar.
       </p>
     );
   }
 
   /* Ölçek tepe değere göre, üstüne bir tık pay bırakılarak. Sıfırdan
      başlıyor: adet grafiğinde tabanı kırpmak farkları olduğundan büyük
-     gösterir ve bu, sayıyı yanlış okutmanın en kolay yolu. */
-  const peak = Math.max(...points.map((p) => p.views), 1);
-  const top = niceCeiling(peak);
+     gösterir ve bu, sayıyı yanlış okutmanın en kolay yolu. Her şerit KENDİ
+     tepesine göre. */
+  const top = niceCeiling(Math.max(...points.map((p) => p.views), 1));
+  /* Şeridin tavanı DAHA SIK basamaklı: şerit 48 piksel ve ızgara çizgisi
+     yok, yuvarlak bir tavanın boşa harcadığı pay burada görünür bir kayıp.
+     7 günlük pencerede tepe 11: kaba basamakla tavan 15, tepe 35 piksel;
+     sık basamakla tavan 12, tepe 44 piksel. */
+  const laneTop = niceCeiling(Math.max(...points.map((p) => p.visitors), 1), true);
   const innerH = H - PAD_T - PAD_B;
+  const laneInnerH = LANE_H - LANE_PAD_T - LANE_PAD_B;
   const x = (i: number) => (i / (noktaSayisi - 1)) * W;
   const y = (v: number) => PAD_T + innerH - (v / top) * innerH;
-
-  const viewsLine = points.map((p, i) => `${x(i).toFixed(1)},${y(p.views).toFixed(1)}`);
-  const visitorsLine = points.map(
-    (p, i) => `${x(i).toFixed(1)},${y(p.visitors).toFixed(1)}`,
-  );
-  const area = `0,${y(0)} ${viewsLine.join(" ")} ${W},${y(0)}`;
+  const ly = (v: number) => LANE_PAD_T + laneInnerH - (v / laneTop) * laneInnerH;
 
   /* BUGÜN KESİKLİ. Serinin son günü henüz TAMAMLANMADI ve düz bir çizgiyle
      çizilince tamamlanmış günlerden ayırt edilemiyor: sabah bakan yönetici
      yarım günün sayısını düşüş sanıyordu. Gün seriden ÇIKARILMIYOR —
      çıkarmak eksiği gizlemek olurdu; kesik çizgi eksik olduğunu söylüyor.
-     Son parça ayrı çiziliyor, gerisi düz kalıyor. */
+     Düz çizgi böylece BİREBİR üstteki kutuların penceresi (tam günler,
+     lib/admin-data.ts → `getTrafficSeries`), kesik son parça bugün. */
   const bugunVar = points[noktaSayisi - 1].isToday;
-  const sonParcaViews = bugunVar
-    ? viewsLine.slice(noktaSayisi - 2).join(" ")
-    : null;
-  const sonParcaVisitors = bugunVar
-    ? visitorsLine.slice(noktaSayisi - 2).join(" ")
-    : null;
-  const tamViews = bugunVar ? viewsLine.slice(0, noktaSayisi - 1) : viewsLine;
-  const tamVisitors = bugunVar
-    ? visitorsLine.slice(0, noktaSayisi - 1)
-    : visitorsLine;
+  const sonTam = bugunVar ? noktaSayisi - 2 : noktaSayisi - 1;
 
-  const last = points[noktaSayisi - 1];
-  const totalViews = points.reduce((sum, p) => sum + p.views, 0);
+  /* ÖLÇÜM ÖNCESİNE ÇİZGİ ÇİZİLMEZ (23 Eylül denetimi). 90 günlük pencere
+     26 Haziran'dan başlıyor, ilk kayıt 13 Ağustos: boş günler sıfırla
+     dolduruluyordu ve grafiğin sol yarısı düz bir sıfır trafik çizgisiydi
+     (1440'ta çizgi ilk ölçülen günün 691 piksel solundan başlıyordu). O
+     aralık artık taralı bir "Ölçüm Yok" bandı; çizgiler ilk ölçülen günden
+     başlıyor. */
+  const seri = (deger: (p: TrafficPoint) => number, yy: (v: number) => number) =>
+    points.map((p, i) => `${x(i).toFixed(1)},${yy(deger(p)).toFixed(1)}`);
+  const viewsLine = seri((p) => p.views, y);
+  const visitorsLine = seri((p) => p.visitors, ly);
+  const tamParca = (line: string[]) =>
+    sonTam >= ilk ? line.slice(ilk, sonTam + 1).join(" ") : "";
+  const kesikParca = (line: string[]) =>
+    bugunVar && sonTam >= ilk ? line.slice(sonTam).join(" ") : "";
+  const alan = (line: string[], taban: number) =>
+    `${x(ilk).toFixed(1)},${taban} ${line.slice(ilk).join(" ")} ${W},${taban}`;
+
   const slotW = W / (noktaSayisi - 1);
   const midIndex = Math.floor((noktaSayisi - 1) / 2);
+  const last = points[noktaSayisi - 1];
+  const sonTamGun = sonTam >= ilk ? points[sonTam] : last;
+  /* Tam günlerin toplamı — üstteki "Görüntüleme" kutusuyla AYNI sayı. */
+  const tamGunler = points.slice(ilk, sonTam + 1);
+  const toplamViews = tamGunler.reduce((sum, p) => sum + p.views, 0);
+  const toplamVisitors = tamGunler.reduce((sum, p) => sum + p.visitors, 0);
+  /* Taralı bandın sağ kenarı: ilk ölçülen günün diliminin sol kenarı. */
+  const olcumsuzGenislik = ilk > 0 ? ((ilk - 0.5) / (noktaSayisi - 1)) * 100 : 0;
 
-  /* Okuma satırı imleç yokken SON GÜNÜ gösteriyor — boş bir satır, okuyucuya
-     satırın ne işe yaradığını da söylemez. */
-  const gosterilen = okunan === null ? last : points[okunan];
+  /* VARSAYILAN OKUMA SON TAM GÜN (23 Eylül denetimi). Satır imleç yokken
+     bugünü gösteriyordu: gün sürüyor ve sabah bakıldığında "Görüntüleme 30
+     · Ziyaretçi 2" — grafiğin en görünür sayıları en az temsil edici
+     olanlardı. Bugünün sayısı kaybolmuyor, yanında ayrı ve sönük bir çipte. */
+  const gosterilen = okunan === null ? sonTamGun : points[okunan];
   const seciliMi = okunan !== null;
+  const olculmedi = !gosterilen.measured;
 
   const klavye = (event: React.KeyboardEvent) => {
     if (event.key === "Escape") {
       setOkunan(null);
       return;
     }
-    const yon =
-      event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
-    if (yon === 0) return;
+    /* Klavye ölçülen aralıkta geziyor: ölçüm öncesindeki kırk dokuz boş
+       günü tek tek geçmek (90 gün) hiçbir sayı vermiyordu. Home ilk
+       ÖLÇÜLEN güne iniyor. */
+    const hedef = (taban: number): number | null => {
+      switch (event.key) {
+        case "ArrowRight":
+          return taban + 1;
+        case "ArrowLeft":
+          return taban - 1;
+        case "PageUp":
+          return taban - WEEK;
+        case "PageDown":
+          return taban + WEEK;
+        case "Home":
+          return ilk;
+        case "End":
+          return noktaSayisi - 1;
+        default:
+          return null;
+      }
+    };
+    const taban = okunan === null ? sonTam : okunan;
+    const sonraki = hedef(taban);
+    if (sonraki === null) return;
     event.preventDefault();
-    setOkunan((onceki) => {
-      const taban = onceki === null ? noktaSayisi - 1 : onceki;
-      return Math.min(noktaSayisi - 1, Math.max(0, taban + yon));
-    });
+    setOkunan(Math.min(noktaSayisi - 1, Math.max(ilk, sonraki)));
   };
+
+  const imlec = seciliMi ? x(okunan) : null;
 
   return (
     <figure className="m-0">
@@ -174,20 +280,20 @@ export function TrafficChart({
           yalnızca renkle taşınmaz, o yüzden renk kutusu işaretin yanında ve
           metin mürekkep renginde — etiketin kendisi seri rengini giymiyor.
           Sayılar `.numeral`: imleç gezerken rakam genişliği değişirse
-          satır titriyor. */}
-      <div className="mb-3 flex flex-wrap items-baseline gap-x-5 gap-y-1.5 text-small">
-        <span className="inline-flex items-center gap-2 text-body">
-          <span aria-hidden className="h-[3px] w-4 rounded-full bg-chart-a" />
-          Görüntüleme
+          satır titriyor. Adlar `METRIC`ten: aynı ölçü dört adla basılıyordu. */}
+      <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-small">
+        <span className="inline-flex items-baseline gap-2 text-body">
+          <span aria-hidden className="h-[3px] w-4 self-center rounded-full bg-chart-a" />
+          {METRIC.views}
           <span className="numeral font-semibold text-strong">
-            {gosterilen.views.toLocaleString("tr-TR")}
+            {olculmedi ? "—" : gosterilen.views.toLocaleString("tr-TR")}
           </span>
         </span>
-        <span className="inline-flex items-center gap-2 text-body">
-          <span aria-hidden className="h-[3px] w-4 rounded-full bg-chart-b" />
-          Tekil Ziyaretçi
+        <span className="inline-flex items-baseline gap-2 text-body">
+          <span aria-hidden className="h-[3px] w-4 self-center rounded-full bg-chart-b" />
+          {METRIC.dailyVisitors}
           <span className="numeral font-semibold text-strong">
-            {gosterilen.visitors.toLocaleString("tr-TR")}
+            {olculmedi ? "—" : gosterilen.visitors.toLocaleString("tr-TR")}
           </span>
         </span>
         {/* Hangi günü okuduğu YAZILI. Sayıyı gösterip gününü söylememek,
@@ -212,197 +318,195 @@ export function TrafficChart({
           }
         >
           <span aria-hidden>
-            {seciliMi
-              ? formatEtDateShort(gosterilen.day, locale) +
-                (gosterilen.isToday ? " · Sürüyor" : "")
-              : bugunVar
-                ? "Bugün · Sürüyor"
-                : "Son Gün"}
+            {adminDay(gosterilen.day)}
+            {olculmedi
+              ? " · Ölçüm Yok"
+              : gosterilen.isToday
+                ? " · Sürüyor"
+                : seciliMi
+                  ? ""
+                  : " · Son Tam Gün"}
           </span>
           <span className="sr-only">
-            {formatEtDateShort(gosterilen.day, locale)}
-            {gosterilen.isToday ? " (gün sürüyor)" : ""}:{" "}
-            {gosterilen.views.toLocaleString("tr-TR")} görüntüleme,{" "}
-            {gosterilen.visitors.toLocaleString("tr-TR")} tekil ziyaretçi
+            {adminDay(gosterilen.day)}
+            {olculmedi
+              ? ": ölçüm yok"
+              : `${gosterilen.isToday ? " (gün sürüyor)" : ""}: ${gosterilen.views.toLocaleString("tr-TR")} görüntüleme, ${gosterilen.visitors.toLocaleString("tr-TR")} ziyaretçi`}
           </span>
         </span>
+        {bugunVar && (
+          /* Bugünün sayısı ayrı bir çipte, sönük: tamamlanmamış bir günün
+             büyüklüğü tam günlerle aynı puntoda yarışmıyor. Birim görünür
+             metinde yok — satırın ilk ölçüsü görüntüleme ve çip onun bugünkü
+             hâli; "Görüntüleme" eki çipi 390'da üçüncü satıra itiyordu. */
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-elevated px-2.5 py-1 text-tiny text-muted sm:ml-auto">
+            Bugün Şimdiye Kadar
+            <span className="numeral font-semibold text-body">
+              {last.views.toLocaleString("tr-TR")}
+            </span>
+            <span className="sr-only">görüntüleme</span>
+          </span>
+        )}
       </div>
 
-      <div className="relative" ref={kap}>
-        {/* Tavan etiketi, ızgara çizgisinin tam üstüne yüzdeyle
-            konumlanıyor — her genişlikte doğru yerde durur. */}
-        <span
-          className="numeral pointer-events-none absolute left-0 -translate-y-full text-tiny text-muted"
-          style={{ top: `${(PAD_T / H) * 100}%` }}
-        >
-          {top.toLocaleString("tr-TR")}
-        </span>
+      {/* ETKİLEŞİM YÜZEYİ İKİ ŞERİDİ BİRDEN SARIYOR: imleç, dokunma ve
+          klavye tek bir durak; iki şeridin imleç çizgisi aynı x'te. */}
+      <div
+        ref={kap}
+        className="relative touch-pan-y rounded-(--radius-sm) outline-none focus-visible:ring-2 focus-visible:ring-(--line-focus) focus-visible:ring-offset-4 focus-visible:ring-offset-(--premium-surface)"
+        role="img"
+        tabIndex={0}
+        aria-label={`Günlük trafik, ${adminDay(points[ilk].day)} ile ${adminDay(last.day)} arası. ${tamGunler.length} tam günde ${toplamViews.toLocaleString("tr-TR")} görüntüleme. ${adminDay(sonTamGun.day)}: ${sonTamGun.views.toLocaleString("tr-TR")} görüntüleme, ${sonTamGun.visitors.toLocaleString("tr-TR")} ziyaretçi. Ok tuşlarıyla gün gün, Home ve End ile ilk ve son güne gidilir.`}
+        onKeyDown={klavye}
+        onPointerMove={(event) => setOkunan(konumdanIndeks(event.clientX))}
+        onPointerDown={(event) => setOkunan(konumdanIndeks(event.clientX))}
+        onPointerLeave={(event) => {
+          if (event.pointerType === "mouse") setOkunan(null);
+        }}
+        /* PARMAK KAYDIRMAYA DÖNERSE OKUMA SİLİNİYOR. `touch-pan-y` sayfayı
+           dikey kaydırmaya izin veriyor ve tarayıcı kaydırmayı üstlendiği
+           anda `pointercancel` atıp `pointerup`/`pointerleave` ATMIYOR.
+           İşlenmediği için okuma satırı, artık dokunulmayan bir günü
+           göstermeye devam ediyordu — grafikte dokunulan okumanın aralık
+           değişince temizlenmesiyle aynı kural.
 
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="none"
-          className="h-36 w-full touch-pan-y rounded-(--radius-sm) outline-none focus-visible:ring-2 focus-visible:ring-(--line-focus) sm:h-44"
-          role="img"
-          tabIndex={0}
-          aria-label={`Son ${noktaSayisi} günün trafiği. Toplam ${totalViews} görüntüleme. Son gün ${last.views} görüntüleme, ${last.visitors} tekil ziyaretçi. Ok tuşlarıyla gün gün okunur.`}
-          onKeyDown={klavye}
-          onPointerMove={(event) => setOkunan(konumdanIndeks(event.clientX))}
-          onPointerDown={(event) => setOkunan(konumdanIndeks(event.clientX))}
-          onPointerLeave={(event) => {
-            if (event.pointerType === "mouse") setOkunan(null);
-          }}
-          /* PARMAK KAYDIRMAYA DÖNERSE OKUMA SİLİNİYOR. `touch-pan-y` sayfayı
-             dikey kaydırmaya izin veriyor ve tarayıcı kaydırmayı üstlendiği
-             anda `pointercancel` atıp `pointerup`/`pointerleave` ATMIYOR.
-             İşlenmediği için okuma satırı, artık dokunulmayan bir günü
-             göstermeye devam ediyordu — grafikte dokunulan okumanın aralık
-             değişince temizlenmesiyle aynı kural. */
-          onPointerCancel={() => setOkunan(null)}
-          onPointerUp={(event) => {
-            if (event.pointerType !== "mouse") setOkunan(null);
-          }}
-          onBlur={() => setOkunan(null)}
-        >
-          {/* Izgara geride: iki yatay çizgi yeter — tavan ve taban. */}
-          <line
-            x1="0"
-            y1={y(top)}
-            x2={W}
-            y2={y(top)}
-            stroke="var(--line)"
-            strokeWidth="1"
-            vectorEffect="non-scaling-stroke"
-          />
-          <line
-            x1="0"
-            y1={y(0)}
-            x2={W}
-            y2={y(0)}
-            stroke="var(--line-strong)"
-            strokeWidth="1"
-            vectorEffect="non-scaling-stroke"
-          />
-
-          {/* SESSİZ GÜN BANTLARI EN GERİDE. Hafta sonu ve tatil günlerinde
-              trafik planlı olarak düşük; bantsız grafikte cumartesi çukurunu
-              gören yönetici "trafik mi düştü, ölçüm mü bozuldu" diye ayırt
-              edemiyordu. Bant bir ZEMİN, tek taşıyıcı değil: çizgi zaten
-              üstünde ve tablo görünümü aynı sayıları veriyor. */}
-          {points.map((p, i) =>
-            p.offDay ? (
-              <rect
-                key={`off-${p.day}`}
-                x={Math.max(0, x(i) - slotW / 2)}
-                y={PAD_T}
-                width={slotW}
-                height={y(0) - PAD_T}
-                fill="var(--surface-sunken)"
-              />
-            ) : null,
-          )}
-
-          <polygon points={area} fill="var(--chart-a-fill)" />
-          <polyline
-            points={tamViews.join(" ")}
-            fill="none"
-            stroke="var(--chart-a)"
-            strokeWidth="2"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            vectorEffect="non-scaling-stroke"
-          />
-          <polyline
-            points={tamVisitors.join(" ")}
-            fill="none"
-            stroke="var(--chart-b)"
-            strokeWidth="2"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            vectorEffect="non-scaling-stroke"
-          />
-          {sonParcaViews && (
-            <polyline
-              points={sonParcaViews}
-              fill="none"
-              stroke="var(--chart-a)"
-              strokeWidth="2"
-              strokeDasharray="4 3"
-              strokeLinecap="round"
+           `pointerup` OKUMAYI SİLMİYOR (23 Eylül denetimi). Bir dönem
+           siliyordu ve dokunmatikte bir dokunuş HİÇBİR ŞEY göstermiyordu:
+           390'da 29 Ağu'ya dokunulurken okuma "706 görüntüleme", parmak
+           kalktıktan 300 ms sonra yeniden bugündü. Yukarıdaki "dışarıya
+           dokununca temizlenir" kuralı o yüzden hiç çalışmıyordu. */
+        onPointerCancel={() => setOkunan(null)}
+        onBlur={() => setOkunan(null)}
+      >
+        {/* GÖRÜNTÜLEME ŞERİDİ. Tavan etiketi, ızgara çizgisinin tam üstüne
+            yüzdeyle konumlanıyor — her genişlikte doğru yerde durur. Etiket
+            şeridin ÖLÇÜSÜNÜ adıyla söylüyor: iki şerit iki ayrı ölçekte ve
+            hangi sayının hangi şeride ait olduğu renge bırakılmıyor. */}
+        <div className="relative">
+          <span
+            className={CEILING_LABEL}
+            style={{ top: `${(PAD_T / H) * 100}%` }}
+          >
+            {top.toLocaleString("tr-TR")} {METRIC.views}
+          </span>
+          <svg
+            data-lane="views"
+            viewBox={`0 0 ${W} ${H}`}
+            preserveAspectRatio="none"
+            className="block h-32 w-full sm:h-48"
+            aria-hidden
+          >
+            {/* Izgara geride: iki yatay çizgi yeter — tavan ve taban. */}
+            <line
+              x1="0"
+              y1={y(top)}
+              x2={W}
+              y2={y(top)}
+              stroke="var(--line)"
+              strokeWidth="1"
               vectorEffect="non-scaling-stroke"
             />
-          )}
-          {sonParcaVisitors && (
-            <polyline
-              points={sonParcaVisitors}
-              fill="none"
-              stroke="var(--chart-b)"
-              strokeWidth="2"
-              strokeDasharray="4 3"
-              strokeLinecap="round"
+            <line
+              data-zero
+              x1="0"
+              y1={y(0)}
+              x2={W}
+              y2={y(0)}
+              stroke="var(--line-strong)"
+              strokeWidth="1"
               vectorEffect="non-scaling-stroke"
             />
-          )}
-
-          {/* İMLEÇ ÇİZGİSİ VE İŞARETLER, ÖLÇEKTEN BAĞIMSIZ.
-              `preserveAspectRatio="none"` altında geometri iki eksende
-              farklı ölçekleniyor: daire elipse döner, dikdörtgenin de
-              GENİŞLİĞİ ekrana göre değişir. İşaretler bir dönem dikdörtgendi
-              ve yorumu "genişliği `non-scaling-stroke` ile sabit kalıyor"
-              diyordu — o koruma dolgu (`fill`) taşıyan bir `rect`e
-              UYGULANMIYOR, çünkü kural yalnızca çizgi kalınlığına bakıyor.
-              Ölçüldü: `?gun=90` + 390 piksel ekranda işaret 1,2 × 4,3
-              piksele iniyor, yani imleç çizgisinden ayırt edilemiyor.
-              Sıfır uzunluklu bir `line` + yuvarlak uç, dolgu değil ÇİZGİ
-              kalınlığı olduğu için `non-scaling-stroke`un kapsamına giriyor:
-              her ölçekte 7 piksellik bir daire, elipse de dönmüyor. */}
-          {seciliMi && (
-            <g pointerEvents="none">
-              <line
-                x1={x(okunan)}
-                y1={PAD_T}
-                x2={x(okunan)}
-                y2={y(0)}
-                stroke="var(--line-strong)"
-                strokeWidth="1"
-                vectorEffect="non-scaling-stroke"
-              />
-              <line
-                x1={x(okunan)}
-                y1={y(gosterilen.views)}
-                x2={x(okunan)}
-                y2={y(gosterilen.views)}
+            <OffDays points={points} ilk={ilk} x={x} slotW={slotW} y0={PAD_T} y1={y(0)} />
+            <polygon points={alan(viewsLine, y(0))} fill="var(--chart-a-fill)" />
+            <SeriesLine points={tamParca(viewsLine)} stroke="var(--chart-a)" />
+            <SeriesLine points={kesikParca(viewsLine)} stroke="var(--chart-a)" dashed />
+            {imlec !== null && (
+              <Cursor
+                x={imlec}
+                y0={PAD_T}
+                y1={y(0)}
+                mark={olculmedi ? null : y(gosterilen.views)}
                 stroke="var(--chart-a)"
-                strokeWidth="7"
-                strokeLinecap="round"
-                vectorEffect="non-scaling-stroke"
               />
-              <line
-                x1={x(okunan)}
-                y1={y(gosterilen.visitors)}
-                x2={x(okunan)}
-                y2={y(gosterilen.visitors)}
+            )}
+          </svg>
+        </div>
+
+        {/* ZİYARETÇİ ŞERİDİ — kendi tavanıyla. Ölçüldü (30 gün, 1440):
+            tepe 25 ziyaretçi eski ortak ölçekte 5,5 piksel yüksekti, burada
+            46 piksel (tavan 26). */}
+        <div className="relative mt-5">
+          <span
+            className={CEILING_LABEL}
+            style={{ top: `${(LANE_PAD_T / LANE_H) * 100}%` }}
+          >
+            {laneTop.toLocaleString("tr-TR")} {METRIC.dailyVisitors}
+          </span>
+          <svg
+            data-lane="visitors"
+            viewBox={`0 0 ${W} ${LANE_H}`}
+            preserveAspectRatio="none"
+            className="block h-14 w-full"
+            aria-hidden
+          >
+            <line
+              data-zero
+              x1="0"
+              y1={ly(0)}
+              x2={W}
+              y2={ly(0)}
+              stroke="var(--line-strong)"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+            />
+            <OffDays points={points} ilk={ilk} x={x} slotW={slotW} y0={LANE_PAD_T} y1={ly(0)} />
+            {/* Şeridin dolgusu çizginin kendi renginden, düşük opaklıkla —
+                ayrı bir dolgu tokeni yok ve renk yine tokenden geliyor. */}
+            <polygon points={alan(visitorsLine, ly(0))} fill="var(--chart-b)" fillOpacity={0.14} />
+            <SeriesLine points={tamParca(visitorsLine)} stroke="var(--chart-b)" />
+            <SeriesLine points={kesikParca(visitorsLine)} stroke="var(--chart-b)" dashed />
+            {imlec !== null && (
+              <Cursor
+                x={imlec}
+                y0={LANE_PAD_T}
+                y1={ly(0)}
+                mark={olculmedi ? null : ly(gosterilen.visitors)}
                 stroke="var(--chart-b)"
-                strokeWidth="7"
-                strokeLinecap="round"
-                vectorEffect="non-scaling-stroke"
               />
-            </g>
-          )}
-        </svg>
+            )}
+          </svg>
+        </div>
+
+        {ilk > 0 && (
+          /* ÖLÇÜM YOK BANDI — iki şeridi birden kaplıyor, çizgi yok. */
+          <div
+            data-unmeasured
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center rounded-(--radius-sm) bg-[repeating-linear-gradient(135deg,var(--line-strong)_0_1px,transparent_1px_7px)]"
+            style={{ width: `${olcumsuzGenislik}%` }}
+          >
+            <span className="rounded-full bg-(--premium-surface) px-2 py-0.5 text-tiny font-semibold text-muted">
+              Ölçüm Yok
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Tarih ekseni HTML'de: üç etiket. Otuz günün hepsini yazmak
-          okunmayan bir duvar üretiyor. */}
-      <div className="numeral mt-1.5 flex justify-between text-tiny text-muted">
-        <span>{formatEtDateShort(points[0].day, locale)}</span>
-        <span>{formatEtDateShort(points[midIndex].day, locale)}</span>
-        <span>{formatEtDateShort(last.day, locale)}</span>
+          okunmayan bir duvar üretiyor. Okunur tarih ("25 Ağu"), rakamsal
+          değil: yıl her etikette tekrar ediyor ve hiçbir şey eklemiyordu
+          (lib/admin-format.ts → `adminDay`). */}
+      <div data-axis className="numeral mt-1.5 flex justify-between text-tiny text-muted">
+        <span>{adminDay(points[0].day)}</span>
+        <span>{adminDay(points[midIndex].day)}</span>
+        <span>{adminDay(last.day)}</span>
       </div>
 
-      {/* İŞARETLERİN ANLAMI YAZILI. Kesik çizgi ve gri bant, açıklaması
-          olmadan yalnızca bir görsel fark; ne anlama geldikleri burada. */}
-      {(bugunVar || points.some((p) => p.offDay)) && (
-        <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-tiny text-muted">
+      {/* İŞARETLERİN ANLAMI YAZILI. Kesik çizgi, gri bant ve tarama,
+          açıklaması olmadan yalnızca bir görsel fark; ne anlama geldikleri
+          burada. */}
+      {(bugunVar || ilk > 0 || points.some((p) => p.offDay)) && (
+        <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-tiny text-muted">
           {bugunVar && (
             <span className="inline-flex items-center gap-1.5">
               <span
@@ -412,20 +516,26 @@ export function TrafficChart({
               Bugün · Gün Sürüyor
             </span>
           )}
-          {points.some((p) => p.offDay) && (
+          {points.some((p, i) => p.offDay && i >= ilk) && (
+            <span className="inline-flex items-center gap-1.5">
+              <span aria-hidden className="h-3 w-4 rounded-xs bg-surface-sunken" />
+              Hafta Sonu ve Tatil
+            </span>
+          )}
+          {ilk > 0 && (
             <span className="inline-flex items-center gap-1.5">
               <span
                 aria-hidden
-                className="h-3 w-4 rounded-xs bg-surface-sunken"
+                className="h-3 w-4 rounded-xs bg-[repeating-linear-gradient(135deg,var(--line-strong)_0_1px,transparent_1px_4px)]"
               />
-              Hafta Sonu ve Tatil
+              Ölçüm Yok
             </span>
           )}
         </p>
       )}
 
       {/* Tablo görünümü — grafiğin okunamadığı her durumda aynı sayılar. */}
-      <details className="mt-3">
+      <details className="mt-2">
         {/* 44 PİKSEL: `<summary>` çıplak bir metin satırıydı ve yüksekliği
             18 piksele iniyordu. Altında ve üstünde başka hedef yok, yani
             `min-h-11` komşusunu ezmiyor. */}
@@ -445,36 +555,71 @@ export function TrafficChart({
         >
           <table className="w-full text-small">
             <caption className="sr-only">
-              Gün gün görüntüleme ve tekil ziyaretçi
+              Gün gün görüntüleme ve ziyaretçi; ölçüm öncesi günler tabloda yok
             </caption>
-            <thead>
-              <tr className="text-left text-tiny uppercase tracking-[0.05em] text-muted">
-                <th scope="col" className="pb-1">
+            {/* Başlıklar Title Case, büyük harfe çevrilmiyor — `AdminTable`
+                ile aynı dil. Başlık satırı kayarken yerinde kalıyor. */}
+            <thead className="sticky top-0 bg-(--premium-surface)">
+              <tr className="text-left font-semibold text-muted">
+                <th scope="col" className="pb-1.5">
+                  Tarih
+                </th>
+                {/* HAFTA GÜNÜ SÜTUNU: gri hafta sonu bantlarının metin
+                    karşılığı — tabloyu okuyan da cumartesi çukurunu
+                    görüyor. */}
+                <th scope="col" className="pb-1.5 pl-3">
                   Gün
                 </th>
-                <th scope="col" className="pb-1 text-right">
-                  Görüntüleme
+                <th scope="col" className="pb-1.5 pl-3 text-right">
+                  {METRIC.views}
                 </th>
-                <th scope="col" className="pb-1 text-right">
-                  Ziyaretçi
+                <th scope="col" className="pb-1.5 pl-3 text-right">
+                  {METRIC.dailyVisitors}
                 </th>
               </tr>
             </thead>
             <tbody>
-              {[...points].reverse().map((p) => (
-                <tr key={p.day} className="border-t border-line">
-                  <td className="py-1 text-body">
-                    {formatEtDateShort(p.day, locale)}
+              {/* Yoğun tablo: rakamsal tarih burada kalıyor. Ölçüm öncesi
+                  günler yazılmıyor — sayıları yok, sıfır değil. */}
+              {points
+                .slice(ilk)
+                .reverse()
+                .map((p) => (
+                  <tr key={p.day} className="border-t border-line">
+                    <th scope="row" className="py-1 text-left font-normal text-body">
+                      <span className="numeral">{formatEtDateShort(p.day, "tr")}</span>
+                    </th>
+                    <td className="py-1 pl-3 text-muted">{dayNote(p)}</td>
+                    <td className="numeral py-1 pl-3 text-right text-strong">
+                      {p.views.toLocaleString("tr-TR")}
+                    </td>
+                    <td className="numeral py-1 pl-3 text-right text-body">
+                      {p.visitors.toLocaleString("tr-TR")}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+            {/* TAM GÜNLERİN TOPLAMI — üstteki kutularla AYNI sayılar.
+                Tablo bugünü de listeliyor; toplamı bugünsüz yazılıyor ki
+                okuyucu satırları toplayıp kutuyla karşılaştırdığında aynı
+                sayıyı bulsun (veri dürüstlüğü § 3). Ziyaretçi sütununun
+                toplamı ziyaretçi-günüdür: kimlik her gün döndüğü için
+                günlük tekillerin toplamı. */}
+            {tamGunler.length > 1 && (
+              <tfoot>
+                <tr className="border-t border-line-strong font-semibold">
+                  <th scope="row" colSpan={2} className="py-1.5 text-left text-body">
+                    {tamGunler.length} Tam Gün
+                  </th>
+                  <td className="numeral py-1.5 pl-3 text-right text-strong">
+                    {toplamViews.toLocaleString("tr-TR")}
                   </td>
-                  <td className="numeral py-1 text-right text-strong">
-                    {p.views.toLocaleString("tr-TR")}
-                  </td>
-                  <td className="numeral py-1 text-right text-body">
-                    {p.visitors.toLocaleString("tr-TR")}
+                  <td className="numeral py-1.5 pl-3 text-right text-body">
+                    {toplamVisitors.toLocaleString("tr-TR")}
                   </td>
                 </tr>
-              ))}
-            </tbody>
+              </tfoot>
+            )}
           </table>
         </div>
       </details>
@@ -482,10 +627,130 @@ export function TrafficChart({
   );
 }
 
-/** Tepe değeri okunur bir yuvarlak sayıya çıkarır: 137 → 150, 1.240 → 1.500. */
-function niceCeiling(value: number): number {
+/**
+ * SESSİZ GÜN BANTLARI EN GERİDE. Hafta sonu ve tatil günlerinde trafik
+ * planlı olarak düşük; bantsız grafikte cumartesi çukurunu gören yönetici
+ * "trafik mi düştü, ölçüm mü bozuldu" diye ayırt edemiyordu. Bant bir ZEMİN,
+ * tek taşıyıcı değil: çizgi zaten üstünde ve tablo görünümü aynı sayıları
+ * (ve hafta gününü) veriyor. Ölçüm öncesinde bant yok — orada tarama var.
+ */
+function OffDays({
+  points,
+  ilk,
+  x,
+  slotW,
+  y0,
+  y1,
+}: {
+  points: TrafficPoint[];
+  ilk: number;
+  x: (i: number) => number;
+  slotW: number;
+  y0: number;
+  y1: number;
+}) {
+  return (
+    <>
+      {points.map((p, i) =>
+        p.offDay && i >= ilk ? (
+          <rect
+            key={`off-${p.day}`}
+            x={Math.max(0, x(i) - slotW / 2)}
+            y={y0}
+            width={slotW}
+            height={y1 - y0}
+            fill="var(--surface-sunken)"
+          />
+        ) : null,
+      )}
+    </>
+  );
+}
+
+function SeriesLine({
+  points,
+  stroke,
+  dashed = false,
+}: {
+  points: string;
+  stroke: string;
+  dashed?: boolean;
+}) {
+  if (!points) return null;
+  return (
+    <polyline
+      points={points}
+      fill="none"
+      stroke={stroke}
+      strokeWidth="2"
+      strokeDasharray={dashed ? "4 3" : undefined}
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      vectorEffect="non-scaling-stroke"
+    />
+  );
+}
+
+/**
+ * İMLEÇ ÇİZGİSİ VE İŞARET, ÖLÇEKTEN BAĞIMSIZ.
+ * `preserveAspectRatio="none"` altında geometri iki eksende farklı
+ * ölçekleniyor: daire elipse döner, dikdörtgenin de GENİŞLİĞİ ekrana göre
+ * değişir. İşaretler bir dönem dikdörtgendi ve yorumu "genişliği
+ * `non-scaling-stroke` ile sabit kalıyor" diyordu — o koruma dolgu (`fill`)
+ * taşıyan bir `rect`e UYGULANMIYOR, çünkü kural yalnızca çizgi kalınlığına
+ * bakıyor. Ölçüldü: `?gun=90` + 390 piksel ekranda işaret 1,2 × 4,3
+ * piksele iniyor, yani imleç çizgisinden ayırt edilemiyor. Sıfır uzunluklu
+ * bir `line` + yuvarlak uç, dolgu değil ÇİZGİ kalınlığı olduğu için
+ * `non-scaling-stroke`un kapsamına giriyor: her ölçekte 7 piksellik bir
+ * daire, elipse de dönmüyor. Ölçülmemiş günde işaret yok, yalnızca çizgi.
+ */
+function Cursor({
+  x,
+  y0,
+  y1,
+  mark,
+  stroke,
+}: {
+  x: number;
+  y0: number;
+  y1: number;
+  mark: number | null;
+  stroke: string;
+}) {
+  return (
+    <g pointerEvents="none">
+      <line
+        x1={x}
+        y1={y0}
+        x2={x}
+        y2={y1}
+        stroke="var(--line-strong)"
+        strokeWidth="1"
+        vectorEffect="non-scaling-stroke"
+      />
+      {mark !== null && (
+        <line
+          x1={x}
+          y1={mark}
+          x2={x}
+          y2={mark}
+          stroke={stroke}
+          strokeWidth="7"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      )}
+    </g>
+  );
+}
+
+/**
+ * Tepe değeri okunur bir yuvarlak sayıya çıkarır: 137 → 150, 1.240 → 1.500.
+ * `fine`: basamak yarım değil beşte bir — 11 → 12, 137 → 140.
+ */
+function niceCeiling(value: number, fine = false): number {
   if (value <= 10) return 10;
   const magnitude = 10 ** Math.floor(Math.log10(value));
-  const step = magnitude / 2;
+  const step = magnitude / (fine ? 5 : 2);
   return Math.ceil(value / step) * step;
 }

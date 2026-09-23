@@ -1,12 +1,16 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
-import Link from "next/link";
 import {
-  ArrowCounterClockwise,
-  ArrowSquareOut,
-  FloppyDisk,
-} from "@phosphor-icons/react/dist/ssr";
+  startTransition,
+  useActionState,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr";
 import {
   restoreBriefRevision,
   saveBriefFromAdmin,
@@ -16,11 +20,23 @@ import {
 import { previewBriefBody } from "@/app/actions/content-preview";
 import {
   Alan,
-  DurumSeridi,
+  EDITOR_OLCULERI,
+  EylemSeridi,
   OnizlemePaneli,
+  Sayac,
   SurumGecmisi,
+  TekSatir,
+  blokYaz,
   girdi,
+  imlecinBlogu,
+  kayitDurumu,
+  useCikisKorumasi,
+  useGenisEkran,
+  useImlec,
+  useKendiligindenBuyu,
   useOnizleme,
+  useOnizlemeTakibi,
+  type Gorunum,
 } from "@/components/admin/editor-parts";
 import { cn } from "@/lib/utils";
 
@@ -38,8 +54,15 @@ import { cn } from "@/lib/utils";
  * günün bültenini ezmesinin en kolay yolu olurdu. Yeni bülten yazmak da
  * rutinin işi — panel var olanı düzeltiyor.
  *
- * Ortak iskelet (durum şeridi, önizleme paneli, sürüm geçmişi)
- * `editor-parts.tsx`te; oradaki yorum ikiliği neden reddettiğimizi anlatıyor.
+ * Ortak iskelet (başlık, önizleme paneli, sürüm geçmişi, eylem şeridi)
+ * `editor-parts.tsx`te; alanların denetimli olması ve editörün kayıttan
+ * sonra yerinde kalmasının gerekçesi mercek editöründe yazılı.
+ *
+ * TABAN DAMGA DEĞİL, İÇERİK. Mercekte kaydın damgası her yazmada ilerliyor;
+ * bültende `generatedAt` panel düzeltmesinde artık ilerlemiyor
+ * (lib/content-write.ts → `saveBrief`). Damgaya bakan bir karşılaştırma
+ * geri yüklemeden sonra eski metinde kalır ve Kaydet geri yüklemeyi silerdi;
+ * karşılaştırma bu yüzden manşet ve gövdenin kendisine bakıyor.
  */
 
 export type BriefDraft = {
@@ -54,218 +77,282 @@ export type BriefDraft = {
 
 const BOS: EditorState = {};
 
+/** Şemadaki sınırlar (lib/content-write.ts → `briefInputSchema`). */
+const SINIR = { headline: 200, body: 8000 } as const;
+
 /**
  * Bültenin YAZIM KISAYOLLARI — `BriefBody`nin tanıdığı üç kalıp.
  *
  * Dördüncüsü yok ve olmamalı: biçimlendirici bu üçünü tanıyor, gerisini düz
  * paragraf sayıyor. Buraya tanınmayan bir kalıp koymak, editörde çalışıyor
- * görünüp sitede düz metne dönen bir kısayol demekti.
+ * görünüp sitede düz metne dönen bir kısayol demekti. Örnek kaydın dilinde;
+ * yanında sözdizimi, mercek çipleriyle aynı dil.
  */
 const KALIPLAR = [
-  { ad: "Bölüm Başlığı", ornek: "## Başlık" },
-  { ad: "Madde", ornek: "- Madde metni" },
-  { ad: "Kalın Giriş", ornek: "**Kalın giriş:** devamı" },
+  { ad: "Bölüm Başlığı", sozdizimi: "##", tr: "## Başlık", en: "## Heading" },
+  { ad: "Madde", sozdizimi: "-", tr: "- Madde metni", en: "- Item text" },
+  {
+    ad: "Kalın Giriş",
+    sozdizimi: "**…:**",
+    tr: "**Kalın giriş:** devamı",
+    en: "**Bold lead:** continued",
+  },
 ] as const;
-
-/** Gövde sınırı — şemadaki `body_md` üst sınırıyla aynı sayı. */
-const GOVDE_TAVANI = 8000;
 
 export function BriefEditor({
   draft,
   revisions,
-  otekiDil,
+  ilkOnizleme,
+  canliAdres,
 }: {
   draft: BriefDraft;
   revisions: StoryRevision[];
-  /** Aynı bültenin öteki dildeki kaydı varsa adresi; yoksa düğme çizilmiyor. */
-  otekiDil: string | null;
+  /** Sayfanın sunucuda çizdiği ilk önizleme — gövdenin kayıttaki hâli. */
+  ilkOnizleme: ReactNode;
+  /** Yayındaki bülten sayfası, kaydın dilinde (`/en/bulten?…`). */
+  canliAdres: string;
 }) {
-  const [state, formAction, pending] = useActionState(saveBriefFromAdmin, BOS);
-  const [restoreState, restoreAction, restoring] = useActionState(
+  const [kayit, kaydet, kaydediliyor] = useActionState(saveBriefFromAdmin, BOS);
+  const [geri, geriYukleEylemi, geriYukleniyor] = useActionState(
     restoreBriefRevision,
     BOS,
   );
 
+  const [headline, setHeadline] = useState(draft.headline);
   const [body, setBody] = useState(draft.bodyMd);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
+
+  /* Sunucudan yeni taslak geldiyse (kaydetme, geri yükleme) alanlar onunla
+     yenilenir — gerekçe dosya başında. */
+  const imza = JSON.stringify([draft.generatedAt, draft.headline, draft.bodyMd]);
+  const [taban, setTaban] = useState(imza);
+  if (imza !== taban) {
+    setTaban(imza);
+    setHeadline(draft.headline);
+    setBody(draft.bodyMd);
+  }
+
+  /* Kirlilik kaydedilince yazılacak hâlle ölçülüyor: şema iki metni de
+     kırpıyor. */
+  const kirli =
+    headline.trim() !== draft.headline.trim() || body.trim() !== draft.bodyMd.trim();
+  useCikisKorumasi(kirli);
+
+  const govdeRef = useRef<HTMLTextAreaElement>(null);
+  const bolgeRef = useRef<HTMLElement>(null);
+  const imlec = useImlec();
+  const genis = useGenisEkran();
+  useKendiligindenBuyu(govdeRef, body, !genis);
 
   /* Server action referansı sabit — `useOnizleme` bunu şart koşuyor. */
-  const onizleme = useOnizleme(body, previewBriefBody);
+  const ilk = useMemo(
+    () => ({ metin: draft.bodyMd, cizim: ilkOnizleme }),
+    [draft.bodyMd, ilkOnizleme],
+  );
+  const onizleme = useOnizleme(body, previewBriefBody, ilk);
+  const takip = useOnizlemeTakibi(govdeRef, bolgeRef);
+  useEffect(() => takip(), [onizleme.cizilen, takip]);
 
-  const kirli = body !== draft.bodyMd;
-  const sifirla = () => {
-    setBody(draft.bodyMd);
-    onizleme.unut();
-  };
-
-  /* Kısayol imlecin OLDUĞU SATIRA yazıyor: bülten kısa ve yeni madde çoğu
-     zaman listenin ortasına giriyor. */
-  const kalipEkle = (ornek: string) => {
-    const el = bodyRef.current;
-    const konum = el ? el.selectionStart : body.length;
-    const ayrac = konum > 0 && body[konum - 1] !== "\n" ? "\n\n" : "";
-    const yeni = body.slice(0, konum) + ayrac + ornek + "\n" + body.slice(konum);
-    setBody(yeni);
-    queueMicrotask(() => {
-      el?.focus();
-      const imlec = konum + ayrac.length + ornek.length + 1;
-      el?.setSelectionRange(imlec, imlec);
+  const [gorunum, setGorunum] = useState<Gorunum>("yaz");
+  const yazKonumu = useRef(0);
+  const gorunumDegistir = (yeni: Gorunum) => {
+    if (yeni === gorunum) return;
+    if (yeni === "onizle") yazKonumu.current = window.scrollY;
+    setGorunum(yeni);
+    requestAnimationFrame(() => {
+      if (yeni === "yaz") {
+        window.scrollTo({ top: yazKonumu.current });
+        return;
+      }
+      const hedef = imlecinBlogu(govdeRef.current, bolgeRef.current) ?? bolgeRef.current;
+      if (!hedef) return;
+      const ust = hedef.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: Math.max(0, ust - window.innerHeight / 3) });
     });
   };
 
+  const sifirla = () => {
+    setHeadline(draft.headline);
+    setBody(draft.bodyMd);
+  };
+
+  const geriYukle = (id: string) => {
+    if (kirli && !window.confirm("Kaydedilmemiş değişiklikler silinecek. Bu sürüm geri yüklensin mi?")) {
+      return;
+    }
+    const fd = new FormData();
+    fd.set("revisionId", id);
+    startTransition(() => geriYukleEylemi(fd));
+  };
+
+  const govdeId = useId();
+  const onizlemeId = useId();
+  const govdeBaslikId = useId();
+  const lang = draft.locale;
+  const hata = kayit.at && kayit.at >= (geri.at ?? "") ? kayit.fieldErrors : undefined;
   const maddeSayisi = body
     .split("\n")
     .filter((satir) => satir.trim().startsWith("- ")).length;
-  const kalan = GOVDE_TAVANI - body.trim().length;
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form
+      style={EDITOR_OLCULERI}
+      onSubmit={(event) => {
+        event.preventDefault();
+        const fd = new FormData(event.currentTarget);
+        startTransition(() => kaydet(fd));
+      }}
+      className="flex flex-col"
+    >
       <input type="hidden" name="date" value={draft.date} />
       <input type="hidden" name="locale" value={draft.locale} />
       <input type="hidden" name="period" value={draft.period} />
 
-      <DurumSeridi
-        state={state}
-        basarili="Kaydedildi. Bülten sayfası ve ana sayfa tazelendi."
-      />
-
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="flex flex-col gap-5">
+      <div className="grid gap-x-6 gap-y-6 lg:grid-cols-2">
+        <div className="min-w-0 lg:col-span-2">
           <Alan
             label="Manşet"
-            hata={state.fieldErrors?.headline}
+            hata={hata?.headline}
             hint="Bülten sayfasının başlığı; ana sayfadaki özet kartında da bu görünüyor."
+            sayac={<Sayac n={headline.trim().length} tavan={SINIR.headline} />}
           >
-            <input
-              name="headline"
-              defaultValue={draft.headline}
-              maxLength={200}
-              className={cn(girdi, "text-lead font-semibold")}
-            />
+            {(p) => (
+              <TekSatir
+                {...p}
+                name="headline"
+                lang={lang}
+                value={headline}
+                onValue={setHeadline}
+                maxLength={SINIR.headline}
+                required
+                className="text-lead font-semibold leading-snug"
+              />
+            )}
           </Alan>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <span className="text-small font-semibold text-strong">
-                Gövde
-              </span>
-              {kirli && (
-                <button
-                  type="button"
-                  onClick={sifirla}
-                  className="inline-flex min-h-8 items-center gap-1.5 text-tiny font-semibold text-primary transition-colors hover:text-primary-hover"
-                >
-                  <ArrowCounterClockwise weight="bold" size={13} />
-                  Yüklendiği Hâle Dön
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap gap-1.5">
-              {KALIPLAR.map((kalip) => (
-                <button
-                  key={kalip.ad}
-                  type="button"
-                  onClick={() => kalipEkle(kalip.ornek)}
-                  title={kalip.ornek}
-                  className="inline-flex min-h-8 items-center rounded-full border border-line bg-surface px-2.5 text-tiny font-semibold text-body transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary"
-                >
-                  {kalip.ad}
-                </button>
-              ))}
-            </div>
-
-            <textarea
-              ref={bodyRef}
-              name="body_md"
-              value={body}
-              onChange={(event) => setBody(event.target.value)}
-              rows={24}
-              spellCheck={false}
-              className={cn(
-                girdi,
-                "resize-y font-mono text-small leading-[1.7] tracking-[0]",
-              )}
-            />
-
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              {state.fieldErrors?.body_md ? (
-                <span className="text-tiny font-semibold text-down">
-                  {state.fieldErrors.body_md}
-                </span>
-              ) : (
-                <span className="text-tiny text-muted">
-                  Boş satır paragrafları ayırır; maddeler 01, 02 diye
-                  numaralanır
-                </span>
-              )}
-              {/* TAVAN YAKINSA SAYAÇ UYARIYOR. Sekiz bin karakterlik sınır
-                  şemada ve aşan bir metin kaydedilmiyor; bunu kaydet
-                  düğmesine basınca öğrenmek, yazılmış bir bülteni yeniden
-                  kısaltmak demekti. */}
-              <span
-                className={cn(
-                  "numeral text-tiny",
-                  kalan < 0
-                    ? "font-semibold text-down"
-                    : kalan < 500
-                      ? "font-semibold text-body"
-                      : "text-muted",
-                )}
-              >
-                {body.trim().length.toLocaleString("tr-TR")} /{" "}
-                {GOVDE_TAVANI.toLocaleString("tr-TR")} Karakter ·{" "}
-                {maddeSayisi.toLocaleString("tr-TR")} Madde
-              </span>
-            </div>
-          </div>
         </div>
 
+        {/* GÖVDE ÖNİZLEMENİN BOYUNDA (23 Eylül denetimi). Sabit 24 satırlık
+            kutu 1440'ta sol sütunun dibinde 138 piksel boşluk bırakıyordu;
+            satırın boyunu 804 piksellik önizleme belirliyordu. Geniş ekranda
+            iki kutu artık aynı ölçüden (`--editor-bolum`) boylanıyor. */}
+        <section
+          id={govdeId}
+          aria-labelledby={govdeBaslikId}
+          className={cn(
+            "flex min-w-0 flex-col gap-2 lg:h-(--editor-bolum)",
+            gorunum === "onizle" && "max-lg:hidden",
+          )}
+        >
+          <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 sm:min-h-9">
+            <h3 id={govdeBaslikId} className="text-small font-semibold text-strong">
+              Gövde
+            </h3>
+            {kirli && (
+              <button
+                type="button"
+                onClick={sifirla}
+                className="tap-44 inline-flex min-h-8 items-center gap-1.5 text-tiny font-semibold text-primary transition-colors hover:text-primary-hover"
+              >
+                <ArrowCounterClockwise weight="bold" size={13} aria-hidden />
+                Yüklendiği Hâle Dön
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Kalıp Ekle">
+            {KALIPLAR.map((kalip) => (
+              <button
+                key={kalip.ad}
+                type="button"
+                onClick={() => {
+                  if (!govdeRef.current) return;
+                  blokYaz(
+                    govdeRef.current,
+                    lang === "en" ? kalip.en : kalip.tr,
+                    imlec.konum.current,
+                    "satir",
+                  );
+                }}
+                title={lang === "en" ? kalip.en : kalip.tr}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-small font-semibold text-body transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary sm:min-h-8 sm:px-2.5"
+              >
+                {kalip.ad}
+                <code className="font-mono text-nano font-normal text-muted">
+                  {kalip.sozdizimi}
+                </code>
+              </button>
+            ))}
+          </div>
+
+          <textarea
+            ref={govdeRef}
+            name="body_md"
+            lang={lang}
+            aria-labelledby={govdeBaslikId}
+            aria-describedby={`${govdeId}-not`}
+            aria-invalid={hata?.body_md ? true : undefined}
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            onSelect={(event) => {
+              imlec.kaydet(event);
+              takip();
+            }}
+            onBlur={imlec.kaydet}
+            spellCheck={false}
+            className={cn(
+              girdi,
+              "min-h-64 resize-none font-mono text-small leading-[1.7] tracking-[0] field-sizing-content",
+              "lg:min-h-0 lg:flex-1 lg:field-sizing-fixed",
+            )}
+          />
+
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <span
+              id={`${govdeId}-not`}
+              className={cn("text-tiny", hata?.body_md ? "font-semibold text-down" : "text-muted")}
+            >
+              {hata?.body_md ?? "Boş satır paragrafları ayırır; maddeler 01, 02 diye numaralanır."}
+            </span>
+            <Sayac
+              n={body.trim().length}
+              tavan={SINIR.body}
+              birim="Karakter"
+              ek={`${maddeSayisi.toLocaleString("tr-TR")} Madde`}
+            />
+          </div>
+        </section>
+
         <OnizlemePaneli
+          id={onizlemeId}
           preview={onizleme.preview}
-          previewing={onizleme.previewing}
-          bayat={onizleme.bayat}
-          guncel={onizleme.guncel}
-          yenile={() => onizleme.onizle(body)}
+          durum={onizleme.durum}
+          yenile={onizleme.yenile}
+          lang={lang}
+          bolgeRef={bolgeRef}
+          dipnot="Bülten Sayfasındaki Çizimin Aynısı"
+          className={cn(
+            "lg:sticky lg:top-(--editor-ust) lg:h-(--editor-bolum) lg:self-start",
+            gorunum === "yaz" && "max-lg:hidden",
+          )}
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-line pt-4">
-        <button
-          type="submit"
-          disabled={pending}
-          className="inline-flex min-h-11 items-center gap-2 rounded-(--radius-md) bg-primary px-5 text-base font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-60 sm:min-h-10"
-        >
-          <FloppyDisk weight="duotone" size={17} />
-          {pending ? "Kaydediliyor…" : "Kaydet"}
-        </button>
-        <Link
-          href={`/bulten?${draft.period === "weekly" ? "tur=haftalik&" : ""}tarih=${draft.date}`}
-          target="_blank"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-(--radius-md) border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-10"
-        >
-          <ArrowSquareOut weight="duotone" size={16} />
-          Yayındaki Hâli
-        </Link>
-        {otekiDil && (
-          <Link
-            href={otekiDil}
-            className="inline-flex min-h-11 items-center rounded-(--radius-md) border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-10"
-          >
-            {draft.locale === "en" ? "Türkçesine Geç" : "İngilizcesine Geç"}
-          </Link>
-        )}
-        <p className="text-tiny text-muted">
-          Kaydetmek yayındaki metnin üzerine yazar; önceki hâli sürüm
-          geçmişine düşer. Künye değişmez — bülteni yine rutin yazdı.
-        </p>
+      <div className="mt-6">
+        <SurumGecmisi
+          revisions={revisions}
+          geriYukle={geriYukle}
+          geriYukleniyor={geriYukleniyor}
+          not="Kaydetmek yayındaki metnin üzerine yazar; önceki hâli burada saklanır ve geri yüklenebilir. Yazar künyesi değişmez, panel düzeltmesi başlıkta ayrıca yazılır."
+        />
       </div>
 
-      <SurumGecmisi
-        revisions={revisions}
-        restoreAction={restoreAction}
-        restoring={restoring}
-        restoreState={restoreState}
+      <EylemSeridi
+        kaydediliyor={kaydediliyor}
+        durum={kayitDurumu({ kayit, geri, kaydediliyor, geriYukleniyor, kirli })}
+        canliAdres={canliAdres}
+        gorunum={gorunum}
+        gorunumDegistir={gorunumDegistir}
+        yazId={govdeId}
+        onizleId={onizlemeId}
       />
     </form>
   );

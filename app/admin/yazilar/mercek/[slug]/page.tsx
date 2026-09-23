@@ -1,19 +1,15 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import { requireAdmin } from "@/lib/admin";
 import { AdminPanel, AdminPanelTitle } from "@/components/admin/AdminUI";
 import { StoryEditor } from "@/components/admin/StoryEditor";
+import { DilAnahtari, EditorBasligi } from "@/components/admin/editor-parts";
 import { getStoryBySlug, getStoryLocales } from "@/lib/data";
 import { listStoryRevisions } from "@/app/actions/content";
-import { pageMetadata } from "@/lib/page-meta";
-
-export const generateMetadata = pageMetadata({
-  path: "/admin/yazilar",
-  robots: { index: false, follow: false },
-  tr: { title: "Yazıyı Düzenle", description: "Yönetim." },
-  en: { title: "Edit Story", description: "Admin." },
-});
+import { previewStoryBody } from "@/app/actions/content-preview";
+import { adminDayYear, adminStamp } from "@/lib/admin-format";
+import { adminDocTitle } from "@/lib/admin-sections";
+import { withLocale } from "@/lib/i18n/routing";
 
 /**
  * Mercek yazısı editörü.
@@ -26,7 +22,37 @@ export const generateMetadata = pageMetadata({
  * ve ikisi ayrı ayrı düzenlenebilmeli; slug'ı dille birleştirmek adresi
  * `/admin/yazilar/mercek/leopold-tasfiyesi-en` gibi sahte bir kimliğe
  * çevirirdi.
+ *
+ * BAŞLIK HİYERARŞİSİ: `h1` kayıt ("Mercek Yazısı · 22 Eyl 2026"), `h2`
+ * düzenlenen satır ("Türkçe Metin" — slug+dil bir satır), `h3` parçalar
+ * (Gövde, Önizleme, Künye, Sürüm Geçmişi). Başlık bir dönem yazının
+ * kendi başlığını `h2` olarak basıyordu ve aynı metin hemen altında
+ * kutunun içinde duruyordu; düzenlenirken ikisi iki ayrı hâlde okunuyordu.
  */
+
+/* Ayraç ve tarih BÖLÜNMÜYOR: 390'da başlık "Mercek Yazısı / · 22 Eyl 2026"
+   diye kırılıyor, ikinci satır ayraçla başlıyordu. Kırılma yalnızca
+   ayraçtan SONRA olabiliyor. */
+const kayitAdi = (eventDate: string) =>
+  `Mercek Yazısı\u00a0· ${adminDayYear(eventDate).replace(/ /g, "\u00a0")}`;
+
+/* Mutlak ve Türkçe: panel Türkçe ve kökün şablonu İngilizce çerezle
+   "Opening Bell" ekliyordu (lib/admin-sections.ts). Kayıt sayfanın
+   kapısından geçmeden okunmuyor — başlık yetkisiz isteğe bir slug'ın
+   varlığını söylemesin. */
+export async function generateMetadata(
+  props: PageProps<"/admin/yazilar/mercek/[slug]">,
+): Promise<Metadata> {
+  await requireAdmin();
+  const { slug } = await props.params;
+  const search = await props.searchParams;
+  const row = await getStoryBySlug(slug, search.dil === "en" ? "en" : "tr");
+  return {
+    title: adminDocTitle(row ? kayitAdi(row.eventDate) : "Mercek Yazısı", "Yazılar"),
+    robots: { index: false, follow: false },
+  };
+}
+
 export default async function StoryEditorPage(
   props: PageProps<"/admin/yazilar/mercek/[slug]">,
 ) {
@@ -47,58 +73,48 @@ export default async function StoryEditorPage(
      iddia; kayıt onu karşılamıyorsa 404 doğru cevap. */
   if (row.locale !== locale) notFound();
 
-  /* Sürümler ve öteki dilin varlığı KAYITLA AYNI TURDA: üçü birbirinden
-     bağımsız ve ardışık beklemenin sebebi yok. */
-  const [revisions, locales] = await Promise.all([
+  /* Sürümler, öteki dilin varlığı ve İLK ÖNİZLEME kayıtla aynı turda:
+     üçü birbirinden bağımsız. Önizleme istemcinin ilk POST'unu bekliyordu
+     ve bölge açılışta 256 pikselden 804'e sıçrıyordu (gerekçe
+     editor-parts.tsx → `useOnizleme`). */
+  const [revisions, locales, ilkOnizleme] = await Promise.all([
     listStoryRevisions(slug, locale),
     getStoryLocales(slug),
+    previewStoryBody(row.bodyMd, locale),
   ]);
-  const oteki = locale === "en" ? "tr" : "en";
-  const otekiDil = locales.includes(oteki)
-    ? `/admin/yazilar/mercek/${slug}${oteki === "en" ? "?dil=en" : ""}`
-    : null;
+  const adres = (dil: "tr" | "en") =>
+    locales.includes(dil)
+      ? `/admin/yazilar/mercek/${slug}${dil === "en" ? "?dil=en" : ""}`
+      : null;
 
   return (
     <div className="flex flex-col gap-6">
-      <Link
-        href="/admin/yazilar"
-        className="inline-flex min-h-11 w-fit items-center gap-1.5 text-base font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-9"
-      >
-        <CaretLeft weight="bold" size={15} />
-        Yazılara Dön
-      </Link>
+      <EditorBasligi
+        geri="/admin/yazilar"
+        tur="Mercek"
+        baslik={kayitAdi(row.eventDate)}
+        aciklama="Yayındaki yazıyı düzelt; slug ve dil değişmez, yeni yazı burada açılmaz."
+        eylem={<DilAnahtari dil={locale} tr={adres("tr")} en={adres("en")} />}
+      />
 
       <AdminPanel>
         <AdminPanelTitle
-          hint={`${row.slug} · ${row.locale === "en" ? "İngilizce" : "Türkçe"} · Son Güncelleme ${row.updatedAt ? new Date(row.updatedAt).toLocaleString("tr-TR") : "—"}`}
-          action={
-            /* İki dil arasında geçiş: aynı slug'ın öteki dili varsa oraya,
-               yoksa bağlantı hiç çizilmiyor — var olmayan bir kayda giden
-               düğme 404'e götürürdü. Koşul BU SATIRDA EKSİKTİ: yorum kuralı
-               yazıyordu ama bağlantı her zaman çiziliyordu. Bülten editörü
-               aynı kalıbı doğru uyguluyor (`otekiDil`). */
-            otekiDil && (
-            <Link
-              href={otekiDil}
-              className="inline-flex min-h-11 items-center rounded-(--radius-md) border border-line bg-surface px-3.5 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-9"
-            >
-              {locale === "en" ? "Türkçesine Geç" : "İngilizcesine Geç"}
-            </Link>
-            )
-          }
+          hint={`${row.slug} · Son Güncelleme ${row.updatedAt ? adminStamp(row.updatedAt) : "—"}`}
         >
-          {row.title}
+          {locale === "en" ? "İngilizce Metin" : "Türkçe Metin"}
         </AdminPanelTitle>
 
-        {/* SÜRÜM GERİ YÜKLENDİĞİNDE EDİTÖR YENİDEN KURULUYOR. Gövde denetimli
-            bir `useState` ve ilk değerini taslaktan alıyor: `router.refresh()`
-            yeni prop getirse de o state eski metinde kalırdı ve kaydetmek geri
-            yüklemeyi silerdi. Anahtar kaydın güncellenme damgası — damga
-            değişince React bileşeni yeniden kuruyor ve state yeni metinle
-            başlıyor. */}
+        {/* ANAHTAR YOK, bilerek: `key={updatedAt}` kaydetmeden sonra
+            editörü yeniden kuruyor ve "Kaydedildi"yi siliyordu. Yeni
+            taslağı editör kendisi karşılıyor — gerekçe StoryEditor'da. */}
         <StoryEditor
-          key={row.updatedAt ? String(row.updatedAt) : row.slug}
           revisions={revisions}
+          ilkOnizleme={ilkOnizleme}
+          /* YAYINDAKİ HÂL KAYDIN DİLİNDE (23 Eylül denetimi). İngilizce
+             editörün bağlantısı öneksiz `/mercek/…` idi; önek yoksa dil
+             çerezden okunuyor ve sahibinin çerezi Türkçe — İngilizceyi
+             düzelten yönetici Türkçe sayfayı açıp denetliyordu. */
+          canliAdres={withLocale(`/mercek/${row.slug}`, locale)}
           draft={{
             slug: row.slug,
             locale: row.locale,
