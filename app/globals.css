@@ -36,7 +36,7 @@
      Yeni değer iki zeminde de geçiyor: 5,28 ve 4,62. Koyu tema zaten 5,94'tü,
      dokunulmadı. */
   --text-muted: #586a7c;
-  /* UZUN OKUMA MÜREKKEBİ — yalnızca Mercek yazı gövdesi (ArticleEditorial).
+  /* UZUN OKUMA MÜREKKEBİ — yalnızca mercek ve rehber gövdesi (ArticleEditorial).
      Gövde `--text-body` ile basılıyordu: #54677c sayfa zemininde 5,51:1.
      AA'yı geçiyor ama 18 piksellik, sayfalarca süren bir metinde gri ve
      yorucu okunuyordu; panel metinleri için doğru olan ton uzun okuma için
@@ -1322,12 +1322,21 @@
 
 /* SPARKLINE KENDİNİ ÇİZİYOR. Neden: günün hareketini anlatır — göz çizgiyi
    soldan sağa izleyip yönü okur, sonra alan "dolar", en son nokta "bugün
-   burada" der. `pathLength="1"` sayesinde uzunluk ölçmeden birim
-   normalize; dasharray 1, offset 1 → 0. Alan ve nokta çizgiden sonra
-   gelir ki sıralama hikâyeyi taşısın. */
+   burada" der. Alan ve nokta çizgiden sonra gelir ki sıralama hikâyeyi
+   taşısın.
+
+   KESİK ÇİZGİ DEĞİL, KIRPMA (23 Eylül). Çizim `pathLength="1"` ile
+   `stroke-dasharray: 1` üzerinden yapılıyordu ve animasyon bittikten sonra
+   da kesik kalıyordu. Çizgi `vector-effect: non-scaling-stroke` taşıyor;
+   Chrome o durumda kesiği EKRAN ölçüsünde, `pathLength`i ise viewBox
+   ölçüsünde hesaplıyor. `preserveAspectRatio="none"` ile yatayda ~1,8 kat
+   gerilen mini grafiklerde çizgi kendi boyunun %55-75'inde bitiyor, alan
+   dolgusu sağ kenara kadar sürüyordu (makro kartları, piyasalar kapağı —
+   ölçüldü). Soldan açılan `clip-path` ölçekten bağımsız: kutu çizginin
+   kendi çerçevesi, negatif pay yuvarlak uçları kırpmıyor. */
 @keyframes spark-draw {
-  from { stroke-dashoffset: 1; }
-  to   { stroke-dashoffset: 0; }
+  from { clip-path: inset(-25% 100% -25% -2%); }
+  to   { clip-path: inset(-25% -2% -25% -2%); }
 }
 @keyframes fade-in-soft {
   from { opacity: 0; }
@@ -1336,7 +1345,6 @@
   from { transform: scale(0); }
 }
 .spark-line {
-  stroke-dasharray: 1;
   animation: spark-draw 0.85s var(--ease-brand) both;
 }
 .spark-area {
@@ -1527,7 +1535,7 @@
 @media (prefers-reduced-motion: reduce) {
   .oku-blok, .oku-bar { animation: none; }
   .panel { animation: none; }
-  .spark-line { stroke-dasharray: none; animation: none; }
+  .spark-line { clip-path: none; animation: none; }
   .spark-area, .spark-dot, .bar-fill, .ring-fill { animation: none; }
 }
 

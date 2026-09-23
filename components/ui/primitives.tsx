@@ -159,7 +159,12 @@ export function PageHeader({
       data-embedded={embedded}
     >
       <div className="min-w-0 page-heading-copy" data-has-eyebrow={!!eyebrow}>
-        {eyebrow && <p className="plate page-eyebrow">{eyebrow}</p>}
+        {/* KÜNYE TITLE CASE, BÜYÜK HARF DEĞİL (23 Eylül). `plate` künyeyi
+            büyük harfe çeviriyordu ("YAN YANA", "ABD EKONOMİSİ"); takvim,
+            rehber ve piyasalar kapakları kendi künyelerini Title Case
+            basıyor ("Ekonominin Ajandası"). Aynı ürünün kapaklarında iki
+            künye dili duruyordu; ölçü ve renk `.page-eyebrow`ta. */}
+        {eyebrow && <p className="page-eyebrow">{eyebrow}</p>}
         <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
           {title}
         </h1>

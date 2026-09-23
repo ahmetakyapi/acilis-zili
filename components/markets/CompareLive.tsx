@@ -455,11 +455,14 @@ export type CompareStripRow = {
 export function CompareStrip({
   rows,
   labels,
+  note,
   children,
 }: {
   rows: CompareStripRow[];
   labels: CompareLabels;
-  /** Ekleme çipi / dolu künyesi — sunucudan geliyor. */
+  /** Başlık satırının sağındaki künye (dört sembolde sınır notu). */
+  note?: string;
+  /** Boş koltuğun içeriği (ekleme denetimi) — sunucudan geliyor. */
   children?: React.ReactNode;
 }) {
   const { symbols, range, series, phase, locale } = useCompare();
@@ -474,138 +477,130 @@ export function CompareStrip({
       periodChangePct(series.find((row) => row.symbol === entry)),
     ),
   );
+  const periodLabel = labels.periodColumn.replace("{range}", labels.ranges[range]);
 
+  /* LİSTE DEĞİL, KOLTUK (23 Eylül). Şerit tam genişlikte dört satırdı: 1440'ta
+     her satırda şirket adı ile sayılar arasında ~700 piksel boş zemin
+     duruyordu ve ekranın en önemli sayısı (dönem getirisi) 16 puntoda satırın
+     sağ ucuna sıkışmıştı. Dört sembol dört yan yana kart: renk anahtarı
+     kartın üst kenarı, dönem getirisi kartın en büyük sayısı. Dörtten azsa
+     son koltuk ekleme denetimi — "bir kişi daha oturabilir". Telefonda iki
+     sütun. */
   return (
-    <Panel>
-      <div className="flex items-center gap-3 border-b border-line-soft px-4 py-2 sm:px-5">
-        <span className="plate min-w-0 flex-1 text-nano">{labels.selected}</span>
-        <span className="plate hidden w-[72px] shrink-0 text-right text-nano sm:block">
-          {labels.dayShort}
-        </span>
-        <span className="plate w-[86px] shrink-0 text-right text-nano text-primary sm:w-[104px]">
-          {labels.periodColumn.replace("{range}", labels.ranges[range])}
-        </span>
-        {/* Çarpı sütununun genişliği — başlık sayılarla aynı hizada dursun.
-            Düğme 44px dokunma hedefi ama negatif margin ile 24px yer
-            kaplıyor (geniş ekranda 20px). */}
-        <span aria-hidden className="w-6 shrink-0 sm:w-5" />
+    <section className="flex flex-col gap-3" aria-labelledby="compare-selected">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h2 id="compare-selected" className="plate text-nano tracking-[0.09em]">
+          {labels.selected}
+        </h2>
+        {note && <span className="text-tiny text-muted">{note}</span>}
       </div>
-
-      <ul className="divide-y divide-line-soft">
+      {/* Sütun sayısı DOLU KOLTUK sayısı: iki sembol ve ekleme koltuğunda
+          dört sütunluk ızgara sağda boş bir dördüncü sütun bırakıyordu. */}
+      <ul
+        className="grid grid-cols-2 gap-3 lg:grid-cols-[repeat(var(--seats),minmax(0,1fr))]"
+        style={{ "--seats": rows.length + (children ? 1 : 0) } as React.CSSProperties}
+      >
         {rows.map((row) => {
           const pct = periodChangePct(
             series.find((entry) => entry.symbol === row.symbol),
           );
-          /* KISA SERİ KENDİ DÖNEMİNİ SÖYLER — ŞERİTTE DE.
-             Bu künye tabloda zaten vardı ve sayı şeride taşınırken
-             kopyalanmamıştı: sütun başlığı "5Y Getirisi" derken altındaki
-             kalın "−%14,90" aslında on haftalık bir getiriydi ve ekranın en
-             büyük puntosu yanlış olanı söylüyordu. Uyarı sayının yanında
-             durmak zorunda; gerekçesi `lib/compare.ts` → coverageNote. */
+          const ratio = ratios[symbols.indexOf(row.symbol)];
+          /* KISA SERİ KENDİ DÖNEMİNİ SÖYLER — KOLTUKTA DA.
+             Sütun başlığı "5Y Getirisi" derken altındaki kalın "−%14,90"
+             aslında on haftalık bir getiri olabiliyor; uyarı sayının hemen
+             altında. Gerekçesi `lib/compare.ts` → coverageNote. */
           const kapsam = coverageNote(series, row.symbol, locale);
           return (
             <li
               key={row.symbol}
-              className="flex flex-col gap-1 px-4 py-2.5 sm:px-5"
+              className="panel relative flex min-w-0 flex-col gap-3 overflow-hidden p-4 sm:p-5"
             >
-            <div className="flex items-center gap-3">
               {/* Renk sembolden eşleniyor, dizinin sırasından değil: seri
                   barı gelmeyen sembolü eliyor ve indise bakan bir eşleme
                   bütün renkleri kaydırıyordu. */}
               <span
                 aria-hidden
-                className="h-5 w-[3px] shrink-0 rounded-full"
+                className="absolute inset-x-0 top-0 h-[3px]"
                 style={{ background: seriesColorOf(symbols, row.symbol) }}
               />
-              <LogoTile
-                symbol={row.symbol}
-                logoUrl={row.logoUrl}
-                size="sm"
-              />
-              <span className="flex min-w-0 flex-1 flex-col">
+              <div className="flex items-start gap-3">
+                <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <Link
+                    href={`/hisse/${row.symbol}`}
+                    className="tap-44 numeral w-fit text-base font-bold leading-tight text-strong transition-colors hover:text-primary"
+                  >
+                    {row.symbol}
+                  </Link>
+                  {row.name && (
+                    <span className="truncate text-tiny leading-tight text-muted">
+                      {row.name}
+                    </span>
+                  )}
+                </span>
+                {/* Dokunma hedefi 44px; görsel daire aynı, negatif margin
+                    kartın dolgusunu değiştirmiyor. Adres CANLI aralığı
+                    taşıyor — sunucudan gelen sabit bir bağlantı, aralık
+                    istemcide değiştikten sonra eski kalırdı. */}
                 <Link
-                  href={`/hisse/${row.symbol}`}
-                  className="tap-44 numeral w-fit text-base font-bold leading-tight text-strong transition-colors hover:text-primary"
+                  href={compareHref(
+                    symbols.filter((entry) => entry !== row.symbol),
+                    range,
+                  )}
+                  /* Sözcük sırası DİLE BAĞLI: birleştirme Türkçede çalışıyor
+                     ("NVDA Listeden Çıkar") ama İngilizcede "NVDA Remove From
+                     List" çıkıyordu. Kalıp sözlükte, yer tutucuyla. */
+                  aria-label={labels.remove.replace("{symbol}", row.symbol)}
+                  className="-m-2.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-down-wash hover:text-down focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus) sm:-m-1.5 sm:size-8"
                 >
-                  {row.symbol}
+                  <X weight="bold" size={12} />
                 </Link>
-                {row.name && (
-                  <span className="truncate text-tiny leading-tight text-muted">
-                    {row.name}
+              </div>
+
+              <div className="mt-auto flex flex-col gap-1.5">
+                <span className="text-tiny font-semibold text-muted">{periodLabel}</span>
+                {phase === "loading" ? (
+                  <Skeleton className="h-7 w-24 rounded-full" />
+                ) : pct === null ? (
+                  <span className="numeral text-heading leading-none text-muted">—</span>
+                ) : (
+                  <span
+                    className={cn(
+                      "numeral text-[1.625rem] font-bold leading-none tracking-[-0.03em] sm:text-[1.875rem]",
+                      directionText(directionOf(pct)),
+                    )}
+                  >
+                    {formatPercent(pct, locale)}
                   </span>
                 )}
-              </span>
+                {phase === "ready" && pct !== null && ratio != null && (
+                  <ScaleBar ratio={ratio} signed={signed} tone="signal" className="mt-1" />
+                )}
+                {phase === "ready" && kapsam && (
+                  <span className="numeral text-nano leading-tight text-muted">
+                    {labels.partialPeriod} · {kapsam}
+                  </span>
+                )}
+              </div>
 
-              <span className="hidden w-[72px] shrink-0 justify-end sm:flex">
+              <div className="flex items-center justify-between gap-2 border-t border-line-soft pt-3">
+                <span className="text-tiny text-muted">{labels.dayShort}</span>
                 {row.changePct !== null ? (
-                  <ChangePill
-                    changePct={row.changePct}
-                    locale={locale}
-                    size="sm"
-                  />
+                  <ChangePill changePct={row.changePct} locale={locale} size="sm" />
                 ) : (
                   <span className="numeral text-tiny text-muted">—</span>
                 )}
-              </span>
-
-              <span className="flex w-[86px] shrink-0 flex-col items-end sm:w-[104px]">
-                {phase === "loading" ? (
-                  <Skeleton className="h-4 w-14 rounded-full" />
-                ) : pct === null ? (
-                  <span className="numeral text-base text-muted">—</span>
-                ) : (
-                  <>
-                    <span
-                      className={cn(
-                        "numeral text-base font-bold",
-                        directionText(directionOf(pct)),
-                      )}
-                    >
-                      {formatPercent(pct, locale)}
-                    </span>
-                    {ratios[symbols.indexOf(row.symbol)] != null && (
-                      <ScaleBar
-                        ratio={ratios[symbols.indexOf(row.symbol)]!}
-                        signed={signed}
-                        tone="signal"
-                        className="mt-1"
-                      />
-                    )}
-                  </>
-                )}
-              </span>
-
-              {/* Dokunma hedefi 44px; görsel daire aynı, negatif margin
-                  satır yüksekliğini değiştirmiyor. Adres CANLI aralığı
-                  taşıyor — sunucudan gelen sabit bir bağlantı, aralık
-                  istemcide değiştikten sonra eski kalırdı. */}
-              <Link
-                href={compareHref(
-                  symbols.filter((entry) => entry !== row.symbol),
-                  range,
-                )}
-                /* Sözcük sırası DİLE BAĞLI: birleştirme Türkçede çalışıyor
-                   ("NVDA Listeden Çıkar") ama İngilizcede "NVDA Remove From
-                   List" çıkıyordu. Kalıp sözlükte, yer tutucuyla. */
-                aria-label={labels.remove.replace("{symbol}", row.symbol)}
-                className="-m-2.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-down-wash hover:text-down focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus) sm:-m-1.5 sm:size-8"
-              >
-                <X weight="bold" size={12} />
-              </Link>
               </div>
-              {phase === "ready" && kapsam && (
-                /* Satırın ALTINDA, tam genişlikte: sayı sütunu 86 piksel ve
-                   iki tarihlik bir künye orada üç satıra kırılıyordu. */
-                <p className="numeral pl-[41px] text-nano leading-tight text-muted">
-                  {labels.partialPeriod} · {kapsam}
-                </p>
-              )}
             </li>
           );
         })}
+        {children && (
+          <li className="flex min-w-0 flex-col justify-center gap-3 rounded-(--radius-panel) border border-dashed border-line-strong p-4 sm:p-5">
+            {children}
+          </li>
+        )}
       </ul>
-      {children}
-    </Panel>
+    </section>
   );
 }
 

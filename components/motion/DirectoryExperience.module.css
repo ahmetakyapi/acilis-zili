@@ -102,10 +102,22 @@
 .earningsActivity { margin-top:22px; padding-top:12px; border-top:1px solid var(--line-soft); }
 .earningsActivity figcaption { display:flex; justify-content:space-between; gap:12px; font-size:11px; color:var(--text-muted); }
 .earningsActivity figcaption strong { font-weight:600; color:var(--text-strong); }
-.activityBars { display:flex; align-items:end; gap:5px; height:42px; margin-top:10px; }
-.activityBars > span { display:flex; align-items:end; height:100%; flex:1; min-width:0; border-bottom:1px solid var(--line); }
-.activityBars i { width:100%; background:var(--primary-faint); border-radius:3px 3px 0 0; }
-.activityBars [data-peak="true"] i { background:linear-gradient(0deg,var(--primary),var(--primary-soft)); }
+/* Çubuk sütunları: üstte sayı, ortada çubuk, altta gün. Sütunlar eşit ve
+   aralarında 6 piksel; etiketler çubukla aynı eksende ortalı. */
+.activityBars { display:flex; align-items:stretch; gap:6px; margin-top:10px; }
+.activityBars > li { display:flex; flex:1 1 0; min-width:0; }
+.activityBars > li > :is(a,span) { display:flex; flex:1; flex-direction:column; align-items:stretch; gap:4px; min-width:0; border-radius:var(--radius-sm); color:inherit; text-decoration:none; }
+.activityCount { height:14px; font-size:11px; font-weight:650; line-height:14px; text-align:center; color:var(--text-soft); font-variant-numeric:tabular-nums; }
+.activityTrack { display:flex; align-items:flex-end; height:44px; border-bottom:1px solid var(--line); }
+.activityTrack i { width:100%; background:var(--primary-faint); border-radius:3px 3px 0 0; transition-property:background-color; }
+.activityDay { display:flex; flex-direction:column; align-items:center; gap:1px; font-size:10.5px; line-height:1.25; color:var(--text-muted); white-space:nowrap; text-align:center; }
+.activityDay b { font-size:12px; font-weight:650; color:var(--text-body); }
+.activityBars[data-weekly] .activityDay { white-space:normal; font-size:10.5px; }
+.activityBars [data-peak] .activityTrack i { background:linear-gradient(0deg,var(--primary),var(--primary-soft)); }
+.activityBars [data-peak] :is(.activityCount,.activityDay b) { color:var(--primary-ink); }
+.activityBars [data-empty] .activityDay { opacity:.7; }
+@media(hover:hover) { .activityBars a:hover .activityTrack i { background:var(--primary-soft); } .activityBars [data-peak] a:hover .activityTrack i { background:var(--primary); } }
+.activityBars a:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 .activityPeak { display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px; padding-top:8px; font-size:11px; color:var(--text-muted); }
 .activityPeak strong { font-weight:600; color:var(--primary-ink); }
 .activityPeak > :last-child { margin-left:auto; color:var(--primary-ink); }
@@ -113,6 +125,11 @@
  .companyHeader.companyHeader:global(.page-frame),.earningsHeader.earningsHeader:global(.page-frame) { align-items:stretch; }
  .companyHeader > :global(.page-heading-copy),.earningsHeader > :global(.page-heading-copy) { display:flex; flex-direction:column; align-self:stretch; }
  .companyHeader .sectorPreview,.earningsHeader .earningsActivity { margin-top:auto; padding-top:14px; }
+ /* Otomatik üst pay, sağ kolon kısaysa SIFIRA iniyor: yoğunluk grafiği
+    etiketlenip uzayınca açıklama cümlesiyle grafiğin çizgisi arasında 12
+    piksel kalıyordu (1440, ölçüldü). Önceki kardeşin alt payı tabanı
+    garanti ediyor. */
+ .earningsHeader :global(.page-heading-copy) > :has(+ .earningsActivity) { margin-bottom:18px; }
  .companyHeader .metrics { margin-bottom:20px; }
  .earningsHeader .calendarControls { margin-bottom:20px; }
 }
@@ -129,7 +146,6 @@
  .companyHeader .heroVisual li > a { height:100%; }
  .earningsHeader > .heroVisual > * { flex:1; }
 }
-.activityAxis { display:flex; justify-content:space-between; gap:12px; margin-top:4px; font-size:10px; color:var(--text-muted); }
 
 /* 22 September: the sticky heading's translucent sunken fill let scrolling
    company names show THROUGH it (confirmed at scrollY 450/600/800). Paint

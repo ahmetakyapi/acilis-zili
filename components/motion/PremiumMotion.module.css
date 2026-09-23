@@ -49,20 +49,39 @@
   box-shadow: var(--premium-shadow);
 }
 
-/* Çubuğun ALTINDA yumuşak bir geçiş. Yapışkan çubuk içeriğin üstünden
-   geçerken alt kenarında satırlar bıçakla kesilmiş gibi bitiyordu: yarısı
-   görünen bir cümle, panelin ortasında duran bir çubuk. Sayfa zemininden
-   şeffafa giden kısa bir bant kesiği yumuşatıyor — içerik çubuğun altına
-   girerken soluyor, kesilmiyor. `pointer-events:none`: bandın altındaki
-   bağlantılar tıklanabilir kalmalı. */
-.sectionNav::after {
+/* YAPIŞINCA TAM GENİŞLİK BANT. Çubuğun altında 16 piksellik bir
+   soluklaştırma bandı (`::after`, sayfa zemininden şeffafa) vardı; kesiği
+   yumuşatıyordu ama iki kusuru vardı. Hapın iki yanından ve başlıkla
+   arasındaki 12 piksellik boşluktan içerik akmaya devam ediyordu. Çubuk
+   yapışkan OLMAYAN yerde (ana sayfanın akış sekmesi, `position: static`)
+   bant en yakın konumlanmış ataya göre yerleşip panelin ortasına, zaman
+   çizgisi lejantının üstüne iniyordu (1440, ölçüldü: 446-462 arası).
+   Artık bant yalnızca yapışınca (`data-stuck`, SectionNav) açılıyor:
+   başlığın altından çubuğun 10 piksel altına, görünüm alanının bir
+   ucundan öbür ucuna, başlıkla aynı zemin ve kenar çizgisiyle. Hap o an
+   kenarlığını ve gölgesini bırakıyor; bant çubuğun kendisi oluyor. */
+.sectionNav::before {
   content: "";
   position: absolute;
-  inset: 100% -1px auto;
-  height: 16px;
-  background: linear-gradient(var(--page-bg), transparent);
+  z-index: -1;
+  /* 2 piksel başlığın ALTINA: çubuğun tepesi alt piksele düşünce başlığın
+     çizgisiyle bant arasında tek satırlık bir yarıktan içerik görünüyordu
+     (hisse, 1440). Başlık üst katmanda, örtüşme görünmüyor. */
+  top: calc(var(--app-bar-h) - var(--section-nav-top, calc(var(--app-bar-h) + 12px)) - 2px);
+  bottom: -10px;
+  left: calc(-1 * var(--nav-x, 0px));
+  width: 100vw;
+  border-bottom: 1px solid var(--chrome-border);
+  background: var(--chrome);
+  visibility: hidden;
   pointer-events: none;
 }
+.sectionNav[data-stuck] {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.sectionNav[data-stuck]::before { visibility: visible; }
 
 :global(html):has(.sectionNav) {
   scroll-behavior: smooth;

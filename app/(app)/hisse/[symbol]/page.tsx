@@ -82,7 +82,7 @@ import {
   formatPercent,
   formatMoneyCompact,
   formatEtDateLong,
-  formatEtDateShort,
+  formatEtDateMedium,
   formatPercentPlain,
   formatPrice,
   formatVolume,
@@ -1445,7 +1445,7 @@ async function ProfileCard({
       t.stock.ipoDate,
       profile.ipoDate ? (
         <span className="numeral">
-          {formatEtDateShort(profile.ipoDate, locale)}
+          {formatEtDateMedium(profile.ipoDate, locale)}
         </span>
       ) : (
         "—"
@@ -2197,11 +2197,11 @@ async function PastEarnings({
                     )}
                   </span>
                   <span className="numeral block text-tiny text-muted md:hidden">
-                    {formatEtDateShort(row.reportDate, locale)}
+                    {formatEtDateMedium(row.reportDate, locale)}
                   </span>
                 </td>
                 <td className="numeral hidden px-3 py-2.5 text-sm text-body md:table-cell">
-                  {formatEtDateShort(row.reportDate, locale)}
+                  {formatEtDateMedium(row.reportDate, locale)}
                 </td>
                 <td className="px-2 py-2.5 text-center sm:px-3">
                   {surprise !== null ? (

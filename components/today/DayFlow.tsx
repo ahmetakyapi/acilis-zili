@@ -287,12 +287,21 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
       </div>
 
       <div className={styles.axisFoot}><span className="numeral">{primary(240)}</span><span>{snapshot.tradingDay ? railLabels.marketHours : labels.closed}</span><span className="numeral">{primary(1200)} {snapshot.tags.primary}</span></div>
-      {events.length > 0 && <div className={styles.railLegend}><span><TrendUp size={13} />{labels.economic}</span><span><Bell size={13} />{labels.earnings}</span><p>{labels.timelineHint}</p></div>}
+      {/* LEJANT SATIRI KALKTI (23 Eylül). Şeridin altında "Ekonomik Veri ·
+          Bilanço" simgelerini ve "bir olay seç" ipucunu taşıyordu; şeritte
+          simge yok (rozetler numara), bilanço satırları logo taşıyor ve
+          liste ile sonuç paneli hemen altta yan yana. Satır 35 piksel
+          tutuyordu ve üstelik yapışkan sekme çubuğunun soluklaştırma bandı
+          tam onun üstüne iniyordu. */}
     </div>
 
     {events.length ? <>
-      <div className={styles.eventHeading}><h3>{labels.events}<span className="numeral">{events.length}</span></h3><div><button aria-label={labels.back} disabled={selectedIndex <= 0} onClick={() => events[selectedIndex - 1] && select(events[selectedIndex - 1]!.id)}><ArrowLeft size={17} /></button><button aria-label={labels.next} disabled={selectedIndex >= events.length - 1} onClick={() => events[selectedIndex + 1] && select(events[selectedIndex + 1]!.id)}><ArrowRight size={17} /></button></div></div>
-      <div className={styles.eventLayout}>
+      {/* TEK OLAYDA LİSTE YOK. Tek satırlık liste ile sonuç paneli aynı olayı
+          yan yana iki kez anlatıyordu (saat, ad, "Planlandı" iki yerde) ve
+          ok düğmeleri gidecek yer olmadan, soluk duruyordu. Tek olayda
+          yalnızca sonuç paneli, tam genişlikte. */}
+      <div className={styles.eventHeading}><h3>{labels.events}<span className="numeral">{events.length}</span></h3>{events.length > 1 && <div><button aria-label={labels.back} disabled={selectedIndex <= 0} onClick={() => events[selectedIndex - 1] && select(events[selectedIndex - 1]!.id)}><ArrowLeft size={17} /></button><button aria-label={labels.next} disabled={selectedIndex >= events.length - 1} onClick={() => events[selectedIndex + 1] && select(events[selectedIndex + 1]!.id)}><ArrowRight size={17} /></button></div>}</div>
+      <div className={styles.eventLayout} data-single={events.length === 1 || undefined}>
       {/* İÇ KAYDIRMA YOK. Liste sayfayla birlikte kayıyor; günün olayları
           altı-sekiz satır ve hepsi tek bakışta okunuyor. */}
       <ol className={styles.eventCards}>
@@ -347,7 +356,7 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
       <div ref={detailRef} className={styles.detailSlot}>
       <AnimatePresence initial={false} mode="wait">
         {selected && <motion.div key={selected.id} id={detailId} role="region" aria-label={selected.title} className={styles.detail} data-kind={selected.kind} initial={reduced ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -3 }} transition={{ duration: .18 }}>
-          <div className={styles.detailHeading}><div><span className={styles.detailKicker}><b className="numeral">{String(selectedIndex + 1).padStart(2, "0")}</b><span className="numeral">{timeOf(selected)} {selected.timeEt && snapshot.tags.primary}</span> · {selected.detail ?? (selected.kind === "earnings" ? labels.earnings : labels.economic)}</span><h4>{selected.title}</h4></div><Status event={selected} nowMs={nowMs} labels={labels} /></div>
+          <div className={styles.detailHeading}><div><span className={styles.detailKicker}><b className="numeral">{String(selectedIndex + 1).padStart(2, "0")}</b><span className="numeral">{timeOf(selected)} {selected.timeEt && snapshot.tags.primary}</span> · {selected.detail ?? (selected.kind === "earnings" ? labels.earnings : labels.economic)}</span><h4>{selected.title}</h4></div>{/* Tek şirketli bilançoda durum şirket satırında; başlıkta ikinci kez basılmıyor. */}{selected.members?.length !== 1 && <Status event={selected} nowMs={nowMs} labels={labels} />}</div>
           {/* "BU DA NE?" — başlığın altındaki tek cümle. Başlık olayın ADINI
               söylüyor ama adı bilmeyene bir şey anlatmıyor; "FOMC" ve "Nokta
               Grafiği" okuyucunun yarısı için boş. Cümle tür başına sözlükte

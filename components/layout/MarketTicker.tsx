@@ -44,6 +44,13 @@ export type TickerGroup = {
    * geniş ekrana bırakmak tercih edildi.
    */
   hideChangeNarrow?: boolean;
+  /**
+   * Aynı anahtarı taşıyan ardışık gruplar AYNI SAYFADA durur (her biri
+   * tek sayfaya sığıyorsa). Kur tek başına bir sayfaydı: 1400 piksellik
+   * bantta 253 piksellik tek değer, altı saniye boyunca bandın %80'i boş
+   * (1440'ta ölçüldü). Tahvil ile kur artık yan yana.
+   */
+  sharePage?: string;
 };
 
 const WIDE_QUERY = "(min-width: 640px)";
@@ -53,18 +60,24 @@ const SHOWN_QUERY = "(min-width: 1024px)";
 const ROTATE_MS = 6000;
 const FADE_MS = 400;
 
-type Page = { caption?: string; showChange: boolean; items: TickerItem[] };
+type Segment = { key: string; caption?: string; showChange: boolean; items: TickerItem[] };
+type Page = { segments: Segment[]; share?: string };
 
 function paginate(groups: TickerGroup[], wide: boolean): Page[] {
   const pages: Page[] = [];
   for (const group of groups) {
     const size = Math.max(1, wide ? group.wideSize : group.narrowSize);
     const showChange = wide || !group.hideChangeNarrow;
+    const whole = group.items.length <= size;
+    const last = pages.at(-1);
+    if (whole && group.sharePage && last?.share === group.sharePage) {
+      last.segments.push({ key: group.key, caption: group.caption, showChange, items: group.items });
+      continue;
+    }
     for (let i = 0; i < group.items.length; i += size) {
       pages.push({
-        caption: group.caption,
-        showChange,
-        items: group.items.slice(i, i + size),
+        segments: [{ key: `${group.key}-${i}`, caption: group.caption, showChange, items: group.items.slice(i, i + size) }],
+        share: whole ? group.sharePage : undefined,
       });
     }
   }
@@ -215,29 +228,53 @@ export function MarketTicker({
         )}
         style={{ transitionDuration: `${FADE_MS}ms` }}
       >
-        {shown.caption && (
-          <span className="shrink-0 text-nano font-bold uppercase tracking-[0.09em] text-muted">
-            {shown.caption}
-          </span>
-        )}
-        {shown.items.map((item) => (
-          <span key={item.label} className="flex shrink-0 items-center gap-2">
-            <span className="text-muted">{item.label}</span>
-            <span className="numeral font-semibold text-body">{item.value}</span>
-            {shown.showChange && item.change && (
-              <span
-                className={cn(
-                  "numeral",
-                  item.changePct === null || item.changePct === 0
-                    ? "text-muted"
-                    : item.changePct > 0
-                      ? "text-up"
-                      : "text-down",
-                )}
-              >
-                {item.change}
+        {/* DEĞERLER ÇİZGİYLE AYRILIYOR. Aralık tek başına öğeleri ayırıyordu
+            ve bant, sayıların üstünde yüzen bir metin satırı gibi
+            okunuyordu. Öğeler arası saç teli (aralığın ortasında, genişlik
+            eklemiyor) ve grupları ayıran daha koyu bir çizgi bandı bir
+            gösterge tahtasına çeviriyor. Künye büyük harf değil, Title
+            Case — sitenin öteki künyeleriyle aynı. */}
+        {shown.segments.map((segment, segmentIndex) => (
+          <span
+            key={segment.key}
+            className={cn(
+              "flex shrink-0 items-center gap-3 sm:gap-5 lg:gap-8 xl:gap-10",
+              segmentIndex > 0 &&
+                "relative before:absolute before:inset-y-[-6px] before:-left-4 before:w-px before:bg-(--line-strong) xl:before:-left-5",
+            )}
+          >
+            {segment.caption && (
+              <span className="shrink-0 text-tiny font-semibold text-muted">
+                {segment.caption}
               </span>
             )}
+            {segment.items.map((item, itemIndex) => (
+              <span
+                key={item.label}
+                className={cn(
+                  "relative flex shrink-0 items-center gap-2",
+                  (itemIndex > 0 || segment.caption) &&
+                    "before:absolute before:inset-y-0.5 before:-left-4 before:w-px before:bg-(--line-soft) xl:before:-left-5",
+                )}
+              >
+                <span className="text-muted">{item.label}</span>
+                <span className="numeral font-semibold text-body">{item.value}</span>
+                {segment.showChange && item.change && (
+                  <span
+                    className={cn(
+                      "numeral",
+                      item.changePct === null || item.changePct === 0
+                        ? "text-muted"
+                        : item.changePct > 0
+                          ? "text-up"
+                          : "text-down",
+                    )}
+                  >
+                    {item.change}
+                  </span>
+                )}
+              </span>
+            ))}
           </span>
         ))}
       </div>
@@ -245,6 +282,23 @@ export function MarketTicker({
       {/* Duraklatma düğmesi mutlak konumda: şeridin akışına girip değerleri
           kaydırmıyor, ama Tab sırasında yerinde duruyor ve odak halkası
           görünüyor. Tek sayfa varsa dönecek bir şey de yok, basılmıyor. */}
+      {/* Hangi sayfadayız: bant kendi kendine dönüyor ve okuyucu bunun
+          bir döngü olduğunu ancak değerler değişince fark ediyordu. İki
+          nokta döngünün kendisini gösteriyor; duraklatma düğmesinin
+          hemen solunda. */}
+      {pageCount > 1 && (
+        <span aria-hidden className="absolute inset-y-0 right-10 my-auto flex h-1.5 items-center gap-1.5">
+          {pages.map((_, index) => (
+            <span
+              key={index}
+              className={cn(
+                "size-1.5 rounded-full transition-colors motion-reduce:transition-none",
+                index === page % pageCount ? "bg-(--primary)" : "bg-(--line-strong)",
+              )}
+            />
+          ))}
+        </span>
+      )}
       {pageCount > 1 && (
         <button
           type="button"

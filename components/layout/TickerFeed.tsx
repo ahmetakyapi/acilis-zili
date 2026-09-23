@@ -129,6 +129,7 @@ export async function TickerFeed() {
       narrowSize: yieldItems.length,
       wideSize: yieldItems.length,
       hideChangeNarrow: true,
+      sharePage: "rates",
     });
   }
 
@@ -164,6 +165,7 @@ export async function TickerFeed() {
       ],
       narrowSize: 1,
       wideSize: 1,
+      sharePage: "rates",
     });
   }
 

@@ -24,8 +24,11 @@
    başlığın ve alt çubuğun ARASINDAKİ bantta hesaplanıyor (`safeBand`). */
 .balloon {
   position:fixed; z-index:25; top:0; left:0;
-  width:min(296px, calc(100vw - 24px));
-  padding:14px 16px;
+  /* 296 → 260 (23 Eylül, sahibinin isteği: "bir tık daha küçük"). Balon
+     208 piksel yüksekliğindeydi; daha dar yüzey, sm logo ve bir kademe
+     küçük punto ile ~176. İçerik aynı, yalnızca ölçü. */
+  width:min(260px, calc(100vw - 24px));
+  padding:12px 14px;
   border:1px solid var(--line);
   border-radius:var(--radius-xl);
   background:var(--overlay-surface);
@@ -55,29 +58,29 @@
 @keyframes balloon-above { from { opacity:0; translate:0 4px; } }
 @media (prefers-reduced-motion:reduce) { .balloon[data-side] { animation:none; } }
 
-.body { display:flex; flex-direction:column; gap:12px; }
-.head { display:flex; align-items:center; gap:11px; }
+.body { display:flex; flex-direction:column; gap:10px; }
+.head { display:flex; align-items:center; gap:10px; }
 .who { display:flex; flex:1; min-width:0; flex-direction:column; gap:2px; }
-.who strong { font-size:15px; font-weight:700; line-height:1.2; letter-spacing:-.02em; color:var(--text-strong); }
+.who strong { font-size:14px; font-weight:700; line-height:1.2; letter-spacing:-.02em; color:var(--text-strong); }
 /* Uzun ad iki satırda kesiliyor ("Taiwan Semiconductor Manufacturing Co
    Ltd"); hap `flex:none` ve adın yanında hep tam boyda kalıyor. */
 .who span {
   display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
-  font-size:12px; line-height:1.35; color:var(--text-muted);
+  font-size:11px; line-height:1.35; color:var(--text-muted);
 }
-.pill { flex:none; padding:4px 10px; border-radius:var(--radius-sm); font-size:12px; font-weight:650; }
+.pill { flex:none; padding:3px 8px; border-radius:var(--radius-sm); font-size:11px; font-weight:650; }
 
 /* Künye sütunu en uzun künyeye göre ("Piyasa Değeri"), değerler sağa
    yaslı: üç satırın sayıları aynı dikey hatta biter. */
 .facts {
-  display:grid; grid-template-columns:auto minmax(0,1fr); align-items:baseline; gap:7px 14px;
-  padding-top:11px; border-top:1px solid var(--line-soft);
+  display:grid; grid-template-columns:auto minmax(0,1fr); align-items:baseline; gap:6px 12px;
+  padding-top:9px; border-top:1px solid var(--line-soft);
 }
 .facts > div { display:contents; }
 .facts dt { font-size:11px; font-weight:600; color:var(--text-muted); }
-.facts dd { min-width:0; text-align:right; font-size:13px; font-weight:600; color:var(--text-strong); overflow-wrap:anywhere; }
+.facts dd { min-width:0; text-align:right; font-size:12px; font-weight:600; color:var(--text-strong); overflow-wrap:anywhere; }
 .price { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:flex-end; gap:2px 7px; }
-.price b { font-size:17px; font-weight:650; letter-spacing:-.025em; }
+.price b { font-size:15px; font-weight:650; letter-spacing:-.025em; }
 .price em { font-style:normal; font-size:12px; font-weight:550; }
 
-.foot { padding-top:10px; border-top:1px solid var(--line-soft); font-size:11px; font-weight:600; line-height:1.45; color:var(--text-muted); }
+.foot { padding-top:8px; border-top:1px solid var(--line-soft); font-size:10.5px; font-weight:600; line-height:1.45; color:var(--text-muted); }

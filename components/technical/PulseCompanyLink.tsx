@@ -5,8 +5,8 @@ import { createPortal } from "react-dom";
 import { LocaleLink } from "@/components/layout/LocaleLink";
 import styles from "./CompanyBalloon.module.css";
 
-/* Balonun genişliği CSS'te (`min(296px, 100vw - 24px)`); burada yalnızca
-   kenar payı ve aralıklar. 320 pikselde 296 + 2×12 = 320, tam sığıyor. */
+/* Balonun genişliği CSS'te (`min(260px, 100vw - 24px)`); burada yalnızca
+   kenar payı ve aralıklar. 320 pikselde 260 + 2×12 = 284, rahat sığıyor. */
 const EDGE = 12;
 /** Logo ile balon arası. */
 const GAP = 10;

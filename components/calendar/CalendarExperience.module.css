@@ -94,6 +94,14 @@ a.cell { border-color:var(--line); background:var(--surface); }
 .cell[data-weekend] { flex:1 1 0; border-color:transparent; padding-inline:8px; }
 .cell[data-holiday] { border-color:transparent; background:var(--surface-sunken); }
 .cell[data-today] { border-color:var(--primary-faint); }
+/* OLAYSIZ GÜN KUTUSUZ (23 Eylül). Ay ızgarasında 22 iş gününün 14'ü boş
+   ve her biri kenarlıklı bir kutuydu: ızgara boş kutu yığını gibi
+   okunuyor, olaylı günler aralarında seçilmiyordu. Boş gün yalnızca soluk
+   rakam; kutu olaylı günün işareti. Bugün kutusunu korur. */
+.cell[data-empty]:not([data-today]) { border-color:transparent; }
+/* Seçili gün (DayPicker): kutu mavi çerçeve ve ton alıyor. */
+a.cell[aria-current="true"] { border-color:var(--primary); background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--primary); }
+a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 .cellTop { display:flex; align-items:baseline; justify-content:space-between; gap:4px; font-size:11px; font-weight:600; line-height:14px; color:var(--text-muted); }
 .cellToday { font-size:11px; font-weight:700; color:var(--primary-ink); }
 .cellNum { display:flex; align-items:baseline; gap:4px; }
@@ -130,6 +138,8 @@ a.cell { border-color:var(--line); background:var(--surface); }
 /* --- Gündem ---------------------------------------------------------------- */
 .agenda { display:flex; flex-direction:column; }
 .agenda > * + * { border-top:1px solid var(--line-soft); }
+/* Gün seçiliyse gündem yalnızca o günü gösteriyor (DayPicker). */
+.agenda[data-picked] > :not([data-picked]) { display:none; }
 
 /* Çapa payı KÖKTE: `html` zaten 76 piksel `scroll-padding` taşıyor
    (globals.css). Grup kendi `scroll-margin`ini de ekleyince ikisi
@@ -184,6 +194,7 @@ a.cell { border-color:var(--line); background:var(--surface); }
 .quiet[data-holiday] { background:var(--surface-sunken); }
 .holidayTag { font-weight:600; color:var(--text-soft); }
 .quietAction { margin-left:auto; font-size:12px; font-weight:600; color:var(--primary-ink); text-decoration:none; }
+.quiet[data-picker] { border-bottom:1px solid var(--line-soft); background:var(--primary-tint); color:var(--text-soft); }
 
 /* Künye panelin İÇİNDE, hairline ile ayrılmış düz paragraf (CLAUDE.md,
    ekran düzeni 6). Kapakta dördüncü satır olarak duruyordu; saatin hangi

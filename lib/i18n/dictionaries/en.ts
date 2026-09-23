@@ -310,6 +310,8 @@ const en: typeof tr = {
     released: "Released",
     scheduled: "Scheduled",
     datesNav: "Release Dates",
+    pickedNote: "Showing the selected day only.",
+    allDays: "All Days",
     viewLabel: "Calendar View",
     emptyFiltered: "No releases at the selected impact in this range.",
   },
@@ -977,6 +979,7 @@ const en: typeof tr = {
     secondSymbolHint:
       "A single series is normalized to its own start, so it says nothing beyond one line leaving zero.",
     fullHint: "Four symbols is the limit; remove one to add another.",
+    seatHint: "Up to four stocks read side by side on the same scale.",
     dividendNone: "None",
     metricsUnavailable:
       "Metrics could not be loaded for {symbols}: P/E, dividend, beta and the 52-week range stay empty in that column.",
@@ -1165,6 +1168,12 @@ const en: typeof tr = {
     nextRelease: "Next Release",
     noNextRelease: "Not announced yet",
     unchanged: "Unchanged",
+    eyebrow: "US Economy",
+    explorer: "Indicator Explorer · FRED",
+    pick: "Choose an indicator",
+    latest: "Latest Release",
+    history: "Historical Reading",
+    historyEmpty: "Not enough historical observations yet.",
   },
 
   auth: {

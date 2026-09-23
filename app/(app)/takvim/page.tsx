@@ -3,6 +3,7 @@ import { QueryTransition } from "@/components/layout/QueryTransition";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/calendar/CalendarExperience.module.css";
 import { CalendarStrip } from "@/components/calendar/CalendarStrip";
+import { DayPicker } from "@/components/calendar/DayPicker";
 import { NextRelease } from "@/components/calendar/NextRelease";
 import { GuideHint } from "@/components/article/GuideHint";
 import { IpoCalendar } from "@/components/markets/IpoCalendar";
@@ -645,9 +646,18 @@ export default async function CalendarPage(
                   />
                 )}
                 {agenda.length > 0 ? (
-                  <div className={styles.agenda} data-values={hasValues || undefined}>
+                  <>
+                  {view !== "day" && (
+                    <DayPicker
+                      key={`${view}-${impact ?? "all"}`}
+                      note={t.calendar.pickedNote}
+                      showAll={t.calendar.allDays}
+                    />
+                  )}
+                  <div className={styles.agenda} data-agenda data-values={hasValues || undefined}>
                     {agenda.map(renderItem)}
                   </div>
+                  </>
                 ) : (
                   <EmptyState
                     compact

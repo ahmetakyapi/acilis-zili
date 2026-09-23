@@ -44,8 +44,10 @@
    to select an event. Keep session context, collapse its unused marker lane. */
 .rail { position:relative; margin-top:14px; padding:16px 22px 14px; border-radius:14px; border:1px solid var(--line-soft); background:linear-gradient(180deg,var(--primary-tint),transparent 70%),var(--premium-surface); }
 .rail[data-empty="true"] .markers { height:12px; }
-.bounds { position:relative; height:46px; }
-.bound { position:absolute; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:3px; white-space:nowrap; }
+/* Açılış ve kapanış TEK SATIR ("Açılış 16:30 TR"): etiket saatin üstünde
+   ayrı bir satırdı ve şeridin 46 pikselini iki kısa sözcük tutuyordu. */
+.bounds { position:relative; height:26px; }
+.bound { position:absolute; transform:translateX(-50%); display:flex; flex-direction:row; align-items:baseline; gap:6px; white-space:nowrap; }
 .bound > span { color:var(--text-muted); font-size:12px; font-weight:600; letter-spacing:.02em; }
 .bound strong { color:var(--text-strong); font-size:17px; font-weight:650; letter-spacing:-.03em; }
 .bound small { font-size:12px; color:var(--text-muted); font-weight:500; }
@@ -86,9 +88,6 @@
 
 .axisFoot { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-top:4px; color:var(--text-muted); font-size:12px; }
 .axisFoot > span:nth-child(2) { color:var(--text-body); font-weight:600; text-align:center; }
-.railLegend { display:flex; flex-wrap:wrap; align-items:center; gap:7px 16px; margin-top:12px; padding-top:11px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; }
-.railLegend > span { display:flex; align-items:center; gap:6px; }
-.railLegend p { margin-left:auto; }
 
 /* ---- Ajanda başlığı ---- */
 .eventHeading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:18px 0 10px; }
@@ -124,6 +123,8 @@
    ölçüldü). Kutunun içi değil SAYFA kayıyor; günün olayları altı-sekiz satır
    ve hepsi tek bakışta okunuyor. */
 .eventLayout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.05fr); align-items:start; gap:22px; }
+.eventLayout[data-single] { grid-template-columns:minmax(0,1fr); }
+.eventLayout[data-single] .eventCards { display:none; }
 .eventCards { display:grid; align-content:start; min-width:0; margin:0; padding:0; list-style:none; }
 .eventCards > li { min-width:0; }
 .eventCards > li + li { border-top:1px solid var(--line-soft); }
@@ -236,6 +237,12 @@
   .marketDay { display:none; }
   .connection { margin-left:auto; font-size:11px; }
   .connection button > span { display:none; }
+  /* ARAÇ SATIRI TEK SATIR. 390'da tarih bir satır, "Otomatik Güncelleme"
+     ile saat düğmesi ikinci satırdı (ölçüldü, satır 44 piksel uzuyordu).
+     Yeşil nokta ve saat durumu zaten söylüyor; cümle düğmenin adında
+     (`aria-label`) ve ipucunda (`title`) kalıyor. */
+  .toolbar { flex-wrap:nowrap; align-items:center; }
+  .connection > span:not(.connectionDot) { display:none; }
   /* ŞERİT MOBİLDE TEK SATIRA İNİYOR ve numaralı rozetler HİÇ basılmıyor.
      Rozetler on altı saatlik bir ekseni 350 piksele sığdırmaya çalışıyordu:
      21:00 ile 21:30 arası %3, yani on piksel. İtme algoritması onları
@@ -256,7 +263,7 @@
      oluyorlar ve 21:00 ile 21:30 bu ölçekte yine tek bir kalınlık gibi
      birleşiyor — kaldırdığımız karışıklığın etiketsiz hâli. Eksende kalan
      tek imleç dolan çubuğun ucu, adı da listedeki "Şimdi" ayracında. */
-  .nowBand,.markers,.axisFoot,.railLegend,.tick { display:none; }
+  .nowBand,.markers,.axisFoot,.tick { display:none; }
   .eventHeading { margin:16px 0 8px; }
   .eventCard { grid-template-columns:62px minmax(0,1fr); gap:10px; padding:12px 10px; }
   .cardTime b { font-size:16px; }

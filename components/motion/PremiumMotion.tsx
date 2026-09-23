@@ -299,6 +299,47 @@ export function SectionNav({
     };
   }, [itemIds, trackAtNav]);
 
+  /* YAPIŞINCA BANT (23 Eylül). Yapışkan çubuk uygulama başlığının 12 piksel
+     altında yüzen bir haptı: aradaki boşluktan ve hapın iki yanından
+     içerik akıyor, panellerin kenarları çubuğun üstünde görünüyordu
+     (teknik detayda hap 602 piksel, sağında panel başlıkları altından
+     geçiyordu; telefonda yeşil panelin kenarı başlıkla hap arasında).
+     Yapıştığı an arkasında tam genişlikte, başlıkla aynı zeminde bir bant
+     açılıyor ve çubuk ikinci bir araç satırı gibi duruyor. Bant görünüm
+     alanının solundan başlamalı; çubuğun kendi sol ofseti `--nav-x` ile
+     veriliyor. Öznitelik React'in değil: bağlandıktan sonra yazılıyor,
+     sunucu çizimiyle çatışmıyor. Yapışkan olmayan kullanımda (ana
+     sayfanın akış sekmesi) hiç açılmıyor. */
+  useEffect(() => {
+    const nav = ref.current;
+    if (!nav) return;
+    let frame = 0;
+    const check = () => {
+      frame = 0;
+      const style = getComputedStyle(nav);
+      if (style.position !== "sticky") {
+        delete nav.dataset.stuck;
+        return;
+      }
+      const top = Number.parseFloat(style.top) || 0;
+      const rect = nav.getBoundingClientRect();
+      nav.style.setProperty("--nav-x", `${rect.left}px`);
+      if (window.scrollY > 0 && rect.top <= top + 0.5) nav.dataset.stuck = "";
+      else delete nav.dataset.stuck;
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(check);
+    };
+    check();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, []);
+
   /* AKTİF SEKME GÖRÜNÜRDE KALIR VE KENAR SOLAR.
      Beş sekme 390 pikselde 513 piksel istiyor (ölçüldü), yani şerit yatay
      kayıyor. Kaydırma kendi başına sorun değil; sorun İKİ eksikti. Birincisi
@@ -393,20 +434,42 @@ export function MotionExperience({ children, className }: { children: ReactNode;
     if (!root || reduced || !("animate" in root) || !("IntersectionObserver" in window)) return;
     const prepared = new Map<Element, Animation>();
     const selector = "[data-motion-reveal], [data-motion-draw], [data-motion-stagger] > *, [data-motion-article] .oku-blok, .page-heading-copy > *, [data-motion-intro] > *, .spark-line, .spark-area, .spark-dot, .ring-fill, .panel";
+    /* GÖZLENEN KUTU ÇİZGİNİN KENDİSİ DEĞİL, SVG'Sİ. Mini grafik çizgisi
+       kırpmayla açılıyor ve giriş pozunda tamamen kırpık; Chrome kırpık
+       öğeyi hiç kesişmiyor sayıyor ve ilk ekranın altındaki çizgiler
+       görünür olduklarında da oynamıyor, kırpık kalıyordu (makro kartlarının
+       ikinci sırası — ölçüldü). Çizgi, kırpılmayan SVG'si görününce oynuyor. */
+    const targetOf = (element: Element) =>
+      element.classList.contains("spark-line") ? (element as SVGElement).ownerSVGElement ?? element : element;
+    const waiting = new Map<Element, Element[]>();
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         observer.unobserve(entry.target);
-        prepared.get(entry.target)?.play();
+        for (const element of waiting.get(entry.target) ?? []) {
+          const animation = prepared.get(element);
+          if (animation?.playState === "paused") animation.play();
+        }
+        waiting.delete(entry.target);
       }
     }, { threshold: 0, rootMargin: "0px 0px -24px 0px" });
+    const watch = (element: Element) => {
+      const target = targetOf(element);
+      const list = waiting.get(target);
+      if (list) list.push(element);
+      else { waiting.set(target, [element]); observer.observe(target); }
+    };
+    const unwatch = (element: Element) => {
+      const target = targetOf(element);
+      observer.unobserve(target); waiting.delete(target);
+    };
     function prepare() {
       if (!root) return;
       // Filtering directories replaces rows inside this persistent wrapper.
       // Release their animation objects instead of retaining every old list.
       for (const [element, animation] of prepared) {
         if (root.contains(element)) continue;
-        animation.cancel(); observer.unobserve(element); prepared.delete(element);
+        animation.cancel(); unwatch(element); prepared.delete(element);
       }
       const elements = root.querySelectorAll<HTMLElement | SVGElement>(selector);
       elements.forEach((element) => {
@@ -417,7 +480,8 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         const delay = Math.min(240, Math.max(0, siblings.indexOf(element)) * (intro ? 55 : 65));
         const bar = element.dataset.motionDraw === "bar";
         const line = element.dataset.motionDraw === "line";
-        const spark = element.classList.contains("spark-line") || element.dataset.motionDraw === "arc";
+        const spark = element.classList.contains("spark-line");
+        const arc = element.dataset.motionDraw === "arc";
         const area = element.classList.contains("spark-area");
         const dot = element.classList.contains("spark-dot");
         const ring = element.classList.contains("ring-fill");
@@ -426,8 +490,12 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         // Signed distance bars start at their zero reference: negative
         // values grow from the right. Existing lines retain their origin.
         // Curves reveal along the actual SVG path, never squeeze the series.
+        /* Mini grafik çizgisi kırpmayla açılıyor, kesikle değil: gerekçesi
+           globals.css → .spark-line (non-scaling-stroke kesiği kısaltıyor).
+           Yay (`arc`) ölçeklenmiyor; orada kesik doğru ölçüyü veriyor. */
         const frames: Keyframe[] = spark
-          ? [{ strokeDashoffset: "1" }, { strokeDashoffset: "0" }]
+          ? [{ clipPath: "inset(-25% 100% -25% -2%)" }, { clipPath: "inset(-25% -2% -25% -2%)" }]
+          : arc ? [{ strokeDashoffset: "1" }, { strokeDashoffset: "0" }]
           : ring ? [{ strokeDashoffset: element.style.getPropertyValue("--ring-circumference") }, { strokeDashoffset: getComputedStyle(element).strokeDashoffset }]
           : area ? [{ opacity: 0 }, { opacity: element.getAttribute("opacity") || 1 }]
           : dot ? [{ opacity: 0, transform: "scale(.5)" }, { opacity: 1, transform: "none" }]
@@ -440,7 +508,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
            Finish/cancel releases transforms for sticky descendants. CSS
            leaves charts fully drawn when JavaScript is absent. */
         const animation = element.animate(frames, {
-          duration: spark || bar || ring ? 1000 : 650,
+          duration: spark || arc || bar || ring ? 1000 : 650,
           delay: delay + (area ? 220 : dot ? 700 : 0),
           easing: "cubic-bezier(.22,1,.36,1)", fill: "both",
         });
@@ -449,7 +517,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         animation.onfinish = () => animation.cancel();
         prepared.set(element, animation);
         // A zero threshold also admits flat SVG strokes with zero-height bounds.
-        observer.observe(element);
+        watch(element);
       });
     }
     prepare();
@@ -462,7 +530,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         passFrame = 0;
         for (const [element, animation] of prepared) {
           if (animation.playState !== "paused") continue;
-          if (element.getBoundingClientRect().bottom < 0) { observer.unobserve(element); animation.play(); }
+          if (element.getBoundingClientRect().bottom < 0) { unwatch(element); animation.play(); }
         }
       });
     };
@@ -483,7 +551,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
       if (!(event.target instanceof Element)) return;
       for (const [element, animation] of prepared) {
         if (element === event.target || element.contains(event.target)) {
-          animation.cancel(); observer.unobserve(element);
+          animation.cancel(); unwatch(element);
         }
       }
     };

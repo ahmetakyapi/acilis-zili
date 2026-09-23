@@ -1,5 +1,4 @@
 import { HeroAccent } from "@/components/motion/HeroAccent";
-import Link from "next/link";
 import { MacroExplorer } from "@/components/macro/MacroExplorer";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/macro/MacroExperience.module.css";
@@ -71,6 +70,7 @@ export default async function MacroPage() {
       title: locale === "tr" ? row.titleTr : row.titleEn,
       latest: format(row.latestValue!),
       period: formatPeriod(row.periodLabel, locale),
+      next: row.nextReleaseAt ? formatEtDateLong(row.nextReleaseAt, locale) : null,
       points: ((row.observations as MacroObservation[] | null) ?? [])
         .filter((point) => Number.isFinite(point.value))
         .slice().sort((a, b) => a.date.localeCompare(b.date))
@@ -86,26 +86,23 @@ export default async function MacroPage() {
       <ScrollProgress />
       <div className={`${styles.hero} page-frame`}>
         <HeroAccent />
-        <div className={styles.intro}>
-        <PageHeader
-          embedded
-          eyebrow={locale === "tr" ? "ABD Ekonomisi" : "US Economy"}
-          title={t.macro.title}
-          subtitle={t.macro.subtitle}
-        />
-        <div className={styles.introNote}>
-          <p>{locale === "tr" ? "Tek bir rakamdan ötesi. Enflasyonun, istihdamın ve faizin zaman içindeki yönünü incele." : "Beyond a single reading. Explore the direction of inflation, employment and interest rates over time."}</p>
-          {/* `tap-44`: bağlantı 20 piksel yüksekliğindeydi (390'da ölçüldü). */}
-          <Link href="/takvim" className="tap-44">{locale === "tr" ? "Veri Takvimine Git ↗" : "Open Release Calendar ↗"}</Link>
-        </div>
-        </div>
         <MacroExplorer
+          intro={
+            <PageHeader
+              embedded
+              eyebrow={t.macro.eyebrow}
+              title={t.macro.title}
+              subtitle={t.macro.subtitle}
+            />
+          }
           labels={{
-            title: locale === "tr" ? "Gösterge Merceği · FRED" : "Indicator Explorer · FRED",
-            latest: locale === "tr" ? "Son Açıklanan" : "Latest Release",
-            history: locale === "tr" ? "Geçmiş Gözlem" : "Historical Reading",
-            hint: locale === "tr" ? "Grafiğin üzerinde gezin veya alttaki sürgüyü kullan." : "Explore the chart or use the slider below.",
-            empty: locale === "tr" ? "Geçmiş gözlemler henüz yeterli değil." : "Not enough historical observations yet.",
+            title: t.macro.explorer,
+            pick: t.macro.pick,
+            latest: t.macro.latest,
+            next: t.macro.nextRelease,
+            noNext: t.macro.noNextRelease,
+            history: t.macro.history,
+            empty: t.macro.historyEmpty,
           }}
           series={explorerSeries}
         />

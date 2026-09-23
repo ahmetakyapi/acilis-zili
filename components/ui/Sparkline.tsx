@@ -88,10 +88,10 @@ export function Sparkline({
           opacity={AREA_OPACITY}
         />
       )}
-      {/* `pathLength="1"`: uzunluk ölçmeden çizim animasyonu; kural globals.css → .spark-line */}
+      {/* Çizim animasyonu kırpmayla (globals.css → .spark-line); kesik ve
+          `pathLength` kullanılmıyor, ölçeklenen çizgide kesik kısalıyordu. */}
       <polyline
         className="spark-line"
-        pathLength={1}
         points={line}
         fill="none"
         stroke={stroke}

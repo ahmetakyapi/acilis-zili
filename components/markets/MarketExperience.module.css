@@ -127,7 +127,10 @@
 .yieldSkeleton { min-height:144px; }
 @media(max-width:1023px) { .yields { grid-template-columns:minmax(0,1fr); } .yieldHeader { flex-direction:row; align-items:center; justify-content:space-between; padding:12px 14px 2px; } .yieldsGrid { padding:6px 0; } }
 @media(max-width:767px) { .yieldsGrid :global(.tote) { font-size:20px; } .curve > details { flex-basis:100%; } .yieldSkeleton { min-height:184px; } }
-.indexTabs { border:0; background:transparent; box-shadow:none; }
+/* Sekme şeridi bir panel primitifi ama kutusuz; `overflow` görünür, çünkü
+   dolgu sıfır ve künyenin son glifi ("2026"nın 6'sı) panelin kenarında
+   kırpılıyordu (390, ölçüldü). */
+.indexTabs { border:0; background:transparent; box-shadow:none; overflow:visible; }
 .indexTabs > div { padding:0; }
 
 /* Measured at 1440px: yields 138.9px, VIX 156.5px. The two context
@@ -158,12 +161,17 @@
 .breadthRail > span { min-width:0; }
 .breadthCounts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
 .breadthCounts > div { display:flex; align-items:baseline; gap:8px; }
+/* Üç sayaç çubuğun üç noktasına oturuyor: artıda solda, yatay ortada,
+   ekside SAĞ UÇTA. Eşit sütunda üçü de sola yaslıydı ve "Ekside 29"
+   çubuğun sağ ucundan 140 piksel içeride bitiyordu (1440, ölçüldü). */
+.breadthCounts > div:nth-child(2) { justify-content:center; }
+.breadthCounts > div:last-child { justify-content:flex-end; }
 .breadthCounts dt { font-size:12px; color:var(--text-muted); }
 .breadthCounts dd { font-size:24px; font-weight:550; line-height:1.2; letter-spacing:-.035em; }
 .breadthCoverage { margin-top:10px; color:var(--text-muted); font-size:11px; line-height:1.6; }
 .breadthEmpty { padding-block:12px; color:var(--text-muted); font-size:13px; }
-.breadthStamp { padding:10px 24px; border-top:1px solid var(--line); background:var(--primary-tint); }
-.movementScale { margin-bottom:-10px; font-size:11px; line-height:1.6; color:var(--text-muted); }
+.breadthStamp { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 16px; padding:10px 24px; border-top:1px solid var(--line); background:var(--primary-tint); }
+.movementScale { font-size:11px; line-height:1.6; color:var(--text-muted); }
 .moverLink { display:block; padding:12px 20px; transition:background 180ms; }
 .moverLink:hover { background:var(--primary-tint); }
 .moverIdentity { display:flex; align-items:center; gap:12px; min-width:0; }
@@ -180,6 +188,8 @@
  .breadthOverview { gap:22px; }
  .breadthVisual { padding-left:22px; }
  .breadthCounts > div { flex-direction:column; gap:3px; }
+ .breadthCounts > div:nth-child(2) { align-items:center; }
+ .breadthCounts > div:last-child { align-items:flex-end; }
 }
 @media(max-width:767px) {
  .breadthOverview { grid-template-columns:minmax(0,1fr); gap:14px; padding:18px; }
@@ -187,7 +197,7 @@
  .breadthHeading { gap:0 10px; }
  .breadthLink { min-height:44px; }
  .breadthVisual { padding:16px 0 0; border-left:0; border-top:1px solid var(--line); }
- .breadthCounts > div { flex-direction:row; flex-wrap:wrap; gap:4px 8px; }
+ .breadthCounts > div, .breadthCounts > div:nth-child(2), .breadthCounts > div:last-child { flex-direction:row; flex-wrap:wrap; align-items:baseline; gap:4px 8px; }
  .breadthCounts { gap:8px; }
  .breadthCounts dd { font-size:23px; }
  .breadthRatio strong { font-size:28px; }

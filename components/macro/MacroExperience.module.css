@@ -1,23 +1,38 @@
 .page { display:flex; flex-direction:column; gap:var(--page-section-gap); }
-.hero { display:grid; grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr); gap:40px; align-items:center; }
-.intro { min-width:0; padding:12px 0; }
+/* KAPAK: solda başlık ve gösterge listesi, sağda seçilenin geçmişi (bkz.
+   MacroExplorer). Liste sol yarının boşluğunu dolduruyor; iki yarı aynı
+   yüksekliğe yakın bitsin diye grafik 110'dan 176 piksele çıktı. */
+.hero { display:grid; grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr); gap:40px; align-items:start; }
+.intro { min-width:0; display:flex; flex-direction:column; gap:22px; }
 .intro h1 { font-size:var(--heading-page); line-height:1.12; max-width:12ch; }
 .intro p { max-width:37ch; }
-.introNote { display:flex; flex-direction:column; gap:8px; margin-top:26px; padding-left:15px; border-left:2px solid var(--primary-faint); font-size:13px; line-height:1.7; color:var(--text-soft); }
-.introNote a { color:var(--primary); font-weight:600; width:fit-content; }
-.explorer { min-width:0; border:1px solid var(--primary-faint); border-radius:22px; padding:20px 24px 12px; background:radial-gradient(ellipse at 90% 0,var(--primary-wash),transparent 65%),var(--premium-surface); box-shadow:var(--premium-shadow); }
-.explorerToolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.explorerToolbar label { font-size:11px; font-weight:600; color:var(--primary); letter-spacing:.04em; }
-.explorerToolbar select { min-width:0; max-width:70%; min-height:36px; border:1px solid var(--line); background:var(--surface); color:var(--text-strong); border-radius:8px; padding:6px 24px 6px 8px; font:inherit; font-size:12px; }
-.explorerReading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:16px 0 8px; }
-.explorerReading > div { display:flex; flex-direction:column; gap:4px; }
-.explorerReading span { font-size:11px; color:var(--text-muted); }
-.explorerReading strong { font-size:30px; letter-spacing:-.04em; line-height:1.15; color:var(--text-strong); }
-.explorerReading p { font-size:11px; line-height:1.6; color:var(--text-muted); max-width:23ch; }
-.history svg { width:100%; height:128px; overflow:visible; }
-.axis { display:flex; justify-content:space-between; margin:4px 0 12px; font-size:10px; color:var(--text-muted); }
-.historyLabel { display:grid; grid-template-columns:1fr auto; align-items:center; gap:6px; border-top:1px solid var(--line-soft); padding-top:10px; font-size:11px; color:var(--text-muted); }
-.historyLabel output { }
+
+.seriesList { display:flex; flex-direction:column; gap:2px; }
+.seriesRow { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:14px; min-height:50px; margin-inline:-12px; padding:7px 12px; border-radius:var(--radius-lg); text-align:left; color:var(--text-body); cursor:pointer; transition:background-color var(--default-transition-duration,180ms); }
+.seriesRow > span { display:flex; flex-direction:column; gap:1px; min-width:0; font-size:14px; line-height:1.3; font-weight:600; color:var(--text-strong); }
+.seriesRow small { font-size:11px; line-height:1.35; font-weight:500; color:var(--text-muted); }
+.seriesRow > strong { font-size:16px; line-height:1.2; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
+.seriesRow[aria-pressed="true"] { background:var(--primary-tint); }
+.seriesRow[aria-pressed="true"] > span { color:var(--primary-ink); }
+@media(hover:hover) { .seriesRow[aria-pressed="false"]:hover { background:var(--surface-sunken); } }
+.seriesRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:0; }
+
+/* Çerçevenin dış yüzeyi paylaşılan `page-frame`te; gezgin onun görsel
+   sütunu, ikinci bir kart açmıyor. */
+.explorer { min-width:0; padding:0 0 0 32px; border-left:1px solid var(--line); }
+.explorerLabel { font-size:12px; line-height:1.35; font-weight:650; color:var(--primary-ink); }
+.explorerReading { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:14px 0 14px; }
+.explorerReading > div:first-child { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.explorerReading h2 { font-size:17px; line-height:1.3; font-weight:650; letter-spacing:-.015em; }
+.explorerReading span { font-size:12px; color:var(--text-muted); }
+.explorerReading strong { margin-top:4px; font-size:36px; letter-spacing:-.04em; line-height:1.1; font-weight:650; color:var(--text-strong); }
+.explorerNext { display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; text-align:right; }
+.explorerNext a { font-size:14px; line-height:1.35; font-weight:650; color:var(--primary); }
+@media(hover:hover) { .explorerNext a:hover { color:var(--primary-hover); } }
+.explorerNext em { font-size:13px; font-style:normal; color:var(--text-muted); }
+.history svg { width:100%; height:176px; overflow:visible; }
+.axis { display:flex; justify-content:space-between; margin:6px 0 12px; font-size:11px; color:var(--text-muted); }
+.historyLabel { display:grid; grid-template-columns:1fr auto; align-items:center; gap:6px; border-top:1px solid var(--line-soft); padding-top:10px; font-size:12px; color:var(--text-muted); }
 .historyLabel strong { color:var(--text-strong); margin-left:8px; font-size:13px; }
 .historyLabel input { grid-column:1/-1; width:100%; height:28px; appearance:none; background:transparent; cursor:ew-resize; }
 .noHistory { padding:24px 0; color:var(--text-muted); font-size:13px; }
@@ -29,22 +44,29 @@
 .card > div:first-child { min-height:36px; }
 .card > div:first-child > span { background:transparent; padding:2px 0; }
 .card dl { margin-top:12px; }
-.page :is(select,input,a):focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
+.page :is(input,a):focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
 @media(hover:hover) and (pointer:fine) { .card:hover { transform:translateY(-3px); border-color:var(--primary-faint); box-shadow:var(--premium-shadow); } }
-@media(max-width:900px) { .hero { grid-template-columns:1fr; gap:18px; } .intro h1 { max-width:none; font-size:var(--heading-page); } .introNote { margin-top:14px; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media(max-width:540px) { .page { gap:18px; } .intro { padding:0; } .intro h1 { font-size:28px; } .introNote { font-size:12px; gap:4px; } .explorer { padding:14px 16px 10px; border-radius:17px; } .explorerToolbar { align-items:flex-start; flex-direction:column; gap:6px; } .explorerToolbar select { max-width:100%; width:100%; min-height:40px; } .explorerReading p { display:none; } .explorerReading strong { font-size:27px; } .history svg { height:105px; } .grid { grid-template-columns:1fr; gap:12px; } .card > div:first-child { min-height:0; } .card :global(.tote) { font-size:26px; } .card svg { height:48px; } }
+/* Dar ekranda liste YATAY bir şerit: altı satır alt alta grafiğin önüne
+   300 piksel koyuyordu. Şerit kaydırılıyor, sağ kenarda solan maske
+   "devamı var" diyor; dönem künyesi düşüyor, ad ve değer kalıyor. */
+@media(max-width:900px) {
+  .hero { grid-template-columns:1fr; gap:18px; }
+  .intro { gap:16px; }
+  .intro h1 { max-width:none; font-size:var(--heading-page); }
+  .seriesList { flex-direction:row; gap:8px; overflow-x:auto; scrollbar-width:none; margin-inline:calc(var(--page-frame-inset) * -1); padding-inline:var(--page-frame-inset); scroll-padding-inline:var(--page-frame-inset); mask-image:linear-gradient(90deg,transparent,var(--text-strong) 16px,var(--text-strong) calc(100% - 28px),transparent); }
+  .seriesList::-webkit-scrollbar { display:none; }
+  .seriesRow { flex-shrink:0; grid-template-columns:auto auto; gap:10px; min-height:44px; margin:0; padding:6px 14px; border:1px solid var(--line); border-radius:999px; }
+  .seriesRow[aria-pressed="true"] { border-color:var(--primary-faint); }
+  .seriesRow small { display:none; }
+  .seriesRow > span { font-size:13px; white-space:nowrap; }
+  .seriesRow > strong { font-size:14px; }
+  .explorer { padding:18px 0 0; border-left:0; border-top:1px solid var(--line); }
+  .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:540px) { .page { gap:18px; } .intro h1 { font-size:28px; } .explorerReading h2 { font-size:15px; } .explorerReading strong { font-size:28px; } .history svg { height:120px; } .grid { grid-template-columns:1fr; gap:12px; } .card > div:first-child { min-height:0; } .card :global(.tote) { font-size:26px; } .card svg { height:48px; } }
 @media(prefers-reduced-motion:reduce) { .card { transition:none; } .card:hover { transform:none; } }
 
 .historyLabel input::-webkit-slider-runnable-track { height:3px; background:var(--primary-faint); border-radius:3px; }
 .historyLabel input::-webkit-slider-thumb { appearance:none; width:13px; height:13px; border-radius:50%; background:var(--primary); border:2px solid var(--panel-fixed); margin-top:-5px; box-shadow:0 0 0 1px var(--primary-faint); }
 .historyLabel input::-moz-range-track { height:3px; background:var(--primary-faint); border-radius:3px; }
 .historyLabel input::-moz-range-thumb { width:10px; height:10px; border-radius:50%; background:var(--primary); border:2px solid var(--panel-fixed); box-shadow:0 0 0 1px var(--primary-faint); }
-
-/* The shared frame owns the outside surface. The explorer is its visual
-   column, so a second card and its inset no longer shift the chart down. */
-.hero { align-items:start; }
-.intro { padding:0; }
-.explorer { padding:0 0 0 24px; border:0; border-left:1px solid var(--line); border-radius:0; background:none; box-shadow:none; }
-.introNote { margin-top:18px; font-size:12px; }
-.history svg { height:110px; }
-@media(max-width:767px) { .explorer { padding:16px 0 0; border-left:0; border-top:1px solid var(--line); } }

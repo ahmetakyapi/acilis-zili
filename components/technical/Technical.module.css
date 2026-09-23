@@ -1014,7 +1014,10 @@
 .coverPlan .riskBar { height:7px; border-radius:3px; }
 .coverPlan .planCells { background:transparent; }
 .indicatorSummary { border:1px solid var(--line); border-radius:16px; padding:18px; background:linear-gradient(110deg,var(--primary-tint),transparent),var(--premium-surface); }
-.sectionNav { border-radius:12px; background:color-mix(in srgb,var(--page-bg) 93%,transparent); backdrop-filter:blur(12px); }
+/* Cam (yarı saydam zemin + bulanıklık) kalktı: proje cam kullanmıyor ve
+   yapışan çubuğun arkasında artık opak bir bant var (PremiumMotion →
+   `.sectionNav::before`). Dinlenme hâlinde zemin sayfanın kendisi. */
+.sectionNav { border-radius:12px; background:var(--page-bg); }
 .block { border-radius:18px; box-shadow:0 3px 12px color-mix(in srgb,var(--primary-ink) 3%,transparent); }
 .block > .sectionTitle,.blockHead { padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
 .blockHead .sectionTitle { display:flex; align-items:center; gap:9px; }

@@ -4,7 +4,7 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { Panel } from "@/components/ui/primitives";
 import { getSeries } from "@/lib/providers/fred";
 import type { Locale } from "@/lib/i18n";
-import { cn, formatEtDateShort, formatPrice } from "@/lib/utils";
+import { cn, formatEtDateCompact, formatPrice } from "@/lib/utils";
 
 /**
  * VIX — piyasanın önümüzdeki 30 gün için beklediği oynaklık.
@@ -85,7 +85,7 @@ export async function FearGauge({
             components/ui/primitives.tsx → PanelHeader içinde. */}
         <h2 className="plate min-w-0">{labels.title}</h2>
         <span className="numeral text-tiny text-muted">
-          VIX · {observedAt ? formatEtDateShort(observedAt, locale) : "—"}
+          VIX · {observedAt ? formatEtDateCompact(observedAt, locale) : "—"}
         </span>
       </div>
 

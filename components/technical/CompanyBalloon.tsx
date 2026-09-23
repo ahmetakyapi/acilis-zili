@@ -67,7 +67,7 @@ export function CompanyBalloon({
   return (
     <div className={styles.body}>
       <div className={styles.head}>
-        <LogoTile symbol={symbol} logoUrl={logoUrl} size="md" />
+        <LogoTile symbol={symbol} logoUrl={logoUrl} size="sm" />
         <span className={styles.who}>
           <strong className="numeral">{symbol}</strong>
           {name && name !== symbol && <span>{name}</span>}

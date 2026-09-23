@@ -643,12 +643,15 @@ async function CompareBoard({
           changePct: quotes[symbol]?.changePct ?? null,
         }))}
         labels={labels}
+        /* Dörtte ekleme koltuğu yok ve neden olmadığı başlığın yanında
+           yazıyor: bir dönem ekleme çipi sessizce kayboluyordu. */
+        note={symbols.length >= MAX_COMPARE_SYMBOLS ? t.compare.fullHint : undefined}
       >
         {symbols.length < MAX_COMPARE_SYMBOLS ? (
-          /* EKLEME YOLU EKRANIN İÇİNDE. Burada yalnızca "bir hisse
-             sayfasından Karşılaştır'a bas" yazan bir cümle vardı: dörtten
-             üçe düşen kullanıcı dördüncüyü geri koyamıyordu. */
-          <div className="flex flex-wrap items-center gap-3 border-t border-line px-4 py-3 sm:px-5">
+          /* EKLEME YOLU EKRANIN İÇİNDE, BOŞ KOLTUKTA. Burada yalnızca "bir
+             hisse sayfasından Karşılaştır'a bas" yazan bir cümle vardı:
+             dörtten üçe düşen kullanıcı dördüncüyü geri koyamıyordu. */
+          <>
             <CompareAdd
               symbols={symbols}
               rangeParam={range === DEFAULT_COMPARE_RANGE ? null : range}
@@ -661,21 +664,13 @@ async function CompareBoard({
                 searchFailed: t.common.error,
               }}
             />
-            {symbols.length === 1 && (
-              /* Tek seri kendi başlangıcına normalize edilmiş tek bir çizgi;
-                 ekran bunu söylemeden okuyucuyu bekletiyordu. */
-              <span className="min-w-0 flex-1 text-small text-muted">
-                {t.compare.secondSymbolHint}
-              </span>
-            )}
-          </div>
-        ) : (
-          /* Dörtte ekleme çipi tümüyle kayboluyordu ve neden kaybolduğu
-             hiçbir yerde yazmıyordu. */
-          <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
-            {t.compare.fullHint}
-          </p>
-        )}
+            <span className="text-small leading-relaxed text-muted">
+              {/* Tek seri kendi başlangıcına normalize edilmiş tek bir
+                  çizgi; ekran bunu söylemeden okuyucuyu bekletiyordu. */}
+              {symbols.length === 1 ? t.compare.secondSymbolHint : t.compare.seatHint}
+            </span>
+          </>
+        ) : null}
       </CompareStrip>
 
 

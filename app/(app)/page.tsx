@@ -93,7 +93,6 @@ import {
   directionText,
   formatEtDateLong,
   formatEtDateCompact,
-  formatEtDateShort,
   formatPercent,
   formatEventValue,
   formatPercentPlain,
@@ -855,7 +854,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
 
       {observedAt && (
         <p className="border-t border-line-soft px-4 py-2 text-nano text-muted sm:px-5">
-          FRED · {formatEtDateShort(observedAt, locale)}
+          FRED · {formatEtDateCompact(observedAt, locale)}
         </p>
       )}
 
@@ -901,7 +900,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
                     gereksiz kalabalıklaştırır. */}
                 {vixDate && vixDate !== observedAt && (
                   <span className="numeral text-nano text-muted">
-                    {formatEtDateShort(vixDate, locale)}
+                    {formatEtDateCompact(vixDate, locale)}
                   </span>
                 )}
                 {vixDelta !== null && vixDelta !== 0 && (
@@ -1117,8 +1116,8 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   const weekRange = (anchor: string) =>
     t.brief.weeklyRange
-      .replace("{start}", formatEtDateShort(anchor, locale))
-      .replace("{end}", formatEtDateShort(addEtDays(anchor, 4), locale));
+      .replace("{start}", formatEtDateCompact(anchor, locale))
+      .replace("{end}", formatEtDateCompact(addEtDays(anchor, 4), locale));
 
   const dailyView: BriefView | null = daily && {
     headline: daily.headline,
@@ -1622,9 +1621,15 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
           /* Satır artık bir <a> değil: analiz rozeti kendi bağlantısını
              taşıyor ve iç içe bağlantı geçersiz HTML. Yüzeyi kaplayan
              bağlantı katmanı görünümü aynen koruyor. */
+          /* SABİT SÜTUNLAR (23 Eylül). Satır esnek bir diziydi ve EPS
+             beklentisi yalnızca değer varsa basılıyordu: beklentisiz
+             satırda zaman rozeti sağ uca kayıyor, "Açılış Öncesi" ile
+             "Saat Belirsiz" farklı hatlarda duruyordu. Izgarada rozet ve
+             EPS sütunu her satırda aynı yerde; değer yoksa sütun boş kalır
+             ama yerini tutar. */
           <li
             key={row.id}
-            className="relative flex items-center gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:gap-4 sm:px-5"
+            className="relative grid grid-cols-[auto_minmax(0,1fr)_7.5rem] items-center gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:grid-cols-[auto_minmax(0,1fr)_7.5rem_5.5rem] sm:gap-4 sm:px-5"
           >
             <Link
               href={`/hisse/${row.symbol}`}
@@ -1650,17 +1655,17 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
               </span>
             </span>
             {badge ? (
-              <AnalysisBadge badge={badge} t={t} size="sm" />
+              <AnalysisBadge badge={badge} t={t} size="sm" className="w-full justify-center" />
             ) : (
               <TimingChip
-                wide
+                className="w-full justify-center"
                 tone={row.hour === "bmo" ? "pre" : row.hour === "amc" ? "post" : "neutral"}
               >
                 {row.hour ? (hourLabel[row.hour] ?? t.earnings.timeUnknown) : t.earnings.timeUnknown}
               </TimingChip>
             )}
-            {row.epsEstimate !== null && (
-              <span className="hidden shrink-0 text-right sm:block">
+            {row.epsEstimate !== null ? (
+              <span className="hidden text-right sm:block">
                 <span className="numeral block text-base font-semibold leading-tight text-body">
                   {formatPrice(row.epsEstimate, locale, { currency: true })}
                 </span>
@@ -1668,6 +1673,8 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
                   {t.earnings.epsEstimate}
                 </span>
               </span>
+            ) : (
+              <span aria-hidden className="hidden sm:block" />
             )}
           </li>
         );
@@ -2540,7 +2547,7 @@ async function LatestAnalyses({
                   <SpotlightCard className={styles.analysisLead}>
                     <div className={styles.analysisIdentity}>
                       <LogoTile symbol={row.symbol} logoUrl={logo} size="md" />
-                      <div><h3>{row.company}</h3><small>{row.symbol} · {row.periodLabel} · {formatEtDateShort(row.reportDate, locale)}</small></div>
+                      <div><h3>{row.company}</h3><small>{row.symbol} · {row.periodLabel} · {formatEtDateCompact(row.reportDate, locale)}</small></div>
                     </div>
                     <ScoreRing score={row.score} verdict={verdict} size={72} showDenominator className={styles.analysisScore} />
                     <p lang={row.locale} className={styles.analysisExcerpt}>{row.headline}</p>
@@ -2580,7 +2587,7 @@ async function LatestAnalyses({
                     <span aria-hidden className="mx-1.5">
                       ·
                     </span>
-                    {formatEtDateShort(row.reportDate, locale)}
+                    {formatEtDateCompact(row.reportDate, locale)}
                   </span>
                 </span>
                 <span

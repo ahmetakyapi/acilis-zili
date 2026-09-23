@@ -757,6 +757,26 @@ export function staleMark(
   return `${label} · ${date}`;
 }
 
+/**
+ * "2026-09-21" → "21 Eyl 2026" / "Sep 21, 2026"
+ *
+ * Yılı GEREKEN okunur tarih: halka arz, endeks kompozisyonu, geçmiş
+ * bilanço satırları. Kamuya açık ekranlarda "21.09.2026" gibi rakamsal
+ * tarihler "22 Eylül Salı" biçimiyle yan yana duruyordu (23 Eylül
+ * taraması: ana sayfa, piyasalar, hisse, bülten); tek kural: yıl
+ * gerekmiyorsa `formatEtDateCompact`, gerekiyorsa bu. Rakamsal
+ * `formatEtDateShort` yalnızca yönetim panelinin yoğun tablolarında.
+ */
+export function formatEtDateMedium(dateStr: string, locale: string): string {
+  const date = new Date(`${dateStr}T12:00:00Z`);
+  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
 export function formatEtDateCompact(dateStr: string, locale: string): string {
   const date = new Date(`${dateStr}T12:00:00Z`);
   return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {

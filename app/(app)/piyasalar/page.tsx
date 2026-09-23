@@ -40,8 +40,9 @@ import {
   directionOf,
   directionText,
   SIGN_GAP,
+  formatEtDateCompact,
+  formatEtDateMedium,
   formatMoneyCompact,
-  formatEtDateShort,
   formatPercent,
   formatPercentPlain,
   formatPrice,
@@ -450,7 +451,7 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
       {/* Plaka başlık — ölçü paneli. Rol ayrımının gerekçesi
           components/ui/primitives.tsx → PanelHeader içinde; ana sayfadaki
           tahvil kartı da aynı tonu taşıyor, aynı sayılar aynı görünsün. */}
-      <PanelHeader title={t.markets.yields} tone="plate" className={styles.yieldHeader} meta={values[0].date ? `FRED · ${formatEtDateShort(values[0].date, locale)}` : undefined} />
+      <PanelHeader title={t.markets.yields} tone="plate" className={styles.yieldHeader} meta={values[0].date ? `FRED · ${formatEtDateCompact(values[0].date, locale)}` : undefined} />
 
       <div className={cn("grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-line-soft sm:p-0", styles.yieldsGrid)} data-motion-stagger>
         {values.map((value) => {
@@ -482,7 +483,7 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                 className="tote mt-0.5 block text-xl sm:text-2xl"
                 signClassName="mx-1 text-sm text-soft"
               />
-              {delta !== null && Math.abs(delta) > 0.001 && (
+              {delta !== null && Math.abs(delta) > 0.001 ? (
                 <p
                   className={cn(
                     /* Değişim bir kademe büyük (11 → 12): sütunun taşıdığı
@@ -494,6 +495,14 @@ async function YieldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                 >
                   {delta > 0 ? "▲" : "▼"} {formatPrice(Math.abs(delta), locale)}{" "}
                   {t.markets.point}
+                </p>
+              ) : (
+                /* DEĞİŞİM SATIRI YERİNİ TUTUYOR. Değişmeyen vadede satır hiç
+                   basılmıyordu ve dört sütunun ortalanmış içeriği o sütunda
+                   8 piksel aşağıda başlıyordu (2 Yıllık, 1440'ta ölçüldü).
+                   Önceki gözlem varsa "Değişmedi" diyor; yoksa boş satır. */
+                <p className="numeral mt-0.5 text-small text-muted">
+                  {delta !== null ? t.macro.unchanged : "\u00a0"}
                 </p>
               )}
             </div>
@@ -704,11 +713,14 @@ async function IndexDetail({
       >
         {source && <DataStamp labels={t.data} source={source} at={stampAt} stale={stale} locale={locale}
           note={status.session === "pre-market" || status.session === "after-hours" ? t.data.extendedNote : undefined} />}
+        {/* ÖLÇEK NOTU KÜNYE BANDINDA. İki hareket panelinin üstünde tek
+            başına bir satırdı (sayfada kendi 30 piksellik şeridi); bant
+            hemen altındaki iki panelin künyesi zaten. */}
+        {withQuote.length > 0 && <span className={styles.movementScale}>{t.markets.movementScale}</span>}
       </IndexToolbar>
 
       {withQuote.length > 0 && (
         <>
-          <p className={styles.movementScale}>{t.markets.movementScale}</p>
           <div id="market-movers" className={styles.movers} data-motion-stagger>
             {/* Künye SEÇKİNİN PAYDASINI söylüyor: "Günün En Çok Artanları"
                 beş satır basıyor ama hangi kümenin beşi olduğunu yazmıyordu.
@@ -828,8 +840,11 @@ function IndexTabs({ tab, locale, t }: { tab: TabKey; locale: Locale; t: Diction
             );
           })}
         </div>
-        <span className="numeral ml-auto text-nano text-muted">
-          {t.markets.asOf}: {formatEtDateShort(INDEX_COMPOSITION_DATE, locale)}
+        {/* Okunur tarih ("1 Ağu 2026"): "01.08.2026" hem sitenin öteki
+            tarihleriyle çelişiyor hem 390'da panelin sağ kenarından
+            kesiliyordu (ölçüldü). */}
+        <span className="numeral ml-auto text-right text-nano text-muted">
+          {t.markets.asOf}: {formatEtDateMedium(INDEX_COMPOSITION_DATE, locale)}
         </span>
       </div>
 

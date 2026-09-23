@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
+import Link from "next/link";
 import styles from "./MacroExperience.module.css";
 
 export type ExplorerSeries = {
@@ -8,32 +9,82 @@ export type ExplorerSeries = {
   title: string;
   latest: string;
   period: string;
+  /** Sonraki açıklamanın okunur tarihi; takvimde yoksa null. */
+  next: string | null;
   points: { date: string; timestamp: number; value: number; label: string }[];
 };
 
-/** Each series keeps its own unit and scale. Historical inspection never
- * replaces the latest published reading. Native controls also work by keyboard. */
-export function MacroExplorer({ series, labels }: {
+type ExplorerLabels = {
+  title: string;
+  pick: string;
+  latest: string;
+  next: string;
+  noNext: string;
+  history: string;
+  empty: string;
+};
+
+/**
+ * Kapağın iki yarısı: solda başlık ve GÖSTERGE LİSTESİ, sağda seçilenin
+ * geçmişi.
+ *
+ * Sol yarı bir dönem başlık, iki satırlık bir not ve bir bağlantıdan
+ * ibaretti; grafiğin yanında 140 piksel boş zemin kalıyordu (1440'ta
+ * ölçüldü) ve gösterge yerel bir `<select>` ile seçiliyordu — altı seçenek
+ * bir açılır kutunun içinde saklıydı. Liste artık o boşluğun kendisi: altı
+ * gösterge adı, dönemi ve son değeriyle alt alta; seçim tek dokunuş ve
+ * hepsinin son okuması grafiğe bakmadan görülüyor. Başlık (`intro`)
+ * sunucuda çiziliyor ve buraya çocuk olarak geliyor.
+ *
+ * Her seri kendi birimini ve ölçeğini taşır. Geçmişte bir noktaya bakmak
+ * son açıklanan okumayı hiçbir zaman değiştirmez.
+ */
+export function MacroExplorer({ series, labels, intro }: {
   series: ExplorerSeries[];
-  labels: { title: string; latest: string; history: string; hint: string; empty: string };
+  labels: ExplorerLabels;
+  intro: ReactNode;
 }) {
   const [selected, setSelected] = useState(series[0]?.id);
   const active = series.find((item) => item.id === selected) ?? series[0];
-  const id = useId();
-  if (!active) return null;
-  return <section className={styles.explorer} aria-label={labels.title}>
-    <div className={styles.explorerToolbar}>
-      <label htmlFor={id}>{labels.title}</label>
-      <select id={id} value={active.id} onChange={(event) => setSelected(event.target.value)}>
-        {series.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
-      </select>
+  const panel = useId();
+  return <>
+    <div className={styles.intro}>
+      {intro}
+      {active && <div className={styles.seriesList} role="group" aria-label={labels.pick}>
+        {series.map((item) => <button
+          key={item.id}
+          type="button"
+          className={styles.seriesRow}
+          aria-pressed={item.id === active.id}
+          aria-controls={panel}
+          onClick={() => setSelected(item.id)}
+        >
+          <span>{item.title}<small>{item.period}</small></span>
+          <strong>{item.latest}</strong>
+        </button>)}
+      </div>}
     </div>
-    <div className={styles.explorerReading}>
-      <div><span>{labels.latest} · {active.period}</span><strong>{active.latest}</strong></div>
-      <p>{labels.hint}</p>
-    </div>
-    <HistoryChart key={active.id} series={active} labels={labels} />
-  </section>;
+    {active && <section className={styles.explorer} aria-label={labels.title} id={panel}>
+      <p className={styles.explorerLabel}>{labels.title}</p>
+      <div className={styles.explorerReading}>
+        <div>
+          <h2>{active.title}</h2>
+          <span>{labels.latest} · {active.period}</span>
+          <strong>{active.latest}</strong>
+        </div>
+        {/* Sonraki açıklama takvime bağlı: bu tarihte ne açıklanacağını
+            takvim söylüyor. Havada duran "grafiğin üzerinde gezin" ipucunun
+            yeri burasıydı; sürgü kendini zaten anlatıyor. */}
+        <div className={styles.explorerNext}>
+          <span>{labels.next}</span>
+          {active.next
+            ? <Link href="/takvim" className="tap-44">{active.next}</Link>
+            : <em>{labels.noNext}</em>}
+        </div>
+      </div>
+      <HistoryChart key={active.id} series={active} labels={labels} />
+    </section>}
+  </>;
 }
 
 function HistoryChart({ series, labels }: { series: ExplorerSeries; labels: { history: string; empty: string } }) {
@@ -64,7 +115,7 @@ function HistoryChart({ series, labels }: { series: ExplorerSeries; labels: { hi
       <defs><linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity=".22" /><stop offset="100%" stopColor="var(--primary)" stopOpacity=".01" /></linearGradient></defs>
       {[20, 75, 130].map((y) => <line key={y} x1="0" x2="700" y1={y} y2={y} stroke="var(--line-soft)" vectorEffect="non-scaling-stroke" />)}
       <polygon points={`10,150 ${line} 690,150`} fill={`url(#${gradient})`} />
-      <polyline className="spark-line" pathLength="1" points={line} fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      <polyline className="spark-line" points={line} fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
       <line x1={cursor.x} x2={cursor.x} y1="12" y2="150" stroke="var(--primary)" strokeOpacity=".25" vectorEffect="non-scaling-stroke" />
       <circle cx={cursor.x} cy={cursor.y} r="4" fill="var(--primary)" stroke="var(--surface)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
     </svg>

@@ -400,6 +400,8 @@ const tr = {
     released: "Açıklandı",
     scheduled: "Planlandı",
     datesNav: "Açıklama Günleri",
+    pickedNote: "Yalnızca seçili gün gösteriliyor.",
+    allDays: "Tüm Günler",
     viewLabel: "Takvim Görünümü",
     /* Önem süzgeci açıkken "açıklama yok" demek YANLIŞ olurdu: o gün başka
        önemde bir açıklama olabilir. Cümle süzgeci söylüyor. */
@@ -1231,6 +1233,7 @@ const tr = {
     secondSymbolHint:
       "Tek seri kendi başlangıcına göre yüzdeye çevrildiği için sıfırdan çıkan bir çizgiden başka bir şey söylemiyor.",
     fullHint: "Sınır dört sembol; birini çıkarınca yenisini ekleyebilirsin.",
+    seatHint: "Dörde kadar hisse aynı ölçekte yan yana okunur.",
     dividendNone: "Ödemiyor",
     metricsUnavailable:
       "{symbols} için ölçü verisi alınamadı: F/K, temettü, beta ve 52 hafta bandı o sütunda boş.",
@@ -1448,6 +1451,12 @@ const tr = {
     nextRelease: "Sonraki Açıklama",
     noNextRelease: "Henüz açıklanmadı",
     unchanged: "Değişmedi",
+    eyebrow: "ABD Ekonomisi",
+    explorer: "Gösterge Merceği · FRED",
+    pick: "Gösterge seç",
+    latest: "Son Açıklanan",
+    history: "Geçmiş Gözlem",
+    historyEmpty: "Geçmiş gözlemler henüz yeterli değil.",
   },
 
   auth: {
