@@ -5,6 +5,7 @@ import styles from "@/components/news/NewsExperience.module.css";
 import { Suspense } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState, PageHeader } from "@/components/ui/primitives";
+import { InkCanvas } from "@/components/ink/InkCanvas";
 import { NewsImage } from "@/components/news/NewsImage";
 import {
   getGenericImageUrls,
@@ -73,7 +74,12 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
                 {t.common.all}
               </Link>
             </div>
-          ) : undefined
+          ) : (
+            /* Süzgeç yokken kapağın sağı boştu: masaüstünde yazılan bir
+               gazete yaprağı. Telefonda gizli — orada başlık tek sütun ve
+               çizim listeyi bir ekran aşağı itmekten başka iş görmezdi. */
+            <InkCanvas scene="press" seed={3} className="hidden h-[84px] w-[134px] md:block" />
+          )
         }
       />
 
@@ -133,7 +139,7 @@ async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
   return (
       <div>
         {items.length === 0 ? (
-          <EmptyState title={t.news.empty} />
+          <EmptyState title={t.news.empty} scene="press" />
         ) : (
           <ul className={styles.list} data-motion-stagger>
             {items.map((item) => {

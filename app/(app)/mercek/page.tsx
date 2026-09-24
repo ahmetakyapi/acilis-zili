@@ -279,7 +279,7 @@ async function StoryBoard({
   if (rows.length === 0 && !symbolFilter) {
     return (
       <Panel>
-        <EmptyState title={t.stories.empty} hint={t.stories.emptyHint} />
+        <EmptyState title={t.stories.empty} hint={t.stories.emptyHint} scene="press" />
       </Panel>
     );
   }
@@ -344,6 +344,7 @@ async function StoryBoard({
       {rows.length === 0 ? (
         <Panel>
           <EmptyState
+            scene="searching"
             title={t.stories.emptyFilter}
             action={
               <Link

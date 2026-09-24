@@ -1,4 +1,6 @@
 import { logoSrc } from "@/lib/logos";
+import { InkCanvas } from "@/components/ink/InkCanvas";
+import type { InkSceneName } from "@/lib/ink/scenes";
 import { LogoImage } from "./LogoImage";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { TabUnderline } from "./TabUnderline";
@@ -707,6 +709,7 @@ export function EmptyState({
   className,
   compact = false,
   titleAs: TitleTag = "p",
+  scene,
 }: {
   title: string;
   hint?: string;
@@ -738,16 +741,27 @@ export function EmptyState({
    * (gerekçeleri o dosyalarda); eksik olan yalnızca başlık düzeyiydi.
    */
   titleAs?: "p" | "h1";
+  /**
+   * Mürekkep sahnesi — yalnızca SAYFANIN boş durumunda (bir listenin ya da
+   * kaydın tamamen yok olduğu yer). Panel içindeki tek satırlık boşluklara
+   * konmaz: orada bir çizim, mesajın kendisinden büyük bir olay olurdu.
+   * `compact` ile birlikte verilirse yok sayılır.
+   */
+  scene?: InkSceneName;
 }) {
   return (
     <div
       className={cn(
         "flex flex-col items-center gap-2 px-4 text-center",
         compact ? "py-6" : "py-10",
+        scene && !compact && "pt-6",
         TitleTag === "h1" && "empty-page",
         className,
       )}
     >
+      {scene && !compact && (
+        <InkCanvas scene={scene} className="mb-1 h-24 w-40" />
+      )}
       <TitleTag className="text-sm text-body">{title}</TitleTag>
       {hint && <p className="max-w-sm text-xs text-muted">{hint}</p>}
       {action && <div className="mt-2">{action}</div>}

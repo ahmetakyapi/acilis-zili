@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { InkSplash, INK_SPLASH_SCRIPT } from "@/components/ink/InkSplash";
 import { SiteJsonLd } from "@/components/seo/JsonLd";
 import { getI18n, getTheme } from "@/lib/i18n";
 import { INTL_LOCALE } from "@/lib/i18n/config";
@@ -164,7 +165,7 @@ export async function generateViewport(): Promise<Viewport> {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [{ locale }, theme] = await Promise.all([getI18n(), getTheme()]);
+  const [{ locale, t }, theme] = await Promise.all([getI18n(), getTheme()]);
 
   return (
     <html
@@ -174,6 +175,10 @@ export default async function RootLayout({
       className={`${bodyFace.variable} h-full`}
     >
       <body className="min-h-full antialiased">
+        {/* Açılışın kararı boyamadan önce: içerik bir kare görünüp sonra
+            örtülmesin. Gerekçeler `components/ink/InkSplash.tsx`te. */}
+        <script dangerouslySetInnerHTML={{ __html: INK_SPLASH_SCRIPT }} />
+        <InkSplash name={t.brand.name} />
         {/* Kuruluş + site künyesi; sayfa bazlı künyeler kendi rotalarında. */}
         <SiteJsonLd locale={locale} />
         {children}

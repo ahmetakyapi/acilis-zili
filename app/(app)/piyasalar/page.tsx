@@ -300,7 +300,7 @@ async function IndexCards({
     getChartBarsMulti([...proxies], "1D", status),
   ]);
 
-  if (!quotesResult.ok) return <Panel className={styles.indexUnavailable}><EmptyState title={t.common.noData} hint={t.common.noDataHint} /></Panel>;
+  if (!quotesResult.ok) return <Panel className={styles.indexUnavailable}><EmptyState title={t.common.noData} hint={t.common.noDataHint} scene="chart" /></Panel>;
 
   // The selected index occupies the first visual position. Keep DOM and
   // keyboard order aligned with that position; the toolbar keeps its order.

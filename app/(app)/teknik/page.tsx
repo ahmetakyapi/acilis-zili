@@ -214,7 +214,7 @@ export default async function TechnicalPage() {
 
       {board.length === 0 || !latest ? (
         <Panel>
-          <EmptyState title={t.technical.empty} hint={t.technical.emptyHint} />
+          <EmptyState title={t.technical.empty} hint={t.technical.emptyHint} scene="chart" />
         </Panel>
       ) : (
         <TechnicalBoard className={styles.board}>

@@ -165,7 +165,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       <MotionExperience className={directory.page}>
         {breadcrumb}
         <Panel>
-          <EmptyState title={t.technical.noAnalysis} hint={t.technical.noAnalysisHint} titleAs="h1" />
+          <EmptyState title={t.technical.noAnalysis} hint={t.technical.noAnalysisHint} titleAs="h1" scene="chart" />
         </Panel>
         {/* Çıkış kartları BURADA DA duruyor — hatta asıl burada: boş durum
             okuyucuya "bu hissede yayın yok" diyor ve tek başına bıraksa

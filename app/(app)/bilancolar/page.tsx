@@ -133,7 +133,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
       <QueryTransition label={t.common.loading}>
       {rows.length === 0 ? (
         <Panel>
-          <EmptyState title={t.earnings.empty} />
+          <EmptyState title={t.earnings.empty} scene="chart" />
         </Panel>
       ) : (
         <EarningsCalendar

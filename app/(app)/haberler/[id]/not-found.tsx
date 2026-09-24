@@ -21,6 +21,7 @@ export default async function NewsNotFound() {
     <div className="mx-auto max-w-2xl">
       <EmptyState
         titleAs="h1"
+        scene="searching"
         title={t.news.notFound}
         hint={t.news.notFoundHint}
         action={

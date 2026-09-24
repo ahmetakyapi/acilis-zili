@@ -18,6 +18,7 @@ export default async function StockNotFound() {
        taşımıyordu — okuyucu ortalanmış iki cümleyle baş başa kalıyordu. */
     <EmptyState
       titleAs="h1"
+      scene="searching"
       title={t.stock.notFound}
       hint={t.stock.notFoundHint}
       action={

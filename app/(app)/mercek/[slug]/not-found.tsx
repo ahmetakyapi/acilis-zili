@@ -10,6 +10,7 @@ export default async function StoryNotFound() {
     <>
       <EmptyState
         titleAs="h1"
+        scene="searching"
         title={t.stories.notFound}
         hint={t.stories.notFoundHint}
         action={

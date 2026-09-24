@@ -620,7 +620,7 @@ async function CompaniesTable({
             sayfasındaki bilanço tablosunda zaten vardı, iki dizin tablosuna
             taşınmamıştı. */}
         {rows.length === 0 ? (
-          <EmptyState title={query ? t.companies.searchEmpty : t.companies.empty}
+          <EmptyState scene="searching" title={query ? t.companies.searchEmpty : t.companies.empty}
             hint={query ? t.companies.searchEmptyHint : t.companies.emptyHint} />
         ) : (
           <ScrollEdges
