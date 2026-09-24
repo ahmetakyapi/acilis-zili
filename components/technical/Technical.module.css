@@ -1598,8 +1598,18 @@
 .coverThesis .coverHeadline { max-width:none; font-size:16px; line-height:1.65; font-weight:500; letter-spacing:-.01em; }
 .planOverview { display:grid; grid-template-columns:minmax(0,1fr) 240px; gap:24px; align-items:stretch; }
 .planOverview[data-has-risk="false"] { grid-template-columns:minmax(0,1fr); }
-.overviewCells { display:grid; grid-template-columns:repeat(var(--cells,3),minmax(0,1fr)); gap:12px; min-width:0; }
-.overviewCell { display:flex; min-width:0; flex-direction:column; justify-content:center; gap:12px; padding:16px; border-radius:12px; background:var(--primary-tint); border:1px solid var(--line-soft); }
+/* PLAN KARTLARI ÜSTTEN HİZALI, SÜTUNLAR İÇERİĞE GÖRE (24 Eylül).
+   Kartlar eşit genişlikteydi ve içeriği dikeyde ORTALIYORDU: üç hedefli
+   "Hedefler" 1440'ta eşit payına sığmayıp iki satıra çıkınca kart uzuyor,
+   komşu kartların başlıkları ve sayıları kendi kutularının ortasına
+   kayıyordu — "Alım Bölgesi" ile "Hedefler" başlıkları farklı yükseklikte.
+   Artık içerik kartın tepesinden başlıyor (başlıklar ve sayılar her
+   durumda aynı hatta) ve sütunlar içeriğe göre paylaşılıyor
+   (`minmax(0,auto)`, kapaktaki plan şeridiyle aynı kural): hedefler
+   ihtiyacı kadar yer alıp tek satırda kalıyor, artan pay eşit bölünüyor.
+   Yer yine yetmezse (1024) hedefler kırılıyor ama hizalar bozulmuyor. */
+.overviewCells { display:grid; grid-template-columns:repeat(var(--cells,3),minmax(0,auto)); gap:12px; min-width:0; }
+.overviewCell { display:flex; min-width:0; flex-direction:column; justify-content:flex-start; gap:12px; padding:16px; border-radius:12px; background:var(--primary-tint); border:1px solid var(--line-soft); }
 .overviewCell[data-kind="stop"] { background:linear-gradient(130deg,var(--down-wash),transparent); }
 .overviewCell[data-kind="target"],.overviewCell[data-kind="entry"] { background:linear-gradient(130deg,var(--up-wash),transparent); }
 .overviewCell dt { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-muted); font-weight:600; }
