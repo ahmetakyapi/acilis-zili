@@ -147,7 +147,9 @@
   min-width: 0;
   gap: 0.2rem;
   overflow-x: auto;
-  overscroll-behavior-inline: contain;
+  overflow-y: hidden;
+  /* Esneme kapalı — gerekçe globals.css → yatay kaydırıcı. */
+  overscroll-behavior-inline: none;
   scrollbar-width: none;
 }
 
