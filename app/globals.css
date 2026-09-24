@@ -172,6 +172,16 @@
      AA kontrastının altına düşüyor. */
   --display-gradient-tight: linear-gradient(100deg, #0a2547 0%, #1e6fbe 100%);
 
+  /* Başlıktaki sekme etiketleri — aynı lacivert → mavi aile, ama ortasında
+     açık bir ışık bandı var ve degrade 260% genişliğinde: dururken yalnızca
+     ilk üçte biri görünüyor (koyu → mavi), üzerine gelince konum kayıyor ve
+     ışık etiketin içinden geçiyor. Sekmelerin geri kalanı seçili olandan
+     bir kademe açık başlıyor ki seçili sekme hâlâ seçilsin. Işık bandının
+     en açık tonu (#2a86d8) 14 piksel yarı kalın metinde 3,9:1 — ve yalnızca
+     geçiş anında görünüyor. */
+  --nav-gradient: linear-gradient(100deg, #3a4d63 0%, #1e6fbe 38%, #2a86d8 50%, #1e6fbe 62%, #3a4d63 100%);
+  --nav-gradient-active: linear-gradient(100deg, #0a2547 0%, #1e6fbe 38%, #2a86d8 50%, #1e6fbe 62%, #0a2547 100%);
+
   /* Marka karosunun oturma gölgesi — rozet hissi buradan geliyor. */
   --mark-shadow: 0 1px 2px rgb(13 92 182 / 0.22), 0 4px 10px rgb(13 92 182 / 0.16);
 
@@ -307,6 +317,9 @@
   );
 
   --display-gradient-tight: linear-gradient(100deg, #eef5fc 0%, #58c4ff 100%);
+
+  --nav-gradient: linear-gradient(100deg, #b7c5d4 0%, #58c4ff 38%, #a9e0ff 50%, #58c4ff 62%, #b7c5d4 100%);
+  --nav-gradient-active: linear-gradient(100deg, #f2f7fc 0%, #58c4ff 38%, #a9e0ff 50%, #58c4ff 62%, #f2f7fc 100%);
 
   --mark-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 4px 12px rgb(0 0 0 / 0.35);
 
@@ -727,12 +740,16 @@
     border-radius: 1px;
     background: var(--line-strong);
     opacity: 0;
-    transition: opacity 180ms;
+    /* Hayalet çizgi ORTADAN AÇILIYOR (24 Eylül), yerinde solmuyor: seçili
+       sekmenin işareti de böyle giriyor (`masthead-mark-in`), ikisi aynı
+       hareket dilinde. */
+    transform: scaleX(0.3);
+    transition: opacity 200ms, transform 260ms var(--ease-brand);
   }
   @media (hover: hover) {
-    .masthead-link:not([aria-current]):hover::after { opacity: 1; }
+    .masthead-link:not([aria-current]):hover::after { opacity: 1; transform: none; }
   }
-  .masthead-link[data-open]::after { opacity: 1; }
+  .masthead-link[data-open]::after { opacity: 1; transform: none; }
   /* Odak halkası etiketin kendisinde: bağlantı 68px boyunca uzanıyor ve
      halka kutuya çizilince başlığın tamamını çerçeveliyordu. */
   .masthead-link:focus-visible { outline: none; }
@@ -1729,8 +1746,62 @@ html.theme-switching::view-transition-new(root) {
 @keyframes masthead-mark-in {
   from { opacity: 0; transform: scaleX(0.5); }
 }
+
+/* SEKME ETİKETLERİ MAVİ DEGRADEYLE (24 Eylül, sahibinin isteği: "başlıkları
+   mavi gradient tonlarında yapalım, o geçişi çok beğeniyorum"). Sayfa
+   başlıklarının degradesi başlıktaki gezinmeye de iniyor; üzerine gelince
+   ışık bandı etiketin içinden geçiyor (gerekçe ve kontrast `:root` →
+   `--nav-gradient`). Marka adı BU KURALIN DIŞINDA: maskeli metin alt piksel
+   yumuşatmasını kaybediyor ve adın keskinliği için degrade oradan bilinçli
+   olarak kaldırılmıştı (BrandWord); sekmeler 14 piksel ve yarı kalın,
+   orada fark okunmuyor (1440 ve 1024'te ekran görüntüsüyle karşılaştırıldı).
+   Masaüstü gezinmesinde yalnızca — telefonda alt sekme çubuğu kendi
+   rengini taşıyor. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .masthead-nav .masthead-link > span:first-child {
+    background-image: var(--nav-gradient);
+    background-size: 260% 100%;
+    background-position: 0% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    padding-bottom: 0.06em;
+    transition: background-position 700ms var(--ease-brand);
+  }
+  .masthead-nav .masthead-link[aria-current] > span:first-child,
+  .masthead-nav .masthead-link.text-primary-ink > span:first-child {
+    background-image: var(--nav-gradient-active);
+  }
+  @media (hover: hover) {
+    .masthead-nav .masthead-link:hover > span:first-child,
+    .masthead-nav .masthead-link[data-open] > span:first-child { background-position: 100% 0; }
+  }
+}
+
+/* "Daha Fazla" paneli açılınca satırlar sırayla iniyor — 30 ms arayla,
+   sekizinci satırda duruyor. Panelin kendisi Motion ile açılıyor; satırlar
+   onun ardından gelince liste "dökülüyor" gibi okunuyor, tek blok olarak
+   belirmiyor. */
+.masthead-dropdown li { animation: dropdown-row-in 260ms var(--ease-brand) backwards; }
+.masthead-dropdown li:nth-child(2) { animation-delay: 30ms; }
+.masthead-dropdown li:nth-child(3) { animation-delay: 60ms; }
+.masthead-dropdown li:nth-child(4) { animation-delay: 90ms; }
+.masthead-dropdown li:nth-child(5) { animation-delay: 120ms; }
+.masthead-dropdown li:nth-child(6) { animation-delay: 150ms; }
+.masthead-dropdown li:nth-child(7) { animation-delay: 180ms; }
+.masthead-dropdown li:nth-child(n + 8) { animation-delay: 210ms; }
+/* Arama sonuçları da aynı dökülmeyle: yeni gelen her satır 18 ms arayla
+   (gecikme satırın kendi `style`ında, SearchCommand). Anahtar sembolün
+   adresi — yazmaya devam edince listede KALAN satır yeniden oynamıyor,
+   yalnızca yeni gelen iniyor. */
+[id^="palet-secenek-"] { animation: dropdown-row-in 240ms var(--ease-brand) backwards; }
+@keyframes dropdown-row-in {
+  from { opacity: 0; transform: translate3d(0, -4px, 0); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .masthead-mark { animation: none; }
+  .masthead-mark, .masthead-dropdown li, [id^="palet-secenek-"] { animation: none; }
+  .masthead-link::after, .masthead-nav .masthead-link > span:first-child { transition: none; }
 }
 /* Zorunlu renk modunda arka plan rengi siliniyor ve işaret kayboluyordu:
    konum yalnızca bu çizgiyle söyleniyor (emsal: aşağıdaki başlık kuralı). */
@@ -1738,6 +1809,13 @@ html.theme-switching::view-transition-new(root) {
   .masthead-mark, .masthead-row[aria-current="page"]::before {
     forced-color-adjust: none;
     background: CanvasText;
+  }
+}
+@media (forced-colors: active) {
+  .masthead-nav .masthead-link > span:first-child {
+    background: none;
+    -webkit-text-fill-color: LinkText;
+    color: LinkText;
   }
 }
 @media (forced-colors: active) {
