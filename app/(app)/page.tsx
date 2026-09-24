@@ -246,10 +246,10 @@ export default async function TodayPage() {
       {/* KÖŞE MOTİFİ BURADA YOK. `HeroAccent` sağ üst köşeye yerleşiyor ve bu
           kahramanda orası DOLU: tarih ile canlı saat tam oraya oturuyor,
           yay saatin arkasından geçiyordu (ölçüldü — 1440'ta "16 Eylül
-          Çarşamba" ve saat satırlarıyla çakışıyor). Kartın kendi ışıması
-          (`styles.hero` içindeki radial-gradient) zaten aynı köşeden
-          geliyor; ikinci bir süs katmanı bilgi taşımıyor, yalnızca
-          okunacak metnin arkasını kalabalıklaştırıyordu. */}
+          Çarşamba" ve saat satırlarıyla çakışıyor). Süs katmanı bilgi
+          taşımıyor, yalnızca okunacak metnin arkasını kalabalıklaştırıyordu.
+          Kartın kendi köşe ışıması da 23 Eylül'de kalktı; kahraman düz
+          yüzeyde (tonla derinlik). */}
       <header id="piyasa-ozeti" className={styles.hero}>
         {/* GAZETE KÜNYESİ (24 Eylül). Üst şeridin solunda bir slogan
             ("ABD Piyasalarına Açılan Penceren") ve bir dalga simgesi

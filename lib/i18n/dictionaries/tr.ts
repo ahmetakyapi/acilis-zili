@@ -1204,7 +1204,10 @@ const tr = {
     symbolPlaceholder: "Sembol ara: örn. NVDA",
     alreadyInList: "Bu sembol listede zaten var",
     empty: "Bu listede henüz sembol yok",
-    emptyAll: "Henüz bir takip listen yok.",
+    /* Boş durumun BAŞLIĞI — Title Case ve noktasız. Tek başına gri bir
+       cümle olarak basılıyordu ve altındaki ipucundan ayırt edilmiyordu;
+       artık panelin h2'si, ipucu gövdesi. */
+    emptyAll: "Henüz Bir Takip Listen Yok",
     emptyAllHint: "İlk listeni oluştur, sonra izlemek istediğin sembolleri ekle.",
     color: "Renk",
     note: "Not",
@@ -1606,6 +1609,8 @@ const tr = {
 
   settings: {
     title: "Ayarlar",
+    subtitle: "Hesap bilgilerin, tema ve dil tercihlerin, verilerinle ilgili hakların.",
+    appearance: "Görünüm",
     language: "Dil",
     theme: "Tema",
     themeLight: "Açık",

@@ -7,12 +7,13 @@
    "Gövde". Rehber yazısı da aynı iki hattı kullanıyor. */
 .article { --read-inset:36px; display:flex; flex-direction:column; min-width:0; gap:24px; max-width:1040px; margin-inline:auto; }
 .utility { display:flex; justify-content:space-between; align-items:center; gap:16px; }
-.coverSurface { background:var(--premium-surface); box-shadow:var(--premium-shadow); }
+.coverSurface { background:var(--premium-surface); }
 /* Kapak dolgusu 32 → 28: 1440x900'de Genel Özet kutusunun dibi alt
    şeridin (863) altında kalıyordu (869); dolgu ve makale aralığı (28 → 24)
    birlikte kutuyu 859'da bitiriyor — ilk ekranda eksiksiz. */
 .cover { position:relative; isolation:isolate; display:grid; grid-template-columns:minmax(0,1.9fr) minmax(0,1fr); gap:32px; align-items:center; overflow:hidden; padding:28px var(--read-inset); border-radius:24px; }
-.cover::before { content:""; position:absolute; inset:-160px -200px auto auto; width:650px; height:650px; border-radius:50%; background:radial-gradient(ellipse,var(--primary-wash),transparent 66%); z-index:-1; pointer-events:none; }
+/* Kapağın sağ üstündeki 650 piksellik ışıma kalktı (24 Eylül) — 23 Eylül
+   taramasından kaçan son köşe ışıması (gerekçe UtilityExperience.module.css başındaki not). */
 .cover[data-has-aside="false"] { grid-template-columns:minmax(0,1fr); }
 .cover[data-has-aside="false"] .coverCopy { max-width:900px; }
 .coverCopy { min-width:0; display:flex; flex-direction:column; gap:22px; }

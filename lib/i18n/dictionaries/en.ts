@@ -944,7 +944,7 @@ const en: typeof tr = {
     symbolPlaceholder: "Search symbol: e.g. NVDA",
     alreadyInList: "That symbol is already in this list",
     empty: "No symbols in this list yet",
-    emptyAll: "You don't have any lists yet.",
+    emptyAll: "No Watchlists Yet",
     emptyAllHint: "Create your first list, then add the symbols you want to follow.",
     color: "Color",
     note: "Note",
@@ -1269,6 +1269,8 @@ const en: typeof tr = {
 
   settings: {
     title: "Settings",
+    subtitle: "Your account details, theme and language, and your rights over your data.",
+    appearance: "Appearance",
     language: "Language",
     theme: "Theme",
     themeLight: "Light",
