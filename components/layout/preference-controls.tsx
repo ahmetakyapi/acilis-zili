@@ -67,12 +67,39 @@ export function useThemePreference(initialTheme: Theme) {
     () => initialTheme,
   );
 
-  const pickTheme = (next: Theme) => {
+  const pickTheme = (
+    next: Theme,
+    event?: React.MouseEvent<HTMLElement>,
+  ) => {
     if (next === readTheme()) return;
+    const root = document.documentElement;
     // Görsel değişim tıklama anında, çerez arka planda. Sunucuyu beklersek
     // tema geç dönüyor ve düğme donmuş gibi duruyor.
-    document.documentElement.setAttribute("data-theme", next);
+    const apply = () => root.setAttribute("data-theme", next);
     void setThemePreference(next);
+
+    /* YENİ TEMA TIKLANAN YERDEN YAYILIYOR. İki tema arasında anlık geçiş
+       bütün ekranı tek karede çeviriyordu — göz neyin değiştiğini değil
+       yalnızca bir parlamayı görüyordu. View Transitions eski ekranın bir
+       fotoğrafını tutup yenisini tıklanan maketten büyüyen bir dairenin
+       içinde açıyor: değişimin kaynağı ile sonucu aynı hareketin iki ucu.
+       Tarayıcı desteklemiyorsa ya da okuyucu hareketi azaltıyorsa geçiş
+       eskisi gibi anlık. Kök sınıf (`theme-switching`) animasyonu YALNIZCA
+       bu geçişe bağlıyor; başka bir view transition eklenirse etkilenmez.
+       Stil: globals.css → "Tema geçişi". */
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!document.startViewTransition || reduce) {
+      apply();
+      return;
+    }
+    if (event) {
+      const box = event.currentTarget.getBoundingClientRect();
+      root.style.setProperty("--theme-x", `${box.left + box.width / 2}px`);
+      root.style.setProperty("--theme-y", `${box.top + box.height / 2}px`);
+    }
+    root.classList.add("theme-switching");
+    const transition = document.startViewTransition(apply);
+    void transition.finished.finally(() => root.classList.remove("theme-switching"));
   };
 
   return { theme, pickTheme };
@@ -174,7 +201,7 @@ export function ThemeChoice({
   variant: "light" | "dark";
   label: string;
   active: boolean;
-  onClick: () => void;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   const spec = THEME_SPECIMEN[variant];
   return (
@@ -262,7 +289,7 @@ export function PreferenceSettings({
               variant={key}
               label={text}
               active={theme === key}
-              onClick={() => pickTheme(key)}
+              onClick={(event) => pickTheme(key, event)}
             />
           ))}
         </div>

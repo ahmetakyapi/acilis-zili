@@ -1012,6 +1012,34 @@
 .page-enter > * > :nth-child(n + 4) { animation-delay: 135ms; }
 
 /* --------------------------------------------------------------------------
+   Tema geçişi — yeni tema tıklanan maketten büyüyen bir dairede açılır.
+
+   Gerekçe components/layout/preference-controls.tsx → `pickTheme`. Eski
+   ekranın fotoğrafı yerinde durur (kendi solma animasyonu kapalı), yenisi
+   onun ÜSTÜNDE daire olarak büyür; ikisi karışmaz, çünkü karışım iki
+   temanın ara tonunu — hiçbir temaya ait olmayan bir griyi — gösterirdi.
+   Daire ekranın en uzak köşesine varacak kadar büyür (150vmax), süre
+   yarım saniye: göz kaynağı görür, beklemez. Merkez yoksa (klavye
+   olmadan tetiklenmiş bir geçiş) ekranın tepesinin ortası.
+   -------------------------------------------------------------------------- */
+html.theme-switching::view-transition-old(root),
+html.theme-switching::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html.theme-switching::view-transition-new(root) {
+  animation: theme-reveal 0.52s cubic-bezier(0.65, 0, 0.35, 1);
+}
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--theme-x, 50%) var(--theme-y, 0));
+  }
+  to {
+    clip-path: circle(150vmax at var(--theme-x, 50%) var(--theme-y, 0));
+  }
+}
+
+/* --------------------------------------------------------------------------
    Gezinme göstergesi
 
    Ekranın en tepesinde 2px'lik bir ray, üzerinde sağa süzülen bir ışık.

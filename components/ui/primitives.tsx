@@ -876,8 +876,13 @@ export function ImpactDot({
 
 /* Yarıçap TOKEN'DAN (`--radius-md` = 9px), elle yazılmış `rounded-md`
    değil: token değişirse buton da değişsin. */
+/* BASINCA İÇE GÖÇER. Düğme hover'da renk değiştiriyordu ama basıldığı an
+   hiçbir şey olmuyordu; dokunmatikte hover yok, yani telefonda tek geri
+   bildirim sonraki ekrandı. %3'lük bir göçme parmağın altında "tık" diye
+   okunuyor ve bırakınca 150 ms'de geri geliyor. Hareketi azaltan okuyucuda
+   yalnızca renk. */
 const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 rounded-md font-semibold transition-colors duration-150 disabled:opacity-45 disabled:pointer-events-none";
+  "inline-flex items-center justify-center gap-2 rounded-md font-semibold transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.97] motion-reduce:active:scale-100 disabled:opacity-45 disabled:pointer-events-none";
 
 const BUTTON_VARIANTS = {
   primary: "bg-primary text-on-primary hover:bg-primary-hover",

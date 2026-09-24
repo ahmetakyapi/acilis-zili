@@ -1,6 +1,6 @@
 import polish from "@/components/motion/UtilityExperience.module.css";
 import Link from "next/link";
-import { BellMark } from "@/components/brand/BellMark";
+import { BellMood } from "@/components/brand/BellMood";
 import { getI18n } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 
@@ -53,7 +53,7 @@ export default async function RootNotFound() {
       className={`${polish.recovery} mx-auto flex w-full max-w-md flex-col items-center justify-center gap-6 px-[max(env(safe-area-inset-left),20px)] text-center`}
       style={{ paddingRight: "max(env(safe-area-inset-right),20px)" }}
     >
-      <BellMark size={56} />
+      <BellMood mood="lost" size={56} />
 
       <div className="flex flex-col gap-2.5">
         <p className="tote display-ink text-[54px] leading-none">404</p>
