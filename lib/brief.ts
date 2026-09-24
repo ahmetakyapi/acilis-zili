@@ -16,6 +16,25 @@
 export type BriefPeriod = "daily" | "weekly";
 
 /**
+ * Bir bülten sayısının KALICI adresi (dil öneksiz).
+ *
+ * Sayılar bir dönem yalnızca `/bulten?tarih=` ile açılıyordu ve o adresin
+ * canonical'ı `/bulten`dı: arama motoru için yüzlerce sayı tek bir sayfaydı,
+ * hiçbiri kendi başına dizine giremiyordu. Beslemenin bağlantıları da aynı
+ * sorgulu adrese gidiyordu. Artık her sayının kendi yolu var; eski sorgulu
+ * adres buraya kalıcı yönlendiriliyor.
+ *
+ * Haftalık ayrı bir segmentte: aynı pazartesi hem günlük hem haftalık kayıt
+ * taşıyabiliyor, tarih tek başına sayıyı belirlemiyor.
+ */
+export function briefHref(date: string, period: BriefPeriod): string {
+  return period === "weekly" ? `/bulten/haftalik/${date}` : `/bulten/${date}`;
+}
+
+/** Sayı adresindeki tarih — başka bir biçim segmentte 404 olur. */
+export const BRIEF_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
  * `## Başlık` ya da tek başına `**Başlık**` → başlık metni; değilse null.
  *
  * Hem ekrandaki bülten gövdesi (BriefBody) hem RSS beslemesi kullanıyor.

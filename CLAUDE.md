@@ -235,8 +235,8 @@ koruma `fetch`in kendi veri önbelleği (`revalidate`), yani farklı bir
 mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
 (`getHolidays`, `getStatus`, `getEventsBetween`, `getEventsBetweenResult`,
 `getEarningsBetween`,
-`getNewsById`, `getStoryBySlug`, `getStoryLocales`, `getAnalysis`,
-`symbolNamesForKey`, `isKnownSymbol`), `lib/technical-data.ts`
+`getNewsById`, `getStoryBySlug`, `getStoryLocales`, `getBriefIssue`,
+`getAnalysis`, `symbolNamesForKey`, `isKnownSymbol`), `lib/technical-data.ts`
 (`getTechnicalBoard`, `getTechnicalDetail`, `getPublishedSymbols`),
 `lib/admin.ts` (`getAdmin`), `lib/admin-data.ts` ve
 `lib/providers/index.ts` (`quotesForKey`).

@@ -140,7 +140,7 @@ Menü'den, her yerde aramadan ve alt bilgiden açılıyor.
 |---|---|
 | `/mercek` · `/mercek/[slug]` | Olayın arkasındaki mekanizma neydi — uzun anlatım arşivi |
 | `/rehber` · `/rehber/[slug]` | Borsayı nereden öğrenirim — sıralı müfredat |
-| `/bulten` | Dünkü ya da geçen haftaki bülteni okuyayım |
+| `/bulten` · `/bulten/[tarih]` · `/bulten/haftalik/[tarih]` | Dünkü ya da geçen haftaki bülteni okuyayım — her sayının kalıcı adresi var; eski `?tarih=` bağlantıları oraya yönlendiriliyor |
 
 ### Hesap ve yönetim
 

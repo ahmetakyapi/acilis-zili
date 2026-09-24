@@ -688,6 +688,29 @@ export async function getBriefByDate(
   }
 }
 
+/**
+ * Bir bülten SAYISININ bütün dil satırları — sayı sayfası (`/bulten/[tarih]`)
+ * için. `cache()` sarılı: künye (`generateMetadata`) ve sayfa aynı istekte
+ * ikisi de soruyor; sarmalsız iki ayrı gidiş-dönüş olurdu. Tek sorgu hem
+ * gösterilecek satırı (istenen dil, yoksa yazılan dil) hem de hreflang için
+ * var olan dilleri veriyor.
+ */
+export const getBriefIssue = cache(async function getBriefIssue(
+  date: string,
+  period: BriefPeriod,
+): Promise<DailyBriefRow[]> {
+  try {
+    return await db
+      .select()
+      .from(dailyBriefs)
+      .where(and(eq(dailyBriefs.briefDate, date), eq(dailyBriefs.period, period)))
+      .limit(4);
+  } catch (error) {
+    yutuldu("getBriefIssue", error);
+    return [];
+  }
+});
+
 export type BriefIndexRow = {
   briefDate: string;
   headline: string;
@@ -696,6 +719,8 @@ export type BriefIndexRow = {
   locale: string;
   /** Gövdenin başı (ham markdown, 280 harf) — arşiv satırının ilk cümlesi. */
   lead: string;
+  /** Site haritasının `lastModified`i. */
+  generatedAt: Date;
 };
 
 /**
@@ -754,6 +779,7 @@ export async function getBriefArchive(
         /* Gövdenin yalnızca başı: arşiv kolonu geniş ekranda her bültenin
            ilk cümlesini de gösteriyor. Metnin tamamı 60 satırda gereksiz. */
         lead: sql<string>`left(${dailyBriefs.bodyMd}, 280)`,
+        generatedAt: dailyBriefs.generatedAt,
       })
       .from(dailyBriefs)
       .where(eq(dailyBriefs.period, period))

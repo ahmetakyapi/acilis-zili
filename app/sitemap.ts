@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { GUIDE_SLUGS } from "@/content/guide";
-import { getAnalyses, getStories } from "@/lib/data";
+import { getAnalyses, getBriefArchive, getStories } from "@/lib/data";
+import { briefHref, type BriefPeriod } from "@/lib/brief";
 import { SITE_URL } from "@/lib/site";
 import { LOCALES } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
@@ -11,8 +12,9 @@ import { getTechnicalBoard } from "@/lib/technical-data";
 /**
  * Site haritası.
  *
- * Beş kaynaktan derlenir: durağan ekranlar, depodaki rehber yazıları,
- * veritabanındaki mercek yazıları, bilanço analizleri ve teknik analizler. Şirket sayfaları (/hisse/*) bilinçli
+ * Altı kaynaktan derlenir: durağan ekranlar, depodaki rehber yazıları,
+ * veritabanındaki mercek yazıları, bilanço analizleri, bülten sayıları ve
+ * teknik analizler. Şirket sayfaları (/hisse/*) bilinçli
  * olarak YOK — beş yüzden fazla sayfa üretirdi, içerikleri neredeyse
  * tamamen sağlayıcı verisi ve her biri her gün değişiyor. Arama motoruna
  * gönderilecek asıl değer, yazılan metinler.
@@ -174,6 +176,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push(...dynamicEntries(items, 0.7));
   } catch {
     // Aynı gerekçe: analiz tablosu okunamazsa harita eksik ama geçerli kalır.
+  }
+
+  /* BÜLTEN SAYILARI. Her sayının kendi adresi var (`briefHref`); öncesinde
+     hepsi `/bulten?tarih=` idi ve canonical'ları `/bulten`du, yani haritaya
+     yazılacak bir adresleri yoktu. Dil kuralı mercekle aynı. */
+  try {
+    const items = [];
+    for (const period of ["daily", "weekly"] as BriefPeriod[]) {
+      for (const locale of LOCALES) {
+        const rows = (await getBriefArchive(locale, period, SITEMAP_LIMIT)).filter(
+          (row) => row.locale === locale,
+        );
+        for (const row of rows) {
+          items.push({ path: briefHref(row.briefDate, period), locale, modified: row.generatedAt });
+        }
+      }
+    }
+    entries.push(...dynamicEntries(items, 0.5));
+  } catch {
+    // Bülten tablosu okunamazsa harita eksik ama geçerli kalır.
   }
 
   /* TEKNİK ANALİZ SAYFALARI yazılmış metin taşıyor, hisse sayfası gibi

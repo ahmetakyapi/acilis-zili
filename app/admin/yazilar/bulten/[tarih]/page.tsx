@@ -10,6 +10,7 @@ import { previewBriefBody } from "@/app/actions/content-preview";
 import { adminDayYear, adminStamp, adminWeekRange } from "@/lib/admin-format";
 import { adminDocTitle } from "@/lib/admin-sections";
 import { withLocale } from "@/lib/i18n/routing";
+import { briefHref } from "@/lib/brief";
 
 /**
  * Bülten editörü.
@@ -134,10 +135,7 @@ export default async function BriefEditorPage(
           revisions={revisions}
           ilkOnizleme={ilkOnizleme}
           /* Yayındaki hâl kaydın dilinde — gerekçe mercek editöründe. */
-          canliAdres={withLocale(
-            `/bulten?${period === "weekly" ? "tur=haftalik&" : ""}tarih=${row.briefDate}`,
-            locale,
-          )}
+          canliAdres={withLocale(briefHref(row.briefDate, period), locale)}
           draft={{
             date: row.briefDate,
             locale: row.locale,

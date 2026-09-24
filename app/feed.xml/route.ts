@@ -2,7 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { dailyBriefs, stories } from "@/lib/schema";
 import { headers } from "next/headers";
-import { briefSummary } from "@/lib/brief";
+import { briefHref, briefSummary } from "@/lib/brief";
 import { DEFAULT_LOCALE } from "@/lib/i18n/config";
 import {
   LOCALE_HEADER,
@@ -112,11 +112,10 @@ export async function GET() {
       title: row.headline,
       /* BAĞLANTI KAYIT TARİHİNE BAĞLI. Her günlük öğe `/bulten`e, her
          haftalık öğe `/bulten?tur=haftalik`a gidiyordu: okuyucu üç gün
-         önceki bülteni tıkladığında bugünün bülteni açılıyordu. Sayfa
-         `?tarih=` parametresini zaten destekliyor. */
-      link: adres(
-        `/bulten?${row.period === "weekly" ? "tur=haftalik&" : ""}tarih=${row.briefDate}`,
-      ),
+         önceki bülteni tıkladığında bugünün bülteni açılıyordu. Artık
+         sayının kalıcı adresi (`briefHref`); eski `?tarih=` biçimi oraya
+         yönlendiriliyor, besleme okuyucusundaki eski öğeler de açılıyor. */
+      link: adres(briefHref(row.briefDate, row.period === "weekly" ? "weekly" : "daily")),
       /* Gövde markdown; beslemede tek cümle yeterli. Kural `lib/brief.ts`te:
          başlık satırları atlanır, işaretleme temizlenir. */
       description: briefSummary(row.bodyMd),

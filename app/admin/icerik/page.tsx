@@ -30,6 +30,7 @@ import {
 import { analysisHref } from "@/lib/analysis";
 import { GUNLER, PublishGrid, PublishGridSkeleton } from "@/components/admin/PublishGrid";
 import { cn } from "@/lib/utils";
+import { briefHref } from "@/lib/brief";
 
 /**
  * İçerik — yayının SAĞLIK PANOSU.
@@ -219,7 +220,7 @@ async function Gaps() {
             ? `${adminWeekRange(brief.date)} · Haftalık`
             : `${adminDayYear(brief.date)} · Günlük`,
           href: `/admin/yazilar/bulten/${brief.date}?tur=${haftalik ? "haftalik" : "gunluk"}&dil=tr`,
-          site: `/bulten?${haftalik ? "tur=haftalik&" : ""}tarih=${brief.date}`,
+          site: briefHref(brief.date, haftalik ? "weekly" : "daily"),
         };
       }),
     },
