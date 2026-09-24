@@ -2147,7 +2147,10 @@ html.ink-splash .ink-splash-layer {
   /* Emniyet: hidrasyon hiç gelmese de katman 4 saniyede kalkıyor. */
   animation: ink-splash-safety 0.4s ease 4s both;
 }
-html.ink-splash { overflow: hidden; }
+/* Sayfa kilitlenmiyor, bilinçli: kilit `html` sınıfına bağlı olurdu ve
+   hidrasyon hiç gelmezse sınıf da kalkmazdı. Emniyet katmanı 4 saniyede
+   gizliyor ama kaydırma kilidi sayfada ömür boyu kalırdı. Katman zaten tam
+   ekran ve tekerlekle kapanıyor. */
 html.ink-splash-out .ink-splash-layer {
   animation: ink-splash-out 0.42s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
