@@ -175,7 +175,7 @@ export function ShareButton({
         )}
       >
         {copied ? (
-          <Check weight="bold" size={13} aria-hidden />
+          <Check weight="bold" size={13} aria-hidden className="check-pop" />
         ) : (
           <Share weight="bold" size={13} aria-hidden />
         )}
@@ -234,7 +234,7 @@ export function ShareButton({
                   )}
                 >
                   {copied ? (
-                    <Check weight="bold" size={14} />
+                    <Check weight="bold" size={14} className="check-pop" />
                   ) : (
                     <LinkSimple weight="bold" size={14} />
                   )}

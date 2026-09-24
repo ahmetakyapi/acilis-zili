@@ -1534,6 +1534,71 @@ html.theme-switching::view-transition-new(root) {
 }
 
 /* --------------------------------------------------------------------------
+   Alt sekme çubuğu — seçili sekme kendini gösteriyor
+
+   Seçili sekme yalnızca renk değiştiriyordu: dört gri ikonun biri mavi.
+   Telefonda başparmağın altında kalan bir şey için bu, dokunuşun
+   kaydedildiğini söylemeye yetmiyor. Şimdi seçilen ikon dolu çiziliyor,
+   yerine küçük bir zıplamayla oturuyor ve tepesinde 18 piksellik bir
+   işaret çizgisi ortadan açılıyor. İkisi de sekme SEÇİLDİĞİ an bir kez
+   oynuyor — sayfa içinde gezinirken tekrar etmiyor, çünkü sınıf ancak
+   `aria-current` değişince yeniden eşleşiyor.
+   -------------------------------------------------------------------------- */
+.tab-bar a { position:relative; }
+.tab-bar a[aria-current="page"]::before {
+  content:""; position:absolute; top:0; left:50%; width:18px; height:3px;
+  margin-left:-9px; border-radius:0 0 3px 3px; background:var(--primary);
+  animation:tab-mark 320ms var(--ease-brand) both;
+}
+.tab-bar a[aria-current="page"] .tab-icon { animation:tab-hop 460ms cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes tab-mark { from { transform:scaleX(0); } to { transform:none; } }
+@keyframes tab-hop {
+  0% { transform:translateY(0) scale(1); }
+  40% { transform:translateY(-4px) scale(1.12); }
+  100% { transform:none; }
+}
+
+/* --------------------------------------------------------------------------
+   Kopyalandı onayı — işaret zıplayarak geliyor
+
+   "Paylaş" düğmesi kopyalayınca ikonu onay işaretine çeviriyordu ama
+   değişim tek kareydi ve göz çoğu zaman kaçırıyordu; okuyucu emin olmak
+   için ikinci kez basıyordu. İşaret küçükten yaylanarak büyüyor.
+   -------------------------------------------------------------------------- */
+.check-pop { animation:check-pop 420ms cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes check-pop {
+  from { opacity:0; transform:scale(.3) rotate(-25deg); }
+  to { opacity:1; transform:none; }
+}
+
+/* --------------------------------------------------------------------------
+   Açılır bölümler yumuşak açılıyor
+
+   Yazının içindekiler kutusu, analist açıklaması, bültenin katlanan
+   bölümü ve grafik seansları yerli `<details>`: JavaScript'siz çalışıyor
+   ve öyle kalmalı. Ama açıldığında içerik tek karede beliriyor, altındaki
+   her şey bir anda aşağı sıçrıyordu. Destekleyen tarayıcıda içerik
+   yüksekliği sıfırdan kendi boyuna akıyor (`interpolate-size` yalnızca
+   bu öğede — sitedeki başka `auto` geçişlerini değiştirmesin). Desteklemeyen
+   tarayıcı eskisi gibi anında açıyor; hiçbir şey kaybolmuyor.
+   -------------------------------------------------------------------------- */
+@supports (interpolate-size: allow-keywords) {
+  details { interpolate-size:allow-keywords; }
+  details::details-content {
+    height:0; overflow:clip;
+    transition:height 280ms var(--ease-brand), content-visibility 280ms allow-discrete;
+  }
+  details[open]::details-content { height:auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-bar a[aria-current="page"]::before,
+  .tab-bar a[aria-current="page"] .tab-icon,
+  .check-pop { animation:none; }
+  details::details-content { transition:none; }
+}
+
+/* --------------------------------------------------------------------------
    DOKUNMATİKTE BASMA İZİ — her hedefte, yalnızca parmakla
    -------------------------------------------------------------------------- */
 

@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BellLoader } from "@/components/brand/BellLoader";
 import styles from "./Countdown.module.css";
+
+/** Son kaç saniye "geri sayım" gibi atıyor. */
+const FINAL_SECONDS = 10;
+/** Sıfırdan sonra zilin çalmaya devam ettiği süre. */
+const RING_MS = 4_000;
 
 type Units = { d: string; h: string; m: string; s: string };
 
@@ -37,7 +43,10 @@ export function Countdown({
   unitsShort,
   label,
   className,
+  ring = false,
 }: {
+  /** Sayaç sıfırlandığında yanında zil çalsın mı — yalnızca kahramanda. */
+  ring?: boolean;
   targetIso: string;
   initialNowMs: number;
   /** Ekran okuyucunun duyduğu tam ad: "Saat". */
@@ -72,6 +81,30 @@ export function Countdown({
   }, []);
 
   const values = split(targetMs, nowMs);
+  const remaining = Math.max(0, Math.ceil((targetMs - nowMs) / 1000));
+
+  /* ZİL ANI. Sitenin adı bu an ve sayaç ona saniye saniye sayıyordu, ama
+     sıfıra varınca hiçbir şey olmuyordu: rakamlar "00" olup sayfa
+     tazelenene kadar donuk kalıyordu. Son on saniyede saniye rakamı her
+     tikte bir kalp gibi atıyor (`data-phase="final"`); sıfırda rakamların
+     yanında zil çalıyor ve dört saniye çalmaya devam ediyor. Sıfır anı
+     render sırasında yakalanıyor — SessionRefresh yeni hedefi getirince
+     sayaç yeniden saymaya başlasa da zil kendi süresini tamamlıyor, çünkü
+     bileşen aynı yerde kalıyor ve bu durum onunla yaşıyor. */
+  const [rangAt, setRangAt] = useState<number | null>(null);
+  if (remaining === 0 && rangAt === null && nowMs !== initialNowMs) {
+    setRangAt(nowMs);
+  }
+  const ringing = rangAt !== null && nowMs - rangAt < RING_MS;
+  // Zil sustu ve yeni hedef uzakta: bir sonraki sıfır için yeniden kur.
+  if (rangAt !== null && !ringing && remaining > FINAL_SECONDS) {
+    setRangAt(null);
+  }
+  const phase = ringing
+    ? "rang"
+    : remaining > 0 && remaining <= FINAL_SECONDS
+      ? "final"
+      : undefined;
   const names = [units.d, units.h, units.m, units.s];
   const shorts = [unitsShort.d, unitsShort.h, unitsShort.m, unitsShort.s];
 
@@ -81,6 +114,7 @@ export function Countdown({
       aria-label={label}
       aria-live="off"
       data-days={values[0] > 0}
+      data-phase={phase}
       className={[styles.countdown, className].filter(Boolean).join(" ")}
     >
       {values.map((value, index) => index === 0 && value === 0 ? null : (
@@ -97,6 +131,11 @@ export function Countdown({
           <span className="sr-only">{names[index]}</span>
         </span>
       ))}
+      {ring && ringing && (
+        <span className={styles.bell}>
+          <BellLoader size={52} />
+        </span>
+      )}
     </div>
   );
 }

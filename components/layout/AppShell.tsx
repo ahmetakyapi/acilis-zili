@@ -363,7 +363,10 @@ export function AppShell({
                 active ? "font-semibold text-primary" : "text-muted",
               )}
             >
-              <Icon weight="duotone" size={21} />
+              {/* Seçili sekmenin ikonu küçük bir zıplamayla geliyor ve
+                  üstünde kısa bir işaret çizgisi açılıyor — gerekçe
+                  globals.css → "Alt sekme çubuğu". */}
+              <Icon weight={active ? "fill" : "duotone"} size={21} className="tab-icon" />
               <span className="truncate">{item.text}</span>
             </Link>
           );
