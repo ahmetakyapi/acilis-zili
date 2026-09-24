@@ -711,6 +711,11 @@ const tr = {
     /* "Şu An" DEĞİL: kotasyon Alpaca'nın 15 dakika gecikmeli SIP akışı ve aynı
        ekranın veri damgası bunu söylüyor. Etiket tazeliği abartmasın. */
     now: "15 Dakika Gecikmeli",
+    /* Detay ekranında fiyatın ADI; gecikme yanında rozet olarak (`now`).
+       Etiketin kendisi "15 Dakika Gecikmeli" olunca okuyucu fiyatın ne
+       olduğunu değil yalnızca ne kadar geç olduğunu okuyordu. */
+    currentPrice: "Güncel Fiyat",
+    thisEdition: "Bu Yayın",
     atAnalysis: "Analiz Anında",
     levelPassed: "Geçildi",
     levelBroken: "Kırıldı",
