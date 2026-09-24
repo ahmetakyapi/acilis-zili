@@ -321,7 +321,7 @@ export function AccountMenu({
                       variant={key}
                       label={text}
                       active={theme === key}
-                      onClick={() => pickTheme(key)}
+                      onClick={(event) => pickTheme(key, event)}
                     />
                   ))}
                 </div>

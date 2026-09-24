@@ -21,17 +21,25 @@
 .countdown { display:flex; flex-wrap:nowrap; align-items:baseline; gap:0 .2em; font-size:clamp(48px,18cqi,92px); font-weight:600; line-height:.86; letter-spacing:-.055em; color:var(--text-strong); }
 .countdown[data-days="true"] { font-size:clamp(38px,14cqi,80px); }
 .group { display:inline-flex; align-items:baseline; gap:.06em; min-width:0; }
-/* Satır yüksekliği .86 yazı kutusunun altında; pencere dikeyde KIRPMIYOR
-   (`overflow-clip-margin`), yalnızca varış hareketinin %12'lik kaymasını
-   maskeliyor. 0/2/3/8 mürekkebi ekran görüntüsünde tam (ölçüldü). */
-.numberWindow { display:block; overflow:clip; overflow-clip-margin:.08em; padding-block:.04em; font-variant-numeric:tabular-nums; }
-.number { display:block; animation:digit-arrive 360ms var(--ease-brand) both; }
+/* Satır yüksekliği .86 yazı kutusunun altında; pencere duran rakamın
+   mürekkebini KIRPMIYOR (`overflow-clip-margin`), yalnızca yuvarlanan
+   rakamın %62'lik yolunu maskeliyor — sayaç penceresi. 0/2/3/8 mürekkebi
+   ekran görüntüsünde tam (ölçüldü). */
+.numberWindow { display:inline-flex; overflow:clip; overflow-clip-margin:.08em; padding-block:.04em; font-variant-numeric:tabular-nums; }
+/* Basamak kendi penceresi: giden rakam mutlak konumda üstte, gelen rakam
+   akışta — pencerenin genişliği hep tek rakam (tabular), satır zıplamaz.
+   Giriş yaylı (hafifçe aşıp oturuyor), çıkış düz: gelen rakam "varıyor",
+   giden yalnızca yol veriyor. Gerekçe Countdown.tsx → RollingDigit. */
+.digit { position:relative; display:inline-block; }
+.digitIn { display:inline-block; animation:digit-in 420ms cubic-bezier(0.34,1.4,0.64,1) both; }
+.digitOut { position:absolute; left:0; top:0; animation:digit-out 300ms var(--ease-brand) both; }
 /* Tek canlı vurgu saniye: değişen tek grup o. */
-.group:last-child .number { color:var(--primary); }
+.group:last-child .digit { color:var(--primary); }
 .suffix { font-size:max(12px,.19em); font-weight:600; letter-spacing:0; color:var(--text-muted); }
 .group:last-child .suffix { color:var(--primary-ink); }
-@keyframes digit-arrive { from { opacity:.35; transform:translateY(12%); } to { opacity:1; transform:translateY(0); } }
-@media (prefers-reduced-motion:reduce) { .number { animation:none; } }
+@keyframes digit-in { from { opacity:0; transform:translateY(62%); } to { opacity:1; transform:translateY(0); } }
+@keyframes digit-out { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-62%); } }
+@media (prefers-reduced-motion:reduce) { .digitIn { animation:none; } .digitOut { display:none; } }
 /* Kap sorgusu desteklemeyen tarayıcıda `cqi` küçük görünüme çözülür ve
    rakam şişer; orada görünüm genişliğine bağlı bir yedek. */
 @supports not (font-size:1cqi) {

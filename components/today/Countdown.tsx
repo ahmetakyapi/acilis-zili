@@ -86,14 +86,56 @@ export function Countdown({
       {values.map((value, index) => index === 0 && value === 0 ? null : (
         <span className={styles.group} key={names[index]}>
           <span className={styles.numberWindow}>
-            <span key={value} className={styles.number}>
-              {String(value).padStart(2, "0")}
-            </span>
+            {String(value)
+              .padStart(2, "0")
+              .split("")
+              .map((digit, place) => (
+                <RollingDigit key={place} digit={digit} />
+              ))}
           </span>
           <span className={styles.suffix} aria-hidden="true">{shorts[index]}</span>
           <span className="sr-only">{names[index]}</span>
         </span>
       ))}
     </div>
+  );
+}
+
+/**
+ * KİLOMETRE SAYACI — yalnızca DEĞİŞEN rakam yuvarlanır.
+ *
+ * Bütün sayı her saniye yeniden doğuyordu (`key={value}`): "11"den "10"a
+ * geçerken değişmeyen onlar basamağı da solup yeniden geliyordu ve göz
+ * saniyede bir tüm grubu kıpırdarken görüyordu. Şimdi her basamak kendi
+ * penceresinde: eski rakam yukarı çıkıp giderken yenisi alttan gelip
+ * oturuyor, sayfa bir sayaç gibi dönüyor. Dakika döndüğünde saniye
+ * basamaklarıyla birlikte dakika da yuvarlanıyor — zamanın "tıkladığı"
+ * an görünür oluyor.
+ *
+ * Önceki rakam render sırasında türetiliyor (React'in "önceki prop'u
+ * saklama" kalıbı): efekt yok, fazladan çizim turu yok. Giden rakam
+ * `aria-hidden`; ekran okuyucu grubun tam adını ve yalnızca güncel rakamı
+ * duyuyor.
+ */
+function RollingDigit({ digit }: { digit: string }) {
+  const [current, setCurrent] = useState(digit);
+  const [previous, setPrevious] = useState<string | null>(null);
+  const [turn, setTurn] = useState(0);
+  if (digit !== current) {
+    setPrevious(current);
+    setCurrent(digit);
+    setTurn((value) => value + 1);
+  }
+  return (
+    <span className={styles.digit}>
+      {previous !== null && (
+        <span key={`out-${turn}`} className={styles.digitOut} aria-hidden="true">
+          {previous}
+        </span>
+      )}
+      <span key={`in-${turn}`} className={turn ? styles.digitIn : undefined}>
+        {current}
+      </span>
+    </span>
   );
 }

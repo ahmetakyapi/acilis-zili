@@ -1,5 +1,6 @@
 "use client";
 
+import { BellMood } from "@/components/brand/BellMood";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -112,6 +113,9 @@ export function WatchlistBoard({
               var"); gövdesi cümle. İkisi de gri 12-14 piksellik satırlardı
               ve hangisinin başlık olduğu okunmuyordu. */}
           <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+            <span className="mb-3">
+              <BellMood mood="sleep" size={52} />
+            </span>
             <h2 className="text-read font-bold tracking-[-0.01em] text-strong">
               {labels.emptyAll}
             </h2>

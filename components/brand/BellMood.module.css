@@ -1,0 +1,43 @@
+/* Gerekçe BellMood.tsx'te. Dönme noktası karonun tepesi (askı): zil
+   ortasından değil yukarıdan sarkıyor. */
+.mood { position:relative; display:inline-grid; place-items:center; }
+.bell { display:block; transform-origin:50% 12%; }
+
+/* UYKU — 8° eğik, çok yavaş bir nefes; baş hafifçe iniyor ve kalkıyor. */
+.mood[data-mood="sleep"] .bell { animation:bell-doze 3.6s ease-in-out infinite; }
+@keyframes bell-doze {
+  0%, 100% { transform:rotate(-8deg) translateY(0); }
+  50% { transform:rotate(-5deg) translateY(2px); }
+}
+
+/* Üç "z" sağ üstte, küçükten büyüğe; her biri 3,6 s'lik döngünün ayrı
+   bir üçte birinde doğup yükselip sönüyor. */
+.zs { position:absolute; left:78%; bottom:62%; display:block; width:36px; height:40px; pointer-events:none; }
+.zs > span { position:absolute; left:0; bottom:0; color:var(--primary-ink); font-weight:700; line-height:1; opacity:0; animation:bell-z 3.6s ease-out infinite; }
+.zs > span:nth-child(1) { font-size:11px; }
+.zs > span:nth-child(2) { font-size:14px; animation-delay:1.2s; }
+.zs > span:nth-child(3) { font-size:17px; animation-delay:2.4s; }
+@keyframes bell-z {
+  0% { opacity:0; transform:translate(0,0) rotate(-6deg); }
+  18% { opacity:0.9; }
+  70% { opacity:0; transform:translate(16px,-26px) rotate(10deg); }
+  100% { opacity:0; transform:translate(16px,-26px) rotate(10deg); }
+}
+
+/* KAYIP — sola bak, sağa bak, dur. Döngünün yarısı sessiz; durmadan
+   sallanan bir işaret okunacak metnin yanında dikkat dağıtırdı. */
+.mood[data-mood="lost"] .bell { animation:bell-look 4.2s cubic-bezier(0.45,0,0.55,1) infinite; }
+@keyframes bell-look {
+  0%, 100% { transform:rotate(0); }
+  12% { transform:rotate(-11deg); }
+  22% { transform:rotate(-11deg); }
+  36% { transform:rotate(9deg); }
+  46% { transform:rotate(9deg); }
+  56%, 99% { transform:rotate(0); }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .bell { animation:none !important; }
+  .mood[data-mood="sleep"] .bell { transform:rotate(-8deg); }
+  .zs { display:none; }
+}

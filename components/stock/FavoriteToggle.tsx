@@ -1,10 +1,14 @@
 "use client";
 
-import { useOptimistic, startTransition } from "react";
+import { useOptimistic, useState, startTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { Heart } from "@phosphor-icons/react";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
 import { cn } from "@/lib/utils";
+import styles from "./FavoriteToggle.module.css";
+
+/** Saçılan noktaların açıları — altı nokta, altmışar derece, biraz kaydırılmış. */
+const SPARKS = [15, 75, 135, 195, 255, 315];
 
 /**
  * Favori kalbi — tıklamanın karşılığı ANINDA.
@@ -55,6 +59,11 @@ export function FavoriteToggle({
  */
 function HeartButton({ active, label }: { active: boolean; label: string }) {
   const { pending } = useFormStatus();
+  /* Kutlama TIKLAMAYA bağlı: sayfa açıldığında favori olan kalp oynamaz.
+     Sayaç her tıklamada artıyor ve anahtar olarak kullanılıyor — art arda
+     iki eklemede animasyon baştan oynuyor, yarıda kalan bir önceki
+     kaldığı yerden devam etmiyor. */
+  const [burst, setBurst] = useState<{ kind: "add" | "remove"; n: number } | null>(null);
 
   return (
     <button
@@ -68,7 +77,14 @@ function HeartButton({ active, label }: { active: boolean; label: string }) {
          sırasında tutuyor; ikinci gönderimi `onClick` engelliyor. */
       aria-disabled={pending}
       onClick={(event) => {
-        if (pending) event.preventDefault();
+        if (pending) {
+          event.preventDefault();
+          return;
+        }
+        setBurst((prev) => ({
+          kind: active ? "remove" : "add",
+          n: (prev?.n ?? 0) + 1,
+        }));
       }}
       aria-label={label}
       title={label}
@@ -86,7 +102,22 @@ function HeartButton({ active, label }: { active: boolean; label: string }) {
         pending && "cursor-default",
       )}
     >
-      <Heart weight={active ? "fill" : "duotone"} size={17} />
+      <span
+        key={burst?.n ?? 0}
+        className={styles.heart}
+        data-burst={burst?.kind}
+        aria-hidden="true"
+      >
+        <span className={styles.ring} />
+        {SPARKS.map((angle) => (
+          <span
+            key={angle}
+            className={styles.spark}
+            style={{ "--a": `${angle}deg` } as React.CSSProperties}
+          />
+        ))}
+        <Heart className={styles.icon} weight={active ? "fill" : "duotone"} size={17} />
+      </span>
     </button>
   );
 }
