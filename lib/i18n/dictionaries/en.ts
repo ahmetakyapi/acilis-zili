@@ -536,6 +536,8 @@ const en: typeof tr = {
     readAnalysis: "Read Analysis",
     shareTitle: "Share This Analysis",
     now: "15-Min Delayed",
+    currentPrice: "Current Price",
+    thisEdition: "This Edition",
     atAnalysis: "At Analysis",
     levelPassed: "Passed",
     levelBroken: "Broken",

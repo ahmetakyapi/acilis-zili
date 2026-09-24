@@ -65,6 +65,7 @@ export function PriceMap({
   resistances,
   verdict,
   priceLabel,
+  priceBadge = null,
   presentation = "axis",
   locale,
   t,
@@ -78,6 +79,8 @@ export function PriceMap({
   resistances: readonly number[];
   verdict: VerdictKey;
   priceLabel: string;
+  /** Fiyatın gecikme rozeti ("15 Dakika Gecikmeli") — yalnızca canlı kotasyonda. */
+  priceBadge?: string | null;
   presentation?: "axis" | "levels";
   locale: Locale;
   t: Dictionary;
@@ -142,10 +145,12 @@ export function PriceMap({
           const crossed = crossedState(rung.kind, distance);
           const value = rung.kind === "entry" && rung.high !== undefined ? formatRange(rung.price, rung.high, locale) : money(rung.price);
           return <li key={`${rung.kind}-${rung.price}`} className={styles.levelRow} data-kind={kindOf(rung)}>
-            <span className={styles.levelLabel}>{labelOf(rung)}{crossed && <b className={styles.mapCrossed} data-state={crossed}>{crossed === "passed" ? t.technical.levelPassed : t.technical.levelBroken}</b>}</span>
+            <span className={styles.levelLabel}>{labelOf(rung)}{rung.kind === "price" && priceBadge && <span className={styles.delayBadge}>{priceBadge}</span>}{crossed && <b className={styles.mapCrossed} data-state={crossed}>{crossed === "passed" ? t.technical.levelPassed : t.technical.levelBroken}</b>}</span>
             <strong className={cn(styles.levelPrice, "numeral")}>{rung.kind === "entry" && value.includes("–") ? <>{value.split("–")[0]}–<wbr />{value.split("–")[1]}</> : value}</strong>
+            {/* Güncel fiyatın satırı ölçünün SIFIRI: kendine uzaklığı yok.
+                Orada bir "–" duruyordu ve eksik bir veri gibi okunuyordu. */}
             <span className={styles.levelDistance} data-dir={distance != null && distance > 0 ? "up" : distance != null && distance < 0 ? "down" : "flat"}>
-              <span className="numeral">{distance !== null ? formatPercent(distance, locale, 1) : NO_VALUE}</span>
+              {rung.kind !== "price" && <span className="numeral">{distance !== null ? formatPercent(distance, locale, 1) : NO_VALUE}</span>}
               {distance !== null && <i aria-hidden className={styles.levelDistanceTrack}><b style={{ width: `${Math.abs(distance) / extent * 50}%`, left: distance < 0 ? `${50 - Math.abs(distance) / extent * 50}%` : "50%" }} /></i>}
             </span>
           </li>;

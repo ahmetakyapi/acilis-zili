@@ -47,7 +47,6 @@ import {
   directionOf,
   directionText,
   formatEtDateCompact,
-  formatEtDateLong,
   formatPercent,
   formatPrice,
   NO_VALUE,
@@ -190,14 +189,22 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
      (eski adıyla "Şu An"; gerekçe `livePriceLabel`de). */
   /* "Şu An" burada da SEMBOL BAŞINA kanıtlanıyor; gerekçesi liste
      sayfasında yazılı. */
+  const live =
+    quote !== null &&
+    status.session === "regular" &&
+    quotes.ok &&
+    !quotes.stale &&
+    isSessionTrade(quote.tradedAt, status);
+  /* GÜNCEL FİYAT + GECİKME ROZETİ (24 Eylül). Etiket "15 Dakika Gecikmeli"
+     idi: okuyucu sayının NE olduğunu değil yalnızca ne kadar geç olduğunu
+     okuyordu. Artık ad "Güncel Fiyat", gecikme yanında bir rozet — aynı
+     dürüstlük, doğru sırada. Kapak ve harita aynı iki parçayı kullanıyor. */
   const priceLabel = !quote
     ? t.technical.atAnalysis
-    : status.session === "regular" &&
-        quotes.ok &&
-        !quotes.stale &&
-        isSessionTrade(quote.tradedAt, status)
-      ? t.technical.now
+    : live
+      ? t.technical.currentPrice
       : t.market.lastPrice;
+  const priceBadge = live ? t.technical.now : null;
   const next = nextEdition(new Date(), holidays);
   const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
   const reading = planReading(verdict, price, row);
@@ -295,28 +302,39 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
               {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
             </div>
             </div>
-            <p className={styles.coverMeta}>
-              {slotLabel(row.slot, t)} · {formatEtDateLong(row.sessionDate, locale)} ·{" "}
-              <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
-            </p>
-            {/* SIRADAKİ YAYIN — okuyucunun ikinci sorusu.
-                Künye bu yayının saatini söylüyordu ama bir sonrakininkini
-                hiçbir yer söylemiyordu: okuyucu elindeki görüşün ne kadar
-                taze olduğunu görüyor, NE KADAR SÜRE geçerli olduğunu
-                görmüyordu. Cuma akşamı açılan bir sayfada "pazartesi
-                sabaha kadar böyle" bilgisi tek başına sayfanın yarısı
-                kadar iş görüyor. Tarih yalnızca BUGÜN değilse yazılıyor;
-                bugünse fazladan bir kelime olurdu (damganın kendi
-                kuralıyla aynı). */}
-            {next && (
-              <p className={styles.coverNext}>
-                {t.technical.nextEdition} · {slotLabel(next.slot, t)} ·{" "}
-                <span className="numeral">{editionClock(next.at, locale)}</span>
-                {todayEt(next.at) !== status.etDate && (
-                  <> · {formatEtDateCompact(todayEt(next.at), locale)}</>
+            {/* İKİ KÜNYE AYNI IZGARADA (24 Eylül). "Seans İçi · 24 Eylül
+                Perşembe · 19:45 TR" ile "Sıradaki Yayın · Kapanış Öncesi ·
+                21:45 TR" iki düz satırdı: ilkinin adı yoktu, parçaların
+                sırası farklıydı ve saatler alt alta gelmiyordu. Artık bir
+                tanım listesi — solda ad, sağda dilim ve saat AYNI SÜTUNLARDA
+                (`subgrid`). Tarih yalnızca BUGÜN değilse yazılıyor; iki satır
+                aynı kuralla (sıradaki yayının kuralı zaten buydu). */}
+            <dl className={styles.coverStamps}>
+              <dt>{t.technical.thisEdition}</dt>
+              <dd>
+                <span>{slotLabel(row.slot, t)}</span>
+                <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
+                {row.sessionDate !== status.etDate && (
+                  <span>{formatEtDateCompact(row.sessionDate, locale)}</span>
                 )}
-              </p>
-            )}
+              </dd>
+              {/* SIRADAKİ YAYIN — okuyucunun ikinci sorusu: elindeki görüş
+                  NE KADAR SÜRE geçerli. Cuma akşamı açılan bir sayfada
+                  "pazartesi sabaha kadar böyle" bilgisi tek başına sayfanın
+                  yarısı kadar iş görüyor. */}
+              {next && (
+                <>
+                  <dt>{t.technical.nextEdition}</dt>
+                  <dd>
+                    <span>{slotLabel(next.slot, t)}</span>
+                    <span className="numeral">{editionClock(next.at, locale)}</span>
+                    {todayEt(next.at) !== status.etDate && (
+                      <span>{formatEtDateCompact(todayEt(next.at), locale)}</span>
+                    )}
+                  </dd>
+                </>
+              )}
+            </dl>
           </div>
           <div className={styles.coverThesis}>
             <span className={styles.thesisLabel}>{t.technical.thesisLabel}</span>
@@ -330,7 +348,10 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
 
         <div className={styles.coverSide}>
           <div className={styles.coverQuote}>
-            <span className={styles.stanceLabel}>{priceLabel}</span>
+            <div className={styles.priceHead}>
+              <span className={styles.priceLabel}>{priceLabel}</span>
+              {priceBadge && <span className={styles.delayBadge}>{priceBadge}</span>}
+            </div>
             <div className={styles.priceRow}>
               <span className={cn(styles.priceNow, "numeral")}>
                 {formatPrice(price, locale, { currency: true })}
@@ -402,6 +423,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             {...levelProps}
             verdict={verdict}
             priceLabel={priceLabel}
+            priceBadge={priceBadge}
             locale={locale}
             t={t}
           />
