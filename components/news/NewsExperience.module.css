@@ -14,7 +14,10 @@
 .cell > .row { grid-row:span 3; display:grid; grid-template-rows:subgrid; grid-template-columns:minmax(0,1fr) auto; }
 .cell > .row > .copy { grid-row:span 3; display:grid; grid-template-rows:subgrid; }
 .cell > .row > :not(.copy) { grid-row:span 3; align-self:start; }
-.list > li:first-child { grid-column:1/-1; border:1px solid var(--primary-faint); border-radius:var(--radius-feature); background:radial-gradient(ellipse at 95% 0,var(--primary-wash),transparent 65%),var(--premium-surface); box-shadow:var(--premium-shadow); margin-bottom:8px; }
+/* Öne çıkan haber düz yüzeyde (24 Eylül): köşe ışıması, mavi kenarlık ve
+   gölge 23 Eylül'ün tonla-derinlik taramasından kaçmıştı (gerekçe UtilityExperience.module.css başındaki not).
+   Onu listeden ayıran şey artık ölçüsü ve kutusu — rengi değil. */
+.list > li:first-child { grid-column:1/-1; border:1px solid var(--line); border-radius:var(--radius-feature); background:var(--premium-surface); margin-bottom:8px; }
 .row { position:relative; display:flex; align-items:flex-start; gap:18px; padding:22px 4px; min-height:156px; transition:background .25s; border-radius:12px; }
 .copy { min-width:0; flex:1; }
 .title { font-size:17px; line-height:1.4; letter-spacing:-.02em; font-weight:550; color:var(--text-strong); text-wrap:pretty; }
@@ -38,7 +41,7 @@
 .detail > header > p:first-child { font-size:12px; line-height:1.7; }
 .detail > :global(.panel) { border-radius:var(--radius-panel); background:var(--premium-surface); }
 .detail > div { font-size:16px; line-height:1.85; }
-.detail > :global(.panel):first-of-type { border-color:var(--primary-faint); background:linear-gradient(140deg,var(--primary-tint),transparent),var(--premium-surface); }
+.detail > :global(.panel):first-of-type { border-color:var(--primary-faint); background:var(--premium-surface); }
 @media(hover:hover) and (pointer:fine) { .row:hover { background:var(--primary-tint); } }
 @media(max-width:767px) { .page { gap:20px; } .list { grid-template-columns:1fr; } .row { padding:18px 2px; min-height:140px; gap:12px; } .title { font-size:16px; } .list > li:first-child .row { padding:20px; align-items:flex-start; gap:12px; } .list > li:first-child .title { font-size:24px; } .list > li:first-child .thumb { width:48px; height:48px; } .thumb { width:48px; height:48px; } .detail { gap:20px; } .detail > header { padding:18px 0; } .detail h1 { font-size:27px; } }
 @media(prefers-reduced-motion:reduce) { .row { transition:none; } }

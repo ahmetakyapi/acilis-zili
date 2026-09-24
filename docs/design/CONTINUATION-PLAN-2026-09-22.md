@@ -133,3 +133,14 @@ uygulanmıştı. Bu planın önceki ölçüm ve sıralama notları tarihsel kay�
 güncel birleşim tercihleri ve son tablo/bilgi kartı isteği
 [`REQUEST-AUDIT-2026-09-21.md`](REQUEST-AUDIT-2026-09-21.md) son bölümündedir.
 Özellikle tahvil/VIX tek kez ve şirket tablosundan sonra gösterilir.
+
+## 24 Eylül Durumu — Plan Kapandı
+
+İkinci fazın on bir maddesi 23–24 Eylül commit'leriyle bitti (`19840dc`
+takvim, `5d998b8` piyasalar şeridi, `b208ed7` marka ve okuma hattı,
+`bc60213`/`8750b76` yönetim paneli, `d33279f` teknik kartlar ve tonla
+derinlik, `bad3fdc` şirket detayı, bilanço detayı ve ana sayfa). Birinci
+fazın 5. adımından açık kalan kuyruk — favoriler, ayarlar, giriş/kayıt,
+boş ve hata durumları — ile tonla derinlik taramasının atladığı modüller
+24 Eylül'de kapandı; ayrıntı `PREMIUM-REDESIGN.md` son bölümünde. Bu plan
+artık tarihsel kayıttır; yeni iş yeni bir planla açılır.

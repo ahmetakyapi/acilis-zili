@@ -34,14 +34,13 @@
 .menuGrid li a > span > span:last-child { white-space:normal; overflow:visible; font-size:12px; line-height:1.6; margin-top:4px; }
 .menuGrid li a > svg:last-child { transition:transform .25s; }
 .settings { max-width:680px; }
-.settings > h1 { font-size:var(--heading-page); line-height:1.1; padding:10px 0 12px; }
 .settings dl > div { padding-block:5px; flex-wrap:wrap; }
 .settings dl dd { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
 .watchlist > div > :global(.panel) { background:var(--premium-surface); border-radius:var(--radius-panel); }
 .watchlist :is(input[type="text"],input:not([type])) { background:var(--premium-surface); border-radius:10px; }
 .legal { max-width:760px; padding:24px 28px; border:1px solid var(--line); border-radius:var(--radius-feature); background:var(--premium-surface); }
 .legal > header h1 { font-size:var(--heading-page); }
-.recovery { position:relative; margin-block:32px; padding:32px 24px; border:1px solid var(--primary-faint); border-radius:var(--radius-feature); background:var(--premium-surface); }
+.recovery { position:relative; margin-block:32px; padding:32px 24px; border:1px solid var(--line); border-radius:var(--radius-feature); background:var(--premium-surface); }
 .recovery h1 { font-size:28px; line-height:1.15; margin-inline:auto; }
 .recovery > div > p:not(:first-child) { font-size:14px; line-height:1.8; }
 .recovery nav { background:var(--premium-surface); }

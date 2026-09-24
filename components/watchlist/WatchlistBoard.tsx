@@ -108,9 +108,16 @@ export function WatchlistBoard({
       <NewListForm labels={labels} />
       {lists.length === 0 ? (
         <section className="panel">
+          {/* Boş durumun başlığı panelin h2'si ("her panelin bir h2'si
+              var"); gövdesi cümle. İkisi de gri 12-14 piksellik satırlardı
+              ve hangisinin başlık olduğu okunmuyordu. */}
           <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
-            <p className="text-sm text-soft">{labels.emptyAll}</p>
-            <p className="max-w-sm text-xs text-muted">{labels.emptyAllHint}</p>
+            <h2 className="text-read font-bold tracking-[-0.01em] text-strong">
+              {labels.emptyAll}
+            </h2>
+            <p className="max-w-sm text-sm leading-relaxed text-body">
+              {labels.emptyAllHint}
+            </p>
           </div>
         </section>
       ) : (

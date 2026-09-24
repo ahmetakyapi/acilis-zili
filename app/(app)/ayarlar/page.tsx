@@ -10,8 +10,9 @@ import {
 import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
 import { DeleteAccount } from "@/components/auth/DeleteAccount";
+import { PreferenceSettings } from "@/components/layout/preference-controls";
 import { Panel, PanelHeader, PageHeader } from "@/components/ui/primitives";
-import { getI18n } from "@/lib/i18n";
+import { getI18n, getTheme } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 
 /* Künye sabit Türkçeydi; sayfa zaten oturuma bağlı olduğu için dizine de
@@ -33,13 +34,13 @@ export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/giris?devam=/ayarlar");
 
-  const { t } = await getI18n();
+  const [{ locale, t }, theme] = await Promise.all([getI18n(), getTheme()]);
   const username = session.user.name ?? "";
 
   return (
     <MotionExperience className={`${polish.page} ${polish.settings} mx-auto w-full`}>
       <ScrollProgress />
-      <PageHeader title={t.settings.title} />
+      <PageHeader title={t.settings.title} subtitle={t.settings.subtitle} />
 
       <Panel>
         <PanelHeader title={t.settings.account} />
@@ -65,6 +66,26 @@ export default async function SettingsPage() {
             </button>
           </form>
 
+        </div>
+      </Panel>
+
+      {/* GÖRÜNÜM. Künye "dil ve tema tercihlerin" diyordu ve ikisi de yalnızca
+          başlıktaki avatarın altındaki panelde duruyordu; tercihi arayan
+          okuyucu ayarlara geliyor ve bulamıyordu. Denetimler hesap
+          menüsüyle AYNI kod (components/layout/preference-controls.tsx). */}
+      <Panel>
+        <PanelHeader title={t.settings.appearance} />
+        <div className="px-4 py-4 sm:px-5">
+          <PreferenceSettings
+            initialTheme={theme}
+            initialLocale={locale}
+            labels={{
+              theme: t.settings.theme,
+              themeLight: t.settings.themeLight,
+              themeDark: t.settings.themeDark,
+              language: t.settings.language,
+            }}
+          />
         </div>
       </Panel>
 
@@ -131,7 +152,6 @@ export default async function SettingsPage() {
         </div>
       </Panel>
 
-      <p className="text-xs text-muted">{t.data.delayedNote}</p>
     </MotionExperience>
   );
 }

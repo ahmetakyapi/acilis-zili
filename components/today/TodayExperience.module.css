@@ -182,7 +182,9 @@
 .brief h2 { font-size:clamp(25px, 2.2vw, 33px); line-height:1.16; letter-spacing:-.035em; max-width:30ch; }
 
 /* ---- Mercek ---- */
-.storySpotlight { overflow:hidden; border:1px solid var(--primary-faint); border-radius:20px; background:linear-gradient(150deg,var(--primary-wash),var(--premium-surface) 65%); }
+/* Öne çıkan Mercek düz yüzeyde; ayrımı mavi kenarlık taşıyor, köşe
+   yıkaması değil (gerekçe UtilityExperience.module.css başındaki not). */
+.storySpotlight { overflow:hidden; border:1px solid var(--primary-faint); border-radius:20px; background:var(--premium-surface); }
 .storySpotlight h3 { color:var(--text-strong); font-size:clamp(26px, 2.3vw, 33px); font-weight:650; line-height:1.13; }
 .storySpotlight > a { padding:26px; }
 /* Mobile Mercek measured 1050px at 390px: treat the archive as a numbered
@@ -392,4 +394,5 @@
   .indexCard { transition:none; }
   .indexValue[data-flash] { animation:none; }
   .storyRow,.storyRowMeta svg { transition:none; }
+  .storyRow:hover .storyRowMeta svg { transform:none; }
 }

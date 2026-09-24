@@ -7,7 +7,12 @@
 .feature > span:first-child { display:grid; place-items:center; width:28px; height:28px; flex-shrink:0; border-radius:9px; background:var(--primary-wash); color:var(--primary-ink); font-size:10px; font-weight:600; }
 .feature > span:last-child { font-size:13px; line-height:1.65; }
 .features > p:last-child { font-size:12px; line-height:1.8; margin-top:12px; max-width:55ch; }
-.formCard { position:relative; padding:30px; border:1px solid var(--primary-faint); border-radius:var(--radius-feature); background:radial-gradient(ellipse at 95% 0,var(--primary-wash),transparent 58%),var(--premium-surface); box-shadow:var(--premium-shadow); }
+/* TONLA DERİNLİK (24 Eylül). Form kartı sağ üst köşeden yayılan bir
+   `--primary-wash` ışıması, mavi kenarlık ve `--premium-shadow` taşıyordu —
+   23 Eylül'de kapaklardan ve panellerden kaldırılan üç şeyin üçü de burada
+   kalmıştı (gerekçe UtilityExperience.module.css başındaki not). Mavi
+   yalnızca etkileşimde: kartın kendisi değil, içindeki düğme. */
+.formCard { position:relative; padding:30px; border:1px solid var(--line); border-radius:var(--radius-feature); background:var(--premium-surface); }
 .formCard h1 { font-size:28px; line-height:1.15; font-weight:600; letter-spacing:-.04em; }
 .formCard > p { font-size:13px; line-height:1.7; }
 .formCard form { gap:18px; }

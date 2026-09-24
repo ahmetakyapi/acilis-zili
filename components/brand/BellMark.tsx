@@ -1,22 +1,22 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Marka işareti — lacivert karo içinde tören zili.
+ * Marka işareti — mavi degrade karo içinde tören zili.
  *
- * GECE MAVİSİ (23 Eylül). Karo bir dönem açık maviden koyu maviye inen bir
- * degradeydi (#6fd0ff → #124f9e) ve sitenin accent mavisiyle aynı aileden
- * geliyordu: başlıktaki işaret, hemen yanındaki seçili sekmeyle ve
- * birincil düğmelerle aynı renkte olduğu için bir marka değil bir düğme
- * gibi okunuyordu. Dört seçenek yan yana çizildi (scratchpad
- * `zil-isareti.html`); lacivert karo seçildi. Sitede başka hiçbir yüzey bu
- * tonu taşımıyor, yani işaret artık kendi başına tanınıyor.
+ * KLASİK TÖREN ZİLİ (24 Eylül). Dört seçenek yan yana çizildi ("Zil İşareti
+ * Seçenekleri" artifact'i): bugünkü kubbe, 1 · Klasik Tören Zili, 2 · Çalan
+ * Zil, 3 · Gece Mavisi. 23 Eylül'de 3 seçildi — lacivert karo, beyaz zil,
+ * marka mavisi ağız çubuğu; gerekçesi açık mavi degradenin yanındaki seçili
+ * sekme ve birincil düğmelerle karışmasıydı. Bir gün sonra sahibi 1'e
+ * döndü: karo açık maviden gece mavisine iner (#5cc4ff → #1f86e0 →
+ * #0b3f86, eski degradeden bir kademe derin), üst yarıda beyaz bir
+ * parlaklık taşır, zil ağız çubuğuyla birlikte bütünüyle beyazdır. Sitenin
+ * ve paylaşım kartlarının kimliği eski degradenin ailesinde kalıyor.
  *
- * İki tema, TEK işaret. "Açıkta lacivert, koyuda mavi degrade" de
- * konuşuldu ve bırakıldı: sekme ikonu, ana ekran ikonu ve paylaşım kartı
+ * İki tema, TEK işaret: sekme ikonu, ana ekran ikonu ve paylaşım kartı
  * temayı bilemiyor, yani iki işaret bir yerde mutlaka yan yana düşerdi.
- * Koyu temada karo zemine yaklaşıyor (#0a1a31 köşe, #070d16 zemin);
- * onu ayıran açık mavi iç kenar (`--mark-edge`), koyu temada bir kademe
- * daha belirgin.
+ * Koyu temada karonun koyu köşesi zemine yaklaşıyor; onu ayıran beyaz iç
+ * kenar (`--mark-edge`) koyu temada bir kademe daha belirgin.
  *
  * Renkler token: `--mark-gradient` (karo), `--mark-edge` (iç kenar),
  * `--mark-ink` (zil) ve `--mark-lip` (ağız çubuğu). `--on-primary` KULLANILMAZ:
@@ -32,8 +32,9 @@ import { cn } from "@/lib/utils";
  * kubbeydi; 16 pikselde bir kutuya dönüşüyordu. Omuz ve açılan etek o boyda
  * da zil diye okunuyor.
  *
- * Ağız çubuğu marka mavisinde (`--mark-lip`): sitenin imzası olan gün
- * şeridinin yankısı ve lacivert karoda gözün ilk tuttuğu yer.
+ * Ağız çubuğunun kendi token'ı var (`--mark-lip`) ama bugün zille aynı
+ * beyaz: Gece Mavisi seçeneğinde marka mavisindeydi, mavi karoda o renk
+ * zemine karışıyor.
  */
 export const BELL_HANGER = { x: 118, y: 40, width: 20, height: 16, rx: 8 };
 export const BELL_BODY_PATH =

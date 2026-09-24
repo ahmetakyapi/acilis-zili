@@ -20,8 +20,12 @@
 .indexOverview { min-width:0; }
 .indexGrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
 .indexLink { min-width:0; border-radius:14px; }
-.indexCard { position:relative; min-height:142px; height:100%; overflow:hidden; padding:15px 16px; border-radius:14px; background:var(--premium-surface); transition:border-color .25s,box-shadow .25s; }
-.indexLink[aria-current="true"] .indexCard { border-color:var(--primary-faint); background:radial-gradient(ellipse at 100% 0,var(--primary-wash),transparent 75%),var(--premium-surface); box-shadow:0 5px 16px var(--primary-wash); }
+.indexCard { position:relative; min-height:142px; height:100%; overflow:hidden; padding:15px 16px; border-radius:14px; background:var(--premium-surface); transition:border-color .25s,background-color .25s; }
+/* Seçili endeks TONLA işaretli (24 Eylül): köşe ışıması ve 16 piksellik
+   mavi gölge 23 Eylül taramasından kaçmıştı (gerekçe UtilityExperience.module.css başındaki not). Seçim bir
+   etkileşim durumu, o yüzden mavi burada yerinde — ama zemin tonu ve
+   kenarlık olarak, `.panel-hover` diliyle. */
+.indexLink[aria-current="true"] .indexCard { border-color:var(--primary-faint); background:var(--primary-tint); }
 .identity { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 8px; }
 .identity > p:first-child { color:var(--text-strong); font-size:13px; font-weight:600; }
 .identity > p:last-child { color:var(--text-muted); font-size:10px; }
@@ -33,7 +37,7 @@
 .indexStamp { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:5px 12px; margin-top:9px; color:var(--text-muted); font-size:10px; }
 .indexSkeleton,.indexUnavailable { min-height:176px; border-radius:14px; }
 .indexUnavailable { display:grid; place-items:center; }
-.breadth { border-radius:20px; background:radial-gradient(ellipse at 100% 0,var(--primary-wash),transparent 65%),var(--premium-surface); overflow:hidden; }
+.breadth { border-radius:20px; background:var(--premium-surface); overflow:hidden; }
 .movers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
 .mover { border-radius:18px; overflow:hidden; background:var(--premium-surface); }
 .mover > div:first-child { padding-block:12px; }
@@ -47,7 +51,7 @@
 .members tbody tr:hover,.members tbody tr:focus-within { background:var(--primary-tint); box-shadow:inset 3px 0 var(--primary); }
 .members tbody td { padding-block:11px; }
 .page :is(a,button):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
-@media(hover:hover) and (pointer:fine) { .indexLink:hover .indexCard { border-color:var(--primary); box-shadow:var(--premium-shadow); } }
+@media(hover:hover) and (pointer:fine) { .indexLink:hover .indexCard { border-color:var(--primary); } }
 @media(max-width:1023px) { .marketHeader { grid-template-columns:minmax(0,1fr); grid-template-areas:"mast" "cards" "pulse"; grid-template-rows:auto; gap:18px; } .masthead > header > p { max-width:60ch; } .spark { flex:none; height:38px; } }
 @media(max-width:767px) {
  .page { gap:16px; }

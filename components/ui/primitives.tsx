@@ -362,35 +362,6 @@ export function TimingChip({
   );
 }
 
-/**
- * Sembol kutusu — gerçek logo geldiğinde aynı kutuya oturur, şimdilik
- * sembolün ilk iki harfi duruyor.
- */
-export function SymbolBadge({
-  symbol,
-  size = "md",
-  className,
-}: {
-  symbol: string;
-  size?: "sm" | "md";
-  className?: string;
-}) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "flex shrink-0 items-center justify-center border border-line bg-primary-wash font-bold tracking-[-0.02em] text-primary-ink",
-        size === "sm"
-          ? "size-8 rounded-md text-tiny"
-          : "size-11 rounded-md text-base",
-        className,
-      )}
-    >
-      {symbol.slice(0, 2)}
-    </span>
-  );
-}
-
 /* --------------------------------------------------------------------------
    Sekme şeridi — alt çizgili gezinme
 
@@ -500,7 +471,8 @@ export function TabItem({
    kuralı kendi taşıyor: `overflow-hidden` + kendi köşe yarıçapı, kenarlık
    yok.
 
-   Logo yoksa `SymbolBadge`e düşer — o düşüş de her yerde ayrı yazılıyordu.
+   Logo yoksa sembolün ilk iki harfine düşer — o düşüş de her yerde ayrı
+   yazılıyordu, artık karonun kendi içinde.
    -------------------------------------------------------------------------- */
 
 const LOGO_TILE_SIZE = {

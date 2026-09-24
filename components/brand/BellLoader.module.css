@@ -1,0 +1,133 @@
+/* Zil çalıyor — gerekçe ve ritim BellLoader.tsx'te.
+   Döngü tek değişkende (`--bell-cycle`): gövde, tokmak, halkalar ve karonun
+   parıltısı aynı saate bağlı; biri kayarsa vuruş ile ses ayrışıyor. */
+.stage {
+  --bell-cycle: 2.2s;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--bell-size);
+  height: var(--bell-size);
+  flex-shrink: 0;
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: calc(var(--bell-size) / 3);
+  background: var(--mark-gradient);
+  box-shadow: var(--mark-shadow), inset 0 0 0 1px var(--mark-edge);
+  animation: bell-tile var(--bell-cycle) var(--ease-brand) infinite;
+}
+
+/* Vuruş anında karonun üzerinden geçen tek bir ışık — metal parlıyor.
+   Karonun kendi `overflow:hidden`ı onu köşelerden kırpıyor. */
+.tile::after {
+  content: "";
+  position: absolute;
+  inset: -20% -60%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgb(255 255 255 / 0.32) 50%,
+    transparent 60%
+  );
+  transform: translateX(-70%);
+  animation: bell-glint var(--bell-cycle) var(--ease-brand) infinite;
+  pointer-events: none;
+}
+
+/* Dönme noktası ASKININ DİBİ: askı karoya çakılı, altındaki her şey ondan
+   sarkıyor. `view-box` kutusu sayesinde nokta görüş kutusu biriminde
+   yazılıyor ve zil hangi boyda çizilirse çizilsin aynı yerde kalıyor. */
+.body,
+.clapper {
+  transform-box: view-box;
+  transform-origin: 128px 50px;
+}
+
+.body {
+  animation: bell-swing var(--bell-cycle) cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+
+.clapper {
+  animation: bell-clapper var(--bell-cycle) cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+
+.ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--bell-size) / 3);
+  border: 1.5px solid var(--primary);
+  opacity: 0;
+  pointer-events: none;
+  animation: bell-ripple var(--bell-cycle) cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
+}
+
+/* İkinci halka ikinci vuruşta: gövdenin öteki uca varışı döngünün %21'i. */
+.ripple[data-late] {
+  animation-delay: calc(var(--bell-cycle) * 0.13);
+}
+
+@keyframes bell-swing {
+  0% { transform: rotate(0deg); }
+  8% { transform: rotate(-13deg); }
+  21% { transform: rotate(11deg); }
+  33% { transform: rotate(-7deg); }
+  44% { transform: rotate(4deg); }
+  53% { transform: rotate(-1.5deg); }
+  60%, 100% { transform: rotate(0deg); }
+}
+
+/* Aynı sarkaç, dört puan geç ve dörtte bir geniş — vuruşu yapan bu fark. */
+@keyframes bell-clapper {
+  0%, 2% { transform: rotate(0deg); }
+  12% { transform: rotate(-16deg); }
+  25% { transform: rotate(14deg); }
+  37% { transform: rotate(-9deg); }
+  48% { transform: rotate(5deg); }
+  57% { transform: rotate(-2deg); }
+  64%, 100% { transform: rotate(0deg); }
+}
+
+@keyframes bell-ripple {
+  0%, 7% { opacity: 0; transform: scale(1); }
+  9% { opacity: 0.55; transform: scale(1.02); }
+  42% { opacity: 0; transform: scale(1.62); }
+  100% { opacity: 0; transform: scale(1.62); }
+}
+
+@keyframes bell-glint {
+  0%, 7% { transform: translateX(-70%); }
+  30%, 100% { transform: translateX(70%); }
+}
+
+/* Vuruşta karo bir tık "tepkiyor" — 1,5 puanlık basınç, sonra geri. */
+@keyframes bell-tile {
+  0%, 6% { transform: scale(1); }
+  9% { transform: scale(0.965); }
+  16%, 100% { transform: scale(1); }
+}
+
+@keyframes bell-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body,
+  .clapper,
+  .ripple,
+  .tile::after {
+    animation: none;
+  }
+  .ripple {
+    display: none;
+  }
+  .tile {
+    animation: bell-breathe 2.4s ease-in-out infinite;
+  }
+}

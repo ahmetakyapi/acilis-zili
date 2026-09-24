@@ -76,7 +76,7 @@
 .upcomingPanel { position:relative; padding:22px; border:1px solid var(--primary-faint); border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
 .upcomingPanel::after { position:absolute; top:0; bottom:0; left:0; width:3px; background:var(--primary); content:""; }
 .eventKicker { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--primary); }
-.eventKicker p { color:var(--primary-ink); }
+.eventKicker h2 { color:var(--primary-ink); }
 .earningsDate { margin-top:14px; font-size:24px; line-height:1.2; font-weight:600; letter-spacing:-.045em; color:var(--text-strong); }
 .chapter { display:flex; min-width:0; flex-direction:column; gap:20px; padding-top:36px; scroll-margin-top:136px; }
 .sectionHeading { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:2px; }

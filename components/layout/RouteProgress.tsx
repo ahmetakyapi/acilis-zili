@@ -188,6 +188,18 @@ export function RouteProgress({ label }: { label: string }) {
     stopRouteProgress();
   }, [pathname, search]);
 
+  /* BAŞLIKTAKİ ZİL DE BEKLİYOR. Üstteki ray gözün kenarında kalıyor ve
+     420 ms'nin altındaki gezinmelerde ortadaki kart hiç çıkmıyor; o kısa
+     aralıkta tek işaret iki piksellik bir çizgiydi. Markanın kendi zili
+     gezinme sürdükçe hafifçe sallanıyor — kısa gezinmede tek bir salınım,
+     uzunda nefes gibi bir ritim. Öznitelik kökte çünkü işaret AppShell'de,
+     bu bileşenin ağacında değil; stil globals.css → `data-navigating`. */
+  useEffect(() => {
+    const root = document.documentElement;
+    root.toggleAttribute("data-navigating", running);
+    return () => root.removeAttribute("data-navigating");
+  }, [running]);
+
   useEffect(() => {
     if (run === 0) return;
     const slowTimer = window.setTimeout(() => setSlowRun(run), SLOW_AFTER);
@@ -206,8 +218,8 @@ export function RouteProgress({ label }: { label: string }) {
       {/* Gecikirse EKRANIN ORTASINDA marka işareti. Köşedeki küçük hap
           "bir şeyler oluyor" diyordu ama gözün gitmediği bir yerde
           duruyordu; ortadaki kart bekleyişi ürünün kendi işaretine
-          bağlıyor — zil, etrafında dönen accent halka ve altında tek
-          kelime. Katman tıklamayı ENGELLEMEZ (`pointer-events: none`):
+          bağlıyor — çalan bir zil (components/brand/BellLoader) ve
+          altında tek kelime. Katman tıklamayı ENGELLEMEZ (`pointer-events: none`):
           gösterge takılırsa ekranı kilitlemesin. */}
       {slow && !inlineFeedback && (
         <div className="route-loader"><LoadingMark label={label} /></div>

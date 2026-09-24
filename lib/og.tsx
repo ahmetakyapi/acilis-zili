@@ -99,15 +99,16 @@ export const BRAND_GRADIENT =
   "linear-gradient(145deg, #6fd0ff 0%, #2f95e8 46%, #124f9e 100%)";
 
 /**
- * Marka işareti — lacivert karo, beyaz zil, marka mavisi ağız çubuğu.
+ * Marka işareti — mavi degrade karo, üstte parlaklık, beyaz zil.
  * Sitedeki `--mark-*` token'larının açık tema değerleri; Satori CSS
  * değişkeni okumuyor. Kaynak ve gerekçe: components/brand/BellMark.tsx
  */
 export const MARK = {
-  tile: "linear-gradient(135deg, #17345c 0%, #0a1a31 100%)",
-  edge: "rgba(159, 212, 255, 0.2)",
+  tile:
+    "linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 50%), linear-gradient(150deg, #5cc4ff 0%, #1f86e0 48%, #0b3f86 100%)",
+  edge: "rgba(255, 255, 255, 0.18)",
   ink: "#ffffff",
-  lip: "#35b8ff",
+  lip: "#ffffff",
 } as const;
 
 /* ==========================================================================
