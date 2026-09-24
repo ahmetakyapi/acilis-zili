@@ -41,7 +41,7 @@
 .detail > header > p:first-child { font-size:12px; line-height:1.7; }
 .detail > :global(.panel) { border-radius:var(--radius-panel); background:var(--premium-surface); }
 .detail > div { font-size:16px; line-height:1.85; }
-.detail > :global(.panel):first-of-type { border-color:var(--primary-faint); background:linear-gradient(140deg,var(--primary-tint),transparent),var(--premium-surface); }
+.detail > :global(.panel):first-of-type { border-color:var(--primary-faint); background:var(--premium-surface); }
 @media(hover:hover) and (pointer:fine) { .row:hover { background:var(--primary-tint); } }
 @media(max-width:767px) { .page { gap:20px; } .list { grid-template-columns:1fr; } .row { padding:18px 2px; min-height:140px; gap:12px; } .title { font-size:16px; } .list > li:first-child .row { padding:20px; align-items:flex-start; gap:12px; } .list > li:first-child .title { font-size:24px; } .list > li:first-child .thumb { width:48px; height:48px; } .thumb { width:48px; height:48px; } .detail { gap:20px; } .detail > header { padding:18px 0; } .detail h1 { font-size:27px; } }
 @media(prefers-reduced-motion:reduce) { .row { transition:none; } }

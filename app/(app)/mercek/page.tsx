@@ -444,7 +444,7 @@ function LeadStory({
 
   return (
     <Link href={`/mercek/${story.slug}`} prefetch className={styles.lead} data-motion-reveal>
-      <section className="panel-hover overflow-hidden rounded-xl border border-primary-faint bg-[linear-gradient(160deg,var(--primary-wash),var(--primary-tint))] p-5 transition-colors sm:p-7">
+      <section className="panel-hover overflow-hidden rounded-xl border border-primary-faint bg-(--premium-surface) p-5 transition-colors sm:p-7">
         {/* İki kolon: solda okunacak metin, sağda yazının kadrosu. Kadro
             manşette bir tabloya dönüşüyor çünkü burada yer var ve bu
             yazıların anlattığı olay çoğu zaman birkaç şirketi birlikte

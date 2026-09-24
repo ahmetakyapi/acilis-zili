@@ -52,7 +52,7 @@ const en: typeof tr = {
     submitting: "Submitting…",
     error: "Something went wrong",
     retry: "Try Again",
-    noData: "No data",
+    noData: "No Data",
     noDataHint: "This data isn't available right now.",
     save: "Save",
     cancel: "Cancel",
@@ -364,7 +364,7 @@ const en: typeof tr = {
     alsoReporting: "Also Reporting",
     companyOne: "Company",
     companyMany: "Companies",
-    marketCapShort: "Mkt cap",
+    marketCapShort: "Mkt Cap",
     rangeWeek: "Week",
     rangeMonth: "Month",
     endOfWeekList: "End of the week. Switch the range to see a month ahead.",
@@ -499,7 +499,7 @@ const en: typeof tr = {
     emptyWatchlistHint:
       "When one of your watchlist companies reports, its analysis shows up here.",
     emptyFilter: "No analysis matches this filter.",
-    notFound: "Analysis not found",
+    notFound: "Analysis Not Found",
     notFoundHint: "The link may be stale; try again from the list.",
     signedOut: "Sign In to Use Your Watchlist",
     signedOutHint:
@@ -824,7 +824,7 @@ const en: typeof tr = {
     removeFromWatchlist: "Remove from Watchlist",
     metaWithSector: "{ad}, {sektor}. Price, chart, earnings history and news.",
     metaPlain: "{ad} stock: price, chart, earnings history and news.",
-    notFound: "Symbol not found",
+    notFound: "Symbol Not Found",
     notFoundHint: "Check the symbol or search for it again.",
     throttled: "Slow Down a Little",
     throttledHint:
@@ -1091,7 +1091,7 @@ const en: typeof tr = {
     empty: "No stories to show right now",
     readAtSource: "Read at Source",
     translated: "Translated to Turkish",
-    notFound: "Story not found",
+    notFound: "Story Not Found",
     notFoundHint: "This story may have been removed.",
     relatedSymbols: "Companies in This Story",
     related: "Related Stories",
@@ -1188,7 +1188,7 @@ const en: typeof tr = {
     empty: "Nothing published yet",
     emptyHint:
       "When something worth explaining happens in the market, it lands here.",
-    notFound: "Piece not found",
+    notFound: "Piece Not Found",
     notFoundHint: "The link may be stale; try again from the list.",
     fallbackNote:
       "This piece hasn't been translated to English yet. You're reading the Turkish original.",
@@ -1276,10 +1276,10 @@ const en: typeof tr = {
     themeLight: "Light",
     themeDark: "Dark",
     account: "Account",
-    privacyTitle: "Your data",
+    privacyTitle: "Your Data",
     privacyHint:
       "What is stored, why, where it goes and the full list of your rights are on the privacy page.",
-    privacyLink: "Privacy notice",
+    privacyLink: "Privacy Notice",
     deleteTitle: "Delete Account",
     deleteHint:
       "Your account and all watchlists are permanently removed. This cannot be undone.",

@@ -1175,7 +1175,7 @@ async function UpcomingEarnings({
 
   return (
     <Panel className={styles.upcomingPanel}>
-      <div className={styles.eventKicker}><p className="plate text-nano">{t.stock.nextEarnings}</p><CalendarBlank aria-hidden size={21} weight="duotone" /></div>
+      <div className={styles.eventKicker}><h2 className="plate text-nano">{t.stock.nextEarnings}</h2><CalendarBlank aria-hidden size={21} weight="duotone" /></div>
       <p className={cn("numeral", styles.earningsDate)}>
         {formatEtDateLong(next.reportDate, locale)}
       </p>

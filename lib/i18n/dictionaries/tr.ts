@@ -67,7 +67,7 @@ const tr = {
     submitting: "Gönderiliyor…",
     error: "Bir sorun oluştu",
     retry: "Tekrar Dene",
-    noData: "Veri yok",
+    noData: "Veri Yok",
     noDataHint: "Bu veri şu an alınamıyor.",
     save: "Kaydet",
     cancel: "İptal",
@@ -666,7 +666,7 @@ const tr = {
     emptyWatchlistHint:
       "Favorilerine eklediğin şirketlerden biri bilanço açıkladığında analizi burada görünür.",
     emptyFilter: "Bu filtreyle eşleşen analiz yok.",
-    notFound: "Analiz bulunamadı",
+    notFound: "Analiz Bulunamadı",
     notFoundHint: "Bağlantı eski olabilir; listeden tekrar dene.",
     signedOut: "Takip Listesi için Giriş Yap",
     signedOutHint:
@@ -1077,7 +1077,7 @@ const tr = {
        `{ad}` şirket adı ya da sembol, `{sektor}` varsa sektör. */
     metaWithSector: "{ad}, {sektor}. Fiyat, grafik, bilanço geçmişi ve haberler.",
     metaPlain: "{ad} hissesi: fiyat, grafik, bilanço geçmişi ve haberler.",
-    notFound: "Bu sembol bulunamadı",
+    notFound: "Bu Sembol Bulunamadı",
     notFoundHint: "Sembolü kontrol et veya arama kutusundan tekrar dene.",
     throttled: "Biraz Yavaşla",
     throttledHint:
@@ -1378,7 +1378,7 @@ const tr = {
     empty: "Şu an gösterilecek haber yok.",
     readAtSource: "Kaynakta Oku",
     translated: "Türkçeye Çevrildi",
-    notFound: "Haber bulunamadı",
+    notFound: "Haber Bulunamadı",
     notFoundHint: "Bu haber kaldırılmış olabilir.",
     relatedSymbols: "Haberde Geçen Şirketler",
     related: "Benzer Haberler",
@@ -1504,7 +1504,7 @@ const tr = {
     empty: "Henüz yayımlanmış yazı yok.",
     emptyHint:
       "Piyasada anlatmaya değer bir olay yaşandığında burada mercek altına alınır.",
-    notFound: "Yazı bulunamadı",
+    notFound: "Yazı Bulunamadı",
     notFoundHint: "Bağlantı eski olabilir; listeden tekrar dene.",
     /* Yazı henüz bu dile çevrilmediyse orijinal gösterilir; bu not onu söyler. */
     fallbackNote:

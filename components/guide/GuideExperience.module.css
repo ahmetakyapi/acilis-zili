@@ -61,4 +61,4 @@
  .guide .chapters > a[href^="/rehber/"] > span > span:first-child { font-size:15px; }
  .guide [data-guide-topic] > div:first-child h2 { font-size:22px; }
 }
-@media(prefers-reduced-motion:reduce) { .guide .chapters > a[href^="#"],.sheet,.balance,.column,.transmission { transition:none; } .guide .chapters > a:hover,.guide .chapters > a:hover .sheet,.guide .chapters > a:hover .balance,.guide .chapters > a:hover .column,.guide .chapters > a:hover .transmission { transform:none; translate:none; rotate:none; scale:none; } }
+@media(prefers-reduced-motion:reduce) { .guide .chapters > a[href^="#"],.sheet,.balance,.column,.transmission { transition:none; } .guide .chapters > a:hover,.guide .chapters > a:hover .sheet,.guide .chapters > a:hover .balance,.guide .chapters > a:hover .column,.guide .chapters > a:hover .transmission,.startCard:hover .startMeta > svg { transform:none; translate:none; rotate:none; scale:none; } }

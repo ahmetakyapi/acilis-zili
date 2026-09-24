@@ -156,9 +156,11 @@ export default async function MenuPage() {
       <div className={`${polish.menuGrid} grid gap-5 sm:grid-cols-2 lg:grid-cols-3`} data-motion-stagger>
         {groups.map((group) => (
           <Panel key={group.title} className="flex flex-col">
-            <p className="plate px-4 pb-3 pt-4 text-nano sm:px-5">
+            {/* Panelin başlığı — plaka görünümünde ama h2 ("her panelin bir
+                h2'si var"); ekran okuyucu grupları başlıkla geziyor. */}
+            <h2 className="plate px-4 pb-3 pt-4 text-nano sm:px-5">
               {group.title}
-            </p>
+            </h2>
             <ul>
               {group.entries.map((entry) => {
                 const Icon = entry.icon;

@@ -681,3 +681,36 @@ kontrolü** (dizin araması ve sıralamada korunması, mercek çipi, takvim
 görünümü, karşılaştırmada grafik sırası, teknik damga, kimlik balonu (22 Eylül'den beri dağılım logolarında), kartın
 kaplayan bağlantısı, harita hizası ve eksen uçları, seviye notlarının yeri,
 masthead işareti) başarılı. Build, lint ve build sonrası typecheck temiz.
+
+### Kalan Ekranlar, Marka İşareti ve Zil Çalan Yükleyici — 24 Eylül
+
+**Kalan ekranlar.** Ayarlar sayfası "dil ve tema tercihlerin" diyordu ama
+ikisi de yalnızca avatar menüsündeydi; Görünüm paneli eklendi ve
+denetimler menüyle aynı koddan geliyor
+(`components/layout/preference-controls.tsx`). Favorilerin boş durumu
+Title Case bir h2 aldı. Giriş/kayıt kartı, öne çıkan haber, makro ve
+rehber kartları, piyasaların seçili endeksi ve genişlik paneli, mercek
+kapağı, ilk on şirket şeridi ve Daha Fazla menüsü 23 Eylül'ün tonla
+derinlik taramasından kaçmıştı (köşe ışıması, renkli gölge, hover'da
+kalkma); hepsi düz yüzeyde, hover yalnızca kenarlık tonu. Ölçüm: sekiz
+rota × 1440/390/320 × iki tema = 48 yerleşim, taşma ve sayfa hatası yok.
+
+**Marka işareti 1 · Klasik Tören Zili.** 23 Eylül'de 3 · Gece Mavisi
+uygulanmıştı; sahibi 1'e döndü. Tek kaynak `BellMark` ve `--mark-*`;
+sekme, apple, PWA ikonları ve paylaşım kartları aynı değerleri okuyor,
+.ico/PNG'ler `build:favicon` ile üretildi.
+
+**Yükleyici: zil çalıyor.** Dönen koni halkası kalktı. Gövde askıdan
+sönümlü bir sarkaç gibi sallanıyor, tokmak dört puan geç ve dörtte bir
+geniş gelip vuruyor, ilk iki vuruşta karonun kenarından yuvarlak kare ses
+halkaları yayılıyor; döngünün son %40'ı sessiz (`components/brand/BellLoader`).
+Gezinme sürerken başlıktaki zil de hafifçe sallanıyor (`data-navigating`).
+Sayfa girişi tek bloktan kademeye geçti: kökün çocukları 45 ms arayla,
+en uzun giriş ≈0,5 s. Azaltılmış harekette sarkaç, halka ve kademe kapalı.
+Doğrulama: ağ yavaşlatılmış gerçek gezinmede iki temada kare kare çekildi.
+
+**Denetim.** Bağımsız tarama 25 bulgu çıkardı, doğrulananlar kapandı:
+dokuz Title Case ihlali (h1 olan "bulunamadı" başlıkları, "Veri Yok",
+EN "Your Data"/"Privacy Notice"/"Mkt Cap"), iki h2'siz panel (hisse
+sayfasının sıradaki bilanço kartı, menü grupları), iki azaltılmış hareket
+açığı ve iki ölü kod (`EarningsRhythm`, `SymbolBadge`).
