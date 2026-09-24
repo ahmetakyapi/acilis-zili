@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 
@@ -21,6 +21,7 @@ export default async function NewsNotFound() {
     <div className="mx-auto max-w-2xl">
       <EmptyState
         titleAs="h1"
+        scene="searching"
         title={t.news.notFound}
         hint={t.news.notFoundHint}
         action={

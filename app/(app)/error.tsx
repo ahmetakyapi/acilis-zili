@@ -4,7 +4,7 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 
 import { startTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { Button, Panel } from "@/components/ui/primitives";
 

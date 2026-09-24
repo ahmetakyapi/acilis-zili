@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
@@ -780,17 +780,18 @@ export default async function AnalysisDetailPage(
         headline={`${row.company} ${row.periodLabel}`}
         description={row.headline}
         path={analysisHref(symbol, period)}
-        locale={locale}
+        locale={row.locale as Locale}
         published={row.publishedAt}
+        modified={row.updatedAt}
       />
       <BreadcrumbJsonLd
-        locale={locale}
+        locale={row.locale as Locale}
         items={[
+          /* Sektör halkası YOK: adresi süzgeçli dizin (`?filtre=`) ve o
+             adresin canonical'ı süzgeçsiz dizin. Kırıntıda canonical olmayan
+             bir adres, arama motoruna dizine almayacağı bir sayfayı
+             gösteriyordu. Ekrandaki kırıntı sektörü taşımaya devam ediyor. */
           { name: t.analysis.title, path: "/bilancolar/analizler" },
-          {
-            name: sectorGroupLabel(group, locale),
-            path: `/bilancolar/analizler?filtre=${group.key}`,
-          },
           {
             name: `${row.company} · ${row.periodLabel}`,
             path: analysisHref(symbol, period),

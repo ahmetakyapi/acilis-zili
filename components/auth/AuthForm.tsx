@@ -4,7 +4,7 @@ import { Eye, EyeSlash } from "@phosphor-icons/react";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import styles from "./AuthExperience.module.css";
 import { useActionState, useState } from "react";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import type { AuthFormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";

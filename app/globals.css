@@ -179,8 +179,8 @@
      bir kademe açık başlıyor ki seçili sekme hâlâ seçilsin. Işık bandının
      en açık tonu (#2a86d8) 14 piksel yarı kalın metinde 3,9:1 — ve yalnızca
      geçiş anında görünüyor. */
-  --nav-gradient: linear-gradient(100deg, #3a4d63 0%, #1e6fbe 38%, #2a86d8 50%, #1e6fbe 62%, #3a4d63 100%);
-  --nav-gradient-active: linear-gradient(100deg, #0a2547 0%, #1e6fbe 38%, #2a86d8 50%, #1e6fbe 62%, #0a2547 100%);
+  --nav-gradient: linear-gradient(100deg, #24374e 0%, #1a64ae 38%, #2a86d8 50%, #1a64ae 62%, #24374e 100%);
+  --nav-gradient-active: linear-gradient(100deg, #071c38 0%, #1a64ae 38%, #2a86d8 50%, #1a64ae 62%, #071c38 100%);
 
   /* Marka karosunun oturma gölgesi — rozet hissi buradan geliyor. */
   --mark-shadow: 0 1px 2px rgb(13 92 182 / 0.22), 0 4px 10px rgb(13 92 182 / 0.16);
@@ -318,7 +318,7 @@
 
   --display-gradient-tight: linear-gradient(100deg, #eef5fc 0%, #58c4ff 100%);
 
-  --nav-gradient: linear-gradient(100deg, #b7c5d4 0%, #58c4ff 38%, #a9e0ff 50%, #58c4ff 62%, #b7c5d4 100%);
+  --nav-gradient: linear-gradient(100deg, #d2dce7 0%, #58c4ff 38%, #a9e0ff 50%, #58c4ff 62%, #d2dce7 100%);
   --nav-gradient-active: linear-gradient(100deg, #f2f7fc 0%, #58c4ff 38%, #a9e0ff 50%, #58c4ff 62%, #f2f7fc 100%);
 
   --mark-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 4px 12px rgb(0 0 0 / 0.35);
@@ -1916,7 +1916,7 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
   header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { align-self:stretch; margin-top:4px; }
 }
 .page-heading-copy.page-heading-copy { min-width:0; padding:0; align-self:start; }
-.page-heading-copy.page-heading-copy > .page-eyebrow { margin:0; min-height:18px; font-size:12px; line-height:18px; font-weight:600; letter-spacing:.04em; color:var(--primary-ink); }
+.page-heading-copy.page-heading-copy > .page-eyebrow { display:flex; align-items:center; gap:8px; margin:0; min-height:18px; font-size:12px; line-height:18px; font-weight:600; letter-spacing:.04em; color:var(--primary-ink); }
 .page-heading-copy[data-has-eyebrow="false"]::before { content:""; display:block; height:18px; }
 .page-heading-copy.page-heading-copy h1 { margin:8px 0 0; font-size:var(--heading-page); line-height:1.12; letter-spacing:-.045em; font-weight:600; max-width:none; }
 .page-heading-copy.page-heading-copy > p:not(.page-eyebrow),
@@ -1969,7 +1969,12 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
 .masthead-brand:focus-visible { outline:2px solid var(--line-focus); outline-offset:5px; }
 .masthead-nav { height:100%; justify-content:center; }
 .masthead-nav > ul { gap:clamp(2px,.5vw,10px); }
-.masthead-nav .masthead-link { font-size:.8125rem; font-weight:600; transition:color 180ms; }
+/* SEKMELER BİR TIK BÜYÜK VE KOYU (24 Eylül, sahibinin isteği). 13 → 14
+   piksel (1280'de 14 → 15), 600 → 650; degradenin koyu ucu da bir kademe
+   koyu (`--nav-gradient`). Sığma `usePriorityStrip`in işi: sığmayan sekme
+   kendiliğinden "Daha Fazla"ya iniyor. Varsayılan yazıda hiçbir genişlikte
+   inmediği ölçüldü (1024, 1100, 1280, 1440). */
+.masthead-nav .masthead-link { font-size:.875rem; font-weight:650; transition:color 180ms; }
 .masthead-nav .masthead-link:focus-visible > span:first-child { outline-offset:3px; }
 .masthead-dropdown { max-height:calc(100dvh - var(--app-bar-h) - 32px); overflow-y:auto; background:var(--overlay-surface); }
 .masthead-row { transition:background 180ms; }
@@ -1992,7 +1997,7 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
  .premium-masthead .masthead-search,.premium-masthead .masthead-account { width:40px; height:40px; min-width:40px; }
 }
 @media(min-width:1280px) {
- .masthead-nav .masthead-link { font-size:.875rem; }
+ .masthead-nav .masthead-link { font-size:.9375rem; }
  .premium-masthead .masthead-search { width:256px; padding:0 6px 0 5px; }
  .premium-masthead .masthead-search-icon { width:30px; height:30px; border-radius:999px; background:var(--primary-tint); }
 }
@@ -2041,3 +2046,122 @@ html[data-navigating] .masthead-brand > span:first-child svg { transform-origin:
    duruyordu. Pay bant + 12 piksel; bant güvenli alanı kendi taşıdığı için
    pay da taşıyor. `data-admin-shell` yönetim layout'unun kökünde. */
 html:has([data-admin-shell]) { scroll-padding-top: calc(env(safe-area-inset-top) + 56px); }
+
+
+/* --------------------------------------------------------------------------
+   SAYFA BAŞLIĞININ İMZASI (24 Eylül)
+
+   Her ekranın başlığı aynı kalıptan geliyor (`PageHeader`) ve sayfa
+   değişince yalnızca bloğun tamamı 8 piksel yükseliyordu — başlık, sayfanın
+   en büyük ve en çok okunan öğesi olduğu hâlde kendi girişi yoktu. Artık:
+
+   · Üst künyenin önünde 18 piksellik mavi bir çizgi soldan açılıyor
+     (sitenin gün şeridinin küçük bir yankısı) ve künye onu izliyor.
+   · Başlık bir maskenin ARKASINDAN yükseliyor: alt kenardan açılan bir
+     kırpma ile birlikte 35% aşağıdan yerine geliyor — gazete manşetinin
+     dizgiden çıkması gibi. Degradeli mürekkep bozulmuyor, çünkü kesilen
+     şey metnin kutusu, harfler değil.
+   · Açıklama satırı başlıktan sonra geliyor.
+
+   Hepsi `backwards`: bitişte geride dönüşüm ya da kırpma kalmıyor (gerekçe
+   yukarıdaki "Sayfa geçişi" notunda). Toplam ~0,75 saniye; içerik bu sırada
+   zaten okunur hâlde. Azaltılmış harekette hiçbiri yok.
+   -------------------------------------------------------------------------- */
+.page-heading-copy.page-heading-copy > .page-eyebrow::before {
+  content: ""; flex: none; width: 18px; height: 2px; border-radius: 1px;
+  background: var(--primary); transform-origin: left center;
+  animation: eyebrow-rule 520ms var(--ease-brand) backwards;
+}
+.page-heading-copy > .page-eyebrow { animation: eyebrow-in 420ms var(--ease-brand) 80ms backwards; }
+.page-heading-copy h1 { animation: title-rise 760ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms backwards; }
+.page-heading-copy > p:not(.page-eyebrow) { animation: eyebrow-in 520ms var(--ease-brand) 260ms backwards; }
+@keyframes eyebrow-rule { from { transform: scaleX(0); } }
+@keyframes eyebrow-in { from { opacity: 0; transform: translate3d(-6px, 0, 0); } }
+@keyframes title-rise {
+  from { clip-path: inset(0 0 100% 0); transform: translate3d(0, 35%, 0); }
+  to { clip-path: inset(0 0 -0.3em 0); transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   DEV KÜNYE — footer'ın dibinde kırpılmış marka adı (gerekçe SiteFooter).
+
+   Punto footer'ın KENDİ genişliğine bağlı (`cqi`) ve dile göre: "Opening
+   Bell" 17,2 cqi'de, daha kısa olan "Açılış Zili" 24,5 cqi'de kolonun
+   ~%92'sini dolduruyor (1440, 390 ve 320'de ölçüldü; ilk denemede Türkçe
+   ad aynı puntoda kolonun %65'inde kalıyordu). Kutu puntonun 1,1'i. İlk
+   hâlde 0,8'di ve "ç" ile "ş"nin çengellerini kesiyordu — ad "Acılıs
+   Zili" okunuyordu; 0,98'de de çengelin ucu gidiyordu. Türkçe adın imi
+   harfin parçası, kırpılamaz. Mürekkep manşet ailesinden ama
+   soluk uçlu kendi degradesi (maskeli metne opaklık verilmez —
+   `.display-ink` notu).
+   -------------------------------------------------------------------------- */
+/* Kap footer'ın kendisi: kutunun yüksekliği de adın puntosu da AYNI
+   genişliğe göre ölçülsün (kap kendi boyutunu kendine göre ölçemez). */
+footer:has(> .footer-wordmark) { container-type: inline-size; }
+.footer-wordmark { --wm-size: 17.2cqi; overflow: hidden; height: calc(var(--wm-size) * 1.1); margin-top: 4px; pointer-events: none; user-select: none; }
+html[lang="tr"] .footer-wordmark { --wm-size: 24.5cqi; }
+.footer-wordmark > span {
+  /* Alt dolgu ŞART: degrade mürekkep (`background-clip: text`) yalnızca
+     öğenin kendi kutusunu boyuyor ve satır yüksekliği 1'de çengeller ile
+     "g"nin kuyruğu kutunun dışında, mürekkepsiz kalıyordu — kutu ne kadar
+     uzun olursa olsun kesik görünüyordu. */
+  display: block; padding-bottom: 0.2em; font-size: var(--wm-size); line-height: 1; font-weight: 700; letter-spacing: -0.06em; white-space: nowrap;
+  color: var(--line-strong);
+}
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .footer-wordmark > span {
+    background-image: var(--wordmark-gradient);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+}
+/* Görünüme girerken aşağıdan yükseliyor — kaydırmaya bağlı, süreye değil.
+   Zaman çizelgesini tanımayan tarayıcıda ad yerinde duruyor. */
+@supports (animation-timeline: view()) {
+  .footer-wordmark > span {
+    animation: wordmark-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+  }
+}
+@keyframes wordmark-rise { from { transform: translate3d(0, 55%, 0); } to { transform: none; } }
+:root { --wordmark-gradient: linear-gradient(100deg, #c9d8ea 0%, #7fb3e6 55%, #3b8fd8 100%); }
+:root[data-theme="dark"] { --wordmark-gradient: linear-gradient(100deg, #243a55 0%, #25609c 55%, #3a9ae8 100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-heading-copy.page-heading-copy > .page-eyebrow::before,
+  .page-heading-copy > .page-eyebrow,
+  .page-heading-copy h1,
+  .page-heading-copy > p:not(.page-eyebrow),
+  .footer-wordmark > span { animation: none !important; }
+}
+
+/* --------------------------------------------------------------------------
+   Mürekkep açılışı — oturumun ilk yüklemesi (components/ink/InkSplash.tsx)
+   -------------------------------------------------------------------------- */
+.ink-splash-layer { display: none; }
+html.ink-splash .ink-splash-layer {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-content: center; justify-items: center; gap: 2px;
+  background: var(--page-bg);
+  /* Emniyet: hidrasyon hiç gelmese de katman 3,8 saniyede kalkıyor (en geç
+     hidrasyon 0,9 s + sahne 2,3 s + imza 0,28 s + kapanış 0,42 s = 3,9 s). */
+  animation: ink-splash-safety 0.4s ease 3.8s both;
+}
+/* Sayfa kilitlenmiyor, bilinçli: kilit `html` sınıfına bağlı olurdu ve
+   hidrasyon hiç gelmezse sınıf da kalkmazdı. Emniyet katmanı 4 saniyede
+   gizliyor ama kaydırma kilidi sayfada ömür boyu kalırdı. Katman zaten tam
+   ekran ve tekerlekle kapanıyor. */
+html.ink-splash-out .ink-splash-layer {
+  animation: ink-splash-out 0.42s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.ink-splash-canvas { width: min(78vw, 340px); aspect-ratio: 320 / 230; }
+.ink-splash-name {
+  margin-top: -14px;
+  font-size: 15px; font-weight: 650; letter-spacing: 0.01em;
+  color: var(--text-strong);
+  animation: ink-splash-name 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) 1.75s both;
+}
+@keyframes ink-splash-name { from { opacity: 0; transform: translateY(6px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes ink-splash-out { to { opacity: 0; transform: scale(1.015); visibility: hidden; } }
+@keyframes ink-splash-safety { to { opacity: 0; visibility: hidden; } }

@@ -1,6 +1,7 @@
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
-import Link from "next/link";
+import NextLink from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { redirect } from "next/navigation";
 import {
   ShieldCheck,
@@ -98,13 +99,16 @@ export default async function SettingsPage() {
         <Panel>
           <PanelHeader title="Yönetim" />
           <div className="px-4 py-4 sm:px-5">
-            <Link
+            {/* Dil öneksiz: panel yalnızca Türkçe. `/en/admin` de açılır (proxy
+                öneki düşürüyor) ama panelin kendi bağlantıları öneksiz ve
+                okuyucu ilk tıklamada Türkçe adrese geçerdi. */}
+            <NextLink
               href="/admin"
               className="inline-flex min-h-11 w-fit items-center gap-2 text-base font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-10"
             >
               <SlidersHorizontal weight="duotone" size={16} />
               Yönetim Paneline Git
-            </Link>
+            </NextLink>
           </div>
         </Panel>
       )}

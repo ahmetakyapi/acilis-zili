@@ -1,7 +1,7 @@
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/news/NewsExperience.module.css";
 import type { Metadata } from "next";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
 import { NewsImage } from "@/components/news/NewsImage";
 import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react/dist/ssr";

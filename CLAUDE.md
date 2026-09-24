@@ -96,6 +96,17 @@ Kenarlık yalnızca görsel OLMAYAN yer tutucularda kalır. Elimizdeki tek gerç
 görsel kaynağı şirket logoları (`symbols.logo_url`, Finnhub): mercek kapakları
 ve haber künyeleri ondan besleniyor.
 
+**Mürekkep sahneleri** (`lib/ink/`, `components/ink/`): fotoğraf yerine
+çizimin ikinci ayağı. Canvas 2D, tohumlu ve deterministik — her sahne
+`render(ctx, t)` saf fonksiyonu, durum tutan parçacık yok; hareketi azaltan
+okuyucuya son kare tek çağrıyla basılıyor. Karakter markanın zili (gözler,
+gülümseme), renkler temadan (`--text-strong` mürekkep, `--brass` kıvılcım;
+mavi YOK). Sahneler DÖNMEZ: görünüme girince bir kez oynar ve oturur.
+Yerleri: oturumun ilk yüklemesindeki açılış (`InkSplash`, botlara ve
+hareketi azaltana hiç açılmaz), sayfa düzeyindeki boş durumlar
+(`EmptyState scene=`) ve haberler kapağı. Panel içindeki tek satırlık boş
+durumlara sahne konmaz.
+
 ## Ekran düzeni: aynı sıra, her ekranda
 
 Ekranlar tek tek tasarlandı ve her biri kendi çözümünü buldu; sonuç, aynı

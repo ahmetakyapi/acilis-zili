@@ -23,6 +23,7 @@ export default async function TechnicalNotFound() {
   return (
     <EmptyState
       titleAs="h1"
+      scene="searching"
       title={t.technical.notListed}
       hint={t.technical.notListedHint.replace("{n}", String(TECHNICAL_SYMBOLS.length))}
       action={

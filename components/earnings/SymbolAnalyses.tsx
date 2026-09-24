@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import {

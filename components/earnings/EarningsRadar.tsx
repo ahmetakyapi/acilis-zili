@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowUpRight, CalendarBlank } from "@phosphor-icons/react/dist/ssr";
 import { LogoTile } from "@/components/ui/primitives";
 import { SpotlightCard } from "@/components/motion/PremiumMotion";

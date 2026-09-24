@@ -1,6 +1,6 @@
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import {
   Bell,
   BookOpen,
@@ -41,8 +41,11 @@ import { pageMetadata } from "@/lib/page-meta";
  * (min 52px) — sekme çubuğundan sonra en çok kullanılacak ekran burası.
  */
 
+/* Dizine girmez ama bağlantıları İZLENİR: sayfanın kendi içeriği yok, bütün
+   değeri gösterdiği ekranlarda. */
 export const generateMetadata = pageMetadata({
   path: "/menu",
+  robots: { index: false, follow: true },
   tr: {
     title: "Menü",
     description:

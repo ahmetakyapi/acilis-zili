@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 
@@ -18,6 +18,7 @@ export default async function StockNotFound() {
        taşımıyordu — okuyucu ortalanmış iki cümleyle baş başa kalıyordu. */
     <EmptyState
       titleAs="h1"
+      scene="searching"
       title={t.stock.notFound}
       hint={t.stock.notFoundHint}
       action={

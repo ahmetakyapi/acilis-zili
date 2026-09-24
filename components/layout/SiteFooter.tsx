@@ -1,5 +1,5 @@
 import polish from "@/components/motion/UtilityExperience.module.css";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { GithubLogo } from "@phosphor-icons/react/dist/ssr";
 import { BellMark } from "@/components/brand/BellMark";
 import { getI18n } from "@/lib/i18n";
@@ -120,7 +120,7 @@ export async function SiteFooter() {
           kapatıyor: burası sayfanın en dibi, başparmağın en zor nişan aldığı
           yer ve ölçüldüğünde 33 piksel çıkıyordu — sitenin kendi standardı
           44. Görünür satır aynı kalıyor. */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-tiny text-muted">
+      <div className={`${polish.footerBase} flex flex-wrap items-center gap-x-4 gap-y-2 text-tiny text-muted`}>
         <span>{t.footer.copyright}</span>
         <Link
           href="/kvkk"
@@ -138,6 +138,18 @@ export async function SiteFooter() {
           <GithubLogo weight="fill" size={14} aria-hidden />
           {t.footer.builtBy}
         </a>
+      </div>
+
+      {/* DEV KÜNYE (24 Eylül). Sayfanın dibi bir liste bağlantıyla
+          bitiyordu; site kendi adını en son 34 piksellik bir işaretle
+          söylüyordu. Artık footer'ın dibinde kolon genişliğinde, alt
+          kenarından kırpılmış dev bir ad — gazetenin son sayfasındaki
+          künye gibi. Süs: `aria-hidden`, ad zaten yukarıda bağlantı olarak
+          okunuyor. Kaydırma zaman çizelgesini tanıyan tarayıcıda görünüme
+          girerken yükseliyor; tanımayanda yerinde duruyor (globals.css →
+          "Dev künye"). */}
+      <div className="footer-wordmark" aria-hidden="true">
+        <span>{t.brand.name}</span>
       </div>
     </footer>
   );

@@ -275,7 +275,7 @@ export default async function AnalysesPage(
 
       {all.length === 0 ? (
         <Panel>
-          <EmptyState title={t.analysis.empty} hint={t.analysis.emptyHint} />
+          <EmptyState title={t.analysis.empty} hint={t.analysis.emptyHint} scene="chart" />
         </Panel>
       ) : (
         <div className={analysisStyles.workspace} data-has-week={thisWeek.length > 0} data-has-feature={!!featured}>
@@ -416,6 +416,7 @@ export default async function AnalysesPage(
             {rows.length === 0 ? (
               <Panel>
                 <EmptyState
+                  scene="searching"
                   title={t.analysis.emptyFilter}
                   action={
                     <Link

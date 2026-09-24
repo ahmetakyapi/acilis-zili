@@ -1316,7 +1316,15 @@ export function weekRange(anchor: string): { from: string; to: string } {
 
 export type StoryIndexRow = Pick<
   StoryRow,
-  "slug" | "title" | "dek" | "eventDate" | "symbols" | "readMinutes" | "locale"
+  | "slug"
+  | "title"
+  | "dek"
+  | "eventDate"
+  | "symbols"
+  | "readMinutes"
+  | "locale"
+  /* Site haritasının `lastModified`i: olay günü değil, metnin son yazıldığı an. */
+  | "updatedAt"
 >;
 
 /**
@@ -1431,6 +1439,7 @@ export async function getStoriesForSymbol(
         symbols: stories.symbols,
         readMinutes: stories.readMinutes,
         locale: stories.locale,
+        updatedAt: stories.updatedAt,
       })
       .from(stories)
       .where(sql`${stories.symbols} @> ${JSON.stringify([symbol])}::jsonb`)
@@ -1466,6 +1475,7 @@ export async function getStories(
         symbols: stories.symbols,
         readMinutes: stories.readMinutes,
         locale: stories.locale,
+        updatedAt: stories.updatedAt,
       })
       .from(stories)
       .orderBy(desc(stories.eventDate), desc(stories.publishedAt))
@@ -1576,6 +1586,7 @@ export type AnalysisIndexRow = Pick<
   | "eps"
   | "epsSurprisePct"
   | "reactionPct"
+  | "updatedAt"
 >;
 
 const ANALYSIS_INDEX_COLUMNS = {
@@ -1595,6 +1606,7 @@ const ANALYSIS_INDEX_COLUMNS = {
   eps: earningsAnalyses.eps,
   epsSurprisePct: earningsAnalyses.epsSurprisePct,
   reactionPct: earningsAnalyses.reactionPct,
+  updatedAt: earningsAnalyses.updatedAt,
 } as const;
 
 /** `symbol + period` başına tek satır; istenen dil öncelikli. */
