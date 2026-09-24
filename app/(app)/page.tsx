@@ -259,10 +259,14 @@ export default async function TodayPage() {
             okuyamıyordu. Slogan gitti, yerine tarih geldi: geniş ekranda
             "24 Eylül Perşembe", dar ekranda "24 Eyl Per", saatin yanında. */}
         <div className={styles.heroTopline}>
-          <p className={styles.dateline}>
-            <time dateTime={new Date(nowMs).toISOString()} className={styles.dateLong}>{dateFormat.format(new Date(nowMs))}</time>
-            <time dateTime={new Date(nowMs).toISOString()} className={styles.dateShort}>{dateShortFormat.format(new Date(nowMs))}</time>
-          </p>
+          <div className={styles.toplineLead}>
+            <p className={styles.dateline}>
+              <time dateTime={new Date(nowMs).toISOString()} className={styles.dateLong}>{dateFormat.format(new Date(nowMs))}</time>
+              <time dateTime={new Date(nowMs).toISOString()} className={styles.dateShort}>{dateShortFormat.format(new Date(nowMs))}</time>
+            </p>
+            {/* ZİL SAATLERİ TARİHİN YANINDA — gerekçe BellLedger.module.css. */}
+            <BellLedger locale={locale} t={t} status={status} nowMs={nowMs} className={styles.toplineBells} />
+          </div>
           <LiveClock locale={locale} initialNowMs={nowMs} />
         </div>
         <div className={styles.heroMain}>
@@ -271,9 +275,10 @@ export default async function TodayPage() {
                 halkalı, uzatılmış seansta mavi, kapalıyken gri. */}
             <div className={styles.heroSession} data-state={sessionState}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
             <h1 className={styles.headline}>{countdownLabel}</h1>
-            {/* Rakam satırı ile zil künyesi TEK blok ve kolonun DİBİNE
-                oturuyor (`align-self:end`); rozet ve başlık tepede. Ölçüm ve
-                gerekçe TodayExperience.module.css → `.heroCopy`. */}
+            {/* Rakam satırı ile zil şeridi TEK blok; rozet ve başlık tepede.
+                Zil künyesi 24 Eylül'den beri üst şeritte, tarihin yanında
+                (BellLedger.module.css). Ölçüm ve gerekçe
+                TodayExperience.module.css → `.heroCopy`. */}
             <div className={styles.countdownBlock}>
               <Countdown
                 targetIso={countdownTarget.toISOString()}
@@ -300,7 +305,13 @@ export default async function TodayPage() {
                   end: `${formatInZone(new Date(rail.domain[1] * 1000), readerZone)} ${tags.primary}`,
                 }}
               />
-              <BellLedger locale={locale} t={t} status={status} nowMs={nowMs} />
+              {/* TABLETTE KÜNYE BURADA. 768–1023'te kolon endeks destesinin
+                  boyuna gerili ve sayacın altında zaten boş hava var; künyeyi
+                  üst şeride koymak kahramanı 509'dan 571 piksele uzatıyordu
+                  (ölçüldü). Aynı künye iki yerde basılıyor ve her genişlikte
+                  YALNIZCA biri görünüyor (`display:none` — ekran okuyucu da
+                  bir kez duyuyor). */}
+              <BellLedger locale={locale} t={t} status={status} nowMs={nowMs} className={styles.copyBells} />
             </div>
           </div>
           <section className={styles.indexDeck} aria-labelledby="hero-indices">
