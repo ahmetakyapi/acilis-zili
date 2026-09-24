@@ -913,7 +913,6 @@ const en: typeof tr = {
     sessionOvernight: "Overnight",
     sessionOvernightNote: "Overnight prices don't flow on the consolidated tape",
     prevCloseShort: "Prev. Close",
-    barClose: "Bar Close",
   },
 
   watchlist: {

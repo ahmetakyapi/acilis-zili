@@ -908,7 +908,6 @@ async function StockHeader({
             change={quoteResult.data.change}
             changePct={quoteResult.data.changePct}
             locale={locale}
-            barCloseLabel={t.chart.barClose}
             classes={{ line: styles.priceLine, price: cn("tote", styles.livePrice), change: styles.priceChange }}
             session={sessionNote}
             stamp={

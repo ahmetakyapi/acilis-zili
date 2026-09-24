@@ -129,10 +129,40 @@ type ChartResult =
 type HoverReading = {
   dateLabel: string;
   price: number;
-  /** Aralığın tabanına göre fark (1G'de önceki kapanış) — başlık okuması. */
+  /** Aralığın tabanına göre fark (1G'de önceki kapanış). */
   change: number;
   changePct: number;
+  /** Yüzen etiketin kaptaki yeri (hisse sayfası) — noktadan hesaplanmış,
+   *  kenara kıstırılmış. Nokta ekran dışındaysa null. */
+  tip: { left: number; top: number } | null;
 } | null;
+
+/** Yüzen okuma etiketinin noktadan uzaklığı ve kenar payı (piksel). */
+const TIP_OFFSET = 14;
+const TIP_EDGE = 8;
+/** Etiketin yaklaşık genişliği: bu kadar yer kalmayınca noktanın soluna geçer. */
+const TIP_WIDTH = 150;
+const TIP_HEIGHT = 58;
+
+/** Etiketin yeri: noktanın sağında, sağa sığmazsa solunda; dikeyde noktaya
+ *  ortalı ve kabın içine kıstırılmış. */
+function tipPlacement(
+  x: number | null,
+  y: number | null,
+  width: number,
+  height: number,
+): { left: number; top: number } | null {
+  if (x === null || y === null) return null;
+  const left =
+    x + TIP_OFFSET + TIP_WIDTH > width - TIP_EDGE
+      ? Math.max(TIP_EDGE, x - TIP_OFFSET - TIP_WIDTH)
+      : x + TIP_OFFSET;
+  const top = Math.min(
+    Math.max(TIP_EDGE, y - TIP_HEIGHT / 2),
+    Math.max(TIP_EDGE, height - TIP_HEIGHT - TIP_EDGE),
+  );
+  return { left, top };
+}
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -163,14 +193,16 @@ export function PriceChart({
       : null,
   );
   const [hover, setHover] = useState<HoverReading>(null);
-  /* Hisse sayfasında okuma BAŞLIĞA yazılıyor (ChartReadingContext.tsx);
-     bağlam yoksa (yazı içi grafik) kendi okuma satırında kalıyor. */
-  const readingContext = useChartReading();
-  const publishReading = readingContext?.setReading;
-  useEffect(() => {
-    publishReading?.(hover);
-  }, [hover, publishReading]);
-  useEffect(() => () => publishReading?.(null), [publishReading]);
+  /* HİSSE SAYFASINDA OKUMA GRAFİĞİN İÇİNDE, NOKTANIN YANINDA (24 Eylül).
+     Okuma bir dönem başlığın fiyatına yazılıyordu: imleç gezerken 48
+     puntoluk başlık fiyatı barın kapanışına dönüşüyordu ve "şu an kaç"
+     sorusunun cevabı imleç grafikten çıkana kadar ekrandan siliniyordu —
+     aynı yerde iki anlamlı sayı dönüşümlü duruyordu (sahibinin geri
+     bildirimi). Başlık artık HEP canlı fiyatı yazıyor; okuma noktanın
+     yanında küçük bir etiket. Grafiğin üstüne ikinci bir büyük fiyat
+     satırı da açılmıyor (başlığa taşınma gerekçesi buydu).
+     Bağlam yoksa (yazı içi grafik) okuma eskisi gibi kendi satırında. */
+  const floatingReading = useChartReading() !== null;
   /* DOKUNULAN OKUMA ARALIKLA BİRLİKTE TEMİZLENİYOR.
      Dokunmatikte okuma tek dokunuşla açılıyor ve grafiğin dışına
      dokunulana kadar EKRANDA KALIYOR (gerekçesi bileşen başında). Ama
@@ -595,6 +627,12 @@ export function PriceChart({
         change: price - baseline,
         changePct:
           baseline !== 0 ? ((price - baseline) / baseline) * 100 : 0,
+        tip: tipPlacement(
+          chart.timeScale().timeToCoordinate(bar.time as UTCTimestamp),
+          series.priceToCoordinate(price),
+          container.clientWidth,
+          container.clientHeight,
+        ),
       };
     };
     // `param.point` kontrol EDİLMİYOR: imleç elle sürüldüğünde (dokunmatik
@@ -845,7 +883,7 @@ export function PriceChart({
     <div className={styles.root} data-compact={compact}>
       {/* Okuma satırı — imleç gezerken nokta okuması, değilse dönem özeti */}
       <div className={cn(styles.reading, "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2")}>
-        {hover && !readingContext ? (
+        {hover && !floatingReading ? (
           <>
             <div className={styles.hoverValues}>
               <span className={cn(styles.hoverPrice, "tote")}>
@@ -953,6 +991,26 @@ export function PriceChart({
           ref={containerRef}
           className={cn("h-full w-full", state.phase !== "ready" ? "invisible" : "chart-in")}
         />
+        {/* YÜZEN OKUMA — gerekçe `floatingReading` üzerinde. Noktanın sağında;
+            sağ kenara TIP_WIDTH'ten az yer kalınca solunda. Dikeyde noktaya
+            ortalı, kabın içine kıstırılmış. İmleci engellemiyor
+            (`pointer-events-none`); ekran okuyucuya `aria-live` ile
+            fiyat ve an birlikte okunuyor. */}
+        {floatingReading && hover?.tip && (
+          <div
+            className={styles.tip}
+            style={{ left: hover.tip.left, top: hover.tip.top, width: TIP_WIDTH }}
+            aria-live="polite"
+          >
+            <span className={cn(styles.tipPrice, "numeral")}>
+              {formatPrice(hover.price, locale, { currency: true })}
+            </span>
+            <span className={cn("numeral", styles.tipChange, hoverTone)}>
+              {formatPercent(hover.changePct, locale)}
+            </span>
+            <span className={cn("numeral", styles.tipDate)}>{hover.dateLabel}</span>
+          </div>
+        )}
         {/* Seans gölgeleri — 1G görünümünde ön/akşam seansları ayrışır */}
         {state.phase === "ready" &&
           zones.map((zone) => (
