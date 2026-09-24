@@ -89,3 +89,11 @@
    yapıyordu (1G 28, 1H 36 ölçüldü) ve aralık değişince çizim kayıyordu. */
 .root[data-compact="true"] .reading { padding-bottom:0; }
 .root[data-compact="true"] .reading * { line-height:24px; }
+
+/* Yüzen okuma etiketi (hisse sayfası) — gerekçe PriceChart.tsx'te.
+   Derinlik tonla: kart yüzeyi, ince kenar; gölge yok. Fiyat 15 punto:
+   başlıktaki 48 puntoluk canlı fiyatla yarışmıyor, bir okuma olduğu belli. */
+.tip { position:absolute; z-index:3; display:grid; grid-template-columns:auto 1fr; align-items:baseline; gap:2px 8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-fixed); pointer-events:none; }
+.tipPrice { font-size:15px; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
+.tipChange { justify-self:end; font-size:12px; font-weight:600; white-space:nowrap; }
+.tipDate { grid-column:1 / -1; font-size:11px; color:var(--text-muted); white-space:nowrap; }

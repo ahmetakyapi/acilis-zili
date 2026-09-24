@@ -1175,8 +1175,6 @@ const tr = {
     sessionOvernightNote: "Gece seansı konsolide veri akışında yok",
     /* 1G grafiğindeki kesikli çizginin eksen etiketi — dar, kısaltılmış. */
     prevCloseShort: "Önc. Kapanış",
-    /* Grafikte bir nokta okunurken başlık fiyatının yanındaki künye. */
-    barClose: "Bar Kapanışı",
   },
 
   watchlist: {

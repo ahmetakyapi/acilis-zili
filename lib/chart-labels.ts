@@ -48,8 +48,6 @@ export type ChartLabels = {
   sessionOvernightNote: string;
   /** 1G'deki önceki kapanış çizgisinin eksen etiketi. */
   prevCloseShort: string;
-  /** Okunan noktanın künyesi — başlık fiyatının yanında. */
-  barClose: string;
 };
 
 export function chartLabels(t: Dictionary): ChartLabels {
@@ -74,6 +72,5 @@ export function chartLabels(t: Dictionary): ChartLabels {
     sessionOvernight: t.chart.sessionOvernight,
     sessionOvernightNote: t.chart.sessionOvernightNote,
     prevCloseShort: t.chart.prevCloseShort,
-    barClose: t.chart.barClose,
   };
 }
