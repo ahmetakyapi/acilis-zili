@@ -319,8 +319,11 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
           <span className="numeral text-muted">{minutesLabel}</span>
         </p>
 
-        <h1 className={detail.title}>
-          {story.title}
+        {/* Degrade satır satır (`data-ink="lines"`, globals.css): manşet
+            iki-üç satır ve kutu boyunca yayılan degradede ikinci satır
+            başka bir tonda başlıyordu. */}
+        <h1 data-ink="lines" className={detail.title}>
+          <span className="ink-line">{story.title}</span>
         </h1>
         <p className={detail.dek}>{story.dek}</p>
 

@@ -2,13 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
+import { etDateTimeToUtc } from "@/lib/market-hours";
+import { formatInZone } from "@/lib/session-clock";
 import { requestFlowSelect, useFlowSnapshot } from "./day-flow-store";
 import styles from "./SessionRail.module.css";
 
 /** Şeridin ilerleme adımı: saniye geri sayımda, şerit dakikanın işi. */
 const TICK_MS = 60_000;
-/** İşaretlerin merkezden merkeze en küçük aralığı (rozetin kendi boyu + nefes). */
-const MARKER_GAP_PX = 30;
+/** İşaretlerin merkezden merkeze en küçük aralığı (rozetin kendi boyu + nefes).
+ *  Rozet artık saati de taşıyor ("01 15:30", ~62 piksel); 30 piksellik eski
+ *  aralık yalnız numaraya göreydi. */
+const MARKER_GAP_PX = 68;
 
 const minutesOf = (time: string) => {
   const [h, m] = time.split(":").map(Number);
@@ -43,6 +47,9 @@ export type SessionRailLabels = {
   /** Eksenin iki ucu, okuyucunun saatiyle: "11:00", "03:00 TR". */
   start: string;
   end: string;
+  /** Zil çentiklerinin adı ve saati: "Açılış 16:30", "Kapanış 23:00". */
+  open: string;
+  close: string;
 };
 
 /**
@@ -77,6 +84,7 @@ export function SessionRail({
   live,
   target,
   initialNowMs,
+  zone,
   labels,
 }: {
   domain: [number, number];
@@ -89,6 +97,8 @@ export function SessionRail({
   /** Sayacın saydığı zil: kapalıyken açılış, seans içinde kapanış. */
   target: "open" | "close";
   initialNowMs: number;
+  /** Okuyucunun saat dilimi — olay rozetindeki saat onunla yazılır. */
+  zone: string;
   labels: SessionRailLabels;
 }) {
   const [nowMs, setNowMs] = useState(initialNowMs);
@@ -158,6 +168,19 @@ export function SessionRail({
 
   return (
     <div className={styles.rail} role="group" aria-label={labels.name}>
+      {/* ZİLLERİN ADI ÇENTİĞİN ÜSTÜNDE (24 Eylül). Şeritte iki çentik vardı
+          ama hangisinin açılış hangisinin kapanış olduğunu hiçbir şey
+          söylemiyordu; okuyucu üç bandın (ön seans, seans, kapanış sonrası)
+          anlamını tahmin etmek zorundaydı. Adlar çentiğin tam üstünde,
+          sayacın saydığı zil koyu. Saatler okuyucunun saatiyle. */}
+      <div className={styles.bells} aria-hidden="true">
+        <span className={styles.bellLabel} data-target={target === "open" || undefined} style={{ left: pct(open) }}>
+          {labels.open}
+        </span>
+        <span className={styles.bellLabel} data-target={target === "close" || undefined} style={{ left: pct(close) }}>
+          {labels.close}
+        </span>
+      </div>
       <div ref={setAxis} className={styles.axis}>
         {/* Üç bant, her biri kendi dolgusuyla: ön seans ve kapanış sonrası
             yarı tonda dolar, asıl seans tam mavi — endeks kartlarındaki
@@ -226,7 +249,13 @@ export function SessionRail({
               aria-label={`${labels.selectEvent}: ${group.events.map((event) => event.title).join(", ")}`}
               title={group.events.map((event) => event.title).join(", ")}
             >
-              <span className="numeral">{String(first.index + 1).padStart(2, "0")}</span>
+              {/* NUMARA + SAAT (24 Eylül). Rozet yalnızca "01", "02" diyordu:
+                  aşağıdaki Bugünün Akışı listesinin sıra numarası, ama şeritte
+                  neyi işaret ettiği okunmuyordu. Saat eklenince rozet kendini
+                  anlatıyor ("01 · 15:30" — o saatte bir olay var); numara
+                  listeyle bağı koruyor, tıklamak o satıra götürüyor. */}
+              <small className="numeral">{String(first.index + 1).padStart(2, "0")}</small>
+              <span className="numeral">{formatInZone(etDateTimeToUtc(day, group.time), zone)}</span>
               {group.events.length > 1 && <small className="numeral">+{group.events.length - 1}</small>}
             </button>
           );

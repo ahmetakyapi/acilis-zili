@@ -25,7 +25,13 @@
    mürekkebini KIRPMIYOR (`overflow-clip-margin`), yalnızca yuvarlanan
    rakamın %62'lik yolunu maskeliyor — sayaç penceresi. 0/2/3/8 mürekkebi
    ekran görüntüsünde tam (ölçüldü). */
-.numberWindow { display:inline-flex; overflow:clip; overflow-clip-margin:.08em; padding-block:.04em; font-variant-numeric:tabular-nums; }
+/* YALNIZCA DİKEYDE KIRPAR (24 Eylül). Pencere iki eksende kırpıyordu ve
+   sıkı harf aralığı (−.055em) son rakamın kutusunu daraltıyor: 9, 8, 6 ve
+   5'in sağ kenarı kutudan .08em'lik payın da dışına taşıyor, telefonda
+   sayının sağında ince bir dilim kesik görünüyordu. Rakam yalnızca DİKEY
+   yuvarlanıyor; yatayda kırpılacak bir şey yok. `clip` diğer ekseni
+   `visible` bırakabilen tek değer (`hidden` bırakamaz). */
+.numberWindow { display:inline-flex; overflow-x:visible; overflow-y:clip; overflow-clip-margin:.08em; padding-block:.04em; font-variant-numeric:tabular-nums; }
 /* Basamak kendi penceresi: giden rakam mutlak konumda üstte, gelen rakam
    akışta — pencerenin genişliği hep tek rakam (tabular), satır zıplamaz.
    Giriş yaylı (hafifçe aşıp oturuyor), çıkış düz: gelen rakam "varıyor",

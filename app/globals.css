@@ -1729,8 +1729,9 @@ html.theme-switching::view-transition-new(root) {
       (#2493dd) beyazda 3,34:1 — AA'nın altında. `display-ink-tight`
       yazan panel başlıkları da bu kural katmansız olduğu için geniş
       degradeye eziliyordu.
-   Çıkış yolu `data-ink="plain"`: yön rengi taşıyan ya da birden çok
-   satıra yayılan başlık bunu yazar ve kendi rengiyle basılır. Punto
+   Çıkış yolu `data-ink="plain"`: yön rengi taşıyan başlık bunu yazar ve
+   kendi rengiyle basılır. Birden çok satıra yayılan manşet ise artık
+   `data-ink="lines"` yazıyor (satır başına degrade, aşağıda). Punto
    sınıfı 16 pikseli ve altını söyleyen başlık sıkı degradeyi alır; onun
    açık ucu #1e6fbe, 14 piksel yarı kalın metinde AA'yı geçen en açık ton.
 
@@ -1744,20 +1745,46 @@ html.theme-switching::view-transition-new(root) {
    dönmüştü). Küçük başlıkların hepsi zaten bir punto sınıfı taşıyor
    (`text-read`/`text-base`), liste onları yakalıyor. */
 @supports (background-clip: text) or (-webkit-background-clip: text) {
-  main h1:not([data-ink="plain"]),
-  main h2:not(.plate):not([data-ink="plain"]) {
+  main h1:not([data-ink]),
+  main h2:not([data-ink]),
+  main h3:not([data-ink]) {
     background-image: var(--display-gradient);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     padding-bottom: .06em;
   }
-  main h2:is(.text-nano, .text-tiny, .text-xs, .text-small, .text-sm, .text-base, .text-read, .text-lead):not(.plate):not([data-ink="plain"]) {
+  /* KART VE PANEL BAŞLIKLARI DA (24 Eylül, sahibinin isteği: "başlıkların
+     hepsi mavi degrade tonumuzda olsun"). `h3` ve `.plate` künyeli panel
+     başlıkları bir dönem düz mürekkepteydi. İkisi de çoğunlukla küçük
+     punto, o yüzden varsayılanları SIKI degrade: açık ucu #1e6fbe, 14
+     pikselde AA'yı geçen en açık ton (yukarıdaki not). Büyük bir `h3`
+     (manşet boyu) `data-ink="lines"` ile geniş degradeyi satır satır alır. */
+  main h3:not([data-ink]),
+  main :is(h2, h3):is(.text-nano, .text-tiny, .text-xs, .text-small, .text-sm, .text-base, .text-read, .text-lead, .plate):not([data-ink]) {
+    background-image: var(--display-gradient-tight);
+  }
+  /* ÇOK SATIRLI MANŞET: degrade başlığın içindeki SATIR İÇİ kutuda ve her
+     satır kendi degradesini alıyor (`clone`). Blok başlıkta degrade kutu
+     boyunca yayılıyor, ikinci satır başka bir tonda başlıyordu — bu yüzden
+     manşetler bir dönem düz mürekkepteydi. */
+  main [data-ink="lines"] > .ink-line {
+    background-image: var(--display-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    padding-bottom: .06em;
+  }
+  /* Küçük puntolu manşet (kart başlığı, 17 piksel) sıkı degradeyi alır:
+     geniş degradenin açık ucu 18,66 pikselin altında AA'yı geçmiyor. */
+  main [data-ink="lines"]:is(.text-base, .text-read, .text-lead) > .ink-line {
     background-image: var(--display-gradient-tight);
   }
   main h1 { width: fit-content; max-width: 100%; }
   /* Badges and controls inside a heading own a separate painted surface. */
-  main :is(h1,h2) :is(button, a, .plate, [role="status"]) {
+  main :is(h1,h2,h3) :is(button, a, .plate, [role="status"]) {
     -webkit-text-fill-color: currentColor;
   }
 }
@@ -1837,7 +1864,7 @@ html.theme-switching::view-transition-new(root) {
   }
 }
 @media (forced-colors: active) {
-  main :is(h1,h2), main .display-ink {
+  main :is(h1,h2,h3), main .display-ink {
     background: none;
     -webkit-text-fill-color: CanvasText;
     color: CanvasText;

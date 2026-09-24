@@ -57,7 +57,7 @@ export async function RecentAnalysesStrip({
          Kalan kaldıraçlar metni etkilemiyor: kenarlık bir kademe koyu,
          dolgu 3.5 → 4, köşe yarıçapı panellerinkiyle aynı (`xl`). Şerit
          artık sayfadaki öteki kutularla aynı dilde ve kenarı belirgin. */
-      className="flex flex-col gap-2.5 rounded-xl border border-primary-soft/45 bg-(--premium-surface) px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+      className="flex flex-col gap-3 rounded-xl border border-primary-soft/45 bg-(--premium-surface) px-4 py-4.5 sm:flex-row sm:items-center sm:gap-5 sm:px-6 sm:py-5"
     >
       <div className="flex shrink-0 items-center justify-between gap-3">
         {/* ETİKET YÜZEYİN KENDİ MÜREKKEBİNDE. `plate` künyeyi `--text-muted`
@@ -68,9 +68,14 @@ export async function RecentAnalysesStrip({
             zemininde 4,67:1, muted 4,56:1 — ikisi de AA geçiyor, ama biri
             bandın parçası gibi okunuyor). Punto ve harf aralığı DEĞİŞMEDİ:
             rol hâlâ künye, yalnızca aidiyeti düzeldi. */}
-        <p className="plate whitespace-nowrap text-primary-ink">
+        {/* BAŞLIK OLDU (24 Eylül, sahibinin isteği: "biraz küçük kalmış,
+            bir tık daha belirgin olsun"). Künye puntosunda bir `plate`tı;
+            şerit sayfanın okunacak tek yüzeyi olduğu hâlde en küçük metni
+            onun adıydı. Artık panel başlıklarıyla aynı basamakta bir `h2`
+            ve öteki başlıklar gibi mavi degradede. */}
+        <h2 className="whitespace-nowrap text-read font-bold">
           {t.analysis.recentStrip}
-        </p>
+        </h2>
         {/* Mobilde "Tümü" etiketle aynı satırda: altına inince şerit üç
             satıra çıkıyor ve takvimin önüne geçiyordu. */}
         <Link
@@ -82,14 +87,9 @@ export async function RecentAnalysesStrip({
       </div>
 
       {/* Dar ekranda çipler kırılmak yerine kayar — sekiz analiz alt alta
-          dizilince şerit bir listeye dönüşüyordu.
-          `py-1.5 -my-1.5`: çipin 44 piksellik dokunma alanı (`.tap-44`)
-          32 piksellik hapın altından ve üstünden 6'şar piksel taşıyor. Şerit
-          yalnızca yatay kayıyor (dikey taşma kesik — globals.css), taşan
-          alan kabın İÇİNDE kalsın diye kap o kadar dolgu taşıyor; eksi marj
-          görünen ölçüyü değiştirmiyor. Öncesinde bu 6 piksel şeridi parmakla
-          dikeyde de oynatıyordu. */}
-      <ScrollEdges as="ul" className="no-scrollbar -mx-4 -my-1.5 flex gap-2 overflow-x-auto px-4 py-1.5 sm:mx-0 sm:min-w-0 sm:flex-1 sm:px-0">
+          dizilince şerit bir listeye dönüşüyordu. Şerit yalnızca yatay
+          kayıyor (dikey taşma kesik — globals.css). */}
+      <ScrollEdges as="ul" className="no-scrollbar -mx-4 flex gap-2.5 overflow-x-auto px-4 sm:mx-0 sm:min-w-0 sm:flex-1 sm:px-0">
         {rows.map((row) => {
           const verdict = verdictOf(row.verdict);
           const logoUrl = meta[row.symbol]?.logoUrl;
@@ -99,25 +99,25 @@ export async function RecentAnalysesStrip({
                 href={analysisHref(row.symbol, row.period)}
                 prefetch={false}
                 title={row.headline}
-                /* Çip 32 piksel yüksekliğinde ve yatay kayan bir şeridin
-                   içinde: parmak kaydırırken nişan alıyor, en zor hedef
-                   biçimi. `.tap-44` görünür hapı büyütmeden alanı açıyor —
-                   şerit tek satır kalmalı, gerekçe yukarıda. */
-                className="tap-44 flex items-center gap-2 rounded-full border border-line bg-surface-solid py-1 pl-1 pr-2.5 transition-colors hover:border-line-strong"
+                /* ÇİP 44 PİKSEL, KENDİSİ (24 Eylül). 32 piksellikti ve
+                   dokunma alanını `.tap-44` ile görünmeden büyütüyordu;
+                   şerit "küçük kalmış" bulundu. Hap artık hedefin kendisi
+                   kadar: logo 26, sembol 15 punto. */
+                className="flex min-h-11 items-center gap-2.5 rounded-full border border-line bg-surface-solid py-1.5 pl-1.5 pr-3.5 transition-colors hover:border-line-strong"
               >
                 {/* Yuvarlak: karo hap biçimli bir çipin içinde. */}
                 <LogoTile
                   symbol={row.symbol}
                   logoUrl={logoUrl}
-                  size="xs"
+                  size="sm"
                   className="rounded-full"
                 />
-                <span className="text-small font-bold text-strong">
+                <span className="text-base font-bold text-strong">
                   {row.symbol}
                 </span>
                 <span
                   className={cn(
-                    "figure whitespace-nowrap rounded-full px-1.5 py-px text-[11px] font-bold",
+                    "figure whitespace-nowrap rounded-full px-2 py-0.5 text-tiny font-bold",
                     verdictPillClass(verdict),
                   )}
                 >
@@ -125,7 +125,7 @@ export async function RecentAnalysesStrip({
                 </span>
                 {/* Hangi çeyreğin okunduğu yazılı değildi: `periodLabel`
                     sorguda zaten geliyor ve sunumda atılıyordu. */}
-                <span className="figure whitespace-nowrap text-[11px] text-muted">
+                <span className="figure whitespace-nowrap text-tiny text-muted">
                   {row.periodLabel}
                 </span>
               </Link>

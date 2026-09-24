@@ -85,16 +85,16 @@ export function StoryCard({
           {/* `lang` ŞART: çevirisi olmayan yazı orijinal diliyle gösteriliyor
               ve rozet bunu göze söylüyor. Ekran okuyucu rozeti okumuyor —
               işaretleme olmadan Türkçe manşeti İngilizce sesletiyordu. */}
-          {/* DÜZ MÜREKKEP (23 Eylül). Manşet iki-üç satır ve degrade satır
-              satır değil kutu boyunca yayılıyor: ikinci satır başka bir
-              tonda başlıyordu. Tema istisnası yalnızca kısa display metni
-              için (globals.css, `data-ink` notu); kartın başlığı bir
-              manşet, ayrımı ağırlık ve punto taşıyor. */}
+          {/* SATIR SATIR DEGRADE (24 Eylül). Manşet iki-üç satır; bir
+              dönem düz mürekkepteydi çünkü blok degradesi ikinci satırı
+              başka tonda başlatıyordu. `data-ink="lines"` her satıra kendi
+              degradesini veriyor (globals.css). */}
           <h3
             lang={story.locale}
+            data-ink="lines"
             className="mt-1.5 text-lead font-bold leading-[1.2] tracking-[-0.025em] text-strong"
           >
-            {story.title}
+            <span className="ink-line">{story.title}</span>
           </h3>
           <p
             lang={story.locale}

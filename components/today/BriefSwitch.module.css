@@ -9,11 +9,9 @@
 .railMeta { flex:1 1 100%; margin-top:4px; }
 .main { min-width:0; margin-top:14px; }
 
-@media (min-width:1200px) {
-  .card { display:grid; grid-template-columns:minmax(0,62ch) 15rem; justify-content:space-between; align-items:start; column-gap:40px; }
-  .main { grid-column:1; grid-row:1; margin-top:0; }
-  /* Ray açık bülten uzadıkça ekranda kalıyor; başlığın altında 16 piksel. */
-  .rail { grid-column:2; grid-row:1; position:sticky; top:calc(var(--app-bar-h) + 60px); flex-direction:column; flex-wrap:nowrap; align-items:stretch; justify-content:flex-start; gap:14px; padding-left:20px; border-left:1px solid var(--line-soft); }
-  .railControls { flex-direction:column; align-items:flex-start; gap:10px; }
-  .railMeta { flex:none; margin-top:0; }
-}
+/* YAN RAY KALKTI (24 Eylül, sahibinin isteği). 1200 ve üstünde künye,
+   sekmeler ve arşiv sağda 15rem'lik yapışkan bir raydaydı: bülten
+   kaydırıldıkça ray metnin yanında kayıyor ve metnin sağında hep bir
+   sütunluk boşluk varmış gibi duruyordu. Denetimler artık her genişlikte
+   metnin ÜSTÜNDE tek satırda (dar ekrandaki sıra), metin kartın tüm
+   genişliğini alıyor. Satır ölçüsü gövdenin kendi sınırında (BriefBody). */

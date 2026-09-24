@@ -4,6 +4,11 @@
    tonla: ön seans ve kapanış sonrası çukur ton (`--surface-sunken`), asıl
    seans mavinin %30'u, geçen kısım düz mavi. Gölge ve parıltı yok. */
 .rail { position:relative; min-width:0; margin-top:14px; }
+/* Zil adları çentiğin üstünde, ortalı. Sayacın saydığı zil koyu, öteki
+   soluk — çentiklerin kendi renk kuralıyla aynı. */
+.bells { position:relative; height:18px; margin-bottom:4px; }
+.bellLabel { position:absolute; bottom:0; transform:translateX(-50%); font-size:var(--text-tiny); font-weight:600; line-height:1.2; white-space:nowrap; color:var(--text-muted); }
+.bellLabel[data-target] { color:var(--text-strong); }
 .axis { position:relative; height:16px; }
 .track { position:absolute; inset:4px 0 auto; height:8px; overflow:hidden; border-radius:4px; background:var(--surface-sunken); }
 .band { position:absolute; inset-block:0; overflow:hidden; }
@@ -36,6 +41,7 @@
 .end { font-size:var(--text-tiny); font-weight:500; color:var(--text-muted); }
 .marker { position:absolute; top:1px; z-index:1; display:flex; align-items:center; justify-content:center; gap:2px; min-width:28px; height:24px; padding:0 6px; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--premium-surface); color:var(--text-strong); font-size:var(--text-small); font-weight:650; cursor:pointer; transform:translateX(-50%); transition:border-color .2s, background-color .2s; }
 .marker::before { content:""; position:absolute; inset:-8px -4px; }
+.marker { gap:5px; }
 .marker small { color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; }
 .marker[data-released] { border-color:color-mix(in srgb, var(--up) 45%, transparent); color:var(--up); }
 .marker:hover { border-color:var(--primary-faint); background:var(--primary-tint); }

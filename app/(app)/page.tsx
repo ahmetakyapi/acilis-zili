@@ -298,8 +298,11 @@ export default async function TodayPage() {
                 live={status.session !== "closed"}
                 target={trading ? "close" : "open"}
                 initialNowMs={nowMs}
+                zone={readerZone}
                 labels={{
                   name: t.dayRail.marketHours,
+                  open: `${t.dayRail.openShort} ${formatInZone(new Date(rail.openAt * 1000), readerZone)}`,
+                  close: `${t.dayRail.closeShort} ${formatInZone(new Date(rail.closeAt * 1000), readerZone)}`,
                   selectEvent: t.dayFlow.selectEvent,
                   start: formatInZone(new Date(rail.domain[0] * 1000), readerZone),
                   end: `${formatInZone(new Date(rail.domain[1] * 1000), readerZone)} ${tags.primary}`,
@@ -2448,11 +2451,10 @@ async function StoriesSpotlight({
       {/* Başlık şeridi panel başlıklarıyla aynı ölçüde: bloğu ayıran şey
           başlığın boyu değil, altındaki manşet ve eğri. Cesaret TEK yerde
           harcanıyor.
-          DÜZ MÜREKKEP (24 Eylül): blok zaten sayfanın tek degrade yüzeyi;
-          başlığına ikinci bir degrade vermek aynı vurguyu iki kez yapıyordu.
-          Başlık düz koyu mürekkep, vurguyu yüzey taşıyor. */}
+          Başlık öteki panel başlıkları gibi sıkı degradede (24 Eylül,
+          sahibinin isteği: bütün başlıklar aynı mavi tonda). */}
       <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
-        <h2 data-ink="plain" className="text-read font-bold text-strong">
+        <h2 className="text-read font-bold text-strong">
           {t.today.latestStories}
         </h2>
         <PanelLink href="/mercek">{t.common.showAll}</PanelLink>
@@ -2501,11 +2503,12 @@ async function StoriesSpotlight({
                 ayrışmıyordu: aynı ağırlıkta bir kutu daha gibi duruyordu.
                 Ölçü farkı, bloğun "burada okunacak bir şey var" demesinin en
                 ucuz ve en sessiz yolu.
-                DÜZ MÜREKKEP (23 Eylül): iki-üç satırlık manşette degrade
-                satır satır değil kutu boyunca yayılıyordu; bültenin
-                manşetiyle aynı gerekçe (BriefSwitch). Ayrımı punto taşıyor. */}
-            <h3 className="mt-2.5 text-heading font-bold leading-[1.14] tracking-[-0.03em] text-strong sm:text-subdisplay">
-              {lead.title}
+                MAVİ DEGRADE, SATIR SATIR (24 Eylül): bir dönem düz
+                mürekkepteydi çünkü degrade kutu boyunca yayılıp ikinci
+                satırı başka tonda başlatıyordu; `data-ink="lines"` her
+                satıra kendi degradesini veriyor (globals.css). */}
+            <h3 data-ink="lines" className="mt-2.5 text-heading font-bold leading-[1.14] tracking-[-0.03em] text-strong sm:text-subdisplay">
+              <span className="ink-line">{lead.title}</span>
             </h3>
             <p className="mt-3 line-clamp-3 max-w-[62ch] text-base leading-[21px] text-body sm:text-read sm:leading-[24px]">
               {lead.dek}
