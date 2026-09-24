@@ -39,7 +39,9 @@ export function BellLedger({
   t,
   status,
   nowMs,
+  className,
 }: {
+  className?: string;
   locale: Locale;
   t: Dictionary;
   status: MarketStatus;
@@ -84,7 +86,7 @@ export function BellLedger({
   }
 
   return (
-    <dl className={styles.bells} aria-label={t.today.bellsLabel}>
+    <dl className={[styles.bells, className].filter(Boolean).join(" ")} aria-label={t.today.bellsLabel}>
       {cells.map((cell) => {
         const early = cell.isClose && etParts(cell.at).minutes !== SESSION_BOUNDS.regularClose;
         const day = dayOf(cell.at);

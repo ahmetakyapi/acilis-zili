@@ -11,7 +11,13 @@
 .list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; }
 .list > li { min-width:0; border-bottom:1px solid var(--line); }
 .cell { grid-row:span 3; display:grid; grid-template-rows:subgrid; }
-.cell > .row { grid-row:span 3; display:grid; grid-template-rows:subgrid; grid-template-columns:minmax(0,1fr) auto; }
+.cell > .row { grid-row:span 3; display:grid; grid-template-rows:subgrid; grid-template-columns:minmax(0,1fr) auto; row-gap:0; }
+/* SATIR ARALIĞI SIFIR (24 Eylül). `.row` flex düzeni için `gap:18px`
+   taşıyor ve satır alt ızgaraya dönünce aynı değer SATIR aralığı da
+   oluyordu: her haberde başlık ile özet arasına ve özet ile künye arasına
+   fazladan 18'er piksel giriyordu (ölçüldü: başlık→özet 27, özet→künye
+   30; kuralın kendi payları 9 ve 12). Sütun aralığı (metin ile küçük
+   resim) 18'de kalıyor. */
 .cell > .row > .copy { grid-row:span 3; display:grid; grid-template-rows:subgrid; }
 .cell > .row > :not(.copy) { grid-row:span 3; align-self:start; }
 /* Öne çıkan haber düz yüzeyde (24 Eylül): köşe ışıması, mavi kenarlık ve

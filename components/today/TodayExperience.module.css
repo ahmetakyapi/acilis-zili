@@ -37,6 +37,12 @@
    yanına sığıyor. */
 .dateline { min-width:0; font-size:var(--text-small); font-weight:600; line-height:1.3; color:var(--text-strong); }
 .dateShort { display:none; }
+/* Tarih ve zil künyesi solda tek grup; ayraç kıl çizgi. Grup dar ekranda
+   sarıyor: zil saatleri tarihin altına iniyor, saat sağda kalıyor. */
+.toplineLead { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 22px; min-width:0; }
+.toplineBells { padding-left:22px; border-left:1px solid var(--line-soft); }
+/* Kopya kolonundaki ikinci künye yalnızca tablette (gerekçe page.tsx). */
+.copyBells { display:none !important; }
 .heroMain { display:grid; grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr); align-items:stretch; gap:28px; padding-top:18px; padding-bottom:0; }
 /* KOPYA KOLONU İKİ UCUNDAN SABİTLENİYOR (22 Eylül).
    `align-self:center` kolonu ortalıyordu ve boşluk iki banda bölünüyordu:
@@ -243,6 +249,14 @@
   .indexDeck { padding-left:0; padding-top:20px; border-left:0; border-top:1px solid var(--line); }
   .dateLong { display:none; }
   .dateShort { display:inline; }
+  /* Üst şerit iki satır: tarih ve saat yan yana, zil künyesi altta tam
+     genişlikte (gerekçe BellLedger.module.css). Grup kendi kutusunu
+     bırakıyor ki tarih ile künye şeridin ayrı satırlarına düşebilsin. */
+  .heroTopline { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"date clock" "bells bells"; row-gap:10px; }
+  .toplineLead { display:contents; }
+  .dateline { grid-area:date; }
+  .heroTopline > :last-child { grid-area:clock; }
+  .toplineBells { grid-area:bells; padding:10px 0 0; border-left:0; border-top:1px solid var(--line-soft); }
   .dashboard { grid-template-columns:minmax(0,1fr); }
   .dashboard > [data-col] { display:contents; }
   /* Telefonda okuma sırası: günün özeti, dünya, hareketler, teknik
@@ -301,6 +315,9 @@
    ARDINDA durmak zorunda; öncesinde kalırsa `.indexDeck { padding-left:0 }`
    kazanıyor. */
 @media (min-width:768px) and (max-width:1023px) {
+  .copyBells { display:grid !important; margin-top:16px; }
+  .toplineBells { display:none !important; }
+  .heroTopline { grid-template-areas:"date clock"; }
   .heroMain { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; }
   .heroCopy { align-self:stretch; }
   .indexDeck { padding:0 0 0 24px; border-top:0; border-left:1px solid var(--line); }
@@ -330,6 +347,7 @@
      360'ta 17 piksel eksik ve `nowrap` künye saatin altına giriyordu.
      Sarınca saat kendi satırına, sağa iner — üst üste binmez. */
   .heroTopline { flex-wrap:wrap; gap:6px 10px; align-items:center; padding-bottom:12px; }
+
   .heroMain { gap:16px; padding-top:14px; }
   .countdownBlock { padding-top:14px; }
   .indexDeck { padding:12px 0 0; }

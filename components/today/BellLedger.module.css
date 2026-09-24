@@ -6,44 +6,45 @@
    saatlerinde çentik, sayılan zilin çentiği koyu. Künye şeridin hemen
    altında ve yalnızca saatleri yazıyor — ilk ekranda zil saatleri tek
    yerde. */
-.bells { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 20px; margin:8px 0 0; padding:0; }
-.cell { position:relative; min-width:0; }
-.kicker { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:11px; font-weight:600; line-height:1.4; color:var(--text-muted); }
+/* ÜST ŞERİTTE, TEK SATIR (24 Eylül). Künye geri sayımın altında iki
+   hücreydi: etiket, 22 puntoluk saat ve "Bugün" rozeti alt alta, üç satır
+   ve 64 piksel. Sahibinin isteği: "tarihin yanına alalım, altta boşluk
+   bırakmayalım". Artık kahramanın üst şeridinde, tarihin yanında tek
+   satır — "Açılış Zili 16:30 TR 09:30 NY Bugün · Kapanış Zili …". Zil
+   saatleri gazetenin künyesi gibi tarihle birlikte okunuyor; geri sayım
+   ile zil şeridi kopya kolonunun tamamını alıyor. Hücre içi sırası aynı
+   (etiket, saat, öteki dilim, gün); yalnızca yön yatay. */
+.bells { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 22px; margin:0; padding:0; }
+.cell { position:relative; min-width:0; display:flex; align-items:baseline; gap:8px; }
+.cell + .cell { padding-left:22px; border-left:1px solid var(--line-soft); margin-left:-1px; }
+.kicker { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:11px; font-weight:600; line-height:1.4; color:var(--text-muted); white-space:nowrap; }
 .cell[data-target] .kicker { color:var(--primary-ink); }
 /* Yarım gün rozeti karar rozetleriyle aynı aileden: `--radius-sm`, hap değil. */
 .early { padding:1px 6px; border-radius:var(--radius-sm); background:var(--primary-tint); color:var(--primary-ink); font-size:var(--text-nano); font-weight:600; line-height:1.5; }
-.reading { display:flex; flex-direction:column; gap:3px; margin:5px 0 0; }
+.reading { display:flex; align-items:baseline; gap:8px; margin:0; }
 /* Saat ve öteki dilim aynı taban çizgisinde; dar hücrede öteki saat
    birincilin altına sarıyor (320'de hücre 116 piksel, ölçüldü). */
 .times { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; }
-.primary { font-size:20px; font-weight:650; line-height:1.15; letter-spacing:-.03em; color:var(--text-strong); white-space:nowrap; }
+.primary { font-size:15px; font-weight:650; line-height:1.2; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
 .primary small { margin-left:4px; font-size:11px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
 .alt { font-size:12px; font-weight:500; color:var(--text-muted); white-space:nowrap; }
-.day { font-size:12px; line-height:1.4; color:var(--text-body); }
+.day { font-size:12px; line-height:1.4; color:var(--text-body); white-space:nowrap; }
 /* "Bugün" üç ekranda aynı rozet (takvim, sıradaki açıklama, yaklaşan
    bilançolar): açık mavi zemin, mavi mürekkep. Öteki günler düz metin. */
-.day[data-today] { align-self:flex-start; padding:1px 6px; border-radius:var(--radius-sm); background:var(--primary-tint); color:var(--primary-ink); font-weight:600; }
+.day[data-today] { padding:1px 6px; border-radius:var(--radius-sm); background:var(--primary-tint); color:var(--primary-ink); font-weight:600; }
 
-/* ÖLÇEK KOLONA BAĞLI, GÖRÜNÜME DEĞİL — rakamla aynı kap (`hero-copy`).
-   Görünüm sorgusuyla 600–767 arasında tek kolon 92 puntoluk rakam
-   basıyor ama künye "telefon" ölçüsünde, 17 puntoda kalıyordu (ölçüldü:
-   767'de rakam 92, saat 17). Kolon genişse saat 22: rakam 92'ye çıkınca
-   20 puntoluk saat onun altında bir dipnot gibi kalıyordu. */
-@container hero-copy (min-width:480px) {
-  .primary { font-size:22px; }
-}
-
-@container hero-copy (max-width:400px) {
-  .bells { margin-top:10px; gap:0 14px; }
-  .primary { font-size:17px; }
-}
-
-/* TABLETTE KAHRAMAN İKİ KOLONLU (768–1023, gerekçesi TodayExperience'ta)
-   ve kopya kolonu daralıyor. Hücreler ancak kolon 360 pikselin altına
-   indiğinde alt alta diziliyor; daha geniş kolonda alt alta dizmek sol
-   tarafı endeks destesinden uzun yapıyordu. Ölçüm TodayExperience'ta. */
-@media (min-width:768px) and (max-width:1023px) {
-  @container hero-copy (max-width:360px) {
-    .bells { grid-template-columns:minmax(0,1fr); gap:12px; }
-  }
+/* 1024'ÜN ALTINDA İKİ SÜTUN, HÜCRE İKİ SATIR. Tek satırlık künye 480
+   piksel istiyor; tablette saatin yanında 420, telefonda 354 piksel kalıyor
+   ve hücreler kırılıp birbirinin altına kayıyordu (ölçüldü: 768'de ikinci
+   hücre içeri girintili, 390'da kahraman 607 → 676). Burada künye üst
+   şeridin ikinci satırını tam genişlikte alıyor, her zil kendi sütununda:
+   üstte etiket ve gün rozeti, altta iki saat. */
+@media (max-width:1023px) {
+  .bells { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 16px; }
+  .cell { display:grid; grid-template-columns:auto 1fr; align-items:center; gap:3px 8px; }
+  .cell + .cell { padding-left:16px; margin-left:0; }
+  .reading { display:contents; }
+  .kicker { grid-row:1; grid-column:1; }
+  .day { grid-row:1; grid-column:2; justify-self:start; }
+  .times { grid-row:2; grid-column:1 / -1; gap:2px 8px; }
 }
