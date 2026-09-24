@@ -97,22 +97,6 @@ import type { EarningsAnalysisRow } from "@/lib/schema";
  */
 
 /**
- * Metin panellerinin sütun düzeni.
- *
- * Satır boyu okunur bandın (50-75 karakter) içinde kalsın diye sütun sayısı
- * genişlikle birlikte artıyor. Sabit bir `max-w` bunu yapamıyordu — dar
- * ekranda gereksiz kısıtlıyor, geniş ekranda panelin sağ yarısını boş
- * bırakıyordu.
- *
- * İKİ SÜTUN 1024'TEN (24 Eylül). Eşik `md` (768) idi ve 768'de sütunlar
- * 339 piksele, satır başına 37-42 karaktere iniyordu; bandın altında. Üç
- * sütun (`xl`) ise modüldeki katmansız bir kural yüzünden hiç
- * uygulanmıyordu (orada iki sütun yazılıydı) — tek sahip burası.
- */
-const PROSE_COLUMNS =
-  "columns-1 gap-x-10 lg:columns-2 [column-rule:1px_solid_var(--line-soft)]";
-
-/**
  * Küçük etiket (büyük harfe ÇEVRİLMEZ, 24 Eylül; `.plate` ile aynı gerekçe) — `.plate`'in rengi serbest bırakılmış hâli.
  *
  * Bu sabit, `.plate` KATMANSIZ yazıldığı dönemden kalma: o zaman yanına
@@ -1547,20 +1531,30 @@ export default async function AnalysisDetailPage(
                 ekran okuyucu yanlış fonetikle okuyor, tarayıcının "çevir"
                 önerisi devreye girmiyordu. Mercek düzeltilmiş, burası
                 atlanmıştı. */}
-            <div className={cn(PROSE_COLUMNS, styles.summaryProse)} lang={row.locale}>
-              {row.summary.map((paragraph, index) => (
-                <p
-                  key={index}
-                  className={cn(
-                    "mb-3.5 break-inside-avoid [text-wrap:pretty] last:mb-0",
-                    index === 0
-                      ? "text-read leading-[24px] text-strong"
-                      : "text-base leading-[23px] text-body",
-                  )}
-                >
-                  <RichText text={paragraph} />
+            {/* GİRİŞ SOLDA, DESTEK SAĞDA (24 Eylül). Giriş 32em'de, kartın
+                sol yarısında duruyordu ve sağında boşluk vardı; kalan
+                paragraflar altında 15 puntoluk iki dar sütundaydı — kart
+                "zayıf" okunuyordu (sahibinin geri bildirimi). Geniş ekranda
+                artık iki sütunlu bir ızgara: solda iri giriş (kartın
+                ~%55'i, satır ~60 harf), sağda kıl çizgiyle ayrılmış
+                destekleyici paragraflar alt alta ve okunur puntoda. Kartın
+                bütün genişliği kullanılıyor, satır boyu iki sütunda da
+                okunur bantta. Dar ekranda alt alta. */}
+            <div className={styles.summaryProse} lang={row.locale}>
+              {row.summary.length > 0 && (
+                <p className={cn(styles.summaryLead, "[text-wrap:pretty]")}>
+                  <RichText text={row.summary[0]} />
                 </p>
-              ))}
+              )}
+              {row.summary.length > 1 && (
+                <div className={styles.summaryRest}>
+                  {row.summary.slice(1).map((paragraph, index) => (
+                    <p key={index} className="[text-wrap:pretty]">
+                      <RichText text={paragraph} />
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
           </Panel>
           </Reveal>

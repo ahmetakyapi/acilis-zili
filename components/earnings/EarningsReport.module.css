@@ -762,32 +762,47 @@
   white-space: normal;
 }
 
-/* Sütun 600 piksel (1440) ve satır başına 78 karakter tutuyordu; paragraf
-   32em'de duruyor (birim notu `.verdictHeadline`te), artan pay sütun
-   aralığına ekleniyor. */
-.summaryProse > p {
-  max-width: 32em;
-  font-size: 0.94rem;
+/* GİRİŞ + DESTEK — gerekçe sayfada (`summaryProse`). */
+.summaryProse { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+.summaryLead {
+  /* 1101'in altında satır sınırı harf sayısından: 40em 1024'te 91, 768'de
+     81 harf veriyordu (ölçüldü); 34em ~65-70. */
+  max-width: 34em;
+  color: var(--text-strong);
+  font-size: 1.14rem;
+  font-weight: 500;
+  line-height: 1.65;
+  letter-spacing: -0.02em;
+}
+.summaryRest { display: flex; flex-direction: column; gap: 0.9rem; min-width: 0; }
+.summaryRest > p {
+  /* 42em 768'de 91 harfti (ölçüldü); 36em ~70. */
+  max-width: 36em;
+  color: var(--text-body);
+  font-size: 1rem;
   line-height: 1.8;
 }
 
-/* GİRİŞ PARAGRAFI İKİ SÜTUNUN ÜSTÜNDE. Tek başına birinci sütunda
-   duruyordu ve ikinci sütun ondan 150 piksel aşağıda bitiyordu (1440;
-   1024'te 197): girişin iri puntosu sütunu uzatıyor, dengelemeyi
-   bozuyordu. Tam genişlikte ve 32em'de, sütunlar ondan sonra başlıyor. */
-.summaryProse > p:first-child {
-  column-span: all;
-  max-width: 32em;
-  margin-bottom: 1.25rem;
-  font-size: 1.14rem;
-  line-height: 1.65;
-  letter-spacing: -0.025em;
-}
-
-@media (min-width: 1101px) {
-  .summaryProse > p:first-child {
-    font-size: 1.35rem;
+/* İki sütun 1024'ten (ölçüldü): 1024'te giriş ~470 piksel, ~55 harf; destek
+   ~390 piksel, ~50 harf — ikisi de okunur bantta. Daha dar ekranda alt alta. */
+@media (min-width: 1024px) {
+  .summaryProse {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 0 clamp(2rem, 3.5vw, 3.5rem);
   }
+  .summaryLead { max-width: none; font-size: 1.2rem; line-height: 1.6; }
+  /* Kıl çizgi sütun aralığının ORTASINDA: kutu aralığın yarısı kadar sola
+     uzanıyor, metin aynı kadar içeriden başlıyor. */
+  .summaryRest { padding-left: calc(clamp(2rem, 3.5vw, 3.5rem) / 2); margin-left: calc(clamp(2rem, 3.5vw, 3.5rem) / -2); border-left: 1px solid var(--line-soft); }
+  .summaryRest > p { max-width: none; font-size: 1rem; }
+  /* Tek paragraflık özet: giriş kartın tamamında, ama satır 44em'de. */
+  .summaryProse:not(:has(> .summaryRest)) { grid-template-columns: minmax(0, 1fr); }
+  .summaryProse:not(:has(> .summaryRest)) .summaryLead { max-width: 44em; }
+}
+@media (min-width: 1280px) {
+  .summaryLead { font-size: 1.35rem; }
 }
 
 /* ---- Bölümler: TEK KURAL, CSS'TE ----
