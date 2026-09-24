@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
 import { InkSplash, INK_SPLASH_SCRIPT } from "@/components/ink/InkSplash";
 import { SiteJsonLd } from "@/components/seo/JsonLd";
 import { getI18n, getTheme } from "@/lib/i18n";
@@ -176,8 +177,12 @@ export default async function RootLayout({
     >
       <body className="min-h-full antialiased">
         {/* Açılışın kararı boyamadan önce: içerik bir kare görünüp sonra
-            örtülmesin. Gerekçeler `components/ink/InkSplash.tsx`te. */}
-        <script dangerouslySetInnerHTML={{ __html: INK_SPLASH_SCRIPT }} />
+            örtülmesin. Gerekçeler `components/ink/InkSplash.tsx`te.
+            `beforeInteractive`: çıplak `<script>` kök düzen istemcide
+            yeniden çizildiğinde (segment 404'leri) React uyarısı basıyordu. */}
+        <Script id="ink-splash" strategy="beforeInteractive">
+          {INK_SPLASH_SCRIPT}
+        </Script>
         <InkSplash name={t.brand.name} />
         {/* Kuruluş + site künyesi; sayfa bazlı künyeler kendi rotalarında. */}
         <SiteJsonLd locale={locale} />

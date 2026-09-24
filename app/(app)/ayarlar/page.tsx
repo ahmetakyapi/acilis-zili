@@ -99,8 +99,9 @@ export default async function SettingsPage() {
         <Panel>
           <PanelHeader title="Yönetim" />
           <div className="px-4 py-4 sm:px-5">
-            {/* Dil öneksiz: panel yalnızca Türkçe ve `/en/admin` diye bir rota
-                yok (404). */}
+            {/* Dil öneksiz: panel yalnızca Türkçe. `/en/admin` de açılır (proxy
+                öneki düşürüyor) ama panelin kendi bağlantıları öneksiz ve
+                okuyucu ilk tıklamada Türkçe adrese geçerdi. */}
             <NextLink
               href="/admin"
               className="inline-flex min-h-11 w-fit items-center gap-2 text-base font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-10"

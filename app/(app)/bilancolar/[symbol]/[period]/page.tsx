@@ -780,12 +780,12 @@ export default async function AnalysisDetailPage(
         headline={`${row.company} ${row.periodLabel}`}
         description={row.headline}
         path={analysisHref(symbol, period)}
-        locale={locale}
+        locale={row.locale as Locale}
         published={row.publishedAt}
         modified={row.updatedAt}
       />
       <BreadcrumbJsonLd
-        locale={locale}
+        locale={row.locale as Locale}
         items={[
           /* Sektör halkası YOK: adresi süzgeçli dizin (`?filtre=`) ve o
              adresin canonical'ı süzgeçsiz dizin. Kırıntıda canonical olmayan

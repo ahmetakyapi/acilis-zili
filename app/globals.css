@@ -2144,8 +2144,9 @@ html.ink-splash .ink-splash-layer {
   position: fixed; inset: 0; z-index: 100;
   display: grid; place-content: center; justify-items: center; gap: 2px;
   background: var(--page-bg);
-  /* Emniyet: hidrasyon hiç gelmese de katman 4 saniyede kalkıyor. */
-  animation: ink-splash-safety 0.4s ease 4s both;
+  /* Emniyet: hidrasyon hiç gelmese de katman 3,8 saniyede kalkıyor (en geç
+     hidrasyon 0,9 s + sahne 2,3 s + imza 0,28 s + kapanış 0,42 s = 3,9 s). */
+  animation: ink-splash-safety 0.4s ease 3.8s both;
 }
 /* Sayfa kilitlenmiyor, bilinçli: kilit `html` sınıfına bağlı olurdu ve
    hidrasyon hiç gelmezse sınıf da kalkmazdı. Emniyet katmanı 4 saniyede

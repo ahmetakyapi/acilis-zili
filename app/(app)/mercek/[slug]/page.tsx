@@ -340,16 +340,18 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
       </header>
       </SpotlightCard>
 
+      {/* Künye YAZININ dilinde: çevirisi olmayan yazıda canonical Türkçe
+          adrese gidiyor (lib/site.ts) ve künye de aynı adresi söylemeli. */}
       <ArticleJsonLd
         headline={story.title}
         description={story.dek}
         path={`/mercek/${story.slug}`}
-        locale={locale}
+        locale={story.locale as Locale}
         published={story.publishedAt}
         modified={story.updatedAt}
       />
       <BreadcrumbJsonLd
-        locale={locale}
+        locale={story.locale as Locale}
         items={[
           { name: t.nav.stories, path: "/mercek" },
           { name: story.title, path: `/mercek/${story.slug}` },
