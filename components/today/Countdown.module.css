@@ -39,7 +39,24 @@
 .group:last-child .suffix { color:var(--primary-ink); }
 @keyframes digit-in { from { opacity:0; transform:translateY(62%); } to { opacity:1; transform:translateY(0); } }
 @keyframes digit-out { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-62%); } }
-@media (prefers-reduced-motion:reduce) { .digitIn { animation:none; } .digitOut { display:none; } }
+/* SON ON SANİYE — saniye rakamı her tikte bir kalp gibi atıyor: yaylı
+   giriş, bir tık büyüyüp oturma. Sayaç "yaklaşıyor" demeye başlıyor.
+   Gerekçe Countdown.tsx → "ZİL ANI". */
+.countdown[data-phase="final"] .group:last-child .digitIn { animation:digit-beat 520ms cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes digit-beat {
+  from { opacity:0; transform:translateY(62%) scale(1); }
+  55% { opacity:1; transform:translateY(0) scale(1.1); }
+  to { opacity:1; transform:translateY(0) scale(1); }
+}
+/* SIFIR — rakamlar marka rengine döner ve yanlarında zil çalar. Zil
+   yaylanarak sahneye giriyor; ses halkaları BellLoader'ın kendisinde. */
+.countdown[data-phase="rang"] .digit { color:var(--primary); }
+.bell { display:inline-grid; place-items:center; align-self:center; margin-left:.12em; animation:bell-enter 480ms cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes bell-enter { from { opacity:0; transform:scale(.4) rotate(-18deg); } to { opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce) {
+  .digitIn, .countdown[data-phase="final"] .group:last-child .digitIn, .bell { animation:none; }
+  .digitOut { display:none; }
+}
 /* Kap sorgusu desteklemeyen tarayıcıda `cqi` küçük görünüme çözülür ve
    rakam şişer; orada görünüm genişliğine bağlı bir yedek. */
 @supports not (font-size:1cqi) {

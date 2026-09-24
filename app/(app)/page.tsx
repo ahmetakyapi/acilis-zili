@@ -282,6 +282,7 @@ export default async function TodayPage() {
                 unitsShort={{ d: t.today.unitD, h: t.today.unitH, m: t.today.unitM, s: t.today.unitS }}
                 label={countdownLabel}
                 className={styles.countdown}
+                ring
               />
               <SessionRail
                 domain={rail.domain}
