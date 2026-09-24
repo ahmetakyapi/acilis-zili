@@ -981,6 +981,10 @@ const tr = {
     /* Profil kartının tek büyük okuması piyasa değeri; künye neyle
        hesaplandığını söylüyor (lib/data.ts → liveMarketCap). */
     capLiveNote: "Canlı Fiyatla Hesaplandı",
+    capRank: "Dizindeki Sırası",
+    capRankOf: "{n} Şirket İçinde",
+    capLeader: "En Büyük: {symbol} · {value}",
+    capLeaderSelf: "Dizinin En Büyüğü",
     nextReportRow: "Sıradaki Bilanço",
     experienceFundamentals: "Değerleme ve Beklentiler",
     experienceFundamentalsHint: "Fiyatın ötesinde: şirketin finansal yapısı ve analistlerin bakışı.",

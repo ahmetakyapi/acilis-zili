@@ -63,6 +63,22 @@
    sütunluk ızgara tek sütuna indi çünkü ikinci ölçü (son fiyat, başlığın
    kopyası) kalktı. */
 .profileVisual { display:flex; flex-direction:column; margin:0 -20px 18px; padding:14px 20px; border-block:1px solid var(--line-soft); background:var(--surface-sunken); }
+/* PİYASA DEĞERİ + DİZİNDEKİ SIRA YAN YANA (24 Eylül). Değer bloğun sol
+   yarısındaydı, sağ yarı boş duruyordu ("sağdaki boşluk komik"). Sağda
+   şirketin dizindeki sırası, en büyük şirkete oranını gösteren ince çubuk
+   ve en büyük şirketin adı — değeri ölçeğe oturtan bilgi. İki sütun aynı
+   tabandan başlıyor, arada kıl çizgi. Gerekçe ProfileCard'da. */
+.profileVisual[data-has-rank="true"] { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); align-items:start; gap:14px 20px; }
+.profileRank { display:flex; min-width:0; flex-direction:column; gap:6px; padding-left:20px; border-left:1px solid var(--line-soft); }
+.profileRank dt { color:var(--text-muted); font-size:11px; font-weight:500; }
+.profileRankValue { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; color:var(--text-strong); font-size:clamp(22px,1.9vw,26px); line-height:1.1; font-weight:600; letter-spacing:-.035em; }
+.profileRankValue > span { color:var(--text-muted); font-size:12px; font-weight:500; letter-spacing:0; }
+.profileRankTrack { position:relative; height:6px; margin-top:4px; border-radius:3px; background:var(--rail-track, var(--line-soft)); overflow:hidden; }
+.profileRankTrack > i { position:absolute; inset-block:0; left:0; border-radius:3px; background:var(--primary); }
+@media (max-width:359px) {
+  .profileVisual[data-has-rank="true"] { grid-template-columns:minmax(0,1fr); }
+  .profileRank { padding:12px 0 0; border-left:0; border-top:1px solid var(--line-soft); }
+}
 .profileMetric { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:6px; }
 .profileMetric dt { color:var(--text-muted); font-size:11px; font-weight:500; }
 .profileCapValue { color:var(--text-strong); font-size:clamp(28px,2.4vw,34px); line-height:1.1; font-weight:600; letter-spacing:-.045em; overflow-wrap:anywhere; }

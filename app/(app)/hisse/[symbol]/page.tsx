@@ -44,6 +44,7 @@ import {
   getStatus,
   getAnalyses,
   getStoriesForSymbol,
+  getCompanies,
   getSymbolNames,
   liveMarketCap,
   isKnownSymbol,
@@ -73,7 +74,7 @@ import {
 import { COMPLIANCE_THRESHOLD, screenCompliance } from "@/lib/compliance";
 import { industryLabel } from "@/lib/sectors";
 import { companySector } from "@/lib/company-sector";
-import { indexMemberOf, peersOf } from "@/db/seed/indices";
+import { indexMemberOf, peersOf, primaryOnly } from "@/db/seed/indices";
 import { fundMetaOf, INDEX_STRIP } from "@/db/seed/symbols";
 import { subIndustryName } from "@/db/seed/sub-industries";
 import {
@@ -1518,7 +1519,7 @@ async function ProfileCard({
      şirket, iki ekran, iki değer. Kural tek yerde: lib/data.ts →
      liveMarketCap. Fiyat alınamazsa kayıtlı değere düşülür. */
   const status = await getStatus();
-  const [result, meta, quoteForCap, nextReport, metricsForBand] = await Promise.all([
+  const [result, meta, quoteForCap, nextReport, metricsForBand, directory] = await Promise.all([
     getCompanyProfile(symbol),
     getSymbolNames([symbol]),
     getQuote(symbol, status),
@@ -1527,6 +1528,9 @@ async function ProfileCard({
     /* 52 hafta bandı — Anahtar Metrikler ile aynı çağrı, `finnhubFetch`
        altı saat önbellekli: yeni tur yok. */
     getKeyMetrics(symbol),
+    /* Dizindeki sıra için — sembol tablosu beş dakika önbellekte
+       (lib/data.ts → loadSymbolTable), yeni bir tur yok. */
+    getCompanies(),
   ]);
   if (!result.ok) {
     return (
@@ -1555,6 +1559,27 @@ async function ProfileCard({
   const liveCap = liveCapValue !== null;
   const marketCap = liveCapValue ?? (profile.currency === "USD" ? profile.marketCap : null);
   const member = indexMemberOf(symbol);
+  /* DİZİNDEKİ SIRA (24 Eylül). Piyasa değeri kartta tek başına bir sayıydı
+     ve sağ yarısı boştu: "4,97 T $" büyük mü, küçük mü, okuyucu kendi
+     bilgisiyle tamamlamak zorundaydı. Sıra ve en büyük şirkete oranı o
+     sayıyı ölçeğe oturtuyor. Bu şirketin değeri CANLI (yukarıda), ötekiler
+     sembol tablosunun önbellek fiyatından — en fazla birkaç dakika geride;
+     sıra o farktan ancak sınırdaki iki şirket arasında oynayabilir. Şirket
+     dizinde yoksa (ikinci sınıf pay, dolar dışı ADR) blok basılmıyor. */
+  const listed = primaryOnly(directory).filter(
+    (row) => row.marketCap !== null && row.marketCap > 0,
+  );
+  const rankInfo = (() => {
+    if (marketCap === null || !listed.some((row) => row.symbol === symbol)) return null;
+    const others = listed.filter((row) => row.symbol !== symbol);
+    const rank = 1 + others.filter((row) => (row.marketCap as number) > marketCap).length;
+    const leader = others.reduce<(typeof others)[number] | null>(
+      (best, row) => (best === null || (row.marketCap as number) > (best.marketCap as number) ? row : best),
+      null,
+    );
+    const leaderCap = leader ? Math.max(leader.marketCap as number, marketCap) : marketCap;
+    return { rank, total: listed.length, leader: rank === 1 ? null : leader, share: marketCap / leaderCap };
+  })();
   const about = await describeSymbol(symbol, locale);
   const websiteHref = safeExternalUrl(profile.weburl);
   const hourLabels: Record<string, string> = {
@@ -1667,7 +1692,7 @@ async function ProfileCard({
           plandaki sembol filigranı ve yörünge halkaları da gitti: derinlik
           tonla kuruluyor, süsle değil (tema § 1). */}
       {marketCap !== null && (
-        <div className={styles.profileVisual}>
+        <div className={styles.profileVisual} data-has-rank={rankInfo !== null}>
           <dl className={styles.profileMetric}>
             <dt>{t.market.marketCap}</dt>
             <dd className={cn("numeral", styles.profileCapValue)}>
@@ -1675,6 +1700,27 @@ async function ProfileCard({
             </dd>
             {liveCap && <dd className={styles.profileCapNote}>{t.stock.capLiveNote}</dd>}
           </dl>
+          {rankInfo && (
+            <dl className={styles.profileRank}>
+              <dt>{t.stock.capRank}</dt>
+              <dd className={cn("numeral", styles.profileRankValue)}>
+                {rankInfo.rank.toLocaleString(locale)}.
+                <span>{t.stock.capRankOf.replace("{n}", rankInfo.total.toLocaleString(locale))}</span>
+              </dd>
+              {/* Ölçek: en büyük şirkete oran — bir büyüklük, yargı değil
+                  (CLAUDE.md "Karşılaştırılan her büyüklük bir de ÇİZGİ"). */}
+              <dd aria-hidden className={styles.profileRankTrack}>
+                <i style={{ width: `${Math.max(2, Math.min(100, rankInfo.share * 100)).toFixed(1)}%` }} />
+              </dd>
+              <dd className={styles.profileCapNote}>
+                {rankInfo.leader
+                  ? t.stock.capLeader
+                      .replace("{symbol}", rankInfo.leader.symbol)
+                      .replace("{value}", formatMoneyCompact(rankInfo.leader.marketCap, locale))
+                  : t.stock.capLeaderSelf}
+              </dd>
+            </dl>
+          )}
         </div>
       )}
       {/* Şirket ne iş yapar — sektör satırından önce düz cümleyle anlatılır */}
