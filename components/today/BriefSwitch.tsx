@@ -159,16 +159,10 @@ export function BriefSwitch({
        "okunacak yer" yerine "vurgulanmış kutu" gibi okunuyordu. Accent
        kenarlık kalıyor — bültenin günün başyazısı olduğu oradan belli.
 
-       GENİŞ EKRANDA İKİ SÜTUN (24 Eylül, ≥1200). Kart tam genişlikte
-       akıyordu: 1440'ta gövde satırı 95–128 harf, manşet de künye, sekme,
-       tarih ve not satırlarının altında, kartın 100 piksel içinden
-       başlıyordu. Metin artık solda 62ch'lik bir sütunda (satır 60–78 harf)
-       ve manşet kartın tepesinden başlıyor; künye, sekmeler, tarih, bayat
-       notu ve arşiv bağlantısı sağda 15rem'lik bir rayda, açık bülten
-       uzadıkça ekranda kalıyor (yapışkan). Ray var olan içerikle dolu —
-       BriefBody'deki "kabı daraltmak boşluğu yalnızca taşır" itirazı burada
-       geçerli değil, sağda boş bir yarım kart yok. 1200'ün altında sıra
-       eskisi gibi alt alta: künye ve denetimler tek satırda, manşet altta. */
+       DENETİMLER METNİN ÜSTÜNDE, HER GENİŞLİKTE (24 Eylül). ≥1200'de
+       künye, sekmeler ve arşiv sağda yapışkan bir raydaydı; bülten
+       kaydırıldıkça ray kayıyor ve metnin sağında hep bir sütunluk boşluk
+       varmış gibi duruyordu. Gerekçe BriefSwitch.module.css'te. */
     <section className={cn("rounded-xl border border-primary-faint bg-surface-solid p-5", styles.card)}>
       <div className={styles.rail}>
         <div className={cn("flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1", styles.railKicker)}>
@@ -235,12 +229,14 @@ export function BriefSwitch({
             {/* MANŞET GERÇEKTEN MANŞET — mercek manşetiyle aynı basamak;
                 `max-w-[34ch]` satırı iki-üç satıra indiriyor, `text-balance`
                 yetim kelime bırakmıyor.
-                DÜZ MÜREKKEP (23 Eylül). İki-üç satırlık bir metinde degrade
-                satır satır değil kutu boyunca yayılıyor; tema dosyasının
-                istisnası yalnızca KISA display metni için. `data-ink="plain"`
-                genel `main h2` maskesini de kapatıyor (globals.css). */}
-            <h2 data-ink="plain" className="max-w-[34ch] text-balance text-heading font-bold leading-[1.16] tracking-[-0.03em] text-strong sm:text-subdisplay">
-              {brief.headline}
+                MAVİ DEGRADE, SATIR SATIR (24 Eylül). Düz mürekkepteydi:
+                iki-üç satırlık metinde degrade kutu boyunca yayılıyor ve
+                ikinci satır başka bir tonda başlıyordu. `data-ink="lines"`
+                degradeyi başlığın içindeki satır içi kutuya taşıyor ve
+                `box-decoration-break: clone` her satıra kendi degradesini
+                veriyor (globals.css). */}
+            <h2 data-ink="lines" className="max-w-[34ch] text-balance text-heading font-bold leading-[1.16] tracking-[-0.03em] text-strong sm:text-subdisplay">
+              <span className="ink-line">{brief.headline}</span>
             </h2>
             {body}
           </>

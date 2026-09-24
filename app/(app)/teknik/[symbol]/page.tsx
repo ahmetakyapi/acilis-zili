@@ -462,15 +462,17 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           <section className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.scenarios}</h2>
             <div className={styles.scenarios} data-motion-stagger>
-              {/* Başlığın yanındaki ok senaryonun yönünü RENKTEN BAĞIMSIZ
+              {/* Başlıklar düz mürekkep (`data-ink="plain"`): rengi yön
+                  taşıyor, degrade onu silerdi (globals.css).
+                  Başlığın yanındaki ok senaryonun yönünü RENKTEN BAĞIMSIZ
                   söylüyor: renk körlüğünde iki kart yalnızca tonla
                   ayrılıyordu ve ikisi de aynı gri-yeşile düşüyordu. */}
               <div className={styles.scenario} data-tone="up">
-                <h3><TrendUp size={15} weight="bold" aria-hidden />{t.technical.bullCase}</h3>
+                <h3 data-ink="plain"><TrendUp size={15} weight="bold" aria-hidden />{t.technical.bullCase}</h3>
                 <p lang={copyLang}>{tieFigures(copy.bull)}</p>
               </div>
               <div className={styles.scenario} data-tone="down">
-                <h3><TrendDown size={15} weight="bold" aria-hidden />{t.technical.bearCase}</h3>
+                <h3 data-ink="plain"><TrendDown size={15} weight="bold" aria-hidden />{t.technical.bearCase}</h3>
                 <p lang={copyLang}>{tieFigures(copy.bear)}</p>
               </div>
             </div>

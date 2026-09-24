@@ -178,7 +178,7 @@ export default async function GuideArticlePage(
                 </p>
               </div>
             </div>
-            <h1 className={detail.title}>{article.title}</h1>
+            <h1 data-ink="lines" className={detail.title}><span className="ink-line">{article.title}</span></h1>
             <p className={detail.dek}>{article.dek}</p>
           </div>
           {hasToc && (

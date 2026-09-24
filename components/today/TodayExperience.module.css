@@ -43,7 +43,12 @@
 .toplineBells { padding-left:22px; border-left:1px solid var(--line-soft); }
 /* Kopya kolonundaki ikinci künye yalnızca tablette (gerekçe page.tsx). */
 .copyBells { display:none !important; }
-.heroMain { display:grid; grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr); align-items:stretch; gap:28px; padding-top:18px; padding-bottom:0; }
+/* SAYAÇ KOLONU GENİŞ, DESTE DAR (24 Eylül). Oran .94 / 1.06'ydı ve zil
+   şeridi 1440'ta ~570 piksele sıkışıyordu: olay rozetleri numaradan
+   ibaretti, saatlerine yer yoktu. Deste 2×2 kartta kalıyor, yalnızca her
+   kart daralıyor (1440'ta ~310'dan ~235 piksele); fiyat ve yüzde tek
+   satıra sığıyor, kıvılcım çizgisi kısalıyor. */
+.heroMain { display:grid; grid-template-columns:minmax(0,1.22fr) minmax(0,.88fr); align-items:stretch; gap:28px; padding-top:18px; padding-bottom:0; }
 /* KOPYA KOLONU İKİ UCUNDAN SABİTLENİYOR (22 Eylül).
    `align-self:center` kolonu ortalıyordu ve boşluk iki banda bölünüyordu:
    1440'ta rozetin üstünde 45, tarih satırının altında 46 piksel (1280'de
