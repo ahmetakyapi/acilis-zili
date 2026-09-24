@@ -356,7 +356,14 @@ export function AppShell({
             <Link
               key={item.key}
               href={L(item.href)}
-              prefetch
+              /* ÖN YÜKLEME NİYETLE (24 Eylül, ölçüldü). Düz `prefetch` her sayfa
+                 açılışında bütün sekmelerin TAM sunucu çizimini istiyordu:
+                 masaüstünde beş, telefonda dört sayfa — okuyucu hiçbirini
+                 açmasa da her ziyarette sunucu, veritabanı ve sağlayıcı o
+                 sayfaları da çiziyordu. Artık görünürken yalnızca hafif ön
+                 yükleme, tam yükleme fare üstüne geldiğinde ya da dokunuş
+                 başladığında (tıklamadan 100-300 ms önce) — geçiş yine anlık. */
+              prefetchOnIntent
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex flex-1 flex-col items-center gap-[5px] px-1 pb-2.5 pt-3 text-nano tracking-[0.03em] transition-colors",

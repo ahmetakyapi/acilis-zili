@@ -609,10 +609,31 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         animation.cancel(); unwatch(element); prepared.delete(element);
       }
       const elements = root.querySelectorAll<HTMLElement | SVGElement>(selector);
+      /* ÖNCE HEPSİNİ ÖLÇ, SONRA HEPSİNE YAZ (24 Eylül, ölçüldü). Döngü her
+         öğede önce konum okuyor (`getBoundingClientRect`), sonra bir
+         animasyon başlatıp duraklatıyordu; animasyonun ilk karesi stili
+         değiştirdiği için bir SONRAKİ öğenin okuması yerleşimi baştan
+         hesaplatıyordu. Şirketler tablosunda yüzlerce satırda bu, 4x
+         yavaşlatılmış CPU'da tek başına 228 ms'lik bir görevdi. Okumalar
+         artık tek geçişte ve yazmalardan önce: yerleşim bir kez hesaplanıyor. */
+      const measured: {
+        element: HTMLElement | SVGElement;
+        visible: boolean;
+        tall: boolean;
+        ringEnd: string | null;
+      }[] = [];
       elements.forEach((element) => {
         if (prepared.has(element) || settled.has(element) || element.closest("[data-motion-root]") !== root) return;
         const visible = inView(element);
         if (firstPass && visible) { settled.add(element); return; }
+        measured.push({
+          element,
+          visible,
+          tall: element.getBoundingClientRect().height > window.innerHeight * .7,
+          ringEnd: element.classList.contains("ring-fill") ? getComputedStyle(element).strokeDashoffset : null,
+        });
+      });
+      measured.forEach(({ element, visible, tall, ringEnd }) => {
         const parent = element.parentElement;
         const intro = parent?.hasAttribute("data-motion-intro") || parent?.classList.contains("page-heading-copy");
         const siblings = intro || parent?.hasAttribute("data-motion-stagger") ? Array.from(parent!.children) : [];
@@ -630,7 +651,6 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         const dot = element.classList.contains("spark-dot");
         const ring = element.classList.contains("ring-fill");
         const origin = element.style.transformOrigin || "left center";
-        const tall = element.getBoundingClientRect().height > window.innerHeight * .7;
         // Signed distance bars start at their zero reference: negative
         // values grow from the right. Existing lines retain their origin.
         // Curves reveal along the actual SVG path, never squeeze the series.
@@ -642,7 +662,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
           : spark
           ? [{ clipPath: "inset(-25% 100% -25% -2%)" }, { clipPath: "inset(-25% -2% -25% -2%)" }]
           : arc ? [{ strokeDashoffset: "1" }, { strokeDashoffset: "0" }]
-          : ring ? [{ strokeDashoffset: element.style.getPropertyValue("--ring-circumference") }, { strokeDashoffset: getComputedStyle(element).strokeDashoffset }]
+          : ring ? [{ strokeDashoffset: element.style.getPropertyValue("--ring-circumference") }, { strokeDashoffset: ringEnd ?? "0" }]
           : area ? [{ opacity: 0 }, { opacity: element.getAttribute("opacity") || 1 }]
           : dot ? [{ opacity: 0, transform: "scale(.5)" }, { opacity: 1, transform: "none" }]
           : bar ? [{ transform: "scaleY(.04)", transformOrigin: "center bottom" }, { transform: "scaleY(1)", transformOrigin: "center bottom" }]

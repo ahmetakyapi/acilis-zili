@@ -235,11 +235,24 @@ koruma `fetch`in kendi veri önbelleği (`revalidate`), yani farklı bir
 mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
 (`getHolidays`, `getStatus`, `getEventsBetween`, `getEventsBetweenResult`,
 `getEarningsBetween`,
-`getNewsById`, `getStoryBySlug`, `getStoryLocales`, `getAnalysis`,
-`symbolNamesForKey`, `isKnownSymbol`), `lib/technical-data.ts`
+`getNewsById`, `getStoryBySlug`, `getStoryLocales`, `getBriefIssue`,
+`getAnalysis`, `symbolNamesForKey`, `isKnownSymbol`), `lib/technical-data.ts`
 (`getTechnicalBoard`, `getTechnicalDetail`, `getPublishedSymbols`),
 `lib/admin.ts` (`getAdmin`), `lib/admin-data.ts` ve
 `lib/providers/index.ts` (`quotesForKey`).
+
+İstekler ARASI önbellek (`unstable_cache`) ayrı bir mekanizma ve hata
+önbelleğin DIŞINDA yakalanır (düşen veritabanının boş listesi saklanmasın):
+`loadHolidays` (gün) ve `loadSymbolTable` (5 dakika — sembol × kotasyon
+önbelleği birleşimi; `getSymbolNames` ile `getCompanies` ondan süzüyor,
+gerekçe ve ölçüm `lib/data.ts`te).
+
+**Kökte `:has()` yok.** `html:has(...)` belgedeki HER DOM değişikliğinde
+yeniden değerlendiriliyor ve tüm belgenin stilini baştan hesaplatıyor: ana
+sayfada geri sayım her saniye bir rakam eklediği için 4x yavaş CPU'da
+yükleme boyunca 126 tam belge hesabı, 2,1 saniye (24 Eylül, ölçüldü).
+Köke bağlı bir kural gerekiyorsa sayfanın kendisi basar (bkz.
+`app/admin/layout.tsx`) ya da `<html>` özniteliği taşır.
 
 ## Veri dürüstlüğü
 

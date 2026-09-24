@@ -110,7 +110,7 @@ export function BriefEditor({
   revisions: StoryRevision[];
   /** Sayfanın sunucuda çizdiği ilk önizleme — gövdenin kayıttaki hâli. */
   ilkOnizleme: ReactNode;
-  /** Yayındaki bülten sayfası, kaydın dilinde (`/en/bulten?…`). */
+  /** Yayındaki bülten sayfası, kaydın dilinde (`/en/bulten/2026-09-24`). */
   canliAdres: string;
 }) {
   const [kayit, kaydet, kaydediliyor] = useActionState(saveBriefFromAdmin, BOS);

@@ -80,9 +80,22 @@ export default async function AdminLayout({
        İngilizce çerezle gezen bir yönetici `<html lang="en">` altında Türkçe
        metin okuyordu: ekran okuyucu yanlış sesletiyor, `uppercase` etiketler
        İngilizce kuralıyla büyüyüp "İÇERİK" yerine "ICERIK" üretiyordu. */
-    /* `data-admin-shell`: globals.css kaydırma payını buna bağlıyor —
-       klavyeyle odaklanan öğe yapışkan sekme bandının altında kalmasın. */
+    /* `data-admin-shell`: yönetim kabuğunun işareti (editör ve çapa
+       bileşenleri ona atıf yapıyor). */
     <div lang="tr" data-admin-shell className="flex min-h-dvh flex-col">
+      {/* YÖNETİMİN KAYDIRMA PAYI KENDİ BANDINA GÖRE (23 Eylül). Sitenin üst
+          payı 76 piksel (64 piksellik uygulama çubuğu + nefes); yönetimde o
+          çubuk yok, yapışkan olan yalnızca 44 piksellik sekme bandı (ölçüldü,
+          1440 ve 390). Pay bant + 12 piksel; bant güvenli alanı kendi
+          taşıdığı için pay da taşıyor.
+          Kural globals.css'te `html:has([data-admin-shell])` idi ve SİTENİN
+          TAMAMINI yavaşlatıyordu (24 Eylül, ölçüldü): kökte duran bir
+          `:has()` belgenin her yerindeki her DOM değişikliğinde yeniden
+          değerlendiriliyor ve belgenin tümünün stilini baştan hesaplatıyor.
+          Ana sayfada geri sayım her saniye bir rakam eklediği için 4x
+          yavaşlatılmış CPU'da her saniye ~100 ms'lik 1.216 öğelik bir stil
+          hesabı çıkıyordu. Kural artık yalnızca yönetim sayfalarında var. */}
+      <style>{`html{scroll-padding-top:calc(env(safe-area-inset-top) + 56px)}`}</style>
       <Suspense fallback={null}>
         <RouteProgress label="Yükleniyor" />
       </Suspense>

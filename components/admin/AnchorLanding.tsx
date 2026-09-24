@@ -24,7 +24,7 @@ import { useEffect } from "react";
  * tazelenmesi (`router.refresh`) paneli yeniden bağlamıyor, okuru okuduğu
  * yerden çekip çapaya geri götürmüyor. Kaydırma anlık — iniş bir geçiş
  * değil, adresin söylediği yer. Bant payı `html`in `scroll-padding-top`unda
- * (globals.css, `data-admin-shell`); `scrollIntoView` onu sayıyor.
+ * (`app/admin/layout.tsx`); `scrollIntoView` onu sayıyor.
  *
  * Karşılaştırma ham: panel çapaları ASCII (`veri`, `anahtarlar`) ve
  * `decodeURIComponent` bozuk bir `%` dizisinde fırlatıp paneli düşürürdü.

@@ -55,7 +55,7 @@ export function AdminPanel({
            `min-w-0`: ızgara sütunu içerikle genişlemesin — Üyeler
            ekranında tablo sütunu 390'da 562 piksele itiyordu.
            ÇAPA PAYI BURADA DEĞİL, `html`de: yapışkan sekme bandının payı
-           globals.css'te (`data-admin-shell`) ve çapaya inen her şey onu
+           app/admin/layout.tsx'te ve çapaya inen her şey onu
            alıyor. Panel bir de `scroll-mt-24` taşıyordu; iki pay toplanıyor
            ve `#çapa` ile inilen panel bandın 108 piksel altında, boşlukta
            duruyordu. */
