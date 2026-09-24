@@ -308,7 +308,7 @@ eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye ba
   içindeki `@theme inline` bloğunda. Hardcoded renk yasak.
 - **Tema** next-themes değil, `data-theme` + `az-theme` çerezi.
 - **Marka işareti tek kaynak:** `components/brand/BellMark.tsx` (zil
-  geometrisi, görüş kutusu, `--mark-*` token'ları). Lacivert karo iki
+  geometrisi, görüş kutusu, `--mark-*` token'ları). Mavi degrade karo iki
   temada da aynı — sekme ve ana ekran ikonu temayı bilemiyor. `app/icon.svg`,
   `app/apple-icon.tsx` ve `lib/og.tsx` aynı sabitleri okur; `.ico` ve PWA
   PNG'leri elle değil `npm run build:favicon` ile üretilir.

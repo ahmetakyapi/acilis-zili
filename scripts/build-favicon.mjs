@@ -45,7 +45,7 @@ const PWA_SIZES = [192, 512];
 const BELL = `
     <rect x="118" y="40" width="20" height="16" rx="8"/>
     <path d="M128 58c-27 0-44 20-46 47l-3 37c-1 11-7 18-18 22h134c-11-4-17-11-18-22l-3-37c-2-27-19-47-46-47z"/>
-    <rect x="52" y="170" width="152" height="15" rx="7.5" fill="#35b8ff"/>
+    <rect x="52" y="170" width="152" height="15" rx="7.5"/>
     <circle cx="128" cy="206" r="13"/>`;
 
 /**
@@ -56,12 +56,18 @@ const BELL = `
  */
 const MASKABLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#17345c"/>
-      <stop offset="1" stop-color="#0a1a31"/>
+    <linearGradient id="tile" x1="12%" y1="0%" x2="88%" y2="100%">
+      <stop offset="0" stop-color="#5cc4ff"/>
+      <stop offset=".48" stop-color="#1f86e0"/>
+      <stop offset="1" stop-color="#0b3f86"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".22"/>
+      <stop offset=".5" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
   </defs>
   <rect width="512" height="512" fill="url(#tile)"/>
+  <rect width="512" height="512" fill="url(#gloss)"/>
   <svg width="512" height="512" viewBox="-42 -46 340 340" fill="#ffffff">${BELL}
   </svg>
 </svg>`;

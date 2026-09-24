@@ -145,14 +145,15 @@
     rgb(255 255 255 / 0) 62%
   );
 
-  /* MARKA İŞARETİ — lacivert karo, beyaz zil, marka mavisi ağız çubuğu.
-     İki temada AYNI karo: sekme ve ana ekran ikonu temayı bilemiyor, iki
-     işaret bir yerde mutlaka yan yana düşerdi (components/brand/BellMark).
-     Yalnızca kenar ve gölge temaya uyuyor. */
-  --mark-gradient: linear-gradient(135deg, #17345c 0%, #0a1a31 100%);
-  --mark-edge: rgb(159 212 255 / 0.2);
+  /* MARKA İŞARETİ — Klasik Tören Zili: açık maviden gece mavisine inen
+     karo, üstte hafif bir parlaklık, bütünüyle beyaz zil. İki temada AYNI
+     karo: sekme ve ana ekran ikonu temayı bilemiyor, iki işaret bir yerde
+     mutlaka yan yana düşerdi (components/brand/BellMark). Yalnızca kenar ve
+     gölge temaya uyuyor. */
+  --mark-gradient: linear-gradient(180deg, rgb(255 255 255 / 0.22) 0%, rgb(255 255 255 / 0) 50%), linear-gradient(150deg, #5cc4ff 0%, #1f86e0 48%, #0b3f86 100%);
+  --mark-edge: rgb(255 255 255 / 0.18);
   --mark-ink: #ffffff;
-  --mark-lip: #35b8ff;
+  --mark-lip: #ffffff;
 
   /* Manşet mürekkebi — sayfa başlıkları ve geri sayım bu degradeyle yazılır.
      Lacivertten accent maviye; koyu tema karşılığı ters yönde açılır, yoksa
@@ -172,7 +173,7 @@
   --display-gradient-tight: linear-gradient(100deg, #0a2547 0%, #1e6fbe 100%);
 
   /* Marka karosunun oturma gölgesi — rozet hissi buradan geliyor. */
-  --mark-shadow: 0 1px 2px rgb(10 26 49 / 0.3), 0 4px 10px rgb(10 26 49 / 0.18);
+  --mark-shadow: 0 1px 2px rgb(13 92 182 / 0.22), 0 4px 10px rgb(13 92 182 / 0.16);
 
   --chart-grid: rgb(16 32 52 / 0.07);
   --skeleton-lo: rgb(16 32 52 / 0.045);
@@ -293,9 +294,9 @@
     rgb(18 38 60 / 0) 60%
   );
 
-  /* Karo aynı; zemine yaklaştığı için (#0a1a31 köşe, #070d16 zemin) iç
-     kenar bir kademe açık. */
-  --mark-edge: rgb(159 212 255 / 0.3);
+  /* Karo aynı; koyu köşesi (#0b3f86) zemine yaklaştığı için iç kenar bir
+     kademe açık. */
+  --mark-edge: rgb(255 255 255 / 0.24);
 
   --display-gradient: linear-gradient(
     112deg,

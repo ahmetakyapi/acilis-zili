@@ -30,8 +30,9 @@ const APPLE_VIEWBOX = "-25 -29 306 306";
  * 2. Zil bir kademe KÜÇÜK. Maske kenardan yiyor; sekme ikonuyla aynı oran
  *    ana ekranda zilin eteklerini kırpıyordu.
  *
- * Lacivert karo, beyaz zil — sitenin kendi işaretiyle (BellMark) aynı. Ana
- * ekran temayı bilmiyor; sitenin iki teması da zaten aynı karoyu kullanıyor.
+ * Mavi degrade karo, beyaz zil — sitenin kendi işaretiyle (BellMark) aynı.
+ * Ana ekran temayı bilmiyor; sitenin iki teması da zaten aynı karoyu
+ * kullanıyor.
  */
 export default function AppleIcon() {
   return new ImageResponse(
