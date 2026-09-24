@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";

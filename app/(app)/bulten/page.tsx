@@ -1,7 +1,7 @@
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { Suspense } from "react";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { BriefBody } from "@/components/today/BriefBody";
 import {
   EmptyState,

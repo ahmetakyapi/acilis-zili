@@ -1,5 +1,5 @@
 import polish from "@/components/motion/UtilityExperience.module.css";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { GithubLogo } from "@phosphor-icons/react/dist/ssr";
 import { BellMark } from "@/components/brand/BellMark";
 import { getI18n } from "@/lib/i18n";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { guideArticle } from "@/content/guide";

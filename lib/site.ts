@@ -100,8 +100,12 @@ export function pageAlternates(
     /* CANONICAL HER DİLDE KENDİSİ. Bir dönem her iki dil de Türkçe adresi
        canonical gösteriyordu ve bu, İngilizce sayfayı Türkçenin mükerreri
        ilan etmek demekti: arama motoru onu dizinden düşürür, yani dili
-       adrese taşımanın bütün faydası kaybolurdu. */
-    canonical: withLocale(path, locale),
+       adrese taşımanın bütün faydası kaybolurdu.
+       TEK İSTİSNA: bu dilde içerik YOKSA. Çevirisi olmayan bir yazı
+       `/en/...` adresinde orijinal Türkçe gövdesiyle gösteriliyor; kendini
+       canonical ilan etmesi aynı metnin ikinci kopyasını dizine sokmak
+       demekti. O zaman canonical metnin gerçekten ait olduğu dile gider. */
+    canonical: withLocale(path, mevcut.includes(locale) ? locale : mevcut[0]),
     /* hreflang: aynı içeriğin öteki dildeki adresi. Bu olmadan arama motoru
        iki sayfayı birbirinin çevirisi olarak değil, ayrı iki sayfa (hatta
        mükerrer içerik) olarak görüyordu. `x-default` önekSİZ Türkçeyi

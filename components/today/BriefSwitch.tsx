@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState, Kicker } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 import type { BriefPeriod } from "@/lib/brief";

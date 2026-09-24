@@ -1,6 +1,6 @@
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArticleBody } from "@/components/article/ArticleBody";
 import { LEGAL_UPDATED, disclaimerMd, privacyMd } from "@/content/legal";
 import { getI18n } from "@/lib/i18n";

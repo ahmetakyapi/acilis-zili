@@ -2,7 +2,7 @@ import { withLocale } from "@/lib/i18n/routing";
 import { cache, Suspense } from "react";
 import { MotionExperience, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { GlyphTile } from "@/components/article/GlyphTile";

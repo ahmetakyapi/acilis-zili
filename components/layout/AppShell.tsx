@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { usePathname } from "next/navigation";
 import { BellMark, BrandWord } from "@/components/brand/BellMark";
 import type { Locale } from "@/lib/i18n/config";

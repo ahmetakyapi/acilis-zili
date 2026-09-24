@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
 import {
   foldForSearch,

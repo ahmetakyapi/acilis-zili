@@ -39,7 +39,9 @@ export function SiteJsonLd({ locale }: { locale: Locale }) {
           "@type": "Organization",
           name,
           url: home,
-          logo: `${SITE_URL}/icon.svg`,
+          /* PNG, SVG değil: Google'ın logo yönergesi yalnızca raster
+             biçimleri kabul ediyor; svg adresli logo sessizce yok sayılıyor. */
+          logo: `${SITE_URL}/icon-512.png`,
         }}
       />
       <Block
@@ -50,12 +52,14 @@ export function SiteJsonLd({ locale }: { locale: Locale }) {
           url: home,
           inLanguage: locale,
           /* Site içi arama: sonuç ekranı `/sirketler` dizini — palet bir
-             adres üretmiyor, dizin üretiyor. */
+             adres üretmiyor, dizin üretiyor. Parametre `q`: dizin sayfası
+             onu okuyor (`search.q`). Bir dönem burada `ara` yazıyordu ve
+             arama kutusundan gelen her ziyaret süzülmemiş dizine iniyordu. */
           potentialAction: {
             "@type": "SearchAction",
             target: {
               "@type": "EntryPoint",
-              urlTemplate: `${SITE_URL}${withLocale("/sirketler", locale)}?ara={search_term_string}`,
+              urlTemplate: `${SITE_URL}${withLocale("/sirketler", locale)}?q={search_term_string}`,
             },
             "query-input": "required name=search_term_string",
           },
@@ -72,7 +76,7 @@ export function ArticleJsonLd({
   path,
   locale,
   published,
-  image,
+  modified,
 }: {
   headline: string;
   description?: string | null;
@@ -80,9 +84,11 @@ export function ArticleJsonLd({
   path: string;
   locale: Locale;
   published?: Date | string | null;
-  image?: string | null;
+  modified?: Date | string | null;
 }) {
   const url = `${SITE_URL}${withLocale(path, locale)}`;
+  const name = locale === "en" ? "Opening Bell" : "Açılış Zili";
+  const iso = (d: Date | string) => (typeof d === "string" ? d : d.toISOString());
   return (
     <Block
       data={{
@@ -92,18 +98,16 @@ export function ArticleJsonLd({
         ...(description ? { description } : {}),
         inLanguage: locale,
         mainEntityOfPage: url,
-        ...(published
-          ? {
-              datePublished:
-                typeof published === "string"
-                  ? published
-                  : published.toISOString(),
-            }
-          : {}),
-        ...(image ? { image } : {}),
+        ...(published ? { datePublished: iso(published) } : {}),
+        ...(modified ? { dateModified: iso(modified) } : {}),
+        /* Yazar bir kişi değil, yayın: metinler editoryal ekipten değil
+           sitenin kendi rutininden çıkıyor ve bir kişi adı uydurmak
+           yanıltıcı olurdu. */
+        author: { "@type": "Organization", name, url: `${SITE_URL}${withLocale("/", locale)}` },
         publisher: {
           "@type": "Organization",
-          name: locale === "en" ? "Opening Bell" : "Açılış Zili",
+          name,
+          logo: { "@type": "ImageObject", url: `${SITE_URL}/icon-512.png` },
         },
       }}
     />
@@ -124,7 +128,12 @@ export function BreadcrumbJsonLd({
       data={{
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
-        itemListElement: items.map((item, index) => ({
+        /* Ana sayfa ilk halka: kırıntı sonuçta "site › bölüm › yazı" diye
+           okunuyor, bölümle başlayan yol sitenin adını hiç taşımıyordu. */
+        itemListElement: [
+          { name: locale === "en" ? "Opening Bell" : "Açılış Zili", path: "/" },
+          ...items,
+        ].map((item, index) => ({
           "@type": "ListItem",
           position: index + 1,
           name: item.name,

@@ -11,7 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { X } from "@phosphor-icons/react";
 import type { CompareBarsResponse } from "@/app/api/karsilastir/route";
 import { CompareChart } from "@/components/markets/CompareChart";

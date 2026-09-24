@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 
 /**
  * Analiz metinlerindeki satır içi biçimlendirme — yalnızca iki şey:

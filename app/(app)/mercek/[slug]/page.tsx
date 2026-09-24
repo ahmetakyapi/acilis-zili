@@ -10,7 +10,7 @@ import {
   type StoryFigureBlock,
 } from "@/components/stories/StoryFigure";
 import { StoryCompanies, StoryCompaniesFallback } from "@/components/stories/StoryCompanies";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, CaretDown } from "@phosphor-icons/react/dist/ssr";
 import {
@@ -346,6 +346,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
         path={`/mercek/${story.slug}`}
         locale={locale}
         published={story.publishedAt}
+        modified={story.updatedAt}
       />
       <BreadcrumbJsonLd
         locale={locale}

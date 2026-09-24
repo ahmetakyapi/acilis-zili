@@ -3,7 +3,7 @@ import experience from "@/components/motion/EditorialExperience.module.css";
 import editorial from "@/components/article/ArticleEditorial.module.css";
 import detail from "@/components/stories/StoryDetail.module.css";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import {
   ArticleBody,

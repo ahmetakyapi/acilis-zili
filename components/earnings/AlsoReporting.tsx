@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { Panel } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";

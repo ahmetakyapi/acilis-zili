@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { SpotlightCard } from "@/components/motion/PremiumMotion";
 import { DataStamp, type DataStampLabels } from "@/components/ui/primitives";
 import { Sparkline } from "@/components/ui/Sparkline";

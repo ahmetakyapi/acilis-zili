@@ -2,7 +2,7 @@
 
 import { BellMood } from "@/components/brand/BellMood";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { useRouter } from "next/navigation";
 import {
   CaretDown,

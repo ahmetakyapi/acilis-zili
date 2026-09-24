@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 

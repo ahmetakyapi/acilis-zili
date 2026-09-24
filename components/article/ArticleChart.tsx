@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { PriceChartLazy } from "@/components/stock/PriceChartLazy";
 import { chartLabels } from "@/lib/chart-labels";
 import { getSymbolNames, isKnownSymbol } from "@/lib/data";
