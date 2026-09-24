@@ -239,15 +239,17 @@ export function TechnicalCard({
         </span>
       </div>
 
+      {/* PLAN ROZETİ FİYATIN SATIRINDA (24 Eylül). Etiket ile rozet üstte
+          bir satırı, fiyat altında bir satırı paylaşıyordu: gözün ilk
+          durduğu yerde iki ayrı hizada üç öğe ("Son Fiyat" solda, rozet
+          sağda, fiyat altta solda). Rozet artık fiyatın sağ ucunda — ikisi
+          aynı soruya cevap ("fiyat nerede?"), aynı satırda okunuyor; etiket
+          fiyatın küçük künyesi olarak üstte tek başına. Dar kartta fiyat
+          ile rozet tek satıra sığmıyor ve rozet etiketin satırına dönüyor
+          (CSS, `.cardQuote` kap sorgusu) — yeni bir satır açmıyor. */}
       <div className={styles.cardQuote}>
-        <div className={styles.cardQuoteLabel}>
-          <span>{quote ? priceLabel : t.technical.atAnalysis}</span>
-          {position && (
-            <span className={styles.plan} data-kind={position.kind}>
-              {planPositionLabel(position, locale, t)}
-            </span>
-          )}
-        </div>
+        <div className={styles.quoteGrid}>
+        <span className={styles.cardQuoteLabel}>{quote ? priceLabel : t.technical.atAnalysis}</span>
         <div className={styles.cardPrice}>
           <strong className="numeral">{formatPrice(price, locale, { currency: true })}</strong>
           {changePct !== null && (
@@ -255,6 +257,12 @@ export function TechnicalCard({
               {formatPercent(changePct, locale)}
             </span>
           )}
+        </div>
+        {position && (
+          <span className={styles.plan} data-kind={position.kind}>
+            {planPositionLabel(position, locale, t)}
+          </span>
+        )}
         </div>
       </div>
 
