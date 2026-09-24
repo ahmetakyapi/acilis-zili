@@ -714,6 +714,24 @@
    Bileşen katmanı utilities'ten ÖNCE geldiği için artık sıra doğru: sınıf
    tabanı verir, yardımcı istisnayı yazar. */
 @layer components {
+  /* YATAY KAYDIRICI YALNIZCA YATAY KAYAR (24 Eylül).
+     `overflow-x: auto` yazılınca tarayıcı `overflow-y`yi de `auto`
+     hesaplıyor. Çiplerin 44 piksellik dokunma alanı (`.tap-44`) ya da bir
+     odak halkası kabın dışına birkaç piksel taştığında şerit DİKEYDE de
+     kayabiliyordu; telefonda parmak çapraz sürüklendiğinde şerit yerinden
+     oynuyor, iOS bir de iki ucunda lastik bant gibi esnetip içeriği 60
+     piksel içeri çekiyordu (Son Yazılan Analizler, şirket sayfasının mercek
+     kartları). Dikey taşma kesiliyor, esneme kapalı; sayfanın kendi dikey
+     kaydırması etkilenmiyor.
+     `@layer components` bilinçli: dikey de kayması gereken bir kap
+     (`lg:overflow-y-auto`, bülten arşivi) yardımcı sınıfla bunu geçersiz
+     kılabiliyor. CSS modüllerindeki kaydırıcılar aynı iki satırı kendileri
+     taşıyor. */
+  :where(.scroll-x, .scroll-x-hint, .overflow-x-auto) {
+    overflow-y: hidden;
+    overscroll-behavior-x: none;
+  }
+
   /* ---- Masthead şeridi ----
      Konum işareti: 2px `--primary`, etiketin genişliğinde, hairline'ın
      üstüne biniyor (ul +1px aşağı taşıyor). Yeni sekmede CSS ile çiziliyor;

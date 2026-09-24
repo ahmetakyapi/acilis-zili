@@ -15,7 +15,7 @@
 .mastheadDescription { max-width:52ch; padding-bottom:4px; font-size:15px; line-height:1.7; color:var(--text-body); text-wrap:pretty; }
 .intro { font-size:12px; }
 .intro li { font-size:12px; line-height:1.7; }
-.storyFilters { display:flex; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent; padding-block:2px 7px; }
+.storyFilters { display:flex; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:none; scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent; padding-block:2px 7px; }
 .storyFilters > * { flex-shrink:0; }
 .storyFilters a { min-height:40px; font-size:12px; }
 /* Kapağın sağ sütununda: genişlik dar, yükseklik bol. Çipler kaymak yerine
