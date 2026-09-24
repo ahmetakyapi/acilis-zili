@@ -29,6 +29,10 @@ import {
 import { getPublishedSymbols, getTechnicalBoard } from "@/lib/technical-data";
 import { formatEtDateCompact, formatEtDateLong, plural } from "@/lib/utils";
 
+/* Künye ayracı: noktadan ÖNCE bölünmez boşluk. Satır noktadan sonra
+   kırılır, hiçbir satır noktayla başlamaz (gerekçe künyenin yanında). */
+const KUNYE_SEP = "\u00A0· ";
+
 export const generateMetadata = pageMetadata({
   path: "/teknik",
   tr: {
@@ -169,12 +173,16 @@ export default async function TechnicalPage() {
                   ilk kartı 37 piksel aşağı itiyordu (ölçüldü: ilk kart 597,
                   sekme çubuğu 560). Kısa tarih ("Sep 22") iki satır; geniş
                   ekranda gün adıyla uzun hâl kalıyor. İkisi de DOM'da, biri
-                  `display:none` — ekran okuyucu yalnızca görüneni okuyor. */}
+                  `display:none` — ekran okuyucu yalnızca görüneni okuyor.
+                  AYRAÇ ÖNCEKİ PARÇAYA YAPIŞIK (`KUNYE_SEP`, 23 Eylül): 1024'te
+                  İngilizce künye "Tuesday, September 22" ardından kırılıyor
+                  ve ikinci satır "· 14:45 NY" diye noktayla başlıyordu. */}
               <span className={styles.editionValue}>
-                {slotLabel(latest.slot, t)} ·{" "}
+                {slotLabel(latest.slot, t)}
+                {KUNYE_SEP}
                 <span className={styles.editionDateLong}>{formatEtDateLong(latest.sessionDate, locale)}</span>
                 <span className={styles.editionDateShort}>{formatEtDateCompact(latest.sessionDate, locale)}</span>
-                {" · "}
+                {KUNYE_SEP}
                 <span className="numeral">{editionTime(latest.sessionDate, latest.slot, locale)}</span>
               </span>
             </div>
@@ -182,10 +190,11 @@ export default async function TechnicalPage() {
               <div className={styles.editionItem}>
                 <span className={styles.editionLabel}>{t.technical.nextEdition}</span>
                 <span className={styles.editionValue}>
-                  {slotLabel(next.slot, t)} ·{" "}
+                  {slotLabel(next.slot, t)}
+                  {KUNYE_SEP}
                   <span className="numeral">{editionClock(next.at, locale)}</span>
                   {todayEt(next.at) !== status.etDate && (
-                    <> · {formatEtDateCompact(todayEt(next.at), locale)}</>
+                    <>{KUNYE_SEP}{formatEtDateCompact(todayEt(next.at), locale)}</>
                   )}
                 </span>
               </div>
@@ -244,8 +253,8 @@ export default async function TechnicalPage() {
                   üstünde dağınık duruyordu (390'da aralarında 26 piksellik
                   delikler) ve 320'de "SAT" tek başına ikinci satıra
                   düşüyordu. Bölmeler artık eşit sütunlar; seçimi gösteren
-                  beyaz kutu radyonun sırasını (`data-i`) CSS'ten okuyup
-                  kayıyor, JavaScript gerekmiyor. */}
+                  kutu (kartın yüzey tonunda) radyonun sırasını (`data-i`)
+                  CSS'ten okuyup kayıyor, JavaScript gerekmiyor. */}
               <fieldset className={styles.filter} style={{ "--n": segments.length } as React.CSSProperties}>
                 <legend>{t.technical.filterLabel}</legend>
                 {segments.map((key, index) => (

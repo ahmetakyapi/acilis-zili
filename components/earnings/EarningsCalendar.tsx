@@ -432,7 +432,7 @@ function DaySection({
               <div className="border-t border-line pt-3 sm:ml-auto sm:shrink-0 sm:border-0 sm:pt-0 sm:text-right">
                 {headline ? (
                   <>
-                    <p className="plate text-nano tracking-[0.09em]">
+                    <p className="plate text-nano">
                       {headline.label}
                     </p>
                     <p className="figure mt-[3px] text-title font-bold tracking-[-0.03em] text-strong sm:text-title">
@@ -609,7 +609,7 @@ function DaySection({
                   )}
                   {headline && (
                     <>
-                      <p className="plate text-nano tracking-[0.08em]">
+                      <p className="plate text-nano">
                         {headline.label}
                       </p>
                       <p className="figure mt-[3px] truncate text-lead font-bold leading-none tracking-[-0.03em] text-strong">

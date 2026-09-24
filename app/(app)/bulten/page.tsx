@@ -324,7 +324,7 @@ async function ArchiveBoard({
                     )}
                     {/* Kayıt okunan dilde değilse dili rozetle söylenir. */}
                     {row.locale !== locale && (
-                      <span className="plate ml-auto text-micro tracking-[0.09em]">
+                      <span className="plate ml-auto text-nano">
                         {row.locale.toUpperCase()}
                       </span>
                     )}

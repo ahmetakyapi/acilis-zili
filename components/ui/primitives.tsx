@@ -193,13 +193,36 @@ export function Kicker({
   return (
     <p
       className={cn(
-        "plate tracking-[0.1em]",
+        "plate",
         tone === "primary" && "text-primary",
         className,
       )}
     >
       {children}
     </p>
+  );
+}
+
+/**
+ * BOŞ HÜCRE — görünen `NO_VALUE`, ekran okuyucuya bir kelime.
+ *
+ * Yarım çizgi (lib/utils.ts → `NO_VALUE`) yalnızca görsel bir işaret:
+ * ekran okuyucu onu ya hiç okumuyor ya "yarım çizgi" diye okuyor ve
+ * tablonun ortasındaki boş hücre "eksi" gibi duyuluyordu. İşaret
+ * `aria-hidden`, yanındaki gizli metin (`label`, ör. `t.common.noData`)
+ * okunuyor. `aria-label` kullanılmıyor: rolü olmayan bir `span` üzerinde
+ * ARIA onu tanımıyor, bazı okuyucular yok sayıyor.
+ *
+ * Yalnızca JSX hücresinde. Biçimlendiriciler (`formatPrice` vb.) dize
+ * döndürdüğü için `NO_VALUE`i düz basar; bir tablonun boş hücresi bu
+ * bileşene sarılır. Bir grubun TAMAMI boşsa işaret değil cümle basılır.
+ */
+export function EmptyValue({ label, className }: { label: string; className?: string }) {
+  return (
+    <span className={className}>
+      <span aria-hidden="true">{NO_VALUE}</span>
+      <span className="sr-only">{label}</span>
+    </span>
   );
 }
 

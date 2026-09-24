@@ -1007,7 +1007,7 @@ export function ArticleBody({
                       {block.head.map((cell, cellIndex) => (
                         <th
                           key={cellIndex}
-                          className="px-2.5 py-2 text-micro font-bold uppercase tracking-[0.07em] text-muted sm:px-4 sm:py-2.5 sm:text-tiny"
+                          className="px-2.5 py-2 text-nano font-bold text-muted sm:px-4 sm:py-2.5 sm:text-tiny"
                         >
                           {cell}
                         </th>
@@ -1043,7 +1043,7 @@ export function ArticleBody({
             return (
               <div key={key} data-block="stats" className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
-                  <p data-part="label" className="plate text-nano tracking-[0.09em]">
+                  <p data-part="label" className="plate text-nano">
                     {block.label}
                   </p>
                 )}
@@ -1087,7 +1087,7 @@ export function ArticleBody({
             return (
               <div key={key} data-block="timeline" className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
-                  <p data-part="label" className="plate text-nano tracking-[0.09em]">
+                  <p data-part="label" className="plate text-nano">
                     {block.label}
                   </p>
                 )}
@@ -1107,7 +1107,7 @@ export function ArticleBody({
                           )}
                         </span>
                         <span data-part="body" className={cn("min-w-0", !last && "pb-4")}>
-                          <span data-part="when" className="numeral block text-small font-bold uppercase tracking-[0.06em] text-primary">
+                          <span data-part="when" className="numeral block text-small font-bold text-primary">
                             {item.when}
                           </span>
                           <span data-part="text" className="mt-1 block text-read leading-[24px] text-body">
@@ -1131,7 +1131,7 @@ export function ArticleBody({
             return (
               <figure key={key} data-block="bars" className="oku-blok flex flex-col gap-2.5" data-article-visual="bars">
                 {block.label && (
-                  <figcaption data-part="label" className="plate text-nano tracking-[0.09em]">
+                  <figcaption data-part="label" className="plate text-nano">
                     {block.label}
                   </figcaption>
                 )}
@@ -1198,7 +1198,7 @@ export function ArticleBody({
             return (
               <div key={key} data-block="share" className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
-                  <p data-part="label" className="plate text-nano tracking-[0.09em]">
+                  <p data-part="label" className="plate text-nano">
                     {block.label}
                   </p>
                 )}
@@ -1251,7 +1251,7 @@ export function ArticleBody({
             return (
               <div key={key} data-block="flow" className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
-                  <p data-part="label" className="plate text-nano tracking-[0.09em]">
+                  <p data-part="label" className="plate text-nano">
                     {block.label}
                   </p>
                 )}
@@ -1304,7 +1304,7 @@ export function ArticleBody({
             return (
               <div key={key} data-block="shift" className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
-                  <p data-part="label" className="plate text-nano tracking-[0.09em]">
+                  <p data-part="label" className="plate text-nano">
                     {block.label}
                   </p>
                 )}
@@ -1407,7 +1407,7 @@ export function ArticleBody({
                 <p
                   data-part="label"
                   className={cn(
-                    "text-nano font-bold uppercase tracking-[0.1em]",
+                    "text-nano font-bold tracking-[0.02em]",
                     tone.kicker,
                   )}
                 >
@@ -1429,7 +1429,7 @@ export function ArticleBody({
                         )}
                       >
                         {line.term && (
-                          <dt data-part="term" className="shrink-0 text-nano font-bold uppercase leading-[18px] tracking-[0.09em] text-muted sm:w-[136px] sm:pt-[3px]">
+                          <dt data-part="term" className="shrink-0 text-nano font-bold leading-[18px] tracking-[0.02em] text-muted sm:w-[136px] sm:pt-[3px]">
                             {line.term}
                           </dt>
                         )}

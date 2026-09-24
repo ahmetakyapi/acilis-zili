@@ -194,7 +194,7 @@ export function ShareButton({
             aria-label={labels.title}
             className="absolute right-0 top-[calc(100%+8px)] z-20 w-[236px] overflow-hidden rounded-xl border border-line bg-overlay-surface shadow-(--shadow-overlay)"
           >
-            <p className="plate border-b border-line-soft px-4 py-2.5 text-micro tracking-[0.09em]">
+            <p className="plate border-b border-line-soft px-4 py-2.5 text-nano">
               {labels.title}
             </p>
             <div className="flex flex-col p-2">

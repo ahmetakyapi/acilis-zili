@@ -50,6 +50,7 @@ import {
   formatEtDateLong,
   formatPercent,
   formatPrice,
+  NO_VALUE,
   proseParagraphs,
   tieFigures,
 } from "@/lib/utils";
@@ -530,7 +531,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                       <td className="numeral" data-cell="entry" data-label={t.technical.entryZone}>
                         {entry.entryLow !== null && entry.entryHigh !== null
                           ? formatRange(entry.entryLow, entry.entryHigh, locale)
-                          : "—"}
+                          : NO_VALUE /* Değer yok işareti tek: uzun çizgi değil (lib/utils). */}
                       </td>
                       <td className="numeral" data-cell="stop" data-label={t.technical.stop}>{formatPrice(entry.stop, locale, { currency: true })}</td>
                     </tr>

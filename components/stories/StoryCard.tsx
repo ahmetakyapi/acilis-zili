@@ -76,7 +76,7 @@ export function StoryCard({
               </>
             )}
             {story.locale !== locale && (
-              <span className="plate ml-auto text-nano tracking-[0.09em]">
+              <span className="plate ml-auto text-nano">
                 {story.locale.toUpperCase()}
               </span>
             )}

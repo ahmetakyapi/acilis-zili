@@ -1,11 +1,15 @@
-/* ZİL KÜNYESİ. Kutu değil, iki hücre ve üstlerinde tek bir kıl çizgi —
-   kahramanın derinliği tondan geliyor (CLAUDE.md), gölge ve dolgu yok.
-   Sayacın saydığı zil, çizginin başındaki 28 piksellik mavi işaretle
-   gösteriliyor: "bu sayı ŞUNA kalan süre" bağını renk değil konum kuruyor. */
-.bells { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 20px; margin:20px 0 0; padding:0; }
-.cell { position:relative; min-width:0; padding-top:12px; border-top:1px solid var(--line); }
-.cell[data-target]::before { content:""; position:absolute; left:0; top:-1px; width:28px; height:2px; background:var(--primary); }
+/* ZİL KÜNYESİ. Kutu değil, iki hücre — kahramanın derinliği tondan
+   geliyor (CLAUDE.md), gölge ve dolgu yok.
+   KIL ÇİZGİLER KALKTI (24 Eylül). Hücrelerin üstünde birer kıl çizgi ve
+   sayacın saydığı zili gösteren 28 piksellik mavi bir işaret vardı; o
+   yeri artık zil şeridi (`SessionRail`) tutuyor: iki zil orada gerçek
+   saatlerinde çentik, sayılan zilin çentiği koyu. Künye şeridin hemen
+   altında ve yalnızca saatleri yazıyor — ilk ekranda zil saatleri tek
+   yerde. */
+.bells { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 20px; margin:8px 0 0; padding:0; }
+.cell { position:relative; min-width:0; }
 .kicker { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:11px; font-weight:600; line-height:1.4; color:var(--text-muted); }
+.cell[data-target] .kicker { color:var(--primary-ink); }
 /* Yarım gün rozeti karar rozetleriyle aynı aileden: `--radius-sm`, hap değil. */
 .early { padding:1px 6px; border-radius:var(--radius-sm); background:var(--primary-tint); color:var(--primary-ink); font-size:var(--text-nano); font-weight:600; line-height:1.5; }
 .reading { display:flex; flex-direction:column; gap:3px; margin:5px 0 0; }
@@ -26,13 +30,11 @@
    767'de rakam 92, saat 17). Kolon genişse saat 22: rakam 92'ye çıkınca
    20 puntoluk saat onun altında bir dipnot gibi kalıyordu. */
 @container hero-copy (min-width:480px) {
-  .bells { margin-top:22px; }
   .primary { font-size:22px; }
 }
 
 @container hero-copy (max-width:400px) {
-  .bells { margin-top:16px; gap:0 14px; }
-  .cell { padding-top:10px; }
+  .bells { margin-top:10px; gap:0 14px; }
   .primary { font-size:17px; }
 }
 

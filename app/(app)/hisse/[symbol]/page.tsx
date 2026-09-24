@@ -8,11 +8,13 @@ import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
 import { analysisHref } from "@/lib/analysis";
 import { withLocale } from "@/lib/i18n/routing";
 import { ArrowDownRight, ArrowLeft, ArrowUpRight, CalendarBlank, Heart, SquaresFour, ChartLineUp, UsersThree } from "@phosphor-icons/react/dist/ssr";
-import { MotionExperience, ScrollStage, Reveal, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
+import { MotionExperience, ScrollStage, Reveal, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
 import styles from "./stock.module.css";
 import { NewsImage } from "@/components/news/NewsImage";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { PriceChartLazy } from "@/components/stock/PriceChartLazy";
+import { ChartReadingProvider, HeaderReadout } from "@/components/stock/ChartReadingContext";
+import { exchangeLabel } from "@/components/stock/exchange-label";
 import { StockTechnicalCard } from "@/components/technical/StockTechnicalCard";
 import {
   SymbolStories,
@@ -24,12 +26,15 @@ import {
   DataError,
   DataStamp,
   EmptyState,
+  EmptyValue,
   Panel,
   PanelHeader,
   PanelLink,
   Skeleton,
 } from "@/components/ui/primitives";
 import { ChapterHeading } from "@/components/ui/ChapterHeading";
+import { ScaleBar } from "@/components/markets/CompareScale";
+import { PriceRail, type RailMark } from "@/components/ui/PriceRail";
 import { db } from "@/lib/db";
 import { news, watchlistItems, watchlists } from "@/lib/schema";
 import {
@@ -43,7 +48,18 @@ import {
   liveMarketCap,
   isKnownSymbol,
   getHolidays,
+  getNextReport,
+  type AnalysisIndexRow,
 } from "@/lib/data";
+import { fiscalLabel, fiscalOf } from "@/lib/fiscal";
+import { EpsTrack } from "@/components/stock/EpsTrack";
+import {
+  buildPastQuarters,
+  epsSurprise,
+  formatEpsSurprise,
+  type EpsSurprise,
+  type PastQuarter,
+} from "@/components/stock/past-quarters";
 import { rateLimit, requestKey } from "@/lib/rate-limit";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { missingMetadata } from "@/lib/page-meta";
@@ -75,11 +91,12 @@ import type { Metadata } from "next";
 import { describeSymbol } from "@/db/seed/descriptions";
 import { isTechnicalSymbol, technicalHref } from "@/lib/technical";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
+import { GuideHint } from "@/components/article/GuideHint";
 import {
   cn,
   directionOf,
   directionText,
-  formatChange,
+  directionWash,
   formatPercent,
   formatMoneyCompact,
   formatEtDateLong,
@@ -96,6 +113,7 @@ import {
   plural,
   safeExternalUrl,
   timeAgo,
+  titleCaseLabel,
 } from "@/lib/utils";
 
 /* --------------------------------------------------------------------------
@@ -221,12 +239,24 @@ export default async function StockPage(
      boş döner. Yerine fonun künyesi ve izlediği piyasa anlatılır. */
   const fund = fundMetaOf(symbol);
   if (fund) {
+    const fundStatus = await getStatus();
+    const fundOffSession =
+      fundStatus.session === "pre-market" || fundStatus.session === "after-hours";
     return (
       <MotionExperience className={styles.page}>
         <ScrollProgress />
-        <StockBreadcrumb symbol={symbol} t={t} />
-        <div className={styles.heroGrid}>
+        {/* FON KÜNYESİ KENDİ ADIYLA: "Şirket Dosyası" bir sepetin adı değil. */}
+        <StockBreadcrumb symbol={symbol} t={t}>
+          <span className={styles.pageLabel}>{t.stock.fundEyebrow}</span>
+        </StockBreadcrumb>
+        {/* FON DA KOMPAKT ÜST BLOKTA (24 Eylül). Şirket dalı ilk ekranı
+            grafiğe ve profile ayırıyordu, fon dalı ise eski düzende kalmıştı:
+            SPY'de 1440×900'de aralık düğmeleri ekranın altındaydı ve 430
+            piksellik sabit grafik yan kolonu 150 piksel aşıyordu. Aynı sınıf,
+            aynı ölçülü değişkenler, aynı iskelet. */}
+        <div className={cn(styles.heroGrid, styles.companyOverview)}>
           <Panel className={styles.chartPanel}>
+            <ChartReadingProvider>
             {/* KİMLİK GRAFİĞİN İÇİNE GİRDİ. Başlık (logo, sembol, ad, sektör,
                 canlı fiyat) panelin DIŞINDA çıplak bir satırdı ve hemen altındaki
                 grafik paneli aynı fiyatı bir kez daha basıyordu: ölçüldü,
@@ -241,16 +271,17 @@ export default async function StockPage(
                 öbür yanda değil, tam üstünde — dayanak düştüğü için kopya her
                 genişlikte kalktı. Aralığa bağlı YÜZDE grafikte kaldı; o başka
                 bir sayı (seçili aralığın getirisi) ve gerekçesi orada yazılı. */}
-            <Suspense fallback={<HeaderSkeleton />}>
+            <Suspense fallback={<HeaderSkeleton sessionRow={fundOffSession} />}>
               <StockHeader symbol={symbol} locale={locale} t={t} />
             </Suspense>
-            <Suspense fallback={<Skeleton className="mt-4 h-[300px] w-full sm:h-[430px]" />}>
-              <ChartSection symbol={symbol} locale={locale} t={t} />
+            <Suspense fallback={<Skeleton className={styles.chartSkeleton} />}>
+              <ChartSection symbol={symbol} locale={locale} t={t} compact />
             </Suspense>
+            </ChartReadingProvider>
           </Panel>
 
-          <div className="flex min-w-0 flex-col gap-5">
-            <Suspense fallback={<Skeleton className="h-96 w-full rounded-(--radius-xl)" />}>
+          <div className={styles.profileColumn}>
+            <Suspense fallback={<Skeleton className={styles.fundSkeleton} />}>
               <FundCard symbol={symbol} locale={locale} t={t} />
             </Suspense>
 
@@ -263,7 +294,7 @@ export default async function StockPage(
                 biri. Barlar da kotasyon da öteki dalla aynı yerden geliyor. */}
             <Panel>
               <PanelHeader title={t.stock.movingAverages} className="pb-1.5" />
-              <Suspense fallback={<ListSkeleton rows={3} />}>
+              <Suspense fallback={<Skeleton className={styles.averagesSkeleton} />}>
                 <MovingAverages symbol={symbol} locale={locale} t={t} />
               </Suspense>
             </Panel>
@@ -277,11 +308,31 @@ export default async function StockPage(
      yorumlarında. İkisi de yerel veritabanı okuması, sağlayıcıya gitmiyor.
      TEK TURDA: ardışık beklenirlerse kabuk iki Neon gidiş dönüşü bekler ve
      kazanılan CLS, gecikmeye geri verilir. */
-  const [storyRows, analysisRows] = await Promise.all([
+  const [storyRows, analysisRows, status] = await Promise.all([
     getStoriesForSymbol(symbol, locale, 3),
     getAnalyses(locale, { symbols: [symbol], limit: 6 }),
+    /* Yalnızca başlık iskeleti için: seans dışındaysa gerçek başlıkta bir
+       hap satırı var ve yedek aynı yeri ayırmalı. İstek içinde önbellekli. */
+    getStatus(),
   ]);
+  const offSession = status.session === "pre-market" || status.session === "after-hours";
   const latestAnalysis = analysisRows[0];
+  const researchLink = latestAnalysis ? (
+    <Link
+      prefetch={false}
+      className="tap-44"
+      href={withLocale(analysisHref(latestAnalysis.symbol, latestAnalysis.period), locale)}
+    >
+      <span>{t.stock.latestAnalysis}</span>
+      <strong>{latestAnalysis.periodLabel}</strong>
+      <ArrowUpRight aria-hidden size={15} />
+    </Link>
+  ) : (
+    <a href="#stock-earnings" className="tap-44">
+      {t.stock.earningsShortcut}
+      <ArrowDownRight aria-hidden size={14} />
+    </a>
+  );
 
   return (
     <MotionExperience className={styles.page}>
@@ -289,19 +340,26 @@ export default async function StockPage(
       <StockBreadcrumb symbol={symbol} t={t}>
         {/* NVDA at 390px: report links began at y3474, after the entire
             fundamentals chapter. Surface the existing latest report in the
-            opening navigation, while retaining the full chart and profile. */}
+            opening navigation, while retaining the full chart and profile.
+            TELEFONDA KÜNYEDE DEĞİL KİMLİKTE (24 Eylül): 768'in altında
+            bağlantı künyenin altında tam genişlikte 44 piksellik ikinci bir
+            satır açıyordu ve 390×844'te aralık düğmeleri ilk ekranın dışına
+            düşüyordu. Aynı bağlantı orada sektör satırının altında bir çip;
+            burada yalnızca geniş ekranda görünüyor (`display:none`, yani
+            ekran okuyucu da tek kopya duyuyor). */}
         <nav className={styles.researchLinks} aria-label={t.stock.experienceNav}>
-          {latestAnalysis ? <Link prefetch={false}
-            href={withLocale(analysisHref(latestAnalysis.symbol, latestAnalysis.period), locale)}>
-            <span>{t.stock.latestAnalysis}</span>
-            <strong>{latestAnalysis.periodLabel}</strong>
-            <ArrowUpRight aria-hidden size={15} />
-          </Link> : <a href="#stock-earnings">{t.stock.earningsShortcut}<ArrowDownRight aria-hidden size={14} /></a>}
+          {researchLink}
         </nav>
       </StockBreadcrumb>
       {/* Üst blok — kimlik ve grafik solda tek panelde, şirket künyesi sağda */}
       <div id="stock-overview" className={cn(styles.heroGrid, styles.companyOverview)}>
+        {/* SEKMEYLE AYNI ADDA BAŞLIK. "Genel Bakış" sekmesi ilk h2'si "Şirket
+            Profili" olan bir bölüme iniyordu; her bölümün başlığı sekmesinin
+            adını taşıyor (ChapterHeading). Kapak görsel bir başlık istemiyor
+            — kimlik zaten orada — ama belge ağacında adı olmalı. */}
+        <h2 className="sr-only">{t.stock.experienceOverview}</h2>
         <Panel className={styles.chartPanel}>
+          <ChartReadingProvider>
         {/* KİMLİK GRAFİĞİN İÇİNE GİRDİ. Başlık (logo, sembol, ad, sektör,
             canlı fiyat) panelin DIŞINDA çıplak bir satırdı ve hemen altındaki
             grafik paneli aynı fiyatı bir kez daha basıyordu: ölçüldü,
@@ -316,8 +374,13 @@ export default async function StockPage(
             öbür yanda değil, tam üstünde — dayanak düştüğü için kopya her
             genişlikte kalktı. Aralığa bağlı YÜZDE grafikte kaldı; o başka
             bir sayı (seçili aralığın getirisi) ve gerekçesi orada yazılı. */}
-          <Suspense fallback={<HeaderSkeleton />}>
-            <StockHeader symbol={symbol} locale={locale} t={t} />
+          <Suspense fallback={<HeaderSkeleton sessionRow={offSession} chip />}>
+            <StockHeader
+              symbol={symbol}
+              locale={locale}
+              t={t}
+              chip={<nav className={styles.identityChip} aria-label={t.stock.experienceNav}>{researchLink}</nav>}
+            />
           </Suspense>
           {/* ÖLÇÜLMÜŞ YÜKSEKLİK. Yedek 300 (mobil) / 430 piksel ayırıyordu
               ama grafik bölümü 636–637 piksel kaplıyor: sayfanın EN
@@ -331,6 +394,7 @@ export default async function StockPage(
           <Suspense fallback={<Skeleton className={styles.chartSkeleton} />}>
             <ChartSection symbol={symbol} locale={locale} t={t} compact />
           </Suspense>
+          </ChartReadingProvider>
         </Panel>
 
         {/* Sağ kolon grafiğin boyuna geriliyor (ızgara varsayılanı) ama
@@ -359,14 +423,22 @@ export default async function StockPage(
               fallback={
                 <>
                   <PanelHeader title={t.stock.profile} />
-                  <ListSkeleton rows={9} />
+                  <ListSkeleton rows={10} />
                 </>
               }
             >
               <ProfileCard symbol={symbol} locale={locale} t={t} />
             </Suspense>
           </Panel>
-          <Suspense fallback={null}>
+          {/* YEDEK KARTIN BOYUNDA (24 Eylül). `null` idi: kapsamdaki
+              sembollerde kart akışla gelip kolonu 179-201 piksel uzatıyor,
+              kolon da grafiği geriyordu — NVDA'da 1440'ta CLS 0,027. Kart
+              yalnızca kapsamdaki sembolde basıldığı için yedek de öyle. */}
+          <Suspense
+            fallback={
+              isTechnicalSymbol(symbol) ? <Skeleton className={styles.technicalSkeleton} /> : null
+            }
+          >
             <StockTechnicalCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
         </div>
@@ -378,7 +450,19 @@ export default async function StockPage(
       <SectionNav
         className={styles.chapterNav}
         label={t.stock.experienceNav}
+        /* Telefonda aşağı kaydırınca çekilir (844 piksellik ekranın 202
+           pikselini sabit katmanlar tutuyor); gerekçe `SectionNav` başında. */
         hideOnScrollDown
+        /* YAPIŞINCA KİMLİK (24 Eylül). Aşağıda Değerleme ya da Bilançolar
+           okunurken sayfanın hangi şirkete ait olduğu ve fiyatı ekranda
+           hiçbir yerde kalmıyordu. Kimlik yalnızca çubuk yapışınca açılıyor
+           (SectionNav); fiyat başlıktakiyle AYNI istek-içi önbellek
+           anahtarından (`getQuote`), ek sağlayıcı turu yok. */
+        lead={
+          <Suspense fallback={<span className={styles.navLead} />}>
+            <NavLead symbol={symbol} locale={locale} />
+          </Suspense>
+        }
         items={[
           { id: "stock-overview", label: t.stock.experienceOverview },
           { id: "stock-fundamentals", label: t.stock.chapterValuation },
@@ -492,7 +576,7 @@ export default async function StockPage(
       <Panel className={styles.earningsPanel}>
         <PanelHeader title={t.stock.pastEarnings} />
         <Suspense fallback={<ListSkeleton rows={6} />}>
-          <PastEarnings symbol={symbol} locale={locale} t={t} />
+          <PastEarnings symbol={symbol} locale={locale} t={t} analyses={analysisRows} />
         </Suspense>
       </Panel>
 
@@ -559,6 +643,16 @@ export default async function StockPage(
         </Suspense>
       </Panel>
       </Reveal>
+      {/* SAYFA REHBERLE KAPANIYOR — öteki ekranların sırası (CLAUDE.md
+          "Ekran düzeni" 7). Tablonun altındaki EPS açıklama paragrafının
+          yerini de bu şerit alıyor: kısaltma orada tek satırlık künye,
+          ayrıntısı burada. */}
+      <GuideHint
+        label={t.guide.contextLabel}
+        locale={locale}
+        slugs={["bilanco", "degerleme", "piyasa-degeri"]}
+        className="pt-1"
+      />
       </section>
     </MotionExperience>
   );
@@ -591,6 +685,31 @@ function StockBreadcrumb({ symbol, t, children }: { symbol: string; t: Dictionar
    `ChapterHeading` (components/ui) — gerekçe orada; sekme etiketi ile
    bölüm başlığı aynı sözlük anahtarını okuyor. */
 
+/** Yapışkan menünün kimliği: logo, sembol, fiyat ve yüzde. */
+async function NavLead({ symbol, locale }: { symbol: string; locale: Locale }) {
+  const status = await getStatus();
+  const [quote, meta] = await Promise.all([getQuote(symbol, status), getSymbolNames([symbol])]);
+  const logo = meta[symbol]?.logoUrl;
+  return (
+    <span className={styles.navLead}>
+      {logo && (
+        <span className={styles.navLeadLogo}>
+          <Image src={logo} alt="" width={22} height={22} />
+        </span>
+      )}
+      <span className={cn("numeral", styles.navLeadSymbol)}>{symbol}</span>
+      {quote.ok && (
+        <>
+          <span className="numeral text-[13px] font-semibold text-strong">
+            {formatPrice(quote.data.price, locale, { currency: true })}
+          </span>
+          <ChangePill changePct={quote.data.changePct} locale={locale} size="sm" className={styles.navLeadPill} />
+        </>
+      )}
+    </span>
+  );
+}
+
 /* ==========================================================================
    Başlık: fiyat + favori yıldızı
    ========================================================================== */
@@ -599,10 +718,13 @@ async function StockHeader({
   symbol,
   locale,
   t,
+  chip,
 }: {
   symbol: string;
   locale: Locale;
   t: Dictionary;
+  /** Telefonda sektör satırının altındaki araştırma bağlantısı. */
+  chip?: React.ReactNode;
 }) {
   const status = await getStatus();
   const [quoteResult, profileResult, session] = await Promise.all([
@@ -638,6 +760,31 @@ async function StockHeader({
       // veri yoksa yıldız pasif kalır
     }
   }
+
+  /* SEANS DIŞINDAKİ FİYAT KENDİNİ SÖYLÜYOR.
+     Konsolide tape'e geçtikten sonra açılış öncesi ve kapanış
+     sonrası işlemler akıyor (eski IEX beslemesinde hiç akmıyordu),
+     yani buradaki sayı artık "dünkü kapanış" değil o dakikanın ön
+     seans fiyatı. Ama ekranda bunu söyleyen hiçbir şey yoktu:
+     okuyucu seans dışı bir baskıyı normal seans fiyatı sanıyordu.
+     Yanındaki önceki kapanış da yüzdenin neye göre hesaplandığını
+     görünür kılıyor — aradaki fark elle doğrulanabiliyor. */
+  const sessionNote =
+    quoteResult.ok &&
+    (status.session === "pre-market" || status.session === "after-hours") ? (
+      <p className="mt-2 flex flex-wrap items-center justify-start gap-x-2 gap-y-1 text-tiny">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-wash px-2.5 py-[3px] font-semibold text-primary-ink">
+          <span aria-hidden className="size-1.5 rounded-full bg-current" />
+          {status.session === "pre-market" ? t.market.preMarket : t.market.afterHours}
+        </span>
+        {quoteResult.data.prevClose !== null && (
+          <span className="numeral text-muted">
+            {t.market.prevClose}{" "}
+            {formatPrice(quoteResult.data.prevClose, locale, { currency: true })}
+          </span>
+        )}
+      </p>
+    ) : null;
 
   return (
     <header className={styles.stockHeader}>
@@ -731,6 +878,7 @@ async function StockHeader({
               {kunyeSektor}
             </p>
           )}
+          {chip}
           {fund && (
             <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-tiny leading-tight text-muted">
               <span className="font-semibold text-soft">
@@ -750,63 +898,29 @@ async function StockHeader({
               tek bir okuma — "şu fiyat, şu kadar değişmiş". Sığmadığında
               kendiliğinden alt satıra iniyor (`flex-wrap`), sığdığında yan
               yana duruyorlar. `items-baseline`: 28 puntoluk fiyat ile 13
-              puntoluk değişim taban çizgisinde hizalı. */}
-          <div className={styles.priceLine}>
-          <p className={cn("tote", styles.livePrice)}>
-            {formatPrice(quoteResult.data.price, locale, { currency: true })}
-          </p>
-          <div className={styles.priceChange}>
-            <span
-              className={cn(
-                "numeral text-sm",
-                directionOf(quoteResult.data.change) === "up"
-                  ? "text-up"
-                  : directionOf(quoteResult.data.change) === "down"
-                    ? "text-down"
-                    : "text-muted",
-              )}
-            >
-              {formatChange(quoteResult.data.change, locale)}
-            </span>
-            <ChangePill changePct={quoteResult.data.changePct} locale={locale} />
-          </div>
-          </div>
-
-          {/* SEANS DIŞINDAKİ FİYAT KENDİNİ SÖYLÜYOR.
-              Konsolide tape'e geçtikten sonra açılış öncesi ve kapanış
-              sonrası işlemler akıyor (eski IEX beslemesinde hiç akmıyordu),
-              yani buradaki sayı artık "dünkü kapanış" değil o dakikanın ön
-              seans fiyatı. Ama ekranda bunu söyleyen hiçbir şey yoktu:
-              okuyucu seans dışı bir baskıyı normal seans fiyatı sanıyordu.
-              Yanındaki önceki kapanış da yüzdenin neye göre hesaplandığını
-              görünür kılıyor — aradaki fark elle doğrulanabiliyor. */}
-          {(status.session === "pre-market" ||
-            status.session === "after-hours") && (
-            <p className="mt-2 flex flex-wrap items-center justify-start gap-x-2 gap-y-1 text-tiny">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-wash px-2.5 py-[3px] font-semibold text-primary-ink">
-                <span aria-hidden className="size-1.5 rounded-full bg-current" />
-                {status.session === "pre-market"
-                  ? t.market.preMarket
-                  : t.market.afterHours}
-              </span>
-              {quoteResult.data.prevClose !== null && (
-                <span className="numeral text-muted">
-                  {t.market.prevClose}{" "}
-                  {formatPrice(quoteResult.data.prevClose, locale, {
-                    currency: true,
-                  })}
-                </span>
-              )}
-            </p>
-          )}
-
-          <DataStamp
-            labels={t.data}
-            source={quoteResult.source}
-            at={quoteResult.fetchedAt}
-            stale={quoteResult.stale}
+              puntoluk değişim taban çizgisinde hizalı.
+              SATIR İSTEMCİ YAPRAĞI (`HeaderReadout`): grafikte bir nokta
+              okunurken burası o barın kapanışını yazıyor — gerekçe
+              components/stock/ChartReadingContext.tsx. Canlı sayılar ve
+              damga yine burada, sunucuda hesaplanıyor. */}
+          <HeaderReadout
+            price={quoteResult.data.price}
+            change={quoteResult.data.change}
+            changePct={quoteResult.data.changePct}
             locale={locale}
-            className="mt-2 justify-start"
+            barCloseLabel={t.chart.barClose}
+            classes={{ line: styles.priceLine, price: cn("tote", styles.livePrice), change: styles.priceChange }}
+            session={sessionNote}
+            stamp={
+              <DataStamp
+                labels={t.data}
+                source={quoteResult.source}
+                at={quoteResult.fetchedAt}
+                stale={quoteResult.stale}
+                locale={locale}
+                className="m-0 justify-start"
+              />
+            }
           />
         </div>
       ) : (
@@ -831,27 +945,31 @@ async function StockHeader({
  * kullanıldığı için iskelet de gerçek başlıkla aynı genişlikte sarıyor ve
  * içerik değiştikçe onunla birlikte kayıyor.
  */
-function HeaderSkeleton() {
+function HeaderSkeleton({ sessionRow = false, chip = false }: { sessionRow?: boolean; chip?: boolean }) {
   return (
     <header className={styles.stockHeader}>
       <div className="flex items-center gap-3">
-        <Skeleton className="size-14 shrink-0 rounded-(--radius-lg) sm:size-16" />
-        <div className="flex flex-col gap-2">
-          <Skeleton className="h-3 w-44" />
-          <Skeleton className="h-8 w-28" />
-          <Skeleton className="h-3 w-36" />
+        <Skeleton className="size-12 shrink-0 rounded-(--radius-lg)" />
+        <div className="flex flex-col gap-1">
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-8 w-44" />
+          <Skeleton className="h-3.5 w-36" />
+          {chip && <Skeleton className="mt-1.5 h-7 w-48 md:hidden" />}
         </div>
       </div>
-      {/* Fiyat bloğu dar ekranda tam genişlik, `md`den itibaren sağa yaslı.
-          Gerçek başlıkta kural `sm:w-auto` ama sarma İÇERİK sürüklüyor:
-          640 pikselde gerçek başlık hâlâ iki satır (168px), `sm` eşiğinde
-          açılan iskelet ise tek satıra düşüp 94px kalıyordu — tam 74
-          piksellik bir fark. Eşik ölçüme göre `md`ye çekildi; bütün
-          genişliklerde fark 21 pikselin altında. */}
+      {/* FİYAT BLOĞU GERÇEĞİN ÖLÇÜLERİYLE (24 Eylül). Yedek 64 + 30 + 28
+          piksellik üç blok basıyordu; gerçek blok fiyat satırı (puntosu
+          kadar, `line-height:1`) + seans dışında hap satırı + künye. 1440'ta
+          122'ye karşı 108, 768'de ise 127'ye karşı 96 piksel: akış gelince
+          grafik 31 piksel yukarı kayıyordu (CLS 0,019). Fiyatın yeri artık
+          aynı sınıfla (`livePrice`, 1em), hap satırı yalnızca seans
+          dışındaysa — sunucu seansı zaten biliyor. */}
       <div className={styles.priceBlock}>
-        <Skeleton className="h-16 w-52" />
-        <Skeleton className="mt-1.5 h-6 w-32" />
-        <Skeleton className="mt-2 h-5 w-48" />
+        <div className={styles.priceLine}>
+          <span className={cn("skeleton block w-52", styles.livePrice, styles.priceSkeleton)} />
+        </div>
+        {sessionRow && <Skeleton className="mt-2 h-[26px] w-56" />}
+        <Skeleton className="mt-2 h-[19px] w-48" />
       </div>
     </header>
   );
@@ -948,8 +1066,6 @@ type EarningsItem = {
   revenueActual: number | null;
   quarter: number | null;
   year: number | null;
-  /** Çeyreğin bittiği tarih — dönem etiketi bunu kullanır (varsa). */
-  periodEnd?: string;
 };
 
 /**
@@ -1077,7 +1193,7 @@ async function UpcomingEarnings({
         <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-line-soft pt-3">
           {next.epsEstimate !== null && (
             <div className="row-span-2 grid grid-rows-subgrid gap-y-0.5">
-              <dt className="text-nano uppercase tracking-wider text-muted">
+              <dt className="text-nano text-muted">
                 {t.earnings.epsEstimate}
               </dt>
               <dd className="numeral self-start text-sm font-semibold text-strong">
@@ -1087,7 +1203,7 @@ async function UpcomingEarnings({
           )}
           {next.revenueEstimate !== null && (
             <div className="row-span-2 grid grid-rows-subgrid gap-y-0.5">
-              <dt className="text-nano uppercase tracking-wider text-muted">
+              <dt className="text-nano text-muted">
                 {t.earnings.revenueEstimate}
               </dt>
               <dd className="numeral self-start text-sm font-semibold text-strong">
@@ -1107,7 +1223,7 @@ async function UpcomingEarnings({
           en az iki çeyrek gerekiyor. */}
       {karneler.length > 1 && (
         <div className="mt-3 border-t border-line-soft pt-3">
-          <p className="text-nano uppercase tracking-wider text-muted">
+          <p className="text-nano text-muted">
             {t.earnings.beatRecord}
           </p>
           {/* Dört işaret: her çeyrek bir kutu, dolu olan aşılmış. Renk TEK
@@ -1143,6 +1259,36 @@ async function UpcomingEarnings({
 
 
 /**
+ * 52 hafta bandı — iki kartın (profil ve ortalamalar) ortak kuralı.
+ *
+ * BANT YALNIZCA PARA BİRİMİ AYNIYSA CETVELE GİRER. Metrik ucu bandı şirketin
+ * ana borsasının parasında veriyor; TSM'de dolar fiyatıyla aynı eksene
+ * konsaydı fiyat bandın çok dışına düşerdi. Orada uçlar kendi para
+ * birimiyle yazılıyor, cetvel ve konum yok. `bandFiyatiKapsiyorMu` da şart:
+ * BRK.B'de band A sınıfının (gerekçe MetricsCard'da).
+ */
+function week52Band(
+  m: { low52: number | null; high52: number | null } | null,
+  price: number | null,
+  currency: string | null,
+) {
+  const homeCurrency = Boolean(currency && currency !== "USD");
+  if (!m || m.low52 === null || m.high52 === null || !(m.high52 > m.low52)) return null;
+  if (!homeCurrency && !bandFiyatiKapsiyorMu(price, m.low52, m.high52)) return null;
+  const onRail = !homeCurrency;
+  return {
+    low: m.low52,
+    high: m.high52,
+    onRail,
+    para: homeCurrency ? currency! : (true as const),
+    position:
+      onRail && price !== null
+        ? Math.min(100, Math.max(0, ((price - m.low52) / (m.high52 - m.low52)) * 100))
+        : null,
+  };
+}
+
+/**
  * Hareketli ortalamalar — 50, 100 ve 200 günlük.
  *
  * NE SÖYLER: fiyatın kendi son elli/yüz/iki yüz günlük ortalamasına göre
@@ -1171,9 +1317,13 @@ async function MovingAverages({
   t: Dictionary;
 }) {
   const status = await getStatus();
-  const [barsResult, quoteResult] = await Promise.all([
+  const [barsResult, quoteResult, metricsResult, meta] = await Promise.all([
     getChartBars(symbol, "1Y", status),
     getQuote(symbol, status),
+    /* 52 hafta bandı buradan — Anahtar Metrikler aynı ucu aynı parametreyle
+       çağırıyor, `finnhubFetch` altı saat önbellekli: yeni tur yok. */
+    getKeyMetrics(symbol),
+    getSymbolNames([symbol]),
   ]);
 
   if (!barsResult.ok) return <DataError message={t.data.failed} />;
@@ -1202,10 +1352,35 @@ async function MovingAverages({
     );
   }
 
-  const differences = satirlar.map(({ deger }) =>
-    deger !== null && deger > 0 && price !== null ? ((price - deger) / deger) * 100 : null,
-  );
-  const extent = Math.max(1, ...differences.filter((value): value is number => value !== null).map(Math.abs));
+  /* TEK CETVEL (24 Eylül). Ortalamalar ±en büyük sapma üzerine SİMETRİK
+     izlerde çiziliyordu — NVDA'nın üç ortalaması da artıdaydı ve her izin
+     sol yarısı daima boştu. Artık ortalamalar ve canlı fiyat tek eksende
+     (`PriceRail`); zeminde 52 haftalık bant gölge olarak duruyor ki
+     ortalamaların yılın neresine düştüğü görünsün. Bandın uçları ETİKETSİZ:
+     sayılar profil kartındaki 52 hafta satırında yazılı, burada tekrar
+     edilmiyor. Bant yoksa (ADR, BRK.B) cetvel yalnızca ortalamaları taşır. */
+  const m = metricsResult.ok ? metricsResult.data : null;
+  const band = week52Band(m, price, meta[symbol]?.currency ?? null);
+
+  const marks: RailMark[] = [];
+  if (band?.onRail) {
+    marks.push({ kind: "band", from: band.low, to: band.high, tone: "range" });
+  }
+  satirlar.forEach(({ pencere, deger }, index) => {
+    if (deger === null) return;
+    marks.push({
+      kind: "tick",
+      at: deger,
+      tone: price !== null ? (price >= deger ? "up" : "down") : "flat",
+      label: t.stock.movingAverageShort.replace("{n}", String(pencere)),
+      /* Üst, alt, üst: yakın duran ortalamaların etiketleri ayrı satırlara
+         düşüyor (NVDA'da 50G ile 100G arası 3,74 $). */
+      side: index % 2 === 0 ? "above" : "below",
+    });
+  });
+  if (price !== null) {
+    marks.push({ kind: "point", at: price, variant: "live", value: formatPrice(price, locale), side: "below" });
+  }
 
   return (
     /* ÜST DOLGU YOK. Başlığın kendi `py-4` alt dolgusu (16px) buradaki
@@ -1215,12 +1390,15 @@ async function MovingAverages({
        gövdenin üst dolgusu tümüyle kalktı; satırın kendi `py-2`si zaten
        nefes alacak kadar. Ölçüldü: kart 245 → 190 piksel. */
     <div className={styles.averagesBody}>
-      <div className={styles.averageReference}>
-        <span>{t.stock.currentQuote}</span>
-        <strong className="numeral">{formatPrice(price, locale, { currency: true })}</strong>
-        <span className={styles.axisKey}><i aria-hidden />{t.stock.averageDistance}</span>
-      </div>
+      <PriceRail marks={marks} className={styles.averagesRail} />
+      {/* Çizim `aria-hidden`; her sayısı bu listede metin olarak da var. */}
       <dl className={styles.averageRows}>
+        <div className={styles.averageRow}>
+          <dt>{t.stock.currentQuote}</dt>
+          <dd className="numeral text-sm font-semibold text-strong">
+            {formatPrice(price, locale, { currency: true })}
+          </dd>
+        </div>
         {satirlar.map(({ pencere, deger }) => {
           /* Fark yalnızca İKİSİ de varken yazılıyor; ortalama yoksa fiyatla
              kıyaslanacak bir şey de yok. */
@@ -1228,15 +1406,9 @@ async function MovingAverages({
             deger !== null && price !== null && deger > 0
               ? ((price - deger) / deger) * 100
               : null;
-          const ton = directionOf(fark);
           return (
-            <div
-              key={pencere}
-              className={styles.averageRow}
-            >
-              <dt className="text-xs font-semibold text-strong">
-                {t.stock.movingAverageRow.replace("{n}", String(pencere))}
-              </dt>
+            <div key={pencere} className={styles.averageRow}>
+              <dt>{t.stock.movingAverageRow.replace("{n}", String(pencere))}</dt>
               <dd className="flex items-baseline gap-2.5">
                 <span className="numeral text-sm text-body">
                   {deger !== null
@@ -1246,32 +1418,18 @@ async function MovingAverages({
                 {fark !== null && (
                   <span
                     className={cn(
-                      "numeral shrink-0 text-tiny font-semibold",
-                      directionText(ton),
+                      "numeral w-14 shrink-0 text-right text-tiny font-semibold",
+                      directionText(directionOf(fark)),
                     )}
                   >
                     {formatPercent(fark, locale)}
                   </span>
                 )}
               </dd>
-              {fark !== null && (
-                <div className={styles.deviationTrack} aria-hidden>
-                  <span data-motion-draw="line" className={styles.deviationFill} style={{
-                    left: `${fark < 0 ? 50 - Math.abs(fark) / extent * 50 : 50}%`,
-                    width: `${Math.abs(fark) / extent * 50}%`,
-                    background: fark >= 0 ? "var(--up)" : "var(--down)",
-                    transformOrigin: fark < 0 ? "right" : "left",
-                  }} />
-                  <i />
-                </div>
-              )}
             </div>
           );
         })}
       </dl>
-      {differences.some((value) => value !== null) && <div className={styles.deviationScale} aria-hidden>
-        <span>{formatPercent(-extent, locale)}</span><span>0</span><span>{formatPercent(extent, locale)}</span>
-      </div>}
       <p className={styles.cardNote}>
         {t.stock.movingAveragesNote}
       </p>
@@ -1361,10 +1519,15 @@ async function ProfileCard({
      şirket, iki ekran, iki değer. Kural tek yerde: lib/data.ts →
      liveMarketCap. Fiyat alınamazsa kayıtlı değere düşülür. */
   const status = await getStatus();
-  const [result, meta, quoteForCap] = await Promise.all([
+  const [result, meta, quoteForCap, nextReport, metricsForBand] = await Promise.all([
     getCompanyProfile(symbol),
     getSymbolNames([symbol]),
     getQuote(symbol, status),
+    /* Yerel takvim okuması; sağlayıcıya gitmiyor (lib/data.ts). */
+    getNextReport(symbol),
+    /* 52 hafta bandı — Anahtar Metrikler ile aynı çağrı, `finnhubFetch`
+       altı saat önbellekli: yeni tur yok. */
+    getKeyMetrics(symbol),
   ]);
   if (!result.ok) {
     return (
@@ -1384,12 +1547,22 @@ async function ProfileCard({
      `SymbolMeta` bu ayrımı zaten yapıyor (USD dışında null); yedeğin de
      aynı kuralı tanıması gerekiyordu. Bilinmiyorsa tire basılır — uydurma
      bir dolar değerinden iyidir. */
-  const marketCap =
-    liveMarketCap(meta[symbol], quoteForCap.ok ? quoteForCap.data.price : null) ??
-    (profile.currency === "USD" ? profile.marketCap : null);
+  const band = week52Band(
+    metricsForBand.ok ? metricsForBand.data : null,
+    quoteForCap.ok ? quoteForCap.data.price : null,
+    meta[symbol]?.currency ?? null,
+  );
+  const liveCapValue = liveMarketCap(meta[symbol], quoteForCap.ok ? quoteForCap.data.price : null);
+  const liveCap = liveCapValue !== null;
+  const marketCap = liveCapValue ?? (profile.currency === "USD" ? profile.marketCap : null);
   const member = indexMemberOf(symbol);
   const about = await describeSymbol(symbol, locale);
   const websiteHref = safeExternalUrl(profile.weburl);
+  const hourLabels: Record<string, string> = {
+    bmo: t.earnings.beforeOpen,
+    amc: t.earnings.afterClose,
+    dmh: t.earnings.duringMarket,
+  };
 
   /* Ülke adı — kod tanınmazsa `of()` girdiyi aynen geri veriyor, o durumda
      "US" gibi ham bir kod basmak yerine satırı hiç açmıyoruz. */
@@ -1430,7 +1603,7 @@ async function ProfileCard({
        Kod tanınmazsa `of()` girdiyi aynen döndürüyor; o zaman ham kod
        basmak yerine satır hiç yazılmıyor. */
     ...(ulkeAdi ? ([[t.stock.country, ulkeAdi]] as [string, React.ReactNode][]) : []),
-    [t.stock.exchange, profile.exchange ?? NO_VALUE],
+    [t.stock.exchange, exchangeLabel(profile.exchange, locale) ?? NO_VALUE],
     /* DEĞER YOKSA SATIR DA YOK. Koruma bilinçli (dolar dışı para biriminde
        null döner, gerekçe yukarıda) ama sonucu hep "—" olan bir satır yer
        kaplayıp hiçbir şey söylemiyordu — üstelik tam da ADR'lerde, kartın
@@ -1448,6 +1621,24 @@ async function ProfileCard({
         NO_VALUE
       ),
     ],
+    /* SIRADAKİ BİLANÇO BİR SATIR, BİR KART DEĞİL. Yaklaşan bilanço kartı
+       ilk ekrandan Bilançolar bölümüne taşınmıştı (ilk ekranın boyunu
+       uzatıyordu); ama tarihin kendisi şirket künyesinin bir satırı ve
+       profil kartının altında boşluk bırakan yere tam oturuyor. Satır
+       bölüme bağlanıyor — ayrıntı orada. Tarih yoksa satır da yok. */
+    ...(nextReport
+      ? ([
+          [
+            t.stock.nextReportRow,
+            <a key="next" href="#stock-earnings" className="tap-44 numeral text-primary hover:underline">
+              {formatEtDateMedium(nextReport.date, locale)}
+              {nextReport.hour && hourLabels[nextReport.hour]
+                ? ` · ${hourLabels[nextReport.hour]}`
+                : ""}
+            </a>,
+          ],
+        ] as [string, React.ReactNode][])
+      : []),
   ];
 
   /* KÜNYE BAŞLIĞIN SAĞINDA. "Finnhub · 22 Eylül 21:52 Güncellendi" kartın
@@ -1469,45 +1660,24 @@ async function ProfileCard({
       }
     />
     <div className={styles.profileBody}>
-      <div className={styles.profileVisual}>
-        <span className={styles.profileTicker} aria-hidden>{symbol}</span>
-        <div className={styles.orbits} aria-hidden><i /><i /><i /></div>
-        {/* Son fiyat, başlık ve piyasa değerinin kullandığı aynı kotasyon.
-            Grafikte geçmiş bir nokta seçilse de bu referans değişmez. */}
-        <dl className={styles.profileMetrics}>
-          <div className={styles.profileMetric}>
-            <dt>{t.market.lastPrice}</dt>
-            <dd className={cn("numeral", styles.profilePrice)}>
-              {quoteForCap.ok
-                ? formatPrice(quoteForCap.data.price, locale, { currency: true })
-                : NO_VALUE}
+      {/* TEK BÜYÜK OKUMA: PİYASA DEĞERİ (24 Eylül). Kartın tepesinde "Son
+          Fiyat", yüzdesi ve kotasyon damgası duruyordu — solundaki başlığın
+          birebir kopyası, aynı panelin 400 piksel yanında. Kopyası gitti;
+          kalan tek sayı başlığın söylemediği şey. Künye onun neyle
+          hesaplandığını söylüyor (lib/data.ts → liveMarketCap). Arka
+          plandaki sembol filigranı ve yörünge halkaları da gitti: derinlik
+          tonla kuruluyor, süsle değil (tema § 1). */}
+      {marketCap !== null && (
+        <div className={styles.profileVisual}>
+          <dl className={styles.profileMetric}>
+            <dt>{t.market.marketCap}</dt>
+            <dd className={cn("numeral", styles.profileCapValue)}>
+              {formatMoneyCompact(marketCap, locale)}
             </dd>
-            {quoteForCap.ok ? (
-              <dd className={styles.profileChange}>
-                <ChangePill changePct={quoteForCap.data.changePct} locale={locale} />
-              </dd>
-            ) : <dd className="text-tiny text-muted">{t.common.noData}</dd>}
-          </div>
-          {marketCap !== null && (
-            <div className={styles.profileMetric}>
-              <dt>{t.market.marketCap}</dt>
-              <dd className={cn("numeral", styles.profileCapValue)}>
-                {formatMoneyCompact(marketCap, locale)}
-              </dd>
-            </div>
-          )}
-        </dl>
-        {quoteForCap.ok && (
-          <DataStamp
-            labels={t.data}
-            source={quoteForCap.source}
-            at={quoteForCap.fetchedAt}
-            stale={quoteForCap.stale}
-            locale={locale}
-            className={styles.profileQuoteStamp}
-          />
-        )}
-      </div>
+            {liveCap && <dd className={styles.profileCapNote}>{t.stock.capLiveNote}</dd>}
+          </dl>
+        </div>
+      )}
       {/* Şirket ne iş yapar — sektör satırından önce düz cümleyle anlatılır */}
       {about && (
         <p className={styles.about}>
@@ -1545,12 +1715,50 @@ async function ProfileCard({
                 rel="noopener noreferrer"
                 className="tap-44 -my-2 block min-h-8 truncate py-2 text-primary hover:underline"
               >
-                {websiteHref.replace(/^https?:\/\/(www\.)?/, "")}
+                {/* Sondaki eğik çizgi de gidiyor: "nvidia.com/" bir adres
+                    değil, bir yolun başı gibi okunuyordu. */}
+                {websiteHref.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
               </a>
             </dd>
           </div>
         )}
       </dl>
+      {/* 52 HAFTA BANDI PROFİLİN SONUNDA (24 Eylül). Anahtar Metrikler'de
+          ayrı bir bloktu; profil kartı ise grafiğin yanında içeriğinden
+          erken bitiyordu (1440'ta AAPL 141, ASTS 251, TSM 295 piksel
+          kuyruk). Band şirketin künyesi kadar kalıcı bir okuma: fiyatın
+          yılın neresinde durduğu. Uçlar metin olarak yazılı; ray yalnızca
+          çizim (`aria-hidden`). ADR'de uçlar ana borsanın parasında ve ray
+          yok (`week52Band`). */}
+      {band && (
+        <div className={styles.profileBand}>
+          <div className="flex items-baseline justify-between gap-3">
+            <span className={styles.profileBandLabel}>
+              {t.stock.week52Range}
+              {band.position !== null && (
+                <span className="numeral ml-2 font-normal text-muted">
+                  {t.stock.week52Position.replace("{value}", formatPercentPlain(band.position, locale, 0))}
+                </span>
+              )}
+            </span>
+            <span className="numeral text-xs text-strong">
+              {formatPrice(band.low, locale, { currency: band.para })}
+              {" – "}
+              {formatPrice(band.high, locale, { currency: band.para })}
+            </span>
+          </div>
+          {band.onRail && quoteForCap.ok && (
+            <PriceRail
+              marks={[
+                { kind: "band", from: band.low, to: band.high, tone: "range" },
+                { kind: "point", at: quoteForCap.data.price, variant: "live" },
+              ]}
+              pad={0}
+              className="mt-2"
+            />
+          )}
+        </div>
+      )}
     </div>
     </>
   );
@@ -1695,30 +1903,11 @@ async function MetricsCard({
     [t.market.volume, quote?.volume ? formatVolume(quote.volume, locale) : NO_VALUE],
   ];
 
-  /* 52 HAFTA BANDI İKİ SATIRDAN BİR BLOĞA DÖNDÜ.
-     "En Yüksek 236,54" ve "En Düşük 164,07" iki ayrı satırdaydı ve okuyucunun
-     asıl sorusunu ikisi de yanıtlamıyordu: fiyat şu an bu bandın NERESİNDE?
-     Okuyucu iki sayıyı ve başlıktaki fiyatı kafasında oranlamak zorundaydı.
-     Tek blok üçünü birden gösteriyor ve kartın en boş yerini —satırların
-     ortasındaki yatay boşluğu— anlamla dolduruyor. Yeni veri yok: üç sayı da
-     zaten ekrandaydı.
-
-     İŞARETÇİ PARA BİRİMİ AYNIYSA ÇIKAR. Bant şirketin ana borsasının
-     parasında, başlıktaki fiyat dolar; ADR'de ikisini oranlamak TSM'de
-     "fiyat bandın %0'ında" gibi anlamsız bir sonuç verirdi. `homeCurrency`
-     dalında bant yine çiziliyor (iki uç okunuyor) ama işaretçi ve yüzde
-     basılmıyor. `olculerTutarli` de şart: BRK.B'de band A sınıfının. */
-  const bantGecerli =
-    hisseBasi(m.low52) !== null &&
-    hisseBasi(m.high52) !== null &&
-    m.high52! > m.low52!;
-  const bantKonumu =
-    bantGecerli && !homeCurrency && quote?.price
-      ? Math.min(
-          100,
-          Math.max(0, ((quote.price - m.low52!) / (m.high52! - m.low52!)) * 100),
-        )
-      : null;
+  /* 52 HAFTA BANDI BU KARTTA DEĞİL (24 Eylül). "İki satırdan bir bloğa"
+     dönmüştü (fiyatın bandın neresinde durduğu tek bakışta); o blok şimdi
+     Hareketli Ortalamalar'ın fiyat cetvelinde, ortalamalarla AYNI eksende
+     — iki kart aynı soruyu iki ayrı ölçekle yanıtlıyordu. Gerekçe
+     MovingAverages'ta. */
 
   /* FİYAT / SATIŞ DEĞERLENDİRİLDİ, EKLENMEDİ — gerekçe yazılıyor çünkü
      aday güçlü ve yeniden önerilmesi çok olası.
@@ -1761,43 +1950,6 @@ async function MetricsCard({
           </div>
         ))}
       </dl>
-      {bantGecerli && (
-        <div className={styles.rangeBlock}>
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-xs font-semibold text-strong">
-              {t.stock.week52Range}
-            </span>
-            {bantKonumu !== null && (
-              <span className="numeral text-tiny text-muted">
-                {t.stock.week52Position.replace(
-                  "{value}",
-                  formatPercentPlain(bantKonumu, locale, 0),
-                )}
-              </span>
-            )}
-          </div>
-          {/* Ray dolu değil ÇİZGİ: bant bir oran değil bir ARALIK, doldurmak
-              "şu kadarı tamamlandı" gibi okunurdu. İşaretçi fiyatın yerini
-              gösteren tek bir nokta; rayın kendisi nötr. */}
-          <div className="relative mt-2 h-1.5 w-full rounded-full bg-surface-sunken">
-            {bantKonumu !== null && (
-              <span
-                aria-hidden
-                className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-2 ring-surface-solid"
-                style={{ left: `${bantKonumu}%` }}
-              />
-            )}
-          </div>
-          <div className="mt-1.5 flex items-baseline justify-between gap-3">
-            <span className="numeral text-tiny text-muted">
-              {formatPrice(m.low52, locale, { currency: currency ?? true })}
-            </span>
-            <span className="numeral text-tiny text-muted">
-              {formatPrice(m.high52, locale, { currency: currency ?? true })}
-            </span>
-          </div>
-        </div>
-      )}
       {/* Para birimi başlıktaki dolar fiyatından farklıysa sebebi yazılır —
           yoksa okuyucu iki sayıyı yan yana koyup birini yanlış sanıyor. */}
       {homeCurrency && (
@@ -2030,84 +2182,93 @@ async function PastEarnings({
   symbol,
   locale,
   t,
+  analyses,
 }: {
   symbol: string;
   locale: Locale;
   t: Dictionary;
+  analyses: AnalysisIndexRow[];
 }) {
   const today = todayEt();
   /* Bu tablo bir dönem koşulsuz dolar basıyordu — gerekçe `paraSecenegi`de. */
   const paraOpt = await paraSecenegi(symbol);
 
-  // Takvim satırları (yerel tablo, yoksa sağlayıcı) — gelir alanlarını taşır.
-  let calRows: EarningsItem[] = (await getEarningsForSymbol(symbol, 12)).filter(
-    (row) => row.reportDate < today || row.epsActual !== null,
-  );
-  if (calRows.length === 0) {
-    calRows = (await symbolEarnings(symbol)).filter(
-      (row) => row.reportDate < today || row.epsActual !== null,
-    );
+  /* TAKVİM İKİ KAYNAKTAN. Yerel tablo geçmiş tarafında sembol başına TEK
+     satır tutuyor (ölçüldü, UpcomingEarnings künyesi) ve sağlayıcının sembol
+     takvimine yalnızca yerel tablo BOŞKEN gidiliyordu: NVDA'da dört çeyreğin
+     üçü rapor tarihsiz kalıyordu. İki liste birleşiyor, aynı gün tek satır
+     (yerel önce: gelir alanları orada). Sağlayıcı çağrısı yeni bir tur
+     açmıyor — Yaklaşan Bilanço kartı aynı ucu aynı parametrelerle çağırıyor
+     ve `finnhubFetch` altı saat önbellekliyor. */
+  const [yerel, saglayici, surprises] = await Promise.all([
+    getEarningsForSymbol(symbol, 12),
+    symbolEarnings(symbol),
+    /* Kanonik EPS kaynağı earnings surprises'tır: çeyrek başına TEK kayıt
+       ve rapor günündeki nihai beklentiyi taşır. Takvim beslemesi aynı
+       çeyrek için revizyon kopyaları düşürebiliyor (AAPL'da iki farklı
+       beklenti görüldü) — bu yüzden takvim yalnızca gelir/rapor-tarihi
+       zenginleştirmesi yapar. */
+    getEarningsSurprises(symbol),
+  ]);
+  const byDate = new Map<string, EarningsItem>();
+  for (const row of [...yerel, ...saglayici]) {
+    if (row.reportDate > today && row.epsActual === null) continue;
+    const held = byDate.get(row.reportDate);
+    if (!held || (row.epsActual !== null && held.epsActual === null)) byDate.set(row.reportDate, row);
   }
+  const calRows = [...byDate.values()];
 
-  /* Kanonik EPS kaynağı earnings surprises'tır: çeyrek başına TEK kayıt ve
-     rapor günündeki nihai beklentiyi taşır. Takvim beslemesi aynı çeyrek için
-     revizyon kopyaları düşürebiliyor (AAPL'da iki farklı beklenti görüldü) —
-     bu yüzden takvim yalnızca gelir/rapor-tarihi zenginleştirmesi yapar. */
-  let rows: EarningsItem[];
-  const surprises = await getEarningsSurprises(symbol);
+  let rows: PastQuarter[];
   if (surprises.ok) {
-    rows = surprises.data.map((s) => {
-      const periodMs = new Date(`${s.period}T12:00:00Z`).getTime();
-      // Rapor, çeyrek bitiminden ~2-10 hafta sonra gelir; o penceredeki takvim
-      // kaydı bu çeyreğe aittir.
-      const cal = calRows.find((row) => {
-        const diffDays =
-          (new Date(`${row.reportDate}T12:00:00Z`).getTime() - periodMs) /
-          86400000;
-        return diffDays > 0 && diffDays <= 100;
-      });
-      return {
-        reportDate: cal?.reportDate ?? s.period,
-        hour: cal?.hour ?? null,
-        epsEstimate: s.epsEstimate,
-        epsActual: s.epsActual,
-        revenueEstimate: cal?.revenueEstimate ?? null,
-        revenueActual: cal?.revenueActual ?? null,
-        quarter: s.quarter,
-        year: s.year,
-        periodEnd: s.period,
-      };
-    });
+    rows = buildPastQuarters(surprises.data, calRows, analyses, locale, today);
   } else {
-    // Surprises yoksa takvimden devam: aynı güne düşen kopyaları tekille.
-    const byDate = new Map<string, EarningsItem>();
-    for (const row of calRows) {
-      const current = byDate.get(row.reportDate);
-      if (!current || (row.epsActual !== null && current.epsActual === null)) {
-        byDate.set(row.reportDate, row);
-      }
-    }
-    rows = [...byDate.values()];
+    // Surprises yoksa takvimden devam: satır zaten açıklama gününe bağlı.
+    rows = calRows
+      .filter((row) => row.reportDate <= today)
+      .sort((a, b) => b.reportDate.localeCompare(a.reportDate))
+      .map((row) => {
+        const fiscal = fiscalOf(row);
+        return {
+          key: row.reportDate,
+          fiscal,
+          label: fiscal ? fiscalLabel(fiscal, locale) : null,
+          shortLabel: null,
+          quarterEnd: null,
+          reportDate: row.reportDate,
+          epsEstimate: row.epsEstimate,
+          epsActual: row.epsActual,
+          revenueEstimate: row.revenueEstimate,
+          revenueActual: row.revenueActual,
+        };
+      });
   }
-  rows.sort((a, b) => b.reportDate.localeCompare(a.reportDate));
 
   if (rows.length === 0) {
     return <EmptyState title={t.common.noData} />;
   }
+  const shown = rows.slice(0, 8);
 
-  // Dönem etiketi çeyreğin bittiği ayı söyler — mali yıl etiketleri (ör.
-  // NVDA'nın FY2027'si) okuyucuyu yanıltır, ay+yıl yanıltmaz.
+  /* Ay satırı çeyreğin bittiği ayı söyler; mali yıl etiketi (NVDA'nın
+     FY2027'si) tek başına takvimde nereye düştüğünü söylemiyor. İkisi
+     birlikte: ad üstteki analiz paneliyle aynı, ay altında sessiz. */
   const periodLabel = new Intl.DateTimeFormat(
     locale === "tr" ? "tr-TR" : "en-US",
     { month: "short", year: "numeric", timeZone: "UTC" },
   );
 
-  const hasRevenue = rows.some(
-    (row) => row.revenueActual !== null || row.revenueEstimate !== null,
-  );
+  /* GELİR SÜTUNLARI YA İKİ SATIRDA DEĞER VARSA YA DA BİR SATIR TAMSA.
+     Tek dolu hücre için iki sütun tablonun üçte birini (1440'ta 449 / 1318
+     piksel) tireye harcıyordu. Ama beklentisi ve gerçekleşeni birlikte
+     bilinen tek bir çeyrek kendi başına bir karşılaştırma: SNDK'nın analizi
+     yayımlanmış çeyreği tam da bu (beklenti takvimden, gerçekleşen analiz
+     kaydından). */
+  const hasRevenue =
+    shown.filter((row) => row.revenueActual !== null || row.revenueEstimate !== null).length >= 2 ||
+    shown.some((row) => row.revenueActual !== null && row.revenueEstimate !== null);
 
   return (
     <div>
+      <EpsTrack rows={shown} locale={locale} currency={paraOpt} t={t} />
       {/* Tablo dar ekranda kendi kabında kayar — sayfa yana kaymaz.
           KAP KLAVYEYLE ODAKLANABİLİR: 560px'lik tablo 352px'lik kapta kayıyor
           ve `tabindex` olmadan sağdaki sütunlara fare olmadan ulaşılamıyordu
@@ -2127,7 +2288,7 @@ async function PastEarnings({
             o iddiayı boşa çıkarıyordu. */}
         <table className="w-full min-w-0 text-sm sm:min-w-[560px]">
         <thead>
-          <tr className="border-b border-line-soft text-left text-nano uppercase tracking-wider text-muted">
+          <tr className="border-b border-line-soft text-left text-nano text-muted">
             <th className="px-4 py-2.5 font-medium sm:px-5">
               {t.earnings.period}
             </th>
@@ -2176,35 +2337,44 @@ async function PastEarnings({
           </tr>
         </thead>
         <tbody className="divide-y divide-line-soft">
-          {rows.slice(0, 8).map((row) => {
-            const surprise =
-              row.epsActual !== null &&
-              row.epsEstimate !== null &&
-              row.epsEstimate !== 0
-                ? ((row.epsActual - row.epsEstimate) /
-                    Math.abs(row.epsEstimate)) *
-                  100
-                : null;
+          {shown.map((row) => {
+            const surprise = epsSurprise(row.epsEstimate, row.epsActual);
             return (
-              <tr key={row.reportDate}>
+              <tr key={row.key}>
                 <td className="px-4 py-2.5 sm:px-5">
                   <span className="numeral block whitespace-nowrap text-sm font-semibold text-strong">
-                    {periodLabel.format(
-                      new Date(`${row.periodEnd ?? row.reportDate}T12:00:00Z`),
-                    )}
+                    {row.label ?? <EmptyValue label={t.common.noData} />}
                   </span>
-                  <span className="numeral block text-tiny text-muted md:hidden">
-                    {formatEtDateMedium(row.reportDate, locale)}
-                  </span>
+                  {row.quarterEnd && (
+                    <span className="numeral hidden text-tiny text-muted md:block">
+                      {periodLabel.format(new Date(`${row.quarterEnd}T12:00:00Z`))}
+                    </span>
+                  )}
+                  {/* Rapor günü bilinmiyorsa dar ekranda alt satır HİÇ yok:
+                      eskiden yerine dönem sonu basılıyordu. */}
+                  {row.reportDate && (
+                    <span className="numeral block text-tiny text-muted md:hidden">
+                      {formatEtDateMedium(row.reportDate, locale)}
+                    </span>
+                  )}
                 </td>
                 <td className="numeral hidden px-3 py-2.5 text-sm text-body md:table-cell">
-                  {formatEtDateMedium(row.reportDate, locale)}
+                  {row.reportDate ? (
+                    formatEtDateMedium(row.reportDate, locale)
+                  ) : (
+                    <EmptyValue label={t.common.noData} />
+                  )}
                 </td>
                 <td className="px-2 py-2.5 text-center sm:px-3">
-                  {surprise !== null ? (
-                    <ChangePill changePct={surprise} locale={locale} size="sm" />
+                  {surprise ? (
+                    <SurprisePill
+                      surprise={surprise}
+                      locale={locale}
+                      currency={paraOpt}
+                      title={`EPS · ${t.calendar.forecast} ${formatPrice(row.epsEstimate, locale, { currency: paraOpt })} · ${t.calendar.actual} ${formatPrice(row.epsActual, locale, { currency: paraOpt })}`}
+                    />
                   ) : (
-                    <span className="text-xs text-muted">{NO_VALUE}</span>
+                    <EmptyValue label={t.common.noData} className="text-xs text-muted" />
                   )}
                 </td>
                 <td className="numeral px-2 py-2.5 text-center text-muted sm:px-3">
@@ -2212,12 +2382,12 @@ async function PastEarnings({
                     ? formatPrice(row.epsEstimate, locale, {
                         currency: paraOpt,
                       })
-                    : NO_VALUE}
+                    : <EmptyValue label={t.common.noData} />}
                 </td>
                 <td className="numeral px-2 py-2.5 text-center font-semibold text-strong sm:px-3">
                   {row.epsActual !== null
                     ? formatPrice(row.epsActual, locale, { currency: paraOpt })
-                    : NO_VALUE}
+                    : <EmptyValue label={t.common.noData} />}
                 </td>
                 {hasRevenue && (
                   <>
@@ -2228,7 +2398,7 @@ async function PastEarnings({
                             locale,
                             paraKoduOf(paraOpt),
                           )
-                        : NO_VALUE}
+                        : <EmptyValue label={t.common.noData} />}
                     </td>
                     <td className="numeral hidden px-4 py-2.5 text-center text-body sm:table-cell sm:px-5">
                       {row.revenueActual !== null ? (
@@ -2240,7 +2410,7 @@ async function PastEarnings({
                           )}
                         </span>
                       ) : (
-                        NO_VALUE
+                        <EmptyValue label={t.common.noData} />
                       )}
                     </td>
                   </>
@@ -2252,13 +2422,48 @@ async function PastEarnings({
         </table>
       </ScrollEdges>
 
-      {/* Tablo kısaltmalarının karşılığı — EPS ne demek, sapma neye göre.
-          Rakamı okuyanın sözlüğe gitmesi gerekmesin. */}
-      <p className="mt-3 border-t border-line-soft px-4 pt-3 text-small leading-relaxed text-muted sm:px-5">
-        <b className="font-semibold text-soft">{t.earnings.epsFull}</b>{" "}
-        {t.earnings.epsExplainer}
+      {/* AÇIKLAMA PARAGRAFI KÜNYEYE İNDİ. EPS'in ne olduğunu anlatan beş-
+          sekiz satırlık paragraf (390'da ~190 piksel) her hisse sayfasında
+          birebir tekrar ediyordu; kısaltmanın karşılığı tek satırda yetiyor,
+          ayrıntısı sayfanın sonundaki rehber bağlantısında. */}
+      <p className="border-t border-line-soft px-4 py-2.5 text-tiny text-muted sm:px-5">
+        {t.earnings.epsFull}
       </p>
     </div>
+  );
+}
+
+/**
+ * Sapma hapı — `ChangePill` ile aynı yıkama ve ok, ama metin
+ * `formatEpsSurprise`ten: yüzde tek ondalık ya da dolar farkı (gerekçe
+ * components/stock/past-quarters.ts). `title` iki EPS'i birlikte yazıyor.
+ */
+function SurprisePill({
+  surprise,
+  locale,
+  currency,
+  title,
+}: {
+  surprise: EpsSurprise;
+  locale: Locale;
+  currency: string | true;
+  title: string;
+}) {
+  return (
+    <span
+      title={title}
+      className={cn(
+        "numeral inline-flex items-center gap-1 whitespace-nowrap rounded-full px-1.5 py-0.5 text-tiny font-semibold",
+        directionWash(surprise.direction),
+      )}
+    >
+      {surprise.direction !== "flat" && (
+        <span aria-hidden className="text-[0.85em] leading-none">
+          {surprise.direction === "up" ? "▲" : "▼"}
+        </span>
+      )}
+      {formatEpsSurprise(surprise, locale, currency)}
+    </span>
   );
 }
 
@@ -2469,9 +2674,21 @@ async function ComplianceCard({
 }
 
 /**
- * Aynı alt sektördeki şirketler — piyasa değerine göre en büyük sekiz isim,
- * sayfanın tam genişliğinde kart ızgarası olarak. Sınıflandırma GICS'ten
- * gelir; fiyatlar canlı. Aynı şirketin ikinci hisse sınıfı listeye girmez.
+ * Aynı alt sektördeki şirketler — piyasa değerine göre SIRALI bir liste,
+ * sayfanın şirketi kendi sırasında (24 Eylül).
+ *
+ * NEDEN LİSTE: sekiz kart dört sütunluk ızgarada 1440'ta 499, 390'da 891
+ * piksel tutuyordu ve her kart aynı üç şeyi (logo, sembol, fiyat) büyük bir
+ * boşluğun içinde gösteriyordu. Kartların söylemediği asıl şey şuydu: bu
+ * şirket sektörünün NERESİNDE? Sayfanın şirketi listede hiç yoktu. Artık
+ * dokuz satır, piyasa değerine göre sıralı; sayfanın şirketi vurgulu satırda
+ * kendi sırasında, çubuk büyüklüğü UZUNLUK olarak veriyor (CLAUDE.md
+ * "Karşılaştırılan her büyüklük bir de çizgi olarak okunur", `ScaleBar`).
+ *
+ * Piyasa değeri profil kartıyla AYNI kural (`liveMarketCap`): NVDA satırı
+ * profilin tek büyük okumasıyla aynı sayı. FİYATTA ÇUBUK YOK — farklı
+ * şirketlerin hisse fiyatları karşılaştırılabilir değil (CompareScale).
+ * Sınıflandırma GICS'ten; aynı şirketin ikinci hisse sınıfı listeye girmez.
  */
 async function PeersCard({
   symbol,
@@ -2486,8 +2703,8 @@ async function PeersCard({
   const peers = peersOf(symbol);
   if (peers.length === 0) return null;
 
-  const meta = await getSymbolNames(peers.map((peer) => peer.symbol));
-  const ranked = [...peers]
+  const meta = await getSymbolNames([symbol, ...peers.map((peer) => peer.symbol)]);
+  const top = [...peers]
     .sort(
       (a, b) =>
         (meta[b.symbol]?.marketCap ?? 0) - (meta[a.symbol]?.marketCap ?? 0),
@@ -2496,83 +2713,98 @@ async function PeersCard({
 
   const status = await getStatus();
   const result = await getQuotes(
-    ranked.map((peer) => peer.symbol),
+    [symbol, ...top.map((peer) => peer.symbol)],
     status,
   );
   const quotes = result.ok ? result.data : {};
 
+  const rows = [
+    { symbol, name: meta[symbol]?.name ?? symbol, self: true },
+    ...top.map((peer) => ({ symbol: peer.symbol, name: peer.name, self: false })),
+  ]
+    .map((row) => ({
+      ...row,
+      cap: liveMarketCap(meta[row.symbol], quotes[row.symbol]?.price ?? null),
+    }))
+    .sort((a, b) => (b.cap ?? -1) - (a.cap ?? -1));
+  const maxCap = Math.max(0, ...rows.map((row) => row.cap ?? 0));
+
   /* Karşılaştırma bağlantısı buraya konuyor çünkü soru tam burada doğuyor:
-     benzer dört şirketi yan yana gören biri "hangisi" diye sorar. Sembol
+     benzer şirketleri yan yana gören biri "hangisi" diye sorar. Sembol
      listesi bu hissenin kendisiyle başlar ve en büyük üç rakiple dolar. */
-  const compareSymbols = [symbol, ...ranked.map((peer) => peer.symbol)]
+  const compareSymbols = [symbol, ...top.map((peer) => peer.symbol)]
     .filter((entry, index, list) => list.indexOf(entry) === index)
     .slice(0, 4);
 
   return (
     <Panel className={styles.peersPanel}>
+      {/* ALT SEKTÖR BAŞLIĞIN KÜNYESİNDE. Kendi satırında ("Alt Sektör:
+          Yarı İletkenler") 33 piksel tutuyordu; başlığın sağı boştu. */}
       <PanelHeader
         title={t.stock.peers}
+        meta={member?.sub ? subIndustryName(member.sub, locale) : undefined}
         action={
           <PanelLink href={`/karsilastir?semboller=${compareSymbols.join(",")}`}>
             {t.compare.addCta} →
           </PanelLink>
         }
       />
-      {member?.sub && (
-        <p className="border-b border-line-soft px-4 py-2 text-tiny text-muted sm:px-5">
-          {t.stock.peersHint}:{" "}
-          <span className="text-soft">
-            {subIndustryName(member.sub, locale)}
-          </span>
-        </p>
-      )}
-      <ul className={styles.peersGrid}>
-        {ranked.map((peer) => {
-          const quote = quotes[peer.symbol];
-          return (
-            <li key={peer.symbol} className="min-w-0">
-              <SpotlightCard className={styles.peerSpotlight}>
-              <Link
-                href={`/hisse/${peer.symbol}`}
-                className={styles.peerCard}
-              >
-                <span className={styles.peerTop}>
-                  {meta[peer.symbol]?.logoUrl ? <span className={styles.peerLogo}><Image src={meta[peer.symbol].logoUrl!} alt="" width={36} height={36} /></span> : <span className={styles.peerMonogram} aria-hidden>{peer.symbol.slice(0, 1)}</span>}
-                  <ArrowUpRight className={styles.peerArrow} aria-hidden size={19} />
+      <ol className={styles.peerList}>
+        {rows.map((row) => {
+          const quote = quotes[row.symbol];
+          const logo = meta[row.symbol]?.logoUrl;
+          const body = (
+            <>
+              {logo ? (
+                <span className={styles.peerLogo}>
+                  <Image src={logo} alt="" width={28} height={28} />
                 </span>
-                <span className="min-w-0">
-                  <span className="numeral block text-lg font-bold tracking-tight text-strong">
-                    {peer.symbol}
-                  </span>
-                  <span className="mt-0.5 block truncate text-tiny text-muted">
-                    {peer.name}
-                  </span>
+              ) : (
+                <span className={styles.peerMonogram} aria-hidden>
+                  {row.symbol.slice(0, 1)}
                 </span>
+              )}
+              <span className="min-w-0">
+                <span className="numeral block text-sm font-bold text-strong">{row.symbol}</span>
+                <span className="block truncate text-xs text-muted">{row.name}</span>
+              </span>
+              <span className="min-w-0 text-right">
+                <span className="numeral block text-xs font-semibold text-strong">
+                  {row.cap !== null ? formatMoneyCompact(row.cap, locale) : NO_VALUE}
+                </span>
+                {row.cap !== null && maxCap > 0 && (
+                  <ScaleBar ratio={row.cap / maxCap} signed={false} emphasis={row.self} />
+                )}
+              </span>
+              <span className={styles.peerQuote}>
                 {quote ? (
-                  <span className="flex flex-wrap items-center justify-between gap-1.5">
-                    {/* Fiyat sembolle AYNI PUNTODAYDI (ikisi de 14px) ve
-                        127 piksellik kartta hangisinin kimlik hangisinin ölçü
-                        olduğu okunmuyordu. Bir punto inince yer de açıldı ve
-                        para birimi geri kondu: sayfadaki başka her fiyatta
-                        "$" varken bu sekiz fiyatta yoktu. */}
-                    <span className="numeral text-tiny text-body">
+                  <>
+                    <span className="numeral text-xs text-body">
                       {formatPrice(quote.price, locale, { currency: true })}
                     </span>
-                    <ChangePill
-                      changePct={quote.changePct}
-                      locale={locale}
-                      size="sm"
-                    />
-                  </span>
+                    <ChangePill changePct={quote.changePct} locale={locale} size="sm" />
+                  </>
                 ) : (
-                  <span className="text-xs text-muted">{NO_VALUE}</span>
+                  <EmptyValue label={t.common.noData} className="text-xs text-muted" />
                 )}
-              </Link>
-              </SpotlightCard>
+              </span>
+            </>
+          );
+          return (
+            <li key={row.symbol} className="min-w-0">
+              {row.self ? (
+                <div className={styles.peerRow} data-self aria-current="page">
+                  {body}
+                </div>
+              ) : (
+                <Link href={`/hisse/${row.symbol}`} className={styles.peerRow}>
+                  {body}
+                </Link>
+              )}
             </li>
           );
         })}
-      </ul>
+      </ol>
     </Panel>
   );
 }
@@ -2601,7 +2833,19 @@ async function CompanyNews({
     return <EmptyState title={t.news.empty} />;
   }
 
-  const shown = result.data.slice(0, 8);
+  /* KONUDAKİ HABER ÖNCE (24 Eylül). Şirketin beslemesi ara ara genel piyasa
+     yazıları da döndürüyor ve bunlar yalnızca tarihleri yeni diye listenin
+     başına geçiyordu; NVDA'da ilk iki satırın ikisi de NVIDIA'dan söz
+     etmiyordu. Başlıkta şirketi anan haberler kararlı bir sıralamayla öne
+     alınıyor, kendi aralarındaki tarih sırası korunuyor. Telefonda ilk dört
+     satır gösteriliyor (stock.module.css), gerisi "Tümünü Gör"de. */
+  const meta = await getSymbolNames([symbol]);
+  const companyName = meta[symbol]?.name;
+  const shown = [...result.data]
+    .map((item, index) => ({ item, index, on: headlineMentions(item.headline, symbol, companyName) }))
+    .sort((a, b) => Number(b.on) - Number(a.on) || a.index - b.index)
+    .slice(0, 8)
+    .map((entry) => entry.item);
 
   /* Haber önce SİTE İÇİNDE okunur; kaynak bağlantısı detay sayfasındadır.
      Şirket haberleri canlı uçtan gelir ve genel akış tablosunda olmayabilir —
@@ -2657,18 +2901,23 @@ async function CompanyNews({
      farklı görünüyordu. Jenerik görseller (kaynak logosu) elenir — aynı
      logonun sekiz satırda tekrar etmesi listeyi taranabilir yapmıyor,
      bozuyor. */
-  const [genericImages, meta] = await Promise.all([
-    getGenericImageUrls(shown.map((item) => item.imageUrl)),
-    // Görseli olmayan haber şirketin logosunu alır — bu listede hepsi aynı
-    // şirketin haberi, o yüzden tek sembol yetiyor.
-    getSymbolNames([symbol]),
-  ]);
+  // Görseli olmayan haber şirketin logosunu alır — bu listede hepsi aynı
+  // şirketin haberi, o yüzden tek sembol yetiyor (`meta` yukarıda).
+  const genericImages = await getGenericImageUrls(shown.map((item) => item.imageUrl));
   const logoUrl = meta[symbol]?.logoUrl ?? null;
 
   return (
     <ul className={styles.newsGrid}>
       {shown.map((item) => {
         const newsId = idByProvider.get(item.providerId);
+        const image =
+          item.imageUrl && !genericImages.has(item.imageUrl) ? item.imageUrl : null;
+        /* Bu liste şirketin kendi beslemesinden geliyor ama besleme ara ara
+           genel piyasa yazıları da döndürüyor; logo yalnızca başlıkta şirket
+           geçiyorsa konur. */
+        const mentionLogo = headlineMentions(item.headline, symbol, companyName)
+          ? logoUrl
+          : null;
         const inner = (
           <span className={styles.newsInner}>
             <span className="min-w-0 flex-1">
@@ -2692,25 +2941,15 @@ async function CompanyNews({
               <span className="mt-1 flex items-center gap-1.5 text-tiny text-muted">
                 {item.source && <span>{item.source}</span>}
                 <span aria-hidden>·</span>
-                <span>{timeAgo(item.publishedAt, locale)}</span>
+                <span>{titleCaseLabel(timeAgo(item.publishedAt, locale), locale)}</span>
               </span>
             </span>
-            <NewsImage
-              src={
-                item.imageUrl && !genericImages.has(item.imageUrl)
-                  ? item.imageUrl
-                  : null
-              }
-              /* Bu liste şirketin kendi beslemesinden geliyor ama besleme
-                 ara ara genel piyasa yazıları da döndürüyor; logo yalnızca
-                 başlıkta şirket geçiyorsa konur. */
-              logoUrl={
-                headlineMentions(item.headline, symbol, meta[symbol]?.name)
-                  ? logoUrl
-                  : null
-              }
-              sizeClass={styles.newsImage}
-            />
+            {/* GÖRSEL DE LOGO DA YOKSA KUTU DA YOK. Boş gri bir kare
+                başlığın yanında 84 piksel tutuyordu ve bir şey yüklenmeyi
+                bekliyormuş gibi duruyordu; başlık artık o yeri kullanıyor. */}
+            {(image || mentionLogo) && (
+              <NewsImage src={image} logoUrl={mentionLogo} sizeClass={styles.newsImage} />
+            )}
           </span>
         );
         // Kaynak adresi sağlayıcıdan; şeması süzülmezse href'e konmaz.

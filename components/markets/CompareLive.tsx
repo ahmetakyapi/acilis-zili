@@ -39,7 +39,7 @@ import {
   type CompareSeries,
 } from "@/lib/compare";
 import type { Locale } from "@/lib/i18n/config";
-import { cn, directionOf, directionText, formatPercent } from "@/lib/utils";
+import { cn, directionOf, directionText, formatPercent, NO_VALUE } from "@/lib/utils";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /**
@@ -489,7 +489,7 @@ export function CompareStrip({
   return (
     <section className="flex flex-col gap-3" aria-labelledby="compare-selected">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 id="compare-selected" className="plate text-nano tracking-[0.09em]">
+        <h2 id="compare-selected" className="plate text-nano">
           {labels.selected}
         </h2>
         {note && <span className="text-tiny text-muted">{note}</span>}
@@ -562,7 +562,7 @@ export function CompareStrip({
                 {phase === "loading" ? (
                   <Skeleton className="h-7 w-24 rounded-full" />
                 ) : pct === null ? (
-                  <span className="numeral text-heading leading-none text-muted">—</span>
+                  <span className="numeral text-heading leading-none text-muted">{NO_VALUE}</span>
                 ) : (
                   <span
                     className={cn(
@@ -588,7 +588,7 @@ export function CompareStrip({
                 {row.changePct !== null ? (
                   <ChangePill changePct={row.changePct} locale={locale} size="sm" />
                 ) : (
-                  <span className="numeral text-tiny text-muted">—</span>
+                  <span className="numeral text-tiny text-muted">{NO_VALUE}</span>
                 )}
               </div>
             </li>
@@ -712,7 +712,7 @@ export function ComparePeriodValue({ symbol }: { symbol: string }) {
   const pct = periodChangePct(
     series.find((entry) => entry.symbol === symbol),
   );
-  if (pct === null) return <>—</>;
+  if (pct === null) return <>{NO_VALUE}</>;
 
   /* ÖLÇEK BURADA KURULUYOR, TABLODA DEĞİL. Öteki satırların çubukları
      sunucuda hesaplanıyor (`olcekler`, sayfa dosyasında) ama bu satırın

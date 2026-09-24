@@ -21,8 +21,8 @@ type Explainer = { tr: string; en: string };
 
 const EXPLAINERS: Record<string, Explainer> = {
   cpi: {
-    tr: "Tüketici fiyatlarındaki değişim — enflasyonun en çok izlenen ölçüsü. Beklentinin üstü, Fed'in faiz indirmesini zorlaştırır.",
-    en: "Change in consumer prices — the most watched inflation gauge. A hotter print makes Fed rate cuts harder to justify.",
+    tr: "Tüketici fiyatlarındaki değişim, enflasyonun en çok izlenen ölçüsü. Beklentinin üstü, Fed'in faiz indirmesini zorlaştırır.",
+    en: "Change in consumer prices, the most watched inflation gauge. A hotter print makes Fed rate cuts harder to justify.",
   },
   "core-cpi": {
     tr: "Gıda ve enerji hariç TÜFE. O iki kalem çok oynak olduğu için asıl eğilim buradan okunur.",
@@ -38,23 +38,23 @@ const EXPLAINERS: Record<string, Explainer> = {
   },
   unemployment: {
     tr: "İş arayanların işgücüne oranı. Düşmesi güçlü ekonomi demek, ama ücret baskısıyla enflasyonu da besleyebilir.",
-    en: "Share of the labor force looking for work. Falling means a strong economy — but can also feed wage pressure.",
+    en: "Share of the labor force looking for work. Falling means a strong economy, but it can also feed wage pressure.",
   },
   "jobless-claims": {
     tr: "Haftalık ilk işsizlik maaşı başvuruları. En güncel istihdam sinyali; tek bir hafta değil, birkaç haftalık eğilim okunur.",
-    en: "Weekly first-time unemployment filings. The freshest labor signal — read the multi-week trend, not one print.",
+    en: "Weekly first-time unemployment filings. The freshest labor signal; read the multi-week trend, not one print.",
   },
   "fomc-rate": {
     tr: "Fed'in politika faizi kararı. Kararın kendisi çoğu zaman sürpriz değildir; sürpriz, kararın yanındaki cümlelerdedir.",
-    en: "The Fed's policy rate decision. The decision itself is rarely the surprise — the language beside it is.",
+    en: "The Fed's policy rate decision. The decision itself is rarely the surprise; the language beside it is.",
   },
   "fomc-presser": {
     tr: "Fed Başkanı'nın karar sonrası soruları yanıtladığı toplantı. Piyasa yönünü çoğu zaman kararda değil burada bulur.",
     en: "The Fed Chair's post-decision press conference. Markets often find their direction here, not in the decision.",
   },
   "fomc-sep": {
-    tr: "Fed üyelerinin faiz, büyüme ve enflasyon tahminleri — nokta grafiği. Yılın kalanına dair patika buradan okunur.",
-    en: "Fed officials' rate, growth and inflation projections — the dot plot. It maps the path for the rest of the year.",
+    tr: "Fed üyelerinin faiz, büyüme ve enflasyon tahminleri: nokta grafiği. Yılın kalanına dair patika buradan okunur.",
+    en: "Fed officials' rate, growth and inflation projections: the dot plot. It maps the path for the rest of the year.",
   },
 };
 

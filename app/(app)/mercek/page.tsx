@@ -459,7 +459,7 @@ function LeadStory({
                   dili rozetle söylenir — sessizce yanlış dilde metin sunmak
                   seçenek değil. */}
               {story.locale !== locale && (
-                <span className="plate text-nano tracking-[0.09em]">
+                <span className="plate text-nano">
                   {story.locale.toUpperCase()}
                 </span>
               )}

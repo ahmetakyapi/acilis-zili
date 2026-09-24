@@ -1,5 +1,6 @@
 import { ChartFooter, type FooterStat } from "@/components/earnings/ChartFooter";
-import { cn } from "@/lib/utils";
+import { consecutiveQuarters, quarterGaps, yearAgoIndex } from "@/components/earnings/quarter-gaps";
+import { cn, formatPercent } from "@/lib/utils";
 import styles from "@/components/earnings/EarningsReport.module.css";
 
 /**
@@ -104,12 +105,35 @@ const GRID_SHAPE = "gap-1.5 pr-2 sm:gap-2 sm:pr-3";
 /** Öngörü sütununun komşusundan aldığı nefes — margin değil dolgu, gerekçe altta. */
 const PROJECTED_INSET = "pl-1.5 sm:pl-3";
 
+/** Eksik çeyrek kırılmasının sütun genişliği. */
+const GAP_TRACK = "12px";
+
+/** Büyüme çipinin yüzdesi — bir ondalık. */
+const GROWTH_DIGITS = 1;
+
+/** Metinler okuyucunun dilinde gelir. */
+export type RevenueColumnLabels = {
+  /** "Çeyreklik" — okuma satırındaki çeyrekten çeyreğe değişim. */
+  qoq: string;
+  /** "Yıllık" — bir yıl önceki aynı çeyreğe göre. */
+  yoy: string;
+  /** "Eksik Çeyrek" — kırılmanın ekran okuyucu adı. */
+  missing: string;
+};
+
+/** İki gelir arasındaki yüzde değişim; önceki sıfır ya da eksiyse yok. */
+function growth(current: number, previous: number): number | null {
+  if (!Number.isFinite(current) || !Number.isFinite(previous) || previous <= 0) return null;
+  return ((current - previous) / previous) * 100;
+}
 export function RevenueColumns({
   bars,
   title,
   legendActual,
   legendProjected,
   format,
+  formatMoney,
+  labels,
   footer = [],
   locale,
   className,
@@ -121,6 +145,9 @@ export function RevenueColumns({
   legendProjected: string;
   /** Sütun üstündeki ÇIPLAK sayı — birim başlıkta, burada değil. */
   format: (value: number) => string;
+  /** Okuma satırındaki BİRİMLİ tutar ("6,76 Mr $"): satır tek başına okunuyor. */
+  formatMoney: (value: number) => string;
+  labels: RevenueColumnLabels;
   footer?: FooterStat[];
   /** ChartFooter'a geçer — not satırının Title Case'i dile bağlı. */
   locale: string;
@@ -132,6 +159,42 @@ export function RevenueColumns({
   if (!Number.isFinite(max) || max <= 0) return null;
 
   const actualCount = bars.filter((bar) => !bar.projected).length;
+
+  /* ---- Eksik çeyrek ve büyüme (24 Eylül) ----
+     Sıfır tabanlı sütunlar dürüst ama büyümeyi OKUTMUYOR: ADBE'nin 5,99 ile
+     6,76 arasındaki beş çeyreği 560 ile 633 piksel arasında — "hangi hızla
+     büyüyor" sorusu gözle cevaplanmıyordu. Taban değişmiyor; altına her
+     sütunun bir önceki çeyreğe göre değişimi yazılıyor. Oran YALNIZCA
+     ardışık iki çeyrek arasında: boşluğun üstünden hesaplanan bir oran
+     "çeyreklik" değil. Öngörü sütununun çipi şirketin orta noktasını son
+     gerçekleşenle kıyaslıyor ve öngörü dilinde (mavi, kesikli). */
+  const labelsOf = bars.map((bar) => bar.label);
+  /* Okuma satırlarının kimliği etiketlerden: bileşen sunucuda çiziliyor
+     (kanca yok) ve sayfada tek gelir grafiği var. */
+  const uid = `revenue-${labelsOf.join("-").replace(/[^a-z0-9-]/gi, "")}`;
+  const gaps = quarterGaps(labelsOf);
+  const tracks = bars
+    .flatMap((_, index) => (gaps[index] ? [GAP_TRACK, "minmax(0, 1fr)"] : ["minmax(0, 1fr)"]))
+    .join(" ");
+  const changes = bars.map((bar, index) =>
+    index > 0 && consecutiveQuarters(bars[index - 1].label, bar.label)
+      ? growth(bar.value, bars[index - 1].value)
+      : null,
+  );
+  const yearly = bars.map((bar, index) => {
+    const ago = yearAgoIndex(labelsOf, index);
+    return ago >= 0 && !bars[ago].projected ? growth(bar.value, bars[ago].value) : null;
+  });
+  const latestActual = bars.reduce((found, bar, index) => (bar.projected ? found : index), -1);
+  const readoutOf = (bar: RevenueBar, index: number) =>
+    [
+      bar.label,
+      bar.projected ? (bar.note ?? formatMoney(bar.value)) : formatMoney(bar.value),
+      changes[index] !== null && `${labels.qoq} ${formatPercent(changes[index], locale, GROWTH_DIGITS)}`,
+      yearly[index] !== null && `${labels.yoy} ${formatPercent(yearly[index], locale, GROWTH_DIGITS)}`,
+    ]
+      .filter(Boolean)
+      .join(" · ");
 
   return (
     <section
@@ -161,6 +224,11 @@ export function RevenueColumns({
           </span>
         </div>
       </div>
+
+      {/* OKUMA SATIRI için ayrılmış yer — satırlar sütunların içinde
+          (odak ve imleç onlara ait), buraya mutlak konumla iniyor. Yer
+          baştan ayrılı: satır görünüp kaybolurken hiçbir şey kaymıyor. */}
+      <div aria-hidden className={styles.readout} />
 
       {/* `flex-1` + taban yükseklik: kart komşusu yüzünden uzadığında fazla
           alanın tamamı buraya, yani grafiğe gidiyor. */}
@@ -196,17 +264,25 @@ export function RevenueColumns({
             içinde `justify-end` ile tabana yaslanıyor. */}
         <ul
           className={cn(styles.revenueBars, "relative grid h-full", GRID_SHAPE)}
-          style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}
+          style={{ gridTemplateColumns: tracks }}
         >
-          {bars.map((bar, index) => {
+          {bars.flatMap((bar, index) => {
             const ratio = Math.max(0.02, bar.value / max);
             const shade =
               SHADES[
                 Math.min(SHADES.length - 1, SHADES.length - actualCount + index)
               ] ?? SHADES[SHADES.length - 1];
-            return (
+            const readoutId = `${uid}-readout-${index}`;
+            const column = (
               <li
                 key={`${bar.label}-${index}`}
+                data-bar
+                data-default={index === latestActual || undefined}
+                /* Odaklanabilir: klavyeyle Tab her sütunu geziyor ve okuma
+                   satırı o sütuna geçiyor; dokunmatikte dokunuş odak
+                   veriyor, dışarı dokunmak bırakıyor. */
+                tabIndex={0}
+                aria-describedby={readoutId}
                 className={cn(
                   "flex h-full flex-col justify-end",
                   /* Öngörü sütunu gerçekleşenlerden bir nefes uzakta durur:
@@ -275,8 +351,19 @@ export function RevenueColumns({
                     }}
                   />
                 </div>
+                <p id={readoutId} className={cn(styles.readoutLine, "text-tiny font-semibold text-body")}>
+                  {readoutOf(bar, index)}
+                </p>
               </li>
             );
+            return gaps[index]
+              ? [
+                  <li key={`gap-${index}`} className={styles.revenueGap}>
+                    <span className="sr-only">{labels.missing}</span>
+                  </li>,
+                  column,
+                ]
+              : [column];
           })}
         </ul>
       </div>
@@ -289,9 +376,10 @@ export function RevenueColumns({
           (GRID_SHAPE) ki biri değişip öteki unutulmasın. */}
       <ul
         className={cn("grid border-t border-line pt-2", GRID_SHAPE)}
-        style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: tracks }}
       >
-        {bars.map((bar, index) => (
+        {bars.flatMap((bar, index) => [
+          ...(gaps[index] ? [<li key={`gap-label-${index}`} aria-hidden />] : []),
           <li
             key={`${bar.label}-label-${index}`}
             className={cn(bar.projected && PROJECTED_INSET)}
@@ -314,8 +402,42 @@ export function RevenueColumns({
             >
               {bar.label}
             </span>
-          </li>
-        ))}
+          </li>,
+        ])}
+      </ul>
+
+      {/* BÜYÜME ŞERİDİ — çipler okuma satırının tekrarı olduğu için ekran
+          okuyucudan gizli; aynı sayılar her sütunun kendi metninde. */}
+      <ul
+        aria-hidden
+        className={cn("-mt-2 grid h-6 items-center", GRID_SHAPE)}
+        style={{ gridTemplateColumns: tracks }}
+      >
+        {bars.flatMap((bar, index) => {
+          const change = changes[index];
+          const chip = (
+            <li
+              key={`${bar.label}-growth-${index}`}
+              className={cn("flex justify-center", bar.projected && PROJECTED_INSET)}
+            >
+              {change !== null && (
+                <span
+                  className={cn(
+                    "numeral whitespace-nowrap rounded-xs px-1 text-nano font-bold leading-[18px]",
+                    bar.projected
+                      ? "border border-dashed border-primary text-primary"
+                      : change >= 0
+                        ? "bg-up-wash text-up"
+                        : "bg-down-wash text-down",
+                  )}
+                >
+                  {formatPercent(change, locale, GROWTH_DIGITS)}
+                </span>
+              )}
+            </li>
+          );
+          return gaps[index] ? [<li key={`gap-growth-${index}`} />, chip] : [chip];
+        })}
       </ul>
 
       <ChartFooter stats={footer} locale={locale} />

@@ -45,6 +45,7 @@ import {
   formatPrice,
   formatVolume,
   staleMark,
+  NO_VALUE,
 } from "@/lib/utils";
 
 import { ChipStrip } from "@/components/ui/ChipStrip";
@@ -640,7 +641,7 @@ async function CompaniesTable({
                 içeriğe göre nefes almalı. */}
             <table className="w-full table-fixed text-sm sm:table-auto sm:min-w-[700px]">
               <thead>
-                <tr className="border-b border-line text-left text-nano uppercase tracking-[0.08em] text-muted">
+                <tr className="border-b border-line text-left text-nano text-muted">
                   <th className="hidden w-10 px-4 py-2.5 font-semibold sm:table-cell sm:px-5">
                     #
                   </th>
@@ -744,7 +745,7 @@ async function CompaniesTable({
                         </Link>
                       </td>
                       <td className="hidden max-w-40 truncate px-3 py-3 text-small text-soft md:table-cell">
-                        {industryLabel(company.industry, locale) ?? "—"}
+                        {industryLabel(company.industry, locale) ?? NO_VALUE}
                       </td>
                       <td className="px-1 py-3 text-right sm:px-3">
                         {quote ? (
@@ -758,7 +759,7 @@ async function CompaniesTable({
                             className="px-1 sm:px-2 sm:text-small"
                           />
                         ) : (
-                          <span className="text-xs text-muted">—</span>
+                          <span className="text-xs text-muted">{NO_VALUE}</span>
                         )}
                       </td>
                       <td className="numeral hidden px-3 py-3 text-right text-read sm:table-cell">
@@ -772,7 +773,7 @@ async function CompaniesTable({
                             {formatPercent(weekly[company.symbol], locale)}
                           </span>
                         ) : (
-                          <span className="text-xs text-muted">—</span>
+                          <span className="text-xs text-muted">{NO_VALUE}</span>
                         )}
                       </td>
                       {/* Fiyat satırın ÇAPASI: değişim, hafta, piyasa değeri
@@ -781,7 +782,7 @@ async function CompaniesTable({
                           Boylar bir kademe büyütüldü: 13/13.5 punto sayılar
                           "bir bakışta" okunmuyordu, tablo sayı tablosu. */}
                       <td className="numeral px-1 py-3 text-right text-base font-bold text-strong sm:px-3 sm:text-read">
-                        {quote ? formatPrice(quote.price, locale) : "—"}
+                        {quote ? formatPrice(quote.price, locale) : NO_VALUE}
                       </td>
                       {/* Piyasa değeri telefonda da FİYATIN SAĞINDA, kendi
                           sütununda. Bir süre fiyatın altına ikinci satır
@@ -794,7 +795,7 @@ async function CompaniesTable({
                       <td className="numeral py-3 pl-1 pr-3 text-right text-small font-semibold text-body sm:px-3 sm:text-base">
                         {(() => {
                           const cap = capOf(company);
-                          return cap ? formatMoneyCompact(cap, locale) : "—";
+                          return cap ? formatMoneyCompact(cap, locale) : NO_VALUE;
                         })()}
                       </td>
                       <td className="numeral hidden px-4 py-3 text-right text-read text-soft sm:table-cell sm:px-5">

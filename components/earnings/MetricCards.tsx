@@ -1,5 +1,5 @@
+import { Fragment } from "react";
 import { cn, tieCurrency, tieFigures, titleCaseLabel } from "@/lib/utils";
-import { SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/earnings/EarningsReport.module.css";
 
 /**
@@ -52,7 +52,12 @@ export function MetricCards({
           key={metric.label}
           className={styles.metricItem}
         >
-          <SpotlightCard className={styles.metricCard}>
+          {/* Kart `SpotlightCard` içindeydi: imleci izleyen radyal bir
+              ışık ve üzerine gelince 4 piksel kalkış. Kart bağlantı değil;
+              imleç altında kıpırdayan bağlantısız bir panel tıklanabilir
+              gibi okunuyordu (tek hover dili `.panel-hover`, yalnızca
+              bağlantıda). Derinlik tonla — düz kart. */}
+          <div className={styles.metricCard}>
           <div className={styles.metricTop}>
           <p className={styles.metricLabel}>
             {tieFigures(metric.label)}
@@ -71,23 +76,72 @@ export function MetricCards({
             /* Bağlam satırı KIRILMAZ: "▲ Yıllık %372 · Beklenti Üstü" iki
                satıra düşünce kartlar farklı yükseklikte kalıyor ve ızgara
                tırtıklı görünüyordu. Sığmazsa kesilir. */
-            <p
-              className={cn(
-                styles.metricNote,
-                "text-small font-bold",
-                metric.tone === "up"
-                  ? "text-up"
-                  : metric.tone === "down"
-                    ? "text-down"
-                    : "text-primary",
-              )}
-            >
-              {tieFigures(titleCaseLabel(metric.note, locale))}
+            <p className={cn(styles.metricNote, "text-small font-bold")}>
+              <MetricNote note={metric.note} tone={metric.tone} locale={locale} />
             </p>
           )}
-          </SpotlightCard>
+          </div>
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * Ölçü kartının bağlam satırı — RENK YÖNÜ SÖYLER, YARGIYI DEĞİL.
+ *
+ * NEDEN (24 Eylül): satırın tamamı kaydın `tone` alanıyla boyanıyordu ve
+ * `tone` bir YARGI: ADBE'nin "Kalan Edim Yükümlülüğü" kartında "▲ %8 ·
+ * Gelirden Yavaş" KIRMIZI yazıyordu — yukarı oklu kırmızı bir sayı. Tema
+ * yeşil ile kırmızıyı yalnızca yukarı ve aşağıya veriyor.
+ *
+ * Kural: oklu (▲ ▼ + −) parça işaretinin rengini alır. Kaydın yargısı okla
+ * aynı yöndeyse satırın geri kalanı eskisi gibi o renkte ("▲ %13 Yıllık ·
+ * Beklenti 6,69 Mr $" yeşil). Ters yöndeyse yargı cümlesi ("Gelirden
+ * Yavaş") renksiz, nötr bir çipe iniyor: bilgi kalıyor, renk yalan
+ * söylemiyor. Ok yoksa satır kaydın tonunda — orada renk ile işaret
+ * çelişemiyor. Kapaktaki iki öncü ölçü de aynı bileşenden geçiyor.
+ */
+export function MetricNote({
+  note,
+  tone,
+  locale,
+  neutralClass = "text-primary",
+}: {
+  note: string;
+  tone?: string | null;
+  locale: string;
+  /** Tonsuz satırın rengi: kartta `text-primary`, kapakta mürekkep tonu. */
+  neutralClass?: string;
+}) {
+  const parts = titleCaseLabel(note, locale)
+    .split(/\s+·\s+/)
+    .map((part) => tieFigures(part.trim()))
+    .filter(Boolean);
+  const toneKey = tone === "up" || tone === "down" ? tone : null;
+  const toneClass = toneKey === "up" ? "text-up" : toneKey === "down" ? "text-down" : neutralClass;
+  const signedIndex = parts.findIndex((part) => /^[▲▼+−]/.test(part));
+  if (signedIndex < 0) return <span className={toneClass}>{parts.join(" · ")}</span>;
+
+  const sign = /^[▲+]/.test(parts[signedIndex]) ? "up" : "down";
+  const conflict = toneKey !== null && toneKey !== sign;
+  return (
+    <>
+      {parts.map((part, index) => (
+        <Fragment key={index}>
+          {index > 0 && !conflict && <span className={toneKey ? toneClass : neutralClass}> · </span>}
+          {index > 0 && conflict && " "}
+          {index === signedIndex ? (
+            <span className={sign === "up" ? "text-up" : "text-down"}>{part}</span>
+          ) : conflict ? (
+            <span className="inline-block rounded-xs bg-surface-elevated px-1.5 font-semibold text-body">
+              {part}
+            </span>
+          ) : (
+            <span className={toneKey ? toneClass : neutralClass}>{part}</span>
+          )}
+        </Fragment>
+      ))}
+    </>
   );
 }

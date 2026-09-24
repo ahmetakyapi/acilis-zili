@@ -13,6 +13,7 @@ import {
   formatPrice,
   formatPercentPlain,
   unitLabel,
+  NO_VALUE,
 } from "@/lib/utils";
 import type { MacroObservation } from "@/lib/providers/types";
 
@@ -142,7 +143,7 @@ export default async function MacroPage() {
             const birim = unitLabel(row.unit, locale);
             const olcu = (value: number | null) =>
               value === null
-                ? "—"
+                ? NO_VALUE
                 : yuzde
                   ? formatPercentPlain(value, locale, 2)
                   : `${formatPrice(value, locale, { digits })} ${birim}`.trimEnd();

@@ -85,7 +85,7 @@ export async function SiteFooter() {
             aria-labelledby={headingId}
             className="flex flex-col gap-2.5"
           >
-            <p id={headingId} className="plate text-nano tracking-[0.09em]">
+            <p id={headingId} className="plate text-nano">
               {column.title}
             </p>
             <ul className="flex flex-col gap-2">

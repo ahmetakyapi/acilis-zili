@@ -43,7 +43,7 @@ export function GuideHint({
 
   return (
     <section className={cn("flex flex-col gap-2.5", className)}>
-      <p className="plate text-nano tracking-[0.09em]">{label}</p>
+      <p className="plate text-nano">{label}</p>
       <div
         className={cn(
           "grid gap-3",

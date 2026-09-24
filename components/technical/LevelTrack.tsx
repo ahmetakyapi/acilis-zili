@@ -1,13 +1,25 @@
 import type { VerdictKey } from "@/lib/analysis";
 import styles from "./Technical.module.css";
 
-/* Halka ile nokta arasındaki en küçük mesafe, eksenin payı olarak. MU'da
-   fiyat analizden beri %0,45 yol almıştı ve bu 380 piksellik rayda 7
-   piksel ediyordu: 8 piksellik halka 14 piksellik noktanın ve halkasının
-   altında tamamen kayboluyordu (1440, ölçüldü). Eksenin %3,5'i dar kartta
-   (256 piksel) 9, geniş kartta 13 piksel — halka noktanın yanında seçiliyor.
-   Altında halka da yolculuk da yok; metin künyesi (TechnicalCard) duruyor. */
-const THEN_MIN_AXIS_SHARE = 0.035;
+/* Halka ile nokta arasındaki en küçük mesafe. MU'da fiyat analizden beri
+   %0,45 yol almıştı ve bu 380 piksellik rayda 7 piksel ediyordu: 8
+   piksellik halka 14 piksellik noktanın ve halkasının altında tamamen
+   kayboluyordu (1440, ölçüldü). Altında halka da yolculuk da yok; metin
+   künyesi (TechnicalCard) duruyor.
+
+   EŞİK PİKSELLE, EKSEN PAYIYLA DEĞİL (23 Eylül). Eşik eksenin %3,5'iydi ve
+   "dar kartta 9, geniş kartta 13 piksel — halka noktanın yanında seçiliyor"
+   diye yazılmıştı; seçilmiyordu. Noktanın dış halkası 11 piksel (7 + 3 + 1),
+   halkanın yarıçapı 4: merkezler arası 15'in altında halka noktanın
+   halkasına biniyor. Ölçülen (TR, 23 Eylül): 320'de RKLB 11, MRVL 9 —
+   halkanın merkezi noktanın altında; 390'da 14 ve 12, halka yarım; 1440'ta
+   MRVL 15, kenar kenara. Okuyucuya bir çizim hatası gibi görünüyordu.
+   Gereken mesafe artık 17 piksel (15 + 2 boşluk). Rayın genişliği sunucuda
+   bilinmiyor; halka, sığdığı en dar ray eşiğini taşıyor (`data-fit`) ve
+   kap sorgusu (`.rail`) daha dar rayda onu gizliyor. Ray 320'de 246, 390'da
+   316, 1440'ta 382, 1024'te 433 piksel (ölçüldü). */
+const THEN_CLEAR_PX = 17;
+const THEN_RAIL_TIERS = [240, 300, 380] as const;
 
 /** Rayın üstüne çizilen bir bacak: `from` ölçümün başladığı yer (çapa). */
 export type TrackSegment = { from: number; to: number; tone: "up" | "down" | "flat" };
@@ -104,10 +116,9 @@ export function LevelTrack({
   const hi = max + pad;
   const pos = (value: number) => `${((value - lo) / (hi - lo)) * 100}%`;
   const targetKind = sellSide ? "sellLevel" : "target";
-  const then =
-    snapshotPrice !== null && price !== null && Math.abs(snapshotPrice - price) / (hi - lo) >= THEN_MIN_AXIS_SHARE
-      ? snapshotPrice
-      : null;
+  const thenShare = snapshotPrice !== null && price !== null ? Math.abs(snapshotPrice - price) / (hi - lo) : 0;
+  const thenFit = THEN_RAIL_TIERS.find((tier) => tier * thenShare >= THEN_CLEAR_PX);
+  const then = thenFit !== undefined ? snapshotPrice : null;
 
   return (
     <div className={styles.track} aria-hidden>
@@ -157,7 +168,17 @@ export function LevelTrack({
       {targets.map((value) => (
         <span key={`t-${value}`} className={styles.trackTick} data-kind={targetKind} style={{ left: pos(value) }} />
       ))}
-      {then !== null && <span className={styles.trackThen} style={{ left: pos(then) }} />}
+      {/* En dar rayda (240) bile sığan halka koşulsuz; ötekiler eşiğini
+          taşıyor. `data-travel-ring`: gizlenen halkadan nokta da yola
+          çıkmıyor (`TechnicalBoard`). */}
+      {then !== null && (
+        <span
+          className={styles.trackThen}
+          data-travel-ring
+          data-fit={thenFit === THEN_RAIL_TIERS[0] ? undefined : thenFit}
+          style={{ left: pos(then) }}
+        />
+      )}
       {/* `spark-dot`: ortak sistemin nokta girişi — bant çizildikten sonra
           fiyat yerine oturuyor. Ortalama `margin` ile, `transform` ile değil:
           giriş animasyonu dönüşümü yönetiyor, ikisi çakışınca nokta bitişte

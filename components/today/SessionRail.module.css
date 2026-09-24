@@ -1,0 +1,56 @@
+/* ZİL ŞERİDİ — gerekçe `SessionRail.tsx` başında.
+
+   Geometri markanın ağız çubuğu: 8 piksel boy, tam yuvarlak uç. Derinlik
+   tonla: ön seans ve kapanış sonrası çukur ton (`--surface-sunken`), asıl
+   seans mavinin %30'u, geçen kısım düz mavi. Gölge ve parıltı yok. */
+.rail { position:relative; min-width:0; margin-top:14px; }
+.axis { position:relative; height:16px; }
+.track { position:absolute; inset:4px 0 auto; height:8px; overflow:hidden; border-radius:4px; background:var(--surface-sunken); }
+.band { position:absolute; inset-block:0; overflow:hidden; }
+.band[data-band="regular"] { background:color-mix(in srgb, var(--primary) 30%, transparent); }
+/* İlerleme `scaleX` ile — genişlik değil dönüşüm, yani her dakikalık adım
+   yerleşimi yeniden hesaplatmıyor. Ön seans ve kapanış sonrası yarı ton. */
+.elapsed { position:absolute; inset:0; background:var(--primary); transform-origin:left center; transition:transform 600ms var(--ease-brand); }
+.band:not([data-band="regular"]) .elapsed { opacity:.5; }
+.elapsed[data-still] { transition:none; }
+/* Zil çentiği şeridin iki yanına taşıyor: 16 piksel, 2 genişlik. Sayacın
+   saydığı zil koyu mürekkep, öteki çizgi tonu. */
+.bell { position:absolute; top:0; width:2px; height:16px; border-radius:1px; transform:translateX(-1px); background:var(--line-strong); }
+.bell[data-target] { background:var(--text-strong); }
+/* "ŞİMDİ" EKSENİN ÜSTÜNDE BİR NOKTA (A-4). Gün akışındaki eski rozetin
+   nabız halkası konumsuz bir `<i>` üzerine kurulmuştu ve `.now` kutusuna
+   (51×26 piksel) göre yerleşip 1,9 katına büyüyordu: halka rozetin
+   çevresinde yamuk bir elips çiziyordu (1440 ve 768, iki temada ölçüldü).
+   Artık 8 piksellik yuvarlak bir nokta, halka onun üzerinde `inset:-4px`
+   — kutusu kare, merkezi çubuğun ucu. */
+.now { position:absolute; top:4px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); }
+.now[data-live]::after { content:""; position:absolute; inset:-4px; border:1px solid var(--primary); border-radius:50%; animation:rail-beacon 3s var(--ease-brand) infinite; }
+.now[data-still]::after { animation:none; opacity:0; }
+.tick { position:absolute; top:14px; width:2px; height:6px; border-radius:1px; transform:translateX(-1px); background:var(--text-muted); }
+.tick[data-released] { background:var(--up); }
+
+/* İşaret şeridi: iki uçta eksenin saatleri, arada olaylar. Rozetler 24
+   piksel; dokunma alanı `::before` ile 40'a tamamlanıyor, görünen ölçü
+   küçük kalıyor. */
+.lane { position:relative; display:flex; justify-content:space-between; align-items:center; min-height:26px; margin-top:4px; }
+.end { font-size:var(--text-tiny); font-weight:500; color:var(--text-muted); }
+.marker { position:absolute; top:1px; z-index:1; display:flex; align-items:center; justify-content:center; gap:2px; min-width:28px; height:24px; padding:0 6px; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--premium-surface); color:var(--text-strong); font-size:var(--text-small); font-weight:650; cursor:pointer; transform:translateX(-50%); transition:border-color .2s, background-color .2s; }
+.marker::before { content:""; position:absolute; inset:-8px -4px; }
+.marker small { color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; }
+.marker[data-released] { border-color:color-mix(in srgb, var(--up) 45%, transparent); color:var(--up); }
+.marker:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+.marker:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+
+@keyframes rail-beacon { from { transform:scale(.6); opacity:.7; } 80%, to { transform:scale(1.6); opacity:0; } }
+
+/* Telefonda rozet yok, çentik var — gerekçe bileşende. */
+@media (max-width:767px) {
+  .rail { margin-top:12px; }
+  .marker { display:none; }
+  .lane { min-height:0; margin-top:4px; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .elapsed, .marker { transition:none; }
+  .now::after { animation:none; opacity:0; }
+}

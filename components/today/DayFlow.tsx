@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
+import { Fragment, useEffect, useId, useRef, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
@@ -11,38 +11,22 @@ import { displayFlowStatus, flowResultSignature, preserveConfirmedResults, type 
 import { clockOf, displayZone } from "@/lib/session-clock";
 import { NO_VALUE } from "@/lib/utils";
 import { withLocale } from "@/lib/i18n/routing";
+import { onFlowSelect, publishFlow } from "./day-flow-store";
 import styles from "./DayFlow.module.css";
 
-type Props = { initial: DayFlowSnapshot; locale: Locale; labels: Dictionary["dayFlow"]; railLabels: Dictionary["dayRail"] };
-const pct = (minutes: number) => Math.max(0, Math.min(100, (minutes - 240) / 960 * 100));
+type Props = {
+  initial: DayFlowSnapshot;
+  locale: Locale;
+  labels: Dictionary["dayFlow"];
+  railLabels: Dictionary["dayRail"];
+  /** Bölümün başlığı (sunucuda çizilir) — künye satırının solunda durur. */
+  heading?: ReactNode;
+};
 const minutesOf = (time: string) => { const [h, m] = time.split(":").map(Number); return h * 60 + m; };
 
-/**
- * İşaretlerin eksendeki yeri — çakışanlar İTİLİR, saatleri kaymaz.
- *
- * Önceki düzende işaretler doğrudan `left: %` ile basılıyordu ve aynı
- * dakikaya yakın iki olay üst üste biniyordu: 14:00 ile 14:30 telefonda 14
- * piksel arayla düşüyor, iki rozet birbirinin rakamını kesiyordu (ölçüldü,
- * 390px'te %62 ve %66). Rozet artık en az `gap` piksel aralıkla yerleşiyor;
- * gerçek saat sapı (stem) ile eksende işaretleniyor, yani kayan yalnızca
- * etiket. Aynı iki geçişli algoritma fiyat haritasında da var
- * (`lib/technical.ts` → `priceMapLayout`).
- */
-function spread(points: number[], width: number, gap: number): number[] {
-  if (width <= 0) return points.map((p) => (p / 100) * width);
-  const half = gap / 2;
-  const order = points.map((p, i) => ({ i, x: (p / 100) * width })).sort((a, b) => a.x - b.x);
-  for (let k = 1; k < order.length; k++) {
-    order[k]!.x = Math.max(order[k]!.x, order[k - 1]!.x + gap);
-  }
-  for (let k = order.length - 1; k >= 0; k--) {
-    const ceiling = k === order.length - 1 ? width - half : order[k + 1]!.x - gap;
-    order[k]!.x = Math.max(half, Math.min(order[k]!.x, ceiling));
-  }
-  const out = new Array<number>(points.length);
-  for (const item of order) out[item.i] = item.x;
-  return out;
-}
+/* Bu kadar ya da daha az olayda akış liste + sonuç paneli değil, satır
+   kartları: gerekçe `DayFlow` içinde, "KISA GÜN" notunda. */
+const COMPACT_MAX = 2;
 
 function Status({ event, nowMs, labels }: { event: Pick<FlowEvent, "status" | "scheduledAt">; nowMs: number; labels: Props["labels"] }) {
   const status = displayFlowStatus(event, nowMs);
@@ -52,16 +36,14 @@ function Status({ event, nowMs, labels }: { event: Pick<FlowEvent, "status" | "s
   </span>;
 }
 
-export function DayFlow({ initial, locale, labels, railLabels }: Props) {
+export function DayFlow({ initial, locale, labels, railLabels, heading }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
   const [nowMs, setNowMs] = useState(() => new Date(initial.asOf).getTime());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [connection, setConnection] = useState<"ready" | "checking" | "error">("ready");
   const [announcement, setAnnouncement] = useState("");
-  const [railWidth, setRailWidth] = useState(0);
   const [, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
-  const axis = useRef<HTMLDivElement>(null);
   const detailRef = useRef<HTMLDivElement>(null);
   const refresh = useRef<() => void>(() => {});
   const announcedResults = useRef(flowResultSignature(initial.events));
@@ -77,6 +59,12 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
         ? previous : preserveConfirmedResults(previous, initial)), 0);
     return () => window.clearTimeout(timer);
   }, [initial]);
+
+  /* Kahramandaki zil şeridi bu fotoğrafı okuyor (`day-flow-store`): olay
+     işaretleri ile buradaki satırlar aynı birleştirilmiş veriden. Şeritteki
+     bir işarete basılınca seçim buraya geliyor. */
+  useEffect(() => { publishFlow(snapshot); }, [snapshot]);
+  useEffect(() => onFlowSelect((id) => setSelectedId(id)), []);
 
   useEffect(() => {
     const timer = window.setInterval(() => { if (!document.hidden) setNowMs(Date.now()); }, 15_000);
@@ -162,40 +150,9 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
     };
   }, [locale]);
 
-  /* İşaretlerin itilmesi PİKSELLE hesaplanıyor, yüzdeyle değil: aralık
-     ekranın genişliğine göre değişmeyen bir ölçü (rozetin kendi boyu).
-     Eksenin genişliği ölçülene kadar işaretler saf yüzdeyle basılıyor —
-     sunucu çiziminde ve JS kapalıyken görünen hâl bu. */
-  useEffect(() => {
-    const element = axis.current;
-    if (!element || typeof ResizeObserver === "undefined") return;
-    const sync = () => setRailWidth(element.clientWidth);
-    sync();
-    const observer = new ResizeObserver(sync);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
   const events = snapshot.events;
   const selected = events.find((event) => event.id === selectedId) ?? events[0];
   const selectedIndex = events.findIndex((event) => event.id === selected?.id);
-  const markerTimes = useMemo(
-    () => [...new Set(events.flatMap((event) => event.timeEt ? [event.timeEt] : []))]
-      .sort((a, b) => minutesOf(a) - minutesOf(b)),
-    [events],
-  );
-  const markerX = useMemo(
-    /* 54 PİKSEL: rozetin kendi genişliği. `gap` merkezden merkeze ölçülüyor,
-       yani iki rozetin yan yana durabilmesi için yarı genişliklerinin
-       toplamından büyük olmalı. Ölçüldü (16 Eylül, FOMC günü): sade rozet
-       30-34 piksel, "+n" ekli olan 46. En kötü çift (46+46)/2 = 46; üstüne
-       8 piksel nefes payı. Eski değer 30'du ve rozetler birbirine giriyordu —
-       768 ve 1024'te 10 piksel, 1440'ta 2 piksel ÜST ÜSTE (ölçüldü); ekranda
-       "02 +1" ile "04" tek bir blok gibi okunuyordu. Sap (stem) gerçek saate
-       eğilmeye devam ediyor, kayan yalnızca etiket. */
-    () => spread(markerTimes.map((time) => pct(minutesOf(time))), railWidth, 54),
-    [markerTimes, railWidth],
-  );
   const nowEt = new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(nowMs));
   const now = minutesOf(nowEt);
   /* "ŞİMDİ" AYRACI — listenin neresindeyiz.
@@ -232,71 +189,70 @@ export function DayFlow({ initial, locale, labels, railLabels }: Props) {
   }
 
   return <div ref={ref} className={styles.flow} data-day-flow>
+    {/* BAŞLIK VE KÜNYE TEK SATIR (24 Eylül). Bölümün başlığı ayrı bir
+        satırda, altında bir kıl çizgi ve ONUN altında künye satırı
+        (piyasa günü, otomatik güncelleme) duruyordu: 1440'ta içerik
+        başlamadan önce 120 piksel. Geniş ekranda ikisi yan yana, başlık
+        solda künye sağda; dar ekranda eskisi gibi alt alta. */}
     <div className={styles.toolbar}>
+      {heading && <div className={styles.heading}>{heading}</div>}
+      <div className={styles.toolbarMeta}>
       <span className={styles.date}><CalendarBlank size={16} /><span className={styles.marketDay}>{labels.marketDay}</span>{dayLabel}<small>NY</small></span>
       <div className={styles.connection} data-state={connection}>
         {connection === "checking" ? <CircleNotch className={styles.spinner} size={14} /> : <span className={styles.connectionDot} />}
         <span>{connection === "error" ? labels.offline : labels.auto}</span>
         <button onClick={() => refresh.current()} disabled={connection === "checking"} aria-label={connection === "error" ? labels.retry : `${labels.checked}: ${checked} ${snapshot.tags.primary}`} title={labels.liveNote}><Clock size={15} /><span>{labels.checked}</span>{checked} {snapshot.tags.primary}</button>
       </div>
+      </div>
     </div>
 
-    {/* ---- Gün şeridi ----
-        KAT DÜZENİ: günün İSKELETİ (açılış, kapanış,
-        şimdi) eksenin ÜSTÜNDE, günün İÇERİĞİ (olaylar) eksenin ALTINDA.
-        Önceki düzende olay rozetleri eksenin ÜSTÜNE oturuyordu; rayı
-        kapatıyor, açılış/kapanış saatleriyle aynı banda giriyor ve
-        birbirlerinin rakamını kesiyorlardı. */}
-    <div className={styles.rail} data-empty={events.length === 0} aria-label={railLabels.marketHours}>
-      <div className={styles.bounds}>
-        {[{ minutes: 570, label: railLabels.openShort }, { minutes: snapshot.closeMinutes, label: railLabels.closeShort }].map(({ minutes, label }) => <div key={label} className={styles.bound} style={{ left: `${pct(minutes)}%` }}><span>{label}</span><strong className="numeral">{primary(minutes)} <small>{snapshot.tags.primary}</small></strong></div>)}
-      </div>
-
-      <div className={styles.nowBand}>
-        {now >= 240 && now <= 1200 && <div className={styles.now} data-live={snapshot.tradingDay} data-edge={pct(now) < 10 ? "start" : pct(now) > 90 ? "end" : undefined} style={{ left: `${pct(now)}%` }}><span>{railLabels.now}</span><i /></div>}
-      </div>
-
-      <div className={styles.axis} ref={axis}>
-        <div className={styles.track} aria-hidden="true" />
-        <div aria-hidden="true" className={styles.sessionBand} data-open={snapshot.tradingDay} style={{ left: `${pct(570)}%`, width: `${pct(snapshot.closeMinutes) - pct(570)}%` }} />
-        <motion.div aria-hidden="true" className={styles.elapsed} style={{ transformOrigin: "left" }} animate={{ scaleX: pct(now) / 100 }} transition={{ duration: reduced ? 0 : 1.2, ease: "easeOut" }} />
-        {[570, snapshot.closeMinutes].map((minutes) => <span aria-hidden="true" key={minutes} className={styles.boundDot} style={{ left: `${pct(minutes)}%` }} />)}
-        {/* Sap: rozet itilmiş olsa bile olayın GERÇEK saati eksende duruyor. */}
-        {markerTimes.map((time) => <span aria-hidden="true" key={time} className={styles.tick} data-released={events.some((event) => event.timeEt === time && event.status !== "scheduled")} style={{ left: `${pct(minutesOf(time))}%` }} />)}
-      </div>
-
-      <div className={styles.markers}>
-        {markerTimes.map((time, index) => {
-          const group = events.filter((event) => event.timeEt === time);
-          const active = group.findIndex((event) => event.id === selected?.id);
-          // Coincident releases share a timestamp, not a destination. Repeated
-          // activation advances through every release at that time.
-          const target = group[(active + 1) % group.length]!;
-          const released = group.some((event) => event.status !== "scheduled");
-          const truePct = pct(minutesOf(time));
-          const x = railWidth > 0 ? markerX[index]! : null;
-          return <button key={time} className={styles.marker} data-selected={active >= 0} data-released={released}
-            style={x === null ? { left: `${truePct}%` } : { left: x, "--lean": `${(truePct / 100) * railWidth - x}px` } as React.CSSProperties}
-            onClick={() => select(target.id)} aria-pressed={active >= 0} aria-controls={detailId}
-            aria-label={`${labels.selectEvent}: ${timeOf(target)} ${snapshot.tags.primary} · ${target.title}`}
-            title={`${primary(minutesOf(time))} · ${group.map((event) => event.title).join(", ")}`}>
-            <i aria-hidden="true" className={styles.stem} />
-            <span className="numeral">{String(events.indexOf(active >= 0 ? group[active]! : group[0]!) + 1).padStart(2, "0")}</span>
-            {group.length > 1 && <small aria-hidden="true" className="numeral">+{group.length - 1}</small>}
-          </button>;
+    {/* GÜN ŞERİDİ KAHRAMANDA (24 Eylül). Bu panelin içinde 190 piksel
+        tutuyordu ve açılış/kapanış saatlerini zil künyesinden sonra ilk
+        ekranda ikinci kez yazıyordu. Aynı fotoğrafı okuyarak geri sayımın
+        altında çiziliyor (`SessionRail`, `day-flow-store`); "şimdi" ayracı
+        ve seçim burada kaldı. */}
+    {events.length > 0 && events.length <= COMPACT_MAX ? (
+      /* KISA GÜN, KISA PANEL (24 Eylül). Bir-iki olaylı günde panel liste
+         + sonuç paneli düzenini kuruyordu: 1440'ta tek olay için 622 piksel,
+         "Günün Olayları 1" başlığı ve aynı olayı ikinci kez anlatan geniş
+         bir sonuç kutusu. Her olay artık tek satırlık bir kart: saat, ad ve
+         durum, varsa sonuç, ve olayın gideceği yer. Başlık basılmıyor —
+         satırın kendisi ne olduğunu söylüyor. Üç ve daha fazla olayda
+         liste ile sonuç paneli aynen duruyor; orada seçim bir şey ayırıyor. */
+      <ol className={styles.compactRows} aria-label={labels.events}>
+        {events.map((event, index) => {
+          const member = event.members?.length === 1 ? event.members[0]! : null;
+          const href = member ? member.href : event.href;
+          const action = member
+            ? member.status === "analyzed" ? labels.readAnalysis : labels.viewCompany
+            : labels.calendar;
+          const value = event.actual ?? member?.eps ?? event.forecast;
+          const valueLabel = event.actual ? labels.actual : member?.eps ? labels.eps : labels.forecast;
+          return <li key={event.id} className={styles.compactRow} data-selected={selectedId === event.id || undefined}>
+            <span className={styles.cardTime} data-unknown={!event.timeEt}><span className={styles.eventNumber}>{String(index + 1).padStart(2, "0")}</span><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : NO_VALUE}</b>{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
+            <span className={styles.cardSummary}>
+              <strong>{event.title}</strong>
+              <span className={styles.cardKind}>
+                {event.kind === "earnings" && event.members?.length ? (
+                  <span className={styles.cardLogos} aria-hidden="true">
+                    {event.members.slice(0, 3).map((item) => (
+                      <LogoTile key={item.symbol} symbol={item.symbol} logoUrl={item.logoUrl} size="xs" className={styles.cardLogo} />
+                    ))}
+                  </span>
+                ) : (
+                  <i data-kind={event.kind} aria-hidden="true">{event.kind === "earnings" ? <Bell size={13} /> : <TrendUp size={13} />}</i>
+                )}
+                {!event.detail && <span className="sr-only">{event.kind === "earnings" ? labels.earnings : labels.economic}</span>}
+                <Status event={event} nowMs={nowMs} labels={labels} />
+                {event.detail ? <em>{event.detail}</em> : !event.timeEt && <em>{labels.timeUnknown}</em>}
+              </span>
+            </span>
+            {value ? <span className={styles.compactValue}><small>{valueLabel}</small><b className="numeral">{value}</b></span> : <span aria-hidden="true" />}
+            <Link href={href} prefetch={false} className={styles.compactLink} data-analysis={member?.status === "analyzed" || undefined}>{action}<ArrowUpRight size={15} aria-hidden /></Link>
+          </li>;
         })}
-      </div>
-
-      <div className={styles.axisFoot}><span className="numeral">{primary(240)}</span><span>{snapshot.tradingDay ? railLabels.marketHours : labels.closed}</span><span className="numeral">{primary(1200)} {snapshot.tags.primary}</span></div>
-      {/* LEJANT SATIRI KALKTI (23 Eylül). Şeridin altında "Ekonomik Veri ·
-          Bilanço" simgelerini ve "bir olay seç" ipucunu taşıyordu; şeritte
-          simge yok (rozetler numara), bilanço satırları logo taşıyor ve
-          liste ile sonuç paneli hemen altta yan yana. Satır 35 piksel
-          tutuyordu ve üstelik yapışkan sekme çubuğunun soluklaştırma bandı
-          tam onun üstüne iniyordu. */}
-    </div>
-
-    {events.length ? <>
+      </ol>
+    ) : events.length ? <>
       {/* TEK OLAYDA LİSTE YOK. Tek satırlık liste ile sonuç paneli aynı olayı
           yan yana iki kez anlatıyordu (saat, ad, "Planlandı" iki yerde) ve
           ok düğmeleri gidecek yer olmadan, soluk duruyordu. Tek olayda
@@ -419,5 +375,8 @@ export function DayFlowLoader({ initial, ...props }: Omit<Props, "initial"> & { 
   }, [initial, loaded, props.locale]);
   const snapshot = initial ?? loaded;
   if (snapshot) return <DayFlow key={props.locale} initial={snapshot} {...props} />;
-  return <div className={styles.unavailable} role="status"><CalendarBlank size={25} /><p>{props.labels.offline}</p><button onClick={() => retry.current()}>{props.labels.retry}<ArrowRight size={14} /></button></div>;
+  return <div className={styles.flow}>
+    {props.heading && <div className={styles.toolbar}><div className={styles.heading}>{props.heading}</div></div>}
+    <div className={styles.unavailable} role="status"><CalendarBlank size={25} /><p>{props.labels.offline}</p><button onClick={() => retry.current()}>{props.labels.retry}<ArrowRight size={14} /></button></div>
+  </div>;
 }

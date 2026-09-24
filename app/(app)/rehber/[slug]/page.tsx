@@ -297,7 +297,7 @@ function CurriculumStep({
           <ArrowLeft weight="bold" size={14} className="shrink-0 text-primary" />
         )}
         <span className={`min-w-0 flex-1 ${next ? "order-first" : ""}`}>
-          <span className="plate text-micro tracking-[0.09em]">{label}</span>
+          <span className="plate text-nano">{label}</span>
           <span className="mt-1 block truncate text-base font-bold text-strong">
             {article.title}
           </span>

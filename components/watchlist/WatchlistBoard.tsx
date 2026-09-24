@@ -24,7 +24,7 @@ import {
 import { ChangePill, LogoTile, Button } from "@/components/ui/primitives";
 import type { SearchHit } from "@/app/api/search/route";
 import type { Locale } from "@/lib/i18n/config";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn, formatPrice, NO_VALUE } from "@/lib/utils";
 
 /**
  * Favoriler panosu.
@@ -599,7 +599,7 @@ function SortableRows({
                 sağ kenarda hizalı bir blok olarak da doğru okunuyor. */}
             <span className="flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-center sm:gap-2">
               <span className="numeral text-right text-sm font-semibold text-strong sm:w-[92px]">
-                {quote ? formatPrice(quote.price, locale) : "—"}
+                {quote ? formatPrice(quote.price, locale) : NO_VALUE}
               </span>
               <span className="flex justify-end sm:w-[86px]">
                 {quote ? (
@@ -609,7 +609,7 @@ function SortableRows({
                     size="sm"
                   />
                 ) : (
-                  <span className="text-xs text-muted">—</span>
+                  <span className="text-xs text-muted">{NO_VALUE}</span>
                 )}
               </span>
             </span>

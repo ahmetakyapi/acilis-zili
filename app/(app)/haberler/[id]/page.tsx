@@ -18,7 +18,7 @@ import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { getQuotes } from "@/lib/providers";
 import { displayZone, zoneTag } from "@/lib/session-clock";
-import { formatPrice, headlineMentions, safeExternalUrl, timeAgo } from "@/lib/utils";
+import { formatPrice, headlineMentions, safeExternalUrl, timeAgo, titleCaseLabel, NO_VALUE } from "@/lib/utils";
 
 /**
  * Haber detayı — kullanıcı siteden ayrılmadan okur.
@@ -122,7 +122,7 @@ export default async function NewsDetailPage(
             {publishedFull} {zoneTag(locale).primary}
           </span>
           <span aria-hidden>·</span>
-          <span>{timeAgo(item.publishedAt, locale)}</span>
+          <span>{titleCaseLabel(timeAgo(item.publishedAt, locale), locale)}</span>
         </p>
         {/* Çevirisi yoksa başlık İngilizce basılıyor; `lang` bunu söylüyor
             (gerekçe liste sayfasında). */}
@@ -178,7 +178,7 @@ export default async function NewsDetailPage(
           </p>
           <p className="mt-0.5 text-xs leading-relaxed text-soft">
             {t.news.fullStoryHint}
-            {item.source ? ` — ${item.source}` : ""}
+            {item.source ? `: ${item.source}` : ""}
           </p>
         </div>
         <a
@@ -271,7 +271,7 @@ async function MentionedSymbols({
                     />
                   </span>
                 ) : (
-                  <span className="text-xs text-muted">—</span>
+                  <span className="text-xs text-muted">{NO_VALUE}</span>
                 )}
               </Link>
             </li>
@@ -339,7 +339,7 @@ async function RelatedNews({
               <p className="mt-1 flex items-center gap-1.5 text-tiny text-muted">
                 {n.source && <span>{n.source}</span>}
                 <span aria-hidden>·</span>
-                <span>{timeAgo(n.publishedAt, locale)}</span>
+                <span>{titleCaseLabel(timeAgo(n.publishedAt, locale), locale)}</span>
               </p>
             </Link>
           </li>

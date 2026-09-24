@@ -64,6 +64,7 @@ export async function TickerFeed() {
       const quote = quotes.data[symbol];
       if (!quote) continue;
       indexItems.push({
+        id: symbol,
         label: INDEX_LABEL[symbol] ?? symbol,
         value: formatPrice(quote.price, locale),
         changePct: quote.changePct,
@@ -172,6 +173,7 @@ export async function TickerFeed() {
   return (
     <MarketTicker
       groups={groups}
+      skipGroups={["indices"]}
       labels={{ pause: t.nav.tickerPause, resume: t.nav.tickerResume }}
     />
   );

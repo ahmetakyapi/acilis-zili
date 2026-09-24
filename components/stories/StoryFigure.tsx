@@ -86,7 +86,7 @@ export function StoryFigure({
       )}
     >
       {block.label && (
-        <figcaption className="plate text-nano tracking-[0.09em]">
+        <figcaption className="plate text-tiny">
           {block.label}
         </figcaption>
       )}
@@ -116,13 +116,15 @@ function Stats({ block }: { block: Extract<Block, { kind: "stats" }> }) {
             {item.value}
           </p>
           {item.note && (
-            /* KÜNYE 10 PİKSEL, 8 DEĞİL. Bir süre `text-micro` (8px) idi ve
+            /* KÜNYE 11 PİKSEL (`text-tiny`). Önce `text-micro` (8px) idi, sonra 10
+               piksele çıktı; o da kapak görselinin altında okunmuyordu (24 Eylül
+               kapısı: künye ve başlık 11 piksele eşitlendi). 8px döneminde
                sistemdeki tek 8 piksellik CÜMLE oydu; o basamak iki kelimelik
                plakalar için var (gün şeridinin ekseni gibi), tam cümle için
                değil. İki satırda kesiliyor: yazar bazen uzun bir cümle
                yazıyor ve üç satıra çıkan tek bir hücre ızgaranın hizasını
                bozuyor. Cümlenin tamamı yazının içinde zaten duruyor. */
-            <p className="mt-1.5 line-clamp-2 text-nano leading-[13px] text-muted">
+            <p className="mt-1.5 line-clamp-2 text-tiny leading-[15px] text-muted">
               {item.note}
             </p>
           )}
@@ -180,7 +182,7 @@ function Side({
         {value}
       </span>
       {label && (
-        <span className="mt-1.5 truncate text-nano leading-[13px] text-muted">
+        <span className="mt-1.5 truncate text-tiny leading-[15px] text-muted">
           {label}
         </span>
       )}

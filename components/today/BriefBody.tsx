@@ -69,7 +69,7 @@ function BriefLines({
 }: {
   lines: string[];
   startNumber: number;
-  size: "card" | "page";
+  size: BriefSize;
 }) {
   /* Madde numaraları render sırasında sayaç artırmadan, önceden türetilir.
      Her bölüm başlığında sayaç sıfırlanır: "Bu Hafta"nın ilk maddesi
@@ -120,10 +120,17 @@ function BriefLines({
      çıktı: 18/30'da satır ~90 harf. Kart (ana sayfa) 14/22'de kalıyor.
      İlk paragraf sayfada GİRİŞ: bülten "dün ne oldu" ile açılıyor ve o
      cümle metnin kapısı (mercekteki lede ile aynı rol). */
+  /* ANA SAYFA GENİŞ KART (`card-wide`, 24 Eylül). 1200 pikselden geniş
+     ekranda bülten kartı iki sütun: solda 62ch'lik metin, sağda künye
+     rayı (BriefSwitch). Kart 14/22'de tam genişlikte akarken 1440'ta
+     satır başına 95–128 harf ölçülmüştü; 62ch'lik sütunda 15/25 punto
+     satırı 60–78 harfe indiriyor. Daha dar ekranda kartla aynı. */
   const text =
     size === "page"
       ? "text-[1.125rem] leading-[1.68]"
-      : "text-read leading-[22px]";
+      : size === "card-wide"
+        ? "text-read leading-[22px] min-[1200px]:text-[0.9375rem] min-[1200px]:leading-[25px]"
+        : "text-read leading-[22px]";
   const ledeAt = size === "page"
     ? lines.findIndex((line) => !headingOf(line) && !line.trim().startsWith("- "))
     : -1;
@@ -214,6 +221,8 @@ function BriefLines({
  */
 const OPEN_LINES = 4;
 
+type BriefSize = "card" | "card-wide" | "page";
+
 export function BriefBody({
   markdown,
   moreLabel,
@@ -228,7 +237,7 @@ export function BriefBody({
   /** Açıkken düğmenin metni — kapatmanın da bir yolu olmalı. */
   lessLabel?: string;
   collapsible?: boolean;
-  size?: "card" | "page";
+  size?: BriefSize;
   /** Katlanmadan önce açık kalan satır sayısı. Ana sayfa bunu kolonların
       dengesine göre yükseltiyor — gerekçe `app/(app)/page.tsx` → BriefCard. */
   openLines?: number;

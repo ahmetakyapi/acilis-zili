@@ -27,6 +27,7 @@ export function ScaleBar({
   ratio,
   signed,
   tone = "neutral",
+  emphasis = false,
   className,
 }: {
   /** −1 ile 1 arası; işaretsiz modda 0 ile 1. */
@@ -47,6 +48,12 @@ export function ScaleBar({
    * okunurdu.
    */
   tone?: "neutral" | "signal";
+  /**
+   * Satırın öznesi — hisse sayfasındaki benzerler listesinde sayfanın
+   * kendi şirketi. Tam `--primary`; öteki çubuklar olağan tonda kalıyor.
+   * Varsayılan kapalı: /karsilastir'da hiçbir satır öne çıkmıyor.
+   */
+  emphasis?: boolean;
   className?: string;
 }) {
   const oran = Math.min(1, Math.abs(ratio));
@@ -79,7 +86,9 @@ export function ScaleBar({
               ? eksi
                 ? "var(--down)"
                 : "var(--up)"
-              : "color-mix(in srgb, var(--primary) 58%, transparent)",
+              : emphasis
+                ? "var(--primary)"
+                : "color-mix(in srgb, var(--primary) 58%, transparent)",
         }}
       />
     </span>

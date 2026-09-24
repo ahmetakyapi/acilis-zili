@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { cn, formatPercent } from "@/lib/utils";
+import { cn, formatPercent, NO_VALUE } from "@/lib/utils";
 import {
   SERIES_COLORS,
   SERIES_DASH,
@@ -474,7 +474,7 @@ export function CompareChart({
                           görmüyordu ve ona bir yüzde atfetmek uydurma
                           olurdu. */}
                       {row.value === null
-                        ? "—"
+                        ? NO_VALUE
                         : formatPercent(row.value, locale, 1)}
                     </span>
                   </div>

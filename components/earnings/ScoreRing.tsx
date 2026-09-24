@@ -31,14 +31,23 @@ export function ScoreRing({
   const circumference = 2 * Math.PI * radius;
   const filled = (Math.min(100, Math.max(0, score)) / 100) * circumference;
 
+  /* BOY BİR DEĞİŞKENDEN OKUNUYOR (24 Eylül). Bilanço kapağı halkayı
+     masaüstünde 80, telefonda 56 piksel istiyor ve ikisi aynı düğüm:
+     iki halka basıp birini gizlemek skoru ekran okuyucuya iki kez
+     okuturdu. Kap `--score-ring-size` verirse o geçerli, vermezse `size`;
+     değişken satır içi stilde değil üst kapta tanımlandığı için bir medya
+     sorgusu onu değiştirebiliyor. Ölçek eşikleri (`size >= 96`) prop'a
+     bakmaya devam ediyor. */
+  const box = `var(--score-ring-size, ${size}px)`;
+
   return (
     <div
       className={cn("relative shrink-0", className)}
-      style={{ width: size, height: size }}
+      style={{ width: box, height: box }}
     >
       <svg
-        width={size}
-        height={size}
+        width="100%"
+        height="100%"
         viewBox="0 0 64 64"
         className={cn("block", size >= 96 && styles.scoreDial)}
         aria-hidden
@@ -82,14 +91,15 @@ export function ScoreRing({
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
           className="figure font-bold leading-none text-strong"
-          style={{ fontSize: Math.round(size * 0.27) }}
+          style={{ fontSize: `calc(${box} * 0.27)` }}
         >
           {score}
         </span>
-        {/* 10 piksel, 8 değil: "/ 100" bir sözcük gibi okunuyor ve
-            `--text-micro` yalnızca metin OLMAYAN yerde (globals.css). */}
+        {/* 11 piksel (`text-tiny`): "/ 100" bir sözcük gibi okunuyor;
+            `--text-micro` yalnızca metin OLMAYAN yerde (globals.css). 10 piksel
+            de halkanın içinde, skorun dev puntosunun yanında okunmuyordu. */}
         {showDenominator && (
-          <span className="mt-px text-nano font-semibold text-muted">
+          <span data-ring-denominator className="mt-px text-tiny font-semibold text-muted">
             / 100
           </span>
         )}

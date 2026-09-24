@@ -5,6 +5,7 @@ import Link from "next/link";
 import { EmptyState, Kicker } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 import type { BriefPeriod } from "@/lib/brief";
+import styles from "./BriefSwitch.module.css";
 
 /**
  * Ana sayfadaki özet kartı — günlük ve haftalık aynı kartın iki sekmesi.
@@ -110,23 +111,67 @@ export function BriefSwitch({
   const brief = period === "daily" ? daily : weekly;
   const body = period === "daily" ? dailyBody : weeklyBody;
 
+  const tabs = (
+    <div
+      role="tablist"
+      aria-label={labels.periodLabel}
+      /* Sekmeler de aralık anahtarıyla aynı dilde: ray + hap
+         (`components/ui/primitives.tsx` → Segment). Kenarlıklı kutuydu ve
+         sayfadaki öteki iki denetimden (Günlük/Haftalık anahtarı, tema
+         anahtarı) farklı görünüyordu.
+
+         SEKME SÖZLEŞMESİ: ok tuşları, Home ve End sekmeler arasında
+         geziyor; sekme sırası GEZİCİ (yalnızca seçili sekme Tab sırasında).
+         Rolü ilan edip davranışını vermemek, hiç ilan etmemekten kötü. */
+      className="inline-flex gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small"
+    >
+      {(["daily", "weekly"] as const).map((key) => (
+        <button
+          key={key}
+          type="button"
+          role="tab"
+          id={`brief-tab-${key}`}
+          aria-controls="brief-panel"
+          aria-selected={period === key}
+          tabIndex={period === key ? 0 : -1}
+          onKeyDown={sekmeTusu}
+          onClick={() => setPeriod(key)}
+          className={cn(
+            /* Telefonda 44px: 34px'lik sekmeler dokunma eşiğinin altındaydı
+               ve bunlar bültenin tek denetimi. Masaüstünde imleç hassas,
+               orada 34px yeterli. */
+            "min-h-11 rounded-full px-4 transition-colors sm:min-h-8",
+            period === key
+              ? "bg-primary font-semibold text-on-primary"
+              : "text-body hover:text-strong",
+          )}
+        >
+          {labels.tabs[key]}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     /* Zemin BEYAZ BELGE, tint değil.
        Panel bir süre mavi degrade taşıdı ve sayfadaki en uzun metin onun
        üstünde duruyordu: tint, gövde metninin kontrastını düşürüyor ve
-       "okunacak yer" yerine "vurgulanmış kutu" gibi okunuyordu. Projede bu
-       karar bir kez veri yüzeyleri için verildi (bkz. `--surface-solid`,
-       karne dokusu); uzun metin için daha da geçerli. Accent kenarlık
-       kalıyor — bültenin günün başyazısı olduğu oradan belli. */
-    <section className="rounded-xl border border-primary-faint bg-surface-solid p-5">
-      {/* ÜST SATIR TEK SIRA. Künye, sekmeler ve arşiv bağlantısı üç ayrı
-          satırdaydı (sekmeler ortada, arşiv bağlantısı metnin en dibinde) ve
-          manşete gelene kadar üç kademe iniliyordu — bültenin başyazı olduğu
-          hissi orada kayboluyordu. Üçü de birer DENETİM ya da künye, yani
-          aynı satırın işi; manşet doğrudan onların altında başlıyor. Sarma
-          `flex-wrap` ile: dar ekranda denetim grubu kendi satırına iner. */}
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1">
+       "okunacak yer" yerine "vurgulanmış kutu" gibi okunuyordu. Accent
+       kenarlık kalıyor — bültenin günün başyazısı olduğu oradan belli.
+
+       GENİŞ EKRANDA İKİ SÜTUN (24 Eylül, ≥1200). Kart tam genişlikte
+       akıyordu: 1440'ta gövde satırı 95–128 harf, manşet de künye, sekme,
+       tarih ve not satırlarının altında, kartın 100 piksel içinden
+       başlıyordu. Metin artık solda 62ch'lik bir sütunda (satır 60–78 harf)
+       ve manşet kartın tepesinden başlıyor; künye, sekmeler, tarih, bayat
+       notu ve arşiv bağlantısı sağda 15rem'lik bir rayda, açık bülten
+       uzadıkça ekranda kalıyor (yapışkan). Ray var olan içerikle dolu —
+       BriefBody'deki "kabı daraltmak boşluğu yalnızca taşır" itirazı burada
+       geçerli değil, sağda boş bir yarım kart yok. 1200'ün altında sıra
+       eskisi gibi alt alta: künye ve denetimler tek satırda, manşet altta. */
+    <section className={cn("rounded-xl border border-primary-faint bg-surface-solid p-5", styles.card)}>
+      <div className={styles.rail}>
+        <div className={cn("flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1", styles.railKicker)}>
           <Kicker tone="primary">{labels.titles[period]}</Kicker>
           {brief && (
             <span className="numeral text-tiny text-muted">{brief.stamp}</span>
@@ -134,129 +179,67 @@ export function BriefSwitch({
         </div>
         {/* ARŞİV BAĞLANTISI DAR EKRANDA SAĞ UÇTA. Denetim grubu kendi
             satırına indiğinde sekmeler ve bağlantı sola toplanıyor, sağında
-            yarım satır boşluk kalıyordu: bağlantı sekmelerin bir devamı gibi
-            duruyor, satırın öteki ucundaki eylem gibi durmuyordu. Grup o
-            satırın tamamını alıyor ve iki uç birbirinden ayrılıyor; tek
-            satıra sığdığında (sm) eski davranış. */}
-        <div className="flex w-full shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:w-auto sm:justify-start">
-
-      {/* Sekmeler metnin hemen üstünde: hangi dönemi okuduğun, okumaya
-          başlamadan önce görünür. Dokunma hedefi 34px — 12.5px'lik iki
-          kelimeyi parmakla ıskalanmayacak bir hapa oturtuyor.
-
-          SEKME SÖZLEŞMESİ EKSİKTİ. `role="tablist"` ve `role="tab"` yazılıydı
-          ama davranışı yoktu: ekran okuyucu "Günlük, sekme, 2 sekmeden 1'i,
-          seçili" diye duyuruyor, kullanıcı kalıbın gereği sağ oka basıyor ve
-          hiçbir şey olmuyordu. Rolü ilan edip davranışını vermemek, hiç
-          ilan etmemekten kötü — kullanıcıya çalışmayan bir söz veriyor.
-          Şimdi ok tuşları, Home ve End sekmeler arasında geziyor; sekme
-          sırası GEZİCİ (yalnızca seçili sekme Tab sırasında, ötekine ok
-          tuşuyla ulaşılıyor) — ARIA kalıbının istediği tam olarak bu. */}
-      <div
-        role="tablist"
-        aria-label={labels.periodLabel}
-        /* Sekmeler de aralık anahtarıyla aynı dilde: ray + hap
-           (`components/ui/primitives.tsx` → Segment). Kenarlıklı kutuydu ve
-           sayfadaki öteki iki denetimden (Günlük/Haftalık anahtarı, tema
-           anahtarı) farklı görünüyordu. */
-        className="inline-flex gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small"
-      >
-        {(["daily", "weekly"] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            role="tab"
-            id={`brief-tab-${key}`}
-            aria-controls="brief-panel"
-            aria-selected={period === key}
-            tabIndex={period === key ? 0 : -1}
-            onKeyDown={sekmeTusu}
-            onClick={() => setPeriod(key)}
-            className={cn(
-              /* Telefonda 44px: 34px'lik sekmeler dokunma eşiğinin altındaydı
-                 ve bunlar bültenin tek denetimi. Masaüstünde imleç hassas,
-                 orada 34px yeterli. */
-              "min-h-11 rounded-full px-4 transition-colors sm:min-h-8",
-              period === key
-                ? "bg-primary font-semibold text-on-primary"
-                : "text-body hover:text-strong",
-            )}
-          >
-            {labels.tabs[key]}
-          </button>
-        ))}
-          </div>
+            yarım satır boşluk kalıyordu; grup o satırın tamamını alıyor ve
+            iki uç birbirinden ayrılıyor. */}
+        <div className={cn("flex w-full shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:w-auto sm:justify-start", styles.railControls)}>
+          {tabs}
           {brief && (
             <Link
               href={brief.archiveHref}
-              /* Dokunma hedefi 40px: negatif margin dolguyu emiyor, yani
-                 hedef büyürken üst satırın yüksekliği değişmiyor. */
-              className="-my-2 inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-8"
+              /* Dokunma hedefi telefonda 44px (40'tı, ölçüldü): negatif
+                 margin dolguyu emiyor, yani hedef büyürken üst satırın
+                 yüksekliği değişmiyor. */
+              className="-my-2 inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-8"
             >
               {labels.archive}
               <span aria-hidden>→</span>
             </Link>
           )}
         </div>
+        {brief && (
+          <div className={styles.railMeta}>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="numeral text-tiny text-body">{brief.dateLabel}</span>
+              {brief.current && (
+                <span className="rounded-full bg-primary px-2 py-0.5 text-tiny font-bold tracking-[0.05em] text-on-primary">
+                  {labels.currentBadge[period]}
+                </span>
+              )}
+            </div>
+            {/* Uyarı metnin ÜSTÜNDE (geniş ekranda yanında): aşağıdaki
+                cümleleri hangi günün gözüyle okuyacağını önce söylemek
+                gerekiyor. */}
+            {brief.staleNote && (
+              <p className="mt-2.5 rounded-md border border-line bg-surface-elevated px-3 py-2 text-small leading-[18px] text-body">
+                {brief.staleNote}
+              </p>
+            )}
+            {/* Dil notu da aynı gerekçeyle metnin önünde. */}
+            {brief.langNote && (
+              <p className="mt-2.5 w-fit rounded-full border border-line bg-surface-elevated px-3 py-1.5 text-tiny text-muted">
+                {brief.langNote}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div
         id="brief-panel"
         role="tabpanel"
         aria-labelledby={`brief-tab-${period}`}
+        className={styles.main}
       >
         {brief ? (
           <>
-            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="numeral text-tiny text-body">
-              {brief.dateLabel}
-            </span>
-              {brief.current && (
-                <span className="rounded-full bg-primary px-2 py-0.5 text-nano font-bold tracking-[0.05em] text-on-primary">
-                  {labels.currentBadge[period]}
-                </span>
-              )}
-            </div>
-
-            {/* Uyarı metnin ÜSTÜNDE: aşağıdaki cümleleri hangi günün gözüyle
-                okuyacağını önce söylemek gerekiyor. */}
-            {brief.staleNote && (
-              <p className="mt-2.5 rounded-md border border-line bg-surface-elevated px-3 py-2 text-small leading-[18px] text-body">
-                {brief.staleNote}
-              </p>
-            )}
-
-            {/* Dil notu da metnin üstünde, aynı gerekçeyle: okur hangi dilde
-                bir metne baktığını okumaya başlamadan bilmeli. */}
-            {brief.langNote && (
-              <p className="mt-2.5 w-fit rounded-full border border-line bg-surface-elevated px-3 py-1.5 text-tiny text-muted">
-                {brief.langNote}
-              </p>
-            )}
-
-            {/* MANŞET GERÇEKTEN MANŞET. Cümle 13 puntoda, gövde metniyle
-                neredeyse aynı ağırlıkta duruyordu: bültenin en önemli satırı
-                bir giriş paragrafı gibi okunuyor, blok da günün başyazısı
-                değil bir bilgi kutusu gibi görünüyordu. Ölçek zaten var —
-                mercek manşetiyle (`LeadStory`) aynı basamak ve aynı üç kural:
-                `max-w-[34ch]` satırı iki-üç satıra indiriyor (manşetler
-                ortalama 55 karakter ve tek satırda 900 piksele uzuyordu),
-                `text-balance` o satırları eşitleyip yetim kelime bırakmıyor.
-
-                DÜZ MÜREKKEP (23 Eylül). Manşet `.display-ink` degradesiyle
-                basılıyordu ve iki-üç satırlık bir metinde degrade satır
-                satır değil kutu boyunca yayılıyor: ikinci satır başka bir
-                tonda başlıyordu. Tema dosyasının istisnası yalnızca KISA
-                display metni için; bu bir paragraf başı. `data-ink="plain"`
-                genel `main h2` maskesini de kapatıyor (globals.css). Maske
-                gidince `w-fit` de gitti: o yalnızca degradenin harflerin
-                bittiği yerde bitmesi içindi ve `text-balance`ın gerçek
-                sütun yerine kendi daralttığı kutuyu dengelemesine yol
-                açıyordu.
-
-                Okunur bant gövdede kalıyor: gövde ölçü sınırını kendi
-                taşıyor, manşetin sınırı ondan dar. */}
-            <h2 data-ink="plain" className="mt-3.5 max-w-[34ch] text-balance text-heading font-bold leading-[1.16] tracking-[-0.03em] text-strong sm:text-subdisplay">
+            {/* MANŞET GERÇEKTEN MANŞET — mercek manşetiyle aynı basamak;
+                `max-w-[34ch]` satırı iki-üç satıra indiriyor, `text-balance`
+                yetim kelime bırakmıyor.
+                DÜZ MÜREKKEP (23 Eylül). İki-üç satırlık bir metinde degrade
+                satır satır değil kutu boyunca yayılıyor; tema dosyasının
+                istisnası yalnızca KISA display metni için. `data-ink="plain"`
+                genel `main h2` maskesini de kapatıyor (globals.css). */}
+            <h2 data-ink="plain" className="max-w-[34ch] text-balance text-heading font-bold leading-[1.16] tracking-[-0.03em] text-strong sm:text-subdisplay">
               {brief.headline}
             </h2>
             {body}

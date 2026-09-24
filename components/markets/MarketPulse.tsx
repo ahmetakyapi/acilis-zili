@@ -2,7 +2,7 @@ import styles from "./MarketExperience.module.css";
 import { getSeries } from "@/lib/providers/fred";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { VIX_SERIES, vixBand } from "@/lib/vix";
-import { formatEtDateCompact, formatPercentPlain, formatPrice } from "@/lib/utils";
+import { formatEtDateCompact, formatPercentPlain, formatPrice, NO_VALUE } from "@/lib/utils";
 
 const YIELD_SERIES = [
   { seriesId: "DGS2", slug: "yield-2y", units: "lin", labelKey: "yieldY2" },
@@ -100,7 +100,7 @@ export async function MarketPulse({ locale, t }: { locale: Locale; t: Dictionary
           <div key={row.key}>
             <dt>{row.label}</dt>
             <dd className="numeral">
-              <b>{row.latest !== null ? formatPercentPlain(row.latest, locale, 2) : "—"}</b>
+              <b>{row.latest !== null ? formatPercentPlain(row.latest, locale, 2) : NO_VALUE}</b>
               {row.delta === null ? (
                 /* Yer tutucu: satır basılmayınca sütun sekiz piksel yukarıda
                    bitiyordu; sayılar aynı hatta dursun. */

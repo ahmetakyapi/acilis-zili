@@ -83,25 +83,51 @@ export function TechnicalBoard({ children, className }: { children: ReactNode; c
   useEffect(() => {
     const root = ref.current;
     if (!root || reduced || !("IntersectionObserver" in window)) return;
-    const dots = Array.from(root.querySelectorAll<HTMLElement>("[data-travel-from]"));
-    const animations: Animation[] = [];
+    const waiting = new Map<Element, Animation>();
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         observer.unobserve(entry.target);
-        const dot = entry.target as HTMLElement;
-        const from = dot.dataset.travelFrom;
-        if (!from || !("animate" in dot)) continue;
-        const animation = dot.animate([{ left: from }, { left: dot.style.left }], {
-          duration: TRAVEL_DURATION_MS,
-          delay: TRAVEL_DELAY_MS,
-          easing: "cubic-bezier(.22,1,.36,1)",
-          fill: "backwards",
-        });
-        animations.push(animation);
+        waiting.get(entry.target)?.play();
+        waiting.delete(entry.target);
       }
     }, { threshold: 0, rootMargin: "0px 0px -24px 0px" });
-    dots.forEach((dot) => observer.observe(dot));
+    /* İLK EKRANDA YOLCULUK YOK (23 Eylül). Sunucu noktayı canlı fiyatın
+       yerine çiziyor; hidratasyonda ekrandaki nokta halkanın yerine geri
+       sıçrıyor, sonra yürüyerek dönüyordu. Ölçüldü, 1440×900: NVDA'nın
+       noktası 106. ms'de 1175'te, 414. ms'de 1211'de (halka), 1232-1648 ms
+       arasında yeniden 1175'e. Okuyucu doğru fiyatı gördükten sonra bir an
+       eskisini görüyordu — ortak kuralın ("İlk ekrandaki veri sabit kalır",
+       `MotionExperience`) tam tersi. Görüş alanındaki nokta yerinde kalıyor,
+       halka yanında duruyor (azaltılmış hareketteki hâl).
+
+       EKRAN DIŞINDAKİ NOKTA ÖNCEDEN HALKADA BEKLİYOR. Animasyon kesişmede
+       KURULUYORDU: nokta ekrana doğru yerinde giriyor, gözlemci ateşleyince
+       halkaya geri sıçrıyor, sonra yürüyordu (390, ölçüldü: GOOGL 138 →
+       158 → 134). Artık ortak sistemdeki gibi baştan kurulup ilk karesinde
+       duraklatılıyor ve kesişmede yalnızca oynatılıyor. Süzgeçle sonradan
+       açılan kartlar da (kutusu sıfır) bu yoldan: açıldığında yola çıkıyor. */
+    for (const dot of Array.from(root.querySelectorAll<HTMLElement>("[data-travel-from]"))) {
+      const rect = dot.getBoundingClientRect();
+      if (rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight) continue;
+      const from = dot.dataset.travelFrom;
+      if (!from || !("animate" in dot)) continue;
+      /* Halka bu rayda sığmadığı için gizliyse (`LevelTrack`, `data-fit`)
+         nokta da görünmeyen bir yerden kalkmıyor. */
+      const ring = dot.parentElement?.querySelector<HTMLElement>("[data-travel-ring]");
+      if (ring && getComputedStyle(ring).display === "none") continue;
+      const animation = dot.animate([{ left: from }, { left: dot.style.left }], {
+        duration: TRAVEL_DURATION_MS,
+        delay: TRAVEL_DELAY_MS,
+        easing: "cubic-bezier(.22,1,.36,1)",
+        fill: "backwards",
+      });
+      animation.pause();
+      animation.currentTime = 0;
+      waiting.set(dot, animation);
+      observer.observe(dot);
+    }
+    const animations = Array.from(waiting.values());
     return () => {
       observer.disconnect();
       animations.forEach((animation) => animation.cancel());

@@ -1,0 +1,19 @@
+/* GÜNÜN ÖZETİ KARTI — düzenin gerekçesi `BriefSwitch` içinde.
+
+   1200'ün altında ray bir satır: künye solda, sekmeler ve arşiv sağda,
+   tarih ve notlar altında tam genişlikte; manşet ve gövde onların altında.
+   1200 ve üstünde iki sütun: solda 62ch'lik metin, sağda 15rem'lik yapışkan
+   ray. */
+.card { min-width:0; }
+.rail { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
+.railMeta { flex:1 1 100%; margin-top:4px; }
+.main { min-width:0; margin-top:14px; }
+
+@media (min-width:1200px) {
+  .card { display:grid; grid-template-columns:minmax(0,62ch) 15rem; justify-content:space-between; align-items:start; column-gap:40px; }
+  .main { grid-column:1; grid-row:1; margin-top:0; }
+  /* Ray açık bülten uzadıkça ekranda kalıyor; başlığın altında 16 piksel. */
+  .rail { grid-column:2; grid-row:1; position:sticky; top:calc(var(--app-bar-h) + 60px); flex-direction:column; flex-wrap:nowrap; align-items:stretch; justify-content:flex-start; gap:14px; padding-left:20px; border-left:1px solid var(--line-soft); }
+  .railControls { flex-direction:column; align-items:flex-start; gap:10px; }
+  .railMeta { flex:none; margin-top:0; }
+}

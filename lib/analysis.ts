@@ -6,6 +6,7 @@ import {
   formatPercent,
   formatPercentPlain,
   formatPrice,
+  NO_VALUE,
 } from "@/lib/utils";
 
 /**
@@ -183,7 +184,7 @@ export function toAnalysisRowView(
         (row.revenueYoyPct !== null
           ? ` ${row.revenueYoyPct >= 0 ? "▲" : "▼"} ${formatPercentPlain(row.revenueYoyPct, locale, 0)}`
           : "")
-      : "—";
+      : NO_VALUE;
 
   const eps =
     row.eps !== null
@@ -191,12 +192,12 @@ export function toAnalysisRowView(
         (row.epsSurprisePct !== null
           ? ` · ${formatPercent(row.epsSurprisePct, locale, 0)}`
           : "")
-      : "—";
+      : NO_VALUE;
 
   const reaction =
     row.reactionPct !== null
       ? `${row.reactionPct >= 0 ? "▲" : "▼"} ${formatPercentPlain(row.reactionPct, locale, 1)}`
-      : "—";
+      : NO_VALUE;
 
   const verdict = verdictOf(row.verdict);
 

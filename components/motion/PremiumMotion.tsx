@@ -442,7 +442,15 @@ export function SectionNav({
     };
     const active = strip.querySelector<HTMLElement>('[aria-current="location"]');
     if (active && strip.scrollWidth > strip.clientWidth + 1) {
-      const target = active.offsetLeft - (strip.clientWidth - active.offsetWidth) / 2;
+      /* Konum ŞERİDE göre, `offsetLeft` ile değil. Şerit konumlandırılmış
+         değil, yani `offsetLeft` çubuğun kendisinden ölçülüyordu ve
+         yapışınca açılan kimlik (`lead`, bilanço ekranında logo + sembol +
+         görüş + fiyat, 390'da ~100 piksel) hedefe ekleniyordu: şerit o
+         kadar fazla kayıyor, aktif sekme sol kenarda kesik kalıyordu
+         (ölçüldü 24 Eylül, /bilancolar/adbe 390, "Özet ve Değerlendirme"
+         → "ğerlendirme"). */
+      const offset = active.getBoundingClientRect().left - strip.getBoundingClientRect().left + strip.scrollLeft;
+      const target = offset - (strip.clientWidth - active.offsetWidth) / 2;
       strip.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
     }
     markEdges();

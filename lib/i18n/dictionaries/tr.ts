@@ -119,6 +119,9 @@ const tr = {
     marketCap: "Piyasa Değeri",
     // Yarım gün: kapanış zili 13:00 ET. Takvim şeridi ve ana sayfanın zil künyesi aynı kelimeyi kullanıyor.
     earlyClose: "Erken Kapanış",
+    /* Bu seansa ait işlem yoksa yüzde bir önceki seansı anlatıyor; ana
+       sayfanın dünya ve endeks satırları bunu künyeyle söylüyor. */
+    lastClose: "Son Kapanış",
   },
 
   directory: {
@@ -363,6 +366,23 @@ const tr = {
     bellClose: "Kapanış Zili",
     nextOpen: "Sonraki Açılış",
     bellsLabel: "Zil Saatleri",
+    /* Dünya satırlarının HİÇBİRİ bu seansta işlem görmediyse künyenin ilk
+       cümlesinin yerine geçer: yüzdeler bugünün değil son kapanışın. */
+    worldLastCloseHint: "Yüzdeler son kapanışa göre; bu seansta işlem yok. Yönü yerel endeksle aynı, yüzdesi kur ve seans farkıyla ayrışabilir.",
+    // Giriş yapmamış okuyucu: bir listesi olabilir, "henüz yok" demek yanlış.
+    watchlistSignedOutTitle: "Favorilerini Burada Gör",
+    watchlistSignedOutHint: "Giriş yapınca takip ettiğin semboller fiyatıyla burada listelenir.",
+    // Yüzen bölüm dizini: adı ve altı durağı. Kısa, çünkü telefonda altısı tek şeritte.
+    sectionIndex: "Sayfa Bölümleri",
+    navFlow: "Akış",
+    navBrief: "Özet",
+    navMarkets: "Piyasalar",
+    navStories: "Mercek",
+    navEarnings: "Bilanço",
+    navNews: "Haberler",
+    // Dizinin sağındaki küçük geri sayımın öneki: "Açılışa 01 sa 04 dk".
+    miniToOpen: "Açılışa",
+    miniToClose: "Kapanışa",
   },
 
   calendar: {
@@ -621,6 +641,22 @@ const tr = {
     afterHours: "Seans Sonrası",
     nextEarnings: "Sonraki Bilanço",
     earningsOf: "{period} Bilançosu",
+    /* BİLANÇO DETAYI, 24 Eylül. Potansiyel artık kapaktaki fiyattan
+       ölçülüyor ve hangi fiyattan ölçüldüğü yazılı; hedefin kendisi
+       bilanço günü ortalaması olarak künyeleniyor. */
+    upsideFromToday: "Bugünkü Fiyata Göre",
+    upsideFromReport: "Bilanço Günü Kapanışına Göre",
+    aboveTarget: "Hedefin Üzerinde",
+    peAtToday: "Bugünkü Fiyatla",
+    newerAnalysis: "Daha Yeni Analiz",
+    guidanceTitleReported: "{period} Öngörüsü (Açıklandı)",
+    howToRead: "Grafik Nasıl Okunur",
+    readMore: "Devamını Oku",
+    readLess: "Daha Az Göster",
+    missingQuarter: "Eksik Çeyrek",
+    quarterOnQuarter: "Çeyreklik",
+    yearOnYear: "Yıllık",
+    preparedWith: "Claude ile Hazırlandı",
     readMinutes: "{count} Dakikalık Okuma",
 
     empty: "Henüz yayımlanmış bilanço analizi yok",
@@ -935,6 +971,12 @@ const tr = {
     experienceOverview: "Genel Bakış",
     experienceNav: "Şirket sayfası bölümleri",
     experienceEyebrow: "Şirket Dosyası",
+    /* Fon sayfasının künyesi: "Şirket Dosyası" bir ETF için yanlış ad. */
+    fundEyebrow: "Fon Dosyası",
+    /* Profil kartının tek büyük okuması piyasa değeri; künye neyle
+       hesaplandığını söylüyor (lib/data.ts → liveMarketCap). */
+    capLiveNote: "Canlı Fiyatla Hesaplandı",
+    nextReportRow: "Sıradaki Bilanço",
     experienceFundamentals: "Değerleme ve Beklentiler",
     experienceFundamentalsHint: "Fiyatın ötesinde: şirketin finansal yapısı ve analistlerin bakışı.",
     experienceEarnings: "Çeyrek Çeyrek Performans",
@@ -960,6 +1002,8 @@ const tr = {
     forwardPe: "İleri F/K",
     movingAverages: "Hareketli Ortalamalar",
     movingAverageRow: "{n} Günlük",
+    /* Fiyat cetvelindeki çentik etiketi — dar, satırdaki adın kısası. */
+    movingAverageShort: "{n}G",
     currentQuote: "Son Fiyat",
     averageDistance: "Ortalamaya Göre Fark",
     analystReading: "12 Aylık Tavsiye Dağılımı",
@@ -1124,6 +1168,10 @@ const tr = {
     sessionAfter: "Akşam Seansı",
     sessionOvernight: "Gece",
     sessionOvernightNote: "Gece seansı konsolide veri akışında yok",
+    /* 1G grafiğindeki kesikli çizginin eksen etiketi — dar, kısaltılmış. */
+    prevCloseShort: "Önc. Kapanış",
+    /* Grafikte bir nokta okunurken başlık fiyatının yanındaki künye. */
+    barClose: "Bar Kapanışı",
   },
 
   watchlist: {
@@ -1478,7 +1526,7 @@ const tr = {
     subtitle: "Enflasyon, istihdam ve faiz verileri",
     previous: "Önceki",
     nextRelease: "Sonraki Açıklama",
-    noNextRelease: "Henüz açıklanmadı",
+    noNextRelease: "Henüz Açıklanmadı",
     unchanged: "Değişmedi",
     eyebrow: "ABD Ekonomisi",
     explorer: "Gösterge Merceği · FRED",

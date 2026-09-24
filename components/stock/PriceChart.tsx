@@ -6,9 +6,12 @@ import { LoadingSurface } from "@/components/ui/LoadingState";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AreaSeries,
+  BaselineSeries,
   CandlestickSeries,
   createChart,
+  LineStyle,
   TickMarkType,
+  type AutoscaleInfo,
   type IChartApi,
   type ISeriesApi,
   type MouseEventParams,
@@ -24,6 +27,7 @@ import type { Locale } from "@/lib/i18n/config";
 import type { ChartLabels } from "@/lib/chart-labels";
 import { SESSION_BOUNDS, etDateTimeToUtc, etParts } from "@/lib/market-hours";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
+import { useChartReading } from "./ChartReadingContext";
 import {
   clockOf,
   displayZone,
@@ -49,6 +53,9 @@ import {
  * kaydırılmıyor/yakınlaştırılmıyor — sürükleme okuma demek. Aralık zaten
  * alttaki 1G/1H/1A düğmeleriyle seçiliyor, kaydırmaya ihtiyaç yok.
  */
+
+/** Seans bölgesi künyesinin (10 px, büyük harf) karakter başına genişliği, cömert. */
+const ZONE_LABEL_CHAR_PX = 8;
 
 /** Gün içi seans bölgesi — gölge + etiket olarak çizilir. */
 type SessionZone = {
@@ -122,6 +129,8 @@ type ChartResult =
 type HoverReading = {
   dateLabel: string;
   price: number;
+  /** Aralığın tabanına göre fark (1G'de önceki kapanış) — başlık okuması. */
+  change: number;
   changePct: number;
 } | null;
 
@@ -154,6 +163,14 @@ export function PriceChart({
       : null,
   );
   const [hover, setHover] = useState<HoverReading>(null);
+  /* Hisse sayfasında okuma BAŞLIĞA yazılıyor (ChartReadingContext.tsx);
+     bağlam yoksa (yazı içi grafik) kendi okuma satırında kalıyor. */
+  const readingContext = useChartReading();
+  const publishReading = readingContext?.setReading;
+  useEffect(() => {
+    publishReading?.(hover);
+  }, [hover, publishReading]);
+  useEffect(() => () => publishReading?.(null), [publishReading]);
   /* DOKUNULAN OKUMA ARALIKLA BİRLİKTE TEMİZLENİYOR.
      Dokunmatikte okuma tek dokunuşla açılıyor ve grafiğin dışına
      dokunulana kadar EKRANDA KALIYOR (gerekçesi bileşen başında). Ama
@@ -311,7 +328,13 @@ export function PriceChart({
       layout: {
         background: { color: "transparent" },
         textColor: text,
-        fontFamily: "'IBM Plex Mono', ui-monospace, monospace",
+        /* EKSEN SAYFANIN YAZISIYLA. "IBM Plex Mono" yazıyordu ama o aile
+           hiçbir yerde yüklenmiyor (globals.css: "Mono kalktı") ve eksen
+           tarayıcının varsayılan eş aralıklı yazısına düşüyordu — sitede
+           başka hiçbir sayının yazısı değil. Aile gövdeden okunuyor:
+           next/font'un ürettiği adı elle yazmak bir sonraki sürümde
+           kırılırdı. */
+        fontFamily: getComputedStyle(document.body).fontFamily,
         fontSize: 11,
         attributionLogo: false,
       },
@@ -433,7 +456,59 @@ export function PriceChart({
        tazelemiyor, yani o dar durumda iki sayının kaynağı da zaman damgası
        da ayrışıyor. Rozetin gitmesi orada en çok işe yarıyor. */
     let series: ISeriesApi<SeriesType>;
-    if (mode === "area") {
+    /* 1G ÖNCEKİ KAPANIŞIN ETRAFINDA ÇİZİLİYOR (24 Eylül). Alan tek renkti ve
+       rengini günün NET yönünden alıyordu: gün içinde önceki kapanışın
+       üstüne çıkıp altına inen bir hisse baştan sona kırmızı ya da yeşil
+       boyanıyordu, oysa başlıktaki rozet her an kapanışa göre yön söylüyor.
+       Taban çizgili seri aynı soruyu her noktada soruyor: üstü yeşil, altı
+       kırmızı. Kesikli çizgi o tabanın kendisi, ekseninde de sayısı yazılı
+       — başlıktaki "Önceki Kapanış" ile aynı kotasyondan (`prevClose`).
+       Ölçek her zaman o çizgiyi kapsıyor: açılış öncesinde fiyat kapanışın
+       çok üstünde dursa bile karşılaştırılan sayı ekranda.
+       Öteki aralıklarda taban dönem başı ve sabit bir çizgi anlam
+       taşımıyor; orada alan serisi kalıyor. */
+    const prevClose = range === "1D" ? state.prevClose : null;
+    if (mode === "area" && prevClose !== null && prevClose > 0) {
+      series = chart.addSeries(BaselineSeries, {
+        baseValue: { type: "price", price: prevClose },
+        topLineColor: up,
+        topFillColor1: lineToRgba(up, 0.14),
+        topFillColor2: lineToRgba(up, 0),
+        bottomLineColor: down,
+        bottomFillColor1: lineToRgba(down, 0),
+        bottomFillColor2: lineToRgba(down, 0.14),
+        lineWidth: 2,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerRadius: 5,
+        crosshairMarkerBorderColor: cssVar("--surface"),
+        autoscaleInfoProvider: (original: () => AutoscaleInfo | null) => {
+          const info = original();
+          if (!info?.priceRange) return info;
+          return {
+            ...info,
+            priceRange: {
+              minValue: Math.min(info.priceRange.minValue, prevClose),
+              maxValue: Math.max(info.priceRange.maxValue, prevClose),
+            },
+          };
+        },
+      });
+      series.createPriceLine({
+        price: prevClose,
+        color: cssVar("--line-strong"),
+        lineWidth: 1,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: labels.prevCloseShort,
+      });
+      series.setData(
+        bars.map((bar) => ({
+          time: bar.time as UTCTimestamp,
+          value: bar.close,
+        })),
+      );
+    } else if (mode === "area") {
       series = chart.addSeries(AreaSeries, {
         lineColor: line,
         lineWidth: 2,
@@ -517,6 +592,7 @@ export function PriceChart({
       return {
         dateLabel: dateFormatter.format(new Date(bar.time * 1000)),
         price,
+        change: price - baseline,
         changePct:
           baseline !== 0 ? ((price - baseline) / baseline) * 100 : 0,
       };
@@ -708,6 +784,7 @@ export function PriceChart({
     range,
     labels.sessionPre,
     labels.sessionAfter,
+    labels.prevCloseShort,
     /* Okuma satırının son noktası kotasyona bağlı; fiyat değişince
        aboneliğin kapanışı da yenilenmeli. Nesnenin KENDİSİ veriliyor:
        kimliği sunucu yükünden geliyor ve istemci durumu değişince
@@ -768,7 +845,7 @@ export function PriceChart({
     <div className={styles.root} data-compact={compact}>
       {/* Okuma satırı — imleç gezerken nokta okuması, değilse dönem özeti */}
       <div className={cn(styles.reading, "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2")}>
-        {hover ? (
+        {hover && !readingContext ? (
           <>
             <div className={styles.hoverValues}>
               <span className={cn(styles.hoverPrice, "tote")}>
@@ -809,7 +886,7 @@ export function PriceChart({
                   ayrı bir satırdaydı; şimdi aynı panelde. Öteki aralıklarda
                   (1H, 1Y, 5Y…) iki sayı FARKLI ve yüzde burada kalıyor. */}
               {range !== "1D" && (
-                <span className={cn("numeral text-lg font-bold", toneText)}>
+                <span className={cn("numeral text-lg font-bold", styles.periodPct, toneText)}>
                   {formatPercent(shownChangePct, locale)}
                 </span>
               )}
@@ -895,7 +972,16 @@ export function PriceChart({
           ))}
         {state.phase === "ready" &&
           zones
-            .filter((zone) => zone.width > 56)
+            /* ETİKET BÖLGEYE SIĞMIYORSA BASILMAZ. Eşik sabit 56 pikseldi ve
+               8 piksellik künyeye göre yazılmıştı; künye 10 piksele çıkınca
+               (`--text-micro` metin için kullanılmaz, globals.css) ölçüldü:
+               "Ön Seans" 60, "Akşam Seansı" 91, "Pre-Market" 78, "After
+               Hours" 82 piksel. 57-96 piksellik bir bölgede etiket kendi
+               bölgesinden taşıp sağdaki fiyat ekseninin üstüne biniyordu.
+               Eşik artık etiketin kendisinden: büyük harf, 0,1em aralıkla
+               karakter başına 8 piksel (ölçülenin üstünde) + 6 piksellik
+               sol pay + 6 piksel nefes. */
+            .filter((zone) => zone.width > zone.label.length * ZONE_LABEL_CHAR_PX + 12)
             .map((zone) => (
               <span
                 key={`${zone.key}-label`}

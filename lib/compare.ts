@@ -172,7 +172,10 @@ export function coverageNote(
       month: "short",
       year: "numeric",
     }).format(new Date(unix * 1000));
-  return `${bicim(ts[0])} — ${bicim(ts[ts.length - 1])}`;
+  /* Aralık yarım çizgiyle (U+2013) yazılır, uzun çizgiyle değil: uzun
+     çizgi görünür metinde yasak (`NO_VALUE` notu, lib/utils.ts) ve bu bir
+     ayraç değil, iki tarih arasındaki aralık. */
+  return `${bicim(ts[0])} \u2013 ${bicim(ts[ts.length - 1])}`;
 }
 
 /* --------------------------------------------------------------------------

@@ -11,6 +11,7 @@ import {
 import { getChartBarsMulti } from "@/lib/providers";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn, plural } from "@/lib/utils";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /**
  * Bu şirket hakkında yazılmış mercek yazıları.
@@ -116,12 +117,12 @@ export async function SymbolStories({
           </span>
         )}
       </div>
-      <ul className={cn("mt-4 grid gap-4", izgaraSinifi(rows.length))}>
+      <ScrollEdges as="ul" className={cn("mt-4 grid gap-4", izgaraSinifi(rows.length))}>
         {rows.map((story) => (
           /* `grid`: hücre satır boyuna geriliyor ama içindeki bağlantı ancak
              kap da bir ızgara ise o boya uzuyor — kartların alt kenarı böyle
              hizalı kalıyor. */
-          <li key={story.slug} className="grid min-w-0">
+          <li key={story.slug} className="grid min-w-0 snap-start">
             <StoryCard
               story={story}
               cast={kadroOf(story)}
@@ -130,7 +131,7 @@ export async function SymbolStories({
             />
           </li>
         ))}
-      </ul>
+      </ScrollEdges>
     </section>
   );
 }
@@ -145,9 +146,21 @@ export async function SymbolStories({
  * sembolün 42'sinde tek yazı var.
  */
 function izgaraSinifi(count: number) {
-  return count >= 3
-    ? "sm:grid-cols-2 xl:grid-cols-3"
-    : "sm:grid-cols-[repeat(auto-fit,minmax(18rem,26rem))] sm:justify-start";
+  /* TELEFONDA YANA KAYAN RAY (24 Eylül). 768'in altında üç kart alt alta
+     ~840 piksel tutuyordu; ray tek kart yüksekliğinde. Kart genişliği
+     %86: bir sonrakinin kenarı görünüyor, kaydırma ayrıca `scroll-x-hint`
+     ve kenar solmasıyla (ScrollEdges) söyleniyor — "Kaydırma saklanmaz".
+     Tek kart rayda değil, tam genişlikte. */
+  const ray =
+    count > 1
+      ? "scroll-x-hint max-md:grid-flow-col max-md:auto-cols-[86%] max-md:snap-x max-md:snap-mandatory max-md:pb-2"
+      : "";
+  return cn(
+    ray,
+    count >= 3
+      ? "md:grid-cols-2 xl:grid-cols-3"
+      : "md:grid-cols-[repeat(auto-fit,minmax(18rem,26rem))] md:justify-start",
+  );
 }
 
 /**

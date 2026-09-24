@@ -1,0 +1,128 @@
+/* EPS İZİ — gerekçe EpsTrack.tsx başında.
+
+   YÜKSEKLİK SABİT (168 / telefonda 148): iz tablonun üstünde, akışla
+   birlikte geliyor ve boyu içeriğe bağlı olsaydı tablonun iskeleti ile
+   gerçeği arasında bir sıçrama açılırdı. Satırlar: lejant, çizim alanı
+   (esnek), eksen; sapma künyesi çizim alanının içinde, işaretin üstünde.
+
+   İşaretler 9 piksel: halka beklenti (boş, `--text-muted` kenar), nokta
+   gerçekleşen (yön rengi), aralarında 1 piksellik `--line-strong` çizgi.
+   Konumlar `translate` ile ortalanıyor, `transform` ile değil: hareket
+   sistemi noktayı `transform: scale()` ile oturtuyor ve ikisi aynı
+   özelliği paylaşsaydı nokta oturuşunda yerinden kayardı. */
+.track {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 6px;
+  height: 168px;
+  margin: 0;
+  padding: 2px 20px 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.legend {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 500;
+  line-height: 16px;
+}
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.legendRing,
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.legendRing { border: 1.5px solid var(--text-muted); }
+.legendDot { background: var(--text-strong); }
+
+.columns {
+  display: grid;
+  min-height: 0;
+}
+
+.column {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 16px;
+  gap: 4px;
+  min-width: 0;
+  justify-items: center;
+}
+
+.surprise {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 1;
+  padding-inline: 3px;
+  background: var(--premium-surface);
+}
+.surprise,
+.axis {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-tiny);
+  line-height: 16px;
+  white-space: nowrap;
+  text-overflow: clip;
+}
+.surprise { font-weight: 600; color: var(--text-muted); }
+.surprise[data-tone="up"] { color: var(--up); }
+.surprise[data-tone="down"] { color: var(--down); }
+.axis { color: var(--text-muted); }
+
+.plot {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+}
+/* Sütunun kılavuzu: işaretleri altındaki etikete bağlayan saç teli. */
+.plot::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--line-soft);
+}
+.columns[data-zero] .plot::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: var(--eps-zero);
+  border-top: 1px dashed var(--line-strong);
+}
+
+.stem {
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  translate: -50% 0;
+  background: var(--line-strong);
+}
+
+.ring,
+.dot {
+  position: absolute;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  translate: -50% 50%;
+}
+.ring {
+  border: 1.5px solid var(--text-muted);
+  background: var(--premium-surface);
+}
+.dot { background: var(--flat); }
+.dot[data-tone="up"] { background: var(--up); }
+.dot[data-tone="down"] { background: var(--down); }
+
+@media (max-width: 639px) {
+  .track { height: 148px; padding-inline: 16px; }
+  .column { gap: 3px; }
+}

@@ -138,7 +138,12 @@ export function TechnicalPulse({
     >
       {filterable && (
         <div className={visuals.visualHeader}>
-          <h2 id="technical-distribution">{t.technical.distribution}</h2>
+          {/* PUNTO SINIFI DEGRADEYİ SEÇİYOR (23 Eylül). Başlık 13 piksel ama
+              puntosunu modül CSS'inden alıyordu; ortak kural (globals.css,
+              `main h2:is(.text-base…)`) sınıfa baktığı için geniş degradeyle
+              basılıyordu ve açık ucu beyazda 3,34:1'di. `text-base` aynı 13
+              piksel: sıkı degradeyi alıyor. */}
+          <h2 id="technical-distribution" className="text-base">{t.technical.distribution}</h2>
           <span className="flex items-center gap-2 text-tiny font-semibold text-muted">
             {t.technical.stockCount.replace("{n}", String(total))}
             {/* Telefonda logo satırları gizli (CSS, `.pulseRows`); bekleyen

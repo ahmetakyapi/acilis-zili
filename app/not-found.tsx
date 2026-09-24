@@ -69,7 +69,7 @@ export default async function RootNotFound() {
         aria-label={t.errors.shortcuts}
         className="w-full overflow-hidden rounded-xl border border-line bg-surface"
       >
-        <p className="plate px-4 pb-2.5 pt-3.5 text-left text-nano tracking-[0.09em]">
+        <p className="plate px-4 pb-2.5 pt-3.5 text-left text-nano">
           {t.errors.shortcuts}
         </p>
         <ul>

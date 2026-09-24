@@ -389,7 +389,7 @@ export function AccountMenu({
                 Çökük zemin bölgeyi ayırıyor; sayılacak ayraç çizgisi yok. */}
             <div className="flex flex-col gap-3 border-t border-line-soft bg-surface px-4 py-3.5">
               <div className="flex flex-col gap-2">
-                <span className="plate text-micro tracking-[0.1em]">
+                <span className="plate text-nano">
                   {labels.theme}
                 </span>
                 <div className="grid grid-cols-2 gap-2">
@@ -411,7 +411,7 @@ export function AccountMenu({
               </div>
 
               <div className="flex items-center justify-between gap-3">
-                <span className="plate text-micro tracking-[0.1em]">
+                <span className="plate text-nano">
                   {labels.language}
                 </span>
                 <span className="flex overflow-hidden rounded-md border border-line bg-surface-solid">

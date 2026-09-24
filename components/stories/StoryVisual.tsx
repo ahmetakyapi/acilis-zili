@@ -212,14 +212,18 @@ export function StoryCast({
       {/* Sağdaki künye, ALTINDAKİ SAYI SÜTUNUYLA aynı hizada durur: iki
           satıra kırılıp sola yaslandığında rakamlarla ilgisiz bir metin gibi
           okunuyordu. Sol başlık kırılır, sağdaki tek satır kalır. */}
+      {/* Künyeler `text-nano`: `text-micro` (8px) metin için kullanılmaz
+          (globals.css). Görünen punto modülden geliyor (11px, katmansız
+          `.castHeader` kuralı yardımcı sınıfı eziyor); sınıf yalnızca
+          yanlış bir şey söylemesin diye düzeltildi. */}
       <div className={styles.castHeader}>
-        <span className="plate min-w-0 text-micro tracking-[0.09em]">
+        <span className="plate min-w-0 text-nano">
           {title}
         </span>
         {/* Künyenin altında ölçünün BAŞLADIĞI GÜN: "olaydan bugüne" tek
             başına hangi günden beri olduğunu söylemiyordu. */}
         <span className="shrink-0 whitespace-nowrap text-right">
-          <span className="block text-micro uppercase tracking-[0.07em] text-muted">
+          <span className="block text-nano text-muted">
             {shown.every(member => member.sinceEvent === null) ? closeLabel : sinceLabel}
           </span>
           <span className="numeral block text-nano leading-tight text-body">

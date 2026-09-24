@@ -116,10 +116,12 @@ export default async function MenuPage() {
       <Panel className="flex items-center gap-3.5 p-4 sm:p-5">
         <span
           aria-hidden
-          className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-wash text-base font-bold uppercase text-primary-ink"
+          className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-wash text-base font-bold text-primary-ink"
         >
+          {/* Baş harfler KODDA büyütülüyor, CSS `uppercase` ile değil:
+              tarayıcı Türkçe `i`yi `I` yapıyor, `İ` değil. */}
           {username ? (
-            username.slice(0, 2)
+            username.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")
           ) : (
             <SignIn size={20} weight="duotone" />
           )}
@@ -154,7 +156,7 @@ export default async function MenuPage() {
       <div className={`${polish.menuGrid} grid gap-5 sm:grid-cols-2 lg:grid-cols-3`} data-motion-stagger>
         {groups.map((group) => (
           <Panel key={group.title} className="flex flex-col">
-            <p className="plate px-4 pb-3 pt-4 text-nano tracking-[0.09em] sm:px-5">
+            <p className="plate px-4 pb-3 pt-4 text-nano sm:px-5">
               {group.title}
             </p>
             <ul>

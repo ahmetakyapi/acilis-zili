@@ -3,7 +3,7 @@ import { cache, Suspense } from "react";
 import { MotionExperience, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Waveform } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { NewsImage } from "@/components/news/NewsImage";
@@ -17,6 +17,9 @@ import { SessionRefresh } from "@/components/today/SessionRefresh";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
 import { LiveClock } from "@/components/today/LiveClock";
+import { SessionRail } from "@/components/today/SessionRail";
+import { IndexLive } from "@/components/today/IndexLive";
+import { loadIndexFeed, sessionDomain } from "@/components/today/index-feed";
 import {
   DataError,
   DataStamp,
@@ -56,11 +59,13 @@ import {
   addEtDays,
   etParts,
   isSessionTrade,
+  quoteBasis,
   todayEt,
   type MarketStatus,
 } from "@/lib/market-hours";
 import {
   displayZone,
+  formatInZone,
   nextZoneMidnight,
   timePair,
   zoneTag,
@@ -101,6 +106,7 @@ import {
   headlineMentions,
   NO_VALUE,
   timeAgo,
+  titleCaseLabel,
   unitLabel,
 } from "@/lib/utils";
 import { Sparkline } from "@/components/ui/Sparkline";
@@ -169,6 +175,22 @@ export default async function TodayPage() {
   const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
     timeZone: readerZone, day: "numeric", month: "long", weekday: "long",
   });
+  /* Dar ekranın künyesi: "24 Eyl Per" — saatin yanına 320'de de sığıyor. */
+  const dateShortFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    timeZone: readerZone, day: "numeric", month: "short", weekday: "short",
+  });
+  /* Kahramanın şeridi ile endeks kartlarının kıvılcım çizgileri AYNI
+     ekseni okuyor — `sessionDomain`, gerekçe index-feed.ts'te. */
+  const rail = sessionDomain(status);
+  const tags = zoneTag(locale);
+  const flowHeading = (
+    <div className={styles.sectionHeading}>
+      <h2>{t.today.todayFlow}</h2>
+      <p>{t.today.experienceFlowNote}</p>
+    </div>
+  );
+  const sessionState =
+    status.session === "regular" ? "regular" : status.session === "closed" ? "closed" : "extended";
   /* Tazeleme anı: seansın bir sonraki sınırı ile OKUYUCUNUN gece yarısının
      erkeni. Üst şeritteki tarih ve zil künyesinin "Bugün / Yarın"ı okuyucunun
      gününe bağlı; yalnızca ET sınırında tazelenince TR okuyucu 00:00 ile
@@ -229,16 +251,25 @@ export default async function TodayPage() {
           geliyor; ikinci bir süs katmanı bilgi taşımıyor, yalnızca
           okunacak metnin arkasını kalabalıklaştırıyordu. */}
       <header id="piyasa-ozeti" className={styles.hero}>
+        {/* GAZETE KÜNYESİ (24 Eylül). Üst şeridin solunda bir slogan
+            ("ABD Piyasalarına Açılan Penceren") ve bir dalga simgesi
+            duruyordu; tarih ise 1024'ün altında HİÇ görünmüyordu
+            (`.dateline > span { display:none }`) — telefondaki okuyucu
+            hangi günün sayacına baktığını ekranın hiçbir yerinde
+            okuyamıyordu. Slogan gitti, yerine tarih geldi: geniş ekranda
+            "24 Eylül Perşembe", dar ekranda "24 Eyl Per", saatin yanında. */}
         <div className={styles.heroTopline}>
-          <span className={styles.eyebrow}><Waveform size={15} weight="bold" />{t.today.experienceEyebrow}</span>
-          <div className={styles.dateline}>
-            <span>{dateFormat.format(new Date(nowMs))}</span>
-            <LiveClock locale={locale} initialNowMs={nowMs} />
-          </div>
+          <p className={styles.dateline}>
+            <time dateTime={new Date(nowMs).toISOString()} className={styles.dateLong}>{dateFormat.format(new Date(nowMs))}</time>
+            <time dateTime={new Date(nowMs).toISOString()} className={styles.dateShort}>{dateShortFormat.format(new Date(nowMs))}</time>
+          </p>
+          <LiveClock locale={locale} initialNowMs={nowMs} />
         </div>
         <div className={styles.heroMain}>
           <div className={styles.heroCopy} data-motion-intro>
-            <div className={styles.heroSession} data-trading={trading}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
+            {/* SEANS ÇİPİ: nokta seansı renkle de söylüyor — asıl seansta yeşil
+                halkalı, uzatılmış seansta mavi, kapalıyken gri. */}
+            <div className={styles.heroSession} data-state={sessionState}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
             <h1 className={styles.headline}>{countdownLabel}</h1>
             {/* Rakam satırı ile zil künyesi TEK blok ve kolonun DİBİNE
                 oturuyor (`align-self:end`); rozet ve başlık tepede. Ölçüm ve
@@ -251,6 +282,22 @@ export default async function TodayPage() {
                 unitsShort={{ d: t.today.unitD, h: t.today.unitH, m: t.today.unitM, s: t.today.unitS }}
                 label={countdownLabel}
                 className={styles.countdown}
+              />
+              <SessionRail
+                domain={rail.domain}
+                openAt={rail.openAt}
+                closeAt={rail.closeAt}
+                day={rail.day}
+                minutes={rail.minutes}
+                live={status.session !== "closed"}
+                target={trading ? "close" : "open"}
+                initialNowMs={nowMs}
+                labels={{
+                  name: t.dayRail.marketHours,
+                  selectEvent: t.dayFlow.selectEvent,
+                  start: formatInZone(new Date(rail.domain[0] * 1000), readerZone),
+                  end: `${formatInZone(new Date(rail.domain[1] * 1000), readerZone)} ${tags.primary}`,
+                }}
               />
               <BellLedger locale={locale} t={t} status={status} nowMs={nowMs} />
             </div>
@@ -265,51 +312,66 @@ export default async function TodayPage() {
         </div>
       </header>
 
-      {/* Bölüm bağlantıları artık bağımsız bir şerit değil, gün akışının
-          araçları. Çapalar ve klavye erişimi korunur; içerik gizlenmez. */}
-      <section id="gunun-akisi" className={styles.flowPanel}>
-        <div className={styles.flowHeader}>
-          <div className={styles.sectionHeading}>
-            <h2>{t.today.todayFlow}</h2>
-            <p>{t.today.experienceFlowNote}</p>
-          </div>
-          <SectionNav className={styles.flowNav} label={t.today.todayFlow} items={[
-            { id: "gunun-akisi", label: t.today.flowTimeline },
-            { id: "gundem", label: t.today.experienceReading },
-            { id: "bilanco-analizleri", label: t.today.experienceReports },
-            { id: "haber-akisi", label: t.today.experienceNews },
-          ]} />
-        </div>
-        {/* İSKELET GERÇEK ÖLÇÜYÜ AYIRIYOR. `h-28` yazıyordu, yani 112 piksel;
-            akışın kendisi ölçüldüğünde 594–864 piksel (320'de 864, 390'da
-            778, 430'da 731, 768'de 826, 1024 ve üstünde 594). Aradaki fark
-            yer tutucu içerikle değişince altındaki her şeyin birden aşağı
-            inmesi demekti: yavaş ağda masaüstünde CLS 0,131 ölçüldü ve
-            kaynağı tam olarak bu sıçramaydı (bölüm 201 pikselden 346'ya
-            büyüyor, altındaki pano yeniden konumlanıyor). Mobilde sayı
-            küçük görünüyordu (0,002) ama sebebi düzeltilmiş olması değil,
-            panelin o sırada ekranın altında kalması — CLS yalnızca
-            görünümdeki kaymayı sayıyor.
+      {/* YÜZEN BÖLÜM DİZİNİ (24 Eylül). Bölüm bağlantıları gün akışının
+          başlığında dört sekmelik bir şeritti: 1440'ta 46, 390'da 48 piksel
+          tutuyor, ilk ekranda akışın başlığıyla yarışıyor ve kaydırınca
+          kayboluyordu — tam da gerekli olduğu an. Dizin artık akışta yer
+          tutmuyor (sabit bant, `variant="floating"`): kahraman başlığın
+          arkasına geçince açılıyor, altı durağı var ve geniş ekranda sağında
+          küçük bir geri sayım taşıyor; telefonda aşağı kaydırırken çekiliyor.
+          Etiketler sözlükten: bir dönem bu sayfadan canlıya geçici bir test
+          dizini sızmıştı, dizin yalnızca gerçek adlarla basılır. */}
+      <SectionNav
+        variant="floating"
+        revealAfter="piyasa-ozeti"
+        hideOnScrollDown
+        label={t.today.sectionIndex}
+        className={styles.sectionIndex}
+        items={[
+          { id: "gunun-akisi", label: t.today.navFlow },
+          { id: "gundem", label: t.today.navBrief },
+          { id: "dunya-piyasalari", label: t.today.navMarkets },
+          { id: "mercek-seckisi", label: t.today.navStories },
+          { id: "bugun-bilanco", label: t.today.navEarnings },
+          { id: "haber-akisi", label: t.today.navNews },
+        ]}
+        trail={
+          <span className={styles.miniCount}>
+            <span>{trading ? t.today.miniToClose : t.today.miniToOpen}</span>
+            <Countdown
+              targetIso={countdownTarget.toISOString()}
+              initialNowMs={nowMs}
+              units={{ d: t.today.countdownDays, h: t.today.countdownHours, m: t.today.countdownMinutes, s: t.today.countdownSeconds }}
+              unitsShort={{ d: t.today.unitD, h: t.today.unitH, m: t.today.unitM, s: t.today.unitS }}
+              label={countdownLabel}
+            />
+          </span>
+        }
+      />
 
-            Yer tutucu artık akışın ŞEKLİNİ de taşıyor (araç çubuğu, gün
-            şeridi, üç olay satırı): boy doğru ayrıldığı için sıçrama
-            kalmıyor, üstelik bekleyen alan tek bir dev gri blok gibi
-            durmuyor. Olay sayısı güne göre değiştiği için ölçü tam
-            tutmuyor; amaç da tamlık değil, 600 piksellik sıçramayı
-            kapatmak. */}
+      <section id="gunun-akisi" className={styles.flowPanel}>
+        {/* İSKELET GERÇEK ÖLÇÜYÜ AYIRIYOR. `h-28` yazıyordu, yani 112 piksel,
+            ve akış 594–864 piksel geliyordu: yavaş ağda masaüstünde CLS 0,131
+            ölçüldü, kaynağı tam olarak bu sıçramaydı. Yer tutucu o yüzden
+            akışın ŞEKLİNİ taşıyor.
+            24 EYLÜL: şerit kahramana taşındı ve kısa günde akış satır
+            kartlarına indi (DayFlow, "KISA GÜN"); panel 1440'ta 211, 768'de
+            255, 390'da 339, 320'de 366 piksel ölçüldü. İskelet artık başlık +
+            iki satır kartı — en sık görülen günün şekli. Olay sayısı üçü
+            geçen günde liste + sonuç paneli daha uzun ve ölçü tutmuyor;
+            takas bilinçli, amaç eski 600 piksellik sıçramayı kapatmak. */}
         <Suspense
           fallback={
-            <div aria-hidden className="grid min-h-[780px] gap-3 lg:min-h-[600px]">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-6 w-40" />
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-20 w-full" />
-            </div>
+            <>
+              <div className={styles.flowHeader}>{flowHeading}</div>
+              <div aria-hidden className={cn("grid gap-3 pt-3.5", styles.flowSkeleton)}>
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            </>
           }
         >
-          <RailSection t={t} locale={locale} />
+          <RailSection t={t} locale={locale} heading={flowHeading} />
         </Suspense>
       </section>
 
@@ -375,14 +437,14 @@ export default async function TodayPage() {
              Yüzey de ayrışıyor — çevresindeki paneller nötr zeminde, bu blok
              accent kenarlık ve çok soluk degrade taşıyor. Ana sayfada
              degrade kullanan tek yüzey bu. */}
-        <div data-home-section="stories">
+        <div id="mercek-seckisi" data-home-section="stories">
           <Suspense fallback={<SpotlightSkeleton />}>
             <StoriesSpotlight locale={locale} t={t} />
           </Suspense>
         </div>
 
         {/* ---- Bugün bilanço açıklayanlar ---- */}
-        <div data-home-section="earnings">
+        <div id="bugun-bilanco" data-home-section="earnings">
           <Suspense fallback={<EarningsTodaySkeleton t={t} />}>
             <EarningsToday locale={locale} t={t} />
           </Suspense>
@@ -427,7 +489,7 @@ export default async function TodayPage() {
             mekanizmasında kapatacak yalnızca bir gizli satır vardı. */}
         {/* Dünya piyasaları en üstte: "bugün borsalar ne yapmış" sorusunun
             ABD'den sonraki halkası. */}
-        <div data-home-section="world">
+        <div id="dunya-piyasalari" data-home-section="world">
           <Suspense fallback={<PanelSkeleton rows={5} footer />}>
             <WorldStrip locale={locale} t={t} />
           </Suspense>
@@ -590,10 +652,10 @@ export default async function TodayPage() {
  * Mockup 4a'da ikisi de aynı eksende duruyor — gün gerçekten böyle akıyor,
  * "08:30 istihdam" ile "16:30 AAPL" aynı zaman çizgisinin olayları.
  */
-async function RailSection({ t, locale }: { t: Dictionary; locale: Locale }) {
+async function RailSection({ t, locale, heading }: { t: Dictionary; locale: Locale; heading: React.ReactNode }) {
   const session = await auth();
   const initial = await loadDayFlow(locale, session?.user?.id).catch(() => null);
-  return <DayFlowLoader key={locale} initial={initial} locale={locale} labels={t.dayFlow} railLabels={t.dayRail} />;
+  return <DayFlowLoader key={locale} initial={initial} locale={locale} labels={t.dayFlow} railLabels={t.dayRail} heading={heading} />;
 }
 
 /* SAYI ENDEKSİN SEVİYESİ DEĞİL, FONUN FİYATI. Nasdaq 100 endeksi 25 binli
@@ -606,30 +668,28 @@ async function RailSection({ t, locale }: { t: Dictionary; locale: Locale }) {
    çünkü QQQ/SPY kendi başına da alınıp satılan, tanınan bir enstrüman. O
    zaman da hangi enstrüman olduğu HER genişlikte görünmeli: sembol bir süre
    `hidden sm:inline` idi ve telefonda kart "Nasdaq 100 · 716,49" diye,
-   endeksin seviyesiymiş gibi okunuyordu. */
-const INDEX_LABEL: Record<string, string> = {
-  QQQ: "Nasdaq 100",
-  SPY: "S&P 500",
-  DIA: "Dow Jones",
-  IWM: "Russell 2000",
-};
+   endeksin seviyesiymiş gibi okunuyordu. Ad tablosu kartla birlikte
+   `components/today/IndexLive.tsx` içinde. */
 
 /**
  * Endeks kartları — geri sayımın sağında, mobilde altında 2×2 ızgara.
  * Dar kolonda dört sütun okunmuyordu; ikişerli dizilim aynı bilgiyi
  * sıkışmadan taşıyor.
+ *
+ * KARTLAR ARTIK CANLI BİR YAPRAK (`IndexLive`): sunucu ilk paketi ve
+ * barları veriyor, seans içinde istemci `/api/endeks`ten tazeliyor.
+ * Paket `loadIndexFeed` — alt şeridin de okuduğu aynı `getQuotes` anahtarı.
  */
 async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   const status = await getStatus();
   /* Barlar TEK istekte: sembol başına ayrı çağrı hem dört Alpaca isteği
      hem dört `candles_cache` yazması demekti. */
-  const [result, bars] = await Promise.all([
-    getQuotes([...INDEX_STRIP], status),
+  const [feed, bars] = await Promise.all([
+    loadIndexFeed(status),
     getChartBarsMulti([...INDEX_STRIP], "1D", status),
   ]);
 
-
-  if (!result.ok) {
+  if (!feed.ok) {
     return (
       <Panel>
         <DataError message={t.data.failed} hint={t.data.failedHint} />
@@ -644,85 +704,37 @@ async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
      düşüyor ve önceki seansın yüzdesini taşıyor. O hâlde kartta bir
      önceki seansın yüzdesinin ALTINDA bu seansın şekli çiziliyor —
      damga "güncel olmayabilir" dese de çizgi sessizce başka bir gün
-     anlatıyor. Şekil de bir iddia; sayı o seansa ait değilse çizilmiyor.
-     Aynı kural favoriler özetinde de var. */
-  const sparkOk = !result.stale;
+     anlatıyor. Şekil de bir iddia; sayı o seansa ait değilse çizilmiyor
+     (paket bayatsa ya da kotasyonun `basis`i "lastClose" ise — kural
+     `IndexLive` içinde). Aynı kural favoriler özetinde de var.
+
+     EKSEN SEANSIN KENDİSİ (23 Eylül). Barlar zamanlarıyla 04:00–20:00 ET
+     eksenine, önceki kapanış kesik bir taban çizgisi olarak çiziliyor;
+     gerekçe ve ölçüm `components/ui/Sparkline.tsx` başında. Yalnızca
+     zaman ve kapanış istemciye iniyor, barın öteki dört alanı değil. */
+  const { domain, openAt } = sessionDomain(status);
+  const points: Record<string, { time: number; value: number }[]> = {};
+  for (const symbol of INDEX_STRIP) {
+    points[symbol] = (bars[symbol] ?? []).map((bar) => ({ time: bar.time, value: bar.close }));
+  }
 
   return (
-    <div className="flex flex-col gap-2.5">
-      {/* Önceki yan kolon ölçümünde 1024'te dört sütunlu düzenin
-          kartları 84 piksele düşüyor ve başlıklar "N…", "S&…", "Do…" diye
-          kırpılıyor — okuyucu hangi endekse baktığını yalnızca sembolden
-          çıkarabiliyordu. Yeni sağ panelde her genişlikte 2×2 kalırlar. */}
-      <div data-motion-stagger className={styles.indexGrid}>
-        {INDEX_STRIP.map((symbol) => {
-          const quote = result.data[symbol];
-          if (!quote) {
-            return (
-              <div key={symbol} className={styles.indexCard}>
-                <p className="text-xs font-semibold text-strong">{INDEX_LABEL[symbol] ?? symbol}</p>
-                <p className="text-tiny text-muted">{symbol}</p>
-                <p className="mt-1 text-xs text-muted">{t.common.noData}</p>
-              </div>
-            );
-          }
-          const points = (bars[symbol] ?? []).map((bar) => ({
-            value: bar.close,
-          }));
-          const tone = directionOf(quote.changePct);
-          return (
-            <Link
-              key={symbol}
-              href={`/hisse/${symbol}`}
-              /* Önceki şeritte 128px gerekiyordu: 112px'te ad ve sembol
-                 yan yana sığmıyordu. Yeni 2×2 düzende dar başlık sarılır;
-                 vekil fonun sembolü hiçbir genişlikte gizlenmez. */
-              className={styles.indexLink}
-            >
-              <SpotlightCard className={styles.indexCard}>
-                <div className={styles.indexIdentity}>
-                  <span className="text-tiny font-semibold text-body">
-                    {INDEX_LABEL[symbol] ?? symbol}
-                  </span>
-                  <span className="numeral shrink-0 text-nano text-muted">
-                    {symbol}
-                  </span>
-                </div>
-                <div className={styles.indexQuote}>
-                  <p className={styles.indexValue}>
-                    {formatPrice(quote.price, locale)}
-                  </p>
-                  <p
-                    className={cn(
-                      "numeral text-tiny font-semibold sm:text-small",
-                      directionText(tone),
-                    )}
-                  >
-                    {formatPercent(quote.changePct, locale)}
-                  </p>
-                </div>
-                {sparkOk && points.length > 1 && (
-                  <Sparkline
-                    points={points}
-                    title={`${INDEX_LABEL[symbol] ?? symbol} · 1D`}
-                    tone={tone}
-                    height={40}
-                    className={styles.indexSpark}
-                  />
-                )}
-              </SpotlightCard>
-            </Link>
-          );
-        })}
-      </div>
-      <DataStamp
-        labels={t.data}
-        source={result.source}
-        at={result.fetchedAt}
-        stale={result.stale}
-        locale={locale}
-      />
-    </div>
+    <IndexLive
+      symbols={INDEX_STRIP}
+      initial={feed}
+      bars={points}
+      domain={domain}
+      openAt={openAt}
+      session={status.session}
+      locale={locale}
+      labels={{
+        noData: t.common.noData,
+        preMarket: t.market.preMarket,
+        afterHours: t.market.afterHours,
+        lastClose: t.market.lastClose,
+        data: t.data,
+      }}
+    />
   );
 }
 
@@ -823,7 +835,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
                 index > 0 && "border-l border-line",
               )}
             >
-              <p className="plate text-nano tracking-[0.08em]">{value.label}</p>
+              <p className="plate text-nano">{value.label}</p>
               {/* İşaret küçük ve sessiz kalıyor (birim künyesi gibi) ama YERİ
                   dile bağlı: Türkçede sayıdan önce, İngilizcede sonra. Kural
                   artık primitives → PercentReading içinde tek yerde; burada
@@ -857,7 +869,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
       </div>
 
       {observedAt && (
-        <p className="border-t border-line-soft px-4 py-2 text-nano text-muted sm:px-5">
+        <p className="border-t border-line-soft px-4 py-2 text-tiny text-muted sm:px-5">
           FRED · {formatEtDateCompact(observedAt, locale)}
         </p>
       )}
@@ -878,12 +890,12 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
       {vixLevel !== null && vixTone && (
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-t border-line px-4 py-3">
           <div className="flex min-w-0 flex-col items-start gap-1.5">
-            <span className="plate text-nano tracking-[0.08em]">
+            <span className="plate text-nano">
               {t.markets.fearTitle}
             </span>
             <span
               className={cn(
-                "rounded-full px-2 py-0.5 text-nano font-semibold",
+                "rounded-full px-2 py-0.5 text-tiny font-semibold",
                 vixTone.band.tone === "up" && "bg-up-wash text-up",
                 vixTone.band.tone === "flat" && "bg-surface-elevated text-body",
                 vixTone.band.tone === "warn" && "bg-brass-wash text-brass-ink",
@@ -903,7 +915,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
                     günse üstteki künye zaten söylüyor ve tekrar etmek satırı
                     gereksiz kalabalıklaştırır. */}
                 {vixDate && vixDate !== observedAt && (
-                  <span className="numeral text-nano text-muted">
+                  <span className="numeral text-tiny text-muted">
                     {formatEtDateCompact(vixDate, locale)}
                   </span>
                 )}
@@ -976,12 +988,28 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
     );
   }
 
+  /* YÜZDE HANGİ SEANSI ANLATIYOR (Veri dürüstlüğü 4, 23 Eylül).
+     Açılış öncesinde (11:46 TR) satır "Türkiye −%0,77" yazıyordu ve
+     damgası "11:30 Güncellendi"ydi; aynı sembol /hisse/TUR'da "22 Eylül
+     23:00 Güncellendi · Güncel Olmayabilir" diyordu — son işlem dünkü
+     kapanıştı, yani −0,77 DÜNÜN hareketiydi. Damga çekim anını söylüyor,
+     işlemin yaşını değil. Günün Hareketleri paneli bu hatayı bir kez
+     düzeltmişti (`isSessionTrade`); bu panel sormuyordu.
+     Kural `quoteBasis`te tek yerde: bu seansa ait işlem yoksa yüzde yön
+     rengini bırakıyor, altında "Son Kapanış" künyesi duruyor. Satırların
+     hiçbiri bu seansta işlem görmediyse künye cümlesi de bunu söylüyor. */
+  const bases = Object.fromEntries(
+    shown.map((market) => [market.symbol, quoteBasis(result.data[market.symbol], status)]),
+  );
+  const allLastClose = shown.every((market) => bases[market.symbol] === "lastClose");
+
   return (
     <Panel>
       <PanelHeader title={t.today.worldMarkets} tone="plate" />
       <ul>
         {shown.map((market) => {
           const quote = result.data[market.symbol];
+          const lastClose = bases[market.symbol] === "lastClose";
           const tone = directionOf(quote.changePct);
           return (
             <li key={market.symbol}>
@@ -1001,10 +1029,18 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                       ABD fonu") ve kesildiğinde cümlenin taşıdığı tek bilgi
                       — vekil olduğu — kayboluyordu; 320 ve 360 piksellik
                       ekranlarda beş satırın üçü böyleydi. İki satıra kadar
-                      sarıyor, ondan sonrası kesiliyor. */}
-                  <span className="mt-0.5 line-clamp-2 block text-nano leading-tight text-muted sm:truncate">
+                      sarıyor, ondan sonrası kesiliyor.
+                      12 PUNTO (23 Eylül): 10 puntoda sayfanın 54 okunmayan
+                      metin düğümünden beşi buydu; 390'da hâlâ iki satıra
+                      sığıyor. */}
+                  <span className="mt-0.5 line-clamp-2 block text-small leading-tight text-muted sm:truncate">
                     {locale === "tr" ? market.tracksTr : market.tracksEn}
                   </span>
+                  {lastClose && (
+                    <span className="mt-0.5 block text-tiny font-semibold text-body">
+                      {t.market.lastClose}
+                    </span>
+                  )}
                 </span>
                 {/* Satırın değeri YALNIZCA yüzde.
                     Burada bir süre fonun dolar fiyatı da (38,70 gibi)
@@ -1018,8 +1054,8 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
                     anlamlı: fonun o günkü yönü. */}
                 <span
                   className={cn(
-                    "numeral shrink-0 text-read font-bold",
-                    directionText(tone),
+                    "numeral shrink-0 text-read",
+                    lastClose ? "font-semibold text-body" : cn("font-bold", directionText(tone)),
                   )}
                 >
                   {formatPercent(quote.changePct, locale)}
@@ -1034,7 +1070,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
           veriyi büyük puntoyla göstermenin yasak olduğu yerdi. */}
       <div className="border-t border-line px-4 py-3 sm:px-5">
         <p className="text-tiny leading-relaxed text-muted">
-          {t.today.worldMarketsHint}
+          {allLastClose ? t.today.worldLastCloseHint : t.today.worldMarketsHint}
         </p>
         <DataStamp
           labels={t.data}
@@ -1065,9 +1101,9 @@ function IndexSkeleton() {
 }
 
 /**
- * Günün özeti — sayfadaki tek gradient yüzey (accent %13 → %2) ve tek
- * accent çerçeve. Bu kartın öne çıkması bilinçli: günü tek paragrafta okumak
- * ürünün vaadi.
+ * Günün özeti — düz beyaz belge ve accent çerçeve (degradesi bir dönem
+ * kalktı, gerekçe BriefSwitch'te). Bu kartın öne çıkması bilinçli: günü tek
+ * paragrafta okumak ürünün vaadi.
  *
  * Kart iki metin taşıyor: günlük ve haftalık bülten. İkisi de burada
  * çekiliyor, sekme geçişi istemcide oluyor (BriefSwitch).
@@ -1162,6 +1198,7 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
       dailyBody={
         daily && (
           <BriefBody
+            size="card-wide"
             markdown={daily.bodyMd}
             moreLabel={t.common.showAll}
             lessLabel={t.common.less}
@@ -1172,6 +1209,7 @@ async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
       weeklyBody={
         weekly && (
           <BriefBody
+            size="card-wide"
             openLines={acikSatir}
             markdown={weekly.bodyMd}
             moreLabel={t.common.showAll}
@@ -1240,7 +1278,7 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
                 {times ? times.primary : NO_VALUE}
               </span>
               {times && (
-                <span className="numeral block text-nano leading-tight text-muted">
+                <span className="numeral block text-tiny leading-tight text-muted">
                   {times.secondary} {tags.secondary}
                 </span>
               )}
@@ -1279,7 +1317,7 @@ async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
                 >
                   {actual ?? forecast}
                 </span>
-                <span className="block text-nano leading-tight text-muted">
+                <span className="block text-tiny leading-tight text-muted">
                   {actual ? t.calendar.actual : t.calendar.forecast}
                 </span>
               </span>
@@ -1397,10 +1435,16 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
   const ranked = [...usable].sort(
     (a, b) => (b.quote.changePct ?? 0) - (a.quote.changePct ?? 0),
   );
-  const gainers = ranked.filter((row) => (row.quote.changePct ?? 0) > 0).slice(0, 3);
+  /* ÜÇ SATIR TABAN, BEŞE KADAR YEDEK — sağ kolonun doldurma kapasitesi
+     (24 Eylül). Giriş yapmamış okuyucunun favori paneli tek satıra inince
+     (227 → 72 piksel) sağ kolonun açabileceği tek liste haftaya bakış
+     kaldı ve takvimin boş olduğu bir günde 1024'te sağ kolon 129 piksel
+     kısa bitiyordu (ölçüldü). Sıralama zaten elde: dördüncü ve beşinci
+     isim sunucuda basılıyor, `FillColumn` ancak yer varsa açıyor. */
+  const gainers = ranked.filter((row) => (row.quote.changePct ?? 0) > 0).slice(0, MOVERS_MAX);
   const losers = ranked
     .filter((row) => (row.quote.changePct ?? 0) < 0)
-    .slice(-3)
+    .slice(-MOVERS_MAX)
     .reverse();
 
   /* KÜNYE SEANSI SÖYLÜYOR — üç ayrı cümle, üç ayrı hâl.
@@ -1451,15 +1495,20 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
      tek liste + renk o gün "kim yükseldi" sorusunu cevapsız bırakırdı. */
   const block = (heading: string, rows: typeof gainers, divided: boolean) => (
     <div className={cn(divided && "border-t border-line")}>
-      <p className="plate px-4 pb-1.5 pt-3.5 text-nano tracking-[0.09em] sm:px-5">
+      <p className="plate px-4 pb-1.5 pt-3.5 text-nano sm:px-5">
         {heading}
       </p>
       <ul>
         {rows.length === 0 ? (
           <li className="px-4 pb-3.5 text-small text-muted sm:px-5">{t.common.noData}</li>
         ) : (
-          rows.map((row) => (
-            <li key={row.symbol}>
+          rows.map((row, index) => (
+            <li
+              key={row.symbol}
+              data-fill={index >= MOVERS_BASE ? "" : undefined}
+              hidden={index >= MOVERS_BASE}
+              suppressHydrationWarning
+            >
               <Link
                 href={`/hisse/${row.symbol}`}
                 prefetch={false}
@@ -1474,7 +1523,7 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
                   <span className="numeral block text-base font-bold leading-tight text-strong">
                     {row.symbol}
                   </span>
-                  <span className="block truncate text-nano leading-tight text-muted">
+                  <span className="block truncate text-tiny leading-tight text-muted">
                     {meta[row.symbol]?.name ?? ""}
                   </span>
                 </span>
@@ -1512,7 +1561,7 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
           komşularının (endeksler, favoriler) hepsinde damga vardı; en hızlı
           bayatlayan sayıları basan panelde yoktu. */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-line-soft px-4 py-2 sm:px-5">
-        <p className="text-nano text-muted">{note}</p>
+        <p className="text-tiny text-muted">{note}</p>
         <DataStamp
           labels={t.data}
           source={result.source}
@@ -1524,6 +1573,10 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
     </Panel>
   );
 }
+
+/* Günün hareketlerinin taban ve yedekli tavan satır sayısı (blok başına). */
+const MOVERS_BASE = 3;
+const MOVERS_MAX = 5;
 
 /** Başlıksız iskelet — panelin kendi başlığı bileşenin içinde. */
 function EarningsTodaySkeleton({ t }: { t: Dictionary }) {
@@ -1673,7 +1726,7 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
                 <span className="numeral block text-base font-semibold leading-tight text-body">
                   {formatPrice(row.epsEstimate, locale, { currency: true })}
                 </span>
-                <span className="block text-nano leading-tight text-muted">
+                <span className="block text-tiny leading-tight text-muted">
                   {t.earnings.epsEstimate}
                 </span>
               </span>
@@ -1703,19 +1756,24 @@ const WATCHLIST_MAX = 10;
 async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   const session = await auth();
 
+  /* GİRİŞ YAPMAMIŞ OKUYUCUYA TEK SATIR (24 Eylül). Panel "Favori Listen
+     Boş" diyen tam bir boş durumdu (simge, iki satır metin, düğme — 227
+     piksel) ve telefonda bugünün bilançolarından ÖNCE duruyordu: listesi
+     olmayan okuyucu, sayfanın asıl içeriğine varmadan bir davetle
+     karşılaşıyordu. Üstelik "boş" yanlıştı — giriş yapınca bir listesi
+     olabilir. Artık solda ne göreceğini söyleyen tek cümle, sağda giriş;
+     telefonda sıra da bilançoların ve analizlerin ardına iniyor
+     (TodayExperience.module.css, `:has(a[href$="/giris"])`). */
   if (!session?.user?.id) {
     return (
-      <Panel>
-        <PanelHeader title={t.today.watchlistSummary} tone="plate" />
-        <EmptyState
-          title={t.watchlist.emptyAll}
-          hint={t.watchlist.emptyAllHint}
-          action={
-            <ButtonLink href="/giris" variant="primary">
-              {t.nav.signIn}
-            </ButtonLink>
-          }
-        />
+      <Panel className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+        <div className="min-w-0 flex-1">
+          <h2 className="plate">{t.today.watchlistSignedOutTitle}</h2>
+          <p className="mt-1 text-small leading-[1.3] text-body">{t.today.watchlistSignedOutHint}</p>
+        </div>
+        <ButtonLink href="/giris" variant="primary" className="shrink-0">
+          {t.nav.signIn}
+        </ButtonLink>
       </Panel>
     );
   }
@@ -1948,7 +2006,7 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
                   yayımlanır ve okuyucu bunu bugünün verisi sanıyordu. Makro
                   ekranı aynı sayının yanına bu künyeyi zaten koyuyor. */}
               {row.periodLabel && (
-                <p className="text-nano text-muted">
+                <p className="text-tiny text-muted">
                   {formatPeriodLabel(row.periodLabel, locale)}
                 </p>
               )}
@@ -2039,7 +2097,7 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
                 {formatEtDateLong(event.eventDate, locale)}
               </span>
               {times && (
-                <span className="numeral text-nano leading-tight text-muted">
+                <span className="numeral text-tiny leading-tight text-muted">
                   {times.primary} {tags.primary}
                 </span>
               )}
@@ -2053,6 +2111,8 @@ async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
 
 /** Kartta gösterilen haber sayısı ve seçkinin tarandığı havuz. */
 const TOP_NEWS_COUNT = 6;
+/** Kaynak sınırıyla altıya varılamadığında basılan haber sayısı. */
+const TOP_NEWS_FALLBACK = 4;
 const TOP_NEWS_POOL = 40;
 /** Aynı sembolden listeye en fazla kaç haber girer. */
 const TOP_NEWS_PER_SYMBOL = 2;
@@ -2106,14 +2166,29 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
     return kept;
   };
 
+  /* YEDEK DOLDURMA KAYNAK SINIRINI BOZMUYOR (24 Eylül). Sınırlar altı
+     haber bırakmadığında liste sınırsız havuzdan tamamlanıyordu ve kaynak
+     sınırı (2) tam o yolla deliniyordu: ölçüldüğü gün altı kartın beşi
+     Yahoo'ydu. Yedek geçiş artık yalnızca SEMBOL sınırını gevşetiyor;
+     kaynak sınırı her geçişte geçerli. Yine altıya varılamıyorsa dört
+     haber basılıyor — tek bir sitenin beş haberi, "öne çıkanlar" değil. */
   const withImage = pool.filter(hasImage);
   const withoutImage = pool.filter((item) => !hasImage(item));
-  const ordered = capped([...withImage, ...withoutImage]);
-  const items = (ordered.length >= TOP_NEWS_COUNT
-    ? ordered
-    : [...ordered, ...[...withImage, ...withoutImage].filter((i) => !ordered.includes(i))]
-  )
-    .slice(0, TOP_NEWS_COUNT)
+  const ranked = [...withImage, ...withoutImage];
+  const ordered = capped(ranked);
+  const bySource = new Map<string, number>();
+  for (const item of ordered) bySource.set(item.source ?? "", (bySource.get(item.source ?? "") ?? 0) + 1);
+  for (const item of ranked) {
+    if (ordered.length >= TOP_NEWS_COUNT) break;
+    if (ordered.includes(item)) continue;
+    const source = item.source ?? "";
+    if (source && (bySource.get(source) ?? 0) >= TOP_NEWS_PER_SOURCE) continue;
+    bySource.set(source, (bySource.get(source) ?? 0) + 1);
+    ordered.push(item);
+  }
+  const shownCount = ordered.length >= TOP_NEWS_COUNT ? TOP_NEWS_COUNT : Math.min(ordered.length, TOP_NEWS_FALLBACK);
+  const items = ordered
+    .slice(0, shownCount)
     .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
 
   /* Görseli olmayan haber, künye kutusunda sembol yazan gri bir kutuyla
@@ -2135,75 +2210,132 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
     return headlineMentions(item.headline, symbol, meta.name) ? meta.logoUrl : null;
   };
 
-  return (
-    /* KART IZGARASI, SATIR LİSTESİ DEĞİL. Satırlar 64 piksellik bir küçük
-       resim + manşet + iki satırlık özet taşıyordu ve sağdaki görsel, metnin
-       arkasından gelen bir ek gibi duruyordu. Kartta görsel ÖNCE geliyor ve
-       16:9 oranında tam genişlik — haberi haber yapan şey orada.
+  /* Manşet kartı: görseli olan İLK haber. Görselsiz haber 16:9'luk bir kart
+     değil, bir satır. */
+  const lead = items.find(hasImage) ?? null;
+  const rows = items.filter((item) => item !== lead);
 
-       Özet düştü: manşet zaten haberin özeti ve altı manşetin altına altı
-       özet koymak bloğu iki katına çıkarıyordu. Künye (kaynak · ne zaman)
-       manşetin üstünde, çünkü "hangi kaynaktan ve ne kadar taze" sorusu
-       başlığı okumadan önce sorulan soru. */
-    /* `<ul>/<li>` KALIYOR. Kartlara geçerken düz `<div>` ızgarasına
-       dönmüştü ve ekran okuyucu "altı öğelik liste" bilgisini kaybediyordu;
-       görsel olarak hiçbir şey değişmiyor. */
-    <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((item) => {
-        const headline =
-          locale === "tr" && item.headlineTr ? item.headlineTr : item.headline;
+  /* KÜNYE: kaynak · zaman · dil. Zaman Title Case ("1 Saat Önce"): künye
+     bir cümle değil (CLAUDE.md, Title Case). Çevirisi olmayan manşet TR
+     sayfada İngilizce duruyor; "EN" rozeti bunu tıklamadan önce söylüyor —
+     Mercek listesinde aynı kural. */
+  const byline = (item: (typeof pool)[number]) => (
+    <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-tiny text-muted">
+      {locale === "tr" && !item.headlineTr && (
+        <span className="plate text-nano">EN</span>
+      )}
+      <span className="numeral">{titleCaseLabel(timeAgo(item.publishedAt, locale), locale)}</span>
+      {item.source && (
+        <>
+          <span aria-hidden>·</span>
+          {item.source}
+        </>
+      )}
+    </span>
+  );
+  const headlineOf = (item: (typeof pool)[number]) =>
+    locale === "tr" && item.headlineTr ? item.headlineTr : item.headline;
+  /* ÇEVRİLMEMİŞ SATIR KENDİ DİLİNİ TAŞIR. Çeviri rutini gecikince TR
+     sayfada İngilizce manşet duruyor ve `lang` olmadan ekran okuyucu onu
+     Türkçe fonemlerle sesletiyor. */
+  const langOf = (item: (typeof pool)[number]) =>
+    locale === "tr" && !item.headlineTr ? "en" : undefined;
+
+  return (
+    /* METİN ÖNCE, GÖRSEL OLDUĞUNDA (24 Eylül). Bant altı tane 16:9 kart
+       basıyordu ve görseli olmayan her kart gri bir gazete simgesiyle
+       doluyordu: ölçüldüğü gün altı kartın beşi yer tutucuydu, bölüm
+       1440'ta 789, 390'da 1926 piksel tutuyordu — telefon sayfasının beşte
+       biri gri dikdörtgendi. Görseli olan ilk haber manşet kartı olarak
+       solda kalıyor; ötekiler satır: 56 piksellik karo (haberin görseli,
+       yoksa şirketin logosu, o da yoksa kaynağın baş harfi), iki satırlık
+       manşet ve künye. Hiç görsel yoksa iki sütun, üçer satır.
+
+       DOM'DA MANŞET ÖNCE, EKRANDA KÜNYE ÜSTTE — `flex-col-reverse`
+       bağlantının erişilebilir adını manşetle başlatıyor (yoksa ekran
+       okuyucu her satırda önce "7 saat önce · Benzinga" diyordu).
+       `<ul>/<li>` kalıyor: ekran okuyucu liste bilgisini kaybetmesin. */
+    <ul
+      className={cn(
+        "mt-4 grid min-w-0 gap-x-8",
+        lead
+          ? "lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]"
+          : /* Görselsiz ve az haberli günde (kaynak sınırı üç haber
+               bıraktı) üç satır tek sırada; iki sütunda üçüncüsü tek
+               başına kalıyordu. */
+            rows.length === 3
+            ? "lg:grid-cols-3"
+            : "sm:grid-cols-2",
+      )}
+    >
+      {lead && (
+        <li className="min-w-0 pb-4 lg:row-span-6 lg:pb-0">
+          <Link
+            href={`/haberler/${lead.id}`}
+            prefetch={false}
+            className="panel panel-hover flex h-full min-w-0 flex-col overflow-hidden"
+          >
+            <NewsImage
+              src={lead.imageUrl}
+              logoUrl={logoFor(lead)}
+              className="w-full rounded-none border-0 border-b border-line-soft"
+              sizeClass="aspect-[16/9] h-auto w-full"
+            />
+            <span className="flex min-w-0 flex-1 flex-col-reverse justify-end gap-2 p-4 sm:p-5">
+              <span
+                lang={langOf(lead)}
+                className="line-clamp-3 text-lead font-semibold leading-[1.35] text-strong sm:text-title"
+              >
+                {headlineOf(lead)}
+              </span>
+              {byline(lead)}
+            </span>
+          </Link>
+        </li>
+      )}
+      {rows.map((item, index) => {
+        const logo = logoFor(item);
         return (
-          <li key={item.id} className="min-w-0">
+          <li
+            key={item.id}
+            className={cn(
+              "min-w-0 border-t border-line",
+              /* Sütunun ilk satırı üstteki kıl çizgiyi taşımıyor: başlık
+                 şeridinin çizgisi hemen üstünde. */
+              index === 0 && "lg:border-t-0",
+              !lead && index === 0 && "border-t-0",
+              !lead && index === 1 && (rows.length === 3 ? "lg:border-t-0" : "sm:border-t-0"),
+              !lead && rows.length === 3 && index === 2 && "lg:border-t-0",
+            )}
+          >
             <Link
               href={`/haberler/${item.id}`}
               prefetch={false}
-              className="panel panel-hover flex h-full min-w-0 flex-col overflow-hidden"
+              className="grid min-w-0 grid-cols-[3.5rem_minmax(0,1fr)] items-start gap-3 rounded-lg py-3 transition-colors hover:bg-primary-tint lg:px-2"
             >
-              <NewsImage
-                src={
-                  item.imageUrl && !genericImages.has(item.imageUrl)
-                    ? item.imageUrl
-                    : null
-                }
-                logoUrl={logoFor(item)}
-                /* Kartın kendi kenarlığı zaten var; görselin yalnızca ALT
-                   kenarı gövdeden ayırıyor. */
-                className="w-full rounded-none border-0 border-b border-line-soft"
-                sizeClass="aspect-[16/9] h-auto w-full"
-              />
-              {/* DOM'DA MANŞET ÖNCE, EKRANDA KÜNYE ÜSTTE.
-                  `flex-col-reverse` ikisini birden veriyor: bağlantının
-                  erişilebilir adı manşetle başlıyor (yoksa ekran okuyucu her
-                  kartta önce "7 saat önce · Benzinga" diyordu), görsel sıra
-                  ise künyeyi manşetin üstünde tutuyor. */}
-              <span className="flex min-w-0 flex-1 flex-col-reverse justify-end gap-1.5 p-4">
+              {hasImage(item) || logo ? (
+                <NewsImage
+                  src={hasImage(item) ? item.imageUrl : null}
+                  logoUrl={logo}
+                  className="rounded-lg"
+                  sizeClass="size-14"
+                />
+              ) : (
                 <span
-                  /* ÇEVRİLMEMİŞ SATIR KENDİ DİLİNİ TAŞIR. Çeviri rutini
-                     gecikince TR sayfada İngilizce manşet duruyor ve `lang`
-                     olmadan ekran okuyucu onu Türkçe fonemlerle sesletiyor.
-                     Aynı kural /haberler listesinde ve mercek yazılarında
-                     zaten uygulanıyor; kart yazılırken taşınmamıştı. */
-                  lang={locale === "tr" && !item.headlineTr ? "en" : undefined}
-                  className="line-clamp-3 text-read font-semibold leading-[19px] text-strong"
+                  aria-hidden
+                  className="grid size-14 place-items-center rounded-lg bg-surface-sunken text-lead font-bold text-body"
                 >
-                  {headline}
+                  {(item.source ?? "?").slice(0, 1).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
                 </span>
-                {/* KÜNYE BÜYÜK HARFE ÇEVRİLMİYOR. `.plate` ile yazılmıştı ve
-                    kaynak adları İngilizce: `<html lang="tr">` altında
-                    `text-transform: uppercase` Türkçe kuralı uyguluyor ve
-                    "Benzinga" ekranda "BENZİNGA", "SeekingAlpha"
-                    "SEEKİNGALPHA" oluyordu. */}
-                <span className="text-nano tracking-[0.02em] text-muted">
-                  <span className="numeral">{timeAgo(item.publishedAt, locale)}</span>
-                  {item.source && (
-                    <>
-                      <span aria-hidden className="mx-1">
-                        ·
-                      </span>
-                      {item.source}
-                    </>
-                  )}
+              )}
+              <span className="flex min-w-0 flex-col-reverse justify-end gap-1">
+                <span
+                  lang={langOf(item)}
+                  className="line-clamp-2 text-lead font-semibold leading-[1.35] text-strong"
+                >
+                  {headlineOf(item)}
                 </span>
+                {byline(item)}
               </span>
             </Link>
           </li>
@@ -2214,23 +2346,31 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
 }
 
 /**
- * Haber ızgarasının iskeleti.
+ * Haber bandının iskeleti.
  *
- * ÖLÇÜ GERÇEK KARTIN ÖLÇÜSÜ: tek bir 16/10 blok basılıyordu ve gerçek kart
- * (16:9 görsel + üç satırlık metin bloğu) ondan seksen piksel uzundu — bant
- * çözülünce altındaki her şey aşağı zıplıyordu. İskelet artık kartın iki
- * parçasını ayrı ayrı taklit ediyor.
+ * ÖLÇÜ GERÇEK BANDIN ŞEKLİ: bir dönem tek bir 16/10 blok basılıyordu ve
+ * gerçek kart ondan seksen piksel uzundu — bant çözülünce altındaki her şey
+ * aşağı zıplıyordu. Bant artık manşet kartı + satırlar (gerekçe `TopNews`);
+ * iskelet de aynı iki parçayı taklit ediyor.
  */
 function NewsGridSkeleton() {
   return (
-    <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="panel overflow-hidden">
-          <Skeleton className="aspect-[16/9] w-full rounded-none" />
-          <div className="flex flex-col gap-2 p-4">
-            <Skeleton className="h-4 w-full rounded-md" />
-            <Skeleton className="h-4 w-4/5 rounded-md" />
+    <div aria-hidden className="mt-4 grid gap-x-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+      <div className="panel overflow-hidden lg:row-span-5">
+        <Skeleton className="aspect-[16/9] w-full rounded-none" />
+        <div className="flex flex-col gap-2 p-4 sm:p-5">
+          <Skeleton className="h-2.5 w-2/5 rounded-md" />
+          <Skeleton className="h-5 w-full rounded-md" />
+          <Skeleton className="h-5 w-4/5 rounded-md" />
+        </div>
+      </div>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-3 border-t border-line py-3 first-of-type:border-t-0">
+          <Skeleton className="size-14 rounded-lg" />
+          <div className="flex flex-col gap-2">
             <Skeleton className="h-2.5 w-2/5 rounded-md" />
+            <Skeleton className="h-4 w-full rounded-md" />
+            <Skeleton className="h-4 w-3/5 rounded-md" />
           </div>
         </div>
       ))}
@@ -2295,9 +2435,12 @@ async function StoriesSpotlight({
     <section className={styles.storySpotlight}>
       {/* Başlık şeridi panel başlıklarıyla aynı ölçüde: bloğu ayıran şey
           başlığın boyu değil, altındaki manşet ve eğri. Cesaret TEK yerde
-          harcanıyor. */}
+          harcanıyor.
+          DÜZ MÜREKKEP (24 Eylül): blok zaten sayfanın tek degrade yüzeyi;
+          başlığına ikinci bir degrade vermek aynı vurguyu iki kez yapıyordu.
+          Başlık düz koyu mürekkep, vurguyu yüzey taşıyor. */}
       <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
-        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+        <h2 data-ink="plain" className="text-read font-bold text-strong">
           {t.today.latestStories}
         </h2>
         <PanelLink href="/mercek">{t.common.showAll}</PanelLink>
@@ -2335,7 +2478,7 @@ async function StoriesSpotlight({
               {/* Çevirisi olmayan yazı orijinal diliyle listeleniyor; rozet
                   bunu tıklamadan önce söylüyor — /mercek ile aynı kural. */}
               {lead.locale !== locale && (
-                <span className="plate ml-1 text-nano tracking-[0.09em]">
+                <span className="plate ml-1 text-nano">
                   {lead.locale.toUpperCase()}
                 </span>
               )}

@@ -2,7 +2,8 @@ import {
   ChartFooter,
   type FooterStat,
 } from "@/components/earnings/ChartFooter";
-import { cn } from "@/lib/utils";
+import { CaretDown } from "@phosphor-icons/react/dist/ssr";
+import { cn, titleCaseLabel } from "@/lib/utils";
 import styles from "@/components/earnings/EarningsReport.module.css";
 
 /**
@@ -60,6 +61,13 @@ export type GuidanceRow = {
  */
 /** Eksenin iki ucundaki pay — işaret kenara yapışmasın. */
 const AXIS_PAD = 1.15;
+
+/**
+ * İki uç etiketi arasındaki en küçük pay, eksenin yüzdesi olarak. Bundan dar
+ * bir şeritte telefonda iki etiket birbirine biniyordu (MU, 390: "49 Mr $"
+ * ile "51 Mr $" 1 piksel üst üste); orada tek, ortalı bir aralık yazılıyor.
+ */
+const MIN_END_LABEL_SPAN = 14;
 
 /** Orta nokta sıfıra çok yakınsa oran anlamını yitirir; o satır çizilmez. */
 const MIN_MIDPOINT = 1e-9;
@@ -139,8 +147,10 @@ export function GuidanceRanges({
   legendRange,
   legendConsensus,
   axisNote,
+  howToRead,
   verdictLabels,
   formatRange,
+  formatEnds,
   formatPercent,
   footer = [],
   locale,
@@ -155,12 +165,20 @@ export function GuidanceRanges({
      aynı ifadeyle dolduruyordu. Açıklamanın tamamı `axisNote` içinde. */
   /** "Çubuklar orta noktaya göre ölçekli · eksen ±{value}" */
   axisNote: string;
+  /** Açıklamayı saran açılır satırın adı: "Grafik Nasıl Okunur". */
+  howToRead: string;
   /** Eksen ucundaki yüzdeyi okuyucunun dilinde yazar. */
   formatPercent: (value: number) => string;
   verdictLabels: GuidanceVerdictLabels;
   /** Aralığın TAMAMINI biçimlendirir — birim iki kez yazılmasın diye tek
       çağrı: "10,3 – 10,8 Mr $", "%83 – %85". */
   formatRange: (low: number, high: number, unit?: string | null) => string;
+  /** Şeridin iki ucundaki etiketler — başlıktaki aralıkla AYNI hane sayısı.
+      Uçlar bir dönem `formatRange(lo, lo)` ile tek tek biçimleniyordu ve
+      hane sayısı her uç için yeniden hesaplanıyordu: başlık "6,80 – 6,85
+      Mr $" derken uç "6,8 Mr $" diyordu, aynı sayı aynı satırda iki
+      biçimde. */
+  formatEnds: (low: number, high: number, unit?: string | null) => [string, string];
   footer?: FooterStat[];
   /** ChartFooter'a geçer — not satırının Title Case'i dile bağlı. */
   locale: string;
@@ -236,7 +254,7 @@ export function GuidanceRanges({
           künyenin arasında dengede duruyor ve hiçbir yerde delik açmıyor. */}
       <ul
         className={cn(
-          "flex min-h-0 flex-1 flex-col gap-4",
+          "flex min-h-0 flex-1 flex-col gap-2",
           rows.length >= 3 ? "justify-between" : "justify-center",
         )}
       >
@@ -266,7 +284,7 @@ export function GuidanceRanges({
             : null;
 
           return (
-            <li key={`${row.label}-${index}`} className={cn(styles.guidanceRow, "flex flex-col gap-1.5")}>
+            <li key={`${row.label}-${index}`} className={cn(styles.guidanceRow, "flex flex-col gap-1")}>
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
                 <span className="text-base font-bold text-strong">
                   {row.label}
@@ -393,7 +411,10 @@ export function GuidanceRanges({
 
                       SAĞ UÇ SAĞA HİZALI: sayı büyüdükçe sola doğru uzuyor,
                       şeridin dışına taşmıyor. */}
-                  {spread.half > 0 && (
+                  {spread.half > 0 && (() => {
+                    const [lowLabel, highLabel] = formatEnds(lo, hi, row.unit);
+                    const narrow = pos(spread.half) - pos(-spread.half) < MIN_END_LABEL_SPAN;
+                    return (
                     /* ETİKETLER ŞERİDİN UÇLARINDA, RAYIN DEĞİL. İlk denemede
                        `justify-between` ile satırın iki ucuna konmuşlardı ve
                        sonuç yanlıştı: ray tüm ekseni gösteriyor, şerit onun
@@ -408,19 +429,32 @@ export function GuidanceRanges({
                        edildi, çünkü kırpılmış bir sayı yanlış okunur. */
                     <div className="relative mt-1 h-3.5">
                       <span
-                        className="numeral absolute -translate-x-1/2 whitespace-nowrap text-nano text-muted"
+                        className={cn(
+                          "numeral absolute -translate-x-1/2 whitespace-nowrap text-nano text-muted",
+                          narrow && "max-sm:hidden",
+                        )}
                         style={{ left: `${pos(-spread.half)}%` }}
                       >
-                        {formatRange(lo, lo, row.unit)}
+                        {lowLabel}
                       </span>
                       <span
-                        className="numeral absolute -translate-x-1/2 whitespace-nowrap text-nano text-muted"
+                        className={cn(
+                          "numeral absolute -translate-x-1/2 whitespace-nowrap text-nano text-muted",
+                          narrow && "max-sm:hidden",
+                        )}
                         style={{ left: `${pos(spread.half)}%` }}
                       >
-                        {formatRange(hi, hi, row.unit)}
+                        {highLabel}
                       </span>
+                      {/* Dar şeritte telefonda iki uç yerine tek etiket. */}
+                      {narrow && (
+                        <span className="numeral absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-nano text-muted sm:hidden">
+                          {formatRange(lo, hi, row.unit)}
+                        </span>
+                      )}
                     </div>
-                  )}
+                    );
+                  })()}
                 </div>
               )}
 
@@ -430,7 +464,9 @@ export function GuidanceRanges({
                   edemiyordu. */}
               {(note || evaluation) && (
                 <p className="flex flex-wrap items-baseline gap-x-1.5 text-tiny">
-                  {note && <span className="text-muted">{note}</span>}
+                  {/* Nötr bağlam kayıttan geliyor ("Orta nokta 6,825");
+                      yanındaki yargıyla aynı imla — Title Case. */}
+                  {note && <span className="text-muted">{titleCaseLabel(note, locale)}</span>}
                   {evaluation && (
                     <span
                       className={cn(
@@ -460,10 +496,21 @@ export function GuidanceRanges({
       {axis > 0 && (
         /* Ölçü sınırı: kart tam genişlikte olduğunda bu açıklama satır
            başına 104 karaktere çıkıyordu (ölçüldü). Metin kartın altında
-           tek blok hâlinde duruyor, kısıtlayacak bir komşusu yok. */
-        <p className="-mt-1 max-w-[62ch] text-tiny text-muted">
-          {axisNote.replace("{value}", formatPercent(axis * 100))}
-        </p>
+           tek blok hâlinde duruyor, kısıtlayacak bir komşusu yok.
+           KATLANIR (24 Eylül). Altı satırlık bu paragraf (1440'ta 99
+           piksel, telefonda sekiz satır) kartın boyunu sürüyordu ve kart
+           boyu yan taraftaki gelir grafiğini 920 piksele geriyordu —
+           sütunları eninden uzun bir grafik. Açıklama bir kez okunacak bir
+           şey; adı görünür, metni bir dokunuş ötede. */
+        <details className={cn(styles.axisNote, "-mt-1 text-tiny text-muted")}>
+          <summary className="min-h-11 sm:min-h-0">
+            {howToRead}
+            <CaretDown aria-hidden size={12} weight="bold" />
+          </summary>
+          <p className="mt-1.5 max-w-[62ch]">
+            {axisNote.replace("{value}", formatPercent(axis * 100))}
+          </p>
+        </details>
       )}
 
       <ChartFooter stats={footer} locale={locale} />

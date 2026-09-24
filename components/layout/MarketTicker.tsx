@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
+import { INDEX_EVENT, type IndexTickerPatch } from "@/components/today/index-event";
 import { Pause, Play } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +22,8 @@ import { cn } from "@/lib/utils";
  */
 
 export type TickerItem = {
+  /** Canlı yamanın anahtarı (endeks sembolü); yoksa öğe yamalanmaz. */
+  id?: string;
   label: string;
   value: string;
   /** Yön rengi için; null ise nötr yazılır. */
@@ -84,15 +88,68 @@ function paginate(groups: TickerGroup[], wide: boolean): Page[] {
   return pages;
 }
 
+/** Ana sayfanın kahramanı — endeksleri zaten büyük puntoyla gösteren blok. */
+const HERO_ID = "piyasa-ozeti";
+
 export function MarketTicker({
-  groups,
+  groups: initialGroups,
   labels,
+  skipGroups = [],
 }: {
   groups: TickerGroup[];
+  /**
+   * Kahraman görünürdeyken döngüden çıkan gruplar. Ana sayfanın ilk
+   * ekranında dört endeks iki kez duruyordu: kahramanın kartlarında 26
+   * puntoyla ve hemen altta şeritte. Kahraman ekrandayken şerit tahvil ve
+   * kurla başlıyor; kahraman kaydırılıp gidince tam döngüye dönüyor.
+   * Kahramanı olmayan sayfalarda hiçbir şey değişmiyor.
+   */
+  skipGroups?: string[];
   /** Duraklatma düğmesinin erişilebilir adı — iki durumu da taşır. */
   labels: { pause: string; resume: string };
 }) {
   const [page, setPage] = useState(0);
+  const pathname = usePathname();
+  /* Kartlar tazelendikçe gelen dizeler (`IndexLive`); ilk paket sunucudan. */
+  const [patch, setPatch] = useState<IndexTickerPatch>({});
+  const [heroInView, setHeroInView] = useState(false);
+  const skipKey = skipGroups.join("|");
+
+  useEffect(() => {
+    const onPatch = (event: Event) => {
+      const detail = (event as CustomEvent<IndexTickerPatch>).detail;
+      if (detail) setPatch(detail);
+    };
+    window.addEventListener(INDEX_EVENT, onPatch);
+    return () => window.removeEventListener(INDEX_EVENT, onPatch);
+  }, []);
+
+  useEffect(() => {
+    const hero = document.getElementById(HERO_ID);
+    if (!hero || skipKey === "" || !("IntersectionObserver" in window)) {
+      const id = window.setTimeout(() => setHeroInView(false), 0);
+      return () => window.clearTimeout(id);
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      setHeroInView(entry.isIntersecting);
+      setPage(0);
+    });
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, [pathname, skipKey]);
+
+  const groups = useMemo(
+    () =>
+      initialGroups
+        .filter((group) => !(heroInView && skipKey.split("|").includes(group.key)))
+        .map((group) => ({
+          ...group,
+          items: group.items.map((item) =>
+            item.id && patch[item.id] ? { ...item, ...patch[item.id] } : item,
+          ),
+        })),
+    [initialGroups, heroInView, skipKey, patch],
+  );
   const [visible, setVisible] = useState(true);
   // Sunucu geniş varsayar; dar ekranda ilk ölçümde daralır. CSS ile gizlemek
   // işe yaramıyor — gizlenen değerler döngüde hiç sıra alamıyor.

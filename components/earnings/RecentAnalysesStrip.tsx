@@ -68,7 +68,7 @@ export async function RecentAnalysesStrip({
             zemininde 4,67:1, muted 4,56:1 — ikisi de AA geçiyor, ama biri
             bandın parçası gibi okunuyor). Punto ve harf aralığı DEĞİŞMEDİ:
             rol hâlâ künye, yalnızca aidiyeti düzeldi. */}
-        <p className="plate whitespace-nowrap text-primary-ink tracking-[0.09em]">
+        <p className="plate whitespace-nowrap text-primary-ink">
           {t.analysis.recentStrip}
         </p>
         {/* Mobilde "Tümü" etiketle aynı satırda: altına inince şerit üç

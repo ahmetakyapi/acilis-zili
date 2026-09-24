@@ -850,12 +850,20 @@
     letter-spacing: -0.02em;
   }
 
-  /* Küçük başlık / kicker — 10.5–11px, seyrek aralık */
+  /* Küçük başlık / kicker — 10–11px.
+     BÜYÜK HARFE ÇEVRİLMİYOR (24 Eylül). `.plate` bir süre
+     `text-transform: uppercase` taşıdı ve bu, sitenin "CSS ile büyük harf
+     yok" kuralını her künyede — GuideHint etiketleri başta — deliyordu:
+     tarayıcı Türkçe metni `i → I` diye çeviriyor, `İ` değil. Sözlükteki
+     değerler zaten Title Case yazılı; künye onları olduğu gibi basar.
+     Aralık 0.1em'den 0.02em'e indi: seyrek aralık büyük harf dizisi için
+     vardı, küçük harfli bir kelimede harfleri birbirinden koparıyordu.
+     Çağrı yerlerindeki `tracking-[0.09em]` ekleri de bu yüzden kaldırıldı;
+     aralığı artık tek yerden bu sınıf verir. */
   .plate {
     font-size: 0.6875rem;
     font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
     color: var(--text-muted);
   }
 
@@ -1615,9 +1623,18 @@
       degradeye eziliyordu.
    Çıkış yolu `data-ink="plain"`: yön rengi taşıyan ya da birden çok
    satıra yayılan başlık bunu yazar ve kendi rengiyle basılır. Punto
-   sınıfı 16 pikselin altını söyleyen başlık (ve açıkça `display-ink-tight`
-   isteyen) sıkı degradeyi alır; onun açık ucu #1e6fbe, 14 piksel yarı
-   kalın metinde AA'yı geçen en açık ton. */
+   sınıfı 16 pikseli ve altını söyleyen başlık sıkı degradeyi alır; onun
+   açık ucu #1e6fbe, 14 piksel yarı kalın metinde AA'yı geçen en açık ton.
+
+   SEÇİCİ PUNTOYA BAKAR, `display-ink-tight` SINIFINA DEĞİL. Sınıf bir
+   dönem listedeydi ve okuma sayfalarını değiştirdi: rehber ve mercek
+   gövdesinin `##` başlıkları (ArticleBody, `text-title sm:text-heading`,
+   24-30 piksel) o sınıfı taşıyor, bu kural onu hep ezdiği için geniş
+   degradeyle basılıyorlardı ve okuma sayfası o hâliyle bitirildi. Sınıfı
+   saymak 30 piksellik başlığa küçük punto degradesini vermek demekti
+   (/rehber/endeks'te ölçüldü: dört h2'nin dördü de iki duraklıya
+   dönmüştü). Küçük başlıkların hepsi zaten bir punto sınıfı taşıyor
+   (`text-read`/`text-base`), liste onları yakalıyor. */
 @supports (background-clip: text) or (-webkit-background-clip: text) {
   main h1:not([data-ink="plain"]),
   main h2:not(.plate):not([data-ink="plain"]) {
@@ -1627,7 +1644,7 @@
     -webkit-text-fill-color: transparent;
     padding-bottom: .06em;
   }
-  main h2:is(.text-nano, .text-tiny, .text-xs, .text-small, .text-sm, .text-base, .text-read, .text-lead, .display-ink-tight):not(.plate):not([data-ink="plain"]) {
+  main h2:is(.text-nano, .text-tiny, .text-xs, .text-small, .text-sm, .text-base, .text-read, .text-lead):not(.plate):not([data-ink="plain"]) {
     background-image: var(--display-gradient-tight);
   }
   main h1 { width: fit-content; max-width: 100%; }

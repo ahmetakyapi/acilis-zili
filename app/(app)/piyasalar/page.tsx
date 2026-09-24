@@ -44,6 +44,7 @@ import {
   formatPercentPlain,
   formatPrice,
   staleMark,
+  NO_VALUE,
 } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
@@ -370,7 +371,7 @@ async function IndexCards({
                   )}
                 </>
               ) : (
-                <p className="mt-2 text-xs text-muted">—</p>
+                <p className="mt-2 text-xs text-muted">{NO_VALUE}</p>
               )}
             </Panel>
           </Link>
@@ -1041,7 +1042,7 @@ function MembersTable({
       >
         <table className="w-full text-sm sm:min-w-[680px]">
           <thead>
-            <tr className="border-b border-line text-left text-nano uppercase tracking-[0.08em] text-muted">
+            <tr className="border-b border-line text-left text-nano text-muted">
               <th className="hidden w-10 px-4 py-2.5 font-semibold sm:table-cell sm:px-5">
                 #
               </th>
@@ -1142,7 +1143,7 @@ function MembersTable({
                               : "text-muted",
                         )}
                       >
-                        {quote ? formatPercent(quote.changePct, locale) : "—"}
+                        {quote ? formatPercent(quote.changePct, locale) : NO_VALUE}
                       </span>
                       {quote && (
                         <span
@@ -1180,7 +1181,7 @@ function MembersTable({
                       sm+ ekranda satır gizlenir, sütun geri gelir. */}
                   <td className="px-3 py-2.5 pr-4 text-right sm:pr-3">
                     <span className="numeral block font-bold text-strong">
-                      {quote ? formatPrice(quote.price, locale) : "—"}
+                      {quote ? formatPrice(quote.price, locale) : NO_VALUE}
                     </span>
                     {row.marketCap && (
                       <span className="numeral mt-0.5 block text-tiny leading-[14px] text-muted sm:hidden">
@@ -1196,13 +1197,13 @@ function MembersTable({
                   >
                     {row.marketCap
                       ? formatMoneyCompact(row.marketCap, locale)
-                      : "—"}
+                      : NO_VALUE}
                   </td>
                   {showContribution && (
                     <td className="numeral hidden px-3 py-2 text-right text-soft sm:table-cell sm:pr-5">
                       {row.contribution !== null
                         ? approxPoints(row.contribution, locale)
-                        : "—"}
+                        : NO_VALUE}
                     </td>
                   )}
                 </tr>

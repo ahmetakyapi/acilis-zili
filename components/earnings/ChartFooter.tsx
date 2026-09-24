@@ -1,4 +1,4 @@
-import { cn, titleCaseLabel } from "@/lib/utils";
+import { cn, tieFigures, titleCaseLabel } from "@/lib/utils";
 import styles from "@/components/earnings/EarningsReport.module.css";
 
 /**
@@ -22,6 +22,9 @@ export type FooterStat = {
   note?: string | null;
   tone?: string | null;
 };
+
+/** Değer bir DEĞİŞİM mi — ok ya da işaretle başlıyor mu. */
+const SIGNED_VALUE = /^\s*[▲▼+−-]/;
 
 export function ChartFooter({
   stats,
@@ -66,18 +69,25 @@ export function ChartFooter({
           </dt>
           {/* Değerin KENDİSİ tona boyanıyor, karnedeki gibi: "▲ %372"
               yeşil, "▼ %32" kırmızı. Renk yalnız kalmasın diye ok işareti
-              değerin metnine ait — ton yoksa nötr koyu yazı. */}
+              değerin metnine ait — ton yoksa nötr koyu yazı.
+              YALNIZCA İŞARETLİ DEĞİŞİMDE (24 Eylül). Kayıt `tone`u düzey
+              değerlerine de veriyordu ve "4,65 Mr $", "%77 · 24,4 Mn $",
+              "10 Adet" yeşil basılıyordu: yeşil burada yukarı demek, bir
+              düzey yukarı gitmez. Ok ya da işaretle (▲ ▼ + −) başlamayan
+              değer tonu ne olursa olsun koyu. */}
           <dd
             className={cn(
               "numeral mt-px flex flex-wrap items-baseline gap-x-1.5 text-read font-bold",
-              stat.tone === "up"
+              SIGNED_VALUE.test(stat.value) && stat.tone === "up"
                 ? "text-up"
-                : stat.tone === "down"
+                : SIGNED_VALUE.test(stat.value) && stat.tone === "down"
                   ? "text-down"
                   : "text-strong",
             )}
           >
-            {stat.value}
+            {/* Birim sayıdan kopmuyor: 1024'te "26,58–26,63 Mr" satır
+                sonunda kalıp "$" alt satıra tek başına iniyordu. */}
+            <span>{tieFigures(stat.value)}</span>
             {stat.note && (
               <span className="text-tiny font-semibold text-muted">
                 {titleCaseLabel(stat.note, locale)}

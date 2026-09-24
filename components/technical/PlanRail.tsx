@@ -89,10 +89,12 @@ export function PlanRail({
         {/* Çapanın sayısı dar rayda düşüyor (CSS, `.riskAnchorValue`):
             320'de künye iki satıra sarıyordu ve düşen sayı bir satır
             yukarıda alım aralığının üst ucu olarak zaten yazılı. Ad
-            kalıyor — yüzdenin nereden ölçüldüğü söylenmeden eksik. */}
+            kalıyor — yüzdenin nereden ölçüldüğü söylenmeden eksik.
+            Noktadan önceki boşluk bölünmez: künye sarınca ikinci satır
+            noktayla başlamasın (sayfa künyesiyle aynı karar, page.tsx). */}
         <span className={styles.riskAnchor}>
           {t.technical.riskAnchorLabel}
-          <span className={styles.riskAnchorValue}> · {money(rr.anchor)}</span>
+          <span className={styles.riskAnchorValue}>{"\u00A0· "}{money(rr.anchor)}</span>
         </span>
       </>
     );

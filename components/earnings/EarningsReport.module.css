@@ -1,3 +1,20 @@
+/* BİLANÇO DETAYI — /bilancolar/[sembol]/[dönem].
+
+   TEK KATMAN, TEK SAHİP (24 Eylül). Dosyanın sonunda katmansız, tek satıra
+   sıkıştırılmış ikinci bir blok vardı (eski 944-992. satırlar) ve üstteki
+   kuralların yarısını eziyordu: `.analysisGrid` sayfanın kayıtlı sütun
+   kuralını (TSX'teki üçlü) iki sütuna bastırıyordu, `.cover::before`
+   halkası ve `.metricCard` degradesi ikinci kez tanımlanıyordu. Hangi
+   kuralın geçerli olduğu ancak dosyanın sonuna kadar okununca
+   anlaşılıyordu. O blok sahibi olan kurallara katıldı; her seçici artık
+   bir kez yazılı.
+
+   DERİNLİK TONLA. Kapakta köşeden açılan radyal bir ışıma (::after), 650
+   piksellik bir halka (::before; 1440'ta gelir çubuklarının, 390'da öncü
+   ölçü notlarının üstünden geçiyordu), son çubuğun altında bir parıltı,
+   ölçü kartlarında degrade ve üzerine gelince kalkış vardı. Tema
+   "efekt yok: glow, blur" diyor; hepsi kalktı, ayrım zemin tonuyla. */
+
 .report {
   display: flex;
   flex-direction: column;
@@ -9,10 +26,10 @@
   scroll-margin-top: 10rem;
 }
 
+/* ---- Kapak ---- */
+
 .cover {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
   /* İlk sonuçlu kapak 1440px'te 598px ölçüldü. Dolgu ve bant aralıkları
      içerik ölçeğini küçültmeden daraltıldı; AVGO ve SNOW son ölçümü 549px.
      Dönem için ayrılan eski boş alan sonuçlar eklendiğinde geri oluşmaz. */
@@ -21,75 +38,6 @@
   background: var(--premium-surface, var(--surface-solid));
   box-shadow: var(--premium-shadow);
   gap: 1.4rem;
-}
-
-.cover::before {
-  position: absolute;
-  z-index: -1;
-  inset: 0 0 23% 42%;
-  content: "";
-  background-image:
-    linear-gradient(var(--line-soft) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
-  background-size: 3.4rem 3.4rem;
-  mask-image: linear-gradient(110deg, transparent, var(--text-strong));
-  opacity: 0.8;
-}
-
-.cover::after {
-  position: absolute;
-  z-index: -1;
-  top: -15rem;
-  right: -6rem;
-  width: 40rem;
-  height: 40rem;
-  border-radius: 50%;
-  content: "";
-  background: radial-gradient(circle, var(--primary-wash), transparent 65%);
-  pointer-events: none;
-}
-
-.coverEdition {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--line);
-}
-
-.coverEyebrow,
-.coverSerial {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  color: var(--text-muted);
-  font-size: 0.68rem;
-  font-weight: 650;
-  letter-spacing: 0.1em;
-}
-
-.coverEyebrow {
-  color: var(--primary-ink);
-}
-
-.coverSerial {
-  padding: 0.3rem 0.6rem;
-  border: 1px solid var(--primary-faint);
-  border-radius: 0.4rem;
-  background: var(--primary-tint);
-  color: var(--primary-ink);
-  letter-spacing: 0.035em;
-}
-
-.editionMark {
-  display: inline-block;
-  width: 0.48rem;
-  height: 0.48rem;
-  background: currentColor;
-  box-shadow: 0.35rem -0.2rem 0 color-mix(in srgb, var(--primary) 28%, transparent);
-  margin-right: 0.25rem;
 }
 
 .companyTitle {
@@ -102,12 +50,55 @@
   overflow-wrap: anywhere;
 }
 
+.companyTitle[data-long] {
+  font-size: clamp(1.6rem, 3.4vw, 3.2rem);
+  letter-spacing: -0.05em;
+}
+
+.coverIdentity {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.coverIdentity > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* SONUÇLAR GÖRÜŞÜN ÖNÜNDE — yalnızca 640 ve üstünde (gerekçe sayfadaki
+   VerdictStrip künyesinde). DOM sırası telefonun sırası. */
+@media (min-width: 640px) {
+  .coverIdentity {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  .coverResults { order: 1; }
+  .verdictPanel { order: 2; }
+  .coverFacts { order: 3; }
+
+  /* Görüş şeridinin alt çizgisi ölçü katmanını zaten ayırıyor; ölçünün
+     kendi üst çizgisi 22 piksel altında ikinci bir çizgi çiziyordu. */
+  .cover .coverFacts {
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+/* Sonuç kutusu çukur zeminde. Degrade (`--primary-tint` → saydam) bir
+   ışımaydı; kutuyu sayfadan ayıran şey ton ve saç teli. */
 .coverResults {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   align-items: center;
   gap: clamp(1.5rem, 3vw, 3rem);
-  padding: 0.65rem 0 0.25rem;
+  padding: 24px;
+  border: 1px solid var(--line-soft);
+  border-radius: 18px;
+  background: var(--surface-sunken);
 }
 
 .coverResults[data-has-trend="false"],
@@ -128,17 +119,31 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: auto auto auto;
-  column-gap: 1.5rem;
+  column-gap: 24px;
   row-gap: 0.65rem;
   min-width: 0;
 }
 
 .coverLeadFacts > div {
+  position: relative;
   display: grid;
   grid-template-rows: subgrid;
   grid-row: span 3;
   min-width: 0;
   justify-items: start;
+}
+
+/* İki ölçü arasındaki saç teli ARALIĞIN ORTASINDA, ikinci ölçünün
+   dolgusunda değil: dolgu ikinci sayıyı ızgara çizgisinden 24 piksel
+   içeri itiyor ve altındaki rayla 6 piksellik bir yakın ıska
+   bırakıyordu (503 / 509, 1440). */
+.coverLeadFacts > div + div::before {
+  position: absolute;
+  inset-block: 0;
+  left: -12px;
+  width: 1px;
+  content: "";
+  background: var(--primary-faint);
 }
 
 .coverLeadFacts dt {
@@ -149,7 +154,7 @@
 
 .coverLeadFacts dd:not(.coverMetricNote) {
   margin-top: 0;
-  font-size: clamp(2.1rem, 3.65vw, 3.55rem);
+  font-size: clamp(30px, 3.4vw, 49px);
   font-weight: 550;
   letter-spacing: -0.065em;
   line-height: 1.12;
@@ -171,13 +176,6 @@
 
 .coverTrend {
   min-width: 0;
-  padding-left: 1.75rem;
-  border-left: 1px solid var(--line);
-}
-
-.coverResults[data-has-metrics="false"] .coverTrend {
-  padding-left: 0;
-  border-left: 0;
 }
 
 .coverTrend figcaption {
@@ -214,6 +212,7 @@
 }
 
 .coverTrendPlot {
+  --trend-track: 90px;
   display: flex;
   gap: clamp(0.6rem, 1.1vw, 1.1rem);
   margin-top: 1.75rem;
@@ -229,16 +228,29 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: 4.6rem;
+  height: var(--trend-track);
   border-bottom: 1px solid var(--line-strong);
 }
 
+/* EKSİK ÇEYREK: 12 piksellik bir boşluk sütunu ve ortasında kesikli bir
+   kırılma — gerekçe components/earnings/quarter-gaps.ts. */
+.coverTrendGap {
+  flex: 0 0 12px;
+  height: var(--trend-track);
+  background: repeating-linear-gradient(to bottom, var(--line-strong) 0 4px, transparent 4px 8px) center / 1px 100% no-repeat;
+}
+
+/* ÇUBUK `--bar` İLE, DEGRADEYLE DEĞİL. Eski çubuklar `--primary-faint` →
+   `--primary-tint` degradesiydi ve çevresine karşı 1,09-1,32:1'e
+   düşüyordu (açık tema, piksel örneği); tema dosyası tam bu yüzden
+   `--bar` token'ını koymuştu (yüzey tonundan çizilen çubuk gece 1,35:1'di).
+   En yeni çeyrek düz `--primary`; altındaki parıltı kalktı. */
 .coverTrendBar {
   position: relative;
   width: 100%;
-  max-width: 3.7rem;
-  border-radius: 0.3rem 0.3rem 0 0;
-  background: var(--primary-faint);
+  max-width: 48px;
+  border-radius: 7px 7px 2px 2px;
+  background: var(--bar);
   transform-origin: center bottom;
 }
 
@@ -278,21 +290,22 @@
 }
 
 .coverFacts {
-  display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 2fr);
   gap: 1.5rem;
-  align-items: center;
-  padding-top: 1.25rem;
 }
 
-.reportClose > p:last-child > span:first-child {
+.reportClose > p:nth-child(2) > span:first-child {
   font-size: clamp(1.8rem, 3vw, 2.55rem);
 }
 
+/* Fiyat merdiveni kapanış sayısının altında, aynı hücrede. */
+.priceLadder {
+  margin-top: 1rem;
+}
+
 .coverFacts > dl {
-  padding: 0 0 0 1.5rem;
+  padding: 1rem 0 0;
   background: transparent;
-  border-left: 1px solid var(--line);
+  border-top: 1px solid var(--line-soft);
   border-radius: 0;
 }
 
@@ -301,18 +314,7 @@
   font-size: 1.2rem;
 }
 
-.reportBody,
-.figuresSection,
-.readingSection {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  gap: clamp(1.25rem, 2.5vw, 2rem);
-}
-
-.reportBody {
-  gap: clamp(2rem, 4vw, 3.5rem);
-}
+/* ---- Görüş şeridi ---- */
 
 .verdictPanel {
   position: relative;
@@ -322,10 +324,6 @@
   gap: 1rem 2rem;
   padding: 1.25rem 0;
   border-block: 1px solid var(--line);
-}
-
-.verdictPanel > span {
-  display: none;
 }
 
 .verdictScore {
@@ -341,21 +339,34 @@
   gap: 0.6rem;
 }
 
-.verdictDecision > span:last-child {
+.verdictWord {
   font-size: 1.8rem;
   letter-spacing: -0.05em;
 }
 
-.verdictHeadline {
+.headlineBlock {
   min-width: 0;
   grid-column: 1;
-  max-width: 76ch;
+}
+
+/* ÖLÇÜ `em` İLE, `ch` İLE DEĞİL. Schibsted'in "0"ı geniş (15 pikselde
+   9,3) ve metnin ortalama harfi ondan çok dar: 76ch 709 piksele, satır
+   başına 93 karaktere çözülüyordu; 60ch bile 77 verdi. 32em, harf
+   genişliğine bakmadan satırı ~72 karakterde tutuyor (ölçüldü; bu
+   sayfadaki bütün uzun metin aynı birimle sınırlı). */
+.verdictHeadline {
+  max-width: 32em;
   font-size: 0.94rem;
   line-height: 1.75;
   letter-spacing: -0.025em;
   color: var(--text-strong);
   font-weight: 550;
   text-wrap: pretty;
+}
+
+/* Düğme yalnızca telefonda — gerekçe ClampedHeadline. */
+.headlineToggle {
+  display: none;
 }
 
 .verdictTarget {
@@ -365,24 +376,18 @@
   grid-column: 2;
   grid-row: 1 / 3;
   max-width: 15rem;
-  gap: 0.65rem;
+  gap: 0.45rem;
   padding-left: 1.5rem;
   border-left: 1px solid var(--primary-faint);
 }
 
-.verdictTarget > span:nth-child(2) {
+.targetValue {
   font-size: 1.7rem;
 }
 
 .verdictPanel[data-has-target="false"] { grid-template-columns: minmax(0, 1fr); }
 
-@media (min-width: 1101px) {
-  .verdictPanel { grid-template-columns: auto minmax(0, 1fr) minmax(0, 12rem); gap: 1.5rem; }
-  .verdictPanel[data-has-target="false"] { grid-template-columns: auto minmax(0, 1fr); }
-  .verdictScore { flex-direction: column; align-items: flex-start; }
-  .verdictHeadline { grid-column: 2; grid-row: 1; }
-  .verdictTarget { grid-column: 3; grid-row: 1; }
-}
+/* ---- Rakamlar ---- */
 
 /* Bölüm başlığı artık paylaşılan `ChapterHeading` (ölçüsü globals.css →
    `.chapter-heading`). Buradaki `.chapterHeading` kendi ölçüsünü
@@ -394,12 +399,24 @@
   margin-bottom: 1.5rem;
 }
 
+.reportBody,
+.figuresSection,
+.readingSection {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.reportBody {
+  gap: clamp(2rem, 4vw, 3.5rem);
+}
+
 /* KARTLAR DA AYNI ÜÇ SATIRI PAYLAŞIYOR (kapaktaki gerekçenin aynısı).
    Kart içinde etiket, sayı ve künye vardı; etiket iki satıra sardığında o
    kartın sayısı komşularından 18-19 piksel aşağıda kalıyordu (ölçüldü).
    Zincir iki kademeli: `li` ana ızgaranın üç satırını alıyor, kartın
-   kendisi de `li`den. Aradaki `SpotlightCard` parlaması mutlak konumlu,
-   yani ızgara satırı tutmuyor.
+   kendisi de `li`den.
    Satır aralığı kart İÇİNDE de geçerli olduğu için sayının eski dolgusu
    (1,4rem/0,75rem) kalktı: boşluk artık tek yerden, `gap`ten geliyor. */
 .metricGrid {
@@ -428,6 +445,7 @@
   min-width: 0;
 }
 
+/* Düz kart: degrade ve üzerine gelince kalkış kalktı (dosya başındaki not). */
 .metricCard {
   display: grid;
   grid-template-rows: subgrid;
@@ -437,8 +455,6 @@
   border: 1px solid var(--line);
   border-radius: 1.1rem;
   background: var(--premium-surface, var(--surface-solid));
-  box-shadow: var(--premium-shadow);
-  transition: transform 240ms, border-color 240ms, box-shadow 240ms;
 }
 
 .metricTop {
@@ -455,10 +471,10 @@
   font-weight: 600;
 }
 
-
 .metricValue {
   color: var(--text-strong);
   font-size: clamp(1.8rem, 3vw, 2.75rem);
+  font-weight: 550;
   letter-spacing: -0.065em;
   line-height: 1.1;
   align-self: start;
@@ -484,10 +500,6 @@
   grid-column: span 6;
 }
 
-.metricGrid[data-count="6"] .metricItem:nth-child(-n + 2) .metricCard {
-  background: linear-gradient(120deg, var(--premium-surface, var(--surface-solid)) 55%, var(--primary-tint));
-}
-
 .metricGrid[data-count="6"] .metricItem:nth-child(-n + 2) .metricValue {
   font-size: clamp(2.3rem, 4.5vw, 4rem);
   padding-top: 1.3rem;
@@ -506,12 +518,22 @@
   gap: 0.9rem;
 }
 
+/* PANEL DÜZEYİ: --text-title, 700. Sayfada aynı düzeydeki h2'ler altı
+   ayrı ölçüdeydi (40,8 · 32 · 20,8 · 16,8 · 13 · 11); artık üç düzey var:
+   bölüm (`ChapterHeading`), panel (bu ölçü: grafikler, Özet, Detaylı
+   Değerlendirme, üç madde kartı, yaklaşan bilançolar) ve etiket
+   (`.plate`: Genel Görüş). */
+.chartHead h2,
+.panelHead h2,
+.pointsCard h2 {
+  font-size: var(--text-title);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+}
+
 .chartHead h2 {
   max-width: 27ch;
-  font-size: clamp(1rem, 1.6vw, 1.3rem);
-  font-weight: 600;
-  line-height: 1.35;
-  letter-spacing: -0.03em;
 }
 
 .revenuePlot {
@@ -527,6 +549,7 @@
   height: 100%;
 }
 
+/* Sütunun üstündeki beyaz parlama degradesi kalktı; çerçeve kaldı. */
 .revenueBar {
   position: relative;
   overflow: hidden;
@@ -538,14 +561,69 @@
   position: absolute;
   inset: 0;
   content: "";
-  background: linear-gradient(90deg, transparent 60%, color-mix(in srgb, var(--on-primary) 15%, transparent));
   border: 1px solid var(--line-soft);
   border-radius: inherit;
   pointer-events: none;
 }
 
+/* EKSİK ÇEYREK SÜTUNU — kapaktakiyle aynı kırılma. */
+.revenueGap {
+  background: repeating-linear-gradient(to bottom, var(--line-strong) 0 4px, transparent 4px 8px) center / 1px 100% no-repeat;
+}
+
+/* OKUMA SATIRI: grafiğin üstünde tek satır. Varsayılan en yeni çeyrek;
+   imleç ya da odak bir sütuna gelince o sütunun satırı görünür, öteki
+   gizlenir. Yalnızca CSS: satır her sütunun İÇİNDE ve mutlak konumla
+   sütun şeridinin üstündeki ayrılmış yere (`.readout`) iniyor. Sütun
+   odaklanabilir (`tabIndex=0`); dokunmatikte dokunuş odak veriyor,
+   dışarı dokunmak onu bırakıyor. */
+.readout {
+  height: 1.25rem;
+}
+
+.readoutLine {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms var(--ease-brand);
+}
+
+.revenueBars > li[data-default] > .readoutLine {
+  opacity: 1;
+}
+
+.revenueBars:has(> li[data-bar]:is(:hover, :focus)) > li[data-default] > .readoutLine {
+  opacity: 0;
+}
+
+.revenueBars > li[data-bar]:is(:hover, :focus) > .readoutLine {
+  opacity: 1;
+}
+
+.revenueBars > li[data-bar] {
+  outline: none;
+}
+
+.revenueBars > li[data-bar]:focus-visible > div {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (max-width: 639px) {
+  .readout {
+    height: 2.4rem;
+  }
+}
+
+/* Öngörü satırları: dikey dolgu daraldı. Öngörü kartı yanındaki gelir
+   grafiğinin boyunu sürüyor ve 1440'ta ikisi 920 piksele gerilmişti —
+   gerilen alanı üretmeyen bir kartın yüksekliği. */
 .guidanceRow {
-  padding: 0.8rem 0 1rem;
+  padding: 0.55rem 0 0.7rem;
   border-bottom: 1px solid var(--line-soft);
 }
 
@@ -557,6 +635,31 @@
   font-size: 1.25rem;
   letter-spacing: -0.04em;
   white-space: normal;
+}
+
+.axisNote > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  color: var(--text-body);
+}
+
+.axisNote > summary::-webkit-details-marker {
+  display: none;
+}
+
+.axisNote > summary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.axisNote[open] > summary svg {
+  rotate: 180deg;
 }
 
 .chartFooter {
@@ -575,12 +678,37 @@
   letter-spacing: -0.035em;
 }
 
+/* DEĞERLER AYNI HATTA. Etiketlerden biri iki satıra sardığında o hücrenin
+   değeri 16 piksel aşağıda kalıyordu (ADBE, 2367 / 2367 / 2351). Hücre
+   dt + dd iki satırını ANA ızgaradan alıyor (kapaktaki öncü ölçülerin
+   kalıbı); etiket kaç satır olursa olsun değerler aynı satırda. */
+@media (min-width: 640px) {
+  .chartFooter {
+    grid-auto-rows: auto;
+  }
+
+  .chartFooter > div {
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+  }
+
+  .chartFooter dd {
+    align-self: start;
+  }
+}
+
+/* CEO şeridi: radyal ışıma yerine düz zemin ve 3 piksellik sol çizgi.
+   Sağ üstteki dev tırnak işareti (140 piksel, ui-serif) kalktı — sayfanın
+   tek serif karakteriydi ve dar ekranda konu çiplerinin altına giriyordu;
+   alıntı olduğunu blockquote ve sol çizgi söylüyor. */
 .ceoQuote {
-  padding: 2.5rem 2rem;
-  border-radius: 0;
+  padding: 40px 32px;
   border: 0;
-  border-top: 1px solid var(--line-strong);
-  border-bottom: 1px solid var(--line-strong);
+  border-block: 1px solid var(--primary-faint);
+  border-left: 3px solid var(--primary);
+  border-radius: 0;
   background: transparent;
 }
 
@@ -594,11 +722,7 @@
   line-height: 1.48;
 }
 
-.ceoQuote > span:first-child {
-  top: -1.8rem;
-  right: 12%;
-  font-size: 18rem;
-}
+/* ---- Özet ve Değerlendirme ---- */
 
 .summaryPanel,
 .analysisPanel {
@@ -609,6 +733,17 @@
 
 .summaryPanel {
   border-top: 3px solid var(--primary);
+}
+
+/* Değerlendirme paneli yüzeysiz: bölümler zaten saç teliyle ayrılıyor ve
+   Özet'in kutusunun altında ikinci bir kutu metni kutu içinde kutu
+   gibi gösteriyordu. */
+.analysisPanel {
+  background: transparent;
+  padding-inline: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .panelHead {
@@ -625,46 +760,104 @@
 
 .panelHead h2 {
   white-space: normal;
-  font-size: clamp(1.35rem, 2.5vw, 2rem);
-  line-height: 1.2;
-  letter-spacing: -0.045em;
-  font-weight: 600;
 }
 
-.summaryPanel > div:last-child > p {
+/* Sütun 600 piksel (1440) ve satır başına 78 karakter tutuyordu; paragraf
+   32em'de duruyor (birim notu `.verdictHeadline`te), artan pay sütun
+   aralığına ekleniyor. */
+.summaryProse > p {
+  max-width: 32em;
   font-size: 0.94rem;
   line-height: 1.8;
 }
 
-.summaryPanel > div:last-child > p:first-child {
+/* GİRİŞ PARAGRAFI İKİ SÜTUNUN ÜSTÜNDE. Tek başına birinci sütunda
+   duruyordu ve ikinci sütun ondan 150 piksel aşağıda bitiyordu (1440;
+   1024'te 197): girişin iri puntosu sütunu uzatıyor, dengelemeyi
+   bozuyordu. Tam genişlikte ve 32em'de, sütunlar ondan sonra başlıyor. */
+.summaryProse > p:first-child {
+  column-span: all;
+  max-width: 32em;
+  margin-bottom: 1.25rem;
   font-size: 1.14rem;
   line-height: 1.65;
   letter-spacing: -0.025em;
 }
 
+@media (min-width: 1101px) {
+  .summaryProse > p:first-child {
+    font-size: 1.35rem;
+  }
+}
+
+/* ---- Bölümler: TEK KURAL, CSS'TE ----
+   Sütun sayısı bir dönem TSX'te bölüm sayısına göre seçiliyordu (3'e
+   bölünmüyorsa 2) ve dosyanın sonundaki katmansız bir kural onu her
+   koşulda iki sütuna eziyordu: 41 analizin 39'unda beş bölüm var ve
+   beşinci bölüm 1440'ta 618×332 piksellik boş bir hücrenin yanında tek
+   başına duruyordu.
+   Artık 1101 ve üstünde altı parçalı bir ızgara: bölümler üçer üçer,
+   son satırda iki bölüm kalırsa ikisi yarımşar genişlikte (5 → 3 + 2),
+   bir kalırsa bütün ızgara ikişer (4 → 2 + 2, kayıtlı "dört → iki
+   sütun" kararı). Hiçbir sayıda boş hücre yok. Altında tek sütun ve
+   paragraf 32em'de: 768'de iki sütun satır başına 40-43 karaktere
+   iniyordu. */
+.analysisGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px 40px;
+}
+
 .analysisItem {
-  padding-top: 1.35rem;
+  position: relative;
+  padding: 24px 0 0 48px;
 }
 
 .analysisItem > span:first-child {
-  margin-bottom: 1rem;
-  font-size: 2.15rem;
+  position: absolute;
+  top: 28px;
+  left: 0;
+  font-size: 16px;
   line-height: 1;
-  letter-spacing: -0.06em;
-  font-weight: 450;
+  font-weight: 550;
+  letter-spacing: -0.025em;
 }
 
 .analysisItem h3 {
   margin-bottom: 0.85rem;
-  font-size: 1.1rem;
-  line-height: 1.45;
-  letter-spacing: -0.03em;
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.04em;
+  color: var(--primary-ink);
 }
 
 .analysisItem p {
-  font-size: 0.93rem;
-  line-height: 1.8;
+  max-width: 32em;
+  font-size: 15px;
+  line-height: 1.85;
 }
+
+@media (min-width: 1101px) {
+  .analysisGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .analysisItem {
+    grid-column: span 2;
+  }
+
+  .analysisItem:last-child:nth-child(3n + 2),
+  .analysisItem:nth-last-child(2):nth-child(3n + 1),
+  .analysisGrid:has(> .analysisItem:last-child:nth-child(3n + 1)) > .analysisItem {
+    grid-column: span 3;
+  }
+
+  .analysisItem:only-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---- İleriye Bakış ---- */
 
 .pointsGrid {
   gap: 1rem;
@@ -675,6 +868,10 @@
   min-width: 0;
 }
 
+/* Üç kart aynı düz yüzeyde; hangisinin ne olduğunu başlığın yön rengi ve
+   ikon karosu söylüyor. Kartlarda bir dönem `bg-up-wash/40` gibi yardımcı
+   sınıflar da yazılıydı ama bu kural onları eziyordu — iki sahip, tek
+   görünen sonuç. Yardımcılar kalktı. */
 .pointsCard {
   width: 100%;
   height: 100%;
@@ -690,12 +887,6 @@
   border-bottom: 1px solid var(--line);
 }
 
-.pointsCard h2 {
-  font-size: 1.05rem;
-  line-height: 1.3;
-  letter-spacing: -0.025em;
-}
-
 .pointsCard ol {
   gap: 1rem;
 }
@@ -709,6 +900,81 @@
   margin-top: 0.15rem;
 }
 
+/* 1100'E KADAR KART TEK SÜTUN, LİSTE İKİ. 768'de üç kart 229 piksel eninde
+   yan yanaydı: satır başına 22-30 karakter ve "Beklenen Gelişmeler"in
+   altında 219 piksel boşluk (dört madde, komşularında altı). */
+@media (min-width: 640px) and (max-width: 1100px) {
+  .pointsCard ol {
+    display: block;
+    columns: 2;
+    column-gap: 24px;
+  }
+
+  .pointsCard ol > li {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}
+
+/* BEKLENEN GELİŞMELER TARİHLİ BİR ZAMAN ÇİZGİSİ. Maddeler zaten tarihle
+   başlıyor ("Aralık 2026: …"); tarih ayrılıp çizginin üstüne yazılıyor,
+   tarihsiz madde düz kalıyor. */
+.timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-left: 1.25rem;
+}
+
+.timeline::before {
+  position: absolute;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  left: 3px;
+  width: 2px;
+  content: "";
+  background: var(--line);
+}
+
+.timeline > li {
+  position: relative;
+}
+
+.timeline > li::before {
+  position: absolute;
+  top: 0.4rem;
+  left: calc(-1.25rem);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  content: "";
+  background: var(--primary);
+}
+
+@media (min-width: 640px) and (max-width: 1100px) {
+  .timeline {
+    display: block;
+    columns: 2;
+    column-gap: 24px;
+  }
+
+  .timeline > li {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}
+
+.timelineFooter {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.pointsCard > ol:not(:last-child) {
+  margin-bottom: 1.25rem;
+}
+
 .reportFooter {
   padding-top: 1.5rem;
   margin-top: 0.75rem;
@@ -718,12 +984,17 @@
   gap: 0.35rem;
 }
 
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .metricCard:hover {
-    transform: translateY(-4px);
-    border-color: var(--primary-faint);
-    box-shadow: var(--premium-shadow-hover);
-  }
+/* Yapışkan bölüm çubuğu. Gölgesi kalktı (derinlik tonla). */
+.reportNav {
+  border-color: var(--line);
+  border-radius: 12px;
+}
+
+/* Sekmelerin önündeki "01 … 05" sayacı kalktı (23 Eylül): sıra
+   bildirmeyen bir süs — /teknik'teki "01" karosuyla aynı karar
+   (app/(app)/teknik/page.tsx) ve tasarım becerisinin §9.F maddesi. */
+.reportNav a[aria-current="location"] {
+  color: var(--primary-ink);
 }
 
 @supports (animation-timeline: view()) {
@@ -741,6 +1012,109 @@
   to { transform: scaleY(1); }
 }
 
+.scoreDial { overflow: visible; }
+
+/* ---- Geniş ekran: kapak TEK 12 sütunlu ızgarada ----
+   Her bant aynı ızgarayı kuruyor ve bantlar kapakla aynı içerik
+   genişliğinde; bu yüzden sütun çizgileri bantlar arasında birebir
+   örtüşüyor (subgrid gerekmiyor). Yerleşim:
+     kimlik 1-8 · fiyat 9-12
+     öncü ölçüler 1-4 / 5-8 · mini grafik 9-12
+     skor 1-2 · gerekçe 3-8 · hedef 9-12
+     fiyat merdiveni 1-4 · künye rayı 5-12
+   Sol kenarlar dört çizgiye iniyor (1, 3, 5, 9). Ray önce 7-12'ye
+   yerleşti ve beş hücre iki satıra sardı: rayın dibi 1440×900'de sabit
+   endeks şeridinin arkasına düşüyordu (≈920; şerit 863'te başlıyor).
+   Sekiz sütunda beş hücre tek satır. Bantların arasındaki
+   saç telleri ARALIĞIN ortasında (`left: -12px`): dolguyla içeri itilen
+   metin bir çizgiden 15-24 piksel sapıp yakın ıska oluyordu. */
+@media (min-width: 1101px) {
+  .cover {
+    padding: 2rem 2.5rem;
+  }
+
+  .coverIdentity,
+  .coverResults,
+  .verdictPanel,
+  .coverFacts {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+  }
+
+  .coverIdentity {
+    align-items: start;
+  }
+
+  .coverIdentity > :first-child { grid-column: 1 / 9; }
+  .coverLive { grid-column: 9 / 13; justify-self: end; }
+
+  /* Çukur kutu ızgaranın 20 piksel DIŞINA taşıyor, içeriği ise çizgide:
+     kutu kendi dolgusuyla içeriği içeri itseydi ölçüler kimlik bandından
+     farklı bir çizgide başlardı. */
+  .coverResults {
+    align-items: center;
+    row-gap: 0;
+    margin-inline: -20px;
+    padding: 16px 19px;
+  }
+
+  .coverResults > .coverLeadFacts { grid-column: 1 / 9; }
+  .coverResults > .coverTrend { grid-column: 9 / 13; }
+  .coverResults[data-has-metrics="false"] > .coverTrend,
+  .coverResults[data-has-trend="false"] > .coverLeadFacts { grid-column: 1 / -1; }
+
+  .verdictPanel {
+    gap: 0 24px;
+    align-items: start;
+  }
+
+  .verdictScore {
+    grid-column: 1 / 3;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .headlineBlock { grid-column: 3 / 9; grid-row: 1; }
+
+  .verdictTarget {
+    position: relative;
+    grid-column: 9 / 13;
+    grid-row: 1;
+    max-width: none;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .verdictTarget::before,
+  .coverFacts > dl::before {
+    position: absolute;
+    inset-block: 0;
+    left: -12px;
+    width: 1px;
+    content: "";
+    background: var(--line);
+  }
+
+  .verdictPanel[data-has-target="false"] .headlineBlock { grid-column: 3 / -1; }
+
+  .coverFacts {
+    align-items: start;
+    row-gap: 0;
+  }
+
+  .coverFacts > .reportClose { grid-column: 1 / 5; }
+
+  .coverFacts > dl {
+    position: relative;
+    grid-column: 5 / 13;
+    padding: 0;
+    border-top: 0;
+  }
+
+  .coverFacts > dl:only-child { grid-column: 1 / -1; }
+}
+
 @media (max-width: 1100px) {
   .coverResults {
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
@@ -755,13 +1129,7 @@
   }
 
   .coverFacts {
-    grid-template-columns: 1fr;
-  }
-
-  .coverFacts > dl {
-    padding: 1rem 0 0;
-    border-left: 0;
-    border-top: 1px solid var(--line-soft);
+    display: flex;
   }
 
   .verdictPanel {
@@ -771,10 +1139,6 @@
   .verdictScore {
     flex-direction: row;
     gap: 0.65rem;
-  }
-
-  .verdictDecision {
-    align-items: flex-start;
   }
 
   .verdictTarget {
@@ -788,24 +1152,23 @@
     gap: 1.35rem;
   }
 
-  .coverEdition {
-    padding-bottom: 0.9rem;
-  }
-
-  .coverSerial {
-    /* Punto mobilde ölçeğin metin tabanının altına inmiyor (globals.css). */
-    font-size: var(--text-nano);
-    letter-spacing: 0.015em;
-  }
-
   .coverResults {
     grid-template-columns: minmax(0, 1fr);
-    gap: 1.4rem;
-    padding-top: 0.3rem;
+    gap: 20px;
+    padding: 18px 14px;
+    border-radius: 14px;
+  }
+
+  .coverLeadFacts {
+    gap: 12px;
+  }
+
+  .coverLeadFacts > div + div::before {
+    left: -6px;
   }
 
   .coverLeadFacts dd:not(.coverMetricNote) {
-    font-size: clamp(1.8rem, 7.8vw, 2.8rem);
+    font-size: clamp(23px, 6.9vw, 31px);
   }
 
   .coverLeadFacts dt {
@@ -817,17 +1180,21 @@
   }
 
   .coverTrend {
-    padding: 1rem 0 0;
-    border-left: 0;
+    padding-top: 18px;
     border-top: 1px solid var(--line-soft);
   }
 
-  .coverTrendTrack {
-    height: 3.5rem;
+  .coverResults[data-has-metrics="false"] .coverTrend {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .coverTrendPlot {
+    --trend-track: 62px;
   }
 
   .coverFacts {
-    padding-top: 1.15rem;
+    gap: 16px;
   }
 
   .coverFacts > dl dd {
@@ -835,24 +1202,20 @@
   }
 
   .verdictPanel {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     padding: 1rem 0;
     gap: 1rem;
   }
 
   .verdictScore {
-    flex-direction: row;
     gap: 0.6rem;
-    flex-wrap: wrap;
   }
 
-  .verdictDecision {
-    align-items: flex-start;
+  .headlineBlock {
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .verdictHeadline {
-    grid-column: 1 / -1;
-    grid-row: 2;
     font-size: 0.875rem;
   }
 
@@ -866,14 +1229,8 @@
 
   /* At 320px the target's content column is 99px: the former 27px
      price and unbroken upside badge exceeded it in Turkish. */
-  .verdictTarget > span:nth-child(2) {
+  .targetValue {
     font-size: clamp(1.15rem, 5.5vw, 1.7rem);
-  }
-
-  .verdictTarget > span:nth-child(3) {
-    display: block;
-    max-width: 100%;
-    line-height: 1.6;
   }
 
   .metricGrid,
@@ -897,7 +1254,6 @@
     gap: 0.35rem;
   }
 
-
   .metricLabel {
     font-size: 0.73rem;
   }
@@ -913,7 +1269,7 @@
   }
 
   .ceoQuote {
-    padding: 1.8rem 0.5rem;
+    padding: 28px 14px 28px 16px;
   }
 
   .pointsGrid {
@@ -923,60 +1279,108 @@
   .chartFooter dd {
     font-size: 1.05rem;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .metricCard,
-  .coverTrendLink {
-    transition: none;
+  .analysisGrid {
+    gap: 24px;
+  }
+
+  .analysisItem {
+    padding-left: 34px;
+  }
+
+  .analysisItem > span:first-child {
+    font-size: 13px;
+  }
+
+  .analysisItem h3 {
+    font-size: 20px;
+  }
+
+  .analysisItem p {
+    font-size: 14px;
+    line-height: 1.8;
   }
 }
 
-.scoreDial { overflow: visible; }
+/* ---- Telefon: görüş önde ----
+   Kimlik → görüş (halka, karar, hedef) → gerekçe (dört satır) → sonuçlar
+   → ölçüler. Halka 56, karar 24, logo 44 piksel; hedef 19 piksel. Ölçüldü:
+   390×844'te halkanın üstü 789'dan ≤320'ye, 320'de ≤360'a. */
+@media (max-width: 639px) {
+  .cover {
+    gap: 1rem;
+  }
 
-/* Measured AVGO cover: 553px desktop / 864px at 390px. Keep the period
-   secondary and use the existing results as the visual centre of gravity. */
-.cover::before { inset:-220px -180px auto auto; width:650px; height:650px; border:1px solid var(--primary-faint); border-radius:50%; background:none; mask-image:linear-gradient(130deg,transparent,var(--text-strong)); opacity:.8; }
-.coverResults { padding:24px; border-radius:18px; background:linear-gradient(115deg,var(--primary-tint),transparent 70%); border:1px solid var(--line-soft); }
-.coverLeadFacts { gap:24px; }
-.coverLeadFacts > div + div { padding-left:24px; border-left:1px solid var(--primary-faint); }
-.coverTrend { padding-left:24px; border-left:0; }
-.coverTrendTrack { height:90px; }
-.coverTrendBar { max-width:48px; border-radius:7px 7px 2px 2px; background:linear-gradient(180deg,var(--primary-faint),var(--primary-tint)); }
-.coverTrendBar[data-latest="true"] { background:linear-gradient(180deg,var(--primary-soft),var(--primary-ink)); box-shadow:0 -8px 24px var(--primary-wash); }
-.coverLeadFacts dd:not(.coverMetricNote) { font-size:clamp(30px,3.4vw,49px); }
-.coverFacts { padding-top:8px; }
-.reportNav { border-color:var(--line); border-radius:12px; box-shadow:0 8px 24px color-mix(in srgb,var(--primary) 5%,transparent); }
-/* Sekmelerin önündeki "01 … 05" sayacı kalktı (23 Eylül): sıra
-   bildirmeyen bir süs — /teknik'teki "01" karosuyla aynı karar
-   (app/(app)/teknik/page.tsx) ve tasarım becerisinin §9.F maddesi. */
-.reportNav a[aria-current="location"] { color:var(--primary-ink); }
-/* ADBE's verdict previously began after the 595px cover and navigation;
-   it now belongs to the cover, before historical valuation figures. */
-.cover .verdictPanel { background: transparent; box-shadow: none; }
-.cover .verdictPanel + .coverFacts { border-top: 0; }
-.metricCard { box-shadow:none; background:linear-gradient(150deg,var(--premium-surface),var(--primary-tint)); }
-.metricValue { font-weight:550; }
-.analysisPanel { background:transparent; padding-inline:0; border:0; border-radius:0; box-shadow:none; }
-.analysisGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:28px 40px; }
-.analysisItem { position:relative; padding:24px 0 0 48px; }
-.analysisItem > span:first-child { position:absolute; left:0; top:28px; font-size:16px; font-weight:550; letter-spacing:-.025em; }
-.analysisItem h3 { font-size:22px; line-height:1.25; letter-spacing:-.04em; color:var(--primary-ink); }
-.analysisItem p { max-width:62ch; font-size:15px; line-height:1.85; }
-.ceoQuote { padding:40px 32px; border-color:var(--primary-faint); background:radial-gradient(ellipse at 10% 50%,var(--primary-tint),transparent 70%); }
-@media(min-width:1101px) { .summaryProse { columns:2; column-gap:40px; } .summaryPanel > .summaryProse > p:first-child { font-size:1.35rem; line-height:1.65; } }
-@media(max-width:767px) {
- .coverResults { padding:18px 14px; gap:20px; border-radius:14px; }
- .coverLeadFacts { gap:12px; }
- .coverLeadFacts > div + div { padding-left:12px; }
- .coverLeadFacts dd:not(.coverMetricNote) { font-size:clamp(23px,6.9vw,31px); }
- .coverTrend { padding:18px 0 0; }
- .coverTrendTrack { height:62px; }
- .coverFacts { gap:16px; }
- .analysisGrid { grid-template-columns:minmax(0,1fr); gap:24px; }
- .analysisItem { padding-left:34px; }
- .analysisItem > span:first-child { font-size:13px; }
- .analysisItem h3 { font-size:20px; }
- .analysisItem p { font-size:14px; line-height:1.8; }
- .ceoQuote { padding:28px 14px; }
+  /* Halka satırın ortasında değil üstünde: hedef bloğu beş satır ve
+     ortalanınca halkayı 22 piksel aşağı itiyordu. */
+  .verdictPanel {
+    align-items: start;
+    padding-top: 0.75rem;
+  }
+
+  .verdictScore {
+    align-items: flex-start;
+  }
+
+  .coverIdentity {
+    gap: 0.75rem;
+  }
+
+  .coverIdentity > :first-child {
+    gap: 0.625rem;
+  }
+
+  .companyTitle,
+  .companyTitle[data-long] {
+    font-size: var(--text-heading);
+    letter-spacing: -0.035em;
+  }
+
+  .verdictScore {
+    --score-ring-size: 56px;
+  }
+
+  .verdictScore [data-ring-denominator] {
+    display: none;
+  }
+
+  .verdictDecision {
+    gap: 0.35rem;
+  }
+
+  .verdictWord {
+    font-size: var(--text-heading);
+  }
+
+  .targetValue {
+    font-size: var(--text-title);
+  }
+
+  .verdictHeadline:not([data-expanded]) {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    overflow: hidden;
+  }
+
+  .headlineToggle {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-bottom: -0.5rem;
+  }
+
+  .headlineToggle:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coverTrendLink,
+  .readoutLine {
+    transition: none;
+  }
 }

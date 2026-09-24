@@ -12,9 +12,18 @@
 .researchLinks a:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 .researchLinks strong { color:var(--text-strong); font-weight:600; }
 .researchLinks svg { flex-shrink:0; }
+/* TELEFONDA KİMLİĞİN İÇİNDE BİR ÇİP (24 Eylül). Bağlantı 768'in altında
+   künyenin altına tam genişlikte, 44 piksellik ikinci bir satır açıyordu:
+   390×844'te aralık düğmeleri 791'de bitiyor, alt sekme çubuğu 764'te
+   başlıyordu. Aynı bağlantı artık sektör satırının altında 28 piksellik
+   bir çip (dokunma alanı `tap-44` ile 44); künyedeki kopya gizli. */
+.identityChip { display:none; }
 @media(max-width:767px) {
- .researchLinks { width:100%; margin-left:0; }
- .researchLinks a { justify-content:space-between; }
+ .researchLinks { display:none; }
+ .identityChip { display:flex; margin-top:6px; }
+ .identityChip a { display:inline-flex; min-height:28px; align-items:center; gap:6px; padding:0 10px; border:1px solid var(--primary-faint); border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); font-size:11px; }
+ .identityChip strong { color:var(--text-strong); font-weight:600; }
+ .identityChip svg { flex-shrink:0; }
 }
 @media(prefers-reduced-motion:reduce) { .researchLinks a { transition:none; } }
 .backLink { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:12px; font-weight:600; transition:color 180ms ease; }
@@ -24,7 +33,7 @@
    çizim hatası gibi duruyor. Künye tonu ayracı hâlâ etiketlerden geri
    plana atıyor ama okunur bırakıyor. */
 .breadcrumbSlash { color:var(--text-muted); }
-.pageLabel { margin-left:auto; color:var(--text-muted); font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
+.pageLabel { margin-left:auto; color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; letter-spacing:.02em; }
 .heroGrid { display:grid; grid-template-columns:minmax(0,1fr); gap:20px; scroll-margin-top:150px; }
 .chartPanel {
   position:relative;
@@ -33,20 +42,12 @@
   border:1px solid var(--line);
   border-radius:24px;
   background:var(--premium-surface, var(--surface-solid));
-  box-shadow:var(--premium-shadow, 0 14px 50px var(--primary-tint));
 }
-.chartPanel::before {
-  position:absolute;
-  z-index:-1;
-  inset:0 0 auto;
-  height:270px;
-  background:radial-gradient(ellipse at 96% 0%,var(--primary-wash),transparent 68%);
-  content:"";
-  pointer-events:none;
-}
+/* Panelin sağ üst köşesindeki mavi yıkama (270 piksellik radyal degrade)
+   ve gölge kalktı: derinlik tonla kuruluyor, ışıkla değil (tema § 1). */
 .stockHeader { display:flex; flex-direction:column; gap:24px; margin-bottom:22px; }
 .identity { display:flex; min-width:0; align-items:center; gap:16px; }
-.companyLogo { display:block; width:66px; height:66px; flex-shrink:0; overflow:hidden; border-radius:16px; background:var(--on-primary); box-shadow:0 6px 18px var(--line-soft); }
+.companyLogo { display:block; width:66px; height:66px; flex-shrink:0; overflow:hidden; border-radius:16px; background:var(--on-primary); }
 .symbol { color:var(--primary); font-size:12px; font-weight:700; letter-spacing:.08em; }
 .companyName { color:var(--text-strong); font-size:clamp(24px,2.4vw,36px); line-height:1.13; font-weight:700; letter-spacing:-.055em; text-wrap:balance; }
 .sector { margin-top:7px; color:var(--text-muted); font-size:11px; font-weight:500; }
@@ -57,26 +58,22 @@
 .profilePanel { display:flex; flex:1; flex-direction:column; background:var(--premium-surface,var(--surface-solid)); border-radius:22px; }
 .profilePanel > div:first-child { padding-top:22px; padding-bottom:8px; }
 .profileBody { display:flex; flex:1; min-width:0; flex-direction:column; padding:0 20px 18px; }
-/* 1440px'te eski 158px yüzeyde etiketten önce 73px boşluk vardı.
-   Ölçüler artık doğal boyunda, 16px üst dolguyla aynı satırda başlar. */
-.profileVisual { position:relative; isolation:isolate; display:flex; flex-direction:column; gap:12px; overflow:hidden; margin:0 -20px 18px; padding:16px 20px; border-bottom:1px solid var(--line-soft); background:linear-gradient(135deg,var(--primary-tint),transparent); }
-.profileTicker { position:absolute; z-index:-1; top:7px; right:10px; color:var(--primary); font-size:clamp(48px,5vw,68px); line-height:1; font-weight:700; letter-spacing:-.075em; opacity:.035; }
-.profileMetrics { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:16px; }
-.profileMetric { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:8px; }
-.profileMetric + .profileMetric { padding-left:16px; border-left:1px solid var(--line); }
+/* PİYASA DEĞERİ KARTIN TEK BÜYÜK OKUMASI (24 Eylül) — gerekçe ProfileCard'da.
+   Yüzey tonla ayrılıyor (`--surface-sunken`), degrade ve süs yok; iki
+   sütunluk ızgara tek sütuna indi çünkü ikinci ölçü (son fiyat, başlığın
+   kopyası) kalktı. */
+.profileVisual { display:flex; flex-direction:column; margin:0 -20px 18px; padding:14px 20px; border-block:1px solid var(--line-soft); background:var(--surface-sunken); }
+.profileMetric { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:6px; }
 .profileMetric dt { color:var(--text-muted); font-size:11px; font-weight:500; }
-.profilePrice, .profileCapValue { color:var(--text-strong); font-size:clamp(24px,2.4vw,34px); line-height:1.1; font-weight:600; letter-spacing:-.045em; overflow-wrap:anywhere; }
-.profileChange { margin-top:1px; }
-.profileQuoteStamp { margin:0; font-size:10px; line-height:1.6; }
-.orbits { position:absolute; z-index:-1; width:220px; height:220px; right:-90px; bottom:-125px; transform:rotate(-24deg); }
-.orbits i { position:absolute; inset:0; border:1px solid var(--primary-faint); border-radius:50%; }
-.orbits i:nth-child(2) { inset:20px; }
-.orbits i:nth-child(3) { inset:40px; }
+.profileCapValue { color:var(--text-strong); font-size:clamp(28px,2.4vw,34px); line-height:1.1; font-weight:600; letter-spacing:-.045em; overflow-wrap:anywhere; }
+.profileCapNote { color:var(--text-muted); font-size:var(--text-nano); font-weight:500; line-height:1.4; }
 .about { padding-bottom:18px; border-bottom:1px solid var(--line-soft); color:var(--text-body); font-size:13px; line-height:1.8; }
 .profileBody > dl > div { min-height:45px; }
 .profileBody > dl dt { font-size:11px; font-weight:500; color:var(--text-muted); }
 .profileBody > dl dd { max-width:65%; font-size:12px; color:var(--text-strong); }
-.upcomingPanel { position:relative; padding:22px; border:1px solid var(--primary-faint); border-radius:22px; background:linear-gradient(130deg,var(--primary-wash),var(--premium-surface,var(--surface-solid)) 85%); }
+/* Yıkama degradesi kalktı; kartı bölümün geri kalanından ayıran şey soldaki
+   3 piksellik `--primary` kuralı ve kenarlığın tonu. */
+.upcomingPanel { position:relative; padding:22px; border:1px solid var(--primary-faint); border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
 .upcomingPanel::after { position:absolute; top:0; bottom:0; left:0; width:3px; background:var(--primary); content:""; }
 .eventKicker { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--primary); }
 .eventKicker p { color:var(--primary-ink); }
@@ -94,8 +91,7 @@
 .metricsList > div:nth-child(even) { padding-right:0; padding-left:18px; border-left:1px solid var(--line-soft); }
 .metricsList dt { color:var(--text-muted); font-size:11px; }
 .metricsList dd { color:var(--text-strong); font-size:clamp(18px,1.85vw,27px); font-weight:600; letter-spacing:-.045em; line-height:1.2; }
-.rangeBlock { margin-top:16px; border-top:1px solid var(--line-soft); padding-top:20px; }
-.analystPanel { display:flex; flex-direction:column; border-radius:22px; background:radial-gradient(ellipse at 65% 18%,var(--up-wash),transparent 55%),var(--premium-surface,var(--surface-solid)); }
+.analystPanel { display:flex; flex-direction:column; border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
 .consensus { position:relative; display:grid; place-items:center; margin:0 auto 5px; width:166px; aspect-ratio:1; }
 .consensusRing { position:absolute; inset:0; width:100%; height:100%; transform:rotate(0deg); }
 .consensusValue { display:flex; flex-direction:column; align-items:center; gap:5px; }
@@ -108,16 +104,21 @@
 .earningsPanel tbody tr { transition:background 180ms ease; }
 .earningsPanel tbody tr:hover { background:var(--primary-tint); }
 .peersPanel { border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
-.peersGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; padding:20px; }
-.peerSpotlight { height:100%; border:1px solid var(--line); border-radius:16px; background:var(--surface-sunken); transition:transform 260ms ease,border-color 260ms ease,box-shadow 260ms ease; }
-.peerSpotlight:hover { transform:translateY(-4px); border-color:var(--primary-faint); box-shadow:0 8px 24px var(--primary-tint); }
-.peerCard { position:relative; display:flex; min-height:177px; height:100%; flex-direction:column; justify-content:space-between; gap:15px; padding:18px; }
-.peerTop { display:flex; align-items:center; justify-content:space-between; }
-.peerLogo { display:block; height:34px; width:34px; overflow:hidden; border-radius:9px; background:var(--on-primary); }
+/* BENZERLER SIRALI BİR LİSTE (24 Eylül) — gerekçe PeersCard'da. Satır 52
+   piksel: 28'lik logo, sembol + ad, piyasa değeri + çubuk, fiyat + yüzde.
+   Hover yalnızca satır tonu; kalkma, gölge, ok kayması yok. Sayfanın
+   şirketi bağlantı değil, `--primary-tint` zeminli vurgulu satır. */
+.peerList { display:grid; grid-template-columns:minmax(0,1fr); padding:4px 20px 12px; }
+.peerRow { display:grid; min-height:52px; grid-template-columns:28px minmax(0,1fr) minmax(76px,.8fr) 104px; align-items:center; gap:12px; margin-inline:-8px; padding:6px 8px; border-radius:10px; transition:background 180ms ease; }
+.peerList > li + li .peerRow { box-shadow:0 -1px 0 var(--line-soft); }
+a.peerRow:hover { background:var(--surface-sunken); }
+a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+.peerRow[data-self] { background:var(--primary-tint); box-shadow:none; }
+.peerList > li:has(.peerRow[data-self]) + li .peerRow { box-shadow:none; }
+.peerLogo { display:block; height:28px; width:28px; overflow:hidden; border-radius:8px; background:var(--on-primary); }
 .peerLogo img { width:100%; height:100%; object-fit:contain; }
-.peerMonogram { display:grid; height:34px; width:34px; place-items:center; border-radius:9px; background:var(--primary-wash); color:var(--primary-ink); font-size:17px; font-weight:700; }
-.peerArrow { color:var(--text-muted); transition:transform 220ms ease,color 220ms ease; }
-.peerCard:hover .peerArrow { color:var(--primary); transform:translate(2px,-2px); }
+.peerMonogram { display:grid; height:28px; width:28px; place-items:center; border-radius:8px; background:var(--primary-wash); color:var(--primary-ink); font-size:14px; font-weight:700; }
+.peerQuote { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
 .newsPanel { border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
 .newsGrid { display:grid; grid-template-columns:minmax(0,1fr); }
 .newsGrid > li { border-top:1px solid var(--line-soft); }
@@ -153,11 +154,13 @@
   .analystPanel > div:last-child { display:flex; align-items:stretch; }
   .analystPanel p { margin-top:12px; }
   .analystPanel p:last-of-type { margin-top:auto; }
-  .peersGrid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  /* İki sütun, beşe dört: sütun sütun okunuyor (`grid-auto-flow:column`),
+     yani sıra yukarıdan aşağı, sonra sağ sütun. */
+  .peerList { grid-auto-flow:column; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(5,auto); column-gap:40px; }
+  .peerList > li:nth-child(6) .peerRow { box-shadow:none; }
 }
 @media (max-width:639px) {
   .page { gap:18px; }
-  .pageLabel { letter-spacing:.06em; }
   .breadcrumb { gap:9px; }
   .chartPanel { padding:20px 16px 16px; border-radius:20px; }
   .stockHeader { gap:22px; margin-bottom:20px; }
@@ -174,12 +177,9 @@
   .sectionHeading p { font-size:12px; margin-top:8px; }
   .sectionHeading > svg { width:24px; height:24px; }
   .metricsList dd { font-size:25px; }
-  .profileMetrics { gap:12px; }
-  .profileMetric + .profileMetric { padding-left:12px; }
-  .profilePrice, .profileCapValue { font-size:28px; }
-  .peersGrid { gap:10px; padding:16px; }
-  .peerCard { min-height:183px; gap:15px; padding:14px; }
-  .peerCard > span:last-child { flex-direction:column; align-items:flex-start; }
+  .profileCapValue { font-size:28px; }
+  .peerList { padding:2px 16px 10px; }
+  .peerRow { grid-template-columns:28px minmax(0,1fr) minmax(64px,.9fr) 84px; gap:10px; }
   .newsInner { gap:14px; }
   .newsInner > span:first-child > span:first-child { font-size:14px; }
   .newsImage { height:72px; width:72px; }
@@ -189,12 +189,11 @@
   .pageLabel { display:none; }
   .livePrice { font-size:40px; }
   .companyName { font-size:23px; }
-  .peerCard { padding:11px; }
+  .peerRow { grid-template-columns:28px minmax(0,1fr) 60px 76px; gap:8px; }
   .metricsList dd { font-size:22px; }
 }
 @media (prefers-reduced-motion:reduce) {
-  .peerSpotlight, .peerArrow, .newsLink { transition:none; }
-  .peerSpotlight:hover, .peerCard:hover .peerArrow { transform:none; }
+  .peerRow, .newsLink { transition:none; }
 }
 
 /* The previous NVDA overview ended at y1179 on a 1440×900 viewport:
@@ -203,8 +202,11 @@
    earnings now belong to the earnings chapter. Only this overview sets
    chart sizing variables; embedded article and fund charts keep theirs. */
 .companyOverview .chartPanel {
-  --price-chart-height:clamp(140px,calc(100svh - 620px),300px);
-  --price-chart-reading:60px;
+  /* 640-1099 TABANI 220-320 (24 Eylül): 1024×768'de çizim 148 pikselde
+     kalıyordu; başlık iki sütuna geçince (≥768) kazanılan ~95 piksel
+     çizime veriliyor. Okuma satırı 24 — gerekçe PriceChart.module.css. */
+  --price-chart-height:clamp(220px,calc(100svh - 520px),320px);
+  --price-chart-reading:24px;
   --price-chart-legend:30px;
   --price-chart-legend-margin:8px;
   --price-chart-legend-padding:6px;
@@ -232,30 +234,46 @@
 .companyOverview .profilePanel { flex:initial; }
 .companyOverview .profilePanel > div:first-child { padding-top:17px; padding-bottom:8px; }
 .companyOverview .profileBody { flex:initial; padding:0 18px 14px; }
-.companyOverview .profileVisual { margin:0 -18px 12px; padding:12px 18px; gap:8px; }
-.companyOverview .profileMetric { gap:6px; }
-.companyOverview .profilePrice,.companyOverview .profileCapValue { font-size:clamp(24px,2vw,28px); }
+.companyOverview .profileVisual { margin:0 -18px 12px; padding:12px 18px; }
+.companyOverview .profileMetric { gap:4px; }
+.companyOverview .profileCapValue { font-size:clamp(28px,2.2vw,32px); }
 .companyOverview .about { padding-bottom:12px; font-size:12px; line-height:1.7; }
 .companyOverview .profileBody > dl { flex:initial; }
 .companyOverview .profileBody > dl > div { flex:initial; min-height:36px; padding-block:7px; }
 .companyOverview .profileBody > dl dd { font-size:11px; }
 .chartSkeleton { width:100%; height:calc(var(--price-chart-height) + 145px); }
-.chapterNav { box-shadow:0 6px 24px var(--primary-tint); border-color:var(--line); }
+/* Menünün gölgesi kalktı; yapışınca arkasında başlıkla aynı tonda bir bant
+   açılıyor (SectionNav), ayrımı o yapıyor. */
+.chapterNav { border-color:var(--line); }
 .chapterNav + .chapter { padding-top:10px; }
+/* BAŞLIK İKİ SÜTUN 768'DEN İTİBAREN (24 Eylül). Tablette kimlik ve fiyat
+   alt alta diziliyor ve ~95 piksel tutuyordu; iki sütun 768'de de sığıyor
+   (ölçüldü) ve o yer çizime gidiyor. PROFİL KOLONU TABLETTE İKİ SÜTUN:
+   profil solda, teknik kart sağda — tek sütunda 68 karakteri aşan
+   satırlar tablet genişliğinde okunmuyordu. */
+@media(min-width:768px) {
+ .companyOverview .stockHeader { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; column-gap:20px; }
+ .companyOverview .priceBlock { padding-top:5px; }
+ .companyOverview .priceChange { padding-bottom:0; }
+}
+@media(min-width:768px) and (max-width:1099px) {
+ .companyOverview .profileColumn { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); align-items:start; gap:20px; }
+ .companyOverview .about { max-width:68ch; }
+}
 @media(min-width:1100px) {
  .companyOverview { align-items:stretch; }
  .companyOverview .chartPanel { --price-chart-height:clamp(180px,calc(100svh - 496px),280px); --price-chart-controls:45px; }
- .companyOverview .stockHeader { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; column-gap:20px; }
  .companyOverview .identity { gap:12px; }
  .companyOverview .priceLine { gap:6px 12px; }
- .companyOverview .priceChange { padding-bottom:0; }
- .companyOverview .priceBlock { padding-top:5px; }
  .chartSkeleton { height:calc(var(--price-chart-height) + 137px); }
 }
 @media(max-width:639px) {
  /* 105px: aralıklar burada kendi satırına iniyor (gerekçe
     `PriceChart.module.css`), yani denetimler iki satır. */
- .companyOverview .chartPanel { padding:16px 14px 12px; --price-chart-controls:105px; }
+ /* Telefonda çizim eski ölçüsünde (140-300, ekranın 620 piksel eksiği):
+    tabandaki 220-320 tablet için; 390×844'te 320 piksellik çizim aralık
+    düğmelerini ilk ekranın dışına itiyordu. */
+ .companyOverview .chartPanel { padding:16px 14px 12px; --price-chart-controls:105px; --price-chart-height:clamp(140px,calc(100svh - 620px),300px); }
  .companyOverview .stockHeader { gap:12px; margin-bottom:12px; }
  .companyOverview .companyName { font-size:23px; }
  .companyOverview .livePrice { font-size:38px; }
@@ -288,36 +306,39 @@
 .fundamentalsChapter .sectionHeading h2 { font-size:clamp(24px,2.3vw,30px); }
 .fundamentalsChapter .sectionHeading p { margin-top:7px; }
 .fundamentalsGrid { align-items:stretch; gap:16px; grid-template-columns:minmax(0,1fr); }
-.fundamentalsGrid > section { min-width:0; border-radius:20px; transition:border-color .25s,box-shadow .25s; }
-.fundamentalsGrid > section:hover { border-color:var(--primary-faint); box-shadow:0 8px 26px var(--primary-tint); }
+/* YALNIZCA BAĞLANTILAR HOVER'A YANIT VERİR (24 Eylül). Dört kartın hepsi
+   üstüne gelince kenarlık rengini ve gölgesini değiştiriyordu ama hiçbiri
+   bir yere gitmiyor: tıklanabilir gibi görünen, tıklanınca hiçbir şey
+   olmayan bir yüzey. Hover dili tek: `.panel-hover`, yalnızca bağlantıda. */
+.fundamentalsGrid > section { min-width:0; border-radius:20px; }
 .fundamentalsGrid > section > div:first-child { padding-block:12px 9px; }
 .cardIcon { color:var(--primary); opacity:.8; }
-.metricsPanel { background:radial-gradient(ellipse at 0 0,var(--primary-wash),transparent 65%),var(--surface-solid); }
+.metricsPanel { background:var(--premium-surface,var(--surface-solid)); }
 .metricsBody { flex:initial; padding:0 18px 16px; }
 .metricsList { flex:initial; }
-.metricsList > div { padding:9px 10px 9px 0; gap:4px; justify-content:flex-start; }
+/* Hücre içeriği ORTADA. Satırlar artan yeri paylaşıyor (MetricsCard künyesi)
+   ve 52 hafta bloğu bu karttan çıkınca (24 Eylül) her hücre ~75 piksel
+   uzadı: değer tepede, altında boş bir şerit kalıyordu. Ortalanınca
+   aralık ölçünün iki yanına eşit dağılıyor. */
+.metricsList > div { padding:9px 10px 9px 0; gap:4px; justify-content:center; }
 .metricsList > div:nth-child(even) { padding-left:14px; }
 .metricsList dt { font-size:11px; line-height:1.4; }
 .fundamentalsGrid .metricsList dd { font-size:22px; letter-spacing:-.035em; }
-.rangeBlock { margin-top:12px; padding:12px 0 0; }
-.rangeBlock > div:nth-child(2) { height:7px; background:linear-gradient(90deg,var(--primary-tint),var(--primary-faint)); }
 .metricsSkeleton { height:340px; margin:0 18px 16px; }
-.averagesPanel { background:var(--surface-solid); }
+.averagesPanel { background:var(--premium-surface,var(--surface-solid)); }
 .averagesBody { padding:0 18px 14px; }
-.averageReference { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px 10px; padding-bottom:9px; color:var(--text-muted); font-size:11px; }
-.averageReference strong { color:var(--text-strong); font-size:19px; font-weight:600; letter-spacing:-.035em; }
-.axisKey { display:flex; align-items:center; gap:6px; margin-left:auto; font-size:10px; }
-.axisKey i { height:10px; width:1px; background:var(--text-muted); }
-.averageRow { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 10px; padding:5px 0; }
-.averageRow dt { font-size:11px; line-height:1.4; }
+/* FİYAT CETVELİ (24 Eylül) — gerekçe MovingAverages'ta. Simetrik sapma
+   izleri ve onların −/0/+ ölçek satırı kalktı; cetvel kartın üstünde,
+   kesin değerler altındaki listede. */
+.averagesRail { margin:4px 0 6px; }
+.averageRow { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:4px 10px; padding:6px 0; border-top:1px solid var(--line-soft); }
+.averageRow dt { color:var(--text-strong); font-size:11px; font-weight:600; line-height:1.4; }
 .averageRow dd, .averageRow dd span { line-height:1.4; }
 .averageRow dd { font-size:12px; }
-.deviationTrack { position:relative; grid-column:1/-1; height:6px; border-radius:3px; background:var(--surface-sunken); }
-.deviationTrack > i { position:absolute; height:12px; width:1px; left:50%; top:-3px; background:var(--text-muted); opacity:.6; }
-.deviationFill { position:absolute; top:0; bottom:0; border-radius:3px; opacity:.75; }
-.deviationScale { display:flex; justify-content:space-between; padding-top:2px; color:var(--text-muted); font-size:10px; }
 .cardNote { margin-top:10px; padding-top:9px; border-top:1px solid var(--line-soft); font-size:11px; line-height:1.65; color:var(--text-muted); }
-.fundamentalsGrid .analystPanel { grid-column:auto; background:radial-gradient(ellipse at 8% 40%,var(--up-wash),transparent 50%),var(--surface-solid); }
+/* Yeşil yıkama KOŞULSUZDU: "Sat" ağırlıklı bir hissede de kart yeşil
+   açılıyordu. Renk yalnızca yön söyler; burada söyleyecek bir yön yok. */
+.fundamentalsGrid .analystPanel { grid-column:auto; background:var(--premium-surface,var(--surface-solid)); }
 .fundamentalsGrid .analystPanel > .analystBody { display:block; padding:0 18px 14px; }
 .analystOverview { display:grid; grid-template-columns:112px minmax(0,1fr); gap:18px; align-items:center; }
 .fundamentalsGrid .consensus { width:112px; margin:0; grid-row:auto; }
@@ -341,7 +362,7 @@
 /* Profil künyesi başlığın sağında: satır sıkışırsa başlıkla alt satıra
    iner (PanelHeader öğe arasından kırıyor), kendi içinde bölünmez. */
 .headerStamp { margin:0; white-space:nowrap; }
-.compliancePanel { background:linear-gradient(125deg,var(--surface-solid) 35%,var(--primary-tint)); }
+.compliancePanel { background:var(--premium-surface,var(--surface-solid)); }
 .complianceBody { padding:0 18px 12px; }
 .complianceRatios { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:6px; }
 .complianceRatio { min-width:0; }
@@ -382,31 +403,44 @@
  .complianceRatio + .complianceRatio { padding-left:12px; }
 }
 @media(prefers-reduced-motion:reduce) {
- .fundamentalsGrid > section,.analystExplanation summary > .analystToggle { transition:none; }
+ .analystExplanation summary > .analystToggle { transition:none; }
 }
 
 @media(max-width:359px) {
  .fundamentalsGrid .metricsList dd { font-size:18px; }
 }
 
-.averagesSkeleton { height:230px; margin:0 18px 14px; }
+/* Ortalamalar gövdesi cetvelle birlikte yeniden ölçüldü (24 Eylül): 1440'ta
+   268, 1024 ve 390'da 286, 320'de 304 piksel (14'ü alt pay). */
+.averagesSkeleton { height:272px; margin:0 18px 14px; }
 .analystSkeleton { height:260px; width:100%; border-radius:20px; }
-@media(min-width:1400px) { .averagesSkeleton { height:212px; } }
+@media(min-width:1400px) { .averagesSkeleton { height:254px; } }
 @media(max-width:359px) {
  .metricsSkeleton { height:320px; }
- .averagesSkeleton { height:248px; }
+ .averagesSkeleton { height:290px; }
  .analystSkeleton { height:253px; }
 }
 
 /* SNDK at 1440: plot 280px, left card 582px, right stack 666px.
    Let the drawing absorb that 84px instead of leaving a blank card tail.
-   Its canvas already observes the plot, including period/legend changes. */
+   Its canvas already observes the plot, including period/legend changes.
+
+   PROFİL KARTI İÇERİĞİNDE BİTİYOR (24 Eylül). Kart, gövdesi ve listesi
+   `flex:1` ile kolonun boyuna geriliyordu: grafik uzun olduğunda artan yer
+   satırların İÇİNE dağılıyor ve kartın dibinde satırsız bir kuyruk
+   kalıyordu. Artık esneyen tek şey grafik; profil doğal boyunda.
+   `flex:1 0 auto` (0 değil): eski `flex:1` + `min-height:0` grafik
+   iskeletini 417 pikselden 249'a eziyordu ve akış gelince panel 168
+   piksel uzuyordu — 1440'taki CLS'in kaynağı buydu.
+   Ölçüldü (1440×900, 24 Eylül): NVDA ve SNDK'da kuyruk 0 (teknik kart
+   kolonu dolduruyor, grafik uzuyor); AAPL 72, ASTS 182, TSM 266 piksel.
+   Kalan kuyruk panelin İÇİNDE değil, kolonun altında: CLAUDE.md "kısa
+   kolon erken biter ve iki sütunlu bir düzende olması gereken de budur".
+   Profilin 52 hafta satırı kuyruğu AAPL'da 141'den, ASTS'de 251'den
+   indirdi; TSM'de piyasa değeri ve ray yok (ADR), satır yalnızca metin. */
 @media(min-width:1100px) {
  .companyOverview .chartPanel { display:flex; flex-direction:column; }
- .companyOverview .chartPanel > :last-child { flex:1; min-height:0; }
- .companyOverview .profilePanel { flex:1; }
- .companyOverview .profileBody { flex:1; }
- .companyOverview .profileBody > dl { flex:1; }
+ .companyOverview .chartPanel > :last-child { flex:1 0 auto; }
 }
 .fundamentalsGrid > section { display:flex; flex-direction:column; }
 .fundamentalsGrid .metricsBody { flex:1; display:flex; flex-direction:column; }
@@ -415,6 +449,58 @@
 .fundamentalsGrid .complianceRatios { flex:1; align-content:center; }
 .fundamentalsGrid .complianceBody > details { margin-top:14px; }
 
-/* Cursor prices now use 32/28px. Reserve a two-line reading on phones,
-   including its date, so hovering never pushes the plot down. */
-@media(max-width:639px) { .companyOverview .chartPanel { --price-chart-reading:72px; } }
+/* Telefonda iki satırlık (72 piksel) okuma rezervi KALKTI: imleç okuması
+   artık başlık fiyatında (ChartReadingContext.tsx), satır her genişlikte
+   24 piksel. */
+
+/* YAPIŞKAN MENÜNÜN KİMLİĞİ — gerekçe sayfadaki SectionNav çağrısında.
+   22 piksellik logo, 13 punto sembol ve fiyat; telefonda (112 piksellik
+   bütçe, PremiumMotion.module.css) sembol ve yüzde düşüyor, logo ile fiyat
+   kalıyor. Yedek aynı yüksekliği tutuyor: akış gelince çubuk zıplamıyor. */
+.navLead { display:inline-flex; min-width:0; height:24px; align-items:center; gap:8px; white-space:nowrap; }
+.navLeadLogo { display:block; width:22px; height:22px; flex-shrink:0; overflow:hidden; border-radius:6px; background:var(--on-primary); }
+.navLeadLogo img { width:100%; height:100%; object-fit:contain; }
+.navLeadSymbol { color:var(--text-strong); font-size:13px; font-weight:700; }
+@media(max-width:639px) {
+ .navLeadSymbol, .navLeadPill { display:none; }
+}
+
+/* TELEFONDA DÖRT HABER (24 Eylül). Sekiz satır 390'da ~1000 piksel
+   tutuyordu; başlığın sağındaki "Tümünü Gör" sembole süzülmüş akışa
+   gidiyor (60 haber), yani kesilen dört satır bir tık ötede. Sıra konudaki
+   haberler önde (CompanyNews). */
+@media(max-width:767px) {
+ .newsGrid > li:nth-child(n+5) { display:none; }
+}
+
+/* Profilin 52 hafta satırı — satırlarla aynı hairline ve aynı künye ölçüsü. */
+.profileBand { padding:10px 0 2px; border-top:1px solid var(--line-soft); }
+.profileBandLabel { color:var(--text-muted); font-size:11px; font-weight:500; }
+
+/* Başlık iskeletinin fiyat satırı: `livePrice` ile aynı punto, yüksekliği
+   1em (satır yüksekliği 1) — gerekçe HeaderSkeleton'da. */
+.priceSkeleton { height:1em; }
+/* Teknik kartın yedeği — ölçüldü: 1100 ve üstü 179, altı 201 piksel. */
+.technicalSkeleton { width:100%; height:201px; border-radius:22px; }
+@media(min-width:1100px) { .technicalSkeleton { height:179px; } }
+
+/* 320 GENİŞLİKTE ÇİZİM SEKME ÇUBUĞUNUN ÜSTÜNDE BİTSİN (24 Eylül). 320×640'ta
+   çizimin dibi 564-613'te, alt sekme çubuğu 560'ta başlıyordu. Çip tek
+   satırda kalıyor (iki satıra kırılıyordu), çizim 120 piksele iniyor. */
+.identityChip a { white-space:nowrap; }
+@media(max-width:359px) {
+ .identityChip a { padding:0 8px; font-size:10px; }
+ .companyOverview .chartPanel { --price-chart-height:120px; padding-top:12px; }
+ .companyOverview .stockHeader { gap:8px; }
+ /* 19 punto: "Taiwan Semiconductor Manufacturing Co Ltd" 21'de üç satırdı. */
+ .companyOverview .companyName { font-size:19px; }
+}
+
+/* Fon künyesinin yedeği — ölçüldü: 343 piksel (1024'te iki sütunda 304,
+   320'de 382). `h-96` (384) 1440'ta 41 piksel fazlaydı. */
+.fundSkeleton { width:100%; height:343px; border-radius:22px; }
+@media(min-width:1000px) and (max-width:1099px) { .fundSkeleton { height:304px; } }
+@media(max-width:359px) { .fundSkeleton { height:382px; } }
+
+/* Analist özet satırı parmakla 44 piksel (32'ydi, 390'da ölçüldü). */
+@media(hover:none) { .analystExplanation summary { min-height:44px; } }

@@ -58,3 +58,34 @@
  .root[data-compact] .reading .hoverPrice { font-size:28px; }
  .hoverChange { font-size:15px; }
 }
+
+/* OKUMA SATIRI 24 PİKSEL (24 Eylül). Hisse sayfasında imleç okuması artık
+   başlık fiyatına yazılıyor (ChartReadingContext.tsx); bu satır yalnızca
+   dönem özetini taşıyor ve 60/72 piksel ayırması gerekmiyor. Dönem
+   getirisi 18 puntodan 16'ya iniyor ki satır 24 pikselde kalsın. */
+.root[data-compact="true"] .periodPct { font-size:16px; line-height:24px; }
+
+/* KOMPAKT DÜZEN HER GENİŞLİKTE SÜTUN — sıra değiştirilebilsin diye.
+   TELEFONDA SIRA: ÇİZİM, ARALIKLAR, SEANS SAATLERİ. Katlanmış "Seans
+   Saatleri" satırı çizimle aralık düğmelerinin arasında 44 piksel tutuyor
+   ve 390×844'te düğmeleri ilk ekranın dışına itiyordu; düğmeler grafiğin
+   denetimi, lejant değil — çizime bitişik olmalılar. İskeletin ayırdığı
+   toplam yer değişmiyor (iki şeridin sırası, boyu değil). */
+.root[data-compact="true"] { display:flex; flex-direction:column; }
+@media (max-width: 639px) {
+  .root[data-compact="true"] .controls { order:2; }
+  .root[data-compact="true"] .sessions { order:3; }
+}
+/* PARMAKLA 44 PİKSEL. Özet satırı 36 pikseldi; dokunmatikte yükseliyor. */
+@media (hover: none) {
+  .root[data-compact="true"] .sessionSummary { min-height:44px; }
+}
+/* 320'de dönem satırı tek satır: künye 11 piksele iniyor (gerekçe
+   stock.module.css'teki 320 notu). */
+@media (max-width: 359px) {
+  .root[data-compact="true"] .reading span:not(.periodPct) { font-size:11px; }
+}
+/* Satırın kendisi 24: `pb-2` ve taban çizgisi hizası 28-36 piksel
+   yapıyordu (1G 28, 1H 36 ölçüldü) ve aralık değişince çizim kayıyordu. */
+.root[data-compact="true"] .reading { padding-bottom:0; }
+.root[data-compact="true"] .reading * { line-height:24px; }

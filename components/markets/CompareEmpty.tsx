@@ -62,7 +62,7 @@ export async function CompareEmpty({
       {/* ---- Hazır setler ---- */}
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 className="plate text-nano tracking-[0.09em]">
+          <h2 className="plate text-nano">
             {t.compare.presets}
           </h2>
           <p className="text-tiny text-muted">{t.compare.presetsHint}</p>
@@ -157,7 +157,7 @@ export async function CompareEmpty({
           Ekranın en altında duruyor çünkü seçim yapmaya hazır olan okuyucu
           buraya hiç bakmadan yukarıdan çıkıyor. */}
       <section className="flex flex-col gap-3">
-        <h2 className="plate text-nano tracking-[0.09em]">
+        <h2 className="plate text-nano">
           {t.compare.howTitle}
         </h2>
         <Panel>

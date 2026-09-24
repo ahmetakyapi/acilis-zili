@@ -45,6 +45,7 @@ import {
   formatPercentPlain,
   formatPrice,
   peRatioOf,
+  NO_VALUE,
 } from "@/lib/utils";
 import { pageMetadata } from "@/lib/page-meta";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
@@ -316,7 +317,7 @@ async function CompareBoard({
             {formatPrice(quote.price, locale)}
           </span>
         ) : (
-          "—"
+          NO_VALUE
         );
       },
     },
@@ -338,7 +339,7 @@ async function CompareBoard({
       signal: true,
       value: (i) => {
         const quote = quotes[symbols[i]];
-        if (!quote) return "—";
+        if (!quote) return NO_VALUE;
         return (
           <span
             className={cn(
@@ -414,7 +415,7 @@ async function CompareBoard({
            bağlı ve o kural tek yerde: lib/utils.ts → withPercent. */
         /* SIFIR İLE BİLİNMİYOR AYRI ŞEY. "Temettü ödemiyor" bir bilgi,
            "veri gelmedi" bilgisizlik; ikisi de aynı tireye düşüyordu. */
-        if (!metrics?.ok || metrics.data.dividendYield === null) return "—";
+        if (!metrics?.ok || metrics.data.dividendYield === null) return NO_VALUE;
         return metrics.data.dividendYield === 0
           ? t.compare.dividendNone
           : formatPercentPlain(metrics.data.dividendYield, locale, 2);
@@ -432,7 +433,7 @@ async function CompareBoard({
         const metrics = metricResults[i];
         return metrics?.ok && metrics.data.beta !== null
           ? formatPrice(metrics.data.beta, locale)
-          : "—";
+          : NO_VALUE;
       },
     },
     {
@@ -442,7 +443,7 @@ async function CompareBoard({
       value: (i) => {
         const metrics = metricResults[i];
         if (!metrics?.ok || metrics.data.low52 === null || metrics.data.high52 === null)
-          return "—";
+          return NO_VALUE;
         /* Bant da ana borsanın parasında: ASML'de fiyat satırı "1.763,39"
            (dolar) derken bant "611,80 — 1.741,00" (euro) yazıyordu, yani
            hisse kendi 52 haftalık zirvesinin ÜSTÜNDE duruyor gibi
@@ -523,7 +524,7 @@ async function CompareBoard({
         const metrics = metricResults[i];
         return metrics?.ok && metrics.data.netMarginPct !== null
           ? formatPercentPlain(metrics.data.netMarginPct, locale, 1)
-          : "—";
+          : NO_VALUE;
       },
     },
     {
@@ -533,14 +534,14 @@ async function CompareBoard({
       group: "company",
       key: "sector",
       label: t.compare.sector,
-      value: (i) => sectorLabel(names[symbols[i]]?.sector, locale) ?? "—",
+      value: (i) => sectorLabel(names[symbols[i]]?.sector, locale) ?? NO_VALUE,
     },
     {
       group: "company",
       key: "industry",
       label: t.stock.industry,
       value: (i) =>
-        industryLabel(names[symbols[i]]?.industry, locale) ?? "—",
+        industryLabel(names[symbols[i]]?.industry, locale) ?? NO_VALUE,
     },
   ];
 
@@ -727,7 +728,7 @@ async function CompareBoard({
             style={{ minWidth: `${104 + symbols.length * 58}px` }}
           >
             <thead>
-              <tr className="border-b border-line-soft text-left text-nano uppercase tracking-wider text-muted">
+              <tr className="border-b border-line-soft text-left text-nano text-muted">
                 <th
                   scope="col"
                   /* SABİTLİK YALNIZCA KAYAN GENİŞLİKLERDE. Tablo artık
@@ -785,7 +786,7 @@ async function CompareBoard({
                       colSpan={symbols.length + 1}
                       className="bg-surface px-2.5 py-1.5 text-left sm:px-4 md:px-5"
                     >
-                      <span className="plate sticky left-0 text-nano tracking-[0.09em]">
+                      <span className="plate sticky left-0 text-nano">
                         {group.label}
                       </span>
                     </th>
@@ -855,7 +856,7 @@ async function CompareBoard({
              anahtarı grafikle aynı ve satır tablonun genişliğiyle
              yarışmıyor. */}
         <div className="border-t border-line sm:hidden">
-          <p className="plate px-4 pb-1 pt-3 text-nano tracking-[0.09em]">
+          <p className="plate px-4 pb-1 pt-3 text-nano">
             {t.compare.groupCompany}
           </p>
           <ul className="pb-3">
@@ -876,7 +877,7 @@ async function CompareBoard({
                     {symbol}
                   </span>
                   <span className="min-w-0 flex-1 text-tiny leading-snug text-muted">
-                    {[sektor, sanayi].filter(Boolean).join(" · ") || "—"}
+                    {[sektor, sanayi].filter(Boolean).join(" · ") || NO_VALUE}
                   </span>
                 </li>
               );

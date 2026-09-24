@@ -1,0 +1,26 @@
+/* Başlık okuması — gerekçe ChartReadingContext.tsx başında. */
+
+/* Rakamlar saymıyor: yeni değer 140 ms'de soluktan tama geliyor. Anahtar
+   (`key`) okunan an değişince düğümü yeniliyor ve animasyon yeniden
+   oynuyor; canlı hâle dönüş de aynı kısa geçiş. */
+.swap { animation: readout-in 140ms cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes readout-in { from { opacity: .35; } }
+
+/* Canlı damga ile okuma künyesi AYNI HÜCREDE üst üste: hangisi görünürse
+   görünsün satırın boyu değişmiyor (CLS 0, 1440'ta ölçüldü). */
+.stampSlot { display: grid; margin-top: 8px; }
+.stampSlot > * { grid-area: 1 / 1; min-width: 0; }
+.stampLive[data-hidden] { visibility: hidden; }
+.stampReading {
+  align-self: start;
+  color: var(--text-soft);
+  font-size: var(--text-tiny);
+  font-weight: 600;
+  /* Canlı damganın satırından alçak kalsın: 1,6 ile 1 piksel uzundu ve
+     başlık okuma sırasında 108'den 109'a çıkıyordu. */
+  line-height: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swap { animation: none; }
+}

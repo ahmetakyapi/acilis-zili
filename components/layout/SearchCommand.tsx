@@ -551,7 +551,7 @@ export function SearchCommand({
               {/* Kutu boşken popüler semboller — boş bir pencere yerine yön */}
               {!query.trim() && (
                 <div role="presentation" className="px-5 pb-2 pt-2">
-                  <p className="plate text-nano tracking-[0.08em]">
+                  <p className="plate text-nano">
                     {popularLabel}
                   </p>
                   <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -575,7 +575,7 @@ export function SearchCommand({
               {shownHits.length > 0 && (
                 <p
                   id="palet-grup-semboller"
-                  className="plate px-5 pb-1.5 pt-2 text-nano tracking-[0.08em]"
+                  className="plate px-5 pb-1.5 pt-2 text-nano"
                 >
                   {companiesLabel}
                 </p>
@@ -642,7 +642,7 @@ export function SearchCommand({
               {shownWritings.length > 0 && (
                 <p
                   id="palet-grup-yazilar"
-                  className="plate px-5 pb-1.5 pt-2 text-nano tracking-[0.08em]"
+                  className="plate px-5 pb-1.5 pt-2 text-nano"
                 >
                   {writingsLabel}
                 </p>
@@ -664,7 +664,7 @@ export function SearchCommand({
                       position === active ? "bg-primary-wash" : "hover:bg-surface",
                     )}
                   >
-                    <span className="plate w-[60px] shrink-0 pt-[3px] text-micro tracking-[0.08em] text-primary">
+                    <span className="plate w-[60px] shrink-0 pt-[3px] text-nano text-primary">
                       {writing.kind}
                     </span>
                     <span className="min-w-0 flex-1">

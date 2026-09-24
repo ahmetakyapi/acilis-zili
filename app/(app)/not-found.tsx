@@ -47,7 +47,7 @@ export default async function NotFound() {
       </div>
 
       <Panel className="w-full">
-        <p className="plate px-4 pb-2.5 pt-3.5 text-left text-nano tracking-[0.09em] sm:px-5">
+        <p className="plate px-4 pb-2.5 pt-3.5 text-left text-nano sm:px-5">
           {t.errors.shortcuts}
         </p>
         <ul>

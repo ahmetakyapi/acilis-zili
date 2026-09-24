@@ -13,7 +13,7 @@ import {
   getSymbolNames,
 } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
-import { cn, headlineMentions, timeAgo } from "@/lib/utils";
+import { cn, headlineMentions, timeAgo, titleCaseLabel } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -178,7 +178,7 @@ async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
                   <p className={styles.meta}>
                     {item.source && <span>{item.source}</span>}
                     <span aria-hidden>·</span>
-                    <span>{timeAgo(item.publishedAt, locale)}</span>
+                    <span>{titleCaseLabel(timeAgo(item.publishedAt, locale), locale)}</span>
                     {shownSymbols.length > 0 && (
                       <>
                         <span aria-hidden>·</span>
