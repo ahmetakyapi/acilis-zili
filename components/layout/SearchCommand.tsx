@@ -586,6 +586,7 @@ export function SearchCommand({
                   <button
                     key={href}
                     id={`palet-secenek-${index}`}
+                    style={{ animationDelay: `${Math.min(index, 8) * 18}ms` }}
                     role="option"
                     aria-selected={index === active}
                     type="button"
@@ -612,6 +613,7 @@ export function SearchCommand({
                   <button
                     key={href}
                     id={`palet-secenek-${index}`}
+                    style={{ animationDelay: `${Math.min(index, 8) * 18}ms` }}
                     role="option"
                     aria-selected={index === active}
                     type="button"
@@ -654,6 +656,7 @@ export function SearchCommand({
                   <button
                     key={`${writing.kind}-${writing.slug}`}
                     id={`palet-secenek-${position}`}
+                    style={{ animationDelay: `${Math.min(position, 8) * 18}ms` }}
                     role="option"
                     aria-selected={position === active}
                     type="button"
