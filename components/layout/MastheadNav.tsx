@@ -159,7 +159,14 @@ export function MastheadNav({
             >
               <Link
                 href={withLocale(item.href, locale)}
-                prefetch
+                /* ÖN YÜKLEME NİYETLE (24 Eylül, ölçüldü). Düz `prefetch` her sayfa
+                   açılışında bütün sekmelerin TAM sunucu çizimini istiyordu:
+                   masaüstünde beş, telefonda dört sayfa — okuyucu hiçbirini
+                   açmasa da her ziyarette sunucu, veritabanı ve sağlayıcı o
+                   sayfaları da çiziyordu. Artık görünürken yalnızca hafif ön
+                   yükleme, tam yükleme fare üstüne geldiğinde ya da dokunuş
+                   başladığında (tıklamadan 100-300 ms önce) — geçiş yine anlık. */
+                prefetchOnIntent
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "masthead-link relative flex h-full items-center px-(--masthead-tab-px) text-base font-semibold xl:text-read",

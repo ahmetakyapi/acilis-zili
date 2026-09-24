@@ -172,6 +172,15 @@ export default async function RootLayout({
     <html
       lang={locale}
       data-theme={theme}
+      /* YUMUŞAK KAYDIRMA SİTE GENELİNDE, `:has()`SIZ. İki modül onu
+         `html:has(.page)` ve `html:has(.sectionNav)` ile açıyordu; kökte
+         duran `:has()` belgedeki HER DOM değişikliğinde yeniden
+         değerlendiriliyor ve tüm belgenin stilini baştan hesaplatıyordu
+         (ölçüm app/admin/layout.tsx'te). Bu öznitelik Next'in önerdiği yol:
+         sayfa geçişinde yumuşak kaydırmayı kendisi kapatıyor, yani yeni
+         sayfaya kayarak inilmiyor. Hareketi azaltan okuyucuda globals.css
+         kuralı `auto`ya çeviriyor. */
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${bodyFace.variable} h-full`}
     >

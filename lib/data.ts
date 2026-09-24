@@ -1024,12 +1024,31 @@ export async function getSymbolNames(
   }
 }
 
-async function loadSymbolNames(
-  list: string[],
-): Promise<Record<string, SymbolMeta>> {
-  if (list.length === 0) return {};
-  try {
-    const rows = await db
+/**
+ * SEMBOL TABLOSU, ÖNBELLEKTE (24 Eylül, ölçüldü).
+ *
+ * Sembol × kotasyon önbelleği birleşimi iki yoldan her istekte yeniden
+ * soruluyordu: `getSymbolNames` (38 çağrı yeri — neredeyse her ekran) ve
+ * `getCompanies` (şirket dizini). Sorgunun kendisi 1 ms'nin altında; bedel
+ * AĞDA: Neon'a her tur ~120 ms, soğuk bağlantıda 350-450 ms ve bu tur
+ * çoğu sayfada ikinci SIRALI tur olarak ilk bayta biniyordu (önce takvim ya
+ * da liste, sonra o listenin adları). `/sirketler` kabuğu 1.034 satırlık
+ * birleşimi beklediği için ilk baytı her istekte yarım saniye gecikiyordu.
+ *
+ * Artık tablo tek kayıt olarak beş dakika saklanıyor ve iki okuyucu da
+ * ondan süzüyor. Satırlar yavaş değişiyor: ad, logo, sektör profil
+ * tazelemesiyle (haftalar); piyasa değeri önbellek fiyatından hesaplanıyor
+ * ve fiyatı canlı gösteren her ekran değeri canlı kotasyonla YENİDEN
+ * hesaplıyor (bkz. `CompanyRow.marketCap`), yani beş dakikalık gecikme
+ * yalnızca kotasyonu hiç gelmeyen satırın taban değerine dokunuyor.
+ *
+ * Hata önbelleğin DIŞINDA kalıyor: fonksiyon fırlatırsa `unstable_cache`
+ * sonucu yazmıyor — `loadHolidays` ile aynı gerekçe, veritabanının düştüğü
+ * anın boş listesi beş dakika saklanmasın.
+ */
+const loadSymbolTable = unstable_cache(
+  async function loadSymbolTable() {
+    return db
       .select({
         symbol: symbolsTable.symbol,
         name: symbolsTable.name,
@@ -1039,17 +1058,27 @@ async function loadSymbolNames(
         logoUrl: symbolsTable.logoUrl,
         industry: symbolsTable.industry,
         sector: symbolsTable.sector,
-        /* Önbellekteki son fiyat — piyasa değeri buradan hesaplanıyor.
-           `getCompanies` aynı join'i zaten yapıyor; sağlayıcıya ek bir tur
-           yok, tek bir sol birleştirme var. */
+        isIndexProxy: symbolsTable.isIndexProxy,
+        volume: quotesCacheTable.volume,
         cachedPrice: quotesCacheTable.price,
       })
       .from(symbolsTable)
       .leftJoin(
         quotesCacheTable,
         eq(quotesCacheTable.symbol, symbolsTable.symbol),
-      )
-      .where(inArray(symbolsTable.symbol, list));
+      );
+  },
+  ["symbol-table"],
+  { revalidate: 300 },
+);
+
+async function loadSymbolNames(
+  list: string[],
+): Promise<Record<string, SymbolMeta>> {
+  if (list.length === 0) return {};
+  try {
+    const wanted = new Set(list);
+    const rows = (await loadSymbolTable()).filter((r) => wanted.has(r.symbol));
     return Object.fromEntries(
       rows.map((r) => [
         r.symbol,
@@ -1115,27 +1144,11 @@ export type CompanyRow = {
   volume: number | null;
 };
 
+
 /** Endeks ETF'leri hariç, profili bilinen şirketler. */
 export async function getCompanies(): Promise<CompanyRow[]> {
   try {
-    const rows = await db
-      .select({
-        symbol: symbolsTable.symbol,
-        name: symbolsTable.name,
-        industry: symbolsTable.industry,
-        logoUrl: symbolsTable.logoUrl,
-        marketCap: symbolsTable.marketCap,
-        shareOutstanding: symbolsTable.shareOutstanding,
-        currency: symbolsTable.currency,
-        volume: quotesCacheTable.volume,
-        price: quotesCacheTable.price,
-      })
-      .from(symbolsTable)
-      .leftJoin(
-        quotesCacheTable,
-        eq(quotesCacheTable.symbol, symbolsTable.symbol),
-      )
-      .where(eq(symbolsTable.isIndexProxy, false));
+    const rows = (await loadSymbolTable()).filter((r) => !r.isIndexProxy);
     // USD dışı piyasa değeri (ör. TWD) USD ile sıralanamaz — yok sayılır.
     return rows.map((r) => {
       const usd = r.currency === "USD";
@@ -1170,7 +1183,7 @@ export async function getCompanies(): Promise<CompanyRow[]> {
            tekrar yapıyor. */
         marketCap: liveMarketCap(
           { marketCap: storedMarketCap, shareOutstanding },
-          r.price,
+          r.cachedPrice,
         ),
       };
     });

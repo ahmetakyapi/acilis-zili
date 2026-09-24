@@ -78,7 +78,6 @@
 .analysisPanels h2 { font-size:15px; }
 .featureHeadline { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:5; overflow:hidden; overflow-wrap:anywhere; color:var(--text-body); font-size:14px; line-height:1.7; text-wrap:pretty; }
 .featureRead { color:var(--primary-ink); font-size:12px; font-weight:600; }
-:global(html):has(.page) { scroll-behavior:smooth; }
 .page :is(a,button):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 @media(max-width:1023px) { .hero { padding:28px; gap:24px; } .heroVisual { padding-left:24px; } .page { gap:24px; } }
 @media(max-width:767px) {
@@ -94,7 +93,7 @@
  .featureHeadline { -webkit-line-clamp:4; }
  .tabs { padding:4px; } .tabs a { padding-inline:12px; font-size:12px; }
 }
-@media(prefers-reduced-motion:reduce) { :global(html):has(.page) { scroll-behavior:auto; } .page * { scroll-behavior:auto; } .tablePanel tbody tr,.distribution a { transition:none; } }
+@media(prefers-reduced-motion:reduce) { .page * { scroll-behavior:auto; } .tablePanel tbody tr,.distribution a { transition:none; } }
 
 /* 22 September: the left covers carried 65–120px of unused space. These
    summaries use existing directory/calendar data, without another request. */
