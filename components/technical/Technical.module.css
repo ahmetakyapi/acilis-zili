@@ -303,8 +303,22 @@
 .stance { display:inline-flex; align-items:center; padding:6px 10px; border-radius:var(--radius-sm); font-size:14px; font-weight:800; letter-spacing:.06em; line-height:1.15; }
 .change { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border:1px solid currentColor; border-radius:var(--radius-sm); font-size:11px; font-weight:700; white-space:nowrap; }
 /* Fiyat satırı: etiket ve plana göre yer aynı satırda, sayı altında büyük. */
-.cardQuote { display:grid; gap:4px; }
-.cardQuoteLabel { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:3px 10px; color:var(--text-muted); font-size:12px; }
+.cardQuote { container:tquote / inline-size; min-width:0; }
+.quoteGrid { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"label label" "price plan"; align-items:center; gap:4px 10px; }
+.quoteGrid > .cardQuoteLabel { grid-area:label; }
+.quoteGrid > .cardPrice { grid-area:price; }
+.quoteGrid > .plan { grid-area:plan; align-self:center; }
+/* Fiyat, değişim ve rozet tek satırda ~370 piksel istiyor; kartın içi
+   ancak kart 410'u geçince o kadar (390'da kart 358, 320'de 288). Daha
+   dar kartta rozet etiketin satırına çıkıyor. Kap fiyat bloğu, ızgara
+   onun içindeki sarmal: kap sorguladığı öğenin atası olmak zorunda.
+   KART KAP OLAMAZ — kap düzen sınırlaması getiriyor ve bu kartın alt
+   ızgara (subgrid) olmasını iptal ediyor; denendi, komşu kartlarla satır
+   hizası ve bölüm aralıkları kayboldu. İç eşik 370 (kart 410). */
+@container tquote (max-width: 369px) {
+  .quoteGrid { grid-template-areas:"label plan" "price price"; }
+}
+.cardQuoteLabel { color:var(--text-muted); font-size:11.5px; font-weight:500; }
 .cardPrice { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
 .cardPrice strong { font-size:27px; line-height:1.1; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
 /* Plan konumu: fiyatın alım planına göre yeri, tek kısa etiket. Ton
@@ -313,7 +327,7 @@
 .plan[data-kind="inZone"] { background:var(--up-wash); color:var(--up); }
 .plan[data-kind="above"], .plan[data-kind="below"] { background:var(--primary-tint); color:var(--primary-ink); }
 .plan[data-kind="belowStop"] { background:var(--down-wash); color:var(--down); }
-.cardQuoteLabel .plan { padding:2px 8px; font-size:11px; }
+.quoteGrid > .plan { padding:3px 8px; font-size:11px; }
 /* 10 → 16: risk çubuğu geldikten sonra kartta ALT ALTA İKİ YATAY ÇİZİM
    oluşuyor — risk şeridinin oranı ve seviye çizgisinin fiyat ekseni. İkisi de
    tam genişlikte ve aynı x'ten başlıyor; 10 pikselde tek bir bileşik çizim
@@ -336,8 +350,8 @@
 .cardPlan { display:grid; gap:12px; align-content:start; }
 /* CÜMLE VE ANI. Künye cümlenin başında (gerekçe TechnicalCard'da). */
 .cardThesis { display:flex; min-width:0; flex-direction:column; gap:5px; }
-.thesisStamp { display:flex; flex-wrap:wrap; justify-content:space-between; gap:2px 12px; font-size:11px; line-height:1.35; font-weight:650; letter-spacing:.02em; color:var(--text-muted); }
-.thesisStamp b { font-weight:700; color:var(--text-body); }
+.thesisStamp { display:flex; flex-wrap:wrap; justify-content:space-between; gap:2px 12px; font-size:11px; line-height:1.35; font-weight:500; color:var(--text-muted); }
+.thesisStamp b { font-weight:650; color:var(--text-body); }
 .cardHeadline { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; color:var(--text-body); font-size:14px; line-height:1.6; text-wrap:pretty; }
 /* KIRPMA GENİŞLİĞE GÖRE (23 Eylül). Üç satır her genişlikte geçerliydi ve
    kartın tek "neden" cümlesi dar düzende sonundan kesiliyordu — MU 390'da
@@ -364,11 +378,14 @@
 .gaugeValue { font-size:13.5px; font-weight:650; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
 .gaugeValue[data-tone="up"] { color:var(--up); }
 .gaugeValue[data-tone="down"] { color:var(--down); }
-.gaugeTags { display:flex; align-self:center; gap:4px; }
+.gaugeTags { display:flex; align-self:center; gap:8px; }
 /* Etiket nötr, YÖN oku renkli: değer ("Yukarı") zaten yön renginde; iki
    etiket de yeşil zeminle basılınca trend sütunu öteki iki ölçünün iki
    katı ağırlığa çıkıyordu (1440 ekran görüntüsü). */
-.gaugeTags i { display:inline-flex; align-items:center; gap:1px; padding:1px 5px 1px 3px; border-radius:var(--radius-xs); background:var(--surface-sunken); color:var(--text-body); font-size:10.5px; font-style:normal; font-weight:700; line-height:1.3; }
+/* ZEMİNSİZ (24 Eylül): iki küçük gri kutu, yanındaki iki ölçünün ince
+   çizgilerinin yanında trend sütununu hâlâ en kalabalık sütun yapıyordu.
+   Etiketler düz metin; yön oku rengi taşımaya devam ediyor. */
+.gaugeTags i { display:inline-flex; align-items:center; gap:1px; padding:0; color:var(--text-muted); font-size:10.5px; font-style:normal; font-weight:600; line-height:1.3; }
 .gaugeTags i[data-dir="up"] svg { color:var(--up); }
 .gaugeTags i[data-dir="down"] svg { color:var(--down); }
 .gaugeMeter { position:relative; align-self:center; height:9px; background:linear-gradient(var(--line-strong) 0 0) 0 50% / 100% 1px no-repeat; }
@@ -439,7 +456,10 @@
    ikinci kez söylerdi. */
 .planCell { display:flex; min-width:0; flex-wrap:wrap; align-items:baseline; gap:2px 0; }
 .planCell dt { display:flex; flex:none; align-items:center; gap:7px; font-size:12.5px; font-weight:600; letter-spacing:.01em; color:var(--text-muted); }
-.planCell::after { content:""; order:1; flex:1 1 12px; min-width:12px; margin-inline:8px; border-bottom:1px dotted var(--line-strong); position:relative; top:-4px; }
+/* Kılavuz 24 Eylül'de bir kademe söndü (`--line-strong` → `--line`):
+   kutunun üç satırı üç noktalı çizgiyle bir form gibi duruyordu. Yol hâlâ
+   çizili, ama sayıdan önce görülmüyor. */
+.planCell::after { content:""; order:1; flex:1 1 8px; min-width:8px; margin-inline:8px; border-bottom:1px dotted var(--line); position:relative; top:-4px; }
 .planCell dd { order:2; min-width:0; margin-left:auto; font-size:15px; line-height:1.25; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); text-align:right; }
 .planCell dd > span { white-space:nowrap; }
 .planItem { white-space:nowrap; }
@@ -456,6 +476,15 @@
    yine bir kademe geride, eşiğin üstünde. */
 .planCell[data-kind="target"] dd { color:var(--up); font-weight:700; }
 .planCell[data-kind="target"] .planSep { color:var(--up); opacity:.75; }
+/* ÜÇ HEDEF TEK SATIRDA (24 Eylül). SNDK'da "1.945,41 → 2.003,77 →
+   2.354,39 $" etiketin yanına sığmıyor ve bütün liste alt satıra
+   iniyordu: üç satırlık kutunun ortası iki satır, etiket tek başına
+   üstte. Liste kartında ara hedefler bir kademe küçük ve ince, son hedef
+   (para birimini taşıyan) tam ölçüde; ok dar. Sıralama yine okunuyor —
+   son hedef listenin ucu ve en koyusu. */
+.planStrip:not(.planStripLg) .planCell[data-kind="target"] dd { font-size:14px; }
+.planStrip:not(.planStripLg) .planCell[data-kind="target"] .planItem:not(:last-child) { font-weight:600; opacity:.85; }
+.planStrip:not(.planStripLg) .planCell[data-kind="target"] .planSep { margin-right:3px; font-size:12px; }
 /* SIĞMAYAN SAYI BÜTÜN OLARAK ALT SATIRA (23 Eylül). "Satırda fiyat hiç
    kırılmıyor" kaydı 320'de tutmuyordu: on beş kartın on ikisinde bir plan
    satırı sarıyordu ve alım aralığı tirenin ARKASINDAN kırılıp "1.062,07 –"
@@ -476,8 +505,11 @@
    bağlar, ağırlık okumayı sayıya çeker. Ray kendi kabı: çapa künyesinin
    sağa yapışma kararı rayın genişliğine bakıyor. */
 .rail { container-type:inline-size; display:grid; gap:4px; padding:0 2px; font-size:12px; line-height:1.35; color:var(--text-muted); }
-.riskHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; }
-.riskHead b { font-size:14px; line-height:1.25; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
+.riskHead { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; }
+/* Oran küçük bir etiket kutusunda (24 Eylül): künye satırının dört
+   parçası (ad, oran, çapa adı, çapa sayısı) aynı ağırlıkta yan yana
+   diziliyordu ve oran — satırın tek cevabı — aralarında kayboluyordu. */
+.riskHead b { padding:1px 7px; border-radius:var(--radius-xs); background:var(--surface-sunken); font-size:13px; line-height:1.35; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
 /* Çapa künyesi sağa yapışır; sığmadığında alt satıra düşer (360'ta düşüyor).
    TABULAR-NUMS DENENDİ VE GERİ ALINDI: bu ailede virgül de tabular genişliğe
    çekiliyor ve "916,84" ekranda "916 , 84" diye okunuyordu. Künye bir sütunda
@@ -490,7 +522,11 @@
    aynı hizaya iniyor; tek satıra sığdığında (kapakta, ≥480px) sağ uca
    gidiyor ve orada bir künye gibi okunuyor. */
 .riskAnchor { letter-spacing:-.01em; }
-@container (min-width: 480px) {
+/* Eşik 480 → 300 (24 Eylül): künye tek satıra sığan her rayda çapa sağ
+   uca gidiyor — liste kartında da (ray 316–433). Oran solda, çapa sağda:
+   iki uç, iki bilgi. 300'ün altında çapa sayısı zaten düşüyor ve künye
+   tek satırda solda kalıyor. */
+@container (min-width: 300px) {
   .riskAnchor { margin-left:auto; }
 }
 /* DAR RAYDA ÇAPANIN SAYISI DÜŞÜYOR (23 Eylül). 320'de künye oran +
@@ -588,7 +624,11 @@
    plan satırında boşluktu. */
 .track { position:relative; height:24px; }
 .trackLine { position:absolute; left:0; right:0; top:11px; height:2px; border-radius:1px; background:var(--rail-track); }
-.trackVoid { position:absolute; left:0; top:10px; height:4px; border-radius:2px 0 0 2px; background:repeating-linear-gradient(90deg, var(--down) 0 3px, transparent 3px 7px); opacity:.35; }
+/* Stopun solu hâlâ işaretli ama NOKTALI DEĞİL (24 Eylül): kesik kırmızı
+   çizgi rayın en gürültülü öğesiydi — planın geçersiz olduğu bölge, planın
+   kendisinden (bant, bacaklar) daha dikkat çekiyordu. Düz, eksenle aynı
+   kalınlıkta, soluk düşüş tonu. */
+.trackVoid { position:absolute; left:0; top:11px; height:2px; border-radius:1px 0 0 1px; background:var(--down); opacity:.28; }
 .trackSeg { position:absolute; top:10px; height:4px; border-radius:2px; }
 .trackSeg[data-tone="down"] { background:var(--down); }
 .trackSeg[data-tone="up"] { background:var(--up); }
@@ -597,8 +637,11 @@
 .trackSeg[data-tone="flat"] { background:color-mix(in srgb, var(--text-muted) 55%, transparent); }
 /* Bant bacakların ALTINDA ve opak: yıkama tonu kartın yüzeyinin üstüne
    seriliyor, eksen çizgisi bandın içinde görünmüyor (gerekçe LevelTrack). */
-.trackBand { position:absolute; top:5px; height:14px; border-radius:5px; background:linear-gradient(var(--up-wash), var(--up-wash)), var(--premium-surface); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 45%, transparent); }
-.trackTick { position:absolute; top:4px; width:2px; height:16px; border-radius:1px; transform:translateX(-1px); }
+/* Bant KENARSIZ (24 Eylül): yeşil kenarlı kapsül, üstünden geçen kırmızı
+   risk bacağıyla birleşince pembe bir kutu gibi okunuyordu. Bant yalnızca
+   yıkama tonu; sınırlarını üstündeki bacaklar ve çentikler zaten çiziyor. */
+.trackBand { position:absolute; top:6px; height:12px; border-radius:4px; background:linear-gradient(var(--up-wash), var(--up-wash)), var(--premium-surface); }
+.trackTick { position:absolute; top:6px; width:2px; height:12px; border-radius:1px; transform:translateX(-1px); }
 .trackTick[data-kind="stop"] { background:var(--down); }
 .trackTick[data-kind="target"] { background:var(--up); }
 .trackTick[data-kind="sellLevel"] { background:var(--down); opacity:.55; }
