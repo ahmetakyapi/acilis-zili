@@ -112,6 +112,9 @@ type SortDir = "asc" | "desc";
  */
 const PAGE_STEP = 60;
 
+/** Piyasa değeri sırasında canlı verisi çekilen fazladan satır — gerekçe tabloda. */
+const CAP_CANDIDATE_MARGIN = 40;
+
 /** Kategori çipi — etiket + o gruptaki şirket sayısı. */
 function SectorChip({
   href,
@@ -481,7 +484,33 @@ async function CompaniesTable({
   t: Dictionary;
 }) {
   const status = await getStatus();
-  const symbols = unsorted.map((r) => r.symbol);
+  /* PİYASA DEĞERİ SIRASINDA CANLI VERİ YALNIZCA ADAYLARA (24 Eylül, ölçüldü).
+     Tablo 60 satır basıyor ama kotasyon ve haftalık değişim dizinin TAMAMI
+     (~1.010 sembol) için çekiliyordu — "en çok düşen" gibi sıralamalar
+     hepsini görmek zorunda, doğru. Varsayılan sıra piyasa değeri ise ve
+     orada sıra önbellekteki değerden neredeyse hiç oynamıyor: önbellek
+     fiyatı canlıdan en fazla birkaç dakika geride. Kotasyon önbelleği
+     boşken bin sembollük tur yerelde 1,4-3 saniye sürüyordu; canlıda seans
+     içinde önbellek sık tazelendiği için ziyaretçilerin önemli bir kısmı
+     sayfayı bu kadar bekliyordu.
+     Artık piyasa değeri sırasında önce önbellekteki değerle sıralanıp
+     görünen dilim + 40 satırlık bir pay seçiliyor; canlı veri yalnızca onlar
+     için çekiliyor ve nihai sıra yine CANLI değerle kuruluyor. Pay, dilimin
+     sınırındaki bir şirketin canlı fiyatla bir-iki sıra yer değiştirmesini
+     karşılıyor. Değeri bilinmeyen satırlar her iki yönde de sonda kalıyordu;
+     burada da sonda. Öteki sıralamalar (değişim, hafta, hacim, fiyat)
+     bütün diziyi görmeye devam ediyor. */
+  const candidates =
+    sort === "cap"
+      ? [...unsorted]
+          .sort((a, b) => {
+            if (a.marketCap == null) return b.marketCap == null ? 0 : 1;
+            if (b.marketCap == null) return -1;
+            return dir === "asc" ? a.marketCap - b.marketCap : b.marketCap - a.marketCap;
+          })
+          .slice(0, limit + CAP_CANDIDATE_MARGIN)
+      : unsorted;
+  const symbols = candidates.map((r) => r.symbol);
 
   const [quotesResult, weekly] = await Promise.all([
     getQuotes(symbols, status),
@@ -539,7 +568,7 @@ async function CompaniesTable({
   /* Boşlar her zaman SONDA, yön ne olursa olsun. Kendi aralarındaki sıra
      bozulmuyor: `Array.prototype.sort` kararlı, yani veri gelmeyen şirketler
      tablonun kendi (piyasa değeri) sırasında kalıyor. */
-  const sorted = [...unsorted].sort((a, b) => {
+  const sorted = [...candidates].sort((a, b) => {
     const av = valueOf(a);
     const bv = valueOf(b);
     if (av === null) return bv === null ? 0 : 1;
@@ -548,9 +577,13 @@ async function CompaniesTable({
   });
 
   // Dilim SIRALAMADAN SONRA: "en çok düşen" ilk 60'ın değil, hepsinin en çok
-  // düşeni. Kotasyonlar bu yüzden tüm semboller için çekiliyor.
+  // düşeni. Kotasyonlar bu yüzden tüm semboller için çekiliyor — piyasa
+  // değeri sırası hariç, orada adaylar yetiyor (yukarıda).
   const rows = sorted.slice(0, limit);
-  const hasMore = sorted.length > rows.length;
+  /* Toplam ve "daha fazla" DİZİNİN kendisinden: adaylar yalnızca bu
+     turun canlı verisini sınırlıyor, listenin boyunu değil. */
+  const total = unsorted.length;
+  const hasMore = total > rows.length;
   const kotasyonsuz = rows.filter((r) => !quotes[r.symbol]).length;
 
   return (
@@ -562,7 +595,7 @@ async function CompaniesTable({
               ikinci geçişte kendi aramasının sayıya dönüştüğünü görürdü.
               İkinci değişim işlev alıyor: "$&" gibi bir arama `replace`in
               kendi kalıp dili sayılmasın. */}
-          <p>{t.companies.searchResults.replace("{n}", String(sorted.length)).replace("{query}", () => query)}</p>
+          <p>{t.companies.searchResults.replace("{n}", String(total)).replace("{query}", () => query)}</p>
           <Link href={clearHref} scroll={false}>{t.companies.clearSearch}</Link>
         </div>}
         {/* TABLONUN BAŞLIĞI VARDI AMA GÖRÜNMÜYORDU. Panel doğrudan sütun
@@ -603,7 +636,7 @@ async function CompaniesTable({
                 hasMore
                   ? t.companies.showing
                       .replace("{n}", String(rows.length))
-                      .replace("{total}", String(sorted.length))
+                      .replace("{total}", String(total))
                   : null,
                 quotesResult.ok && quotesResult.stale
                   ? staleMark(t.data.mayBeStale, quotesResult.fetchedAt, locale)
@@ -834,7 +867,7 @@ async function CompaniesTable({
             <p className="numeral text-small text-muted">
               {t.companies.showing
                 .replace("{n}", String(rows.length))
-                .replace("{total}", String(sorted.length))}
+                .replace("{total}", String(total))}
             </p>
             <Link
               href={moreHref}
