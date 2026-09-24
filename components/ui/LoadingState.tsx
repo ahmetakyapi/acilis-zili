@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
-import { BellMark } from "@/components/brand/BellMark";
+import { BellLoader } from "@/components/brand/BellLoader";
 
 /** One brand mark for route, filter, and chart loading. No progress percent:
  * provider requests do not expose how much work remains. */
 export function LoadingMark({ label, compact = false }: { label?: string; compact?: boolean }) {
   return <div className={`route-loader-card${compact ? " loading-mark-compact" : ""}`} role={label ? "status" : undefined} aria-live={label ? "polite" : undefined} aria-hidden={!label || undefined}>
-    <span aria-hidden className="route-loader-mark"><BellMark size={compact ? 26 : 34} className="route-loader-bell" /></span>
+    <span aria-hidden className="route-loader-mark"><BellLoader size={compact ? 30 : 44} /></span>
     {label && <span className="route-loader-label">{label}</span>}
   </div>;
 }
