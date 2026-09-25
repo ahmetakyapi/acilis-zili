@@ -16,6 +16,7 @@ import {
   news,
   quotesCache as quotesCacheTable,
   stories,
+  storyRevisions,
   symbols as symbolsTable,
   watchlistItems,
   watchlists,
@@ -719,8 +720,16 @@ export type BriefIndexRow = {
   locale: string;
   /** Gövdenin başı (ham markdown, 280 harf) — arşiv satırının ilk cümlesi. */
   lead: string;
-  /** Site haritasının `lastModified`i. */
   generatedAt: Date;
+  /**
+   * Site haritasının `lastModified`i: üretim anı ile son panel
+   * düzeltmesinden hangisi daha yeniyse. `generatedAt` bilerek yalnızca
+   * rutin yazınca ilerliyor (content-write.ts); düzeltmenin anı
+   * `story_revisions`ta, `bulten:{tarih}:{dönem}` anahtarıyla duruyor.
+   * Harita yalnızca `generatedAt`i okurken düzeltilen bir bülten arama
+   * motoruna hiç değişmemiş görünüyordu.
+   */
+  modifiedAt: Date;
 };
 
 /**
@@ -780,6 +789,11 @@ export async function getBriefArchive(
            ilk cümlesini de gösteriyor. Metnin tamamı 60 satırda gereksiz. */
         lead: sql<string>`left(${dailyBriefs.bodyMd}, 280)`,
         generatedAt: dailyBriefs.generatedAt,
+        modifiedAt: sql<Date>`greatest(${dailyBriefs.generatedAt}, (
+          select max(${storyRevisions.replacedAt}) from ${storyRevisions}
+          where ${storyRevisions.slug} = 'bulten:' || ${dailyBriefs.briefDate} || ':' || ${dailyBriefs.period}
+            and ${storyRevisions.locale} = ${dailyBriefs.locale}
+        ))`.mapWith(dailyBriefs.generatedAt),
       })
       .from(dailyBriefs)
       .where(eq(dailyBriefs.period, period))

@@ -59,6 +59,10 @@ const THEME_SPECIMEN = {
   dark: { page: "#070d16", card: "#141d29", ink: "#2a3542", accent: "#35b8ff" },
 } as const;
 
+/** Sürmekte olan tema geçişi — üst üste tıklamada temizliği yalnızca
+    sonuncusu yapsın diye (bkz. `pickTheme`). */
+let activeThemeTransition: ViewTransition | null = null;
+
 /** Açık/koyu seçimi — `<html data-theme>`i dinler ve ona yazar. */
 export function useThemePreference(initialTheme: Theme) {
   const theme = useSyncExternalStore(
@@ -99,7 +103,17 @@ export function useThemePreference(initialTheme: Theme) {
     }
     root.classList.add("theme-switching");
     const transition = document.startViewTransition(apply);
-    void transition.finished.finally(() => root.classList.remove("theme-switching"));
+    activeThemeTransition = transition;
+    /* ÜST ÜSTE İKİ TIKLAMA. Geçiş sürerken öteki temaya basılınca tarayıcı
+       ilk geçişi atlıyor ve onun `finished`i hemen çözülüyor. Temizlik
+       koşulsuz olsaydı sınıfı İKİNCİ geçiş hâlâ oynarken silerdi ve
+       tarayıcının varsayılan çapraz solması araya girerdi. Sınıfı yalnızca
+       en son başlayan geçiş kaldırır. */
+    void transition.finished.finally(() => {
+      if (activeThemeTransition !== transition) return;
+      activeThemeTransition = null;
+      root.classList.remove("theme-switching");
+    });
   };
 
   return { theme, pickTheme };

@@ -202,7 +202,10 @@ export function PriceChart({
      yanında küçük bir etiket. Grafiğin üstüne ikinci bir büyük fiyat
      satırı da açılmıyor (başlığa taşınma gerekçesi buydu).
      Bağlam yoksa (yazı içi grafik) okuma eskisi gibi kendi satırında. */
-  const floatingReading = useChartReading() !== null;
+  /* Bağlam artık düz bir boolean (`createContext(false)`); `!== null`
+     karşılaştırması her yerde true dönüyor ve yazı içi grafik de okumayı
+     noktanın yanında basıyordu. */
+  const floatingReading = useChartReading();
   /* DOKUNULAN OKUMA ARALIKLA BİRLİKTE TEMİZLENİYOR.
      Dokunmatikte okuma tek dokunuşla açılıyor ve grafiğin dışına
      dokunulana kadar EKRANDA KALIYOR (gerekçesi bileşen başında). Ama

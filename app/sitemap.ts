@@ -6,6 +6,9 @@ import { SITE_URL } from "@/lib/site";
 import { LOCALES } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
 import { analysisHref } from "@/lib/analysis";
+
+type Locale = (typeof LOCALES)[number];
+type SitemapItem = { path: string; locale: Locale; modified: Date };
 import { technicalHref } from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
 
@@ -109,7 +112,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
      listesi toplanıyor, sonra kayıtlar üretiliyor — bir kaydın öteki dilde
      var olup olmadığı ancak ikisi de okunduktan sonra biliniyor. */
   const dynamicEntries = (
-    items: { path: string; locale: (typeof LOCALES)[number]; modified: Date }[],
+    items: SitemapItem[],
     priority: number,
   ): MetadataRoute.Sitemap => {
     const byPath = new Map<string, Set<string>>();
@@ -139,63 +142,61 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   };
 
-  try {
-    const items = [];
-    for (const locale of LOCALES) {
-      const rows = (await getStories(locale, SITEMAP_LIMIT)).filter(
-        (row) => row.locale === locale,
-      );
-      for (const story of rows) {
-        // Metnin son yazıldığı an. Bir dönem olayın günüydü (eventDate):
-        // düzeltilen bir yazı haritada hiç değişmemiş görünüyordu.
-        items.push({ path: `/mercek/${story.slug}`, locale, modified: story.updatedAt });
+  /* ÜÇ İÇERİK, TEK KALIP. Mercek, analiz ve bülten aynı işi yapıyordu:
+     her dil için satırları oku, yalnızca O DİLDE yazılmış satırları tut
+     (okuyucu dili bulunamayınca öteki dilin satırını döndürüyor; o satır
+     haritaya yazılırsa var olmayan bir çeviri ilan edilir), adres + dil +
+     değişiklik anını topla. Kalıp üç kez kopyalıydı; bir kural değişince
+     üç yerde birden değişmesi gerekiyordu. Okunamayan tablo haritayı
+     düşürmez: o bölüm eksik kalır, harita geçerli kalır. */
+  const section = async <Row extends { locale: string }>(
+    load: (locale: Locale) => Promise<Row[]>,
+    toItem: (row: Row, locale: Locale) => SitemapItem,
+    priority: number,
+  ) => {
+    try {
+      const items: SitemapItem[] = [];
+      for (const locale of LOCALES) {
+        for (const row of (await load(locale)).filter((r) => r.locale === locale)) {
+          items.push(toItem(row, locale));
+        }
       }
+      entries.push(...dynamicEntries(items, priority));
+    } catch {
+      // Veritabanı yoksa harita durağan kısımla üretilsin, hata vermesin.
     }
-    entries.push(...dynamicEntries(items, 0.7));
-  } catch {
-    // Veritabanı yoksa harita durağan kısımla üretilsin, hata vermesin.
-  }
+  };
 
-  try {
-    const items = [];
-    for (const locale of LOCALES) {
-      /* Süzme gerekçesi mercek döngüsünde. Adres `analysisHref`ten geliyor:
-         sayfanın canonical'ı ve JSON-LD'si de aynı yardımcıyı kullanıyor,
-         yani harita ile sayfa aynı adresi yazıyor. */
-      const rows = (await getAnalyses(locale, { limit: SITEMAP_LIMIT })).filter(
-        (row) => row.locale === locale,
-      );
-      for (const analysis of rows) {
-        items.push({
-          path: analysisHref(analysis.symbol, analysis.period),
-          locale,
-          modified: analysis.updatedAt,
-        });
-      }
-    }
-    entries.push(...dynamicEntries(items, 0.7));
-  } catch {
-    // Aynı gerekçe: analiz tablosu okunamazsa harita eksik ama geçerli kalır.
-  }
+  // Metnin son yazıldığı an. Bir dönem olayın günüydü (eventDate):
+  // düzeltilen bir yazı haritada hiç değişmemiş görünüyordu.
+  await section(
+    (locale) => getStories(locale, SITEMAP_LIMIT),
+    (story, locale) => ({ path: `/mercek/${story.slug}`, locale, modified: story.updatedAt }),
+    0.7,
+  );
+
+  /* Adres `analysisHref`ten geliyor: sayfanın canonical'ı ve JSON-LD'si de
+     aynı yardımcıyı kullanıyor, yani harita ile sayfa aynı adresi yazıyor. */
+  await section(
+    (locale) => getAnalyses(locale, { limit: SITEMAP_LIMIT }),
+    (analysis, locale) => ({
+      path: analysisHref(analysis.symbol, analysis.period),
+      locale,
+      modified: analysis.updatedAt,
+    }),
+    0.7,
+  );
 
   /* BÜLTEN SAYILARI. Her sayının kendi adresi var (`briefHref`); öncesinde
      hepsi `/bulten?tarih=` idi ve canonical'ları `/bulten`du, yani haritaya
-     yazılacak bir adresleri yoktu. Dil kuralı mercekle aynı. */
-  try {
-    const items = [];
-    for (const period of ["daily", "weekly"] as BriefPeriod[]) {
-      for (const locale of LOCALES) {
-        const rows = (await getBriefArchive(locale, period, SITEMAP_LIMIT)).filter(
-          (row) => row.locale === locale,
-        );
-        for (const row of rows) {
-          items.push({ path: briefHref(row.briefDate, period), locale, modified: row.generatedAt });
-        }
-      }
-    }
-    entries.push(...dynamicEntries(items, 0.5));
-  } catch {
-    // Bülten tablosu okunamazsa harita eksik ama geçerli kalır.
+     yazılacak bir adresleri yoktu. Değişiklik anı `modifiedAt`: panel
+     düzeltmesi `generatedAt`i ilerletmiyor (gerekçe lib/data.ts). */
+  for (const period of ["daily", "weekly"] as BriefPeriod[]) {
+    await section(
+      (locale) => getBriefArchive(locale, period, SITEMAP_LIMIT),
+      (row, locale) => ({ path: briefHref(row.briefDate, period), locale, modified: row.modifiedAt }),
+      0.5,
+    );
   }
 
   /* TEKNİK ANALİZ SAYFALARI yazılmış metin taşıyor, hisse sayfası gibi
