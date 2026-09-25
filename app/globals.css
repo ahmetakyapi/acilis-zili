@@ -2140,14 +2140,22 @@ html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
 /* Kap footer'ın kendisi: kutunun yüksekliği de adın puntosu da AYNI
    genişliğe göre ölçülsün (kap kendi boyutunu kendine göre ölçemez). */
 footer:has(> .footer-wordmark) { container-type: inline-size; }
-.footer-wordmark { --wm-size: 17.2cqi; overflow: hidden; height: calc(var(--wm-size) * 1.1); margin-top: 4px; pointer-events: none; user-select: none; }
-html[lang="tr"] .footer-wordmark { --wm-size: 24.5cqi; }
+/* Boy: künye bir İMZA, sahne değil. İlk hâli footer'ın tam genişliğini
+   dolduruyordu (TR 24,5cqi) ve masaüstünde 323 piksellik bir blok olarak
+   footer'ın yarısını tutuyordu — sayfanın son karesi veriden değil markadan
+   oluşuyordu. Şimdi genişliğin ~%40'ı, soldan hizalı: 1280'de 132, telefonda
+   ~53 piksel (ölçüldü, 25 Eylül). Telefonda taban punto, adın okunur kalması
+   için; oran iki dilde aynı (EN adı TR'den ~%40 daha geniş). Ad artık satırı
+   doldurmadığı için span `fit-content`: degrade kutuya yayılıyor ve tam
+   genişlikte koyu ucu boş sağ tarafa, adın dışına düşüyordu. */
+.footer-wordmark { --wm-size: max(7cqi, 34px); overflow: hidden; height: calc(var(--wm-size) * 1.1); margin-top: 4px; pointer-events: none; user-select: none; }
+html[lang="tr"] .footer-wordmark { --wm-size: max(10cqi, 48px); }
 .footer-wordmark > span {
   /* Alt dolgu ŞART: degrade mürekkep (`background-clip: text`) yalnızca
      öğenin kendi kutusunu boyuyor ve satır yüksekliği 1'de çengeller ile
      "g"nin kuyruğu kutunun dışında, mürekkepsiz kalıyordu — kutu ne kadar
      uzun olursa olsun kesik görünüyordu. */
-  display: block; padding-bottom: 0.2em; font-size: var(--wm-size); line-height: 1; font-weight: 700; letter-spacing: -0.06em; white-space: nowrap;
+  display: block; width: fit-content; padding-bottom: 0.2em; font-size: var(--wm-size); line-height: 1; font-weight: 700; letter-spacing: -0.06em; white-space: nowrap;
   color: var(--line-strong);
 }
 @supports (background-clip: text) or (-webkit-background-clip: text) {
