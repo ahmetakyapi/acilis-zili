@@ -47,6 +47,10 @@
 @media(max-width:540px) {
   .formCard { padding:22px 18px; border-radius:18px; } .formCard h1 { font-size:26px; } .inputWrap input { font-size:16px; }
   .title { font-size:26px; } .details { margin-top:32px; }
+  /* TELEFONDA FORM ÖNCE. 390 × 844'te kayıt formunun düğmesi alt sekme
+     çubuğunun ARKASINDA kalıyordu (düğmenin dibi 800, çubuk 764; ölçüldü).
+     Gün şeridi süs: telefonda kalkıyor, zil küçülüyor (160 → 128). */
+  .scene { width:128px; height:80px; margin:-8px 0 0; } .strip { display:none; } .formCard { margin-top:14px; }
   .features { grid-template-columns:minmax(0, 1fr); } .feature { flex-direction:row; text-align:left; padding:14px 2px; gap:13px; }
   .feature + .feature { border-left:0; border-top:1px solid var(--line); }
 }
