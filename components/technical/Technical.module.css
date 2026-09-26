@@ -1798,3 +1798,33 @@
  .overviewCell { flex-wrap:wrap; row-gap:4px; }
  .overviewCell dd { flex:1 0 max-content; max-width:100%; }
 }
+
+/* ---- Ana sayfa paneli: halka + lejant (26 Eylül) ----
+   Halka solda (104), lejant sağda; logo satırları altta tam genişlikte.
+   Düz oran çubuğu panelde kalkıyor: halka aynı oranı dilim dilim veriyor
+   ve her dilim bir hisse (dizindeki kurgunun aynısı). */
+.pulse[data-variant="panel"] { grid-template-columns:104px minmax(0,1fr); column-gap:18px; align-items:center; }
+.pulse[data-variant="panel"] > .pulseDial { width:104px; grid-column:1; grid-row:1; }
+.pulse[data-variant="panel"] .pulseDial strong { font-size:26px; }
+.pulse[data-variant="panel"] > .pulseBar { display:none; }
+.pulse[data-variant="panel"] > .pulseRows, .pulse[data-variant="panel"] > .pulseChanges { grid-column:1/-1; }
+.pulse[data-variant="panel"] .pulseStance b { display:none; }
+.pulse[data-variant="panel"] .pulseRow { padding:8px 0; border-radius:0; border-top:1px solid var(--line-soft); }
+.pulseLegend { display:grid; gap:2px; grid-column:2; grid-row:1; }
+.pulseLegend li { display:grid; grid-template-columns:minmax(0,1fr) auto 44px; align-items:baseline; gap:10px; padding:6px 0; border-bottom:1px solid var(--line-soft); font-size:13px; font-weight:700; letter-spacing:.03em; }
+.pulseLegend li:last-child { border-bottom:0; }
+.pulseLegend li > span { display:flex; align-items:center; gap:8px; }
+/* Lejant noktası halkadaki dilimin rengi — göz ikisini eşleştiriyor. */
+.pulseLegend li > span::before { content:""; width:8px; height:8px; flex-shrink:0; border-radius:999px; background:var(--primary); }
+.pulseLegend li[data-verdict="buy"] > span::before { background:var(--up); }
+.pulseLegend li[data-verdict="sell"] > span::before { background:var(--down); }
+.pulseLegend li[data-verdict="pending"] > span::before { background:var(--line-strong); }
+.pulseLegend b { font-size:22px; font-weight:600; line-height:1; letter-spacing:-.04em; color:var(--text-strong); }
+.pulseLegend small { text-align:right; font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
+/* Logolar üzerine gelince kalkıyor; hangi logoya gelindiği balondan önce
+   hareketle okunuyor. */
+@media(hover:hover) and (pointer:fine) {
+  .pulse[data-variant="panel"] .pulseLogo { transition-property:background-color, box-shadow, opacity, filter, translate; }
+  .pulse[data-variant="panel"] .pulseLogo:hover { translate:0 -2px; }
+}
+@media(prefers-reduced-motion:reduce) { .pulse[data-variant="panel"] .pulseLogo:hover { translate:none; } }

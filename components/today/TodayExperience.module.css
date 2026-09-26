@@ -143,7 +143,13 @@
 @keyframes index-flash { from { background:var(--flash); } to { background:transparent; } }
 /* Yüzdenin hangi seansı anlattığı ("Kapanış Sonrası", "Son Kapanış"):
    bir künye, sayının gölgesinde — 11 punto, yarım kalın. */
-.indexBasis { color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; line-height:1.3; }
+/* KÜNYE HER KARTTA KENDİ SATIRINDA (26 Eylül). Satır sarılıyordu ve
+   künyenin yeri fiyatın uzunluğuna bağlıydı: 1440'ta Russell 2000'in
+   kısa fiyatının yanına "Kapanış Sonrası" sığıyor, öteki üç kartta alta
+   iniyordu; aynı ızgarada üç kart bir hizada, biri başka hizada
+   (ekran görüntüsüyle bildirildi). `flex-basis:100%` onu her genişlikte
+   alta alıyor. */
+.indexBasis { flex-basis:100%; color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; line-height:1.3; }
 .indexSpark { margin-top:10px; height:32px; width:100%; }
 
 /* ---- Gün akışı çerçevesi ----
@@ -206,13 +212,31 @@
 .storyFigure { background:var(--surface-solid); }
 /* The three secondary stories were title-only ~40px rows. Each now includes
    its existing dek, with a small separate date/symbol column on desktop. */
-.storyRow { display:grid; grid-template-columns:22px minmax(0,1fr) auto; align-items:start; gap:14px 24px; padding:17px 26px; border-left:2px solid transparent; transition:background .2s; }
+.storyRow { display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:start; gap:14px 24px; padding:17px 26px; border-left:2px solid transparent; transition:background .2s; }
 .storyRow:hover { background:var(--primary-tint); border-left-color:var(--primary-faint); }
 .storyRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
 .storyNumber { padding-top:3px; color:var(--primary); font-size:var(--text-tiny); font-weight:600; letter-spacing:.04em; }
 .storyRowCopy { min-width:0; }
 .storyRowCopy h4 { color:var(--text-strong); font-size:var(--text-read); line-height:1.45; font-weight:600; letter-spacing:-.015em; overflow-wrap:anywhere; }
 .storyRowCopy p { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin-top:6px; color:var(--text-body); font-size:var(--text-base); line-height:1.6; }
+/* ---- Mercek bloğunun logoları (26 Eylül) ----
+   Kadro: karolar 12 piksel üst üste biniyor, aralarındaki ince halka
+   bloğun kendi yüzeyi (gölge değil, ton — CLAUDE.md). Üzerine gelince
+   karolar aralanıyor: kaç şirket olduğu bir bakışta sayılıyor. */
+.storyCast { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.storyCastLogos { display:flex; align-items:center; flex-shrink:0; }
+.storyCastTile { box-shadow:0 0 0 3px var(--premium-surface); transition:margin .32s, translate .32s; }
+.storyCastLogos > * + * { margin-left:-12px; }
+.storyCastMore { display:grid; place-items:center; width:44px; height:44px; margin-left:-12px; border-radius:var(--radius-lg); background:var(--primary-wash); color:var(--primary-ink); font-size:var(--text-tiny); font-weight:700; box-shadow:0 0 0 3px var(--premium-surface); }
+@media(hover:hover) and (pointer:fine) {
+  .storyLead:hover .storyCastLogos > * + * { margin-left:4px; }
+  .storyLead:hover .storyCastTile { translate:0 -2px; }
+}
+/* Satırın logosu numaranın yerinde; ikinci sembol köşesine binen küçük
+   karo. Satıra gelince logo hafifçe kalkıyor, ok ile aynı anda. */
+.storyRowLogo { position:relative; width:32px; height:32px; margin-top:1px; transition:translate .25s; }
+.storyRowLogoSecond { position:absolute; right:-7px; bottom:-6px; box-shadow:0 0 0 2px var(--surface-solid); }
+.storyRow:hover .storyRowLogo { translate:0 -2px; }
 .storyRowMeta { display:flex; align-items:center; gap:12px; padding-top:2px; color:var(--text-muted); font-size:var(--text-tiny); }
 .storyRowMeta svg { flex-shrink:0; color:var(--primary-ink); transition:transform .2s; }
 .storyRow:hover .storyRowMeta svg { transform:translate(2px,-2px); }
@@ -375,7 +399,7 @@
   .storySpotlight h3 { font-size:25px; line-height:1.2; text-wrap:pretty; }
   .storyLead h3 + p { margin-top:10px; font-size:var(--text-read); line-height:1.65; }
   .storyLead .storyFigure { border-radius:12px; padding:14px; gap:10px; }
-  .storyRow { grid-template-columns:22px minmax(0,1fr); gap:8px 12px; padding:16px 18px; }
+  .storyRow { grid-template-columns:36px minmax(0,1fr); gap:8px 12px; padding:16px 18px; }
   .storyRowCopy h4 { font-size:15px; line-height:1.45; }
   .storyRowCopy p { -webkit-line-clamp:2; font-size:var(--text-base); line-height:1.55; }
   .storyRowMeta { grid-column:2; flex-wrap:wrap; gap:9px; padding-top:0; }
@@ -416,6 +440,7 @@
 @media (prefers-reduced-motion:reduce) {
   .indexCard { transition:none; }
   .indexValue[data-flash] { animation:none; }
-  .storyRow,.storyRowMeta svg { transition:none; }
+  .storyRow,.storyRowMeta svg,.storyCastTile,.storyRowLogo { transition:none; }
+  .storyRow:hover .storyRowLogo,.storyLead:hover .storyCastTile { translate:none; }
   .storyRow:hover .storyRowMeta svg { transform:none; }
 }

@@ -73,6 +73,7 @@ export function TechnicalPulse({
   variant?: "directory" | "panel";
 }) {
   const filterable = variant === "directory";
+  const sharePercent = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", { style: "percent", maximumFractionDigits: 0 });
   const groups = VERDICTS.map((verdict) => ({
     verdict,
     rows: board.filter(({ row }) => verdictOf(row.stance) === verdict),
@@ -162,7 +163,7 @@ export function TechnicalPulse({
       {/* HAREKET VERİYİ ÇİZİYOR, SÜSLEMİYOR. Dilimler soldan kendi oranlarına
           uzuyor, satırlar ve logolar sırayla iniyor; ortak hareket sisteminin
           (`MotionExperience`) kancaları, azaltılmış harekette hepsi yerinde. */}
-      {filterable && total > 0 && <div className={styles.pulseDial} aria-hidden="true">
+      {total > 0 && <div className={styles.pulseDial} aria-hidden="true">
         <svg viewBox="0 0 160 160" fill="none">
           <circle cx="80" cy="80" r="53" className={styles.pulseDialGuide} />
           {[...groups.map((group) => ({ verdict: group.verdict, count: group.rows.length })), { verdict: "pending", count: pending.length }]
@@ -177,6 +178,27 @@ export function TechnicalPulse({
         </svg>
         <span><strong>{total}</strong><small>{t.technical.trackedLabel}</small></span>
       </div>}
+      {/* PANELDE HALKA + LEJANT (26 Eylül). Ana sayfa paneli yalnızca düz
+          bir oran çubuğu ve logo satırları taşıyordu; "çok düz" bulundu
+          (ekran görüntüsüyle bildirildi). Dizindeki halka panele de
+          geliyor, yanında her görüşün sayısı ve payı. Sayı satırlarda
+          ikinci kez yazılmıyor (CSS, `data-variant="panel"`). */}
+      {!filterable && total > 0 && (
+        <ul className={styles.pulseLegend} data-motion-stagger>
+          {[
+            ...groups.map((group) => ({ key: group.verdict, label: verdictLabel(group.verdict, t), count: group.rows.length })),
+            { key: "pending" as const, label: t.technical.pendingLabel, count: pending.length },
+          ]
+            .filter((item) => item.count > 0)
+            .map((item) => (
+              <li key={item.key} data-verdict={item.key}>
+                <span className={item.key === "pending" ? "text-muted" : verdictTextClass(item.key)}>{item.label}</span>
+                <b className="numeral">{item.count}</b>
+                <small className="numeral">{sharePercent.format(item.count / total)}</small>
+              </li>
+            ))}
+        </ul>
+      )}
       <div className={styles.pulseBar} aria-hidden data-motion-stagger>
         {groups
           .filter((group) => group.rows.length > 0)

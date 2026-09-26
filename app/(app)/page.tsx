@@ -580,7 +580,7 @@ export default async function TodayPage() {
         <Panel data-home-section="schedule">
           <PanelHeader
             title={t.today.schedule}
-            tone="plate"
+            tone="title"
             action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
           />
           <Suspense fallback={<ListSkeleton rows={3} />}>
@@ -591,7 +591,7 @@ export default async function TodayPage() {
         <Panel data-home-section="week">
           <PanelHeader
             title={t.today.weekAhead}
-            tone="plate"
+            tone="title"
             action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
           />
           <Suspense fallback={<ListSkeleton rows={3} />}>
@@ -837,7 +837,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
           tarihini dipte taşıyor — iki ekran artık aynı yerde söylüyor. */}
       <PanelHeader
         title={t.markets.yields}
-        tone="plate"
+        tone="title"
         action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
       />
       <div className="grid grid-cols-3 border-t border-line">
@@ -989,7 +989,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   if (!result.ok) {
     return (
       <Panel>
-        <PanelHeader title={t.today.worldMarkets} tone="plate" />
+        <PanelHeader title={t.today.worldMarkets} tone="title" />
         <DataError message={t.data.failed} hint={t.data.failedHint} />
       </Panel>
     );
@@ -1001,7 +1001,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
   if (shown.length === 0) {
     return (
       <Panel>
-        <PanelHeader title={t.today.worldMarkets} tone="plate" />
+        <PanelHeader title={t.today.worldMarkets} tone="title" />
         <DataError message={t.data.failed} hint={t.data.failedHint} />
       </Panel>
     );
@@ -1024,7 +1024,7 @@ async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   return (
     <Panel>
-      <PanelHeader title={t.today.worldMarkets} tone="plate" />
+      <PanelHeader title={t.today.worldMarkets} tone="title" />
       <ul>
         {shown.map((market) => {
           const quote = result.data[market.symbol];
@@ -1422,7 +1422,7 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
   if (!result.ok) {
     return (
       <Panel>
-        <PanelHeader title={title} tone="plate" />
+        <PanelHeader title={title} tone="title" />
         <DataError message={t.data.failed} hint={t.data.failedHint} />
       </Panel>
     );
@@ -1488,7 +1488,7 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
   if (gainers.length === 0 && losers.length === 0) {
     return (
       <Panel>
-        <PanelHeader title={title} tone="plate" />
+        <PanelHeader title={title} tone="title" />
         {result.stale ? (
           <DataError message={t.data.failed} hint={t.data.failedHint} />
         ) : (
@@ -1569,7 +1569,7 @@ async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }) {
     <Panel>
       <PanelHeader
         title={title}
-        tone="plate"
+        tone="title"
         action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
       />
       {block(t.today.moversUp, gainers, true)}
@@ -1603,7 +1603,7 @@ function EarningsTodaySkeleton({ t }: { t: Dictionary }) {
     <Panel>
       <PanelHeader
         title={t.today.earningsToday}
-        tone="plate"
+        tone="title"
         action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
       />
       <ListSkeleton rows={4} />
@@ -1627,7 +1627,7 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
       <Panel>
         <PanelHeader
           title={t.today.earningsToday}
-          tone="plate"
+          tone="title"
           action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
         />
         <EmptyState compact title={t.earnings.empty} />
@@ -1674,7 +1674,7 @@ async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
            başlık ailesi okunuyordu. Kural: sitenin KENDİ YAZDIĞI içerik
            (mercek, bilanço analizi, bülten) büyük başlık alıyor, piyasa
            verisi panelleri plaka. Bugün açıklayanlar bir takvim listesi. */
-        tone="plate"
+        tone="title"
         /* SAYAÇ YALNIZCA LİSTE KIRPILDIĞINDA. İki sayıyı da söylüyor
            ("47 şirketin 8 tanesi") çünkü önce yalnızca toplam yazıyordu ve
            altında sekiz satır duruyordu: okuyucu ya kırpıldığını fark
@@ -1787,7 +1787,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
     return (
       <Panel className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
         <div className="min-w-0 flex-1">
-          <h2 className="plate">{t.today.watchlistSignedOutTitle}</h2>
+          <h2 className="display-ink display-ink-tight w-fit text-read font-bold">{t.today.watchlistSignedOutTitle}</h2>
           <p className="mt-1 text-small leading-[1.3] text-body">{t.today.watchlistSignedOutHint}</p>
         </div>
         <ButtonLink href="/giris" variant="primary" className="shrink-0">
@@ -1802,7 +1802,7 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
   if (userSymbols.length === 0) {
     return (
       <Panel>
-        <PanelHeader title={t.today.watchlistSummary} tone="plate" />
+        <PanelHeader title={t.today.watchlistSummary} tone="title" />
         <EmptyState
           title={t.today.watchlistEmpty}
           action={<PanelLink href="/favoriler">{t.watchlist.addSymbol}</PanelLink>}
@@ -1837,12 +1837,14 @@ async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dictionary }
 
   return (
     <Panel className="px-4 py-4 sm:px-5">
-      {/* Plaka başlık — panelin iki boş dalı zaten `PanelHeader` üzerinden
-          plakaya inmişti; dolu dal kendi başlığını elden yazdığı için geride
+      {/* TAM BOY BAŞLIK (26 Eylül) — ana sayfanın bütün panelleri 11
+          piksellik plakadan tam boy başlığa çıktı ("başlık küçük kalmış",
+          ekran görüntüsüyle bildirildi). Aşağıdaki not plaka dönemindendir:
+          panelin iki boş dalı zaten `PanelHeader` üzerinden plakaya inmişti; dolu dal kendi başlığını elden yazdığı için geride
           kalmıştı ve aynı panel veriye göre iki farklı başlık tipografisi
           basıyordu. */}
       <div className="mb-1 flex items-baseline justify-between gap-3">
-        <h2 className="plate min-w-0 truncate">{t.today.watchlistSummary}</h2>
+        <h2 className="display-ink display-ink-tight w-fit text-read font-bold min-w-0 truncate">{t.today.watchlistSummary}</h2>
         <PanelLink href="/favoriler">{t.common.showAll}</PanelLink>
       </div>
       {result.ok ? (
@@ -1977,10 +1979,10 @@ async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <Panel className="px-4 py-4 sm:px-5">
       <div className="mb-3.5 flex items-baseline justify-between gap-3">
-        {/* Plaka başlık — yan kolonun tamamı gibi. Gerekçe PanelHeader'da;
+        {/* Tam boy başlık — yan kolonun tamamı gibi (26 Eylül'e kadar plaka). Gerekçe PanelHeader'da;
             bu panel kendi başlığını elden yazıyor (ölçü ızgarası bir
             `PanelHeader` düzeni değil), o yüzden sınıf burada tekrarlanıyor. */}
-        <h2 className="plate">
+        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
           {t.today.macroSummary}
         </h2>
         <PanelLink href="/makro">{t.common.showAll}</PanelLink>
@@ -2494,6 +2496,9 @@ function ListSkeleton({ rows }: { rows: number }) {
  * Yazı yoksa blok kaybolmuyor, keşif karolarına düşüyor: hiç içerik
  * yazılmamış bir sitede ana sayfanın okuma girişi büsbütün yok olmasın.
  */
+/** Manşet kadrosunda en çok kaç logo — fazlası "+n" olarak sayılır. */
+const STORY_CAST_MAX = 4;
+
 async function StoriesSpotlight({
   locale,
   t,
@@ -2513,6 +2518,19 @@ async function StoriesSpotlight({
      yalnızca manşet için tek satırlık ikinci bir sorgu atılıyor. */
   const full = await getStoryBySlug(lead.slug, locale);
   const figure = storyFigureOf(full?.bodyMd, full?.locale ?? locale);
+
+  /* LOGOLAR ARTIK GERÇEKTEN BASILIYOR (26 Eylül). Yukarıdaki not manşette
+     logoların göründüğünü söylüyordu ama kod yalnızca metin basıyordu;
+     blok "çok düz yazı" gibi okunuyordu (ekran görüntüsüyle bildirildi).
+     Manşetin kadrosu en çok dört logo, satırlar ilk iki sembolün logosunu
+     taşıyor. Adlar ve adresler tek sorguda: manşet ve satırların
+     sembolleri birleşik bir listeyle soruluyor. */
+  const leadCast = (lead.symbols ?? []).slice(0, STORY_CAST_MAX);
+  const leadMore = (lead.symbols?.length ?? 0) - leadCast.length;
+  const castMeta = await getSymbolNames([
+    ...leadCast,
+    ...rest.flatMap((story) => (story.symbols ?? []).slice(0, 2)),
+  ]);
 
   return (
     <section className={styles.storySpotlight}>
@@ -2545,6 +2563,38 @@ async function StoriesSpotlight({
             bakışta okunuyor. */}
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-7">
           <div className="min-w-0 flex-1">
+            {/* KADRO: yazının kahramanı şirketler, logolarıyla. Karolar üst
+                üste biniyor ve blok görünüme girince sırayla iniyor
+                (`data-motion-stagger`); üzerine gelince aralanıyorlar.
+                Tek şirketse yanında adı yazıyor, birden çoksa semboller. */}
+            {leadCast.length > 0 && (
+              <div className={styles.storyCast}>
+                <span className={styles.storyCastLogos} data-motion-stagger>
+                  {leadCast.map((symbol) => (
+                    <LogoTile
+                      key={symbol}
+                      symbol={symbol}
+                      logoUrl={castMeta[symbol]?.logoUrl}
+                      size="lg"
+                      className={styles.storyCastTile}
+                    />
+                  ))}
+                  {leadMore > 0 && (
+                    <span className={`numeral ${styles.storyCastMore}`}>+{leadMore}</span>
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <span className="numeral block truncate text-small font-bold tracking-[0.02em] text-strong">
+                    {leadCast.join(" · ")}
+                  </span>
+                  {leadCast.length === 1 && castMeta[leadCast[0]]?.name && (
+                    <span className="block truncate text-tiny text-muted">
+                      {castMeta[leadCast[0]].name}
+                    </span>
+                  )}
+                </span>
+              </div>
+            )}
             <p className="numeral flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-tiny text-muted">
               <span className="text-base font-semibold text-body">
                 {formatEtDateLong(lead.eventDate, locale)}
@@ -2602,7 +2652,7 @@ async function StoriesSpotlight({
       </Link>
 
       {rest.length > 0 && (
-        <ul className="border-t border-primary-faint bg-surface-solid">
+        <ul className="border-t border-primary-faint bg-surface-solid" data-motion-stagger>
           {rest.map((story, index) => (
             <li
               key={story.slug}
@@ -2613,7 +2663,28 @@ async function StoriesSpotlight({
                 prefetch={false}
                 className={styles.storyRow}
               >
-                <span className={styles.storyNumber} aria-hidden>{String(index + 2).padStart(2, "0")}</span>
+                {/* Numara yerine yazının şirketi: ilk sembolün logosu,
+                    ikinci sembol varsa köşesine binen küçük karo. Sembolü
+                    olmayan yazı (makro, politika) sıra numarasını korur. */}
+                {story.symbols && story.symbols.length > 0 ? (
+                  <span className={styles.storyRowLogo} aria-hidden>
+                    <LogoTile
+                      symbol={story.symbols[0]}
+                      logoUrl={castMeta[story.symbols[0]]?.logoUrl}
+                      size="md"
+                    />
+                    {story.symbols[1] && (
+                      <LogoTile
+                        symbol={story.symbols[1]}
+                        logoUrl={castMeta[story.symbols[1]]?.logoUrl}
+                        size="xs"
+                        className={styles.storyRowLogoSecond}
+                      />
+                    )}
+                  </span>
+                ) : (
+                  <span className={styles.storyNumber} aria-hidden>{String(index + 2).padStart(2, "0")}</span>
+                )}
                 <div className={styles.storyRowCopy}>
                   <h4 lang={story.locale}>{story.title}</h4>
                   {story.dek && <p lang={story.locale}>{story.dek}</p>}
@@ -2680,9 +2751,11 @@ async function TechnicalPanel({ locale, t }: { locale: Locale; t: Dictionary }) 
   const latest = newestEdition(board);
   return (
     <Panel className="min-w-0">
+      {/* Başlık tam boy (26 Eylül): plaka başlıkta "küçük kalmış" bulundu;
+          panel artık bir halka taşıyor ve Mercek bloğu gibi görsel bir blok. */}
       <PanelHeader
         title={t.technical.title}
-        tone="plate"
+        tone="title"
         action={<PanelLink href="/teknik">{t.common.showAll}</PanelLink>}
       />
       <div className="flex flex-col gap-3 px-4 pb-4 sm:px-5">
