@@ -336,6 +336,7 @@ export function BriefEditor({
           lang={lang}
           bolgeRef={bolgeRef}
           dipnot="Bülten Sayfasındaki Çizimin Aynısı"
+          kunye={{ baslik: headline }}
           className={cn(
             "lg:sticky lg:top-(--editor-ust) lg:h-(--editor-bolum) lg:self-start",
             gorunum === "yaz" && "max-lg:hidden",

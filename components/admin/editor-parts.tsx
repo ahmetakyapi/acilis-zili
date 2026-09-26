@@ -516,10 +516,13 @@ export function OnizlemePaneli({
   lang,
   bolgeRef,
   dipnot,
+  kunye,
   className,
 }: {
   id: string;
   preview: ReactNode;
+  /** Gövdenin üstünde, tuşa basıldığı an güncellenen başlık ve giriş. */
+  kunye?: { baslik: string; giris?: string };
   durum: OnizlemeDurumu;
   yenile: () => void;
   lang: string;
@@ -607,6 +610,21 @@ export function OnizlemePaneli({
           aria-busy={durum === "ciziliyor"}
           className="p-4 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--line-focus) sm:p-5 lg:absolute lg:inset-0 lg:overflow-y-auto lg:overscroll-contain"
         >
+          {/* BAŞLIK DA ÖNİZLENİYOR (26 Eylül). Önizleme yalnızca gövdeyi
+              çiziyordu; başlığı ya da girişi düzelten editör sonucu
+              göremiyordu ("yazılar güncellenirken önizlensin"). Bu iki alan
+              düz metin, sunucu çizimine gerek yok: tuşa basıldığı an burada
+              değişiyor. Başlık sitenin başlık dilinde (degrade mürekkep). */}
+          {kunye && kunye.baslik.trim() && (
+            <header className="mb-5 border-b border-line-soft pb-4">
+              <p className="display-ink text-[1.625rem] font-bold leading-[1.15] tracking-[-0.03em] text-strong">
+                {kunye.baslik}
+              </p>
+              {kunye.giris?.trim() && (
+                <p className="mt-2.5 text-read leading-relaxed text-body">{kunye.giris}</p>
+              )}
+            </header>
+          )}
           {preview}
         </article>
         <span

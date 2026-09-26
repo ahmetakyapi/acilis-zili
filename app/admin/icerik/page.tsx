@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Suspense } from "react";
 import { CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { Button, PageHeader, PanelLink, Skeleton } from "@/components/ui/primitives";
@@ -14,7 +15,6 @@ import {
   StatBox,
   StatGrid,
   StatGridSkeleton,
-  adminInput,
   type HealthTone,
 } from "@/components/admin/AdminUI";
 import { getContentSummary, getPublishRhythm, type PublishDay } from "@/lib/admin-data";
@@ -548,16 +548,12 @@ function DayPicker({ firstBriefDay }: { firstBriefDay: string | null }) {
       >
         <label className="flex flex-col gap-1.5">
           <span className="text-small font-semibold text-muted">Geçmiş Bir Güne Git</span>
-          <input
-            type="date"
+          <DatePicker
             name="tarih"
             required
             defaultValue={today}
             min={firstBriefDay ?? undefined}
             max={today}
-            /* Yükseklik düğmeyle aynı: telefonda 44, geniş ekranda 40
-               (`Button` md). */
-            className={cn(adminInput, "numeral h-11 w-full sm:h-10 sm:w-auto")}
           />
         </label>
         <div className="grid grid-cols-2 gap-2 sm:flex">

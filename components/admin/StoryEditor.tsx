@@ -1,5 +1,6 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/DatePicker";
 import {
   startTransition,
   useActionState,
@@ -518,6 +519,7 @@ export function StoryEditor({
           lang={lang}
           bolgeRef={bolgeRef}
           dipnot="Yayındaki Çizimin Aynısı · Grafikler Yer Tutucu"
+          kunye={{ baslik: alanlar.title, giris: alanlar.dek }}
           className={cn(
             "lg:sticky lg:top-(--editor-ust) lg:row-span-2 lg:h-(--editor-bolum) lg:self-start",
             gorunum === "yaz" && "max-lg:hidden",
@@ -541,14 +543,13 @@ export function StoryEditor({
             hint="Olayın yaşandığı gün (ET); yazı arşivde bu güne düşer."
           >
             {(p) => (
-              <input
-                {...p}
-                type="date"
+              <DatePicker
+                id={p.id}
+                aria-describedby={p["aria-describedby"]}
                 name="event_date"
                 required
                 value={alanlar.eventDate}
-                onChange={(event) => ata("eventDate", event.target.value)}
-                className={cn(girdi, "numeral sm:max-w-60")}
+                onChange={(value) => ata("eventDate", value)}
               />
             )}
           </Alan>

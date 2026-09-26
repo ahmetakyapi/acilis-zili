@@ -1,10 +1,10 @@
 import Link from "next/link";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Suspense } from "react";
 import {
   PageHeader,
   Segment,
   SegmentItem,
-  buttonClass,
 } from "@/components/ui/primitives";
 import {
   AdminCell,
@@ -15,7 +15,6 @@ import {
   AdminPanelTitle,
   AdminRow,
   AdminTable,
-  adminInput,
 } from "@/components/admin/AdminUI";
 import { YazilarTabs } from "@/components/admin/YazilarTabs";
 import { ADMIN_SECTIONS, adminDocTitle } from "@/lib/admin-sections";
@@ -277,22 +276,22 @@ async function Briefs({
         >
           {donem && <input type="hidden" name="donem" value={donem} />}
           {dil && <input type="hidden" name="dil" value={dil} />}
-          <label className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <span className="w-12 shrink-0 text-small font-semibold text-muted lg:w-auto">
               Tarih
             </span>
-            <input
-              type="date"
+            {/* SİTENİN TAKVİMİ (26 Eylül): tarayıcının yerel penceresi yerine
+                `DatePicker`; seçim formu kendiliğinden gönderiyor, "Git"
+                düğmesine gerek kalmadı. */}
+            <DatePicker
               name="tarih"
               defaultValue={tarih ?? undefined}
               min={aralik.first ?? undefined}
               max={aralik.last ?? undefined}
-              className={cn(adminInput, "numeral h-11 sm:h-10")}
+              autoSubmit
+              aria-label="Tarih"
             />
-          </label>
-          <button type="submit" className={buttonClass({ variant: "ghost" })}>
-            Git
-          </button>
+          </div>
           {suzgecVar && (
             <Link
               href="/admin/yazilar/bulten"

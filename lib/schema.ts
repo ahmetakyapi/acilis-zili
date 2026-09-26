@@ -81,14 +81,19 @@ export const users = pgTable(
  * (`lib/avatar-data.ts`) tablo yokken sessizce baş harflere düşüyor, yani
  * kod migration'dan önce de güvenle yayında durabiliyor.
  *
- * `icon` bir ANAHTAR (`lib/avatars.ts` → AVATAR_KEYS), çizim değil; hesap
- * silinince satır da gidiyor. KVKK metnindeki üye verisi tablosunda sayılı.
+ * `icon` ve `color` ANAHTAR (`lib/avatars.ts`), çizim ya da hex değil;
+ * hesap silinince satır da gidiyor. KVKK metnindeki üye verisi tablosunda
+ * sayılı. İkisi de boş olabiliyor (0019): renk seçip baş harflerde kalmak
+ * mümkün.
  */
 export const userAvatars = pgTable("user_avatars", {
   userId: uuid("user_id")
     .primaryKey()
     .references(() => users.id, { onDelete: "cascade" }),
-  icon: text("icon").notNull(),
+  /** Boşsa karo baş harfleri basıyor — renk seçip ikon seçmemek mümkün. */
+  icon: text("icon"),
+  /** `lib/avatars.ts` → AVATAR_COLORS; boşsa ikonun varsayılan rengi. */
+  color: text("color"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

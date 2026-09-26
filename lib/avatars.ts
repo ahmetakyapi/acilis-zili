@@ -1,13 +1,14 @@
 /**
- * Profil ikonlarının SÖZLEŞMESİ — anahtarlar ve tonlar.
+ * Profil karosunun SÖZLEŞMESİ: ikon anahtarları, renkler, varsayılanlar.
  *
- * Çizimler `components/brand/AvatarIcon.tsx`te; bu dosya "use client"
- * değil ve çizim taşımıyor, çünkü sunucu eylemi (doğrulama), veri katmanı
- * ve arayüz aynı listeyi okuyor. Kayıtta yalnızca anahtar duruyor: bir
- * ikonun çizimi değişirse seçmiş herkeste kendiliğinden değişir.
+ * Çizimler `components/brand/AvatarIcon.tsx`te, renklerin kendisi
+ * `app/globals.css`te (`--avatar-*`). Bu dosya "use client" değil ve çizim
+ * taşımıyor: sunucu eylemi (doğrulama), veri katmanı ve arayüz aynı
+ * listeyi okuyor. Kayıtta yalnızca anahtarlar duruyor; bir çizim ya da
+ * renk değişirse seçmiş herkeste kendiliğinden değişir.
  *
- * Sıra SEÇİCİNİN sırası. Yeni ikon sona eklenir; bir anahtar silinirse onu
- * seçmiş hesap baş harflere düşer (`isAvatarKey` kayıttaki değeri süzüyor).
+ * Sıra SEÇİCİNİN sırası. Yeni ikon sona eklenir; bir anahtar silinirse
+ * onu seçmiş hesap baş harflere düşer (`isAvatarKey` kayıttaki değeri süzüyor).
  */
 export const AVATAR_KEYS = [
   "bell",
@@ -22,33 +23,62 @@ export const AVATAR_KEYS = [
   "diamond",
   "bolt",
   "shield",
+  "crown",
+  "globe",
+  "target",
+  "star",
 ] as const;
 
 export type AvatarKey = (typeof AVATAR_KEYS)[number];
 
 /**
- * Karonun zemini. Üç ton, üçü de temadan: marka mavisi, pirinç (mürekkep
- * sahnelerinin kıvılcımı) ve mürekkep. Yön renkleri (`--up`/`--down`)
- * BİLEREK yok — sitede o iki renk yalnızca artı/eksi söylüyor; kırmızı bir
- * profil karosu "düşüşte" gibi okunurdu.
+ * Karonun rengi — okuyucunun seçimi.
+ *
+ * Yeşil ve kırmızı BİLEREK yok: sitede o iki renk yalnızca artı/eksi
+ * söylüyor ve kırmızı bir profil karosu "düşüşte" diye okunurdu. Palet
+ * markanın mavi ailesinden (mavi, lacivert, turkuaz), bir sıcak tondan
+ * (pirinç, mürekkep sahnelerinin kıvılcımı), bir soğuk vurgudan (lavanta)
+ * ve iki nötrden (mürekkep, gümüş) oluşuyor.
  */
-export type AvatarTone = "primary" | "brass" | "ink";
+export const AVATAR_COLORS = [
+  "blue",
+  "navy",
+  "teal",
+  "violet",
+  "brass",
+  "ink",
+  "silver",
+] as const;
 
-export const AVATAR_TONE: Record<AvatarKey, AvatarTone> = {
-  bell: "primary",
+export type AvatarColor = (typeof AVATAR_COLORS)[number];
+
+/** Renk seçilmemişse ikonun kendi rengi — ilk görünüşte karolar çeşitli. */
+export const AVATAR_DEFAULT_COLOR: Record<AvatarKey, AvatarColor> = {
+  bell: "blue",
   bull: "brass",
   bear: "ink",
-  candles: "ink",
-  rocket: "primary",
-  compass: "brass",
-  trend: "primary",
+  candles: "navy",
+  rocket: "violet",
+  compass: "teal",
+  trend: "blue",
   coffee: "brass",
   owl: "ink",
-  diamond: "primary",
+  diamond: "teal",
   bolt: "brass",
-  shield: "ink",
+  shield: "navy",
+  crown: "brass",
+  globe: "teal",
+  target: "violet",
+  star: "blue",
 };
+
+/** Kayıttaki hâl: ikon yoksa karo baş harfleri basıyor, renk yine geçerli. */
+export type Avatar = { icon: AvatarKey | null; color: AvatarColor };
 
 export function isAvatarKey(value: unknown): value is AvatarKey {
   return typeof value === "string" && (AVATAR_KEYS as readonly string[]).includes(value);
+}
+
+export function isAvatarColor(value: unknown): value is AvatarColor {
+  return typeof value === "string" && (AVATAR_COLORS as readonly string[]).includes(value);
 }

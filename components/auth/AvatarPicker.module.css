@@ -1,17 +1,40 @@
-/* Profil ikonu seçici. Karolar 56 piksel ve kabın genişliğine göre
-   sütun sayısı değişiyor (telefonda 4-5, masaüstünde 7). Seçili karonun
-   çevresinde marka halkası ve köşesinde onay rozeti; üzerine gelince karo
-   kalkıyor, basınca içeri çöküyor — seçimin hissi bir tıklamadan fazlası. */
+/* Profil karosu seçici. Üç katman: önizleme, renk şeridi, ikon ızgarası.
+   Karolar 56 pikselden başlıyor ve kabın genişliğine göre sütun sayısı
+   değişiyor. Seçili karonun çevresinde marka halkası ve köşesinde onay
+   rozeti; üzerine gelince karo kalkıyor, basınca içeri çöküyor. */
+.picker { display:flex; flex-direction:column; gap:22px; }
+
+.preview { display:flex; align-items:center; gap:16px; padding:14px; border-radius:20px; background:var(--primary-tint); }
+/* Önizleme karosu seçim değişince yaylanarak oturuyor — anahtar seçimden
+   türediği için her değişimde yeniden bağlanıyor ve animasyon baştan. */
+.previewTile { width:72px; height:72px; border-radius:22px; font-size:24px; box-shadow:var(--mark-shadow), inset 0 0 0 1px var(--mark-edge) !important; animation:avatar-land 460ms cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes avatar-land { from { scale:.82; rotate:-6deg; opacity:.4; } }
+
+.group { display:flex; flex-direction:column; gap:10px; min-width:0; border:0; padding:0; margin:0; }
+.legend { padding:0; margin-bottom:10px; font-size:var(--text-small); font-weight:700; color:var(--text-strong); }
+
+.swatches { display:flex; flex-wrap:wrap; gap:10px; }
+.swatch { display:grid; place-items:center; width:36px; height:36px; border-radius:999px; color:var(--mark-ink); cursor:pointer; box-shadow:inset 0 0 0 1px var(--mark-edge); transition:translate .2s, scale .15s, box-shadow .2s; }
+.swatch[data-active] { box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 5px var(--primary), inset 0 0 0 1px var(--mark-edge); }
+.swatch:focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
+
 .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(56px, 1fr)); gap:12px; }
 .option { position:relative; display:grid; place-items:center; aspect-ratio:1; border-radius:18px; cursor:pointer; transition:translate .22s, scale .15s; }
 .option:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
-.tile { width:100%; height:100%; border-radius:16px; box-shadow:0 0 0 0 var(--primary-faint); transition:box-shadow .22s; }
-.initials { display:grid; place-items:center; background:var(--primary-wash); color:var(--primary-ink); font-size:15px; font-weight:700; }
-.option[data-active] .tile { box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 5px var(--primary); }
+.tile { width:100%; height:100%; border-radius:16px; font-size:17px; transition:box-shadow .22s; }
+.option[data-active] .tile { box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 5px var(--primary), inset 0 0 0 1px var(--mark-edge) !important; }
 .check { position:absolute; right:-4px; top:-4px; display:grid; place-items:center; width:20px; height:20px; border-radius:999px; background:var(--primary); color:var(--on-primary); box-shadow:0 0 0 2px var(--premium-surface); animation:avatar-check 320ms cubic-bezier(0.34,1.56,0.64,1) both; }
 @keyframes avatar-check { from { scale:.3; opacity:0; } }
-@media(hover:hover) and (pointer:fine) { .option:hover { translate:0 -3px; } }
-.option:active { scale:.94; }
-.status { min-height:18px; margin-top:12px; font-size:var(--text-tiny); color:var(--text-muted); }
+
+@media(hover:hover) and (pointer:fine) { .option:hover, .swatch:hover { translate:0 -3px; } }
+.option:active, .swatch:active { scale:.94; }
+
+.status { min-height:18px; margin-top:-8px; font-size:var(--text-tiny); color:var(--text-muted); }
 .status[data-state="failed"] { color:var(--down); }
-@media(prefers-reduced-motion:reduce) { .option, .tile { transition:none; } .check { animation:none; } .option:hover { translate:none; } .option:active { scale:none; } }
+
+@media(prefers-reduced-motion:reduce) {
+  .option, .swatch, .tile { transition:none; }
+  .check, .previewTile { animation:none; }
+  .option:hover, .swatch:hover { translate:none; }
+  .option:active, .swatch:active { scale:none; }
+}

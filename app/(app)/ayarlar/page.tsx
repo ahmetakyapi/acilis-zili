@@ -43,6 +43,7 @@ export default async function SettingsPage() {
     session.user.id ? getUserAvatar(session.user.id) : Promise.resolve(null),
   ]);
   const username = session.user.name ?? "";
+  const initials = username.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US");
 
   return (
     <MotionExperience className={`${polish.page} ${polish.settings} mx-auto w-full`}>
@@ -76,24 +77,28 @@ export default async function SettingsPage() {
         </div>
       </Panel>
 
-      {/* PROFİL İKONU (26 Eylül). Hesap başlıkta baş harflerle duruyordu;
-          okuyucu artık sitenin kendi çizdiği on iki ikondan birini seçiyor
-          (components/brand/AvatarIcon.tsx). Seçim hesabın kendisinde
-          saklanıyor, yani her cihazda aynı. */}
+      {/* PROFİL KAROSU (26 Eylül). Hesap başlıkta baş harflerle duruyordu;
+          okuyucu artık sitenin kendi çizdiği on altı ikondan birini ve
+          yedi renkten birini seçiyor (components/brand/AvatarIcon.tsx).
+          Seçim hesabın kendisinde saklanıyor, yani her cihazda aynı. */}
       <Panel>
         <PanelHeader title={t.settings.avatarTitle} />
         <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
           <p className="text-small leading-relaxed text-body">{t.settings.avatarHint}</p>
           <AvatarPicker
-            initial={avatar}
+            initial={avatar ?? { icon: null, color: "blue" }}
             /* Baş harfler KODDA büyütülüyor: CSS `uppercase` Türkçe `i`yi
                `I` yapıyor, `İ` değil. */
-            initials={username.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
+            initials={initials}
+            username={username}
             labels={{
               initials: t.settings.avatarInitials,
+              icon: t.settings.avatarIconLabel,
+              color: t.settings.avatarColorLabel,
               saved: t.settings.avatarSaved,
               failed: t.settings.avatarFailed,
               names: t.settings.avatarNames,
+              colors: t.settings.avatarColors,
             }}
           />
         </div>

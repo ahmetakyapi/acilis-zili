@@ -122,7 +122,12 @@ export default async function MenuPage() {
           dokunuşta değil. */}
       <Panel className="flex items-center gap-3.5 p-4 sm:p-5">
         {avatar ? (
-          <AvatarTile icon={avatar} className="size-11 rounded-lg" />
+          <AvatarTile
+            icon={avatar.icon}
+            color={avatar.color}
+            initials={username?.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
+            className="size-11 rounded-lg text-base"
+          />
         ) : (
         <span
           aria-hidden

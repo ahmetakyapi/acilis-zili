@@ -22,7 +22,7 @@ import {
 } from "@/components/layout/preference-controls";
 import { ButtonLink } from "@/components/ui/primitives";
 import { AvatarTile } from "@/components/brand/AvatarIcon";
-import type { AvatarKey } from "@/lib/avatars";
+import type { Avatar } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 
 /* --------------------------------------------------------------------------
@@ -93,8 +93,8 @@ export function AccountMenu({
 }: {
   signedIn: boolean;
   username: string | null;
-  /** Seçilen profil ikonu; yoksa baş harfler (Ayarlar → Profil İkonu). */
-  avatar?: AvatarKey | null;
+  /** Seçilen profil karosu; yoksa baş harfler (Ayarlar → Profil İkonu). */
+  avatar?: Avatar | null;
   /** Yönetim satırı yalnızca yöneticide çizilir — panelin kapısı ayrıca
       veritabanına soruyor, bu yalnızca görünürlük kararı. */
   isAdmin?: boolean;
@@ -144,7 +144,12 @@ export function AccountMenu({
     switchLocale(next);
   };
 
-  const initials = (username ?? "").slice(0, 2);
+  /* Baş harfler KODDA ve dile göre büyütülüyor: düğme bir süre CSS
+     `uppercase` taşıyordu ve tarayıcı Türkçe `i`yi `I` yapıyordu, `İ` değil
+     ("ilker" → "IL"). */
+  const initials = (username ?? "")
+    .slice(0, 2)
+    .toLocaleUpperCase(initialLocale === "tr" ? "tr-TR" : "en-US");
 
   return (
     /* Masaüstünde kök başlığın tam boyunu alıyor: panelin `top` değeri
@@ -183,14 +188,14 @@ export function AccountMenu({
            (globals.css → `.masthead-account`) — durum farkı korunuyor. */
         data-signed-in={signedIn || undefined}
         className={cn(
-          "masthead-account inline-flex size-11 items-center justify-center rounded-full border text-small font-bold uppercase tracking-[0.02em] transition-colors",
+          "masthead-account inline-flex size-11 items-center justify-center rounded-full border text-small font-bold tracking-[0.02em] transition-colors",
           open && "ring-2 ring-primary/35",
         )}
       >
         {signedIn && avatar ? (
           /* İkon düğmenin tamamını dolduruyor; halka `.masthead-account`
              üzerinde kalıyor. */
-          <AvatarTile icon={avatar} className="size-full rounded-full" />
+          <AvatarTile icon={avatar.icon} color={avatar.color} initials={initials} className="size-full rounded-full text-small" />
         ) : signedIn ? (
           <span aria-hidden>{initials || "?"}</span>
         ) : (
@@ -240,7 +245,7 @@ export function AccountMenu({
                 className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary-wash to-transparent"
               />
               {signedIn && avatar ? (
-                <AvatarTile icon={avatar} className="relative size-11 rounded-lg" />
+                <AvatarTile icon={avatar.icon} color={avatar.color} initials={initials} className="relative size-11 rounded-lg text-base" />
               ) : (
               <span
                 aria-hidden
@@ -248,7 +253,7 @@ export function AccountMenu({
                   /* Panelin künyesi düğmeyle AYNI biçim: düğme yumuşak
                      köşeli kare, künye daireydi ve panel açıldığında iki
                      ayrı şey gibi duruyordu. */
-                  "relative flex size-11 shrink-0 items-center justify-center rounded-lg text-base font-bold uppercase",
+                  "relative flex size-11 shrink-0 items-center justify-center rounded-lg text-base font-bold",
                   signedIn
                     ? "bg-primary text-on-primary"
                     : "border border-line bg-surface-solid text-muted",

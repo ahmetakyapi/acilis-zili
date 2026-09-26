@@ -97,7 +97,7 @@ export default async function AdminLayout({
           hesabı çıkıyordu. Kural artık yalnızca yönetim sayfalarında var. */}
       <style>{`html{scroll-padding-top:calc(env(safe-area-inset-top) + 56px)}`}</style>
       <Suspense fallback={null}>
-        <RouteProgress label="Yükleniyor" />
+        <RouteProgress label="Yükleniyor" brand="Açılış Zili" />
       </Suspense>
 
       {/* KİMLİK SATIRI. Panelden çıkışın tek yolu burada ve 44 piksel:
@@ -146,7 +146,7 @@ export default async function AdminLayout({
         className={cn(
           FRAME,
           GUTTER,
-          "flex flex-1 flex-col gap-6 pt-6 pb-[max(env(safe-area-inset-bottom),32px)] sm:pt-8",
+          "flex flex-1 flex-col gap-6 pt-4 pb-[max(env(safe-area-inset-bottom),32px)] sm:pt-5",
         )}
       >
         {failed ? (
