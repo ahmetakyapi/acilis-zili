@@ -219,6 +219,9 @@ export function TechnicalCard({
             kimliği zaten gösteriyor, balon aynı bilgiyi ikinci kez veriyordu
             ve kaplama bağlantısıyla çakışma riski taşıyordu. Bkz.
             `CompanyBalloon`. */}
+        {/* Uçuşun kaynağı karonun kendisi (`data-morph`, LogoTile); kartı
+            kaplayan bağlantı onu içermediği için kart `data-morph-scope`
+            taşıyor (teknik/page.tsx). */}
         <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
         <div className={styles.cardName}>
           {/* h3: kartlar sayfanın "Hisse Planları" bölüm başlığının altında. */}

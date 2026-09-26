@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { auth } from "@/auth";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { AppShell, type ShellLabels } from "@/components/layout/AppShell";
-import { RouteFrame } from "@/components/layout/RouteFrame";
 import { SearchCommand } from "@/components/layout/SearchCommand";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { TickerFeed } from "@/components/layout/TickerFeed";
@@ -142,7 +141,7 @@ export default async function AppLayout({
       >
         {/* Sayfa ölçümü — çerezsiz, kimliksiz, hiçbir şey çizmez. */}
         <ViewBeacon locale={locale} />
-        <RouteFrame>{children}</RouteFrame>
+        {children}
       </AppShell>
     </MotionProvider>
   );

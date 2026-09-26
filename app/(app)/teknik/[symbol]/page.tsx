@@ -21,6 +21,7 @@ import {
 } from "@/components/technical/TechnicalCard";
 import styles from "@/components/technical/Technical.module.css";
 import { DataStamp, EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
+import { MorphTarget } from "@/components/motion/Morph";
 import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getDictionary, getI18n } from "@/lib/i18n";
@@ -274,7 +275,10 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                 tek kelime. Künye satırları o satırın altında kalıyor. */}
             <div className={styles.coverHead}>
             <Link href={`/hisse/${symbol}`} className={styles.coverNameLink}>
-              <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="lg" />
+              {/* Teknik kartından gelindiyse logo kartın yerinden buraya uçuyor. */}
+              <MorphTarget morphKey={`logo:${symbol}`}>
+                <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="lg" />
+              </MorphTarget>
               <div className="min-w-0">
                 <h1>
                   {symbol}

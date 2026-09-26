@@ -1018,9 +1018,17 @@
    dönüyor ve geride tutulan hiçbir şey kalmıyor. Görsel sonuç aynı, çünkü
    bitiş karesi zaten elemanın doğal hâli (opaklık 1, dönüşüm yok).
    -------------------------------------------------------------------------- */
+/* SIFIRDAN DEĞİL, 0,35'TEN (26 Eylül). Giriş sıfır opaklıktan başlıyordu ve
+   kademe yüzünden alt bloklar gecikmeleri boyunca görünmez bekliyordu.
+   Ölçüldü (/piyasalar → /teknik, 1280): takas karesinde dört bloğun etkin
+   opaklığı 0,00; ilki 47. ms'de 0,43'e çıkıyor, dördüncüsü ~140 ms görünmez
+   kalıyor. Arada ekran bir-iki kare BOŞ duruyordu — kart logosu yeni
+   sayfaya uçarken (components/motion/Morph) bomboş bir sayfanın üstünden
+   geçiyordu. Şimdi bloklar takas karesinde okunur tonda; kademeli yükseliş
+   aynı, yalnızca boşluk yok. */
 @keyframes page-enter {
   from {
-    opacity: 0;
+    opacity: 0.35;
     transform: translate3d(0, 8px, 0);
   }
   to {
@@ -2100,29 +2108,6 @@ html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
 .ticker-rise + .ticker-rise + .ticker-rise { animation-delay: 120ms; }
 @keyframes ticker-rise { from { opacity: 0; transform: translate3d(0, 7px, 0); } }
 @media (prefers-reduced-motion: reduce) { .ticker-rise { animation: none; } }
-
-/* --------------------------------------------------------------------------
-   SAYFA GEÇİŞİ — GELEN İÇERİĞİN GİRİŞİ (26 Eylül)
-
-   Gerekçe ve anahtar kararı `components/layout/RouteFrame.tsx` yorumunda.
-   Süre kısa tutuldu (240 ms): geçiş bir gösteri değil, sayfanın yerine
-   oturduğunu söyleyen bir işaret. İçerik önce tam görünüp sonra sönmüyor —
-   23 Eylül'ün "önce tam, sonra sönük, sonra yeniden tam" kaydı burada da
-   geçerli: animasyon YALNIZCA yeni sayfanın kendi öğelerinde başlıyor,
-   eski sayfa hiç karartılmıyor.
-
-   GİRİŞ SIFIRDAN DEĞİL. İlk hâli `opacity: 0` idi ve kare kare ölçüldü
-   (1280×760, /piyasalar → /teknik): eski içerik 519. ms'de kalkıyor, yeni
-   içerik 543'e kadar TAM SAYDAM duruyordu — arada iki karelik boş bir
-   ekran. Şimdi giriş 0,4'ten başlıyor: takas karesinde içerik zaten
-   okunur, kalan 240 ms yalnızca tonun yerine oturması.
-
-   Bitişte geride dolgu kalmıyor: `.panel` girişleri kendi kaydırma zaman
-   çizelgelerinde (`animation-timeline: view()`) devam ediyor.
-   -------------------------------------------------------------------------- */
-.route-frame { animation: route-in 240ms var(--ease-brand) backwards; }
-@keyframes route-in { from { opacity: 0.4; } }
-@media (prefers-reduced-motion: reduce) { .route-frame { animation: none; } }
 
 /* --------------------------------------------------------------------------
    SAYFA BAŞLIĞININ İMZASI (24 Eylül)

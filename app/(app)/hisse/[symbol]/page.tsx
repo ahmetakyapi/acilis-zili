@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { MorphTarget } from "@/components/motion/Morph";
 import Image from "next/image";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
@@ -796,15 +797,19 @@ async function StockHeader({
              kare kendi köşe yarıçapıyla kırpılıyor, görsel kutuyu tümüyle
              dolduruyor. Beyaz zemin duruyor çünkü logoların çoğu şeffaf PNG
              ve koyu temada kendi koyu harfleriyle kayboluyor. */
-          <span className={styles.companyLogo}>
-            <Image
-              src={profile.logoUrl}
-              alt=""
-              width={64}
-              height={64}
-              className="size-full object-contain"
-            />
-          </span>
+          /* Listeden gelindiyse logo tıklanan satırın yerinden buraya uçuyor
+             (components/motion/Morph). */
+          <MorphTarget morphKey={`logo:${symbol}`}>
+            <span className={styles.companyLogo}>
+              <Image
+                src={profile.logoUrl}
+                alt=""
+                width={64}
+                height={64}
+                className="size-full object-contain"
+              />
+            </span>
+          </MorphTarget>
         ) : fund ? (
           // Fonun logosu yok; ülke/piyasa bayrağı kimliği taşır
           <span

@@ -10,7 +10,7 @@
 .main { min-width:0; margin-top:14px; }
 /* Sekme geçişi: yeni dönemin metni geldiği yönden kısa bir kaymayla
    yerine oturuyor. 0,35'ten başlıyor, sıfırdan değil — takas karesinde metin
-   zaten okunur, boş bir kare yok (RouteFrame'deki ölçümün aynısı). Yalnızca
+   zaten okunur, boş bir kare yok (sayfa girişindeki ölçümün aynısı, globals.css → page-enter). Yalnızca
    `data-enter` varken: ilk çizimde hiçbir şey oynamıyor. Dönüşüm bitince
    kalmıyor (`backwards`). */
 .panelEnter[data-enter="next"] { animation:brief-enter-next 340ms var(--ease-brand) backwards; }

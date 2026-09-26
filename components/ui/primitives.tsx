@@ -512,9 +512,15 @@ export function LogoTile({
   /* Harf karosu İKİ DURUMDA birden çiziliyor: logo hiç yokken ve adres
      varken görsel düşerken. İkincisini ancak tarayıcı bilebiliyor, o yüzden
      karo `LogoImage`e yedek olarak geçiyor — gerekçesi o dosyada. */
+  /* UÇUŞ KAYNAĞI. Her logo karosu kendi sembolünü taşıyor; içinde karo olan
+     her hisse bağlantısı böylece kendiliğinden kaynak oluyor ve logo yeni
+     sayfanın başlığına uçuyor (components/motion/Morph). Anahtar sembol:
+     MU'nun karosu yalnızca MU sayfasındaki hedefle eşleşir. */
+  const morph = `logo:${symbol}`;
   const letters = (
     <span
       aria-hidden
+      data-morph={morph}
       className={cn(
         "numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold tracking-[-0.02em] text-primary-ink",
         step.box,
@@ -538,6 +544,7 @@ export function LogoTile({
         className,
       )}
       fallback={letters}
+      morph={morph}
     />
   );
 }

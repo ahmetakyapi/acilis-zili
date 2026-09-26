@@ -283,7 +283,7 @@ export default async function TechnicalPage() {
 
           <div className={styles.grid} data-motion-stagger>
             {board.map(({ row, previousStance }) => (
-              <div key={row.symbol} className={styles.cell} data-verdict={verdictOf(row.stance)}>
+              <div key={row.symbol} className={styles.cell} data-verdict={verdictOf(row.stance)} data-morph-scope>
                 <TechnicalCard
                   row={row}
                   previousStance={previousStance}

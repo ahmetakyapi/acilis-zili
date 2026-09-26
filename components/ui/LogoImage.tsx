@@ -33,10 +33,13 @@ export function LogoImage({
   px,
   boxClass,
   fallback,
+  morph,
 }: {
   src: string;
   px: number;
   boxClass: string;
+  /** Kartla sayfa arası uçuşun anahtarı (components/motion/Morph). */
+  morph?: string;
   /** Görsel düşerse çizilecek harf karosu — sunucuda üretiliyor. */
   fallback: React.ReactNode;
 }) {
@@ -50,7 +53,7 @@ export function LogoImage({
   return (
     /* Zemin BEYAZ: logoların çoğu şeffaf PNG ve koyu mürekkeple çizilmiş —
        koyu temada zeminsiz bırakılırsa görünmüyorlar. */
-    <span className={boxClass}>
+    <span className={boxClass} data-morph={morph}>
       <Image
         ref={watch}
         onError={() => setBroken(true)}
