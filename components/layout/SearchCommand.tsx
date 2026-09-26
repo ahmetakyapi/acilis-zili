@@ -12,7 +12,8 @@ import {
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, ClockCounterClockwise, MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
+import { LogoTile } from "@/components/ui/primitives";
 import type {
   SearchHit,
   SearchResponse,
@@ -68,6 +69,56 @@ function subscribePalette(listener: () => void) {
   return () => paletteListeners.delete(listener);
 }
 
+/* SORGU ÖNBELLEĞİ (26 Eylül, "çok performanslı çalışsın"). Aynı oturumda
+   sorulmuş bir sorgu ağa bir daha gitmiyor: yazıp silen, geri alan okuyucu
+   sonucu anında görüyor. Modül seviyesinde, sayfalar arası gezinmede de
+   yaşıyor; tavan 60 sorgu, en eskisi düşüyor. */
+const SEARCH_CACHE = new Map<string, SearchResponse>();
+const SEARCH_CACHE_MAX = 60;
+/** Tuş vuruşu sonrası bekleme — 220'den indi: önbellek ve daha hızlı uç. */
+const SEARCH_DEBOUNCE_MS = 120;
+
+/* SON ARAMALAR — yalnızca bu tarayıcıda, gidilen son altı sembol. Tercih
+   değil kolaylık (kayıp olursa hiçbir şey bozulmuyor), o yüzden
+   localStorage; erişim her yerde try/catch içinde. */
+const RECENT_KEY = "az-search-recent";
+const RECENT_MAX = 6;
+type Recent = { symbol: string; name: string };
+function readRecent(): Recent[] {
+  try {
+    const raw = window.localStorage.getItem(RECENT_KEY);
+    const list = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(list)
+      ? list.filter((item): item is Recent => typeof item?.symbol === "string" && typeof item?.name === "string").slice(0, RECENT_MAX)
+      : [];
+  } catch {
+    return [];
+  }
+}
+function pushRecent(item: Recent) {
+  try {
+    const next = [item, ...readRecent().filter((entry) => entry.symbol !== item.symbol)].slice(0, RECENT_MAX);
+    window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+  } catch {
+    // Depolama kapalıysa son aramalar yalnızca tutulmuyor.
+  }
+}
+
+/** Eşleşen kısmı vurgular — büyük/küçük ve Türkçe harf farkı gözetmeden. */
+function Highlight({ text, term }: { text: string; term: string }) {
+  const needle = term.trim().toLocaleLowerCase("tr-TR");
+  if (!needle) return <>{text}</>;
+  const at = text.toLocaleLowerCase("tr-TR").indexOf(needle);
+  if (at < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, at)}
+      <mark className="palette-mark">{text.slice(at, at + needle.length)}</mark>
+      {text.slice(at + needle.length)}
+    </>
+  );
+}
+
 /** Boş kutuda önerilen semboller — takip evreninin merkezî isimleri. */
 const POPULAR_PICKS = [
   { symbol: "NVDA", name: "NVIDIA" },
@@ -76,8 +127,11 @@ const POPULAR_PICKS = [
   { symbol: "TSLA", name: "Tesla" },
   { symbol: "AMD", name: "AMD" },
   { symbol: "MU", name: "Micron" },
-  { symbol: "SPY", name: "S&P 500" },
-  { symbol: "QQQ", name: "Nasdaq 100" },
+  /* SPY ve QQQ çıktı (26 Eylül): popüler hisseler artık logolu karolar ve
+     fonların logosu yok, iki harf kutusu olarak duruyorlardı. Fonlar
+     aranınca yine bulunuyor. */
+  { symbol: "META", name: "Meta" },
+  { symbol: "GOOGL", name: "Alphabet" },
 ] as const;
 
 export function SearchCommand({
@@ -88,6 +142,7 @@ export function SearchCommand({
   rateLimitedLabel,
   failedLabel,
   popularLabel,
+  recentLabel,
   companiesLabel,
   technicalLabel,
   writingsLabel,
@@ -103,6 +158,8 @@ export function SearchCommand({
   rateLimitedLabel: string;
   failedLabel: string;
   popularLabel: string;
+  /** "Son Aramalar" — bu tarayıcıda gidilen son semboller. */
+  recentLabel: string;
   companiesLabel: string;
   /** Teknik analizi olan sembolün altındaki ikinci satır — "Teknik Analiz". */
   technicalLabel: string;
@@ -160,6 +217,7 @@ export function SearchCommand({
      liste ve ekranda "sonuç yok" oluyordu. Kullanıcı aradığı şirketin sitede
      olmadığını sanıyordu. */
   const [failure, setFailure] = useState<string | null>(null);
+  const [recent, setRecent] = useState<Recent[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   /* Paleti açan düğme ve panelin kendisi. İkisi de odak yönetimi için:
      kapanışta odak düğmeye geri döner, açıkken Tab paneli terk edemez. */
@@ -194,6 +252,7 @@ export function SearchCommand({
 
   const openPalette = useCallback(() => {
     paletteReturnFocus = triggerRef.current;
+    setRecent(readRecent());
     togglePalette(true);
   }, []);
 
@@ -206,6 +265,7 @@ export function SearchCommand({
           paletteReturnFocus = document.activeElement instanceof HTMLElement
             ? document.activeElement
             : null;
+          setRecent(readRecent());
         }
         togglePalette((value) => {
           if (value) {
@@ -332,7 +392,16 @@ export function SearchCommand({
     if (!term) return;
 
     const controller = new AbortController();
+    const key = term.toLocaleLowerCase("tr-TR");
+    const cached = SEARCH_CACHE.get(key);
     const id = window.setTimeout(async () => {
+      if (cached) {
+        setFailure(null);
+        setHits(cached.hits ?? []);
+        setWritings(cached.writings ?? []);
+        setActive(0);
+        return;
+      }
       setLoading(true);
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`, {
@@ -357,12 +426,16 @@ export function SearchCommand({
         setHits(data.hits ?? []);
         setWritings(data.writings ?? []);
         setActive(0);
+        SEARCH_CACHE.set(key, data);
+        if (SEARCH_CACHE.size > SEARCH_CACHE_MAX) {
+          SEARCH_CACHE.delete(SEARCH_CACHE.keys().next().value as string);
+        }
       } catch {
         // İptal edilen istekler sessizce geçilir.
       } finally {
         setLoading(false);
       }
-    }, 220);
+    }, cached ? 0 : SEARCH_DEBOUNCE_MS);
 
     return () => {
       controller.abort();
@@ -371,7 +444,8 @@ export function SearchCommand({
   }, [query, open, owns, rateLimitedLabel, failedLabel]);
 
   const go = useCallback(
-    (href: string) => {
+    (href: string, remember?: Recent) => {
+      if (remember) pushRecent(remember);
       navigatingRef.current = true;
       close();
       startRouteProgress(href);
@@ -409,7 +483,8 @@ export function SearchCommand({
       event.preventDefault();
       const href = navItems[active];
       if (href) {
-        go(href);
+        const row = hitRows[active];
+        go(href, row ? { symbol: row.hit.symbol, name: row.hit.name } : undefined);
         return;
       }
       /* SONUÇ YOKKEN ENTER UYDURMA ADRESE GİTMEZ. Eskiden yazılan her şey
@@ -537,6 +612,10 @@ export function SearchCommand({
               </button>
             </div>
 
+            {/* ARAMA SÜRERKEN giriş kutusunun altında akan ince bir ışık
+                (gezinme göstergesiyle aynı dil). Önbellekten gelen sonuçta hiç
+                görünmüyor. */}
+            <span aria-hidden className="palette-progress" data-on={loading || undefined} />
             {/* LISTBOX. Kabın kendisi `role="listbox"` ve her sonuç bir
                 `option`; input `aria-controls` ile buraya bağlı. Popüler
                 semboller ve boş durum metni seçenek DEĞİL — onlar
@@ -549,26 +628,51 @@ export function SearchCommand({
               aria-label={label}
               className="max-h-[60dvh] overflow-y-auto py-2.5 sm:max-h-[45vh]"
             >
-              {/* Kutu boşken popüler semboller — boş bir pencere yerine yön */}
+              {/* KUTU BOŞKEN: önce son aramalar (varsa), sonra popüler semboller.
+                  İkisi de logolu karolar — boş bir pencere yerine yön. */}
               {!query.trim() && (
-                <div role="presentation" className="px-5 pb-2 pt-2">
-                  <p className="plate text-nano">
-                    {popularLabel}
-                  </p>
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
-                    {POPULAR_PICKS.map((pick) => (
-                      <button
-                        key={pick.symbol}
-                        type="button"
-                        onClick={() => go(`/hisse/${pick.symbol}`)}
-                        className="flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 sm:min-h-[34px] text-xs transition-colors hover:border-line-strong hover:bg-primary-tint"
-                      >
-                        <span className="font-bold text-strong">
-                          {pick.symbol}
-                        </span>
-                        <span className="text-muted">{pick.name}</span>
-                      </button>
-                    ))}
+                <div role="presentation" className="flex flex-col gap-4 px-5 pb-2 pt-2">
+                  {recent.length > 0 && (
+                    <div>
+                      <p className="palette-group">
+                        <ClockCounterClockwise size={13} weight="bold" aria-hidden />
+                        {recentLabel}
+                      </p>
+                      <div className="mt-2.5 flex flex-wrap gap-2">
+                        {recent.map((item, index) => (
+                          <button
+                            key={item.symbol}
+                            type="button"
+                            onClick={() => go(`/hisse/${item.symbol}`, item)}
+                            className="palette-chip palette-row"
+                            style={{ animationDelay: `${index * 28}ms` }}
+                          >
+                            <LogoTile symbol={item.symbol} size="xs" />
+                            <span className="font-bold text-strong">{item.symbol}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <p className="palette-group">{popularLabel}</p>
+                    <div className="palette-popular mt-2.5">
+                      {POPULAR_PICKS.map((pick, index) => (
+                        <button
+                          key={pick.symbol}
+                          type="button"
+                          onClick={() => go(`/hisse/${pick.symbol}`, pick)}
+                          className="palette-tile palette-row"
+                          style={{ animationDelay: `${index * 28}ms` }}
+                        >
+                          <LogoTile symbol={pick.symbol} size="md" />
+                          <span className="min-w-0 text-left">
+                            <b className="block text-small font-bold text-strong">{pick.symbol}</b>
+                            <small className="block truncate text-tiny text-body">{pick.name}</small>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -576,7 +680,7 @@ export function SearchCommand({
               {shownHits.length > 0 && (
                 <p
                   id="palet-grup-semboller"
-                  className="plate px-5 pb-1.5 pt-2 text-nano"
+                  className="palette-group px-5 pb-1.5 pt-2"
                 >
                   {companiesLabel}
                 </p>
@@ -587,47 +691,46 @@ export function SearchCommand({
                   <button
                     key={href}
                     id={`palet-secenek-${index}`}
-                    style={{ animationDelay: `${Math.min(index, 8) * 18}ms` }}
+                    style={{ animationDelay: `${Math.min(index, 8) * 22}ms` }}
                     role="option"
                     aria-selected={index === active}
                     type="button"
-                    onClick={() => go(href)}
+                    onClick={() => go(href, { symbol: hit.symbol, name: hit.name })}
                     onMouseEnter={() => setActive(index)}
                     className={cn(
-                      "flex w-full items-center gap-3.5 px-5 py-2.5 text-left text-base transition-colors max-sm:py-3",
-                      index === active ? "bg-primary-wash" : "hover:bg-surface",
+                      "palette-row palette-option flex w-full items-center gap-3 px-5 py-2.5 text-left text-base max-sm:py-3",
+                      index === active && "is-active",
                     )}
                   >
-                    <span className="w-[60px] shrink-0 font-bold text-strong">
-                      {hit.symbol}
+                    <LogoTile symbol={hit.symbol} logoUrl={hit.logo} size="md" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-bold text-strong">
+                        <Highlight text={hit.symbol} term={query} />
+                      </span>
+                      <span className={cn("block truncate text-small", index === active ? "text-strong" : "text-body")}>
+                        <Highlight text={hit.name} term={query} />
+                      </span>
                     </span>
-                    <span
-                      className={cn(
-                        "min-w-0 flex-1 truncate",
-                        index === active ? "text-strong" : "text-body",
-                      )}
-                    >
-                      {hit.name}
-                    </span>
+                    <ArrowUpRight aria-hidden size={15} className="palette-go shrink-0" />
                   </button>
                 ) : (
                   <button
                     key={href}
                     id={`palet-secenek-${index}`}
-                    style={{ animationDelay: `${Math.min(index, 8) * 18}ms` }}
+                    style={{ animationDelay: `${Math.min(index, 8) * 22}ms` }}
                     role="option"
                     aria-selected={index === active}
                     type="button"
-                    onClick={() => go(href)}
+                    onClick={() => go(href, { symbol: hit.symbol, name: hit.name })}
                     onMouseEnter={() => setActive(index)}
                     className={cn(
                       /* Telefonda 44px: hisse satırıyla bitişik ve daha küçük
                          bir hedef parmakla ıskalanıyordu (tap-44 notu). */
-                      "flex w-full items-center gap-3.5 py-2 pl-5 pr-5 text-left text-small transition-colors max-sm:min-h-11",
-                      index === active ? "bg-primary-wash" : "hover:bg-surface",
+                      "palette-row palette-option flex w-full items-center gap-3 py-2 pl-5 pr-5 text-left text-small max-sm:min-h-11",
+                      index === active && "is-active",
                     )}
                   >
-                    <span aria-hidden className="w-[60px] shrink-0 text-right text-muted">
+                    <span aria-hidden className="w-8 shrink-0 text-center text-muted">
                       ↳
                     </span>
                     <span className={cn("min-w-0 flex-1 truncate font-semibold", index === active ? "text-primary-ink" : "text-primary")}>
@@ -645,7 +748,7 @@ export function SearchCommand({
               {shownWritings.length > 0 && (
                 <p
                   id="palet-grup-yazilar"
-                  className="plate px-5 pb-1.5 pt-2 text-nano"
+                  className="palette-group px-5 pb-1.5 pt-2"
                 >
                   {writingsLabel}
                 </p>
@@ -657,15 +760,15 @@ export function SearchCommand({
                   <button
                     key={`${writing.kind}-${writing.slug}`}
                     id={`palet-secenek-${position}`}
-                    style={{ animationDelay: `${Math.min(position, 8) * 18}ms` }}
+                    style={{ animationDelay: `${Math.min(position, 8) * 22}ms` }}
                     role="option"
                     aria-selected={position === active}
                     type="button"
                     onClick={() => go(`/${writing.kind}/${writing.slug}`)}
                     onMouseEnter={() => setActive(position)}
                     className={cn(
-                      "flex w-full items-start gap-3.5 px-5 py-2.5 text-left transition-colors max-sm:py-3",
-                      position === active ? "bg-primary-wash" : "hover:bg-surface",
+                      "palette-row palette-option flex w-full items-start gap-3 px-5 py-2.5 text-left max-sm:py-3",
+                      position === active && "is-active",
                     )}
                   >
                     <span className="plate w-[60px] shrink-0 pt-[3px] text-nano text-primary">
@@ -678,7 +781,7 @@ export function SearchCommand({
                           position === active ? "text-strong" : "text-body",
                         )}
                       >
-                        {writing.title}
+                        <Highlight text={writing.title} term={query} />
                       </span>
                       <span className="mt-0.5 block truncate text-tiny text-muted">
                         {writing.dek}
@@ -722,7 +825,7 @@ export function SearchCommand({
               <span>↵ {hints.open}</span>
               {shownHits.length > 0 && (
                 <span className="ml-auto numeral">
-                  {shownHits.length} · Finnhub
+                  {shownHits.length}
                 </span>
               )}
             </div>

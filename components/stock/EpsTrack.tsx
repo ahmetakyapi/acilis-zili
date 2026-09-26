@@ -1,5 +1,6 @@
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { formatPercent, formatPrice } from "@/lib/utils";
 import { epsSurprise, formatEpsSurprise, type PastQuarter } from "./past-quarters";
 import styles from "./EpsTrack.module.css";
 
@@ -35,7 +36,7 @@ const MAX_QUARTERS = 8;
 /** Sıfırın altına inen çeyrekte alt uca bırakılan pay. */
 const DOMAIN_PAD = 0.12;
 /** Üst uçtaki pay: en yüksek sütunun sapma künyesi oraya iner. */
-const DOMAIN_PAD_TOP = 0.26;
+const DOMAIN_PAD_TOP = 0.46;
 
 export function EpsTrack({
   rows,
@@ -89,7 +90,47 @@ export function EpsTrack({
     .replace("{total}", String(paired.length))
     .replace("{beat}", String(beat));
 
+  /* ÖZET SÜTUNU (26 Eylül). Dört sütun 1300 piksellik panele yayılınca
+     araları boş kalıyor ve grafik kartla uyumsuz, "tuhaf" duruyordu.
+     Grafik artık solundaki bir özetle birlikte: kaç çeyrekte beklenti
+     aşıldı (dört küçük işaretle), ortalama sapma ve son çeyreğin EPS'i.
+     Ortalama yalnızca yüzde sapmalardan; mutlak (dolar) sapma karışırsa
+     iki ayrı birim toplanırdı. */
+  const pctSurprises = paired
+    .map((row) => epsSurprise(row.epsEstimate, row.epsActual))
+    .filter((value): value is NonNullable<typeof value> => value !== null && value.kind === "pct");
+  const avg = pctSurprises.length === paired.length && pctSurprises.length > 0
+    ? pctSurprises.reduce((sum, item) => sum + item.value, 0) / pctSurprises.length
+    : null;
+  const latest = [...quarters].reverse().find((row) => row.epsActual !== null) ?? null;
+
   return (
+    <div className={styles.wrap}>
+    <aside className={styles.aside}>
+      <p className={styles.asideLabel}>{t.earnings.beatRecord}</p>
+      <p className={styles.beatCount}>
+        {t.earnings.epsBeatCount.replace("{beat}", String(beat)).replace("{total}", String(paired.length))}
+      </p>
+      <span aria-hidden className={styles.beatMarks}>
+        {paired.map((row) => (
+          <i key={row.key} data-beat={row.epsActual! > row.epsEstimate! || undefined} />
+        ))}
+      </span>
+      <dl className={styles.asideFacts}>
+        {avg !== null && (
+          <div>
+            <dt>{t.earnings.epsAvgSurprise}</dt>
+            <dd className="numeral" data-tone={avg > 0 ? "up" : avg < 0 ? "down" : undefined}>{formatPercent(avg, locale, 1)}</dd>
+          </div>
+        )}
+        {latest?.epsActual !== null && latest && (
+          <div>
+            <dt>{t.earnings.epsLatest}</dt>
+            <dd className="numeral">{formatPrice(latest.epsActual, locale, { currency })}</dd>
+          </div>
+        )}
+      </dl>
+    </aside>
     <figure className={styles.track} aria-label={summary}>
       {/* Lejant künyedir: iki işaretin adı, cümle değil. */}
       <figcaption className={styles.legend}>
@@ -122,7 +163,8 @@ export function EpsTrack({
                     data-tone={surprise.direction}
                     style={{ bottom: `calc(${y(Math.max(est, act, 0))}% + 6px)` }}
                   >
-                    {formatEpsSurprise(surprise, locale, currency)}
+                    <b>{formatPrice(act, locale, { currency })}</b>
+                    <small>{formatEpsSurprise(surprise, locale, currency)}</small>
                   </span>
                 )}
                 {/* BEKLENTİ: geniş, kesik çizgili bir çerçeve. GERÇEKLEŞEN:
@@ -148,5 +190,6 @@ export function EpsTrack({
         })}
       </ol>
     </figure>
+    </div>
   );
 }

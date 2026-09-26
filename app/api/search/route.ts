@@ -17,6 +17,7 @@ import { guideArticles } from "@/content/guide";
 import { getLocale } from "@/lib/i18n";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { isTechnicalSymbol } from "@/lib/technical";
+import { logoSrc } from "@/lib/logos";
 
 export type SearchHit = {
   symbol: string;
@@ -26,6 +27,8 @@ export type SearchHit = {
       altına ikinci bir satır açıyor: "NVDA" yazan okuyucu hissenin teknik
       analizine şirket sayfasına uğramadan gidebilsin. */
   technical?: boolean;
+  /** Logo adresi — önce depodaki dosya (`logoSrc`), yoksa sağlayıcınınki. */
+  logo?: string | null;
 };
 
 /**
@@ -135,9 +138,13 @@ export async function GET(request: Request) {
 
   try {
     const pattern = `%${escaped}%`;
+    /* KISA SORGUDA AD ARAMASI YOK (26 Eylül). İki harfte ("mu") ad
+       eşleşmesi gürültüydü: Micron'dan sonra adında "Municipal" geçen
+       onlarca fon geliyordu. İki harfe kadar yalnızca SEMBOL ön eki ve
+       takma ad aranıyor; üç harften itibaren ad da. */
     const matches = [
-      ilike(symbols.symbol, pattern),
-      ilike(symbols.name, pattern),
+      query.length <= 2 ? ilike(symbols.symbol, `${escaped}%`) : ilike(symbols.symbol, pattern),
+      ...(query.length > 2 ? [ilike(symbols.name, pattern)] : []),
       ...(aliased.length > 0 ? [inArray(symbols.symbol, aliased)] : []),
     ];
 
@@ -146,36 +153,51 @@ export async function GET(request: Request) {
         symbol: symbols.symbol,
         name: symbols.name,
         industry: symbols.industry,
+        logoUrl: symbols.logoUrl,
       })
       .from(symbols)
       .where(or(...matches))
-      /* Sıra: takma ad eşleşmesi → sembol ön eki → gerisi. Takma ad en
-         kesin sinyal ("spacex" yazan SPCX istiyor, tahmin yok); sembolle
-         başlayanlar ondan sonra gelir. */
+      /* SIRA (26 Eylül, "doğru sonuçlarla çalışsın"): birebir sembol →
+         takma ad → sembol ön eki → adın ya da bir kelimesinin başı → gerisi;
+         her kademenin içinde PİYASA DEĞERİ büyükten küçüğe. Eskiden kademe
+         içi sıra yoktu: "mu" aramasında içinde "MU" geçen onlarca sembol
+         veritabanının kendi sırasıyla geliyor, Micron ilk sekizde bile
+         olmayabiliyordu; "app" araması Apple'ı küçük şirketlerin arkasına
+         atabiliyordu. */
       .orderBy(
         sql`case
-              when ${aliased.length > 0 ? inArray(symbols.symbol, aliased) : sql`false`} then 0
-              when ${symbols.symbol} ilike ${escaped + "%"} then 1
-              else 2
+              when upper(${symbols.symbol}) = upper(${query}) then 0
+              when ${aliased.length > 0 ? inArray(symbols.symbol, aliased) : sql`false`} then 1
+              when ${symbols.symbol} ilike ${escaped + "%"} then 2
+              when ${symbols.name} ilike ${escaped + "%"} or ${symbols.name} ilike ${"% " + escaped + "%"} then 3
+              else 4
             end`,
+        sql`${symbols.marketCap} desc nulls last`,
       )
       .limit(8);
 
     for (const row of local) {
       seen.add(row.symbol);
-      hits.push(row);
+      hits.push({ symbol: row.symbol, name: row.name, industry: row.industry, logo: logoSrc(row.symbol, row.logoUrl) });
     }
   } catch {
     // Veritabanı yoksa arama yine de sağlayıcı üzerinden çalışsın.
   }
 
-  if (hits.length < 6 && query.length >= 2) {
+  /* SAĞLAYICIYA YALNIZCA GEREKTİĞİNDE (26 Eylül). Yerel sonuç 6'nın
+     altındaysa her tuş vuruşunda Finnhub'a gidiliyordu ve yanıt onu
+     bekliyordu; "nvi" gibi yerelde bir-iki sonucu olan her ara sorgu
+     yavaşlıyordu. Yerel katalog bin sembolü aşkın; sağlayıcı artık yalnızca
+     yerelde 3'ten az sonuç varken, katalog dışı bir şey arandığında. */
+  /* İki harfte sağlayıcıya gidilmiyor: Finnhub "mu" için VZ, ZM, BNY gibi
+     alakasız semboller döndürüyordu (ölçüldü). */
+  if (hits.length < 3 && query.length >= 3) {
     const remote = await searchSymbols(query);
     if (remote.ok) {
       for (const item of remote.data) {
         if (seen.has(item.symbol) || hits.length >= 10) continue;
         seen.add(item.symbol);
-        hits.push({ symbol: item.symbol, name: item.description });
+        hits.push({ symbol: item.symbol, name: item.description, logo: logoSrc(item.symbol, null) });
       }
     }
   }

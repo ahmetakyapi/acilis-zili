@@ -103,6 +103,7 @@ export default async function AppLayout({
             rateLimitedLabel={t.nav.searchRateLimited}
             failedLabel={t.nav.searchFailed}
             popularLabel={t.nav.searchPopular}
+            recentLabel={t.nav.searchRecent}
             companiesLabel={t.nav.companies}
             technicalLabel={t.technical.title}
             writingsLabel={t.nav.searchWritings}

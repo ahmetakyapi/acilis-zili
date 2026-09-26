@@ -35,6 +35,7 @@ const tr = {
     searchPlaceholder: "Hisse ara: sembol veya şirket adı",
     searchTrigger: "Sembol veya Olay Ara",
     searchPopular: "Popüler",
+    searchRecent: "Son Aramalar",
     searchWritings: "Yazılar",
     /* Arama ucu 429 döndüğünde. Eskiden bu durum "sonuç yok" gibi
        görünüyordu: aradığı şirket sitede duruyorken kullanıcıya olgusal
@@ -455,6 +456,9 @@ const tr = {
        tarih, gerçekleşen ve sapma zaten aşağıdaki Geçmiş Bilançolar
        tablosunda var; burada olan şey o tablonun SÖYLEMEDİĞİ özet. */
     beatRecord: "Beklenti Karnesi",
+    epsAvgSurprise: "Ortalama Sapma",
+    epsLatest: "Son Çeyrek EPS",
+    epsBeatCount: "{beat}/{total} Çeyrekte Aşıldı",
     beatRecordLine: "Son {total} çeyreğin {beat} tanesinde beklenti aşıldı",
     beatRecordNone: "Son {total} çeyrekte beklenti aşılmadı",
     beatRecordAll: "Son {total} çeyreğin tamamında beklenti aşıldı",
@@ -1366,7 +1370,7 @@ const tr = {
     advancingShare: "Yükselenlerin Payı",
     breadthCoverage: "{total} şirketin {known} tanesinde değişim verisi mevcut.",
     heatmap: "Isı Haritası",
-    heatmapHint: "Her kare bir şirket, piyasa değerine göre sıralı; renk yön, koyuluk hareketin büyüklüğü.",
+    heatmapHint: "Piyasa değerine göre ilk 30 şirket; renk yön, koyuluk hareketin büyüklüğü. Ayrıntı için karenin üzerine gel.",
     movementScale: "Çubuklar iki listede aynı yüzde ölçeğini kullanır.",
     advancing: "Artıda",
     declining: "Ekside",

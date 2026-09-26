@@ -242,3 +242,36 @@
  .breadthOverview > .heat { padding:16px 0 0; border-left:0; border-top:1px solid var(--line); }
  .tabsAside { flex-basis:100%; max-width:none; }
 }
+
+/* ---- Isı haritası, 30 şirket ve künye kartı (26 Eylül) ----
+   Sabit 10 sütun (telefonda 6): üç endekste de aynı ızgara. Karede logo ve
+   günlük yüzde; üzerine gelince ya da odaklanınca karenin üstünde künye
+   kartı açılıyor. Kart panelin dışına taşabilsin diye panel artık
+   kırpmıyor; alt künye bandı köşesini kendisi yuvarlıyor. */
+.breadth { overflow:visible; }
+.breadthStamp { border-radius:0 0 20px 20px; }
+.heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(10, minmax(0, 1fr)); gap:6px; margin-top:14px; }
+.heatCell { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; aspect-ratio:auto; min-height:74px; padding:8px 4px; border-radius:12px; overflow:visible; transition:scale .18s var(--ease-brand), box-shadow .18s; }
+.heatLogo { width:30px !important; height:30px !important; border-radius:9px !important; box-shadow:0 0 0 2px rgb(255 255 255 / .35); }
+.heatPct { font-size:11.5px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
+.heatCell:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+
+.heatCard { position:absolute; bottom:calc(100% + 8px); left:50%; z-index:20; display:flex; flex-direction:column; gap:8px; width:220px; padding:12px; border:1px solid var(--line); border-radius:14px; background:var(--overlay-surface); box-shadow:var(--shadow-overlay); text-align:left; opacity:0; pointer-events:none; transform:translate(-50%, 4px) scale(.97); transition:opacity .16s, transform .2s var(--ease-brand); }
+.heatGrid > :nth-child(10n + 1) .heatCard { left:0; transform:translate(0, 4px) scale(.97); }
+.heatGrid > :nth-child(10n) .heatCard { left:auto; right:0; transform:translate(0, 4px) scale(.97); }
+.heatCardHead { display:flex; align-items:center; gap:9px; min-width:0; }
+.heatCardHead b { display:block; font-size:14px; color:var(--text-strong); }
+.heatCardHead small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-body); }
+.heatCardRow { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+.heatCardFoot { padding-top:8px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-body); }
+.heatCardFoot b { color:var(--text-strong); }
+.heatCell:is(:hover, :focus-visible) { z-index:5; }
+.heatCell:is(:hover, :focus-visible) .heatCard { opacity:1; transform:translate(-50%, 0) scale(1); }
+.heatGrid > :nth-child(10n + 1):is(:hover, :focus-visible) .heatCard,
+.heatGrid > :nth-child(10n):is(:hover, :focus-visible) .heatCard { transform:translate(0, 0) scale(1); }
+@media(hover:hover) and (pointer:fine) { .heatCell:hover { scale:1.06; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); } }
+@media(max-width:639px) {
+ .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(5, minmax(0, 1fr)); }
+ .heatCard { display:none; }
+}
+@media(prefers-reduced-motion:reduce) { .heatCell, .heatCard { transition:none; } .heatCell:hover { scale:none; } }

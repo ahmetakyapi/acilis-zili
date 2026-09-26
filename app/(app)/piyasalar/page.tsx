@@ -755,14 +755,12 @@ function IndexToolbar({
             {t.markets.asOf}: <span className="numeral">{formatEtDateMedium(INDEX_COMPOSITION_DATE, locale)}</span>
           </p>
         </div>
-        {/* ISI HARİTASI, LOGOLU (26 Eylül). Renkli kareler "anlamsız"
-            bulundu: hangi karenin hangi şirket olduğu okunmuyordu. Her kare
-            artık şirketin logosunu taşıyor; renk karonun zemini. Kare boyu
-            endeksin kalabalığına göre (Dow iri, Nasdaq orta, S&P 500 küçük).
-            S&P 500'de logoyu piyasa değerine göre ilk HEAT_LOGOS şirket
-            alıyor — 500 logo sayfayı ağırlaştırırdı — kalanı düz renkli kare.
-            Renk sayaçla AYNI satırlardan. Kareler odak sırasının dışında:
-            aynı bağlantılar alttaki tabloda. */}
+        {/* ISI HARİTASI, LOGOLU VE 30 ŞİRKET (26 Eylül). Renkli kareler
+            "anlamsız" bulundu: hangi karenin hangi şirket olduğu okunmuyordu.
+            Artık piyasa değerine göre ilk 30 şirket (`HEAT_MAX`), her karede
+            logo ve günlük yüzde; renk karonun zemini, koyuluk hareketin
+            büyüklüğü. Üzerine gelince künye kartı açılıyor. Kareler artık
+            klavyeyle de gezilebiliyor: 30 durak kabul edilebilir. */}
         {heat.length > 0 && (
           <div className={styles.heat}>
             <div className={styles.heatHead}>
@@ -774,15 +772,11 @@ function IndexToolbar({
               </span>
             </div>
             <p className={styles.heatHint}>{t.markets.heatmapHint}</p>
-            <div
-              className={styles.heatGrid}
-              data-density={heat.length <= HEAT_LARGE ? "large" : heat.length <= HEAT_MEDIUM ? "medium" : "small"}
-              aria-hidden
-              data-motion-stagger
-            >
+            <div className={styles.heatGrid} data-motion-stagger>
               {[...heat]
                 .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
-                .map((row, index) => {
+                .slice(0, HEAT_MAX)
+                .map((row) => {
                   const change = row.quote!.changePct!;
                   const depth = Math.min(1, Math.abs(change) / HEAT_FULL);
                   const tone = change > 0 ? "var(--up)" : change < 0 ? "var(--down)" : null;
@@ -791,18 +785,38 @@ function IndexToolbar({
                       key={row.member.symbol}
                       href={`/hisse/${row.member.symbol}`}
                       prefetch={false}
-                      tabIndex={-1}
-                      title={`${row.member.symbol} · ${formatPercent(change, locale)}`}
                       className={styles.heatCell}
+                      aria-label={`${row.member.symbol} · ${row.member.name} · ${formatPercent(change, locale)}`}
                       style={{
                         background: tone
                           ? `color-mix(in srgb, ${tone} ${Math.round(HEAT_MIN + depth * (100 - HEAT_MIN))}%, var(--surface-sunken))`
                           : "var(--surface-sunken)",
                       }}
                     >
-                      {index < HEAT_LOGOS && (
-                        <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" className={styles.heatLogo} />
-                      )}
+                      <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="md" className={styles.heatLogo} />
+                      <span className={cn("numeral", styles.heatPct)}>{formatPercent(change, locale)}</span>
+                      {/* ÜZERİNE GELİNCE KÜNYE KARTI — yalnızca CSS, istemciye
+                          JavaScript inmiyor. Ad, fiyat, günlük değişim ve piyasa
+                          değeri; ekran okuyucu aynı bilgiyi bağlantının adından
+                          alıyor, kart `aria-hidden`. */}
+                      <span aria-hidden className={styles.heatCard}>
+                        <span className={styles.heatCardHead}>
+                          <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" />
+                          <span className="min-w-0">
+                            <b className="numeral">{row.member.symbol}</b>
+                            <small>{row.member.name}</small>
+                          </span>
+                        </span>
+                        <span className={styles.heatCardRow}>
+                          <span className="numeral">{formatPrice(row.quote!.price, locale, { currency: true })}</span>
+                          <ChangePill changePct={change} locale={locale} />
+                        </span>
+                        {row.marketCap ? (
+                          <span className={styles.heatCardFoot}>
+                            {t.market.marketCap} <b className="numeral">{formatMoneyCompact(row.marketCap, locale)}</b>
+                          </span>
+                        ) : null}
+                      </span>
                     </Link>
                   );
                 })}
@@ -815,11 +829,10 @@ function IndexToolbar({
   );
 }
 
-/** Isı haritasında kare boyunun kademeleri: bu kadar şirkete kadar iri/orta. */
-const HEAT_LARGE = 40;
-const HEAT_MEDIUM = 150;
-/** Logoyu alan en fazla kare — S&P 500'de ilk 120 (piyasa değerine göre). */
-const HEAT_LOGOS = 120;
+/** Isı haritasında en çok kaç şirket — piyasa değerine göre ilk 30 (26 Eylül,
+    sahibinin isteği): Dow zaten 30 üye, böylece üç endekste de harita aynı
+    ızgarada ve her kare logosu, yüzdesi ve künye kartıyla okunacak kadar iri. */
+const HEAT_MAX = 30;
 
 /**
  * Yükselenlerin payı — sekme satırının sağında, sıkı hâliyle (26 Eylül).

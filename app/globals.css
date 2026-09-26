@@ -2382,3 +2382,34 @@ html.ink-splash-out .ink-splash-layer {
 @keyframes avatar-flip { 50% { transform:scaleX(-1); } }
 @keyframes avatar-rise { 40% { transform:translateY(-10%) scale(1.04); } }
 @keyframes avatar-turn { 50% { transform:rotate(24deg); } }
+
+/* ---- Arama paleti (26 Eylül) — gerekçe SearchCommand.tsx ----
+   Grup başlıkları sitenin künye dilinde, satırlar logolu ve sırayla iniyor;
+   seçili satırın solunda mavi bir hat ve sağında açılan bir ok. Arama
+   sürerken giriş kutusunun altında gezinme göstergesinin ışığı akıyor.
+   Eşleşen kısım soluk mavi bir vurgu. */
+.palette-group { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--text-body); }
+.palette-row { animation:palette-row-in 260ms var(--ease-brand) backwards; }
+@keyframes palette-row-in { from { opacity:0; transform:translate3d(0, 6px, 0); } }
+.palette-option { position:relative; transition:background-color .15s; }
+.palette-option::before { content:""; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0; background:var(--primary); transform:scaleY(0); transition:transform .2s var(--ease-brand); }
+.palette-option.is-active { background:var(--primary-tint); }
+.palette-option.is-active::before { transform:scaleY(1); }
+.palette-go { color:var(--primary-ink); opacity:0; transform:translate(-4px, 4px); transition:opacity .15s, transform .2s var(--ease-brand); }
+.palette-option.is-active .palette-go { opacity:1; transform:none; }
+.palette-mark { background:var(--primary-wash); color:var(--primary-ink); border-radius:3px; padding:0 1px; }
+.palette-chip { display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:4px 12px 4px 5px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface); font-size:13px; transition:border-color .2s, background-color .2s, translate .2s var(--ease-brand); }
+.palette-popular { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; }
+.palette-tile { display:flex; align-items:center; gap:10px; min-width:0; padding:9px 10px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:border-color .2s, background-color .2s, translate .2s var(--ease-brand); }
+@media(hover:hover) and (pointer:fine) {
+ .palette-chip:hover, .palette-tile:hover { translate:0 -2px; border-color:var(--primary-faint); background:var(--primary-tint); }
+}
+@media(max-width:639px) { .palette-popular { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+.palette-progress { display:block; position:relative; height:2px; overflow:hidden; background:transparent; }
+.palette-progress[data-on]::after { content:""; position:absolute; inset:0 auto 0 0; width:35%; background:linear-gradient(90deg, transparent, var(--primary), transparent); animation:palette-progress 900ms linear infinite; }
+@keyframes palette-progress { from { transform:translateX(-100%); } to { transform:translateX(300%); } }
+@media(prefers-reduced-motion:reduce) {
+ .palette-row, .palette-progress[data-on]::after { animation:none; }
+ .palette-option::before, .palette-go, .palette-chip, .palette-tile { transition:none; }
+ .palette-chip:hover, .palette-tile:hover { translate:none; }
+}
