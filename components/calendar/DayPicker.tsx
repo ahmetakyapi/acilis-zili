@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "@/components/calendar/CalendarExperience.module.css";
 
 const DAY_HREF = "#gun-";
@@ -29,6 +29,10 @@ const agendaOf = () => document.querySelector<HTMLElement>("[data-agenda]");
  */
 export function DayPicker({ note, showAll }: { note: string; showAll: string }) {
   const [day, setDay] = useState<string | null>(null);
+  /* Bir önceki seçim — geçişin yönü buna göre (tarih dizeleri YYYY-AA-GG,
+     sözlük sırası takvim sırası). İlk çizimde yön yok, hiçbir şey oynamıyor. */
+  const previousDay = useRef<string | null>(null);
+  const touched = useRef(false);
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
@@ -53,6 +57,16 @@ export function DayPicker({ note, showAll }: { note: string; showAll: string }) 
     const id = day ? `gun-${day}` : null;
     if (id) agenda.dataset.picked = "";
     else delete agenda.dataset.picked;
+    /* GEÇİŞİN YÖNÜ (CalendarExperience.module.css → "gün geçişi"). Sonraki
+       güne geçince bölüm sağdan, öncekine dönünce soldan; ilk seçimde ve
+       "Tüm Günler"de aşağıdan. İlk çizimde öznitelik yazılmıyor: gündem
+       yüklemede kımıldamasın. */
+    if (touched.current) {
+      const from = previousDay.current;
+      agenda.dataset.dir = !day ? "all" : !from ? "pick" : day > from ? "next" : "prev";
+    }
+    touched.current = true;
+    previousDay.current = day;
     for (const child of Array.from(agenda.children)) {
       child.toggleAttribute("data-picked", child.id === id);
     }

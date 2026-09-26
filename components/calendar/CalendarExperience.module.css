@@ -140,6 +140,23 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 .agenda > * + * { border-top:1px solid var(--line-soft); }
 /* Gün seçiliyse gündem yalnızca o günü gösteriyor (DayPicker). */
 .agenda[data-picked] > :not([data-picked]) { display:none; }
+/* GÜN GEÇİŞİ. Gün seçilince gündem bir karede tek bölüme iniyor, başka güne
+   geçince bölüm yerinde değişiyordu; göz hangi güne gittiğini ancak başlığı
+   okuyunca anlıyordu. Şimdi bölüm takvimdeki yönünden geliyor: sonraki gün
+   sağdan, önceki soldan, ilk seçim ve "Tüm Günler" aşağıdan. Her yönün kendi
+   animasyon adı var; ad değişince ya da bölüm gizliden görünür olunca
+   tarayıcı animasyonu baştan başlatıyor. Yön yalnızca okuyucu seçim yapınca
+   yazılıyor (DayPicker), ilk çizimde hiçbir şey oynamıyor. 0,35'ten, sıfırdan
+   değil: takas karesinde bölüm okunur. */
+.agenda[data-picked][data-dir="pick"] > [data-picked] { animation:day-in-pick 320ms var(--ease-brand) backwards; }
+.agenda[data-picked][data-dir="next"] > [data-picked] { animation:day-in-next 320ms var(--ease-brand) backwards; }
+.agenda[data-picked][data-dir="prev"] > [data-picked] { animation:day-in-prev 320ms var(--ease-brand) backwards; }
+.agenda[data-dir="all"]:not([data-picked]) > * { animation:day-in-all 320ms var(--ease-brand) backwards; }
+@keyframes day-in-pick { from { opacity:.35; transform:translate3d(0,10px,0); } }
+@keyframes day-in-all { from { opacity:.35; transform:translate3d(0,10px,0); } }
+@keyframes day-in-next { from { opacity:.35; transform:translate3d(18px,0,0); } }
+@keyframes day-in-prev { from { opacity:.35; transform:translate3d(-18px,0,0); } }
+@media(prefers-reduced-motion:reduce) { .agenda > * { animation:none !important; } }
 
 /* Çapa payı KÖKTE: `html` zaten 76 piksel `scroll-padding` taşıyor
    (globals.css). Grup kendi `scroll-margin`ini de ekleyince ikisi

@@ -4,6 +4,7 @@ import { BellMood } from "@/components/brand/BellMood";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "motion/react";
 import {
   CaretDown,
   CaretUp,
@@ -464,6 +465,8 @@ function SortableRows({
 }) {
   const router = useRouter();
   const [order, setOrder] = useState<string[] | null>(null);
+  /* Silinmekte olan satırlar — sunucu dönene kadar tonu düşük (aşağıda). */
+  const [removing, setRemoving] = useState<ReadonlySet<string>>(() => new Set());
   const dragId = useRef<string | null>(null);
   /* Sürükleme BAŞLARKENKİ sıra — geri alma hedefi bu. `onDragOver` yerel
      sırayı adım adım değiştiriyor, yani bırakma anındaki `order` artık
@@ -527,165 +530,238 @@ function SortableRows({
     [order, ordered, persist],
   );
 
+  /* LİSTE HAREKETİ (26 Eylül). Üç an kesme gibiydi: sıralamada satırlar yeni
+     yerlerine bir karede atlıyor, silmede satır sunucu dönene kadar hiç
+     tepki vermeyip birden yok oluyor ve alttakiler sıçrıyor, eklenen hisse
+     sessizce beliriyordu.
+
+     - SIRALAMA: satırlar yeni yerlerine KAYIYOR (`layout="position"`, yay).
+       Oklarla da sürüklerken de; sürükleme sırasında öteki satırlar yol
+       açıyor.
+     - SİLME: basınca satır hemen tonunu kaybediyor (iyimser); sunucu
+       dönünce sağa kayıp sönüyor ve alttakiler yukarı kayıyor.
+       `popLayout`: çıkan satır akıştan hemen çekiliyor, yani komşuların
+       kayması çıkışın bitmesini beklemiyor.
+     - EKLEME: yeni satır üstten iniyor ve bir an `--primary-wash` tonuyla
+       "buraya geldi" diyor.
+
+     İLK ÇİZİMDE HİÇBİRİ YOK (`initial={false}`): liste yüklenirken
+     kımıldamıyor, hareket yalnızca okuyucunun eyleminde. "Hareketi azalt"
+     açıkken kabuğun MotionConfig'i dönüşüm ve yerleşim animasyonlarını
+     kapatıyor, yalnızca opaklık kalıyor.
+
+     `motion.li` YALNIZCA HAREKETİ taşıyor, sürüklenen öğe içindeki düz
+     `div`: Motion `onDragStart` gibi adları kendi jest sistemine ayırıp
+     DOM'a geçirmiyor — bu dinleyiciler `motion.li`ye konsaydı yerel
+     sürükle-bırak sessizce kırılırdı. */
   return (
-    <ul className="divide-y divide-line-soft">
-      {ordered.map((item, index) => {
-        const quote = quotes[item.symbol];
-        return (
-          <li
-            key={item.id}
-            draggable
-            onDragStart={(event) => {
-              dragId.current = item.id;
-              dragOncesi.current = order;
-              event.dataTransfer.effectAllowed = "move";
-            }}
-            onDragOver={(event) => {
-              event.preventDefault();
-              const from = dragId.current;
-              if (!from || from === item.id) return;
-              const ids = moveTo(from, item.id);
-              if (ids) setOrder(ids);
-            }}
-            onDrop={(event) => event.preventDefault()}
-            onDragEnd={() => {
-              dragId.current = null;
-              if (order) persist(order, dragOncesi.current);
-              dragOncesi.current = null;
-            }}
-            className="group flex items-center gap-2 px-2 py-2.5 transition-colors hover:bg-primary-tint sm:px-3"
-          >
-            {/* Tutamak yalnızca imleç satırın üstündeyken görünür. Dokuz
-                satırın hepsinde sürekli duran gri bir nokta ızgarası, listenin
-                sol kenarında ikinci bir sütun gibi okunuyordu. */}
-            <span
-              aria-hidden
-              className="hidden cursor-grab touch-none text-muted/60 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-hover:text-muted [@media(hover:none)]:opacity-100 sm:block"
-              title={labels.dragHint}
+    <ul className="relative divide-y divide-line-soft">
+      <AnimatePresence mode="popLayout" initial={false}>
+        {ordered.map((item, index) => {
+          const quote = quotes[item.symbol];
+          return (
+            <motion.li
+              key={item.id}
+              layout="position"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: 28, transition: ROW_EXIT }}
+              transition={ROW_MOTION}
+              className="relative"
             >
-              <DotsSixVertical weight="duotone" size={15} />
-            </span>
-
-            <Link
-              href={`/hisse/${item.symbol}`}
-              prefetch={false}
-              className="flex min-w-0 flex-1 items-center gap-2.5"
-            >
-              <LogoTile
-                symbol={item.symbol}
-                logoUrl={logos[item.symbol]}
-                size="sm"
+              <motion.span
+                aria-hidden
+                /* Son satırda kartın iç köşesini alıyor: dikdörtgen ton
+                   kartın yuvarlak alt köşelerinden taşıyordu (ölçüldü).
+                   Kart `overflow-hidden` yapılamıyor — içindeki sembol
+                   arama listesi kırpılırdı. */
+                className="pointer-events-none absolute inset-0 bg-primary-wash [li:last-child>&]:rounded-b-[calc(var(--radius-panel,var(--radius-xl))_-_1px)]"
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 0 }}
+                transition={ROW_LANDED}
               />
-              {/* Sembol telefonda SABİT GENİŞLİKTE DEĞİL. `w-14` (56px) her
-                  ekranda duruyordu ve dar telefonda satırın sabit sütunları
-                  (fiyat 92 + değişim 86 + oklar 24 + sil 28 + boşluklar)
-                  yeri bitirince bu kutu daralmıyor, TAŞIYORDU: sembol fiyatın
-                  üstüne biniyor, şirket adı sıfır genişliğe düşüp tamamen
-                  kayboluyordu. Sabit genişliğin işi geniş ekranda sütunları
-                  hizalamak; telefonda hizalanacak yer zaten yok. */}
-              {/* At 320px the company name had only 12–23px beside the
-                  symbol. Stack the identity on phones; desktop retains
-                  the aligned symbol and name columns through contents. */}
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5 sm:contents">
-                <span className="numeral shrink-0 text-sm font-semibold text-strong sm:w-14">
-                  {item.symbol}
+              <div
+                draggable
+                onDragStart={(event) => {
+                  dragId.current = item.id;
+                  dragOncesi.current = order;
+                  event.dataTransfer.effectAllowed = "move";
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  const from = dragId.current;
+                  if (!from || from === item.id) return;
+                  const ids = moveTo(from, item.id);
+                  if (ids) setOrder(ids);
+                }}
+                onDrop={(event) => event.preventDefault()}
+                onDragEnd={() => {
+                  dragId.current = null;
+                  if (order) persist(order, dragOncesi.current);
+                  dragOncesi.current = null;
+                }}
+                className={cn(
+                  "group relative flex items-center gap-2 px-2 py-2.5 transition-[background-color,opacity] hover:bg-primary-tint sm:px-3",
+                  removing.has(item.id) && "pointer-events-none opacity-45",
+                )}
+                aria-busy={removing.has(item.id) || undefined}
+              >
+                {/* Tutamak yalnızca imleç satırın üstündeyken görünür. Dokuz
+                    satırın hepsinde sürekli duran gri bir nokta ızgarası, listenin
+                    sol kenarında ikinci bir sütun gibi okunuyordu. */}
+                <span
+                  aria-hidden
+                  className="hidden cursor-grab touch-none text-muted/60 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-hover:text-muted [@media(hover:none)]:opacity-100 sm:block"
+                  title={labels.dragHint}
+                >
+                  <DotsSixVertical weight="duotone" size={15} />
                 </span>
-                <span className="min-w-0 truncate text-xs text-soft">
-                  {names[item.symbol] ?? ""}
-                </span>
-              </span>
-            </Link>
 
-            {/* Fiyat SABİT GENİŞLİKTE bir sütun. Genişlik içeriğe bağlıydı
-                ("539,58" ile "1.211,61" arasında yirmi piksel fark var) ve
-                sayılar sağdan hizasız duruyordu; okuyucu dokuz satırı
-                karşılaştıramıyordu. Ayrıca fiyat gövde mürekkebindeydi ve
-                yanındaki renkli yüzde rozeti onu gölgede bırakıyordu — oysa
-                satırın ana sayısı fiyat. */}
-            {/* Fiyat ve değişim TELEFONDA ALT ALTA, geniş ekranda yan yana.
-                İkisi de sabit genişlikte sütun olarak yan yana dururken satır
-                320-360px'te yeri bitiriyordu: sembol fiyatın üstüne biniyor,
-                şirket adı sıfır genişliğe düşüyordu. Alt alta almak seksen
-                piksel kazandırıyor ve iki sayı zaten aynı şeyin iki yüzü —
-                sağ kenarda hizalı bir blok olarak da doğru okunuyor. */}
-            <span className="flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-              <span className="numeral text-right text-sm font-semibold text-strong sm:w-[92px]">
-                {quote ? formatPrice(quote.price, locale) : NO_VALUE}
-              </span>
-              <span className="flex justify-end sm:w-[86px]">
-                {quote ? (
-                  <ChangePill
-                    changePct={quote.changePct}
-                    locale={locale}
+                <Link
+                  href={`/hisse/${item.symbol}`}
+                  prefetch={false}
+                  className="flex min-w-0 flex-1 items-center gap-2.5"
+                >
+                  <LogoTile
+                    symbol={item.symbol}
+                    logoUrl={logos[item.symbol]}
                     size="sm"
                   />
-                ) : (
-                  <span className="text-xs text-muted">{NO_VALUE}</span>
-                )}
-              </span>
-            </span>
+                  {/* Sembol telefonda SABİT GENİŞLİKTE DEĞİL. `w-14` (56px) her
+                      ekranda duruyordu ve dar telefonda satırın sabit sütunları
+                      (fiyat 92 + değişim 86 + oklar 24 + sil 28 + boşluklar)
+                      yeri bitirince bu kutu daralmıyor, TAŞIYORDU: sembol fiyatın
+                      üstüne biniyor, şirket adı sıfır genişliğe düşüp tamamen
+                      kayboluyordu. Sabit genişliğin işi geniş ekranda sütunları
+                      hizalamak; telefonda hizalanacak yer zaten yok. */}
+                  {/* At 320px the company name had only 12–23px beside the
+                      symbol. Stack the identity on phones; desktop retains
+                      the aligned symbol and name columns through contents. */}
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5 sm:contents">
+                    <span className="numeral shrink-0 text-sm font-semibold text-strong sm:w-14">
+                      {item.symbol}
+                    </span>
+                    <span className="min-w-0 truncate text-xs text-soft">
+                      {names[item.symbol] ?? ""}
+                    </span>
+                  </span>
+                </Link>
 
-            {/* Sıralama okları ve silme, İMLEÇ SATIRDAYKEN çıkar.
-                Üç ikon her satırda sürekli duruyordu: dokuz satırlık bir
-                listede yirmi yedi düğme, üstelik biri yıkıcı.
+                {/* Fiyat SABİT GENİŞLİKTE bir sütun. Genişlik içeriğe bağlıydı
+                    ("539,58" ile "1.211,61" arasında yirmi piksel fark var) ve
+                    sayılar sağdan hizasız duruyordu; okuyucu dokuz satırı
+                    karşılaştıramıyordu. Ayrıca fiyat gövde mürekkebindeydi ve
+                    yanındaki renkli yüzde rozeti onu gölgede bırakıyordu — oysa
+                    satırın ana sayısı fiyat. */}
+                {/* Fiyat ve değişim TELEFONDA ALT ALTA, geniş ekranda yan yana.
+                    İkisi de sabit genişlikte sütun olarak yan yana dururken satır
+                    320-360px'te yeri bitiriyordu: sembol fiyatın üstüne biniyor,
+                    şirket adı sıfır genişliğe düşüyordu. Alt alta almak seksen
+                    piksel kazandırıyor ve iki sayı zaten aynı şeyin iki yüzü —
+                    sağ kenarda hizalı bir blok olarak da doğru okunuyor. */}
+                <span className="flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                  <span className="numeral text-right text-sm font-semibold text-strong sm:w-[92px]">
+                    {quote ? formatPrice(quote.price, locale) : NO_VALUE}
+                  </span>
+                  <span className="flex justify-end sm:w-[86px]">
+                    {quote ? (
+                      <ChangePill
+                        changePct={quote.changePct}
+                        locale={locale}
+                        size="sm"
+                      />
+                    ) : (
+                      <span className="text-xs text-muted">{NO_VALUE}</span>
+                    )}
+                  </span>
+                </span>
 
-                KOŞUL GENİŞLİK DEĞİL, İMLEÇ VARLIĞI — ve kural CASCADE
-                SIRASINA göre kuruldu. Önce `sm:opacity-0` yazılmıştı: geniş
-                ekranlı bir dokunmatik cihazda (tablet) düğmeler gizleniyor
-                ve onları geri getirecek hover olayı hiç gelmiyordu.
+                {/* Sıralama okları ve silme, İMLEÇ SATIRDAYKEN çıkar.
+                    Üç ikon her satırda sürekli duruyordu: dokuz satırlık bir
+                    listede yirmi yedi düğme, üstelik biri yıkıcı.
 
-                İkinci deneme `[@media(hover:hover)]:opacity-0` idi ve
-                üretilen CSS ölçülünce o da yanlış çıktı: Tailwind serbest
-                varyantları en sona basıyor, yani gizleyen kural gösterenden
-                SONRA geliyor ve aynı özgüllükte olduğu için hover hiç
-                çalışmıyordu.
+                    KOŞUL GENİŞLİK DEĞİL, İMLEÇ VARLIĞI — ve kural CASCADE
+                    SIRASINA göre kuruldu. Önce `sm:opacity-0` yazılmıştı: geniş
+                    ekranlı bir dokunmatik cihazda (tablet) düğmeler gizleniyor
+                    ve onları geri getirecek hover olayı hiç gelmiyordu.
 
-                Doğrusu ters kurmak: taban gizli, hover ve klavye açıyor,
-                DOKUNMATİK için `[@media(hover:none)]` sonda geldiği için
-                tabanı eziyor ve orada düğmeler hep açık kalıyor.
+                    İkinci deneme `[@media(hover:hover)]:opacity-0` idi ve
+                    üretilen CSS ölçülünce o da yanlış çıktı: Tailwind serbest
+                    varyantları en sona basıyor, yani gizleyen kural gösterenden
+                    SONRA geliyor ve aynı özgüllükte olduğu için hover hiç
+                    çalışmıyordu.
 
-                Klavyeyle gezen okuyucu için `group-focus-within` var: sekme
-                tuşu satıra girdiğinde hepsi görünür oluyor. */}
-            <span className="flex shrink-0 flex-col transition-opacity opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
-              <button
-                type="button"
-                onClick={() => nudge(item.id, -1)}
-                disabled={index === 0}
-                aria-label={`${labels.moveUp}: ${item.symbol}`}
-                className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25 sm:h-5 sm:w-6"
-              >
-                <CaretUp weight="duotone" size={13} />
-              </button>
-              <button
-                type="button"
-                onClick={() => nudge(item.id, 1)}
-                disabled={index === ordered.length - 1}
-                aria-label={`${labels.moveDown}: ${item.symbol}`}
-                className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25 sm:h-5 sm:w-6"
-              >
-                <CaretDown weight="duotone" size={13} />
-              </button>
-            </span>
+                    Doğrusu ters kurmak: taban gizli, hover ve klavye açıyor,
+                    DOKUNMATİK için `[@media(hover:none)]` sonda geldiği için
+                    tabanı eziyor ve orada düğmeler hep açık kalıyor.
 
-            <button
-              type="button"
-              onClick={async () => {
-                const fd = new FormData();
-                fd.set("itemId", item.id);
-                await removeSymbolFromList(fd);
-                router.refresh();
-              }}
-              aria-label={`${labels.removeSymbol}: ${item.symbol}`}
-              className="inline-flex size-10 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 opacity-100 transition hover:bg-down-wash hover:text-down opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 sm:size-7"
-            >
-              <Trash weight="duotone" size={13} />
-            </button>
-          </li>
-        );
-      })}
+                    Klavyeyle gezen okuyucu için `group-focus-within` var: sekme
+                    tuşu satıra girdiğinde hepsi görünür oluyor. */}
+                <span className="flex shrink-0 flex-col transition-opacity opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+                  <button
+                    type="button"
+                    onClick={() => nudge(item.id, -1)}
+                    disabled={index === 0}
+                    aria-label={`${labels.moveUp}: ${item.symbol}`}
+                    className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25 sm:h-5 sm:w-6"
+                  >
+                    <CaretUp weight="duotone" size={13} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => nudge(item.id, 1)}
+                    disabled={index === ordered.length - 1}
+                    aria-label={`${labels.moveDown}: ${item.symbol}`}
+                    className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25 sm:h-5 sm:w-6"
+                  >
+                    <CaretDown weight="duotone" size={13} />
+                  </button>
+                </span>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setRemoving((current) => new Set(current).add(item.id));
+                    const fd = new FormData();
+                    fd.set("itemId", item.id);
+                    try {
+                      await removeSymbolFromList(fd);
+                    } catch {
+                      // Silinemedi: satır tonuna geri dönüyor, liste yerinde.
+                      setRemoving((current) => {
+                        const next = new Set(current);
+                        next.delete(item.id);
+                        return next;
+                      });
+                      return;
+                    }
+                    router.refresh();
+                  }}
+                  aria-label={`${labels.removeSymbol}: ${item.symbol}`}
+                  className="inline-flex size-10 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 opacity-100 transition hover:bg-down-wash hover:text-down opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 sm:size-7"
+                >
+                  <Trash weight="duotone" size={13} />
+                </button>
+              </div>
+            </motion.li>
+          );
+        })}
+      </AnimatePresence>
     </ul>
   );
 }
+
+/** Satır hareketi: kayma bir yay (sürüklerken takip eder, taşmaz), giriş
+ *  marka eğrisi. */
+const ROW_MOTION = {
+  layout: { type: "spring", stiffness: 520, damping: 42, mass: 0.8 },
+  duration: 0.3,
+  ease: [0.22, 1, 0.36, 1],
+} as const;
+/** Çıkış hızlı ve hızlanarak — giden satır gözü tutmamalı. */
+const ROW_EXIT = { duration: 0.2, ease: [0.4, 0, 1, 1] } as const;
+/** Yeni satırın "buraya geldi" tonu: satır indikten sonra yavaşça söner. */
+const ROW_LANDED = { duration: 1.4, delay: 0.2, ease: [0.22, 1, 0.36, 1] } as const;
 
 /* --------------------------------------------------------------------------
    Sembol ekleme — satır içi arama
