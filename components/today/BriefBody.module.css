@@ -8,3 +8,13 @@
 .disclosure[open] { margin-top:0; padding-bottom:54px; }
 .disclosure[open] > .toggle { position:absolute; bottom:0; left:0; }
 @media(prefers-reduced-motion:reduce) { .toggle { transition:none; } }
+
+/* ZAMAN RAYI (26 Eylül) — kartta girişten sonraki paragraflar. Solda ince
+   bir hat, her paragrafın başında bir işaret noktası; paragraflar tek bir
+   bloğun parçaları değil, günün sıralı notları gibi okunuyor. Hat bir
+   sonraki paragrafa kadar uzanıyor (kabın 10 piksellik aralığı kadar),
+   son paragrafta bitiyor. */
+.beat { position:relative; padding-left:22px; }
+.beat::before { content:""; position:absolute; z-index:1; left:3px; top:8px; width:8px; height:8px; border-radius:999px; background:var(--primary-wash); box-shadow:inset 0 0 0 2px var(--primary); }
+.beat::after { content:""; position:absolute; left:6.5px; top:16px; bottom:-10px; width:1px; background:var(--primary-faint); }
+.beat:last-child::after { display:none; }

@@ -118,7 +118,7 @@ export function useRouteNavigating(): boolean {
  * `useSearchParams` okuduğu için ÇAĞIRAN taraf bunu `<Suspense>` içine almalı;
  * aksi halde altındaki bütün rota statik ön çizimden düşer.
  */
-export function RouteProgress({ label }: { label: string }) {
+export function RouteProgress({ label, brand }: { label: string; brand: string }) {
   const pathname = usePathname();
   const search = useSearchParams().toString();
   const run = useSyncExternalStore(
@@ -238,7 +238,7 @@ export function RouteProgress({ label }: { label: string }) {
           (filtre, grafik) küçük zil olarak kaldı: dar bir panelin içinde
           sahne, bekleyişin kendisinden büyük bir olay olurdu. */}
       {slow && !inlineFeedback && (
-        <div className="route-loader"><InkLoader scene={scene} label={label} /></div>
+        <div className="route-loader"><InkLoader scene={scene} label={label} brand={brand} /></div>
       )}
     </>
   );

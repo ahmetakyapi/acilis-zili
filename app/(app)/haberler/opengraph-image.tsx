@@ -10,7 +10,7 @@ export default async function SectionOgImage() {
     sectionOg({
       eyebrow: "Akış",
       title: "Haberler",
-      dek: "ABD piyasalarından haberler — Türkçe künyeleriyle.",
+      dek: "ABD piyasalarından haberler, Türkçe künyeleriyle.",
       chips: ["Piyasa", "Şirket", "Makro"],
     }),
     { ...size, fonts: await ogFonts() },

@@ -127,6 +127,22 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.menu.hintMarkets,
   },
   {
+    /* PİYASALAR'IN HEMEN ARKASINDA (26 Eylül, sahibinin isteği). Bir dönem
+       hiçbir genişlikte sığmıyordu ve yalnızca "Menü" hapının içindeydi;
+       tek şeride inen düzen yer açtı ve Bilançolar ile Takvim arasına
+       oturdu. Şimdi dizide ikinci: başlıkta, menüde ve alt bilgide
+       Piyasalar'dan sonra geliyor. Sığma önceliği (`rank`) değişmedi —
+       dar ekranda hangi sekmenin önce "Daha Fazla"ya ineceği ayrı bir karar.
+       Şeritteki ad `nav.technical` — TR "Teknik Analiz", EN "Technicals";
+       İngilizce tam ad ("Technical Analysis") 1024'te aralığı daraltıyordu. */
+    href: "/teknik",
+    label: (t) => t.technical.title,
+    icon: ChartLineUp,
+    inBottomBar: false,
+    strip: { rank: 4, label: (t) => t.nav.technical },
+    hint: (t) => t.menu.hintTechnical,
+  },
+  {
     href: "/sirketler",
     label: (t) => t.nav.companies,
     icon: Buildings,
@@ -150,19 +166,6 @@ export const NAV_ITEMS: NavItem[] = [
     shortLabel: (t) => t.nav.earningsShort,
     strip: { rank: 2 },
     hint: (t) => t.menu.hintEarnings,
-  },
-  {
-    /* ŞERİTTE, BEŞİNCİ SIRADA. Bir dönem hiçbir genişlikte sığmıyordu ve
-       yalnızca "Menü" hapının içindeydi. Tek şeride inen düzen yer açtı:
-       dizideki ve alt bilgideki yeri zaten Bilançolar ile Takvim arası.
-       Şeritteki ad `nav.technical` — TR "Teknik Analiz", EN "Technicals";
-       İngilizce tam ad ("Technical Analysis") 1024'te aralığı daraltıyordu. */
-    href: "/teknik",
-    label: (t) => t.technical.title,
-    icon: ChartLineUp,
-    inBottomBar: false,
-    strip: { rank: 4, label: (t) => t.nav.technical },
-    hint: (t) => t.menu.hintTechnical,
   },
   {
     href: "/takvim",

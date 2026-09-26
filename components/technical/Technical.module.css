@@ -1828,3 +1828,42 @@
   .pulse[data-variant="panel"] .pulseLogo:hover { translate:0 -2px; }
 }
 @media(prefers-reduced-motion:reduce) { .pulse[data-variant="panel"] .pulseLogo:hover { translate:none; } }
+
+/* ---- PREMIUM KART (26 Eylül) ----
+   "Daha görsel, daha okunur, logolar bir tık büyük" (sahibinin isteği,
+   ekran görüntüsüyle). Dosyanın üst kısmındaki kurallar karar kaydı olarak
+   yerinde; bu blok onları kartın kapsamıyla eziyor.
+
+   AKSAN ŞERİDİ: kartın tepesinde görüşün renginde 3 piksellik bir şerit
+   (AL yeşil, TUT mavi, SAT kırmızı); kart görünüme girince soldan
+   çiziliyor. Renk YÖN söylüyor ve bu kartta görüş zaten bir yön — sitenin
+   renk kuralı içinde. Gölge yok; derinlik tonla ve bir kalkışla. */
+/* Köşelere değmiyor: düz bir çizgi yuvarlak köşeden taşıp iki uçta çıkıntı
+   yapıyordu (ölçüldü, 1440). Kenarın içinde, altı yuvarlatılmış bir sekme
+   işareti gibi duruyor. */
+.card::before { content:""; position:absolute; z-index:1; top:-1px; left:28px; right:28px; height:3px; border-radius:0 0 3px 3px; background:var(--primary); transform-origin:left center; animation:card-accent 720ms var(--ease-brand) 120ms both; }
+.card[data-verdict="buy"]::before { background:var(--up); }
+.card[data-verdict="sell"]::before { background:var(--down); }
+@keyframes card-accent { from { transform:scaleX(0); } }
+.card { transition:border-color var(--default-transition-duration) var(--ease-brand), translate .28s var(--ease-brand); }
+.card .cardHead > :first-child { transition:scale .28s var(--ease-brand); }
+@media(hover:hover) and (pointer:fine) {
+ .card:hover { translate:0 -3px; }
+ .card:hover .cardHead > :first-child { scale:1.06; }
+}
+/* Okunurluk: 10–11,5 piksellik künyeler 12'ye, soluk tonlar gövde tonuna. */
+.card .cardSymbol { font-size:20px; }
+.card .cardCompany { font-size:13px; color:var(--text-body); }
+.card .cardQuoteLabel { font-size:12.5px; font-weight:600; color:var(--text-body); }
+.card .cardPrice strong { font-size:28px; }
+.card .thesisStamp { font-size:12px; font-weight:600; color:var(--text-body); }
+.card .gaugeName { font-size:12.5px; color:var(--text-body); }
+.card .gaugeValue { font-size:14.5px; }
+.card .gaugeTags i { font-size:12px; color:var(--text-body); }
+.card .cardFoot { font-size:12.5px; color:var(--text-body); }
+@media(prefers-reduced-motion:reduce) {
+ .card::before { animation:none; }
+ .card, .card .cardHead > :first-child { transition:none; }
+ .card:hover { translate:none; }
+ .card:hover .cardHead > :first-child { scale:none; }
+}

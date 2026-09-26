@@ -131,9 +131,12 @@ function BriefLines({
       : size === "card-wide"
         ? "text-read leading-[22px] min-[1200px]:text-[0.9375rem] min-[1200px]:leading-[25px]"
         : "text-read leading-[22px]";
-  const ledeAt = size === "page"
-    ? lines.findIndex((line) => !headingOf(line) && !line.trim().startsWith("- "))
-    : -1;
+  /* KARTTA DA GİRİŞ VAR (26 Eylül). Ana sayfa kartı dokuz eş ağırlıklı
+     paragraf basıyordu ve "metin duvarı" gibi okunuyordu (sahibinin
+     bildirimi). Uzunluk bilerek (kısa günde sol kolonu dengeliyor, bkz.
+     page.tsx → BriefCard), o yüzden değişen sunum: ilk paragraf giriş,
+     sonrakiler bir zaman rayının üstünde (`styles.beat`). */
+  const ledeAt = lines.findIndex((line) => !headingOf(line) && !line.trim().startsWith("- "));
 
   return (
     <div
@@ -174,18 +177,22 @@ function BriefLines({
             </p>
           );
         }
-        if (index === ledeAt) {
+        if (index === ledeAt && startNumber === 1) {
           return (
             <p
               key={index}
-              className="text-[1.3125rem] font-medium leading-[1.5] tracking-[-0.01em] text-strong max-sm:text-[1.1875rem]"
+              className={
+                size === "page"
+                  ? "text-[1.3125rem] font-medium leading-[1.5] tracking-[-0.01em] text-strong max-sm:text-[1.1875rem]"
+                  : "text-[1.0625rem] font-medium leading-[27px] tracking-[-0.01em] text-strong"
+              }
             >
               {renderInline(trimmed, String(index))}
             </p>
           );
         }
         return (
-          <p key={index} className={cn("text-body", text)}>
+          <p key={index} className={cn("text-body", text, size !== "page" && styles.beat)}>
             {renderInline(trimmed, String(index))}
           </p>
         );

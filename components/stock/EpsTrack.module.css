@@ -5,18 +5,21 @@
    gerçeği arasında bir sıçrama açılırdı. Satırlar: lejant, çizim alanı
    (esnek), eksen; sapma künyesi çizim alanının içinde, işaretin üstünde.
 
-   İşaretler 9 piksel: halka beklenti (boş, `--text-muted` kenar), nokta
-   gerçekleşen (yön rengi), aralarında 1 piksellik `--line-strong` çizgi.
-   Konumlar `translate` ile ortalanıyor, `transform` ile değil: hareket
-   sistemi noktayı `transform: scale()` ile oturtuyor ve ikisi aynı
-   özelliği paylaşsaydı nokta oturuşunda yerinden kayardı. */
+   Mermi grafiği (26 Eylül): beklenti kesik çizgili çerçeve, gerçekleşen
+   onun içinde dolu sütun. Sütunlar `translate` ile ortalanıyor,
+   `transform` ile değil: hareket sistemi sütunu `transform: scaleY()` ile
+   büyütüyor ve ikisi aynı özelliği paylaşsaydı büyürken yerinden kayardı. */
 .track {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 6px;
-  height: 168px;
+  /* 168 → 232 (26 Eylül): mermi grafiğinde uzunluk değerin kendisi ve
+     168'de çizim alanı 120 piksele düşüyor, en küçük çeyreğin sütunu 8
+     piksele iniyordu. Grafiğin iskeleti yok (tablo iskeleti), sıçrama
+     açılmıyor. */
+  height: 232px;
   margin: 0;
-  padding: 2px 20px 14px;
+  padding: 4px 20px 14px;
   border-bottom: 1px solid var(--line-soft);
 }
 
@@ -30,14 +33,11 @@
   line-height: 16px;
 }
 .legend > span { display: inline-flex; align-items: center; gap: 6px; }
-.legendRing,
-.legendDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-.legendRing { border: 1.5px solid var(--text-muted); }
-.legendDot { background: var(--text-strong); }
+.legendEstimate,
+.legendActual { width: 10px; height: 10px; border-radius: 3px; }
+.legendEstimate { border: 1.5px dashed var(--text-muted); }
+/* Gerçekleşen sütunu yön renginde: lejant ikisini birden gösteriyor. */
+.legendActual { background: linear-gradient(90deg, var(--up) 50%, var(--down) 50%); }
 
 .columns {
   display: grid;
@@ -79,50 +79,40 @@
   width: 100%;
   min-height: 0;
 }
-/* Sütunun kılavuzu: işaretleri altındaki etikete bağlayan saç teli. */
-.plot::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  background: var(--line-soft);
-}
-.columns[data-zero] .plot::after {
+/* SIFIR ÇİZGİSİ — sütunların tabanı. Aralık sıfırı geçiyorsa (zarar)
+   kesik, geçmiyorsa düz bir zemin çizgisi. */
+.plot::after {
   content: "";
   position: absolute;
   inset-inline: 0;
   bottom: var(--eps-zero);
-  border-top: 1px dashed var(--line-strong);
+  border-top: 1px solid var(--line);
 }
+.columns[data-zero] .plot::after { border-top-style: dashed; border-color: var(--line-strong); }
 
-.stem {
+/* Beklenti: geniş çerçeve, kesik çizgi, çok soluk dolgu. Sütunun %62'si. */
+.estimate {
   position: absolute;
   left: 50%;
-  width: 1px;
+  width: min(62%, 64px);
   translate: -50% 0;
-  background: var(--line-strong);
+  border: 1.5px dashed var(--text-muted);
+  border-radius: 7px 7px 3px 3px;
+  background: var(--surface-sunken);
 }
-
-.ring,
-.dot {
+/* Gerçekleşen: çerçevenin içinde, daha dar ve dolu; yön renginde. */
+.actual {
   position: absolute;
   left: 50%;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  translate: -50% 50%;
+  width: min(34%, 34px);
+  translate: -50% 0;
+  border-radius: 5px 5px 2px 2px;
+  background: var(--flat);
 }
-.ring {
-  border: 1.5px solid var(--text-muted);
-  background: var(--premium-surface);
-}
-.dot { background: var(--flat); }
-.dot[data-tone="up"] { background: var(--up); }
-.dot[data-tone="down"] { background: var(--down); }
+.actual[data-tone="up"] { background: var(--up); }
+.actual[data-tone="down"] { background: var(--down); }
 
 @media (max-width: 639px) {
-  .track { height: 148px; padding-inline: 16px; }
+  .track { height: 196px; padding-inline: 16px; }
   .column { gap: 3px; }
 }

@@ -152,6 +152,19 @@
      gölge temaya uyuyor. */
   --mark-gradient: linear-gradient(180deg, rgb(255 255 255 / 0.22) 0%, rgb(255 255 255 / 0) 50%), linear-gradient(150deg, #5cc4ff 0%, #1f86e0 48%, #0b3f86 100%);
   --mark-edge: rgb(255 255 255 / 0.18);
+  /* PROFİL KAROLARI (26 Eylül) — marka işaretinin dilinde: üstte parlaklık,
+     altında çapraz degrade. Marka karosu gibi İKİ TEMADA DA AYNI: kimlik
+     temayla değişmemeli (koyu temada bu blok yeniden tanımlanmıyor).
+     Çizgi her renkte `--mark-ink` (beyaz); en açık ton olan gümüşün koyu
+     ucu beyaz çizgiyle kontrast tutacak kadar derin. Gerekçe lib/avatars.ts. */
+  --avatar-gloss: linear-gradient(180deg, rgb(255 255 255 / 0.26) 0%, rgb(255 255 255 / 0) 52%);
+  --avatar-blue: linear-gradient(150deg, #5cc4ff 0%, #1f86e0 48%, #0b3f86 100%);
+  --avatar-navy: linear-gradient(150deg, #6f8fd6 0%, #2c4e9a 50%, #0e1f4a 100%);
+  --avatar-teal: linear-gradient(150deg, #62e3d5 0%, #13a0a6 50%, #094f61 100%);
+  --avatar-violet: linear-gradient(150deg, #b9a3ff 0%, #7654e2 50%, #33208c 100%);
+  --avatar-brass: linear-gradient(150deg, #f7cf7c 0%, #cf922b 50%, #7d4a09 100%);
+  --avatar-ink: linear-gradient(150deg, #5d6b82 0%, #283447 50%, #0a1019 100%);
+  --avatar-silver: linear-gradient(150deg, #c8d2de 0%, #8391a4 50%, #3f4c5e 100%);
   --mark-ink: #ffffff;
   --mark-lip: #ffffff;
 
@@ -1222,6 +1235,9 @@ html.theme-switching::view-transition-new(root) {
   height: 72px;
 }
 
+/* Kartın başındaki marka adı — başlıktaki logonun yazısıyla aynı dil. */
+.route-loader-brand { font-size: 17px; line-height: 1; margin-bottom: -4px; }
+
 /* Gezinme kartındaki kısa film — sahne kutusunun oranı (240 × 150). */
 .route-loader-canvas { width: 176px; height: 110px; }
 
@@ -2050,6 +2066,13 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
 .masthead-brand { border-radius:10px; }
 .masthead-brand > span:first-child { transition:transform 260ms var(--ease-brand); }
 .masthead-brand svg { transform-origin:50% 15%; }
+/* ÇINLAMA (26 Eylül). Logonun üzerine gelince zil sallanıyordu ama ses
+   yoktu; karonun iki yanında bir ses dalgası büyüyüp sönüyor — sitenin
+   mürekkep zilinin (yükleme, açılış) başlıktaki karşılığı. Yalnızca
+   kenarlık, gölge yok; renk marka mavisinin soluk tonu. */
+.masthead-brand > span:first-child { position:relative; }
+.masthead-brand > span:first-child::before,
+.masthead-brand > span:first-child::after { content:""; position:absolute; inset:-5px; border-radius:40%; border:2px solid transparent; border-left-color:var(--primary-faint); border-right-color:var(--primary-faint); opacity:0; pointer-events:none; }
 .masthead-brand:focus-visible { outline:2px solid var(--line-focus); outline-offset:5px; }
 .masthead-nav { height:100%; justify-content:center; }
 .masthead-nav > ul { gap:clamp(2px,.5vw,10px); }
@@ -2088,11 +2111,14 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
 @media(hover:hover) and (pointer:fine) {
  .masthead-brand:hover > span:first-child { transform:translateY(-1px); }
  .masthead-brand:hover svg { animation:masthead-bell 600ms var(--ease-brand); }
+ .masthead-brand:hover > span:first-child::before { animation:masthead-ring 700ms var(--ease-brand) 60ms; }
+ .masthead-brand:hover > span:first-child::after { animation:masthead-ring 700ms var(--ease-brand) 240ms; }
  .masthead-row:hover .masthead-row-arrow { transform:translate(2px,-2px); opacity:1; }
  .premium-masthead .masthead-search:hover,.premium-masthead .masthead-account:not([data-signed-in]):hover { border-color:var(--primary-faint); background:var(--primary-tint); color:var(--text-strong); }
  .premium-masthead .masthead-search:hover .masthead-search-icon { background:var(--primary-wash); }
  .premium-masthead .masthead-account[data-signed-in]:hover { background:var(--primary-hover); }
 }
+@keyframes masthead-ring { from { opacity:0; scale:.86; } 30% { opacity:1; } to { opacity:0; scale:1.28; } }
 @keyframes masthead-bell { 20% { transform:rotate(-9deg); } 50% { transform:rotate(7deg); } 80% { transform:rotate(-3deg); } to { transform:none; } }
 /* Gezinme sürerken başlıktaki zil sallanır (gerekçe RouteProgress.tsx →
    `data-navigating`). Dönme noktası askı: zil karonun ortasından değil
@@ -2102,7 +2128,7 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
 html[data-navigating] .masthead-brand > span:first-child svg { transform-origin:50% 22%; animation:masthead-bell-wait 1.6s var(--ease-brand) infinite; }
 @keyframes masthead-bell-wait { 0% { transform:none; } 12% { transform:rotate(-10deg); } 28% { transform:rotate(8deg); } 42% { transform:rotate(-4deg); } 54%,100% { transform:none; } }
 @media(prefers-reduced-motion:reduce) {
- .masthead-brand:hover svg,html[data-navigating] .masthead-brand > span:first-child svg { animation:none; }
+ .masthead-brand:hover svg,html[data-navigating] .masthead-brand > span:first-child svg,.masthead-brand:hover > span:first-child::before,.masthead-brand:hover > span:first-child::after { animation:none; }
  .masthead-brand > span:first-child,.masthead-row-arrow,.masthead-nav .masthead-link { transition:none; }
  .masthead-brand:hover > span:first-child,.masthead-row:hover .masthead-row-arrow { transform:none; }
 }
@@ -2294,3 +2320,29 @@ html.ink-splash-out .ink-splash-layer {
 @keyframes ink-splash-name { from { opacity: 0; transform: translateY(6px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
 @keyframes ink-splash-out { to { opacity: 0; transform: scale(1.015); visibility: hidden; } }
 @keyframes ink-splash-safety { to { opacity: 0; visibility: hidden; } }
+
+/* Çip şeridinin yön düğmeleri (components/ui/ChipStrip.tsx). Kenarın
+   ortasında, şeridin yüzeyinde yuvarlak bir düğme; beliriş kısa bir
+   kayma. Derinlik tonla: kenarlık ve yüzey, gölge yok. */
+.chip-strip { position:relative; min-width:0; }
+.chip-strip-arrow { position:absolute; top:50%; z-index:1; display:grid; place-items:center; width:32px; height:32px; margin-top:-16px; border:1px solid var(--line); border-radius:999px; background:var(--overlay-surface); color:var(--primary-ink); cursor:pointer; animation:chip-arrow-in 220ms var(--ease-brand) both; transition:background-color .2s, border-color .2s; }
+.chip-strip-arrow[data-side="start"] { left:-4px; }
+.chip-strip-arrow[data-side="end"] { right:-4px; }
+.chip-strip-arrow:hover { background:var(--primary-tint); border-color:var(--primary-faint); }
+.chip-strip-arrow:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+@keyframes chip-arrow-in { from { opacity:0; scale:.8; } }
+@media(prefers-reduced-motion:reduce) { .chip-strip-arrow { animation:none; } }
+
+/* YÖNETİMDE SIKI BAŞLIK (26 Eylül, sahibinin isteği: "başlığı küçültüp
+   içeriği yukarı alalım, mümkün olduğunca az kaydırma"). Panel sitenin
+   kamu `PageHeader`ını kullanıyor: 50 piksellik başlık ve geniş dolgulu bir
+   kart, ilk ekranın üçte birini yiyordu. Yalnızca yönetim kabuğunda
+   (`data-admin-shell`) başlık 26 piksele, kartın dolgusu 16/22'ye, sayfa
+   aralığı 16'ya iniyor; kamu sayfaları etkilenmiyor. Kökte `:has()` yok —
+   kural kabuğun kendi özniteliğinden iniyor (CLAUDE.md). */
+[data-admin-shell] .page-masthead.page-masthead[data-embedded="false"] { padding:16px 22px; }
+[data-admin-shell] .page-heading-copy h1 { font-size:1.625rem; line-height:1.15; }
+[data-admin-shell] .page-heading-copy + p,
+[data-admin-shell] .page-heading-copy p:not(.page-eyebrow) { margin-top:4px; }
+[data-admin-shell] .page-eyebrow { margin-bottom:2px; }
+[data-admin-shell] .page-enter > .gap-6 { gap:16px; }

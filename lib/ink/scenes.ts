@@ -1227,6 +1227,13 @@ const RING_PERIOD = 1.4;
 const RING_SWING = 0.2;
 /** Çınlama yaylarının süresi (sn) — yarım dönemden kısa, sönüp bitsin. */
 const RING_ARC_S = 0.6;
+/** Vuruş kıvılcımının süresi (sn). */
+const RING_SPARK_S = 0.42;
+/** Yörüngenin yarıçapı: 120'lik kutuda zilin ve çınlama yaylarının dışı. */
+const RING_ORBIT_R = 52;
+/** Yörünge yayının boyu (radyan) ve kaç parçada soluduğu. */
+const RING_ORBIT_SWEEP = 1.9;
+const RING_ORBIT_TRAIL = 5;
 
 const ringing: InkScene = {
   box: { w: 120, h: 120 },
@@ -1258,10 +1265,50 @@ const ringing: InkScene = {
       seed,
     });
     if (t >= RING_LOOP) {
-      for (const hit of [0.25, 0.75]) {
+      for (const [i, hit] of [0.25, 0.75].entries()) {
         const since = (((within - hit) % 1) + 1) % 1;
         ringArcs(ctx, pal, x, y - 2, (since * RING_PERIOD) / RING_ARC_S, s);
+        /* VURUŞUN KIVILCIMI (26 Eylül): tokmağın çarptığı yandan, zilin
+           ağzının hizasından pirinç bir sıçrama. Sol vuruş solda, sağ
+           vuruş sağda — göz sesin nereden çıktığını görüyor. */
+        const side = i === 0 ? 1 : -1;
+        spark(ctx, pal, x + side * 21, y + 12, (since * RING_PERIOD) / RING_SPARK_S, 0.46, seed + 80 + i);
       }
+    }
+    /* YÖRÜNGE (26 Eylül). Çalan zil tek başına "bekliyoruz" diyordu ama
+       "ilerliyoruz" demiyordu; bekleme göstergesinin evrensel dili dönen
+       bir iz. Zilin çevresinde fırçayla çizilmiş pirinç bir yay dönüyor:
+       başı dolgun, kuyruğu kuru fırça gibi incelip soluyor. Bir tur tam bir
+       çalma dönemi (RING_PERIOD) sürüyor ve açı sahnenin kendi saatinden
+       geliyor; döngü başa sardığında yay tam aynı yerde, dikiş görünmüyor.
+       Zil kendini çizerken iz de birlikte beliriyor (`ramp`). */
+    const orbit = span(t, 0.5, RING_LOOP);
+    if (orbit > 0) {
+      const head = -Math.PI / 2 + (2 * Math.PI * (t - RING_LOOP)) / RING_PERIOD;
+      for (let k = 0; k < RING_ORBIT_TRAIL; k++) {
+        const a1 = head - (k * RING_ORBIT_SWEEP) / RING_ORBIT_TRAIL;
+        const a0 = a1 - RING_ORBIT_SWEEP / RING_ORBIT_TRAIL - 0.02;
+        const pts: Point[] = [];
+        for (let i = 0; i <= 8; i++) {
+          const a = a0 + ((a1 - a0) * i) / 8;
+          pts.push({ x: x + Math.cos(a) * RING_ORBIT_R, y: 60 + Math.sin(a) * RING_ORBIT_R });
+        }
+        brush(ctx, pts, {
+          width: 3.4 * (1 - k / RING_ORBIT_TRAIL) + 0.6,
+          seed: seed + 90 + k,
+          taper: k === 0 ? 0.6 : 0,
+          dry: k > 1 ? 0.5 : 0,
+          alpha: orbit * (1 - k / RING_ORBIT_TRAIL) * 0.95,
+          color: pal.spark,
+        });
+      }
+      /* Yörüngenin geçtiği halka: silik bir kurşun kalem izi. */
+      const guide: Point[] = [];
+      for (let i = 0; i <= 48; i++) {
+        const a = (i / 48) * Math.PI * 2;
+        guide.push({ x: x + Math.cos(a) * RING_ORBIT_R, y: 60 + Math.sin(a) * RING_ORBIT_R });
+      }
+      brush(ctx, guide, { width: 1, seed: seed + 99, taper: 0, alpha: orbit * 0.12, color: pal.ink });
     }
   },
 };

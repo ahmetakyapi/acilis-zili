@@ -553,6 +553,7 @@ async function IndexDetail({
         flat={flat}
         total={withChange.length}
         memberCount={members.length}
+        heat={withChange}
         locale={locale}
         t={t}
       >
@@ -702,10 +703,12 @@ function IndexTabs({ tab, locale, t }: { tab: TabKey; locale: Locale; t: Diction
    fon sembolü bu yüzden fiyatın yanında kalır. Eksik değişimler sayaca
    katılmaz; gerçek kapsam toplam üye sayısıyla ayrıca gösterilir. */
 function IndexToolbar({
-  tab, proxy, proxyQuote, advancing, declining, flat, total, memberCount, locale, t, children,
+  tab, proxy, proxyQuote, advancing, declining, flat, total, memberCount, heat, locale, t, children,
 }: {
   tab: TabKey; proxy: string; proxyQuote: Quote | null;
   advancing: number; declining: number; flat: number; total: number; memberCount: number;
+  /** Değişimi bilinen satırlar — sayaçla AYNI liste (`withChange`). */
+  heat: Row[];
   locale: Locale; t: Dictionary; children?: ReactNode;
 }) {
   const pct = (value: number) => total > 0 ? value / total * 100 : 0;
@@ -746,10 +749,59 @@ function IndexToolbar({
           <p className={styles.breadthCoverage}>{t.markets.breadthCoverage.replace("{known}", String(total)).replace("{total}", String(memberCount))}</p>
         </div>
       </div>
+      {/* ISI HARİTASI (26 Eylül). Genişlik yalnızca üç sayı ve bir çubuktu;
+          piyasanın NASIL dağıldığı — büyükler mi taşıyor, küçükler mi —
+          görünmüyordu. Her kare bir bileşen, piyasa değerine göre sıralı
+          (büyükler başta). Renk yön, koyuluk hareketin büyüklüğü: %3'te
+          doyuyor. Sayaçla AYNI satırlar, yani ızgaradaki yeşil kare sayısı
+          "Artıda" sayısıyla birebir. Kareler odak sırasının DIŞINDA:
+          S&P 500'de 500 durak olurdu; aynı bağlantılar alttaki tabloda. */}
+      {heat.length > 0 && (
+        <div className={styles.heat}>
+          <div className={styles.heatHead}>
+            <h3>{t.markets.heatmap}</h3>
+            <span aria-hidden className={styles.heatScale}>
+              <span className="numeral">−%{HEAT_FULL}</span>
+              <i />
+              <span className="numeral">+%{HEAT_FULL}</span>
+            </span>
+          </div>
+          <p className={styles.heatHint}>{t.markets.heatmapHint}</p>
+          <div className={styles.heatGrid} aria-hidden data-motion-stagger>
+            {[...heat]
+              .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
+              .map((row) => {
+                const change = row.quote!.changePct!;
+                const depth = Math.min(1, Math.abs(change) / HEAT_FULL);
+                const tone = change > 0 ? "var(--up)" : change < 0 ? "var(--down)" : null;
+                return (
+                  <Link
+                    key={row.member.symbol}
+                    href={`/hisse/${row.member.symbol}`}
+                    prefetch={false}
+                    tabIndex={-1}
+                    title={`${row.member.symbol} · ${formatPercent(change, locale)}`}
+                    className={styles.heatCell}
+                    style={{
+                      background: tone
+                        ? `color-mix(in srgb, ${tone} ${Math.round(HEAT_MIN + depth * (100 - HEAT_MIN))}%, var(--surface-sunken))`
+                        : "var(--surface-sunken)",
+                    }}
+                  />
+                );
+              })}
+          </div>
+        </div>
+      )}
       {children && <div className={styles.breadthStamp}>{children}</div>}
     </Panel>
   );
 }
+
+/** Isı haritasının doyduğu hareket (yüzde): bunun üstü en koyu ton. */
+const HEAT_FULL = 3;
+/** En küçük hareketin bile zeminden ayrışması için karışımdaki taban pay. */
+const HEAT_MIN = 22;
 
 /* ---- En çok artan / düşen kartları ---- */
 
@@ -1097,7 +1149,7 @@ function MembersTable({
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-line-soft">
+          <tbody data-motion-stagger className="divide-y divide-line-soft">
             {sorted.map((row, index) => {
               const quote = row.quote;
               const tone = directionOf(quote?.changePct);

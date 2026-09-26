@@ -26,3 +26,24 @@
 @media(prefers-reduced-motion:reduce) { .company,.open { transition:none; } }
 
 .cap { color:var(--text-muted); font-size:10px; line-height:1.2; white-space:nowrap; letter-spacing:-.015em; margin-top:-4px; }
+
+/* ---- Premium raf (26 Eylül) ----
+   Sembol ve değer okunur puntoya çıktı (10 → 12 / 11), birinci şirket
+   hafif bir marka yıkamasıyla öne çıkıyor ve her karonun dibinde birinciye
+   oranla bir pay çubuğu var. Üzerine gelince logo hafifçe kalkıyor. */
+.heading h2 { font-size:var(--text-read); font-weight:700; color:var(--text-strong); }
+.heading > span { font-size:12px; }
+.company { gap:7px; padding-bottom:14px; transition:border-color .2s, background-color .2s, translate .22s; }
+.company[data-first] { border-color:var(--primary-faint); background:var(--primary-tint); }
+.symbol { font-size:12px; font-weight:700; color:var(--text-strong); }
+.cap { font-size:11px; font-weight:600; color:var(--text-body); margin-top:-3px; }
+.logo { transition:translate .25s var(--ease-brand); }
+.share { position:absolute; left:10px; right:10px; bottom:7px; height:3px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
+.share > i { display:block; height:100%; border-radius:999px; background:color-mix(in srgb, var(--primary) 70%, transparent); transform-origin:left center; }
+.company[data-first] .share > i { background:var(--primary); }
+@media(hover:hover) and (pointer:fine) {
+ .company:hover { translate:0 -2px; background:var(--primary-tint); }
+ .company:hover .logo { translate:0 -2px; }
+}
+@media(max-width:767px) { .symbol { font-size:11px; } .cap { font-size:10px; } .share { left:7px; right:7px; bottom:5px; } }
+@media(prefers-reduced-motion:reduce) { .company, .logo { transition:none; } .company:hover, .company:hover .logo { translate:none; } }

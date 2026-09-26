@@ -277,7 +277,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             <Link href={`/hisse/${symbol}`} className={styles.coverNameLink} data-morph-stage>
               {/* Teknik kartından gelindiyse logo kartın yerinden buraya uçuyor. */}
               <MorphTarget morphKey={`logo:${symbol}`}>
-                <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="lg" />
+                <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="xl" />
               </MorphTarget>
               <div className="min-w-0">
                 <h1>

@@ -63,6 +63,8 @@ const tr = {
   },
 
   common: {
+    scrollPrev: "Geri Kaydır",
+    scrollNext: "İleri Kaydır",
     loading: "Yükleniyor",
     submitting: "Gönderiliyor…",
     error: "Bir sorun oluştu",
@@ -1363,6 +1365,8 @@ const tr = {
     breadth: "Piyasa Genişliği",
     advancingShare: "Yükselenlerin Payı",
     breadthCoverage: "{total} şirketin {known} tanesinde değişim verisi mevcut.",
+    heatmap: "Isı Haritası",
+    heatmapHint: "Her kare bir şirket, piyasa değerine göre sıralı; renk yön, koyuluk hareketin büyüklüğü.",
     movementScale: "Çubuklar iki listede aynı yüzde ölçeğini kullanır.",
     advancing: "Artıda",
     declining: "Ekside",
@@ -1616,8 +1620,10 @@ const tr = {
 
   settings: {
     avatarTitle: "Profil İkonu",
-    avatarHint: "Hesabın başlıkta ve menüde bu ikonla görünür. İstediğin zaman değiştirebilirsin.",
+    avatarHint: "Hesabın başlıkta ve menüde bu karoyla görünür. Rengini ve ikonunu istediğin zaman değiştirebilirsin.",
     avatarInitials: "Baş Harfler",
+    avatarIconLabel: "İkon",
+    avatarColorLabel: "Renk",
     avatarSaved: "Kaydedildi",
     avatarFailed: "İkon kaydedilemedi, birazdan tekrar dene.",
     avatarNames: {
@@ -1633,6 +1639,19 @@ const tr = {
       diamond: "Elmas",
       bolt: "Yıldırım",
       shield: "Kalkan",
+      crown: "Taç",
+      globe: "Dünya",
+      target: "Hedef",
+      star: "Yıldız",
+    },
+    avatarColors: {
+      blue: "Mavi",
+      navy: "Lacivert",
+      teal: "Turkuaz",
+      violet: "Lavanta",
+      brass: "Pirinç",
+      ink: "Mürekkep",
+      silver: "Gümüş",
     },
     title: "Ayarlar",
     subtitle: "Hesap bilgilerin, tema ve dil tercihlerin, verilerinle ilgili hakların.",

@@ -10,7 +10,7 @@ export default async function SectionOgImage() {
     sectionOg({
       eyebrow: "Makro Veri",
       title: "Ekonomik Takvim",
-      dek: "ABD makro veri açıklamaları ve Fed toplantıları — Türkiye saatiyle.",
+      dek: "ABD makro veri açıklamaları ve Fed toplantıları, Türkiye saatiyle.",
       chips: ["TÜFE", "İstihdam", "FOMC"],
     }),
     { ...size, fonts: await ogFonts() },

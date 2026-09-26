@@ -48,6 +48,8 @@ const en: typeof tr = {
   },
 
   common: {
+    scrollPrev: "Scroll Back",
+    scrollNext: "Scroll Forward",
     loading: "Loading",
     submitting: "Submitting…",
     error: "Something went wrong",
@@ -1074,6 +1076,8 @@ const en: typeof tr = {
     breadth: "Market Breadth",
     advancingShare: "Share of Advancers",
     breadthCoverage: "Change data is available for {known} of {total} companies.",
+    heatmap: "Heat Map",
+    heatmapHint: "Each square is a company, ordered by market value; color is direction, depth is the size of the move.",
     movementScale: "Bars use the same percentage scale across both lists.",
     advancing: "Advancing",
     declining: "Declining",
@@ -1274,8 +1278,10 @@ const en: typeof tr = {
 
   settings: {
     avatarTitle: "Profile Icon",
-    avatarHint: "Your account shows this icon in the header and the menu. You can change it any time.",
+    avatarHint: "Your account shows this tile in the header and the menu. You can change its color and icon any time.",
     avatarInitials: "Initials",
+    avatarIconLabel: "Icon",
+    avatarColorLabel: "Color",
     avatarSaved: "Saved",
     avatarFailed: "The icon could not be saved, try again shortly.",
     avatarNames: {
@@ -1291,6 +1297,19 @@ const en: typeof tr = {
       diamond: "Diamond",
       bolt: "Bolt",
       shield: "Shield",
+      crown: "Crown",
+      globe: "Globe",
+      target: "Target",
+      star: "Star",
+    },
+    avatarColors: {
+      blue: "Blue",
+      navy: "Navy",
+      teal: "Teal",
+      violet: "Lavender",
+      brass: "Brass",
+      ink: "Ink",
+      silver: "Silver",
     },
     title: "Settings",
     subtitle: "Your account details, theme and language, and your rights over your data.",

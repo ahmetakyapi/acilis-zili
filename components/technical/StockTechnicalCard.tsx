@@ -79,7 +79,8 @@ export async function StockTechnicalCard({
   return (
     <section className={styles.stockCard} data-verdict={verdict}>
       <div className={styles.stockCardHead}>
-        <h2 className="plate">{t.technical.title}</h2>
+        {/* Tam boy başlık — sitenin öteki panelleriyle aynı dil (26 Eylül). */}
+        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">{t.technical.title}</h2>
         <span className={styles.stockCardMeta}>
           {slotLabel(row.slot, t)} · {formatEtDateCompact(row.sessionDate, locale)}
         </span>

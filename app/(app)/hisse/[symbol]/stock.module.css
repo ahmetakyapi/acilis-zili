@@ -527,3 +527,27 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .profileIcon { display:grid; place-items:center; width:24px; height:24px; flex-shrink:0; border-radius:7px; background:var(--primary-wash); color:var(--primary-ink); transition:background-color .2s, color .2s; }
 dl > div:hover .profileIcon { background:var(--primary); color:var(--on-primary); }
 @media(prefers-reduced-motion:reduce) { .profileIcon { transition:none; } }
+
+/* ---- OKUNUR PROFİL (26 Eylül) ----
+   Sağdaki profil kartı "bazıları okunamıyor" diye bildirildi ve ölçü
+   haklı çıktı: satır etiketleri 11 piksel ve `--text-muted`, değerler
+   bu kartta 11 piksele kadar iniyordu; iki büyük ölçünün ve 52 hafta
+   bandının künyeleri de 11 piksel soluk tondaydı. Etiket artık 13 piksel
+   gövde tonunda, değer 13,5 piksel güçlü tonda ve yarı kalın; künyeler 12
+   piksel. Satırın ikonu 26'lık karo. Yukarıdaki eski kurallar karar
+   kaydı olarak yerinde, bu blok onları eziyor. */
+.profileBody > dl dt,
+.companyOverview .profileBody > dl dt { font-size:13px; font-weight:600; color:var(--text-body); }
+.profileBody > dl dd,
+.companyOverview .profileBody > dl dd { font-size:13.5px; font-weight:600; color:var(--text-strong); }
+.companyOverview .profileBody > dl > div { min-height:42px; padding-block:8px; }
+.profileMetric dt, .profileRank dt { font-size:12px; font-weight:600; color:var(--text-body); }
+.profileRankValue > span, .profileCapNote { font-size:12px; color:var(--text-body); }
+.profileBandLabel { font-size:12px; font-weight:600; color:var(--text-body); }
+.companyOverview .about { font-size:13px; line-height:1.75; }
+.profileIcon { width:26px; height:26px; border-radius:8px; }
+/* LOGO BİR KADEME BÜYÜK (26 Eylül): 48 → 56, telefonda 44 → 50. Kimlik
+   satırı logoyla açılıyor; 48'de adın iki satırlık yüksekliğinin
+   altında kalıyordu. */
+.companyOverview .companyLogo { width:56px; height:56px; border-radius:14px; }
+@media(max-width:639px) { .companyOverview .companyLogo { width:50px; height:50px; border-radius:12px; } }

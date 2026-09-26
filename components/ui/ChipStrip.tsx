@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 
 /**
  * Yatay kayan çip şeridi — seçili çipi kendiliğinden görünür alana getirir.
@@ -17,17 +18,27 @@ import { useEffect, useRef } from "react";
  * boyunca yaşıyor; etkinin yeniden koşması için değişen bir bağımlılık şart
  * ve seçili çipin kendisi tam olarak o.
  */
+type Edge = "none" | "start" | "end" | "both";
+
+/** Bir tıkta kaydırılan pay — şeridin görünen genişliğinin bu kadarı; bir
+    önceki görünümden bir-iki çip ekranda kalıyor, göz yerini kaybetmiyor. */
+const PAGE_SHARE = 0.72;
+
 export function ChipStrip({
   activeKey,
   className,
   children,
+  scrollLabels,
 }: {
   /** Seçili çipin anahtarı; değiştiğinde şerit yeniden konumlanır. */
   activeKey: string | null;
   className?: string;
   children: React.ReactNode;
+  /** Verilirse şerit taşarken iki yanda yön düğmeleri çıkar. */
+  scrollLabels?: { prev: string; next: string };
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [edge, setEdge] = useState<Edge>("none");
 
   /* KENAR SOLMASI ŞERİDİN KENDİSİNDE. Eskiden kabın içinde ayrı bir gradyan
      `div` duruyordu ve iki kusuru vardı: `sm:hidden` olduğu için yalnızca
@@ -42,7 +53,7 @@ export function ChipStrip({
     if (!strip) return;
     const mark = () => {
       const max = strip.scrollWidth - strip.clientWidth;
-      strip.dataset.edge =
+      const next: Edge =
         max <= 1
           ? "none"
           : strip.scrollLeft <= 1
@@ -50,6 +61,8 @@ export function ChipStrip({
             : strip.scrollLeft >= max - 1
               ? "start"
               : "both";
+      strip.dataset.edge = next;
+      setEdge(next);
     };
     mark();
     strip.addEventListener("scroll", mark, { passive: true });
@@ -79,9 +92,37 @@ export function ChipStrip({
     });
   }, [activeKey]);
 
+  /* YÖN DÜĞMELERİ (26 Eylül). Kenar solması "devamı var" diyordu ama çok
+     sessizdi: sektör şeridinin sağda sürdüğü fark edilmiyordu (sahibinin
+     bildirimi). Şerit taşarken, yalnızca kaydırılabilen yönde yuvarlak bir
+     ok beliriyor; basınca şerit bir sayfa kayıyor. Solma yerinde kalıyor,
+     düğme onun üstünde. Düğmeler odak sırasının DIŞINDA değil — klavyeyle
+     gelen de kaydırabiliyor; ama şerit zaten klavyeyle kayıyor, o yüzden
+     yalnızca yardımcı. Taşma yoksa hiç basılmıyor. */
+  const page = (dir: 1 | -1) => {
+    const strip = ref.current;
+    if (!strip) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    strip.scrollBy({ left: dir * strip.clientWidth * PAGE_SHARE, behavior: reduce ? "auto" : "smooth" });
+  };
+  const canBack = edge === "start" || edge === "both";
+  const canForward = edge === "end" || edge === "both";
+
   return (
-    <div ref={ref} className={`edge-fade ${className ?? ""}`}>
-      {children}
+    <div className="chip-strip">
+      <div ref={ref} className={`edge-fade ${className ?? ""}`}>
+        {children}
+      </div>
+      {scrollLabels && canBack && (
+        <button type="button" className="chip-strip-arrow" data-side="start" aria-label={scrollLabels.prev} onClick={() => page(-1)}>
+          <CaretLeft weight="bold" size={14} aria-hidden />
+        </button>
+      )}
+      {scrollLabels && canForward && (
+        <button type="button" className="chip-strip-arrow" data-side="end" aria-label={scrollLabels.next} onClick={() => page(1)}>
+          <CaretRight weight="bold" size={14} aria-hidden />
+        </button>
+      )}
     </div>
   );
 }

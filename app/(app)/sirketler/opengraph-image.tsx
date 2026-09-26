@@ -10,7 +10,7 @@ export default async function SectionOgImage() {
     sectionOg({
       eyebrow: "Dizin",
       title: "Şirketler",
-      dek: "ABD borsalarında işlem gören şirketler — sektör, fiyat ve piyasa değeriyle.",
+      dek: "ABD borsalarında işlem gören şirketler: sektör, fiyat ve piyasa değeri.",
       chips: ["Sektörler", "Piyasa Değeri", "Haftalık Değişim"],
     }),
     { ...size, fonts: await ogFonts() },

@@ -1,6 +1,7 @@
 "use client";
 
 import type { InkSceneName } from "@/lib/ink/scenes";
+import { BrandWord } from "@/components/brand/BellMark";
 import { InkCanvas } from "./InkCanvas";
 
 /**
@@ -16,9 +17,17 @@ import { InkCanvas } from "./InkCanvas";
  */
 const LOADER_RATE = 1.5;
 
-export function InkLoader({ scene, label }: { scene: InkSceneName; label: string }) {
+/* MARKA ADI KARTIN BAŞINDA (26 Eylül, sahibinin isteği). Kart yalnızca bir
+   sahne ve tek kelimeden ibaretti; bekleyen okuyucu kimin beklettiğini
+   görmüyordu. Ad başlıktaki logoyla aynı biçimde (`BrandWord`: ilk kelime
+   mürekkep, ikincisi mavi) ve yazılı olduğu için ekran okuyucuya ayrıca
+   okunmuyor (`aria-hidden`); duyurulan yine etiket. */
+export function InkLoader({ scene, label, brand }: { scene: InkSceneName; label: string; brand: string }) {
   return (
     <div className="route-loader-card" role="status" aria-live="polite">
+      <span aria-hidden className="route-loader-brand">
+        <BrandWord name={brand} />
+      </span>
       <InkCanvas scene={scene} seed={13} rate={LOADER_RATE} className="route-loader-canvas" />
       <span className="route-loader-label">{label}</span>
     </div>

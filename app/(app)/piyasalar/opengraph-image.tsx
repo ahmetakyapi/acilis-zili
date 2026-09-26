@@ -10,7 +10,7 @@ export default async function SectionOgImage() {
     sectionOg({
       eyebrow: "ABD Piyasası",
       title: "Piyasalar",
-      dek: "Endeksler, tahvil faizleri ve gün içi hareket — piyasanın nabzı.",
+      dek: "Endeksler, tahvil faizleri ve gün içi hareket: piyasanın nabzı.",
       chips: ["Endeksler", "Tahvil Faizleri", "Korku Endeksi"],
     }),
     { ...size, fonts: await ogFonts() },

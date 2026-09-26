@@ -339,6 +339,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
           <div className={cn("relative", styles.filters)}>
             <ChipStrip
               activeKey={activeGroup?.key ?? null}
+              scrollLabels={{ prev: t.common.scrollPrev, next: t.common.scrollNext }}
               /* ŞERİT HER GENİŞLİKTE TEK SATIR — `sm:flex-wrap` kalktı.
                  Sarma, yüksekliği METNİN GENİŞLİĞİNE bağlıyordu ve o genişlik
                  yazı tipi yüklenirken değişiyor: ölçüldü, 1440'ta kap yedek

@@ -10,7 +10,7 @@ export default async function SectionOgImage() {
     sectionOg({
       eyebrow: "Uzun Okuma",
       title: "Mercek",
-      dek: "Piyasada yaşananların uzun anlatımı — olayın arkasındaki mekanizma.",
+      dek: "Piyasada yaşananların uzun anlatımı: olayın arkasındaki mekanizma.",
       chips: ["Analiz", "Bağlam"],
     }),
     { ...size, fonts: await ogFonts() },

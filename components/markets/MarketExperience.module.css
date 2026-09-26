@@ -192,3 +192,20 @@
 }
 .pulseSkeleton { min-height:74px; border-radius:var(--radius-lg); }
 @media(max-width:1023px) { .pulseSkeleton { min-height:150px; } }
+
+/* Isı haritası (26 Eylül) — gerekçe piyasalar/page.tsx → IndexToolbar.
+   Kareler 18 pikselden başlayıp satırı dolduruyor; aralık 3 piksel.
+   Üzerine gelince kare büyüyüp öne çıkıyor. */
+.heat { padding:18px 24px 20px; border-top:1px solid var(--line); }
+.heatHead { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.heatHead h3 { font-size:var(--text-read); font-weight:700; color:var(--text-strong); }
+.heatHint { margin-top:4px; color:var(--text-body); font-size:12px; line-height:1.6; }
+.heatScale { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:11px; font-weight:600; }
+.heatScale > i { width:96px; height:8px; border-radius:999px; background:linear-gradient(90deg, var(--down), var(--surface-sunken) 50%, var(--up)); }
+.heatGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(18px, 1fr)); gap:3px; margin-top:14px; }
+.heatCell { display:block; aspect-ratio:1; border-radius:4px; transition:scale .18s, box-shadow .18s; }
+@media(hover:hover) and (pointer:fine) {
+ .heatCell:hover { position:relative; z-index:1; scale:1.5; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); }
+}
+@media(max-width:639px) { .heat { padding:14px 16px 16px; } .heatGrid { grid-template-columns:repeat(auto-fill, minmax(14px, 1fr)); gap:2px; } .heatScale > i { width:64px; } }
+@media(prefers-reduced-motion:reduce) { .heatCell { transition:none; } .heatCell:hover { scale:none; } }

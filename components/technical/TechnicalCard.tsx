@@ -213,7 +213,7 @@ export function TechnicalCard({
        ama ışıma duruyordu. Hover artık yalnızca kenarlık tonu. Spot kartın
        verdiği `isolation` CSS'te `.card` üzerinde; kaplama bağlantısının
        (`.cardLink::after`, z-1) yerel yığını ona bağlı. */
-    <div className={styles.card}>
+    <div className={styles.card} data-verdict={verdict}>
       <div className={styles.cardHead}>
         {/* Kimlik balonu 22 Eylül'de dağılım logolarına taşındı: kart
             kimliği zaten gösteriyor, balon aynı bilgiyi ikinci kez veriyordu
@@ -222,7 +222,7 @@ export function TechnicalCard({
         {/* Uçuşun kaynağı karonun kendisi (`data-morph`, LogoTile); kartı
             kaplayan bağlantı onu içermediği için kart `data-morph-scope`
             taşıyor (teknik/page.tsx). */}
-        <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="md" />
+        <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="lg" />
         <div className={styles.cardName}>
           {/* h3: kartlar sayfanın "Hisse Planları" bölüm başlığının altında. */}
           <h3 id={headingId} className={styles.cardSymbol}>

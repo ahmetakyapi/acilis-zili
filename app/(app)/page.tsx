@@ -3,7 +3,7 @@ import { cache, Suspense } from "react";
 import { MotionExperience, ScrollProgress, SectionNav, SpotlightCard } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, ArrowUpRight, ChartLineUp } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { NewsImage } from "@/components/news/NewsImage";
@@ -72,6 +72,7 @@ import {
   zoneTag,
 } from "@/lib/session-clock";
 import { FillColumn } from "@/components/today/FillColumn";
+import { logoSrc } from "@/lib/logos";
 import { TechnicalPulse } from "@/components/technical/TechnicalPulse";
 import {
   TECHNICAL_SYMBOLS,
@@ -302,6 +303,7 @@ export default async function TodayPage() {
                 zone={readerZone}
                 labels={{
                   name: t.dayRail.marketHours,
+                  bands: { pre: t.chart.sessionPre, regular: t.chart.sessionRegular, after: t.chart.sessionAfter },
                   open: `${t.dayRail.openShort} ${formatInZone(new Date(rail.openAt * 1000), readerZone)}`,
                   close: `${t.dayRail.closeShort} ${formatInZone(new Date(rail.closeAt * 1000), readerZone)}`,
                   selectEvent: t.dayFlow.selectEvent,
@@ -2525,12 +2527,18 @@ async function StoriesSpotlight({
      Manşetin kadrosu en çok dört logo, satırlar ilk iki sembolün logosunu
      taşıyor. Adlar ve adresler tek sorguda: manşet ve satırların
      sembolleri birleşik bir listeyle soruluyor. */
-  const leadCast = (lead.symbols ?? []).slice(0, STORY_CAST_MAX);
-  const leadMore = (lead.symbols?.length ?? 0) - leadCast.length;
+  const leadSymbols = (lead.symbols ?? []).slice(0, STORY_CAST_MAX);
   const castMeta = await getSymbolNames([
-    ...leadCast,
+    ...leadSymbols,
     ...rest.flatMap((story) => (story.symbols ?? []).slice(0, 2)),
   ]);
+  /* KAROYU YALNIZCA LOGOSU OLAN ALIR (26 Eylül). Yazının kahramanı çoğu
+     zaman bir fon (SPY, USO) ve fonların logosu yok: karo sembolün ilk iki
+     harfine düşüyordu ("SP", "US") ve manşetin en görünür yeri iki soluk
+     harf kutusuydu. Karo artık yalnızca gerçek bir logo varsa basılıyor;
+     sembollerin hepsi yanındaki künye satırında yazılı kalıyor. */
+  const leadCast = leadSymbols.filter((symbol) => logoSrc(symbol, castMeta[symbol]?.logoUrl));
+  const leadMore = (lead.symbols?.length ?? 0) - leadSymbols.length;
 
   return (
     <section className={styles.storySpotlight}>
@@ -2567,9 +2575,16 @@ async function StoriesSpotlight({
                 üste biniyor ve blok görünüme girince sırayla iniyor
                 (`data-motion-stagger`); üzerine gelince aralanıyorlar.
                 Tek şirketse yanında adı yazıyor, birden çoksa semboller. */}
-            {leadCast.length > 0 && (
+            {leadSymbols.length > 0 && (
               <div className={styles.storyCast}>
-                <span className={styles.storyCastLogos} data-motion-stagger>
+                {/* Logosu olan yoksa (yalnız fonlar) künyenin başında bir
+                    piyasa ikonu: satır yalnız kalmasın, karo dili sürsün. */}
+                {leadCast.length === 0 && (
+                  <span aria-hidden className={styles.storyCastFund}>
+                    <ChartLineUp size={22} weight="duotone" />
+                  </span>
+                )}
+                {leadCast.length > 0 && <span className={styles.storyCastLogos} data-motion-stagger>
                   {leadCast.map((symbol) => (
                     <LogoTile
                       key={symbol}
@@ -2582,14 +2597,14 @@ async function StoriesSpotlight({
                   {leadMore > 0 && (
                     <span className={`numeral ${styles.storyCastMore}`}>+{leadMore}</span>
                   )}
-                </span>
+                </span>}
                 <span className="min-w-0">
                   <span className="numeral block truncate text-small font-bold tracking-[0.02em] text-strong">
-                    {leadCast.join(" · ")}
+                    {leadSymbols.join(" · ")}
                   </span>
-                  {leadCast.length === 1 && castMeta[leadCast[0]]?.name && (
+                  {leadSymbols.length === 1 && castMeta[leadSymbols[0]]?.name && (
                     <span className="block truncate text-tiny text-muted">
-                      {castMeta[leadCast[0]].name}
+                      {castMeta[leadSymbols[0]].name}
                     </span>
                   )}
                 </span>
@@ -2666,14 +2681,14 @@ async function StoriesSpotlight({
                 {/* Numara yerine yazının şirketi: ilk sembolün logosu,
                     ikinci sembol varsa köşesine binen küçük karo. Sembolü
                     olmayan yazı (makro, politika) sıra numarasını korur. */}
-                {story.symbols && story.symbols.length > 0 ? (
+                {story.symbols && story.symbols.length > 0 && logoSrc(story.symbols[0], castMeta[story.symbols[0]]?.logoUrl) ? (
                   <span className={styles.storyRowLogo} aria-hidden>
                     <LogoTile
                       symbol={story.symbols[0]}
                       logoUrl={castMeta[story.symbols[0]]?.logoUrl}
                       size="md"
                     />
-                    {story.symbols[1] && (
+                    {story.symbols[1] && logoSrc(story.symbols[1], castMeta[story.symbols[1]]?.logoUrl) && (
                       <LogoTile
                         symbol={story.symbols[1]}
                         logoUrl={castMeta[story.symbols[1]]?.logoUrl}

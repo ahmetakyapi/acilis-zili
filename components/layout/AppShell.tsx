@@ -179,7 +179,7 @@ export function AppShell({
           Suspense şart — yoksa altındaki bütün rotalar statik ön çizimden
           düşerdi. */}
       <Suspense fallback={null}>
-        <RouteProgress label={labels.loading} />
+        <RouteProgress label={labels.loading} brand={labels.brandName} />
       </Suspense>
       {/* Kartla sayfa arası uçuşun kaydı — gerekçe components/motion/Morph. */}
       <MorphRecorder />
@@ -224,8 +224,11 @@ export function AppShell({
             aria-current={barePath === "/" ? "page" : undefined}
             className="masthead-brand flex items-center gap-2.5 self-center"
           >
-            <BellMark size={38} />
-            <BrandWord name={labels.brandName} className="text-title leading-none" />
+            {/* LOGO BİR KADEME BÜYÜK (26 Eylül, sahibinin isteği): 38 → 44,
+                ad 19 → 22 piksel. Başlık 69 piksel; 44'lük karo üst ve altta
+                12,5'er piksel nefes bırakıyor. */}
+            <BellMark size={44} />
+            <BrandWord name={labels.brandName} className="text-[1.375rem] leading-none" />
           </Link>
 
           <MastheadNav
@@ -261,7 +264,7 @@ export function AppShell({
           className="masthead-brand -my-1 flex items-center gap-2.5 py-1"
           aria-label={labels.brandName}
         >
-          <BellMark size={32} />
+          <BellMark size={36} />
           {/* DEGRADE MASKE YOK — METİN KESKİN OLSUN. `display-ink`
               `-webkit-background-clip: text` ile çiziyor: harfler bir maske
               hâline geliyor ve maskeli metin alt piksel yumuşatması ALAMIYOR,

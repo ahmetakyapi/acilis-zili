@@ -1,6 +1,7 @@
 import type { Locale } from "@/lib/i18n";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { SESSION_BOUNDS } from "@/lib/market-hours";
 import {
   BELL_BODY_PATH,
   BELL_CLAPPER,
@@ -160,28 +161,15 @@ export function BellGlyph({ size = 56 }: { size?: number }) {
   );
 }
 
-/**
- * Metnin dilinde büyük harf.
- *
- * `toLocaleUpperCase("tr-TR")` sabitti ve künye Türkçe olduğu sürece
- * doğruydu. Künye iki dilli olunca hata görünür oldu: Türkçe kuralı İngilizce
- * metne uygulanınca "EARNINGS ANALYSIS" değil "EARNİNGS ANALYSİS" çıkıyor —
- * çünkü Türkçede `i`nin büyüğü `İ`. Ters yön de aynı derecede yanlış:
- * İngilizce kuralı Türkçe metne uygulanırsa "BİLANÇO" yerine "BILANÇO"
- * olurdu. Kural metnin dilinden geliyor.
- */
-export function upper(text: string, locale: Locale): string {
-  return text.toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US");
-}
+/* BÜYÜK HARF YOK (26 Eylül). Künyeler burada `upper()` ile büyük harfe
+   çevriliyordu ("ABD PİYASA TAKİBİ", "AÇILIŞ"). Sitenin kuralı ise
+   cümle olmayan her metnin Title Case yazılması; `.plate` da 24 Eylül'de
+   büyük harften çıkmıştı ve kart onun gerisinde kalmıştı. Sözlükteki
+   değerler zaten Title Case, kart onları olduğu gibi basıyor. Fonksiyonun
+   dile göre büyütme notu (Türkçede `i`nin büyüğü `İ`) artık gereksiz. */
 
 /** Marka kilidi — karo + ad. Her kartın sol üstünde aynı yerde. */
-export function BrandLock({
-  label,
-  locale = "tr",
-}: {
-  label?: string;
-  locale?: Locale;
-}) {
+export function BrandLock({ label }: { label?: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
       <div
@@ -210,13 +198,13 @@ export function BrandLock({
         {label && (
           <span
             style={{
-              fontSize: 15,
+              fontSize: 18,
               fontWeight: 700,
-              letterSpacing: "0.12em",
+              letterSpacing: "0.01em",
               color: C.primary,
             }}
           >
-            {upper(label, locale)}
+            {label}
           </span>
         )}
       </div>
@@ -232,21 +220,29 @@ export function BrandLock({
  * indirilmiş hâli; kartı marka olarak tanınır kılan şey bu.
  */
 export function DayRailMark() {
+  /* GERÇEK ORANLAR (26 Eylül). Şerit 150/640/250 piksellik keyfi parçalarla
+     çiziliyordu; ana kartın etiketli rayı ise seansın gerçek oranlarını
+     (ET 04:00–20:00 penceresinde açılış %34,4, kapanış %75) kullanıyor.
+     İki kart aynı günü anlatsın diye bu şerit de aynı oranlarda. */
+  const start = SESSION_BOUNDS.preMarketOpen;
+  const span = SESSION_BOUNDS.afterHoursClose - start;
+  const open = ((SESSION_BOUNDS.regularOpen - start) / span) * 100;
+  const close = ((SESSION_BOUNDS.regularClose - start) / span) * 100;
   return (
     <div style={{ display: "flex", alignItems: "center", height: 8 }}>
       <div
         style={{
-          width: 150,
+          width: `${open}%`,
           height: 8,
           borderTopLeftRadius: 99,
           borderBottomLeftRadius: 99,
           background: C.line,
         }}
       />
-      <div style={{ width: 640, height: 8, backgroundImage: BRAND_GRADIENT }} />
+      <div style={{ width: `${close - open}%`, height: 8, backgroundImage: BRAND_GRADIENT }} />
       <div
         style={{
-          width: 250,
+          width: `${100 - close}%`,
           height: 8,
           borderTopRightRadius: 99,
           borderBottomRightRadius: 99,
@@ -319,14 +315,16 @@ export function OgFrame({
   children,
   accent,
   footer,
-  /* Künyenin büyük harfe çevrilme kuralı bu dilden geliyor — bkz. `upper`.
-     Varsayılan Türkçe: kartların çoğu tek dilli ve o dil Türkçe. */
-  locale = "tr",
+  rail,
 }: {
   eyebrow?: string;
   children: React.ReactNode;
   accent?: React.ReactNode;
   footer?: React.ReactNode;
+  /** Alt şeridin yerine geçen ray — ana kart etiketli seans rayını basıyor. */
+  rail?: React.ReactNode;
+  /** Eski çağrı yerleri dil geçiriyordu; künye artık dönüştürülmediği için
+      kullanılmıyor (bkz. yukarıdaki "BÜYÜK HARF YOK"). */
   locale?: Locale;
 }) {
   return (
@@ -360,7 +358,7 @@ export function OgFrame({
             justifyContent: "space-between",
           }}
         >
-          <BrandLock label={eyebrow} locale={locale} />
+          <BrandLock label={eyebrow} />
           {accent}
         </div>
 
@@ -374,7 +372,7 @@ export function OgFrame({
               {footer}
             </div>
           )}
-          <DayRailMark />
+          {rail ?? <DayRailMark />}
         </div>
       </div>
     </div>

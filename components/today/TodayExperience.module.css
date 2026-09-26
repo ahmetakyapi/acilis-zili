@@ -224,6 +224,7 @@
    bloğun kendi yüzeyi (gölge değil, ton — CLAUDE.md). Üzerine gelince
    karolar aralanıyor: kaç şirket olduğu bir bakışta sayılıyor. */
 .storyCast { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.storyCastFund { display:grid; place-items:center; width:44px; height:44px; flex-shrink:0; border-radius:var(--radius-lg); background:var(--primary-wash); color:var(--primary-ink); }
 .storyCastLogos { display:flex; align-items:center; flex-shrink:0; }
 .storyCastTile { box-shadow:0 0 0 3px var(--premium-surface); transition:margin .32s, translate .32s; }
 .storyCastLogos > * + * { margin-left:-12px; }

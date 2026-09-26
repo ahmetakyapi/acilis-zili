@@ -9,7 +9,6 @@ import {
   Tri,
   clip,
   ogFonts,
-  upper,
 } from "@/lib/og";
 import { getAnalysis } from "@/lib/data";
 import { DEFAULT_LOCALE, getDictionary } from "@/lib/i18n";
@@ -126,13 +125,13 @@ export default async function AnalysisOgImage({
             >
               <span
                 style={{
-                  fontSize: 15,
+                  fontSize: 18,
                   fontWeight: 700,
-                  letterSpacing: "0.12em",
+                  letterSpacing: "0.01em",
                   color: C.muted,
                 }}
               >
-                {upper(t.analysis.verdictLabel, locale)}
+                {t.analysis.verdictLabel}
               </span>
               <span
                 style={{

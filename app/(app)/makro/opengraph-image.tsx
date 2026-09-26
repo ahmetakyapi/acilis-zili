@@ -10,7 +10,7 @@ export default async function SectionOgImage() {
     sectionOg({
       eyebrow: "Ekonomi",
       title: "Makro",
-      dek: "Enflasyon, istihdam ve faiz — ABD ekonomisinin ana göstergeleri.",
+      dek: "Enflasyon, istihdam ve faiz: ABD ekonomisinin ana göstergeleri.",
       chips: ["TÜFE", "PCE", "Politika Faizi"],
     }),
     { ...size, fonts: await ogFonts() },

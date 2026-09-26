@@ -252,7 +252,7 @@ export function TechnicalPulse({
                         foot: `${formatEtDateCompact(row.sessionDate, locale)} · ${slotLabel(row.slot, t)} · ${editionTime(row.sessionDate, row.slot, locale)}`,
                       })}
                     >
-                      <LogoTile symbol={row.symbol} logoUrl={company?.logoUrl ?? null} size="sm" />
+                      <LogoTile symbol={row.symbol} logoUrl={company?.logoUrl ?? null} size={filterable ? "md" : "sm"} />
                     </PulseCompanyLink>
                   );
                 })}
@@ -283,7 +283,7 @@ export function TechnicalPulse({
                     foot: t.technical.pulseAwaiting,
                   })}
                 >
-                  <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl ?? null} size="sm" />
+                  <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl ?? null} size={filterable ? "md" : "sm"} />
                 </PulseCompanyLink>
               ))}
             </div>

@@ -50,6 +50,8 @@ export type SessionRailLabels = {
   /** Zil çentiklerinin adı ve saati: "Açılış 16:30", "Kapanış 23:00". */
   open: string;
   close: string;
+  /** Bantların adı — "Ön Seans", "Seans", "Akşam Seansı". */
+  bands?: { pre: string; regular: string; after: string };
 };
 
 /**
@@ -166,6 +168,17 @@ export function SessionRail({
 
   const pct = (value: number) => `${(value * 100).toFixed(3)}%`;
 
+  /* SAAT CETVELİ (26 Eylül). Şerit düz bir çubuktu; saat ekseni olduğu
+     yalnızca iki uçtaki saatten anlaşılıyordu. Altında her tam saatte ince
+     bir çentik, eksenin başından itibaren dört saatte bir uzun çentik —
+     şerit bir saat ölçeği gibi okunuyor. Tam saat ET'de hesaplanıyor; TR
+     ile fark tam saat olduğu için çentikler okuyucunun saatinde de tam
+     saate düşüyor. */
+  const hours: { at: number; major: boolean }[] = [];
+  for (let s = Math.ceil(domain[0] / 3600) * 3600; s <= domain[1]; s += 3600) {
+    hours.push({ at: at(s), major: Math.round((s - domain[0]) / 3600) % 4 === 0 });
+  }
+
   return (
     <div className={styles.rail} role="group" aria-label={labels.name}>
       {/* ZİLLERİN ADI ÇENTİĞİN ÜSTÜNDE (24 Eylül). Şeritte iki çentik vardı
@@ -180,6 +193,16 @@ export function SessionRail({
         <span className={styles.bellLabel} data-target={target === "close" || undefined} style={{ left: pct(close) }}>
           {labels.close}
         </span>
+        {/* BANT ADLARI — ön seans sola, akşam sağa yaslı (zil adlarıyla
+            çakışmasın diye), seans kendi bandının ortasında. Telefonda
+            gizli: 350 pikselde zil adlarının üstüne biniyorlar (CSS). */}
+        {labels.bands && (
+          <>
+            <span className={styles.bandLabel} style={{ left: 0 }}>{labels.bands.pre}</span>
+            <span className={styles.bandLabel} data-center style={{ left: pct((open + close) / 2) }}>{labels.bands.regular}</span>
+            <span className={styles.bandLabel} style={{ right: 0 }}>{labels.bands.after}</span>
+          </>
+        )}
       </div>
       <div ref={setAxis} className={styles.axis}>
         {/* Üç bant, her biri kendi dolgusuyla: ön seans ve kapanış sonrası
@@ -214,6 +237,15 @@ export function SessionRail({
             koyu (kapalıyken açılış, seans içinde kapanış). */}
         <span aria-hidden="true" className={styles.bell} data-target={target === "open" || undefined} style={{ left: pct(open) }} />
         <span aria-hidden="true" className={styles.bell} data-target={target === "close" || undefined} style={{ left: pct(close) }} />
+        {hours.map((hour) => (
+          <span
+            aria-hidden="true"
+            key={`hour-${hour.at}`}
+            className={styles.hour}
+            data-major={hour.major || undefined}
+            style={{ left: pct(hour.at) }}
+          />
+        ))}
         {nowFraction > 0 && nowFraction < 1 && (
           <span
             aria-hidden="true"
