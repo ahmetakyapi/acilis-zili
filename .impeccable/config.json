@@ -32,6 +32,11 @@
         ],
         "createdAt": "2026-09-26T06:17:17.020Z",
         "reason": "user confirmed (26 Eylül): üç sol şerit kod içi karar kayıtlarıyla belgeli — .reading planın tonu, .mapRung ölçülen degradenin yerine 3px çubuk, .scenario yükseliş/düşüş ayrımı"
+      },
+      {
+        "rule": "layout-transition",
+        "value": "transition:height 280ms var(--ease-brand), content-visibility 280ms allow-discrete",
+        "createdAt": "2026-09-26T11:33:39.432Z"
       }
     ]
   }
