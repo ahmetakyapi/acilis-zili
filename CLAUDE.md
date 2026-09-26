@@ -311,6 +311,13 @@ Commit'ten önce üçü de temiz olmalı: `npm run typecheck`, `npm run lint`,
 `npm run build`. Görsel bir değişiklikse ayrıca tarayıcıda ölçülmüş olmalı —
 "sığıyor gibi duruyor" bir doğrulama değil.
 
+**İş ortasında yeni istek gelirse commit'i ERTELE.** Sahibi çoğu zaman bir
+iş sürerken yenisini yazıyor; her isteği bitirdikçe commit atmak bir
+oturumda altı commit demekti (26 Eylül) ve bu uyarı üçüncü kez geldi.
+Kuyruk boşalana kadar bekle, sonra ilgili işleri konu başına tek commit'te
+topla: "ana sayfa + şirket sayfası + tablolar" görsel iyileştirme olarak
+tek commit, README ayrı bir commit.
+
 Mesele commit SAYISI, mesaj detayı değil — gövdede her değişikliğin gerekçesi
 ayrı paragraf olarak yazılmaya devam eder. Sekiz-on küçük commit geçmişi
 taranamaz hâle getiriyor.

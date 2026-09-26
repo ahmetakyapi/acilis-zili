@@ -1,229 +1,227 @@
+<div align="center">
+
+<a href="https://aciliszili.com"><img src="https://aciliszili.com/opengraph-image" alt="Açılış Zili: ABD borsaları için Türkçe günlük takip platformu" width="100%"></a>
+
 # Açılış Zili · Opening Bell
 
-ABD borsaları için Türkçe günlük takip platformu: **zil çalmadan önce bugünü gör.**
+**ABD borsaları için Türkçe günlük takip platformu. Zil çalmadan önce bugünü gör.**
 
-Ekonomik takvim, bilanço tarihleri, canlı fiyat ve grafikler, makro göstergeler,
-haber akışı ve kişisel takip listeleri — hepsi saatleriyle tek ekranda. Üstüne
-her gün yazılan bir bülten, olay bazlı uzun anlatımlar ve bilanço analizleri.
+[**aciliszili.com**](https://aciliszili.com) · [English](https://aciliszili.com/en) · [Rehber](https://aciliszili.com/rehber) · [Mercek](https://aciliszili.com/mercek)
 
-İki dil (TR/EN), açık ve koyu tema, tam mobil uyum. Ücretsiz, reklamsız, açık kaynak.
+![Next.js 16](https://img.shields.io/badge/Next.js-16-0b0f19?logo=nextdotjs&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19.2-0d74c4?logo=react&logoColor=white)
+![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-0d74c4?logo=typescript&logoColor=white)
+![Tailwind v4](https://img.shields.io/badge/Tailwind-v4-0d74c4?logo=tailwindcss&logoColor=white)
+![Neon + Drizzle](https://img.shields.io/badge/Neon_%2B_Drizzle-PostgreSQL-0d74c4?logo=postgresql&logoColor=white)
+![Reklamsız](https://img.shields.io/badge/reklams%C4%B1z-%C3%BCcretsiz-a4720f)
 
-**Canlı:** [aciliszili.com](https://aciliszili.com)
-
----
-
-## Ne yapar
-
-Beş konu başlığı var ve her biri ayrı bir soruya cevap veriyor.
-
-### Piyasayı takip et
-
-Endeksler (S&P 500, Nasdaq 100, Dow, Russell 2000), günün seans haritası ve
-açılışa geri sayım, gün içi en çok yükselen ve düşen isimler, piyasa
-genişliği, ABD tahvil faizleri ve getiri eğrisi, VIX korku endeksi, dünya
-piyasaları. Ana sayfa bunu tek ekranda topluyor; `/piyasalar` aynı soruyu
-endeks bileşenlerine kadar iniyor.
-
-### Şirketleri ve hisseleri incele
-
-Her hisse için gün içinden beş yıla kadar grafik (alan ya da mum), şirket
-profili, değerleme ve risk ölçüleri (F/K, temettü, beta, net kâr marjı, 52
-hafta bandı), analist tavsiye dağılımı ve hedef fiyat, o şirkete ait haberler
-ve geçmiş bilanço sürprizleri. `/sirketler` 800'ü aşkın şirketi sektör
-şeridiyle ve sıralanabilir bir dizinle veriyor; `/karsilastir` iki ile dört
-hisseyi **aynı ölçekte** yan yana koyuyor — normalize tek grafik ve getiri,
-değerleme, risk, şirket künyesi olmak üzere dört öbekli tek tablo.
-
-### Bilançoları izle
-
-Kim ne zaman açıklıyor (açılış öncesi mi kapanış sonrası mı), analist EPS ve
-gelir beklentisi ne, gerçekleşen ne çıktı. Takvimi kendi takvimine `.ics`
-olarak ekleyebiliyorsun. Açıklanan çeyrekler için ayrıca uzun analizler var:
-skor, görüş, hedef fiyat, güçlü yönler ve riskler, beklenen gelişmeler.
-
-### Teknik görünümü oku
-
-On beş hissenin (MU, SNDK, NVDA, AMD, INTC, SPCX, TSLA, GOOGL, META, PLTR,
-NBIS, BE, RKLB, MRVL, ONDS) her işlem günü üç kez yenilenen teknik analizi:
-açılıştan önce, seans içinde ve kapanışa doğru. Al/Tut/Sat görüşü, alım bölgesi, hedefler ve stop, destek ve dirençler,
-yükseliş ve düşüş senaryosu. Ortalamaları, RSI'ı, MACD'yi, hacmi ve pivotları
-site kendi fiyat verisinden hesaplıyor; görüşü ve seviyeleri claude.ai rutini
-yazıyor. Görüş bir önceki analizden farklıysa kartta "Ala Döndü" rozeti çıkıyor.
-
-### Ekonomik veriyi ve makroyu oku
-
-CPI, çekirdek enflasyon, FOMC kararları ve basın toplantıları, tarım dışı
-istihdam, işsizlik, PCE — takvimde saatleriyle, beklenti ve gerçekleşen
-değerleriyle. `/makro` altı FRED serisini sparkline ve bir sonraki açıklama
-tarihiyle gösteriyor. Önümüzdeki altı haftanın halka arz takvimi de burada.
-
-### Haberleri ve analizleri takip et
-
-Piyasa haber akışı, sembol süzgeciyle ve siteden çıkmadan okunabilir hâlde.
-Üstüne her gün yazılan bir bülten (haftalık özeti pazartesi), olayın
-arkasındaki **mekanizmayı** anlatan uzun yazılar ve borsayı sıfırdan
-öğreten sıralı bir rehber.
-
-Bir de kişisel taraf: çoklu takip listeleri, renkli etiketler, ana sayfada
-kendi listenin özeti ve yalnızca senin izlediklerinin bilanço takvimi.
+</div>
 
 ---
 
-## İki kurucu karar
+Ekonomik takvim, bilanço tarihleri, gecikmeli ama damgalı canlı fiyat,
+grafikler, makro göstergeler, haber akışı ve kişisel takip listeleri. Hepsi
+**Türkiye saatiyle** ve tek ekranda. Üstüne her gün yazılan bir bülten,
+olayların arkasındaki mekanizmayı anlatan uzun yazılar, bilanço analizleri ve
+günde üç kez yenilenen teknik analizler.
+
+İki dil (TR/EN), açık ve koyu tema, telefondan geniş ekrana tam uyum.
+Ücretsiz, reklamsız, açık kaynak.
+
+<table>
+<tr>
+<td align="center"><b>38</b><br><sub>sayfa rotası</sub></td>
+<td align="center"><b>18</b><br><sub>API ucu</sub></td>
+<td align="center"><b>18</b><br><sub>veritabanı tablosu</sub></td>
+<td align="center"><b>4</b><br><sub>veri sağlayıcısı</sub></td>
+<td align="center"><b>5</b><br><sub>içerik rutini</sub></td>
+<td align="center"><b>17</b><br><sub>mürekkep sahnesi</sub></td>
+<td align="center"><b>2</b><br><sub>dil, her sayfada</sub></td>
+</tr>
+</table>
+
+## İçindekiler
+
+- [Ne Yapar](#ne-yapar)
+- [Bir İşlem Günü: Siteyi Nasıl Kullanırsın](#bir-i̇şlem-günü-siteyi-nasıl-kullanırsın)
+- [İki Kurucu Karar](#i̇ki-kurucu-karar)
+- [Mimari](#mimari)
+- [Teknoloji](#teknoloji)
+- [Hareket ve Mürekkep](#hareket-ve-mürekkep)
+- [Veri Modeli](#veri-modeli)
+- [Sağlayıcılar](#sağlayıcılar)
+- [İçerik Üretimi](#i̇çerik-üretimi)
+- [Görsel Dil](#görsel-dil)
+- [Erişilebilirlik](#erişilebilirlik)
+- [Performans](#performans)
+- [Gizlilik](#gizlilik)
+- [Ekranlar](#ekranlar)
+- [Geliştirme](#geliştirme)
+- [Deploy](#deploy)
+- [Dizin Yapısı](#dizin-yapısı)
+- [Bilinen Sınırlar](#bilinen-sınırlar)
+
+---
+
+## Ne Yapar
+
+Altı konu başlığı var ve her biri ayrı bir soruya cevap veriyor.
+
+| | Soru | Nerede |
+|---|---|---|
+| 📈 | **Piyasa bugün nerede?** Endeksler (S&P 500, Nasdaq 100, Dow, Russell 2000), açılışa geri sayım ve seans şeridi, günün en çok yükselen ve düşenleri, piyasa genişliği, tahvil faizleri ve getiri eğrisi, VIX, dünya piyasaları. | `/` · `/piyasalar` |
+| 🏢 | **Bu şirket nasıl gidiyor?** Gün içinden beş yıla grafik (alan ya da mum), profil, değerleme ve risk ölçüleri, 52 hafta bandı, analist dağılımı, haberler, geçmiş bilanço sürprizleri. 1.000'i aşkın şirket sektör şeridiyle ve sıralanabilir bir dizinde; iki ile dört hisse **aynı ölçekte** yan yana. | `/sirketler` · `/hisse/NVDA` · `/karsilastir` |
+| 🧾 | **Kim ne zaman bilanço açıklıyor?** Açılış öncesi mi kapanış sonrası mı, analist EPS ve gelir beklentisi ne, gerçekleşen ne çıktı. Takvim `.ics` olarak kendi takvimine eklenebiliyor. Açıklanan çeyrekler için skorlu uzun analizler. | `/bilancolar` |
+| 🎯 | **Teknik olarak nereden alınır, nerede vazgeçilir?** On beş hissenin her işlem günü üç kez yenilenen analizi: görüş (Al/Tut/Sat), alım bölgesi, hedefler, stop, destek ve direnç, senaryolar. | `/teknik` |
+| 🏛️ | **Ekonomi ne diyor?** CPI, FOMC, istihdam, PCE; takvimde saatleriyle, beklenti ve gerçekleşenle. Altı FRED serisi ve halka arz takvimi. | `/makro` · `/takvim` |
+| 📰 | **Bugün ne konuşuluyor, neden?** Siteden çıkmadan okunan haber akışı, her gün yazılan bülten, olayın **mekanizmasını** anlatan Mercek yazıları ve borsayı sıfırdan öğreten sıralı bir rehber. | `/haberler` · `/bulten` · `/mercek` · `/rehber` |
+
+Bir de kişisel taraf var: çoklu takip listeleri, renkli etiketler, ana sayfada
+kendi listenin özeti, yalnızca senin izlediklerinin bilanço takvimi ve
+hesabını gösteren, sitenin kendi çizdiği on iki profil ikonundan biri.
+
+---
+
+## Bir İşlem Günü: Siteyi Nasıl Kullanırsın
+
+Site bir işlem gününün ritmine göre kuruldu. Saatler Türkiye saati; ABD yaz
+saatine göre kayıyorlar (kışın açılış 17:30) ve ekranda her zaman o günün
+tarihiyle hesaplanıyorlar.
+
+| Saat (TR) | Ne oluyor | Nereye bakarsın |
+|---|---|---|
+| **09:00** | Dün açıklanan bilançoların analizleri yayında: skor, görüş, hedef fiyat, güçlü yönler ve riskler. | Bilançolar → Analizler |
+| **11:30** | Günün ilk Mercek yazısı: bir olayın arkasındaki mekanizma, metinden çizilen grafik ve rakam bloklarıyla. | Mercek |
+| **15:45** | Açılış öncesi teknik analiz: on beş hissenin planı güncellendi. | Teknik Analiz |
+| **16:10** | Günün bülteni: bugün neye bakmalı, takvimde ne var. | Ana sayfa → Günün Özeti |
+| **16:30** | 🔔 **Açılış zili.** Geri sayım sıfırlanır ve zil çalar; endeks kartları, hareket paneli ve gün akışı canlıya geçer. | Ana sayfa |
+| **19:45** | Seans içi teknik analiz. | Teknik Analiz |
+| **21:45** | Kapanışa doğru teknik analiz. | Teknik Analiz |
+| **23:00** | Kapanış zili. Kapanış sonrası bilançolar bu pencerede açıklanır. | Bilançolar |
+| **23:30** | Günün ikinci Mercek yazısı. | Mercek |
+
+Pazartesi sabahı 09:30'da bir de haftalık bülten yayımlanıyor.
+
+**Birkaç kısayol:**
+
+- **`⌘K` / `Ctrl K`**: her yerden sembol, şirket, teknik analiz ve yazı arama.
+- **Kalp ikonu**: bir hisseyi takip listene ekler; ana sayfada listenin özeti
+  ve Bilançolar → Takip Ettiklerim'de yalnızca senin şirketlerin çıkar.
+- **Takvime Ekle**: bir bilançoyu `.ics` olarak telefonunun takvimine atar.
+- **`/en/...`**: her sayfanın İngilizcesi aynı adreste, önekli.
+- **Tema düğmesi**: yeni tema tıkladığın yerden bir mürekkep lekesi gibi yayılır.
+
+---
+
+## İki Kurucu Karar
 
 Ürünün geri kalanı bu iki karardan türüyor.
 
-### Saat Türkiye saatiyle
+### Saat Türkiye Saatiyle
 
 Bütün kaynaklar New York saatiyle yayın yapıyor. Bir bilançonun "after the
-close" açıklanacağını bilmek yetmiyor; okuyucunun kafasında bunu 23:00'a
-çevirmesi gerekiyor — üstelik ABD yaz saati kaydıkça bu dönüşüm yılda iki kez
+close" açıklanacağını bilmek yetmiyor; okuyucunun bunu kafasında 23:00'a
+çevirmesi gerekiyor ve ABD yaz saati kaydıkça bu dönüşüm yılda iki kez
 değişiyor. Bu üründe **birincil saat İstanbul**, New York künyede durur;
-İngilizceye geçince sıra tersine döner. Hiçbir yere sabit saat yazılmaz, o
-günün tarihiyle hesaplanır (açılış yazın 16:30, kışın 17:30 TR).
+İngilizceye geçince sıra tersine döner. Hiçbir yere sabit saat yazılmaz. Tek
+kaynak `lib/session-clock.ts`; ET↔UTC dönüşümünün tamamı `lib/market-hours.ts`te.
 
-### Ekranda uydurma sayı yok
+### Ekranda Uydurma Sayı Yok
 
 Ücretsiz sağlayıcılar dünyayı yarım gösteriyor ve bu proje eksik veriyi
-gizlemek yerine **söylemeyi** seçiyor. Veri yoksa kart boş durur; her kartın
-altında `kaynak · saat` damgası vardır; gecikmeli besleme gecikmeli olduğunu
-yazar; sağlayıcı dakika vermiyorsa saat `~` ile yaklaşık yazılır ve hangi
-pencere olduğu adıyla söylenir. Bir metrik dürüstçe gösterilemiyorsa
-gösterilmez — Brent kartı bu yüzden kaldırıldı.
+gizlemek yerine **söylemeyi** seçiyor. Veri yoksa kart boş durur. Her kartın
+altında `kaynak · saat` damgası vardır. Gecikmeli besleme gecikmeli olduğunu
+yazar. Sağlayıcı dakika vermiyorsa saat `~` ile yaklaşık yazılır ve hangi
+pencere olduğu adıyla söylenir. Bir metrik dürüstçe gösterilemiyorsa hiç
+gösterilmez: Brent kartı bu yüzden kaldırıldı.
 
----
-
-## Ekranlar
-
-31 sayfa rotası var; hepsi istek başına sunucuda çiziliyor (kök layout dili ve
-temayı çerezden okuduğu için statik ön çizim yapılmıyor).
-
-### Ana akış
-
-| Rota | Cevapladığı soru |
-|---|---|
-| `/` | Zil çalmadan önce bugün ne var — gün şeridi, geri sayım, endeksler, takvim, bilançolar, bülten, favoriler, haberler |
-| `/piyasalar` | Piyasanın nabzı ne — endeksler, tahvil faizleri, korku endeksi, gün içi hareket, endeks bileşenleri |
-| `/sirketler` | Hangi şirket hangi sektörde, ne kadar ediyor — sektör şeridi + sıralanabilir dizin |
-| `/hisse/[symbol]` | Bu şirket nasıl gidiyor — grafik, profil, metrikler, analist dağılımı, haber, geçmiş bilançolar |
-| `/karsilastir` | İki ile dört hisseden hangisi — aynı ölçekte normalize grafik + tek tablo |
-| `/makro` | ABD ekonomisi nerede — altı FRED serisi, sparkline, sonraki açıklama |
-| `/takvim` | Hangi makro veri ne zaman açıklanacak — gün/hafta/ay, önem filtresi, halka arz takvimi |
-| `/haberler` · `/haberler/[id]` | Bugün ne konuşuluyor — akış + siteden çıkmadan okuma |
-
-### Bilançolar
-
-Üç sekme ve bir detay. Sekme çubuğu paylaşılan bir layout'ta değil, üç sayfanın
-her biri kendi basıyor — detay sayfası aynı segmentin altında ve orada sekme
-istenmiyor.
-
-| Rota | Soru |
-|---|---|
-| `/bilancolar` | Kim ne zaman açıklıyor — hafta/ay, açılış öncesi ve kapanış sonrası rozetleri |
-| `/bilancolar/analizler` | Okunmuş çeyrekler — skor, görüş, hedef fiyat |
-| `/bilancolar/takip` | Benim izlediklerimin bilançoları |
-| `/bilancolar/[symbol]/[period]` | Bu çeyrek ne anlattı — tam analiz |
-
-### Teknik analiz
-
-Masaüstü şeridinde beşinci sekme (Bilançolar ile Takvim arası); mobilde
-Menü'den, her yerde aramadan ve alt bilgiden açılıyor.
-
-| Rota | Soru |
-|---|---|
-| `/teknik` | On beş hisse bugün teknik olarak nerede — görüş, plan şeridi (alım · satış · vazgeçme), seviye çizgisi, üç kelimelik gösterge okuması |
-| `/teknik/[symbol]` | Nereden alınır, nerede satılır, nerede vazgeçilir — plan şeridi ve planın okuması, gösterge özeti, fiyata orantılı fiyat haritası, gösterge panelleri, senaryolar, görüş geçmişi |
-
-### Okuma
-
-| Rota | Soru |
-|---|---|
-| `/mercek` · `/mercek/[slug]` | Olayın arkasındaki mekanizma neydi — uzun anlatım arşivi |
-| `/rehber` · `/rehber/[slug]` | Borsayı nereden öğrenirim — sıralı müfredat |
-| `/bulten` · `/bulten/[tarih]` · `/bulten/haftalik/[tarih]` | Dünkü ya da geçen haftaki bülteni okuyayım — her sayının kalıcı adresi var; eski `?tarih=` bağlantıları oraya yönlendiriliyor |
-
-### Hesap ve yönetim
-
-`/giris` · `/kayit` · `/favoriler` · `/ayarlar` · `/menu` · `/kvkk`, ve kabuğun
-dışında altı yönetim ekranı (`/admin`, `/admin/trafik`, `/admin/uyeler`,
-`/admin/icerik`, `/admin/yazilar`, `/admin/sistem`). Yazılar ekranından iki
-editör açılıyor: `/admin/yazilar/mercek/[slug]` ve
-`/admin/yazilar/bulten/[tarih]`. Yönetim yetkisi ortam değişkeninde değil
-veritabanında; yetkisiz istek **404** görür — "yetkiniz yok" demek panelin
-varlığını ele verirdi.
-
-### İngilizce
-
-Her sayfa ikinci bir adreste daha var: `/en/<aynı slug>`. Önek sunucuda
-sökülüyor ve dil bir başlıkla taşınıyor; tarayıcının adresi `/en/...` kalıyor.
-
----
-
-## Teknoloji
-
-| Katman | Seçim |
-|---|---|
-| Framework | Next.js 16 · App Router · Turbopack |
-| Dil | TypeScript, `strict` |
-| Stil | Tailwind CSS v4 — `tailwind.config` yok, tokenlar `app/globals.css` içindeki `@theme inline` bloğunda |
-| Tema | Custom `data-theme` + `az-theme` çerezi (`next-themes` kullanılmıyor) |
-| Grafik | TradingView lightweight-charts v5 (hisse) · elle çizilen SVG (karşılaştırma, sparkline, makale blokları) |
-| Veritabanı | Neon PostgreSQL + Drizzle ORM |
-| Auth | next-auth v5 — Credentials + bcrypt, JWT |
-| İkon | Phosphor (duotone) |
-| Yazı tipi | Schibsted Grotesk — tek aile, değişken 400–900 |
-| Barındırma | Kendi sunucusu (Oracle Cloud Always Free) — `next start` + systemd, TLS için Caddy; `main`'e her push GitHub Actions ile deploy olur, cron da orada (§ Deploy) |
+Bu ilke animasyona kadar iniyor. Fiyat grafiğinin ucundaki atan nokta
+"fiyat hâlâ oynuyor" demek; o yüzden yalnızca seans açıkken ve çizilen gün
+seans günüyse atıyor.
 
 ---
 
 ## Mimari
 
-### Sunucuda model çağrısı yok
+```mermaid
+flowchart LR
+  subgraph Kaynaklar
+    AL[Alpaca<br/>fiyat · bar]
+    FH[Finnhub<br/>profil · haber · bilanço]
+    FR[FRED<br/>makro · faiz · VIX]
+    TC[TCMB<br/>USD/TRY]
+  end
 
-Sitenin yazılı içeriğini (bülten, mercek yazıları, bilanço analizleri) claude.ai
-üzerindeki zamanlanmış görevler üretir ve korumalı uçlara **yazar**. Sunucu
-yalnızca veritabanından okur; kodda hiçbir model çağrısı ve model anahtarı
-yoktur. Yayın gecikirse ekran en son yazılanı gösterir ve yenisinin ne zaman
-geleceğini söyler.
+  subgraph Sunucu["Next.js 16 · kendi sunucusu"]
+    PL["Sağlayıcı katmanı<br/>canlı → yedek → son bilinen"]
+    RSC["Sunucu bileşenleri<br/>istek başına çizim"]
+    API["Korumalı yazma uçları<br/>/api/brief · mercek · analiz · teknik"]
+    CW["lib/content-write.ts<br/>tek doğrulama + tek yazma yolu"]
+    CRON["/api/cron/daily<br/>takvim · haber · FRED · profil"]
+  end
 
-### Üç katmanlı veri, uydurma yok
+  DB[(Neon PostgreSQL<br/>Drizzle ORM)]
+  RT["claude.ai rutinleri<br/>bülten · mercek · analiz · teknik"]
+  U((Okuyucu))
+
+  AL & FH & FR & TC --> PL
+  PL <--> DB
+  PL --> RSC
+  RT -- "BRIEF_SECRET" --> API --> CW --> DB
+  CRON --> DB
+  DB --> RSC --> U
+```
+
+### Sunucuda İçerik Üreten Model Çağrısı Yok
+
+Sitenin yazılı içeriğini (bülten, Mercek yazıları, bilanço ve teknik
+analizler) claude.ai üzerindeki zamanlanmış rutinler üretir ve korumalı
+uçlara **yazar**. Sunucu yalnızca veritabanından okur. Yayın gecikirse ekran
+en son yazılanı gösterir ve yenisinin ne zaman geleceğini söyler.
+
+Rutin sayı üretmez, yorum yazar: teknik analizde göstergeleri (ortalamalar,
+RSI, MACD, hacim, pivotlar) site kendi fiyat verisinden hesaplar ve rutine
+verir; gösterge fotoğrafını yazma ucu kendisi çıkarır.
+
+Koddaki tek model çağrısı isteğe bağlı: haber başlığı çevirisinde önce DeepL
+denenir, anahtarı verilmişse Claude yedek olarak devreye girer.
+
+### İçeriğin Tek Yazma Yolu
+
+Doğrulama şeması, sürüm fotoğrafı ve upsert `lib/content-write.ts`te.
+Rutinlerin uçları da yönetim panelinin editörleri de oradan geçer. Panelden
+yeni kayıt üretilmez, yalnızca var olan düzeltilir; üzerine yazılan hâlin
+fotoğrafı `story_revisions`a düşer.
+
+### Üç Katmanlı Veri
 
 Her sağlayıcı çağrısı sırayla üç kapıdan geçer: **canlı sağlayıcı → yedek
 sağlayıcı → Neon'daki son bilinen değer.** Hiçbir aşamada uydurma değer
-üretilmez. Sağlayıcı fonksiyonları asla `throw` etmez, hatayı değer olarak
-döndürür; çağıran kart "veri alınamadı" gösterir ve sayfanın geri kalanı
-çalışmaya devam eder. Önbelleğe düşüldüğünde kaynak `cache` olur ve ekrandaki
-damga "güncel olmayabilir" der.
+üretilmez. Sağlayıcı fonksiyonları `throw` etmez, hatayı değer olarak
+döndürür; kart "veri alınamadı" der ve sayfanın geri kalanı çalışmaya devam
+eder.
 
-Bu kuralın üç maddesi kod içinde de yazılı ve üçü de birer hata düzeltmesinden
-geldi:
+Bir yüzde hangi seansı anlattığını **kanıtlamak** zorunda. Kotasyon ancak
+işlem günü `status.sessionDate`e eşitse ve yeterince tazeyse "bugün" sayılır.
+Ekran katmanı bayat veriyi künyesiyle gösterebilir; **yazma katmanı
+gösteremez.** Bülten, Mercek ve teknik uçlar bayat kotasyonu hiç kullanmaz,
+çünkü oradan çıkan sayı metne geçip kalıcı olur.
 
-1. **Uydurma kesinlik yok.** Sağlayıcı dakika vermiyorsa saat `~` ile yazılır ve
-   hangi pencere olduğu adıyla söylenir ("~23:00 · kapanış sonrası").
-2. **Eski veriyi büyük puntoyla gösterme.** Brent kartı FRED'in EIA spot
-   serisinden geliyordu ve o seri günlerce geriden yayımlanıyor; ekranda bir
-   haftalık eski fiyat duruyordu. Küçük puntoda tarih yazmak bunu kurtarmaz —
-   metrik kaldırıldı.
-3. **Aynı sayı iki yerde duruyorsa aynı kaynaktan gelmeli.** Hisse başlığı anlık
-   kotasyonu, grafik son dakika barının kapanışını yazıyordu; ikisi tanımı gereği
-   farklı sayılar ve yan yana durunca hata gibi okunuyordu.
+### Önbellek Sunucuda Paylaşımlı
 
-### Önbellek sunucuda paylaşımlı
+Kotasyon tazeliği seansa göre değişir: seans içinde 15 saniye, uzatılmış
+seansta 60, kapalıyken 15 dakika. Önbellek ziyaretçi başına değil sunucuda
+olduğu için sağlayıcıya giden istek trafikle artmıyor.
 
-Kotasyon tazeliği seansa göre değişir: seans içinde 15 saniye, uzatılmış seansta
-60, kapalıyken 15 dakika. Önbellek ziyaretçi başına değil sunucuda paylaşımlı
-olduğu için sağlayıcıya giden istek trafikle değil yalnızca bu süreyle artıyor —
-15 saniyede dakikada dört istek, Alpaca'nın 200/dk sınırının çok altında.
+İstek içinde `cache()` ile tekilleştirme var ve anahtar **sıralanmış sembol
+dizesi**: iki panel aynı listeyi sorduğunda sağlayıcıya bir kez gidilir. Bu
+hız kadar doğruluk meselesi; ayrı çekilselerdi aynı ekranda aynı hissenin iki
+farklı yüzdesi durabilirdi.
 
-İstek içinde ayrıca `cache()` ile tekilleştirme var ve anahtar **sıralanmış
-sembol dizesi**: iki ayrı panel aynı listeyi sorduğunda sağlayıcıya bir kez
-gidilir. Bu hız kadar doğruluk meselesi — ayrı çekilselerdi aynı ekranda aynı
-hissenin iki farklı yüzdesi durabilirdi.
+### Görseli Metin Çiziyor
 
-### Görsel dili metin çiziyor
-
-Yazıların fotoğrafı yok. Görsel dili, metinden çizilen `:::` bloklarıdır: model
-yalnızca satırları yazar, çizimi site yapar.
+Yazıların fotoğrafı yok. Görsel dil, metinden çizilen `:::` bloklarıdır:
+model yalnızca satırları yazar, çizimi site yapar.
 
 ```
 ::: sayilar Rakamlarla
@@ -234,47 +232,107 @@ yalnızca satırları yazar, çizimi site yapar.
 
 Yedi görsel blok (`sayilar` · `bar` · `pay` · `akis` · `oncesi` · `zaman` ·
 `grafik`) ve dört metin kutusu (`ornek` · `dikkat` · `ozet` · `tanim`) var.
-Karşılığı üç kazanç: telif riski yok, hiçbir yerde görsel barındırmak
-gerekmiyor, her temada tutarlı. Şema bir kez `image_url` alanı aldı ve hemen
-geri alındı.
+Kazanç üç: telif riski yok, görsel barındırmak gerekmiyor, her temada
+tutarlı. Elimizdeki tek gerçek görsel kaynağı şirket logoları.
 
-Elimizdeki tek gerçek görsel kaynağı şirket logoları — mercek kapakları ve haber
-künyeleri ondan besleniyor.
+### Ölçmeden Düzen Değişmiyor
 
-### Ölçmeden düzen değişmiyor
-
-Yerleşim kararları tahminle değil ölçümle veriliyor ve ölçüm kod yorumlarında
+Yerleşim kararları tahminle değil ölçümle veriliyor ve ölçüm kod yorumunda
 kalıyor: hangi genişlikte kaç piksel taştığı, hangi CLS değerinin nereden
 geldiği, hangi kontrast oranının kaça çıktığı. Kod içi Türkçe yorumlar birer
-**karar kaydıdır** — ne yapıldığını değil neden yapıldığını ve hangi somut
+**karar kaydıdır**: ne yapıldığını değil, neden yapıldığını ve hangi somut
 hatanın onu doğurduğunu anlatırlar.
 
 ---
 
-## Veri modeli
+## Teknoloji
 
-17 tablo. Kim yazar sütunu önemli: bir tablonun tazeliği onu yazanın ritmine bağlı.
+| Katman | Seçim | Neden |
+|---|---|---|
+| Framework | **Next.js 16.2** · App Router · Turbopack | Sunucu bileşenleri, akışlı Suspense, sunucu eylemleri |
+| UI | **React 19.2** | `useOptimistic`, `useActionState`, form eylemleri |
+| Dil | **TypeScript 5**, `strict` | `en` sözlüğü `tr` tipinden türer; eksik çeviri derlenmez |
+| Stil | **Tailwind CSS v4** | `tailwind.config` yok; tokenlar `app/globals.css` içindeki `@theme inline` bloğunda |
+| Hareket | **Motion 13** (`motion/react`) + Web Animations API + CSS | Panel girişleri, düzen geçişleri, logo uçuşu |
+| Çizim | **Canvas 2D** mürekkep motoru (`lib/ink/`) | Tohumlu, deterministik, kare kare saf fonksiyon |
+| Grafik | **lightweight-charts 5** (hisse) · elle çizilen SVG (sparkline, karşılaştırma, makale blokları) | |
+| Veritabanı | **Neon PostgreSQL** (`@neondatabase/serverless`) + **Drizzle ORM 0.45** | Migration'lar `drizzle/` altında, yalnızca eklenir |
+| Doğrulama | **Zod 4** | İçerik yazma yolu ve API uçları |
+| Auth | **next-auth v5** · Credentials + bcrypt · JWT | Yönetim yetkisi veritabanında |
+| İkon | **Phosphor** (duotone) + sitenin kendi çizdiği profil ikonları | |
+| Yazı | **Schibsted Grotesk**, tek aile, değişken 400–900 | Ayrım punto ve ağırlıkla |
+| Tema | Custom `data-theme` + `az-theme` çerezi | `next-themes` yok; ilk karede doğru tema |
+| Barındırma | Oracle Cloud Always Free · `next start` + systemd · Caddy (TLS) | Her push GitHub Actions ile deploy |
+| Doğrulama araçları | `tsx --test` (19 test dosyası) · başsız Chrome (`puppeteer-core`) ölçüm betikleri | |
+
+---
+
+## Hareket ve Mürekkep
+
+Animasyon süs için değil, okumayı kolaylaştırmak için var ve her hareketin
+bir işi var. Hepsi `prefers-reduced-motion`a saygı gösterir: azaltılmış
+harekette son kare tek seferde basılır.
+
+**Mürekkep sahneleri** (`lib/ink/`, `components/ink/`). Fotoğraf yerine
+çizimin ikinci ayağı. Canvas 2D motoru fırça, damla, sıçrama ve kuru fırça
+dokusunu tohumlu ve deterministik çiziyor; her sahne `render(ctx, t)` saf
+fonksiyonu. Karakter markanın zili: gözleri ve gülümsemesi var. Renkler
+temadan (mürekkep ve pirinç). Sahneler görünüme girince bir kez oynar ve
+oturur. On yedi sahne var; yerleri şunlar:
+
+- oturumun ilk açılışındaki kısa film
+- gezinme beklemesinde hedef sayfaya göre değişen sahne
+- 404'te kaybolan zil, hata ekranında devrilen zil
+- giriş sayfasında selam veren zil, gün şeridi ve kendini çizen form çerçevesi
+- boş durumlar
+- Mercek ve rehber yazısının bitiş işareti
+
+Yükleme işareti de aynı zil: iş bitene kadar sallanıp çalıyor.
+
+**Geçişler.**
+
+- **Logo uçuşu:** bir şirket kartına tıklandığında logo yeni sayfanın
+  başlığına kavisli bir yolla uçar ve şirket adı onun inişini bekler.
+- **Tema değişimi:** yeni tema tıklanan noktadan pürüzlü bir mürekkep lekesi
+  olarak yayılır (View Transitions + SVG maske).
+- **Veri girişi:** grafik çizgileri kırpmayla açılır, çubuklar sıfırdan uzar,
+  halka dilimleri çizilir. Geri sayımın rakamları yuvarlanır, son on saniyede
+  atar ve sıfırda zil çalar.
+
+İlk ekranda görünen hiçbir şey hidrasyonda sönüp yeniden gelmez. Bunun
+ölçümü `components/motion/PremiumMotion.tsx`te.
+
+---
+
+## Veri Modeli
+
+18 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
+ritmine bağlı.
 
 | Tablo | Ne tutar | Kim yazar |
 |---|---|---|
 | `users` · `watchlists` · `watchlist_items` | Hesap, takip listeleri ve sembolleri | Kullanıcı eylemleri |
-| `symbols` | Sembol künyesi: ad, borsa, sektör, logo, piyasa değeri, hisse sayısı | Tohum + cron profil turu + sayfa isteği |
-| `quotes_cache` | Son bilinen fiyat — sağlayıcı düşünce gösterilecek yedek | Sayfa isteği |
+| `user_avatars` | Seçilen profil ikonunun anahtarı | Kullanıcı eylemi (Ayarlar) |
+| `symbols` | Sembol künyesi: ad, borsa, sektör, logo, piyasa değeri, hisse sayısı | Tohum + cron + sayfa isteği |
+| `quotes_cache` | Son bilinen fiyat; sağlayıcı düşünce gösterilecek yedek | Sayfa isteği |
 | `candles_cache` | Aralık başına bar dizisi | Sayfa isteği |
 | `earnings_calendar` | Bilanço takvimi + beklenti/gerçekleşen | Cron |
 | `economic_events` | Ekonomik takvim (ET tarih + saat) | Tohum + cron |
 | `market_holidays` | NYSE/Nasdaq tatilleri, yarım günde erken kapanış | Yalnız tohum |
-| `macro_series` | FRED serisi + son 60 gözlem + sonraki yayın | Tohum (tanım) + cron (değer) |
-| `news` | Haber akışı + çevirisi | Cron + hisse sayfası açılışı |
+| `macro_series` | FRED serisi + son 60 gözlem + sonraki yayın | Tohum + cron |
+| `news` | Haber akışı + çevirisi | Cron + hisse sayfası |
 | `daily_briefs` | Günlük ve haftalık bülten | claude.ai rutini |
 | `stories` | Mercek yazıları | claude.ai rutini |
-| `story_revisions` | Mercek ve bülten düzeltilirken üzerine yazılan hâlin fotoğrafı (son on sürüm) | İçerik yazma yolu |
-| `earnings_analyses` | Bilanço analizleri — sayılar **ham** tutulur (8.97e9), sunum katmanı biçimlendirir | claude.ai rutini |
-| `technical_analyses` | Teknik analizler — sembol × işlem günü × yayın başına tek satır, iki dilin metni `copy` içinde, göstergelerin yazma anındaki fotoğrafı `snapshot`ta | claude.ai rutini (gösterge fotoğrafını uç hesaplar) |
+| `story_revisions` | Düzeltilen içeriğin önceki hâli (son on sürüm) | İçerik yazma yolu |
+| `earnings_analyses` | Bilanço analizleri; sayılar **ham** (8.97e9), sunum biçimlendirir | claude.ai rutini |
+| `technical_analyses` | Sembol × gün × yayın başına tek satır; metin `copy.{tr,en}`, göstergeler `snapshot` | claude.ai rutini |
 | `page_views` | Çerezsiz sayfa ölçümü | İstemci beacon |
 
-Migration disiplini: şema değişince **yeni** migration dosyası üretilir, eskisi
-düzenlenmez.
+Migration disiplini: şema değişince **yeni** migration dosyası üretilir,
+eskisi düzenlenmez. Migration'lar deploy'da çalışmaz, elle uygulanır. Bu
+yüzden yeni bir özellik mümkünse var olan tabloya sütun eklemek yerine kendi
+tablosunu alır: `user_avatars` tablo yokken sessizce baş harflere düşüyor,
+yani kod migration'dan önce de güvenle yayında durabiliyor.
 
 ---
 
@@ -282,301 +340,328 @@ düzenlenmez.
 
 | Sağlayıcı | Ne verir | Not |
 |---|---|---|
-| **Alpaca** | Anlık fiyat (`/snapshots`, `delayed_sip`) ve tarihsel barlar (`/bars`, `sip`) | Ücretsiz katman 200 istek/dk. 200 sembollük paketler paralel gider |
-| **Finnhub** | Profil, haber, bilanço takvimi, halka arz, EPS sürprizi, analist dağılımı, metrikler, arama | 60 istek/dk. Grafik barları buradan **alınmaz** — ücretsiz katmanda güvenilmez |
-| **FRED** | Makro seriler, tahvil faizleri, VIX | Yayın kimlikleri koda gömülmez, seri kimliğinden çalışma anında türetilir |
-| **TCMB** | USD/TRY | Anahtarsız. Canlı değil, günde tek bülten — dönen veri bülten tarihini taşır |
+| **Alpaca** | Fiyat (`/snapshots`, `delayed_sip`) ve tarihsel barlar (`/bars`, `sip`) | 200 istek/dk. Uzun bar cevaplarında `next_page_token` izlenir |
+| **Finnhub** | Profil, haber, bilanço takvimi, halka arz, EPS sürprizi, analist dağılımı, metrikler, arama | 60 istek/dk. Grafik barları buradan **alınmaz** |
+| **FRED** | Makro seriler, tahvil faizleri, VIX | Yayın kimlikleri seri kimliğinden çalışma anında türetilir |
+| **TCMB** | USD/TRY | Anahtarsız; günde tek bülten, veri bülten tarihini taşır |
 
-Alpaca'ya geçiş ölçülerek yapıldı: bir dönem IEX beslemesi kullanıldı, gerçek
-zamanlıydı ama konsolide hacmin yalnızca %2–7'sini görüyordu (bir ölçümde MRNA
-için 3,67M / 199,3M) ve **ön seansta hiç işlem akmıyordu** — 05:58 ET'de "son
-işlem" dünkü kapanıştı. Karşılığında 15 dakikalık gecikme kabul edildi ve ekranda
-damgalanıyor.
+Alpaca'ya geçiş ölçülerek yapıldı. Bir dönem IEX beslemesi kullanıldı: gerçek
+zamanlıydı ama konsolide hacmin yalnızca %2–7'sini görüyordu ve **ön seansta
+hiç işlem akmıyordu**. Karşılığında 15 dakikalık gecikme kabul edildi ve
+ekranda damgalanıyor.
 
-Finnhub'ın üç tuzağı kodda kayıtlı: `marketCapitalization` milyon cinsinden ama
-dolar değil ana borsanın parasında; `/stock/recommendation` sorulan sembolü değil
-karşılık kotasyonu döndürebiliyor (TSM → "2330.TW"); hazır `peTTM` geriden gelen
-bir fiyattan hesaplandığı için kullanılmıyor, oran ekranın kendi fiyatından
-kuruluyor.
+Finnhub'ın üç tuzağı kodda kayıtlı: `marketCapitalization` milyon cinsinden
+ama ana borsanın parasında; `/stock/recommendation` karşılık kotasyonu
+döndürebiliyor (TSM → "2330.TW"); hazır `peTTM` geriden gelen bir fiyattan
+hesaplandığı için kullanılmıyor.
 
-Tohumlanan veri elle bakılıyor çünkü ücretsiz katmanda karşılığı yok: NYSE
-tatilleri (23 gün, üçü yarım), FOMC/CPI/istihdam takvimi, sembol listesi ve
-endeks bileşimleri.
+Ücretsiz katmanda karşılığı olmayan veri elle tohumlanıyor: NYSE tatilleri,
+FOMC/CPI/istihdam takvimi, sembol listesi ve endeks bileşimleri.
 
 ---
 
-## İçerik üretimi
+## İçerik Üretimi
 
-| Görev | Ne zaman | Nereye |
+| Rutin | Ne zaman (TR) | Nereye |
 |---|---|---|
-| Günlük bülten | her gün 16:10 TR | `POST /api/brief` → ana sayfa · Günün Özeti |
-| Haftalık bülten | pazartesi 09:30 TR | `POST /api/brief` (`period: weekly`) → `/bulten` |
-| Mercek yazısı | her gün 11:30 ve 23:30 TR | `POST /api/mercek` → `/mercek` |
-| Bilanço analizi | her gün 09:00 TR | `POST /api/analiz` → `/bilancolar/analizler` |
-| Teknik analiz | işlem günleri 15:45, 19:45 ve 21:45 TR | `POST /api/teknik` → `/teknik` |
+| Günlük bülten | her gün 16:10 | `POST /api/brief` → ana sayfa · Günün Özeti |
+| Haftalık bülten | pazartesi 09:30 | `POST /api/brief` (`period: weekly`) → `/bulten` |
+| Mercek yazısı | her gün 11:30 ve 23:30 | `POST /api/mercek` → `/mercek` |
+| Bilanço analizi | her gün 09:00 | `POST /api/analiz` → `/bilancolar/analizler` |
+| Teknik analiz | işlem günleri 15:45, 19:45, 21:45 | `POST /api/teknik` → `/teknik` |
 
-Beşi de `BRIEF_SECRET` ile korunuyor ve her uç `?slug=` / `?symbol=&period=` /
-`?symbol=` ile yazdığını geri okuyabiliyor — rutin güncelleme yaparken bu
-köprüyü kullanıyor. Ayrıca dört `context` ucu rutine ham veri ve aday listesi
-veriyor; teknik analizinki göstergeleri de hesaplayıp veriyor.
-
-Prompt'ların tamamı ve kurulum adımları `docs/claude-rutinler.md` içinde.
-**Görevler koddan kurulamaz**, claude.ai arayüzünden elle kurulur.
+Beşi de `BRIEF_SECRET` ile korunuyor ve her uç yazdığını geri okuyabiliyor
+(`?slug=`, `?symbol=&period=`, `?symbol=`). Ayrıca dört `context` ucu rutine
+ham veri ve aday listesi veriyor. Prompt'ların tamamı `docs/claude-rutinler.md`
+içinde. Rutinler koddan kurulmaz, claude.ai arayüzünden elle kurulur.
 
 ---
 
-## Görsel dil
+## Görsel Dil
 
-- **Gölge yok.** Derinlik gölgeyle değil **ton farkıyla** kurulur; kartlar
-  zeminden saydamlık ve tek hairline ile ayrılır. Glass/blur efekti de yok.
+- **Derinlik tonla kurulur, gölgeyle değil.** Kartlar zeminden saydamlık ve
+  tek hairline ile ayrılır; glass ve blur yok.
 - **Hardcoded renk yok.** Her renk bir CSS değişkeni; açık ve koyu tema aynı
-  token adlarını farklı değerlerle doldurur.
-- **Tek yazı ailesi.** Ayrım punto ve ağırlıkla kurulur. Sayılar için ayrı bir
-  mono aile denendi ve geri alındı: dokuz sütunlu bir tabloda daktilo
-  genişliğindeki rakamlar hem yer yiyor hem satırı gürültülü gösteriyordu.
+  token adlarını farklı değerlerle doldurur. Varsayılan tema açık.
+- **Tek yazı ailesi.** Ayrım punto ve ağırlıkla. Sayılar için ayrı bir mono
+  aile denendi ve geri alındı.
+- **Renk anlam taşır.** Yeşil ve kırmızı yalnızca yön söyler; profil
+  ikonlarında bile kullanılmaz, çünkü kırmızı bir karo "düşüşte" diye okunur.
+- **Karşılaştırılan her büyüklük bir de çizgi olarak okunur.** Piyasa değeri,
+  değişim ve F/K gibi sütunların altında ince bir ölçek çubuğu var. Hisse
+  fiyatı gibi karşılaştırılamayan bir ölçüde ise çubuk hiç basılmaz.
+- **Her ekran aynı sırada:** başlık → künye → ana görsel → ölçü ızgarası →
+  metin → künye ve uyarılar → veri damgası.
 - **Degrade metin belgeli bir istisna:** yalnızca kısa display metninde,
-  token'lanmış, `@supports` korumalı, solid fallback'li ve descender düzeltmeli.
-- **Türkçe Title Case.** Cümle olmayan her metin Title Case yazılır. `title()` ve
-  `text-transform: capitalize` yasak — `i → I` üretir, `İ` değil. Bağlaç ve
-  edatlar başta değilse küçük kalır.
+  `@supports` korumalı ve solid fallback'li.
+- **Türkçe Title Case.** Cümle olmayan her metin Title Case. `capitalize`
+  yasak, çünkü `i`yi `I` yapıyor, `İ` değil.
 
 ---
 
 ## Erişilebilirlik
 
-Kod içinde on iki yerde WCAG kriter numarası geçiyor ve her biri gerçek bir
-düzeltmeye bağlı:
+Kod içinde WCAG kriter numaraları geçiyor ve her biri gerçek bir düzeltmeye
+bağlı:
 
-- **2.1.1** — yatay kayan tablo kapları klavyeyle odaklanabilir; öncesinde fare
-  olmadan sağ sütunlara ulaşılamıyordu.
-- **2.4.1** — atlama bağlantısı ve `<main tabIndex={-1}>`; `tabIndex` olmadan odak
-  `<body>`de kalıyor ve "İçeriğe Geç" hiçbir şeyi atlamıyordu.
-- **2.4.11** — sabit katmanlar odaklanan öğeyi örtmesin diye `scroll-padding`;
-  kırpan kaplarda `outline-offset: -2px`. Ölçüldü: `/haberler`de 99 odaklanabilir
-  öğenin 62'sinin odak halkası kırpılıyordu.
-- **2.5.3** — kısaltmalı denetimlerde erişilebilir ad görünen etiketi kapsar
-  ("1A Son 1 Ay"); `aria-label` görünen metni ezmez.
-- **AA kontrast** — ölçülmüş düzeltmeler: `--text-muted` 3,50 → 5,28; wash üzerine
-  yazılan metin için ayrı bir `--primary-ink` token'ı (4,14 → 4,86); koyu tema
-  yüzey rampası 1,03:1 kontrastla görünmezken açıldı.
-- **Renk tek taşıyıcı değil.** Yön her zaman işaretle de söylenir (▲/▼ ya da
-  +/−), grafik serileri renk körlüğünde ayrışsın diye kesikli çizilir.
-- **Dokunma hedefi** telefonda 44 piksel, masaüstünde 32–36'ya iner. İki araç
-  var ve hangisinin kullanılacağı yapıya bağlı:
-  - `.tap-44` (`app/globals.css`) hedefi sözde öğeyle büyütür, görünür ölçüye
-    ve düzene dokunmaz. Bir panel başlığındaki "Tümünü Gör" bağlantısını 44
-    piksel yüksekliğinde çizmek satırı şişirirdi; hedef genişler, düzen
-    kımıldamaz.
-  - Öğe SARAN bir listenin içindeyse ya da `overflow: hidden` bir kabın
-    altındaysa sözde öğe işe yaramaz — ilkinde alt satırın hedefini kapar,
-    ikincisinde kırpılır. Orada gerçek yükseklik verilir (`min-h-11
-    sm:min-h-8`) ve dikey aralık ona göre ayarlanır. Kaynak künyeleri ve
-    menüdeki dil segmenti bu yoldan geçti.
-
-  Kuralın dışında kalan tek şey bir cümlenin içine gömülü satır içi
-  bağlantılar (bir paragraftaki "bilançonun" gibi); onları genişletmek
-  satırları birbirine geçirir ve kural zaten muaf tutuyor (WCAG 2.5.8).
-  Ölçüm otomatik değil, tarayıcıdan yapılıyor — bkz. Doğrulama.
-- **Hareket** azaltılmış hareket tercihine saygı gösterir; piyasa şeridi hover,
-  `prefers-reduced-motion` ve açık bir duraklat düğmesiyle durur.
+- **2.1.1**: yatay kayan tablo kapları klavyeyle odaklanabilir.
+- **2.4.1**: atlama bağlantısı ve `<main tabIndex={-1}>`.
+- **2.4.11**: sabit katmanlar odağı örtmesin diye `scroll-padding`. Ölçüldü:
+  `/haberler`de 99 odaklanabilir öğenin 62'sinin halkası kırpılıyordu.
+- **2.5.3**: kısaltmalı denetimlerde erişilebilir ad görünen etiketi kapsar.
+- **AA kontrast**: `--text-muted` 3,50 → 5,28; wash üzerine yazılan metin için
+  ayrı `--primary-ink` (4,14 → 4,86).
+- **Renk tek taşıyıcı değil**: yön her zaman işaretle de söylenir (▲/▼, +/−).
+- **Dokunma hedefi** telefonda 44 piksel (`.tap-44` ya da gerçek yükseklik).
+- **Canlı bölgeler**: form hataları, kayıt sonuçları ve yükleme durumu ekran
+  okuyucuya duyurulur.
+- **Hareket**: azaltılmış hareket tercihine saygı; piyasa şeridinde ayrıca
+  açık bir duraklat düğmesi.
 
 ---
 
 ## Performans
 
-CLS ölçülerek düşürüldü. Ana sayfanın mobil CLS'i 0,25'ti — dokuz Suspense
-sınırı tek bir elle yazılmış yüksekliği paylaşıyordu ve paneller akışla gelince
-altındaki her şey sıçrıyordu. Çözüm yer tutucuyu **yükseklikle değil yapıyla**
-eşleştirmek oldu: aynı dolgu, aynı satır düzeni, panel büyüdükçe onunla birlikte
-kayan bir iskelet.
-
-Uzun listeler kırpılıyor (S&P 500 bileşenleri tek sayfada 2,3 MB HTML üretiyordu)
-ve sıralama dilimden **önce** yapılıyor. Değişmemiş satır veritabanına yeniden
-yazılmıyor — şirketler dizininin sunucu yanıtının yarısı bu yazmadan geliyordu.
+- **CLS yapıyla düşürüldü.** Ana sayfanın mobil CLS'i 0,25'ti; dokuz Suspense
+  sınırı tek bir elle yazılmış yüksekliği paylaşıyordu. Yer tutucular artık
+  yükseklikle değil **yapıyla** eşleşiyor.
+- **Boşluk esnetilmez, doldurulur.** İki kolonlu ana sayfada kısa kalan kolon,
+  sunucunun `hidden` bastığı yedek satırları tarayıcının ölçümüyle açarak
+  dengeleniyor. JavaScript kapalıyken taban satır sayısı kalıyor.
+- **Kökte `:has()` yok.** Geri sayım her saniye DOM'a dokunduğu için belge
+  kökündeki bir `:has()` 4x yavaş CPU'da yükleme boyunca 2,1 saniye stil
+  hesabı yapıyordu (ölçüldü).
+- **Canlı veri yalnızca görünen dilime.** Şirketler dizininde piyasa değeri
+  sırasında kotasyon bin sembol için değil, görünen dilim artı bir pay için
+  çekiliyor.
 
 ---
 
 ## Gizlilik
 
-Sayfa ölçümü çerezsiz. IP, tam referrer, kullanıcı-ajanı ve kullanıcı kimliği
-tutulmuyor; günlük dönen bir ziyaretçi özeti (IP + UA + gün + sır → 16 karakter)
-saklanıyor ve 180 gün sonra siliniyor. Üçüncü taraf analitik yok.
+Sayfa ölçümü çerezsiz. IP, tam referrer, kullanıcı ajanı ve kullanıcı kimliği
+tutulmuyor; günlük dönen bir ziyaretçi özeti saklanıyor ve 180 gün sonra
+siliniyor. Üçüncü taraf analitik yok. Kaydedilen her üye alanı
+[KVKK metninde](https://aciliszili.com/kvkk) sayılı.
 
 ---
 
-## Kurulum
+## Ekranlar
+
+Rota listesinin **tek kaynağı** burası. 38 sayfa var: 29'u herkese açık, 9'u
+yönetim. Hepsi istek başına sunucuda çiziliyor. Her sayfa `/en/...` önekiyle
+İngilizce de açılıyor; önek sunucuda sökülüyor ve adres çubuğunda kalıyor.
+
+### Ana Akış
+
+| Rota | Cevapladığı soru |
+|---|---|
+| `/` | Zil çalmadan önce bugün ne var: geri sayım, endeksler, gün akışı, bülten, Mercek, teknik görünüm, bilançolar, favoriler, haberler |
+| `/piyasalar` | Piyasanın nabzı: endeksler, tahvil faizleri, VIX, gün içi hareket, endeks bileşenleri |
+| `/sirketler` | Hangi şirket hangi sektörde, ne kadar ediyor: sektör şeridi + sıralanabilir dizin |
+| `/hisse/[symbol]` | Bu şirket nasıl gidiyor: grafik, profil, metrikler, analistler, haber, geçmiş bilançolar |
+| `/karsilastir` | İki ile dört hisseden hangisi: aynı ölçekte normalize grafik + tek tablo |
+| `/makro` | ABD ekonomisi nerede: altı FRED serisi, sonraki açıklama |
+| `/takvim` | Hangi makro veri ne zaman: gün/hafta/ay, önem süzgeci, halka arz takvimi |
+| `/haberler` · `/haberler/[id]` | Bugün ne konuşuluyor: akış + siteden çıkmadan okuma |
+
+### Bilançolar
+
+Sekme çubuğu paylaşılan bir layout'ta değil, üç sayfanın her biri kendi
+basıyor; detay sayfası aynı segmentin altında ve orada sekme istenmiyor.
+
+| Rota | Soru |
+|---|---|
+| `/bilancolar` | Kim ne zaman açıklıyor: hafta/ay, açılış öncesi ve kapanış sonrası |
+| `/bilancolar/analizler` | Okunmuş çeyrekler: skor, görüş, hedef fiyat |
+| `/bilancolar/takip` | Benim izlediklerimin bilançoları |
+| `/bilancolar/[symbol]/[period]` | Bu çeyrek ne anlattı: tam analiz |
+
+### Teknik Analiz
+
+Masaüstü başlığında Bilançolar ile Mercek arasında; mobilde Menü'den.
+
+| Rota | Soru |
+|---|---|
+| `/teknik` | On beş hisse bugün teknik olarak nerede: görüş halkası, plan şeridi, risk/getiri rayı |
+| `/teknik/[symbol]` | Nereden alınır, nerede satılır, nerede vazgeçilir: plan, fiyat haritası, gösterge panelleri, senaryolar, görüş geçmişi |
+
+### Okuma
+
+| Rota | Soru |
+|---|---|
+| `/mercek` · `/mercek/[slug]` | Olayın arkasındaki mekanizma neydi |
+| `/rehber` · `/rehber/[slug]` | Borsayı nereden öğrenirim: sıralı müfredat |
+| `/bulten` · `/bulten/[tarih]` · `/bulten/haftalik` · `/bulten/haftalik/[tarih]` | Dünkü ya da geçen haftaki bülten; her sayının kalıcı adresi var |
+
+### Hesap
+
+`/giris` · `/kayit` · `/favoriler` · `/ayarlar` (profil ikonu, tema, dil,
+hesap silme) · `/menu` · `/kvkk`
+
+### Yönetim
+
+Kabuğun dışında: `/admin`, `/admin/trafik`, `/admin/uyeler`,
+`/admin/icerik`, `/admin/yazilar` ve iki editör
+(`/admin/yazilar/mercek/[slug]`, `/admin/yazilar/bulten/[tarih]`). Panel
+sekmelerinden **İçerik ölçer, Yazılar değiştirir.** Yetki veritabanında;
+yetkisiz istek **404** görür, çünkü "yetkiniz yok" demek panelin varlığını ele
+verirdi.
+
+---
+
+## Geliştirme
 
 ```bash
 npm install
-cp .env.example .env.local   # değerleri doldur — aşağıya bak
+cp .env.example .env.local   # değerleri doldur, aşağıya bak
 npm run db:migrate           # şemayı Neon'a uygula
 npm run db:seed              # takvim + tatil + sembol tohumları
+npm run build                # ilk kez: route tiplerini üretir
 npm run dev
 ```
 
-### Ortam değişkenleri
+**Temiz bir kopyada önce `npm run build` çalıştır.** `PageProps` ve
+`RouteContext` tipleri `.next/types` altına üretiliyor; build almadan
+`typecheck` onlarca yanlış hata verir.
+
+<details>
+<summary><b>Ortam değişkenleri</b></summary>
 
 | Değişken | Zorunlu | Nereden |
 |---|---|---|
-| `DATABASE_URL` | evet | [neon.tech](https://neon.tech) → yeni proje → connection string |
+| `DATABASE_URL` | evet | [neon.tech](https://neon.tech) → connection string |
 | `AUTH_SECRET` | evet | `openssl rand -base64 32` |
-| `ALPACA_API_KEY_ID` + `ALPACA_API_SECRET_KEY` | fiyat için | [alpaca.markets](https://alpaca.markets) → API Keys (paper yeterli) |
-| `FINNHUB_API_KEY` | profil/haber için | [finnhub.io](https://finnhub.io) → Get free API key |
-| `FRED_API_KEY` | makro için | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) — 32 karakter, küçük harf |
-| `CRON_SECRET` | üretimde | `openssl rand -hex 32` — cron ucunu `Bearer` ile çağıran taraf (bkz. § Deploy) gönderir |
-| `BRIEF_SECRET` | içerik için | `openssl rand -hex 32` — bülten, mercek ve analiz uçlarının kapısı |
-| `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri ve sitemap için) — canlıda `https://aciliszili.com` |
-| `AUTH_TRUST_HOST` | üretimde | ters vekilin (Caddy) arkasında `true`; yoksa giriş yönlendirmesi şaşar |
-| `SITE_INDEXABLE` | ikinci kopyada | canlı kopyada `true`, ikinci bir kopya açılırsa orada `false` — aynı içeriğin iki adresi kopya içerik sayılır |
-| `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisi (DeepL yoksa) |
+| `ALPACA_API_KEY_ID` + `ALPACA_API_SECRET_KEY` | fiyat için | [alpaca.markets](https://alpaca.markets) (paper yeterli) |
+| `FINNHUB_API_KEY` | profil/haber için | [finnhub.io](https://finnhub.io) |
+| `FRED_API_KEY` | makro için | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) |
+| `CRON_SECRET` | üretimde | `openssl rand -hex 32`; cron ucunun `Bearer` anahtarı |
+| `BRIEF_SECRET` | içerik için | `openssl rand -hex 32`; rutin uçlarının kapısı |
+| `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri, sitemap) |
+| `AUTH_TRUST_HOST` | üretimde | ters vekil arkasında `true` |
+| `SITE_INDEXABLE` | ikinci kopyada | canlıda `true`, ikinci kopyada `false` |
 | `DEEPL_API_KEY` | opsiyonel | haber başlığı çevirisi (önce bu denenir) |
-| `ANALYTICS_SALT` | opsiyonel | ziyaretçi özetinin tuzu; verilmezse `AUTH_SECRET` kullanılır |
+| `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisinde yedek |
+| `ANALYTICS_SALT` | opsiyonel | ziyaretçi özetinin tuzu; yoksa `AUTH_SECRET` |
 
-Anahtarlar olmadan da uygulama açılır; ilgili kartlar "veri alınamadı" gösterir ve
-sayfa çökmez. Doğrulamak için: `/api/debug/providers`.
+Anahtarlar olmadan da uygulama açılır; ilgili kartlar "veri alınamadı" der ve
+sayfa çökmez. Kontrol için `/api/debug/providers`. Korumalı uçlar yerelde
+secret boşsa açıktır; **üretimde secret yoksa uç 503 döner.**
 
-Korumalı uçlar yerelde secret boşsa açıktır; **üretimde secret yoksa uç 503
-döner**, açık kalmaz.
+</details>
 
----
-
-## Komutlar
+<details>
+<summary><b>Komutlar</b></summary>
 
 ```bash
-npm run dev          # geliştirme (3000 doluysa 3001'e düşer)
-npm run build        # üretim derlemesi
-npm run typecheck    # tsc --noEmit
-npm run lint         # eslint
-npm run db:generate  # şema değişikliği → YENİ migration dosyası
-npm run db:migrate   # migration'ları uygula
-npm run db:seed      # idempotent tohum (kullanıcı verisine dokunmaz)
-npm run db:studio    # Drizzle Studio
+npm run dev            # geliştirme (3000 doluysa 3001)
+npm run build          # üretim derlemesi
+npm run typecheck      # tsc --noEmit
+npm run lint           # eslint
+npx tsx --test tests/*.test.ts   # birim testleri
+npm run db:generate    # şema değişti → YENİ migration dosyası
+npm run db:migrate     # migration'ları uygula
+npm run db:seed        # idempotent tohum (kullanıcı verisine dokunmaz)
+npm run db:studio      # Drizzle Studio
+npm run build:favicon  # .ico ve PWA ikonlarını marka işaretinden üret
 ```
 
-**Temiz bir kopyada önce `npm run build` çalıştır.** `PageProps` ve `RouteContext`
-tipleri Next tarafından `.next/types` altına üretiliyor ve ikisi de gitignore'da;
-build almadan `typecheck` çalıştırırsan kodda sorun olmadığı hâlde onlarca hata
-alırsın.
+</details>
 
----
+### Doğrulama
 
-## Doğrulama
-
-Otomatik test paketi yok; doğrulama üç ayaklı:
-
-1. `npm run typecheck` + `npm run lint` + `npm run build` — üçü de temiz olmadan
-   commit yok.
-2. **Yatay taşma ve konsol taraması** — Chrome'u başsız koşturup rota × genişlik
-   matrisini (360 / 390 / 768 / 1280 / 1600) tarayan geçici betikler. Bunlar
-   `.tmp-*.mjs` deseniyle yazılır ve commit'lenmez.
-3. **Ölçüm** — düzen değişiklikleri gerçek piksellerle doğrulanır; sonuç kod
-   yorumuna yazılır ki bir daha ölçülmesin.
+1. **`typecheck` + `lint` + `build`**: üçü de temiz olmadan commit yok.
+2. **Birim testleri**: `tests/` altında 19 dosya. Kotasyon tazeliği ve paket
+   yaşı, önbellek süreleri, rutin ve teknik yayın saatleri, karşılaştırma
+   ölçeği, gün akışı, mali çeyrek hesabı, rota sahneleri gibi saf mantığı
+   sınıyor.
+3. **Ölçüm**: başsız Chrome rota × genişlik matrisini (360 / 390 / 768 / 1280 /
+   1440) tarıyor; yatay taşma, konsol hatası ve düzen gerçek piksellerle
+   ölçülüyor ve sonuç kod yorumuna yazılıyor. Bu betikler `.tmp-*.mjs`
+   deseniyle yazılır ve commit'lenmez.
 
 ---
 
 ## Deploy
 
-Site **kendi sunucusunda** yayında: [aciliszili.com](https://aciliszili.com).
-Vercel bir dönem asıl kopyaydı, sonra ikinci kopya oldu, şimdi hiç yayında
-değil (`acilis-zili.vercel.app` duraklatılmış bir dağıtım). Vercel'e özgü
-kod hâlâ duruyor ama hiçbiri koşulsuz değil: Analytics yalnızca `VERCEL=1`
-iken basılıyor, `vercel.json` bilerek boş ve adres/indeks/vekil ayarları üç
-ortam değişkenine çevrildi (`NEXT_PUBLIC_SITE_URL`, `SITE_INDEXABLE`,
-`AUTH_TRUST_HOST`).
+Site kendi sunucusunda yayında: [aciliszili.com](https://aciliszili.com).
+Tam yol `docs/deploy-vps.md`'de, sunucu dosyaları `deploy/` altında.
 
-### Kendi sunucusu — canlı yol
+1. `main`'e her push **GitHub Actions**'ı tetikler
+   (`.github/workflows/deploy.yml`): runner'da typecheck + lint + build.
+2. Geçerse sunucuda `deploy/update.sh` çalışır: yeni sürüm
+   `releases/<zaman>-<sha>` altına derlenir, `current` bağı ancak sağlık
+   kontrolü geçince çevrilir. Derleme sürerken canlı sürüm ayakta kalır,
+   sağlık geçmezse bağ öncekine döner.
+3. Günlük cron (`/api/cron/daily`, hafta içi 10:30 UTC) sunucunun crontab'ından
+   tetiklenir. Yüz saniyelik bir bütçesi var; dolarsa kalan adımları atlar ve
+   neyi atladığını raporlar.
 
-Tam yol `docs/deploy-vps.md`'de; sunucudaki dosyalar `deploy/` altında
-(systemd birimi, Caddy yapılandırması, cron ve güncelleme betikleri).
-Kısaca: Oracle Cloud Always Free üstünde `next start` + systemd, TLS için
-Caddy, cron için crontab.
+Migration'lar deploy'da **uygulanmaz**; şema değişikliği ayrıca
+`npm run db:migrate` ile üretim veritabanına uygulanır.
 
-`main`'e her push **GitHub Actions**'ı tetikliyor
-(`.github/workflows/deploy.yml`): önce runner'da typecheck + lint + build,
-o geçerse sunucuda `deploy/update.sh`. Betik yeni sürümü
-`releases/<zaman>-<sha>` altına klonlayıp derliyor ve `current` bağını ancak
-sağlık kontrolü geçtikten sonra çeviriyor — derleme sürerken canlı sürüm
-ayakta kalıyor, sağlık geçmezse bağ öncekine dönüyor.
-
-İlk kurulumdan sonra bir kez: `npm run db:migrate && npm run db:seed`
-(lokalden, üretim `DATABASE_URL` ile) ve claude.ai görevleri
-(`docs/claude-rutinler.md`) — yoksa bülten, mercek ve teknik analizler boş
-kalır.
-
-### İkinci bir kopya açılırsa
-
-İki kopya birden canlıysa iki kural: **cron tek yerde çalışır** (iki koşum
-Finnhub'ın dakikalık kotasını aşar) ve **ikincil kopya indekslenmez**
-(`SITE_INDEXABLE=false`) — aynı içerik iki adreste durursa arama motoru bunu
-kopya içerik sayar.
-
-Ana sayfanın gün akışı `GET /api/day-flow?locale=tr|en` ile görünürken 30 saniyede bir
-kontrol edilir. Uç kullanıcıya özel, `no-store` bir yanıt verir; bugünün Finnhub
-sonuçları ve uygun FRED yayınları ortak 60 saniyelik sağlayıcı önbelleğinden
-okunur. Sonuç veya analiz oluşmadan "Açıklandı" etiketi/analiz bağlantısı
-üretilmez. Bu okuma yolu veritabanına yazmaz; yayımlama ve cron iş akışı korunur.
-
-Günlük cron (`/api/cron/daily`, hafta içi 10:30 UTC) **kendi sunucumuzdaki
-crontab'dan** tetikleniyor (`deploy/cron-daily.sh`) — `vercel.json` bilerek
-boş, iki yerde birden koşarsa Finnhub'ın dakikalık kotası taşar. Uç bilanço
-takvimi, haber, FRED serileri, gerçekleşen değerler, profil tazeleme ve
-budama işlerini sırayla yapar.
-Yüz saniyelik bir bütçesi vardır: bütçe dolarsa kalan adımları atlar ve neyi
-atladığını raporlar — yarım kalmış bir tur sessizce başarılı görünmez.
+İkinci bir kopya açılırsa iki kural: **cron tek yerde çalışır** (Finnhub'ın
+dakikalık kotası) ve **ikinci kopya indekslenmez** (`SITE_INDEXABLE=false`).
 
 ---
 
-## Dizin yapısı
+## Dizin Yapısı
 
 ```
 app/
-  (app)/             # sayfalar — Bugün, piyasalar, şirketler, hisse, karşılaştır,
+  (app)/             # sayfalar: bugün, piyasalar, şirketler, hisse, karşılaştır,
                      #   takvim, bilançolar, teknik, mercek, rehber, bülten, haberler, hesap
-  admin/             # yönetim — kabuğun dışında, yetkisizde 404
+  admin/             # yönetim: kabuğun dışında, yetkisizde 404
+  actions/           # sunucu eylemleri: auth, takip listesi, içerik, profil ikonu
   api/               # chart, day-flow, karsilastir, search, takvim, olcum,
-                     #   brief, mercek, analiz, teknik (+ context uçları), cron, auth, debug
+                     #   brief, mercek, analiz, teknik (+ context), cron, auth, debug
 components/
-  article/           # ArticleBody — ::: blok ailesi burada çizilir
-  layout/            # AppShell, masthead, alt sekme çubuğu, piyasa şeridi, arama paleti
-  today/             # gün şeridi, bülten anahtarı, geri sayım, kolon doldurucu
-  markets/           # karşılaştırma (canlı aralık katmanı), korku endeksi
-  stock/ earnings/ stories/ technical/ watchlist/ ui/
+  article/           # ArticleBody: ::: blok ailesi burada çizilir
+  brand/             # BellMark (marka işareti) · AvatarIcon (profil ikonları)
+  ink/               # InkCanvas, açılış, yükleme ve sahne yerleşimleri
+  motion/            # görünüme girme sistemi, logo uçuşu, sayfa geçişleri
+  layout/            # AppShell, başlık, alt sekme çubuğu, piyasa şeridi, arama
+  today/             # geri sayım, gün akışı, bülten, kolon doldurucu
+  markets/           # karşılaştırma, ölçek çubukları, piyasa nabzı
+  stock/ earnings/ stories/ technical/ watchlist/ auth/ ui/
 lib/
+  ink/               # mürekkep motoru (engine) + sahneler (scenes) + rota haritası
   market-hours.ts    # ET↔UTC, seans durumu, önbellek süreleri
   session-clock.ts   # dile göre birincil saat dilimi (TR/NY)
+  content-write.ts   # içeriğin tek doğrulama ve yazma yolu
   compare.ts         # karşılaştırma ekranının ortak sözleşmesi
-  technical.ts       # teknik analiz: sembol listesi, yayın saatleri, göstergeler (saf)
-  technical-data.ts  # teknik analiz: fotoğraf, tek yazma yolu, okuma
+  technical*.ts      # teknik analiz: semboller, göstergeler, yazma yolu
+  avatars.ts         # profil ikonu anahtarları ve tonları
   providers/         # alpaca · finnhub · fred · tcmb
   i18n/              # tr + en sözlükleri (en, tr tipinden türer)
-content/guide/       # rehber yazıları — meta + tr + en, eksik çeviri derlemeyi kırar
+content/guide/       # rehber yazıları: meta + tr + en
 db/seed/             # tatiller, ekonomik takvim, semboller, endeks bileşimleri
-docs/                # rutin prompt'ları, tasarım notları
-drizzle/             # migration'lar — elle düzenlenmez, yenisi eklenir
+docs/                # rutin prompt'ları, deploy, tasarım notları
+drizzle/             # migration'lar: elle düzenlenmez, yenisi eklenir
+tests/               # birim testleri (tsx --test)
 ```
 
 ---
 
-## Bilinen sınırlar
+## Bilinen Sınırlar
 
-- **Fiyatlar 15 dakika gecikmeli.** Alpaca'nın ücretsiz katmanı konsolide tape'i
-  (SIP) gecikmeli veriyor; ekranda damgalanır.
-- **Endeksler ETF üzerinden izlenir** (SPY/QQQ/DIA/IWM) ve arayüzde belirtilir.
-- **Dünya piyasaları MSCI ülke fonları üzerinden.** Yerel endeksler ücretsiz
-  sağlayıcılarda yok; yön aynı, yüzde kur ve seans farkıyla ayrışabilir.
-- **Emtia yok.** Brent bir süre gösterildi ve kaldırıldı — ücretsiz
-  sağlayıcılarımızın hiçbirinde canlı emtia fiyatı yok.
-- **Bilanço saatleri yaklaşıktır.** Sağlayıcı yalnızca pencereyi veriyor (açılış
-  öncesi / kapanış sonrası), dakika vermiyor.
-- **Ekonomik takvim tohumlanır.** Finnhub'ın ücretsiz katmanında bu uç yok;
-  tarihler resmî kaynaklardan tohumlanır ve FRED'in yayın takvimiyle ileriye
-  uzatılır.
-- **Otomatik test yok.** Doğrulama yukarıdaki üç ayakla yapılıyor.
+- **Fiyatlar 15 dakika gecikmeli.** Alpaca'nın ücretsiz katmanı konsolide
+  tape'i (SIP) gecikmeli veriyor; ekranda damgalanır.
+- **Endeksler ETF üzerinden izlenir** (SPY/QQQ/DIA/IWM) ve arayüzde yazılır.
+- **Dünya piyasaları MSCI ülke fonları üzerinden.** Yön aynı, yüzde kur ve
+  seans farkıyla ayrışabilir.
+- **Emtia yok.** Ücretsiz sağlayıcıların hiçbirinde canlı emtia fiyatı yok.
+- **Bilanço saatleri yaklaşık.** Sağlayıcı yalnızca pencereyi veriyor.
+- **Ekonomik takvim tohumlanır** ve FRED'in yayın takvimiyle ileriye uzatılır.
 
 ---
 
-## Lisans ve sorumluluk
+<div align="center">
 
-Kişisel bir proje; **yatırım tavsiyesi değildir.** Veriler üçüncü taraf
-sağlayıcılardan gelir, gecikmeli ya da hatalı olabilir. Ekrandaki hiçbir sayı bir
-alım satım kararının tek dayanağı olacak şekilde tasarlanmadı.
+Kişisel bir proje. **Yatırım tavsiyesi değildir.** Veriler üçüncü taraf
+sağlayıcılardan gelir, gecikmeli ya da hatalı olabilir; ekrandaki hiçbir sayı
+bir alım satım kararının tek dayanağı olacak şekilde tasarlanmadı.
+
+[aciliszili.com](https://aciliszili.com) · [Ahmet Akyapı](https://ahmetakyapi.com)
+
+</div>
