@@ -22,15 +22,21 @@ import { cn } from "@/lib/utils";
  *   gelince kaldığı saniyeden devam ediyor.
  * - Piksel yoğunluğu 2'de kesiliyor: 3x ekranda kazanç görünmüyor, maliyet
  *   dokuz kat piksel.
+ * - `rate` sahnenin SAATİNİ hızlandırır, karelerini atlamaz: motor saf
+ *   olduğu için 1,4 hızda da aynı çizim, yalnızca daha kısa sürede çıkar.
+ *   Açılış bunu bir SON TARİHE uymak için kullanıyor (`InkSplash`).
  */
 export function InkCanvas({
   scene,
   seed = 7,
+  rate = 1,
   className,
   onDone,
 }: {
   scene: InkSceneName;
   seed?: number;
+  /** Sahne saatinin çarpanı: 1 yazıldığı hız, 1,4 aynı sahne %40 kısa. */
+  rate?: number;
   className?: string;
   /** Sahne son karesine vardığında. */
   onDone?: () => void;
@@ -47,6 +53,7 @@ export function InkCanvas({
     if (!canvas || !ctx) return;
     const def = INK_SCENES[scene];
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const speed = rate > 0 ? rate : 1;
 
     let pal: InkPalette = readPalette();
     let raf = 0;
@@ -77,7 +84,7 @@ export function InkCanvas({
 
     const tick = (now: number) => {
       if (start < 0) start = now;
-      const t = (now - start) / 1000;
+      const t = ((now - start) / 1000) * speed;
       draw(t);
       if (t >= def.end) {
         raf = 0;
@@ -91,7 +98,8 @@ export function InkCanvas({
     const play = () => {
       if (reduce || raf || finished || !visible) return;
       // Kaldığı saniyeden devam: başlangıcı geçen süre kadar geri al.
-      start = start < 0 ? -1 : performance.now() - lastT * 1000;
+      // Saat hızlandırılmışsa geri alınan gerçek süre de o kadar kısa.
+      start = start < 0 ? -1 : performance.now() - (lastT / speed) * 1000;
       raf = requestAnimationFrame(tick);
     };
     const pause = () => {
@@ -140,7 +148,7 @@ export function InkCanvas({
       mo.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [scene, seed]);
+  }, [scene, seed, rate]);
 
   return (
     <canvas

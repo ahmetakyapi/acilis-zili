@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { InkCanvas } from "./InkCanvas";
 
 /**
@@ -16,25 +16,49 @@ import { InkCanvas } from "./InkCanvas";
  * - Hareketi azaltan okuyucu ve tarayıcı botları hiç görmüyor: arama motoru
  *   sayfanın üstünde bir katman değil, sayfanın kendisini görmeli.
  * - Tıklama, tuş, tekerlek ya da dokunuşla hemen geçiliyor.
- * - CSS'te 3,8 saniyelik bir emniyet var: hidrasyon hiç gelmese de katman
- *   kendiliğinden kalkıyor.
- * - GEÇ GELEN HİDRASYON açılışı İPTAL eder (`LATE_MS`). Katman hidrasyona
- *   kadar düz zemin; yavaş bir telefonda o boş ekrana üç saniyelik bir sahne
- *   eklemek, okuyucuyu sayfadan beş saniye uzak tutmaktı. Üstelik emniyet
- *   katmanı gizledikten sonra sahne görünmeden oynuyor, bitişteki kapanış
- *   animasyonu (`ink-splash-out`, yalnızca `to` karesi var) katmanı TAM
- *   OPAK geri getirip öyle söndürüyordu — ölçüldü, 8,6. saniyede sayfanın
- *   üstünde bir parlama.
+ * - CSS'te bir emniyet var: hidrasyon hiç gelmezse katman kendiliğinden
+ *   kalkıyor (`--ink-safety`, globals.css).
+ *
+ * AÇILIŞ EŞİĞE DEĞİL SON TARİHE BAĞLI (26 Eylül). Önceki kural şuydu:
+ * hidrasyon 900 ms'yi geçtiyse sahne HİÇ oynamaz. Gerekçesi doğruydu —
+ * yavaş bir telefonda boş ekrana üç saniye eklemek okuyucuyu sayfadan
+ * uzak tutuyor — ama eşik yanlış yere düşmüştü: üretimde hidrasyon
+ * 0,7-1,1 saniye arasında ölçüldü (aciliszili.com, masaüstü, 6 koşum),
+ * yani eşik dağılımın TAM ORTASINDAYDI ve sahne yazı tura oynuyordu.
+ * Aynı yüklemeyi iki kez ölçtüm: birinde 939. ms'de katman açılıp 1020'de
+ * iptal edildi (tuval hiç boyanmadı), ötekinde sahne baştan sona oynadı.
+ *
+ * Şimdi soru "geç mi kaldı" değil, "kalan süreye sığar mı": sahnenin
+ * SAATİ hızlandırılıp açılış her hâlde `DEADLINE_MS`te bitiriliyor. Geç
+ * hidrasyonda sahne kısalıyor, çok geçse hiç oynamıyor. Okuyucu sayfaya
+ * her koşulda aynı anda kavuşuyor; eskiden bitiş hidrasyona bağlıydı ve
+ * 3,8 saniyeyi buluyordu.
+ *
+ * Emniyet katmanı sahneyi ORTASINDAN kesmiyor: oynamaya karar verildiği
+ * an `ink-splash-live` sınıfı emniyeti kapatıyor ve kapanışı React
+ * yürütüyor. Kesilirse kapanış animasyonu (`ink-splash-out`, yalnızca
+ * `to` karesi var) katmanı TAM OPAK geri getirip söndürüyordu — ölçüldü,
+ * 8,6. saniyede sayfanın üstünde bir parlama.
  */
 export const INK_SPLASH_SCRIPT = `try{var d=document.documentElement,s=sessionStorage;if(!s.getItem("az-ink")&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&!/bot|crawl|spider|slurp|lighthouse|headless|preview/i.test(navigator.userAgent)){s.setItem("az-ink","1");d.classList.add("ink-splash")}}catch(e){}`;
 
 /* Sıra önemli: önce işaret, sonra sınıf. `setItem` kota yüzünden fırlatırsa
    sınıf hiç eklenmiyor; tersinde açılış her yüklemede gösterilirdi. */
 
-/** Hidrasyon bu andan sonra gelirse (gezinme başlangıcından ms) sahne
- *  oynamaz, katman hemen kalkar. Emniyet 3800 ms (globals.css) ile birlikte
- *  ayarlı: bu eşiğin altındaki her hidrasyonda sahne emniyetten önce biter. */
-const LATE_MS = 900;
+/** Açılış, gezinmenin başlangıcından bu ana kadar BİTER. */
+const DEADLINE_MS = 3400;
+/** Sahnenin yazıldığı süre — `lib/ink/scenes.ts` → `intro.end` (2,3 sn). */
+const SCENE_MS = 2300;
+/** Sahneden sonra geçen süre: imza okunsun diye 280, kapanış 420. */
+const TAIL_MS = 700;
+/** Sahne saati bundan hızlı oynatılmaz; üstünde çizim okunmuyor, mürekkep
+ *  akmıyor gibi duruyor. 1,9 hızda sahne 1,2 saniye sürüyor, yani hidrasyon
+ *  1,5 saniyeye kadar gecikse bile açılış oynuyor (ölçülen bant 0,7-1,1). */
+const MAX_RATE = 1.9;
+/** İmza sahnenin sonuna yakın beliriyor (2,3 saniyelik sahnede 1,75). */
+const NAME_AT = 1750;
+/** Sahne hiç bitmezse (tuval hatası) katmanı kaldıran son çare payı. */
+const FAILSAFE_MS = 600;
 
 const noop = () => () => {};
 const readActive = () => document.documentElement.classList.contains("ink-splash");
@@ -61,13 +85,33 @@ export function InkSplash({ name }: { name: string }) {
     }, 420);
   }, []);
 
-  // Geç hidrasyon: sahne yok, katman hemen kalkar. Ölçü İLK çizimde bir
-  // kez alınıyor; sonraki bir yeniden çizim oynayan sahneyi kesmemeli.
-  const [hydratedLate] = useState(() => performance.now() > LATE_MS);
-  const late = active && hydratedLate;
+  /* Sahnenin hızı İLK çizimde bir kez hesaplanıyor; sonraki bir yeniden
+     çizim oynayan sahneyi hızlandırmamalı. `performance.now()` gezinmenin
+     başlangıcından beri geçen süre, yani hidrasyonun gecikmesi. */
+  const [rate] = useState(() => {
+    const budget = DEADLINE_MS - performance.now() - TAIL_MS;
+    return budget > 0 ? Math.max(1, SCENE_MS / budget) : Number.POSITIVE_INFINITY;
+  });
+  const late = active && rate > MAX_RATE;
   useEffect(() => {
     if (late) document.documentElement.classList.remove("ink-splash");
   }, [late]);
+
+  /* OYNAYACAKSA EMNİYET KAPANIR. Katmanı artık React kaldırıyor; CSS'teki
+     emniyet yalnızca hidrasyonun hiç gelmediği durum için duruyor. */
+  const playing = active && !late && !gone;
+  useEffect(() => {
+    if (!playing) return;
+    const root = document.documentElement;
+    root.classList.add("ink-splash-live");
+    /* Sahne bir şekilde bitmezse (tuval hatası, sekme arka planda) katman
+       yine de kalkar: son tarihe kadar bekler, sonra kapatır. */
+    const timer = window.setTimeout(close, SCENE_MS / rate + TAIL_MS + FAILSAFE_MS);
+    return () => {
+      root.classList.remove("ink-splash-live");
+      window.clearTimeout(timer);
+    };
+  }, [playing, rate, close]);
 
   // Tuş katmana değil pencereye gelir: katman odak almıyor, almamalı da.
   // Açılış kalkınca dinleyici de gidiyor — yoksa sayfadaki ilk tuş
@@ -88,10 +132,21 @@ export function InkSplash({ name }: { name: string }) {
       onPointerDown={close}
       onWheel={close}
       onTouchMove={close}
+      /* İmza sahneyle birlikte hızlanır: sabit gecikme, hızlandırılmış bir
+         sahnede zilin çalmasından ÖNCE beliriyordu.
+
+         DEĞER YALNIZCA OYNARKEN, YANİ YALNIZCA İSTEMCİDE. `performance.now()`
+         sunucuda da çalışıyor ve orada "gezinmeden beri geçen süre" değil
+         "süreç başlayalı geçen süre"; sunucu HTML'ine bu yüzden hep
+         `0ms` gömülüyordu (imza sahnenin başında beliriyordu, ölçüldü).
+         Hidrasyon öznitelik farkını düzeltmiyor, sonraki çizim de aynı
+         prop'u gördüğü için DOM'a hiç yazmıyordu. Sunucuda stil yok;
+         değeri ilk kez, oynamaya karar verildiğinde React yazıyor. */
+      style={playing ? ({ "--ink-name-delay": `${Math.round(NAME_AT / rate)}ms` } as CSSProperties) : undefined}
     >
-      {active && !gone && !late && (
+      {playing && (
         <>
-          <InkCanvas scene="intro" seed={11} className="ink-splash-canvas" onDone={finish} />
+          <InkCanvas scene="intro" seed={11} rate={rate} className="ink-splash-canvas" onDone={finish} />
           <span className="ink-splash-name">{name}</span>
         </>
       )}

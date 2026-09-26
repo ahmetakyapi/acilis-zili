@@ -2091,6 +2091,29 @@ html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
 
 
 /* --------------------------------------------------------------------------
+   SAYFA GEÇİŞİ — GELEN İÇERİĞİN GİRİŞİ (26 Eylül)
+
+   Gerekçe ve anahtar kararı `components/layout/RouteFrame.tsx` yorumunda.
+   Süre kısa tutuldu (240 ms): geçiş bir gösteri değil, sayfanın yerine
+   oturduğunu söyleyen bir işaret. İçerik önce tam görünüp sonra sönmüyor —
+   23 Eylül'ün "önce tam, sonra sönük, sonra yeniden tam" kaydı burada da
+   geçerli: animasyon YALNIZCA yeni sayfanın kendi öğelerinde başlıyor,
+   eski sayfa hiç karartılmıyor.
+
+   GİRİŞ SIFIRDAN DEĞİL. İlk hâli `opacity: 0` idi ve kare kare ölçüldü
+   (1280×760, /piyasalar → /teknik): eski içerik 519. ms'de kalkıyor, yeni
+   içerik 543'e kadar TAM SAYDAM duruyordu — arada iki karelik boş bir
+   ekran. Şimdi giriş 0,4'ten başlıyor: takas karesinde içerik zaten
+   okunur, kalan 240 ms yalnızca tonun yerine oturması.
+
+   Bitişte geride dolgu kalmıyor: `.panel` girişleri kendi kaydırma zaman
+   çizelgelerinde (`animation-timeline: view()`) devam ediyor.
+   -------------------------------------------------------------------------- */
+.route-frame { animation: route-in 240ms var(--ease-brand) backwards; }
+@keyframes route-in { from { opacity: 0.4; } }
+@media (prefers-reduced-motion: reduce) { .route-frame { animation: none; } }
+
+/* --------------------------------------------------------------------------
    SAYFA BAŞLIĞININ İMZASI (24 Eylül)
 
    Her ekranın başlığı aynı kalıptan geliyor (`PageHeader`) ve sayfa
@@ -2194,10 +2217,15 @@ html.ink-splash .ink-splash-layer {
   position: fixed; inset: 0; z-index: 100;
   display: grid; place-content: center; justify-items: center; gap: 2px;
   background: var(--page-bg);
-  /* Emniyet: hidrasyon hiç gelmese de katman 3,8 saniyede kalkıyor (en geç
-     hidrasyon 0,9 s + sahne 2,3 s + imza 0,28 s + kapanış 0,42 s = 3,9 s). */
-  animation: ink-splash-safety 0.4s ease 3.8s both;
+  /* Emniyet YALNIZCA hidrasyon hiç gelmezse: 2,6 saniyede katman kalkıyor.
+     Hidrasyon geldiyse kararı React veriyor — oynayacaksa `ink-splash-live`
+     emniyeti kapatıyor (sahneyi ortasından kesmesin), oynamayacaksa sınıfı
+     zaten kaldırıyor. Eski 3,8 saniyelik emniyet JavaScript'siz okuyucuyu
+     boş bir zeminde bir saniye fazla bekletiyordu. */
+  animation: ink-splash-safety 0.4s ease var(--ink-safety, 2.6s) both;
 }
+/* Sahne oynuyor: kapanışın saati React'te (InkSplash). */
+html.ink-splash-live .ink-splash-layer { animation: none; }
 /* Sayfa kilitlenmiyor, bilinçli: kilit `html` sınıfına bağlı olurdu ve
    hidrasyon hiç gelmezse sınıf da kalkmazdı. Emniyet katmanı 4 saniyede
    gizliyor ama kaydırma kilidi sayfada ömür boyu kalırdı. Katman zaten tam
@@ -2210,7 +2238,9 @@ html.ink-splash-out .ink-splash-layer {
   margin-top: -14px;
   font-size: 15px; font-weight: 650; letter-spacing: 0.01em;
   color: var(--text-strong);
-  animation: ink-splash-name 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) 1.75s both;
+  /* Gecikme sahnenin hızıyla ölçekleniyor: değeri katmana React yazıyor
+     (`--ink-name-delay`), yoksa sahnenin kendi hızındaki an. */
+  animation: ink-splash-name 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) var(--ink-name-delay, 1.75s) both;
 }
 @keyframes ink-splash-name { from { opacity: 0; transform: translateY(6px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
 @keyframes ink-splash-out { to { opacity: 0; transform: scale(1.015); visibility: hidden; } }
