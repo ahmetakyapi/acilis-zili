@@ -23,6 +23,8 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { CSSProperties } from "react";
 import { auth } from "@/auth";
+import { AvatarTile } from "@/components/brand/AvatarIcon";
+import { getUserAvatar } from "@/lib/avatar-data";
 import { signOutAction } from "@/app/actions/auth";
 import { PageHeader, Panel, ButtonLink } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
@@ -70,6 +72,7 @@ export default async function MenuPage() {
   const { t, locale } = await getI18n();
   const session = await auth();
   const username = session?.user?.name ?? null;
+  const avatar = session?.user?.id ? await getUserAvatar(session.user.id) : null;
 
   const groups: { title: string; entries: Entry[] }[] = [
     {
@@ -118,6 +121,9 @@ export default async function MenuPage() {
       {/* Oturum kartı en üstte: mobilde giriş ve çıkış başka hiçbir yerde tek
           dokunuşta değil. */}
       <Panel className="flex items-center gap-3.5 p-4 sm:p-5">
+        {avatar ? (
+          <AvatarTile icon={avatar} className="size-11 rounded-lg" />
+        ) : (
         <span
           aria-hidden
           className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-wash text-base font-bold text-primary-ink"
@@ -130,6 +136,7 @@ export default async function MenuPage() {
             <SignIn size={20} weight="duotone" />
           )}
         </span>
+        )}
         <span className="min-w-0 flex-1">
           <span className="block truncate text-read font-bold text-strong">
             {username ?? t.menu.guestTitle}

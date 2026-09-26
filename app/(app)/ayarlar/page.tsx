@@ -11,6 +11,8 @@ import {
 import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
 import { DeleteAccount } from "@/components/auth/DeleteAccount";
+import { AvatarPicker } from "@/components/auth/AvatarPicker";
+import { getUserAvatar } from "@/lib/avatar-data";
 import { PreferenceSettings } from "@/components/layout/preference-controls";
 import { Panel, PanelHeader, PageHeader } from "@/components/ui/primitives";
 import { getI18n, getTheme } from "@/lib/i18n";
@@ -35,7 +37,11 @@ export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/giris?devam=/ayarlar");
 
-  const [{ locale, t }, theme] = await Promise.all([getI18n(), getTheme()]);
+  const [{ locale, t }, theme, avatar] = await Promise.all([
+    getI18n(),
+    getTheme(),
+    session.user.id ? getUserAvatar(session.user.id) : Promise.resolve(null),
+  ]);
   const username = session.user.name ?? "";
 
   return (
@@ -67,6 +73,29 @@ export default async function SettingsPage() {
             </button>
           </form>
 
+        </div>
+      </Panel>
+
+      {/* PROFİL İKONU (26 Eylül). Hesap başlıkta baş harflerle duruyordu;
+          okuyucu artık sitenin kendi çizdiği on iki ikondan birini seçiyor
+          (components/brand/AvatarIcon.tsx). Seçim hesabın kendisinde
+          saklanıyor, yani her cihazda aynı. */}
+      <Panel>
+        <PanelHeader title={t.settings.avatarTitle} />
+        <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+          <p className="text-small leading-relaxed text-body">{t.settings.avatarHint}</p>
+          <AvatarPicker
+            initial={avatar}
+            /* Baş harfler KODDA büyütülüyor: CSS `uppercase` Türkçe `i`yi
+               `I` yapıyor, `İ` değil. */
+            initials={username.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
+            labels={{
+              initials: t.settings.avatarInitials,
+              saved: t.settings.avatarSaved,
+              failed: t.settings.avatarFailed,
+              names: t.settings.avatarNames,
+            }}
+          />
         </div>
       </Panel>
 

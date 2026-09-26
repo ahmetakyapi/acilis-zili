@@ -21,6 +21,8 @@ import {
   useThemePreference,
 } from "@/components/layout/preference-controls";
 import { ButtonLink } from "@/components/ui/primitives";
+import { AvatarTile } from "@/components/brand/AvatarIcon";
+import type { AvatarKey } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 
 /* --------------------------------------------------------------------------
@@ -82,6 +84,7 @@ export type AccountMenuLabels = {
 export function AccountMenu({
   signedIn,
   username,
+  avatar = null,
   isAdmin = false,
   initialTheme,
   initialLocale,
@@ -90,6 +93,8 @@ export function AccountMenu({
 }: {
   signedIn: boolean;
   username: string | null;
+  /** Seçilen profil ikonu; yoksa baş harfler (Ayarlar → Profil İkonu). */
+  avatar?: AvatarKey | null;
   /** Yönetim satırı yalnızca yöneticide çizilir — panelin kapısı ayrıca
       veritabanına soruyor, bu yalnızca görünürlük kararı. */
   isAdmin?: boolean;
@@ -182,7 +187,11 @@ export function AccountMenu({
           open && "ring-2 ring-primary/35",
         )}
       >
-        {signedIn ? (
+        {signedIn && avatar ? (
+          /* İkon düğmenin tamamını dolduruyor; halka `.masthead-account`
+             üzerinde kalıyor. */
+          <AvatarTile icon={avatar} className="size-full rounded-full" />
+        ) : signedIn ? (
           <span aria-hidden>{initials || "?"}</span>
         ) : (
           <UserCircle weight="duotone" size={21} aria-hidden />
@@ -230,6 +239,9 @@ export function AccountMenu({
                 aria-hidden
                 className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary-wash to-transparent"
               />
+              {signedIn && avatar ? (
+                <AvatarTile icon={avatar} className="relative size-11 rounded-lg" />
+              ) : (
               <span
                 aria-hidden
                 className={cn(
@@ -244,6 +256,7 @@ export function AccountMenu({
               >
                 {signedIn ? initials || "?" : <UserCircle weight="duotone" size={22} />}
               </span>
+              )}
               <span className="relative min-w-0 flex-1">
                 <span className="block truncate text-read font-bold tracking-[-0.01em] text-strong">
                   {signedIn ? (username ?? labels.account) : labels.guest}

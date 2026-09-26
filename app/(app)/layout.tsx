@@ -9,6 +9,7 @@ import { TickerFeed } from "@/components/layout/TickerFeed";
 import { ViewBeacon } from "@/components/layout/ViewBeacon";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { getI18n, getTheme } from "@/lib/i18n";
+import { getUserAvatar } from "@/lib/avatar-data";
 
 /* --------------------------------------------------------------------------
    BU SEGMENTTE `loading.tsx` YOK — ve bu bilinçli.
@@ -42,6 +43,9 @@ export default async function AppLayout({
     getTheme(),
     auth(),
   ]);
+  /* Profil ikonu — giriş yapılmışsa tek küçük sorgu, istek içinde
+     önbellekli (/menu aynı cevabı okuyor). Düşerse baş harfler. */
+  const avatar = session?.user?.id ? await getUserAvatar(session.user.id) : null;
 
   const labels: ShellLabels = {
     brandName: t.brand.name,
@@ -110,6 +114,7 @@ export default async function AppLayout({
           <AccountMenu
             signedIn={Boolean(session?.user)}
             username={session?.user?.name ?? null}
+            avatar={avatar}
             /* Oturum token'ındaki rol yalnızca BAĞLANTIYI göstermek için
                yeterli; panelin kendisi yetkiyi veritabanından doğruluyor
                (lib/admin.ts). Burada sorgu yapmak her sayfada bir gidiş-dönüş

@@ -70,6 +70,30 @@ export const users = pgTable(
   ],
 );
 
+/**
+ * Profil ikonu — kullanıcının kendi seçtiği karo (26 Eylül).
+ *
+ * NEDEN `users` TABLOSUNDA BİR SÜTUN DEĞİL. Migration'lar dağıtımda
+ * uygulanmıyor, elle uygulanıyor (deploy.yml `db:migrate` çalıştırmıyor).
+ * `users`a sütun eklenseydi, migration canlıya inmeden push edilen kod
+ * her `select().from(users)` sorgusunda o sütunu isteyecek ve GİRİŞİ
+ * kıracaktı. Ayrı tablo bu bağı koparıyor: onu okuyan tek yer
+ * (`lib/avatar-data.ts`) tablo yokken sessizce baş harflere düşüyor, yani
+ * kod migration'dan önce de güvenle yayında durabiliyor.
+ *
+ * `icon` bir ANAHTAR (`lib/avatars.ts` → AVATAR_KEYS), çizim değil; hesap
+ * silinince satır da gidiyor. KVKK metnindeki üye verisi tablosunda sayılı.
+ */
+export const userAvatars = pgTable("user_avatars", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  icon: text("icon").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const watchlists = pgTable(
   "watchlists",
   {

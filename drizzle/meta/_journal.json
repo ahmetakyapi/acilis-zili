@@ -127,6 +127,13 @@
       "when": 1789130104566,
       "tag": "0017_unusual_the_santerians",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790417579890,
+      "tag": "0018_funny_zarek",
+      "breakpoints": true
     }
   ]
 }

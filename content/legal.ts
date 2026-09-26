@@ -14,7 +14,7 @@
    ========================================================================== */
 
 /** Metnin son güncellendiği tarih — sayfa künyesinde görünür (ET/TR farkı önemsiz). */
-export const LEGAL_UPDATED = "2026-09-18";
+export const LEGAL_UPDATED = "2026-09-26";
 
 const PRIVACY_TR = `Açılış Zili kişisel bir projedir ve ABD borsalarını Türkçe takip etmek için yapılmıştır. Bu sayfa, 6698 sayılı **Kişisel Verilerin Korunması Kanunu** (KVKK) kapsamında hangi verinin neden işlendiğini, nereye gittiğini ve senin hangi haklara sahip olduğunu anlatır.
 
@@ -75,6 +75,7 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 | Şifrenin özeti | Girişi doğrulamak | Sözleşmenin ifası (m. 5/2-c) |
 | Takip listen ve notların | Ürünün asıl işlevi | Sözleşmenin ifası (m. 5/2-c) |
 | Tema ve dil tercihi | Arayüzü hatırlamak | Meşru menfaat (m. 5/2-f) |
+| Seçtiğin profil ikonu | Hesabını arayüzde göstermek | Meşru menfaat (m. 5/2-f) |
 | Son giriş zamanı | Hesabın hâlâ kullanılıp kullanılmadığını görmek | Meşru menfaat (m. 5/2-f) |
 | Oturum çerezi | Girişi açık tutmak | Sözleşmenin ifası (m. 5/2-c) |
 
@@ -264,6 +265,7 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 | Password digest | To verify sign-in | Performance of a contract (Art. 5/2-c) |
 | Your watchlists and notes | The product's core function | Performance of a contract (Art. 5/2-c) |
 | Theme and language preference | To remember the interface | Legitimate interest (Art. 5/2-f) |
+| The profile icon you picked | To show your account in the interface | Legitimate interest (Art. 5/2-f) |
 | Last sign-in time | To see whether the account is still in use | Legitimate interest (Art. 5/2-f) |
 | Session cookie | To keep you signed in | Performance of a contract (Art. 5/2-c) |
 
