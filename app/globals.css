@@ -1186,6 +1186,9 @@ html.theme-switching::view-transition-new(root) {
   height: 72px;
 }
 
+/* Gezinme kartındaki kısa film — sahne kutusunun oranı (240 × 150). */
+.route-loader-canvas { width: 176px; height: 110px; }
+
 .route-loader-label {
   font-size: 12.5px;
   font-weight: 600;

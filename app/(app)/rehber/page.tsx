@@ -441,7 +441,7 @@ function TopicView({
 
       {articles.length === 0 ? (
         <Panel>
-          <EmptyState title={t.guide.empty} />
+          <EmptyState title={t.guide.empty} scene="lens" />
         </Panel>
       ) : (
         <LeveledGrid articles={articles} locale={locale} t={t} />

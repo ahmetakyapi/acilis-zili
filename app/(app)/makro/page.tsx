@@ -111,7 +111,7 @@ export default async function MacroPage() {
 
       {withData.length === 0 ? (
         <Panel>
-          <EmptyState title={t.common.noData} hint={t.common.noDataHint} />
+          <EmptyState title={t.common.noData} hint={t.common.noDataHint} scene="chart" />
         </Panel>
       ) : (
         <div className={styles.grid} data-motion-stagger>

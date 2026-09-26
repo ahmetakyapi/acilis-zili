@@ -103,9 +103,14 @@ okuyucuya son kare tek çağrıyla basılıyor. Karakter markanın zili (gözler
 gülümseme), renkler temadan (`--text-strong` mürekkep, `--brass` kıvılcım;
 mavi YOK). Sahneler DÖNMEZ: görünüme girince bir kez oynar ve oturur.
 Yerleri: oturumun ilk yüklemesindeki açılış (`InkSplash`, botlara ve
-hareketi azaltana hiç açılmaz), sayfa düzeyindeki boş durumlar
+hareketi azaltana hiç açılmaz; hidrasyon geç kalırsa sahne hızlanıp yine
+3,4 saniyede biter), gezinme beklemesinin kartı (hedefe göre sahne,
+harita `lib/ink/route-scenes.ts`), iki 404 (`lost`), hata ekranı
+(`mishap`), giriş/kayıt (`hello`), sayfa düzeyindeki boş durumlar
 (`EmptyState scene=`) ve haberler kapağı. Panel içindeki tek satırlık boş
-durumlara sahne konmaz.
+durumlara sahne konmaz. Yeni sahneyi `.tmp-*` bir önizlemede kare kare
+çizip hem açık hem koyu temada gözle kontrol et — çizim hatası ancak
+karede görünüyor.
 
 ## Ekran düzeni: aynı sıra, her ekranda
 

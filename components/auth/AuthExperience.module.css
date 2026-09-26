@@ -1,5 +1,11 @@
 .layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,460px); gap:48px; align-items:center; padding:24px 0 32px; max-width:1160px; margin-inline:auto; }
 .pitch { position:relative; min-width:0; padding:20px 0; }
+/* Karşılama sahnesi: başlığın üstünde. Sahne kutusu zilin çevresinde boşluk
+   taşıyor (zil 240'lık kutunun 69. biriminden başlıyor, 192 pikselde 55):
+   -18 pikselle zilin mürekkebi başlığın 37 piksel İÇİNDE kalıyordu
+   (ölçüldü, 1280). -55 ile zilin sol kenarı başlıkla aynı hatta. Kutunun
+   solu dışarı taşıyor ama o kısım saydam ve sayfayı yatay kaydırmıyor. */
+.scene { width:192px; height:120px; margin:-8px 0 4px -55px; }
 .pitch h2 { font-size:clamp(28px,3vw,40px); line-height:1.13; letter-spacing:-.045em; max-width:20ch; font-weight:600; }
 .pitch > p { max-width:52ch; font-size:14px; line-height:1.9; margin-top:20px; }
 .features { display:grid; gap:0; margin-top:28px; padding:0; }
@@ -30,7 +36,13 @@
 
 /* Sign-in and sign-up used center alignment, putting the shorter form
    lower on the page. Both now start at the content origin. */
-.layout { align-items:start; padding-top:0; }
+/* HİZALAMA YALNIZCA MASAÜSTÜ IZGARASINDA. Bu kural bir dönem medya
+   sorgusunun dışındaydı ve mobil sütun düzeninden SONRA geliyordu: dikey
+   esnek sütunda `align-items` yatay hizayı yönettiği için form kartı
+   ekranın genişliğine esnemiyor, içeriği kadar kalıyordu (ölçüldü, 390'da
+   kart 289 piksel, sağda 83 piksel boşluk). */
+@media(min-width:1024px) { .layout { align-items:start; } }
+.layout { padding-top:0; }
 .pitch { padding-top:24px; }
 .formCard { padding:24px; }
 @media(max-width:1023px) { .layout { padding-top:0; } }

@@ -79,6 +79,7 @@ export default async function WatchedEarningsPage(
         <EarningsTabs active="watchlist" t={t} className="-mt-1" />
         <Panel>
           <EmptyState
+            scene="hello"
             title={t.analysis.signedOut}
             hint={t.analysis.signedOutHint}
             action={
@@ -186,6 +187,7 @@ export default async function WatchedEarningsPage(
       {userSymbols.length === 0 ? (
         <Panel>
           <EmptyState
+            scene="hello"
             title={t.earnings.emptyWatchlist}
             hint={t.analysis.emptyWatchlistHint}
             action={

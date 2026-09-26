@@ -620,7 +620,432 @@ const press: InkScene = {
   },
 };
 
-export const INK_SCENES = { intro, searching, chart, press } satisfies Record<string, InkScene>;
+/* ----------------------------------------------------------------------- */
+/* Mercek — büyüteç satırların üstünden geçiyor                             */
+/* ----------------------------------------------------------------------- */
+
+/* "Mercek" büyüteç demek: bölümün adı sahnenin kendisi. Büyüteç GERÇEKTEN
+   büyütüyor — camın içinde aynı satırlar kırpılıp 1,6 kat ölçekle yeniden
+   çiziliyor, yani altındaki metin camda kalınlaşıyor. Sonunda bir satırın
+   altı pirinçle çiziliyor: Mercek'in işi tam bu, akışın içinden tek bir
+   hikâyeyi seçip altını çizmek. */
+const LENS_LINES = [
+  { y: 40, x0: 36, x1: 192 },
+  { y: 56, x0: 36, x1: 170 },
+  { y: 72, x0: 36, x1: 204 },
+  { y: 88, x0: 36, x1: 158 },
+  { y: 104, x0: 36, x1: 186 },
+];
+const LENS_R = 25;
+const LENS_ZOOM = 1.6;
+
+const lens: InkScene = {
+  box: { w: 240, h: 150 },
+  end: 3.0,
+  render(ctx, t, pal, seed) {
+    const doc = () => {
+      LENS_LINES.forEach((ln, i) => {
+        brush(ctx, segment({ x: ln.x0, y: ln.y }, { x: ln.x1, y: ln.y + 0.5 }, 14), {
+          width: i === 2 ? 3 : 2.3,
+          progress: ease.out(span(t, 0.04 + i * 0.09, 0.4 + i * 0.09)),
+          seed: seed + i,
+          taper: 0.5,
+          color: pal.ink,
+        });
+      });
+      // Seçilen satırın altı — pirinç, büyüteç oturduktan sonra.
+      brush(ctx, segment({ x: 112, y: 79 }, { x: 204, y: 78.5 }, 16), {
+        width: 3.4,
+        progress: ease.out(span(t, 2.2, 2.62)),
+        seed: seed + 20,
+        taper: 0.8,
+        dry: 0.4,
+        color: pal.spark,
+      });
+    };
+    doc();
+
+    const appear = span(t, 0.42, 0.78);
+    if (appear <= 0) return;
+    const move = ease.inOut(span(t, 0.8, 2.15));
+    const cx = 62 + (156 - 62) * move;
+    const cy = 82 - 10 * move - 7 * Math.sin(move * Math.PI);
+    const r = LENS_R * ease.back(appear);
+
+    // Camın içi: zemin + çok soluk bir cam tonu + büyütülmüş satırlar.
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.max(0.1, r - 1.5), 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = pal.paper;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+    ctx.globalAlpha = 0.05;
+    ctx.fillStyle = pal.ink;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+    ctx.globalAlpha = 1;
+    ctx.translate(cx, cy);
+    ctx.scale(LENS_ZOOM, LENS_ZOOM);
+    ctx.translate(-cx, -cy);
+    doc();
+    ctx.restore();
+
+    // Çerçeve ve sap.
+    const ring: Point[] = [];
+    for (let i = 0; i <= 36; i++) {
+      const a = -Math.PI * 0.75 + (i / 36) * Math.PI * 2.08;
+      ring.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+    }
+    brush(ctx, ring, { width: 3.6, progress: ease.out(appear), seed: seed + 30, taper: 0.3, color: pal.ink });
+    const k = Math.SQRT1_2;
+    brush(
+      ctx,
+      segment({ x: cx + r * k, y: cy + r * k }, { x: cx + (r + 22) * k, y: cy + (r + 22) * k }, 8),
+      { width: 6, progress: ease.out(span(t, 0.62, 0.86)), seed: seed + 31, taper: 0.35, color: pal.ink },
+    );
+
+    spark(ctx, pal, 204, 78.5, (t - 2.55) / 0.45, 0.6, seed + 40);
+  },
+};
+
+/* ----------------------------------------------------------------------- */
+/* Bilanço — terazi dengeye geliyor                                          */
+/* ----------------------------------------------------------------------- */
+
+/* Bilanço iki tarafın eşitlenmesi. Terazi sola yatık çiziliyor, sağ kefeye
+   bir damla düşüyor ve kol salınıp düz duruyor: sayılar okunmadan önce
+   "bu ekran dengeyi tartıyor" diyor. Kol açısının işareti: artı, sağ kefe
+   aşağıda. */
+const SCALE_PIVOT = { x: 120, y: 42 };
+const SCALE_ARM = 64;
+const SCALE_TILT = -0.2;
+const SCALE_DROP_AT = 1.12;
+
+function scaleAngle(t: number) {
+  const dt = t - SCALE_DROP_AT;
+  if (dt <= 0) return SCALE_TILT;
+  return SCALE_TILT * Math.exp(-dt * 2.3) * Math.cos(dt * 2.4 * Math.PI * 2);
+}
+
+const ledger: InkScene = {
+  box: { w: 240, h: 150 },
+  end: 3.2,
+  render(ctx, t, pal, seed) {
+    const { x: px, y: py } = SCALE_PIVOT;
+    blot(ctx, 120, 134, 30, { seed: seed + 50, spread: span(t, 0.1, 0.5), color: pal.ink, alpha: 0.1, squash: 0.3 });
+
+    // Ayak ve taban.
+    brush(ctx, segment({ x: px, y: py + 4 }, { x: px + 0.5, y: 126 }, 12), {
+      width: 5.5, progress: ease.inOut(span(t, 0, 0.36)), seed: seed + 1, taper: 0.3, color: pal.ink,
+    });
+    brush(ctx, path([{ x: 90, y: 130 }, { x: 110, y: 127 }, { x: 130, y: 127 }, { x: 150, y: 130 }], 16), {
+      width: 6, progress: ease.out(span(t, 0.22, 0.5)), seed: seed + 2, taper: 0.7, dry: 0.5, color: pal.ink,
+    });
+
+    const a = scaleAngle(t);
+    const cos = Math.cos(a);
+    const sin = Math.sin(a);
+    const left = { x: px - SCALE_ARM * cos, y: py - SCALE_ARM * sin };
+    const right = { x: px + SCALE_ARM * cos, y: py + SCALE_ARM * sin };
+
+    // Kol: ortadan iki yana açılıyor.
+    const beam = ease.out(span(t, 0.34, 0.64));
+    for (const [i, end] of [left, right].entries()) {
+      brush(ctx, segment({ x: px, y: py }, end, 12), {
+        width: 4.6, progress: beam, seed: seed + 3 + i, taper: 0.5, taperStart: 0, color: pal.ink,
+      });
+    }
+
+    // İpler ve kefeler — kefe dikey asılı, kolla birlikte iniyor.
+    const hang = span(t, 0.56, 0.8);
+    const pans = span(t, 0.7, 0.96);
+    for (const [i, end] of [left, right].entries()) {
+      const bowlY = end.y + 36;
+      for (const side of [-1, 1]) {
+        brush(ctx, segment(end, { x: end.x + side * 16, y: bowlY }, 8), {
+          width: 1.6, progress: ease.out(hang), seed: seed + 10 + i * 2 + side, taper: 0.2, color: pal.ink,
+        });
+      }
+      brush(
+        ctx,
+        path([{ x: end.x - 21, y: bowlY }, { x: end.x - 10, y: bowlY + 8 }, { x: end.x + 10, y: bowlY + 8 }, { x: end.x + 21, y: bowlY }], 14),
+        { width: 4.2, progress: ease.out(pans), seed: seed + 14 + i, taper: 0.6, color: pal.ink },
+      );
+    }
+
+    // Sol kefede baştan duran ağırlık.
+    const weight = span(t, 0.88, 1.04);
+    if (weight > 0) {
+      blot(ctx, left.x, left.y + 38, 6.5, { seed: seed + 20, spread: ease.back(weight), color: pal.ink });
+    }
+
+    // Sağ kefeye düşen damla; düştükten sonra kefeyle birlikte hareket ediyor.
+    const fall = span(t, 0.78, SCALE_DROP_AT);
+    if (fall > 0 && fall < 1) {
+      const y = -8 + (right.y + 36 - -8) * ease.in(fall);
+      blot(ctx, right.x, y, 5, { seed: seed + 21, color: pal.ink, squash: 1 + fall * 0.6 });
+    } else if (fall >= 1) {
+      blot(ctx, right.x, right.y + 38, 6.5, { seed: seed + 22, color: pal.ink });
+      splatter(ctx, right.x, right.y + 36, t - SCALE_DROP_AT, {
+        seed: seed + 23, count: 6, reach: 18, size: 1.8, color: pal.ink, up: true, fade: 0.35,
+      });
+    }
+
+    // Denge bulundu: pirinç düğme ve bir kıvılcım.
+    blot(ctx, px, py, 4.6, { seed: seed + 30, spread: ease.back(span(t, 0.55, 0.72)), color: pal.ink });
+    const settle = span(t, 2.62, 2.8);
+    if (settle > 0) blot(ctx, px, py, 3.6, { seed: seed + 31, spread: ease.back(settle), color: pal.spark });
+    spark(ctx, pal, px, py, (t - 2.66) / 0.5, 0.75, seed + 32);
+  },
+};
+
+/* ----------------------------------------------------------------------- */
+/* Merhaba — giriş ve kayıt                                                 */
+/* ----------------------------------------------------------------------- */
+
+/** Kalp — klasik parametrik eğri, `s` ölçeğinde. */
+function heartPoints(cx: number, cy: number, s: number): Point[] {
+  const pts: Point[] = [];
+  for (let i = 0; i <= 40; i++) {
+    const a = (i / 40) * Math.PI * 2;
+    const x = 16 * Math.pow(Math.sin(a), 3);
+    const y = -(13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a));
+    pts.push({ x: cx + x * s, y: cy + y * s });
+  }
+  return pts;
+}
+
+/* Hesap ekranının karşılaması. Zil iki kez çalıp selam veriyor; yanında
+   pirinç bir kalp beliriyor — hesabın okuyucuya verdiği asıl şey takip
+   listesi. Kalp tek bir kez yükselip yerinde duruyor, atmıyor: sürekli
+   atan bir kalp formun yanında dikkat dağıtırdı. */
+const hello: InkScene = {
+  box: { w: 240, h: 150 },
+  end: 2.8,
+  render(ctx, t, pal, seed) {
+    blot(ctx, 112, 132, 17, { seed: seed + 50, spread: span(t, 0.05, 0.45), color: pal.ink, alpha: 0.12, squash: 0.42 });
+    const swing = 0.22 * damped(t - 0.78, 1.5, 1.4);
+    const blinkT = t - 2.05;
+    const blink = blinkT > 0 && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
+    drawBell(ctx, pal, {
+      x: 112,
+      y: 78,
+      s: 0.8,
+      swing,
+      outline: span(t, 0, 0.5),
+      lip: span(t, 0.4, 0.56),
+      hanger: span(t, 0.45, 0.6),
+      wash: span(t, 0.5, 0.72),
+      clapper: span(t, 0.55, 0.7),
+      eyes: span(t, 0.6, 0.76),
+      blink,
+      look: 0.5 * ease.inOut(span(t, 1.3, 1.6)),
+      smile: span(t, 0.7, 0.9),
+      seed,
+    });
+    ringArcs(ctx, pal, 112, 76, (t - 0.86) / 0.75, 0.8);
+    ringArcs(ctx, pal, 112, 76, (t - 1.2) / 0.75, 0.8);
+
+    const rise = span(t, 1.2, 1.7);
+    if (rise > 0) {
+      const cy = 64 - 14 * ease.out(rise);
+      const pts = heartPoints(184, cy, 0.62 * ease.back(rise));
+      ctx.save();
+      ctx.globalAlpha = clamp(rise * 1.6);
+      ctx.fillStyle = pal.spark;
+      ctx.beginPath();
+      pts.forEach((q, i) => (i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)));
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      spark(ctx, pal, 184, cy, (t - 1.55) / 0.5, 0.55, seed + 60);
+    }
+  },
+};
+
+/* ----------------------------------------------------------------------- */
+/* Kayıp — 404                                                               */
+/* ----------------------------------------------------------------------- */
+
+/* "Sayfa bulunamadı"nın kelimesi kelimesine hâli: zilin yanında duran
+   yaprak rüzgârla uçup gidiyor, zil gözüyle onu izliyor ve sonra okuyucuya
+   dönüyor. Suçlu kimse değil; sayfa yerinde değil. Altındaki kısayollar
+   "o zaman buradan devam et" diyor. */
+const lost: InkScene = {
+  box: { w: 240, h: 150 },
+  end: 3.6,
+  render(ctx, t, pal, seed) {
+    blot(ctx, 86, 132, 16, { seed: seed + 50, spread: span(t, 0.05, 0.45), color: pal.ink, alpha: 0.12, squash: 0.42 });
+
+    // Rüzgâr: yaprağın ÜSTÜNDEN geçen üç kuru darbe, geçip soluyor. İlk
+    // taslakta soldan esip zilin gövdesini kesiyordu; zil çizik gibi duruyordu.
+    for (let i = 0; i < 3; i++) {
+      const w = span(t, 0.86 + i * 0.07, 1.28 + i * 0.07);
+      if (w <= 0) continue;
+      const y = 60 + i * 11;
+      brush(ctx, path([{ x: 128, y }, { x: 152, y: y - 3 }, { x: 176, y: y + 1 }, { x: 204, y: y - 3 }], 14), {
+        width: 2.4, progress: ease.out(w), seed: seed + 70 + i, taper: 1, dry: 1,
+        alpha: 1 - span(t, 1.5 + i * 0.06, 2.0), color: pal.ink,
+      });
+    }
+
+    const lookOut = ease.inOut(span(t, 1.05, 1.35));
+    const lookBack = ease.inOut(span(t, 2.55, 2.85));
+    const look = lookOut - lookBack;
+    const blinkT = t - 3.05;
+    const blink = blinkT > 0 && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
+    drawBell(ctx, pal, {
+      x: 86,
+      y: 80,
+      s: 0.78,
+      swing: 0.05 * look + 0.04 * damped(t - 0.95, 1.2, 2),
+      outline: span(t, 0, 0.5),
+      lip: span(t, 0.4, 0.55),
+      hanger: span(t, 0.45, 0.6),
+      wash: span(t, 0.5, 0.72),
+      clapper: span(t, 0.55, 0.7),
+      eyes: span(t, 0.62, 0.78),
+      blink,
+      look,
+      smile: 0,
+      seed,
+    });
+
+    // Yaprak gidince zilin üstünde üç nokta: söyleyecek bir şey yok. Yaprağın
+    // erken dönüşlerinden ÖNCE çiziliyor, yoksa yaprak sönünce hiç çıkmıyordu.
+    for (let d = 0; d < 3; d++) {
+      const dot = span(t, 2.95 + d * 0.1, 3.08 + d * 0.1);
+      if (dot > 0) blot(ctx, 114 + d * 8, 36, 2.2, { seed: seed + 90 + d, spread: ease.back(dot), color: pal.ink });
+    }
+
+    // Yaprak: önce yerde, eğik; sonra dönerek sağ üste uçuyor.
+    const drawn = span(t, 0.2, 0.62);
+    if (drawn <= 0) return;
+    const f = ease.inOut(span(t, 1.0, 2.5));
+    const x = 156 + 64 * f;
+    const y = 108 - 86 * f + Math.sin(f * Math.PI * 2) * 7;
+    const rot = -0.22 + f * 1.9 + Math.sin(f * Math.PI * 3) * 0.28;
+    // Çıkarken tamamen sönüyor: kutunun kenarında kırpılmış bir köşe
+    // olarak kalınca bir çizim hatası gibi okunuyordu.
+    const alpha = 1 - ease.in(f);
+    if (alpha <= 0.01) return;
+    const sheet: Point[] = [
+      { x: -13, y: -16 }, { x: 13, y: -16 }, { x: 13, y: 16 }, { x: -13, y: 16 }, { x: -13, y: -16 },
+    ];
+    const at = (q: Point) => ({
+      x: x + q.x * Math.cos(rot) - q.y * Math.sin(rot),
+      y: y + q.x * Math.sin(rot) + q.y * Math.cos(rot),
+    });
+    const edge: Point[] = [];
+    for (let i = 0; i < 4; i++) {
+      for (let k = 0; k <= 6; k++) {
+        const a = sheet[i];
+        const b = sheet[i + 1];
+        edge.push(at({ x: a.x + (b.x - a.x) * (k / 6), y: a.y + (b.y - a.y) * (k / 6) }));
+      }
+    }
+    brush(ctx, edge, { width: 2.2, progress: ease.inOut(drawn), seed: seed + 80, taper: 0.2, alpha, color: pal.ink });
+    for (let l = 0; l < 3; l++) {
+      brush(ctx, segment(at({ x: -8, y: -8 + l * 7 }), at({ x: l === 2 ? 2 : 8, y: -8 + l * 7 }), 6), {
+        width: 1.6, progress: ease.out(span(t, 0.5 + l * 0.06, 0.7 + l * 0.06)), seed: seed + 81 + l, taper: 0.5, alpha, color: pal.ink,
+      });
+    }
+
+  },
+};
+
+/* ----------------------------------------------------------------------- */
+/* Aksilik — hata sayfası                                                   */
+/* ----------------------------------------------------------------------- */
+
+/* Zil çalarken tokmağı kopuyor: yere düşüp sekiyor, yuvarlanıp duruyor,
+   zil de dönüp ona bakıyor. Hata ekranının dili bu: bir şey düştü, kimse
+   suçlanmıyor ve yerine takılabilir — altındaki "Tekrar Dene" düğmesi
+   tam o iş. Tokmağın yolu sabit adımlı bir benzetimle hesaplanıyor; her
+   karede baştan kurulduğu için sahne yine `t`nin saf bir fonksiyonu. */
+const MISHAP_BELL = { x: 120, y: 66, s: 0.82 };
+const MISHAP_DETACH = 1.02;
+const MISHAP_GROUND = 131;
+const MISHAP_STEP = 1 / 240;
+
+function mishapSwing(t: number) {
+  return 0.26 * damped(t - 0.72, 1.35, 1.7);
+}
+
+function clapperPath(t: number) {
+  const { x, y, s } = MISHAP_BELL;
+  const swing = mishapSwing(MISHAP_DETACH);
+  const start = placeOne({ x: 0, y: 53 }, { x, y, s, swing: swing * 1.35, seed: 0 });
+  let px = start.x;
+  let py = start.y;
+  let vx = 64;
+  let vy = -26;
+  let landed: number | null = null;
+  let landedX = px;
+  const r = 7 * s;
+  const steps = Math.floor(Math.max(0, t - MISHAP_DETACH) / MISHAP_STEP);
+  for (let i = 0; i < steps; i++) {
+    vy += 980 * MISHAP_STEP;
+    px += vx * MISHAP_STEP;
+    py += vy * MISHAP_STEP;
+    if (py >= MISHAP_GROUND - r) {
+      py = MISHAP_GROUND - r;
+      if (landed === null) {
+        landed = MISHAP_DETACH + i * MISHAP_STEP;
+        landedX = px;
+      }
+      vy = Math.abs(vy) > 70 ? -Math.abs(vy) * 0.36 : 0;
+      vx *= vy === 0 ? 0.992 : 0.72;
+    }
+  }
+  return { x: px, y: py, landed, landedX };
+}
+
+const mishap: InkScene = {
+  box: { w: 240, h: 150 },
+  end: 3.3,
+  render(ctx, t, pal, seed) {
+    const { x, y, s } = MISHAP_BELL;
+    blot(ctx, x, MISHAP_GROUND + 1, 17, { seed: seed + 50, spread: span(t, 0.05, 0.45), color: pal.ink, alpha: 0.12, squash: 0.42 });
+
+    const free = t >= MISHAP_DETACH;
+    const c = free ? clapperPath(t) : null;
+    const blinkT = t - 1.22;
+    const blink = blinkT > 0 && blinkT < 0.2 ? Math.sin((blinkT / 0.2) * Math.PI) : 0;
+    const look = c ? clamp((c.x - x) / 55, -1, 1) * ease.inOut(span(t, 1.35, 1.7)) : 0;
+    drawBell(ctx, pal, {
+      x,
+      y,
+      s,
+      swing: mishapSwing(t),
+      outline: span(t, 0, 0.5),
+      lip: span(t, 0.4, 0.55),
+      hanger: span(t, 0.45, 0.6),
+      wash: span(t, 0.5, 0.7),
+      clapper: free ? 0 : span(t, 0.52, 0.66),
+      eyes: span(t, 0.6, 0.76),
+      blink,
+      look,
+      smile: 0,
+      seed,
+    });
+
+    // Kopma anındaki tın: eteğin ucunda pirinç kıvılcım.
+    const lipTip = placeOne({ x: 48, y: 38 }, { x, y, s, swing: mishapSwing(MISHAP_DETACH), seed: 0 });
+    spark(ctx, pal, lipTip.x, lipTip.y, (t - MISHAP_DETACH) / 0.45, 0.6, seed + 40);
+
+    if (c) {
+      blot(ctx, c.x, c.y, 7 * s, { seed: seed + 3, color: pal.ink });
+      if (c.landed !== null) {
+        // Sıçrantı ilk değdiği yerde kalıyor, yuvarlanan tokmağı izlemiyor.
+        splatter(ctx, c.landedX, MISHAP_GROUND - 2, t - c.landed, {
+          seed: seed + 60, count: 5, reach: 14, size: 1.6, color: pal.ink, up: true, fade: 0.3,
+        });
+      }
+    }
+  },
+};
+
+export const INK_SCENES = { intro, searching, chart, press, lens, ledger, hello, lost, mishap } satisfies Record<string, InkScene>;
 export type InkSceneName = keyof typeof INK_SCENES;
 
 /** Gerçek saati sahnenin saatine çevirir: sonda durur. */

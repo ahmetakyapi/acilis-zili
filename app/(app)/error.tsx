@@ -5,7 +5,8 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 import { startTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react/dist/ssr";
+import { ArrowClockwise } from "@phosphor-icons/react/dist/ssr";
+import { InkCanvas } from "@/components/ink/InkCanvas";
 import { Button, Panel } from "@/components/ui/primitives";
 
 /**
@@ -83,12 +84,11 @@ export default function AppError({
 
   return (
     <div className={`${polish.recovery} mx-auto flex w-full max-w-md flex-col items-center gap-6 text-center`}>
-      <span
-        aria-hidden
-        className="flex size-14 items-center justify-center rounded-xl bg-down-wash text-down"
-      >
-        <WarningCircle weight="duotone" size={30} />
-      </span>
+      {/* KISA FİLM: zil çalarken tokmağı düşüyor, yerde sekip yuvarlanıyor.
+          Kırmızı uyarı karosunun yerine: bir şey düştü, kimse suçlanmıyor
+          ve yerine takılabilir — altındaki "Tekrar Dene" tam o iş.
+          (lib/ink/scenes.ts → mishap) */}
+      <InkCanvas scene="mishap" seed={9} className="h-[120px] w-[192px]" />
 
       <div className="flex flex-col gap-2.5">
         <h1 className="text-title font-bold tracking-[-0.025em] text-strong">

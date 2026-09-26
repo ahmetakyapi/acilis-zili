@@ -1,6 +1,6 @@
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { BellMood } from "@/components/brand/BellMood";
+import { InkCanvas } from "@/components/ink/InkCanvas";
 import { getI18n } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 
@@ -53,7 +53,10 @@ export default async function RootNotFound() {
       className={`${polish.recovery} mx-auto flex w-full max-w-md flex-col items-center justify-center gap-6 px-[max(env(safe-area-inset-left),20px)] text-center`}
       style={{ paddingRight: "max(env(safe-area-inset-right),20px)" }}
     >
-      <BellMood mood="lost" size={56} />
+      {/* KISA FİLM: zilin yanındaki yaprak rüzgârla uçup gidiyor, zil onu
+          izleyip okuyucuya dönüyor — "sayfa yerinde değil"in kendisi.
+          Sahne bir kez oynayıp duruyor (lib/ink/scenes.ts → lost). */}
+      <InkCanvas scene="lost" seed={5} className="h-[120px] w-[192px]" />
 
       <div className="flex flex-col gap-2.5">
         <p className="tote display-ink text-[54px] leading-none">404</p>

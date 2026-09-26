@@ -114,7 +114,7 @@ async function ArchiveBoard({
   if (archive.length === 0) {
     return (
       <Panel>
-        <EmptyState title={t.brief.noArchive} hint={t.brief.emptyHint} />
+        <EmptyState title={t.brief.noArchive} hint={t.brief.emptyHint} scene="press" />
       </Panel>
     );
   }

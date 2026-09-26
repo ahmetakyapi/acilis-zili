@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LoadingMark } from "@/components/ui/LoadingState";
+import { InkLoader } from "@/components/ink/InkLoader";
+import { sceneForPath } from "@/lib/ink/route-scenes";
+import type { InkSceneName } from "@/lib/ink/scenes";
 
 /* --------------------------------------------------------------------------
    Gezinme göstergesi — üstte ince çubuk, gecikirse "Yükleniyor" hapı.
@@ -42,6 +44,9 @@ let runId = 0;
 let counter = 0;
 let localQuery = false;
 let inlineFeedback = false;
+/** Beklemede oynayacak sahne — hedef adres biliniyorsa ona göre. Geri tuşu
+ *  ve dil değişimi hedef vermiyor; onlar açılış sahnesini alıyor. */
+let targetScene: InkSceneName = "intro";
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -64,6 +69,7 @@ export function startRouteProgress(href?: string) {
   if (runId !== 0 && localQuery && nextLocal && inlineFeedback === nextInline) return;
   localQuery = nextLocal;
   inlineFeedback = nextInline;
+  targetScene = sceneForPath(target ? target.pathname : null);
   runId = ++counter;
   emit();
 }
@@ -119,6 +125,11 @@ export function RouteProgress({ label }: { label: string }) {
     subscribe,
     () => runId,
     () => 0,
+  );
+  const scene = useSyncExternalStore(
+    subscribe,
+    () => targetScene,
+    () => "intro" as const,
   );
   const running = run !== 0;
   const [slowRun, setSlowRun] = useState(0);
@@ -218,11 +229,16 @@ export function RouteProgress({ label }: { label: string }) {
       {/* Gecikirse EKRANIN ORTASINDA marka işareti. Köşedeki küçük hap
           "bir şeyler oluyor" diyordu ama gözün gitmediği bir yerde
           duruyordu; ortadaki kart bekleyişi ürünün kendi işaretine
-          bağlıyor — çalan bir zil (components/brand/BellLoader) ve
-          altında tek kelime. Katman tıklamayı ENGELLEMEZ (`pointer-events: none`):
-          gösterge takılırsa ekranı kilitlemesin. */}
+          bağlıyor. Katman tıklamayı ENGELLEMEZ (`pointer-events: none`):
+          gösterge takılırsa ekranı kilitlemesin.
+
+          KART ARTIK HEDEFİ ANLATIYOR (26 Eylül). Her gezinmede aynı çalan
+          zil vardı; şimdi gidilen ekrana göre bir mürekkep sahnesi oynuyor
+          (harita `lib/ink/route-scenes.ts`). Sayfa içi yükleme işaretleri
+          (filtre, grafik) küçük zil olarak kaldı: dar bir panelin içinde
+          sahne, bekleyişin kendisinden büyük bir olay olurdu. */}
       {slow && !inlineFeedback && (
-        <div className="route-loader"><LoadingMark label={label} /></div>
+        <div className="route-loader"><InkLoader scene={scene} label={label} /></div>
       )}
     </>
   );

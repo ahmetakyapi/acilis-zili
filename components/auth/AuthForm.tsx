@@ -2,6 +2,7 @@
 
 import { Eye, EyeSlash } from "@phosphor-icons/react";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
+import { InkCanvas } from "@/components/ink/InkCanvas";
 import styles from "./AuthExperience.module.css";
 import { useActionState, useState } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -77,6 +78,11 @@ export function AuthForm({
            itiyordu; `order` ile mobilde aşağı, geniş ekranda yine sola
            alınıyor. */}
       <div className={styles.pitch}>
+        {/* KARŞILAMA: zil iki kez çalıp selam veriyor, yanında pirinç bir
+            kalp — hesabın okuyucuya verdiği asıl şey takip listesi. Mobilde
+            bu sütun formun ALTINDA, yani sahne formu itmiyor; görünüme
+            girince oynuyor. (lib/ink/scenes.ts → hello) */}
+        <InkCanvas scene="hello" seed={3} className={styles.scene} />
         <h2 className="display-ink">
           {pitchTitle}
         </h2>
