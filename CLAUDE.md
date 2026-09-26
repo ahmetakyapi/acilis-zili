@@ -344,6 +344,14 @@ eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye ba
 - **Depo herkese açık.** `BRIEF_SECRET` ve `CRON_SECRET` asla commit'lenmez.
   Gerçek değerlerin bulunduğu `docs/rutinler.local.md` `*.local.md` deseniyle
   gitignore'da; commit öncesi staged diff'i secret'a karşı tara.
+- **Migration'lar deploy'da UYGULANMAZ** (deploy.yml `db:migrate` çalıştırmıyor);
+  `npm run db:migrate` ayrıca, üretim `DATABASE_URL`iyle koşulur. Sonucu:
+  canlıdaki kod migration'dan ÖNCE yayına inebilir. Yeni bir özellik mümkünse
+  var olan tabloya sütun eklemez, kendi tablosunu alır ve onu okuyan kod tablo
+  yokken sessizce düşer (`user_avatars` → `lib/avatar-data.ts`). `users`a
+  eklenen bir sütun, migration inene kadar her kullanıcı sorgusunu ve girişi
+  kırardı. Uygulamayı atlamak da sessiz bir hata: 26 Eylül'de profil ikonları
+  "kaydedilemiyor" diye bildirildi, sebep uygulanmamış 0018'di.
 - **Tailwind v4** — `tailwind.config.ts` yok, tokenlar `app/globals.css`
   içindeki `@theme inline` bloğunda. Hardcoded renk yasak.
 - **Tema** next-themes değil, `data-theme` + `az-theme` çerezi.

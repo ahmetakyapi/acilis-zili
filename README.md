@@ -69,7 +69,7 @@ Altı konu başlığı var ve her biri ayrı bir soruya cevap veriyor.
 
 | | Soru | Nerede |
 |---|---|---|
-| 📈 | **Piyasa bugün nerede?** Endeksler (S&P 500, Nasdaq 100, Dow, Russell 2000), açılışa geri sayım ve seans şeridi, günün en çok yükselen ve düşenleri, piyasa genişliği, tahvil faizleri ve getiri eğrisi, VIX, dünya piyasaları. | `/` · `/piyasalar` |
+| 📈 | **Piyasa bugün nerede?** Endeksler (S&P 500, Nasdaq 100, Dow, Russell 2000), açılışa geri sayım ve seans şeridi, günün en çok yükselen ve düşenleri, piyasa genişliği ve bileşenlerin ısı haritası, tahvil faizleri ve getiri eğrisi, VIX, dünya piyasaları. | `/` · `/piyasalar` |
 | 🏢 | **Bu şirket nasıl gidiyor?** Gün içinden beş yıla grafik (alan ya da mum), profil, değerleme ve risk ölçüleri, 52 hafta bandı, analist dağılımı, haberler, geçmiş bilanço sürprizleri. 1.000'i aşkın şirket sektör şeridiyle ve sıralanabilir bir dizinde; iki ile dört hisse **aynı ölçekte** yan yana. | `/sirketler` · `/hisse/NVDA` · `/karsilastir` |
 | 🧾 | **Kim ne zaman bilanço açıklıyor?** Açılış öncesi mi kapanış sonrası mı, analist EPS ve gelir beklentisi ne, gerçekleşen ne çıktı. Takvim `.ics` olarak kendi takvimine eklenebiliyor. Açıklanan çeyrekler için skorlu uzun analizler. | `/bilancolar` |
 | 🎯 | **Teknik olarak nereden alınır, nerede vazgeçilir?** On beş hissenin her işlem günü üç kez yenilenen analizi: görüş (Al/Tut/Sat), alım bölgesi, hedefler, stop, destek ve direnç, senaryolar. | `/teknik` |
@@ -78,7 +78,8 @@ Altı konu başlığı var ve her biri ayrı bir soruya cevap veriyor.
 
 Bir de kişisel taraf var: çoklu takip listeleri, renkli etiketler, ana sayfada
 kendi listenin özeti, yalnızca senin izlediklerinin bilanço takvimi ve
-hesabını gösteren, sitenin kendi çizdiği on iki profil ikonundan biri.
+hesabını gösteren, sitenin kendi çizdiği on altı profil ikonundan biri ve
+yedi renkten biri.
 
 ---
 
@@ -287,12 +288,16 @@ oturur. On yedi sahne var; yerleri şunlar:
 - boş durumlar
 - Mercek ve rehber yazısının bitiş işareti
 
-Yükleme işareti de aynı zil: iş bitene kadar sallanıp çalıyor.
+Yükleme işareti de aynı zil: iş bitene kadar sallanıp çalıyor, çevresinde
+fırçayla çizilmiş pirinç bir yörünge dönüyor ve her vuruşta kıvılcım
+sıçrıyor. Gezinme bekleyişinin kartı marka adıyla açılıyor.
 
 **Geçişler.**
 
 - **Logo uçuşu:** bir şirket kartına tıklandığında logo yeni sayfanın
   başlığına kavisli bir yolla uçar ve şirket adı onun inişini bekler.
+- **Logo:** başlıktaki zilin üzerine gelince zil sallanır ve iki yanında
+  bir ses dalgası büyüyüp söner.
 - **Tema değişimi:** yeni tema tıklanan noktadan pürüzlü bir mürekkep lekesi
   olarak yayılır (View Transitions + SVG maske).
 - **Veri girişi:** grafik çizgileri kırpmayla açılır, çubuklar sıfırdan uzar,
@@ -312,7 +317,7 @@ ritmine bağlı.
 | Tablo | Ne tutar | Kim yazar |
 |---|---|---|
 | `users` · `watchlists` · `watchlist_items` | Hesap, takip listeleri ve sembolleri | Kullanıcı eylemleri |
-| `user_avatars` | Seçilen profil ikonunun anahtarı | Kullanıcı eylemi (Ayarlar) |
+| `user_avatars` | Seçilen profil ikonu ve rengi (anahtar olarak) | Kullanıcı eylemi (Ayarlar) |
 | `symbols` | Sembol künyesi: ad, borsa, sektör, logo, piyasa değeri, hisse sayısı | Tohum + cron + sayfa isteği |
 | `quotes_cache` | Son bilinen fiyat; sağlayıcı düşünce gösterilecek yedek | Sayfa isteği |
 | `candles_cache` | Aralık başına bar dizisi | Sayfa isteği |
@@ -457,9 +462,9 @@ yönetim. Hepsi istek başına sunucuda çiziliyor. Her sayfa `/en/...` önekiyl
 | Rota | Cevapladığı soru |
 |---|---|
 | `/` | Zil çalmadan önce bugün ne var: geri sayım, endeksler, gün akışı, bülten, Mercek, teknik görünüm, bilançolar, favoriler, haberler |
-| `/piyasalar` | Piyasanın nabzı: endeksler, tahvil faizleri, VIX, gün içi hareket, endeks bileşenleri |
+| `/piyasalar` | Piyasanın nabzı: endeksler, tahvil faizleri, VIX, piyasa genişliği ve ısı haritası, gün içi hareket, endeks bileşenleri |
 | `/sirketler` | Hangi şirket hangi sektörde, ne kadar ediyor: sektör şeridi + sıralanabilir dizin |
-| `/hisse/[symbol]` | Bu şirket nasıl gidiyor: grafik, profil, metrikler, analistler, haber, geçmiş bilançolar |
+| `/hisse/[symbol]` | Bu şirket nasıl gidiyor: canlı grafik, profil, metrikler, analistler, haber, beklenti ile gerçekleşeni aynı sütunda gösteren geçmiş bilançolar |
 | `/karsilastir` | İki ile dört hisseden hangisi: aynı ölçekte normalize grafik + tek tablo |
 | `/makro` | ABD ekonomisi nerede: altı FRED serisi, sonraki açıklama |
 | `/takvim` | Hangi makro veri ne zaman: gün/hafta/ay, önem süzgeci, halka arz takvimi |
@@ -479,7 +484,7 @@ basıyor; detay sayfası aynı segmentin altında ve orada sekme istenmiyor.
 
 ### Teknik Analiz
 
-Masaüstü başlığında Bilançolar ile Mercek arasında; mobilde Menü'den.
+Başlıkta Piyasalar'dan hemen sonra; mobilde Menü'den.
 
 | Rota | Soru |
 |---|---|
@@ -496,7 +501,7 @@ Masaüstü başlığında Bilançolar ile Mercek arasında; mobilde Menü'den.
 
 ### Hesap
 
-`/giris` · `/kayit` · `/favoriler` · `/ayarlar` (profil ikonu, tema, dil,
+`/giris` · `/kayit` · `/favoriler` · `/ayarlar` (profil ikonu ve rengi, tema, dil,
 hesap silme) · `/menu` · `/kvkk`
 
 ### Yönetim
@@ -507,6 +512,11 @@ Kabuğun dışında: `/admin`, `/admin/trafik`, `/admin/uyeler`,
 sekmelerinden **İçerik ölçer, Yazılar değiştirir.** Yetki veritabanında;
 yetkisiz istek **404** görür, çünkü "yetkiniz yok" demek panelin varlığını ele
 verirdi.
+
+Editörler yazarken önizliyor: gövde yayındaki çizimin kendisiyle sunucuda
+çiziliyor, başlık ve giriş tuşa basıldığı an önizlemenin başında değişiyor.
+Tarih alanları tarayıcının yerel takvimi yerine sitenin kendi seçicisini
+kullanıyor (klavyeyle gezilebilir, aralık dışı günler seçilemez).
 
 ---
 
@@ -631,7 +641,7 @@ lib/
   content-write.ts   # içeriğin tek doğrulama ve yazma yolu
   compare.ts         # karşılaştırma ekranının ortak sözleşmesi
   technical*.ts      # teknik analiz: semboller, göstergeler, yazma yolu
-  avatars.ts         # profil ikonu anahtarları ve tonları
+  avatars.ts         # profil ikonu ve renk anahtarları
   providers/         # alpaca · finnhub · fred · tcmb
   i18n/              # tr + en sözlükleri (en, tr tipinden türer)
 content/guide/       # rehber yazıları: meta + tr + en
