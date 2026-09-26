@@ -6,6 +6,7 @@ import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/markets/MarketExperience.module.css";
 import { MarketPulse } from "@/components/markets/MarketPulse";
+import { ScaleBar } from "@/components/markets/CompareScale";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import {
@@ -989,6 +990,13 @@ function MembersTable({
     ...rows.map((row) => Math.abs(row.quote?.changePct ?? 0)),
     0.01,
   );
+  /* PİYASA DEĞERİ BİR DE ÇİZGİ (26 Eylül). "Karşılaştırılan her büyüklük bir
+     de çizgi olarak okunur" (CLAUDE.md); sütun yalnızca sayıydı ve "hangisi
+     ne kadar büyük" basamak basamak okunuyordu. Ölçek DOĞRUSAL ve listenin
+     en büyüğüne göre: logaritmik ölçek sırayı korurdu ama büyüklüğü
+     çarpıtırdı, oysa sütunun asıl söylediği tam da o — birkaç dev şirketin
+     piyasanın ne kadarını tuttuğu. Çubuk bir yargı değil, nötr tonda. */
+  const peakCap = Math.max(...rows.map((row) => row.marketCap ?? 0), 1);
 
   const ordered = [...rows].sort((a, b) => {
     const va = valueOf(a);
@@ -1198,6 +1206,7 @@ function MembersTable({
                     {row.marketCap
                       ? formatMoneyCompact(row.marketCap, locale)
                       : NO_VALUE}
+                    {row.marketCap ? <ScaleBar ratio={row.marketCap / peakCap} signed={false} className="max-w-[96px]" /> : null}
                   </td>
                   {showContribution && (
                     <td className="numeral hidden px-3 py-2 text-right text-soft sm:table-cell sm:pr-5">

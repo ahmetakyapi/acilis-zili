@@ -9,6 +9,7 @@ import {
   BaselineSeries,
   CandlestickSeries,
   createChart,
+  LastPriceAnimationMode,
   LineStyle,
   TickMarkType,
   type AutoscaleInfo,
@@ -115,6 +116,11 @@ type PriceChartProps = {
     bars: Bar[];
     prevClose?: number | null;
   } | null;
+  /**
+   * Çizilen gün şu an işlem görüyor mu — seans (ön ve akşam dahil) açık ve
+   * grafiğin günü seans günü. Sunucu `status`ten biliyor.
+   */
+  live?: boolean;
 };
 
 type ChartResult =
@@ -177,6 +183,7 @@ export function PriceChart({
   closeMinutes = SESSION_BOUNDS.regularClose,
   initialBars,
   compact = false,
+  live = false,
 }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -505,6 +512,18 @@ export function PriceChart({
        Öteki aralıklarda taban dönem başı ve sabit bir çizgi anlam
        taşımıyor; orada alan serisi kalıyor. */
     const prevClose = range === "1D" ? state.prevClose : null;
+    /* SERİNİN UCU ATIYOR — YALNIZCA CANLIYKEN (26 Eylül). Kütüphanenin son
+       fiyat animasyonu serinin son noktasında nabız gibi atan bir halka
+       çiziyor: "fiyat şu an burada ve hâlâ oynuyor". Bu bir iddia, o yüzden
+       ancak doğruysa açılıyor: seans açık, çizilen gün seans günü ve
+       aralık 1G. Kapalı piyasada ya da dönemsel aralıkta atan bir nokta
+       olmayan bir canlılığı gösterirdi (Veri dürüstlüğü). Hareketi
+       azaltan okuyucuya hiç açılmıyor. Sayı basmıyor; eksen rozeti ve
+       fiyat çizgisi kapalı kalıyor (aşağıdaki not). */
+    const pulse =
+      live && range === "1D" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? LastPriceAnimationMode.Continuous
+        : LastPriceAnimationMode.Disabled;
     if (mode === "area" && prevClose !== null && prevClose > 0) {
       series = chart.addSeries(BaselineSeries, {
         baseValue: { type: "price", price: prevClose },
@@ -517,6 +536,7 @@ export function PriceChart({
         lineWidth: 2,
         priceLineVisible: false,
         lastValueVisible: false,
+        lastPriceAnimation: pulse,
         crosshairMarkerRadius: 5,
         crosshairMarkerBorderColor: cssVar("--surface"),
         autoscaleInfoProvider: (original: () => AutoscaleInfo | null) => {
@@ -553,6 +573,7 @@ export function PriceChart({
         bottomColor: lineToRgba(line, 0),
         priceLineVisible: false,
         lastValueVisible: false,
+        lastPriceAnimation: pulse,
         crosshairMarkerRadius: 5,
         crosshairMarkerBorderColor: cssVar("--surface"),
         crosshairMarkerBackgroundColor: line,
@@ -828,6 +849,7 @@ export function PriceChart({
   }, [
     state,
     mode,
+    live,
     locale,
     closeMinutes,
     intraday,

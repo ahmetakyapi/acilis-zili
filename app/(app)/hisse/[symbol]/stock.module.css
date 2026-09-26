@@ -520,3 +520,10 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 
 /* Analist özet satırı parmakla 44 piksel (32'ydi, 390'da ölçüldü). */
 @media(hover:none) { .analystExplanation summary { min-height:44px; } }
+
+/* Profil satırının ikonu — sayfanın vurgu yıkamasında küçük bir karo
+   (26 Eylül; gerekçe page.tsx → "SATIRIN İKONU"). Satıra gelince karo
+   dolgun maviye geçiyor: satırın okunduğunu hareketsiz gösteriyor. */
+.profileIcon { display:grid; place-items:center; width:24px; height:24px; flex-shrink:0; border-radius:7px; background:var(--primary-wash); color:var(--primary-ink); transition:background-color .2s, color .2s; }
+dl > div:hover .profileIcon { background:var(--primary); color:var(--on-primary); }
+@media(prefers-reduced-motion:reduce) { .profileIcon { transition:none; } }

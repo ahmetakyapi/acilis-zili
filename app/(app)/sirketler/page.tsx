@@ -6,6 +6,7 @@ import { CompanySearch } from "@/components/companies/CompanySearch";
 import companyStyles from "@/components/companies/CompanyDirectory.module.css";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import { ScaleBar } from "@/components/markets/CompareScale";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -540,6 +541,13 @@ async function CompaniesTable({
         )
       : row.marketCap;
   };
+  /* PİYASA DEĞERİ BİR DE ÇİZGİ (26 Eylül). "Karşılaştırılan her büyüklük bir
+     de çizgi olarak okunur" (CLAUDE.md); sütun yalnızca sayıydı ve "hangisi
+     ne kadar büyük" basamak basamak okunuyordu. Ölçek DOĞRUSAL ve listenin
+     en büyüğüne göre: logaritmik ölçek sırayı korurdu ama büyüklüğü
+     çarpıtırdı, oysa sütunun asıl söylediği tam da o — birkaç dev şirketin
+     piyasanın ne kadarını tuttuğu. Çubuk bir yargı değil, nötr tonda. */
+  const peakCap = Math.max(...unsorted.map((row) => capOf(row) ?? 0), 1);
 
   /* Değeri OLMAYAN satır `null` döner, sayı değil.
      Eskiden eksik değerler `-Infinity` ile temsil ediliyordu ve bu, azalan
@@ -828,7 +836,12 @@ async function CompaniesTable({
                       <td className="numeral py-3 pl-1 pr-3 text-right text-small font-semibold text-body sm:px-3 sm:text-base">
                         {(() => {
                           const cap = capOf(company);
-                          return cap ? formatMoneyCompact(cap, locale) : NO_VALUE;
+                          return cap ? (
+                            <>
+                              {formatMoneyCompact(cap, locale)}
+                              <ScaleBar ratio={cap / peakCap} signed={false} className="max-w-[96px]" />
+                            </>
+                          ) : NO_VALUE;
                         })()}
                       </td>
                       <td className="numeral hidden px-4 py-3 text-right text-read text-soft sm:table-cell sm:px-5">

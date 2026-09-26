@@ -8,7 +8,7 @@ import { auth } from "@/auth";
 import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
 import { analysisHref } from "@/lib/analysis";
 import { withLocale } from "@/lib/i18n/routing";
-import { ArrowDownRight, ArrowLeft, ArrowUpRight, CalendarBlank, Heart, SquaresFour, ChartLineUp, UsersThree } from "@phosphor-icons/react/dist/ssr";
+import { ArrowDownRight, ArrowLeft, ArrowUpRight, Bank, CalendarBlank, CalendarCheck, Flag, GlobeHemisphereWest, Heart, LinkSimple, SquaresFour, Stack, ChartLineUp, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import { MotionExperience, ScrollStage, Reveal, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
 import styles from "./stock.module.css";
 import { NewsImage } from "@/components/news/NewsImage";
@@ -1034,6 +1034,9 @@ async function ChartSection({
       locale={locale}
       labels={chartLabels(t)}
       closeMinutes={closeMinutesFor(grafikGunu, holidays)}
+      /* Uç ancak çizilen gün BUGÜNÜN seansıysa ve seans açıksa atıyor
+         (gerekçe PriceChart → "SERİNİN UCU ATIYOR"). */
+      live={status.session !== "closed" && grafikGunu === status.sessionDate}
       quote={
         result.ok
           ? {
@@ -1671,6 +1674,32 @@ async function ProfileCard({
         ] as [string, React.ReactNode][])
       : []),
   ];
+  /* SATIRIN İKONU (26 Eylül). Profil etiket-değer satırlarından ibaretti ve
+     "düz sayfa" gibi okunuyordu. Her satırın başında ne anlattığını
+     gösteren küçük bir karo var; göz etiketi okumadan satırı buluyor.
+     Eşleme etikete göre: satırlar koşullu eklendiği için sıra değil ad
+     tanımlayıcı. Eşlenmeyen satır ikonsuz kalır, kaymaz. */
+  const rowIcon = new Map<string, typeof Stack>([
+    [t.stock.industry, Stack],
+    [t.stock.country, GlobeHemisphereWest],
+    [t.stock.exchange, Bank],
+    [t.stock.ipoDate, Flag],
+    [t.stock.nextReportRow, CalendarCheck],
+    [t.stock.website, LinkSimple],
+  ]);
+  const rowLabel = (label: string) => {
+    const Icon = rowIcon.get(label);
+    return (
+      <dt className="flex items-center gap-2.5 text-xs font-semibold text-strong">
+        {Icon && (
+          <span aria-hidden className={styles.profileIcon}>
+            <Icon size={14} weight="duotone" />
+          </span>
+        )}
+        {label}
+      </dt>
+    );
+  };
 
   /* KÜNYE BAŞLIĞIN SAĞINDA. "Finnhub · 22 Eylül 21:52 Güncellendi" kartın
      dibinde tek başına bir satır tutuyordu; başlık satırının sağı ise
@@ -1752,14 +1781,14 @@ async function ProfileCard({
       <dl className="flex flex-1 flex-col divide-y divide-line-soft">
         {rows.map(([label, value]) => (
           <div key={label} className="flex flex-1 items-center justify-between gap-3 py-2">
-            <dt className="text-xs font-semibold text-strong">{label}</dt>
+            {rowLabel(label)}
             <dd className="text-right text-sm text-body">{value}</dd>
           </div>
         ))}
         {/* Adres sağlayıcıdan geliyor; şeması süzülmeden href'e konmaz. */}
         {websiteHref && (
           <div className="flex flex-1 items-center justify-between gap-3 py-2">
-            <dt className="text-xs font-semibold text-strong">{t.stock.website}</dt>
+            {rowLabel(t.stock.website)}
             <dd className="min-w-0 text-right text-sm">
               <a
                 href={websiteHref}
