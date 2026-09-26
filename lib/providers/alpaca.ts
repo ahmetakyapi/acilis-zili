@@ -157,7 +157,11 @@ async function safeText(res: Response): Promise<string> {
  * are never retried here. The retry budget prevents malformed lists flooding
  * the provider. Known share-class aliases are normalized before this point.
  */
-async function symbolBatchFetch<T>(path: string, params: Record<string, string>, opts: FetchOpts): Promise<ProviderResult<T>> {
+async function symbolBatchRequest<T>(
+  path: string,
+  params: Record<string, string>,
+  opts: FetchOpts,
+): Promise<{ result: ProviderResult<T>; symbols: string }> {
   let symbols = params.symbols.split(",");
   let result = await alpacaFetch<T>(path, params, opts);
   for (let retry = 0; retry < 8 && !result.ok; retry++) {
@@ -167,7 +171,72 @@ async function symbolBatchFetch<T>(path: string, params: Record<string, string>,
     if (!symbols.length) break;
     result = await alpacaFetch<T>(path, { ...params, symbols: symbols.join(",") }, opts);
   }
-  return result;
+  return { result, symbols: symbols.join(",") };
+}
+
+async function symbolBatchFetch<T>(path: string, params: Record<string, string>, opts: FetchOpts): Promise<ProviderResult<T>> {
+  return (await symbolBatchRequest<T>(path, params, opts)).result;
+}
+
+type BarsPage = {
+  bars?: Record<string, AlpacaBar[] | null>;
+  next_page_token?: string | null;
+};
+
+/** Devam sayfası için emniyet tavanı: sayfa başına ~2.300 barla 23.000 bar. */
+const MAX_BAR_PAGES = 10;
+
+/**
+ * Çoklu sembol `/bars` isteğinin BÜTÜN sayfaları, sembol başına birleşik.
+ *
+ * SAYFALAMA ŞART, SINIRIN ALTINDA KALMAK YETMİYOR (26 Eylül). Önceki kod
+ * `limit`i 10.000'in altında tutup yanıtın tek parça geleceğini
+ * varsayıyordu. Ölçüldü: dört endeks fonu için `limit=8000` istendi,
+ * Alpaca yanıtı 2.365 barda kesip `next_page_token` döndürdü. Yanıt
+ * sembol sırasıyla geldiği için kesilen hep listenin SONUNDAKİ sembol:
+ * SPY Salı ve Çarşamba sabahında kaldı, "son işlem günü" süzgeci
+ * Çarşamba'yı seçti ve ana sayfanın S&P 500 kartında grafik hiç çıkmadı
+ * (kart, seansa ait olmayan çizgiyi doğru olarak basmıyor). Aynı kesilme
+ * dönem yüzdesinde sessizce ESKİ bir günü "son gün" sayardı.
+ *
+ * Devam sayfası ilk sayfanın GERÇEKTEN kullandığı sembollerle isteniyor:
+ * geçersiz bir sembol ilk istekte düşürüldüyse belirteç o listeye ait.
+ *
+ * Tavana varılıp belirteç hâlâ duruyorsa son sembol eksik olabilir ve
+ * düşürülür: eksik bir seriyi tam gibi göstermektense hiç göstermemek
+ * doğru (çağıranlar sembolün yokluğunu "veri yok" diye okuyor). Bir devam
+ * sayfası hata verirse paketin tamamı hata sayılır, yarım veri dönmez.
+ */
+async function fetchBarPages(
+  params: Record<string, string>,
+  opts: FetchOpts,
+): Promise<ProviderResult<Record<string, AlpacaBar[]>>> {
+  const first = await symbolBatchRequest<BarsPage>("/bars", params, opts);
+  if (!first.result.ok) return first.result;
+
+  const merged: Record<string, AlpacaBar[]> = {};
+  const add = (page: BarsPage) => {
+    for (const [symbol, list] of Object.entries(page.bars ?? {})) {
+      if (list && list.length > 0) (merged[symbol] ??= []).push(...list);
+    }
+  };
+  add(first.result.data);
+  let token = first.result.data.next_page_token ?? null;
+  for (let page = 1; token && page < MAX_BAR_PAGES; page++) {
+    const next = await alpacaFetch<BarsPage>(
+      "/bars",
+      { ...params, symbols: first.symbols, page_token: token },
+      opts,
+    );
+    if (!next.ok) return next;
+    add(next.data);
+    token = next.data.next_page_token ?? null;
+  }
+  if (token) {
+    const last = Object.keys(merged).at(-1);
+    if (last) delete merged[last];
+  }
+  return ok(merged, "alpaca", { fetchedAt: first.result.fetchedAt });
 }
 
 /* --------------------------------------------------------------------------
@@ -441,8 +510,7 @@ export async function getPeriodChanges(
   /* Paketler PARALEL — gerekçe `getSnapshots` içinde. */
   const results = await Promise.all(
     batches(unique).map((batch) =>
-      symbolBatchFetch<{ bars?: Record<string, AlpacaBar[]> }>(
-        "/bars",
+      fetchBarPages(
         {
           symbols: batch.join(","),
           timeframe: "1Day",
@@ -464,8 +532,8 @@ export async function getPeriodChanges(
     }
     anyOk = true;
 
-    for (const [symbol, bars] of Object.entries(result.data.bars ?? {})) {
-      if (!bars || bars.length < 2) continue;
+    for (const [symbol, bars] of Object.entries(result.data)) {
+      if (bars.length < 2) continue;
       const last = bars[bars.length - 1];
       // `sessions` gün öncesi; o kadar bar yoksa eldeki en eskisi kullanılır
       // ve sonuç "kısa dönem" olur — yanlış değil, sadece daha dar.
@@ -578,11 +646,10 @@ export async function getBars(
 /**
  * Alpaca'nın tek istekte döndürdüğü en fazla bar sayısı.
  *
- * `limit` sembol BAŞINA değil, YANITIN TAMAMI için geçerli — çoklu sembol
- * isteğinde tavan aşılırsa yanıt kesiliyor ve `next_page_token` ile devam
- * ediliyor. Sayfalama yapmak yerine istek, tavana sığacak kadar sembolle
- * bölünüyor: `sort=asc` olduğu için kesilme listenin sonundaki sembollerin
- * EN YENİ barlarını düşürürdü, yani grafik sessizce eksik çizilirdi.
+ * `limit` sembol BAŞINA değil, YANITIN TAMAMI için geçerli. İstek hâlâ
+ * tavana sığacak kadar sembolle bölünüyor, ama bu tek başına yetmiyor:
+ * Alpaca sınırın ÇOK altında da sayfa kesebiliyor (ölçüm ve gerekçe
+ * `fetchBarPages` başında). Devam sayfaları orada izleniyor.
  */
 const MAX_BARS_PER_REQUEST = 10_000;
 
@@ -620,10 +687,7 @@ export async function getBarsMulti(
 
   for (let i = 0; i < unique.length; i += perRequest) {
     const batch = unique.slice(i, i + perRequest);
-    const result = await symbolBatchFetch<{
-      bars?: Record<string, AlpacaBar[]>;
-    }>(
-      "/bars",
+    const result = await fetchBarPages(
       {
         symbols: batch.join(","),
         timeframe: spec.timeframe,
@@ -645,8 +709,7 @@ export async function getBarsMulti(
     anyOk = true;
     fetchedAt = result.fetchedAt;
 
-    for (const [symbol, list] of Object.entries(result.data.bars ?? {})) {
-      if (!list || list.length === 0) continue;
+    for (const [symbol, list] of Object.entries(result.data)) {
       let bars: Bar[] = list.map((b) => ({
         time: Math.floor(new Date(b.t).getTime() / 1000),
         open: b.o,
