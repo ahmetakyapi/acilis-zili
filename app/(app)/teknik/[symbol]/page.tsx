@@ -274,7 +274,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                 artık aynı satırı paylaşıyor: sol uçta kimlik, sağ uçta
                 tek kelime. Künye satırları o satırın altında kalıyor. */}
             <div className={styles.coverHead}>
-            <Link href={`/hisse/${symbol}`} className={styles.coverNameLink}>
+            <Link href={`/hisse/${symbol}`} className={styles.coverNameLink} data-morph-stage>
               {/* Teknik kartından gelindiyse logo kartın yerinden buraya uçuyor. */}
               <MorphTarget morphKey={`logo:${symbol}`}>
                 <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="lg" />

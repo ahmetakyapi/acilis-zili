@@ -883,6 +883,7 @@ export default async function AnalysisDetailPage(
             <Link
               href={`/hisse/${symbol}`}
               className="group flex min-w-0 items-start gap-3 sm:gap-4"
+              data-morph-stage
             >
               {/* Telefonda 44 piksel: 56'lık karo kimlik satırını görüş
                   şeridini ilk ekrandan itecek kadar uzatıyordu. */}

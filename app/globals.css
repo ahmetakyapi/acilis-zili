@@ -2101,6 +2101,21 @@ html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
    hesaplatıyordu (gerekçe ve ölçüm orada). */
 
 
+/* UÇUŞ SAHNESİ (components/motion/Morph). Kart logosu yeni sayfanın
+   başlığına uçarken kimliğin geri kalanı (ad, künye) bekliyor ve logo
+   indiği an yanından kayarak açılıyor. İlk hâlde ad baştan görünürdü ve
+   logo onun üstünden kayıyordu (şirket sayfası, kare kare incelendi).
+   Uçuş yokken (doğrudan açılış, geri tuşu) hiçbir şey gizlenmiyor. */
+[data-morph-stage] > :not([data-morph-target]) {
+  transition: opacity 360ms var(--ease-brand), translate 460ms var(--ease-brand);
+}
+[data-morph-stage][data-morph-state="flying"] > :not([data-morph-target]) {
+  opacity: 0;
+  translate: -14px 0;
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) { [data-morph-stage] > * { transition: none; } }
+
 /* Süzgeçle beliren liste satırı yerine oturuyor (AnalysisTable). Yalnızca
    süzgeç kullanıldıktan sonra sınıf ekleniyor; gerekçe o dosyada. 0,4
    tondan, sıfırdan değil: yazarken liste hiç boş görünmüyor. */

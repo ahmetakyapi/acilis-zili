@@ -790,7 +790,9 @@ async function StockHeader({
 
   return (
     <header className={styles.stockHeader}>
-      <div data-motion-reveal className={styles.identity}>
+      {/* `data-morph-stage`: logo uçarak gelirken ad ve künye bekliyor,
+          inince yanından açılıyor (components/motion/Morph). */}
+      <div data-motion-reveal data-morph-stage className={styles.identity}>
         {profile?.logoUrl ? (
           /* Logo ÇERÇEVESİZ ve tam oturur: kenarlık + iç dolgu, logoyu beyaz
              bir kutunun ortasında küçük bir damga gibi gösteriyordu. Artık
