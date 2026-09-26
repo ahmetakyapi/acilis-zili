@@ -2660,6 +2660,7 @@ async function StoriesSpotlight({
           {figure && (
             <StoryFigure
               block={figure}
+              locale={full?.locale ?? locale}
               className={`${styles.storyFigure} lg:w-[292px] lg:shrink-0`}
             />
           )}

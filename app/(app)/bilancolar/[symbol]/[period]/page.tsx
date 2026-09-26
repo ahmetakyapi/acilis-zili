@@ -894,7 +894,10 @@ export default async function AnalysisDetailPage(
                   symbol={symbol}
                   logoUrl={symbolMeta?.logoUrl}
                   size="xl"
-                  className="max-sm:size-11"
+                  /* 56 → 72 (26 Eylül, "logo bir tık büyük"): şirket adı 60
+                     piksellik bir display başlık ve 56'lık karo onun yanında
+                     küçük bir işaret gibi duruyordu. */
+                  className="size-[72px] rounded-[18px] max-sm:size-12 max-sm:rounded-xl"
                 />
               </MorphTarget>
               <div className="flex min-w-0 flex-col gap-1">

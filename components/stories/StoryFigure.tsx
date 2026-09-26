@@ -1,5 +1,5 @@
 import { parseBlocks, type Block } from "@/components/article/ArticleBody";
-import { cn } from "@/lib/utils";
+import { cn, titleCaseLabel } from "@/lib/utils";
 
 /* --------------------------------------------------------------------------
    Mercek kartının görseli — YAZININ KENDİ BLOĞU.
@@ -71,9 +71,12 @@ export function figureRepeatsBlock(block: Block): boolean {
 export function StoryFigure({
   block,
   className,
+  locale = "tr",
 }: {
   block: StoryFigureBlock;
   className?: string;
+  /** Künyelerin Title Case kuralı bu dilden (`titleCaseLabel`). */
+  locale?: string;
 }) {
   return (
     <figure
@@ -90,7 +93,7 @@ export function StoryFigure({
           {block.label}
         </figcaption>
       )}
-      {block.kind === "stats" && <Stats block={block} />}
+      {block.kind === "stats" && <Stats block={block} locale={locale} />}
       {block.kind === "shift" && <Shift block={block} />}
       {block.kind === "share" && <Share block={block} />}
     </figure>
@@ -98,7 +101,7 @@ export function StoryFigure({
 }
 
 /** Rakam şeridi — yazının en çarpıcı sayıları, kart ölçüsünde. */
-function Stats({ block }: { block: Extract<Block, { kind: "stats" }> }) {
+function Stats({ block, locale }: { block: Extract<Block, { kind: "stats" }>; locale: string }) {
   const items = block.items.slice(0, MAX_ITEMS);
   return (
     <div
@@ -113,7 +116,7 @@ function Stats({ block }: { block: Extract<Block, { kind: "stats" }> }) {
       {items.map((item, index) => (
         <div key={index} className="min-w-0">
           <p className="tote text-lead leading-none tracking-[-0.02em] text-strong">
-            {item.value}
+            {titleCaseLabel(item.value, locale)}
           </p>
           {item.note && (
             /* KÜNYE 11 PİKSEL (`text-tiny`). Önce `text-micro` (8px) idi, sonra 10
@@ -125,7 +128,7 @@ function Stats({ block }: { block: Extract<Block, { kind: "stats" }> }) {
                yazıyor ve üç satıra çıkan tek bir hücre ızgaranın hizasını
                bozuyor. Cümlenin tamamı yazının içinde zaten duruyor. */
             <p className="mt-1.5 line-clamp-2 text-tiny leading-[15px] text-muted">
-              {item.note}
+              {titleCaseLabel(item.note, locale)}
             </p>
           )}
         </div>

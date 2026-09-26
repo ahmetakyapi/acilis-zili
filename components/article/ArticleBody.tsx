@@ -11,7 +11,7 @@ import {
 import type { Icon } from "@phosphor-icons/react";
 import { ArticleChart } from "./ArticleChart";
 import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
-import { cn, safeExternalUrl } from "@/lib/utils";
+import { cn, safeExternalUrl, titleCaseLabel } from "@/lib/utils";
 
 /* ==========================================================================
    Uzun metin gövdesi — rehber yazıları ve mercek yazıları
@@ -1071,10 +1071,15 @@ export function ArticleBody({
                         data-word={/\d/.test(item.value) ? undefined : ""}
                         className="tote text-title leading-none sm:text-heading"
                       >
-                        {item.value}
+                        {titleCaseLabel(item.value, locale)}
                       </p>
+                      {/* KÜNYE TITLE CASE (26 Eylül). Rakamın altındaki satır bir
+                          künye, cümle değil ("Teklifte Boğazın Açılmasına Kalan
+                          Süre"); rutin cümle düzeninde yazıyordu. Dönüşüm
+                          çizimde, Türkçe kuralıyla (`titleCaseLabel`). Değerin
+                          birimi de ("7 gün" → "7 Gün"). */}
                       <p data-part="note" className="mt-1.5 text-tiny leading-[16px] text-muted">
-                        {item.note}
+                        {titleCaseLabel(item.note, locale)}
                       </p>
                     </div>
                   ))}

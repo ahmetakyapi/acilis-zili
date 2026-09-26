@@ -1399,3 +1399,20 @@
     transition: none;
   }
 }
+
+/* ---- ÖZET, ÜÇÜNCÜ DÜZEN (26 Eylül) ----
+   İki sütunda giriş kısa, destek uzun kalıyordu: sol yarı boş, sağ yarı
+   soluk ve küçük puntolu bir metin duvarı (ekran görüntüsüyle bildirildi).
+   Giriş artık tam genişlikte bir ALINTI: solunda mavi hat, iri ve koyu.
+   Kalan paragraflar altında iki eşit sütunda akıyor (CSS columns), gövde
+   tonunda ve okunur puntoda; sütunlar kendiliğinden dengeleniyor. Aşağıdaki
+   kurallar yukarıdaki iki sütunlu ızgarayı eziyor. */
+.summaryProse, .summaryProse[class] { display:flex; flex-direction:column; gap:22px; }
+.summaryLead, .summaryLead[class] { max-width:none; padding:4px 0 4px 20px; border-left:3px solid var(--primary); font-size:clamp(1.15rem, 1.6vw, 1.35rem); line-height:1.6; color:var(--text-strong); }
+.summaryRest, .summaryRest[class] { display:block; margin:0; padding:0; border:0; column-count:2; column-gap:clamp(2rem, 4vw, 3.5rem); column-rule:1px solid var(--line-soft); }
+.summaryRest > p, .summaryRest[class] > p { max-width:none; margin:0 0 .9rem; break-inside:avoid; color:var(--text-body); font-size:1rem; line-height:1.8; }
+@media (max-width: 1023px) { .summaryRest, .summaryRest[class] { column-count:1; } }
+
+/* Çeyreklik gelir sütunlarının değeri okunur puntoda (11 → 13). */
+.coverTrendBar > span { font-size:0.8rem; font-weight:600; }
+.coverTrendBar[data-latest="true"] > span { font-size:0.875rem; }

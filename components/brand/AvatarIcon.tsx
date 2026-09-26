@@ -103,10 +103,27 @@ const DRAWINGS: Record<AvatarKey, ReactNode> = {
       <path d="M24.6 12.3h5.6v5.6M9.8 31h20.4" />
     </>
   ),
-  coffee: (
+  pie: (
     <>
-      <Plane d="M11 15.8h15v5.4a7 7 0 0 1-7 7h-1a7 7 0 0 1-7-7z" />
-      <path d="M26 18h1.3a3 3 0 0 1 0 6H26M15.6 8.4c-1.3 1.5 1.3 2.7 0 4.4M20.6 8.4c-1.3 1.5 1.3 2.7 0 4.4M10 31.6h17.8" />
+      <path d="M20 8.4v11.6h11.6A11.6 11.6 0 0 0 20 8.4z" {...SOLID} />
+      <path d="M17 11.2a10.6 10.6 0 1 0 11.8 11.8H17z" {...FILL} />
+      <path d="M17 11.2a10.6 10.6 0 1 0 11.8 11.8H17z" />
+    </>
+  ),
+  coin: (
+    <>
+      <Disc cx={20} cy={20} r={11.6} />
+      <circle cx="20" cy="20" r="8" />
+      <path d="M22.6 16.4c-.6-.9-1.6-1.4-2.8-1.4-1.6 0-2.8.9-2.8 2.2 0 3 5.8 1.6 5.8 4.6 0 1.3-1.2 2.3-2.9 2.3-1.3 0-2.4-.6-3-1.5M20 13.6v1.4M20 25v1.4" />
+    </>
+  ),
+  briefcase: (
+    <>
+      <path d="M16 13.2v-1.6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1.6" />
+      <rect x="8.6" y="13.2" width="22.8" height="16.4" rx="3.4" {...FILL} />
+      <rect x="8.6" y="13.2" width="22.8" height="16.4" rx="3.4" />
+      <path d="M8.6 20.4h22.8" />
+      <rect x="17.6" y="18.6" width="4.8" height="3.8" rx="1" {...SOLID} />
     </>
   ),
   owl: (
@@ -132,13 +149,6 @@ const DRAWINGS: Record<AvatarKey, ReactNode> = {
       <path d="M15.3 20.2l3.4 3.4 6.1-6.6" />
     </>
   ),
-  crown: (
-    <>
-      <Plane d="M9.6 15.2l5.1 5 5.3-8.2 5.3 8.2 5.1-5-2.3 13.3H11.9z" />
-      <circle cx="20" cy="10.4" r="1.6" {...SOLID} />
-      <path d="M12.6 31.4h14.8" />
-    </>
-  ),
   globe: (
     <>
       <Disc cx={20} cy={20} r={11.6} />
@@ -152,9 +162,6 @@ const DRAWINGS: Record<AvatarKey, ReactNode> = {
       <circle cx="20" cy="20" r="6.6" />
       <circle cx="20" cy="20" r="2.3" {...SOLID} />
     </>
-  ),
-  star: (
-    <Plane d="M20 9l3.06 7.59 8.16.56-6.27 5.26 1.99 7.94L20 26l-6.94 4.35 1.99-7.94-6.27-5.26 8.16-.56z" />
   ),
 };
 
@@ -197,6 +204,7 @@ export function AvatarTile({
   return (
     <span
       aria-hidden
+      data-avatar={icon ?? "initials"}
       className={cn(
         "inline-flex shrink-0 items-center justify-center overflow-hidden text-(--mark-ink)",
         className,
@@ -207,7 +215,7 @@ export function AvatarTile({
       }}
     >
       {icon ? (
-        <AvatarGlyph icon={icon} className="size-[76%]" />
+        <AvatarGlyph icon={icon} className="avatar-glyph size-[76%]" />
       ) : (
         <span className="text-[0.95em] font-bold tracking-[-0.02em]">{initials || "?"}</span>
       )}

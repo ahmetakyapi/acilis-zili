@@ -7,6 +7,10 @@
  * listeyi okuyor. Kayıtta yalnızca anahtarlar duruyor; bir çizim ya da
  * renk değişirse seçmiş herkeste kendiliğinden değişir.
  *
+ * SET YATIRIMCILIĞIN DİLİNDE (26 Eylül). Kahve, taç ve yıldız çıktı ("projeye,
+ * yatırımcılığa uygun olsun"); yerlerine portföy dilimi, madeni para ve
+ * evrak çantası girdi. Çıkan anahtarı seçmiş hesap baş harflere düşüyor.
+ *
  * Sıra SEÇİCİNİN sırası. Yeni ikon sona eklenir; bir anahtar silinirse
  * onu seçmiş hesap baş harflere düşer (`isAvatarKey` kayıttaki değeri süzüyor).
  */
@@ -18,15 +22,15 @@ export const AVATAR_KEYS = [
   "rocket",
   "compass",
   "trend",
-  "coffee",
+  "pie",
+  "coin",
+  "briefcase",
   "owl",
   "diamond",
   "bolt",
   "shield",
-  "crown",
   "globe",
   "target",
-  "star",
 ] as const;
 
 export type AvatarKey = (typeof AVATAR_KEYS)[number];
@@ -61,15 +65,15 @@ export const AVATAR_DEFAULT_COLOR: Record<AvatarKey, AvatarColor> = {
   rocket: "violet",
   compass: "teal",
   trend: "blue",
-  coffee: "brass",
+  pie: "violet",
+  coin: "brass",
+  briefcase: "navy",
   owl: "ink",
   diamond: "teal",
   bolt: "brass",
   shield: "navy",
-  crown: "brass",
   globe: "teal",
   target: "violet",
-  star: "blue",
 };
 
 /** Kayıttaki hâl: ikon yoksa karo baş harfleri basıyor, renk yine geçerli. */

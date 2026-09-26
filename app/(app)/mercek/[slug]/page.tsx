@@ -13,7 +13,8 @@ import {
 import { StoryCompanies, StoryCompaniesFallback } from "@/components/stories/StoryCompanies";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, CaretDown } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, ArrowUpRight, CaretDown, ChartLineUp } from "@phosphor-icons/react/dist/ssr";
+import { logoSrc } from "@/lib/logos";
 import {
   ArticleBody,
   parseBlocks,
@@ -99,19 +100,30 @@ async function StorySymbols({ symbols }: { symbols: string[] }) {
           <Link
             key={symbol}
             href={`/hisse/${symbol}`}
-            className="panel-hover flex min-h-10 items-center gap-2 rounded-md border border-line bg-surface py-1.5 pl-1.5 pr-3 transition-colors"
+            className={detail.symbolChip}
           >
-            <LogoTile symbol={symbol} logoUrl={logo} size="sm" />
+            {/* LOGOSU OLMAYAN SEMBOL (fon, endeks) harf kutusu yerine bir
+                piyasa ikonu alıyor (26 Eylül): "SP", "US" gibi iki soluk
+                harf kapağın en görünür yerinde anlamsız duruyordu. Karo 32
+                → 40 piksel, ad okunur puntoda. */}
+            {logoSrc(symbol, logo) ? (
+              <LogoTile symbol={symbol} logoUrl={logo} size="md" className="size-10" />
+            ) : (
+              <span aria-hidden className={detail.symbolFund}>
+                <ChartLineUp size={20} weight="duotone" />
+              </span>
+            )}
             <span className="min-w-0">
-              <span className="numeral block text-small font-bold leading-tight text-strong">
+              <span className="numeral block text-base font-bold leading-tight text-strong">
                 {symbol}
               </span>
               {name && (
-                <span className="block max-w-32 truncate text-nano leading-tight text-muted">
+                <span className="block max-w-40 truncate text-tiny leading-tight text-body">
                   {name}
                 </span>
               )}
             </span>
+            <ArrowUpRight size={14} aria-hidden className={detail.symbolArrow} />
           </Link>
         );
       })}
@@ -339,7 +351,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
         {hasCompanies && <StorySymbols symbols={symbols} />}
       </div>
       {figure && <ScrollStage className={detail.coverFigure}>
-        <StoryFigure block={figure} className={detail.figure} />
+        <StoryFigure block={figure} className={detail.figure} locale={story.locale} />
       </ScrollStage>}
       </header>
       </SpotlightCard>

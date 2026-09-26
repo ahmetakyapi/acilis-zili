@@ -524,7 +524,7 @@ export function CompareStrip({
                 style={{ background: seriesColorOf(symbols, row.symbol) }}
               />
               <div className="flex items-start gap-3">
-                <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
+                <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="md" className="size-10" />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <Link
                     href={`/hisse/${row.symbol}`}

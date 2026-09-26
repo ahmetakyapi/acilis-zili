@@ -157,3 +157,14 @@ a.sourceLink:focus-visible { outline:2px solid var(--line-focus); outline-offset
 @media(max-width:1023px) { .cover { grid-template-columns:minmax(0,1fr); } .title { max-width:32ch; } .figure { padding:20px 0 0; border-left:0; border-top:1px solid var(--primary-faint); } .figure > div { grid-template-columns:repeat(2,minmax(0,1fr)); } .coverFigure { max-width:none; } .coverToc { padding:18px 0 0; border-left:0; border-top:1px solid var(--primary-faint); } }
 @media(max-width:767px) { .coverToc { display:none; } .article { --read-inset:20px; gap:22px; } .cover { padding:22px var(--read-inset); border-radius:20px; gap:22px; } .coverCopy { gap:18px; } .title { font-size:32px; line-height:1.12; } .dek { font-size:14px; line-height:1.75; } .figure { gap:16px; } .figure :global(.tote) { font-size:23px; } .moreStories li a { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 10px; padding-block:16px; } .moreStories li a > span:first-child, .moreStories:lang(en) li a > span:first-child { grid-column:1/-1; width:auto; } .moreCopy strong { font-size:17px; } .moreCopy > span { font-size:13px; } }
 @media(prefers-reduced-motion:reduce) { .moreStories li a > svg, .sourceLink > svg, .tocBox > summary > svg { transition:none; transform:none!important; } }
+
+/* Kapaktaki şirket çipleri (26 Eylül): 40'lık logo, okunur ad, üzerine
+   gelince kalkıp ok açılıyor. Logosu olmayan fon piyasa ikonu alıyor. */
+.symbolChip { display:flex; min-height:52px; align-items:center; gap:10px; padding:6px 14px 6px 6px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:border-color .2s, background-color .2s, translate .25s var(--ease-brand); }
+.symbolFund { display:grid; place-items:center; width:40px; height:40px; flex-shrink:0; border-radius:11px; background:var(--primary-wash); color:var(--primary-ink); }
+.symbolArrow { flex-shrink:0; color:var(--primary-ink); opacity:.45; transition:opacity .2s, transform .25s var(--ease-brand); }
+@media(hover:hover) and (pointer:fine) {
+ .symbolChip:hover { translate:0 -2px; border-color:var(--primary-faint); background:var(--primary-tint); }
+ .symbolChip:hover .symbolArrow { opacity:1; transform:translate(2px,-2px); }
+}
+@media(prefers-reduced-motion:reduce) { .symbolChip, .symbolArrow { transition:none; } .symbolChip:hover { translate:none; } }

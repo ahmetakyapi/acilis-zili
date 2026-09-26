@@ -322,3 +322,18 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 @media (prefers-reduced-motion:reduce) {
   .next, .cell, .chip { transition:none; }
 }
+
+/* ---- Olay satırları, premium (26 Eylül) ----
+   Yüksek etkili olayın solunda marka mavisinde bir hat (etki bir yön değil,
+   bir önem derecesi); saat karosu bir kademe iri. Satır üzerine gelince
+   tonlanıyor ve karo kalkıyor — göz hangi olayı okuduğunu buluyor. */
+.event { position:relative; transition:background-color .2s; }
+.event[data-impact="high"]::before { content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; background:var(--primary); }
+.time { min-height:58px; transition:translate .25s var(--ease-brand); }
+.time > span:first-child { font-size:20px; }
+.time > span:nth-child(2) { font-size:12px; }
+@media(hover:hover) and (pointer:fine) {
+ .event:hover { background:var(--primary-tint); }
+ .event:hover .time { translate:0 -2px; }
+}
+@media(prefers-reduced-motion:reduce) { .event, .time { transition:none; } .event:hover .time { translate:none; } }

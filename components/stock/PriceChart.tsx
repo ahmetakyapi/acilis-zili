@@ -551,13 +551,22 @@ export function PriceChart({
           };
         },
       });
+      /* ÖNCEKİ KAPANIŞ SESSİZ (26 Eylül). Çizgi başlığı ("Önc. Kapanış")
+         grafiğin içinde siyah bir kutu, eksen etiketi de koyu bir hap olarak
+         çiziliyordu ve eksendeki fiyatların üstüne biniyordu ("değerleri
+         baltalıyor", ekran görüntüsüyle bildirildi). Çizginin içindeki
+         başlık kalktı; eksen etiketi yüzeyin çukur tonunda ve gövde
+         renginde yumuşak bir hap. Adı ve değeri grafiğin üstündeki okuma
+         satırında, kesik çizgi işaretiyle yazılı. */
       series.createPriceLine({
         price: prevClose,
         color: cssVar("--line-strong"),
         lineWidth: 1,
         lineStyle: LineStyle.Dashed,
         axisLabelVisible: true,
-        title: labels.prevCloseShort,
+        axisLabelColor: cssVar("--surface-sunken"),
+        axisLabelTextColor: cssVar("--text-body"),
+        title: "",
       });
       series.setData(
         bars.map((bar) => ({
@@ -972,6 +981,14 @@ export function PriceChart({
                   {"  ·  "}
                   {labels.periodHigh}{" "}
                   <span className="text-soft">{formatPrice(period.high, locale)}</span>
+                  {state.phase === "ready" && state.prevClose !== null && state.prevClose > 0 && mode === "area" && (
+                    <>
+                      {"  ·  "}
+                      <i aria-hidden className="mr-1 inline-block w-3.5 border-t border-dashed border-line-strong align-middle" />
+                      {labels.prevCloseShort}{" "}
+                      <span className="text-soft">{formatPrice(state.prevClose, locale)}</span>
+                    </>
+                  )}
                 </span>
               )}
             </div>

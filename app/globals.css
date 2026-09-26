@@ -2346,3 +2346,39 @@ html.ink-splash-out .ink-splash-layer {
 [data-admin-shell] .page-heading-copy p:not(.page-eyebrow) { margin-top:4px; }
 [data-admin-shell] .page-eyebrow { margin-bottom:2px; }
 [data-admin-shell] .page-enter > .gap-6 { gap:16px; }
+
+/* PROFİL KAROLARI KOYU TEMADA (26 Eylül). Karolar iki temada aynıydı ve
+   koyu zeminde açık uçları (#5cc4ff, #f7cf7c…) göz alıyordu. Koyu temada
+   degradeler bir kademe derin ve daha az doygun; parlaklık katmanı da
+   yarıya iniyor. Kimlik yine aynı rengi taşıyor, yalnızca zemine uyuyor. */
+:root[data-theme="dark"] {
+  --avatar-gloss: linear-gradient(180deg, rgb(255 255 255 / 0.14) 0%, rgb(255 255 255 / 0) 52%);
+  --avatar-blue: linear-gradient(150deg, #3a9fe0 0%, #1a6cbd 48%, #0b3569 100%);
+  --avatar-navy: linear-gradient(150deg, #5673b8 0%, #273f7e 50%, #0f1a3a 100%);
+  --avatar-teal: linear-gradient(150deg, #3fbfb2 0%, #10828a 50%, #083e4c 100%);
+  --avatar-violet: linear-gradient(150deg, #9b85e6 0%, #5f43c2 50%, #2a1b70 100%);
+  --avatar-brass: linear-gradient(150deg, #d9ae62 0%, #a8761f 50%, #5f3806 100%);
+  --avatar-ink: linear-gradient(150deg, #4a5870 0%, #243044 50%, #0c131f 100%);
+  --avatar-silver: linear-gradient(150deg, #a7b3c2 0%, #6c7a8d 50%, #36414f 100%);
+}
+
+/* İKONUN KENDİ HAREKETİ (26 Eylül). Seçicide ve hesap düğmesinde karonun
+   üzerine gelince her ikon kendi işini yapıyor: zil sallanır, roket kalkar,
+   para döner, grafik ve mumlar yükselir, pusula iğnesi titrer, kalkan
+   parlar. Tek seferlik, yarım saniye; hareketi azaltana hiç oynamıyor. */
+.avatar-glyph { transform-origin:50% 40%; }
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+ :is(button, a, .masthead-account):hover > [data-avatar] .avatar-glyph,
+ :is(button, a):hover [data-avatar] .avatar-glyph { animation:avatar-bob 520ms var(--ease-brand); }
+ :is(button, a, .masthead-account):hover [data-avatar="bell"] .avatar-glyph { transform-origin:50% 22%; animation:avatar-ring 620ms var(--ease-brand); }
+ :is(button, a, .masthead-account):hover [data-avatar="rocket"] .avatar-glyph { animation:avatar-lift 620ms var(--ease-brand); }
+ :is(button, a, .masthead-account):hover [data-avatar="coin"] .avatar-glyph { animation:avatar-flip 700ms var(--ease-brand); }
+ :is(button, a, .masthead-account):hover :is([data-avatar="trend"], [data-avatar="candles"], [data-avatar="bull"]) .avatar-glyph { animation:avatar-rise 560ms var(--ease-brand); }
+ :is(button, a, .masthead-account):hover :is([data-avatar="compass"], [data-avatar="globe"], [data-avatar="pie"], [data-avatar="target"]) .avatar-glyph { transform-origin:50% 50%; animation:avatar-turn 640ms var(--ease-brand); }
+}
+@keyframes avatar-bob { 40% { transform:translateY(-8%) scale(1.06); } }
+@keyframes avatar-ring { 20% { transform:rotate(-14deg); } 45% { transform:rotate(11deg); } 70% { transform:rotate(-5deg); } }
+@keyframes avatar-lift { 45% { transform:translateY(-16%); } 60% { transform:translateY(-12%); } }
+@keyframes avatar-flip { 50% { transform:scaleX(-1); } }
+@keyframes avatar-rise { 40% { transform:translateY(-10%) scale(1.04); } }
+@keyframes avatar-turn { 50% { transform:rotate(24deg); } }

@@ -18,8 +18,8 @@
    0,66em, "00" 1,18em — satır her tikte zıplardı. İki nokta tabular
    dizide 0,58em'lik bir sütun yiyordu; birimler ve ekran okuyucu adları
    zaten tabular dizinin DIŞINDA (globals.css "Sayısal okumalar"). */
-.countdown { display:flex; flex-wrap:nowrap; align-items:baseline; gap:0 .2em; font-size:clamp(48px,18cqi,92px); font-weight:600; line-height:.86; letter-spacing:-.055em; color:var(--text-strong); }
-.countdown[data-days="true"] { font-size:clamp(38px,14cqi,80px); }
+.countdown { display:flex; flex-wrap:nowrap; align-items:baseline; gap:0 .2em; font-size:clamp(48px,20cqi,108px); font-weight:600; line-height:.86; letter-spacing:-.055em; color:var(--text-strong); }
+.countdown[data-days="true"] { font-size:clamp(38px,16cqi,96px); }
 .group { display:inline-flex; align-items:baseline; gap:.06em; min-width:0; }
 /* Satır yüksekliği .86 yazı kutusunun altında; pencere duran rakamın
    mürekkebini KIRPMIYOR (`overflow-clip-margin`), yalnızca yuvarlanan

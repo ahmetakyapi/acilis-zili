@@ -233,7 +233,6 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
       </div>
 
 
-      <IndexTabs tab={tab} locale={locale} t={t} />
       <QueryTransition label={t.common.loading}>
       <Suspense
         key={`detail:${tab}:${sort}:${dir}:${limit}`}
@@ -247,8 +246,16 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
            Satır sayısı ZATEN BİLİNİYOR (`limit` ve üye sayısı sunucuda,
            askıya alınmadan önce), dolayısıyla yer tahminle değil sayıyla
            ayrılıyor. */
+        /* SEKME SATIRI AKIŞIN İÇİNDE (26 Eylül). Yükselenlerin payı artık
+           düğmelerin yanında duruyor ve o pay kotasyonlarla birlikte geliyor;
+           satır bu yüzden `IndexDetail`in içine girdi. Yedekte de AYNI
+           düğmeler basılıyor: sekme değişirken satır kaybolmuyor, yalnızca
+           yanındaki pay bekliyor. */
         fallback={
-          <LoadingFallback label={t.common.loading}><DetailSkeleton rows={Math.min(active.members.length, limit)} /></LoadingFallback>
+          <>
+            <IndexTabs tab={tab} locale={locale} t={t} />
+            <LoadingFallback label={t.common.loading}><DetailSkeleton rows={Math.min(active.members.length, limit)} /></LoadingFallback>
+          </>
         }
       >
         <IndexDetail
@@ -542,15 +549,31 @@ async function IndexDetail({
   const staleNote =
     stale && stampAt ? ` · ${staleMark(t.data.mayBeStale, stampAt, locale)}` : "";
 
+  const share = withChange.length > 0 ? (advancing / withChange.length) * 100 : 0;
+
   return (
     <>
+      <IndexTabs
+        tab={tab}
+        locale={locale}
+        t={t}
+        aside={
+          withChange.length > 0 ? (
+            <BreadthSummary
+              share={share}
+              advancing={advancing}
+              flat={flat}
+              declining={declining}
+              locale={locale}
+              t={t}
+            />
+          ) : undefined
+        }
+      />
       <IndexToolbar
         tab={tab}
         proxy={proxy}
         proxyQuote={proxyResult.ok ? (proxyResult.data[proxy] ?? null) : null}
-        advancing={advancing}
-        declining={declining}
-        flat={flat}
         total={withChange.length}
         memberCount={members.length}
         heat={withChange}
@@ -646,7 +669,7 @@ async function IndexDetail({
    Sonraki yükleme düzeninde seçimler sonuç sınırının dışına çıktı: veri
    beklenirken çipler kaybolmaz veya devre dışı kalmaz; genişlik yine altındadır. */
 
-function IndexTabs({ tab, locale, t }: { tab: TabKey; locale: Locale; t: Dictionary }) {
+function IndexTabs({ tab, aside }: { tab: TabKey; locale: Locale; t: Dictionary; aside?: ReactNode }) {
   return <Panel className={styles.indexTabs}>
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 px-4 py-3 sm:px-5">
         {/* ÜÇ ÇİP MOBİLDE TEK SATIRDA. `flex-wrap` ile diziliyorlardı ve
@@ -686,12 +709,11 @@ function IndexTabs({ tab, locale, t }: { tab: TabKey; locale: Locale; t: Diction
             );
           })}
         </div>
-        {/* Okunur tarih ("1 Ağu 2026"): "01.08.2026" hem sitenin öteki
-            tarihleriyle çelişiyor hem 390'da panelin sağ kenarından
-            kesiliyordu (ölçüldü). */}
-        <span className="numeral ml-auto text-right text-nano text-muted">
-          {t.markets.asOf}: {formatEtDateMedium(INDEX_COMPOSITION_DATE, locale)}
-        </span>
+        {/* SAĞDA YÜKSELENLERİN PAYI (26 Eylül). Pay genişlik kartının sağ
+            yarısını tutuyordu; satırın sağı ise yalnızca liste tarihini
+            taşıyordu. Pay buraya çıkınca kartın sağı ısı haritasına kaldı.
+            Liste tarihi kartın kimlik bloğuna indi. */}
+        {aside && <div className={styles.tabsAside}>{aside}</div>}
       </div>
 
   </Panel>;
@@ -703,20 +725,15 @@ function IndexTabs({ tab, locale, t }: { tab: TabKey; locale: Locale; t: Diction
    fon sembolü bu yüzden fiyatın yanında kalır. Eksik değişimler sayaca
    katılmaz; gerçek kapsam toplam üye sayısıyla ayrıca gösterilir. */
 function IndexToolbar({
-  tab, proxy, proxyQuote, advancing, declining, flat, total, memberCount, heat, locale, t, children,
+  tab, proxy, proxyQuote, total, memberCount, heat, locale, t, children,
 }: {
   tab: TabKey; proxy: string; proxyQuote: Quote | null;
-  advancing: number; declining: number; flat: number; total: number; memberCount: number;
+  total: number; memberCount: number;
   /** Değişimi bilinen satırlar — sayaçla AYNI liste (`withChange`). */
   heat: Row[];
   locale: Locale; t: Dictionary; children?: ReactNode;
 }) {
-  const pct = (value: number) => total > 0 ? value / total * 100 : 0;
-  const groups = [
-    { key: "up", label: t.markets.advancing, value: advancing, tone: "text-up", fill: "bg-up" },
-    { key: "flat", label: t.markets.unchanged, value: flat, tone: "text-muted", fill: "bg-flat/50" },
-    { key: "down", label: t.markets.declining, value: declining, tone: "text-down", fill: "bg-down" },
-  ];
+  /* Artı/yatay/eksi sayıları ve pay artık sekme satırında (BreadthSummary). */
   return (
     <Panel id="market-reading" className={styles.breadth}>
       <div className={styles.breadthOverview}>
@@ -730,71 +747,112 @@ function IndexToolbar({
             <span className="numeral">{proxy} · {formatPrice(proxyQuote.price, locale, { currency: true })}</span>
             {proxyQuote.changePct !== null && <ChangePill changePct={proxyQuote.changePct} locale={locale} />}
           </div>}
-        </div>
-        <div className={styles.breadthVisual}>
-          {total > 0 ? <>
-            <div className={styles.breadthRatio}>
-              <span>{t.markets.advancingShare}</span>
-              <strong className="numeral">{formatPercentPlain(pct(advancing), locale, 0)}</strong>
-            </div>
-            <div className={styles.breadthRail} aria-hidden>
-              {groups.map((group) => group.value > 0 && <span key={group.key} data-motion-draw="line" className={cn("bar-fill", group.fill)} style={{ flex: group.value }} />)}
-            </div>
-            <dl className={styles.breadthCounts}>
-              {groups.map((group) => <div key={group.key}>
-                <dt>{group.label}</dt><dd className={cn("numeral", group.tone)}>{group.value}</dd>
-              </div>)}
-            </dl>
-          </> : <p className={styles.breadthEmpty}>{t.common.noData}</p>}
+          {total === 0 && <p className={styles.breadthEmpty}>{t.common.noData}</p>}
           <p className={styles.breadthCoverage}>{t.markets.breadthCoverage.replace("{known}", String(total)).replace("{total}", String(memberCount))}</p>
+          {/* Okunur tarih ("1 Ağu 2026"): "01.08.2026" hem sitenin öteki
+              tarihleriyle çelişiyor hem 390'da kenardan kesiliyordu. */}
+          <p className={styles.breadthCoverage}>
+            {t.markets.asOf}: <span className="numeral">{formatEtDateMedium(INDEX_COMPOSITION_DATE, locale)}</span>
+          </p>
         </div>
+        {/* ISI HARİTASI, LOGOLU (26 Eylül). Renkli kareler "anlamsız"
+            bulundu: hangi karenin hangi şirket olduğu okunmuyordu. Her kare
+            artık şirketin logosunu taşıyor; renk karonun zemini. Kare boyu
+            endeksin kalabalığına göre (Dow iri, Nasdaq orta, S&P 500 küçük).
+            S&P 500'de logoyu piyasa değerine göre ilk HEAT_LOGOS şirket
+            alıyor — 500 logo sayfayı ağırlaştırırdı — kalanı düz renkli kare.
+            Renk sayaçla AYNI satırlardan. Kareler odak sırasının dışında:
+            aynı bağlantılar alttaki tabloda. */}
+        {heat.length > 0 && (
+          <div className={styles.heat}>
+            <div className={styles.heatHead}>
+              <h3>{t.markets.heatmap}</h3>
+              <span aria-hidden className={styles.heatScale}>
+                <span className="numeral">−%{HEAT_FULL}</span>
+                <i />
+                <span className="numeral">+%{HEAT_FULL}</span>
+              </span>
+            </div>
+            <p className={styles.heatHint}>{t.markets.heatmapHint}</p>
+            <div
+              className={styles.heatGrid}
+              data-density={heat.length <= HEAT_LARGE ? "large" : heat.length <= HEAT_MEDIUM ? "medium" : "small"}
+              aria-hidden
+              data-motion-stagger
+            >
+              {[...heat]
+                .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
+                .map((row, index) => {
+                  const change = row.quote!.changePct!;
+                  const depth = Math.min(1, Math.abs(change) / HEAT_FULL);
+                  const tone = change > 0 ? "var(--up)" : change < 0 ? "var(--down)" : null;
+                  return (
+                    <Link
+                      key={row.member.symbol}
+                      href={`/hisse/${row.member.symbol}`}
+                      prefetch={false}
+                      tabIndex={-1}
+                      title={`${row.member.symbol} · ${formatPercent(change, locale)}`}
+                      className={styles.heatCell}
+                      style={{
+                        background: tone
+                          ? `color-mix(in srgb, ${tone} ${Math.round(HEAT_MIN + depth * (100 - HEAT_MIN))}%, var(--surface-sunken))`
+                          : "var(--surface-sunken)",
+                      }}
+                    >
+                      {index < HEAT_LOGOS && (
+                        <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" className={styles.heatLogo} />
+                      )}
+                    </Link>
+                  );
+                })}
+            </div>
+          </div>
+        )}
       </div>
-      {/* ISI HARİTASI (26 Eylül). Genişlik yalnızca üç sayı ve bir çubuktu;
-          piyasanın NASIL dağıldığı — büyükler mi taşıyor, küçükler mi —
-          görünmüyordu. Her kare bir bileşen, piyasa değerine göre sıralı
-          (büyükler başta). Renk yön, koyuluk hareketin büyüklüğü: %3'te
-          doyuyor. Sayaçla AYNI satırlar, yani ızgaradaki yeşil kare sayısı
-          "Artıda" sayısıyla birebir. Kareler odak sırasının DIŞINDA:
-          S&P 500'de 500 durak olurdu; aynı bağlantılar alttaki tabloda. */}
-      {heat.length > 0 && (
-        <div className={styles.heat}>
-          <div className={styles.heatHead}>
-            <h3>{t.markets.heatmap}</h3>
-            <span aria-hidden className={styles.heatScale}>
-              <span className="numeral">−%{HEAT_FULL}</span>
-              <i />
-              <span className="numeral">+%{HEAT_FULL}</span>
-            </span>
-          </div>
-          <p className={styles.heatHint}>{t.markets.heatmapHint}</p>
-          <div className={styles.heatGrid} aria-hidden data-motion-stagger>
-            {[...heat]
-              .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
-              .map((row) => {
-                const change = row.quote!.changePct!;
-                const depth = Math.min(1, Math.abs(change) / HEAT_FULL);
-                const tone = change > 0 ? "var(--up)" : change < 0 ? "var(--down)" : null;
-                return (
-                  <Link
-                    key={row.member.symbol}
-                    href={`/hisse/${row.member.symbol}`}
-                    prefetch={false}
-                    tabIndex={-1}
-                    title={`${row.member.symbol} · ${formatPercent(change, locale)}`}
-                    className={styles.heatCell}
-                    style={{
-                      background: tone
-                        ? `color-mix(in srgb, ${tone} ${Math.round(HEAT_MIN + depth * (100 - HEAT_MIN))}%, var(--surface-sunken))`
-                        : "var(--surface-sunken)",
-                    }}
-                  />
-                );
-              })}
-          </div>
-        </div>
-      )}
       {children && <div className={styles.breadthStamp}>{children}</div>}
     </Panel>
+  );
+}
+
+/** Isı haritasında kare boyunun kademeleri: bu kadar şirkete kadar iri/orta. */
+const HEAT_LARGE = 40;
+const HEAT_MEDIUM = 150;
+/** Logoyu alan en fazla kare — S&P 500'de ilk 120 (piyasa değerine göre). */
+const HEAT_LOGOS = 120;
+
+/**
+ * Yükselenlerin payı — sekme satırının sağında, sıkı hâliyle (26 Eylül).
+ * Büyük yüzde, üç renkli ray ve artı/yatay/eksi sayıları tek blokta.
+ */
+function BreadthSummary({
+  share, advancing, flat, declining, locale, t,
+}: {
+  share: number; advancing: number; flat: number; declining: number; locale: Locale; t: Dictionary;
+}) {
+  const parts = [
+    { key: "up", value: advancing, fill: "bg-up", tone: "text-up", label: t.markets.advancing },
+    { key: "flat", value: flat, fill: "bg-flat/50", tone: "text-muted", label: t.markets.unchanged },
+    { key: "down", value: declining, fill: "bg-down", tone: "text-down", label: t.markets.declining },
+  ];
+  return (
+    <div className={styles.shareBox}>
+      <div className={styles.shareHead}>
+        <span>{t.markets.advancingShare}</span>
+        <strong className="numeral">{formatPercentPlain(share, locale, 0)}</strong>
+      </div>
+      <div className={styles.breadthRail} aria-hidden>
+        {parts.map((part) => part.value > 0 && <span key={part.key} data-motion-draw="line" className={cn("bar-fill", part.fill)} style={{ flex: part.value }} />)}
+      </div>
+      <dl className={styles.shareCounts}>
+        {parts.map((part) => (
+          <div key={part.key}>
+            <dt>{part.label}</dt>
+            <dd className={cn("numeral", part.tone)}>{part.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }
 
