@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { MorphTarget } from "@/components/motion/Morph";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -885,12 +886,16 @@ export default async function AnalysisDetailPage(
             >
               {/* Telefonda 44 piksel: 56'lık karo kimlik satırını görüş
                   şeridini ilk ekrandan itecek kadar uzatıyordu. */}
-              <LogoTile
-                symbol={symbol}
-                logoUrl={symbolMeta?.logoUrl}
-                size="xl"
-                className="max-sm:size-11"
-              />
+              {/* Listeden gelindiyse logo tıklanan satırdan buraya uçuyor
+                  (components/motion/Morph). */}
+              <MorphTarget morphKey={`logo:${symbol}`}>
+                <LogoTile
+                  symbol={symbol}
+                  logoUrl={symbolMeta?.logoUrl}
+                  size="xl"
+                  className="max-sm:size-11"
+                />
+              </MorphTarget>
               <div className="flex min-w-0 flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
                   {/* UZUN AD KENDİ ÖLÇÜSÜNDE. "Space Exploration

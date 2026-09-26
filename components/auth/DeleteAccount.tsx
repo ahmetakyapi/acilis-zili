@@ -76,7 +76,10 @@ export function DeleteAccount({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-3 rounded-(--radius-lg) border border-down/40 bg-down-wash p-4"
+      /* Geri alınamaz adım AÇILIYOR: form düğmenin yerine tek karede
+         geçiyordu; şimdi yerine oturarak açılıyor (globals.css → .step-in).
+         Yalnızca okuyucu düğmeye basınca bağlandığı için yüklemede oynamaz. */
+      className="step-in flex flex-col gap-3 rounded-(--radius-lg) border border-down/40 bg-down-wash p-4"
     >
       <p className="flex items-start gap-2 text-small leading-relaxed text-strong">
         <Warning weight="fill" size={16} className="mt-px shrink-0 text-down" />

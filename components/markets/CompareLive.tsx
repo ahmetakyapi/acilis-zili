@@ -618,7 +618,7 @@ export function CompareStrip({
    -------------------------------------------------------------------------- */
 
 export function CompareChartPanel({ labels }: { labels: CompareLabels }) {
-  const { symbols, series, phase, retry, locale } = useCompare();
+  const { symbols, series, phase, retry, locale, range } = useCompare();
 
   return (
     <Panel className="flex flex-col gap-4 px-4 py-4 sm:px-5">
@@ -660,6 +660,14 @@ export function CompareChartPanel({ labels }: { labels: CompareLabels }) {
         <div className={cn(phase !== "ready" && "invisible")}>
           {series.length > 0 ? (
             <CompareChart
+              /* Aralık değişince grafik yeniden kuruluyor: çizgiler yeni
+                 şekillerine tek karede sıçrıyordu, artık soldan çiziliyor
+                 (CompareChart → `spark-line`). Anahtar aralık VE evre:
+                 `range` veri gelmeden değişiyor ve grafik görünmezken
+                 kurulsaydı çizim görünmeden oynar, veri gelince çizgiler
+                 yine sıçrardı. Böylece yeni aralığın verisi hazır olduğu
+                 an, görünürken kuruluyor. */
+              key={`${range}:${phase}`}
               series={series}
               order={symbols}
               title={labels.chartTitle}

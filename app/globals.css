@@ -2101,6 +2101,16 @@ html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
    hesaplatıyordu (gerekçe ve ölçüm orada). */
 
 
+/* Süzgeçle beliren liste satırı yerine oturuyor (AnalysisTable). Yalnızca
+   süzgeç kullanıldıktan sonra sınıf ekleniyor; gerekçe o dosyada. 0,4
+   tondan, sıfırdan değil: yazarken liste hiç boş görünmüyor. */
+.filter-settle { animation: filter-settle 280ms var(--ease-brand) backwards; }
+@keyframes filter-settle { from { opacity: 0.4; transform: translate3d(0, 6px, 0); } }
+/* Bir adımın açılışı — düğmenin yerine gelen onay formu gibi (DeleteAccount). */
+.step-in { animation: step-in 320ms var(--ease-brand) backwards; }
+@keyframes step-in { from { opacity: 0.4; transform: translate3d(0, -6px, 0); } }
+@media (prefers-reduced-motion: reduce) { .filter-settle, .step-in { animation: none; } }
+
 /* Alt şeridin tabela dönüşü — gerekçe MarketTicker'da. Gruplar arasında
    hafif bir kademe: soldaki önce geliyor, göz satırı soldan okuyor. */
 .ticker-rise { animation: ticker-rise 420ms var(--ease-brand) backwards; }

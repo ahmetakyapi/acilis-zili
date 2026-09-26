@@ -107,6 +107,16 @@ export function AnalysisTable({
   toolbar?: React.ReactNode;
 }) {
   const [query, setQuery] = useState("");
+  /* Okuyucu süzgeci kullandı mı — satırların yerine oturma animasyonu
+     yalnızca o andan sonra (globals.css → .filter-settle). İlk tuşta kalan
+     satırlar bir kez oturuyor; sonraki tuşlarda yalnızca YENİDEN beliren
+     satırlar (yeniden bağlananlar) oynuyor, ekranda kalanlar titremiyor.
+     Yüklemede hiçbir şey kımıldamıyor. */
+  const [filtered, setFiltered] = useState(false);
+  const search = (value: string) => {
+    setFiltered(true);
+    setQuery(value);
+  };
 
   const visible = useMemo(() => {
     const needle = foldForSearch(query.trim());
@@ -142,7 +152,7 @@ export function AnalysisTable({
           <input
             type="search"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => search(event.target.value)}
             placeholder={labels.searchPlaceholder}
             aria-label={labels.searchPlaceholder}
             className={cn(
@@ -155,7 +165,7 @@ export function AnalysisTable({
           {searching && (
             <button
               type="button"
-              onClick={() => setQuery("")}
+              onClick={() => search("")}
               aria-label={labels.searchClear}
               className="absolute right-2 inline-flex size-6 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-elevated hover:text-strong"
             >
@@ -266,6 +276,7 @@ export function AnalysisTable({
                   className={cn(
                     "relative flex items-center gap-4 border-b border-line-soft px-4 py-3.5 transition-colors last:border-b-0 hover:bg-surface-elevated sm:px-5",
                     highlightFirst && !searching && index === 0 && "bg-primary-tint",
+                    filtered && "filter-settle",
                   )}
                 >
                   <Link

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
+import { stripLocale } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
 
 /* --------------------------------------------------------------------------
@@ -68,6 +69,45 @@ function settledRect(el: HTMLElement) {
   return { left: r.left - dx, top: r.top - dy, width: r.width, height: r.height };
 }
 
+/** Sembol taşıyan hedefler: hisse, teknik detay, bilanço detayı. */
+const SYMBOL_ROUTE = /^\/(?:hisse|teknik|bilancolar)\/([^/?#]+)/;
+/** Kaynak aranırken bağlantıdan en fazla kaç ata yukarı çıkılır. */
+const SOURCE_REACH = 5;
+
+/**
+ * Tıklanan bağlantının KAYNAĞI — hedefin sembolüne ait logo.
+ *
+ * İlk hâlde kaynak bağlantının içinde ya da `data-morph-scope` işaretli
+ * kartta aranıyordu. Sitede sık bir kalıp bunu kaçırıyordu: satırı örten
+ * BOŞ bir bağlantı ve kardeş hücrede logo (analiz tablosu, bazı ana sayfa
+ * listeleri — ana sayfada 34 bağlantının 9'u kaynaksızdı). Artık sembol
+ * bağlantının hedefinden okunuyor ve bağlantıdan yukarı doğru O SEMBOLÜN
+ * logosu aranıyor: satırın kendisi bulunuyor, komşu satırın başka bir
+ * logosu asla seçilmiyor. Sembolsüz hedeflerde eski yol (içerik ya da
+ * kart) geçerli.
+ */
+function findSource(anchor: Element): HTMLElement | null {
+  let symbol: string | null = null;
+  try {
+    const path = stripLocale(new URL((anchor as HTMLAnchorElement).href, window.location.href).pathname);
+    const match = SYMBOL_ROUTE.exec(path);
+    symbol = match ? decodeURIComponent(match[1]).toUpperCase() : null;
+  } catch {
+    symbol = null;
+  }
+  if (symbol) {
+    const selector = `[data-morph="logo:${CSS.escape(symbol)}"]`;
+    let node: Element | null = anchor;
+    for (let i = 0; i < SOURCE_REACH && node; i++, node = node.parentElement) {
+      const found = node.matches(selector) ? node : node.querySelector(selector);
+      if (found instanceof HTMLElement) return found;
+    }
+    return null;
+  }
+  const scope = anchor.closest("[data-morph-scope]") ?? anchor;
+  return scope.querySelector<HTMLElement>("[data-morph]");
+}
+
 /** Kabukta bir kez: bağlantı tıklamalarında kaynağın yerini not eder. */
 export function MorphRecorder() {
   useEffect(() => {
@@ -76,13 +116,18 @@ export function MorphRecorder() {
       const target = event.target instanceof Element ? event.target : null;
       const anchor = target?.closest("a[href]");
       if (!anchor) return;
-      /* Kart bağlantısı çoğu zaman logoyu İÇERMİYOR (başlıktaki bağlantı
-         kartı kaplıyor); kaynak, bağlantının kartında aranıyor. */
-      const scope = anchor.closest("[data-morph-scope]") ?? anchor;
-      const source = scope.querySelector<HTMLElement>("[data-morph]");
+      const source = findSource(anchor);
       const key = source?.dataset.morph;
       if (!source || !key) return;
       const r = source.getBoundingClientRect();
+      /* Kaynak ekranda değilse uçuş yok: ekranın dışından kalkan bir logo
+         bir hata gibi okunur. (Aynı adrese giden iki bağlantı olabiliyor —
+         analizler sayfasında üstteki "son analiz" kartı ile tablodaki
+         satırı — ve yalnızca tıklananın kartı kaynak.) */
+      if (r.bottom <= 0 || r.top >= window.innerHeight || r.width === 0) {
+        pending = null;
+        return;
+      }
       pending = { key, rect: { left: r.left, top: r.top, width: r.width, height: r.height }, at: performance.now() };
     };
     /* Geri ve ileri tuşları tıklama değil: bekleyen bir kayıt kalmışsa

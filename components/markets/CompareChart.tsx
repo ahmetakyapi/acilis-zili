@@ -375,6 +375,11 @@ export function CompareChart({
               return (
                 <path
                   key={entry.symbol}
+                  /* Çizgi soldan ÇİZİLİYOR — mini grafiklerin dili
+                     (globals.css → .spark-line). Aralık değişince grafik
+                     yeniden kuruluyor (CompareLive, `key`), yeni eklenen
+                     sembolün çizgisi de kendi başına çiziliyor. */
+                  className="spark-line"
                   d={paths[index]}
                   fill="none"
                   stroke={color}
