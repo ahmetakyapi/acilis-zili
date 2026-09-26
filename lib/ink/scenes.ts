@@ -1045,7 +1045,158 @@ const mishap: InkScene = {
   },
 };
 
-export const INK_SCENES = { intro, searching, chart, press, lens, ledger, hello, lost, mishap } satisfies Record<string, InkScene>;
+/* ----------------------------------------------------------------------- */
+/* Gün şeridi — giriş sayfasının başlığı altında                            */
+/* ----------------------------------------------------------------------- */
+
+/* "Zil Çalmadan Önce Hazır Ol" başlığının çizimi: kuru fırçayla bir seans
+   şeridi, saat çentikleri soldan sağa düşüyor ve açılış anına pirinç bir
+   zil işareti basılıyor. Başlık bir ANI anlatıyor; şerit o anın yerini
+   gösteriyor. Sitenin imzası olan gün şeridinin (ana sayfa) mürekkep hâli. */
+const STRIP_TICKS = 13;
+const STRIP_OPEN = 7;
+
+const dayStrip: InkScene = {
+  box: { w: 360, h: 48 },
+  end: 2.4,
+  render(ctx, t, pal, seed) {
+    const x0 = 10;
+    const x1 = 350;
+    const y = 30;
+    brush(ctx, path([{ x: x0, y }, { x: 120, y: y - 1 }, { x: 240, y: y + 0.6 }, { x: x1, y: y - 0.5 }], 30), {
+      width: 3.4,
+      progress: ease.inOut(span(t, 0, 0.9)),
+      seed: seed + 1,
+      taper: 0.9,
+      dry: 0.7,
+      color: pal.ink,
+    });
+    for (let i = 0; i < STRIP_TICKS; i++) {
+      const x = x0 + ((x1 - x0) * i) / (STRIP_TICKS - 1);
+      const at = 0.15 + i * 0.055;
+      const tall = i % 3 === 0;
+      brush(ctx, segment({ x, y: y - (tall ? 9 : 5) }, { x, y: y + (tall ? 3 : 1) }, 4), {
+        width: tall ? 2 : 1.4,
+        progress: ease.out(span(t, at, at + 0.18)),
+        seed: seed + 10 + i,
+        taper: 0.4,
+        alpha: tall ? 0.85 : 0.5,
+        color: pal.ink,
+      });
+    }
+    // Açılış anı: pirinç damga, küçük bir çınlama.
+    const ox = x0 + ((x1 - x0) * STRIP_OPEN) / (STRIP_TICKS - 1);
+    const stamp = span(t, 1.05, 1.3);
+    if (stamp > 0) {
+      blot(ctx, ox, y - 15, 6.5 * (1.4 - 0.4 * ease.back(stamp)), { seed: seed + 40, color: pal.spark, alpha: clamp(stamp * 2) });
+      brush(ctx, segment({ x: ox - 7, y: y - 8 }, { x: ox + 7, y: y - 8 }, 6), {
+        width: 2.4, progress: ease.out(stamp), seed: seed + 41, taper: 0.5, color: pal.spark,
+      });
+    }
+    spark(ctx, pal, ox, y - 15, (t - 1.25) / 0.5, 0.45, seed + 42);
+  },
+};
+
+/* ----------------------------------------------------------------------- */
+/* Glifler — giriş sayfasının özellik satırları                            */
+/* ----------------------------------------------------------------------- */
+
+/* Her özellik kendi küçük mürekkep işaretini çiziyor; "01-04" numara
+   rozetlerinin yerine. Numara bir SIRA söylüyordu, oysa özelliklerin
+   sırası yok; işaret ise özelliğin kendisini söylüyor. Hepsi 48'lik
+   kutuda, 1,1-1,4 saniyede biter ve durur. */
+
+const glyphHeart: InkScene = {
+  box: { w: 48, h: 48 },
+  end: 1.2,
+  render(ctx, t, pal, seed) {
+    const pts = heartPoints(24, 23, 0.95);
+    const fill = span(t, 0.7, 1.1);
+    if (fill > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.9 * ease.out(fill);
+      ctx.fillStyle = pal.spark;
+      ctx.beginPath();
+      pts.forEach((q, i) => (i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)));
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    brush(ctx, pts, { width: 2.6, progress: ease.inOut(span(t, 0, 0.75)), seed, taper: 0.3, color: pal.ink });
+  },
+};
+
+const glyphLedger: InkScene = {
+  box: { w: 48, h: 48 },
+  end: 1.4,
+  render(ctx, t, pal, seed) {
+    const tilt = 0.28 * Math.exp(-Math.max(0, t - 0.55) * 3.2) * Math.cos(Math.max(0, t - 0.55) * 11);
+    const a = t < 0.55 ? 0.28 : tilt;
+    const px = 24;
+    const py = 13;
+    const arm = 15;
+    const l = { x: px - arm * Math.cos(a), y: py - arm * Math.sin(a) };
+    const r = { x: px + arm * Math.cos(a), y: py + arm * Math.sin(a) };
+    brush(ctx, segment({ x: px, y: py }, { x: px, y: 40 }, 6), { width: 2.4, progress: ease.out(span(t, 0, 0.3)), seed, taper: 0.3, color: pal.ink });
+    brush(ctx, segment({ x: 16, y: 41 }, { x: 32, y: 41 }, 6), { width: 2.6, progress: ease.out(span(t, 0.15, 0.4)), seed: seed + 1, taper: 0.5, color: pal.ink });
+    brush(ctx, segment(l, r, 8), { width: 2.2, progress: ease.out(span(t, 0.25, 0.5)), seed: seed + 2, taper: 0.4, color: pal.ink });
+    for (const [i, end] of [l, r].entries()) {
+      const pan = span(t, 0.4, 0.65);
+      // Kefe: dört noktalı eğri — `path` kübik parçalar kuruyor, üç noktayla
+      // hiç çizilmiyordu (önizlemede terazi "T" gibi duruyordu).
+      brush(ctx, path([{ x: end.x - 7, y: end.y + 10 }, { x: end.x - 3, y: end.y + 14 }, { x: end.x + 3, y: end.y + 14 }, { x: end.x + 7, y: end.y + 10 }], 10), {
+        width: 2.4, progress: ease.out(pan), seed: seed + 3 + i, taper: 0.5, color: pal.ink,
+      });
+      brush(ctx, segment(end, { x: end.x, y: end.y + 10 }, 4), { width: 1, progress: ease.out(pan), seed: seed + 5 + i, taper: 0.2, alpha: 0.7, color: pal.ink });
+    }
+    blot(ctx, px, py, 2.4, { seed: seed + 8, spread: ease.back(span(t, 1.0, 1.2)), color: pal.spark });
+  },
+};
+
+const glyphPress: InkScene = {
+  box: { w: 48, h: 48 },
+  end: 1.3,
+  render(ctx, t, pal, seed) {
+    const sheet = [{ x: 13, y: 8 }, { x: 35, y: 7 }, { x: 36, y: 41 }, { x: 13, y: 42 }, { x: 13, y: 8 }];
+    const edge: Point[] = [];
+    for (let i = 0; i < 4; i++) {
+      const a = sheet[i];
+      const b = sheet[i + 1];
+      for (let k = 0; k <= 5; k++) edge.push({ x: a.x + (b.x - a.x) * (k / 5), y: a.y + (b.y - a.y) * (k / 5) });
+    }
+    brush(ctx, edge, { width: 2, progress: ease.inOut(span(t, 0, 0.5)), seed, taper: 0.2, color: pal.ink });
+    [16, 22, 28, 34].forEach((y, i) => {
+      brush(ctx, segment({ x: 18, y }, { x: i === 0 ? 31 : i === 3 ? 25 : 30, y }, 6), {
+        width: i === 0 ? 2.6 : 1.5, progress: ease.out(span(t, 0.45 + i * 0.14, 0.62 + i * 0.14)), seed: seed + 2 + i, taper: 0.5, color: pal.ink,
+      });
+    });
+    blot(ctx, 33, 38, 2.6, { seed: seed + 9, spread: ease.back(span(t, 1.05, 1.25)), color: pal.spark });
+  },
+};
+
+const glyphFree: InkScene = {
+  box: { w: 48, h: 48 },
+  end: 1.3,
+  render(ctx, t, pal, seed) {
+    // Etiket: köşesi kesik bir kart, delik ve pirinç bir onay.
+    const tag = [{ x: 14, y: 12 }, { x: 34, y: 12 }, { x: 40, y: 24 }, { x: 34, y: 36 }, { x: 14, y: 36 }, { x: 14, y: 12 }];
+    const edge: Point[] = [];
+    for (let i = 0; i < tag.length - 1; i++) {
+      const a = tag[i];
+      const b = tag[i + 1];
+      for (let k = 0; k <= 5; k++) edge.push({ x: a.x + (b.x - a.x) * (k / 5), y: a.y + (b.y - a.y) * (k / 5) });
+    }
+    brush(ctx, edge, { width: 2.2, progress: ease.inOut(span(t, 0, 0.6)), seed, taper: 0.2, color: pal.ink });
+    blot(ctx, 33, 24, 2, { seed: seed + 3, spread: ease.back(span(t, 0.55, 0.7)), color: pal.ink });
+    // Onay iki düz parça: üç noktalı `path` çizmiyordu (önizlemede yoktu).
+    const check = [...segment({ x: 18, y: 24 }, { x: 22, y: 29 }, 6), ...segment({ x: 22, y: 29 }, { x: 29, y: 18 }, 8).slice(1)];
+    brush(ctx, check, {
+      width: 3, progress: ease.out(span(t, 0.75, 1.15)), seed: seed + 4, taper: 0.6, color: pal.spark,
+    });
+  },
+};
+
+export const INK_SCENES = { intro, searching, chart, press, lens, ledger, hello, lost, mishap, dayStrip, glyphHeart, glyphLedger, glyphPress, glyphFree } satisfies Record<string, InkScene>;
 export type InkSceneName = keyof typeof INK_SCENES;
 
 /** Gerçek saati sahnenin saatine çevirir: sonda durur. */

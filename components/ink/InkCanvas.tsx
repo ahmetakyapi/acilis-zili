@@ -30,6 +30,7 @@ export function InkCanvas({
   scene,
   seed = 7,
   rate = 1,
+  delay = 0,
   className,
   onDone,
 }: {
@@ -37,6 +38,9 @@ export function InkCanvas({
   seed?: number;
   /** Sahne saatinin çarpanı: 1 yazıldığı hız, 1,4 aynı sahne %40 kısa. */
   rate?: number;
+  /** Görününce sahnenin başlamadan önce beklediği süre (sn) — yan yana
+   *  sahnelerin sırayla çizilmesi için. Beklerken ilk kare duruyor. */
+  delay?: number;
   className?: string;
   /** Sahne son karesine vardığında. */
   onDone?: () => void;
@@ -54,6 +58,7 @@ export function InkCanvas({
     const def = INK_SCENES[scene];
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const speed = rate > 0 ? rate : 1;
+    const wait = Math.max(0, delay);
 
     let pal: InkPalette = readPalette();
     let raf = 0;
@@ -62,6 +67,8 @@ export function InkCanvas({
     let visible = false;
     let finished = false;
     let lastT = 0;
+    /* Gecikme dahil sahne saati; duraklayıp devam ederken buradan sürülüyor. */
+    let lastClock = 0;
 
     const size = () => {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -84,7 +91,9 @@ export function InkCanvas({
 
     const tick = (now: number) => {
       if (start < 0) start = now;
-      const t = ((now - start) / 1000) * speed;
+      const clock = ((now - start) / 1000) * speed;
+      lastClock = clock;
+      const t = Math.max(0, clock - wait);
       draw(t);
       if (t >= def.end) {
         raf = 0;
@@ -99,7 +108,7 @@ export function InkCanvas({
       if (reduce || raf || finished || !visible) return;
       // Kaldığı saniyeden devam: başlangıcı geçen süre kadar geri al.
       // Saat hızlandırılmışsa geri alınan gerçek süre de o kadar kısa.
-      start = start < 0 ? -1 : performance.now() - (lastT / speed) * 1000;
+      start = start < 0 ? -1 : performance.now() - (lastClock / speed) * 1000;
       raf = requestAnimationFrame(tick);
     };
     const pause = () => {
@@ -148,7 +157,7 @@ export function InkCanvas({
       mo.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [scene, seed, rate]);
+  }, [scene, seed, rate, delay]);
 
   return (
     <canvas

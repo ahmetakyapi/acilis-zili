@@ -51,3 +51,38 @@
 .errorIn { animation:auth-error-in 260ms var(--ease-brand) backwards; }
 @keyframes auth-error-in { from { opacity:0; transform:translate3d(0,-4px,0); } }
 @media(prefers-reduced-motion:reduce) { .errorIn { animation:none; } }
+
+/* ---- Sanatsal giriş (26 Eylül) ----
+   Başlık maskeden yükseliyor, altında gün şeridi çiziliyor, özellikler
+   kendi gliflerini sırayla çiziyor. Sahnelerin kendileri lib/ink/scenes.ts'te;
+   burada yalnızca yerleri. */
+.title { animation:title-rise 760ms cubic-bezier(0.2, 0.8, 0.2, 1) 80ms backwards; }
+/* Şerit başlıkla metin arasında, metin sütununun genişliğinde (sahne 360 × 48). */
+/* Şerit başlıkla aynı genişlikte (1280'de başlık ~460 piksel); 360'ta
+   başlığın dörtte biri kadar kısa kalıyordu. */
+.strip { display:block; width:min(100%, 460px); aspect-ratio:360 / 48; height:auto; margin:12px 0 -8px -6px; }
+/* Glif 48'lik kutuda çizildi, satırda 36 piksel; satır yüksekliğini
+   değiştirmesin diye dikeyde negatif pay. */
+.glyph { width:36px; height:36px; flex-shrink:0; margin:-4px -2px -4px -4px; }
+
+/* ODAK ÇİZGİSİ. Odaklanılan alanın altında mavi bir mürekkep çizgisi soldan
+   açılıyor: okuyucu nereye yazdığını kenarlık renginden önce hareketle
+   görüyor. Halka (focus:shadow) erişilebilir odak göstergesi olarak
+   yerinde; çizgi onun yerini almıyor. Hatalı alanda çizgi kırmızı. */
+.inputWrap::after { content:""; position:absolute; left:10px; right:10px; bottom:0; height:2px; border-radius:2px; background:var(--primary); transform:scaleX(0); transform-origin:left center; transition:transform 380ms var(--ease-brand); pointer-events:none; }
+.inputWrap:focus-within::after { transform:scaleX(1); }
+.inputWrap:has(input[aria-invalid="true"])::after { background:var(--down); }
+/* FORM KENDİNİ KURUYOR. Kart başlığı sol başlıktan biraz sonra aynı
+   maskeden yükseliyor, alanlar sırayla yerine oturuyor: göz etiketten
+   alana, oradan düğmeye akıyor. YALNIZCA YÜKSELİŞ, opaklık yok — sayfanın
+   kendi girişi (`.page-enter`) zaten tonla geliyor; ikisi çarpılsaydı form
+   ilk karelerde neredeyse görünmez olurdu. Hata satırı bu kuralın dışında
+   (kendi girişi var, `.errorIn`). */
+.formCard h1 { animation:title-rise 760ms cubic-bezier(0.2, 0.8, 0.2, 1) 220ms backwards; }
+.formCard form > :not([role="alert"]) { animation:auth-field-rise 480ms var(--ease-brand) 260ms backwards; }
+.formCard form > :nth-child(2) { animation-delay:320ms; }
+.formCard form > :nth-child(3) { animation-delay:380ms; }
+.formCard form > :nth-child(4) { animation-delay:440ms; }
+.formCard form > :nth-child(n + 5) { animation-delay:500ms; }
+@keyframes auth-field-rise { from { transform:translate3d(0, 12px, 0); } }
+@media(prefers-reduced-motion:reduce) { .title, .formCard h1, .formCard form > * { animation:none; } .inputWrap::after { transition:none; } }

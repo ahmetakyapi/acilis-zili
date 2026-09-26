@@ -7,8 +7,20 @@ import styles from "./AuthExperience.module.css";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import type { AuthFormState } from "@/app/actions/auth";
+import type { InkSceneName } from "@/lib/ink/scenes";
 import { Button } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
+
+/**
+ * Özellik satırlarının mürekkep glifleri — `features` dizisinin SIRASIYLA
+ * (giriş ve kayıt sayfası aynı dört özelliği aynı sırada veriyor): takip
+ * listesi, bilançolar, bülten, ücretsiz. "01-04" numara rozetlerinin yerine:
+ * numara olmayan bir sırayı söylüyordu, işaret özelliğin kendisini söylüyor.
+ * Listede karşılığı olmayan satır numarasını korur.
+ */
+const FEATURE_GLYPHS: readonly InkSceneName[] = ["glyphHeart", "glyphLedger", "glyphPress", "glyphFree"];
+/** Glifler sırayla çiziliyor: bir öncekinin yarısı bitmişken sıradaki başlıyor. */
+const GLYPH_STAGGER = 0.22;
 
 type Field = {
   name: string;
@@ -110,9 +122,15 @@ export function AuthForm({
             bu sütun formun ALTINDA, yani sahne formu itmiyor; görünüme
             girince oynuyor. (lib/ink/scenes.ts → hello) */}
         <InkCanvas scene="hello" seed={3} className={styles.scene} />
-        <h2 className="display-ink">
+        {/* Başlık sayfa başlıklarının imzasıyla (globals.css → title-rise)
+            bir maskenin arkasından yükseliyor. */}
+        <h2 className={cn("display-ink", styles.title)}>
           {pitchTitle}
         </h2>
+        {/* GÜN ŞERİDİ: başlığın söylediği anı çiziyor — kuru fırçayla bir
+            seans şeridi, saat çentikleri ve açılış anına basılan pirinç zil
+            (lib/ink/scenes.ts → dayStrip). */}
+        <InkCanvas scene="dayStrip" seed={5} delay={0.45} className={styles.strip} />
         <p className="mt-5 max-w-[52ch] text-base leading-[26px] text-body">
           {pitchBody}
         </p>
@@ -120,9 +138,16 @@ export function AuthForm({
         <div className={styles.features} data-motion-stagger>
           {features.map((feature, index) => (
             <p key={feature} className={styles.feature}>
-              <span aria-hidden>
-                {String(index + 1).padStart(2, "0")}
-              </span>
+              {FEATURE_GLYPHS[index] ? (
+                <InkCanvas
+                  scene={FEATURE_GLYPHS[index]}
+                  seed={index + 2}
+                  delay={0.3 + index * GLYPH_STAGGER}
+                  className={styles.glyph}
+                />
+              ) : (
+                <span aria-hidden>{String(index + 1).padStart(2, "0")}</span>
+              )}
               <span className="text-read text-body">{feature}</span>
             </p>
           ))}
