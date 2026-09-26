@@ -2093,6 +2093,14 @@ html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
    hesaplatıyordu (gerekçe ve ölçüm orada). */
 
 
+/* Alt şeridin tabela dönüşü — gerekçe MarketTicker'da. Gruplar arasında
+   hafif bir kademe: soldaki önce geliyor, göz satırı soldan okuyor. */
+.ticker-rise { animation: ticker-rise 420ms var(--ease-brand) backwards; }
+.ticker-rise + .ticker-rise { animation-delay: 60ms; }
+.ticker-rise + .ticker-rise + .ticker-rise { animation-delay: 120ms; }
+@keyframes ticker-rise { from { opacity: 0; transform: translate3d(0, 7px, 0); } }
+@media (prefers-reduced-motion: reduce) { .ticker-rise { animation: none; } }
+
 /* --------------------------------------------------------------------------
    SAYFA GEÇİŞİ — GELEN İÇERİĞİN GİRİŞİ (26 Eylül)
 

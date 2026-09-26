@@ -109,6 +109,9 @@ export function MarketTicker({
   labels: { pause: string; resume: string };
 }) {
   const [page, setPage] = useState(0);
+  /* Kaçıncı dönüş — 0 iken giriş animasyonu yok: ilk çizimde şerit
+     yerinde duruyor, hareket yalnızca grup değişirken. */
+  const [turns, setTurns] = useState(0);
   const pathname = usePathname();
   /* Kartlar tazelendikçe gelen dizeler (`IndexLive`); ilk paket sunucudan. */
   const [patch, setPatch] = useState<IndexTickerPatch>({});
@@ -215,6 +218,7 @@ export function MarketTicker({
       setVisible(false);
       fade = window.setTimeout(() => {
         setPage((current) => (current + 1) % pageCount);
+        setTurns((current) => current + 1);
         setVisible(true);
       }, FADE_MS);
     }, ROTATE_MS);
@@ -280,8 +284,18 @@ export function MarketTicker({
              basıyor; "aralık büyümüş ama öğe de çoğalmış" diye bir bant yok.
              1280'den sonra kap 1400'de sabitlendiği için aralık 40'a
              çıkıyor; orada pay 260 pikselin altına hiç inmiyor. */
-          "mx-auto flex h-9 max-w-[1400px] items-center gap-3 overflow-hidden px-[18px] text-small transition-opacity motion-reduce:transition-none sm:gap-5 sm:px-6 sm:text-base lg:gap-8 xl:gap-10 xl:px-10",
-          visible ? "opacity-100" : "opacity-0",
+          "mx-auto flex h-9 max-w-[1400px] items-center gap-3 overflow-hidden px-[18px] text-small motion-reduce:transition-none sm:gap-5 sm:px-6 sm:text-base lg:gap-8 xl:gap-10 xl:px-10",
+          /* TABELA GİBİ DÖNÜYOR (26 Eylül). Gruplar yerinde soluklaşıp
+             yeniden yanıyordu; şimdi eski grup yukarı kayıp sönüyor, yenisi
+             aşağıdan geliyor — kalkış tabelasının satır değiştirmesi. İki
+             hareket AYRI öğelerde: çıkış bu kapsayıcının geçişi, giriş
+             gruplarının kendi animasyonu (`ticker-rise`). Aynı öğede
+             toplansalar çıkışın −6 pikseliyle girişin +6'sı birbirini
+             sıfırlıyordu. Bu yüzden kapsayıcı görünür olurken geçişsiz
+             yerine dönüyor. */
+          visible
+            ? "translate-y-0 opacity-100 transition-none"
+            : "-translate-y-1.5 opacity-0 transition-[opacity,translate]",
         )}
         style={{ transitionDuration: `${FADE_MS}ms` }}
       >
@@ -293,9 +307,12 @@ export function MarketTicker({
             Case — sitenin öteki künyeleriyle aynı. */}
         {shown.segments.map((segment, segmentIndex) => (
           <span
-            key={segment.key}
+            /* Anahtar dönüşü de taşıyor: her yeni grupta öğe yeniden kuruluyor
+               ve giriş animasyonu baştan oynuyor. */
+            key={`${turns}:${segment.key}`}
             className={cn(
               "flex shrink-0 items-center gap-3 sm:gap-5 lg:gap-8 xl:gap-10",
+              turns > 0 && "ticker-rise",
               segmentIndex > 0 &&
                 "relative before:absolute before:inset-y-[-6px] before:-left-4 before:w-px before:bg-(--line-strong) xl:before:-left-5",
             )}

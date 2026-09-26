@@ -79,6 +79,17 @@ export function BriefSwitch({
   labels: BriefSwitchLabels;
 }) {
   const [period, setPeriod] = useState<BriefPeriod>("daily");
+  /* GEÇİŞİN YÖNÜ — yalnızca okuyucu sekme değiştirdiğinde dolu. Kart ana
+     sayfanın ilk ekranında; ilk çizimde animasyon oynasaydı sunucunun tam
+     boyadığı metin yüklenirken kayıp soluklaşırdı (23 Eylül kuralı:
+     ilk ekran hidrasyonda kımıldamaz). Haftalık sağdaki sekme, içerik
+     oradan geliyor; Günlük'e dönüşte soldan. */
+  const [direction, setDirection] = useState<"next" | "prev" | null>(null);
+  const choose = (next: BriefPeriod) => {
+    if (next === period) return;
+    setDirection(next === "weekly" ? "next" : "prev");
+    setPeriod(next);
+  };
 
   /**
    * Ok tuşlarıyla sekme gezinmesi (ARIA "tabs" kalıbı).
@@ -103,7 +114,7 @@ export function BriefSwitch({
       return;
     }
     olay.preventDefault();
-    setPeriod(sira[hedef]);
+    choose(sira[hedef]);
     olay.currentTarget.parentElement
       ?.querySelector<HTMLButtonElement>(`#brief-tab-${sira[hedef]}`)
       ?.focus();
@@ -135,7 +146,7 @@ export function BriefSwitch({
           aria-selected={period === key}
           tabIndex={period === key ? 0 : -1}
           onKeyDown={sekmeTusu}
-          onClick={() => setPeriod(key)}
+          onClick={() => choose(key)}
           className={cn(
             /* Telefonda 44px: 34px'lik sekmeler dokunma eşiğinin altındaydı
                ve bunlar bültenin tek denetimi. Masaüstünde imleç hassas,
@@ -219,10 +230,15 @@ export function BriefSwitch({
       </div>
 
       <div
+        /* Anahtar dönem: yeni sekmede panel yeniden kuruluyor ve giriş
+           animasyonu baştan oynuyor. Sekmeler panelin DIŞINDA, odak
+           kaybolmuyor. */
+        key={period}
         id="brief-panel"
         role="tabpanel"
         aria-labelledby={`brief-tab-${period}`}
-        className={styles.main}
+        data-enter={direction ?? undefined}
+        className={cn(styles.main, styles.panelEnter)}
       >
         {brief ? (
           <>

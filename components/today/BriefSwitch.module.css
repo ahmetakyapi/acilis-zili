@@ -8,6 +8,16 @@
 .rail { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
 .railMeta { flex:1 1 100%; margin-top:4px; }
 .main { min-width:0; margin-top:14px; }
+/* Sekme geçişi: yeni dönemin metni geldiği yönden kısa bir kaymayla
+   yerine oturuyor. 0,35'ten başlıyor, sıfırdan değil — takas karesinde metin
+   zaten okunur, boş bir kare yok (RouteFrame'deki ölçümün aynısı). Yalnızca
+   `data-enter` varken: ilk çizimde hiçbir şey oynamıyor. Dönüşüm bitince
+   kalmıyor (`backwards`). */
+.panelEnter[data-enter="next"] { animation:brief-enter-next 340ms var(--ease-brand) backwards; }
+.panelEnter[data-enter="prev"] { animation:brief-enter-prev 340ms var(--ease-brand) backwards; }
+@keyframes brief-enter-next { from { opacity:.35; transform:translate3d(16px,0,0); } }
+@keyframes brief-enter-prev { from { opacity:.35; transform:translate3d(-16px,0,0); } }
+@media(prefers-reduced-motion:reduce) { .panelEnter { animation:none !important; } }
 
 /* YAN RAY KALKTI (24 Eylül, sahibinin isteği). 1200 ve üstünde künye,
    sekmeler ve arşiv sağda 15rem'lik yapışkan bir raydaydı: bülten

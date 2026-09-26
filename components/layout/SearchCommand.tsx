@@ -19,6 +19,7 @@ import type {
   WritingHit,
 } from "@/app/api/search/route";
 import { cn, isValidSymbol } from "@/lib/utils";
+import { InkCanvas } from "@/components/ink/InkCanvas";
 
 /**
  * ⌘K sembol arama.
@@ -701,9 +702,17 @@ export function SearchCommand({
                 query.trim() &&
                 shownHits.length === 0 &&
                 shownWritings.length === 0 && (
-                  <p className="px-5 py-6 text-center text-sm text-muted">
-                    {emptyLabel}
-                  </p>
+                  /* SONUÇ YOK, ZİL ARIYOR. Paletin tüm sonuç alanı boşken
+                     tek satırlık bir cümle bekleyişin sonu gibi duruyordu;
+                     burası sayfa düzeyinde bir boşluk (sahne kuralı), zil
+                     etrafına bakınıp soru işaretini yazıyor. 1,6 hızda:
+                     yazan biri 5,6 saniyelik sahnenin sonunu beklemez. Yazmaya
+                     devam edildikçe öğe yerinde kalıyor, sahne baştan
+                     oynamıyor. */
+                  <div className="flex flex-col items-center gap-1 px-5 pb-6 pt-2 text-center">
+                    <InkCanvas scene="searching" seed={21} rate={1.6} className="h-[84px] w-[134px]" />
+                    <p className="text-sm text-muted">{emptyLabel}</p>
+                  </div>
                 )}
             </div>
 

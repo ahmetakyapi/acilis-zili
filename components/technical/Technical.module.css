@@ -211,6 +211,30 @@
 .board:has(input[value="hold"]:checked) .cell:not([data-verdict="hold"]),
 .board:has(input[value="sell"]:checked) .cell:not([data-verdict="sell"]) { display:none; }
 
+/* SÜZGEÇ DEĞİŞİNCE KARTLAR YERİNE OTURUYOR. Seçimle birlikte kartların
+   yarısı yok olup kalanlar bir karede yeni yerlerine sıçrıyordu; göz hangi
+   kartın nereye gittiğini kaybediyordu. Her süzgeç değerinin KENDİ
+   animasyon adı var (içerikleri aynı): ad değişince tarayıcı animasyonu
+   baştan başlatıyor, yani her seçimde görünür kartlar birlikte yükselip
+   tonuna oturuyor. JavaScript yok, süzgecin kendisi gibi.
+
+   Kademe YOK, bilinçli: süzgeçten sonra görünen kartların sırası atlamalı
+   (2., 5., 9.) ve dizi sırasına bağlı bir gecikme düzensiz dalgalanırdı.
+   İlk çizimde "Tümü" seçili olduğu için ilk sıra da BOYAMADAN İTİBAREN bir
+   kez yükseliyor — sayfa başlığının imzasıyla aynı kural: içerik önce tam
+   görünüp sonra sönmüyor. Ekranın altındaki kartları kaydırma girişi
+   (MotionExperience) yönetiyor; onun duraklatılmış animasyonu bunun
+   önünde. */
+.board:has(input[value="all"]:checked) .cell { animation:board-settle-a 300ms var(--ease-brand) backwards; }
+.board:has(input[value="buy"]:checked) .cell { animation:board-settle-b 300ms var(--ease-brand) backwards; }
+.board:has(input[value="hold"]:checked) .cell { animation:board-settle-c 300ms var(--ease-brand) backwards; }
+.board:has(input[value="sell"]:checked) .cell { animation:board-settle-d 300ms var(--ease-brand) backwards; }
+@keyframes board-settle-a { from { opacity:.4; transform:translate3d(0,10px,0); } }
+@keyframes board-settle-b { from { opacity:.4; transform:translate3d(0,10px,0); } }
+@keyframes board-settle-c { from { opacity:.4; transform:translate3d(0,10px,0); } }
+@keyframes board-settle-d { from { opacity:.4; transform:translate3d(0,10px,0); } }
+@media (prefers-reduced-motion: reduce) { .board .cell { animation:none !important; } }
+
 /* ---- Kart ızgarası ----
    Kart tabanı 340px, 300 değil: dört sütunda (1440'ta 300'lük kartlar)
    14 puntoluk başlık üç satıra sığmıyor, plan satırlarında üç hedef

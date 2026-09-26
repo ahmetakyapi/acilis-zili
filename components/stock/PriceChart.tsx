@@ -180,6 +180,8 @@ export function PriceChart({
 }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  /* Son çizim hangi veri ve görünüm için oynadı — bkz. `revealPlot`. */
+  const drawnRef = useRef<{ state: unknown; mode: unknown } | null>(null);
   const [range, setRange] = useState<ChartRange>(initialRange);
   const [mode, setMode] = useState<"area" | "candles">("area");
   const [result, setResult] = useState<ChartResult | null>(
@@ -729,6 +731,15 @@ export function PriceChart({
 
     chart.timeScale().fitContent();
 
+    /* SERİ ÇİZİLEREK GELİYOR — yalnızca YENİ VERİDE. Efekt canlı kotasyon,
+       tema ve dil değişiminde de yeniden koşuyor; çizim her fiyat tikinde
+       baştan oynasaydı grafik saniyede bir silinip yeniden çiziliyor gibi
+       dururdu. Anahtar verinin kendisi (`state`) ve görünüm tipi. */
+    const fresh =
+      !drawnRef.current || drawnRef.current.state !== state || drawnRef.current.mode !== mode;
+    drawnRef.current = { state, mode };
+    const reveal = fresh ? revealPlot(container, chart) : null;
+
     /* Seans bölgeleri — yalnızca 1G görünümünde. 04:00-09:30 ön seans,
        16:00-20:00 akşam seansı gölgelenir (ET). Gece seansı (20:00-04:00)
        konsolide tape'te akmaz, lejantta not düşülür.
@@ -800,6 +811,7 @@ export function PriceChart({
     chart.timeScale().subscribeVisibleTimeRangeChange(updateZones);
 
     return () => {
+      reveal?.cancel();
       cancelAnimationFrame(raf);
       cancelAnimationFrame(readRaf);
       container.removeEventListener("pointerdown", onPointerDown);
@@ -1249,4 +1261,58 @@ function shiftBarsToZone(bars: Bar[], zone: string): Bar[] {
     }
     return { ...bar, time: bar.time + cachedOffset };
   });
+}
+
+/** Çizim süresi — mini grafiklerin çizilişiyle AYNI: 1000 ms, marka eğrisi
+ *  (MotionExperience → `.spark-line`). 700 ms denendi: eğri önden yüklü
+ *  olduğu için çizginin %90'ı 133. ms'de açılmıştı ve çizim "çiziliyor"
+ *  gibi değil "belirdi" gibi okunuyordu (ölçüldü, NVDA 1A). */
+const PLOT_REVEAL_MS = 1000;
+
+/**
+ * Aralık ya da görünüm değişince seri soldan sağa ÇİZİLİYOR.
+ *
+ * Sitenin mini grafikleri (`.spark-line`) görünüme girince kendini çiziyor;
+ * büyük grafik ise her aralıkta tek karede yerine geçip yalnızca
+ * soluklaşarak geliyordu (`chart-in`, 0,32 sn). Aynı dil burada da:
+ * okuyucu yeni dönemin şeklini zaman yönünde okuyor.
+ *
+ * MASKE DEĞİL, KIRPMA. Üstünden kayan zemin renginde bir perde seçilmedi:
+ * grafiğin zemini saydam ve panel yüzeyi koyu temada yarı saydam, yani
+ * perdenin rengi zemini birebir tutmazdı ve kayan bir dikdörtgen görünürdü. Kırpma
+ * L biçiminde: çizim alanı soldan açılıyor, fiyat ekseni (sağ) ve zaman
+ * ekseni (alt) baştan görünür. Böylece okuyucu ölçeği çizgiden ÖNCE
+ * görüyor. Eksen ölçüleri ilk çizimden önce 0 dönebildiği için bir sonraki
+ * karede gerçek ölçülerle yeniden kuruluyor; zamanlama korunuyor.
+ *
+ * `fill: "backwards"`: bitince geride kırpma kalmıyor. Hareketi azaltan
+ * okuyucuda hiç oynamıyor; soluklaşma (`chart-in`) yine var.
+ */
+function revealPlot(container: HTMLElement, chart: IChartApi): Animation | null {
+  if (typeof container.animate !== "function") return null;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+
+  const frames = () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    const axisW = chart.priceScale("right").width();
+    const axisH = chart.timeScale().height();
+    const plotW = Math.max(0, w - axisW);
+    const plotH = Math.max(0, h - axisH);
+    const shape = (r: number) =>
+      `polygon(0px 0px, ${r}px 0px, ${r}px ${plotH}px, ${plotW}px ${plotH}px, ${plotW}px 0px, ${w}px 0px, ${w}px ${h}px, 0px ${h}px)`;
+    return [{ clipPath: shape(0) }, { clipPath: shape(plotW) }];
+  };
+
+  const animation = container.animate(frames(), {
+    duration: PLOT_REVEAL_MS,
+    easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+    fill: "backwards",
+  });
+  requestAnimationFrame(() => {
+    if (animation.playState === "running" && animation.effect instanceof KeyframeEffect) {
+      animation.effect.setKeyframes(frames());
+    }
+  });
+  return animation;
 }
