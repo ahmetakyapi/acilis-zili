@@ -4,7 +4,7 @@ import { Eye, EyeSlash } from "@phosphor-icons/react";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import { InkCanvas } from "@/components/ink/InkCanvas";
 import styles from "./AuthExperience.module.css";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import type { AuthFormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/primitives";
@@ -68,6 +68,33 @@ export function AuthForm({
   continueTo,
 }: AuthFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
+
+  /* "HAYIR" SALLANMASI. Reddedilen bir denemede hata satırı ve kırmızı
+     kenar tek karede beliriyordu; İKİNCİ yanlış denemede ise ekranda hiçbir
+     şey değişmiyordu — mesaj zaten oradaydı ve okuyucu formun tepki verip
+     vermediğini anlayamıyordu. Eylem her dönüşte YENİ bir durum nesnesi
+     veriyor, yani metin aynı olsa da efekt koşuyor: kart her reddedilen
+     denemede kısa, sönen bir yatay sallanma yapıyor. İlk çizimde durum boş
+     ({}), sallanma yok. Hareketi azaltan okuyucuda yok; hata satırı ve
+     kenar rengi yine söylüyor. */
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!state.error || !card || typeof card.animate !== "function") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const shake = card.animate(
+      [
+        { transform: "none" },
+        { transform: "translate3d(-7px,0,0)" },
+        { transform: "translate3d(6px,0,0)" },
+        { transform: "translate3d(-4px,0,0)" },
+        { transform: "translate3d(2px,0,0)" },
+        { transform: "none" },
+      ],
+      { duration: 380, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+    );
+    return () => shake.cancel();
+  }, [state]);
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
 
   return (
@@ -106,7 +133,7 @@ export function AuthForm({
       </div>
 
       {/* ---- Sağ: form ---- */}
-      <div className={styles.formCard}>
+      <div ref={cardRef} className={styles.formCard}>
         {/* The form action is the page heading, including the form-first mobile layout. */}
         <h1>
           {title}
@@ -165,7 +192,7 @@ export function AuthForm({
                 </button>}
                 </div>
                 {hasError && (
-                  <span id={`${field.name}-hata`} className="text-xs text-down">
+                  <span id={`${field.name}-hata`} className={cn("text-xs text-down", styles.errorIn)}>
                     {state.error}
                   </span>
                 )}
@@ -181,7 +208,7 @@ export function AuthForm({
                doğru yazılmıştı. */
             <p
               role="alert"
-              className="rounded-md bg-down-wash px-3.5 py-2.5 text-sm text-down"
+              className={cn("rounded-md bg-down-wash px-3.5 py-2.5 text-sm text-down", styles.errorIn)}
             >
               {state.error}
             </p>

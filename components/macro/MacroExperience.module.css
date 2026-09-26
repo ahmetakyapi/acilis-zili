@@ -72,3 +72,11 @@
 .historyLabel input::-webkit-slider-thumb { appearance:none; width:13px; height:13px; border-radius:50%; background:var(--primary); border:2px solid var(--panel-fixed); margin-top:-5px; box-shadow:0 0 0 1px var(--primary-faint); }
 .historyLabel input::-moz-range-track { height:3px; background:var(--primary-faint); border-radius:3px; }
 .historyLabel input::-moz-range-thumb { width:10px; height:10px; border-radius:50%; background:var(--primary); border:2px solid var(--panel-fixed); box-shadow:0 0 0 1px var(--primary-faint); }
+
+/* OKUMA GİRİŞİ. Seri değişince başlık ve büyük rakam bir karede
+   değişiyordu; şimdi kısa bir yükselişle ve okunur tondan (0,35, sıfır
+   değil) oturuyor, grafik çizilirken rakam da yerine geliyor. Yalnızca
+   okuyucu seri değiştirdiğinde (`data-enter`). */
+.explorerReading[data-enter] { animation:macro-reading-in 300ms var(--ease-brand) backwards; }
+@keyframes macro-reading-in { from { opacity:.35; transform:translate3d(0,6px,0); } }
+@media (prefers-reduced-motion: reduce) { .explorerReading[data-enter] { animation:none; } }

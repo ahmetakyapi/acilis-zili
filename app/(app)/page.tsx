@@ -14,6 +14,7 @@ import { BellLedger } from "@/components/today/BellLedger";
 import { DayFlowLoader } from "@/components/today/DayFlow";
 import { loadDayFlow } from "@/lib/day-flow-data";
 import { SessionRefresh } from "@/components/today/SessionRefresh";
+import { NewsFill } from "@/components/today/NewsFill";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
 import { LiveClock } from "@/components/today/LiveClock";
@@ -630,7 +631,10 @@ export default async function TodayPage() {
             <span className="plate hidden whitespace-nowrap text-nano sm:inline">
               {/* Havuz büyüklüğü SABİTTEN geliyor: metinde "40" yazılıydı ve
                   `TOP_NEWS_POOL` değişirse künye sessizce yalan söylerdi. */}
-              {t.today.topNewsNote.replace("{n}", String(TOP_NEWS_POOL))}
+              {/* Künyedeki sayı yedeklerin havuzu: seçki son 40 haberden,
+                  manşetin yanını dolduran yedekler son 80'den geliyor
+                  (TopNews). Ekrandaki her haber için doğru olan büyük sayı. */}
+              {t.today.topNewsNote.replace("{n}", String(TOP_NEWS_FILL_POOL))}
             </span>
             <PanelLink href="/haberler" className="whitespace-nowrap">
               {t.common.showAll}
@@ -2141,6 +2145,12 @@ const TOP_NEWS_PER_SYMBOL = 2;
  * ızgarada "öne çıkan haberler" tek bir yayının bülteni gibi duruyor.
  */
 const TOP_NEWS_PER_SOURCE = 2;
+/** Manşet kartının yanını doldurmak için basılan en fazla yedek satır. */
+const TOP_NEWS_FILL_MAX = 6;
+/** Yedeklerin tarandığı havuz. Yedek, listedeki en eski satırdan daha eski
+ *  olmak zorunda; 40'lık havuzun çoğu o satırdan yeni kalıyordu ve 1440'ta
+ *  tek aday çıkıyordu (158 piksel boşluk, ölçüldü). */
+const TOP_NEWS_FILL_POOL = 80;
 
 async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
   // Bu kart "son haberler" değil "öne çıkanlar": son 40 haberlik havuzdan
@@ -2148,14 +2158,17 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
   // habere aynı yer tutucu logoyu iliştiriyor; kendi görseli olan haberler
   // (şirket beslemesinden gelenler) öne alınıyor. Sıralama yine tarihe göre,
   // yalnızca hangi altı haberin seçildiği değişiyor.
-  const pool = await getLatestNews(TOP_NEWS_POOL);
+  const wide = await getLatestNews(TOP_NEWS_FILL_POOL);
+  const pool = wide.slice(0, TOP_NEWS_POOL);
 
   if (pool.length === 0) {
     return <EmptyState title={t.news.empty} />;
   }
 
+  /* Yer tutucu görseller GENİŞ havuz üzerinden: yedekler de oradan geliyor
+     ve bir Yahoo yer tutucusu gerçek görselmiş gibi karoya basılırdı. */
   const genericImages = await getGenericImageUrls(
-    pool.map((item) => item.imageUrl),
+    wide.map((item) => item.imageUrl),
   );
   const hasImage = (item: (typeof pool)[number]) =>
     Boolean(item.imageUrl) && !genericImages.has(item.imageUrl as string);
@@ -2206,12 +2219,57 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
     .slice(0, shownCount)
     .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
 
+  /* YEDEK SATIRLAR — MANŞETİN YANI BOŞ KALMASIN (26 Eylül). Kaynak sınırı
+     havuzu çoğu gün dört habere indiriyor (havuz ağırlıkla iki siteden) ve
+     manşet kartının yanında üç satır kalıyordu: kart ~500, satırlar ~265
+     piksel, arada bir kart boyu boşluk (ekran görüntüsüyle bildirildi).
+     Havuzdan en yeni haberler yedek olarak `hidden` basılıyor; tarayıcı
+     manşetin boyuna SIĞAN kadarını açıyor (NewsFill). Yedeklerde kaynak
+     sınırı YOK — bu satırlar seçkinin kendisi değil devamı, ve sınır
+     korunursa boşluk dolmuyordu — ama sembol sınırı ve aynı manşetin iki
+     kez girmemesi geçerli.
+
+     YALNIZCA LİSTEDEKİ EN ESKİ SATIRDAN DAHA ESKİ HABERLER. İlk hâlde
+     yedekler havuzun en yenilerinden seçiliyordu ve "13 Saat Önce"nin
+     altına "6 Saat Önce" iniyordu; künye zamanı yazdığı için sıra bozuk
+     okunuyordu. Şimdi liste doğal olarak geriye doğru devam ediyor ve
+     sona eklemek kronolojiyi bozmuyor, hiçbir satır kaymıyor. Yedekler
+     arasında şirket başına TEK haber: ilk denemede son iki satır da
+     Apple'dı. */
+  const leadCandidate = items.find(hasImage) ?? null;
+  const baseRows = items.filter((item) => item !== leadCandidate);
+  const oldestShown = Math.min(...(baseRows.length ? baseRows : items).map((item) => item.publishedAt.getTime()));
+  const fillSymbols = new Set<string>();
+  const shownIds = new Set(items.map((item) => item.id));
+  const seenHeadlines = new Set(items.map((item) => item.headline.trim().toLocaleLowerCase("en-US")));
+  const fillBySymbol = new Map<string, number>();
+  for (const item of items) {
+    const symbol = item.symbols?.[0] ?? "";
+    if (symbol) fillBySymbol.set(symbol, (fillBySymbol.get(symbol) ?? 0) + 1);
+  }
+  const fill: typeof pool = [];
+  for (const item of [...wide].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())) {
+    if (fill.length >= TOP_NEWS_FILL_MAX) break;
+    if (shownIds.has(item.id)) continue;
+    if (item.publishedAt.getTime() >= oldestShown) continue;
+    const headline = item.headline.trim().toLocaleLowerCase("en-US");
+    if (seenHeadlines.has(headline)) continue;
+    const symbol = item.symbols?.[0] ?? "";
+    if (symbol && (fillSymbols.has(symbol) || (fillBySymbol.get(symbol) ?? 0) >= TOP_NEWS_PER_SYMBOL)) continue;
+    if (symbol) {
+      fillSymbols.add(symbol);
+      fillBySymbol.set(symbol, (fillBySymbol.get(symbol) ?? 0) + 1);
+    }
+    seenHeadlines.add(headline);
+    fill.push(item);
+  }
+
   /* Görseli olmayan haber, künye kutusunda sembol yazan gri bir kutuyla
      duruyordu. Sıradaki en iyi görsel şirketin kendi logosu: haberin konusunu
      gösteriyor ve zaten elimizde. */
   const logos = await getSymbolNames([
     ...new Set(
-      items.map((item) => item.symbols?.[0]).filter((s): s is string => Boolean(s)),
+      [...items, ...fill].map((item) => item.symbols?.[0]).filter((s): s is string => Boolean(s)),
     ),
   ]);
 
@@ -2270,7 +2328,9 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
        bağlantının erişilebilir adını manşetle başlatıyor (yoksa ekran
        okuyucu her satırda önce "7 saat önce · Benzinga" diyordu).
        `<ul>/<li>` kalıyor: ekran okuyucu liste bilgisini kaybetmesin. */
+    <>
     <ul
+      data-news-grid
       className={cn(
         "mt-4 grid min-w-0 gap-x-8",
         lead
@@ -2284,7 +2344,7 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
       )}
     >
       {lead && (
-        <li className="min-w-0 pb-4 lg:row-span-6 lg:pb-0">
+        <li data-news-lead className="min-w-0 pb-4 lg:row-span-6 lg:pb-0">
           <Link
             href={`/haberler/${lead.id}`}
             prefetch={false}
@@ -2308,11 +2368,17 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
           </Link>
         </li>
       )}
-      {rows.map((item, index) => {
+      {[
+        ...rows.map((item) => ({ item, extra: false })),
+        ...(lead ? fill.map((item) => ({ item, extra: true })) : []),
+      ].map(({ item, extra }, index) => {
         const logo = logoFor(item);
         return (
           <li
             key={item.id}
+            /* Yedek satır: tarayıcı sığdığını ölçerse açıyor (NewsFill). */
+            hidden={extra || undefined}
+            data-news-fill={extra || undefined}
             className={cn(
               "min-w-0 border-t border-line",
               /* Sütunun ilk satırı üstteki kıl çizgiyi taşımıyor: başlık
@@ -2357,6 +2423,8 @@ async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
         );
       })}
     </ul>
+    {lead && fill.length > 0 && <NewsFill />}
+    </>
   );
 }
 

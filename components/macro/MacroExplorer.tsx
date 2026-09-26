@@ -45,6 +45,9 @@ export function MacroExplorer({ series, labels, intro }: {
   intro: ReactNode;
 }) {
   const [selected, setSelected] = useState(series[0]?.id);
+  /* Okuyucu seri değiştirdi mi — okumanın girişi yalnızca o zaman oynuyor;
+     sayfa yüklenirken rakamlar yerinde duruyor. */
+  const [switched, setSwitched] = useState(false);
   const active = series.find((item) => item.id === selected) ?? series[0];
   const panel = useId();
   return <>
@@ -57,7 +60,11 @@ export function MacroExplorer({ series, labels, intro }: {
           className={styles.seriesRow}
           aria-pressed={item.id === active.id}
           aria-controls={panel}
-          onClick={() => setSelected(item.id)}
+          onClick={() => {
+            if (item.id === active.id) return;
+            setSwitched(true);
+            setSelected(item.id);
+          }}
         >
           <span>{item.title}<small>{item.period}</small></span>
           <strong>{item.latest}</strong>
@@ -66,7 +73,12 @@ export function MacroExplorer({ series, labels, intro }: {
     </div>
     {active && <section className={styles.explorer} aria-label={labels.title} id={panel}>
       <p className={styles.explorerLabel}>{labels.title}</p>
-      <div className={styles.explorerReading}>
+      {/* Anahtar seri: yeni seride okuma yeniden kuruluyor ve girişi
+          baştan oynuyor (MacroExperience.module.css → "okuma girişi").
+          ÖNEKLİ, çünkü kardeşi `HistoryChart` da seri kimliğini anahtar
+          alıyor; aynı ebeveynde iki eş anahtar React'in eski okumayı
+          silememesine yol açıyordu (ölçüldü: geçişte iki okuma birden). */}
+      <div key={`reading:${active.id}`} className={styles.explorerReading} data-enter={switched || undefined}>
         <div>
           <h2>{active.title}</h2>
           <span>{labels.latest} · {active.period}</span>
@@ -114,10 +126,15 @@ function HistoryChart({ series, labels }: { series: ExplorerSeries; labels: { hi
       }}>
       <defs><linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity=".22" /><stop offset="100%" stopColor="var(--primary)" stopOpacity=".01" /></linearGradient></defs>
       {[20, 75, 130].map((y) => <line key={y} x1="0" x2="700" y1={y} y2={y} stroke="var(--line-soft)" vectorEffect="non-scaling-stroke" />)}
-      <polygon points={`10,150 ${line} 690,150`} fill={`url(#${gradient})`} />
+      {/* ÇİZGİ, SONRA DOLGU, SONRA NOKTA — mini grafiklerin sırası
+          (globals.css → .spark-*). Seri değişince çizgi soldan çiziliyordu
+          ama alan dolgusu ve imleç ANINDA çıkıyordu: dolgu çizgiden önce
+          tamamlanmış, nokta çizgi oraya varmadan sağ uçta bekliyordu
+          (ölçüldü, /makro). */}
+      <polygon className="spark-area" points={`10,150 ${line} 690,150`} fill={`url(#${gradient})`} />
       <polyline className="spark-line" points={line} fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-      <line x1={cursor.x} x2={cursor.x} y1="12" y2="150" stroke="var(--primary)" strokeOpacity=".25" vectorEffect="non-scaling-stroke" />
-      <circle cx={cursor.x} cy={cursor.y} r="4" fill="var(--primary)" stroke="var(--surface)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+      <line className="spark-area" x1={cursor.x} x2={cursor.x} y1="12" y2="150" stroke="var(--primary)" strokeOpacity=".25" vectorEffect="non-scaling-stroke" />
+      <circle className="spark-dot" cx={cursor.x} cy={cursor.y} r="4" fill="var(--primary)" stroke="var(--surface)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
     </svg>
     <div className={styles.axis}><span>{points[0].date}</span><span>{points.at(-1)!.date}</span></div>
     <label className={styles.historyLabel}>
