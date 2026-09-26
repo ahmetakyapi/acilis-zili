@@ -1,24 +1,26 @@
-.layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,460px); gap:48px; align-items:center; padding:24px 0 32px; max-width:1160px; margin-inline:auto; }
-.pitch { position:relative; min-width:0; padding:20px 0; }
-/* Karşılama sahnesi: başlığın üstünde. Sahne kutusu zilin çevresinde boşluk
-   taşıyor (zil 240'lık kutunun 69. biriminden başlıyor, 192 pikselde 55):
-   -18 pikselle zilin mürekkebi başlığın 37 piksel İÇİNDE kalıyordu
-   (ölçüldü, 1280). -55 ile zilin sol kenarı başlıkla aynı hatta. Kutunun
-   solu dışarı taşıyor ama o kısım saydam ve sayfayı yatay kaydırmıyor. */
-.scene { width:192px; height:120px; margin:-8px 0 4px -55px; }
-.pitch h2 { font-size:clamp(28px,3vw,40px); line-height:1.13; letter-spacing:-.045em; max-width:20ch; font-weight:600; }
-.pitch > p { max-width:52ch; font-size:14px; line-height:1.9; margin-top:20px; }
-.features { display:grid; gap:0; margin-top:28px; padding:0; }
-.feature { display:flex; align-items:center; gap:13px; padding:14px 0; border-top:1px solid var(--line); }
-.feature > span:first-child { display:grid; place-items:center; width:28px; height:28px; flex-shrink:0; border-radius:9px; background:var(--primary-wash); color:var(--primary-ink); font-size:10px; font-weight:600; }
-.feature > span:last-child { font-size:13px; line-height:1.65; }
-.features > p:last-child { font-size:12px; line-height:1.8; margin-top:12px; max-width:55ch; }
+/* TEK SÜTUN, ORTADA (26 Eylül). Gerekçe AuthForm.tsx'teki düzen notunda. */
+.layout { display:flex; flex-direction:column; align-items:center; padding:0 0 32px; max-width:1040px; margin-inline:auto; }
+.intro { display:flex; flex-direction:column; align-items:center; text-align:center; width:100%; }
+/* Karşılama sahnesi başlığın üstünde, ortada. Sahne kutusu 240 × 150'lik
+   çizimi taşıyor; zil kutunun ortasında olduğu için yana pay gerekmiyor
+   (eski iki sütunlu düzendeki -55'lik sol pay zili başlığın sol hattına
+   çekmek içindi). */
+.scene { width:160px; height:100px; margin:-6px 0 2px; }
+.title { font-size:clamp(28px,3vw,38px); line-height:1.13; letter-spacing:-.045em; max-width:22ch; font-weight:600; }
+/* Şerit başlığın altında, formun genişliğinde (sahne 360 × 48). */
+.strip { display:block; width:min(100%, 440px); aspect-ratio:360 / 48; height:auto; margin:8px 0 -6px; }
+
 /* TONLA DERİNLİK (24 Eylül). Form kartı sağ üst köşeden yayılan bir
    `--primary-wash` ışıması, mavi kenarlık ve `--premium-shadow` taşıyordu —
    23 Eylül'de kapaklardan ve panellerden kaldırılan üç şeyin üçü de burada
    kalmıştı (gerekçe UtilityExperience.module.css başındaki not). Mavi
-   yalnızca etkileşimde: kartın kendisi değil, içindeki düğme. */
-.formCard { position:relative; padding:30px; border:1px solid var(--line); border-radius:var(--radius-feature); background:var(--premium-surface); }
+   yalnızca etkileşimde: kartın kendisi değil, içindeki düğme. Kenarlık
+   soluk: asıl çerçeveyi üstündeki mürekkep çiziyor (`.frame`). */
+.formCard { position:relative; width:100%; max-width:440px; margin-top:18px; padding:28px; border:1px solid var(--line-soft); border-radius:var(--radius-feature); background:var(--premium-surface); }
+/* Mürekkep çerçeve kartın kenarından 3 piksel dışarı taşıyor
+   (lib/ink/scenes.ts → FRAME_INSET); fırçanın kalın yeri kenarlığın
+   üstüne biniyor, ince yeri dışında kalıyor. */
+.frame { position:absolute; inset:-3px; width:calc(100% + 6px); height:calc(100% + 6px); pointer-events:none; }
 .formCard h1 { font-size:28px; line-height:1.15; font-weight:600; letter-spacing:-.04em; }
 .formCard > p { font-size:13px; line-height:1.7; }
 .formCard form { gap:18px; }
@@ -30,23 +32,29 @@
 .visibility { position:absolute; right:3px; top:3px; width:40px; height:40px; display:grid; place-items:center; color:var(--text-muted); border-radius:8px; cursor:pointer; transition:color .2s,background .2s; }
 .visibility:hover { background:var(--primary-tint); color:var(--primary-ink); }
 .visibility:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
-@media(max-width:1023px) { .layout { display:flex; flex-direction:column; align-items:stretch; gap:28px; max-width:580px; padding:8px 0 12px; } .formCard { order:1; } .pitch { order:2; padding:10px 4px; } .pitch h2 { max-width:24ch; font-size:28px; } .features { margin-top:22px; } }
-@media(max-width:540px) { .formCard { padding:24px 20px; border-radius:18px; } .formCard h1 { font-size:26px; } .inputWrap input { font-size:16px; } .pitch > p { margin-top:14px; } }
+
+/* Formun altında: ürün ne veriyor. Gövde ve künye ortada; özellikler
+   geniş ekranda dört sütun, tablette iki, telefonda liste. */
+.details { width:100%; margin-top:44px; display:flex; flex-direction:column; align-items:center; }
+.body { max-width:60ch; text-align:center; font-size:14px; line-height:1.9; }
+.features { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:0; width:100%; margin-top:24px; border-top:1px solid var(--line); }
+.feature { display:flex; flex-direction:column; align-items:center; gap:10px; padding:18px 14px; text-align:center; }
+.feature + .feature { border-left:1px solid var(--line); }
+.feature > span:first-child { display:grid; place-items:center; width:28px; height:28px; flex-shrink:0; border-radius:9px; background:var(--primary-wash); color:var(--primary-ink); font-size:10px; font-weight:600; }
+.feature > span:last-child { font-size:13px; line-height:1.65; }
+.privacy { max-width:60ch; text-align:center; font-size:12px; line-height:1.8; margin-top:14px; }
+@media(max-width:1023px) { .features { grid-template-columns:repeat(2, minmax(0, 1fr)); } .feature:nth-child(odd) { border-left:0; } .feature:nth-child(n + 3) { border-top:1px solid var(--line); } }
+@media(max-width:540px) {
+  .formCard { padding:22px 18px; border-radius:18px; } .formCard h1 { font-size:26px; } .inputWrap input { font-size:16px; }
+  .title { font-size:26px; } .details { margin-top:32px; }
+  .features { grid-template-columns:minmax(0, 1fr); } .feature { flex-direction:row; text-align:left; padding:14px 2px; gap:13px; }
+  .feature + .feature { border-left:0; border-top:1px solid var(--line); }
+}
 @media(prefers-reduced-motion:reduce) { .visibility { transition:none; } }
 
-/* Sign-in and sign-up used center alignment, putting the shorter form
-   lower on the page. Both now start at the content origin. */
-/* HİZALAMA YALNIZCA MASAÜSTÜ IZGARASINDA. Bu kural bir dönem medya
-   sorgusunun dışındaydı ve mobil sütun düzeninden SONRA geliyordu: dikey
-   esnek sütunda `align-items` yatay hizayı yönettiği için form kartı
-   ekranın genişliğine esnemiyor, içeriği kadar kalıyordu (ölçüldü, 390'da
-   kart 289 piksel, sağda 83 piksel boşluk). */
-@media(min-width:1024px) { .layout { align-items:start; } }
-.layout { padding-top:0; }
-.pitch { padding-top:24px; }
-.formCard { padding:24px; }
-@media(max-width:1023px) { .layout { padding-top:0; } }
-@media(max-width:540px) { .formCard { padding:22px 18px; } }
+/* Glif 48'lik kutuda çizildi, satırda 36 piksel; satır yüksekliğini
+   değiştirmesin diye dikeyde negatif pay. */
+.glyph { width:36px; height:36px; flex-shrink:0; margin:-4px; }
 /* Hata satırı belirirken yerine iniyor (kart sallanması AuthForm'da). */
 .errorIn { animation:auth-error-in 260ms var(--ease-brand) backwards; }
 @keyframes auth-error-in { from { opacity:0; transform:translate3d(0,-4px,0); } }
@@ -57,13 +65,6 @@
    kendi gliflerini sırayla çiziyor. Sahnelerin kendileri lib/ink/scenes.ts'te;
    burada yalnızca yerleri. */
 .title { animation:title-rise 760ms cubic-bezier(0.2, 0.8, 0.2, 1) 80ms backwards; }
-/* Şerit başlıkla metin arasında, metin sütununun genişliğinde (sahne 360 × 48). */
-/* Şerit başlıkla aynı genişlikte (1280'de başlık ~460 piksel); 360'ta
-   başlığın dörtte biri kadar kısa kalıyordu. */
-.strip { display:block; width:min(100%, 460px); aspect-ratio:360 / 48; height:auto; margin:12px 0 -8px -6px; }
-/* Glif 48'lik kutuda çizildi, satırda 36 piksel; satır yüksekliğini
-   değiştirmesin diye dikeyde negatif pay. */
-.glyph { width:36px; height:36px; flex-shrink:0; margin:-4px -2px -4px -4px; }
 
 /* ODAK ÇİZGİSİ. Odaklanılan alanın altında mavi bir mürekkep çizgisi soldan
    açılıyor: okuyucu nereye yazdığını kenarlık renginden önce hareketle

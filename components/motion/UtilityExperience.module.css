@@ -52,3 +52,17 @@
 @media(max-width:1023px) { .archive { position:static; } }
 @media(max-width:767px) { .page { gap:20px; } .page > header { padding:4px 0 16px; } .bulletinGrid { gap:18px; } .bulletinArticle { padding:20px; } .bulletinArticle h2 { font-size:24px; } .preset { padding:18px; } .legal { padding:20px 18px; border-radius:18px; } .recovery { margin-block:12px; padding:26px 20px; } .menuGrid li a { padding:14px 16px; } }
 @media(prefers-reduced-motion:reduce) { .preset,.menuGrid li a > svg:last-child,.footer nav a,.archive a,.compare table tbody tr { transition:none; } .menuGrid li a:hover > svg:last-child { transform:none; } .footer nav a:hover { translate:none; } }
+
+/* MENÜ SATIRLARI DÖKÜLÜYOR (26 Eylül). Menü telefonda alt çubuğun
+   "Daha Fazla"sı: on dört satır tek blok hâlinde beliriyordu ve göz nereden
+   başlayacağını seçemiyordu. Satırlar yukarıdan aşağı, gruplar boyunca tek
+   akışla sağdan yerine kayıyor (`--row` sayfadaki sıra, page.tsx). Adım 28
+   ms, tavan 12 satır: son satır ~400 ms'de yerinde, dokunmayı beklemiyor.
+   YALNIZCA KONUM — ton sayfanın kendi girişinden (`.page-enter`) geliyor.
+   Dokunuşta satır hafifçe içeri basılıyor: telefonda hover yok ve bir
+   bağlantıya basıldığını gösteren tek şey buydu. */
+.menuGrid li { animation:menu-row-in 420ms var(--ease-brand) backwards; animation-delay:calc(min(var(--row, 0), 12) * 28ms + 60ms); }
+@keyframes menu-row-in { from { transform:translate3d(14px, 0, 0); } }
+.menuGrid li a { transition:background-color .2s, scale .15s; }
+.menuGrid li a:active { scale:.985; }
+@media(prefers-reduced-motion:reduce) { .menuGrid li { animation:none; } .menuGrid li a:active { scale:none; } }

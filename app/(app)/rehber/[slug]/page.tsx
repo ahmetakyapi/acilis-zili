@@ -1,3 +1,4 @@
+import { InkCanvas } from "@/components/ink/InkCanvas";
 import { MotionExperience, ScrollProgress, SpotlightCard } from "@/components/motion/PremiumMotion";
 import experience from "@/components/motion/EditorialExperience.module.css";
 import editorial from "@/components/article/ArticleEditorial.module.css";
@@ -209,6 +210,12 @@ export default async function GuideArticlePage(
           variant="editorial"
           className={editorial.prose}
         />
+        {/* YAZININ SONU: iki fırça çizgisi ortada buluşuyor ve araya
+            pirinç bir zil basılıyor (lib/ink/scenes.ts → storyEnd).
+            Okuyucu gövdenin dibine indiğinde çiziliyor; aşağıdaki ilgili
+            yazılar yazının parçası değil, EKİ. Gövdenin kabında
+            duruyor ki sütunun 56'lık aralığı ikinci kez eklenmesin. */}
+        <InkCanvas scene="storyEnd" seed={13} className="mx-auto mt-8 block h-15 w-60" />
       </div>
 
       {related.length > 0 && (

@@ -107,8 +107,12 @@ hareketi azaltana hiç açılmaz; hidrasyon geç kalırsa sahne hızlanıp yine
 3,4 saniyede biter), gezinme beklemesinin kartı (hedefe göre sahne,
 harita `lib/ink/route-scenes.ts`), iki 404 (`lost`), hata ekranı
 (`mishap`), giriş/kayıt (`hello`), sayfa düzeyindeki boş durumlar
-(`EmptyState scene=`) ve haberler kapağı. Panel içindeki tek satırlık boş
-durumlara sahne konmaz. Yeni sahneyi `.tmp-*` bir önizlemede kare kare
+(`EmptyState scene=`) haberler kapağı, giriş/kayıt kartının kendini çizen çerçevesi
+(`cardFrame`) ve Mercek ile rehber yazısının bitiş işareti (`storyEnd`).
+Panel içindeki tek satırlık boş durumlara sahne konmaz. Tek istisna
+yükleme: `LoadingMark` döngülü `ringing` sahnesini çalar (sahnenin
+`loop` alanı; döngü yalnızca bekleme için, görünüme giren sahneler yine
+dönmez). Kabın boyuna uyan sahneler (`fill`) kutu değil CSS boyutu alır. Yeni sahneyi `.tmp-*` bir önizlemede kare kare
 çizip hem açık hem koyu temada gözle kontrol et — çizim hatası ancak
 karede görünüyor.
 

@@ -37,7 +37,19 @@ type Ctx = CanvasRenderingContext2D;
 export type InkScene = {
   box: { w: number; h: number };
   end: number;
-  render: (ctx: Ctx, t: number, pal: InkPalette, seed: number) => void;
+  /**
+   * Döngü başlangıcı (sn). Verilirse sahne `end`e varınca buradan sürer ve
+   * hiç bitmez. YALNIZCA YÜKLEME GÖSTERGESİ için: öteki sahneler bilerek
+   * dönmüyor (dosya başındaki not, WCAG 2.2.2); bir bekleme göstergesi ise
+   * bekleme bitene kadar "çalışıyor" demek zorunda ve iş bitince kalkıyor.
+   */
+  loop?: number;
+  /**
+   * Kutu tuvalin KENDİSİ: kart çerçevesi gibi boyu değişen sahneler. `box`
+   * yok sayılır, `render` tuvalin CSS ölçüsünü beşinci argüman alır.
+   */
+  fill?: boolean;
+  render: (ctx: Ctx, t: number, pal: InkPalette, seed: number, size: { w: number; h: number }) => void;
 };
 
 /* ----------------------------------------------------------------------- */
@@ -1196,10 +1208,174 @@ const glyphFree: InkScene = {
   },
 };
 
-export const INK_SCENES = { intro, searching, chart, press, lens, ledger, hello, lost, mishap, dayStrip, glyphHeart, glyphLedger, glyphPress, glyphFree } satisfies Record<string, InkScene>;
+/* ----------------------------------------------------------------------- */
+/* Çalan zil — yükleme göstergesi (DÖNGÜLÜ)                                 */
+/* ----------------------------------------------------------------------- */
+
+/* Açılış sahnesinin dilinde bekleme işareti: zil mürekkeple kendini
+   çiziyor, sonra yükleme sürdükçe sallanıp çalıyor. Paneldeki mavi karolu
+   zilin (BellLoader) yerine; sitenin geri kalanı el çizimi konuşurken
+   bekleme anı bir ikon gibi duruyordu.
+
+   DİKİŞSİZ DÖNGÜ: sallanma `sin(2πφ)` ve döngü φ=0'da başlıyor — hem açı
+   hem hız döngü sınırında sürekli. Çizim bitmeden hafif bir geri çekilme
+   (φ<0) salınımı başlatıyor; yani ilk sallanma bir anda değil, kurularak
+   geliyor. Tokmak iki uçta (φ=¼, ¾) vuruyor ve çınlama yayları açılıyor;
+   yaylar bir sonraki vuruştan önce sönüyor. */
+const RING_LOOP = 0.9;
+const RING_PERIOD = 1.4;
+const RING_SWING = 0.2;
+/** Çınlama yaylarının süresi (sn) — yarım dönemden kısa, sönüp bitsin. */
+const RING_ARC_S = 0.6;
+
+const ringing: InkScene = {
+  box: { w: 120, h: 120 },
+  end: RING_LOOP + RING_PERIOD,
+  loop: RING_LOOP,
+  render(ctx, t, pal, seed) {
+    const x = 60;
+    const y = 64;
+    const s = 0.52;
+    const phase = (t - RING_LOOP) / RING_PERIOD;
+    const ramp = span(t, 0.6, RING_LOOP);
+    const swing = ramp > 0 ? RING_SWING * Math.sin(2 * Math.PI * phase) * ramp : 0;
+    const within = ((phase % 1) + 1) % 1;
+    const blink = t >= RING_LOOP && within > 0.55 && within < 0.62 ? Math.sin(((within - 0.55) / 0.07) * Math.PI) : 0;
+    blot(ctx, x, 110, 13, { seed: seed + 50, spread: span(t, 0, 0.4), color: pal.ink, alpha: 0.1, squash: 0.4 });
+    drawBell(ctx, pal, {
+      x,
+      y,
+      s,
+      swing,
+      outline: span(t, 0, 0.45),
+      lip: span(t, 0.35, 0.5),
+      hanger: span(t, 0.4, 0.55),
+      wash: span(t, 0.45, 0.65),
+      clapper: span(t, 0.5, 0.62),
+      eyes: span(t, 0.55, 0.7),
+      blink,
+      smile: span(t, 0.62, 0.78),
+      seed,
+    });
+    if (t >= RING_LOOP) {
+      for (const hit of [0.25, 0.75]) {
+        const since = (((within - hit) % 1) + 1) % 1;
+        ringArcs(ctx, pal, x, y - 2, (since * RING_PERIOD) / RING_ARC_S, s);
+      }
+    }
+  },
+};
+
+/* ----------------------------------------------------------------------- */
+/* Kart çerçevesi — elle çizilmiş kenar (giriş kartı)                        */
+/* ----------------------------------------------------------------------- */
+
+/* Giriş kartının kenarı mürekkeple kendini çiziyor: sol üstten başlıyor,
+   saat yönünde dönüp başladığı yeri biraz geçerek bitiyor — elle çizilmiş
+   bir kutunun kapanışı gibi. Arkasında soluk ikinci bir iz (kalem izi) var.
+   Kutu tuvalin kendisi (`fill`): kart her ekranda başka boyda. Kartın CSS
+   kenarlığı altta soluk kalıyor; JavaScript yokken kart çerçevesiz olmuyor. */
+const FRAME_RADIUS = 22;
+/** Tuval kartın kenarından bu kadar taşıyor; hat tam kenarın üstünde. */
+export const FRAME_INSET = 3;
+/** Kapanışta başlangıcı geçen pay (piksel). */
+const FRAME_OVERLAP = 34;
+
+function roundedRectPath(w: number, h: number, inset: number, r: number, overlap: number): Point[] {
+  const x0 = inset;
+  const y0 = inset;
+  const x1 = w - inset;
+  const y1 = h - inset;
+  const pts: Point[] = [];
+  const line = (a: Point, b: Point) => {
+    const n = Math.max(2, Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 6));
+    for (let i = pts.length ? 1 : 0; i <= n; i++) pts.push({ x: a.x + ((b.x - a.x) * i) / n, y: a.y + ((b.y - a.y) * i) / n });
+  };
+  const arc = (cx: number, cy: number, from: number) => {
+    for (let i = 1; i <= 10; i++) {
+      const a = from + (i / 10) * (Math.PI / 2);
+      pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+    }
+  };
+  line({ x: x0 + r, y: y0 }, { x: x1 - r, y: y0 });
+  arc(x1 - r, y0 + r, -Math.PI / 2);
+  line({ x: x1, y: y0 + r }, { x: x1, y: y1 - r });
+  arc(x1 - r, y1 - r, 0);
+  line({ x: x1 - r, y: y1 }, { x: x0 + r, y: y1 });
+  arc(x0 + r, y1 - r, Math.PI / 2);
+  line({ x: x0, y: y1 - r }, { x: x0, y: y0 + r });
+  arc(x0 + r, y0 + r, Math.PI);
+  line({ x: x0 + r, y: y0 }, { x: Math.min(x1 - r, x0 + r + overlap), y: y0 + 0.6 });
+  return pts;
+}
+
+const cardFrame: InkScene = {
+  box: { w: 1, h: 1 },
+  fill: true,
+  end: 1.4,
+  render(ctx, t, pal, seed, size) {
+    const pts = roundedRectPath(size.w, size.h, FRAME_INSET, FRAME_RADIUS, FRAME_OVERLAP);
+    brush(ctx, pts.map((q) => ({ x: q.x + 0.9, y: q.y + 0.8 })), {
+      width: 1.1,
+      progress: ease.inOut(span(t, 0.14, 1.3)),
+      seed: seed + 1,
+      taper: 0.2,
+      wobble: 0.8,
+      alpha: 0.22,
+      color: pal.ink,
+    });
+    brush(ctx, pts, {
+      width: 1.9,
+      progress: ease.inOut(span(t, 0, 1.15)),
+      seed,
+      taper: 0.25,
+      wobble: 0.6,
+      dry: 0.35,
+      alpha: 0.72,
+      color: pal.ink,
+    });
+  },
+};
+
+/* ----------------------------------------------------------------------- */
+/* Son işareti — Mercek ve rehber yazısının sonu                             */
+/* ----------------------------------------------------------------------- */
+
+/* Dergiler yazının sonunu küçük bir işaretle kapatır (∎). Burada iki yandan
+   gelen kuru fırça çizgisi ve ortaya basılan pirinç bir zil mührü: okuyucu
+   yazının bittiğini, sayfanın devam eden künyelerinden önce görüyor. */
+const storyEnd: InkScene = {
+  box: { w: 240, h: 60 },
+  end: 1.7,
+  render(ctx, t, pal, seed) {
+    const y = 33;
+    brush(ctx, path([{ x: 22, y: y + 1 }, { x: 52, y: y - 1 }, { x: 80, y: y + 0.6 }, { x: 104, y }], 20), {
+      width: 2.6, progress: ease.inOut(span(t, 0, 0.55)), seed: seed + 1, taper: 0.9, dry: 0.6, color: pal.ink,
+    });
+    brush(ctx, path([{ x: 218, y: y + 1 }, { x: 188, y: y - 1 }, { x: 160, y: y + 0.6 }, { x: 136, y }], 20), {
+      width: 2.6, progress: ease.inOut(span(t, 0.1, 0.65)), seed: seed + 2, taper: 0.9, dry: 0.6, color: pal.ink,
+    });
+    const stamp = span(t, 0.62, 0.9);
+    if (stamp > 0) {
+      const k = 1.5 - 0.5 * ease.back(stamp);
+      blot(ctx, 120, y - 3, 7 * k, { seed: seed + 3, color: pal.spark, alpha: clamp(stamp * 2) });
+      brush(ctx, segment({ x: 111, y: y + 5 }, { x: 129, y: y + 5 }, 6), {
+        width: 2.6, progress: ease.out(stamp), seed: seed + 4, taper: 0.5, color: pal.spark,
+      });
+      blot(ctx, 120, y + 10, 2.4, { seed: seed + 5, spread: ease.back(span(t, 0.8, 0.95)), color: pal.spark });
+    }
+    spark(ctx, pal, 120, y - 3, (t - 0.85) / 0.55, 0.55, seed + 6);
+  },
+};
+
+export const INK_SCENES = { intro, searching, chart, press, lens, ledger, hello, lost, mishap, dayStrip, glyphHeart, glyphLedger, glyphPress, glyphFree, ringing, cardFrame, storyEnd } satisfies Record<string, InkScene>;
 export type InkSceneName = keyof typeof INK_SCENES;
 
-/** Gerçek saati sahnenin saatine çevirir: sonda durur. */
+/** Gerçek saati sahnenin saatine çevirir: sonda durur, döngülü sahne döner. */
 export function sceneTime(scene: InkScene, t: number) {
+  if (scene.loop !== undefined && t >= scene.end) {
+    const period = scene.end - scene.loop;
+    return scene.loop + ((t - scene.loop) % period);
+  }
   return Math.min(t, scene.end);
 }

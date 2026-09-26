@@ -21,6 +21,7 @@ import {
   SignOut,
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
+import type { CSSProperties } from "react";
 import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
 import { PageHeader, Panel, ButtonLink } from "@/components/ui/primitives";
@@ -157,7 +158,7 @@ export default async function MenuPage() {
       {/* The server-resolved locale also owns these destinations. An /en/menu
           visit without a preference cookie previously linked back to Turkish. */}
       <div className={`${polish.menuGrid} grid gap-5 sm:grid-cols-2 lg:grid-cols-3`} data-motion-stagger>
-        {groups.map((group) => (
+        {groups.map((group, groupIndex) => (
           <Panel key={group.title} className="flex flex-col">
             {/* Panelin başlığı — plaka görünümünde ama h2 ("her panelin bir
                 h2'si var"); ekran okuyucu grupları başlıkla geziyor. */}
@@ -165,10 +166,15 @@ export default async function MenuPage() {
               {group.title}
             </h2>
             <ul>
-              {group.entries.map((entry) => {
+              {group.entries.map((entry, entryIndex) => {
                 const Icon = entry.icon;
+                /* Satırın sayfadaki sırası: dökülme gruplar boyunca TEK
+                   akış (polish.menuGrid → menu-row-in). */
+                const order =
+                  groups.slice(0, groupIndex).reduce((sum, g) => sum + g.entries.length, 0) +
+                  entryIndex;
                 return (
-                  <li key={entry.href}>
+                  <li key={entry.href} style={{ "--row": order } as CSSProperties}>
                     <Link
                       href={withLocale(entry.href, locale)}
                       prefetch={false}

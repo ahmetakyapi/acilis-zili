@@ -70,8 +70,9 @@ export function InkCanvas({
     /* Gecikme dahil sahne saati; duraklayıp devam ederken buradan sürülüyor. */
     let lastClock = 0;
 
+    let dpr = 1;
     const size = () => {
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      dpr = Math.min(2, window.devicePixelRatio || 1);
       const { width, height } = canvas.getBoundingClientRect();
       canvas.width = Math.max(1, Math.round(width * dpr));
       canvas.height = Math.max(1, Math.round(height * dpr));
@@ -79,14 +80,20 @@ export function InkCanvas({
 
     const draw = (t: number) => {
       lastT = t;
-      const { w, h } = def.box;
       const cw = canvas.width;
       const ch = canvas.height;
-      const k = Math.min(cw / w, ch / h);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, cw, ch);
+      if (def.fill) {
+        // Kutu tuvalin kendisi (çerçeve): CSS pikseliyle çiziliyor.
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        def.render(ctx, sceneTime(def, t), pal, seed, { w: cw / dpr, h: ch / dpr });
+        return;
+      }
+      const { w, h } = def.box;
+      const k = Math.min(cw / w, ch / h);
       ctx.setTransform(k, 0, 0, k, (cw - w * k) / 2, (ch - h * k) / 2);
-      def.render(ctx, sceneTime(def, t), pal, seed);
+      def.render(ctx, sceneTime(def, t), pal, seed, def.box);
     };
 
     const tick = (now: number) => {
@@ -95,7 +102,8 @@ export function InkCanvas({
       lastClock = clock;
       const t = Math.max(0, clock - wait);
       draw(t);
-      if (t >= def.end) {
+      // Döngülü sahne (yükleme göstergesi) bitmez; görünür kaldıkça döner.
+      if (t >= def.end && def.loop === undefined) {
         raf = 0;
         finished = true;
         doneRef.current?.();

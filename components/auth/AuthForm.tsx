@@ -111,54 +111,37 @@ export function AuthForm({
 
   return (
     <MotionExperience className={styles.layout}>
-      {/* ---- Sol: ürün ne yapıyor ----
-           MOBİLDE İKİNCİ SIRADA: "Giriş Yap"a basan biri formu arıyor.
-           Tanıtım metni tam ekranı doldurup formu katlamanın altına
-           itiyordu; `order` ile mobilde aşağı, geniş ekranda yine sola
-           alınıyor. */}
-      <div className={styles.pitch}>
+      {/* ---- TEK SÜTUN, FORM ORTADA (26 Eylül) ----
+           İki sütunluydu: solda tanıtım, sağda form. Form kısa kaldığı için
+           sağ üstte küçük bir kutu gibi duruyor, sayfanın ağırlığı sola
+           kayıyordu (ekran görüntüsüyle bildirildi). Artık sırası: karşılama
+           (zil, başlık, gün şeridi) → ORTADA form → formun altında özellik
+           şeridi. Form her genişlikte ilk ekranda (1280×860'ta kartın dibi
+           ~700 piksel, 390×844'te ~680); eski mobil kuralın ("Giriş Yap"a
+           basan biri formu arıyor) istediği de buydu. */}
+      <div className={styles.intro}>
         {/* KARŞILAMA: zil iki kez çalıp selam veriyor, yanında pirinç bir
-            kalp — hesabın okuyucuya verdiği asıl şey takip listesi. Mobilde
-            bu sütun formun ALTINDA, yani sahne formu itmiyor; görünüme
-            girince oynuyor. (lib/ink/scenes.ts → hello) */}
+            kalp — hesabın okuyucuya verdiği asıl şey takip listesi
+            (lib/ink/scenes.ts → hello). */}
         <InkCanvas scene="hello" seed={3} className={styles.scene} />
-        {/* Başlık sayfa başlıklarının imzasıyla (globals.css → title-rise)
-            bir maskenin arkasından yükseliyor. */}
-        <h2 className={cn("display-ink", styles.title)}>
+        {/* Başlık DEĞİL, künye cümlesi: sayfanın başlığı formun "Giriş
+            Yap"ı (h1). Bu satır h2 iken belgede h1'den ÖNCE geliyordu ve
+            anahat ters okunuyordu. Sayfa başlıklarının imzasıyla
+            (title-rise) maskeden yükseliyor. */}
+        <p className={cn("display-ink", styles.title)}>
           {pitchTitle}
-        </h2>
+        </p>
         {/* GÜN ŞERİDİ: başlığın söylediği anı çiziyor — kuru fırçayla bir
             seans şeridi, saat çentikleri ve açılış anına basılan pirinç zil
             (lib/ink/scenes.ts → dayStrip). */}
         <InkCanvas scene="dayStrip" seed={5} delay={0.45} className={styles.strip} />
-        <p className="mt-5 max-w-[52ch] text-base leading-[26px] text-body">
-          {pitchBody}
-        </p>
-
-        <div className={styles.features} data-motion-stagger>
-          {features.map((feature, index) => (
-            <p key={feature} className={styles.feature}>
-              {FEATURE_GLYPHS[index] ? (
-                <InkCanvas
-                  scene={FEATURE_GLYPHS[index]}
-                  seed={index + 2}
-                  delay={0.3 + index * GLYPH_STAGGER}
-                  className={styles.glyph}
-                />
-              ) : (
-                <span aria-hidden>{String(index + 1).padStart(2, "0")}</span>
-              )}
-              <span className="text-read text-body">{feature}</span>
-            </p>
-          ))}
-          <p className="mt-2.5 text-small leading-relaxed text-muted">
-            {privacyNote}
-          </p>
-        </div>
       </div>
 
-      {/* ---- Sağ: form ---- */}
       <div ref={cardRef} className={styles.formCard}>
+        {/* ELLE ÇİZİLMİŞ KENAR: kartın çerçevesi mürekkeple kendini çiziyor
+            (lib/ink/scenes.ts → cardFrame). CSS kenarlığı altta soluk
+            kalıyor; JavaScript yokken kart çerçevesiz olmuyor. */}
+        <InkCanvas scene="cardFrame" seed={8} delay={0.25} className={styles.frame} />
         {/* The form action is the page heading, including the form-first mobile layout. */}
         <h1>
           {title}
@@ -269,6 +252,31 @@ export function AuthForm({
             {altLinkLabel}
           </Link>
         </p>
+      </div>
+
+      {/* ---- Formun altında: ürün ne veriyor ----
+           Özellikler bir şerit: geniş ekranda dört sütun, tablette iki,
+           telefonda liste. Her biri kendi mürekkep glifini sırayla çiziyor. */}
+      <div className={styles.details}>
+        <p className={styles.body}>{pitchBody}</p>
+        <div className={styles.features} data-motion-stagger>
+          {features.map((feature, index) => (
+            <p key={feature} className={styles.feature}>
+              {FEATURE_GLYPHS[index] ? (
+                <InkCanvas
+                  scene={FEATURE_GLYPHS[index]}
+                  seed={index + 2}
+                  delay={0.3 + index * GLYPH_STAGGER}
+                  className={styles.glyph}
+                />
+              ) : (
+                <span aria-hidden>{String(index + 1).padStart(2, "0")}</span>
+              )}
+              <span className="text-read text-body">{feature}</span>
+            </p>
+          ))}
+        </div>
+        <p className={styles.privacy}>{privacyNote}</p>
       </div>
     </MotionExperience>
   );

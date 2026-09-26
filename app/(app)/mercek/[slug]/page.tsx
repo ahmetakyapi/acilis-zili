@@ -1,3 +1,4 @@
+import { InkCanvas } from "@/components/ink/InkCanvas";
 import { Suspense } from "react";
 import { MotionExperience, ScrollProgress, ScrollStage, SpotlightCard } from "@/components/motion/PremiumMotion";
 import experience from "@/components/motion/EditorialExperience.module.css";
@@ -381,6 +382,12 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
                 hasToc ? <StoryToc items={toc} lang={story.locale} t={t} /> : undefined
               }
             />
+            {/* YAZININ SONU: iki fırça çizgisi ortada buluşuyor ve araya
+                pirinç bir zil basılıyor (lib/ink/scenes.ts → storyEnd).
+                Okuyucu gövdenin dibine indiğinde çiziliyor; aşağıdaki şirket
+                kartı ve künye yazının parçası değil, EKİ. Gövdenin kabında
+                duruyor ki sütunun 56'lık aralığı ikinci kez eklenmesin. */}
+            <InkCanvas scene="storyEnd" seed={11} className="mx-auto mt-8 block h-15 w-60" />
           </div>
 
           {/* ŞİRKETLER GÖVDENİN SONUNDA, KAYNAKLARDAN ÖNCE — her genişlikte
