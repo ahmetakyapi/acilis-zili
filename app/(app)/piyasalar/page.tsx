@@ -253,8 +253,15 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
            yanındaki pay bekliyor. */
         fallback={
           <>
-            <IndexTabs tab={tab} locale={locale} t={t} />
-            <LoadingFallback label={t.common.loading}><DetailSkeleton rows={Math.min(active.members.length, limit)} /></LoadingFallback>
+            <IndexTabs tab={tab} locale={locale} t={t}
+              identity={<IndexIdentity tab={tab} proxy={active.proxy} proxyQuote={null} locale={locale} t={t} loading />}
+              aside={<div className={styles.shareBox} aria-hidden="true">
+                <div className={styles.shareHead}><Skeleton className="h-3 w-28" /><Skeleton className="h-6 w-12" /></div>
+                <Skeleton className="h-2 w-full" />
+                <div className={styles.shareCounts}>{[0, 1, 2].map((key) => <Skeleton key={key} className="h-5 w-16" />)}</div>
+              </div>}
+            />
+            <LoadingFallback label={t.common.loading}><DetailSkeleton rows={Math.min(active.members.length, limit)} contribution={tab === "dow"} /></LoadingFallback>
           </>
         }
       >
@@ -354,8 +361,9 @@ async function IndexCards({
                       {formatPrice(quote.price, locale)}
                     </p>
                     <p
+                      data-tone={tone}
                       className={cn(
-                        "numeral text-base font-bold",
+                        styles.indexChange, "numeral text-base font-bold",
                         tone === "up"
                           ? "text-up"
                           : tone === "down"
@@ -667,11 +675,12 @@ async function IndexDetail({
    Sonraki yükleme düzeninde seçimler sonuç sınırının dışına çıktı: veri
    beklenirken çipler kaybolmaz veya devre dışı kalmaz; genişlik yine altındadır. */
 
-function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Locale; t: Dictionary; aside?: ReactNode; identity?: ReactNode }) {
+function IndexTabs({ tab, aside, identity, t }: { tab: TabKey; locale: Locale; t: Dictionary; aside?: ReactNode; identity?: ReactNode }) {
   return <Panel className={styles.indexTabs}>
       <div className={styles.toolbarLayout}>
         <div className={styles.indexControls}>
-        {identity}
+        <div className={styles.indexChoices}>
+        <p className={styles.breadthEyebrow}>{t.markets.breadth}</p>
         {/* ÜÇ ÇİP MOBİLDE TEK SATIRDA. `flex-wrap` ile diziliyorlardı ve
             üçüncü çip (S&P 500) 390 pikselde alt satıra düşüyordu: üç eşit
             seçenek iki-bir diye kırılınca denetim tek bir seçici olmaktan
@@ -710,6 +719,8 @@ function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Locale; t: D
           })}
         </div>
         </div>
+        {identity}
+        </div>
         {/* SAĞDA YÜKSELENLERİN PAYI (26 Eylül). Pay genişlik kartının sağ
             yarısını tutuyordu; satırın sağı ise yalnızca liste tarihini
             taşıyordu. Pay buraya çıkınca kartın sağı ısı haritasına kaldı.
@@ -725,21 +736,20 @@ function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Locale; t: D
    Gösterilen fiyat endeks seviyesi değil onu izleyen fonun kotasyonudur;
    fon sembolü bu yüzden fiyatın yanında kalır. Eksik değişimler sayaca
    katılmaz; gerçek kapsam toplam üye sayısıyla ayrıca gösterilir. */
-function IndexIdentity({ tab, proxy, proxyQuote, locale, t }: {
-  tab: TabKey; proxy: string; proxyQuote: Quote | null; locale: Locale; t: Dictionary;
+function IndexIdentity({ tab, proxy, proxyQuote, locale, t, loading = false }: {
+  tab: TabKey; proxy: string; proxyQuote: Quote | null; locale: Locale; t: Dictionary; loading?: boolean;
 }) {
-  return <div className={styles.toolbarIdentity}>
-    <div>
-      <p className={styles.breadthEyebrow}>{t.markets.breadth}</p>
-      <div className={styles.breadthHeading}>
-        <h2>{INDEX_TABS.find((entry) => entry.key === tab)?.label}</h2>
-        <a href="#market-members" className={styles.breadthLink}>{t.markets.constituents} <span aria-hidden>↘</span></a>
-      </div>
+  return <div className={styles.toolbarIdentity} aria-label={INDEX_TABS.find((entry) => entry.key === tab)?.label}>
+    <div className={styles.selectedIndexLabel}>
+      <span className={styles.proxySymbol}>{proxy}</span>
+      <span>{INDEX_TABS.find((entry) => entry.key === tab)?.label}</span>
     </div>
-    {proxyQuote && <div className={styles.breadthQuote}>
-      <span className="numeral">{proxy} · {formatPrice(proxyQuote.price, locale, { currency: true })}</span>
-      {proxyQuote.changePct !== null && <ChangePill changePct={proxyQuote.changePct} locale={locale} />}
-    </div>}
+    {loading ? <Skeleton className="h-7 w-48 max-w-full" /> : proxyQuote ? (
+      <div className={styles.selectedIndexReading}>
+        <strong className="numeral">{formatPrice(proxyQuote.price, locale, { currency: true })}</strong>
+        {proxyQuote.changePct !== null && <ChangePill changePct={proxyQuote.changePct} locale={locale} />}
+      </div>
+    ) : <span className={styles.selectedIndexEmpty}>{t.common.noData}</span>}
   </div>;
 }
 
@@ -1390,53 +1400,64 @@ function MembersTable({
  * düzeni, aynı ızgara. Böylece içerik uzayıp kısaldıkça iskelet de onunla
  * birlikte kayıyor ve elle ayarlanmış piksel sayıları eskimiyor.
  */
-function DetailSkeleton({ rows }: { rows: number }) {
+function DetailSkeleton({ rows, contribution }: { rows: number; contribution: boolean }) {
   return (
-    <>
-      {/* Genişlik şeridi */}
+    <div className={styles.detailSkeleton} aria-hidden="true">
+      {/* 27 Eylül: eski kimlik/çubuk maketi yerine gerçek 30 karolu geometri.
+          Seçici ve genişlik özeti yukarıda, yüklenirken de aynı konumda. */}
       <Panel className={styles.breadth}>
         <div className={styles.breadthOverview}>
-          <div className={styles.breadthIdentity}>
-            <Skeleton className="h-3 w-28" />
-            <Skeleton className="my-3 h-8 w-40" />
-            <Skeleton className="h-5 w-44" />
-            <Skeleton className="mt-3 h-6 w-32" />
-          </div>
-          <div className={styles.breadthVisual}>
-            <div className={styles.breadthRatio}><Skeleton className="h-3 w-28" /><Skeleton className="h-8 w-16" /></div>
-            <Skeleton className="my-3.5 h-[9px] w-full" />
-            <div className={styles.breadthCounts}>{[0, 1, 2].map((key) => <Skeleton key={key} className="h-7 w-full" />)}</div>
-            <Skeleton className="mt-3 h-3 w-3/4" />
+          <div className={styles.heat}>
+            <div className={styles.heatHead}>
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className={cn(styles.heatHint, "h-3 w-full max-w-72")} />
+              <Skeleton className={cn(styles.heatLegend, "h-10")} />
+            </div>
+            <div className={styles.heatGrid}>
+              {Array.from({ length: HEAT_MAX }, (_, i) => (
+                <div key={i} className={styles.heatCell} data-heat-level="0">
+                  <Skeleton className="size-[26px] rounded-lg" />
+                  <Skeleton className="h-3 w-7" />
+                  <Skeleton className="h-3 w-8" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <div className={styles.breadthStamp}><Skeleton className="h-4 w-3/4" /></div>
+        <div className={cn(styles.breadthStamp, styles.stampSkeleton)}>
+          <Skeleton className="h-3 w-72 max-w-full" />
+          <Skeleton className="h-3 w-52 max-w-full" />
+          <Skeleton className="h-3 w-80 max-w-full" />
+        </div>
       </Panel>
 
-      {/* Artanlar / azalanlar — beşer satır */}
       <div className={styles.movers}>
         {[0, 1].map((panel) => (
           <Panel key={panel} className={styles.mover}>
-            <div className="flex items-center justify-between px-4 py-4 sm:px-5">
-              <Skeleton className="h-3 w-40" />
-              <Skeleton className="h-2.5 w-20" />
+            <div className={styles.moverSkeletonHead}>
+              <Skeleton className="h-5 w-40" /><Skeleton className="h-3 w-24" />
             </div>
-            <div className="flex flex-col gap-px">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <SkeletonRow key={i} />
+            <ul>
+              {Array.from({ length: 5 }, (_, i) => (
+                <li key={i} className={styles.moverSkeletonRow}>
+                  <Skeleton className="size-6 rounded-md" />
+                  <div className={styles.moverSkeletonCompany}><Skeleton className="h-[18px] w-12" /><Skeleton className="h-[14px] w-full" /></div>
+                  <Skeleton className={cn(styles.moverSkeletonValue, "h-5 w-16")} />
+                  <Skeleton className={cn(styles.moverSkeletonBar, "h-[3px] w-full")} />
+                  {contribution && <Skeleton className={cn(styles.moverSkeletonBar, "h-4 w-20")} />}
+                </li>
               ))}
-            </div>
+            </ul>
           </Panel>
         ))}
       </div>
 
-      {/* Bileşen tablosu */}
-      <Panel>
+      <Panel className={styles.members}>
+        <div className="flex items-center justify-between gap-4 px-5 py-4"><Skeleton className="h-5 w-40" /><Skeleton className="h-3 w-20" /></div>
         <div className="flex flex-col gap-px">
-          {Array.from({ length: rows }).map((_, i) => (
-            <SkeletonRow key={i} />
-          ))}
+          {Array.from({ length: rows }, (_, i) => <SkeletonRow key={i} />)}
         </div>
       </Panel>
-    </>
+    </div>
   );
 }

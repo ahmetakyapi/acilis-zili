@@ -394,3 +394,61 @@
   .moverTrack { margin-top:7px; }
   .moverTrack > span:nth-child(2) { font-size:10px; }
 }
+
+/* 27 Eylül, seçim şeridi: önce QQQ 12px ile 700px uzağa dağılıyordu.
+   Üç seçenek ve seçilinin kotasyonu artık tek yatay grupta; etiket,
+   fiyat ve değişim aynı göz hizasında. Bileşen tablosu oku kaldırıldı. */
+.toolbarLayout { grid-template-columns:auto minmax(300px,1fr); gap:24px; }
+.indexControls { flex-direction:row; align-items:center; justify-content:flex-start; gap:24px; }
+.indexChoices { min-width:0; flex-shrink:0; }
+.indexChoices > .breadthEyebrow { margin-bottom:8px; }
+.toolbarIdentity { flex:none; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:8px; padding-left:20px; border-left:1px solid var(--line); }
+.selectedIndexLabel { display:flex; align-items:center; gap:8px; color:var(--text-body); font-size:12px; line-height:1.2; font-weight:550; }
+.proxySymbol { padding:4px 7px; border-radius:5px; background:var(--primary-wash); color:var(--primary-ink); font-size:12px; font-weight:750; letter-spacing:.03em; }
+.selectedIndexReading { display:flex; align-items:center; gap:10px; white-space:nowrap; }
+.selectedIndexReading > strong { font-size:24px; line-height:1.1; font-weight:650; letter-spacing:-.035em; color:var(--text-strong); }
+.selectedIndexReading > :last-child:not(strong) { font-size:14px; font-weight:700; padding:4px 8px; }
+.selectedIndexEmpty { color:var(--text-muted); font-size:12px; }
+.reading > p.indexChange { border-radius:6px; padding:4px 7px; font-size:14px; line-height:1.2; letter-spacing:-.015em; white-space:nowrap; }
+.indexChange[data-tone="up"] { background:var(--up-wash); }
+.indexChange[data-tone="down"] { background:var(--down-wash); }
+.indexChange[data-tone="flat"] { background:var(--surface-sunken); }
+@media(min-width:1200px) {
+ .shareBox { padding:10px 14px; gap:6px; }
+ .shareCounts dd { font-size:16px; }
+}
+@media(min-width:768px) and (max-width:1199px) {
+ .toolbarLayout { grid-template-columns:minmax(0,1fr); gap:14px; }
+ .indexControls { justify-content:space-between; }
+ .tabsAside { width:100%; }
+}
+@media(max-width:767px) {
+ .toolbarLayout { grid-template-columns:minmax(0,1fr); gap:12px; }
+ .indexControls { flex-direction:column; align-items:stretch; gap:12px; }
+ .indexChoices { width:100%; }
+ .toolbarIdentity { flex-direction:row; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:12px 0 0; border-left:0; border-top:1px solid var(--line); }
+ .selectedIndexLabel { gap:6px; font-size:11px; }
+ .selectedIndexReading { gap:8px; }
+ .selectedIndexReading > strong { font-size:22px; }
+ .selectedIndexReading > :last-child:not(strong) { font-size:13px; padding:3px 6px; }
+ .reading > p.indexChange { font-size:12px; padding:3px 6px; }
+}
+
+/* Yükleme kabuğu da gerçek harita ve beşli özetlerle aynı ızgarayı kullanır. */
+.detailSkeleton { display:flex; flex-direction:column; gap:20px; min-width:0; }
+.stampSkeleton { min-height:34px; }
+.moverSkeletonHead { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 20px; min-height:42px; }
+.moverSkeletonRow { display:grid; grid-template-columns:24px minmax(0,1fr) auto; align-items:center; gap:3px 12px; padding:9px 20px; border-bottom:1px solid var(--line-soft); }
+.moverSkeletonCompany { display:flex; flex-direction:column; gap:2px; min-width:0; max-width:100px; }
+.moverSkeletonBar { grid-column:1/-1; margin-top:5px; }
+@media(min-width:1200px) {
+ .moverSkeletonRow { grid-template-columns:24px minmax(0,1fr); gap:5px 8px; padding:10px 12px 12px; }
+ .moverSkeletonCompany,.moverSkeletonValue { grid-column:1/-1; }
+ .moverSkeletonBar { margin-top:2px; }
+}
+@media(max-width:767px) {
+ .detailSkeleton .heatHint { min-height:36px; }
+ .stampSkeleton { min-height:98px; gap:8px; }
+ .moverSkeletonHead { min-height:68px; padding-inline:16px; flex-wrap:wrap; }
+ .moverSkeletonRow { padding-inline:16px; }
+}

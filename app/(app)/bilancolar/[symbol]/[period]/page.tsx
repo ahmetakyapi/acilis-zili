@@ -1014,12 +1014,12 @@ export default async function AnalysisDetailPage(
                   günündeki kapanış. Telefonda bu blok tek satırlık bir bağlam
                   (etiket, fiyat, değişim yan yana); geniş ekranda kimlik
                   bandının sağ yarısını dolduran eski manşet olarak kalıyor. */}
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 sm:flex-col sm:items-end sm:gap-0">
+              <div className={styles.liveReading}>
                 <span className={cn(PLATE_LABEL, "text-primary")}>
                   {priceLabel}
                 </span>
                 <span className="flex flex-wrap items-baseline gap-x-2.5 sm:mt-1.5 sm:justify-end">
-                  <span className="figure text-title font-bold leading-none tracking-[-0.04em] text-strong sm:text-subdisplay">
+                  <span className={cn(styles.liveValue, "figure font-bold leading-none tracking-[-0.04em] text-strong")}>
                     {liveText}
                   </span>
                   {/* Değişim bilinmiyorsa yön rengi de yok: tire nötr basılır. */}
@@ -1078,14 +1078,7 @@ export default async function AnalysisDetailPage(
           )}
         </div>
 
-        <VerdictStrip
-          row={row}
-          verdict={verdict}
-          upside={upside}
-          targetText={targetText}
-          locale={locale}
-          t={t}
-        />
+
 
         {/* İlk kapakta dönem büyük bir manşetti; kullanıcı geri bildirimiyle
             görsel ağırlık çeyreğin sonuçlarına geçti. Etiketler ve notlar
@@ -1178,6 +1171,15 @@ export default async function AnalysisDetailPage(
             Ray hücre sayısına göre sütunlanıyor: yazılmamış oran hiç
             basılmadığı için sayı 3 ile 6 arasında değişiyor ve sabit bir
             sütun sayısı satır sonunda boşluk bırakırdı. */}
+        <div className={styles.assessment}>
+        <VerdictStrip
+          row={row}
+          verdict={verdict}
+          upside={upside}
+          targetText={targetText}
+          locale={locale}
+          t={t}
+        />
         {row.price !== null && (
           <div className={cn(styles.coverFacts, "flex flex-col gap-4 border-t border-line pt-4")}>
             {/* ---- Fiyat merdiveni ----
@@ -1296,6 +1298,7 @@ export default async function AnalysisDetailPage(
             />
           </div>
         )}
+        </div>
       </header>
 
       {/* YAPIŞINCA KİMLİK. Kapaktan sonra gövde 1440'ta 3917, telefonda

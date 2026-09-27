@@ -1416,3 +1416,64 @@
 /* Çeyreklik gelir sütunlarının değeri okunur puntoda (11 → 13). */
 .coverTrendBar > span { font-size:0.8rem; font-weight:600; }
 .coverTrendBar[data-latest="true"] > span { font-size:0.875rem; }
+
+/* 27 Eylül: görüş, kapanış merdiveni ve oranlar tek değerlendirme yüzeyi.
+   Önceki ayrı bantlar ve 12 kolonlu yerleşim kayıt olarak yukarıda durur.
+   Yeni yüzeyin içinde ortak kenarlar ve tek yatay ayraç kullanılıyor. */
+.assessment { order:2; min-width:0; padding:22px; border:1px solid var(--line); border-radius:18px; background:var(--surface-sunken); }
+.assessment .verdictPanel { display:grid; grid-template-columns:150px minmax(0,1fr) minmax(190px,.6fr); align-items:start; gap:24px; padding:0 0 22px; border:0; }
+.assessment .verdictScore { grid-column:1; grid-row:1; flex-direction:column; align-items:flex-start; gap:12px; }
+.assessment .headlineBlock { grid-column:2; grid-row:1; }
+.assessment .verdictHeadline { max-width:36em; font-size:15px; line-height:1.75; }
+.assessment .verdictTarget { grid-column:3; grid-row:1; max-width:none; height:100%; padding:0 0 0 20px; border-left:1px solid var(--line); gap:8px; }
+.assessment .verdictTarget::before,.assessment .coverFacts > dl::before { content:none; }
+.assessment .verdictPanel[data-has-target="false"] { grid-template-columns:150px minmax(0,1fr); }
+.assessment .verdictPanel[data-has-target="false"] .headlineBlock { grid-column:2; }
+.assessment .targetValue { font-size:30px; }
+.cover .assessment .coverFacts { display:grid; grid-template-columns:minmax(240px,.9fr) minmax(0,1.8fr); gap:24px; padding-top:22px; border-top:1px solid var(--line); }
+.assessment .coverFacts > .reportClose { grid-column:auto; min-width:0; }
+.assessment .reportClose > p:nth-child(2) > span:first-child { font-size:34px; }
+.assessment .priceLadder { margin-top:14px; }
+.assessment .coverFacts > dl { grid-column:auto; margin:0; padding:0 0 0 24px; border:0; border-left:1px solid var(--line); background:none; gap:18px; align-content:start; }
+.assessment .coverFacts > dl > div { padding:0; gap:8px; }
+.assessment .coverFacts > dl dt { display:flex; flex-direction:column; align-items:flex-start; gap:5px; line-height:1.5; }
+.assessment .coverFacts > dl dt > span:last-child { flex-shrink:1; }
+.assessment .coverFacts > dl dd { padding-top:0; font-size:22px; line-height:1.25; }
+.liveReading { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+.liveValue { font-size:clamp(36px,3.4vw,50px); }
+.liveReading > span:last-child { align-items:center; gap:12px; margin:0; }
+.liveReading > span:last-child > span:last-child:not(:first-child) { font-size:17px; }
+@media(max-width:1100px) {
+ .assessment { padding:20px; }
+ .assessment .verdictPanel { grid-template-columns:minmax(0,1fr) minmax(190px,.65fr); gap:18px; }
+ .assessment .verdictScore { grid-column:1; flex-direction:row; align-items:center; }
+ .assessment .headlineBlock { grid-column:1/-1; grid-row:2; }
+ .assessment .verdictTarget { grid-column:2; grid-row:1; }
+ .assessment .verdictPanel[data-has-target="false"] { grid-template-columns:minmax(0,1fr); }
+ .assessment .verdictPanel[data-has-target="false"] .headlineBlock { grid-column:1; }
+ .cover .assessment .coverFacts { grid-template-columns:minmax(0,1fr); }
+ .assessment .coverFacts > dl { padding:18px 0 0; border-left:0; border-top:1px solid var(--line); }
+ .liveValue { font-size:38px; }
+}
+@media(max-width:639px) {
+ .assessment { padding:16px; border-radius:14px; }
+ .assessment .verdictPanel { grid-template-columns:minmax(0,1fr); gap:16px; padding-bottom:18px; }
+ .assessment .verdictScore { grid-column:1; grid-row:1; align-items:center; }
+ .assessment .headlineBlock { grid-column:1; grid-row:2; }
+ .assessment .verdictTarget { grid-column:1; grid-row:3; padding:16px 0 0; border-left:0; border-top:1px solid var(--line); height:auto; }
+ .assessment .targetValue { font-size:28px; }
+ .assessment .verdictHeadline { font-size:14px; }
+ .cover .assessment .coverFacts { padding-top:18px; gap:18px; }
+ .assessment .coverFacts > dl > div { flex-direction:row; align-items:center; padding:10px 0; }
+ .assessment .coverFacts > dl > div:first-child { padding-top:0; }
+ .assessment .coverFacts > dl > div:last-child { padding-bottom:0; }
+ .assessment .coverFacts > dl dt { gap:3px; }
+ .assessment .coverFacts > dl dd { font-size:20px; }
+ .assessment .reportClose > p:nth-child(2) > span:first-child { font-size:30px; }
+ .liveReading { align-items:flex-start; gap:6px; }
+ .liveValue { font-size:36px; }
+ .coverLive { padding-top:14px; border-top:1px solid var(--line-soft); }
+}
+@media(min-width:1101px) {
+ .assessment { margin-inline:-20px; padding-inline:19px; }
+}

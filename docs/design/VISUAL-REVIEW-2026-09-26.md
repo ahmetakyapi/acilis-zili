@@ -101,3 +101,32 @@ basamaklarında en düşük metin kontrastı açık **5,86:1**, koyu **5,14:1**.
 engellenmiş logo kaynağında sembol görünümü ve hareket azaltma yeniden
 kontrol edildi. TypeScript, ESLint, üretim derlemesi ve diff boşluk
 kontrolü başarılı.
+
+### Seçim Şeridi · Son Düzen
+
+`148f032` sonrasında kullanıcı geri bildirimiyle üç endeks seçeneği,
+seçilen fonun kotasyonu ve yükselenlerin payı geniş ekranda tek satıra alındı.
+Bileşen tablosu oku kaldırıldı. Fon sembolü renkli etiket, fiyat 24 px,
+değişim 14 px; üst endeks kartlarındaki yüzdeler de 14 px ve yön tonlu
+zemin üzerinde. Telefonda seçenekler aynı satırda, kotasyon hemen altında.
+Yeni harita/özet yapısıyla eşleşmeyen yükleme iskeleti de uyarlandı.
+
+Üretim derlemesinde üç endeks, iki tema, Türkçe/İngilizce ve yedi genişlik
+ile 42 görünüm kontrol edildi: taşma, seçenek/kotasyon çakışması ve istemci
+istisnası yok. Üst kart yüzdelerinin hesaplanan fontu genişte 14 px,
+telefonda 12 px. Yükleme görünümü ayrıca JavaScript kapalı Chrome'da
+incelendi. TypeScript, ESLint, üretim derlemesi ve diff kontrolü başarılı.
+
+### Bilanço Detayı · Bütünleşik Değerlendirme
+
+Kullanıcı geri bildirimiyle genel görüş, analist hedefi, bilanço günü
+kapanışı, fiyat merdiveni ve oranlar tek yüzeyde birleştirildi. Masaüstünde
+ortak kenarlar ve tek yatay ayraç; telefonda hedef/kapanış/ölçüler aynı
+çerçevenin içinde sıralanıyor. Oranların tarih ve hesaplama dayanakları
+korundu. Son kapanış fiyatı 1440 px ekranda 49 px, telefonda 36 px.
+
+COST, NVDA, ASTS ve İngilizce SNOW raporları; açık/koyu temada,
+320/390/768/1024/1200/1440 px genişliklerinde 48 görünüm: yatay taşma ve
+istemci istisnası yok. Uzun açıklama, olumsuz oranlar ve farklı ölçü
+sayıları aynı düzenle kontrol edildi. TypeScript, ESLint ve üretim derlemesi
+başarılı. Genel görüşün mobil aç/kapat davranışı korunuyor.
