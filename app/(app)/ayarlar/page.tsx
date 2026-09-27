@@ -12,6 +12,7 @@ import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
 import { DeleteAccount } from "@/components/auth/DeleteAccount";
 import { AvatarPicker } from "@/components/auth/AvatarPicker";
+import { DataExportLinks } from "@/components/auth/DataExportLinks";
 import { getUserAvatar } from "@/lib/avatar-data";
 import { PreferenceSettings } from "@/components/layout/preference-controls";
 import { Panel, PanelHeader, PageHeader } from "@/components/ui/primitives";
@@ -160,6 +161,11 @@ export default async function SettingsPage() {
             <ShieldCheck weight="duotone" size={16} />
             {t.settings.privacyLink}
           </Link>
+
+          {/* VERİLERİMİ İNDİR (28 Eylül) — gerekçe ve yerleşim bileşende. */}
+          <DataExportLinks
+            labels={{ title: t.dataExport.title, hint: t.dataExport.hint, json: t.dataExport.json, csv: t.dataExport.csv }}
+          />
         </div>
       </Panel>
 

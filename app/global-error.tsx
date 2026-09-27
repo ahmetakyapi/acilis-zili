@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import { reportClientError } from "@/lib/error-report";
+
 /**
  * Son çare hata ekranı — kök düzen (layout) çöktüğünde devreye girer.
  *
@@ -63,6 +66,14 @@ export default function GlobalError({
     typeof navigator !== "undefined" && navigator.language?.startsWith("en")
       ? COPY.en
       : COPY.tr;
+
+  /* Kök layout'un tarayıcıda çöktüğü an panelin hata listesine gidiyor
+     (lib/error-report.ts); `digest`li sunucu hatasını instrumentation.ts
+     zaten yazdı. Modül globals.css'e ya da sağlayıcılara dayanmıyor —
+     kabuk çökmüşken de çalışmalı. */
+  useEffect(() => {
+    reportClientError(error);
+  }, [error]);
 
   return (
     <html lang={copy.lang}>

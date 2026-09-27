@@ -13,6 +13,10 @@ import {
   FileText,
   Gear,
   Heart,
+  Briefcase,
+  Receipt,
+  SquaresFour,
+  TextAa,
   Newspaper,
   Percent,
   Scroll,
@@ -85,6 +89,7 @@ export default async function MenuPage() {
         { href: "/bilancolar", icon: FileText, title: t.nav.earnings, hint: t.menu.hintEarnings },
         { href: "/takvim", icon: CalendarBlank, title: t.nav.calendar, hint: t.menu.hintCalendar },
         { href: "/karsilastir", icon: ChartBar, title: t.compare.title, hint: t.menu.hintCompare },
+        { href: "/tema", icon: SquaresFour, title: t.themes.eyebrow, hint: t.menu.hintThemes },
       ],
     },
     {
@@ -95,6 +100,8 @@ export default async function MenuPage() {
            okunuyor, sonra referans kalıyor. */
         { href: "/mercek", icon: Scroll, title: t.nav.stories, hint: t.menu.hintStories },
         { href: "/rehber", icon: BookOpen, title: t.nav.guide, hint: t.menu.hintGuide },
+        { href: "/sozluk", icon: TextAa, title: t.glossary.title, hint: t.menu.hintGlossary },
+        { href: "/vergi", icon: Receipt, title: t.lira.tax.title, hint: t.menu.hintTax },
         { href: "/haberler", icon: Newspaper, title: t.nav.news, hint: t.menu.hintNews },
         { href: "/bulten", icon: Envelope, title: t.footer.briefArchive, hint: t.menu.hintBrief },
       ],
@@ -103,6 +110,7 @@ export default async function MenuPage() {
       title: t.menu.groupAccount,
       entries: [
         { href: "/favoriler", icon: Heart, title: t.nav.watchlist, hint: t.menu.hintWatchlist },
+        { href: "/portfoy", icon: Briefcase, title: t.lira.portfolio.title, hint: t.menu.hintPortfolio },
         { href: "/ayarlar", icon: Gear, title: t.nav.settings, hint: t.menu.hintSettings },
         { href: "/kvkk", icon: ShieldCheck, title: t.footer.privacy, hint: t.menu.hintPrivacy },
       ],

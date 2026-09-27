@@ -274,6 +274,7 @@ type AttentionRow = {
 const CHECK_HREF: Readonly<Record<string, string>> = {
   "Günlük Bülten": "/admin/yazilar/bulten",
   "Haftalık Bülten": "/admin/yazilar/bulten",
+  "Uygulama Hataları": "/admin/sistem#hatalar",
 };
 const GROUP_HREF: Record<HealthCheck["group"], string> = {
   key: "/admin/sistem#anahtarlar",

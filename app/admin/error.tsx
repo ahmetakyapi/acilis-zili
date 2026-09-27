@@ -4,6 +4,7 @@ import { startTransition, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { Button, ButtonLink, Panel } from "@/components/ui/primitives";
+import { reportClientError } from "@/lib/error-report";
 
 /**
  * Yönetim ekranı çöktüğünde.
@@ -40,6 +41,9 @@ export default function AdminError({
 
   useEffect(() => {
     console.error("Yönetim ekranı hatası:", error);
+    /* Tarayıcıda doğan hata panelin hata listesine (lib/error-report.ts);
+       sunucudakini instrumentation.ts zaten yazdı. */
+    reportClientError(error);
   }, [error]);
 
   return (

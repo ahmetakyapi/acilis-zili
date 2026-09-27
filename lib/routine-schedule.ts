@@ -281,3 +281,123 @@ export function cronState(lastRun: Date | null, now: Date): { state: CronState; 
   }
   return { state: "missed", dueTr };
 }
+
+/* ---------------------------------------------------------------------------
+   Gecikme — ne kadar geç (28 Eylül)
+   --------------------------------------------------------------------------- */
+
+/**
+ * Beklenen andan bu yana geçen tam dakika; an henüz gelmediyse 0.
+ *
+ * NEDEN AYRICA. Durum üçlüsü (ok / waiting / late) "geç mi" diyordu ama
+ * "ne kadar"ı söylemiyordu: panelde bir saatlik aksama ile üç günlük
+ * durma aynı "Gecikti" sözcüğüydü. Dış izleme (`/api/health`) de sayıyı
+ * istiyor — eşiği izleyici kendisi koyabilsin.
+ */
+export function minutesLate(dueAt: Date, now: Date): number {
+  return Math.max(0, Math.floor((now.getTime() - dueAt.getTime()) / MINUTE));
+}
+
+/**
+ * Günlük bültende EN ESKİ eksik günün yazılma anı.
+ *
+ * Gecikme en yeni borçtan değil en eskisinden sayılır: rutin üç gündür
+ * yazmıyorsa "40 dakika geç" demek durumu küçültür. Kayıt hiç yoksa
+ * beklenen gün esas alınır — başlangıcı bilinmeyen bir boşluğu uydurma
+ * bir tarihle uzatmamak için.
+ */
+export function dailyBriefOverdueSince(latest: string | null, now: Date): Date {
+  const expected = expectedDailyBrief(now);
+  const firstMissing = latest && latest < expected ? addEtDays(latest, 1) : expected;
+  return dailyBriefDueAt(firstMissing);
+}
+
+/** Haftalıkta aynı kural: en eski eksik haftanın yazılma anı. */
+export function weeklyBriefOverdueSince(latest: string | null, now: Date): Date {
+  const expected = expectedWeeklyAnchor(now);
+  const firstMissing = latest && latest < expected ? addEtDays(latest, 7) : expected;
+  return weeklyBriefDueAt(firstMissing);
+}
+
+export type RoutineKey = "dailyBrief" | "weeklyBrief" | "technical" | "story" | "analysis";
+
+/**
+ * Bir rutinin makinece okunur durumu — `/api/health`in `routines` alanı.
+ *
+ * `conditional`: mercek ve bilanço analizi. İkisi yazacak bir şey yoksa
+ * yazmıyor ve bu doğru davranış (lib/admin-data.ts → "Mercek ve analiz
+ * YARGI VERMEZ"); onlara eşik koymak uydurma alarm olurdu.
+ */
+export type RoutineReport = {
+  key: RoutineKey;
+  state: RoutineState | "notScheduled" | "conditional";
+  /** En son yazılan kaydın günü ya da anı (ISO); hiç yoksa null. */
+  latest: string | null;
+  /** Gecikmişse ilk eksiğin beklendiği an (ISO), değilse null. */
+  overdueSince: string | null;
+  /** Gecikmişse o andan bu yana dakika, değilse null. */
+  lateMinutes: number | null;
+};
+
+export type RoutineInputs = {
+  dailyLatest: string | null;
+  weeklyLatest: string | null;
+  technicalLatest: { sessionDate: string; slots: readonly string[] } | null;
+  storyLatest: Date | null;
+  analysisLatest: Date | null;
+};
+
+/** Beş rutinin durumu — kural yukarıdaki fonksiyonlardan, ikinci kez yazılmıyor. */
+export function routineReports(
+  input: RoutineInputs,
+  now: Date,
+  holidays: MarketHoliday[],
+): RoutineReport[] {
+  const late = (since: Date) => ({
+    overdueSince: since.toISOString(),
+    lateMinutes: minutesLate(since, now),
+  });
+  const onTime = { overdueSince: null, lateMinutes: null };
+
+  const daily = dailyBriefState(input.dailyLatest, now).state;
+  const weekly = weeklyBriefState(input.weeklyLatest, now).state;
+  const technical = technicalState(input.technicalLatest, now, holidays);
+
+  return [
+    {
+      key: "dailyBrief",
+      state: daily,
+      latest: input.dailyLatest,
+      ...(daily === "late" ? late(dailyBriefOverdueSince(input.dailyLatest, now)) : onTime),
+    },
+    {
+      key: "weeklyBrief",
+      state: weekly,
+      latest: input.weeklyLatest,
+      ...(weekly === "late" ? late(weeklyBriefOverdueSince(input.weeklyLatest, now)) : onTime),
+    },
+    {
+      key: "technical",
+      state: technical.state,
+      latest: input.technicalLatest?.sessionDate ?? null,
+      /* Teknikte sayaç BORÇLU nöbetten, yani en yenisinden: nöbetler gün
+         içinde birbirinin yerini tutuyor (öğlen yayını sabahkini kapatır,
+         `technicalState`), en eski eksik nöbet bir borç değil. */
+      ...(technical.state === "late" && technical.due
+        ? late(slotInstant(technical.due.sessionDate, technical.due.slot))
+        : onTime),
+    },
+    {
+      key: "story",
+      state: "conditional",
+      latest: input.storyLatest?.toISOString() ?? null,
+      ...onTime,
+    },
+    {
+      key: "analysis",
+      state: "conditional",
+      latest: input.analysisLatest?.toISOString() ?? null,
+      ...onTime,
+    },
+  ];
+}

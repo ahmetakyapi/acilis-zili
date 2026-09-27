@@ -245,10 +245,18 @@ mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
 (`getHolidays`, `getStatus`, `getEventsBetween`, `getEventsBetweenResult`,
 `getEarningsBetween`,
 `getNewsById`, `getStoryBySlug`, `getStoryLocales`, `getBriefIssue`,
-`getAnalysis`, `symbolNamesForKey`, `isKnownSymbol`), `lib/technical-data.ts`
-(`getTechnicalBoard`, `getTechnicalDetail`, `getPublishedSymbols`),
-`lib/admin.ts` (`getAdmin`), `lib/admin-data.ts` ve
-`lib/providers/index.ts` (`quotesForKey`).
+`getAnalysis`, `getAnalysisLocales`, `symbolNamesForKey`, `isKnownSymbol`),
+`lib/technical-data.ts` (`getTechnicalBoard`, `getTechnicalDetail`,
+`getPublishedSymbols`), `lib/admin.ts` (`getAdmin`), `lib/admin-data.ts`,
+`lib/avatar-data.ts` (`getUserAvatar`), `lib/providers/index.ts`
+(`quotesForKey`), `lib/providers/alpaca-corporate.ts` (`dividendsForKey`),
+`lib/autolink-data.ts` (`knownSymbols`), `lib/themes-data.ts`
+(`katilimPool`), `lib/market-boards.ts` (`loadBoardBars`),
+`lib/sentiment-data.ts` (`getSentiment`), `lib/earnings-extras.ts`
+(`getAnalysisExtras`) ve `lib/portfolio-data.ts` (`getPortfolioPositions`).
+Bileşen düzeyinde de var: `getPageTimestamp` (ana sayfa ve
+`/gomulu/geri-sayim`, sayacın "şimdi"si istek içinde tek) ve
+`components/stories/StoryCompanies.tsx` (`companyBars`).
 
 İstekler ARASI önbellek (`unstable_cache`) ayrı bir mekanizma ve hata
 önbelleğin DIŞINDA yakalanır (düşen veritabanının boş listesi saklanmasın):
@@ -434,6 +442,27 @@ eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye ba
   ikinci bir rota tablosu tutuyordu ve tam da bu yüzden güncelliğini yitirdi — on üç
   rota eksik kalmıştı. O dosya artık yalnızca DURUM tutuyor: canlıda ne var,
   ne yarım kaldı, ne bilinçli olarak yapılmadı.
+- **Büyük sayfalar panellere bölündü; yeni panel oraya.** Şirket sayfası
+  `app/(app)/hisse/[symbol]/_panels/`, ana sayfa `components/today/home/`,
+  bilanço detayı `components/earnings/report/` altında. Yeni bir paneli
+  sayfa dosyasına gömme; kendi dosyasını aç, sayfa onu yerleştirsin.
+- **Sözlükte her özellik kendi ad alanında.** `about`, `dataExport`,
+  `marketExtras`, `glossary`, `themes`, `pairs`, `stockDepth`, `lira`,
+  `earningsExtra` — paralel dallar aynı anahtarı ellemesin diye. Yeni bir
+  özellik mevcut bir ad alanına anahtar serpiştirmez, kendininkini açar
+  (`tr` ve `en` birlikte).
+- **Otomatik bağlantı tutucu** (`lib/autolink.ts`). Sözlük terimini ve
+  sembolü yazı boyunca yalnızca İLK geçişte bağlar; sembolü yalnızca açık
+  kalıpta (`$NVDA` ya da tek başına `(NVDA)`) ve bilinen sembol kümesindeyse.
+  Düz metindeki büyük harfli kelime sembol sayılmaz ("ABD", "FED", "ON").
+- **`/gomulu/*` çerçevelenebilen TEK yol.** Geri kalan her yol
+  `X-Frame-Options: DENY` + `frame-ancestors 'none'`; istisna
+  `next.config.ts`te, gerekçesiyle. Gömülü parçalar kabuğun dışında ve
+  dizine kapalı. Yeni bir yola çerçeve izni vermeden önce oraya bak.
+- **W-8BEN ile ABD temettü stopajı bireyde %20.** Türkiye–ABD anlaşmasının
+  10. maddesi; %15 yalnızca şirketin oy hakkının en az %10'una sahip bir
+  KURUM için, W-8BEN yoksa %30. Bu bir kez %15 diye yanlış yazıldı; tek
+  kaynak `lib/tax.ts` → `US_WITHHOLDING`, metinlerde de bu sayı geçer.
 
 ## iCloud kopyaları — derlemeyi kırar
 

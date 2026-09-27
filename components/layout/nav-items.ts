@@ -8,6 +8,9 @@ import {
   EnvelopeSimple,
   Heart,
   ListDashes,
+  Receipt,
+  SquaresFour,
+  TextAa,
   Newspaper,
   FileText,
   Percent,
@@ -196,6 +199,17 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.menu.hintCompare,
   },
   {
+    /* 28 Eylül: tematik listeler, sözlük ve vergi hesaplayıcı "Daha
+       Fazla"da. Şeritte değiller: şerit ölçüsü (yukarıda) beş sekmeye göre
+       alındı ve üçü de günlük değil başvuru ekranı. */
+    href: "/tema",
+    label: (t) => t.themes.eyebrow,
+    icon: SquaresFour,
+    inBottomBar: false,
+    more: true,
+    hint: (t) => t.menu.hintThemes,
+  },
+  {
     /* DAHA FAZLA'DA. Bir dönem yalnızca 1280 üstünde sekmeydi: aynı ekran
        dizüstünde menüde, masaüstünde şeritte duruyordu. Durağan bir
        müfredat, her gün değişmiyor ve ana sayfadan da açılıyor. */
@@ -205,6 +219,22 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: true,
     hint: (t) => t.menu.hintGuide,
+  },
+  {
+    href: "/sozluk",
+    label: (t) => t.glossary.title,
+    icon: TextAa,
+    inBottomBar: false,
+    more: true,
+    hint: (t) => t.menu.hintGlossary,
+  },
+  {
+    href: "/vergi",
+    label: (t) => t.lira.tax.title,
+    icon: Receipt,
+    inBottomBar: false,
+    more: true,
+    hint: (t) => t.menu.hintTax,
   },
   {
     href: "/haberler",

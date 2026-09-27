@@ -8,6 +8,7 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowClockwise } from "@phosphor-icons/react/dist/ssr";
 import { InkCanvas } from "@/components/ink/InkCanvas";
 import { Button, Panel } from "@/components/ui/primitives";
+import { reportClientError } from "@/lib/error-report";
 
 /**
  * Sayfa çöktüğünde görünen ekran.
@@ -80,6 +81,9 @@ export default function AppError({
   useEffect(() => {
     // Sunucu tarafı zaten kaydediyor; bu, tarayıcı konsolunda izi bırakır.
     console.error("Sayfa hatası:", error);
+    /* Tarayıcıda doğan hata yönetim panelinin hata listesine gidiyor
+       (lib/error-report.ts); `digest`li sunucu hatası orada zaten var. */
+    reportClientError(error);
   }, [error]);
 
   return (

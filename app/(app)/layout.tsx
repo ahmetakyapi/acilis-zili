@@ -131,6 +131,7 @@ export default async function AppLayout({
               guest: t.menu.guestTitle,
               guestHint: t.menu.guestHint,
               watchlist: t.nav.watchlist,
+              portfolio: t.lira.portfolio.title,
               theme: t.settings.theme,
               themeLight: t.settings.themeLight,
               themeDark: t.settings.themeDark,

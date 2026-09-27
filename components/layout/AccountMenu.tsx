@@ -8,6 +8,7 @@ import {
   CaretRight,
   Gear,
   Heart,
+  Briefcase,
   SignIn,
   SlidersHorizontal,
   UserCircle,
@@ -68,6 +69,7 @@ import { cn } from "@/lib/utils";
 export type AccountMenuLabels = {
   account: string;
   settings: string;
+  portfolio: string;
   signIn: string;
   signUp: string;
   theme: string;
@@ -280,6 +282,11 @@ export function AccountMenu({
                     href={withLocale("/favoriler", initialLocale)}
                     icon={Heart}
                     label={labels.watchlist}
+                  />
+                  <MenuRow
+                    href={withLocale("/portfoy", initialLocale)}
+                    icon={Briefcase}
+                    label={labels.portfolio}
                   />
                   <MenuRow
                     href={withLocale("/ayarlar", initialLocale)}

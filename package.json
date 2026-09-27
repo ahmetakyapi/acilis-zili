@@ -16,7 +16,8 @@
     "db:seed:events": "tsx db/seed/events-only.ts",
     "clean:dupes": "node scripts/clean-sync-dupes.mjs",
     "build:favicon": "node scripts/build-favicon.mjs",
-    "build:logos": "node scripts/build-logos.mjs"
+    "build:logos": "node scripts/build-logos.mjs",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",

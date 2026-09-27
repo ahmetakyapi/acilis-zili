@@ -1,0 +1,62 @@
+name: Smoke
+
+# Duman testi — derlenmiş uygulamayı başsız Chrome'la gezer (scripts/smoke.mjs).
+#
+# SIR YOK, VERİTABANI YOK. Runner'da hiçbir anahtar tanımlı değil: sayfalar
+# "veri alınamadı" durumlarıyla çiziliyor ve sınanan şey tam da o — rota
+# kodları (404 gerçekten 404 mü), hidrasyon/istemci hataları ve 390 ile
+# 1280'de yatay taşma. `SMOKE_DEGRADED_OK=1` kendi `/api/` uçlarımızın 503'ünü
+# hata saymıyor: veri yokken sözleşmeleri bu. Yazma akışı (kayıt, favori,
+# hesap silme) burada KOŞMAZ; veritabanı ister, elle `SMOKE_ALLOW_WRITES=1`.
+#
+# DAĞITIMI BEKLETMEZ. deploy.yml'den ayrı bir iş akışı: duman testi bir
+# uyarı kanalı, dağıtım kapısı değil — başsız tarayıcının tek bir zaman
+# aşımı canlıya çıkışı durdurmamalı.
+#
+# AUTH_SECRET burada sır değil: next-auth üretim kipinde değer istiyor,
+# koşum bitince hiçbir yerde kalmıyor ve hiçbir gerçek oturum imzalamıyor.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      AUTH_SECRET: ci-smoke-only-not-a-real-secret
+      AUTH_TRUST_HOST: "true"
+      CHROME_PATH: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Uygulamayı başlat
+        run: |
+          npx next start -p 3000 > next.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3000/giris && exit 0
+            sleep 1
+          done
+          cat next.log
+          exit 1
+      - name: Duman testi
+        run: npm run smoke
+        env:
+          BASE_URL: http://localhost:3000
+          SMOKE_DEGRADED_OK: "1"
+          SMOKE_CONCURRENCY: "2"
+      - name: Sunucu günlüğü
+        if: failure()
+        run: cat next.log

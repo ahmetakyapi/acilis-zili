@@ -30,10 +30,10 @@ günde üç kez yenilenen teknik analizler.
 
 <table>
 <tr>
-<td align="center"><b>38</b><br><sub>sayfa rotası</sub></td>
-<td align="center"><b>18</b><br><sub>API ucu</sub></td>
-<td align="center"><b>18</b><br><sub>veritabanı tablosu</sub></td>
-<td align="center"><b>4</b><br><sub>veri sağlayıcısı</sub></td>
+<td align="center"><b>49</b><br><sub>sayfa rotası</sub></td>
+<td align="center"><b>24</b><br><sub>API ucu</sub></td>
+<td align="center"><b>22</b><br><sub>veritabanı tablosu</sub></td>
+<td align="center"><b>5</b><br><sub>veri sağlayıcısı</sub></td>
 <td align="center"><b>5</b><br><sub>içerik rutini</sub></td>
 <td align="center"><b>17</b><br><sub>mürekkep sahnesi</sub></td>
 <td align="center"><b>2</b><br><sub>dil, her sayfada</sub></td>
@@ -65,21 +65,23 @@ günde üç kez yenilenen teknik analizler.
 
 ## Ne Yapar
 
-Altı konu başlığı var ve her biri ayrı bir soruya cevap veriyor.
+Yedi konu başlığı var ve her biri ayrı bir soruya cevap veriyor.
 
 | | Soru | Nerede |
 |---|---|---|
-| 📈 | **Piyasa bugün nerede?** Endeksler (S&P 500, Nasdaq 100, Dow, Russell 2000), açılışa geri sayım ve seans şeridi, günün en çok yükselen ve düşenleri, piyasa genişliği ve bileşenlerin ısı haritası, tahvil faizleri ve getiri eğrisi, VIX, dünya piyasaları. | `/` · `/piyasalar` |
-| 🏢 | **Bu şirket nasıl gidiyor?** Gün içinden beş yıla grafik (alan ya da mum), profil, değerleme ve risk ölçüleri, 52 hafta bandı, analist dağılımı, haberler, geçmiş bilanço sürprizleri. 1.000'i aşkın şirket sektör şeridiyle ve sıralanabilir bir dizinde; iki ile dört hisse **aynı ölçekte** yan yana. | `/sirketler` · `/hisse/NVDA` · `/karsilastir` |
-| 🧾 | **Kim ne zaman bilanço açıklıyor?** Açılış öncesi mi kapanış sonrası mı, analist EPS ve gelir beklentisi ne, gerçekleşen ne çıktı. Takvim `.ics` olarak kendi takvimine eklenebiliyor. Açıklanan çeyrekler için skorlu uzun analizler. | `/bilancolar` |
-| 🎯 | **Teknik olarak nereden alınır, nerede vazgeçilir?** On beş hissenin her işlem günü üç kez yenilenen analizi: görüş (Al/Tut/Sat), alım bölgesi, hedefler, stop, destek ve direnç, senaryolar. | `/teknik` |
-| 🏛️ | **Ekonomi ne diyor?** CPI, FOMC, istihdam, PCE; takvimde saatleriyle, beklenti ve gerçekleşenle. Altı FRED serisi ve halka arz takvimi. | `/makro` · `/takvim` |
-| 📰 | **Bugün ne konuşuluyor, neden?** Siteden çıkmadan okunan haber akışı, her gün yazılan bülten, olayın **mekanizmasını** anlatan Mercek yazıları ve borsayı sıfırdan öğreten sıralı bir rehber. | `/haberler` · `/bulten` · `/mercek` · `/rehber` |
+| 📈 | **Piyasa bugün nerede?** Endeksler (S&P 500, Nasdaq 100, Dow, Russell 2000), açılışa geri sayım ve seans şeridi, günün en çok yükselen ve düşenleri, piyasa genişliği ve bileşenlerin ısı haritası, tahvil faizleri ve getiri eğrisi, VIX, dünya piyasaları. Bileşenleri ekranda açık duran bir Piyasa Nabzı, on bir SPDR fonuyla sektör performansı, emtia ve kripto fonları. | `/` · `/piyasalar` |
+| 🏢 | **Bu şirket nasıl gidiyor?** Gün içinden beş yıla grafik (alan ya da mum; USD, TL ya da Reel TL), profil, değerleme ve risk ölçüleri, sektör yüzdelikli skor kartı, 52 hafta bandı, analist dağılımı ve aydan aya değişimi, içeriden işlemler, bilanço öncesi beklenen hareket, temettü, haberler, geçmiş bilanço sürprizleri. 1.000'i aşkın şirket sektör şeridiyle ve sıralanabilir bir dizinde; iki ile dört hisse **aynı ölçekte** yan yana, yirmi hazır çift ve on tematik liste. | `/sirketler` · `/hisse/NVDA` · `/karsilastir` · `/tema` |
+| 🧾 | **Kim ne zaman bilanço açıklıyor?** Açılış öncesi mi kapanış sonrası mı, analist EPS ve gelir beklentisi ne, gerçekleşen ne çıktı. Takvim `.ics` olarak kendi takvimine eklenebiliyor, haftası paylaşılabilir bir görsel olarak iniyor. Açıklanan çeyrekler için skorlu uzun analizler, başında "30 Saniyede" özeti, segment ve KPI verisi. | `/bilancolar` · `/bilancolar/hafta` |
+| 🎯 | **Teknik olarak nereden alınır, nerede vazgeçilir?** On beş hissenin her işlem günü üç kez yenilenen analizi: görüş (Al/Tut/Sat), alım bölgesi, hedefler, stop, destek ve direnç, senaryolar. Listede olmayan hisselerde yorumsuz bir teknik fotoğraf. | `/teknik` |
+| 🏛️ | **Ekonomi ne diyor?** CPI, FOMC, istihdam, PCE; takvimde saatleriyle, beklenti ve gerçekleşenle. On bir FRED serisi, sonraki FOMC kararı, halka arz ve temettü takvimi. | `/makro` · `/takvim` |
+| 📰 | **Bugün ne konuşuluyor, neden?** Siteden çıkmadan okunan haber akışı, her gün yazılan bülten, olayın **mekanizmasını** anlatan Mercek yazıları, borsayı sıfırdan öğreten sıralı bir rehber ve yüz elli terimlik bir sözlük. | `/haberler` · `/bulten` · `/mercek` · `/rehber` · `/sozluk` |
+| 🇹🇷 | **Türkiye'den yatırım yapınca lirada ne kaldı?** TCMB kuruyla TL ve (EVDS anahtarı varsa) enflasyondan arındırılmış Reel TL getirisi; yurt dışı hisse vergisi hesaplayıcısı (satış kazancı, Yİ-ÜFE endekslemesi, temettü ve stopaj mahsubu) ve TL maliyetli portföy. | `/vergi` · `/portfoy` |
 
 Bir de kişisel taraf var: çoklu takip listeleri, renkli etiketler, ana sayfada
-kendi listenin özeti, yalnızca senin izlediklerinin bilanço takvimi ve
-hesabını gösteren, sitenin kendi çizdiği on altı profil ikonundan biri ve
-yedi renkten biri.
+kendi listenin özeti, yalnızca senin izlediklerinin bilanço takvimi,
+alış günü kuruyla TL kâr/zarar tutan bir portföy, hesabındaki her şeyi tek
+dosyada indiren "Verilerimi İndir" ve hesabını gösteren, sitenin kendi
+çizdiği on altı profil ikonundan biri ve yedi renkten biri.
 
 ---
 
@@ -150,7 +152,7 @@ flowchart LR
     AL[Alpaca<br/>fiyat · bar]
     FH[Finnhub<br/>profil · haber · bilanço]
     FR[FRED<br/>makro · faiz · VIX]
-    TC[TCMB<br/>USD/TRY]
+    TC[TCMB<br/>USD/TRY · arşiv · EVDS]
   end
 
   subgraph Sunucu["Next.js 16 · kendi sunucusu"]
@@ -264,7 +266,7 @@ hatanın onu doğurduğunu anlatırlar.
 | Yazı | **Schibsted Grotesk**, tek aile, değişken 400–900 | Ayrım punto ve ağırlıkla |
 | Tema | Custom `data-theme` + `az-theme` çerezi | `next-themes` yok; ilk karede doğru tema |
 | Barındırma | Oracle Cloud Always Free · `next start` + systemd · Caddy (TLS) | Her push GitHub Actions ile deploy |
-| Doğrulama araçları | `tsx --test` (19 test dosyası) · başsız Chrome (`puppeteer-core`) ölçüm betikleri | |
+| Doğrulama araçları | `tsx --test` (37 test dosyası) · başsız Chrome (`puppeteer-core`) duman testi ve ölçüm betikleri | |
 
 ---
 
@@ -311,7 +313,7 @@ sıçrıyor. Gezinme bekleyişinin kartı marka adıyla açılıyor.
 
 ## Veri Modeli
 
-18 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
+22 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
 ritmine bağlı.
 
 | Tablo | Ne tutar | Kim yazar |
@@ -332,12 +334,19 @@ ritmine bağlı.
 | `earnings_analyses` | Bilanço analizleri; sayılar **ham** (8.97e9), sunum biçimlendirir | claude.ai rutini |
 | `technical_analyses` | Sembol × gün × yayın başına tek satır; metin `copy.{tr,en}`, göstergeler `snapshot` | claude.ai rutini |
 | `page_views` | Çerezsiz sayfa ölçümü | İstemci beacon |
+| `symbol_metrics` | Finnhub `/stock/metric` fotoğrafı + GICS sektörü; skor kartının sektör yüzdelikleri buradan | Cron (koşum başına 15 sembol) + sayfa isteği |
+| `portfolio_positions` | Portföy pozisyonu: adet, USD maliyet, alış günü, not | Kullanıcı eylemi (Portföy) |
+| `earnings_analysis_extras` | Bilanço analizinin ekleri: "30 Saniyede" özeti, segmentler ve kaynağı, KPI'lar | claude.ai rutini (`/api/analiz` ile aynı gövde) |
+| `app_errors` | Gün × tür × rota × parmak izi başına hata sayacı; kullanıcı kimliği, IP ve tarayıcı künyesi yok | Sunucu (`instrumentation.ts`) ve istemci (`/api/hata`) hata kaydı; 30 günden eskisini cron siler |
 
 Migration disiplini: şema değişince **yeni** migration dosyası üretilir,
 eskisi düzenlenmez. Migration'lar deploy'da çalışmaz, elle uygulanır. Bu
 yüzden yeni bir özellik mümkünse var olan tabloya sütun eklemek yerine kendi
 tablosunu alır: `user_avatars` tablo yokken sessizce baş harflere düşüyor,
-yani kod migration'dan önce de güvenle yayında durabiliyor.
+yani kod migration'dan önce de güvenle yayında durabiliyor. Migration 0020'nin
+dört tablosu da aynı kalıpta: tablo yokken skor kartı "Hazırlanıyor" der,
+portföy "şu an açılamıyor" der, bilanço ekleri basılmaz ve hata kaydı
+sessizce yazmaz (panelde ise "tablo yok" diye ayrıca söylenir).
 
 ---
 
@@ -345,10 +354,11 @@ yani kod migration'dan önce de güvenle yayında durabiliyor.
 
 | Sağlayıcı | Ne verir | Not |
 |---|---|---|
-| **Alpaca** | Fiyat (`/snapshots`, `delayed_sip`) ve tarihsel barlar (`/bars`, `sip`) | 200 istek/dk. Uzun bar cevaplarında `next_page_token` izlenir |
-| **Finnhub** | Profil, haber, bilanço takvimi, halka arz, EPS sürprizi, analist dağılımı, metrikler, arama | 60 istek/dk. Grafik barları buradan **alınmaz** |
-| **FRED** | Makro seriler, tahvil faizleri, VIX | Yayın kimlikleri seri kimliğinden çalışma anında türetilir |
-| **TCMB** | USD/TRY | Anahtarsız; günde tek bülten, veri bülten tarihini taşır |
+| **Alpaca** | Fiyat (`/snapshots`, `delayed_sip`), tarihsel barlar (`/bars`, `sip`), kurumsal işlemler (`/v1/corporate-actions`: nakit temettü) ve opsiyon anlık görüntüleri (`feed=indicative`) | 200 istek/dk. Uzun bar cevaplarında `next_page_token` izlenir |
+| **Finnhub** | Profil, haber, bilanço takvimi, halka arz, EPS sürprizi, analist dağılımı, metrikler (`/stock/metric`), insider işlemleri ve insider duyarlılığı, arama | 60 istek/dk. Grafik barları buradan **alınmaz** |
+| **FRED** | Makro seriler, tahvil faizleri, VIX, yüksek getirili tahvil farkı, aylık USD/TRY ortalaması | Yayın kimlikleri seri kimliğinden çalışma anında türetilir |
+| **TCMB** | USD/TRY: günün bülteni ve günlük arşiv XML'i (`kurlar/YYYYMM/DDMMYYYY.xml`) | Anahtarsız; günde tek bülten, veri bülten tarihini taşır. Hafta sonu sorulan gün cuma bültenine düşer ve ekran bunu yazar |
+| **TCMB EVDS** (isteğe bağlı) | Aylık TÜFE (`TP.TUKFIY2025.GENEL`) ve Yİ-ÜFE (`TP.TUFE1YI.T1`) | `EVDS_API_KEY` ister. Yoksa Reel TL düğmesi basılmaz, vergi hesaplayıcısı Yİ-ÜFE'yi okuyucudan ister |
 
 Alpaca'ya geçiş ölçülerek yapıldı. Bir dönem IEX beslemesi kullanıldı: gerçek
 zamanlıydı ama konsolide hacmin yalnızca %2–7'sini görüyordu ve **ön seansta
@@ -358,7 +368,9 @@ ekranda damgalanıyor.
 Finnhub'ın üç tuzağı kodda kayıtlı: `marketCapitalization` milyon cinsinden
 ama ana borsanın parasında; `/stock/recommendation` karşılık kotasyonu
 döndürebiliyor (TSM → "2330.TW"); hazır `peTTM` geriden gelen bir fiyattan
-hesaplandığı için kullanılmıyor.
+hesaplandığı için kullanılmıyor. Ücretsiz katmanda kapalı uçlar da kayıtlı
+(28 Eylül'de denendi, 403): not değişiklikleri, hedef fiyat, temettü ve gelir
+kırılımı. Temettü bu yüzden Alpaca'dan geliyor, ötekileri isteyen panel yok.
 
 Ücretsiz katmanda karşılığı olmayan veri elle tohumlanıyor: NYSE tatilleri,
 FOMC/CPI/istihdam takvimi, sembol listesi ve endeks bileşimleri.
@@ -379,6 +391,14 @@ Beşi de `BRIEF_SECRET` ile korunuyor ve her uç yazdığını geri okuyabiliyor
 (`?slug=`, `?symbol=&period=`, `?symbol=`). Ayrıca dört `context` ucu rutine
 ham veri ve aday listesi veriyor. Prompt'ların tamamı `docs/claude-rutinler.md`
 içinde. Rutinler koddan kurulmaz, claude.ai arayüzünden elle kurulur.
+
+Bilanço rutininin gövdesi dört isteğe bağlı alan taşıyor ve bunlar
+`earnings_analysis_extras`e yazılıyor: `takeaways` (sayfanın başındaki
+"30 Saniyede" özeti, tam üç madde), `segments` (segment gelirleri),
+`segments_source` (segment verildiyse zorunlu; yalnızca şirketin kendi
+belgesi: bülten, 10-Q, 10-K) ve `kpis` (şirkete özgü ölçüler, en fazla sekiz,
+sayılar ham). Alanı göndermeyen bir POST eki temizler; düzeltme akışı "GET ile
+oku, düzenle, geri gönder" olduğu için okunan paket ekleri de taşıyor.
 
 ---
 
@@ -449,12 +469,26 @@ tutulmuyor; günlük dönen bir ziyaretçi özeti saklanıyor ve 180 gün sonra
 siliniyor. Üçüncü taraf analitik yok. Kaydedilen her üye alanı
 [KVKK metninde](https://aciliszili.com/kvkk) sayılı.
 
+**Hata kaydı da kendi sunucumuzda** (`app_errors`) ve bir arızanın izini
+sürmek için var, okuyucunun değil: kullanıcı kimliği, IP ve tarayıcı künyesi
+hiçbir sütunda yok, mesajdaki e-posta ve IP biçimli parçalar yazılmadan önce
+örtülüyor, istemci hatasının yığını hiç alınmıyor. Kayıtlar 30 gün sonra
+günlük cron'la siliniyor. Üçüncü taraf hata izleme servisi yok.
+
+**Verilerimi İndir.** Ayarlar'daki iki bağlantı hesabın künyesini, dil ve
+tema tercihini, takip listelerini (sembolleri ve notlarıyla), portföy
+pozisyonlarını ve profil ikonunu tek dosyada indiriyor
+(`/api/hesap/verilerim`). JSON tam kopya; CSV takip listelerinin tablo
+biçimi, portföy yalnızca JSON'da.
+Şifre özeti bilerek dışarıda. Yalnızca oturum sahibi; yanıt hiçbir ara katmanda
+saklanmıyor (`private, no-store`).
+
 ---
 
 ## Ekranlar
 
-Rota listesinin **tek kaynağı** burası. 38 sayfa var: 29'u herkese açık, 9'u
-yönetim. Hepsi istek başına sunucuda çiziliyor. Her sayfa `/en/...` önekiyle
+Rota listesinin **tek kaynağı** burası. 49 sayfa var: 40'ı herkese açık
+(ikisi başka sitelere gömülen parça), 9'u yönetim. Hepsi istek başına sunucuda çiziliyor. Her sayfa `/en/...` önekiyle
 İngilizce de açılıyor; önek sunucuda sökülüyor ve adres çubuğunda kalıyor.
 
 ### Ana Akış
@@ -462,25 +496,30 @@ yönetim. Hepsi istek başına sunucuda çiziliyor. Her sayfa `/en/...` önekiyl
 | Rota | Cevapladığı soru |
 |---|---|
 | `/` | Zil çalmadan önce bugün ne var: geri sayım, endeksler, gün akışı, bülten, Mercek, teknik görünüm, bilançolar, favoriler, haberler |
-| `/piyasalar` | Piyasanın nabzı: endeksler, tahvil faizleri, VIX, piyasa genişliği ve ısı haritası, gün içi hareket, endeks bileşenleri |
-| `/sirketler` | Hangi şirket hangi sektörde, ne kadar ediyor: sektör şeridi + sıralanabilir dizin |
-| `/hisse/[symbol]` | Bu şirket nasıl gidiyor: canlı grafik, profil, metrikler, analistler, haber, beklenti ile gerçekleşeni aynı sütunda gösteren geçmiş bilançolar |
-| `/karsilastir` | İki ile dört hisseden hangisi: aynı ölçekte normalize grafik + tek tablo |
-| `/makro` | ABD ekonomisi nerede: altı FRED serisi, sonraki açıklama |
-| `/takvim` | Hangi makro veri ne zaman: gün/hafta/ay, önem süzgeci, halka arz takvimi |
+| `/piyasalar` | Piyasanın nabzı: endeksler, tahvil faizleri, VIX, piyasa genişliği ve ısı haritası, gün içi hareket, endeks bileşenleri; Piyasa Nabzı (bileşenleri ve ham değerleri ekranda duran 0–100 bileşik ölçü, ağırlıksız), Sektör Performansı (on bir SPDR sektör fonu), Emtia (altın, gümüş, petrol, doğal gaz, bakır, tarım ve Bitcoin/Ether fonları) |
+| `/sirketler` | Hangi şirket hangi sektörde, ne kadar ediyor: sektör şeridi + sıralanabilir dizin (`?sektor=` ile süzülür) |
+| `/hisse/[symbol]` | Bu şirket nasıl gidiyor: canlı grafik (USD · TL · Reel TL), profil, metrikler, analistler, haber, beklenti ile gerçekleşeni aynı sütunda gösteren geçmiş bilançolar. Yeni paneller: Hisse Skor Kartı (beş eksende sektör yüzdeliği; yalnızca GICS sektörü bilinen endeks üyelerinde), Analist Dağılımı Değişimi (dört aylık dağılımın farkı), Teknik Fotoğraf (teknik analiz listesinde olmayan hisselerde, yorumsuz göstergeler), Temettü (hak kesim, yıl toplamları, stopaj künyesi), Beklenen Hareket (sonraki rapora yakınken opsiyonların fiyatladığı hareket ve geçmiş rapor ertesi hareketler), İçeriden İşlemler |
+| `/karsilastir` | İki ile dört hisseden hangisi: aynı ölçekte normalize grafik + tek tablo; getiri USD, TL ya da Reel TL |
+| `/karsilastir/[pair]` | Yirmi küratörlü çift (`/karsilastir/nvda-amd`): aynı tahta, başlık ve "neden bu ikisi" paragrafıyla; canonical adres bu (`content/compare-pairs.ts`) |
+| `/tema` · `/tema/[slug]` | Tematik listeler (yapay zekâ, yarı iletkenler, katılım uyumlu…): üyeler, günün medyanı, ölçüt fonu (`content/themes.ts`, on tema) |
+| `/makro` | ABD ekonomisi nerede: on bir FRED serisi (haftalık işsizlik başvuruları, perakende satışlar, M2, Sahm kuralı ve 10Y–3A faiz farkı eklendi), sonraki açıklama, Sonraki FOMC Kararı kartı |
+| `/takvim` | Hangi makro veri ne zaman: gün/hafta/ay, önem süzgeci, halka arz takvimi. `?tur=temettu` aynı sayfada temettü takvimi görünümü (Alpaca kurumsal işlemler) |
 | `/haberler` · `/haberler/[id]` | Bugün ne konuşuluyor: akış + siteden çıkmadan okuma |
 
 ### Bilançolar
 
-Sekme çubuğu paylaşılan bir layout'ta değil, üç sayfanın her biri kendi
-basıyor; detay sayfası aynı segmentin altında ve orada sekme istenmiyor.
+Sekme çubuğu paylaşılan bir layout'ta değil, her sayfa kendi basıyor; detay
+sayfası aynı segmentin altında ve orada sekme istenmiyor. Haftalık görünüm
+dördüncü bir sekme değil: Takvim'in seçilmiş bir haftası, çubukta Takvim
+etkin görünür.
 
 | Rota | Soru |
 |---|---|
 | `/bilancolar` | Kim ne zaman açıklıyor: hafta/ay, açılış öncesi ve kapanış sonrası |
 | `/bilancolar/analizler` | Okunmuş çeyrekler: skor, görüş, hedef fiyat |
 | `/bilancolar/takip` | Benim izlediklerimin bilançoları |
-| `/bilancolar/[symbol]/[period]` | Bu çeyrek ne anlattı: tam analiz |
+| `/bilancolar/hafta` | Bu haftanın bilanço takvimi tek ekranda (`?hafta=YYYY-MM-DD`); paylaşılacak bir çıktı |
+| `/bilancolar/[symbol]/[period]` | Bu çeyrek ne anlattı: tam analiz; rutin yazdıysa başında "30 Saniyede" özeti, sonunda Segment ve KPI Verisi |
 
 ### Teknik Analiz
 
@@ -496,18 +535,59 @@ Başlıkta Piyasalar'dan hemen sonra; mobilde Menü'den.
 | Rota | Soru |
 |---|---|
 | `/mercek` · `/mercek/[slug]` | Olayın arkasındaki mekanizma neydi |
-| `/rehber` · `/rehber/[slug]` | Borsayı nereden öğrenirim: sıralı müfredat |
+| `/rehber` · `/rehber/[slug]` | Borsayı nereden öğrenirim: sıralı müfredat (Türkiye'den yatırım için pratik yazılar dahil: W-8BEN, aracı kurum, vergi, kesirli hisse) |
+| `/sozluk` · `/sozluk/[terim]` | Bu terim ne demek: yüz elli terim, sekiz kategoride, iki dilde. Mercek, rehber ve bilanço analizlerinde terimin ilk geçişi buraya kendiliğinden bağlanıyor |
 | `/bulten` · `/bulten/[tarih]` · `/bulten/haftalik` · `/bulten/haftalik/[tarih]` | Dünkü ya da geçen haftaki bülten; her sayının kalıcı adresi var |
 
 ### Hesap
 
-`/giris` · `/kayit` · `/favoriler` · `/ayarlar` (profil ikonu ve rengi, tema, dil,
-hesap silme) · `/menu` · `/kvkk`
+`/giris` · `/kayit` · `/favoriler` (fiyatlar USD ya da TL) · `/ayarlar` (profil
+ikonu ve rengi, tema, dil, Verilerimi İndir, hesap silme) · `/menu` · `/kvkk` ·
+`/hakkinda` (Hakkında ve Metodoloji: kim yapıyor, sayılar nereden geliyor,
+yazıları kim yazıyor; gömme kodları da burada)
+
+### Türkiye'den Yatırım
+
+| Rota | Soru |
+|---|---|
+| `/vergi` | Yurt dışı hisse kazancım için ne kadar vergi: satış kazancı (alış ve satış günlerinin TCMB kuru), Yİ-ÜFE endekslemesi, temettü beyan sınırı, ABD stopajının mahsubu. Hesap tümüyle tarayıcıda; kurallar ve kaynaklar `lib/tax.ts` |
+| `/portfoy` | Neyim var ve lirada ne kazandırdı: pozisyon başına alış günü kuruyla TL maliyet, bugünün kuruyla TL değer, sektör ağırlığı. Oturum ister, dizine girmez |
+
+### Gömülü Parçalar ve Görseller
+
+`/gomulu/*` sitenin kabuğunun dışında, dizine kapalı ve çerçeveye izin verilen
+**tek** yol (`next.config.ts`); gömme kodları `/hakkinda`da.
+
+| Rota | Ne |
+|---|---|
+| `/gomulu/geri-sayim` | Sıradaki zile geri sayım, Türkiye saatiyle; ana sayfadaki sayacın kendisi |
+| `/gomulu/bilancolar` | Haftanın öne çıkan altı bilançosu; satırlar sitede yeni sekmede açılır |
+| `/gun/[tarih]/kart` | Günün paylaşılabilir kartı (1200×630; `?bicim=dikey` 1080×1350; `/gun/bugun/kart`). `/api` altında değil, çünkü `robots.txt` onu engelliyor ve kart botları ona uyuyor |
+| `/bilancolar/hafta/gorsel` | Haftalık bilanço takviminin görseli (`?boyut=yatay\|dikey&hafta=`) |
+
+### API Uçları
+
+24 uç. Yazma uçları (`brief`, `mercek`, `analiz`, `teknik` ve `context`
+eşleri) `BRIEF_SECRET`, cron `CRON_SECRET`, Verilerimi İndir oturum ister;
+okuma uçları herkese açık ve IP başına oran sınırlı.
+
+| Uç | Ne |
+|---|---|
+| `/api/chart/[symbol]` · `/api/karsilastir` · `/api/endeks` · `/api/day-flow` · `/api/search` | Ekranların istemci tarafı okumaları: bar, toplu bar, endeks paketi, gün akışı, ⌘K arama |
+| `/api/takvim` | Bilanço takvimi `.ics` |
+| `/api/kur` · `/api/kur/yol` · `/api/kur/endeks` | TCMB günlük kuru (tek ya da toplu gün), iki gün arasındaki USD/TRY yolu (TL ve Reel TL görünümü), EVDS aylık endeksi (Yİ-ÜFE/TÜFE; anahtar yoksa `missing-key`) |
+| `/api/health` | Dış izleyici için sağlık: veritabanı yanıt veriyorsa 200, vermiyorsa 503; geciken rutin gövdede `degraded`. Önbelleksiz |
+| `/api/hata` | İstemci hata sınırlarının bildirimi; her durumda gövdesiz 204 |
+| `/api/hesap/verilerim` | Verilerimi İndir (`?bicim=json\|csv`); yalnızca oturum sahibi |
+| `/api/olcum` | Çerezsiz sayfa ölçümü |
+| `/api/brief` · `/api/mercek` · `/api/analiz` · `/api/teknik` (+ `/context`) | İçerik rutinlerinin yazma ve geri okuma uçları |
+| `/api/cron/daily` · `/api/auth/[...nextauth]` · `/api/debug/providers` | Günlük cron, oturum, sağlayıcı anahtar kontrolü (yalnızca geliştirmede; üretimde 404) |
 
 ### Yönetim
 
 Kabuğun dışında: `/admin`, `/admin/trafik`, `/admin/uyeler`,
-`/admin/icerik`, `/admin/yazilar` ve iki editör
+`/admin/icerik`, `/admin/sistem` (verinin durumu ve son 30 günün hata
+kaydı), `/admin/yazilar`, `/admin/yazilar/bulten` ve iki editör
 (`/admin/yazilar/mercek/[slug]`, `/admin/yazilar/bulten/[tarih]`). Panel
 sekmelerinden **İçerik ölçer, Yazılar değiştirir.** Yetki veritabanında;
 yetkisiz istek **404** görür, çünkü "yetkiniz yok" demek panelin varlığını ele
@@ -553,6 +633,7 @@ npm run dev
 | `DEEPL_API_KEY` | opsiyonel | haber başlığı çevirisi (önce bu denenir) |
 | `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisinde yedek |
 | `ANALYTICS_SALT` | opsiyonel | ziyaretçi özetinin tuzu; yoksa `AUTH_SECRET` |
+| `EVDS_API_KEY` | opsiyonel | [evds3.tcmb.gov.tr](https://evds3.tcmb.gov.tr) → üye ol → profil → API anahtarı; Reel TL ve vergi hesaplayıcısının Yİ-ÜFE endekslemesi. Yoksa ikisi de okuyucuya açık alan bırakır |
 
 Anahtarlar olmadan da uygulama açılır; ilgili kartlar "veri alınamadı" der ve
 sayfa çökmez. Kontrol için `/api/debug/providers`. Korumalı uçlar yerelde
@@ -569,6 +650,7 @@ npm run build          # üretim derlemesi
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint
 npx tsx --test tests/*.test.ts   # birim testleri
+npm run smoke          # duman testi: çalışan bir kopyayı başsız Chrome'la gezer
 npm run db:generate    # şema değişti → YENİ migration dosyası
 npm run db:migrate     # migration'ları uygula
 npm run db:seed        # idempotent tohum (kullanıcı verisine dokunmaz)
@@ -581,11 +663,25 @@ npm run build:favicon  # .ico ve PWA ikonlarını marka işaretinden üret
 ### Doğrulama
 
 1. **`typecheck` + `lint` + `build`**: üçü de temiz olmadan commit yok.
-2. **Birim testleri**: `tests/` altında 19 dosya. Kotasyon tazeliği ve paket
-   yaşı, önbellek süreleri, rutin ve teknik yayın saatleri, karşılaştırma
-   ölçeği, gün akışı, mali çeyrek hesabı, rota sahneleri gibi saf mantığı
-   sınıyor.
-3. **Ölçüm**: başsız Chrome rota × genişlik matrisini (360 / 390 / 768 / 1280 /
+2. **Birim testleri**: `tests/` altında 37 dosya. Kotasyon tazeliği ve paket
+   yaşı, önbellek süreleri, rutin ve teknik yayın saatleri, rutin gecikmesi,
+   karşılaştırma ölçeği, gün akışı, mali çeyrek hesabı, rota sahneleri,
+   vergi ve kur hesabı, portföy, temettü, Piyasa Nabzı, skor kartı ve
+   beklenen hareket, otomatik bağlantı, hata kaydının örtmesi, veri dışa
+   aktarımı gibi saf mantığı sınıyor.
+3. **Duman testi** (`npm run smoke`, `scripts/smoke.mjs`): çalışan bir kopyaya
+   (`BASE_URL`, varsayılan `http://localhost:3000`) başsız Chrome ile gidip
+   ana rotaları iki dilde ve iki genişlikte (390, 1280) açar; HTTP kodunu
+   (olmayan adres gerçekten 404 mü), konsol hatasını ve yatay taşmayı sorar.
+   Bir kontrol düşerse çıkış kodu 1. Kayıt → giriş → favori → hesap silme
+   akışı veritabanına gerçek hesap yazdığı için yalnızca
+   `SMOKE_ALLOW_WRITES=1` ile koşar. GitHub Actions'ta ayrı bir iş akışı
+   (`.github/workflows/smoke.yml`) her PR'da ve `main`e her push'ta
+   derlenmiş uygulamayı sırsız ve veritabanısız ayağa kaldırıp testi
+   `SMOKE_DEGRADED_OK=1` ile koşar (veri yokken kendi uçlarımızın 503'ü
+   sözleşme, hata değil). Bir uyarı kanalı, dağıtım kapısı değil: deploy'u
+   bekletmez.
+4. **Ölçüm**: başsız Chrome rota × genişlik matrisini (360 / 390 / 768 / 1280 /
    1440) tarıyor; yatay taşma, konsol hatası ve düzen gerçek piksellerle
    ölçülüyor ve sonuç kod yorumuna yazılıyor. Bu betikler `.tmp-*.mjs`
    deseniyle yazılır ve commit'lenmez.
@@ -628,8 +724,11 @@ app/
                      #   takvim, bilançolar, teknik, mercek, rehber, bülten, haberler, hesap
   admin/             # yönetim: kabuğun dışında, yetkisizde 404
   actions/           # sunucu eylemleri: auth, takip listesi, içerik, profil ikonu
-  api/               # chart, day-flow, karsilastir, search, takvim, olcum,
+  api/               # chart, day-flow, endeks, karsilastir, search, takvim, olcum,
+                     #   kur (+ yol, endeks), health, hata, hesap/verilerim,
                      #   brief, mercek, analiz, teknik (+ context), cron, auth, debug
+  gomulu/            # başka sitelere gömülen parçalar: kabuğun dışında, dizine kapalı
+  gun/[tarih]/kart/  # günün paylaşılabilir görseli
 components/
   article/           # ArticleBody: ::: blok ailesi burada çizilir
   brand/             # BellMark (marka işareti) · AvatarIcon (profil ikonları)
@@ -637,8 +736,12 @@ components/
   motion/            # görünüme girme sistemi, logo uçuşu, sayfa geçişleri
   layout/            # AppShell, başlık, alt sekme çubuğu, piyasa şeridi, arama
   today/             # geri sayım, gün akışı, bülten, kolon doldurucu
-  markets/           # karşılaştırma, ölçek çubukları, piyasa nabzı
-  stock/ earnings/ stories/ technical/ watchlist/ auth/ ui/
+    home/            # ana sayfanın panelleri (yeni panel buraya)
+  markets/           # karşılaştırma, ölçek çubukları, piyasa nabzı, fon panoları
+  earnings/report/   # bilanço analizi sayfasının panelleri
+  earnings/week/     # haftalık bilanço takvimi
+  glossary/ themes/ tax/ portfolio/ calendar/ macro/ seo/
+  stock/ stories/ technical/ watchlist/ auth/ ui/
 lib/
   ink/               # mürekkep motoru (engine) + sahneler (scenes) + rota haritası
   market-hours.ts    # ET↔UTC, seans durumu, önbellek süreleri
@@ -647,13 +750,21 @@ lib/
   compare.ts         # karşılaştırma ekranının ortak sözleşmesi
   technical*.ts      # teknik analiz: semboller, göstergeler, yazma yolu
   avatars.ts         # profil ikonu ve renk anahtarları
-  providers/         # alpaca · finnhub · fred · tcmb
+  providers/         # alpaca (+ kurumsal işlemler, opsiyon) · finnhub (+ derinlik)
+                     #   · fred · tcmb (+ arşiv) · evds · fx-history
+  tax.ts             # vergi kuralları, yıllık eşikler ve kaynakları
+  fx.ts              # TL ve Reel TL çevirisi (saf)
+  autolink.ts        # yazı gövdelerinde sözlük ve sembol bağlantısı
   i18n/              # tr + en sözlükleri (en, tr tipinden türer)
 content/guide/       # rehber yazıları: meta + tr + en
+content/glossary/    # sözlük: meta + tr/ + en/ (kategori başına dosya)
+content/themes.ts    # tematik listeler (elle bakılır)
+content/compare-pairs.ts  # küratörlü karşılaştırma çiftleri (elle bakılır)
 db/seed/             # tatiller, ekonomik takvim, semboller, endeks bileşimleri
 docs/                # rutin prompt'ları, deploy, tasarım notları
 drizzle/             # migration'lar: elle düzenlenmez, yenisi eklenir
 tests/               # birim testleri (tsx --test)
+scripts/smoke.mjs    # duman testi (npm run smoke)
 ```
 
 ---
@@ -665,7 +776,25 @@ tests/               # birim testleri (tsx --test)
 - **Endeksler ETF üzerinden izlenir** (SPY/QQQ/DIA/IWM) ve arayüzde yazılır.
 - **Dünya piyasaları MSCI ülke fonları üzerinden.** Yön aynı, yüzde kur ve
   seans farkıyla ayrışabilir.
-- **Emtia yok.** Ücretsiz sağlayıcıların hiçbirinde canlı emtia fiyatı yok.
+- **Emtia ve kripto fon üzerinden izlenir** (GLD, SLV, USO, UNG, CPER, DBA,
+  IBIT, ETHA). Ücretsiz sağlayıcıların hiçbirinde canlı emtia spotu yok; fon
+  vadeli sözleşme ya da fiziki varlık taşıdığı için yüzdesi spottan
+  ayrışabilir (özellikle USO ve UNG'de vade yenileme maliyeti). Panel künyesi
+  bunu yazar.
+- **Tek tek analist not değişiklikleri ve hedef fiyat yok.** Finnhub'ın
+  ilgili uçları ücretsiz katmanda 403 dönüyor; ekranda yalnızca aylık dağılım
+  ve değişimi var, tek tek notlar uydurulmuyor.
+- **Opsiyon verisi gösterge beslemesi** (`indicative`): OPRA'nın kendisi
+  değil, ondan türetilmiş kotasyon. Beklenen hareket bu yüzden geniş alış-satış
+  aralıklı kontratları eler ve künyesinde bunu söyler.
+- **Geçmiş bilanço tarihleri ücretsiz katmanda yok.** Beklenen hareketin
+  "geçmiş rapor ertesi hareket" ortalaması yerel takvim tablosundan (Temmuz
+  2026'dan beri birikiyor) ve analiz kayıtlarından besleniyor; veri
+  biriktikçe görünür, en az iki ölçüm olmadan ortalama yazılmaz.
+- **Reel TL ve Yİ-ÜFE endekslemesi `EVDS_API_KEY` ister.** Anahtar yoksa
+  Reel TL düğmesi basılmaz, vergi hesaplayıcısı Yİ-ÜFE değerlerini okuyucudan
+  ister. FRED'deki Türkiye TÜFE serisi Nisan 2025'te kesiliyor; o yüzden
+  kaynak EVDS.
 - **Bilanço saatleri yaklaşık.** Sağlayıcı yalnızca pencereyi veriyor.
 - **Ekonomik takvim tohumlanır** ve FRED'in yayın takvimiyle ileriye uzatılır.
 

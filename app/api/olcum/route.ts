@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { recordPageView, shouldRecord } from "@/lib/analytics";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { sameSite } from "@/lib/same-site";
 
 /**
  * Sayfa görüntüleme toplayıcısı.
@@ -28,32 +29,6 @@ const BODY = z.object({
 /** Bir IP beş dakikada bu kadar görüntüleme bildirebilir. */
 const LIMIT = 120;
 const WINDOW_MS = 5 * 60 * 1000;
-
-/**
- * İstek BU siteden mi geliyor?
- *
- * Uç yetkisiz ve gövdesi tamamen istemciden: başka bir site kendi
- * ziyaretçilerinin tarayıcısından buraya istek yağdırıp panelin sayılarını
- * şişirebilir ya da uydurma yollarla listeyi kirletebilirdi. Tarayıcı
- * `Sec-Fetch-Site` başlığını istemcinin yazması mümkün değil; onu
- * desteklemeyen eski tarayıcılar için `Origin` karşılaştırması yedek.
- *
- * Başlıkların İKİSİ DE yoksa istek geçiyor: `sendBeacon` bazı ortamlarda
- * `Origin` göndermiyor ve ölçümü tamamen kapatmak, kirlenmeye izin
- * vermekten daha kötü bir sonuç.
- */
-function sameSite(request: Request): boolean {
-  const fetchSite = request.headers.get("sec-fetch-site");
-  if (fetchSite) return fetchSite === "same-origin" || fetchSite === "none";
-
-  const origin = request.headers.get("origin");
-  if (!origin) return true;
-  try {
-    return new URL(origin).host === new URL(request.url).host;
-  } catch {
-    return false;
-  }
-}
 
 export async function POST(request: Request) {
   /* Dışarıdan gelen istek de 204 alır: "engellendin" demek yalnızca

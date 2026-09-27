@@ -94,6 +94,27 @@ export function agoLabel(date: Date | null, now: Date = new Date()): string {
   return `${Math.floor(elapsed / DAY)} Gün Önce`;
 }
 
+const MINUTES_PER_HOUR = 60;
+const MINUTES_PER_DAY = 24 * MINUTES_PER_HOUR;
+
+/**
+ * Rutin gecikmesinin değeri: "45 Dakika Gecikti", "3 Saat Gecikti",
+ * "2 Gün Gecikti" (28 Eylül).
+ *
+ * Satır bir saatlik aksamaya da üç günlük durmaya da yalnızca "Gecikti"
+ * diyordu; Özet'in "Dikkat İsteyenler" listesinde ikisi aynı ağırlıktaydı.
+ * Sayı lib/routine-schedule.ts → `minutesLate`tan; birim en kaba tam
+ * birim, tıpkı `agoLabel`daki gibi. Pay (30 dakika) dolmadan satır zaten
+ * "Bekleniyor" diyor, yani sıfır buraya hiç gelmiyor — gelirse sözcük tek
+ * başına kalıyor.
+ */
+export function lateLabel(minutes: number): string {
+  if (minutes <= 0) return "Gecikti";
+  if (minutes < MINUTES_PER_HOUR) return `${minutes} Dakika Gecikti`;
+  if (minutes < MINUTES_PER_DAY) return `${Math.floor(minutes / MINUTES_PER_HOUR)} Saat Gecikti`;
+  return `${Math.floor(minutes / MINUTES_PER_DAY)} Gün Gecikti`;
+}
+
 /** ET takvim günü, yılsız: "22 Eyl". Yıl bağlamdan belliyse bu. */
 export function adminDay(day: string): string {
   return formatEtDateCompact(day, "tr");

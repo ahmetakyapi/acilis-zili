@@ -27,6 +27,8 @@ import { adminStamp, agoLabel } from "@/lib/admin-format";
 import { formatInZone, TR_ZONE, zoneDateKey } from "@/lib/session-clock";
 import { addEtDays, ET_ZONE } from "@/lib/market-hours";
 import { cn } from "@/lib/utils";
+import { getErrorGroups } from "@/lib/error-log";
+import { ErrorGroupsPanel } from "@/components/admin/ErrorGroupsPanel";
 
 /**
  * Sistem — verinin durumu.
@@ -72,6 +74,13 @@ export default async function SystemPage() {
 
       <Suspense fallback={<ChecksSkeleton />}>
         <Checks />
+      </Suspense>
+
+      {/* Hatalar sağlık listesinin ALTINDA: Veri Sağlığı'ndaki "Uygulama
+          Hataları" satırı sayıyı söylüyor, bu panel hangileri olduğunu.
+          Özet'in Dikkat satırı buraya iniyor (#hatalar). */}
+      <Suspense fallback={<AdminPanelSkeleton rows={4} rowHeight={72} />}>
+        <ErrorsPanel />
       </Suspense>
 
       {/* Okunduğu an, İstanbul saatiyle (AdminUI → `AdminReadStamp`). Saat
@@ -405,6 +414,9 @@ async function Checks() {
  * satırı ortalama 61 piksel (Rutinler 424 = başlık bloğu ve dolgu 118,5 +
  * 5 × 61; Veri Sağlığı 486), şerit ve notları 130 piksel (Anahtarlar 249).
  *
+ * Veri Sağlığı 28 Eylül'de yedinci satırı aldı (Uygulama Hataları); satır
+ * boyu aynı kalıpta, yer tutucu yedi satır.
+ *
  * TELEFONDA AYRI BOYLAR (23 Eylül, 390'da ölçüldü). Tek boylu yer tutucu
  * akış inince 273,5 piksel kısa kalıyordu: notlar iki satıra sarıyor
  * (Rutinler 452 = 112,5 + 5 × 68, Veri Sağlığı 532,5 = 112,5 + 6 × 70) ve
@@ -418,12 +430,22 @@ function ChecksSkeleton() {
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2 lg:items-start">
         <AdminPanelSkeleton rows={5} rowHeight={68} className="sm:hidden" />
         <AdminPanelSkeleton rows={5} rowHeight={61} className="hidden sm:block" />
-        <AdminPanelSkeleton rows={6} rowHeight={70} className="sm:hidden" />
-        <AdminPanelSkeleton rows={6} rowHeight={61} className="hidden sm:block" />
+        <AdminPanelSkeleton rows={7} rowHeight={70} className="sm:hidden" />
+        <AdminPanelSkeleton rows={7} rowHeight={61} className="hidden sm:block" />
       </div>
       <AdminPanelSkeleton rows={3} rowHeight={105} className="sm:hidden" />
       <AdminPanelSkeleton rows={2} rowHeight={97} className="hidden sm:block lg:hidden" />
       <AdminPanelSkeleton rows={2} rowHeight={65} className="hidden lg:block" />
     </div>
   );
+}
+
+/** Panelin penceresi ve satır tavanı — kayıt 30 gün tutuluyor, bakılan son hafta. */
+const ERROR_PANEL_DAYS = 7;
+const ERROR_PANEL_ROWS = 30;
+
+/** Okuma burada, çizim `ErrorGroupsPanel`de — bileşen okumadan bağımsız sınanabilsin. */
+async function ErrorsPanel() {
+  const result = await getErrorGroups(ERROR_PANEL_DAYS, ERROR_PANEL_ROWS);
+  return <ErrorGroupsPanel result={result} days={ERROR_PANEL_DAYS} now={new Date()} />;
 }
