@@ -35,3 +35,13 @@
  .searchField { gap:8px; padding-left:11px; }
 }
 @media(prefers-reduced-motion:reduce) { .searchField { transition:none; } }
+
+/* Telefon araması: ölçülen 13px metin yerine 16px; sembol yazarken
+   okunabilirlik ve mobil klavye kullanımı için yeterli giriş yüksekliği. */
+@media(max-width:767px) {
+ .searchField input { font-size:16px; height:40px; }
+ .searchField button { width:40px; height:40px; }
+ .searchField button::after { inset:-2px; }
+}
+.searchField button:active { background:var(--primary); color:var(--on-primary); }
+@media(prefers-reduced-motion:reduce) { .searchField button { transition:none; } }

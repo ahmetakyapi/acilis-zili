@@ -1,3 +1,4 @@
+import { ArrowUpRight, SquaresFour, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
@@ -5,6 +6,7 @@ import { Suspense, type ReactNode } from "react";
 import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/markets/MarketExperience.module.css";
+import { HeatmapGrid } from "@/components/markets/HeatmapGrid";
 import { MarketPulse } from "@/components/markets/MarketPulse";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -352,7 +354,7 @@ async function IndexCards({
             >
               <div className={styles.identity}>
                 <p className="text-sm font-semibold text-strong">{entry.label}</p>
-                <p className="numeral text-nano text-muted">{entry.proxy}</p>
+                <p className={styles.indexProxy}><span className="numeral">{entry.proxy}</span><ArrowUpRight size={14} aria-hidden /></p>
               </div>
               {quote ? (
                 <>
@@ -380,8 +382,8 @@ async function IndexCards({
                       title={`${entry.label} · ${locale === "tr" ? "1G" : "1D"}`}
                       tone={tone}
                       height={38}
-                      showLastDot={false}
-                      strokeWidth={1.6}
+                      showLastDot
+                      strokeWidth={1.8}
                       className={styles.spark}
                     />
                   )}
@@ -603,6 +605,7 @@ async function IndexDetail({
                 bileşen tablosunda ve ana sayfadaki bilanço panelinde de var. */}
             <MoverPanel
               title={t.markets.topGainers}
+              kind="up"
               rows={gainers}
               scaleMax={movementScale}
               showContribution={divisor !== null}
@@ -617,6 +620,7 @@ async function IndexDetail({
             />
             <MoverPanel
               title={t.markets.topLosers}
+              kind="down"
               rows={losers}
               scaleMax={movementScale}
               showContribution={divisor !== null}
@@ -769,7 +773,7 @@ function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
         {heat.length > 0 && (
           <div className={styles.heat}>
             <div className={styles.heatHead}>
-              <h2>{t.markets.heatmap}</h2>
+              <h2 data-ink="solid"><SquaresFour size={21} weight="duotone" aria-hidden />{t.markets.heatmap}</h2>
               <p className={styles.heatHint}>{t.markets.heatmapHint}</p>
               <div className={styles.heatLegend} role="img" aria-label={t.markets.heatScaleHint}>
                 <div className={styles.heatSwatches} aria-hidden>
@@ -781,7 +785,7 @@ function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
                 <span className={styles.heatLegendHint}>{t.markets.heatScaleSteps}</span>
               </div>
             </div>
-            <div className={styles.heatGrid} data-motion-stagger>
+            <HeatmapGrid className={styles.heatGrid}>
               {[...heat]
                 .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
                 .slice(0, HEAT_MAX)
@@ -790,12 +794,17 @@ function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
                   const magnitude = Math.abs(change);
                   const level = magnitude === 0 ? 0 : magnitude < 0.5 ? 1 : magnitude < 1.5 ? 2 : magnitude < 3 ? 3 : 4;
                   const tone = change > 0 ? "up" : change < 0 ? "down" : "flat";
+                  const quote = row.quote!;
+                  const rangePosition = quote.low !== null && quote.high !== null && quote.high > quote.low
+                    && quote.price >= quote.low && quote.price <= quote.high
+                    ? ((quote.price - quote.low) / (quote.high - quote.low)) * 100 : null;
                   return (
                     <Link
                       key={row.member.symbol}
                       href={`/hisse/${row.member.symbol}`}
                       prefetch={false}
                       className={styles.heatCell}
+                      data-heat-cell
                       aria-label={`${row.member.symbol} · ${row.member.name} · ${formatPercent(change, locale)}`}
                       aria-describedby={`heat-detail-${row.member.symbol}`}
                       data-heat-tone={tone}
@@ -804,10 +813,10 @@ function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
                       <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="md" className={styles.heatLogo} />
                       <span className={styles.heatSymbol}>{row.member.symbol}</span>
                       <span className={cn("numeral", styles.heatPct)}>{formatPercent(change, locale)}</span>
-                      {/* ÜZERİNE GELİNCE KÜNYE KARTI — yalnızca CSS, istemciye
-                          JavaScript inmiyor. Ekran okuyucu ayrıntıları bağlantının
-                          aria-describedby açıklamasından alıyor. */}
-                      <span id={`heat-detail-${row.member.symbol}`} aria-hidden className={styles.heatCard}>
+                      {/* Künye sunucuda çizilir. HeatmapGrid yalnızca konum yönünü
+                          ve Escape ile kapatmayı yönetir; 30 ayrı istemci kartı yok.
+                          Ekran okuyucu ayrıntıları aria-describedby ile alır. */}
+                      <span id={`heat-detail-${row.member.symbol}`} data-heat-card aria-hidden className={styles.heatCard}>
                         <span className={styles.heatCardHead}>
                           <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" />
                           <span className="min-w-0">
@@ -824,12 +833,13 @@ function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
                           {row.quote!.volume !== null && <span><span>{t.market.volume}</span><b className="numeral">{new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", { notation: "compact", maximumFractionDigits: 1 }).format(row.quote!.volume)}</b></span>}
                           {row.quote!.low !== null && row.quote!.high !== null && <span className={styles.heatCardRange}><span>{t.markets.heatDayRange}</span><b className="numeral">{formatPrice(row.quote!.low, locale)} – {formatPrice(row.quote!.high, locale)} $</b></span>}
                         </span>
+                        {rangePosition !== null && <span className={styles.heatRangeTrack} aria-hidden="true"><i style={{ left: `${rangePosition}%` }} /></span>}
                         <span className={styles.heatCardFoot}>{t.markets.heatOpenCompany} <span aria-hidden>↗</span></span>
                       </span>
                     </Link>
                   );
                 })}
-            </div>
+            </HeatmapGrid>
           </div>
         )}
       </div>
@@ -889,6 +899,7 @@ function BreadthSummary({
 
 function MoverPanel({
   title,
+  kind,
   rows,
   showContribution,
   contributionLabel,
@@ -898,6 +909,7 @@ function MoverPanel({
   scaleMax,
 }: {
   title: string;
+  kind: "up" | "down";
   rows: Row[];
   showContribution: boolean;
   contributionLabel: string;
@@ -915,22 +927,17 @@ function MoverPanel({
           girenin çoğu varlığını bilmiyordu; oysa "günün en çok artan beşi"
           listesi, karşılaştırmanın en doğal başlangıcı. Liste sabit değil,
           o anki sıralamadan türüyor. */}
-      <PanelHeader
-        title={title}
-        meta={meta}
-        action={
-          rows.length >= 2 ? (
-            <PanelLink
-              href={`/karsilastir?semboller=${rows
-                .slice(0, 4)
-                .map((row) => row.member.symbol)
-                .join(",")}`}
-            >
-              {t.compare.compareFirstFour}
-            </PanelLink>
-          ) : undefined
-        }
-      />
+      <div className={styles.moverHeading}>
+        <h2 data-ink="solid"><span className={styles.moverHeadingIcon} data-direction={kind}>
+          {kind === "up" ? <TrendUp size={18} weight="bold" aria-hidden /> : <TrendDown size={18} weight="bold" aria-hidden />}
+        </span>{title}</h2>
+        <div className={styles.moverHeadingMeta}>
+          {meta && <span>{meta}</span>}
+          {rows.length >= 2 && <PanelLink href={`/karsilastir?semboller=${rows.slice(0, 4).map((row) => row.member.symbol).join(",")}`}>
+            {t.compare.compareFirstFour}
+          </PanelLink>}
+        </div>
+      </div>
       <ul className="divide-y divide-line-soft" data-motion-stagger>
         {rows.map((row, index) => {
           const changePct = row.quote?.changePct ?? 0;
@@ -956,7 +963,7 @@ function MoverPanel({
               >
                 <div className={styles.moverIdentity}>
                   <span className={styles.moverRank} aria-hidden>{String(index + 1).padStart(2, "0")}</span>
-                  <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" />
+                  <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" className={styles.moverLogo} />
                   <span className={styles.moverCompany}>
                     <span className="shrink-0 text-base font-bold text-strong">
                       {row.member.symbol}
@@ -1183,6 +1190,7 @@ function MembersTable({
         aria-label={t.markets.constituents}
       >
         <table className="w-full text-sm sm:min-w-[680px]">
+          <caption className="sr-only">{INDEX_TABS.find((entry) => entry.key === tab)?.label} · {t.markets.constituents}</caption>
           <thead>
             <tr className="border-b border-line text-left text-nano text-muted">
               <th className="hidden w-10 px-4 py-2.5 font-semibold sm:table-cell sm:px-5">
@@ -1204,7 +1212,7 @@ function MembersTable({
                 className="px-1.5 sm:px-3"
               />
               <SortHead
-                label={t.companies.price}
+                label={`${t.companies.price} ($)`}
                 href={sortHref(tab, "fiyat", sort, dir, limit)}
                 active={sort === "fiyat"}
                 dir={dir}
@@ -1262,7 +1270,7 @@ function MembersTable({
                         <span className="block text-base font-bold leading-[17px] text-strong">
                           {row.member.symbol}
                         </span>
-                        <span className="block max-w-[104px] truncate text-tiny leading-[15px] text-muted sm:max-w-none">
+                        <span title={row.member.name} className="block max-w-[104px] truncate text-tiny leading-[15px] text-muted sm:max-w-none">
                           {row.member.name}
                         </span>
                       </span>

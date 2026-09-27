@@ -130,3 +130,44 @@ COST, NVDA, ASTS ve İngilizce SNOW raporları; açık/koyu temada,
 istemci istisnası yok. Uzun açıklama, olumsuz oranlar ve farklı ölçü
 sayıları aynı düzenle kontrol edildi. TypeScript, ESLint ve üretim derlemesi
 başarılı. Genel görüşün mobil aç/kapat davranışı korunuyor.
+
+### Mobil Alan Kullanımı ve Şirket Araması
+
+Piyasalar ısı haritası 375–639 px ekranlarda 6×5; daha dar telefonlarda
+5×6 kalıyor. 390 px ölçümünde 456→379 px, yaklaşık 77 px kazanç.
+375 px'de karo eni en az 47 px; sembol/yüzde metinleri korunuyor.
+
+Şirket araması telefonda 16 px yazı, 40 px giriş/düğme ve 44 px dokunma
+alanı kullanıyor. Klavye eylemi arama; otomatik büyük harf ve yazım denetimi
+kapalı. Lider kartlarında odak/basılı yüzey tonları ve piyasa değerini de
+okuyan erişilebilir ad eklendi. Büyüklük çubukları gerçek doğrusal oranı
+kullanıyor. Arama gönderimi ve klavye odağı Chrome'da doğrulandı.
+
+Son kontrolde 10 genişlik × iki dil × iki tema = 40 görünüm: yatay taşma,
+sembol/yüzde alanı ihlali ve istemci istisnası yok. 320 ve 375 px'de yazıyı
+küçültmeden karo dolgusu ayarlandı. TypeScript, ESLint, üretim derlemesi ve
+`git diff --check` başarılı.
+
+### Piyasalar · Görsel Hiyerarşi ve Etkileşim
+
+Mevcut marka ve veri yoğunluğu korunarak açılış başlığı, endeks fiyatları,
+seçili kartın vurgu çizgisi ve yön etiketleri güçlendirildi. Tasarım yönü:
+koruyarak iyileştirme; çeşitlilik 5, hareket 4, yoğunluk 7. Yeni hareketler
+kısa durum geçişleriyle sınırlı; azaltılmış hareket tercihinde kapalı.
+
+Isı haritası ve yükselen/düşen listelerine tutarlı simgeler; liste başlıklarına
+daha net tipografik hiyerarşi eklendi. Bileşen tablosunda hafif alternatif
+satır tonları, klavye odağı ve daha okunaklı fiyat/değişim değerleri kullanıldı.
+Tablo başlığındaki dolar birimi ve erişilebilir tablo açıklaması netleştirildi.
+
+Isı haritasının bilgi kartı, yeterli üst boşluk yoksa aşağı açılıyor; Escape
+ile kapanıyor ve yeniden girişte açılabiliyor. Gün içi aralık göstergesi
+yalnızca fiyat geçerli düşük/yüksek aralığındaysa çiziliyor. Sunucuda oluşan
+30 karoyu tek istemci sarmalayıcısı yönetiyor; veri ve sıralama mantığı korundu.
+
+Üretim derlemesinde üç endeks × iki tema × sekiz genişlik
+(320/375/390/640/768/1024/1200/1440 px) = 48 görünüm: yatay taşma veya
+istemci istisnası yok. İngilizce görünüm, bilgi kartının aşağı açılması,
+Escape, yeniden giriş, klavye odağı ve artan fiyat sıralaması ayrıca
+doğrulandı. Açık/koyu masaüstü ve mobil ekran görüntüleri incelendi.
+TypeScript, ESLint, üretim derlemesi ve diff kontrolü başarılı.

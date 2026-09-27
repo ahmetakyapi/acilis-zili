@@ -47,3 +47,9 @@
 }
 @media(max-width:767px) { .symbol { font-size:11px; } .cap { font-size:10px; } .share { left:7px; right:7px; bottom:5px; } }
 @media(prefers-reduced-motion:reduce) { .company, .logo { transition:none; } .company:hover, .company:hover .logo { translate:none; } }
+
+/* Klavye odağı da fareyle aynı kart tonunu ve sembol vurgusunu alır.
+   Basılı durum yalnız tonla verilir; logo uçuşunun geometrisi değişmez. */
+.company:focus-visible { border-color:var(--primary); background:var(--primary-tint); }
+.company:focus-visible .symbol { color:var(--primary-ink); }
+.company:active { background:var(--primary-wash); border-color:var(--primary); }

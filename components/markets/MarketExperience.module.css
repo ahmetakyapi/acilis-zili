@@ -452,3 +452,97 @@
  .moverSkeletonHead { min-height:68px; padding-inline:16px; flex-wrap:wrap; }
  .moverSkeletonRow { padding-inline:16px; }
 }
+
+/* 390px ölçümü: 30 karo 5×6 dizilimde 456px tutuyordu. En az 375px
+   genişlikte 6×5 ile bir satır kazanılıyor; en dar karonun eni ≥47px.
+   320–374px telefonlar okunabilir beş sütunlu düzeni korur. */
+@media(min-width:375px) and (max-width:639px) {
+ .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(6,minmax(0,1fr)); }
+}
+@media(max-width:389px) {
+ /* Yüzdeyi küçültmeden uzun sembol ve işaretlere yatay alan bırak. */
+ .heatCell { padding-inline:1.5px; }
+}
+
+/* 27 Eylül, piyasa ekranı görsel bütünü: Archivo + marka mavisi korunur.
+   Yön renkleri yalnız veriyi anlatır. Açılış, harita ve liste aynı 16px
+   yüzey dilini paylaşır; hareket yalnız seçim ve gezinmeye eşlik eder. */
+.page .masthead :global(.page-heading-copy) h1 { font-size:clamp(34px,4.2vw,56px); letter-spacing:-.055em; line-height:1.05; }
+.page .masthead > header > p { font-size:14px; line-height:1.6; max-width:32ch; }
+.indexGrid { gap:12px; }
+.indexCard { border-radius:16px; border-color:var(--line-soft); }
+.indexCard::before { position:absolute; content:""; top:0; left:16px; right:16px; height:3px; border-radius:0 0 3px 3px; background:var(--primary); transform:scaleX(0); transform-origin:left; transition:transform 260ms var(--ease-brand); }
+.indexLink[aria-current="true"] .indexCard::before { transform:scaleX(1); }
+.identity > p:first-child { font-size:14px; font-weight:650; letter-spacing:-.02em; }
+.identity > .indexProxy { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--text-body); }
+.indexProxy svg { color:var(--primary-ink); transition:transform 220ms var(--ease-brand); }
+.price { font-size:32px; font-weight:650; letter-spacing:-.045em; }
+.indexStamp { font-size:11px; line-height:1.5; }
+.indexLink:focus-visible .indexCard { border-color:var(--primary); }
+.indexLink:active .indexCard { background:var(--primary-wash); }
+@media(hover:hover) and (pointer:fine) {
+ .indexLink:hover .indexProxy svg { transform:translate(2px,-2px); }
+}
+.heatHead h2 { display:flex; align-items:center; gap:8px; font-size:18px; line-height:1.3; letter-spacing:-.025em; }
+.heatHead h2 svg { color:var(--primary-ink); flex:none; }
+.heatHead .heatHint { font-size:12px; line-height:1.6; }
+.heatLegend { min-width:184px; }
+.heatLegendLabels { font-weight:600; }
+.heatSwatches { height:8px; gap:3px; }
+.heatSymbol { font-weight:750; letter-spacing:.015em; }
+.mover { border-radius:16px; }
+.moverHeading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px; padding:14px 18px; border-bottom:1px solid var(--line-soft); }
+.moverHeading h2 { display:flex; align-items:center; gap:8px; font-size:16px; line-height:1.35; font-weight:700; letter-spacing:-.03em; }
+.moverHeadingIcon { display:grid; place-items:center; flex:none; width:28px; height:28px; border-radius:8px; }
+.moverHeadingIcon[data-direction="up"] { color:var(--up); background:var(--up-wash); }
+.moverHeadingIcon[data-direction="down"] { color:var(--down); background:var(--down-wash); }
+.moverHeadingMeta { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; font-size:11px; color:var(--text-muted); }
+.moverLogo { width:28px; height:28px; }
+.moverLink:focus-visible { background:var(--primary-tint); outline-offset:-3px; }
+.moverLink:active { background:var(--primary-wash); }
+.members { border-radius:16px; }
+.members h2 { font-size:20px; letter-spacing:-.035em; }
+.members thead { background:var(--surface-sunken); }
+.members th { font-size:11px; color:var(--text-body); }
+.members tbody tr:nth-child(even) { background:color-mix(in srgb,var(--surface-sunken) 40%,transparent); }
+.members tbody tr:is(:hover,:focus-within) { background:var(--primary-tint); }
+.members tbody td { padding-block:13px; }
+.members tbody td:first-child { color:var(--text-muted); }
+.members tbody td:nth-child(3),.members tbody td:nth-child(4) { font-size:15px; }
+@media(min-width:1200px) {
+ .marketHeader .indexCard { min-height:132px; padding:14px 16px; }
+ .marketHeader .reading { margin-top:10px; }
+ .marketHeader .spark { min-height:34px; }
+ .mover li a > div:first-child > span:last-child { font-size:21px; letter-spacing:-.035em; }
+ .moverCompany > span:first-child { font-size:14px; }
+}
+@media(max-width:767px) {
+ .page .masthead :global(.page-heading-copy) h1 { font-size:34px; }
+ .indexGrid { gap:8px; }
+ .indexCard { border-radius:12px; }
+ .indexCard::before { top:12px; bottom:12px; left:0; right:auto; width:3px; height:auto; transform:scaleY(0); transform-origin:center; }
+ .indexLink[aria-current="true"] .indexCard::before { transform:scaleY(1); }
+ .identity > p:first-child { font-size:12px; }
+ .identity > .indexProxy { font-size:10px; }
+ .indexProxy svg { display:none; }
+ .price { font-size:24px; }
+ .heatHead h2 { gap:6px; font-size:16px; }
+ .heatHead h2 svg { width:18px; height:18px; }
+ .heatLegend { min-width:128px; }
+ .heatHead .heatHint { font-size:11px; }
+ .moverHeading { padding-inline:16px; }
+ .moverHeading h2 { font-size:16px; }
+ .members h2 { font-size:18px; }
+ .members tbody td { padding-block:11px; }
+ .members tbody td:nth-child(3),.members tbody td:nth-child(4) { font-size:13px; }
+}
+@media(max-width:359px) { .price { font-size:22px; } }
+@media(prefers-reduced-motion:reduce) { .indexCard::before,.indexProxy svg { transition:none; } .indexLink:hover .indexProxy svg { transform:none; } }
+
+.heatCardHead small { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; white-space:normal; line-height:1.4; }
+.heatCardRow { font-size:21px; }
+.heatRangeTrack { position:relative; display:block; height:4px; margin:0 4px 3px; border-radius:3px; background:var(--line); }
+.heatRangeTrack > i { position:absolute; top:50%; width:9px; height:9px; border:2px solid var(--overlay-surface); border-radius:50%; background:var(--primary); transform:translate(-50%,-50%); box-shadow:0 0 0 1px var(--primary); }
+.heatCell[data-heat-dismissed] .heatCard { visibility:hidden; opacity:0; pointer-events:none; }
+.heatCell[data-heat-side="below"] .heatCard { top:calc(100% + 8px); bottom:auto; }
+.heatCell[data-heat-side="below"] .heatCard::after { top:auto; bottom:100%; }

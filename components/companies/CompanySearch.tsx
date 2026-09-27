@@ -30,7 +30,7 @@ export function CompanySearch({ action, query, sector, sort, direction, labels }
     <div className={styles.searchField}>
       <MagnifyingGlass aria-hidden size={17} />
       <input key={query} id="company-query" name="q" type="search" defaultValue={query}
-        placeholder={labels.searchPlaceholder} maxLength={100} autoComplete="off" />
+        placeholder={labels.searchPlaceholder} maxLength={100} autoComplete="off" autoCapitalize="none" spellCheck={false} enterKeyHint="search" />
       <button type="submit" aria-label={labels.searchSubmit}>
         <ArrowRight aria-hidden size={15} weight="bold" />
       </button>
