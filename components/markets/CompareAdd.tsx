@@ -133,7 +133,7 @@ export function CompareAdd({
       startRouteProgress();
       router.push(
         compare
-          ? compareHref(next, compare.range)
+          ? compareHref(next, compare.range, compare.currency)
           : `/karsilastir?semboller=${next.join(",")}${
               rangeParam ? `&aralik=${rangeParam}` : ""
             }`,

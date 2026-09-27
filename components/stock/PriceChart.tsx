@@ -20,6 +20,16 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts";
 import type { ChartResponse } from "@/app/api/chart/[symbol]/route";
+import type { FxPathResponse } from "@/app/api/kur/yol/route";
+import {
+  etDateOf,
+  formatIsoDate,
+  formatLira,
+  formatRate,
+  fxAnchors,
+  rateAt,
+  type FxPath,
+} from "@/lib/fx";
 import type { Bar, ChartRange } from "@/lib/providers/types";
 import { CHART_RANGES } from "@/lib/providers/types";
 import { cn, formatPercent, formatPrice } from "@/lib/utils";
@@ -178,12 +188,13 @@ export function PriceChart({
   initialRange = "1D",
   locale,
   labels,
-  quote,
+  quote: quoteProp,
   closeMinutes = SESSION_BOUNDS.regularClose,
   initialBars,
   compact = false,
   live = false,
 }: PriceChartProps) {
+  const usdQuote = quoteProp;
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   /* Son çizim hangi veri ve görünüm için oynadı — bkz. `revealPlot`. */
@@ -232,13 +243,91 @@ export function PriceChart({
   const [zones, setZones] = useState<SessionZone[]>([]);
 
   const requestKey = `${symbol}:${range}`;
-  const state = useMemo(
+  const usdState = useMemo(
     () =>
       result && result.key === requestKey
         ? result
         : ({ phase: "loading" } as const),
     [result, requestKey],
   );
+
+  /* ---- TL GÖRÜNÜMÜ ----
+     Grafik ve dönem getirisi liraya çevrilebiliyor: barların her biri kendi
+     işlem gününün kuruyla (gerekçe ve kur yolu `lib/fx.ts` başında). Uçlar
+     TCMB'nin günlük döviz alış kuru; aradaki aylar FRED ortalaması.
+
+     1G'DE YOK. Kur günde bir bülten; gün içi grafikte lira eğrisi dolar
+     eğrisinin sabit bir katı olurdu ve önceki kapanışa göre yüzde de
+     dünkü kurun değişimini gizlerdi. Seçim hatırlanıyor, 1G'de dolar
+     gösteriliyor ve denetim o aralıkta hiç basılmıyor. */
+  const [currency, setCurrency] = useState<"usd" | "tl">("usd");
+  const tlActive = currency === "tl" && range !== "1D";
+  const [fxStore, setFxStore] = useState<Record<string, FxPath | "failed">>({});
+  const fxSpan = useMemo(
+    () =>
+      usdState.phase === "ready" && usdState.bars.length > 0
+        ? {
+            start: etDateOf(usdState.bars[0].time),
+            end: etDateOf(usdState.bars[usdState.bars.length - 1].time),
+          }
+        : null,
+    [usdState],
+  );
+  const fxKey = fxSpan ? `${fxSpan.start}:${fxSpan.end}` : null;
+  const fxEntry = fxKey ? fxStore[fxKey] : undefined;
+  useEffect(() => {
+    if (!tlActive || !fxSpan || !fxKey || fxEntry) return;
+    let cancelled = false;
+    fetch(`/api/kur/yol?baslangic=${fxSpan.start}&bitis=${fxSpan.end}`)
+      .then((res) => res.json() as Promise<FxPathResponse>)
+      .then((data) => {
+        if (cancelled) return;
+        setFxStore((prev) => ({ ...prev, [fxKey]: data.ok ? data.path : "failed" }));
+      })
+      .catch(() => {
+        if (!cancelled) setFxStore((prev) => ({ ...prev, [fxKey]: "failed" }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tlActive, fxSpan, fxKey, fxEntry]);
+  const fxPath = fxEntry && fxEntry !== "failed" ? fxEntry : null;
+  const fxFailed = tlActive && fxEntry === "failed";
+  const fxAnchorList = useMemo(() => (fxPath ? fxAnchors(fxPath) : null), [fxPath]);
+  const inLira = tlActive && fxAnchorList !== null;
+
+  /* Çizim, dönem özeti ve okuma satırı `state`i okuyor; çeviri burada,
+     tek yerde. Kur beklenirken yükleme gösteriliyor — dolar eğrisini lira
+     etiketiyle bir an bile çizmemek için. */
+  const state = useMemo(() => {
+    if (!tlActive || usdState.phase !== "ready" || fxFailed) return usdState;
+    if (!fxAnchorList) return { phase: "loading" } as const;
+    const bars = usdState.bars.map((bar) => {
+      const rate = rateAt(fxAnchorList, etDateOf(bar.time)) ?? 0;
+      return {
+        ...bar,
+        open: bar.open * rate,
+        high: bar.high * rate,
+        low: bar.low * rate,
+        close: bar.close * rate,
+      };
+    });
+    return { ...usdState, bars, prevClose: null };
+  }, [tlActive, usdState, fxFailed, fxAnchorList]);
+
+  /* Başlıktaki kotasyon da aynı kurla: son noktanın okuması ve dönem
+     getirisinin ucu kotasyondan geliyor (gerekçe `quote` prop'unda). */
+  const quote = useMemo(() => {
+    if (!inLira || !usdQuote || typeof usdQuote.price !== "number" || !fxPath) return usdQuote;
+    return { ...usdQuote, price: usdQuote.price * fxPath.end.rate };
+  }, [inLira, usdQuote, fxPath]);
+  const money = (value: number) =>
+    inLira ? formatLira(value, locale) : formatPrice(value, locale, { currency: true });
+  /* Dönem bandı dolarda simgesiz (sayfanın her yerinde dolar varsayılan);
+     lirada simgeli — yoksa "En Düşük 9.946,42" hangi para birimi olduğunu
+     söylemiyordu (ölçüldü: NVDA 1A, TL görünümü). */
+  const bandPrice = (value: number) =>
+    inLira ? formatLira(value, locale) : formatPrice(value, locale);
 
   // Dönem istatistikleri — başlık satırı ve renk kararı bunlardan gelir.
   // 1G'de baz, TradingView/Midas konvansiyonuyla ÖNCEKİ SEANSIN KAPANIŞIDIR:
@@ -920,7 +1009,7 @@ export function PriceChart({
           <>
             <div className={styles.hoverValues}>
               <span className={cn(styles.hoverPrice, "tote")}>
-                {formatPrice(hover.price, locale, { currency: true })}
+                {money(hover.price)}
               </span>
               <span className={cn(styles.hoverChange, "numeral", hoverTone)}>
                 {formatPercent(hover.changePct, locale)}
@@ -964,10 +1053,10 @@ export function PriceChart({
               {range === "1D" && (
                 <span className="numeral text-xs text-muted">
                   {labels.periodLow}{" "}
-                  <span className="text-soft">{formatPrice(period.low, locale)}</span>
+                  <span className="text-soft">{bandPrice(period.low)}</span>
                   {"  ·  "}
                   {labels.periodHigh}{" "}
-                  <span className="text-soft">{formatPrice(period.high, locale)}</span>
+                  <span className="text-soft">{bandPrice(period.high)}</span>
 
                 </span>
               )}
@@ -980,12 +1069,12 @@ export function PriceChart({
               <span className="numeral text-xs text-muted">
                 {labels.periodLow}{" "}
                 <span className="text-soft">
-                  {formatPrice(period.low, locale)}
+                  {bandPrice(period.low)}
                 </span>
                 {"  ·  "}
                 {labels.periodHigh}{" "}
                 <span className="text-soft">
-                  {formatPrice(period.high, locale)}
+                  {bandPrice(period.high)}
                 </span>
               </span>
             )}
@@ -1037,7 +1126,7 @@ export function PriceChart({
             aria-live="polite"
           >
             <span className={cn(styles.tipPrice, "numeral")}>
-              {formatPrice(hover.price, locale, { currency: true })}
+              {money(hover.price)}
             </span>
             <span className={cn("numeral", styles.tipChange, hoverTone)}>
               {formatPercent(hover.changePct, locale)}
@@ -1224,27 +1313,83 @@ export function PriceChart({
             </button>
           ))}
         </ScrollEdges>
-        <div className="flex gap-1" role="group" aria-label={labels.modeGroup}>
-          {(["area", "candles"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              /* Mod düğmelerinde hiç durum yoktu: hangi çizim türünün açık
-                 olduğu yalnızca renkle anlatılıyordu. */
-              aria-pressed={mode === m}
-              onClick={() => setMode(m)}
-              className={cn(
-                "min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-medium sm:min-h-[36px] transition-colors",
-                mode === m
-                  ? "bg-primary-wash text-primary-ink"
-                  : "text-muted hover:bg-surface-elevated hover:text-soft",
-              )}
+        {/* PARA BİRİMİ MOD GRUBUNUN YANINDA. Telefonda ikisi aralıkların
+            altındaki ikinci satırda duruyor (bkz. PriceChart.module.css,
+            "TELEFONDA ARALIKLAR KENDİ SATIRINDA"); o satırda mod grubundan
+            sonra ~200 piksel boş yer vardı, yükseklik değişmiyor ve
+            iskeletin ayırdığı alan (`--price-chart-controls`) aynı kalıyor.
+            1G'de basılmıyor — gerekçe `tlActive` üzerinde. */}
+        <div className="flex items-center gap-2">
+          {range !== "1D" && (
+            <div
+              className="flex gap-1 border-r border-line-soft pr-2"
+              role="group"
+              aria-label={labels.currencyGroup}
             >
-              {m === "area" ? labels.area : labels.candles}
-            </button>
-          ))}
+              {(["usd", "tl"] as const).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  aria-pressed={currency === c}
+                  /* Görünen ad erişilebilir adın içinde (WCAG 2.5.3):
+                     uzun ad yalnızca ipucu. */
+                  title={c === "usd" ? labels.usdLong : labels.tlLong}
+                  onClick={() => setCurrency(c)}
+                  className={cn(
+                    "numeral min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-semibold sm:min-h-[36px] transition-colors",
+                    currency === c
+                      ? "bg-primary-wash text-primary-ink"
+                      : "text-muted hover:bg-surface-elevated hover:text-soft",
+                  )}
+                >
+                  {c === "usd" ? labels.usd : labels.tl}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-1" role="group" aria-label={labels.modeGroup}>
+            {(["area", "candles"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                /* Mod düğmelerinde hiç durum yoktu: hangi çizim türünün açık
+                   olduğu yalnızca renkle anlatılıyordu. */
+                aria-pressed={mode === m}
+                onClick={() => setMode(m)}
+                className={cn(
+                  "min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-medium sm:min-h-[36px] transition-colors",
+                  mode === m
+                    ? "bg-primary-wash text-primary-ink"
+                    : "text-muted hover:bg-surface-elevated hover:text-soft",
+                )}
+              >
+                {m === "area" ? labels.area : labels.candles}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+      {/* KUR KÜNYESİ — yalnızca TL görünümündeyken, denetimin altında.
+          Hangi iki günün hangi kuru ve eğrinin ortasının nasıl kurulduğu
+          (uydurma kesinlik yok). Okuyucunun eylemiyle beliriyor; ilk
+          yüklemede basılmadığı için düzen kayması sayılmıyor. */}
+      {tlActive && fxPath && state.phase === "ready" && (
+        <p className={cn(styles.fxNote, "numeral mt-2 text-nano leading-relaxed text-muted")}>
+          {labels.fxNote
+            .replace("{from}", formatIsoDate(fxPath.start.date, locale))
+            .replace("{fromRate}", formatRate(fxPath.start.rate, locale))
+            .replace("{to}", formatIsoDate(fxPath.end.date, locale))
+            .replace("{toRate}", formatRate(fxPath.end.rate, locale))}{" "}
+          {/* Ara ay çapası yoksa (kısa aralık) "FRED ortalaması" demek
+              yanlış olurdu: yol o zaman iki uç arasında düz bir çizgi. */}
+          {fxAnchorList && fxAnchorList.length > 2 ? labels.fxMonthly : labels.fxLinear}
+        </p>
+      )}
+      {fxFailed && (
+        <p className={cn(styles.fxNote, "mt-2 text-nano leading-relaxed text-muted")} role="status">
+          {labels.fxFailed}
+        </p>
+      )}
     </div>
   );
 }

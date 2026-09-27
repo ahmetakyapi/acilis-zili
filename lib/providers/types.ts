@@ -25,7 +25,15 @@ export type ProviderFail = {
 export type ProviderResult<T> = ProviderOk<T> | ProviderFail;
 
 export type DataSource =
-  "alpaca" | "finnhub" | "fred" | "tcmb" | "cache" | "seed" | "cboe" | "treasury";
+  | "alpaca"
+  | "finnhub"
+  | "fred"
+  | "tcmb"
+  | "evds"
+  | "cache"
+  | "seed"
+  | "cboe"
+  | "treasury";
 
 export type FailReason =
   | "missing-key"

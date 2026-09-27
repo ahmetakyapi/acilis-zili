@@ -12,6 +12,8 @@ import { DataStamp, PageHeader } from "@/components/ui/primitives";
 import { getStatus, getSymbolNames, getUserWatchlists } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { getQuotes } from "@/lib/providers";
+import { getUsdTry } from "@/lib/providers/tcmb";
+import { formatIsoDate, formatRate } from "@/lib/fx";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -37,18 +39,28 @@ export default async function WatchlistPage() {
     ...new Set(lists.flatMap((l) => l.items.map((i) => i.symbol))),
   ];
   const status = await getStatus();
-  const [quotesResult, names] = await Promise.all([
+  const [quotesResult, names, fx] = await Promise.all([
     allSymbols.length > 0
       ? getQuotes(allSymbols, status)
       : Promise.resolve(null),
     getSymbolNames(allSymbols),
+    /* LİRA KARŞILIĞI. Takip listesinde adet yok, yani "toplam" bir anlam
+       taşımıyor (dört hissenin birer adedinin toplamı bir portföy değil);
+       toplam `/portfoy`ta. Burada her fiyatın lira karşılığı var, bugünün
+       TCMB döviz alış kuruyla — kur ve bülten günü sayfanın altında. */
+    allSymbols.length > 0 ? getUsdTry() : Promise.resolve(null),
   ]);
+  const usdTry = fx?.ok ? fx.data.buying : null;
 
   const quotes: Record<string, BoardQuote> = {};
   if (quotesResult?.ok) {
     for (const [symbol, quote] of Object.entries(quotesResult.data)) {
       if (quote) {
-        quotes[symbol] = { price: quote.price, changePct: quote.changePct };
+        quotes[symbol] = {
+          price: quote.price,
+          changePct: quote.changePct,
+          priceTl: usdTry ? quote.price * usdTry : null,
+        };
       }
     }
   }
@@ -110,6 +122,16 @@ export default async function WatchlistPage() {
         locale={locale}
         labels={labels}
       />
+
+      {quotesResult?.ok && fx && (
+        <p className="numeral text-tiny leading-relaxed text-muted">
+          {fx.ok
+            ? t.lira.favorites.tlNote
+                .replace("{rate}", formatRate(fx.data.buying, locale))
+                .replace("{date}", formatIsoDate(fx.data.bulletinDate, locale, "long"))
+            : t.lira.favorites.tlUnavailable}
+        </p>
+      )}
 
       {quotesResult?.ok && allSymbols.length > 0 && (
         <DataStamp

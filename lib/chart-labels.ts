@@ -48,6 +48,16 @@ export type ChartLabels = {
   sessionOvernightNote: string;
   /** 1G'deki önceki kapanış çizgisinin eksen etiketi. */
   prevCloseShort: string;
+  /* TL görünümü — gerekçe PriceChart → `tlActive`. */
+  currencyGroup: string;
+  usd: string;
+  tl: string;
+  usdLong: string;
+  tlLong: string;
+  fxNote: string;
+  fxMonthly: string;
+  fxLinear: string;
+  fxFailed: string;
 };
 
 export function chartLabels(t: Dictionary): ChartLabels {
@@ -72,5 +82,14 @@ export function chartLabels(t: Dictionary): ChartLabels {
     sessionOvernight: t.chart.sessionOvernight,
     sessionOvernightNote: t.chart.sessionOvernightNote,
     prevCloseShort: t.chart.prevCloseShort,
+    currencyGroup: t.lira.chart.currencyGroup,
+    usd: t.lira.chart.usd,
+    tl: t.lira.chart.tl,
+    usdLong: t.lira.chart.usdLong,
+    tlLong: t.lira.chart.tlLong,
+    fxNote: t.lira.chart.fxNote,
+    fxMonthly: t.lira.chart.fxMonthly,
+    fxLinear: t.lira.chart.fxLinear,
+    fxFailed: t.lira.chart.fxFailed,
   };
 }

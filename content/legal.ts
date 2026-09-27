@@ -14,14 +14,14 @@
    ========================================================================== */
 
 /** Metnin son güncellendiği tarih — sayfa künyesinde görünür (ET/TR farkı önemsiz). */
-export const LEGAL_UPDATED = "2026-09-26";
+export const LEGAL_UPDATED = "2026-09-28";
 
 const PRIVACY_TR = `Açılış Zili kişisel bir projedir ve ABD borsalarını Türkçe takip etmek için yapılmıştır. Bu sayfa, 6698 sayılı **Kişisel Verilerin Korunması Kanunu** (KVKK) kapsamında hangi verinin neden işlendiğini, nereye gittiğini ve senin hangi haklara sahip olduğunu anlatır.
 
 Kısa cevap peşindeysen: hesap açmadan siteyi kullanabilirsin ve o durumda seni tanımlayan hiçbir kayıt oluşmaz. Reklam ağı, izleme çerezi ve üçüncü taraf piksel bu sitede **yok**. Hangi sayfanın kaç kez okunduğu sayılır ama bu sayım kimliksizdir ve aşağıda satır satır anlatılmıştır.
 
 ::: ozet Üç Cümlede
-Hesap açmazsan yalnızca tema ve dil tercihin tarayıcında saklanır; sunucuda seni tanımlayan bir kayıt oluşmaz. Hesap açarsan kullanıcı adın, e-postan, şifrenin geri döndürülemez özeti ve takip listen saklanır. Bu veriler kimseye satılmaz, pazarlama amacıyla kullanılmaz.
+Hesap açmazsan yalnızca tema ve dil tercihin tarayıcında saklanır; sunucuda seni tanımlayan bir kayıt oluşmaz. Hesap açarsan kullanıcı adın, e-postan, şifrenin geri döndürülemez özeti, takip listen ve portföyüne eklediğin pozisyonlar saklanır. Bu veriler kimseye satılmaz, pazarlama amacıyla kullanılmaz.
 :::
 
 ## Veri Sorumlusu
@@ -74,6 +74,7 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 | E-posta adresi | Hesabı benzersiz kılmak | Sözleşmenin ifası (m. 5/2-c) |
 | Şifrenin özeti | Girişi doğrulamak | Sözleşmenin ifası (m. 5/2-c) |
 | Takip listen ve notların | Ürünün asıl işlevi | Sözleşmenin ifası (m. 5/2-c) |
+| Portföy pozisyonların (sembol, adet, alış fiyatı, alış tarihi, not) | Dolar ve lira kâr/zararını hesaplamak | Sözleşmenin ifası (m. 5/2-c) |
 | Tema ve dil tercihi | Arayüzü hatırlamak | Meşru menfaat (m. 5/2-f) |
 | Seçtiğin profil ikonu | Hesabını arayüzde göstermek | Meşru menfaat (m. 5/2-f) |
 | Son giriş zamanı | Hesabın hâlâ kullanılıp kullanılmadığını görmek | Meşru menfaat (m. 5/2-f) |
@@ -86,6 +87,8 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 E-posta adresin **yalnızca** hesabın benzersiz olmasını sağlamak için tutulur; bu adrese hiçbir zaman posta gönderilmez. Şifre sıfırlama özelliği henüz yok, yani şifreni unutursan e-posta adresin hesabını geri getirmez — bu yüzden şifreni bir parola yöneticisinde sakla.
 
 Özel nitelikli kişisel veri (sağlık, din, biyometri, siyasi görüş vb.) hiçbir biçimde toplanmaz. Kimlik numarası, telefon, adres, doğum tarihi ve finansal hesap bilgisi de istenmez — site senin adına işlem yapmaz, bir aracı kuruma bağlanmaz.
+
+Portföy ekranına girdiğin pozisyonlar yalnızca senin elle yazdığın sayılardır: aracı kurum hesabın, bakiyen ya da hesap numaran istenmez. Pozisyonları yalnızca sen görürsün; başka bir kullanıcıya gösterilmez, analiz ya da pazarlama için kullanılmaz. **Vergi hesaplayıcısına** girdiğin işlemler ise hiç saklanmaz: hesap tarayıcında yapılır ve sunucuya yalnızca kuru sorulacak tarihler gider, adet ya da fiyat gitmez.
 
 ## Toplanmayan Veriler
 
@@ -117,8 +120,8 @@ Sitede yalnızca üç çerez vardır ve üçü de işlevseldir:
 | Kim | Ne için | Sana ait ne gidiyor |
 |---|---|---|
 | Oracle Cloud (yurt dışı) | Siteyi barındıran sunucuyu sağlar | İstek kayıtlarında IP adresi ve tarayıcı bilgisi |
-| Neon (ABD/AB) | Veritabanı | Hesap ve takip listesi kayıtların |
-| Alpaca, Finnhub, FRED | Fiyat, şirket ve makro verisi | **Hiçbir şey** — bu istekleri sunucu kendi adına yapar |
+| Neon (ABD/AB) | Veritabanı | Hesap, takip listesi ve portföy kayıtların |
+| Alpaca, Finnhub, FRED, TCMB | Fiyat, şirket, makro ve kur verisi | **Hiçbir şey** — bu istekleri sunucu kendi adına yapar |
 | DeepL | Haber başlıklarının çevirisi | **Hiçbir şey** — yalnızca haber metni gider |
 | Anthropic | Bülten ve yazı metinlerinin üretimi | **Hiçbir şey** — yalnızca piyasa verisi gider |
 
@@ -128,9 +131,11 @@ Barındırma sağlayıcısının teknik kayıtlarında (log) IP adresi ve taray�
 
 ## Saklama Süresi
 
-Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
+Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri ve portföy pozisyonları veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
 
 Piyasa verileri, haberler ve yazılar kişisel veri değildir; onlar sende bir hesap olsun olmasın tutulur.
+
+Sitenin kendi hata kayıtları (bir sayfa çöktüğünde hangi ekranda ve hangi hatayla) kişisel veri içermez: kullanıcı kimliği, IP adresi ve tarayıcı bilgisi yazılmaz, hata metnindeki e-posta ve IP biçimli parçalar kayıttan önce örtülür. Bu kayıtlar **30 gün** sonra otomatik silinir.
 
 ## Haklarını Nasıl Kullanırsın
 
@@ -139,6 +144,8 @@ KVKK m. 11 sana şu hakları verir: kişisel verinin işlenip işlenmediğini ö
 Başvurunu [GitHub deposu üzerinden](https://github.com/ahmetakyapi/acilis-zili/issues) iletebilirsin. Talepler en geç **30 gün** içinde ücretsiz olarak sonuçlandırılır.
 
 Hesap silme talebi için beklemene gerek yok: Ayarlar ekranından hesabını kendin silebilirsin, işlem anında uygulanır.
+
+Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, profil ikonun) JSON ya da CSV dosyası olarak anında indirir.
 
 ## Güvenlik
 
@@ -211,7 +218,7 @@ const PRIVACY_EN = `Opening Bell is a personal project built to follow US market
 If you want the short answer: you can use the site without an account, and in that case no record identifying you is created. There are **no** ad networks, tracking cookies or third-party pixels on this site. Page reads are counted, but that count is anonymous and is explained line by line below.
 
 ::: ozet In Three Sentences
-Without an account, only your theme and language preferences are stored in your browser; no record identifying you is created on the server. With an account, your username, email address, an irreversible digest of your password and your watchlists are stored. This data is never sold and never used for marketing.
+Without an account, only your theme and language preferences are stored in your browser; no record identifying you is created on the server. With an account, your username, email address, an irreversible digest of your password, your watchlists and the positions you add to your portfolio are stored. This data is never sold and never used for marketing.
 :::
 
 ## Data Controller
@@ -264,6 +271,7 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 | Email address | To keep the account unique | Performance of a contract (Art. 5/2-c) |
 | Password digest | To verify sign-in | Performance of a contract (Art. 5/2-c) |
 | Your watchlists and notes | The product's core function | Performance of a contract (Art. 5/2-c) |
+| Your portfolio positions (symbol, quantity, buy price, buy date, note) | To compute dollar and lira profit and loss | Performance of a contract (Art. 5/2-c) |
 | Theme and language preference | To remember the interface | Legitimate interest (Art. 5/2-f) |
 | The profile icon you picked | To show your account in the interface | Legitimate interest (Art. 5/2-f) |
 | Last sign-in time | To see whether the account is still in use | Legitimate interest (Art. 5/2-f) |
@@ -276,6 +284,8 @@ The password itself is kept nowhere. What is stored is an irreversible digest pr
 Your email address is stored **only** to keep your account unique; no mail is ever sent to it. There is no password reset feature yet, so if you forget your password your email address will not recover the account — keep it in a password manager.
 
 No special categories of personal data (health, religion, biometrics, political opinion and so on) are collected in any form. National id number, phone, address, date of birth and financial account details are not requested either — the site does not act on your behalf and does not connect to a brokerage.
+
+The positions you enter on the portfolio screen are only the numbers you type in yourself: your brokerage account, balance or account number are never requested. Only you see your positions; they are not shown to other users and not used for analysis or marketing. Trades you enter in the **tax calculator** are not stored at all: the math runs in your browser and only the dates whose exchange rate is needed reach the server, never quantities or prices.
 
 ## Data That Is Not Collected
 
@@ -307,8 +317,8 @@ The product runs on the following infrastructure and data providers. Some of the
 | Who | What for | What of yours goes there |
 |---|---|---|
 | Oracle Cloud (outside Turkey) | Provides the server that hosts the site | IP address and browser information in request logs |
-| Neon (US/EU) | Database | Your account and watchlist records |
-| Alpaca, Finnhub, FRED | Price, company and macro data | **Nothing** — the server makes these requests on its own behalf |
+| Neon (US/EU) | Database | Your account, watchlist and portfolio records |
+| Alpaca, Finnhub, FRED, CBRT | Price, company, macro and exchange rate data | **Nothing** — the server makes these requests on its own behalf |
 | DeepL | Translation of news headlines | **Nothing** — only the news text is sent |
 | Anthropic | Generation of brief and article text | **Nothing** — only market data is sent |
 
@@ -318,9 +328,11 @@ The hosting provider's technical logs may hold an IP address and browser informa
 
 ## Retention
 
-Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
+Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist and portfolio position attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
 
 Market data, news and articles are not personal data; they are kept whether or not you have an account.
+
+The site's own error records (which screen failed and with which error) contain no personal data: no user id, IP address or browser information is written, and email- and IP-shaped fragments in an error message are masked before it is stored. These records are deleted automatically after **30 days**.
 
 ## How to Exercise Your Rights
 
@@ -329,6 +341,8 @@ Article 11 of the KVKK gives you the right to: learn whether your personal data 
 You can send your request [through the GitHub repository](https://github.com/ahmetakyapi/acilis-zili/issues). Requests are answered free of charge within **30 days** at the latest.
 
 You do not have to wait for an account deletion request: you can delete your account yourself from the Settings screen, and it takes effect immediately.
+
+You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your profile icon) as a JSON or CSV file.
 
 ## Security
 

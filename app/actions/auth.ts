@@ -371,8 +371,10 @@ export async function signOutAction() {
    desen bu. Şifre de isteniyor — oturum çerezi ele geçirilmiş bir tarayıcı
    hesabı silememeli.
 
-   Silme gerçekten siliyor: users satırı gidince watchlists ve
-   watchlist_items ON DELETE CASCADE ile birlikte düşüyor. Yumuşak silme
+   Silme gerçekten siliyor: users satırı gidince watchlists,
+   watchlist_items, user_avatars ve portfolio_positions ON DELETE CASCADE
+   ile birlikte düşüyor. Kullanıcıya bağlı YENİ bir tablo da aynı kuralla
+   kurulmalı — yoksa silinen hesabın verisi yetim kalır. Yumuşak silme
    (soft delete) bilinçli olarak yok — "sildim" demek, silmek demektir.
    -------------------------------------------------------------------------- */
 

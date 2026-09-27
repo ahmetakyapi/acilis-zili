@@ -97,3 +97,11 @@
 .tipPrice { font-size:15px; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
 .tipChange { justify-self:end; font-size:12px; font-weight:600; white-space:nowrap; }
 .tipDate { grid-column:1 / -1; font-size:11px; color:var(--text-muted); white-space:nowrap; }
+
+/* KUR KÜNYESİ DENETİMİN ALTINDA. Telefonda kompakt düzen sırayı `order`
+   ile kuruyor (denetim 2, seans saatleri 3); künyenin sırası verilmeyince
+   0'da kalıp çizimle aralık düğmelerinin arasına giriyordu (390px'te
+   ölçüldü). Aynı sırada DOM düzeni geçerli, künye denetimden sonra. */
+@media (max-width: 639px) {
+  .root[data-compact="true"] .fxNote { order:2; }
+}

@@ -1,5 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { DEFAULT_LOCALE, LOCALE_COOKIE, isLocale } from "@/lib/i18n/config";
+import {
+  DEFAULT_LOCALE,
+  EMBED_THEME_HEADER,
+  LOCALE_COOKIE,
+  isLocale,
+} from "@/lib/i18n/config";
+import { EMBED_THEME_PARAM, embedThemeFromParam, isEmbedPath } from "@/lib/embed";
 import { LOCALE_HEADER, splitLocale, withLocale } from "@/lib/i18n/routing";
 
 /**
@@ -19,7 +25,7 @@ import { LOCALE_HEADER, splitLocale, withLocale } from "@/lib/i18n/routing";
 /** Dil çerezinin ömrü — `app/actions/preferences.ts` ile aynı. */
 const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
-const PROTECTED = ["/favoriler", "/ayarlar"];
+const PROTECTED = ["/favoriler", "/ayarlar", "/portfoy"];
 const AUTH_ROUTES = ["/giris", "/kayit"];
 
 /* `/admin` BİLEREK BU LİSTEDE DEĞİL. Buradaki koruma girişe yönlendiriyor ve
@@ -32,6 +38,20 @@ function hasSessionCookie(request: NextRequest): boolean {
     request.cookies.has("authjs.session-token") ||
     request.cookies.has("__Secure-authjs.session-token")
   );
+}
+
+/**
+ * Gömülü parçanın teması — `?tema=` başlığa çevrilir, sayfa `getTheme()`
+ * ile okur. Başlık İSTEMCİDEN GELSE BİLE SİLİNİYOR: yalnızca bu fonksiyon
+ * yazabilmeli, yoksa herhangi bir sayfanın teması dışarıdan bir başlıkla
+ * değiştirilebilirdi (zararsız ama sözleşme dışı).
+ */
+function withEmbedTheme(request: NextRequest, path: string, headers: Headers): Headers {
+  headers.delete(EMBED_THEME_HEADER);
+  if (!isEmbedPath(path)) return headers;
+  const theme = embedThemeFromParam(request.nextUrl.searchParams.get(EMBED_THEME_PARAM));
+  if (theme) headers.set(EMBED_THEME_HEADER, theme);
+  return headers;
 }
 
 export function proxy(request: NextRequest) {
@@ -95,13 +115,21 @@ export function proxy(request: NextRequest) {
       url.pathname = withLocale(path, preferred);
       return NextResponse.redirect(url);
     }
+    /* Başlık yalnızca gerektiğinde yeniden yazılıyor: parça yolunda ya da
+       istemci başlığı kendisi göndermişse (silmek için). Öteki her istek
+       eskisi gibi dokunulmadan geçiyor. */
+    if (isEmbedPath(path) || request.headers.has(EMBED_THEME_HEADER)) {
+      return NextResponse.next({
+        request: { headers: withEmbedTheme(request, path, new Headers(request.headers)) },
+      });
+    }
     return NextResponse.next();
   }
 
   /* Önek varsa sayfa dosyası önekSİZ yolda duruyor: istek oraya yazılıyor ve
      dil başlıkla taşınıyor. Başlık İSTEĞE ekleniyor (yanıta değil): sayfa onu
      `headers()` ile okuyor, tarayıcıya hiç gitmiyor. */
-  const headers = new Headers(request.headers);
+  const headers = withEmbedTheme(request, path, new Headers(request.headers));
   headers.set(LOCALE_HEADER, locale);
 
   const url = request.nextUrl.clone();

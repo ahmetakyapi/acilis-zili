@@ -1,4 +1,5 @@
 import type { ChartRange } from "@/lib/providers/types";
+import type { CurrencyMode } from "@/lib/fx";
 import { isValidSymbol } from "@/lib/utils";
 
 /**
@@ -102,10 +103,16 @@ export function parseCompareSymbols(raw: string | string[] | undefined): {
 export function compareHref(
   list: readonly string[],
   range: CompareRange = DEFAULT_COMPARE_RANGE,
+  /* PARA BİRİMİ DE ADRESTE, aralıkla aynı gerekçeyle: paylaşılan bir
+     "TL getirisi" bağlantısı alıcıda dolar getirisi açılsaydı iki kişi aynı
+     adreste iki farklı sayı konuşurdu. Varsayılan (USD) yazılmıyor — eski
+     bağlantılar ve önbellek anahtarları değişmesin. */
+  currency: CurrencyMode = "usd",
 ): string {
   if (list.length === 0) return "/karsilastir";
   const ek = range !== DEFAULT_COMPARE_RANGE ? `&aralik=${range}` : "";
-  return `/karsilastir?semboller=${list.join(",")}${ek}`;
+  const para = currency !== "usd" ? `&para=${currency}` : "";
+  return `/karsilastir?semboller=${list.join(",")}${ek}${para}`;
 }
 
 /**

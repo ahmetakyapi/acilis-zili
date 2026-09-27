@@ -32,6 +32,8 @@ const ROUTE_SCENES: readonly (readonly [prefix: string, scene: InkSceneName])[] 
   ["/kayit", "hello"],
   ["/favoriler", "hello"],
   ["/ayarlar", "hello"],
+  ["/portfoy", "ledger"],
+  ["/vergi", "ledger"],
 ];
 
 export function sceneForPath(pathname: string | null): InkSceneName {

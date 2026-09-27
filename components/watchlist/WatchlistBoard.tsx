@@ -27,6 +27,7 @@ import { ChangePill, LogoTile, Button } from "@/components/ui/primitives";
 import type { SearchHit } from "@/app/api/search/route";
 import type { Locale } from "@/lib/i18n/config";
 import { cn, formatPrice, NO_VALUE } from "@/lib/utils";
+import { formatLira } from "@/lib/fx";
 
 /**
  * Favoriler panosu.
@@ -46,7 +47,13 @@ export type BoardList = {
 };
 /* `changePct` NULL OLABİLİR: sağlayıcı önceki kapanışı vermediğinde değişim
    "sıfır" değil "bilinmiyor". `ChangePill` bu durumu zaten nötr basıyor. */
-export type BoardQuote = { price: number; changePct: number | null };
+export type BoardQuote = {
+  price: number;
+  changePct: number | null;
+  /** Fiyatın lira karşılığı — TCMB döviz alış kuruyla, sunucuda çevrilmiş.
+   *  Kur alınamadıysa yok; satır yalnızca doları yazar. */
+  priceTl?: number | null;
+};
 
 export type BoardLabels = {
   newList: string;
@@ -660,8 +667,20 @@ function SortableRows({
                     piksel kazandırıyor ve iki sayı zaten aynı şeyin iki yüzü —
                     sağ kenarda hizalı bir blok olarak da doğru okunuyor. */}
                 <span className="flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-                  <span className="numeral text-right text-sm font-semibold text-strong sm:w-[92px]">
-                    {quote ? formatPrice(quote.price, locale) : NO_VALUE}
+                  {/* LİRA KARŞILIĞI DOLARIN ALTINDA, küçük puntoda. Fiyat
+                      sütununun genişliği değişmiyor (92 piksel; en uzun
+                      tutar "₺1.234.567,00" ~80 piksel) ve satırın ana
+                      sayısı hâlâ dolar — kur bir künye, ikinci bir fiyat
+                      değil. Kur ve bülten günü sayfanın altında yazılı. */}
+                  <span className="flex flex-col items-end sm:w-[92px]">
+                    <span className="numeral text-right text-sm font-semibold text-strong">
+                      {quote ? formatPrice(quote.price, locale) : NO_VALUE}
+                    </span>
+                    {typeof quote?.priceTl === "number" && (
+                      <span className="numeral text-right text-nano leading-tight text-muted">
+                        {formatLira(quote.priceTl, locale)}
+                      </span>
+                    )}
                   </span>
                   <span className="flex justify-end sm:w-[86px]">
                     {quote ? (

@@ -39,6 +39,25 @@ import {
   type CompareSeries,
 } from "@/lib/compare";
 import type { Locale } from "@/lib/i18n/config";
+import type { FxPathResponse } from "@/app/api/kur/yol/route";
+import {
+  CURRENCY_MODES,
+  convertCloses,
+  cpiAt,
+  cpiSpan,
+  decomposeReturn,
+  etDateOf,
+  formatIsoDate,
+  formatIsoMonth,
+  formatRate,
+  fxAnchors,
+  isCurrencyMode,
+  rateAt,
+  type CurrencyMode,
+  type FxPath,
+  type FxPoint,
+  type ReturnDecomposition,
+} from "@/lib/fx";
 import { cn, directionOf, directionText, formatPercent, NO_VALUE } from "@/lib/utils";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
@@ -106,9 +125,40 @@ export type CompareLabels = {
   rangeFailedHint: string;
   retry: string;
   periodChange: string;
+  /* ---- TL perspektifi (gerekçe `lib/fx.ts` başında) ---- */
+  /** Para birimi denetiminin adı. */
+  currencyLabel: string;
+  currencies: Record<CurrencyMode, string>;
+  currencyLongs: Record<CurrencyMode, string>;
+  /** Şeridin dönem sütunu künyesi, para birimine göre; `{range}` yer tutucu. */
+  periodColumns: Record<CurrencyMode, string>;
+  /** Bileşen satırının kısa adları: "USD", "Kur", "TL", "TÜFE". */
+  partUsd: string;
+  partFx: string;
+  partTl: string;
+  partInflation: string;
+  /** `{from}` `{fromRate}` `{to}` `{toRate}` `{pct}` yer tutuculu kur künyesi. */
+  fxNote: string;
+  fxPathNote: string;
+  fxPathFlat: string;
+  fxPathShort: string;
+  /** `{from}` `{to}` `{pct}` yer tutuculu TÜFE künyesi. */
+  cpiNote: string;
+  multiplyNote: string;
+  fxFailed: string;
+  fxFailedHint: string;
 };
 
 type StoreEntry = { series: CompareSeries[] } | { failed: true };
+
+type FxEntry = { path: FxPath; monthlyAvailable: boolean } | { failed: true };
+
+/** Görünen para biriminin kur bağlamı — künye ve bileşenler buradan okunur. */
+export type CompareFx = {
+  path: FxPath;
+  anchors: FxPoint[];
+  monthlyAvailable: boolean;
+};
 
 type ComparePhase = "ready" | "loading" | "error";
 
@@ -118,10 +168,21 @@ type CompareValue = {
   setRange: (next: CompareRange) => void;
   /** Düğmeye basılmadan önce isteği başlatır — imleç ya da odak yeter. */
   prefetch: (next: CompareRange) => void;
+  /** GÖRÜNEN seriler — seçili para biriminde. Şerit, grafik ve tablo hep
+   *  bunu okuyor; üçü aynı sayıyı söylesin diye çeviri tek yerde. */
   series: CompareSeries[];
+  /** Dolar serileri — bileşen satırı (USD getirisi) buradan. */
+  usdSeries: CompareSeries[];
   phase: ComparePhase;
+  /** Hata kurdan mı geldi — mesaj ona göre seçiliyor. */
+  fxFailed: boolean;
   retry: () => void;
   locale: Locale;
+  currency: CurrencyMode;
+  setCurrency: (next: CurrencyMode) => void;
+  /** Reel TL ancak TÜFE kaynağı (EVDS anahtarı) varsa. */
+  realAvailable: boolean;
+  fx: CompareFx | null;
 };
 
 const CompareCtx = createContext<CompareValue | null>(null);
@@ -146,6 +207,9 @@ export function CompareProvider({
   symbols,
   initialRange,
   initialSeries,
+  initialCurrency = "usd",
+  realAvailable = false,
+  currencyAnnounce,
   locale,
   announce,
   children,
@@ -153,6 +217,11 @@ export function CompareProvider({
   symbols: string[];
   initialRange: CompareRange;
   initialSeries: CompareSeries[];
+  /** Adresteki `para` — sunucu çizimi için; istemci adresten okur (aralıkla aynı gerekçe). */
+  initialCurrency?: CurrencyMode;
+  realAvailable?: boolean;
+  /** Para birimi başına hazır duyuru cümlesi. */
+  currencyAnnounce?: Record<CurrencyMode, string>;
   locale: Locale;
   /**
    * Aralık başına HAZIR duyuru cümlesi.
@@ -188,6 +257,18 @@ export function CompareProvider({
     const adres = new URLSearchParams(window.location.search).get("aralik");
     return isCompareRange(adres) ? adres : DEFAULT_COMPARE_RANGE;
   });
+  /* PARA BİRİMİ DE ADRESTEN — aralığın hemen yukarıdaki gerekçesiyle. Reel
+     görünüm kaynak yokken adreste yazsa bile açılmıyor. */
+  const [currency, setCurrencyState] = useState<CurrencyMode>(() => {
+    const aday =
+      typeof window === "undefined"
+        ? initialCurrency
+        : new URLSearchParams(window.location.search).get("para");
+    if (!isCurrencyMode(aday)) return "usd";
+    return aday === "reel" && !realAvailable ? "usd" : aday;
+  });
+  const [fxStore, setFxStore] = useState<Record<string, FxEntry>>({});
+  const [fxRequested] = useState(() => new Set<string>());
   const [store, setStore] = useState<Record<string, StoreEntry>>(() => ({
     [`${symbolKey}:${initialRange}`]: { series: initialSeries },
   }));
@@ -261,12 +342,97 @@ export function CompareProvider({
     if (!entry) load(key, range);
   }, [entry, key, range, load]);
 
-  const phase: ComparePhase = !entry
+  const barPhase: ComparePhase = !entry
     ? "loading"
     : "failed" in entry
       ? "error"
       : "ready";
-  const series = entry && !("failed" in entry) ? entry.series : NO_SERIES;
+  const usdSeries = entry && !("failed" in entry) ? entry.series : NO_SERIES;
+
+  /* KURUN İSTENDİĞİ PENCERE: serilerin en erken ilk günü ile en geç son
+     günü. Tek yol bütün sembollere yetiyor; kısa seri yolun ortasından
+     başlıyor ve kendi ilk gününün kurunu okuyor. */
+  const fxSpan = useMemo(() => {
+    let ilk: string | null = null;
+    let son: string | null = null;
+    for (const item of usdSeries) {
+      if (item.times.length === 0) continue;
+      const a = etDateOf(item.times[0]);
+      const b = etDateOf(item.times[item.times.length - 1]);
+      if (ilk === null || a < ilk) ilk = a;
+      if (son === null || b > son) son = b;
+    }
+    return ilk && son ? { start: ilk, end: son } : null;
+  }, [usdSeries]);
+  const fxKey = fxSpan ? `${fxSpan.start}:${fxSpan.end}` : null;
+  const fxEntry = fxKey ? fxStore[fxKey] : undefined;
+
+  useEffect(() => {
+    if (currency === "usd" || !fxSpan || !fxKey || fxEntry || fxRequested.has(fxKey)) return;
+    fxRequested.add(fxKey);
+    /* TÜFE kaynağı varsa HER ZAMAN isteniyor: TL ile Reel arasında gidip
+       gelen okuyucu ikinci kez ağa çıkmasın. */
+    fetch(
+      `/api/kur/yol?baslangic=${fxSpan.start}&bitis=${fxSpan.end}${realAvailable ? "&reel=1" : ""}`,
+    )
+      .then((res) => res.json() as Promise<FxPathResponse>)
+      .then((data) => {
+        setFxStore((prev) => ({
+          ...prev,
+          [fxKey]: data.ok
+            ? { path: data.path, monthlyAvailable: data.monthlyAvailable }
+            : { failed: true },
+        }));
+      })
+      .catch(() => setFxStore((prev) => ({ ...prev, [fxKey]: { failed: true } })));
+  }, [currency, fxSpan, fxKey, fxEntry, fxRequested, realAvailable]);
+
+  const fx = useMemo<CompareFx | null>(
+    () =>
+      fxEntry && !("failed" in fxEntry)
+        ? {
+            path: fxEntry.path,
+            anchors: fxAnchors(fxEntry.path),
+            monthlyAvailable: fxEntry.monthlyAvailable,
+          }
+        : null,
+    [fxEntry],
+  );
+
+  const fxFailed =
+    currency !== "usd" &&
+    barPhase === "ready" &&
+    ((fxEntry !== undefined && "failed" in fxEntry) ||
+      (currency === "reel" && fx !== null && !fx.path.cpi));
+  const phase: ComparePhase =
+    barPhase !== "ready" || currency === "usd"
+      ? barPhase
+      : fxFailed
+        ? "error"
+        : fx
+          ? "ready"
+          : "loading";
+
+  /* ÇEVİRİ TEK YERDE. Çevrilemeyen nokta (kur ya da endeks yok) eleniyor;
+     sıfır yazmak eğriyi dibe çekerdi. */
+  const series = useMemo(() => {
+    if (currency === "usd" || !fx) return usdSeries;
+    return usdSeries
+      .map((item) => {
+        const dates = item.times.map(etDateOf);
+        const converted = convertCloses(item.closes, dates, currency, fx.anchors, fx.path.cpi);
+        const closes: number[] = [];
+        const times: number[] = [];
+        converted.forEach((value, i) => {
+          if (value !== null && Number.isFinite(value)) {
+            closes.push(value);
+            times.push(item.times[i]);
+          }
+        });
+        return { symbol: item.symbol, closes, times };
+      })
+      .filter((item) => item.closes.length >= 2);
+  }, [currency, fx, usdSeries]);
 
   const setRange = useCallback(
     (next: CompareRange) => {
@@ -305,17 +471,73 @@ export function CompareProvider({
   );
 
   const retry = useCallback(() => {
-    requested.delete(key);
-    setStore((prev) => {
-      const sonraki = { ...prev };
-      delete sonraki[key];
-      return sonraki;
-    });
-  }, [key, requested]);
+    if (barPhase === "error") {
+      requested.delete(key);
+      setStore((prev) => {
+        const sonraki = { ...prev };
+        delete sonraki[key];
+        return sonraki;
+      });
+    }
+    if (fxKey) {
+      fxRequested.delete(fxKey);
+      setFxStore((prev) => {
+        const sonraki = { ...prev };
+        delete sonraki[fxKey];
+        return sonraki;
+      });
+    }
+  }, [barPhase, key, requested, fxKey, fxRequested]);
+
+  /* Para birimi de aralık gibi SIĞ güncelleniyor — gerekçe `setRange`te;
+     gezinme sürerken denetim kendini kapatıyor (CompareCurrencyControl). */
+  const setCurrency = useCallback(
+    (next: CurrencyMode) => {
+      if (next === "reel" && !realAvailable) return;
+      setCurrencyState(next);
+      const url = new URL(window.location.href);
+      if (next === "usd") url.searchParams.delete("para");
+      else url.searchParams.set("para", next);
+      const search = url.search.replace(/%2C/g, ",");
+      window.history.replaceState(null, "", `${url.pathname}${search}${url.hash}`);
+      if (currencyAnnounce) setSpoken(currencyAnnounce[next]);
+    },
+    [currencyAnnounce, realAvailable],
+  );
 
   const value = useMemo<CompareValue>(
-    () => ({ symbols, range, setRange, prefetch, series, phase, retry, locale }),
-    [symbols, range, setRange, prefetch, series, phase, retry, locale],
+    () => ({
+      symbols,
+      range,
+      setRange,
+      prefetch,
+      series,
+      usdSeries,
+      phase,
+      fxFailed,
+      retry,
+      locale,
+      currency,
+      setCurrency,
+      realAvailable,
+      fx,
+    }),
+    [
+      symbols,
+      range,
+      setRange,
+      prefetch,
+      series,
+      usdSeries,
+      phase,
+      fxFailed,
+      retry,
+      locale,
+      currency,
+      setCurrency,
+      realAvailable,
+      fx,
+    ],
   );
 
   return (
@@ -344,7 +566,7 @@ export function CompareProvider({
    -------------------------------------------------------------------------- */
 
 export function CompareRangeControl({ labels }: { labels: CompareLabels }) {
-  const { symbols, range, setRange, prefetch } = useCompare();
+  const { symbols, range, setRange, prefetch, currency } = useCompare();
 
   /* GEZİNME SÜRERKEN DENETİM KAPALI.
      Sığ güncelleme (`history.replaceState`) Next'in yönlendiricisinde O
@@ -390,7 +612,7 @@ export function CompareRangeControl({ labels }: { labels: CompareLabels }) {
         {COMPARE_RANGES.map((key) => (
           <SegmentItem
             key={key}
-            href={compareHref(symbols, key)}
+            href={compareHref(symbols, key, currency)}
             active={range === key}
             label={labels.rangeLongs[key]}
             prefetch={false}
@@ -465,7 +687,7 @@ export function CompareStrip({
   /** Boş koltuğun içeriği (ekleme denetimi) — sunucudan geliyor. */
   children?: React.ReactNode;
 }) {
-  const { symbols, range, series, phase, locale } = useCompare();
+  const { symbols, range, series, usdSeries, phase, locale, currency, fx } = useCompare();
 
   /* ŞERİDİN KENDİ ÖLÇEĞİ. Ekranın en üstündeki soru "hangisi önde" ve
      cevabı dört yüzdeyi okuyarak veriliyordu. Çubuk aynı sıralamayı
@@ -477,7 +699,7 @@ export function CompareStrip({
       periodChangePct(series.find((row) => row.symbol === entry)),
     ),
   );
-  const periodLabel = labels.periodColumn.replace("{range}", labels.ranges[range]);
+  const periodLabel = labels.periodColumns[currency].replace("{range}", labels.ranges[range]);
 
   /* LİSTE DEĞİL, KOLTUK (23 Eylül). Şerit tam genişlikte dört satırdı: 1440'ta
      her satırda şirket adı ile sayılar arasında ~700 piksel boş zemin
@@ -546,6 +768,7 @@ export function CompareStrip({
                   href={compareHref(
                     symbols.filter((entry) => entry !== row.symbol),
                     range,
+                    currency,
                   )}
                   /* Sözcük sırası DİLE BAĞLI: birleştirme Türkçede çalışıyor
                      ("NVDA Listeden Çıkar") ama İngilizcede "NVDA Remove From
@@ -580,6 +803,17 @@ export function CompareStrip({
                   <span className="numeral text-nano leading-tight text-muted">
                     {labels.partialPeriod} · {kapsam}
                   </span>
+                )}
+                {/* BİLEŞENLER SAYININ ALTINDA. TL getirisi tek başına "hisse
+                    mi kazandırdı, kur mu" sorusunu cevaplamıyor; iki çarpan
+                    aynı kartta. Reel görünümde çarpanlar TL ve TÜFE. */}
+                {phase === "ready" && currency !== "usd" && fx && (
+                  <DecompositionLine
+                    parts={decompositionOf(usdSeries, row.symbol, fx)}
+                    currency={currency}
+                    labels={labels}
+                    locale={locale}
+                  />
                 )}
               </div>
 
@@ -618,13 +852,20 @@ export function CompareStrip({
    -------------------------------------------------------------------------- */
 
 export function CompareChartPanel({ labels }: { labels: CompareLabels }) {
-  const { symbols, series, phase, retry, locale, range } = useCompare();
+  const { symbols, series, phase, retry, locale, range, currency, fxFailed, fx } = useCompare();
 
   return (
     <Panel className="flex flex-col gap-4 px-4 py-4 sm:px-5">
-      <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
-        {labels.chartTitle}
-      </h2>
+      {/* PARA BİRİMİ DENETİMİ GRAFİĞİN BAŞLIĞINDA. Sayfa başlığının sağı
+          aralığın yeri ve "tek denetim" kuralı orada; para birimi ise
+          grafiğin, şeridin ve tablodaki dönem getirisinin birimini
+          değiştiriyor ve ilk dokunduğu şey bu panel. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+          {labels.chartTitle}
+        </h2>
+        <CompareCurrencyControl labels={labels} />
+      </div>
       {/* İpucu grafiğin ÜSTÜNDE: "hepsi neden sıfırdan başlıyor" sorusu
           doğmadan cevaplanıyor. */}
       <p className="text-tiny leading-relaxed text-muted">{labels.chartHint}</p>
@@ -644,9 +885,11 @@ export function CompareChartPanel({ labels }: { labels: CompareLabels }) {
             role="alert"
             className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 px-4 text-center"
           >
-            <p className="text-sm text-body">{labels.rangeFailed}</p>
+            <p className="text-sm text-body">
+              {fxFailed ? labels.fxFailed : labels.rangeFailed}
+            </p>
             <p className="max-w-sm text-xs text-muted">
-              {labels.rangeFailedHint}
+              {fxFailed ? labels.fxFailedHint : labels.rangeFailedHint}
             </p>
             <button
               type="button"
@@ -667,7 +910,7 @@ export function CompareChartPanel({ labels }: { labels: CompareLabels }) {
                  kurulsaydı çizim görünmeden oynar, veri gelince çizgiler
                  yine sıçrardı. Böylece yeni aralığın verisi hazır olduğu
                  an, görünürken kuruluyor. */
-              key={`${range}:${phase}`}
+              key={`${range}:${phase}:${currency}`}
               series={series}
               order={symbols}
               title={labels.chartTitle}
@@ -682,6 +925,9 @@ export function CompareChartPanel({ labels }: { labels: CompareLabels }) {
           )}
         </div>
       </div>
+      {phase === "ready" && currency !== "usd" && fx && (
+        <FxNotes fx={fx} currency={currency} labels={labels} locale={locale} />
+      )}
     </Panel>
   );
 }
@@ -699,12 +945,15 @@ export function CompareChartPanel({ labels }: { labels: CompareLabels }) {
    -------------------------------------------------------------------------- */
 
 export function ComparePeriodLabel({ labels }: { labels: CompareLabels }) {
-  const { range } = useCompare();
+  const { range, currency } = useCompare();
   return (
     <>
       {labels.periodChange}
       <span className="block text-nano leading-tight text-muted">
         {labels.rangeLongs[range]}
+        {/* Birim künyede: aynı satır dolar ve lira getirisini sırayla
+            gösteriyor, hangisi olduğu satırın kendisinde yazmalı. */}
+        {currency !== "usd" && ` · ${labels.currencies[currency]}`}
       </span>
     </>
   );
@@ -746,6 +995,174 @@ export function ComparePeriodValue({ symbol }: { symbol: string }) {
       {oran != null && (
         <ScaleBar ratio={oran} signed={signed} tone="signal" />
       )}
+    </div>
+  );
+}
+
+/* --------------------------------------------------------------------------
+   TL perspektifi — para birimi denetimi, bileşen satırı ve kur künyesi
+
+   NEDEN: bu ekrandaki her getiri dolar. Türkiye'den ABD borsasına yatırım
+   yapan için "NVDA %20" yarım cümle; lira karşılığı kurla birlikte oluşuyor
+   ve kur çoğu dönemde hissenin kendisinden çok oynuyor. Gerekçenin ve kur
+   yolunun tamamı `lib/fx.ts` başında.
+   -------------------------------------------------------------------------- */
+
+export function CompareCurrencyControl({ labels }: { labels: CompareLabels }) {
+  const { symbols, range, currency, setCurrency, realAvailable } = useCompare();
+  /* Aralık denetimiyle aynı kural: sığ güncelleme uçuştaki gezinmeyi
+     öldürüyor, gezinme sürerken denetim kapalı (`useRouteNavigating`). */
+  const gezinmede = useRouteNavigating();
+  /* REEL TL KAYNAK YOKSA HİÇ BASILMIYOR. Soluk bir düğme "neden basamıyorum"
+     sorusu doğuruyordu; TÜFE olmadan o görünümün söyleyeceği dürüst bir sayı
+     yok. */
+  const modes = CURRENCY_MODES.filter((mode) => mode !== "reel" || realAvailable);
+  return (
+    <span className={cn("transition-opacity", gezinmede && "pointer-events-none opacity-50")}>
+      <Segment label={labels.currencyLabel}>
+        {modes.map((mode) => (
+          <SegmentItem
+            key={mode}
+            href={compareHref(symbols, range, mode)}
+            active={currency === mode}
+            label={labels.currencyLongs[mode]}
+            prefetch={false}
+            shallow
+            disabled={gezinmede}
+            onClick={(event) => {
+              if (
+                event.defaultPrevented ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey
+              ) {
+                return;
+              }
+              event.preventDefault();
+              if (gezinmede) return;
+              setCurrency(mode);
+            }}
+          >
+            {labels.currencies[mode]}
+          </SegmentItem>
+        ))}
+      </Segment>
+    </span>
+  );
+}
+
+/**
+ * Bir sembolün getiri bileşenleri — DOLAR serisinin uçlarından ve aynı kur
+ * yolundan. Şeritteki büyük TL sayısı `series` (çevrilmiş) üzerinden
+ * `periodChangePct` ile hesaplanıyor; buradaki `tlPct` aynı uçları ve aynı
+ * kuru kullandığı için birebir aynı çıkar (tests/fx.test.ts).
+ */
+function decompositionOf(
+  usdSeries: readonly CompareSeries[],
+  symbol: string,
+  fx: CompareFx,
+): ReturnDecomposition | null {
+  const item = usdSeries.find((entry) => entry.symbol === symbol);
+  if (!item || item.closes.length < 2) return null;
+  const ilkGun = etDateOf(item.times[0]);
+  const sonGun = etDateOf(item.times[item.times.length - 1]);
+  const rateStart = rateAt(fx.anchors, ilkGun);
+  const rateEnd = rateAt(fx.anchors, sonGun);
+  if (rateStart === null || rateEnd === null) return null;
+  return decomposeReturn({
+    usdStart: item.closes[0],
+    usdEnd: item.closes[item.closes.length - 1],
+    rateStart,
+    rateEnd,
+    cpiStart: fx.path.cpi ? cpiAt(fx.path.cpi, ilkGun) : null,
+    cpiEnd: fx.path.cpi ? cpiAt(fx.path.cpi, sonGun) : null,
+  });
+}
+
+function DecompositionLine({
+  parts,
+  currency,
+  labels,
+  locale,
+}: {
+  parts: ReturnDecomposition | null;
+  currency: CurrencyMode;
+  labels: CompareLabels;
+  locale: Locale;
+}) {
+  if (!parts) return null;
+  const items: [string, number | null][] =
+    currency === "reel"
+      ? [
+          [labels.partTl, parts.tlPct],
+          [labels.partInflation, parts.inflationPct],
+        ]
+      : [
+          [labels.partUsd, parts.usdPct],
+          [labels.partFx, parts.fxPct],
+        ];
+  return (
+    <span className="numeral flex flex-wrap gap-x-2 gap-y-0.5 text-nano leading-tight text-muted">
+      {items.map(([name, pct], i) => (
+        <span key={name} className="whitespace-nowrap">
+          {i > 0 && <span aria-hidden>· </span>}
+          {name} <span className={directionText(directionOf(pct ?? 0))}>{formatPercent(pct, locale)}</span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * Kur künyesi — grafiğin altında, panelin İÇİNDE, hairline ile ayrılmış.
+ *
+ * Ne söylediği: hangi iki günün hangi iki kuru kullanıldı (bülten günüyle),
+ * kurun dönemdeki değişimi, eğrinin ortasının nasıl kurulduğu ve Reel
+ * görünümde hangi iki ayın TÜFE'si. Uydurma kesinlik kuralı: eğrinin ortası
+ * bir yaklaşım ve bu yazılı; dönem getirisi yalnızca uçlardan.
+ */
+function FxNotes({
+  fx,
+  currency,
+  labels,
+  locale,
+}: {
+  fx: CompareFx;
+  currency: CurrencyMode;
+  labels: CompareLabels;
+  locale: Locale;
+}) {
+  const { start, end, cpi } = fx.path;
+  const fxPct = (end.rate / start.rate - 1) * 100;
+  const kurNotu = labels.fxNote
+    .replace("{from}", formatIsoDate(start.date, locale))
+    .replace("{fromRate}", formatRate(start.rate, locale))
+    .replace("{to}", formatIsoDate(end.date, locale))
+    .replace("{toRate}", formatRate(end.rate, locale))
+    .replace("{pct}", formatPercent(fxPct, locale));
+  const span = currency === "reel" && cpi ? cpiSpan(cpi, start.requested, end.requested) : null;
+  const cpiStart = span && cpi ? cpiAt(cpi, start.requested) : null;
+  const cpiEnd = span && cpi ? cpiAt(cpi, end.requested) : null;
+  return (
+    <div className="flex flex-col gap-1.5 border-t border-line-soft pt-3 text-tiny leading-relaxed text-muted">
+      <p className="numeral">{kurNotu}</p>
+      {span && cpiStart && cpiEnd && (
+        <p className="numeral">
+          {labels.cpiNote
+            .replace("{from}", formatIsoMonth(span.from, locale))
+            .replace("{to}", formatIsoMonth(span.to, locale))
+            .replace("{pct}", formatPercent((cpiEnd / cpiStart - 1) * 100, locale))}
+        </p>
+      )}
+      <p>
+        {!fx.monthlyAvailable
+          ? labels.fxPathFlat
+          : fx.anchors.length > 2
+            ? labels.fxPathNote
+            : labels.fxPathShort}
+      </p>
+      <p>{labels.multiplyNote}</p>
     </div>
   );
 }

@@ -24,6 +24,8 @@ import { CompareAdd } from "@/components/markets/CompareAdd";
 import { RangeTrack, ScaleBar } from "@/components/markets/CompareScale";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
+import { isEvdsConfigured } from "@/lib/providers/evds";
+import { CURRENCY_MODES, isCurrencyMode, type CurrencyMode } from "@/lib/fx";
 import { getI18n } from "@/lib/i18n";
 import { industryLabel, sectorLabel } from "@/lib/sectors";
 import {
@@ -125,6 +127,7 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
   const range: CompareRange = isCompareRange(search.aralik)
     ? search.aralik
     : DEFAULT_COMPARE_RANGE;
+  const { currency, realAvailable } = resolveCompareCurrency(search.para);
 
   return (
     <MotionExperience className={`${polish.page} ${polish.compare}`}>
@@ -170,7 +173,13 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
         /* BAŞLIK DA TAHTANIN İÇİNDE. Aralık denetimi sayfa başlığının sağında
            duruyor ve artık istemci durumunu okuyor: sağlayıcının ağacın
            kökünde olması gerekiyor, yani başlık da onun altında. */
-        <CompareBoard symbols={symbols} range={range} dropped={dropped} />
+        <CompareBoard
+          symbols={symbols}
+          range={range}
+          dropped={dropped}
+          currency={currency}
+          realAvailable={realAvailable}
+        />
       )}
 
       <GuideHint
@@ -183,14 +192,50 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
   );
 }
 
-async function CompareBoard({
+/**
+ * Adresteki `para` → görünüm. Reel TL ancak TÜFE kaynağı varsa; adreste
+ * yazsa bile kaynak yoksa dolar görünümüne düşülüyor (gerekçe CompareLive →
+ * CompareCurrencyControl). Çift sayfaları da aynı tahtayı çizdiği için kural
+ * burada tek: iki sayfa ayrı hesaplasaydı biri reel TL'yi kaynak yokken
+ * açabilirdi.
+ */
+export function resolveCompareCurrency(para: string | string[] | undefined): {
+  currency: CurrencyMode;
+  realAvailable: boolean;
+} {
+  const realAvailable = isEvdsConfigured();
+  const currency: CurrencyMode =
+    isCurrencyMode(para) && (para !== "reel" || realAvailable) ? para : "usd";
+  return { currency, realAvailable };
+}
+
+/**
+ * Tahtanın kendisi — DIŞA AÇIK, çünkü küratörlü çift sayfaları
+ * (`/karsilastir/[pair]`) aynı ekranı çiziyor. İkinci bir kopya yazmak
+ * yerine buradan okunuyor: tablo, grafik ve aralık denetimi tek yerde
+ * kalıyor, bir düzeltme iki ekrana birden iniyor.
+ *
+ * Çift sayfasının iki farkı prop olarak geliyor: kendi başlığı (`heading`,
+ * SEO için "Nvidia ve AMD" diyen bir h1) ve tablodan SONRA duran kısa
+ * metin (`children`) — ekran düzeninde metin ölçü ızgarasının altında,
+ * veri damgasının üstünde.
+ */
+export async function CompareBoard({
   symbols,
   range,
   dropped,
+  heading,
+  children,
+  currency,
+  realAvailable,
 }: {
   symbols: string[];
   range: CompareRange;
   dropped: string[];
+  heading?: { eyebrow?: string; title: string; subtitle: string };
+  children?: React.ReactNode;
+  currency: CurrencyMode;
+  realAvailable: boolean;
 }) {
   const { locale, t } = await getI18n();
   const status = await getStatus();
@@ -254,6 +299,22 @@ async function CompareBoard({
     rangeFailedHint: t.compare.rangeFailedHint,
     retry: t.common.retry,
     periodChange: t.compare.periodChange,
+    currencyLabel: t.lira.compare.currencyLabel,
+    currencies: t.lira.compare.currencies,
+    currencyLongs: t.lira.compare.currencyLongs,
+    periodColumns: t.lira.compare.periodColumns,
+    partUsd: t.lira.compare.partUsd,
+    partFx: t.lira.compare.partFx,
+    partTl: t.lira.compare.partTl,
+    partInflation: t.lira.compare.partInflation,
+    fxNote: t.lira.compare.fxNote,
+    fxPathNote: t.lira.compare.fxPathNote,
+    fxPathFlat: t.lira.compare.fxPathFlat,
+    fxPathShort: t.lira.compare.fxPathShort,
+    cpiNote: t.lira.compare.cpiNote,
+    multiplyNote: t.lira.compare.multiplyNote,
+    fxFailed: t.lira.compare.fxFailed,
+    fxFailedHint: t.lira.compare.fxFailedHint,
   };
 
   /**
@@ -599,6 +660,16 @@ async function CompareBoard({
       symbols={symbols}
       initialRange={range}
       initialSeries={initialSeries}
+      initialCurrency={currency}
+      realAvailable={realAvailable}
+      currencyAnnounce={
+        Object.fromEntries(
+          CURRENCY_MODES.map((mode) => [
+            mode,
+            t.lira.compare.currencyAnnounce.replace("{currency}", t.lira.compare.currencies[mode]),
+          ]),
+        ) as Record<CurrencyMode, string>
+      }
       locale={locale}
       announce={labels.rangeAnnounce}
     >
@@ -611,9 +682,9 @@ async function CompareBoard({
           hisse sayfasının aynı denetimi yıllardır "1A · 3A · 6A · YBB"
           diyor — aynı ürün, iki dil. */}
       <PageHeader
-        eyebrow={t.compare.eyebrow}
-        title={t.compare.title}
-        subtitle={t.compare.subtitle}
+        eyebrow={heading ? heading.eyebrow : t.compare.eyebrow}
+        title={heading?.title ?? t.compare.title}
+        subtitle={heading?.subtitle ?? t.compare.subtitle}
         action={<CompareRangeControl labels={labels} />}
       />
 
@@ -923,6 +994,8 @@ async function CompareBoard({
           </p>
         )}
       </Panel>
+
+      {children}
 
       {quotesResult.ok && (
         <DataStamp
