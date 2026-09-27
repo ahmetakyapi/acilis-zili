@@ -6,6 +6,7 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgTable,
   primaryKey,
   text,
@@ -16,6 +17,7 @@ import {
 /* Yalnızca TİP: derlemede siliniyor. drizzle-kit bu dosyayı `@/` takma
    adlarını çözmeden yüklüyor, yani buradan bir DEĞER içe aktarılamaz. */
 import type { TechnicalCopy, TechnicalSnapshot } from "./technical";
+import type { StoredMetrics } from "./scorecard";
 
 /* ==========================================================================
    Kullanıcı ve takip listeleri
@@ -135,6 +137,45 @@ export const watchlistItems = pgTable(
     uniqueIndex("watchlist_items_unique").on(t.watchlistId, t.symbol),
     index("watchlist_items_symbol_idx").on(t.symbol),
   ],
+);
+
+/**
+ * Portföy pozisyonları — `/portfoy`.
+ *
+ * NEDEN AYRI TABLO, `watchlist_items`a sütun DEĞİL: migration'lar deploy'da
+ * uygulanmıyor ve canlıdaki kod migration'dan önce yayına inebiliyor. Var
+ * olan bir tabloya eklenen sütun, migration inene kadar favoriler
+ * sorgusunu kırardı (26 Eylül'deki `user_avatars` dersi). Kendi tablosu
+ * olan özellik tablo yokken sessizce düşüyor (`lib/portfolio-data.ts`).
+ *
+ * Takip listesi "neye bakıyorum", portföy "neyim var": adet ve maliyet
+ * olmadan TL kâr/zarar ve vergi hesabı kurulamıyor.
+ *
+ * `cost_usd` HİSSE BAŞI alış fiyatı (dolar), toplam değil: kullanıcı aracı
+ * kurumun ekstresinde bu sayıyı görüyor. `numeric` — kesirli adet (0,125
+ * hisse) ve kuruşun altındaki fiyatlar kayan noktada yuvarlanmasın; sürücü
+ * dize döndürüyor, okuyan taraf sayıya çeviriyor.
+ *
+ * Hesap silinince CASCADE ile düşüyor (bkz. `deleteAccountAction`).
+ */
+export const portfolioPositions = pgTable(
+  "portfolio_positions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    symbol: text("symbol").notNull(),
+    quantity: numeric("quantity", { precision: 20, scale: 8 }).notNull(),
+    costUsd: numeric("cost_usd", { precision: 20, scale: 6 }).notNull(),
+    /** Alış günü — TL maliyeti o günün TCMB döviz alış kuruyla kuruluyor. */
+    boughtAt: date("bought_at").notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("portfolio_positions_user_idx").on(t.userId, t.boughtAt)],
 );
 
 /* ==========================================================================
@@ -630,6 +671,68 @@ export const earningsAnalyses = pgTable(
   ],
 );
 
+/** Bir faaliyet segmentinin çeyrek geliri — ham dolar, yıllık değişim yüzde. */
+export type AnalysisSegment = {
+  name: string;
+  revenue: number;
+  yoyPct?: number | null;
+  note?: string | null;
+};
+
+/**
+ * Şirkete özgü bir ölçü (abone sayısı, teslimat, ARPU…).
+ *
+ * `unit` üç sözlükten biri ya da serbest bir sayma birimi: "USD" para
+ * olarak, "%" yüzde olarak biçimlenir; başka her değer sayının arkasına
+ * yazılan birimdir ("abone", "araç"). `source` bir SÖZLÜK, serbest metin
+ * değil (bkz. `lib/earnings-extras.ts` → KPI_SOURCES).
+ */
+export type AnalysisKpi = {
+  name: string;
+  value: number;
+  unit: string;
+  yoyPct?: number | null;
+  source: string;
+};
+
+/**
+ * Bilanço analizinin İSTEĞE BAĞLI ekleri — "30 Saniyede" özeti, segment
+ * gelirleri ve şirkete özgü ölçüler.
+ *
+ * AYRI TABLO, SÜTUN DEĞİL. `earnings_analyses`ta yeni alanları taşıyacak
+ * esnek bir jsonb YOK: her jsonb sütunun tek bir anlamı var (özet
+ * paragrafları, metrik kartları, CEO alıntısı…) ve oraya ilgisiz bir alan
+ * gömmek, o sütunun tipini ve rutinin okuduğu gövdeyi bozmak demekti
+ * (`ceo_quote.topics` bir istisnaydı: alıntının kendi parçası). Sütun
+ * eklemek de olmaz: migration'lar deploy'dan SONRA elle uygulanıyor ve
+ * `earnings_analyses`a eklenen bir sütun, migration inene kadar o tablonun
+ * HER `select()`ini — detay sayfası, rutin ucu, panel — kırardı
+ * (`user_avatars` kuralı, CLAUDE.md "Bilinmesi gerekenler").
+ *
+ * Anahtar analiz satırının kimliği: analiz dil başına bir satır ve
+ * eklerin metni (segment adları, özet maddeleri) de dile göre. Upsert
+ * (`onConflictDoUpdate`) satırın `id`sini korur, yani rutinin bir analizi
+ * düzeltmesi ekleri koparmaz; analiz silinirse ekler de gider.
+ *
+ * Okuyan ve yazan her yol tablo yokken SESSİZCE düşer
+ * (`lib/earnings-extras.ts`): sayfa eski hâliyle çizilir, rutin ucu ana
+ * kaydı yazar ve yanıtında eklerin yazılamadığını söyler.
+ */
+export const earningsAnalysisExtras = pgTable("earnings_analysis_extras", {
+  analysisId: uuid("analysis_id")
+    .primaryKey()
+    .references(() => earningsAnalyses.id, { onDelete: "cascade" }),
+  /** Tam üç madde — sayfanın başındaki "30 Saniyede" özeti. */
+  takeaways: jsonb("takeaways").$type<string[]>(),
+  segments: jsonb("segments").$type<AnalysisSegment[]>(),
+  /** Segment rakamlarının belgesi — KPI kaynaklarıyla aynı sözlük. */
+  segmentsSource: text("segments_source"),
+  kpis: jsonb("kpis").$type<AnalysisKpi[]>(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 /**
  * Teknik analizler — takip listesindeki hisselerin her işlem günü üç kez
  * yazılan görüşü (liste `lib/technical.ts` → TECHNICAL_SYMBOLS).
@@ -748,6 +851,96 @@ export const pageViews = pgTable(
   ],
 );
 
+/**
+ * Sembol başına temel ölçüler — hisse skor kartının sektör karşılaştırması
+ * için (28 Eylül).
+ *
+ * NEDEN TABLO. Bir şirketi sektörüne göre konumlamak sektördeki HER
+ * şirketin ölçüsünü istiyor: Bilgi Teknolojileri'nde ~70 şirket, yani sayfa
+ * başına 70 Finnhub isteği — dakikada 60 sınırını tek sayfa aşardı. Ölçüler
+ * burada birikiyor: günlük cron en eski güncellenenden başlayarak küçük bir
+ * paket tazeliyor (`lib/symbol-metrics.ts`), bir hisse sayfası açıldığında
+ * da o hissenin satırı zaten çekilmiş metrikten yazılıyor (ek istek yok).
+ *
+ * `sector` GICS ana sektörü (endeks tohumu), `metrics` seçilmiş alanlar —
+ * seçim ve gerekçesi lib/scorecard.ts → `StoredMetrics`. Yabancı anahtar
+ * yok: sembol `symbols`ta olmasa da ölçüsü tutulabilir ve silinecek bir
+ * ebeveyn yok. Okuyan ve yazan her yer tablo yokken sessizce düşüyor —
+ * migration'lar elle uygulanıyor (`user_avatars` ile aynı desen).
+ */
+export const symbolMetrics = pgTable(
+  "symbol_metrics",
+  {
+    symbol: text("symbol").primaryKey(),
+    sector: text("sector"),
+    /** Raporlama para birimi — hisse başı tutarlar yalnızca USD'de kullanılır. */
+    currency: text("currency"),
+    metrics: jsonb("metrics").$type<StoredMetrics>().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("symbol_metrics_sector_idx").on(t.sector),
+    index("symbol_metrics_updated_idx").on(t.updatedAt),
+  ],
+);
+
+/* ==========================================================================
+   Uygulama hataları — kendi barındırdığımız hata günlüğü
+   ========================================================================== */
+
+/**
+ * Sunucu ve istemci hataları, gün başına toplanmış (28 Eylül).
+ *
+ * NEDEN KENDİ TABLOMUZ. Sunucu hataları yalnızca systemd günlüğüne
+ * düşüyordu ve okuyucunun hata ekranında gördüğü kimliği (`digest`) oraya
+ * SSH atmadan aramanın yolu yoktu; tarayıcıda doğan hatalar ise hiçbir
+ * yere yazılmıyordu. Üçüncü taraf bir hata servisi README'deki "üçüncü
+ * taraf analitik yok" sözünü bozardı.
+ *
+ * NE TUTULMUYOR: kullanıcı kimliği, IP, tarayıcı künyesi. Rota ŞABLON
+ * olarak (`/hisse/[symbol]`), mesaj e-posta ve IP biçimli parçaları
+ * örtülüp kırpılarak (lib/error-log-core.ts). Yığın yalnızca sunucu
+ * hatasında — istemcinin yığını küçültülmüş paket satırları, okunmuyor.
+ *
+ * GÜN BAŞINA TEK SATIR: aynı rota + aynı parmak izi (sunucuda `digest`)
+ * bir günde bir satır, tekrarı `count`u artırıyor. Bir sağlayıcı bir saat
+ * düşünce binlerce satır değil bir satır ve bir sayı.
+ *
+ * AYRI TABLO, YABANCI ANAHTAR YOK. Migration elle uygulanıyor; tablo
+ * yokken yazan da okuyan da sessizce düşüyor (lib/error-log.ts). 30 günde
+ * siliniyor (`purgeOldErrors`, günlük cron).
+ */
+export const appErrors = pgTable(
+  "app_errors",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** ET takvim günü — tekilleştirmenin penceresi. */
+    day: date("day").notNull(),
+    /** "server" | "client" */
+    kind: text("kind").notNull(),
+    /** Rota şablonu: "/hisse/[symbol]", "/en/teknik/[symbol]". */
+    route: text("route").notNull(),
+    /** Next'in hata kimliği — okuyucunun hata ekranında gördüğü değer. */
+    digest: text("digest"),
+    /** Tekilleştirme anahtarı: digest ya da mesajın ilk satırının özeti. */
+    fingerprint: text("fingerprint").notNull(),
+    message: text("message").notNull(),
+    /** Yalnızca sunucu hatasında, kırpılmış. */
+    stack: text("stack"),
+    count: integer("count").notNull().default(1),
+    /** Günün ilk görülmesi. */
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+    /** Günün son görülmesi. */
+    lastAt: timestamp("last_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("app_errors_unique").on(t.day, t.kind, t.route, t.fingerprint),
+    index("app_errors_last_idx").on(t.lastAt),
+  ],
+);
+
 /* ==========================================================================
    Çıkarsanan tipler
    ========================================================================== */
@@ -756,6 +949,7 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Watchlist = typeof watchlists.$inferSelect;
 export type WatchlistItem = typeof watchlistItems.$inferSelect;
+export type PortfolioPositionRow = typeof portfolioPositions.$inferSelect;
 export type SymbolRow = typeof symbols.$inferSelect;
 export type QuoteRow = typeof quotesCache.$inferSelect;
 export type EarningsRow = typeof earningsCalendar.$inferSelect;
@@ -766,8 +960,10 @@ export type DailyBriefRow = typeof dailyBriefs.$inferSelect;
 export type StoryRow = typeof stories.$inferSelect;
 export type MarketHolidayRow = typeof marketHolidays.$inferSelect;
 export type EarningsAnalysisRow = typeof earningsAnalyses.$inferSelect;
+export type EarningsAnalysisExtrasRow = typeof earningsAnalysisExtras.$inferSelect;
 export type TechnicalAnalysisRow = typeof technicalAnalyses.$inferSelect;
 export type PageViewRow = typeof pageViews.$inferSelect;
+export type SymbolMetricsRow = typeof symbolMetrics.$inferSelect;
 
 /** Kullanıcı rolleri — "admin" yönetim ekranını açar, başka ayrıcalığı yok. */
 export const USER_ROLES = ["user", "admin"] as const;

@@ -1,0 +1,102 @@
+/* Hisse sayfasının derinlik panelleri (28 Eylül) — içeriden işlemler,
+   beklenen hareket, analist dağılımı değişimi, skor kartı, teknik fotoğraf
+   ve şirket özeti. Ayrı modül: stock.module.css ilk ekranın ölçülmüş
+   yerleşimini taşıyor ve bu panellerin hiçbiri o ölçülere dokunmuyor.
+   Yüzey dili komşularla aynı (premium yüzey, 20 piksel köşe, hairline). */
+
+.panel { min-width:0; border-radius:20px; background:var(--premium-surface,var(--surface-solid)); }
+.body { display:flex; min-width:0; flex-direction:column; padding:0 18px 16px; }
+.note { margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:11px; line-height:1.65; }
+.note + .note { margin-top:6px; padding-top:0; border-top:0; }
+.stamp { margin-top:10px; }
+
+/* İKİ PANEL YAN YANA, BOYLARI BAĞIMSIZ. `align-items:start`: kısa panel
+   erken biter; ızgaranın varsayılanı (stretch) kısa panelin altına boş bir
+   kuyruk açardı ve CLAUDE.md "Boşluk esnetilmez" kuralı tam bunu yasaklıyor. */
+.grid { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; gap:16px; }
+@media (min-width:1100px) {
+  .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+/* Büyük okuma — değer ve künyesi. */
+.readings { display:grid; grid-template-columns:minmax(0,1fr); gap:12px 20px; padding-bottom:14px; }
+@media (min-width:640px) {
+  .readings { grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
+}
+.reading { display:flex; min-width:0; flex-direction:column; gap:4px; }
+.reading dt { color:var(--text-muted); font-size:11px; font-weight:500; }
+.readingValue { color:var(--text-strong); font-size:clamp(22px,2vw,28px); font-weight:600; line-height:1.15; letter-spacing:-.035em; }
+/* Okuma çubuğu sayının altında, soldan dolar: iki okuma aynı eksende. */
+.readingTrack { position:relative; width:100%; max-width:200px; height:3px; margin-top:6px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
+.readingTrack > i { position:absolute; inset-block:0; left:0; border-radius:999px; background:color-mix(in srgb, var(--primary) 58%, transparent); }
+.readingMeta { color:var(--text-muted); font-size:var(--text-nano); line-height:1.45; }
+
+/* Tablolar — dar ekranda kendi kabında kayar, etiket sütunu sabit
+   (CLAUDE.md "Kaydırma saklanmaz"). Taban genişlik tablo başına. */
+.table { width:100%; font-size:13px; }
+.table th { padding:8px 10px; color:var(--text-muted); font-size:var(--text-nano); font-weight:500; text-align:right; white-space:nowrap; }
+.table td { padding:9px 10px; border-top:1px solid var(--line-soft); text-align:right; white-space:nowrap; }
+.table tbody th { padding:9px 10px; border-top:1px solid var(--line-soft); color:var(--text-strong); font-size:12px; font-weight:600; }
+.table th:first-child, .table td:first-child { position:sticky; left:0; z-index:1; padding-left:0; text-align:left; background:var(--premium-surface,var(--surface-solid)); }
+.table th:last-child, .table td:last-child { padding-right:0; }
+.insiderTable { min-width:560px; }
+.trendTable { min-width:420px; }
+.historyTable { min-width:300px; max-width:640px; }
+.nameCell { display:block; max-width:13rem; overflow:hidden; text-overflow:ellipsis; color:var(--text-strong); font-weight:600; }
+.tag { display:inline-block; margin-left:6px; padding:1px 6px; border-radius:999px; background:var(--surface-elevated); color:var(--text-muted); font-size:10px; font-weight:600; vertical-align:1px; }
+.dot { display:inline-block; width:8px; height:8px; margin-right:8px; border-radius:999px; vertical-align:0; }
+
+/* MSPR çubukları — sıfır çizgisi ortada, yukarı alım, aşağı satım. Renk
+   yalnızca işaretten; boş ay çubuksuz, yalnızca taban çizgisinde bir nokta. */
+.sentiment { margin-top:4px; padding-top:12px; border-top:1px solid var(--line-soft); }
+.sentimentLabel { color:var(--text-strong); font-size:11px; font-weight:600; }
+.bars { position:relative; display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:4px; height:72px; margin-top:10px; }
+.bars::before { position:absolute; inset-inline:0; top:50%; height:1px; background:var(--line); content:""; }
+.bar { position:relative; height:100%; }
+.bar > i { position:absolute; inset-inline:15%; border-radius:2px; }
+.bar > i[data-sign="up"] { bottom:50%; background:var(--up); }
+.bar > i[data-sign="down"] { top:50%; background:var(--down); }
+.bar > b { position:absolute; top:calc(50% - 2px); left:calc(50% - 2px); width:4px; height:4px; border-radius:999px; background:var(--line-strong); }
+.barAxis { display:flex; justify-content:space-between; margin-top:6px; color:var(--text-muted); font-size:10px; }
+
+/* Skor kartı satırı: etiket + cümle solda, yüzde ve çubuk sağda. */
+.axisList { display:flex; flex-direction:column; }
+.axisRow { display:grid; grid-template-columns:minmax(0,1fr) 108px; align-items:center; gap:4px 16px; padding:10px 0; border-top:1px solid var(--line-soft); }
+.axisRow:first-child { border-top:0; padding-top:4px; }
+.axisName { color:var(--text-strong); font-size:12px; font-weight:600; }
+.axisSentence { color:var(--text-body); font-size:13px; line-height:1.45; }
+.axisMetrics { color:var(--text-muted); font-size:var(--text-nano); line-height:1.45; }
+.axisFigure { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+.axisPct { color:var(--text-strong); font-size:20px; font-weight:600; line-height:1; letter-spacing:-.03em; }
+@media (max-width:359px) {
+  .axisRow { grid-template-columns:minmax(0,1fr) 84px; }
+}
+
+/* Teknik fotoğraf — iki sütunlu ölçü listesi, satırlar aynı hatta. */
+.techGrid { display:grid; grid-template-columns:minmax(0,1fr); column-gap:24px; }
+@media (min-width:640px) {
+  .techGrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+.techRow { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:4px 10px; padding:8px 0; border-top:1px solid var(--line-soft); }
+.techRow dt { color:var(--text-strong); font-size:11px; font-weight:600; line-height:1.4; }
+.techRow dd { color:var(--text-body); font-size:13px; text-align:right; }
+.techSub { display:block; color:var(--text-muted); font-size:var(--text-nano); font-weight:500; }
+.rsiRail { position:relative; grid-column:1 / -1; height:6px; margin-top:4px; border-radius:3px; background:var(--rail-track,var(--line-soft)); }
+.rsiRail > span { position:absolute; top:-2px; bottom:-2px; width:1px; background:var(--line-strong); }
+.rsiRail > i { position:absolute; top:-3px; width:12px; height:12px; margin-left:-6px; border:2px solid var(--surface-solid); border-radius:999px; background:var(--primary); }
+.pivots { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; margin-top:4px; padding-top:10px; border-top:1px solid var(--line-soft); }
+.pivots > div { display:flex; min-width:0; flex-direction:column; align-items:center; gap:3px; }
+.pivots dt { color:var(--text-muted); font-size:10px; text-align:center; }
+.pivots dd { color:var(--text-strong); font-size:12px; font-weight:600; }
+.pivotLabel { color:var(--text-strong); font-size:11px; font-weight:600; margin-top:12px; }
+@media (max-width:389px) {
+  .pivots dd { font-size:11px; }
+}
+
+/* Şirket özeti. */
+.summaryLine { color:var(--text-strong); font-size:15px; font-weight:600; line-height:1.45; letter-spacing:-.015em; }
+.summaryText { margin-top:8px; max-width:72ch; color:var(--text-body); font-size:13px; line-height:1.75; }
+.guides { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); }
+.guides > span { color:var(--text-muted); font-size:11px; font-weight:600; }
+.guides a { color:var(--primary-ink); font-size:12px; font-weight:600; }
+.guides a:hover { text-decoration:underline; }

@@ -31,13 +31,35 @@ export function isFredConfigured(): boolean {
  * Takip edilen seriler.
  * `units: "pc1"` FRED'e yıllık yüzde değişimi hesaplatır — endeks değerini
  * kendimiz orana çevirmeyiz, kaynak ne diyorsa o gösterilir.
+ *
+ * TİP AÇIKÇA YAZILI (28 Eylül). Dizi `as const` idi ve ilk altı seri aynı
+ * alanları taşıdığı için sorun çıkmıyordu; `divisor` ve `digits` yalnızca
+ * bazı serilerde var ve `as const` birleşiminde o alanlara erişmek derleme
+ * hatası veriyordu. Tüketiciler (tohum, cron, gün akışı) alanları adıyla
+ * okuyor, dizinin sırasına değil; yeni seriler SONA eklendi.
  */
-export const MACRO_SERIES = [
+export type MacroSeriesDefinition = SeriesRequest & {
+  unit: string;
+  titleTr: string;
+  titleEn: string;
+  /**
+   * Gözlem sıklığı. Kart künyesi buna göre yazılır: aylık seri "Ağustos
+   * 2026", haftalık seri "20 Eyl 2026 ile Biten Hafta", günlük seri tam
+   * tarih. Haftalık İşsizlik Başvuruları ay etiketiyle ("Eylül 2026")
+   * basılsaydı hangi haftanın okunduğu kaybolurdu.
+   */
+  frequency: "monthly" | "weekly" | "daily";
+  /** Ekrandaki ondalık hane; verilmezse yüzde 2, öteki birimler 0. */
+  digits?: number;
+};
+
+export const MACRO_SERIES: readonly MacroSeriesDefinition[] = [
   {
     seriesId: "CPIAUCSL",
     slug: "cpi",
     units: "pc1",
     unit: "%",
+    frequency: "monthly",
     titleTr: "TÜFE (Yıllık)",
     titleEn: "CPI (Year over Year)",
   },
@@ -46,6 +68,7 @@ export const MACRO_SERIES = [
     slug: "core-cpi",
     units: "pc1",
     unit: "%",
+    frequency: "monthly",
     titleTr: "Çekirdek TÜFE (Yıllık)",
     titleEn: "Core CPI (Year over Year)",
   },
@@ -54,6 +77,7 @@ export const MACRO_SERIES = [
     slug: "unemployment",
     units: "lin",
     unit: "%",
+    frequency: "monthly",
     titleTr: "İşsizlik Oranı",
     titleEn: "Unemployment Rate",
   },
@@ -62,6 +86,7 @@ export const MACRO_SERIES = [
     slug: "fed-funds",
     units: "lin",
     unit: "%",
+    frequency: "monthly",
     titleTr: "Fed Politika Faizi",
     titleEn: "Fed Funds Rate",
   },
@@ -70,6 +95,7 @@ export const MACRO_SERIES = [
     slug: "core-pce",
     units: "pc1",
     unit: "%",
+    frequency: "monthly",
     titleTr: "Çekirdek PCE (Yıllık)",
     titleEn: "Core PCE (Year over Year)",
   },
@@ -78,10 +104,74 @@ export const MACRO_SERIES = [
     slug: "payrolls",
     units: "chg",
     unit: "bin",
+    frequency: "monthly",
     titleTr: "Tarım Dışı İstihdam (Aylık Değişim)",
     titleEn: "Nonfarm Payrolls (Monthly Change)",
   },
-] as const;
+  /* ---- 28 Eylül: ikinci halka ----
+     Altı seri enflasyon, iş gücü ve politikayı anlatıyordu; tüketim, para
+     arzı ve resesyon sinyali yoktu. Beşi de FRED'de ve aynı yoldan geliyor:
+     tohum satırı açar, cron doldurur, /makro satır yoksa canlı okur
+     (lib/macro-data.ts). */
+  {
+    /* FRED kişi sayısı veriyor (231000); takvim ve gün akışı bin kişiyle
+       çalışıyor. Bölen BURADA, `getSeries` içinde uygulanıyor ki önbellek
+       tablosu, takvimin gerçekleşen değeri ve ekran aynı birimi görsün. */
+    seriesId: "ICSA",
+    slug: "jobless-claims",
+    units: "lin",
+    unit: "bin",
+    divisor: 1000,
+    frequency: "weekly",
+    titleTr: "Haftalık İşsizlik Başvuruları",
+    titleEn: "Initial Jobless Claims",
+  },
+  {
+    /* Düzey (milyon $) değil AYLIK DEĞİŞİM: piyasanın tepki verdiği sayı
+       bu ve 700 milyarlık bir düzeyin yanında "▲ 3.912" okunmuyor. */
+    seriesId: "RSAFS",
+    slug: "retail-sales",
+    units: "pch",
+    unit: "%",
+    frequency: "monthly",
+    titleTr: "Perakende Satışlar (Aylık Değişim)",
+    titleEn: "Retail Sales (Monthly Change)",
+  },
+  {
+    seriesId: "M2SL",
+    slug: "m2",
+    units: "pc1",
+    unit: "%",
+    frequency: "monthly",
+    titleTr: "M2 Para Arzı (Yıllık)",
+    titleEn: "M2 Money Supply (Year over Year)",
+  },
+  {
+    /* Birim yüzde PUANI, yüzde değil: gösterge bir işsizlik oranı değil,
+       iki oranın farkı. Eşik (0,50) kartın künyesinde anlatılıyor. */
+    seriesId: "SAHMREALTIME",
+    slug: "sahm-rule",
+    units: "lin",
+    unit: "puan",
+    digits: 2,
+    frequency: "monthly",
+    titleTr: "Sahm Kuralı Göstergesi",
+    titleEn: "Sahm Rule Indicator",
+  },
+  {
+    /* 10 yıl − 3 ay: Fed'in resesyon araştırmalarında kullandığı fark.
+       Makro kapağındaki eğri 10 − 2 yıllık; ikisi ayrı ölçüler ve kart
+       adı hangi iki vadeden kurulduğunu söylüyor. Günlük seri. */
+    seriesId: "T10Y3M",
+    slug: "curve-10y3m",
+    units: "lin",
+    unit: "puan",
+    digits: 2,
+    frequency: "daily",
+    titleTr: "10 Yıl ile 3 Ay Faiz Farkı",
+    titleEn: "10-Year Minus 3-Month Spread",
+  },
+];
 
 async function fredFetch<T>(
   path: string,
@@ -139,6 +229,8 @@ export type SeriesRequest = {
   seriesId: string;
   slug: string;
   units: string;
+  /** Kaynağın birimini ekranın birimine çeviren bölen (ICSA: kişi → bin). */
+  divisor?: number;
 };
 
 /** Günlük kapanışlar: ana sayfa, Makro ve alt şerit aynı politikayı kullanır. */
@@ -175,7 +267,7 @@ export async function getSeries(
   // FRED eksik gözlemleri "." olarak yollar.
   const observations: MacroObservation[] = raw
     .filter((o) => o.value !== "." && o.value.trim() !== "")
-    .map((o) => ({ date: o.date, value: Number(o.value) }))
+    .map((o) => ({ date: o.date, value: Number(o.value) / (definition.divisor ?? 1) }))
     .filter((o) => Number.isFinite(o.value))
     .reverse();
 
@@ -271,9 +363,9 @@ export async function getReleaseDates(
  * https://fred.stlouisfed.org/docs/api/fred/series_observations.html
  */
 export async function getReleasedObservation(seriesId: string, dateEt: string) {
-  const definition = seriesId === "ICSA"
-    ? { seriesId, units: "lin", slug: "jobless-claims" }
-    : MACRO_SERIES.find((entry) => entry.seriesId === seriesId && entry.seriesId !== "FEDFUNDS");
+  /* ICSA bir dönem burada elle tanımlanıyordu çünkü MACRO_SERIES'te yoktu;
+     artık orada ve böleni de tanımında. */
+  const definition = MACRO_SERIES.find((entry) => entry.seriesId === seriesId && entry.seriesId !== "FEDFUNDS");
   if (!definition) return null;
   const read = (date: string, revalidate: number) => fredFetch<RawObservations>(
     "/series/observations",
@@ -286,8 +378,8 @@ export async function getReleasedObservation(seriesId: string, dateEt: string) {
     point.value.trim() !== "" && point.value !== "." && Number.isFinite(Number(point.value)));
   const points = valid(current.data);
   if (!isNewObservation(points[0]?.date, valid(previous.data)[0]?.date)) return null;
-  // ICSA kişi sayısı; takvim birimi bin kişi. PAYEMS zaten bin birimindedir.
-  const divisor = seriesId === "ICSA" ? 1000 : 1;
+  // ICSA kişi sayısı; takvim birimi bin kişi (bölen tanımda). PAYEMS zaten bin birimindedir.
+  const divisor = definition.divisor ?? 1;
   return {
     actual: String(Number(points[0].value) / divisor),
     previous: points[1] ? String(Number(points[1].value) / divisor) : null,

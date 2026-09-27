@@ -7,17 +7,18 @@ import styles from "@/components/macro/MacroExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { DataStamp, EmptyState, PageHeader, Panel, Skeleton } from "@/components/ui/primitives";
-import { getMacroRows } from "@/lib/data";
-import { getI18n } from "@/lib/i18n";
+import { FomcCard } from "@/components/macro/FomcCard";
+import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { getMacroBoard, type MacroBoardRow } from "@/lib/macro-data";
 import {
   formatEtDateLong,
+  formatEtDateMedium,
   formatPeriodLabel,
   formatPrice,
   formatPercentPlain,
   unitLabel,
   NO_VALUE,
 } from "@/lib/utils";
-import type { MacroObservation } from "@/lib/providers/types";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -51,32 +52,96 @@ export const generateMetadata = pageMetadata({
    aynı biçimi kullanıyor. */
 const formatPeriod = formatPeriodLabel;
 
+/**
+ * Kartın dönem künyesi — SIKLIĞA göre (28 Eylül).
+ *
+ * Aylık seride ay adı yeterli ("Ağustos 2026"). Haftalık İşsizlik
+ * Başvuruları ve günlük 10 yıl − 3 ay farkı aynı biçimle "Eylül 2026"
+ * yazılsaydı hangi haftanın ya da günün okunduğu kaybolurdu; o seriler
+ * gözlemin kendi tarihini taşıyor. FRED haftalık seriyi haftanın BİTTİĞİ
+ * cumartesiyle tarihliyor.
+ */
+function periodOf(row: MacroBoardRow, locale: Locale, t: Dictionary): string {
+  if (row.definition.frequency === "monthly" || !row.observedAt) {
+    return formatPeriod(row.periodLabel, locale);
+  }
+  const date = formatEtDateMedium(row.observedAt, locale);
+  return row.definition.frequency === "weekly" ? t.marketExtras.weekEnding.replace("{date}", date) : date;
+}
+
+/** Birim etiketi: "puan" iki dilde ayrı yazılıyor (`unitLabel` yalnızca "bin"i çeviriyor). */
+function unitText(unit: string, locale: Locale, t: Dictionary): string {
+  return unit === "puan" ? t.markets.point : unitLabel(unit, locale);
+}
+
+/** Bir satırın değer biçimi — kart, gezgin ve önceki değer aynı kuraldan. */
+function formatterFor(row: MacroBoardRow, locale: Locale, t: Dictionary) {
+  const percent = row.unit === "%";
+  const digits = row.definition.digits ?? (percent ? 2 : 0);
+  const unit = unitText(row.unit, locale, t);
+  return {
+    percent,
+    digits,
+    unit,
+    format: (value: number | null) =>
+      value === null
+        ? NO_VALUE
+        : percent
+          ? formatPercentPlain(value, locale, digits)
+          : `${formatPrice(value, locale, { digits })} ${unit}`.trimEnd(),
+  };
+}
+
+/** Sahm kuralının eşiği — yüzde puanı (Claudia Sahm, 2019). */
+const SAHM_THRESHOLD = 0.5;
+
+/**
+ * Seriye özgü okuma notu — kartın İÇİNDE, saç teliyle ayrılmış düz
+ * paragraf (ekran düzeni 6. madde). Yalnızca eşiği ya da işareti olan
+ * iki seride: sayının kendisi bir yargı taşımıyor ama eşiğe göre konumu
+ * taşıyor ve o eşik ekranda yazmıyorsa okuyucu "0,37 çok mu" diye soruyor.
+ */
+function seriesNote(row: MacroBoardRow, locale: Locale, t: Dictionary): { status: string | null; text: string } | null {
+  const x = t.marketExtras;
+  const latest = row.latestValue;
+  if (row.definition.seriesId === "SAHMREALTIME") {
+    const threshold = formatPrice(SAHM_THRESHOLD, locale, { digits: 2 });
+    return {
+      status: latest === null ? null : latest >= SAHM_THRESHOLD ? x.sahmTriggered : x.sahmBelow,
+      text: x.sahmNote.replace("{threshold}", threshold),
+    };
+  }
+  if (row.definition.seriesId === "T10Y3M") {
+    return {
+      status: latest === null ? null : latest < 0 ? x.curveInvertedStatus : x.curveNormalStatus,
+      text: x.curveNote,
+    };
+  }
+  return null;
+}
+
 export default async function MacroPage() {
   const { locale, t } = await getI18n();
-  const rows = await getMacroRows();
+  /* Tablo + canlı yedek: tohumda satırı olmayan yeni seri de basılıyor
+     (gerekçe lib/macro-data.ts). */
+  const rows = await getMacroBoard();
 
-  const withData = rows.filter(
-    (row) => row.latestValue !== null && row.observations,
-  );
+  const withData = rows.filter((row) => row.latestValue !== null);
 
   // Historical observations carry their exact dates and units into the client.
   // The published reading remains separate when a previous point is inspected.
   const explorerSeries = withData.map((row) => {
-    const format = (value: number) => row.unit === "%"
-      ? formatPercentPlain(value, locale, 2)
-      : `${formatPrice(value, locale, { digits: 0 })} ${unitLabel(row.unit, locale)}`.trim();
+    const { format } = formatterFor(row, locale, t);
     const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
       day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
     });
     return {
-      id: row.seriesId,
+      id: row.definition.seriesId,
       title: locale === "tr" ? row.titleTr : row.titleEn,
-      latest: format(row.latestValue!),
-      period: formatPeriod(row.periodLabel, locale),
+      latest: format(row.latestValue),
+      period: periodOf(row, locale, t),
       next: row.nextReleaseAt ? formatEtDateLong(row.nextReleaseAt, locale) : null,
-      points: ((row.observations as MacroObservation[] | null) ?? [])
-        .filter((point) => Number.isFinite(point.value))
-        .slice().sort((a, b) => a.date.localeCompare(b.date))
+      points: row.observations
         .map((point) => {
           const date = new Date(`${point.date}T12:00:00Z`);
           return { value: point.value, date: dateFormat.format(date), timestamp: date.getTime(), label: format(point.value) };
@@ -122,10 +187,15 @@ export default async function MacroPage() {
         </Panel>
       ) : (
         <div className={styles.grid} data-motion-stagger>
+          {/* Sonraki FOMC ızgaranın başında: politika faizi kartının
+              "sonraki açıklama" satırı aylık ortalamanın yayın günü, karar
+              günü değil. Kararın kendisi bu kartta. */}
+          <Suspense fallback={null}>
+            <FomcCard locale={locale} t={t} />
+          </Suspense>
           {withData.map((row) => {
             const title = locale === "tr" ? row.titleTr : row.titleEn;
-            const observations =
-              (row.observations as MacroObservation[] | null) ?? [];
+            const observations = row.observations;
             const delta =
               row.latestValue !== null && row.prevValue !== null
                 ? row.latestValue - row.prevValue
@@ -134,35 +204,22 @@ export default async function MacroPage() {
                Bu ekran işareti elle sayının ARDINA koyuyor ve bir ondalığa
                yuvarlıyordu; ana sayfadaki makro paneli aynı seriyi
                `formatPercentPlain` ile iki ondalıklı ve dile göre doğru
-               tarafa yazıyor. Sonuç: "Tümünü Gör" ile geçen okuyucu, ana
-               sayfada "%2,47" gördüğü sayıyı burada "2,5 %" diye buluyordu —
-               aynı kartta, aynı seride, iki farklı biçim ve iki farklı
-               hassasiyet. Kural tek yerde: lib/utils.ts → withPercent. */
-            /* BİRİM DE YAZILIYOR, yalnızca yüzde değil.
-               Bu ekran `%` dışındaki her birimi düşürüyordu ve PAYEMS serisi
-               (`unit: "bin"`) burada birimsiz "-23" olarak duruyordu; ekonomik
-               takvim aynı seriyi `formatEventValue` ile "-23 bin" yazarken.
-               Komşu kartlar "%3,30" ve "%4,10" olduğu için birimsiz sayı
-               yüzde ya da endeks seviyesi gibi de okunabiliyordu.
-               Etiket kararı lib/utils.ts → `unitLabel`; üç ekran aynı yerden. */
-            const yuzde = row.unit === "%";
-            const digits = yuzde ? 2 : 0;
-            const birim = unitLabel(row.unit, locale);
-            const olcu = (value: number | null) =>
-              value === null
-                ? NO_VALUE
-                : yuzde
-                  ? formatPercentPlain(value, locale, 2)
-                  : `${formatPrice(value, locale, { digits })} ${birim}`.trimEnd();
+               tarafa yazıyor. Kural tek yerde: lib/utils.ts → withPercent.
+               BİRİM DE YAZILIYOR, yalnızca yüzde değil (PAYEMS "-23 bin";
+               gerekçe lib/utils.ts → `unitLabel`). Hane sayısı artık seri
+               tanımından (`digits`): Sahm göstergesi ve faiz farkı yüzde
+               PUANI ve sıfır haneyle "0" basılırdı. */
+            const { percent: yuzde, digits, unit: birim, format: olcu } = formatterFor(row, locale, t);
+            const note = seriesNote(row, locale, t);
 
             return (
-              <Panel key={row.seriesId} className={`${styles.card} flex flex-col p-4 sm:p-5`}>
+              <Panel key={row.definition.seriesId} className={`${styles.card} flex flex-col p-4 sm:p-5`}>
                 <div className="flex items-start justify-between gap-2">
                   <h2 className="text-sm font-semibold leading-snug text-strong">
                     {title}
                   </h2>
                   <span className="numeral shrink-0 rounded-full bg-primary-tint px-2 py-0.5 text-nano text-soft">
-                    {formatPeriod(row.periodLabel, locale)}
+                    {periodOf(row, locale, t)}
                   </span>
                 </div>
 
@@ -185,21 +242,21 @@ export default async function MacroPage() {
                         {delta > 0 ? "▲" : "▼"}
                       </span>
                       {formatPrice(Math.abs(delta), locale, { digits })}
-                      {/* BİRİM SÖZLÜKTEN, elden yazılmış değil. Bu rozet " puan" diye
-                          küçük harfle basıyordu; aynı künye /piyasalar'ın tahvil
-                          kartında `t.markets.point` ile "Puan" duruyor. İki ekran aynı
-                          ölçüyü iki biçimde yazıyordu ve CLAUDE.md'nin Title Case kuralı
-                          künyeleri açıkça kapsıyor. "bin" bilerek küçük kaldı: dev
-                          puntolu sayının yanındaki sayı sözcüğü, geri sayımın sa/dk/sn
-                          ekleriyle aynı bilinçli istisna. */}
+                      {/* BİRİM SÖZLÜKTEN, elden yazılmış değil (Title Case
+                          künye kuralı; "bin" bilinçli küçük — sayı sözcüğü). */}
                       {yuzde
                         ? ` ${t.markets.point}`
                         : birim
-                          ? ` ${birim}`
+                          ? ` ${birim}`
                           : ""}
                     </span>
                   )}
                 </div>
+                {note?.status && (
+                  <p className="mt-2 w-fit rounded-full bg-surface-elevated px-2 py-0.5 text-nano font-semibold text-body">
+                    {note.status}
+                  </p>
+                )}
 
                 <div className="mt-4">
                   <Sparkline
@@ -232,6 +289,12 @@ export default async function MacroPage() {
                   </div>
                 </dl>
 
+                {note && (
+                  <p className="mt-3 border-t border-line-soft pt-3 text-tiny leading-relaxed text-muted">
+                    {note.text}
+                  </p>
+                )}
+
                 <DataStamp
                   labels={t.data}
                   source="fred"
@@ -248,7 +311,7 @@ export default async function MacroPage() {
       <GuideHint
         label={t.guide.contextLabel}
         locale={locale}
-        slugs={["enflasyon", "sahin-guvercin", "faiz-tahvil", "getiri-egrisi", "volatilite", "endeks"]}
+        slugs={["enflasyon", "istihdam", "sahin-guvercin", "faiz-tahvil", "getiri-egrisi", "volatilite"]}
         className="pt-1"
       />
     </MotionExperience>

@@ -32,7 +32,10 @@ export function isFinnhubConfigured(): boolean {
   return apiKey() !== null;
 }
 
-async function finnhubFetch<T>(
+/* Dışa açık: hisse sayfasının derinlik uçları (içeriden işlemler, ham
+   metrikler) ayrı dosyada (`finnhub-depth.ts`) ama anahtar, süre sınırı ve
+   429/403 ayrımı bu tek kapıdan geçmeli. */
+export async function finnhubFetch<T>(
   path: string,
   params: Record<string, string>,
   opts: { revalidate: number; tags?: string[] },

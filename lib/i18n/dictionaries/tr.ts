@@ -1724,6 +1724,10 @@ const tr = {
     hintNews: "Çevrilmiş Piyasa Haberleri",
     hintBrief: "Günlük ve Haftalık Bülten Arşivi",
     hintWatchlist: "Takip Listelerin",
+    hintPortfolio: "Pozisyonların, Dolar ve Lira Kâr/Zarar",
+    hintThemes: "Yapay Zekâ, Yarı İletken, Katılım",
+    hintGlossary: "Piyasa Terimleri, A’dan Z’ye",
+    hintTax: "Satış Kazancı ve Temettü, TL Olarak",
     hintSettings: "Hesap, Tema ve Dil",
     hintPrivacy: "Verilerin ve Haklarının Tamamı",
   },
@@ -1787,6 +1791,773 @@ const tr = {
        fazladan bir kelime olurdu. */
     updatedOn: "{date} {time} Güncellendi",
     mayBeStale: "Güncel Olmayabilir",
+  },
+
+  /* Hakkında ve Metodoloji (`/hakkinda`), gömülü parçalar (`/gomulu/*`) ve
+     Açılış Kartı (`/gun/[tarih]/kart`). Üçü de sitenin kendini dışarıya
+     anlattığı yüzeyler; tek ad alanında duruyorlar. */
+  about: {
+    metaTitle: "Hakkında ve Metodoloji",
+    metaDescription:
+      "Açılış Zili'ni kim yapıyor, veriler nereden geliyor, yazılar nasıl üretiliyor ve neden ücretsiz. Sitenin çalışma biçiminin açık anlatımı.",
+    eyebrow: "Hakkında",
+    title: "Hakkında ve Metodoloji",
+    intro:
+      "Bu sayfa sitenin nasıl çalıştığını anlatıyor: kim yapıyor, sayılar nereden geliyor, yazıları kim yazıyor. Bir sayıya ya da bir cümleye ne kadar güveneceğine kendin karar verebilesin diye.",
+    footerLink: "Hakkında",
+    whoTitle: "Kim Yapıyor",
+    whoBody: [
+      "Açılış Zili, geliştirici Ahmet Akyapı'nın kişisel projesi. Bir şirket, aracı kurum ya da yatırım danışmanı değil; arkasında reklam veren ya da sponsor yok.",
+      "Neden var: ABD borsalarını Türkiye'den izleyen herkes her gün aynı çeviriyi yapıyordu. Kaynaklar New York saatiyle yayın yapıyor, bir bilanço \"kapanış sonrası\" deniyor ve bunun Türkiye saatiyle kaç olduğunu herkes kendi hesaplıyor; ABD yaz saatine geçince hesap bir saat kayıyor. Site bu çeviriyi bir kez ve doğru yapmak için kuruldu.",
+    ],
+    whoLink: "ahmetakyapi.com",
+    dataTitle: "Veri Nereden Geliyor",
+    dataIntro:
+      "Sitedeki her sayının adı belli bir kaynağı var. Site sayı uydurmuyor; kaynağın verdiğini hesaplıyor, biçimlendiriyor ve damgalıyor.",
+    sources: [
+      { name: "Alpaca", what: "Hisse ve fon fiyatları, grafik barları. Konsolide tape (SIP), 15 dakika gecikmeli." },
+      { name: "Finnhub", what: "Şirket profilleri, haberler, bilanço takvimi, analist dağılımı ve halka arzlar." },
+      { name: "FRED", what: "ABD makro serileri: enflasyon, istihdam, büyüme ve faiz." },
+      { name: "U.S. Treasury ve Cboe", what: "Tahvil getirileri ve VIX için resmî günlük kapanışlar." },
+      { name: "TCMB", what: "Dolar/TL kuru, bültenin kendi tarihiyle." },
+    ],
+    layersTitle: "Üç Katmanlı Veri",
+    layersIntro:
+      "Her fiyat isteği sırayla üç kapıdan geçiyor. Hiçbir aşamada tahmin ya da uydurma değer üretilmiyor.",
+    layers: [
+      { title: "Canlı Sağlayıcı", body: "Önce asıl kaynak soruluyor." },
+      { title: "Yedek Sağlayıcı", body: "Asıl kaynak cevap vermezse ikinci kaynak deneniyor." },
+      { title: "Son Bilinen Değer", body: "İkisi de düşerse veritabanındaki son kayıt gösteriliyor ve kartın künyesi bunu söylüyor." },
+    ],
+    stampTitle: "Kaynak ve Saat Damgası",
+    stampBody: [
+      "Her veri kartının altında kaynağın adı ve verinin çekildiği saat yazıyor. Fiyatlar 15 dakika gecikmeli ve damga bunu da söylüyor. Kayıt dünden kaldıysa tarih de yazılıyor; bayat olabilecek bir kayıt ayrıca işaretleniyor.",
+      "Bir yüzde hangi seansı anlattığını kanıtlamıyorsa \"bugün\" diye gösterilmiyor. Bir ölçü dürüstçe gösterilemiyorsa hiç gösterilmiyor: kart boş kalıyor ya da ölçü kaldırılıyor.",
+    ],
+    timeTitle: "Saat Türkiye Saatiyle",
+    timeBody:
+      "Birincil saat İstanbul, New York saati yanında duruyor. Site hiçbir yere sabit saat yazmıyor, her saati o günün tarihiyle hesaplıyor. Bugün açılış zili {open}, kapanış zili {close} Türkiye saatiyle çalıyor.",
+    contentTitle: "Yazılar Nasıl Üretiliyor",
+    contentBody: [
+      "Bülten, Mercek yazıları, bilanço analizleri ve teknik analizler, Anthropic'in yapay zekâ modeli Claude ile çalışan zamanlanmış rutinler tarafından yazılıyor. Bunu saklamıyoruz: yazıların altında bir insan adı yok, çünkü onları bir insan yazmıyor.",
+      "Sayıları model değil site üretiyor. Teknik analizde ortalamalar, RSI, MACD, hacim ve pivot seviyeleri sitenin kendi fiyat verisinden hesaplanıp rutine veriliyor; rutin yorumu yazıyor. Bayat bir fiyat yazıya hiç girmiyor: yazma katmanı yalnızca o seansa ait olduğu kanıtlanan kotasyonu kabul ediyor.",
+      "Sitenin sahibi yayımlanan metinleri yönetim panelinden okuyup düzeltiyor ve düzeltilen her metnin önceki hâli saklanıyor. Rehber yazıları ise kodun içinde duruyor; her değişiklikleri incelemeden geçiyor.",
+    ],
+    rhythmTitle: "Yayın Ritmi",
+    rhythm: [
+      "Her gün bir bülten",
+      "Günde iki Mercek yazısı",
+      "Dün açıklanan bilançoların analizleri",
+      "İşlem günlerinde üç teknik analiz",
+      "Pazartesi haftalık bülten",
+    ],
+    freeTitle: "Ücretsiz, Reklamsız, Açık Kaynak",
+    freeBody:
+      "Sitede reklam, ücretli üyelik ya da sponsorlu içerik yok. Kaynak kodunun tamamı GitHub'da herkese açık: bir sayının nasıl hesaplandığını merak eden, onu üreten kodu okuyabilir.",
+    repoLink: "Kaynak Kodu",
+    issuesLink: "Hata Bildir",
+    privacyTitle: "Gizlilik",
+    privacyBody:
+      "Sayfa ölçümü çerezsiz: IP adresi, tam yönlendiren adres ve tarayıcı kimliği saklanmıyor, üçüncü taraf analitik yok. Hesap açarsan tutulan her alan aydınlatma metninde tek tek sayılı.",
+    privacyLink: "KVKK ve Gizlilik",
+    disclaimerTitle: "Yatırım Tavsiyesi Değildir",
+    disclaimerBody:
+      "Sitedeki hiçbir sayı, görüş ya da yazı bir alım satım önerisi değil. Teknik analizdeki Al, Tut ve Sat görüşleri bir yöntemin çıktısı; senin birikimini, risk tercihini ve vergi durumunu bilmiyor. Karar vermeden önce lisanslı bir yatırım danışmanına başvur.",
+    embedTitle: "Sitene Ekle",
+    embedIntro:
+      "Açılış geri sayımını ya da haftanın bilançolarını kendi sitene ekleyebilirsin. Kodu kopyalayıp sayfana yapıştırman yeterli; koyu zemin için adresteki tema değerini koyu yap.",
+    embedCountdown: "Açılış Geri Sayımı",
+    embedEarnings: "Haftanın Bilançoları",
+    embedCopy: "Kodu Kopyala",
+    embedCopied: "Kopyalandı",
+    embedCodeLabel: "{name} için gömme kodu",
+    embedPreviewLabel: "{name} önizlemesi",
+    embed: {
+      attribution: "Açılış Zili",
+      attributionLabel: "Açılış Zili'ni yeni sekmede aç",
+      openAt: "Açılış",
+      closeAt: "Kapanış",
+      earningsTitle: "Haftanın Bilançoları",
+      earningsEmpty: "Bu hafta takvimde öne çıkan bir bilanço yok.",
+      /* Ek saate değil "TR"ye bitişiyor: "16:30'dan" ünlü uyumu saatin
+         okunuşuna bağlı ve saat kışın kayıyor (session-clock.ts,
+         dayBoundaryNote ile aynı kural). */
+      earningsNote:
+        "Açılış öncesi {open} TR'den önce, kapanış sonrası {close} TR'den sonra açıklanır.",
+      earningsSource: "Finnhub Takvimi",
+      allEarnings: "Tüm Takvim",
+      metaCountdown: "Açılış Geri Sayımı",
+      metaEarnings: "Haftanın Bilançoları",
+    },
+    card: {
+      eyebrow: "Açılış Kartı",
+      trTime: "TR",
+      marketClosed: "Piyasa Kapalı",
+      weekend: "Hafta Sonu",
+      halfDay: "Yarım Gün",
+      eventsEmpty: "Takvimde öne çıkan bir veri ya da bilanço yok.",
+      timeUnknown: "Saat Belirsiz",
+      movesSession: "Seans İçi · 15 Dakika Gecikmeli",
+      movesPre: "Açılış Öncesi İşlem",
+      movesAfter: "Kapanış Sonrası İşlem",
+      movesLastClose: "Önceki Kapanış · {date}",
+    },
+  },
+  /* Verilerimi İndir (28 Eylül) — Ayarlar → Verilerin. KVKK veri
+     taşınabilirliği; içerik lib/account-export-format.ts. */
+  dataExport: {
+    title: "Verilerimi İndir",
+    hint:
+      "Hesabının tuttuğu her şey tek dosyada: hesap bilgilerin, takip listelerin ve renkleri, listelerdeki semboller ve notların, portföy pozisyonların, profil ikonun. JSON tam kopyadır, CSV listelerini tablo programında açmak için.",
+    json: "JSON Olarak İndir",
+    csv: "CSV Olarak İndir",
+  },
+  /* Piyasa panoları, makro ikinci halka ve temettü (28 Eylül). Ayrı ad
+     alanı: aynı gün başka paketler de sözlüğe anahtar ekliyor. */
+  marketExtras: {
+    boardsLabel: "Piyasa Geneli",
+    /* ---- Sektör ve emtia panoları ---- */
+    sectorsTitle: "Sektör Performansı",
+    sectorsMeta: "11 SPDR Sektör Fonu",
+    sectorColumn: "Sektör",
+    colDay: "1G",
+    colDayLong: "Günlük Değişim",
+    colWeek: "1H",
+    colWeekLong: "Son 1 Hafta",
+    colMonth: "1A",
+    colMonthLong: "Son 1 Ay",
+    colQuarter: "3A",
+    colQuarterLong: "Son 3 Ay",
+    colYtd: "YBB",
+    colYtdLong: "Yılbaşından Beri",
+    sectorsProxyNote:
+      "Sektörler SPDR sektör fonlarıyla temsil ediliyor: her fon, o sektördeki S&P 500 şirketlerini piyasa değeriyle tutar ve tek şirketin ağırlığına tavan uygular. Fonun getirisi sektörün kendisiyle birebir aynı değildir.",
+    dayNote:
+      "1G bu seansın değişimidir; bu seansta işlem görmemiş bir fonda yüzde son kapanışı anlatır ve Son Kapanış işaretiyle yazılır.",
+    periodNote:
+      "1H, 1A ve 3A son 5, 21 ve 63 işlem günüdür; YBB önceki yılın son kapanışından hesaplanır. Getiriler günlük kapanışlardan hesaplanan fiyat getirisidir, temettü dahil değildir.",
+    returnsThrough: "Dönem Getirileri {date} Kapanışına Kadar",
+    commoditiesTitle: "Emtia",
+    commoditiesMeta: "Borsada İşlem Gören Fonlar",
+    commodityGroup: "Emtia Fonları",
+    cryptoGroup: "Spot Kripto Fonları",
+    fundColumn: "Fon",
+    priceColumn: "Fon Fiyatı ($)",
+    etfLabel: "{name} ETF",
+    commoditiesNote:
+      "Fiyatlar emtianın değil fonun fiyatıdır: GLD'nin fiyatı bir ons altının fiyatı değildir. Yüzdeler fonun hareketini gösterir. USO ve UNG vadeli kontrat tutar; vade yenileme maliyeti yüzünden uzun dönemde spot fiyattan ayrışabilir.",
+    cryptoNote:
+      "Kripto 7/24 işlem görür, fonlar yalnızca borsa saatlerinde: hafta sonunun hareketi pazartesi açılışında topluca yansır.",
+
+    /* ---- Piyasa Nabzı ---- */
+    pulseTitle: "Piyasa Nabzı",
+    pulseScale: "0 Korku · 100 İştah",
+    pulseDetails: "Ayrıntılar",
+    gaugeAria: "Piyasa nabzı 100 üzerinden {score}: {band}",
+    pulseInsufficient: "Genel puan için yeterli bileşen yok",
+    pulseInsufficientShort: "Yetersiz Veri",
+    pulseAverageOf: "{n} Bileşenin Ortalaması",
+    bandExtremeFear: "Aşırı Korku",
+    bandFear: "Korku",
+    bandNeutral: "Nötr",
+    bandGreed: "İştah",
+    bandExtremeGreed: "Aşırı İştah",
+    pulseVix: "Oynaklık (VIX)",
+    pulseMomentum: "S&P 500 Momentumu",
+    pulseBreadth: "Piyasa Genişliği",
+    pulseCredit: "Yüksek Getirili Tahvil Farkı",
+    pulseSafeHaven: "Güvenli Liman Talebi",
+    rawVix: "VIX {value} · {days} Günlük Ortalama {average}",
+    rawCredit: "Fark {value} Puan · {days} Günlük Ortalama {average}",
+    rawMomentum: "SPY, {days} Günlük Ortalamasına Göre {distance}",
+    rawSafeHaven: "{days} Gün: SPY {stocks} · TLT {bonds}",
+    rawBreadth: "Artıdaki Üye Payı {share}",
+    pulseExtended: "Seans Dışı",
+    pulseMethod:
+      "Her bileşenin bugünkü okuması, kendi son 126 işlem gününün (yaklaşık altı ay) içinde yüzdelik sıraya çevrilir; VIX ve tahvil farkında sıra ters çevrilir, çünkü yükselmeleri gerginlik demektir. Genişlik doğrudan artıdaki hisselerin payıdır. Genel puan mevcut bileşenlerin ağırlıksız ortalamasıdır.",
+    pulseRelative:
+      "Puan göreli bir ölçüdür: son altı aya göre okunur. Sakin bir dönemin korku bölgesi, tarihsel bir krizle aynı şey değildir. Yatırım tavsiyesi değildir.",
+    pulseMissing: "Hesaplanamayan bileşenler: {names}.",
+    pulseMinimum: "Genel puan en az {n} bileşenle yazılır.",
+    pulseNoHighsLows:
+      "52 haftalık zirve ve dip sayısı kullanılmıyor: her endeks üyesi için bir yıllık fiyat geçmişi gerekiyor ve bu ekranın verisinden türetilemiyor.",
+    pulseSources:
+      "Kaynaklar: VIX Cboe (yedek FRED), yüksek getirili tahvil farkı ICE BofA serisi FRED üzerinden, SPY ve TLT günlük kapanışları ile S&P 500 kotasyonları Alpaca (15 dakika gecikmeli).",
+
+    /* ---- Makro ikinci halka ---- */
+    weekEnding: "{date} ile Biten Hafta",
+    sahmBelow: "Eşiğin Altında",
+    sahmTriggered: "Eşik Aşıldı",
+    sahmNote:
+      "Sahm kuralı: işsizlik oranının üç aylık ortalaması, önceki 12 ayın en düşük üç aylık ortalamasının {threshold} puan üzerine çıktığında resesyonun başladığına dair tarihsel bir sinyal verir. Gösterge sinyaldir, tahmin değil.",
+    curveNormalStatus: "Normal Eğri",
+    curveInvertedStatus: "Ters Eğri",
+    curveNote:
+      "10 yıllık tahvil faizinden 3 aylık bono faizi çıkarılır. Fark eksiye düştüğünde (ters eğri) kısa vadeli borçlanma uzun vadeliden pahalıdır; bu durum geçmişte resesyonlardan önce görülmüştür ama zamanlaması değişkendir.",
+    fomcTitle: "Sonraki FOMC Kararı",
+    fomcProjections: "Nokta Grafiği ile",
+    fomcTarget: "Mevcut Hedef Aralık",
+    observed: "Gözlem",
+    fomcNoPricing:
+      "Piyasanın faiz beklentisini gösteren vadeli fiyatlamaya erişimimiz yok; bu yüzden karar olasılığı yazılmıyor. Tarih Fed'in yayımladığı toplantı takviminden.",
+
+    /* ---- Takvim türleri ve temettü ---- */
+    calendarKinds: "Takvim Türü",
+    calendarEconomic: "Ekonomik Takvim",
+    calendarDividends: "Temettü Takvimi",
+    dividendTitle: "Temettü Takvimi",
+    dividendSubtitle: "Endeks şirketlerinin yaklaşan hak kesim günleri, tutarları ve temettüyü almak için son alım günü",
+    dividendMeta: "Önümüzdeki {weeks} Hafta · {n} Ödeme",
+    dividendEmpty: "Bu dönemde hak kesimi olan temettü yok",
+    dividendEmptyHint: "Liste endeks üyelerini kapsar; şirketler temettüyü genellikle hak kesimden birkaç hafta önce ilan eder.",
+    exDate: "Hak Kesim Günü",
+    lastBuy: "Almak İçin Son Gün",
+    perShare: "Hisse Başı",
+    special: "Özel Temettü",
+    payable: "Ödeme",
+    payableLong: "Ödeme Tarihi",
+    yieldEstimate: "Yıllık Getiri Tahmini",
+    freqMonthly: "Aylık Ödeme",
+    freqQuarterly: "Çeyreklik Ödeme",
+    freqSemiannual: "Altı Ayda Bir",
+    freqAnnual: "Yıllık Ödeme",
+    t1Rule:
+      "ABD'de takas T+1: temettüyü almak için hisseyi hak kesim gününden önceki işlem gününün kapanışına kadar almış olmalısın. Hak kesim günü ya da sonrasında alınan hisse o temettüyü almaz.",
+    yieldMethod:
+      "Yıllık getiri tahmini son olağan temettü × yıllık ödeme sayısı ÷ son fiyattır; ödeme sıklığı geçmiş ödemelerden kanıtlanamıyorsa, ödeme özel ya da yabancı ihraççıdansa yazılmaz.",
+    withholding:
+      "ABD temettülerinden kaynakta vergi kesilir: Türkiye ile ABD arasındaki anlaşma gereği bireysel yatırımcıda W-8BEN formu verilmişse %20, verilmemişse %30. Tutarlar vergi öncesi, hisse başı brüttür.",
+    taxGuide: "Vergi Rehberi",
+    w8benGuide: "W-8BEN Nedir",
+    dividendCoverage: "Kapsam: S&P 500, Nasdaq 100 ve Dow Jones üyeleri; iki sınıflı şirketler tek satır.",
+    dividendSource: "Alpaca Kurumsal İşlemler",
+    panelTitle: "Temettü",
+    panelNone: "Son üç yılda nakit temettü ödemesi yok.",
+    nextExDate: "Sıradaki Hak Kesim",
+    amount: "Tutar",
+    partialYear: "Kısmi Yıl",
+    payments: "{n} Ödeme",
+    recentPayments: "Son Ödemeler",
+  },
+  /* ---- Programatik sayfalar: sözlük, temalar, karşılaştırma çiftleri ----
+     Üç yeni rota ailesinin metni; içerik (terim tanımları, tema ve çift
+     paragrafları) `content/` altında, burada yalnızca arayüz. */
+  glossary: {
+    eyebrow: "Piyasa Terimleri",
+    title: "Sözlük",
+    subtitle:
+      "Borsada, bilançoda ve Fed kararlarında geçen {count} terimin kısa ve düz tanımı.",
+    filterLabel: "Terimlerde ara",
+    filterPlaceholder: "Terim ara: F/K, RSI, stopaj…",
+    categoryLabel: "Kategoriye göre süz",
+    allCategories: "Tümü",
+    noResults: "Bu aramayla eşleşen terim yok. Kısaltmayı ya da Türkçe adını dene.",
+    count: "{count} Terim",
+    backToList: "Sözlüğe Dön",
+    definition: "Tanım",
+    related: "İlgili Terimler",
+    guide: "Rehberde Ayrıntısı",
+    metaTitle: "{term} Nedir?",
+  },
+  themes: {
+    eyebrow: "Tematik Listeler",
+    title: "Temalar",
+    subtitle:
+      "Bir hikâyenin etrafında toplanan ABD hisseleri, günün hareketi ve piyasa değeriyle.",
+    backToList: "Temalara Dön",
+    todayTitle: "Temanın Günü",
+    companies: "{count} Şirket",
+    median: "Günün Medyanı",
+    medianSession: "Bu Seans",
+    medianLastClose: "Son Kapanış",
+    medianMissing:
+      "Üyelerin yüzdeleri farklı seansları anlatıyor; iki günden tek bir medyan kurulmuyor.",
+    breadth: "Yükselen / Düşen",
+    tableTitle: "Şirketler",
+    tableRegion: "Tema şirketleri tablosu",
+    colCompany: "Şirket",
+    colPrice: "Son Fiyat",
+    colDay: "Günlük Değişim",
+    colCap: "Piyasa Değeri",
+    benchmark: "Karşılaştırma Ölçütü",
+    lastClose: "Son Kapanış",
+    whyTitle: "Neden Bu Şirketler",
+    listNote:
+      "Liste editoryal bir seçimdir, yatırım tavsiyesi değildir. Sıralama piyasa değerine göredir; ana borsası ABD dışında olan şirketlerin piyasa değeri karşılaştırılamadığı için boş kalır.",
+    compareTop: "İlk Dördü Karşılaştır",
+    quotesUnavailable: "Fiyatlar şu an alınamadı; liste fiyatsız gösteriliyor.",
+    katilimPool:
+      "Endeks üyeleri arasından piyasa değeri en büyük {pool} şirket tarandı; ön elemeyi geçenlerin en büyük {max} tanesi gösteriliyor.",
+    katilimEmpty:
+      "Bugün ön elemeyi geçen şirket bulunamadı ya da bilanço oranları alınamadı.",
+  },
+  pairs: {
+    eyebrow: "Karşı Karşıya",
+    title: "{names}",
+    metaTitle: "{names} Karşılaştırması",
+    subtitle:
+      "Aynı grafikte, aynı ölçekte: getiri, değerleme ve risk ölçüleri yan yana.",
+    introTitle: "Bu İkili Neden Karşılaştırılır",
+    others: "Diğer Karşılaştırmalar",
+    joiner: " ve ",
+  },
+  /* HİSSE SAYFASININ DERİNLİK PANELLERİ (28 Eylül) — içeriden işlemler,
+     beklenen hareket, analist dağılımı değişimi, skor kartı, teknik
+     fotoğraf ve şirket özeti. Ayrı ad alanı: `stock` bloğu zaten yüz
+     altmış satır ve bu paneller kendi kaynaklarını ve kendi künyelerini
+     taşıyor. `{ek}` Türkçe ek yer tutucusu (lib/scorecard.ts → trAblative);
+     İngilizce metinde yok. */
+  stockDepth: {
+    insiderTitle: "İçeriden İşlemler",
+    insiderWindow: "Son 90 Gün",
+    insiderBuy: "Açık Piyasa Alım",
+    insiderSell: "Açık Piyasa Satış",
+    insiderNet: "Net",
+    insiderPersonOne: "{n} Kişi",
+    insiderPersonMany: "{n} Kişi",
+    insiderNoOpenMarket:
+      "Son 90 günde açık piyasadan alım ya da satış yok; listedeki hareketler ödül, vergi kesintisi, hediye ya da opsiyon kaynaklı.",
+    insiderEmpty: "Son 90 günde dosyalanmış içeriden işlem yok.",
+    insiderEmptyHint:
+      "ABD dışındaki ihraççılar Form 4 dosyalamak zorunda değil; ADR'lerde bu liste çoğu zaman boştur.",
+    insiderColDate: "Tarih",
+    insiderColName: "Kişi",
+    insiderColType: "İşlem",
+    insiderColShares: "Pay",
+    insiderColPrice: "Fiyat",
+    insiderColValue: "Tutar",
+    insiderDerivative: "Türev",
+    insiderMore: "{n} İşlem Daha",
+    insiderCodes: {
+      P: "Açık Piyasa Alım",
+      S: "Açık Piyasa Satış",
+      A: "Hisse Ödülü",
+      D: "Şirkete Devir",
+      F: "Vergi Kesintisi",
+      M: "Opsiyon Kullanımı",
+      X: "Opsiyon Kullanımı",
+      O: "Opsiyon Kullanımı",
+      C: "Dönüştürme",
+      G: "Hediye",
+      J: "Diğer",
+      K: "Swap",
+      I: "Takdirî İşlem",
+      W: "Miras",
+      V: "Gönüllü Bildirim",
+      E: "Vade Sonu",
+      H: "Vade Sonu",
+      U: "Devralma Teklifi",
+      L: "Küçük Alım",
+      Z: "Oy Tröstü",
+    },
+    insiderCodeOther: "Diğer ({code})",
+    insiderPriceDropped:
+      "{n} işlemin fiyatı hisse fiyatıyla tutmuyor (kayıt başka bir menkulün ya da para biriminin fiyatını taşıyor olabilir); bu işlemlerin fiyatı ve tutarı gösterilmiyor, özete katılmıyor.",
+    sentimentTitle: "Aylık Alım Oranı (MSPR)",
+    sentimentNote:
+      "MSPR −100 ile 100 arasında: 100 o ay yalnızca alım, −100 yalnızca satış demek. Boş ay, kaynakta o ay için hesaplanmış bir değer olmadığını gösterir; son aylar kaynağa gecikmeli düşebilir.",
+    insiderNote:
+      "Satırlar SEC Form 4 dosyalarından; aynı dosyanın parçaları tek işlem olarak birleştirildi. Özet yalnızca açık piyasa alım ve satışlarını sayar: ödül, vergi kesintisi, hediye ve opsiyon kullanımı bir alım satım kararı değildir. Önceden planlanmış (10b5-1) satışlar kaynakta ayrıca işaretlenmez.",
+
+    emTitle: "Beklenen Hareket",
+    emImplied: "Opsiyonların Fiyatladığı",
+    emImpliedDetail: "{expiry} Vadesi · {strike} Kullanım · Straddle {straddle}",
+    emIndicative: "Gösterge Fiyat",
+    emImpliedNote:
+      "Başa baş alım ve satım opsiyonlarının orta fiyatları toplamının hisse fiyatına oranı. Vadeye kadar olan bütün hareketi fiyatlar, yalnızca bilançoyu değil. Kotasyonlar türetilmiş gösterge beslemesinden gelir, OPRA'nın kendisi değildir.",
+    emReason: {
+      "no-quotes": "Bu vade için opsiyon kotasyonu alınamadı.",
+      "wide-spread":
+        "Başa baş opsiyonların alış satış aralığı çok geniş; orta fiyat güvenilir bir tahmin olmadığı için sayı gösterilmiyor.",
+      "no-atm": "Hisse fiyatına yakın bir kullanım fiyatında kotasyon yok.",
+      "no-expiry": "Raporu kapsayan bir opsiyon vadesi bulunamadı.",
+      stale: "Opsiyon kotasyonları güncel değil; sayı gösterilmiyor.",
+      "bad-spot": "Hisse fiyatı alınamadığı için oran kurulamadı.",
+    },
+    emHistory: "Geçmiş Raporların Ertesinde",
+    emAverage: "Ortalama Mutlak Hareket",
+    emAverageCount: "Son {n} Rapor",
+    emAverageTooFew: "Ortalama için en az {n} ölçülmüş rapor gerekiyor.",
+    emHistoryEmpty: "Bu şirket için kayıtlı geçmiş rapor tarihi henüz yok.",
+    emColReport: "Rapor",
+    emColTiming: "Zaman",
+    emColMove: "Hareket",
+    emTimingUnknown: "Saat Bilinmiyor",
+    emBarsMissing: "Fiyat Yok",
+    emHistoryNote:
+      "Açılış öncesi raporda önceki kapanıştan rapor gününün kapanışına, kapanış sonrası raporda rapor gününün kapanışından ertesi seansın kapanışına kadar ölçülür. Saati bilinmeyen rapor ortalamaya girmez. Rapor tarihleri sitenin kendi takviminden; takvim biriktikçe liste sekiz rapora uzar.",
+
+    atTitle: "Analist Dağılımı Değişimi",
+    atChange: "Değişim",
+    atTotal: "Toplam",
+    atBuyShare: "Al Tarafı",
+    atNote:
+      "Tek tek not değişiklikleri ve hedef fiyatlar kaynağımızda yok; tablo aylık dağılımın net değişimini gösterir. Bir kovadaki artış notunu değiştiren analistten de yeni katılan analistten de gelebilir.",
+
+    scTitle: "Hisse Skor Kartı",
+    scPeers: "{n} Şirket",
+    scAxes: {
+      valuation: "Değerleme",
+      growth: "Büyüme",
+      profitability: "Kârlılık",
+      health: "Bilanço Sağlığı",
+      momentum: "Momentum",
+    },
+    scSentence: {
+      valuation: "Sektörünün %{p}{ek} ucuz",
+      growth: "Sektörünün %{p}{ek} hızlı büyüyor",
+      profitability: "Sektörünün %{p}{ek} kârlı",
+      health: "Borç ve likiditede sektörünün %{p}{ek} önde",
+      momentum: "Son 6 ayda sektörünün %{p}{ek} önde",
+    },
+    scMetrics: {
+      earningsYield: "Kâr Getirisi",
+      salesYield: "Satış Getirisi",
+      revenueGrowth: "Gelir Büyümesi",
+      epsGrowth: "EPS Büyümesi",
+      operatingMargin: "Faaliyet Marjı",
+      netMargin: "Net Marj",
+      roe: "Özsermaye Getirisi",
+      debtToEquity: "Borç / Özsermaye",
+      currentRatio: "Cari Oran",
+      momentum: "6 Aylık Getiri",
+    },
+    scPreparing: "Hazırlanıyor",
+    scPreparingHint:
+      "Sektör karşılaştırması için en az {n} şirketin ölçüsü gerekiyor; ölçüler her iş günü biraz daha toplanıyor.",
+    scNote:
+      "Her eksen, şirketin aynı GICS sektöründeki endeks üyeleri arasındaki yüzdeliğidir; bir not ya da tavsiye değil. Değerleme canlı fiyatla kurulur (kâr ve satış getirisi), büyüme ve marjlar son on iki ayın yıllık ölçüleridir. Ucuz bir hisse ucuzluğunu hak ediyor olabilir.",
+    scOldest: "En Eski Ölçü {date}",
+
+    tsTitle: "Teknik Fotoğraf",
+    tsAsOf: "{date} Kapanışı",
+    tsMa20: "20 Günlük Ortalama",
+    tsCrossGolden: "50 Günlük Ortalama 200 Günlüğün Üstüne Geçti",
+    tsCrossDeath: "50 Günlük Ortalama 200 Günlüğün Altına İndi",
+    tsNote:
+      "Göstergeler son tamamlanmış seansın kapanışından hesaplanır ve yorum içermez; aynı hesap Teknik Analiz sayfasındaki hisselerde de kullanılıyor. 50, 100 ve 200 günlük ortalamalar Değerleme bölümündeki panelde.",
+
+    sumTitle: "Şirket Özeti",
+    sumNextLine: "Sonraki Bilanço: {date}",
+    sumNextApprox: "{clock} · {window}",
+    sumIndexOne: "{ad}, {list} endeksinin üyesi.",
+    sumIndexMany: "{ad}, {list} endekslerinin üyesi.",
+    sumSector: "Şirket {sektor} sektöründe yer alıyor.",
+    sumSectorSub: "Şirket {sektor} sektöründe, {alt} alt sektöründe yer alıyor.",
+    sumNext: "Sonraki bilanço {date} tarihinde {window} açıklanacak.",
+    sumNextUnknown: "Sonraki bilanço {date} tarihinde bekleniyor; açıklama saati henüz belli değil.",
+    sumPeers: "Aynı alt sektörde {n} endeks şirketi daha var.",
+    sumGuides: "İlgili Rehber",
+    listJoin: " ve ",
+    metaIndex: "{list} üyesi.",
+    metaNext: "Sonraki bilanço: {date}.",
+  },
+  /* ==========================================================================
+     TL perspektifi, vergi hesaplayıcısı ve portföy (gerekçeler lib/fx.ts ve
+     lib/tax.ts başında). Tek ad alanı: dört ekranın ortak kur dili burada.
+     ========================================================================== */
+  lira: {
+    compare: {
+      currencyLabel: "Para Birimi",
+      currencies: { usd: "USD", tl: "TL", reel: "Reel TL" },
+      currencyLongs: {
+        usd: "Dolar Cinsinden",
+        tl: "Lira Cinsinden",
+        reel: "Enflasyondan Arındırılmış Lira",
+      },
+      currencyAnnounce: "Para birimi {currency} olarak değiştirildi",
+      periodColumns: {
+        usd: "{range} Getirisi",
+        tl: "{range} TL Getirisi",
+        reel: "{range} Reel Getiri",
+      },
+      partUsd: "USD",
+      partFx: "Kur",
+      partTl: "TL",
+      partInflation: "TÜFE",
+      fxNote:
+        "Kur: {from} {fromRate} ₺, {to} {toRate} ₺ ({pct}). TCMB döviz alış, bülten günleriyle.",
+      fxPathNote:
+        "Uçlar TCMB'nin günlük kuru; aradaki aylar FRED aylık ortalaması, noktalar arası doğrusal. Dönem getirisi yalnızca iki uçtan hesaplanır.",
+      fxPathFlat:
+        "Aylık kur serisi alınamadı; grafikte ara noktalar iki uç arasında doğrusal. Dönem getirisi bundan etkilenmez.",
+      cpiNote:
+        "TÜFE: {from} ile {to} arası {pct} (TCMB EVDS, 2025=100). Son açıklanan aydan sonrası için enflasyon sıfır sayılır.",
+      fxPathShort:
+        "Aralık kısa; aradaki günler iki ucun günlük kuru arasında doğrusal. Dönem getirisi yalnızca iki uçtan hesaplanır.",
+      multiplyNote:
+        "Bileşenler toplanmaz, çarpılır: (1 + USD getirisi) × (1 + kur değişimi) − 1 = TL getirisi.",
+      fxFailed: "Kur Alınamadı",
+      fxFailedHint: "TCMB bültenine ya da enflasyon verisine şu an ulaşılamıyor; dolar görünümü çalışıyor.",
+    },
+    chart: {
+      currencyGroup: "Para Birimi",
+      usd: "USD",
+      tl: "TL",
+      usdLong: "Dolar Cinsinden",
+      tlLong: "Lira Cinsinden",
+      fxNote: "TL: TCMB döviz alış, {from} {fromRate} ₺ ile {to} {toRate} ₺ arası.",
+      fxMonthly: "Ara aylar FRED aylık ortalaması, noktalar arası doğrusal.",
+      fxLinear: "Aradaki günler iki uç arasında doğrusal.",
+      fxFailed: "Kur alınamadı; grafik dolar cinsinden gösteriliyor.",
+    },
+    favorites: {
+      tlNote: "TL karşılıkları TCMB döviz alış kuruyla: 1 USD = {rate} ₺ ({date} bülteni).",
+      tlUnavailable: "Kur alınamadı; TL karşılıkları şu an gösterilmiyor.",
+    },
+    tax: {
+      eyebrow: "Hesaplayıcı",
+      title: "Yurt Dışı Hisse Vergisi",
+      subtitle:
+        "ABD hisselerinin satış kazancını ve temettüsünü TCMB kuru ve Yİ-ÜFE endekslemesiyle liraya çevir. Hiçbir şey kaydedilmez; hesap tarayıcında yapılır.",
+      notAdvice: "Vergi Danışmanlığı Değildir",
+      notAdviceBody:
+        "Bu hesaplayıcı GİB rehberlerine dayanan bir tahmindir; beyannamen için mali müşavirine danış. Kuralların kaynakları sayfanın sonunda.",
+      yearLabel: "Vergi Yılı",
+      yearOption: "{year} Geliri · Mart {filing} Beyannamesi",
+      rateDayLabel: "Kur Günü",
+      rateDaySame: "İşlem Günü",
+      rateDayPrevious: "Bir Önceki İş Günü",
+      rateDayHint:
+        "Varsayılan, işlem gününde ilan edilen kur; hafta sonu ve tatilde son iş günü. Uygulamada bir önceki iş gününün kurunu kullananlar da var.",
+      tradesTitle: "İşlemler",
+      tradesHint:
+        "Alış ve satışlarını gir; satışlar en eski alıştan başlayarak eşleşir (ilk giren ilk çıkar). Satışın yılı, seçili vergi yılı olmalı.",
+      addBuy: "Alış Ekle",
+      addSell: "Satış Ekle",
+      side: "Tür",
+      sideBuy: "Alış",
+      sideSell: "Satış",
+      symbol: "Sembol",
+      date: "Tarih",
+      quantity: "Adet",
+      priceUsd: "Fiyat (USD)",
+      commissionUsd: "Komisyon (USD)",
+      remove: "Satırı Sil",
+      removeAria: "{row}. satırı sil",
+      emptyTrades: "Henüz işlem yok. Bir alış ve bir satış ekleyerek başla.",
+      imported: "Portföyden {count} pozisyon alış olarak aktarıldı.",
+      resultsTitle: "Satış Kazancı",
+      resultsHint: "Her satır bir satışın bir alışla eşleşen parçası.",
+      buyDate: "Alış",
+      sellDate: "Satış",
+      buyRate: "Alış Kuru",
+      sellRate: "Satış Kuru",
+      costTl: "TL Maliyet",
+      indexRatio: "Yİ-ÜFE Oranı",
+      taxCostTl: "Vergiye Esas Maliyet",
+      proceedsTl: "TL Satış Bedeli",
+      gainTl: "Kazanç / Zarar",
+      indexedBadge: "Endeksli",
+      bulletinOf: "{date} Bülteni",
+      rateMissing: "Kur Yok",
+      noSalesInYear: "Seçili yılda satış yok; kazanç hesabı satış yılına göre yapılır.",
+      shortfall: "{symbol}: {date} satışında {quantity} adedin alışı girilmemiş; bu kısım hesaba katılmadı.",
+      totalProceeds: "Toplam Satış Bedeli",
+      totalCost: "Toplam Vergiye Esas Maliyet",
+      netGain: "Net Kazanç",
+      declare: "Beyan",
+      declareYes: "Beyan Edilir",
+      declareNo: "Beyan Gerekmez",
+      declareHint:
+        "Menkul kıymet satış kazancında yıllık istisna yok: net kazanç varsa tutar ne olursa olsun beyan edilir. Zararlar yalnızca aynı yılın menkul kıymet kazançlarından düşülür; sonraki yıla devretmez.",
+      estTax: "Tahmini Vergi",
+      estTaxHint:
+        "Yalnızca bu gelir varsa {year} tarifesiyle; ücret ya da başka gelirin varsa dilim yükselir.",
+      incomplete: "Bazı satırların kuru ya da endeksi eksik; toplam yalnızca tamamlanan satırları içerir.",
+      loadingRates: "Kurlar getiriliyor",
+      ratesFailed: "Bazı kurlar alınamadı; tarihi kontrol edip yeniden dene.",
+      retry: "Tekrar Dene",
+      indexTitle: "Yİ-ÜFE Endeksleri",
+      indexHint:
+        "Maliyet, alıştan önceki ay ile satıştan önceki ayın Yİ-ÜFE artışı %10 ya da üstündeyse endekslenir.",
+      indexAuto: "Endeksler TCMB EVDS'den (Yİ-ÜFE, 2003=100) otomatik geldi.",
+      indexManual:
+        "Endeks kaynağı bu kurulumda kapalı; TÜİK'in Yİ-ÜFE (2003=100) değerlerini ay ay yaz. Boş bırakırsan endeksleme yapılmaz.",
+      indexMonth: "Ay",
+      indexValue: "Yİ-ÜFE",
+      indexNote:
+        "Endeksleme yalnızca endekslemeden önce kazançlı olan satışa uygulanır ve kazancı en fazla sıfıra indirir; zarar doğurup doğuramayacağı konusunda açık bir düzenleme bulunamadığı için temkinli yol seçildi.",
+      dividendsTitle: "Temettüler",
+      dividendsHint:
+        "Yurt dışı temettü brüt tutarıyla beyan edilir; ödeme gününün kuruyla liraya çevrilir.",
+      addDividend: "Temettü Ekle",
+      grossUsd: "Brüt (USD)",
+      withholding: "ABD Stopajı",
+      withholdingW8: "%20 · W-8BEN Var",
+      withholdingNone: "%30 · W-8BEN Yok",
+      grossTl: "Brüt TL",
+      withheldTl: "Kesilen TL",
+      emptyDividends: "Temettü eklemedin.",
+      thresholdLabel: "Beyan Sınırı ({year})",
+      thresholdSource: "GVK 86/1-c, {source}",
+      thresholdOver: "Sınır Aşıldı: Tamamı Beyan Edilir",
+      thresholdUnder: "Sınırın Altında",
+      thresholdHint:
+        "Sınır, stopaja tabi tutulmamış bütün menkul ve gayrimenkul sermaye iratlarının toplamına uygulanır; mevduat dışı başka yurt dışı gelirin varsa onları da ekle.",
+      creditHint:
+        "ABD'de kesilen vergi Türkiye'de bu gelire düşen vergiden mahsup edilebilir, fazlası iade edilmez. Belge olarak aracı kurumun 1042-S formu kullanılır; kesilen oranı da o formda doğrula.",
+      totalGrossTl: "Toplam Brüt TL",
+      totalWithheldTl: "Toplam Kesilen TL",
+      exportCsv: "CSV İndir",
+      csvName: "yurt-disi-hisse-vergisi-{year}.csv",
+      guideTitle: "Bilmen Gerekenler",
+      sections: {
+        changesTitle: "2026'da Ne Değişti",
+        changesBody:
+          "Doğrudan yurt dışı hisse satış kazancının vergilemesinde 2026 için bir rejim değişikliği yok: kazanç yine yıllık beyannameyle bildiriliyor. Değişenler şunlar: tarife dilimleri güncellendi (ilk dilim 190.000 TL), temettü için beyan sınırı 22.000 TL'ye çıktı, yurt dışı iştirak kazancı istisnasının sermaye şartı %50'den %20'ye indi (CBK 11257; portföy yatırımcısını ilgilendirmez) ve serbest fonlarda stopaj oranları değişti (7566 sayılı Kanun ve 27 Mart 2026 tarihli karar). Araştırma Eylül 2026 itibarıyladır.",
+        timelineTitle: "Mart Beyannamesi Takvimi",
+        timelineBody:
+          "Bir yılın kazancı izleyen yılın 1 ile 31 Mart arasında yıllık gelir vergisi beyannamesiyle bildirilir. Vergi iki eşit taksitte ödenir: ilki 31 Mart, ikincisi 31 Temmuz. ABD'deki aracı kurum 1042-S formunu en geç 15 Mart'ta gönderir; beyanname için bu belgeyi bekle.",
+        w8Title: "W-8BEN ve 1042-S",
+        w8Body:
+          "W-8BEN, ABD'ye vergi mukimi olmadığını bildiren formdur. Verilmişse Türkiye ile ABD arasındaki anlaşma temettü stopajını bireysel yatırımcıda %20 ile sınırlar; verilmemişse %30 kesilir. 1042-S, yıl içinde kesilen vergiyi gösteren belgedir ve Türkiye'deki mahsup için kullanılır; hesaplayıcıdaki oranı bu formdaki oranla karşılaştır.",
+        ruleTitle: "Kur ve Endeksleme Kuralı",
+        ruleBody:
+          "Maliyet alış tarihindeki, satış bedeli satış tarihindeki TCMB döviz alış kuruyla liraya çevrilir; kur farkı da vergiye tabidir, yani dolarda zarar eden bir satış TL'de kazançlıysa vergilenir. Yİ-ÜFE artışı %10 ya da üstündeyse maliyet endekslenebilir. Komisyonlar kazancı azaltır.",
+        fifoTitle: "Hangi Alış Satılmış Sayılır",
+        fifoBody:
+          "Farklı günlerde alınan aynı hissenin bir kısmı satıldığında ilk giren ilk çıkar yöntemi uygulanır (257 Seri No. Gelir Vergisi Genel Tebliği). Tebliğ yurt içi için yazıldı; yurt dışı hissede de kıyasla kullanılır.",
+        sourcesTitle: "Kaynaklar",
+      },
+      sources: {
+        dki: "GİB, Diğer Kazanç ve İratlar Rehberi 2025",
+        msi: "GİB, Menkul Sermaye İradı Rehberi (Şubat 2026)",
+        ykb: "Yapı Kredi, Yabancı Hisse Senedi Gelirlerinde (2026 Yılı) Vergi Durumu",
+        turmob: "TÜRMOB Sirküleri 2026/65 (CBK 11257)",
+        irs: "IRS, Form 1042-S Talimatı",
+      },
+      dataNote: "Kurlar: TCMB döviz alış (günlük bülten). Endeks: TÜİK Yİ-ÜFE, 2003=100.",
+    },
+    portfolio: {
+      eyebrow: "Hesabım",
+      title: "Portföy",
+      subtitle: "Pozisyonlarının dolar ve lira kâr/zararı; TL maliyet alış gününün kuruyla, bugünkü değer bugünün kuruyla.",
+      unavailableTitle: "Portföy Şu An Açılamıyor",
+      unavailableBody:
+        "Portföy kaydı bu sunucuda henüz hazır değil. Takip listelerin ve hesabın etkilenmedi; biraz sonra yeniden dene.",
+      emptyTitle: "Henüz Pozisyon Yok",
+      emptyBody: "Elindeki hisseyi adet, alış fiyatı ve alış tarihiyle ekle; kâr/zarar dolar ve lira olarak hesaplanır.",
+      addTitle: "Pozisyon Ekle",
+      symbol: "Sembol",
+      quantity: "Adet",
+      costUsd: "Alış Fiyatı (USD)",
+      boughtAt: "Alış Tarihi",
+      note: "Not",
+      notePlaceholder: "İsteğe bağlı, örn. aracı kurum",
+      add: "Ekle",
+      adding: "Ekleniyor",
+      remove: "Sil",
+      removeAria: "{symbol} pozisyonunu sil",
+      errors: {
+        invalid: "Alanları kontrol et: sembol, pozitif adet ve fiyat, bugünden ileri olmayan bir tarih.",
+        limit: "En fazla {max} pozisyon eklenebilir.",
+        rateLimited: "Çok hızlı denedin; bir dakika sonra yeniden dene.",
+        failed: "Kaydedilemedi; biraz sonra yeniden dene.",
+        signedOut: "Oturumun kapanmış; yeniden giriş yap.",
+      },
+      positionsTitle: "Pozisyonlar",
+      price: "Fiyat",
+      value: "Değer",
+      pnlUsd: "K/Z (USD)",
+      pnlTl: "K/Z (TL)",
+      costTl: "TL Maliyet",
+      valueTl: "TL Değer",
+      rateAt: "{date} Kuru {rate} ₺",
+      noQuote: "Fiyat Yok",
+      totals: "Toplam",
+      totalValue: "Toplam Değer",
+      totalPnlUsd: "Dolar K/Z",
+      totalPnlTl: "Lira K/Z",
+      fxEffect: "Kurun Katkısı",
+      fxEffectHint: "Lira K/Z ile dolar K/Z'nin bugünkü kurla çevrilmiş hâli arasındaki fark.",
+      sectorTitle: "Sektör Ağırlığı",
+      sectorHint: "Güncel dolar değerine göre.",
+      otherSector: "Diğer",
+      todayRate: "Bugünkü kur: 1 USD = {rate} ₺ ({date} bülteni, TCMB döviz alış).",
+      fxMissing: "Kur alınamadı; TL sütunları şu an boş.",
+      staleNote: "Fiyatlar güncel olmayabilir; kâr/zarar son alınan fiyatla hesaplandı.",
+      exportToTax: "Vergi Hesaplayıcıya Aktar",
+      exportHint: "Pozisyonların alış olarak vergi hesaplayıcısına geçer; hiçbir şey sunucuya gönderilmez.",
+      notAdvice: "Yatırım tavsiyesi değildir.",
+    },
+  },
+  /* Bilanço analizinin ekleri ("30 Saniyede", segment ve KPI verisi) ve
+     Haftalık Bilanço Takvimi. Ayrı ad alanı: iki özellik de sonradan geldi
+     ve `analysis` ile `earnings` zaten yüzlerce anahtar taşıyor. */
+  earningsExtra: {
+    summaryTitle: "Bilanço Özeti",
+    summaryMeta: "30 Saniyede",
+    /* Liste kartındaki tek satırlık ipucunun künyesi. */
+    teaserLabel: "30 Saniyede",
+    dataTitle: "Segment ve KPI Verisi",
+    segmentsTitle: "Segment Gelirleri",
+    kpisTitle: "Şirkete Özgü Ölçüler",
+    segmentsHeading: "Gelirin Segmentlere Dağılımı",
+    kpisHeading: "Öne Çıkan Ölçüler",
+    share: "Pay",
+    yearly: "Yıllık",
+    sourceLabel: "Kaynak",
+    /* Künye cümleleri — paragraf, Title Case değil. */
+    segmentBasis: "Paylar segment toplamı üzerinden hesaplandı: {total}.",
+    segmentGap:
+      "Segment toplamı konsolide gelirden ({revenue}) farklı; şirketin eliminasyon ve diğer satırları bu tabloda yok.",
+    kpiNote:
+      "Ölçüler yalnızca şirketin kendi belgelerinden alınır; her birinin yanında hangi belge olduğu yazılı.",
+    sources: {
+      "press-release": "Basın Bülteni",
+      "shareholder-letter": "Hissedar Mektubu",
+      "10-Q": "10-Q",
+      "10-K": "10-K",
+      "8-K": "8-K",
+    },
+    week: {
+      eyebrow: "Bilanço Haftası",
+      title: "Haftalık Bilanço Takvimi",
+      /* PageHeader açıklaması — cümle. */
+      description:
+        "Gelecek haftanın kayda değer bilançoları, gün gün ve Türkiye saatiyle: açılış öncesi ve kapanış sonrası.",
+      metaTitle: "Haftalık Bilanço Takvimi · {range}",
+      metaDescription:
+        "{range} haftasında bilanço açıklayacak kayda değer şirketler, gün gün, açılış öncesi ve kapanış sonrası.",
+      boardTitle: "Açıklayacak Şirketler",
+      prevWeek: "Önceki Hafta",
+      nextWeek: "Sonraki Hafta",
+      thisWeek: "Bu Hafta",
+      navLabel: "Hafta seçimi",
+      beforeOpen: "Açılış Öncesi",
+      afterClose: "Kapanış Sonrası",
+      otherTime: "Saati Belirsiz",
+      marketClosed: "Borsa Kapalı",
+      emptyDay: "Kayda değer bilanço yok",
+      empty: "Bu hafta için kayda değer bilanço bulunamadı",
+      emptyHint:
+        "Takvim sağlayıcıdan her gün tazeleniyor; uzak haftalar henüz boş olabilir.",
+      countCompanies: "{count} Şirket",
+      countOf: "Takvimdeki {total} şirketin {count} tanesi gösteriliyor.",
+      statCompanies: "Şirket",
+      statBeforeOpen: "Açılış Öncesi",
+      statAfterClose: "Kapanış Sonrası",
+      statBusiest: "En Yoğun Gün",
+      imagesTitle: "Paylaşım Görselleri",
+      imageLandscape: "Yatay · 1200×630",
+      imagePortrait: "Dikey · 1080×1350",
+      download: "Görseli İndir",
+      shareTitle: "Bu Haftayı Paylaş",
+      landscapeAlt: "{range} haftasının bilanço takvimi, yatay paylaşım görseli",
+      portraitAlt: "{range} haftasının bilanço takvimi, dikey paylaşım görseli",
+      /* Künye paragrafları — cümle. */
+      noteTimes:
+        "Saatler yaklaşık: sağlayıcı dakika değil yalnızca pencereyi veriyor. Açılış öncesi bilançolar çoğunlukla ana seanstan bir buçuk saat önce, kapanış sonrası bilançolar kapanış zilinden hemen sonra açıklanıyor.",
+      noteSelection:
+        "Seçim: S&P 500, Nasdaq-100 ve Dow üyeleri, 10 milyar doların üzerindeki şirketler ve takip listemizdeki adlar; en fazla {max} şirket, büyükten küçüğe.",
+      openCalendar: "Takvimin Tamamı",
+      /* Takvim sekmesindeki bağlantı. */
+      calendarLink: "Haftalık Takvim Görseli",
+      calendarLinkHint: "Gelecek haftanın bilançoları tek görselde, indirilebilir.",
+      ogFooter: "Saatler Türkiye Saatiyle, Yaklaşık",
+      ogMore: "+{count}",
+    },
   },
 };
 

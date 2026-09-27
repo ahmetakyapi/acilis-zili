@@ -276,8 +276,15 @@ export function closeMinutesFor(dateStr: string, holidays: MarketHoliday[]): num
   return SESSION_BOUNDS.regularClose;
 }
 
-/** Verilen tarihten önceki ilk işlem gününü bulur (o gün dahil değil). */
-function prevTradingDay(dateStr: string, holidays: MarketHoliday[]): string {
+/**
+ * Verilen tarihten önceki ilk işlem gününü bulur (o gün dahil değil).
+ *
+ * Dışarı verildi (28 Eylül): temettü takviminin "almak için son gün"
+ * satırı hak kesim gününden bir önceki İŞLEM gününü istiyor ve tatil
+ * takvimi burada. Kopyası yazılsaydı yarım günleri işlem günü sayma
+ * kuralı iki yerde yaşardı.
+ */
+export function prevTradingDay(dateStr: string, holidays: MarketHoliday[]): string {
   let cursor = addEtDays(dateStr, -1);
   for (let i = 0; i < 14; i++) {
     if (isTradingDay(cursor, holidays)) return cursor;

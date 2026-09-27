@@ -29,6 +29,8 @@ import { getCompanyProfile } from "@/lib/providers";
 import { symbols as symbolsTable } from "@/lib/schema";
 import { ALL_MEMBERS } from "@/db/seed/indices";
 import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
+import { refreshSymbolMetrics } from "@/lib/symbol-metrics";
+import { purgeOldErrors } from "@/lib/error-log";
 
 /**
  * BÜTÇE. Finnhub ücretsiz katmanı dakikada 60 istek kabul ediyor ve bu
@@ -45,6 +47,10 @@ import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
  * profil. Profil turu 60'tan 25'e inince evren ~12 günde değil ~29 günde bir
  * tazeleniyor; hisse sayısı ve sektör ancak geri alım/ihraçla değiştiği için
  * bu kabul edilebilir bir yavaşlama.
+ *
+ * Skor kartının sektör ölçüleri (2d') koşum başına 15 istek daha ekliyor:
+ * toplam ~99, dakikada 60 sınırıyla yüz saniyelik bütçenin içinde. Adım
+ * kotaya çarptığı anda kendini kesiyor (lib/symbol-metrics.ts).
  *
  * İşi ayrı cron uçlarına bölmek (her birine kendi 120 saniyesi) daha iyi
  * olurdu ama cron SAYISI dağıtım planına bağlı; bu düzeltme hangi planda
@@ -452,6 +458,22 @@ export async function GET(request: Request) {
     report.profiles = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
+  /* ---- 2d'. Skor kartının sektör ölçüleri ----
+     Hisse sayfasındaki skor kartı bir şirketi SEKTÖRÜNE göre konumluyor ve
+     bunun için sektördeki her şirketin ölçüsü gerekiyor; sayfa başına
+     onlarca Finnhub isteği yerine `symbol_metrics` tablosunda birikiyor.
+     Koşum başına küçük bir paket, en eskiden başlayarak (sayı ve gerekçe
+     lib/symbol-metrics.ts → SYMBOL_METRICS_BATCH). Tablo yoksa adım
+     sessizce atlanıyor ve raporda söylüyor. */
+  if (outOfTime()) {
+    report.symbolMetrics = "atlandı: bütçe";
+  } else
+  try {
+    report.symbolMetrics = await refreshSymbolMetrics({ outOfTime });
+  } catch (error) {
+    report.symbolMetrics = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
   /* ---- 2e. Ekonomik takvimi ileriye doldur ----
      Takvimin ilan edilmiş tarihleri elle tohumlanıyordu ve bir gün bitip
      ekranı sessizce boşaltıyordu. Artık FRED'in yayın takviminden bir yıl
@@ -491,6 +513,12 @@ export async function GET(request: Request) {
   } catch (error) {
     report.indexDrift = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
+
+  /* ---- 2g. Eski hata kayıtları ----
+     `app_errors` otuz günden eskisini tutmuyor (KVKK metninde yazılı süre).
+     Tek bir DELETE, sağlayıcıya gitmiyor; bütçe kontrolü gerekmiyor.
+     Fonksiyon hatayı değer olarak döndürüyor, tablo yoksa 0. */
+  report.errorsPurged = await purgeOldErrors();
 
   /* ---- 3. Makro seriler ---- */
   if (outOfTime()) {

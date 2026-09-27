@@ -7,6 +7,9 @@ import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/markets/MarketExperience.module.css";
 import { HeatmapGrid } from "@/components/markets/HeatmapGrid";
+import { CommodityBoard, SectorPerformance, parseSectorSort } from "@/components/markets/EtfBoards";
+import { SentimentPulse } from "@/components/markets/SentimentPulse";
+import boardStyles from "@/components/markets/MarketBoards.module.css";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -181,6 +184,21 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
 
   const { locale, t } = await getI18n();
   const active = INDEX_TABS.find((entry) => entry.key === tab)!;
+  const sectorSort = parseSectorSort(search.sektor, search.sektorYon);
+  /* Sektör sıralaması endeks bölümünün parametrelerini KORUYOR: okuyucu
+     S&P 500 sekmesinde 120 satıra inmişken sektör başlığına basınca endeks
+     tablosu başa dönmemeli. Adres yalnızca bilinen anahtarlardan kuruluyor;
+     tanınmayan parametre taşınmıyor. */
+  const sectorHref = (params: { sektor: string; sektorYon: string }) => {
+    const query = new URLSearchParams();
+    if (search.endeks === tab) query.set("endeks", tab);
+    if (typeof search.sirala === "string") query.set("sirala", sort);
+    if (typeof search.yon === "string") query.set("yon", dir);
+    if (typeof search.adet === "string") query.set("adet", String(limit));
+    query.set("sektor", params.sektor);
+    query.set("sektorYon", params.sektorYon);
+    return `/piyasalar?${query.toString()}`;
+  };
 
   return (
     <MotionExperience className={styles.page}>
@@ -271,13 +289,41 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
       </Suspense>
       </QueryTransition>
 
+      {/* PİYASA GENELİ: NABIZ, SEKTÖRLER, EMTİA (28 Eylül). Endeks akışının
+          (kartlar → sekmeler → genişlik → hareket edenler → bileşenler)
+          ARKASINDA: kartlar `?endeks=` ile aşağıdaki detayı değiştiriyor
+          ve araya bir blok girseydi seçimin sonucu ekranın dışında
+          kalırdı. Üçü de seçili endeksten bağımsız; kendi Suspense
+          sınırlarında akıyorlar, endeks sekmesi değişince yeniden
+          beklenmiyorlar (anahtarları sekmeye bağlı değil). */}
+      <section className={boardStyles.section} aria-label={t.marketExtras.boardsLabel}>
+        <Suspense fallback={<Skeleton className="h-72 rounded-[18px]" />}>
+          <SentimentPulse locale={locale} t={t} />
+        </Suspense>
+        <div className={boardStyles.boards}>
+          <Suspense fallback={<Skeleton className="h-[520px] rounded-[18px]" />}>
+            <SectorPerformance
+              locale={locale}
+              t={t}
+              sort={sectorSort.sort}
+              dir={sectorSort.dir}
+              hrefFor={sectorHref}
+            />
+          </Suspense>
+          <Suspense fallback={<Skeleton className="h-[520px] rounded-[18px]" />}>
+            <CommodityBoard locale={locale} t={t} />
+          </Suspense>
+        </div>
+      </section>
+
       <GuideHint
         label={t.guide.contextLabel}
         locale={locale}
         /* Faiz ve oynaklık ızgarası açıklama kutusu taşımıyor (MarketPulse);
            eğri ve VIX'in okunuşu bu iki yazıda. Sayı ÇİFT kalmalı —
-           GuideHint iki sütunlu. */
-        slugs={["endeks", "volatilite"]}
+           GuideHint iki sütunlu. Sektör ve fon yazıları 28 Eylül'de
+           eklendi (sektör paneli ve emtia fonları). */
+        slugs={["endeks", "volatilite", "sektor-rotasyonu", "etf"]}
         className="pt-1"
       />
     </MotionExperience>

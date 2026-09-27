@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
@@ -8,6 +9,7 @@ import { NextRelease } from "@/components/calendar/NextRelease";
 import { GuideHint } from "@/components/article/GuideHint";
 import { IpoCalendar } from "@/components/markets/IpoCalendar";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { DividendCalendar, DividendCalendarSkeleton } from "@/components/calendar/DividendCalendar";
 import {
   DataError,
   EmptyState,
@@ -16,6 +18,8 @@ import {
   PanelHeader,
   Segment,
   SegmentItem,
+  TabBar,
+  TabItem,
 } from "@/components/ui/primitives";
 import { CalendarPlus } from "@phosphor-icons/react/dist/ssr";
 import { eventExplainer } from "@/lib/event-explainers";
@@ -191,16 +195,77 @@ function ValueSlot({
   );
 }
 
+/**
+ * Takvim türleri — ekonomik (varsayılan) ve temettü (`?tur=temettu`).
+ *
+ * TEMETTÜ AYRI BİR GÖRÜNÜM, AYRI BİR ROTA DEĞİL (28 Eylül). İkisi de aynı
+ * soruya cevap veriyor ("önümüzdeki günlerde ne olacak") ve halka arz
+ * takvimi de bu ekranda duruyor. Gün/Hafta/Ay seçimi ve önem süzgeci
+ * temettüde anlamsız; o görünümde basılmıyorlar.
+ */
+const KINDS = ["ekonomik", "temettu"] as const;
+type Kind = (typeof KINDS)[number];
+
+function KindTabs({ kind, labels }: { kind: Kind; labels: { label: string; economic: string; dividends: string } }) {
+  return (
+    <TabBar label={labels.label}>
+      <TabItem href="/takvim" active={kind === "ekonomik"} underlineId="takvim-tur">
+        {labels.economic}
+      </TabItem>
+      <TabItem href="/takvim?tur=temettu" active={kind === "temettu"} underlineId="takvim-tur">
+        {labels.dividends}
+      </TabItem>
+    </TabBar>
+  );
+}
+
 export default async function CalendarPage(
   props: PageProps<"/takvim">,
 ) {
   const search = await props.searchParams;
+  const kind: Kind = KINDS.includes(search.tur as Kind) ? (search.tur as Kind) : "ekonomik";
   const view: View = VIEWS.includes(search.g as View) ? (search.g as View) : "week";
   const impact: Impact | null = IMPACTS.includes(search.onem as Impact)
     ? (search.onem as Impact)
     : null;
 
   const { locale, t } = await getI18n();
+  const kindLabels = {
+    label: t.marketExtras.calendarKinds,
+    economic: t.marketExtras.calendarEconomic,
+    dividends: t.marketExtras.calendarDividends,
+  };
+
+  /* Temettü görünümü erken dönüyor: ekonomik takvimin altı haftalık
+     sorgusu ve FRED tazelemesi bu görünümde hiçbir şey çizmiyor. */
+  if (kind === "temettu") {
+    return (
+      <MotionExperience className={styles.page}>
+        <ScrollProgress />
+        <header className={`${styles.hero} page-frame`}>
+          <HeroAccent />
+          <div className="page-heading-copy">
+            <p className="page-eyebrow">{t.calendar.eyebrow}</p>
+            <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
+              {t.marketExtras.dividendTitle}
+            </h1>
+            <p>{t.marketExtras.dividendSubtitle}</p>
+          </div>
+        </header>
+        <KindTabs kind={kind} labels={kindLabels} />
+        <Suspense fallback={<DividendCalendarSkeleton t={t} />}>
+          <DividendCalendar locale={locale} t={t} />
+        </Suspense>
+        <GuideHint
+          label={t.guide.contextLabel}
+          locale={locale}
+          slugs={["temettu", "hisse-senedi"]}
+          className="pt-1"
+        />
+      </MotionExperience>
+    );
+  }
+
   const intlLocale = locale === "tr" ? "tr-TR" : "en-US";
   const today = todayEt();
   const now = new Date();
@@ -598,6 +663,8 @@ export default async function CalendarPage(
           )}
         </div>
       </header>
+
+      <KindTabs kind={kind} labels={kindLabels} />
 
       {/* PANO: takvim solda, halka arz sağda (≥1100). Seyrek bir hafta
           halka arzın ÜSTÜNDE bir boşluk olarak değil, yanında duruyor.

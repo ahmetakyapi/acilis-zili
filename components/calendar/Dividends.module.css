@@ -1,0 +1,64 @@
+/* --------------------------------------------------------------------------
+   Temettü takvimi (/takvim?tur=temettu) ve hisse temettü paneli.
+   Tokenlar globals.css'ten; gölge yok, ayrım saç teliyle.
+   -------------------------------------------------------------------------- */
+
+.panel { border-radius:18px; background:var(--premium-surface); }
+
+/* ---- Takvim ---- */
+.days { display:flex; flex-direction:column; }
+.day { border-top:1px solid var(--line); }
+.dayHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; padding:12px 16px 8px; background:var(--surface-sunken); }
+.dayHead h3 { font-size:var(--text-base); font-weight:700; color:var(--text-strong); }
+.rel { font-size:var(--text-tiny); font-weight:650; color:var(--primary-ink); }
+.dayTag { font-size:var(--text-nano); font-weight:650; color:var(--text-muted); }
+.lastBuy { flex-basis:100%; font-size:var(--text-tiny); color:var(--text-body); }
+.lastBuy strong { font-weight:650; color:var(--text-strong); }
+@media(min-width:640px) { .dayHead { padding-inline:20px; } .lastBuy { flex-basis:auto; margin-left:auto; } }
+.rows > li + li { border-top:1px solid var(--line-soft); }
+.row { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"company amount" "meta meta"; gap:4px 12px; padding:10px 16px; }
+@media(min-width:640px) { .row { grid-template-columns:minmax(0,1.3fr) minmax(0,.8fr) minmax(0,1.4fr); grid-template-areas:"company amount meta"; align-items:center; padding-inline:20px; } }
+.company { grid-area:company; display:flex; align-items:center; gap:10px; min-width:0; margin-block:-4px; padding-block:4px; }
+.company:hover .symbol { color:var(--primary); }
+.symbol { display:block; font-size:var(--text-base); font-weight:700; line-height:1.2; color:var(--text-strong); transition:color .2s; }
+.name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-tiny); color:var(--text-muted); }
+.amount { grid-area:amount; display:flex; flex-wrap:wrap; align-items:baseline; justify-content:flex-end; gap:2px 6px; text-align:right; font-weight:700; color:var(--text-strong); }
+@media(min-width:640px) { .amount { justify-content:flex-start; text-align:left; } }
+.amountUnit { font-size:var(--text-nano); font-weight:500; color:var(--text-muted); }
+.badge { padding:0 7px; border-radius:999px; background:var(--brass-wash); color:var(--brass-ink); font-size:var(--text-nano); font-weight:650; line-height:17px; }
+.meta { grid-area:meta; display:flex; flex-wrap:wrap; gap:2px 14px; font-size:var(--text-tiny); color:var(--text-muted); }
+.meta b { font-weight:650; color:var(--text-body); }
+
+/* ---- Künyeler ve damga ---- */
+.notes { display:flex; flex-direction:column; gap:6px; padding:12px 16px; border-top:1px solid var(--line-soft); font-size:var(--text-tiny); line-height:1.55; color:var(--text-muted); }
+.inlineLink { color:var(--primary); font-weight:600; text-decoration:underline; text-underline-offset:2px; }
+.inlineLink:hover { color:var(--primary-hover); }
+.stamp { padding:10px 16px 14px; border-top:1px solid var(--line-soft); }
+@media(min-width:640px) { .notes, .stamp { padding-inline:20px; } }
+
+/* ---- Hisse paneli ---- */
+.panelEmpty { padding:4px 16px 14px; font-size:var(--text-small); color:var(--text-body); }
+.nextStrip { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 16px; padding:4px 16px 14px; }
+@media(min-width:640px) { .nextStrip { grid-template-columns:repeat(4,minmax(0,1fr)); padding-inline:20px; } .panelEmpty { padding-inline:20px; } }
+.nextStrip > div { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.nextStrip strong { font-size:var(--text-base); font-weight:700; color:var(--text-strong); }
+.stripLabel { font-size:var(--text-nano); font-weight:600; color:var(--text-muted); }
+.years { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); border-top:1px solid var(--line-soft); }
+.years > div { display:flex; flex-direction:column; gap:3px; padding:12px 16px; min-width:0; }
+.years > div + div { border-left:1px solid var(--line-soft); }
+.years dt { display:flex; align-items:baseline; gap:6px; font-size:var(--text-tiny); font-weight:650; color:var(--text-muted); }
+.years dd { display:flex; flex-direction:column; gap:2px; }
+.years dd > span:first-child { font-size:20px; font-weight:700; letter-spacing:-.03em; color:var(--text-strong); }
+.partial { font-weight:500; }
+.count { font-size:var(--text-nano); color:var(--text-muted); }
+.yearBar { margin-left:0; max-width:none; }
+.recent { padding:12px 16px; border-top:1px solid var(--line-soft); }
+@media(min-width:640px) { .years > div, .recent { padding-inline:20px; } }
+.recent h3 { font-size:var(--text-tiny); font-weight:650; color:var(--text-muted); }
+.recent ul { margin-top:6px; }
+.recent li { display:flex; align-items:baseline; gap:10px; padding-block:5px; font-size:var(--text-small); color:var(--text-body); }
+.recent li + li { border-top:1px solid var(--line-soft); }
+.recent li > span:nth-child(2) { margin-left:auto; font-weight:650; color:var(--text-strong); }
+.yieldLine { padding:0 16px 12px; font-size:var(--text-small); color:var(--text-body); }
+.yieldLine b { color:var(--text-strong); }
+@media(min-width:640px) { .yieldLine { padding-inline:20px; } }
