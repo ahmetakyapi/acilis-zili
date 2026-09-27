@@ -5,7 +5,7 @@ name: Smoke
 # SIR YOK, VERİTABANI YOK. Runner'da hiçbir anahtar tanımlı değil: sayfalar
 # "veri alınamadı" durumlarıyla çiziliyor ve sınanan şey tam da o — rota
 # kodları (404 gerçekten 404 mü), hidrasyon/istemci hataları ve 390 ile
-# 1280'de yatay taşma. `SMOKE_DEGRADED_OK=1` kendi `/api/` uçlarımızın 503'ünü
+# 1280'de yatay taşma. `SMOKE_DEGRADED_OK=1` kendi `/api/` uçlarımızın 502 ve 503'ünü
 # hata saymıyor: veri yokken sözleşmeleri bu. Yazma akışı (kayıt, favori,
 # hesap silme) burada KOŞMAZ; veritabanı ister, elle `SMOKE_ALLOW_WRITES=1`.
 #

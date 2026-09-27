@@ -25,8 +25,13 @@
  *   SMOKE_CONCURRENCY   aynı anda açık sekme (varsayılan 3)
  *   SMOKE_ALLOW_WRITES  1 → yazma akışını da koş
  *   SMOKE_DEGRADED_OK   1 → veritabanısız koşum (CI): kendi `/api/` uçlarımızın
- *                       503'ü hata sayılmaz — sözleşmeleri bu, veri yokken
- *                       503 + "veri alınamadı" (ör. app/api/day-flow/route.ts)
+ *                       502 ve 503'ü hata sayılmaz — sözleşmeleri bu, veri
+ *                       yokken 503 + "veri alınamadı" (ör. app/api/day-flow/
+ *                       route.ts), sağlayıcı düşünce 502 (app/api/chart).
+ *                       İlk CI koşumu (28 Eylül) hisse sayfalarında grafiğin
+ *                       502'siyle düştü: yerel denemede anahtarlar boştu ama
+ *                       veritabanı vardı ve barlar önbellekten geliyordu, yani
+ *                       502 hiç oluşmamıştı.
  *
  * Çıkış kodu: bir kontrol bile düşerse 1.
  */
@@ -38,6 +43,8 @@ const BASE_URL = (process.env.BASE_URL || "http://localhost:3000").replace(/\/+$
 const CONCURRENCY = Math.max(1, Number(process.env.SMOKE_CONCURRENCY) || 3);
 const ALLOW_WRITES = process.env.SMOKE_ALLOW_WRITES === "1";
 const DEGRADED_OK = process.env.SMOKE_DEGRADED_OK === "1";
+/** Veritabanısız koşumda kendi veri uçlarımızın "kaynak yok" cevapları. */
+const DEGRADED_STATUSES = new Set([502, 503]);
 const WIDTHS = [390, 1280];
 const VIEWPORT_HEIGHT = 900;
 const NAV_TIMEOUT_MS = 60_000;
@@ -88,10 +95,12 @@ const NOT_FOUND_ROUTE = "/bu-sayfa-yok-duman-testi";
  *     NewsImage.tsx) ve biri düşünce bileşen yer tutucuya dönüyor; o
  *     sitenin değil kaynağın arızası. Yalnızca BAŞKA köke ait kaynak
  *     hataları susturuluyor, kendi kökümüzün 404/500'ü hata sayılıyor.
- *   · `SMOKE_DEGRADED_OK=1` ile kendi `/api/` uçlarımızın 503'ü (yukarıda).
+ *   · `SMOKE_DEGRADED_OK=1` ile kendi `/api/` uçlarımızın 502 ve 503'ü
+ *     (yukarıda). Sayfanın kendisi HTTP 200 dönmek ve konsola başka hata
+ *     yazmamak zorunda; istisna yalnızca veri ucunun "kaynak yok" cevabı.
  *
- * Konsol satırı kaynağın adresini ancak `location().url`de taşıyor; 503
- * ayrımı için yanıtın kendisi de izleniyor (`degradedUrls`).
+ * Konsol satırı kaynağın adresini ancak `location().url`de taşıyor; bu
+ * ayrım için yanıtın kendisi de izleniyor (`degradedUrls`).
  */
 function ignorable(message, url, expectNotFound, degradedUrls) {
   if (!message.startsWith("Failed to load resource") || !url) return false;
@@ -136,7 +145,7 @@ async function checkPage(browser, path, width) {
   const origin = new URL(BASE_URL).origin;
   page.on("response", (response) => {
     const url = new URL(response.url());
-    if (DEGRADED_OK && response.status() === 503 && url.origin === origin && url.pathname.startsWith("/api/")) {
+    if (DEGRADED_OK && DEGRADED_STATUSES.has(response.status()) && url.origin === origin && url.pathname.startsWith("/api/")) {
       degradedUrls.add(response.url());
     }
   });
