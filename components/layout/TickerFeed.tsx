@@ -5,7 +5,7 @@ import {
 } from "./MarketTicker";
 import { getStatus } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
-import { getSeries } from "@/lib/providers/fred";
+import { getDailyMarketSeries as getSeries } from "@/lib/providers/daily-markets";
 import { getUsdTry } from "@/lib/providers/tcmb";
 import { INDEX_STRIP } from "@/db/seed/symbols";
 import { getI18n } from "@/lib/i18n";
@@ -125,7 +125,7 @@ export async function TickerFeed() {
   if (yieldItems.length > 0) {
     groups.push({
       key: "yields",
-      caption: locale === "tr" ? "ABD Tahvili" : "US Treasuries",
+      caption: [locale === "tr" ? "ABD Tahvili" : "US Treasuries", ...new Set(yields.flatMap(result => result.ok ? [formatEtDateCompact(result.data.observations.at(-1)!.date, locale)] : []))].join(" · "),
       items: yieldItems,
       narrowSize: yieldItems.length,
       wideSize: yieldItems.length,

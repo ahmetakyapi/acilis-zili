@@ -417,7 +417,7 @@
 /* 27 Eylül, piyasa ekranı görsel bütünü: Archivo + marka mavisi korunur.
    Yön renkleri yalnız veriyi anlatır. Açılış, harita ve liste aynı 16px
    yüzey dilini paylaşır; hareket yalnız seçim ve gezinmeye eşlik eder. */
-.page .masthead :global(.page-heading-copy) h1 { font-size:clamp(34px,4.2vw,56px); letter-spacing:-.055em; line-height:1.05; }
+.page .masthead :global(.page-heading-copy) h1 { font-size:var(--heading-page); letter-spacing:-.045em; line-height:1.12; }
 .page .masthead > header > p { font-size:14px; line-height:1.6; max-width:32ch; }
 .indexGrid { gap:12px; }
 .indexCard { border-radius:16px; border-color:var(--line-soft); }
@@ -467,7 +467,7 @@
  .moverCompany > span:first-child { font-size:14px; }
 }
 @media(max-width:767px) {
- .page .masthead :global(.page-heading-copy) h1 { font-size:34px; }
+ .page .masthead :global(.page-heading-copy) h1 { font-size:var(--heading-page); }
  .indexGrid { gap:8px; }
  .indexCard { border-radius:12px; }
  .indexCard::before { top:12px; bottom:12px; left:0; right:auto; width:3px; height:auto; transform:scaleY(0); transform-origin:center; }
@@ -496,3 +496,10 @@
 .heatCell[data-heat-dismissed] .heatCard { visibility:hidden; opacity:0; pointer-events:none; }
 .heatCell[data-heat-side="below"] .heatCard { top:calc(100% + 8px); bottom:auto; }
 .heatCell[data-heat-side="below"] .heatCard::after { top:auto; bottom:100%; }
+
+/* Kapanış fiyatı ile canlı seans birbirine karışmasın; birim ortak künyede. */
+.indexContext { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; }
+.indexContext strong { font-weight:650; color:var(--text-body); }
+.sessionBadge { display:inline-flex; align-items:center; gap:6px; color:var(--text-body); font-size:11px; font-weight:600; }
+.sessionBadge > i { width:6px; height:6px; border-radius:50%; background:var(--text-muted); }
+.sessionBadge[data-open="true"] > i { background:var(--up); }

@@ -387,7 +387,16 @@ async function IndexCards({
         );
       })}
     </div>
-    <div className={styles.indexStamp}><span>{t.today.experienceIndexNote}</span><DataStamp labels={t.data} source={quotesResult.source} at={quotesResult.fetchedAt} stale={Boolean(quotesResult.stale)} locale={locale} /></div>
+    <div className={styles.indexStamp}>
+      <div className={styles.indexContext}>
+        <span className={styles.sessionBadge} data-open={status.isRegularOpen}>
+          <i aria-hidden />
+          {status.session === "regular" ? t.market.open : status.session === "pre-market" ? t.market.preMarket : status.session === "after-hours" ? t.market.afterHours : t.market.closed}
+        </span>
+        <span>{t.today.experienceIndexNote} · <strong>USD</strong></span>
+      </div>
+      <DataStamp labels={t.data} source={quotesResult.source} at={quotesResult.fetchedAt} stale={Boolean(quotesResult.stale)} locale={locale} />
+    </div>
     </div>
   );
 }

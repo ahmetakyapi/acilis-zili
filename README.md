@@ -605,7 +605,12 @@ Tam yol `docs/deploy-vps.md`'de, sunucu dosyaları `deploy/` altında.
    sağlık geçmezse bağ öncekine döner.
 3. Günlük cron (`/api/cron/daily`, hafta içi 10:30 UTC) sunucunun crontab'ından
    tetiklenir. Yüz saniyelik bir bütçesi var; dolarsa kalan adımları atlar ve
-   neyi atladığını raporlar.
+   neyi atladığını raporlar. Tahvil (2/5/10/30 yıl) ve VIX kapanışları ilk
+   adımda Cboe / U.S. Treasury ve FRED üzerinden önbelleksiz kontrol edilir;
+   en yeni gözlem tarihi seçilir, aynı tarihte doğrudan kaynak tercih edilir; başarılı serilerin ekran önbelleği
+   geçersizleştirilir, son gözlem tarihleri cron raporuna yazılır. Sayfa
+   isteklerinde bu günlük serilerin önbellek süresi 1 saat; aylık makro
+   serilerinki 6 saattir. Bu süreler kaynak yayın tarihini değiştirmez.
 
 Migration'lar deploy'da **uygulanmaz**; şema değişikliği ayrıca
 `npm run db:migrate` ile üretim veritabanına uygulanır.

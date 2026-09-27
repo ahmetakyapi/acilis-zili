@@ -1,5 +1,5 @@
 import styles from "./MacroExperience.module.css";
-import { getSeries } from "@/lib/providers/fred";
+import { getDailyMarketSeries as getSeries, dailySourceLabel } from "@/lib/providers/daily-markets";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { VIX_SERIES, vixBand } from "@/lib/vix";
 import { formatEtDateCompact, formatPercentPlain, formatPrice, NO_VALUE } from "@/lib/utils";
@@ -56,6 +56,7 @@ export async function MarketPulse({ locale, t }: { locale: Locale; t: Dictionary
     const prev = result.ok ? result.data.prevValue : null;
     return {
       key: series.slug,
+      source: result.ok ? dailySourceLabel(result.source) : "",
       label: t.markets[series.labelKey],
       latest,
       delta: latest !== null && prev !== null ? latest - prev : null,
@@ -72,7 +73,7 @@ export async function MarketPulse({ locale, t }: { locale: Locale; t: Dictionary
 
   const y2 = rows[0].latest;
   const y10 = rows[2].latest;
-  const spread = y2 !== null && y10 !== null ? y10 - y2 : null;
+  const spread = y2 !== null && y10 !== null && rows[0].date === rows[2].date && rows[0].source === rows[2].source ? y10 - y2 : null;
   const inverted = spread !== null && spread < 0;
   const band = vixLevel !== null ? vixBand(vixLevel) : null;
   const bandLabel: Record<string, string> = {
@@ -87,8 +88,8 @@ export async function MarketPulse({ locale, t }: { locale: Locale; t: Dictionary
      geriden yayımlıyor. VIX başka bir güne aitse o da ayrıca yazılıyor. */
   const yieldDate = rows.find((row) => row.date)?.date ?? null;
   const stamp = [
-    yieldDate && `FRED · ${formatEtDateCompact(yieldDate, locale)}`,
-    vixDate && vixDate !== yieldDate && `VIX · ${formatEtDateCompact(vixDate, locale)}`,
+    yieldDate && [...new Set(rows.filter(row => row.date).map(row => `${row.source} · ${formatEtDateCompact(row.date!, locale)}`))].join(" / "),
+    vix.ok && vixDate && `${dailySourceLabel(vix.source)} · VIX · ${formatEtDateCompact(vixDate, locale)}`,
   ].filter(Boolean).join(" · ");
 
   return (

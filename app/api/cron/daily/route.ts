@@ -1,3 +1,5 @@
+import { getDailyMarketSeries } from "@/lib/providers/daily-markets";
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { checkBearer } from "@/lib/api-auth";
 import { and, desc, eq, gte, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
@@ -14,7 +16,7 @@ import {
   getEarningsCalendar,
   getMarketNews,
 } from "@/lib/providers/finnhub";
-import { MACRO_SERIES, getSeries } from "@/lib/providers/fred";
+import { DAILY_MARKET_SERIES, MACRO_SERIES, getSeries } from "@/lib/providers/fred";
 import { addEtDays, etParts, todayEt } from "@/lib/market-hours";
 import { calendarRunwayDays, syncCalendar } from "@/lib/calendar-sync";
 import { translatePendingNews, isTranslateConfigured } from "@/lib/translate";
@@ -150,6 +152,22 @@ export async function GET(request: Request) {
   const today = todayEt();
   const startedAt = Date.now();
   const outOfTime = () => Date.now() - startedAt > BUDGET_MS;
+
+  /* Günlük kapanışları önce kontrol et: haber/profil bütçesi bu beş
+     seriyi atlatmasın. Başarısız kaynak yanıtında son iyi önbelleği koru. */
+  await Promise.all(DAILY_MARKET_SERIES.map(async (definition) => {
+    try {
+      const result = await getDailyMarketSeries(definition, 30, { forceRefresh: true });
+      if (result.ok) {
+        revalidateTag(`macro:${definition.slug}`, { expire: 0 });
+        report[definition.seriesId] = result.data.observations.at(-1)?.date ?? "gözlem yok";
+      } else {
+        report[definition.seriesId] = `hata: ${result.reason}`;
+      }
+    } catch {
+      report[definition.seriesId] = "hata: yenilenemedi";
+    }
+  }));
 
   /* ---- 1. Bilanço takvimi (bugün → +30 gün) ----
      Finnhub tek yanıtı ~1500 kayıtla keser; geniş aralık limit yüzünden bazı

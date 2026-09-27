@@ -117,7 +117,7 @@ import {
   storyFigureOf,
 } from "@/components/stories/StoryFigure";
 import { getChartBarsMulti } from "@/lib/providers";
-import { getSeries } from "@/lib/providers/fred";
+import { getDailyMarketSeries as getSeries, dailySourceLabel } from "@/lib/providers/daily-markets";
 import { VIX_SERIES, vixBand } from "@/lib/vix";
 
 import { pageMetadata } from "@/lib/page-meta";
@@ -783,6 +783,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
     const result = results[index];
     return {
       key: series.slug,
+      source: result.ok ? dailySourceLabel(result.source) : "",
       label: t.markets[series.labelKey],
       latest: result.ok ? result.data.latestValue : null,
       prev: result.ok ? result.data.prevValue : null,
@@ -891,7 +892,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
 
       {observedAt && (
         <p className="border-t border-line-soft px-4 py-2 text-tiny text-muted sm:px-5">
-          FRED · {formatEtDateCompact(observedAt, locale)}
+          {[...new Set(values.filter(value => value.date).map(value => `${value.source} · ${formatEtDateCompact(value.date!, locale)}`))].join(" / ")}
         </p>
       )}
 
@@ -930,14 +931,14 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
             <span className="tote text-lead leading-none">
               {formatPrice(vixLevel, locale, { digits: 2 })}
             </span>
-            {((vixDate && vixDate !== observedAt) || (vixDelta !== null && vixDelta !== 0)) && (
+            {(vixDate || (vixDelta !== null && vixDelta !== 0)) && (
               <span className="flex flex-wrap items-baseline justify-end gap-x-2">
                 {/* Tarih yalnızca faiz künyesinden FARKLIYSA yazılıyor: aynı
                     günse üstteki künye zaten söylüyor ve tekrar etmek satırı
                     gereksiz kalabalıklaştırır. */}
-                {vixDate && vixDate !== observedAt && (
+                {vixDate && vixResult.ok && (
                   <span className="numeral text-tiny text-muted">
-                    {formatEtDateCompact(vixDate, locale)}
+                    {vixResult.ok && dailySourceLabel(vixResult.source)} · {formatEtDateCompact(vixDate, locale)}
                   </span>
                 )}
                 {vixDelta !== null && vixDelta !== 0 && (

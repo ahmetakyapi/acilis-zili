@@ -1929,10 +1929,10 @@ html.theme-switching::view-transition-new(root) {
 /* Public directory/utility headings measured 24–46px for the same role.
    One compact scale now spans these routes; report/article display type
    and financial readings keep their own hierarchy. */
-:root { --heading-page:clamp(28px,3vw,40px); --radius-panel:18px; --radius-feature:22px; }
+:root { --heading-page:clamp(34px,4.2vw,56px); --radius-panel:18px; --radius-feature:22px; }
 .page-heading h1 { font-size:var(--heading-page); line-height:1.12; font-weight:600; letter-spacing:-.045em; }
 .page-heading > div > p:last-child { max-width:64ch; font-size:14px; line-height:1.7; }
-@media(max-width:767px) { :root { --heading-page:28px; } }
+@media(max-width:767px) { :root { --heading-page:34px; } }
 
 /* Route-level empty states use the same composed recovery surface. Inline
    no-data messages retain their compact footprint inside data panels. */

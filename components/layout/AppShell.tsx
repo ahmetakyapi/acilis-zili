@@ -330,8 +330,7 @@ export function AppShell({
              temizlemesi yeter — şerit artık orada basılmıyor, 128px'lik
              eski dolgu sayfanın dibinde ölü boşluk bırakıyordu. */
           CONTENT_FRAME,
-          "pb-24 pt-10",
-          barePath === "/piyasalar" ? "lg:pb-10" : "lg:pb-20",
+          "pb-24 pt-10 lg:pb-20",
           CONTENT_GUTTER,
           barePath === "/menu" && "[&_footer_nav]:hidden",
         )}
@@ -339,8 +338,7 @@ export function AppShell({
         {footer}
       </div>
 
-      {/* Piyasalar kendi endeks özetini taşır; alt şerit burada tekrarlanmaz. */}
-      {barePath !== "/piyasalar" && ticker}
+      {ticker}
 
       {/* ---- Mobil alt gezinme — 4 sekme, dokunma hedefi min 64px ---- */}
       <nav

@@ -86,7 +86,7 @@ export const MACRO_SERIES = [
 async function fredFetch<T>(
   path: string,
   params: Record<string, string>,
-  opts: { revalidate: number; tags?: string[] },
+  opts: { revalidate: number; tags?: string[]; forceRefresh?: boolean },
 ): Promise<ProviderResult<T>> {
   const key = apiKey();
   if (!key) {
@@ -104,7 +104,9 @@ async function fredFetch<T>(
     const res = await withTimeout(
       fetch(url, {
         headers: { accept: "application/json" },
-        next: { revalidate: opts.revalidate, tags: opts.tags },
+        ...(opts.forceRefresh
+          ? { cache: "no-store" as const }
+          : { next: { revalidate: opts.revalidate, tags: opts.tags } }),
       }),
     );
 
@@ -139,26 +141,40 @@ export type SeriesRequest = {
   units: string;
 };
 
+/** Günlük kapanışlar: ana sayfa, Makro ve alt şerit aynı politikayı kullanır. */
+export const DAILY_MARKET_SERIES: SeriesRequest[] = [
+  { seriesId: "DGS2", slug: "yield-2y", units: "lin" },
+  { seriesId: "DGS5", slug: "yield-5y", units: "lin" },
+  { seriesId: "DGS10", slug: "yield-10y", units: "lin" },
+  { seriesId: "DGS30", slug: "yield-30y", units: "lin" },
+  { seriesId: "VIXCLS", slug: "vix", units: "lin" },
+];
+
 export async function getSeries(
   definition: SeriesRequest,
   limit = 60,
+  options: { forceRefresh?: boolean } = {},
 ): Promise<ProviderResult<MacroSeriesData>> {
+  const daily = DAILY_MARKET_SERIES.some((series) => series.seriesId === definition.seriesId);
+  // Tatillerde son iki ham kayıt boş olabilir. Ortak pencere, ekranların
+  // farklı limitlerle birbirinden kopuk önbellekler tutmasını da önler.
+  const fetchLimit = daily ? Math.max(30, limit) : limit;
   const result = await fredFetch<RawObservations>(
     "/series/observations",
     {
       series_id: definition.seriesId,
       units: definition.units,
       sort_order: "desc",
-      limit: String(limit),
+      limit: String(fetchLimit),
     },
-    { revalidate: 21600, tags: ["macro", `macro:${definition.slug}`] },
+    { revalidate: daily ? 3600 : 21600, tags: ["macro", `macro:${definition.slug}`], forceRefresh: options.forceRefresh },
   );
   if (!result.ok) return result;
 
   const raw = result.data?.observations ?? [];
   // FRED eksik gözlemleri "." olarak yollar.
   const observations: MacroObservation[] = raw
-    .filter((o) => o.value !== "." && o.value !== "")
+    .filter((o) => o.value !== "." && o.value.trim() !== "")
     .map((o) => ({ date: o.date, value: Number(o.value) }))
     .filter((o) => Number.isFinite(o.value))
     .reverse();
@@ -173,7 +189,7 @@ export async function getSeries(
   return ok(
     {
       seriesId: definition.seriesId,
-      observations,
+      observations: observations.slice(-limit),
       latestValue: latest.value,
       prevValue: prev?.value ?? null,
       periodLabel: latest.date.slice(0, 7),

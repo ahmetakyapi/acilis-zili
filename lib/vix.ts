@@ -1,3 +1,5 @@
+/** 28 Eylül: Günlük ekranlar artık daily-markets sağlayıcısıyla Cboe ve
+ * FRED tarihlerini karşılaştırır. Aşağıdaki FRED kaydı önceki mimariyi anlatır. */
 /**
  * VIX — piyasanın önümüzdeki 30 gün için beklediği oynaklık.
  *

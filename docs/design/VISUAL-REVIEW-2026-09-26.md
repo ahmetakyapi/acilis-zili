@@ -171,3 +171,24 @@ istemci istisnası yok. İngilizce görünüm, bilgi kartının aşağı açılm
 Escape, yeniden giriş, klavye odağı ve artan fiyat sıralaması ayrıca
 doğrulandı. Açık/koyu masaüstü ve mobil ekran görüntüleri incelendi.
 TypeScript, ESLint, üretim derlemesi ve diff kontrolü başarılı.
+
+### 28 Eylül · Başlık Birliği ve Günlük Kaynaklar
+
+Sayfa başlıkları ortak `--heading-page` ölçeğinde: genişte 56 px,
+telefonda 34 px. Piyasalar/Şirketler/Teknik/Mercek, iki dil ve dört
+genişlikte 32 görünüm: aynı hesaplanan yazı/satır ölçüsü, taşma yok.
+Kullanıcı isteğiyle Piyasalar alt bilgi şeridi yeniden açıldı.
+
+Finnhub mevcut anahtarla VIX için abonelik hatası, tahvil eğrisi için 403
+veriyor. Doğrudan Cboe günlük CSV ve U.S. Treasury XML kaynakları bağlandı;
+FRED ile gözlem tarihi karşılaştırılıyor, yenisi seçiliyor. Önceki kapanış
+aynı kaynaktan; getiri eğrisi yalnızca aynı gün ve kaynaktaki vadelerden.
+Kaynak künyeleri gerçek sağlayıcı ve gözlem tarihini taşıyor. Canlı kaynak
+kontrolünde 25 Eylül VIX 14,87, 2/5/10/30 yıl %4,81/%4,98/%5,17/%5,49.
+
+10 sağlayıcı testi: boş/tatil kayıtları, geçersiz/gelecek tarihler, yıl
+geçişi, kaynak seçimi, hata halinde FRED ve önbelleksiz yenileme. Ana sayfa,
+Makro, Piyasalar × iki dil × 390/1024/1440 px = 18 görünüm; taşma veya
+istemci hatası yok. TypeScript, lint ve üretim derlemesi başarılı.
+Kaynaklar: https://www.cboe.com/tradable-products/vix/vix-historical-data
+ve https://home.treasury.gov/treasury-daily-interest-rate-xml-feed.
