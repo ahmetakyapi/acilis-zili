@@ -1,0 +1,240 @@
+/* ==========================================================================
+   Bilanço analizinin ekleri — "30 Saniyede" özeti, segment payları, KPI'lar.
+
+   Yüzey Özet panelinin diliyle aynı (`EarningsReport.module.css` →
+   `.summaryPanel`): düz kart, derinlik tonla. Renkler yalnızca token.
+   ========================================================================== */
+
+.panel {
+  padding: clamp(1.35rem, 3vw, 2.5rem);
+  border-radius: 1.3rem;
+  background: var(--premium-surface, var(--surface-solid));
+}
+
+/* ---- 30 Saniyede ----
+   ÜÇ MADDE YAN YANA, geniş ekranda. Alt alta dizildiklerinde 1280'de her
+   satır ~130 harf oluyordu; üç sütunda ~45, yani üçü de tek bakışta. */
+.takeaways {
+  display: grid;
+  gap: 1rem 1.75rem;
+  counter-reset: takeaway;
+}
+
+@media (min-width: 900px) {
+  .takeaways {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.takeaway {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+  color: var(--text-strong);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+
+.takeawayIndex {
+  color: var(--primary-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* ---- Segment ve KPI ---- */
+
+.block + .block {
+  margin-top: 1.75rem;
+}
+
+.blockTitle {
+  margin-bottom: 0.9rem;
+}
+
+.segments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.segment {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+/* Ad solda, sayılar sağda; dar ekranda sayılar ADIN ALTINA iner, ad
+   kesilmez (segment adları "Veri Merkezi ve Yapay Zekâ" kadar uzun). */
+.segmentHead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+/* Telefonda ad ve sayılar HER SATIRDA alt alta. Sarmaya bırakılınca kısa
+   adlı segment ("Tüketici") sayılarını yanına alıyor, uzun adlılar alta
+   indiriyordu: 390'da aynı listede iki farklı satır düzeni (ölçüldü). */
+@media (min-width: 640px) {
+  .segmentHead {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.15rem 1rem;
+  }
+}
+
+.segmentName {
+  min-width: 0;
+  color: var(--text-strong);
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.segmentFigures {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--text-body);
+}
+
+.segmentMoney {
+  color: var(--text-strong);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+/* PAY BİR BÜTÜNÜN PARÇASI: ray kabın tamamı (%100), dolgu o segmentin
+   payı. `CompareScale`teki gibi en büyüğe göre ölçeklenseydi en büyük
+   segment her şirkette tam dolu görünür ve "gelirin yarısı" ile "gelirin
+   tamamı" aynı çizilirdi. */
+.segmentTrack {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+
+.segmentFill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 72%, transparent);
+}
+
+.segmentNote {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+/* KPI kartları — etiket, sayı, künye aynı üç satırda (metrik ızgarasının
+   kuralı: yan yana duran ölçüler AYNI HATTA biter). */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12.5rem), 1fr));
+  grid-auto-rows: auto;
+  gap: 0.75rem;
+}
+
+.kpi {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 3;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--surface-solid);
+}
+
+.kpiLabel {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Punto metrik kartlarından BİR KADEME küçük: sayma birimi sayıya
+   bölünmez boşlukla bağlı ("12,4 Bin müşteri" tek parça) ve 1,75rem'de
+   176 piksellik kartta "mü / şteri" diye kelimenin ortasından bölünüyordu
+   (1280'de ölçüldü). 1,45rem ve 12,5rem taban kartta sığıyor; sığmayan çok
+   uzun bir birim yine de kutudan taşmasın diye kırılmaya izin var. */
+.kpiValue {
+  align-self: end;
+  color: var(--text-strong);
+  font-size: clamp(1.25rem, 2vw, 1.45rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  overflow-wrap: break-word;
+}
+
+.kpiMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.kpiSource {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Künyeler panelin İÇİNDE, hairline ile ayrılmış düz paragraflar
+   (ekran düzeni kuralı 6) — yeni bir kutu açılmıyor. */
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line-soft);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* ---- Liste kartındaki ipucu ----
+   Öne çıkan kartın ızgarası adlandırılmış alanlarla kurulu; ipucu alan
+   almadan tam genişlikte kartın DİBİNE iniyor, ölçülerin altına. Kart
+   yapısına dokunulmuyor: ipucu olmayan analizde kart birebir eskisi. */
+.teaser {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-body);
+}
+
+.teaserLabel {
+  flex-shrink: 0;
+  color: var(--primary-ink);
+  font-weight: 700;
+}
+
+/* TEK SATIR: kart manşetinin altında ikinci bir paragraf olmasın. */
+.teaserText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

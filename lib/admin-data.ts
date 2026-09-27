@@ -19,6 +19,7 @@ import {
 import type { PgColumn } from "drizzle-orm/pg-core";
 import type { HealthTone } from "@/components/admin/AdminUI";
 import { db } from "./db";
+import { getExtrasCoverage } from "./earnings-extras";
 import {
   dailyBriefs,
   earningsAnalyses,
@@ -44,6 +45,7 @@ import {
   adminStamp,
   adminWeekRange,
   agoLabel,
+  lateLabel,
 } from "./admin-format";
 import { siteHost } from "./analytics";
 import { briefRevisionKey } from "./content-write";
@@ -52,17 +54,21 @@ import {
   ROUTINE_GRACE_MINUTES,
   cronState,
   dailyBriefDueAt,
+  dailyBriefOverdueSince,
   dailyBriefState,
   expectedDailyBrief,
   lastCronDue,
+  minutesLate,
   technicalState,
   trDateOf,
   weeklyBriefDueAt,
+  weeklyBriefOverdueSince,
   weeklyBriefState,
   type CronState,
 } from "./routine-schedule";
 import { SLOT_RANK, isTechnicalSlot, slotInstant, type TechnicalSlot } from "./technical";
 import { activeTranslateBackend } from "./translate";
+import { getErrorCountSince } from "./error-log";
 import trDictionary from "./i18n/dictionaries/tr";
 
 /**
@@ -757,6 +763,15 @@ export type ContentSummary = {
      bir yol olarak sayıp okunmayı bölerdi. */
   analysesMissingEn: AnalysisRef[];
   analysesWithoutCharts: AnalysisRef[];
+  /**
+   * "30 Saniyede" özeti ve segment tablosu olmayan analizler.
+   *
+   * `null` = ek tablosu okunamadı (migration henüz uygulanmadı). O durumda
+   * her analizi "eksik" saymak yanlış bir alarm olurdu; panel "okunamadı"
+   * diyor. Kural grafiklerle aynı: iki dilden birinde yoksa eksik.
+   */
+  analysesWithoutSummary: AnalysisRef[] | null;
+  analysesWithoutSegments: AnalysisRef[] | null;
 };
 
 /**
@@ -774,7 +789,7 @@ export const getContentSummary = cache(
     return oku("getContentSummary", async () => {
       /* HEPSİ BAĞIMSIZ — sırayla beklenmelerinin bir sebebi yoktu.
        neon-http'de her sorgu ayrı bir HTTP gidiş-dönüşü; turlar bire indi. */
-      const [[briefRow], briefGaps, storyRows, analysisRows] = await Promise.all([
+      const [[briefRow], briefGaps, storyRows, analysisRows, extrasCoverage] = await Promise.all([
         db
           .select({
             n: sql<number>`count(distinct (${dailyBriefs.briefDate}, ${dailyBriefs.period}))`,
@@ -799,6 +814,7 @@ export const getContentSummary = cache(
          × iki dil, yüzlerce kilobayt. Karar veritabanında veriliyor. */
         db
           .select({
+            id: earningsAnalyses.id,
             symbol: earningsAnalyses.symbol,
             period: earningsAnalyses.period,
             /* EKRANDA GÖRÜNEN DÖNEM ADI. `period` bir URL parçası
@@ -813,6 +829,10 @@ export const getContentSummary = cache(
           `,
           })
           .from(earningsAnalyses),
+        /* Ek tablosunun kapsamı — ayrı sorgu, çünkü tablo migration'la
+           geliyor ve yokken yukarıdaki sorguyu düşürmemeli
+           (lib/earnings-extras.ts, hata yutuluyor → `null`). */
+        getExtrasCoverage(),
       ]);
 
       /* Başlık TÜRKÇE kayıttan: panel tek dilde (Yazılar listesinin kuralı,
@@ -829,6 +849,8 @@ export const getContentSummary = cache(
       const analysisLocales = new Map<string, Set<string>>();
       const analysisRefs = new Map<string, AnalysisRef>();
       const chartless = new Map<string, AnalysisRef>();
+      const summaryless = new Map<string, AnalysisRef>();
+      const segmentless = new Map<string, AnalysisRef>();
       for (const row of analysisRows) {
         /* ANAHTAR SLUG'DAN, ETİKET `period_label`DAN. İkisi ayrı: anahtar
            iki dilin aynı kaydını birleştiriyor, etiket okunacak metin.
@@ -852,6 +874,9 @@ export const getContentSummary = cache(
          yığını gibi duruyor demektir. Aynı kural rutinin okuduğu
          /api/analiz/context ucunda da geçerli. */
         if (!row.hasCharts) chartless.set(key, ref);
+        const covered = extrasCoverage?.get(row.id);
+        if (!covered?.takeaways) summaryless.set(key, ref);
+        if (!covered?.segments) segmentless.set(key, ref);
       }
 
       return {
@@ -870,6 +895,8 @@ export const getContentSummary = cache(
           .map(([key]) => analysisRefs.get(key))
           .filter((ref): ref is AnalysisRef => ref !== undefined),
         analysesWithoutCharts: [...chartless.values()],
+        analysesWithoutSummary: extrasCoverage ? [...summaryless.values()] : null,
+        analysesWithoutSegments: extrasCoverage ? [...segmentless.values()] : null,
       };
     });
   },
@@ -1593,6 +1620,9 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
       .orderBy(desc(technicalAnalyses.sessionDate))
       .limit(1),
     getHolidays(),
+    /* Uygulama hataları (28 Eylül) — okuma kendi hatasını yutuyor ve
+       tablonun yokluğunu ayrıca söylüyor (lib/error-log.ts). */
+    getErrorCountSince(ERROR_WINDOW_HOURS),
   ]);
 
   /* Düşen sorgu fırlatır ve aşağıdaki blokların kendi `catch`i onu
@@ -1809,7 +1839,8 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
             : "Dün Yazıldı"
           : gunlukDurum.state === "waiting"
             ? "Bekleniyor"
-            : "Gecikti",
+            /* NE KADAR geç (28 Eylül) — gerekçe admin-format.ts → lateLabel. */
+            : lateLabel(minutesLate(dailyBriefOverdueSince(gunlukSon, now), now)),
       tone:
         gunlukDurum.state === "ok" ? "ok" : gunlukDurum.state === "waiting" ? "idle" : "warn",
       note:
@@ -1834,7 +1865,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
           ? "Yazıldı"
           : haftalikDurum.state === "waiting"
             ? "Bekleniyor"
-            : "Gecikti",
+            : lateLabel(minutesLate(weeklyBriefOverdueSince(haftalikSon, now), now)),
       tone:
         haftalikDurum.state === "ok" ? "ok" : haftalikDurum.state === "waiting" ? "idle" : "warn",
       note:
@@ -1890,7 +1921,9 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
       checks.push({
         label: "Teknik Analiz",
         group: "routine",
-        value: "Gecikti",
+        value: borc
+          ? lateLabel(minutesLate(slotInstant(borc.sessionDate, borc.slot), now))
+          : "Gecikti",
         tone: "warn",
         note: `${nobet} Nöbeti Yazılmadı · Son Yayın ${sonYayin}`,
       });
@@ -1939,8 +1972,48 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
     checks.push(failed("Sayfa Ölçümü", "data"));
   }
 
+  /* ---- Uygulama hataları ----
+     Sunucu ve tarayıcı hataları kendi tablomuzda (lib/error-log.ts). Satır
+     yalnızca SAYIYI söylüyor; hangi rota, hangi mesaj Sistem'deki
+     "Uygulama Hataları" panelinde. Tek bir hata bile sarı: sağlıklı bir
+     günde bu sayı sıfır ve sıfırdan farkı bakılacak bir şey. Tablo yoksa
+     satır nötr ve NEDENİNİ söylüyor — "Hata Yok" demek unutulmuş bir
+     migration'ı gizlerdi. */
+  try {
+    const hatalar = unwrap(probes[11]);
+    if (hatalar.ok) {
+      const { total, groups } = hatalar.data;
+      checks.push({
+        label: "Uygulama Hataları",
+        group: "data",
+        value: total === 0 ? "Hata Yok" : `${total.toLocaleString("tr-TR")} Hata`,
+        tone: total === 0 ? "ok" : "warn",
+        note:
+          total === 0
+            ? `Son ${ERROR_WINDOW_HOURS} Saat · Sunucu ve Tarayıcı`
+            : `Son ${ERROR_WINDOW_HOURS} Saat · ${groups.toLocaleString("tr-TR")} Ayrı Hata`,
+      });
+    } else if (hatalar.missingTable) {
+      checks.push({
+        label: "Uygulama Hataları",
+        group: "data",
+        value: "Tablo Yok",
+        tone: "idle",
+        status: "Kurulmadı",
+        note: "app_errors Migration'ı Uygulanmamış",
+      });
+    } else {
+      checks.push(failed("Uygulama Hataları", "data"));
+    }
+  } catch {
+    checks.push(failed("Uygulama Hataları", "data"));
+  }
+
   return checks;
 });
+
+/** Sağlık satırının hata penceresi — Sistem'deki listeninkinden kısa, "bugün ne oldu". */
+const ERROR_WINDOW_HOURS = 24;
 
 /** Teknik nöbetlerin adı — sitenin kendi sözlüğünden, ikinci bir yazım yok. */
 const SLOT_AD: Record<TechnicalSlot, string> = {

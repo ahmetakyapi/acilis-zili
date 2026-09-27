@@ -40,7 +40,14 @@ import { InkCanvas } from "./InkCanvas";
  * `to` karesi var) katmanı TAM OPAK geri getirip söndürüyordu — ölçüldü,
  * 8,6. saniyede sayfanın üstünde bir parlama.
  */
-export const INK_SPLASH_SCRIPT = `try{var d=document.documentElement,s=sessionStorage;if(!s.getItem("az-ink")&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&!/bot|crawl|spider|slurp|lighthouse|headless|preview/i.test(navigator.userAgent)){s.setItem("az-ink","1");d.classList.add("ink-splash")}}catch(e){}`;
+/* ÇERÇEVEDE VE PARÇADA AÇILMAZ (28 Eylül). Kök düzen gömülü parçaları da
+   (`/gomulu/*`) sarıyor ve başka bir sitenin içindeki küçük bir geri sayım
+   kutusu, ilk yüklemede 3,4 saniye boyunca tam ekran mürekkep sahnesiyle
+   örtülürdü. `self!==top` çerçeveyi yakalıyor (çapraz kökende de
+   karşılaştırma serbest); yol denetimi parçanın doğrudan açıldığı hâli.
+   Yol denetimi düzenli ifade DEĞİL: şablon dizesinde `\/` kaçışı düşüyor ve
+   betik sözdizimi hatasıyla hiç çalışmıyordu (ölçüldü, konsolda hata). */
+export const INK_SPLASH_SCRIPT = `try{var d=document.documentElement,s=sessionStorage,p=location.pathname;if(p.indexOf("/en/")===0)p=p.slice(3);if(window.self===window.top&&(p+"/").indexOf("/gomulu/")!==0&&!s.getItem("az-ink")&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&!/bot|crawl|spider|slurp|lighthouse|headless|preview/i.test(navigator.userAgent)){s.setItem("az-ink","1");d.classList.add("ink-splash")}}catch(e){}`;
 
 /* Sıra önemli: önce işaret, sonra sınıf. `setItem` kota yüzünden fırlatırsa
    sınıf hiç eklenmiyor; tersinde açılış her yüklemede gösterilirdi. */

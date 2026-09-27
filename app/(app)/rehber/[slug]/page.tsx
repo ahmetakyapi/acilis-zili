@@ -13,6 +13,7 @@ import {
   sectionIndex,
 } from "@/components/article/ArticleBody";
 import { ShareButton } from "@/components/article/ShareButton";
+import { articleAutoLinker } from "@/lib/autolink-data";
 import { LevelBadge } from "@/components/article/LevelBadge";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { Panel } from "@/components/ui/primitives";
@@ -122,6 +123,9 @@ export default async function GuideArticlePage(
   const blocks = parseBlocks(article.bodyMd, locale);
   const sections = sectionIndex(blocks);
   const hasToc = sections.length >= TOC_MIN;
+  /* Gövdedeki sözlük terimleri ve semboller ilk geçtikleri yerde bağlanıyor
+     (`lib/autolink.ts`); başlıklar ve blok etiketleri hariç. */
+  const autoLink = await articleAutoLinker(locale);
 
   return (
     <MotionExperience className={experience.article}>
@@ -209,6 +213,7 @@ export default async function GuideArticlePage(
           locale={locale}
           variant="editorial"
           className={editorial.prose}
+          autoLink={autoLink}
         />
         {/* YAZININ SONU: iki fırça çizgisi ortada buluşuyor ve araya
             pirinç bir zil basılıyor (lib/ink/scenes.ts → storyEnd).

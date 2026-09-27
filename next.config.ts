@@ -14,10 +14,8 @@ import type { NextConfig } from "next";
  * modern tarayıcılarda önceliği var; ikisi birlikte duruyor, eski
  * tarayıcılar hâlâ X-Frame-Options okuyor.
  */
-const SECURITY_HEADERS = [
-  // Tıklama hırsızlığı: site başka bir sayfanın içine gömülemez.
-  { key: "X-Frame-Options", value: "DENY" },
-  { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+/** Çerçeve dışındaki güvenlik başlıkları — gömülü parçalar da taşıyor. */
+const BASE_SECURITY_HEADERS = [
   // Tarayıcı içerik türünü tahmin etmesin — MIME karışıklığı saldırısı.
   { key: "X-Content-Type-Options", value: "nosniff" },
   // Dış bağlantılara tam adres sızmasın; site içinde tam yol kalsın.
@@ -35,10 +33,76 @@ const SECURITY_HEADERS = [
   },
 ];
 
+const SECURITY_HEADERS = [
+  // Tıklama hırsızlığı: site başka bir sayfanın içine gömülemez.
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+  ...BASE_SECURITY_HEADERS,
+];
+
+/**
+ * GÖMÜLÜ PARÇALAR (`/gomulu/*`) — çerçeve yasağının TEK istisnası.
+ *
+ * Geri sayım ve haftanın bilançoları başka sitelere `<iframe>` ile
+ * konabilsin diye var; `frame-ancestors 'none'` onları her yerde boş bir
+ * kutuya çeviriyordu. Yasak GEVŞETİLMİYOR, bu yollarda DEĞİŞTİRİLİYOR:
+ *
+ * - Tıklama hırsızlığının riski, çerçevenin içinde okuyucunun farkında
+ *   olmadan tetikleyebileceği bir EYLEM olması (hesap silme, takip
+ *   listesine ekleme, form gönderme). Bu sayfalarda hiçbiri yok: oturum
+ *   okunmuyor, form yok, sunucu eylemi yok; tek etkileşim yeni sekmede
+ *   açılan bir kaynak bağlantısı. Çerçevelenecek bir yetki yok.
+ * - Üçüncü taraf çerçevede çerezler zaten gitmiyor (SameSite=Lax), yani
+ *   parça giriş yapmış okuyucunun oturumuyla da çizilemiyor.
+ * - `X-Frame-Options` bu yollarda HİÇ gönderilmiyor: başlığın "her yere
+ *   izin ver" değeri yok, DENY kalırsa CSP'yi tanımayan eski tarayıcılar
+ *   parçayı yine boş gösterirdi. Modern tarayıcılar CSP'nin
+ *   `frame-ancestors *` değerini okuyor.
+ *
+ * Sitenin geri kalanı DENY'de kalıyor: istisna yol düzeyinde ve genel
+ * kuralın kaynak deseni bu yolları dışarıda bırakıyor (aşağıda). İki
+ * kuralın aynı başlığı yazıp birbirini ezmesine güvenilmedi: Next'te
+ * sonraki kural kazanıyor ama sıra değişirse sessizce açık kalırdı.
+ */
+const EMBED_HEADERS = [
+  { key: "Content-Security-Policy", value: "frame-ancestors *" },
+  ...BASE_SECURITY_HEADERS,
+];
+
+/** `/gomulu` ve `/en/gomulu` DIŞINDAKİ her yol (kök `/` dahil). */
+const NOT_EMBED_SOURCE = "/:path((?!gomulu(?:/|$)|en/gomulu(?:/|$)).*)";
+const EMBED_SOURCES = ["/gomulu/:path*", "/en/gomulu/:path*"];
+
+/**
+ * DİZİNE GİRMEYECEK YOLLAR — başlıkla, sayfanın künyesinden BAĞIMSIZ.
+ *
+ * Kişisel ekranlar (`/favoriler`, `/ayarlar`, gelecek `/portfoy`) ve
+ * panel künyelerinde zaten `noindex` taşıyor; ama künye sayfa dosyasının
+ * içinde ve yeni bir rota onu unutabiliyor. `X-Robots-Tag` aynı sözü yol
+ * düzeyinde veriyor: `/portfoy` başka bir iş paketiyle gelecek ve o gün
+ * burada zaten kapalı olacak. Gömülü parçalar da burada: başka sitelerin
+ * içinde çizilen kısa kutular, kendi başına bir arama sonucu değil.
+ *
+ * `robots.txt`e YAZILMIYOR — gerekçesi `app/robots.ts` başında: `Disallow`
+ * taramayı engeller ve arama motoru bu başlığı hiç okuyamaz.
+ */
+const NOINDEX_PATHS = ["/gomulu", "/portfoy", "/favoriler", "/ayarlar", "/admin"];
+const NOINDEX_SOURCES = NOINDEX_PATHS.flatMap((path) => [
+  path,
+  `${path}/:path*`,
+  `/en${path}`,
+  `/en${path}/:path*`,
+]);
+
 const nextConfig: NextConfig = {
   async headers() {
     return [
-      { source: "/:path*", headers: SECURITY_HEADERS },
+      { source: NOT_EMBED_SOURCE, headers: SECURITY_HEADERS },
+      ...EMBED_SOURCES.map((source) => ({ source, headers: EMBED_HEADERS })),
+      ...NOINDEX_SOURCES.map((source) => ({
+        source,
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      })),
       {
         // API yanıtları hiçbir katmanda önbelleğe alınmasın: fiyatın ya da
         // yetkili bir ucun eski kopyasının servis edilmesi kabul edilemez.

@@ -1,0 +1,32 @@
+/* ==========================================================================
+   Sözlük ve temalar — programatik sayfaların ortak parçaları
+
+   Arama alanı şirketler dizininin alanıyla (CompanyDirectory.module.css →
+   .searchField) aynı ölçüde: sitede iki farklı arama kutusu durmasın.
+   Renk yok; hepsi token.
+   ========================================================================== */
+
+.searchField { display:flex; min-width:0; max-width:32rem; align-items:center; gap:9px; padding:4px 13px; border:1px solid var(--line); border-radius:999px; background:var(--surface-sunken); transition:border-color .2s,background .2s,box-shadow .2s; }
+.searchField:hover { border-color:var(--line-strong); background:var(--surface-solid); }
+.searchField:focus-within { border-color:var(--line-focus); box-shadow:0 0 0 3px var(--primary-tint); }
+.searchField > svg { flex-shrink:0; color:var(--text-muted); }
+.searchField input { min-width:0; width:100%; height:36px; color:var(--text-strong); background:transparent; font-size:13px; outline:none; }
+.searchField input::placeholder { color:var(--text-muted); }
+/* Telefonda 16 piksel: iOS daha küçük puntolu alana odaklanınca sayfayı
+   yakınlaştırıyor. Kutu şirketler dizinindekiyle aynı gerekçe. */
+@media(max-width:767px) { .searchField input { font-size:16px; } }
+@media(prefers-reduced-motion:reduce) { .searchField { transition:none; } }
+
+/* Terim ızgarası — HÜCRELER ARASINDA HAIRLINE, kutu değil. Panel içindeki
+   satırlar sitenin geri kalanında da üstlerinde tek çizgi taşıyor. */
+.termGrid { display:grid; grid-template-columns:minmax(0,1fr); border-top:1px solid var(--line); }
+.termGrid > li + li { border-top:1px solid var(--line-soft); }
+@media(min-width:768px) {
+  .termGrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .termGrid > li { border-top:1px solid var(--line-soft); }
+  .termGrid > li:nth-child(-n+2) { border-top:0; }
+  .termGrid > li:nth-child(odd) { border-right:1px solid var(--line-soft); }
+}
+.termLink { display:block; min-height:44px; padding:12px 16px; transition:background .2s; }
+.termLink:hover { background:var(--primary-tint); }
+@media(min-width:640px) { .termLink { padding:12px 20px; } }

@@ -32,9 +32,9 @@ export const GUIDE_TOPICS = [
     labelTr: "Pozisyon ve Risk",
     labelEn: "Positions & Risk",
     descTr:
-      "Emir vermekten pozisyon büyüklüğüne: kazanmayı değil, oyunda kalmayı belirleyen kararlar.",
+      "Hesap açmaktan vergiye, emirden pozisyon büyüklüğüne: kazanmayı değil, oyunda kalmayı belirleyen kararlar.",
     descEn:
-      "From placing an order to sizing a position: the decisions that determine whether you stay in the game.",
+      "From opening an account to taxes, from placing an order to sizing a position: the decisions that determine whether you stay in the game.",
   },
   {
     key: "sirket",
@@ -148,13 +148,33 @@ export const GUIDE_META = [
     slug: "etf",
     topic: "temel",
     glyph: "ETF",
-    related: ["endeks", "temettu"],
+    related: ["endeks", "temettu", "endeks-fonu-mu-tek-hisse-mi", "kripto-etf"],
+  },
+  {
+    /* ETF'ten hemen sonra: o yazı fonun ne olduğunu anlatıyor, bu yazı
+       "fon mu, şirket mi" kararını. Getirinin çarpık dağılımı ve şirkete
+       özgü risk burada ilk kez geçiyor; çeşitlendirme yazısı aynı fikri
+       portföy düzeyinde büyütüyor. */
+    slug: "endeks-fonu-mu-tek-hisse-mi",
+    topic: "temel",
+    glyph: "1:500",
+    related: ["etf", "cesitlendirme", "duzenli-alim", "endeks"],
+  },
+  {
+    /* ETF yapısının özel bir hâli: yaratma/itfa, takip farkı ve gider
+       oranı ETF yazısında okunmuş olmalı. Orta seviye çünkü vadeli işlem
+       yenileme maliyeti ve tröst yapısı ek kavram. */
+    slug: "kripto-etf",
+    topic: "temel",
+    level: "orta", // ETF mekaniği + vadeli işlem yenilemesi + tröst yapısı
+    glyph: "₿",
+    related: ["etf", "volatilite", "spread-likidite", "endeks-fonu-mu-tek-hisse-mi"],
   },
   {
     slug: "volatilite",
     topic: "temel",
     glyph: "σ",
-    related: ["ayi-boga", "risk-yonetimi", "opsiyonlar"],
+    related: ["ayi-boga", "risk-yonetimi", "opsiyonlar", "beklenen-hareket"],
   },
   {
     slug: "ayi-boga",
@@ -166,22 +186,76 @@ export const GUIDE_META = [
     slug: "spread-likidite",
     topic: "temel",
     glyph: "⇔",
-    related: ["borsa-nasil-isler", "emir-tipleri"],
+    related: ["borsa-nasil-isler", "emir-tipleri", "araci-kurum-secimi", "konferans-gorusmesi"],
   },
   {
     slug: "halka-arz",
     topic: "temel",
     glyph: "IPO",
-    related: ["hisse-senedi", "piyasa-degeri"],
+    related: ["hisse-senedi", "piyasa-degeri", "adr-spac", "10k-10q"],
+  },
+  {
+    /* Halka arzın kardeşi: ikisi de "bir şirket ABD borsasına nasıl girer"
+       sorusunun cevabı. ADR yabancı şirketin, SPAC ise klasik arzın
+       dışındaki yolu anlatıyor. Seyrelme aritmetiği yüzünden orta. */
+    slug: "adr-spac",
+    topic: "temel",
+    level: "orta", // depo bankası, kur katmanı ve SPAC seyrelmesi
+    glyph: "ADR",
+    related: ["halka-arz", "kur-riski", "10k-10q", "w-8ben"],
   },
 
   /* ---- 2 · Pozisyon ve Risk -------------------------------------------- */
+  {
+    /* Bloğun kapısı: ilk emirden önce hesabın açılması, paranın dolara
+       çevrilmesi ve W-8BEN geliyor. Emir tipleri bu yazının dördüncü
+       adımını büyütüyor; o yüzden hemen önünde duruyor. */
+    slug: "abd-hisse-nasil-alinir",
+    topic: "strateji",
+    level: "temel", // ön koşulu yok; bir ABD hissesine giden ilk adım
+    glyph: "₺→$",
+    related: ["araci-kurum-secimi", "w-8ben", "emir-tipleri", "yurt-disi-hisse-vergisi"],
+  },
+  {
+    slug: "araci-kurum-secimi",
+    topic: "strateji",
+    level: "temel", // hesap açmadan önce okunuyor
+    glyph: "SIPC",
+    related: ["abd-hisse-nasil-alinir", "spread-likidite", "kesirli-hisse", "kur-riski"],
+  },
   {
     slug: "emir-tipleri",
     topic: "strateji",
     level: "temel", // ilk emri verirken okunuyor, ön koşulu yok
     glyph: "LMT",
-    related: ["spread-likidite", "risk-yonetimi"],
+    related: ["spread-likidite", "risk-yonetimi", "abd-hisse-nasil-alinir", "kesirli-hisse"],
+  },
+  {
+    /* Emir tiplerinin ardından: kesirli emir, emir tipleri ve seans
+       erişiminde kısıtlarla geliyor ve o kısıtlar ancak emir tipleri
+       bilinince okunuyor. */
+    slug: "kesirli-hisse",
+    topic: "strateji",
+    level: "temel", // tek mekanizma, ön koşulu emir tipleri
+    glyph: "0,25",
+    glyphEn: "0.25",
+    related: ["araci-kurum-secimi", "duzenli-alim", "hisse-senedi", "yurt-disi-hisse-vergisi"],
+  },
+  {
+    /* Vergi çifti: önce ABD'nin kestiği (W-8BEN), sonra Türkiye'de
+       beyan edilen. İkincisi temettü bölümünde birincinin %20'sine
+       yaslanıyor; sıra bu yüzden sabit. */
+    slug: "w-8ben",
+    topic: "strateji",
+    glyph: "W-8",
+    related: ["yurt-disi-hisse-vergisi", "temettu-takvimi", "abd-hisse-nasil-alinir", "adr-spac"],
+  },
+  {
+    slug: "yurt-disi-hisse-vergisi",
+    topic: "strateji",
+    glyph: "Beyan",
+    glyphEn: "Tax",
+    related: ["w-8ben", "kur-riski", "temettu", "abd-hisse-nasil-alinir"],
   },
   {
     slug: "risk-yonetimi",
@@ -194,7 +268,17 @@ export const GUIDE_META = [
     slug: "cesitlendirme",
     topic: "strateji",
     glyph: "⁙",
-    related: ["risk-yonetimi", "etf"],
+    related: ["risk-yonetimi", "etf", "endeks-fonu-mu-tek-hisse-mi", "duzenli-alim"],
+  },
+  {
+    /* Çeşitlendirmenin zaman eksenindeki karşılığı: o yazı riski
+       varlıklara, bu yazı alım anlarına yayıyor. Mekanizma tek bir
+       ortalama eşitsizliği; ön koşulu yok. */
+    slug: "duzenli-alim",
+    topic: "strateji",
+    level: "temel", // tek hesap, davranış tarafı ağır basıyor
+    glyph: "DCA",
+    related: ["yatirimci-psikolojisi", "kesirli-hisse", "endeks-fonu-mu-tek-hisse-mi", "risk-yonetimi"],
   },
   {
     slug: "long-short",
@@ -224,7 +308,17 @@ export const GUIDE_META = [
     topic: "strateji",
     level: "ileri", // prim, vade ve zaman erimesi üç ayrı kavram
     glyph: "C/P",
-    related: ["kaldirac", "volatilite"],
+    related: ["kaldirac", "volatilite", "beklenen-hareket", "hedge"],
+  },
+  {
+    /* Opsiyonlardan SONRA: primin zaman ve oynaklık parçası orada
+       anlatılıyor, burada o parçanın içinden piyasanın beklediği hareket
+       okunuyor. Opsiyon işlemi değil, opsiyon FİYATINI okuma yazısı. */
+    slug: "beklenen-hareket",
+    topic: "strateji",
+    level: "ileri", // örtük oynaklık, straddle ve karekök ölçekleme
+    glyph: "±%",
+    related: ["opsiyonlar", "volatilite", "bilanco-gunu-nasil-okunur", "konferans-gorusmesi"],
   },
   {
     /* Opsiyonlardan SONRA: koruyucu put ile covered call'u anlatmak için
@@ -249,7 +343,15 @@ export const GUIDE_META = [
     slug: "bilanco",
     topic: "sirket",
     glyph: "EPS",
-    related: ["nakit-akisi", "degerleme", "temettu"],
+    related: ["nakit-akisi", "degerleme", "temettu", "10k-10q"],
+  },
+  {
+    /* Bilançonun kaynağı: o yazı tabloları, bu yazı tabloların durduğu
+       belgeyi ve dipnotları okumayı öğretiyor. */
+    slug: "10k-10q",
+    topic: "sirket",
+    glyph: "10-K",
+    related: ["bilanco", "nakit-akisi", "konferans-gorusmesi", "insider-islemleri"],
   },
   {
     /* Bilançodan hemen sonra: o yazı tabloları okumayı öğretiyor, bu yazı
@@ -260,7 +362,15 @@ export const GUIDE_META = [
     topic: "sirket",
     glyph: "4Ç",
     glyphEn: "Q4",
-    related: ["bilanco", "degerleme", "volatilite"],
+    related: ["bilanco", "degerleme", "konferans-gorusmesi", "beklenen-hareket"],
+  },
+  {
+    /* Bilanço gününün ikinci yarısı: sayılar bültende, rehberliğin nasıl
+       anlatıldığı görüşmede. Bilanço günü yazısının hemen ardından. */
+    slug: "konferans-gorusmesi",
+    topic: "sirket",
+    glyph: "Q&A",
+    related: ["bilanco-gunu-nasil-okunur", "10k-10q", "beklenen-hareket", "spread-likidite"],
   },
   {
     slug: "nakit-akisi",
@@ -287,7 +397,17 @@ export const GUIDE_META = [
     topic: "sirket",
     level: "temel", // tek kavram, tek cümlelik tanım
     glyph: "%",
-    related: ["bilanco", "nakit-akisi", "hisse-geri-alimi"],
+    related: ["bilanco", "nakit-akisi", "hisse-geri-alimi", "temettu-takvimi"],
+  },
+  {
+    /* Temettünün takvim tarafı: dört tarih temettü yazısında tanıtılıyor,
+       burada T+1 ile değişen kural ve hak kesme sabahının hesabı işleniyor.
+       Temettüyle birlikte bloğun başına geçiyor. */
+    slug: "temettu-takvimi",
+    topic: "sirket",
+    level: "temel", // tek kural: hak kesmeden bir önceki iş günü
+    glyph: "Ex",
+    related: ["temettu", "w-8ben", "yurt-disi-hisse-vergisi", "borsa-nasil-isler"],
   },
   {
     /* Temettünün karşı yakası: ikisi de "şirket kazandığı parayı hissedara
@@ -297,7 +417,16 @@ export const GUIDE_META = [
     slug: "hisse-geri-alimi",
     topic: "sirket",
     glyph: "↺",
-    related: ["temettu", "bilanco", "degerleme", "nakit-akisi"],
+    related: ["temettu", "bilanco", "degerleme", "insider-islemleri"],
+  },
+  {
+    /* Geri alımın öteki yüzü: şirket kendi hissesini alırken yöneticiler
+       ne yapıyor? Form 4'ü okumak için 10-K/10-Q'daki hisse bazlı ödeme
+       dipnotunun bilinmesi işi kolaylaştırıyor. */
+    slug: "insider-islemleri",
+    topic: "sirket",
+    glyph: "P/S",
+    related: ["10k-10q", "hisse-geri-alimi", "yatirimci-psikolojisi", "bilanco"],
   },
 
   /* ---- 4 · Makro ve Merkez Bankası ------------------------------------- */
@@ -324,7 +453,7 @@ export const GUIDE_META = [
     topic: "makro",
     glyph: "TÜFE",
     glyphEn: "CPI",
-    related: ["faiz-tahvil", "sahin-guvercin", "istihdam"],
+    related: ["faiz-tahvil", "sahin-guvercin", "istihdam", "yurt-disi-hisse-vergisi"],
   },
   {
     slug: "istihdam",
@@ -342,7 +471,7 @@ export const GUIDE_META = [
     slug: "kur-riski",
     topic: "makro",
     glyph: "₺/$",
-    related: ["etf", "faiz-tahvil"],
+    related: ["etf", "faiz-tahvil", "yurt-disi-hisse-vergisi", "abd-hisse-nasil-alinir"],
   },
   {
     /* Makro bloğunun SONU: faiz, enflasyon, istihdam ve eğri okunduktan

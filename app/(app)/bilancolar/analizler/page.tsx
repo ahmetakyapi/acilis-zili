@@ -4,6 +4,9 @@ import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import analysisStyles from "@/components/earnings/AnalysisExperience.module.css";
+import extrasStyles from "@/components/earnings/report/ReportExtras.module.css";
+import { getTakeawayTeasers, teaserKey } from "@/lib/earnings-extras";
+import { plainInline } from "@/lib/earnings-report";
 import { GuideHint } from "@/components/article/GuideHint";
 import { auth } from "@/auth";
 import {
@@ -179,7 +182,13 @@ export default async function AnalysesPage(
      İkisi birbirinden bağımsız — biri takvime ve takip listesine, öteki
      yalnızca analiz listesine bakıyor — yani sayfanın kritik yolunda
      gereksiz bir Neon turu duruyordu. Zincir üç kademeden ikiye indi. */
-  const meta = await getSymbolNames([...new Set(all.map((row) => row.symbol))]);
+  /* İpuçları künyeyle AYNI TURDA: öne çıkan kart süzgece bağlı (sektör
+     künyeden okunuyor), yani hangi kartın ipucu gerektiğini beklemek bir
+     tur daha demekti. Kümenin tamamı için sormak tek sorgu. */
+  const [meta, teasers] = await Promise.all([
+    getSymbolNames([...new Set(all.map((row) => row.symbol))]),
+    getTakeawayTeasers(all),
+  ]);
 
   /* Filtre çipleri yalnızca ELDE OLAN sektörleri gösterir: hiçbir analizi
      olmayan bir sektör çipi tıklanınca boş ekran veriyordu. */
@@ -210,6 +219,10 @@ export default async function AnalysesPage(
      kartın ne olduğunu zaten söylüyor ve tablodaki ilk satır vurgusu artık
      her koşulda kartla aynı satırı gösteriyor. */
   const featured = rows[0] ?? null;
+  /* "30 SANİYEDE" İPUCU yalnızca öne çıkan kartta: sayfanın tek kartı o;
+     tablo satırları hizalı sütunlar ve oraya bir cümle girmez. Ek tablosu
+     yoksa ya da analizin özeti yazılmamışsa kart birebir eskisi. */
+  const featuredTeaser = featured ? (teasers.get(teaserKey(featured)) ?? null) : null;
   /* Haftanın paneli arşivin sıralamasını İZLEMİYOR: sıralama değişince
      satırlar yer değiştiriyor ama sayfa yeniden bağlanmıyordu; FillList'in
      elle açtığı satırlar DOM'da açık kalıp sırası kayanlar kapanıyordu. */
@@ -284,6 +297,7 @@ export default async function AnalysesPage(
               <FeaturedAnalysis
                 row={featured}
                 logoUrl={meta[featured.symbol]?.logoUrl ?? null}
+                teaser={featuredTeaser}
                 locale={locale}
                 t={t}
               />
@@ -666,11 +680,14 @@ export default async function AnalysesPage(
 function FeaturedAnalysis({
   row,
   logoUrl,
+  teaser,
   locale,
   t,
 }: {
   row: AnalysisIndexRow;
   logoUrl: string | null;
+  /** Özetin ilk maddesi — kayıtta yoksa `null`, satır hiç basılmaz. */
+  teaser: string | null;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -781,6 +798,15 @@ function FeaturedAnalysis({
             </div>
           ))}
         </dl>
+      )}
+
+      {teaser && (
+        <p className={extrasStyles.teaser}>
+          <span className={extrasStyles.teaserLabel}>{t.earningsExtra.teaserLabel}</span>
+          <span className={extrasStyles.teaserText} lang={row.locale}>
+            {plainInline(teaser)}
+          </span>
+        </p>
       )}
     </article>
   );

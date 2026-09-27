@@ -6,6 +6,7 @@ import { earningsAnalyses, earningsCalendar, symbols } from "@/lib/schema";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { sectorGroupOf } from "@/lib/sectors";
 import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
+import { getExtrasCoverage } from "@/lib/earnings-extras";
 
 /**
  * Analiz rutini için bağlam paketi.
@@ -119,7 +120,7 @@ export async function GET(request: Request) {
 
   const symbolList = [...new Set(reported.map((row) => row.symbol))];
 
-  const [profiles, existing] = await Promise.all([
+  const [profiles, existing, coverage] = await Promise.all([
     symbolList.length > 0
       ? db
           .select({
@@ -135,6 +136,7 @@ export async function GET(request: Request) {
       : Promise.resolve([]),
     db
       .select({
+        id: earningsAnalyses.id,
         symbol: earningsAnalyses.symbol,
         period: earningsAnalyses.period,
         periodLabel: earningsAnalyses.periodLabel,
@@ -148,6 +150,9 @@ export async function GET(request: Request) {
       .from(earningsAnalyses)
       .orderBy(desc(earningsAnalyses.reportDate))
       .limit(400),
+    /* Ek tablosu ayrı sorgu: migration inmeden `null` döner ve bu uç yine
+       çalışır (lib/earnings-extras.ts). */
+    getExtrasCoverage(),
   ]);
 
   const profileOf = new Map(profiles.map((row) => [row.symbol, row]));
@@ -169,6 +174,11 @@ export async function GET(request: Request) {
          sayfada metin yığını olarak duruyor. Rutin bu bayrağa bakıp eski
          kayıtları tamamlıyor. */
       has_charts: boolean;
+      /* "30 Saniyede" özeti ve segment tablosu — § 4'ün yeni alanları.
+         İki dilden birinde yoksa false; ek tablosu okunamıyorsa null
+         ("bilinmiyor", eksik değil). */
+      has_summary: boolean | null;
+      has_segments: boolean | null;
     }
   >();
   for (const row of existing) {
@@ -176,10 +186,16 @@ export async function GET(request: Request) {
     const held = grouped.get(key);
     const charts =
       (row.quarterlyRevenue?.length ?? 0) > 0 && (row.guidance?.length ?? 0) > 0;
+    const covered = coverage?.get(row.id);
+    const summary = coverage ? Boolean(covered?.takeaways) : null;
+    const segments = coverage ? Boolean(covered?.segments) : null;
     if (held) {
       if (!held.locales.includes(row.locale)) held.locales.push(row.locale);
       /* İki dilden biri grafiksizse analiz eksik sayılır. */
       held.has_charts = held.has_charts && charts;
+      held.has_summary = held.has_summary === null ? null : held.has_summary && Boolean(summary);
+      held.has_segments =
+        held.has_segments === null ? null : held.has_segments && Boolean(segments);
     } else {
       grouped.set(key, {
         symbol: row.symbol,
@@ -190,6 +206,8 @@ export async function GET(request: Request) {
         score: row.score,
         locales: [row.locale],
         has_charts: charts,
+        has_summary: summary,
+        has_segments: segments,
       });
     }
   }

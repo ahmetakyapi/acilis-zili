@@ -2,6 +2,7 @@ import { cookies, headers } from "next/headers";
 import {
   DEFAULT_LOCALE,
   DEFAULT_THEME,
+  EMBED_THEME_HEADER,
   INTL_LOCALE,
   LOCALE_COOKIE,
   THEME_COOKIE,
@@ -46,6 +47,11 @@ export async function getLocale(): Promise<Locale> {
 }
 
 export async function getTheme(): Promise<Theme> {
+  /* Gömülü parça temayı adresten alır (proxy başlığa çeviriyor); başka
+     sitenin çerçevesine çerez gitmiyor. Gerekçe `lib/embed.ts`. */
+  const embedded = (await headers()).get(EMBED_THEME_HEADER);
+  if (isTheme(embedded)) return embedded;
+
   const store = await cookies();
   const value = store.get(THEME_COOKIE)?.value;
   return isTheme(value) ? value : DEFAULT_THEME;

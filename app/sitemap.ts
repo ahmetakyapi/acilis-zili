@@ -1,28 +1,30 @@
 import type { MetadataRoute } from "next";
 import { GUIDE_SLUGS } from "@/content/guide";
-import { getAnalyses, getBriefArchive, getStories } from "@/lib/data";
+import { GLOSSARY_SLUGS } from "@/content/glossary";
+import { THEME_SLUGS } from "@/content/themes";
+import { COMPARE_PAIR_SLUGS } from "@/content/compare-pairs";
+import { getAnalyses, getBriefArchive, getCompanies, getStories } from "@/lib/data";
 import { briefHref, type BriefPeriod } from "@/lib/brief";
 import { SITE_URL } from "@/lib/site";
 import { LOCALES } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
 import { analysisHref } from "@/lib/analysis";
+import { technicalHref } from "@/lib/technical";
+import { getTechnicalBoard } from "@/lib/technical-data";
 
 type Locale = (typeof LOCALES)[number];
 type SitemapItem = { path: string; locale: Locale; modified: Date };
-import { technicalHref } from "@/lib/technical";
-import { getTechnicalBoard } from "@/lib/technical-data";
+type Frequency = MetadataRoute.Sitemap[number]["changeFrequency"];
+type StaticRoute = { path: string; priority: number; frequency: Frequency };
 
 /**
  * Site haritası.
  *
- * Altı kaynaktan derlenir: durağan ekranlar, depodaki rehber yazıları,
- * veritabanındaki mercek yazıları, bilanço analizleri, bülten sayıları ve
- * teknik analizler. Şirket sayfaları (/hisse/*) bilinçli
- * olarak YOK — beş yüzden fazla sayfa üretirdi, içerikleri neredeyse
- * tamamen sağlayıcı verisi ve her biri her gün değişiyor. Arama motoruna
- * gönderilecek asıl değer, yazılan metinler.
+ * Yedi kaynaktan derlenir: durağan ekranlar, depodaki rehber yazıları,
+ * veritabanındaki mercek yazıları, bilanço analizleri, bülten sayıları,
+ * teknik analizler ve piyasa değeri en büyük şirketlerin sayfaları.
  *
- * Veritabanı düşerse harita yine üretilir; yalnızca mercek bölümü boş kalır.
+ * Veritabanı düşerse harita yine üretilir; yalnızca o bölüm boş kalır.
  */
 /* Tavan yüksek tutuluyor: 200'lük sınır eski yazıları SESSİZCE düşürüyordu
    ve düşen yazı arama motoruna bir daha hiç gösterilmiyordu. Haritanın
@@ -30,14 +32,53 @@ import { getTechnicalBoard } from "@/lib/technical-data";
    geçmez. */
 const SITEMAP_LIMIT = 2000;
 
+/**
+ * ŞİRKET SAYFALARI HARİTADA — KARAR TERSİNE DÖNDÜ (28 Eylül).
+ *
+ * Eski gerekçe şuydu: /hisse/* beş yüzden fazla sayfa üretir, içerikleri
+ * neredeyse tamamen sağlayıcı verisi ve her gün değişiyor; arama motoruna
+ * gönderilecek asıl değer yazılan metinler. O gün doğruydu: sayfa bir
+ * fiyat, bir grafik ve sağlayıcının profil metninden ibaretti, yani başka
+ * yüz sitede aynısı olan içerik.
+ *
+ * Değişen şey sayfanın kendisi. Şirket sayfası artık sitenin ÜRETTİĞİ bir
+ * metin katmanı taşıyor: sıradaki bilançonun tarihi ve Türkiye saatiyle
+ * penceresi, hangi endekslerin bileşeni olduğu, ilgili rehber yazılarına
+ * bağlantılar. Bu, "ABD hissesi X ne zaman bilanço açıklıyor, saat kaçta"
+ * sorusunun Türkçe cevabı ve başka yerde yok.
+ *
+ * TAVAN 300, bin değil. Tarama bütçesi sınırsız değil ve katalogun kuyruğu
+ * (küçük, profili eksik, logosuz şirketler) en ince sayfalar; onları
+ * listelemek arama motoruna ince sayfa göstermenin en hızlı yolu. Piyasa
+ * değeri sırası hem okuyucu ilgisini hem de sayfanın zenginliğini (analist
+ * kapsamı, bilanço geçmişi, haber) iyi izliyor. Listelenmeyen sayfalar
+ * dizine KAPALI DEĞİL: site içi bağlantılardan yine bulunuyorlar, yalnızca
+ * haritayla öne itilmiyorlar.
+ */
+const COMPANY_SITEMAP_LIMIT = 300;
+
+/**
+ * 28 Eylül paketlerinin getirdiği ekranlar. Durağanlar bu listede; dinamik
+ * olanlar (terim, tema, çift) rehber yazılarıyla AYNI kalıpla, kendi slug
+ * listeleri üzerinde `bothLocales` döngüsüyle aşağıda. Karşılaştırma
+ * çiftlerinden yalnızca KÜRATÖRLÜ olanlar girer: her kombinasyon
+ * listelenseydi binlerce ince sayfa olurdu.
+ *
+ * `/portfoy` HİÇBİR ZAMAN buraya girmez: kişisel ekran, `noindex` (bkz.
+ * next.config.ts → NOINDEX_PATHS). `/gomulu/*` da girmez: başka sitelerin
+ * içinde çizilen parçalar. `/gun/[tarih]/kart` bir görsel, sayfa değil.
+ */
+const FEATURE_STATIC_ROUTES: StaticRoute[] = [
+  { path: "/vergi", priority: 0.7, frequency: "monthly" },
+  { path: "/sozluk", priority: 0.8, frequency: "weekly" },
+  { path: "/tema", priority: 0.7, frequency: "daily" },
+  { path: "/bilancolar/hafta", priority: 0.7, frequency: "daily" },
+];
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
-  const staticRoutes: {
-    path: string;
-    priority: number;
-    frequency: MetadataRoute.Sitemap[number]["changeFrequency"];
-  }[] = [
+  const staticRoutes: StaticRoute[] = [
     { path: "/", priority: 1, frequency: "hourly" },
     { path: "/piyasalar", priority: 0.8, frequency: "hourly" },
     { path: "/bilancolar", priority: 0.8, frequency: "daily" },
@@ -54,6 +95,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     /* `/menu` YOK: telefon gezinmesinin tam ekran listesi, kendi içeriği
        olmayan bir bağlantı sayfası. Sayfa `noindex` taşıyor. */
     { path: "/kvkk", priority: 0.3, frequency: "monthly" },
+    /* Güven sayfası: kim işletiyor, veri ve içerik nasıl üretiliyor. */
+    { path: "/hakkinda", priority: 0.4, frequency: "monthly" },
+    ...FEATURE_STATIC_ROUTES,
   ];
 
   /* HER KAYIT İKİ DİLDE. Harita bir dönem yalnızca önekSİZ adresleri
@@ -69,7 +113,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const bothLocales = (
     path: string,
     priority: number,
-    frequency: MetadataRoute.Sitemap[number]["changeFrequency"],
+    frequency: Frequency,
     /* Rehber yazısı için `false`: depoda duruyor ve değişme anı bilinmiyor.
        Her üretimde "şimdi" yazmak, arama motoruna her gün yüz yazının
        değiştiğini söylemekti; yanlış `lastmod` görmezden gelinmeyi öğretiyor.
@@ -91,6 +135,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for (const slug of GUIDE_SLUGS) {
     entries.push(...bothLocales(`/rehber/${slug}`, 0.7, "monthly", false));
+  }
+  /* Terimler ve çiftler depoda duruyor, değişme anı bilinmiyor: rehberle
+     aynı gerekçeyle `lastmod` yok. Tema sayfası canlı kotasyon taşıyor. */
+  for (const slug of GLOSSARY_SLUGS) {
+    entries.push(...bothLocales(`/sozluk/${slug}`, 0.6, "monthly", false));
+  }
+  for (const slug of THEME_SLUGS) {
+    entries.push(...bothLocales(`/tema/${slug}`, 0.6, "daily"));
+  }
+  for (const slug of COMPARE_PAIR_SLUGS) {
+    entries.push(...bothLocales(`/karsilastir/${slug}`, 0.5, "weekly", false));
   }
 
   /* MERCEK VE ANALİZ YAZILARI DİLE GÖRE listelenir; durağan sayfaların
@@ -215,6 +270,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...(langs.length > 1 ? { alternates: alternatesFor(path) } : {}),
       });
     }
+  }
+
+  /* ŞİRKET SAYFALARI — gerekçe ve tavan dosya başında
+     (`COMPANY_SITEMAP_LIMIT`). Sıra piyasa değeri; değeri bilinmeyen
+     (USD dışı, profili eksik) şirket listeye girmez. `getCompanies`
+     hatayı kendisi yutuyor (boş liste), harita yine geçerli kalıyor.
+     `lastModified` yok: sayfa her istekte çiziliyor ve "şimdi" yazmak her
+     gün üç yüz sayfanın değiştiğini söylemek olurdu — rehberdeki gerekçe. */
+  const companies = (await getCompanies())
+    .filter((company) => company.marketCap !== null && company.marketCap > 0)
+    .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
+    .slice(0, COMPANY_SITEMAP_LIMIT);
+  for (const company of companies) {
+    entries.push(...bothLocales(`/hisse/${company.symbol}`, 0.5, "daily", false));
   }
 
   return entries;

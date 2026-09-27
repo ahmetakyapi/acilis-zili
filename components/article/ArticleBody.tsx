@@ -12,6 +12,7 @@ import type { Icon } from "@phosphor-icons/react";
 import { ArticleChart } from "./ArticleChart";
 import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
 import { cn, safeExternalUrl, titleCaseLabel } from "@/lib/utils";
+import type { AutoLinker } from "@/lib/autolink";
 
 /* ==========================================================================
    Uzun metin gövdesi — rehber yazıları ve mercek yazıları
@@ -320,7 +321,14 @@ const ALL_BOLD = /^\*\*[^*]+\*\*$/;
  * bir sonraki metin aynı kalıba bir daha uymuyor. `kod` dalı BİLEREK dışarıda
  * — kod verbatim demektir, içinde biçim aranmaz.
  */
-function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
+function renderInline(
+  text: string,
+  keyPrefix: string,
+  /* Otomatik bağlantı (sözlük terimi, sembol). Bağlantı etiketinin içine
+     GEÇİRİLMİYOR: `<a>` içinde `<a>` geçersiz HTML ve yazarın bağlantısı
+     zaten bir hedef. Kod da dışarıda — kod verbatim. */
+  linker?: AutoLinker | null,
+): React.ReactNode[] {
   return text.split(INLINE_PATTERN).map((part, index) => {
     const key = `${keyPrefix}-${index}`;
     if (!part) return null;
@@ -332,14 +340,14 @@ function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
            komşu kalın etiketlerden bir kademe ince duruyordu. Torun
            seçici özgüllükte kazanıyor, yani bağlantı hem mavi hem kalın. */
         <strong key={key} className="font-semibold text-strong [&_a]:font-semibold">
-          {renderInline(part.slice(2, -2), key)}
+          {renderInline(part.slice(2, -2), key, linker)}
         </strong>
       );
     }
     if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
       return (
         <em key={key} className="italic">
-          {renderInline(part.slice(1, -1), key)}
+          {renderInline(part.slice(1, -1), key, linker)}
         </em>
       );
     }
@@ -394,9 +402,43 @@ function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
       );
     }
 
+    if (linker) {
+      const pieces = linker.split(part);
+      if (pieces.length > 1 || typeof pieces[0] !== "string") {
+        return (
+          <span key={key}>
+            {pieces.map((piece, pieceIndex) =>
+              typeof piece === "string" ? (
+                piece
+              ) : (
+                <Link
+                  key={pieceIndex}
+                  href={piece.href}
+                  prefetch={false}
+                  data-autolink=""
+                  className={AUTO_LINK_CLASS}
+                >
+                  {piece.text}
+                </Link>
+              ),
+            )}
+          </span>
+        );
+      }
+    }
+
     return <span key={key}>{part}</span>;
   });
 }
+
+/* OTOMATİK BAĞLANTI YAZARINKİNDEN BİR TON SESSİZ. Aynı mavi ve aynı
+   kontrast (`--primary-ink`, gerekçesi yukarıda) ama alt çizgi noktalı:
+   bir paragrafta beş terim bağlandığında düz çizgiler metni bir bağlantı
+   listesine çeviriyordu. Noktalı çizgi "burada bir tanım var" diyor,
+   "buradan git" demiyor. `prefetch={false}`: yazı başına yirmi bağlantı
+   yirmi ön yükleme isteği demekti. */
+const AUTO_LINK_CLASS =
+  "text-primary-ink underline decoration-primary-faint decoration-dotted underline-offset-2 transition-colors hover:text-primary-hover";
 
 /* --------------------------------------------------------------------------
    Blok çözümleme
@@ -814,6 +856,7 @@ export function ArticleBody({
   variant = "default",
   skipIndex,
   afterLead,
+  autoLink,
 }: {
   markdown: string;
   /** Etiketi yazılmamış `:::` kutularının varsayılan başlığı bundan gelir. */
@@ -858,8 +901,30 @@ export function ArticleBody({
    * özetin altında, ilk paragrafın üstünde.
    */
   afterLead?: ReactNode;
+  /**
+   * Sözlük terimi ve sembol bağlantısı — İSTEĞE BAĞLI. Mercek, rehber ve
+   * sözlük sayfası açıyor; KVKK ve panel önizlemesi açmıyor. Hukuk
+   * metninde bir terimin sözlüğe gitmesi metnin bağlayıcı tanımını
+   * bulandırır; önizleme ise bir sunucu eylemi ve orada sembol kümesi için
+   * veritabanına gitmek, editörün her tuşunu bir sorguya bağlardı.
+   *
+   * Durum TUTAN bir nesne: "yalnızca ilk geçişte" kuralı yazının tamamına
+   * yayılıyor ve bloklar sırayla çizildiği için ilk geçiş belge sırasındaki
+   * ilk geçiş. Her çizim kendi nesnesini kurar (`lib/autolink-data.ts` →
+   * `articleAutoLinker`); iki yazı aynı nesneyi paylaşmamalı.
+   */
+  autoLink?: AutoLinker | null;
 }) {
   const blocks = blocksProp ?? parseBlocks(markdown, locale);
+  /* Yazarın elle verdiği sözlük ve hisse bağlantıları hedefi tüketiyor:
+     gövde "[NVDA](/hisse/NVDA)" diyorsa ondan önceki ya da sonraki
+     "(NVDA)" ikinci bir bağlantı almıyor. Blok ayrıştırmasından değil ham
+     metinden okunuyor — bağlantı her blok türünün içinde durabilir. */
+  if (autoLink) {
+    for (const match of markdown.matchAll(/\]\((\/(?:sozluk|hisse)\/[^)\s]+)\)/g)) {
+      autoLink.claim(match[1]);
+    }
+  }
   const ids = headingIds(blocks);
   const legacyIds = legacyHeadingIds(blocks);
   const editorial = variant === "editorial";
@@ -919,7 +984,7 @@ export function ArticleBody({
                 data-role={role}
                 className="text-read leading-[28px] text-body"
               >
-                {renderInline(block.text, key)}
+                {renderInline(block.text, key, autoLink)}
               </p>
             );
 
@@ -951,7 +1016,7 @@ export function ArticleBody({
                         <span className="block size-1.5 rounded-full bg-primary-faint" />
                       )}
                     </span>
-                    <span>{renderInline(item, `${key}-${itemIndex}`)}</span>
+                    <span>{renderInline(item, `${key}-${itemIndex}`, autoLink)}</span>
                   </li>
                 ))}
               </ul>
@@ -966,7 +1031,7 @@ export function ArticleBody({
               >
                 {block.lines.map((line, lineIndex) => (
                   <p key={lineIndex}>
-                    {renderInline(line, `${key}-${lineIndex}`)}
+                    {renderInline(line, `${key}-${lineIndex}`, autoLink)}
                   </p>
                 ))}
               </blockquote>
@@ -1027,7 +1092,7 @@ export function ArticleBody({
                                 : "text-body",
                             )}
                           >
-                            {renderInline(cell, `${key}-${rowIndex}-${cellIndex}`)}
+                            {renderInline(cell, `${key}-${rowIndex}-${cellIndex}`, autoLink)}
                           </td>
                         ))}
                       </tr>
@@ -1116,7 +1181,7 @@ export function ArticleBody({
                             {item.when}
                           </span>
                           <span data-part="text" className="mt-1 block text-read leading-[24px] text-body">
-                            {renderInline(item.text, `${key}-${itemIndex}`)}
+                            {renderInline(item.text, `${key}-${itemIndex}`, autoLink)}
                           </span>
                         </span>
                       </li>
@@ -1447,7 +1512,7 @@ export function ArticleBody({
                             !line.term && "sm:ml-0",
                           )}
                         >
-                          {renderInline(line.text, `${key}-${lineIndex}`)}
+                          {renderInline(line.text, `${key}-${lineIndex}`, autoLink)}
                         </dd>
                       </div>
                     ))}
@@ -1467,7 +1532,7 @@ export function ArticleBody({
                         }
                         className="text-read leading-[25px] text-body"
                       >
-                        {renderInline(line.text, `${key}-${lineIndex}`)}
+                        {renderInline(line.text, `${key}-${lineIndex}`, autoLink)}
                       </p>
                     ))}
                   </div>

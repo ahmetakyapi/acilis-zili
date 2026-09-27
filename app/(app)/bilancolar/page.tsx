@@ -1,4 +1,6 @@
 import { QueryTransition } from "@/components/layout/QueryTransition";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { ArrowRight, ImageSquare } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
 import { auth } from "@/auth";
@@ -125,6 +127,23 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
       </DirectoryHeader>
 
       <EarningsTabs active="calendar" t={t} className="-mt-2" />
+
+      {/* HAFTALIK GÖRSEL BU SEKMENİN ALTINDA, DÖRDÜNCÜ SEKME DEĞİL. Sekmeler
+          aynı listenin görünümleri; haftalık sayfa takvimin seçilmiş bir
+          haftası ve paylaşılacak bir çıktı (gerekçe
+          `app/(app)/bilancolar/hafta/page.tsx` başında). Tek satır, kutu
+          değil: takvimin önüne bir panel daha koymak listeyi aşağı itiyordu. */}
+      <Link
+        href="/bilancolar/hafta"
+        className="group -mt-2 inline-flex min-h-11 w-fit max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 text-small"
+      >
+        <ImageSquare size={16} weight="duotone" aria-hidden className="text-primary" />
+        <span className="font-semibold text-primary group-hover:underline">
+          {t.earningsExtra.week.calendarLink}
+        </span>
+        <span className="text-muted max-sm:hidden">{t.earningsExtra.week.calendarLinkHint}</span>
+        <ArrowRight size={13} weight="bold" aria-hidden className="text-primary" />
+      </Link>
 
       {/* Analizler geçmiş bilançolara ait, takvim ise ileriye bakıyor:
           son yazılanlar sekmeye tıklanmadan burada görünüyor. */}

@@ -30,6 +30,7 @@ export async function SiteFooter() {
           { href: "/teknik", label: t.technical.title },
           { href: "/takvim", label: t.nav.calendar },
           { href: "/karsilastir", label: t.compare.title },
+          { href: "/tema", label: t.themes.eyebrow },
         ],
       },
       {
@@ -39,6 +40,8 @@ export async function SiteFooter() {
           { href: "/mercek", label: t.nav.stories },
           { href: "/haberler", label: t.nav.news },
           { href: "/bulten", label: t.footer.briefArchive },
+          { href: "/sozluk", label: t.glossary.title },
+          { href: "/vergi", label: t.lira.tax.title },
           { href: "/feed.xml", label: t.footer.feed },
         ],
       },
@@ -46,6 +49,7 @@ export async function SiteFooter() {
         title: t.footer.sectionAccount,
         links: [
           { href: "/favoriler", label: t.nav.watchlist },
+          { href: "/portfoy", label: t.lira.portfolio.title },
           { href: "/ayarlar", label: t.nav.settings },
           { href: "/kvkk", label: t.footer.privacy },
         ],
@@ -127,6 +131,14 @@ export async function SiteFooter() {
           className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"
         >
           {t.footer.privacy}
+        </Link>
+        {/* Hakkında yasal satırda, KVKK'nın yanında: ikisi de "bu siteye ne
+            kadar güvenebilirim" sorusunu cevaplıyor (kvkk/page.tsx başı). */}
+        <Link
+          href="/hakkinda"
+          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"
+        >
+          {t.about.footerLink}
         </Link>
         <span>{t.footer.disclaimer}</span>
         <a

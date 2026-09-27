@@ -1,4 +1,5 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import type { AutoLinker } from "@/lib/autolink";
 
 /**
  * Analiz metinlerindeki satır içi biçimlendirme — yalnızca iki şey:
@@ -38,14 +39,58 @@ function safeHref(href: string): string | null {
   return null;
 }
 
-export function RichText({ text }: { text: string }) {
+export function RichText({
+  text,
+  linker,
+}: {
+  text: string;
+  /**
+   * Sözlük ve sembol bağlantısı — `ArticleBody`deki `autoLink`in aynısı ve
+   * aynı nesne sayfanın BÜTÜN metin alanlarına geçiyor: analiz özet,
+   * bölümler ve madde listeleri olarak parça parça çiziliyor ama "yalnızca
+   * ilk geçişte" kuralı analizin tamamına yayılmalı. Yalnızca düz metin
+   * parçalarına uygulanıyor; kalın ve bağlantı etiketi olduğu gibi kalıyor.
+   */
+  linker?: AutoLinker | null;
+}) {
   const nodes: React.ReactNode[] = [];
   let cursor = 0;
   let key = 0;
 
+  const plain = (segment: string) => {
+    if (!linker) {
+      nodes.push(segment);
+      return;
+    }
+    for (const piece of linker.split(segment)) {
+      if (typeof piece === "string") {
+        nodes.push(piece);
+        continue;
+      }
+      nodes.push(
+        <Link
+          key={key++}
+          href={piece.href}
+          prefetch={false}
+          data-autolink=""
+          className="text-primary underline decoration-primary-faint decoration-dotted underline-offset-2 hover:decoration-primary"
+        >
+          {piece.text}
+        </Link>,
+      );
+    }
+  };
+
+  if (linker) {
+    for (const match of text.matchAll(TOKEN)) {
+      const href = match[2] ?? match[4];
+      if (href) linker.claim(href);
+    }
+  }
+
   for (const match of text.matchAll(TOKEN)) {
     const at = match.index ?? 0;
-    if (at > cursor) nodes.push(text.slice(cursor, at));
+    if (at > cursor) plain(text.slice(cursor, at));
 
     const [raw, mdText, mdHref, boldText, htmlHref, htmlText] = match;
     const linkText = mdText ?? htmlText;
@@ -88,6 +133,6 @@ export function RichText({ text }: { text: string }) {
     cursor = at + raw.length;
   }
 
-  if (cursor < text.length) nodes.push(text.slice(cursor));
+  if (cursor < text.length) plain(text.slice(cursor));
   return <>{nodes}</>;
 }

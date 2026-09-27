@@ -484,6 +484,243 @@ Halka arz bir şirketin doğumu değil, satış ilanıdır: zamanı ve fiyatı s
 Şirket sayfasındaki profil kartında **halka arz tarihi** yazar — beş çeyreklik geçmişi olan bir şirketle otuz yıllık bir şirketi aynı güvenle okumamak için oraya bak. Yeni kote olmuş semboller arama kutusuyla bulunur; endeks kartlarında görünmezler, çünkü henüz endekste değillerdir.`,
   },
 
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: H. Bessembinder, "Do Stocks Outperform Treasury Bills?",
+     Journal of Financial Economics 129 (2018) — 1926-2016 arası net servet
+     artışının tamamı hisselerin yaklaşık %4'ünden; hisselerin yarıdan fazlası
+     ömür boyu bir aylık hazine bonosunun gerisinde. S&P Dow Jones Indices,
+     SPIVA U.S. Scorecard (yıllık) — 15 yıllık pencerede ABD büyük ölçekli
+     aktif fonların ~%90'ı S&P 500'ün gerisinde; oran rapordan rapora birkaç
+     puan oynuyor, o yüzden metinde "onda dokuza yakın" yazıyor. */
+  "endeks-fonu-mu-tek-hisse-mi": {
+    title: "Endeks Fonu mu, Tek Hisse mi?",
+    dek: "İkisi aynı soruya verilmiş iki cevap değil: biri piyasayı, öteki bir şirketi satın alır ve riskleri farklı yerden gelir.",
+    bodyMd: `"Hangi hisseyi alayım?" sorusu çoğu zaman bir önceki soruyu atlar: tek bir şirket mi seçmek istiyorsun, yoksa piyasanın tamamını mı taşımak? İkisi aynı işin küçük ve büyük hâli değil. Getirinin nereden geldiği, riskin nereden geldiği ve seni neyin yanıltabileceği ikisinde farklıdır.
+
+::: tanim Bu Yazıdaki Terimler
+**Endeks Fonu:** Bir endeksi kurallara göre birebir kopyalayan fon. ABD'de çoğunlukla ETF olarak işlem görür.
+**Şirkete Özgü Risk:** Yalnızca o şirketi vuran riskler: bir ürünün tutmaması, bir dava, bir yöneticinin hatası.
+**Piyasa Riski:** Bütün hisseleri birlikte etkileyen riskler: faiz, resesyon, genel korku.
+:::
+
+## Ortalama Hisse Ortalama Değildir
+
+Borsanın uzun vadeli getirisi hisselere eşit dağılmaz. Getirilerin dağılımı çarpıktır: çok sayıda sıradan ya da kötü sonuç, çok az sayıda devasa kazananla dengelenir.
+
+::: sayilar Seçim Probleminin Rakamları
+~%4 | 1926-2016 arasında ABD borsasındaki net servet artışının tamamını üreten hisselerin payı
+>%50 | Aynı dönemde ömrü boyunca bir aylık hazine bonosundan az getiren hisselerin payı
+~%90 | On beş yıllık pencerede S&P 500'ün gerisinde kalan ABD büyük ölçekli aktif fonların payı
+:::
+
+İlk iki satır aynı çalışmadan geliyor ve birlikte okununca şunu söylüyor: rastgele seçilmiş tek bir hissenin, borsanın ortalamasını yakalama ihtimali yarıdan azdır. Endeks ise o az sayıdaki büyük kazananı **tanımı gereği** içinde taşır; kimin kazanacağını bilmek zorunda kalmaz. Üçüncü satır da işin profesyonellere de kolay gelmediğini gösterir.
+
+::: ornek Beş Hisse, Bir Kazanan
+Beş hisseye eşit para koyduğunu düşün. Dördü dönem sonunda %20 kaybettirir, biri %300 kazandırır.
+Beşini birden tutan portföy: (4 × −20 + 300) ÷ 5 = **+%44**.
+Aynı beş hisseden rastgele yalnızca birini seçen kişi ise beşte dört ihtimalle **−%20** ile kapanır.
+Ortalama getiri iki durumda da aynıdır. Değişen, sonucun dağılımıdır: tek hisse seçen biri ortalamayı değil, kendi şansını yaşar.
+:::
+
+## Tek Hisse İki Riski Birden Taşır
+
+Tek bir hisse aldığında hem piyasa riskini hem şirkete özgü riski taşırsın. İkincisi [çeşitlendirmeyle](/rehber/cesitlendirme) neredeyse sıfıra indirilebilir; birincisi indirilemez.
+
+Bunun sonucu önemlidir: piyasa, çeşitlendirilerek ortadan kaldırılabilecek bir risk için ek getiri ödemez. Tek hisse taşımak daha fazla risk almak demektir ama o fazladan riskin karşılığında **beklenen** getiri otomatik olarak artmaz. Artması için seçimin gerçekten isabetli olması gerekir.
+
+## Karşılaştırma
+
+| Konu | Endeks Fonu | Tek Hisse |
+|---|---|---|
+| **Neye Bahis** | Piyasanın geneline | O şirketin piyasadan iyi yapmasına |
+| **Maliyet** | Yıllık gider oranı, genellikle düşük | Gider oranı yok, ama araştırma zamanı var |
+| **Kötü Senaryo** | Piyasayla birlikte düşüş | Şirkete özgü çöküş, sıfıra kadar |
+| **Takip Yükü** | Düşük | Her çeyrek bilanço, haber, rehberlik |
+| **Yanılma Biçimi** | Zamanlamada | Hem zamanlamada hem seçimde |
+
+## Tek Hisse Ne Zaman Anlamlı Olur
+
+Tek hisse almak meşru bir tercihtir; yalnızca bir iddia taşıdığını bilmek gerekir. Bu iddia genellikle üç koşulda savunulabilir:
+
+1. **Şirket hakkında bir görüşün var** ve bu görüş piyasanın fiyata koyduğundan farklı. "İyi şirket" bir görüş değildir; iyi şirketler zaten pahalı fiyatlanır. Ayrıntı: [F/K ve Değerleme Oranları](/rehber/degerleme)
+2. **Takip edecek zamanın var.** Bilançoları okumak, rehberlik değişikliklerini izlemek, tezin çürüdüğünü fark etmek süreklilik ister.
+3. **Pozisyon büyüklüğü sınırlı.** Tek bir şirketin çökmesi portföyünü taşınamaz bir yere götürmüyorsa. Ayrıntı: [Risk Yönetimi](/rehber/risk-yonetimi)
+
+Bazı yatırımcılar bu yüzden iki katmanlı düşünür: portföyün büyük kısmı geniş bir endekste, küçük bir kısmı görüş taşıdığı şirketlerde. Bu bir öneri değil, iki aracın farklı işler yaptığını kabul eden bir çerçevedir.
+
+::: dikkat Endeks Fonu da Risklidir
+Endeks fonu şirkete özgü riski azaltır, piyasa riskini azaltmaz. S&P 500 2008-2009'da zirveden yarıdan fazla düştü ve fonu tutan herkes o düşüşü birebir yaşadı. Ayrıca piyasa değeri ağırlıklı bir endekste en büyük birkaç şirket endeksin önemli bir kısmını taşır; "500 şirket" göründüğü kadar dağınık değildir. Ayrıntı: [Endeks Nedir?](/rehber/endeks)
+:::
+
+::: ozet Özet
+Endeks fonu "hangi şirket kazanacak" sorusunu cevaplamak zorunda kalmadan piyasanın getirisini almaktır. Tek hisse, o soruya bir cevabın olduğunu iddia etmektir. İkisi de meşru; sorun, bir tema hakkında haklı olup yanlış şirketi seçtiğinde ya da elindekinin bir iddia olduğunu unuttuğunda başlar.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+[Karşılaştır](/karsilastir) ekranında bir hisseyi SPY ya da QQQ ile aynı ölçekte çizebilirsin: şirket seçiminin endekse göre ne kattığı ya da ne götürdüğü tek grafikte okunur. ETF sayfalarında şirket metrikleri yerine fon künyesi durur.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: SEC, "Statement on the Approval of Spot Bitcoin Exchange-Traded
+     Products" (10 Ocak 2024; işlem 11 Ocak 2024'te başladı). SEC onayı spot
+     ether ETP'leri (Mayıs 2024 kural değişikliği, işlem 23 Temmuz 2024).
+     SEC basın bülteni 2025-101: kripto ETP'lerde ayni (in-kind) yaratma ve
+     itfa onayı, 29 Temmuz 2025. Fon izahnameleri (S-1): 1933 Kanunu altında
+     kayıtlı grantor trust yapısı, 1940 Kanunu kapsamında yatırım şirketi
+     değil; NAV bir referans fiyata (ör. CF Benchmarks, 16:00 ET) göre
+     hesaplanıyor. GBTC'nin dönüşümdeki %1,5 gider oranı izahnameden.
+     Vadeli işlem tabanlı ilk bitcoin ETF'i Ekim 2021. 2022 düşüşü (~%64)
+     yıl başı/yıl sonu kapanışlarından yuvarlandı. */
+  "kripto-etf": {
+    title: "Kripto ETF'leri: Spot Bitcoin ve Ether Fonları Ne Tutar?",
+    dek: "Bir borsa fonunun içinde gerçek bitcoin: ne kazandırdığı kadar ne kaybettirdiği de paketin yapısından geliyor.",
+    bodyMd: `Ocak 2024'e kadar ABD borsalarında bitcoin'in kendisini tutan bir ETF yoktu. Vadeli işlem sözleşmesi tutan fonlar ve tezgâh üstünde işlem gören, fiyatı içindeki varlıktan sık sık kopan tröstler vardı. SEC'in onayıyla birlikte ilk kez **gerçek bitcoin tutan** fonlar borsada işlem görmeye başladı; altı ay sonra aynısı ether için geldi. Bu yazı bu fonların ne olduğunu anlatır, alınıp alınmaması gerektiğini değil.
+
+::: tanim Spot Kripto ETF'i
+İçinde doğrudan kripto varlığın kendisini (bitcoin ya da ether) tutan ve payları ABD borsalarında hisse gibi işlem gören fon. Varlık bir saklama kuruluşunda, çoğunlukla internete bağlı olmayan cüzdanlarda tutulur.
+:::
+
+::: zaman Düzenleyici Takvim
+Ekim 2021 | İlk **vadeli işlem tabanlı** bitcoin ETF'i işlem görmeye başlar. Fon bitcoin değil, bitcoin vadeli sözleşmesi tutar.
+10 Ocak 2024 | SEC spot bitcoin ETF'lerini onaylar; işlem ertesi gün başlar.
+23 Temmuz 2024 | Spot ether ETF'leri işlem görmeye başlar.
+29 Temmuz 2025 | SEC, fon paylarının nakit yerine doğrudan kripto varlıkla yaratılıp itfa edilmesine izin verir.
+:::
+
+## İçeride Ne Var, Fiyat Nasıl Oluşur
+
+Fonun her payı belirli miktarda bitcoin'i temsil eder. Pay sayısı, büyük aracı kurumların (yetkili katılımcılar) fona varlık getirip yeni pay yaratması ya da pay iade edip varlık çekmesiyle değişir. Bu mekanizma fon fiyatını içindeki bitcoin'in değerine yakın tutar: fiyat açılırsa arbitrajcı devreye girer.
+
+Fonun net varlık değeri (NAV) her gün, belirli bir saatte hesaplanan bir **referans fiyata** göre bulunur; tek bir kripto borsasının fiyatına değil. Ayrıntı: [ETF Nedir?](/rehber/etf)
+
+## Takip Farkı Nereden Gelir
+
+Fonun getirisi bitcoin'in getirisine hiçbir zaman birebir eşit olmaz. Farkı üç şey açar:
+
+- **Gider oranı.** Yıllık yönetim ücreti fonun içindeki bitcoin'den her gün küçük parçalar hâlinde düşülür. Lansman döneminde yeni fonların çoğu yılda yaklaşık %0,2-0,25 bandındaydı; tröstten dönüşen en eski fon %1,5 ile başladı. Ücretler değişebilir, güncel oran fonun kendi sayfasında yazar.
+- **Saat farkı.** Bitcoin yedi gün, yirmi dört saat işlem görür; fon yalnızca ABD seansında. Hafta sonu olan bir hareket fonda pazartesi açılışında tek bir fiyat boşluğu olarak görünür.
+- **Spread ve prim/iskonto.** Fon payı piyasada NAV'ın biraz üstünde ya da altında el değiştirebilir. Ayrıntı: [Likidite ve Spread](/rehber/spread-likidite)
+
+::: ornek Yatay Bir Yılın Hesabı
+Bitcoin bir yılı başladığı fiyatta bitirdi. Gider oranı %0,25 olan bir fonun payı aynı dönemde yaklaşık **%0,25 geride** kapanır, çünkü her gün düşülen ücret fonun içindeki bitcoin miktarını azaltmıştır.
+Gider oranı %1,5 olan bir fonda aynı fark %1,5'tir. On yılda bu, bileşik olarak **yaklaşık %14**'lük bir fark demektir.
+:::
+
+## Üç Yol, Üç Yapı
+
+| Konu | Doğrudan Kripto | Spot ETF | Vadeli İşlem ETF'i |
+|---|---|---|---|
+| **Ne Tutarsın** | Varlığın kendisi | Fon payı | Vadeli sözleşme tutan fonun payı |
+| **Anahtarlar** | Sende ya da platformda | Saklama kuruluşunda | Yok, varlık hiç tutulmuyor |
+| **İşlem Saati** | Her an | ABD seansı | ABD seansı |
+| **Ek Maliyet** | Platform ücreti, çekim ücreti | Gider oranı | Gider oranı + vade yenileme maliyeti |
+| **Çekebilir Misin** | Evet | Hayır, yalnızca satarsın | Hayır |
+
+Vadeli işlem tabanlı fonlarda son satırın ötesinde bir maliyet daha var: sözleşmeler her ay vadesi gelince daha uzak vadeliyle değiştirilir ve uzak vade genellikle daha pahalıdır. Bu "yenileme maliyeti" spot fonda yoktur.
+
+## Yapının Getirdiği Sınırlar
+
+Spot kripto fonları ABD'de klasik yatırım fonlarını düzenleyen 1940 Kanunu kapsamında değil, bir **tröst** olarak kayıtlıdır. Pratik anlamı: yatırım fonlarına özgü bazı yatırımcı korumaları (yönetim kurulu yapısı, portföy kuralları) burada aynı şekilde uygulanmaz. Fonun ne yaptığı izahnamede yazar ve okunmaya değer tek belge odur.
+
+Fon payı sahibi olarak bitcoin'in kendisi üzerinde bir talebin yoktur: payı ancak borsada satabilirsin, içindeki bitcoin'i hesabına çekemezsin.
+
+::: dikkat Paket Oynaklığı Değiştirmez
+Bir ETF'in içine konmak bitcoin'i daha az oynak yapmaz. Bitcoin 2022'de yıl başından yıl sonuna yaklaşık üçte iki değer kaybetti; o yıl bir spot fon var olsaydı aynı düşüşü birebir yaşardı. Borsada işlem görmesi ürünü tanıdık gösterir, riskini değil. Ayrıntı: [Volatilite Nedir?](/rehber/volatilite)
+:::
+
+::: ozet Özet
+Spot kripto ETF'i, kripto varlığı bir hisse hesabının içine taşıyan bir pakettir. Saklama, anahtar ve platform sorunlarını ortadan kaldırır; karşılığında gider oranı, seans saati ve varlığı hiçbir zaman eline alamama bedeli gelir. Oynaklığı ise olduğu gibi taşır.
+:::
+
+*Bu yazı SEC kararlarına ve fon izahnamelerine dayanıyor; gider oranları fon sağlayıcıların kararıyla değişebilir.*`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: SEC Investor Bulletin "American Depositary Receipts" (Level
+     I/II/III, depo bankası, ücretler); TSMC 20-F (1 ADS = 5 adi hisse).
+     SEC, "Special Purpose Acquisition Companies, Shell Companies, and
+     Projections" nihai kuralları (24 Ocak 2024 kabul, 1 Temmuz 2024
+     yürürlük). SEC Investor Bulletin "What You Need to Know About SPACs"
+     (emanet hesabı, iade hakkı, sponsorun kurucu payları). Kurucu payının
+     halka arz sonrası toplam payın ~%20'si olması piyasa teamülü, kural
+     değil — metinde "genellikle" diye yazıyor. */
+  "adr-spac": {
+    title: "ADR ve SPAC Nedir?",
+    dek: "ABD borsasında işlem gören ama ABD'de kurulmamış şirketler ile hiç şirketi olmadan halka açılan şirketler.",
+    bodyMd: `ABD borsasındaki her sembol, arkasında ABD'de kurulmuş ve orada faaliyet gösteren bir şirket anlamına gelmez. İki yapı bu kuralın dışında durur ve ikisi de kendine özgü riskler taşır: yabancı şirketlerin hissesini temsil eden **ADR**'ler ve halka arz edildiği gün henüz bir işi olmayan **SPAC**'ler.
+
+## ADR: Başka Bir Borsadaki Hissenin Makbuzu
+
+::: tanim ADR (American Depositary Receipt)
+Yabancı bir şirketin kendi ülkesinde işlem gören hisselerini temsil eden, dolar cinsinden ve ABD borsasında işlem gören sertifika. Hisselerin kendisi bir depo bankasında saklanır, ABD'de onları temsil eden makbuz alınıp satılır.
+:::
+
+Mekanizma basittir: bir ABD depo bankası şirketin kendi borsasından hisse alır, yerel bir saklama kuruluşunda tutar ve karşılığında ABD'de ADR çıkarır. Her ADR belirli sayıda yerel hisseyi temsil eder ve bu oran bire bir olmak zorunda değildir.
+
+::: ornek Oran ve Fiyat
+TSMC'nin ABD'deki bir ADR'si Tayvan'da işlem gören **5 adi hisseyi** temsil eder. ADR'nin fiyatı bu yüzden kabaca şuna eşittir:
+Tayvan'daki hisse fiyatı × 5 ÷ dolar/Tayvan doları kuru.
+Aradaki fark büyürse aracı kurumlar hisse ile ADR arasında dönüşüm yaparak farkı kapatır. Dönüşümün kısıtlı olduğu ülkelerde ADR kalıcı bir prim ya da iskontoyla işlem görebilir.
+:::
+
+### Üç Seviye
+
+| Seviye | Nerede İşlem Görür | Sermaye Toplayabilir mi | Raporlama |
+|---|---|---|---|
+| **Level I** | Tezgâh üstü (OTC) | Hayır | En hafif |
+| **Level II** | NYSE ya da Nasdaq | Hayır | SEC'e yıllık rapor |
+| **Level III** | NYSE ya da Nasdaq | Evet, ABD'de halka arz | En kapsamlı |
+
+Yabancı şirketler 10-K ve 10-Q yerine yıllık **20-F** ve dönemsel **6-K** raporları verir. Birçoğu çeyrek raporu yayımlamaz, yalnızca yarıyıl ya da ülkesinin kurallarına göre raporlar. Ayrıntı: [10-K ve 10-Q Nasıl Okunur?](/rehber/10k-10q)
+
+### ADR'nin Görünmeyen Katmanları
+
+- **Kur riski içinde gizlidir.** ADR dolar cinsinden işlem görür ama şirketin kazancı ve yerel hisse fiyatı kendi para birimindedir. Yerel hisse sabit kalırken yerel para dolara karşı değer kaybederse ADR düşer. Ayrıntı: [Kur Riski](/rehber/kur-riski)
+- **Temettüde vergi başka bir ülkeden kesilir.** ADR'nin temettüsünden şirketin kendi ülkesi vergi keser, ABD değil; W-8BEN'in anlattığı oran burada geçerli değildir.
+- **Depo ücreti vardır.** Depo bankası ADR başına yıllık birkaç sentlik bir saklama ücreti alabilir; çoğu zaman temettüden düşülür ya da aracı kurum üzerinden tahsil edilir.
+
+## SPAC: Önce Para, Sonra Şirket
+
+::: tanim SPAC (Special Purpose Acquisition Company)
+Kendi işi olmayan, halka arzla para toplayıp bu parayı belirli bir süre içinde özel bir şirketle birleşmek için kullanan kabuk şirket. Birleşme gerçekleştiğinde hedef şirket borsaya bu yoldan girmiş olur.
+:::
+
+::: akis Bir SPAC'ın Yolu
+Halka Arz | Birim başına genellikle 10 $, para emanet hesabına
+Hedef Arayışı | Genellikle 18-24 ay
+Birleşme Duyurusu | Hedef şirket ve değerlemesi açıklanır
+Oylama ve İade | Hissedar ya kalır ya parasını geri alır
+Birleşme Sonrası | Hedef şirket kendi sembolüyle işlem görür
+:::
+
+Toplanan para bir emanet hesabında, genellikle kısa vadeli ABD hazine bonolarında bekler. Hissedarın en önemli hakkı **iade hakkıdır**: birleşme oylamasında hedefi beğenmezse payını emanet hesabındaki tutar üzerinden (birim başına yaklaşık 10 $ artı birikmiş faiz) geri verebilir. Süre dolar ve birleşme olmazsa para hissedarlara iade edilir.
+
+## Sponsorun Payı: Seyrelmenin Aritmetiği
+
+SPAC'ı kuran sponsor, halka arzdan önce çok düşük bir bedelle **kurucu payları** alır; bunlar genellikle halka arz sonrası toplam payların yaklaşık beşte biridir. İade oranı yükseldikçe bu payların ağırlığı büyür.
+
+::: ornek 100 Milyon Dolarlık Bir SPAC
+Halka arzda 10 milyon pay, 10 $'dan satılır: emanette 100 milyon dolar. Sponsor 2,5 milyon kurucu payı taşır. Toplam 12,5 milyon pay.
+Birleşme oylamasında halka açık payların **%80'i** iade edilir. Emanette 20 milyon dolar, dışarıda 2 milyon halka açık pay kalır; sponsorun 2,5 milyon payı yerinde durur.
+Kalan 4,5 milyon payın her birine düşen emanet nakdi: 20 ÷ 4,5 ≈ **4,4 $**. Birleşme sonrası şirketin payı 10 $'dan işlem görmeye başlıyorsa, bu farkı hedef şirketin kendisinin kapatması gerekir.
+:::
+
+İade oranları 2021 sonrasında sık sık çok yüksek seviyelere çıktı ve birleşme sonrası birçok şirket, SPAC'ın 10 $'lık başlangıcının çok altına indi. SEC, 2024 ortasında yürürlüğe giren kurallarla SPAC birleşmelerinde sponsor çıkarları, seyrelme ve gelecek tahminleri konusunda açıklama yükünü artırdı; bu, klasik [halka arza](/rehber/halka-arz) yaklaşan bir denetim anlamına geliyor.
+
+::: dikkat Birleşme Sonrası Satış Baskısı
+Kurucu paylar ve birleşmeyle birlikte ek finansman sağlayan yatırımcıların payları çoğu zaman belirli bir süre satış yasağına tabidir. Bu süre dolduğunda arz bir anda artabilir. SPAC'tan gelen bir şirketin payında bu takvimi bilmek, halka arz sonrası kilitlenme süresini bilmek kadar önemlidir.
+:::
+
+::: ozet Özet
+ADR yabancı bir hisseyi dolar cinsinden taşır, beraberinde kur riskini, başka bir ülkenin vergisini ve depo ücretini getirir. SPAC ise önce parayı toplar, şirketi sonra bulur; hissedarı iade hakkı korur, sponsorun kurucu payları ise iade arttıkça kalanların payını seyreltir. İkisinde de sembolün arkasındaki yapıyı bilmeden fiyatı okumak eksik kalır.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Bir ADR'nin sayfasında fiyat ve piyasa değeri dolar cinsindendir; şirketin kendi ülkesindeki borsada oluşan hareket ve kur etkisi bu sayılara birlikte yansır. Yaklaşan halka arzlar [Takvim](/takvim) ekranında listelenir.`,
+  },
+
   /* ==== 2 · Pozisyon ve Risk ============================================== */
 
   /* ---------------------------------------------------------------------- */
@@ -1145,6 +1382,537 @@ Piyasa hakkında bilmen gerekenlerin çoğu birkaç ayda öğrenilir. Kendin hak
 :::`,
   },
 
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: SEC, "Shortening the Securities Transaction Settlement Cycle"
+     (T+1, 28 Mayıs 2024 yürürlük). SEC Investor Bulletin "Holding Your
+     Securities" (street name, DTC). IRS Instructions for Form W-8BEN.
+     Seans saatleri NYSE/Nasdaq; TR karşılığı lib/session-clock.ts'teki
+     kuralla aynı (ABD yaz saatiyle kayar). Kurum adı bilerek geçmiyor. */
+  "abd-hisse-nasil-alinir": {
+    title: "ABD'de Hisse Nasıl Alınır: Adım Adım",
+    dek: "Liranın bir ABD hissesine dönüşene kadar geçtiği beş halka ve her halkada ödenen, çoğu görünmeyen bedel.",
+    bodyMd: `Türkiye'den bir ABD hissesi almak tek bir tuşa basmak gibi görünür ama arkasında beş ayrı adım vardır: bir kurum seçmek, hesap açmak, parayı dolara çevirmek, emir vermek ve hisseyi saklamak. Her adımın kendi maliyeti ve kendi kararı var. Bu yazı sırayla hepsinin üzerinden geçer; belirli bir kurumu önermez.
+
+::: akis Liradan Hisseye
+Aracı Kurum | Yerli ya da yabancı, lisanslı
+Hesap | Kimlik doğrulama · W-8BEN
+Döviz | Lira → dolar, kur farkıyla
+Emir | Limit ya da piyasa emri
+Saklama | T+1 takas, kurum adına kayıt
+:::
+
+## 1. Aracı Kurumu Seç
+
+İki yol var. Birincisi Türkiye'de lisanslı bir aracı kurumun yurt dışı piyasalar hizmeti: hesabı yurt içinde açarsın, kurum emrini arka planda bir yabancı muhabir kuruma iletir. İkincisi hesabı doğrudan yurt dışındaki bir aracı kurumda açmak: para yurt dışına gider, muhatabın o kurum olur.
+
+İkisinin maliyeti, koruma çerçevesi ve belge düzeni farklıdır. Hangisinin sana uyduğunu belirleyen kalemler ayrı bir yazıda: [Aracı Kurum Seçerken Nelere Bakılır?](/rehber/araci-kurum-secimi)
+
+## 2. Hesabı Aç ve Kimliğini Doğrula
+
+Her lisanslı kurum hesap açmadan önce kim olduğunu doğrulamak zorundadır. Buna **KYC** (müşterini tanı) denir: kimlik belgesi, adres belgesi, bazen gelir ve birikim kaynağına dair sorular. Çoğu kurum ayrıca yatırım deneyimini ölçen bir uygunluk testi yapar; opsiyon ya da kaldıraç gibi ürünlere erişim bu teste bağlıdır.
+
+ABD hissesi için bir form daha vardır: **W-8BEN**. Bu form ABD vergi mükellefi olmadığını ve Türkiye'de yerleşik olduğunu beyan eder; temettülerden kesilecek ABD vergisini belirler. Yabancı kurumda hesap açılışında doldurulur; yerli kurumlar da genellikle muhabirleri için aynı formu ister. Ayrıntı: [W-8BEN ve 1042-S](/rehber/w-8ben)
+
+## 3. Parayı Gönder ve Dolara Çevir
+
+Hesaba para yatırmanın iki biçimi var: parayı bankada dolara çevirip göndermek ya da lira gönderip kurumun içinde çevirmek. Hangisi seçilirse seçilsin, çevirme anında bir kur farkı ödenir ve bu fark ekstrede "komisyon" diye yazmaz.
+
+::: ornek İki Kez Ödenen Makas
+100.000 lirayı dolara çevirdiğini düşün. Kullanılan kur ile piyasanın orta kuru arasında %0,5 fark varsa, çevirme anında **500 lira** kaybolur.
+Aynı parayı yıllar sonra liraya döndürürken bir %0,5 daha ödenir.
+Hisse hiç kıpırdamadan, yalnızca gidiş ve dönüşte yaklaşık **%1**. Karşılaştırırken sorulacak soru "komisyon kaç" değil, "hangi kurdan çeviriyorsunuz" olmalıdır.
+:::
+
+Yurt dışındaki bir kuruma banka havalesiyle para gönderiliyorsa buna SWIFT ücreti ve bazen arada duran muhabir bankanın kesintisi eklenir. Para liradan çıkıp dolara girdiği andan itibaren portföyün bir de kur bahsi taşır. Ayrıntı: [Kur Riski](/rehber/kur-riski)
+
+## 4. Emri Ver
+
+Emir üç bilgiden oluşur: sembol (ticker, örneğin [AAPL](/hisse/AAPL)), miktar (adet ya da dolar tutarı) ve emir tipi.
+
+- **Piyasa emri** o anki en iyi karşı fiyattan hemen gerçekleşir; fiyatı garanti etmez.
+- **Limit emri** yalnızca belirttiğin fiyattan ya da daha iyisinden gerçekleşir; gerçekleşmeyi garanti etmez.
+
+Ana seans New York saatiyle 09:30'da açılır; Türkiye'de bu, ABD'nin yaz saati uygulamasına göre 16:30'a ya da 17:30'a denk gelir. Açılış öncesi ve kapanış sonrası seanslarda spread genişler ve çoğu kurum orada yalnızca limit emri kabul eder. Ayrıntı: [Emir Tipleri](/rehber/emir-tipleri)
+
+## 5. Takas ve Saklama
+
+İşlem gerçekleştiğinde hisseler hemen senin olmaz; ABD'de takas **T+1**'dir, yani işlemin ertesi iş günü tamamlanır. 28 Mayıs 2024'ten önce bu süre iki iş günüydü.
+
+Takas sonrası hisseler çoğunlukla senin adına değil, aracı kurumun adına kayıtlıdır. Buna **street name** denir: merkezi saklama kuruluşunun kayıtlarında kurumun adı görünür, kurumun kendi defterinde sen. Yerli bir kurum üzerinden alırsan zincir bir halka uzar: sen, yerli kurum, yabancı muhabir kurum, merkezi saklama kuruluşu. Kurumlardan biri batarsa hangi koruma çerçevesinin geçerli olacağını bu zincir belirler.
+
+::: dikkat Kayıt Tutmak Sonraki Adımdır, İsteğe Bağlı Değil
+Türkiye'de yerleşik biri için yurt dışı hisseden elde edilen satış kazancı ve temettü beyana tabidir. Kazanç lira üzerinden, alış ve satış günlerinin kuruyla hesaplanır. Her işlemin tarihini, adedini, dolar tutarını ve ödenen ücretleri baştan kaydetmek, Mart ayındaki beyanı bir hesaplama işine indirir; kaydetmemek onu bir arkeoloji kazısına çevirir. Ayrıntı: [Yurt Dışı Hisse Kazancının Vergilendirilmesi](/rehber/yurt-disi-hisse-vergisi)
+:::
+
+::: tanim Bu Yazıdaki Terimler
+**Ticker:** Hissenin borsadaki kısa kodu. Apple için AAPL, Nvidia için NVDA.
+**KYC:** Kurumun müşterinin kimliğini ve para kaynağını doğrulama yükümlülüğü.
+**T+1:** İşlemin, gerçekleştiği günden bir iş günü sonra takasla kesinleşmesi.
+**Street Name:** Hissenin kayıtlarda yatırımcının değil aracı kurumun adına tutulması.
+:::
+
+::: ozet Özet
+Bir ABD hissesinin toplam maliyeti komisyondan ibaret değildir: kur farkı, transfer ücreti, spread ve saklama ücreti birlikte hesaplanır. Beş adımın her biri bir kez doğru kurulduğunda sonraki alımlar tek bir emre iner; yanlış kurulduğunda her alımda aynı bedel yeniden ödenir.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Aradığın şirketi üstteki arama kutusundan ya da [Şirketler](/sirketler) dizininden bulursun; sayfasında sembolü, fiyatı ve seansın durumu yazar. Ana sayfadaki geri sayım bir sonraki açılışa ya da kapanışa kalan süreyi Türkiye saatiyle gösterir.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: SIPC, "What SIPC Protects" (500.000 $ tavan, bunun 250.000
+     $'ı nakit; piyasa kaybını kapsamaz). FINRA BrokerCheck. SPK ve
+     Yatırımcı Tazmin Merkezi (YTM) — tazmin tavanı her yıl güncellendiği
+     için metinde rakam yok. SPK'nın izinsiz yatırım hizmetine erişim engeli
+     kararları SPK bültenlerinde. Ücret rakamı BİLEREK yok: tarifeler
+     kurumdan kuruma ve aydan aya değişiyor; örnek varsayımsal. */
+  "araci-kurum-secimi": {
+    title: "Aracı Kurum Seçerken Nelere Bakılır?",
+    dek: "Komisyon sıfır olabilir; maliyet sıfır olmaz. Bir kurumu karşılaştırmanın kalem kalem yolu.",
+    bodyMd: `Aracı kurum, seninle borsa arasındaki tek kapıdır. Seçerken çoğu kişi tek bir sayıya bakar: işlem başına komisyon. Oysa bir kurumun sana maliyeti beş altı kalemin toplamıdır ve en görünür kalem çoğu zaman en küçüğüdür. Bu yazı kurum adı vermez ve ücret rakamı yazmaz; tarifeler sık değişir ve güncel olanı kurumun kendi fiyat sayfasında ve sözleşme ekinde durur.
+
+## Maliyetin Kalemleri
+
+| Kalem | Nerede Durur | Sorulacak Soru |
+|---|---|---|
+| **Komisyon** | Her işlemde, sabit ya da hisse başına | 5.000 dolarlık tek emirde toplam ne öderim? |
+| **Saklama Ücreti** | Aylık ya da yıllık, portföy yüzdesi ya da sabit | Hiç işlem yapmasam yılda ne öderim? |
+| **Döviz Farkı** | Kurun içinde | Hangi kurdan çeviriyorsunuz, piyasa ortasından farkı ne? |
+| **Transfer Ücreti** | Para yatırma ve çekme | Parayı geri çekerken kaç kalem ücret var? |
+| **Veri ve Hesap Ücretleri** | Anlık fiyat aboneliği, pasif hesap | Hangi durumda hesabım ücretlenir? |
+
+::: ornek Sıfır Komisyonun Hesabı
+Varsayımsal bir yatırımcı yılda dört kez 2.500 dolarlık alım yapıyor; hesapta ortalama 10.000 dolar duruyor.
+Komisyon: **0 $**.
+Çevirmede %0,5'lik kur farkı: 10.000 × %0,5 = **50 $**.
+Yıllık %0,2'lik saklama ücreti: 10.000 × %0,2 = **20 $**.
+Ekstrede "komisyon" satırı sıfır yazar; yıllık maliyet 70 dolardır. Kalemlerin oranları kurumdan kuruma değişir; değişmeyen şey, karşılaştırmanın toplam üzerinden yapılması gerektiğidir.
+:::
+
+## Ürün ve Seans Erişimi
+
+Ucuz ama ihtiyacın olan şeyi sunmayan bir kurum ucuz değildir. Sorulacak başlıklar:
+
+- **Kesirli hisse.** Tutar bazlı emir verilebiliyor mu, hangi hisselerde? Ayrıntı: [Kesirli Hisse](/rehber/kesirli-hisse)
+- **Uzatılmış seans.** Açılış öncesi ve kapanış sonrası seanslara erişim var mı? Bazı kurumlar gece boyunca da işlem imkânı sunuyor. Bilanço tepkileri çoğunlukla bu saatlerde oluşur. Ayrıntı: [Bilanço Günü Nasıl Okunur?](/rehber/bilanco-gunu-nasil-okunur)
+- **Emir tipleri.** Stop ve iz süren stop emirleri sunucuda mı bekliyor, uygulamada mı?
+- **ETF erişimi.** Bazı kurumlar bağlı oldukları ülkenin düzenlemesi nedeniyle ABD'de kurulu ETF'leri bireysel müşteriye sunmaz. Hesap açmadan önce sormak gerekir.
+
+## Yatırımcı Koruması Neyi Korur
+
+ABD'de SIPC üyesi bir aracı kurum batarsa ve müşteri varlıkları eksik çıkarsa, SIPC müşteri başına **500.000 dolara** kadar (bunun en fazla 250.000 doları nakit için) koruma sağlar. Koruma, hesabın açıldığı **tüzel kişiliğe** bağlıdır: küresel kurumlar birçok ülkede ayrı şirketlerle çalışır ve ABD dışındaki bir şirkette açılan hesap SIPC kapsamında olmayabilir.
+
+Türkiye'de lisanslı kurumlarda benzer rolü **Yatırımcı Tazmin Merkezi** üstlenir; kurumun yükümlülüklerini yerine getirememesi hâlinde her yıl güncellenen bir tavana kadar tazmin sağlar. Yurt dışı piyasalardaki varlıkların bu kapsamda nasıl değerlendirildiğini kuruma ayrıca sormak gerekir.
+
+::: dikkat Koruma Fiyatı Korumaz
+SIPC de Yatırımcı Tazmin Merkezi de **kurumun batmasına** karşı koruma sağlar, hissenin düşmesine karşı değil. Aldığın hisse %40 düşerse bu bir piyasa kaybıdır ve hiçbir koruma programı onu karşılamaz.
+:::
+
+## Yerli Kurum ve Yabancı Kurum
+
+| Konu | Yerli Kurum | Yabancı Kurum |
+|---|---|---|
+| **Düzenleyici** | SPK | Kurumun kayıtlı olduğu ülkenin düzenleyicisi |
+| **Para Transferi** | Yurt içi, lira ile | Uluslararası havale, SWIFT ücreti |
+| **Saklama Zinciri** | Bir halka daha uzun, yabancı muhabir üzerinden | Daha kısa |
+| **Koruma Çerçevesi** | Yatırımcı Tazmin Merkezi | SIPC ya da o ülkenin programı |
+| **Belgeler** | Türkçe döküm, bazen vergi raporu | İngilizce ekstre, 1042-S |
+| **Destek** | Türkçe, Türkiye saatiyle | Çoğunlukla İngilizce |
+
+İkisi arasında doğru ya da yanlış yok; ağırlık verdiğin kaleme göre değişen bir tercih var. Yabancı bir kurumla çalışacaksan lisansını kurumun kendi düzenleyicisinin sitesinden doğrula (ABD'de FINRA'nın BrokerCheck aracı gibi). SPK, Türkiye'de izinsiz yatırım hizmeti sunan platformlara erişim engeli getirebiliyor; reklamla karşına çıkan bir platformun Türkiye'ye hizmet yetkisi olup olmadığını SPK'nın listelerinden kontrol etmek mümkün.
+
+::: ozet Özet
+Bir aracı kurumu komisyonuyla değil, **yıllık toplam maliyetiyle**, ihtiyacın olan ürünlere erişimiyle ve hesabının hangi tüzel kişilikte, hangi koruma çerçevesinde durduğuyla karşılaştır. Sıfır komisyon bir fiyat değil, bir pazarlama satırıdır.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Bu site aracı kurum değildir ve buradan emir verilmez; herhangi bir kurumu önermez. Kurumunun uygulamasında gördüğün fiyatı buradaki hisse sayfasıyla karşılaştırırken sayfadaki zaman damgasına bak: aradaki fark çoğu zaman gecikmeden gelir.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: SEC Investor Bulletin "Fractional Share Investing — Buy a
+     Slice, Not the Whole Pie" (oy hakkı, hesap taşıma, emir yürütme
+     farkları). FINRA, ACATS (kesirli payların taşınmayıp nakde çevrilmesi
+     kurumdan kuruma değişiyor). Opsiyon sözleşmesinin 100 hisse temsil
+     etmesi OCC standart sözleşme koşulu. */
+  "kesirli-hisse": {
+    title: "Kesirli Hisse Nedir?",
+    dek: "Yüzlerce dolarlık bir hisseye elli dolarla ortak olmak: nasıl çalıştığı ve tam hisseye göre neyin eksik kaldığı.",
+    bodyMd: `Bir hissenin fiyatı 400 dolarsa, klasik bir emirle 50 dolara o şirkete ortak olamazsın. Kesirli hisse bu engeli kaldırır: hisse adedi yerine **tutar** yazarsın ve karşılığında hissenin bir parçasını alırsın. Mekanizma basit ama tam hissenin bütün haklarını her zaman taşımaz.
+
+::: tanim Kesirli Hisse
+Bir hissenin tam sayı olmayan bir kısmı: 0,125 ya da 2,4 hisse gibi. Borsada kesirli hisse işlem görmez; parçalama işini aracı kurum yapar ve kaydı kendi defterinde tutar.
+:::
+
+## Nasıl Çalışır
+
+Borsalarda işlemin en küçük birimi tam hissedir. Kesirli emir veren müşterilerin taleplerini aracı kurum toplar, tam hisseleri piyasadan alır ya da kendi envanterinden karşılar ve parçaları müşterilerin hesaplarına defter üzerinde dağıtır.
+
+Bunun iki sonucu var. Birincisi, kesirli payın kurum dışında bir karşılığı yoktur: merkezi saklama kaydında tam hisse kurumun adına durur, senin payın kurumun iç kaydıdır. İkincisi, emrin nasıl ve ne zaman gerçekleştiği kuruma göre değişir: bazıları anında, bazıları gün içinde toplu olarak işler; bazıları kesirli emirde yalnızca piyasa emrine izin verir.
+
+::: ornek 50 Dolarla Bir Hisse Parçası
+Hisse 400 dolar. 50 dolarlık kesirli emir **0,125 hisse** alır.
+Şirket hisse başına 2 dolar temettü dağıtırsa hesabına 0,25 dolar brüt temettü gelir.
+Hisse %10 yükselirse payın 55 dolar olur.
+Ekonomik olarak bir tam hissenin sekizde biriyle birebir aynı davranır: kazanç, kayıp ve temettü oransal işler.
+:::
+
+## Tam Hisseye Göre Neyin Eksik Kaldığı
+
+| Konu | Tam Hisse | Kesirli Hisse |
+|---|---|---|
+| **Fiyat Hareketi ve Temettü** | Tam | Oransal olarak tam |
+| **Oy Hakkı** | Var | Kuruma göre yok ya da oransal |
+| **Başka Kuruma Taşıma** | Taşınır | Çoğunlukla satılıp nakde çevrilir |
+| **Emir Tipleri** | Hepsi | Çoğu kurumda kısıtlı |
+| **Uzatılmış Seans** | Kuruma göre | Çoğu kurumda yok |
+| **Opsiyon Teminatı** | 100 hisse bir sözleşme | Kesir sayılmaz |
+
+::: dikkat Taşıma Bir Satıştır
+Hesabını başka bir kuruma taşıdığında tam hisseler olduğu gibi aktarılabilir, kesirli kısım ise çoğu zaman satılıp nakde çevrilir. Türkiye'de yerleşik biri için bu bir **satış işlemidir**: kazanç varsa beyana girer. Küçük bir kesir için bile tarih, tutar ve kur kaydı gerekir. Ayrıntı: [Yurt Dışı Hisse Kazancının Vergilendirilmesi](/rehber/yurt-disi-hisse-vergisi)
+:::
+
+## Ne İşe Yarar
+
+Kesirli hisse bir getiri aracı değil, bir **ölçü** aracıdır. Üç işte fark yaratır:
+
+- **Düzenli küçük alımlar.** Her ay sabit bir tutar yatıran biri için hisse fiyatının bölünmezliği ortadan kalkar; tutarın tamamı yatırıma girer, kenarda artık nakit kalmaz. Ayrıntı: [Düzenli Alım (DCA)](/rehber/duzenli-alim)
+- **Ağırlık hassasiyeti.** Portföyünü yüzdelerle kurmak istiyorsan pahalı bir hissede tam adet zorunluluğu hedef oranı bozar. Ayrıntı: [Risk Yönetimi](/rehber/risk-yonetimi)
+- **Temettünün yeniden yatırımı.** Küçük temettü tutarları aynı hisseye kesir olarak geri yatırılabilir.
+
+Hisse bölünmesiyle ilişkisi de buradan okunur: şirketler pahalı hisseleri küçük yatırımcıya erişilebilir kılmak için hisse böler. Kesirli işlem imkânı yaygınlaştıkça bu gerekçe zayıfladı, ama bölünme kararları hâlâ alınıyor. Ayrıntı: [Hisse Senedi Nedir?](/rehber/hisse-senedi)
+
+::: ozet Özet
+Kesirli hisse, fiyatın bölünmez olmasının yarattığı engeli kaldırır; getiri ve temettü açısından tam hisseyle aynı davranır. Karşılığında payın kurumun defterinde yaşar: oy, taşıma ve emir esnekliği kurumun sunduğu kadardır.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Hisse sayfalarındaki fiyatlar her zaman **tam hisse** fiyatıdır. Kesirli payının değeri bu fiyatın payınla çarpımıdır; kurumunun uygulamasında gördüğün tutarla karşılaştırırken bunu hesaba kat.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: ABD-Türkiye Çifte Vergilendirmeyi Önleme Anlaşması (28 Mart
+     1996), md. 10/2: temettüde kaynak ülke vergisi, en az %10 oy hakkına
+     sahip ŞİRKETLERE %15, diğer bütün hâllerde %20. Gerçek kişi portföy
+     yatırımcısı için oran %20 — "%15" sık yapılan bir hata, metin bunu
+     açıkça söylüyor. Senato Dış İlişkiler raporu (Ex. Rept. 105-6) ve IRS
+     Tax Treaty Table 1 aynı oranları veriyor. Md. 13: taşınmaz ve işyeri
+     dışındaki değer artışı kazancı yalnızca yerleşik olunan ülkede
+     vergilenir. IRS Instructions for Form W-8BEN: geçerlilik imza yılını
+     izleyen üçüncü takvim yılının sonuna kadar; durum değişikliğinde 30 gün.
+     IRS Instructions for Form 1042-S: alıcıya 15 Mart'a kadar.
+     IRC §1446(f): 2023'ten itibaren yabancıların PTP satışlarında %10.
+     IRS "Some nonresidents with U.S. assets must file estate tax returns":
+     ABD'de yerleşik olmayanlarda 60.000 $ eşiği; ABD'nin Türkiye ile
+     veraset vergisi anlaşması yok. GVK md. 123: yurt dışında ödenen
+     verginin mahsubu ve belge şartı. */
+  "w-8ben": {
+    title: "W-8BEN ve 1042-S: Temettüden Kesilen ABD Vergisi",
+    dek: "Bir ABD şirketinin temettüsü hesabına gelmeden önce vergisi kesilir; ne kadar kesileceğini tek bir form belirler.",
+    bodyMd: `Bir ABD şirketi temettü dağıttığında para sana ulaşmadan önce ABD adına bir vergi kesilir. Bu kesintinin oranı senin kim olduğuna bağlıdır ve bunu aracı kuruma söyleyen belge **W-8BEN** formudur. Yıl sonunda ne kadar kesildiğini gösteren belge ise **1042-S**'tir. İkisi birlikte, yurt dışı hisse yatırımının vergi tarafındaki ilk halkayı oluşturur.
+
+::: tanim Bu Yazıdaki Terimler
+**W-8BEN:** ABD'de yerleşik olmayan gerçek kişinin ABD vergi mükellefi olmadığını, hangi ülkede yerleşik olduğunu ve vergi anlaşmasından yararlanmak istediğini beyan ettiği IRS formu.
+**1042-S:** Vergiyi kesen kurumun yıl içinde ödediği geliri ve kestiği vergiyi gösteren yıllık bildirim.
+**Kaynakta Kesinti:** Verginin, gelir sahibine ödenmeden önce ödeyen tarafından kesilip devlete aktarılması.
+:::
+
+## Form Ne Söyler
+
+W-8BEN kısa bir formdur ve üç şey beyan eder: kimliğin, yerleşik olduğun ülke ve vergi anlaşmasından yararlanma talebin. Türkiye'de yerleşik biri için talep, ABD ile Türkiye arasındaki çifte vergilendirmeyi önleme anlaşmasının **temettü maddesine** dayanır.
+
+Form IRS'e gönderilmez; aracı kuruma verilir. Kurum onu dosyada tutar ve her temettü ödemesinde hangi oranda kesinti yapacağını ona bakarak belirler.
+
+## Oran: %30 Yerine %20
+
+::: oncesi 100 Dolarlık Temettüden Hesabına Geçen
+70 $ | Form Yoksa, %30 Kesinti
+80 $ | W-8BEN ile, %20 Kesinti
+:::
+
+ABD, formu olmayan yabancıya ödenen temettüden **%30** keser. Anlaşma bu oranı gerçek kişiler için **%20**'ye indirir. Fark yıllar içinde küçük değildir: aynı temettüden hesabına geçen nakit yedide bir oranında artar.
+
+::: dikkat %15 Değil, %20
+Türkçe kaynaklarda sık sık "Türkiye için temettü kesintisi %15" yazar. Anlaşmanın 10. maddesi %15'i yalnızca şirketin oy haklarının en az %10'una sahip **şirketler** için öngörür. Hisse alan bir gerçek kişi için oran %20'dir. Kurumun uyguladığı oranı 1042-S'teki kesinti oranı satırından doğrulayabilirsin.
+:::
+
+## Formun Kapsamadığı Şeyler
+
+**Satış kazancı.** ABD'de yerleşik olmayan bir yabancının hisse satışından elde ettiği kazançtan ABD vergi kesmez; anlaşma da bu kazancı yerleşik olunan ülkeye bırakır. Yani satış kazancının vergisi ABD'de değil **Türkiye'de** doğar. Ayrıntı: [Yurt Dışı Hisse Kazancının Vergilendirilmesi](/rehber/yurt-disi-hisse-vergisi)
+
+**Bazı özel yapılar.** Ortaklık olarak kurulmuş ve borsada işlem gören yapıların (PTP) satışında 2023'ten beri satış tutarının %10'u kesilebiliyor. Bu kurallar hisse ve sıradan ETF'lerden farklıdır; bu tür bir ürün almadan önce kurumun ne kestiğini sormak gerekir.
+
+**ADR temettüsü.** Yabancı bir şirketin ADR'sinden gelen temettüde vergiyi şirketin kendi ülkesi keser; W-8BEN'in ABD oranı orada geçerli değildir. Ayrıntı: [ADR ve SPAC Nedir?](/rehber/adr-spac)
+
+## Formun Ömrü
+
+W-8BEN süresiz değildir. İmzalandığı yılı izleyen **üçüncü takvim yılının son gününe** kadar geçerlidir; yani kabaca üç ila dört yıl. Adresin ya da yerleşik olduğun ülke değişirse otuz gün içinde yeni form verilmesi gerekir.
+
+::: zaman Bir Formun Ömrü
+10 Mart 2026 | Formu imzalarsın; kurum kaydına işler.
+Her temettü ödemesi | Kesinti %20 olarak uygulanır.
+15 Mart 2027'ye kadar | 2026 yılının 1042-S belgesi hesabına gelir.
+31 Aralık 2029 | Formun geçerli olduğu son gün. Kurumlar genellikle birkaç ay önce yenileme ister.
+1 Ocak 2030 | Yenilenmemişse kesinti %30'a döner; bazı kurumlar hesabı kısıtlar.
+:::
+
+## 1042-S ile Ne Yapılır
+
+1042-S yıl içindeki her gelir türünü ayrı satırda gösterir: gelirin kodu, brüt tutarı, uygulanan oran ve kesilen vergi. Türkiye'deki beyan açısından iki işe yarar: temettünün **brüt** tutarını belgeler ve ABD'de ödenen vergiyi gösterir.
+
+::: ornek 100 Dolarlık Temettünün İki Ülkedeki Yolu
+Şirket 100 dolar brüt temettü öder. ABD 20 dolar keser; hesabına 80 dolar geçer.
+Türkiye'de beyan sınırı aşılıyorsa temettü **brüt 100 dolar** üzerinden, ödeme günündeki kurla liraya çevrilerek beyan edilir; net 80 üzerinden değil.
+ABD'de ödenen 20 dolar, o gelire Türkiye'de düşen vergiyi aşmamak kaydıyla hesaplanan vergiden mahsup edilebilir.
+:::
+
+Mahsup için verginin yurt dışında ödendiğinin belgelenmesi gerekir ve Türk mevzuatı bu belgede yetkili makam onayı gibi şartlar arayabilir. 1042-S'in tek başına yeterli sayılıp sayılmayacağını beyan öncesinde bir mali müşavirle konuşmak gerekir.
+
+::: dikkat Formun Çözmediği Konu: Veraset
+W-8BEN yalnızca gelir vergisiyle ilgilidir. ABD, yerleşik olmayan yabancıların ABD'deki varlıklarında da veraset vergisi uygular ve ABD hisseleri bu varlıklara dahildir. Beyan yükümlülüğü ABD'deki varlıkların toplamı **60.000 doları** aştığında doğar ve ABD'nin Türkiye ile veraset vergisine ilişkin bir anlaşması yoktur. Büyük bir portföy için bu, bir uzmana danışılacak ayrı bir konudur.
+:::
+
+::: ozet Özet
+W-8BEN, ABD'nin temettüden keseceği vergiyi %30'dan %20'ye indiren formdur ve süresi dolunca kendiliğinden yenilenmez. 1042-S bu kesintinin belgesidir. Satış kazancı ise ABD'de değil Türkiye'de vergilenir; W-8BEN o hesabı değiştirmez.
+:::
+
+*Bu yazı genel bilgi verir, vergi danışmanlığı değildir. Oranlar ABD-Türkiye vergi anlaşmasının 1996 tarihli metnine ve IRS'in 2026 itibarıyla yayımlı form talimatlarına dayanır.*`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: 193 sayılı GVK md. Mük. 80 (değer artışı kazancı; yıllık
+     istisna tutarı menkul kıymetlere UYGULANMAZ), Mük. 81 (Yİ-ÜFE artışı
+     %10 ve üstüyse maliyet, elden çıkarılan ay hariç endekslenir), md. 86/1-d
+     ve 332 Seri No.lu GVGT (31.12.2025 RG): tevkifata tabi olmayan
+     menkul ve gayrimenkul sermaye iratlarında 2026 yılı beyan sınırı
+     22.000 TL (2025: 18.000 TL). GVK md. 92 (beyan Mart), 117 (ödeme Mart
+     ve Temmuz), 123 (yurt dışında ödenen verginin mahsubu). GİB özelgeleri
+     ve Yapı Kredi "Yabancı Hisse Senedi Gelirlerinde (2026 Yılı) Vergi
+     Durumu", Gedik ve Eriş YMM (09.2026) notları: TL karşılığı alış ve
+     satış günlerinin TCMB döviz alış kuruyla; aynı yıl içindeki alım-satım
+     zararı aynı yılın kazancından düşülür, sonraki yıla devretmez.
+     Kâr payında yarı istisna yalnızca önemli sahiplikte (11257 sayılı CK,
+     29.04.2026: oran %50'den %20'ye) — portföy yatırımcısını kapsamıyor.
+     BELİRSİZLİK: "2026'dan itibaren her kazanç beyan edilir" ifadesi
+     kaynaklarda farklı çerçeveleniyor; menkul kıymetler istisna dışında
+     zaten vardı. Metin tarihsel bir değişiklik iddia etmiyor, 2026
+     itibarıyla geçerli düzeni anlatıyor. Örnekteki kur ve endeks
+     rakamları VARSAYIMSAL. */
+  "yurt-disi-hisse-vergisi": {
+    title: "Yurt Dışı Hisse Kazancının Vergilendirilmesi",
+    dek: "Türkiye'de yerleşik biri için ABD hissesinden gelen satış kazancı ve temettü: nasıl hesaplanır, ne zaman beyan edilir.",
+    bodyMd: `ABD hissesinden elde edilen kazancın vergisi ABD'de değil, Türkiye'de doğar. Yurt dışı borsalardaki hisseler için Türkiye'de kaynakta kesinti yapan bir aracı da çoğu zaman yoktur; hesaplama ve beyan yatırımcının kendisine kalır. Bu yazı 2026 itibarıyla geçerli düzeni anlatır.
+
+::: dikkat Genel Bilgi, Vergi Danışmanlığı Değil
+Bu yazı 2026 itibarıyla yürürlükteki kuralları genel olarak özetler. Kanun, tebliğ ve had tutarları her yıl değişebilir; kişisel durumun (diğer gelirlerin, yerleşiklik durumun, işlem sıklığın) sonucu değiştirebilir. Beyan öncesinde güncel mevzuatı Gelir İdaresi'nden ya da bir mali müşavirden doğrula.
+:::
+
+## Satış Kazancı Nasıl Hesaplanır
+
+Yurt dışı hisse satışından doğan kazanç, Gelir Vergisi Kanunu'nda **değer artışı kazancı** olarak geçer. Hesap **lira** üzerinden yapılır: dolar kazancı değil, liraya çevrilmiş alış ile liraya çevrilmiş satış arasındaki fark vergilenir.
+
+::: akis Kazancın Dört Adımı
+Alış Maliyeti | Dolar tutarı × alış günü TCMB döviz alış kuru
+Endeksleme | Yİ-ÜFE artışı %10 ve üstüyse maliyet güncellenir
+Satış Bedeli | Dolar tutarı × satış günü TCMB döviz alış kuru
+Kazanç | Satış bedeli − (endekslenmiş) maliyet
+:::
+
+**Endeksleme** enflasyonun maliyeti eritmesine karşı bir düzeltmedir. Alış ayından önceki ay ile satış ayından önceki ay arasındaki Yİ-ÜFE artışı **%10 ya da daha fazlaysa**, lira cinsinden maliyet bu oranda artırılır. Artış %10'un altındaysa endeksleme yapılmaz.
+
+::: ornek Kurla Büyüyen Kazanç
+Rakamlar varsayımsaldır.
+Alış: 1.000 dolarlık hisse, kur 36 → maliyet **36.000 TL**.
+Satış: 1.200 dolar, kur 43 → satış bedeli **51.600 TL**.
+Endekssiz kazanç: 15.600 TL. Oysa dolar bazında kazanç yalnızca 200 dolar, satış kuruyla 8.600 TL. Geri kalan **7.000 TL** hissenin değil kurun yükselişinden geliyor.
+Aradaki Yİ-ÜFE artışı %25 olsaydı maliyet 36.000 × 1,25 = **45.000 TL** olur ve vergiye esas kazanç 6.600 TL'ye iner. Endeksleme, kurdan gelen "kazancın" enflasyon kadar olan kısmını vergiden çıkarır.
+:::
+
+Buradaki mekanizma önemli: lira değer kaybettikçe, dolar bazında hiç kâr etmemiş bir pozisyon bile lira bazında kazanç gösterebilir. Endeksleme bunu kısmen dengeler, tamamen değil. Ayrıntı: [Kur Riski](/rehber/kur-riski)
+
+## Beyan: Tutar Ne Olursa Olsun
+
+Değer artışı kazançları için kanunda yıllık bir istisna tutarı vardır ama bu istisna **menkul kıymetlere uygulanmaz**. Sonuç: yurt dışı hisse satışından elde edilen kazanç, tutarı ne olursa olsun beyan edilir.
+
+- Beyan, kazancın elde edildiği yılı izleyen yılın **1-31 Mart** döneminde yıllık gelir vergisi beyannamesiyle verilir. 2026'da satılan hissenin beyanı Mart 2027'dedir.
+- Vergi, diğer beyana tabi gelirlerle toplanıp artan oranlı tarifeyle (%15'ten %40'a kadar dilimler) hesaplanır.
+- Ödeme iki taksittir: Mart ve Temmuz.
+
+::: sayilar 2026 Düzeninde Anahtar Sayılar
+0 TL | Hisse satış kazancında beyan sınırı
+%10 | Maliyet endekslemesi için gereken asgari Yİ-ÜFE artışı
+22.000 TL | 2026 gelirlerinde, kesintiye uğramamış sermaye iratları için beyan sınırı
+1-31 Mart | Beyanname dönemi, kazancı izleyen yıl
+:::
+
+## Zararlar Ne Olur
+
+Aynı takvim yılı içindeki alım-satım zararları, aynı yılın alım-satım kazançlarından düşülür. Bir hissede 5.000 TL kazanıp diğerinde 3.000 TL kaybettiysen beyana 2.000 TL girer.
+
+Sınırlar da net: zarar maaş, kira ya da temettü gibi başka gelirlerden düşülemez ve **sonraki yıla devretmez**. Yıl içinde kapatılmayan zarar o yılla birlikte kaybolur.
+
+## Temettü
+
+Yurt dışı hisseden gelen temettü **menkul sermaye iradıdır** ve satış kazancından farklı bir kurala tabidir.
+
+1. Temettü **brüt** tutarı üzerinden, tahsil edildiği günün TCMB döviz alış kuruyla liraya çevrilir. ABD'nin kestiği %20 düşülmeden önceki tutar esastır. Ayrıntı: [W-8BEN ve 1042-S](/rehber/w-8ben)
+2. 2026 gelirleri için kaynakta kesintiye uğramamış menkul ve gayrimenkul sermaye iratlarının toplamı **22.000 TL**'yi aşmıyorsa bu gelirler için beyanname verilmez. Aşıyorsa tamamı beyan edilir; yalnızca aşan kısım değil.
+3. Yerli şirket temettülerindeki yarı istisna, portföy yatırımcısının yabancı hisse temettüsüne uygulanmaz.
+4. ABD'de ödenen vergi, belgelenmek ve o gelire Türkiye'de düşen vergiyi aşmamak kaydıyla hesaplanan vergiden mahsup edilebilir.
+
+::: dikkat Kur Günü Tek Değildir
+Her alış, her satış ve her temettü kendi gününün kuruyla çevrilir. Yıl sonu kuruyla ya da ortalama kurla yapılan toplu bir hesap yanlış sonuç verir. Aynı hisseyi farklı günlerde parça parça aldıysan, hangi alışın satıldığını ve maliyetinin nasıl belirleneceğini de kayıt altında tutman gerekir.
+:::
+
+## Hesabı Yapmak
+
+Sitedeki [vergi hesaplayıcısı](/vergi) alış ve satış tarihlerini, dolar tutarlarını ve kurları girerek bir tahmin çıkarmana yardım eder. Sonucu bir beyanname değil, bir ön hesap olarak oku.
+
+::: ozet Özet
+Yurt dışı hisse kazancı lira üzerinden hesaplanır, kur artışı da kazancın içindedir ve Yİ-ÜFE %10'u geçtiğinde maliyet endekslenerek bunun bir kısmı düşülür. Satış kazancında beyan sınırı yoktur, zarar yalnızca aynı yıl içinde düşülür. Temettü brüt tutarıyla ayrı bir sınıra tabidir. Kuralları bilmek yetmez: her işlemi günüyle kaydetmek beyanın kendisidir.
+:::
+
+*Bu yazı Gelir Vergisi Kanunu'nun ilgili maddelerine, 2026 had ve tutarlarını belirleyen tebliğe ve Gelir İdaresi özelgelerine dayanır. Genel bilgi verir, vergi danışmanlığı değildir ve 2026 itibarıyla geçerlidir; düzenlemeler değişebilir.*`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: Vanguard Research, "Dollar-cost averaging just means taking
+     risk later" (2012): ABD, İngiltere ve Avustralya verisinde toplu
+     yatırım, 12 aylık düzenli alımı vakaların yaklaşık üçte ikisinde
+     geçti. Harmonik ortalama ≤ aritmetik ortalama eşitsizliği standart
+     matematik. Örnekteki fiyatlar varsayımsal. */
+  "duzenli-alim": {
+    title: "Düzenli Alım (DCA): Ne Yapar, Ne Yapmaz",
+    dek: "Her ay aynı tutarla almak ortalama maliyeti düşürür gibi görünür; neyi gerçekten düşürdüğü ve neyi hiç değiştirmediği.",
+    bodyMd: `Her ay maaştan aynı tutarı ayırıp aynı fona ya da hisseye yatırmak, bireysel yatırımcının en yaygın yöntemidir. Adı İngilizcede **dollar-cost averaging**, kısaca DCA. Hakkında iki şey birden söylenir: "riski azaltır" ve "getiriyi artırır". Birincisi kısmen doğrudur, ikincisi büyük ölçüde yanlıştır.
+
+::: tanim Düzenli Alım (DCA)
+Piyasa fiyatına bakmadan, belirli aralıklarla sabit bir tutarla alım yapmak. Adet sabit değildir; fiyat düştüğünde aynı tutar daha çok adet, yükseldiğinde daha az adet alır.
+:::
+
+## Mekanizma: Sabit Tutar, Değişen Adet
+
+Yöntemin bütün matematiği tek cümlede: sabit tutar, ucuz aylarda daha çok, pahalı aylarda daha az adet alır. Bu yüzden ödediğin **ortalama maliyet**, o aylardaki fiyatların basit ortalamasından her zaman düşük ya da ona eşittir.
+
+::: ornek Dört Ay, Dört Fiyat
+Her ay 1.000 dolar yatırılıyor. Fiyatlar sırasıyla 100, 80, 50 ve 100 dolar.
+Alınan adetler: 10 + 12,5 + 20 + 10 = **52,5 adet**, toplam 4.000 dolar.
+Adet başına ortalama maliyet: 4.000 ÷ 52,5 ≈ **76,2 dolar**. Fiyatların basit ortalaması ise 82,5 dolar.
+Dördüncü ayın sonunda fiyat başladığı yere, 100 dolara döndü; portföy 5.250 dolar, yani **+%31**. Tek seferde ilk ay alan biri aynı tarihte başa baş durur.
+:::
+
+Örnek yöntemin en iyi senaryosunu gösteriyor: önce düşen, sonra toparlanan bir fiyat. Yöntemin değeri tam olarak bu yolun üzerindedir.
+
+## Ne Yapmaz
+
+**Beklenen getiriyi artırmaz.** Uzun vadede yükselen bir piyasada paranın bir kısmını aylarca nakitte bekletmek, o bekleme süresinin getirisinden vazgeçmek demektir. Vanguard'ın 2012'de ABD, İngiltere ve Avustralya verisiyle yaptığı çalışmada, eldeki paranın tamamını tek seferde yatırmak on iki aya yayarak yatırmayı vakaların yaklaşık **üçte ikisinde** geride bıraktı.
+
+**Kötü seçimi düzeltmez.** Sürekli düşen bir hissede düzenli alım, her ay batan bir şeye daha çok para koymaktır. Ortalama maliyet düşer ama şirket kurtulmuyorsa ortalamanın düşmesi bir şey ifade etmez. Yöntem, uzun vadede yükseleceğine inanılan geniş bir varlık için anlamlıdır; bir şirketin kaderini değiştirmez. Ayrıntı: [Endeks Fonu mu, Tek Hisse mi?](/rehber/endeks-fonu-mu-tek-hisse-mi)
+
+**Kaybı engellemez.** Piyasa on yıl boyunca yatay ya da aşağı giderse düzenli alan da kaybeder; yalnızca daha yavaş kaybeder.
+
+| İddia | Gerçek |
+|---|---|
+| **"Riski azaltır"** | Zamanlama riskini yayar; piyasa riskini azaltmaz |
+| **"Getiriyi artırır"** | Beklenti olarak hayır; yükselen piyasada tek seferlik alım çoğunlukla önde |
+| **"Dipten almayı sağlar"** | Dibi bulmaz; dibin olduğu ayda da, zirvenin olduğu ayda da alır |
+| **"Duyguyu devre dışı bırakır"** | Evet, asıl işlevi bu |
+
+## Asıl İşlevi: Kararı Takvime Bırakmak
+
+DCA'nın gerçek değeri matematikte değil davranıştadır. "Şimdi mi girsem, biraz daha mı beklesem" sorusu yatırımcıların en çok yanıldığı sorudur ve DCA bu soruyu hiç sormamayı sağlar. Düşüşte panikle durmak yerine planı sürdürmek, yöntemin bütün faydasını belirler. Ayrıntı: [Yatırımcı Psikolojisi](/rehber/yatirimci-psikolojisi)
+
+Ayrıca çoğu insan için DCA bir tercih bile değildir: birikim maaşla her ay geldiği için yatırım da her ay yapılır. Toplu bir para (miras, prim, satış) söz konusu olduğunda soru gerçekten ortaya çıkar ve cevap, beklenen getiri ile "tek seferde girip hemen düşüşe yakalanma" pişmanlığına ne kadar dayanabileceğin arasındaki bir tercihtir.
+
+::: dikkat Planlı Alım ile Ortalama Düşürmek Aynı Şey Değil
+Düzenli alım, fiyattan bağımsız ve önceden belirlenmiş bir plandır. Zarardaki bir pozisyonu "maliyeti düşürmek" için büyütmek ise fiyata tepki olarak verilen bir karardır ve pozisyonun portföydeki ağırlığını tam da yanıldığın yerde artırır. İkisi ekranda aynı görünür; mantıkları zıttır. Ayrıntı: [Risk Yönetimi](/rehber/risk-yonetimi)
+:::
+
+## Türkiye'den Yapınca İki Katman
+
+Türkiye'den ABD hissesine düzenli alım yapan biri aslında iki şeyi birden düzenli alır: doları ve hisseyi. Her ay yapılan çevirme, kurda da bir ortalama maliyet oluşturur. Bunun bedeli, her küçük alımda ayrı ayrı ödenen kur farkı ve sabit ücretlerdir. Küçük tutarlarda sabit bir işlem ücreti oransal olarak büyür; bu yüzden alım sıklığı ile maliyet arasında bir denge kurmak gerekir. Tutar küçükse [kesirli hisse](/rehber/kesirli-hisse) tutarın tamamının yatırıma girmesini sağlar.
+
+::: ozet Özet
+Düzenli alım, getiriyi artıran bir teknik değil, yanlış zamanda tek bir büyük karar verme riskini zamana yayan bir disiplindir. İyi seçilmiş geniş bir varlıkta ve sürdürüldüğünde işe yarar; kötü bir seçimi düzeltmez ve yükselen bir piyasada beklemenin bir bedeli vardır.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+[Karşılaştır](/karsilastir) ekranındaki uzun aralıklar (5 yıl gibi), bir varlığın düşüş ve toparlanma yolunu gösterir; düzenli alımın neden yol boyunca değer kazandığını bu yolun şekli belirler.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: Cboe, "VIX White Paper" (VIX = S&P 500 opsiyonlarından
+     türetilen 30 günlük yıllıklaştırılmış beklenen oynaklık; aylığa
+     çevirmek için √12). ATM straddle ≈ 0,8 × 1σ hareket yaklaşımı:
+     Brenner-Subrahmanyam (1988) yaklaşık formülü (ATM opsiyon ≈ 0,4 ×
+     σ × S × √T, straddle bunun iki katı; 0,4 ≈ 1/√(2π)). Normal dağılımda
+     ±1σ olasılığı %68. Örnekteki fiyatlar varsayımsal. */
+  "beklenen-hareket": {
+    title: "Opsiyon Piyasası Ne Fiyatlıyor: Örtük Oynaklık ve Beklenen Hareket",
+    dek: "Bilanço gecesinden önce piyasanın ne kadar büyük bir hareket beklediğini, opsiyon fiyatlarından tek bir bölmeyle okumak.",
+    bodyMd: `Bir şirket bu akşam bilanço açıklayacak. Hisse yarın ne kadar oynar? Kimse bilmiyor, ama piyasa bu soruya bir fiyat koymuş durumda: o fiyat **opsiyonların** içinde. Bu yazı o fiyatı nasıl okuyacağını anlatır; opsiyon işlemi yapmayı önermez. Primin temel yapısı için önce [Opsiyonlar](/rehber/opsiyonlar) yazısını okumak gerekir.
+
+::: tanim Bu Yazıdaki Terimler
+**Örtük Oynaklık (IV):** Opsiyonun piyasa fiyatından geriye doğru çözülen, piyasanın beklediği yıllık oynaklık. Tarihsel oynaklık geçmişi ölçer; örtük oynaklık bugünkü fiyatın içindeki beklentidir.
+**ATM (At the Money):** Kullanım fiyatı hissenin o anki fiyatına en yakın olan opsiyon.
+**Straddle:** Aynı vade ve aynı kullanım fiyatında bir call ile bir put'un birlikte alınması. Hissenin yönünden bağımsız olarak, yalnızca hareketin büyüklüğünden kazanır.
+:::
+
+## Tek Bölmeyle Beklenen Hareket
+
+ATM straddle'ın fiyatı, piyasanın vadeye kadar beklediği hareketin büyüklüğünü dolar cinsinden verir. Hisse fiyatına bölündüğünde yüzde olur:
+
+**Beklenen hareket ≈ ATM straddle fiyatı ÷ hisse fiyatı**
+
+::: ornek Bilanço Akşamı
+Hisse 200 dolar. Bilançodan hemen sonra vadesi dolan 200 dolarlık call 9 dolar, put 7 dolar.
+Straddle: 9 + 7 = **16 dolar**. Beklenen hareket: 16 ÷ 200 = **±%8**, yani 184 ile 216 dolar arası.
+Ertesi gün hisse %6 yükselip 212'ye gider. Yön ne olursa olsun, hareket fiyatlananın **altında** kaldı: straddle vadede yaklaşık 12 dolar eder ve 16'ya alan kaybeder.
+Manşet "hisse yükseldi" der; opsiyon piyasasının okuması "beklenenden sakin geçti" olur.
+:::
+
+Bu, bilanço tepkilerini okumanın en kullanışlı ölçüsüdür: %6'lık bir hareket, %3 fiyatlanmış bir hissede büyük bir sürpriz, %12 fiyatlanmış bir hissede ise sessiz bir gecedir. Ayrıntı: [Bilanço Günü Nasıl Okunur?](/rehber/bilanco-gunu-nasil-okunur)
+
+## Örtük Oynaklıktan Aynı Sayıya
+
+İkinci yol yıllık örtük oynaklığı vadeye ölçeklemektir. Oynaklık zamanın karekökü ile büyür:
+
+**Bir standart sapmalık hareket ≈ fiyat × IV × √(gün ÷ 365)**
+
+İki yöntem aynı sayıyı vermez ve bu bir hata değildir. ATM straddle, bir standart sapmalık hareketin yaklaşık **0,8** katına denk gelir; çünkü straddle ortalama mutlak hareketi fiyatlar, standart sapmayı değil. Pratikte straddle yöntemi daha doğrudandır: piyasada gerçekten işlem gören fiyatlardan hesaplanır.
+
+::: sayilar Akılda Tutulacak Üç Sayı
+√12 | Yıllık oynaklığı aylık harekete çevirmenin çarpanı
+0,8 | ATM straddle'ın bir standart sapmalık harekete oranı, yaklaşık
+%68 | Normal dağılımda fiyatın ±1 standart sapma içinde kalma olasılığı
+:::
+
+Aynı mantık endeks düzeyinde de işler. **VIX**, S&P 500 opsiyonlarından türetilen 30 günlük örtük oynaklıktır. VIX 20 ise piyasa önümüzdeki bir ay için S&P 500'de yaklaşık 20 ÷ √12 ≈ **±%5,8**'lik bir standart sapmalık hareket fiyatlıyor demektir. Ayrıntı: [Volatilite Nedir?](/rehber/volatilite)
+
+## Okurken Dikkat Edilecekler
+
+- **Vade olayı kapsamalı.** Bilanço hareketini ölçmek için açıklamadan hemen sonra dolan ilk vade kullanılır. Daha uzun vade, olayın dışındaki günlerin oynaklığını da içerir.
+- **Orta fiyat kullan.** Opsiyonlarda alış-satış farkı geniş olabilir; son işlem fiyatı yerine alış ile satışın ortası daha güvenilir bir okuma verir.
+- **Tam ATM yoksa en yakını.** Hisse 203 dolarsa 200 ve 205'lik kullanım fiyatlarının ikisine birden bakmak gerekir.
+- **Yön bilgisi yoktur.** Straddle hareketin büyüklüğünü fiyatlar, yönünü değil. Yön konusunda piyasanın bir eğilimi varsa o put ile call'un göreli fiyatında (çarpıklıkta) görünür, beklenen hareket sayısında değil.
+
+::: dikkat Olasılık Değil, Fiyat
+Örtük oynaklık bir tahmin değil, bir fiyattır ve içinde bir **risk primi** taşır: opsiyon satanlar belirsizliği üstlenmek için ücret ister. Bu yüzden örtük oynaklık uzun dönemde genellikle gerçekleşen oynaklıktan biraz yüksektir. Ayrıca normal dağılım varsayımı uç hareketleri olduğundan az gösterir; "%68 ihtimalle bu aralıkta" cümlesi bir kaba ölçüdür, bir garanti değil.
+:::
+
+::: ozet Özet
+Opsiyon piyasası her olayın önünde bir hareket büyüklüğü fiyatlar ve bunu okumak için opsiyon almak gerekmez: ATM straddle'ı fiyata bölmek yeter. Bir hareketin büyük mü küçük mü olduğunu anlamak için onu sıfıra değil, **fiyatlanan harekete** göre ölçmek gerekir.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Bu sitede opsiyon zinciri yok. Piyasa geneli için aynı ölçünün hazır hâli olan VIX, [Piyasalar](/piyasalar) ekranında durur. Bilanço tarihlerini [Bilançolar](/bilancolar) ekranından, açıklama sonrası hareketi hisse sayfasından takip edebilirsin.`,
+  },
+
   /* ==== 3 · Şirketi Okumak ================================================ */
 
   /* ---------------------------------------------------------------------- */
@@ -1598,6 +2366,290 @@ Geri alım nötr bir araçtır; iyi ya da kötü olmasını fiyat belirler. Üç
 ## Bu Sitede Nerede Görürsün
 
 [Bilanço analizlerinde](/bilancolar/analizler) hisse başı kâr ile net kârın birlikte verilmesinin sebebi budur: ikisi ayrıştığında aradaki farkı pay sayısı açıklar. [Değerleme](/rehber/degerleme) ve [piyasa değeri](/rehber/piyasa-degeri) yazılarındaki F/K hesabı da geri alımdan doğrudan etkilenir — payda küçülünce oran, şirket hiç değişmeden düşer.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: SEC, "Investor Bulletin: How to Read a 10-K/10-Q" ve Form
+     10-K / 10-Q genel talimatları (madde numaraları). Başvuru süreleri
+     SEC Regulation S-K / Exchange Act kural 13a-1 ve 13a-13: büyük
+     hızlandırılmış (halka açık değer ≥ 700 M $) 60/40 gün, hızlandırılmış
+     (75-700 M $) 75/40 gün, diğerleri 90/45 gün. Bilanço basın bülteni
+     Form 8-K Madde 2.02 ile verilir; GAAP dışı ölçüler Regulation G.
+     Yabancı şirketler 20-F / 6-K. EDGAR tam metin araması sec.gov. */
+  "10k-10q": {
+    title: "10-K ve 10-Q Nasıl Okunur?",
+    dek: "Şirketin kendi imzasıyla SEC'e verdiği rapor, basın bülteninin anlatmadığını anlatır; yüz sayfanın hangi beşinin önemli olduğu.",
+    bodyMd: `Bilanço günü haberlere düşen sayılar bir **basın bülteninden** gelir. Şirketin asıl raporu ise birkaç gün ya da hafta sonra, SEC'e verilen ve çoğu zaman yüz sayfayı aşan bir belgedir: yıllık rapor **10-K**, çeyrek raporu **10-Q**. Kimse onları baştan sona okumaz; okunması gereken yer bellidir.
+
+::: tanim Bu Yazıdaki Terimler
+**10-K:** Yıllık rapor. Bağımsız denetimden geçmiş finansal tabloları, işin tanımını ve risk faktörlerini içerir.
+**10-Q:** İlk üç çeyreğin raporu. Finansal tablolar denetlenmez, yalnızca sınırlı incelemeden geçer. Dördüncü çeyreğin ayrı 10-Q'su yoktur; o dönem 10-K'nın içindedir.
+**EDGAR:** SEC'in, şirketlerin bütün resmî başvurularını ücretsiz yayımladığı veri tabanı.
+:::
+
+## Belgeyi Bulmak
+
+EDGAR'da şirketin adını ya da sembolünü arat, başvuru listesini form türüne göre süz. Aynı raporlar şirketin yatırımcı ilişkileri sayfasında da bulunur. Süreler şirketin büyüklüğüne bağlıdır:
+
+| Şirket Sınıfı | 10-K Süresi | 10-Q Süresi |
+|---|---|---|
+| **Büyük Hızlandırılmış** (halka açık değer 700 milyon $ üstü) | Yıl sonundan 60 gün | Çeyrek sonundan 40 gün |
+| **Hızlandırılmış** (75-700 milyon $) | 75 gün | 40 gün |
+| **Diğerleri** | 90 gün | 45 gün |
+
+Yabancı şirketler bunların yerine yıllık **20-F** ve dönemsel **6-K** verir. Ayrıntı: [ADR ve SPAC Nedir?](/rehber/adr-spac)
+
+## Okuma Sırası
+
+::: akis Yüz Sayfayı Beşe İndirmek
+Yönetimin Değerlendirmesi | Madde 7 (10-Q'da Bölüm I, Madde 2)
+Finansal Tablolar | Madde 8: gelir, bilanço, nakit akışı
+Dipnotlar | Segmentler, borç vadeleri, gelir tanıma
+Risk Faktörleri | Madde 1A: geçen yıldan ne değişti
+:::
+
+**Yönetimin değerlendirmesi (MD&A)** raporun anlatı bölümüdür: gelirin neden değiştiği, marjı neyin sıktığı, nakdin nereye gittiği. Yönetim burada rakamları kendi diliyle açıklar ve açıklamak zorunda olduğu eğilimleri yazar.
+
+**Finansal tablolar** üç tanedir ve üçü birlikte okunur: gelir tablosu kârı, bilanço varlık ve borçları, nakit akışı tablosu gerçek parayı gösterir. Ayrıntı: [Bilanço Nedir, Nasıl Okunur?](/rehber/bilanco) ve [Nakit Akışı](/rehber/nakit-akisi)
+
+**Dipnotlar** raporun en az okunan ve en çok bilgi taşıyan kısmıdır. Gelirin hangi iş kolundan geldiği (segment raporu), borçların ne zaman vadesinin dolduğu, hisse bazlı ödemenin büyüklüğü ve müşteri yoğunlaşması burada yazar.
+
+**Risk faktörleri** her yıl uzar ve çoğu kalıptır. Değerli olan yeni eklenen ya da yeniden yazılan maddelerdir: iki yılın metnini yan yana koymak, şirketin neyi yeni bir risk olarak gördüğünü gösterir.
+
+::: ornek Dipnotta Saklı Olan
+Varsayımsal bir şirket gelirini %20 artırdığını açıklıyor. Basın bülteni büyümeyi "güçlü talep"le anlatıyor.
+Segment dipnotu ise şunu gösteriyor: büyümenin tamamı tek bir iş kolundan geliyor ve o iş kolunun gelirinin **%45'i tek bir müşteriden**.
+Aynı %20, iki farklı risk profili anlatır. Birinde geniş bir talep, diğerinde tek bir sözleşmenin yenilenmesine bağlı bir gelir.
+:::
+
+## Basın Bülteni ile Rapor Arasındaki Fark
+
+Bilanço akşamı yayımlanan bülten **8-K** ile SEC'e sunulur ve şirketin öne çıkarmak istediği sayıları taşır. Bunların çoğu GAAP dışı ölçülerdir: hisse bazlı ödemeyi, tek seferlik giderleri ya da satın alma maliyetlerini dışarıda bırakan "düzeltilmiş" kâr gibi. Kurallar şirketin bu ölçüleri GAAP karşılıklarıyla birlikte ve aradaki farkı göstererek vermesini ister.
+
+::: dikkat Bülten 10-Q Değildir
+Bülten bir pazarlama belgesidir, yanlış olmak zorunda değildir ama seçicidir. Düzeltilmiş kâr ile GAAP kârı arasındaki fark her çeyrek büyüyorsa, şirketin "tek seferlik" dediği giderler aslında tekrarlayan giderlerdir. Bu farkın izini sürmek için 10-Q'daki mutabakat tablosu gerekir.
+:::
+
+## Hızlı Okuma İçin Beş Soru
+
+1. Gelir hangi segmentten büyüdü, hangisinden küçüldü?
+2. Faaliyet nakit akışı net kârın üstünde mi, altında mı?
+3. Önümüzdeki iki yıl içinde vadesi dolan borç ne kadar?
+4. Hisse bazlı ödeme gelirin yüzde kaçı ve hisse sayısı artıyor mu?
+5. Risk faktörlerine bu yıl ne eklendi?
+
+::: ozet Özet
+10-K ve 10-Q, şirketin sayılarının denetlenmiş ya da incelenmiş ve imzalı hâlidir. Bülten ne olduğunu söyler; rapor nedenini ve bedelini. Beş soruyla okunacak bir 10-Q, bir bilanço gününün manşetlerinden daha fazla bilgi verir.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Hisse sayfasındaki geçmiş bilançolar ve [Bilançolar](/bilancolar) ekranındaki analizler bu raporların sayılarından beslenir. Bir analizde tuhaf görünen bir kalem varsa, kaynağı çoğu zaman 10-Q'nun dipnotlarındadır.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: SEC Regulation FD (Ağustos 2000 kabul, Ekim 2000 yürürlük):
+     önemli bilgiyi seçici açıklama yasağı, halka açık çağrı pratiği.
+     Private Securities Litigation Reform Act (1995): ileriye dönük beyan
+     "güvenli liman" uyarısı. Çağrı yapısı şirketlerin yatırımcı ilişkileri
+     sayfalarındaki kayıtlardan. Örnekler varsayımsal. */
+  "konferans-gorusmesi": {
+    title: "Bilanço Konferans Görüşmesi Nasıl Dinlenir?",
+    dek: "Rakamlar bültende; yönetimin onlar hakkında ne düşündüğü ve neyi söylemekten kaçındığı görüşmede.",
+    bodyMd: `Bilanço açıklandıktan kısa süre sonra şirketin üst yönetimi analistlerle bir telefon ya da internet görüşmesi yapar. Adı **earnings call**, Türkçesiyle konferans görüşmesi. Rakamlar zaten bültende yazılıdır; görüşmeyi değerli kılan, o rakamların yönetimin ağzından nasıl anlatıldığı ve analistlerin neyi sorduğudur.
+
+## Neden Herkese Açık
+
+ABD'de 2000 yılından beri yürürlükte olan **Regulation FD**, şirketlerin önemli bilgiyi bazı yatırımcılara diğerlerinden önce vermesini yasaklar. Sonuç: analistlerle yapılan görüşme herkesin dinleyebileceği biçimde yayımlanır. Canlı yayın, kaydı ve çoğu zaman yazılı dökümü şirketin yatırımcı ilişkileri sayfasında bulunur.
+
+Kapanıştan sonra açıklama yapan şirketlerin çoğu görüşmeyi aynı akşam, New York saatiyle kapanıştan bir iki saat sonra yapar. Türkiye'den bakınca bu genellikle gece yarısına yakın bir saattir; kayıt ve döküm ertesi sabah okunabilir.
+
+## Görüşmenin Yapısı
+
+::: akis Bir Görüşmenin Sırası
+Uyarı | İleriye dönük beyanlar hakkında yasal metin
+Hazır Konuşma | CEO işi, CFO sayıları anlatır
+Rehberlik | Gelecek çeyrek ve yıl beklentisi
+Soru-Cevap | Analistlerin soruları
+:::
+
+**Hazır konuşma** önceden yazılmış ve hukukçulardan geçmiş bir metindir. Önemlidir ama sürprizi azdır. **Soru-cevap** bölümü ise hazırlıksızdır; bilginin çoğu buradan çıkar. Dinleyecek vaktin kısıtlıysa doğrudan soru-cevaba geçmek çoğu zaman daha verimlidir.
+
+## Nelere Kulak Verilir
+
+**Rehberliğin değişimi.** Gelecek dönem beklentisi, geçen çeyrekte verilen beklentiyle karşılaştırılarak okunur. Aralığın alt ucu mu yükseltildi, üst ucu mu indirildi? Piyasa çoğu zaman gerçekleşen çeyreğe değil bu değişime tepki verir. Ayrıntı: [Bilanço Günü Nasıl Okunur?](/rehber/bilanco-gunu-nasil-okunur)
+
+**Tekrar eden soru.** Birden fazla analist aynı konuyu farklı kelimelerle soruyorsa, piyasanın o noktada tatmin olmadığı anlaşılır.
+
+**Cevaplanmayan soru.** Yönetim bir soruya rakam vermekten kaçınıp genel bir cümleyle geçiyorsa, bu da bir bilgidir. Özellikle geçen çeyrekte rakam verdiği bir konuda bu kez vermiyorsa.
+
+**Kelime değişimi.** "Güçlü" talebin "sağlıklı" talebe, "hızlanma"nın "istikrar"a dönüşmesi gibi küçük değişiklikler, hazır metinlerin dikkatle seçilen dilinde anlam taşır.
+
+| Duyduğun | Ne Anlama Gelebilir |
+|---|---|
+| **"Görünürlüğümüz sınırlı"** | Yönetim de bilmiyor; rehberlik geniş ya da temkinli |
+| **"Tek seferlik etkiler"** | Hangi etki olduğu ve gerçekten tekrarlamayıp tekrarlamayacağı sorulmalı |
+| **"Bu konuda ayrıntı vermiyoruz"** | Önceden veriliyorsa, verilmemesi bir işaret |
+| **"Yatırım dönemindeyiz"** | Marj baskısı sürecek; ne zaman biteceğini dinle |
+
+::: ornek Temkinli Bir Kelimenin Fiyatı
+Varsayımsal bir şirket beklentilerin üzerinde bir çeyrek açıklıyor; hisse kapanış sonrası %4 yükseliyor. Görüşmede CFO, gelecek çeyrek için müşterilerin sipariş verirken "daha temkinli" davrandığını söylüyor ve rehberliği değiştirmiyor.
+Soru-cevap boyunca üç analist aynı temkine geri dönüyor. Görüşme bittiğinde hisse artıdan **eksiye** geçmiş oluyor. Rakamlar değişmedi; değişen, rakamların geleceği hakkında ne söylediğiydi.
+:::
+
+::: dikkat Görüşme Sırasındaki Fiyat Hareketi
+Görüşme genellikle kapanış sonrası seansta, işlem hacminin düşük ve spread'in geniş olduğu saatlerde yapılır. Bu saatlerdeki sert hareketler ertesi günün açılışını her zaman öngörmez; bir kısmı manşetleri anlık okuyan algoritmaların tepkisidir. Ayrıntı: [Likidite ve Spread](/rehber/spread-likidite)
+:::
+
+::: ozet Özet
+Bülten ne olduğunu söyler, görüşme yönetimin buna nasıl baktığını. Rehberliğin değişimine, analistlerin ısrar ettiği konulara ve yönetimin rakam vermekten kaçındığı yerlere odaklanmak, bir saatlik kaydı birkaç dakikalık bir bilgiye indirir.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+[Bilançolar](/bilancolar) ekranı kimin ne zaman, açılış öncesinde mi kapanış sonrasında mı açıklayacağını Türkiye saatiyle gösterir. Okunmuş çeyreklerin analizleri [Analizler](/bilancolar/analizler) sekmesindedir.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: SEC, T+1 geçişi (28 Mayıs 2024) ve FINRA/NYSE rehberliği:
+     T+1 ile hak kesme günü kayıt günüyle aynı iş günü. FINRA Kural 11140
+     (b)(2) ve borsa kuralları: hisse değerinin %25'i ve üstündeki
+     dağıtımlarda hak kesme, ödeme gününü izleyen iş günü. 2026 takvimi:
+     2 Şubat Pazartesi, 12 Şubat Perşembe, 13 Şubat Cuma, 5 Mart
+     Perşembe — örnek tarihler varsayımsal bir şirket için. */
+  "temettu-takvimi": {
+    title: "Temettü Takvimi Nasıl Okunur?",
+    dek: "İlan, hak kesme, kayıt ve ödeme: temettüyü almak için hisseyi en geç hangi gün alman gerektiği ve o günün neden bir tuzak olmadığı.",
+    bodyMd: `Bir şirket temettü ilan ettiğinde duyuruda dört tarih yazar. Bunlardan yalnızca biri, temettüyü kimin alacağını belirler ve takas süresinin kısalmasıyla birlikte bu tarihin kuralı 2024'te değişti. Temettünün ne olduğu ve neden bedava para olmadığı [Temettü Nedir?](/rehber/temettu) yazısında; bu yazı takvimin kendisini anlatır.
+
+## Dört Tarih
+
+| Tarih | Ne Olur |
+|---|---|
+| **İlan (Declaration)** | Şirket tutarı ve takvimi duyurur |
+| **Hak Kesme (Ex-Dividend)** | Bu günden itibaren alan temettüyü almaz |
+| **Kayıt (Record)** | Şirketin hissedar listesi bu gün itibarıyla belirlenir |
+| **Ödeme (Payment)** | Para hissedarların hesabına gönderilir |
+
+Temettüyü almak için kayıt gününde hissedar listesinde olmak gerekir. Listeye girmek için hisseyi almak yetmez; işlemin **takası** tamamlanmış olmalıdır. Hak kesme günü bu yüzden vardır: kayıt gününe takası yetişmeyecek ilk alım gününü işaretler.
+
+## T+1 ile Hak Kesme ve Kayıt Aynı Gün
+
+ABD'de takas 28 Mayıs 2024'ten beri **T+1**'dir: işlem ertesi iş günü kesinleşir. Bunun sonucu olarak hak kesme günü artık kayıt günüyle **aynı iş günüdür**. Kural tek cümleye iner:
+
+> Temettüyü almak için hisseyi en geç hak kesme gününden bir önceki iş günü almış olmak gerekir.
+
+::: zaman Varsayımsal Bir Temettünün Takvimi
+2 Şubat 2026 | Şirket hisse başına 1 dolar temettü ilan eder.
+12 Şubat, Perşembe | **Son alım günü.** Bu gün alınan hissenin takası 13 Şubat'ta tamamlanır; alıcı listeye girer.
+13 Şubat, Cuma | Hak kesme ve kayıt günü. Bu gün alan temettüyü almaz; hisse açılışta temettü kadar ayarlanır.
+5 Mart | Ödeme günü. Brüt tutardan ABD kesintisi düşülerek hesaba geçer.
+:::
+
+Hesap **iş günüyle** yapılır: hafta sonları ve ABD'nin resmî tatilleri sayılmaz. Türkiye'deki tatiller ise hesabı etkilemez; belirleyici olan ABD piyasasının takvimidir.
+
+## Hak Kesme Sabahı Ne Olur
+
+Hak kesme günü hisse, dağıtılacak temettü kadar düşük bir referans fiyattan açılır. Bu bir satış dalgası değil, muhasebedir: şirketin kasasından çıkacak para artık hisse fiyatının içinde değildir.
+
+::: ornek Son Gün Alıp Ertesi Gün Satmak
+Hisse 100 dolar, temettü 1 dolar. 12 Şubat'ta alırsın. 13 Şubat sabahı hisse, piyasa başka hiçbir şey yapmasa, yaklaşık **99 dolardan** açılır.
+Elinde 99 dolarlık hisse ve 1 dolarlık brüt temettü alacağı var; toplam yine 100.
+Türkiye'de yerleşik biri için temettüden ABD %20 keser: hesabına 0,80 dolar geçer. Hisse fiyatındaki 1 dolarlık ayarlamanın karşılığında **0,80** dolar almış olursun; buna iki kez ödenen spread ve komisyon eklenir. "Temettü avı" bu yüzden yabancı yatırımcı için sıfır değil, **eksi** bir işlemdir.
+:::
+
+## Büyük Temettü İstisnası
+
+Temettü hisse değerinin **%25'i ya da daha fazlasıysa** kural farklı işler: hak kesme günü kayıt gününe değil, ödeme gününü izleyen iş gününe kayar. Bu istisna olağanüstü tek seferlik dağıtımlarda görülür ve duyuruda ayrıca belirtilir. Böyle bir durumda hisseyi kayıt ile ödeme arasında satan kişi temettüyle birlikte hakkı da satmış olur.
+
+::: dikkat Ödeme Günü Hesaba Geçiş Günü Değildir
+Ödeme günü şirketin parayı gönderdiği gündür. Aracı kurumun zinciri uzunsa (yerli kurum, yabancı muhabir, saklama kuruluşu) paranın hesabında görünmesi birkaç iş günü sürebilir. Vergi hesabında esas alınacak tarih ve kur konusunda kurumun dökümüne bak. Ayrıntı: [Yurt Dışı Hisse Kazancının Vergilendirilmesi](/rehber/yurt-disi-hisse-vergisi)
+:::
+
+::: ozet Özet
+Takvimde dört tarih var ama karar tek tarihe bağlı: hak kesme günü. T+1 ile bu gün kayıt günüyle aynıdır ve temettüyü almak için hisseyi bir önceki iş günü almış olmak gerekir. Hak kesme sabahı hisse temettü kadar ayarlanır; bu yüzden takvim bir fırsat değil, bir mekanizmadır.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Hisse sayfasındaki **Anahtar Metrikler** kartında temettü verimi yer alır. Bir şirketin temettü takvimini ve tutarını şirketin yatırımcı ilişkileri duyurusundan ya da aracı kurumunun kurumsal işlem bildiriminden doğrulayabilirsin.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar: Securities Exchange Act md. 16 (yöneticiler, yönetim kurulu
+     üyeleri, %10'dan fazla pay sahipleri); Sarbanes-Oxley md. 403: Form 4
+     işlemden sonra iki iş günü içinde. SEC Form 4 genel talimatları, işlem
+     kodları (P, S, M, A, F, G, X). SEC, Kural 10b5-1 değişiklikleri
+     (Aralık 2022 kabul, 2023 yürürlük): yönetici ve kurul üyelerinde
+     "soğuma" süresi en az 90 gün (en fazla 120), Form 4'te plan onay
+     kutusu. "İçeriden kişiler hisselerini birçok sebeple satar ama tek
+     bir sebeple alır" sözü Peter Lynch'e atfediliyor. Örnek varsayımsal. */
+  "insider-islemleri": {
+    title: "Insider İşlemleri: Form 4 Nasıl Okunur?",
+    dek: "Şirket yöneticilerinin kendi hisselerinde yaptığı alım satımlar herkese açık; satışların neden alımlardan çok daha az şey söylediği.",
+    bodyMd: `Bir şirketin yöneticileri kendi şirketlerinin hissesini alıp satabilir; bu yasaldır. Yasal olmasının şartı, işlemin herkese duyurulmasıdır. ABD'de bu duyurunun adı **Form 4**'tür ve iki iş günü içinde SEC'e verilmek zorundadır. Manşetlerde "CEO milyonlarca dolarlık hisse sattı" diye okunan haberlerin kaynağı çoğu zaman bu formdur ve formun kendisi manşetten daha fazlasını anlatır.
+
+::: tanim Bu Yazıdaki Terimler
+**Insider:** ABD mevzuatında şirketin üst düzey yöneticileri, yönetim kurulu üyeleri ve şirketin %10'undan fazlasına sahip olanlar.
+**Form 4:** Bu kişilerin şirket hissesindeki her değişikliği işlemden sonraki iki iş günü içinde bildirdiği SEC formu.
+**10b5-1 Planı:** Yöneticinin önceden, içeriden bilgiye sahip olmadığı bir anda kurduğu ve sonradan değiştiremediği alım satım programı.
+:::
+
+::: dikkat Yasal İşlem ile Yasa Dışı Insider Trading
+Form 4'te bildirilen işlemler yasaldır. Yasa dışı olan, kamuya açıklanmamış önemli bir bilgiye dayanarak işlem yapmaktır. Türkçede ikisi de "içeriden işlem" diye anılabildiği için karışır; bu yazı yalnızca yasal ve bildirilen işlemleri anlatır.
+:::
+
+## İşlem Kodları
+
+Form 4'ün en önemli sütunu işlem kodudur. Aynı "hisse sayısında azalma", koduna göre çok farklı şeyler anlatır.
+
+| Kod | Anlamı | Ne Söyler |
+|---|---|---|
+| **P** | Açık piyasadan ya da özel alım | Yönetici kendi parasıyla aldı; en güçlü sinyal |
+| **S** | Açık piyasada ya da özel satış | Tek başına az şey söyler; sebep çok olabilir |
+| **M** | Opsiyon ya da türev hakkının kullanılması | Ücret paketinin bir parçası |
+| **A** | Şirketin verdiği hisse ya da ödül | Maaş gibi; bir karar değil |
+| **F** | Vergi ya da kullanım bedeli için hisse tutulması | Otomatik; bilgi taşımaz |
+| **G** | Bağış | Genellikle vergi planlaması |
+| **X** | Parası içeride opsiyonun kullanılması | M'ye benzer |
+
+## Satış Neden Gürültülüdür
+
+Yöneticilerin ücretinin önemli bir kısmı hisse ve opsiyon olarak ödenir. Bu yüzden satmaları için birçok sebep vardır: vergi ödemek, ev almak, servetini tek bir şirketten çeşitlendirmek ya da yıllar önce kurulmuş bir satış planını sürdürmek. Bunların hiçbiri şirketin geleceği hakkında bir görüş değildir.
+
+Alımın ise pratikte tek bir sebebi vardır:
+
+> İçeriden kişiler hisselerini birçok sebeple satar ama yalnızca bir sebeple alır: fiyatın yükseleceğini düşündükleri için.
+
+Söz Peter Lynch'e atfedilir ve Form 4 okumanın ana kuralını özetler: açık piyasadan, kendi parasıyla yapılan alım (**P**) nadirdir ve bilgi taşır; satışlar sıktır ve çoğu gürültüdür.
+
+::: ornek Bir Manşetin Arkasındaki Form
+Manşet: "CEO 4,8 milyon dolarlık hisse sattı." Varsayımsal Form 4'ün satırları:
+**M** · 50.000 hisse · 20 $ · Yıllar önce verilmiş opsiyonun kullanılması.
+**F** · 18.000 hisse · 150 $ · Kullanım bedeli ve vergi için şirketin tuttuğu hisseler.
+**S** · 32.000 hisse · 151 $ · Satış; formdaki kutu işaretli: **10b5-1 planı** kapsamında.
+Sonuç: CEO'nun işlemden önceki hisse sayısı değişmedi (50.000 − 18.000 − 32.000 = 0). Manşetteki satış, bir opsiyonun nakde çevrilmesi ve vergisinin ödenmesiydi; önceden planlanmıştı.
+:::
+
+## Planlı Satışlar
+
+10b5-1 planları, yöneticinin içeriden bilgiye sahip olmadığı bir anda kurduğu ve sonra müdahale edemediği programlardır. 2023'ten beri yöneticiler için planın kurulmasıyla ilk işlem arasında en az 90 günlük bir bekleme süresi vardır ve Form 4'te işlemin bir plan kapsamında olup olmadığını gösteren bir kutu bulunur. Planlı bir satış, zamanlamasıyla ilgili bir sinyal taşımaz; planın **kurulma ya da iptal edilme** zamanı ise taşıyabilir.
+
+## Anlamlı Olabilecek Örüntüler
+
+- **Kümelenmiş alım.** Aynı dönemde birden fazla yöneticinin açık piyasadan alım yapması, tek bir alımdan daha güçlü bir işarettir.
+- **Düşüş sonrası alım.** Sert bir düşüşten sonra yöneticinin kendi parasıyla alması, fiyatın içerideki görüşe göre fazla düştüğünü düşündüğünü gösterebilir.
+- **Plan dışı büyük satış.** 10b5-1 kutusu işaretli olmayan, alışılmışın çok üstünde ve birden fazla yöneticiden gelen satışlar ayrıca incelenmeye değer.
+
+Bunların hiçbiri tek başına bir alım ya da satım gerekçesi değildir. Yöneticiler de yanılır ve alımları çoğu zaman aylar, hatta yıllar sonra haklı çıkar.
+
+::: ozet Özet
+Form 4, şirket yöneticilerinin hisse hareketlerini iki iş günü içinde herkese açar. Okumanın kuralı kodlardadır: P kodu nadir ve anlamlı, S kodu sık ve çoğu zaman gürültü, M, A ve F ise ücretin mekaniğidir. Bir satış manşetini okumadan önce formun satırlarına bakmak gerekir.
+:::
+
+## Bu Sitede Nerede Görürsün
+
+Bu sitede insider işlemleri listelenmiyor. Bir şirketin Form 4 başvurularını SEC'in EDGAR veri tabanında şirket adıyla arayıp form türüne göre süzerek bulabilirsin. Şirketin kendi hisselerini geri alması ise ayrı bir konudur: [Hisse Geri Alımı](/rehber/hisse-geri-alimi)`,
   },
 
   /* ---------------------------------------------------------------------- */

@@ -317,7 +317,7 @@ export function bandFiyatiKapsiyorMu(
  * Türkçe yazımda simge sayıdan sonra ve arada boşlukla durur; satır sonunda
  * ayrılmamalı, yoksa dolar işareti tek başına bir alt satıra düşüyor.
  */
-const MONEY_GAP = "\u00A0";
+export const MONEY_GAP = "\u00A0";
 
 /**
  * DEĞER YOK İŞARETİ — tek bir yarım çizgi (en dash, U+2013).

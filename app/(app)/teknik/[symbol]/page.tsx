@@ -6,7 +6,7 @@ import { ShareButton } from "@/components/article/ShareButton";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MotionExperience, Reveal, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
 import directory from "@/components/motion/DirectoryExperience.module.css";
-import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
 import { MoreSymbols, type MoreSymbolEntry } from "@/components/technical/MoreSymbols";
 import { PlanStrip } from "@/components/technical/PlanStrip";
@@ -228,10 +228,23 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   return (
     <MotionExperience className={directory.page}>
       <ScrollProgress />
+      {/* MAKALE KÜNYESİ METNİN DİLİNDE. Sayfada yazılmış bir yorum var
+          (başlık, değerlendirme, senaryolar) ama künyesi yalnızca kırıntıydı;
+          mercek ve bilanço analiziyle aynı `Article` bloğu artık burada da.
+          İngilizce metni olmayan analizde canonical Türkçe adrese gidiyor
+          (`pageAlternates` yukarıda), künye de aynı adresi ve dili söylüyor. */}
+      <ArticleJsonLd
+        headline={copyLang === "en" ? `${symbol} Technical Analysis` : `${symbol} Teknik Analiz`}
+        description={copy.headline}
+        path={technicalHref(symbol)}
+        locale={copyLang}
+        published={row.publishedAt}
+        modified={row.updatedAt}
+      />
       <BreadcrumbJsonLd
-        locale={locale}
+        locale={copyLang}
         items={[
-          { name: t.technical.title, path: "/teknik" },
+          { name: getDictionary(copyLang).technical.title, path: "/teknik" },
           { name: `${symbol} · ${company}`, path: technicalHref(symbol) },
         ]}
       />

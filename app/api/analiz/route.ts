@@ -6,6 +6,14 @@ import { db } from "@/lib/db";
 import { earningsAnalyses } from "@/lib/schema";
 import { isLocale } from "@/lib/i18n/config";
 import { periodSlug } from "@/lib/analysis";
+import {
+  EXTRAS_INPUT_SHAPE,
+  extrasFromInput,
+  extrasIssues,
+  extrasToOutput,
+  getAnalysisExtras,
+  saveAnalysisExtras,
+} from "@/lib/earnings-extras";
 
 /**
  * Bilanço analizi alım ucu.
@@ -169,7 +177,15 @@ const BodySchema = z.object({
   /** Öngörü kartının altındaki üç mini ölçü. */
   guidance_footer: z.array(HighlightSchema).max(3).nullish(),
   sources: z.array(SourceSchema).max(20).nullish(),
+  /* ---- Ekler: özet, segmentler, KPI'lar ----
+     Ayrı tabloda duruyorlar (gerekçe `lib/schema.ts` →
+     `earningsAnalysisExtras`); şema ve dönüşüm `lib/earnings-extras.ts`te.
+     Hepsi isteğe bağlı ve eski gövde olduğu gibi geçerli. */
+  ...EXTRAS_INPUT_SHAPE,
 }).superRefine((body, ctx) => {
+  for (const issue of extrasIssues(body)) {
+    ctx.addIssue({ code: "custom", path: [issue.path], message: issue.message });
+  }
   /* PEG'in böleni tanımıyla birlikte gelir, yoksa hiç gelmez.
      Kural şemada değil burada, çünkü iki alan arasındaki bağı anlatıyor:
      "%18,4 büyüme" tek başına doğrulanamaz — ileriye dönük mü, son on iki ay
@@ -242,6 +258,10 @@ export async function GET(request: Request) {
     );
   }
 
+  /* Ekler geri okunan pakette AYNI adlarla — düzenlenip geri gönderilen
+     gövde onları da taşısın, POST üzerine yazarken kaybolmasın. */
+  const extras = await getAnalysisExtras(row.id);
+
   return NextResponse.json({
     ok: true,
     symbol: row.symbol,
@@ -284,6 +304,7 @@ export async function GET(request: Request) {
     guidance: row.guidance ?? [],
     guidance_footer: row.guidanceFooter ?? [],
     sources: row.sources ?? [],
+    ...extrasToOutput(extras),
     updated_at: row.updatedAt,
   });
 }
@@ -333,6 +354,14 @@ export async function POST(request: Request) {
             "[{label, value, note?, tone?}] — öngörü kartının altındaki 3 ölçü",
           ceo_quote: "{quote, name, title} (opsiyonel)",
           sources: "[{label, url}] (opsiyonel)",
+          takeaways:
+            "['madde','madde','madde'] — TAM 3 madde, 20-220 karakter (opsiyonel, '30 Saniyede' özeti)",
+          segments:
+            "[{name, revenue (HAM $), yoy_pct?, note?}] 2-8 segment, negatif satır yok (opsiyonel)",
+          segments_source:
+            "press-release | shareholder-letter | 10-Q | 10-K | 8-K — segments verildiyse zorunlu",
+          kpis:
+            "[{name, value (HAM), unit ('USD' | '%' | sayma birimi), yoy_pct?, source}] ≤8 (opsiyonel)",
         },
       },
       { status: 400 },
@@ -397,7 +426,9 @@ export async function POST(request: Request) {
     generatedBy: "claude",
   };
 
-  await db
+  /* `returning` ekleri bağlamak için: upsert çakışmada satırın `id`sini
+     koruyor, yani düzeltilen analiz aynı kimlikte kalıyor. */
+  const [saved] = await db
     .insert(earningsAnalyses)
     .values(values)
     .onConflictDoUpdate({
@@ -407,7 +438,16 @@ export async function POST(request: Request) {
         earningsAnalyses.locale,
       ],
       set: { ...values, updatedAt: new Date() },
-    });
+    })
+    .returning({ id: earningsAnalyses.id });
+
+  /* EKLER ANA KAYDI BEKLETMEZ, BOZMAZ. Tablo henüz yoksa (migration
+     deploy'dan sonra elle uygulanıyor) analiz yine yazılıyor; yanıttaki
+     `extras` alanı rutine eklerin yazılamadığını söylüyor ki aynı gövdeyi
+     migration indikten sonra yeniden göndersin. */
+  const extras = saved
+    ? await saveAnalysisExtras(saved.id, extrasFromInput(parsed))
+    : "unavailable";
 
   return NextResponse.json({
     ok: true,
@@ -415,5 +455,6 @@ export async function POST(request: Request) {
     period,
     locale,
     url: `/bilancolar/${symbol.toLowerCase()}/${period}`,
+    extras,
   });
 }

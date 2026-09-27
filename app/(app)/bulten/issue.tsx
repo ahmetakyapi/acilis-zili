@@ -71,7 +71,9 @@ export async function BriefIssuePage({
 
   return (
     <>
+      {/* NewsArticle: sayı bir günün haberi (gerekçe JsonLd.tsx). */}
       <ArticleJsonLd
+        type="NewsArticle"
         headline={brief.headline}
         description={briefSummary(brief.bodyMd)}
         path={path}

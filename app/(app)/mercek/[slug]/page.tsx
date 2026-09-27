@@ -22,6 +22,7 @@ import {
   sectionIndex,
   type SectionItem,
 } from "@/components/article/ArticleBody";
+import { articleAutoLinker } from "@/lib/autolink-data";
 import { ShareButton } from "@/components/article/ShareButton";
 import { LogoTile } from "@/components/ui/primitives";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
@@ -274,6 +275,9 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
      (`blocks`), yani `skipIndex` ile başlık kimlikleri hiçbir zaman ayrı
      bir ayrıştırmaya bakmıyor. Dil yazının dili (`story.locale`). */
   const blocks = parseBlocks(story.bodyMd, story.locale);
+  /* Sözlük terimi ve sembol bağlantısı yazının diliyle: çevirisi olmayan
+     Türkçe yazı İngilizce arayüzde de Türkçe biçimlerle eşleşmeli. */
+  const autoLink = await articleAutoLinker(story.locale);
   const figureIndex = storyFigureIndex(blocks);
   const figure = figureIndex < 0 ? null : (blocks[figureIndex] as StoryFigureBlock);
   const skipIndex = figure && figureRepeatsBlock(figure) ? figureIndex : undefined;
@@ -390,6 +394,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
               variant="editorial"
               className={editorial.prose}
               skipIndex={skipIndex}
+              autoLink={autoLink}
               afterLead={
                 hasToc ? <StoryToc items={toc} lang={story.locale} t={t} /> : undefined
               }

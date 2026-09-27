@@ -17,7 +17,12 @@ import {
   StatGridSkeleton,
   type HealthTone,
 } from "@/components/admin/AdminUI";
-import { getContentSummary, getPublishRhythm, type PublishDay } from "@/lib/admin-data";
+import {
+  getContentSummary,
+  getPublishRhythm,
+  type AnalysisRef,
+  type PublishDay,
+} from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/admin";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { BRIEF_PUBLISH_TR } from "@/lib/data";
@@ -134,7 +139,8 @@ type Gap = {
 };
 
 /**
- * Eksikler — BEŞ KONTROL, TEK PANEL (23 Eylül denetimi).
+ * Eksikler — ALTI KONTROL, TEK PANEL (23 Eylül denetimi; özet ve segment
+ * hücresi 28 Eylül).
  *
  * Dört ayrı paneldi ve üçü "Eksik yok." diyordu: 1440'ta iki sıra × 188
  * piksel, 390'da 607 piksel boyunca aynı cümle. Aynı bilgiyi yukarıdaki
@@ -236,6 +242,14 @@ async function Gaps() {
         href: analysisHref(ref.symbol, ref.period),
       })),
     },
+    /* ÖZET VE SEGMENT TEK HÜCREDE. Ekler ayrı tabloda
+       (lib/earnings-extras.ts); tablo okunamıyorsa (migration henüz
+       uygulanmadı) hücre "okunamadı" der — her analizi "eksik" saymak
+       yanlış bir alarm olurdu. İki ayrı hücre ızgarayı yediye çıkarıp beş
+       sütunluk şeridi iki satıra bölüyordu; eksik olan ek satırın adında
+       yazılı. Eski analizlerin hepsi burada görünür: liste bir iş kuyruğu
+       değil, kapsamın ölçüsü. */
+    extrasGap(content.analysesWithoutSummary, content.analysesWithoutSegments),
     rhythm.ok
       ? {
           key: "brief-missed",
@@ -263,7 +277,7 @@ async function Gaps() {
           <HealthRow
             tone="ok"
             label="Hepsi Tamam"
-            note="Çeviri, grafik ve bülten günü eksiği yok."
+            note="Çeviri, grafik, özet, segment ve bülten günü eksiği yok."
             status="Tamam"
           />
         </ul>
@@ -311,10 +325,42 @@ function missedBriefs(days: PublishDay[]): GapItem[] {
   return items.reverse();
 }
 
-/* Liste: dar ekranda alt alta satırlar, aralarında saç teli; `lg`de beş
-   sütun, aralarında dikey saç teli. */
+/* Liste: dar ekranda alt alta satırlar, aralarında saç teli; `lg`de altı
+   sütun (özet/segment hücresi eklendi), aralarında dikey saç teli. */
 const GAP_LIST =
-  "flex flex-col divide-y divide-line lg:grid lg:grid-cols-5 lg:divide-x lg:divide-y-0";
+  "flex flex-col divide-y divide-line lg:grid lg:grid-cols-6 lg:divide-x lg:divide-y-0";
+
+/** Özetsiz ya da segmentsiz analizler — tek hücre, eksik olan ek satırda. */
+function extrasGap(
+  summaryless: AnalysisRef[] | null,
+  segmentless: AnalysisRef[] | null,
+): Gap {
+  const label = "Özet ve Segment";
+  if (!summaryless || !segmentless) {
+    return { key: "extras", label, note: "", items: [], unavailable: true };
+  }
+  const byKey = new Map<string, { ref: AnalysisRef; parts: string[] }>();
+  for (const [refs, part] of [
+    [summaryless, "Özet"],
+    [segmentless, "Segment"],
+  ] as const) {
+    for (const ref of refs) {
+      const held = byKey.get(ref.label) ?? { ref, parts: [] };
+      held.parts.push(part);
+      byKey.set(ref.label, held);
+    }
+  }
+  return {
+    key: "extras",
+    label,
+    note: "\"30 Saniyede\" özeti ya da segment tablosu yok; sayfa o paneller olmadan çiziliyor. Her şirket segment açıklamıyor, segmentin boş kalması tek başına hata değil.",
+    items: [...byKey.values()].map(({ ref, parts }) => ({
+      key: ref.label,
+      label: `${ref.label} · ${parts.join(" ve ")} Yok`,
+      href: analysisHref(ref.symbol, ref.period),
+    })),
+  };
+}
 
 /* Satırın iki yüzü. `-mx-2.5 px-2.5`: üzerine gelince açılan zemin için
    dolgu; metin panel başlığının hizasında kalıyor (HealthRow ve RankList
@@ -645,6 +691,9 @@ async function Summary() {
   const content = result.data;
   const tekDilliAnaliz = content.analysesMissingEn.length;
   const grafiksiz = content.analysesWithoutCharts.length;
+  /* Ek tablosu okunamıyorsa (`null`) künyeye hiç girmez: "0 Özetsiz"
+     yanlış bir güven verirdi. */
+  const ozetsiz = content.analysesWithoutSummary?.length ?? null;
   const analizKunyesi =
     content.analyses === 0
       ? "Hiç Yazılmamış"
@@ -653,7 +702,10 @@ async function Summary() {
         : [
             tekDilliAnaliz === 0 ? "Hepsi İki Dilli" : `${tekDilliAnaliz} Tek Dilli`,
             grafiksiz === 0 ? "Hepsi Grafikli" : `${grafiksiz} Grafiksiz`,
-          ].join(" · ");
+            ozetsiz === null || ozetsiz === 0 ? null : `${ozetsiz} Özetsiz`,
+          ]
+            .filter(Boolean)
+            .join(" · ");
 
   return (
     <StatGrid cols={3}>

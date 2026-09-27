@@ -483,6 +483,221 @@ An IPO is not a company's birth; it is a sale, and the seller picks both the tim
 The profile card on a company's page shows the **IPO date** — check it so you don't read a company with five quarters of history with the same confidence as one with thirty years. Newly listed symbols are reachable through search; they won't appear in the index cards, because they aren't in the indexes yet.`,
   },
 
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (Bessembinder 2018, SPIVA). */
+  "endeks-fonu-mu-tek-hisse-mi": {
+    title: "Index Fund or Single Stock?",
+    dek: "Not two answers to the same question: one buys the market, the other buys a company, and the risks come from different places.",
+    bodyMd: `The question "which stock should I buy?" usually skips the question before it: do you want to pick one company, or carry the whole market? They are not the small and large versions of the same job. Where the return comes from, where the risk comes from and what can mislead you are different in each.
+
+::: tanim Terms in This Article
+**Index Fund:** A fund that copies an index by its rules. In the US it usually trades as an ETF.
+**Company-Specific Risk:** Risks that hit only that company: a product that flops, a lawsuit, a management mistake.
+**Market Risk:** Risks that move all stocks together: rates, recessions, general fear.
+:::
+
+## The Average Stock Is Not Average
+
+The stock market's long-run return is not spread evenly across stocks. The distribution is skewed: a large number of ordinary or poor outcomes is balanced by a very small number of enormous winners.
+
+::: sayilar The Numbers Behind the Picking Problem
+~4% | Share of stocks that produced all of the US market's net wealth creation, 1926-2016
+>50% | Share of stocks over the same period that returned less than one-month Treasury bills over their lifetime
+~90% | Share of US large-cap active funds trailing the S&P 500 over fifteen-year windows
+:::
+
+The first two lines come from the same study, and read together they say this: a single randomly chosen stock has less than an even chance of matching the market average. An index holds those few big winners **by definition**; it never has to know which ones they will be. The third line shows that professionals find the job hard too.
+
+::: ornek Five Stocks, One Winner
+Put equal money into five stocks. Four end the period down 20%, one ends up 300%.
+The portfolio holding all five: (4 × −20 + 300) ÷ 5 = **+44%**.
+Someone who picks just one of the five at random finishes at **−20%** four times out of five.
+The average return is the same in both cases. What changes is the distribution of outcomes: a single-stock picker doesn't live the average, they live their own luck.
+:::
+
+## A Single Stock Carries Two Risks
+
+When you buy one stock you carry both market risk and company-specific risk. The second can be diversified almost to zero with [diversification](/rehber/cesitlendirme); the first cannot.
+
+The consequence matters: the market does not pay extra for a risk you could have diversified away. Holding a single stock means taking more risk, but the **expected** return does not rise automatically in exchange. For it to rise, the pick has to actually be right.
+
+## Side by Side
+
+| Topic | Index Fund | Single Stock |
+|---|---|---|
+| **The Bet** | On the market as a whole | On that company beating the market |
+| **Cost** | Annual expense ratio, usually low | No expense ratio, but research time |
+| **Bad Scenario** | Falling with the market | A company-specific collapse, down to zero |
+| **Monitoring Load** | Low | Earnings every quarter, news, guidance |
+| **How You Get It Wrong** | Timing | Timing and selection |
+
+## When a Single Stock Makes Sense
+
+Buying a single stock is a legitimate choice; you just need to know you are making a claim. That claim is usually defensible under three conditions:
+
+1. **You have a view on the company**, and it differs from what the market has priced in. "Good company" is not a view; good companies are already priced expensively. More: [P/E and the Valuation Ratios](/rehber/degerleme)
+2. **You have the time to follow it.** Reading earnings, tracking guidance changes and noticing when the thesis breaks all take continuity.
+3. **The position size is limited.** One company collapsing doesn't take your portfolio somewhere you can't carry. More: [Risk Management](/rehber/risk-yonetimi)
+
+Some investors think in two layers for this reason: most of the portfolio in a broad index, a small part in companies they hold a view on. That is not a recommendation, just a frame that accepts the two tools do different jobs.
+
+::: dikkat An Index Fund Is Risky Too
+An index fund reduces company-specific risk, not market risk. The S&P 500 fell by more than half from its peak in 2008-2009, and everyone holding the fund lived through that drop one for one. And in a cap-weighted index the largest few companies carry a large share of the index; "500 companies" is less spread out than it sounds. More: [What Is an Index?](/rehber/endeks)
+:::
+
+::: ozet Summary
+An index fund collects the market's return without having to answer "which company will win." A single stock claims to have an answer to that question. Both are legitimate; trouble starts when you are right about a theme and pick the wrong company, or forget that what you hold is a claim.
+:::
+
+## Where You'll See It on This Site
+
+On the [Compare](/karsilastir) screen you can draw a stock on the same scale as SPY or QQQ: what the pick added or took away relative to the index reads off a single chart. ETF pages show a fund fact box instead of company metrics.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (SEC kararları, izahnameler). */
+  "kripto-etf": {
+    title: "Crypto ETFs: What Do Spot Bitcoin and Ether Funds Hold?",
+    dek: "Real bitcoin inside an exchange-traded fund: what it costs you comes from the structure of the package as much as what it earns.",
+    bodyMd: `Until January 2024 there was no ETF on a US exchange that held bitcoin itself. There were funds holding futures contracts, and over-the-counter trusts whose prices often drifted far from the assets inside. With the SEC's approval, funds holding **actual bitcoin** began trading on exchanges for the first time; six months later the same came for ether. This article explains what these funds are, not whether to buy them.
+
+::: tanim Spot Crypto ETF
+A fund that holds the crypto asset itself (bitcoin or ether) and whose shares trade on US exchanges like a stock. The asset is held by a custodian, mostly in wallets not connected to the internet.
+:::
+
+::: zaman Regulatory Timeline
+October 2021 | The first **futures-based** bitcoin ETF starts trading. It holds bitcoin futures contracts, not bitcoin.
+January 10, 2024 | The SEC approves spot bitcoin ETFs; trading begins the next day.
+July 23, 2024 | Spot ether ETFs begin trading.
+July 29, 2025 | The SEC allows fund shares to be created and redeemed directly in crypto rather than cash.
+:::
+
+## What's Inside, and How the Price Forms
+
+Each fund share represents a set amount of bitcoin. The share count changes as large broker-dealers (authorized participants) bring assets to create new shares or hand shares back to take assets out. This mechanism keeps the fund's price close to the value of the bitcoin inside: if the gap widens, arbitrageurs step in.
+
+The fund's net asset value (NAV) is struck each day against a **reference price** calculated at a set time, not against a single crypto exchange's price. More: [What Is an ETF?](/rehber/etf)
+
+## Where the Tracking Gap Comes From
+
+A fund's return never equals bitcoin's return exactly. Three things open the gap:
+
+- **Expense ratio.** The annual management fee is deducted in small daily slices from the bitcoin inside the fund. At launch most of the new funds sat around 0.2-0.25% a year; the oldest fund, converted from a trust, started at 1.5%. Fees can change; the current rate is on each fund's own page.
+- **Trading hours.** Bitcoin trades seven days a week, around the clock; the fund trades only during US hours. A weekend move shows up in the fund as a single gap at Monday's open.
+- **Spread and premium/discount.** Fund shares can change hands slightly above or below NAV. More: [Liquidity and the Spread](/rehber/spread-likidite)
+
+::: ornek The Math of a Flat Year
+Bitcoin ends a year where it started. A fund with a 0.25% expense ratio closes the same period about **0.25% behind**, because the fee deducted every day has shrunk the amount of bitcoin in the fund.
+In a fund with a 1.5% expense ratio, the same gap is 1.5%. Over ten years, compounded, that becomes a gap of **about 14%**.
+:::
+
+## Three Routes, Three Structures
+
+| Topic | Crypto Directly | Spot ETF | Futures ETF |
+|---|---|---|---|
+| **What You Hold** | The asset itself | A fund share | A share in a fund holding futures |
+| **Keys** | With you or the platform | With the custodian | None; the asset is never held |
+| **Trading Hours** | Any time | US session | US session |
+| **Extra Cost** | Platform and withdrawal fees | Expense ratio | Expense ratio + roll cost |
+| **Can You Withdraw It** | Yes | No, you can only sell | No |
+
+Futures-based funds carry one more cost beyond the last row: each month expiring contracts are swapped for later ones, and later contracts are usually more expensive. That "roll cost" does not exist in a spot fund.
+
+## The Limits the Structure Brings
+
+Spot crypto funds are registered in the US as **trusts**, not under the 1940 Act that governs classic investment funds. In practice, some investor protections specific to investment funds (board structure, portfolio rules) don't apply in the same way. What the fund does is written in its prospectus, and that is the one document worth reading.
+
+As a fund shareholder you have no claim on the bitcoin itself: you can sell your shares on the exchange, but you can't withdraw the bitcoin inside to your own wallet.
+
+::: dikkat The Wrapper Doesn't Change the Volatility
+Putting bitcoin inside an ETF doesn't make it less volatile. Bitcoin lost roughly two thirds of its value from the start to the end of 2022; a spot fund existing that year would have lived the same drop one for one. Trading on an exchange makes the product look familiar, not its risk. More: [What Is Volatility?](/rehber/volatilite)
+:::
+
+::: ozet Summary
+A spot crypto ETF is a package that carries a crypto asset into a brokerage account. It removes the custody, key and platform problems; in exchange come the expense ratio, session hours and the fact that you can never take the asset into your own hands. The volatility it carries as is.
+:::
+
+*This article is based on SEC decisions and fund prospectuses; expense ratios can change at the fund sponsors' discretion.*`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (SEC ADR ve SPAC bültenleri). */
+  "adr-spac": {
+    title: "What Are ADRs and SPACs?",
+    dek: "Companies that trade on US exchanges without being American, and companies that go public before they have a business.",
+    bodyMd: `Not every ticker on a US exchange stands for a company incorporated and operating in the US. Two structures sit outside that rule, and each carries its own risks: **ADRs**, which represent shares of foreign companies, and **SPACs**, which have no business on the day they go public.
+
+## ADRs: A Receipt for a Share Traded Elsewhere
+
+::: tanim ADR (American Depositary Receipt)
+A dollar-denominated certificate that trades on a US exchange and represents shares of a foreign company traded in its home country. The shares themselves sit with a depositary bank; in the US, the receipt representing them is what trades.
+:::
+
+The mechanism is simple: a US depositary bank buys shares on the company's home exchange, holds them with a local custodian and issues ADRs against them in the US. Each ADR represents a set number of local shares, and that ratio doesn't have to be one to one.
+
+::: ornek Ratio and Price
+One TSMC ADR in the US represents **5 ordinary shares** traded in Taiwan. So the ADR's price is roughly:
+Taiwan share price × 5 ÷ the Taiwan dollar per US dollar rate.
+If the gap widens, brokers convert between shares and ADRs to close it. In countries where conversion is restricted, an ADR can trade at a lasting premium or discount.
+:::
+
+### Three Levels
+
+| Level | Where It Trades | Can It Raise Capital | Reporting |
+|---|---|---|---|
+| **Level I** | Over the counter (OTC) | No | Lightest |
+| **Level II** | NYSE or Nasdaq | No | Annual report to the SEC |
+| **Level III** | NYSE or Nasdaq | Yes, a US offering | Most extensive |
+
+Foreign companies file an annual **20-F** and periodic **6-K** reports instead of 10-Ks and 10-Qs. Many don't publish quarterly reports at all, reporting semiannually or under their home country's rules. More: [How to Read a 10-K and 10-Q](/rehber/10k-10q)
+
+### The Hidden Layers of an ADR
+
+- **Currency risk is built in.** The ADR trades in dollars, but the company's earnings and its local share price are in its own currency. If the local share holds steady while the local currency falls against the dollar, the ADR falls. More: [Currency Risk](/rehber/kur-riski)
+- **Dividend tax is withheld by another country.** Tax on an ADR's dividend is withheld by the company's home country, not the US; the rate described under W-8BEN doesn't apply there.
+- **There is a depositary fee.** The depositary bank may charge a custody fee of a few cents per ADR a year, usually deducted from dividends or collected through the broker.
+
+## SPACs: Money First, Company Later
+
+::: tanim SPAC (Special Purpose Acquisition Company)
+A shell company with no business of its own that raises money in an IPO and uses it, within a set period, to merge with a private company. When the merger closes, the target company has entered the stock market by this route.
+:::
+
+::: akis The Path of a SPAC
+IPO | Usually $10 per unit, cash into a trust account
+Search | Usually 18-24 months
+Deal Announcement | The target and its valuation are disclosed
+Vote and Redemption | Shareholders stay or take their money back
+After the Merger | The target trades under its own ticker
+:::
+
+The money raised sits in a trust account, usually in short-term US Treasury bills. The shareholder's most important right is the **redemption right**: if they don't like the target, they can hand their shares back at the vote for the amount in the trust (about $10 a unit plus accrued interest). If the deadline passes without a deal, the money is returned to shareholders.
+
+## The Sponsor's Stake: The Arithmetic of Dilution
+
+The sponsor that sets up the SPAC buys **founder shares** before the IPO for a very small sum; these are usually about one fifth of total shares after the offering. The higher the redemption rate, the heavier those shares weigh.
+
+::: ornek A $100 Million SPAC
+The IPO sells 10 million shares at $10: $100 million in trust. The sponsor holds 2.5 million founder shares. Total: 12.5 million shares.
+At the merger vote, **80%** of public shares are redeemed. $20 million stays in trust, with 2 million public shares outstanding; the sponsor's 2.5 million shares stay where they are.
+Trust cash per remaining share across the 4.5 million shares: 20 ÷ 4.5 ≈ **$4.4**. If the merged company starts trading at $10, the target company itself has to close that gap.
+:::
+
+Redemption rates often ran very high after 2021, and many companies fell far below the SPAC's $10 starting point after merging. With rules effective in mid-2024, the SEC raised disclosure requirements on sponsor interests, dilution and projections in SPAC mergers, bringing oversight closer to that of a traditional [IPO](/rehber/halka-arz).
+
+::: dikkat Selling Pressure After the Merger
+Founder shares and the shares of investors who provide extra financing alongside the merger are often locked up for a set period. When that period ends, supply can jump at once. For a company that came through a SPAC, knowing that calendar matters as much as knowing the lockup after a regular IPO.
+:::
+
+::: ozet Summary
+An ADR carries a foreign share in dollars and brings currency risk, another country's tax and a depositary fee with it. A SPAC raises the money first and finds the company later; the redemption right protects the shareholder, while the sponsor's founder shares dilute those who stay as redemptions rise. In both, reading the price without knowing the structure behind the ticker leaves you short.
+:::
+
+## Where You'll See It on This Site
+
+On an ADR's page, price and market value are in dollars; the move on the company's home exchange and the currency effect are both reflected in those numbers. Upcoming IPOs are listed on the [Calendar](/takvim) screen.`,
+  },
+
   /* ==== 2 · Positions & Risk ============================================= */
 
   /* ---------------------------------------------------------------------- */
@@ -1144,6 +1359,487 @@ Most of what you need to know about the market can be learned in months. What yo
 :::`,
   },
 
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (SEC T+1, street name). */
+  "abd-hisse-nasil-alinir": {
+    title: "How to Buy US Stocks: Step by Step",
+    dek: "The five links lira passes through on its way to becoming a US share, and the mostly invisible price paid at each one.",
+    bodyMd: `Buying a US stock from Türkiye looks like pressing a single button, but behind it there are five separate steps: choosing a broker, opening an account, converting money into dollars, placing an order and holding the shares. Each has its own cost and its own decision. This article walks through them in order; it doesn't recommend any particular firm.
+
+::: akis From Lira to Shares
+Broker | Domestic or foreign, licensed
+Account | Identity checks · W-8BEN
+Currency | Lira → dollars, at a spread
+Order | Limit or market order
+Custody | T+1 settlement, held in the broker's name
+:::
+
+## 1. Choose a Broker
+
+There are two routes. The first is the foreign markets service of a broker licensed in Türkiye: you open the account at home, and the firm routes your order through a foreign correspondent broker behind the scenes. The second is opening an account directly with a broker abroad: your money leaves the country, and that firm is your counterparty.
+
+The two differ in cost, protection framework and paperwork. The items that decide which one suits you are in a separate article: [What to Look for in a Broker](/rehber/araci-kurum-secimi)
+
+## 2. Open the Account and Verify Your Identity
+
+Every licensed firm has to verify who you are before opening an account. This is called **KYC** (know your customer): an ID, proof of address, sometimes questions about the source of your income and savings. Most firms also run a suitability test of your investing experience; access to products like options or margin depends on it.
+
+A US stock needs one more form: **W-8BEN**. It declares that you are not a US taxpayer and that you are resident in Türkiye, and it sets the US tax withheld from your dividends. Foreign brokers have you sign it when opening the account; domestic brokers usually ask for the same form on behalf of their correspondent. More: [W-8BEN and 1042-S](/rehber/w-8ben)
+
+## 3. Send the Money and Convert It to Dollars
+
+There are two ways to fund the account: convert to dollars at your bank and send them, or send lira and convert inside the broker. Either way, a currency spread is paid at conversion, and it never shows up on the statement as "commission."
+
+::: ornek The Spread You Pay Twice
+Say you convert 100,000 lira into dollars. If the rate you get is 0.5% away from the market mid-rate, **500 lira** disappears at conversion.
+Turning the same money back into lira years later costs another 0.5%.
+Without the stock moving at all, the round trip costs roughly **1%**. The question to ask when comparing isn't "what's the commission" but "what rate do you convert at."
+:::
+
+If you wire money to a broker abroad, add the SWIFT fee and sometimes a cut taken by an intermediary bank. From the moment money leaves lira for dollars, the portfolio also carries a currency bet. More: [Currency Risk](/rehber/kur-riski)
+
+## 4. Place the Order
+
+An order has three parts: the ticker (for example [AAPL](/hisse/AAPL)), the quantity (shares or a dollar amount) and the order type.
+
+- A **market order** fills immediately at the best available price; it doesn't guarantee the price.
+- A **limit order** fills only at your price or better; it doesn't guarantee a fill.
+
+The regular session opens at 09:30 New York time; in Türkiye that falls at 16:30 or 17:30 depending on US daylight saving time. Spreads widen in the pre-market and after-hours sessions, and most brokers accept only limit orders there. More: [Order Types](/rehber/emir-tipleri)
+
+## 5. Settlement and Custody
+
+When a trade executes, the shares aren't yours immediately; US settlement is **T+1**, completing the next business day. Before May 28, 2024, it took two business days.
+
+After settlement, the shares are usually registered not in your name but in the broker's. This is called **street name**: the central depository's records show the broker, and the broker's own books show you. Buy through a domestic broker and the chain grows one link longer: you, the domestic broker, the foreign correspondent, the central depository. If one of the firms fails, this chain determines which protection framework applies.
+
+::: dikkat Record Keeping Is the Next Step, Not an Option
+For someone resident in Türkiye, gains from selling foreign shares and dividends are subject to declaration. Gains are calculated in lira, at the exchange rates of the purchase and sale dates. Recording each trade's date, quantity, dollar amount and fees from the start turns the March filing into a calculation; not doing so turns it into an archaeological dig. More: [How Gains on Foreign Stocks Are Taxed](/rehber/yurt-disi-hisse-vergisi)
+:::
+
+::: tanim Terms in This Article
+**Ticker:** The stock's short code on the exchange. AAPL for Apple, NVDA for Nvidia.
+**KYC:** A firm's obligation to verify a client's identity and source of funds.
+**T+1:** A trade becoming final through settlement one business day after it executes.
+**Street Name:** Shares being registered in the broker's name rather than the investor's.
+:::
+
+::: ozet Summary
+The total cost of a US stock isn't just the commission: currency spread, transfer fees, bid-ask spread and custody fees add up together. Once all five steps are set up correctly, later purchases come down to a single order; set up badly, the same cost is paid again on every purchase.
+:::
+
+## Where You'll See It on This Site
+
+Find the company you're looking for through the search box at the top or the [Companies](/sirketler) directory; its page shows the ticker, the price and the state of the session. The countdown on the home page shows the time left to the next open or close.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (SIPC, FINRA, SPK, YTM). */
+  "araci-kurum-secimi": {
+    title: "What to Look for in a Broker",
+    dek: "Commission can be zero; cost never is. A line-by-line way to compare brokers.",
+    bodyMd: `Your broker is the only door between you and the exchange. When choosing one, most people look at a single number: commission per trade. But what a broker costs you is the sum of five or six items, and the most visible one is often the smallest. This article names no firms and quotes no fees; fee schedules change often, and the current one lives on the broker's own pricing page and in the contract annex.
+
+## The Cost Items
+
+| Item | Where It Sits | Question to Ask |
+|---|---|---|
+| **Commission** | On every trade, flat or per share | What do I pay in total on a single $5,000 order? |
+| **Custody Fee** | Monthly or yearly, a percentage or flat | What do I pay a year if I never trade? |
+| **Currency Spread** | Inside the exchange rate | What rate do you convert at, and how far is it from mid? |
+| **Transfer Fees** | Deposits and withdrawals | How many fees are there when I withdraw? |
+| **Data and Account Fees** | Real-time data, inactivity | When does my account get charged? |
+
+::: ornek The Math of Zero Commission
+A hypothetical investor makes four $2,500 purchases a year, with an average $10,000 in the account.
+Commission: **$0**.
+A 0.5% currency spread on conversion: 10,000 × 0.5% = **$50**.
+A 0.2% annual custody fee: 10,000 × 0.2% = **$20**.
+The "commission" line on the statement reads zero; the annual cost is $70. The rates vary from broker to broker; what doesn't vary is that the comparison has to be made on the total.
+:::
+
+## Product and Session Access
+
+A cheap broker that doesn't offer what you need isn't cheap. Topics to ask about:
+
+- **Fractional shares.** Can you place dollar-based orders, and on which stocks? More: [Fractional Shares](/rehber/kesirli-hisse)
+- **Extended hours.** Is there access to the pre-market and after-hours sessions? Some brokers now offer overnight trading too. Earnings reactions mostly happen in these hours. More: [How to Read an Earnings Day](/rehber/bilanco-gunu-nasil-okunur)
+- **Order types.** Do stop and trailing stop orders wait on the server or in the app?
+- **ETF access.** Some brokers don't offer US-domiciled ETFs to retail clients because of rules in the country they're regulated in. Ask before opening an account.
+
+## What Investor Protection Protects
+
+In the US, if a SIPC-member broker fails and client assets are missing, SIPC protects up to **$500,000** per customer (of which at most $250,000 in cash). Protection is tied to the **legal entity** where the account is opened: global brokers operate through separate companies in many countries, and an account opened at a non-US entity may not be covered by SIPC.
+
+For brokers licensed in Türkiye, the Investor Compensation Center (Yatırımcı Tazmin Merkezi) plays a similar role, compensating up to a ceiling updated every year if a firm can't meet its obligations. How assets in foreign markets are treated under that scheme is something to ask the broker directly.
+
+::: dikkat Protection Doesn't Protect the Price
+Both SIPC and the Investor Compensation Center protect against the **broker failing**, not against a stock falling. If the stock you bought drops 40%, that's a market loss and no protection scheme covers it.
+:::
+
+## Domestic Broker vs. Foreign Broker
+
+| Topic | Domestic Broker | Foreign Broker |
+|---|---|---|
+| **Regulator** | Capital Markets Board of Türkiye (SPK) | The regulator where the firm is registered |
+| **Money Transfer** | Domestic, in lira | International wire, SWIFT fee |
+| **Custody Chain** | One link longer, via a foreign correspondent | Shorter |
+| **Protection Framework** | Investor Compensation Center | SIPC or that country's scheme |
+| **Documents** | Turkish statements, sometimes a tax report | English statements, 1042-S |
+| **Support** | In Turkish, on Türkiye time | Mostly in English |
+
+There's no right or wrong between them; there's a choice that shifts with the items you weigh most. If you'll work with a foreign firm, verify its license on its own regulator's website (in the US, FINRA's BrokerCheck, for example). The SPK can block access to platforms offering unauthorized investment services in Türkiye; whether a platform that reaches you through ads is authorized to serve Türkiye can be checked against the SPK's lists.
+
+::: ozet Summary
+Compare a broker not by its commission but by its **total annual cost**, its access to the products you need, and which legal entity and protection framework your account sits in. Zero commission isn't a price; it's a marketing line.
+:::
+
+## Where You'll See It on This Site
+
+This site isn't a broker, you can't place orders here, and it doesn't recommend any firm. When comparing the price in your broker's app with a stock page here, check the page's timestamp: the gap usually comes from delay.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (SEC bülteni, ACATS, OCC). */
+  "kesirli-hisse": {
+    title: "What Are Fractional Shares?",
+    dek: "Owning part of a several-hundred-dollar stock for fifty dollars: how it works, and what's missing compared with a whole share.",
+    bodyMd: `If a stock costs $400, a classic order won't let you own a piece of the company for $50. Fractional shares remove that barrier: you enter a **dollar amount** instead of a share count and get part of a share in return. The mechanism is simple, but it doesn't always carry every right a whole share does.
+
+::: tanim Fractional Share
+A non-whole portion of a share, like 0.125 or 2.4 shares. Fractional shares don't trade on exchanges; the broker does the splitting and keeps the record on its own books.
+:::
+
+## How It Works
+
+The smallest unit on an exchange is a whole share. The broker pools the requests of clients placing fractional orders, buys whole shares in the market or fills them from its own inventory, and allocates the pieces to client accounts on its books.
+
+That has two consequences. First, your fraction has no existence outside the broker: at the central depository the whole share sits in the broker's name, and your piece is the broker's internal record. Second, how and when the order executes depends on the broker: some fill immediately, some in batches during the day, and some allow only market orders for fractions.
+
+::: ornek A Slice of a Share for $50
+The stock is $400. A $50 fractional order buys **0.125 shares**.
+If the company pays a $2 dividend per share, your account receives $0.25 gross.
+If the stock rises 10%, your slice is worth $55.
+Economically it behaves exactly like one eighth of a whole share: gains, losses and dividends are proportional.
+:::
+
+## What's Missing Compared With a Whole Share
+
+| Topic | Whole Share | Fractional Share |
+|---|---|---|
+| **Price Moves and Dividends** | Full | Fully proportional |
+| **Voting Rights** | Yes | None or proportional, by broker |
+| **Transfer to Another Broker** | Transfers | Usually sold and turned to cash |
+| **Order Types** | All | Limited at most brokers |
+| **Extended Hours** | Depends on broker | Not available at most brokers |
+| **Options** | 100 shares per contract | Fractions don't count |
+
+::: dikkat A Transfer Is a Sale
+When you move your account to another broker, whole shares can move as they are, but the fractional part is often sold and turned into cash. For someone resident in Türkiye that is a **sale**: if there's a gain, it goes into the tax return. Even a small fraction needs its date, amount and exchange rate on record. More: [How Gains on Foreign Stocks Are Taxed](/rehber/yurt-disi-hisse-vergisi)
+:::
+
+## What It's For
+
+A fractional share isn't a return tool; it's a **measuring** tool. It makes a difference in three jobs:
+
+- **Small regular purchases.** For someone investing a fixed amount each month, the indivisibility of the share price disappears; the whole amount goes into the investment and no leftover cash sits on the side. More: [Dollar-Cost Averaging](/rehber/duzenli-alim)
+- **Weighting precision.** If you want to build a portfolio in percentages, the whole-share requirement on an expensive stock throws off the target weights. More: [Risk Management](/rehber/risk-yonetimi)
+- **Reinvesting dividends.** Small dividend amounts can be put back into the same stock as fractions.
+
+The link to stock splits reads from here too: companies split expensive shares to make them accessible to small investors. As fractional trading spread, that reason weakened, but split decisions are still being made. More: [What Is a Stock?](/rehber/hisse-senedi)
+
+::: ozet Summary
+Fractional shares remove the barrier created by an indivisible price; for returns and dividends they behave exactly like whole shares. In exchange, your piece lives on the broker's books: voting, transfers and order flexibility are whatever the broker offers.
+:::
+
+## Where You'll See It on This Site
+
+Prices on stock pages are always the price of a **whole share**. Your fractional position is worth that price times your fraction; keep that in mind when comparing with the amount shown in your broker's app.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (ABD-Türkiye anlaşması md. 10
+     ve 13, IRS W-8BEN ve 1042-S talimatları, §1446(f), veraset eşiği). */
+  "w-8ben": {
+    title: "W-8BEN and 1042-S: The US Tax Taken From Your Dividends",
+    dek: "A US company's dividend is taxed before it reaches your account; a single form decides how much.",
+    bodyMd: `When a US company pays a dividend, a tax is withheld on behalf of the US before the money reaches you. The rate depends on who you are, and the document that tells your broker is the **W-8BEN** form. The document that shows how much was withheld over the year is the **1042-S**. Together they form the first link on the tax side of investing in foreign stocks.
+
+::: tanim Terms in This Article
+**W-8BEN:** The IRS form in which an individual not resident in the US declares that they are not a US taxpayer, which country they are resident in, and that they claim tax treaty benefits.
+**1042-S:** The annual statement showing the income a withholding agent paid during the year and the tax it withheld.
+**Withholding:** Tax taken out by the payer and passed to the government before income is paid to its owner.
+:::
+
+## What the Form Says
+
+The W-8BEN is a short form that declares three things: your identity, the country you're resident in, and your claim to treaty benefits. For someone resident in Türkiye, the claim rests on the **dividends article** of the double taxation treaty between the US and Türkiye.
+
+The form isn't sent to the IRS; it goes to the broker. The broker keeps it on file and checks it to decide the withholding rate on each dividend payment.
+
+## The Rate: 20% Instead of 30%
+
+::: oncesi What Reaches Your Account From a $100 Dividend
+$70 | No Form, 30% Withheld
+$80 | With W-8BEN, 20% Withheld
+:::
+
+The US withholds **30%** on dividends paid to a foreigner with no form. The treaty cuts that to **20%** for individuals. Over the years the difference isn't small: the cash reaching your account from the same dividend rises by one seventh.
+
+::: dikkat 20%, Not 15%
+Turkish sources often say "the dividend withholding for Türkiye is 15%." Article 10 of the treaty sets 15% only for **companies** holding at least 10% of the voting power of the payer. For an individual buying shares, the rate is 20%. You can confirm the rate your broker applied on the withholding rate line of your 1042-S.
+:::
+
+## What the Form Doesn't Cover
+
+**Capital gains.** The US doesn't withhold tax on gains a nonresident foreigner makes from selling shares, and the treaty leaves those gains to the country of residence. So the tax on a sale gain arises **in Türkiye**, not the US. More: [How Gains on Foreign Stocks Are Taxed](/rehber/yurt-disi-hisse-vergisi)
+
+**Some special structures.** Since 2023, 10% of the sale proceeds can be withheld when selling publicly traded partnerships (PTPs). These rules differ from those for stocks and ordinary ETFs; before buying such a product, ask the broker what it withholds.
+
+**ADR dividends.** On dividends from a foreign company's ADR, the tax is withheld by the company's home country; the US rate on the W-8BEN doesn't apply. More: [What Are ADRs and SPACs?](/rehber/adr-spac)
+
+## The Form's Lifespan
+
+A W-8BEN doesn't last forever. It stays valid until the **last day of the third calendar year** after the year it's signed; roughly three to four years. If your address or country of residence changes, a new form is due within thirty days.
+
+::: zaman The Life of a Form
+March 10, 2026 | You sign the form; the broker records it.
+Each dividend payment | Withholding is applied at 20%.
+By March 15, 2027 | The 1042-S for 2026 arrives in your account.
+December 31, 2029 | The last day the form is valid. Brokers usually ask for a renewal a few months ahead.
+January 1, 2030 | If not renewed, withholding reverts to 30%; some brokers restrict the account.
+:::
+
+## What to Do With the 1042-S
+
+The 1042-S shows each type of income for the year on its own line: the income code, the gross amount, the rate applied and the tax withheld. For the Turkish tax return it does two jobs: it documents the **gross** dividend and it shows the tax paid in the US.
+
+::: ornek A $100 Dividend's Path Through Two Countries
+The company pays a $100 gross dividend. The US withholds $20; $80 reaches your account.
+In Türkiye, if the declaration threshold is exceeded, the dividend is declared on the **$100 gross** amount converted to lira at the payment date's rate, not on the net $80.
+The $20 paid in the US can be credited against the tax calculated in Türkiye, as long as it doesn't exceed the Turkish tax on that income.
+:::
+
+To claim the credit, the tax paid abroad has to be documented, and Turkish rules can require conditions such as certification by the competent authority. Whether a 1042-S alone will be accepted is worth discussing with a tax adviser before filing.
+
+::: dikkat What the Form Doesn't Solve: Estate Tax
+The W-8BEN is only about income tax. The US also applies estate tax to nonresident foreigners' US assets, and US shares count as such assets. A filing obligation arises once US assets exceed **$60,000** in total, and the US has no estate tax treaty with Türkiye. For a large portfolio, this is a separate topic for a specialist.
+:::
+
+::: ozet Summary
+The W-8BEN is the form that cuts US withholding on dividends from 30% to 20%, and it doesn't renew itself when it expires. The 1042-S is the record of that withholding. Capital gains, meanwhile, are taxed in Türkiye, not the US; the W-8BEN doesn't change that math.
+:::
+
+*This article is general information, not tax advice. The rates are based on the 1996 text of the US-Türkiye tax treaty and the IRS form instructions published as of 2026.*`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar ve belirsizlik notu tr.ts'teki aynı yazının üstünde (GVK Mük.
+     80, Mük. 81, 86/1-d, 92, 117, 123; 332 Seri No.lu GVGT). */
+  "yurt-disi-hisse-vergisi": {
+    title: "How Gains on Foreign Stocks Are Taxed in Türkiye",
+    dek: "Capital gains and dividends from US stocks for someone resident in Türkiye: how they're calculated and when they're declared.",
+    bodyMd: `The tax on gains from a US stock arises not in the US but in Türkiye. For shares on foreign exchanges there is usually no intermediary in Türkiye withholding tax at source either; the calculation and the filing fall to the investor. This article describes the rules in force as of 2026.
+
+::: dikkat General Information, Not Tax Advice
+This article summarizes the rules in force as of 2026 in general terms. Laws, communiqués and thresholds can change every year, and your personal situation (other income, residency, how often you trade) can change the outcome. Before filing, confirm the current rules with the Revenue Administration (GİB) or a certified tax adviser.
+:::
+
+## How a Capital Gain Is Calculated
+
+A gain from selling foreign shares counts under the Income Tax Law as a **capital gain** (değer artışı kazancı). The math is done in **lira**: what's taxed isn't the dollar gain, but the difference between the purchase converted to lira and the sale converted to lira.
+
+::: akis The Gain in Four Steps
+Purchase Cost | Dollar amount × CBRT buying rate on the purchase date
+Indexation | Cost is adjusted if the PPI rise is 10% or more
+Sale Proceeds | Dollar amount × CBRT buying rate on the sale date
+Gain | Sale proceeds − (indexed) cost
+:::
+
+**Indexation** is a correction for inflation eroding the cost. If the domestic producer price index (Yİ-ÜFE) rises **10% or more** between the month before the purchase and the month before the sale, the lira cost is raised by that rate. Below 10%, no indexation applies.
+
+::: ornek A Gain Inflated by the Exchange Rate
+The figures are hypothetical.
+Purchase: $1,000 of stock at a rate of 36 → cost **36,000 TL**.
+Sale: $1,200 at a rate of 43 → proceeds **51,600 TL**.
+Unindexed gain: 15,600 TL. Yet the dollar gain is only $200, or 8,600 TL at the sale rate. The remaining **7,000 TL** comes from the exchange rate, not the stock.
+Had PPI risen 25% in between, the cost would become 36,000 × 1.25 = **45,000 TL**, and the taxable gain drops to 6,600 TL. Indexation removes the part of the currency "gain" that matches inflation.
+:::
+
+The mechanism matters: as the lira loses value, even a position with no dollar profit at all can show a gain in lira. Indexation partly offsets that, not fully. More: [Currency Risk](/rehber/kur-riski)
+
+## Declaration: Whatever the Amount
+
+The law sets an annual exemption amount for capital gains, but that exemption **doesn't apply to securities**. The result: gains from selling foreign shares are declared whatever their size.
+
+- The declaration is made on the annual income tax return in **March 1-31** of the year after the gain. A share sold in 2026 is declared in March 2027.
+- Tax is calculated on the progressive schedule (brackets from 15% to 40%), together with other declarable income.
+- Payment is in two installments: March and July.
+
+::: sayilar Key Numbers Under the 2026 Rules
+0 TL | Declaration threshold for capital gains on shares
+10% | Minimum PPI rise needed to index the cost
+22,000 TL | Declaration threshold for 2026 capital income not taxed at source
+March 1-31 | Filing period, in the year after the gain
+:::
+
+## What Happens to Losses
+
+Trading losses within the same calendar year are deducted from trading gains of the same year. If you gained 5,000 TL on one stock and lost 3,000 TL on another, 2,000 TL goes into the return.
+
+The limits are clear too: losses can't be deducted from other income such as salary, rent or dividends, and they **don't carry forward** to the next year. A loss not used within the year disappears with it.
+
+## Dividends
+
+Dividends from foreign shares are **income from movable capital** (menkul sermaye iradı) and follow a different rule from capital gains.
+
+1. The dividend is converted to lira at its **gross** amount, at the CBRT buying rate on the day it's received. The amount before the US 20% withholding is what counts. More: [W-8BEN and 1042-S](/rehber/w-8ben)
+2. For 2026 income, if total movable and immovable capital income not taxed at source doesn't exceed **22,000 TL**, no return is required for it. If it does, all of it is declared, not just the excess.
+3. The half exemption on dividends from Turkish companies doesn't apply to a portfolio investor's foreign dividends.
+4. Tax paid in the US can be credited against the tax calculated, provided it's documented and doesn't exceed the Turkish tax on that income.
+
+::: dikkat There Is No Single Exchange Rate Date
+Every purchase, every sale and every dividend is converted at its own day's rate. A single calculation at the year-end rate or an average rate gives the wrong result. If you bought the same stock in pieces on different days, you also need a record of which purchase was sold and how its cost is determined.
+:::
+
+## Running the Numbers
+
+The site's [tax calculator](/vergi) helps you produce an estimate by entering purchase and sale dates, dollar amounts and rates. Read the result as a preliminary calculation, not a tax return.
+
+::: ozet Summary
+Gains on foreign shares are calculated in lira, the exchange rate rise is part of the gain, and when PPI rises past 10% the cost is indexed to remove part of it. There's no declaration threshold on capital gains, and losses only offset gains within the same year. Dividends are subject to a separate threshold on their gross amount. Knowing the rules isn't enough: recording every trade by date is the filing itself.
+:::
+
+*This article is based on the relevant articles of the Turkish Income Tax Law, the communiqué setting the 2026 thresholds and GİB rulings. It is general information, not tax advice, and reflects the rules as of 2026; regulations can change.*`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (Vanguard 2012). */
+  "duzenli-alim": {
+    title: "Dollar-Cost Averaging: What It Does and Doesn't Do",
+    dek: "Buying the same amount every month seems to lower your average cost; what it really lowers, and what it never changes.",
+    bodyMd: `Setting aside the same amount from each paycheck and putting it into the same fund or stock is the most common method among individual investors. It's called **dollar-cost averaging**, or DCA. Two claims are made about it at once: "it reduces risk" and "it boosts returns." The first is partly true; the second is largely false.
+
+::: tanim Dollar-Cost Averaging (DCA)
+Buying with a fixed amount at set intervals, regardless of price. The share count isn't fixed: when the price falls the same amount buys more shares, when it rises, fewer.
+:::
+
+## The Mechanism: Fixed Amount, Changing Share Count
+
+The whole math of the method fits in one sentence: a fixed amount buys more shares in cheap months and fewer in expensive ones. So the **average cost** you pay is always below or equal to the simple average of the prices in those months.
+
+::: ornek Four Months, Four Prices
+$1,000 invested each month. Prices are $100, $80, $50 and $100 in turn.
+Shares bought: 10 + 12.5 + 20 + 10 = **52.5 shares**, for $4,000 in total.
+Average cost per share: 4,000 ÷ 52.5 ≈ **$76.2**. The simple average of the prices is $82.5.
+At the end of month four the price is back where it started, at $100; the portfolio is worth $5,250, or **+31%**. Someone who bought everything in month one is at breakeven on the same date.
+:::
+
+The example shows the method's best case: a price that falls first, then recovers. The method's value lies exactly along that path.
+
+## What It Doesn't Do
+
+**It doesn't raise expected returns.** In a market that rises over the long run, keeping part of your money in cash for months means giving up the return of that waiting period. In a 2012 Vanguard study using US, UK and Australian data, investing a lump sum all at once beat spreading it over twelve months in about **two thirds** of cases.
+
+**It doesn't fix a bad pick.** Buying a stock that keeps falling on a schedule means putting more money into a sinking thing every month. The average cost falls, but if the company isn't recovering, a lower average means nothing. The method makes sense for a broad asset believed to rise over the long run; it doesn't change a company's fate. More: [Index Fund or Single Stock?](/rehber/endeks-fonu-mu-tek-hisse-mi)
+
+**It doesn't prevent losses.** If the market goes sideways or down for ten years, the regular buyer loses too; just more slowly.
+
+| Claim | Reality |
+|---|---|
+| **"It reduces risk"** | It spreads timing risk; it doesn't reduce market risk |
+| **"It boosts returns"** | Not in expectation; in a rising market a lump sum usually leads |
+| **"It lets you buy the bottom"** | It doesn't find the bottom; it buys in the bottom month and the peak month alike |
+| **"It takes emotion out"** | Yes, that is its real job |
+
+## Its Real Job: Handing the Decision to the Calendar
+
+DCA's real value lies not in the math but in behavior. "Should I go in now, or wait a bit?" is the question investors get wrong most often, and DCA lets you never ask it. Sticking to the plan in a downturn instead of stopping in panic decides the method's entire benefit. More: [Investor Psychology](/rehber/yatirimci-psikolojisi)
+
+For most people DCA isn't even a choice: savings arrive monthly with the paycheck, so investing happens monthly too. The question only really comes up with a lump sum (an inheritance, a bonus, a sale), and the answer is a trade-off between expected return and how much regret you can bear from going in all at once and getting caught by a drop right away.
+
+::: dikkat Planned Buying and Averaging Down Are Not the Same
+Dollar-cost averaging is a plan set in advance and independent of price. Adding to a losing position to "bring the cost down" is a decision made in reaction to price, and it raises the position's weight in your portfolio exactly where you were wrong. The two look the same on screen; their logic is opposite. More: [Risk Management](/rehber/risk-yonetimi)
+:::
+
+## Two Layers When Buying From Türkiye
+
+Someone buying US stocks regularly from Türkiye is really buying two things on a schedule: dollars and the stock. The monthly conversion also builds an average cost in the exchange rate. The price is the currency spread and fixed fees paid separately on each small purchase. On small amounts a fixed trading fee is proportionally large, so purchase frequency has to be balanced against cost. If the amount is small, [fractional shares](/rehber/kesirli-hisse) make sure all of it gets invested.
+
+::: ozet Summary
+Dollar-cost averaging isn't a technique that raises returns; it's a discipline that spreads the risk of making one big decision at the wrong time. It works in a well-chosen broad asset when kept up; it doesn't fix a bad pick, and waiting has a cost in a rising market.
+:::
+
+## Where You'll See It on This Site
+
+The long ranges on the [Compare](/karsilastir) screen (such as 5 years) show an asset's path through declines and recoveries; the shape of that path is what decides why regular buying gains value along the way.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (Cboe VIX, Brenner-
+     Subrahmanyam yaklaşımı). */
+  "beklenen-hareket": {
+    title: "What the Options Market Prices: Implied Volatility and the Expected Move",
+    dek: "Reading how big a move the market expects before an earnings night, straight from option prices with a single division.",
+    bodyMd: `A company reports earnings tonight. How much will the stock move tomorrow? Nobody knows, but the market has already put a price on the question: that price is inside the **options**. This article explains how to read it; it doesn't recommend trading options. For the basic structure of a premium, read [Options](/rehber/opsiyonlar) first.
+
+::: tanim Terms in This Article
+**Implied Volatility (IV):** The annual volatility the market expects, solved backward from an option's market price. Historical volatility measures the past; implied volatility is the expectation inside today's price.
+**ATM (At the Money):** The option whose strike is closest to the stock's current price.
+**Straddle:** Buying a call and a put together at the same expiry and strike. It profits only from the size of the move, regardless of direction.
+:::
+
+## The Expected Move in One Division
+
+The price of the ATM straddle gives, in dollars, the size of the move the market expects through expiry. Divide by the stock price and it becomes a percentage:
+
+**Expected move ≈ ATM straddle price ÷ stock price**
+
+::: ornek Earnings Night
+The stock is at $200. For the expiry right after earnings, the $200 call is $9 and the put $7.
+Straddle: 9 + 7 = **$16**. Expected move: 16 ÷ 200 = **±8%**, so between $184 and $216.
+The next day the stock rises 6% to $212. Whatever the direction, the move came in **below** what was priced: the straddle is worth about $12 at expiry, and whoever paid $16 loses.
+The headline says "the stock rose"; the options market's reading is "calmer than expected."
+:::
+
+This is the most useful yardstick for reading earnings reactions: a 6% move is a big surprise in a stock priced for 3%, and a quiet night in one priced for 12%. More: [How to Read an Earnings Day](/rehber/bilanco-gunu-nasil-okunur)
+
+## From Implied Volatility to the Same Number
+
+The second route is to scale annual implied volatility to the expiry. Volatility grows with the square root of time:
+
+**One standard deviation move ≈ price × IV × √(days ÷ 365)**
+
+The two methods don't give the same number, and that isn't an error. The ATM straddle corresponds to about **0.8** of a one standard deviation move, because the straddle prices the average absolute move, not the standard deviation. In practice the straddle method is more direct: it's computed from prices that actually trade.
+
+::: sayilar Three Numbers Worth Remembering
+√12 | The factor that converts annual volatility to a one-month move
+0.8 | The ATM straddle's ratio to a one standard deviation move, approximately
+68% | The probability of staying within ±1 standard deviation under a normal distribution
+:::
+
+The same logic works at the index level. The **VIX** is the 30-day implied volatility derived from S&P 500 options. A VIX of 20 means the market is pricing a one standard deviation move of about 20 ÷ √12 ≈ **±5.8%** in the S&P 500 over the next month. More: [What Is Volatility?](/rehber/volatilite)
+
+## What to Watch When Reading It
+
+- **The expiry must cover the event.** To measure an earnings move, use the first expiry after the announcement. A longer expiry also includes the volatility of days outside the event.
+- **Use the mid price.** Option bid-ask spreads can be wide; the midpoint between bid and ask gives a more reliable reading than the last trade.
+- **No exact ATM? Use the nearest.** If the stock is at $203, look at both the $200 and $205 strikes.
+- **There's no direction.** The straddle prices the size of the move, not its direction. If the market leans one way, it shows in the relative price of puts and calls (the skew), not in the expected move number.
+
+::: dikkat A Price, Not a Probability
+Implied volatility isn't a forecast; it's a price, and it carries a **risk premium**: option sellers charge a fee for taking on uncertainty. That's why implied volatility is usually somewhat higher than realized volatility over the long run. The normal distribution assumption also understates extreme moves; "68% chance of staying in this range" is a rough measure, not a guarantee.
+:::
+
+::: ozet Summary
+The options market prices a move size ahead of every event, and reading it doesn't require buying options: dividing the ATM straddle by the price is enough. To tell whether a move was big or small, measure it not against zero but against **the move that was priced**.
+:::
+
+## Where You'll See It on This Site
+
+There's no options chain on this site. The VIX, the ready-made version of the same measure for the market as a whole, is on the [Markets](/piyasalar) screen. Earnings dates are on the [Earnings](/bilancolar) screen, and the move after a report on the stock page.`,
+  },
+
   /* ==== 3 · Reading a Company ============================================ */
 
   /* ---------------------------------------------------------------------- */
@@ -1597,6 +2293,270 @@ A buyback is a neutral tool; price decides whether it is good or bad. Read it wi
 ## Where You'll See It Here
 
 This is why the [earnings analyses](/bilancolar/analizler) report EPS and net income side by side: when the two diverge, the share count explains the gap. The P/E calculation in the [valuation](/rehber/degerleme) and [market cap](/rehber/piyasa-degeri) articles is directly affected too — shrink the denominator and the ratio falls without the company changing at all.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (SEC 10-K/10-Q talimatları,
+     başvuru süreleri, 8-K Madde 2.02, Regulation G). */
+  "10k-10q": {
+    title: "How to Read a 10-K and 10-Q",
+    dek: "The report a company signs and files with the SEC says what the press release doesn't; which five of the hundred pages matter.",
+    bodyMd: `The numbers that hit the news on earnings day come from a **press release**. The company's actual report is a document filed with the SEC a few days or weeks later, often running past a hundred pages: the annual **10-K** and the quarterly **10-Q**. Nobody reads them cover to cover; the parts worth reading are well defined.
+
+::: tanim Terms in This Article
+**10-K:** The annual report. It includes independently audited financial statements, a description of the business and the risk factors.
+**10-Q:** The report for the first three quarters. Its financial statements aren't audited, only reviewed. There's no separate 10-Q for the fourth quarter; that period sits inside the 10-K.
+**EDGAR:** The SEC's database where all official company filings are published for free.
+:::
+
+## Finding the Document
+
+Search EDGAR for the company's name or ticker and filter the filing list by form type. The same reports are also on the company's investor relations page. Deadlines depend on the company's size:
+
+| Filer Category | 10-K Deadline | 10-Q Deadline |
+|---|---|---|
+| **Large Accelerated** (public float above $700 million) | 60 days after year-end | 40 days after quarter-end |
+| **Accelerated** ($75-700 million) | 75 days | 40 days |
+| **Others** | 90 days | 45 days |
+
+Foreign companies file an annual **20-F** and periodic **6-K** instead. More: [What Are ADRs and SPACs?](/rehber/adr-spac)
+
+## The Reading Order
+
+::: akis Cutting a Hundred Pages to Five
+Management's Discussion | Item 7 (Part I, Item 2 in a 10-Q)
+Financial Statements | Item 8: income, balance sheet, cash flow
+Notes | Segments, debt maturities, revenue recognition
+Risk Factors | Item 1A: what changed from last year
+:::
+
+**Management's discussion and analysis (MD&A)** is the narrative section of the report: why revenue changed, what squeezed margins, where the cash went. Here management explains the numbers in its own words and writes down the trends it is obliged to disclose.
+
+**The financial statements** are three, and they're read together: the income statement shows profit, the balance sheet assets and liabilities, the cash flow statement the actual money. More: [Earnings Reports: What to Read, How](/rehber/bilanco) and [Cash Flow](/rehber/nakit-akisi)
+
+**The notes** are the least-read and most informative part of the report. Which business line revenue came from (segment reporting), when debts mature, how large stock-based compensation is, and customer concentration are all written here.
+
+**Risk factors** grow longer every year, and most are boilerplate. What's valuable are the newly added or rewritten items: putting two years' text side by side shows what the company now sees as a new risk.
+
+::: ornek What Hides in the Notes
+A hypothetical company reports revenue up 20%. The press release credits "strong demand."
+The segment note shows something else: all of the growth came from a single business line, and **45% of that line's revenue comes from one customer**.
+The same 20% tells two different risk stories. In one, broad demand; in the other, revenue that hinges on a single contract being renewed.
+:::
+
+## The Press Release vs. the Report
+
+The release published on earnings night is furnished to the SEC with an **8-K** and carries the numbers the company wants to highlight. Many of them are non-GAAP measures: "adjusted" profit that leaves out stock-based compensation, one-time charges or acquisition costs. The rules require companies to present these alongside their GAAP equivalents and to show the difference.
+
+::: dikkat The Release Isn't the 10-Q
+The release is a marketing document. It doesn't have to be wrong, but it is selective. If the gap between adjusted profit and GAAP profit grows every quarter, the expenses the company calls "one-time" are in fact recurring. Tracking that gap takes the reconciliation table in the 10-Q.
+:::
+
+## Five Questions for a Quick Read
+
+1. Which segment did revenue grow from, and which did it shrink in?
+2. Is operating cash flow above or below net income?
+3. How much debt matures in the next two years?
+4. What share of revenue is stock-based compensation, and is the share count rising?
+5. What was added to the risk factors this year?
+
+::: ozet Summary
+The 10-K and 10-Q are the audited or reviewed, signed version of a company's numbers. The release says what happened; the report says why, and at what cost. A 10-Q read through five questions tells you more than an earnings day's headlines.
+:::
+
+## Where You'll See It on This Site
+
+The past earnings on stock pages and the analyses on the [Earnings](/bilancolar) screen are fed by the numbers in these reports. If an item in an analysis looks odd, its source is usually in the 10-Q's notes.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (Regulation FD, PSLRA). */
+  "konferans-gorusmesi": {
+    title: "How to Listen to an Earnings Call",
+    dek: "The numbers are in the release; what management thinks of them, and what it avoids saying, is on the call.",
+    bodyMd: `Shortly after earnings come out, the company's senior management holds a phone or webcast session with analysts: the **earnings call**. The numbers are already in the release; what makes the call valuable is how management talks about them and what analysts ask.
+
+## Why It's Public
+
+**Regulation FD**, in force in the US since 2000, bars companies from giving material information to some investors before others. The result: the call with analysts is broadcast so that anyone can listen. The live webcast, the replay and usually a written transcript are on the company's investor relations page.
+
+Most companies reporting after the close hold the call the same evening, an hour or two after the New York close. Seen from Türkiye, that usually lands close to midnight; the replay and transcript can be read the next morning.
+
+## The Structure of a Call
+
+::: akis The Order of a Call
+Disclaimer | Legal language on forward-looking statements
+Prepared Remarks | The CEO covers the business, the CFO the numbers
+Guidance | Expectations for next quarter and the year
+Q&A | Analysts' questions
+:::
+
+The **prepared remarks** are a script written in advance and cleared by lawyers. They matter but hold few surprises. The **Q&A** is unscripted; most of the information comes out there. If you're short on time, going straight to the Q&A is usually the better use of it.
+
+## What to Listen For
+
+**Changes in guidance.** Next-period expectations are read against the guidance given last quarter. Was the low end of the range raised, or the high end cut? The market often reacts to this change rather than to the quarter just reported. More: [How to Read an Earnings Day](/rehber/bilanco-gunu-nasil-okunur)
+
+**The recurring question.** If several analysts ask about the same topic in different words, the market isn't satisfied on that point.
+
+**The unanswered question.** If management dodges a number and moves on with a general sentence, that's information too. Especially if it gave a number on the same topic last quarter and doesn't this time.
+
+**Changes in wording.** Small shifts, like "strong" demand becoming "healthy" demand or "acceleration" becoming "stability," carry meaning in the carefully chosen language of a script.
+
+| What You Hear | What It Can Mean |
+|---|---|
+| **"Our visibility is limited"** | Management doesn't know either; guidance is wide or cautious |
+| **"One-time impacts"** | Ask which impact, and whether it truly won't recur |
+| **"We don't break that out"** | If it used to, not doing so now is a signal |
+| **"We're in an investment phase"** | Margin pressure will continue; listen for when it ends |
+
+::: ornek The Price of a Cautious Word
+A hypothetical company reports a quarter above expectations; the stock rises 4% after hours. On the call, the CFO says customers are being "more cautious" with orders for next quarter and leaves guidance unchanged.
+Three analysts come back to that caution during the Q&A. By the time the call ends, the stock has turned from up to **down**. The numbers didn't change; what changed is what they said about the future.
+:::
+
+::: dikkat Price Moves During the Call
+The call usually happens in the after-hours session, when volume is thin and spreads are wide. Sharp moves in those hours don't always predict the next day's open; part of them is the reaction of algorithms reading headlines in real time. More: [Liquidity and the Spread](/rehber/spread-likidite)
+:::
+
+::: ozet Summary
+The release says what happened; the call says how management sees it. Focusing on the change in guidance, the topics analysts keep pressing and the places management avoids giving numbers reduces an hour-long recording to a few minutes of information.
+:::
+
+## Where You'll See It on This Site
+
+The [Earnings](/bilancolar) screen shows who reports when, before the open or after the close. Analyses of reported quarters are on the [Analyses](/bilancolar/analizler) tab.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (T+1, FINRA 11140). */
+  "temettu-takvimi": {
+    title: "How to Read a Dividend Calendar",
+    dek: "Declaration, ex-dividend, record and payment: the last day you can buy to get the dividend, and why that day isn't an opportunity.",
+    bodyMd: `When a company declares a dividend, the announcement lists four dates. Only one of them decides who gets the dividend, and the rule for that date changed in 2024 when the settlement cycle got shorter. What a dividend is and why it isn't free money is covered in [What Is a Dividend?](/rehber/temettu); this article is about the calendar itself.
+
+## Four Dates
+
+| Date | What Happens |
+|---|---|
+| **Declaration** | The company announces the amount and the schedule |
+| **Ex-Dividend** | From this day on, buyers don't receive the dividend |
+| **Record** | The company's list of shareholders is fixed as of this day |
+| **Payment** | The money is sent to shareholders' accounts |
+
+To receive the dividend you have to be on the shareholder list on the record date. Buying the stock isn't enough to get on the list; the trade has to have **settled**. That's why the ex-dividend date exists: it marks the first purchase date whose settlement won't make it to the record date.
+
+## With T+1, Ex-Dividend and Record Fall on the Same Day
+
+US settlement has been **T+1** since May 28, 2024: a trade becomes final the next business day. As a result, the ex-dividend date is now **the same business day** as the record date. The rule comes down to one sentence:
+
+> To receive the dividend, you must have bought the stock by the business day before the ex-dividend date.
+
+::: zaman A Hypothetical Dividend Calendar
+February 2, 2026 | The company declares a $1 per share dividend.
+February 12, Thursday | **Last day to buy.** A share bought today settles on February 13; the buyer makes the list.
+February 13, Friday | Ex-dividend and record date. Buyers today don't get the dividend; the stock is adjusted by the dividend at the open.
+March 5 | Payment date. The gross amount, less US withholding, reaches the account.
+:::
+
+The count uses **business days**: weekends and US market holidays don't count. Turkish holidays don't affect it; the US market calendar is what matters.
+
+## What Happens on the Ex-Dividend Morning
+
+On the ex-dividend date the stock opens from a reference price lower by the amount of the dividend. That isn't a selling wave, it's accounting: the cash leaving the company is no longer inside the share price.
+
+::: ornek Buy on the Last Day, Sell the Next
+The stock is $100, the dividend $1. You buy on February 12. On the morning of February 13, with nothing else happening in the market, the stock opens at about **$99**.
+You now hold a $99 share and a $1 gross dividend receivable; still $100 in total.
+For someone resident in Türkiye, the US withholds 20% of the dividend: $0.80 reaches your account. You receive **$0.80** in exchange for a $1 price adjustment, plus a spread and commission paid twice. That's why "dividend capture" isn't a zero-sum trade for a foreign investor; it's a **negative** one.
+:::
+
+## The Large Dividend Exception
+
+If the dividend is **25% or more** of the share's value, the rule works differently: the ex-dividend date moves not to the record date but to the business day after the payment date. This exception shows up with extraordinary one-time payouts and is flagged separately in the announcement. In that case, someone selling the stock between the record and payment dates sells the entitlement along with it.
+
+::: dikkat Payment Date Isn't the Day It Hits Your Account
+The payment date is the day the company sends the money. If your broker's chain is long (domestic broker, foreign correspondent, custodian), it can take a few business days to show up in your account. For the date and exchange rate to use in your tax calculation, check your broker's statement. More: [How Gains on Foreign Stocks Are Taxed](/rehber/yurt-disi-hisse-vergisi)
+:::
+
+::: ozet Summary
+The calendar has four dates, but the decision hangs on one: the ex-dividend date. With T+1 it's the same day as the record date, and to get the dividend you must have bought by the business day before. On the ex-dividend morning the stock is adjusted by the dividend, which is why the calendar isn't an opportunity but a mechanism.
+:::
+
+## Where You'll See It on This Site
+
+The **Key Metrics** card on the stock page shows the dividend yield. You can confirm a company's dividend schedule and amount from its investor relations announcement or your broker's corporate action notice.`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (Exchange Act md. 16, SOX
+     md. 403, Form 4 kodları, Kural 10b5-1 değişiklikleri). */
+  "insider-islemleri": {
+    title: "Insider Transactions: How to Read a Form 4",
+    dek: "Executives' trades in their own company's stock are public; why sales say much less than purchases.",
+    bodyMd: `A company's executives can buy and sell their own company's stock; that is legal. What makes it legal is that the trade is disclosed to everyone. In the US that disclosure is called a **Form 4**, and it has to be filed with the SEC within two business days. Headlines like "CEO sells millions of dollars of stock" usually come from this form, and the form itself tells you more than the headline.
+
+::: tanim Terms in This Article
+**Insider:** Under US rules, a company's senior officers, board members and anyone owning more than 10% of the company.
+**Form 4:** The SEC form in which these people report every change in their holdings within two business days of the trade.
+**10b5-1 Plan:** A trading program an executive sets up in advance, at a time when they have no inside information, and can't change afterward.
+:::
+
+::: dikkat Legal Trades vs. Illegal Insider Trading
+Trades reported on a Form 4 are legal. What's illegal is trading on material information that hasn't been made public. The two get confused because both can be called "insider trading"; this article covers only legal, reported trades.
+:::
+
+## Transaction Codes
+
+The most important column on a Form 4 is the transaction code. The same "decrease in shares" says very different things depending on its code.
+
+| Code | Meaning | What It Says |
+|---|---|---|
+| **P** | Open market or private purchase | The executive bought with their own money; the strongest signal |
+| **S** | Open market or private sale | Says little on its own; there can be many reasons |
+| **M** | Exercise or conversion of an option or derivative | Part of the pay package |
+| **A** | Grant or award from the company | Like salary; not a decision |
+| **F** | Shares withheld for tax or exercise price | Automatic; carries no information |
+| **G** | Gift | Usually tax planning |
+| **X** | Exercise of an in-the-money option | Similar to M |
+
+## Why Sales Are Noisy
+
+A large part of executive pay comes as stock and options. So they have many reasons to sell: paying taxes, buying a house, diversifying their wealth away from a single company, or following a sales plan set up years ago. None of these is a view on the company's future.
+
+Buying, in practice, has just one reason:
+
+> Insiders might sell their shares for any number of reasons, but they buy them for only one: they think the price will rise.
+
+The line is attributed to Peter Lynch, and it sums up the main rule of reading a Form 4: open-market purchases with the insider's own money (**P**) are rare and informative; sales are frequent and mostly noise.
+
+::: ornek The Form Behind a Headline
+Headline: "CEO sells $4.8 million of stock." The rows of a hypothetical Form 4:
+**M** · 50,000 shares · $20 · Exercise of options granted years ago.
+**F** · 18,000 shares · $150 · Shares withheld by the company for the exercise price and taxes.
+**S** · 32,000 shares · $151 · A sale; the box on the form is checked: under a **10b5-1 plan**.
+Result: the CEO's share count before the transaction didn't change (50,000 − 18,000 − 32,000 = 0). The sale in the headline was an option being turned into cash and its taxes being paid; it was planned in advance.
+:::
+
+## Planned Sales
+
+10b5-1 plans are programs an executive sets up when they have no inside information and can't interfere with afterward. Since 2023, officers must wait at least 90 days between adopting a plan and the first trade, and the Form 4 has a box showing whether a trade was made under a plan. A planned sale carries no signal about timing; when the plan was **adopted or cancelled**, however, can.
+
+## Patterns That Can Matter
+
+- **Cluster buying.** Several executives buying in the open market in the same period is a stronger sign than a single purchase.
+- **Buying after a drop.** An executive buying with their own money after a sharp decline can show they think the price has fallen too far relative to the inside view.
+- **Large sales outside a plan.** Sales without the 10b5-1 box checked, far above the usual size and from several executives, are worth a closer look.
+
+None of these alone is a reason to buy or sell. Executives get things wrong too, and their purchases are often proven right only months or even years later.
+
+::: ozet Summary
+A Form 4 makes executives' stock moves public within two business days. The reading rule is in the codes: P is rare and meaningful, S is frequent and usually noise, and M, A and F are the mechanics of pay. Before reading a sales headline, look at the rows of the form.
+:::
+
+## Where You'll See It on This Site
+
+This site doesn't list insider transactions. You can find a company's Form 4 filings by searching its name in the SEC's EDGAR database and filtering by form type. A company buying back its own shares is a separate topic: [What Is a Share Buyback?](/rehber/hisse-geri-alimi)`,
   },
 
   /* ---------------------------------------------------------------------- */

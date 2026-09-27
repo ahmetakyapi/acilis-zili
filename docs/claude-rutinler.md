@@ -521,10 +521,23 @@ BAĞLANTI KURALLARI
                /rehber/piyasa-degeri · /rehber/temettu
     Makro:     /rehber/faiz-tahvil · /rehber/enflasyon · /rehber/istihdam ·
                /rehber/sahin-guvercin · /rehber/kur-riski
+    Fon:       /rehber/endeks-fonu-mu-tek-hisse-mi · /rehber/kripto-etf ·
+               /rehber/adr-spac
+    Türkiye'den yatırım:
+               /rehber/abd-hisse-nasil-alinir · /rehber/araci-kurum-secimi ·
+               /rehber/kesirli-hisse · /rehber/w-8ben ·
+               /rehber/yurt-disi-hisse-vergisi · /rehber/duzenli-alim
+    Bilanço ve şirket:
+               /rehber/beklenen-hareket · /rehber/10k-10q ·
+               /rehber/konferans-gorusmesi · /rehber/temettu-takvimi ·
+               /rehber/insider-islemleri
 
     Bu liste değişebilir. Emin değilsen https://aciliszili.com/rehber
     sayfasını aç ve oradaki bağlantıyı kullan — var olmayan bir slug'a
     bağlantı vermek 404 üretir.
+  - Bir terimi sözlüğe de bağlayabilirsin: [F/K](/sozluk/fk). Bağlamasan da
+    site sözlükteki terimin yazıdaki ilk geçişini kendisi bağlıyor; elle
+    bağlantıyı yalnızca terimin kalıbı sözlüktekinden farklı yazıldığında ver.
   - Bağlantılar cümlenin içine doğal biçimde girsin, liste hâlinde dipnot
     olarak değil.
 
@@ -689,6 +702,12 @@ Hepsi yazılmışsa o gün YAZMA — "bugün yeni analiz yok" diye bitir.
      quarterly_revenue ve guidance alanlarını ekleyip iki dilde de yeniden
      gönder. Diğer alanlara dokunma.
 
+existing_analyses kayıtlarında ayrıca has_summary ve has_segments var:
+"30 Saniyede" özeti ve segment tablosu yazılmış mı. İkisi de YENİ analize
+tercih EDİLMEZ; o gün yazacak yeni şirket yoksa en yeni özetsiz kaydı geri
+oku, takeaways / segments / kpis alanlarını ekleyip iki dilde de gönder.
+Değer null ise site o bilgiyi okuyamıyor demektir — tamamlamaya çalışma.
+
 --- 3. GERÇEK VERİYİ TOPLA ---
 
 context'teki rakamlar sağlayıcı takviminden gelir ve BAŞLANGIÇ NOKTASIDIR.
@@ -732,6 +751,21 @@ hazır F/K'si tam bu yüzden %5,6 geriden geliyordu.)
     "ileriye dönük 12 ay", "son 12 ay", "şirket öngörüsü 2027".
 
 İkisi de isteğe bağlı. Doğrulayamadığın bölen yazılmaz, o oran da basılmaz.
+
+**Segmentler ve şirkete özgü ölçüler (KPI) — YALNIZCA ŞİRKETİN BELGESİNDEN.**
+
+Sayfada "Segment ve KPI Verisi" paneli var: segment gelirlerinin payı ve
+şirkete özgü ölçüler (abone sayısı, teslimat, ARPU, serbest nakit akışı…).
+Buradaki her sayı şirketin KENDİ belgesinde birebir yazılı olmalı:
+
+  - press-release       → bilanço basın bülteni
+  - shareholder-letter  → hissedar mektubu (NFLX, TSLA gibi bülten yerine)
+  - 10-Q / 10-K / 8-K   → SEC dosyaları
+
+Analist raporu, haber, veri sitesi, kazanç çağrısında sözlü söylenen sayı
+KAYNAK DEĞİLDİR; uç sözlük dışındaki kaynağı 400 ile reddediyor. Belgede
+bulamadığın sayıyı TAHMİN ETME, hesaplayıp türetme, yuvarlayıp "yaklaşık"
+yazma — alanı hiç gönderme. Eksik panel görünmez; uydurma sayı kalıcıdır.
 
 PD/DD bir süre burada duruyordu ve KALDIRILDI: sektöre bağlı bir ölçü, her
 şirkete yazılamıyor ve "bu şirkette anlamlı mı" kararını rutine yıkmak her
@@ -878,7 +912,22 @@ curl -s -X POST https://aciliszili.com/api/analiz \
       {"label": "Hisse Sayısı", "value": "155 Mn"},
       {"label": "Yatırım Harcaması / Gelir", "value": "~%6"}
     ],
-    "sources": [{"label": "SanDisk 4Ç FY26 Bülteni", "url": "https://..."}]
+    "sources": [{"label": "SanDisk 4Ç FY26 Bülteni", "url": "https://..."}],
+    "takeaways": [
+      "Gelir 8,97 Mr $ ile beklentinin %4 üzerinde; veri merkezi yıllık %240 büyüdü.",
+      "Brüt marj %84,6 ile rekor, ama şirket gelecek çeyrekte yatay seyir öngörüyor.",
+      "Hisse, öngörü piyasa beklentisinin altında kalınca seans dışında %8 geriledi."
+    ],
+    "segments": [
+      {"name": "Veri Merkezi", "revenue": 3410000000, "yoy_pct": 240},
+      {"name": "Uç Cihazlar", "revenue": 3990000000, "yoy_pct": 18},
+      {"name": "Tüketici", "revenue": 1570000000, "yoy_pct": -32, "note": "Perakende kanal dahil"}
+    ],
+    "segments_source": "press-release",
+    "kpis": [
+      {"name": "Serbest Nakit Akışı", "value": 2310000000, "unit": "USD", "yoy_pct": 410, "source": "press-release"},
+      {"name": "Stok Günü", "value": 96, "unit": "gün", "source": "10-Q"}
+    ]
   }'
 ```
 
@@ -964,6 +1013,39 @@ Alan notları:
                 "Önceki Çeyrek 6,2 Mr $". Cümle kurma ("14 Mr $'lık ek program
                 onaylandı" yerine "Ek Program 14 Mr $"); künye satırı dar ve
                 orada cümle okunmuyor.
+
+  takeaways   → "30 SANİYEDE" ÖZETİ, sayfanın başında kapaktan hemen sonra
+                ve analiz listesindeki kartta ilk maddesi. TAM ÜÇ madde
+                (üçten az ya da fazlası reddedilir), her biri 20-220
+                karakter, TEK cümle. 1: çeyreğin sonucu (rakamla). 2: en
+                önemli ayrıntı ya da öngörü. 3: hissenin tepkisi ve nedeni.
+                Normal cümle yazımı (Title Case değil). Summary'nin
+                kopyası değil, yalnızca bunu okuyanın çeyreği bilmesi için.
+  segments    → faaliyet segmentlerinin BU ÇEYREKTEKİ geliri. 2-8 satır,
+                revenue HAM dolar, yoy_pct yıllık değişim yüzde (belgede
+                yoksa yazma). Eliminasyon, "kurumsal" ya da eksi değerli
+                satırları YAZMA (negatif değer reddedilir); site payları
+                yazdığın satırların toplamı üzerinden hesaplıyor ve toplam
+                konsolide gelirden farklıysa künyede bunu kendisi söylüyor.
+                name okuyucunun dilinde ve Title Case. note isteğe bağlı,
+                kısa bir cümle.
+  segments_source → segments verildiyse ZORUNLU: press-release |
+                shareholder-letter | 10-Q | 10-K | 8-K.
+  kpis        → şirkete özgü ölçüler, en fazla 8. value HAM sayı; unit
+                "USD" (para), "%" (düzey: marj, oran) ya da kısa bir sayma
+                birimi — okuyucunun dilinde, en fazla bir iki kelime
+                ("abone", "araç", "gün"; İngilizcede "subscribers").
+                Milyon/milyar birime YAZILMAZ: 301000000 + "abone" yaz,
+                site "301 Mn abone" diye kısaltır. source her KPI'da
+                ZORUNLU ve yukarıdaki sözlükten. highlights kartlarında
+                zaten duran gelir, EPS, brüt marj gibi ölçüleri burada
+                TEKRARLAMA; burası yalnızca şirkete özgü olanlar için.
+                İngilizce gönderimde sayılar ve source aynı kalır; name,
+                note, unit ve takeaways çevrilir.
+
+Yanıttaki "extras" alanı ekleri söyler: "saved" yazıldı, "cleared"
+göndermediğin için silindi, "unavailable" sitede henüz yazılamıyor (ana
+analiz yine kaydedildi; aynı gövdeyi daha sonra yeniden göndermen yeter).
 
 Yanıtta "ok": true ve dönen "url" alanını doğrula; ayrıca dönen "period"
 değerini NOT ET — İngilizce gönderimde ona ihtiyacın olacak. "ok" göremezsen
