@@ -840,7 +840,7 @@ async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
       <PanelHeader
         title={t.markets.yields}
         tone="title"
-        action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
+        action={<PanelLink href="/makro">{t.common.showAll}</PanelLink>}
       />
       <div className="grid grid-cols-3 border-t border-line">
         {values.map((value, index) => {

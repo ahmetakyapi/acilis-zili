@@ -1065,7 +1065,7 @@ const en: typeof tr = {
     fearHigh: "Tense",
     fearPanic: "Panic",
     title: "Markets",
-    subtitle: "Indices, treasury yields and intraday moves.",
+    subtitle: "Indices, market breadth and intraday moves.",
     yields: "US Treasury Yields",
     yieldY2: "2-Year",
     yieldY5: "5-Year",

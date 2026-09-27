@@ -1,10 +1,12 @@
+import { Suspense } from "react";
+import { MarketPulse } from "@/components/macro/MarketPulse";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { MacroExplorer } from "@/components/macro/MacroExplorer";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/macro/MacroExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { Sparkline } from "@/components/ui/Sparkline";
-import { DataStamp, EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
+import { DataStamp, EmptyState, PageHeader, Panel, Skeleton } from "@/components/ui/primitives";
 import { getMacroRows } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import {
@@ -107,6 +109,11 @@ export default async function MacroPage() {
           }}
           series={explorerSeries}
         />
+        <div className={styles.pulseArea}>
+          <Suspense fallback={<Skeleton className={styles.pulseSkeleton} />}>
+            <MarketPulse locale={locale} t={t} />
+          </Suspense>
+        </div>
       </div>
 
       {withData.length === 0 ? (
@@ -241,7 +248,7 @@ export default async function MacroPage() {
       <GuideHint
         label={t.guide.contextLabel}
         locale={locale}
-        slugs={["enflasyon", "sahin-guvercin"]}
+        slugs={["enflasyon", "sahin-guvercin", "faiz-tahvil", "getiri-egrisi", "volatilite", "endeks"]}
         className="pt-1"
       />
     </MotionExperience>

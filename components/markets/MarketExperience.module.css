@@ -8,12 +8,11 @@
    kartlar boşluk bırakmıyor, UZUYOR: gün içi eğrisi kalan yüksekliği
    dolduruyor (`.spark`). Tek kolonda sıra ekran düzeni kuralının sırası:
    başlık, ana görsel (kartlar), ölçüler (şerit). */
-.marketHeader { display:grid; grid-template-columns:minmax(200px,.8fr) minmax(0,2fr); grid-template-areas:"mast cards" "pulse pulse"; gap:30px; }
+.marketHeader { display:grid; grid-template-columns:minmax(200px,.8fr) minmax(0,2fr); grid-template-areas:"mast cards"; gap:30px; }
 .masthead { grid-area:mast; min-width:0; }
 .cardsArea { grid-area:cards; display:flex; flex-direction:column; align-self:stretch; min-width:0; }
 .cardsArea > .indexOverview { display:flex; flex:1; flex-direction:column; }
 .cardsArea .indexGrid { flex:1; }
-.pulseArea { grid-area:pulse; min-width:0; container-type:inline-size; }
 .masthead > header { display:flex; flex-direction:column; align-items:flex-start; gap:12px; padding:0; border:0; }
 .masthead h1 { font-size:clamp(30px,3.2vw,44px); }
 .masthead > header > p { font-size:13px; line-height:1.65; max-width:34ch; }
@@ -52,7 +51,7 @@
 .members tbody td { padding-block:11px; }
 .page :is(a,button):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 @media(hover:hover) and (pointer:fine) { .indexLink:hover .indexCard { border-color:var(--primary); } }
-@media(max-width:1023px) { .marketHeader { grid-template-columns:minmax(0,1fr); grid-template-areas:"mast" "cards" "pulse"; grid-template-rows:auto; gap:18px; } .masthead > header > p { max-width:60ch; } .spark { flex:none; height:38px; } }
+@media(max-width:1023px) { .marketHeader { grid-template-columns:minmax(0,1fr); grid-template-areas:"mast" "cards"; grid-template-rows:auto; gap:18px; } .masthead > header > p { max-width:60ch; } .spark { flex:none; height:38px; } }
 @media(max-width:767px) {
  .page { gap:16px; }
  .marketHeader { gap:16px; }
@@ -143,55 +142,6 @@
  .mover li a > div:first-child > span:last-child { font-size:17px; }
 }
 @media(prefers-reduced-motion:reduce) { .moverLink { transition:none; } }
-
-/* --------------------------------------------------------------------------
-   Faiz ve oynaklık — kapağın dibinde (MarketPulse)
-
-   Geniş kapta (≥760) TEK SATIR: künye solda, altı ölçü eşit sütunlarda.
-   Dar kapta (tablet, telefon) künye üstte, dört vade bir satır, eğri ve
-   VIX altında ikişer sütun. Ölçüler saç teliyle ayrılıyor; kutu yok.
-   -------------------------------------------------------------------------- */
-.pulse { display:flex; flex-direction:column; gap:10px; padding-top:14px; border-top:1px solid var(--line); }
-.pulseHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; }
-.pulseHead h2 { font-size:13px; line-height:1.35; font-weight:650; letter-spacing:-.01em; color:var(--text-strong); }
-.pulseHead > span { font-size:11px; line-height:1.35; color:var(--text-muted); }
-.pulseGrid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); row-gap:10px; }
-.pulseGrid > div { min-width:0; padding:0 10px; border-left:1px solid var(--line-soft); }
-.pulseGrid > div:first-child { padding-left:0; border-left:0; }
-.pulseGrid > div[data-wide] { grid-column:span 2; padding-top:10px; border-top:1px solid var(--line-soft); }
-.pulseGrid > div[data-wide]:nth-child(5) { padding-left:0; border-left:0; }
-.pulseGrid dt { font-size:11px; line-height:1.3; font-weight:600; color:var(--text-muted); white-space:nowrap; }
-.pulseGrid dd { display:flex; flex-direction:column; gap:2px; margin-top:3px; }
-.pulseGrid dd b { font-size:19px; line-height:1.15; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); white-space:nowrap; }
-
-.pulseGrid dd small { display:flex; flex-wrap:wrap; align-items:center; gap:2px 4px; font-size:11px; line-height:1.3; font-weight:600; color:var(--text-muted); white-space:nowrap; }
-/* Yön rengi öznitelikte: modül kuralı katmansız ve Tailwind'in `text-up`
-   yardımcısını eziyordu (değişimler gri basılıyordu). */
-.pulseGrid [data-tone="up"] { color:var(--up); }
-.pulseGrid [data-tone="down"] { color:var(--down); }
-/* Ayraç nokta yok: dar hücrede alt satır kırılınca satır sonunda asılı
-   kalıyordu (320). İki parça aralık ve tonla ayrışıyor. */
-.pulseGrid [data-basis] { font-weight:500; }
-.pulseBand { padding:0 7px; border-radius:999px; font-size:11px; font-weight:650; line-height:17px; }
-.pulseBand[data-tone="up"] { background:var(--up-wash); color:var(--up); }
-.pulseBand[data-tone="flat"] { background:var(--surface-elevated); color:var(--text-body); }
-.pulseBand[data-tone="warn"] { background:var(--brass-wash); color:var(--brass-ink); }
-.pulseBand[data-tone="down"] { background:var(--down-wash); color:var(--down); }
-@container (min-width:760px) {
-  .pulse { flex-direction:row; align-items:center; gap:24px; }
-  .pulseHead { flex:none; flex-direction:column; align-items:flex-start; gap:2px; }
-  .pulseGrid { flex:1; grid-template-columns:repeat(6,minmax(0,1fr)); }
-  .pulseGrid > div[data-wide] { grid-column:auto; padding-top:0; border-top:0; }
-  .pulseGrid > div[data-wide]:nth-child(5) { padding-left:10px; border-left:1px solid var(--line-soft); }
-}
-/* 320'lik telefon: dört vade ~55 piksellik hücreye iniyor. */
-@container (max-width:300px) {
-  .pulseGrid > div { padding:0 7px; }
-  .pulseGrid dt, .pulseGrid dd small { font-size:10.5px; }
-  .pulseGrid dd b { font-size:16px; }
-}
-.pulseSkeleton { min-height:74px; border-radius:var(--radius-lg); }
-@media(max-width:1023px) { .pulseSkeleton { min-height:150px; } }
 
 /* Isı haritası (26 Eylül) — gerekçe piyasalar/page.tsx → IndexToolbar.
    Kareler 18 pikselden başlayıp satırı dolduruyor; aralık 3 piksel.

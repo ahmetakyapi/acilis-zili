@@ -1354,7 +1354,7 @@ const tr = {
     fearHigh: "Gergin",
     fearPanic: "Panik",
     title: "Piyasalar",
-    subtitle: "Endeksler, tahvil faizleri ve gün içi hareket: piyasanın nabzı",
+    subtitle: "Endeksler, piyasa genişliği ve gün içi hareket: piyasanın nabzı",
     yields: "ABD Tahvil Faizleri",
     yieldY2: "2 Yıllık",
     yieldY5: "5 Yıllık",

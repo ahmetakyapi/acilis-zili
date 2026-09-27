@@ -1,4 +1,4 @@
-import styles from "./MarketExperience.module.css";
+import styles from "./MacroExperience.module.css";
 import { getSeries } from "@/lib/providers/fred";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { VIX_SERIES, vixBand } from "@/lib/vix";
@@ -15,6 +15,9 @@ const YIELD_SERIES = [
 const FLAT_DELTA = 0.001;
 
 /**
+ * 27 Eylül: Kullanıcı isteğiyle Makro kapağına taşındı. Aşağıdaki kayıt
+ * önceki yerleşim kararını anlatır; ana sayfadaki özet korunuyor.
+ *
  * Faiz ve oynaklık — piyasalar kapağının sol kolonunda kompakt bir ızgara.
  *
  * İKİ YER DENENDİ, İKİSİ DE GERİ ALINDI. Tahvil şeridi ve korku kadranı önce

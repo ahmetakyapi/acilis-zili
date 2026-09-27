@@ -7,7 +7,6 @@ import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/markets/MarketExperience.module.css";
 import { HeatmapGrid } from "@/components/markets/HeatmapGrid";
-import { MarketPulse } from "@/components/markets/MarketPulse";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -61,12 +60,12 @@ export const generateMetadata = pageMetadata({
   tr: {
     title: "Piyasalar",
     description:
-      "Endeksler, tahvil faizleri ve gün içi hareket — ABD piyasasının nabzı.",
+      "Endeksler, piyasa genişliği ve gün içi hareket — ABD piyasasının nabzı.",
   },
   en: {
     title: "Markets",
     description:
-      "Indices, bond yields and intraday moves — the pulse of the US market.",
+      "Indices, market breadth and intraday moves — the pulse of the US market.",
   },
 });
 
@@ -223,14 +222,6 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         </Suspense>
       </div>
 
-      {/* FAİZ VE OYNAKLIK KAPAĞIN İÇİNDE — gerekçesi MarketPulse'ta. Kendi
-          sınırı var: FRED turu endeks kartlarını beklemiyor. Yedek, ölçülen
-          yüksekliği tutuyor; kart akışla gelince kapak zıplamıyor. */}
-      <div className={styles.pulseArea}>
-        <Suspense fallback={<Skeleton className={styles.pulseSkeleton} />}>
-          <MarketPulse locale={locale} t={t} />
-        </Suspense>
-      </div>
 
       </div>
 
@@ -286,7 +277,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         /* Faiz ve oynaklık ızgarası açıklama kutusu taşımıyor (MarketPulse);
            eğri ve VIX'in okunuşu bu iki yazıda. Sayı ÇİFT kalmalı —
            GuideHint iki sütunlu. */
-        slugs={["endeks", "faiz-tahvil", "getiri-egrisi", "volatilite"]}
+        slugs={["endeks", "volatilite"]}
         className="pt-1"
       />
     </MotionExperience>
