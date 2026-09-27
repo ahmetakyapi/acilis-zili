@@ -56,7 +56,8 @@ export function InkCanvas({
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
     const def = INK_SCENES[scene];
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let reduce = preference.matches;
     const speed = rate > 0 ? rate : 1;
     const wait = Math.max(0, delay);
 
@@ -131,6 +132,18 @@ export function InkCanvas({
       doneRef.current?.();
     }
 
+    // Sistem tercihi sayfa açıkken de değişebilir. Bitmiş sahneyi yeniden
+    // başlatma; bekleyen ya da dönen sahneyi son karesine oturt.
+    const onPreference = () => {
+      reduce = preference.matches;
+      if (!reduce || finished) return;
+      pause();
+      draw(def.end);
+      finished = true;
+      doneRef.current?.();
+    };
+    preference.addEventListener("change", onPreference);
+
     const ro = new ResizeObserver(() => {
       size();
       draw(lastT);
@@ -164,6 +177,7 @@ export function InkCanvas({
       io.disconnect();
       mo.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
+      preference.removeEventListener("change", onPreference);
     };
   }, [scene, seed, rate, delay]);
 

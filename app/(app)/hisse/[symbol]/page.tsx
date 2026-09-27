@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { LogoImage } from "@/components/ui/LogoImage";
+import { logoSrc } from "@/lib/logos";
 import { MorphTarget } from "@/components/motion/Morph";
 import Image from "next/image";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -742,6 +744,12 @@ async function StockHeader({
   const kunyeSektor = companySector(symbol, profile?.industry, locale);
   // Fonlarda sağlayıcı profili boş döner — ad ve künye yerel kayıttan gelir.
   const fund = fundMetaOf(symbol);
+  const identityLogo = logoSrc(symbol, profile?.logoUrl);
+  const logoFallback = (
+    <span aria-hidden className={cn(styles.companyLogo, styles.companyFallback)}>
+      {fund ? <ChartLineUp size={40} weight="duotone" /> : <span>{symbol.slice(0, 4)}</span>}
+    </span>
+  );
 
   let isFavorite = false;
   if (session?.user?.id) {
@@ -793,35 +801,17 @@ async function StockHeader({
       {/* `data-morph-stage`: logo uçarak gelirken ad ve künye bekliyor,
           inince yanından açılıyor (components/motion/Morph). */}
       <div data-motion-reveal data-morph-stage className={styles.identity}>
-        {profile?.logoUrl ? (
-          /* Logo ÇERÇEVESİZ ve tam oturur: kenarlık + iç dolgu, logoyu beyaz
-             bir kutunun ortasında küçük bir damga gibi gösteriyordu. Artık
-             kare kendi köşe yarıçapıyla kırpılıyor, görsel kutuyu tümüyle
-             dolduruyor. Beyaz zemin duruyor çünkü logoların çoğu şeffaf PNG
-             ve koyu temada kendi koyu harfleriyle kayboluyor. */
-          /* Listeden gelindiyse logo tıklanan satırın yerinden buraya uçuyor
-             (components/motion/Morph). */
-          <MorphTarget morphKey={`logo:${symbol}`}>
-            <span className={styles.companyLogo}>
-              <Image
-                src={profile.logoUrl}
-                alt=""
-                width={64}
-                height={64}
-                className="size-full object-contain"
-              />
-            </span>
-          </MorphTarget>
-        ) : fund ? (
-          // Fonun logosu yok; ülke/piyasa bayrağı kimliği taşır
-          <span
-            aria-hidden
-            className="flex size-14 shrink-0 items-center justify-center rounded-(--radius-lg) border border-line bg-surface-elevated text-2xl"
-          >
-            {fund.flag}
-          </span>
-        ) : null}
-        <div className="min-w-0">
+        {/* Kimlikte de ortak logo yolu: yerel WebP öncelikli, görsel
+            yüklenemezse aynı ölçüde sembol karosu. Uçuş hedefi tek.
+            Önceki çerçevesiz logo kararı korunuyor: resim kutuyu doldurur,
+            iç dolgu ve kenarlık yok; şeffaf logoların koyu harfleri gece
+            temasında kaybolmasın diye resmin zemini her iki temada beyaz. */}
+        <MorphTarget morphKey={`logo:${symbol}`} className={styles.identityMark}>
+          {identityLogo ? (
+            <LogoImage key={identityLogo} src={identityLogo} px={96} boxClass={styles.companyLogo} fallback={logoFallback} />
+          ) : logoFallback}
+        </MorphTarget>
+        <div className={styles.identityCopy}>
           {/* SIRA: SEMBOL → AD → KÜNYE.
               Önce künye (borsa · sektör) geliyordu, altında ad ve onun
               yanında sembol ile kalp. Telefonda üçü de sığmıyordu: künye iki
@@ -833,7 +823,7 @@ async function StockHeader({
               ayrılmıyorlar), altında tam ad, en altta künye tek satırda
               kırpılıyor. Künye bir etiket, başlık değil — en alta düşmesi
               okuma sırasını da düzeltiyor. */}
-          <div className="flex items-center gap-2">
+          <div className={styles.identityMeta}>
             <span className={cn("numeral", styles.symbol)}>
               {symbol}
             </span>
@@ -863,7 +853,7 @@ async function StockHeader({
               </Link>
             )}
           </div>
-          <h1 className={styles.companyName}>
+          <h1 data-ink="solid" className={styles.companyName}>
             {profile?.name || fund?.name || symbol}
           </h1>
           {/* Künye şeridi — borsa · sektör.
@@ -883,6 +873,7 @@ async function StockHeader({
                genişliğinin tamamını tekrara harcayıp tekrar olmayan yarısını
                kesiyordu. Sektör tek başına sığıyor. */
             <p className={styles.sector}>
+              <Stack size={14} weight="duotone" aria-hidden />
               {kunyeSektor}
             </p>
           )}
@@ -955,13 +946,13 @@ async function StockHeader({
 function HeaderSkeleton({ sessionRow = false, chip = false }: { sessionRow?: boolean; chip?: boolean }) {
   return (
     <header className={styles.stockHeader}>
-      <div className="flex items-center gap-3">
-        <Skeleton className="size-12 shrink-0 rounded-(--radius-lg)" />
-        <div className="flex flex-col gap-1">
-          <Skeleton className="h-6 w-20" />
-          <Skeleton className="h-8 w-44" />
-          <Skeleton className="h-3.5 w-36" />
-          {chip && <Skeleton className="mt-1.5 h-7 w-48 md:hidden" />}
+      <div className={styles.identity}>
+        <Skeleton className={cn(styles.companyLogo, "shrink-0")} />
+        <div className={styles.identityCopy}>
+          <Skeleton className="mb-2 h-7 w-20" />
+          <Skeleton className={styles.identityNameSkeleton} />
+          <Skeleton className="mt-2 h-4 w-36 max-w-full" />
+          {chip && <Skeleton className="mt-2 h-7 w-48 max-w-full md:hidden" />}
         </div>
       </div>
       {/* FİYAT BLOĞU GERÇEĞİN ÖLÇÜLERİYLE (24 Eylül). Yedek 64 + 30 + 28

@@ -194,6 +194,10 @@ export function MorphRecorder() {
       const target = event.target instanceof Element ? event.target : null;
       const anchor = target?.closest("a[href]");
       if (!anchor) return;
+      // Yeni bağlantı eski uçuşu geçersiz kılar; logosuz bir bağlantıdan
+      // gidilen ekrana önceki tıklamanın logosu uçmamalı.
+      pending = null;
+      if (anchor.getAttribute("target") === "_blank" || anchor.hasAttribute("download")) return;
       const source = findSource(anchor);
       const key = source?.dataset.morph;
       if (!source || !key) return;
@@ -241,7 +245,8 @@ export function MorphTarget({
     if (!el || !flight || flight.key !== morphKey) return;
     pending = null;
     if (performance.now() - flight.at > FRESH_MS) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (preference.matches) return;
     if (typeof el.animate !== "function") return;
 
     /* Hedef ÖNCE gizleniyor, ölçü bir sonraki karede: App Router en üste
@@ -262,7 +267,20 @@ export function MorphTarget({
       el.style.visibility = "";
       if (stage) delete stage.dataset.morphState;
     };
-    const frame = requestAnimationFrame(() => {
+    let frame = 0;
+    // Uçuşun hedefi ekran koordinatında ölçülür. Kaydırma ya da yeniden
+    // boyutlandırmada eski koordinata inmek yerine gerçek logoyu göster.
+    const settle = () => {
+      cancelAnimationFrame(frame);
+      animation?.cancel();
+      restore();
+    };
+    const onPreference = () => { if (preference.matches) settle(); };
+    window.addEventListener("resize", settle);
+    window.addEventListener("wheel", settle, { passive: true });
+    window.addEventListener("touchmove", settle, { passive: true });
+    preference.addEventListener("change", onPreference);
+    frame = requestAnimationFrame(() => {
       const to = settledRect(el);
       if (!to.width || !to.height) return restore();
       clone = el.cloneNode(true) as HTMLElement;
@@ -314,9 +332,11 @@ export function MorphTarget({
       animation.oncancel = restore;
     });
     return () => {
-      cancelAnimationFrame(frame);
-      animation?.cancel();
-      restore();
+      settle();
+      window.removeEventListener("resize", settle);
+      window.removeEventListener("wheel", settle);
+      window.removeEventListener("touchmove", settle);
+      preference.removeEventListener("change", onPreference);
     };
   }, [morphKey]);
 

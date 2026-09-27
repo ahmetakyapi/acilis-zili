@@ -551,3 +551,129 @@ dl > div:hover .profileIcon { background:var(--primary); color:var(--on-primary)
    altında kalıyordu. */
 .companyOverview .companyLogo { width:56px; height:56px; border-radius:14px; }
 @media(max-width:639px) { .companyOverview .companyLogo { width:50px; height:50px; border-radius:12px; } }
+
+/* ŞİRKET KİMLİĞİ (26 Eylül, ikinci inceleme). 1440px görünümde
+   kimlik fiyatla iki eşit sütuna bölünüyor, logo 56px, ad en fazla 30px
+   kalıyordu. Şirket başlığı fiyatın gölgesindeydi. Kimlik artık panelin
+   tamamını kullanır; fiyat altındaki ayrı okuma satırında grafiğe bağlanır.
+   Logo kutusu resmin kendisidir; çevresine ikinci bir kart eklenmez. */
+.companyOverview .stockHeader {
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:20px;
+  margin-bottom:18px;
+}
+.companyOverview .identity { align-items:center; gap:22px; }
+.identityMark { align-self:center; }
+.companyOverview .companyLogo { width:88px; height:88px; border-radius:22px; background:#fff; }
+.companyOverview .companyLogo:global(.skeleton) { background:var(--surface-sunken); }
+.identityCopy { flex:1; min-width:0; }
+.identityMeta { display:flex; align-items:center; gap:10px; margin-bottom:7px; }
+.identityMeta .symbol {
+  display:inline-flex;
+  align-items:center;
+  min-height:27px;
+  padding:3px 9px;
+  border-radius:7px;
+  background:var(--primary-wash);
+  color:var(--primary-ink);
+  font-size:12px;
+  letter-spacing:.065em;
+}
+.identityMeta > :last-child:not(.symbol) { margin-left:auto; }
+.identityMeta :is(button,a) {
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--surface-sunken);
+  color:var(--primary-ink);
+}
+.companyOverview .companyName {
+  font-size:clamp(30px,3vw,42px);
+  font-weight:700;
+  line-height:1.08;
+  letter-spacing:-.045em;
+  overflow-wrap:anywhere;
+  text-wrap:balance;
+}
+.companyOverview .sector {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:10px;
+  color:var(--text-body);
+  font-size:12px;
+  line-height:1.4;
+}
+.sector > svg { flex:none; color:var(--primary-ink); }
+.companyOverview .priceBlock { position:relative; padding-top:18px; border-top:1px solid var(--line-soft); }
+.companyOverview .priceBlock::before {
+  content:"";
+  position:absolute;
+  top:-1px;
+  left:0;
+  width:44px;
+  height:2px;
+  background:var(--primary);
+  transform-origin:left center;
+}
+.companyFallback,
+.companyOverview .companyFallback {
+  display:grid;
+  place-items:center;
+  background:var(--primary-wash);
+  color:var(--primary-ink);
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:-.04em;
+}
+.identityNameSkeleton { width:72%; height:clamp(32px,3.24vw,45px); }
+
+/* Yalnızca konum: sunucu metni hiçbir karede gizlenmez. Logo animasyonu
+   iç karoda çalışır; MorphTarget'ın ölçüm kutusu sabittir. Uçan kopya
+   .identity dışında olduğundan bu giriş animasyonunu ikinci kez almaz. */
+@media(prefers-reduced-motion:no-preference) {
+  .identity .companyLogo { animation:company-mark-arrive 620ms var(--ease-brand) both; }
+  .identity .companyName { animation:company-name-arrive 560ms var(--ease-brand) both; }
+  .companyOverview .priceBlock::before { animation:company-rule-arrive 700ms var(--ease-brand) both; }
+}
+@keyframes company-mark-arrive {
+  from { transform:translate3d(0,7px,0) rotate(-4deg) scale(.94); }
+  to { transform:none; }
+}
+@keyframes company-name-arrive {
+  from { transform:translate3d(7px,0,0); }
+  to { transform:none; }
+}
+@keyframes company-rule-arrive {
+  from { transform:scaleX(.15); }
+  to { transform:scaleX(1); }
+}
+@media(max-width:767px) {
+  .companyOverview .identity { gap:16px; }
+  .companyOverview .companyLogo { width:72px; height:72px; border-radius:19px; }
+  .companyOverview .companyName { font-size:32px; }
+  .companyOverview .stockHeader { gap:18px; }
+  .companyOverview .sector { margin-top:8px; }
+  .identityChip { margin-top:10px; }
+  .identityNameSkeleton { height:35px; }
+}
+@media(max-width:479px) {
+  .companyOverview .identity { gap:14px; align-items:flex-start; }
+  .identityMark { margin-top:8px; align-self:flex-start; }
+  .companyOverview .companyLogo { width:64px; height:64px; border-radius:17px; }
+  .companyOverview .companyName { font-size:29px; }
+  .identityMeta { margin-bottom:8px; }
+  .identityMeta :is(button,a) { width:30px; height:30px; }
+  .companyOverview .priceBlock { padding-top:16px; }
+  .identityNameSkeleton { height:32px; }
+}
+@media(max-width:359px) {
+  .companyOverview .identity { gap:11px; }
+  .companyOverview .companyLogo { width:56px; height:56px; border-radius:15px; }
+  .companyOverview .companyName { font-size:25px; }
+  .companyOverview .sector { font-size:11px; }
+  .companyFallback { font-size:18px; }
+  .identityChip a { white-space:normal; }
+}

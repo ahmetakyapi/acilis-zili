@@ -557,6 +557,7 @@ async function IndexDetail({
         tab={tab}
         locale={locale}
         t={t}
+        identity={<IndexIdentity tab={tab} proxy={proxy} proxyQuote={proxyResult.ok ? (proxyResult.data[proxy] ?? null) : null} locale={locale} t={t} />}
         aside={
           withChange.length > 0 ? (
             <BreadthSummary
@@ -571,9 +572,6 @@ async function IndexDetail({
         }
       />
       <IndexToolbar
-        tab={tab}
-        proxy={proxy}
-        proxyQuote={proxyResult.ok ? (proxyResult.data[proxy] ?? null) : null}
         total={withChange.length}
         memberCount={members.length}
         heat={withChange}
@@ -669,9 +667,11 @@ async function IndexDetail({
    Sonraki yükleme düzeninde seçimler sonuç sınırının dışına çıktı: veri
    beklenirken çipler kaybolmaz veya devre dışı kalmaz; genişlik yine altındadır. */
 
-function IndexTabs({ tab, aside }: { tab: TabKey; locale: Locale; t: Dictionary; aside?: ReactNode }) {
+function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Locale; t: Dictionary; aside?: ReactNode; identity?: ReactNode }) {
   return <Panel className={styles.indexTabs}>
-      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 px-4 py-3 sm:px-5">
+      <div className={styles.toolbarLayout}>
+        <div className={styles.indexControls}>
+        {identity}
         {/* ÜÇ ÇİP MOBİLDE TEK SATIRDA. `flex-wrap` ile diziliyorlardı ve
             üçüncü çip (S&P 500) 390 pikselde alt satıra düşüyordu: üç eşit
             seçenek iki-bir diye kırılınca denetim tek bir seçici olmaktan
@@ -709,6 +709,7 @@ function IndexTabs({ tab, aside }: { tab: TabKey; locale: Locale; t: Dictionary;
             );
           })}
         </div>
+        </div>
         {/* SAĞDA YÜKSELENLERİN PAYI (26 Eylül). Pay genişlik kartının sağ
             yarısını tutuyordu; satırın sağı ise yalnızca liste tarihini
             taşıyordu. Pay buraya çıkınca kartın sağı ısı haritasına kaldı.
@@ -724,37 +725,31 @@ function IndexTabs({ tab, aside }: { tab: TabKey; locale: Locale; t: Dictionary;
    Gösterilen fiyat endeks seviyesi değil onu izleyen fonun kotasyonudur;
    fon sembolü bu yüzden fiyatın yanında kalır. Eksik değişimler sayaca
    katılmaz; gerçek kapsam toplam üye sayısıyla ayrıca gösterilir. */
-function IndexToolbar({
-  tab, proxy, proxyQuote, total, memberCount, heat, locale, t, children,
-}: {
-  tab: TabKey; proxy: string; proxyQuote: Quote | null;
-  total: number; memberCount: number;
-  /** Değişimi bilinen satırlar — sayaçla AYNI liste (`withChange`). */
-  heat: Row[];
+function IndexIdentity({ tab, proxy, proxyQuote, locale, t }: {
+  tab: TabKey; proxy: string; proxyQuote: Quote | null; locale: Locale; t: Dictionary;
+}) {
+  return <div className={styles.toolbarIdentity}>
+    <div>
+      <p className={styles.breadthEyebrow}>{t.markets.breadth}</p>
+      <div className={styles.breadthHeading}>
+        <h2>{INDEX_TABS.find((entry) => entry.key === tab)?.label}</h2>
+        <a href="#market-members" className={styles.breadthLink}>{t.markets.constituents} <span aria-hidden>↘</span></a>
+      </div>
+    </div>
+    {proxyQuote && <div className={styles.breadthQuote}>
+      <span className="numeral">{proxy} · {formatPrice(proxyQuote.price, locale, { currency: true })}</span>
+      {proxyQuote.changePct !== null && <ChangePill changePct={proxyQuote.changePct} locale={locale} />}
+    </div>}
+  </div>;
+}
+
+function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
+  total: number; memberCount: number; heat: Row[];
   locale: Locale; t: Dictionary; children?: ReactNode;
 }) {
-  /* Artı/yatay/eksi sayıları ve pay artık sekme satırında (BreadthSummary). */
   return (
     <Panel id="market-reading" className={styles.breadth}>
       <div className={styles.breadthOverview}>
-        <div className={styles.breadthIdentity}>
-          <p className={styles.breadthEyebrow}>{t.markets.breadth}</p>
-          <div className={styles.breadthHeading}>
-            <h2>{INDEX_TABS.find((entry) => entry.key === tab)?.label}</h2>
-            <a href="#market-members" className={styles.breadthLink}>{t.markets.constituents} <span aria-hidden>↘</span></a>
-          </div>
-          {proxyQuote && <div className={styles.breadthQuote}>
-            <span className="numeral">{proxy} · {formatPrice(proxyQuote.price, locale, { currency: true })}</span>
-            {proxyQuote.changePct !== null && <ChangePill changePct={proxyQuote.changePct} locale={locale} />}
-          </div>}
-          {total === 0 && <p className={styles.breadthEmpty}>{t.common.noData}</p>}
-          <p className={styles.breadthCoverage}>{t.markets.breadthCoverage.replace("{known}", String(total)).replace("{total}", String(memberCount))}</p>
-          {/* Okunur tarih ("1 Ağu 2026"): "01.08.2026" hem sitenin öteki
-              tarihleriyle çelişiyor hem 390'da kenardan kesiliyordu. */}
-          <p className={styles.breadthCoverage}>
-            {t.markets.asOf}: <span className="numeral">{formatEtDateMedium(INDEX_COMPOSITION_DATE, locale)}</span>
-          </p>
-        </div>
         {/* ISI HARİTASI, LOGOLU VE 30 ŞİRKET (26 Eylül). Renkli kareler
             "anlamsız" bulundu: hangi karenin hangi şirket olduğu okunmuyordu.
             Artık piyasa değerine göre ilk 30 şirket (`HEAT_MAX`), her karede
@@ -764,22 +759,27 @@ function IndexToolbar({
         {heat.length > 0 && (
           <div className={styles.heat}>
             <div className={styles.heatHead}>
-              <h3>{t.markets.heatmap}</h3>
-              <span aria-hidden className={styles.heatScale}>
-                <span className="numeral">−%{HEAT_FULL}</span>
-                <i />
-                <span className="numeral">+%{HEAT_FULL}</span>
-              </span>
+              <h2>{t.markets.heatmap}</h2>
+              <p className={styles.heatHint}>{t.markets.heatmapHint}</p>
+              <div className={styles.heatLegend} role="img" aria-label={t.markets.heatScaleHint}>
+                <div className={styles.heatSwatches} aria-hidden>
+                  {[-4, -3, -2, -1, 0, 1, 2, 3, 4].map((level) => (
+                    <i key={level} data-heat-tone={level < 0 ? "down" : level > 0 ? "up" : "flat"} data-heat-level={Math.abs(level)} />
+                  ))}
+                </div>
+                <div className={styles.heatLegendLabels}><span>{locale === "tr" ? "≤ −%3" : "≤ −3%"}</span><span>0</span><span>{locale === "tr" ? "≥ +%3" : "≥ +3%"}</span></div>
+                <span className={styles.heatLegendHint}>{t.markets.heatScaleSteps}</span>
+              </div>
             </div>
-            <p className={styles.heatHint}>{t.markets.heatmapHint}</p>
             <div className={styles.heatGrid} data-motion-stagger>
               {[...heat]
                 .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
                 .slice(0, HEAT_MAX)
                 .map((row) => {
                   const change = row.quote!.changePct!;
-                  const depth = Math.min(1, Math.abs(change) / HEAT_FULL);
-                  const tone = change > 0 ? "var(--up)" : change < 0 ? "var(--down)" : null;
+                  const magnitude = Math.abs(change);
+                  const level = magnitude === 0 ? 0 : magnitude < 0.5 ? 1 : magnitude < 1.5 ? 2 : magnitude < 3 ? 3 : 4;
+                  const tone = change > 0 ? "up" : change < 0 ? "down" : "flat";
                   return (
                     <Link
                       key={row.member.symbol}
@@ -787,19 +787,17 @@ function IndexToolbar({
                       prefetch={false}
                       className={styles.heatCell}
                       aria-label={`${row.member.symbol} · ${row.member.name} · ${formatPercent(change, locale)}`}
-                      style={{
-                        background: tone
-                          ? `color-mix(in srgb, ${tone} ${Math.round(HEAT_MIN + depth * (100 - HEAT_MIN))}%, var(--surface-sunken))`
-                          : "var(--surface-sunken)",
-                      }}
+                      aria-describedby={`heat-detail-${row.member.symbol}`}
+                      data-heat-tone={tone}
+                      data-heat-level={level}
                     >
                       <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="md" className={styles.heatLogo} />
+                      <span className={styles.heatSymbol}>{row.member.symbol}</span>
                       <span className={cn("numeral", styles.heatPct)}>{formatPercent(change, locale)}</span>
                       {/* ÜZERİNE GELİNCE KÜNYE KARTI — yalnızca CSS, istemciye
-                          JavaScript inmiyor. Ad, fiyat, günlük değişim ve piyasa
-                          değeri; ekran okuyucu aynı bilgiyi bağlantının adından
-                          alıyor, kart `aria-hidden`. */}
-                      <span aria-hidden className={styles.heatCard}>
+                          JavaScript inmiyor. Ekran okuyucu ayrıntıları bağlantının
+                          aria-describedby açıklamasından alıyor. */}
+                      <span id={`heat-detail-${row.member.symbol}`} aria-hidden className={styles.heatCard}>
                         <span className={styles.heatCardHead}>
                           <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" />
                           <span className="min-w-0">
@@ -811,11 +809,12 @@ function IndexToolbar({
                           <span className="numeral">{formatPrice(row.quote!.price, locale, { currency: true })}</span>
                           <ChangePill changePct={change} locale={locale} />
                         </span>
-                        {row.marketCap ? (
-                          <span className={styles.heatCardFoot}>
-                            {t.market.marketCap} <b className="numeral">{formatMoneyCompact(row.marketCap, locale)}</b>
-                          </span>
-                        ) : null}
+                        <span className={styles.heatCardMetrics}>
+                          {row.marketCap !== null && <span><span>{t.market.marketCap}</span><b className="numeral">{formatMoneyCompact(row.marketCap, locale)}</b></span>}
+                          {row.quote!.volume !== null && <span><span>{t.market.volume}</span><b className="numeral">{new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", { notation: "compact", maximumFractionDigits: 1 }).format(row.quote!.volume)}</b></span>}
+                          {row.quote!.low !== null && row.quote!.high !== null && <span className={styles.heatCardRange}><span>{t.markets.heatDayRange}</span><b className="numeral">{formatPrice(row.quote!.low, locale)} – {formatPrice(row.quote!.high, locale)} $</b></span>}
+                        </span>
+                        <span className={styles.heatCardFoot}>{t.markets.heatOpenCompany} <span aria-hidden>↗</span></span>
                       </span>
                     </Link>
                   );
@@ -824,7 +823,11 @@ function IndexToolbar({
           </div>
         )}
       </div>
-      {children && <div className={styles.breadthStamp}>{children}</div>}
+      {total === 0 && <p className={styles.heatEmpty}>{t.common.noData}</p>}
+      <div className={styles.breadthStamp}>
+        {children}
+        <span className={styles.heatCoverage}>{t.markets.breadthCoverage.replace("{known}", String(total)).replace("{total}", String(memberCount))} · {t.markets.asOf}: {formatEtDateMedium(INDEX_COMPOSITION_DATE, locale)}</span>
+      </div>
     </Panel>
   );
 }
@@ -869,10 +872,8 @@ function BreadthSummary({
   );
 }
 
-/** Isı haritasının doyduğu hareket (yüzde): bunun üstü en koyu ton. */
-const HEAT_FULL = 3;
-/** En küçük hareketin bile zeminden ayrışması için karışımdaki taban pay. */
-const HEAT_MIN = 22;
+/* Haritanın renk eşikleri sabittir: %0,5 / %1,5 / %3. Endeks
+   değiştirmek aynı hareketi başka bir renge dönüştürmez. */
 
 /* ---- En çok artan / düşen kartları ---- */
 
@@ -950,7 +951,7 @@ function MoverPanel({
                     <span className="shrink-0 text-base font-bold text-strong">
                       {row.member.symbol}
                     </span>
-                    <span className="min-w-0 truncate text-tiny text-muted">
+                    <span className="min-w-0 truncate text-tiny text-muted" title={row.member.name}>
                       {row.member.name}
                     </span>
                   </span>

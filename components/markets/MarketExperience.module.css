@@ -198,10 +198,10 @@
    Üzerine gelince kare büyüyüp öne çıkıyor. */
 .heat { padding:18px 24px 20px; border-top:1px solid var(--line); }
 .heatHead { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.heatHead h3 { font-size:var(--text-read); font-weight:700; color:var(--text-strong); }
+.heatHead :is(h2,h3) { font-size:var(--text-read); font-weight:700; color:var(--text-strong); }
 .heatHint { margin-top:4px; color:var(--text-body); font-size:12px; line-height:1.6; }
 .heatScale { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:11px; font-weight:600; }
-.heatScale > i { width:96px; height:8px; border-radius:999px; background:linear-gradient(90deg, var(--down), var(--surface-sunken) 50%, var(--up)); }
+.heatScale > i { width:96px; height:8px; border-radius:999px; background:linear-gradient(90deg, color-mix(in srgb, var(--down) 40%, var(--premium-surface)), var(--premium-surface) 50%, color-mix(in srgb, var(--up) 40%, var(--premium-surface))); }
 .heatGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(18px, 1fr)); gap:3px; margin-top:14px; }
 .heatCell { display:block; aspect-ratio:1; border-radius:4px; transition:scale .18s, box-shadow .18s; }
 @media(hover:hover) and (pointer:fine) {
@@ -253,7 +253,8 @@
 .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(10, minmax(0, 1fr)); gap:6px; margin-top:14px; }
 .heatCell { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; aspect-ratio:auto; min-height:74px; padding:8px 4px; border-radius:12px; overflow:visible; transition:scale .18s var(--ease-brand), box-shadow .18s; }
 .heatLogo { width:30px !important; height:30px !important; border-radius:9px !important; box-shadow:0 0 0 2px rgb(255 255 255 / .35); }
-.heatPct { font-size:11.5px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
+.heatSymbol { font-size:11px; font-weight:700; line-height:1.2; letter-spacing:.02em; color:var(--text-strong); }
+.heatPct { font-size:11.5px; font-weight:600; line-height:1.2; letter-spacing:-.01em; color:var(--text-strong); }
 .heatCell:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 
 .heatCard { position:absolute; bottom:calc(100% + 8px); left:50%; z-index:20; display:flex; flex-direction:column; gap:8px; width:220px; padding:12px; border:1px solid var(--line); border-radius:14px; background:var(--overlay-surface); box-shadow:var(--shadow-overlay); text-align:left; opacity:0; pointer-events:none; transform:translate(-50%, 4px) scale(.97); transition:opacity .16s, transform .2s var(--ease-brand); }
@@ -267,6 +268,10 @@
 .heatCardFoot b { color:var(--text-strong); }
 .heatCell:is(:hover, :focus-visible) { z-index:5; }
 .heatCell:is(:hover, :focus-visible) .heatCard { opacity:1; transform:translate(-50%, 0) scale(1); }
+/* Künye okunurken imleç karodan karta geçebilsin; 8px aralığı görünmez
+   köprü kapatır. Köprü yalnızca açık kartta etkindir. */
+.heatCard::after { content:""; position:absolute; inset:100% 0 auto; height:10px; }
+.heatCell:is(:hover, :focus-visible) .heatCard { pointer-events:auto; }
 .heatGrid > :nth-child(10n + 1):is(:hover, :focus-visible) .heatCard,
 .heatGrid > :nth-child(10n):is(:hover, :focus-visible) .heatCard { transform:translate(0, 0) scale(1); }
 @media(hover:hover) and (pointer:fine) { .heatCell:hover { scale:1.06; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); } }
@@ -275,3 +280,117 @@
  .heatCard { display:none; }
 }
 @media(prefers-reduced-motion:reduce) { .heatCell, .heatCard { transition:none; } .heatCell:hover { scale:none; } }
+
+/* 27 Eylül: 1440/1280'de eski harita 405px, hareket listeleri y=979.
+   Endeks kimliği seçicinin üstündeki boşluğa taşındı. Harita tüm paneli
+   kullanır: genişte 15×2, tablette 10×3, telefonda 5×6. */
+.toolbarLayout { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr); align-items:center; gap:24px; }
+.indexControls { display:flex; min-width:0; flex-direction:column; gap:10px; }
+.toolbarIdentity { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 16px; }
+.toolbarIdentity h2 { margin:3px 0 0; font-size:24px; font-weight:650; line-height:1.15; letter-spacing:-.035em; }
+.toolbarIdentity .breadthLink { min-height:28px; }
+.toolbarIdentity .breadthQuote { gap:6px 10px; font-size:12px; }
+.tabsAside { width:100%; max-width:none; margin:0; }
+.breadthOverview { display:block; padding:16px 20px; }
+.breadthOverview > .heat { padding:0; border:0; }
+.heatHead { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:16px; }
+.heatHead .heatHint { margin:0; font-size:11.5px; }
+.heatLegend { min-width:168px; max-width:200px; color:var(--text-body); }
+.heatSwatches { display:grid; grid-template-columns:repeat(9,1fr); gap:2px; height:7px; overflow:hidden; border-radius:3px; }
+.heatLegendLabels { display:flex; align-items:center; justify-content:space-between; margin-top:3px; font-size:11px; line-height:1.2; font-variant-numeric:tabular-nums; }
+.heatLegendHint { display:block; margin-top:3px; font-size:11px; line-height:1.3; }
+.heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(15,minmax(0,1fr)); gap:5px; margin-top:12px; }
+.heatCell { gap:3px; min-height:68px; padding:7px 3px; border-radius:10px; }
+.heatLogo { width:26px !important; height:26px !important; border-radius:8px !important; box-shadow:none; }
+.heatSymbol { font-size:10.5px; }
+.heatPct { font-size:11px; }
+.heatSymbol, .heatPct { color:inherit; }
+
+/* Mutlak, simetrik ölçek: <0,5 / 0,5–1,5 / 1,5–3 / ≥3. En koyu
+   açık-tema karosunda beyaz metin; gece temasında mürekkep tonu korunur. */
+.breadth { --heat-up-deep:var(--up); --heat-down-deep:var(--down); --heat-deep-ink:#fff; }
+:global([data-theme="dark"]) .breadth {
+  --heat-up-deep:color-mix(in srgb,var(--up) 45%,var(--premium-surface));
+  --heat-down-deep:color-mix(in srgb,var(--down) 45%,var(--premium-surface));
+  --heat-deep-ink:var(--text-strong);
+}
+.heatCell, .heatSwatches > i { --heat-tone:var(--line); --heat-mix:0%; background:var(--surface-sunken); color:var(--text-strong); }
+:is(.heatCell,.heatSwatches > i)[data-heat-tone="up"] { --heat-tone:var(--up); }
+:is(.heatCell,.heatSwatches > i)[data-heat-tone="down"] { --heat-tone:var(--down); }
+:is(.heatCell,.heatSwatches > i)[data-heat-level="1"] { --heat-mix:10%; }
+:is(.heatCell,.heatSwatches > i)[data-heat-level="2"] { --heat-mix:22%; }
+:is(.heatCell,.heatSwatches > i)[data-heat-level="3"] { --heat-mix:34%; }
+:is(.heatCell,.heatSwatches > i):not([data-heat-level="0"]) { background:color-mix(in srgb,var(--heat-tone) var(--heat-mix),var(--premium-surface)); }
+:is(.heatCell,.heatSwatches > i)[data-heat-level="4"] { color:var(--heat-deep-ink); }
+:is(.heatCell,.heatSwatches > i)[data-heat-level="4"][data-heat-tone="up"] { background:var(--heat-up-deep); }
+:is(.heatCell,.heatSwatches > i)[data-heat-level="4"][data-heat-tone="down"] { background:var(--heat-down-deep); }
+
+.heatCard { width:264px; color:var(--text-body); visibility:hidden; }
+.heatCell:is(:hover,:focus-visible) .heatCard { visibility:visible; }
+.heatGrid > .heatCell .heatCard { left:50%; right:auto; transform:translate(-50%,4px) scale(.97); }
+.heatGrid > .heatCell:is(:hover,:focus-visible) .heatCard { transform:translate(-50%,0) scale(1); }
+.heatGrid > .heatCell:is(:nth-child(15n + 1),:nth-child(15n + 2)) .heatCard { left:0; transform:translate(0,4px) scale(.97); }
+.heatGrid > .heatCell:is(:nth-child(15n),:nth-child(15n - 1)) .heatCard { left:auto; right:0; transform:translate(0,4px) scale(.97); }
+.heatGrid > .heatCell:is(:is(:nth-child(15n + 1),:nth-child(15n + 2)),:is(:nth-child(15n),:nth-child(15n - 1))):is(:hover,:focus-visible) .heatCard { transform:translate(0,0) scale(1); }
+.heatCardMetrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 12px; padding-top:10px; border-top:1px solid var(--line-soft); font-size:11px; }
+.heatCardMetrics > span { display:flex; min-width:0; flex-direction:column; gap:3px; }
+.heatCardMetrics b { color:var(--text-strong); font-size:13px; font-weight:650; }
+.heatCardMetrics > .heatCardRange { grid-column:1/-1; flex-direction:row; justify-content:space-between; }
+.heatCardFoot { display:flex; align-items:center; justify-content:space-between; color:var(--primary-ink); font-size:11px; }
+.heatCoverage { color:var(--text-muted); font-size:10.5px; line-height:1.5; }
+.heatEmpty { padding:0 20px 16px; color:var(--text-body); }
+.breadthStamp { padding:8px 20px; }
+@media(max-width:1199px) {
+  .toolbarIdentity .breadthQuote { flex-basis:100%; }
+  .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(10,minmax(0,1fr)); }
+  .heatGrid > .heatCell.heatCell .heatCard { left:50%; right:auto; transform:translate(-50%,4px) scale(.97); }
+  .heatGrid > .heatCell.heatCell:is(:hover,:focus-visible) .heatCard { transform:translate(-50%,0) scale(1); }
+  .heatGrid > .heatCell:is(:nth-child(10n + 1),:nth-child(10n + 2)) .heatCard { left:0; transform:translate(0,4px) scale(.97); }
+  .heatGrid > .heatCell:is(:nth-child(10n),:nth-child(10n - 1)) .heatCard { left:auto; right:0; transform:translate(0,4px) scale(.97); }
+  .heatGrid > .heatCell:is(:is(:nth-child(10n + 1),:nth-child(10n + 2)),:is(:nth-child(10n),:nth-child(10n - 1))):is(:hover,:focus-visible) .heatCard { transform:translate(0,0) scale(1); }
+}
+@media(max-width:767px) {
+  .toolbarLayout { grid-template-columns:minmax(0,1fr); gap:12px; }
+  .indexControls { gap:12px; }
+  .toolbarIdentity { gap:6px; }
+  .toolbarIdentity h2 { font-size:22px; }
+  .toolbarIdentity .breadthQuote { flex-basis:auto; }
+  .breadthOverview { padding:14px; }
+  .heatHead { grid-template-columns:minmax(0,1fr) auto; gap:6px 10px; }
+  .heatHead .heatHint { grid-column:1; grid-row:2; font-size:11px; }
+  .heatLegend { grid-column:2; grid-row:1/3; min-width:128px; max-width:150px; }
+  .heatLegendHint { max-width:135px; font-size:11px; }
+  .breadthStamp { padding:8px 14px; }
+}
+@media(max-width:639px) {
+  .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; }
+  .heatCell { min-height:68px; }
+}
+
+/* Kapak ve hareket listesi: 1440×900'de önce listenin ilk satırı y=909'du.
+   İçerik boyutlarını koruyup kapağın dikey dolgusunu ve bölüm aralığını
+   azaltıyoruz; hareket özetleri yaklaşık 170 piksel daha yukarı taşınır. */
+@media(min-width:1200px) {
+  .page .marketHeader:global(.page-frame.page-frame) { padding-block:16px; gap:16px; }
+  .marketHeader .indexCard { min-height:124px; padding-block:12px; }
+  .marketHeader .reading { margin-top:8px; }
+  .marketHeader .spark { min-height:28px; margin-top:8px; }
+  .marketHeader .masthead > header { gap:8px; }
+  .mover > div:first-child { padding-block:9px; }
+}
+
+/* Beş hareket tek bakışta: geniş ekranda uzun dikey liste yerine
+   beş eşit sütun. Dar ekranda şirket adlarına yer bırakan liste korunur. */
+@media(min-width:1200px) {
+  .mover ul { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); }
+  .mover li { min-width:0; border-bottom:0; }
+  .mover li + li { border-left:1px solid var(--line-soft); }
+  .mover li a { height:100%; padding:10px 12px 12px; }
+  .moverIdentity { display:grid; grid-template-columns:auto 1fr; gap:5px 8px; }
+  .moverRank { grid-column:2; grid-row:1; text-align:right; }
+  .moverIdentity > :nth-child(2) { grid-column:1; grid-row:1; }
+  .moverCompany { grid-column:1/-1; }
+  .moverIdentity > span:last-child { grid-column:1/-1; font-size:18px; line-height:1.2; }
+  .moverTrack { margin-top:7px; }
+  .moverTrack > span:nth-child(2) { font-size:10px; }
+}

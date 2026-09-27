@@ -94,12 +94,20 @@ export function Reveal({
     const passedBy = () => {
       if (element.getBoundingClientRect().bottom < 0) reveal();
     };
+    const revealFocus = () => {
+      reveal();
+      stopAnimation?.();
+      opacity.set(1);
+      y.set(0);
+    };
     observer.observe(element);
     window.addEventListener("scroll", passedBy, { passive: true });
+    element.addEventListener("focusin", revealFocus);
 
     return () => {
       observer.disconnect();
       window.removeEventListener("scroll", passedBy);
+      element.removeEventListener("focusin", revealFocus);
       stopAnimation?.();
       opacity.set(1);
       y.set(0);
@@ -621,23 +629,42 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         visible: boolean;
         tall: boolean;
         ringEnd: string | null;
+        step: number;
       }[] = [];
+      const rows = new Map<Element, { top: number; step: number }>();
+      const grids = new Map<Element, boolean>();
       elements.forEach((element) => {
         if (prepared.has(element) || settled.has(element) || element.closest("[data-motion-root]") !== root) return;
         const visible = inView(element);
         if (firstPass && visible) { settled.add(element); return; }
+        const rect = element.getBoundingClientRect();
+        const parent = element.parentElement;
+        let step = 0;
+        if (parent?.hasAttribute("data-motion-stagger")) {
+          if (!grids.has(parent)) {
+            const columns = getComputedStyle(parent).gridTemplateColumns;
+            grids.set(parent, columns !== "none" && columns.trim().split(/\s+/).length > 1);
+          }
+          const previous = rows.get(parent);
+          // Isı haritası gibi çok satırlı ızgaralarda sıra her görsel
+          // satırda yeniden başlar. Eskiden beşinci öğeden sonraki bütün
+          // karolar aynı 240ms tavana çarpıp tek blok olarak geliyordu.
+          step = previous && (!grids.get(parent) || Math.abs(previous.top - rect.top) < 2) ? previous.step + 1 : 0;
+          rows.set(parent, { top: rect.top, step });
+        }
         measured.push({
           element,
           visible,
-          tall: element.getBoundingClientRect().height > window.innerHeight * .7,
+          tall: rect.height > window.innerHeight * .7,
           ringEnd: element.classList.contains("ring-fill") ? getComputedStyle(element).strokeDashoffset : null,
+          step,
         });
       });
-      measured.forEach(({ element, visible, tall, ringEnd }) => {
+      measured.forEach(({ element, visible, tall, ringEnd, step }) => {
         const parent = element.parentElement;
         const intro = parent?.hasAttribute("data-motion-intro") || parent?.classList.contains("page-heading-copy");
         const siblings = intro || parent?.hasAttribute("data-motion-stagger") ? Array.from(parent!.children) : [];
-        const delay = Math.min(240, Math.max(0, siblings.indexOf(element)) * (intro ? 55 : 65));
+        const delay = Math.min(240, intro ? Math.max(0, siblings.indexOf(element)) * 55 : step * 28);
         const bar = element.dataset.motionDraw === "bar";
         const line = element.dataset.motionDraw === "line";
         /* YOLCULUK (PriceRail): canlı nokta, hayalet noktanın yerinden
@@ -682,7 +709,11 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         });
         animation.pause();
         animation.currentTime = 0;
-        animation.onfinish = () => animation.cancel();
+        animation.onfinish = () => {
+          animation.cancel();
+          settled.add(element);
+          prepared.delete(element);
+        };
         prepared.set(element, animation);
         // A zero threshold also admits flat SVG strokes with zero-height bounds.
         watch(element);
@@ -721,6 +752,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
       for (const [element, animation] of prepared) {
         if (element === event.target || element.contains(event.target)) {
           animation.cancel(); unwatch(element);
+          settled.add(element); prepared.delete(element);
         }
       }
     };
