@@ -1,6 +1,6 @@
 "use client";
 
-import { animate, motion } from "motion/react";
+import { animate } from "motion/react";
 import {
   createContext,
   use,
@@ -14,34 +14,42 @@ import {
   type ReactNode,
 } from "react";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
-import { MACRO_GROUPS, type MacroGroupKey } from "./macro-groups";
+import { anchorOf, MACRO_GROUPS, type MacroGroupKey } from "./macro-groups";
 import { formatMacroValue, type MacroValueFormat } from "./macro-format";
 import styles from "./MacroExperience.module.css";
 
 /* --------------------------------------------------------------------------
-   /makro sahnesi: grup sekmeleri + seri çipleri + büyük grafik, altında
-   bütün serilerin küçük çoklu ızgarası.
+   /makro: üstte bütün göstergelerin ÖZETİ, altta grup grup ayrıntı.
+
+   ÖZET ÜSTTE, GRAFİK ALTTA (29 Eylül, sahibinin isteği). Önceki düzende
+   kapakta tek bir büyük grafik (grup sekmeleri + seri çipleri) ve onun
+   ALTINDA bütün serilerin küçük çoklu ızgarası vardı: on bir göstergenin
+   tek bakışta okunduğu yer sayfanın ikinci ekranındaydı (1440'ta 1070.
+   piksel, 390'da 1042.) ve ilk ekranı tek bir serinin grafiği tutuyordu.
+   Şimdi sıra tersine: kapakta başlığın hemen altında özet ızgarası
+   (ad, dönem, değer, değişim, mini çizgi), kapağın dibinde faiz ve
+   oynaklık; altta dört grup bölümü, her birinde o grubun büyük grafiği.
+   Grup sekmeleri kalktı, çünkü grup artık bir BÖLÜM; seri çipleri bölümün
+   içinde kaldı.
+
+   ÖZET KARTI BİR ÇAPA. `<a href="#makro-enflasyon">`: JavaScript yokken
+   tarayıcı bölüme iner ve bölüm grubun ilk serisini gösterir. JavaScript
+   varken bağlantı o SERİYİ bölümün sahnesinde seçip bölüme kaydırıyor;
+   adres değişmiyor (sığ adres güncellemesi uçuştaki gezinmeyi öldürüyor,
+   CLAUDE.md "İstemci ile sunucu sınırı").
 
    ESKİ KAPAK (28 Eylül, ölçüldü). Solda başlık ve on bir satırlık dikey
-   liste, sağda seçilenin grafiği vardı. Seri sayısı altıdan on bire
-   çıkınca liste 570 piksel boy aldı, yanındaki grafik 176 pikselde kaldı:
-   1280 ve 1440'ta kapak 862 piksel ve grafiğin altında ~450 piksel boş
-   zemin. Sayfanın konusu olan çizgi, seçenek listesinin yanında küçük bir
-   ek gibi duruyordu; üstelik aynı on bir seri kapağın hemen altında
-   kart olarak BİR DAHA listeleniyordu.
+   liste, sağda seçilenin grafiği vardı; liste 570 piksel boy aldı, yanındaki
+   grafik 176 pikselde kaldı. Seçimin yatay (çip) olması o ölçümden.
 
-   Şimdi seçim yatay: dört grup sekmesi, seçili grubun serileri çip. Grafik
-   çerçevenin tam genişliğinde ve 320 piksel. İkinci liste yok; ızgaranın
-   kendisi seçici: karta dokunmak sahneyi o seriye getiriyor.
-
-   DURUM İSTEMCİDE, ADRESTE DEĞİL. Seçili seri hiçbir zaman adreste
-   tutulmadı; sığ adres güncellemesi uçuştaki gezinmeyi öldürüyor ve geri
-   tuşunda eski ağacı getiriyor (CLAUDE.md "İstemci ile sunucu sınırı").
-   Paylaşılabilir bir adres istenmediği sürece o riski almaya değmez.
+   DURUM İSTEMCİDE, ADRESTE DEĞİL. Her grubun seçili serisi ayrı tutuluyor;
+   bir bölümde seri değiştirmek ötekilerin grafiğini oynatmıyor.
 
    VERİ BİR SÖZ (Promise) OLARAK GELİYOR. Sayfa `getMacroBoard`ı beklemeden
-   başlığı gönderiyor; sahne ve ızgara aynı sözü `use()` ile okuyup kendi
-   Suspense sınırlarında akıyor (ölçüm sayfa dosyasında).
+   başlığı gönderiyor; özet ve bölümler AYNI sözü `use()` ile okuyup kendi
+   Suspense sınırlarında akıyor (ölçüm sayfa dosyasında). Özetteki sayı ile
+   bölümdeki büyük rakam aynı nesneden okunuyor; iki ayrı istek iki farklı
+   değer basamaz.
    -------------------------------------------------------------------------- */
 
 export type BoardPoint = {
@@ -79,7 +87,6 @@ export type BoardData = { series: BoardSeries[] };
 
 export type BoardLabels = {
   groups: Record<MacroGroupKey, string>;
-  groupsLabel: string;
   seriesLabel: string;
   previous: string;
   nextRelease: string;
@@ -95,16 +102,17 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const FLAT_DELTA = 0.001;
 /** Rakamın sıfırdan yuvarlanma süresi (saniye): grafiğin çizilişiyle aynı. */
 const ROLL_SECONDS = 0.7;
-/** Sahnenin üstü görüş alanının bu oranından aşağıdaysa karta basınca kaydırılır. */
-const STAGE_VISIBLE_RATIO = 0.35;
 
 type Selection = {
   board: Promise<BoardData>;
   labels: BoardLabels;
-  selected: string | null;
-  /** Okuyucu bir seçim yaptı mı: giriş hareketleri yalnızca o zaman oynar. */
-  switched: boolean;
-  select: (id: string, fromGrid?: boolean) => void;
+  /** Grup başına seçili seri; yoksa grubun ilk serisi. */
+  selected: Partial<Record<MacroGroupKey, string>>;
+  /** Okuyucu o grupta bir seçim yaptı mı: giriş hareketleri yalnızca o zaman oynar. */
+  switched: Partial<Record<MacroGroupKey, boolean>>;
+  select: (group: MacroGroupKey, id: string) => void;
+  /** Özet kartından: seriyi bölümünde seç, bölüme kaydır. */
+  jump: (series: BoardSeries) => void;
 };
 
 const SelectionContext = createContext<Selection | null>(null);
@@ -115,102 +123,65 @@ function useSelection(): Selection {
   return value;
 }
 
-export const STAGE_ID = "makro-grafik";
-
 export function MacroSelection({ board, labels, children }: {
   board: Promise<BoardData>;
   labels: BoardLabels;
   children: ReactNode;
 }) {
-  const [selected, setSelected] = useState<string | null>(null);
-  const [switched, setSwitched] = useState(false);
+  const [selected, setSelected] = useState<Partial<Record<MacroGroupKey, string>>>({});
+  const [switched, setSwitched] = useState<Partial<Record<MacroGroupKey, boolean>>>({});
   const reduced = useMotionPreference();
-  const select = useCallback((id: string, fromGrid = false) => {
-    setSelected(id);
-    setSwitched(true);
-    if (!fromGrid) return;
-    const stage = document.getElementById(STAGE_ID);
-    if (!stage) return;
-    const top = stage.getBoundingClientRect().top;
-    if (top < 0 || top > window.innerHeight * STAGE_VISIBLE_RATIO) {
-      stage.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-    }
-  }, [reduced]);
-  const value = useMemo(() => ({ board, labels, selected, switched, select }), [board, labels, selected, switched, select]);
+  const select = useCallback((group: MacroGroupKey, id: string) => {
+    setSelected((current) => ({ ...current, [group]: id }));
+    setSwitched((current) => (current[group] ? current : { ...current, [group]: true }));
+  }, []);
+  const jump = useCallback((series: BoardSeries) => {
+    select(series.group, series.id);
+    document.getElementById(anchorOf(series.group))?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  }, [select, reduced]);
+  const value = useMemo(
+    () => ({ board, labels, selected, switched, select, jump }),
+    [board, labels, selected, switched, select, jump],
+  );
   return <SelectionContext value={value}>{children}</SelectionContext>;
 }
 
-function activeOf(series: BoardSeries[], selected: string | null) {
-  return series.find((item) => item.id === selected) ?? series[0];
+function directionOf(series: BoardSeries): "up" | "down" | null {
+  return series.delta === null || Math.abs(series.delta) < FLAT_DELTA ? null : series.delta > 0 ? "up" : "down";
 }
 
 /* ---------------------------------------------------------------- Sahne */
 
-export function MacroStage({ empty }: { empty: ReactNode }) {
-  const { board, labels, selected, switched, select } = useSelection();
-  const { series } = use(board);
+function MacroStage({ group, series, extra }: { group: MacroGroupKey; series: BoardSeries[]; extra?: ReactNode }) {
+  const { labels, selected, switched, select } = useSelection();
   const chips = useId();
-  if (series.length === 0) return <>{empty}</>;
-  const active = activeOf(series, selected);
-  const groups = MACRO_GROUPS.filter((group) => series.some((item) => item.group === group.key));
-  const inGroup = series.filter((item) => item.group === active.group);
-  const direction = active.delta === null || Math.abs(active.delta) < FLAT_DELTA ? null : active.delta > 0 ? "up" : "down";
+  const active = series.find((item) => item.id === selected[group]) ?? series[0];
+  const play = switched[group] ?? false;
+  const headingId = `${anchorOf(group)}-seri`;
 
   return (
-    <section id={STAGE_ID} className={styles.stage} aria-labelledby={`${STAGE_ID}-baslik`}>
-      <div className={styles.picker}>
-        <div className={styles.tabs} role="group" aria-label={labels.groupsLabel}>
-          {groups.map((group) => {
-            const on = group.key === active.group;
-            return (
-              <button
-                key={group.key}
-                type="button"
-                aria-pressed={on}
-                aria-controls={chips}
-                onClick={() => {
-                  if (on) return;
-                  const first = series.find((item) => item.group === group.key);
-                  if (first) select(first.id);
-                }}
-              >
-                {/* Seçili hap sekmeden sekmeye KAYAR (TabUnderline ile aynı
-                    yay): hangi grubun açık olduğu bir konum olarak okunuyor. */}
-                {on && <motion.span layoutId="macro-group-pill" className={styles.tabPill} transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
-                <span>{labels.groups[group.key]}</span>
-              </button>
-            );
-          })}
-        </div>
+    <div className={styles.stage}>
+      {/* Tek serili grupta çip basılmaz: seçilecek bir şey yok. Çipte değer
+          YOK (29 Eylül): bütün değerler hemen yukarıdaki özette ve seçili
+          olanınki bir satır aşağıda büyük puntoyla; üçüncü kez yazmak
+          yarım genişlikteki bölümde çip satırını taşırıyordu. */}
+      {series.length > 1 && (
         <div id={chips} className={styles.chips} role="group" aria-label={labels.seriesLabel}>
-          {inGroup.map((item) => (
-            <button key={item.id} type="button" aria-pressed={item.id === active.id} onClick={() => item.id !== active.id && select(item.id)}>
-              <span>{item.title}</span>
-              <b className="numeral">{formatMacroValue(item.latest, item.format)}</b>
+          {series.map((item) => (
+            <button key={item.id} type="button" aria-pressed={item.id === active.id} aria-controls={headingId} onClick={() => item.id !== active.id && select(group, item.id)}>
+              {item.title}
             </button>
           ))}
         </div>
-      </div>
+      )}
 
-      <div key={`okuma:${active.id}`} className={styles.reading} data-enter={switched || undefined}>
+      <div key={`okuma:${active.id}`} className={styles.reading} data-enter={play || undefined}>
         <div className={styles.readingMain}>
-          <h2 id={`${STAGE_ID}-baslik`} className={styles.inkTight}>{active.title}</h2>
+          <h3 id={headingId} className={styles.inkTight}>{active.title}</h3>
           <p className="numeral">{active.period}</p>
           <div className={styles.figure}>
-            <strong className="numeral"><RollingValue value={active.latest} format={active.format} play={switched} /></strong>
-            {active.delta !== null && (
-              <span className={`${styles.delta} numeral`} data-tone={direction ?? "flat"}>
-                {direction ? (
-                  <>
-                    {/* Ok yalnızca yönü söyler: yükseliş accent mavi, düşüş
-                        kırmızı. Yeşil yok; makroda yükselmek iyi haber demek
-                        değil (enflasyon). */}
-                    <span aria-hidden>{direction === "up" ? "▲" : "▼"}</span>
-                    {active.deltaLabel}
-                  </>
-                ) : labels.unchanged}
-              </span>
-            )}
+            <strong className="numeral"><RollingValue value={active.latest} format={active.format} play={play} /></strong>
+            {active.delta !== null && <Delta series={active} labels={labels} />}
             {active.status && <span className={styles.status} data-alert={isAlert(active) ? "" : undefined}>{active.status}</span>}
           </div>
         </div>
@@ -226,7 +197,9 @@ export function MacroStage({ empty }: { empty: ReactNode }) {
         </dl>
       </div>
 
-      <HistoryChart key={`grafik:${active.id}`} series={active} labels={labels} play={switched} />
+      <HistoryChart key={`grafik:${active.id}`} series={active} labels={labels} play={play} />
+
+      {extra}
 
       {(active.note || active.stamp) && (
         <div className={styles.stageFoot}>
@@ -234,7 +207,25 @@ export function MacroStage({ empty }: { empty: ReactNode }) {
           {active.stamp}
         </div>
       )}
-    </section>
+    </div>
+  );
+}
+
+/**
+ * Değişim hapı: ok yalnızca YÖNÜ söyler (yükseliş accent mavi, düşüş
+ * kırmızı). Yeşil yok; makroda yükselmek iyi haber demek değil (enflasyon).
+ */
+function Delta({ series, labels }: { series: BoardSeries; labels: BoardLabels }) {
+  const direction = directionOf(series);
+  return (
+    <span className={`${styles.delta} numeral`} data-tone={direction ?? "flat"}>
+      {direction ? (
+        <>
+          <span aria-hidden>{direction === "up" ? "▲" : "▼"}</span>
+          {series.deltaLabel}
+        </>
+      ) : labels.unchanged}
+    </span>
   );
 }
 
@@ -311,7 +302,7 @@ function domainOf(points: BoardPoint[], threshold: number | null): Domain {
 /* --------------------------------------------------------- Büyük grafik */
 
 const CHART_W = 1000;
-const CHART_H = 320;
+const CHART_H = 240;
 
 function HistoryChart({ series, labels, play }: { series: BoardSeries; labels: BoardLabels; play: boolean }) {
   const points = series.points;
@@ -431,89 +422,128 @@ function tickDigits(ticks: number[], digits: number) {
   return ticks.every((tick) => Number.isInteger(tick)) ? 0 : Math.min(digits, 2);
 }
 
-/* ------------------------------------------------------- Küçük çoklular */
+/* ------------------------------------------------------------- Özet */
 
 const MINI_W = 200;
 const MINI_H = 56;
 
-export function MacroGrid({ fomc }: { fomc: ReactNode }) {
-  const { board, labels, selected, select } = useSelection();
-  const { series } = use(board);
-  if (series.length === 0) return null;
-  const active = activeOf(series, selected);
+/**
+ * Mini çizgi: büyük grafikle aynı ölçek dili (eşik ve sıfır çizgisi,
+ * dolgu). Yalnızca serinin kendi gözlemlerinden; iki noktadan azsa hiç
+ * basılmaz, düz bir çizgi uydurulmaz.
+ */
+function Spark({ series }: { series: BoardSeries }) {
+  const gradient = useId();
+  const points = series.points;
+  if (points.length < 2) return <span className={styles.tileSpark} aria-hidden />;
+  const domain = domainOf(points, series.threshold?.value ?? null);
+  const t0 = points[0].t;
+  const span = points[points.length - 1].t - t0 || 1;
+  const x = (t: number) => ((t - t0) / span) * MINI_W;
+  const y = (value: number) => (1 - (value - domain.lo) / (domain.hi - domain.lo)) * MINI_H;
+  const line = points.map((point, i) => `${i ? "L" : "M"}${x(point.t).toFixed(1)},${y(point.value).toFixed(1)}`).join("");
   return (
-    <section className={styles.multiples} aria-labelledby="makro-tumu">
-      <h2 id="makro-tumu" className={styles.multiplesTitle}>{labels.all}</h2>
-      <div className={styles.grid} data-motion-stagger>
-        {fomc}
+    <svg viewBox={`0 0 ${MINI_W} ${MINI_H}`} preserveAspectRatio="none" aria-hidden className={styles.tileSpark}>
+      <defs>
+        <linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--primary)" stopOpacity=".16" />
+          <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {domain.lo < 0 && domain.hi > 0 && (
+        <line x1="0" x2={MINI_W} y1={y(0)} y2={y(0)} className={styles.gridLine} data-zero="" vectorEffect="non-scaling-stroke" />
+      )}
+      {series.threshold && (
+        <line x1="0" x2={MINI_W} y1={y(series.threshold.value)} y2={y(series.threshold.value)} className={styles.thresholdLine} vectorEffect="non-scaling-stroke" />
+      )}
+      {/* `spark-*` sınıfları: görünüme girince MotionExperience çiziyor
+          (çizgi, sonra dolgu), sitenin bütün mini grafikleri gibi. */}
+      <path className="spark-area" d={`${line}L${MINI_W},${MINI_H}L0,${MINI_H}Z`} fill={`url(#${gradient})`} />
+      <path className={`spark-line ${styles.chartLine}`} d={line} vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+/**
+ * Özet ızgarası: kapakta, başlığın hemen altında, her gösterge bir kart.
+ *
+ * AYNI HAT. Kart ızgaranın üç SATIRINI alt ızgara (`subgrid`) olarak
+ * kullanıyor: başlık/künye, değer/değişim, mini çizgi. Bir satırdaki
+ * kartlardan birinin adı iki satıra kırıldığında o satırın bütün kartları
+ * aynı başlık yüksekliğini alıyor ve değerler aynı hatta biter (CLAUDE.md
+ * "yan yana duran ölçüler aynı hatta biter").
+ *
+ * DÖNEM KÜNYESİ HER KARTTA. Seriler aynı günün verisi değil: TÜFE bir ay,
+ * çekirdek PCE iki ay geriden yayımlanıyor, işsizlik başvuruları haftalık,
+ * faiz farkı günlük. Değerin hangi döneme ait olduğu adın hemen altında;
+ * "bugün" izlenimi veren bir sayı yok (veri dürüstlüğü 2. madde).
+ */
+export function MacroSummary({ empty }: { empty: ReactNode }) {
+  const { board, labels, jump } = useSelection();
+  const { series } = use(board);
+  if (series.length === 0) return <>{empty}</>;
+  return (
+    <section className={styles.summary} aria-labelledby="makro-ozet">
+      <h2 id="makro-ozet" className={styles.summaryTitle}>{labels.all}</h2>
+      <div className={styles.summaryGrid} data-motion-stagger>
         {series.map((item) => (
-          <MiniCard key={item.id} series={item} active={item.id === active.id} labels={labels} onSelect={() => select(item.id, true)} />
+          <a
+            key={item.id}
+            href={`#${anchorOf(item.group)}`}
+            className={styles.tile}
+            data-summary-tile={item.id}
+            onClick={(event) => {
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              event.preventDefault();
+              jump(item);
+            }}
+          >
+            <span className={styles.tileHead}>
+              <span className={styles.tileTitle}>{item.title}</span>
+              <span className={styles.tileMeta}>
+                <span className="numeral">{item.period}</span>
+                {item.status && <span className={styles.status} data-alert={isAlert(item) ? "" : undefined}>{item.status}</span>}
+              </span>
+            </span>
+            <span className={styles.tileFigure} data-summary-figure>
+              <b className="numeral">{formatMacroValue(item.latest, item.format)}</b>
+              {item.delta !== null && <Delta series={item} labels={labels} />}
+            </span>
+            <Spark series={item} />
+          </a>
         ))}
       </div>
     </section>
   );
 }
 
-function MiniCard({ series, active, labels, onSelect }: {
-  series: BoardSeries;
-  active: boolean;
-  labels: BoardLabels;
-  onSelect: () => void;
-}) {
-  const gradient = useId();
-  const points = series.points;
-  const direction = series.delta === null || Math.abs(series.delta) < FLAT_DELTA ? null : series.delta > 0 ? "up" : "down";
-  let spark: ReactNode = null;
-  if (points.length >= 2) {
-    const domain = domainOf(points, series.threshold?.value ?? null);
-    const t0 = points[0].t;
-    const span = points.at(-1)!.t - t0 || 1;
-    const x = (t: number) => ((t - t0) / span) * MINI_W;
-    const y = (value: number) => (1 - (value - domain.lo) / (domain.hi - domain.lo)) * MINI_H;
-    const line = points.map((point, i) => `${i ? "L" : "M"}${x(point.t).toFixed(1)},${y(point.value).toFixed(1)}`).join("");
-    spark = (
-      <svg viewBox={`0 0 ${MINI_W} ${MINI_H}`} preserveAspectRatio="none" aria-hidden className={styles.mini}>
-        <defs>
-          <linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--primary)" stopOpacity=".16" />
-            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {domain.lo < 0 && domain.hi > 0 && (
-          <line x1="0" x2={MINI_W} y1={y(0)} y2={y(0)} className={styles.gridLine} data-zero="" vectorEffect="non-scaling-stroke" />
-        )}
-        {series.threshold && (
-          <line x1="0" x2={MINI_W} y1={y(series.threshold.value)} y2={y(series.threshold.value)} className={styles.thresholdLine} vectorEffect="non-scaling-stroke" />
-        )}
-        {/* `spark-*` sınıfları: görünüme girince MotionExperience çiziyor
-            (çizgi, sonra dolgu), sitenin bütün mini grafikleri gibi. */}
-        <path className="spark-area" d={`${line}L${MINI_W},${MINI_H}L0,${MINI_H}Z`} fill={`url(#${gradient})`} />
-        <path className={`spark-line ${styles.chartLine}`} d={line} vectorEffect="non-scaling-stroke" />
-      </svg>
-    );
-  }
+/* --------------------------------------------------------- Bölümler */
 
+/**
+ * Ayrıntı: her grup bir bölüm, bölümün başlığı grubun adı; geniş ekranda
+ * ikişer yan yana (CSS). Para politikası bölümü sonraki FOMC şeridini
+ * grafiğin altında taşıyor: politika faizi
+ * kartının "Sonraki Açıklama" satırı aylık ortalamanın yayın günü, karar
+ * günü değil; kararın kendisi o kartta.
+ */
+export function MacroSections({ fomc }: { fomc: ReactNode }) {
+  const { board, labels } = useSelection();
+  const { series } = use(board);
+  if (series.length === 0) return null;
+  const groups = MACRO_GROUPS.filter((group) => series.some((item) => item.group === group.key));
   return (
-    <button type="button" className={styles.card} aria-pressed={active} aria-controls={STAGE_ID} onClick={onSelect}>
-      <span className={styles.cardHead}>
-        <span className={styles.cardTitle}>{series.title}</span>
-        <span className={`${styles.cardPeriod} numeral`}>{series.period}</span>
-      </span>
-      <span className={styles.cardFigure}>
-        <b className="numeral">{formatMacroValue(series.latest, series.format)}</b>
-        {series.delta !== null && (
-          <span className={`${styles.delta} numeral`} data-tone={direction ?? "flat"}>
-            {direction ? <><span aria-hidden>{direction === "up" ? "▲" : "▼"}</span>{series.deltaLabel}</> : labels.unchanged}
-          </span>
-        )}
-      </span>
-      {series.status && <span className={styles.status} data-alert={isAlert(series) ? "" : undefined}>{series.status}</span>}
-      {spark}
-      <span className={styles.cardFoot}>
-        <span>{labels.nextRelease}</span>
-        <span className="numeral" data-muted={series.nextShort ? undefined : ""}>{series.nextShort ?? labels.noNextRelease}</span>
-      </span>
-    </button>
+    <div className={styles.sections}>
+      {groups.map((group) => (
+        <section key={group.key} id={group.anchor} className={styles.section} aria-labelledby={`${group.anchor}-baslik`}>
+          <h2 id={`${group.anchor}-baslik`} className={styles.sectionTitle}>{labels.groups[group.key]}</h2>
+          <MacroStage
+            group={group.key}
+            series={series.filter((item) => item.group === group.key)}
+            extra={group.key === "policy" ? fomc : undefined}
+          />
+        </section>
+      ))}
+    </div>
   );
 }
 

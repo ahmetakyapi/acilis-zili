@@ -11,7 +11,7 @@ import styles from "@/components/themes/Themes.module.css";
 import { LogoGroup, SpreadStrip } from "@/components/themes/ThemeVisuals";
 import { ThemeRanking } from "@/components/themes/ThemeRanking";
 import { CompanyCards } from "@/components/ui/CompanyCards";
-import { DataStamp } from "@/components/ui/primitives";
+import { DataStamp, LogoTile } from "@/components/ui/primitives";
 import { themeDek, themeTitle } from "@/content/themes";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
@@ -124,16 +124,32 @@ async function LiveRanking({ locale, t }: { locale: Locale; t: Dictionary }) {
  * En güçlü ve en zayıf YALNIZCA canlı seansta (galerideki künyeyle aynı
  * kural); son kapanışa kalmış günde sayılar nötr basılıyor ve "Son Kapanış"
  * diyor: dünü bugün diye anlatmıyor.
+ *
+ * DÖRT KUTU YERİNE TEK YÜZEY (29 Eylül, sahibinin isteği: "görselliği daha
+ * üst seviyeye"). Dört eşit kutu sağdaki sıralamanın sayılarını ikinci kez
+ * YAZIYORDU. Özet artık sıralamanın söylemediğini gösteriyor: yükselen ve
+ * düşen tema sayısı tek bir ORAN ÇUBUĞU (sıralama her temayı ayrı ayrı
+ * çiziyor, kaç tanesinin artıda olduğunu okutmuyor) ve iki uç temanın
+ * kimlerden oluştuğu (logolar). Hepsi aynı `comparable` kümesinden; çubuk
+ * sayılarla aynı üç parçayı (yükselen, yatay, düşen) orantılı çiziyor.
+ * Kutu değil ton: tek çukur yüzey, bölümler hairline ile ayrılıyor.
  */
 type HeroSummaryData = {
   rising: number;
   falling: number;
+  /** Ortak kümedeki tema sayısı — medyanı tam sıfır olan tema ikisine de girmiyor. */
+  total: number;
   session: boolean;
   preMarket: boolean;
   lastClose: boolean;
   leader: ThemeCard | null;
   laggard: ThemeCard | null;
 };
+
+/** Uç temanın yanında gösterilen logo sayısı. 1440'ta satır 262 piksel:
+    dört 22'lik logo (100) + ad + yüzde sığıyor; beşincide "Nükleer,
+    Elektrik ve Şebeke" gibi uzun ad iki harfe iniyordu. */
+const EXTREME_LOGOS = 4;
 
 async function LiveHeroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   const { board, scaleBasis } = await loadThemeBoard();
@@ -144,6 +160,7 @@ async function LiveHeroSummary({ locale, t }: { locale: Locale; t: Dictionary })
       summary={{
         rising: comparable.filter((card) => card.median! > 0).length,
         falling: comparable.filter((card) => card.median! < 0).length,
+        total: comparable.length,
         session: scaleBasis === "session",
         preMarket: board.phase === "pre-market",
         lastClose: board.phase === "lastClose",
@@ -157,55 +174,98 @@ async function LiveHeroSummary({ locale, t }: { locale: Locale; t: Dictionary })
 }
 
 function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; locale: Locale; t: Dictionary }) {
-  const count = (value: number | undefined, tone: "up" | "down") => (
-    <strong
-      className={cn(
-        "numeral",
-        styles.heroStatValue,
-        value === undefined ? "text-muted" : summary?.session ? (tone === "up" ? "text-up" : "text-down") : "text-body",
-      )}
-    >
-      {value === undefined ? NO_VALUE : value}
-    </strong>
-  );
-  const extreme = (card: ThemeCard | null, label: string) => (
-    <div className={styles.heroStat}>
-      <span className={styles.heroStatLabel}>{label}</span>
-      {card && card.median !== null ? (
-        <span className={styles.heroExtreme}>
-          <span className={styles.heroExtremeName}>{themeTitle(card.theme, locale)}</span>
-          <b className={cn("numeral", directionText(directionOf(card.median)))}>{formatPercent(card.median, locale)}</b>
+  const tone = (kind: "up" | "down") =>
+    summary === null ? "text-muted" : summary.session ? (kind === "up" ? "text-up" : "text-down") : "text-body";
+  const total = summary?.total ?? 0;
+  const flat = total - (summary?.rising ?? 0) - (summary?.falling ?? 0);
+  const neutral = !summary?.session;
+
+  const extreme = (card: ThemeCard | null, label: string) =>
+    card && card.median !== null ? (
+      <Link href={`/tema/${card.theme.slug}`} prefetch={false} className={styles.heroExtreme}>
+        <span className={styles.heroExtremeHead}>
+          <span className={styles.heroLabel}>{label}</span>
+          <b className={cn("numeral", styles.heroExtremePct, directionText(directionOf(card.median)))}>
+            {formatPercent(card.median, locale)}
+          </b>
         </span>
-      ) : (
-        <strong className={cn("numeral text-muted", styles.heroStatValue)}>{NO_VALUE}</strong>
-      )}
-    </div>
-  );
+        <span className={styles.heroExtremeBody}>
+          <span className={styles.heroLogos} aria-hidden>
+            {card.members.slice(0, EXTREME_LOGOS).map((member) => (
+              <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="xs" />
+            ))}
+          </span>
+          <span className={styles.heroExtremeName}>{themeTitle(card.theme, locale)}</span>
+        </span>
+      </Link>
+    ) : (
+      /* Yedekte ve seans dışında aynı iki satır: veri inince kapak oynamıyor. */
+      <div className={styles.heroExtreme}>
+        <span className={styles.heroExtremeHead}>
+          <span className={styles.heroLabel}>{label}</span>
+          <b className={cn("numeral text-muted", styles.heroExtremePct)}>{NO_VALUE}</b>
+        </span>
+        <span className={styles.heroExtremeBody}>
+          <span className={cn(styles.heroExtremeName, "text-muted")}>{NO_VALUE}</span>
+        </span>
+      </div>
+    );
+
   return (
     <div className={styles.heroSummary}>
-      <div className={styles.heroStat}>
-        <span className={styles.heroStatLabel}>
-          {t.themes.themesRising}
-          {summary && (!summary.session || summary.lastClose)
-            ? ` · ${t.themes.medianLastClose}`
-            : summary?.preMarket
-              ? ` · ${t.themes.medianPreMarket}`
-              : ""}
+      <div className={styles.heroBreadth}>
+        <div className={styles.heroBreadthHead}>
+          <span className={styles.heroLabel}>
+            {t.themes.themesBreadth}
+            {summary && (!summary.session || summary.lastClose)
+              ? ` · ${t.themes.medianLastClose}`
+              : summary?.preMarket
+                ? ` · ${t.themes.medianPreMarket}`
+                : ""}
+          </span>
+          <span className={styles.heroCounts}>
+            <b className={cn("numeral", tone("up"))}>{summary ? summary.rising : NO_VALUE}</b>
+            {t.themes.up}
+            <span aria-hidden className={styles.breadthSep} />
+            <b className={cn("numeral", tone("down"))}>{summary ? summary.falling : NO_VALUE}</b>
+            {t.themes.down}
+          </span>
+        </div>
+        {/* Oranın çizgisi: yükselen soldan, düşen sağdan; yatay kalan
+            ortada. Nötr kümede yön rengi yok ama iki parça iki tonda
+            kalıyor — oran son kapanışta da okunur. */}
+        <span className={styles.ratio} aria-hidden>
+          {total > 0 && (
+            <>
+              {summary!.rising > 0 && (
+                <i
+                  data-tone={neutral ? "neutral-up" : "up"}
+                  data-motion-draw="line"
+                  style={{ flexGrow: summary!.rising, transformOrigin: "left center" }}
+                />
+              )}
+              {flat > 0 && <i data-tone="flat" style={{ flexGrow: flat }} />}
+              {summary!.falling > 0 && (
+                <i
+                  data-tone={neutral ? "neutral-down" : "down"}
+                  data-motion-draw="line"
+                  style={{ flexGrow: summary!.falling, transformOrigin: "right center" }}
+                />
+              )}
+            </>
+          )}
         </span>
-        {count(summary?.rising, "up")}
       </div>
-      <div className={styles.heroStat}>
-        <span className={styles.heroStatLabel}>{t.themes.themesFalling}</span>
-        {count(summary?.falling, "down")}
+      <div className={styles.heroExtremes}>
+        {extreme(
+          summary?.leader ?? null,
+          summary?.preMarket ? t.themes.strongestPre : summary?.lastClose ? t.themes.strongestClose : t.themes.strongest,
+        )}
+        {extreme(
+          summary?.laggard ?? null,
+          summary?.preMarket ? t.themes.weakestPre : summary?.lastClose ? t.themes.weakestClose : t.themes.weakest,
+        )}
       </div>
-      {extreme(
-        summary?.leader ?? null,
-        summary?.preMarket ? t.themes.strongestPre : summary?.lastClose ? t.themes.strongestClose : t.themes.strongest,
-      )}
-      {extreme(
-        summary?.laggard ?? null,
-        summary?.preMarket ? t.themes.weakestPre : summary?.lastClose ? t.themes.weakestClose : t.themes.weakest,
-      )}
     </div>
   );
 }
@@ -345,11 +405,32 @@ function ThemeGallery({ board, locale, t }: { board: ThemeBoard; locale: Locale;
                 }
               />
 
+              {/* YÖN ORANI ÇİZGİ OLARAK (29 Eylül). "2 Yükselen · 15 Düşen"
+                  yalnızca metindi; iki sayıyı kafada orana çevirmek
+                  gerekiyordu. Çubuk aynı iki sayıyı (ve sıfırda kalanları)
+                  uzunluk olarak çiziyor, şeridin çentikleriyle AYNI küme
+                  (`card.points`). Yedekte ray boş ama yerinde: sayılar inince
+                  dip satırı oynamıyor. */}
               <div className={styles.cardFoot}>
                 <span>
                   {card.count === null
                     ? NO_VALUE
                     : t.themes.companies.replace("{count}", String(card.count))}
+                </span>
+                <span className={cn(styles.ratio, styles.cardRatio)} aria-hidden>
+                  {card.up !== null && card.points.length > 0 && (
+                    <>
+                      {card.up > 0 && (
+                        <i data-tone={neutral ? "neutral-up" : "up"} style={{ flexGrow: card.up }} />
+                      )}
+                      {card.points.length - card.up - card.down! > 0 && (
+                        <i data-tone="flat" style={{ flexGrow: card.points.length - card.up - card.down! }} />
+                      )}
+                      {card.down! > 0 && (
+                        <i data-tone={neutral ? "neutral-down" : "down"} style={{ flexGrow: card.down! }} />
+                      )}
+                    </>
+                  )}
                 </span>
                 <span className={styles.breadth}>
                   {card.up === null ? (

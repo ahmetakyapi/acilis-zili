@@ -243,7 +243,7 @@ function`, `cache()` sarmalı yok ve argümanı sembol listesi değil bir
 koruma `fetch`in kendi veri önbelleği (`revalidate`), yani farklı bir
 mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
 (`getHolidays`, `getStatus`, `getEventsBetween`, `getEventsBetweenResult`,
-`getEarningsBetween`,
+`getEarningsBetween`, `getEarningsBetweenResult`,
 `getNewsById`, `getStoryBySlug`, `getStoryLocales`, `getBriefIssue`,
 `getAnalysis`, `getAnalysisLocales`, `symbolNamesForKey`, `isKnownSymbol`),
 `lib/technical-data.ts` (`getTechnicalBoard`, `getTechnicalDetail`,
@@ -394,10 +394,11 @@ eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye ba
   `/api/analiz/context` rutine aday listesi verir. Rutin promptu
   `docs/claude-rutinler.md` § 4'te. Sayılar **ham** tutulur (8.97e9), metin
   alanları dile göre; sunum katmanı biçimlendirir.
-  Bilançolar ekranı üç sekmedir — Takvim (`/bilancolar`), Analizler
-  (`/bilancolar/analizler`), Takip Ettiklerim (`/bilancolar/takip`); detay
-  `/bilancolar/{sembol}/{donem}`. Sekme çubuğu paylaşılan bir layout'ta
-  DEĞİL, üç sayfanın her biri kendi basıyor: detay sayfası aynı segmentin
+  Bilançolar ekranı dört sekmedir — Takvim (`/bilancolar`), Haftalık
+  (`/bilancolar/hafta`), Analizler (`/bilancolar/analizler`), Takip
+  Ettiklerim (`/bilancolar/takip`); detay `/bilancolar/{sembol}/{donem}`.
+  Sekme çubuğu paylaşılan bir layout'ta DEĞİL, dört sayfanın her biri
+  kendi basıyor: detay sayfası aynı segmentin
   altında ve orada sekme istenmiyor.
 - **Teknik analizler** de veritabanında (`technical_analyses`) ve aynı
   köprüden: `/api/teknik` POST bir yayını TOPLU yazar (`{session_date,

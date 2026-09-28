@@ -253,7 +253,9 @@
    ızgaranın satır aralığı 14'e indi ve kartlar arasındaki 18 piksel
    hücrenin alt kenarından tamamlanıyor. */
 .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 340px), 1fr)); column-gap:18px; row-gap:14px; }
-.cell { display:grid; grid-template-rows:subgrid; grid-row:span 6; min-width:0; margin-bottom:4px; }
+/* BEŞ SATIR (29 Eylül): baş, fiyat, plan, gerekçe, ölçüler. Altıncı satır
+   "Analizi Oku" ayağıydı; kalkış gerekçesi TechnicalCard'da. */
+.cell { display:grid; grid-template-rows:subgrid; grid-row:span 5; min-width:0; margin-bottom:4px; }
 /* Kartın TAMAMI tek bağlantı değil. Öyleydi ve bağlantının erişilebilir adı
    kartın bütün metniydi (sembol, fiyat, 280 karaktere kadar başlık, lejant,
    çipler); ekran okuyucuda hisseler arasında başlıkla da gezinilemiyordu.
@@ -278,7 +280,7 @@
    her kartın tepesinde renkli şerit kalıplaşmış bir kart süsü ve TUT'u
    maviye bağlayınca "mavi etkileşimdir" kuralını (tema dosyası) bozuyordu.
    Yarıçap panel tokenı. */
-.card { position:relative; isolation:isolate; display:grid; grid-template-rows:subgrid; grid-row:span 6; min-width:0; padding:20px 20px 16px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); box-shadow:none; transition:border-color var(--default-transition-duration) var(--ease-brand); }
+.card { position:relative; isolation:isolate; display:grid; grid-template-rows:subgrid; grid-row:span 5; min-width:0; padding:20px 20px 18px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); box-shadow:none; transition:border-color var(--default-transition-duration) var(--ease-brand); }
 /* Kart bir bağlantı (başlıktaki `::after` kaplaması), hover'ı bu yüzden
    var — ve yalnızca kenarlık tonu. */
 .card:hover { border-color:var(--primary-faint); }
@@ -445,15 +447,15 @@
   .gaugeTags { gap:3px; }
   .gaugeTags i { padding:1px 4px 1px 2px; font-size:10px; }
 }
-.cardFoot { display:flex; align-items:center; align-self:end; justify-content:space-between; gap:10px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
-/* Eski yayından gelen kart: ayak adını ve tarihini taşıyan bir etiket
-   alıyor. Yön rengi değil ton — bayatlık bir yön değil (gerekçe
-   TechnicalCard'da). Güncel kartın ayağında yalnızca "Analizi Oku" var ve
-   sağda duruyor (`margin-left:auto`), etiket geldiğinde de yeri değişmiyor. */
-.staleTag { display:inline-flex; padding:2px 8px; border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-strong); font-weight:650; }
-.cardRead { display:inline-flex; align-items:center; gap:4px; margin-left:auto; color:var(--primary-ink); font-weight:600; }
-.cardRead svg { transition:transform var(--default-transition-duration) var(--ease-brand); }
-.card:hover .cardRead svg { transform:translate(2px,-2px); }
+/* Eski yayından gelen kart: adını ve tarihini taşıyan bir etiket alıyor.
+   Yön rengi değil ton — bayatlık bir yön değil (gerekçe TechnicalCard'da).
+   AYAK 29 EYLÜL'DE KALKTI: etiket ayaktan cümlenin künyesine çıktı,
+   "Analizi Oku" işareti sembolün yanındaki oka döndü (`.cardGo`). Ayağın
+   kıl çizgisi ve iç payı kartın 46 pikseliydi (1440, ölçüldü). */
+.staleTag { display:inline-flex; padding:1px 7px; border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-strong); font-weight:650; }
+.cardSymbol .cardLink { display:inline-flex; align-items:center; gap:3px; }
+.cardGo { flex:none; color:var(--primary-ink); transition:transform var(--default-transition-duration) var(--ease-brand); }
+.card:hover .cardGo { transform:translate(2px,-2px); }
 
 /* ---- Plan şeridi: NEREDEN ALINIR · NEREDE SATILIR · NEREDE VAZGEÇİLİR ----
    Kartta SATIR düzeni: soru solda, sayı sağda. Üç sütun 340px'lik kartta
@@ -1193,8 +1195,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card, .cardRead svg, .pulseLogo { transition:none; }
-  .card:hover .cardRead svg { transform:none; }
+  .card, .cardGo, .pulseLogo { transition:none; }
+  .card:hover .cardGo { transform:none; }
 }
 
 /* ---- Şirket sayfasının teknik analiz kartı ----
@@ -1861,7 +1863,6 @@
 .card .gaugeName { font-size:12.5px; color:var(--text-body); }
 .card .gaugeValue { font-size:14.5px; }
 .card .gaugeTags i { font-size:12px; color:var(--text-body); }
-.card .cardFoot { font-size:12.5px; color:var(--text-body); }
 @media(prefers-reduced-motion:reduce) {
  .card::before { animation:none; }
  .card, .card .cardHead > :first-child { transition:none; }
@@ -1915,3 +1916,60 @@
 .stanceCases { display:grid; gap:12px; padding-top:12px; border-top:1px solid var(--line-soft); }
 .stanceCases > div { display:grid; gap:4px; }
 .stanceCases dd { color:var(--text-body); font-size:14px; line-height:1.65; text-wrap:pretty; }
+.stanceMore > summary { display:flex; align-items:center; gap:6px; min-height:44px; color:var(--primary-ink); font-size:13px; font-weight:650; cursor:pointer; list-style:none; }
+.stanceMore > summary::-webkit-details-marker { display:none; }
+.stanceMore > summary::after { content:""; width:7px; height:7px; margin-left:2px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:translateY(-2px) rotate(45deg); transition:transform .2s; }
+.stanceMore[open] > summary::after { transform:translateY(1px) rotate(-135deg); }
+@media (min-width:768px) {
+  .stanceMore > summary { display:none; }
+  .stanceMore::details-content { content-visibility:visible; height:auto; }
+}
+
+/* ---- Görüş geçmişi: planın seyri (29 Eylül) ----
+   Gerekçe `PlanHistory` üzerinde. Çizgi ince bir ray: bölge görüşün
+   renginde bir kapsül (AL yükseliş, TUT birincil, SAT düşüş), stop kırmızı
+   bir çentik. Ölçek başlıkta yazılı (en düşük – en yüksek), satırlar aynı
+   ölçeği paylaşıyor. Satırlar 42 pikseldi, 34'e indi: tablo on iki yayını
+   taşırken bile ekranın sayısı değil seyri okutması gerekiyor. */
+.historyTable td { padding-block:7px; }
+.historyTable th[data-cell="track"], .historyTable td[data-cell="track"] { width:34%; min-width:180px; padding-right:0; }
+.historyScale { display:flex; justify-content:space-between; gap:12px; }
+.historyScale > .numeral { font-weight:600; letter-spacing:0; }
+.historyCount { margin-left:8px; font-size:11px; font-weight:600; color:var(--text-muted); }
+.historyTrack { position:relative; display:block; height:10px; }
+.historyTrack::before { content:""; position:absolute; left:0; right:0; top:4px; height:2px; border-radius:1px; background:var(--rail-track); }
+.historyTrack b { position:absolute; top:1px; height:8px; border-radius:4px; background:var(--primary); }
+.historyTrack[data-verdict="buy"] b { background:var(--up); }
+.historyTrack[data-verdict="sell"] b { background:var(--down); }
+.historyTrack i { position:absolute; top:0; width:2px; height:10px; margin-left:-1px; border-radius:1px; background:var(--down); }
+.historyTable + .footHint, .tableWrap + .footHint { margin-top:10px; }
+@media (max-width: 767px) {
+  /* TELEFONDA ÜÇ SATIR, İKİ DEĞİL DÖRT DEĞİL: üstte tarih, yayın, görüş;
+     ortada bölge solda, stop sağda (ikisi ayrı satırdaydı); altta ray. */
+  .historyTable tr { grid-template-columns:auto minmax(0,1fr) auto; padding:9px 0; row-gap:4px; }
+  .historyTable td { padding-block:0; }
+  .historyTable td[data-cell="edition"] { font-size:12.5px; line-height:1.35; }
+  .historyTable td[data-cell="entry"] { grid-column:1 / 3; }
+  .historyTable td[data-cell="stop"] { grid-column:3; justify-self:end; }
+  .historyTable td[data-cell="track"] { grid-column:1 / -1; width:auto; min-width:0; margin-top:2px; }
+  .historyCount { margin-left:6px; }
+}
+
+/* ---- Fiyat haritası: satır payı (29 Eylül, ölçüldü) ----
+   Satırlar 58 piksel tabanla ve 12 piksel iç payla 63 piksel tutuyordu
+   (1440): dokuz satırlık harita 845 piksel, satırın içeriği (etiket, fiyat,
+   uzaklık ve çubuğu) 34 piksel. Taban 44'e, iç pay 8'e indi; renkli
+   satırların (fiyat, bölge, stop) yıkaması yine satırın tamamını boyuyor. */
+.levelRow { min-height:44px; padding-block:8px; }
+@media (max-width: 639px) { .levelRow { min-height:42px; padding-block:7px; } }
+
+/* ---- Kapaktaki gösterge bakışı telefonda tek kelime (29 Eylül) ----
+   390'da üç sütunun künyesi ("50 ve 200 Günlüğün Üstünde") üç satıra
+   sarıyor ve kapağı ~60 piksel uzatıyordu (ölçüldü). Kapaktaki şerit bir
+   BAKIŞ (kayıt `teknik/[symbol]/page.tsx`te); künyenin aynısı iki bölüm
+   aşağıda, Göstergeler'in geniş şeridinde duruyor. Telefonda kapakta ad ve
+   değer kalıyor, künye yalnızca bölümde. */
+@media (max-width: 639px) {
+  .signalsCompact .signalDetail { display:none; }
+  .signalsCompact { row-gap:0; }
+}

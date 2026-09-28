@@ -9,6 +9,7 @@ import directory from "@/components/motion/DirectoryExperience.module.css";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
 import { MoreSymbols, type MoreSymbolEntry } from "@/components/technical/MoreSymbols";
+import { PlanHistory } from "@/components/technical/PlanHistory";
 import { PlanStrip } from "@/components/technical/PlanStrip";
 import { BalanceNotes } from "@/components/technical/BalanceNotes";
 import { PriceMap, PriceMapNotes } from "@/components/technical/PriceMap";
@@ -33,7 +34,6 @@ import {
   TECHNICAL_SYMBOLS,
   editionClock,
   editionTime,
-  formatRange,
   isTechnicalSymbol,
   nextEdition,
   planPosition,
@@ -51,7 +51,6 @@ import {
   formatEtDateCompact,
   formatPercent,
   formatPrice,
-  NO_VALUE,
   proseParagraphs,
   tieFigures,
 } from "@/lib/utils";
@@ -560,44 +559,10 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       {history.length > 1 && (
         <section id="technical-history" className={styles.block}>
           <h2 className={styles.sectionTitle}>{t.technical.history}</h2>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th scope="col">{t.technical.historyDate}</th>
-                  <th scope="col">{t.technical.historyEdition}</th>
-                  <th scope="col">{t.technical.historyStance}</th>
-                  <th scope="col">{t.technical.entryZone}</th>
-                  <th scope="col">{t.technical.stop}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((entry, index) => {
-                  const stance = verdictOf(entry.stance);
-                  const older = history[index + 1];
-                  const turned = older ? stanceChangeLabel(stance, verdictOf(older.stance), t) : null;
-                  return (
-                    <tr key={`${entry.sessionDate}-${entry.slot}`}>
-                      <td data-cell="date">{formatEtDateCompact(entry.sessionDate, locale)}</td>
-                      <td data-cell="edition">{slotLabel(entry.slot, t)}</td>
-                      <td data-cell="stance">
-                        <span className={cn("inline-flex rounded-full px-2.5 py-[2px] text-tiny font-bold", verdictPillClass(stance))}>
-                          {verdictLabel(stance, t)}
-                        </span>
-                        {turned && <span className={cn("ml-2 text-tiny font-bold", changeToneClass(stance))}>{turned}</span>}
-                      </td>
-                      <td className="numeral" data-cell="entry" data-label={t.technical.entryZone}>
-                        {entry.entryLow !== null && entry.entryHigh !== null
-                          ? formatRange(entry.entryLow, entry.entryHigh, locale)
-                          : NO_VALUE /* Değer yok işareti tek: uzun çizgi değil (lib/utils). */}
-                      </td>
-                      <td className="numeral" data-cell="stop" data-label={t.technical.stop}>{formatPrice(entry.stop, locale, { currency: true })}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          {/* Tablo `PlanHistory`e taşındı (29 Eylül): aynı planın art arda
+              yayınları tek satır ve planın seyri ortak ölçekli bir çizgi.
+              Gerekçe ve ölçüm bileşenin üzerinde. */}
+          <PlanHistory history={history} locale={locale} t={t} />
         </section>
       )}
 

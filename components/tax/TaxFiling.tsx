@@ -75,7 +75,7 @@ const NODE_AT = [0, 2, 3, 4, 5].map((unit) => unit / TIMELINE_UNITS);
  * geçmemiş en eski vergi yılı. 28 Eylül 2026'da 2025 gelirinin ikinci
  * taksidi (31 Temmuz 2026) geçti, yani ekran 2026 gelirini gösteriyor.
  */
-function currentTaxYear(today: string, years: Record<number, TaxYearRules>): number {
+export function currentTaxYear(today: string, years: Record<number, TaxYearRules>): number {
   const list = taxYearList(years);
   const ascending = [...list].sort((a, b) => a - b);
   return ascending.find((year) => `${years[year].filingYear}-07-31` >= today) ?? list[0];

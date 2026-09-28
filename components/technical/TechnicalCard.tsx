@@ -230,6 +230,11 @@ export function TechnicalCard({
           <h3 id={headingId} className={styles.cardSymbol}>
             <Link href={technicalHref(row.symbol)} prefetch={false} className={styles.cardLink}>
               {row.symbol}
+              {/* "ANALİZİ OKU" AYAĞININ YERİNE (29 Eylül). Kartın tıklanabilir
+                  olduğunu ayaktaki yazı söylüyordu; artık sembolün yanındaki
+                  ok söylüyor — detay kapağındaki `coverGo` ile aynı işaret.
+                  Gerekçe aşağıda, ayağın eski yerinde. */}
+              <ArrowUpRight className={styles.cardGo} size={14} weight="bold" aria-hidden />
             </Link>
           </h3>
           {company && <span className={styles.cardCompany}>{company}</span>}
@@ -284,17 +289,34 @@ export function TechnicalCard({
           anlamlı ölçüde yol aldıysa o anın fiyatı da yanında (rayın boş
           halkasının metin karşılığı — ray `aria-hidden`). */}
       <div className={styles.cardThesis}>
-        <p className={styles.thesisStamp}>
-          <span>
-            {slotLabel(row.slot, t)} · <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
-          </span>
-          {snapshotPrice !== null && (
-            <span>
-              {t.technical.atAnalysis}{" "}
-              <b className="numeral">{formatPrice(snapshotPrice, locale, { currency: true })}</b>
-            </span>
-          )}
-        </p>
+        {/* KÜNYE YALNIZCA BİR ŞEY SÖYLÜYORSA (29 Eylül). "Kapanış Öncesi ·
+            21:45 TR" on beş kartın on beşinde aynıydı ve başlıktaki "Son
+            Yayın" künyesini birebir tekrar ediyordu (1440 ve 390 ekran
+            görüntüsü). Satır artık iki hâlde basılıyor: kart panonun en yeni
+            yayınından değilse (adı ve tarihiyle "Önceki Yayın" — eskiden
+            ayaktaki etiket, ayak kalkınca buraya çıktı) ya da fiyat analiz
+            anından beri anlamlı ölçüde yol aldıysa (o anın fiyatı; yukarıdaki
+            23 Eylül kaydının asıl gerekçesi, ONDS örneği). İkisi de yoksa
+            cümlenin anı başlıktaki künyeyle aynı ve satır yer kaplamıyor. */}
+        {(stale || snapshotPrice !== null) && (
+          <p className={styles.thesisStamp}>
+            {stale ? (
+              <span className={styles.staleTag}>
+                {t.technical.earlierEdition} · {formatEtDateCompact(row.sessionDate, locale)} · {slotLabel(row.slot, t)}
+              </span>
+            ) : (
+              <span>
+                {slotLabel(row.slot, t)} · <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
+              </span>
+            )}
+            {snapshotPrice !== null && (
+              <span>
+                {t.technical.atAnalysis}{" "}
+                <b className="numeral">{formatPrice(snapshotPrice, locale, { currency: true })}</b>
+              </span>
+            )}
+          </p>
+        )}
         <p className={styles.cardHeadline} lang={untranslated ? "tr" : locale}>
           {untranslated && (
             /* `relative z-[3]`: kartı kaplayan bağlantı katmanının (z-1)
@@ -375,19 +397,12 @@ export function TechnicalCard({
           "Analizi Oku" kalıyor. Eski yayından gelen kart "Önceki Yayın" ve
           kendi tarihini taşıyan bir etiket alıyor, renkle değil tonla: on
           dört boş ayağın yanında tek dolu ayak kendiliğinden seçiliyor. */}
-      <div className={styles.cardFoot} data-stale={stale || undefined}>
-        {stale && (
-          <span className={styles.staleTag}>
-            {t.technical.earlierEdition} · {formatEtDateCompact(row.sessionDate, locale)}
-          </span>
-        )}
-        {/* Bağlantı zaten başlıkta ve kartı kaplıyor; bu yazı yalnızca bir
-            işaret, ekran okuyucuya ikinci bir bağlantı gibi okunmasın. */}
-        <span className={styles.cardRead} aria-hidden>
-          {t.technical.readAnalysis}
-          <ArrowUpRight size={13} weight="bold" />
-        </span>
-      </div>
+      {/* AYAK KALKTI (29 Eylül, ölçüldü). Yukarıdaki kaydın sonunda ayakta
+          yalnızca "Analizi Oku" kalmıştı: bir kıl çizgi, 12 piksel iç pay ve
+          tek bir işaret kartın 46 pikselini (1440) alıyordu ve kartın
+          tamamı zaten bağlantı. On beş kartta telefonda ~700 piksel. İşaret
+          sembolün yanına ok olarak çıktı, eski yayın etiketi cümlenin
+          künyesine; kart beş satırlık alt ızgaraya indi (CSS `.cell`). */}
     </div>
   );
 }

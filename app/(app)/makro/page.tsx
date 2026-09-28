@@ -2,9 +2,9 @@ import { Suspense } from "react";
 import { MarketPulse } from "@/components/macro/MarketPulse";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import {
-  MacroGrid,
+  MacroSections,
   MacroSelection,
-  MacroStage,
+  MacroSummary,
   type BoardData,
   type BoardLabels,
   type BoardSeries,
@@ -46,8 +46,8 @@ export const generateMetadata = pageMetadata({
 });
 
 /**
- * Makro göstergeler: kapakta seçili serinin büyük grafiği, altında bütün
- * serilerin küçük çoklu ızgarası (karar kaydı components/macro/MacroBoard.tsx).
+ * Makro göstergeler: kapakta bütün serilerin özet ızgarası, altında grup
+ * grup büyük grafikler (karar kaydı components/macro/MacroBoard.tsx).
  * Değer büyük ve mono; ok yalnızca yönü söyler (düşüş kırmızı, yükseliş
  * accent mavi) — yeşil bilinçli olarak yok, çünkü enflasyonun düşmesi iyi,
  * istihdamın düşmesi kötüdür ve yeşil "iyi haber" demek olurdu.
@@ -190,7 +190,7 @@ function toBoard(rows: MacroBoardRow[], locale: Locale, t: Dictionary): BoardDat
  * olmayan seriler için canlı FRED turu, sonra ilk bayt. Veri önbelleği
  * boşken ilk bayt 998 ms'de geliyordu (sıcakta ~150-200 ms). Artık
  * başlık, sekme iskeleti ve piyasa nabzının yeri hemen gidiyor; tahta bir
- * söz olarak istemci sağlayıcısına veriliyor ve sahne ile ızgara kendi
+ * söz olarak istemci sağlayıcısına veriliyor ve özet ile bölümler kendi
  * Suspense sınırlarında akıyor. İskeletler son hâlin kutusunu tutuyor
  * (CLS 0). Sonra, aynı koşulda: soğukta ilk bayt 188 ms, sıcakta 27-58 ms;
  * CLS 0; istemci JS'i 295 → 298 KB. Masaüstü LCP 272 → 408 ms: en büyük öğe
@@ -204,7 +204,6 @@ export default async function MacroPage() {
   const x = t.macro;
   const labels: BoardLabels = {
     groups: { inflation: x.groupInflation, labor: x.groupLabor, policy: x.groupPolicy, growth: x.groupGrowth },
-    groupsLabel: x.groupsLabel,
     seriesLabel: x.pick,
     previous: x.previous,
     nextRelease: x.nextRelease,
@@ -219,11 +218,14 @@ export default async function MacroPage() {
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       <MacroSelection board={board} labels={labels}>
+        {/* KAPAK: başlık, bütün göstergelerin özeti, dipte faiz ve
+            oynaklık. Grafikler aşağıda, grup grup (karar kaydı
+            components/macro/MacroBoard.tsx başında). */}
         <div className={`${styles.hero} page-frame`}>
           <HeroAccent />
           <PageHeader embedded eyebrow={x.eyebrow} title={x.title} subtitle={x.subtitle} />
-          <Suspense fallback={<StageSkeleton />}>
-            <MacroStage
+          <Suspense fallback={<SummarySkeleton />}>
+            <MacroSummary
               empty={<EmptyState title={t.common.noData} hint={t.common.noDataHint} scene="chart" />}
             />
           </Suspense>
@@ -234,14 +236,13 @@ export default async function MacroPage() {
           </div>
         </div>
 
-        <Suspense fallback={<GridSkeleton />}>
-          {/* Sonraki FOMC ızgaranın başında: politika faizi kartının
-              "Sonraki Açıklama" satırı aylık ortalamanın yayın günü, karar
-              günü değil. Kararın kendisi bu kartta. Kendi sınırında akıyor;
-              yer tutucu komşu kartlarla aynı kutu. */}
-          <MacroGrid
+        <Suspense fallback={<SectionsSkeleton />}>
+          {/* Sonraki FOMC para politikası bölümünde, grafiğin altında
+              kompakt bir şerit. Kendi sınırında akıyor; yer tutucu
+              şeridin kutusunda. */}
+          <MacroSections
             fomc={
-              <Suspense fallback={<Skeleton className={styles.cardSkeleton} />}>
+              <Suspense fallback={<Skeleton className={styles.fomcSkeleton} />}>
                 <FomcCard locale={locale} t={t} />
               </Suspense>
             }
@@ -259,34 +260,45 @@ export default async function MacroPage() {
   );
 }
 
-/** Sahnenin yer tutucusu: sekme, çip, okuma ve grafik kutuları son hâlin ölçüsünde. */
-function StageSkeleton() {
+/** Özetin yer tutucusu: başlık ve on bir kartın kutusu (CLS). */
+const SUMMARY_SKELETON_TILES = 11;
+
+function SummarySkeleton() {
   return (
-    <div className={styles.stage} aria-hidden>
-      <div className={styles.picker}>
-        <Skeleton className={styles.skTabs} />
-        <Skeleton className={styles.skChips} />
+    <div className={styles.summary} aria-hidden>
+      <Skeleton className={styles.skSummaryTitle} />
+      <div className={styles.summaryGrid}>
+        {Array.from({ length: SUMMARY_SKELETON_TILES }, (_, i) => <Skeleton key={i} className={styles.tileSkeleton} />)}
       </div>
-      <div className={`${styles.reading} ${styles.skReading}`}>
-        <div className={styles.readingMain}>
-          <Skeleton className={styles.skTitle} />
-          <Skeleton className={styles.skFigure} />
-        </div>
-      </div>
-      <Skeleton className={styles.skChart} />
-      <Skeleton className={styles.skFoot} />
     </div>
   );
 }
 
-const GRID_SKELETON_CARDS = 12;
+/** Bölümlerin yer tutucusu: ilk iki bölümün (geniş ekranda bir satır) başlığı ve sahnesi. */
+const SECTION_SKELETONS = 2;
 
-function GridSkeleton() {
+function SectionsSkeleton() {
   return (
-    <div className={styles.multiples} aria-hidden>
+    <div className={styles.sections} aria-hidden>
+      {Array.from({ length: SECTION_SKELETONS }, (_, i) => <SectionSkeleton key={i} />)}
+    </div>
+  );
+}
+
+function SectionSkeleton() {
+  return (
+    <div className={styles.section}>
       <Skeleton className={styles.skHeading} />
-      <div className={styles.grid}>
-        {Array.from({ length: GRID_SKELETON_CARDS }, (_, i) => <Skeleton key={i} className={styles.cardSkeleton} />)}
+      <div className={styles.stage}>
+        <Skeleton className={styles.skChips} />
+        <div className={`${styles.reading} ${styles.skReading}`}>
+          <div className={styles.readingMain}>
+            <Skeleton className={styles.skTitle} />
+            <Skeleton className={styles.skFigure} />
+          </div>
+        </div>
+        <Skeleton className={styles.skChart} />
+        <Skeleton className={styles.skFoot} />
       </div>
     </div>
   );

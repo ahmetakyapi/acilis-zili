@@ -853,6 +853,10 @@ const tr = {
     historyDate: "Tarih",
     historyEdition: "Yayın",
     historyStance: "Görüş",
+    historyPlan: "Planın Seyri",
+    historyRuns: "{n} Yayın",
+    historyNote:
+      "Aynı gün aynı kalan yayınlar tek satırda. Çubukta alım bölgesi ve stop (kırmızı çentik), tablodaki en düşük ve en yüksek seviye arasında ortak ölçekte.",
     moreSymbols: "Diğer Şirketler",
     noEditionYet: "Yayın Bekliyor",
     companyPage: "Şirket Sayfası",
@@ -1007,6 +1011,7 @@ const tr = {
       boardLink: "Görüşler Ne Demek?",
       noPosition: "Pozisyonun Yoksa",
       hasPosition: "Pozisyonun Varsa",
+      whatToDo: "Ne Yapmalı?",
       scaling: "Kademeli mi, Tek Seferde mi?",
       othersLabel: "Öteki Görüşler",
       stickyTitle: "Görüş Neden Kolay Değişmez",
@@ -2245,7 +2250,6 @@ const tr = {
     spotlight: "Günün Terimi",
     readDefinition: "Tanımı Oku",
     openCategory: "Kategoriyi Aç",
-    moreTerms: "{count} Terim Daha",
     position: "Kategoride {index} / {total}",
   },
   themes: {
@@ -2304,6 +2308,8 @@ const tr = {
     /* Kapaktaki günün özeti (28 Eylül). */
     themesRising: "Yükselen Tema",
     themesFalling: "Düşen Tema",
+    /* Kapaktaki oran çubuğunun başlığı (29 Eylül). */
+    themesBreadth: "Temaların Yönü",
     up: "Yükselen",
     down: "Düşen",
     spreadLabel: "{count} üyenin hareketi: {up} yükselen, {down} düşen.",
@@ -2405,6 +2411,17 @@ const tr = {
     insiderCodeOther: "Diğer ({code})",
     insiderPriceDropped:
       "{n} işlemin fiyatı hisse fiyatıyla tutmuyor (kayıt başka bir menkulün ya da para biriminin fiyatını taşıyor olabilir); bu işlemlerin fiyatı ve tutarı gösterilmiyor, özete katılmıyor.",
+    /* Panelin okuma katmanı (29 Eylül): işlem çipi, alım/satış dengesi
+       çubuğu, MSPR ekseninin yön etiketleri ve notları toplayan "Nasıl
+       Okunur" açılır satırı. Gerekçe InsiderPanel.tsx başında. */
+    insiderChipBuy: "Alım",
+    insiderChipSell: "Satış",
+    insiderBalance: "Alım ve Satış Dengesi",
+    insiderBalanceShare: "Alım %{buy} · Satış %{sell}",
+    insiderLegend:
+      "Renkli çipler açık piyasa kararlarıdır; sönük satırlar ödül, vergi kesintisi, hediye ya da opsiyon kullanımı gibi karar olmayan hareketlerdir.",
+    insiderHowTitle: "Nasıl Okunur",
+    sentimentLatest: "Son Değer ({month}): {value}",
     sentimentTitle: "Aylık Alım Oranı (MSPR)",
     sentimentNote:
       "MSPR −100 ile 100 arasında: 100 o ay yalnızca alım, −100 yalnızca satış demek. Boş ay, kaynakta o ay için hesaplanmış bir değer olmadığını gösterir; son aylar kaynağa gecikmeli düşebilir.",
@@ -2791,6 +2808,32 @@ const tr = {
         "Sınır, stopaja tabi tutulmamış bütün menkul ve gayrimenkul sermaye iratlarının toplamına uygulanır; başka yurt dışı gelirin varsa onları da ekle.",
       exportCsv: "CSV İndir",
       csvName: "yurt-disi-hisse-vergisi-{year}.csv",
+      how: {
+        title: "Nasıl Hesaplanır",
+        label: "Hesap Adımları",
+        lead: "Hesaplayıcı bu altı adımı senin yerine yapar; sen yalnızca işlemlerini girersin. Sayılar {year} vergi yılının kurallarından.",
+        step1Title: "İşlemlerini Gir",
+        step1Body:
+          "Alış ve satışı elle yaz ya da ekstreni yükle; dosya cihazından çıkmaz. Satış, ilk giren ilk çıkar sırasıyla en eski alıştan düşülür.",
+        step2Title: "TCMB Kuruyla Liraya Çevir",
+        step2Body:
+          "Maliyet alış, satış bedeli satış, temettü ödeme gününün TCMB döviz alış kuruyla çevrilir. Kur farkı da vergilenir; komisyon kazancı azaltır.",
+        step3Title: "Yİ-ÜFE ile Endeksle",
+        step3Body:
+          "Yİ-ÜFE alıştan önceki aydan satıştan önceki aya %{pct} ya da daha çok arttıysa maliyet endekslenir; yalnızca kazançlı satışta ve kazancı en fazla sıfıra indirerek.",
+        step4Title: "Kazanç ve Temettüyü Topla",
+        step4Body:
+          "Yıl içindeki kazanç ve zarar mahsup edilir; hisse satışında istisna yoktur. Tevkifatsız sermaye iratlarının toplamı {thresholdYear} sınırı olan {threshold} tutarını aşarsa temettünün tamamı beyana girer.",
+        step5Title: "Dilimlere Göre Vergi",
+        step5Body:
+          "Matrah tarifeden geçer: {first} tutarına kadar %{min}, en üst dilimde %{max}. ABD'de kesilen stopaj (W-8BEN ile %{w8}, yoksa %{none}) bu gelire düşen vergiden mahsup edilir.",
+        step6Title: "Mart'ta Beyan Et",
+        step6Body:
+          "{year} geliri {filing} Mart'ında Hazır Beyan Sistemi'nden beyan edilir; vergi 31 Mart ve 31 Temmuz'da iki taksitte ödenir.",
+        step6Link: "Takvim ve Belgeler",
+        start: "Hesaplamaya Başla",
+        tariffSource: "Kaynak: {source}.",
+      },
       filing: {
         title: "Ne Zaman, Nereye, Hangi Belgeyle",
         lead: "{year} yılının satış kazancı ve temettüsü {filing} Mart'ında yıllık gelir vergisi beyannamesiyle bildirilir.",
@@ -2828,12 +2871,6 @@ const tr = {
         w8Title: "W-8BEN ve 1042-S",
         w8Body:
           "W-8BEN, ABD'ye vergi mukimi olmadığını bildiren formdur. Verilmişse Türkiye ile ABD arasındaki anlaşma temettü stopajını bireysel yatırımcıda %20 ile sınırlar; verilmemişse %30 kesilir. 1042-S, yıl içinde kesilen vergiyi gösteren belgedir ve Türkiye'deki mahsup için kullanılır; hesaplayıcıdaki oranı bu formdaki oranla karşılaştır.",
-        ruleTitle: "Kur ve Endeksleme Kuralı",
-        ruleBody:
-          "Maliyet alış tarihindeki, satış bedeli satış tarihindeki TCMB döviz alış kuruyla liraya çevrilir; kur farkı da vergiye tabidir, yani dolarda zarar eden bir satış TL'de kazançlıysa vergilenir. Yİ-ÜFE artışı %10 ya da üstündeyse maliyet endekslenebilir: alıştan önceki ay ile satıştan önceki ayın endeksi karşılaştırılır. Komisyonlar kazancı azaltır.",
-        fifoTitle: "Hangi Alış Satılmış Sayılır",
-        fifoBody:
-          "Farklı günlerde alınan aynı hissenin bir kısmı satıldığında ilk giren ilk çıkar yöntemi uygulanır (257 Seri No. Gelir Vergisi Genel Tebliği). Tebliğ yurt içi için yazıldı; yurt dışı hissede de kıyasla kullanılır.",
         sourcesTitle: "Kaynaklar",
       },
       sources: {
@@ -2844,6 +2881,7 @@ const tr = {
         irs: "IRS, Form 1042-S Talimatı",
       },
       dataNote: "Kurlar: TCMB döviz alış (günlük bülten). Endeks: TÜİK Yİ-ÜFE, 2003=100.",
+      notAdviceFoot: "Bu sayfadaki hesaplar GİB rehberlerine dayanan bir tahmindir; beyannameni vermeden önce mali müşavirine danış.",
     },
     portfolio: {
       eyebrow: "Hesabım",
@@ -3135,6 +3173,47 @@ const tr = {
     },
   },
 
+  /* Haftalık sekme (29 Eylül) — /bilancolar/hafta: En Çok Beklenenler
+     ızgarası ve haftanın tam takvimi. Görsel ve eski sayfanın metinleri
+     `earningsExtra.week`te kalıyor. */
+  earningsWeek: {
+    tab: "Haftalık",
+    /* PageHeader açıklaması — cümle. */
+    description:
+      "Pazartesiden cumaya bir hafta: en büyük bilançolar tek bakışta, altında gün gün tam takvim. Saatler Türkiye saatiyle.",
+    anticipatedTitle: "En Çok Beklenenler",
+    anticipatedMeta: "Piyasa Değerine Göre",
+    scheduleTitle: "Haftanın Takvimi",
+    colCompany: "Şirket",
+    colTime: "Saat",
+    colEps: "EPS Beklentisi",
+    colEpsActual: "Gerçekleşen EPS",
+    colRevenue: "Gelir Beklentisi",
+    colCap: "Piyasa Değeri",
+    colAnalysis: "Analiz",
+    epsShort: "EPS",
+    revenueShort: "Gelir",
+    capShort: "Değer",
+    actualShort: "Gerçekleşen",
+    beat: "Beklentiyi Aştı",
+    miss: "Beklentinin Altında",
+    inline: "Beklentiye Eşit",
+    pending: "Bekleniyor",
+    analysis: "Analiz",
+    /* Boş ve hata durumları — başlık Title Case, gövde cümle. */
+    dayEmpty: "Bu gün takvimde bilanço yok.",
+    errorTitle: "Takvim Alınamadı",
+    errorHint: "Bilanço takvimi şu an okunamıyor; bu bir boş hafta değil. Birazdan yeniden dene.",
+    /* Künye paragrafları — cümle. */
+    noteCriterion:
+      "Sıralama ölçütü piyasa değeri. Duyarlılık ya da ilgi puanı kullanmıyoruz: elimizde dürüstçe ölçebildiğimiz bir tane yok.",
+    noteTiers:
+      "Büyük karo 500 milyar doların, orta karo 100 milyar doların üzerindeki şirketler; karonun altındaki çizgi haftanın en büyüğüne göre uzunluk.",
+    noteSchedule:
+      "Her gün piyasa değeri 1 milyar doların üzerindeki şirketler adıyla listeleniyor, en fazla {max}; kalanlar günün altındaki açılır listede.",
+    noteSurprise: "Gerçekleşen EPS'nin yanındaki yüzde, beklentiden sapma.",
+  },
+
   /* Ünlü yatırımcılar (28 Eylül) — /yatirimcilar, detay ve hisse paneli. */
   /* Şirket kartı — logo ve karoların üstünde açılan ortak okuma
      (components/ui/CompanyCard.tsx). Künyeler Title Case: cümle değiller. */
@@ -3188,6 +3267,7 @@ const tr = {
     moversMeta: "{period} · {count} Yatırımcı",
     buysTitle: "En Çok Alınanlar",
     sellsTitle: "En Çok Satılanlar",
+    moversScale: "Yatırımcı Sayısı",
     opened: "{count} Yeni Aldı",
     added: "{count} Artırdı",
     trimmed: "{count} Azalttı",

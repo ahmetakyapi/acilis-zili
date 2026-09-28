@@ -215,15 +215,8 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.menu.hintThemes,
   },
   {
-    href: "/karsilastir",
-    label: (t) => t.compare.title,
-    icon: ChartBar,
-    inBottomBar: false,
-    more: "data",
-    hint: (t) => t.menu.hintCompare,
-  },
-  {
-    /* 28 Eylül: ünlü yatırımcılar "Daha Fazla"da, temaların yanında. Şerit
+    /* 29 Eylül: panelde Karşılaştır'ın ÜSTÜNDE (sahibinin isteği). 28 Eylül:
+       ünlü yatırımcılar "Daha Fazla"da, temaların yanında. Şerit
        ölçüsü (yukarıda) beş sekmeye göre alındı ve boşluk yok; ekran çeyrekte
        bir değişen bir başvuru ekranı, günlük değil. */
     href: "/yatirimcilar",
@@ -232,6 +225,14 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: "data",
     hint: (t) => t.menu.hintInvestors,
+  },
+  {
+    href: "/karsilastir",
+    label: (t) => t.compare.title,
+    icon: ChartBar,
+    inBottomBar: false,
+    more: "data",
+    hint: (t) => t.menu.hintCompare,
   },
   {
     /* DAHA FAZLA'DA. Bir dönem yalnızca 1280 üstünde sekmeydi: aynı ekran

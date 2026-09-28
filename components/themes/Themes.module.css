@@ -64,8 +64,8 @@
 }
 
 .card {
-  display:flex; flex-direction:column; gap:16px; height:100%; min-width:0;
-  padding:22px 24px 18px; border:1px solid var(--line); border-radius:var(--radius-feature);
+  display:flex; flex-direction:column; gap:12px; height:100%; min-width:0;
+  padding:18px 22px 14px; border:1px solid var(--line); border-radius:var(--radius-feature);
   background:var(--premium-surface); color:inherit;
   transition:background-color .3s, border-color .3s, transform .2s;
 }
@@ -81,11 +81,11 @@
 /* İki satırda kesilir: kartların boyu dek uzunluğuna göre oynamasın. */
 .cardDek {
   display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
-  max-width:56ch; min-height:3.2em; font-size:13.5px; line-height:1.6; color:var(--text-body);
+  max-width:56ch; min-height:3.1em; font-size:13.5px; line-height:1.55; color:var(--text-body);
 }
 
 .cardBody { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:14px 20px; margin-top:auto; }
-.cardFigure { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.cardFigure { display:flex; flex-direction:column; gap:4px; min-width:0; }
 .figureLabel { display:flex; align-items:center; gap:8px; min-height:20px; font-size:11.5px; font-weight:600; color:var(--text-muted); }
 .flag {
   display:inline-flex; align-items:center; min-height:20px; padding:0 8px; border-radius:999px;
@@ -127,10 +127,24 @@
 .tickMedian { position:absolute; top:0; bottom:0; width:3px; margin-left:-1.5px; border-radius:2px; background:var(--text-strong); }
 @media(hover:hover) { .card:hover .tick { transform:scaleY(1.5); } }
 .spreadScale { display:flex; justify-content:space-between; margin-top:3px; font-size:10.5px; line-height:1.3; color:var(--text-muted); }
+/* KARTTA ŞERİT DAHA OKUNUR (29 Eylül). Ana sayfa bandının şeridi
+   (MarketTexture) değişmesin diye `.card` altında: ray kalın bir iz,
+   çentikler tam opak, sıfır çizgisi şeridin tam boyu, medyan tepesinde
+   bir düğmeyle çentik kalabalığından ayrılıyor (on yedi çentik arasında
+   3 piksellik çizgi seçilmiyordu). */
+.card .spread { height:30px; }
+.card .spread::before { top:calc(50% - 2px); height:4px; border-radius:2px; background:var(--rail-track); }
+.card .spreadZero { top:0; bottom:0; width:1px; background:var(--text-muted); opacity:.55; }
+.card .tick { top:6px; bottom:6px; opacity:1; }
+.card .tickMedian { top:2px; bottom:0; }
+.card .tickMedian::before {
+  content:""; position:absolute; left:50%; top:-2px; width:9px; height:9px; margin-left:-4.5px;
+  border-radius:50%; background:var(--text-strong);
+}
 
 .cardFoot {
   display:flex; align-items:center; justify-content:space-between; gap:12px;
-  padding-top:12px; border-top:1px solid var(--line-soft);
+  padding-top:10px; border-top:1px solid var(--line-soft);
   font-size:12px; color:var(--text-muted); white-space:nowrap;
 }
 .breadth { display:inline-flex; align-items:baseline; gap:4px; }
@@ -138,7 +152,7 @@
 .breadthSep { display:inline-block; width:1px; height:10px; margin:0 6px; background:var(--line-strong); }
 
 @media(max-width:767px) {
-  .card { padding:18px 18px 14px; gap:14px; border-radius:20px; }
+  .card { padding:16px 16px 12px; gap:12px; border-radius:20px; }
   .card[data-wide] .cardTitle { font-size:var(--text-title); }
   .card[data-wide] .figure, .figure { font-size:36px; }
   /* Telefonda rakam ve logolar alt alta: yan yana 306 piksele sığmıyor,
@@ -488,19 +502,64 @@
 }
 
 /* --------------------------------------------------------------------------
-   Kapağın günün özeti (28 Eylül) — sol yarıdaki boşluğu sıralamanın
-   özetiyle dolduruyor; gerekçe page.tsx → HeroSummary. Dört hücre iki
-   satırda: üstte sayılar, altta en güçlü ve en zayıf tema. Kutu değil
-   ton: hücreler çukur zeminde, gölgesiz.
+   Kapağın günün özeti — gerekçe page.tsx → HeroSummary. Tek çukur yüzey,
+   üstte yön oranı, altta iki uç tema yan yana (telefonda alt alta);
+   bölümler hairline ile ayrılıyor. Kutu değil ton, gölge yok.
    -------------------------------------------------------------------------- */
-.heroSummary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:24px; max-width:34rem; }
-.heroStat { display:flex; min-width:0; flex-direction:column; gap:6px; padding:12px 14px; border-radius:12px; background:var(--surface-sunken); }
-.heroStatLabel { color:var(--text-muted); font-size:12px; font-weight:600; line-height:1.3; }
-.heroStatValue { font-size:28px; font-weight:700; line-height:1; letter-spacing:-.03em; }
-.heroExtreme { display:flex; min-width:0; align-items:baseline; justify-content:space-between; gap:10px; }
-.heroExtremeName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:15px; font-weight:650; }
-.heroExtreme b { flex-shrink:0; font-size:15px; font-weight:700; }
-@media(max-width:639px) { .heroSummary { margin-top:18px; } .heroStatValue { font-size:24px; } }
+.heroSummary { display:flex; flex-direction:column; margin-top:22px; max-width:34rem; border-radius:14px; background:var(--surface-sunken); }
+.heroLabel { color:var(--text-muted); font-size:12px; font-weight:600; line-height:1.3; }
+.heroBreadth { display:flex; flex-direction:column; gap:9px; padding:12px 14px 13px; }
+.heroBreadthHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
+.heroCounts { display:inline-flex; align-items:baseline; gap:5px; font-size:12.5px; color:var(--text-muted); }
+.heroCounts b { font-size:20px; font-weight:700; line-height:1; letter-spacing:-.03em; }
+.heroExtremes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-top:1px solid var(--line-soft); }
+.heroExtreme {
+  display:flex; min-width:0; flex-direction:column; gap:8px; padding:11px 14px 12px; color:inherit;
+  transition:background-color .2s;
+}
+.heroExtreme + .heroExtreme { border-left:1px solid var(--line-soft); }
+.heroExtremes > :first-child { border-bottom-left-radius:14px; }
+.heroExtremes > :last-child { border-bottom-right-radius:14px; }
+a.heroExtreme:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+@media(hover:hover) { a.heroExtreme:hover { background:var(--primary-tint); } a.heroExtreme:hover .heroExtremeName { color:var(--primary-ink); } }
+.heroExtremeHead { display:flex; min-width:0; align-items:baseline; justify-content:space-between; gap:10px; }
+.heroExtremeHead .heroLabel { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.heroExtremePct { flex-shrink:0; font-size:15px; font-weight:700; }
+.heroExtremeBody { display:flex; min-width:0; align-items:center; gap:10px; min-height:22px; }
+.heroLogos { display:flex; flex-shrink:0; gap:3px; }
+.heroExtremeName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:14.5px; font-weight:650; transition:color .2s; }
+@media(max-width:639px) {
+  .heroSummary { margin-top:16px; }
+  .heroExtremes { grid-template-columns:minmax(0,1fr); }
+  .heroExtreme + .heroExtreme { border-left:0; border-top:1px solid var(--line-soft); }
+  .heroExtremes > :first-child { border-bottom-left-radius:0; }
+  .heroExtremes > :last-child { border-bottom-left-radius:14px; }
+  /* Telefonda uç tema TEK SATIR: logolar solda, künye ile ad üst üste,
+     yüzde sağda. İki satırlık masaüstü düzeni alt alta inince kapağı 68
+     piksel uzatıyordu (dört kutuyla 696, iki satırla 764, tek satırla 732;
+     390'da ölçüldü — sayfa bütünü yine 6141 → 6004). */
+  .heroExtreme {
+    display:grid; grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"logos label pct" "logos name pct";
+    align-items:center; gap:2px 10px; padding:10px 14px;
+  }
+  .heroExtremeHead, .heroExtremeBody { display:contents; }
+  .heroExtremeHead .heroLabel { grid-area:label; }
+  .heroExtremePct { grid-area:pct; }
+  .heroLogos { grid-area:logos; }
+  .heroExtremeName { grid-area:name; }
+}
+
+/* Yön oranı — kapakta ve kart dibinde aynı çubuk. Parçalar `flex-grow`
+   ile sayılarla orantılı. Nötr kümede (son kapanış) yön rengi yok ama
+   yükselen ve düşen iki ayrı tonda: oran yine okunuyor. */
+.ratio { display:flex; gap:2px; height:8px; overflow:hidden; border-radius:4px; background:var(--rail-track); }
+.ratio > i { display:block; flex-basis:0; min-width:3px; height:100%; }
+.ratio > i[data-tone="up"] { background:var(--up); }
+.ratio > i[data-tone="down"] { background:var(--down); }
+.ratio > i[data-tone="neutral-up"] { background:var(--flat); }
+.ratio > i[data-tone="neutral-down"] { background:var(--line-strong); }
+.ratio > i[data-tone="flat"] { background:transparent; }
+.cardRatio { flex:1; min-width:40px; height:6px; border-radius:3px; }
 
 /* Dar kart: dört sütunlu, iki satırlık logo ızgarası (gerekçe page.tsx →
    NARROW_MOSAIC_MAX). Geniş kartın beş sütunu korunuyor. */

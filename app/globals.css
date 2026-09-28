@@ -1732,6 +1732,7 @@ html.theme-switching::view-transition-new(root) {
   details { interpolate-size:allow-keywords; }
   details::details-content {
     height:0; overflow:clip;
+    /* impeccable-disable-next-line layout-transition -- details içeriği; interpolate-size @supports korumalı, gerekçe yukarıda */
     transition:height 280ms var(--ease-brand), content-visibility 280ms allow-discrete;
   }
   details[open]::details-content { height:auto; }
@@ -2467,6 +2468,7 @@ html.ink-splash-out .ink-splash-layer {
 .palette-row { animation:palette-row-in 260ms var(--ease-brand) backwards; }
 @keyframes palette-row-in { from { opacity:0; transform:translate3d(0, 6px, 0); } }
 .palette-option { position:relative; transition:background-color .15s; }
+/* impeccable-disable-next-line side-tab -- seçili satır işareti, kart kenarlığı değil; scaleY(0)'dan açılan etkileşim göstergesi */
 .palette-option::before { content:""; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0; background:var(--primary); transform:scaleY(0); transition:transform .2s var(--ease-brand); }
 .palette-option.is-active { background:var(--primary-tint); }
 .palette-option.is-active::before { transform:scaleY(1); }

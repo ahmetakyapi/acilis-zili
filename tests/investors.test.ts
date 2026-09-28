@@ -267,6 +267,16 @@ test("crowd moves group by ticker and need two investors", () => {
   assert.deepEqual(topSells(crowd, 5).map((e) => e.key), ["OLD"]);
 });
 
+test("crowd moves: a holder counts once when two share classes merge into one key", () => {
+  const prev = [holding("A", 10, 10), holding("C", 10, 10)];
+  const d = diffPeriods([holding("A", 20, 20), holding("C", 20, 20)], prev);
+  /* GOOGL (A) ve GOOG (C) tek anahtara iniyor; aynı yatırımcı bir kez. */
+  const crowd = crowdMoves([{ slug: "x", diff: d }], (c) => (c === "A" || c === "C" ? "GOOGL" : null));
+  const alphabet = crowd.find((e) => e.key === "GOOGL")!;
+  assert.deepEqual(alphabet.added, ["x"]);
+  assert.equal(crowd.length, 1);
+});
+
 /* ------------------------------------------------------------ OpenFIGI */
 
 test("OpenFIGI: class separator and CINS ids", () => {

@@ -3,6 +3,8 @@ import { unstable_cache } from "next/cache";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "./db";
 import { congressFilings, congressTrades, cusipTickers, investorFilings, investorHoldings } from "./schema";
+import { SECONDARY_SHARE_CLASSES } from "@/db/seed/indices";
+import { canonicalSymbol } from "./symbols";
 import { INVESTORS, investorBySlug, type Investor } from "./investors";
 import {
   crowdMoves,
@@ -306,7 +308,14 @@ const loadOverview = unstable_cache(
       });
     }
 
-    const crowd = crowdMoves(diffs, (cusip) => tickers[cusip] ?? null);
+    /* HİSSE SINIFLARI TEK SATIR (29 Eylül). GOOGL ile GOOG aynı şirket;
+       panoda Alphabet iki ayrı satırda duruyordu. Endeks listesindeki eşleme
+       (`SECONDARY_SHARE_CLASSES`, bilanço haftası da onu kullanıyor) ikinci
+       sınıfı yaygın olana indiriyor. */
+    const crowd = crowdMoves(diffs, (cusip) => {
+      const ticker = tickers[cusip] ?? null;
+      return ticker ? SECONDARY_SHARE_CLASSES[canonicalSymbol(ticker)] ?? ticker : null;
+    });
     return {
       cards,
       movers: {

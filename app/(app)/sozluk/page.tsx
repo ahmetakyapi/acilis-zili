@@ -16,7 +16,6 @@ import {
   glossaryCategoryLabel,
   glossaryIncoming,
   glossaryTerms,
-  type GlossarySlug,
 } from "@/content/glossary";
 import { GLOSSARY_MARKS } from "@/content/glossary/marks";
 import { displayZone, zoneDateKey } from "@/lib/session-clock";
@@ -47,18 +46,26 @@ export const generateMetadata = pageMetadata({
  * alfabetik (dilin kendi harf sırasıyla, `glossaryTerms`). Harf dizini yine
  * var ama bir SÜZGEÇ olarak, bölümleme olarak değil (GlossaryBrowser).
  *
- * Kısa açıklama tanımın İLK CÜMLESİ: dizinde her terimin yanında bir satır,
+ * Kısa açıklama tanımın İLK CÜMLESİ: dizinde her terimin kartında,
  * sayfaya girmeden "doğru terim bu mu" sorusunu cevaplıyor.
  *
- * ÖNE ÇIKANLAR ÖLÇÜLÜYOR, SEÇİLMİYOR: her kategoride sözlüğün kendi
- * ağında en çok başvurulan üç terim (`glossaryIncoming`). Eşitlikte dizin
- * sırası karar veriyor, yani seçim her derlemede aynı.
+ * Öne çıkan terim YOK (29 Eylül, üçüncü tur). Atlas her kategoride
+ * sözlüğün ağında en çok başvurulan üç terimi (`glossaryIncoming`) büyük
+ * satırla, kalanı kapalı bir listede adla gösteriyordu. Artık yüz elli
+ * terimin hepsi aynı kartta, tanımıyla açıkta (GlossaryBrowser); bir
+ * sıralama ölçüsüne gerek kalmadı, kategori içi sıra alfabetik.
+ *
+ * Ölçü tek bir yerde geri döndü (29 Eylül, dördüncü tur): telefonda
+ * kategoriler katlanıyor ve kapalı bölümün özet satırı "ROA, F/K, EPS…"
+ * diye kategorinin en çok başvurulan üç terimini sayıyor
+ * (`glossaryIncoming`, eşitlikte dizin sırası). Alfabetik ilk üç bir
+ * kategoriyi tanıtmıyordu ("Aktif Kârlılığı, Borç/Özsermaye, Brüt Kâr").
  */
 
-/** Kategoride büyük kartla öne çıkan terim sayısı. */
-const FEATURED_PER_CATEGORY = 3;
-/** Öne çıkan kartta adı yazılan ilişkili terim sayısı. */
-const FEATURED_RELATED = 3;
+/** Katlanmış bölümün özetinde adı yazılan terim sayısı. */
+const PREVIEW_TERMS = 3;
+/** Parantez içindeki kısaltma: "Fiyat/Kazanç Oranı (F/K)" → "F/K". */
+const ABBREVIATION = /\(([^()]+)\)\s*$/;
 
 /** Dilin alfabesi — harf dizininin iskeleti; boş harfler sönük basılıyor. */
 const ALPHABET = {
@@ -83,8 +90,6 @@ function sentences(text: string, count: number): string {
   }
   return out.join(" ");
 }
-/** Büyük kartta tanımdan kaç cümle. Kart iki satır boyu; bir cümle boş kalıyordu. */
-const LEAD_SENTENCES = 2;
 /** Bir günün milisaniyesi — günün terimi takvim gününden sayılıyor. */
 const DAY_MS = 86_400_000;
 
@@ -92,20 +97,7 @@ export default async function GlossaryIndexPage() {
   const { locale, t } = await getI18n();
   const lang = locale === "en" ? "en" : "tr";
   const terms = glossaryTerms(locale);
-  const incoming = glossaryIncoming();
-  const names = new Map(terms.map((term) => [term.slug, term.term]));
   const collator = new Intl.Collator(lang, { sensitivity: "base" });
-
-  /* Öne çıkma sırası: kategori içinde bağlantı sayısına göre ilk üç. */
-  const featuredRank = new Map<GlossarySlug, number>();
-  for (const category of GLOSSARY_CATEGORIES) {
-    terms
-      .filter((term) => term.category === category.key)
-      .map((term, order) => ({ slug: term.slug, links: incoming.get(term.slug) ?? 0, order }))
-      .sort((a, b) => b.links - a.links || a.order - b.order)
-      .slice(0, FEATURED_PER_CATEGORY)
-      .forEach((entry, index) => featuredRank.set(entry.slug, index + 1));
-  }
 
   /* GÜNÜN TERİMİ (28 Eylül, ikinci tur). Kapağın sağ yarısı kategori
      kutucuklarını taşıyordu; onlar kapağın altına bir şeride indi ve yerini
@@ -125,40 +117,36 @@ export default async function GlossaryIndexPage() {
 
   const letterOf = (term: string) => term.charAt(0).toLocaleUpperCase(lang);
 
-  const items: GlossaryBrowserItem[] = terms.map((term) => {
-    const featured = featuredRank.get(term.slug) ?? 0;
-    return {
-      slug: term.slug,
-      term: term.term,
-      category: term.category,
-      short: sentences(term.definition, 1),
-      lede: featured === 1 ? sentences(term.definition, LEAD_SENTENCES) : undefined,
-      haystack: [term.term, term.slug, ...term.match]
-        .map((part) => foldForSearch(part, locale))
-        .join(" "),
-      letter: letterOf(term.term),
-      motif: GLOSSARY_MARKS[term.slug],
-      links: incoming.get(term.slug) ?? 0,
-      featured,
-      related:
-        featured > 0
-          ? term.related
-              .slice(0, FEATURED_RELATED)
-              .map((slug) => names.get(slug))
-              .filter((name): name is string => Boolean(name))
-          : [],
-    };
-  });
+  const items: GlossaryBrowserItem[] = terms.map((term) => ({
+    slug: term.slug,
+    term: term.term,
+    category: term.category,
+    short: sentences(term.definition, 1),
+    haystack: [term.term, term.slug, ...term.match]
+      .map((part) => foldForSearch(part, locale))
+      .join(" "),
+    letter: letterOf(term.term),
+  }));
 
   /* Alfabe + alfabe dışında kalan baş harfler (Türkçede W: "W-8BEN"). */
   const letters = [...new Set([...ALPHABET[lang], ...items.map((item) => item.letter)])].sort(
     collator.compare,
   );
-  const groups = GLOSSARY_CATEGORIES.map((category) => ({
-    key: category.key,
-    label: glossaryCategoryLabel(category.key, locale),
-    count: terms.filter((term) => term.category === category.key).length,
-  }));
+  const incoming = glossaryIncoming();
+  const groups = GLOSSARY_CATEGORIES.map((category) => {
+    const members = terms.filter((term) => term.category === category.key);
+    const preview = members
+      .map((term, order) => ({ term, links: incoming.get(term.slug) ?? 0, order }))
+      .sort((a, b) => b.links - a.links || a.order - b.order)
+      .slice(0, PREVIEW_TERMS)
+      .map(({ term }) => ABBREVIATION.exec(term.term)?.[1] ?? term.term);
+    return {
+      key: category.key,
+      label: glossaryCategoryLabel(category.key, locale),
+      count: members.length,
+      preview: preview.join(", ") + (members.length > PREVIEW_TERMS ? "…" : ""),
+    };
+  });
   const linkTotal = terms.reduce((sum, term) => sum + term.related.length, 0);
 
   return (
@@ -170,7 +158,13 @@ export default async function GlossaryIndexPage() {
         letters={letters}
         locale={locale}
         hero={
-          <>
+          /* ANAHTAR ŞART (29 Eylül). Sunucudan prop olarak gelen öğe,
+             istemcide kapağın çocuk dizisine (`HeroAccent`, kapak metni,
+             günün terimi) giriyor ve RSC'den gelen öğe o dizide "statik"
+             sayılmıyor: anahtarsız `hero` ve `spotlight` geliştirmede
+             "Each child in a list should have a unique key" basıyordu
+             (ikisi birlikte kapatılınca sustu, ölçüldü). */
+          <div key="hero" className={`${styles.heroCopy} page-heading-copy`}>
             <p className="page-eyebrow">{t.glossary.eyebrow}</p>
             <h1 className="display-ink">{t.glossary.title}</h1>
             <p>{t.glossary.subtitle}</p>
@@ -188,10 +182,10 @@ export default async function GlossaryIndexPage() {
                 <dd className="numeral">{linkTotal}</dd>
               </div>
             </dl>
-          </>
+          </div>
         }
         spotlight={
-          <aside aria-labelledby="sozluk-gunun-terimi" className={styles.spotlight}>
+          <aside key="spotlight" aria-labelledby="sozluk-gunun-terimi" className={styles.spotlight}>
             <div className={styles.spotlightPlate}>
               <TermMark motif={GLOSSARY_MARKS[today.slug]} size="plate" draw />
             </div>
@@ -224,9 +218,7 @@ export default async function GlossaryIndexPage() {
           letterLabel: t.glossary.letterLabel,
           clear: t.glossary.clear,
           clearQuery: t.glossary.clearQuery,
-          links: t.glossary.links,
           openCategory: t.glossary.openCategory,
-          moreTerms: t.glossary.moreTerms,
           scrollPrev: t.common.scrollPrev,
           scrollNext: t.common.scrollNext,
         }}

@@ -1,21 +1,26 @@
 /**
- * /makro grupları: sekme çubuğu ve küçük çoklu ızgaranın sırası.
+ * /makro grupları: özet ızgarasının sırası ve ayrıntının bölümleri.
  *
  * "use client" DEĞİL: sunucu sayfası da (ızgara sırası, seri başına grup)
- * istemci sahnesi de (sekmeler) buradan okuyor; istemci modülünden dışa
+ * istemci sahnesi de (bölümler) buradan okuyor; istemci modülünden dışa
  * aktarılan değer sunucuya gerçek değer olarak gelmez (CLAUDE.md).
  *
  * Gruplar MACRO_SERIES'in kendi mantığından: enflasyon, iş gücü, politika,
  * sonra ikinci halkanın büyüme ve resesyon sinyalleri. M2 para arzı
  * politikanın yanına düştü (Fed'in bilanço kanalı); perakende, Sahm ve
  * 10Y-3A "Büyüme ve Risk" başlığında. Listede olmayan yeni bir seri son
- * gruba düşer ki sekmede hiç görünmez kalmasın.
+ * gruba düşer ki ne özette ne bölümlerde görünmez kalsın.
+ *
+ * `anchor`: grubun ayrıntı bölümünün kimliği (29 Eylül). Özet kartı bir
+ * `#çapa` bağlantısı; JavaScript kapalıyken de doğru bölüme iner. Dilden
+ * bağımsız ve sabit ki paylaşılan bir `/makro#makro-enflasyon` iki dilde
+ * aynı yere açılsın.
  */
 export const MACRO_GROUPS = [
-  { key: "inflation", series: ["CPIAUCSL", "CPILFESL", "PCEPILFE"] },
-  { key: "labor", series: ["UNRATE", "PAYEMS", "ICSA"] },
-  { key: "policy", series: ["FEDFUNDS", "M2SL"] },
-  { key: "growth", series: ["RSAFS", "SAHMREALTIME", "T10Y3M"] },
+  { key: "inflation", anchor: "makro-enflasyon", series: ["CPIAUCSL", "CPILFESL", "PCEPILFE"] },
+  { key: "labor", anchor: "makro-is-gucu", series: ["UNRATE", "PAYEMS", "ICSA"] },
+  { key: "policy", anchor: "makro-para-politikasi", series: ["FEDFUNDS", "M2SL"] },
+  { key: "growth", anchor: "makro-buyume-ve-risk", series: ["RSAFS", "SAHMREALTIME", "T10Y3M"] },
 ] as const;
 
 export type MacroGroupKey = (typeof MACRO_GROUPS)[number]["key"];
@@ -33,4 +38,8 @@ export function groupRank(seriesId: string): number {
   const groupIndex = MACRO_GROUPS.findIndex((group) => group.key === groupOf(seriesId));
   const within = (MACRO_GROUPS[groupIndex].series as readonly string[]).indexOf(seriesId);
   return groupIndex * GROUP_STRIDE + (within < 0 ? GROUP_STRIDE - 1 : within);
+}
+
+export function anchorOf(key: MacroGroupKey): string {
+  return MACRO_GROUPS.find((group) => group.key === key)?.anchor ?? `makro-${key}`;
 }

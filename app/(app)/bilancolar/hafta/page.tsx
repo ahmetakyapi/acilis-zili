@@ -16,12 +16,24 @@ import {
 } from "@/components/earnings/week/WeekBoard";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import board from "@/components/earnings/week/WeekBoard.module.css";
-import { buttonClass, DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
+import { WeekSchedule } from "@/components/earnings/week/WeekSchedule";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import {
-  defaultWeekStart,
-  mondayOf,
+  buttonClass,
+  DataError,
+  DataStamp,
+  EmptyState,
+  Panel,
+  PanelHeader,
+} from "@/components/ui/primitives";
+import { auth } from "@/auth";
+import { getAnalysisBadges, getUserSymbols } from "@/lib/data";
+import {
+  currentWeekStart,
   parseWeekParam,
+  SCHEDULE_DAY_MAX,
   weekRangeLabel,
+  WEEK_DAYS,
   WEEK_MAX_NAMES,
 } from "@/lib/earnings-week";
 import { getEarningsWeek } from "@/lib/earnings-week-data";
@@ -33,6 +45,18 @@ import { absoluteUrl, pageAlternates } from "@/lib/site";
 
 /**
  * Haftalık Bilanço Takvimi — `/bilancolar/hafta` (+ `?hafta=YYYY-MM-DD`).
+ *
+ * DÖRDÜNCÜ SEKME (29 Eylül). Sahibi haftayı ayrı bir sekmede, üstünde
+ * "en çok beklenenler" tarzı grafiksel bir ızgarayla istedi. Sayfa artık
+ * üç panel: En Çok Beklenenler (günler sütun, açılış öncesi / kapanış
+ * sonrası şerit, karo boyu piyasa değeri), Haftanın Takvimi (gün gün tam
+ * liste, beklenti ve gerçekleşen) ve paylaşım görselleri. Varsayılan hafta
+ * içinde bulunulan iş haftası (`currentWeekStart`, gerekçesi orada).
+ *
+ * Sekme çubuğu telefonda (29 Eylül, ölçüldü): dört sekme 390 pikselde
+ * 344 piksel, kap 352 — sığıyor (TR ve EN). 360'ta 8 piksel (EN 4) taşıyor
+ * ve çubuk kayıyor; `TabBar` bunu zaten taşıyor, sayfaya yatay taşma 0.
+ * Aşağıdaki paragraf ESKİ kararın kaydı:
  *
  * TAKVİMİN BİR GÖRÜNÜMÜ, DÖRDÜNCÜ SEKME DEĞİL. Sekme çubuğu aynı listenin
  * üç görünümünü taşıyor (takvim, analizler, takip) ve telefonda üç sekme
@@ -61,7 +85,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const search = await props.searchParams;
   const param = typeof search.hafta === "string" ? parseWeekParam(search.hafta) : null;
-  const monday = param ?? defaultWeekStart(todayEt());
+  const monday = param ?? currentWeekStart(todayEt());
   const locale = await getLocale();
   const t = getDictionary(locale);
   const w = t.earningsExtra.week;
@@ -125,23 +149,26 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
   const search = await props.searchParams;
   const param = typeof search.hafta === "string" ? parseWeekParam(search.hafta) : null;
   const today = todayEt();
-  const monday = param ?? defaultWeekStart(today);
+  const thisMonday = currentWeekStart(today);
+  const monday = param ?? thisMonday;
 
   const { locale, t } = await getI18n();
   const w = t.earningsExtra.week;
   const range = weekRangeLabel(monday, locale);
 
-  const thisMonday = mondayOf(today);
   const weekHref = (target: string) =>
-    target === defaultWeekStart(today) ? "/bilancolar/hafta" : `/bilancolar/hafta?hafta=${target}`;
+    target === thisMonday ? "/bilancolar/hafta" : `/bilancolar/hafta?hafta=${target}`;
 
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
+      {/* BAŞLIK BÖLÜMÜN ADI, açıklama bu sekmenin: öteki üç sekmenin kuralı
+          (gerekçe `app/(app)/bilancolar/page.tsx`). "Haftalık Bilanço
+          Takvimi" adı sayfa başlığında (metadata) ve görselde kalıyor. */}
       <DirectoryHeader
         eyebrow={w.eyebrow}
-        title={w.title}
-        description={w.description}
+        title={t.analysis.title}
+        description={t.earningsWeek.description}
         visual={
           <Suspense fallback={<WeekPulseSkeleton t={t} />}>
             <HeroPulse monday={monday} locale={locale} t={t} />
@@ -175,7 +202,7 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
         </div>
       </DirectoryHeader>
 
-      <EarningsTabs active="calendar" t={t} className="-mt-2" />
+      <EarningsTabs active="week" t={t} className="-mt-2" />
 
       {/* ---- Seçim şeridi: hangi hafta, öteki haftalar ----
           Bağlantılar `scroll={false}`: hafta değiştiren okuyucu sayfanın
@@ -202,7 +229,7 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
       <Suspense
         fallback={
           <Panel>
-            <PanelHeader title={w.boardTitle} />
+            <PanelHeader title={t.earningsWeek.anticipatedTitle} meta={t.earningsWeek.anticipatedMeta} />
             <div className={board.boardPanel}>
               <WeekBoardSkeleton />
             </div>
@@ -236,7 +263,31 @@ async function WeekBody({
   t: Dictionary;
 }) {
   const w = t.earningsExtra.week;
-  const week = await loadWeek(monday, locale);
+  const e = t.earningsWeek;
+  const friday = addEtDays(monday, WEEK_DAYS - 1);
+  const [week, session] = await Promise.all([loadWeek(monday, locale), auth()]);
+  const listedSymbols = week.schedule.flatMap((day) => day.listed.map((row) => row.symbol));
+  const tileSymbols = week.days.flatMap((day) =>
+    [...day.bmo, ...day.amc, ...day.other].map((row) => row.symbol),
+  );
+  const allSymbols = [...new Set([...tileSymbols, ...listedSymbols])];
+  const [badges, userSymbols] = await Promise.all([
+    getAnalysisBadges(allSymbols, locale, { from: monday, to: friday }),
+    session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve<string[]>([]),
+  ]);
+  const watchSet = new Set(userSymbols);
+
+  /* OKUNAMAYAN TAKVİM BOŞ BİR HAFTA DEĞİL (gerekçe `getEarningsBetweenResult`):
+     ne mozaik ne gün gün "bilanço yok" satırları basılıyor. */
+  if (week.failed) {
+    return (
+      <Panel>
+        <PanelHeader title={e.anticipatedTitle} />
+        <DataError message={e.errorTitle} hint={e.errorHint} />
+      </Panel>
+    );
+  }
+
   const labels = { landscape: w.imageLandscape, portrait: w.imagePortrait };
   const alts = { landscape: w.landscapeAlt, portrait: w.portraitAlt };
   /* Sütun oranı = görselin en/boy oranı: iki görsel aynı yükseklikte biter
@@ -244,35 +295,75 @@ async function WeekBody({
   const ratio = (size: "landscape" | "portrait") =>
     WEEK_OG_SIZES[size].width / WEEK_OG_SIZES[size].height;
   const imageColumns = `minmax(0, ${ratio("landscape")}fr) minmax(0, ${ratio("portrait")}fr)`;
+  const hasActuals = week.schedule.some((day) => day.listed.some((row) => row.epsActual !== null));
 
   return (
     <>
+      {/* Şirket kartı: mozaiğin karoları ve takvimin adıyla listelenen
+          satırları. Sembol tablosu haftanın okumasından (`week.meta`),
+          ikinci bir tur yok; kotasyon akışla iniyor. */}
+      <Suspense fallback={null}>
+        <CompanyCards symbols={allSymbols} names={week.meta} />
+      </Suspense>
+
       <Panel>
-        <PanelHeader
-          title={w.boardTitle}
-          meta={w.countCompanies.replace("{count}", String(week.picked))}
-        />
+        <PanelHeader title={e.anticipatedTitle} meta={e.anticipatedMeta} />
         {week.picked === 0 ? (
           <EmptyState title={w.empty} hint={w.emptyHint} scene="chart" />
         ) : (
           <>
             <div className={board.boardPanel}>
-              <WeekBoard days={week.days} locale={locale} t={t} today={today} />
+              <WeekBoard
+                days={week.days}
+                badges={badges}
+                watchSet={watchSet}
+                locale={locale}
+                t={t}
+                today={today}
+              />
             </div>
 
-            {/* ---- Künyeler: panelin içinde, hairline ile ---- */}
+            {/* ---- Künyeler: panelin içinde, hairline ile ----
+                Ölçüt ilk cümle: "en çok beklenen" iddiası ancak neye göre
+                olduğu söylenince dürüst. */}
             <div className={board.notes}>
+              <p>
+                {e.noteCriterion} {e.noteTiers}
+              </p>
               <p>
                 {w.countOf
                   .replace("{count}", String(week.picked))
                   .replace("{total}", String(week.total))}{" "}
                 {w.noteSelection.replace("{max}", String(WEEK_MAX_NAMES))}
               </p>
-              <p>{w.noteTimes}</p>
             </div>
           </>
         )}
       </Panel>
+
+      {week.total > 0 && (
+        <Panel>
+          <PanelHeader
+            title={e.scheduleTitle}
+            meta={w.countCompanies.replace("{count}", String(week.total))}
+          />
+          <WeekSchedule
+            schedule={week.schedule}
+            badges={badges}
+            watchSet={watchSet}
+            today={today}
+            locale={locale}
+            t={t}
+          />
+          <div className={board.notes}>
+            <p>
+              {e.noteSchedule.replace("{max}", String(SCHEDULE_DAY_MAX))}
+              {hasActuals && <> {e.noteSurprise}</>}
+            </p>
+            <p>{w.noteTimes}</p>
+          </div>
+        </Panel>
+      )}
 
       {week.picked > 0 && (
         <Panel>

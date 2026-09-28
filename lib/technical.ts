@@ -1130,3 +1130,70 @@ export function formatRange(low: number, high: number, locale: Locale): string {
   if (low === high) return formatPrice(low, locale, { currency: true });
   return `${formatPrice(low, locale)} – ${formatPrice(high, locale, { currency: true })}`;
 }
+
+/** Görüş geçmişinin bir satırı — yayın başına kayıt (`getTechnicalDetail`). */
+export type PlanHistoryEntry = {
+  sessionDate: string;
+  slot: string;
+  stance: string;
+  entryLow: number | null;
+  entryHigh: number | null;
+  stop: number | null;
+};
+
+/** Art arda aynı kalan yayınların tek satırı: en yeni kayıt ve yayınların sırası. */
+export type PlanHistoryRun<T extends PlanHistoryEntry> = {
+  entry: T;
+  /** Grubun yayın dilimleri, ESKİDEN yeniye ("premarket", "midsession"…). */
+  slots: string[];
+};
+
+/**
+ * GÖRÜŞ GEÇMİŞİNDE AYNI PLAN TEK SATIR (29 Eylül).
+ *
+ * Rutin günde üç yayın yazıyor ve plan çoğu gün değişmiyor: NVDA'nın on iki
+ * satırlık geçmişinde yedi satır bir üstündekinin birebir kopyasıydı (aynı
+ * gün, aynı görüş, aynı bölge, aynı stop). Tablo 1440'ta 630, 390'da 1.165
+ * piksel tutuyordu ve okuyucunun aradığı şey — plan NE ZAMAN değişti —
+ * kopyaların arasında kayboluyordu.
+ *
+ * Birleşme yalnızca AYNI GÜN içinde ve dört alanın dördü de aynıysa: gün
+ * sınırı aşılmaz (tarih sütunu yalan söylemesin), tek bir sayı farkı ayrı
+ * satır demek. Girdi yeniden eskiye, çıktı da öyle.
+ */
+export function groupPlanHistory<T extends PlanHistoryEntry>(rows: readonly T[]): PlanHistoryRun<T>[] {
+  const runs: PlanHistoryRun<T>[] = [];
+  for (const row of rows) {
+    const last = runs.at(-1);
+    const head = last?.entry;
+    if (
+      last &&
+      head &&
+      head.sessionDate === row.sessionDate &&
+      head.stance === row.stance &&
+      head.entryLow === row.entryLow &&
+      head.entryHigh === row.entryHigh &&
+      head.stop === row.stop
+    ) {
+      last.slots.unshift(row.slot);
+      continue;
+    }
+    runs.push({ entry: row, slots: [row.slot] });
+  }
+  return runs;
+}
+
+/**
+ * Geçmiş planların ortak ölçeği: tablodaki bütün bölge ve stop sayılarının
+ * en düşüğü ile en yükseği. Tek değer (ya da hiç) varsa ölçek yok — çizgi
+ * olmayan bir değişimi çizmesin.
+ */
+export function planHistoryScale(rows: readonly PlanHistoryEntry[]): { min: number; max: number } | null {
+  const values = rows.flatMap((row) =>
+    [row.entryLow, row.entryHigh, row.stop].filter((value): value is number => value !== null && Number.isFinite(value)),
+  );
+  if (values.length === 0) return null;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  return max > min ? { min, max } : null;
+}

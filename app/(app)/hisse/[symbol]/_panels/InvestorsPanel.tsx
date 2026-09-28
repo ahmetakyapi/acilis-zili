@@ -102,7 +102,14 @@ export function InvestorsPanel({ data, locale, t }: { data: StockInvestors; loca
                 <li key={`${trade.docId}-${trade.rowNo}`}>
                   <Link href={`/yatirimcilar/${trade.member}`} prefetch={false} className={styles.holderTrade}>
                     {investor && <Portrait investor={investor} size="chip" />}
-                    <span className="numeral text-muted">{formatEtDateMedium(trade.txDate, locale)}</span>
+                    {/* AD PORTRENİN YANINDA (29 Eylül, sahibinin isteği). Yalnızca
+                        portre vardı; kimin işlem yaptığı yüzü tanımayana
+                        okunmuyordu. Ad üstte, tarih altında sönük: satır
+                        genişlemiyor, iki sütun yine sığıyor. */}
+                    <span className={styles.holderTradeWho}>
+                      <b>{investor?.name ?? trade.member}</b>
+                      <span className="numeral">{formatEtDateMedium(trade.txDate, locale)}</span>
+                    </span>
                     <span className={styles.txChip} data-tone={txTone(trade.txType)}>
                       {txLabel(trade.txType, ti)}
                       {trade.assetType === "OP" ? ` · ${ti.optionShort}` : ""}

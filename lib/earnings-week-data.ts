@@ -1,20 +1,34 @@
 import { indexMemberOf, isSecondaryShareClass } from "@/db/seed/indices";
-import { getEarningsBetween, getHolidays, getSymbolNames } from "@/lib/data";
+import {
+  getEarningsBetweenResult,
+  getHolidays,
+  getSymbolNames,
+  type SymbolMeta,
+} from "@/lib/data";
 import type { Locale } from "@/lib/i18n/config";
 import { addEtDays } from "@/lib/market-hours";
 import { isSpotlight } from "@/lib/spotlight";
 import {
+  buildSchedule,
   buildWeek,
   pickNotable,
   WEEK_DAYS,
-  type WeekCandidate,
+  type ScheduleDay,
+  type ScheduleRow,
   type WeekDay,
 } from "@/lib/earnings-week";
 
 export type EarningsWeek = {
   monday: string;
   friday: string;
-  days: WeekDay[];
+  days: WeekDay<ScheduleRow>[];
+  /** Haftanın tam takvimi, gün gün (haftalık sekmenin alt paneli). */
+  schedule: ScheduleDay[];
+  /** Sembol tablosunun o haftaki kesiti — şirket kartı kaydı aynı veriyi
+      okusun, ikinci bir tur açılmasın. */
+  meta: Record<string, SymbolMeta>;
+  /** Takvim OKUNAMADI — boş hafta değil. Sayfa boşluk iddiası basmaz. */
+  failed: boolean;
   /** Seçilenlerin sayısı ve takvimde o hafta açıklayanların tamamı. */
   picked: number;
   total: number;
@@ -29,21 +43,24 @@ export type EarningsWeek = {
  * önbellekli; takvim zaten `guncelBilanco` süzgecinden geçiyor (aynı
  * çeyreğin eski tarihli satırı düşüyor).
  *
- * Hata değer olarak dönüyor: okunamayan takvim boş bir haftadır, sayfa
- * "bu hafta kayda değer bilanço yok" der ve çökmez.
+ * Hata değer olarak dönüyor ve ADIYLA: okunamayan takvim boş bir hafta
+ * DEĞİL (`failed`). Görsel onu yine boş hafta olarak çiziyor (bir PNG'nin
+ * hata diyecek yeri yok), sayfa ise "takvim alınamadı" der — bir dönem
+ * ikisi de "bu hafta kayda değer bilanço yok" diyordu.
  */
 export async function getEarningsWeek(monday: string, locale: Locale): Promise<EarningsWeek> {
   const friday = addEtDays(monday, WEEK_DAYS - 1);
-  const [rows, holidays] = await Promise.all([
-    getEarningsBetween(monday, friday),
+  const [result, holidays] = await Promise.all([
+    getEarningsBetweenResult(monday, friday),
     getHolidays(),
   ]);
+  const rows = result.ok ? result.rows : [];
   /* İkinci hisse sınıfı (GOOG, BRK.A…) aynı şirketin ikinci satırı; görselde
      aynı logo iki kez durmasın. */
   const primary = rows.filter((row) => !isSecondaryShareClass(row.symbol));
   const meta = await getSymbolNames([...new Set(primary.map((row) => row.symbol))]);
 
-  const candidates: WeekCandidate[] = primary.map((row) => ({
+  const candidates: ScheduleRow[] = primary.map((row) => ({
     symbol: row.symbol,
     reportDate: row.reportDate,
     hour: row.hour?.trim() || null,
@@ -52,6 +69,11 @@ export async function getEarningsWeek(monday: string, locale: Locale): Promise<E
     marketCap: meta[row.symbol]?.marketCap ?? null,
     indexMember: indexMemberOf(row.symbol) !== null,
     spotlight: isSpotlight(row.symbol),
+    epsEstimate: row.epsEstimate ?? null,
+    epsActual: row.epsActual ?? null,
+    revenueEstimate: row.revenueEstimate ?? null,
+    revenueActual: row.revenueActual ?? null,
+    currency: meta[row.symbol]?.currency || null,
   }));
   const picked = pickNotable(candidates);
 
@@ -64,6 +86,9 @@ export async function getEarningsWeek(monday: string, locale: Locale): Promise<E
     monday,
     friday,
     days: buildWeek(monday, picked, holidays, locale),
+    schedule: buildSchedule(monday, candidates, holidays, locale),
+    meta,
+    failed: !result.ok,
     picked: picked.length,
     total: new Set(primary.map((row) => row.symbol)).size,
     updatedAt,

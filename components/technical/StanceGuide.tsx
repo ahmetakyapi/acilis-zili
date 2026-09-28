@@ -59,16 +59,24 @@ export function StanceGuide({
             <article key={key} className={styles.stanceColumn} data-tone={TONE[key]}>
               <span className={cn(styles.stancePill, verdictPillClass(key))}>{verdictLabel(key, t)}</span>
               <p className={styles.stanceMeaning}>{g[key].meaning}</p>
-              <dl className={styles.stanceCases}>
-                <div>
-                  <dt>{g.noPosition}</dt>
-                  <dd>{g[key].noPosition}</dd>
-                </div>
-                <div>
-                  <dt>{g.hasPosition}</dt>
-                  <dd>{g[key].hasPosition}</dd>
-                </div>
-              </dl>
+              {/* TELEFONDA KATLI (29 Eylül). Üç sütun alt alta 390'da 1.893
+                  piksel tutuyordu (sayfanın ~%15'i). Etiket ve anlam her
+                  ekranda açık; "yoksa / varsa" ayrıntısı telefonda dokununca
+                  açılıyor. Geniş ekranda `::details-content` ile hep açık ve
+                  özet satırı gizli: orada hiçbir şey değişmedi. */}
+              <details className={styles.stanceMore}>
+                <summary>{g.whatToDo}</summary>
+                <dl className={styles.stanceCases}>
+                  <div>
+                    <dt>{g.noPosition}</dt>
+                    <dd>{g[key].noPosition}</dd>
+                  </div>
+                  <div>
+                    <dt>{g.hasPosition}</dt>
+                    <dd>{g[key].hasPosition}</dd>
+                  </div>
+                </dl>
+              </details>
             </article>
           ))}
         </div>

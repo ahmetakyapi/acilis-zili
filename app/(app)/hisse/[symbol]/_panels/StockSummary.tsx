@@ -2,7 +2,6 @@ import { Buildings, CalendarBlank, Stack, TreeStructure, UsersThree } from "@pho
 import type { ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
-import { guideArticle } from "@/content/guide";
 import { DOW_MEMBERS, NDX_MEMBERS, SPX_MEMBERS, indexMemberOf, peersOf } from "@/db/seed/indices";
 import { getHolidays, getNextReport, getSymbolNames } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -83,15 +82,6 @@ export function metaExtras(facts: SummaryFacts, locale: Locale, t: Dictionary): 
   return parts.join(" ");
 }
 
-/** Özetin bağlantı verdiği rehber yazıları — sırası sorunun doğduğu sıra. */
-function guideSlugs(facts: SummaryFacts): string[] {
-  return [
-    ...(facts.next ? ["bilanco-gunu-nasil-okunur"] : []),
-    ...(facts.indices.length > 0 ? ["endeks"] : []),
-    ...(facts.sector ? ["sektor-rotasyonu"] : []),
-    "hisse-senedi",
-  ];
-}
 
 export async function StockSummary({ symbol, locale, t }: { symbol: string; locale: Locale; t: Dictionary }) {
   const d = t.stockDepth;
@@ -128,13 +118,8 @@ export async function StockSummary({ symbol, locale, t }: { symbol: string; loca
       : null,
   ].filter((s): s is string => s !== null);
 
-  /* Hiçbir şey bilinmiyorsa (endeks dışı, takvimsiz) panel yok: tek başına
-     bir rehber bağlantısı bir özet değil. */
+  /* Hiçbir şey bilinmiyorsa (endeks dışı, takvimsiz) panel yok. */
   if (sentences.length === 0) return null;
-
-  const guides = guideSlugs(facts)
-    .map((slug) => guideArticle(slug, locale))
-    .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
   /* Logo şeridi piyasa değerine göre: alt sektörü en çok temsil eden beş
      şirket. Değeri bilinmeyen sona. */
@@ -191,6 +176,12 @@ export async function StockSummary({ symbol, locale, t }: { symbol: string; loca
     <Panel className={cn(styles.panel, styles.summaryPanel)}>
       <PanelHeader title={d.sumTitle} />
       <div className={styles.body}>
+        {/* PARAGRAF VE REHBER SATIRI KALKTI (29 Eylül, sahibinin isteği:
+            "kompakt ve daha iyi seviye"). Paragraf dört ölçünün söylediğini
+            (endeks, sektör, alt sektör, şirket sayısı) hemen altında cümle
+            olarak tekrarlıyordu; rehber bağlantıları sayfanın sonundaki
+            "Bunu Anlamak İçin" şeridinde zaten var. Cümleler arama motoru
+            açıklamasında yaşıyor (`summaryFacts` → generateMetadata). */}
         <dl className={styles.summaryFacts} data-motion-stagger>
           {cells.map((cell) => (
             <div key={cell.key} className={styles.summaryFact}>
@@ -203,17 +194,6 @@ export async function StockSummary({ symbol, locale, t }: { symbol: string; loca
             </div>
           ))}
         </dl>
-        <p className={styles.summaryText}>{sentences.join(" ")}</p>
-        {guides.length > 0 && (
-          <p className={styles.guides}>
-            <span>{d.sumGuides}</span>
-            {guides.map((guide) => (
-              <Link key={guide.slug} href={`/rehber/${guide.slug}`} prefetch={false} className="tap-44">
-                {guide.title}
-              </Link>
-            ))}
-          </p>
-        )}
       </div>
     </Panel>
   );

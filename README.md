@@ -536,7 +536,7 @@ etkin görünür.
 | `/bilancolar` | Kim ne zaman açıklıyor: hafta/ay, açılış öncesi ve kapanış sonrası |
 | `/bilancolar/analizler` | Okunmuş çeyrekler: skor, görüş, hedef fiyat |
 | `/bilancolar/takip` | Benim izlediklerimin bilançoları |
-| `/bilancolar/hafta` | Bu haftanın bilanço takvimi tek ekranda (`?hafta=YYYY-MM-DD`); paylaşılacak bir çıktı |
+| `/bilancolar/hafta` | Haftalık sekme (`?hafta=YYYY-MM-DD`): En Çok Beklenenler ızgarası (günler × açılış öncesi/kapanış sonrası, karo boyu piyasa değeri), altında gün gün tam takvim — beklenti, gerçekleşen EPS ve sapma; paylaşım görselleri |
 | `/bilancolar/[symbol]/[period]` | Bu çeyrek ne anlattı: tam analiz; rutin yazdıysa başında "30 Saniyede" özeti, sonunda Segment ve KPI Verisi |
 
 ### Teknik Analiz

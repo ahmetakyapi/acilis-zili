@@ -92,7 +92,11 @@
 .eventKicker { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--primary); }
 .eventKicker h2 { color:var(--primary-ink); }
 .earningsDate { margin-top:14px; font-size:24px; line-height:1.2; font-weight:600; letter-spacing:-.045em; color:var(--text-strong); }
-.chapter { display:flex; min-width:0; flex-direction:column; gap:20px; padding-top:36px; scroll-margin-top:136px; }
+/* BÖLÜM ÜSTÜ SIKI (29 Eylül, sahibinin isteği: "Bilançolar ve Gündem
+   başlığının üstündeki boşluğu azaltalım"). 36'lık iç boşluk sayfa
+   ızgarasının aralığına ekleniyor ve başlığın üstünde ~60 piksel boşluk
+   açıyordu; büyük başlık zaten bölüm ayrımını taşıyor. */
+.chapter { display:flex; min-width:0; flex-direction:column; gap:16px; padding-top:12px; scroll-margin-top:136px; }
 .sectionHeading { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:2px; }
 .sectionHeading h2 { color:var(--text-strong); font-size:clamp(25px,2.8vw,36px); font-weight:600; line-height:1.14; letter-spacing:-.055em; }
 .sectionHeading p { max-width:60ch; margin-top:10px; color:var(--text-muted); font-size:13px; line-height:1.7; }
@@ -189,7 +193,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
   .priceLine { gap:10px 14px; }
   .priceChange { gap:6px; }
   .priceChange > span { font-size:12px; }
-  .chapter { padding-top:22px; gap:16px; }
+  .chapter { padding-top:6px; gap:14px; }
   .sectionHeading { gap:12px; }
   .sectionHeading h2 { font-size:27px; }
   .sectionHeading p { font-size:12px; margin-top:8px; }

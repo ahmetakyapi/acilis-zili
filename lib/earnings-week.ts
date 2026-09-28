@@ -93,6 +93,27 @@ export function parseWeekParam(value: string | null | undefined): string | null 
   return mondayOf(value);
 }
 
+/**
+ * Haftalık SEKMENİN varsayılan haftası: içinde bulunulan iş haftası;
+ * cumartesi ve pazar ise gelecek hafta.
+ *
+ * `defaultWeekStart` her zaman gelecek haftayı veriyor ve paylaşım
+ * görselinin işi için doğru ("gelecek hafta kim açıklıyor"). Ama sayfa
+ * artık bilançolar ekranının bir SEKMESİ (29 Eylül) ve sekmeye salı günü
+ * gelen okuyucu önce bu haftanın takvimini arıyor: yarın açıklayacak MU
+ * gelecek haftanın panosunda hiç görünmüyordu. Hafta sonu ise iş haftası
+ * bitmiş sayılıyor — pazar akşamı "bu hafta" diye biten haftayı göstermek
+ * geçmişe bakmak olurdu. Görsel ucu eski varsayılanda kalıyor; sayfa ona
+ * haftayı her zaman açıkça veriyor.
+ */
+export function currentWeekStart(todayEt: string): string {
+  const weekday = utcDay(todayEt).getUTCDay();
+  const SATURDAY = 6;
+  const SUNDAY = 0;
+  if (weekday === SATURDAY || weekday === SUNDAY) return defaultWeekStart(todayEt);
+  return mondayOf(todayEt);
+}
+
 /** Pazartesiden cumaya beş gün. */
 export function weekDates(monday: string): string[] {
   return Array.from({ length: WEEK_DAYS }, (_, index) => addEtDays(monday, index));
@@ -136,10 +157,10 @@ export function laneOf(hour: string | null | undefined): WeekLane {
  * Aynı sembol haftada iki kez görünürse (sağlayıcı tarihi kaydırdı, eski
  * satır silinmedi) ilk tarih kalır — görselde aynı logo iki güne düşmesin.
  */
-export function pickNotable(
-  rows: WeekCandidate[],
+export function pickNotable<T extends WeekCandidate>(
+  rows: T[],
   max: number = WEEK_MAX_NAMES,
-): WeekCandidate[] {
+): T[] {
   const seen = new Set<string>();
   const eligible = rows
     .filter(
@@ -164,13 +185,13 @@ export function pickNotable(
     .slice(0, max);
 }
 
-export type WeekDay = {
+export type WeekDay<T extends WeekCandidate = WeekCandidate> = {
   date: string;
   /** Tam gün tatil — borsa kapalı. Yarım gün burada DEĞİL, kapanışı kayar. */
   closed: MarketHoliday | null;
-  bmo: WeekCandidate[];
-  amc: WeekCandidate[];
-  other: WeekCandidate[];
+  bmo: T[];
+  amc: T[];
+  other: T[];
   /** "~15:00" gibi — okuyucunun birincil saati ve öteki saat. */
   bmoClock: TimePair;
   amcClock: TimePair;
@@ -184,12 +205,12 @@ export type WeekDay = {
  * ET, yani kapanış sonrası bilançolar TR'de 21:00 civarı — sabit "~23:00"
  * yazmak o gün iki saat yanlış olurdu.
  */
-export function buildWeek(
+export function buildWeek<T extends WeekCandidate>(
   monday: string,
-  picked: WeekCandidate[],
+  picked: T[],
   holidays: MarketHoliday[],
   locale: Locale,
-): WeekDay[] {
+): WeekDay<T>[] {
   return weekDates(monday).map((date) => {
     const holiday = holidays.find((item) => item.date === date) ?? null;
     const rows = picked
@@ -286,4 +307,180 @@ export function allocateSlots(counts: readonly number[], budget: number): number
     if (!gave) break;
   }
   return slots;
+}
+
+/* ---------------------------------------------------------------------------
+   En Çok Beklenenler — karo boyu
+   --------------------------------------------------------------------------- */
+
+/**
+ * Karo basamakları — piyasa değeri, dolar.
+ *
+ * "En çok beklenen" iddiası burada ÖLÇÜTÜ AÇIK bir iddia: şirketin
+ * büyüklüğü. Earnings Whispers aynı ızgarayı kendi okuyucu ilgisinden
+ * kuruyor ve ölçütünü söylemiyor; bizim elimizde dürüstçe ölçülebilen
+ * bir ilgi puanı yok. Takip listesi sayımı düşünüldü ve ölçüldü (29
+ * Eylül: 5 kullanıcı, 18 favori satırı, en çok takip edilen sembolde 2
+ * kişi) — sıralama değil gürültü olurdu. Karo boyu bu yüzden piyasa
+ * değerinden, eşikler künyede adıyla yazılı.
+ *
+ * Üç basamak, sürekli ölçek değil: 10 milyar ile 4 trilyon arası dört yüz
+ * kat ve doğrusal bir alan ölçeğinde küçükler görünmez olurdu. Sürekli
+ * büyüklüğü karonun altındaki çizgi taşıyor (haftanın en büyüğüne göre
+ * uzunluk — CLAUDE.md "karşılaştırılan her büyüklük bir de çizgi").
+ */
+export const TILE_XL_CAP = 500e9;
+export const TILE_LG_CAP = 100e9;
+
+export type TileTier = "xl" | "lg" | "md";
+
+export function tileTier(marketCap: number | null): TileTier {
+  if (marketCap !== null && marketCap >= TILE_XL_CAP) return "xl";
+  if (marketCap !== null && marketCap >= TILE_LG_CAP) return "lg";
+  return "md";
+}
+
+/* ---------------------------------------------------------------------------
+   Sürpriz — gerçekleşen EPS beklentiye göre
+   --------------------------------------------------------------------------- */
+
+/**
+ * Yarım sent: EPS iki ondalıkla açıklanıyor, sağlayıcının beklentisi dört
+ * ondalıkla geliyor (0,4444). 0,44 açıklayan şirkete "beklentinin altında"
+ * demek, yuvarlamanın ürettiği bir kaybı olay gibi göstermek olurdu.
+ */
+export const EPS_INLINE_TOLERANCE = 0.005;
+
+/** Yüzde sapma için beklentinin en küçük mutlak değeri: bir sent. */
+export const EPS_RATIO_MIN_BASE = 0.01;
+
+export type Surprise = {
+  direction: "beat" | "miss" | "inline";
+  /** Beklentiden sapma, oran (0.12 = %12). Beklenti bir sentin altındaysa null. */
+  ratio: number | null;
+};
+
+export function epsSurprise(
+  actual: number | null | undefined,
+  estimate: number | null | undefined,
+): Surprise | null {
+  if (actual === null || actual === undefined || estimate === null || estimate === undefined) {
+    return null;
+  }
+  const diff = actual - estimate;
+  const direction =
+    Math.abs(diff) < EPS_INLINE_TOLERANCE ? "inline" : diff > 0 ? "beat" : "miss";
+  /* Oran NEGATİF beklentide mutlak değere bölünüyor: -0,72 beklenen ve
+     -0,50 açıklayan şirket beklentiyi AŞTI; düz bölmede sapma eksi çıkardı.
+     Beklenti bir sentin altındaysa (ekranda "0,00 $") oran YOK: 21 Eylül
+     haftasında ANAB 0,0031 beklentiyle 5,11 açıkladı ve sütunda
+     "+%164.738,7" yazıyordu — sıfıra yakın bir paydanın ürettiği, hiçbir
+     şey söylemeyen bir sayı. Yön kalıyor, yüzde düşüyor. */
+  const ratio =
+    Math.abs(estimate) < EPS_RATIO_MIN_BASE || direction === "inline"
+      ? null
+      : diff / Math.abs(estimate);
+  return { direction, ratio };
+}
+
+/* ---------------------------------------------------------------------------
+   Haftanın takvimi — gün gün tam liste
+   --------------------------------------------------------------------------- */
+
+/** Takvim satırı — seçim adayı artı beklenti ve gerçekleşenler. */
+export type ScheduleRow = WeekCandidate & {
+  epsEstimate: number | null;
+  epsActual: number | null;
+  revenueEstimate: number | null;
+  revenueActual: number | null;
+  /** Tahminlerin para birimi (ana borsanın): USD dışı olabilir. */
+  currency: string | null;
+};
+
+/**
+ * Listede adıyla görünmek için piyasa değeri tabanı.
+ *
+ * Bilanço sezonunun yoğun bir gününde takvimde üç yüzü aşkın şirket var ve
+ * çoğu kapalı uçlu fon ya da mikro ölçekli; beklentisi bile yok (28 Eylül
+ * haftası: 96 satırın 31'inde EPS beklentisi). 1 milyar doların altı
+ * günün açılır listesine iniyor — kaybolmuyor, sembolüyle orada.
+ */
+export const SCHEDULE_MIN_CAP = 1e9;
+
+/**
+ * Bir günde adıyla listelenen en fazla şirket. On iki satır ~620 piksel;
+ * 22 Ekim gibi bir günde tabanın üstünde 60'ı aşkın şirket var ve hepsini
+ * açmak haftayı on ekranlık bir listeye çevirirdi.
+ */
+export const SCHEDULE_DAY_MAX = 12;
+
+export type ScheduleDay<T extends ScheduleRow = ScheduleRow> = {
+  date: string;
+  closed: MarketHoliday | null;
+  /** Adıyla listelenenler — önce adla seçilenler, sonra piyasa değeri. */
+  listed: T[];
+  /** Kalanlar, pencereye göre — günün açılır listesi. */
+  rest: { bmo: T[]; amc: T[]; other: T[] };
+  total: number;
+  bmoClock: TimePair;
+  amcClock: TimePair;
+};
+
+/**
+ * Günün tam listesini ikiye böler. Sıra `pickNotable`ın sırası: adla
+ * seçilenler (takvim sekmesinin kuralı, gerekçesi orada), sonra piyasa
+ * değeri. Aynı sembol aynı gün iki kez gelmez (`guncelBilanco` zaten
+ * eliyor; burada ikinci savunma).
+ */
+export function splitScheduleDay<T extends ScheduleRow>(
+  rows: T[],
+  max: number = SCHEDULE_DAY_MAX,
+): { listed: T[]; rest: T[] } {
+  const seen = new Set<string>();
+  const unique = rows.filter((row) => {
+    if (seen.has(row.symbol)) return false;
+    seen.add(row.symbol);
+    return true;
+  });
+  const ordered = [...unique].sort(
+    (a, b) =>
+      Number(b.spotlight) - Number(a.spotlight) ||
+      (b.marketCap ?? 0) - (a.marketCap ?? 0) ||
+      a.symbol.localeCompare(b.symbol),
+  );
+  const eligible = ordered.filter(
+    (row) => row.spotlight || (row.marketCap !== null && row.marketCap >= SCHEDULE_MIN_CAP),
+  );
+  const listed = eligible.slice(0, max);
+  const listedSet = new Set(listed.map((row) => row.symbol));
+  return { listed, rest: ordered.filter((row) => !listedSet.has(row.symbol)) };
+}
+
+export function buildSchedule<T extends ScheduleRow>(
+  monday: string,
+  rows: T[],
+  holidays: MarketHoliday[],
+  locale: Locale,
+  max: number = SCHEDULE_DAY_MAX,
+): ScheduleDay<T>[] {
+  return weekDates(monday).map((date) => {
+    const holiday = holidays.find((item) => item.date === date) ?? null;
+    const { listed, rest } = splitScheduleDay(
+      rows.filter((row) => row.reportDate === date),
+      max,
+    );
+    return {
+      date,
+      closed: holiday && holiday.earlyCloseEt === null ? holiday : null,
+      listed,
+      rest: {
+        bmo: rest.filter((row) => laneOf(row.hour) === "bmo"),
+        amc: rest.filter((row) => laneOf(row.hour) === "amc"),
+        other: rest.filter((row) => laneOf(row.hour) === "other"),
+      },
+      total: listed.length + rest.length,
+      bmoClock: timePair(date, clockOf(BMO_TYPICAL_MINUTES), locale),
+      amcClock: timePair(date, clockOf(closeMinutesFor(date, holidays)), locale),
+    };
+  });
 }

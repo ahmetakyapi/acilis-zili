@@ -218,12 +218,23 @@ export const guncelBilanco = sql`(
   )
 )`;
 
-export const getEarningsBetween = cache(async function getEarningsBetween(
+/**
+ * Sonuç tipli okuma — okunamayan takvim BOŞ bir takvim değildir.
+ *
+ * Haftalık sekme (`/bilancolar/hafta`) boş listeden olgu çıkarıyor: gün
+ * gün "bu gün bilanço yok", kapakta "0 şirket", beş günün hepsinde tarama
+ * deseni. Neon düştüğünde bunlar beş ayrı yanlış iddia olurdu; ekonomik
+ * takvimin `getEventsBetweenResult` ile çözdüğü sorunun aynısı. Çağıran
+ * `ok: false`ta hiçbir boşluk iddiası basmaz, yalnızca hata der.
+ */
+export type EarningsResult = { ok: true; rows: EarningsRow[] } | { ok: false };
+
+export const getEarningsBetweenResult = cache(async function getEarningsBetweenResult(
   from: string,
   to: string,
-): Promise<EarningsRow[]> {
+): Promise<EarningsResult> {
   try {
-    return await db
+    const rows = await db
       .select()
       .from(earningsCalendar)
       .where(
@@ -234,10 +245,25 @@ export const getEarningsBetween = cache(async function getEarningsBetween(
         ),
       )
       .orderBy(asc(earningsCalendar.reportDate));
+    return { ok: true, rows };
   } catch (error) {
-    yutuldu("getEarningsBetween", error);
-    return [];
+    yutuldu("getEarningsBetweenResult", error);
+    return { ok: false };
   }
+});
+
+/**
+ * Eski imza — hatayı `[]` olarak yutuyor; ana sayfanın ve takvim
+ * sekmesinin panelleri için yeterli. Sorgu TEK YERDE, yukarıdaki sonuç
+ * tipli okumada (ekonomik takvimdeki çiftle aynı gerekçe: iki kopya
+ * zamanla süzgeç ya da sıralama bakımından ayrışırdı).
+ */
+export const getEarningsBetween = cache(async function getEarningsBetween(
+  from: string,
+  to: string,
+): Promise<EarningsRow[]> {
+  const result = await getEarningsBetweenResult(from, to);
+  return result.ok ? result.rows : [];
 });
 
 export type UpcomingRow = {

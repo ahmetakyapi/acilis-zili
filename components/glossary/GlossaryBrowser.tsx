@@ -1,17 +1,15 @@
 "use client";
 
-import { useDeferredValue, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, CaretDown, Graph, MagnifyingGlass, X } from "@phosphor-icons/react";
+import { ArrowRight, ArrowUpRight, CaretDown, MagnifyingGlass, X } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import { EmptyState } from "@/components/ui/primitives";
 import type { GlossaryCategoryKey } from "@/content/glossary";
-import type { GlossaryMotif } from "@/content/glossary/marks";
 import { foldForSearch } from "@/lib/search-fold";
 import { GLOSSARY_ALL_ICON, GLOSSARY_CATEGORY_ICONS } from "./category-icons";
-import { TermMark } from "./TermMark";
 import styles from "./Glossary.module.css";
 
 /**
@@ -40,39 +38,59 @@ import styles from "./Glossary.module.css";
  * süzgeç açılınca (kategori, harf ya da arama) eski sonuç düzeni geliyor:
  * o zaman okuyucu bir şey arıyor ve her eşleşmeyi görmeli.
  *
- * BAĞLANTILAR DOM'DA KALIYOR. Kapalı `details` içindeki bağlantılar HTML'de
- * duruyor; arama motoru yüz ellisini de görüyor ve JavaScript kapalıyken
- * okuyucu her kategoriyi elle açabiliyor. Kategori düğmeleri JS ister ama
- * hiçbir terim yalnızca onların arkasında değil.
+ * KARTLAR, ATLAS DEĞİL (29 Eylül, üçüncü tur). Atlas her kategoride üç
+ * terimi tanımıyla, kalan yüz yirmi küsurunu kapalı bir `details` arkasında
+ * yalnızca adla gösteriyordu; okuyucu bir terimin ne demek olduğunu görmek
+ * için ya kutuyu açıp adı tahmin ediyor ya da detaya gidip dönüyordu. Dizin
+ * artık KENDİ BAŞINA YETİYOR: yüz ellisinin hepsi küçük bir kartta, tanımın
+ * ilk cümlesiyle açıkta. Detay sayfası kalıyor (otomatik bağlantının hedefi,
+ * dizinlenen sayfa, örnek kutusu, kavram çizimi, ilişki ağı); kartın tamamı
+ * oraya giden bir bağlantı. Sayfa uzadı (ölçüm: 1440'ta 3.100'den 7.995'e,
+ * 390'da 5.937'den 18.829'a) ama bu uzunluk okunan metin, kaydırılarak
+ * geçilen ad listesi değil; süzgeçler ve harf dizini (768 ve üstünde) yapışkan şeritte.
+ * Dördüncü tur (aynı gün): 390'daki boy kabul edilemezdi. Telefonda
+ * bölümler katlanıyor (CategorySection), 1024 ve üstünde kart sıkı, 1280
+ * ve üstünde dört sütun. Sonuç: 1440'ta 6.137, 1024'te 7.502, 390'da
+ * 3.199 piksel (altbilgi dahil; 1440'ta 577, 390'da 1.317'si altbilgi).
+ * Kartta kavram işareti YOK: 42 piksellik karo 1440'ta kart başına bir
+ * satır, 390'da iki satır tanım yiyordu ve kategori simgesi bölüm başında
+ * zaten duruyor. İşaret günün teriminde ve detay sayfasında kalıyor.
+ *
+ * BAĞLANTILAR DOM'DA KALIYOR. Yüz elli kartın hepsi sunucuda basılıyor;
+ * arama motoru hepsini görüyor, JavaScript kapalıyken okuyucu her terimi
+ * görüp tıklayabiliyor. Kategori düğmeleri JS ister ama hiçbir terim
+ * yalnızca onların arkasında değil.
  *
  * HAREKET: süzgeç değişince kalan kartlar yeni yerlerine KAYIYOR (Motion
  * `layout="position"`), çıkanlar sönerek yer açıyor; hareketi azaltan
  * okuyucuda kök sağlayıcı (`MotionProvider`, `reducedMotion="user"`)
- * kaymayı kapatıyor. Kavram çizimleri `MotionExperience`in `arc` kalıbıyla
- * görünüme girince çiziliyor.
+ * kaymayı kapatıyor. Kayma YALNIZCA SÜZÜLMÜŞ görünümde: süzgeçsiz dizin
+ * yüz elli düz `li`, her süzgeç değişiminde yüz elli düğümün konumunu
+ * ölçtürmesin (tümüne dönüşün kare süresi ölçüldü, rapor `.tmp-sozluk2.mjs`).
  */
 
 export type GlossaryBrowserItem = {
   slug: string;
   term: string;
   category: GlossaryCategoryKey;
+  /** Kartın metni: tanımın ilk cümlesi. */
   short: string;
-  /** Büyük kartın metni: tanımın ilk iki cümlesi (yalnızca öne çıkan ilk terimde). */
-  lede?: string;
   /** Adın ve biçimlerin katlanmış hâli — sunucuda bir kez kuruluyor. */
   haystack: string;
   /** Harf dizinindeki yeri (dile göre büyük harf). */
   letter: string;
-  motif: GlossaryMotif;
-  /** Kaç terim buna bağlanıyor. */
-  links: number;
-  /** Kategorideki öne çıkma sırası: 1 büyük kart, 2-3 orta kart, 0 sıkı ızgara. */
-  featured: number;
-  /** Öne çıkan kartta ilişkili terimlerin adları (en çok üç). */
-  related: string[];
 };
 
-export type GlossaryBrowserGroup = { key: GlossaryCategoryKey; label: string; count: number };
+export type GlossaryBrowserGroup = {
+  key: GlossaryCategoryKey;
+  label: string;
+  count: number;
+  /** Katlanmış bölümün özeti: en çok başvurulan üç terimin kısa adı. */
+  preview: string;
+};
+
+/** Bölümlerin katlanmadığı genişlik — Glossary.module.css `.fold` ile aynı sınır. */
+const FOLD_WIDE_QUERY = "(min-width: 768px)";
 
 /** Süzgeç değişince sonuçlar yalnızca şerit yapışıkken başa alınır. */
 const SCROLL_SETTLE_PX = 4;
@@ -91,7 +109,7 @@ export function GlossaryBrowser({
   groups: GlossaryBrowserGroup[];
   letters: string[];
   locale: string;
-  /** Kapağın metni (üst künye, başlık, açıklama, ölçüler) — sunucuda çiziliyor. */
+  /** Kapağın metin kabı (üst künye, başlık, açıklama, ölçüler) — sunucuda çiziliyor. */
   hero: ReactNode;
   /** Kapağın sağındaki günün terimi — sunucuda seçiliyor ve çiziliyor. */
   spotlight: ReactNode;
@@ -106,9 +124,7 @@ export function GlossaryBrowser({
     letterLabel: string;
     clear: string;
     clearQuery: string;
-    links: string;
     openCategory: string;
-    moreTerms: string;
     scrollPrev: string;
     scrollNext: string;
   };
@@ -119,6 +135,53 @@ export function GlossaryBrowser({
   const deferred = useDeferredValue(query);
   const resultsRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
+
+  /* KIRPILAN TANIM `title` TAŞIYOR. Kartın tanımı satır tavanında
+     kesiliyorsa (dört sütunda 150 kartın ~20'si) tam cümle ipucu olarak
+     okunabilsin. Hangi kartın kesildiği genişliğe bağlı, sunucu bilemez:
+     kap boyu değişince (genişlik, süzgeç, açılan bölüm) yeniden ölçülüyor.
+     Kapalı bölümdeki kart ölçülmüyor (boyu yok, `title`ı da gereksiz). */
+  useEffect(() => {
+    const root = resultsRef.current;
+    if (!root) return;
+    let frame = 0;
+    const mark = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        root.querySelectorAll<HTMLElement>("[data-short]").forEach((short) => {
+          const card = short.parentElement;
+          if (!card) return;
+          const clipped = short.clientHeight > 0 && short.scrollHeight > short.clientHeight + 1;
+          if (clipped) card.title = short.textContent ?? "";
+          else card.removeAttribute("title");
+        });
+      });
+    };
+    const observer = new ResizeObserver(mark);
+    observer.observe(root);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, []);
+
+  /* Geniş ekranda katlanan bölüm YOK: CSS `::details-content` ile kapalı
+     `details`in içeriğini gösteriyor, yani ilk karede JS beklenmiyor. O
+     seçiciyi tanımayan tarayıcıda (Safari 18.4 öncesi) kapalı `details`
+     geniş ekranda da kapalı kalırdı; orada bölümler JS ile açılıyor. */
+  useEffect(() => {
+    if (CSS.supports("selector(::details-content)")) return;
+    const media = window.matchMedia(FOLD_WIDE_QUERY);
+    const sync = () => {
+      if (!media.matches) return;
+      resultsRef.current?.querySelectorAll<HTMLDetailsElement>("details[data-fold]").forEach((fold) => {
+        fold.open = true;
+      });
+    };
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
 
   const needle = foldForSearch(deferred, locale);
   /* Harfin açık olup olmadığı kategori ve aramaya göre; sonuç listesi
@@ -145,14 +208,7 @@ export function GlossaryBrowser({
   const byGroup = groups
     .map((group) => {
       const members = visible.filter((item) => item.category === group.key);
-      return {
-        ...group,
-        featured: members
-          .filter((item) => item.featured > 0)
-          .sort((a, b) => a.featured - b.featured),
-        rest: members.filter((item) => item.featured === 0),
-        total: members.length,
-      };
+      return { ...group, members, total: members.length };
     })
     .filter((group) => group.total > 0);
 
@@ -190,7 +246,7 @@ export function GlossaryBrowser({
     <div className={styles.browser}>
       <header className={`${styles.hero} page-frame`}>
         <HeroAccent />
-        <div className={`${styles.heroCopy} page-heading-copy`}>{hero}</div>
+        {hero}
         {spotlight}
       </header>
 
@@ -328,12 +384,12 @@ export function GlossaryBrowser({
               className={styles.atlas}
             >
               {byGroup.map((group, index) => (
-                <AtlasBlock
+                <CategorySection
                   key={group.key}
                   group={group}
                   order={index}
-                  labels={labels}
                   countLabel={countLabel}
+                  openLabel={labels.openCategory}
                   onOpen={() => pickCategory(group.key)}
                 />
               ))}
@@ -361,7 +417,7 @@ export function GlossaryBrowser({
             >
               <AnimatePresence initial={false} mode="popLayout">
                 {byGroup.map((group) => (
-                  <ResultSection key={group.key} group={group} labels={labels} countLabel={countLabel} />
+                  <ResultSection key={group.key} group={group} countLabel={countLabel} />
                 ))}
               </AnimatePresence>
             </motion.div>
@@ -373,99 +429,122 @@ export function GlossaryBrowser({
 }
 
 type Group = GlossaryBrowserGroup & {
-  featured: GlossaryBrowserItem[];
-  rest: GlossaryBrowserItem[];
+  members: GlossaryBrowserItem[];
   total: number;
 };
 
 /**
- * Atlasın bir kategorisi. Öne çıkan üç terim satır olarak (kart içinde
- * kart değil: blok kendisi yüzey, satırlar tonla ayrılıyor), kalanı
- * `details` içinde iki sütunlu bir ad dizini. Başlıktaki düğme kategoriyi
- * süzgeç olarak açıyor: orada her terimin tanım cümlesi de görünüyor.
+ * Terim kartı — ad, sağ üstte ok, altında tanımın ilk cümlesi. Kartın
+ * tamamı detaya giden bağlantı. Kısa tanım en çok dört satır
+ * (`line-clamp`, gerekçesi ve ölçümü Glossary.module.css `.cardShort`);
+ * ilk cümleler 35-223 harf.
  */
-function AtlasBlock({
+function TermCard({ item }: { item: GlossaryBrowserItem }) {
+  return (
+    <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.card} data-card>
+      <span className={styles.cardName} data-name>
+        {item.term}
+      </span>
+      <ArrowUpRight aria-hidden size={14} weight="bold" className={styles.cardArrow} />
+      <span className={styles.cardShort} data-short>
+        {item.short}
+      </span>
+    </Link>
+  );
+}
+
+function SectionHead({
+  group,
+  countLabel,
+}: {
+  group: Group;
+  countLabel: (count: number) => string;
+}) {
+  const Icon = GLOSSARY_CATEGORY_ICONS[group.key];
+  return (
+    <div className={styles.sectionHead}>
+      <span aria-hidden className={styles.sectionIcon}>
+        <Icon size={18} weight="duotone" />
+      </span>
+      <h2 id={`sozluk-${group.key}`}>{group.label}</h2>
+      <span className={`${styles.sectionCount} numeral`}>{countLabel(group.total)}</span>
+    </div>
+  );
+}
+
+/**
+ * Süzgeçsiz dizinde bir kategori: başlık, sayı, "Kategoriyi Aç" ve bütün
+ * terimleri kart ızgarasında. Düz `li` — kayma hareketi yalnızca süzülmüş
+ * görünümde (bkz. dosya başı).
+ *
+ * TELEFONDA KATLANIYOR (29 Eylül, dördüncü tur). Yüz elli kart 390'da
+ * sayfayı 18.829 piksele çıkarıyordu. 768 altında her kategori kapalı bir
+ * `details`: özet satırında simge, ad, terim sayısı ve en çok başvurulan
+ * üç terimin kısa adı, yani kapalıyken de bölümün ne olduğu okunuyor.
+ * Kartlar DOM'da (arama motoru ve JS'siz okuyucu için), yalnızca kapalı.
+ * 768 ve üstünde aynı `details` CSS ile hep açık ve özet satırı düz bir
+ * başlık; "Kategoriyi Aç" düğmesi özetin DIŞINDA (özetin içindeki düğme
+ * hem katlamayı hem süzgeci tetikliyor ve ekran okuyucuda düğme içinde
+ * düğme oluyordu), geniş ekranda başlığın sağına oturuyor. Süzülmüş
+ * görünüm hiç katlanmıyor: okuyucu bir şey aradıysa her eşleşmeyi görmeli.
+ */
+function CategorySection({
   group,
   order,
-  labels,
   countLabel,
+  openLabel,
   onOpen,
 }: {
   group: Group;
   order: number;
-  labels: { openCategory: string; moreTerms: string };
   countLabel: (count: number) => string;
+  openLabel: string;
   onOpen: () => void;
 }) {
   const Icon = GLOSSARY_CATEGORY_ICONS[group.key];
   return (
     <section
       aria-labelledby={`sozluk-${group.key}`}
-      className={styles.atlasBlock}
+      className={styles.section}
       data-motion-reveal
       style={{ "--tile": order } as CSSProperties}
     >
-      <div className={styles.atlasHead}>
-        <span aria-hidden className={styles.sectionIcon}>
-          <Icon size={20} weight="duotone" />
-        </span>
-        <div className="min-w-0">
+      <details className={styles.fold} data-fold>
+        <summary className={`${styles.sectionHead} ${styles.foldHead}`}>
+          <span aria-hidden className={styles.sectionIcon}>
+            <Icon size={18} weight="duotone" />
+          </span>
+          {/* Özetin içeriği yalnızca metin + başlık olabilir (kap `div`/
+              `span` içinde `h2` geçersiz): yerleşim özetin kendi ızgarasında. */}
           <h2 id={`sozluk-${group.key}`}>{group.label}</h2>
-          <span className={`${styles.atlasCount} numeral`}>{countLabel(group.total)}</span>
-        </div>
-        <button type="button" onClick={onOpen} className={styles.atlasOpen}>
-          {labels.openCategory}
-          <ArrowRight aria-hidden size={14} weight="bold" />
-        </button>
-      </div>
-
-      <ol className={styles.atlasFeatured} data-motion-stagger>
-        {group.featured.map((item) => (
-          <li key={item.slug} data-lead={item.featured === 1 ? "" : undefined}>
-            <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.atlasTerm}>
-              <TermMark motif={item.motif} size={item.featured === 1 ? "lg" : "md"} draw />
-              <span className="min-w-0">
-                <span className={styles.atlasName}>{item.term}</span>
-                <span className={styles.atlasShort}>{item.short}</span>
-              </span>
-              <ArrowRight aria-hidden size={15} weight="bold" className={styles.atlasArrow} />
-            </Link>
-          </li>
-        ))}
-      </ol>
-
-      {group.rest.length > 0 && (
-        <details className={styles.atlasMore}>
-          <summary>
-            <span className="numeral">{labels.moreTerms.replace("{count}", String(group.rest.length))}</span>
-            <CaretDown aria-hidden size={14} weight="bold" className={styles.atlasCaret} />
-          </summary>
-          <ul className={styles.atlasList}>
-            {group.rest.map((item) => (
-              <li key={item.slug}>
-                <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.atlasLink}>
-                  {item.term}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
+          <span className={styles.foldPreview}>{group.preview}</span>
+          <span className={`${styles.sectionCount} numeral`}>{countLabel(group.total)}</span>
+          <CaretDown aria-hidden size={14} weight="bold" className={styles.foldCaret} />
+        </summary>
+        <ul className={styles.cards}>
+          {group.members.map((item) => (
+            <li key={item.slug} className={styles.cardItem}>
+              <TermCard item={item} />
+            </li>
+          ))}
+        </ul>
+      </details>
+      <button type="button" onClick={onOpen} className={styles.sectionOpen}>
+        {openLabel}
+        <ArrowRight aria-hidden size={13} weight="bold" />
+      </button>
     </section>
   );
 }
 
-/** Süzgeç açıkken bir kategorinin eşleşmeleri — öne çıkanlar kartta, kalanı ızgarada. */
+/** Süzgeç açıkken bir kategorinin eşleşmeleri — aynı kart dili, kayarak yerleşen. */
 function ResultSection({
   group,
-  labels,
   countLabel,
 }: {
   group: Group;
-  labels: { links: string };
   countLabel: (count: number) => string;
 }) {
-  const Icon = GLOSSARY_CATEGORY_ICONS[group.key];
   return (
     <motion.section
       layout="position"
@@ -476,77 +555,24 @@ function ResultSection({
       aria-labelledby={`sozluk-${group.key}`}
       className={styles.section}
     >
-      <div className={styles.sectionHead}>
-        <span aria-hidden className={styles.sectionIcon}>
-          <Icon size={20} weight="duotone" />
-        </span>
-        <h2 id={`sozluk-${group.key}`}>{group.label}</h2>
-        <span className={`${styles.sectionCount} numeral`}>{countLabel(group.total)}</span>
-      </div>
-
-      {group.featured.length > 0 && (
-        <ul className={styles.featured} data-count={group.featured.length}>
-          <AnimatePresence initial={false} mode="popLayout">
-            {group.featured.map((item) => {
-              const lead = item.featured === 1 && group.featured.length === 3;
-              return (
-                <motion.li
-                  key={item.slug}
-                  layout="position"
-                  initial={{ opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.97 }}
-                  transition={{ duration: 0.32, ease: EASE }}
-                  className={styles.featureItem}
-                  data-lead={lead ? "" : undefined}
-                >
-                  <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.featureCard}>
-                    <TermMark motif={item.motif} size={lead ? "lg" : "md"} draw />
-                    <span className={styles.featureTerm}>{item.term}</span>
-                    <span className={styles.featureShort}>{lead && item.lede ? item.lede : item.short}</span>
-                    <span className={styles.featureMeta}>
-                      <span className={styles.featureLinks}>
-                        <Graph aria-hidden size={14} weight="bold" />
-                        <span className="numeral">{labels.links.replace("{count}", String(item.links))}</span>
-                      </span>
-                      {item.related.length > 0 && (
-                        <span className={styles.featureRelated}>{item.related.join(", ")}</span>
-                      )}
-                      <ArrowRight aria-hidden size={15} weight="bold" className={styles.featureArrow} />
-                    </span>
-                  </Link>
-                </motion.li>
-              );
-            })}
-          </AnimatePresence>
-        </ul>
-      )}
-
-      {group.rest.length > 0 && (
-        <ul className={styles.compact}>
-          <AnimatePresence initial={false} mode="popLayout">
-            {group.rest.map((item) => (
-              <motion.li
-                key={item.slug}
-                layout="position"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.26, ease: EASE }}
-                className="min-w-0"
-              >
-                <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.termLink}>
-                  <TermMark motif={item.motif} size="sm" />
-                  <span className="min-w-0">
-                    <span className={styles.termName}>{item.term}</span>
-                    <span className={styles.termShort}>{item.short}</span>
-                  </span>
-                </Link>
-              </motion.li>
-            ))}
-          </AnimatePresence>
-        </ul>
-      )}
+      <SectionHead group={group} countLabel={countLabel} />
+      <ul className={styles.cards}>
+        <AnimatePresence initial={false} mode="popLayout">
+          {group.members.map((item) => (
+            <motion.li
+              key={item.slug}
+              layout="position"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ duration: 0.28, ease: EASE }}
+              className={styles.cardItem}
+            >
+              <TermCard item={item} />
+            </motion.li>
+          ))}
+        </AnimatePresence>
+      </ul>
     </motion.section>
   );
 }

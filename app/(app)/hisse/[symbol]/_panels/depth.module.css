@@ -88,6 +88,17 @@
 .bar > i[data-sign="down"] { top:50%; background:var(--down); }
 .bar > b { position:absolute; top:calc(50% - 2px); left:calc(50% - 2px); width:4px; height:4px; border-radius:999px; background:var(--line-strong); }
 .barAxis { display:flex; justify-content:space-between; margin-top:6px; color:var(--text-muted); font-size:10px; }
+/* MSPR başlık satırı (29 Eylül): solda ad, sağda en yeni ayın değeri —
+   çizim yalnızca biçim veriyordu, sayısı hiçbir yerde yazmıyordu. Sağdaki
+   yön etiketleri sıfır çizgisinin iki yanını adlandırıyor; eksen genişliği
+   etiket kadar, `.barAxis` çubukların altında aynı hizada kalsın diye onun
+   da sağına aynı boşluk. */
+.sentimentHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; }
+.sentimentLatest { color:var(--text-muted); font-size:11px; font-weight:500; }
+.sentimentLatest > span { font-weight:650; }
+.sentimentPlot { display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:8px; }
+.sentimentScale { display:grid; grid-template-rows:1fr 1fr; align-items:center; margin-top:10px; color:var(--text-muted); font-size:10px; font-weight:600; line-height:1; }
+.sentimentPlot + .barAxis { margin-right:calc(8px + 4ch); }
 
 /* Skor kartı satırı (28 Eylül): ad · dağılım şeridi · yüzde TEK hatta,
    altında cümle ve ölçü adları tek künye. Eski düzen etiket, cümle ve
@@ -160,14 +171,16 @@
    3+1 diziliyor ve dördüncü hücre tek kalıyordu, ölçüldü), tam genişlikte beş.
    İkon kutusu ton farkıyla, gölgesiz. */
 .summaryFacts { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:0 22px; }
-.summaryFact { display:flex; min-width:0; flex-direction:column; gap:5px; padding:14px 0; border-bottom:1px solid var(--line-soft); }
+/* Sıkı (29 Eylül): hücre altı çizgisi ve 14'lük dolgu tek satırlık bir
+   ızgarada boşuna ikinci bir kat açıyordu. */
+.summaryFact { display:flex; min-width:0; flex-direction:column; gap:4px; padding:4px 0 2px; }
 .summaryFact dt { display:flex; align-items:center; gap:8px; color:var(--text-muted); font-size:11.5px; font-weight:600; }
 .summaryIcon { display:grid; width:26px; height:26px; place-items:center; border-radius:8px; background:var(--primary-wash); color:var(--primary-ink); }
 .summaryFact dd { min-width:0; color:var(--text-strong); font-size:16px; font-weight:650; line-height:1.3; letter-spacing:-.02em; text-wrap:balance; }
 .summaryFact dd.summaryMeta { color:var(--text-muted); font-size:12px; font-weight:500; letter-spacing:0; }
 /* Logolar aralıklı, üst üste binmiyor: bindirilen karolar birbirinin
    yarısını örtüyor ve kesik logo gibi okunuyordu (görüldü, 1440). */
-.summaryPeers { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+.summaryPeers { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
 .summaryPeers > a { border-radius:10px; transition:transform .25s; }
 @media(hover:hover) and (pointer:fine) { .summaryPeers > a:hover { transform:translateY(-2px); } }
 .summaryText { margin-top:14px; max-width:78ch; color:var(--text-body); font-size:13.5px; line-height:1.75; }
@@ -199,6 +212,71 @@
    yerine satır satır (etiket solda, sayı sağda) ve kayıtların ilk beşi
    açık. */
 .insiderRecords { min-width:0; margin-top:12px; }
+
+/* ---- İçeriden işlemler: okuma katmanı (29 Eylül) ----
+   Gerekçe InsiderPanel.tsx başında. Renk yalnızca yönden: çip, pay ve
+   tutar çubuğu yön rengini YALNIZCA açık piyasa satırında taşıyor. */
+/* Denge çubuğu: alım ile satış tutarı tek şeritte, oranları kadar. Ölçülerin
+   altında hairline ile ayrılmış kendi satırı. */
+.balance { padding:10px 0 14px; border-top:1px solid var(--line-soft); }
+.balanceHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; color:var(--text-muted); font-size:11px; font-weight:500; }
+.balanceHead > span:first-child { color:var(--text-strong); font-weight:600; }
+.balanceBar { display:flex; gap:2px; height:8px; margin-top:8px; border-radius:999px; background:var(--rail-track,var(--line-soft)); overflow:hidden; }
+.balanceBar > i { flex-basis:0; min-width:2px; }
+.balanceBar > i[data-sign="up"] { background:var(--up); }
+.balanceBar > i[data-sign="down"] { background:var(--down); }
+.balance + .sentiment { margin-top:0; }
+
+/* Kişi: baş harf rozeti + ad ve tek satırlık görev. Rozet ton farkıyla,
+   kenarlıksız; dar ekranda sütun yapışkan ve dar, rozet orada basılmıyor. */
+.person { display:flex; align-items:center; gap:10px; }
+.personText { display:flex; min-width:0; flex-direction:column; }
+.initials { display:none; flex:none; width:28px; height:28px; place-items:center; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:10.5px; font-weight:650; letter-spacing:.02em; }
+@media (min-width:640px) {
+  .initials { display:grid; }
+}
+.insiderTable .roleCell { display:block; -webkit-line-clamp:none; line-clamp:none; text-overflow:ellipsis; white-space:nowrap; }
+.insiderTable td { vertical-align:middle; }
+/* Sabit ilk sütunun zemini, tabloya ait (border-collapse) üst çizginin
+   üstüne satıra göre değişken biçimde boyanıyor: çizgi kişi sütununda bazı
+   satırlarda kesiliyor, bazılarında çiziliyordu (Chrome, 1440, görüldü).
+   O hücrede tablo çizgisi gizli (`hidden` çakışmada kazanır) ve çizgiyi
+   hücrenin kendi iç gölgesi çiziyor: her satırda tek ve kesintisiz. */
+.insiderTable tbody td:first-child { border-top-style:hidden; box-shadow:inset 0 1px var(--line-soft); }
+.dateCell { color:var(--text-body); }
+/* Telefonda yapışkan kişi sütunu 13rem'di ve 390'da tarih ile çipten
+   yalnızca "Açık Piyasa S…" görünüyordu; 10.5rem ile çip de ilk karede. */
+@media (max-width:639px) {
+  .insiderTable .nameCell, .insiderTable .roleCell { max-width:10.5rem; }
+}
+
+/* İşlem çipi. Nötr çip (ödül, vergi, hediye) sönük; açık piyasa kararı
+   yön renginin wash'ı üzerinde, yön renginde. */
+.chip { display:inline-flex; align-items:center; min-height:22px; padding:0 9px; border-radius:999px; background:var(--surface-elevated); color:var(--text-muted); font-size:11.5px; font-weight:550; line-height:1; }
+.chip[data-side="up"] { background:var(--up-wash); color:var(--up); font-weight:650; }
+.chip[data-side="down"] { background:var(--down-wash); color:var(--down); font-weight:650; }
+
+/* Tutar çubuğu: sayının altında, sağa yaslı ve sağdan dolar — sütunun
+   sayıları da sağa yaslı, iki okuma aynı kenardan başlıyor. Akışta
+   durunca tutarı satırın geri kalanından 8 piksel yukarı itiyordu
+   (1440, görüldü); hücrenin dibine mutlak konumlu, sayı hatta kalıyor. */
+.insiderTable td:last-child { position:relative; }
+.valueBar { position:absolute; right:0; bottom:9px; display:flex; justify-content:flex-end; width:72px; height:3px; border-radius:999px; background:var(--rail-track,var(--line-soft)); overflow:hidden; }
+.valueBar > i { display:block; min-width:2px; height:100%; border-radius:999px; }
+.valueBar[data-side="up"] > i { background:var(--up); }
+.valueBar[data-side="down"] > i { background:var(--down); }
+
+/* "Nasıl Okunur": yöntem notları kapalı gelen bir açılır satırda. Özet
+   satırı 32 piksel dokunma yüksekliğinde, ok CSS ile. */
+.how { margin-top:10px; border-top:1px solid var(--line-soft); }
+.how > summary { display:flex; min-height:32px; align-items:center; gap:6px; padding-top:6px; color:var(--primary-ink); font-size:11.5px; font-weight:650; list-style:none; cursor:pointer; }
+.how > summary::-webkit-details-marker { display:none; }
+.how > summary::after { width:6px; height:6px; margin-top:-3px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); transition:transform .2s; content:""; }
+.how[open] > summary::after { margin-top:3px; transform:rotate(-135deg); }
+.how > summary:hover { text-decoration:underline; text-underline-offset:3px; }
+.how > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
+.how > p { margin-top:6px; color:var(--text-muted); font-size:11px; line-height:1.65; }
+.how + .stamp { margin-top:6px; }
 .clampButton { display:none; }
 .insiderNotes { min-width:0; }
 @media (min-width:1100px) {

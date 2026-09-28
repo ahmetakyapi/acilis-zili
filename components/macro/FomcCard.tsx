@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { DataStamp, Panel } from "@/components/ui/primitives";
+import { DataStamp } from "@/components/ui/primitives";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getNextFomc } from "@/lib/macro-data";
@@ -57,32 +57,60 @@ export async function FomcCard({ locale, t }: { locale: Locale; t: Dictionary })
   const away = readerDayOffset(next.date, next.timeEt, locale);
   const strip = dayStrip(todayEt(), next.date);
 
-  /* Izgaranın ilk hücresi: öteki kartlarla aynı kutu (`styles.card`), ama
-     ton farklı (`data-kind="fomc"`): bir seri değil, bir takvim olayı ve
-     tıklanmıyor. Uzun "fiyatlama yok" notu kartın dibinde, saç teliyle. */
+  /* KOMPAKT ŞERİT (29 Eylül). Kart önce küçük çoklu ızgaranın ilk
+     hücresiydi, sonra para politikası bölümünde sahnenin yanında 300
+     piksellik bir sütundu. Bölümler geniş ekranda ikişer yan yana dizilince
+     yarım genişlikte sahnenin yanına sığmadı; şimdi bölümün içinde,
+     grafiğin altında. Üst satır geri sayım, tarih ve hedef aralık; altında
+     takvim şeridi; dipte fiyatlama notu. Damga başlık satırının sağında.
+     İçerik aynı, yalnızca dizilişi değişti. Yarım genişlikte ölçüldü:
+     dikey kart dizilişi 195, bu diziliş ~130 piksel; aradaki fark yan
+     bölümün grafiğine ekleniyor (MacroExperience.module.css). Ton farkı (marka mavisinin en açık yıkaması)
+     kalıyor: bir seri değil, bir takvim olayı. */
   return (
-    <Panel className={styles.fomc}>
-      <div className={styles.cardHead}>
-        <h2 className={`${styles.cardTitle} ${styles.inkTight}`}>{x.fomcTitle}</h2>
+    <section className={styles.fomc} aria-labelledby="makro-fomc">
+      <div className={styles.fomcHead}>
+        <h3 id="makro-fomc" className={styles.fomcTitle}>{x.fomcTitle}</h3>
         {next.withProjections && <span className={styles.status}>{x.fomcProjections}</span>}
+        {next.target && (
+          <DataStamp labels={t.data} source="fred" at={next.target.fetchedAt} locale={locale} className={styles.fomcStamp} />
+        )}
       </div>
 
-      <div className={styles.fomcCount}>
-        {away >= 1 ? (
-          <>
-            <b className="numeral">{away}</b>
-            <span>{x.fomcDaysLeft}</span>
-          </>
-        ) : (
-          <b>{relativeDayLabel(Math.max(away, 0), t.calendar)}</b>
-        )}
+      <div className={styles.fomcRow}>
+        <div className={styles.fomcCount}>
+          {away >= 1 ? (
+            <>
+              <b className="numeral">{away}</b>
+              <span>{x.fomcDaysLeft}</span>
+            </>
+          ) : (
+            <b>{relativeDayLabel(Math.max(away, 0), t.calendar)}</b>
+          )}
+        </div>
+        <p className={styles.fomcDate}>
+          {formatEtDateLong(next.date, locale)}
+          {times && (
+            <span className="numeral"> {times.primary} <small>· {times.secondary} {tags.secondary}</small></span>
+          )}
+        </p>
+        <dl className={styles.fomcTarget}>
+          <div>
+            <dt>{x.fomcTarget}</dt>
+            <dd className="numeral">
+              {next.target
+                ? `${formatPercentPlain(next.target.lower, locale, 2)} - ${formatPercentPlain(next.target.upper, locale, 2)}`
+                : t.common.noData}
+            </dd>
+          </div>
+          {next.target && (
+            <div>
+              <dt>{x.observed}</dt>
+              <dd className="numeral">{formatEtDateMedium(next.target.date, locale)}</dd>
+            </div>
+          )}
+        </dl>
       </div>
-      <p className={styles.fomcDate}>
-        {formatEtDateLong(next.date, locale)}
-        {times && (
-          <span className="numeral"> {times.primary} <small>· {times.secondary} {tags.secondary}</small></span>
-        )}
-      </p>
 
       {strip.length > 1 && (
         <div className={styles.fomcStrip} role="img" aria-label={`${x.fomcCalendar}: ${strip.length - 1}`}>
@@ -92,24 +120,7 @@ export async function FomcCard({ locale, t }: { locale: Locale; t: Dictionary })
         </div>
       )}
 
-      <dl className={styles.fomcTarget}>
-        <dt>{x.fomcTarget}</dt>
-        <dd className="numeral">
-          {next.target
-            ? `${formatPercentPlain(next.target.lower, locale, 2)} - ${formatPercentPlain(next.target.upper, locale, 2)}`
-            : t.common.noData}
-        </dd>
-        {next.target && (
-          <>
-            <dt>{x.observed}</dt>
-            <dd className="numeral">{formatEtDateMedium(next.target.date, locale)}</dd>
-          </>
-        )}
-      </dl>
       <p className={styles.fomcNote}>{x.fomcNoPricing}</p>
-      {next.target && (
-        <DataStamp labels={t.data} source="fred" at={next.target.fetchedAt} locale={locale} className="mt-2" />
-      )}
-    </Panel>
+    </section>
   );
 }

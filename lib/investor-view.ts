@@ -289,14 +289,19 @@ export function crowdMoves(
     }
     return found;
   };
+  /* Aynı yatırımcı aynı anahtara iki kez düşebilir: iki hisse sınıfı
+     (GOOGL + GOOG) tek sembole birleşince. Bir kişi bir kez sayılır. */
+  const push = (list: string[], slug: string) => {
+    if (!list.includes(slug)) list.push(slug);
+  };
   for (const { slug, diff } of diffs) {
     if (!diff.compared) continue;
     for (const position of diff.positions) {
-      if (position.move === "new") entry(position.cusip, position.issuer).opened.push(slug);
-      else if (position.move === "increased") entry(position.cusip, position.issuer).added.push(slug);
-      else if (position.move === "decreased") entry(position.cusip, position.issuer).trimmed.push(slug);
+      if (position.move === "new") push(entry(position.cusip, position.issuer).opened, slug);
+      else if (position.move === "increased") push(entry(position.cusip, position.issuer).added, slug);
+      else if (position.move === "decreased") push(entry(position.cusip, position.issuer).trimmed, slug);
     }
-    for (const sold of diff.sold) entry(sold.cusip, sold.issuer).exited.push(slug);
+    for (const sold of diff.sold) push(entry(sold.cusip, sold.issuer).exited, slug);
   }
   return [...map.values()];
 }

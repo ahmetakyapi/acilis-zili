@@ -1,0 +1,362 @@
+/* ==========================================================================
+   Haftanın Takvimi — gün gün tablo (gerekçe WeekSchedule.tsx).
+
+   Geniş ekranda tek ızgara: başlık satırı ve her satır AYNI sütun
+   şablonunu kullanıyor (`--cols`), yani beş günün sayıları aynı hatta.
+   Telefonda satır iki kat: şirket + saat, altında etiketli ölçüler.
+   Derinlik ton farkıyla; renk yalnızca token.
+   ========================================================================== */
+
+.schedule {
+  --cols: minmax(0, 1.7fr) 9.75rem 6.5rem 7rem 7.5rem 6.75rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1rem 0.75rem;
+}
+
+.schedule[data-actuals] {
+  --cols: minmax(0, 1.6fr) 9.75rem 6.5rem 8.5rem 7rem 7.5rem 6.75rem;
+}
+
+@media (min-width: 768px) {
+  .schedule {
+    padding: 0 1.25rem 1rem;
+  }
+}
+
+/* Başlık satırı yalnızca geniş ekranda; hücrelerin kendi etiketi ekran
+   okuyucuya kalıyor. */
+.head {
+  display: none;
+}
+
+.num {
+  text-align: right;
+}
+
+.day + .day {
+  margin-top: 0.35rem;
+}
+
+.dayHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  padding: 0.9rem 0 0.55rem;
+  border-top: 2px solid var(--line-strong);
+}
+
+.dayTitle {
+  color: var(--text-strong);
+  font-size: var(--text-lead);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.day[data-state="past"] .dayTitle {
+  color: var(--text-body);
+}
+
+.todayTag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: var(--text-nano);
+  font-weight: 650;
+  line-height: 18px;
+}
+
+.dayCount {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.dayEmpty {
+  padding: 0.35rem 0 0.9rem;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Satır ---- */
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "company time"
+    "figs figs";
+  align-items: center;
+  /* Telefonda satır ~96 piksel: iki kat, arada 6 piksel. İlk sürüm 10
+     piksel aralık ve 11 piksel dolguyla 105'ti (390, ölçüldü); on iki
+     satırlık bir günde fark bir ekranın dörtte biri. */
+  gap: 0.375rem 0.75rem;
+  padding: 0.55rem 0.5rem 0.6rem;
+  margin-inline: -0.5rem;
+  border-radius: 0.75rem;
+  transition: background-color 0.25s var(--ease-brand);
+}
+
+.row + .row::before {
+  position: absolute;
+  top: 0;
+  right: 0.5rem;
+  left: 0.5rem;
+  height: 1px;
+  background: var(--line-soft);
+  content: "";
+}
+
+@media (hover: hover) {
+  .row:hover {
+    background: var(--premium-surface);
+  }
+
+  .row:hover .symbol {
+    color: var(--primary);
+  }
+}
+
+.cover {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.cover:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.company {
+  grid-area: company;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.companyText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.symbol {
+  color: var(--text-strong);
+  font-size: var(--text-read);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  transition: color 0.25s var(--ease-brand);
+}
+
+.star {
+  margin-right: 3px;
+  color: var(--primary);
+  font-size: 0.85em;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  line-height: 1.35;
+}
+
+.time {
+  grid-area: time;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.clock {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  color: var(--text-strong);
+  font-size: var(--text-small);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.clockAlt {
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 500;
+}
+
+/* Telefonda ölçüler ikinci katta, eşit sütunlarda: EPS, (gerçekleşen),
+   gelir, değer. Sütunlar satırdan satıra aynı hizada. */
+.figs {
+  grid-area: figs;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+  gap: 0.25rem 0.5rem;
+  padding-left: calc(26px + 0.6rem);
+}
+
+.fig {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.label {
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 600;
+}
+
+.value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-body);
+  font-size: var(--text-small);
+  font-weight: 650;
+}
+
+.none {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.actual {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.35rem;
+}
+
+.surprise {
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.surprise[data-dir="beat"] {
+  color: var(--up);
+}
+
+.surprise[data-dir="miss"] {
+  color: var(--down);
+}
+
+.bar {
+  display: block;
+  height: 2px;
+  margin-top: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--line-soft);
+}
+
+.bar > span {
+  display: block;
+  width: max(3px, calc(var(--ratio) * 100%));
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+}
+
+/* Analiz rozeti satır bağlantısının ÜSTÜNDE (`AnalysisBadge` kendi
+   `z-10`unu taşıyor). Telefonda şirket satırının altına, saatin altına
+   değil: yalnızca rozet olan satırda yer kaplıyor. */
+.analysis {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-start;
+  padding-left: calc(26px + 0.6rem);
+}
+
+.analysis:empty {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .head {
+    display: grid;
+    grid-template-columns: var(--cols);
+    column-gap: 1rem;
+    padding: 0 0 0.6rem;
+    color: var(--text-muted);
+    font-size: var(--text-tiny);
+    font-weight: 600;
+  }
+
+  .row {
+    grid-template-columns: var(--cols);
+    grid-template-areas: none;
+    column-gap: 1rem;
+    padding-block: 0.5rem;
+  }
+
+  .company,
+  .time {
+    grid-area: auto;
+  }
+
+  .time {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .clock {
+    flex-direction: column;
+    gap: 0;
+    line-height: 1.2;
+  }
+
+  .figs {
+    display: contents;
+  }
+
+  .fig {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .fig .bar {
+    width: 100%;
+  }
+
+  .actual {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+  }
+
+  /* Etiket başlık satırında; hücrede yalnızca ekran okuyucuya. */
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .analysis,
+  .analysis:empty {
+    display: flex;
+    grid-column: auto;
+    justify-content: flex-end;
+    padding-left: 0;
+  }
+}

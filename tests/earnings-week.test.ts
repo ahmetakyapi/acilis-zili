@@ -3,8 +3,15 @@ import assert from "node:assert/strict";
 import { z } from "zod";
 import {
   allocateSlots,
+  buildSchedule,
   buildWeek,
+  currentWeekStart,
   defaultWeekStart,
+  epsSurprise,
+  SCHEDULE_DAY_MAX,
+  splitScheduleDay,
+  tileTier,
+  type ScheduleRow,
   mondayOf,
   parseWeekParam,
   pickNotable,
@@ -103,6 +110,92 @@ test("allocateSlots: her dolu şerit en az bir karo, bütçe aşılmaz", () => {
   assert.deepEqual(allocateSlots([6, 1, 3], 5), [2, 1, 2]);
   assert.deepEqual(allocateSlots([2, 0, 1], 6), [2, 0, 1]);
   assert.deepEqual(allocateSlots([10], 7), [7]);
+});
+
+test("currentWeekStart: iş günü içinde bu hafta, hafta sonu gelecek hafta", () => {
+  assert.equal(currentWeekStart("2026-09-28"), "2026-09-28"); // pazartesi
+  assert.equal(currentWeekStart("2026-09-29"), "2026-09-28"); // salı
+  assert.equal(currentWeekStart("2026-10-02"), "2026-09-28"); // cuma
+  assert.equal(currentWeekStart("2026-10-03"), "2026-10-05"); // cumartesi
+  assert.equal(currentWeekStart("2026-10-04"), "2026-10-05"); // pazar
+});
+
+test("tileTier: üç basamak, eşik dahil, bilinmeyen en küçük", () => {
+  assert.equal(tileTier(1.2e12), "xl");
+  assert.equal(tileTier(500e9), "xl");
+  assert.equal(tileTier(499e9), "lg");
+  assert.equal(tileTier(100e9), "lg");
+  assert.equal(tileTier(12e9), "md");
+  assert.equal(tileTier(null), "md");
+});
+
+test("epsSurprise: yön, negatif beklenti, yuvarlama payı ve sıfıra yakın payda", () => {
+  assert.equal(epsSurprise(null, 1), null);
+  assert.equal(epsSurprise(1, null), null);
+  const beat = epsSurprise(56.05, 54.4);
+  assert.equal(beat?.direction, "beat");
+  assert.ok(Math.abs((beat?.ratio ?? 0) - 0.0303) < 0.001);
+  assert.equal(epsSurprise(0.78, 0.89)?.direction, "miss");
+  // -0,72 beklenen, -0,50 açıklayan: beklentiyi aştı, sapma artı.
+  const negative = epsSurprise(-0.5, -0.72);
+  assert.equal(negative?.direction, "beat");
+  assert.ok((negative?.ratio ?? 0) > 0);
+  // 0,4444 beklenti, 0,44 açıklama: yuvarlama, olay değil.
+  assert.deepEqual(epsSurprise(0.44, 0.4444), { direction: "inline", ratio: null });
+  // 0,0031 beklenti: yön var, yüzde yok.
+  assert.deepEqual(epsSurprise(5.11, 0.0031), { direction: "beat", ratio: null });
+});
+
+const sched = (symbol: string, extra: Partial<ScheduleRow> = {}): ScheduleRow => ({
+  ...row(symbol),
+  epsEstimate: null,
+  epsActual: null,
+  revenueEstimate: null,
+  revenueActual: null,
+  currency: "USD",
+  ...extra,
+});
+
+test("splitScheduleDay: taban, sıra, tavan ve kalanlar", () => {
+  const { listed, rest } = splitScheduleDay(
+    [
+      sched("FUND", { marketCap: 0.4e9 }),
+      sched("MID", { marketCap: 30e9 }),
+      sched("SPOT", { spotlight: true, marketCap: null }),
+      sched("BIG", { marketCap: 900e9 }),
+      sched("MID", { marketCap: 30e9 }),
+      sched("NOCAP"),
+    ],
+    3,
+  );
+  assert.deepEqual(listed.map((r) => r.symbol), ["SPOT", "BIG", "MID"]);
+  assert.deepEqual(rest.map((r) => r.symbol), ["FUND", "NOCAP"]);
+
+  const crowd = Array.from({ length: 20 }, (_, i) => sched(`C${i}`, { marketCap: (i + 2) * 1e9 }));
+  const split = splitScheduleDay(crowd);
+  assert.equal(split.listed.length, SCHEDULE_DAY_MAX);
+  assert.equal(split.listed[0]?.symbol, "C19");
+  assert.equal(split.rest.length, 20 - SCHEDULE_DAY_MAX);
+});
+
+test("buildSchedule: beş gün, kalanlar pencereye göre, tatil kapalı", () => {
+  const days = buildSchedule(
+    "2026-11-23",
+    [
+      sched("A", { reportDate: "2026-11-23", marketCap: 50e9 }),
+      sched("B", { reportDate: "2026-11-23", hour: "amc", marketCap: 0.2e9 }),
+      sched("C", { reportDate: "2026-11-23", hour: null, marketCap: 0.1e9 }),
+    ],
+    [{ date: "2026-11-26", nameTr: "Şükran Günü", nameEn: "Thanksgiving", earlyCloseEt: null }],
+    "tr",
+  );
+  assert.equal(days.length, 5);
+  assert.deepEqual(days[0]?.listed.map((r) => r.symbol), ["A"]);
+  assert.deepEqual(days[0]?.rest.amc.map((r) => r.symbol), ["B"]);
+  assert.deepEqual(days[0]?.rest.other.map((r) => r.symbol), ["C"]);
+  assert.equal(days[0]?.total, 3);
+  assert.ok(days[3]?.closed);
+  assert.equal(days[1]?.total, 0);
 });
 
 const Extras = z.object(EXTRAS_INPUT_SHAPE);

@@ -1,12 +1,27 @@
 import type { CSSProperties } from "react";
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { RollingFigure } from "@/components/ui/RollingFigure";
-import { LogoTile, Skeleton, TimingChip, type TimingTone } from "@/components/ui/primitives";
-import { dayLabel, WEEK_DAYS, type WeekCandidate, type WeekDay } from "@/lib/earnings-week";
+import {
+  LogoTile,
+  Skeleton,
+  TimingChip,
+  type LogoTileSize,
+  type TimingTone,
+} from "@/components/ui/primitives";
+import { analysisHref } from "@/lib/analysis";
+import type { AnalysisBadge as AnalysisBadgeData } from "@/lib/data";
+import {
+  dayLabel,
+  epsSurprise,
+  tileTier,
+  WEEK_DAYS,
+  type ScheduleRow,
+  type TileTier,
+  type WeekDay,
+} from "@/lib/earnings-week";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { zoneTag, type TimePair } from "@/lib/session-clock";
-import { etDateParts, formatMoneyCompact } from "@/lib/utils";
+import { etDateParts, formatMoneyCompact, formatPercent } from "@/lib/utils";
 import styles from "./WeekBoard.module.css";
 
 /**
@@ -57,11 +72,17 @@ function countOf(day: WeekDay): number {
 
 export function WeekBoard({
   days,
+  badges,
+  watchSet,
   locale,
   t,
   today,
 }: {
-  days: WeekDay[];
+  days: WeekDay<ScheduleRow>[];
+  /** `SEMBOL:TARİH` → yayımlanmış analiz; karo o zaman analize gider. */
+  badges: Record<string, AnalysisBadgeData>;
+  /** Okuyucunun takip ettikleri — karoda ★. */
+  watchSet: ReadonlySet<string>;
   locale: Locale;
   t: Dictionary;
   /** ET takvim günü — haftanın içindeyse geçmiş günler sönük, bugün işaretli. */
@@ -74,6 +95,13 @@ export function WeekBoard({
   );
   const peak = Math.max(1, ...days.map(countOf));
   const open = days.find((day) => !day.closed) ?? days[0];
+  /* Karonun çizgisi HAFTANIN en büyüğüne göre, günün değil: gün ölçeğinde
+     cuma günkü tek 12 milyarlık şirket tam çizgi alır ve çarşambanın
+     trilyonluk şirketiyle aynı boyda görünürdü. */
+  const weekPeak = Math.max(
+    0,
+    ...days.flatMap((day) => [...day.bmo, ...day.amc, ...day.other].map((row) => row.marketCap ?? 0)),
+  );
 
   return (
     <div
@@ -110,6 +138,9 @@ export function WeekBoard({
           day={day}
           lanes={lanes}
           peak={peak}
+          weekPeak={weekPeak}
+          badges={badges}
+          watchSet={watchSet}
           index={index}
           locale={locale}
           t={t}
@@ -124,14 +155,20 @@ function DayColumn({
   day,
   lanes,
   peak,
+  weekPeak,
+  badges,
+  watchSet,
   index,
   locale,
   t,
   today,
 }: {
-  day: WeekDay;
+  day: WeekDay<ScheduleRow>;
   lanes: LaneSpec[];
   peak: number;
+  weekPeak: number;
+  badges: Record<string, AnalysisBadgeData>;
+  watchSet: ReadonlySet<string>;
   index: number;
   locale: Locale;
   t: Dictionary;
@@ -156,7 +193,7 @@ function DayColumn({
     >
       <header className={styles.dayHead}>
         <div className={styles.dayTitle}>
-          {/* Gün başlığı bir h3: panelin h2'si "Açıklayacak Şirketler". */}
+          {/* Gün başlığı bir h3: panelin h2'si "En Çok Beklenenler". */}
           <h3 id={`week-day-${day.date}`} className={styles.dayName}>
             {label.weekday}
           </h3>
@@ -189,7 +226,11 @@ function DayColumn({
             lane={lane}
             rows={day[lane.key]}
             clock={clockOf(day, lane.key)}
+            weekPeak={weekPeak}
+            badges={badges}
+            watchSet={watchSet}
             locale={locale}
+            t={t}
           />
         ))
       )}
@@ -197,16 +238,37 @@ function DayColumn({
   );
 }
 
+/**
+ * ŞERİT BİR LOGO MOZAİĞİ, LİSTE DEĞİL (29 Eylül). Şerit 48 piksellik
+ * satırlardan bir listeydi: logo, sembol, ad, piyasa değeri — dört şirketin
+ * dördü de aynı boyda ve "hangisi haftanın olayı" sorusu sayı okunarak
+ * cevaplanıyordu. Earnings Whispers'ın haftalık ızgarası bu soruyu logoyla
+ * cevaplıyor ama ölçütünü söylemiyor. Burada karo boyu ölçütün kendisi
+ * (`tileTier`, piyasa değeri üç basamak) ve karonun altındaki çizgi sürekli
+ * büyüklük: haftanın en büyüğüne göre uzunluk. Sıra şerit içinde büyükten
+ * küçüğe (`buildWeek`).
+ *
+ * Tıklama bilançonun analizine gider, analiz yoksa şirket sayfasına: haftanın
+ * geçmiş günlerinde okuyucunun aradığı şey açıklamanın ne dediği.
+ */
 function Lane({
   lane,
   rows,
   clock,
+  weekPeak,
+  badges,
+  watchSet,
   locale,
+  t,
 }: {
   lane: LaneSpec;
-  rows: WeekCandidate[];
+  rows: ScheduleRow[];
   clock: TimePair | null;
+  weekPeak: number;
+  badges: Record<string, AnalysisBadgeData>;
+  watchSet: ReadonlySet<string>;
   locale: Locale;
+  t: Dictionary;
 }) {
   return (
     <div className={styles.lane} data-lane={lane.key} data-filled={rows.length > 0 || undefined}>
@@ -226,32 +288,92 @@ function Lane({
         )}
       </p>
       {rows.length > 0 && (
-        <ul className={styles.entries}>
+        <ul className={styles.tiles}>
           {rows.map((row) => (
-            <li key={row.symbol}>
-              <Link
-                href={`/hisse/${row.symbol}`}
-                prefetch={false}
-                className={styles.entry}
-                aria-label={row.name ? `${row.symbol} · ${row.name}` : row.symbol}
-              >
-                <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="md" className={styles.entryLogo} />
-                <span className={styles.entryText}>
-                  <span className={styles.entrySymbol}>{row.symbol}</span>
-                  {row.name && <span className={styles.entryName}>{row.name}</span>}
-                </span>
-                {row.marketCap !== null && (
-                  <span className={`figure ${styles.entryCap}`}>
-                    {formatMoneyCompact(row.marketCap, locale)}
-                  </span>
-                )}
-                <ArrowUpRight size={13} weight="bold" aria-hidden className={styles.entryArrow} />
-              </Link>
-            </li>
+            <Tile
+              key={row.symbol}
+              row={row}
+              weekPeak={weekPeak}
+              badge={badges[`${row.symbol}:${row.reportDate}`]}
+              watched={watchSet.has(row.symbol)}
+              locale={locale}
+              t={t}
+            />
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+const TILE_LOGO: Record<TileTier, LogoTileSize> = { xl: "lg", lg: "md", md: "sm" };
+
+function Tile({
+  row,
+  weekPeak,
+  badge,
+  watched,
+  locale,
+  t,
+}: {
+  row: ScheduleRow;
+  weekPeak: number;
+  badge: AnalysisBadgeData | undefined;
+  watched: boolean;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const e = t.earningsWeek;
+  const tier = tileTier(row.marketCap);
+  const surprise = epsSurprise(row.epsActual, row.epsEstimate);
+  const cap = row.marketCap !== null ? formatMoneyCompact(row.marketCap, locale) : null;
+  const verdict = surprise ? e[surprise.direction] : null;
+  const label = [row.symbol, row.name, cap, verdict].filter(Boolean).join(" · ");
+  /* Çizgi en az 4 piksel: 10 milyarlık bir şirket 1,2 trilyonluk haftada
+     %0,8 — sıfır uzunluk "değeri yok" gibi okunurdu. */
+  const ratio = row.marketCap !== null && weekPeak > 0 ? row.marketCap / weekPeak : 0;
+
+  return (
+    <li className={styles.tileItem} data-tier={tier}>
+      <Link
+        href={badge ? analysisHref(badge.symbol, badge.period) : `/hisse/${row.symbol}`}
+        prefetch={false}
+        className={styles.tile}
+        aria-label={label}
+        data-week-tile
+        data-cc={row.symbol}
+      >
+        <LogoTile
+          symbol={row.symbol}
+          logoUrl={row.logoUrl}
+          size={TILE_LOGO[tier]}
+          className={styles.tileLogo}
+        />
+        <span className={styles.tileText}>
+          <span className={styles.tileSymbol}>
+            {watched && (
+              <span aria-hidden className={styles.tileStar}>
+                ★
+              </span>
+            )}
+            {row.symbol}
+          </span>
+          {tier === "xl" && row.name && <span className={styles.tileName}>{row.name}</span>}
+          {tier !== "md" && cap && <span className={`figure ${styles.tileCap}`}>{cap}</span>}
+        </span>
+        {surprise && (
+          <span className={styles.tileResult} data-dir={surprise.direction} aria-hidden>
+            {tier !== "md" && surprise.ratio !== null
+              ? formatPercent(surprise.ratio * 100, locale, 0)
+              : null}
+          </span>
+        )}
+        {badge && <span className={styles.tileBadge} aria-hidden>{e.analysis}</span>}
+        <span className={styles.tileBar} aria-hidden>
+          <span style={{ "--ratio": ratio } as CSSProperties} />
+        </span>
+      </Link>
+    </li>
   );
 }
 

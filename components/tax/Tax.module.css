@@ -439,10 +439,46 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .inlineLink { display:inline-flex; align-items:center; gap:4px; min-height:32px; font-size:12px; font-weight:600; color:var(--primary-ink); transition:color .2s; }
 .inlineLink:hover { color:var(--primary-hover); }
 
+/* ---------- Nasıl hesaplanır (TaxHow, 29 Eylül) ----------
+   Numaralı adım şeridi. Kutu yok: düğüm + ince ray, hesaplayıcının
+   Alış/Satış adımlarıyla aynı dil (`.step`/`.node`) ama düğüm açık tonda,
+   çünkü burada "tamamlandı" durumu yok. Dar ekranda dikey liste (ray
+   solda), genişte altı sütunluk yatay şerit (ray düğümden düğüme). */
+.how { position:relative; display:grid; margin:22px 0 0; padding:0; list-style:none; }
+.howStep { position:relative; min-width:0; padding:0 0 18px 40px; }
+.howStep:last-child { padding-bottom:0; }
+.howStep::before { content:""; position:absolute; left:13px; top:32px; bottom:4px; width:2px; border-radius:2px; background:var(--line); }
+.howStep:last-child::before { display:none; }
+.howNode { position:absolute; left:0; top:0; display:grid; place-items:center; width:28px; height:28px; border-radius:999px; border:1.5px solid var(--primary-faint); background:var(--primary-tint); color:var(--primary-ink); font-size:12px; font-weight:700; }
+.howTitle { width:fit-content; max-width:100%; margin:4px 0 4px; font-size:15px; font-weight:650; line-height:1.3; letter-spacing:-.01em; color:var(--text-strong); }
+.howBody { margin:0; max-width:64ch; font-size:13px; line-height:1.55; color:var(--text-body); }
+/* Telefonda sıkı: altı adım ilk ölçümde 836 pikseldi (390, 29 Eylül). */
+@media (max-width:639px) { .howStep { padding-bottom:14px; } .howBody { line-height:1.5; } }
+@media (min-width:1200px) {
+  .how { grid-template-columns:repeat(6,minmax(0,1fr)); column-gap:22px; margin-top:28px; }
+  .howStep { padding:42px 0 0; }
+  .howStep::before { left:36px; right:-14px; top:13px; bottom:auto; width:auto; height:2px; }
+  .howTitle { margin-top:0; }
+}
+.howFoot { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; margin-top:22px; padding-top:20px; border-top:1px solid var(--line-soft); }
+
+/* Durağan tarife: sayfanın dibinde, SSS'nin yanında. */
+.guideGrid { display:grid; gap:8px; }
+@media (min-width:1024px) { .guideGrid { grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:40px; align-items:start; } }
+.tariff { padding:16px 16px 8px; }
+@media (min-width:640px) { .tariff { padding:16px 28px 8px; } }
+@media (min-width:1024px) { .tariff { padding:16px 0 8px 28px; } }
+/* İki sütun: dar ekrandaki üç sütunluk sabit genişlikler burada geçmez. */
+@media (max-width:519px) {
+  .tariffTable thead th:nth-child(1) { width:70%; }
+  .tariffTable thead th:nth-child(2) { width:30%; }
+}
+
 /* ---------- Bilmen gerekenler ---------- */
 
 .faqWrap { padding:0 16px; }
 @media (min-width:640px) { .faqWrap { padding:0 28px; } }
+@media (min-width:1024px) { .guideGrid .faqWrap { padding-left:0; } }
 
 .faq { margin:0; padding:0; list-style:none; }
 .faq > li + li { border-top:1px solid var(--line-soft); }

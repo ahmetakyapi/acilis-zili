@@ -9,11 +9,20 @@ import styles from "@/components/motion/DirectoryExperience.module.css";
  * açıklanacağını, analizler açıklandıktan sonra ne anlama geldiğini, takip
  * sekmesi de ikisinin yalnızca favorilere daralmış hâlini gösterir.
  *
- * Çubuk paylaşılan bir layout'ta DEĞİL, üç sayfanın her biri kendi basıyor:
+ * HAFTALIK DÖRDÜNCÜ SEKME (29 Eylül). `/bilancolar/hafta` bir dönem
+ * bilinçli olarak sekme DEĞİLDİ: paylaşılacak bir görselin sayfasıydı ve
+ * telefonda üç sekme satırı dolduruyordu. Sahibi haftayı ayrı bir sekmede
+ * istedi ve sayfa artık bir görünüm: en büyükler ızgarası ve haftanın tam
+ * takvimi. Takvim sekmesi BUGÜNDEN ileri kayan bir pencere, haftalık sekme
+ * pazartesi–cuma sabit bir hafta (geçen günlerin gerçekleşenleriyle).
+ * Telefonda 390'da dört sekme sığıyor, 360'ta çubuk kayıyor (`TabBar`);
+ * ölçü `app/(app)/bilancolar/hafta/page.tsx` başında.
+ *
+ * Çubuk paylaşılan bir layout'ta DEĞİL, dört sayfanın her biri kendi basıyor:
  * `/bilancolar/[symbol]/[period]` de aynı segmentin altında ve orada sekme
  * istemiyoruz — detay sayfası listenin bir görünümü değil, ayrı bir yer.
  */
-export type EarningsTab = "calendar" | "analyses" | "watchlist";
+export type EarningsTab = "calendar" | "week" | "analyses" | "watchlist";
 
 export function EarningsTabs({
   active,
@@ -26,6 +35,9 @@ export function EarningsTabs({
 }) {
   const tabs: { key: EarningsTab; href: string; label: string }[] = [
     { key: "calendar", href: "/bilancolar", label: t.earnings.tabCalendar },
+    /* Takvimin hemen yanında: ikisi de "ne zaman" sorusu, biri kayan
+       pencere biri sabit hafta. */
+    { key: "week", href: "/bilancolar/hafta", label: t.earningsWeek.tab },
     {
       key: "analyses",
       href: "/bilancolar/analizler",

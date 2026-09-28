@@ -648,6 +648,10 @@ const en: typeof tr = {
     historyDate: "Date",
     historyEdition: "Edition",
     historyStance: "Stance",
+    historyPlan: "Plan Drift",
+    historyRuns: "{n} Editions",
+    historyNote:
+      "Editions that stayed the same within a day share one row. The bar shows the entry zone and the stop (red tick) on a common scale between the lowest and highest level in the table.",
     moreSymbols: "Other Companies",
     noEditionYet: "Awaiting Edition",
     companyPage: "Company Page",
@@ -767,6 +771,7 @@ const en: typeof tr = {
       boardLink: "What the Views Mean",
       noPosition: "If You Don't Own It",
       hasPosition: "If You Own It",
+      whatToDo: "What to Do?",
       scaling: "All at Once or in Steps?",
       othersLabel: "The Other Views",
       stickyTitle: "Why the View Rarely Changes",
@@ -1831,7 +1836,6 @@ const en: typeof tr = {
     spotlight: "Term of the Day",
     readDefinition: "Read the Definition",
     openCategory: "Open Category",
-    moreTerms: "{count} More Terms",
     position: "{index} of {total} in Category",
   },
   themes: {
@@ -1881,6 +1885,7 @@ const en: typeof tr = {
     weakestClose: "Weakest at Last Close",
     themesRising: "Themes Up",
     themesFalling: "Themes Down",
+    themesBreadth: "Theme Breadth",
     up: "Advancers",
     down: "Decliners",
     spreadLabel: "Move of {count} members: {up} advancing, {down} declining.",
@@ -1971,6 +1976,15 @@ const en: typeof tr = {
     insiderCodeOther: "Other ({code})",
     insiderPriceDropped:
       "The price of {n} transactions does not match the share price (the record may carry another security's or currency's price); their price and value are not shown or counted in the summary.",
+    /* Reading layer of the panel (29 Sep) — see InsiderPanel.tsx. */
+    insiderChipBuy: "Buy",
+    insiderChipSell: "Sell",
+    insiderBalance: "Buy and Sell Balance",
+    insiderBalanceShare: "Buy {buy}% · Sell {sell}%",
+    insiderLegend:
+      "Colored chips are open-market decisions; dimmed rows are grants, tax withholding, gifts or option exercises, which are not trading decisions.",
+    insiderHowTitle: "How to Read",
+    sentimentLatest: "Latest ({month}): {value}",
     sentimentTitle: "Monthly Share Purchase Ratio (MSPR)",
     sentimentNote:
       "MSPR runs from −100 to 100: 100 means only buying that month, −100 only selling. An empty month means the source has no computed value for it; recent months can reach the source late.",
@@ -2353,6 +2367,32 @@ const en: typeof tr = {
         "The threshold applies to the total of all capital income that had no Turkish withholding; add any other such foreign income too.",
       exportCsv: "Download CSV",
       csvName: "foreign-stock-tax-{year}.csv",
+      how: {
+        title: "How It Is Calculated",
+        label: "Calculation Steps",
+        lead: "The calculator does these six steps for you; you only enter your trades. Figures follow the rules of tax year {year}.",
+        step1Title: "Enter Your Trades",
+        step1Body:
+          "Type in the buy and the sell or upload your statement; the file never leaves your device. A sale is matched first in, first out against the oldest buy.",
+        step2Title: "Convert at the CBRT Rate",
+        step2Body:
+          "Cost uses the CBRT buying rate of the buy date, proceeds the sell date's, dividends the payment date's. The FX gain is taxed too; commissions reduce the gain.",
+        step3Title: "Index with the PPI",
+        step3Body:
+          "If the PPI rose {pct}% or more from the month before the buy to the month before the sell, cost is indexed; only on a profitable sale, and the gain drops to zero at most.",
+        step4Title: "Add Up Gains and Dividends",
+        step4Body:
+          "Gains and losses within the year offset each other; stock sales have no exemption. If capital income without withholding exceeds the {thresholdYear} threshold of {threshold}, all dividends are declared.",
+        step5Title: "Tax by Bracket",
+        step5Body:
+          "The tax base runs through the schedule: {min}% up to {first}, {max}% in the top bracket. US withholding ({w8}% with a W-8BEN, {none}% without) is credited against the tax on that income.",
+        step6Title: "File in March",
+        step6Body:
+          "{year} income is declared in March {filing} on the Hazır Beyan system; the tax is paid in two instalments on 31 March and 31 July.",
+        step6Link: "Timeline and Documents",
+        start: "Start Calculating",
+        tariffSource: "Source: {source}.",
+      },
       filing: {
         title: "When, Where and With Which Documents",
         lead: "Gains and dividends of {year} are declared on the annual income tax return in March {filing}.",
@@ -2390,12 +2430,6 @@ const en: typeof tr = {
         w8Title: "W-8BEN and 1042-S",
         w8Body:
           "W-8BEN tells the US you are not a US tax resident. With it, the US-Turkey treaty caps dividend withholding at 20% for individuals; without it, 30% is withheld. Form 1042-S shows the tax withheld during the year and supports the credit in Turkey; compare the calculator's rate with the rate on that form.",
-        ruleTitle: "The FX and Indexation Rule",
-        ruleBody:
-          "Cost is converted at the CBRT buying rate of the buy date and proceeds at the rate of the sell date; the FX gain is taxable too, so a sell that lost money in dollars is taxed if it gained in lira. If the PPI rose 10% or more, cost may be indexed: the index of the month before the buy is compared with the month before the sell. Commissions reduce the gain.",
-        fifoTitle: "Which Buy Counts as Sold",
-        fifoBody:
-          "When part of a stock bought on different dates is sold, first in, first out applies (General Communiqué on Income Tax No. 257). It was written for domestic securities and is applied to foreign stocks by analogy.",
         sourcesTitle: "Sources",
       },
       sources: {
@@ -2406,6 +2440,7 @@ const en: typeof tr = {
         irs: "IRS, Instructions for Form 1042-S",
       },
       dataNote: "Rates: CBRT buying rate (daily bulletin). Index: TurkStat Yİ-ÜFE, 2003=100.",
+      notAdviceFoot: "Every figure on this page is an estimate based on Turkish Revenue Administration guides; ask your accountant before you file.",
     },
     portfolio: {
       eyebrow: "My Account",
@@ -2684,6 +2719,41 @@ const en: typeof tr = {
     },
   },
 
+  earningsWeek: {
+    tab: "Weekly",
+    description:
+      "One week, Monday to Friday: the biggest reports at a glance, then the full calendar day by day. Times in New York time.",
+    anticipatedTitle: "Most Anticipated",
+    anticipatedMeta: "By Market Cap",
+    scheduleTitle: "This Week's Calendar",
+    colCompany: "Company",
+    colTime: "Time",
+    colEps: "EPS Estimate",
+    colEpsActual: "Reported EPS",
+    colRevenue: "Revenue Estimate",
+    colCap: "Market Cap",
+    colAnalysis: "Analysis",
+    epsShort: "EPS",
+    revenueShort: "Revenue",
+    capShort: "Cap",
+    actualShort: "Reported",
+    beat: "Beat",
+    miss: "Missed",
+    inline: "In Line",
+    pending: "Pending",
+    analysis: "Analysis",
+    dayEmpty: "No earnings on the calendar this day.",
+    errorTitle: "Calendar Unavailable",
+    errorHint: "The earnings calendar can't be read right now; this is not an empty week. Try again shortly.",
+    noteCriterion:
+      "Ranked by market cap. We don't use a sentiment or interest score: we have none we can measure honestly.",
+    noteTiers:
+      "Large tiles are companies above $500B, medium tiles above $100B; the line under each tile is its length against the week's largest.",
+    noteSchedule:
+      "Each day lists companies above $1B in market cap by name, up to {max}; the rest sit in the day's expandable list.",
+    noteSurprise: "The percentage next to reported EPS is the deviation from the estimate.",
+  },
+
   companyCard: {
     sector: "Sector",
     marketCap: "Market Cap",
@@ -2734,6 +2804,7 @@ const en: typeof tr = {
     moversMeta: "{period} · {count} Investors",
     buysTitle: "Most Bought",
     sellsTitle: "Most Sold",
+    moversScale: "Investors",
     opened: "{count} Opened",
     added: "{count} Added",
     trimmed: "{count} Trimmed",

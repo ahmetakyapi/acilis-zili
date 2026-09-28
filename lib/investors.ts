@@ -229,7 +229,8 @@ export function investorInitials(name: string): string {
 
 export const INVESTORS: readonly Investor[] = [
   /* SIRA ÜNLÜLÜK SIRASI (28 Eylül, sahibinin isteği): okuyucunun adını
-     ilk duyacağı kişi önde. Dizin kapağı, kartlar ve hareket panosundaki
+     ilk duyacağı kişi önde. Leopold Aschenbrenner 12.'den 3.'ye alındı
+     (sahibinin kararı): yapay zekâ döneminin en çok konuşulan yeni fonu. Dizin kapağı, kartlar ve hareket panosundaki
      yüzler bu sırayı okuyor; portföy büyüklüğü sırası değil. */
   {
     slug: "warren-buffett",
@@ -255,6 +256,18 @@ export const INVESTORS: readonly Investor[] = [
       en: "The manager who foresaw the 2008 housing crash, known for concentrated contrarian bets.",
     },
     emblem: "short",
+  },
+  {
+    slug: "leopold-aschenbrenner",
+    name: "Leopold Aschenbrenner",
+    firm: "Situational Awareness LP",
+    kind: "13f",
+    ciks: [2045724],
+    tagline: {
+      tr: "Yapay zekânın enerji ve çip talebine yatırım yapan, OpenAI kökenli genç yönetici.",
+      en: "A young former OpenAI researcher investing in the power and chip demand of AI.",
+    },
+    emblem: "ai",
   },
   {
     slug: "nancy-pelosi",
@@ -358,18 +371,6 @@ export const INVESTORS: readonly Investor[] = [
       tr: "Piyasa döngüleri üzerine notlarıyla bilinen, sıkıntılı borç ve fırsat yatırımcısı.",
       en: "A distressed-debt and opportunity investor known for his memos on market cycles.",
     },
-  },
-  {
-    slug: "leopold-aschenbrenner",
-    name: "Leopold Aschenbrenner",
-    firm: "Situational Awareness LP",
-    kind: "13f",
-    ciks: [2045724],
-    tagline: {
-      tr: "Yapay zekânın enerji ve çip talebine yatırım yapan, OpenAI kökenli genç yönetici.",
-      en: "A young former OpenAI researcher investing in the power and chip demand of AI.",
-    },
-    emblem: "ai",
   },
   {
     slug: "li-lu",

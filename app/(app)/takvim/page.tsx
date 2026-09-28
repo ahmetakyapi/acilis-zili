@@ -679,10 +679,7 @@ export default async function CalendarPage(
 
       <KindTabs kind={kind} labels={kindLabels} />
 
-      {/* PANO: takvim solda, halka arz sağda (≥1100). Seyrek bir hafta
-          halka arzın ÜSTÜNDE bir boşluk olarak değil, yanında duruyor.
-          Aralık sabit `gap`, kolonlar eşitlenmiyor — kısa olan erken biter
-          (CLAUDE.md, `justify-between` kuralı). */}
+      {/* PANO: takvim tam genişlik; halka arz altında (29 Eylül). */}
       <div className={styles.board}>
         <QueryTransition label={t.common.loading}>
           <Panel className={styles.calendar} data-motion-reveal>
@@ -757,13 +754,13 @@ export default async function CalendarPage(
           </Panel>
         </QueryTransition>
 
-        {/* Halka arz takvimi: ikisi de "önümüzdeki günlerde ne olacak"
-            sorusuna cevap veriyor. Geçiş maskesinin DIŞINDA — kendi akışı
-            görünüm değişirken örtülmesin. */}
-        <aside className={styles.aside}>
-          <IpoCalendar locale={locale} t={t} compact />
-        </aside>
       </div>
+
+      {/* HALKA ARZ TAKVİMİN ALTINDA, TAM GENİŞLİK (29 Eylül). Yan kolondu ve
+          küçük bir liste için ekranı ikiye bölüyordu (gerekçe
+          components/markets/IpoCalendar.tsx). Geçiş maskesinin DIŞINDA:
+          görünüm değişirken örtülmüyor. */}
+      <IpoCalendar locale={locale} t={t} />
 
       {/* DÖRT SLUG, İKİ DEĞİL — sayfa iki yarım taşıyor. Üstteki ekonomik
           takvim Fed ve enflasyona bakıyor, halka arz takvimi bambaşka bir

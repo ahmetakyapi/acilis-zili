@@ -43,21 +43,10 @@
 .nextPill[data-today] { background:var(--primary-wash); color:var(--primary-ink); }
 
 /* --- Pano ----------------------------------------------------------------- */
-/* Takvim ve halka arz ≥1100'de yan yana. Tek kolonda seyrek bir hafta
-   halka arzın ÜSTÜNDE boşluk olarak duruyordu (hafta 1440: tek olaylı gün
-   paneli 151 piksel, halka arz başlığı y=631). Aralık sabit; kolonlar
-   eşitlenmiyor, kısa olan erken biter. */
+/* Takvim tam genişlik (29 Eylül); halka arz artık panonun ALTINDA bir kart
+   ızgarası (gerekçe IpoCalendar.tsx). Yan kolon, yapışkanlığı ve 360
+   piksellik sütunu kalktı. */
 .board { display:grid; grid-template-columns:minmax(0,1fr); gap:20px; align-items:start; }
-.aside { min-width:0; container-type:inline-size; }
-@media (min-width:1100px) { .board { grid-template-columns:minmax(0,1fr) 360px; } }
-/* YAN KOLON YAPIŞKAN, AMA YALNIZCA SIĞDIĞINDA. Ay görünümünde takvim paneli
-   2087, halka arz 318 piksel (1440, ölçüldü): sağ kolonun 1100 pikseli
-   boştu. Kolon en çok altı satır (≈504 piksel) + 69 piksellik uygulama
-   çubuğu; 760 piksel yüksekliğin altındaki ekranda dibi kesilirdi, orada
-   eskisi gibi akışta kalır. */
-@media (min-width:1100px) and (min-height:760px) {
-  .aside { position:sticky; top:calc(var(--app-bar-h) + 20px); }
-}
 
 /* `overflow: clip`, `hidden` DEĞİL. Panel primitifi `overflow-hidden`
    taşıyor ve bu paneli bir kaydırma kabı yapıyor: içindeki yapışkan gün

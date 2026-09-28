@@ -9,7 +9,6 @@ import { addEtDays, todayEt } from "@/lib/market-hours";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatRange } from "@/lib/technical";
 import {
-  cn,
   formatCompact,
   formatEtDateLong,
   formatMoneyCompact,
@@ -19,9 +18,14 @@ import {
 /**
  * Halka arz takvimi — önümüzdeki altı hafta.
  *
- * Ekonomik takvimin yanında duruyor çünkü ikisi de aynı soruya cevap
- * veriyor: "önümüzdeki günlerde ne olacak". Bilanço takvimi ve makro takvim
- * zaten vardı; takvimi tamamlayan üçüncü parça buydu.
+ * Ekonomik takvimin ALTINDA, tam genişlikte kart ızgarası (29 Eylül). Bir
+ * dönem takvimin yanında 360 piksellik bir kolondu: ekran ≥1100'de ikiye
+ * bölünüyor, üç-altı satırlık küçük bir liste için takvim 940 piksele
+ * sıkışıyor ve kolon ay görünümünde 1.700 piksel boş sarkıyordu (1440,
+ * ölçüldü: takvim 889, halka arz 318). Sahibi "boşa ekranı kaplıyor"
+ * dedi. Artık takvim tam genişlik, halka arzlar onun altında bir kart
+ * ızgarası: her kartta gün tek bakışta (büyük rakam), sembol, durum, ad,
+ * fiyat aralığı ve büyüklük.
  *
  * Sağlayıcı bazı kayıtları fiyat aralığı ve adet belirlenmeden yayımlıyor
  * (status: expected). O alanlar boş bırakılıyor — tahmin edilmiyor. Durum
@@ -31,16 +35,7 @@ import {
 
 const WEEKS_AHEAD = 6;
 const MAX_ROWS = 12;
-/* Takvim ekranının yan kolonunda (360 piksel) en çok altı satır: kolon,
-   yanındaki takvim panelinden uzun düşüp sayfanın dibinde tek başına
-   sarkmasın. 1100 altında aynı liste tam genişliğe iniyor ve orada on iki
-   satırın hepsi görünüyor.
-   Karar İKİ KOŞULLU: kap dar (`@max-[479px]`) VE ekran ≥1100. Yalnızca kap
-   koşulu vardı ve telefonda tam genişlikteki kap da 480'in altında (ölçüldü:
-   390'da 354, 320'de 284 piksel) — 7-12. satırlar hiçbir "devamı var"
-   işareti olmadan gizleniyordu. 360 piksellik yan kolon yalnızca ≥1100'de
-   var (CalendarExperience `.board`); tavan da yalnızca orada. */
-const COMPACT_ROWS = 6;
+
 
 /**
  * Fiyat aralığı sağlayıcıdan METİN geliyor ("7.06", "18.00-20.00") ve
@@ -75,53 +70,26 @@ function shortExchange(value: string | null): string | null {
   return value.split(/[ ,]/)[0];
 }
 
-export function IpoCalendar({
-  locale,
-  t,
-  compact = false,
-}: {
-  locale: Locale;
-  t: Dictionary;
-  /**
-   * Dar kolon düzeni. `sm:` kırılımları VİEWPORT'u okuyor, kabı değil:
-   * 1440 pikselde 360 piksellik yan kolona konan liste 92 piksellik tarih
-   * sütununu ve geniş aralığı alıyor, şirket adına ~150 piksel kalıyordu.
-   * `compact` bu kararları KABA bağlıyor: yan kolonda dar tarih sütunu ve
-   * altı satır, 1100 altında tam genişliğe inince geniş sütun ve tam liste
-   * (ölçüldü: 1024'te 976 piksellik panelde tarih iki satıra kırılıyor,
-   * sağında ~600 piksel boş kalıyordu). Yatay dolgu DEĞİŞMİYOR:
-   * başlık (`PanelHeader`) 20 pikselde kalıyor ve satırlar ondan ayrı
-   * düşerse sol kenar iki hatta biterdi.
-   */
-  compact?: boolean;
-}) {
+export function IpoCalendar({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <Panel>
       <PanelHeader title={t.ipo.title} meta={t.ipo.window} />
       <Suspense
         fallback={
-          <div className="flex flex-col gap-2 px-4 py-3 sm:px-5">
-            {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-9 w-full" />
+          <div className="grid grid-cols-2 gap-2 px-4 pb-4 sm:grid-cols-3 sm:px-5 lg:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-[112px] w-full rounded-xl" />
             ))}
           </div>
         }
       >
-        <IpoList locale={locale} t={t} compact={compact} />
+        <IpoList locale={locale} t={t} />
       </Suspense>
     </Panel>
   );
 }
 
-async function IpoList({
-  locale,
-  t,
-  compact,
-}: {
-  locale: Locale;
-  t: Dictionary;
-  compact: boolean;
-}) {
+async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
   const today = todayEt();
   const result = await getIpoCalendar(today, addEtDays(today, WEEKS_AHEAD * 7));
 
@@ -147,70 +115,75 @@ async function IpoList({
     filed: t.ipo.statusFiled,
   };
 
+  const intl = locale === "en" ? "en-US" : "tr-TR";
+  /* Tarih ET günü ("YYYY-AA-GG"); öğlen UTC'den okununca hiçbir saat
+     diliminde gün kaymıyor. */
+  const dayParts = (iso: string) => {
+    const date = new Date(`${iso}T12:00:00Z`);
+    const part = (options: Intl.DateTimeFormatOptions) =>
+      new Intl.DateTimeFormat(intl, { ...options, timeZone: "UTC" }).format(date);
+    return { day: part({ day: "numeric" }), month: part({ month: "short" }), weekday: part({ weekday: "short" }) };
+  };
+
   return (
     <>
-      <ul>
-        {rows.map((row, index) => (
-          <li
-            key={`${row.symbol}-${row.date}`}
-            className={cn(
-              "flex items-start gap-3 border-t border-line px-4 py-3 sm:px-5",
-              compact ? "@min-[480px]:gap-4" : "sm:gap-4",
-              compact && index >= COMPACT_ROWS && "min-[1100px]:@max-[479px]:hidden",
-            )}
-          >
-            <span className={cn("w-[74px] shrink-0", compact ? "@min-[480px]:w-[92px]" : "sm:w-[92px]")}>
-              <span className="block text-tiny font-semibold leading-tight text-strong">
-                {formatEtDateLong(row.date, locale)}
-              </span>
-              {shortExchange(row.exchange) && (
-                <span className="mt-0.5 block truncate text-nano leading-tight text-muted">
-                  {shortExchange(row.exchange)}
+      <ul className="grid grid-cols-1 gap-2 px-4 pb-4 min-[420px]:grid-cols-2 sm:px-5 md:grid-cols-3 xl:grid-cols-4">
+        {rows.map((row) => {
+          const when = dayParts(row.date);
+          const exchange = shortExchange(row.exchange);
+          const status = row.status ? statusLabel[row.status.toLowerCase()] ?? row.status : null;
+          return (
+            <li
+              key={`${row.symbol}-${row.date}`}
+              className="flex min-w-0 flex-col gap-2.5 rounded-xl border border-line-soft bg-surface-sunken px-3.5 py-3 transition-colors hover:border-line"
+            >
+              <span className="flex items-start justify-between gap-2">
+                {/* Gün tek bakışta: büyük rakam, yanında ay ve gün adı. */}
+                <span className="flex items-baseline gap-1.5" aria-label={formatEtDateLong(row.date, locale)}>
+                  <b className="numeral text-[22px] font-bold leading-none tracking-tight text-strong">{when.day}</b>
+                  <span className="text-tiny font-semibold leading-tight text-body">
+                    {when.month}
+                    <span className="text-muted"> · {when.weekday}</span>
+                  </span>
                 </span>
-              )}
-            </span>
-
-            <span className="min-w-0 flex-1">
-              <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <Link
-                  href={`/hisse/${row.symbol}`}
-                  className="tap-44 numeral -my-1.5 inline-flex min-h-8 items-center py-1.5 text-base font-bold text-strong transition-colors hover:text-primary"
-                >
-                  {row.symbol}
-                </Link>
-                {row.status && (
-                  <span className="rounded-full bg-surface-elevated px-[7px] py-px text-nano font-semibold text-body">
-                    {statusLabel[row.status.toLowerCase()] ?? row.status}
+                {status && (
+                  <span className="shrink-0 rounded-full border border-line-soft bg-surface px-[7px] py-px text-nano font-semibold text-body">
+                    {status}
                   </span>
                 )}
               </span>
-              <span className="mt-0.5 block truncate text-small leading-tight text-body">
-                {row.name}
-              </span>
-            </span>
-
-            {/* BİLİNMEYEN ALAN BOŞ KALIR, TİRE BASILMAZ. Fiyat aralığı
-                belirlenmemiş kayıtta sağ sütunun üstünde tek başına bir tire
-                duruyordu; alan yoksa satır yalnızca bildiğini yazıyor. */}
-            <span className="shrink-0 text-right">
-              {row.priceRange && (
-                <span className="numeral block text-small font-semibold text-strong">
-                  {/* Aralık bir metin ama para: simgenin yeri yine dile bağlı. */}
-                  {priceRangeLabel(row.priceRange, locale)}
+              <span className="min-w-0">
+                <Link
+                  href={`/hisse/${row.symbol}`}
+                  className="numeral text-base font-bold text-strong transition-colors hover:text-primary"
+                >
+                  {row.symbol}
+                </Link>
+                <span className="block truncate text-small leading-tight text-body" title={row.name}>
+                  {row.name}
                 </span>
-              )}
-              {row.totalValue || row.shares ? (
-                <span className="numeral mt-0.5 block text-nano leading-tight text-muted">
+              </span>
+              {/* BİLİNMEYEN ALAN BOŞ KALIR, TİRE BASILMAZ: fiyat aralığı ya
+                  da büyüklük yoksa satır yalnızca bildiğini yazıyor. */}
+              <span className="mt-auto flex items-baseline justify-between gap-2 border-t border-line-soft pt-2">
+                <span className="numeral min-w-0 truncate text-small font-semibold text-strong">
+                  {row.priceRange ? priceRangeLabel(row.priceRange, locale) : exchange}
+                </span>
+                <span className="numeral shrink-0 text-nano text-muted">
                   {row.totalValue
                     ? formatMoneyCompact(row.totalValue, locale)
-                    : `${formatCompact(row.shares ?? 0, locale)} ${t.ipo.shares}`}
+                    : row.shares
+                      ? `${formatCompact(row.shares, locale)} ${t.ipo.shares}`
+                      : row.priceRange
+                        ? exchange
+                        : null}
                 </span>
-              ) : null}
-            </span>
-          </li>
-        ))}
+              </span>
+            </li>
+          );
+        })}
       </ul>
-      <p className="border-t border-line px-4 py-3 text-tiny leading-relaxed text-muted sm:px-5">
+      <p className="border-t border-line-soft px-4 py-3 text-tiny leading-relaxed text-muted sm:px-5">
         {t.ipo.hint}
       </p>
     </>
