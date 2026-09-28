@@ -346,6 +346,15 @@ export const GUIDE_META = [
     glyph: "!",
     related: ["risk-yonetimi", "ayi-boga"],
   },
+  {
+    /* Psikolojiden SONRA: "ünlü yatırımcıyı kopyalamak" tam da o yazının
+       anlattığı kısa yolun bir türü. Opsiyon satırının dayanak değerini
+       anlatmak için opsiyonlar yazısına bağlanıyor. */
+    slug: "13f-nedir",
+    topic: "strateji",
+    glyph: "13F",
+    related: ["yatirimci-psikolojisi", "opsiyonlar", "cesitlendirme"],
+  },
 
   /* ---- 3 · Şirketi Okumak ---------------------------------------------- */
   {

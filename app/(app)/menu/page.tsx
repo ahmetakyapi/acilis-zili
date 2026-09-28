@@ -24,6 +24,7 @@ import {
   SignIn,
   SignOut,
   TrendUp,
+  UsersThree,
 } from "@phosphor-icons/react/dist/ssr";
 import type { CSSProperties } from "react";
 import { auth } from "@/auth";
@@ -90,6 +91,7 @@ export default async function MenuPage() {
         { href: "/takvim", icon: CalendarBlank, title: t.nav.calendar, hint: t.menu.hintCalendar },
         { href: "/karsilastir", icon: ChartBar, title: t.compare.title, hint: t.menu.hintCompare },
         { href: "/tema", icon: SquaresFour, title: t.themes.eyebrow, hint: t.menu.hintThemes },
+        { href: "/yatirimcilar", icon: UsersThree, title: t.investors.eyebrow, hint: t.menu.hintInvestors },
       ],
     },
     {

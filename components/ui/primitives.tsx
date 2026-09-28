@@ -570,6 +570,8 @@ const PROVIDER_LABEL: Record<string, string> = {
   alpaca: "Alpaca · SIP",
   finnhub: "Finnhub",
   fred: "FRED",
+  sec: "SEC EDGAR",
+  house: "House Clerk",
 };
 
 /* GECİKME DAMGAYA YAZILIYOR. Damgadaki saat verinin YAŞI değil, bizim onu

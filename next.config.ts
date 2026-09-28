@@ -95,6 +95,12 @@ const NOINDEX_SOURCES = NOINDEX_PATHS.flatMap((path) => [
 ]);
 
 const nextConfig: NextConfig = {
+  /* Kongre bildirimlerinin PDF'i sunucuda okunuyor (lib/providers/
+     house-ptr.ts). pdf.js Node'da çalışanını kendi dosyasından dinamik
+     içe aktarıyor; sunucu paketine girerse o yol kırılıyor. Paket
+     node_modules'tan olduğu gibi yükleniyor. Vergi hesaplayıcının
+     tarayıcıdaki PDF okuması bundan etkilenmiyor. */
+  serverExternalPackages: ["pdfjs-dist"],
   async headers() {
     return [
       { source: NOT_EMBED_SOURCE, headers: SECURITY_HEADERS },

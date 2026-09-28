@@ -19,11 +19,11 @@
 
 | | |
 |---|---|
-| Sayfa rotası | 49 (40 açık, 9 yönetim; `/en` önekiyle ikinci bir adreste daha) |
+| Sayfa rotası | 51 (42 açık, 9 yönetim; `/en` önekiyle ikinci bir adreste daha) |
 | API ucu | 24 |
-| Veritabanı tablosu | 22 · 21 migration (0000–0020; **0020 üretimde uygulanmadı**, aşağıda) |
-| Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · TCMB EVDS (isteğe bağlı) |
-| Ortam değişkeni | 15 (`.env.example`) |
+| Veritabanı tablosu | 27 · 22 migration (0000–0021; **0020 üretimde uygulanmadı**, aşağıda; 0021 `.env.local`in işaret ettiği veritabanına 28 Eylül'de uygulandı) |
+| Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · SEC EDGAR · OpenFIGI · House Clerk · TCMB EVDS (isteğe bağlı) |
+| Ortam değişkeni | 16 (`.env.example`) |
 | Cron | `/api/cron/daily` — hafta içi 10:30 UTC (13:30 TR) |
 | İçerik rutini | 5 adet, claude.ai üzerinde elle kurulu (teknik analiz günde üç koşu) |
 
@@ -39,6 +39,22 @@ gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
 ## Açık işler
 
 Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
+
+- [ ] **Ünlü yatırımcılar (migration 0021).** Beş tablo: `investor_filings`,
+      `investor_holdings`, `cusip_tickers`, `congress_filings`,
+      `congress_trades`. 28 Eylül'de `.env.local`in veritabanına uygulandı ve
+      `npx tsx scripts/sync-investors.ts` ile ilk doldurma yapıldı (15 yatırımcı
+      × 8 çeyrek, Pelosi'nin 2025-2026 PTR'leri). Üretim veritabanı farklıysa
+      orada da `npm run db:migrate` ve betik koşmalı; tablo yokken ekran "Henüz
+      Veri Yok" der, hisse paneli basılmaz, cron adımı raporda "hata" yazar
+      ve devam eder.
+- [ ] **`OPENFIGI_API_KEY` isteğe bağlı.** Anahtarsız cron koşum başına 40
+      CUSIP çözüyor; 13F sezonunda Bridgewater'ın yüzlerce yeni pozisyonunun
+      logosu birkaç günde geliyor (o arada ad yazılıyor). Anahtar bunu tek
+      koşuma indirir.
+- [ ] **ARK günlük ETF işlemleri yapılmadı.** Cathie Wood sayfası yalnızca
+      13F'i (çeyreklik) gösteriyor; ARK'ın günlük holdings CSV'lerinden
+      "dünkü alım/satım" katmanı ikinci aşama.
 
 - [ ] **Migration 0020 üretimde uygulanmadı.** Dört yeni tablo:
       `symbol_metrics`, `portfolio_positions`, `earnings_analysis_extras`,

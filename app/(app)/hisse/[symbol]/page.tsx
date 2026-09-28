@@ -14,6 +14,7 @@ import { SymbolStories, SymbolStoriesSkeleton } from "@/components/stock/SymbolS
 import { EmptyState, Panel, PanelHeader, PanelLink, Skeleton } from "@/components/ui/primitives";
 import { ChapterHeading } from "@/components/ui/ChapterHeading";
 import { getStatus, getAnalyses, getNextReport, getStoriesForSymbol, getSymbolNames, isKnownSymbol } from "@/lib/data";
+import { getStockInvestors } from "@/lib/investor-data";
 import { rateLimit, requestKey } from "@/lib/rate-limit";
 import { getI18n } from "@/lib/i18n";
 import type { Metadata } from "next";
@@ -49,6 +50,7 @@ import { ExpectedMovePanel } from "./_panels/ExpectedMovePanel";
 import { AnalystTrendPanel } from "./_panels/AnalystTrendPanel";
 import { ScorecardPanel } from "./_panels/ScorecardPanel";
 import { TechnicalSnapshotPanel } from "./_panels/TechnicalSnapshotPanel";
+import { InvestorsPanel } from "./_panels/InvestorsPanel";
 import { StockSummary, metaExtras, summaryFacts } from "./_panels/StockSummary";
 import { StockJsonLd } from "./_panels/StockJsonLd";
 import depth from "./_panels/depth.module.css";
@@ -256,7 +258,7 @@ export default async function StockPage(
      yorumlarında. İkisi de yerel veritabanı okuması, sağlayıcıya gitmiyor.
      TEK TURDA: ardışık beklenirlerse kabuk iki Neon gidiş dönüşü bekler ve
      kazanılan CLS, gecikmeye geri verilir. */
-  const [storyRows, analysisRows, status, nextReport, names] = await Promise.all([
+  const [storyRows, analysisRows, status, nextReport, names, famousInvestors] = await Promise.all([
     getStoriesForSymbol(symbol, locale, 3),
     getAnalyses(locale, { symbols: [symbol], limit: 6 }),
     /* Yalnızca başlık iskeleti için: seans dışındaysa gerçek başlıkta bir
@@ -270,6 +272,10 @@ export default async function StockPage(
     /* Kırıntı künyesinin adı — künye ve başlık aynı istek-içi anahtarı
        okuyor, ek tur yok. */
     getSymbolNames([symbol]),
+    /* ÜNLÜ YATIRIMCILAR PANELİ AÇILACAK MI — aynı gerekçe: yerel ve
+       önbellekli okuma (lib/investor-data.ts); kayıt yoksa panel hiç
+       basılmıyor, geç gelip altındaki haberleri itmiyor. */
+    getStockInvestors(symbol),
   ]);
   const expectedMoveDue =
     nextReport !== null && daysBetweenEt(status.etDate, nextReport.date) <= EXPECTED_MOVE_HORIZON_DAYS;
@@ -652,6 +658,10 @@ export default async function StockPage(
       <Suspense fallback={<Skeleton className="h-[460px] w-full rounded-[20px]" />}>
         <InsiderPanel symbol={symbol} locale={locale} t={t} />
       </Suspense>
+
+      {/* ÜNLÜ YATIRIMCILAR içeriden işlemlerin altında: ikisi de "bu hisseyi
+          kim alıp satıyor" sorusu. Veri ön okumada; yoksa hiçbir şey. */}
+      {famousInvestors && <InvestorsPanel data={famousInvestors} locale={locale} t={t} />}
 
       {/* Haberler en altta — mobilde de masaüstünde de son durak */}
       <Reveal>

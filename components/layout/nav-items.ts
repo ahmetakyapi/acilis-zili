@@ -16,6 +16,7 @@ import {
   Percent,
   Scroll,
   TrendUp,
+  UsersThree,
 } from "@phosphor-icons/react/dist/ssr";
 import { stripLocale } from "@/lib/i18n/routing";
 import type { Dictionary } from "@/lib/i18n";
@@ -208,6 +209,17 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: true,
     hint: (t) => t.menu.hintThemes,
+  },
+  {
+    /* 28 Eylül: ünlü yatırımcılar "Daha Fazla"da, temaların yanında. Şerit
+       ölçüsü (yukarıda) beş sekmeye göre alındı ve boşluk yok; ekran çeyrekte
+       bir değişen bir başvuru ekranı, günlük değil. */
+    href: "/yatirimcilar",
+    label: (t) => t.investors.eyebrow,
+    icon: UsersThree,
+    inBottomBar: false,
+    more: true,
+    hint: (t) => t.menu.hintInvestors,
   },
   {
     /* DAHA FAZLA'DA. Bir dönem yalnızca 1280 üstünde sekmeydi: aynı ekran

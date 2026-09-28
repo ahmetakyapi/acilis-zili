@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { GUIDE_SLUGS } from "@/content/guide";
 import { GLOSSARY_SLUGS } from "@/content/glossary";
 import { THEME_SLUGS } from "@/content/themes";
+import { INVESTOR_SLUGS } from "@/lib/investors";
 import { COMPARE_PAIR_SLUGS } from "@/content/compare-pairs";
 import { getAnalyses, getBriefArchive, getCompanies, getStories } from "@/lib/data";
 import { briefHref, type BriefPeriod } from "@/lib/brief";
@@ -72,6 +73,7 @@ const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   { path: "/vergi", priority: 0.7, frequency: "monthly" },
   { path: "/sozluk", priority: 0.8, frequency: "weekly" },
   { path: "/tema", priority: 0.7, frequency: "daily" },
+  { path: "/yatirimcilar", priority: 0.7, frequency: "weekly" },
   { path: "/bilancolar/hafta", priority: 0.7, frequency: "daily" },
 ];
 
@@ -143,6 +145,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
   for (const slug of THEME_SLUGS) {
     entries.push(...bothLocales(`/tema/${slug}`, 0.6, "daily"));
+  }
+  /* Yatırımcılar kodda (lib/investors.ts); veri çeyrekte bir, Kongre
+     bildirimleri ayda birkaç kez değişiyor. */
+  for (const slug of INVESTOR_SLUGS) {
+    entries.push(...bothLocales(`/yatirimcilar/${slug}`, 0.6, "weekly", false));
   }
   for (const slug of COMPARE_PAIR_SLUGS) {
     entries.push(...bothLocales(`/karsilastir/${slug}`, 0.5, "weekly", false));

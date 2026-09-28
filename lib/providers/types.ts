@@ -33,7 +33,10 @@ export type DataSource =
   | "cache"
   | "seed"
   | "cboe"
-  | "treasury";
+  | "treasury"
+  | "sec"
+  | "openfigi"
+  | "house";
 
 export type FailReason =
   | "missing-key"

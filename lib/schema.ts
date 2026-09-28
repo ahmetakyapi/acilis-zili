@@ -887,6 +887,165 @@ export const symbolMetrics = pgTable(
 );
 
 /* ==========================================================================
+   Ünlü yatırımcılar — SEC 13F bildirimleri ve Kongre işlem bildirimleri
+   ========================================================================== */
+
+/**
+ * Bir 13F dosyası — SEC'e verilen tek bir bildirim (28 Eylül).
+ *
+ * DOSYA, DÖNEM DEĞİL. Aynı dönem için birden çok dosya olabiliyor: asıl
+ * bildirim (13F-HR), onu baştan yazan düzeltme (13F-HR/A, RESTATEMENT) ve
+ * gizli tutulup süresi dolunca eklenen pozisyonlar (13F-HR/A, NEW
+ * HOLDINGS — Berkshire'ın 2025 1. çeyreği böyle tamamlandı). Dönemin
+ * portföyü okuma anında bu dosyalardan kuruluyor (lib/investor-view.ts →
+ * `periodHoldings`); tablo SEC'in söylediğini olduğu gibi tutuyor.
+ *
+ * `investor` bir slug (lib/investors.ts), yabancı anahtar değil: yatırımcı
+ * listesi kodda duruyor, veritabanında değil. Bir yatırımcının İKİ CIK'i
+ * olabiliyor (Ackman, 2026 2. çeyrekten itibaren yeni şirket); `cik`
+ * hangisinin dosyası olduğunu söylüyor.
+ *
+ * `value_scaled`: bu dosya değerleri BİN DOLAR yazmış ve okurken 1000 ile
+ * çarpıldı. Kural 2023'ten beri dolar ama Baupost ve Duquesne hâlâ bin
+ * yazıyor; algılama dosya bazında (lib/providers/sec-13f.ts →
+ * `detectValueScale`). Tablodaki `value` her zaman DOLAR.
+ *
+ * Migration elle uygulanıyor; tablo yokken okuyan kod sessizce boş dönüyor
+ * (`user_avatars` ile aynı desen).
+ */
+export const investorFilings = pgTable(
+  "investor_filings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    investor: text("investor").notNull(),
+    cik: integer("cik").notNull(),
+    accession: text("accession").notNull(),
+    /** "13F-HR" | "13F-HR/A" */
+    form: text("form").notNull(),
+    /** Düzeltmenin türü: "restatement" | "new-holdings"; asıl bildirimde null. */
+    amendment: text("amendment"),
+    /** Bildirimin anlattığı çeyrek sonu. */
+    period: date("period").notNull(),
+    filedAt: date("filed_at").notNull(),
+    /** Dolar, ölçek düzeltmesinden sonra. Opsiyonların dayanak değeri dahil. */
+    valueTotal: doublePrecision("value_total").notNull(),
+    entryCount: integer("entry_count").notNull(),
+    valueScaled: boolean("value_scaled").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("investor_filings_accession_unique").on(t.accession),
+    index("investor_filings_investor_period_idx").on(t.investor, t.period),
+  ],
+);
+
+/**
+ * 13F dosyasının satırları, CUSIP + pozisyon türüne göre toplanmış.
+ *
+ * Aynı CUSIP birden çok satırda gelebiliyor (fonun alt yöneticileri ayrı
+ * satır yazıyor); ekranda tek pozisyon olmalı, o yüzden yazarken
+ * toplanıyor. `position` "long" | "call" | "put" — opsiyon satırındaki
+ * değer PRİM değil DAYANAK hissenin değeri, ekranda ayrı duruyor.
+ * `amount_type` "SH" (hisse) ya da "PRN" (tahvil anaparası).
+ *
+ * Dosya silinirse satırları da gider (ON DELETE CASCADE).
+ */
+export const investorHoldings = pgTable(
+  "investor_holdings",
+  {
+    filingId: uuid("filing_id")
+      .notNull()
+      .references(() => investorFilings.id, { onDelete: "cascade" }),
+    cusip: text("cusip").notNull(),
+    position: text("position").notNull(),
+    issuer: text("issuer").notNull(),
+    titleOfClass: text("title_of_class"),
+    amount: doublePrecision("amount").notNull(),
+    amountType: text("amount_type").notNull(),
+    /** Dolar. */
+    value: doublePrecision("value").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.filingId, t.cusip, t.position] }),
+    index("investor_holdings_cusip_idx").on(t.cusip),
+  ],
+);
+
+/**
+ * CUSIP → borsa sembolü, OpenFIGI'den (28 Eylül).
+ *
+ * SEC sembol vermiyor; 13F satırında yalnızca CUSIP ve şirket adı var.
+ * Eşleme kalıcı: bir CUSIP bir kez sorulur. Çözülemeyen CUSIP (tahvil,
+ * yurt dışı hisse, kapanmış şirket) `ticker` null ile yazılıyor ve
+ * `tried_at` yeniden denemenin takvimini tutuyor — ekranda ad görünür,
+ * UYDURMA sembol basılmaz.
+ */
+export const cusipTickers = pgTable("cusip_tickers", {
+  cusip: text("cusip").primaryKey(),
+  ticker: text("ticker"),
+  figi: text("figi"),
+  name: text("name"),
+  securityType: text("security_type"),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  triedAt: timestamp("tried_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * İşlenmiş Kongre bildirimleri (PTR) — PDF'i bir kez okumak için.
+ *
+ * İşlem satırı olmayan bir bildirim de (taranmış kâğıt, metin katmanı yok)
+ * burada `trade_count = 0` ile durur; yoksa her gün yeniden indirilirdi.
+ */
+export const congressFilings = pgTable("congress_filings", {
+  docId: text("doc_id").primaryKey(),
+  member: text("member").notNull(),
+  filedAt: date("filed_at").notNull(),
+  tradeCount: integer("trade_count").notNull(),
+  parsedAt: timestamp("parsed_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Kongre üyesinin (ve eşinin) bildirdiği tekil işlemler.
+ *
+ * TUTAR ARALIK: bildirim tek bir sayı değil bir aralık veriyor ("$1,000,001
+ * - $5,000,000"); iki uç ayrı sütunda, ekranda da aralık olarak yazılıyor.
+ * Tek sayı uydurulmuyor. `owner` SP (eş), JT (ortak), DC (bakmakla yükümlü
+ * çocuk) ya da null (üyenin kendisi). İşlem tarihi ile bildirim tarihi
+ * ayrı: yasa 45 güne kadar gecikmeye izin veriyor.
+ *
+ * `row_no` bildirimin içindeki sıra; (doc_id, row_no) tekil, yani aynı
+ * PDF'i yeniden okumak satır çoğaltmıyor. Bildirim silinirse işlemleri de
+ * gider (ON DELETE CASCADE).
+ */
+export const congressTrades = pgTable(
+  "congress_trades",
+  {
+    docId: text("doc_id")
+      .notNull()
+      .references(() => congressFilings.docId, { onDelete: "cascade" }),
+    rowNo: integer("row_no").notNull(),
+    member: text("member").notNull(),
+    ticker: text("ticker"),
+    asset: text("asset").notNull(),
+    /** ST hisse, OP opsiyon, AB, OT… — bildirimin kendi kodu. */
+    assetType: text("asset_type"),
+    /** "P" alış, "S" satış, "S (partial)" kısmi satış, "E" değişim. */
+    txType: text("tx_type").notNull(),
+    txDate: date("tx_date").notNull(),
+    notifiedDate: date("notified_date"),
+    amountLow: doublePrecision("amount_low"),
+    amountHigh: doublePrecision("amount_high"),
+    owner: text("owner"),
+    description: text("description"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.docId, t.rowNo] }),
+    index("congress_trades_member_date_idx").on(t.member, t.txDate),
+    index("congress_trades_ticker_idx").on(t.ticker),
+  ],
+);
+
+/* ==========================================================================
    Uygulama hataları — kendi barındırdığımız hata günlüğü
    ========================================================================== */
 

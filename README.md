@@ -65,7 +65,7 @@ günde üç kez yenilenen teknik analizler.
 
 ## Ne Yapar
 
-Yedi konu başlığı var ve her biri ayrı bir soruya cevap veriyor.
+Sekiz konu başlığı var ve her biri ayrı bir soruya cevap veriyor.
 
 | | Soru | Nerede |
 |---|---|---|
@@ -73,6 +73,7 @@ Yedi konu başlığı var ve her biri ayrı bir soruya cevap veriyor.
 | 🏢 | **Bu şirket nasıl gidiyor?** Gün içinden beş yıla grafik (alan ya da mum; USD, TL ya da Reel TL), profil, değerleme ve risk ölçüleri, sektör yüzdelikli skor kartı, 52 hafta bandı, analist dağılımı ve aydan aya değişimi, içeriden işlemler, bilanço öncesi beklenen hareket, temettü, haberler, geçmiş bilanço sürprizleri. 1.000'i aşkın şirket sektör şeridiyle ve sıralanabilir bir dizinde; iki ile dört hisse **aynı ölçekte** yan yana, yirmi hazır çift ve on tematik liste. | `/sirketler` · `/hisse/NVDA` · `/karsilastir` · `/tema` |
 | 🧾 | **Kim ne zaman bilanço açıklıyor?** Açılış öncesi mi kapanış sonrası mı, analist EPS ve gelir beklentisi ne, gerçekleşen ne çıktı. Takvim `.ics` olarak kendi takvimine eklenebiliyor, haftası paylaşılabilir bir görsel olarak iniyor. Açıklanan çeyrekler için skorlu uzun analizler, başında "30 Saniyede" özeti, segment ve KPI verisi. | `/bilancolar` · `/bilancolar/hafta` |
 | 🎯 | **Teknik olarak nereden alınır, nerede vazgeçilir?** On beş hissenin her işlem günü üç kez yenilenen analizi: görüş (Al/Tut/Sat), alım bölgesi, hedefler, stop, destek ve direnç, senaryolar. Listede olmayan hisselerde yorumsuz bir teknik fotoğraf. | `/teknik` |
+| 🧭 | **Ünlü yatırımcılar ne alıp satıyor?** Buffett, Burry, Ackman, Cathie Wood, Dalio ve on bir ismin SEC 13F bildirimlerinden portföyü, bu çeyrek yeni aldıkları, artırdıkları, azalttıkları ve tamamen sattıkları (adet farkıyla, bölünme ayıklanarak); Nancy Pelosi'nin Kongre işlem bildirimleri tutar aralığıyla. Hisse sayfasında "bu hisseyi kim tutuyor". | `/yatirimcilar` |
 | 🏛️ | **Ekonomi ne diyor?** CPI, FOMC, istihdam, PCE; takvimde saatleriyle, beklenti ve gerçekleşenle. On bir FRED serisi, sonraki FOMC kararı, halka arz ve temettü takvimi. | `/makro` · `/takvim` |
 | 📰 | **Bugün ne konuşuluyor, neden?** Siteden çıkmadan okunan haber akışı, her gün yazılan bülten, olayın **mekanizmasını** anlatan Mercek yazıları, borsayı sıfırdan öğreten sıralı bir rehber ve yüz elli terimlik bir sözlük. | `/haberler` · `/bulten` · `/mercek` · `/rehber` · `/sozluk` |
 | 🇹🇷 | **Türkiye'den yatırım yapınca lirada ne kaldı?** TCMB kuruyla TL ve (EVDS anahtarı varsa) enflasyondan arındırılmış Reel TL getirisi; yurt dışı hisse vergisi hesaplayıcısı (satış kazancı, Yİ-ÜFE endekslemesi, temettü ve stopaj mahsubu) ve TL maliyetli portföy. | `/vergi` · `/portfoy` |
@@ -236,7 +237,14 @@ model yalnızca satırları yazar, çizimi site yapar.
 Yedi görsel blok (`sayilar` · `bar` · `pay` · `akis` · `oncesi` · `zaman` ·
 `grafik`) ve dört metin kutusu (`ornek` · `dikkat` · `ozet` · `tanim`) var.
 Kazanç üç: telif riski yok, görsel barındırmak gerekmiyor, her temada
-tutarlı. Elimizdeki tek gerçek görsel kaynağı şirket logoları.
+tutarlı. Elimizdeki gerçek görsel kaynağı şirket logoları.
+
+Tek belgeli istisna ünlü yatırımcıların portreleri ve kuralın gerekçesini
+(telif) çiğnemiyor: yalnızca Wikimedia Commons'ta kamu malı ya da CC BY /
+CC BY-SA lisanslı dosyalar, lisansları tek tek okunarak, kare kırpılıp
+`public/investors/` altında yerelde barındırılıyor; atıf detay sayfasının
+künyesinde (kaynak `lib/investors.ts` → PORTRAITS). Özgür lisanslı
+fotoğrafı olmayan kişi baş harf karosuyla çiziliyor, fotoğraf üretilmiyor.
 
 ### Ölçmeden Düzen Değişmiyor
 
@@ -313,7 +321,7 @@ sıçrıyor. Gezinme bekleyişinin kartı marka adıyla açılıyor.
 
 ## Veri Modeli
 
-22 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
+27 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
 ritmine bağlı.
 
 | Tablo | Ne tutar | Kim yazar |
@@ -337,6 +345,9 @@ ritmine bağlı.
 | `symbol_metrics` | Finnhub `/stock/metric` fotoğrafı + GICS sektörü; skor kartının sektör yüzdelikleri buradan | Cron (koşum başına 15 sembol) + sayfa isteği |
 | `portfolio_positions` | Portföy pozisyonu: adet, USD maliyet, alış günü, not | Kullanıcı eylemi (Portföy) |
 | `earnings_analysis_extras` | Bilanço analizinin ekleri: "30 Saniyede" özeti, segmentler ve kaynağı, KPI'lar | claude.ai rutini (`/api/analiz` ile aynı gövde) |
+| `investor_filings` · `investor_holdings` | Ünlü yatırımcıların 13F dosyaları (asıl bildirim ve düzeltmeler ayrı satır) ve dosya başına CUSIP × pozisyon türü toplanmış satırlar; değer her zaman dolar (bin dolar yazan dosya çevrilir) | Cron (0b adımı, bütçeli) + `scripts/sync-investors.ts` |
+| `cusip_tickers` | CUSIP → sembol eşlemesi (OpenFIGI); çözülemeyen `null` ve yeniden deneme zamanı | Cron + betik |
+| `congress_filings` · `congress_trades` | İşlenmiş Kongre PTR'leri ve tekil işlemler (tutar alt/üst uç, sahip, işlem ve bildirim tarihi) | Cron + betik |
 | `app_errors` | Gün × tür × rota × parmak izi başına hata sayacı; kullanıcı kimliği, IP ve tarayıcı künyesi yok | Sunucu (`instrumentation.ts`) ve istemci (`/api/hata`) hata kaydı; 30 günden eskisini cron siler |
 
 Migration disiplini: şema değişince **yeni** migration dosyası üretilir,
@@ -358,6 +369,9 @@ sessizce yazmaz (panelde ise "tablo yok" diye ayrıca söylenir).
 | **Finnhub** | Profil, haber, bilanço takvimi, halka arz, EPS sürprizi, analist dağılımı, metrikler (`/stock/metric`), insider işlemleri ve insider duyarlılığı, arama | 60 istek/dk. Grafik barları buradan **alınmaz** |
 | **FRED** | Makro seriler, tahvil faizleri, VIX, yüksek getirili tahvil farkı, aylık USD/TRY ortalaması | Yayın kimlikleri seri kimliğinden çalışma anında türetilir |
 | **TCMB** | USD/TRY: günün bülteni ve günlük arşiv XML'i (`kurlar/YYYYMM/DDMMYYYY.xml`) | Anahtarsız; günde tek bülten, veri bülten tarihini taşır. Hafta sonu sorulan gün cuma bültenine düşer ve ekran bunu yazar |
+| **SEC EDGAR** | 13F-HR dosya listesi (`data.sec.gov/submissions`), kapak ve bilgi tablosu XML'i | Kimlik başlığı (`User-Agent`) şart; ≤ 8 istek/sn. Bazı yöneticiler değeri hâlâ bin dolar yazıyor, dosya bazında algılanıyor |
+| **OpenFIGI** | CUSIP → ABD sembolü (harfle başlayan kimlik CINS olarak sorulur) | Anahtarsız 25 istek/dk × 10 kayıt; `OPENFIGI_API_KEY` ile 100 kayıt |
+| **House Clerk** | Yıllık bildirim indeksi (ZIP, bağımlılıksız açılır) ve PTR PDF'leri (`pdfjs-dist` ile metne) | Tutar yalnızca aralık; tek sayı üretilmez |
 | **TCMB EVDS** (isteğe bağlı) | Aylık TÜFE (`TP.TUKFIY2025.GENEL`) ve Yİ-ÜFE (`TP.TUFE1YI.T1`) | `EVDS_API_KEY` ister. Yoksa Reel TL düğmesi basılmaz, vergi hesaplayıcısı Yİ-ÜFE'yi okuyucudan ister |
 
 Alpaca'ya geçiş ölçülerek yapıldı. Bir dönem IEX beslemesi kullanıldı: gerçek
@@ -502,6 +516,7 @@ Rota listesinin **tek kaynağı** burası. 49 sayfa var: 40'ı herkese açık
 | `/karsilastir` | İki ile dört hisseden hangisi: aynı ölçekte normalize grafik + tek tablo; getiri USD, TL ya da Reel TL |
 | `/karsilastir/[pair]` | Yirmi küratörlü çift (`/karsilastir/nvda-amd`): aynı tahta, başlık ve "neden bu ikisi" paragrafıyla; canonical adres bu (`content/compare-pairs.ts`) |
 | `/tema` · `/tema/[slug]` | Tematik listeler (yapay zekâ, yarı iletkenler, katılım uyumlu…): üyeler, günün medyanı, ölçüt fonu (`content/themes.ts`, on tema) |
+| `/yatirimcilar` · `/yatirimcilar/[slug]` | Ünlü yatırımcılar kim ne tutuyor: portre mozaiği, çeyreğin ortak hareketleri ("META: 4 Artırdı"), yatırımcı kartları; detayda portföy haritası (alan değer, renk hareket), Yeni/Artırdı/Azalttı/Tamamen Sattı, tam pozisyon tablosu, opsiyonlar (dayanak değer), son sekiz çeyrek. Pelosi sayfası Kongre bildirimi: işlem ve bildirim tarihi, tutar aralığı, sahip, opsiyon ayrıntısı (`lib/investors.ts`, on altı kişi) |
 | `/makro` | ABD ekonomisi nerede: on bir FRED serisi (haftalık işsizlik başvuruları, perakende satışlar, M2, Sahm kuralı ve 10Y–3A faiz farkı eklendi), sonraki açıklama, Sonraki FOMC Kararı kartı |
 | `/takvim` | Hangi makro veri ne zaman: gün/hafta/ay, önem süzgeci, halka arz takvimi. `?tur=temettu` aynı sayfada temettü takvimi görünümü (Alpaca kurumsal işlemler) |
 | `/haberler` · `/haberler/[id]` | Bugün ne konuşuluyor: akış + siteden çıkmadan okuma |

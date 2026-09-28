@@ -31,6 +31,7 @@ export async function SiteFooter() {
           { href: "/takvim", label: t.nav.calendar },
           { href: "/karsilastir", label: t.compare.title },
           { href: "/tema", label: t.themes.eyebrow },
+          { href: "/yatirimcilar", label: t.investors.eyebrow },
         ],
       },
       {

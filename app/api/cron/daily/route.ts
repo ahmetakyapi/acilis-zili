@@ -31,6 +31,8 @@ import { ALL_MEMBERS } from "@/db/seed/indices";
 import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
 import { refreshSymbolMetrics } from "@/lib/symbol-metrics";
 import { purgeOldErrors } from "@/lib/error-log";
+import { syncInvestors } from "@/lib/investor-sync";
+import { INVESTORS_TAG } from "@/lib/investor-data";
 
 /**
  * BÜTÇE. Finnhub ücretsiz katmanı dakikada 60 istek kabul ediyor ve bu
@@ -51,6 +53,10 @@ import { purgeOldErrors } from "@/lib/error-log";
  * Skor kartının sektör ölçüleri (2d') koşum başına 15 istek daha ekliyor:
  * toplam ~99, dakikada 60 sınırıyla yüz saniyelik bütçenin içinde. Adım
  * kotaya çarptığı anda kendini kesiyor (lib/symbol-metrics.ts).
+ *
+ * Ünlü yatırımcılar (0b) Finnhub kotasına DOKUNMUYOR (SEC, OpenFIGI ve
+ * Kongre sunucusu) ama süreden yiyor; kendi tavanı var
+ * (`INVESTOR_BUDGET_MS`). 13F sezonu dışında ~17 istek, birkaç saniye.
  *
  * İşi ayrı cron uçlarına bölmek (her birine kendi 120 saniyesi) daha iyi
  * olurdu ama cron SAYISI dağıtım planına bağlı; bu düzeltme hangi planda
@@ -78,6 +84,29 @@ const PROFILE_REFRESH_LIMIT = 25;
  * demektir. Pahalı olanlar 2c, 3 ve 4 — atlanması gerekenler de onlar.
  */
 const BUDGET_MS = 100_000;
+
+/**
+ * Ünlü yatırımcılar adımının kendi tavanı (28 Eylül).
+ *
+ * Sezon dışında adım her yatırımcının SEC dosya listesini (16 istek) ve
+ * Kongre'nin yıllık indeksini (~60 KB) soruyor, yeni bir şey yoksa çıkıyor:
+ * birkaç saniye. Sezonda (Şubat, Mayıs, Ağustos, Kasım ortası) yeni 13F'ler
+ * iniyor; Bridgewater'ın tek dosyası bin satır. Tavan dolunca kalan dosyalar
+ * ertesi koşuma kalıyor — sıra yeniden eskiye, yani önce güncel dönem.
+ *
+ * OpenFIGI anahtarsız dakikada 25 istek veriyor (istek başına 10 CUSIP) ve
+ * iki istek arası 2,5 saniye; koşum başına en fazla 4 istek, en büyük
+ * pozisyon önce. Sezonda yeni CUSIP'lerin tamamı birkaç günde çözülüyor;
+ * o arada ekran şirketin bildirimdeki adını yazıyor. `OPENFIGI_API_KEY`
+ * verilirse istek başına 100 CUSIP.
+ *
+ * ADIM ERKEN KOŞUYOR, Finnhub adımlarından önce: sonda dursaydı bütçeyi
+ * dolduran günlerde hiç koşmazdı ve sezonun dosyaları haftalarca inmezdi.
+ * Tavanı küçük tutmak diğer adımların payını koruyor.
+ */
+const INVESTOR_BUDGET_MS = 15_000;
+const INVESTOR_MAX_FILINGS = 6;
+const INVESTOR_FIGI_REQUESTS = 4;
 
 /**
  * Bilanço takvimi kaç gün ileri çekilir.
@@ -174,6 +203,22 @@ export async function GET(request: Request) {
       report[definition.seriesId] = "hata: yenilenemedi";
     }
   }));
+
+  /* ---- 0b. Ünlü yatırımcılar: SEC 13F + Kongre bildirimleri ----
+     Kendi tavanıyla (gerekçe `INVESTOR_BUDGET_MS`). Sağlayıcı hataları
+     rapora yazılıyor; tablo yoksa (migration uygulanmadı) veritabanı hatası
+     burada yakalanıyor ve koşum devam ediyor. */
+  try {
+    const result = await syncInvestors({
+      deadline: Date.now() + INVESTOR_BUDGET_MS,
+      maxFilings: INVESTOR_MAX_FILINGS,
+      maxFigiRequests: INVESTOR_FIGI_REQUESTS,
+    });
+    if (result.changed) revalidateTag(INVESTORS_TAG, { expire: 0 });
+    report.investors = result.summary;
+  } catch (error) {
+    report.investors = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
 
   /* ---- 1. Bilanço takvimi (bugün → +30 gün) ----
      Finnhub tek yanıtı ~1500 kayıtla keser; geniş aralık limit yüzünden bazı

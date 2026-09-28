@@ -1450,6 +1450,66 @@ Most of what you need to know about the market can be learned in months. What yo
 :::`,
   },
 
+  "13f-nedir": {
+    title: "What Is a 13F: How to Read Famous Investors' Portfolios",
+    dek: "The filing that shows what Buffett bought is real, but it is three months late and only part of the picture.",
+    bodyMd: `Every institution in the US that manages more than $100 million in stocks must report its holdings to the SEC at the end of each quarter. That report is the 13F. Every headline about what Berkshire Hathaway, Pershing Square or Bridgewater "bought" comes from this document.
+
+::: tanim 13F
+A mandatory SEC filing listing a large institutional manager's US stock positions at quarter end, with share counts and dollar values. It is filed within 45 days after the quarter ends.
+:::
+
+## What It Shows
+
+A 13F line tells you three things: which company, how many shares, and their value at the quarter-end price. Put two consecutive filings from the same manager side by side and the buying and selling appear:
+
+- **New:** a position that was not there last quarter.
+- **Added / Trimmed:** a position whose share count changed.
+- **Sold Out:** a position that was there last quarter and is gone now.
+
+The comparison uses SHARE COUNTS, not dollar values. If a stock rises 30%, its value rises 30% too; the manager may not have bought a single share.
+
+## What It Doesn't Show
+
+::: dikkat Four Blind Spots
+**Delay:** The filing can come up to 45 days after quarter end. You see the June 30 portfolio in mid-August; the manager may have sold everything in between.
+**Short selling:** Short positions are not reported. If a fund hedges one stock by shorting another, you only see the long side.
+**Cash and bonds:** How much of the portfolio sits in cash is invisible.
+**Foreign shares:** Only securities traded in the US are listed.
+:::
+
+## Option Lines Can Mislead
+
+Calls and puts appear in a 13F too. But the value on that line is not the premium paid for the option; it is the value of the UNDERLYING shares. A "$10 billion put" headline does not mean the fund paid $10 billion; it is the quarter-end value of the shares the options cover. Opening Bell shows these lines separately from the stock portfolio and leaves them out of the weights.
+
+## Why Copying Is Risky
+
+Buying what a famous investor bought looks like a tempting shortcut. It has three problems:
+
+1. **You are late.** By the time you see it, the trade happened weeks, often months, ago. The price may already have moved.
+2. **You don't see the whole.** The position may be part of a hedge or another asset you cannot see.
+3. **Their scale is not yours.** A 1% experiment in a portfolio of hundreds of billions could be your entire savings.
+
+A 13F is a source of ideas, not a buy signal. Trying to understand why an investor believes in a company teaches far more than copying what they bought.
+
+## Congressional Disclosures
+
+Members of the US Congress and their spouses must report stock trades above $1,000 within 45 days under the STOCK Act. These reports differ from a 13F in two ways:
+
+| | 13F | Congressional Report |
+|---|---|---|
+| Scope | Portfolio at quarter end | Individual trades |
+| Amount | Exact value | Range (e.g. $1,000,001 - $5,000,000) |
+| Delay | Quarter end + 45 days | Trade + 45 days |
+
+Because the amount is only reported as a range, the true size of a trade is unknown; reading the middle of the range as a single number would be invented precision.
+
+::: ozet Summary
+A 13F is a quarter-end snapshot of large managers: real but late and incomplete. On an option line the value belongs to the underlying shares. Congressional reports list individual trades with amount ranges. None of them alone is enough for a buy or sell decision.
+:::`,
+  },
+
+
   /* ---------------------------------------------------------------------- */
   /* Kaynaklar tr.ts'teki aynı yazının üstünde (SEC T+1, street name). */
   "abd-hisse-nasil-alinir": {

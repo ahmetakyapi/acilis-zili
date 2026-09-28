@@ -1473,6 +1473,66 @@ Piyasa hakkında bilmen gerekenlerin çoğu birkaç ayda öğrenilir. Kendin hak
 :::`,
   },
 
+  "13f-nedir": {
+    title: "13F Nedir: Ünlü Yatırımcıların Portföyü Nasıl Okunur",
+    dek: "Buffett'ın ne aldığını gösteren belge gerçek, ama üç ay gecikmeli ve resmin yalnızca bir parçası.",
+    bodyMd: `ABD'de 100 milyon doları aşan hisse portföyünü yöneten her kurum, her çeyreğin sonunda elindeki hisseleri SEC'e (ABD Sermaye Piyasası Kurulu) bildirmek zorunda. Bu bildirimin adı 13F. Berkshire Hathaway'in, Pershing Square'in ya da Bridgewater'ın "ne aldığı" haberlerinin kaynağı hep bu belgedir.
+
+::: tanim 13F
+Büyük kurumsal yöneticilerin çeyrek sonundaki ABD hisse pozisyonlarını, adet ve dolar değeriyle listeleyen zorunlu SEC bildirimi. Çeyrek bitiminden sonraki 45 gün içinde verilir.
+:::
+
+## Ne Gösterir
+
+Bir 13F satırı üç şey söyler: hangi şirket, kaç hisse, çeyrek sonundaki fiyattan değeri ne. Aynı yöneticinin iki ardışık bildirimi yan yana konunca alım ve satım ortaya çıkar:
+
+- **Yeni:** önceki çeyrekte olmayan pozisyon.
+- **Artırdı / Azalttı:** hisse adedi değişen pozisyon.
+- **Tamamen Sattı:** önceki çeyrekte olup bu çeyrekte olmayan pozisyon.
+
+Karşılaştırma dolar değeriyle değil ADETLE yapılır. Fiyatı yüzde 30 yükselen bir hissenin değeri de yüzde 30 artar; yönetici tek hisse almamış olabilir.
+
+## Neyi Göstermez
+
+::: dikkat Dört Kör Nokta
+**Gecikme:** Bildirim çeyrek bitiminden 45 gün sonraya kadar verilebilir. 30 Haziran'daki portföyü Ağustos ortasında görürsün; yönetici o arada her şeyi satmış olabilir.
+**Açığa satış:** Kısa pozisyonlar bildirilmez. Bir fon bir hisseyi alıp başka bir hisseyi açığa satarak korunuyorsa sen yalnızca alım tarafını görürsün.
+**Nakit ve tahvil:** Portföyün ne kadarının nakitte beklediği görünmez.
+**Yurt dışı hisseler:** Yalnızca ABD'de işlem gören menkul kıymetler listelenir.
+:::
+
+## Opsiyon Satırları Yanıltabilir
+
+13F'te alım (call) ve satım (put) opsiyonları da yer alır. Ama satırdaki değer, opsiyonun ödenen primi değil DAYANAK hissenin değeridir. "10 milyar dolarlık put" başlığı, fonun 10 milyar dolar ödediği anlamına gelmez; opsiyonun kapsadığı hisselerin çeyrek sonu değeri budur. Açılış Zili bu satırları hisse portföyünden ayrı gösterir ve ağırlık hesabına katmaz.
+
+## Kopyalamak Neden Riskli
+
+Ünlü bir yatırımcının aldığını almak cazip bir kısa yol gibi görünür. Üç sorunu vardır:
+
+1. **Geç kalırsın.** Sen gördüğünde işlem en az birkaç hafta, çoğu zaman aylar önce yapılmıştır. Fiyat çoktan hareket etmiş olabilir.
+2. **Bütünü görmezsin.** Pozisyon, görmediğin bir korumanın ya da başka bir varlığın parçası olabilir.
+3. **Onun ölçeği senin ölçeğin değil.** Yüzlerce milyarlık bir portföyde yüzde birlik bir deneme, senin portföyünde tüm birikim olabilir.
+
+13F bir fikir kaynağıdır, bir al sinyali değil. Bir yatırımcının neden o şirkete inandığını anlamaya çalışmak, ne aldığını kopyalamaktan çok daha öğreticidir.
+
+## Kongre Bildirimleri
+
+ABD Kongre üyeleri ve eşleri, 1.000 doları aşan hisse işlemlerini STOCK Yasası gereği 45 gün içinde bildirmek zorundadır. Bu bildirimler 13F'ten iki noktada ayrılır:
+
+| | 13F | Kongre Bildirimi |
+|---|---|---|
+| Kapsam | Çeyrek sonundaki portföy | Tek tek işlemler |
+| Tutar | Kesin değer | Aralık ($1.000.001 - $5.000.000 gibi) |
+| Gecikme | Çeyrek sonu + 45 gün | İşlem + 45 gün |
+
+Tutar yalnızca aralık olarak bildirildiği için bir işlemin gerçek büyüklüğü bilinmez; aralığın ortasını tek sayı gibi okumak uydurma bir kesinlik olur.
+
+::: ozet Özet
+13F büyük yöneticilerin çeyrek sonu fotoğrafıdır: gerçek ama gecikmeli ve eksik. Opsiyon satırında değer dayanak hissenindir. Kongre bildirimleri tek tek işlemleri tutar aralığıyla verir. Hiçbiri tek başına bir al-sat kararı için yeterli değildir.
+:::`,
+  },
+
+
   /* ---------------------------------------------------------------------- */
   /* Kaynaklar: SEC, "Shortening the Securities Transaction Settlement Cycle"
      (T+1, 28 Mayıs 2024 yürürlük). SEC Investor Bulletin "Holding Your
