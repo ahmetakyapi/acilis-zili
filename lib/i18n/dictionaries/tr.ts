@@ -12,6 +12,10 @@ const tr = {
      bileşen, aynı punto, iki farklı imla. Kural: `title` KISA BİR
      BAŞLIKTIR, nokta almaz; `hint` ise cümledir ve nokta alır. */
   nav: {
+    themes: "Temalar",
+    moreGroupData: "Veri ve Ekranlar",
+    moreGroupLearn: "Öğren",
+    moreGroupRead: "Oku",
     tickerPause: "Şeridi Duraklat",
     tickerResume: "Şeridi Sürdür",
     today: "Bugün",
@@ -407,8 +411,19 @@ const tr = {
     themesLink: "Tüm Temalar",
     /* Son kapanışa "Günün En Güçlüsü" denmiyor (dünü bugün diye anlatmak
        olurdu); künye hangi günü anlattığını adıyla söylüyor. */
-    strongestLastClose: "Son Kapanışta En Güçlü",
-    weakestLastClose: "Son Kapanışta En Zayıf",
+    /* HANGİ EVREN (28 Eylül). Kartlar "Günün En Güçlüsü" diyordu ve
+       Enerji +%1,32 iken en güçlü olarak +%0,01'lik bir tema gösteriliyordu;
+       okuyucu haklı olarak "yanlış mı" diye sordu. İki ölçü ayrı evren:
+       sektörler SPDR fonunun (piyasa değeri ağırlıklı) değişimi, temalar
+       üye hisselerin eşit ağırlıklı medyanı. Etiketler ve künyeler bunu
+       adıyla söylüyor. */
+    sectorsWeight: "Piyasa Değeri Ağırlıklı",
+    themesHeading: "Temalar",
+    themesMeta: "Üye Hisselerin Medyanı · Eşit Ağırlık",
+    strongestTheme: "Günün En Güçlü Teması",
+    weakestTheme: "Günün En Zayıf Teması",
+    strongestLastClose: "Son Kapanışta En Güçlü Tema",
+    weakestLastClose: "Son Kapanışta En Zayıf Tema",
   },
 
   calendar: {

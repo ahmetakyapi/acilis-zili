@@ -8,7 +8,7 @@ import { ArrowUpRight, CaretDown } from "@phosphor-icons/react/dist/ssr";
 import type { Locale } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
-import { isActive, NAV_ITEMS } from "./nav-items";
+import { isActive, MORE_GROUPS, NAV_ITEMS, type MoreGroup } from "./nav-items";
 import { usePriorityStrip } from "./usePriorityStrip";
 
 export type MastheadStripItem = {
@@ -22,10 +22,10 @@ export type MastheadStripItem = {
   rank: number;
 };
 
-export type MastheadMoreItem = { href: string; label: string; hint: string };
+export type MastheadMoreItem = { href: string; label: string; hint: string; group: MoreGroup };
 
-/** Panelin genişliği rem cinsinden — sınıftaki `w-[19rem]` ile aynı sayı. */
-const PANEL_REM = 19;
+/** Panelin genişliği rem cinsinden — sınıftaki `w-[38rem]` ile aynı sayı. */
+const PANEL_REM = 38;
 
 /**
  * Masaüstü şeridi — yedi sekme ve "Daha Fazla".
@@ -45,6 +45,12 @@ const PANEL_REM = 19;
  * PANEL BİR MENÜ DEĞİL, AÇILIR GEZİNME. `role="menu"` yok: içindekiler
  * bağlantı ve ekran okuyucu onları bağlantı olarak duymalı (gerekçe
  * AccountMenu'de). Üzerine gelmeyle açılmaz; tıklama ve klavye.
+ *
+ * İKİ SÜTUN, ÜÇ GRUP (28 Eylül). Panel tek sütunda on satırdı ve 900
+ * piksellik bir liste oluyordu; hangi satırın veri ekranı, hangisinin
+ * okuma olduğu ayırt edilmiyordu. Solda "Veri ve Ekranlar", sağda "Öğren"
+ * ile "Oku". Şeritten taşan sekmeler sol grubun başına iniyor. Klavye
+ * sırası belge sırası: önce sol sütun, sonra sağ.
  */
 export function MastheadNav({
   locale,
@@ -52,12 +58,14 @@ export function MastheadNav({
   moreLabel,
   strip,
   more,
+  groups,
 }: {
   locale: Locale;
   label: string;
   moreLabel: string;
   strip: readonly MastheadStripItem[];
   more: readonly MastheadMoreItem[];
+  groups: Record<MoreGroup, string>;
 }) {
   const pathname = usePathname();
   const navRef = useRef<HTMLElement>(null);
@@ -93,7 +101,7 @@ export function MastheadNav({
 
   const overflow = strip.filter((item) => hidden.has(item.href));
   const rows: MastheadMoreItem[] = [
-    ...overflow.map((item) => ({ href: item.href, label: item.full, hint: item.hint })),
+    ...overflow.map((item) => ({ href: item.href, label: item.full, hint: item.hint, group: "data" as const })),
     ...more,
   ];
   const activeRow = rows.find((row) => isActive(pathname, row.href)) ?? null;
@@ -230,41 +238,55 @@ export function MastheadNav({
               style={{ transformOrigin: alignEnd ? "top right" : "top left" }}
               onKeyDown={onPanelKeyDown}
               className={cn(
-                "masthead-dropdown absolute top-[calc(100%+0.75rem)] z-40 w-[19rem] rounded-2xl border border-line bg-overlay-surface p-2 shadow-(--shadow-overlay)",
+                "masthead-dropdown absolute top-[calc(100%+0.75rem)] z-40 w-[38rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-overlay-surface p-2 shadow-(--shadow-overlay)",
                 alignEnd
                   ? "right-[calc(var(--masthead-tab-px)-1rem)]"
                   : "left-[calc(var(--masthead-tab-px)-1rem)]",
               )}
             >
-              <ul className="flex flex-col">
-                {rows.map((row, index) => {
-                  const current = activeRow?.href === row.href;
-                  const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
-                  return (
-                    <li key={row.href}>
-                      {index === overflow.length && overflow.length > 0 && (
-                        <div aria-hidden className="mx-2.5 my-1 h-px bg-line-soft" />
-                      )}
-                      <Link
-                        href={withLocale(row.href, locale)}
-                        prefetch={false}
-                        aria-current={current ? "page" : undefined}
-                        onClick={() => setOpenedAt(null)}
-                        className="masthead-row relative flex min-h-13 items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-surface focus-visible:bg-surface"
-                      >
-                        {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={19} weight="duotone" /></span>}
-                        <span className="min-w-0 flex-1">
-                          <span className={cn("block text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
-                            {row.label}
-                          </span>
-                          <span className="mt-0.5 block text-tiny text-muted">{row.hint}</span>
-                        </span>
-                        <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+              <div className="grid grid-cols-2 gap-x-2">
+                {[["data"], ["learn", "read"]].map((column) => (
+                  <div key={column.join("-")} className="flex min-w-0 flex-col gap-2">
+                    {MORE_GROUPS.filter((group) => column.includes(group)).map((group) => {
+                      const groupRows = rows.filter((row) => row.group === group);
+                      if (groupRows.length === 0) return null;
+                      return (
+                        <section key={group} aria-label={groups[group]}>
+                          <h3 className="px-3 pb-1 pt-2 text-tiny font-semibold text-muted">{groups[group]}</h3>
+                          <ul className="flex flex-col">
+                            {groupRows.map((row) => {
+                              const current = activeRow?.href === row.href;
+                              const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
+                              const lastOverflow = overflow.length > 0 && row.href === overflow[overflow.length - 1].href;
+                              return (
+                                <li key={row.href}>
+                                  <Link
+                                    href={withLocale(row.href, locale)}
+                                    prefetch={false}
+                                    aria-current={current ? "page" : undefined}
+                                    onClick={() => setOpenedAt(null)}
+                                    className="masthead-row relative flex min-h-13 items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-surface focus-visible:bg-surface"
+                                  >
+                                    {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={19} weight="duotone" /></span>}
+                                    <span className="min-w-0 flex-1">
+                                      <span className={cn("block text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
+                                        {row.label}
+                                      </span>
+                                      <span className="mt-0.5 block text-tiny text-muted">{row.hint}</span>
+                                    </span>
+                                    <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
+                                  </Link>
+                                  {lastOverflow && <div aria-hidden className="mx-2.5 my-1 h-px bg-line-soft" />}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </section>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

@@ -75,10 +75,11 @@ export default async function AppLayout({
     ),
     moreItems: NAV_ITEMS.flatMap((item) =>
       item.more
-        ? [{ href: item.href, label: item.label(t), hint: item.hint?.(t) ?? "" }]
+        ? [{ href: item.href, label: item.label(t), hint: item.hint?.(t) ?? "", group: item.more }]
         : [],
     ),
     more: t.nav.more,
+    moreGroups: { data: t.nav.moreGroupData, learn: t.nav.moreGroupLearn, read: t.nav.moreGroupRead },
     mainNav: t.nav.mainNav,
     bottomNav: t.nav.bottomNav,
     skipToContent: t.nav.skipToContent,

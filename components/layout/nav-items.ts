@@ -21,8 +21,13 @@ import {
 import { stripLocale } from "@/lib/i18n/routing";
 import type { Dictionary } from "@/lib/i18n";
 
+export type MoreGroup = "data" | "learn" | "read";
+
+/** Panelde grupların sırası — taşan şerit sekmeleri "data"nın başına iner. */
+export const MORE_GROUPS: readonly MoreGroup[] = ["data", "learn", "read"];
+
 /** Masthead şeridinde taşma önceliği — 1 en son taşar. */
-export type StripRank = 1 | 2 | 3 | 4 | 5;
+export type StripRank = 1 | 2 | 3 | 4 | 5 | 6;
 
 /**
  * Phosphor, duotone ağırlık — `/dist/ssr` girişi context kullanmaz, o yüzden
@@ -41,8 +46,12 @@ export type NavItem = {
    * EN adı şeride sığmıyor); taşıp "Daha Fazla"ya indiğinde tam ad döner.
    */
   strip?: { rank: StripRank; label?: (t: Dictionary) => string };
-  /** Masaüstünde "Daha Fazla" panelinin sabit satırı. */
-  more?: true;
+  /**
+   * Masaüstünde "Daha Fazla" panelinin sabit satırı ve grubu. Panel iki
+   * sütun: solda veri ekranları, sağda öğrenme ve okuma (28 Eylül; tek
+   * sütunda on satır 900 piksellik bir liste oluyordu).
+   */
+  more?: MoreGroup;
   /** Paneldeki ikinci satır — /menu ile aynı sözlük anahtarı. */
   hint?: (t: Dictionary) => string;
 };
@@ -151,7 +160,9 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.companies,
     icon: Buildings,
     inBottomBar: false,
-    strip: { rank: 5 },
+    /* Taşma sırasında İLK iner (6): 500+ satırlık dizin bir başvuru
+       ekranı ve aramadan da açılıyor; Temalar (5) her gün bakılan ekran. */
+    strip: { rank: 6 },
     hint: (t) => t.menu.hintCompanies,
   },
   {
@@ -159,7 +170,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.macro,
     icon: Percent,
     inBottomBar: false,
-    more: true,
+    more: "data",
     hint: (t) => t.menu.hintMacro,
   },
   {
@@ -176,7 +187,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.calendar,
     icon: CalendarBlank,
     inBottomBar: false,
-    more: true,
+    more: "data",
     hint: (t) => t.menu.hintCalendar,
   },
   {
@@ -192,23 +203,24 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.menu.hintStories,
   },
   {
-    href: "/karsilastir",
-    label: (t) => t.compare.title,
-    icon: ChartBar,
-    inBottomBar: false,
-    more: true,
-    hint: (t) => t.menu.hintCompare,
-  },
-  {
-    /* 28 Eylül: tematik listeler, sözlük ve vergi hesaplayıcı "Daha
-       Fazla"da. Şeritte değiller: şerit ölçüsü (yukarıda) beş sekmeye göre
-       alındı ve üçü de günlük değil başvuru ekranı. */
+    /* ŞERİTTE, MERCEK'İN ARDINDA (28 Eylül, sahibinin isteği). Bir gün
+       "Daha Fazla"daydı; ana sayfaya tema bandı gelince her gün bakılan bir
+       ekran oldu. Şeritte kısa ad ("Temalar"), taşıp panele inerse tam ad.
+       Sığma ölçüsü aşağıda, nav-items başındaki tablonun altında. */
     href: "/tema",
     label: (t) => t.themes.eyebrow,
     icon: SquaresFour,
     inBottomBar: false,
-    more: true,
+    strip: { rank: 5, label: (t) => t.nav.themes },
     hint: (t) => t.menu.hintThemes,
+  },
+  {
+    href: "/karsilastir",
+    label: (t) => t.compare.title,
+    icon: ChartBar,
+    inBottomBar: false,
+    more: "data",
+    hint: (t) => t.menu.hintCompare,
   },
   {
     /* 28 Eylül: ünlü yatırımcılar "Daha Fazla"da, temaların yanında. Şerit
@@ -218,7 +230,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.investors.eyebrow,
     icon: UsersThree,
     inBottomBar: false,
-    more: true,
+    more: "data",
     hint: (t) => t.menu.hintInvestors,
   },
   {
@@ -229,7 +241,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.guide,
     icon: BookOpen,
     inBottomBar: false,
-    more: true,
+    more: "learn",
     hint: (t) => t.menu.hintGuide,
   },
   {
@@ -237,7 +249,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.glossary.title,
     icon: TextAa,
     inBottomBar: false,
-    more: true,
+    more: "learn",
     hint: (t) => t.menu.hintGlossary,
   },
   {
@@ -245,7 +257,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.lira.tax.title,
     icon: Receipt,
     inBottomBar: false,
-    more: true,
+    more: "learn",
     hint: (t) => t.menu.hintTax,
   },
   {
@@ -253,7 +265,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.news,
     icon: Newspaper,
     inBottomBar: false,
-    more: true,
+    more: "read",
     hint: (t) => t.menu.hintNews,
   },
   {
@@ -262,7 +274,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.footer.briefArchive,
     icon: EnvelopeSimple,
     inBottomBar: false,
-    more: true,
+    more: "read",
     hint: (t) => t.menu.hintBrief,
   },
   {

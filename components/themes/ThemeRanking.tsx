@@ -30,7 +30,7 @@ export function ThemeRanking({
   locale: Locale;
   t: Dictionary;
   /** Dizinde kapağın h2'si; ana sayfada bandın h2'sinin altında h3. */
-  heading?: "h2" | "h3";
+  heading?: "h2" | "h3" | "h4";
   className?: string;
 }) {
   const inScale = (card: ThemeCard) => basis !== null && card.basis === basis && card.median !== null;

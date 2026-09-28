@@ -9,6 +9,7 @@ import { stripLocale, withLocale } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
 import { MorphRecorder } from "@/components/motion/Morph";
 import { MastheadNav, type MastheadMoreItem, type MastheadStripItem } from "./MastheadNav";
+import type { MoreGroup } from "./nav-items";
 import { RouteProgress } from "./RouteProgress";
 import { NAV_ITEMS, isActive } from "./nav-items";
 
@@ -21,6 +22,8 @@ export type ShellLabels = {
   /** "Daha Fazla" panelinin sabit satırları. */
   moreItems: MastheadMoreItem[];
   more: string;
+  /** Panel gruplarının başlıkları. */
+  moreGroups: Record<MoreGroup, string>;
   mainNav: string;
   bottomNav: string;
   skipToContent: string;
@@ -237,6 +240,7 @@ export function AppShell({
             moreLabel={labels.more}
             strip={labels.strip}
             more={labels.moreItems}
+            groups={labels.moreGroups}
           />
 
           <div className="flex h-full items-center gap-2">

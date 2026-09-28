@@ -87,7 +87,7 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
   const allLastClose = rows.every((row) => row.change === null || row.lastClose);
 
   return (
-    <SectorFrame t={t} meta={allLastClose ? `${x.sectorsMeta} · ${t.market.lastClose}` : x.sectorsMeta}>
+    <SectorFrame t={t} meta={allLastClose ? `${x.sectorsMeta} · ${t.market.lastClose}` : `${x.sectorsMeta} · ${t.today.sectorsWeight}`}>
       <ol className={styles.ribbon} data-motion-stagger>
         {rows.map((row) => {
           const heat = row.change === null || row.lastClose ? { tone: "flat", level: 0 } : heatOf(row.change);
@@ -195,12 +195,12 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
 
   return (
     <ThemeFrame
-      ranking={<ThemeRanking cards={board.cards} basis={scaleBasis} locale={locale} t={t} heading="h3" />}
+      ranking={<ThemeRanking cards={board.cards} basis={scaleBasis} locale={locale} t={t} heading="h4" />}
       extremes={
         <>
           <ExtremeCard
             card={top}
-            label={session ? t.themes.strongest : t.today.strongestLastClose}
+            label={session ? t.today.strongestTheme : t.today.strongestLastClose}
             session={session}
             scale={board.scale}
             locale={locale}
@@ -208,7 +208,7 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
           />
           <ExtremeCard
             card={bottom}
-            label={session ? t.themes.weakest : t.today.weakestLastClose}
+            label={session ? t.today.weakestTheme : t.today.weakestLastClose}
             session={session}
             scale={board.scale}
             locale={locale}
@@ -248,13 +248,15 @@ function ThemeFrame({
 }) {
   return (
     <div className={styles.part}>
+      <div className={styles.partHead}>
+        <h3>{t.today.themesHeading}</h3>
+        <span className={styles.partMeta}>{t.today.themesMeta}</span>
+        <PanelLink href="/tema" className={styles.partLink}>
+          {t.today.themesLink}
+        </PanelLink>
+      </div>
       <div className={styles.themes}>
-        <div className={styles.rankCol}>
-          {ranking}
-          <PanelLink href="/tema" className={styles.themesLink}>
-            {t.today.themesLink}
-          </PanelLink>
-        </div>
+        <div className={styles.rankCol}>{ranking}</div>
         <div className={styles.extremes}>{extremes}</div>
       </div>
       {stamp}
@@ -348,7 +350,7 @@ function ExtremeCard({
 export function ThemeSpotlightSkeleton({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <ThemeFrame
-      ranking={<ThemeRanking cards={themePlaceholders()} locale={locale} t={t} heading="h3" />}
+      ranking={<ThemeRanking cards={themePlaceholders()} locale={locale} t={t} heading="h4" />}
       extremes={
         <>
           <Skeleton className={styles.extremeSkeleton} />

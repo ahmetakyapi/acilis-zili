@@ -327,6 +327,35 @@ export default async function TodayPage() {
           erkeni (yukarıda, `nextZoneMidnight`). */}
       <SessionRefresh atIso={refreshAt.toISOString()} />
 
+      {/* ---- Sektörler ve temalar ----
+           İKİ KOLONUN ÜSTÜNDE, KENDİ SATIRINDA (28 Eylül). Önce kolonların
+           altındaydı ve 5.580 piksellik sayfanın 3.470. pikselinde kalıyordu
+           (1440, ölçüldü); sahibi yukarı istedi. Kolonları ortadan bölmek
+           iki kolonun dengesini bozardı, bu yüzden bant kahramanın hemen
+           altında tam genişlikte bir satır. Kolonlar ölçülü
+           bir dengede (bant eklenmeden önce, misafir, açık tema: 1024'te
+           138, 1280'de 14, 1440'ta 31 piksel fark) ve bu bant hangi kolona
+           girse ötekinde kendi boyu kadar boşluk açardı. Tam genişlikte
+           kolonlara hiç dokunmuyor.
+           Seçim gerekçesi ve veri kaynağı `MarketTexture.tsx` başında. */}
+      <Panel
+        data-home-section="texture"
+        id="sektor-ve-tema"
+        aria-labelledby="sektor-ve-tema-baslik"
+        className={cn(textureStyles.band, styles.texture, "min-w-0 lg:col-span-2 lg:row-start-1")}
+      >
+        <div className={textureStyles.bandHead}>
+          <h2 id="sektor-ve-tema-baslik">{t.today.textureTitle}</h2>
+          <p>{t.today.textureNote}</p>
+        </div>
+        <Suspense fallback={<SectorRibbonSkeleton t={t} />}>
+          <SectorRibbon locale={locale} t={t} />
+        </Suspense>
+        <Suspense fallback={<ThemeSpotlightSkeleton locale={locale} t={t} />}>
+          <ThemeSpotlight locale={locale} t={t} />
+        </Suspense>
+      </Panel>
+
       {/* ================= Ana kolon =================
           `justify-between` KALKTI ve bu bir hata düzeltmesi. İki kolon da
           onu taşıyordu; ızgara satırı iki kolonu aynı yüksekliğe geriyor ve
@@ -340,7 +369,7 @@ export default async function TodayPage() {
           ve iki sütunlu bir düzende olması gereken de bu. */}
       <div
         data-col="main"
-        className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1"
+        className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2"
       >
 
         {/* Ön seans / akşam seansı hareketleri BURADAN KALKTI. Panel
@@ -435,7 +464,7 @@ export default async function TodayPage() {
           listen. Okunacak metin sol kolonda. */}
       <div
         data-col="side"
-        className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1"
+        className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-2"
       >
         {/* ENDEKS ŞERİDİ BURADAN MASTHEAD'E TAŞINDI. Dört endeks piyasanın
             MANŞET sayıları; yan kolonda bir gösterge tablosu satırıydılar,
@@ -546,30 +575,6 @@ export default async function TodayPage() {
         </div>
       </div>
 
-      {/* ---- Sektörler ve temalar ----
-           İKİ KOLONUN ALTINDA, KENDİ SATIRINDA (28 Eylül). Kolonlar ölçülü
-           bir dengede (bant eklenmeden önce, misafir, açık tema: 1024'te
-           138, 1280'de 14, 1440'ta 31 piksel fark) ve bu bant hangi kolona
-           girse ötekinde kendi boyu kadar boşluk açardı. Tam genişlikte
-           kolonlara hiç dokunmuyor; haber bandı bir satır aşağı iniyor.
-           Seçim gerekçesi ve veri kaynağı `MarketTexture.tsx` başında. */}
-      <Panel
-        data-home-section="texture"
-        id="sektor-ve-tema"
-        aria-labelledby="sektor-ve-tema-baslik"
-        className={cn(textureStyles.band, styles.texture, "min-w-0 lg:col-span-2 lg:row-start-2")}
-      >
-        <div className={textureStyles.bandHead}>
-          <h2 id="sektor-ve-tema-baslik">{t.today.textureTitle}</h2>
-          <p>{t.today.textureNote}</p>
-        </div>
-        <Suspense fallback={<SectorRibbonSkeleton t={t} />}>
-          <SectorRibbon locale={locale} t={t} />
-        </Suspense>
-        <Suspense fallback={<ThemeSpotlightSkeleton locale={locale} t={t} />}>
-          <ThemeSpotlight locale={locale} t={t} />
-        </Suspense>
-      </Panel>
 
       {/* ---- Öne çıkan haberler ----
            TAM GENİŞLİK BANT, KUTU DEĞİL. Haberler bir süre sol kolonda,

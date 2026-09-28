@@ -10,6 +10,10 @@ const en: typeof tr = {
   },
 
   nav: {
+    themes: "Themes",
+    moreGroupData: "Data and Screens",
+    moreGroupLearn: "Learn",
+    moreGroupRead: "Read",
     tickerPause: "Pause Ticker",
     tickerResume: "Resume Ticker",
     today: "Today",
@@ -307,8 +311,13 @@ const en: typeof tr = {
     sectorsHeading: "Sectors",
     sectorsLink: "Sector Table",
     themesLink: "All Themes",
-    strongestLastClose: "Strongest at Last Close",
-    weakestLastClose: "Weakest at Last Close",
+    sectorsWeight: "Market-Cap Weighted",
+    themesHeading: "Themes",
+    themesMeta: "Median of Members · Equal Weight",
+    strongestTheme: "Strongest Theme Today",
+    weakestTheme: "Weakest Theme Today",
+    strongestLastClose: "Strongest Theme at Last Close",
+    weakestLastClose: "Weakest Theme at Last Close",
   },
 
   calendar: {
