@@ -240,6 +240,13 @@ export function detectValueScale(rows: readonly RawHolding[]): 1 | 1000 {
 export function aggregateHoldings(rows: readonly RawHolding[], scale: 1 | 1000): Holding[] {
   const map = new Map<string, Holding>();
   for (const row of rows) {
+    /* TAHVİL (PRN) SAKLANMIYOR (28 Eylül). Satırda adet yerine anapara
+       duruyor; Howard Marks'ın Oaktree'si gibi kredi fonlarında dönüştürülebilir
+       tahviller portföy toplamını şişiriyor ve hisse listesine "hisse" gibi
+       giriyordu. Ekran bir HİSSE portföyü anlatıyor; sahibi tahvilleri
+       göstermemeyi seçti. Okuma katmanı eski satırları da süzüyor
+       (lib/investor-data.ts → STOCK_ONLY). */
+    if (row.amountType === "PRN") continue;
     const position = row.putCall ?? "long";
     const key = `${row.cusip}|${position}`;
     const current = map.get(key);

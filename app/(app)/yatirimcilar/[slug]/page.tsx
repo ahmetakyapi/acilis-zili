@@ -19,7 +19,7 @@ import { getInvestorDetail } from "@/lib/investor-data";
 import { INVESTOR_SLUGS, investorBySlug, investorFirm, investorPortrait, type Investor } from "@/lib/investors";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
-import { formatMoneyCompact } from "@/lib/utils";
+import { formatMoneyCompact, plural } from "@/lib/utils";
 
 /**
  * Ünlü yatırımcının sayfası (28 Eylül).
@@ -106,10 +106,26 @@ export default async function InvestorPage(props: PageProps<"/yatirimcilar/[slug
             figureMeta={
               <>
                 <span className="numeral">{quarterLabel(detail.period, ti)}</span>
-                <span className="numeral">{ti.positions.replace("{count}", String(detail.diff.positions.length))}</span>
+                <span className="numeral">{plural(detail.diff.positions.length, ti.positionsOne, ti.positions).replace("{count}", String(detail.diff.positions.length))}</span>
               </>
             }
-            note={closed ? ti.closedNote : undefined}
+            note={
+              closed
+                ? (investor.closedOn ? ti.closedNote : ti.closedNoteUndated)
+                    .replace("{firm}", investorFirm(investor, locale))
+                    .replace(
+                      "{date}",
+                      investor.closedOn
+                        ? new Intl.DateTimeFormat(locale === "en" ? "en-US" : "tr-TR", {
+                            month: "long",
+                            year: "numeric",
+                            timeZone: "UTC",
+                          }).format(new Date(`${investor.closedOn}-15T12:00:00Z`))
+                        : "",
+                    )
+                    .replace("{quarter}", quarterLabel(detail.period, ti))
+                : undefined
+            }
           />
           <FundStrip detail={detail} locale={locale} t={ti} />
           {ark && <ArkTrades activity={ark} locale={locale} t={t} />}

@@ -233,7 +233,7 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
           <ExtremeCard
             card={top}
             label={
-              !session
+              !session || board.phase === "lastClose"
                 ? t.today.strongestLastClose
                 : board.phase === "pre-market"
                   ? t.today.strongestPreMarket
@@ -247,7 +247,7 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
           <ExtremeCard
             card={bottom}
             label={
-              !session
+              !session || board.phase === "lastClose"
                 ? t.today.weakestLastClose
                 : board.phase === "pre-market"
                   ? t.today.weakestPreMarket

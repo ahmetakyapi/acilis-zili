@@ -931,6 +931,7 @@ export function TaxCalculator({
                         value={buyRow?.date ?? ""}
                         min={TCMB_MIN_DATE}
                         max={today}
+                        today={today}
                         onChange={(value) => editSimple("buy", { date: value })}
                         locale={locale}
                       />
@@ -958,6 +959,7 @@ export function TaxCalculator({
                         value={sellRow?.date ?? ""}
                         min={buyRow?.date && isIsoDate(buyRow.date) ? buyRow.date : TCMB_MIN_DATE}
                         max={today}
+                        today={today}
                         aria-invalid={simpleSellBeforeBuy || undefined}
                         onChange={(value) => editSimple("sell", { date: value })}
                         locale={locale}
@@ -1068,6 +1070,7 @@ export function TaxCalculator({
                             value={row.date}
                             min={TCMB_MIN_DATE}
                             max={today}
+                            today={today}
                             onChange={(value) => {
                               updateTrade(row.id, { date: value });
                               if (row.side === "sell") followSellYear(value);
@@ -1330,6 +1333,7 @@ export function TaxCalculator({
                           value={row.date}
                           min={TCMB_MIN_DATE}
                           max={today}
+                          today={today}
                           onChange={(value) => updateDividend(row.id, { date: value })}
                           locale={locale}
                         />

@@ -100,7 +100,8 @@ test("pencere: açılış öncesi 'Günün' değil", () => {
   assert.equal(themePhase("session", "pre-market"), "pre-market");
   assert.equal(themePhase("session", "regular"), "day");
   assert.equal(themePhase("session", "after-hours"), "day");
-  assert.equal(themePhase("session", "closed"), "day");
+  /* Hafta sonu ve gece: yüzde seans gününe ait ama o an bir seans yok. */
+  assert.equal(themePhase("session", "closed"), "lastClose");
   assert.equal(themePhase("lastClose", "pre-market"), "lastClose");
   assert.equal(themePhase(null, "regular"), null);
 });

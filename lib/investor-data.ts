@@ -53,6 +53,11 @@ function swallowed(source: string, error: unknown): void {
    Ortak parçalar
    -------------------------------------------------------------------------- */
 
+/* Yalnızca hisse satırları. Tahviller (PRN) artık senkronda saklanmıyor
+   (lib/providers/sec-13f.ts → aggregateHoldings); bu koşul ondan ÖNCE
+   yazılmış satırları süzüyor. Dosya indeksindeki toplamlar da aynı koşulla. */
+const STOCK_ONLY = eq(investorHoldings.amountType, "SH");
+
 type IndexedFiling = FilingRecord & { investor: string; longValue: number; longCount: number };
 
 /** Bütün dosyalar, dosya başına hisse (uzun) toplamıyla. ~150 satır. */
@@ -68,8 +73,8 @@ async function readFilingIndex(): Promise<IndexedFiling[]> {
       period: investorFilings.period,
       filedAt: investorFilings.filedAt,
       valueScaled: investorFilings.valueScaled,
-      longValue: sql<number>`coalesce((select sum(h.value) from investor_holdings h where h.filing_id = ${investorFilings.id} and h.position = 'long'), 0)`,
-      longCount: sql<number>`(select count(*) from investor_holdings h where h.filing_id = ${investorFilings.id} and h.position = 'long')`,
+      longValue: sql<number>`coalesce((select sum(h.value) from investor_holdings h where h.filing_id = ${investorFilings.id} and h.position = 'long' and h.amount_type = 'SH'), 0)`,
+      longCount: sql<number>`(select count(*) from investor_holdings h where h.filing_id = ${investorFilings.id} and h.position = 'long' and h.amount_type = 'SH')`,
     })
     .from(investorFilings);
   return rows.map((row) => ({ ...row, longValue: Number(row.longValue), longCount: Number(row.longCount) }));
@@ -90,7 +95,7 @@ async function readHoldings(filingIds: string[]): Promise<Map<string, HoldingRec
       value: investorHoldings.value,
     })
     .from(investorHoldings)
-    .where(inArray(investorHoldings.filingId, filingIds));
+    .where(and(inArray(investorHoldings.filingId, filingIds), STOCK_ONLY));
   for (const { filingId, ...holding } of rows) {
     const list = map.get(filingId) ?? [];
     list.push(holding);
@@ -497,6 +502,7 @@ const loadStockInvestors = unstable_cache(
                   inArray(investorHoldings.filingId, ids),
                   inArray(investorHoldings.cusip, [...cusips]),
                   eq(investorHoldings.position, "long"),
+                  STOCK_ONLY,
                 ),
               )
           : [];

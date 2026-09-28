@@ -130,6 +130,7 @@ type HeroSummaryData = {
   falling: number;
   session: boolean;
   preMarket: boolean;
+  lastClose: boolean;
   leader: ThemeCard | null;
   laggard: ThemeCard | null;
 };
@@ -145,6 +146,7 @@ async function LiveHeroSummary({ locale, t }: { locale: Locale; t: Dictionary })
         falling: comparable.filter((card) => card.median! < 0).length,
         session: scaleBasis === "session",
         preMarket: board.phase === "pre-market",
+        lastClose: board.phase === "lastClose",
         leader: bySlug(board.leader),
         laggard: bySlug(board.laggard),
       }}
@@ -184,7 +186,7 @@ function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; 
       <div className={styles.heroStat}>
         <span className={styles.heroStatLabel}>
           {t.themes.themesRising}
-          {summary && !summary.session
+          {summary && (!summary.session || summary.lastClose)
             ? ` · ${t.themes.medianLastClose}`
             : summary?.preMarket
               ? ` · ${t.themes.medianPreMarket}`
@@ -196,8 +198,14 @@ function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; 
         <span className={styles.heroStatLabel}>{t.themes.themesFalling}</span>
         {count(summary?.falling, "down")}
       </div>
-      {extreme(summary?.leader ?? null, summary?.preMarket ? t.themes.strongestPre : t.themes.strongest)}
-      {extreme(summary?.laggard ?? null, summary?.preMarket ? t.themes.weakestPre : t.themes.weakest)}
+      {extreme(
+        summary?.leader ?? null,
+        summary?.preMarket ? t.themes.strongestPre : summary?.lastClose ? t.themes.strongestClose : t.themes.strongest,
+      )}
+      {extreme(
+        summary?.laggard ?? null,
+        summary?.preMarket ? t.themes.weakestPre : summary?.lastClose ? t.themes.weakestClose : t.themes.weakest,
+      )}
     </div>
   );
 }
@@ -260,11 +268,12 @@ function ThemeGallery({ board, locale, t }: { board: ThemeBoard; locale: Locale;
         const wide = span >= WIDE_SPAN;
         const neutral = card.basis !== "session";
         const pre = board.phase === "pre-market";
+        const closed = board.phase === "lastClose";
         const flag =
           card.theme.slug === board.leader
-            ? pre ? t.themes.strongestPre : t.themes.strongest
+            ? pre ? t.themes.strongestPre : closed ? t.themes.strongestClose : t.themes.strongest
             : card.theme.slug === board.laggard
-              ? pre ? t.themes.weakestPre : t.themes.weakest
+              ? pre ? t.themes.weakestPre : closed ? t.themes.weakestClose : t.themes.weakest
               : null;
         const katilim = card.theme.symbols === "katilim";
         return (

@@ -7,7 +7,7 @@ import type { ArkActivity } from "@/lib/ark-data";
 import type { ArkTrade } from "@/lib/ark-view";
 import { getSymbolNames } from "@/lib/data";
 import type { Dictionary } from "@/lib/i18n";
-import { formatEtDateMedium, formatMoneyCompact } from "@/lib/utils";
+import { formatEtDateMedium, formatMoneyCompact, plural } from "@/lib/utils";
 import { formatShares } from "./format";
 import styles from "./Investors.module.css";
 
@@ -163,7 +163,7 @@ function TradeRow({
       </span>
       <span className={styles.moveFigures}>
         <b className="numeral">{formatMoneyCompact(trade.value, locale)}</b>
-        <small className="numeral">{ta.shares.replace("{count}", formatShares(trade.shares, locale))}</small>
+        <small className="numeral">{plural(trade.shares, ta.sharesOne, ta.shares).replace("{count}", formatShares(trade.shares, locale))}</small>
       </span>
     </>
   );

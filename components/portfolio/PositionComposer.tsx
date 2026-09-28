@@ -284,6 +284,7 @@ export function PositionComposer({
             value={date}
             min={minDate}
             max={today}
+            today={today}
             aria-invalid={visible("boughtAt") ? true : undefined}
             onValidityChange={setDateTextValid}
             onChange={(value) => {

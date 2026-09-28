@@ -8,7 +8,7 @@ import type { Dictionary } from "@/lib/i18n";
 import { isBuy, isSell, type CongressDetail as CongressDetailData, type TradeRow } from "@/lib/investor-data";
 import { parseTradeDetail } from "@/lib/investor-view";
 import { ptrUrl } from "@/lib/providers/house-ptr";
-import { cn, formatEtDateMedium } from "@/lib/utils";
+import { cn, formatEtDateMedium, plural } from "@/lib/utils";
 import { amountRange, ownerLabel, tradeDetailText, txLabel, txTone } from "./format";
 import styles from "./Investors.module.css";
 
@@ -114,13 +114,13 @@ export function CongressBody({
                   {row.buys > 0 && (
                     <span data-tone="up">
                       <i data-motion-draw="line" style={{ width: `${(row.buys / peak) * 100}%` }} aria-hidden />
-                      <b className="numeral">{t.buys.replace("{count}", String(row.buys))}</b>
+                      <b className="numeral">{plural(row.buys, t.buysOne, t.buys).replace("{count}", String(row.buys))}</b>
                     </span>
                   )}
                   {row.sells > 0 && (
                     <span data-tone="down">
                       <i data-motion-draw="line" style={{ width: `${(row.sells / peak) * 100}%` }} aria-hidden />
-                      <b className="numeral">{t.sells.replace("{count}", String(row.sells))}</b>
+                      <b className="numeral">{plural(row.sells, t.sellsOne, t.sells).replace("{count}", String(row.sells))}</b>
                     </span>
                   )}
                 </span>
@@ -143,7 +143,7 @@ export function CongressBody({
       </Panel>
 
       <Panel className={styles.tablePanel}>
-        <PanelHeader title={t.tradesTitle} meta={t.tradesCount.replace("{count}", String(detail.trades.length))} />
+        <PanelHeader title={t.tradesTitle} meta={plural(detail.trades.length, t.tradesCountOne, t.tradesCount).replace("{count}", String(detail.trades.length))} />
         <TradeTable trades={detail.trades} known={known} locale={locale} t={t} />
       </Panel>
 

@@ -28,6 +28,7 @@ import {
   plural,
 } from "@/lib/utils";
 import styles from "./depth.module.css";
+import { FoldToggle } from "./FoldToggle";
 
 /** Pencere — Form 4 iki iş günü içinde dosyalanıyor; 90 gün bir çeyrek. */
 const INSIDER_WINDOW_DAYS = 90;
@@ -37,6 +38,8 @@ const SENTIMENT_MONTHS = 12;
 const SENTIMENT_LOOKBACK_DAYS = 400;
 /** Tabloda kaç işlem — gerisi "N İşlem Daha" künyesinde sayılıyor. */
 const INSIDER_ROWS = 10;
+/** Dar ekranda açık gelen satır — gerisi `FoldToggle` ile açılıyor. */
+const INSIDER_FOLD = 5;
 /** MSPR'nin mutlak tavanı — çubuk bu değerde dolu. */
 const MSPR_MAX = 100;
 
@@ -112,11 +115,15 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
     return owner ? roleLine(owner, locale, roleLabels) : null;
   };
   const hasRoles = shown.some((trade) => roleOf(trade.name) !== null);
+  /* Geniş ekranda iki sütun ancak iki taraf da doluysa: kayıt yoksa (yalnız
+     MSPR) sol sütun tek başına kalır, sağı boş bir yarım panel olurdu. */
+  const split = shown.length > 0;
 
   return (
     <Panel className={styles.panel}>
       {header}
-      <div className={styles.body}>
+      <div className={cn(styles.body, styles.insiderBody)} data-split={split ? "" : undefined}>
+        <div className={styles.insiderAside}>
         {hasOpenMarket ? (
           <dl className={styles.readings}>
             <div className={styles.reading}>
@@ -174,10 +181,18 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
             </div>
           </div>
         )}
+        </div>
 
-        {shown.length > 0 && (
+        {split && (
+          <div className={styles.insiderRecords}>
+          <FoldToggle
+            id={`insider-fold-${symbol}`}
+            hiddenCount={shown.length - INSIDER_FOLD}
+            more={d.insiderShowMore.replace("{n}", String(shown.length - INSIDER_FOLD))}
+            less={t.common.less}
+          >
           <ScrollEdges
-            className="scroll-x mt-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+            className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
             tabIndex={0}
             role="region"
             aria-label={d.insiderTitle}
@@ -194,18 +209,36 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
                 </tr>
               </thead>
               <tbody>
-                {shown.map((trade) => (
-                  <InsiderRow key={trade.key} trade={trade} role={roleOf(trade.name)} locale={locale} t={t} />
+                {shown.map((trade, index) => (
+                  <InsiderRow
+                    key={trade.key}
+                    trade={trade}
+                    role={roleOf(trade.name)}
+                    folded={index >= INSIDER_FOLD}
+                    locale={locale}
+                    t={t}
+                  />
                 ))}
               </tbody>
             </table>
           </ScrollEdges>
-        )}
+          </FoldToggle>
         {trades.length > shown.length && (
           <p className="numeral mt-2 text-tiny text-muted">
-            {d.insiderMore.replace("{n}", String(trades.length - shown.length))}
+            {/* CÜMLE, SAYAÇ DEĞİL (28 Eylül). "10 İşlem Daha" künyesi dar
+                ekranda katlama düğmesinin ("5 İşlem Daha Göster") hemen
+                altına düşüyordu; biri katlanan satırları, öteki hiç
+                basılmayanları sayıyordu ve yan yana aynı şeyi söylüyor
+                gibi okunuyordu. */}
+            {d.insiderMore
+              .replace("{shown}", String(shown.length))
+              .replace("{n}", String(trades.length - shown.length))}
           </p>
         )}
+          </div>
+        )}
+
+        <div className={styles.insiderNotes}>
 
         <p className={styles.note}>{d.insiderNote}</p>
         {hasRoles && <p className={styles.note}>{d.insiderRolesNote}</p>}
@@ -221,6 +254,7 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
           locale={locale}
           className={styles.stamp}
         />
+        </div>
       </div>
     </Panel>
   );
@@ -229,18 +263,21 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
 function InsiderRow({
   trade,
   role,
+  folded,
   locale,
   t,
 }: {
   trade: InsiderTrade;
   role: string | null;
+  /** Dar ekranda katlı gelen satır (`FoldToggle`). */
+  folded: boolean;
   locale: Locale;
   t: Dictionary;
 }) {
   const open = !trade.derivative && isOpenMarket(trade.code);
   const name = displayInsiderName(trade.name);
   return (
-    <tr>
+    <tr data-fold={folded ? "" : undefined}>
       {/* Özgün SEC adı `title`da: okunuş için sıra çevrilmiş olabilir. */}
       <td>
         <span className={styles.nameCell} title={trade.name}>{name}</span>

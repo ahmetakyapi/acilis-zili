@@ -20,7 +20,7 @@ import {
   type SkippedLine,
 } from "@/lib/tax-import";
 import type { Locale } from "@/lib/i18n/config";
-import { cn, isValidSymbol } from "@/lib/utils";
+import { cn, isValidSymbol, plural } from "@/lib/utils";
 import { PdfPasswordError, pdfLines } from "@/lib/tax-import/pdf-text";
 import type { TaxLabels } from "./TaxCalculator";
 import type { DividendRow, TradeRow } from "./tax-ui";
@@ -538,7 +538,7 @@ function SkippedList({ skipped, labels }: { skipped: SkippedLine[]; labels: TaxL
     <details className={cn(styles.disclosure, styles.skipped)}>
       <summary>
         <CaretDown size={14} weight="bold" aria-hidden />
-        {L.skippedCount.replace("{count}", String(skipped.length))}
+        {plural(skipped.length, L.skippedCountOne, L.skippedCount).replace("{count}", String(skipped.length))}
       </summary>
       <div>
         <p className={styles.help}>{L.skippedHint}</p>
@@ -658,6 +658,7 @@ function TradeTable({
                       value={row.date}
                       min={TCMB_MIN_DATE}
                       max={today}
+                      today={today}
                       aria-label={labels.date}
                       aria-invalid={flags.includes("noDate") || flags.includes("dateRange") || undefined}
                       onChange={(date) => edit(row.key, { date })}
@@ -755,6 +756,7 @@ function DividendTable({
                       value={row.date}
                       min={TCMB_MIN_DATE}
                       max={today}
+                      today={today}
                       aria-label={labels.paymentDate}
                       onChange={(date) => edit(row.key, { date })}
                     />

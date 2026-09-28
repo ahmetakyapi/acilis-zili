@@ -106,8 +106,15 @@ export function sameSessionMoves(rows: readonly MoveRow[]): MoveSet | null {
  * oradaki gibi piyasa durumundan okunuyor, iki panel aynı anda aynı
  * kelimeyi kullansın diye.
  *
- * Kapanış sonrası ve hafta sonu "Günün" kalıyor: yüzde seans gününün
- * kapanışına kadar (kapanış sonrası işlem dahil) bütün günü anlatıyor.
+ * Kapanış sonrası "Günün" kalıyor: yüzde seans gününün kapanışına kadar
+ * (kapanış sonrası işlem dahil) bütün günü anlatıyor ve okuyucu hâlâ o
+ * günün akşamında.
+ *
+ * PİYASA KAPALIYKEN "SON KAPANIŞ" (28 Eylül). Hafta sonu, tatil ve gece
+ * (20:00 ET, Türkiye'de 03:00 sonrası) yüzdeler seans gününe ait, yani
+ * küme "session" sayılıyor; ama başlık pazar günü "Günün En Güçlü Teması"
+ * diyordu ve o gün bir seans yok. Ana sayfanın hareket paneli de aynı
+ * pencerede "Son Kapanış" diline geçiyor (DayMovers).
  */
 export type ThemePhase = "day" | "pre-market" | "lastClose";
 
@@ -116,7 +123,7 @@ export function themePhase(
   session: MarketSession,
 ): ThemePhase | null {
   if (basis === null) return null;
-  if (basis === "lastClose") return "lastClose";
+  if (basis === "lastClose" || session === "closed") return "lastClose";
   return session === "pre-market" ? "pre-market" : "day";
 }
 

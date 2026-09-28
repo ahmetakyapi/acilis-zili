@@ -7,6 +7,9 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import type { StockInvestors } from "@/lib/investor-data";
 import { investorBySlug, investorFirm } from "@/lib/investors";
 import { cn, formatEtDateMedium, formatMoneyCompact, formatPercent } from "@/lib/utils";
+import type { CSSProperties } from "react";
+import depth from "./depth.module.css";
+import { FoldToggle } from "./FoldToggle";
 
 /**
  * "Ünlü Yatırımcılar" — bu hisseyi son bildirimlerinde tutan yatırımcılar
@@ -18,9 +21,17 @@ import { cn, formatEtDateMedium, formatMoneyCompact, formatPercent } from "@/lib
  * geç gelen bir blok altındaki haberleri itmiyor.
  *
  * Yeri içeriden işlemlerin hemen altı: ikisi de "bu hisseyi kim alıp
- * satıyor" sorusu, biri yönetimin öteki ünlü yatırımcıların.
+ * satıyor" sorusu, biri yönetimin öteki ünlü yatırımcıların. Bir süre
+ * Şirket Özeti'nin altındaydı; sahibi "çok üstte" buldu ve Gündem'e indi.
+ *
+ * KOMPAKT (28 Eylül): geniş ekranda sahipler ve Kongre işlemleri iki
+ * sütun, dar ekranda ilk dört sahip açık, gerisi `FoldToggle` ile.
  */
 const MAX_HOLDERS = 8;
+/** Dar ekranda açık gelen sahip sayısı. */
+const HOLDER_FOLD = 4;
+/** Katlama anahtarının iç payı — satırların metin hattı (liste 10 + satır 8). */
+const FOLD_INSET = "18px";
 
 export function InvestorsPanel({ data, locale, t }: { data: StockInvestors; locale: Locale; t: Dictionary }) {
   const ti = t.investors;
@@ -29,13 +40,24 @@ export function InvestorsPanel({ data, locale, t }: { data: StockInvestors; loca
     <Panel>
       <PanelHeader title={ti.panelTitle} action={<PanelLink href="/yatirimcilar">{ti.panelAll}</PanelLink>} />
       {holders.length > 0 && (
-        <ul className={styles.holderList} data-motion-stagger>
-          {holders.map((holder) => {
+        <div style={{ "--fold-inset": FOLD_INSET } as CSSProperties}>
+        <FoldToggle
+          id="investors-fold"
+          hiddenCount={holders.length - HOLDER_FOLD}
+          more={t.stockDepth.investorsShowMore.replace("{n}", String(holders.length - HOLDER_FOLD))}
+          less={t.common.less}
+        >
+        <ul
+          className={cn(styles.holderList, depth.holderGrid)}
+          style={{ "--rows": Math.ceil(holders.length / 2) } as CSSProperties}
+          data-motion-stagger
+        >
+          {holders.map((holder, index) => {
             const investor = investorBySlug(holder.slug);
             if (!investor) return null;
             const closed = investor.status === "closed";
             return (
-              <li key={holder.slug} className="min-w-0">
+              <li key={holder.slug} className="min-w-0" data-fold={index >= HOLDER_FOLD ? "" : undefined}>
                 <Link href={`/yatirimcilar/${holder.slug}`} prefetch={false} className={styles.holderRow}>
                   <Portrait investor={investor} size="sm" />
                   <span className={styles.holderId}>
@@ -67,11 +89,13 @@ export function InvestorsPanel({ data, locale, t }: { data: StockInvestors; loca
             );
           })}
         </ul>
+        </FoldToggle>
+        </div>
       )}
       {data.trades.length > 0 && (
         <div className={styles.holderTrades}>
           <h3 className={styles.holderTradesTitle}>{ti.panelCongress}</h3>
-          <ul>
+          <ul className={depth.tradeGrid}>
             {data.trades.map((trade) => {
               const investor = investorBySlug(trade.member);
               return (

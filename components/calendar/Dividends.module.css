@@ -42,3 +42,18 @@
 .yieldLine { padding:0 16px 12px; font-size:var(--text-small); color:var(--text-body); }
 .yieldLine b { color:var(--text-strong); }
 @media(min-width:640px) { .yieldLine { padding-inline:20px; } }
+
+/* ---- Tam genişlik (hisse sayfası, Bilançolar bölümünün dibi) ----
+   Panel değerleme ızgarasının yarım sütunundan tam genişliğe indi (28
+   Eylül). Dar düzen olduğu gibi kalınca son ödemeler 1200 piksellik bir
+   satıra yayılıyor, tarih ile tutar ekranın iki ucunda kalıyordu. Geniş
+   panelde yıl toplamları solda, son ödemeler sağda; ayrım saç teliyle.
+   Dar ekranda sarmal yok sayılıyor (`display:contents`). */
+.panelBody { display:contents; }
+@media(min-width:900px) {
+  .panelWide .panelBody { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); border-top:1px solid var(--line-soft); }
+  .panelWide .panelBody > .years { border-top:0; }
+  .panelWide .panelBody > .recent { border-top:0; border-left:1px solid var(--line-soft); }
+  .panelWide .panelBody > :only-child { grid-column:1 / -1; }
+  .panelWide .yieldLine { padding-top:12px; border-top:1px solid var(--line-soft); }
+}

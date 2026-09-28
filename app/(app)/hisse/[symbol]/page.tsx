@@ -445,13 +445,10 @@ export default async function StockPage(
         <StockSummary symbol={symbol} locale={locale} t={t} />
       </Suspense>
 
-      {/* ÜNLÜ YATIRIMCILAR ŞİRKET ÖZETİNİN HEMEN ALTINDA (28 Eylül). Panel
-          sayfanın en dibinde, Gündem'de içeriden işlemlerin altındaydı ve
-          sahibi onu hiç görmediği için "bu hisseyi tutan ünlü yatırımcıları
-          da gösterelim" diye istedi. Şimdi şirketi tanıtan bloğun ardında:
-          kim tutuyor, bu çeyrek ne yaptı. Veri ön okumada; tutan yoksa hiçbir
-          şey basılmıyor ve yer ayrılmıyor. */}
-      {famousInvestors && <InvestorsPanel data={famousInvestors} locale={locale} t={t} />}
+      {/* ÜNLÜ YATIRIMCILAR BURADAN GÜNDEM'E İNDİ (28 Eylül, sahibinin
+          isteği: "burası çok üstte olmuş"). Özetin hemen altında 423–851
+          piksel tutuyor ve Değerleme'yi ilk ekranların dışına itiyordu.
+          Yeni yeri İçeriden İşlemler'in hemen altı — aşağıda. */}
 
       {/* Bölüm menüsü ilk ekranı bölmez; özetin ardından doğal akışta gelir
           ve kaydırınca üstte kalır. 1280×720 ölçümünde eski menü/boşluk
@@ -570,7 +567,8 @@ export default async function StockPage(
           biter (`align-items:start`). Skor kartı yalnızca GICS sektörü
           bilinen endeks üyelerinde, teknik fotoğraf yalnızca teknik analiz
           listesinde OLMAYAN hisselerde (listedekiler üstte yazılı analizini
-          taşıyor). */}
+          taşıyor). Temettü bu ızgaradaydı; Bilançolar bölümüne indi
+          (aşağıda, sahibinin isteği). */}
       <div className={depth.grid}>
         {indexMemberOf(symbol)?.sector && (
           /* YEDEK YOK (28 Eylül denetimi): skor kartı sektör ölçüleri
@@ -588,9 +586,6 @@ export default async function StockPage(
             <TechnicalSnapshotPanel symbol={symbol} locale={locale} t={t} />
           </Suspense>
         )}
-        <Suspense fallback={<Skeleton className="h-[300px] w-full rounded-[20px]" />}>
-          <DividendPanel symbol={symbol} locale={locale} />
-        </Suspense>
       </div>
 
         </ScrollStage>
@@ -629,21 +624,50 @@ export default async function StockPage(
       </Panel>
 
       </Reveal>
+
+      {/* TEMETTÜ BİLANÇOLARIN ALTINDA (28 Eylül, sahibinin isteği). Değerleme
+          ızgarasında skor kartı ile analist değişiminin yanındaydı; oysa
+          temettü bir değerleme okuması değil, şirketin kâr dağıtımının
+          takvimi ve geçmişi — kârın açıklandığı bölümün devamı. Ayrı bir
+          bölüm AÇILMADI: SectionNav dört durakta kalıyor ve "Bilançolar"
+          çapası tabloyla birlikte temettüyü de kapsıyor. Tam genişlikte
+          durduğu için `wide`: yıl toplamları ile son ödemeler yan yana
+          (Dividends.module.css). */}
+      <Suspense fallback={<Skeleton className="h-[300px] w-full rounded-[20px]" />}>
+        <DividendPanel symbol={symbol} locale={locale} wide />
+      </Suspense>
       </section>
 
       <section id="stock-context" className={styles.chapter}>
         <ChapterHeading title={t.stock.chapterContext} />
-      {/* İÇERİDEN İŞLEMLER GÜNDEM'İN BAŞINDA, MERCEK'İN ÜSTÜNDE (28 Eylül,
-          sahibinin isteği). Önce benzer şirketlerin altındaydı; sıra artık
-          "şirketi kim tutuyor, kim alıp satıyor" (Ünlü Yatırımcılar özetin
-          altında, İçeriden İşlemler burada) → Mercek → Aynı Sektörden
-          Şirketler → Haberler. Yönetimin davranışı bir olayın anlatısından
-          önce okunuyor. */}
-      <Suspense fallback={<Skeleton className="h-[460px] w-full rounded-[20px]" />}>
+      {/* İÇERİDEN İŞLEMLER GÜNDEM'İN BAŞINDA, ÜNLÜ YATIRIMCILAR HEMEN
+          ALTINDA, İKİSİ DE MERCEK'İN ÜSTÜNDE (28 Eylül, sahibinin isteği).
+          Sıra: "şirketi kim alıp satıyor" (yönetim, sonra ünlü yatırımcılar
+          ve Kongre) → Mercek → Aynı Sektörden Şirketler → Haberler.
+          Yönetimin ve büyük elin davranışı bir olayın anlatısından önce
+          okunuyor.
+
+          GÜNDEM KOMPAKT (28 Eylül, "aşırı uzun olmuş"). Ölçüldü, bölümün
+          toplam boyu (NVDA, açık tema; yatırımcılar paneli henüz özetin
+          altındayken): 1280'de 2678, 390'da 3395 piksel — en büyük parça
+          İçeriden İşlemler (1105 / 1458). Yatırımcılar paneli (751 / 851)
+          eski düzeniyle buraya inseydi bölüm 3449 / 4262 olacaktı.
+          Yapılanlar panellerin kendi yorumlarında: geniş ekranda içeriden
+          işlemler iki sütun (ölçüler + MSPR + künyeler solda, kayıtlar
+          sağda), yatırımcılar ve Kongre işlemleri iki sütun, haber
+          satırları sıkı; telefonda okumalar satır satır, uzun listelerin
+          (işlemler 5, yatırımcılar 4, benzer şirketler 5) fazlası katlı ve
+          "N … Daha Göster" ile açılıyor (JS'siz, `FoldToggle`). Sonuç,
+          yatırımcılar DAHİL: NVDA 1280'de 2640, 390'da 3513 piksel
+          (İçeriden İşlemler 740 / 1076, Ünlü Yatırımcılar 459 / 753);
+          MU 3121 → 2481 ve 3911 → 3194. */}
+      <Suspense fallback={<Skeleton className="h-[600px] w-full rounded-[20px] max-[1099px]:h-[900px]" />}>
         <InsiderPanel symbol={symbol} locale={locale} t={t} />
       </Suspense>
 
-      {/* MERCEK GEÇMİŞ BİLANÇOLARIN ALTINDA, İÇERİDEN İŞLEMLERİN ARDINDA. Sıralama kodun
+      {famousInvestors && <InvestorsPanel data={famousInvestors} locale={locale} t={t} />}
+
+      {/* MERCEK GEÇMİŞ BİLANÇOLARIN ALTINDA, ÜNLÜ YATIRIMCILARIN ARDINDA. Sıralama kodun
           kendi gerekçesini takip ediyor: analiz bir çeyreğin okunmuş hâli,
           geçmiş bilançolar o çeyreklerin tablosu — ikisi aynı malzeme ve
           yan yana durmalı. Mercek ise bir olayın anlatısı, yani bir adım

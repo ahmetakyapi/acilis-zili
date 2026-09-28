@@ -55,8 +55,12 @@ export async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }
 
   const extended =
     status.session === "pre-market" || status.session === "after-hours";
+  /* Piyasa kapalıyken (gece, hafta sonu, tatil) liste son seansın
+     kapanışı; "Günün" pazar günü var olmayan bir seansı söylüyordu. */
   const title = !extended
-    ? t.today.dayMovers
+    ? status.session === "closed"
+      ? t.today.dayMoversClosed
+      : t.today.dayMovers
     : status.session === "pre-market"
       ? t.today.preMarketMovers
       : t.today.afterHoursMovers;

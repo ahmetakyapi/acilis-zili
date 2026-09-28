@@ -105,9 +105,11 @@ export function InvestorRoster({
                       <span className={styles.capitalInline} aria-hidden>
                         <Portrait investor={segment.investor} size="chip" />
                         {pct >= INLINE_NAME_SHARE && (
-                          <span className={styles.capitalInlineName}>{segment.investor.name}</span>
+                          <>
+                            <span className={styles.capitalInlineName}>{segment.investor.name}</span>
+                            <b className="numeral">{formatPercentPlain(pct, locale, 0)}</b>
+                          </>
                         )}
-                        <b className="numeral">{formatPercentPlain(pct, locale, 0)}</b>
                       </span>
                     )}
                     <span className={styles.capitalTip} aria-hidden>
@@ -127,8 +129,18 @@ export function InvestorRoster({
             })()}
           </div>
           <ol className={styles.capitalLegend}>
+            {/* HER SAYI TEK YERDE (28 Eylül). Adını ve payını şeridin içinde
+                taşıyan dilim lejantta tekrar ediliyordu: "Warren Buffett %60"
+                alt alta iki kez. Artık ad + pay ya şeritte ya lejantta; orta
+                boy dilim şeritte yalnızca portreyle, adı ve payı lejantta.
+                Telefonda şerit yalnızca ilk dilimin adını basıyor, o yüzden
+                orada gizlenen lejant satırı yalnızca ilk sıradaki. */}
             {named.map((segment, index) => (
-              <li key={segment.investor.slug} data-rank={index}>
+              <li
+                key={segment.investor.slug}
+                data-rank={index}
+                data-inline={share(segment.value) >= INLINE_NAME_SHARE || undefined}
+              >
                 <Link href={`/yatirimcilar/${segment.investor.slug}`} prefetch={false} className={styles.capitalItem}>
                   <Portrait investor={segment.investor} size="chip" />
                   <span className={styles.capitalName}>{segment.investor.name}</span>

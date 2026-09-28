@@ -25,7 +25,7 @@ import {
   type RowFlag,
 } from "@/lib/tax-import";
 import { PdfPasswordError, pdfLines } from "@/lib/tax-import/pdf-text";
-import { cn, formatPrice, isValidSymbol } from "@/lib/utils";
+import { cn, formatPrice, isValidSymbol, plural } from "@/lib/utils";
 import type { PortfolioLabels } from "./PortfolioWorkbench";
 import styles from "./Workbench.module.css";
 
@@ -364,7 +364,7 @@ export function PortfolioImport({
           {broker !== null && <CheckCircle size={15} weight="fill" aria-hidden />}
           {brokerName}
         </span>
-        <span className="numeral text-small text-muted">{L.tradesCount.replace("{n}", String(rows.length))}</span>
+        <span className="numeral text-small text-muted">{plural(rows.length, L.tradesCountOne, L.tradesCount).replace("{n}", String(rows.length))}</span>
         <span className="numeral text-small text-muted">{L.selectedCount.replace("{n}", String(selectedTrades.length))}</span>
         <button type="button" className={cn(styles.linkButton, "ml-auto")} onClick={() => inputRef.current?.click()}>
           {L.another}

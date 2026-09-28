@@ -16,7 +16,7 @@ import { getI18n } from "@/lib/i18n";
 import { getInvestorOverview } from "@/lib/investor-data";
 import { investorBySlug } from "@/lib/investors";
 import { pageMetadata } from "@/lib/page-meta";
-import { cn, formatEtDateMedium, formatMoneyCompact, NO_VALUE } from "@/lib/utils";
+import { cn, formatEtDateMedium, formatMoneyCompact, NO_VALUE, plural } from "@/lib/utils";
 
 export const generateMetadata = pageMetadata({
   path: "/yatirimcilar",
@@ -114,7 +114,7 @@ export default async function InvestorsPage() {
           <section className={styles.cardsSection} aria-labelledby="investors-cards">
             <h2 id="investors-cards" className={styles.sectionTitle}>
               {ti.cardsTitle}
-              <span className="numeral">{ti.investorsCount.replace("{count}", String(overview.cards.length))}</span>
+              <span className="numeral">{plural(overview.cards.length, ti.investorsCountOne, ti.investorsCount).replace("{count}", String(overview.cards.length))}</span>
             </h2>
             <ul className={styles.cards} data-motion-stagger>
               {overview.cards.map((card) => {

@@ -117,6 +117,34 @@ function bandLabel(score: number, t: Dictionary) {
   return labels[sentimentBand(score).key];
 }
 
+/** Bandın bir cümlelik anlamı. "Korku" tek başına bir şey söylemiyordu
+    (28 Eylül, sahibinin sorusu: "korku ne demek?"). */
+function bandNote(score: number, t: Dictionary) {
+  const x = t.marketExtras;
+  const notes: Record<(typeof SENTIMENT_BANDS)[number]["key"], string> = {
+    extremeFear: x.bandNoteExtremeFear,
+    fear: x.bandNoteFear,
+    neutral: x.bandNoteNeutral,
+    greed: x.bandNoteGreed,
+    extremeGreed: x.bandNoteExtremeGreed,
+  };
+  return notes[sentimentBand(score).key];
+}
+
+/** Göstergenin ne ölçtüğü, kısa. Ad ("Piyasa Genişliği") okuyucuya
+    neyin sayıldığını söylemiyordu. */
+function componentHint(key: SentimentKey, t: Dictionary) {
+  const x = t.marketExtras;
+  const hints: Record<SentimentKey, string> = {
+    vix: x.hintVix,
+    momentum: x.hintMomentum.replace("{days}", String(MOMENTUM_MA_DAYS)),
+    breadth: x.hintBreadth,
+    credit: x.hintCredit,
+    safeHaven: x.hintSafeHaven.replace("{days}", String(SAFE_HAVEN_DAYS)),
+  };
+  return hints[key];
+}
+
 function componentName(key: SentimentKey, t: Dictionary) {
   const x = t.marketExtras;
   const names: Record<SentimentKey, string> = {
@@ -174,6 +202,7 @@ export async function SentimentPulse({
   const overall = snapshot.overall;
   const rounded = overall !== null ? Math.round(overall) : null;
   const band = overall !== null ? bandLabel(overall, t) : null;
+  const note = overall !== null ? bandNote(overall, t) : null;
   const gaugeLabel =
     rounded !== null && band
       ? x.gaugeAria.replace("{score}", String(rounded)).replace("{band}", band)
@@ -192,6 +221,7 @@ export async function SentimentPulse({
     return (
       <Panel className={styles.pulsePanel}>
         <PanelHeader title={x.pulseTitle} action={<PanelLink href="/piyasalar#piyasa-nabzi">{x.pulseDetails}</PanelLink>} />
+        <p className={styles.pulseLead}>{x.pulseLead}</p>
         <div className={styles.pulseCompact}>
           <div className={styles.gaugeWrap}>
             <Gauge score={overall} label={gaugeLabel} size="compact" />
@@ -199,11 +229,15 @@ export async function SentimentPulse({
               <strong className="numeral">{rounded ?? NO_VALUE}</strong>
               <span>{band ?? x.pulseInsufficientShort}</span>
             </p>
+            {note && <p className={styles.gaugeNote}>{note}</p>}
           </div>
           <ul className={styles.pulseChips}>
             {snapshot.readings.map((reading) => (
               <li key={reading.key}>
-                <span>{componentName(reading.key, t)}</span>
+                <span className={styles.pulseChipName}>
+                  {componentName(reading.key, t)}
+                  <small>{componentHint(reading.key, t)}</small>
+                </span>
                 <b className="numeral">{Math.round(reading.score)}</b>
               </li>
             ))}
@@ -216,6 +250,7 @@ export async function SentimentPulse({
   return (
     <Panel id="piyasa-nabzi" className={styles.pulsePanel}>
       <PanelHeader title={x.pulseTitle} meta={x.pulseScale} />
+      <p className={styles.pulseLead}>{x.pulseLead}</p>
       <div className={styles.pulseBody}>
         <div className={styles.gaugeWrap}>
           <Gauge score={overall} label={gaugeLabel} size="full" />
@@ -223,6 +258,7 @@ export async function SentimentPulse({
             <strong className="numeral">{rounded ?? NO_VALUE}</strong>
             <span>{band ?? x.pulseInsufficientShort}</span>
           </p>
+          {note && <p className={styles.gaugeNote}>{note}</p>}
           <p className={styles.gaugeCaption}>
             {x.pulseAverageOf.replace("{n}", String(snapshot.readings.length))}
           </p>
@@ -233,7 +269,10 @@ export async function SentimentPulse({
             return (
               <li key={reading.key}>
                 <div className={styles.pulseRowHead}>
-                  <span className={styles.pulseName}>{componentName(reading.key, t)}</span>
+                  <span className={styles.pulseName}>
+                    {componentName(reading.key, t)}
+                    <small>{componentHint(reading.key, t)}</small>
+                  </span>
                   <b className="numeral">{score}</b>
                 </div>
                 {/* Puan rayı: 0 solda (korku), 100 sağda (iştah). Çubuk bir

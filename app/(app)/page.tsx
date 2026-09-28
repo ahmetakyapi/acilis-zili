@@ -1,5 +1,5 @@
 import { cache, Suspense } from "react";
-import { MotionExperience, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
+import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
 import { Countdown } from "@/components/today/Countdown";
 import { BellLedger } from "@/components/today/BellLedger";
@@ -256,50 +256,11 @@ export default async function TodayPage() {
         </div>
       </header>
 
-      {/* YÜZEN BÖLÜM DİZİNİ (24 Eylül). Bölüm bağlantıları gün akışının
-          başlığında dört sekmelik bir şeritti: 1440'ta 46, 390'da 48 piksel
-          tutuyor, ilk ekranda akışın başlığıyla yarışıyor ve kaydırınca
-          kayboluyordu — tam da gerekli olduğu an. Dizin artık akışta yer
-          tutmuyor (sabit bant, `variant="floating"`): kahraman başlığın
-          arkasına geçince açılıyor, altı durağı var ve geniş ekranda sağında
-          küçük bir geri sayım taşıyor; telefonda aşağı kaydırırken çekiliyor.
-          Etiketler sözlükten: bir dönem bu sayfadan canlıya geçici bir test
-          dizini sızmıştı, dizin yalnızca gerçek adlarla basılır. */}
-      <SectionNav
-        variant="floating"
-        revealAfter="piyasa-ozeti"
-        hideOnScrollDown
-        label={t.today.sectionIndex}
-        className={styles.sectionIndex}
-        items={[
-          { id: "gunun-akisi", label: t.today.navFlow },
-          /* Bant akışın hemen altına taşındı (28 Eylül); çubuk sayfanın
-             sırasını izliyor, yoksa okuyucu atlarken geri dönüyordu.
-             TELEFONDA SIRA FARKLI: 1024'ün altında bant Hareketler'in
-             ardına iniyor (TodayExperience.module.css, `texture` order:4),
-             yani Gündem ve Dünya'nın ALTINDA. Çubuk orada da sayfayı
-             izlesin diye aynı `order` sınıfları (28 Eylül denetimi; 390'da
-             ölçüldü: bant 2728, Gündem 1094, Dünya 1762). */
-          { id: "sektor-ve-tema", label: t.today.navThemes, className: styles.navNarrowThemes },
-          { id: "gundem", label: t.today.navBrief },
-          { id: "dunya-piyasalari", label: t.today.navMarkets },
-          { id: "mercek-seckisi", label: t.today.navStories, className: styles.navNarrowLater },
-          { id: "bugun-bilanco", label: t.today.navEarnings, className: styles.navNarrowLater },
-          { id: "haber-akisi", label: t.today.navNews, className: styles.navNarrowLater },
-        ]}
-        trail={
-          <span className={styles.miniCount}>
-            <span>{trading ? t.today.miniToClose : t.today.miniToOpen}</span>
-            <Countdown
-              targetIso={countdownTarget.toISOString()}
-              initialNowMs={nowMs}
-              units={{ d: t.today.countdownDays, h: t.today.countdownHours, m: t.today.countdownMinutes, s: t.today.countdownSeconds }}
-              unitsShort={{ d: t.today.unitD, h: t.today.unitH, m: t.today.unitM, s: t.today.unitS }}
-              label={countdownLabel}
-            />
-          </span>
-        }
-      />
+      {/* YÜZEN BÖLÜM DİZİNİ KALDIRILDI (28 Eylül, sahibinin isteği). Kahraman
+          başlığın arkasına geçince açılan sabit sekme bandıydı; sahibi
+          kaydırırken beliren bu yapıyı sevmedi. Bölüm çapaları (`id`)
+          yerinde: bağlantılar ve adres çubuğundaki #çapa çalışmaya devam
+          ediyor. */}
 
       <section id="gunun-akisi" className={styles.flowPanel}>
         {/* İSKELET GERÇEK ÖLÇÜYÜ AYIRIYOR. `h-28` yazıyordu, yani 112 piksel,

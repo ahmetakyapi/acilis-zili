@@ -257,45 +257,61 @@ export function MastheadNav({
               style={{ transformOrigin: alignEnd ? "top right" : "top left" }}
               onKeyDown={onPanelKeyDown}
               className={cn(
-                "masthead-dropdown absolute outline-none top-[calc(100%+0.75rem)] z-40 w-[38rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-overlay-surface p-2 shadow-(--shadow-overlay)",
+                "masthead-dropdown absolute outline-none top-[calc(100%+0.75rem)] z-40 w-[38rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-overlay-surface p-2.5 shadow-(--shadow-overlay)",
                 alignEnd
                   ? "right-[calc(var(--masthead-tab-px)-1rem)]"
                   : "left-[calc(var(--masthead-tab-px)-1rem)]",
               )}
             >
-              <div className="grid grid-cols-2 gap-x-2">
+              {/* SATIRLAR İKİ SÜTUNDA AYNI HATTA (28 Eylül). Solda beş satır,
+                  sağda iki grup ikişer satır; sağın ikinci grup başlığı kısa
+                  bir başlık + boşluk olduğu için sağdaki satırlar soldakilerin
+                  hattından kayıyor ve sağ sütunun altı boş kalıyordu. Artık
+                  satır boyu sabit (`--more-row`) ve bir sütunun İKİNCİ ve
+                  sonraki grup başlığı tam bir satır boyunda, yazısı dibinde:
+                  sol 1 başlık + 5 satır, sağ 1 başlık + 2 + 1 + 2 satır;
+                  "Haberler" "Ünlü Yatırımcılar"ın karşısında, iki sütunun
+                  dibi aynı çizgide. Taşan sekmelerin ayırıcısı da artık yer
+                  tutmuyor (satırın kendi çizgisi), yoksa hat yine kayardı. */}
+              <div className="masthead-more-grid grid grid-cols-2">
                 {[["data"], ["learn", "read"]].map((column) => (
-                  <div key={column.join("-")} className="flex min-w-0 flex-col gap-2">
-                    {MORE_GROUPS.filter((group) => column.includes(group)).map((group) => {
+                  <div key={column.join("-")} className="masthead-more-col flex min-w-0 flex-col">
+                    {MORE_GROUPS.filter((group) => column.includes(group)).map((group, groupIndex) => {
                       const groupRows = rows.filter((row) => row.group === group);
                       if (groupRows.length === 0) return null;
                       return (
                         <section key={group} aria-label={groups[group]}>
-                          <h3 className="px-3 pb-1 pt-2 text-tiny font-semibold text-muted">{groups[group]}</h3>
+                          <h3
+                            className={cn(
+                              "masthead-more-head flex items-end px-3 pb-1.5 text-tiny font-semibold text-muted",
+                              groupIndex === 0 ? "h-8" : "h-(--more-row)",
+                            )}
+                          >
+                            {groups[group]}
+                          </h3>
                           <ul className="flex flex-col">
                             {groupRows.map((row) => {
                               const current = activeRow?.href === row.href;
                               const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
                               const lastOverflow = overflow.length > 0 && row.href === overflow[overflow.length - 1].href;
                               return (
-                                <li key={row.href}>
+                                <li key={row.href} data-divider={lastOverflow || undefined}>
                                   <Link
                                     href={withLocale(row.href, locale)}
                                     prefetch={false}
                                     aria-current={current ? "page" : undefined}
                                     onClick={() => setOpenedAt(null)}
-                                    className="masthead-row relative flex min-h-13 items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-surface focus-visible:bg-surface"
+                                    className="masthead-row relative flex min-h-(--more-row) items-center gap-3 rounded-xl px-3 py-1.5 hover:bg-surface focus-visible:bg-surface"
                                   >
                                     {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={19} weight="duotone" /></span>}
                                     <span className="min-w-0 flex-1">
-                                      <span className={cn("block text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
+                                      <span className={cn("block truncate text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
                                         {row.label}
                                       </span>
-                                      <span className="mt-0.5 block text-tiny text-muted">{row.hint}</span>
+                                      <span className="mt-0.5 block truncate text-tiny text-muted">{row.hint}</span>
                                     </span>
                                     <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
                                   </Link>
-                                  {lastOverflow && <div aria-hidden className="mx-2.5 my-1 h-px bg-line-soft" />}
                                 </li>
                               );
                             })}

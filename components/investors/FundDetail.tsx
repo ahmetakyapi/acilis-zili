@@ -10,7 +10,7 @@ import type { FundDetail as FundDetailData } from "@/lib/investor-data";
 import type { HoldingRecord, Move, PositionView, SoldView } from "@/lib/investor-view";
 import type { Investor } from "@/lib/investors";
 import { secFilingUrl } from "@/lib/providers/sec-13f";
-import { cn, formatEtDateMedium, formatMoneyCompact, formatPercent } from "@/lib/utils";
+import { cn, formatEtDateMedium, formatMoneyCompact, formatPercent, plural } from "@/lib/utils";
 import { asOfLabel, formatShares, formatWeight, moveLabel, moveTone, quarterLabel } from "./format";
 import { InvestorTreemap, MAP_MAX, type MapPosition } from "./InvestorTreemap";
 import styles from "./Investors.module.css";
@@ -383,7 +383,6 @@ function PositionsTable({
       </th>
       <td className={cn("numeral", styles.num)}>
         {formatShares(position.amount, locale)}
-        {position.amountType === "PRN" && <small className={styles.cellNote}>{t.principal}</small>}
       </td>
       <td className={cn("numeral", styles.num)}>{formatMoneyCompact(position.value, locale)}</td>
       <td className={styles.colWeight}>
@@ -420,7 +419,7 @@ function PositionsTable({
   const rest = positions.slice(TABLE_ROWS);
   return (
     <Panel className={styles.tablePanel}>
-      <PanelHeader title={t.tableTitle} meta={t.positions.replace("{count}", String(positions.length))} />
+      <PanelHeader title={t.tableTitle} meta={plural(positions.length, t.positionsOne, t.positions).replace("{count}", String(positions.length))} />
       <div className={styles.tableScroll}>
         <table className={styles.table}>
           {head}
@@ -546,7 +545,7 @@ function HistoryPanel({
                 <i data-motion-draw="bar" style={{ height: `${Math.max(2, (point.longValue / peak) * 100)}%` }} />
               </span>
               <span className={cn("numeral", styles.historyLabel)}>{quarterLabel(point.period, t)}</span>
-              <small className="numeral">{t.positions.replace("{count}", String(point.positionCount))}</small>
+              <small className="numeral">{plural(point.positionCount, t.positionsOne, t.positions).replace("{count}", String(point.positionCount))}</small>
             </li>
           ))}
         </ol>

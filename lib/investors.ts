@@ -42,6 +42,12 @@ export type Investor = {
    * yatırımcıda "bu çeyrek aldı" gibi güncel bir dil kullanmıyor.
    */
   status?: "closed";
+  /**
+   * Kaydın kapandığı ay ("YYYY-MM"). Kapanış notu bundan ve son bildirimin
+   * döneminden kuruluyor; not bir dönem Scion'un adını ve tarihini sözlükte
+   * sabit taşıyordu, ikinci bir fon kapansa onun sayfasında Scion yazacaktı.
+   */
+  closedOn?: string;
   tagline: { tr: string; en: string };
   /**
    * Özgür lisanslı portresi olmayan kişinin görseli: hikâyesinden gelen bir
@@ -243,6 +249,7 @@ export const INVESTORS: readonly Investor[] = [
     kind: "13f",
     ciks: [1649339],
     status: "closed",
+    closedOn: "2025-11",
     tagline: {
       tr: "2008 konut krizini önceden gören, yoğun ve aykırı pozisyonlarıyla bilinen yönetici.",
       en: "The manager who foresaw the 2008 housing crash, known for concentrated contrarian bets.",

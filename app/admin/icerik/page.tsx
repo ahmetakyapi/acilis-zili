@@ -600,6 +600,7 @@ function DayPicker({ firstBriefDay }: { firstBriefDay: string | null }) {
             defaultValue={today}
             min={firstBriefDay ?? undefined}
             max={today}
+            today={today}
           />
         </label>
         <div className="grid grid-cols-2 gap-2 sm:flex">

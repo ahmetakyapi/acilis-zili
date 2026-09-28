@@ -324,7 +324,9 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
             {benchmark && <BenchmarkAside
                 benchmark={benchmark}
                 moves={moves}
-                sessionLabel={phase === "pre-market" ? t.themes.medianPreMarket : t.themes.medianSession}
+                sessionLabel={
+                  phase === "pre-market" ? t.themes.medianPreMarket : phase === "lastClose" ? t.themes.medianLastClose : t.themes.medianSession
+                }
                 locale={locale}
                 t={t}
               />}
@@ -348,7 +350,8 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
         labels={{
           title: t.themes.todayTitle,
           median: phase === "pre-market" ? t.themes.medianPre : phase === "lastClose" ? t.themes.medianClose : t.themes.median,
-          medianSession: phase === "pre-market" ? t.themes.medianPreMarket : t.themes.medianSession,
+          medianSession:
+            phase === "pre-market" ? t.themes.medianPreMarket : phase === "lastClose" ? t.themes.medianLastClose : t.themes.medianSession,
           coverage: t.themes.coverage,
           medianLastClose: t.themes.medianLastClose,
           medianMissing: t.themes.medianMissing,

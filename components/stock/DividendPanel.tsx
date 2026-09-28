@@ -11,6 +11,8 @@ import {
   formatEtDateMedium,
   formatPercentPlain,
   formatPrice,
+  cn,
+  plural,
 } from "@/lib/utils";
 import styles from "@/components/calendar/Dividends.module.css";
 
@@ -36,7 +38,16 @@ const RECENT_ROWS = 4;
 const SMALL_RATE = 0.1;
 const SMALL_RATE_DIGITS = 4;
 
-export async function DividendPanel({ symbol, locale }: { symbol: string; locale: Locale }) {
+export async function DividendPanel({
+  symbol,
+  locale,
+  wide = false,
+}: {
+  symbol: string;
+  locale: Locale;
+  /** Tam genişlikte duruyorsa: yıl toplamları ile son ödemeler yan yana. */
+  wide?: boolean;
+}) {
   const t = getDictionary(locale);
   const x = t.marketExtras;
   const result = await getSymbolDividends(symbol);
@@ -68,7 +79,7 @@ export async function DividendPanel({ symbol, locale }: { symbol: string; locale
   const freq = frequencyLabel(result.frequency, t);
 
   return (
-    <Panel className={styles.panel}>
+    <Panel className={cn(styles.panel, wide && styles.panelWide)}>
       <PanelHeader title={x.panelTitle} meta={freq ?? undefined} />
       {past.length === 0 && !next ? (
         <p className={styles.panelEmpty}>{x.panelNone}</p>
@@ -99,6 +110,9 @@ export async function DividendPanel({ symbol, locale }: { symbol: string; locale
             </div>
           )}
 
+          {/* GÖVDE SARMALI — dar panelde `display:contents` (düzen eskisi
+              gibi), `wide`da iki sütunluk ızgara. */}
+          <div className={styles.panelBody}>
           {yearRows.length > 0 && (
             <dl className={styles.years}>
               {yearRows.map(([year, entry]) => (
@@ -109,7 +123,7 @@ export async function DividendPanel({ symbol, locale }: { symbol: string; locale
                   </dt>
                   <dd>
                     <span className="numeral">{money(entry.total)}</span>
-                    <span className={styles.count}>{x.payments.replace("{n}", String(entry.count))}</span>
+                    <span className={styles.count}>{plural(entry.count, x.paymentsOne, x.payments).replace("{n}", String(entry.count))}</span>
                     <ScaleBar ratio={entry.total / peak} signed={false} className={styles.yearBar} />
                   </dd>
                 </div>
@@ -131,6 +145,7 @@ export async function DividendPanel({ symbol, locale }: { symbol: string; locale
               </ul>
             </div>
           )}
+          </div>
 
           {result.yieldPct !== null && (
             <p className={styles.yieldLine}>

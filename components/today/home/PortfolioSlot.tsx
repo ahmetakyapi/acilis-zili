@@ -6,7 +6,7 @@ import { DataStamp, LogoTile, Panel, PanelLink } from "@/components/ui/primitive
 import { formatLira } from "@/lib/fx";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { loadPortfolioSnapshot, type PortfolioSnapshot } from "@/lib/portfolio-snapshot";
-import { cn, directionOf, directionText, formatPercent, formatPercentPlain, formatPrice, NO_VALUE } from "@/lib/utils";
+import { cn, directionOf, directionText, formatPercent, formatPercentPlain, formatPrice, NO_VALUE, plural } from "@/lib/utils";
 import styles from "./PortfolioSlot.module.css";
 
 /** Dağılım şeridinde adıyla duran pozisyon sayısı; kalanı "Diğer". */
@@ -82,7 +82,7 @@ function PortfolioSummary({
           <span className={styles.sub}>
             {totals.valueTl !== null ? formatLira(totals.valueTl, locale, 0) : NO_VALUE}
             {" · "}
-            {L.portfolioPositions.replace("{n}", String(views.length))}
+            {plural(views.length, L.portfolioPositionsOne, L.portfolioPositions).replace("{n}", String(views.length))}
           </span>
         </div>
         <dl className={styles.pnl}>

@@ -153,6 +153,7 @@
 .capitalSegment[data-rank="3"], .capitalLegend > li[data-rank="3"] { --capital-tone:color-mix(in oklab, var(--primary) 48%, var(--surface-sunken)); }
 .capitalSegment[data-rank="4"], .capitalLegend > li[data-rank="4"] { --capital-tone:color-mix(in oklab, var(--primary) 36%, var(--surface-sunken)); }
 .capitalLegend { display:flex; flex-wrap:wrap; gap:8px 22px; }
+.capitalLegend > li[data-inline] { display:none; }
 .capitalItem { display:inline-flex; align-items:center; gap:8px; min-width:0; font-size:13px; color:var(--text-body); }
 .capitalItem::before { content:""; width:8px; height:8px; flex:none; border-radius:2px; background:var(--capital-tone); }
 .capitalRestDot { display:none; }
@@ -171,6 +172,7 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
   .hero { padding:22px 18px 20px; border-radius:20px; gap:20px; }
   .roster { gap:20px; padding-top:18px; }
   .capitalLegend { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px 12px; }
+  .capitalLegend > li[data-inline]:not([data-rank="0"]) { display:block; }
   .capitalLegend > li { min-width:0; }
   .capitalItem { display:flex; width:100%; font-size:12px; }
   .capitalItem > .portrait { display:none; }

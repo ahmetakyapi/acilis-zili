@@ -130,24 +130,46 @@ export const THEMES = [
   },
   {
     slug: "obezite-ilaclari",
-    symbols: ["LLY", "AMGN", "PFE", "REGN", "ABBV", "MRK", "ALT", "WST"],
+    /* Üye kararı (28 Eylül, sahibinin sorusu: "obezite ilaçları mı, sağlık
+       şirketleri mi?"): liste bir dönem Regeneron, AbbVie ve Merck'i de
+       taşıyordu. Üçünün de obezite bağı lisansla alınmış ERKEN aşama bir aday
+       (Regeneron ve Merck'te Hansoh'tan GLP-1, AbbVie'de Gubra'dan amilin
+       benzeri) ve hisselerini oynatan işler başka yerde (Dupixent, Eylea;
+       Skyrizi, Humira; Keytruda). Temanın medyanı böylece büyük ilaç
+       şirketlerinin ortalamasını anlatıyor, ad ise dar bir tema vaat ediyordu.
+       Ad genişletilmedi (yerleşik bir yatırım teması: "GLP-1 / obezite"), üye
+       daraltıldı: obezite ya satışın ana kalemi (Lilly, West'in kalem
+       bileşenleri) ya da faz 3'te değerlemeyi taşıyan bir program (Amgen
+       MariTide, Pfizer'in yaklaşık 10 milyar dolarlık Metsera alımı) ya da
+       şirketin tek işi (Altimmune). Viking, Hims & Hers ve Novo Nordisk
+       sembol tablosunda yok; tablo genişlerse ilk adaylar onlar. */
+    symbols: ["LLY", "AMGN", "PFE", "ALT", "WST"],
     benchmark: null,
     titleTr: "Obezite İlaçları (GLP-1)",
     titleEn: "Obesity Drugs (GLP-1)",
     dekTr: "GLP-1 sınıfı kilo verme ilaçlarını satanlar, geliştirenler ve üretim zincirine parça verenler.",
     dekEn: "Companies selling, developing or supplying the production chain for GLP-1 class weight-loss drugs.",
     whyTr:
-      "Eli Lilly, tirzepatid (Mounjaro, Zepbound) ile pazarın iki büyük satıcısından biri; öteki Novo Nordisk sembol tablomuzda olmadığı için listede yok. Amgen (MariTide), Pfizer (Metsera satın alımı), AbbVie (amilin benzeri molekül lisansı), Merck (ağızdan alınan GLP-1 lisansı) ve Altimmune (pemvidutid) geliştirme aşamasındaki adaylarla temaya giriyor; Regeneron kilo verirken kas kaybını azaltmayı hedefleyen kombinasyonları deniyor. West Pharmaceutical enjeksiyon kalemlerinin bileşenlerini üretiyor. Geliştirme aşamasındaki bir ilacın klinik sonucu hisseyi tek günde sert oynatabilir.",
+      "Eli Lilly, tirzepatid (Mounjaro, Zepbound) ile pazarın iki büyük satıcısından biri ve listede obezitenin gelirin ana kalemi olduğu tek büyük şirket; öteki satıcı Novo Nordisk sembol tablomuzda olmadığı için listede yok. Amgen (MariTide) ve Pfizer (Metsera satın alımıyla gelen adaylar) son aşama klinik denemelerdeki programlarla temaya giriyor; ikisinin de bugünkü geliri başka ilaçlardan geliyor, hisselerini obeziteye bağlayan beklenti. Altimmune'un (pemvidutid) tek işi bu. West Pharmaceutical enjeksiyon kalemlerinin bileşenlerini üretiyor. Obezite adayı yalnızca erken aşamada, lisansla alınmış büyük ilaç şirketleri (Regeneron, AbbVie, Merck) listede değil: hisseleri başka ilaçlarla hareket ediyor. Geliştirme aşamasındaki bir ilacın klinik sonucu hisseyi tek günde sert oynatabilir.",
     whyEn:
-      "Eli Lilly is one of the two large sellers in the market with tirzepatide (Mounjaro, Zepbound); the other, Novo Nordisk, is not in our symbol table and so is not listed. Amgen (MariTide), Pfizer (through its Metsera acquisition), AbbVie (a licensed amylin analogue), Merck (a licensed oral GLP-1) and Altimmune (pemvidutide) join through candidates still in development, and Regeneron is testing combinations meant to limit muscle loss during weight loss. West Pharmaceutical makes components for injection pens. A clinical readout for a drug in development can move a stock sharply in a single day.",
+      "Eli Lilly is one of the two large sellers in the market with tirzepatide (Mounjaro, Zepbound) and the only large company here for which obesity is a main source of revenue; the other seller, Novo Nordisk, is not in our symbol table and so is not listed. Amgen (MariTide) and Pfizer (candidates from its Metsera acquisition) join through programmes in late-stage trials; both earn today's revenue from other drugs, and what ties their stocks to obesity is expectation. Altimmune (pemvidutide) does nothing else. West Pharmaceutical makes components for injection pens. Large drugmakers whose only obesity candidate is an early-stage licence (Regeneron, AbbVie, Merck) are left out: their stocks move with other drugs. A clinical readout for a drug in development can move a stock sharply in a single day.",
     guides: ["volatilite", "cesitlendirme"],
   },
   {
     slug: "nukleer-enerji",
     symbols: ["CEG", "VST", "NRG", "NEE", "CCJ", "GEV", "ETN", "VRT", "PWR", "HUBB", "BE"],
-    benchmark: { symbol: "NLR", name: "VanEck Uranium and Nuclear ETF" },
-    titleTr: "Nükleer ve Enerji Altyapısı",
-    titleEn: "Nuclear & Power Infrastructure",
+    /* NLR (VanEck Uranium and Nuclear) yalnızca nükleer tarafı izliyor; tema
+       28 Eylül'de adıyla birlikte elektrik üreticileri ve şebeke ekipmanını
+       da kapsadığını söylüyor. Üstteki kural: birebir izleyen yaygın fon
+       yoksa ölçüt yok. */
+    benchmark: null,
+    /* Ad (28 Eylül): "Nükleer ve Enerji Altyapısı" idi. On bir üyenin
+       yalnızca üçünün işi nükleer (Constellation, Cameco, GE Vernova'nın
+       reaktör programı); kalanı elektrik üreticisi ya da şebeke ve güç
+       ekipmanı. "Enerji" Türkçede petrol ve doğal gazı da çağırıyor, listede
+       ikisi de yok. Slug bağlantılar için aynı kaldı. */
+    titleTr: "Nükleer, Elektrik ve Şebeke",
+    titleEn: "Nuclear, Power & Grid",
     dekTr: "Veri merkezlerinin elektrik talebini karşılayan üretici, yakıt tedarikçisi ve şebeke ekipmanı şirketleri.",
     dekEn: "The generators, fuel suppliers and grid-equipment makers meeting data centres' demand for electricity.",
     whyTr:
@@ -205,10 +227,15 @@ export const THEMES = [
     slug: "katilim-uyumlu",
     symbols: "katilim",
     benchmark: null,
+    /* AD VE AÇIKLAMA (28 Eylül). Ad Türkiye'deki yerleşik terim (katılım
+       bankacılığı, Katılım Endeksi) olarak kalıyor: "Faizsiz Yatırıma
+       Uygun" denendi, sahibi beğenmedi. Terimin ne demek olduğunu açıklama
+       cümlesi söylüyor: faizsiz finans, ne elendiği ve bunun bir sertifika
+       değil oran taraması olduğu. */
     titleTr: "Katılım Uyumlu",
-    titleEn: "Shariah Screen",
-    dekTr: "Endeks üyeleri arasından katılım ön elemesini geçen en büyük şirketler, her gün yeniden seçilir.",
-    dekEn: "The largest index members that pass the Shariah pre-screen, reselected every day.",
+    titleEn: "Shariah-Compliant",
+    dekTr: "Katılım (faizsiz finans) ön elemesini geçen en büyük endeks şirketleri: faaliyeti uygun, borcu ve faizli nakdi sınırın altında. Her gün yeniden seçilir; sertifika değildir.",
+    dekEn: "The largest index companies that pass an Islamic finance pre-screen: permissible business, debt and interest-bearing cash under the limits. Reselected daily; not a certification.",
     whyTr:
       "Bu liste elle seçilmiyor. S&P 500, Nasdaq 100 ve Dow Jones üyelerinden faaliyet alanı elenmeyenler piyasa değerine göre sıralanıyor, en büyüklerinin borç ve nakit oranları sitenin hisse sayfalarındaki katılım taramasıyla aynı kurala göre ölçülüyor ve ön elemeyi geçenler burada listeleniyor. Oranlar üç ayda bir yayımlanan bilançodan geldiği için liste çoğu gün aynı kalır; fiyat değiştikçe sınıra yakın bir şirket girip çıkabilir.",
     whyEn:

@@ -97,6 +97,15 @@ type Props = {
    * okuyucunun "yazdım" sandığı tarihi değil eskisini gönderirdi.
    */
   onValidityChange?: (valid: boolean) => void;
+  /**
+   * Sayfanın "bugün"ü (ISO). Verilmezse tarayıcının yerel günü. Vergi ve
+   * portföy alanlarının üst sınırı sunucuda İstanbul günüyle hesaplanıyor;
+   * takvim bugünü tarayıcıdan okursa İstanbul'un ilerisindeki bir saat
+   * diliminde "Bugün" düğmesi kapalı kalıyor, bugün işareti de seçilemeyen
+   * bir güne düşüyordu (28 Eylül denetimi). Sınırı veren sayfa bugünü de
+   * vermeli.
+   */
+  today?: string;
 };
 
 /** Alan ile pencere arası ve pencerenin ekran kenarından payı. */
@@ -218,6 +227,7 @@ export function DatePicker({
   id,
   className,
   onValidityChange,
+  today: todayProp,
   ...aria
 }: Props) {
   const { locale: routeLocale } = useLocaleHref();
@@ -241,7 +251,7 @@ export function DatePicker({
     [onValidityChange],
   );
   const [open, setOpen] = useState(false);
-  const [month, setMonth] = useState(() => monthOf(valid ? current : todayIso()));
+  const [month, setMonth] = useState(() => monthOf(valid ? current : todayProp && isIsoDay(todayProp) ? todayProp : todayIso()));
   const [sheet, setSheet] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -269,7 +279,7 @@ export function DatePicker({
   const shown = editing || error ? draft : formatted;
 
   const inRange = useCallback((iso: string) => (!min || iso >= min) && (!max || iso <= max), [min, max]);
-  const today = todayIso();
+  const today = todayProp && isIsoDay(todayProp) ? todayProp : todayIso();
   const fmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(intl, { ...opts, timeZone: "UTC" }).format(isoToUtc(iso));
   const thisYear = Number(today.slice(0, 4));
@@ -574,6 +584,7 @@ export function DatePicker({
             onMonthChange={setMonth}
             startMonth={startMonth}
             endMonth={endMonth}
+            today={isoToDate(today)}
             selected={valid ? isoToDate(current) : undefined}
             onSelect={(date) => {
               if (date) commit(dateToIso(date));

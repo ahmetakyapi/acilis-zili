@@ -169,25 +169,8 @@
    başlık/kart hareketleri içeride kalır, panelin kendisi yerinden oynamaz. */
 .hero + .flowPanel { margin-top:-10px; }
 .flowPanel { padding:18px 24px 0; border:1px solid var(--line); border-radius:20px; background:var(--premium-surface); scroll-margin-top:150px; }
-/* Başlığın yanındaki dört sekmelik şerit kalktı — bölüm dizini artık
-   yüzen bant (`.sectionIndex`, gerekçe page.tsx). */
 .flowHeader { padding-bottom:14px; border-bottom:1px solid var(--line-soft); }
 .flowSkeleton { padding-bottom:16px; }
-/* YÜZEN BÖLÜM DİZİNİ — `SectionNav variant="floating"`in ana sayfa
-   ayarları. Telefonda dokunma hedefi 44: bandın kendi ölçüsü 44 ve
-   bağlantılar 36'ydı; bant 52'ye, bağlantılar 44'e çıkıyor. Bant sabit
-   konumlu, sayfanın boyuna piksel eklemiyor. Sağdaki küçük geri sayım
-   yalnızca geniş ekranda: telefonda altı durak şeride zor sığıyor ve
-   kahramanın sayacı bir kaydırma yukarıda. */
-.miniCount { display:inline-flex; align-items:baseline; gap:8px; color:var(--text-muted); font-size:var(--text-small); font-weight:600; white-space:nowrap; }
-.miniCount [role="timer"][aria-live] { font-size:15px; line-height:1; letter-spacing:-.02em; }
-@media (max-width:1023px) {
-  nav.sectionIndex[data-variant="floating"] [class*="navTrail"] { display:none; }
-}
-@media (max-width:767px) {
-  nav.sectionIndex[data-variant="floating"] { height:52px; }
-  nav.sectionIndex[data-variant="floating"] a[href] { min-height:44px; }
-}
 .sectionHeading { display:flex; flex-direction:column; gap:5px; }
 .sectionHeading h2 { font-size:25px; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
 .sectionHeading p { font-size:var(--text-base); line-height:1.6; color:var(--text-body); }
@@ -356,10 +339,6 @@
      duruyordu (390, ölçüldü); sahibi yukarı istedi. "Bugün hangi isim
      taşıdı"nın hemen ardından "hangi sektör ve tema" okunuyor. */
   .dashboard [data-home-section="texture"] { order:4; }
-  /* Bölüm çubuğu aynı sırayı izliyor (page.tsx → SectionNav): bant
-     Dünya'nın ardında, sonrakiler bandın ardında. */
-  .navNarrowThemes { order:1; }
-  .navNarrowLater { order:2; }
   .dashboard [data-home-section="news"] { order:16; }
   .dashboard [data-home-section="sources"] { order:17; }
   /* GİRİŞ YAPMAMIŞ OKUYUCUNUN FAVORİLERİ BİLANÇOLARIN ARDINDA (24 Eylül).

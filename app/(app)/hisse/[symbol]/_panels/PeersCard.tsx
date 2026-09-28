@@ -10,6 +10,12 @@ import { getQuotes } from "@/lib/providers";
 import { indexMemberOf, peersOf } from "@/db/seed/indices";
 import { subIndustryName } from "@/db/seed/sub-industries";
 import { formatMoneyCompact, formatPrice, NO_VALUE } from "@/lib/utils";
+import { FoldToggle } from "./FoldToggle";
+
+/** Telefonda açık gelen satır (28 Eylül, Gündem'i kısaltma işi). Dokuz satır
+    390'da 556 piksel tutuyordu; sayfanın şirketi beşin dışına düşse de
+    katlanmıyor — listenin asıl söylediği onun sırası. */
+const PEER_FOLD = 5;
 
 /**
  * Aynı alt sektördeki şirketler — piyasa değerine göre SIRALI bir liste,
@@ -66,6 +72,8 @@ export async function PeersCard({
     }))
     .sort((a, b) => (b.cap ?? -1) - (a.cap ?? -1));
   const maxCap = Math.max(0, ...rows.map((row) => row.cap ?? 0));
+  const folded = (index: number, self: boolean) => index >= PEER_FOLD && !self;
+  const foldCount = rows.filter((row, index) => folded(index, row.self)).length;
 
   /* Karşılaştırma bağlantısı buraya konuyor çünkü soru tam burada doğuyor:
      benzer şirketleri yan yana gören biri "hangisi" diye sorar. Sembol
@@ -87,8 +95,14 @@ export async function PeersCard({
           </PanelLink>
         }
       />
+      <FoldToggle
+        id="peers-fold"
+        hiddenCount={foldCount}
+        more={t.stockDepth.peersShowMore.replace("{n}", String(foldCount))}
+        less={t.common.less}
+      >
       <ol className={styles.peerList}>
-        {rows.map((row) => {
+        {rows.map((row, index) => {
           const quote = quotes[row.symbol];
           const logo = meta[row.symbol]?.logoUrl;
           const body = (
@@ -129,7 +143,7 @@ export async function PeersCard({
             </>
           );
           return (
-            <li key={row.symbol} className="min-w-0">
+            <li key={row.symbol} className="min-w-0" data-fold={folded(index, row.self) ? "" : undefined}>
               {row.self ? (
                 <div className={styles.peerRow} data-self aria-current="page">
                   {body}
@@ -143,6 +157,7 @@ export async function PeersCard({
           );
         })}
       </ol>
+      </FoldToggle>
       {/* ŞİRKET KARTI — bu listenin satırları VE Şirket Özeti'ndeki logo
           şeridi (StockSummary: aynı sıralamanın ilk beşi, yani bu sekizin
           alt kümesi). Kayıt burada çünkü paket burada: kart satırın

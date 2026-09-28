@@ -7,7 +7,7 @@ import type { SymbolMeta } from "@/lib/data";
 import type { Dictionary } from "@/lib/i18n";
 import type { CongressCard, FundCard } from "@/lib/investor-data";
 import { investorFirm, type Investor } from "@/lib/investors";
-import { cn, formatEtDateCompact, formatMoneyCompact } from "@/lib/utils";
+import { cn, formatEtDateCompact, formatMoneyCompact, plural } from "@/lib/utils";
 import { amountRange, asOfLabel, filedLabel, formatWeight, txLabel, txTone } from "./format";
 import { Portrait } from "./Portrait";
 import styles from "./Investors.module.css";
@@ -88,7 +88,7 @@ function FundBody({
           <RollingFigure value={formatMoneyCompact(card.longValue, locale)} />
         </strong>
         <span className={cn("numeral", styles.cardFigureMeta)}>
-          {t.positions.replace("{count}", String(card.positionCount))}
+          {plural(card.positionCount, t.positionsOne, t.positions).replace("{count}", String(card.positionCount))}
         </span>
       </div>
 
@@ -161,9 +161,9 @@ function CongressBody({
           <RollingFigure value={String(card.total)} />
         </strong>
         <span className={cn("numeral", styles.cardFigureMeta)}>
-          <span className="text-up">{t.buys.replace("{count}", String(card.buys))}</span>
+          <span className="text-up">{plural(card.buys, t.buysOne, t.buys).replace("{count}", String(card.buys))}</span>
           {" · "}
-          <span className="text-down">{t.sells.replace("{count}", String(card.sells))}</span>
+          <span className="text-down">{plural(card.sells, t.sellsOne, t.sells).replace("{count}", String(card.sells))}</span>
         </span>
       </div>
       <ul className={styles.tradeList}>

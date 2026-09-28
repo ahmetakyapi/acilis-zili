@@ -2,7 +2,7 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { addEtDays } from "@/lib/market-hours";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { EarningsRow } from "@/lib/schema";
-import { formatEtDateCompact } from "@/lib/utils";
+import { formatEtDateCompact, plural } from "@/lib/utils";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 
 /** Günlük çubuk bu sayıya kadar; üstünde çubuklar haftaya toplanıyor. */
@@ -68,7 +68,7 @@ export function EarningsActivity({ rows, from, to, locale, t }: {
   const intlLocale = locale === "tr" ? "tr-TR" : "en-US";
   const weekday = new Intl.DateTimeFormat(intlLocale, { weekday: "short", timeZone: "UTC" });
   const dayOfMonth = new Intl.DateTimeFormat(intlLocale, { day: "numeric", timeZone: "UTC" });
-  const countLabel = (n: number) => t.directory.reportsCount.replace("{n}", n.toLocaleString(locale));
+  const countLabel = (n: number) => plural(n, t.directory.reportsCountOne, t.directory.reportsCount).replace("{n}", n.toLocaleString(locale));
 
   return <figure className={styles.earningsActivity}>
     <figcaption><span>{t.directory.earningsActivity}</span><strong>{countLabel(rows.length)}</strong></figcaption>

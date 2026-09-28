@@ -12,7 +12,7 @@ import type { MarketStatus } from "@/lib/market-hours";
 import type { ProviderResult, Quote } from "@/lib/providers/types";
 import { editionTime, livePriceLabel, slotLabel, stanceChangeLabel, technicalHref } from "@/lib/technical";
 import type { TechnicalBoardEntry } from "@/lib/technical-data";
-import { cn, formatEtDateCompact } from "@/lib/utils";
+import { cn, formatEtDateCompact, plural } from "@/lib/utils";
 import { changeToneClass } from "./TechnicalCard";
 import styles from "./Technical.module.css";
 
@@ -168,7 +168,7 @@ export function TechnicalPulse({
               piksel: sıkı degradeyi alıyor. */}
           <h2 id="technical-distribution" className="text-base">{t.technical.distribution}</h2>
           <span className="flex items-center gap-2 text-tiny font-semibold text-muted">
-            {t.technical.stockCount.replace("{n}", String(total))}
+            {plural(total, t.technical.stockCountOne, t.technical.stockCount).replace("{n}", String(total))}
             {/* Telefonda logo satırları gizli (CSS, `.pulseRows`); bekleyen
                 sayısı o satırda yazıyordu ve kaybolmasın diye buraya iniyor.
                 Masaüstünde satır duruyor, künye tekrar etmiyor. */}

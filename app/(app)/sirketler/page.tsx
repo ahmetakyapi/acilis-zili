@@ -53,6 +53,7 @@ import {
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import { pageMetadata } from "@/lib/page-meta";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
+import { aliasSymbols } from "@/db/seed/aliases";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
@@ -231,6 +232,14 @@ function SortHead({
   );
 }
 
+/** Boşluk ve noktalamasız eşleşmenin en kısa sorgusu. */
+const COMPACT_MIN = 3;
+
+/** "Coca-Cola Co" → "cocacolaco"; Latin küçültme (NVIDIA'nın I'sı ı olmasın). */
+function compactName(value: string): string {
+  return value.toLocaleLowerCase("en-US").replace(/[^\p{L}\p{N}]/gu, "");
+}
+
 export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   const search = await props.searchParams;
   const sort: SortKey = SORT_KEYS.includes(search.sirala as SortKey)
@@ -267,9 +276,25 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   // 60 rows would incorrectly hide companies from a 1,010-company directory.
   // Fold Latin casing consistently: Turkish lowercase turns NVIDIA's I into ı.
   const terms = query.toLocaleLowerCase("en-US").split(/\s+/).filter(Boolean);
+  /* ÜÇ YOL (28 Eylül). Yalnızca ad ve sembolde kelime araması yapılıyordu
+     ve "google" hiçbir şey bulmuyordu: tablodaki ad "Alphabet Inc". Başlıktaki
+     arama (app/api/search) bu boşluğu takma ad köprüsüyle kapatıyordu, bu
+     sayfa kapatmıyordu. Şimdi:
+       1. kelimeler ad + sembolde (eskisi gibi),
+       2. takma ad köprüsü (db/seed/aliases.ts: google → GOOGL, instagram →
+          META, tsmc → TSM),
+       3. boşluk ve noktalamasız eşleşme: "coca cola" → "Coca-Cola",
+          "jp morgan" → "JPMorgan". Üç harften kısa sorguda denenmiyor,
+          yoksa iki harf adın ortasında her şeyle eşleşirdi. */
+  const aliased = new Set(query ? aliasSymbols(query) : []);
+  const compactQuery = compactName(query);
   const rows = sectorRows.filter(company => {
     const name = `${company.symbol} ${company.name}`.toLocaleLowerCase("en-US");
-    return terms.every(term => name.includes(term));
+    return (
+      terms.every(term => name.includes(term)) ||
+      aliased.has(company.symbol) ||
+      (compactQuery.length >= COMPACT_MIN && compactName(company.name).includes(compactQuery))
+    );
   });
   const leaders = [...companies].filter(company => company.marketCap != null && company.marketCap > 0).sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, 10);
 
