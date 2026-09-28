@@ -42,6 +42,42 @@
         "rule": "side-tab",
         "value": ".palette-option::before",
         "createdAt": "2026-09-26T19:57:11.037Z"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "app/(app)/hisse/[symbol]/stock.module.css"
+        ],
+        "createdAt": "2026-09-27T22:24:47.246Z",
+        "reason": "Claude: main'de önceden var olan, satır 90-91'deki karar yorumuyla belgelenmiş bilinçli tasarım (yıkama degradesi yerine 3px --primary kuralı); bu oturumda eklenmedi"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "components/today/TodayExperience.module.css"
+        ],
+        "createdAt": "2026-09-27T23:41:34.556Z",
+        "reason": "Claude: main'de 26 Eylül'den kalma; ikincil Mercek satırının hover işareti (scaleY(0)'dan açılıyor), bilinçli etkileşim, bu oturumda eklenmedi"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "components/today/TodayExperience.module.css"
+        ],
+        "createdAt": "2026-09-27T23:41:34.595Z",
+        "reason": "Claude: main'de 24 Eylül'den kalma; Son Bilanço Analizleri panelinin vurgu kenarı, mevcut tasarım kararı, bu oturumda eklenmedi"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "components/earnings/EarningsReport.module.css"
+        ],
+        "createdAt": "2026-09-28T06:56:24.763Z",
+        "reason": "Claude: 24/26 Eylül commit'lerinden kalma mevcut rapor vurguları (özet girişi dahil); 28 Eylül oturumunda eklenmedi"
       }
     ]
   }
