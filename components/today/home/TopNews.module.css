@@ -1,0 +1,95 @@
+/* Öne Çıkan Haberler — manşet ve zaman akışı (28 Eylül; gerekçe TopNews.tsx).
+
+   Kutu yok: manşetin görseli kendi köşesiyle kutunun kendisi, metinler
+   sayfanın zemininde. Derinlik ton farkıyla (satırın üzerine gelince
+   `--primary-tint`), gölge ve ışıma yok. */
+
+.grid { position:relative; display:grid; margin-top:18px; column-gap:36px; min-width:0; }
+.list { display:grid; min-width:0; }
+@media (min-width:640px) { .pair { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:28px; } }
+@media (min-width:1024px) {
+  /* İki bağımsız sütun, ikisi de tepeden başlıyor: kısa kalan geriliyor
+     değil erken bitiyor (gerekçe TopNews.tsx). */
+  .withLead { grid-template-columns:minmax(0,1.12fr) minmax(0,1fr); align-items:start; }
+  .three { grid-template-columns:repeat(3,minmax(0,1fr)); column-gap:28px; }
+}
+
+/* ---- Manşet ---- */
+.leadItem { min-width:0; padding-bottom:18px; }
+@media (min-width:1024px) { .leadItem { padding-bottom:0; } }
+/* DOM sırası başlık → özet → künye → görsel (bağlantının adı başlıkla
+   başlasın); ekranda görsel → künye → başlık → özet. */
+.lead { display:flex; flex-direction:column; gap:12px; min-width:0; color:inherit; border-radius:18px; }
+.lead:focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
+.leadImage { order:-2; border-radius:18px; }
+.leadImage img { transition:transform .7s; }
+@media (hover:hover) and (pointer:fine) { .lead:hover .leadImage img { transform:scale(1.035); } }
+.leadMeta { order:-1; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:6px; color:var(--text-muted); font-size:var(--text-small); }
+.leadSource { color:var(--text-body); font-weight:650; }
+.chip {
+  display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 9px 0 2px; border-radius:999px;
+  background:var(--surface-sunken); color:var(--text-strong); font-size:11.5px; font-weight:700; letter-spacing:.01em;
+}
+.leadHeadline {
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden;
+  color:var(--text-strong); font-size:clamp(21px,2.05vw,29px); font-weight:650; line-height:1.2; letter-spacing:-.032em;
+  text-wrap:pretty; transition:color .25s;
+}
+@media (hover:hover) and (pointer:fine) { .lead:hover .leadHeadline { color:var(--primary-ink); } }
+.leadSummary {
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
+  max-width:64ch; color:var(--text-body); font-size:15px; line-height:1.6;
+}
+
+/* ---- Zaman akışı ----
+   Satır üç sütun: saat | karo | başlık ve kaynak. Saat sütununun sağındaki
+   kıl çizgi satırdan satıra kesintisiz iniyor (satırın kendi dolgusu yok,
+   dolgu sütunların içinde); yatay ayraç çizgiyi kesmesin diye karodan
+   başlıyor. */
+.rowItem { min-width:0; }
+.row {
+  --time-col:76px; --thumb:48px; --gap:14px;
+  position:relative; display:grid; grid-template-columns:var(--time-col) var(--thumb) minmax(0,1fr);
+  grid-template-areas:"time thumb headline" "time thumb byline"; grid-template-rows:auto auto; align-content:start;
+  column-gap:var(--gap); min-width:0; border-radius:12px; color:inherit; transition:background-color .2s;
+}
+.row::before {
+  content:""; position:absolute; top:0; right:0; left:calc(var(--time-col) + var(--gap));
+  height:1px; background:var(--line-soft);
+}
+.rowItem:first-child .row::before { display:none; }
+@media (min-width:640px) { .pair .rowItem:nth-child(2) .row::before { display:none; } }
+@media (min-width:1024px) { .three .rowItem:nth-child(-n+3) .row::before { display:none; } }
+.row:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+@media (hover:hover) and (pointer:fine) {
+  .row:hover { background:var(--primary-tint); }
+  .row:hover .rowHeadline { color:var(--primary-ink); }
+  .row:hover .thumb { transform:translateY(-2px); }
+}
+.rowTime {
+  grid-area:time; display:flex; flex-direction:column; align-items:flex-end; gap:3px;
+  padding:15px 12px 15px 0; border-right:1px solid var(--line);
+  color:var(--text-muted); font-size:var(--text-tiny); line-height:1.2; text-align:right; white-space:nowrap;
+}
+.rowTime time { color:var(--text-strong); font-size:14px; font-weight:700; letter-spacing:-.01em; }
+.rowTime small { font-size:10px; font-weight:600; color:var(--text-muted); }
+.thumb { grid-area:thumb; margin-block:14px; border-radius:12px; transition:transform .3s; }
+.initial { display:grid; place-items:center; width:var(--thumb); height:var(--thumb); background:var(--surface-sunken); color:var(--text-body); font-size:var(--text-lead); font-weight:700; }
+.rowHeadline {
+  grid-area:headline; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
+  margin-top:13px; padding-right:10px; color:var(--text-strong); font-size:15px; font-weight:600; line-height:1.4;
+  transition:color .2s;
+}
+.rowByline { grid-area:byline; display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; padding:5px 10px 14px 0; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.3; }
+
+@media (max-width:639px) {
+  .row { --time-col:76px; --thumb:44px; --gap:12px; }
+  .rowTime { padding-right:10px; }
+  .rowTime time { font-size:13px; }
+  .thumb { width:44px; height:44px; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .leadImage img, .leadHeadline, .row, .rowHeadline, .thumb { transition:none; }
+  .lead:hover .leadImage img, .row:hover .thumb { transform:none; }
+}

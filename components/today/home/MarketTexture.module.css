@@ -1,0 +1,124 @@
+/* Sektörler ve Temalar bandı (28 Eylül) — gerekçe MarketTexture.tsx.
+
+   Derinlik TONLA: bant düz panel yüzeyinde, uç kartları çukur tonda,
+   gölge ve ışıma yok. Renkli olan yalnızca veri: karoların ısı tonu
+   `/piyasalar` ve tema haritasının formülünden (Themes.module.css `.heat`),
+   rakamların yön rengi işaretten. */
+
+.band { display:flex; flex-direction:column; gap:22px; padding:22px 24px 20px; }
+.bandHead { display:flex; flex-direction:column; gap:4px; }
+.bandHead h2 { width:fit-content; max-width:100%; color:var(--text-strong); font-size:clamp(22px,2.2vw,28px); font-weight:650; letter-spacing:-.045em; line-height:1.1; }
+.bandHead p { max-width:62ch; color:var(--text-body); font-size:var(--text-small); line-height:1.55; }
+
+.part { display:flex; flex-direction:column; gap:12px; min-width:0; }
+.part + .part { padding-top:20px; border-top:1px solid var(--line-soft); }
+.partHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; }
+.partHead h3 { color:var(--text-strong); font-size:14px; font-weight:650; }
+.partMeta { color:var(--text-muted); font-size:12px; }
+.partLink { margin-left:auto; }
+
+/* ---- Sektör şeridi ----
+   On bir karo, en güçlüden en zayıfa. Geniş ekranda tek satır (1280'de
+   karo ~100 piksel); 1180'in altında 6 + 5, telefonda 3'erli dört satır. Dört
+   sütun denendi: 390'da karo 84 piksele iniyor ve "Hammadde" kelime
+   ortasından bölünüyordu. Karo yüksekliği sabit: ad iki satıra sarsa da
+   şerit boyu değişmiyor ve yedekle aynı.
+   Karoda fonun sembolü YOK: ad ile yüzde yan yana sığmıyor, yüzde sembolün
+   altına iniyordu (1280'de ölçüldü); sembol bağlantının hedefinde. */
+.ribbon { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+@media (min-width:640px) { .ribbon { grid-template-columns:repeat(6,minmax(0,1fr)); } }
+/* 11 sütun 1180'den itibaren: 1024'te karo 80 pikseldi ve "Gayrimenkul",
+   "Hammadde" kelime ortasından bölünüyordu (ölçüldü). Altında 6 + 5. */
+@media (min-width:1180px) { .ribbon { grid-template-columns:repeat(11,minmax(0,1fr)); } }
+.tileItem { min-width:0; }
+.tile {
+  display:flex; flex-direction:column; justify-content:space-between; gap:6px;
+  height:78px; padding:9px 10px; border-radius:10px; overflow:hidden;
+  transition:transform .25s, box-shadow .2s;
+}
+.tile:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+@media (hover:hover) and (pointer:fine) {
+  .tile:hover { transform:translateY(-2px); box-shadow:0 0 0 1px var(--text-strong); }
+}
+.tileName {
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
+  font-size:12px; font-weight:650; line-height:1.25; overflow-wrap:break-word;
+}
+.tileHead { display:flex; flex-direction:column; gap:1px; min-width:0; }
+.tileName[data-short] { -webkit-line-clamp:1; }
+.tileBasis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10.5px; font-weight:600; opacity:.75; }
+.tilePct { font-size:17px; font-weight:700; line-height:1.1; letter-spacing:-.03em; white-space:nowrap; }
+.tileSkeleton { height:78px; border-radius:10px; }
+.ribbonError { padding:26px 0; color:var(--text-muted); font-size:var(--text-small); text-align:center; }
+.stamp { justify-content:flex-end; }
+.stampNote { color:var(--text-muted); font-size:var(--text-tiny); text-align:right; }
+/* Damga tek satır: 1280'de ve 390'da 17 piksel ölçüldü. */
+.stampSkeleton { align-self:flex-end; width:180px; height:17px; border-radius:4px; }
+
+/* ---- Temalar ----
+   Solda sıralama (on satır), sağda iki uç kartı. Kartların boyu sabit
+   (`.extreme` yüksekliği) ve iki kart + aradaki boşluk sıralamanın boyuna
+   yakın: 1280'de ölçüm yorumu page.tsx'te. */
+.themes { display:grid; gap:18px; }
+@media (min-width:1024px) { .themes { grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:28px; align-items:start; } }
+.rankCol { display:flex; flex-direction:column; gap:10px; min-width:0; }
+.themesLink { align-self:flex-start; }
+.extremes { display:grid; gap:12px; min-width:0; }
+@media (min-width:640px) and (max-width:1023px) { .extremes { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+.extreme {
+  display:flex; flex-direction:column; gap:10px; min-width:0; height:184px;
+  padding:16px 18px 12px; border:1px solid var(--line-soft); border-radius:16px;
+  background:var(--surface-sunken); color:inherit;
+  transition:background-color .3s, border-color .3s, transform .2s;
+}
+.extreme:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+.extreme:active { transform:scale(.992); }
+@media (hover:hover) { a.extreme:hover { border-color:var(--primary-faint); background:var(--primary-tint); } }
+.extremeEmpty { justify-content:space-between; }
+.extremeSkeleton { height:184px; border-radius:16px; }
+.extremeTop { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.extremeLabel { color:var(--text-muted); font-size:11.5px; font-weight:650; }
+.extremeArrow { flex-shrink:0; color:var(--primary); transition:transform .35s; }
+@media (hover:hover) { .extreme:hover .extremeArrow { transform:translate(3px,-3px); } }
+.extremeMain { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; min-width:0; }
+.extremeText { display:flex; flex-direction:column; gap:10px; min-width:0; }
+.extremeTitle { width:fit-content; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:19px; font-weight:700; letter-spacing:-.025em; line-height:1.2; }
+.extremeFigure { flex-shrink:0; font-size:clamp(30px,2.8vw,40px); font-weight:600; line-height:1; letter-spacing:-.05em; }
+.extremeLogos { display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden; }
+.extremeLogo { display:inline-flex; flex-shrink:0; transition:transform .4s; transition-delay:calc(var(--i) * 22ms); }
+@media (hover:hover) { .extreme:hover .extremeLogo { transform:translateY(-2px); } }
+.extremeRest[data-at="narrow"] { display:none; }
+.extremeRest {
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  height:26px; min-width:26px; padding:0 5px; border-radius:var(--radius-sm);
+  background:var(--premium-surface); color:var(--text-body); font-size:10.5px; font-weight:700;
+}
+
+@media (max-width:767px) {
+  .band { gap:18px; padding:18px 16px 16px; }
+  .extremeTitle { font-size:17px; }
+}
+/* TELEFONDA UÇLAR YAN YANA VE KISA. Alt alta iki 184 piksellik kart bandı
+   390'da 1239 piksele çıkarıyordu (ölçüldü). Uçlar zaten sıralamanın ilk
+   ve son satırı; telefonda yalnızca adları, rakamları ve dört logo kalıyor,
+   dağılım şeridi dizinin kartında. */
+@media (max-width:639px) {
+  .tile { height:70px; padding:8px 9px; }
+  .tileSkeleton { height:70px; }
+  .tilePct { font-size:15px; }
+  .extremes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .extreme, .extremeSkeleton { height:148px; }
+  .extreme { gap:8px; padding:12px 12px 12px; }
+  .extreme > div:last-child { display:none; }
+  .extremeMain { flex-direction:column; align-items:flex-start; gap:8px; }
+  .extremeTitle { width:auto; white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:15px; line-height:1.25; }
+  .extremeFigure { font-size:26px; }
+  .extremeLogo:nth-child(n+5), .extremeRest[data-at="wide"] { display:none; }
+  .extremeRest[data-at="narrow"] { display:inline-flex; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .tile, .extreme, .extremeArrow, .extremeLogo { transition:none; }
+  .tile:hover, .extreme:hover .extremeArrow, .extreme:hover .extremeLogo { transform:none; }
+}

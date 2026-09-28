@@ -260,6 +260,7 @@
 .analysisScore { grid-area:score; justify-self:end; }
 
 /* ---- Haber bandı ---- */
+.texture { scroll-margin-top:150px; }
 .news { padding-top:18px; scroll-margin-top:150px; }
 .newsHeading { color:var(--text-strong); font-size:clamp(22px,2.2vw,28px); font-weight:650; letter-spacing:-.045em; line-height:1.1; }
 .news > div:first-child { padding-bottom:20px; }
@@ -328,8 +329,11 @@
   .dashboard [data-home-section="watchlist"] { order:11; }
   .dashboard [data-home-section="earnings"] { order:12; }
   .dashboard [data-home-section="analyses"] { order:13; }
-  .dashboard [data-home-section="news"] { order:14; }
-  .dashboard [data-home-section="sources"] { order:15; }
+  /* Sektörler ve temalar masaüstündeki gibi analizlerin ardında, haber
+     bandının önünde: iki kolonun altındaki ilk tam genişlik satır. */
+  .dashboard [data-home-section="texture"] { order:14; }
+  .dashboard [data-home-section="news"] { order:15; }
+  .dashboard [data-home-section="sources"] { order:16; }
   /* GİRİŞ YAPMAMIŞ OKUYUCUNUN FAVORİLERİ BİLANÇOLARIN ARDINDA (24 Eylül).
      Panel onun için bir davet satırı (page.tsx → WatchlistSummary); günün
      bilançolarından ve analizlerden önce durması, sayfanın asıl içeriğine
@@ -362,7 +366,7 @@
      hafta, teknik | favoriler. Kısa olan panel erken bitiyor — boşluk
      esnetilmez (`align-items:start`). */
   .dashboard { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
-  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="news"],[data-home-section="sources"]) { grid-column:1 / -1; }
+  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="texture"],[data-home-section="news"],[data-home-section="sources"]) { grid-column:1 / -1; }
   /* Teknik görünüm tablette favorilerle eş: yerleşim sırası öyle kuruluyor
      (yan yana duracak iki panel ardışık olmalı). */
   .dashboard [data-home-section="technical"] { order:11; }

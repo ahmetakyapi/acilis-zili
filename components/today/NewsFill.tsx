@@ -4,10 +4,6 @@ import { useEffect } from "react";
 
 /* Dar ekranda manşet kartı listenin üstünde, yanında boşluk yok. */
 const WIDE_QUERY = "(min-width: 1024px)";
-/** Kartın sunucudaki kapsamı (`lg:row-span-6`). Altına inilmiyor: kart az
- *  sayıda satırı kapsarsa ızgara kartın fazla boyunu o satırlara dağıtıp
- *  satır aralarını açardı. */
-const BASE_SPAN = 6;
 /** Son satırın manşet kartının dibini aşabileceği pay (kıl çizgi, yuvarlama). */
 const OVERSHOOT_PX = 2;
 
@@ -21,13 +17,13 @@ const OVERSHOOT_PX = 2;
  * SIĞAN kadarını açıyor. FillColumn'un kuralıyla aynı: boşluk esnetilmez,
  * doldurulur.
  *
- * SIĞMAYAN GERİ KAPANIYOR. Kart ızgarada satırları kapsıyor (`row-span`);
- * satırlar kartın kendi boyunu geçerse ızgara kartı GERİYOR ve kartın
- * içinde bu kez metnin altında boşluk açılıyordu. Hedef bu yüzden kartın
- * DOĞAL dibi: ölçü, hiçbir yedek açılmadan önce alınıyor.
+ * SIĞMAYAN GERİ KAPANIYOR. Hedef manşetin DOĞAL dibi: son açılan satır
+ * onu geçerse kapanıyor.
  *
- * Kartın kapsadığı satır sayısı açılan satır sayısına eşitleniyor; yoksa
- * altıncıdan sonraki satır ızgaranın sol sütununa, kartın altına düşerdi.
+ * 28 EYLÜL: manşet ve liste artık iki bağımsız sütun (gerekçe TopNews).
+ * Manşet eskiden ızgarada satırları kapsıyordu ve bu bileşen kapsamı
+ * (`row-span`) açılan satır sayısına eşitliyordu; sütunlar ayrılınca o
+ * hesap düştü, yalnızca listenin dibi ile manşetin dibi karşılaştırılıyor.
  *
  * Satırlar listenin SONUNA ekleniyor, yani görünür hiçbir şey kaymıyor;
  * açılan satırlar zaten boş olan alana iniyor. JavaScript kapalıyken ve
@@ -37,27 +33,28 @@ export function NewsFill() {
   useEffect(() => {
     const grid = document.querySelector<HTMLElement>("[data-news-grid]");
     const lead = grid?.querySelector<HTMLElement>("[data-news-lead]");
-    if (!grid || !lead) return;
+    const list = grid?.querySelector<HTMLElement>("[data-news-list]");
+    if (!grid || !lead || !list) return;
     const wide = window.matchMedia(WIDE_QUERY);
     let frame = 0;
 
     const apply = () => {
-      const extras = [...grid.querySelectorAll<HTMLElement>("[data-news-fill]")];
+      const extras = [...list.querySelectorAll<HTMLElement>("[data-news-fill]")];
       // Baştan kur: genişlik değişince sığan satır sayısı da değişiyor.
       extras.forEach((row) => (row.hidden = true));
-      lead.style.gridRow = "";
       if (!wide.matches || extras.length === 0) return;
 
-      const rows = () => [...grid.children].filter(
-        (el): el is HTMLElement => el instanceof HTMLElement && el !== lead && !el.hidden,
-      );
-      const leadBottom = lead.getBoundingClientRect().bottom;
+      /* DÜZEN ÖLÇÜSÜ, BOYANMIŞ KUTU DEĞİL. Manşet ve satırlar giriş
+         hareketiyle geliyor (`data-motion-reveal`, stagger) ve ekranın
+         altındayken başlangıç pozunda, yani kaydırılmış duruyorlar;
+         `getBoundingClientRect` o kaymayı da ölçerdi. `offsetTop` dönüşümü
+         saymıyor. İkisinin de ofset atası ızgara (`position:relative`). */
+      const bottom = (element: HTMLElement) => element.offsetTop + element.offsetHeight;
+      const leadBottom = bottom(lead);
       for (const row of extras) {
         row.hidden = false;
-        lead.style.gridRow = `span ${Math.max(BASE_SPAN, rows().length)}`;
-        if (row.getBoundingClientRect().bottom > leadBottom + OVERSHOOT_PX) {
+        if (bottom(row) > leadBottom + OVERSHOOT_PX) {
           row.hidden = true;
-          lead.style.gridRow = `span ${Math.max(BASE_SPAN, rows().length)}`;
           break;
         }
       }

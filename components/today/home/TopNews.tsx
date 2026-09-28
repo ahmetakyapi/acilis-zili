@@ -1,9 +1,11 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { NewsImage } from "@/components/news/NewsImage";
 import { NewsFill } from "@/components/today/NewsFill";
-import { EmptyState, Skeleton } from "@/components/ui/primitives";
+import styles from "./TopNews.module.css";
+import { EmptyState, LogoTile, Skeleton } from "@/components/ui/primitives";
 import { getGenericImageUrls, getLatestNews, getSymbolNames } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
+import { displayZone, formatInZone, zoneDateKey, zoneTag } from "@/lib/session-clock";
 import { cn, headlineMentions, timeAgo, titleCaseLabel } from "@/lib/utils";
 
 /** Kartta gösterilen haber sayısı ve seçkinin tarandığı havuz. */
@@ -29,6 +31,10 @@ const TOP_NEWS_FILL_MAX = 6;
  *  olmak zorunda; 40'lık havuzun çoğu o satırdan yeni kalıyordu ve 1440'ta
  *  tek aday çıkıyordu (158 piksel boşluk, ölçüldü). */
 export const TOP_NEWS_FILL_POOL = 80;
+/** UTF-8'in Latin-1 (ya da cp1252) diye okunmuş izi: "â€™", "â\u0080\u0099", "Ã©". */
+const MOJIBAKE = /\u00e2[\u0080-\u00bf\u20ac]|\u00c3[\u0080-\u00bf]/;
+/** Manşetin künyesinde en fazla kaç şirket çipi durur. */
+const LEAD_CHIPS = 3;
 
 export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) {
   // Bu kart "son haberler" değil "öne çıkanlar": son 40 haberlik havuzdan
@@ -147,7 +153,11 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
      gösteriyor ve zaten elimizde. */
   const logos = await getSymbolNames([
     ...new Set(
-      [...items, ...fill].map((item) => item.symbols?.[0]).filter((s): s is string => Boolean(s)),
+      [
+        ...[...items, ...fill].map((item) => item.symbols?.[0]),
+        /* Manşetin künyesindeki şirket çipleri: ilk üç sembolün hepsi. */
+        ...(leadCandidate?.symbols ?? []).slice(0, LEAD_CHIPS),
+      ].filter((s): s is string => Boolean(s)),
     ),
   ]);
 
@@ -166,90 +176,139 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
   const lead = items.find(hasImage) ?? null;
   const rows = items.filter((item) => item !== lead);
 
-  /* KÜNYE: kaynak · zaman · dil. Zaman Title Case ("1 Saat Önce"): künye
-     bir cümle değil (CLAUDE.md, Title Case). Çevirisi olmayan manşet TR
-     sayfada İngilizce duruyor; "EN" rozeti bunu tıklamadan önce söylüyor —
-     Mercek listesinde aynı kural. */
-  const byline = (item: (typeof pool)[number]) => (
-    <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-tiny text-muted">
-      {locale === "tr" && !item.headlineTr && (
-        <span className="plate text-nano">EN</span>
-      )}
-      <span className="numeral">{titleCaseLabel(timeAgo(item.publishedAt, locale), locale)}</span>
-      {item.source && (
-        <>
-          <span aria-hidden>·</span>
-          {item.source}
-        </>
-      )}
-    </span>
-  );
+  /* KÜNYE: kaynak · zaman · dil (28 Eylül'de yeniden kuruldu).
+
+     SAAT OKUYUCUNUN SAATİ. Satırlar yalnızca "3 Saat Önce" yazıyordu ve
+     okuyucu haberin seansın neresine düştüğünü (açılıştan önce mi, sonra
+     mı) hesaplamak zorundaydı. Artık her satırın solunda birincil saat
+     dilimiyle saat var (TR'de İstanbul, künyesiz; EN'de New York, "NY"
+     künyeli, DataStamp ile aynı kural), altında göreli zaman. Haber
+     okuyucunun bugününe ait değilse göreli zamanın yerinde tarih duruyor:
+     dünkü 22:10, bugünkü 22:10 gibi okunmasın.
+
+     Göreli zaman Title Case ("1 Saat Önce"): künye bir cümle değil
+     (CLAUDE.md). Çevirisi olmayan manşet TR sayfada İngilizce duruyor; "EN"
+     rozeti bunu tıklamadan önce söylüyor — Mercek listesinde aynı kural. */
+  const zone = displayZone(locale);
+  const todayKey = zoneDateKey(new Date(), zone);
+  const dayFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    timeZone: zone, day: "numeric", month: "short",
+  });
+  const clockOf = (item: (typeof pool)[number]) => formatInZone(item.publishedAt, zone);
+  const whenOf = (item: (typeof pool)[number]) =>
+    zoneDateKey(item.publishedAt, zone) === todayKey
+      ? titleCaseLabel(timeAgo(item.publishedAt, locale), locale)
+      : dayFormat.format(item.publishedAt);
+  const zoneMark = locale === "tr" ? null : zoneTag(locale).primary;
+  const enBadge = (item: (typeof pool)[number]) =>
+    locale === "tr" && !item.headlineTr ? <span className="plate text-nano">EN</span> : null;
+
   const headlineOf = (item: (typeof pool)[number]) =>
     locale === "tr" && item.headlineTr ? item.headlineTr : item.headline;
+  /* Manşetin özeti: başlıkla AYNI dilde. Türkçe başlığın altına İngilizce
+     özet konmuyor; başlık çevrilmemişse özet de orijinal dilinde kalıyor. */
+  const summaryOf = (item: (typeof pool)[number]) => {
+    const summary = locale === "tr" ? (item.headlineTr ? item.summaryTr : item.summary) : item.summary;
+    /* Bozuk kodlanmış özet basılmıyor: bazı beslemeler UTF-8'i Latin-1
+       diye okuyup yolluyor ve özet "Nike's" yerine "Nikeâ s" gibi geliyordu (28 Eylül,
+       ekranda görüldü). Başlık bu hatayı taşımıyor; özet isteğe bağlı. */
+    return summary && !MOJIBAKE.test(summary) ? summary : null;
+  };
   /* ÇEVRİLMEMİŞ SATIR KENDİ DİLİNİ TAŞIR. Çeviri rutini gecikince TR
      sayfada İngilizce manşet duruyor ve `lang` olmadan ekran okuyucu onu
      Türkçe fonemlerle sesletiyor. */
   const langOf = (item: (typeof pool)[number]) =>
     locale === "tr" && !item.headlineTr ? "en" : undefined;
 
-  return (
-    /* METİN ÖNCE, GÖRSEL OLDUĞUNDA (24 Eylül). Bant altı tane 16:9 kart
-       basıyordu ve görseli olmayan her kart gri bir gazete simgesiyle
-       doluyordu: ölçüldüğü gün altı kartın beşi yer tutucuydu, bölüm
-       1440'ta 789, 390'da 1926 piksel tutuyordu — telefon sayfasının beşte
-       biri gri dikdörtgendi. Görseli olan ilk haber manşet kartı olarak
-       solda kalıyor; ötekiler satır: 56 piksellik karo (haberin görseli,
-       yoksa şirketin logosu, o da yoksa kaynağın baş harfi), iki satırlık
-       manşet ve künye. Hiç görsel yoksa iki sütun, üçer satır.
+  /* MANŞETİN ŞİRKETLERİ. Satırlarda şirket logonun kendisi; manşette en
+     fazla üç şirket logo ve sembolüyle künyede. Yalnızca BAŞLIKTA geçen
+     şirket: `symbols` alanı bazen haberin konusunu değil çekildiği
+     beslemeyi söylüyor (logoFor ile aynı kural). */
+  const chipsOf = (item: (typeof pool)[number]) =>
+    (item.symbols ?? []).slice(0, LEAD_CHIPS).filter((symbol) => {
+      const meta = logos[symbol];
+      return meta ? headlineMentions(item.headline, symbol, meta.name) : false;
+    });
 
-       DOM'DA MANŞET ÖNCE, EKRANDA KÜNYE ÜSTTE — `flex-col-reverse`
-       bağlantının erişilebilir adını manşetle başlatıyor (yoksa ekran
-       okuyucu her satırda önce "7 saat önce · Benzinga" diyordu).
-       `<ul>/<li>` kalıyor: ekran okuyucu liste bilgisini kaybetmesin. */
+  const extras = lead ? fill : [];
+  const leadSummary = lead ? summaryOf(lead) : null;
+  const leadChips = lead ? chipsOf(lead) : [];
+
+  return (
+    /* MANŞET VE AKIŞ (28 Eylül). Bant solda kutulu bir manşet kartı, sağda
+       künyesi başlığın üstünde duran satırlardı; sahibi "daha iyi hâle
+       getirelim" dedi. Üç değişiklik:
+
+       1. MANŞET KUTUSUZ. Görsel kutunun kendisi (CLAUDE.md "Görselin
+          etrafında çerçeve yok"); başlık, özet ve künye onun altında,
+          sayfanın zemininde. Kart çerçevesi ile görselin kendi köşesi iç
+          içe iki kutu gibi okunuyordu. Başlık bir kademe büyüdü ve
+          haberin özeti (varsa, başlıkla aynı dilde) iki satır olarak geldi.
+       2. SAĞDA ZAMAN AKIŞI. Her satırın solunda okuyucunun saati, bir kıl
+          çizgiyle ayrılmış bir sütunda; satırlar bir haber ajansı akışı
+          gibi yukarıdan aşağı zamanla okunuyor. Göreli zaman saatin altında.
+       3. HAREKET. Satırlar sırayla iniyor (`data-motion-stagger`), görsel
+          üzerine gelince hafifçe yakınlaşıyor, satırın oku kayıyor. Hepsi
+          azaltılmış harekette kapalı.
+
+       İKİ AYRI SÜTUN, ORTAK IZGARA SATIRLARI DEĞİL. Manşet eskiden satır
+       ızgarasında altı satırı kapsıyordu ve kendi boyu satırların
+       toplamından uzunsa ızgara farkı SATIRLARA dağıtıyordu: dört satırlık
+       bir günde her satır 80 yerine 118 piksele gerildi, künye satırın
+       dibine kaçtı (1280'de ölçüldü). Şimdi manşet ve liste iki bağımsız
+       sütun; liste yedek satırlarla manşetin doğal dibine kadar doluyor
+       (NewsFill), dolmayan kısım listenin altında kalıyor.
+
+       DOM'DA MANŞET ÖNCE, EKRANDA KÜNYE VE SAAT ÖNDE — ızgara alanlarıyla;
+       bağlantının erişilebilir adı başlıkla başlıyor. Satırlar `<ul>/<li>`:
+       ekran okuyucu liste bilgisini kaybetmesin. */
     <>
-    <ul
-      data-news-grid
-      className={cn(
-        "mt-4 grid min-w-0 gap-x-8",
-        lead
-          ? "lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]"
-          : /* Görselsiz ve az haberli günde (kaynak sınırı üç haber
-               bıraktı) üç satır tek sırada; iki sütunda üçüncüsü tek
-               başına kalıyordu. */
-            rows.length === 3
-            ? "lg:grid-cols-3"
-            : "sm:grid-cols-2",
-      )}
-    >
+    <div data-news-grid className={cn(styles.grid, lead ? styles.withLead : undefined)}>
       {lead && (
-        <li data-news-lead className="min-w-0 pb-4 lg:row-span-6 lg:pb-0">
-          <Link
-            href={`/haberler/${lead.id}`}
-            prefetch={false}
-            className="panel panel-hover flex h-full min-w-0 flex-col overflow-hidden"
-          >
+        <div data-news-lead data-motion-reveal className={styles.leadItem}>
+          <Link href={`/haberler/${lead.id}`} prefetch={false} className={styles.lead}>
+            <span lang={langOf(lead)} className={styles.leadHeadline}>
+              {headlineOf(lead)}
+            </span>
+            {leadSummary && (
+              <span lang={langOf(lead)} className={styles.leadSummary}>
+                {leadSummary}
+              </span>
+            )}
+            <span className={styles.leadMeta}>
+              {enBadge(lead)}
+              {leadChips.map((symbol) => (
+                <span key={symbol} className={styles.chip}>
+                  <LogoTile symbol={symbol} logoUrl={logos[symbol]?.logoUrl} size="xs" />
+                  {symbol}
+                </span>
+              ))}
+              {lead.source && <span className={styles.leadSource}>{lead.source}</span>}
+              <span className="numeral">
+                {clockOf(lead)}
+                {zoneMark && ` ${zoneMark}`}
+              </span>
+              <span aria-hidden>·</span>
+              <span className="numeral">{whenOf(lead)}</span>
+            </span>
             <NewsImage
               src={lead.imageUrl}
               logoUrl={logoFor(lead)}
-              className="w-full rounded-none border-0 border-b border-line-soft"
+              className={styles.leadImage}
               sizeClass="aspect-[16/9] h-auto w-full"
             />
-            <span className="flex min-w-0 flex-1 flex-col-reverse justify-end gap-2 p-4 sm:p-5">
-              <span
-                lang={langOf(lead)}
-                className="line-clamp-3 text-lead font-semibold leading-[1.35] text-strong sm:text-title"
-              >
-                {headlineOf(lead)}
-              </span>
-              {byline(lead)}
-            </span>
           </Link>
-        </li>
+        </div>
       )}
+      <ul
+        data-news-list
+        data-motion-stagger
+        className={cn(styles.list, !lead && (rows.length === 3 ? styles.three : styles.pair))}
+      >
       {[
         ...rows.map((item) => ({ item, extra: false })),
-        ...(lead ? fill.map((item) => ({ item, extra: true })) : []),
-      ].map(({ item, extra }, index) => {
+        ...extras.map((item) => ({ item, extra: true })),
+      ].map(({ item, extra }) => {
         const logo = logoFor(item);
         return (
           <li
@@ -257,50 +316,41 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
             /* Yedek satır: tarayıcı sığdığını ölçerse açıyor (NewsFill). */
             hidden={extra || undefined}
             data-news-fill={extra || undefined}
-            className={cn(
-              "min-w-0 border-t border-line",
-              /* Sütunun ilk satırı üstteki kıl çizgiyi taşımıyor: başlık
-                 şeridinin çizgisi hemen üstünde. */
-              index === 0 && "lg:border-t-0",
-              !lead && index === 0 && "border-t-0",
-              !lead && index === 1 && (rows.length === 3 ? "lg:border-t-0" : "sm:border-t-0"),
-              !lead && rows.length === 3 && index === 2 && "lg:border-t-0",
-            )}
+            className={styles.rowItem}
           >
-            <Link
-              href={`/haberler/${item.id}`}
-              prefetch={false}
-              className="grid min-w-0 grid-cols-[3.5rem_minmax(0,1fr)] items-start gap-3 rounded-lg py-3 transition-colors hover:bg-primary-tint lg:px-2"
-            >
+            <Link href={`/haberler/${item.id}`} prefetch={false} className={styles.row}>
+              <span lang={langOf(item)} className={styles.rowHeadline}>
+                {headlineOf(item)}
+              </span>
+              <span className={styles.rowByline}>
+                {enBadge(item)}
+                {item.source && <span>{item.source}</span>}
+              </span>
+              <span className={styles.rowTime}>
+                <time dateTime={item.publishedAt.toISOString()} className="numeral">
+                  {clockOf(item)}
+                  {zoneMark && <small> {zoneMark}</small>}
+                </time>
+                <span className="numeral">{whenOf(item)}</span>
+              </span>
               {hasImage(item) || logo ? (
                 <NewsImage
                   src={hasImage(item) ? item.imageUrl : null}
                   logoUrl={logo}
-                  className="rounded-lg"
-                  sizeClass="size-14"
+                  className={styles.thumb}
+                  sizeClass="size-12"
                 />
               ) : (
-                <span
-                  aria-hidden
-                  className="grid size-14 place-items-center rounded-lg bg-surface-sunken text-lead font-bold text-body"
-                >
+                <span aria-hidden className={cn(styles.thumb, styles.initial)}>
                   {(item.source ?? "?").slice(0, 1).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
                 </span>
               )}
-              <span className="flex min-w-0 flex-col-reverse justify-end gap-1">
-                <span
-                  lang={langOf(item)}
-                  className="line-clamp-2 text-lead font-semibold leading-[1.35] text-strong"
-                >
-                  {headlineOf(item)}
-                </span>
-                {byline(item)}
-              </span>
             </Link>
           </li>
         );
       })}
-    </ul>
+      </ul>
+    </div>
     {lead && fill.length > 0 && <NewsFill />}
     </>
   );
@@ -311,30 +361,47 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
  *
  * ÖLÇÜ GERÇEK BANDIN ŞEKLİ: bir dönem tek bir 16/10 blok basılıyordu ve
  * gerçek kart ondan seksen piksel uzundu — bant çözülünce altındaki her şey
- * aşağı zıplıyordu. Bant artık manşet kartı + satırlar (gerekçe `TopNews`);
- * iskelet de aynı iki parçayı taklit ediyor.
+ * aşağı zıplıyordu. Bant manşet + satırlar (gerekçe `TopNews`); iskelet
+ * aynı sınıflarla aynı iki parçayı basıyor: görsel 16:9, başlık üç, özet
+ * iki satır; satırlar saat sütunu, karo ve iki satır başlıkla.
  */
 export function NewsGridSkeleton() {
   return (
-    <div aria-hidden className="mt-4 grid gap-x-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-      <div className="panel overflow-hidden lg:row-span-5">
-        <Skeleton className="aspect-[16/9] w-full rounded-none" />
-        <div className="flex flex-col gap-2 p-4 sm:p-5">
-          <Skeleton className="h-2.5 w-2/5 rounded-md" />
-          <Skeleton className="h-5 w-full rounded-md" />
-          <Skeleton className="h-5 w-4/5 rounded-md" />
+    <div aria-hidden className={cn(styles.grid, styles.withLead)}>
+      <div className={styles.leadItem}>
+        <div className={styles.lead}>
+          <div className={styles.leadMeta}>
+            <Skeleton className="h-3 w-48 rounded-md" />
+          </div>
+          <Skeleton className="h-6 w-full rounded-md" />
+          <Skeleton className="h-6 w-4/5 rounded-md" />
+          <Skeleton className="h-4 w-full rounded-md" />
+          <Skeleton className={cn(styles.leadImage, "aspect-[16/9] w-full")} />
         </div>
       </div>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-3 border-t border-line py-3 first-of-type:border-t-0">
-          <Skeleton className="size-14 rounded-lg" />
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-2.5 w-2/5 rounded-md" />
-            <Skeleton className="h-4 w-full rounded-md" />
-            <Skeleton className="h-4 w-3/5 rounded-md" />
+      <div className={styles.list}>
+      {Array.from({ length: NEWS_SKELETON_ROWS }).map((_, i) => (
+        <div key={i} className={styles.rowItem}>
+          <div className={styles.row}>
+            <span className={styles.rowTime}>
+              <Skeleton className="h-3.5 w-10 rounded-md" />
+              <Skeleton className="h-2.5 w-12 rounded-md" />
+            </span>
+            <Skeleton className={cn(styles.thumb, "size-12")} />
+            <span className={styles.rowHeadline}>
+              <Skeleton className="mb-1.5 h-4 w-full rounded-md" />
+              <Skeleton className="h-4 w-3/5 rounded-md" />
+            </span>
+            <span className={styles.rowByline}>
+              <Skeleton className="h-2.5 w-16 rounded-md" />
+            </span>
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 }
+
+/** İskeletteki satır sayısı — en sık görülen günün hâli (manşet + beş). */
+const NEWS_SKELETON_ROWS = 5;

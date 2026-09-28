@@ -1,4 +1,4 @@
-import { cache, Suspense } from "react";
+import { Suspense } from "react";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
@@ -8,17 +8,14 @@ import { GuideHint } from "@/components/article/GuideHint";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { RollingFigure } from "@/components/themes/RollingFigure";
 import styles from "@/components/themes/Themes.module.css";
-import { LogoGroup, SpreadStrip, type LogoMember, type SpreadPoint } from "@/components/themes/ThemeVisuals";
+import { LogoGroup, SpreadStrip } from "@/components/themes/ThemeVisuals";
+import { ThemeRanking } from "@/components/themes/ThemeRanking";
 import { DataStamp } from "@/components/ui/primitives";
-import { THEMES, themeDek, themeTitle } from "@/content/themes";
-import { getStatus, getSymbolNames } from "@/lib/data";
+import { themeDek, themeTitle } from "@/content/themes";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { logoSrc } from "@/lib/logos";
 import { pageMetadata } from "@/lib/page-meta";
-import { getQuotes } from "@/lib/providers";
-import { median, sameSessionMoves } from "@/lib/theme-stats";
-import { spreadScale } from "@/lib/theme-view";
-import { KATILIM_MAX, katilimMembers, katilimPool, themeRow } from "@/lib/themes-data";
+import { loadThemeBoard, themePlaceholders, type ThemeBoard, type ThemeCard } from "@/lib/theme-board";
+import { KATILIM_MAX } from "@/lib/themes-data";
 import { cn, directionOf, directionText, formatPercent, NO_VALUE } from "@/lib/utils";
 
 export const generateMetadata = pageMetadata({
@@ -42,8 +39,9 @@ export const generateMetadata = pageMetadata({
  * (`getQuotes` sıralı sembol dizesiyle önbellekli). NVDA üç temada birden
  * duruyor; üç ayrı çağrı üç ayrı fiyat anı demekti ve aynı hisse aynı
  * ekranda üç medyana üç farklı yüzdeyle girebilirdi. Kapaktaki sıralama ve
- * galeri iki ayrı Suspense sınırı ama ikisi de aynı `loadBoard`u okuyor
- * (`cache`, istek içinde tek hesap).
+ * galeri iki ayrı Suspense sınırı ama ikisi de aynı `loadThemeBoard`u okuyor
+ * (`cache`, istek içinde tek hesap). Hesap lib/theme-board.ts'te; ana
+ * sayfanın temalar bandı da oradan okuyor.
  *
  * GÖRSEL DİL (28 Eylül). Önceki dizin on eşit kutuydu: başlık, bir cümle,
  * köşede küçük bir yüzde. Sahibi "görsel olarak çok zayıf" dedi. Kart artık
@@ -67,19 +65,7 @@ export default async function ThemesIndexPage() {
      elle seçilmiş temaların logoları durağan (content/themes.ts, depodaki
      logo dosyaları); yalnızca sayılar veriye bağlı. Yedek AYNI ızgarayı
      sayısız basıyor, sayılar akışla iniyor ve kartlar yerinden oynamıyor. */
-  const placeholders: ThemeCard[] = THEMES.map((theme) => ({
-    theme,
-    members:
-      theme.symbols === "katilim"
-        ? []
-        : theme.symbols.map((symbol) => ({ symbol, logoUrl: logoSrc(symbol, null) })),
-    count: theme.symbols === "katilim" ? null : theme.symbols.length,
-    points: [],
-    basis: null,
-    median: null,
-    up: null,
-    down: null,
-  }));
+  const placeholders = themePlaceholders();
 
   return (
     <MotionExperience className={polish.page}>
@@ -120,91 +106,8 @@ export default async function ThemesIndexPage() {
   );
 }
 
-type ThemeCard = {
-  theme: (typeof THEMES)[number];
-  members: LogoMember[];
-  /** Katılım listesi taranana kadar üye sayısı bilinmiyor. */
-  count: number | null;
-  /** Medyana giren (aynı seansı anlatan) üyelerin hareketi. */
-  points: SpreadPoint[];
-  basis: "session" | "lastClose" | null;
-  median: number | null;
-  up: number | null;
-  down: number | null;
-};
-
-type Board = {
-  cards: ThemeCard[];
-  /** Dağılım şeritlerinin ortak ölçeği; yedekte bilinmiyor. */
-  scale: number | null;
-  leader: string | null;
-  laggard: string | null;
-};
-
-const loadBoard = cache(async function loadBoard() {
-  const status = await getStatus();
-  const pool = await katilimPool();
-
-  const all = [
-    ...new Set(THEMES.flatMap((theme) => (theme.symbols === "katilim" ? pool : [...theme.symbols]))),
-  ];
-  const [quotesResult, names] = await Promise.all([
-    getQuotes(all, status),
-    getSymbolNames(all),
-  ]);
-  const quotes = quotesResult.ok ? quotesResult.data : {};
-
-  const cards: ThemeCard[] = await Promise.all(
-    THEMES.map(async (theme) => {
-      const members =
-        theme.symbols === "katilim"
-          ? await katilimMembers(pool, quotes, names)
-          : [...theme.symbols];
-      const rows = members.map((symbol) => themeRow(symbol, quotes, names, status));
-      const moves = sameSessionMoves(rows);
-      const values = moves?.values ?? [];
-      return {
-        theme,
-        members: rows.map((row) => ({ symbol: row.symbol, logoUrl: row.logoUrl })),
-        count: members.length,
-        points: moves
-          ? rows.flatMap((row, i) =>
-              moves.included[i] ? [{ symbol: row.symbol, change: row.changePct! }] : [],
-            )
-          : [],
-        basis: moves?.basis ?? null,
-        median: moves ? median(values) : null,
-        up: moves ? values.filter((value) => value > 0).length : null,
-        down: moves ? values.filter((value) => value < 0).length : null,
-      };
-    }),
-  );
-
-  /* Sıralama ve ortak ölçek yalnızca AYNI SEANSI anlatan medyanlardan:
-     son kapanışa kalmış bir temanın medyanı bu seansın medyanlarıyla aynı
-     çizgiye konmuyor. */
-  const sessionCount = cards.filter((card) => card.basis === "session").length;
-  const scaleBasis: "session" | "lastClose" = sessionCount > 0 ? "session" : "lastClose";
-  const comparable = cards.filter((card) => card.basis === scaleBasis && card.median !== null);
-  const scale = spreadScale(comparable.flatMap((card) => card.points.map((point) => point.change)));
-
-  /* Günün öne çıkanı yalnızca canlı seansta ve en az iki tema varken:
-     son kapanışa "günün en güçlüsü" demek dünü bugün diye anlatmak olurdu. */
-  const ranked = scaleBasis === "session" && comparable.length >= 2
-    ? [...comparable].sort((a, b) => b.median! - a.median!)
-    : [];
-
-  const board: Board = {
-    cards,
-    scale,
-    leader: ranked[0]?.theme.slug ?? null,
-    laggard: ranked.length > 1 ? ranked[ranked.length - 1].theme.slug : null,
-  };
-  return { board, scaleBasis, quotesResult };
-});
-
 async function LiveRanking({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const { board, scaleBasis } = await loadBoard();
+  const { board, scaleBasis } = await loadThemeBoard();
   return <ThemeRanking cards={board.cards} basis={scaleBasis} locale={locale} t={t} />;
 }
 
@@ -215,7 +118,7 @@ async function LiveRanking({ locale, t }: { locale: Locale; t: Dictionary }) {
  * tek cümlenin altında büyük bir boşluk kalıyordu (sahibinin geri
  * bildirimi). Boşluk esnetilmiyor, sıralamanın zaten söylediğinin ÖZETİYLE
  * doluyor: kaç tema yükseldi, kaç tema düştü, en güçlü ve en zayıf hangisi.
- * Veri `loadBoard`tan, istek içinde önbellekli; yeni bir istek yok.
+ * Veri `loadThemeBoard`dan, istek içinde önbellekli; yeni bir istek yok.
  *
  * En güçlü ve en zayıf YALNIZCA canlı seansta (galerideki künyeyle aynı
  * kural); son kapanışa kalmış günde sayılar nötr basılıyor ve "Son Kapanış"
@@ -230,7 +133,7 @@ type HeroSummaryData = {
 };
 
 async function LiveHeroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const { board, scaleBasis } = await loadBoard();
+  const { board, scaleBasis } = await loadThemeBoard();
   const comparable = board.cards.filter((card) => card.basis === scaleBasis && card.median !== null);
   const bySlug = (slug: string | null) => board.cards.find((card) => card.theme.slug === slug) ?? null;
   return (
@@ -293,7 +196,7 @@ function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; 
 }
 
 async function LiveGallery({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const { board, quotesResult } = await loadBoard();
+  const { board, quotesResult } = await loadThemeBoard();
   return (
     <>
       <ThemeGallery board={board} locale={locale} t={t} />
@@ -312,88 +215,6 @@ async function LiveGallery({ locale, t }: { locale: Locale; t: Dictionary }) {
   );
 }
 
-/**
- * Kapaktaki sıralama — temalar medyana göre, sıfırdan iki yana açılan
- * çubuklarla. Ekran kuralı: karşılaştırılan büyüklük bir de ÇİZGİ olarak
- * okunur. Çubuk yalnızca aynı seansı anlatan medyanlara basılıyor; ötekiler
- * listenin dibinde sayısız duruyor.
- *
- * Yedek aynı on satırı editoryal sırayla ve çubuksuz basıyor: veri inince
- * yalnızca satırların sırası ve içi değişiyor, kutu değil.
- */
-function ThemeRanking({
-  cards,
-  basis = null,
-  locale,
-  t,
-}: {
-  cards: ThemeCard[];
-  basis?: "session" | "lastClose" | null;
-  locale: Locale;
-  t: Dictionary;
-}) {
-  const inScale = (card: ThemeCard) => basis !== null && card.basis === basis && card.median !== null;
-  const sorted = basis
-    ? [...cards].sort((a, b) => {
-        if (inScale(a) !== inScale(b)) return inScale(a) ? -1 : 1;
-        return (b.median ?? 0) - (a.median ?? 0);
-      })
-    : cards;
-  const peak = Math.max(0, ...sorted.filter(inScale).map((card) => Math.abs(card.median!)));
-
-  return (
-    <div className={styles.rank}>
-      <div className={styles.rankHead}>
-        <h2>{t.themes.rankTitle}</h2>
-        <span>
-          {t.themes.median}
-          {basis === "lastClose" ? ` · ${t.themes.medianLastClose}` : ""}
-        </span>
-      </div>
-      <ol className={styles.rankList}>
-        {sorted.map((card) => {
-          const ratio = inScale(card) && peak > 0 ? card.median! / peak : null;
-          const neutral = card.basis !== "session";
-          return (
-            <li key={card.theme.slug}>
-              <Link href={`/tema/${card.theme.slug}`} prefetch={false} className={styles.rankRow}>
-                <span className={styles.rankName}>{themeTitle(card.theme, locale)}</span>
-                <span className={styles.rankTrack} aria-hidden>
-                  {ratio !== null && ratio !== 0 && (
-                    <i
-                      className={styles.rankBar}
-                      data-tone={neutral ? "flat" : ratio > 0 ? "up" : "down"}
-                      data-motion-draw="line"
-                      style={
-                        ratio > 0
-                          ? { left: "50%", width: `${ratio * 50}%`, transformOrigin: "left center" }
-                          : { right: "50%", width: `${-ratio * 50}%`, transformOrigin: "right center" }
-                      }
-                    />
-                  )}
-                </span>
-                <span
-                  className={cn(
-                    "numeral",
-                    styles.rankValue,
-                    card.median === null
-                      ? "text-muted"
-                      : neutral
-                        ? "text-body"
-                        : directionText(directionOf(card.median)),
-                  )}
-                >
-                  {card.median === null ? NO_VALUE : formatPercent(card.median, locale)}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
-  );
-}
-
 /** Kart genişlikleri, 12 sütunlu ızgarada (1024 ve üstü). Dar ekranda
     hepsi tek ya da iki sütuna iniyor; sıra her zaman aynı. Yan yana iki
     kart her satırda 12'ye tamamlanıyor, eşit üçlü satır yok. */
@@ -408,7 +229,7 @@ const MOSAIC_MAX = 8;
 const NARROW_MOSAIC_MAX = 7;
 const WIDE_SPAN = 7;
 
-function ThemeGallery({ board, locale, t }: { board: Board; locale: Locale; t: Dictionary }) {
+function ThemeGallery({ board, locale, t }: { board: ThemeBoard; locale: Locale; t: Dictionary }) {
   return (
     <ul className={styles.gallery} data-motion-stagger>
       {board.cards.map((card, index) => {

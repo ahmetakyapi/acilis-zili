@@ -29,6 +29,13 @@ import { SpotlightSkeleton, StoriesSpotlight } from "@/components/today/home/Sto
 import { TechnicalPanel } from "@/components/today/home/TechnicalPanel";
 import { LatestAnalyses } from "@/components/today/home/LatestAnalyses";
 import { PortfolioSlot } from "@/components/today/home/PortfolioSlot";
+import {
+  SectorRibbon,
+  SectorRibbonSkeleton,
+  ThemeSpotlight,
+  ThemeSpotlightSkeleton,
+} from "@/components/today/home/MarketTexture";
+import textureStyles from "@/components/today/home/MarketTexture.module.css";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -539,6 +546,31 @@ export default async function TodayPage() {
         </div>
       </div>
 
+      {/* ---- Sektörler ve temalar ----
+           İKİ KOLONUN ALTINDA, KENDİ SATIRINDA (28 Eylül). Kolonlar ölçülü
+           bir dengede (bant eklenmeden önce, misafir, açık tema: 1024'te
+           138, 1280'de 14, 1440'ta 31 piksel fark) ve bu bant hangi kolona
+           girse ötekinde kendi boyu kadar boşluk açardı. Tam genişlikte
+           kolonlara hiç dokunmuyor; haber bandı bir satır aşağı iniyor.
+           Seçim gerekçesi ve veri kaynağı `MarketTexture.tsx` başında. */}
+      <Panel
+        data-home-section="texture"
+        id="sektor-ve-tema"
+        aria-labelledby="sektor-ve-tema-baslik"
+        className={cn(textureStyles.band, styles.texture, "min-w-0 lg:col-span-2 lg:row-start-2")}
+      >
+        <div className={textureStyles.bandHead}>
+          <h2 id="sektor-ve-tema-baslik">{t.today.textureTitle}</h2>
+          <p>{t.today.textureNote}</p>
+        </div>
+        <Suspense fallback={<SectorRibbonSkeleton t={t} />}>
+          <SectorRibbon locale={locale} t={t} />
+        </Suspense>
+        <Suspense fallback={<ThemeSpotlightSkeleton locale={locale} t={t} />}>
+          <ThemeSpotlight locale={locale} t={t} />
+        </Suspense>
+      </Panel>
+
       {/* ---- Öne çıkan haberler ----
            TAM GENİŞLİK BANT, KUTU DEĞİL. Haberler bir süre sol kolonda,
            analizlerin altında, altı satırlık düz bir listeydi: sayfanın en
@@ -549,7 +581,7 @@ export default async function TodayPage() {
            tamamını aldı; başlığı da bir panel başlığı değil BÖLÜM başlığı
            oldu — kutu yok, altında hairline var. Sayfa böylece "kutu, kutu,
            kutu" ritminden çıkıp bir bölümle kapanıyor. */}
-      <section data-home-section="news" id="haber-akisi" className={cn(styles.news, "min-w-0 lg:col-span-2 lg:row-start-2")}>
+      <section data-home-section="news" id="haber-akisi" className={cn(styles.news, "min-w-0 lg:col-span-2 lg:row-start-3")}>
         <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
           <h2 className={styles.newsHeading}>
             {t.today.topNews}
@@ -586,7 +618,7 @@ export default async function TodayPage() {
       <FillColumn />
 
       {/* ---- Kaynak künyesi ---- */}
-      <footer data-home-section="sources" className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted lg:col-span-2 lg:row-start-3">
+      <footer data-home-section="sources" className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted lg:col-span-2 lg:row-start-4">
         <span>{t.today.sourceLine}</span>
         <span>{t.today.sourceNote}</span>
       </footer>
