@@ -57,6 +57,13 @@
 .table tbody th { padding:9px 10px; border-top:1px solid var(--line-soft); color:var(--text-strong); font-size:12px; font-weight:600; }
 .table th:first-child, .table td:first-child { position:sticky; left:0; z-index:1; padding-left:0; text-align:left; background:var(--premium-surface,var(--surface-solid)); }
 .table th:last-child, .table td:last-child { padding-right:0; }
+/* ANALİST DEĞİŞİMİ SIKI (28 Eylül, sahibinin isteği: "mümkün olduğunca
+   kompakt, gereksiz boşluk yok"). Yedi satır 9 piksellik dolguyla 457
+   piksel tutuyor ve yanındaki skor kartını (doğal 390) kendi boyuna
+   geriyordu; skor kartında listeyle künye arasında 68 piksel boşluk
+   kalıyordu. Satır dolgusu 6: iki panel aynı boya iniyor. */
+.trendTable th, .trendTable td, .trendTable tbody th { padding-block:6px; }
+.trendTable thead th { padding-block:2px 6px; }
 .insiderTable { min-width:560px; }
 .trendTable { min-width:420px; }
 .historyTable { min-width:300px; max-width:640px; }
@@ -82,18 +89,48 @@
 .bar > b { position:absolute; top:calc(50% - 2px); left:calc(50% - 2px); width:4px; height:4px; border-radius:999px; background:var(--line-strong); }
 .barAxis { display:flex; justify-content:space-between; margin-top:6px; color:var(--text-muted); font-size:10px; }
 
-/* Skor kartı satırı: etiket + cümle solda, yüzde ve çubuk sağda. */
+/* Skor kartı satırı (28 Eylül): ad · dağılım şeridi · yüzde TEK hatta,
+   altında cümle ve ölçü adları tek künye. Eski düzen etiket, cümle ve
+   künyeyi üst üste üç satıra diziyordu (satır 72, 390'da 91 piksel). */
 .axisList { display:flex; flex-direction:column; }
-.axisRow { display:grid; grid-template-columns:minmax(0,1fr) 108px; align-items:center; gap:4px 16px; padding:10px 0; border-top:1px solid var(--line-soft); }
-.axisRow:first-child { border-top:0; padding-top:4px; }
-.axisName { color:var(--text-strong); font-size:12px; font-weight:600; }
-.axisSentence { color:var(--text-body); font-size:13px; line-height:1.45; }
-.axisMetrics { color:var(--text-muted); font-size:var(--text-nano); line-height:1.45; }
-.axisFigure { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
-.axisPct { color:var(--text-strong); font-size:20px; font-weight:600; line-height:1; letter-spacing:-.03em; }
-@media (max-width:359px) {
-  .axisRow { grid-template-columns:minmax(0,1fr) 84px; }
+.axisRow {
+  display:grid; grid-template-columns:minmax(0,9rem) minmax(0,1fr) 3.25rem;
+  grid-template-areas:"name strip pct" "meta meta meta";
+  align-items:center; gap:2px 16px; padding:7px 0; border-top:1px solid var(--line-soft);
 }
+.axisRow:first-child { border-top:0; padding-top:0; }
+/* Liste ile künye arası: `.note`un 12 + 10'u burada 8 + 8 — satırlar
+   zaten hairline ile bitiyor, ikinci bir geniş boşluk panelin dibini uzatıyordu. */
+.axisList + .note { margin-top:8px; padding-top:8px; }
+/* SATIR KOMŞUSUNA GERİLDİĞİNDE KÜNYE DİPTE (28 Eylül). 1100 üstünde ızgara
+   satırı iki paneli aynı boya geriyor (`.grid` yorumu) ve sıkılaşan skor
+   kartı (doğal 390) analist dağılımının 457'sine uzuyor: 68 piksel,
+   damganın ALTINDA boş bir kuyruk olarak kalıyordu (NVDA ve MU, 1280,
+   ölçüldü). Künye ve damga artık panelin dibinde; iki paneldeki kaynak
+   damgası aynı hatta bitiyor. Liste ile künye arası en az 8 piksel. */
+.scorePanel { display:flex; flex-direction:column; }
+.scorePanel > .body { flex:1 1 auto; }
+.scorePanel .axisList { margin-bottom:8px; }
+.scorePanel .axisList + .note { margin-top:auto; }
+.axisName { grid-area:name; min-width:0; color:var(--text-strong); font-size:12.5px; font-weight:600; line-height:1.3; }
+.axisPct { grid-area:pct; color:var(--text-strong); font-size:17px; font-weight:600; line-height:1; letter-spacing:-.03em; text-align:right; }
+.axisMeta { grid-area:meta; min-width:0; color:var(--text-muted); font-size:var(--text-nano); line-height:1.45; }
+.axisSentence { color:var(--text-body); }
+@media (max-width:519px) {
+  .axisRow { grid-template-columns:minmax(0,6.75rem) minmax(0,1fr) 2.75rem; column-gap:12px; }
+  .axisPct { font-size:16px; }
+}
+
+/* Dağılım şeridi: ray = konunun yüzdeliği, ince çentik = sektördeki bir
+   şirket, uzun çizgi = medyan, yuvarlak işaret = konu. Uçlarda işaret
+   yarım taşmasın diye şerit kendi yarıçapı kadar içeride (`margin-inline`);
+   `container-type` işaretin `travel` kaymasını şeridin eniyle ölçüyor. */
+.strip { grid-area:strip; position:relative; display:block; height:18px; margin-inline:6px; container-type:inline-size; }
+.stripRail { position:absolute; inset-inline:0; top:50%; height:3px; margin-top:-1.5px; border-radius:999px; background:var(--rail-track,var(--line-soft)); }
+.stripRail > i { display:block; height:100%; border-radius:999px; background:color-mix(in srgb, var(--primary) 45%, transparent); }
+.stripTick { position:absolute; top:4px; bottom:4px; width:1.5px; margin-left:-.75px; border-radius:1px; background:color-mix(in srgb, var(--flat) 55%, transparent); }
+.stripMedian { position:absolute; top:0; bottom:0; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-muted); }
+.stripDot { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border:2px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--primary); box-sizing:border-box; }
 
 /* Teknik fotoğraf — iki sütunlu ölçü listesi, satırlar aynı hatta. */
 .techGrid { display:grid; grid-template-columns:minmax(0,1fr); column-gap:24px; }
@@ -162,12 +199,26 @@
    yerine satır satır (etiket solda, sayı sağda) ve kayıtların ilk beşi
    açık. */
 .insiderRecords { min-width:0; margin-top:12px; }
+.clampButton { display:none; }
 .insiderNotes { min-width:0; }
 @media (min-width:1100px) {
   .insiderBody[data-split] { display:grid; grid-template-columns:minmax(0,380px) minmax(0,1fr); grid-template-rows:auto 1fr; grid-template-areas:"aside records" "notes records"; column-gap:28px; }
   .insiderBody[data-split] > .insiderAside { grid-area:aside; }
   .insiderBody[data-split] > .insiderNotes { grid-area:notes; }
-  .insiderBody[data-split] > .insiderRecords { grid-area:records; margin-top:0; padding-left:28px; border-left:1px solid var(--line-soft); }
+  .insiderBody[data-split] > .insiderRecords { grid-area:records; margin-top:0; padding-left:28px; border-left:1px solid var(--line-soft); position:relative; display:flex; flex-direction:column; }
+  /* Kutu ızgara satırının boyuna katkı vermiyor (`height:0`) ve satırın
+     boyunu, yani sol sütunu dolduruyor (`min-height:100%`). Alt 72 piksel
+     maskeyle soluyor; renk değil saydamlık, iki temada aynı. */
+  .clampBox { height:0; min-height:100%; overflow:hidden; mask-image:linear-gradient(to bottom, black calc(100% - 72px), transparent); }
+  .clampInput:checked ~ .clampBox { height:auto; min-height:0; overflow:visible; mask-image:none; }
+  .clampButton { position:absolute; left:28px; right:0; bottom:0; z-index:1; display:flex; justify-content:center; }
+  .clampButton > span { display:inline-flex; align-items:center; min-height:36px; padding:0 16px; border:1px solid var(--line); border-radius:999px; background:var(--panel-fixed); color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; transition:border-color .2s, background-color .2s; }
+  .clampButton:hover > span { border-color:var(--primary-faint); background:var(--primary-tint); }
+  .clampInput:focus-visible ~ .clampButton > span { outline:2px solid var(--line-focus); outline-offset:2px; }
+  .clampInput:checked ~ .clampButton { position:static; margin-top:10px; }
+  .clampInput:checked ~ .clampButton .clampMore, .clampInput:not(:checked) ~ .clampButton .clampLess { display:none; }
+  .insiderRecords[data-fits] > .clampBox { mask-image:none; }
+  .insiderRecords[data-fits] > .clampButton { display:none; }
   .insiderAside .readings { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px 14px; }
   .insiderAside .readingValue { font-size:20px; }
 }

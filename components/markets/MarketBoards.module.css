@@ -81,9 +81,26 @@
 @media(min-width:640px) { .pulseCompact { padding-inline:20px; } }
 .pulseCompact .gaugeWrap { flex:0 0 auto; width:180px; }
 .pulseChips { flex:1 1 180px; display:flex; flex-direction:column; min-width:0; }
-.pulseChips li { display:flex; align-items:center; justify-content:space-between; gap:10px; padding-block:6px; border-top:1px solid var(--line-soft); font-size:var(--text-small); color:var(--text-body); }
+.pulseChips li { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px 16px; padding-block:9px; border-top:1px solid var(--line-soft); font-size:var(--text-small); color:var(--text-body); }
 .pulseChips li:first-child { border-top:0; }
-.pulseChips b { font-weight:700; color:var(--text-strong); }
+/* Sağ uç: ray + büyük sayı. Sayı 13'ten 22 piksele (sahibinin isteği:
+   "sağdaki sayılar çok ufak"), yön tonunda; ray sabit genişlikte ki beş
+   satırın rayları alt alta aynı ölçekte okunsun. */
+.pulseChipScore { display:flex; align-items:center; gap:14px; }
+.chipTrack { width:120px; height:6px; position:relative; overflow:visible; }
+.chipTrack::after { content:""; position:absolute; top:-3px; bottom:-3px; left:50%; width:1px; background:var(--line-strong); }
+.pulseChipScore b { min-width:2.2ch; font-size:22px; font-weight:700; line-height:1; letter-spacing:-.03em; text-align:right; color:var(--down); }
+.pulseChipScore b[data-side="up"] { color:var(--up); }
+/* Telefonda puan adın satırında, açıklama altta tam genişlikte: ray ayrı
+   satıra indiğinde panel 525'ten 704 piksele uzuyordu (390, ölçüldü). */
+@media(max-width:479px) {
+  .pulseChips li { row-gap:3px; }
+  .pulseChips .pulseChipName { display:contents; }
+  .pulseChips .pulseChipName small { grid-column:1 / -1; grid-row:2; }
+  .pulseChipScore { grid-column:2; grid-row:1; gap:10px; }
+  .chipTrack { width:64px; }
+  .pulseChipScore b { font-size:20px; }
+}
 /* Açıklamalar (28 Eylül): üst satır ölçeği, kadranın altı bandın anlamını,
    her göstergenin altı neyi ölçtüğünü söylüyor. Küçük punto, soluk ton;
    sayıların okunuşunu bastırmıyor. */

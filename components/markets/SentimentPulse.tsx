@@ -238,7 +238,22 @@ export async function SentimentPulse({
                   {componentName(reading.key, t)}
                   <small>{componentHint(reading.key, t)}</small>
                 </span>
-                <b className="numeral">{Math.round(reading.score)}</b>
+                {/* PUAN BİR ÇİZGİ DE (28 Eylül). Sağdaki küçük sayı tek
+                    başına okunmuyordu ("sayılar çok ufak"); ray aynı puanı
+                    uzunluk olarak veriyor: 0 solda (korku), 100 sağda
+                    (iştah), orta çizgi 50. Renk yalnızca yarının hangi
+                    tarafında olduğu — tam sürümdeki rayın aynısı. */}
+                <span className={styles.pulseChipScore}>
+                  <span className={cn(styles.scoreTrack, styles.chipTrack)} aria-hidden>
+                    <i
+                      style={{ width: `${reading.score}%` }}
+                      data-side={reading.score >= SCORE_MAX / 2 ? "up" : "down"}
+                    />
+                  </span>
+                  <b className="numeral" data-side={reading.score >= SCORE_MAX / 2 ? "up" : "down"}>
+                    {Math.round(reading.score)}
+                  </b>
+                </span>
               </li>
             ))}
           </ul>

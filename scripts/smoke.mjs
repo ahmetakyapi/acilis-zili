@@ -106,6 +106,14 @@ const NOT_FOUND_ROUTE = "/bu-sayfa-yok-duman-testi";
  *
  * Konsol satırı kaynağın adresini ancak `location().url`de taşıyor; bu
  * ayrım için yanıtın kendisi de izleniyor (`degradedUrls`).
+ *
+ * KARAR SAYFA OTURDUKTAN SONRA (28 Eylül). Satırlar geldikleri an
+ * eleniyordu ve Chrome "Failed to load resource" satırını çoğu zaman o
+ * isteğin `response` olayından ÖNCE basıyor: adres henüz `degradedUrls`te
+ * olmadığı için kendi `/api/` ucumuzun sözleşmeli 502'si hata sayılıyor,
+ * koşum rastgele düşüyordu (28 Eylül'de dört kez, her seferinde başka bir
+ * sayfada; aynı sayfa öteki genişlikte geçiyordu). Artık satırlar adresiyle
+ * toplanıyor, eleme sayfa oturunca yapılıyor.
  */
 function ignorable(message, url, expectNotFound, degradedUrls) {
   if (!message.startsWith("Failed to load resource") || !url) return false;
@@ -154,10 +162,10 @@ async function checkPage(browser, path, width) {
       degradedUrls.add(response.url());
     }
   });
+  const consoleErrors = [];
   page.on("console", (msg) => {
     if (msg.type() !== "error") return;
-    const url = msg.location()?.url;
-    if (!ignorable(msg.text(), url, expectNotFound, degradedUrls)) errors.push(msg.text().slice(0, 200));
+    consoleErrors.push({ text: msg.text(), url: msg.location()?.url });
   });
   page.on("pageerror", (error) => errors.push(`pageerror: ${String(error).slice(0, 200)}`));
   await page.setViewport({ width, height: VIEWPORT_HEIGHT });
@@ -174,6 +182,13 @@ async function checkPage(browser, path, width) {
     result.note = String(error).slice(0, 160);
   } finally {
     await context.close();
+  }
+  for (const { text, url } of consoleErrors) {
+    if (!ignorable(text, url, expectNotFound, degradedUrls)) {
+      /* Adres de yazılıyor: düşen bir koşumun günlüğü hangi kaynağın
+         düştüğünü söylemiyordu, teşhis tahmine kalıyordu. */
+      errors.push(`${text.slice(0, 160)}${url ? ` · ${url.slice(0, 120)}` : ""}`);
+    }
   }
   const statusOk = expectNotFound ? result.status === 404 : result.status === 200;
   result.ok = statusOk && errors.length === 0 && result.overflow <= OVERFLOW_TOLERANCE_PX && !result.note;
@@ -198,6 +213,7 @@ async function runPool(tasks, size) {
         .filter(Boolean)
         .join(" · ");
       console.log(`${mark} ${String(result.width).padStart(4)}  ${result.path}  ${detail}`);
+      if (result.retried) console.log(`       tekrar: ${result.retried}`);
       for (const line of result.ok ? [] : result.errors) console.log(`       ${line}`);
     }
   }
@@ -308,7 +324,23 @@ try {
     route,
     route === "/" ? "/en" : `/en${route}`,
   ]);
-  const tasks = paths.flatMap((path) => WIDTHS.map((width) => () => checkPage(browser, path, width)));
+  /* BİR KEZ YENİDEN DENE (28 Eylül). Koşum CI'da anahtarsız ve dış
+     kaynaklara bağlı; tek bir anlık 502 bütün koşumu düşürüp bildirim
+     gönderiyordu. Düşen sayfa bir kez daha açılıyor ve ancak İKİNCİ kez de
+     düşerse hata sayılıyor: kalıcı bir hata (kırık sayfa, taşma, hidrasyon
+     hatası) iki denemede de düşer ve yine yakalanır. İlk denemenin hatası
+     günlükte "tekrar" notuyla kalıyor, gizlenmiyor. */
+  const checkTwice = async (path, width) => {
+    const first = await checkPage(browser, path, width);
+    if (first.ok) return first;
+    const second = await checkPage(browser, path, width);
+    if (second.ok) {
+      second.note = "";
+      second.retried = `ilk deneme düştü: ${[...first.errors, first.note].filter(Boolean).join(" | ").slice(0, 200)}`;
+    }
+    return second;
+  };
+  const tasks = paths.flatMap((path) => WIDTHS.map((width) => () => checkTwice(path, width)));
   const results = await runPool(tasks, CONCURRENCY);
   failed += results.filter((r) => !r.ok).length;
   console.log(`\n${results.length - failed}/${results.length} sayfa kontrolü geçti.`);

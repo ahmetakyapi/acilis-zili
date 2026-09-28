@@ -2444,7 +2444,7 @@ const tr = {
     atTotal: "Toplam",
     atBuyShare: "Al Tarafı",
     atNote:
-      "Tek tek not değişiklikleri ve hedef fiyatlar kaynağımızda yok; tablo aylık dağılımın net değişimini gösterir. Bir kovadaki artış notunu değiştiren analistten de yeni katılan analistten de gelebilir.",
+      "Aylık dağılımın net değişimi: bir kovadaki artış not değiştiren ya da yeni katılan analistten gelebilir. Tek tek not ve hedef fiyat kaynakta yok.",
 
     scTitle: "Hisse Skor Kartı",
     scPeers: "{n} Şirket",
@@ -2475,7 +2475,8 @@ const tr = {
       momentum: "6 Aylık Getiri",
     },
     scNote:
-      "Her eksen, şirketin aynı GICS sektöründeki endeks üyeleri arasındaki yüzdeliğidir; bir not ya da tavsiye değil. Değerleme canlı fiyatla kurulur (kâr ve satış getirisi), büyüme ve marjlar son on iki ayın yıllık ölçüleridir. Ucuz bir hisse ucuzluğunu hak ediyor olabilir.",
+      "Aynı GICS sektöründeki endeks üyeleri arasında konum; not ya da tavsiye değil. Çentikler şirketler, dikey çizgi medyan. Değerleme canlı fiyatla kurulur.",
+    scStrip: "Sektördeki {n} şirketin dağılımı: medyan {m}, bu şirket {p}",
     scOldest: "En Eski Ölçü {date}",
 
     tsTitle: "Teknik Fotoğraf",

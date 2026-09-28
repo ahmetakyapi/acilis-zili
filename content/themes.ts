@@ -60,7 +60,7 @@ export const THEMES = [
     slug: "yapay-zeka",
     symbols: [
       "NVDA", "MSFT", "GOOGL", "META", "AMZN", "AVGO", "AMD", "TSM",
-      "ORCL", "PLTR", "MU", "ANET", "DELL", "SMCI", "ALAB", "NOW",
+      "ORCL", "PLTR", "MU", "SNDK", "ANET", "DELL", "SMCI", "ALAB", "NOW",
     ],
     benchmark: null,
     titleTr: "Yapay Zekâ",
@@ -68,9 +68,9 @@ export const THEMES = [
     dekTr: "Yapay zekâ modellerini eğiten ve çalıştıran çiplerden bulut altyapısına ve yazılıma uzanan zincir.",
     dekEn: "The chain from the chips that train and run AI models to the cloud infrastructure and software on top.",
     whyTr:
-      "Liste, yapay zekâ harcamasının parasının aktığı üç halkadan seçildi: hızlandırıcı ve bellek üreten yarı iletken şirketleri (Nvidia, AMD, Broadcom, Micron, TSMC), bu çipleri veri merkezlerine kuran ve kiralayan bulut sağlayıcıları (Microsoft, Alphabet, Amazon, Oracle, Meta) ve sunucu, ağ ve yazılım tarafı (Dell, Super Micro, Arista, Astera Labs, Palantir, ServiceNow). Halkalar aynı talebe bağlı ama aynı anda hareket etmek zorunda değil: bulut şirketlerinin yatırım bütçesi bir halkanın geliri, ötekinin gideridir.",
+      "Liste, yapay zekâ harcamasının parasının aktığı üç halkadan seçildi: hızlandırıcı, bellek ve veri merkezi depolaması üreten yarı iletken şirketleri (Nvidia, AMD, Broadcom, Micron, SanDisk, TSMC), bu çipleri veri merkezlerine kuran ve kiralayan bulut sağlayıcıları (Microsoft, Alphabet, Amazon, Oracle, Meta) ve sunucu, ağ ve yazılım tarafı (Dell, Super Micro, Arista, Astera Labs, Palantir, ServiceNow). Halkalar aynı talebe bağlı ama aynı anda hareket etmek zorunda değil: bulut şirketlerinin yatırım bütçesi bir halkanın geliri, ötekinin gideridir.",
     whyEn:
-      "The list is drawn from the three links that AI spending flows through: the semiconductor makers of accelerators and memory (Nvidia, AMD, Broadcom, Micron, TSMC), the cloud providers that install and rent those chips (Microsoft, Alphabet, Amazon, Oracle, Meta), and the server, networking and software layer (Dell, Super Micro, Arista, Astera Labs, Palantir, ServiceNow). The links share the same demand but need not move together: a cloud company's capital budget is one link's revenue and another's expense.",
+      "The list is drawn from the three links that AI spending flows through: the semiconductor makers of accelerators, memory and data-center storage (Nvidia, AMD, Broadcom, Micron, SanDisk, TSMC), the cloud providers that install and rent those chips (Microsoft, Alphabet, Amazon, Oracle, Meta), and the server, networking and software layer (Dell, Super Micro, Arista, Astera Labs, Palantir, ServiceNow). The links share the same demand but need not move together: a cloud company's capital budget is one link's revenue and another's expense.",
     guides: ["sektor-rotasyonu", "degerleme"],
   },
   {

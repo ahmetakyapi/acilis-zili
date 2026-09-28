@@ -2010,7 +2010,7 @@ const en: typeof tr = {
     atTotal: "Total",
     atBuyShare: "Buy Side",
     atNote:
-      "Individual rating changes and price targets are not available from our source; the table shows the net change of the monthly distribution. A rise in one bucket can come from an analyst changing their rating or from a new analyst joining.",
+      "Net change in the monthly distribution: a rise in a bucket can come from an analyst changing their rating or a new one joining. Individual rating changes and price targets are not in the source.",
 
     scTitle: "Stock Scorecard",
     scPeers: "{n} Companies",
@@ -2041,7 +2041,8 @@ const en: typeof tr = {
       momentum: "6-Month Return",
     },
     scNote:
-      "Each axis is the company's percentile among index members in the same GICS sector; it is not a grade or a recommendation. Valuation uses the live price (earnings and sales yield), growth and margins are trailing twelve-month figures. A cheap stock may deserve to be cheap.",
+      "Position among index members in the same GICS sector, not a grade or a recommendation. Ticks are companies, the vertical line is the median. Valuation uses the live price.",
+    scStrip: "Spread of {n} companies in the sector: median {m}, this company {p}",
     scOldest: "Oldest Figure {date}",
 
     tsTitle: "Technical Snapshot",

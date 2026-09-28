@@ -227,6 +227,45 @@ export function scoreCard(
   return out;
 }
 
+/**
+ * Eksen başına SEKTÖRÜN TAMAMININ yüzdelikleri — skor kartındaki dağılım
+ * şeridinin çentikleri (28 Eylül).
+ *
+ * Tek bir yüzdelik "%80" diyor ama sektörün nasıl yayıldığını söylemiyor:
+ * şirketlerin çoğu ortada mı toplanıyor, yoksa iki uca mı dağılıyor. Şerit
+ * her şirketi AYNI YÖNTEMLE (kendisi hariç herkese karşı, `scoreCard`)
+ * yerleştiriyor; konunun çentiği `scoreCard`ın kendi sonucuyla birebir aynı
+ * sayı, yani şeritteki yer ile yanındaki yüzde ayrışamaz. Eşiği geçemeyen
+ * şirket o eksende hiç çentik almıyor — olmayan bir konumu uydurmaz.
+ *
+ * Yüzdelik uzayında çizildiği için tek ölçülü eksende çentikler neredeyse
+ * eşit aralıklı durur (sıralamanın tanımı); ölçüleri birleşen eksende
+ * (kârlılık, bilanço) şirketler ortada kümelenir ve şerit bunu gösterir.
+ */
+export function axisDistribution(
+  subject: ScoreSubject,
+  peers: readonly ScoreSubject[],
+  minPeers = SCORECARD_MIN_PEERS,
+): Partial<Record<ScoreAxis, number[]>> {
+  const everyone = [subject, ...peers.filter((peer) => peer.symbol !== subject.symbol)];
+  const out: Partial<Record<ScoreAxis, number[]>> = {};
+  for (const company of everyone) {
+    const others = everyone.filter((other) => other.symbol !== company.symbol);
+    for (const axis of scoreCard(company, others, minPeers)) {
+      (out[axis.axis] ??= []).push(axis.percentile);
+    }
+  }
+  for (const values of Object.values(out)) values.sort((a, b) => a - b);
+  return out;
+}
+
+/** Sıralı dizinin medyanı; boşsa null. */
+export function medianOf(sorted: readonly number[]): number | null {
+  if (sorted.length === 0) return null;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+}
+
 /* --------------------------------------------------------------------------
    Türkçe ek — "%80'inden", "%50'sinden", "%30'undan"
    -------------------------------------------------------------------------- */

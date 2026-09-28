@@ -28,6 +28,7 @@ import {
   plural,
 } from "@/lib/utils";
 import styles from "./depth.module.css";
+import { ClampProbe } from "./ClampProbe";
 import { FoldToggle } from "./FoldToggle";
 
 /** Pencere — Form 4 iki iş günü içinde dosyalanıyor; 90 gün bir çeyrek. */
@@ -185,6 +186,19 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
 
         {split && (
           <div className={styles.insiderRecords}>
+          {/* GENİŞ EKRANDA SOL SÜTUNUN BOYUNDA (28 Eylül, sahibinin
+              isteği: "başta aynı hizada aç, tümünü gör derse uzatırsın").
+              Tablo sol sütundan ~140 piksel uzun bitiyordu. Kutu sol
+              sütunun boyunda kesiliyor, altı soluyor; onay kutusu açınca
+              tam boyuna uzuyor. Dar ekranda katlamayı `FoldToggle`
+              yapıyor, bu kutu orada devre dışı. */}
+          <input
+            type="checkbox"
+            id={`insider-all-${symbol}`}
+            data-clamp-input
+            className={cn("sr-only", styles.clampInput)}
+          />
+          <div data-clamp-box className={styles.clampBox}>
           <FoldToggle
             id={`insider-fold-${symbol}`}
             hiddenCount={shown.length - INSIDER_FOLD}
@@ -235,6 +249,12 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
               .replace("{n}", String(trades.length - shown.length))}
           </p>
         )}
+          </div>
+          <label htmlFor={`insider-all-${symbol}`} className={styles.clampButton}>
+            <span className={styles.clampMore}>{t.common.showAll}</span>
+            <span className={styles.clampLess}>{t.common.less}</span>
+          </label>
+          <ClampProbe />
           </div>
         )}
 
